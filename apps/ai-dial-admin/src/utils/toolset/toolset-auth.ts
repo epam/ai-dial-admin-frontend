@@ -29,6 +29,10 @@ export const isLoggedInToToolset = (toolset: Toolset): boolean => {
   return isUserLoggedInToToolset(toolset) || isAdminLoggedInToToolset(toolset);
 };
 
+export const isFullLoggedInToToolset = (toolset: Toolset): boolean => {
+  return isUserLoggedInToToolset(toolset) && isAdminLoggedInToToolset(toolset);
+};
+
 export const isUserLoggedInToToolset = (toolset: Toolset): boolean => {
   const authSettings = toolset.authSettings;
   return authSettings?.userLevelAuthStatus === ToolsetAuthStatus.SIGNED_IN;

@@ -7,6 +7,7 @@ import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconLogin, IconLogout } from '@tabler/icons-react';
 
 import LoginPopup from '@/src/components/Toolsets/Auth/LoginPopup';
+import LogoutConfirmationPopup from '@/src/components/Toolsets/Auth/LogoutConfirmationPopup';
 import { ToolsetI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -19,8 +20,10 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import {
   encodeToolsetRedirectState,
+  isFullLoggedInToToolset,
   isLoggedInToToolset,
   isUserLoggedInToToolset,
+  isAdminLoggedInToToolset,
 } from '@/src/utils/toolset/toolset-auth';
 import { getIsUser, setIsUser, setUrl } from './utils';
 
@@ -58,9 +61,22 @@ const AuthButtons: FC<Props> = ({
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isLogoutConfirmationOpen, setIsLogoutConfirmationOpen] = useState(false);
 
   const isToolsetSignedIn = useMemo(() => {
     return isLoggedInToToolset(selectedToolset);
+  }, [selectedToolset]);
+
+  const isToolsetFullSignedIn = useMemo(() => {
+    return isFullLoggedInToToolset(selectedToolset);
+  }, [selectedToolset]);
+
+  const isUserLevelSignedIn = useMemo(() => {
+    return isUserLoggedInToToolset(selectedToolset);
+  }, [selectedToolset]);
+
+  const isOrgLevelSignedIn = useMemo(() => {
+    return isAdminLoggedInToToolset(selectedToolset);
   }, [selectedToolset]);
 
   const signIn = useCallback(
@@ -130,21 +146,47 @@ const AuthButtons: FC<Props> = ({
     [publicationName, publicationPath, selectedToolset, signIn, view],
   );
 
+  const performLogout = useCallback(
+    (levels: ToolsetAuthCredentialLevel[]) => {
+      setIsLogoutConfirmationOpen(false);
+      let completedCount = 0;
+      let hasError = false;
+
+      levels.forEach((level) => {
+        getReqRef.current(signOutToolset, selectedToolset, level).then((res) => {
+          completedCount++;
+          if (!res.success) {
+            hasError = true;
+            showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+          }
+
+          // After all logout requests complete, show success or navigate
+          if (completedCount === levels.length) {
+            if (!hasError) {
+              router.push(
+                getUrnForEntity(view, { ...selectedToolset, requestName: publicationName, path: publicationPath }),
+              );
+              showNotification(
+                getSuccessNotification(t(ToolsetI18nKey.SuccessLogout), t(ToolsetI18nKey.SuccessLogoutDescription)),
+              );
+            }
+          }
+        });
+      });
+    },
+    [router, selectedToolset, view, showNotification, t, signOutToolset, publicationName, publicationPath],
+  );
+
   const onLogout = useCallback(() => {
-    const level = isUserLoggedInToToolset(selectedToolset)
-      ? ToolsetAuthCredentialLevel.USER
-      : ToolsetAuthCredentialLevel.GLOBAL;
-    getReqRef.current(signOutToolset, selectedToolset, level).then((res) => {
-      if (res.success) {
-        router.push(getUrnForEntity(view, { ...selectedToolset, requestName: publicationName, path: publicationPath }));
-        showNotification(
-          getSuccessNotification(t(ToolsetI18nKey.SuccessLogout), t(ToolsetI18nKey.SuccessLogoutDescription)),
-        );
-      } else {
-        showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
-      }
-    });
-  }, [router, selectedToolset, view, showNotification, t, signOutToolset, publicationName, publicationPath]);
+    // If logged in at both levels, show confirmation modal
+    if (isToolsetFullSignedIn) {
+      setIsLogoutConfirmationOpen(true);
+    } else {
+      // If logged in at only one level, proceed directly
+      const level = isUserLevelSignedIn ? ToolsetAuthCredentialLevel.USER : ToolsetAuthCredentialLevel.GLOBAL;
+      performLogout([level]);
+    }
+  }, [isToolsetFullSignedIn, isUserLevelSignedIn, performLogout]);
 
   useEffect(() => {
     if (oAuthCode && !isSignInProcessed) {
@@ -157,19 +199,22 @@ const AuthButtons: FC<Props> = ({
     <>
       {selectedToolset.authSettings?.authenticationType &&
       selectedToolset.authSettings?.authenticationType !== ToolsetAuthType.NONE ? (
-        isToolsetSignedIn ? (
-          <DialNeutralButton
-            label={t(ToolsetI18nKey.LogOut)}
-            iconBefore={<IconLogout {...BASE_BUTTON_ICON_PROPS} />}
-            onClick={onLogout}
-          />
-        ) : (
-          <DialNeutralButton
-            label={t(ToolsetI18nKey.LogIn)}
-            iconBefore={<IconLogin {...BASE_BUTTON_ICON_PROPS} />}
-            onClick={() => setIsLoginModalOpen(true)}
-          />
-        )
+        <>
+          {isToolsetSignedIn && (
+            <DialNeutralButton
+              label={t(ToolsetI18nKey.LogOut)}
+              iconBefore={<IconLogout {...BASE_BUTTON_ICON_PROPS} />}
+              onClick={onLogout}
+            />
+          )}
+          {!isToolsetFullSignedIn && (
+            <DialNeutralButton
+              label={t(ToolsetI18nKey.LogIn)}
+              iconBefore={<IconLogin {...BASE_BUTTON_ICON_PROPS} />}
+              onClick={() => setIsLoginModalOpen(true)}
+            />
+          )}
+        </>
       ) : null}
       {isLoginModalOpen && (
         <LoginPopup
@@ -177,6 +222,15 @@ const AuthButtons: FC<Props> = ({
           isModalOpen={isLoginModalOpen}
           onClose={() => setIsLoginModalOpen(false)}
           onLogin={onLogin}
+        />
+      )}
+      {isLogoutConfirmationOpen && (
+        <LogoutConfirmationPopup
+          isModalOpen={isLogoutConfirmationOpen}
+          isLoggedInAsUser={isUserLevelSignedIn}
+          isLoggedInAsOrganization={isOrgLevelSignedIn}
+          onClose={() => setIsLogoutConfirmationOpen(false)}
+          onConfirm={performLogout}
         />
       )}
     </>
