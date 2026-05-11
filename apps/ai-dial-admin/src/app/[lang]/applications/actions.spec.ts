@@ -71,7 +71,7 @@ describe('Applications :: server actions', () => {
     const result = await updateApplication({ name: 'test' }, 'etag');
     expect(getUserToken).toHaveBeenCalled();
     expect(applicationsApi.updateApplication).toHaveBeenCalledWith(
-      { name: 'test', applicationProperties: {}, defaults: {}, routes: void 0 },
+      { name: 'test', applicationProperties: {}, defaults: {}, responsesDefaults: {}, routes: void 0 },
       TOKEN_MOCK,
       'etag',
     );
@@ -91,7 +91,13 @@ describe('Applications :: server actions', () => {
     );
     expect(getUserToken).toHaveBeenCalled();
     expect(applicationsApi.updateApplication).toHaveBeenCalledWith(
-      { name: 'test', applicationProperties: { key: 'value' }, defaults: { key: 'value' }, routes: void 0 },
+      {
+        name: 'test',
+        applicationProperties: { key: 'value' },
+        defaults: { key: 'value' },
+        responsesDefaults: {},
+        routes: void 0,
+      },
       TOKEN_MOCK,
       'etag',
     );

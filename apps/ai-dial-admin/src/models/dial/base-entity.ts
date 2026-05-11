@@ -17,6 +17,8 @@ export interface BaseEntity extends ModifiedEntity {
 export interface EntityDefaults {
   defaults?: Record<string, unknown>;
   defaultsTemp?: DefaultTemp[];
+  responsesDefaults?: Record<string, unknown>;
+  responsesDefaultsTemp?: DefaultTemp[];
 }
 
 export interface EntityAttachment {

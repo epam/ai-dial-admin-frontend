@@ -1,4 +1,4 @@
-import { editor } from 'monaco-editor';
+import type { editor } from 'monaco-editor';
 
 export type JSONEditorError = editor.IMarker;
 export type JSONEditorThemeConfig = editor.IStandaloneThemeData;

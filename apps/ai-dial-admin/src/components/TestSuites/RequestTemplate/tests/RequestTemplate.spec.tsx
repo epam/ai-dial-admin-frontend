@@ -72,6 +72,10 @@ vi.mock('../tabs/TabsContent', () => {
   };
 });
 
+vi.mock('../components/TemplateVariablesDoc', () => ({
+  default: () => <div aria-label="template-variables-doc" />,
+}));
+
 vi.mock('../components/ContentTypeSelect', () => ({
   default: ({ testSuite, onChangeTestSuite }: any) => (
     <div role="combobox" aria-label="content-type-select">

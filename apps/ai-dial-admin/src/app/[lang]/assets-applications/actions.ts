@@ -47,6 +47,9 @@ export async function importApps(body: FormData, fileType: ImportFileType) {
 export async function updateApp(app: AssetApp, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   const defaults = app.defaultsTemp ? { ...convertDefaultsToRecord(app.defaultsTemp) } : { ...app.defaults };
+  const responsesDefaults = app.responsesDefaultsTemp
+    ? { ...convertDefaultsToRecord(app.responsesDefaultsTemp) }
+    : { ...app.responsesDefaults };
   const applicationProperties = app.applicationPropertiesTemp
     ? { ...convertDefaultsToRecord(app.applicationPropertiesTemp) }
     : { ...app.applicationProperties };
@@ -54,9 +57,11 @@ export async function updateApp(app: AssetApp, etag: string) {
     ...app,
     applicationProperties,
     defaults,
+    responsesDefaults,
     displayVersion: app.version,
   };
   delete application.defaultsTemp;
+  delete application.responsesDefaultsTemp;
   delete application.applicationPropertiesTemp;
   return assetsApi.updateAssetWithEtag(token, application, ResourceType.APPLICATION, etag);
 }
