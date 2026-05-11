@@ -3,18 +3,17 @@
 import { FC } from 'react';
 
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { ChatEntity } from '@/src/models/dial/base-entity';
-import { getSchemaSourceId } from '@/src/utils/entities/application-source';
-import { ApplicationRoute } from '@/src/types/routes';
 import { Toolset } from '@/src/models/dial/toolset';
-import { useI18n } from '@/src/locales/client';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getSchemaSourceId } from '@/src/utils/entities/application-source';
 
-import ReadonlyInput from '@/src/components/Common/ReadonlyInput/ReadonlyInput';
-import MaintainerControl from '@/src/components/BaseControls/Maintainer';
 import IconControl from '@/src/components/BaseControls/Icon';
+import MaintainerControl from '@/src/components/BaseControls/Maintainer';
 import TopicsControl from '@/src/components/BaseControls/Topics';
-import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import ComplexInput from '@/src/components/Common/ComplexInput/ComplexInput';
 
 interface Props {
   view: ApplicationRoute;
@@ -49,10 +48,11 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
       ) : null}
 
       {isShowCompletionEndpoint && isEntityImmutable ? (
-        <ReadonlyInput
+        <ComplexInput
           value={applicationRunner['dial:applicationTypeCompletionEndpoint']}
           label={t(EntityFieldsI18nKey.completionEndpoint)}
-          containerClassName={STANDARD_CONTROL_WIDTH}
+          copyable
+          disabled
         />
       ) : null}
       {view == ApplicationRoute.Toolsets && isEntityImmutable && (
