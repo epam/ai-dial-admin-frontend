@@ -68,9 +68,9 @@ const InternalImageField: FC<Props> = ({ container, image, route, disabled }) =>
         elementId="internalImage"
         disabled={isChangeDisabled}
         iconBefore={
-          <WarningIcon
-            warningText={isImageNotInstalled(image) ? t(ContainersI18nKey.ImageNotInstalledTooltip) : undefined}
-          />
+          isImageNotInstalled(image) ? (
+            <WarningIcon warningText={t(ContainersI18nKey.ImageNotInstalledTooltip)} />
+          ) : undefined
         }
       >
         {isModalOpen && image && (
