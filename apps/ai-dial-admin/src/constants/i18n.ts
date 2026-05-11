@@ -1342,6 +1342,7 @@ export enum ToolsetI18nKey {
   OtherInAToolset = 'Toolset.OtherInAToolset',
   CustomToolDescription = 'Toolset.CustomToolDescription',
   AuthSettingsLockedMessage = 'Toolset.AuthSettingsLockedMessage',
+  SelectLogoutLevels = 'Toolset.SelectLogoutLevels',
 }
 
 export enum ImagesI18nKey {

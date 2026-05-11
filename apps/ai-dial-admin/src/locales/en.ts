@@ -1366,6 +1366,7 @@ export default {
     ManageTools: 'Manage tools',
     AvailableForYou: 'Available for you',
     OtherInAToolset: 'Others in a toolset',
+    SelectLogoutLevels: 'Select logout levels',
     CustomToolDescription:
       'You can add tools from the toolset to which you don’t have direct access. Enter exact names to add them.',
     AuthSettingsLockedMessage:

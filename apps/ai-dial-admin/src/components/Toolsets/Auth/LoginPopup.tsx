@@ -17,11 +17,13 @@ import { ToolsetAuthCredentialLevel, ToolsetAuthType } from '@/src/models/dial/t
 interface Props {
   isModalOpen: boolean;
   type?: ToolsetAuthType;
+  isLoggedInAsUser?: boolean;
+  isLoggedInAsOrganization?: boolean;
   onClose: () => void;
   onLogin: (type: ToolsetAuthCredentialLevel, apiKeyValue: string) => void;
 }
 
-const LoginPopup: FC<Props> = ({ type, isModalOpen, onClose, onLogin }) => {
+const LoginPopup: FC<Props> = ({ type, isModalOpen, isLoggedInAsUser, isLoggedInAsOrganization, onClose, onLogin }) => {
   const t = useI18n();
 
   const radioButtons: RadioButtonWithContent[] = [
@@ -29,8 +31,16 @@ const LoginPopup: FC<Props> = ({ type, isModalOpen, onClose, onLogin }) => {
     { id: ToolsetAuthCredentialLevel.USER, name: t(ToolsetI18nKey.Personal) },
   ];
 
-  const [authType, setAuthType] = useState(radioButtons[0].id);
+  // If logged in at one level, default to the other; otherwise default to GLOBAL
+  const defaultAuthType = isLoggedInAsOrganization
+    ? ToolsetAuthCredentialLevel.USER
+    : ToolsetAuthCredentialLevel.GLOBAL;
+
+  const [authType, setAuthType] = useState(defaultAuthType);
   const [apiKeyValue, setApiKeyValue] = useState('');
+
+  // Show level selector only when neither level is logged in yet
+  const showLevelSelector = !isLoggedInAsUser && !isLoggedInAsOrganization;
 
   return (
     <DialFormPopup
@@ -45,14 +55,16 @@ const LoginPopup: FC<Props> = ({ type, isModalOpen, onClose, onLogin }) => {
       cancelLabel={t(ButtonsI18nKey.Cancel)}
     >
       <div className="flex px-6 py-4 h-full flex-col gap-y-8">
-        <DialRadioGroup
-          fieldTitle={t(EntityFieldsI18nKey.authenticationType)}
-          orientation={RadioGroupOrientation.Column}
-          radioButtons={radioButtons}
-          activeRadioButton={authType}
-          elementId="auth-type"
-          onChange={setAuthType}
-        />
+        {showLevelSelector && (
+          <DialRadioGroup
+            fieldTitle={t(EntityFieldsI18nKey.authenticationType)}
+            orientation={RadioGroupOrientation.Column}
+            radioButtons={radioButtons}
+            activeRadioButton={authType}
+            elementId="auth-type"
+            onChange={(id) => setAuthType(id as ToolsetAuthCredentialLevel)}
+          />
+        )}
 
         {type === ToolsetAuthType.API_KEY && (
           <DialPasswordInput
