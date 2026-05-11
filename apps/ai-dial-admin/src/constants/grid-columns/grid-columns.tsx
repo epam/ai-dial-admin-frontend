@@ -24,14 +24,20 @@ import {
   STATUS_I18N_KEYS,
 } from '@/src/constants/deployments/images';
 import { ROW_IMPORT_META_KEY } from '@/src/constants/import';
-import { BasicI18nKey, ImportI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, EntityFieldsI18nKey, ImportI18nKey, SourceI18nKey } from '@/src/constants/i18n';
 import { RowImportMeta } from '@/src/models/deployments/import';
 import { ValidationState } from '@/src/types/deployments/import';
 import {
   containerSourceNameLabel,
   containerSourceTypeLabel,
+  formatCpuColumnValue,
+  formatGpuColumnValue,
+  formatMemoryColumnValue,
   formatRequired,
+  getCpuColumnValue,
   getFormattedResourceType,
+  getGpuColumnValue,
+  getMemoryColumnValue,
   numberValueFormatter,
   priceValueFormatter,
 } from '@/src/constants/grid-columns/formatters';
@@ -639,6 +645,64 @@ export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, rou
     filterValueGetter: (params) => t(STATUS_I18N_KEYS[params.data[params.colDef.field || ''] as CONTAINER_STATUS]),
   },
   { field: 'url', headerName: 'Container URL', hide: true },
+  {
+    field: 'resources.requests.cpu',
+    headerName: t(EntityFieldsI18nKey.CPURequest),
+    hide: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    valueGetter: (params: ValueGetterParams) => getCpuColumnValue(params.data?.resources?.requests?.cpu),
+    valueFormatter: ({ value }) => formatCpuColumnValue(value as number | null),
+    filterValueGetter: (params) => formatCpuColumnValue(getCpuColumnValue(params.data?.resources?.requests?.cpu)),
+  },
+  {
+    field: 'resources.limits.cpu',
+    headerName: t(EntityFieldsI18nKey.CPULimit),
+    hide: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    valueGetter: (params: ValueGetterParams) => getCpuColumnValue(params.data?.resources?.limits?.cpu),
+    valueFormatter: ({ value }) => formatCpuColumnValue(value as number | null),
+    filterValueGetter: (params) => formatCpuColumnValue(getCpuColumnValue(params.data?.resources?.limits?.cpu)),
+  },
+  {
+    field: 'resources.requests.memory',
+    headerName: t(EntityFieldsI18nKey.MemoryRequest),
+    hide: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    valueGetter: (params: ValueGetterParams) => getMemoryColumnValue(params.data?.resources?.requests?.memory),
+    valueFormatter: ({ value }) => formatMemoryColumnValue(value as number | null),
+    filterValueGetter: (params) =>
+      formatMemoryColumnValue(getMemoryColumnValue(params.data?.resources?.requests?.memory)),
+  },
+  {
+    field: 'resources.limits.memory',
+    headerName: t(EntityFieldsI18nKey.MemoryLimit),
+    hide: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    valueGetter: (params: ValueGetterParams) => getMemoryColumnValue(params.data?.resources?.limits?.memory),
+    valueFormatter: ({ value }) => formatMemoryColumnValue(value as number | null),
+    filterValueGetter: (params) =>
+      formatMemoryColumnValue(getMemoryColumnValue(params.data?.resources?.limits?.memory)),
+  },
+  ...(route === ApplicationRoute.ModelServings
+    ? [
+        {
+          field: 'resources.gpu',
+          headerName: t(EntityFieldsI18nKey.GPURequest),
+          hide: true,
+          sortable: true,
+          filter: 'agTextColumnFilter',
+          valueGetter: (params: ValueGetterParams) =>
+            getGpuColumnValue(params.data?.resources?.requests?.['nvidia.com/gpu']),
+          valueFormatter: ({ value }) => formatGpuColumnValue(value as number | null),
+          filterValueGetter: (params) =>
+            formatGpuColumnValue(getGpuColumnValue(params.data?.resources?.requests?.['nvidia.com/gpu'])),
+        } as ColDef,
+      ]
+    : []),
   AUTHOR_COLUMN,
   TOPICS_COLUMN,
   { ...CREATED_AT_COLUMN, filter: false },
