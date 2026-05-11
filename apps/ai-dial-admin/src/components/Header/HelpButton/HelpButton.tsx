@@ -13,6 +13,7 @@ interface Props {
 const HelpButton: FC<Props> = ({ docLink }) => {
   const pathname = usePathname();
   const helpUrl = getHelpUrl(pathname ?? '');
+  const hasHelpLink = Boolean(helpUrl && docLink);
 
   const onClick = useCallback(() => {
     const isList = isListView(pathname ?? '');
@@ -21,25 +22,25 @@ const HelpButton: FC<Props> = ({ docLink }) => {
   }, [docLink, helpUrl?.listView, helpUrl?.selectedView, pathname]);
 
   const dropdownItems = useMemo<DropdownItem[]>(() => {
-    if (!helpUrl || !docLink) {
+    if (!hasHelpLink) {
       return [];
     }
 
     const items: DropdownItem[] = [
       {
         key: 'help-link',
-        label: helpUrl.title || 'View documentation',
+        label: helpUrl?.title || 'View documentation',
         onClick,
       },
     ];
 
     return items;
-  }, [helpUrl, docLink, onClick]);
+  }, [hasHelpLink, helpUrl, onClick]);
 
-  if (!helpUrl) {
+  if (!hasHelpLink) {
     return null;
   }
-  return helpUrl?.title ? (
+  return (
     <DialDropdown menu={{ items: dropdownItems }} allowedPlacements={['bottom-end']}>
       <DialPrimaryIconButton
         appearance={ButtonAppearance.Ghost}
@@ -47,13 +48,6 @@ const HelpButton: FC<Props> = ({ docLink }) => {
         icon={<IconHelpCircle size={24} stroke={1.5} />}
       />
     </DialDropdown>
-  ) : (
-    <DialPrimaryIconButton
-      appearance={ButtonAppearance.Ghost}
-      aria-label="Help button"
-      icon={<IconHelpCircle size={24} stroke={1.5} />}
-      onClick={onClick}
-    />
   );
 };
 
