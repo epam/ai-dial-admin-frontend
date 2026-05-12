@@ -1,4 +1,4 @@
-import React, { FC, ReactElement, use, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { FC, ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { SelectOption } from '@epam/ai-dial-ui-kit';
 
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
