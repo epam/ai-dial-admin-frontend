@@ -23,7 +23,7 @@ const AppRunnerSource: FC<Props> = ({ entity, onChangeEntity, isEntityImmutable,
   const t = useI18n();
 
   return (
-    <div className="flex flex-col w-full gap-2">
+    <div className="flex flex-col w-full gap-1">
       <DialLabel label={t(EntitiesI18nKey.SourceType)} />
       <EndpointAndMCPContainer
         entity={entity}

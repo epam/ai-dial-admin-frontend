@@ -1,21 +1,27 @@
-import { FC } from 'react';
+'use client';
 
+import { FC, useEffect, useRef, useState } from 'react';
+
+import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
+import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import Defaults from '@/src/components/Defaults/Defaults';
-import UpstreamEndpoints from '@/src/components/UpstreamEndpoints/UpstreamEndpoints';
-import DeploymentProperties from '@/src/components/EntityMainProperties/Properties/DeploymentProperties';
 import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
-import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
+import DeploymentProperties from '@/src/components/EntityMainProperties/Properties/DeploymentProperties';
 import Limits from '@/src/components/ModelView/Limits/Limits';
 import Pricing from '@/src/components/ModelView/Pricing/Pricing';
 import TokenizerModelSwitch from '@/src/components/Models/View/TokenizerModel/Tokenizer';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
+import UpstreamEndpoints from '@/src/components/UpstreamEndpoints/UpstreamEndpoints';
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
+import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialModel } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
 import ModelTypeProperties from './ModelTypeProperties';
-import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 
 interface Props {
   model: DialModel;
@@ -26,6 +32,26 @@ interface Props {
 const ModelProperties: FC<Props> = ({ model, modelsNames, onChangeModel }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  const getReqRef = useRef(useProtectedRequest());
+  const [selectedAdapter, setSelectedAdapter] = useState<DialAdapter | null>(null);
+
+  useEffect(() => {
+    if (model.source?.$type === SOURCE_TYPE.ADAPTER && model.source?.adapterName) {
+      getReqRef.current(getModelsAdapters).then((res) => {
+        if (res.success) {
+          const adapters: DialAdapter[] = res.response || [];
+          setSelectedAdapter(adapters.find((a) => a.name === model.source?.adapterName) ?? null);
+        }
+      });
+    } else {
+      setSelectedAdapter(null);
+    }
+  }, [model.source?.$type, model.source?.adapterName]);
+
+  const showResponsesDefaults =
+    (model.source?.$type === SOURCE_TYPE.ENDPOINTS && !!model.responsesEndpoint) ||
+    (model.source?.$type === SOURCE_TYPE.ADAPTER && !!selectedAdapter?.responsesEndpoint) ||
+    (model.source?.$type === SOURCE_TYPE.CONTAINER && !!model.source?.responsesEndpointPath);
 
   return (
     <div className="h-full flex flex-col gap-8">
@@ -39,7 +65,18 @@ const ModelProperties: FC<Props> = ({ model, modelsNames, onChangeModel }) => {
 
       <ModelTypeProperties model={model} onChangeModel={onChangeModel} />
 
-      <Defaults entity={model} onChangeEntity={onChangeModel} />
+      <Defaults entity={model} onChangeEntity={onChangeModel} title={t(EntityFieldsI18nKey.completionDefaults)} />
+
+      {showResponsesDefaults && (
+        <Defaults
+          entity={model}
+          onChangeEntity={onChangeModel}
+          title={t(EntityFieldsI18nKey.responsesDefaults)}
+          valuesKey="responsesDefaults"
+          tempKey="responsesDefaultsTemp"
+          validationKey="responsesDefaultKeys"
+        />
+      )}
 
       <UpstreamEndpoints entity={model} onChangeEntity={onChangeModel} isKeyOptional withResponses />
 

@@ -75,7 +75,7 @@ import {
   VERSION_COLUMN,
 } from './base-columns';
 import { dateTimeColumn, numericColumn, priceColumn } from './configs';
-import { auditStringFilter, dateFilter, evalStringFilter } from './filters';
+import { baseStringFilter, dateFilter, evalStringFilter } from './filters';
 import RowExpanderCellRenderer from '@/src/components/Grid/CellRenderers/RowExpanderCellRenderer';
 import ChildrenActivityTypeCellRenderer from '@/src/components/Grid/CellRenderers/ChildrenActivityTypeCellRenderer';
 import { GridFilterType } from '@/src/types/grid-filter';
@@ -227,7 +227,7 @@ export const ACTIVITY_AUDIT_COLUMNS = (t: (s: string) => string, isSingleEntity?
     {
       field: 'activityType',
       headerName: 'Activity type',
-      ...auditStringFilter,
+      ...baseStringFilter,
       cellRenderer: ChildrenActivityTypeCellRenderer,
     },
     {
@@ -236,9 +236,9 @@ export const ACTIVITY_AUDIT_COLUMNS = (t: (s: string) => string, isSingleEntity?
       valueFormatter: ({ value }) => getFormattedResourceType(value, t),
       tooltipValueGetter: ({ value }) => getFormattedResourceType(value, t),
       filterValueGetter: (params) => getFormattedResourceType(params.data[params.colDef.field || ''], t),
-      ...auditStringFilter,
+      ...baseStringFilter,
     },
-    { field: 'resourceId', headerName: 'Resource identifier', ...auditStringFilter },
+    { field: 'resourceId', headerName: 'Resource identifier', ...baseStringFilter },
     {
       field: 'epochTimestampMs',
       headerName: 'Time',
@@ -247,9 +247,9 @@ export const ACTIVITY_AUDIT_COLUMNS = (t: (s: string) => string, isSingleEntity?
       floatingFilter: false,
       filter: false,
     },
-    { field: 'initiatedEmail', headerName: 'Initiated', ...auditStringFilter },
-    { field: 'activityId', headerName: 'Activity ID', ...auditStringFilter },
-    { field: 'parentActivityId', headerName: 'Parent ID', ...auditStringFilter },
+    { field: 'initiatedEmail', headerName: 'Initiated', ...baseStringFilter },
+    { field: 'activityId', headerName: 'Activity ID', ...baseStringFilter },
+    { field: 'parentActivityId', headerName: 'Parent ID', ...baseStringFilter },
   ];
 
   if (isSingleEntity) {
@@ -457,8 +457,8 @@ const completionTimeColumn = (headerName: string): ColDef => ({
 
 export const USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
   completionTimeColumn('Completion Time'),
-  { field: 'trace_id', headerName: 'Trace ID', hide: false },
-  { field: 'topic', headerName: 'Topic', hide: false },
+  { field: 'trace_id', headerName: 'Trace ID', hide: false, ...baseStringFilter },
+  { field: 'topic', headerName: 'Topic', hide: false, ...baseStringFilter },
   { field: 'reactions', headerName: 'Reactions', hide: true }, // TODO: not implemented
   { field: 'cached_prompt_tokens', headerName: 'Cached Prompt Tokens', hide: true, ...numericColumn },
   { field: 'prompt_tokens', headerName: 'Prompt Tokens', hide: false, ...numericColumn },
@@ -472,54 +472,54 @@ export const USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
   },
   { field: 'price', headerName: 'Total Price', hide: false, ...priceColumn('Total Price') },
   { field: 'number_request_messages', headerName: 'Number of Request Messages', hide: true, ...numericColumn },
-  { field: 'deployment', headerName: 'Deployment ID', hide: false },
-  { field: 'parent_deployment', headerName: 'Parent Deployment ID', hide: true },
-  { field: 'model', headerName: 'Model', hide: true },
-  { field: 'project_id', headerName: 'Project', hide: false },
-  { field: 'upstream', headerName: 'Upstream', hide: true },
-  { field: 'execution_path', headerName: 'Execution Path', hide: true },
-  { field: 'user_hash', headerName: 'User', hide: false },
-  { field: 'user_title', headerName: 'User Title', hide: true },
-  { field: 'language', headerName: 'Language', hide: true },
-  { field: 'response_id', headerName: 'Response ID', hide: true },
-  { field: 'chat_id', headerName: 'Conversation ID', hide: true },
-  { field: 'core_span_id', headerName: 'Core span ID', hide: true },
-  { field: 'core_parent_span_id', headerName: 'Core parent span ID', hide: false },
+  { field: 'deployment', headerName: 'Deployment ID', hide: false, ...baseStringFilter },
+  { field: 'parent_deployment', headerName: 'Parent Deployment ID', hide: true, ...baseStringFilter },
+  { field: 'model', headerName: 'Model', hide: true, ...baseStringFilter },
+  { field: 'project_id', headerName: 'Project', hide: false, ...baseStringFilter },
+  { field: 'upstream', headerName: 'Upstream', hide: true, ...baseStringFilter },
+  { field: 'execution_path', headerName: 'Execution Path', hide: true, ...baseStringFilter },
+  { field: 'user_hash', headerName: 'User', hide: false, ...baseStringFilter },
+  { field: 'user_title', headerName: 'User Title', hide: true, ...baseStringFilter },
+  { field: 'language', headerName: 'Language', hide: true, ...baseStringFilter },
+  { field: 'response_id', headerName: 'Response ID', hide: true, ...baseStringFilter },
+  { field: 'chat_id', headerName: 'Conversation ID', hide: true, ...baseStringFilter },
+  { field: 'core_span_id', headerName: 'Core span ID', hide: true, ...baseStringFilter },
+  { field: 'core_parent_span_id', headerName: 'Core parent span ID', hide: false, ...baseStringFilter },
 ];
 
 export const USAGE_LOG_CONVERSATIONS_COLUMNS: ColDef[] = [
   completionTimeColumn('Last activity'),
-  { field: 'chat_id', headerName: 'Conversation ID', hide: false },
-  { field: 'topic', headerName: 'Topic', hide: false },
+  { field: 'chat_id', headerName: 'Conversation ID', hide: false, ...baseStringFilter },
+  { field: 'topic', headerName: 'Topic', hide: false, ...baseStringFilter },
   { field: 'cached_prompt_tokens', headerName: 'Cached Prompt Tokens', hide: true, ...numericColumn },
   { field: 'prompt_tokens', headerName: 'Prompt Tokens', hide: false, ...numericColumn },
   { field: 'completion_tokens', headerName: 'Completion Tokens', hide: false, ...numericColumn },
   { field: 'deployment_price', headerName: 'Total Price', hide: false, ...priceColumn('Total Price') },
   { field: 'number_request_messages', headerName: 'Number of Request Messages', hide: true, ...numericColumn },
-  { field: 'deployment', headerName: 'Deployment ID', hide: false },
-  { field: 'project_id', headerName: 'Project', hide: false },
-  { field: 'user_hash', headerName: 'User', hide: false },
-  { field: 'user_title', headerName: 'User Title', hide: true },
-  { field: 'language', headerName: 'Language', hide: true },
+  { field: 'deployment', headerName: 'Deployment ID', hide: false, ...baseStringFilter },
+  { field: 'project_id', headerName: 'Project', hide: false, ...baseStringFilter },
+  { field: 'user_hash', headerName: 'User', hide: false, ...baseStringFilter },
+  { field: 'user_title', headerName: 'User Title', hide: true, ...baseStringFilter },
+  { field: 'language', headerName: 'Language', hide: true, ...baseStringFilter },
 ];
 
 export const USAGE_LOG_MCP_COLUMNS: ColDef[] = [
   completionTimeColumn('Last activity'),
-  { field: 'deployment', headerName: 'Deployment ID', hide: false },
-  { field: 'project_id', headerName: 'Project', hide: false },
-  { field: 'mcp_method', headerName: 'Method', hide: true },
-  { field: 'mcp_tool_call_name', headerName: 'Tool Name', hide: false },
-  { field: 'trace_id', headerName: 'Trace ID', hide: false },
+  { field: 'deployment', headerName: 'Deployment ID', hide: false, ...baseStringFilter },
+  { field: 'project_id', headerName: 'Project', hide: false, ...baseStringFilter },
+  { field: 'mcp_method', headerName: 'Method', hide: true, ...baseStringFilter },
+  { field: 'mcp_tool_call_name', headerName: 'Tool Name', hide: false, ...baseStringFilter },
+  { field: 'trace_id', headerName: 'Trace ID', hide: false, ...baseStringFilter },
 ];
 
 export const USAGE_LOG_ROUTES_COLUMNS: ColDef[] = [
   completionTimeColumn('Last activity'),
-  { field: 'project_id', headerName: 'Project', hide: false },
-  { field: 'deployment', headerName: 'Deployment ID', hide: false },
-  { field: 'route_path', headerName: 'Route', hide: true },
-  { field: 'http_method', headerName: 'Method', hide: true },
-  { field: 'upstream', headerName: 'Upstream', hide: false },
-  { field: 'trace_id', headerName: 'Trace ID', hide: false },
+  { field: 'project_id', headerName: 'Project', hide: false, ...baseStringFilter },
+  { field: 'deployment', headerName: 'Deployment ID', hide: false, ...baseStringFilter },
+  { field: 'route_path', headerName: 'Route', hide: true, ...baseStringFilter },
+  { field: 'http_method', headerName: 'Method', hide: true, ...baseStringFilter },
+  { field: 'upstream', headerName: 'Upstream', hide: false, ...baseStringFilter },
+  { field: 'trace_id', headerName: 'Trace ID', hide: false, ...baseStringFilter },
 ];
 
 export const USAGE_LOG_TOOLSET_TRACES_COLUMNS: ColDef[] = [

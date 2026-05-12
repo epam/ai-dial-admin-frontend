@@ -100,6 +100,7 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset | DialAppli
             editorUrl: undefined,
             applicationTypeSchemaId: undefined,
             applicationProperties: undefined,
+            responsesEndpoint: undefined,
           });
         }
 

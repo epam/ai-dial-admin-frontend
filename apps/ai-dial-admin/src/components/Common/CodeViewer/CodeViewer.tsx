@@ -46,7 +46,7 @@ const CodeViewer: FC<Props> = ({ title, content, hideFullscreen }) => {
     <>
       <div className="border border-secondary rounded overflow-hidden shrink-0">
         <div
-          className="flex items-center justify-between px-3 py-1.5 bg-layer-3 text-xs cursor-pointer select-none hover:bg-layer-4 transition-colors"
+          className="flex items-center justify-between px-3 py-1.5 bg-layer-3 tiny cursor-pointer select-none hover:bg-layer-4 transition-colors"
           onClick={() => setIsOpen((prev) => !prev)}
           role="button"
           aria-expanded={isOpen}

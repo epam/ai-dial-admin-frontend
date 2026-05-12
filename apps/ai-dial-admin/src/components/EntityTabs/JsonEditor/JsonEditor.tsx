@@ -2,7 +2,7 @@
 
 import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 
-import { editor } from 'monaco-editor';
+import type { editor } from 'monaco-editor';
 
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import { clearResolvedErrors, mergeWithIgnoredFields } from '@/src/components/EntityTabs/JsonEditor/utils';

@@ -18,9 +18,21 @@ interface Props {
   entity: EntityDefaults;
   onChangeEntity: (entity: EntityDefaults) => void;
   disabled?: boolean;
+  title?: string;
+  valuesKey?: 'defaults' | 'responsesDefaults';
+  tempKey?: 'defaultsTemp' | 'responsesDefaultsTemp';
+  validationKey?: string;
 }
 
-const Defaults: FC<Props> = ({ entity, onChangeEntity, disabled }) => {
+const Defaults: FC<Props> = ({
+  entity,
+  onChangeEntity,
+  disabled,
+  title,
+  valuesKey = 'defaults',
+  tempKey = 'defaultsTemp',
+  validationKey = 'defaultKeys',
+}) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
@@ -29,42 +41,48 @@ const Defaults: FC<Props> = ({ entity, onChangeEntity, disabled }) => {
   const [defaultItems, setDefaultItems] = useState<DefaultTemp[]>([]);
   const [count, setCount] = useState(0);
 
+  const entityTempValues = entity[tempKey];
+  const entityValues = entity[valuesKey];
+
   const onAddItem = useCallback(() => {
     const defaultsTemp = [...defaultItems, { key: '', value: '', type: 'string' }];
-    onChangeEntity({ ...entity, defaultsTemp });
-  }, [defaultItems, entity, onChangeEntity]);
+    onChangeEntity({ ...entity, [tempKey]: defaultsTemp });
+  }, [defaultItems, entity, onChangeEntity, tempKey]);
 
   const onRemoveItem = useCallback(
     (index: number) => {
       const defaultsTemp = [...defaultItems];
       defaultsTemp.splice(index, 1);
-      onChangeEntity({ ...entity, defaultsTemp });
+      onChangeEntity({ ...entity, [tempKey]: defaultsTemp });
     },
-    [defaultItems, entity, onChangeEntity],
+    [defaultItems, entity, onChangeEntity, tempKey],
   );
 
   const onChangeDefaultItem = useCallback(
     (item: DefaultTemp, index: number) => {
       const defaultsTemp = [...defaultItems];
       defaultsTemp.splice(index, 1, item);
-      onChangeEntity({ ...entity, defaultsTemp });
+      onChangeEntity({ ...entity, [tempKey]: defaultsTemp });
     },
-    [defaultItems, entity, onChangeEntity],
+    [defaultItems, entity, onChangeEntity, tempKey],
   );
 
   useEffect(() => {
-    if (entity.defaultsTemp) {
-      setDefaultItems(entity.defaultsTemp || []);
+    if (entityTempValues) {
+      setDefaultItems(entityTempValues);
     } else {
-      const defaults = convertDefaultsToArray(entity.defaults || {});
+      const defaults = convertDefaultsToArray(entityValues || {});
       setDefaultItems(defaults);
     }
     dispatch({
       type: ValidationActionType.SetField,
-      field: 'defaultKeys',
-      isValid: !entity.defaultsTemp?.some((d) => !d.key),
+      field: validationKey,
+      isValid: !entityTempValues?.some((d) => !d.key),
     });
-  }, [dispatch, entity.defaults, entity.defaultsTemp]);
+    return () => {
+      dispatch({ type: ValidationActionType.RemoveField, field: validationKey });
+    };
+  }, [dispatch, entityValues, entityTempValues, validationKey]);
 
   useEffect(() => {
     if (defaultItems.length === 1 && !defaultItems[0].key && !defaultItems[0].value) {
@@ -75,7 +93,7 @@ const Defaults: FC<Props> = ({ entity, onChangeEntity, disabled }) => {
   }, [defaultItems]);
 
   return (
-    <Accordion title={`${t(EntityFieldsI18nKey.defaults)}: ${count}`} contentClassName="gap-2">
+    <Accordion title={`${title ?? t(EntityFieldsI18nKey.defaults)}: ${count}`} contentClassName="gap-2">
       {defaultItems.map((item, index) => (
         <DefaultItemDeclaration
           key={index}

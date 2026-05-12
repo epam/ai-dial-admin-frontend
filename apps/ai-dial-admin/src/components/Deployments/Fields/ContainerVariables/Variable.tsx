@@ -1,13 +1,12 @@
 'use client';
 
 import { DialRemoveButton, DialSelectField, DialInput } from '@epam/ai-dial-ui-kit';
-import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
+import { IconChevronDown, IconChevronRight, IconGripVertical } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import DraggableItem from '@/src/components/Common/DraggableItem/DraggableItem';
 import { mountTypeDropdownItems } from '@/src/constants/deployments/variables';
-import { EntityPlaceholdersI18nKey, EnvVariablesI18nKey } from '@/src/constants/i18n';
+import { EntityPlaceholdersI18nKey, EnvVariablesI18nKey, BasicI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
@@ -17,6 +16,8 @@ import { FieldError } from '@/src/models/error';
 import { MOUNT_TYPE } from '@/src/types/deployments/variables';
 import { getVariableNameError } from '@/src/utils/deployments/validation';
 import Value from '@/src/components/Deployments/Fields/ContainerVariables/Value';
+import FileButton from '@/src/components/Deployments/Fields/ContainerVariables/FileButton';
+import { useColumnDragDrop } from '@/src/components/Deployments/Fields/ContainerVariables/use-column-drag-drop';
 
 interface Props {
   index: number;
@@ -47,6 +48,12 @@ const Variable: FC<Props> = ({
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [variableNameError, setVariableNameError] = useState<FieldError | null>(null);
+
+  const { dragRef, dropRef, isDragging } = useColumnDragDrop({
+    id: variable.name || '',
+    findColumn,
+    moveColumn,
+  });
 
   useEffect(() => {
     const error = getVariableNameError(variable.name as string, t, existingNames);
@@ -116,76 +123,106 @@ const Variable: FC<Props> = ({
     setIsCollapsed((prev) => !prev);
   }, []);
 
+  const mobileLabel = (key: EnvVariablesI18nKey | BasicI18nKey) =>
+    isTablet && index === 0 ? { label: t(key) } : undefined;
+
+  const hideOnMobileCollapsed = isTablet && isCollapsed;
+
   return (
-    <DraggableItem id={variable.name || ''} findItem={findColumn} moveItem={moveColumn}>
-      <div className="flex flex-row gap-2 flex-1 relative">
-        <div className="flex min-w-0 flex-1 flex-col rounded border border-primary p-3 lg:border-none lg:p-0 lg:flex-initial">
-          {isTablet && (
-            <div className="flex flex-col justify-center cursor-pointer" onClick={toggleCollapse}>
-              <h3 className="small flex items-center">
-                <i className="text-icon-primary mr-2">
-                  {isCollapsed ? (
-                    <IconChevronRight {...BASE_BUTTON_ICON_PROPS} />
-                  ) : (
-                    <IconChevronDown {...BASE_BUTTON_ICON_PROPS} />
-                  )}
-                </i>
-                {t(EnvVariablesI18nKey.EnvVariable)} {index + 1}
-              </h3>
-              {isCollapsed && (
-                <p className="max-w-[220px] md:max-w-1/2 truncate tiny text-secondary mt-3">{variable.name}</p>
-              )}
+    <div
+      ref={dropRef}
+      className={classNames(
+        'relative flex flex-row gap-2 lg:grid lg:grid-cols-subgrid lg:col-span-4 lg:gap-x-4 lg:items-start',
+        index > 0 && 'lg:mt-1',
+      )}
+      style={{ opacity: isDragging ? 0 : 1 }}
+    >
+      <div className="flex min-w-0 flex-1 flex-col rounded border border-primary p-3 lg:contents">
+        {isTablet && (
+          <div className="flex flex-col justify-center cursor-pointer lg:hidden" onClick={toggleCollapse}>
+            <h3 className="small flex items-center">
+              <i className="text-icon-primary mr-2">
+                {isCollapsed ? (
+                  <IconChevronRight {...BASE_BUTTON_ICON_PROPS} />
+                ) : (
+                  <IconChevronDown {...BASE_BUTTON_ICON_PROPS} />
+                )}
+              </i>
+              {t(EnvVariablesI18nKey.EnvVariable)} {index + 1}
+            </h3>
+            {isCollapsed && (
+              <p className="max-w-[220px] md:max-w-1/2 truncate tiny text-secondary mt-3">{variable.name}</p>
+            )}
+          </div>
+        )}
+
+        <div
+          className={classNames('flex flex-col mt-4 gap-y-4 lg:mt-0 lg:contents', hideOnMobileCollapsed && 'hidden')}
+        >
+          <div className="flex flex-row gap-x-2 items-end">
+            <div
+              ref={dragRef}
+              className="hidden lg:flex lg:items-center lg:h-10 cursor-move text-secondary"
+              aria-label="Drag to reorder"
+            >
+              <IconGripVertical {...BASE_BUTTON_ICON_PROPS} />
             </div>
-          )}
-          <div
-            className={classNames('flex flex-col mt-4 gap-y-4 lg:flex-row lg:gap-x-4 lg:mt-0', isCollapsed && 'hidden')}
-          >
-            <DialInput
-              id={`name ${index}`}
-              value={variable.name}
-              placeholder={t(EntityPlaceholdersI18nKey.Name)}
-              labelProps={{ label: index === 0 ? t(EnvVariablesI18nKey.Name) : '' }}
-              error={variableNameError?.text}
-              invalid={!!variableNameError}
-              required
-              className="min-w-[100px]"
-              onChange={onChangeName}
-              disabled={disabled}
-            />
-            <DialInput
-              id={`description ${index}`}
-              className="min-w-[150px]"
-              value={variable.description}
-              placeholder={t(EntityPlaceholdersI18nKey.Description)}
-              labelProps={{ label: index === 0 ? t(EnvVariablesI18nKey.Description) : '' }}
-              onChange={onChangeDescription}
-              disabled={disabled}
-            />
-            <div className="lg:min-w-[350px] lg:max-w-[350px]">
-              <Value
-                value={variable.value}
-                onValueChange={onValueChange}
-                index={index}
-                mountType={variable.mountType}
+            <div className="flex-1 min-w-0">
+              <DialInput
+                id={`name ${index}`}
+                value={variable.name}
+                placeholder={t(EntityPlaceholdersI18nKey.Name)}
+                labelProps={mobileLabel(EnvVariablesI18nKey.Name)}
+                aria-label={t(EnvVariablesI18nKey.Name)}
+                error={variableNameError?.text}
+                invalid={!!variableNameError}
+                required
+                onChange={onChangeName}
                 disabled={disabled}
               />
             </div>
-            <DialSelectField
-              className="min-w-[160px]"
-              value={variable.mountType || mountTypeItems[0].value}
-              id="mountType"
-              options={mountTypeItems}
-              label={index === 0 ? t(EnvVariablesI18nKey.MountType) : ''}
-              onChange={onChangeMountType}
+          </div>
+
+          <DialInput
+            id={`description ${index}`}
+            value={variable.description}
+            placeholder={t(EntityPlaceholdersI18nKey.Description)}
+            labelProps={mobileLabel(EnvVariablesI18nKey.Description)}
+            aria-label={t(EnvVariablesI18nKey.Description)}
+            onChange={onChangeDescription}
+            disabled={disabled}
+          />
+
+          <div className="flex flex-row gap-x-2 items-end">
+            <Value
+              value={variable.value}
+              onValueChange={onValueChange}
+              index={index}
+              mountType={variable.mountType}
               disabled={disabled}
+              fieldName={isTablet && index === 0 ? t(BasicI18nKey.Value) : undefined}
+              ariaLabel={t(BasicI18nKey.Value)}
             />
+            <FileButton onChange={onValueChange} disabled={disabled} />
+          </div>
+
+          <div className="flex flex-row gap-x-2 items-end">
+            <div className="flex-1 min-w-0">
+              <DialSelectField
+                value={variable.mountType || mountTypeItems[0].value}
+                id={`mountType_${index}`}
+                options={mountTypeItems}
+                label={isTablet && index === 0 ? t(EnvVariablesI18nKey.MountType) : undefined}
+                aria-label={t(EnvVariablesI18nKey.MountType)}
+                onChange={onChangeMountType}
+                disabled={disabled}
+              />
+            </div>
+            <DialRemoveButton onClick={onRemove} disabled={disabled} />
           </div>
         </div>
-        <div className="w-[40px] shrink-0">
-          <DialRemoveButton onClick={onRemove} className={index === 0 ? 'mt-3 lg:mt-6' : ''} disabled={disabled} />
-        </div>
       </div>
-    </DraggableItem>
+    </div>
   );
 };
 
