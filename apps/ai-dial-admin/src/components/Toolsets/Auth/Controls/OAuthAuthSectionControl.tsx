@@ -41,7 +41,6 @@ const OAuthAuthSectionControl: FC<Props> = ({
         endpoint={authorizationEndpoint || ''}
         placeholder={t(EntityPlaceholdersI18nKey.AuthorizationEndpoint)}
         onChange={onChangeAuthorizationEndpoint}
-        isFullWidth
       />
 
       <EndpointControl
@@ -49,7 +48,6 @@ const OAuthAuthSectionControl: FC<Props> = ({
         required
         isFullWidth
         label={t(EntityFieldsI18nKey.tokenEndpoint)}
-        isFullWidth
         endpoint={tokenEndpoint || ''}
         placeholder={t(EntityPlaceholdersI18nKey.TokenEndpoint)}
         onChange={onChangeTokenEndpoint}
