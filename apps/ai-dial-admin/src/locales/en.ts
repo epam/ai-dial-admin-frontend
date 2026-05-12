@@ -1362,6 +1362,7 @@ export default {
     LoggedOut: 'Logged out',
     UserLoggedIn: 'Logged in (Personal)',
     AdminLoggedIn: 'Logged in (Organization)',
+    isAuthenticated: 'Logged in',
     SuccessLogin: 'Toolset logged in successfully',
     SuccessLoginDescription: 'List of available tools is in the Tools Overview tab',
     SuccessLogout: 'Toolset logged out successfully',
