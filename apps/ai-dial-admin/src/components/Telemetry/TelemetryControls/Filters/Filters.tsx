@@ -6,7 +6,7 @@ import AddFilter from '@/src/components/Telemetry/TelemetryControls/Filters/AddF
 import Filter from '@/src/components/Telemetry/TelemetryControls/Filters/Filter';
 import { TelemetryI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-import { getEntityQuery, getProjectQuery, MCP_TABLE_NAME } from '@/src/constants/telemetry';
+import { getEntityQuery, getProjectQuery, MCP_TABLE_NAME, ROUTE_TABLE_NAME } from '@/src/constants/telemetry';
 import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { FilterData, TelemetryQuery } from '@/src/models/telemetry';
@@ -38,7 +38,7 @@ const Filters: FC<Props> = ({ filters, setFilters, getData, route, isMcpView = f
       return { data: [] };
     };
 
-    const tableName = isMcpView ? MCP_TABLE_NAME : undefined;
+    const tableName = isMcpView ? MCP_TABLE_NAME : isRouteView ? ROUTE_TABLE_NAME : undefined;
 
     Promise.all([fetch(getProjectQuery(tableName)), fetch(getEntityQuery(tableName))]).then((responses) => {
       const { data: projectData } = responses[0];
@@ -63,7 +63,7 @@ const Filters: FC<Props> = ({ filters, setFilters, getData, route, isMcpView = f
         );
       }
     });
-  }, [getData, isMcpView]);
+  }, [getData, isMcpView, isRouteView]);
 
   const onDelete = useCallback(
     (index: number) => {
@@ -101,7 +101,8 @@ const Filters: FC<Props> = ({ filters, setFilters, getData, route, isMcpView = f
             id={index}
             onClose={onDelete}
             onEdit={addFilter}
-            dropdownData={{ projects, entities }}
+            projects={projects}
+            entities={entities}
             route={route}
             isMcpView={isMcpView}
             isRouteView={isRouteView}
@@ -109,7 +110,8 @@ const Filters: FC<Props> = ({ filters, setFilters, getData, route, isMcpView = f
         ))}
       <AddFilter
         addFilter={addFilter}
-        dropdownData={{ projects, entities }}
+        projects={projects}
+        entities={entities}
         route={route}
         isMcpView={isMcpView}
         isRouteView={isRouteView}

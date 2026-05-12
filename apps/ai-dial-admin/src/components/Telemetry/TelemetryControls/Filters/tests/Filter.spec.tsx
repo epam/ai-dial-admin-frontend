@@ -4,7 +4,6 @@ import { describe, expect, test, vi } from 'vitest';
 import Filter from '../Filter';
 
 const baseFilterData = { type: 'Project', condition: 'Equal', value: ['val'] };
-const baseDropdownData = { projects: [], entities: [] };
 
 describe('Filter', () => {
   test('renders filter type, condition icon, and value', () => {
@@ -13,7 +12,8 @@ describe('Filter', () => {
         id={1}
         onClose={vi.fn()}
         onEdit={vi.fn()}
-        dropdownData={baseDropdownData}
+        projects={[]}
+        entities={[]}
         filterData={baseFilterData as any}
         route={ApplicationRoute.Applications}
       />,
@@ -28,7 +28,8 @@ describe('Filter', () => {
         id={2}
         onClose={onClose}
         onEdit={vi.fn()}
-        dropdownData={baseDropdownData}
+        projects={[]}
+        entities={[]}
         filterData={baseFilterData as any}
         route={ApplicationRoute.Applications}
       />,
@@ -45,7 +46,8 @@ describe('Filter', () => {
         id={3}
         onClose={vi.fn()}
         onEdit={onEdit}
-        dropdownData={baseDropdownData}
+        projects={[]}
+        entities={[]}
         filterData={baseFilterData as any}
         route={ApplicationRoute.Applications}
       />,

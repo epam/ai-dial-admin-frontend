@@ -12,7 +12,8 @@ import { useI18n } from '@/src/locales/client';
 
 interface Props {
   addFilter: (filter: FilterData) => void;
-  dropdownData: { projects: SelectOption[]; entities: SelectOption[] };
+  projects: SelectOption[];
+  entities: SelectOption[];
   children: ReactElement;
   filterData?: FilterData;
   route: ApplicationRoute;
@@ -22,7 +23,8 @@ interface Props {
 
 const AddFilter: FC<Props> = ({
   addFilter,
-  dropdownData,
+  projects,
+  entities,
   children,
   filterData,
   route,
@@ -76,7 +78,8 @@ const AddFilter: FC<Props> = ({
           setCondition={setCondition}
           setValue={setValue}
           onCreate={onCreate}
-          dropdownData={dropdownData}
+          projects={projects}
+          entities={entities}
           reset={reset}
           route={route}
           isMcpView={isMcpView}
@@ -93,7 +96,8 @@ const AddFilter: FC<Props> = ({
           setCondition={setCondition}
           setValue={setValue}
           onCreate={onCreate}
-          dropdownData={dropdownData}
+          projects={projects}
+          entities={entities}
           reset={reset}
           route={route}
           isMcpView={isMcpView}
