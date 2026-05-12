@@ -2,7 +2,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { BreadcrumbConfig } from '@/src/components/Breadcrumbs/models';
 
-export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig | null> = {
+export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig | null>> = {
   [ApplicationRoute.Home]: {
     segments: [{ name: 'Home', i18nKey: MenuI18nKey.Home }],
   },

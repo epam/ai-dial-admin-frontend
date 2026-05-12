@@ -263,6 +263,7 @@ export enum DeleteI18nKey {
   Adapter = 'DeleteEntity.Entities.Adapter',
   InterceptorTemplate = 'DeleteEntity.Entities.InterceptorTemplate',
   TestSuite = 'DeleteEntity.Entities.TestSuite',
+  TestCase = 'DeleteEntity.Entities.TestCase',
   Run = 'DeleteEntity.Entities.Run',
   ApplicationRunner = 'DeleteEntity.Entities.ApplicationRunner',
   McpContainer = 'DeleteEntity.Entities.McpContainer',
