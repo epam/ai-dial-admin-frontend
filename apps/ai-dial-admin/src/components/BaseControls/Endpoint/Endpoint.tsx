@@ -109,7 +109,7 @@ const EndpointControl: FC<Props> = ({
       {...props}
     />
   ) : isDisabled ? (
-    <ComplexInput id={id} label={label} value={endpoint || ''} copyable disabled />
+    <ComplexInput id={id} label={label} value={endpoint || ''} copyable disabled isFullWidth={isFullWidth} />
   ) : (
     <DialInput
       prefix={prefix}
