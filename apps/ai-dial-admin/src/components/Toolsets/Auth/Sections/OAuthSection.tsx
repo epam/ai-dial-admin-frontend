@@ -93,6 +93,7 @@ const OAuthSection: FC<Props> = ({ disabled, authSettings, view, onChange }) => 
         <EndpointControl
           disabled={isAuthDisabled}
           required
+          isFullWidth
           id="authEndpoint"
           label={t(EntityFieldsI18nKey.authorizationEndpoint)}
           endpoint={authSettings?.authorizationEndpoint || ''}
@@ -106,6 +107,7 @@ const OAuthSection: FC<Props> = ({ disabled, authSettings, view, onChange }) => 
           id="tokenEndpoint"
           disabled={isAuthDisabled}
           required
+          isFullWidth
           label={t(EntityFieldsI18nKey.tokenEndpoint)}
           endpoint={authSettings?.tokenEndpoint || ''}
           placeholder={t(EntityPlaceholdersI18nKey.TokenEndpoint)}
