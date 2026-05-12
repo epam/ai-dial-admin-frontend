@@ -1,6 +1,11 @@
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storage';
-import { updateColumnVisibilityInStorage, getColumnVisibilityFromGridState } from './utils';
+import {
+  updateColumnVisibilityInStorage,
+  getColumnVisibilityFromGridState,
+  applyColumnStateOrderToColDefs,
+  haveColDefsSamePanelState,
+} from './utils';
 import { GRID_COLUMNS_KEY } from './constants';
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 
@@ -88,6 +93,25 @@ describe('Grid :: getColumnVisibilityFromGridState', () => {
     ]);
   });
 
+  test('should apply stored column order to columnDefs', () => {
+    const storedModel = {
+      columns: [
+        { colId: 'status', hide: false },
+        { colId: 'name', hide: false },
+      ],
+      filters: {},
+    };
+    vi.mocked(getFromLocalStorage).mockReturnValue(JSON.stringify(storedModel));
+
+    const colDefs = [
+      { field: 'name', hide: false, headerName: 'Name' },
+      { field: 'status', hide: false, headerName: 'Status' },
+    ];
+    const result = getColumnVisibilityFromGridState(ApplicationRoute.Models, colDefs);
+
+    expect(result?.map((col) => col.field)).toEqual(['status', 'name']);
+  });
+
   test('should keep columnDef hide value when column not in storage', () => {
     const storedModel = {
       columns: [{ colId: 'name', hide: true }],
@@ -103,5 +127,49 @@ describe('Grid :: getColumnVisibilityFromGridState', () => {
 
     expect(result![0].hide).toBe(true);
     expect(result![1].hide).toBe(false);
+  });
+});
+
+describe('Grid :: applyColumnStateOrderToColDefs', () => {
+  test('should reorder columnDefs to match column state', () => {
+    const colDefs = [
+      { field: 'name', hide: false, headerName: 'Name' },
+      { field: 'status', hide: false, headerName: 'Status' },
+    ];
+
+    const result = applyColumnStateOrderToColDefs(colDefs, [
+      { colId: 'status', hide: true },
+      { colId: 'name', hide: false },
+    ]);
+
+    expect(result).toEqual([
+      { field: 'status', hide: true, headerName: 'Status' },
+      { field: 'name', hide: false, headerName: 'Name' },
+    ]);
+  });
+});
+
+describe('Grid :: haveColDefsSamePanelState', () => {
+  test('should return true when order and visibility match', () => {
+    const colDefs = [
+      { field: 'name', hide: false },
+      { field: 'status', hide: true },
+    ];
+
+    expect(haveColDefsSamePanelState(colDefs, [...colDefs])).toBe(true);
+  });
+
+  test('should return false when order differs', () => {
+    const colDefs = [
+      { field: 'name', hide: false },
+      { field: 'status', hide: false },
+    ];
+
+    expect(
+      haveColDefsSamePanelState(colDefs, [
+        { field: 'status', hide: false },
+        { field: 'name', hide: false },
+      ]),
+    ).toBe(false);
   });
 });
