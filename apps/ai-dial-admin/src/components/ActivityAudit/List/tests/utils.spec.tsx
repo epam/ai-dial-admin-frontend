@@ -2,6 +2,7 @@ import { ActivityAuditRevision } from '@/src/components/ActivityAudit/models';
 import {
   getActivityAuditColumns,
   getAuditActivityHref,
+  getDeploymentActivityAuditColumns,
   getEndOfDay,
   getGridFilters,
   getStartOfDay,
@@ -22,9 +23,14 @@ vi.mock('@/src/constants/grid-columns/actions', () => ({
   getViewDetailsOperation: vi.fn((cb) => ({ type: 'viewDetails', cb })),
 }));
 
-vi.mock('@/src/constants/grid-columns/grid-columns', () => ({
-  ACTIVITY_AUDIT_COLUMNS: vi.fn(() => [{ colId: 'a' }, { colId: 'b' }]),
-}));
+vi.mock('@/src/constants/grid-columns/grid-columns', async () => {
+  const actual = (await vi.importActual('@/src/types/activity-audit')) as { ActivityAuditView: Record<string, string> };
+  return {
+    ACTIVITY_AUDIT_COLUMNS: vi.fn((_t: unknown, view: string) =>
+      view === actual.ActivityAuditView.Deployments ? [{ colId: 'd1' }, { colId: 'd2' }] : [{ colId: 'a' }, { colId: 'b' }],
+    ),
+  };
+});
 
 describe('Activity Audit List utils :: getActivityAuditColumns', () => {
   test('returns columns with action column at the end', () => {
@@ -43,6 +49,33 @@ describe('Activity Audit List utils :: getActivityAuditColumns', () => {
     expect((cols[2] as { actions: { type: string }[] }).actions[0].type).toBe('open');
     expect((cols[2] as { actions: { type: string }[] }).actions[1].type).toBe('viewDetails');
     expect((cols[2] as { actions: { type: string }[] }).actions[2].type).toBe('rollback');
+  });
+});
+
+describe('Activity Audit List utils :: getDeploymentActivityAuditColumns', () => {
+  test('returns deployment columns with only Open in new tab action', () => {
+    const openMock = vi.fn();
+    const t = (s: string) => s;
+
+    const cols = getDeploymentActivityAuditColumns(t, openMock);
+
+    expect(cols).toHaveLength(3);
+    expect(cols[0]).toEqual({ colId: 'd1' });
+    expect(cols[1]).toEqual({ colId: 'd2' });
+    expect(cols[2].colId).toBe('actions');
+    const actions = (cols[2] as { actions: { type: string }[] }).actions;
+    expect(actions).toHaveLength(1);
+    expect(actions[0].type).toBe('open');
+  });
+
+  test('returns deployment columns with an empty action list when no open handler', () => {
+    const t = (s: string) => s;
+
+    const cols = getDeploymentActivityAuditColumns(t);
+
+    expect(cols).toHaveLength(3);
+    const actions = (cols[2] as { actions: { type: string }[] }).actions;
+    expect(actions).toHaveLength(0);
   });
 });
 

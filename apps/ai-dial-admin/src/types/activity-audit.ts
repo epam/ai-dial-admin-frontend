@@ -23,6 +23,12 @@ export enum ActivityAuditType {
   Delete = 'Delete',
 }
 
+export enum ActivityAuditView {
+  Config = 'Config',
+  Deployments = 'Deployments',
+  Asset = 'Asset',
+}
+
 export enum ActivityAuditResourceType {
   MODEL = 'Model',
   APPLICATION = 'Application',
@@ -36,4 +42,15 @@ export enum ActivityAuditResourceType {
   TOOLSET = 'ToolSet',
   SYSTEM_PROPERTIES = 'GlobalSettings',
   ADMIN_PROPERTIES = 'AdminSettings',
+  ADAPTER_DEPLOYMENT = 'AdapterDeployment',
+  APPLICATION_DEPLOYMENT = 'ApplicationDeployment',
+  INTERCEPTOR_DEPLOYMENT = 'InterceptorDeployment',
+  MCP_DEPLOYMENT = 'McpDeployment',
+  NIM_DEPLOYMENT = 'NimDeployment',
+  INFERENCE_DEPLOYMENT = 'InferenceDeployment',
+  ADAPTER_IMAGE_DEFINITION = 'AdapterImageDefinition',
+  APPLICATION_IMAGE_DEFINITION = 'ApplicationImageDefinition',
+  INTERCEPTOR_IMAGE_DEFINITION = 'InterceptorImageDefinition',
+  MCP_IMAGE_DEFINITION = 'McpImageDefinition',
+  IMAGE_BUILD_DOMAIN_WHITELIST = 'ImageBuildDomainWhitelist',
 }

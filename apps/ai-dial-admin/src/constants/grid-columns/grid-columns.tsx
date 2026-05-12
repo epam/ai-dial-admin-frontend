@@ -78,6 +78,7 @@ import { dateTimeColumn, numericColumn, priceColumn } from './configs';
 import { baseStringFilter, dateFilter, evalStringFilter } from './filters';
 import RowExpanderCellRenderer from '@/src/components/Grid/CellRenderers/RowExpanderCellRenderer';
 import ChildrenActivityTypeCellRenderer from '@/src/components/Grid/CellRenderers/ChildrenActivityTypeCellRenderer';
+import { ActivityAuditView } from '@/src/types/activity-audit';
 import { GridFilterType } from '@/src/types/grid-filter';
 
 export const COLUMN_PANEL_PREFIX = 'column_';
@@ -211,53 +212,60 @@ export const MCP_TOOLS_COLUMNS: ColDef[] = [
   },
 ];
 
-export const ACTIVITY_AUDIT_COLUMNS = (t: (s: string) => string, isSingleEntity?: boolean): ColDef[] => {
-  const columns: ColDef[] = [
-    {
-      headerName: '',
-      field: 'expanderColumn',
-      cellClass: NO_BORDER_CLASS,
-      flex: 1,
-      maxWidth: 30,
-      sortable: false,
-      filter: false,
-      floatingFilter: false,
-      cellRenderer: RowExpanderCellRenderer,
-    },
-    {
-      field: 'activityType',
-      headerName: 'Activity type',
-      ...baseStringFilter,
-      cellRenderer: ChildrenActivityTypeCellRenderer,
-    },
-    {
-      field: 'resourceType',
-      headerName: 'Resource type',
-      valueFormatter: ({ value }) => getFormattedResourceType(value, t),
-      tooltipValueGetter: ({ value }) => getFormattedResourceType(value, t),
-      filterValueGetter: (params) => getFormattedResourceType(params.data[params.colDef.field || ''], t),
-      ...baseStringFilter,
-    },
-    { field: 'resourceId', headerName: 'Resource identifier', ...baseStringFilter },
-    {
-      field: 'epochTimestampMs',
-      headerName: 'Time',
-      sort: 'desc',
-      ...dateTimeColumn,
-      floatingFilter: false,
-      filter: false,
-    },
-    { field: 'initiatedEmail', headerName: 'Initiated', ...baseStringFilter },
-    { field: 'activityId', headerName: 'Activity ID', ...baseStringFilter },
-    { field: 'parentActivityId', headerName: 'Parent ID', ...baseStringFilter },
-  ];
-
-  if (isSingleEntity) {
-    return [columns[1], ...columns.slice(4)];
-  }
-
-  return columns;
-};
+export const ACTIVITY_AUDIT_COLUMNS = (
+  t: (s: string) => string,
+  view: ActivityAuditView = ActivityAuditView.Config,
+  isSingleEntity = false,
+): ColDef[] => [
+  ...(!isSingleEntity && view === ActivityAuditView.Config
+    ? [
+        {
+          headerName: '',
+          field: 'expanderColumn',
+          cellClass: NO_BORDER_CLASS,
+          flex: 1,
+          maxWidth: 30,
+          sortable: false,
+          filter: false,
+          floatingFilter: false,
+          cellRenderer: RowExpanderCellRenderer,
+        } as ColDef,
+      ]
+    : []),
+  {
+    field: 'activityType',
+    headerName: 'Activity type',
+    ...baseStringFilter,
+    cellRenderer: ChildrenActivityTypeCellRenderer,
+  },
+  ...(!isSingleEntity
+    ? [
+        {
+          field: 'resourceType',
+          headerName: 'Resource type',
+          valueFormatter: ({ value }) => getFormattedResourceType(value, t),
+          tooltipValueGetter: ({ value }) => getFormattedResourceType(value, t),
+          filterValueGetter: (params) => getFormattedResourceType(params.data[params.colDef.field || ''], t),
+          ...baseStringFilter,
+        } as ColDef,
+        { field: 'resourceId', headerName: 'Resource identifier', ...baseStringFilter } as ColDef,
+      ]
+    : []),
+  ...(view === ActivityAuditView.Deployments
+    ? [{ field: 'version', headerName: 'Version', ...baseStringFilter } as ColDef]
+    : []),
+  {
+    field: 'epochTimestampMs',
+    headerName: 'Time',
+    sort: 'desc',
+    ...dateTimeColumn,
+    floatingFilter: false,
+    filter: false,
+  },
+  { field: 'initiatedEmail', headerName: 'Initiated', ...baseStringFilter },
+  { field: 'activityId', headerName: 'Activity ID', ...baseStringFilter },
+  { field: 'parentActivityId', headerName: 'Parent ID', ...baseStringFilter },
+];
 
 export const BASE_KEYS_COLUMNS: ColDef[] = [
   DISPLAY_NAME_COLUMN,

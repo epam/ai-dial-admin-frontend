@@ -43,6 +43,61 @@ describe('Formatters :: getFormattedResourceType', () => {
     const res = getFormattedResourceType(ActivityAuditResourceType.APPLICATION, t);
     expect(res).toBe('Application');
   });
+
+  test('Should return Adapter container label for AdapterDeployment', () => {
+    const res = getFormattedResourceType(ActivityAuditResourceType.ADAPTER_DEPLOYMENT, t);
+    expect(res).toBe(EntitiesI18nKey.AdapterContainer);
+  });
+
+  test('Should return Application container label for ApplicationDeployment', () => {
+    const res = getFormattedResourceType(ActivityAuditResourceType.APPLICATION_DEPLOYMENT, t);
+    expect(res).toBe(EntitiesI18nKey.ApplicationContainer);
+  });
+
+  test('Should return Interceptor container label for InterceptorDeployment', () => {
+    const res = getFormattedResourceType(ActivityAuditResourceType.INTERCEPTOR_DEPLOYMENT, t);
+    expect(res).toBe(EntitiesI18nKey.InterceptorContainer);
+  });
+
+  test('Should return MCP container label for McpDeployment', () => {
+    const res = getFormattedResourceType(ActivityAuditResourceType.MCP_DEPLOYMENT, t);
+    expect(res).toBe(EntitiesI18nKey.McpContainer);
+  });
+
+  test('Should flatten NimDeployment to Model serving label', () => {
+    const res = getFormattedResourceType(ActivityAuditResourceType.NIM_DEPLOYMENT, t);
+    expect(res).toBe(EntitiesI18nKey.ModelServingLabel);
+  });
+
+  test('Should flatten InferenceDeployment to Model serving label', () => {
+    const res = getFormattedResourceType(ActivityAuditResourceType.INFERENCE_DEPLOYMENT, t);
+    expect(res).toBe(EntitiesI18nKey.ModelServingLabel);
+  });
+
+  test('Should flatten AdapterImageDefinition to Image label', () => {
+    const res = getFormattedResourceType(ActivityAuditResourceType.ADAPTER_IMAGE_DEFINITION, t);
+    expect(res).toBe(EntitiesI18nKey.Image);
+  });
+
+  test('Should flatten ApplicationImageDefinition to Image label', () => {
+    const res = getFormattedResourceType(ActivityAuditResourceType.APPLICATION_IMAGE_DEFINITION, t);
+    expect(res).toBe(EntitiesI18nKey.Image);
+  });
+
+  test('Should flatten InterceptorImageDefinition to Image label', () => {
+    const res = getFormattedResourceType(ActivityAuditResourceType.INTERCEPTOR_IMAGE_DEFINITION, t);
+    expect(res).toBe(EntitiesI18nKey.Image);
+  });
+
+  test('Should flatten McpImageDefinition to Image label', () => {
+    const res = getFormattedResourceType(ActivityAuditResourceType.MCP_IMAGE_DEFINITION, t);
+    expect(res).toBe(EntitiesI18nKey.Image);
+  });
+
+  test('Should return Global firewall label for ImageBuildDomainWhitelist', () => {
+    const res = getFormattedResourceType(ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST, t);
+    expect(res).toBe(EntitiesI18nKey.GlobalFirewall);
+  });
 });
 
 describe('Formatters :: formatAttachment ', () => {
