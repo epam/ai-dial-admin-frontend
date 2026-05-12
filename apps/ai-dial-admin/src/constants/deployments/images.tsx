@@ -58,6 +58,11 @@ export const IMAGE_TRANSPORT_I18N_KEYS: Record<IMAGE_TRANSPORT_TYPE, string> = {
   [IMAGE_TRANSPORT_TYPE.REMOTE]: ImagesI18nKey.ImageTransportRemote,
 };
 
+export const IMAGE_BUILDER_AUDIT_I18N_KEYS: Record<IMAGE_BUILDER_TYPE, string> = {
+  [IMAGE_BUILDER_TYPE.ROOTLESS]: ImagesI18nKey.BuilderRootlessShort,
+  [IMAGE_BUILDER_TYPE.ROOT]: ImagesI18nKey.BuilderRoot,
+};
+
 export const IMAGE_SOURCE_TYPE_I18N_KEYS: Record<IMAGE_SOURCE_TYPE, string> = {
   [IMAGE_SOURCE_TYPE.DOCKER]: ImagesI18nKey.SourceDocker,
   [IMAGE_SOURCE_TYPE.CODE]: ImagesI18nKey.SourceCode,

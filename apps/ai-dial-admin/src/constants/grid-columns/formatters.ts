@@ -1,8 +1,10 @@
 import { Big } from 'big.js';
 
 import { ALL_ATTACHMENTS } from '@/src/constants/dial-base-entity';
+import { IMAGE_SOURCE_TYPE_I18N_KEYS } from '@/src/constants/deployments/images';
 import { AttachmentsI18nKey, BasicI18nKey, EntitiesI18nKey, MenuI18nKey, SourceI18nKey } from '@/src/constants/i18n';
 import { ActivityAuditResourceType } from '@/src/types/activity-audit';
+import { IMAGE_SOURCE_TYPE } from '@/src/types/deployments/images';
 import { formatNumberByDelimiter } from '@/src/utils/formatting/number-formatting';
 import { SOURCE_FIELD, SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { CONTAINER_SOURCE_TYPE, ContainerSource } from '@/src/types/deployments/containers';
@@ -83,6 +85,10 @@ export const numberValueFormatter = (value?: string | number) => {
 };
 
 export const sourceTypeFormatter = (value: string, t: (key: string) => string, view?: ApplicationRoute) => {
+  const imageSourceKey = IMAGE_SOURCE_TYPE_I18N_KEYS[value as IMAGE_SOURCE_TYPE];
+  if (imageSourceKey) {
+    return t(imageSourceKey);
+  }
   if (value === SOURCE_TYPE.ADAPTER) {
     return t(SourceI18nKey.Adapter);
   } else if (value === SOURCE_TYPE.CONTAINER) {

@@ -14,6 +14,10 @@ export const auditResourceRoute: Partial<Record<ActivityAuditResourceType, Appli
   [ActivityAuditResourceType.INTERCEPTOR_TEMPLATE]: ApplicationRoute.InterceptorTemplates,
   [ActivityAuditResourceType.TOOLSET]: ApplicationRoute.Toolsets,
   [ActivityAuditResourceType.SYSTEM_PROPERTIES]: ApplicationRoute.SystemProperties,
+  [ActivityAuditResourceType.ADAPTER_IMAGE_DEFINITION]: ApplicationRoute.Images,
+  [ActivityAuditResourceType.APPLICATION_IMAGE_DEFINITION]: ApplicationRoute.Images,
+  [ActivityAuditResourceType.INTERCEPTOR_IMAGE_DEFINITION]: ApplicationRoute.Images,
+  [ActivityAuditResourceType.MCP_IMAGE_DEFINITION]: ApplicationRoute.Images,
 };
 
 export const routeAuditResource: Partial<Record<ApplicationRoute, ActivityAuditResourceType>> = {
