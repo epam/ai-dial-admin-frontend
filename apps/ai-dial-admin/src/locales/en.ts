@@ -279,6 +279,7 @@ export default {
     Entities: {
       Model: 'Model',
       TestSuite: 'Test Suite',
+      TestCase: 'Test case',
       Application: 'Application',
       Toolset: 'Toolset',
       Interceptor: 'Interceptor',
