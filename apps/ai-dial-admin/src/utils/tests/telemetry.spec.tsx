@@ -106,13 +106,12 @@ describe('Utils :: telemetry :: getFormattedDataFilters', () => {
       { $eq: { left: 'project_id', right: "'Project1'" } },
     ]);
   });
-
-  test('returns $in operator for multiple values with Equal condition', () => {
+  -test('returns $in operator for multiple values with Equal condition', () => {
     const filters = [
       { type: FILTER_TYPE.Entity, value: ['Entity1', 'Entity2', 'Entity3'], condition: FILTER_OPERATOR.Equal },
     ];
     const result = getFormattedDataFilters(filters, null);
-    expect(result).toEqual([{ $in: { left: 'deployment', right: ['Entity1', 'Entity2', 'Entity3'] } }]);
+    expect(result).toEqual([{ $in: { left: 'deployment', right: ["'Entity1'", "'Entity2'", "'Entity3'"] } }]);
   });
 
   test('returns $nin operator for multiple values with NotEqual condition', () => {
@@ -120,7 +119,7 @@ describe('Utils :: telemetry :: getFormattedDataFilters', () => {
       { type: FILTER_TYPE.Project, value: ['Project1', 'Project2'], condition: FILTER_OPERATOR.NotEqual },
     ];
     const result = getFormattedDataFilters(filters, null);
-    expect(result).toEqual([{ $nin: { left: 'project_id', right: ['Project1', 'Project2'] } }]);
+    expect(result).toEqual([{ $nin: { left: 'project_id', right: [`'Project1'`, `'Project2'`] } }]);
   });
 
   test('handles text input conditions with array values', () => {

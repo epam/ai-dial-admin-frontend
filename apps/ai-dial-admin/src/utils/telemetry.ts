@@ -75,7 +75,7 @@ export const getFormattedDataFilters = (filters: FilterData[], entityName?: stri
     // Handle multi-value filters with $in/$nin operators
     if (isExactMatch && filter.value.length > 1) {
       const operator = filter.condition === FILTER_OPERATOR.Equal ? '$in' : '$nin';
-      userFilters.push({ [operator]: { left: left, right: filter.value } });
+      userFilters.push({ [operator]: { left: left, right: filter.value.map((v) => `'${v}'`) } });
     } else {
       // Single value or text input conditions
       const singleValue = filter.value[0] || '';
