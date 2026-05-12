@@ -27,7 +27,9 @@ vi.mock('@/src/constants/grid-columns/grid-columns', async () => {
   const actual = (await vi.importActual('@/src/types/activity-audit')) as { ActivityAuditView: Record<string, string> };
   return {
     ACTIVITY_AUDIT_COLUMNS: vi.fn((_t: unknown, view: string) =>
-      view === actual.ActivityAuditView.Deployments ? [{ colId: 'd1' }, { colId: 'd2' }] : [{ colId: 'a' }, { colId: 'b' }],
+      view === actual.ActivityAuditView.Deployments
+        ? [{ colId: 'd1' }, { colId: 'd2' }]
+        : [{ colId: 'a' }, { colId: 'b' }],
     ),
   };
 });
