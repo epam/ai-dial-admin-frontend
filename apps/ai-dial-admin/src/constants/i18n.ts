@@ -228,6 +228,13 @@ export enum EntitiesI18nKey {
   Serving = 'Entities.Serving',
   ModelServing = 'Entities.ModelServing',
   Container = 'Entities.Container',
+  AdapterContainer = 'Entities.AdapterContainer',
+  ApplicationContainer = 'Entities.ApplicationContainer',
+  McpContainer = 'Entities.McpContainer',
+  ModelServingLabel = 'Entities.ModelServingLabel',
+  Image = 'Entities.Image',
+  GlobalFirewall = 'Entities.GlobalFirewall',
+  Version = 'Entities.Version',
   DiscardChanges = 'Entities.DiscardChanges',
   DiscardChangesDescription = 'Entities.DiscardChangesDescription',
   EndpointsSourceType = 'Entities.EndpointsSourceType',
@@ -668,6 +675,7 @@ export enum TelemetryI18nKey {
   RouteRequests = 'Telemetry.RouteRequests',
   Unknown = 'Telemetry.Unknown',
   ActivityViewConfig = 'Telemetry.ActivityView.Config',
+  ActivityViewDeployments = 'Telemetry.ActivityView.Deployments',
   ActivityViewAsset = 'Telemetry.ActivityView.Asset',
 }
 

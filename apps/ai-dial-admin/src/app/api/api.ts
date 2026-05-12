@@ -24,6 +24,7 @@ import { MetricsApi } from '@/src/server/eval/metrics-api';
 import { HuggingfaceApi } from '@/src/server/deployments/huggingface';
 import { McpRegistryApi } from '@/src/server/deployments/mcp-registry';
 import { DeploymentConfigApi } from '@/src/server/deployments/config';
+import { DeploymentAuditApi } from '@/src/server/deployments/audit-api';
 import { RunsApi } from '@/src/server/eval/runs-api';
 import { AnalyticsApi } from '@/src/server/eval/analytics-api';
 
@@ -120,6 +121,10 @@ export const mcpRegistryApi = new McpRegistryApi({
 });
 
 export const deploymentConfigApi = new DeploymentConfigApi({
+  host: process.env.DIAL_DEPLOYMENTS_API_URL,
+});
+
+export const deploymentAuditApi = new DeploymentAuditApi({
   host: process.env.DIAL_DEPLOYMENTS_API_URL,
 });
 

@@ -20,6 +20,28 @@ export const getFormattedResourceType = (value: string, t: (key: string) => stri
   if (value === ActivityAuditResourceType.SYSTEM_PROPERTIES) {
     return t(MenuI18nKey.SystemProperties);
   }
+
+  switch (value) {
+    case ActivityAuditResourceType.ADAPTER_DEPLOYMENT:
+      return t(EntitiesI18nKey.AdapterContainer);
+    case ActivityAuditResourceType.APPLICATION_DEPLOYMENT:
+      return t(EntitiesI18nKey.ApplicationContainer);
+    case ActivityAuditResourceType.INTERCEPTOR_DEPLOYMENT:
+      return t(EntitiesI18nKey.InterceptorContainer);
+    case ActivityAuditResourceType.MCP_DEPLOYMENT:
+      return t(EntitiesI18nKey.McpContainer);
+    case ActivityAuditResourceType.NIM_DEPLOYMENT:
+    case ActivityAuditResourceType.INFERENCE_DEPLOYMENT:
+      return t(EntitiesI18nKey.ModelServingLabel);
+    case ActivityAuditResourceType.ADAPTER_IMAGE_DEFINITION:
+    case ActivityAuditResourceType.APPLICATION_IMAGE_DEFINITION:
+    case ActivityAuditResourceType.INTERCEPTOR_IMAGE_DEFINITION:
+    case ActivityAuditResourceType.MCP_IMAGE_DEFINITION:
+      return t(EntitiesI18nKey.Image);
+    case ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST:
+      return t(EntitiesI18nKey.GlobalFirewall);
+  }
+
   return value;
 };
 

@@ -25,6 +25,7 @@ import {
 } from '../grid-columns';
 import { ColDef } from 'ag-grid-community';
 import { describe, expect, test, vi } from 'vitest';
+import { ActivityAuditView } from '@/src/types/activity-audit';
 import { ApplicationRoute } from '@/src/types/routes';
 
 vi.mock('@/src/constants/ag-grid', () => ({
@@ -72,17 +73,43 @@ describe('Constants :: grid columns', () => {
     expect(ASSETS_COLUMNS.some((c) => c.field === 'version')).toBe(true);
   });
 
-  test('ACTIVITY_AUDIT_COLUMNS returns expected columns', () => {
+  test('ACTIVITY_AUDIT_COLUMNS returns expected columns for Config view', () => {
     const t = (s: string) => s;
-    const cols1 = ACTIVITY_AUDIT_COLUMNS(t);
-    expect(Array.isArray(cols1)).toBe(true);
-    expect(cols1.some((c) => c.field === 'activityType')).toBe(true);
-    expect(cols1.some((c) => c.field === 'resourceId')).toBe(true);
+    const cols = ACTIVITY_AUDIT_COLUMNS(t, ActivityAuditView.Config);
+    expect(Array.isArray(cols)).toBe(true);
+    expect(cols.some((c) => c.field === 'expanderColumn')).toBe(true);
+    expect(cols.some((c) => c.field === 'activityType')).toBe(true);
+    expect(cols.some((c) => c.field === 'resourceId')).toBe(true);
+    expect(cols.some((c) => c.field === 'parentActivityId')).toBe(true);
+    expect(cols.some((c) => c.field === 'version')).toBe(false);
+  });
 
-    const cols2 = ACTIVITY_AUDIT_COLUMNS(t, true);
-    expect(Array.isArray(cols2)).toBe(true);
-    expect(cols2.some((c) => c.field === 'activityType')).toBe(true);
-    expect(cols2.some((c) => c.field === 'activityId')).toBe(true);
+  test('ACTIVITY_AUDIT_COLUMNS returns expected columns for embedded (single-entity) Config view', () => {
+    const t = (s: string) => s;
+    const cols = ACTIVITY_AUDIT_COLUMNS(t, ActivityAuditView.Config, true);
+    expect(Array.isArray(cols)).toBe(true);
+    expect(cols.some((c) => c.field === 'expanderColumn')).toBe(false);
+    expect(cols.some((c) => c.field === 'resourceType')).toBe(false);
+    expect(cols.some((c) => c.field === 'resourceId')).toBe(false);
+    expect(cols.some((c) => c.field === 'activityType')).toBe(true);
+    expect(cols.some((c) => c.field === 'activityId')).toBe(true);
+  });
+
+  test('ACTIVITY_AUDIT_COLUMNS returns expected columns in order for Deployments view', () => {
+    const t = (s: string) => s;
+    const cols = ACTIVITY_AUDIT_COLUMNS(t, ActivityAuditView.Deployments);
+    expect(Array.isArray(cols)).toBe(true);
+    expect(cols.map((c) => c.field)).toEqual([
+      'activityType',
+      'resourceType',
+      'resourceId',
+      'version',
+      'epochTimestampMs',
+      'initiatedEmail',
+      'activityId',
+      'parentActivityId',
+    ]);
+    expect(cols.some((c) => c.field === 'expanderColumn')).toBe(false);
   });
 
   test('IMAGE_DEPENDENCIES_COLUMNS returns expected columns', () => {
