@@ -46,16 +46,20 @@ const Filters: FC<Props> = ({ filters, setFilters, getData, route, isMcpView = f
 
       if (projectData?.length) {
         setProjects(
-          projectData.map((arr: string[]) => {
-            return { value: arr[0], label: arr[0] };
-          }),
+          projectData
+            .filter((v) => !!v[0])
+            .map((arr: string[]) => {
+              return { value: arr[0], label: arr[0] };
+            }),
         );
       }
       if (entityData?.length) {
         setEntities(
-          entityData.map((arr: string[]) => {
-            return { value: arr[0], label: arr[0] };
-          }),
+          entityData
+            .filter((v) => !!v[0])
+            .map((arr: string[]) => {
+              return { value: arr[0], label: arr[0] };
+            }),
         );
       }
     });

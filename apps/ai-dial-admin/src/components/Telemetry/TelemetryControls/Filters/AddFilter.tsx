@@ -1,4 +1,4 @@
-import React, { FC, ReactElement, useCallback, useState } from 'react';
+import React, { FC, ReactElement, use, useCallback, useEffect, useMemo, useState } from 'react';
 import { SelectOption } from '@epam/ai-dial-ui-kit';
 
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
@@ -33,23 +33,33 @@ const AddFilter: FC<Props> = ({
   const t = useI18n();
   const filterTypeConfig = getFilterTypeConfig(t, isMcpView, isRouteView);
   const filterConditionConfig = getFilterConditionConfig(t);
-  const typeValue =
-    route === ApplicationRoute.Dashboard
+
+  const typeValue = useMemo(() => {
+    return route === ApplicationRoute.Dashboard
       ? filterTypeConfig[0].value
       : filterTypeConfig.find((item) => item.value === FILTER_TYPE.Project)?.value;
-  const [type, setType] = useState<FILTER_TYPE>(
-    (filterData?.type ?? typeValue ?? filterTypeConfig[0].value) as FILTER_TYPE,
-  );
+  }, [route, filterTypeConfig]);
+
+  const initialType = useMemo(() => {
+    return (filterData?.type ?? typeValue ?? filterTypeConfig[0].value) as FILTER_TYPE;
+  }, [filterData, typeValue, filterTypeConfig]);
+
+  const [type, setType] = useState<FILTER_TYPE>(initialType);
+
   const [condition, setCondition] = useState<FILTER_OPERATOR>(
     (filterData?.condition ?? filterConditionConfig[0].value) as FILTER_OPERATOR,
   );
   const [value, setValue] = useState<string[]>(filterData?.value ?? []);
 
+  useEffect(() => {
+    setType(initialType);
+  }, [isRouteView, isMcpView, initialType]);
+
   const reset = useCallback(() => {
-    setType((filterData?.type ?? typeValue ?? filterTypeConfig[0].value) as FILTER_TYPE);
+    setType(initialType);
     setCondition((filterData?.condition ?? filterConditionConfig[0].value) as FILTER_OPERATOR);
     setValue(filterData?.value ?? []);
-  }, [filterData, typeValue, filterTypeConfig, filterConditionConfig]);
+  }, [filterData, initialType, filterConditionConfig]);
 
   const onCreate = useCallback(() => {
     addFilter({ type, condition, value });
