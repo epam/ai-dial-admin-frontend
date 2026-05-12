@@ -111,17 +111,18 @@ When constructing the Firewall settings section for an image-definition activity
 - length `0` → `All domains`.
 - length `> 0` → `Specific domains`.
 
-The synthetic row SHALL participate in diff status calculation: when the before/after policies differ (one side empty, the other non-empty) the row's diff status SHALL be `CHANGED`; when they match, it SHALL be `MIRROR`. The synthetic row SHALL be hidden by the `View: Diff` filter when its status is `MIRROR`, matching the existing behavior for real fields.
+The synthetic row SHALL participate in diff status calculation: when the before/after policies differ (one side empty, the other non-empty) the row's diff status SHALL be `CHANGED`; when they match, the row SHALL be emitted with no diff status. The `View: Diff` filter SHALL hide the row when it has no diff status, matching the existing behavior for unchanged fields.
 
 #### Scenario: Empty → non-empty list yields policy change
 - **GIVEN** an image whose `allowedDomains` went from `[]` to `["aws.com"]`
 - **WHEN** the Firewall section renders
 - **THEN** the synthesized `Domain access policy` row shows `All domains` (before) and `Specific domains` (after) with diff status `CHANGED`
 
-#### Scenario: Same list state yields mirror policy
+#### Scenario: Same list state yields unchanged policy
 - **GIVEN** an image whose `allowedDomains` went from `["aws.com"]` to `["aws.com", "github.com"]`
 - **WHEN** the Firewall section renders
-- **THEN** the synthesized `Domain access policy` row shows `Specific domains` on both sides with diff status `MIRROR`
+- **THEN** the synthesized `Domain access policy` row shows `Specific domains` on both sides with no diff status
+- **AND** the row is hidden by the `View: Diff` filter
 
 ### Requirement: Global firewall detail renders a single Global domain whitelist section
 
