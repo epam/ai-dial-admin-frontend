@@ -61,7 +61,7 @@ const LoginPopup: FC<Props> = ({ type, isModalOpen, isLoggedInAsUser, isLoggedIn
       cancelLabel={t(ButtonsI18nKey.Cancel)}
       disableSubmitButton={!loginOrganization && !loginUser}
     >
-      <div className="flex px-6 py-4 h-full flex-col gap-y-3">
+      <div className="flex px-6 py-4 h-full flex-col gap-y-6">
         {showOrganizationCheckbox && (
           <DialCheckbox
             id="organization-login-checkbox"
