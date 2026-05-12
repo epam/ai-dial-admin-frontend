@@ -25,7 +25,12 @@ export const isEntitiesWithDisplayVersion = (view?: ApplicationRoute) => {
 };
 
 export const isEvaluationView = (view?: ApplicationRoute): boolean => {
-  return view === ApplicationRoute.TestSuites || view === ApplicationRoute.Metrics || view === ApplicationRoute.Runs;
+  return (
+    view === ApplicationRoute.TestSuites ||
+    view === ApplicationRoute.TestCases ||
+    view === ApplicationRoute.Metrics ||
+    view === ApplicationRoute.Runs
+  );
 };
 
 export const isToolsetRoute = (route?: ApplicationRoute): boolean => {
