@@ -95,13 +95,10 @@ export const prepareEntityForDuplicate = async <T>(
   }
 
   if (route === ApplicationRoute.AssetsApplications) {
-    const app = fullEntity as AssetApp | null;
+    const app = { ...fullEntity, ...entity } as AssetApp | null;
     delete app?.reference;
 
-    return {
-      ...app,
-      ...entity,
-    };
+    return app;
   }
 
   if (isToolsetRoute(route)) {
