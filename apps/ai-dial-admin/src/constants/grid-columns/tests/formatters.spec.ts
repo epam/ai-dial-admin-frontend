@@ -1,13 +1,20 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   formatAttachment,
+  formatCpuColumnValue,
+  formatGpuColumnValue,
+  formatMemoryColumnValue,
   formatRequired,
+  getCpuColumnValue,
   getFormattedResourceType,
+  getGpuColumnValue,
+  getMemoryColumnValue,
   getTopics,
   numberValueFormatter,
   priceValueFormatter,
   sourceTypeFormatter,
   sourceValueFormatter,
+  toNumberOrNull,
 } from '../formatters';
 import { ActivityAuditResourceType } from '@/src/types/activity-audit';
 import { SOURCE_FIELD, SOURCE_TYPE } from '@/src/components/SourceField/types';
@@ -191,5 +198,103 @@ describe('formatRequired', () => {
     const t = (key: string) => key;
     const res = formatRequired('', t);
     expect(res).toBe(BasicI18nKey.Optional);
+  });
+});
+
+describe('Formatters :: container resource columns', () => {
+  describe('toNumberOrNull', () => {
+    test('returns null for undefined, null, and empty string', () => {
+      expect(toNumberOrNull(undefined)).toBeNull();
+      expect(toNumberOrNull(null)).toBeNull();
+      expect(toNumberOrNull('')).toBeNull();
+    });
+
+    test('returns the parsed number for numeric strings', () => {
+      expect(toNumberOrNull('0')).toBe(0);
+      expect(toNumberOrNull('42')).toBe(42);
+      expect(toNumberOrNull('0.5')).toBe(0.5);
+    });
+
+    test('passes through numbers unchanged', () => {
+      expect(toNumberOrNull(0)).toBe(0);
+      expect(toNumberOrNull(123)).toBe(123);
+    });
+
+    test('returns null for non-numeric strings', () => {
+      expect(toNumberOrNull('NaN')).toBeNull();
+      expect(toNumberOrNull('abc')).toBeNull();
+    });
+  });
+
+  describe('getCpuColumnValue', () => {
+    test('returns null when no value is set', () => {
+      expect(getCpuColumnValue(undefined)).toBeNull();
+      expect(getCpuColumnValue('')).toBeNull();
+    });
+
+    test('converts cores to millicores', () => {
+      expect(getCpuColumnValue('2')).toBe(2000);
+      expect(getCpuColumnValue('0.5')).toBe(500);
+    });
+
+    test('handles zero', () => {
+      expect(getCpuColumnValue('0')).toBe(0);
+    });
+  });
+
+  describe('getMemoryColumnValue', () => {
+    test('returns null when no value is set', () => {
+      expect(getMemoryColumnValue(undefined)).toBeNull();
+      expect(getMemoryColumnValue('')).toBeNull();
+    });
+
+    test('converts bytes to Mb', () => {
+      expect(getMemoryColumnValue(`${4 * 1024 * 1024 * 1024}`)).toBe(4096);
+      expect(getMemoryColumnValue(`${512 * 1024 * 1024}`)).toBe(512);
+    });
+
+    test('rounds sub-megabyte values to zero', () => {
+      expect(getMemoryColumnValue('1024')).toBe(0);
+    });
+
+    test('handles very large memory values', () => {
+      expect(getMemoryColumnValue(`${1024 * 1024 * 1024 * 1024}`)).toBe(1024 * 1024);
+    });
+  });
+
+  describe('getGpuColumnValue', () => {
+    test('returns null when no value is set', () => {
+      expect(getGpuColumnValue(undefined)).toBeNull();
+      expect(getGpuColumnValue('')).toBeNull();
+    });
+
+    test('parses integer GPU counts', () => {
+      expect(getGpuColumnValue('1')).toBe(1);
+      expect(getGpuColumnValue('8')).toBe(8);
+    });
+
+    test('parses zero', () => {
+      expect(getGpuColumnValue('0')).toBe(0);
+    });
+  });
+
+  describe('formatters render null as empty and non-null with the expected suffix', () => {
+    test('formatCpuColumnValue', () => {
+      expect(formatCpuColumnValue(null)).toBe('');
+      expect(formatCpuColumnValue(500)).toBe('500 m');
+      expect(formatCpuColumnValue(0)).toBe('0 m');
+    });
+
+    test('formatMemoryColumnValue', () => {
+      expect(formatMemoryColumnValue(null)).toBe('');
+      expect(formatMemoryColumnValue(4096)).toBe('4096 Mb');
+      expect(formatMemoryColumnValue(0)).toBe('0 Mb');
+    });
+
+    test('formatGpuColumnValue', () => {
+      expect(formatGpuColumnValue(null)).toBe('');
+      expect(formatGpuColumnValue(1)).toBe('1');
+      expect(formatGpuColumnValue(0)).toBe('0');
+    });
   });
 });

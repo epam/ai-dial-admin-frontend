@@ -25,7 +25,7 @@ const stringFilter: Partial<ColDef> = {
   } as ITextFilterParams,
 };
 
-export const auditStringFilter: Partial<ColDef> = {
+export const baseStringFilter: Partial<ColDef> = {
   filterParams: {
     ...stringFilter.filterParams,
     filterOptions: [
