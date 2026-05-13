@@ -4,14 +4,20 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { ButtonsI18nKey, DeploymentsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { Container } from '@/src/models/deployments/containers';
 import { NodePool } from '@/src/models/deployments/node-pools';
+import { NotificationType } from '@/src/models/notification';
 import { CONTAINER_SOURCE_TYPE, CONTAINER_STATUS, CONTAINER_TYPE } from '@/src/types/deployments/containers';
 
 import ContainerNodePool from '@/src/components/Deployments/Fields/ContainerNodePool';
 
 const getNodePoolsMock = vi.fn();
+const showNotificationMock = vi.fn();
 
 vi.mock('@/src/app/actions/deployments', () => ({
   getNodePools: () => getNodePoolsMock(),
+}));
+
+vi.mock('@/src/context/NotificationContext', () => ({
+  useNotification: () => ({ showNotification: showNotificationMock, removeNotification: vi.fn() }),
 }));
 
 const gpuPool: NodePool = {
@@ -48,6 +54,7 @@ const waitForLoad = () =>
 describe('ContainerNodePool', () => {
   beforeEach(() => {
     getNodePoolsMock.mockReset();
+    showNotificationMock.mockReset();
   });
 
   test('renders the field title', async () => {
@@ -133,11 +140,57 @@ describe('ContainerNodePool', () => {
     expect(setContainer).not.toHaveBeenCalled();
   });
 
-  test('shows load error when endpoint fails', async () => {
-    getNodePoolsMock.mockResolvedValue({ success: false, errorMessage: 'boom' });
-    renderContainer();
-    await waitFor(() => {
-      expect(screen.getByText('boom')).toBeInTheDocument();
+  test('shows a toast notification on load failure', async () => {
+    getNodePoolsMock.mockResolvedValue({
+      success: false,
+      errorHeader: 'Service unavailable',
+      errorMessage: 'boom',
+      requestId: 'req-42',
     });
+    renderContainer();
+
+    await waitFor(() => {
+      expect(showNotificationMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: NotificationType.error,
+          title: 'Service unavailable',
+          description: 'boom',
+          requestId: 'req-42',
+        }),
+      );
+    });
+    expect(screen.queryByText('boom')).not.toBeInTheDocument();
+  });
+
+  test('falls back to default load-error title when server omits errorHeader', async () => {
+    getNodePoolsMock.mockResolvedValue({ success: false });
+    renderContainer();
+
+    await waitFor(() => {
+      expect(showNotificationMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: NotificationType.error,
+          title: DeploymentsI18nKey.NodePoolLoadError,
+        }),
+      );
+    });
+  });
+
+  test('search filters the modal list by name', async () => {
+    getNodePoolsMock.mockResolvedValue({ success: true, response: { pools: [gpuPool, cpuPool] } });
+    renderContainer();
+    await waitForLoad();
+
+    fireEvent.click(screen.getByRole('button', { name: DeploymentsI18nKey.NodePoolSelect }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByRole('radio', { name: /GPU pool/i })).toBeInTheDocument();
+    expect(within(dialog).getByRole('radio', { name: /CPU pool/i })).toBeInTheDocument();
+
+    const searchInput = within(dialog).getByPlaceholderText(DeploymentsI18nKey.NodePoolSearchPlaceholder);
+    fireEvent.change(searchInput, { target: { value: 'cpu' } });
+
+    expect(within(dialog).queryByRole('radio', { name: /GPU pool/i })).not.toBeInTheDocument();
+    expect(within(dialog).getByRole('radio', { name: /CPU pool/i })).toBeInTheDocument();
+    expect(within(dialog).getByText(DeploymentsI18nKey.NodePoolAny)).toBeInTheDocument();
   });
 });

@@ -68,7 +68,7 @@ const ContainerResources: FC<Props> = ({ container, setContainer, route, disable
 
   return (
     <div className="flex flex-col gap-3">
-      <h4 className="text-sm font-semibold text-primary">{t(EntityFieldsI18nKey.Resources)}</h4>
+      <span className="dial-small-semi-text text-primary">{t(EntityFieldsI18nKey.Resources)}</span>
       <div className="flex flex-col gap-x-2 gap-y-8">
         <CPUFields container={container} setContainer={setContainer} disabled={disabled} />
         <MemoryFields container={container} setContainer={setContainer} disabled={disabled} />

@@ -14,7 +14,7 @@ The UI-kit components used here are all standard: `DialPopup` (`PopupSize.Lg`), 
 - A discoverable single-glance "compute" surface where node-pool and resource decisions live together.
 - An explicit, default-friendly "Any node pool" option that submits `null` rather than relying on the absence of a value.
 - Optimistic display of the chosen pool's name (the form doesn't need to wait for a refetch to render the right label after Apply).
-- Graceful degradation: clear loading, clear load-error, and a clear dangling-reference warning when a referenced pool no longer exists.
+- Graceful degradation: clear loading state, a toast notification when the listing fails, and a clear dangling-reference warning when a referenced pool no longer exists.
 - No new accessibility regressions — the modal uses native `<label>`/`<input type="radio">` semantics through `DialRadioButton`; full strings stay reachable via `title` on truncated cells.
 
 **Non-Goals:**
@@ -60,7 +60,13 @@ The UI-kit components used here are all standard: `DialPopup` (`PopupSize.Lg`), 
 
 **Rationale:** Any pool id is valid (including `null` for Any). Dangling references are visible inline (the "Unknown node pool" warning) but do not block save — the backend may have its own policy.
 
-### Decision 6: Two specs in one change
+### Decision 6: Split the picker into `NodePoolItem` + `NodePoolList` + `ContainerNodePoolModal`
+
+**Choice:** Three components in three files under `Deployments/NodePool/` (item, list+search) and `Deployments/Modals/ContainerNodePoolModal/` (popup shell).
+
+**Rationale:** Keeps each component focused — the row owns presentation of one pool, the list owns search and the "Any" entry, the modal owns popup chrome and Apply/Cancel state. Mirrors the existing modal layout convention (`McpRegistryModal/`, `HFRegistryModal/`). The list is independently reusable if a non-modal "pick a pool inline" surface is needed in the future.
+
+### Decision 7: Two specs in one change
 
 **Choice:** Split into `deployments-node-pool-selector` (the field, modal, API, model fields) and `deployments-compute-section` (the accordion grouping, error indicator, ordering).
 
@@ -72,8 +78,8 @@ The UI-kit components used here are all standard: `DialPopup` (`PopupSize.Lg`), 
   **Mitigation:** Live `pools` list takes precedence over the cache; the next time the user opens the form and the pool list loads, the live name renders.
 - **Risk:** `/node-pools` returning a large list affects modal performance.
   **Mitigation:** Payload is small (`{id,name,description}`); search is in-memory. If pools grow beyond UI-friendly counts, backend-side search becomes a follow-up change.
-- **Risk:** On load error the Change button is hidden, leaving no recovery path inside the form.
-  **Mitigation:** Accepted for now — reloading the detail page retries. A retry button is a small follow-up.
+- **Risk:** On load error the loaded pool list is empty, so the Change button is disabled — there is no in-form retry.
+  **Mitigation:** Accepted for now — the toast surfaces the failure (with the backend's `errorHeader` / `errorMessage` / `requestId`), and reloading the detail page retries. A retry button is a small follow-up.
 - **Trade-off:** Pool description is rendered in a single truncated line. Long descriptions are reachable via the `title` attribute but not via a popover. Acceptable given the modal's row density target.
 
 ## Migration Plan

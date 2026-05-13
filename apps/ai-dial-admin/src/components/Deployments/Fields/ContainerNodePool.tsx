@@ -1,16 +1,18 @@
 'use client';
 
 import { FC, useCallback, useEffect, useState } from 'react';
-import { ButtonAppearance, DialLoader, DialNoDataContent, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, DialLoader, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 
 import { getNodePools } from '@/src/app/actions/deployments';
 import { ButtonsI18nKey, DeploymentsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { Container } from '@/src/models/deployments/containers';
 import { NodePool } from '@/src/models/deployments/node-pools';
 import { isEditDisabled } from '@/src/utils/deployments/containers';
+import { getErrorNotification } from '@/src/utils/notification';
 import { useI18n } from '@/src/locales/client';
+import { useNotification } from '@/src/context/NotificationContext';
 
-import NodePoolSelectorModal from '@/src/components/Deployments/Fields/ContainerNodePool/NodePoolSelectorModal';
+import ContainerNodePoolModal from '@/src/components/Deployments/Modals/ContainerNodePoolModal/ContainerNodePoolModal';
 
 interface SelectedDisplayProps {
   pool: NodePool | null;
@@ -24,8 +26,8 @@ const SelectedPoolDisplay: FC<SelectedDisplayProps> = ({ pool, poolId, poolName 
   if (!poolId) {
     return (
       <div className="flex flex-1 flex-col min-w-0">
-        <span className="font-semibold text-primary truncate">{t(DeploymentsI18nKey.NodePoolAny)}</span>
-        <span className="text-xs text-secondary truncate">{t(DeploymentsI18nKey.NodePoolAnyDescription)}</span>
+        <span className="dial-small-semi-text text-primary truncate">{t(DeploymentsI18nKey.NodePoolAny)}</span>
+        <span className="dial-tiny-text text-secondary truncate">{t(DeploymentsI18nKey.NodePoolAnyDescription)}</span>
       </div>
     );
   }
@@ -36,24 +38,24 @@ const SelectedPoolDisplay: FC<SelectedDisplayProps> = ({ pool, poolId, poolName 
   if (!resolvedName) {
     return (
       <div className="flex flex-1 flex-col min-w-0">
-        <span className="font-semibold text-error truncate" title={poolId}>
+        <span className="dial-small-semi-text text-error truncate" title={poolId}>
           {t(DeploymentsI18nKey.NodePoolUnknown, { id: poolId })}
         </span>
-        <span className="text-xs text-secondary truncate">{t(DeploymentsI18nKey.NodePoolUnknownHint)}</span>
+        <span className="dial-tiny-text text-secondary truncate">{t(DeploymentsI18nKey.NodePoolUnknownHint)}</span>
       </div>
     );
   }
 
   return (
     <div className="flex flex-1 flex-col min-w-0">
-      <span className="font-semibold text-primary truncate" title={resolvedName}>
+      <span className="dial-small-semi-text text-primary truncate" title={resolvedName}>
         {resolvedName}
       </span>
-      <span className="font-mono text-xs text-secondary truncate" title={poolId}>
+      <span className="font-mono dial-tiny-text text-secondary truncate" title={poolId}>
         {poolId}
       </span>
       {description && (
-        <span className="text-xs text-secondary truncate" title={description}>
+        <span className="dial-tiny-text text-secondary truncate" title={description}>
           {description}
         </span>
       )}
@@ -69,42 +71,35 @@ interface Props {
 
 const ContainerNodePool: FC<Props> = ({ container, setContainer, disabled }) => {
   const t = useI18n();
+  const { showNotification } = useNotification();
   const isDisabled = disabled ?? isEditDisabled(container);
   const [pools, setPools] = useState<NodePool[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const selectedId = container.nodePoolId ?? null;
   const selectedName = container.nodePoolName ?? null;
 
   useEffect(() => {
-    let isActive = true;
     setIsLoading(true);
     getNodePools()
-      .then(({ success, response, errorMessage: message }) => {
-        if (!isActive) return;
+      .then(({ success, response, errorHeader, errorMessage, requestId }) => {
         if (success) {
           const list = (response as { pools?: NodePool[] } | undefined)?.pools ?? [];
           setPools(Array.isArray(list) ? list : []);
-          setErrorMessage(null);
         } else {
           setPools([]);
-          setErrorMessage(message || t(DeploymentsI18nKey.NodePoolLoadError));
+          showNotification(
+            getErrorNotification(errorHeader ?? t(DeploymentsI18nKey.NodePoolLoadError), errorMessage, requestId),
+          );
         }
       })
       .catch(() => {
-        if (!isActive) return;
         setPools([]);
-        setErrorMessage(t(DeploymentsI18nKey.NodePoolLoadError));
+        showNotification(getErrorNotification(t(DeploymentsI18nKey.NodePoolLoadError)));
       })
-      .finally(() => {
-        if (isActive) setIsLoading(false);
-      });
-    return () => {
-      isActive = false;
-    };
-  }, [t]);
+      .finally(() => setIsLoading(false));
+  }, [t, showNotification]);
 
   const selectedPool = pools.find((pool) => pool.id === selectedId) ?? null;
 
@@ -123,34 +118,23 @@ const ContainerNodePool: FC<Props> = ({ container, setContainer, disabled }) => 
   const onOpenModal = useCallback(() => setIsModalOpen(true), []);
   const onCloseModal = useCallback(() => setIsModalOpen(false), []);
 
-  let body;
-  if (isLoading) {
-    body = (
-      <div className="flex justify-center py-6">
-        <DialLoader size={32} />
-      </div>
-    );
-  } else if (errorMessage) {
-    body = <DialNoDataContent title={errorMessage} />;
-  } else {
-    body = (
-      <div className="flex items-center gap-3 rounded border border-primary px-4 py-3">
-        <SelectedPoolDisplay pool={selectedPool} poolId={selectedId} poolName={selectedName} />
-        <DialPrimaryButton
-          appearance={ButtonAppearance.Ghost}
-          label={selectedId ? t(ButtonsI18nKey.Change) : t(DeploymentsI18nKey.NodePoolSelect)}
-          onClick={onOpenModal}
-          disabled={isDisabled || pools.length === 0}
-        />
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col gap-3">
-      <h4 className="text-sm font-semibold text-primary">{t(EntityFieldsI18nKey.NodePool)}</h4>
-      {body}
-      <NodePoolSelectorModal
+      <span className="dial-small-semi-text text-primary">{t(EntityFieldsI18nKey.NodePool)}</span>
+      {isLoading ? (
+        <DialLoader size={32} />
+      ) : (
+        <div className="flex items-center gap-3 rounded border border-primary px-4 py-3">
+          <SelectedPoolDisplay pool={selectedPool} poolId={selectedId} poolName={selectedName} />
+          <DialPrimaryButton
+            appearance={ButtonAppearance.Ghost}
+            label={selectedId ? t(ButtonsI18nKey.Change) : t(DeploymentsI18nKey.NodePoolSelect)}
+            onClick={onOpenModal}
+            disabled={isDisabled || pools.length === 0}
+          />
+        </div>
+      )}
+      <ContainerNodePoolModal
         isOpen={isModalOpen}
         pools={pools}
         initialSelection={selectedId}

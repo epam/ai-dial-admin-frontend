@@ -16,11 +16,13 @@
 - [x] 3.2 Add the `DeploymentsI18nKey.NodePool*` group: `NodePoolModalTitle`, `NodePoolSearchPlaceholder`, `NodePoolColumnName`, `NodePoolColumnDescription`, `NodePoolEmpty`, `NodePoolAny`, `NodePoolAnyDescription`, `NodePoolUnknown`, `NodePoolUnknownHint`, `NodePoolLoadError`, `NodePoolSelect`, `NodePoolNoMatches`.
 - [x] 3.3 Mirror all entries in `src/locales/en.ts` (`Compute`, `NodePool`, and the `NodePool*` Deployments group).
 
-## 4. Selector field
+## 4. Selector field and picker components
 
-- [x] 4.1 Create `src/components/Deployments/Fields/ContainerNodePool.tsx` — loads pools on mount via `getNodePools()`, renders loading / error / ready states, opens the modal on demand, writes `nodePoolId` + cached `nodePoolName` on confirm. Cleans up via an `isActive` flag in the effect.
-- [x] 4.2 Create `src/components/Deployments/Fields/ContainerNodePool/NodePoolSelectorModal.tsx` — `DialPopup` (`PopupSize.Lg`, `className="h-[560px]"`) with `DialSearch`, an "Any node pool" row, and one `DialRadioButton` row per pool. Apply submits the pending selection; Cancel discards. Reset `pendingSelection` / `search` on every open.
-- [x] 4.3 Add `src/components/Deployments/Fields/tests/ContainerNodePool.spec.tsx` covering: field title rendering, "Any" by default when `nodePoolId` is null, hydration from `nodePoolId` + `nodePoolName`, dangling-id warning, Apply writes id + name, "Any" submits null, Cancel does not touch the container, load-error message.
+- [x] 4.1 Create `src/components/Deployments/Fields/ContainerNodePool.tsx` — loads pools on mount via `getNodePools()`, renders loading / ready states, opens the modal on demand, writes `nodePoolId` + cached `nodePoolName` on confirm. On listing failure surfaces a toast via `useNotification()` + `getErrorNotification(errorHeader ?? t(NodePoolLoadError), errorMessage, requestId)` and leaves the loaded list empty (Change/Select button disabled).
+- [x] 4.2 Create `src/components/Deployments/NodePool/NodePoolItem.tsx` — single radio row used by both the "Any node pool" entry and each pool entry; renders name, optional monospace id, and optional description in the shared three-column grid.
+- [x] 4.3 Create `src/components/Deployments/NodePool/NodePoolList.tsx` — `DialSearch` input + header row + a `<ul>` of `NodePoolItem`s with the "Any" row pinned at top; filters case-insensitively by id / name / description; renders `DialNoDataContent` with `NodePoolNoMatches` when the query yields zero pool matches but the loaded list is non-empty.
+- [x] 4.4 Create `src/components/Deployments/Modals/ContainerNodePoolModal/ContainerNodePoolModal.tsx` — `DialPopup` (`PopupSize.Lg`, `className="h-[560px]"`) wrapping `NodePoolList`. Apply submits the pending selection; Cancel discards. Reset `pendingSelection` on every open.
+- [x] 4.5 Add `src/components/Deployments/Fields/tests/ContainerNodePool.spec.tsx` covering: field title rendering, "Any" by default when `nodePoolId` is null, hydration from `nodePoolId` + `nodePoolName`, dangling-id warning, Apply writes id + name, "Any" submits null, Cancel does not touch the container, toast is fired on load failure (with `errorHeader` / `errorMessage` / `requestId`), default-title fallback when `errorHeader` is absent, modal search filters the list.
 
 ## 5. Compute accordion
 

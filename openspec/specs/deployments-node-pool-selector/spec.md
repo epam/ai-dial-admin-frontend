@@ -18,7 +18,7 @@ The `getNodePools()` server action SHALL issue a GET to `${API}/node-pools` with
 #### Scenario: Non-2xx surfaces as a load error
 
 - **WHEN** the `/node-pools` endpoint returns a non-success status or the request throws
-- **THEN** `getNodePools()` SHALL return `{ success: false, errorMessage }` and the field SHALL render a `DialNoDataContent` with the error message (falling back to `DeploymentsI18nKey.NodePoolLoadError` when no message is supplied)
+- **THEN** `getNodePools()` SHALL return `{ success: false, errorHeader?, errorMessage?, requestId? }` and the field SHALL surface a toast notification (see "Listing failures surface as a toast notification" below)
 
 ### Requirement: Container model carries `nodePoolId` and cached `nodePoolName`
 
@@ -39,19 +39,14 @@ The `Container` model SHALL declare `nodePoolId?: string | null` (source of trut
 - **WHEN** the user opens the modal with a current selection and picks the "Any node pool" row, then clicks Apply
 - **THEN** `setContainer` SHALL be called with `nodePoolId: null` and `nodePoolName: null`
 
-### Requirement: Selector field renders three distinct states
+### Requirement: Selector field renders two distinct states
 
-The `ContainerNodePool` field SHALL render exactly one of three states at a time: loading, load-error, or ready. The action button SHALL only be rendered in the ready state and SHALL be disabled when the container is in a read-only status (`isEditDisabled(container)`), when the parent passes `disabled`, or when the loaded `pools` list is empty.
+The `ContainerNodePool` field SHALL render exactly one of two states at a time: loading or ready. The action button SHALL only be rendered in the ready state and SHALL be disabled when the container is in a read-only status (`isEditDisabled(container)`), when the parent passes `disabled`, or when the loaded `pools` list is empty.
 
 #### Scenario: Loading state
 
 - **WHEN** pools are being fetched
-- **THEN** the field body SHALL render a centered `DialLoader` (size 32) and no action button
-
-#### Scenario: Load-error state
-
-- **WHEN** the pool fetch fails
-- **THEN** the field body SHALL render a `DialNoDataContent` with the error title and SHALL NOT render the Change / Select button
+- **THEN** the field body SHALL render a `DialLoader` (size 32) and no action button
 
 #### Scenario: Ready state with no selection
 
@@ -62,6 +57,26 @@ The `ContainerNodePool` field SHALL render exactly one of three states at a time
 
 - **WHEN** pools have loaded and `nodePoolId` matches a loaded pool
 - **THEN** the field body SHALL render that pool's display and a button labelled `ButtonsI18nKey.Change`
+
+### Requirement: Listing failures surface as a toast notification
+
+When the pool listing fails, the field SHALL NOT render an inline error region. Instead, it SHALL show a toast via `useNotification().showNotification(getErrorNotification(...))` carrying the backend's `errorHeader`, `errorMessage`, and `requestId`. When the server omits `errorHeader`, the toast title SHALL fall back to `DeploymentsI18nKey.NodePoolLoadError`. The field SHALL leave the loaded `pools` list empty, transition out of the loading state, and leave the Change / Select button disabled (since `pools.length === 0`).
+
+#### Scenario: Server returns an error payload
+
+- **WHEN** `getNodePools()` resolves with `{ success: false, errorHeader: "Service unavailable", errorMessage: "boom", requestId: "req-42" }`
+- **THEN** `showNotification` SHALL be called with a notification of type `NotificationType.error`, title `"Service unavailable"`, description `"boom"`, and `requestId: "req-42"`
+- **AND** the field body SHALL transition out of the loading state with no inline error region
+
+#### Scenario: Server omits the error header
+
+- **WHEN** `getNodePools()` resolves with `{ success: false }`
+- **THEN** the toast title SHALL be `DeploymentsI18nKey.NodePoolLoadError`
+
+#### Scenario: Request throws
+
+- **WHEN** `getNodePools()` rejects
+- **THEN** the field SHALL show a toast with title `DeploymentsI18nKey.NodePoolLoadError` and leave the loaded list empty
 
 ### Requirement: Selected-pool display reconciles live data, cache, and dangling state
 
@@ -82,9 +97,13 @@ The selector display SHALL prefer the live `NodePool` from the loaded list when 
 - **WHEN** `nodePoolId` is set but neither a live match nor a cached `nodePoolName` is available
 - **THEN** the display SHALL render `DeploymentsI18nKey.NodePoolUnknown` (interpolating `{id}`) in the error color and the `DeploymentsI18nKey.NodePoolUnknownHint` secondary line
 
-### Requirement: Selector modal
+### Requirement: Selector modal composition
 
-The `NodePoolSelectorModal` SHALL render as a `DialPopup` (`PopupSize.Lg`, fixed-height container) with a `DialSearch` input, a list of radio rows, and Cancel / Apply footer buttons. The modal SHALL reset its pending selection to the field's current `nodePoolId` and clear the search box on every open. Each radio row SHALL be wrapped in a `<label htmlFor=...>` so clicking anywhere in the row toggles the radio.
+The selector modal SHALL be composed of three components:
+
+- `Deployments/Modals/ContainerNodePoolModal/ContainerNodePoolModal.tsx` — the `DialPopup` shell (`PopupSize.Lg`, fixed-height container) with Cancel / Apply footer buttons; owns the pending selection and resets it to the field's current `nodePoolId` on every open.
+- `Deployments/NodePool/NodePoolList.tsx` — the `DialSearch` input plus a `<ul>` of radio rows including the pinned "Any node pool" entry; owns the search query, which is reset to empty on every mount (i.e., every modal open).
+- `Deployments/NodePool/NodePoolItem.tsx` — a single radio row, wrapped in a `<label htmlFor=...>` so clicking anywhere in the row toggles the radio.
 
 #### Scenario: Modal lists "Any node pool" plus one row per loaded pool
 

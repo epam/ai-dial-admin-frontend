@@ -10,8 +10,11 @@ Container scheduling on a specific Kubernetes node pool was not configurable fro
   - `src/app/api/api.ts` — register `nodePoolsApi`.
   - `src/app/actions/deployments.ts` — `getNodePools()` server action authenticated via `getUserToken()`.
 - Extend the container model: `Container` gains `nodePoolId?: string | null` (source of truth submitted to backend) and `nodePoolName?: string | null` (cached display name captured at selection time).
-- Add the selector field `src/components/Deployments/Fields/ContainerNodePool.tsx` with three render states (loading / load-error / ready row) and a "Select node pool" / "Change" action button.
-- Add `src/components/Deployments/Fields/ContainerNodePool/NodePoolSelectorModal.tsx` — a `DialPopup` (Lg, 560px) containing `DialSearch`, an explicit "Any node pool" row, and one `DialRadioButton` row per loaded pool. Search filters case-insensitively by id / name / description. Apply submits the pending id (or null for "Any"); Cancel discards.
+- Add the selector field `src/components/Deployments/Fields/ContainerNodePool.tsx` with two render states (loading / ready row) and a "Select node pool" / "Change" action button. Listing failures surface as a toast via `useNotification()` + `getErrorNotification()` rather than as an inline error region.
+- Split the picker into reusable components:
+  - `src/components/Deployments/NodePool/NodePoolItem.tsx` — a single radio row (name + monospace id + description).
+  - `src/components/Deployments/NodePool/NodePoolList.tsx` — search input + list of `NodePoolItem`s including the explicit "Any node pool" row.
+  - `src/components/Deployments/Modals/ContainerNodePoolModal/ContainerNodePoolModal.tsx` — a `DialPopup` (Lg, 560px) that renders `NodePoolList` and exposes Cancel / Apply. Apply submits the pending id (or null for "Any"); Cancel discards.
 - Wrap `ContainerNodePool` and the existing `ContainerResources` in a new "Compute" accordion (`ContainerCompute.tsx`) with a section-level error indicator driven by the existing `SaveValidationContext` and `isErrorPresent` helper. `Containers/Fields/ContainerFields.tsx` now mounts `ContainerCompute` in place of the standalone `ContainerResources`.
 - Add i18n entries:
   - `EntityFieldsI18nKey.Compute`, `EntityFieldsI18nKey.NodePool`.
