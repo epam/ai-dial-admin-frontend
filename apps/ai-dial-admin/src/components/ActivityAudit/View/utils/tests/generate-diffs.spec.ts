@@ -13,7 +13,7 @@ import { ActivityAuditDiff } from '@/src/models/activity-audit';
 
 describe('Activity audit :: generateCurrentResource ', () => {
   test('should return only empty properties array', () => {
-    const result = generateCurrentResource(undefined, undefined);
+    const result = generateCurrentResource(null, null);
     expect(result).toEqual({ properties: [] });
   });
 
@@ -83,12 +83,12 @@ describe('Activity audit :: compareObjectArray', () => {
   test('should call compareUpstreams for UPSTREAMS key', () => {
     const diffs: Record<string, ActivityAuditDiff[]> = {};
     const val1: DialModelEndpoint[] = [
-      { endpoint: 'a', url: 'url1' },
-      { endpoint: 'b', url: 'url2' },
+      { endpoint: 'a', key: 'key1' },
+      { endpoint: 'b', key: 'key2' },
     ];
     const val2: DialModelEndpoint[] = [
-      { endpoint: 'b', url: 'url2' },
-      { endpoint: 'c', url: 'url3' },
+      { endpoint: 'b', key: 'key2' },
+      { endpoint: 'c', key: 'key3' },
     ];
 
     compareObjectArray(diffs, EntityParameterKeys.UPSTREAMS, val1, val2);
@@ -130,8 +130,8 @@ describe('Activity audit :: fillObjectArray', () => {
   test('should fill diffs for UPSTREAMS key', () => {
     const diffMap: Record<string, ActivityAuditDiff[]> = {};
     const value: DialModelEndpoint[] = [
-      { endpoint: 'a', url: 'url1' },
-      { endpoint: 'b', url: 'url2' },
+      { endpoint: 'a', key: 'key1' },
+      { endpoint: 'b', key: 'key2' },
     ];
 
     fillObjectArray(diffMap, EntityParameterKeys.UPSTREAMS, value);
@@ -404,5 +404,196 @@ describe('Activity audit :: mergeEntityMaps', () => {
     const output = result.get(ActivityAuditResourceType.MODEL)!;
 
     expect(output).toEqual([]);
+  });
+});
+
+describe('Activity audit :: image entity top-level $type is suppressed', () => {
+  test('does not emit a $type row at the top level for image-definition entities', () => {
+    const before = { $type: 'mcp', displayName: 'GPT-4', source: { $type: 'docker', imageUri: 'foo' } };
+    const after = { $type: 'mcp', displayName: 'GPT-4 turbo', source: { $type: 'docker', imageUri: 'foo' } };
+
+    const result = generateCurrentResource(before, after, ActivityAuditResourceType.MCP_IMAGE_DEFINITION, false);
+
+    const topLevelTypeRow = result.properties.find((d) => d.parameter === '$type' && d.value === 'mcp');
+    expect(topLevelTypeRow).toBeUndefined();
+    // Nested source.$type still produces a row (with value `docker`).
+    const sourceTypeRow = result.properties.find((d) => d.parameter === '$type' && d.value === 'docker');
+    expect(sourceTypeRow).toBeDefined();
+  });
+
+  test('keeps the top-level $type row for non-image entities', () => {
+    const before = { $type: 'something', name: 'foo' };
+    const after = { $type: 'something', name: 'foo' };
+
+    const result = generateCurrentResource(before, after, ActivityAuditResourceType.MODEL, false);
+
+    const topLevelTypeRow = result.properties.find((d) => d.parameter === '$type');
+    expect(topLevelTypeRow).toBeDefined();
+  });
+});
+
+describe('Activity audit :: image source normalization for MCP Registry', () => {
+  test('flattens externalRegistryRef into $type=mcp-registry + packageName + version', () => {
+    const before = {
+      source: {
+        $type: 'docker',
+        externalRegistryRef: { packageName: 'qa-mcp', version: '1.0.0' },
+      },
+    };
+    const after = {
+      source: {
+        $type: 'docker',
+        externalRegistryRef: { packageName: 'qa-mcp', version: '1.1.0' },
+      },
+    };
+    const result = generateCurrentResource(before, after, ActivityAuditResourceType.MCP_IMAGE_DEFINITION, false);
+
+    const params = result.properties.map((d) => d.parameter);
+    expect(params).toContain('$type');
+    expect(params).toContain('packageName');
+    expect(params).toContain('serverVersion');
+    expect(params).not.toContain('externalRegistryRef');
+    expect(params).not.toContain('imageUri');
+
+    const typeRow = result.properties.find((d) => d.parameter === '$type');
+    expect(typeRow?.value).toBe('mcp-registry');
+  });
+
+  test('returns plain docker/git source as-is when no externalRegistryRef present', () => {
+    const before = { source: { $type: 'docker', imageUri: 'registry/foo:1.0' } };
+    const after = { source: { $type: 'docker', imageUri: 'registry/foo:1.1' } };
+    const result = generateCurrentResource(before, after, ActivityAuditResourceType.MCP_IMAGE_DEFINITION, false);
+    const params = result.properties.map((d) => d.parameter);
+    expect(params).toContain('$type');
+    expect(params).toContain('imageUri');
+    expect(params).not.toContain('packageName');
+  });
+});
+
+describe('Activity audit :: image with Firewall settings section', () => {
+  test('routes allowedDomains into its own section with policy + per-domain rows', () => {
+    // Both sides have non-empty lists w/o wildcard → policy "Specific" (MIRROR, no status).
+    const before = { displayName: 'GPT-4', allowedDomains: ['aws.com'] };
+    const after = { displayName: 'GPT-4', allowedDomains: ['epam.com', 'github.com'] };
+
+    const result = generateCurrentResource(before, after, ActivityAuditResourceType.MCP_IMAGE_DEFINITION, false);
+
+    expect(result.properties.find((d) => d.parameter === 'allowedDomains')).toBeUndefined();
+    expect(result.properties.find((d) => d.parameter === 'displayName')).toBeDefined();
+
+    const firewallSection = result[EntityParameterKeys.ALLOWED_DOMAINS];
+    expect(firewallSection).toBeDefined();
+    expect(firewallSection?.[0].parameter).toBe('domainAccessPolicy');
+    expect(firewallSection?.[0].diffStatus).toBeUndefined();
+    const allowedDomainRows = firewallSection?.filter((d) => d.parameter === 'allowedDomain');
+    expect(allowedDomainRows?.map((r) => r.value)).toEqual(['epam.com', 'github.com']);
+  });
+
+  test('policy CHANGED when one side has wildcard "*" and the other does not', () => {
+    const before = { allowedDomains: ['asd.com'] };
+    const after = { allowedDomains: ['*', 'asd.com'] };
+
+    const result = generateCurrentResource(before, after, ActivityAuditResourceType.MCP_IMAGE_DEFINITION, false);
+
+    const firewallSection = result[EntityParameterKeys.ALLOWED_DOMAINS];
+    expect(firewallSection?.[0].parameter).toBe('domainAccessPolicy');
+    expect(firewallSection?.[0].diffStatus).toBe(DiffStatus.CHANGED);
+    // No domain rows on the After side because the wildcard hides them.
+    const allowedDomainRows = firewallSection?.filter((d) => d.parameter === 'allowedDomain');
+    expect(allowedDomainRows).toEqual([]);
+  });
+
+  test('image without allowedDomains key emits only Properties section', () => {
+    const before = { displayName: 'GPT-4' };
+    const after = { displayName: 'GPT-4-turbo' };
+
+    const result = generateCurrentResource(before, after, ActivityAuditResourceType.MCP_IMAGE_DEFINITION, false);
+
+    expect(result.properties).toEqual([
+      { parameter: 'displayName', value: 'GPT-4-turbo', diffStatus: DiffStatus.CHANGED },
+    ]);
+    expect(result[EntityParameterKeys.ALLOWED_DOMAINS]).toBeUndefined();
+  });
+});
+
+describe('Activity audit :: Global firewall section', () => {
+  test('after side: marks added entries as ADDED and removed entries as blank-mirror', () => {
+    const before: ActivityAuditEntity = { domains: ['aws.com', 'gmail.com', 'azure.com'] };
+    const after: ActivityAuditEntity = { domains: ['aws.com', 'google.com', 'azure.com', 'meta.com', 'remote.com'] };
+
+    const result = generateCurrentResource(
+      before,
+      after,
+      ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST,
+      false,
+    );
+
+    const section = result[EntityParameterKeys.DOMAINS];
+    expect(section).toBeDefined();
+    expect(section?.find((d) => d.value === 'google.com')?.diffStatus).toBe(DiffStatus.ADDED);
+    expect(section?.find((d) => d.value === 'meta.com')?.diffStatus).toBe(DiffStatus.ADDED);
+    expect(section?.find((d) => d.value === 'remote.com')?.diffStatus).toBe(DiffStatus.ADDED);
+    expect(section?.find((d) => d.value === 'aws.com')?.diffStatus).toBeUndefined();
+    // gmail.com is only on the before side → after side shows a blank mirror placeholder.
+    const blankMirror = section?.filter((d) => d.diffStatus === DiffStatus.MIRROR && d.value === '');
+    expect(blankMirror?.length).toBeGreaterThan(0);
+  });
+
+  test('Before side: marks removed entries as REMOVED', () => {
+    // isCurrent=true means val1=current (NEWER), val2=compare (OLDER).
+    const newer: ActivityAuditEntity = { domains: ['aws.com', 'google.com', 'azure.com'] };
+    const older: ActivityAuditEntity = { domains: ['aws.com', 'gmail.com', 'azure.com'] };
+
+    const result = generateCurrentResource(newer, older, ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST, true);
+
+    const section = result[EntityParameterKeys.DOMAINS];
+    expect(section?.find((d) => d.value === 'gmail.com')?.diffStatus).toBe(DiffStatus.REMOVED);
+    expect(section?.find((d) => d.value === 'aws.com')?.diffStatus).toBeUndefined();
+  });
+
+  test('empty firewall snapshot emits an empty domains section', () => {
+    const before: ActivityAuditEntity = { domains: [] };
+    const after: ActivityAuditEntity = { domains: [] };
+
+    const result = generateCurrentResource(
+      before,
+      after,
+      ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST,
+      false,
+    );
+
+    expect(result[EntityParameterKeys.DOMAINS]).toEqual([]);
+  });
+});
+
+describe('Activity audit :: createSectionFromDiffs surfaces firewall sections', () => {
+  test('includes allowedDomains in the generated sections map', () => {
+    const current: Record<string, ActivityAuditDiff[]> = {
+      properties: [],
+      [EntityParameterKeys.ALLOWED_DOMAINS]: [
+        { parameter: 'domainAccessPolicy', value: 'Specific domains', diffStatus: DiffStatus.CHANGED },
+      ],
+    };
+    const compare: Record<string, ActivityAuditDiff[]> = {
+      properties: [],
+      [EntityParameterKeys.ALLOWED_DOMAINS]: [
+        { parameter: 'domainAccessPolicy', value: 'Specific domains', diffStatus: DiffStatus.CHANGED },
+      ],
+    };
+    const sections = createSectionFromDiffs(current, compare);
+    expect(sections[EntityParameterKeys.ALLOWED_DOMAINS]).toBeDefined();
+  });
+
+  test('includes domains in the generated sections map', () => {
+    const current: Record<string, ActivityAuditDiff[]> = {
+      properties: [],
+      [EntityParameterKeys.DOMAINS]: [{ parameter: '', value: 'aws.com' }],
+    };
+    const compare: Record<string, ActivityAuditDiff[]> = {
+      properties: [],
+      [EntityParameterKeys.DOMAINS]: [{ parameter: '', value: 'aws.com' }],
+    };
+    const sections = createSectionFromDiffs(current, compare);
+    expect(sections[EntityParameterKeys.DOMAINS]).toBeDefined();
   });
 });

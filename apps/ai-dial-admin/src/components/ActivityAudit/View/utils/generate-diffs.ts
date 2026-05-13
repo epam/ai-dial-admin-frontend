@@ -7,7 +7,12 @@ import {
 } from '@/src/components/ActivityAudit/constants';
 import { ActivityAuditDiff, ActivityAuditSection } from '@/src/models/activity-audit';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
-import { ActivityAuditEntity, ActivityAuditResourceType, DiffStatus } from '@/src/types/activity-audit';
+import {
+  ActivityAuditEntity,
+  ActivityAuditResourceType,
+  DiffStatus,
+  isImageDefinitionResource,
+} from '@/src/types/activity-audit';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { isAppRunnerParameter, isRoleSharingParameter, sortKeys } from './compare-helpers';
 import { setObjectsArrayDiff } from './set-objects-array-diffs';
@@ -30,24 +35,24 @@ import {
 } from './create-complex-diffs';
 import { DialModelEndpoint } from '@/src/models/dial/model';
 import { DialRoleLimits, DialRoleShare } from '@/src/models/dial/role-limits';
+import { ExternalRegistryRef } from '@/src/types/deployments/mcp-registry';
 import {
+  compareAllowedDomains,
+  compareDomains,
   compareEntities,
   compareInterceptors,
   compareRoleLimits,
   compareShare,
+  fillAllowedDomains,
+  fillDomains,
   fillEntities,
   fillInterceptors,
   fillRoleLimits,
   fillShare,
 } from './create-simple-diffs';
 
-/**
- * Generate activity audit diff between two resources, divided into different sections if needed
- *
- * @param {(ActivityAuditEntity | null)} current - current resource
- * @param {(ActivityAuditEntity | null)} compare - compare resource
- * @returns {Record<string, ActivityAuditDiff[]>} - resource diff with status
- */
+const IMAGE_HIDDEN_KEYS = new Set<string>(['$type', 'id', 'createdAt', 'updatedAt']);
+
 export const generateCurrentResource = (
   current: ActivityAuditEntity | null,
   compare: ActivityAuditEntity | null,
@@ -63,8 +68,11 @@ export const generateCurrentResource = (
   if (type === ActivityAuditResourceType.ROLE && !allKeys.has(EntityParameterKeys.SHARE)) {
     allKeys.add(EntityParameterKeys.SHARE);
   }
+  const skipImageKeys = isImageDefinitionResource(type);
+
   if (current && compare) {
     allKeys.forEach((key) => {
+      if (skipImageKeys && IMAGE_HIDDEN_KEYS.has(key)) return;
       const val1 = current?.[key];
       const val2 = compare?.[key];
       const isObject = typeof val1 === 'object' || typeof val2 === 'object';
@@ -77,6 +85,7 @@ export const generateCurrentResource = (
   }
   if (!current) {
     allKeys.forEach((key) => {
+      if (skipImageKeys && IMAGE_HIDDEN_KEYS.has(key)) return;
       const value = compare?.[key];
       const isObject = typeof value === 'object';
       if (!isObject && !isAppRunnerParameter(key, type) && !isRoleSharingParameter(key, type)) {
@@ -90,14 +99,6 @@ export const generateCurrentResource = (
   return result;
 };
 
-/**
- * Compare more complex object in different ways
- *
- * @param {Record<string, ActivityAuditDiff[]>} diffMap - map where stored result
- * @param {EntityParameterKeys} key - resource key
- * @param {object} val1 - first value to compare
- * @param {object} val2 - second value to compare
- */
 export const compareObjectTypes = (
   diffMap: Record<string, ActivityAuditDiff[]>,
   key: EntityParameterKeys,
@@ -134,7 +135,7 @@ export const compareObjectTypes = (
     const { completionEndpointPath: __completionEndpointPath2, ...value2 } = val2 as {
       completionEndpointPath?: string;
     };
-    compareSimpleObjects(diffMap.properties, value1, value2, isCurrent);
+    compareSimpleObjects(diffMap.properties, normalizeImageSource(value1), normalizeImageSource(value2), isCurrent);
   } else if (
     !diffMap[key] &&
     (separateObjectParameterKeys.includes(key) ||
@@ -148,13 +149,31 @@ export const compareObjectTypes = (
   }
 };
 
-/**
- * Fill diff for more complex object in different ways
- *
- * @param {Record<string, ActivityAuditDiff[]>} diffMap - map where stored result
- * @param {EntityParameterKeys} key - resource key
- * @param {object} value - value to fill
- */
+type ImageSourceShape = Record<string, unknown> & {
+  externalRegistryRef?: ExternalRegistryRef;
+};
+
+// MCP-Registry sources are projected to a synthetic `mcp-registry` $type with
+// just packageName + serverVersion — the docker/git-specific fields (imageUri,
+// url, branchName, sha, baseDirectory) are intentionally dropped because they
+// are not populated by the registry.
+const normalizeImageSource = (source: object | undefined): object => {
+  if (!source || typeof source !== 'object') return source ?? {};
+  const src = source as ImageSourceShape;
+  if (src.externalRegistryRef && typeof src.externalRegistryRef === 'object') {
+    return {
+      $type: 'mcp-registry',
+      packageName: src.externalRegistryRef.packageName ?? '',
+      serverVersion: src.externalRegistryRef.version ?? '',
+    };
+  }
+  if ('externalRegistryRef' in src) {
+    const { externalRegistryRef: __excluded, ...rest } = src;
+    return rest;
+  }
+  return source;
+};
+
 export const fillObjectTypes = (
   diffMap: Record<string, ActivityAuditDiff[]>,
   key: EntityParameterKeys,
@@ -180,7 +199,7 @@ export const fillObjectTypes = (
     const { completionEndpointPath: __completionEndpointPath1, ...value1 } = value as {
       completionEndpointPath?: string;
     };
-    fillSimpleObjects(diffMap.properties, value1);
+    fillSimpleObjects(diffMap.properties, normalizeImageSource(value1));
   } else if (
     !diffMap[key] &&
     (separateObjectParameterKeys.includes(key) ||
@@ -237,14 +256,82 @@ export const fillObjectArray = (
   }
 };
 
-/**
- * Compare complex objects based on type
- *
- * @param {ActivityAuditDiff[]} diffs - result array
- * @param {string} key - resource key
- * @param {object} val1 - first value to compare
- * @param {object} val2 - second value to compare
- */
+type SeparateObjectHandler = {
+  compare: (diffs: ActivityAuditDiff[], val1: object, val2: object, isCurrent?: boolean) => void;
+  fill: (diffs: ActivityAuditDiff[], value: object) => void;
+};
+
+const interceptorsHandler: SeparateObjectHandler = {
+  compare: (diffs, val1, val2, isCurrent) => compareInterceptors(diffs, val1 as string[], val2 as string[], isCurrent),
+  fill: (diffs, value) => fillInterceptors(diffs, value as string[]),
+};
+
+const entitiesHandler: SeparateObjectHandler = {
+  compare: (diffs, val1, val2, isCurrent) => compareEntities(diffs, val1 as string[], val2 as string[], isCurrent),
+  fill: (diffs, value) => fillEntities(diffs, value as string[]),
+};
+
+const roleLimitsHandler: SeparateObjectHandler = {
+  compare: (diffs, val1, val2, isCurrent) =>
+    compareRoleLimits(diffs, val1 as Record<string, DialRoleLimits>, val2 as Record<string, DialRoleLimits>, isCurrent),
+  fill: (diffs, value) => fillRoleLimits(diffs, value as Record<string, DialRoleLimits>),
+};
+
+const shareHandler: SeparateObjectHandler = {
+  compare: (diffs, val1, val2, isCurrent) =>
+    compareShare(diffs, val1 as Record<string, DialRoleShare>, val2 as Record<string, DialRoleShare>, isCurrent),
+  fill: (diffs, value) => fillShare(diffs, value as Record<string, DialRoleShare>),
+};
+
+const defaultLimitsHandler: SeparateObjectHandler = {
+  compare: compareDefaultLimits,
+  fill: fillDefaultLimits,
+};
+
+const featuresHandler: SeparateObjectHandler = {
+  compare: compareSimpleObjects,
+  fill: fillSimpleObjects,
+};
+
+const authHandler: SeparateObjectHandler = {
+  compare: compareSimpleObjects,
+  fill: () => undefined,
+};
+
+const allowedDomainsHandler: SeparateObjectHandler = {
+  compare: (diffs, val1, val2, isCurrent) =>
+    compareAllowedDomains(diffs, val1 as string[], val2 as string[], isCurrent),
+  fill: (diffs, value) => fillAllowedDomains(diffs, value as string[]),
+};
+
+const domainsHandler: SeparateObjectHandler = {
+  compare: (diffs, val1, val2, isCurrent) => compareDomains(diffs, val1 as string[], val2 as string[], isCurrent),
+  fill: (diffs, value) => fillDomains(diffs, value as string[]),
+};
+
+const SEPARATE_OBJECT_HANDLERS: Record<string, SeparateObjectHandler> = {
+  [EntityParameterKeys.ALLOWED_DOMAINS]: allowedDomainsHandler,
+  [EntityParameterKeys.DOMAINS]: domainsHandler,
+  [EntityParameterKeys.INTERCEPTORS]: interceptorsHandler,
+  [EntityParameterKeys.GLOBAL_INTERCEPTORS]: interceptorsHandler,
+  [EntityParameterKeys.APP_RUNNER_INTERCEPTORS]: interceptorsHandler,
+  [EntityParameterKeys.ROLE_LIMITS]: roleLimitsHandler,
+  [EntityParameterKeys.LIMITS]: roleLimitsHandler,
+  [EntityParameterKeys.SHARE]: shareHandler,
+  [EntityParameterKeys.COST_LIMIT]: defaultLimitsHandler,
+  [EntityParameterKeys.DEFAULT_ROLE_LIMIT]: defaultLimitsHandler,
+  [EntityParameterKeys.FEATURES]: featuresHandler,
+  [EntityParameterKeys.AUTH]: authHandler,
+  [EntityParameterKeys.APPLICATIONS]: entitiesHandler,
+  [EntityParameterKeys.ENTITIES]: entitiesHandler,
+  [EntityParameterKeys.KEYS]: entitiesHandler,
+  [EntityParameterKeys.ROLES]: entitiesHandler,
+  [EntityParameterKeys.ROUTES]: entitiesHandler,
+  [EntityParameterKeys.DEPENDENCIES]: entitiesHandler,
+  [EntityParameterKeys.MODELS]: entitiesHandler,
+  [EntityParameterKeys.APP_RUNNERS]: entitiesHandler,
+};
+
 export const compareSeparateObjects = (
   diffs: ActivityAuditDiff[],
   key: string,
@@ -252,84 +339,11 @@ export const compareSeparateObjects = (
   val2: object,
   isCurrent?: boolean,
 ): void => {
-  if (
-    key === EntityParameterKeys.INTERCEPTORS ||
-    key === EntityParameterKeys.GLOBAL_INTERCEPTORS ||
-    key === EntityParameterKeys.APP_RUNNER_INTERCEPTORS
-  ) {
-    compareInterceptors(diffs, val1 as string[], val2 as string[], isCurrent);
-  }
-  if (key === EntityParameterKeys.ROLE_LIMITS || key === EntityParameterKeys.LIMITS) {
-    compareRoleLimits(diffs, val1 as Record<string, DialRoleLimits>, val2 as Record<string, DialRoleLimits>, isCurrent);
-  }
-  if (key === EntityParameterKeys.SHARE) {
-    compareShare(diffs, val1 as Record<string, DialRoleShare>, val2 as Record<string, DialRoleShare>, isCurrent);
-  }
-  if (key === EntityParameterKeys.COST_LIMIT) {
-    compareDefaultLimits(diffs, val1, val2, isCurrent);
-  }
-  if (key === EntityParameterKeys.DEFAULT_ROLE_LIMIT) {
-    compareDefaultLimits(diffs, val1, val2, isCurrent);
-  }
-  if (key === EntityParameterKeys.FEATURES || key === EntityParameterKeys.AUTH) {
-    compareSimpleObjects(diffs, val1, val2, isCurrent);
-  }
-  if (
-    key === EntityParameterKeys.APPLICATIONS ||
-    key === EntityParameterKeys.ENTITIES ||
-    key === EntityParameterKeys.KEYS ||
-    key === EntityParameterKeys.ROLES ||
-    key === EntityParameterKeys.ROUTES ||
-    key === EntityParameterKeys.DEPENDENCIES ||
-    key === EntityParameterKeys.MODELS ||
-    key === EntityParameterKeys.APP_RUNNERS
-  ) {
-    compareEntities(diffs, val1 as string[], val2 as string[], isCurrent);
-  }
+  SEPARATE_OBJECT_HANDLERS[key]?.compare(diffs, val1, val2, isCurrent);
 };
 
-/**
- * Fill diff for complex objects based on type
- *
- * @param {ActivityAuditDiff[]} diffs - result array
- * @param {string} key key - resource key
- * @param {object} value - value to fill
- */
-export const fillSeparateObjects = (diffs: ActivityAuditDiff[], key: string, value: object) => {
-  if (
-    key === EntityParameterKeys.INTERCEPTORS ||
-    key === EntityParameterKeys.GLOBAL_INTERCEPTORS ||
-    key === EntityParameterKeys.APP_RUNNER_INTERCEPTORS
-  ) {
-    fillInterceptors(diffs, value as string[]);
-  }
-  if (key === EntityParameterKeys.ROLE_LIMITS || key === EntityParameterKeys.LIMITS) {
-    fillRoleLimits(diffs, value as Record<string, DialRoleLimits>);
-  }
-  if (key === EntityParameterKeys.SHARE) {
-    fillShare(diffs, value as Record<string, DialRoleShare>);
-  }
-  if (key === EntityParameterKeys.DEFAULT_ROLE_LIMIT) {
-    fillDefaultLimits(diffs, value);
-  }
-  if (key === EntityParameterKeys.COST_LIMIT) {
-    fillDefaultLimits(diffs, value);
-  }
-  if (key === EntityParameterKeys.FEATURES) {
-    fillSimpleObjects(diffs, value);
-  }
-  if (
-    key === EntityParameterKeys.APPLICATIONS ||
-    key === EntityParameterKeys.ENTITIES ||
-    key === EntityParameterKeys.KEYS ||
-    key === EntityParameterKeys.ROLES ||
-    key === EntityParameterKeys.ROUTES ||
-    key === EntityParameterKeys.MODELS ||
-    key === EntityParameterKeys.DEPENDENCIES ||
-    key === EntityParameterKeys.APP_RUNNERS
-  ) {
-    fillEntities(diffs, value as string[]);
-  }
+export const fillSeparateObjects = (diffs: ActivityAuditDiff[], key: string, value: object): void => {
+  SEPARATE_OBJECT_HANDLERS[key]?.fill(diffs, value);
 };
 
 /**
@@ -363,6 +377,8 @@ export const createSectionFromDiffs = (
     EntityParameterKeys.APP_RUNNER_INTERCEPTORS,
     EntityParameterKeys.APP_RUNNERS,
     EntityParameterKeys.GLOBAL_INTERCEPTORS,
+    EntityParameterKeys.ALLOWED_DOMAINS,
+    EntityParameterKeys.DOMAINS,
   ];
   const sections: ActivityAuditSection = {};
 

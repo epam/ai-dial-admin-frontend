@@ -49,4 +49,17 @@ describe('ViewHeader', () => {
     );
     expect(screen.getByText('child-content')).toBeInTheDocument();
   });
+
+  test('omits the Resource identifier chip when resourceId is empty (firewall singleton)', () => {
+    const firewallActivity: DialActivity = {
+      ...baseActivity,
+      resourceType: ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST,
+      resourceId: '',
+    };
+    render(<ViewHeader activity={firewallActivity} />);
+
+    expect(screen.queryByText(ActivityAuditI18nKey.ResourceId)).not.toBeInTheDocument();
+    expect(screen.getByText(ActivityAuditI18nKey.ActivityType)).toBeInTheDocument();
+    expect(screen.getByText(ActivityAuditI18nKey.ResourceType)).toBeInTheDocument();
+  });
 });

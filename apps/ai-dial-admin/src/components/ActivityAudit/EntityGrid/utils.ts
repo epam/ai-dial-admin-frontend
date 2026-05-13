@@ -3,6 +3,7 @@ import { ColDef } from 'ag-grid-community';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ActivityAuditEntity, ActivityAuditResourceType } from '@/src/types/activity-audit';
 import {
+  DOMAINS_DIFF_COLUMNS,
   ENTITIES_DIFF_COLUMNS,
   INTERCEPTORS_DIFF_COLUMNS,
   RESOURCE_DIFF_COLUMNS,
@@ -60,5 +61,9 @@ export const getColumnsByParameter = (
   ) {
     return ENTITIES_DIFF_COLUMNS;
   }
-  return RESOURCE_DIFF_COLUMNS(t as (stringToTranslate: string) => string, parameter);
+
+  if (parameter === EntityParameterKeys.DOMAINS) {
+    return DOMAINS_DIFF_COLUMNS;
+  }
+  return RESOURCE_DIFF_COLUMNS(t as (stringToTranslate: string) => string, parameter, type);
 };

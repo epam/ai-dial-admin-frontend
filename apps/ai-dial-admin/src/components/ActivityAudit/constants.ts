@@ -46,6 +46,8 @@ export enum EntityParameterKeys {
   SOURCE = 'source',
   DEFAULTS = 'defaults',
   APP_PROPERTIES = 'applicationProperties',
+  ALLOWED_DOMAINS = 'allowedDomains',
+  DOMAINS = 'domains',
 }
 
 export const dateKeys = ['expiresAt', 'keyGeneratedAt', 'createdAt', 'updatedAt'];
@@ -83,4 +85,8 @@ export const separateObjectParameterKeys = [
   EntityParameterKeys.SOURCE,
   EntityParameterKeys.APP_RUNNER_INTERCEPTORS,
   EntityParameterKeys.APP_RUNNERS,
+  EntityParameterKeys.ALLOWED_DOMAINS,
+  EntityParameterKeys.DOMAINS,
 ];
+
+export const DOMAIN_ACCESS_POLICY_KEY = 'domainAccessPolicy';
