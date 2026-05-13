@@ -1794,6 +1794,7 @@ export default {
     MetricFailedText: 'Metric evaluation failed',
     NumericDiff: 'Numeric',
     TextDiff: 'Text',
+    CompareWith: 'Compare with',
   },
   JsonAta: {
     JSONAtaDoc: 'JSONata Expression Reference',
