@@ -118,9 +118,7 @@ describe('ContainerNodePool', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: ButtonsI18nKey.Apply }));
 
     await waitFor(() => {
-      expect(setContainer).toHaveBeenCalledWith(
-        expect.objectContaining({ nodePoolId: null, nodePoolName: null }),
-      );
+      expect(setContainer).toHaveBeenCalledWith(expect.objectContaining({ nodePoolId: null, nodePoolName: null }));
     });
   });
 
