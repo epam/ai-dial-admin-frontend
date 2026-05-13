@@ -17,9 +17,10 @@ interface Props {
   selectedAdapter: DialAdapter;
   originalAdapter: DialAdapter;
   onChangeAdapter: (adapter: DialAdapter) => void;
+  initialAuditTab?: EntityViewTab;
 }
 
-const TabsContent: FC<Props> = ({ activeTab, selectedAdapter, originalAdapter, onChangeAdapter }) => {
+const TabsContent: FC<Props> = ({ activeTab, selectedAdapter, originalAdapter, onChangeAdapter, initialAuditTab }) => {
   return (
     <>
       {activeTab === EntityViewTab.Properties && (
@@ -35,7 +36,9 @@ const TabsContent: FC<Props> = ({ activeTab, selectedAdapter, originalAdapter, o
       {activeTab === EntityViewTab.Models && (
         <AdapterModels adapter={selectedAdapter} onChangeAdapter={onChangeAdapter} />
       )}
-      {activeTab === EntityViewTab.Audit && <EntityAudit entity={selectedAdapter} view={ApplicationRoute.Adapters} />}
+      {activeTab === EntityViewTab.Audit && (
+        <EntityAudit entity={selectedAdapter} view={ApplicationRoute.Adapters} initialAuditTab={initialAuditTab} />
+      )}
     </>
   );
 };

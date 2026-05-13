@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -23,6 +23,7 @@ import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { ApplicationRoute } from '@/src/types/routes';
+import { readAndClearAuditTabReturn } from '@/src/utils/audit-tab-return';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
@@ -38,11 +39,13 @@ interface Props {
 const View: FC<Props> = ({ etag, template, names }) => {
   const t = useI18n();
   const router = useRouter();
+  const pathname = usePathname();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
   const getReqRef = useRef(useProtectedRequest());
 
-  const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
+  const [savedTabs] = useState(() => readAndClearAuditTabReturn(pathname));
+  const [activeTab, setActiveTab] = useState<EntityViewTab>(savedTabs?.mainTab ?? EntityViewTab.Properties);
   const [isChanged, setIsChanged] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(cloneDeep(template));
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -124,7 +127,12 @@ const View: FC<Props> = ({ etag, template, names }) => {
           />
         ) : (
           <>
-            <TabsContent activeTab={activeTab} selectedTemplate={selectedTemplate} onChange={setSelectedTemplate} />
+            <TabsContent
+              activeTab={activeTab}
+              selectedTemplate={selectedTemplate}
+              onChange={setSelectedTemplate}
+              initialAuditTab={savedTabs?.auditTab}
+            />
             {isModalOpen &&
               createPortal(
                 <CreateEntity
