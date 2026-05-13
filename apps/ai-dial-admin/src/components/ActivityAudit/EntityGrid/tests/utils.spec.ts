@@ -117,3 +117,39 @@ describe('getColumnsByParameter', () => {
     expect(resourceColumnsSpy).toHaveBeenCalled();
   });
 });
+
+describe('Activity audit :: RESOURCE_DIFF_COLUMNS cellRendererSelector for env-var rows', () => {
+  const t = (k: string) => k;
+  const getValueSelector = (parameter: EntityParameterKeys) => {
+    const cols = constants.RESOURCE_DIFF_COLUMNS(t, parameter, undefined);
+    const valueCol = cols.find((c) => c.field === 'value');
+    return (valueCol?.cellRendererSelector as Function) || (() => undefined);
+  };
+
+  test.each(['secure_content', 'secure_file', 'content'])(
+    'returns EnvVarValueCellRenderer for envValue row with mountType=%s',
+    (mountType) => {
+      const result = getValueSelector(EntityParameterKeys.METADATA)({
+        data: { parameter: 'envValue', mountType },
+        value: 'v',
+      });
+      expect(result?.component?.displayName || result?.component?.name).toMatch(/EnvVarValueCellRenderer/);
+    },
+  );
+
+  test('returns undefined for non-envValue rows in METADATA section', () => {
+    const result = getValueSelector(EntityParameterKeys.METADATA)({
+      data: { parameter: 'envName', mountType: 'secure_content' },
+      value: 'API_KEY',
+    });
+    expect(result).toBeUndefined();
+  });
+
+  test('returns undefined for env-var-like row when parameter is not METADATA', () => {
+    const result = getValueSelector(EntityParameterKeys.KEYS)({
+      data: { parameter: 'envValue', mountType: 'secure_content' },
+      value: 'v',
+    });
+    expect(result).toBeUndefined();
+  });
+});

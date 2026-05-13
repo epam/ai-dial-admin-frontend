@@ -58,12 +58,7 @@ import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { saveAuditTabReturn } from '@/src/utils/audit-tab-return';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
-import {
-  ActivityAuditResourceType,
-  ActivityAuditView,
-  isGlobalFirewallResource,
-  isImageDefinitionResource,
-} from '@/src/types/activity-audit';
+import { ActivityAuditResourceType, ActivityAuditView, isDeploymentManagerResource } from '@/src/types/activity-audit';
 import { ACTIVITY_AUDIT_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 
 interface Props {
@@ -102,10 +97,8 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
 
   const openInNewTab = useCallback(
     (activity?: DialActivity) => {
-      if (activityViewType === ActivityAuditView.Deployments) {
-        if (!isImageDefinitionResource(activity?.resourceType) && !isGlobalFirewallResource(activity?.resourceType)) {
-          return;
-        }
+      if (activityViewType === ActivityAuditView.Deployments && !isDeploymentManagerResource(activity?.resourceType)) {
+        return;
       }
       onOpenInNewTab(ApplicationRoute.ActivityAudit, activity);
     },
@@ -249,10 +242,8 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
   const gridOptions: GridOptions = {
     ...infiniteGridOptions,
     onCellClicked: (e) => {
-      if (isDeploymentsView) {
-        if (!isImageDefinitionResource(e.data?.resourceType) && !isGlobalFirewallResource(e.data?.resourceType)) {
-          return;
-        }
+      if (isDeploymentsView && !isDeploymentManagerResource(e.data?.resourceType)) {
+        return;
       }
       if (e.data?.children?.length > 0) {
         return;

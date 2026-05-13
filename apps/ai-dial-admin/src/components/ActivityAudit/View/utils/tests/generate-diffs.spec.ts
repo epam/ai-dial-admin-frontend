@@ -597,3 +597,232 @@ describe('Activity audit :: createSectionFromDiffs surfaces firewall sections', 
     expect(sections[EntityParameterKeys.DOMAINS]).toBeDefined();
   });
 });
+
+describe('Container detail :: resources handler', () => {
+  test('full resources object emits 5 rows in fixed order (gpuLimit hidden to match editor)', () => {
+    const before: ActivityAuditEntity = {
+      resources: {
+        requests: { cpu: '100m', memory: '256Mi', 'nvidia.com/gpu': '1' },
+        limits: { cpu: '500m', memory: '1Gi', 'nvidia.com/gpu': '1' },
+      },
+    };
+    const after = before;
+    const result = generateCurrentResource(before, after, ActivityAuditResourceType.NIM_DEPLOYMENT, true);
+    const rows = result[EntityParameterKeys.RESOURCES] || [];
+    expect(rows.map((r) => r.parameter)).toEqual([
+      'cpuRequest',
+      'memoryRequest',
+      'gpuRequest',
+      'cpuLimit',
+      'memoryLimit',
+    ]);
+  });
+
+  test('partial resources hides missing rows', () => {
+    const before: ActivityAuditEntity = { resources: { requests: { cpu: '100m' }, limits: { memory: '1Gi' } } };
+    const result = generateCurrentResource(before, before, ActivityAuditResourceType.MCP_DEPLOYMENT, true);
+    const rows = result[EntityParameterKeys.RESOURCES] || [];
+    expect(rows.map((r) => r.parameter)).toEqual(['cpuRequest', 'memoryLimit']);
+  });
+
+  test('changed value in resources carries CHANGED status', () => {
+    const before: ActivityAuditEntity = { resources: { requests: { cpu: '100m' } } };
+    const after: ActivityAuditEntity = { resources: { requests: { cpu: '200m' } } };
+    const result = generateCurrentResource(before, after, ActivityAuditResourceType.MCP_DEPLOYMENT, false);
+    const row = result[EntityParameterKeys.RESOURCES]?.[0];
+    expect(row).toMatchObject({ parameter: 'cpuRequest', value: '200m', diffStatus: DiffStatus.CHANGED });
+  });
+});
+
+describe('Container detail :: scaling handler', () => {
+  test('with scale-to-zero enabled (non-zero seconds): hides min/max, shows strategy+threshold', () => {
+    const snap: ActivityAuditEntity = {
+      scaling: {
+        minReplicas: 1,
+        maxReplicas: 5,
+        scaleToZeroDelaySeconds: 300,
+        strategy: { $type: 'active_requests', threshold: 80 },
+      },
+    };
+    const result = generateCurrentResource(snap, snap, ActivityAuditResourceType.MCP_DEPLOYMENT, true);
+    const rows = result[EntityParameterKeys.SCALING] || [];
+    expect(rows.map((r) => r.parameter)).toEqual([
+      'scaleToZeroDelaySeconds',
+      'scalingStrategyType',
+      'scalingStrategyThreshold',
+    ]);
+  });
+
+  test('with scale-to-zero never (0) and min != max: shows min, max, scale-to-zero, strategy, threshold', () => {
+    const snap: ActivityAuditEntity = {
+      scaling: {
+        minReplicas: 0,
+        maxReplicas: 5,
+        scaleToZeroDelaySeconds: 0,
+        strategy: { $type: 'active_requests', threshold: 80 },
+      },
+    };
+    const result = generateCurrentResource(snap, snap, ActivityAuditResourceType.MCP_DEPLOYMENT, true);
+    const rows = result[EntityParameterKeys.SCALING] || [];
+    expect(rows.map((r) => r.parameter)).toEqual([
+      'minReplicas',
+      'maxReplicas',
+      'scaleToZeroDelaySeconds',
+      'scalingStrategyType',
+      'scalingStrategyThreshold',
+    ]);
+  });
+
+  test('with scale-to-zero never AND min == max: hides strategy + threshold', () => {
+    const snap: ActivityAuditEntity = {
+      scaling: {
+        minReplicas: 1,
+        maxReplicas: 1,
+        scaleToZeroDelaySeconds: 0,
+        strategy: { $type: 'active_requests', threshold: 80 },
+      },
+    };
+    const result = generateCurrentResource(snap, snap, ActivityAuditResourceType.NIM_DEPLOYMENT, true);
+    const rows = result[EntityParameterKeys.SCALING] || [];
+    expect(rows.map((r) => r.parameter)).toEqual(['minReplicas', 'maxReplicas', 'scaleToZeroDelaySeconds']);
+  });
+
+  test('missing scaling field produces no Scaling section', () => {
+    const snap: ActivityAuditEntity = {};
+    const result = generateCurrentResource(snap, snap, ActivityAuditResourceType.NIM_DEPLOYMENT, true);
+    expect(result[EntityParameterKeys.SCALING]).toBeUndefined();
+  });
+});
+
+describe('Container detail :: probeProperties handler', () => {
+  test('emits probe rows with flattened probe object', () => {
+    const snap: ActivityAuditEntity = {
+      probeProperties: {
+        enabled: true,
+        initialDelaySeconds: 10,
+        periodSeconds: 5,
+        timeoutSeconds: 1,
+        failureThreshold: 3,
+        probe: { $type: 'httpGet', path: '/health', port: 8080 },
+      },
+    };
+    const result = generateCurrentResource(snap, snap, ActivityAuditResourceType.MCP_DEPLOYMENT, true);
+    const rows = result[EntityParameterKeys.PROBE_PROPERTIES] || [];
+    expect(rows.map((r) => r.parameter)).toEqual([
+      'probeEnabled',
+      'initialDelaySeconds',
+      'periodSeconds',
+      'timeoutSeconds',
+      'failureThreshold',
+      'probeType',
+      'probePath',
+      'probePort',
+    ]);
+  });
+
+  test('boolean enabled renders as string', () => {
+    const snap: ActivityAuditEntity = { probeProperties: { enabled: false } };
+    const result = generateCurrentResource(snap, snap, ActivityAuditResourceType.MCP_DEPLOYMENT, true);
+    const enabledRow = result[EntityParameterKeys.PROBE_PROPERTIES]?.find((r) => r.parameter === 'probeEnabled');
+    expect(enabledRow?.value).toBe('false');
+  });
+});
+
+describe('Container detail :: metadata (envs) handler — per-variable sub-tables', () => {
+  test('emits one bucket per env, sorted by name', () => {
+    const snap: ActivityAuditEntity = {
+      metadata: {
+        envs: [
+          { name: 'Z_LAST', description: '', value: { $type: 'simple', value: 'z' }, mountType: 'content' },
+          { name: 'A_FIRST', description: '', value: { $type: 'simple', value: 'a' }, mountType: 'content' },
+        ],
+      },
+    };
+    const result = generateCurrentResource(snap, snap, ActivityAuditResourceType.MCP_DEPLOYMENT, true);
+    expect(result[`${EntityParameterKeys.METADATA}0`]?.[0]).toMatchObject({ parameter: 'envName', value: 'A_FIRST' });
+    expect(result[`${EntityParameterKeys.METADATA}1`]?.[0]).toMatchObject({ parameter: 'envName', value: 'Z_LAST' });
+  });
+
+  test('each bucket emits four rows: envName, envDescription, envValue, envMountType', () => {
+    const snap: ActivityAuditEntity = {
+      metadata: {
+        envs: [{ name: 'X', description: 'desc', value: { $type: 'simple', value: '1' }, mountType: 'secure_content' }],
+      },
+    };
+    const result = generateCurrentResource(snap, snap, ActivityAuditResourceType.MCP_DEPLOYMENT, true);
+    const rows = result[`${EntityParameterKeys.METADATA}0`] || [];
+    expect(rows.map((r) => r.parameter)).toEqual(['envName', 'envDescription', 'envValue', 'envMountType']);
+    expect(rows[0]).toMatchObject({ value: 'X' });
+    expect(rows[1]).toMatchObject({ value: 'desc' });
+    expect(rows[2]).toMatchObject({ value: '1', mountType: 'secure_content' });
+    expect(rows[3]).toMatchObject({ value: 'secure_content' });
+  });
+
+  test('file-type env: envValue row uses fileName as value', () => {
+    const snap: ActivityAuditEntity = {
+      metadata: {
+        envs: [
+          {
+            name: 'CERT',
+            description: '',
+            value: { $type: 'file', fileName: 'server.crt', fileContent: 'pem' },
+            mountType: 'secure_file',
+          },
+        ],
+      },
+    };
+    const result = generateCurrentResource(snap, snap, ActivityAuditResourceType.MCP_DEPLOYMENT, true);
+    const rows = result[`${EntityParameterKeys.METADATA}0`] || [];
+    const envValueRow = rows.find((r) => r.parameter === 'envValue');
+    expect(envValueRow?.value).toBe('server.crt');
+  });
+});
+
+describe('Container detail :: metadata (envs) diff symmetry', () => {
+  // AuditView convention: BEFORE pass = generateCurrentResource(latest, previous, ..., true).
+  //                      AFTER pass  = generateCurrentResource(previous, latest, ..., false).
+  const envA = { name: 'A', description: 'before', value: { $type: 'simple', value: '1' }, mountType: 'content' };
+  const envB = { name: 'B', description: '', value: { $type: 'simple', value: '2' }, mountType: 'content' };
+  const envAChanged = { ...envA, value: { $type: 'simple', value: '99' } };
+
+  test('added env: BEFORE bucket empty, AFTER bucket has ADDED rows', () => {
+    const previous: ActivityAuditEntity = { metadata: { envs: [envA] } };
+    const latest: ActivityAuditEntity = { metadata: { envs: [envA, envB] } };
+    const beforePass = generateCurrentResource(latest, previous, ActivityAuditResourceType.MCP_DEPLOYMENT, true);
+    const afterPass = generateCurrentResource(previous, latest, ActivityAuditResourceType.MCP_DEPLOYMENT, false);
+    // index 1 corresponds to envB (sorted alphabetically)
+    expect(beforePass[`${EntityParameterKeys.METADATA}1`] ?? []).toEqual([]);
+    const addedRows = afterPass[`${EntityParameterKeys.METADATA}1`] || [];
+    expect(addedRows).toHaveLength(4);
+    expect(addedRows.every((r) => r.diffStatus === DiffStatus.ADDED)).toBe(true);
+  });
+
+  test('removed env: BEFORE bucket has REMOVED rows, AFTER bucket empty', () => {
+    const previous: ActivityAuditEntity = { metadata: { envs: [envA, envB] } };
+    const latest: ActivityAuditEntity = { metadata: { envs: [envA] } };
+    const beforePass = generateCurrentResource(latest, previous, ActivityAuditResourceType.MCP_DEPLOYMENT, true);
+    const afterPass = generateCurrentResource(previous, latest, ActivityAuditResourceType.MCP_DEPLOYMENT, false);
+    const removedRows = beforePass[`${EntityParameterKeys.METADATA}1`] || [];
+    expect(removedRows).toHaveLength(4);
+    expect(removedRows.every((r) => r.diffStatus === DiffStatus.REMOVED)).toBe(true);
+    expect(afterPass[`${EntityParameterKeys.METADATA}1`] ?? []).toEqual([]);
+  });
+
+  test('changed env value: BEFORE pass marks envValue row CHANGED, other rows unchanged', () => {
+    const previous: ActivityAuditEntity = { metadata: { envs: [envA] } };
+    const latest: ActivityAuditEntity = { metadata: { envs: [envAChanged] } };
+    const beforePass = generateCurrentResource(latest, previous, ActivityAuditResourceType.MCP_DEPLOYMENT, true);
+    const rows = beforePass[`${EntityParameterKeys.METADATA}0`] || [];
+    const envValueRow = rows.find((r) => r.parameter === 'envValue');
+    expect(envValueRow?.diffStatus).toBe(DiffStatus.CHANGED);
+    const envNameRow = rows.find((r) => r.parameter === 'envName');
+    expect(envNameRow?.diffStatus).toBeUndefined();
+  });
+
+  test('identical env: no diffStatus on any row', () => {
+    const snap: ActivityAuditEntity = { metadata: { envs: [envA] } };
+    const result = generateCurrentResource(snap, snap, ActivityAuditResourceType.MCP_DEPLOYMENT, true);
+    const rows = result[`${EntityParameterKeys.METADATA}0`] || [];
+    expect(rows.every((r) => r.diffStatus === undefined)).toBe(true);
+  });
+});

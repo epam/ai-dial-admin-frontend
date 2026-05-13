@@ -62,12 +62,7 @@ const IMAGE_DEFINITION_RESOURCE_TYPES = new Set<string>([
   ActivityAuditResourceType.MCP_IMAGE_DEFINITION,
 ]);
 
-const DEPLOYMENT_MANAGER_RESOURCE_TYPES = new Set<string>([
-  ActivityAuditResourceType.ADAPTER_IMAGE_DEFINITION,
-  ActivityAuditResourceType.APPLICATION_IMAGE_DEFINITION,
-  ActivityAuditResourceType.INTERCEPTOR_IMAGE_DEFINITION,
-  ActivityAuditResourceType.MCP_IMAGE_DEFINITION,
-  ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST,
+const CONTAINER_DEPLOYMENT_RESOURCE_TYPES = new Set<string>([
   ActivityAuditResourceType.ADAPTER_DEPLOYMENT,
   ActivityAuditResourceType.APPLICATION_DEPLOYMENT,
   ActivityAuditResourceType.INTERCEPTOR_DEPLOYMENT,
@@ -76,11 +71,20 @@ const DEPLOYMENT_MANAGER_RESOURCE_TYPES = new Set<string>([
   ActivityAuditResourceType.INFERENCE_DEPLOYMENT,
 ]);
 
+const DEPLOYMENT_MANAGER_RESOURCE_TYPES = new Set<string>([
+  ...IMAGE_DEFINITION_RESOURCE_TYPES,
+  ...CONTAINER_DEPLOYMENT_RESOURCE_TYPES,
+  ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST,
+]);
+
 export const isImageDefinitionResource = (type?: string): boolean =>
   !!type && IMAGE_DEFINITION_RESOURCE_TYPES.has(type);
 
 export const isGlobalFirewallResource = (type?: string): boolean =>
   type === ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST;
+
+export const isContainerDeploymentResource = (type?: string): boolean =>
+  !!type && CONTAINER_DEPLOYMENT_RESOURCE_TYPES.has(type);
 
 export const isDeploymentManagerResource = (type?: string): boolean =>
   !!type && DEPLOYMENT_MANAGER_RESOURCE_TYPES.has(type);
