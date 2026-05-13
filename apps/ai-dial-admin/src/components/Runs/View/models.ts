@@ -1,3 +1,5 @@
+import { AnalyticsResult } from '@/src/models/evaluation/run';
+
 export interface MetricEntry {
   key: string;
   value: number | null;
@@ -10,4 +12,8 @@ export interface MetricGroup {
   info?: Record<string, unknown>;
   hasError: boolean;
   errorMessage?: string;
+}
+
+export interface CompareAnalyticsRow extends AnalyticsResult {
+  _compared?: AnalyticsResult | null;
 }

@@ -1699,6 +1699,7 @@ export enum RunsI18nKey {
   NumericDiff = 'Runs.NumericDiff',
   TextDiff = 'Runs.TextDiff',
   MetricBindings = 'Runs.MetricBindings',
+  CompareWith = 'Runs.CompareWith',
 }
 
 export enum FileManagerI18nKey {
