@@ -746,9 +746,7 @@ describe('Container detail :: metadata (envs) handler — per-variable sub-table
   test('each bucket emits four rows: envName, envDescription, envValue, envMountType', () => {
     const snap: ActivityAuditEntity = {
       metadata: {
-        envs: [
-          { name: 'X', description: 'desc', value: { $type: 'simple', value: '1' }, mountType: 'secure_content' },
-        ],
+        envs: [{ name: 'X', description: 'desc', value: { $type: 'simple', value: '1' }, mountType: 'secure_content' }],
       },
     };
     const result = generateCurrentResource(snap, snap, ActivityAuditResourceType.MCP_DEPLOYMENT, true);

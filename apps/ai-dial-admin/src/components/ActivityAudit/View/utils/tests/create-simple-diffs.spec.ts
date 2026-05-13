@@ -557,27 +557,16 @@ describe('Activity audit :: fillShare', () => {
   });
 });
 
-
 describe('Activity audit :: compareNestedFlatObject', () => {
   test('matched rows carry no status', () => {
     const diffs: ActivityAuditDiff[] = [];
-    compareNestedFlatObject(
-      diffs,
-      [{ parameter: 'a', value: '1' }],
-      [{ parameter: 'a', value: '1' }],
-      false,
-    );
+    compareNestedFlatObject(diffs, [{ parameter: 'a', value: '1' }], [{ parameter: 'a', value: '1' }], false);
     expect(diffs).toEqual([{ parameter: 'a', value: '1' }]);
   });
 
   test('changed value carries CHANGED', () => {
     const diffs: ActivityAuditDiff[] = [];
-    compareNestedFlatObject(
-      diffs,
-      [{ parameter: 'a', value: '1' }],
-      [{ parameter: 'a', value: '2' }],
-      false,
-    );
+    compareNestedFlatObject(diffs, [{ parameter: 'a', value: '1' }], [{ parameter: 'a', value: '2' }], false);
     expect(diffs).toEqual([{ parameter: 'a', value: '2', diffStatus: DiffStatus.CHANGED }]);
   });
 
@@ -585,8 +574,14 @@ describe('Activity audit :: compareNestedFlatObject', () => {
     const diffs: ActivityAuditDiff[] = [];
     compareNestedFlatObject(
       diffs,
-      [{ parameter: 'a', value: undefined }, { parameter: 'b', value: '1' }],
-      [{ parameter: 'a', value: undefined }, { parameter: 'b', value: '1' }],
+      [
+        { parameter: 'a', value: undefined },
+        { parameter: 'b', value: '1' },
+      ],
+      [
+        { parameter: 'a', value: undefined },
+        { parameter: 'b', value: '1' },
+      ],
       false,
     );
     expect(diffs).toEqual([{ parameter: 'b', value: '1' }]);
@@ -594,23 +589,13 @@ describe('Activity audit :: compareNestedFlatObject', () => {
 
   test('val1-only row → REMOVED on After side', () => {
     const diffs: ActivityAuditDiff[] = [];
-    compareNestedFlatObject(
-      diffs,
-      [{ parameter: 'a', value: '1' }],
-      [{ parameter: 'a', value: undefined }],
-      false,
-    );
+    compareNestedFlatObject(diffs, [{ parameter: 'a', value: '1' }], [{ parameter: 'a', value: undefined }], false);
     expect(diffs).toEqual([{ parameter: 'a', value: '', diffStatus: DiffStatus.REMOVED }]);
   });
 
   test('val2-only row → ADDED on After side', () => {
     const diffs: ActivityAuditDiff[] = [];
-    compareNestedFlatObject(
-      diffs,
-      [{ parameter: 'a', value: undefined }],
-      [{ parameter: 'a', value: '1' }],
-      false,
-    );
+    compareNestedFlatObject(diffs, [{ parameter: 'a', value: undefined }], [{ parameter: 'a', value: '1' }], false);
     expect(diffs).toEqual([{ parameter: 'a', value: '1', diffStatus: DiffStatus.ADDED }]);
   });
 
