@@ -57,7 +57,12 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
-import { ActivityAuditResourceType, ActivityAuditView } from '@/src/types/activity-audit';
+import {
+  ActivityAuditResourceType,
+  ActivityAuditView,
+  isGlobalFirewallResource,
+  isImageDefinitionResource,
+} from '@/src/types/activity-audit';
 import { ACTIVITY_AUDIT_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 
 interface Props {
@@ -96,7 +101,9 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
   const openInNewTab = useCallback(
     (activity?: DialActivity) => {
       if (activityViewType === ActivityAuditView.Deployments) {
-        return;
+        if (!isImageDefinitionResource(activity?.resourceType) && !isGlobalFirewallResource(activity?.resourceType)) {
+          return;
+        }
       }
       onOpenInNewTab(ApplicationRoute.ActivityAudit, activity);
     },
@@ -241,7 +248,9 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
     ...infiniteGridOptions,
     onCellClicked: (e) => {
       if (isDeploymentsView) {
-        return;
+        if (!isImageDefinitionResource(e.data?.resourceType) && !isGlobalFirewallResource(e.data?.resourceType)) {
+          return;
+        }
       }
       if (e.data?.children?.length > 0) {
         return;
