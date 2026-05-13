@@ -78,6 +78,8 @@ describe('Constants :: grid columns', () => {
     const cols = ACTIVITY_AUDIT_COLUMNS(t, ActivityAuditView.Config);
     expect(Array.isArray(cols)).toBe(true);
     expect(cols.some((c) => c.field === 'expanderColumn')).toBe(true);
+    const activityTypeCol = cols.find((c) => c.field === 'activityType');
+    expect(activityTypeCol?.cellRendererParams).toEqual({ showIcon: true });
     expect(cols.some((c) => c.field === 'activityType')).toBe(true);
     expect(cols.some((c) => c.field === 'resourceId')).toBe(true);
     expect(cols.some((c) => c.field === 'parentActivityId')).toBe(true);
@@ -92,6 +94,8 @@ describe('Constants :: grid columns', () => {
     expect(cols.some((c) => c.field === 'resourceType')).toBe(false);
     expect(cols.some((c) => c.field === 'resourceId')).toBe(false);
     expect(cols.some((c) => c.field === 'activityType')).toBe(true);
+    const activityTypeCol = cols.find((c) => c.field === 'activityType');
+    expect(activityTypeCol?.cellRendererParams).toEqual({ showIcon: false });
     expect(cols.some((c) => c.field === 'activityId')).toBe(true);
   });
 
