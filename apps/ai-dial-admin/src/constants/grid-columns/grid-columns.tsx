@@ -237,6 +237,9 @@ export const ACTIVITY_AUDIT_COLUMNS = (
     headerName: 'Activity type',
     ...baseStringFilter,
     cellRenderer: ChildrenActivityTypeCellRenderer,
+    cellRendererParams: {
+      showIcon: !isSingleEntity,
+    },
   },
   ...(!isSingleEntity
     ? [
