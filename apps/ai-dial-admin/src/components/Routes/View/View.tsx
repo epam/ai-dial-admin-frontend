@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { cloneDeep } from 'lodash';
@@ -17,6 +17,7 @@ import { DialRole } from '@/src/models/dial/role';
 import { DialRoute } from '@/src/models/dial/route';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
+import { readAndClearAuditTabReturn } from '@/src/utils/audit-tab-return';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
@@ -33,12 +34,14 @@ interface Props {
 const RouteView: FC<Props> = ({ originalRoute, etag, names, roles }) => {
   const t = useI18n();
   const router = useRouter();
+  const pathname = usePathname();
   const { dispatch } = useSaveValidationContext();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
   const tabs = getRouteTabs(t);
 
-  const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
+  const [savedTabs] = useState(() => readAndClearAuditTabReturn(pathname));
+  const [activeTab, setActiveTab] = useState<EntityViewTab>(savedTabs?.mainTab ?? EntityViewTab.Properties);
   const [selectedRoute, setSelectedRoute] = useState(cloneDeep(originalRoute));
   const [isChanged, setIsChanged] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
@@ -136,6 +139,7 @@ const RouteView: FC<Props> = ({ originalRoute, etag, names, roles }) => {
             onChangeRoute={setSelectedRoute}
             roles={roles}
             routeNames={names}
+            initialAuditTab={savedTabs?.auditTab}
           />
         )}
       </div>

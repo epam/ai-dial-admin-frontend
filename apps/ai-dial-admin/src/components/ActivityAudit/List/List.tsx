@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -55,6 +55,7 @@ import {
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { saveAuditTabReturn } from '@/src/utils/audit-tab-return';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
 import { ActivityAuditResourceType, ActivityAuditView } from '@/src/types/activity-audit';
@@ -72,6 +73,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const router = useRouter();
+  const pathname = usePathname();
   const { showNotification } = useNotification();
 
   const [isRollbackModalOpen, setIsRollbackModalOpen] = useState(false);
@@ -251,6 +253,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
         if (entity) {
           const href = getAuditActivityHref(entity, entityType as ActivityAuditResourceType, e.data.activityId);
           if (href) {
+            saveAuditTabReturn(pathname);
             router.push(href);
           }
         } else {
