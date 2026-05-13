@@ -14,9 +14,10 @@ interface Props {
   activeTab: EntityViewTab;
   selectedTemplate: InterceptorTemplate;
   onChange: (template: InterceptorTemplate) => void;
+  initialAuditTab?: EntityViewTab;
 }
 
-const TabsContent: FC<Props> = ({ activeTab, selectedTemplate, onChange }) => {
+const TabsContent: FC<Props> = ({ activeTab, selectedTemplate, onChange, initialAuditTab }) => {
   return (
     <>
       {activeTab === EntityViewTab.Properties && (
@@ -30,7 +31,11 @@ const TabsContent: FC<Props> = ({ activeTab, selectedTemplate, onChange }) => {
       )}
       {activeTab === EntityViewTab.Interceptors && <Interceptors interceptorList={selectedTemplate.interceptors} />}
       {activeTab === EntityViewTab.Audit && (
-        <EntityAudit entity={selectedTemplate} view={ApplicationRoute.InterceptorTemplates} />
+        <EntityAudit
+          entity={selectedTemplate}
+          view={ApplicationRoute.InterceptorTemplates}
+          initialAuditTab={initialAuditTab}
+        />
       )}
     </>
   );

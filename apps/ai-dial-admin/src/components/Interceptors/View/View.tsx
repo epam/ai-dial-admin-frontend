@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { TabModel } from '@epam/ai-dial-ui-kit';
@@ -25,6 +25,7 @@ import { DialModel } from '@/src/models/dial/model';
 import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
+import { readAndClearAuditTabReturn } from '@/src/utils/audit-tab-return';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
@@ -44,13 +45,15 @@ interface Props {
 const InterceptorView: FC<Props> = ({ originalInterceptor, names, etag, ...props }) => {
   const t = useI18n();
   const router = useRouter();
+  const pathname = usePathname();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
   const getReqRef = useRef(useProtectedRequest());
 
   const tabs: TabModel[] = getInterceptorTabs(t);
 
-  const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
+  const [savedTabs] = useState(() => readAndClearAuditTabReturn(pathname));
+  const [activeTab, setActiveTab] = useState<EntityViewTab>(savedTabs?.mainTab ?? EntityViewTab.Properties);
   const [selectedInterceptor, setSelectedInterceptor] = useState(cloneDeep(originalInterceptor));
   const [isChanged, setIsChanged] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
@@ -161,6 +164,7 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, etag, ...props
             onChange={setSelectedInterceptor}
             activeTab={activeTab}
             names={names}
+            initialAuditTab={savedTabs?.auditTab}
             {...props}
           />
         )}

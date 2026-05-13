@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -24,6 +24,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialModelType } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
+import { readAndClearAuditTabReturn } from '@/src/utils/audit-tab-return';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
@@ -40,6 +41,7 @@ interface Props {
 const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
   const t = useI18n();
   const router = useRouter();
+  const pathname = usePathname();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
 
@@ -47,7 +49,8 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
 
   const tabs = getAdapterTabs(t);
 
-  const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
+  const [savedTabs] = useState(() => readAndClearAuditTabReturn(pathname));
+  const [activeTab, setActiveTab] = useState<EntityViewTab>(savedTabs?.mainTab ?? EntityViewTab.Properties);
   const [selectedAdapter, setSelectedAdapter] = useState(cloneDeep(originalAdapter));
   const [isChanged, setIsChanged] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
@@ -124,6 +127,7 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
               selectedAdapter={selectedAdapter}
               originalAdapter={originalAdapter}
               onChangeAdapter={setSelectedAdapter}
+              initialAuditTab={savedTabs?.auditTab}
             />
 
             {isModalOpen &&

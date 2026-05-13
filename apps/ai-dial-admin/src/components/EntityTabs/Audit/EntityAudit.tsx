@@ -19,14 +19,15 @@ import { TimeFilterValue } from '@/src/models/time-range';
 interface Props {
   entity: BaseEntity;
   view: ApplicationRoute;
+  initialAuditTab?: EntityViewTab;
 }
 
-const EntityAudit: FC<Props> = ({ entity, view }) => {
+const EntityAudit: FC<Props> = ({ entity, view, initialAuditTab }) => {
   const t = useI18n();
 
   const { featureFlags } = useAppContext();
   const tabs = getAuditTabs(t, featureFlags, view);
-  const [activeTab, setActiveTab] = useState(tabs[0].id);
+  const [activeTab, setActiveTab] = useState(initialAuditTab ?? tabs[0].id);
 
   const [timeFilter, setTimeFilter] = useState<TimeFilterValue>(DEFAULT_TIME_PERIOD);
 
