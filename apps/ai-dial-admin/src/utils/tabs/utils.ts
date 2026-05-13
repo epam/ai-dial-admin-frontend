@@ -452,6 +452,7 @@ export const getDeploymentsViewTabs = (
       firewallTab(t, !!allowedWhitelist?.includes(ALLOW_ALL_DOMAINS)),
       relatedContainersTab(t, status as IMAGE_STATUS),
       installationLogTab(t, status as IMAGE_STATUS),
+      auditTab(t),
     ];
   }
   if (route === ApplicationRoute.McpContainers) {
@@ -463,6 +464,7 @@ export const getDeploymentsViewTabs = (
       promptsTab(t, status as CONTAINER_STATUS),
       executionLogTab(t),
       eventsTab(t),
+      auditTab(t),
     ];
   }
   return [
@@ -470,6 +472,7 @@ export const getDeploymentsViewTabs = (
     firewallTab(t, !!allowedWhitelist?.includes(ALLOW_ALL_DOMAINS)),
     executionLogTab(t),
     eventsTab(t),
+    auditTab(t),
   ];
 };
 
