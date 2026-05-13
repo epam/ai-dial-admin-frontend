@@ -42,7 +42,7 @@ const GridView = <T extends object>({
   getHref,
 }: GridViewProps<T>) => {
   const staticPanelContainerClassName = classNames(
-    'left-0 top-0 size-full bg-blackout z-50',
+    'left-0 top-0 size-full bg-blackout z-[15]',
     showColumnsPanel ? 'flex' : 'hidden',
   );
 
