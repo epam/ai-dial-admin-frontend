@@ -187,7 +187,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
           .then((res) => {
             if (res == null || res.data.length === 0) {
               params.successCallback([], 0);
-            } else if (isDeploymentsView) {
+            } else if (isDeploymentsView || entity) {
               params.successCallback(res.data, page + 1 === res.totalPages ? res.total : void 0);
             } else {
               const activityMap: Record<

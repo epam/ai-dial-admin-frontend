@@ -22,7 +22,8 @@ interface Props {
   setCondition: Dispatch<SetStateAction<FILTER_OPERATOR>>;
   setValue: Dispatch<SetStateAction<string[]>>;
   onCreate: () => void;
-  dropdownData: { projects: SelectOption[]; entities: SelectOption[] };
+  projects: SelectOption[];
+  entities: SelectOption[];
   reset: () => void;
   children: ReactElement;
   route: ApplicationRoute;
@@ -38,7 +39,8 @@ const AddFilterPopover: FC<Props> = ({
   setCondition,
   condition,
   onCreate,
-  dropdownData,
+  projects,
+  entities,
   reset,
   children,
   route,
@@ -96,7 +98,8 @@ const AddFilterPopover: FC<Props> = ({
                 setType={setType}
                 setCondition={setCondition}
                 setValue={setValue}
-                dropdownData={dropdownData}
+                projects={projects}
+                entities={entities}
                 route={route}
                 isMcpView={isMcpView}
                 isRouteView={isRouteView}

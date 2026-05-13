@@ -1,10 +1,15 @@
 import { IconLetterL } from '@tabler/icons-react';
 import { ICellRendererParams } from 'ag-grid-community';
 
-const ChildrenActivityTypeCellRenderer = ({ data }: ICellRendererParams) => {
+interface ChildrenActivityTypeCellRendererParams extends ICellRendererParams {
+  /** When false, the child-activity indicator icon is not shown. Defaults to true. */
+  showIcon?: boolean;
+}
+
+const ChildrenActivityTypeCellRenderer = ({ data, showIcon = true }: ChildrenActivityTypeCellRendererParams) => {
   return (
     <>
-      {data?.parentActivityId ? <IconLetterL size={14} className="text-secondary m-1" /> : null}
+      {showIcon && data?.parentActivityId ? <IconLetterL size={14} className="text-secondary m-1" /> : null}
       <span>{data?.activityType}</span>
     </>
   );
