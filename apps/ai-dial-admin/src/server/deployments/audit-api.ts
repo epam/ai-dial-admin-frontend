@@ -1,6 +1,7 @@
 import { DialActivity } from '@/src/models/activity-audit';
 import { Token } from '@/src/models/auth';
 import { AuditPageData, FilterDto, SortDto } from '@/src/models/request';
+import { ServerActionResponse } from '@/src/models/server-action';
 import { API } from '@/src/server/api';
 import { BaseApi } from '@/src/server/base-api';
 
@@ -24,5 +25,9 @@ export class DeploymentAuditApi extends BaseApi {
       },
       token,
     );
+  }
+
+  getActivityById(id: string, token: Token): Promise<ServerActionResponse<DialActivity>> {
+    return this.getAction(`${DEPLOYMENT_ACTIVITIES_URL}/${id}`, token);
   }
 }
