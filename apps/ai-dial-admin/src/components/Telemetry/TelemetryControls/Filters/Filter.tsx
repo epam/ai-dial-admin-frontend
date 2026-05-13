@@ -13,7 +13,8 @@ interface Props {
   onClose: (id: number) => void;
   onEdit: (filter: FilterData, index?: number) => void;
   filterData: FilterData;
-  dropdownData: { projects: SelectOption[]; entities: SelectOption[] };
+  projects: SelectOption[];
+  entities: SelectOption[];
   route: ApplicationRoute;
   isMcpView?: boolean;
   isRouteView?: boolean;
@@ -23,7 +24,8 @@ const Filter: FC<Props> = ({
   id,
   onClose,
   onEdit,
-  dropdownData,
+  projects,
+  entities,
   filterData,
   route,
   isMcpView = false,
@@ -46,7 +48,8 @@ const Filter: FC<Props> = ({
   return (
     <AddFilter
       addFilter={addFilter}
-      dropdownData={dropdownData}
+      projects={projects}
+      entities={entities}
       filterData={filterData}
       route={route}
       isMcpView={isMcpView}

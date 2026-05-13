@@ -13,7 +13,8 @@ const baseProps = {
   setCondition: vi.fn(),
   setValue: vi.fn(),
   onClose: vi.fn(),
-  dropdownData: { projects: [{ value: 'project1' }, { value: 'project2' }], entities: [{ value: 'entity1' }] },
+  projects: [{ value: 'project1' }, { value: 'project2' }],
+  entities: [{ value: 'entity1' }],
   route: ApplicationRoute.Dashboard,
 };
 
