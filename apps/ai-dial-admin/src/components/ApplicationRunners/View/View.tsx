@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -33,6 +33,7 @@ import { DialRole } from '@/src/models/dial/role';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
 import { createSchemaSource } from '@/src/utils/entities/application-source';
+import { readAndClearAuditTabReturn } from '@/src/utils/audit-tab-return';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
@@ -51,6 +52,7 @@ interface Props {
 const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...props }) => {
   const t = useI18n();
   const router = useRouter();
+  const pathname = usePathname();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
   const getReqRef = useRef(useProtectedRequest());
@@ -66,7 +68,8 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
     },
   ];
 
-  const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
+  const [savedTabs] = useState(() => readAndClearAuditTabReturn(pathname));
+  const [activeTab, setActiveTab] = useState<EntityViewTab>(savedTabs?.mainTab ?? EntityViewTab.Properties);
   const [selectedRunner, setSelectedRunner] = useState(cloneDeep(originalScheme));
   const [isChanged, setIsChanged] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
@@ -185,6 +188,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
             onChange={onChangeRunner}
             names={names}
             isSkipRefresh={isSkipRefresh}
+            initialAuditTab={savedTabs?.auditTab}
             {...props}
           />
         )}

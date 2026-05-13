@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -21,6 +21,7 @@ import { DialKey } from '@/src/models/dial/key';
 import { DialRole } from '@/src/models/dial/role';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
+import { readAndClearAuditTabReturn } from '@/src/utils/audit-tab-return';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
@@ -41,11 +42,13 @@ const KeyView: FC<Props> = ({ originalKey, etag, ...props }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const router = useRouter();
+  const pathname = usePathname();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
   const tabs = getKeyTabs(t);
 
-  const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
+  const [savedTabs] = useState(() => readAndClearAuditTabReturn(pathname));
+  const [activeTab, setActiveTab] = useState<EntityViewTab>(savedTabs?.mainTab ?? EntityViewTab.Properties);
   const [isOpenConfirmModal, setIsOpenConfirmModal] = useState(false);
   const [isRotateModalOpen, setIsRotateModalOpen] = useState(false);
   const [selectedKey, setSelectedKey] = useState(cloneDeep(originalKey));
@@ -178,6 +181,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, ...props }) => {
               selectedKey={selectedKey}
               onChange={setSelectedKey}
               originalKey={originalKey}
+              initialAuditTab={savedTabs?.auditTab}
               {...props}
             />
           )}
