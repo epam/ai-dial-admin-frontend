@@ -13,14 +13,13 @@ import {
   TypeI18nKey,
 } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DefaultsValue } from '@/src/models/dial/defaults';
 import { BooleanType } from '@/src/types/boolean';
 import { DefaultItemType } from './types';
 import { getDefaultValueByType, getValueByType } from './utils';
 
 interface DefaultItemDeclaration {
   key: string;
-  value: DefaultsValue;
+  value: unknown;
   type: string;
 }
 
@@ -71,7 +70,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove, disabled })
   );
 
   const onChangeValue = useCallback(
-    (v?: string | number | boolean | object, newType?: string) => {
+    (v?: unknown, newType?: string) => {
       const type = newType || item.type;
       const value = getValueByType(v, type);
       changeItem({ ...item, value, type }, index);
@@ -97,9 +96,9 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove, disabled })
   );
 
   return (
-    <div className="flex gap-x-3 items-end">
-      <div className="flex flex-row gap-x-4 items-center">
-        <div className="min-w-[187px]">
+    <div className="flex gap-x-3 items-end w-full">
+      <div className="flex flex-row gap-x-4 items-center w-full">
+        <div className="w-[320px]">
           <DialInput
             id={`entity-default-key-${index}`}
             value={item.key}
@@ -109,7 +108,17 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove, disabled })
             disabled={disabled}
           />
         </div>
-        <div className="w-[384px]">
+        <div className="w-[136px]">
+          <DialSelectField
+            value={item.type}
+            id={`entity-default-type-${index}`}
+            options={types}
+            label={isFirstLine ? t(EntityFieldsI18nKey.type) : ''}
+            onChange={(type) => onChangeType(type as string)}
+            disabled={disabled}
+          />
+        </div>
+        <div className="flex-1">
           {item.type === DefaultItemType.string && (
             <DialInput
               id={`entity-default-value-${index}`}
@@ -132,7 +141,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove, disabled })
           )}
           {item.type === DefaultItemType.boolean && (
             <DialSelectField
-              value={item.value.toString()}
+              value={String(item.value)}
               id={`entity-default-value=${index}`}
               options={booleans}
               label={isFirstLine ? t(BasicI18nKey.Value) : ''}
@@ -150,16 +159,6 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove, disabled })
               disabled={disabled}
             />
           )}
-        </div>
-        <div className="min-w-[136px]">
-          <DialSelectField
-            value={item.type}
-            id={`entity-default-type-${index}`}
-            options={types}
-            label={isFirstLine ? t(EntityFieldsI18nKey.type) : ''}
-            onChange={(type) => onChangeType(type as string)}
-            disabled={disabled}
-          />
         </div>
       </div>
       {!disabled && (

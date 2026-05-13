@@ -13,7 +13,10 @@ import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/compon
 import AssetHeader from '@/src/components/EntityHeaderControls/AssetHeader';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import { useParametersTabGuard } from '@/src/components/EntityView/hooks/use-parameters-tab-guard';
+import EntityViewModals from '@/src/components/EntityView/Modals/EntityViewModals';
 import { ROOT_FOLDER } from '@/src/constants/file';
+import { useAppContext } from '@/src/context/AppContext';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -58,6 +61,9 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
   const [isSkipRefresh, setIsSkipRefresh] = useState(true);
   const [discardKey, setDiscardKey] = useState(0);
 
+  const [addedVersions, setAddedVersions] = useState<string[]>([]);
+  const { visualizerConnector } = useAppContext();
+
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
       isEditorEnabled,
@@ -96,6 +102,7 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
 
   const onDiscard = useCallback(() => {
     setIsSkipRefresh(false);
+    setAddedVersions([]);
     setDiscardKey((prev) => prev + 1);
     setSelectedApp(cloneDeep(originalApp));
   }, [originalApp]);
@@ -151,6 +158,16 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
     [selectedApp, originalApp, etag, showNotification, t, router, fetchFiles],
   );
 
+  const { isModalOpen, modalType, onModalClose, onModalCancel, onModalConfirm, onChangeActiveTab } =
+    useParametersTabGuard({
+      activeTab,
+      isChanged,
+      visualizerConnector,
+      onSaveEntity: () => onSave(),
+      onDiscardEntity: onDiscard,
+      onSetActiveTab: setActiveTab,
+    });
+
   const onChangeEntity = useCallback(
     (entity: AssetApp, skipRefresh?: boolean) => {
       setSelectedApp(entity);
@@ -172,10 +189,12 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
         assets={assets}
         jsonConfiguration={jsonConfiguration}
         activeTab={activeTab}
-        onChangeActiveTab={setActiveTab}
+        onChangeActiveTab={onChangeActiveTab}
         onRemove={removeApp}
         getAssetContext={useAppsFolder}
         onChangeAsset={setSelectedApp as (asset: Asset) => void}
+        addedVersions={addedVersions}
+        onChangeAddedVersion={setAddedVersions}
       />
 
       <div className="flex-1 overflow-auto min-h-0">
@@ -203,6 +222,14 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
           />
         )}
       </div>
+
+      <EntityViewModals
+        isModalOpen={isModalOpen}
+        modalType={modalType}
+        handleConfirm={onModalConfirm}
+        handleClose={onModalClose}
+        handleCancel={onModalCancel}
+      />
     </div>
   );
 };

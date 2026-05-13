@@ -1,4 +1,5 @@
 import { FC, useMemo, useState } from 'react';
+import classNames from 'classnames';
 
 import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { FieldError } from '@/src/models/error';
@@ -43,16 +44,22 @@ const ImageFields: FC<Props> = ({ image, setImage, isModal, setImageVersions }) 
                 }
                 const versionMap = getVersionsPerName(data);
                 setVersionsMap(versionMap);
-                const error = getSemanticVersionError(versionMap, updatedImage.name, t, image.version);
-                setVersionError(error);
-                dispatch({
-                  type: ValidationActionType.SetField,
-                  field: 'version',
-                  isValid: !error,
-                });
+                if (isModal) {
+                  const error = getSemanticVersionError(versionMap, updatedImage.name, t, image.version);
+                  setVersionError(error);
+                  dispatch({
+                    type: ValidationActionType.SetField,
+                    field: 'version',
+                    isValid: !error,
+                  });
+                } else {
+                  dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: true });
+                }
               } else {
                 setVersionsMap({});
-                setVersionError(null);
+                if (isModal) {
+                  setVersionError(null);
+                }
                 dispatch({ type: ValidationActionType.SetField, field: 'version', isValid: true });
               }
             },
@@ -67,11 +74,11 @@ const ImageFields: FC<Props> = ({ image, setImage, isModal, setImageVersions }) 
           });
         }
       }, 500),
-    [dispatch, image.version, setImageVersions, t],
+    [dispatch, image.version, isModal, setImageVersions, t],
   );
 
   return (
-    <div className="flex flex-col size-full gap-y-8 divide-y divide-primary">
+    <div className={classNames('flex flex-col size-full gap-y-8', !isModal && 'divide-y divide-primary')}>
       <div className="flex flex-col gap-y-8">
         <ImageBase
           image={image}
@@ -84,7 +91,7 @@ const ImageFields: FC<Props> = ({ image, setImage, isModal, setImageVersions }) 
         />
         {!isModal && <ImageBuildPrivileges image={image} setImage={setImage} />}
       </div>
-      <div className="flex flex-col gap-y-8 pt-8">
+      <div className={classNames('flex flex-col gap-y-8', !isModal && 'pt-8')}>
         <ImageSource image={image} setImage={setImage} isModal={isModal} verifyVersion={verifyVersion} />
         {!isModal && <ImageTransport image={image} setImage={setImage} />}
       </div>

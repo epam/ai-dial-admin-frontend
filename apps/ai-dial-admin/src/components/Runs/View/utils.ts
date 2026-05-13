@@ -139,6 +139,9 @@ const staticColumns = [
         field: 'testCaseName',
         headerName: 'Test Case name',
         colId: 'testCaseName',
+        filter: 'agTextColumnFilter',
+        floatingFilter: true,
+        floatingFilterComponent: 'agTextColumnFloatingFilter',
       },
     ],
   },
@@ -218,13 +221,15 @@ export const getPanelTitle = (result: ExtractionResult | AnalyticsResult | null)
   return `${result?.testCaseName} - Run #${result?.runIndex ?? 0}`;
 };
 
-export const getDetailEntries = (data: Record<string, unknown>): Array<[string, string | string[]]> => {
+export const getDetailEntries = (data: Record<string, unknown>): Array<[string, unknown]> => {
   return Object.keys(data).map((key) => {
     const val = data[key];
-    if (Array.isArray(val) && val.every((v) => typeof v === 'string')) {
-      return [key, val as string[]];
+    if (typeof val === 'string') return [key, val];
+    if (typeof val === 'number' || typeof val === 'boolean' || typeof val === 'bigint') {
+      return [key, String(val)];
     }
-    return [key, String(val)];
+    if (val == null) return [key, String(val)];
+    return [key, val];
   });
 };
 

@@ -72,7 +72,7 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset | DialAppli
   );
 
   useEffect(() => {
-    const isValid = isValidSourceField(entity);
+    const isValid = isValidSourceField(entity, view);
 
     setErrorText(isValid ? '' : t(ErrorI18nKey.RequiredField));
     dispatch({
@@ -80,7 +80,7 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset | DialAppli
       field: 'source',
       isValid,
     });
-  }, [dispatch, entity, t]);
+  }, [dispatch, entity, t, view]);
 
   const onChangeSource = useCallback(
     (sourceType: string) => {
@@ -100,12 +100,13 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset | DialAppli
             editorUrl: undefined,
             applicationTypeSchemaId: undefined,
             applicationProperties: undefined,
+            responsesEndpoint: undefined,
           });
         }
 
         onChangeEntity({
           ...entity,
-          source: { ...entity.source, $type: sourceType as SOURCE_TYPE },
+          source: { $type: sourceType as SOURCE_TYPE },
           ...reset,
         });
       }

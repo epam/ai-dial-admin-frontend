@@ -29,7 +29,8 @@ const TryOutResponsePreview: FC<Props> = ({
   isMcp,
 }) => {
   const t = useI18n();
-  const requestBodyCopyText = useMemo(() => (response ? JSON.stringify(response, null, 2) : ''), [response]);
+  const requestBody = resolvedRequest.body as object;
+  const requestBodyCopyText = useMemo(() => (requestBody ? JSON.stringify(requestBody, null, 2) : ''), [requestBody]);
   const isError = isMcp
     ? (response as Record<string, unknown>).isError
     : !(response.statusCode >= 200 && response.statusCode < 300);
@@ -57,15 +58,15 @@ const TryOutResponsePreview: FC<Props> = ({
       {/* todo: possible change this component to codeViewer */}
       <CollapsibleSection
         title={t(BasicI18nKey.Request)}
-        fullViewContent={JSON.stringify(resolvedRequest, null, 2)}
-        headerIcon={<CopyButton value={requestBodyCopyText} valueLabel={t(BasicI18nKey.Response)} />}
+        fullViewContent={JSON.stringify(requestBody, null, 2)}
+        headerIcon={<CopyButton value={requestBodyCopyText} valueLabel={t(BasicI18nKey.Request)} />}
         growOnOpen
       >
         {isRequestSend ? (
           <DialLoader />
         ) : (
           <JsonEditor
-            entity={resolvedRequest}
+            entity={requestBody}
             options={{ stickyScroll: { enabled: false }, wordWrap: 'bounded' }}
             readonly={true}
           />

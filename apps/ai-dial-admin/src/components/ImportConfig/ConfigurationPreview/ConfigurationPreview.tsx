@@ -2,7 +2,7 @@
 
 import { FC, useEffect, useRef, useState } from 'react';
 
-import { DialPrimaryButton, DialLoader, DialTabs, TabModel } from '@epam/ai-dial-ui-kit';
+import { DialPrimaryButton, DialLoader, DialTabs, DialTooltip, TabModel } from '@epam/ai-dial-ui-kit';
 import { IconDownload } from '@tabler/icons-react';
 
 import {
@@ -16,6 +16,8 @@ import {
   getDeploymentConfigurationPreview,
 } from '@/src/components/ImportConfig/ConfigurationPreview/ConfigurationPreview.utils';
 import DeploymentConfigurationGrid from '@/src/components/ImportConfig/ConfigurationPreview/DeploymentConfigurationGrid';
+import ValidationBanner from '@/src/components/ImportConfig/ConfigurationPreview/ValidationBanner';
+import { ValidationSummary } from '@/src/models/deployments/import';
 import { ButtonsI18nKey, ImportI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -36,12 +38,24 @@ interface Props {
   fileType: ImportFileType;
   isDeployments?: boolean;
   onImportFile: () => void;
+  onValidationChange?: (hasErrors: boolean) => void;
 }
 
-const ConfigurationPreview: FC<Props> = ({ isImporting, files, importBody, fileType, isDeployments, onImportFile }) => {
+const EMPTY_VALIDATION_SUMMARY: ValidationSummary = { totalFailed: 0, errorsByTab: {} };
+
+const ConfigurationPreview: FC<Props> = ({
+  isImporting,
+  files,
+  importBody,
+  fileType,
+  isDeployments,
+  onImportFile,
+  onValidationChange,
+}) => {
   const t = useI18n();
   const { showNotification } = useNotification();
   const showNotificationRef = useRef(showNotification);
+  const onValidationChangeRef = useRef(onValidationChange);
   const getReqRef = useRef(useProtectedRequest());
 
   const [tabs, setTabs] = useState<TabModel[]>([]);
@@ -53,6 +67,7 @@ const ConfigurationPreview: FC<Props> = ({ isImporting, files, importBody, fileT
   const [prevState, setPrevState] = useState<Record<string, ActivityAuditEntity[]>>({});
 
   const [globalFirewall, setGlobalFirewall] = useState<FileComponentItem | null>(null);
+  const [validationSummary, setValidationSummary] = useState<ValidationSummary>(EMPTY_VALIDATION_SUMMARY);
 
   // Admin import preview
   useEffect(() => {
@@ -92,32 +107,46 @@ const ConfigurationPreview: FC<Props> = ({ isImporting, files, importBody, fileT
       setIsLoading(false);
       if (res.success) {
         const response = res.response as DeploymentImportPreviewResponse;
-        const { previewData, prevData, tabs, globalFirewall } = getDeploymentConfigurationPreview(response, t);
+        const {
+          previewData,
+          prevData,
+          tabs,
+          globalFirewall: previewFirewall,
+          validationSummary: nextValidationSummary,
+        } = getDeploymentConfigurationPreview(response, t);
 
         setCurrentState(previewData as Record<string, ActivityAuditEntity[]>);
         setPrevState(prevData as Record<string, ActivityAuditEntity[]>);
         setData(previewData);
         setTabs(tabs);
         setSelectedTab(tabs[0]?.id);
-        setGlobalFirewall(globalFirewall);
+        setGlobalFirewall(previewFirewall);
+        setValidationSummary(nextValidationSummary);
+        onValidationChangeRef.current?.(nextValidationSummary.totalFailed > 0);
       } else {
         showNotificationRef.current(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+        onValidationChangeRef.current?.(true);
       }
     });
   }, [importBody, isDeployments, t]);
 
-  const isImportDisabled = isDeployments ? !files?.length : isLoading || !files;
+  const hasValidationErrors = !!isDeployments && validationSummary.totalFailed > 0;
+  const baseImportDisabled = isDeployments ? !files?.length : isLoading || !files;
+  const isImportDisabled = baseImportDisabled || hasValidationErrors;
+  const isErrorOnlyDisable = !baseImportDisabled && hasValidationErrors;
 
   return (
     <div className="flex flex-col flex-1 min-h-0 rounded border border-primary py-4 px-6 mt-8">
       <div className="mb-2 flex flex-row justify-between">
         <h1>{t(ImportI18nKey.Configuration)}</h1>
-        <DialPrimaryButton
-          label={t(ButtonsI18nKey.Import)}
-          disabled={isImportDisabled || isImporting}
-          iconBefore={<IconDownload {...BASE_BUTTON_ICON_PROPS} />}
-          onClick={onImportFile}
-        />
+        <DialTooltip tooltip={t(ImportI18nKey.ImportBlockedTooltip)} hideTooltip={!isErrorOnlyDisable}>
+          <DialPrimaryButton
+            label={t(ButtonsI18nKey.Import)}
+            disabled={isImportDisabled || isImporting}
+            iconBefore={<IconDownload {...BASE_BUTTON_ICON_PROPS} />}
+            onClick={onImportFile}
+          />
+        </DialTooltip>
       </div>
       <div className="flex-1 min-h-0">
         {isLoading ? (
@@ -130,6 +159,11 @@ const ConfigurationPreview: FC<Props> = ({ isImporting, files, importBody, fileT
             {isImporting && (
               <div className="size-full absolute bg-blackout z-10">
                 <DialLoader size={45} />
+              </div>
+            )}
+            {hasValidationErrors && (
+              <div className="mb-3">
+                <ValidationBanner count={validationSummary.totalFailed} />
               </div>
             )}
             <div className="mb-3">

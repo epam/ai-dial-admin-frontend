@@ -57,7 +57,7 @@ const Authentication: FC<Props> = ({ disabled, view, toolset, onChange, ...props
   );
 
   return (
-    <div className={classNames('flex flex-col gap-y-2', STANDARD_CONTROL_WIDTH)}>
+    <div className={classNames('flex flex-col gap-y-1', STANDARD_CONTROL_WIDTH)}>
       <DialLabel label={t(EntityFieldsI18nKey.authSettings)} />
       <div className="flex flex-col gap-y-3">
         {isDisabled ? (

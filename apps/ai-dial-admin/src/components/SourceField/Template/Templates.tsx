@@ -114,7 +114,7 @@ const Templates = <T extends DialModel | DialInterceptor>({
           </div>
         ) : (
           <div className="flex gap-2">
-            <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-2')}>
+            <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-1')}>
               <DialLabel label={t(SourceI18nKey.InterceptorTemplate)} required htmlFor="templates" />
               <DialInputPopup
                 open={isModalOpen}

@@ -11,6 +11,7 @@ export interface DialActivity {
   revision: number;
   parentActivityId?: string;
   action?: string;
+  version?: string;
 }
 
 export interface ActivityAuditDiff {

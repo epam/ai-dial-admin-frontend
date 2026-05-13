@@ -22,9 +22,10 @@ interface Props {
   isModal?: boolean;
   testSuite: TestSuite;
   onChange: (testSuite: TestSuite, isSkipRefresh?: boolean) => void;
+  nameExistsError?: string;
 }
 
-const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false }) => {
+const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, nameExistsError }) => {
   const t = useI18n();
   const [deployments, setDeployments] = useState<Deployment[] | null>(null);
   const [selectedAppType, setSelectedAppType] = useState<string | undefined>(void 0);
@@ -71,6 +72,7 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false }
           required
           isFullWidth={false}
           onChange={(name) => onChange({ ...testSuite, name })}
+          externalError={nameExistsError}
         />
       )}
       <DescriptionControl isFullWidth={false} entity={testSuite} onChangeEntity={onChange} />
@@ -78,7 +80,7 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false }
         <>
           <div className="flex gap-2">
             <div className="flex gap-2">
-              <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-2')}>
+              <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-1')}>
                 <DialLabel label={t(TestSuitesI18nKey.Application)} htmlFor="applications" />
                 <DialInputPopup
                   open={isAppModalOpen}

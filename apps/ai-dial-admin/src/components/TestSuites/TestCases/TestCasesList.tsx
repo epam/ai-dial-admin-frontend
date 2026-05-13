@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { FC, RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { DialConfirmationPopup, DialLoader } from '@epam/ai-dial-ui-kit';
 import {
   CellClickedEvent,
   CellValueChangedEvent,
@@ -24,6 +24,7 @@ import {
   removeMultipleTestCases,
   removeTestCase,
 } from '@/src/app/[lang]/test-suites/actions';
+import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 import ListEntities from '@/src/components/ListView/List';
 import TryOut from '@/src/components/TestSuites/RequestTemplate/components/TryOut';
 import { getTestCaseColumns } from '@/src/components/TestSuites/utils/columns';
@@ -31,12 +32,13 @@ import { createNewTestCaseRow, getTestCaseGridData, rowToTestCase } from '@/src/
 import { ONE_ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { ApiRoute } from '@/src/constants/api-routes';
 import { getRemoveOperation, getTryOutOperation } from '@/src/constants/grid-columns/actions';
-import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, DeleteI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { TestCase, TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
+import { ApplicationRoute } from '@/src/types/routes';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import HeaderButtons from './Header';
@@ -44,6 +46,7 @@ import TestCasesSchemaModal from './TestCasesSchemaModal';
 
 export interface TestCasesActions {
   getDirtyTestCases: () => TestCase[];
+  getEnabledOnlyChanges: () => Map<string, boolean>;
   clearDirtyAndRefresh: () => void;
 }
 
@@ -67,9 +70,13 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
   const [data, setData] = useState<Record<string, unknown>[]>([]);
   const [columnDefs, setColumnDefs] = useState<ColDef[]>([]);
   const [isSchemaModalOpen, setIsSchemaModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isBatchDeleteModalOpen, setIsBatchDeleteModalOpen] = useState(false);
+  const [selectedTestCase, setSelectedTestCase] = useState<TestCase | undefined>(undefined);
   const [selectedRows, setSelectedRows] = useState<TestCase[]>([]);
   const onRemoveCaseRef = useRef<(data?: TestCase) => void>(() => {});
   const dirtyRowsRef = useRef<Map<string, Record<string, unknown>>>(new Map());
+  const dirtyEnabledRef = useRef<Map<string, boolean>>(new Map());
 
   const onOpenSchemaModal = useCallback(() => {
     setIsSchemaModalOpen(true);
@@ -91,22 +98,40 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
       if (newTestCases.some((r) => r.id === row.id)) {
         setNewTestCases((prev) => prev.map((r) => (r.id === row.id ? ({ ...row } as Record<string, unknown>) : r)));
       } else {
-        dirtyRowsRef.current.set(String(row.id), { ...row });
+        const id = String(row.id);
+        const enabledOverride = dirtyEnabledRef.current.get(id);
+        dirtyRowsRef.current.set(id, enabledOverride !== undefined ? { ...row, enabled: enabledOverride } : { ...row });
       }
       onDirtyChange?.(true);
     },
     [newTestCases, onDirtyChange],
   );
 
-  const onCellValueChanged = useCallback((event: CellValueChangedEvent) => {
-    const col = event.column?.getColId();
-    if (col === 'enabled') {
+  const onCellValueChanged = useCallback(
+    (event: CellValueChangedEvent) => {
+      const col = event.column?.getColId();
+      if (col !== 'enabled') return;
+
       const api = gridApiRef.current;
-      if (!api) return;
-      api.refreshClientSideRowModel('filter');
-      onCellChange(event.data, col, event.newValue);
-    }
-  }, []);
+      if (api) api.refreshClientSideRowModel('filter');
+
+      const rowId = String(event.data.id);
+      const isNewCase = newTestCases.some((r) => r.id === rowId);
+
+      if (isNewCase) {
+        onCellChange(event.data, col, event.newValue);
+        return;
+      }
+
+      dirtyEnabledRef.current.set(rowId, event.newValue as boolean);
+      if (dirtyRowsRef.current.has(rowId)) {
+        const existing = dirtyRowsRef.current.get(rowId)!;
+        dirtyRowsRef.current.set(rowId, { ...existing, enabled: event.newValue });
+      }
+      onDirtyChange?.(true);
+    },
+    [newTestCases],
+  );
 
   const onCellChange = useCallback(
     (data: Record<string, unknown>, field: string, value: string | number | boolean) => {
@@ -163,6 +188,27 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
     },
   };
 
+  const onOpenDeleteModal = useCallback(
+    (data?: TestCase) => {
+      if (!data) return;
+
+      if (newTestCases.some((r) => r.id === data.id)) {
+        setNewTestCases((prev) => prev.filter((r) => r.id !== data.id));
+        onDirtyChange?.(true);
+        return;
+      }
+
+      setSelectedTestCase(data);
+      setIsDeleteModalOpen(true);
+    },
+    [newTestCases, onDirtyChange],
+  );
+
+  const onCloseDeleteModal = useCallback(() => {
+    setSelectedTestCase(undefined);
+    setIsDeleteModalOpen(false);
+  }, []);
+
   const stableOnRemoveCase = useCallback((data?: TestCase) => {
     onRemoveCaseRef.current(data);
   }, []);
@@ -212,13 +258,10 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
     [gridApi, onCellChange, onOpenTryOutSidebar, selectedTestSuite, stableOnRemoveCase, t],
   );
 
-  const onGridReady = useCallback(
-    ({ api }: GridReadyEvent) => {
-      gridApiRef.current = api;
-      setGridApi(api);
-    },
-    [refreshGrid],
-  );
+  const onGridReady = useCallback(({ api }: GridReadyEvent) => {
+    gridApiRef.current = api;
+    setGridApi(api);
+  }, []);
 
   const onApplyImport = useCallback(
     (file: File, mode: TestCaseImportMode, strategy: TestCaseConflictStrategy) => {
@@ -261,31 +304,29 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
     });
   }, [selectedTestSuite.id, refreshGrid, showNotification, t]);
 
-  const onRemoveCase = useCallback(
-    (data?: TestCase) => {
-      if (!data) return;
-      if (newTestCases.some((r) => r.id === data.id)) {
-        setNewTestCases((prev) => prev.filter((r) => r.id !== data.id));
-        onDirtyChange?.(true);
-        return;
+  const onRemoveTestCase = useCallback(
+    async (testCaseId: string) => {
+      const response = await removeTestCase(selectedTestSuite.id as string, testCaseId);
+      if (response.success) {
+        refreshGrid();
       }
-      removeTestCase(selectedTestSuite.id as string, data.id as string).then((res) => {
-        if (res?.success) {
-          showNotification(getSuccessNotification(t(TestSuitesI18nKey.RemoveSuccess)));
-          refreshGrid();
-        } else {
-          showNotification(
-            getErrorNotification(t(TestSuitesI18nKey.RemoveFailed), res?.errorMessage || 'Unknown error'),
-          );
-        }
-      });
+      return response;
     },
-    [newTestCases, selectedTestSuite.id, onDirtyChange, showNotification, t, refreshGrid],
+    [refreshGrid, selectedTestSuite.id],
   );
+
+  const onOpenBatchDeleteModal = useCallback(() => {
+    setIsBatchDeleteModalOpen(true);
+  }, []);
+
+  const onCloseBatchDeleteModal = useCallback(() => {
+    setIsBatchDeleteModalOpen(false);
+  }, []);
 
   const onBatchDelete = useCallback(() => {
     const namesToDelete = selectedRows.map((r) => r.testCaseName as string);
     removeMultipleTestCases(selectedTestSuite.id as string, namesToDelete).then((res) => {
+      setIsBatchDeleteModalOpen(false);
       if (res?.success) {
         showNotification(getSuccessNotification(t(TestSuitesI18nKey.RemoveSuccess)));
         refreshGrid();
@@ -293,7 +334,7 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
         showNotification(getErrorNotification(t(TestSuitesI18nKey.RemoveFailed), res?.errorMessage || 'Unknown error'));
       }
     });
-  }, [selectedRows]);
+  }, [refreshGrid, selectedRows, selectedTestSuite.id, showNotification, t]);
 
   const getDirtyTestCases = useCallback((): TestCase[] => {
     const dirty = Array.from(dirtyRowsRef.current.values()).map((row) => rowToTestCase(row));
@@ -301,8 +342,19 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
     return [...dirty, ...newCases];
   }, [newTestCases]);
 
+  const getEnabledOnlyChanges = useCallback((): Map<string, boolean> => {
+    const result = new Map<string, boolean>();
+    dirtyEnabledRef.current.forEach((value, id) => {
+      if (!dirtyRowsRef.current.has(id)) {
+        result.set(id, value);
+      }
+    });
+    return result;
+  }, []);
+
   const clearDirtyAndRefresh = useCallback(() => {
     dirtyRowsRef.current.clear();
+    dirtyEnabledRef.current.clear();
     setNewTestCases([]);
     onDirtyChange?.(false);
     refreshGrid();
@@ -316,24 +368,27 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
     }
   }, [gridApi, newTestCases]);
 
+  const testCaseSchemaKey = JSON.stringify(selectedTestSuite.testCaseSchema);
+
   useEffect(() => {
     refreshGrid();
-  }, [selectedTestSuite.testCaseSchema]);
+  }, [testCaseSchemaKey]);
 
   useEffect(() => {
     if (!testCasesActionsRef) return;
     testCasesActionsRef.current = {
       getDirtyTestCases,
+      getEnabledOnlyChanges,
       clearDirtyAndRefresh,
     };
     return () => {
       testCasesActionsRef.current = null;
     };
-  }, [testCasesActionsRef, getDirtyTestCases, clearDirtyAndRefresh]);
+  }, [testCasesActionsRef, getDirtyTestCases, getEnabledOnlyChanges, clearDirtyAndRefresh]);
 
   useEffect(() => {
-    onRemoveCaseRef.current = onRemoveCase;
-  }, [onRemoveCase]);
+    onRemoveCaseRef.current = onOpenDeleteModal;
+  }, [onOpenDeleteModal]);
 
   return (
     <div className="flex-1 min-h-0">
@@ -354,7 +409,7 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
             onAdd={onAddTestCase}
             onExport={onExport}
             onOpenSchemaModal={onOpenSchemaModal}
-            onBatchDelete={onBatchDelete}
+            onBatchDelete={onOpenBatchDeleteModal}
             showBatchDelete={selectedRows.length > 0}
           />
         </ListEntities>
@@ -366,6 +421,28 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
             selectedTestSuite={selectedTestSuite}
             onClose={onCloseSchemaModal}
             onApply={onChangeTestCaseSchema}
+          />,
+          document.body,
+        )}
+      {isDeleteModalOpen &&
+        createPortal(
+          <DeleteConfirmationModal
+            entity={selectedTestCase ? { ...selectedTestCase, displayName: selectedTestCase.testCaseName } : undefined}
+            view={ApplicationRoute.TestCases}
+            onCloseModal={onCloseDeleteModal}
+            onRemoveEntity={onRemoveTestCase}
+          />,
+          document.body,
+        )}
+      {isBatchDeleteModalOpen &&
+        createPortal(
+          <DialConfirmationPopup
+            open={isBatchDeleteModalOpen}
+            header={t(DeleteI18nKey.Title, { entity: t(TabsI18nKey.TestCases) })}
+            onConfirm={onBatchDelete}
+            onClose={onCloseBatchDeleteModal}
+            confirmLabel={t(ButtonsI18nKey.Delete)}
+            description={t(DeleteI18nKey.Confirming, { entity: t(TestSuitesI18nKey.SelectedTestCases) })}
           />,
           document.body,
         )}

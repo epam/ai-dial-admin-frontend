@@ -6,7 +6,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { ColDef, GridApi, GridOptions, GridReadyEvent } from 'ag-grid-community';
 
 import ListView from '@/src/components/ListView/ListView';
-import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { ENTITIES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
@@ -18,6 +17,7 @@ import { isAssetWithVersion } from '@/src/utils/is-view';
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { emptyDataTitleMap, listViewTitleMap } from '../ListView/constants';
 import Actions from './Components/Actions';
+import { onCellClicked } from './utils/on-cell-clicked';
 import { ModalType } from './Components/Modals';
 import EntityListHeaderButtons from './HeaderButtons/HeaderButtons';
 
@@ -56,11 +56,7 @@ const BaseEntityList = <T extends object>({
   const router = useRouter();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const gridOptions: GridOptions = {
-    onCellClicked: (e) => {
-      if (e.colDef.field !== ACTIONS_COLUMN_CEL_ID) {
-        router.push(getUrnForEntity(route, e.data));
-      }
-    },
+    onCellClicked: (e) => onCellClicked(e, route, router.push),
   };
   // entity for which the modals (delete and duplicate) is open
   const [currentEntity, setCurrentEntity] = useState<T | undefined>(void 0);
@@ -150,6 +146,7 @@ const BaseEntityList = <T extends object>({
         context={getAssetContext}
         onGridReady={onGridReady}
         isBulkView={isBulkView}
+        getHref={(data) => getUrnForEntity(route, data)}
       >
         <EntityListHeaderButtons
           names={names}

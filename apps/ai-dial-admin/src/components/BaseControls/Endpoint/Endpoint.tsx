@@ -9,7 +9,6 @@ import { FieldError } from '@/src/models/error';
 import { addTrailingSlash, removeSlash } from '@/src/utils/url';
 import { getUrlError } from '@/src/utils/validation/url-error';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
-import ReadonlyInput from '@/src/components/Common/ReadonlyInput/ReadonlyInput';
 
 export interface EndpointControlProps {
   endpoint?: string | null;
@@ -110,12 +109,7 @@ const EndpointControl: FC<Props> = ({
       {...props}
     />
   ) : isDisabled ? (
-    <ReadonlyInput
-      containerClassName={isFullWidth ? 'w-full' : STANDARD_CONTROL_WIDTH}
-      id={id}
-      label={label}
-      value={endpoint || ''}
-    />
+    <ComplexInput id={id} label={label} value={endpoint || ''} copyable disabled isFullWidth={isFullWidth} />
   ) : (
     <DialInput
       prefix={prefix}

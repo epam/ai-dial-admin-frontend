@@ -1,52 +1,46 @@
 'use client';
 
-import { createRef, FC, useCallback, useEffect } from 'react';
+import { FC, useCallback } from 'react';
 
-import Form, { IChangeEvent } from '@rjsf/core';
-import { RJSFSchema } from '@rjsf/utils';
-import validator from '@rjsf/validator-ajv8';
-
-import { SchemaForm } from '@/src/components/Common/SchemaUIRenderer/CustomTemplates/CustomSchemaForm';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
-import { DefaultsValue } from '@/src/models/dial/defaults';
+import { DialSchemaRenderer, JsonSchema } from '@epam/ai-dial-ui-kit';
 
 interface Props {
-  schema: RJSFSchema;
+  schema: JsonSchema;
   data?: Record<string, unknown>;
-  onChangeConfiguration: (data: Record<string, DefaultsValue>) => void;
-  onGetSchemeDefaults?: (data: Record<string, DefaultsValue>) => void;
+  onChangeConfiguration: (value: Record<string, unknown>) => void;
+  onGetSchemeDefaults?: (value: Record<string, unknown>) => void;
   disabled?: boolean;
+  defaultExpanded?: boolean;
 }
-const SchemaUiRenderer: FC<Props> = ({ schema, data, onChangeConfiguration, onGetSchemeDefaults, disabled }) => {
+const SchemaUiRenderer: FC<Props> = ({
+  schema,
+  data,
+  onChangeConfiguration,
+  onGetSchemeDefaults,
+  disabled,
+  defaultExpanded = true,
+}) => {
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const isReadonly = disabled || isReadOnlyAdmin;
   const onChange = useCallback(
-    (data: IChangeEvent<any, RJSFSchema, any>) => {
-      onChangeConfiguration(data.formData);
+    (value: Record<string, unknown>) => {
+      onChangeConfiguration(value);
     },
     [onChangeConfiguration],
   );
-  const onSubmit = (data: IChangeEvent<any, RJSFSchema, any>) => onGetSchemeDefaults?.(data.formData);
 
-  const formRef = createRef<Form>();
-  useEffect(() => {
-    formRef.current?.submit();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
   return (
-    <SchemaForm
-      ref={formRef}
+    <DialSchemaRenderer
       schema={schema}
-      validator={validator}
-      formData={data}
       onChange={onChange}
-      onSubmit={onSubmit}
-      showErrorList={false}
+      defaultValue={data}
+      onDefaultValues={onGetSchemeDefaults}
       readonly={isReadonly}
-      noValidate={true}
-    >
-      <></>
-    </SchemaForm>
+      inputClassName={STANDARD_CONTROL_WIDTH}
+      defaultExpanded={defaultExpanded}
+    />
   );
 };
 

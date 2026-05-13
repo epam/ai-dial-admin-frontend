@@ -4,6 +4,7 @@ import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor
 
 export enum ValidationActionType {
   SetField = 'SET_FIELD_VALIDATION',
+  RemoveField = 'REMOVE_FIELD_VALIDATION',
   SetJsonEditor = 'SET_JSON_EDITOR_VALIDATION',
   SetJsonEditorNotifications = 'SET_JSON_EDITOR_NOTIFICATIONS',
   Reset = 'RESET',
@@ -11,6 +12,7 @@ export enum ValidationActionType {
 
 type ValidationAction =
   | { type: ValidationActionType.SetField; field: string; isValid: boolean }
+  | { type: ValidationActionType.RemoveField; field: string }
   | { type: ValidationActionType.SetJsonEditor; errors: JSONEditorError[] | null }
   | { type: ValidationActionType.SetJsonEditorNotifications; errors: JSONEditorErrorNotification[] }
   | { type: ValidationActionType.Reset };
@@ -39,6 +41,19 @@ const validationReducer = (state: ValidationState, action: ValidationAction): Va
       newFieldValidations.set(action.field, action.isValid);
 
       const isValid = Array.from(newFieldValidations.values()).every((valid) => valid);
+
+      return {
+        ...state,
+        fieldValidations: newFieldValidations,
+        isValid,
+      };
+    }
+    case ValidationActionType.RemoveField: {
+      const newFieldValidations = new Map(state.fieldValidations);
+      newFieldValidations.delete(action.field);
+
+      const isValid =
+        newFieldValidations.size === 0 || Array.from(newFieldValidations.values()).every((valid) => valid);
 
       return {
         ...state,

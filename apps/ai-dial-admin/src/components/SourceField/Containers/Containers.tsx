@@ -1,4 +1,4 @@
-import { DialInputPopup, DialLabel, DialNeutralButton, DialSelectField } from '@epam/ai-dial-ui-kit';
+import { DialInput, DialInputPopup, DialLabel, DialNeutralButton, DialSelectField } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -13,6 +13,7 @@ import {
   CreateI18nKey,
   EntitiesI18nKey,
   EntityFieldsI18nKey,
+  EntityPlaceholdersI18nKey,
   SourceI18nKey,
 } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
@@ -111,7 +112,7 @@ const Containers = <T extends DialInterceptor | DialModel | DialApplication>({
 
   return (
     <div className="flex flex-col gap-y-8">
-      <div className="flex lg:flex-row flex-col gap-2 items-end">
+      <div className="flex lg:flex-row flex-col gap-2">
         {isModal ? (
           <div className="flex flex-col w-full">
             <DialSelectField
@@ -131,7 +132,7 @@ const Containers = <T extends DialInterceptor | DialModel | DialApplication>({
           </div>
         ) : (
           <div className="flex gap-2">
-            <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-2')}>
+            <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-1')}>
               <DialLabel label={t(SourceI18nKey.Container)} required htmlFor="containers" />
               <DialInputPopup
                 open={isModalOpen}
@@ -142,13 +143,9 @@ const Containers = <T extends DialInterceptor | DialModel | DialApplication>({
                 disabled={disabled || !featureFlags.deploymentsEnabled}
                 errorText={error}
                 iconBefore={
-                  <WarningIcon
-                    warningText={
-                      currentContainer && currentContainer.status !== CONTAINER_STATUS.RUNNING
-                        ? t(ContainersI18nKey.ContainerNotRunningTooltip)
-                        : undefined
-                    }
-                  />
+                  currentContainer && currentContainer.status !== CONTAINER_STATUS.RUNNING ? (
+                    <WarningIcon warningText={t(ContainersI18nKey.ContainerNotRunningTooltip)} />
+                  ) : undefined
                 }
               >
                 <SelectContainerModal
@@ -179,6 +176,34 @@ const Containers = <T extends DialInterceptor | DialModel | DialApplication>({
           prefix={addTrailingSlash(selectedContainer?.url || '')}
           disabled={disabled}
         />
+      )}
+      {entity.source?.containerId && selectedContainer && isModal && view === ApplicationRoute.Adapters && (
+        <div className="flex flex-col gap-y-8">
+          <DialInput
+            id="completionEndpointPath"
+            labelProps={{ label: t(EntityFieldsI18nKey.completionEndpointPath) }}
+            placeholder={t(EntityPlaceholdersI18nKey.CompletionEndpointPath)}
+            value={entity.source?.completionEndpointPath}
+            onChange={(completionEndpointPath) => {
+              onChange({
+                ...entity,
+                source: { ...entity.source, completionEndpointPath },
+              });
+            }}
+          />
+          <DialInput
+            id="responsesEndpointPath"
+            labelProps={{ label: t(EntityFieldsI18nKey.responsesEndpointPath) }}
+            placeholder={t(EntityPlaceholdersI18nKey.ResponsesEndpointPath)}
+            value={entity.source?.responsesEndpointPath}
+            onChange={(responsesEndpointPath) => {
+              onChange({
+                ...entity,
+                source: { ...entity.source, responsesEndpointPath },
+              });
+            }}
+          />
+        </div>
       )}
     </div>
   );

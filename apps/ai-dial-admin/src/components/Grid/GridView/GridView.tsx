@@ -1,8 +1,8 @@
 'use client';
-import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
-import { ColDef } from 'ag-grid-community';
+import { DialNoDataContent, DialNoDataContentProps } from '@epam/ai-dial-ui-kit';
+import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import classNames from 'classnames';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
@@ -11,8 +11,13 @@ import ColumnsPanel from '@/src/components/Grid/ColumnsPanel/ColumnsPanel';
 import { checkColDefsChanges } from '@/src/components/Grid/comparators/base-column-comparator';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
-import { getColumnVisibilityFromGridState, updateColumnVisibilityInStorage } from '../utils';
-import { DialNoDataContentProps } from '@epam/ai-dial-ui-kit/dist/src/components/NoDataContent/NoDataContent';
+
+import {
+  applyColumnStateOrderToColDefs,
+  getColumnVisibilityFromGridState,
+  haveColDefsSamePanelState,
+  updateColumnVisibilityInStorage,
+} from '../utils';
 
 export interface GridViewProps<T> extends AgGridProps<T> {
   emptyDataProps?: DialNoDataContentProps;
@@ -32,9 +37,12 @@ const GridView = <T extends object>({
   toggleColumnsPanel,
   onGridReady,
   getIsEmptyData,
+  isLiveData,
+  getRowId,
+  getHref,
 }: GridViewProps<T>) => {
   const staticPanelContainerClassName = classNames(
-    'left-0 top-0 size-full bg-blackout z-50',
+    'left-0 top-0 size-full bg-blackout z-[15]',
     showColumnsPanel ? 'flex' : 'hidden',
   );
 
@@ -47,6 +55,7 @@ const GridView = <T extends object>({
   const [showResetButton, setShowResetButton] = useState(false);
   const [panelContainerClassName, setPanelContainerClassName] = useState(staticPanelContainerClassName);
   const [panelClassName, setPanelClassName] = useState(staticPanelClassName);
+  const gridApiRef = useRef<GridApi | null>(null);
 
   const isEmptyData = useMemo(
     () =>
@@ -66,9 +75,7 @@ const GridView = <T extends object>({
           ? storageColumns || [...(columnDefs || [])]
           : [...columnDefs],
       );
-      setShowResetButton(
-        storageColumns ? storageColumns?.some((c, index) => c.hide !== columnDefs?.[index].hide) : false,
-      );
+      setShowResetButton(storageColumns ? checkColDefsChanges(storageColumns, columnDefs || []) : false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [columnDefs, storageKey]);
@@ -117,19 +124,54 @@ const GridView = <T extends object>({
   const onMoveColumn = useCallback(
     (field: string, atIndex: number) => {
       const index = onFindColumn(field);
-      if (index) {
-        const updatedColDefs = [...(currentColDefs || [])];
-        const [removedColDef] = updatedColDefs.splice(index, 1);
-        updatedColDefs.splice(atIndex, 0, removedColDef);
-        if (storageKey) {
-          updateColumnVisibilityInStorage(storageKey, updatedColDefs);
-        }
-        setCurrentColDefs(updatedColDefs);
-        setShowResetButton(checkColDefsChanges(updatedColDefs, columnDefs || []));
+      if (index == null || index < 0) {
+        return;
       }
+
+      const updatedColDefs = [...(currentColDefs || [])];
+      const [removedColDef] = updatedColDefs.splice(index, 1);
+      updatedColDefs.splice(atIndex, 0, removedColDef);
+      if (storageKey) {
+        updateColumnVisibilityInStorage(storageKey, updatedColDefs);
+      }
+      setCurrentColDefs(updatedColDefs);
+      setShowResetButton(checkColDefsChanges(updatedColDefs, columnDefs || []));
     },
-    [onFindColumn, currentColDefs, setShowResetButton, columnDefs, storageKey],
+    [onFindColumn, currentColDefs, columnDefs, storageKey],
   );
+
+  const handleGridReady = useCallback(
+    (event: GridReadyEvent) => {
+      gridApiRef.current = event.api;
+      onGridReady?.(event);
+    },
+    [onGridReady],
+  );
+
+  useEffect(() => {
+    if (!showColumnsPanel || !columnDefs?.length) {
+      return;
+    }
+
+    const columnState = gridApiRef.current?.getColumnState();
+    if (!columnState?.length) {
+      return;
+    }
+
+    setCurrentColDefs((prevColDefs) => {
+      if (!prevColDefs?.length) {
+        return prevColDefs;
+      }
+
+      const syncedColDefs = applyColumnStateOrderToColDefs(prevColDefs, columnState);
+      if (haveColDefsSamePanelState(prevColDefs, syncedColDefs)) {
+        return prevColDefs;
+      }
+
+      setShowResetButton(checkColDefsChanges(syncedColDefs, columnDefs));
+      return syncedColDefs;
+    });
+  }, [showColumnsPanel, columnDefs]);
 
   return (
     <div className="size-full relative">
@@ -142,7 +184,10 @@ const GridView = <T extends object>({
             rowData={rowData}
             additionalGridOptions={additionalGridOptions}
             storageKey={storageKey}
-            onGridReady={onGridReady}
+            onGridReady={handleGridReady}
+            isLiveData={isLiveData}
+            getRowId={getRowId}
+            getHref={getHref}
           />
           {showColumnsPanel && (
             <div className={panelContainerClassName}>

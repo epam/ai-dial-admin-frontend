@@ -275,8 +275,8 @@ describe('Runs View :: getDetailEntries', () => {
     ]);
   });
 
-  test('Should stringify object values', () => {
-    expect(getDetailEntries({ data: { nested: true } })).toEqual([['data', '[object Object]']]);
+  test('Should keep object values as objects', () => {
+    expect(getDetailEntries({ data: { nested: true } })).toEqual([['data', { nested: true }]]);
   });
 
   test('Should handle empty record', () => {
@@ -287,8 +287,8 @@ describe('Runs View :: getDetailEntries', () => {
     expect(getDetailEntries({ tags: ['alpha', 'beta', 'gamma'] })).toEqual([['tags', ['alpha', 'beta', 'gamma']]]);
   });
 
-  test('Should stringify mixed arrays', () => {
-    expect(getDetailEntries({ mixed: ['a', 1, true] })).toEqual([['mixed', 'a,1,true']]);
+  test('Should keep mixed arrays as arrays', () => {
+    expect(getDetailEntries({ mixed: ['a', 1, true] })).toEqual([['mixed', ['a', 1, true]]]);
   });
 
   test('Should stringify number values', () => {

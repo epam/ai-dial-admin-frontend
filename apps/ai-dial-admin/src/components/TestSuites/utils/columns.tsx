@@ -101,7 +101,7 @@ export const getTestCaseColumns = (
         return true;
       },
       tooltipValueGetter: (params) => {
-        return !params.data?.enabled ? 'Disable test case' : 'Enable test case';
+        return params.data?.enabled ? 'Disable test case' : 'Enable test case';
       },
     } as ColDef,
     ...TEST_CASES_COLUMN.map((col) => {
@@ -222,11 +222,11 @@ export const getTestCaseColumns = (
         },
       };
     }),
-    getValidityStatusColumn(),
+    getValidityStatusColumn(t?.(TestSuitesI18nKey.TestCaseError)),
   ];
 };
 
-export const getValidityStatusColumn = (): ColDef => {
+export const getValidityStatusColumn = (label?: string): ColDef => {
   return {
     ...BASE_STATUS_COLUMN,
     cellRenderer: (params: { data?: TestCase }) => {
@@ -234,6 +234,7 @@ export const getValidityStatusColumn = (): ColDef => {
         <ValidityStatus
           valid={params.data?.valid}
           message={params.data?.validationWarnings?.map((warning) => warning.message).join(', \n') || ''}
+          label={label}
         />
       );
     },

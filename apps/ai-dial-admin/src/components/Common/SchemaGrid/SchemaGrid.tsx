@@ -8,6 +8,7 @@ import { JSONSchema7 } from 'json-schema';
 import isEqual from 'lodash/isEqual';
 
 import GridView from '@/src/components/Grid/GridView/GridView';
+import { getRowIdById } from '@/src/components/Grid/utils';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
@@ -105,13 +106,23 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
   const onChangeType = useCallback(
     (value: string, data: SchemaFieldRow) => {
       const updated = updateFieldInList(fieldsRef.current, data.id, (f) => {
+        if (value.startsWith('array:')) {
+          const itemsType = value.slice(6) as SchemaFieldRow['type'];
+          return {
+            ...f,
+            type: 'array' as SchemaFieldRow['type'],
+            itemsType,
+            children: itemsType === 'object' ? f.children : [],
+            expanded: itemsType === 'object' ? f.expanded : false,
+          };
+        }
         const newType = value as SchemaFieldRow['type'];
-        const shouldClearChildren = newType !== 'object' && newType !== 'array';
         return {
           ...f,
           type: newType,
-          children: shouldClearChildren ? [] : f.children,
-          expanded: shouldClearChildren ? false : f.expanded,
+          itemsType: undefined,
+          children: newType === 'object' ? f.children : [],
+          expanded: newType === 'object' ? f.expanded : false,
         };
       });
       updateFields(updated);
@@ -290,11 +301,11 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
   return (
     <div className="h-[500px]">
       <GridView<SchemaFieldRow>
-        getIsEmptyData={() => fields.length === 0}
+        getIsEmptyData={() => fields.length === 0 && isReadonlyGrid}
         emptyDataProps={{ title: t(BasicI18nKey.NoData) }}
         onGridReady={onGridReady}
         additionalGridOptions={{
-          getRowId: (params) => params.data.id,
+          getRowId: getRowIdById,
           isFullWidthRow: (params: IsFullWidthRowParams<SchemaFieldRow>) => !!params.rowNode.data?.isAddSubFieldRow,
           fullWidthCellRenderer,
         }}

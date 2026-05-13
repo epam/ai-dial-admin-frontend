@@ -22,11 +22,13 @@ interface Props {
   setCondition: Dispatch<SetStateAction<FILTER_OPERATOR>>;
   setValue: Dispatch<SetStateAction<string[]>>;
   onCreate: () => void;
-  dropdownData: { projects: SelectOption[]; entities: SelectOption[] };
+  projects: SelectOption[];
+  entities: SelectOption[];
   reset: () => void;
   children: ReactElement;
   route: ApplicationRoute;
   isMcpView?: boolean;
+  isRouteView?: boolean;
 }
 
 const AddFilterPopover: FC<Props> = ({
@@ -37,11 +39,13 @@ const AddFilterPopover: FC<Props> = ({
   setCondition,
   condition,
   onCreate,
-  dropdownData,
+  projects,
+  entities,
   reset,
   children,
   route,
   isMcpView = false,
+  isRouteView = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { refs, floatingStyles, context } = useFloating({
@@ -94,9 +98,11 @@ const AddFilterPopover: FC<Props> = ({
                 setType={setType}
                 setCondition={setCondition}
                 setValue={setValue}
-                dropdownData={dropdownData}
+                projects={projects}
+                entities={entities}
                 route={route}
                 isMcpView={isMcpView}
+                isRouteView={isRouteView}
               />
             </div>
           </FloatingFocusManager>

@@ -7,6 +7,7 @@ import { formatNumberByDelimiter } from '@/src/utils/formatting/number-formattin
 import { SOURCE_FIELD, SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { CONTAINER_SOURCE_TYPE, ContainerSource } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
+import { convertBytesToMb, convertCoresToMilliCores } from '@/src/utils/deployments/containers';
 
 export const getFormattedResourceType = (value: string, t: (key: string) => string): string => {
   if (value === ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA) {
@@ -19,6 +20,28 @@ export const getFormattedResourceType = (value: string, t: (key: string) => stri
   if (value === ActivityAuditResourceType.SYSTEM_PROPERTIES) {
     return t(MenuI18nKey.SystemProperties);
   }
+
+  switch (value) {
+    case ActivityAuditResourceType.ADAPTER_DEPLOYMENT:
+      return t(EntitiesI18nKey.AdapterContainer);
+    case ActivityAuditResourceType.APPLICATION_DEPLOYMENT:
+      return t(EntitiesI18nKey.ApplicationContainer);
+    case ActivityAuditResourceType.INTERCEPTOR_DEPLOYMENT:
+      return t(EntitiesI18nKey.InterceptorContainer);
+    case ActivityAuditResourceType.MCP_DEPLOYMENT:
+      return t(EntitiesI18nKey.McpContainer);
+    case ActivityAuditResourceType.NIM_DEPLOYMENT:
+    case ActivityAuditResourceType.INFERENCE_DEPLOYMENT:
+      return t(EntitiesI18nKey.ModelServingLabel);
+    case ActivityAuditResourceType.ADAPTER_IMAGE_DEFINITION:
+    case ActivityAuditResourceType.APPLICATION_IMAGE_DEFINITION:
+    case ActivityAuditResourceType.INTERCEPTOR_IMAGE_DEFINITION:
+    case ActivityAuditResourceType.MCP_IMAGE_DEFINITION:
+      return t(EntitiesI18nKey.Image);
+    case ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST:
+      return t(EntitiesI18nKey.GlobalFirewall);
+  }
+
   return value;
 };
 
@@ -30,8 +53,11 @@ export const getTopics = (data?: { topics?: string[]; descriptionKeywords?: stri
 export const formatAttachment = (value: string, t: (stringToTranslate: string) => string) => {
   if (value && value?.[0] === ALL_ATTACHMENTS) {
     return t(AttachmentsI18nKey.AllAttachments);
+  } else if (value) {
+    return value.toString();
+  } else {
+    return '';
   }
-  return value;
 };
 
 export const priceValueFormatter = (value?: string | number) => {
@@ -154,3 +180,38 @@ export const containerSourceNameLabel = (source: ContainerSource | undefined): s
 export const formatRequired = (value: string, t: (stringToTranslate: string) => string) => {
   return value ? t(BasicI18nKey.Required) : t(BasicI18nKey.Optional);
 };
+
+export const toNumberOrNull = (value: string | number | undefined | null): number | null => {
+  if (value === undefined || value === null || value === '') {
+    return null;
+  }
+  const parsed = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const identity = (value: string): string => value;
+
+const parseResourceValue = (raw: string | undefined, convert: (value: string) => string): number | null => {
+  if (raw === undefined || raw === '') {
+    return null;
+  }
+  return toNumberOrNull(convert(raw));
+};
+
+const formatResourceValue = (value: number | null, suffix: string): string => {
+  return value === null ? '' : `${value}${suffix}`;
+};
+
+export const getCpuColumnValue = (raw: string | undefined): number | null =>
+  parseResourceValue(raw, convertCoresToMilliCores);
+
+export const getMemoryColumnValue = (raw: string | undefined): number | null =>
+  parseResourceValue(raw, convertBytesToMb);
+
+export const getGpuColumnValue = (raw: string | undefined): number | null => parseResourceValue(raw, identity);
+
+export const formatCpuColumnValue = (value: number | null): string => formatResourceValue(value, ' m');
+
+export const formatMemoryColumnValue = (value: number | null): string => formatResourceValue(value, ' Mb');
+
+export const formatGpuColumnValue = (value: number | null): string => formatResourceValue(value, '');

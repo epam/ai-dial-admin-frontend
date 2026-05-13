@@ -19,9 +19,11 @@ interface Props {
   setCondition: Dispatch<SetStateAction<FILTER_OPERATOR>>;
   setValue: Dispatch<SetStateAction<string[]>>;
   onClose: () => void;
-  dropdownData: { projects: SelectOption[]; entities: SelectOption[] };
+  projects: SelectOption[];
+  entities: SelectOption[];
   route: ApplicationRoute;
   isMcpView?: boolean;
+  isRouteView?: boolean;
 }
 
 const CreateFilter: FC<Props> = ({
@@ -32,15 +34,16 @@ const CreateFilter: FC<Props> = ({
   setCondition,
   setType,
   onClose,
-  dropdownData,
+  projects,
+  entities,
   route,
   isMcpView = false,
+  isRouteView = false,
 }) => {
   const t = useI18n();
-  const filterTypeConfig = getFilterTypeConfig(t, isMcpView);
+  const filterTypeConfig = getFilterTypeConfig(t, isMcpView, isRouteView);
   const filterConditionConfig = getFilterConditionConfig(t);
   const isMobile = useIsMobileScreen();
-  const { projects, entities } = dropdownData;
 
   const setConditionHandler = useCallback(
     (value: FILTER_OPERATOR) => {

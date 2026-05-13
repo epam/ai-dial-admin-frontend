@@ -14,10 +14,13 @@ const fetchMocker = createFetchMock(vi);
 fetchMocker.enableMocks();
 
 // ------------------ Mocks for Locales ------------------
-vi.mock('@/src/locales/client', () => ({
-  useI18n: () => (key: string) => key,
-  useCurrentLocale: () => 'en',
-}));
+vi.mock('@/src/locales/client', () => {
+  const t = (key: string) => key;
+  return {
+    useI18n: () => t,
+    useCurrentLocale: () => 'en',
+  };
+});
 
 // ------------------ NextAuth ------------------
 vi.mock('next-auth/react', () => ({
@@ -75,7 +78,11 @@ vi.mock('@/src/context/SaveValidationContext', () => {
       isValid: true,
       dispatch,
     }),
-    ValidationActionType: { SetField: 'SET_FIELD_VALIDATION', Reset: 'RESET' },
+    ValidationActionType: {
+      SetField: 'SET_FIELD_VALIDATION',
+      RemoveField: 'REMOVE_FIELD_VALIDATION',
+      Reset: 'RESET',
+    },
   };
 });
 
@@ -99,6 +106,17 @@ Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
   writable: true,
   value: () => {},
 });
+
+// ------------------ Monaco Editor (jsdom) ------------------
+// Monaco 0.55+ evaluates clipboard support at import time via queryCommandSupported;
+// jsdom does not implement this deprecated DOM API.
+if (typeof Document.prototype.queryCommandSupported !== 'function') {
+  Object.defineProperty(Document.prototype, 'queryCommandSupported', {
+    configurable: true,
+    writable: true,
+    value: () => false,
+  });
+}
 
 // ------------------ Mock ResizeObserver ------------------
 class ResizeObserverMock {

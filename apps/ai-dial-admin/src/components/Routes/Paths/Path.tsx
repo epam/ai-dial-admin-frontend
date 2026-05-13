@@ -16,6 +16,7 @@ interface Props {
   disabled?: boolean;
   allPaths?: string[];
   disableValidation?: boolean;
+  trackGlobalValidity?: boolean;
   onRemove: (index: number) => void;
   onChangePath: (index: number, value?: string) => void;
 }
@@ -28,6 +29,7 @@ const Path: FC<Props> = ({
   label,
   allPaths,
   disableValidation,
+  trackGlobalValidity = true,
   onRemove,
   onChangePath,
 }) => {
@@ -55,12 +57,9 @@ const Path: FC<Props> = ({
   }, [path]);
 
   useEffect(() => {
+    if (!trackGlobalValidity) return;
     dispatch({ type: ValidationActionType.SetField, field: 'path ' + index, isValid: !error });
-    return () => {
-      dispatch({ type: ValidationActionType.SetField, field: 'path ' + index, isValid: true });
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [error]);
+  }, [dispatch, error, index, trackGlobalValidity]);
 
   return (
     <div className={classNames('flex flex-row gap-x-2', alignmentClassName)}>

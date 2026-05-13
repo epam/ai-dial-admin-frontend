@@ -1,11 +1,10 @@
-import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
+import { ReactNode } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
 import TryOut from '../components/TryOut';
-import { getTryoutResponseFromStorage } from '../../utils/tryout-storage';
 
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
   getTestSuiteTemplateVariables: vi.fn(() => Promise.resolve([])),
@@ -40,7 +39,7 @@ vi.mock('../components/Variables', () => ({
 }));
 
 vi.mock('../components/CollapsibleSection', () => ({
-  default: ({ title, children }: { title: string; children: React.ReactNode }) => (
+  default: ({ title, children }: { title: string; children: ReactNode }) => (
     <div>
       <span>{title}</span>
       {children}

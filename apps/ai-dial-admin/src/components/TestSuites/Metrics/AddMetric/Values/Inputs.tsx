@@ -89,7 +89,7 @@ const MetricInput: FC<{
   );
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-1">
       <DialLabel label={field.name} caption={field.description} required={field.required} />
       <TabSelector
         tabs={tabs}

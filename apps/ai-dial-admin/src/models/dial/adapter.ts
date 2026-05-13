@@ -5,4 +5,5 @@ export interface DialAdapter extends BaseEntity {
   models?: string[];
   baseEndpoint?: string;
   source?: SOURCE_FIELD;
+  responsesEndpoint?: string;
 }

@@ -26,10 +26,6 @@ const InstallationLog: FC<Props> = ({ imageBuildId }) => {
       }
     };
 
-    const handleStatus = () => {
-      eventSource.close();
-    };
-
     const handleError = (event: Event) => {
       const messageEvent = event as MessageEvent;
       try {
@@ -42,12 +38,10 @@ const InstallationLog: FC<Props> = ({ imageBuildId }) => {
     };
 
     eventSource.addEventListener('logs', handleLogs);
-    eventSource.addEventListener('status', handleStatus);
     eventSource.addEventListener('error', handleError);
 
     return () => {
       eventSource.removeEventListener('logs', handleLogs);
-      eventSource.removeEventListener('status', handleStatus);
       eventSource.removeEventListener('error', handleError);
       eventSource.close();
     };

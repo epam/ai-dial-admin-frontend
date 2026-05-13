@@ -6,6 +6,8 @@ export interface SchemaFieldRow {
   id: string;
   name: string;
   type: JSONSchema7TypeName;
+  /** For array fields: the type of items in the array (e.g. 'string', 'object'). Only defined when type === 'array'. */
+  itemsType?: JSONSchema7TypeName;
   required: boolean;
   title: string;
   description: string;
@@ -228,10 +230,11 @@ const convertPropertyToField = (
     typeof effectiveDef.items === 'object' &&
     isJSONSchema7(effectiveDef.items as JSONSchema7Definition)
   ) {
-    if ((effectiveDef.items as JSONSchema7).properties) {
-      const items = effectiveDef.items as JSONSchema7;
-      const nestedRequired = items.required || [];
-      field.children = Object.entries(items.properties!).map(([childName, childDef]) =>
+    const rawItems = effectiveDef.items as JSONSchema7;
+    if (rawItems.properties) {
+      field.itemsType = 'object';
+      const nestedRequired = rawItems.required || [];
+      field.children = Object.entries(rawItems.properties).map(([childName, childDef]) =>
         convertPropertyToField(
           childName,
           childDef,
@@ -246,35 +249,23 @@ const convertPropertyToField = (
         field.expanded = true;
       }
     } else {
-      // evaluation metric
-      const items = effectiveDef.items as JSONSchema7;
-      const effectiveChild = getEffectiveSchema(items, rootSchema) ?? resolveDef(items, rootSchema);
+      const effectiveChild = getEffectiveSchema(rawItems, rootSchema) ?? resolveDef(rawItems, rootSchema);
       if (!isJSONSchema7(effectiveChild)) {
         return { ...createEmptyField(field.id, depth + 1), name: field.name };
       }
       const childSchema = effectiveChild as JSONSchema7;
       const childType = getPrimaryType(childSchema);
-      field.children =
-        childSchema.type === 'object'
-          ? jsonSchemaToFields(childSchema, rootSchema).map((child) => ({
-              ...child,
-              parentId: field.id,
-              depth: depth + 1,
-            }))
-          : [
-              {
-                id: generateFieldId(),
-                name: field.name,
-                type: childType,
-                required: field.required,
-                title: childSchema.title || '',
-                description: childSchema.description || '',
-                expanded: false,
-                children: [],
-                parentId: field.id,
-                depth: depth + 1,
-              },
-            ];
+      field.itemsType = childType;
+      if (childType === 'object') {
+        field.children = jsonSchemaToFields(childSchema, rootSchema).map((child) => ({
+          ...child,
+          parentId: field.id,
+          depth: depth + 1,
+        }));
+        if (field.children.length) {
+          field.expanded = true;
+        }
+      }
     }
   }
 
@@ -332,8 +323,14 @@ export const fieldsToJsonSchema = (fields: SchemaFieldRow[]): JSONSchema7 => {
         prop.properties = {};
       }
     } else if (field.type === 'array') {
-      // Always add items for array type: use children schema or { type: 'string' }
-      prop.items = field.children?.length > 0 ? fieldChildrenToObjectSchema(field.children) : { type: 'string' };
+      if (field.itemsType === 'object') {
+        prop.items =
+          field.children?.length > 0 ? fieldChildrenToObjectSchema(field.children) : { type: 'object', properties: {} };
+      } else if (field.itemsType) {
+        prop.items = { type: field.itemsType };
+      } else {
+        prop.items = field.children?.length > 0 ? fieldChildrenToObjectSchema(field.children) : { type: 'string' };
+      }
     }
 
     if (field.parentId === null && field.dialMeta) {
@@ -380,7 +377,14 @@ const fieldChildrenToObjectSchema = (children: SchemaFieldRow[]): JSONSchema7 =>
         childProp.properties = {};
       }
     } else if (child.type === 'array') {
-      childProp.items = child.children?.length > 0 ? fieldChildrenToObjectSchema(child.children) : { type: 'string' };
+      if (child.itemsType === 'object') {
+        childProp.items =
+          child.children?.length > 0 ? fieldChildrenToObjectSchema(child.children) : { type: 'object', properties: {} };
+      } else if (child.itemsType) {
+        childProp.items = { type: child.itemsType };
+      } else {
+        childProp.items = child.children?.length > 0 ? fieldChildrenToObjectSchema(child.children) : { type: 'string' };
+      }
     }
 
     schema.properties![childName] = childProp;
@@ -411,7 +415,9 @@ export const flattenFields = (fields: SchemaFieldRow[], depth = 0, isReadonly?: 
   fields.forEach((field) => {
     result.push({ ...field, depth });
 
-    if ((field.type === 'object' || field.type === 'array') && field.expanded) {
+    const canExpand =
+      field.type === 'object' || (field.type === 'array' && (field.itemsType === 'object' || !field.itemsType));
+    if (canExpand && field.expanded) {
       if (field.children?.length) {
         result.push(...flattenFields(field.children, depth + 1, isReadonly));
       }

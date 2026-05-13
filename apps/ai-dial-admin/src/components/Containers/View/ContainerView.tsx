@@ -137,47 +137,49 @@ const ContainerView: FC<Props> = ({
   }, [container, selectedContainer]);
 
   useEffect(() => {
-    if (selectedContainer.name) {
-      const eventSource = new EventSource(`${ApiRoute.Events}?id=${selectedContainer.name}`);
+    if (!selectedContainer.name) return;
 
-      const handleEvent = (event: MessageEvent) => {
-        try {
-          const data = JSON.parse(event.data) as KubEvent;
-          if (data.eventType === KubEventType.WARNING) {
-            setTabs((prev) => prev.map((tab) => (tab.id === EntityViewTab.Events ? { ...tab, invalid: true } : tab)));
-          }
-          setEvents((prev) => [...prev, data].sort((a, b) => b.firstTimestamp - a.firstTimestamp));
-        } catch (e) {
-          console.error('Failed to parse SSE event:', e);
+    setEvents([]);
+
+    const eventSource = new EventSource(`${ApiRoute.Events}?id=${selectedContainer.name}`);
+
+    const handleEvent = (event: MessageEvent) => {
+      try {
+        const data = JSON.parse(event.data) as KubEvent;
+        if (data.eventType === KubEventType.WARNING) {
+          setTabs((prev) => prev.map((tab) => (tab.id === EntityViewTab.Events ? { ...tab, invalid: true } : tab)));
         }
-      };
+        setEvents((prev) => [...prev, data].sort((a, b) => b.firstTimestamp - a.firstTimestamp));
+      } catch (e) {
+        console.error('Failed to parse SSE event:', e);
+      }
+    };
 
-      const handleError = (event: Event) => {
-        const messageEvent = event as MessageEvent;
+    const handleError = (event: Event) => {
+      const messageEvent = event as MessageEvent;
+      if (typeof messageEvent.data === 'string') {
         try {
           const { message } = JSON.parse(messageEvent.data);
           showNotification(getErrorNotification(t(ErrorI18nKey.Error), message));
+          eventSource.close();
+          return;
         } catch {
-          showNotification(getErrorNotification(t(ErrorI18nKey.Error), t(DeploymentsI18nKey.EventsError)));
+          // not a server-sent error — fall through to readyState gate
         }
-        eventSource.close();
-      };
+      }
+      if (eventSource.readyState === EventSource.CLOSED) {
+        showNotification(getErrorNotification(t(ErrorI18nKey.Error), t(DeploymentsI18nKey.EventsError)));
+      }
+    };
 
-      const handleOpen = () => {
-        setEvents([]);
-      };
+    eventSource.addEventListener('event', handleEvent);
+    eventSource.addEventListener('error', handleError);
 
-      eventSource.addEventListener('event', handleEvent);
-      eventSource.addEventListener('error', handleError);
-      eventSource.addEventListener('open', handleOpen);
-
-      return () => {
-        eventSource.removeEventListener('event', handleEvent);
-        eventSource.removeEventListener('error', handleError);
-        eventSource.removeEventListener('open', handleOpen);
-        eventSource.close();
-      };
-    }
+    return () => {
+      eventSource.removeEventListener('event', handleEvent);
+      eventSource.removeEventListener('error', handleError);
+      eventSource.close();
+    };
   }, [selectedContainer.name, showNotification, t]);
 
   useEffect(() => {

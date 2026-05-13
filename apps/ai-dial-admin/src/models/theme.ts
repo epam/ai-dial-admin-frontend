@@ -7,6 +7,9 @@ export interface ThemeImages {
   'default-addon': string;
   'default-model': string;
   favicon: string;
+  'admin-logo-light'?: string;
+  'admin-logo-dark'?: string;
+  'admin-favicon'?: string;
 }
 
 export interface Theme {

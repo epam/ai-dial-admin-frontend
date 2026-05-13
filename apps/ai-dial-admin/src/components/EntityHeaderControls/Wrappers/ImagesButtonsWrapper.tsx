@@ -1,5 +1,5 @@
 import { DialNeutralButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
-import { IconBlocks, IconPlus, IconTrashX } from '@tabler/icons-react';
+import { IconBlocks, IconPlayerPause, IconPlus, IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { useRouter } from 'next/navigation';
 import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
@@ -96,11 +96,34 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
     return true;
   }, [image.buildStatus, isOnlyMetadataChange]);
 
-  const forceNewVersion = useMemo(() => {
-    const isNameChanged = (image.name ?? '').trim() !== (originalImage.name ?? '').trim();
+  const isNameChanged = useMemo(
+    () => (image.name ?? '').trim() !== (originalImage.name ?? '').trim(),
+    [image.name, originalImage.name],
+  );
 
+  const forceNewVersion = useMemo(() => {
     return isNameChanged && versions.some((v: ImageVersion) => v.version === image.version);
-  }, [image.name, image.version, originalImage.name, versions]);
+  }, [isNameChanged, image.version, versions]);
+
+  const existingVersionsByName = useMemo(() => getVersionsPerName(versions), [versions]);
+
+  const saveAsNewLabel = useMemo(
+    () => (isNameChanged ? t(ButtonsI18nKey.SaveAsNewImage) : t(ButtonsI18nKey.SaveAsNewVersion)),
+    [isNameChanged, t],
+  );
+
+  const saveAsNewModalHeader = useMemo(
+    () => (isNameChanged ? t(ImagesI18nKey.SaveNewImageModalTitle) : t(ImagesI18nKey.SaveNewVersionModalTitle)),
+    [isNameChanged, t],
+  );
+
+  const saveAsNewDefaultVersion = useMemo(() => {
+    if (!isNameChanged) {
+      return undefined;
+    }
+    const versionsForTypedName = existingVersionsByName[image.name ?? ''] ?? [];
+    return versionsForTypedName.length > 0 ? undefined : '1.0.0';
+  }, [isNameChanged, existingVersionsByName, image.name]);
 
   const onOpenModal = useCallback((modalType: ModalType) => {
     setIsModalOpen(true);
@@ -166,9 +189,9 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
     onOpenModal(ModalType.install);
   }, [onOpenModal]);
 
-  // const onOpenStopModal = useCallback(() => {
-  //   onOpenModal(ModalType.stopBuild);
-  // }, [onOpenModal]);
+  const onOpenStopModal = useCallback(() => {
+    onOpenModal(ModalType.stopBuild);
+  }, [onOpenModal]);
 
   const onCreateContainer = useCallback(
     (container: Container) => {
@@ -184,13 +207,14 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
   );
 
   const onSaveAsNewVersion = useCallback(
-    (image: Image) => {
+    (image: Image, isNewImage: boolean) => {
       createImage(image).then((res) => {
         if (res.success) {
           const type = getTranslatedType(getRouteByType(image.$type), t);
+          const entity = isNewImage ? 'Image' : 'Image version';
           showNotification(
             getSuccessNotification(
-              t(ImagesI18nKey.ImagesSaveSuccess, { type }),
+              t(ImagesI18nKey.ImagesSaveSuccess, { type, entity }),
               t(ImagesI18nKey.ImagesSaveSuccessDescription, { type, version: image.version }),
             ),
           );
@@ -237,7 +261,7 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
             >
               <DialPrimaryButton
                 className={buttonsClassNames}
-                label={t(ButtonsI18nKey.SaveAsNewVersion)}
+                label={saveAsNewLabel}
                 onClick={onOpenSaveNewVersionModal}
                 disabled={isDisableSave}
               />
@@ -259,14 +283,14 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
                   iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
                   onClick={onOpenDeleteModal}
                 />
-                {/* {image.buildStatus === IMAGE_STATUS.BUILDING && (
+                {image.buildStatus === IMAGE_STATUS.BUILDING && (
                   <DialNeutralButton
                     className={buttonsClassNames}
                     label={t(ButtonsI18nKey.Stop)}
                     iconBefore={<IconPlayerPause {...BASE_BUTTON_ICON_PROPS} />}
                     onClick={onOpenStopModal}
                   />
-                )} */}
+                )}
                 {image.buildStatus === IMAGE_STATUS.BUILT && (
                   <DialNeutralButton
                     className={buttonsClassNames}
@@ -334,11 +358,12 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
           <AddVersionModal
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
-            header={t(ImagesI18nKey.SaveNewVersionModalTitle)}
+            header={saveAsNewModalHeader}
             submitLabel={t(ButtonsI18nKey.Save)}
-            onConfirm={(version) => onSaveAsNewVersion({ ...image, version })}
-            existingVersions={getVersionsPerName(versions)}
+            onConfirm={(version) => onSaveAsNewVersion({ ...image, version }, isNameChanged)}
+            existingVersions={existingVersionsByName}
             entityName={image.name}
+            defaultVersion={saveAsNewDefaultVersion}
           />,
           document.body,
         )}
@@ -349,7 +374,7 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
             header={t(ImagesI18nKey.CreateNewVersionModalTitle)}
-            onConfirm={(version) => onSaveAsNewVersion({ ...image, version })}
+            onConfirm={(version) => onSaveAsNewVersion({ ...image, version }, false)}
             existingVersions={getVersionsPerName(versions)}
             entityName={image.name}
           />,

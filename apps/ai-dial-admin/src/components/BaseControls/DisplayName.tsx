@@ -6,6 +6,7 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
+import { ErrorType } from '@/src/types/error-type';
 import { getControlClassName } from '@/src/utils/entities/view';
 import { getErrorForAppRouteName, getErrorForName } from '@/src/utils/validation/name-error';
 
@@ -17,6 +18,8 @@ interface Props {
   names?: string[];
   allowWhitespace?: boolean;
   alphanumericOnly?: boolean;
+  trackGlobalValidity?: boolean;
+  externalError?: string;
   onChange?: (displayName?: string) => void;
 }
 
@@ -28,6 +31,8 @@ const DisplayNameControl: FC<Props> = ({
   names,
   allowWhitespace = true,
   alphanumericOnly = false,
+  trackGlobalValidity = true,
+  externalError,
   disabled,
   ...props
 }) => {
@@ -39,21 +44,23 @@ const DisplayNameControl: FC<Props> = ({
   const [displayNameError, setDisplayNameError] = useState<FieldError | null>(null);
 
   const validateDisplayName = useCallback(
-    (displayName?: string) => {
+    (value?: string) => {
       const error = alphanumericOnly
-        ? getErrorForAppRouteName(displayName, names, t)
-        : getErrorForName(displayName, names, t, false, !allowWhitespace, true);
+        ? getErrorForAppRouteName(value, names, t)
+        : getErrorForName(value, names, t, false, !allowWhitespace, true);
       setDisplayNameError(error);
-      dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !error });
+      if (trackGlobalValidity) {
+        dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !error });
+      }
     },
-    [dispatch, t, names, allowWhitespace, alphanumericOnly],
+    [dispatch, t, names, allowWhitespace, alphanumericOnly, trackGlobalValidity],
   );
 
   // initial validation
   useEffect(() => {
     if (displayName) {
       validateDisplayName(displayName);
-    } else {
+    } else if (trackGlobalValidity) {
       dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: !!displayName });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -68,6 +75,15 @@ const DisplayNameControl: FC<Props> = ({
     [onChange, validateDisplayName],
   );
 
+  useEffect(() => {
+    if (externalError && trackGlobalValidity) {
+      dispatch({ type: ValidationActionType.SetField, field: 'displayName', isValid: false });
+    }
+  }, [externalError, dispatch, trackGlobalValidity]);
+
+  const activeError: FieldError | null =
+    displayNameError ?? (externalError ? { text: externalError, type: ErrorType.EXISTING } : null);
+
   return (
     <DialInput
       labelProps={{ label: t(EntityFieldsI18nKey.displayName), required }}
@@ -75,8 +91,8 @@ const DisplayNameControl: FC<Props> = ({
       id="displayName"
       value={displayName}
       onChange={onChangeDisplayName}
-      error={displayNameError?.text}
-      invalid={!!displayNameError}
+      error={activeError?.text}
+      invalid={!!activeError}
       containerClassName={containerClassName}
       disabled={disabled || isReadOnlyAdmin}
       {...props}

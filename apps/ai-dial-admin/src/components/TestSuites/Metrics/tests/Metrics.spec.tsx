@@ -74,6 +74,14 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
       {label}
     </button>
   ),
+  DialConfirmationPopup: ({ open, onConfirm, confirmLabel }: any) =>
+    open ? (
+      <div role="dialog" aria-label="delete-metric-confirmation">
+        <button type="button" onClick={onConfirm}>
+          {confirmLabel}
+        </button>
+      </div>
+    ) : null,
   ElementSize: { Small: 'small' },
 }));
 
@@ -174,6 +182,12 @@ describe('Metrics', () => {
     });
 
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Delete }));
+
+    await user.click(
+      within(screen.getByRole('dialog', { name: 'delete-metric-confirmation' })).getByRole('button', {
+        name: ButtonsI18nKey.Delete,
+      }),
+    );
 
     await waitFor(() => {
       expect(mockDeleteTestSuiteMetric).toHaveBeenCalledWith('suite-1', 'metric-1');

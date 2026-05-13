@@ -49,11 +49,16 @@ export async function removeModel(name?: string) {
 export async function updateModel(model: DialModel, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   const defaults = model.defaultsTemp ? { ...convertDefaultsToRecord(model.defaultsTemp) } : { ...model.defaults };
+  const responsesDefaults = model.responsesDefaultsTemp
+    ? { ...convertDefaultsToRecord(model.responsesDefaultsTemp) }
+    : { ...model.responsesDefaults };
   const newModel = {
     ...model,
     defaults,
+    responsesDefaults,
   };
   delete newModel.defaultsTemp;
+  delete newModel.responsesDefaultsTemp;
   return modelsApi.updateModel(newModel, token, etag);
 }
 

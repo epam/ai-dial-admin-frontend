@@ -149,7 +149,7 @@ const FolderCreateSetup: FC<Props> = ({
             onChange={setFileType}
           />
           {isAssetView(view) && (
-            <div className="flex flex-col gap-y-2">
+            <div className="flex flex-col gap-y-1">
               <DialLabel label={ignorePathsTitle} htmlFor="ignorePaths" />
               <DialSwitch
                 isOn={ignorePaths}

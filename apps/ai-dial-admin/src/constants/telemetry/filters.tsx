@@ -38,6 +38,11 @@ export const mcpFilterTypeConfig = [
   { value: FILTER_TYPE.Project, label: TelemetryI18nKey.FilterTypeProjects, filter: 'project_id' },
 ];
 
+export const routerFilterTypeConfig = [
+  { value: FILTER_TYPE.Deployment, label: TelemetryI18nKey.FilterTypeDeployment, filter: 'deployment' },
+  { value: FILTER_TYPE.Project, label: TelemetryI18nKey.FilterTypeProjects, filter: 'project_id' },
+];
+
 export const filterConditionConfig = [
   { value: FILTER_OPERATOR.Contain, label: TelemetryI18nKey.FilterConditionContain, icon: <Contains /> },
   { value: FILTER_OPERATOR.NotContains, label: TelemetryI18nKey.FilterConditionNotContain, icon: <NotContains /> },

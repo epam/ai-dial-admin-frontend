@@ -16,11 +16,13 @@ interface Props {
   setCondition: Dispatch<SetStateAction<FILTER_OPERATOR>>;
   setValue: Dispatch<SetStateAction<string[]>>;
   onCreate: () => void;
-  dropdownData: { projects: SelectOption[]; entities: SelectOption[] };
+  projects: SelectOption[];
+  entities: SelectOption[];
   reset: () => void;
   children: ReactElement;
   route: ApplicationRoute;
   isMcpView?: boolean;
+  isRouteView?: boolean;
 }
 
 const AddFilterModal: FC<Props> = ({
@@ -31,11 +33,13 @@ const AddFilterModal: FC<Props> = ({
   setCondition,
   condition,
   onCreate,
-  dropdownData,
+  projects,
+  entities,
   reset,
   children,
   route,
   isMcpView = false,
+  isRouteView = false,
 }) => {
   const t = useI18n();
   const [isOpen, setIsOpen] = useState(false);
@@ -76,9 +80,11 @@ const AddFilterModal: FC<Props> = ({
                 setType={setType}
                 setCondition={setCondition}
                 setValue={setValue}
-                dropdownData={dropdownData}
+                projects={projects}
+                entities={entities}
                 route={route}
                 isMcpView={isMcpView}
+                isRouteView={isRouteView}
               />
             </div>
           </DialFormPopup>,

@@ -15,7 +15,7 @@ import { FilterOperatorDto } from '@/src/types/request';
 import { formatDateToLocalString } from '@/src/utils/formatting/date';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 import { ActivityAuditRevision } from '@/src/components/ActivityAudit/models';
-import { ActivityAuditResourceType } from '@/src/types/activity-audit';
+import { ActivityAuditResourceType, ActivityAuditView } from '@/src/types/activity-audit';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { BaseEntity } from '@/src/models/dial/base-entity';
@@ -37,7 +37,11 @@ export const getActivityAuditColumns = (
 ): ColDef[] => {
   const actions = [];
   if (open) {
-    actions.push(getOpenInNewTabOperation(open));
+    actions.push(
+      getOpenInNewTabOperation(open, void 0, (_, node) => {
+        return !!(node.data as DialActivity & { children?: DialActivity[] })?.children?.length;
+      }),
+    );
   }
   if (viewDetails) {
     actions.push(getViewDetailsOperation(viewDetails));
@@ -50,7 +54,22 @@ export const getActivityAuditColumns = (
     );
   }
 
-  return [...ACTIVITY_AUDIT_COLUMNS(t, isSingleEntity), ACTION_COLUMN(actions)];
+  return [...ACTIVITY_AUDIT_COLUMNS(t, ActivityAuditView.Config, isSingleEntity), ACTION_COLUMN(actions)];
+};
+
+/**
+ * Generate columns with actions for the deployment activity audit grid.
+ * The only available row action is `Open in new tab`.
+ *
+ * @param {(activity: DialActivity) => void} open - open in new tab action
+ * @returns {ColDef[]} - columns
+ */
+export const getDeploymentActivityAuditColumns = (
+  t: (key: string) => string,
+  open?: (activity?: DialActivity) => void,
+): ColDef[] => {
+  const actions = open ? [getOpenInNewTabOperation(open)] : [];
+  return [...ACTIVITY_AUDIT_COLUMNS(t, ActivityAuditView.Deployments), ACTION_COLUMN(actions)];
 };
 
 /**

@@ -33,36 +33,47 @@ const PodView: FC<Props> = ({ pod, containerId, route }) => {
   const restartReasons = RESTART_REASONS(t);
 
   useEffect(() => {
-    if (containerId && podData?.name) {
-      const eventSource = new EventSource(`${ApiRoute.Sse}?entity=container&id=${containerId}&podName=${podData.name}`);
-      const handleLogs = (event: MessageEvent) => {
-        setLogs((prev) => prev + event.data + '\n');
-      };
-      const handleError = (event: Event) => {
-        const messageEvent = event as MessageEvent;
+    if (!containerId || !podData?.name) return;
+
+    const eventSource = new EventSource(`${ApiRoute.Sse}?entity=container&id=${containerId}&podName=${podData.name}`);
+
+    const handleLogs = (event: MessageEvent) => {
+      setLogs((prev) => prev + event.data + '\n');
+    };
+
+    const handleError = (event: Event) => {
+      const messageEvent = event as MessageEvent;
+      if (typeof messageEvent.data === 'string') {
         try {
           const { message } = JSON.parse(messageEvent.data);
           showNotification(getErrorNotification(t(ErrorI18nKey.Error), message));
+          eventSource.close();
+          return;
         } catch {
-          showNotification(getErrorNotification(t(ErrorI18nKey.Error), t(DeploymentsI18nKey.LogsError)));
+          // not a server-sent error — fall through to readyState gate
         }
-        eventSource.close();
-      };
-      const handleOpen = () => {
-        setLogs('');
-      };
-      eventSource.addEventListener('logs', handleLogs);
-      eventSource.addEventListener('error', handleError);
-      eventSource.addEventListener('open', handleOpen);
+      }
+      if (eventSource.readyState === EventSource.CLOSED) {
+        showNotification(getErrorNotification(t(ErrorI18nKey.Error), t(DeploymentsI18nKey.LogsError)));
+      }
+    };
 
-      return () => {
-        eventSource.removeEventListener('logs', handleLogs);
-        eventSource.removeEventListener('error', handleError);
-        eventSource.removeEventListener('open', handleOpen);
-        eventSource?.close();
-        setLogs('');
-      };
-    }
+    // Backend re-streams the full pod log on every (re)connect via fabric8 watchLog().
+    // Clear the buffer on each open to avoid duplication; the next open will refill from the start.
+    const handleOpen = () => {
+      setLogs('');
+    };
+
+    eventSource.addEventListener('logs', handleLogs);
+    eventSource.addEventListener('error', handleError);
+    eventSource.addEventListener('open', handleOpen);
+
+    return () => {
+      eventSource.removeEventListener('logs', handleLogs);
+      eventSource.removeEventListener('error', handleError);
+      eventSource.removeEventListener('open', handleOpen);
+      eventSource.close();
+    };
   }, [containerId, podData.name, showNotification, t]);
 
   return (

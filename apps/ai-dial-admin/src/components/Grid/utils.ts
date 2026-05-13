@@ -7,6 +7,8 @@ export interface GridModel {
   filters: FilterModel;
 }
 
+export const getRowIdById = <T extends { id: string }>({ data }: { data: T }): string => data.id;
+
 export const saveColumnsStateToStorage = (storageKey: string, model: GridModel) => {
   setToLocalStorage(`${GRID_COLUMNS_KEY}${storageKey}`, JSON.stringify(model));
 };
@@ -16,6 +18,31 @@ export const getColumnsStateFromStorage = (storageKey: string, defaultSorts: Col
   const parsed = JSON.parse(model);
   return Object.values(parsed).length > 0 ? parsed : { columns: defaultSorts, filters: [] };
 };
+
+export const applyColumnStateOrderToColDefs = (columnDefs: ColDef[], columnState: ColumnState[]): ColDef[] => {
+  const byColId = new Map(columnDefs.map((col) => [(col.field ?? col.colId) as string, col]));
+  const ordered: ColDef[] = [];
+
+  columnState.forEach((state) => {
+    const col = byColId.get(state.colId);
+    if (!col) {
+      return;
+    }
+
+    byColId.delete(state.colId);
+    ordered.push(state.hide !== undefined ? { ...col, hide: state.hide } : col);
+  });
+
+  byColId.forEach((col) => ordered.push(col));
+
+  return ordered;
+};
+
+export const haveColDefsSamePanelState = (columnDefs: ColDef[], nextColumnDefs: ColDef[]) =>
+  columnDefs.length === nextColumnDefs.length &&
+  columnDefs.every(
+    (col, index) => col.field === nextColumnDefs[index].field && col.hide === nextColumnDefs[index].hide,
+  );
 
 export const updateColumnVisibilityInStorage = (storageKey: string, colDefs: ColDef[]) => {
   const stored = getFromLocalStorage(`${GRID_COLUMNS_KEY}${storageKey}`) || '{}';
@@ -36,8 +63,5 @@ export const getColumnVisibilityFromGridState = (storageKey: string, columnDefs:
   if (!model.columns || model.columns.length === 0) {
     return null;
   }
-  return columnDefs.map((col) => {
-    const storedCol = model.columns.find((c) => c.colId === col.field);
-    return storedCol && storedCol.hide !== undefined ? { ...col, hide: storedCol.hide } : col;
-  });
+  return applyColumnStateOrderToColDefs(columnDefs, model.columns);
 };

@@ -3,8 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialLoader, DialNoDataContent, DialPrimaryButton, SelectOption } from '@epam/ai-dial-ui-kit';
-import { RJSFSchema } from '@rjsf/utils';
+import { DialLoader, DialNoDataContent, DialPrimaryButton, JsonSchema, SelectOption } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -31,11 +30,11 @@ import { UserSession } from '@/src/models/auth';
 import { ApplicationPropertiesTemp, DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialApplicationResource } from '@/src/models/dial/application-resource';
 import { BaseEntity } from '@/src/models/dial/base-entity';
-import { DefaultsValue } from '@/src/models/dial/defaults';
 import { ParamsView } from '@/src/types/parameters';
 import { ApplicationRoute } from '@/src/types/routes';
 import TableView from './TableView';
 import ViewControl from './ViewControl';
+import { AssetApp } from '@/src/models/dial/deployment-asset';
 
 interface Props {
   application?: DialApplication | DialApplicationResource;
@@ -91,12 +90,12 @@ const ParametersTab: FC<Props> = ({
       const config = getCorrectConfig(scheme, application, currentTheme, session as UserSession);
       const targetUrl = getTargetUrl(view, application, config);
 
-      setViewItems(generateViewItems(t, view, !!targetUrl, !!config));
-      setParamsView(getInitialParamsView(view, !!targetUrl));
+      setViewItems(generateViewItems(t, view, !!targetUrl && !isReadOnlyAdmin, !!config));
+      setParamsView(getInitialParamsView(view, !!targetUrl && !isReadOnlyAdmin));
     });
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [(application as AssetApp)?.version]);
 
   const [appPropertiesTemp, setAppPropertiesTemp] = useState<ApplicationPropertiesTemp[] | undefined>();
   const [schemeProperties, setSchemeProperties] = useState<ApplicationPropertiesTemp[]>([]);
@@ -110,14 +109,14 @@ const ParametersTab: FC<Props> = ({
     return getTargetUrl(view, application, frameConfig);
   }, [application, frameConfig, view]);
 
-  const rjsfSchema = useMemo(
+  const jsonSchema = useMemo(
     () =>
       ({
         $defs: scheme?.$defs,
         properties: scheme?.properties,
         required: scheme?.required,
         isRoot: true,
-      }) as RJSFSchema,
+      }) as JsonSchema,
     [scheme],
   );
 
@@ -126,7 +125,7 @@ const ParametersTab: FC<Props> = ({
   }, [viewItems.length]);
 
   const onGetSchemeDefaults = useCallback(
-    (data: Record<string, DefaultsValue>) => {
+    (data: Record<string, unknown>) => {
       if (application?.applicationPropertiesTemp) {
         setAppPropertiesTemp(application.applicationPropertiesTemp || []);
       } else {
@@ -153,7 +152,7 @@ const ParametersTab: FC<Props> = ({
   );
 
   const onChangeConfiguration = useCallback(
-    (data: Record<string, DefaultsValue>) => {
+    (data: Record<string, unknown>) => {
       if (paramsView === ParamsView.FORM) {
         const newEntity = {
           ...application,
@@ -235,11 +234,12 @@ const ParametersTab: FC<Props> = ({
               ) : (
                 <div className="flex-1 min-h-0 p-4 bg-layer-0">
                   <SchemaUiRenderer
-                    schema={rjsfSchema}
+                    schema={jsonSchema}
                     data={application?.applicationProperties}
                     onChangeConfiguration={onChangeConfiguration}
                     onGetSchemeDefaults={onGetSchemeDefaults}
                     disabled={view === ApplicationRoute.ApplicationPublications}
+                    defaultExpanded={false}
                   />
                 </div>
               )}

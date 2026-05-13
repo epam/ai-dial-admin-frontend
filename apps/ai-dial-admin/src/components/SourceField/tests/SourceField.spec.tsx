@@ -255,3 +255,69 @@ describe('SourceField clearing (non-Applications view)', () => {
     expect('applicationProperties' in last).toBe(false);
   });
 });
+
+describe('SourceField onChangeSource produces a clean source object', () => {
+  test('MCP_REGISTRY → CONTAINER drops serverName and serverVersion from source', () => {
+    const onChange = vi.fn();
+    const entity = {
+      name: 't',
+      source: {
+        $type: SOURCE_TYPE.MCP_REGISTRY,
+        serverName: 'namespace/server',
+        serverVersion: '1.2.3',
+      },
+    } as any;
+
+    render(
+      <SourceField
+        id="sourceType"
+        view={ApplicationRoute.Toolsets}
+        sourceItems={[
+          { value: SOURCE_TYPE.MCP_REGISTRY, label: 'MCP Registry' },
+          { value: SOURCE_TYPE.CONTAINER, label: 'MCP Container' },
+        ]}
+        entity={entity}
+        onChange={onChange}
+        getContainers={vi.fn()}
+      />,
+    );
+
+    fireEvent.change(screen.getByTestId('select-sourceType'), { target: { value: SOURCE_TYPE.CONTAINER } });
+
+    const last = onChange.mock.calls.at(-1)?.[0];
+    expect(last.source).toEqual({ $type: SOURCE_TYPE.CONTAINER });
+    expect(last.source.serverName).toBeUndefined();
+    expect(last.source.serverVersion).toBeUndefined();
+  });
+
+  test('CONTAINER → ENDPOINTS drops containerId from source', () => {
+    const onChange = vi.fn();
+    const entity = {
+      name: 't',
+      source: {
+        $type: SOURCE_TYPE.CONTAINER,
+        containerId: 'my-container',
+      },
+    } as any;
+
+    render(
+      <SourceField
+        id="sourceType"
+        view={ApplicationRoute.Toolsets}
+        sourceItems={[
+          { value: SOURCE_TYPE.ENDPOINTS, label: 'External Endpoint' },
+          { value: SOURCE_TYPE.CONTAINER, label: 'MCP Container' },
+        ]}
+        entity={entity}
+        onChange={onChange}
+        getContainers={vi.fn()}
+      />,
+    );
+
+    fireEvent.change(screen.getByTestId('select-sourceType'), { target: { value: SOURCE_TYPE.ENDPOINTS } });
+
+    const last = onChange.mock.calls.at(-1)?.[0];
+    expect(last.source).toEqual({ $type: SOURCE_TYPE.ENDPOINTS });
+    expect(last.source.containerId).toBeUndefined();
+  });
+});

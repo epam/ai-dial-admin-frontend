@@ -19,7 +19,12 @@ const ActionColumn = <T extends object>({ items, data, api, node, disabledInstea
           disabled: item.hidden?.(api, node),
         };
       })
-    : items.filter((item) => !item.hidden?.(api, node));
+    : items
+        .filter((item) => !item.hidden?.(api, node))
+        .map((item) => ({
+          ...item,
+          disabled: typeof item.disabled === 'function' ? item.disabled(api, node) : item.disabled,
+        }));
   return data ? (
     <div className="size-[24px] ml-[-4px]">
       <ActionsDropdown

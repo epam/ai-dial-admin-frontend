@@ -52,32 +52,34 @@ const ImageSource: FC<Props> = ({ image, setImage, isModal = false, verifyVersio
         </div>
       )}
 
-      <div className={classNames('flex', isModal ? 'flex-col gap-y-8' : 'flex-row gap-x-4', className)}>
-        {showSourceType && (
-          <SourceType
-            image={image}
-            setImage={setImage}
-            isModal={isModal}
-            verifyVersion={verifyVersion}
-            registryServer={registryServer}
-          />
-        )}
-        {(!isModal || !hasExternalRegistryRef) && (
-          <div className="flex-1">
-            {image.source?.$type === IMAGE_SOURCE_TYPE.CODE && (
-              <CodeURL image={image} setImage={setImage} disabled={hasExternalRegistryRef} />
-            )}
-            {image.source?.$type === IMAGE_SOURCE_TYPE.DOCKER && (
-              <DockerURI image={image} setImage={setImage} disabled={hasExternalRegistryRef} />
-            )}
-          </div>
-        )}
-      </div>
+      {(showSourceType || !isModal || !hasExternalRegistryRef) && (
+        <div className={classNames('flex', isModal ? 'flex-col gap-y-8' : 'flex-row gap-x-4', className)}>
+          {showSourceType && (
+            <SourceType
+              image={image}
+              setImage={setImage}
+              isModal={isModal}
+              verifyVersion={verifyVersion}
+              registryServer={registryServer}
+            />
+          )}
+          {(!isModal || !hasExternalRegistryRef) && (
+            <div className="flex-1">
+              {image.source?.$type === IMAGE_SOURCE_TYPE.CODE && (
+                <CodeURL image={image} setImage={setImage} disabled={hasExternalRegistryRef} />
+              )}
+              {image.source?.$type === IMAGE_SOURCE_TYPE.DOCKER && (
+                <DockerURI image={image} setImage={setImage} disabled={hasExternalRegistryRef} />
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
-      {image.source?.$type === IMAGE_SOURCE_TYPE.CODE && !isModal && (
+      {image.source?.$type === IMAGE_SOURCE_TYPE.CODE && (
         <>
           <Branch image={image} setImage={setImage} isModal={isModal} />
-          <BaseDirectory image={image} setImage={setImage} />
+          {!isModal && <BaseDirectory image={image} setImage={setImage} />}
         </>
       )}
     </div>

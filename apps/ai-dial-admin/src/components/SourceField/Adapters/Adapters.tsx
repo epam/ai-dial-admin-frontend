@@ -4,6 +4,9 @@ import classNames from 'classnames';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
+import ComplexInput from '@/src/components/Common/ComplexInput/ComplexInput';
+import SelectAdapterModal from '@/src/components/SourceField/Adapters/SelectAdapterModal';
+import ModelEndpoint from '@/src/components/SourceField/Endpoints/ModelEndpoint';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import {
   ButtonsI18nKey,
@@ -14,20 +17,17 @@ import {
 } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
+import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 import { getErrorNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-
-import SelectAdapterModal from '@/src/components/SourceField/Adapters/SelectAdapterModal';
-import ModelEndpoint from '@/src/components/SourceField/Endpoints/ModelEndpoint';
-import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
-import { useProtectedRequest } from '@/src/hooks/use-protected-request';
-import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 
 interface Props<T> {
   entity: T;
@@ -125,7 +125,7 @@ const Adapters = <T extends DialModel | DialInterceptor>({
           </div>
         ) : (
           <div className="flex gap-2">
-            <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-2')}>
+            <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-1')}>
               <DialLabel label={t(SourceI18nKey.Adapter)} required htmlFor="adapters" />
               <DialInputPopup
                 open={isModalOpen}
@@ -156,12 +156,22 @@ const Adapters = <T extends DialModel | DialInterceptor>({
           </div>
         )}
       </div>
-      {entity.source?.adapterName && selectedAdapter && !isModal && (
+      {entity.source?.adapterName && selectedAdapter && selectedAdapter.baseEndpoint && !isModal && (
         <ModelEndpoint
           entity={entity}
           prefix={selectedAdapter?.baseEndpoint}
           onChange={onChange as (entity: DialModel) => void}
           disabled={disabled}
+          hideResponsesEndpoint
+        />
+      )}
+      {entity.source?.adapterName && selectedAdapter && selectedAdapter.responsesEndpoint && (
+        <ComplexInput
+          copyable
+          id="responsesEndpoint"
+          disabled
+          label={t(EntityFieldsI18nKey.responsesEndpoint)}
+          value={selectedAdapter.responsesEndpoint || ''}
         />
       )}
     </div>

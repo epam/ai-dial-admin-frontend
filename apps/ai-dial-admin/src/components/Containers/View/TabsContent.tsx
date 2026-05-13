@@ -1,10 +1,6 @@
-import { AlertVariant, DialAlert, DialLabelledText, DialNeutralButton, ElementSize } from '@epam/ai-dial-ui-kit';
-import { IconBlocks } from '@tabler/icons-react';
-import { useRouter } from 'next/navigation';
-import { FC, useCallback, useMemo, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { DialLabelledText } from '@epam/ai-dial-ui-kit';
+import { FC, useMemo } from 'react';
 
-import { installImage } from '@/src/app/actions/deployments';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import Events from '@/src/components/Containers/View/Events/Events';
 import ExecutionLog from '@/src/components/Containers/View/ExecutionLog/ExecutionLog';
@@ -13,24 +9,18 @@ import Metrics from '@/src/components/Containers/View/Metrics/Metrics';
 import Prompts from '@/src/components/Containers/View/Prompts/Prompts';
 import Properties from '@/src/components/Containers/View/Properties/Properties';
 import Resources from '@/src/components/Containers/View/Resources/Resources';
+import ImageStatusBanner from '@/src/components/Deployments/Common/ImageStatusBanner/ImageStatusBanner';
 import StatusIndicator from '@/src/components/Deployments/Common/StatusIndicator/StatusIndicator';
-import ImageInstall from '@/src/components/Deployments/Modals/ImageInstall';
 import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
 import Tools from '@/src/components/Tools/Tools';
-import { BasicI18nKey, ContainersI18nKey, EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
-import { useNotification } from '@/src/context/NotificationContext';
+import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { Container, KubEvent, Pod } from '@/src/models/deployments/containers';
 import { Image } from '@/src/models/deployments/images';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
-import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getContainerSourceTypeLabel } from '@/src/utils/deployments/containers';
-import { getTranslatedType } from '@/src/utils/deployments/entity';
-import { isImageNotInstalled } from '@/src/utils/deployments/images';
-import { getErrorNotification } from '@/src/utils/notification';
-import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 
 interface Props {
@@ -58,34 +48,6 @@ const TabsContent: FC<Props> = ({
 }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
-
-  const router = useRouter();
-  const { showNotification } = useNotification();
-
-  const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
-
-  const imageWarning = isImageNotInstalled(image);
-
-  const handleInstallModalOpen = useCallback(() => {
-    setIsInstallModalOpen(true);
-  }, []);
-
-  const handleInstallModalClose = useCallback(() => {
-    setIsInstallModalOpen(false);
-  }, []);
-
-  const onInstallImage = useCallback(
-    (img: Image) => {
-      installImage(img.id).then((res) => {
-        if (res.success) {
-          router.push(getUrnForEntity(ApplicationRoute.Images, { id: img.id }));
-        } else {
-          showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
-        }
-      });
-    },
-    [router, showNotification],
-  );
 
   const headerPostfix = useMemo(() => {
     return (
@@ -115,33 +77,7 @@ const TabsContent: FC<Props> = ({
     <>
       {activeTab === EntityViewTab.Properties && (
         <>
-          {imageWarning && image && (
-            <DialAlert
-              className="[&>div]:flex-1 [&>div>div:last-child]:w-full mb-8"
-              variant={AlertVariant.Warning}
-              message={
-                <div className="flex flex-row items-center justify-between gap-4 w-full">
-                  <span className="small">
-                    {t(
-                      image.buildStatus === IMAGE_STATUS.BUILD_FAILED
-                        ? ContainersI18nKey.ImageBuildFailedWarning
-                        : ContainersI18nKey.ImageNotInstalledWarning,
-                      { imageName: image.name ?? '', imageVersion: image.version },
-                    )}
-                  </span>
-                  {!isReadOnlyAdmin && (
-                    <DialNeutralButton
-                      className="shrink-0"
-                      size={ElementSize.Small}
-                      label={t(ContainersI18nKey.InstallImage)}
-                      iconBefore={<IconBlocks size={12} />}
-                      onClick={handleInstallModalOpen}
-                    />
-                  )}
-                </div>
-              }
-            />
-          )}
+          <ImageStatusBanner image={image} />
           <PropertiesTabContent
             entity={selectedContainer}
             view={route}
@@ -178,19 +114,6 @@ const TabsContent: FC<Props> = ({
           disabled={isReadOnlyAdmin}
         />
       )}
-
-      {isInstallModalOpen &&
-        image &&
-        createPortal(
-          <ImageInstall
-            isModalOpen={isInstallModalOpen}
-            title={t(ContainersI18nKey.ContainerImage, { type: getTranslatedType(route, t) })}
-            onClose={handleInstallModalClose}
-            onApply={onInstallImage}
-            image={image}
-          />,
-          document.body,
-        )}
     </>
   );
 };
