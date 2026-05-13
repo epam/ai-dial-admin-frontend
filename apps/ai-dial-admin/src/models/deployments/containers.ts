@@ -32,7 +32,8 @@ export interface Container extends BaseEntity {
   scaling?: Autoscaling;
   allowedDomains?: string[];
   probeProperties?: ProbeProperties;
-  nodePool?: string;
+  nodePoolId?: string | null;
+  nodePoolName?: string | null;
 }
 
 export interface ProbeProperties {

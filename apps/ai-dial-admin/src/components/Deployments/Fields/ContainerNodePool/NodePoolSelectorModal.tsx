@@ -14,43 +14,39 @@ import {
 
 import { ButtonsI18nKey, DeploymentsI18nKey } from '@/src/constants/i18n';
 import { NodePool } from '@/src/models/deployments/node-pools';
-import { humanBytes, humanMilliCpus, isGpuPool } from '@/src/utils/deployments/node-pools';
 import { useI18n } from '@/src/locales/client';
 
 const RADIO_NAME = 'node-pool-selector';
+const ANY_VALUE = '__any__';
 
-const ROW_GRID = 'grid grid-cols-[36px_1.8fr_1fr_0.9fr_0.9fr_0.6fr] gap-3 items-center';
+const ROW_GRID = 'grid grid-cols-[36px_1fr_1.5fr] gap-3 items-center';
 
 interface Props {
   isOpen: boolean;
   pools: NodePool[];
   initialSelection: string | null;
   onClose: () => void;
-  onConfirm: (poolName: string | null) => void;
+  onConfirm: (poolId: string | null) => void;
 }
 
 const matchesQuery = (pool: NodePool, query: string): boolean => {
   if (!query) return true;
   const q = query.toLowerCase();
   return (
+    pool.id.toLowerCase().includes(q) ||
     pool.name.toLowerCase().includes(q) ||
-    (pool.description?.toLowerCase().includes(q) ?? false) ||
-    (pool.gpu?.name.toLowerCase().includes(q) ?? false) ||
-    (pool.instance?.toLowerCase().includes(q) ?? false)
+    (pool.description?.toLowerCase().includes(q) ?? false)
   );
 };
 
 interface RowProps {
   pool: NodePool;
   checked: boolean;
-  onSelect: (name: string) => void;
+  onSelect: (id: string) => void;
 }
 
 const PoolRow: FC<RowProps> = ({ pool, checked, onSelect }) => {
-  const t = useI18n();
-  const isGpu = isGpuPool(pool);
-  const inputId = `node-pool-${pool.name}`;
-  const acceleratorLabel = pool.gpu ? `${pool.gpu.count}× ${pool.gpu.name}` : t(DeploymentsI18nKey.NodePoolCpuOnly);
+  const inputId = `node-pool-${pool.id}`;
 
   return (
     <li
@@ -60,51 +56,45 @@ const PoolRow: FC<RowProps> = ({ pool, checked, onSelect }) => {
       )}
     >
       <label htmlFor={inputId} className={classNames(ROW_GRID, 'cursor-pointer px-4 py-3')}>
-        <DialRadioButton name={RADIO_NAME} inputId={inputId} value={pool.name} checked={checked} onChange={onSelect} />
-        <div className="flex flex-col gap-1 min-w-0">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="font-mono font-semibold text-primary truncate" title={pool.name}>
-              {pool.name}
-            </span>
-            {pool.instance && (
-              <span className="font-mono text-[11px] text-secondary bg-layer-3 rounded px-1.5 py-0.5 truncate">
-                {pool.instance}
-              </span>
-            )}
-          </div>
-          {pool.description && <span className="text-xs text-secondary truncate">{pool.description}</span>}
-        </div>
-        <div className="flex items-center gap-2 min-w-0">
-          <span
-            aria-hidden
-            className={classNames(
-              'size-1.5 rounded-full shrink-0',
-              isGpu ? 'bg-accent-tertiary' : 'bg-accent-secondary',
-            )}
-          />
-          <div className="flex flex-col min-w-0">
-            <span className="text-sm text-primary truncate">{acceleratorLabel}</span>
-            {pool.gpu && (
-              <span className="text-[11px] text-secondary">
-                {humanBytes(pool.gpu.vramBytes)} {t(DeploymentsI18nKey.NodePoolUnitVram)}
-              </span>
-            )}
-          </div>
-        </div>
-        <div className="flex flex-col tabular-nums min-w-0">
-          <span className="text-sm text-primary">{humanMilliCpus(pool.cpu.milliCpus)}</span>
-          {pool.cpu.name && <span className="text-[11px] text-secondary truncate">{pool.cpu.name}</span>}
-        </div>
-        <div className="flex flex-col tabular-nums">
-          <span className="text-sm text-primary">{humanBytes(pool.memory.bytes)}</span>
-          <span className="text-[11px] text-secondary">{t(DeploymentsI18nKey.NodePoolUnitRam)}</span>
-        </div>
-        <div className="flex flex-col tabular-nums">
-          <span className="text-sm text-primary">
-            {pool.minNodes}&ndash;{pool.maxNodes}
+        <DialRadioButton name={RADIO_NAME} inputId={inputId} value={pool.id} checked={checked} onChange={onSelect} />
+        <div className="flex flex-col gap-0.5 min-w-0">
+          <span className="font-semibold text-primary truncate" title={pool.name}>
+            {pool.name}
           </span>
-          <span className="text-[11px] text-secondary">{t(DeploymentsI18nKey.NodePoolUnitNodes)}</span>
+          <span className="font-mono text-[11px] text-secondary truncate" title={pool.id}>
+            {pool.id}
+          </span>
         </div>
+        <span className="text-sm text-secondary truncate" title={pool.description || ''}>
+          {pool.description || ''}
+        </span>
+      </label>
+    </li>
+  );
+};
+
+interface AnyRowProps {
+  checked: boolean;
+  onSelect: () => void;
+}
+
+const AnyRow: FC<AnyRowProps> = ({ checked, onSelect }) => {
+  const t = useI18n();
+  const inputId = `node-pool-${ANY_VALUE}`;
+
+  return (
+    <li
+      className={classNames(
+        'border-b border-primary last:border-b-0',
+        checked ? 'bg-accent-primary-alpha' : 'hover:bg-layer-3',
+      )}
+    >
+      <label htmlFor={inputId} className={classNames(ROW_GRID, 'cursor-pointer px-4 py-3')}>
+        <DialRadioButton name={RADIO_NAME} inputId={inputId} value={ANY_VALUE} checked={checked} onChange={onSelect} />
+        <div className="flex flex-col gap-0.5 min-w-0">
+          <span className="font-semibold text-primary truncate">{t(DeploymentsI18nKey.NodePoolAny)}</span>
+        </div>
+        <span className="text-sm text-secondary truncate">{t(DeploymentsI18nKey.NodePoolAnyDescription)}</span>
       </label>
     </li>
   );
@@ -129,15 +119,13 @@ const NodePoolSelectorModal: FC<Props> = ({ isOpen, pools, initialSelection, onC
     onClose();
   };
 
-  const emptyTitle = pools.length === 0 ? t(DeploymentsI18nKey.NodePoolEmpty) : t(DeploymentsI18nKey.NodePoolNoMatches);
-
   return (
     <DialPopup
       open={isOpen}
       onClose={onClose}
       header={t(DeploymentsI18nKey.NodePoolModalTitle)}
       size={PopupSize.Lg}
-      className="h-[640px]"
+      className="h-[560px]"
       dividers
       footer={
         <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
@@ -162,27 +150,25 @@ const NodePoolSelectorModal: FC<Props> = ({ isOpen, pools, initialSelection, onC
           >
             <span />
             <span>{t(DeploymentsI18nKey.NodePoolColumnName)}</span>
-            <span>{t(DeploymentsI18nKey.NodePoolColumnAccelerator)}</span>
-            <span>{t(DeploymentsI18nKey.NodePoolColumnCpu)}</span>
-            <span>{t(DeploymentsI18nKey.NodePoolColumnMemory)}</span>
-            <span>{t(DeploymentsI18nKey.NodePoolColumnNodes)}</span>
+            <span>{t(DeploymentsI18nKey.NodePoolColumnDescription)}</span>
           </div>
-          {filteredPools.length === 0 ? (
-            <div className="flex flex-1 items-center justify-center py-10">
-              <DialNoDataContent title={emptyTitle} />
-            </div>
-          ) : (
-            <ul className="flex flex-col overflow-auto">
-              {filteredPools.map((pool) => (
+          <ul className="flex flex-col overflow-auto">
+            <AnyRow checked={pendingSelection === null} onSelect={() => setPendingSelection(null)} />
+            {filteredPools.length === 0 && pools.length > 0 ? (
+              <li className="flex items-center justify-center py-10">
+                <DialNoDataContent title={t(DeploymentsI18nKey.NodePoolNoMatches)} />
+              </li>
+            ) : (
+              filteredPools.map((pool) => (
                 <PoolRow
-                  key={pool.name}
+                  key={pool.id}
                   pool={pool}
-                  checked={pendingSelection === pool.name}
+                  checked={pendingSelection === pool.id}
                   onSelect={setPendingSelection}
                 />
-              ))}
-            </ul>
-          )}
+              ))
+            )}
+          </ul>
         </div>
       </div>
     </DialPopup>

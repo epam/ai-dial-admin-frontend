@@ -1,6 +1,5 @@
 'use client';
 
-import classNames from 'classnames';
 import { FC, useCallback, useEffect, useState } from 'react';
 import { ButtonAppearance, DialLoader, DialNoDataContent, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 
@@ -8,36 +7,56 @@ import { getNodePools } from '@/src/app/actions/deployments';
 import { ButtonsI18nKey, DeploymentsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { Container } from '@/src/models/deployments/containers';
 import { NodePool } from '@/src/models/deployments/node-pools';
-import { humanBytes, humanMilliCpus, isGpuPool } from '@/src/utils/deployments/node-pools';
 import { isEditDisabled } from '@/src/utils/deployments/containers';
 import { useI18n } from '@/src/locales/client';
 
 import NodePoolSelectorModal from '@/src/components/Deployments/Fields/ContainerNodePool/NodePoolSelectorModal';
 
-interface SummaryProps {
-  pool: NodePool;
+interface SelectedDisplayProps {
+  pool: NodePool | null;
+  poolId: string | null;
+  poolName: string | null;
 }
 
-const SelectedPoolSummary: FC<SummaryProps> = ({ pool }) => {
+const SelectedPoolDisplay: FC<SelectedDisplayProps> = ({ pool, poolId, poolName }) => {
   const t = useI18n();
-  const isGpu = isGpuPool(pool);
-  const accelerator = pool.gpu ? `${pool.gpu.count}× ${pool.gpu.name}` : t(DeploymentsI18nKey.NodePoolCpuOnly);
+
+  if (!poolId) {
+    return (
+      <div className="flex flex-1 flex-col min-w-0">
+        <span className="font-semibold text-primary truncate">{t(DeploymentsI18nKey.NodePoolAny)}</span>
+        <span className="text-xs text-secondary truncate">{t(DeploymentsI18nKey.NodePoolAnyDescription)}</span>
+      </div>
+    );
+  }
+
+  const resolvedName = pool?.name ?? poolName ?? null;
+  const description = pool?.description;
+
+  if (!resolvedName) {
+    return (
+      <div className="flex flex-1 flex-col min-w-0">
+        <span className="font-semibold text-error truncate" title={poolId}>
+          {t(DeploymentsI18nKey.NodePoolUnknown, { id: poolId })}
+        </span>
+        <span className="text-xs text-secondary truncate">{t(DeploymentsI18nKey.NodePoolUnknownHint)}</span>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-1 items-center gap-3 min-w-0">
-      <span
-        aria-hidden
-        className={classNames('size-2 rounded-full shrink-0', isGpu ? 'bg-accent-tertiary' : 'bg-accent-secondary')}
-      />
-      <div className="flex flex-col min-w-0">
-        <span className="font-mono font-semibold text-primary truncate" title={pool.name}>
-          {pool.name}
+    <div className="flex flex-1 flex-col min-w-0">
+      <span className="font-semibold text-primary truncate" title={resolvedName}>
+        {resolvedName}
+      </span>
+      <span className="font-mono text-xs text-secondary truncate" title={poolId}>
+        {poolId}
+      </span>
+      {description && (
+        <span className="text-xs text-secondary truncate" title={description}>
+          {description}
         </span>
-        <span className="text-xs text-secondary tabular-nums">
-          {accelerator} · {humanMilliCpus(pool.cpu.milliCpus)} · {humanBytes(pool.memory.bytes)} · {pool.minNodes}–
-          {pool.maxNodes} {t(DeploymentsI18nKey.NodePoolUnitNodes)}
-        </span>
-      </div>
+      )}
     </div>
   );
 };
@@ -56,7 +75,8 @@ const ContainerNodePool: FC<Props> = ({ container, setContainer, disabled }) => 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const selectedName = container.nodePool ?? null;
+  const selectedId = container.nodePoolId ?? null;
+  const selectedName = container.nodePoolName ?? null;
 
   useEffect(() => {
     let isActive = true;
@@ -65,7 +85,8 @@ const ContainerNodePool: FC<Props> = ({ container, setContainer, disabled }) => 
       .then(({ success, response, errorMessage: message }) => {
         if (!isActive) return;
         if (success) {
-          setPools(Array.isArray(response) ? (response as NodePool[]) : []);
+          const list = (response as { pools?: NodePool[] } | undefined)?.pools ?? [];
+          setPools(Array.isArray(list) ? list : []);
           setErrorMessage(null);
         } else {
           setPools([]);
@@ -85,18 +106,19 @@ const ContainerNodePool: FC<Props> = ({ container, setContainer, disabled }) => 
     };
   }, [t]);
 
-  const selectedPool = pools.find((pool) => pool.name === selectedName) ?? null;
+  const selectedPool = pools.find((pool) => pool.id === selectedId) ?? null;
 
   const onConfirmSelection = useCallback(
-    (name: string | null) => {
-      setContainer({ ...container, nodePool: name ?? undefined });
+    (id: string | null) => {
+      const matched = id ? (pools.find((pool) => pool.id === id) ?? null) : null;
+      setContainer({
+        ...container,
+        nodePoolId: id,
+        nodePoolName: matched?.name ?? null,
+      });
     },
-    [container, setContainer],
+    [container, pools, setContainer],
   );
-
-  const onClearSelection = useCallback(() => {
-    setContainer({ ...container, nodePool: undefined });
-  }, [container, setContainer]);
 
   const onOpenModal = useCallback(() => setIsModalOpen(true), []);
   const onCloseModal = useCallback(() => setIsModalOpen(false), []);
@@ -110,32 +132,16 @@ const ContainerNodePool: FC<Props> = ({ container, setContainer, disabled }) => 
     );
   } else if (errorMessage) {
     body = <DialNoDataContent title={errorMessage} />;
-  } else if (pools.length === 0) {
-    body = <DialNoDataContent title={t(DeploymentsI18nKey.NodePoolEmpty)} />;
   } else {
     body = (
       <div className="flex items-center gap-3 rounded border border-primary px-4 py-3">
-        {selectedPool ? (
-          <SelectedPoolSummary pool={selectedPool} />
-        ) : selectedName ? (
-          <span className="flex-1 text-sm text-secondary font-mono">{selectedName}</span>
-        ) : (
-          <span className="flex-1 text-sm text-secondary">{t(DeploymentsI18nKey.NodePoolNotSelected)}</span>
-        )}
+        <SelectedPoolDisplay pool={selectedPool} poolId={selectedId} poolName={selectedName} />
         <DialPrimaryButton
           appearance={ButtonAppearance.Ghost}
-          label={selectedName ? t(ButtonsI18nKey.Change) : t(DeploymentsI18nKey.NodePoolSelect)}
+          label={selectedId ? t(ButtonsI18nKey.Change) : t(DeploymentsI18nKey.NodePoolSelect)}
           onClick={onOpenModal}
-          disabled={isDisabled}
+          disabled={isDisabled || pools.length === 0}
         />
-        {selectedName && (
-          <DialPrimaryButton
-            appearance={ButtonAppearance.Link}
-            label={t(ButtonsI18nKey.Remove)}
-            onClick={onClearSelection}
-            disabled={isDisabled}
-          />
-        )}
       </div>
     );
   }
@@ -147,7 +153,7 @@ const ContainerNodePool: FC<Props> = ({ container, setContainer, disabled }) => 
       <NodePoolSelectorModal
         isOpen={isModalOpen}
         pools={pools}
-        initialSelection={selectedName}
+        initialSelection={selectedId}
         onClose={onCloseModal}
         onConfirm={onConfirmSelection}
       />

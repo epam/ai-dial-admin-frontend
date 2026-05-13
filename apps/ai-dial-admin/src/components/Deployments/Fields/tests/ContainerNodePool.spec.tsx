@@ -14,25 +14,15 @@ vi.mock('@/src/app/actions/deployments', () => ({
   getNodePools: () => getNodePoolsMock(),
 }));
 
-const GiB = 1024 ** 3;
-
 const gpuPool: NodePool = {
-  name: 'gpu-a100-prod',
+  id: 'gpu-pool',
+  name: 'GPU pool',
   description: 'High-end inference pool',
-  cpu: { milliCpus: 32000, name: 'Intel Xeon Platinum' },
-  memory: { bytes: 256 * GiB },
-  gpu: { name: 'NVIDIA A100', count: 4, vramBytes: 80 * GiB },
-  minNodes: 0,
-  maxNodes: 4,
-  instance: 'p4d.24xlarge',
 };
 
 const cpuPool: NodePool = {
-  name: 'cpu-standard',
-  cpu: { milliCpus: 8000 },
-  memory: { bytes: 32 * GiB },
-  minNodes: 1,
-  maxNodes: 10,
+  id: 'cpu-pool',
+  name: 'CPU pool',
 };
 
 const baseContainer: Container = {
@@ -60,70 +50,81 @@ describe('ContainerNodePool', () => {
     getNodePoolsMock.mockReset();
   });
 
-  test('renders the accordion title', async () => {
-    getNodePoolsMock.mockResolvedValue({ success: true, response: [] });
+  test('renders the field title', async () => {
+    getNodePoolsMock.mockResolvedValue({ success: true, response: { pools: [] } });
     renderContainer();
     expect(screen.getByText(EntityFieldsI18nKey.NodePool)).toBeInTheDocument();
   });
 
-  test('shows empty state when endpoint returns no pools', async () => {
-    getNodePoolsMock.mockResolvedValue({ success: true, response: [] });
-    renderContainer();
-    await waitFor(() => {
-      expect(screen.getByText(DeploymentsI18nKey.NodePoolEmpty)).toBeInTheDocument();
-    });
-  });
-
-  test('shows placeholder + Select button when no pool is selected', async () => {
-    getNodePoolsMock.mockResolvedValue({ success: true, response: [gpuPool, cpuPool] });
+  test('shows "Any node pool" by default when nodePoolId is null/undefined', async () => {
+    getNodePoolsMock.mockResolvedValue({ success: true, response: { pools: [gpuPool, cpuPool] } });
     renderContainer();
     await waitForLoad();
-    expect(screen.getByText(DeploymentsI18nKey.NodePoolNotSelected)).toBeInTheDocument();
+    expect(screen.getByText(DeploymentsI18nKey.NodePoolAny)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: DeploymentsI18nKey.NodePoolSelect })).toBeInTheDocument();
   });
 
-  test('hydrates initial selection from container.nodePool', async () => {
-    getNodePoolsMock.mockResolvedValue({ success: true, response: [gpuPool, cpuPool] });
-    renderContainer({ ...baseContainer, nodePool: 'gpu-a100-prod' });
+  test('hydrates initial selection from container.nodePoolId / nodePoolName', async () => {
+    getNodePoolsMock.mockResolvedValue({ success: true, response: { pools: [gpuPool, cpuPool] } });
+    renderContainer({ ...baseContainer, nodePoolId: 'gpu-pool', nodePoolName: 'GPU pool' });
     await waitForLoad();
-    expect(screen.getByText('gpu-a100-prod')).toBeInTheDocument();
+    expect(screen.getByText('GPU pool')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Change })).toBeInTheDocument();
   });
 
-  test('writes nodePool back to the container when a pool is applied', async () => {
-    getNodePoolsMock.mockResolvedValue({ success: true, response: [gpuPool, cpuPool] });
+  test('shows warning state when nodePoolId is dangling (name is null)', async () => {
+    getNodePoolsMock.mockResolvedValue({ success: true, response: { pools: [gpuPool] } });
+    renderContainer({ ...baseContainer, nodePoolId: 'ghost', nodePoolName: null });
+    await waitForLoad();
+    expect(screen.getByText(DeploymentsI18nKey.NodePoolUnknown)).toBeInTheDocument();
+  });
+
+  test('writes nodePoolId + nodePoolName when a pool is applied', async () => {
+    getNodePoolsMock.mockResolvedValue({ success: true, response: { pools: [gpuPool, cpuPool] } });
     const { setContainer } = renderContainer();
     await waitForLoad();
 
     fireEvent.click(screen.getByRole('button', { name: DeploymentsI18nKey.NodePoolSelect }));
     const dialog = await screen.findByRole('dialog');
-    fireEvent.click(within(dialog).getByRole('radio', { name: /gpu-a100-prod/i }));
+    fireEvent.click(within(dialog).getByRole('radio', { name: /GPU pool/i }));
     fireEvent.click(within(dialog).getByRole('button', { name: ButtonsI18nKey.Apply }));
 
     await waitFor(() => {
-      expect(setContainer).toHaveBeenCalledWith(expect.objectContaining({ nodePool: 'gpu-a100-prod' }));
+      expect(setContainer).toHaveBeenCalledWith(
+        expect.objectContaining({ nodePoolId: 'gpu-pool', nodePoolName: 'GPU pool' }),
+      );
     });
   });
 
-  test('clears nodePool on Remove', async () => {
-    getNodePoolsMock.mockResolvedValue({ success: true, response: [gpuPool] });
-    const container: Container = { ...baseContainer, nodePool: 'gpu-a100-prod' };
-    const setContainer = vi.fn();
-    render(<ContainerNodePool container={container} setContainer={setContainer} />);
+  test('selecting "Any" sets nodePoolId to null', async () => {
+    getNodePoolsMock.mockResolvedValue({ success: true, response: { pools: [gpuPool] } });
+    const { setContainer } = renderContainer({
+      ...baseContainer,
+      nodePoolId: 'gpu-pool',
+      nodePoolName: 'GPU pool',
+    });
     await waitForLoad();
 
-    fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.Remove }));
-    expect(setContainer).toHaveBeenCalledWith(expect.objectContaining({ nodePool: undefined }));
+    fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.Change }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getAllByRole('radio')[0]);
+    fireEvent.click(within(dialog).getByRole('button', { name: ButtonsI18nKey.Apply }));
+
+    await waitFor(() => {
+      expect(setContainer).toHaveBeenCalledWith(
+        expect.objectContaining({ nodePoolId: null, nodePoolName: null }),
+      );
+    });
   });
 
   test('Cancel does not touch the container', async () => {
-    getNodePoolsMock.mockResolvedValue({ success: true, response: [gpuPool, cpuPool] });
+    getNodePoolsMock.mockResolvedValue({ success: true, response: { pools: [gpuPool, cpuPool] } });
     const { setContainer } = renderContainer();
     await waitForLoad();
 
     fireEvent.click(screen.getByRole('button', { name: DeploymentsI18nKey.NodePoolSelect }));
     const dialog = await screen.findByRole('dialog');
-    fireEvent.click(within(dialog).getByRole('radio', { name: /gpu-a100-prod/i }));
+    fireEvent.click(within(dialog).getByRole('radio', { name: /GPU pool/i }));
     fireEvent.click(within(dialog).getByRole('button', { name: ButtonsI18nKey.Cancel }));
 
     await waitFor(() => {

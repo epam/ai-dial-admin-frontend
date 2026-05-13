@@ -1,25 +1,9 @@
-export interface NodePoolGpu {
-  name: string;
-  count: number;
-  vramBytes: number;
-}
-
-export interface NodePoolCpu {
-  milliCpus: number;
-  name?: string;
-}
-
-export interface NodePoolMemory {
-  bytes: number;
-}
-
 export interface NodePool {
+  id: string;
   name: string;
   description?: string;
-  gpu?: NodePoolGpu;
-  cpu: NodePoolCpu;
-  memory: NodePoolMemory;
-  minNodes: number;
-  maxNodes: number;
-  instance?: string;
+}
+
+export interface NodePoolsResponse {
+  pools: NodePool[];
 }
