@@ -18,6 +18,12 @@ export const auditResourceRoute: Partial<Record<ActivityAuditResourceType, Appli
   [ActivityAuditResourceType.APPLICATION_IMAGE_DEFINITION]: ApplicationRoute.Images,
   [ActivityAuditResourceType.INTERCEPTOR_IMAGE_DEFINITION]: ApplicationRoute.Images,
   [ActivityAuditResourceType.MCP_IMAGE_DEFINITION]: ApplicationRoute.Images,
+  [ActivityAuditResourceType.MCP_DEPLOYMENT]: ApplicationRoute.McpContainers,
+  [ActivityAuditResourceType.ADAPTER_DEPLOYMENT]: ApplicationRoute.AdapterContainers,
+  [ActivityAuditResourceType.APPLICATION_DEPLOYMENT]: ApplicationRoute.ApplicationContainers,
+  [ActivityAuditResourceType.INTERCEPTOR_DEPLOYMENT]: ApplicationRoute.InterceptorContainers,
+  [ActivityAuditResourceType.NIM_DEPLOYMENT]: ApplicationRoute.ModelServings,
+  [ActivityAuditResourceType.INFERENCE_DEPLOYMENT]: ApplicationRoute.ModelServings,
 };
 
 export const routeAuditResource: Partial<Record<ApplicationRoute, ActivityAuditResourceType>> = {
