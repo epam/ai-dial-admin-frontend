@@ -1182,6 +1182,13 @@ export default {
     FailureThreshold: 'Failure threshold',
     AdvancedTiming: 'Advanced timing',
     expression: 'Expression',
+    ScaleToZeroDelaySeconds: 'Scale to zero delay seconds',
+    ScalingStrategyType: 'Scaling strategy type',
+    ScalingStrategyThreshold: 'Scaling strategy threshold',
+    ProbeEnabled: 'Enabled',
+    ProbeType: 'Probe type',
+    ProbePath: 'Probe path',
+    ProbePort: 'Probe port',
   },
   EntityPlaceholders: {
     Project: 'Enter project',

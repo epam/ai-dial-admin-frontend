@@ -1330,6 +1330,13 @@ export enum EntityFieldsI18nKey {
   FailureThreshold = 'EntityFields.FailureThreshold',
   AdvancedTiming = 'EntityFields.AdvancedTiming',
   expression = 'EntityFields.expression',
+  ScaleToZeroDelaySeconds = 'EntityFields.ScaleToZeroDelaySeconds',
+  ScalingStrategyType = 'EntityFields.ScalingStrategyType',
+  ScalingStrategyThreshold = 'EntityFields.ScalingStrategyThreshold',
+  ProbeEnabled = 'EntityFields.ProbeEnabled',
+  ProbeType = 'EntityFields.ProbeType',
+  ProbePath = 'EntityFields.ProbePath',
+  ProbePort = 'EntityFields.ProbePort',
 }
 
 export enum ToolsetI18nKey {

@@ -1,14 +1,16 @@
-import { ActivityAuditDiff } from '@/src/models/dial/activity-audit';
+import { ActivityAuditDiff } from '@/src/models/activity-audit';
 import { DialRoleLimits, DialRoleShare } from '@/src/models/dial/role-limits';
 import { DiffStatus } from '@/src/types/activity-audit';
 import { describe, expect, test } from 'vitest';
 import {
   compareEntities,
   compareInterceptors,
+  compareNestedFlatObject,
   compareRoleLimits,
   compareShare,
   fillEntities,
   fillInterceptors,
+  fillNestedFlatObject,
   fillRoleLimits,
   fillShare,
 } from '../create-simple-diffs';
@@ -158,7 +160,7 @@ describe('Activity audit :: fillEntities', () => {
 
 describe('Activity audit :: compareInterceptors', () => {
   test('should push REMOVE when val1 item is defined and val2 item is null', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     compareInterceptors(diffs, ['a', 'b'], ['a', null as unknown as string]);
     expect(diffs).toEqual([
       { parameter: '1', value: 'a' },
@@ -167,7 +169,7 @@ describe('Activity audit :: compareInterceptors', () => {
   });
 
   test('should push ADD when val1 item is null and val2 item is defined', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     compareInterceptors(diffs, ['a', null as unknown as string], ['a', 'b']);
     expect(diffs).toEqual([
       { parameter: '1', value: 'a' },
@@ -176,7 +178,7 @@ describe('Activity audit :: compareInterceptors', () => {
   });
 
   test('should push CHANGE when val1 and val2 items are different', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     compareInterceptors(diffs, ['old', 'same'], ['new', 'same']);
     expect(diffs).toEqual([
       { parameter: '1', value: 'new', diffStatus: DiffStatus.CHANGED },
@@ -185,7 +187,7 @@ describe('Activity audit :: compareInterceptors', () => {
   });
 
   test('should push unchanged values when val1 and val2 items are the same', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     compareInterceptors(diffs, ['same', 'same'], ['same', 'same']);
     expect(diffs).toEqual([
       { parameter: '1', value: 'same' },
@@ -194,7 +196,7 @@ describe('Activity audit :: compareInterceptors', () => {
   });
 
   test('should handle val1 longer than val2 with REMOVEs', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     compareInterceptors(diffs, ['one', 'two', 'three'], ['one']);
     expect(diffs).toEqual([
       { parameter: '1', value: 'one' },
@@ -204,7 +206,7 @@ describe('Activity audit :: compareInterceptors', () => {
   });
 
   test('should handle val2 longer than val1 with ADDs', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     compareInterceptors(diffs, ['one'], ['one', 'two', 'three']);
     expect(diffs).toEqual([
       { parameter: '1', value: 'one' },
@@ -214,7 +216,7 @@ describe('Activity audit :: compareInterceptors', () => {
   });
 
   test('should handle empty arrays', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     compareInterceptors(diffs, [], []);
     expect(diffs).toEqual([]);
   });
@@ -222,7 +224,7 @@ describe('Activity audit :: compareInterceptors', () => {
 
 describe('Activity audit :: fillInterceptors', () => {
   test('should fill diffs with index and value pairs from array', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     fillInterceptors(diffs, ['one', 'two']);
     expect(diffs).toEqual([
       { parameter: '1', value: 'one' },
@@ -231,7 +233,7 @@ describe('Activity audit :: fillInterceptors', () => {
   });
 
   test('should convert falsy string values like empty string to empty string', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     fillInterceptors(diffs, ['value', '']);
     expect(diffs).toEqual([
       { parameter: '1', value: 'value' },
@@ -240,7 +242,7 @@ describe('Activity audit :: fillInterceptors', () => {
   });
 
   test('should replace null and undefined with empty strings', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     fillInterceptors(diffs, ['a', null as unknown as string, undefined as unknown as string]);
     expect(diffs).toEqual([
       { parameter: '1', value: 'a' },
@@ -250,19 +252,19 @@ describe('Activity audit :: fillInterceptors', () => {
   });
 
   test('should do nothing when value is an empty array', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     fillInterceptors(diffs, []);
     expect(diffs).toEqual([]);
   });
 
   test('should do nothing when value is undefined', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     fillInterceptors(diffs, undefined as unknown as string[]);
     expect(diffs).toEqual([]);
   });
 
   test('should work with single-element array', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     fillInterceptors(diffs, ['only']);
     expect(diffs).toEqual([{ parameter: '1', value: 'only' }]);
   });
@@ -270,25 +272,25 @@ describe('Activity audit :: fillInterceptors', () => {
 
 describe('Activity audit :: compareRoleLimits', () => {
   test('should push REMOVE when val1 has key and val2 does not', () => {
-    const diffs = [];
-    const val1 = { admin: { maxCalls: 5, maxDuration: 10 } };
-    const val2 = {};
+    const diffs: ActivityAuditDiff[] = [];
+    const val1 = { admin: { maxCalls: 5, maxDuration: 10 } } as unknown as Record<string, DialRoleLimits>;
+    const val2: Record<string, DialRoleLimits> = {};
     compareRoleLimits(diffs, val1, val2);
     expect(diffs).toEqual([{ parameter: '', value: '', diffStatus: DiffStatus.REMOVED }]);
   });
 
   test('should push ADD when val1 does not have key and val2 does', () => {
-    const diffs = [];
-    const val1 = {};
-    const val2 = { user: { maxCalls: 3, maxDuration: 15 } };
+    const diffs: ActivityAuditDiff[] = [];
+    const val1: Record<string, DialRoleLimits> = {};
+    const val2 = { user: { maxCalls: 3, maxDuration: 15 } } as unknown as Record<string, DialRoleLimits>;
     compareRoleLimits(diffs, val1, val2);
     expect(diffs).toEqual([{ parameter: 'user', value: 'maxCalls: 3, maxDuration: 15', diffStatus: DiffStatus.ADDED }]);
   });
 
   test('should push CHANGE when val1 and val2 have same key but different values', () => {
-    const diffs = [];
-    const val1 = { guest: { maxCalls: 1, maxDuration: 5 } };
-    const val2 = { guest: { maxCalls: 2, maxDuration: 5 } };
+    const diffs: ActivityAuditDiff[] = [];
+    const val1 = { guest: { maxCalls: 1, maxDuration: 5 } } as unknown as Record<string, DialRoleLimits>;
+    const val2 = { guest: { maxCalls: 2, maxDuration: 5 } } as unknown as Record<string, DialRoleLimits>;
     compareRoleLimits(diffs, val1, val2);
     expect(diffs).toEqual([
       { parameter: 'guest', value: 'maxCalls: 2, maxDuration: 5', diffStatus: DiffStatus.CHANGED },
@@ -296,37 +298,45 @@ describe('Activity audit :: compareRoleLimits', () => {
   });
 
   test('should push unchanged value when val1 and val2 are equal', () => {
-    const diffs = [];
-    const val1 = { manager: { maxCalls: 4, maxDuration: 20 } };
-    const val2 = { manager: { maxCalls: 4, maxDuration: 20 } };
+    const diffs: ActivityAuditDiff[] = [];
+    const val1 = { manager: { maxCalls: 4, maxDuration: 20 } } as unknown as Record<string, DialRoleLimits>;
+    const val2 = { manager: { maxCalls: 4, maxDuration: 20 } } as unknown as Record<string, DialRoleLimits>;
     compareRoleLimits(diffs, val1, val2);
     expect(diffs).toEqual([{ parameter: 'manager', value: 'maxCalls: 4, maxDuration: 20' }]);
   });
 
   test('should handle empty val1 and val2', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     compareRoleLimits(diffs, {}, {});
     expect(diffs).toEqual([]);
   });
 
   test('should handle val1 or val2 being null or undefined', () => {
-    const diffs1 = [];
-    compareRoleLimits(diffs1, null as any, { user: { maxCalls: 1, maxDuration: 1 } });
+    const diffs1: ActivityAuditDiff[] = [];
+    compareRoleLimits(
+      diffs1,
+      null as unknown as Record<string, DialRoleLimits>,
+      { user: { maxCalls: 1, maxDuration: 1 } } as unknown as Record<string, DialRoleLimits>,
+    );
     expect(diffs1).toEqual([{ parameter: 'user', value: 'maxCalls: 1, maxDuration: 1', diffStatus: DiffStatus.ADDED }]);
 
-    const diffs2 = [];
-    compareRoleLimits(diffs2, { user: { maxCalls: 1, maxDuration: 1 } }, null as any);
+    const diffs2: ActivityAuditDiff[] = [];
+    compareRoleLimits(
+      diffs2,
+      { user: { maxCalls: 1, maxDuration: 1 } } as unknown as Record<string, DialRoleLimits>,
+      null as unknown as Record<string, DialRoleLimits>,
+    );
     expect(diffs2).toEqual([{ parameter: '', value: '', diffStatus: DiffStatus.REMOVED }]);
   });
 });
 
 describe('Activity audit :: fillRoleLimits', () => {
   test('should push entries with parameter and formatted value', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     const value = {
       admin: { maxCalls: 10, maxDuration: 60 },
       user: { maxCalls: 5, maxDuration: 30 },
-    };
+    } as unknown as Record<string, DialRoleLimits>;
     fillRoleLimits(diffs, value);
     expect(diffs).toEqual([
       { parameter: 'admin', value: 'maxCalls: 10, maxDuration: 60' },
@@ -335,20 +345,20 @@ describe('Activity audit :: fillRoleLimits', () => {
   });
 
   test('should handle single key object', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     const value = {
       guest: { maxCalls: 1, maxDuration: 5 },
-    };
+    } as unknown as Record<string, DialRoleLimits>;
     fillRoleLimits(diffs, value);
     expect(diffs).toEqual([{ parameter: 'guest', value: 'maxCalls: 1, maxDuration: 5' }]);
   });
 
   test('should sort keys alphabetically', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     const value = {
       zeta: { maxCalls: 3, maxDuration: 3 },
       alpha: { maxCalls: 1, maxDuration: 1 },
-    };
+    } as unknown as Record<string, DialRoleLimits>;
     fillRoleLimits(diffs, value);
     expect(diffs).toEqual([
       { parameter: 'alpha', value: 'maxCalls: 1, maxDuration: 1' },
@@ -357,17 +367,17 @@ describe('Activity audit :: fillRoleLimits', () => {
   });
 
   test('should do nothing if value is an empty object', () => {
-    const diffs = [];
+    const diffs: ActivityAuditDiff[] = [];
     fillRoleLimits(diffs, {});
     expect(diffs).toEqual([]);
   });
 
   test('should handle value being null or undefined gracefully', () => {
-    const diffs1 = [];
+    const diffs1: ActivityAuditDiff[] = [];
     fillRoleLimits(diffs1, null as unknown as Record<string, DialRoleLimits>);
     expect(diffs1).toEqual([]);
 
-    const diffs2 = [];
+    const diffs2: ActivityAuditDiff[] = [];
     fillRoleLimits(diffs2, undefined as unknown as Record<string, DialRoleLimits>);
     expect(diffs2).toEqual([]);
   });
@@ -432,10 +442,10 @@ describe('Activity audit :: compareShare', () => {
   test('should call fillShareValues for CHANGED when values differ', () => {
     const diffs: any[] = [];
     const val1 = {
-      application: { invitationTtl: '1000', acceptedUsers: '5' },
+      application: { invitationTtl: '1000', maxAcceptedUsers: '5' },
     };
     const val2 = {
-      application: { invitationTtl: '3000', acceptedUsers: '5' },
+      application: { invitationTtl: '3000', maxAcceptedUsers: '5' },
     };
 
     compareShare(diffs, val1, val2);
@@ -448,10 +458,10 @@ describe('Activity audit :: compareShare', () => {
   test('should call fillShareValues for UNCHANGED when objects equal', () => {
     const diffs: any[] = [];
     const val1 = {
-      application: { invitationTtl: '1000', acceptedUsers: '5' },
+      application: { invitationTtl: '1000', maxAcceptedUsers: '5' },
     };
     const val2 = {
-      application: { invitationTtl: '1000', acceptedUsers: '5' },
+      application: { invitationTtl: '1000', maxAcceptedUsers: '5' },
     };
 
     compareShare(diffs, val1, val2);
@@ -463,12 +473,12 @@ describe('Activity audit :: compareShare', () => {
   test('should handle multiple keys (roles) and push diffs for each', () => {
     const diffs: any[] = [];
     const val1 = {
-      application: { invitationTtl: '1000', acceptedUsers: '5' },
-      conversation: { invitationTtl: '2000', acceptedUsers: '10' },
+      application: { invitationTtl: '1000', maxAcceptedUsers: '5' },
+      conversation: { invitationTtl: '2000', maxAcceptedUsers: '10' },
     };
     const val2 = {
-      application: { invitationTtl: '3000', acceptedUsers: '5' },
-      conversation: { invitationTtl: '2000', acceptedUsers: '10' },
+      application: { invitationTtl: '3000', maxAcceptedUsers: '5' },
+      conversation: { invitationTtl: '2000', maxAcceptedUsers: '10' },
     };
 
     compareShare(diffs, val1, val2);
@@ -524,8 +534,8 @@ describe('Activity audit :: fillShare', () => {
   test('should process shareKeys in sorted order of roles', () => {
     const diffs: ActivityAuditDiff[] = [];
     const value: Record<string, DialRoleShare> = {
-      application: { invitationTtl: '500', acceptedUsers: '2' },
-      conversation: { invitationTtl: '1000', acceptedUsers: '5' },
+      application: { invitationTtl: '500', maxAcceptedUsers: '2' },
+      conversation: { invitationTtl: '1000', maxAcceptedUsers: '5' },
     };
 
     fillShare(diffs, value);
@@ -538,11 +548,98 @@ describe('Activity audit :: fillShare', () => {
   test('should call fillShareValues once per key in shareKeys', () => {
     const diffs: ActivityAuditDiff[] = [];
     const value: Record<string, DialRoleShare> = {
-      testRole: { invitationTtl: '1500', acceptedUsers: '3' },
+      testRole: { invitationTtl: '1500', maxAcceptedUsers: '3' },
     };
 
     fillShare(diffs, value);
 
     expect(diffs.length).toBe(10);
+  });
+});
+
+
+describe('Activity audit :: compareNestedFlatObject', () => {
+  test('matched rows carry no status', () => {
+    const diffs: ActivityAuditDiff[] = [];
+    compareNestedFlatObject(
+      diffs,
+      [{ parameter: 'a', value: '1' }],
+      [{ parameter: 'a', value: '1' }],
+      false,
+    );
+    expect(diffs).toEqual([{ parameter: 'a', value: '1' }]);
+  });
+
+  test('changed value carries CHANGED', () => {
+    const diffs: ActivityAuditDiff[] = [];
+    compareNestedFlatObject(
+      diffs,
+      [{ parameter: 'a', value: '1' }],
+      [{ parameter: 'a', value: '2' }],
+      false,
+    );
+    expect(diffs).toEqual([{ parameter: 'a', value: '2', diffStatus: DiffStatus.CHANGED }]);
+  });
+
+  test('hides rows where both sides are empty', () => {
+    const diffs: ActivityAuditDiff[] = [];
+    compareNestedFlatObject(
+      diffs,
+      [{ parameter: 'a', value: undefined }, { parameter: 'b', value: '1' }],
+      [{ parameter: 'a', value: undefined }, { parameter: 'b', value: '1' }],
+      false,
+    );
+    expect(diffs).toEqual([{ parameter: 'b', value: '1' }]);
+  });
+
+  test('val1-only row → REMOVED on After side', () => {
+    const diffs: ActivityAuditDiff[] = [];
+    compareNestedFlatObject(
+      diffs,
+      [{ parameter: 'a', value: '1' }],
+      [{ parameter: 'a', value: undefined }],
+      false,
+    );
+    expect(diffs).toEqual([{ parameter: 'a', value: '', diffStatus: DiffStatus.REMOVED }]);
+  });
+
+  test('val2-only row → ADDED on After side', () => {
+    const diffs: ActivityAuditDiff[] = [];
+    compareNestedFlatObject(
+      diffs,
+      [{ parameter: 'a', value: undefined }],
+      [{ parameter: 'a', value: '1' }],
+      false,
+    );
+    expect(diffs).toEqual([{ parameter: 'a', value: '1', diffStatus: DiffStatus.ADDED }]);
+  });
+
+  test('preserves mountType when set', () => {
+    const diffs: ActivityAuditDiff[] = [];
+    compareNestedFlatObject(
+      diffs,
+      [{ parameter: 'a', value: '1', mountType: 'x' }],
+      [{ parameter: 'a', value: '2', mountType: 'x' }],
+      false,
+    );
+    expect(diffs[0]).toMatchObject({ mountType: 'x' });
+  });
+});
+
+describe('Activity audit :: fillNestedFlatObject', () => {
+  test('skips empty rows', () => {
+    const diffs: ActivityAuditDiff[] = [];
+    fillNestedFlatObject(diffs, [
+      { parameter: 'a', value: '1' },
+      { parameter: 'b', value: undefined },
+      { parameter: 'c', value: '' },
+    ]);
+    expect(diffs).toEqual([{ parameter: 'a', value: '1' }]);
+  });
+
+  test('preserves mountType', () => {
+    const diffs: ActivityAuditDiff[] = [];
+    fillNestedFlatObject(diffs, [{ parameter: 'a', value: '1', mountType: 'x' }]);
+    expect(diffs[0]).toMatchObject({ mountType: 'x' });
   });
 });

@@ -3,6 +3,7 @@ import { Container, Pod, Prompt, Resource } from '@/src/models/deployments/conta
 import { ServerActionResponse } from '@/src/models/server-action';
 import { API } from '@/src/server/api';
 import { BaseApi } from '@/src/server/base-api';
+import { ActivityAuditEntity } from '@/src/types/activity-audit';
 import { encodeVariables } from '@/src/utils/deployments/variables';
 
 export const BASE_CONTAINERS_URL = `${API}/deployments`;
@@ -55,6 +56,10 @@ export class ContainersApi extends BaseApi {
 
   getContainer(id: string, token: Token): Promise<ServerActionResponse> {
     return this.getAction(CONTAINER_URL(id), token);
+  }
+
+  getRevisionDetails(url: string, token: Token): Promise<ActivityAuditEntity | null> {
+    return this.get(`${API}${url}`, token);
   }
 
   createContainer(container: Container, token: Token): Promise<ServerActionResponse> {
