@@ -226,26 +226,20 @@ const FileManager: FC<Props> = ({
       if (!nextPath) {
         return;
       }
-
-      let normalizedPath = nextPath;
-      if (!normalizedPath.endsWith('/')) {
-        normalizedPath = `${normalizedPath}/`;
-      }
-
       const newExpanded = new Set(expandedFolders);
 
-      if (newExpanded.has(normalizedPath)) {
-        newExpanded.delete(normalizedPath);
+      if (newExpanded.has(nextPath)) {
+        newExpanded.delete(nextPath);
       } else {
-        newExpanded.add(normalizedPath);
+        newExpanded.add(nextPath);
       }
-      if (!loadedPaths.has(normalizedPath)) {
-        fetchFiles(normalizedPath);
+      if (!loadedPaths.has(nextPath)) {
+        fetchFiles(nextPath);
       }
-      setFilePath(normalizedPath);
-      setLoadedPaths((prev) => new Set(prev).add(normalizedPath));
+      setFilePath(nextPath);
+      setLoadedPaths((prev) => new Set(prev).add(nextPath));
       setExpandedFolders(newExpanded);
-      onPathChange?.(normalizedPath);
+      onPathChange?.(nextPath);
     },
     [expandedFolders, fetchFiles, loadedPaths, setExpandedFolders, setFilePath, onPathChange],
   );
@@ -362,6 +356,7 @@ const FileManager: FC<Props> = ({
         items={filteredFiles as []}
         rootItem={filteredFiles?.[0] as DialRootFolder}
         filesLoading={isFetchingFiles}
+        showNavigationPanel={false}
         bulkActionsToolbarOptions={getBulkActionsToolbarOptions(t)}
         toolbarOptions={getToolbarOptions(view, isReadOnlyAdmin, t)}
         treeOptions={getTreeOptions(
@@ -393,9 +388,6 @@ const FileManager: FC<Props> = ({
         isDuplicateFolderAvailable={false}
         previewExtensions={PREVIEW_EXTENSIONS}
         customUploadFileAction={customUploadFileAction}
-        navigationPanelOptions={{
-          searchable: false,
-        }}
         {...props}
       />
       <MoveItemsModal
