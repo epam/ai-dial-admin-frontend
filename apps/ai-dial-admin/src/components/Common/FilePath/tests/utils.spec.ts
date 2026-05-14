@@ -214,14 +214,24 @@ describe('FilePath utils', () => {
       getFilePathGridOptions(mockTranslate, ApplicationRoute.AssetsApplications);
 
       expect(baseAssetListUtils.getGridColumns).toHaveBeenCalledWith(expect.any(Function), {}, false);
-      expect(fileManagerUtils.getGridOptions).toHaveBeenCalledWith(ApplicationRoute.Prompts, true, [], mockTranslate);
+      expect(fileManagerUtils.getGridOptions).toHaveBeenCalledWith(
+        ApplicationRoute.AssetsApplications,
+        true,
+        [],
+        mockTranslate,
+      );
     });
 
     it('should call getGridColumns and getGridOptions for AssetsToolsets', () => {
       getFilePathGridOptions(mockTranslate, ApplicationRoute.AssetsToolsets);
 
       expect(baseAssetListUtils.getGridColumns).toHaveBeenCalledWith(expect.any(Function), {}, false);
-      expect(fileManagerUtils.getGridOptions).toHaveBeenCalledWith(ApplicationRoute.Prompts, true, [], mockTranslate);
+      expect(fileManagerUtils.getGridOptions).toHaveBeenCalledWith(
+        ApplicationRoute.AssetsToolsets,
+        true,
+        [],
+        mockTranslate,
+      );
     });
 
     it('should call getGridColumns and getGridOptions for Prompts', () => {
@@ -250,7 +260,7 @@ describe('FilePath utils', () => {
       getFilePathGridOptions(mockTranslate, ApplicationRoute.AssetsToolsets);
 
       expect(fileManagerUtils.getGridOptions).toHaveBeenCalledWith(
-        ApplicationRoute.Prompts,
+        ApplicationRoute.AssetsToolsets,
         true,
         mockColumnDefs,
         mockTranslate,

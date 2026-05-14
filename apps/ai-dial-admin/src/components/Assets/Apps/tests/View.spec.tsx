@@ -18,6 +18,11 @@ vi.mock('@/src/app/[lang]/assets-applications/actions', () => ({
   moveApps: vi.fn(),
   removeApp: vi.fn(),
   updateApp: vi.fn(),
+  getApp: vi.fn(),
+  createApp: vi.fn(),
+  importApps: vi.fn(),
+  exportApps: vi.fn(),
+  bulkDeleteApps: vi.fn(),
 }));
 
 describe('AppView', () => {

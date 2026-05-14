@@ -55,6 +55,6 @@ export const getFilePathGridOptions = (
     view === ApplicationRoute.Prompts
   ) {
     const columnDefs = getGridColumns(() => {}, {}, false);
-    return getGridOptions(ApplicationRoute.Prompts, true, columnDefs, t);
+    return getGridOptions(view, true, columnDefs, t);
   }
 };
