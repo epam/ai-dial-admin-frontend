@@ -189,6 +189,7 @@ export enum EntitiesI18nKey {
   InterceptorTemplate = 'Entities.InterceptorTemplate',
   InterceptorName = 'Entities.InterceptorName',
   ModelDisplayName = 'Entities.ModelDisplayName',
+  ToolsetDisplayName = 'Entities.ToolsetDisplayName',
   Author = 'Entities.Author',
   JSONEditor = 'Entities.JSONEditor',
   JSONViewer = 'Entities.JSONViewer',
@@ -518,6 +519,7 @@ export enum ForwardTokenI18nKey {
   UseForThisModel = 'ForwardToken.UseForThisModel',
   UseForThisApplication = 'ForwardToken.UseForThisApplication',
   UseForThisInterceptor = 'ForwardToken.UseForThisInterceptor',
+  UseForThisToolset = 'ForwardToken.UseForThisToolset',
   ForwardTokenModalTitle = 'ForwardToken.ForwardTokenModalTitle',
   ForwardTokenModalAlert = 'ForwardToken.ForwardTokenModalAlert',
 }

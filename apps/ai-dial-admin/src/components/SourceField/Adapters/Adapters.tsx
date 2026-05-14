@@ -165,7 +165,7 @@ const Adapters = <T extends DialModel | DialInterceptor>({
           hideResponsesEndpoint
         />
       )}
-      {entity.source?.adapterName && selectedAdapter && selectedAdapter.responsesEndpoint && (
+      {entity.source?.adapterName && selectedAdapter && selectedAdapter.responsesEndpoint && !isModal && (
         <ReadonlyInput
           containerClassName={isModal ? 'w-full' : STANDARD_CONTROL_WIDTH}
           id="responsesEndpoint"
