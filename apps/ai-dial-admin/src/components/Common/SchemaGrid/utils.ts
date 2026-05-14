@@ -8,6 +8,11 @@ export interface SchemaFieldRow {
   type: JSONSchema7TypeName;
   /** For array fields: the type of items in the array (e.g. 'string', 'object'). Only defined when type === 'array'. */
   itemsType?: JSONSchema7TypeName;
+  /**
+   * Object with only `additionalProperties` (no fixed `properties`): a string-keyed map whose values are
+   * arrays of this primitive item type (e.g. `Record<string, string[]>`).
+   */
+  additionalPropertiesArrayItemType?: JSONSchema7TypeName;
   required: boolean;
   title: string;
   description: string;
@@ -37,6 +42,7 @@ export interface SchemaTreeNode {
 
 const SCHEMA_TYPES: JSONSchema7TypeName[] = ['string', 'number', 'integer', 'boolean', 'object', 'array', 'null'];
 const DIAL_META_KEY = 'dial:meta';
+const MAP_ARRAY_ITEM_PRIMITIVE_TYPES = new Set<JSONSchema7TypeName>(['string', 'number', 'integer', 'boolean']);
 
 export const getSchemaTypes = (): JSONSchema7TypeName[] => SCHEMA_TYPES;
 
@@ -207,9 +213,11 @@ const convertPropertyToField = (
     ...(propSchema.default !== undefined && { defaultValue: propSchema.default }),
   };
 
-  if (type === 'object' && effectiveDef.properties) {
+  const objectPropertyKeys = effectiveDef.properties ? Object.keys(effectiveDef.properties) : [];
+
+  if (type === 'object' && objectPropertyKeys.length > 0) {
     const nestedRequired = effectiveDef.required || [];
-    field.children = Object.entries(effectiveDef.properties).map(([childName, childDef]) =>
+    field.children = Object.entries(effectiveDef.properties!).map(([childName, childDef]) =>
       convertPropertyToField(
         childName,
         childDef,
@@ -222,6 +230,25 @@ const convertPropertyToField = (
     );
     if (field.children.length) {
       field.expanded = true;
+    }
+  } else if (type === 'object' && effectiveDef.additionalProperties && effectiveDef.additionalProperties !== true) {
+    const addlRaw = resolveDef(effectiveDef.additionalProperties, rootSchema);
+    if (isJSONSchema7(addlRaw)) {
+      const addlEffective = getEffectiveSchema(effectiveDef.additionalProperties, rootSchema) ?? addlRaw;
+      const addlType = getPrimaryType(addlEffective);
+      if (addlType === 'array') {
+        const itemsDef = addlEffective.items;
+        if (itemsDef && !Array.isArray(itemsDef) && isJSONSchema7(itemsDef as JSONSchema7Definition)) {
+          const itemResolved =
+            getEffectiveSchema(itemsDef as JSONSchema7Definition, rootSchema) ?? resolveDef(itemsDef, rootSchema);
+          if (isJSONSchema7(itemResolved)) {
+            const itemType = getPrimaryType(itemResolved);
+            if (MAP_ARRAY_ITEM_PRIMITIVE_TYPES.has(itemType)) {
+              field.additionalPropertiesArrayItemType = itemType;
+            }
+          }
+        }
+      }
     }
   } else if (
     type === 'array' &&
@@ -319,6 +346,11 @@ export const fieldsToJsonSchema = (fields: SchemaFieldRow[]): JSONSchema7 => {
         if (nested.required?.length) {
           prop.required = nested.required;
         }
+      } else if (field.additionalPropertiesArrayItemType) {
+        prop.additionalProperties = {
+          type: 'array',
+          items: { type: field.additionalPropertiesArrayItemType },
+        };
       } else {
         prop.properties = {};
       }
@@ -373,6 +405,11 @@ const fieldChildrenToObjectSchema = (children: SchemaFieldRow[]): JSONSchema7 =>
         if (nested.required?.length) {
           childProp.required = nested.required;
         }
+      } else if (child.additionalPropertiesArrayItemType) {
+        childProp.additionalProperties = {
+          type: 'array',
+          items: { type: child.additionalPropertiesArrayItemType },
+        };
       } else {
         childProp.properties = {};
       }
