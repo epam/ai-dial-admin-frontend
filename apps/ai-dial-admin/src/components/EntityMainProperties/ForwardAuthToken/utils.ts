@@ -24,6 +24,10 @@ export const getAlertTitlePerView = (view: ApplicationRoute): string => {
     case ApplicationRoute.Interceptors:
       return ForwardTokenI18nKey.UseForThisInterceptor;
 
+    case ApplicationRoute.Toolsets:
+    case ApplicationRoute.AssetsToolsets:
+      return ForwardTokenI18nKey.UseForThisToolset;
+
     default:
       return '';
   }
@@ -35,10 +39,15 @@ export const getDisplayNamePerView = (view: ApplicationRoute): string => {
       return EntitiesI18nKey.ModelDisplayName;
 
     case ApplicationRoute.Applications:
+    case ApplicationRoute.AssetsApplications:
       return EntitiesI18nKey.ApplicationDisplayName;
 
     case ApplicationRoute.Interceptors:
       return EntitiesI18nKey.InterceptorName;
+
+    case ApplicationRoute.Toolsets:
+    case ApplicationRoute.AssetsToolsets:
+      return EntitiesI18nKey.ToolsetDisplayName;
 
     default:
       return '';
