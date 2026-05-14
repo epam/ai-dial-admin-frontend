@@ -1702,6 +1702,7 @@ export enum RunsI18nKey {
   TextDiff = 'Runs.TextDiff',
   MetricBindings = 'Runs.MetricBindings',
   CompareWith = 'Runs.CompareWith',
+  RunCompareNoMatch = 'Runs.RunCompareNoMatch',
 }
 
 export enum FileManagerI18nKey {
