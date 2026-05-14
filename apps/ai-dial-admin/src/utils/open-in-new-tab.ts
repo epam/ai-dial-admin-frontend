@@ -67,3 +67,10 @@ export const getEntityPath = (
       return encodeURIComponent((data as BaseEntity).name || '');
   }
 };
+
+export const getEntityAuditFilterId = (
+  entity?: BaseEntity | DialApplicationScheme | { id?: string; name?: string },
+): string | undefined =>
+  (entity as DialApplicationScheme | undefined)?.$id ||
+  (entity as { id?: string } | undefined)?.id ||
+  (entity as BaseEntity | undefined)?.name;

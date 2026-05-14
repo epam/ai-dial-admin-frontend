@@ -1,7 +1,7 @@
 import { DOMAIN_ACCESS_POLICY_KEY, shareEntities, shareKeys } from '@/src/components/ActivityAudit/constants';
 import { ALLOW_ALL_DOMAINS } from '@/src/components/Deployments/Common/Whitelists/Whitelists';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
-import { ActivityAuditDiff } from '@/src/models/activity-audit';
+import { ActivityAuditDiff, ArrayDiffRowFactory, FlatRow } from '@/src/models/activity-audit';
 import { DialRoleLimits, DialRoleShare } from '@/src/models/dial/role-limits';
 import { DiffStatus } from '@/src/types/activity-audit';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -17,13 +17,6 @@ const policyKey = (domains: string[] | undefined): string =>
 
 const visibleDomains = (domains: string[] | undefined): string[] =>
   hasAllDomains(domains) ? [] : Array.isArray(domains) ? domains : [];
-
-interface ArrayDiffRowFactory {
-  match: (value: string) => ActivityAuditDiff;
-  placeholder: () => ActivityAuditDiff;
-  added: (value: string) => ActivityAuditDiff;
-  removed: (value: string) => ActivityAuditDiff;
-}
 
 const walkSortedArrayDiff = (
   diffs: ActivityAuditDiff[],
@@ -185,6 +178,57 @@ export const fillInterceptors = (diffs: ActivityAuditDiff[], value: string[]) =>
     value: val || '',
   }));
   diffs.push(...result);
+};
+
+const isEmptyValue = (value: string | undefined): boolean => value == null || value === '';
+
+const withMountType = (row: ActivityAuditDiff, mountType?: string): ActivityAuditDiff =>
+  mountType ? { ...row, mountType } : row;
+
+export const compareNestedFlatObject = (
+  diffs: ActivityAuditDiff[],
+  rows1: FlatRow[],
+  rows2: FlatRow[],
+  isCurrent?: boolean,
+): void => {
+  const len = Math.max(rows1.length, rows2.length);
+  for (let i = 0; i < len; i++) {
+    const r1 = rows1[i];
+    const r2 = rows2[i];
+    const parameter = r1?.parameter || r2?.parameter || '';
+    const value1 = r1?.value;
+    const value2 = r2?.value;
+    const mountType = r2?.mountType ?? r1?.mountType;
+
+    if (isEmptyValue(value1) && isEmptyValue(value2)) continue;
+
+    if (!isEmptyValue(value1) && isEmptyValue(value2)) {
+      diffs.push(
+        withMountType(
+          { parameter, value: '', diffStatus: isCurrent ? DiffStatus.MIRROR : DiffStatus.REMOVED },
+          mountType,
+        ),
+      );
+    } else if (isEmptyValue(value1) && !isEmptyValue(value2)) {
+      diffs.push(
+        withMountType(
+          { parameter, value: value2 || '', diffStatus: isCurrent ? DiffStatus.MIRROR : DiffStatus.ADDED },
+          mountType,
+        ),
+      );
+    } else if (value1 !== value2) {
+      diffs.push(withMountType({ parameter, value: value2 || '', diffStatus: DiffStatus.CHANGED }, mountType));
+    } else {
+      diffs.push(withMountType({ parameter, value: value1 || '' }, mountType));
+    }
+  }
+};
+
+export const fillNestedFlatObject = (diffs: ActivityAuditDiff[], rows: FlatRow[]): void => {
+  rows.forEach(({ parameter, value, mountType }) => {
+    if (isEmptyValue(value)) return;
+    diffs.push(withMountType({ parameter, value: value || '' }, mountType));
+  });
 };
 
 export const compareRoleLimits = (

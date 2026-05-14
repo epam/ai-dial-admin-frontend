@@ -73,6 +73,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
 
 import ActivityAuditList from '@/src/components/ActivityAudit/List/List';
 import { ButtonsI18nKey, RollbackI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
+import { ActivityAuditView } from '@/src/types/activity-audit';
 
 describe('ActivityAuditList :: view-aware behavior', () => {
   beforeEach(() => {
@@ -113,5 +114,20 @@ describe('ActivityAuditList :: view-aware behavior', () => {
     expect(values).toContain('Asset');
     expect(screen.getByText(ButtonsI18nKey.Refresh)).toBeInTheDocument();
     expect(screen.getByText(TelemetryI18nKey.ActivityViewDeployments)).toBeInTheDocument();
+  });
+
+  test('hides the View dropdown when viewMode is provided', () => {
+    render(<ActivityAuditList viewMode={ActivityAuditView.Deployments} />);
+    expect(screen.queryByLabelText('View')).not.toBeInTheDocument();
+  });
+
+  test('hides the Rollback button when viewMode forces Deployments', () => {
+    render(<ActivityAuditList viewMode={ActivityAuditView.Deployments} />);
+    expect(screen.queryByText(RollbackI18nKey.Rollback)).not.toBeInTheDocument();
+  });
+
+  test('still renders the Rollback button when viewMode forces Config', () => {
+    render(<ActivityAuditList viewMode={ActivityAuditView.Config} />);
+    expect(screen.getByText(RollbackI18nKey.Rollback)).toBeInTheDocument();
   });
 });

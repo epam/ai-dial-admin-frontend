@@ -19,6 +19,15 @@ interface Props {
   compareView?: CompareView;
 }
 
+const CONTAINER_SECTION_TITLE_KEYS: Record<string, EntityFieldsI18nKey> = {
+  [EntityParameterKeys.RESOURCES]: EntityFieldsI18nKey.Resources,
+  [EntityParameterKeys.SCALING]: EntityFieldsI18nKey.Autoscaling,
+  [EntityParameterKeys.PROBE_PROPERTIES]: EntityFieldsI18nKey.StartupProbe,
+  [EntityParameterKeys.METADATA]: EntityFieldsI18nKey.EnvironmentVariables,
+  [EntityParameterKeys.ENDPOINT_CONFIGURATION]: EntityFieldsI18nKey.EndpointConfiguration,
+  [EntityParameterKeys.CONFIGURATION]: EntityFieldsI18nKey.Configuration,
+};
+
 const DiffSection: FC<Props> = ({ sections, name, type, diffView, compareView }) => {
   const t = useI18n();
 
@@ -30,10 +39,13 @@ const DiffSection: FC<Props> = ({ sections, name, type, diffView, compareView })
 
   if (validSections.length === 0) return null;
 
+  const containerSectionKey = CONTAINER_SECTION_TITLE_KEYS[name];
   const title =
     type === ActivityAuditResourceType.ROLE && name === EntityParameterKeys.ROLES
       ? t(EntityFieldsI18nKey.entities)
-      : t(EntityFieldsI18nKey[name as keyof typeof EntityFieldsI18nKey]);
+      : containerSectionKey
+        ? t(containerSectionKey)
+        : t(EntityFieldsI18nKey[name as keyof typeof EntityFieldsI18nKey]);
 
   return (
     <Accordion
@@ -46,20 +58,22 @@ const DiffSection: FC<Props> = ({ sections, name, type, diffView, compareView })
         </div>
       }
     >
-      {validSections.map(({ index, currentData, compareData }) => (
-        <div key={index} className="flex flex-row gap-8">
-          <div className="flex flex-col flex-1">
-            <h4 className="mb-2 text-secondary">{t(CompareI18nKey.Before)}</h4>
-            <AuditEntityGrid data={currentData} parameter={name} type={type} index={index} diffView={diffView} />
+      {validSections.map(({ index, currentData, compareData }) => {
+        const prefix = name === EntityParameterKeys.METADATA ? `Variable ${index + 1} ` : '';
+        const compareLabel = compareView === CompareView.CURRENT ? t(CompareI18nKey.Current) : t(CompareI18nKey.After);
+        return (
+          <div key={index} className="flex flex-row gap-8">
+            <div className="flex flex-col flex-1">
+              <h4 className="mb-2 text-secondary">{`${prefix}${t(CompareI18nKey.Before)}`}</h4>
+              <AuditEntityGrid data={currentData} parameter={name} type={type} index={index} diffView={diffView} />
+            </div>
+            <div className="flex flex-col flex-1">
+              <h4 className="mb-2 text-secondary">{`${prefix}${compareLabel}`}</h4>
+              <AuditEntityGrid data={compareData} parameter={name} type={type} index={index} diffView={diffView} />
+            </div>
           </div>
-          <div className="flex flex-col flex-1">
-            <h4 className="mb-2 text-secondary">
-              {compareView === CompareView.CURRENT ? t(CompareI18nKey.Current) : t(CompareI18nKey.After)}
-            </h4>
-            <AuditEntityGrid data={compareData} parameter={name} type={type} index={index} diffView={diffView} />
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </Accordion>
   );
 };

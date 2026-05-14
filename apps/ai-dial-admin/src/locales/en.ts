@@ -204,6 +204,7 @@ export default {
     AppRunner: 'Application runner',
     ModelDisplayName: 'Model display name',
     ApplicationDisplayName: 'Application display name',
+    ToolsetDisplayName: 'Toolset display name',
     InterceptorName: 'Interceptor Name',
     ChangeIcon: 'Change icon',
     Source: 'Source',
@@ -594,6 +595,7 @@ export default {
   ForwardToken: {
     ForwardTokenModalTitle: 'Forward Auth Token',
     UseForThisModel: 'Use for this model',
+    UseForThisToolset: 'Use for this toolset',
     UseForThisInterceptor: 'Use for this interceptor',
     UseForThisApplication: 'Use for this application',
     ForwardTokenModalAlert:
@@ -1182,6 +1184,13 @@ export default {
     FailureThreshold: 'Failure threshold',
     AdvancedTiming: 'Advanced timing',
     expression: 'Expression',
+    ScaleToZeroDelaySeconds: 'Scale to zero delay seconds',
+    ScalingStrategyType: 'Scaling strategy type',
+    ScalingStrategyThreshold: 'Scaling strategy threshold',
+    ProbeEnabled: 'Enabled',
+    ProbeType: 'Probe type',
+    ProbePath: 'Probe path',
+    ProbePort: 'Probe port',
   },
   EntityPlaceholders: {
     Project: 'Enter project',
@@ -1795,6 +1804,7 @@ export default {
     MetricFailedText: 'Metric evaluation failed',
     NumericDiff: 'Numeric',
     TextDiff: 'Text',
+    CompareWith: 'Compare with',
   },
   JsonAta: {
     JSONAtaDoc: 'JSONata Expression Reference',

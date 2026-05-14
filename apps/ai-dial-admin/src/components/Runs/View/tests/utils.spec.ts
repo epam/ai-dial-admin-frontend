@@ -12,7 +12,11 @@ import {
   getDetailNestedEntries,
   getMetricGroups,
   snapshotsToBindingsMap,
+  mergeByTestCaseId,
+  getAnalyticsColumnsCompare,
 } from '../utils';
+import { CompareAnalyticsRow } from '../models';
+import { AnalyticsResult } from '@/src/models/evaluation/run';
 
 describe('Runs View :: RESULT_FILTERS', () => {
   test('Should return run and suite filters for provided run', () => {
@@ -590,5 +594,146 @@ describe('Runs View :: snapshotsToBindingsMap', () => {
     const result = snapshotsToBindingsMap(snapshots as any);
     expect(result['Metric A'].configBindings).toEqual([]);
     expect(result['Metric A'].inputBindings).toEqual([]);
+  });
+});
+
+const makeResult = (overrides: Partial<AnalyticsResult> = {}): AnalyticsResult => ({
+  responseStatusCode: 200,
+  runIndex: 0,
+  ...overrides,
+});
+
+describe('Runs View :: mergeByTestCaseId', () => {
+  test('matches rows by testCaseId', () => {
+    const current = [makeResult({ testCaseId: 'tc1', testCaseName: 'A' })];
+    const compared = [makeResult({ testCaseId: 'tc1', testCaseName: 'B' })];
+    const result = mergeByTestCaseId(current, compared);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].testCaseId).toBe('tc1');
+    expect(result[0]._compared?.testCaseName).toBe('B');
+  });
+
+  test('falls back to testCaseName when testCaseId is absent', () => {
+    const current = [makeResult({ testCaseName: 'Alpha' })];
+    const compared = [makeResult({ testCaseName: 'Alpha', responseStatusCode: 404 })];
+    const result = mergeByTestCaseId(current, compared);
+
+    expect(result[0]._compared?.responseStatusCode).toBe(404);
+  });
+
+  test('sets _compared to null for unmatched current rows', () => {
+    const current = [makeResult({ testCaseId: 'tc1' }), makeResult({ testCaseId: 'tc2' })];
+    const compared = [makeResult({ testCaseId: 'tc1' })];
+    const result = mergeByTestCaseId(current, compared);
+
+    expect(result[0]._compared).not.toBeNull();
+    expect(result[1]._compared).toBeNull();
+  });
+
+  test('sets _compared to null when current row has no key', () => {
+    const current = [makeResult()];
+    const compared = [makeResult({ testCaseId: 'tc1' })];
+    const result = mergeByTestCaseId(current, compared);
+
+    expect(result[0]._compared).toBeNull();
+  });
+
+  test('preserves all current row fields', () => {
+    const current = [makeResult({ testCaseId: 'tc1', runIndex: 5, responseStatusCode: 201 })];
+    const result = mergeByTestCaseId(current, []);
+
+    expect(result[0].runIndex).toBe(5);
+    expect(result[0].responseStatusCode).toBe(201);
+    expect(result[0]._compared).toBeNull();
+  });
+});
+
+const makeRow = (overrides: Partial<CompareAnalyticsRow> = {}): CompareAnalyticsRow => ({
+  responseStatusCode: 200,
+  runIndex: 0,
+  _compared: null,
+  ...overrides,
+});
+
+describe('Runs View :: getAnalyticsColumnsCompare', () => {
+  test('[blank] group is first and unchanged', () => {
+    const cols = getAnalyticsColumnsCompare([makeRow()]);
+    const blank = cols[0] as { headerName: string; children: unknown[] };
+
+    expect(blank.headerName).toBe(' ');
+    expect(blank.children).toHaveLength(2);
+  });
+
+  test('EXECUTION group has Current and Compared sub-groups', () => {
+    const cols = getAnalyticsColumnsCompare([makeRow()]);
+    const exec = cols[1] as { headerName: string; children: { headerName: string; children: unknown[] }[] };
+
+    expect(exec.headerName).toBe('EXECUTION');
+    expect(exec.children).toHaveLength(2);
+    expect(exec.children[0].headerName).toBe('Current');
+    expect(exec.children[1].headerName).toBe('Compared');
+  });
+
+  test('metric groups have Current and Compared sub-groups', () => {
+    const rows = [makeRow({ metricValues: { myMetric: { score: 0.9 } } })];
+    const cols = getAnalyticsColumnsCompare(rows);
+
+    const metricGroup = cols.find((c) => (c as { headerName: string }).headerName === 'myMetric') as {
+      children: { headerName: string }[];
+    };
+
+    expect(metricGroup).toBeDefined();
+    expect(metricGroup.children[0].headerName).toBe('Current');
+    expect(metricGroup.children[1].headerName).toBe('Compared');
+  });
+
+  test('Compared metric colIds are prefixed with cmp_', () => {
+    const rows = [makeRow({ metricValues: { grp: { accuracy: 1 } } })];
+    const cols = getAnalyticsColumnsCompare(rows);
+
+    const grp = cols.find((c) => (c as { headerName: string }).headerName === 'grp') as {
+      children: { headerName: string; children: { colId?: string }[] }[];
+    };
+
+    const comparedChildren = grp.children[1].children;
+    expect(comparedChildren.every((c) => c.colId?.startsWith('cmp_'))).toBe(true);
+  });
+
+  test('EXTRACTED group has Current and Compared sub-groups', () => {
+    const rows = [makeRow({ extractedColumns: { col1: 'val1' } })];
+    const cols = getAnalyticsColumnsCompare(rows);
+
+    const extracted = cols.find((c) => (c as { headerName: string }).headerName === 'EXTRACTED') as {
+      children: { headerName: string }[];
+    };
+
+    expect(extracted).toBeDefined();
+    expect(extracted.children[0].headerName).toBe('Current');
+    expect(extracted.children[1].headerName).toBe('Compared');
+  });
+
+  test('Compared extracted colIds are prefixed with cmp_extracted_', () => {
+    const rows = [makeRow({ extractedColumns: { myCol: 'v' } })];
+    const cols = getAnalyticsColumnsCompare(rows);
+
+    const extracted = cols.find((c) => (c as { headerName: string }).headerName === 'EXTRACTED') as {
+      children: { headerName: string; children: { colId?: string }[] }[];
+    };
+
+    const comparedChildren = extracted.children[1].children;
+    expect(comparedChildren.every((c) => c.colId?.startsWith('cmp_extracted_'))).toBe(true);
+  });
+
+  test('Compared valueGetters return dash when _compared is null', () => {
+    const rows = [makeRow({ metricValues: { grp: { score: 0.8 } }, _compared: null })];
+    const cols = getAnalyticsColumnsCompare(rows);
+
+    const grp = cols.find((c) => (c as { headerName: string }).headerName === 'grp') as {
+      children: { headerName: string; children: { valueGetter: (p: { data?: CompareAnalyticsRow }) => unknown }[] }[];
+    };
+
+    const scoreComparedCol = grp.children[1].children[0];
+    expect(scoreComparedCol.valueGetter({ data: makeRow({ _compared: null }) })).toBe('—');
   });
 });
