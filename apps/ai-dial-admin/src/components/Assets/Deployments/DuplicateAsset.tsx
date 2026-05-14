@@ -42,7 +42,7 @@ interface Props {
   context?: () => AssetsFolderContext;
   onClose: () => void;
   onDuplicate: (entity: AssetWithVersion) => void;
-  onCreateFolder: (_: DialUploadFileItem | undefined, folderPath: string) => Promise<ServerActionResponse>;
+  onCreateFolder?: (_: DialUploadFileItem | undefined, folderPath: string) => Promise<ServerActionResponse>;
 }
 
 const DuplicateAsset: FC<Props> = ({

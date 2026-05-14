@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { DialSwitch, DialUploadFileItem } from '@epam/ai-dial-ui-kit';
+import { DialSwitch } from '@epam/ai-dial-ui-kit';
 
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import VersionControl from '@/src/components/BaseControls/Version';
@@ -14,8 +14,8 @@ import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { JSONEditorError } from '@/src/types/editor';
-import { CreateAssetActionMap, getEmptyAsset } from '@/src/components/Assets/BaseAssetList/utils';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getAssetCreateFolderHandler } from '@/src/components/EntityListView/utils';
 
 interface Props {
   prompt: DialPrompt;
@@ -69,15 +69,6 @@ const PromptProperties: FC<Props> = ({ prompt, onChangePrompt, isPublication }) 
     }
   }, [isJSONContentMode, prompt.content]);
 
-  const handleCreateFolder = useCallback(async (_: DialUploadFileItem | undefined, folderPath: string) => {
-    const newPath = `${folderPath.replaceAll('//', '/')}/`;
-    const emptyAsset = getEmptyAsset(ApplicationRoute.Prompts, newPath);
-
-    const createAsset = CreateAssetActionMap[ApplicationRoute.Prompts];
-
-    return createAsset(emptyAsset);
-  }, []);
-
   return (
     <div className="flex flex-col gap-y-8">
       {isPublication && (
@@ -128,7 +119,7 @@ const PromptProperties: FC<Props> = ({ prompt, onChangePrompt, isPublication }) 
           onChange={(folderId: string) => onChangePrompt?.({ ...prompt, folderId })}
           context={usePromptFolder}
           disabled={isReadOnlyAdmin}
-          onCreateFolder={handleCreateFolder}
+          onCreateFolder={getAssetCreateFolderHandler(ApplicationRoute.Prompts)}
           view={ApplicationRoute.Prompts}
         />
       )}

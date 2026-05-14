@@ -1,6 +1,6 @@
-import { FC, useCallback } from 'react';
+import { FC } from 'react';
 
-import { DialSwitch, DialUploadFileItem } from '@epam/ai-dial-ui-kit';
+import { DialSwitch } from '@epam/ai-dial-ui-kit';
 
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
@@ -19,7 +19,7 @@ import { useI18n } from '@/src/locales/client';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { Toolset, ToolsetAuthType } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
-import { CreateAssetActionMap, getEmptyAsset } from '@/src/components/Assets/BaseAssetList/utils';
+import { getAssetCreateFolderHandler } from '@/src/components/EntityListView/utils';
 
 interface Props {
   selectedToolset: AssetToolset;
@@ -30,15 +30,6 @@ interface Props {
 const Properties: FC<Props> = ({ selectedToolset, onChange, isPublication }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
-
-  const handleCreateFolder = useCallback(async (_: DialUploadFileItem | undefined, folderPath: string) => {
-    const newPath = `${folderPath.replaceAll('//', '/')}/`;
-    const emptyAsset = getEmptyAsset(ApplicationRoute.AssetsToolsets, newPath);
-
-    const createAsset = CreateAssetActionMap[ApplicationRoute.AssetsToolsets];
-
-    return createAsset(emptyAsset);
-  }, []);
 
   return (
     <div className="size-full flex flex-col gap-y-8">
@@ -77,7 +68,7 @@ const Properties: FC<Props> = ({ selectedToolset, onChange, isPublication }) => 
           onChange={(folderId) => onChange?.({ ...selectedToolset, folderId })}
           context={useToolsetFolder}
           disabled={isReadOnlyAdmin}
-          onCreateFolder={handleCreateFolder}
+          onCreateFolder={getAssetCreateFolderHandler(ApplicationRoute.AssetsToolsets)}
           view={ApplicationRoute.AssetsToolsets}
         />
       )}
