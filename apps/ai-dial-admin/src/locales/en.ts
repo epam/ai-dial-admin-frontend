@@ -1805,6 +1805,7 @@ export default {
     NumericDiff: 'Numeric',
     TextDiff: 'Text',
     CompareWith: 'Compare with',
+    RunCompareNoMatch: 'No matching test case in compared run',
   },
   JsonAta: {
     JSONAtaDoc: 'JSONata Expression Reference',
