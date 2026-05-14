@@ -19,6 +19,23 @@ export const AuthHeader: FC<Props> = ({ toolset }) => {
 
   const isUserLoggedIn = isUserLoggedInToToolset(toolset);
   const isAdminLoggedIn = isAdminLoggedInToToolset(toolset);
+  const isAuthenticated = isUserLoggedIn && isAdminLoggedIn;
+
+  const getAuthStatusLabel = () => {
+    if (isAuthenticated) {
+      return t(ToolsetI18nKey.isAuthenticated);
+    }
+
+    if (isUserLoggedIn) {
+      return t(ToolsetI18nKey.UserLoggedIn);
+    }
+
+    if (isAdminLoggedIn) {
+      return t(ToolsetI18nKey.AdminLoggedIn);
+    }
+
+    return t(ToolsetI18nKey.LoggedOut);
+  };
 
   return (
     <LabelledText label={t(EntityFieldsI18nKey.authentication)}>
@@ -29,13 +46,7 @@ export const AuthHeader: FC<Props> = ({ toolset }) => {
             isUserLoggedIn || isAdminLoggedIn ? 'bg-accent-secondary' : 'bg-red-400',
           )}
         ></div>
-        <div>
-          {isUserLoggedIn
-            ? t(ToolsetI18nKey.UserLoggedIn)
-            : isAdminLoggedIn
-              ? t(ToolsetI18nKey.AdminLoggedIn)
-              : t(ToolsetI18nKey.LoggedOut)}
-        </div>
+        <div>{getAuthStatusLabel()}</div>
       </div>
     </LabelledText>
   );

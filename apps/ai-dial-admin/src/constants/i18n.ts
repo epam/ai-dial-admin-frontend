@@ -1361,6 +1361,7 @@ export enum ToolsetI18nKey {
   LoggedOut = 'Toolset.LoggedOut',
   UserLoggedIn = 'Toolset.UserLoggedIn',
   AdminLoggedIn = 'Toolset.AdminLoggedIn',
+  isAuthenticated = 'Toolset.isAuthenticated',
   SuccessLogin = 'Toolset.SuccessLogin',
   SuccessLoginDescription = 'Toolset.SuccessLoginDescription',
   SuccessLogout = 'Toolset.SuccessLogout',
