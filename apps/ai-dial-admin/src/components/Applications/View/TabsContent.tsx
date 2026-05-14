@@ -40,6 +40,7 @@ interface Props {
   isChanged?: boolean;
   onSave?: () => void;
   onChangeApplication: (application: DialApplication) => void;
+  initialAuditTab?: EntityViewTab;
 }
 
 const TabsContent: FC<Props> = ({
@@ -60,6 +61,7 @@ const TabsContent: FC<Props> = ({
   onSave,
   setIsChanged,
   setSelectedApplication,
+  initialAuditTab,
 }) => {
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const appRunner = useMemo(() => {
@@ -157,7 +159,9 @@ const TabsContent: FC<Props> = ({
         />
       )}
 
-      {activeTab === EntityViewTab.Audit && <EntityAudit entity={selectedApplication} view={view} />}
+      {activeTab === EntityViewTab.Audit && (
+        <EntityAudit entity={selectedApplication} view={view} initialAuditTab={initialAuditTab} />
+      )}
     </>
   );
 };

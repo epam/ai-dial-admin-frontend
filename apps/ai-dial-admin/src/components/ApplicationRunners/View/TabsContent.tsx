@@ -27,6 +27,7 @@ interface Props {
   names: string[];
   isSkipRefresh: boolean;
   onChange: (runner: DialApplicationScheme, isSkipRefresh?: boolean) => void;
+  initialAuditTab?: EntityViewTab;
 }
 
 const TabsContent: FC<Props> = ({
@@ -38,6 +39,7 @@ const TabsContent: FC<Props> = ({
   interceptors,
   isSkipRefresh,
   onChange,
+  initialAuditTab,
 }) => {
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
@@ -86,7 +88,11 @@ const TabsContent: FC<Props> = ({
         )}
 
         {activeTab === EntityViewTab.Audit && (
-          <EntityAudit entity={selectedRunner} view={ApplicationRoute.ApplicationRunners} />
+          <EntityAudit
+            entity={selectedRunner}
+            view={ApplicationRoute.ApplicationRunners}
+            initialAuditTab={initialAuditTab}
+          />
         )}
       </>
     )

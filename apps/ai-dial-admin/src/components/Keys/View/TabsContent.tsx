@@ -30,6 +30,7 @@ interface Props {
   selectedKey: DialKey;
   originalKey: DialKey;
   onChange: (key: DialKey) => void;
+  initialAuditTab?: EntityViewTab;
 }
 
 const TabsContent: FC<Props> = ({
@@ -41,6 +42,7 @@ const TabsContent: FC<Props> = ({
   selectedFormat,
   keys,
   names,
+  initialAuditTab,
 }) => {
   const t = useI18n();
 
@@ -113,7 +115,9 @@ const TabsContent: FC<Props> = ({
             getRelevantDataForEntity={getRelevantRolesForKey.bind(this, selectedKey)}
           />
         )}
-        {activeTab === EntityViewTab.Audit && <EntityAudit entity={selectedKey} view={ApplicationRoute.Keys} />}
+        {activeTab === EntityViewTab.Audit && (
+          <EntityAudit entity={selectedKey} view={ApplicationRoute.Keys} initialAuditTab={initialAuditTab} />
+        )}
       </>
     )
   );

@@ -20,9 +20,18 @@ interface Props {
   route: DialRoute;
   routeNames: string[];
   onChangeRoute: (route: DialRoute) => void;
+  initialAuditTab?: EntityViewTab;
 }
 
-const TabsContent: FC<Props> = ({ activeTab, route, roles, routeNames, onChangeRoute, selectedFormat }) => {
+const TabsContent: FC<Props> = ({
+  activeTab,
+  route,
+  roles,
+  routeNames,
+  onChangeRoute,
+  selectedFormat,
+  initialAuditTab,
+}) => {
   return (
     selectedFormat === ExportFormat.ADMIN && (
       <>
@@ -40,7 +49,9 @@ const TabsContent: FC<Props> = ({ activeTab, route, roles, routeNames, onChangeR
             isSkipRefresh={false}
           />
         )}
-        {activeTab === EntityViewTab.Audit && <EntityAudit entity={route} view={ApplicationRoute.Routes} />}
+        {activeTab === EntityViewTab.Audit && (
+          <EntityAudit entity={route} view={ApplicationRoute.Routes} initialAuditTab={initialAuditTab} />
+        )}
       </>
     )
   );

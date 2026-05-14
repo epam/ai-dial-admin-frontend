@@ -203,6 +203,19 @@ export const convertBytesToMb = (value?: string): string => {
   return String(Math.round(Number(value) / (1024 * 1024)));
 };
 
+export const formatCpuValue = (value: string): string => {
+  if (!value || value.endsWith('m')) return value;
+  const milli = convertCoresToMilliCores(value);
+  return Number.isFinite(Number(milli)) ? `${milli}m` : value;
+};
+
+export const formatMemoryValue = (value: string): string => {
+  if (!value) return value;
+  if (/[A-Za-z]/.test(value)) return value;
+  const mb = convertBytesToMb(value);
+  return Number.isFinite(Number(mb)) ? `${mb} Mb` : value;
+};
+
 export const isErrorPresent = (errors: Map<string, boolean>, errorKeys: string[]) => {
   return [...errors].some(([key, value]) => errorKeys.some((errorKey) => key.includes(errorKey)) && !value);
 };

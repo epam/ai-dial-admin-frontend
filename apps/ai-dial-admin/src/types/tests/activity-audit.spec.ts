@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 
 import {
   ActivityAuditResourceType,
+  isContainerDeploymentResource,
   isDeploymentManagerResource,
   isGlobalFirewallResource,
   isImageDefinitionResource,
@@ -86,5 +87,41 @@ describe('activity-audit predicates :: isDeploymentManagerResource', () => {
 
   test('returns false for undefined', () => {
     expect(isDeploymentManagerResource(undefined)).toBe(false);
+  });
+});
+
+describe('activity-audit predicates :: isContainerDeploymentResource', () => {
+  test.each([
+    ActivityAuditResourceType.ADAPTER_DEPLOYMENT,
+    ActivityAuditResourceType.APPLICATION_DEPLOYMENT,
+    ActivityAuditResourceType.INTERCEPTOR_DEPLOYMENT,
+    ActivityAuditResourceType.MCP_DEPLOYMENT,
+    ActivityAuditResourceType.NIM_DEPLOYMENT,
+    ActivityAuditResourceType.INFERENCE_DEPLOYMENT,
+  ])('returns true for %s', (type) => {
+    expect(isContainerDeploymentResource(type)).toBe(true);
+  });
+
+  test.each([
+    ActivityAuditResourceType.MCP_IMAGE_DEFINITION,
+    ActivityAuditResourceType.ADAPTER_IMAGE_DEFINITION,
+    ActivityAuditResourceType.APPLICATION_IMAGE_DEFINITION,
+    ActivityAuditResourceType.INTERCEPTOR_IMAGE_DEFINITION,
+    ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST,
+  ])('returns false for non-container deployment-manager type %s', (type) => {
+    expect(isContainerDeploymentResource(type)).toBe(false);
+  });
+
+  test.each([
+    ActivityAuditResourceType.MODEL,
+    ActivityAuditResourceType.APPLICATION,
+    ActivityAuditResourceType.ADAPTER,
+    ActivityAuditResourceType.ROLE,
+  ])('returns false for admin-backend %s', (type) => {
+    expect(isContainerDeploymentResource(type)).toBe(false);
+  });
+
+  test('returns false for undefined', () => {
+    expect(isContainerDeploymentResource(undefined)).toBe(false);
   });
 });
