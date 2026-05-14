@@ -4,7 +4,6 @@ import { DialSwitch } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback } from 'react';
 
 import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
-import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
 import DeploymentProperties from '@/src/components/EntityMainProperties/Properties/DeploymentProperties';
 import Authentication from '@/src/components/Toolsets/Auth/Authentication';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
@@ -53,11 +52,6 @@ const ToolsetProperties: FC<Props> = ({ names, selectedToolset, onChangeToolset 
         onChange={(value: boolean) => {
           handleChangeToolset({ ...selectedToolset, forwardPerRequestKey: value });
         }}
-      />
-      <ForwardAuthTokenField
-        view={ApplicationRoute.Toolsets}
-        entity={selectedToolset}
-        onChangeEntity={handleChangeToolset}
       />
       <MaxRetryAttempts entity={selectedToolset} onChangeEntity={handleChangeToolset} />
     </div>
