@@ -10,7 +10,6 @@ import VersionControl from '@/src/components/BaseControls/Version';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import Defaults from '@/src/components/Defaults/Defaults';
 import EntityAttachments from '@/src/components/EntityMainProperties/EntityAttachments/EntityAttachments';
-import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
 import ApplicationSource from '@/src/components/SourceField/Application/ApplicationSource';
 import { BasicI18nKey, EntitiesI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
@@ -79,12 +78,6 @@ const ApplicationAssetProperties: FC<Props> = ({ asset, runners, onChange, isPub
         onChangeEntity={onChange as (entity: DialApplication) => void}
       />
       <Defaults entity={asset as DialApplication} onChangeEntity={onChange as (entity: DialApplication) => void} />
-      <ForwardAuthTokenField
-        view={ApplicationRoute.AssetsApplications}
-        entity={asset}
-        onChangeEntity={onChange as (entity: DialApplication) => void}
-        disabled
-      />
       <MaxRetryAttempts entity={asset} onChangeEntity={onChange} />
     </div>
   );
