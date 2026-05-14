@@ -28,6 +28,7 @@ interface Props {
   clearPendingFocus: () => void;
   onClose: () => void;
   onSwitchToSidebar: () => void;
+  runCompareNames?: { current: string; compared: string };
 }
 
 const AnalyticsBottomDrawer: FC<Props> = ({
@@ -36,6 +37,7 @@ const AnalyticsBottomDrawer: FC<Props> = ({
   clearPendingFocus,
   onClose,
   onSwitchToSidebar,
+  runCompareNames,
 }) => {
   const t = useI18n();
   const [activeDetail, setActiveDetail] = useState<AnalyticsResult | null>(null);
@@ -157,6 +159,13 @@ const AnalyticsBottomDrawer: FC<Props> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const resolvedRunCompareNames = runCompareNames
+    ? {
+        current: runCompareNames.current,
+        compared: drawerPanel.pinnedId === null ? t(RunsI18nKey.RunCompareNoMatch) : runCompareNames.compared,
+      }
+    : undefined;
+
   const onPinActive = useCallback(() => {
     if (drawerPanel.activeId) {
       drawerPanel.pin(drawerPanel.activeId);
@@ -181,7 +190,7 @@ const AnalyticsBottomDrawer: FC<Props> = ({
   return createPortal(
     <Resizable
       size={{ width: '100%', height: panelHeight }}
-      minHeight={MIN_DRAWER_HEIGHT}
+      minHeight={drawerPanel.isCollapsed ? COLLAPSED_HEIGHT : MIN_DRAWER_HEIGHT}
       maxHeight={maxHeight}
       enable={{ top: !drawerPanel.isCollapsed }}
       handleComponent={{ top: <ResizeHandle /> }}
@@ -214,6 +223,7 @@ const AnalyticsBottomDrawer: FC<Props> = ({
             onExpand={drawerPanel.expand}
             onClose={onCloseDrawer}
             onSwitchToSidebar={onSwitchSidebar}
+            runCompareNames={resolvedRunCompareNames}
           />
         </div>
         {!drawerPanel.isCollapsed && (
@@ -238,6 +248,7 @@ const AnalyticsBottomDrawer: FC<Props> = ({
                   pinnedDetail={pinnedDetail}
                   spotlightedFields={fieldSelector.spotlightedFields}
                   onToggleSpotlight={fieldSelector.toggleSpotlight}
+                  runCompareNames={runCompareNames}
                 />
               ) : (
                 <ComparisonPivotView
@@ -246,6 +257,7 @@ const AnalyticsBottomDrawer: FC<Props> = ({
                   activeDetail={activeDetail}
                   pinnedDetail={pinnedDetail}
                   spotlightedFields={fieldSelector.spotlightedFields}
+                  runCompareNames={runCompareNames}
                 />
               )}
             </div>

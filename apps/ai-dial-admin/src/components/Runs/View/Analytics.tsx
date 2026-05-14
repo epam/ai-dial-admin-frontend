@@ -8,6 +8,7 @@ import {
   DialGhostIconButton,
   DialLoader,
   DialSelect,
+  ElementSize,
   SelectOption,
   SelectSize,
   SelectVariant,
@@ -22,6 +23,7 @@ import { useDrawerPanel } from '@/src/components/Runs/Details/BottomDrawer/useDr
 import { EntitiesI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsResult, Run, RunStatus } from '@/src/models/evaluation/run';
+import { CompareAnalyticsRow } from './models';
 import { FilterOperatorDto } from '@/src/types/request';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 
@@ -126,19 +128,35 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
   const onRowClicked = useCallback(
     (event: RowClickedEvent) => {
       if (!event.data) return;
-      detailMode.openDetail(event.data.id);
+      if (isCompareMode) {
+        const comparedResultId = (event.data as CompareAnalyticsRow)._compared?.id ?? null;
+        detailMode.setSelectedForCompare(event.data.id);
+        drawerPanel.openRunCompare(event.data.id, comparedResultId);
+      } else {
+        detailMode.openDetail(event.data.id);
+      }
     },
-    [detailMode],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isCompareMode, detailMode.setSelectedForCompare, detailMode.openDetail, drawerPanel.openRunCompare],
   );
 
   useLayoutEffect(() => {
+    if (drawerPanel.isRunCompareMode) return;
     if (detailMode.drawerOpen && detailMode.selectedResultId) {
       drawerPanel.open(detailMode.selectedResultId);
     } else if (!detailMode.drawerOpen && drawerPanel.isOpen) {
       drawerPanel.close();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [detailMode.drawerOpen, detailMode.selectedResultId]);
+  }, [detailMode.drawerOpen, detailMode.selectedResultId, drawerPanel.isRunCompareMode]);
+
+  useEffect(() => {
+    if (!isCompareMode && drawerPanel.isRunCompareMode) {
+      drawerPanel.close();
+      detailMode.clearSelected();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCompareMode]);
 
   const selectedResultIdRef = useRef(detailMode.selectedResultId);
   selectedResultIdRef.current = detailMode.selectedResultId;
@@ -166,6 +184,26 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
       })),
     [siblingRuns],
   );
+
+  const runCompareNames = useMemo(() => {
+    if (!isCompareMode) return undefined;
+    const currentName = `${run.testRunName || run.id}${run.startedAt ? ` · ${formatDateTimeToLocalString(run.startedAt)}` : ''}`;
+    const comparedRun = siblingRuns.find((r) => r.id === comparedRunId);
+    const comparedName = comparedRun
+      ? `${comparedRun.testRunName || comparedRun.id}${comparedRun.startedAt ? ` · ${formatDateTimeToLocalString(comparedRun.startedAt)}` : ''}`
+      : '';
+    return { current: currentName, compared: comparedName };
+  }, [isCompareMode, run, comparedRunId, siblingRuns]);
+
+  const onDrawerClose = useCallback(() => {
+    if (drawerPanel.isRunCompareMode) {
+      drawerPanel.close();
+      detailMode.clearSelected();
+    } else {
+      detailMode.closeDetail();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drawerPanel.isRunCompareMode, drawerPanel.close, detailMode.closeDetail, detailMode.clearSelected]);
 
   const onCompareChange = useCallback((value: string | string[]) => {
     setComparedRunId(value as string);
@@ -199,8 +237,14 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
           disabled={siblingRunOptions.length === 0}
           onChange={onCompareChange}
         />
-        {isCompareLoading && <DialLoader size={20} />}
-        {comparedRunId && <DialGhostIconButton icon={<IconX size={14} />} onClick={onCompareClear} />}
+        {comparedRunId &&
+          (isCompareLoading ? (
+            <div className="flex items-center justify-center w-6 h-6 shrink-0">
+              <DialLoader size={20} />
+            </div>
+          ) : (
+            <DialGhostIconButton size={ElementSize.Small} icon={<IconX size={12} />} onClick={onCompareClear} />
+          ))}
       </div>
       <div className="flex-1 min-h-0">
         {isLoading ? (
@@ -216,13 +260,14 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
           />
         )}
       </div>
-      {detailMode.detailMode === DetailMode.Drawer && detailMode.drawerOpen && (
+      {((detailMode.detailMode === DetailMode.Drawer && detailMode.drawerOpen) || drawerPanel.isRunCompareMode) && (
         <AnalyticsBottomDrawer
           drawerPanel={drawerPanel}
           pendingFocus={detailMode.pendingFocus}
           clearPendingFocus={detailMode.clearPendingFocus}
-          onClose={detailMode.closeDetail}
+          onClose={onDrawerClose}
           onSwitchToSidebar={detailMode.switchToSidebar}
+          runCompareNames={runCompareNames}
         />
       )}
       <ColorScale />
