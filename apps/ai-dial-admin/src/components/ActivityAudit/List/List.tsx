@@ -54,7 +54,7 @@ import {
 } from '@/src/utils/entities/rollback-entity';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { getEntityAuditFilterId, getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { saveAuditTabReturn } from '@/src/utils/audit-tab-return';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
@@ -67,9 +67,17 @@ interface Props {
   refresh?: boolean;
   defaultTimeFilter?: TimeFilterValue;
   onTimeFilterChange?: (filter: TimeFilterValue) => void;
+  viewMode?: ActivityAuditView;
 }
 
-const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTimeFilter, onTimeFilterChange }) => {
+const ActivityAuditList: FC<Props> = ({
+  entity,
+  entityType,
+  refresh,
+  defaultTimeFilter,
+  onTimeFilterChange,
+  viewMode,
+}) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const router = useRouter();
@@ -86,7 +94,8 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
     onTimeFilterChange,
   });
   const [selectedActivity, setSelectedActivity] = useState<DialActivity | undefined>(void 0);
-  const [activityViewType, setActivityViewType] = useState<ActivityAuditView>(ActivityAuditView.Config);
+  const [activityViewType, setActivityViewType] = useState<ActivityAuditView>(viewMode ?? ActivityAuditView.Config);
+  const effectiveViewType = viewMode ?? activityViewType;
   const [fullActivityList, setFullActivityList] = useState<DialActivity[]>([]);
 
   const onCloseModal = useCallback(() => {
@@ -97,12 +106,12 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
 
   const openInNewTab = useCallback(
     (activity?: DialActivity) => {
-      if (activityViewType === ActivityAuditView.Deployments && !isDeploymentManagerResource(activity?.resourceType)) {
+      if (effectiveViewType === ActivityAuditView.Deployments && !isDeploymentManagerResource(activity?.resourceType)) {
         return;
       }
       onOpenInNewTab(ApplicationRoute.ActivityAudit, activity);
     },
-    [activityViewType],
+    [effectiveViewType],
   );
 
   const onOpenConfirmationModal = useCallback((activity?: DialActivity) => {
@@ -147,7 +156,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
     [fullActivityList],
   );
 
-  const isDeploymentsView = activityViewType === ActivityAuditView.Deployments;
+  const isDeploymentsView = effectiveViewType === ActivityAuditView.Deployments;
 
   const gridDataSource: IDatasource = useMemo(
     () => ({
@@ -163,7 +172,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
             ? [
                 {
                   column: 'resourceId',
-                  value: (entity as DialApplicationScheme).$id || (entity as BaseEntity).name,
+                  value: getEntityAuditFilterId(entity),
                   operator: 'eq',
                 } as FilterDto,
                 {
@@ -237,7 +246,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
     setFullActivityList([]);
     gridApi.setGridOption('datasource', gridDataSource);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activityViewType]);
+  }, [effectiveViewType]);
 
   const gridOptions: GridOptions = {
     ...infiniteGridOptions,
@@ -394,7 +403,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
           </div>
         </div>
         <div className="flex flex-row flex-wrap justify-between mt-4 w-full">
-          {!entity && (
+          {!entity && !viewMode && (
             <div className="flex flex-row gap-x-4 h-[40px] items-center">
               <DialSelect
                 size={SelectSize.Sm}
@@ -414,7 +423,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
             </div>
           )}
 
-          {!entity && !isReadOnlyAdmin && activityViewType === ActivityAuditView.Config && (
+          {!entity && !isReadOnlyAdmin && effectiveViewType === ActivityAuditView.Config && (
             <DialNeutralButton
               iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} />}
               label={t(RollbackI18nKey.Rollback)}

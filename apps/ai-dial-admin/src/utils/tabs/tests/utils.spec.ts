@@ -1,6 +1,17 @@
 import { TabsI18nKey } from '@/src/constants/i18n';
+import { FeatureFlags } from '@/src/models/feature-flags';
 import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test, vi } from 'vitest';
+
+const flags = (overrides: Partial<FeatureFlags> = {}): FeatureFlags => ({
+  dashboardEnabled: false,
+  deploymentsEnabled: false,
+  evaluationEnabled: false,
+  mcpRegistryEnabled: false,
+  nimEnabled: false,
+  hfEnabled: false,
+  ...overrides,
+});
 import {
   analyticsTab,
   applicationRunnersTab,
@@ -112,7 +123,7 @@ describe('Entities :: tabs', () => {
   });
 
   test('returns dashboard and activities tabs if dashboardEnabled and view is Models', () => {
-    const tabs = getAuditTabs(t, { dashboardEnabled: true }, ApplicationRoute.Models);
+    const tabs = getAuditTabs(t, flags({ dashboardEnabled: true }), ApplicationRoute.Models);
     expect(tabs).toEqual([
       { id: 'Dashboard', label: TabsI18nKey.Dashboard },
       { id: 'Traces', label: TabsI18nKey.Traces },
@@ -122,7 +133,7 @@ describe('Entities :: tabs', () => {
   });
 
   test('returns dashboard and activities tabs if dashboardEnabled and view is Applications', () => {
-    const tabs = getAuditTabs(t, { dashboardEnabled: true }, ApplicationRoute.Applications);
+    const tabs = getAuditTabs(t, flags({ dashboardEnabled: true }), ApplicationRoute.Applications);
     expect(tabs).toEqual([
       { id: 'Dashboard', label: TabsI18nKey.Dashboard },
       { id: 'Traces', label: TabsI18nKey.Traces },
@@ -132,17 +143,17 @@ describe('Entities :: tabs', () => {
   });
 
   test('returns only activities tab if dashboardEnabled is false', () => {
-    const tabs = getAuditTabs(t, { dashboardEnabled: false }, ApplicationRoute.Models);
+    const tabs = getAuditTabs(t, flags({ dashboardEnabled: false }), ApplicationRoute.Models);
     expect(tabs).toEqual([{ id: 'Activities', label: TabsI18nKey.Activities }]);
   });
 
   test('returns only activities tab for other views', () => {
-    const tabs = getAuditTabs(t, { dashboardEnabled: true }, ApplicationRoute.Home);
+    const tabs = getAuditTabs(t, flags({ dashboardEnabled: true }), ApplicationRoute.Home);
     expect(tabs).toEqual([{ id: 'Activities', label: TabsI18nKey.Activities }]);
   });
 
   test('returns dashboard and traces tabs for AssetsToolsets when dashboardEnabled is true', () => {
-    const tabs = getAuditTabs(t, { dashboardEnabled: true }, ApplicationRoute.AssetsToolsets);
+    const tabs = getAuditTabs(t, flags({ dashboardEnabled: true }), ApplicationRoute.AssetsToolsets);
     expect(tabs).toEqual([
       { id: 'Dashboard', label: TabsI18nKey.Dashboard },
       { id: 'Traces', label: TabsI18nKey.Traces },
@@ -150,7 +161,7 @@ describe('Entities :: tabs', () => {
   });
 
   test('returns dashboard, traces and activities tabs for Toolsets when dashboardEnabled is true', () => {
-    const tabs = getAuditTabs(t, { dashboardEnabled: true }, ApplicationRoute.Toolsets);
+    const tabs = getAuditTabs(t, flags({ dashboardEnabled: true }), ApplicationRoute.Toolsets);
     expect(tabs).toEqual([
       { id: 'Dashboard', label: TabsI18nKey.Dashboard },
       { id: 'Traces', label: TabsI18nKey.Traces },
@@ -173,7 +184,7 @@ describe('Entities :: tabs', () => {
   });
 
   test('returns correct tabs for AssetsToolsets with dashboardEnabled', () => {
-    expect(getTabsForAsset(t, ApplicationRoute.AssetsToolsets, { dashboardEnabled: true })).toEqual([
+    expect(getTabsForAsset(t, ApplicationRoute.AssetsToolsets, flags({ dashboardEnabled: true }))).toEqual([
       propertiesTab(t),
       toolsTab(t),
       auditTab(t),
@@ -251,6 +262,7 @@ describe('Entities :: tabs', () => {
       firewallTab(t, false),
       relatedContainersTab(t, status),
       installationLogTab(t, status),
+      auditTab(t),
     ]);
   });
   test('returns correct tabs for deployment mcp containers', () => {
@@ -264,6 +276,7 @@ describe('Entities :: tabs', () => {
       promptsTab(t, status),
       executionLogTab(t),
       eventsTab(t),
+      auditTab(t),
     ]);
   });
 
@@ -335,7 +348,22 @@ describe('Entities :: tabs', () => {
       firewallTab(t, false),
       executionLogTab(t),
       eventsTab(t),
+      auditTab(t),
     ]);
+  });
+
+  test('appends audit tab for adapter / application / interceptor container routes', () => {
+    const status = CONTAINER_STATUS.RUNNING;
+    const routes = [
+      ApplicationRoute.AdapterContainers,
+      ApplicationRoute.ApplicationContainers,
+      ApplicationRoute.InterceptorContainers,
+    ];
+
+    for (const route of routes) {
+      const tabs = getDeploymentsViewTabs(route, t, status, []);
+      expect(tabs[tabs.length - 1]).toEqual(auditTab(t));
+    }
   });
 
   test('returns correct tabs for test suite request template', () => {
