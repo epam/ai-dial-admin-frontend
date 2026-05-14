@@ -55,6 +55,26 @@ describe('generateMetricDefaultInputBindings', () => {
       source: { $type: MetricBindingType.Constant, value: 0 },
     });
   });
+
+  test('uses empty object default for object with additionalProperties map', () => {
+    const schema: JSONSchema7 = {
+      type: 'object',
+      properties: {
+        actual: {
+          type: 'object',
+          additionalProperties: {
+            type: 'array',
+            items: { type: 'string' },
+          },
+        },
+      },
+    };
+    const result = generateMetricDefaultInputBindings(schema);
+
+    expect(result).toEqual([
+      { property: 'actual', source: { $type: MetricBindingType.Constant, value: {} } },
+    ]);
+  });
 });
 
 describe('generateMetricDefaultBindings', () => {
