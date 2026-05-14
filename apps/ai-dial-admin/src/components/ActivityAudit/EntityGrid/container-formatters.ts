@@ -51,6 +51,7 @@ export const CONTAINER_ROW_LABEL_KEYS: Record<
   imageRef: EntityFieldsI18nKey.ImageURI,
   imageReference: EntityFieldsI18nKey.DockerImageReference,
   modelName: EntityFieldsI18nKey.HFModelName,
+  url: BasicI18nKey.URL,
 };
 
 // Value-formatting tables for atomic row types.

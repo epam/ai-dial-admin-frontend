@@ -4,6 +4,7 @@ import { DialLabelledText } from '@epam/ai-dial-ui-kit';
 import { FC, useMemo } from 'react';
 
 import StatusIndicator from '@/src/components/Deployments/Common/StatusIndicator/StatusIndicator';
+import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
 import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
 import ImageFields from '@/src/components/Images/Fields/ImageFields';
 import Containers from '@/src/components/Images/View/Containers/Containers';
@@ -14,6 +15,7 @@ import { EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { Image, ImageVersion } from '@/src/models/deployments/images';
+import { ActivityAuditView } from '@/src/types/activity-audit';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 
@@ -23,9 +25,17 @@ interface Props {
   imageVersions: ImageVersion[];
   onChange: (image: Image) => void;
   onChangeVersions: (versions: ImageVersion[]) => void;
+  initialAuditTab?: EntityViewTab;
 }
 
-const TabsContent: FC<Props> = ({ activeTab, selectedImage, onChange, onChangeVersions, imageVersions }) => {
+const TabsContent: FC<Props> = ({
+  activeTab,
+  selectedImage,
+  onChange,
+  onChangeVersions,
+  imageVersions,
+  initialAuditTab,
+}) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
@@ -77,6 +87,14 @@ const TabsContent: FC<Props> = ({ activeTab, selectedImage, onChange, onChangeVe
           setImage={onChange}
           route={ApplicationRoute.Images}
           disabled={isReadOnlyAdmin}
+        />
+      )}
+      {activeTab === EntityViewTab.Audit && (
+        <EntityAudit
+          entity={selectedImage}
+          view={ApplicationRoute.Images}
+          viewMode={ActivityAuditView.Deployments}
+          initialAuditTab={initialAuditTab}
         />
       )}
     </>

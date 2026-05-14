@@ -15,8 +15,8 @@ import { FilterOperatorDto } from '@/src/types/request';
 import { formatDateToLocalString } from '@/src/utils/formatting/date';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 import { ActivityAuditRevision } from '@/src/components/ActivityAudit/models';
+import { auditResourceRoute } from '@/src/components/ActivityAudit/View/Header/constants';
 import { ActivityAuditResourceType, ActivityAuditView } from '@/src/types/activity-audit';
-import { ApplicationRoute } from '@/src/types/routes';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialApplicationScheme } from '@/src/models/dial/application';
@@ -140,42 +140,9 @@ export const getAuditActivityHref = (
   if (!entityType || !entity || !activityId) {
     return '';
   }
-
-  let route: ApplicationRoute;
-  switch (entityType) {
-    case ActivityAuditResourceType.MODEL:
-      route = ApplicationRoute.Models;
-      break;
-    case ActivityAuditResourceType.APPLICATION:
-      route = ApplicationRoute.Applications;
-      break;
-    case ActivityAuditResourceType.TOOLSET:
-      route = ApplicationRoute.Toolsets;
-      break;
-    case ActivityAuditResourceType.INTERCEPTOR:
-      route = ApplicationRoute.Interceptors;
-      break;
-    case ActivityAuditResourceType.ROUTE:
-      route = ApplicationRoute.Routes;
-      break;
-    case ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA:
-      route = ApplicationRoute.ApplicationRunners;
-      break;
-    case ActivityAuditResourceType.INTERCEPTOR_TEMPLATE:
-      route = ApplicationRoute.InterceptorTemplates;
-      break;
-    case ActivityAuditResourceType.ADAPTER:
-      route = ApplicationRoute.Adapters;
-      break;
-    case ActivityAuditResourceType.ROLE:
-      route = ApplicationRoute.Roles;
-      break;
-    case ActivityAuditResourceType.KEY:
-      route = ApplicationRoute.Keys;
-      break;
-    default:
-      return '';
+  const route = auditResourceRoute[entityType];
+  if (!route) {
+    return '';
   }
-
-  return route ? `${getUrnForEntity(route, entity)}/${encodeURIComponent(activityId)}` : '';
+  return `${getUrnForEntity(route, entity)}/${encodeURIComponent(activityId)}`;
 };

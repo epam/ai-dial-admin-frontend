@@ -192,6 +192,46 @@ describe('getAuditActivityHref', () => {
     expect(href).toBe('/keys/entity/1');
   });
 
+  test('returns entity-namespaced href for container deployment types', () => {
+    const mockEntity = { name: 'gpt-4-turbo' };
+
+    expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.NIM_DEPLOYMENT, 'abc-123')).toBe(
+      '/model-servings/gpt-4-turbo/abc-123',
+    );
+    expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.INFERENCE_DEPLOYMENT, 'abc-123')).toBe(
+      '/model-servings/gpt-4-turbo/abc-123',
+    );
+    expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.MCP_DEPLOYMENT, 'abc-123')).toBe(
+      '/mcp-containers/gpt-4-turbo/abc-123',
+    );
+    expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.ADAPTER_DEPLOYMENT, 'abc-123')).toBe(
+      '/adapter-containers/gpt-4-turbo/abc-123',
+    );
+    expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.APPLICATION_DEPLOYMENT, 'abc-123')).toBe(
+      '/application-containers/gpt-4-turbo/abc-123',
+    );
+    expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.INTERCEPTOR_DEPLOYMENT, 'abc-123')).toBe(
+      '/interceptor-containers/gpt-4-turbo/abc-123',
+    );
+  });
+
+  test('returns entity-namespaced href for image-definition types (Image route uses entity.id)', () => {
+    const mockEntity = { id: 'my-image-id', name: 'my-image' };
+
+    expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.MCP_IMAGE_DEFINITION, 'abc-123')).toBe(
+      '/deployment-images/my-image-id/abc-123',
+    );
+    expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.ADAPTER_IMAGE_DEFINITION, 'abc-123')).toBe(
+      '/deployment-images/my-image-id/abc-123',
+    );
+    expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.APPLICATION_IMAGE_DEFINITION, 'abc-123')).toBe(
+      '/deployment-images/my-image-id/abc-123',
+    );
+    expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.INTERCEPTOR_IMAGE_DEFINITION, 'abc-123')).toBe(
+      '/deployment-images/my-image-id/abc-123',
+    );
+  });
+
   test('returns empty href for unknown entity type', () => {
     const mockEntity = { name: 'entity' };
     const href = getAuditActivityHref(mockEntity, undefined, '1');
@@ -204,6 +244,12 @@ describe('getAuditActivityHref', () => {
     expect(href).toBe('');
 
     href = getAuditActivityHref(mockEntity, ActivityAuditResourceType.MODEL, '');
+    expect(href).toBe('');
+  });
+
+  test('returns empty href for a resource type not registered in auditResourceRoute', () => {
+    const mockEntity = { name: 'entity' };
+    const href = getAuditActivityHref(mockEntity, ActivityAuditResourceType.ADMIN_PROPERTIES, '1');
     expect(href).toBe('');
   });
 });

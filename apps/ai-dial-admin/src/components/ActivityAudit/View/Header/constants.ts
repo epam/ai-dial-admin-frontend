@@ -1,4 +1,6 @@
 import { ActivityAuditResourceType } from '@/src/types/activity-audit';
+import { CONTAINER_TYPE } from '@/src/types/deployments/containers';
+import { IMAGE_TYPE } from '@/src/types/deployments/images';
 import { EntityType } from '@/src/types/entity-type';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -37,6 +39,22 @@ export const routeAuditResource: Partial<Record<ApplicationRoute, ActivityAuditR
   [ApplicationRoute.Routes]: ActivityAuditResourceType.ROUTE,
   [ApplicationRoute.InterceptorTemplates]: ActivityAuditResourceType.INTERCEPTOR_TEMPLATE,
   [ApplicationRoute.Toolsets]: ActivityAuditResourceType.TOOLSET,
+};
+
+export const CONTAINER_TYPE_TO_AUDIT: Record<CONTAINER_TYPE, ActivityAuditResourceType> = {
+  [CONTAINER_TYPE.MCP]: ActivityAuditResourceType.MCP_DEPLOYMENT,
+  [CONTAINER_TYPE.NIM]: ActivityAuditResourceType.NIM_DEPLOYMENT,
+  [CONTAINER_TYPE.HF]: ActivityAuditResourceType.INFERENCE_DEPLOYMENT,
+  [CONTAINER_TYPE.ADAPTER]: ActivityAuditResourceType.ADAPTER_DEPLOYMENT,
+  [CONTAINER_TYPE.APPLICATION]: ActivityAuditResourceType.APPLICATION_DEPLOYMENT,
+  [CONTAINER_TYPE.INTERCEPTOR]: ActivityAuditResourceType.INTERCEPTOR_DEPLOYMENT,
+};
+
+export const IMAGE_TYPE_TO_AUDIT: Record<IMAGE_TYPE, ActivityAuditResourceType> = {
+  [IMAGE_TYPE.MCP]: ActivityAuditResourceType.MCP_IMAGE_DEFINITION,
+  [IMAGE_TYPE.INTERCEPTOR]: ActivityAuditResourceType.INTERCEPTOR_IMAGE_DEFINITION,
+  [IMAGE_TYPE.ADAPTER]: ActivityAuditResourceType.ADAPTER_IMAGE_DEFINITION,
+  [IMAGE_TYPE.APPLICATION]: ActivityAuditResourceType.APPLICATION_IMAGE_DEFINITION,
 };
 
 export const importPreviewResource: Partial<Record<EntityType, ActivityAuditResourceType>> = {
