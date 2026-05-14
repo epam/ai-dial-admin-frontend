@@ -165,7 +165,7 @@ const Adapters = <T extends DialModel | DialInterceptor>({
           hideResponsesEndpoint
         />
       )}
-      {entity.source?.adapterName && selectedAdapter && selectedAdapter.responsesEndpoint && (
+      {entity.source?.adapterName && selectedAdapter && selectedAdapter.responsesEndpoint && !isModal && (
         <ComplexInput
           copyable
           id="responsesEndpoint"
