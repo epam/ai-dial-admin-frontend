@@ -21,6 +21,7 @@ import { ChatEntity } from '@/src/models/dial/base-entity';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { Toolset, ToolsetAuthType } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getAssetCreateFolderHandler } from '@/src/components/EntityListView/utils';
 
 interface Props {
   selectedToolset: AssetToolset;
@@ -69,6 +70,8 @@ const Properties: FC<Props> = ({ selectedToolset, onChange, isPublication }) => 
           onChange={(folderId) => onChange?.({ ...selectedToolset, folderId })}
           context={useToolsetFolder}
           disabled={isReadOnlyAdmin}
+          onCreateFolder={getAssetCreateFolderHandler(ApplicationRoute.AssetsToolsets)}
+          view={ApplicationRoute.AssetsToolsets}
         />
       )}
       <ToolsetEndpoint entity={selectedToolset} onChange={onChange as (entity: Toolset) => void} />

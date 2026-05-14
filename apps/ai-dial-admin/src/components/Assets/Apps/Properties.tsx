@@ -20,6 +20,7 @@ import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { AssetApp, DeploymentAsset } from '@/src/models/dial/deployment-asset';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getAssetCreateFolderHandler } from '@/src/components/EntityListView/utils';
 
 interface Props {
   asset: DeploymentAsset;
@@ -74,6 +75,8 @@ const ApplicationAssetProperties: FC<Props> = ({ asset, runners, onChange, isPub
           onChange={(folderId) => onChange?.({ ...asset, folderId })}
           context={useAppsFolder}
           disabled={isReadOnlyAdmin}
+          onCreateFolder={getAssetCreateFolderHandler(ApplicationRoute.AssetsApplications)}
+          view={ApplicationRoute.AssetsApplications}
         />
       )}
 
