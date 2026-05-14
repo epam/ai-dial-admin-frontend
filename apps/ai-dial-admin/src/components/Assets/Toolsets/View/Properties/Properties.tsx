@@ -10,12 +10,14 @@ import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
 import TopicsControl from '@/src/components/BaseControls/Topics';
 import VersionControl from '@/src/components/BaseControls/Version';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
+import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
 import ToolsetEndpoint from '@/src/components/SourceField/Endpoints/ToolsetEndpoint';
 import Authentication from '@/src/components/Toolsets/Auth/Authentication';
 import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
+import { ChatEntity } from '@/src/models/dial/base-entity';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { Toolset, ToolsetAuthType } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -84,7 +86,11 @@ const Properties: FC<Props> = ({ selectedToolset, onChange, isPublication }) => 
           onChange({ ...selectedToolset, forwardPerRequestKey: value });
         }}
       />
-
+      <ForwardAuthTokenField
+        view={ApplicationRoute.AssetsToolsets}
+        entity={selectedToolset}
+        onChangeEntity={onChange as (entity: ChatEntity) => void}
+      />
       <MaxRetryAttempts entity={selectedToolset} onChangeEntity={onChange} />
     </div>
   );

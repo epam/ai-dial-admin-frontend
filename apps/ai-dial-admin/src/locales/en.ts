@@ -204,6 +204,7 @@ export default {
     AppRunner: 'Application runner',
     ModelDisplayName: 'Model display name',
     ApplicationDisplayName: 'Application display name',
+    ToolsetDisplayName: 'Toolset display name',
     InterceptorName: 'Interceptor Name',
     ChangeIcon: 'Change icon',
     Source: 'Source',
@@ -594,6 +595,7 @@ export default {
   ForwardToken: {
     ForwardTokenModalTitle: 'Forward Auth Token',
     UseForThisModel: 'Use for this model',
+    UseForThisToolset: 'Use for this toolset',
     UseForThisInterceptor: 'Use for this interceptor',
     UseForThisApplication: 'Use for this application',
     ForwardTokenModalAlert:

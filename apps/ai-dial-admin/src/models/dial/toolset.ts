@@ -14,6 +14,7 @@ export interface Toolset extends BaseEntity, EntityRoleLimits {
   source?: SOURCE_FIELD;
   authSettings?: ToolsetAuthSettings;
   forwardPerRequestKey?: boolean;
+  forwardAuthToken?: boolean;
 }
 
 export interface ToolsetAuthSettings {
