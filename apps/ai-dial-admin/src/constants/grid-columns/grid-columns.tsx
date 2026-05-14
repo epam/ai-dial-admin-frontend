@@ -75,7 +75,7 @@ import {
   VERSION_COLUMN,
 } from './base-columns';
 import { dateTimeColumn, numericColumn, priceColumn } from './configs';
-import { baseStringFilter, dateFilter, evalStringFilter } from './filters';
+import { baseNumberFilter, baseStringFilter, dateFilter, evalStringFilter } from './filters';
 import RowExpanderCellRenderer from '@/src/components/Grid/CellRenderers/RowExpanderCellRenderer';
 import ChildrenActivityTypeCellRenderer from '@/src/components/Grid/CellRenderers/ChildrenActivityTypeCellRenderer';
 import { ActivityAuditView } from '@/src/types/activity-audit';
@@ -471,18 +471,31 @@ export const USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
   { field: 'trace_id', headerName: 'Trace ID', hide: false, ...baseStringFilter },
   { field: 'topic', headerName: 'Topic', hide: false, ...baseStringFilter },
   { field: 'reactions', headerName: 'Reactions', hide: true }, // TODO: not implemented
-  { field: 'cached_prompt_tokens', headerName: 'Cached Prompt Tokens', hide: true, ...numericColumn },
-  { field: 'prompt_tokens', headerName: 'Prompt Tokens', hide: false, ...numericColumn },
-  { field: 'completion_tokens', headerName: 'Completion Tokens', hide: false, ...numericColumn },
+  {
+    field: 'cached_prompt_tokens',
+    headerName: 'Cached Prompt Tokens',
+    hide: true,
+    ...numericColumn,
+    ...baseNumberFilter,
+  },
+  { field: 'prompt_tokens', headerName: 'Prompt Tokens', hide: false, ...numericColumn, ...baseNumberFilter },
+  { field: 'completion_tokens', headerName: 'Completion Tokens', hide: false, ...numericColumn, ...baseNumberFilter },
   {
     field: 'deployment_price',
     headerName: 'Deployment Price',
     minWidth: 180,
     hide: false,
     ...priceColumn('Deployment Price'),
+    ...baseNumberFilter,
   },
-  { field: 'price', headerName: 'Total Price', hide: false, ...priceColumn('Total Price') },
-  { field: 'number_request_messages', headerName: 'Number of Request Messages', hide: true, ...numericColumn },
+  { field: 'price', headerName: 'Total Price', hide: false, ...priceColumn('Total Price'), ...baseNumberFilter },
+  {
+    field: 'number_request_messages',
+    headerName: 'Number of Request Messages',
+    hide: true,
+    ...numericColumn,
+    ...baseNumberFilter,
+  },
   { field: 'deployment', headerName: 'Deployment ID', hide: false, ...baseStringFilter },
   { field: 'parent_deployment', headerName: 'Parent Deployment ID', hide: true, ...baseStringFilter },
   { field: 'model', headerName: 'Model', hide: true, ...baseStringFilter },
@@ -502,11 +515,29 @@ export const USAGE_LOG_CONVERSATIONS_COLUMNS: ColDef[] = [
   completionTimeColumn('Last activity'),
   { field: 'chat_id', headerName: 'Conversation ID', hide: false, ...baseStringFilter },
   { field: 'topic', headerName: 'Topic', hide: false, ...baseStringFilter },
-  { field: 'cached_prompt_tokens', headerName: 'Cached Prompt Tokens', hide: true, ...numericColumn },
-  { field: 'prompt_tokens', headerName: 'Prompt Tokens', hide: false, ...numericColumn },
-  { field: 'completion_tokens', headerName: 'Completion Tokens', hide: false, ...numericColumn },
-  { field: 'deployment_price', headerName: 'Total Price', hide: false, ...priceColumn('Total Price') },
-  { field: 'number_request_messages', headerName: 'Number of Request Messages', hide: true, ...numericColumn },
+  {
+    field: 'cached_prompt_tokens',
+    headerName: 'Cached Prompt Tokens',
+    hide: true,
+    ...numericColumn,
+    ...baseNumberFilter,
+  },
+  { field: 'prompt_tokens', headerName: 'Prompt Tokens', hide: false, ...numericColumn, ...baseNumberFilter },
+  { field: 'completion_tokens', headerName: 'Completion Tokens', hide: false, ...numericColumn, ...baseNumberFilter },
+  {
+    field: 'deployment_price',
+    headerName: 'Total Price',
+    hide: false,
+    ...priceColumn('Total Price'),
+    ...baseNumberFilter,
+  },
+  {
+    field: 'number_request_messages',
+    headerName: 'Number of Request Messages',
+    hide: true,
+    ...numericColumn,
+    ...baseNumberFilter,
+  },
   { field: 'deployment', headerName: 'Deployment ID', hide: false, ...baseStringFilter },
   { field: 'project_id', headerName: 'Project', hide: false, ...baseStringFilter },
   { field: 'user_hash', headerName: 'User', hide: false, ...baseStringFilter },
@@ -535,10 +566,10 @@ export const USAGE_LOG_ROUTES_COLUMNS: ColDef[] = [
 
 export const USAGE_LOG_TOOLSET_TRACES_COLUMNS: ColDef[] = [
   completionTimeColumn('Last activity'),
-  { field: 'project_id', headerName: 'Project', hide: false },
-  { field: 'mcp_method', headerName: 'Method', hide: true },
-  { field: 'mcp_tool_call_name', headerName: 'Tool Name', hide: false },
-  { field: 'trace_id', headerName: 'Trace ID', hide: false },
+  { field: 'project_id', headerName: 'Project', hide: false, ...baseStringFilter },
+  { field: 'mcp_method', headerName: 'Method', hide: true, ...baseStringFilter },
+  { field: 'mcp_tool_call_name', headerName: 'Tool Name', hide: false, ...baseStringFilter },
+  { field: 'trace_id', headerName: 'Trace ID', hide: false, ...baseStringFilter },
 ];
 
 // Derived from the column defs — any column spread with ...numericColumn or

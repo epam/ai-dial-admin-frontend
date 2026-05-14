@@ -17,7 +17,7 @@ export const dateFilter: Partial<ColDef> = {
   } as ITextFilterParams,
 };
 
-const stringFilter: Partial<ColDef> = {
+const baseFilterParams: Partial<ColDef> = {
   filterParams: {
     maxNumConditions: 1,
     buttons: ['reset', 'apply'],
@@ -27,7 +27,7 @@ const stringFilter: Partial<ColDef> = {
 
 export const baseStringFilter: Partial<ColDef> = {
   filterParams: {
-    ...stringFilter.filterParams,
+    ...baseFilterParams.filterParams,
     filterOptions: [
       GridFilterType.CONTAINS,
       GridFilterType.NOT_CONTAINS,
@@ -37,9 +37,23 @@ export const baseStringFilter: Partial<ColDef> = {
   } as ITextFilterParams,
 };
 
+export const baseNumberFilter: Partial<ColDef> = {
+  filterParams: {
+    ...baseFilterParams.filterParams,
+    filterOptions: [
+      GridFilterType.GREATER_THAN,
+      GridFilterType.GREATER_THAN_OR_EQUAL,
+      GridFilterType.LESS_THAN,
+      GridFilterType.LESS_THAN_OR_EQUAL,
+      GridFilterType.EQUALS,
+      GridFilterType.NOT_EQUAL,
+    ],
+  } as ITextFilterParams,
+};
+
 export const evalStringFilter = (options: GridFilterType[]): Partial<ColDef> => ({
   filterParams: {
-    ...stringFilter.filterParams,
+    ...baseFilterParams.filterParams,
     filterOptions: options,
   } as ITextFilterParams,
 });
