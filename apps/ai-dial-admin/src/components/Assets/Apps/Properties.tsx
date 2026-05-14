@@ -1,5 +1,6 @@
 import { FC, useMemo } from 'react';
 
+import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import IconControl from '@/src/components/BaseControls/Icon';
@@ -9,9 +10,8 @@ import TopicsControl from '@/src/components/BaseControls/Topics';
 import VersionControl from '@/src/components/BaseControls/Version';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import Defaults from '@/src/components/Defaults/Defaults';
+import { getAssetCreateFolderHandler } from '@/src/components/EntityListView/utils';
 import EntityAttachments from '@/src/components/EntityMainProperties/EntityAttachments/EntityAttachments';
-import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
-import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
 import ApplicationSource from '@/src/components/SourceField/Application/ApplicationSource';
 import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
@@ -20,7 +20,6 @@ import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { AssetApp, DeploymentAsset } from '@/src/models/dial/deployment-asset';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getAssetCreateFolderHandler } from '@/src/components/EntityListView/utils';
 
 interface Props {
   asset: DeploymentAsset;
@@ -105,12 +104,6 @@ const ApplicationAssetProperties: FC<Props> = ({ asset, runners, onChange, isPub
           validationKey="responsesDefaultKeys"
         />
       )}
-      <ForwardAuthTokenField
-        view={ApplicationRoute.AssetsApplications}
-        entity={asset}
-        onChangeEntity={onChange as (entity: DialApplication) => void}
-        disabled
-      />
       <MaxRetryAttempts entity={asset} onChangeEntity={onChange} />
     </div>
   );
