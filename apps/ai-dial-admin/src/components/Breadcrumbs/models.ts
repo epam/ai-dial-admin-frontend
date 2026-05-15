@@ -5,6 +5,7 @@ export interface BreadcrumbConfig {
     name: string;
     i18nKey?: MenuI18nKey;
     href?: boolean;
+    shouldEnrichWithFolderBreadcrumbs?: boolean;
   }[];
 }
 
@@ -12,4 +13,5 @@ export interface Breadcrumb {
   key?: MenuI18nKey;
   name: string;
   href: string;
+  callback?: (href: string) => void;
 }
