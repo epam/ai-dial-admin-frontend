@@ -44,7 +44,6 @@ interface Props {
   toolsets?: Toolset[];
   routes?: DialRoute[];
   onChange: (key: DialRole, skipRefresh?: boolean) => void;
-  initialAuditTab?: EntityViewTab;
 }
 
 const TabsContent: FC<Props> = ({
@@ -55,7 +54,6 @@ const TabsContent: FC<Props> = ({
   selectedRole,
   keys,
   names,
-  initialAuditTab,
   ...props
 }) => {
   const t = useI18n();
@@ -205,9 +203,7 @@ const TabsContent: FC<Props> = ({
             getRelevantDataForEntity={getRelevantKeysForRole.bind(this, selectedRole)}
           />
         )}
-        {activeTab === EntityViewTab.Audit && (
-          <EntityAudit entity={selectedRole} view={ApplicationRoute.Roles} initialAuditTab={initialAuditTab} />
-        )}
+        {activeTab === EntityViewTab.Audit && <EntityAudit entity={selectedRole} view={ApplicationRoute.Roles} />}
       </>
     )
   );

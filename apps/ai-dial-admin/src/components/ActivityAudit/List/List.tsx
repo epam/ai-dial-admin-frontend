@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -54,12 +54,10 @@ import {
 } from '@/src/utils/entities/rollback-entity';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { getEntityAuditFilterId, getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import { saveAuditTabReturn } from '@/src/utils/audit-tab-return';
+import { getEntityAuditFilterId, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
 import { ActivityAuditResourceType, ActivityAuditView, isDeploymentManagerResource } from '@/src/types/activity-audit';
-import { ACTIVITY_AUDIT_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 
 interface Props {
   entity?: BaseEntity | DialApplicationScheme;
@@ -81,7 +79,6 @@ const ActivityAuditList: FC<Props> = ({
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const router = useRouter();
-  const pathname = usePathname();
   const { showNotification } = useNotification();
 
   const [isRollbackModalOpen, setIsRollbackModalOpen] = useState(false);
@@ -112,6 +109,16 @@ const ActivityAuditList: FC<Props> = ({
       onOpenInNewTab(ApplicationRoute.ActivityAudit, activity);
     },
     [effectiveViewType],
+  );
+
+  const openInNewTabForEntity = useCallback(
+    (activity?: DialActivity) => {
+      const href = getAuditActivityHref(entity, entityType as ActivityAuditResourceType, activity?.activityId);
+      if (href) {
+        window.open(href, '_blank');
+      }
+    },
+    [entity, entityType],
   );
 
   const onOpenConfirmationModal = useCallback((activity?: DialActivity) => {
@@ -250,6 +257,14 @@ const ActivityAuditList: FC<Props> = ({
 
   const gridOptions: GridOptions = {
     ...infiniteGridOptions,
+    rowSelection: { mode: 'singleRow', enableClickSelection: false, checkboxes: false },
+    rowClassRules: {
+      'ag-activity-row-clickable': (params) => {
+        const data = params.data as DialActivity & { children?: DialActivity[] };
+        if (isDeploymentsView && !isDeploymentManagerResource(data?.resourceType)) return false;
+        return !data?.children?.length;
+      },
+    },
     onCellClicked: (e) => {
       if (isDeploymentsView && !isDeploymentManagerResource(e.data?.resourceType)) {
         return;
@@ -258,15 +273,13 @@ const ActivityAuditList: FC<Props> = ({
         return;
       }
 
+      e.node.setSelected(true, true);
+
       if (e.colDef.field !== ACTIONS_COLUMN_CEL_ID && e.colDef.field !== EXPANDER_COLUMN_CEL_ID) {
         if (entity) {
-          const href = getAuditActivityHref(entity, entityType as ActivityAuditResourceType, e.data.activityId);
-          if (href) {
-            saveAuditTabReturn(pathname);
-            router.push(href);
-          }
+          openInNewTabForEntity(e.data);
         } else {
-          router.push(getUrnForEntity(ApplicationRoute.ActivityAudit, e.data));
+          openInNewTab(e.data);
         }
       }
     },
@@ -274,7 +287,13 @@ const ActivityAuditList: FC<Props> = ({
 
   const columnDefs = useMemo(() => {
     if (entity) {
-      return [...ACTIVITY_AUDIT_COLUMNS(t, ActivityAuditView.Config, true)];
+      return getActivityAuditColumns(
+        t,
+        openInNewTabForEntity,
+        isReadOnlyAdmin ? undefined : onOpenConfirmationModal,
+        void 0,
+        true,
+      );
     }
     if (isDeploymentsView) {
       return getDeploymentActivityAuditColumns(t, openInNewTab);
@@ -286,7 +305,7 @@ const ActivityAuditList: FC<Props> = ({
       void 0,
       void 0,
     );
-  }, [entity, isDeploymentsView, t, openInNewTab, isReadOnlyAdmin, onOpenConfirmationModal]);
+  }, [entity, isDeploymentsView, t, openInNewTab, openInNewTabForEntity, isReadOnlyAdmin, onOpenConfirmationModal]);
 
   const onRefresh = useCallback(() => {
     if (gridApi) {

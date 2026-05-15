@@ -1,10 +1,9 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ActivityAuditResourceType, ActivityAuditView } from '@/src/types/activity-audit';
 import { CONTAINER_TYPE } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
-import { EntityViewTab } from '@/src/utils/tabs/utils';
 import EntityAudit from '../EntityAudit';
 import { TabsI18nKey } from '@/src/constants/i18n';
 
@@ -53,12 +52,7 @@ describe('EntityAudit', () => {
     const container = { name: 'gpt-4-turbo', $type: CONTAINER_TYPE.NIM };
 
     render(
-      <EntityAudit
-        entity={container}
-        view={ApplicationRoute.ModelServings}
-        initialAuditTab={EntityViewTab.Activities}
-        viewMode={ActivityAuditView.Deployments}
-      />,
+      <EntityAudit entity={container} view={ApplicationRoute.ModelServings} viewMode={ActivityAuditView.Deployments} />,
     );
 
     expect(listPropsSpy).toHaveBeenCalled();
@@ -71,7 +65,8 @@ describe('EntityAudit', () => {
   test('forwards admin audit type via routeAuditResource fallback for a Model', () => {
     const model = { name: 'gpt-4-turbo' };
 
-    render(<EntityAudit entity={model} view={ApplicationRoute.Models} initialAuditTab={EntityViewTab.Activities} />);
+    render(<EntityAudit entity={model} view={ApplicationRoute.Models} />);
+    fireEvent.click(screen.getByRole('tab', { name: TabsI18nKey.Activities }));
 
     expect(listPropsSpy).toHaveBeenCalled();
     const props = listPropsSpy.mock.calls[listPropsSpy.mock.calls.length - 1][0];
