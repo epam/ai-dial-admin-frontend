@@ -1,7 +1,7 @@
 'use client';
 
 import { cloneDeep } from 'lodash';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getImage, updateImage } from '@/src/app/actions/deployments';
@@ -14,7 +14,6 @@ import { useI18n } from '@/src/locales/client';
 import { Image, ImageVersion } from '@/src/models/deployments/images';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
-import { readAndClearAuditTabReturn } from '@/src/utils/audit-tab-return';
 import { getRouteByType, getTranslatedType } from '@/src/utils/deployments/entity';
 import { validateImageChanged } from '@/src/utils/deployments/images';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
@@ -34,13 +33,11 @@ interface Props {
 const ImageView: FC<Props> = ({ image, containerNames, versions }) => {
   const t = useI18n();
   const router = useRouter();
-  const pathname = usePathname();
   const { showNotification } = useNotification();
   const { disableDeploymentsJSONEditor } = useAppContext();
 
-  const [savedTabs] = useState(() => readAndClearAuditTabReturn(pathname));
   const [selectedImage, setSelectedImage] = useState<Image>(cloneDeep(image));
-  const [activeTab, setActiveTab] = useState<EntityViewTab>(savedTabs?.mainTab ?? EntityViewTab.Properties);
+  const [activeTab, setActiveTab] = useState<EntityViewTab>(EntityViewTab.Properties);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [isChanged, setIsChanged] = useState<boolean>(false);
   const [key, setKey] = useState(0);
@@ -157,7 +154,6 @@ const ImageView: FC<Props> = ({ image, containerNames, versions }) => {
               onChange={setSelectedImage}
               selectedImage={selectedImage}
               onChangeVersions={setImageVersions}
-              initialAuditTab={savedTabs?.auditTab}
             />
           </>
         )}

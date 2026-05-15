@@ -35,7 +35,6 @@ interface Props {
   names: string[];
   restarts: number;
   onChange: (container: Container) => void;
-  initialAuditTab?: EntityViewTab;
 }
 
 const TabsContent: FC<Props> = ({
@@ -48,7 +47,6 @@ const TabsContent: FC<Props> = ({
   events,
   onChange,
   names,
-  initialAuditTab,
 }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
@@ -119,12 +117,7 @@ const TabsContent: FC<Props> = ({
         />
       )}
       {activeTab === EntityViewTab.Audit && (
-        <EntityAudit
-          entity={selectedContainer}
-          view={route}
-          viewMode={ActivityAuditView.Deployments}
-          initialAuditTab={initialAuditTab}
-        />
+        <EntityAudit entity={selectedContainer} view={route} viewMode={ActivityAuditView.Deployments} />
       )}
     </>
   );
