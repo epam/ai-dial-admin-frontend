@@ -53,6 +53,7 @@ const ApplicationSource: FC<Props> = ({ entity, runners, onChangeEntity, isEntit
       onChangeEntity({
         ...entity,
         endpoint: undefined,
+        responsesEndpoint: undefined,
         mcp: undefined,
         viewerUrl: undefined,
         editorUrl: undefined,
