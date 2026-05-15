@@ -19,7 +19,10 @@ describe('TreeColumnsPanel :: toggleColDefNode', () => {
   });
 
   test('shows a top-level leaf', () => {
-    const tree: ColDef[] = [{ field: 'a', hide: true }, { field: 'b', hide: true }];
+    const tree: ColDef[] = [
+      { field: 'a', hide: true },
+      { field: 'b', hide: true },
+    ];
     const result = toggleColDefNode(tree, [1], false);
     expect(result[0].hide).toBe(true);
     expect(result[1].hide).toBe(false);
