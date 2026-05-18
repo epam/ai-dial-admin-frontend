@@ -471,7 +471,7 @@ export const USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
   completionTimeColumn('Completion Time'),
   { field: 'trace_id', headerName: 'Trace ID', hide: false, ...baseStringFilter },
   { field: 'topic', headerName: 'Topic', hide: false, ...baseStringFilter },
-  { field: 'reactions', headerName: 'Reactions', hide: true }, // TODO: not implemented
+  // { field: 'reactions', headerName: 'Reactions', hide: true , ...baseStringFilter}, // TODO: not implemented
   {
     field: 'cached_prompt_tokens',
     headerName: 'Cached Prompt Tokens',
