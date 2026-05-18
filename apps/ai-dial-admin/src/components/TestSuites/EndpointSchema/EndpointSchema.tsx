@@ -103,7 +103,9 @@ const EndpointSchema: FC<Props> = ({ testSuite, onChangeTestSuite, isSkipRefresh
             />
           </div>
         ) : (
-          <SchemaGrid schema={currentSchema} onChange={onChangeSchema} isSkipRefresh={isSkipRefresh} />
+          <div className="h-[500px]">
+            <SchemaGrid schema={currentSchema} onChange={onChangeSchema} isSkipRefresh={isSkipRefresh} />
+          </div>
         )
       ) : (
         <Columns
