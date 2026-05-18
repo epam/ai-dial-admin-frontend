@@ -117,13 +117,13 @@ describe('ComparisonPivotView', () => {
         spotlightedFields={new Set()}
       />,
     );
-    // Row 0 is pinned — no diff class; row 1 is active — should have diff class
+    // Row 0 is active — no diff class; row 1 is pinned/compared — should have diff class
     const rows = capturedRowData as any[];
-    const pinnedCell = rows[0]['execution:status'];
-    const activeCell = rows[1]['execution:status'];
-    expect(pinnedCell.diffClass).toBe('');
+    const activeCell = rows[0]['execution:status'];
+    const pinnedCell = rows[1]['execution:status'];
+    expect(activeCell.diffClass).toBe('');
     // Text diff -> accent-secondary-alpha
-    expect(activeCell.diffClass).toBe('bg-accent-secondary-alpha');
+    expect(pinnedCell.diffClass).toBe('bg-accent-secondary-alpha');
   });
 
   it('marks spotlighted field column with spotlight header class', () => {

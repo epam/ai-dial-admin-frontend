@@ -18,11 +18,11 @@ interface Entity {
 }
 
 interface Props<T> extends SimpleButtonsWrapperProps<T> {
-  tabs: TabModel[];
-  activeTab: EntityViewTab;
+  tabs?: TabModel[];
+  activeTab?: EntityViewTab;
   children?: ReactNode;
 
-  onChangeActiveTab: (tab: EntityViewTab) => void;
+  onChangeActiveTab?: (tab: EntityViewTab) => void;
 }
 
 const SimpleEntityHeader = <T extends Entity>({
@@ -47,7 +47,14 @@ const SimpleEntityHeader = <T extends Entity>({
           {children}
         </SimpleButtonsWrapper>
       </div>
-      <Tabs isEditorEnabled={isEditorEnabled} tabs={tabs} activeTab={activeTab} onChangeActiveTab={onChangeActiveTab} />
+      {tabs && activeTab && onChangeActiveTab && (
+        <Tabs
+          isEditorEnabled={isEditorEnabled}
+          tabs={tabs}
+          activeTab={activeTab}
+          onChangeActiveTab={onChangeActiveTab}
+        />
+      )}
     </div>
   );
 };
