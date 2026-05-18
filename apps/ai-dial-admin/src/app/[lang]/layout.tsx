@@ -14,6 +14,7 @@ import Header from '@/src/components/Header/Header';
 import Menu from '@/src/components/Menu/Menu';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { AppContextProvider } from '@/src/context/AppContext';
+import { AppsFolderProvider } from '@/src/context/assets/AppsFolderContext';
 import { PromptFolderProvider } from '@/src/context/assets/PromptFolderContext';
 import { I18nProvider } from '@/src/context/I18nProvider';
 import { NextAuthProvider } from '@/src/context/NextAuthProvider';
@@ -29,6 +30,8 @@ import { getMenuItems } from '@/src/utils/env/get-menu-items';
 import { extractTelemetryMaxRangeMs } from '@/src/utils/telemetry';
 import { isValueTruthy } from '@/src/utils/types';
 import { normalizeUrl } from '@/src/utils/url';
+import { FileFolderProvider } from '@/src/context/assets/FileFolderContext';
+import { ToolsetFolderProvider } from '@/src/context/assets/ToolsetsFolderContext';
 
 export default async function Layout({ children, params }: { children: ReactNode; params: Promise<{ lang: string }> }) {
   const { lang } = await params;
@@ -68,21 +71,30 @@ export default async function Layout({ children, params }: { children: ReactNode
         >
           <ThemeProvider themesConfiguration={themesConfiguration} themeImages={themesImages}>
             <RuleFolderProvider attributes={process.env.PUBLICATION_FILTERS || 'title,role,dial_roles'}>
-              <PromptFolderProvider>
-                <NotificationProvider>
-                  <div className="flex flex-col size-full">
-                    <Header isEnableAuth={isEnableAuth} docLink={normalizeUrl(process.env.DIAL_ADMIN_DOCUMENTATION)} />
-                    <div className="flex-1 min-h-0">
-                      <div className="flex flex-row h-full relative">
-                        <Menu disableMenuItems={getMenuItems(process.env.DISABLE_MENU_ITEMS)} />
-                        <Content isEnableAuth={isEnableAuth} beVersion={beVersion}>
-                          {children}
-                        </Content>
-                      </div>
-                    </div>
-                  </div>
-                </NotificationProvider>
-              </PromptFolderProvider>
+              <AppsFolderProvider>
+                <PromptFolderProvider>
+                  <ToolsetFolderProvider>
+                    <FileFolderProvider>
+                      <NotificationProvider>
+                        <div className="flex flex-col size-full">
+                          <Header
+                            isEnableAuth={isEnableAuth}
+                            docLink={normalizeUrl(process.env.DIAL_ADMIN_DOCUMENTATION)}
+                          />
+                          <div className="flex-1 min-h-0">
+                            <div className="flex flex-row h-full relative">
+                              <Menu disableMenuItems={getMenuItems(process.env.DISABLE_MENU_ITEMS)} />
+                              <Content isEnableAuth={isEnableAuth} beVersion={beVersion}>
+                                {children}
+                              </Content>
+                            </div>
+                          </div>
+                        </div>
+                      </NotificationProvider>
+                    </FileFolderProvider>
+                  </ToolsetFolderProvider>
+                </PromptFolderProvider>
+              </AppsFolderProvider>
             </RuleFolderProvider>
           </ThemeProvider>
         </AppContextProvider>

@@ -18,7 +18,7 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
   [ApplicationRoute.Keys]: auditSubIdBreadcrumb('Keys', MenuI18nKey.Keys),
   [ApplicationRoute.Prompts]: {
     segments: [
-      { name: 'Prompts', i18nKey: MenuI18nKey.Prompts },
+      { name: 'Prompts', i18nKey: MenuI18nKey.Prompts, shouldEnrichWithFolderBreadcrumbs: true },
       {
         name: 'Id',
         href: false,
@@ -27,7 +27,7 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
   },
   [ApplicationRoute.Files]: {
     segments: [
-      { name: 'Files', i18nKey: MenuI18nKey.Files },
+      { name: 'Files', i18nKey: MenuI18nKey.Files, shouldEnrichWithFolderBreadcrumbs: true },
       {
         name: 'Id',
         href: false,
@@ -36,7 +36,7 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
   },
   [ApplicationRoute.AssetsApplications]: {
     segments: [
-      { name: 'AssetsApplications', i18nKey: MenuI18nKey.Applications },
+      { name: 'AssetsApplications', i18nKey: MenuI18nKey.Applications, shouldEnrichWithFolderBreadcrumbs: true },
       {
         name: 'Id',
         href: false,
@@ -45,7 +45,7 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
   },
   [ApplicationRoute.AssetsToolsets]: {
     segments: [
-      { name: 'AssetsToolsets', i18nKey: MenuI18nKey.Toolsets },
+      { name: 'AssetsToolsets', i18nKey: MenuI18nKey.Toolsets, shouldEnrichWithFolderBreadcrumbs: true },
       {
         name: 'Id',
         href: false,
