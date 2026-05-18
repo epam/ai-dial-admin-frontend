@@ -19,7 +19,7 @@ interface Props {
 const LoginPopup: FC<Props> = ({ type, isModalOpen, isLoggedInAsUser, isLoggedInAsOrganization, onClose, onLogin }) => {
   const t = useI18n();
   const [loginOrganization, setLoginOrganization] = useState(!isLoggedInAsOrganization);
-  const [loginUser, setLoginUser] = useState(!!isLoggedInAsOrganization && !isLoggedInAsUser);
+  const [loginUser, setLoginUser] = useState(!isLoggedInAsUser);
   const [apiKeyValue, setApiKeyValue] = useState('');
 
   const showOrganizationCheckbox = !isLoggedInAsOrganization;
@@ -28,17 +28,11 @@ const LoginPopup: FC<Props> = ({ type, isModalOpen, isLoggedInAsUser, isLoggedIn
   const handleOrganizationChange = (value?: boolean) => {
     const nextValue = !!value;
     setLoginOrganization(nextValue);
-    if (type === ToolsetAuthType.OAUTH && nextValue) {
-      setLoginUser(false);
-    }
   };
 
   const handleUserChange = (value?: boolean) => {
     const nextValue = !!value;
     setLoginUser(nextValue);
-    if (type === ToolsetAuthType.OAUTH && nextValue) {
-      setLoginOrganization(false);
-    }
   };
 
   const handleSubmit = () => {
