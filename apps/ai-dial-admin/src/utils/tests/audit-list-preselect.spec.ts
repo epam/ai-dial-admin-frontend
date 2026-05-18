@@ -2,11 +2,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { AUDIT_LIST_PRESELECT_STORAGE_KEY } from '@/src/constants/audit-list-preselect';
 import { AuditListPreselect } from '@/src/types/audit-list-preselect';
-import {
-  clearAuditListPreselect,
-  readAuditListPreselect,
-  saveAuditListPreselect,
-} from '../audit-list-preselect';
+import { clearAuditListPreselect, readAuditListPreselect, saveAuditListPreselect } from '../audit-list-preselect';
 
 describe('audit-list-preselect', () => {
   beforeEach(() => {
