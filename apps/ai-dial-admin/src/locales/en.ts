@@ -1574,6 +1574,7 @@ export default {
     AddDomain: 'Add domain',
     EventsError: 'Error getting Events',
     LogsError: 'Error getting Logs',
+    ViewInActivityAudit: 'View in Activity Audit',
   },
   TestSuites: {
     CreateTestSuite: 'Create Test Suite',

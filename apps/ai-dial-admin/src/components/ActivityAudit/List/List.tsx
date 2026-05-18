@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import {
@@ -18,6 +18,8 @@ import { GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } fro
 import classNames from 'classnames';
 
 import { getActivities, getDeploymentActivities } from '@/src/app/[lang]/activity-audit/actions';
+import { buildResourceTypeLabelMap, getFormattedResourceType } from '@/src/constants/grid-columns/formatters';
+import { RESOURCE_TYPE_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import {
   getActivityAuditColumns,
   getAuditActivityHref,
@@ -45,6 +47,8 @@ import { BaseEntity } from '@/src/models/dial/base-entity';
 import { FilterDto } from '@/src/models/request';
 import { TimeFilterValue, TimeRange } from '@/src/models/time-range';
 import { ApplicationRoute } from '@/src/types/routes';
+import { AuditListPreselect } from '@/src/types/audit-list-preselect';
+import { clearAuditListPreselect, readAuditListPreselect } from '@/src/utils/audit-list-preselect';
 import { rollbackEntityPerType } from '@/src/utils/audit/get-rollback-request';
 import {
   getRollbackErrorDescription,
@@ -91,9 +95,16 @@ const ActivityAuditList: FC<Props> = ({
     onTimeFilterChange,
   });
   const [selectedActivity, setSelectedActivity] = useState<DialActivity | undefined>(void 0);
-  const [activityViewType, setActivityViewType] = useState<ActivityAuditView>(viewMode ?? ActivityAuditView.Config);
+  const [preselect] = useState(() => (entity ? null : readAuditListPreselect()));
+  const [activityViewType, setActivityViewType] = useState<ActivityAuditView>(() =>
+    preselect === AuditListPreselect.GlobalFirewall
+      ? ActivityAuditView.Deployments
+      : (viewMode ?? ActivityAuditView.Config),
+  );
   const effectiveViewType = viewMode ?? activityViewType;
   const [fullActivityList, setFullActivityList] = useState<DialActivity[]>([]);
+  const resourceTypeLabelMap = useMemo(() => buildResourceTypeLabelMap(t), [t]);
+  const hasAppliedPreselectRef = useRef(false);
 
   const onCloseModal = useCallback(() => {
     setIsRollbackModalOpen(false);
@@ -183,13 +194,13 @@ const ActivityAuditList: FC<Props> = ({
                   operator: 'eq',
                 } as FilterDto,
                 {
-                  column: 'resourceType',
+                  column: RESOURCE_TYPE_COLUMN,
                   value: entityType,
                   operator: 'eq',
                 } as FilterDto,
               ]
             : []),
-          ...getGridFilters(params.filterModel, actualTimeRange),
+          ...getGridFilters(params.filterModel, actualTimeRange, resourceTypeLabelMap),
         ];
 
         const fetchActivities = isDeploymentsView ? getDeploymentActivities : getActivities;
@@ -236,7 +247,7 @@ const ActivityAuditList: FC<Props> = ({
       },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [isCustom, timePeriod, timeRange, gridApi, entity, entityType, isDeploymentsView],
+    [isCustom, timePeriod, timeRange, gridApi, entity, entityType, isDeploymentsView, resourceTypeLabelMap],
   );
 
   useEffect(() => {
@@ -254,6 +265,21 @@ const ActivityAuditList: FC<Props> = ({
     gridApi.setGridOption('datasource', gridDataSource);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectiveViewType]);
+
+  useEffect(() => {
+    if (!gridApi || hasAppliedPreselectRef.current || preselect !== AuditListPreselect.GlobalFirewall) {
+      return;
+    }
+    hasAppliedPreselectRef.current = true;
+    gridApi.setFilterModel({
+      [RESOURCE_TYPE_COLUMN]: {
+        filterType: 'text',
+        type: 'contains',
+        filter: getFormattedResourceType(ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST, t),
+      },
+    });
+    clearAuditListPreselect();
+  }, [gridApi, preselect, t]);
 
   const gridOptions: GridOptions = {
     ...infiniteGridOptions,

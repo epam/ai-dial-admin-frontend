@@ -83,6 +83,8 @@ import { GridFilterType } from '@/src/types/grid-filter';
 
 export const COLUMN_PANEL_PREFIX = 'column_';
 
+export const RESOURCE_TYPE_COLUMN = 'resourceType';
+
 export const BASE_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN, NAME_COLUMN];
 
 export const BASE_COLUMNS_WITH_TOPICS: ColDef[] = [
@@ -244,11 +246,10 @@ export const ACTIVITY_AUDIT_COLUMNS = (
   ...(!isSingleEntity
     ? [
         {
-          field: 'resourceType',
+          field: RESOURCE_TYPE_COLUMN,
           headerName: 'Resource type',
           valueFormatter: ({ value }) => getFormattedResourceType(value, t),
           tooltipValueGetter: ({ value }) => getFormattedResourceType(value, t),
-          filterValueGetter: (params) => getFormattedResourceType(params.data[params.colDef.field || ''], t),
           ...baseStringFilter,
         } as ColDef,
         { field: 'resourceId', headerName: 'Resource identifier', ...baseStringFilter } as ColDef,

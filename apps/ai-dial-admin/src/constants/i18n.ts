@@ -1519,6 +1519,7 @@ export enum DeploymentsI18nKey {
   AddDomain = 'Deployments.AddDomain',
   EventsError = 'Deployments.EventsError',
   LogsError = 'Deployments.LogsError',
+  ViewInActivityAudit = 'Deployments.ViewInActivityAudit',
 }
 
 export enum KubEventsI18nKey {

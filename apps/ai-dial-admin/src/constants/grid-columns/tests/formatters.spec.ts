@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
+  buildResourceTypeLabelMap,
   formatAttachment,
   formatCpuColumnValue,
   formatGpuColumnValue,
@@ -97,6 +98,50 @@ describe('Formatters :: getFormattedResourceType', () => {
   test('Should return Global firewall label for ImageBuildDomainWhitelist', () => {
     const res = getFormattedResourceType(ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST, t);
     expect(res).toBe(EntitiesI18nKey.GlobalFirewall);
+  });
+});
+
+describe('Formatters :: buildResourceTypeLabelMap', () => {
+  test('maps each lowercased localized label to the matching enum value(s)', () => {
+    const map = buildResourceTypeLabelMap(t);
+
+    expect(map[EntitiesI18nKey.GlobalFirewall.toLowerCase()]).toEqual([
+      ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST,
+    ]);
+    expect(map[EntitiesI18nKey.AdapterContainer.toLowerCase()]).toEqual([ActivityAuditResourceType.ADAPTER_DEPLOYMENT]);
+    expect(map[EntitiesI18nKey.AppRunner.toLowerCase()]).toEqual([ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA]);
+  });
+
+  test('groups multiple enum values that share a single label', () => {
+    const map = buildResourceTypeLabelMap(t);
+
+    expect(new Set(map[EntitiesI18nKey.ModelServingLabel.toLowerCase()])).toEqual(
+      new Set([ActivityAuditResourceType.NIM_DEPLOYMENT, ActivityAuditResourceType.INFERENCE_DEPLOYMENT]),
+    );
+    expect(new Set(map[EntitiesI18nKey.Image.toLowerCase()])).toEqual(
+      new Set([
+        ActivityAuditResourceType.ADAPTER_IMAGE_DEFINITION,
+        ActivityAuditResourceType.APPLICATION_IMAGE_DEFINITION,
+        ActivityAuditResourceType.INTERCEPTOR_IMAGE_DEFINITION,
+        ActivityAuditResourceType.MCP_IMAGE_DEFINITION,
+      ]),
+    );
+  });
+
+  test('falls back to the raw enum value as the label when no custom mapping exists', () => {
+    const map = buildResourceTypeLabelMap(t);
+
+    expect(map[ActivityAuditResourceType.MODEL.toLowerCase()]).toEqual([ActivityAuditResourceType.MODEL]);
+    expect(map[ActivityAuditResourceType.ROLE.toLowerCase()]).toEqual([ActivityAuditResourceType.ROLE]);
+  });
+
+  test('rebuilds with a different translation function (locale change)', () => {
+    const altT = (key: string) => `xx:${key}`;
+    const map = buildResourceTypeLabelMap(altT);
+
+    expect(map[`xx:${EntitiesI18nKey.GlobalFirewall}`.toLowerCase()]).toEqual([
+      ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST,
+    ]);
   });
 });
 
