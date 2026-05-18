@@ -1,5 +1,6 @@
-import { FC } from 'react';
+import { FC, useMemo } from 'react';
 
+import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import IconControl from '@/src/components/BaseControls/Icon';
@@ -9,10 +10,10 @@ import TopicsControl from '@/src/components/BaseControls/Topics';
 import VersionControl from '@/src/components/BaseControls/Version';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import Defaults from '@/src/components/Defaults/Defaults';
+import { getAssetCreateFolderHandler } from '@/src/components/EntityListView/utils';
 import EntityAttachments from '@/src/components/EntityMainProperties/EntityAttachments/EntityAttachments';
-import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
 import ApplicationSource from '@/src/components/SourceField/Application/ApplicationSource';
-import { BasicI18nKey, EntitiesI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
@@ -30,6 +31,14 @@ interface Props {
 const ApplicationAssetProperties: FC<Props> = ({ asset, runners, onChange, isPublication }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
+
+  const assetApp = asset as AssetApp;
+
+  const appRunner = useMemo(() => getAppRunner(assetApp, runners), [assetApp, runners]);
+
+  const showResponsesDefaults =
+    (!assetApp.applicationTypeSchemaId && !!assetApp.responsesEndpoint) ||
+    (!!assetApp.applicationTypeSchemaId && !!appRunner?.['dial:applicationTypeResponsesEndpoint']);
 
   return (
     <div className="flex flex-col gap-y-8">
@@ -65,6 +74,8 @@ const ApplicationAssetProperties: FC<Props> = ({ asset, runners, onChange, isPub
           onChange={(folderId) => onChange?.({ ...asset, folderId })}
           context={useAppsFolder}
           disabled={isReadOnlyAdmin}
+          onCreateFolder={getAssetCreateFolderHandler(ApplicationRoute.AssetsApplications)}
+          view={ApplicationRoute.AssetsApplications}
         />
       )}
 
@@ -78,13 +89,21 @@ const ApplicationAssetProperties: FC<Props> = ({ asset, runners, onChange, isPub
         entity={asset as DialApplication}
         onChangeEntity={onChange as (entity: DialApplication) => void}
       />
-      <Defaults entity={asset as DialApplication} onChangeEntity={onChange as (entity: DialApplication) => void} />
-      <ForwardAuthTokenField
-        view={ApplicationRoute.AssetsApplications}
-        entity={asset}
+      <Defaults
+        entity={asset as DialApplication}
         onChangeEntity={onChange as (entity: DialApplication) => void}
-        disabled
+        title={t(EntityFieldsI18nKey.completionDefaults)}
       />
+      {showResponsesDefaults && (
+        <Defaults
+          entity={asset as DialApplication}
+          onChangeEntity={onChange as (entity: DialApplication) => void}
+          title={t(EntityFieldsI18nKey.responsesDefaults)}
+          valuesKey="responsesDefaults"
+          tempKey="responsesDefaultsTemp"
+          validationKey="responsesDefaultKeys"
+        />
+      )}
       <MaxRetryAttempts entity={asset} onChangeEntity={onChange} />
     </div>
   );

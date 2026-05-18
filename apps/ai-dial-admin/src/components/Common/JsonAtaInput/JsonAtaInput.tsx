@@ -103,7 +103,7 @@ const JsonAtaInput: FC<Props> = ({
   );
 
   return (
-    <div className="flex flex-col gap-y-2">
+    <div className="flex flex-col gap-y-1">
       {label && <DialLabel label={label} htmlFor={elementId} />}
       <DialInputPopup
         disabled={disabled || isReadOnlyAdmin}

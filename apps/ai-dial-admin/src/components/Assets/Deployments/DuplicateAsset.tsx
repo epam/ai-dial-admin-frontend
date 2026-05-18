@@ -1,4 +1,10 @@
-import { DialFormPopup, DialRadioGroup, RadioButtonWithContent, RadioGroupOrientation } from '@epam/ai-dial-ui-kit';
+import {
+  DialFormPopup,
+  DialRadioGroup,
+  DialUploadFileItem,
+  RadioButtonWithContent,
+  RadioGroupOrientation,
+} from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import semver from 'semver';
 
@@ -26,6 +32,7 @@ import { duplicateEntityMap, getClonedEntityName, getCloneTitle } from '@/src/ut
 import { isDeploymentAsset } from '@/src/utils/is-view';
 import { checkNameVersionCombination, getInitialVersion } from '@/src/utils/prompts/versions';
 import { addTrailingSlash } from '@/src/utils/url';
+import { ServerActionResponse } from '@/src/models/server-action';
 
 interface Props {
   view: ApplicationRoute;
@@ -35,9 +42,19 @@ interface Props {
   context?: () => AssetsFolderContext;
   onClose: () => void;
   onDuplicate: (entity: AssetWithVersion) => void;
+  onCreateFolder?: (_: DialUploadFileItem | undefined, folderPath: string) => Promise<ServerActionResponse>;
 }
 
-const DuplicateAsset: FC<Props> = ({ view, isModalOpen, entity, versionsMap, context, onDuplicate, onClose }) => {
+const DuplicateAsset: FC<Props> = ({
+  view,
+  isModalOpen,
+  entity,
+  versionsMap,
+  context,
+  onDuplicate,
+  onClose,
+  onCreateFolder,
+}) => {
   const t = useI18n();
   const { isValid, dispatch } = useSaveValidationContext();
   const initialName = entity.name;
@@ -277,6 +294,8 @@ const DuplicateAsset: FC<Props> = ({ view, isModalOpen, entity, versionsMap, con
             placeholder={t(EntityPlaceholdersI18nKey.Path)}
             onChange={onChangePath}
             context={context}
+            onCreateFolder={onCreateFolder}
+            view={view}
           />
         )}
       </div>

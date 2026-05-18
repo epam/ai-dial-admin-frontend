@@ -66,21 +66,19 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
 
   return (
     <div className="flex flex-col gap-y-8">
-      {isModal && (
-        <DisplayNameControl
-          displayName={testSuite.name}
-          required
-          isFullWidth={false}
-          onChange={(name) => onChange({ ...testSuite, name })}
-          externalError={nameExistsError}
-        />
-      )}
+      <DisplayNameControl
+        displayName={testSuite.name}
+        required
+        isFullWidth={false}
+        onChange={(name) => onChange({ ...testSuite, name })}
+        externalError={nameExistsError}
+      />
       <DescriptionControl isFullWidth={false} entity={testSuite} onChangeEntity={onChange} />
       {!isModal && (
         <>
           <div className="flex gap-2">
             <div className="flex gap-2">
-              <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-2')}>
+              <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-1')}>
                 <DialLabel label={t(TestSuitesI18nKey.Application)} htmlFor="applications" />
                 <DialInputPopup
                   open={isAppModalOpen}

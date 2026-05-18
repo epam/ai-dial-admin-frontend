@@ -2,83 +2,23 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { BreadcrumbConfig } from '@/src/components/Breadcrumbs/models';
 
-export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig | null> = {
+const auditSubIdBreadcrumb = (name: string, i18nKey: MenuI18nKey): BreadcrumbConfig => ({
+  segments: [{ name, i18nKey }, { name: 'Id' }, { name: 'Audit Id', href: false }],
+});
+
+export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig | null>> = {
   [ApplicationRoute.Home]: {
     segments: [{ name: 'Home', i18nKey: MenuI18nKey.Home }],
   },
-  [ApplicationRoute.Models]: {
-    segments: [
-      { name: 'Models', i18nKey: MenuI18nKey.Models },
-      {
-        name: 'Id',
-      },
-      {
-        name: 'Audit Id',
-        href: false,
-      },
-    ],
-  },
-  [ApplicationRoute.Applications]: {
-    segments: [
-      {
-        name: 'Application',
-        i18nKey: MenuI18nKey.Applications,
-      },
-      { name: 'Id' },
-      {
-        name: 'Audit Id',
-        href: false,
-      },
-    ],
-  },
-  [ApplicationRoute.Adapters]: {
-    segments: [
-      { name: 'Adapters', i18nKey: MenuI18nKey.Adapters },
-      {
-        name: 'Id',
-      },
-      {
-        name: 'Audit Id',
-        href: false,
-      },
-    ],
-  },
-  [ApplicationRoute.Interceptors]: {
-    segments: [
-      {
-        name: 'Interceptors',
-        i18nKey: MenuI18nKey.Interceptors,
-      },
-      { name: 'Id' },
-      {
-        name: 'Audit Id',
-        href: false,
-      },
-    ],
-  },
-  [ApplicationRoute.Roles]: {
-    segments: [
-      { name: 'Roles', i18nKey: MenuI18nKey.Roles },
-      { name: 'Id' },
-      {
-        name: 'Audit Id',
-        href: false,
-      },
-    ],
-  },
-  [ApplicationRoute.Keys]: {
-    segments: [
-      { name: 'Keys', i18nKey: MenuI18nKey.Keys },
-      { name: 'Id' },
-      {
-        name: 'Audit Id',
-        href: false,
-      },
-    ],
-  },
+  [ApplicationRoute.Models]: auditSubIdBreadcrumb('Models', MenuI18nKey.Models),
+  [ApplicationRoute.Applications]: auditSubIdBreadcrumb('Application', MenuI18nKey.Applications),
+  [ApplicationRoute.Adapters]: auditSubIdBreadcrumb('Adapters', MenuI18nKey.Adapters),
+  [ApplicationRoute.Interceptors]: auditSubIdBreadcrumb('Interceptors', MenuI18nKey.Interceptors),
+  [ApplicationRoute.Roles]: auditSubIdBreadcrumb('Roles', MenuI18nKey.Roles),
+  [ApplicationRoute.Keys]: auditSubIdBreadcrumb('Keys', MenuI18nKey.Keys),
   [ApplicationRoute.Prompts]: {
     segments: [
-      { name: 'Prompts', i18nKey: MenuI18nKey.Prompts },
+      { name: 'Prompts', i18nKey: MenuI18nKey.Prompts, shouldEnrichWithFolderBreadcrumbs: true },
       {
         name: 'Id',
         href: false,
@@ -87,7 +27,7 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig | null>
   },
   [ApplicationRoute.Files]: {
     segments: [
-      { name: 'Files', i18nKey: MenuI18nKey.Files },
+      { name: 'Files', i18nKey: MenuI18nKey.Files, shouldEnrichWithFolderBreadcrumbs: true },
       {
         name: 'Id',
         href: false,
@@ -96,7 +36,7 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig | null>
   },
   [ApplicationRoute.AssetsApplications]: {
     segments: [
-      { name: 'AssetsApplications', i18nKey: MenuI18nKey.Applications },
+      { name: 'AssetsApplications', i18nKey: MenuI18nKey.Applications, shouldEnrichWithFolderBreadcrumbs: true },
       {
         name: 'Id',
         href: false,
@@ -105,7 +45,7 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig | null>
   },
   [ApplicationRoute.AssetsToolsets]: {
     segments: [
-      { name: 'AssetsToolsets', i18nKey: MenuI18nKey.Toolsets },
+      { name: 'AssetsToolsets', i18nKey: MenuI18nKey.Toolsets, shouldEnrichWithFolderBreadcrumbs: true },
       {
         name: 'Id',
         href: false,
@@ -157,32 +97,8 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig | null>
       },
     ],
   },
-  [ApplicationRoute.Routes]: {
-    segments: [
-      {
-        name: 'Routes',
-        i18nKey: MenuI18nKey.Routes,
-      },
-      { name: 'Id' },
-      {
-        name: 'Audit Id',
-        href: false,
-      },
-    ],
-  },
-  [ApplicationRoute.Toolsets]: {
-    segments: [
-      {
-        name: 'Toolsets',
-        i18nKey: MenuI18nKey.Toolsets,
-      },
-      { name: 'Id' },
-      {
-        name: 'Audit Id',
-        href: false,
-      },
-    ],
-  },
+  [ApplicationRoute.Routes]: auditSubIdBreadcrumb('Routes', MenuI18nKey.Routes),
+  [ApplicationRoute.Toolsets]: auditSubIdBreadcrumb('Toolsets', MenuI18nKey.Toolsets),
   [ApplicationRoute.Dashboard]: {
     segments: [{ name: 'Dashboard', i18nKey: MenuI18nKey.Dashboard }],
   },
@@ -207,86 +123,23 @@ export const breadcrumbConfig: Record<ApplicationRoute, BreadcrumbConfig | null>
       },
     ],
   },
-  [ApplicationRoute.ApplicationRunners]: {
-    segments: [
-      {
-        name: 'ApplicationRunners',
-        i18nKey: MenuI18nKey.ApplicationRunners,
-      },
-      { name: 'Id' },
-      {
-        name: 'Audit Id',
-        href: false,
-      },
-    ],
-  },
-  [ApplicationRoute.InterceptorTemplates]: {
-    segments: [
-      {
-        name: 'InterceptorTemplates',
-        i18nKey: MenuI18nKey.InterceptorTemplates,
-      },
-      { name: 'Id' },
-      {
-        name: 'Audit Id',
-        href: false,
-      },
-    ],
-  },
-  [ApplicationRoute.InterceptorContainers]: {
-    segments: [
-      {
-        name: 'InterceptorContainers',
-        i18nKey: MenuI18nKey.InterceptorContainers,
-      },
-      { name: 'Id', href: false },
-    ],
-  },
-  [ApplicationRoute.ModelServings]: {
-    segments: [
-      {
-        name: 'ModelServings',
-        i18nKey: MenuI18nKey.ModelServings,
-      },
-      { name: 'Id', href: false },
-    ],
-  },
-  [ApplicationRoute.McpContainers]: {
-    segments: [
-      {
-        name: 'McpContainers',
-        i18nKey: MenuI18nKey.McpContainers,
-      },
-      { name: 'Id', href: false },
-    ],
-  },
-  [ApplicationRoute.AdapterContainers]: {
-    segments: [
-      {
-        name: 'AdapterContainers',
-        i18nKey: MenuI18nKey.AdapterContainers,
-      },
-      { name: 'Id', href: false },
-    ],
-  },
-  [ApplicationRoute.ApplicationContainers]: {
-    segments: [
-      {
-        name: 'ApplicationContainers',
-        i18nKey: MenuI18nKey.ApplicationContainers,
-      },
-      { name: 'Id', href: false },
-    ],
-  },
-  [ApplicationRoute.Images]: {
-    segments: [
-      {
-        name: 'Images',
-        i18nKey: MenuI18nKey.Images,
-      },
-      { name: 'Id', href: false },
-    ],
-  },
+  [ApplicationRoute.ApplicationRunners]: auditSubIdBreadcrumb('ApplicationRunners', MenuI18nKey.ApplicationRunners),
+  [ApplicationRoute.InterceptorTemplates]: auditSubIdBreadcrumb(
+    'InterceptorTemplates',
+    MenuI18nKey.InterceptorTemplates,
+  ),
+  [ApplicationRoute.InterceptorContainers]: auditSubIdBreadcrumb(
+    'InterceptorContainers',
+    MenuI18nKey.InterceptorContainers,
+  ),
+  [ApplicationRoute.ModelServings]: auditSubIdBreadcrumb('ModelServings', MenuI18nKey.ModelServings),
+  [ApplicationRoute.McpContainers]: auditSubIdBreadcrumb('McpContainers', MenuI18nKey.McpContainers),
+  [ApplicationRoute.AdapterContainers]: auditSubIdBreadcrumb('AdapterContainers', MenuI18nKey.AdapterContainers),
+  [ApplicationRoute.ApplicationContainers]: auditSubIdBreadcrumb(
+    'ApplicationContainers',
+    MenuI18nKey.ApplicationContainers,
+  ),
+  [ApplicationRoute.Images]: auditSubIdBreadcrumb('Images', MenuI18nKey.Images),
   [ApplicationRoute.Playground]: {
     segments: [
       {

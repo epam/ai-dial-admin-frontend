@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import {
@@ -17,10 +17,13 @@ import { IconRefresh, IconRestore } from '@tabler/icons-react';
 import { GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
 import classNames from 'classnames';
 
-import { getActivities } from '@/src/app/[lang]/activity-audit/actions';
+import { getActivities, getDeploymentActivities } from '@/src/app/[lang]/activity-audit/actions';
+import { buildResourceTypeLabelMap, getFormattedResourceType } from '@/src/constants/grid-columns/formatters';
+import { RESOURCE_TYPE_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import {
   getActivityAuditColumns,
   getAuditActivityHref,
+  getDeploymentActivityAuditColumns,
   getEndOfDay,
   getGridFilters,
   getStartOfDay,
@@ -44,6 +47,8 @@ import { BaseEntity } from '@/src/models/dial/base-entity';
 import { FilterDto } from '@/src/models/request';
 import { TimeFilterValue, TimeRange } from '@/src/models/time-range';
 import { ApplicationRoute } from '@/src/types/routes';
+import { AuditListPreselect } from '@/src/types/audit-list-preselect';
+import { clearAuditListPreselect, readAuditListPreselect } from '@/src/utils/audit-list-preselect';
 import { rollbackEntityPerType } from '@/src/utils/audit/get-rollback-request';
 import {
   getRollbackErrorDescription,
@@ -53,12 +58,10 @@ import {
 } from '@/src/utils/entities/rollback-entity';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import { getEntityAuditFilterId, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
-import { ActivityAuditResourceType } from '@/src/types/activity-audit';
-import { ACTIVITY_AUDIT_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { ACTIVITY_VIEW_TYPE } from '@/src/types/telemetry';
+import { ActivityAuditResourceType, ActivityAuditView, isDeploymentManagerResource } from '@/src/types/activity-audit';
 
 interface Props {
   entity?: BaseEntity | DialApplicationScheme;
@@ -66,9 +69,17 @@ interface Props {
   refresh?: boolean;
   defaultTimeFilter?: TimeFilterValue;
   onTimeFilterChange?: (filter: TimeFilterValue) => void;
+  viewMode?: ActivityAuditView;
 }
 
-const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTimeFilter, onTimeFilterChange }) => {
+const ActivityAuditList: FC<Props> = ({
+  entity,
+  entityType,
+  refresh,
+  defaultTimeFilter,
+  onTimeFilterChange,
+  viewMode,
+}) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const router = useRouter();
@@ -84,8 +95,16 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
     onTimeFilterChange,
   });
   const [selectedActivity, setSelectedActivity] = useState<DialActivity | undefined>(void 0);
-  const [activityViewType, setActivityViewType] = useState<ACTIVITY_VIEW_TYPE>(ACTIVITY_VIEW_TYPE.Config);
+  const [preselect] = useState(() => (entity ? null : readAuditListPreselect()));
+  const [activityViewType, setActivityViewType] = useState<ActivityAuditView>(() =>
+    preselect === AuditListPreselect.GlobalFirewall
+      ? ActivityAuditView.Deployments
+      : (viewMode ?? ActivityAuditView.Config),
+  );
+  const effectiveViewType = viewMode ?? activityViewType;
   const [fullActivityList, setFullActivityList] = useState<DialActivity[]>([]);
+  const resourceTypeLabelMap = useMemo(() => buildResourceTypeLabelMap(t), [t]);
+  const hasAppliedPreselectRef = useRef(false);
 
   const onCloseModal = useCallback(() => {
     setIsRollbackModalOpen(false);
@@ -93,9 +112,25 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
     setSelectedActivity(void 0);
   }, [setIsRollbackModalOpen]);
 
-  const openInNewTab = useCallback((activity?: DialActivity) => {
-    onOpenInNewTab(ApplicationRoute.ActivityAudit, activity);
-  }, []);
+  const openInNewTab = useCallback(
+    (activity?: DialActivity) => {
+      if (effectiveViewType === ActivityAuditView.Deployments && !isDeploymentManagerResource(activity?.resourceType)) {
+        return;
+      }
+      onOpenInNewTab(ApplicationRoute.ActivityAudit, activity);
+    },
+    [effectiveViewType],
+  );
+
+  const openInNewTabForEntity = useCallback(
+    (activity?: DialActivity) => {
+      const href = getAuditActivityHref(entity, entityType as ActivityAuditResourceType, activity?.activityId);
+      if (href) {
+        window.open(href, '_blank');
+      }
+    },
+    [entity, entityType],
+  );
 
   const onOpenConfirmationModal = useCallback((activity?: DialActivity) => {
     setIsRollbackModalOpen(true);
@@ -139,6 +174,8 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
     [fullActivityList],
   );
 
+  const isDeploymentsView = effectiveViewType === ActivityAuditView.Deployments;
+
   const gridDataSource: IDatasource = useMemo(
     () => ({
       getRows: (params: IGetRowsParams) => {
@@ -153,23 +190,27 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
             ? [
                 {
                   column: 'resourceId',
-                  value: (entity as DialApplicationScheme).$id || (entity as BaseEntity).name,
+                  value: getEntityAuditFilterId(entity),
                   operator: 'eq',
                 } as FilterDto,
                 {
-                  column: 'resourceType',
+                  column: RESOURCE_TYPE_COLUMN,
                   value: entityType,
                   operator: 'eq',
                 } as FilterDto,
               ]
             : []),
-          ...getGridFilters(params.filterModel, actualTimeRange),
+          ...getGridFilters(params.filterModel, actualTimeRange, resourceTypeLabelMap),
         ];
 
-        getActivities(PAGE_SIZE, page, sorts, filters)
+        const fetchActivities = isDeploymentsView ? getDeploymentActivities : getActivities;
+
+        fetchActivities(PAGE_SIZE, page, sorts, filters)
           .then((res) => {
             if (res == null || res.data.length === 0) {
               params.successCallback([], 0);
+            } else if (isDeploymentsView || entity) {
+              params.successCallback(res.data, page + 1 === res.totalPages ? res.total : void 0);
             } else {
               const activityMap: Record<
                 string,
@@ -206,7 +247,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
       },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [isCustom, timePeriod, timeRange, gridApi, entity, entityType],
+    [isCustom, timePeriod, timeRange, gridApi, entity, entityType, isDeploymentsView, resourceTypeLabelMap],
   );
 
   useEffect(() => {
@@ -215,29 +256,82 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
     }
   }, [gridApi, gridDataSource]);
 
+  useEffect(() => {
+    if (!gridApi || entity) {
+      return;
+    }
+    gridApi.setFilterModel(null);
+    setFullActivityList([]);
+    gridApi.setGridOption('datasource', gridDataSource);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [effectiveViewType]);
+
+  useEffect(() => {
+    if (!gridApi || hasAppliedPreselectRef.current || preselect !== AuditListPreselect.GlobalFirewall) {
+      return;
+    }
+    hasAppliedPreselectRef.current = true;
+    gridApi.setFilterModel({
+      [RESOURCE_TYPE_COLUMN]: {
+        filterType: 'text',
+        type: 'contains',
+        filter: getFormattedResourceType(ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST, t),
+      },
+    });
+    clearAuditListPreselect();
+  }, [gridApi, preselect, t]);
+
   const gridOptions: GridOptions = {
     ...infiniteGridOptions,
+    rowSelection: { mode: 'singleRow', enableClickSelection: false, checkboxes: false },
+    rowClassRules: {
+      'ag-activity-row-clickable': (params) => {
+        const data = params.data as DialActivity & { children?: DialActivity[] };
+        if (isDeploymentsView && !isDeploymentManagerResource(data?.resourceType)) return false;
+        return !data?.children?.length;
+      },
+    },
     onCellClicked: (e) => {
+      if (isDeploymentsView && !isDeploymentManagerResource(e.data?.resourceType)) {
+        return;
+      }
       if (e.data?.children?.length > 0) {
         return;
       }
 
+      e.node.setSelected(true, true);
+
       if (e.colDef.field !== ACTIONS_COLUMN_CEL_ID && e.colDef.field !== EXPANDER_COLUMN_CEL_ID) {
         if (entity) {
-          const href = getAuditActivityHref(entity, entityType as ActivityAuditResourceType, e.data.activityId);
-          if (href) {
-            router.push(href);
-          }
+          openInNewTabForEntity(e.data);
         } else {
-          router.push(getUrnForEntity(ApplicationRoute.ActivityAudit, e.data));
+          openInNewTab(e.data);
         }
       }
     },
   };
 
-  const columnDefs = entity
-    ? [...ACTIVITY_AUDIT_COLUMNS(t, true)]
-    : getActivityAuditColumns(t, openInNewTab, isReadOnlyAdmin ? undefined : onOpenConfirmationModal, void 0, void 0);
+  const columnDefs = useMemo(() => {
+    if (entity) {
+      return getActivityAuditColumns(
+        t,
+        openInNewTabForEntity,
+        isReadOnlyAdmin ? undefined : onOpenConfirmationModal,
+        void 0,
+        true,
+      );
+    }
+    if (isDeploymentsView) {
+      return getDeploymentActivityAuditColumns(t, openInNewTab);
+    }
+    return getActivityAuditColumns(
+      t,
+      openInNewTab,
+      isReadOnlyAdmin ? undefined : onOpenConfirmationModal,
+      void 0,
+      void 0,
+    );
+  }, [entity, isDeploymentsView, t, openInNewTab, openInNewTabForEntity, isReadOnlyAdmin, onOpenConfirmationModal]);
 
   const onRefresh = useCallback(() => {
     if (gridApi) {
@@ -310,14 +404,15 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
     setGridApi(api);
   }, []);
 
-  const onActivityViewChange = useCallback((val: ACTIVITY_VIEW_TYPE) => {
+  const onActivityViewChange = useCallback((val: ActivityAuditView) => {
     setActivityViewType(val);
   }, []);
 
   const activityViewOptions = useMemo(
     () => [
-      { value: ACTIVITY_VIEW_TYPE.Config, label: t(TelemetryI18nKey.ActivityViewConfig) },
-      { value: ACTIVITY_VIEW_TYPE.Asset, label: t(TelemetryI18nKey.ActivityViewAsset), disabled: true },
+      { value: ActivityAuditView.Config, label: t(TelemetryI18nKey.ActivityViewConfig) },
+      { value: ActivityAuditView.Deployments, label: t(TelemetryI18nKey.ActivityViewDeployments) },
+      { value: ActivityAuditView.Asset, label: t(TelemetryI18nKey.ActivityViewAsset), disabled: true },
     ],
     [t],
   );
@@ -325,12 +420,14 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
   return (
     <div role="activities" className="flex flex-col flex-1 min-h-0 w-full relative">
       <ListView
+        key={!entity ? activityViewType : void 0}
         additionalGridOptions={gridOptions}
         columnDefs={columnDefs}
         title={!entity ? t(listViewTitleMap[ApplicationRoute.ActivityAudit]) : void 0}
         emptyDataTitle={t(emptyDataTitleMap[ApplicationRoute.ActivityAudit])}
         onGridReady={onGridReady}
         view={!entity ? ApplicationRoute.ActivityAudit : void 0}
+        storageKey={!entity ? `${ApplicationRoute.ActivityAudit}:${activityViewType.toLowerCase()}` : void 0}
       >
         <div className={classNames('flex gap-4', entity ? 'flex-1 justify-between' : 'justify-end')}>
           {entity && (
@@ -351,7 +448,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
           </div>
         </div>
         <div className="flex flex-row flex-wrap justify-between mt-4 w-full">
-          {!entity && (
+          {!entity && !viewMode && (
             <div className="flex flex-row gap-x-4 h-[40px] items-center">
               <DialSelect
                 size={SelectSize.Sm}
@@ -359,7 +456,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
                 prefix={`${t(CompareI18nKey.View)}:`}
                 options={activityViewOptions}
                 value={activityViewType}
-                onChange={(val) => onActivityViewChange(val as ACTIVITY_VIEW_TYPE)}
+                onChange={(val) => onActivityViewChange(val as ActivityAuditView)}
               />
               <TimeFilter
                 timePeriod={timePeriod}
@@ -371,7 +468,7 @@ const ActivityAuditList: FC<Props> = ({ entity, entityType, refresh, defaultTime
             </div>
           )}
 
-          {!entity && !isReadOnlyAdmin && activityViewType === ACTIVITY_VIEW_TYPE.Config && (
+          {!entity && !isReadOnlyAdmin && effectiveViewType === ActivityAuditView.Config && (
             <DialNeutralButton
               iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} />}
               label={t(RollbackI18nKey.Rollback)}

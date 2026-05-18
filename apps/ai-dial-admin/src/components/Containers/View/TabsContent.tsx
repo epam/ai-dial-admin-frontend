@@ -11,6 +11,7 @@ import Properties from '@/src/components/Containers/View/Properties/Properties';
 import Resources from '@/src/components/Containers/View/Resources/Resources';
 import ImageStatusBanner from '@/src/components/Deployments/Common/ImageStatusBanner/ImageStatusBanner';
 import StatusIndicator from '@/src/components/Deployments/Common/StatusIndicator/StatusIndicator';
+import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
 import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
 import Tools from '@/src/components/Tools/Tools';
 import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
@@ -18,6 +19,7 @@ import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { Container, KubEvent, Pod } from '@/src/models/deployments/containers';
 import { Image } from '@/src/models/deployments/images';
+import { ActivityAuditView } from '@/src/types/activity-audit';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getContainerSourceTypeLabel } from '@/src/utils/deployments/containers';
@@ -113,6 +115,9 @@ const TabsContent: FC<Props> = ({
           setContainer={onChange}
           disabled={isReadOnlyAdmin}
         />
+      )}
+      {activeTab === EntityViewTab.Audit && (
+        <EntityAudit entity={selectedContainer} view={route} viewMode={ActivityAuditView.Deployments} />
       )}
     </>
   );

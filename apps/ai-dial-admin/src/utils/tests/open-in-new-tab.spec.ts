@@ -1,6 +1,12 @@
 import { ApplicationRoute } from '@/src/types/routes';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { escapePercentSign, getEntityPath, getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+import {
+  escapePercentSign,
+  getEntityAuditFilterId,
+  getEntityPath,
+  getUrnForEntity,
+  onOpenInNewTab,
+} from '@/src/utils/open-in-new-tab';
 
 describe('escapePercentSign', () => {
   test('escapes single percent sign', () => {
@@ -146,5 +152,27 @@ describe('onOpenInNewTab', () => {
     const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
     onOpenInNewTab(undefined, { name: 'entity' });
     expect(windowOpenSpy).toHaveBeenCalledWith(expect.stringContaining('/entity'), '_blank');
+  });
+});
+
+describe('getEntityAuditFilterId', () => {
+  test('prefers $id (DialApplicationScheme) over id and name', () => {
+    expect(getEntityAuditFilterId({ $id: 'scheme-id', id: 'plain-id', name: 'fallback' } as never)).toBe('scheme-id');
+  });
+
+  test('falls back to id when $id is absent (Image-style entities)', () => {
+    expect(getEntityAuditFilterId({ id: 'image-id', name: 'image-name' } as never)).toBe('image-id');
+  });
+
+  test('falls back to name when neither $id nor id is present (Container / BaseEntity)', () => {
+    expect(getEntityAuditFilterId({ name: 'container-name' } as never)).toBe('container-name');
+  });
+
+  test('returns undefined when entity is undefined', () => {
+    expect(getEntityAuditFilterId(undefined)).toBeUndefined();
+  });
+
+  test('returns undefined when entity is empty', () => {
+    expect(getEntityAuditFilterId({})).toBeUndefined();
   });
 });

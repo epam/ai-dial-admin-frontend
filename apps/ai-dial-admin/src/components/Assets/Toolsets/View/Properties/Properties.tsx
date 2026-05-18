@@ -10,6 +10,7 @@ import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
 import TopicsControl from '@/src/components/BaseControls/Topics';
 import VersionControl from '@/src/components/BaseControls/Version';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
+import { getAssetCreateFolderHandler } from '@/src/components/EntityListView/utils';
 import ToolsetEndpoint from '@/src/components/SourceField/Endpoints/ToolsetEndpoint';
 import Authentication from '@/src/components/Toolsets/Auth/Authentication';
 import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -67,6 +68,8 @@ const Properties: FC<Props> = ({ selectedToolset, onChange, isPublication }) => 
           onChange={(folderId) => onChange?.({ ...selectedToolset, folderId })}
           context={useToolsetFolder}
           disabled={isReadOnlyAdmin}
+          onCreateFolder={getAssetCreateFolderHandler(ApplicationRoute.AssetsToolsets)}
+          view={ApplicationRoute.AssetsToolsets}
         />
       )}
       <ToolsetEndpoint entity={selectedToolset} onChange={onChange as (entity: Toolset) => void} />
@@ -84,7 +87,6 @@ const Properties: FC<Props> = ({ selectedToolset, onChange, isPublication }) => 
           onChange({ ...selectedToolset, forwardPerRequestKey: value });
         }}
       />
-
       <MaxRetryAttempts entity={selectedToolset} onChangeEntity={onChange} />
     </div>
   );

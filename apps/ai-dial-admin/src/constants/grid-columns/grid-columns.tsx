@@ -24,14 +24,20 @@ import {
   STATUS_I18N_KEYS,
 } from '@/src/constants/deployments/images';
 import { ROW_IMPORT_META_KEY } from '@/src/constants/import';
-import { BasicI18nKey, ImportI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, EntityFieldsI18nKey, ImportI18nKey, SourceI18nKey } from '@/src/constants/i18n';
 import { RowImportMeta } from '@/src/models/deployments/import';
 import { ValidationState } from '@/src/types/deployments/import';
 import {
   containerSourceNameLabel,
   containerSourceTypeLabel,
+  formatCpuColumnValue,
+  formatGpuColumnValue,
+  formatMemoryColumnValue,
   formatRequired,
+  getCpuColumnValue,
   getFormattedResourceType,
+  getGpuColumnValue,
+  getMemoryColumnValue,
   numberValueFormatter,
   priceValueFormatter,
 } from '@/src/constants/grid-columns/formatters';
@@ -69,12 +75,15 @@ import {
   VERSION_COLUMN,
 } from './base-columns';
 import { dateTimeColumn, numericColumn, priceColumn } from './configs';
-import { auditStringFilter, dateFilter, evalStringFilter } from './filters';
+import { baseNumberFilter, baseStringFilter, dateFilter, evalStringFilter } from './filters';
 import RowExpanderCellRenderer from '@/src/components/Grid/CellRenderers/RowExpanderCellRenderer';
 import ChildrenActivityTypeCellRenderer from '@/src/components/Grid/CellRenderers/ChildrenActivityTypeCellRenderer';
+import { ActivityAuditView } from '@/src/types/activity-audit';
 import { GridFilterType } from '@/src/types/grid-filter';
 
 export const COLUMN_PANEL_PREFIX = 'column_';
+
+export const RESOURCE_TYPE_COLUMN = 'resourceType';
 
 export const BASE_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN, NAME_COLUMN];
 
@@ -205,53 +214,62 @@ export const MCP_TOOLS_COLUMNS: ColDef[] = [
   },
 ];
 
-export const ACTIVITY_AUDIT_COLUMNS = (t: (s: string) => string, isSingleEntity?: boolean): ColDef[] => {
-  const columns: ColDef[] = [
-    {
-      headerName: '',
-      field: 'expanderColumn',
-      cellClass: NO_BORDER_CLASS,
-      flex: 1,
-      maxWidth: 30,
-      sortable: false,
-      filter: false,
-      floatingFilter: false,
-      cellRenderer: RowExpanderCellRenderer,
+export const ACTIVITY_AUDIT_COLUMNS = (
+  t: (s: string) => string,
+  view: ActivityAuditView = ActivityAuditView.Config,
+  isSingleEntity = false,
+): ColDef[] => [
+  ...(!isSingleEntity && view === ActivityAuditView.Config
+    ? [
+        {
+          headerName: '',
+          field: 'expanderColumn',
+          cellClass: NO_BORDER_CLASS,
+          flex: 1,
+          maxWidth: 30,
+          sortable: false,
+          filter: false,
+          floatingFilter: false,
+          cellRenderer: RowExpanderCellRenderer,
+        } as ColDef,
+      ]
+    : []),
+  {
+    field: 'activityType',
+    headerName: 'Activity type',
+    ...baseStringFilter,
+    cellRenderer: ChildrenActivityTypeCellRenderer,
+    cellRendererParams: {
+      showIcon: !isSingleEntity,
     },
-    {
-      field: 'activityType',
-      headerName: 'Activity type',
-      ...auditStringFilter,
-      cellRenderer: ChildrenActivityTypeCellRenderer,
-    },
-    {
-      field: 'resourceType',
-      headerName: 'Resource type',
-      valueFormatter: ({ value }) => getFormattedResourceType(value, t),
-      tooltipValueGetter: ({ value }) => getFormattedResourceType(value, t),
-      filterValueGetter: (params) => getFormattedResourceType(params.data[params.colDef.field || ''], t),
-      ...auditStringFilter,
-    },
-    { field: 'resourceId', headerName: 'Resource identifier', ...auditStringFilter },
-    {
-      field: 'epochTimestampMs',
-      headerName: 'Time',
-      sort: 'desc',
-      ...dateTimeColumn,
-      floatingFilter: false,
-      filter: false,
-    },
-    { field: 'initiatedEmail', headerName: 'Initiated', ...auditStringFilter },
-    { field: 'activityId', headerName: 'Activity ID', ...auditStringFilter },
-    { field: 'parentActivityId', headerName: 'Parent ID', ...auditStringFilter },
-  ];
-
-  if (isSingleEntity) {
-    return [columns[1], ...columns.slice(4)];
-  }
-
-  return columns;
-};
+  },
+  ...(!isSingleEntity
+    ? [
+        {
+          field: RESOURCE_TYPE_COLUMN,
+          headerName: 'Resource type',
+          valueFormatter: ({ value }) => getFormattedResourceType(value, t),
+          tooltipValueGetter: ({ value }) => getFormattedResourceType(value, t),
+          ...baseStringFilter,
+        } as ColDef,
+        { field: 'resourceId', headerName: 'Resource identifier', ...baseStringFilter } as ColDef,
+      ]
+    : []),
+  ...(view === ActivityAuditView.Deployments
+    ? [{ field: 'version', headerName: 'Version', ...baseStringFilter } as ColDef]
+    : []),
+  {
+    field: 'epochTimestampMs',
+    headerName: 'Time',
+    sort: 'desc',
+    ...dateTimeColumn,
+    floatingFilter: false,
+    filter: false,
+  },
+  { field: 'initiatedEmail', headerName: 'Initiated', ...baseStringFilter },
+  { field: 'activityId', headerName: 'Activity ID', ...baseStringFilter },
+  { field: 'parentActivityId', headerName: 'Parent ID', ...baseStringFilter },
+];
 
 export const BASE_KEYS_COLUMNS: ColDef[] = [
   DISPLAY_NAME_COLUMN,
@@ -451,77 +469,108 @@ const completionTimeColumn = (headerName: string): ColDef => ({
 
 export const USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
   completionTimeColumn('Completion Time'),
-  { field: 'trace_id', headerName: 'Trace ID', hide: false },
-  { field: 'topic', headerName: 'Topic', hide: false },
-  { field: 'reactions', headerName: 'Reactions', hide: true }, // TODO: not implemented
-  { field: 'cached_prompt_tokens', headerName: 'Cached Prompt Tokens', hide: true, ...numericColumn },
-  { field: 'prompt_tokens', headerName: 'Prompt Tokens', hide: false, ...numericColumn },
-  { field: 'completion_tokens', headerName: 'Completion Tokens', hide: false, ...numericColumn },
+  { field: 'trace_id', headerName: 'Trace ID', hide: false, ...baseStringFilter },
+  { field: 'topic', headerName: 'Topic', hide: false, ...baseStringFilter },
+  // { field: 'reactions', headerName: 'Reactions', hide: true , ...baseStringFilter}, // TODO: not implemented
+  {
+    field: 'cached_prompt_tokens',
+    headerName: 'Cached Prompt Tokens',
+    hide: true,
+    ...numericColumn,
+    ...baseNumberFilter,
+  },
+  { field: 'prompt_tokens', headerName: 'Prompt Tokens', hide: false, ...numericColumn, ...baseNumberFilter },
+  { field: 'completion_tokens', headerName: 'Completion Tokens', hide: false, ...numericColumn, ...baseNumberFilter },
   {
     field: 'deployment_price',
     headerName: 'Deployment Price',
     minWidth: 180,
     hide: false,
     ...priceColumn('Deployment Price'),
+    ...baseNumberFilter,
   },
-  { field: 'price', headerName: 'Total Price', hide: false, ...priceColumn('Total Price') },
-  { field: 'number_request_messages', headerName: 'Number of Request Messages', hide: true, ...numericColumn },
-  { field: 'deployment', headerName: 'Deployment ID', hide: false },
-  { field: 'parent_deployment', headerName: 'Parent Deployment ID', hide: true },
-  { field: 'model', headerName: 'Model', hide: true },
-  { field: 'project_id', headerName: 'Project', hide: false },
-  { field: 'upstream', headerName: 'Upstream', hide: true },
-  { field: 'execution_path', headerName: 'Execution Path', hide: true },
-  { field: 'user_hash', headerName: 'User', hide: false },
-  { field: 'user_title', headerName: 'User Title', hide: true },
-  { field: 'language', headerName: 'Language', hide: true },
-  { field: 'response_id', headerName: 'Response ID', hide: true },
-  { field: 'chat_id', headerName: 'Conversation ID', hide: true },
-  { field: 'core_span_id', headerName: 'Core span ID', hide: true },
-  { field: 'core_parent_span_id', headerName: 'Core parent span ID', hide: false },
+  { field: 'price', headerName: 'Total Price', hide: false, ...priceColumn('Total Price'), ...baseNumberFilter },
+  {
+    field: 'number_request_messages',
+    headerName: 'Number of Request Messages',
+    hide: true,
+    ...numericColumn,
+    ...baseNumberFilter,
+  },
+  { field: 'deployment', headerName: 'Deployment ID', hide: false, ...baseStringFilter },
+  { field: 'parent_deployment', headerName: 'Parent Deployment ID', hide: true, ...baseStringFilter },
+  { field: 'model', headerName: 'Model', hide: true, ...baseStringFilter },
+  { field: 'project_id', headerName: 'Project', hide: false, ...baseStringFilter },
+  { field: 'upstream', headerName: 'Upstream', hide: true, ...baseStringFilter },
+  { field: 'execution_path', headerName: 'Execution Path', hide: true, ...baseStringFilter },
+  { field: 'user_hash', headerName: 'User', hide: false, ...baseStringFilter },
+  { field: 'user_title', headerName: 'User Title', hide: true, ...baseStringFilter },
+  { field: 'language', headerName: 'Language', hide: true, ...baseStringFilter },
+  { field: 'response_id', headerName: 'Response ID', hide: true, ...baseStringFilter },
+  { field: 'chat_id', headerName: 'Conversation ID', hide: true, ...baseStringFilter },
+  { field: 'core_span_id', headerName: 'Core span ID', hide: true, ...baseStringFilter },
+  { field: 'core_parent_span_id', headerName: 'Core parent span ID', hide: false, ...baseStringFilter },
 ];
 
 export const USAGE_LOG_CONVERSATIONS_COLUMNS: ColDef[] = [
   completionTimeColumn('Last activity'),
-  { field: 'chat_id', headerName: 'Conversation ID', hide: false },
-  { field: 'topic', headerName: 'Topic', hide: false },
-  { field: 'cached_prompt_tokens', headerName: 'Cached Prompt Tokens', hide: true, ...numericColumn },
-  { field: 'prompt_tokens', headerName: 'Prompt Tokens', hide: false, ...numericColumn },
-  { field: 'completion_tokens', headerName: 'Completion Tokens', hide: false, ...numericColumn },
-  { field: 'deployment_price', headerName: 'Total Price', hide: false, ...priceColumn('Total Price') },
-  { field: 'number_request_messages', headerName: 'Number of Request Messages', hide: true, ...numericColumn },
-  { field: 'deployment', headerName: 'Deployment ID', hide: false },
-  { field: 'project_id', headerName: 'Project', hide: false },
-  { field: 'user_hash', headerName: 'User', hide: false },
-  { field: 'user_title', headerName: 'User Title', hide: true },
-  { field: 'language', headerName: 'Language', hide: true },
+  { field: 'chat_id', headerName: 'Conversation ID', hide: false, ...baseStringFilter },
+  { field: 'topic', headerName: 'Topic', hide: false, ...baseStringFilter },
+  {
+    field: 'cached_prompt_tokens',
+    headerName: 'Cached Prompt Tokens',
+    hide: true,
+    ...numericColumn,
+    ...baseNumberFilter,
+  },
+  { field: 'prompt_tokens', headerName: 'Prompt Tokens', hide: false, ...numericColumn, ...baseNumberFilter },
+  { field: 'completion_tokens', headerName: 'Completion Tokens', hide: false, ...numericColumn, ...baseNumberFilter },
+  {
+    field: 'deployment_price',
+    headerName: 'Total Price',
+    hide: false,
+    ...priceColumn('Total Price'),
+    ...baseNumberFilter,
+  },
+  {
+    field: 'number_request_messages',
+    headerName: 'Number of Request Messages',
+    hide: true,
+    ...numericColumn,
+    ...baseNumberFilter,
+  },
+  { field: 'deployment', headerName: 'Deployment ID', hide: false, ...baseStringFilter },
+  { field: 'project_id', headerName: 'Project', hide: false, ...baseStringFilter },
+  { field: 'user_hash', headerName: 'User', hide: false, ...baseStringFilter },
+  { field: 'user_title', headerName: 'User Title', hide: true, ...baseStringFilter },
+  { field: 'language', headerName: 'Language', hide: true, ...baseStringFilter },
 ];
 
 export const USAGE_LOG_MCP_COLUMNS: ColDef[] = [
   completionTimeColumn('Last activity'),
-  { field: 'deployment', headerName: 'Deployment ID', hide: false },
-  { field: 'project_id', headerName: 'Project', hide: false },
-  { field: 'mcp_method', headerName: 'Method', hide: true },
-  { field: 'mcp_tool_call_name', headerName: 'Tool Name', hide: false },
-  { field: 'trace_id', headerName: 'Trace ID', hide: false },
+  { field: 'deployment', headerName: 'Deployment ID', hide: false, ...baseStringFilter },
+  { field: 'project_id', headerName: 'Project', hide: false, ...baseStringFilter },
+  { field: 'mcp_method', headerName: 'Method', hide: true, ...baseStringFilter },
+  { field: 'mcp_tool_call_name', headerName: 'Tool Name', hide: false, ...baseStringFilter },
+  { field: 'trace_id', headerName: 'Trace ID', hide: false, ...baseStringFilter },
 ];
 
 export const USAGE_LOG_ROUTES_COLUMNS: ColDef[] = [
   completionTimeColumn('Last activity'),
-  { field: 'project_id', headerName: 'Project', hide: false },
-  { field: 'deployment', headerName: 'Deployment ID', hide: false },
-  { field: 'route_path', headerName: 'Route', hide: true },
-  { field: 'http_method', headerName: 'Method', hide: true },
-  { field: 'upstream', headerName: 'Upstream', hide: false },
-  { field: 'trace_id', headerName: 'Trace ID', hide: false },
+  { field: 'project_id', headerName: 'Project', hide: false, ...baseStringFilter },
+  { field: 'deployment', headerName: 'Deployment ID', hide: false, ...baseStringFilter },
+  { field: 'route_path', headerName: 'Route', hide: true, ...baseStringFilter },
+  { field: 'http_method', headerName: 'Method', hide: true, ...baseStringFilter },
+  { field: 'upstream', headerName: 'Upstream', hide: false, ...baseStringFilter },
+  { field: 'trace_id', headerName: 'Trace ID', hide: false, ...baseStringFilter },
 ];
 
 export const USAGE_LOG_TOOLSET_TRACES_COLUMNS: ColDef[] = [
   completionTimeColumn('Last activity'),
-  { field: 'project_id', headerName: 'Project', hide: false },
-  { field: 'mcp_method', headerName: 'Method', hide: true },
-  { field: 'mcp_tool_call_name', headerName: 'Tool Name', hide: false },
-  { field: 'trace_id', headerName: 'Trace ID', hide: false },
+  { field: 'project_id', headerName: 'Project', hide: false, ...baseStringFilter },
+  { field: 'mcp_method', headerName: 'Method', hide: true, ...baseStringFilter },
+  { field: 'mcp_tool_call_name', headerName: 'Tool Name', hide: false, ...baseStringFilter },
+  { field: 'trace_id', headerName: 'Trace ID', hide: false, ...baseStringFilter },
 ];
 
 // Derived from the column defs — any column spread with ...numericColumn or
@@ -639,6 +688,64 @@ export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, rou
     filterValueGetter: (params) => t(STATUS_I18N_KEYS[params.data[params.colDef.field || ''] as CONTAINER_STATUS]),
   },
   { field: 'url', headerName: 'Container URL', hide: true },
+  {
+    field: 'resources.requests.cpu',
+    headerName: t(EntityFieldsI18nKey.CPURequest),
+    hide: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    valueGetter: (params: ValueGetterParams) => getCpuColumnValue(params.data?.resources?.requests?.cpu),
+    valueFormatter: ({ value }) => formatCpuColumnValue(value as number | null),
+    filterValueGetter: (params) => formatCpuColumnValue(getCpuColumnValue(params.data?.resources?.requests?.cpu)),
+  },
+  {
+    field: 'resources.limits.cpu',
+    headerName: t(EntityFieldsI18nKey.CPULimit),
+    hide: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    valueGetter: (params: ValueGetterParams) => getCpuColumnValue(params.data?.resources?.limits?.cpu),
+    valueFormatter: ({ value }) => formatCpuColumnValue(value as number | null),
+    filterValueGetter: (params) => formatCpuColumnValue(getCpuColumnValue(params.data?.resources?.limits?.cpu)),
+  },
+  {
+    field: 'resources.requests.memory',
+    headerName: t(EntityFieldsI18nKey.MemoryRequest),
+    hide: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    valueGetter: (params: ValueGetterParams) => getMemoryColumnValue(params.data?.resources?.requests?.memory),
+    valueFormatter: ({ value }) => formatMemoryColumnValue(value as number | null),
+    filterValueGetter: (params) =>
+      formatMemoryColumnValue(getMemoryColumnValue(params.data?.resources?.requests?.memory)),
+  },
+  {
+    field: 'resources.limits.memory',
+    headerName: t(EntityFieldsI18nKey.MemoryLimit),
+    hide: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    valueGetter: (params: ValueGetterParams) => getMemoryColumnValue(params.data?.resources?.limits?.memory),
+    valueFormatter: ({ value }) => formatMemoryColumnValue(value as number | null),
+    filterValueGetter: (params) =>
+      formatMemoryColumnValue(getMemoryColumnValue(params.data?.resources?.limits?.memory)),
+  },
+  ...(route === ApplicationRoute.ModelServings
+    ? [
+        {
+          field: 'resources.gpu',
+          headerName: t(EntityFieldsI18nKey.GPURequest),
+          hide: true,
+          sortable: true,
+          filter: 'agTextColumnFilter',
+          valueGetter: (params: ValueGetterParams) =>
+            getGpuColumnValue(params.data?.resources?.requests?.['nvidia.com/gpu']),
+          valueFormatter: ({ value }) => formatGpuColumnValue(value as number | null),
+          filterValueGetter: (params) =>
+            formatGpuColumnValue(getGpuColumnValue(params.data?.resources?.requests?.['nvidia.com/gpu'])),
+        } as ColDef,
+      ]
+    : []),
   AUTHOR_COLUMN,
   TOPICS_COLUMN,
   { ...CREATED_AT_COLUMN, filter: false },

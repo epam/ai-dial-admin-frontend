@@ -2,6 +2,7 @@ import { ActivityAuditRevision } from '@/src/components/ActivityAudit/models';
 import {
   getActivityAuditColumns,
   getAuditActivityHref,
+  getDeploymentActivityAuditColumns,
   getEndOfDay,
   getGridFilters,
   getStartOfDay,
@@ -22,9 +23,17 @@ vi.mock('@/src/constants/grid-columns/actions', () => ({
   getViewDetailsOperation: vi.fn((cb) => ({ type: 'viewDetails', cb })),
 }));
 
-vi.mock('@/src/constants/grid-columns/grid-columns', () => ({
-  ACTIVITY_AUDIT_COLUMNS: vi.fn(() => [{ colId: 'a' }, { colId: 'b' }]),
-}));
+vi.mock('@/src/constants/grid-columns/grid-columns', async () => {
+  const actual = (await vi.importActual('@/src/types/activity-audit')) as { ActivityAuditView: Record<string, string> };
+  return {
+    ACTIVITY_AUDIT_COLUMNS: vi.fn((_t: unknown, view: string) =>
+      view === actual.ActivityAuditView.Deployments
+        ? [{ colId: 'd1' }, { colId: 'd2' }]
+        : [{ colId: 'a' }, { colId: 'b' }],
+    ),
+    RESOURCE_TYPE_COLUMN: 'resourceType',
+  };
+});
 
 describe('Activity Audit List utils :: getActivityAuditColumns', () => {
   test('returns columns with action column at the end', () => {
@@ -43,6 +52,33 @@ describe('Activity Audit List utils :: getActivityAuditColumns', () => {
     expect((cols[2] as { actions: { type: string }[] }).actions[0].type).toBe('open');
     expect((cols[2] as { actions: { type: string }[] }).actions[1].type).toBe('viewDetails');
     expect((cols[2] as { actions: { type: string }[] }).actions[2].type).toBe('rollback');
+  });
+});
+
+describe('Activity Audit List utils :: getDeploymentActivityAuditColumns', () => {
+  test('returns deployment columns with only Open in new tab action', () => {
+    const openMock = vi.fn();
+    const t = (s: string) => s;
+
+    const cols = getDeploymentActivityAuditColumns(t, openMock);
+
+    expect(cols).toHaveLength(3);
+    expect(cols[0]).toEqual({ colId: 'd1' });
+    expect(cols[1]).toEqual({ colId: 'd2' });
+    expect(cols[2].colId).toBe('actions');
+    const actions = (cols[2] as { actions: { type: string }[] }).actions;
+    expect(actions).toHaveLength(1);
+    expect(actions[0].type).toBe('open');
+  });
+
+  test('returns deployment columns with an empty action list when no open handler', () => {
+    const t = (s: string) => s;
+
+    const cols = getDeploymentActivityAuditColumns(t);
+
+    expect(cols).toHaveLength(3);
+    const actions = (cols[2] as { actions: { type: string }[] }).actions;
+    expect(actions).toHaveLength(0);
   });
 });
 
@@ -94,6 +130,132 @@ describe('Activity Audit List utils :: getGridFilters', () => {
         value: mockEndDate.getTime().toString(),
       },
     ]);
+  });
+
+  describe('resourceType label-aware filter transform', () => {
+    const labelMap = {
+      'global firewall': [ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST],
+      'adapter container': [ActivityAuditResourceType.ADAPTER_DEPLOYMENT],
+      'application container': [ActivityAuditResourceType.APPLICATION_DEPLOYMENT],
+      'interceptor container': [ActivityAuditResourceType.INTERCEPTOR_DEPLOYMENT],
+      'mcp container': [ActivityAuditResourceType.MCP_DEPLOYMENT],
+      'model serving': [ActivityAuditResourceType.NIM_DEPLOYMENT, ActivityAuditResourceType.INFERENCE_DEPLOYMENT],
+    };
+
+    test('single-match contains substring expands to eq with the matching enum', () => {
+      const gridFilter = {
+        resourceType: { filter: 'GLO', type: GridFilterType.CONTAINS, filterType: 'text' },
+      };
+
+      const result = getGridFilters(gridFilter, timeRange, labelMap);
+
+      expect(result[0]).toEqual({
+        column: 'resourceType',
+        operator: FilterOperatorDto.EQUALS,
+        value: ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST,
+      });
+    });
+
+    test('case-insensitive matching produces the same single-match expansion', () => {
+      const lower = getGridFilters(
+        { resourceType: { filter: 'global', type: GridFilterType.CONTAINS, filterType: 'text' } },
+        timeRange,
+        labelMap,
+      );
+      const upper = getGridFilters(
+        { resourceType: { filter: 'GLOBAL', type: GridFilterType.CONTAINS, filterType: 'text' } },
+        timeRange,
+        labelMap,
+      );
+
+      expect(lower[0]).toEqual({
+        column: 'resourceType',
+        operator: FilterOperatorDto.EQUALS,
+        value: ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST,
+      });
+      expect(lower[0]).toEqual(upper[0]);
+    });
+
+    // Known limitation: multi-match inputs fall through to the original `co` payload,
+    // which the backend runs as LIKE '%value%' against the raw enum string. Since the
+    // raw enums (e.g. AdapterDeployment) share no substring with localized labels
+    // (e.g. "container"), the user sees zero rows. Documented in design.md; a BE-side
+    // `in` operator is required to fix multi-match generally.
+    test('multi-match input passes through original co payload — known limitation, returns 0 rows on BE', () => {
+      const gridFilter = {
+        resourceType: { filter: 'container', type: GridFilterType.CONTAINS, filterType: 'text' },
+      };
+
+      const result = getGridFilters(gridFilter, timeRange, labelMap);
+
+      expect(result[0]).toEqual({
+        column: 'resourceType',
+        operator: FilterOperatorDto.CONTAINS,
+        value: 'container',
+      });
+    });
+
+    test('no-match input passes through original co payload', () => {
+      const gridFilter = {
+        resourceType: { filter: 'zzz-no-match', type: GridFilterType.CONTAINS, filterType: 'text' },
+      };
+
+      const result = getGridFilters(gridFilter, timeRange, labelMap);
+
+      expect(result[0]).toEqual({
+        column: 'resourceType',
+        operator: FilterOperatorDto.CONTAINS,
+        value: 'zzz-no-match',
+      });
+    });
+
+    test('equals operator on resourceType passes through unchanged', () => {
+      const gridFilter = {
+        resourceType: {
+          filter: ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST,
+          type: GridFilterType.EQUALS,
+          filterType: 'text',
+        },
+      };
+
+      const result = getGridFilters(gridFilter, timeRange, labelMap);
+
+      expect(result[0]).toEqual({
+        column: 'resourceType',
+        operator: FilterOperatorDto.EQUALS,
+        value: ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST,
+      });
+    });
+
+    test('non-resourceType filters are not affected by the transform', () => {
+      const gridFilter = {
+        resourceId: { filter: 'my-id', type: GridFilterType.CONTAINS, filterType: 'text' },
+        activityType: { filter: 'GLO', type: GridFilterType.CONTAINS, filterType: 'text' },
+      };
+
+      const result = getGridFilters(gridFilter, timeRange, labelMap);
+
+      const cols = result.map((f) => f.column);
+      expect(cols).toContain('resourceId');
+      expect(cols).toContain('activityType');
+      const activityType = result.find((f) => f.column === 'activityType');
+      expect(activityType?.operator).toBe(FilterOperatorDto.CONTAINS);
+      expect(activityType?.value).toBe('GLO');
+    });
+
+    test('omitting the labelMap leaves resourceType filters untouched', () => {
+      const gridFilter = {
+        resourceType: { filter: 'GLO', type: GridFilterType.CONTAINS, filterType: 'text' },
+      };
+
+      const result = getGridFilters(gridFilter, timeRange);
+
+      expect(result[0]).toEqual({
+        column: 'resourceType',
+        operator: FilterOperatorDto.CONTAINS,
+        value: 'GLO',
+      });
+    });
   });
 });
 
@@ -157,6 +319,46 @@ describe('getAuditActivityHref', () => {
     expect(href).toBe('/keys/entity/1');
   });
 
+  test('returns entity-namespaced href for container deployment types', () => {
+    const mockEntity = { name: 'gpt-4-turbo' };
+
+    expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.NIM_DEPLOYMENT, 'abc-123')).toBe(
+      '/model-servings/gpt-4-turbo/abc-123',
+    );
+    expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.INFERENCE_DEPLOYMENT, 'abc-123')).toBe(
+      '/model-servings/gpt-4-turbo/abc-123',
+    );
+    expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.MCP_DEPLOYMENT, 'abc-123')).toBe(
+      '/mcp-containers/gpt-4-turbo/abc-123',
+    );
+    expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.ADAPTER_DEPLOYMENT, 'abc-123')).toBe(
+      '/adapter-containers/gpt-4-turbo/abc-123',
+    );
+    expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.APPLICATION_DEPLOYMENT, 'abc-123')).toBe(
+      '/application-containers/gpt-4-turbo/abc-123',
+    );
+    expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.INTERCEPTOR_DEPLOYMENT, 'abc-123')).toBe(
+      '/interceptor-containers/gpt-4-turbo/abc-123',
+    );
+  });
+
+  test('returns entity-namespaced href for image-definition types (Image route uses entity.id)', () => {
+    const mockEntity = { id: 'my-image-id', name: 'my-image' };
+
+    expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.MCP_IMAGE_DEFINITION, 'abc-123')).toBe(
+      '/deployment-images/my-image-id/abc-123',
+    );
+    expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.ADAPTER_IMAGE_DEFINITION, 'abc-123')).toBe(
+      '/deployment-images/my-image-id/abc-123',
+    );
+    expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.APPLICATION_IMAGE_DEFINITION, 'abc-123')).toBe(
+      '/deployment-images/my-image-id/abc-123',
+    );
+    expect(getAuditActivityHref(mockEntity, ActivityAuditResourceType.INTERCEPTOR_IMAGE_DEFINITION, 'abc-123')).toBe(
+      '/deployment-images/my-image-id/abc-123',
+    );
+  });
+
   test('returns empty href for unknown entity type', () => {
     const mockEntity = { name: 'entity' };
     const href = getAuditActivityHref(mockEntity, undefined, '1');
@@ -169,6 +371,12 @@ describe('getAuditActivityHref', () => {
     expect(href).toBe('');
 
     href = getAuditActivityHref(mockEntity, ActivityAuditResourceType.MODEL, '');
+    expect(href).toBe('');
+  });
+
+  test('returns empty href for a resource type not registered in auditResourceRoute', () => {
+    const mockEntity = { name: 'entity' };
+    const href = getAuditActivityHref(mockEntity, ActivityAuditResourceType.ADMIN_PROPERTIES, '1');
     expect(href).toBe('');
   });
 });

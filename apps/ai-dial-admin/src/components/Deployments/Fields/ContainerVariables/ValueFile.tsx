@@ -17,10 +17,11 @@ interface Props {
   onValueChange: (value: EnvVariableValue) => void;
   index: number;
   fieldName?: string;
+  ariaLabel?: string;
   disabled?: boolean;
 }
 
-const ValueFile: FC<Props> = ({ value, index, fieldName, onValueChange, disabled }) => {
+const ValueFile: FC<Props> = ({ value, index, fieldName, ariaLabel, onValueChange, disabled }) => {
   const t = useI18n();
   const { dispatch, resetCounter } = useSaveValidationContext();
 
@@ -65,11 +66,13 @@ const ValueFile: FC<Props> = ({ value, index, fieldName, onValueChange, disabled
   }, [dispatch, index]);
 
   return (
-    <div className="flex flex-col flex-1 gap-y-2 max-w-full">
-      <DialLabel label={fieldName} htmlFor={`variable_value_${index}`} />
+    <div className="flex flex-col flex-1 gap-y-1 max-w-full">
+      {fieldName && <DialLabel label={fieldName} htmlFor={`variable_value_${index}`} />}
       <div
+        id={`variable_value_${index}`}
+        aria-label={ariaLabel}
         className={classNames(
-          'flex border px-3 py-1 rounded justify-between items-center',
+          'flex border px-3 py-1 rounded justify-between items-center h-10',
           error ? 'border-error' : 'border-primary',
         )}
       >

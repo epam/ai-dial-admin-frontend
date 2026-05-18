@@ -65,7 +65,7 @@ const ContainerView: FC<Props> = ({
     getDeploymentsViewTabs(route, t, container.status, container.allowedDomains, imageNotInstalled),
   );
   const [selectedContainer, setSelectedContainer] = useState<Container>(cloneDeep(container));
-  const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
+  const [activeTab, setActiveTab] = useState<EntityViewTab>(EntityViewTab.Properties);
   const [isEditorEnabled, setIsEditorEnabled] = useState<boolean>(false);
   const [isChanged, setIsChanged] = useState<boolean>(false);
   const [isRedeployRequired, setIsRedeployRequired] = useState<boolean>(false);

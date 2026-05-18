@@ -4,12 +4,13 @@ import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialTabs } from '@epam/ai-dial-ui-kit';
 
 import ActivityAuditList from '@/src/components/ActivityAudit/List/List';
-import { routeAuditResource } from '@/src/components/ActivityAudit/View/Header/constants';
+import { resolveEntityAuditType } from '@/src/components/ActivityAudit/View/Header/utils';
 import Dashboard from '@/src/components/Telemetry/Dashboard';
 import UsageLog from '@/src/components/UsageLog/UsageLog';
 import { TabsI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
+import { ActivityAuditView } from '@/src/types/activity-audit';
 import { ApplicationRoute } from '@/src/types/routes';
 import { TabOrientation } from '@/src/types/tab';
 import { EntityViewTab, getAuditTabs } from '@/src/utils/tabs/utils';
@@ -19,9 +20,10 @@ import { TimeFilterValue } from '@/src/models/time-range';
 interface Props {
   entity: BaseEntity;
   view: ApplicationRoute;
+  viewMode?: ActivityAuditView;
 }
 
-const EntityAudit: FC<Props> = ({ entity, view }) => {
+const EntityAudit: FC<Props> = ({ entity, view, viewMode }) => {
   const t = useI18n();
 
   const { featureFlags } = useAppContext();
@@ -70,7 +72,8 @@ const EntityAudit: FC<Props> = ({ entity, view }) => {
             defaultTimeFilter={timeFilter}
             onTimeFilterChange={setTimeFilter}
             entity={entity}
-            entityType={routeAuditResource[view]}
+            entityType={resolveEntityAuditType(entity, view)}
+            viewMode={viewMode}
             refresh
           />
         )}

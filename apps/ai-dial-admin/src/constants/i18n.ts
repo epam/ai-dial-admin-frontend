@@ -190,6 +190,7 @@ export enum EntitiesI18nKey {
   InterceptorTemplate = 'Entities.InterceptorTemplate',
   InterceptorName = 'Entities.InterceptorName',
   ModelDisplayName = 'Entities.ModelDisplayName',
+  ToolsetDisplayName = 'Entities.ToolsetDisplayName',
   Author = 'Entities.Author',
   JSONEditor = 'Entities.JSONEditor',
   JSONViewer = 'Entities.JSONViewer',
@@ -228,6 +229,13 @@ export enum EntitiesI18nKey {
   Serving = 'Entities.Serving',
   ModelServing = 'Entities.ModelServing',
   Container = 'Entities.Container',
+  AdapterContainer = 'Entities.AdapterContainer',
+  ApplicationContainer = 'Entities.ApplicationContainer',
+  McpContainer = 'Entities.McpContainer',
+  ModelServingLabel = 'Entities.ModelServingLabel',
+  Image = 'Entities.Image',
+  GlobalFirewall = 'Entities.GlobalFirewall',
+  Version = 'Entities.Version',
   DiscardChanges = 'Entities.DiscardChanges',
   DiscardChangesDescription = 'Entities.DiscardChangesDescription',
   EndpointsSourceType = 'Entities.EndpointsSourceType',
@@ -256,6 +264,7 @@ export enum DeleteI18nKey {
   Adapter = 'DeleteEntity.Entities.Adapter',
   InterceptorTemplate = 'DeleteEntity.Entities.InterceptorTemplate',
   TestSuite = 'DeleteEntity.Entities.TestSuite',
+  TestCase = 'DeleteEntity.Entities.TestCase',
   Run = 'DeleteEntity.Entities.Run',
   ApplicationRunner = 'DeleteEntity.Entities.ApplicationRunner',
   McpContainer = 'DeleteEntity.Entities.McpContainer',
@@ -520,6 +529,7 @@ export enum ForwardTokenI18nKey {
   UseForThisModel = 'ForwardToken.UseForThisModel',
   UseForThisApplication = 'ForwardToken.UseForThisApplication',
   UseForThisInterceptor = 'ForwardToken.UseForThisInterceptor',
+  UseForThisToolset = 'ForwardToken.UseForThisToolset',
   ForwardTokenModalTitle = 'ForwardToken.ForwardTokenModalTitle',
   ForwardTokenModalAlert = 'ForwardToken.ForwardTokenModalAlert',
 }
@@ -667,6 +677,7 @@ export enum TelemetryI18nKey {
   RouteRequests = 'Telemetry.RouteRequests',
   Unknown = 'Telemetry.Unknown',
   ActivityViewConfig = 'Telemetry.ActivityView.Config',
+  ActivityViewDeployments = 'Telemetry.ActivityView.Deployments',
   ActivityViewAsset = 'Telemetry.ActivityView.Asset',
 }
 
@@ -1155,7 +1166,26 @@ export enum EntityFieldsI18nKey {
   inputAttachmentTypes = 'EntityFields.inputAttachmentTypes',
   maxInputAttachments = 'EntityFields.maxInputAttachments',
   defaults = 'EntityFields.defaults',
+  completionDefaults = 'EntityFields.completionDefaults',
+  responsesDefaults = 'EntityFields.responsesDefaults',
   topics = 'EntityFields.topics',
+  allowedDomains = 'Tabs.Firewall',
+  domains = 'EntityFields.domains',
+  allowedDomain = 'EntityFields.allowedDomain',
+  domainAccessPolicy = 'Deployments.WhitelistPolicyLabel',
+  allDomains = 'Deployments.WhitelistPolicyAll',
+  specificDomains = 'Deployments.WhitelistPolicyCustomShort',
+  buildStatus = 'EntityFields.buildStatus',
+  transportType = 'EntityFields.transportType',
+  imageBuilder = 'EntityFields.imageBuilder',
+  imageUri = 'EntityFields.imageUri',
+  branchName = 'EntityFields.branchName',
+  sha = 'EntityFields.sha',
+  baseDirectory = 'EntityFields.baseDirectory',
+  license = 'EntityFields.license',
+  source = 'Entities.Source',
+  packageName = 'EntityFields.packageName',
+  serverVersion = 'EntityFields.serverVersion',
   maxRetryAttempts = 'EntityFields.maxRetryAttempts',
   type = 'EntityFields.type',
   tokenizerModel = 'EntityFields.tokenizerModel',
@@ -1302,6 +1332,13 @@ export enum EntityFieldsI18nKey {
   FailureThreshold = 'EntityFields.FailureThreshold',
   AdvancedTiming = 'EntityFields.AdvancedTiming',
   expression = 'EntityFields.expression',
+  ScaleToZeroDelaySeconds = 'EntityFields.ScaleToZeroDelaySeconds',
+  ScalingStrategyType = 'EntityFields.ScalingStrategyType',
+  ScalingStrategyThreshold = 'EntityFields.ScalingStrategyThreshold',
+  ProbeEnabled = 'EntityFields.ProbeEnabled',
+  ProbeType = 'EntityFields.ProbeType',
+  ProbePath = 'EntityFields.ProbePath',
+  ProbePort = 'EntityFields.ProbePort',
 }
 
 export enum ToolsetI18nKey {
@@ -1333,6 +1370,7 @@ export enum ToolsetI18nKey {
   LoggedOut = 'Toolset.LoggedOut',
   UserLoggedIn = 'Toolset.UserLoggedIn',
   AdminLoggedIn = 'Toolset.AdminLoggedIn',
+  isAuthenticated = 'Toolset.isAuthenticated',
   SuccessLogin = 'Toolset.SuccessLogin',
   SuccessLoginDescription = 'Toolset.SuccessLoginDescription',
   SuccessLogout = 'Toolset.SuccessLogout',
@@ -1390,6 +1428,7 @@ export enum ImagesI18nKey {
   FromMcpRegistry = 'Images.FromMcpRegistry',
   AddFromMcpRegistryModalTitle = 'Images.AddFromMcpRegistryModalTitle',
   BuildStopped = 'Images.BuildStopped',
+  BuilderRootlessShort = 'Images.BuilderRootlessShort',
   StopBuildModalTitle = 'Images.StopBuildModalTitle',
   StopBuildModalDescription = 'Images.StopBuildModalDescription',
   BuildStoppedSuccess = 'Images.BuildStoppedSuccess',
@@ -1475,10 +1514,12 @@ export enum DeploymentsI18nKey {
   WhitelistPolicyAllWarning = 'Deployments.WhitelistPolicyAllWarning',
   WhitelistPolicyAllWarningDescription = 'Deployments.WhitelistPolicyAllWarningDescription',
   WhitelistPolicyCustom = 'Deployments.WhitelistPolicyCustom',
+  WhitelistPolicyCustomShort = 'Deployments.WhitelistPolicyCustomShort',
   WhitelistPolicyCustomCaption = 'Deployments.WhitelistPolicyCustomCaption',
   AddDomain = 'Deployments.AddDomain',
   EventsError = 'Deployments.EventsError',
   LogsError = 'Deployments.LogsError',
+  ViewInActivityAudit = 'Deployments.ViewInActivityAudit',
 }
 
 export enum KubEventsI18nKey {
@@ -1604,6 +1645,13 @@ export enum TestSuitesI18nKey {
   ToolCallFailed = 'TestSuites.ToolCallFailed',
   ToolOutputSchema = 'TestSuites.ToolOutputSchema',
   ToolSchema = 'TestSuites.ToolSchema',
+  TemplateVariablesDoc = 'TestSuites.TemplateVariablesDoc',
+  TemplateVariablesViewDoc = 'TestSuites.TemplateVariablesViewDoc',
+  TemplateVariablesDescription = 'TestSuites.TemplateVariablesDescription',
+  TemplateVariablesFormat = 'TestSuites.TemplateVariablesFormat',
+  TemplateVariablesExample = 'TestSuites.TemplateVariablesExample',
+  TemplateVariablesDescCol = 'TestSuites.TemplateVariablesDescCol',
+  TemplateVariablesSupportedTypes = 'TestSuites.TemplateVariablesSupportedTypes',
 }
 
 export enum RunsI18nKey {
@@ -1654,6 +1702,8 @@ export enum RunsI18nKey {
   NumericDiff = 'Runs.NumericDiff',
   TextDiff = 'Runs.TextDiff',
   MetricBindings = 'Runs.MetricBindings',
+  CompareWith = 'Runs.CompareWith',
+  RunCompareNoMatch = 'Runs.RunCompareNoMatch',
 }
 
 export enum FileManagerI18nKey {

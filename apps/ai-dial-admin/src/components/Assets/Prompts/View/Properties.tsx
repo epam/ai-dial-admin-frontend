@@ -14,6 +14,8 @@ import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { JSONEditorError } from '@/src/types/editor';
+import { ApplicationRoute } from '@/src/types/routes';
+import { getAssetCreateFolderHandler } from '@/src/components/EntityListView/utils';
 
 interface Props {
   prompt: DialPrompt;
@@ -117,6 +119,8 @@ const PromptProperties: FC<Props> = ({ prompt, onChangePrompt, isPublication }) 
           onChange={(folderId: string) => onChangePrompt?.({ ...prompt, folderId })}
           context={usePromptFolder}
           disabled={isReadOnlyAdmin}
+          onCreateFolder={getAssetCreateFolderHandler(ApplicationRoute.Prompts)}
+          view={ApplicationRoute.Prompts}
         />
       )}
     </div>

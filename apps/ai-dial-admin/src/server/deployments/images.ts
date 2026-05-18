@@ -3,6 +3,7 @@ import { Image } from '@/src/models/deployments/images';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { API } from '@/src/server/api';
 import { BaseApi } from '@/src/server/base-api';
+import { ActivityAuditEntity } from '@/src/types/activity-audit';
 
 export const BASE_IMAGES_URL = `${API}/images`;
 export const IMAGES_URL = `${BASE_IMAGES_URL}/definitions`;
@@ -19,6 +20,10 @@ export class ImagesApi extends BaseApi {
 
   getImage(id: string, token: Token): Promise<ServerActionResponse> {
     return this.getAction(IMAGE_URL(id), token);
+  }
+
+  getRevisionDetails(url: string, token: Token): Promise<ActivityAuditEntity | null> {
+    return this.get(`${API}${url}`, token);
   }
 
   getImageVersions(name: string, type: string, token: Token): Promise<ServerActionResponse> {

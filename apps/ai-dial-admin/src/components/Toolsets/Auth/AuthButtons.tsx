@@ -104,9 +104,14 @@ const AuthButtons: FC<Props> = ({
   );
 
   const onLogin = useCallback(
-    (type: ToolsetAuthCredentialLevel, apiKeyValue: string) => {
+    (levels: ToolsetAuthCredentialLevel[], apiKeyValue: string) => {
+      if (!levels.length) {
+        return;
+      }
+
       const authSettings = selectedToolset.authSettings;
       if (authSettings && authSettings?.authenticationType === ToolsetAuthType.OAUTH) {
+        const type = levels[0];
         const callbackUrl = `${window.location.pathname}${window.location.search}`;
         const state = {
           callbackUrl,
@@ -135,10 +140,40 @@ const AuthButtons: FC<Props> = ({
 
         window.location.assign(url.toString());
       } else {
-        signIn(type, apiKeyValue);
+        setIsLoginModalOpen(false);
+
+        let completedCount = 0;
+        let hasError = false;
+
+        levels.forEach((level) => {
+          getReqRef
+            .current(
+              signInToolset,
+              selectedToolset,
+              level,
+              `${window.location.origin}${TOOLSET_AUTH_REDIRECT_URL}`,
+              apiKeyValue,
+            )
+            .then((res) => {
+              completedCount++;
+              if (!res.success) {
+                hasError = true;
+                showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+              }
+
+              if (completedCount === levels.length && !hasError) {
+                showNotification(
+                  getSuccessNotification(t(ToolsetI18nKey.SuccessLogin), t(ToolsetI18nKey.SuccessLoginDescription)),
+                );
+                router.push(
+                  getUrnForEntity(view, { ...selectedToolset, requestName: publicationName, path: publicationPath }),
+                );
+              }
+            });
+        });
       }
     },
-    [publicationName, publicationPath, selectedToolset, signIn, view],
+    [publicationName, publicationPath, selectedToolset, signInToolset, showNotification, t, router, view],
   );
 
   const performLogout = useCallback(

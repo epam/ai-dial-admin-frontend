@@ -34,7 +34,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import MoveItemsModal from './MoveItemsModal';
-import { MOVE_ITEMS_INDICATOR_DELAY, NEW_FOLDER_PLACEHOLDER } from './constants';
+import { MOVE_ITEMS_INDICATOR_DELAY } from './constants';
 import {
   getBulkActionsToolbarOptions,
   getDestinationFolderPopupOptions,
@@ -209,7 +209,6 @@ const FileManager: FC<Props> = ({
       if (!nextPath) {
         return;
       }
-
       const newExpanded = new Set(expandedFolders);
 
       if (newExpanded.has(nextPath)) {
@@ -370,7 +369,6 @@ const FileManager: FC<Props> = ({
         isDuplicateFolderAvailable={false}
         previewExtensions={PREVIEW_EXTENSIONS}
         customUploadFileAction={customUploadFileAction}
-        createdFolderPlaceholder={NEW_FOLDER_PLACEHOLDER}
         {...props}
       />
       <MoveItemsModal

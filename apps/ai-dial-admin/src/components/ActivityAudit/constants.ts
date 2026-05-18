@@ -46,6 +46,14 @@ export enum EntityParameterKeys {
   SOURCE = 'source',
   DEFAULTS = 'defaults',
   APP_PROPERTIES = 'applicationProperties',
+  ALLOWED_DOMAINS = 'allowedDomains',
+  DOMAINS = 'domains',
+  RESOURCES = 'resources',
+  SCALING = 'scaling',
+  METADATA = 'metadata',
+  PROBE_PROPERTIES = 'probeProperties',
+  ENDPOINT_CONFIGURATION = 'endpointConfiguration',
+  CONFIGURATION = 'configuration',
 }
 
 export const dateKeys = ['expiresAt', 'keyGeneratedAt', 'createdAt', 'updatedAt'];
@@ -65,6 +73,7 @@ export const arrayObjectParameterKeys = [
   EntityParameterKeys.UPSTREAMS,
   EntityParameterKeys.DEFAULTS,
   EntityParameterKeys.APP_PROPERTIES,
+  EntityParameterKeys.METADATA,
 ];
 export const separateObjectParameterKeys = [
   EntityParameterKeys.INTERCEPTORS,
@@ -83,4 +92,11 @@ export const separateObjectParameterKeys = [
   EntityParameterKeys.SOURCE,
   EntityParameterKeys.APP_RUNNER_INTERCEPTORS,
   EntityParameterKeys.APP_RUNNERS,
+  EntityParameterKeys.ALLOWED_DOMAINS,
+  EntityParameterKeys.DOMAINS,
+  EntityParameterKeys.RESOURCES,
+  EntityParameterKeys.SCALING,
+  EntityParameterKeys.PROBE_PROPERTIES,
 ];
+
+export const DOMAIN_ACCESS_POLICY_KEY = 'domainAccessPolicy';

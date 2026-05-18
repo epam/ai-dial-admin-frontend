@@ -5,7 +5,6 @@ import { getModelsList } from '@/src/app/[lang]/models/actions';
 import { applicationRunnersApi, applicationsApi, assetsApi, interceptorsApi } from '@/src/app/api/api';
 import AppView from '@/src/components/Assets/Apps/View';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
-import { AppsFolderProvider } from '@/src/context/assets/AppsFolderContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
@@ -63,17 +62,15 @@ export default async function Page(params: {
 
   return (
     <SaveValidationContextProvider>
-      <AppsFolderProvider>
-        <AppView
-          etag={etag}
-          originalApp={app}
-          assets={apps || []}
-          models={models || []}
-          applications={applications || []}
-          schemes={applicationSchemes || []}
-          interceptors={interceptors || []}
-        />
-      </AppsFolderProvider>
+      <AppView
+        etag={etag}
+        originalApp={app}
+        assets={apps || []}
+        models={models || []}
+        applications={applications || []}
+        schemes={applicationSchemes || []}
+        interceptors={interceptors || []}
+      />
     </SaveValidationContextProvider>
   );
 }

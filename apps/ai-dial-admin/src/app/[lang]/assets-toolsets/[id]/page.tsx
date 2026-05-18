@@ -4,7 +4,6 @@ import { notFound } from 'next/navigation';
 import { assetsApi } from '@/src/app/api/api';
 import ToolsetView from '@/src/components/Assets/Toolsets/View/View';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
-import { ToolsetFolderProvider } from '@/src/context/assets/ToolsetsFolderContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { DialFileNodeType } from '@/src/models/dial/file';
@@ -50,9 +49,7 @@ export default async function Page(params: {
 
   return (
     <SaveValidationContextProvider>
-      <ToolsetFolderProvider>
-        <ToolsetView oAuthCode={oAuthCode} etag={etag} originalToolset={toolset} toolsets={toolsets || []} />
-      </ToolsetFolderProvider>
+      <ToolsetView oAuthCode={oAuthCode} etag={etag} originalToolset={toolset} toolsets={toolsets || []} />
     </SaveValidationContextProvider>
   );
 }

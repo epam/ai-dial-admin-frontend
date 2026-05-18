@@ -60,21 +60,22 @@ export const getSingleValueChartData = (data: TelemetryData): number => {
 export const getFormattedDataFilters = (filters: FilterData[], entityName?: string | null) => {
   const userFilters = [];
 
+  const filtersConfig = [...filterTypeConfig, ...mcpFilterTypeConfig, ...routerFilterTypeConfig];
   if (entityName) {
-    const left = filterTypeConfig.find((filterType) => filterType.value === FILTER_TYPE.Entity)?.filter;
+    const left = filtersConfig.find((filterType) => filterType.value === FILTER_TYPE.Entity)?.filter;
     const right = `'${entityName}'`;
     const operator = filterOperatorConfig[FILTER_OPERATOR.Equal];
     userFilters.push({ [operator]: { left: left, right: right } });
   }
 
   filters.forEach((filter) => {
-    const left = filterTypeConfig.find((filterType) => filterType.value === filter.type)?.filter;
+    const left = filtersConfig.find((filterType) => filterType.value === filter.type)?.filter;
     const isExactMatch = filter.condition === FILTER_OPERATOR.Equal || filter.condition === FILTER_OPERATOR.NotEqual;
 
     // Handle multi-value filters with $in/$nin operators
     if (isExactMatch && filter.value.length > 1) {
       const operator = filter.condition === FILTER_OPERATOR.Equal ? '$in' : '$nin';
-      userFilters.push({ [operator]: { left: left, right: filter.value } });
+      userFilters.push({ [operator]: { left: left, right: filter.value.map((v) => `'${v}'`) } });
     } else {
       // Single value or text input conditions
       const singleValue = filter.value[0] || '';

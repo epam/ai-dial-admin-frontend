@@ -125,7 +125,7 @@ const Adapters = <T extends DialModel | DialInterceptor>({
           </div>
         ) : (
           <div className="flex gap-2">
-            <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-2')}>
+            <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-col gap-y-1')}>
               <DialLabel label={t(SourceI18nKey.Adapter)} required htmlFor="adapters" />
               <DialInputPopup
                 open={isModalOpen}
@@ -165,7 +165,7 @@ const Adapters = <T extends DialModel | DialInterceptor>({
           hideResponsesEndpoint
         />
       )}
-      {entity.source?.adapterName && selectedAdapter && selectedAdapter.responsesEndpoint && (
+      {entity.source?.adapterName && selectedAdapter && selectedAdapter.responsesEndpoint && !isModal && (
         <ComplexInput
           copyable
           id="responsesEndpoint"

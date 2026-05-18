@@ -4,4 +4,3 @@ export const FILE_NAME_MAX_LENGTH = 160;
 export const MOVE_ITEMS_INDICATOR_SIZE = 100;
 export const MOVE_ITEMS_INDICATOR_WIDTH = 4;
 export const MOVE_ITEMS_INDICATOR_DELAY = 500;
-export const NEW_FOLDER_PLACEHOLDER = 'New Folder';

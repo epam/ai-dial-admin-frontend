@@ -20,6 +20,8 @@ interface UseDetailModeReturn {
   closeDetail: () => void;
   switchToDrawer: () => void;
   switchToSidebar: () => void;
+  setSelectedForCompare: (id: string) => void;
+  clearSelected: () => void;
 }
 
 export function useDetailMode(): UseDetailModeReturn {
@@ -116,6 +118,14 @@ export function useDetailMode(): UseDetailModeReturn {
     }
   }, [detailMode, sidebar]);
 
+  const setSelectedForCompare = useCallback((id: string) => {
+    setSelectedResultId(id);
+  }, []);
+
+  const clearSelected = useCallback(() => {
+    setSelectedResultId(null);
+  }, []);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -134,5 +144,7 @@ export function useDetailMode(): UseDetailModeReturn {
     closeDetail,
     switchToDrawer,
     switchToSidebar,
+    setSelectedForCompare,
+    clearSelected,
   };
 }

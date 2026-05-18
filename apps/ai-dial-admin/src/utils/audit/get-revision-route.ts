@@ -24,6 +24,20 @@ export const getRevisionRouteForEntityType = (type?: string, id?: string): strin
       return `/interceptor-runners/${id}/revision/`;
     case ActivityAuditResourceType.SYSTEM_PROPERTIES:
       return `/global-settings/revision/`;
+    case ActivityAuditResourceType.ADAPTER_IMAGE_DEFINITION:
+    case ActivityAuditResourceType.APPLICATION_IMAGE_DEFINITION:
+    case ActivityAuditResourceType.INTERCEPTOR_IMAGE_DEFINITION:
+    case ActivityAuditResourceType.MCP_IMAGE_DEFINITION:
+      return `/images/definitions/${id}/revision/`;
+    case ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST:
+      return `/global-whitelist/image-build/revision/`;
+    case ActivityAuditResourceType.ADAPTER_DEPLOYMENT:
+    case ActivityAuditResourceType.APPLICATION_DEPLOYMENT:
+    case ActivityAuditResourceType.INTERCEPTOR_DEPLOYMENT:
+    case ActivityAuditResourceType.MCP_DEPLOYMENT:
+    case ActivityAuditResourceType.NIM_DEPLOYMENT:
+    case ActivityAuditResourceType.INFERENCE_DEPLOYMENT:
+      return `/deployments/${id}/revision/`;
     default:
       return null;
   }

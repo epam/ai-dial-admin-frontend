@@ -37,7 +37,7 @@ const ImageView: FC<Props> = ({ image, containerNames, versions }) => {
   const { disableDeploymentsJSONEditor } = useAppContext();
 
   const [selectedImage, setSelectedImage] = useState<Image>(cloneDeep(image));
-  const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
+  const [activeTab, setActiveTab] = useState<EntityViewTab>(EntityViewTab.Properties);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [isChanged, setIsChanged] = useState<boolean>(false);
   const [key, setKey] = useState(0);

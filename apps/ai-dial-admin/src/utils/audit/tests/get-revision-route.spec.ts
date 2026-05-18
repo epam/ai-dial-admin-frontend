@@ -59,6 +59,32 @@ describe('Audit :: getRevisionRouteForEntityType', () => {
     );
   });
 
+  test.each([
+    ActivityAuditResourceType.ADAPTER_IMAGE_DEFINITION,
+    ActivityAuditResourceType.APPLICATION_IMAGE_DEFINITION,
+    ActivityAuditResourceType.INTERCEPTOR_IMAGE_DEFINITION,
+    ActivityAuditResourceType.MCP_IMAGE_DEFINITION,
+  ])('returns correct route for %s', (type) => {
+    expect(getRevisionRouteForEntityType(type, id)).toBe(`/images/definitions/${id}/revision/`);
+  });
+
+  test('returns correct route for IMAGE_BUILD_DOMAIN_WHITELIST (no id segment)', () => {
+    expect(getRevisionRouteForEntityType(ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST, id)).toBe(
+      `/global-whitelist/image-build/revision/`,
+    );
+  });
+
+  test.each([
+    ActivityAuditResourceType.ADAPTER_DEPLOYMENT,
+    ActivityAuditResourceType.APPLICATION_DEPLOYMENT,
+    ActivityAuditResourceType.INTERCEPTOR_DEPLOYMENT,
+    ActivityAuditResourceType.MCP_DEPLOYMENT,
+    ActivityAuditResourceType.NIM_DEPLOYMENT,
+    ActivityAuditResourceType.INFERENCE_DEPLOYMENT,
+  ])('returns correct route for %s', (type) => {
+    expect(getRevisionRouteForEntityType(type, id)).toBe(`/deployments/${id}/revision/`);
+  });
+
   test('returns null for unknown type', () => {
     expect(getRevisionRouteForEntityType('UNKNOWN' as any, id)).toBeNull();
   });
