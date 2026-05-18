@@ -93,7 +93,7 @@ describe('SourceField view-aware clearing (Applications view)', () => {
 
     const last = onChange.mock.calls.at(-1)?.[0] as DialApplication;
     expect(last.source?.$type).toBe(SOURCE_TYPE.SCHEMA);
-    expect(last.endpoint).toBe('');
+    expect(last.endpoint).toBeUndefined();
     expect(last.mcp).toBeUndefined();
     expect(last.viewerUrl).toBeUndefined();
     expect(last.editorUrl).toBeUndefined();
@@ -122,7 +122,7 @@ describe('SourceField view-aware clearing (Applications view)', () => {
 
     const last = onChange.mock.calls.at(-1)?.[0] as DialApplication;
     expect(last.source?.$type).toBe(SOURCE_TYPE.ENDPOINTS);
-    expect(last.endpoint).toBe('');
+    expect(last.endpoint).toBeUndefined();
     expect(last.mcp).toBeUndefined();
     expect(last.viewerUrl).toBeUndefined();
     expect(last.editorUrl).toBeUndefined();
@@ -192,7 +192,7 @@ describe('SourceField view-aware clearing (Applications view)', () => {
 
     const last = onChange.mock.calls.at(-1)?.[0] as DialApplication;
     expect(last.source?.$type).toBe(SOURCE_TYPE.CONTAINER);
-    expect(last.endpoint).toBe('');
+    expect(last.endpoint).toBeUndefined();
     expect(last.mcp).toBeUndefined();
     expect(last.viewerUrl).toBeUndefined();
     expect(last.editorUrl).toBeUndefined();
