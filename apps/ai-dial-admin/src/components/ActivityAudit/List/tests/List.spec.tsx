@@ -74,6 +74,8 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
 import ActivityAuditList from '@/src/components/ActivityAudit/List/List';
 import { ButtonsI18nKey, RollbackI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 import { ActivityAuditView } from '@/src/types/activity-audit';
+import { AUDIT_LIST_PRESELECT_STORAGE_KEY } from '@/src/constants/audit-list-preselect';
+import { AuditListPreselect } from '@/src/types/audit-list-preselect';
 
 describe('ActivityAuditList :: view-aware behavior', () => {
   beforeEach(() => {
@@ -129,5 +131,37 @@ describe('ActivityAuditList :: view-aware behavior', () => {
   test('still renders the Rollback button when viewMode forces Config', () => {
     render(<ActivityAuditList viewMode={ActivityAuditView.Config} />);
     expect(screen.getByText(RollbackI18nKey.Rollback)).toBeInTheDocument();
+  });
+});
+
+describe('ActivityAuditList :: audit-list-preselect', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    getActivitiesMock.mockClear();
+    getDeploymentActivitiesMock.mockClear();
+  });
+
+  test('without preselect, default view is Config', () => {
+    render(<ActivityAuditList />);
+    expect((screen.getByLabelText('View') as HTMLSelectElement).value).toBe('Config');
+  });
+
+  test('with preselect "global-firewall", initial view is Deployments', () => {
+    localStorage.setItem(AUDIT_LIST_PRESELECT_STORAGE_KEY, AuditListPreselect.GlobalFirewall);
+    render(<ActivityAuditList />);
+    expect((screen.getByLabelText('View') as HTMLSelectElement).value).toBe('Deployments');
+  });
+
+  test('preselect is ignored when an entity is provided', () => {
+    localStorage.setItem(AUDIT_LIST_PRESELECT_STORAGE_KEY, AuditListPreselect.GlobalFirewall);
+    render(<ActivityAuditList entity={{ name: 'm' } as never} entityType="Model" />);
+    expect(localStorage.getItem(AUDIT_LIST_PRESELECT_STORAGE_KEY)).toBe(AuditListPreselect.GlobalFirewall);
+  });
+
+  test('unknown preselect value is ignored without corrupting state (and not cleared)', () => {
+    localStorage.setItem(AUDIT_LIST_PRESELECT_STORAGE_KEY, 'something-else');
+    render(<ActivityAuditList />);
+    expect((screen.getByLabelText('View') as HTMLSelectElement).value).toBe('Config');
+    expect(localStorage.getItem(AUDIT_LIST_PRESELECT_STORAGE_KEY)).toBe('something-else');
   });
 });
