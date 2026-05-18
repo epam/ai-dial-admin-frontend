@@ -299,7 +299,7 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
   );
 
   return (
-    <div className="h-[500px]">
+    <div className="h-full">
       <GridView<SchemaFieldRow>
         getIsEmptyData={() => fields.length === 0 && isReadonlyGrid}
         emptyDataProps={{ title: t(BasicI18nKey.NoData) }}
