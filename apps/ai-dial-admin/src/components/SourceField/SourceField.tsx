@@ -92,7 +92,7 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset | DialAppli
           isValid: true,
         });
 
-        const reset: Partial<T> = { endpoint: '' } as Partial<T>;
+        const reset: Partial<T> = {} as Partial<T>;
         if (view === ApplicationRoute.Applications) {
           Object.assign(reset, {
             mcp: undefined,
@@ -101,6 +101,7 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset | DialAppli
             applicationTypeSchemaId: undefined,
             applicationProperties: undefined,
             responsesEndpoint: undefined,
+            endpoint: undefined,
           });
         }
 
