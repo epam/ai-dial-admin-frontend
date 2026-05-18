@@ -25,17 +25,9 @@ interface Props {
   imageVersions: ImageVersion[];
   onChange: (image: Image) => void;
   onChangeVersions: (versions: ImageVersion[]) => void;
-  initialAuditTab?: EntityViewTab;
 }
 
-const TabsContent: FC<Props> = ({
-  activeTab,
-  selectedImage,
-  onChange,
-  onChangeVersions,
-  imageVersions,
-  initialAuditTab,
-}) => {
+const TabsContent: FC<Props> = ({ activeTab, selectedImage, onChange, onChangeVersions, imageVersions }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
@@ -90,12 +82,7 @@ const TabsContent: FC<Props> = ({
         />
       )}
       {activeTab === EntityViewTab.Audit && (
-        <EntityAudit
-          entity={selectedImage}
-          view={ApplicationRoute.Images}
-          viewMode={ActivityAuditView.Deployments}
-          initialAuditTab={initialAuditTab}
-        />
+        <EntityAudit entity={selectedImage} view={ApplicationRoute.Images} viewMode={ActivityAuditView.Deployments} />
       )}
     </>
   );

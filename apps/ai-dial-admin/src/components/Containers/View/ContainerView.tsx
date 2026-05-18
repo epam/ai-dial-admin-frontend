@@ -2,7 +2,7 @@
 
 import { TabModel } from '@epam/ai-dial-ui-kit';
 import { cloneDeep } from 'lodash';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getContainer, getContainerPods, updateContainer } from '@/src/app/actions/deployments';
@@ -26,7 +26,6 @@ import { Toolset } from '@/src/models/dial/toolset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { CONTAINER_STATUS, KubEventType } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
-import { readAndClearAuditTabReturn } from '@/src/utils/audit-tab-return';
 import { getContainerRedeploySnapshot } from '@/src/utils/deployments/containers';
 import { decodeVariables } from '@/src/utils/deployments/variables';
 import { getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
@@ -57,18 +56,16 @@ const ContainerView: FC<Props> = ({
 }) => {
   const t = useI18n();
   const router = useRouter();
-  const pathname = usePathname();
   const { showNotification } = useNotification();
   const { disableDeploymentsJSONEditor } = useAppContext();
 
   const imageNotInstalled = isImageNotInstalled(image);
 
-  const [savedTabs] = useState(() => readAndClearAuditTabReturn(pathname));
   const [tabs, setTabs] = useState<TabModel[]>(
     getDeploymentsViewTabs(route, t, container.status, container.allowedDomains, imageNotInstalled),
   );
   const [selectedContainer, setSelectedContainer] = useState<Container>(cloneDeep(container));
-  const [activeTab, setActiveTab] = useState<EntityViewTab>(savedTabs?.mainTab ?? EntityViewTab.Properties);
+  const [activeTab, setActiveTab] = useState<EntityViewTab>(EntityViewTab.Properties);
   const [isEditorEnabled, setIsEditorEnabled] = useState<boolean>(false);
   const [isChanged, setIsChanged] = useState<boolean>(false);
   const [isRedeployRequired, setIsRedeployRequired] = useState<boolean>(false);
@@ -323,7 +320,6 @@ const ContainerView: FC<Props> = ({
               pods={pods}
               restarts={restarts}
               image={image}
-              initialAuditTab={savedTabs?.auditTab}
               {...props}
             />
           )}

@@ -24,7 +24,6 @@ interface Props {
   roles?: DialRole[] | null;
   isSkipRefresh: boolean;
   onChange: (selectedModel: DialModel, isSkipRefresh?: boolean) => void;
-  initialAuditTab?: EntityViewTab;
 }
 
 const TabsContent: FC<Props> = ({
@@ -36,7 +35,6 @@ const TabsContent: FC<Props> = ({
   originalModel,
   onChange,
   names,
-  initialAuditTab,
 }) => {
   return (
     <>
@@ -71,9 +69,7 @@ const TabsContent: FC<Props> = ({
           view={ApplicationRoute.Models}
         />
       )}
-      {activeTab === EntityViewTab.Audit && (
-        <EntityAudit entity={selectedModel} view={ApplicationRoute.Models} initialAuditTab={initialAuditTab} />
-      )}
+      {activeTab === EntityViewTab.Audit && <EntityAudit entity={selectedModel} view={ApplicationRoute.Models} />}
     </>
   );
 };

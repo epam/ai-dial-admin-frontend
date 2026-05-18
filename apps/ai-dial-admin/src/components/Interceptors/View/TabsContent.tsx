@@ -36,7 +36,6 @@ interface Props {
   names: string[];
   selectedInterceptor: DialInterceptor;
   onChange: (interceptor: DialInterceptor) => void;
-  initialAuditTab?: EntityViewTab;
 }
 
 const TabsContent: FC<Props> = ({
@@ -48,7 +47,6 @@ const TabsContent: FC<Props> = ({
   names,
   interceptorTemplate,
   appRunners,
-  initialAuditTab,
   ...props
 }) => {
   const t = useI18n();
@@ -150,11 +148,7 @@ const TabsContent: FC<Props> = ({
           />
         )}
         {activeTab === EntityViewTab.Audit && (
-          <EntityAudit
-            entity={selectedInterceptor}
-            view={ApplicationRoute.Interceptors}
-            initialAuditTab={initialAuditTab}
-          />
+          <EntityAudit entity={selectedInterceptor} view={ApplicationRoute.Interceptors} />
         )}
       </>
     )
