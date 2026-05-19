@@ -35,14 +35,19 @@ vi.mock('@/src/components/Common/EditableTitle/EditableTitle', () => ({
   ),
 }));
 
-vi.mock('@epam/ai-dial-ui-kit', () => ({
-  DialErrorButton: ({ label, onClick, iconBefore }: any) => (
-    <button role="button" aria-label={label} onClick={onClick}>
-      {iconBefore}
-      {label}
-    </button>
-  ),
-}));
+vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
+
+  return {
+    ...actual,
+    DialErrorButton: ({ label, onClick, iconBefore }: any) => (
+      <button role="button" aria-label={label} onClick={onClick}>
+        {iconBefore}
+        {label}
+      </button>
+    ),
+  };
+});
 
 vi.mock('@tabler/icons-react', () => ({
   IconTrashX: (props: any) => <span role="img" aria-label="trash-icon" {...props} />,
