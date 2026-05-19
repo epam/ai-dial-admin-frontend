@@ -5,6 +5,8 @@ import {
   getColumnVisibilityFromGridState,
   applyColumnStateOrderToColDefs,
   haveColDefsSamePanelState,
+  applyColumnStateOrderToTreeColDefs,
+  haveTreeColDefsSamePanelState,
 } from './utils';
 import { GRID_COLUMNS_KEY } from './constants';
 import { describe, expect, test, vi, beforeEach } from 'vitest';
@@ -171,5 +173,108 @@ describe('Grid :: haveColDefsSamePanelState', () => {
         { field: 'name', hide: false },
       ]),
     ).toBe(false);
+  });
+});
+
+describe('Grid :: applyColumnStateOrderToTreeColDefs', () => {
+  test('should reorder flat columns by colId', () => {
+    const colDefs = [
+      { field: 'name', headerName: 'Name' },
+      { field: 'status', headerName: 'Status' },
+    ];
+
+    const result = applyColumnStateOrderToTreeColDefs(colDefs, [{ colId: 'status' }, { colId: 'name' }]);
+
+    expect(result.map((c) => c.field)).toEqual(['status', 'name']);
+  });
+
+  test('should prefer colId over field when both are set', () => {
+    const colDefs = [
+      { field: 'executionStatus', colId: 'status', headerName: 'Status' },
+      { field: 'testCaseName', colId: 'testCaseName', headerName: 'Name' },
+    ];
+
+    const result = applyColumnStateOrderToTreeColDefs(colDefs, [{ colId: 'testCaseName' }, { colId: 'status' }]);
+
+    expect(result.map((c) => c.colId)).toEqual(['testCaseName', 'status']);
+  });
+
+  test('should reorder group columns by first child colId', () => {
+    const details = {
+      headerName: 'Details',
+      context: { panelName: 'Details' },
+      children: [
+        { field: 'executionStatus', colId: 'status' },
+        { field: 'testCaseName', colId: 'testCaseName' },
+      ],
+    };
+    const metrics = {
+      headerName: 'Metrics',
+      children: [{ field: 'accuracy' }, { field: 'bleu' }],
+    };
+
+    const result = applyColumnStateOrderToTreeColDefs(
+      [details, metrics],
+      [{ colId: 'accuracy' }, { colId: 'bleu' }, { colId: 'status' }, { colId: 'testCaseName' }],
+    );
+
+    expect(result.map((c) => c.headerName)).toEqual(['Metrics', 'Details']);
+  });
+
+  test('should place columns not in state at the end, preserving relative order', () => {
+    const colDefs = [
+      { field: 'missing', headerName: 'Missing' },
+      { field: 'name', headerName: 'Name' },
+    ];
+
+    const result = applyColumnStateOrderToTreeColDefs(colDefs, [{ colId: 'name' }]);
+
+    expect(result.map((c) => c.field)).toEqual(['name', 'missing']);
+  });
+
+  test('should not mutate the original array', () => {
+    const colDefs = [
+      { field: 'b', headerName: 'B' },
+      { field: 'a', headerName: 'A' },
+    ];
+    const original = [...colDefs];
+
+    applyColumnStateOrderToTreeColDefs(colDefs, [{ colId: 'a' }, { colId: 'b' }]);
+
+    expect(colDefs).toEqual(original);
+  });
+});
+
+describe('Grid :: haveTreeColDefsSamePanelState', () => {
+  test('should return true when order matches for flat columns', () => {
+    const colDefs = [{ field: 'name' }, { field: 'status' }];
+
+    expect(haveTreeColDefsSamePanelState(colDefs, [...colDefs])).toBe(true);
+  });
+
+  test('should return false when order differs for flat columns', () => {
+    expect(
+      haveTreeColDefsSamePanelState([{ field: 'name' }, { field: 'status' }], [{ field: 'status' }, { field: 'name' }]),
+    ).toBe(false);
+  });
+
+  test('should return true when group order matches', () => {
+    const details = { headerName: 'Details', children: [{ field: 'executionStatus', colId: 'status' }] };
+    const metrics = { headerName: 'Metrics', children: [{ field: 'accuracy' }] };
+
+    expect(haveTreeColDefsSamePanelState([details, metrics], [details, metrics])).toBe(true);
+  });
+
+  test('should return false when group order differs', () => {
+    const details = { headerName: 'Details', children: [{ field: 'executionStatus', colId: 'status' }] };
+    const metrics = { headerName: 'Metrics', children: [{ field: 'accuracy' }] };
+
+    expect(haveTreeColDefsSamePanelState([details, metrics], [metrics, details])).toBe(false);
+  });
+
+  test('should return false when lengths differ', () => {
+    const colDefs = [{ field: 'name' }, { field: 'status' }];
+
+    expect(haveTreeColDefsSamePanelState(colDefs, [{ field: 'name' }])).toBe(false);
   });
 });
