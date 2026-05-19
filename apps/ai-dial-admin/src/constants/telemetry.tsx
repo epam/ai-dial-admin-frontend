@@ -305,6 +305,10 @@ export const USAGE_LOG_TEXT_OPERATOR_MAP: Record<string, string> = {
   notEqual: '$ne',
   startsWith: '$starts_with',
   endsWith: '$ends_with',
+  lessThan: '$lt',
+  lessThanOrEqual: '$lte',
+  greaterThan: '$gt',
+  greaterThanOrEqual: '$gte',
 };
 
 export const ROUTE_UNIQUE_USERS_QUERY: TelemetryQuery = getUniqueUsersQuery(ROUTE_TABLE_NAME);

@@ -38,6 +38,7 @@ export const baseStringFilter: Partial<ColDef> = {
 };
 
 export const baseNumberFilter: Partial<ColDef> = {
+  filter: 'agNumberColumnFilter',
   filterParams: {
     ...baseFilterParams.filterParams,
     filterOptions: [

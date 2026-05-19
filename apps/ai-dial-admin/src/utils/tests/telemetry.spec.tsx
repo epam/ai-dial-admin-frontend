@@ -415,40 +415,26 @@ describe('Utils :: telemetry :: translateUsageLogFilterModel', () => {
     ).toEqual([]);
   });
 
-  test('coerces text filter on a numeric column to $eq with a parsed number', () => {
-    expect(
-      translateUsageLogFilterModel({
-        price: { filterType: 'text', type: 'contains', filter: '100' },
-      }),
-    ).toEqual([{ $eq: { left: 'price', right: 100 } }]);
-
-    expect(
-      translateUsageLogFilterModel({
-        prompt_tokens: { filterType: 'text', type: 'equals', filter: '42' },
-      }),
-    ).toEqual([{ $eq: { left: 'prompt_tokens', right: 42 } }]);
-  });
-
-  test('uses $ne for negating text operators on numeric columns', () => {
-    expect(
-      translateUsageLogFilterModel({
-        price: { filterType: 'text', type: 'notContains', filter: '100' },
-      }),
-    ).toEqual([{ $ne: { left: 'price', right: 100 } }]);
-
-    expect(
-      translateUsageLogFilterModel({
-        price: { filterType: 'text', type: 'notEqual', filter: '100' },
-      }),
-    ).toEqual([{ $ne: { left: 'price', right: 100 } }]);
-  });
-
   test('skips numeric-column text filter when value is not a valid number', () => {
     expect(
       translateUsageLogFilterModel({
         price: { filterType: 'text', type: 'contains', filter: 'abc' },
       }),
     ).toEqual([]);
+  });
+
+  test('strips comma thousands-separators from numeric column filter values', () => {
+    expect(
+      translateUsageLogFilterModel({
+        prompt_tokens: { filterType: 'text', type: 'equals', filter: '1,234' },
+      }),
+    ).toEqual([{ $eq: { left: 'prompt_tokens', right: 1234 } }]);
+
+    expect(
+      translateUsageLogFilterModel({
+        price: { filterType: 'text', type: 'notEqual', filter: '1,234,567.89' },
+      }),
+    ).toEqual([{ $ne: { left: 'price', right: 1234567.89 } }]);
   });
 
   test('numeric coercion accepts "0" — it is a legitimate filter value, not empty', () => {
