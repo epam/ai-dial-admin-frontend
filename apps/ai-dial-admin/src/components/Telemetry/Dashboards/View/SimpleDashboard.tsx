@@ -1,8 +1,9 @@
 import LineChart from '@/src/components/Telemetry/Dashboards/LineChart/LineChart';
+import EntitiesConsumptionTree from '@/src/components/Telemetry/EntitiesConsumptionTree';
 import TelemetryGrid from '@/src/components/Telemetry/TelemetryGrid';
-import { PROJECT_GRID_COLUMNS, TELEMETRY_GRID_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { PROJECT_GRID_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { TelemetryI18nKey } from '@/src/constants/i18n';
-import { createSystemUsageQuery, ENTITY_CONSUMPTION_QUERY, PROJECT_CONSUMPTION_QUERY } from '@/src/constants/telemetry';
+import { createSystemUsageQuery, PROJECT_CONSUMPTION_QUERY } from '@/src/constants/telemetry';
 import { useI18n } from '@/src/locales/client';
 import { TelemetryQuery } from '@/src/models/telemetry';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -36,11 +37,9 @@ const SimpleDashboard: FC<Props> = ({ route, effectiveRefreshTime, getData }) =>
       <div className="flex flex-col w-full">
         {route === ApplicationRoute.Dashboard && (
           <div className="flex mb-6 w-full relative">
-            <TelemetryGrid
+            <EntitiesConsumptionTree
               getData={getData}
               refreshTime={effectiveRefreshTime}
-              query={ENTITY_CONSUMPTION_QUERY}
-              columnDefs={TELEMETRY_GRID_COLUMNS}
               title={t(TelemetryI18nKey.EntitiesConsumption)}
             />
           </div>

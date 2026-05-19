@@ -78,6 +78,8 @@ import { dateTimeColumn, numericColumn, priceColumn } from './configs';
 import { baseNumberFilter, baseStringFilter, dateFilter, evalStringFilter } from './filters';
 import RowExpanderCellRenderer from '@/src/components/Grid/CellRenderers/RowExpanderCellRenderer';
 import ChildrenActivityTypeCellRenderer from '@/src/components/Grid/CellRenderers/ChildrenActivityTypeCellRenderer';
+import { TreeRow } from '@/src/components/Common/TreeGrid/types';
+import { EntityRow } from '@/src/models/telemetry';
 import { ActivityAuditView } from '@/src/types/activity-audit';
 import { GridFilterType } from '@/src/types/grid-filter';
 
@@ -456,6 +458,21 @@ export const TELEMETRY_GRID_COLUMNS: ColDef[] = [
       numberValueFormatter(priceValueFormatter(params.data[params.colDef.field || '']) as string),
   },
 ];
+
+export const ENTITIES_CONSUMPTION_TREE_COLUMNS: ColDef[] = TELEMETRY_GRID_COLUMNS.map((col) => {
+  if (col.field === 'name') {
+    return {
+      ...col,
+      valueFormatter: (params) => {
+        const row = params.data as TreeRow<EntityRow> | undefined;
+        const n = row?.children?.length ?? 0;
+        const suffix = n > 0 ? ` (+${n})` : '';
+        return `${params.value ?? ''}${suffix}`;
+      },
+    };
+  }
+  return col;
+});
 
 const completionTimeColumn = (headerName: string): ColDef => ({
   field: 'completion_time',
