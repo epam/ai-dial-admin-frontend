@@ -1,15 +1,11 @@
 import { FC, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialIconButton } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
-import OpenPopup from '@/public/images/icons/open-pop-up.svg';
 import { getCoreSyncStatus } from '@/src/app/actions';
-import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { CoreSyncI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { CoreSyncStatus } from '@/src/models/core-sync-status';
@@ -17,7 +13,6 @@ import { EntitySyncStatus } from '@/src/types/entity-sync-status';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getCoreSyncStatusUrl } from '@/src/utils/core-sync/get-core-sync-status-url';
 import CoreSyncDiffModal from './DiffModal';
-import StatusText from './StatusText';
 
 interface Props {
   view?: ApplicationRoute;
@@ -30,6 +25,24 @@ const CoreSyncEntityStatus: FC<Props> = ({ view, name }) => {
   const [coreSyncStatus, setCoreSyncStatus] = useState<CoreSyncStatus | undefined>();
   const [etag, setEtag] = useState<string>(DEFAULT_ETAG);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const textMapping = useMemo(() => {
+    return {
+      [EntitySyncStatus.FULLY_SYNCED]: t(CoreSyncI18nKey.Synced),
+      [EntitySyncStatus.IN_PROGRESS]: t(CoreSyncI18nKey.InProgress),
+      [EntitySyncStatus.IN_PROGRESS_TOO_LONG]: t(CoreSyncI18nKey.Partially),
+      [EntitySyncStatus.UNKNOWN]: t(CoreSyncI18nKey.Unknown),
+    };
+  }, [t]);
+
+  const badgeClassMapping = useMemo(() => {
+    return {
+      [EntitySyncStatus.FULLY_SYNCED]: 'text-success bg-success',
+      [EntitySyncStatus.IN_PROGRESS]: 'text-secondary bg-layer-4',
+      [EntitySyncStatus.IN_PROGRESS_TOO_LONG]: 'text-warning bg-warning',
+      [EntitySyncStatus.UNKNOWN]: 'text-secondary bg-layer-4',
+    };
+  }, []);
 
   const validStatus = useMemo(() => {
     return (
@@ -79,21 +92,17 @@ const CoreSyncEntityStatus: FC<Props> = ({ view, name }) => {
   }, [resetCounter]);
 
   return (
-    <div className={classNames(coreSyncStatus?.status ? 'block' : 'hidden')}>
-      <LabelledText label={t(CoreSyncI18nKey.SyncWithCore)}>
-        <div className="flex flex-row gap-x-2 items-center">
-          <div className="flex flex-row gap-x-2 items-center flex-1 min-w-0">
-            <StatusText status={coreSyncStatus?.status} />
-          </div>
-          {diffStatus && (
-            <DialIconButton
-              icon={<OpenPopup {...BASE_BUTTON_ICON_PROPS} className="cursor-pointer text-secondary" />}
-              onClick={() => setIsModalOpen(true)}
-              className="size-auto"
-            />
+    <>
+      <div className={classNames(coreSyncStatus?.status ? 'visible' : 'invisible', 'h-[20px]')}>
+        <div
+          className={classNames(
+            'py-1 px-2 uppercase dial-caption-text font-semibold rounded-full',
+            badgeClassMapping[coreSyncStatus?.status || EntitySyncStatus.UNKNOWN],
           )}
+        >
+          {coreSyncStatus?.status ? textMapping[coreSyncStatus.status] : ''}
         </div>
-      </LabelledText>
+      </div>
       {isModalOpen &&
         createPortal(
           <CoreSyncDiffModal
@@ -107,8 +116,16 @@ const CoreSyncEntityStatus: FC<Props> = ({ view, name }) => {
           />,
           document.body,
         )}
-    </div>
+    </>
   );
+
+  //         {diffStatus && (
+  //           <DialIconButton
+  //             icon={<OpenPopup {...BASE_BUTTON_ICON_PROPS} className="cursor-pointer text-secondary" />}
+  //             onClick={() => setIsModalOpen(true)}
+  //             className="size-auto"
+  //           />
+  //         )}
 };
 
 export default CoreSyncEntityStatus;

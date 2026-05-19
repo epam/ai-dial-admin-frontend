@@ -65,7 +65,7 @@ const Dashboard: FC<Props> = ({ route, entity, defaultTimeFilter, onTimeFilterCh
       } else {
         q.query.from.where = getFormattedFilters(currentTimeRange, filters, entityFilterName);
       }
-
+      console.log('Fetching dashboard data with query:', q);
       return getReqRef.current(getDashboardData, q);
     },
     [entityFilterName, filters, getCurrentTimeRange],

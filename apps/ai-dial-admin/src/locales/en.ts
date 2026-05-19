@@ -27,10 +27,10 @@ export default {
   CoreSync: {
     SyncStatus: 'Sync status',
     SyncWithCore: 'Sync with core',
-    InProgress: 'In progress...',
+    InProgress: 'Syncing with Core',
     Partially: 'Out of sync',
     Fully: 'Fully synced',
-    Synced: 'Synced',
+    Synced: 'Synced with core',
     Unknown: 'Unavailable',
     Format: 'JSON format',
     Core: 'Core',
