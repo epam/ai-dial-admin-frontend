@@ -3,15 +3,16 @@
 import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonVariant, DialGhostButton, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, DialErrorButton } from '@epam/ai-dial-ui-kit';
 import { IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
+import { showEditorErrorNotifications } from '@/src/components/EntityHeaderControls/Buttons/utils';
 import JsonToggleWithFormats from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggleWithFormats';
+import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import {
   BASE_BUTTON_ICON_PROPS,
   SELECT_ENTITY_HEADER_CLASS,
@@ -21,12 +22,11 @@ import {
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
-import { showEditorErrorNotifications } from '@/src/components/EntityHeaderControls/Buttons/utils';
-import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 
 export interface SimpleButtonsWrapperProps<T> {
   view: ApplicationRoute;
@@ -107,10 +107,10 @@ const SimpleButtonsWrapper = <T extends object>({
           <div className="flex flex-row items-center w-full gap-x-4">
             {!isEditorEnabled && (
               <div className="flex-1 flex flex-row gap-x-4 justify-center">
-                <DialGhostButton
+                <DialErrorButton
                   className={buttonsClassName}
                   label={t(ButtonsI18nKey.Delete)}
-                  variant={ButtonVariant.Error}
+                  appearance={ButtonAppearance.Outlined}
                   iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
                   onClick={onOpenModal}
                 />

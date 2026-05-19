@@ -3,11 +3,12 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, DialErrorButton } from '@epam/ai-dial-ui-kit';
 import { IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import AssetVersionControl from '@/src/components/Assets/Deployments/AssetVersionControl';
+import { getVersionsPerName } from '@/src/components/Assets/utils';
 import { showEditorErrorNotifications } from '@/src/components/EntityHeaderControls/Buttons/utils';
 import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
@@ -28,7 +29,6 @@ import { useI18n } from '@/src/locales/client';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import AssetChangedEntityButtons from '../Buttons/AssetChangedEntityButtons';
 import { SimpleButtonsWrapperProps } from './SimpleButtonsWrapper';
-import { getVersionsPerName } from '@/src/components/Assets/utils';
 
 export interface AssetButtonsWrapperProps extends Omit<SimpleButtonsWrapperProps<AssetWithVersion>, 'onSave'> {
   assets?: AssetWithVersion[] | null;
@@ -133,9 +133,10 @@ const AssetButtonsWrapper: FC<AssetButtonsWrapperProps> = ({
                   assets={assets}
                   onChangeAsset={onChangeAsset}
                 />
-                <DialNeutralButton
+                <DialErrorButton
                   className={buttonsClassName}
                   label={t(ButtonsI18nKey.Delete)}
+                  appearance={ButtonAppearance.Outlined}
                   iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
                   onClick={onOpenModal}
                 />
