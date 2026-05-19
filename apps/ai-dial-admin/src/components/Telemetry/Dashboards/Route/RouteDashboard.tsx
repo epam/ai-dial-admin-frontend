@@ -38,7 +38,6 @@ const RouteDashboard: FC<Props> = ({ getData, refreshTime, isEntityView = false 
           title={t(TelemetryI18nKey.RouteRequests)}
           query={createRouteUsageQuery}
           getData={getData}
-          prepareData={prepareMultiSeriesChartData}
           refreshTime={refreshTime}
         />
         <RouteChartsValues getData={getData} refreshTime={refreshTime} />

@@ -154,8 +154,8 @@ export const getDefaultFilterValue = (
 
 export function prepareChartData(data: Record<string, string>[], t: (key: string) => string): EChartsOption {
   const config = { ...lineChartDefaultOptions(t) };
-  const xData = data.map((item) => item.time);
-  const yData = data.map((item) => item.requests);
+  const xData = data.map((item) => item.time || item.window);
+  const yData = data.map((item) => item.requests || item.count);
 
   (config.xAxis as unknown as { data: string[] }).data = xData;
   (config.series as unknown as { data: string[] }[])[0].data = yData;
@@ -173,7 +173,7 @@ export function prepareMultiSeriesChartData(data: Record<string, string>[], t: (
 
   for (const row of data) {
     timeSet.add(row.window);
-    methodSet.add(row.mcp_method || row.count || unknownLabel);
+    methodSet.add(row.mcp_method || unknownLabel);
   }
 
   const times = Array.from(timeSet).sort();
@@ -184,7 +184,7 @@ export function prepareMultiSeriesChartData(data: Record<string, string>[], t: (
     dataByMethod.set(method, new Map());
   }
   for (const row of data) {
-    dataByMethod.get(row.mcp_method || row.count || unknownLabel)!.set(row.window, Number(row.count));
+    dataByMethod.get(row.mcp_method || unknownLabel)!.set(row.window, Number(row.count));
   }
 
   (config.xAxis as unknown as { data: string[] }).data = times;
