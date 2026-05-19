@@ -96,6 +96,24 @@ describe('EnvVariable', () => {
     expect(removeVariable).toHaveBeenCalledWith(3);
   });
 
+  test('affected row cells use items-start so paired buttons stay anchored when an error grows the field column', () => {
+    const { container } = render(<Variable {...baseProps} updateVariable={vi.fn()} removeVariable={vi.fn()} />);
+
+    const dragHandle = container.querySelector('[aria-label="Drag to reorder"]');
+    expect(dragHandle).not.toBeNull();
+    const nameRow = dragHandle!.parentElement;
+    expect(nameRow).not.toBeNull();
+    expect(nameRow!.className).toMatch(/\blg:items-start\b/);
+
+    const fileBtn = Array.from(container.querySelectorAll('button')).find((b) =>
+      b.querySelector('svg[class*="tabler-icon-file-arrow-right"]'),
+    );
+    expect(fileBtn).toBeDefined();
+    const valueRow = fileBtn!.parentElement;
+    expect(valueRow).not.toBeNull();
+    expect(valueRow!.className).toMatch(/\bitems-start\b/);
+  });
+
   test('row exposes desktop cells in the documented column order', () => {
     const { container } = render(<Variable {...baseProps} updateVariable={vi.fn()} removeVariable={vi.fn()} />);
 
