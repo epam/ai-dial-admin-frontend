@@ -183,10 +183,7 @@ describe('Grid :: applyColumnStateOrderToTreeColDefs', () => {
       { field: 'status', headerName: 'Status' },
     ];
 
-    const result = applyColumnStateOrderToTreeColDefs(colDefs, [
-      { colId: 'status' },
-      { colId: 'name' },
-    ]);
+    const result = applyColumnStateOrderToTreeColDefs(colDefs, [{ colId: 'status' }, { colId: 'name' }]);
 
     expect(result.map((c) => c.field)).toEqual(['status', 'name']);
   });
@@ -197,10 +194,7 @@ describe('Grid :: applyColumnStateOrderToTreeColDefs', () => {
       { field: 'testCaseName', colId: 'testCaseName', headerName: 'Name' },
     ];
 
-    const result = applyColumnStateOrderToTreeColDefs(colDefs, [
-      { colId: 'testCaseName' },
-      { colId: 'status' },
-    ]);
+    const result = applyColumnStateOrderToTreeColDefs(colDefs, [{ colId: 'testCaseName' }, { colId: 'status' }]);
 
     expect(result.map((c) => c.colId)).toEqual(['testCaseName', 'status']);
   });
@@ -219,12 +213,10 @@ describe('Grid :: applyColumnStateOrderToTreeColDefs', () => {
       children: [{ field: 'accuracy' }, { field: 'bleu' }],
     };
 
-    const result = applyColumnStateOrderToTreeColDefs([details, metrics], [
-      { colId: 'accuracy' },
-      { colId: 'bleu' },
-      { colId: 'status' },
-      { colId: 'testCaseName' },
-    ]);
+    const result = applyColumnStateOrderToTreeColDefs(
+      [details, metrics],
+      [{ colId: 'accuracy' }, { colId: 'bleu' }, { colId: 'status' }, { colId: 'testCaseName' }],
+    );
 
     expect(result.map((c) => c.headerName)).toEqual(['Metrics', 'Details']);
   });
