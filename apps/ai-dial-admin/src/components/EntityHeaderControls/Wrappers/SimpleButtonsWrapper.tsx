@@ -3,7 +3,7 @@
 import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { ButtonVariant, DialGhostButton, DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -107,9 +107,10 @@ const SimpleButtonsWrapper = <T extends object>({
           <div className="flex flex-row items-center w-full gap-x-4">
             {!isEditorEnabled && (
               <div className="flex-1 flex flex-row gap-x-4 justify-center">
-                <DialNeutralButton
+                <DialGhostButton
                   className={buttonsClassName}
                   label={t(ButtonsI18nKey.Delete)}
+                  variant={ButtonVariant.Error}
                   iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
                   onClick={onOpenModal}
                 />

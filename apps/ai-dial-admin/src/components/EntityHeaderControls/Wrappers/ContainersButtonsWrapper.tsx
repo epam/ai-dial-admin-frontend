@@ -2,6 +2,7 @@ import {
   ButtonAppearance,
   ButtonVariant,
   DialButtonDropdown,
+  DialGhostButton,
   DialNeutralButton,
   DropdownItem,
 } from '@epam/ai-dial-ui-kit';
@@ -216,9 +217,10 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
                   </>
                 )}
 
-                <DialNeutralButton
+                <DialGhostButton
                   className={buttonsClassNames}
                   label={t(ButtonsI18nKey.Delete)}
+                  variant={ButtonVariant.Error}
                   iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
                   onClick={onOpenDeleteModal}
                 />
