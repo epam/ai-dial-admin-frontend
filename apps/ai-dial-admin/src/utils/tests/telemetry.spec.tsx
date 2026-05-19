@@ -451,6 +451,20 @@ describe('Utils :: telemetry :: translateUsageLogFilterModel', () => {
     ).toEqual([]);
   });
 
+  test('strips comma thousands-separators from numeric column filter values', () => {
+    expect(
+      translateUsageLogFilterModel({
+        prompt_tokens: { filterType: 'text', type: 'equals', filter: '1,234' },
+      }),
+    ).toEqual([{ $eq: { left: 'prompt_tokens', right: 1234 } }]);
+
+    expect(
+      translateUsageLogFilterModel({
+        price: { filterType: 'text', type: 'notEqual', filter: '1,234,567.89' },
+      }),
+    ).toEqual([{ $ne: { left: 'price', right: 1234567.89 } }]);
+  });
+
   test('numeric coercion accepts "0" — it is a legitimate filter value, not empty', () => {
     expect(
       translateUsageLogFilterModel({

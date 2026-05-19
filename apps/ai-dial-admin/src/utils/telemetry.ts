@@ -173,7 +173,7 @@ export function prepareMultiSeriesChartData(data: Record<string, string>[], t: (
 
   for (const row of data) {
     timeSet.add(row.window);
-    methodSet.add(row.mcp_method || unknownLabel);
+    methodSet.add(row.mcp_method || row.count || unknownLabel);
   }
 
   const times = Array.from(timeSet).sort();
@@ -184,7 +184,7 @@ export function prepareMultiSeriesChartData(data: Record<string, string>[], t: (
     dataByMethod.set(method, new Map());
   }
   for (const row of data) {
-    dataByMethod.get(row.mcp_method || unknownLabel)!.set(row.window, Number(row.count));
+    dataByMethod.get(row.mcp_method || row.count || unknownLabel)!.set(row.window, Number(row.count));
   }
 
   (config.xAxis as unknown as { data: string[] }).data = times;
@@ -240,7 +240,7 @@ const translateUsageLogTextFilter = (colId: string, filter: AgGridTextFilter): U
   }
   const column = toUsageLogSourceColumn(colId);
   if (USAGE_LOG_NUMERIC_COLUMNS.has(column)) {
-    const asNumber = Number(filter.filter);
+    const asNumber = Number(filter.filter.replace(/,/g, ''));
     if (Number.isNaN(asNumber)) {
       return null;
     }
