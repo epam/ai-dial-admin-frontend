@@ -636,6 +636,7 @@ export const CALL_BY_DEPLOYMENT_COLUMNS: ColDef[] = [
 
 export const CALL_BY_PARENT_DEPLOYMENT_COLUMNS: ColDef[] = [
   { field: 'parent_deployment', headerName: 'Parent Deployment', hide: false },
+  { field: 'name', headerName: 'Deployment', hide: false },
   { field: 'requests', headerName: 'Calls', hide: false, ...numericColumn },
 ];
 
