@@ -20,7 +20,6 @@ import {
 } from '@/src/constants/telemetry';
 import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { prepareMultiSeriesChartData } from '@/src/utils/telemetry';
 
 interface Props {
   getData: (input: QueryInput) => Promise<ServerActionResponse>;

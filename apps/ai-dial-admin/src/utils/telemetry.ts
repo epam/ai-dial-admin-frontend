@@ -240,7 +240,7 @@ const translateUsageLogTextFilter = (colId: string, filter: AgGridTextFilter): U
   }
   const column = toUsageLogSourceColumn(colId);
   if (USAGE_LOG_NUMERIC_COLUMNS.has(column)) {
-    const asNumber = Number(filter.filter.replace(/,/g, ''));
+    const asNumber = Number(filter.filter.toString().replace(/,/g, ''));
     if (Number.isNaN(asNumber)) {
       return null;
     }
