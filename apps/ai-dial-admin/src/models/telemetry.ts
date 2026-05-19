@@ -8,6 +8,18 @@ export interface TelemetryData {
   data?: string[][] | string[];
 }
 
+export interface EntityRow {
+  name?: string;
+  parent_deployment?: string;
+  execution_path?: string;
+  requests?: string;
+  cost?: string;
+  deployment_cost?: string;
+  prompts?: string;
+  completions?: string;
+  synthetic?: boolean;
+}
+
 export interface TelemetryQuery {
   $type: string;
   fillGaps?: boolean;
