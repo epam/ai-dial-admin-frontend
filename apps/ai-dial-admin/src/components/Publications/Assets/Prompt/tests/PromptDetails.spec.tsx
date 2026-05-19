@@ -36,7 +36,7 @@ vi.mock('@/src/components/Common/EditableTitle/EditableTitle', () => ({
 }));
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
-  DialNeutralButton: ({ label, onClick, iconBefore }: any) => (
+  DialErrorButton: ({ label, onClick, iconBefore }: any) => (
     <button role="button" aria-label={label} onClick={onClick}>
       {iconBefore}
       {label}
