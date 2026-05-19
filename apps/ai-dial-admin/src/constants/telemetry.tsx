@@ -65,6 +65,24 @@ export const ENTITY_CONSUMPTION_QUERY: TelemetryQuery = {
   },
 };
 
+export const ENTITY_CONSUMPTION_TREE_QUERY: TelemetryQuery = {
+  $type: 'json',
+  query: {
+    expressions: [
+      'deployment',
+      'parent_deployment',
+      'execution_path',
+      'count()',
+      'sum(deployment_price) as money',
+      'sum(price) as aggregated_money',
+      'sum(prompt_tokens) as tokens_p',
+      'sum(completion_tokens) as tokens_c',
+    ],
+    from: ANALYTICS_TABLE_NAME,
+    groupBy: ['deployment', 'parent_deployment', 'execution_path'],
+  },
+};
+
 export const getEntityQuery = (tableName = ANALYTICS_TABLE_NAME): TelemetryQuery => ({
   $type: 'json',
   query: {
@@ -285,6 +303,7 @@ export const TELEMETRY_GRID_HEADERS_MAP: Record<string, string> = {
   tokens_c: 'completions',
   mcp_tool_call_name: 'mcp_tool_call_name',
   parent_deployment: 'parent_deployment',
+  execution_path: 'execution_path',
   tool_calls: 'tool_calls',
   mcp_calls: 'mcp_calls',
   route_path: 'route_path',
