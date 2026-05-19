@@ -136,7 +136,7 @@ describe('ActivityAuditList :: view-aware behavior', () => {
 
 describe('ActivityAuditList :: audit-list-preselect', () => {
   beforeEach(() => {
-    localStorage.clear();
+    sessionStorage.clear();
     getActivitiesMock.mockClear();
     getDeploymentActivitiesMock.mockClear();
   });
@@ -147,21 +147,21 @@ describe('ActivityAuditList :: audit-list-preselect', () => {
   });
 
   test('with preselect "global-firewall", initial view is Deployments', () => {
-    localStorage.setItem(AUDIT_LIST_PRESELECT_STORAGE_KEY, AuditListPreselect.GlobalFirewall);
+    sessionStorage.setItem(AUDIT_LIST_PRESELECT_STORAGE_KEY, AuditListPreselect.GlobalFirewall);
     render(<ActivityAuditList />);
     expect((screen.getByLabelText('View') as HTMLSelectElement).value).toBe('Deployments');
   });
 
   test('preselect is ignored when an entity is provided', () => {
-    localStorage.setItem(AUDIT_LIST_PRESELECT_STORAGE_KEY, AuditListPreselect.GlobalFirewall);
+    sessionStorage.setItem(AUDIT_LIST_PRESELECT_STORAGE_KEY, AuditListPreselect.GlobalFirewall);
     render(<ActivityAuditList entity={{ name: 'm' } as never} entityType="Model" />);
-    expect(localStorage.getItem(AUDIT_LIST_PRESELECT_STORAGE_KEY)).toBe(AuditListPreselect.GlobalFirewall);
+    expect(sessionStorage.getItem(AUDIT_LIST_PRESELECT_STORAGE_KEY)).toBe(AuditListPreselect.GlobalFirewall);
   });
 
   test('unknown preselect value is ignored without corrupting state (and not cleared)', () => {
-    localStorage.setItem(AUDIT_LIST_PRESELECT_STORAGE_KEY, 'something-else');
+    sessionStorage.setItem(AUDIT_LIST_PRESELECT_STORAGE_KEY, 'something-else');
     render(<ActivityAuditList />);
     expect((screen.getByLabelText('View') as HTMLSelectElement).value).toBe('Config');
-    expect(localStorage.getItem(AUDIT_LIST_PRESELECT_STORAGE_KEY)).toBe('something-else');
+    expect(sessionStorage.getItem(AUDIT_LIST_PRESELECT_STORAGE_KEY)).toBe('something-else');
   });
 });

@@ -43,7 +43,8 @@ const ViewHeader: FC<Props> = ({ activity, children }) => {
         )}
         {activity.resourceId &&
           activity.resourceType !== ActivityAuditResourceType.SYSTEM_PROPERTIES &&
-          activity.resourceType !== ActivityAuditResourceType.ADMIN_PROPERTIES && (
+          activity.resourceType !== ActivityAuditResourceType.ADMIN_PROPERTIES &&
+          activity.resourceType !== ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST && (
             <LabelledText label={t(ActivityAuditI18nKey.ResourceId)}>
               <div className="flex flex-row gap-1 items-center">
                 <DialTooltip tooltip={activity.resourceId}>{activity.resourceId}</DialTooltip>

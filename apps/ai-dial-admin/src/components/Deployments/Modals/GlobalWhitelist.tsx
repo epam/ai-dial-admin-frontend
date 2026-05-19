@@ -52,6 +52,8 @@ const GlobalWhitelist: FC<Props> = ({ onClose, isModalOpen, onApply, getDomains,
 
   const onViewInActivityAudit = () => {
     saveAuditListPreselect(AuditListPreselect.GlobalFirewall);
+    // Do not add 'noopener' here — the audit list reads the preselect from sessionStorage,
+    // which is inherited by the new tab only when the opener relationship is intact.
     window.open(ApplicationRoute.ActivityAudit, '_blank');
   };
 
