@@ -79,12 +79,14 @@
 
   .ag-filter-wrapper {
     .ag-input-field-input.ag-text-field-input,
+    .ag-input-field-input.ag-number-field-input,
     .ag-picker-field-wrapper.ag-picker-collapsed,
     .ag-picker-field-wrapper.ag-picker-expanded {
       @apply input;
     }
 
-    .ag-input-field-input.ag-text-field-input {
+    .ag-input-field-input.ag-text-field-input,
+    .ag-input-field-input.ag-input-field-input {
       @apply pl-5;
     }
 
