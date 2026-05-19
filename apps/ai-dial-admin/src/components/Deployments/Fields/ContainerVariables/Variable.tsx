@@ -16,7 +16,6 @@ import { FieldError } from '@/src/models/error';
 import { MOUNT_TYPE } from '@/src/types/deployments/variables';
 import { getVariableNameError } from '@/src/utils/deployments/validation';
 import Value from '@/src/components/Deployments/Fields/ContainerVariables/Value';
-import FileButton from '@/src/components/Deployments/Fields/ContainerVariables/FileButton';
 import { useColumnDragDrop } from '@/src/components/Deployments/Fields/ContainerVariables/use-column-drag-drop';
 
 interface Props {
@@ -123,8 +122,7 @@ const Variable: FC<Props> = ({
     setIsCollapsed((prev) => !prev);
   }, []);
 
-  const mobileLabel = (key: EnvVariablesI18nKey | BasicI18nKey) =>
-    isTablet && index === 0 ? { label: t(key) } : undefined;
+  const mobileLabel = (key: EnvVariablesI18nKey | BasicI18nKey) => (isTablet ? { label: t(key) } : undefined);
 
   const hideOnMobileCollapsed = isTablet && isCollapsed;
 
@@ -157,67 +155,74 @@ const Variable: FC<Props> = ({
         )}
 
         <div
-          className={classNames('flex flex-col mt-4 gap-y-4 lg:mt-0 lg:contents', hideOnMobileCollapsed && 'hidden')}
+          className={classNames(
+            'flex flex-row items-center gap-x-2 mt-4 lg:mt-0 lg:contents',
+            hideOnMobileCollapsed && 'hidden',
+          )}
         >
-          <div className="flex flex-row gap-x-2 items-end">
-            <div
-              ref={dragRef}
-              className="hidden lg:flex lg:items-center lg:h-10 cursor-move text-secondary"
-              aria-label="Drag to reorder"
-            >
-              <IconGripVertical {...BASE_BUTTON_ICON_PROPS} />
+          <div className="flex-1 min-w-0 flex flex-col gap-y-4 lg:contents">
+            <div className="flex flex-row gap-x-2 items-end lg:items-start">
+              <div
+                ref={dragRef}
+                className="hidden lg:flex lg:items-center lg:h-10 cursor-move text-secondary"
+                aria-label="Drag to reorder"
+              >
+                <IconGripVertical {...BASE_BUTTON_ICON_PROPS} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <DialInput
+                  id={`name ${index}`}
+                  value={variable.name}
+                  placeholder={t(EntityPlaceholdersI18nKey.Name)}
+                  labelProps={mobileLabel(EnvVariablesI18nKey.Name)}
+                  aria-label={t(EnvVariablesI18nKey.Name)}
+                  error={variableNameError?.text}
+                  invalid={!!variableNameError}
+                  required
+                  onChange={onChangeName}
+                  disabled={disabled}
+                />
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <DialInput
-                id={`name ${index}`}
-                value={variable.name}
-                placeholder={t(EntityPlaceholdersI18nKey.Name)}
-                labelProps={mobileLabel(EnvVariablesI18nKey.Name)}
-                aria-label={t(EnvVariablesI18nKey.Name)}
-                error={variableNameError?.text}
-                invalid={!!variableNameError}
-                required
-                onChange={onChangeName}
-                disabled={disabled}
-              />
-            </div>
-          </div>
 
-          <DialInput
-            id={`description ${index}`}
-            value={variable.description}
-            placeholder={t(EntityPlaceholdersI18nKey.Description)}
-            labelProps={mobileLabel(EnvVariablesI18nKey.Description)}
-            aria-label={t(EnvVariablesI18nKey.Description)}
-            onChange={onChangeDescription}
-            disabled={disabled}
-          />
+            <DialInput
+              id={`description ${index}`}
+              value={variable.description}
+              placeholder={t(EntityPlaceholdersI18nKey.Description)}
+              labelProps={mobileLabel(EnvVariablesI18nKey.Description)}
+              aria-label={t(EnvVariablesI18nKey.Description)}
+              onChange={onChangeDescription}
+              disabled={disabled}
+            />
 
-          <div className="flex flex-row gap-x-2 items-end">
             <Value
               value={variable.value}
               onValueChange={onValueChange}
               index={index}
               mountType={variable.mountType}
               disabled={disabled}
-              fieldName={isTablet && index === 0 ? t(BasicI18nKey.Value) : undefined}
+              fieldName={isTablet ? t(BasicI18nKey.Value) : undefined}
               ariaLabel={t(BasicI18nKey.Value)}
             />
-            <FileButton onChange={onValueChange} disabled={disabled} />
-          </div>
 
-          <div className="flex flex-row gap-x-2 items-end">
-            <div className="flex-1 min-w-0">
-              <DialSelectField
-                value={variable.mountType || mountTypeItems[0].value}
-                id={`mountType_${index}`}
-                options={mountTypeItems}
-                label={isTablet && index === 0 ? t(EnvVariablesI18nKey.MountType) : undefined}
-                aria-label={t(EnvVariablesI18nKey.MountType)}
-                onChange={onChangeMountType}
-                disabled={disabled}
-              />
+            <div className="flex flex-row gap-x-2 items-end">
+              <div className="flex-1 min-w-0">
+                <DialSelectField
+                  value={variable.mountType || mountTypeItems[0].value}
+                  id={`mountType_${index}`}
+                  options={mountTypeItems}
+                  label={isTablet ? t(EnvVariablesI18nKey.MountType) : undefined}
+                  aria-label={t(EnvVariablesI18nKey.MountType)}
+                  onChange={onChangeMountType}
+                  disabled={disabled}
+                />
+              </div>
+              <div className="hidden lg:flex">
+                <DialRemoveButton onClick={onRemove} disabled={disabled} />
+              </div>
             </div>
+          </div>
+          <div className="lg:hidden">
             <DialRemoveButton onClick={onRemove} disabled={disabled} />
           </div>
         </div>
