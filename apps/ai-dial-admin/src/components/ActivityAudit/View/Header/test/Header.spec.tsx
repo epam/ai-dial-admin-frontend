@@ -62,4 +62,30 @@ describe('ViewHeader', () => {
     expect(screen.getByText(ActivityAuditI18nKey.ActivityType)).toBeInTheDocument();
     expect(screen.getByText(ActivityAuditI18nKey.ResourceType)).toBeInTheDocument();
   });
+
+  test('omits the Resource identifier row for global firewall even when resourceId is present', () => {
+    const firewallActivity: DialActivity = {
+      ...baseActivity,
+      resourceType: ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST,
+      resourceId: 'firewall-id-1',
+    };
+    render(<ViewHeader activity={firewallActivity} />);
+
+    expect(screen.queryByText(ActivityAuditI18nKey.ResourceId)).not.toBeInTheDocument();
+    expect(screen.queryByText('firewall-id-1')).not.toBeInTheDocument();
+    expect(screen.queryAllByRole('button')).toHaveLength(0);
+  });
+
+  test('renders the Resource identifier row with icon for a container activity', () => {
+    const containerActivity: DialActivity = {
+      ...baseActivity,
+      resourceType: ActivityAuditResourceType.MCP_DEPLOYMENT,
+      resourceId: 'mcp-deploy-1',
+    };
+    render(<ViewHeader activity={containerActivity} />);
+
+    expect(screen.getByText(ActivityAuditI18nKey.ResourceId)).toBeInTheDocument();
+    expect(screen.getByText('mcp-deploy-1')).toBeInTheDocument();
+    expect(screen.getAllByRole('button').length).toBeGreaterThan(0);
+  });
 });

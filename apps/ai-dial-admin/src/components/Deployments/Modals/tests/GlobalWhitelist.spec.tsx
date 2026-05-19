@@ -54,7 +54,7 @@ describe('GlobalWhitelist :: View in Activity Audit link', () => {
   const openSpy = vi.spyOn(window, 'open');
 
   beforeEach(() => {
-    localStorage.clear();
+    sessionStorage.clear();
     openSpy.mockReset();
     openSpy.mockReturnValue(null);
   });
@@ -92,16 +92,16 @@ describe('GlobalWhitelist :: View in Activity Audit link', () => {
 
     fireEvent.click(screen.getByText(DeploymentsI18nKey.ViewInActivityAudit));
 
-    expect(localStorage.getItem(AUDIT_LIST_PRESELECT_STORAGE_KEY)).toBe(AuditListPreselect.GlobalFirewall);
+    expect(sessionStorage.getItem(AUDIT_LIST_PRESELECT_STORAGE_KEY)).toBe(AuditListPreselect.GlobalFirewall);
     expect(openSpy).toHaveBeenCalledTimes(1);
     expect(openSpy).toHaveBeenCalledWith(ApplicationRoute.ActivityAudit, '_blank');
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  test('preselect is written to localStorage before window.open is called', () => {
+  test('preselect is written to sessionStorage before window.open is called', () => {
     let storageAtOpen: string | null = null;
     openSpy.mockImplementation(() => {
-      storageAtOpen = localStorage.getItem(AUDIT_LIST_PRESELECT_STORAGE_KEY);
+      storageAtOpen = sessionStorage.getItem(AUDIT_LIST_PRESELECT_STORAGE_KEY);
       return null;
     });
 
@@ -111,7 +111,7 @@ describe('GlobalWhitelist :: View in Activity Audit link', () => {
     expect(storageAtOpen).toBe(AuditListPreselect.GlobalFirewall);
   });
 
-  test('Cancel button invokes onClose without touching localStorage or opening tabs', async () => {
+  test('Cancel button invokes onClose without touching sessionStorage or opening tabs', async () => {
     const onClose = vi.fn();
     render(<GlobalWhitelist {...baseProps} onClose={onClose} />);
 
@@ -119,7 +119,7 @@ describe('GlobalWhitelist :: View in Activity Audit link', () => {
     fireEvent.click(cancelBtn);
 
     await waitFor(() => expect(onClose).toHaveBeenCalled());
-    expect(localStorage.getItem(AUDIT_LIST_PRESELECT_STORAGE_KEY)).toBeNull();
+    expect(sessionStorage.getItem(AUDIT_LIST_PRESELECT_STORAGE_KEY)).toBeNull();
     expect(openSpy).not.toHaveBeenCalled();
   });
 });

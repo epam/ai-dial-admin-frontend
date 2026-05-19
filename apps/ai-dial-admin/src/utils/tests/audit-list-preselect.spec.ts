@@ -6,7 +6,7 @@ import { clearAuditListPreselect, readAuditListPreselect, saveAuditListPreselect
 
 describe('audit-list-preselect', () => {
   beforeEach(() => {
-    localStorage.clear();
+    sessionStorage.clear();
   });
 
   afterEach(() => {
@@ -14,10 +14,10 @@ describe('audit-list-preselect', () => {
   });
 
   describe('saveAuditListPreselect', () => {
-    test('writes the enum value to localStorage', () => {
+    test('writes the enum value to sessionStorage', () => {
       saveAuditListPreselect(AuditListPreselect.GlobalFirewall);
 
-      expect(localStorage.getItem(AUDIT_LIST_PRESELECT_STORAGE_KEY)).toBe(AuditListPreselect.GlobalFirewall);
+      expect(sessionStorage.getItem(AUDIT_LIST_PRESELECT_STORAGE_KEY)).toBe(AuditListPreselect.GlobalFirewall);
     });
 
     test('no-ops when window is undefined (SSR)', () => {
@@ -35,7 +35,7 @@ describe('audit-list-preselect', () => {
       const result = readAuditListPreselect();
 
       expect(result).toBe(AuditListPreselect.GlobalFirewall);
-      expect(localStorage.getItem(AUDIT_LIST_PRESELECT_STORAGE_KEY)).toBe(AuditListPreselect.GlobalFirewall);
+      expect(sessionStorage.getItem(AUDIT_LIST_PRESELECT_STORAGE_KEY)).toBe(AuditListPreselect.GlobalFirewall);
     });
 
     test('is idempotent — repeated calls return the same value', () => {
@@ -50,10 +50,10 @@ describe('audit-list-preselect', () => {
     });
 
     test('returns null when the stored value is not a known enum member (without clearing)', () => {
-      localStorage.setItem(AUDIT_LIST_PRESELECT_STORAGE_KEY, 'something-else');
+      sessionStorage.setItem(AUDIT_LIST_PRESELECT_STORAGE_KEY, 'something-else');
 
       expect(readAuditListPreselect()).toBeNull();
-      expect(localStorage.getItem(AUDIT_LIST_PRESELECT_STORAGE_KEY)).toBe('something-else');
+      expect(sessionStorage.getItem(AUDIT_LIST_PRESELECT_STORAGE_KEY)).toBe('something-else');
     });
 
     test('returns null when window is undefined (SSR)', () => {
@@ -65,12 +65,12 @@ describe('audit-list-preselect', () => {
   });
 
   describe('clearAuditListPreselect', () => {
-    test('removes the key from localStorage', () => {
+    test('removes the key from sessionStorage', () => {
       saveAuditListPreselect(AuditListPreselect.GlobalFirewall);
 
       clearAuditListPreselect();
 
-      expect(localStorage.getItem(AUDIT_LIST_PRESELECT_STORAGE_KEY)).toBeNull();
+      expect(sessionStorage.getItem(AUDIT_LIST_PRESELECT_STORAGE_KEY)).toBeNull();
     });
 
     test('no-ops when window is undefined (SSR)', () => {
