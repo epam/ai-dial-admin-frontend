@@ -13,55 +13,7 @@ import { useI18n } from '@/src/locales/client';
 import { useNotification } from '@/src/context/NotificationContext';
 
 import ContainerNodePoolModal from '@/src/components/Deployments/Modals/ContainerNodePoolModal/ContainerNodePoolModal';
-
-interface SelectedDisplayProps {
-  pool: NodePool | null;
-  poolId: string | null;
-  poolName: string | null;
-}
-
-const SelectedPoolDisplay: FC<SelectedDisplayProps> = ({ pool, poolId, poolName }) => {
-  const t = useI18n();
-
-  if (!poolId) {
-    return (
-      <div className="flex flex-1 flex-col min-w-0">
-        <span className="dial-small-semi-text text-primary truncate">{t(DeploymentsI18nKey.NodePoolAny)}</span>
-        <span className="dial-tiny-text text-secondary truncate">{t(DeploymentsI18nKey.NodePoolAnyDescription)}</span>
-      </div>
-    );
-  }
-
-  const resolvedName = pool?.name ?? poolName ?? null;
-  const description = pool?.description;
-
-  if (!resolvedName) {
-    return (
-      <div className="flex flex-1 flex-col min-w-0">
-        <span className="dial-small-semi-text text-error truncate" title={poolId}>
-          {t(DeploymentsI18nKey.NodePoolUnknown, { id: poolId })}
-        </span>
-        <span className="dial-tiny-text text-secondary truncate">{t(DeploymentsI18nKey.NodePoolUnknownHint)}</span>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-1 flex-col min-w-0">
-      <span className="dial-small-semi-text text-primary truncate" title={resolvedName}>
-        {resolvedName}
-      </span>
-      <span className="font-mono dial-tiny-text text-secondary truncate" title={poolId}>
-        {poolId}
-      </span>
-      {description && (
-        <span className="dial-tiny-text text-secondary truncate" title={description}>
-          {description}
-        </span>
-      )}
-    </div>
-  );
-};
+import SelectedPoolDisplay from '@/src/components/Deployments/NodePool/SelectedPoolDisplay';
 
 interface Props {
   container: Container;

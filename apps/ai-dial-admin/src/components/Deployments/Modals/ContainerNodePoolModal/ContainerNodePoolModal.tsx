@@ -1,7 +1,7 @@
 'use client';
 
 import { FC, useEffect, useState } from 'react';
-import { DialNeutralButton, DialPopup, DialPrimaryButton, PopupSize } from '@epam/ai-dial-ui-kit';
+import { DialConfirmationPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey, DeploymentsI18nKey } from '@/src/constants/i18n';
 import { NodePool } from '@/src/models/deployments/node-pools';
@@ -33,24 +33,21 @@ const ContainerNodePoolModal: FC<Props> = ({ isOpen, pools, initialSelection, on
   };
 
   return (
-    <DialPopup
+    <DialConfirmationPopup
       open={isOpen}
       onClose={onClose}
+      onConfirm={onApply}
       header={t(DeploymentsI18nKey.NodePoolModalTitle)}
+      confirmLabel={t(ButtonsI18nKey.Apply)}
+      cancelLabel={t(ButtonsI18nKey.Cancel)}
       size={PopupSize.Lg}
       className="h-[560px]"
       dividers
-      footer={
-        <div className="flex flex-row items-center justify-end gap-2 px-6 py-4">
-          <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-          <DialPrimaryButton label={t(ButtonsI18nKey.Apply)} onClick={onApply} />
-        </div>
-      }
     >
       <div className="flex h-full flex-col px-6 py-4">
         <NodePoolList pools={pools} selectedId={pendingSelection} onSelect={setPendingSelection} />
       </div>
-    </DialPopup>
+    </DialConfirmationPopup>
   );
 };
 
