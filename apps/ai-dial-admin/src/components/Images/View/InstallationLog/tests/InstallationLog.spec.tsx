@@ -115,6 +115,16 @@ describe('InstallationLog', () => {
     expect(showNotificationSpy).toHaveBeenCalledTimes(1);
   });
 
+  test('error event with no data closes the stream silently (no notification)', () => {
+    render(<InstallationLog imageBuildId="build-1" />);
+    const source = MockEventSource.instances[0];
+    act(() => {
+      source.dispatch('error');
+    });
+    expect(source.close).toHaveBeenCalledTimes(1);
+    expect(showNotificationSpy).not.toHaveBeenCalled();
+  });
+
   test('unmount closes EventSource and removes every listener it added', () => {
     const { unmount } = render(<InstallationLog imageBuildId="build-1" />);
     const source = MockEventSource.instances[0];
