@@ -107,8 +107,14 @@ const RunMetricDetailPanel: FC<Props> = ({ resultId, grafanaTraceUrl, onClose, m
               )}
               {metricGroups.map((group) => {
                 const bindings = metricBindings?.[group.title];
-                const groupBindings = [...(bindings?.configBindings ?? []), ...(bindings?.inputBindings ?? [])];
-                return <MetricGroup key={group.title} group={group} bindings={groupBindings} />;
+                return (
+                  <MetricGroup
+                    key={group.title}
+                    group={group}
+                    configBindings={bindings?.configBindings}
+                    inputBindings={bindings?.inputBindings}
+                  />
+                );
               })}
               {requestJson && <CodeViewer title={t(RunsI18nKey.Request)} content={requestJson} />}
               {responseJson && <CodeViewer title={t(RunsI18nKey.Response)} content={responseJson} />}

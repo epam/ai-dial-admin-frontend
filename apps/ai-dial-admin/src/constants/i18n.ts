@@ -1715,6 +1715,8 @@ export enum RunsI18nKey {
   NumericDiff = 'Runs.NumericDiff',
   TextDiff = 'Runs.TextDiff',
   MetricBindings = 'Runs.MetricBindings',
+  ConfigBindings = 'Runs.ConfigBindings',
+  InputBindings = 'Runs.InputBindings',
   CompareWith = 'Runs.CompareWith',
   RunCompareNoMatch = 'Runs.RunCompareNoMatch',
 }
