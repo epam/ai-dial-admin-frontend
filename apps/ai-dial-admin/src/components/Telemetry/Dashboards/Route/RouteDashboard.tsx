@@ -20,7 +20,6 @@ import {
 } from '@/src/constants/telemetry';
 import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { prepareMultiSeriesChartData } from '@/src/utils/telemetry';
 
 interface Props {
   getData: (input: QueryInput) => Promise<ServerActionResponse>;
@@ -38,7 +37,6 @@ const RouteDashboard: FC<Props> = ({ getData, refreshTime, isEntityView = false 
           title={t(TelemetryI18nKey.RouteRequests)}
           query={createRouteUsageQuery}
           getData={getData}
-          prepareData={prepareMultiSeriesChartData}
           refreshTime={refreshTime}
         />
         <RouteChartsValues getData={getData} refreshTime={refreshTime} />

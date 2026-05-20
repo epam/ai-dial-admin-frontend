@@ -14,6 +14,9 @@ vi.mock('@/src/app/[lang]/prompts/actions', () => ({
   getPrompts: vi.fn(),
   movePrompts: vi.fn(),
   removePrompt: vi.fn(),
+  getPrompt: vi.fn(),
+  exportPrompts: vi.fn(),
+  bulkDeletePrompts: vi.fn(),
 }));
 
 describe('PromptView', () => {

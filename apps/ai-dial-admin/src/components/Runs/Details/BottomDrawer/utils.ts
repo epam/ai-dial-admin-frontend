@@ -15,7 +15,7 @@ function buildRecordRows(
 
   return [...keys].sort().map((key) => {
     const values: ComparisonRow['values'] = hasTwoResults
-      ? [{ raw: serializeValue(pinnedRecord?.[key]) }, { raw: serializeValue(activeRecord?.[key]) }]
+      ? [{ raw: serializeValue(activeRecord?.[key]) }, { raw: serializeValue(pinnedRecord?.[key]) }]
       : [{ raw: serializeValue(activeRecord?.[key]) }];
 
     return { fieldKey: key, label: key, isNumeric, values };
@@ -35,14 +35,14 @@ export function buildComparisonSections(
 
   const sectionsMap = new Map<string, ComparisonSection>();
 
-  // Execution section — values order: [pinned, active] when two results, [active] when single
+  // Execution section — values order: [active/current, pinned/compared] when two results, [active] when single
   const execRows: ComparisonRow[] = [
     {
       fieldKey: 'executionStatus',
       label: 'executionStatus',
       isNumeric: false,
       values: hasTwoResults
-        ? [{ raw: effectivePinned.executionStatus ?? null }, { raw: active.executionStatus ?? null }]
+        ? [{ raw: active.executionStatus ?? null }, { raw: effectivePinned.executionStatus ?? null }]
         : [{ raw: active.executionStatus ?? null }],
     },
     {
@@ -51,8 +51,8 @@ export function buildComparisonSections(
       isNumeric: true,
       values: hasTwoResults
         ? [
-            { raw: effectivePinned.execDurationMs != null ? String(effectivePinned.execDurationMs) : null },
             { raw: active.execDurationMs != null ? String(active.execDurationMs) : null },
+            { raw: effectivePinned.execDurationMs != null ? String(effectivePinned.execDurationMs) : null },
           ]
         : [{ raw: active.execDurationMs != null ? String(active.execDurationMs) : null }],
     },
@@ -82,7 +82,7 @@ export function buildComparisonSections(
       label: 'requestBody',
       isNumeric: false,
       values: hasTwoResults
-        ? [{ raw: serializeValue(effectivePinned.requestBody) }, { raw: serializeValue(active.requestBody) }]
+        ? [{ raw: serializeValue(active.requestBody) }, { raw: serializeValue(effectivePinned.requestBody) }]
         : [{ raw: serializeValue(active.requestBody) }],
     });
   }
@@ -92,7 +92,7 @@ export function buildComparisonSections(
       label: 'responseBody',
       isNumeric: false,
       values: hasTwoResults
-        ? [{ raw: serializeValue(effectivePinned.responseBody) }, { raw: serializeValue(active.responseBody) }]
+        ? [{ raw: serializeValue(active.responseBody) }, { raw: serializeValue(effectivePinned.responseBody) }]
         : [{ raw: serializeValue(active.responseBody) }],
     });
   }
@@ -115,7 +115,7 @@ export function buildComparisonSections(
 
     const rows: ComparisonRow[] = [...fieldKeys].sort().map((fieldKey) => {
       const values: ComparisonRow['values'] = hasTwoResults
-        ? [{ raw: serializeValue(pinnedGroup?.[fieldKey]) }, { raw: serializeValue(activeGroup?.[fieldKey]) }]
+        ? [{ raw: serializeValue(activeGroup?.[fieldKey]) }, { raw: serializeValue(pinnedGroup?.[fieldKey]) }]
         : [{ raw: serializeValue(activeGroup?.[fieldKey]) }];
 
       return {
@@ -223,8 +223,8 @@ export function valuesAreEqual(a: string | null, b: string | null): boolean {
 
 export function getDiffClass(row: ComparisonRow): string {
   if (row.values.length < 2) return '';
-  const [pinned, active] = row.values;
-  if (valuesAreEqual(pinned.raw, active.raw)) return '';
+  const [active, pinned] = row.values;
+  if (valuesAreEqual(active.raw, pinned.raw)) return '';
   return row.isNumeric ? 'bg-warning' : 'bg-accent-secondary-alpha';
 }
 

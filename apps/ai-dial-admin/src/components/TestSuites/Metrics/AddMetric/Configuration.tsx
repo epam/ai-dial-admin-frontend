@@ -2,13 +2,14 @@
 
 import { Dispatch, FC, SetStateAction, useCallback, useMemo, useState } from 'react';
 
-import { DialInput, DialLinkButton, DialSelect, SelectOption, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
+import { DialInput, DialSelect, SelectOption, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
 import classnames from 'classnames';
 
 import ContentWithLinks from '@/src/components/Common/ContentWithLinks/ContentWithLinks';
+import ExpandableText from '@/src/components/Common/ExpandableText/ExpandableText';
 import { jsonSchemaToFields } from '@/src/components/Common/SchemaGrid/utils';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
-import { ButtonsI18nKey, CompareI18nKey, EntityFieldsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { CompareI18nKey, EntityFieldsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Metric, MetricBinding } from '@/src/models/evaluation/metric';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
@@ -48,11 +49,9 @@ const MetricConfiguration: FC<Props> = ({
   onJsonViewChange,
 }) => {
   const t = useI18n();
-  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isJsonView, setIsJsonView] = useState(false);
 
   const description = selectedMetric?.description || selectedMetricDetails?.description || '';
-  const isLongDescription = description.length > 150;
 
   const viewOptions: SelectOption[] = [
     { value: 'controls', label: t(TestSuitesI18nKey.Controls) },
@@ -119,21 +118,12 @@ const MetricConfiguration: FC<Props> = ({
             onChange={onViewSelectChange}
           />
         </div>
-        <div
-          className={classnames('h-full flex flex-col dial-tiny-text text-secondary', !isJsonView ? 'w-full' : 'w-1/2')}
+        <ExpandableText
+          lines={3}
+          className={classnames('h-full dial-tiny-text text-secondary', !isJsonView ? 'w-full' : 'w-1/2')}
         >
-          <div className={!isDescriptionExpanded && isLongDescription ? 'line-clamp-3' : ''}>
-            <ContentWithLinks text={description} />
-          </div>
-          {isLongDescription && (
-            <div>
-              <DialLinkButton
-                onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-                label={isDescriptionExpanded ? t(ButtonsI18nKey.ShowLess) : t(ButtonsI18nKey.ShowMore)}
-              />
-            </div>
-          )}
-        </div>
+          <ContentWithLinks text={description} />
+        </ExpandableText>
       </div>
 
       {isJsonView ? (

@@ -4,7 +4,9 @@ import { FC, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import {
+  ButtonAppearance,
   DialConfirmationPopup,
+  DialErrorButton,
   DialLoader,
   DialNeutralButton,
   DialNoDataContent,
@@ -142,9 +144,10 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
                     <span className="dial-body-semi">{metric.name}</span>
 
                     <div className="flex flex-row items-center gap-3">
-                      <DialNeutralButton
+                      <DialErrorButton
                         size={ElementSize.Small}
                         label={t(ButtonsI18nKey.Delete)}
+                        appearance={ButtonAppearance.Outlined}
                         onClick={() => {
                           setMetricToEdit(metric);
                           setIsDeleteModalOpen(true);

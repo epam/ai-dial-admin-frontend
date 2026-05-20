@@ -20,6 +20,7 @@ interface Props {
   pinnedDetail: AnalyticsResult | null;
   spotlightedFields: Set<string>;
   onToggleSpotlight: (fieldKey: string) => void;
+  runCompareNames?: { current: string; compared: string };
 }
 
 const ComparisonTableView: FC<Props> = ({
@@ -28,6 +29,7 @@ const ComparisonTableView: FC<Props> = ({
   pinnedDetail,
   spotlightedFields,
   onToggleSpotlight,
+  runCompareNames,
 }) => {
   const t = useI18n();
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
@@ -58,8 +60,8 @@ const ComparisonTableView: FC<Props> = ({
   const hasTwoColumns = pinnedDetail != null && pinnedDetail.id !== activeDetail?.id;
   const details = useMemo(() => {
     const arr: AnalyticsResult[] = [];
-    if (pinnedDetail && hasTwoColumns) arr.push(pinnedDetail);
     if (activeDetail) arr.push(activeDetail);
+    if (pinnedDetail && hasTwoColumns) arr.push(pinnedDetail);
     return arr;
   }, [activeDetail, pinnedDetail, hasTwoColumns]);
 
@@ -91,18 +93,26 @@ const ComparisonTableView: FC<Props> = ({
           <div className="sticky top-0 z-10 bg-layer-1 text-left dial-caption-semi-text text-secondary font-medium px-3 py-1.5 border-b border-secondary">
             {t(RunsI18nKey.FieldColumn)}
           </div>
-          {details.map((detail, idx) => (
-            <div
-              key={detail.id ?? idx}
-              className="sticky top-0 z-10 bg-layer-1 text-left dial-caption-semi-text font-medium px-3 py-1.5 border-b border-secondary"
-            >
-              <div className="flex items-center gap-2">
-                <DialEllipsisTooltip text={detail.testCaseName ?? detail.id ?? ''} className="text-primary" />
-                <StatusBadge status={detail.executionStatus} />
-                {detail.execDurationMs != null && <span className="text-secondary">{detail.execDurationMs}ms</span>}
+          {details.map((detail, idx) => {
+            const runLabel = runCompareNames ? (idx === 0 ? runCompareNames.current : runCompareNames.compared) : null;
+            return (
+              <div
+                key={detail.id ?? idx}
+                className="sticky top-0 z-10 bg-layer-1 text-left dial-caption-semi-text font-medium px-3 py-1.5 border-b border-secondary"
+              >
+                <div className="flex items-center gap-2">
+                  <DialEllipsisTooltip
+                    text={runLabel ?? detail.testCaseName ?? detail.id ?? ''}
+                    className="text-primary"
+                  />
+                  {!runLabel && <StatusBadge status={detail.executionStatus} />}
+                  {!runLabel && detail.execDurationMs != null && (
+                    <span className="text-secondary">{detail.execDurationMs}ms</span>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           {/* Section rows */}
           {sections.map((section) => {
@@ -130,8 +140,8 @@ const ComparisonTableView: FC<Props> = ({
           fieldLabel={diffViewState.fieldLabel}
           original={diffViewState.original}
           modified={diffViewState.modified}
-          originalLabel={pinnedDetail?.testCaseName ?? pinnedDetail?.id ?? ''}
-          modifiedLabel={activeDetail?.testCaseName ?? activeDetail?.id ?? ''}
+          originalLabel={runCompareNames?.current ?? activeDetail?.testCaseName ?? activeDetail?.id ?? ''}
+          modifiedLabel={runCompareNames?.compared ?? pinnedDetail?.testCaseName ?? pinnedDetail?.id ?? ''}
           onClose={() => setDiffViewState(null)}
         />
       )}

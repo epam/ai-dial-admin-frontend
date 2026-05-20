@@ -4,13 +4,14 @@ import { DialSwitch } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback } from 'react';
 
 import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
+import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
 import DeploymentProperties from '@/src/components/EntityMainProperties/Properties/DeploymentProperties';
+import Authentication from '@/src/components/Toolsets/Auth/Authentication';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { Toolset, ToolsetAuthType } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
-import Authentication from '@/src/components/Toolsets/Auth/Authentication';
 
 interface Props {
   selectedToolset: Toolset;
@@ -43,6 +44,7 @@ const ToolsetProperties: FC<Props> = ({ names, selectedToolset, onChangeToolset 
         isEntityImmutable={true}
         view={ApplicationRoute.Toolsets}
       />
+      <Authentication toolset={selectedToolset} view={ApplicationRoute.Toolsets} onChange={handleChangeToolset} />
       <DialSwitch
         isOn={selectedToolset.forwardPerRequestKey}
         label={t(EntityFieldsI18nKey.forwardPerRequestKey)}
@@ -52,8 +54,12 @@ const ToolsetProperties: FC<Props> = ({ names, selectedToolset, onChangeToolset 
           handleChangeToolset({ ...selectedToolset, forwardPerRequestKey: value });
         }}
       />
+      <ForwardAuthTokenField
+        view={ApplicationRoute.Toolsets}
+        entity={selectedToolset}
+        onChangeEntity={handleChangeToolset}
+      />
       <MaxRetryAttempts entity={selectedToolset} onChangeEntity={handleChangeToolset} />
-      <Authentication toolset={selectedToolset} view={ApplicationRoute.Toolsets} onChange={handleChangeToolset} />
     </div>
   );
 };

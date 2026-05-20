@@ -6,20 +6,43 @@ import {
   getResourceRollbackOperation,
   getViewDetailsOperation,
 } from '@/src/constants/grid-columns/actions';
-import { ACTIVITY_AUDIT_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { ResourceTypeLabelMap } from '@/src/constants/grid-columns/formatters';
+import { ACTIVITY_AUDIT_COLUMNS, RESOURCE_TYPE_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { DialActivity } from '@/src/models/activity-audit';
 import { GridFilter } from '@/src/models/grid-filter';
 import { FilterDto } from '@/src/models/request';
 import { TimeRange } from '@/src/models/time-range';
+import { GridFilterType } from '@/src/types/grid-filter';
 import { FilterOperatorDto } from '@/src/types/request';
 import { formatDateToLocalString } from '@/src/utils/formatting/date';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 import { ActivityAuditRevision } from '@/src/components/ActivityAudit/models';
+import { auditResourceRoute } from '@/src/components/ActivityAudit/View/Header/constants';
 import { ActivityAuditResourceType, ActivityAuditView } from '@/src/types/activity-audit';
-import { ApplicationRoute } from '@/src/types/routes';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialApplicationScheme } from '@/src/models/dial/application';
+
+const expandResourceTypeFilter = (filter: GridFilter, map: ResourceTypeLabelMap): GridFilter => {
+  if (filter.type !== GridFilterType.CONTAINS || typeof filter.filter !== 'string') {
+    return filter;
+  }
+  const needle = filter.filter.toLowerCase();
+  if (!needle) {
+    return filter;
+  }
+  const matched = new Set<ActivityAuditResourceType>();
+  for (const [label, enumValues] of Object.entries(map)) {
+    if (label.includes(needle)) {
+      for (const v of enumValues) matched.add(v);
+    }
+  }
+  if (matched.size !== 1) {
+    return filter;
+  }
+  const [only] = matched;
+  return { ...filter, type: GridFilterType.EQUALS, filter: only };
+};
 
 /**
  * Generate columns with actions for activity audit grid
@@ -79,8 +102,19 @@ export const getDeploymentActivityAuditColumns = (
  * @param {TimeRange} timeRange - time range selection
  * @returns {FilterDto[]} - filter for audit data
  */
-export const getGridFilters = (gridFilter: Record<string, GridFilter>, timeRange: TimeRange): FilterDto[] => {
-  const filters = getRequestFilters(gridFilter);
+export const getGridFilters = (
+  gridFilter: Record<string, GridFilter>,
+  timeRange: TimeRange,
+  resourceTypeLabelMap?: ResourceTypeLabelMap,
+): FilterDto[] => {
+  const transformed =
+    resourceTypeLabelMap && gridFilter[RESOURCE_TYPE_COLUMN]
+      ? {
+          ...gridFilter,
+          [RESOURCE_TYPE_COLUMN]: expandResourceTypeFilter(gridFilter[RESOURCE_TYPE_COLUMN], resourceTypeLabelMap),
+        }
+      : gridFilter;
+  const filters = getRequestFilters(transformed);
   const timeFilters: FilterDto[] = [
     {
       column: 'epochTimestampMs',
@@ -140,42 +174,9 @@ export const getAuditActivityHref = (
   if (!entityType || !entity || !activityId) {
     return '';
   }
-
-  let route: ApplicationRoute;
-  switch (entityType) {
-    case ActivityAuditResourceType.MODEL:
-      route = ApplicationRoute.Models;
-      break;
-    case ActivityAuditResourceType.APPLICATION:
-      route = ApplicationRoute.Applications;
-      break;
-    case ActivityAuditResourceType.TOOLSET:
-      route = ApplicationRoute.Toolsets;
-      break;
-    case ActivityAuditResourceType.INTERCEPTOR:
-      route = ApplicationRoute.Interceptors;
-      break;
-    case ActivityAuditResourceType.ROUTE:
-      route = ApplicationRoute.Routes;
-      break;
-    case ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA:
-      route = ApplicationRoute.ApplicationRunners;
-      break;
-    case ActivityAuditResourceType.INTERCEPTOR_TEMPLATE:
-      route = ApplicationRoute.InterceptorTemplates;
-      break;
-    case ActivityAuditResourceType.ADAPTER:
-      route = ApplicationRoute.Adapters;
-      break;
-    case ActivityAuditResourceType.ROLE:
-      route = ApplicationRoute.Roles;
-      break;
-    case ActivityAuditResourceType.KEY:
-      route = ApplicationRoute.Keys;
-      break;
-    default:
-      return '';
+  const route = auditResourceRoute[entityType];
+  if (!route) {
+    return '';
   }
-
-  return route ? `${getUrnForEntity(route, entity)}/${encodeURIComponent(activityId)}` : '';
+  return `${getUrnForEntity(route, entity)}/${encodeURIComponent(activityId)}`;
 };

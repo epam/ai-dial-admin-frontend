@@ -14,7 +14,7 @@ import { ImportData } from '@/src/models/import-asset';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { DialFile } from '@epam/ai-dial-ui-kit';
+import { DialFile, DialUploadFileItem } from '@epam/ai-dial-ui-kit';
 
 interface Props {
   view: ApplicationRoute;
@@ -42,6 +42,7 @@ interface Props {
   onDeleteFolder: () => void;
   onMultipleRemove: () => Promise<void>;
   onRemoveAssetEnd: () => void;
+  onCreateFolder: (_: DialUploadFileItem | undefined, folderPath: string) => Promise<ServerActionResponse>;
 }
 
 const Modals: FC<Props> = ({
@@ -64,6 +65,7 @@ const Modals: FC<Props> = ({
   onRemove,
   onMultipleRemove,
   onRemoveAssetEnd,
+  onCreateFolder,
 }) => {
   return (
     <>
@@ -99,6 +101,7 @@ const Modals: FC<Props> = ({
           entity={duplicateItem as AssetWithVersion}
           versionsMap={versionsMap}
           onDuplicate={onDuplicate}
+          onCreateFolder={onCreateFolder}
         />
       )}
       {isModalOpen && modalType === ModalType.delete && deletedItems && (

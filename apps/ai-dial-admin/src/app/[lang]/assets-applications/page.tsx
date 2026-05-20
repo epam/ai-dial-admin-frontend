@@ -2,7 +2,6 @@ import { cookies, headers } from 'next/headers';
 
 import { applicationRunnersApi } from '@/src/app/api/api';
 import AppsList from '@/src/components/Assets/Apps/List';
-import { AppsFolderProvider } from '@/src/context/assets/AppsFolderContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { errorObjLog } from '@/src/server/logger';
@@ -24,9 +23,7 @@ export default async function Page() {
 
   return (
     <SaveValidationContextProvider>
-      <AppsFolderProvider>
-        <AppsList runners={runners || []} />
-      </AppsFolderProvider>
+      <AppsList runners={runners || []} />
     </SaveValidationContextProvider>
   );
 }

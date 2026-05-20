@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { TabModel } from '@epam/ai-dial-ui-kit';
@@ -31,7 +31,6 @@ import { DialModel } from '@/src/models/dial/model';
 import { DialRole } from '@/src/models/dial/role';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
-import { readAndClearAuditTabReturn } from '@/src/utils/audit-tab-return';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
@@ -53,14 +52,12 @@ interface Props {
 const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => {
   const t = useI18n();
   const router = useRouter();
-  const pathname = usePathname();
   const { showNotification } = useNotification();
   const { dispatch } = useSaveValidationContext();
   const getReqRef = useRef(useProtectedRequest());
 
   const [tabs, setTabs] = useState<TabModel[]>(getApplicationTabs(t));
-  const [savedTabs] = useState(() => readAndClearAuditTabReturn(pathname));
-  const [activeTab, setActiveTab] = useState<EntityViewTab>(savedTabs?.mainTab ?? EntityViewTab.Properties);
+  const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [isSkipRefresh, setIsSkipRefresh] = useState(true);
 
   const [selectedApplication, setSelectedApplication] = useState(cloneDeep(originalApplication));
@@ -239,7 +236,6 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
             onSave={onTryToSave}
             setIsChanged={setIsChanged}
             setSelectedApplication={setSelectedApplication}
-            initialAuditTab={savedTabs?.auditTab}
             {...props}
           />
         )}

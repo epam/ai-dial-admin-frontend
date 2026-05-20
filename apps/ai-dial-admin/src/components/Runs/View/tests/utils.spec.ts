@@ -4,7 +4,6 @@ import { FilterOperatorDto } from '@/src/types/request';
 import {
   RESULT_FILTERS,
   getTestCaseStatusClass,
-  getResultColumns,
   getAnalyticsColumns,
   getFormattedDuration,
   getPanelTitle,
@@ -56,91 +55,6 @@ describe('Runs View :: getCellClass', () => {
   });
 });
 
-describe('Runs View :: getResultColumns', () => {
-  test('Should build static, input and extracted columns and format values', () => {
-    const results = [
-      {
-        testCaseData: {
-          prompt: 'hello',
-          payload: { a: 1 },
-        },
-        extractedColumns: {
-          score: 0.98,
-          details: { matched: true },
-        },
-      },
-    ] as any[];
-
-    const columns = getResultColumns(results as any);
-
-    expect(columns).toHaveLength(4);
-    expect(columns[0]).toEqual(
-      expect.objectContaining({
-        headerName: ' ',
-      }),
-    );
-    expect(columns[1]).toEqual(
-      expect.objectContaining({
-        headerName: 'EXECUTION',
-      }),
-    );
-    expect(columns[2]).toEqual(
-      expect.objectContaining({
-        headerName: 'INPUT BINDINGS',
-      }),
-    );
-    expect(columns[3]).toEqual(
-      expect.objectContaining({
-        headerName: 'EXTRACTED',
-      }),
-    );
-
-    const inputChildren = (columns[2] as any).children;
-    expect(inputChildren).toHaveLength(2);
-    expect(inputChildren[0]).toEqual(
-      expect.objectContaining({
-        field: 'prompt',
-        headerName: 'prompt',
-      }),
-    );
-
-    expect(inputChildren[1].valueGetter({ data: { testCaseData: { payload: { a: 1 } } } })).toBe('{"a":1}');
-    expect(inputChildren[0].valueGetter({ data: { testCaseData: { prompt: 'value' } } })).toBe('value');
-    expect(inputChildren[0].valueGetter({ data: { testCaseData: {} } })).toBe('—');
-
-    const extractedChildren = (columns[3] as any).children;
-    expect(extractedChildren).toHaveLength(2);
-    expect(extractedChildren[0]).toEqual(
-      expect.objectContaining({
-        field: 'score',
-        headerName: 'score',
-      }),
-    );
-    expect(extractedChildren[1].valueGetter({ data: { extractedColumns: { details: { matched: true } } } })).toBe(
-      '{"matched":true}',
-    );
-    expect(extractedChildren[0].valueGetter({ data: { extractedColumns: { score: 1 } } })).toBe(1);
-    expect(extractedChildren[0].valueGetter({ data: { extractedColumns: {} } })).toBe('—');
-  });
-
-  test('Should format duration and row index in execution columns', () => {
-    const columns = getResultColumns([{ testCaseData: {} }] as any);
-    const executionChildren = (columns[1] as any).children;
-
-    const runIndexColumn = executionChildren.find((col: any) => col.colId === 'runIndex');
-    const durationColumn = executionChildren.find((col: any) => col.colId === 'duration');
-
-    expect(runIndexColumn.valueGetter({ node: { rowIndex: 2 } })).toBe(3);
-    expect(runIndexColumn.valueGetter({ node: {} })).toBeNull();
-
-    expect(durationColumn.valueGetter({ data: { executionInfo: { durationMs: 250 } } })).toBe('250ms');
-    expect(durationColumn.valueGetter({ data: { executionInfo: { durationMs: 1200 } } })).toBe('1.2s');
-    expect(durationColumn.valueGetter({ data: { executionInfo: {} } })).toBe('—');
-    expect(durationColumn.valueGetter({ data: { execDurationMs: 500 } })).toBe('500ms');
-    expect(durationColumn.valueGetter({ data: { execDurationMs: 2500 } })).toBe('2.5s');
-  });
-});
-
 describe('Runs View :: getAnalyticsColumns', () => {
   test('Should build static, nested metric group and extracted columns', () => {
     const results = [
@@ -157,12 +71,13 @@ describe('Runs View :: getAnalyticsColumns', () => {
 
     const columns = getAnalyticsColumns(results as any);
 
-    expect(columns).toHaveLength(5);
+    expect(columns).toHaveLength(6);
     expect(columns[0]).toEqual(expect.objectContaining({ headerName: ' ' }));
     expect(columns[1]).toEqual(expect.objectContaining({ headerName: 'EXECUTION' }));
     expect(columns[2]).toEqual(expect.objectContaining({ headerName: 'Accuracy' }));
     expect(columns[3]).toEqual(expect.objectContaining({ headerName: 'Details' }));
-    expect(columns[4]).toEqual(expect.objectContaining({ headerName: 'EXTRACTED' }));
+    expect(columns[4]).toEqual(expect.objectContaining({ headerName: 'INPUT BINDINGS' }));
+    expect(columns[5]).toEqual(expect.objectContaining({ headerName: 'EXTRACTED' }));
 
     const accuracyChildren = (columns[2] as any).children;
     expect(accuracyChildren).toHaveLength(1);
@@ -176,7 +91,7 @@ describe('Runs View :: getAnalyticsColumns', () => {
       detailsChildren[0].valueGetter({ data: { metricValues: { Details: { details: { matched: true } } } } }),
     ).toBe('{"matched":true}');
 
-    const extractedChildren = (columns[4] as any).children;
+    const extractedChildren = (columns[5] as any).children;
     expect(extractedChildren).toHaveLength(1);
     expect(extractedChildren[0]).toEqual(expect.objectContaining({ field: 'score', headerName: 'score' }));
   });
@@ -203,10 +118,11 @@ describe('Runs View :: getAnalyticsColumns', () => {
   test('Should handle empty results', () => {
     const columns = getAnalyticsColumns([]);
 
-    expect(columns).toHaveLength(3);
+    expect(columns).toHaveLength(4);
     expect(columns[0]).toEqual(expect.objectContaining({ headerName: ' ' }));
     expect(columns[1]).toEqual(expect.objectContaining({ headerName: 'EXECUTION' }));
-    expect((columns[2] as any).children).toHaveLength(0);
+    expect(columns[2]).toEqual(expect.objectContaining({ headerName: 'INPUT BINDINGS' }));
+    expect((columns[3] as any).children).toHaveLength(0);
   });
 
   test('Should sort error metric cells last for ascending and first for descending', () => {
@@ -665,27 +581,39 @@ describe('Runs View :: getAnalyticsColumnsCompare', () => {
     expect(blank.children).toHaveLength(2);
   });
 
-  test('EXECUTION group has Current and Compared sub-groups', () => {
+  test('EXECUTION group has field sub-groups each with Current and Compared leaves', () => {
     const cols = getAnalyticsColumnsCompare([makeRow()]);
-    const exec = cols[1] as { headerName: string; children: { headerName: string; children: unknown[] }[] };
+    const exec = cols[1] as {
+      headerName: string;
+      children: { headerName: string; children: { headerName: string }[] }[];
+    };
 
     expect(exec.headerName).toBe('EXECUTION');
-    expect(exec.children).toHaveLength(2);
-    expect(exec.children[0].headerName).toBe('Current');
-    expect(exec.children[1].headerName).toBe('Compared');
+    expect(exec.children).toHaveLength(3);
+    expect(exec.children[0].headerName).toBe('#');
+    expect(exec.children[1].headerName).toBe('HTTP');
+    expect(exec.children[2].headerName).toBe('Duration');
+
+    for (const fieldGroup of exec.children) {
+      expect(fieldGroup.children).toHaveLength(2);
+      expect(fieldGroup.children[0].headerName).toBe('Current');
+      expect(fieldGroup.children[1].headerName).toBe('Compared');
+    }
   });
 
-  test('metric groups have Current and Compared sub-groups', () => {
+  test('metric groups have metric key sub-groups each with Current and Compared leaves', () => {
     const rows = [makeRow({ metricValues: { myMetric: { score: 0.9 } } })];
     const cols = getAnalyticsColumnsCompare(rows);
 
     const metricGroup = cols.find((c) => (c as { headerName: string }).headerName === 'myMetric') as {
-      children: { headerName: string }[];
+      children: { headerName: string; children: { headerName: string }[] }[];
     };
 
     expect(metricGroup).toBeDefined();
-    expect(metricGroup.children[0].headerName).toBe('Current');
-    expect(metricGroup.children[1].headerName).toBe('Compared');
+    expect(metricGroup.children).toHaveLength(1);
+    expect(metricGroup.children[0].headerName).toBe('score');
+    expect(metricGroup.children[0].children[0].headerName).toBe('Current');
+    expect(metricGroup.children[0].children[1].headerName).toBe('Compared');
   });
 
   test('Compared metric colIds are prefixed with cmp_', () => {
@@ -696,21 +624,24 @@ describe('Runs View :: getAnalyticsColumnsCompare', () => {
       children: { headerName: string; children: { colId?: string }[] }[];
     };
 
-    const comparedChildren = grp.children[1].children;
-    expect(comparedChildren.every((c) => c.colId?.startsWith('cmp_'))).toBe(true);
+    // Each metric key sub-group's second child is the Compared leaf
+    const comparedLeaves = grp.children.map((keyGroup) => keyGroup.children[1]);
+    expect(comparedLeaves.every((c) => c.colId?.startsWith('cmp_'))).toBe(true);
   });
 
-  test('EXTRACTED group has Current and Compared sub-groups', () => {
+  test('EXTRACTED group has field key sub-groups each with Current and Compared leaves', () => {
     const rows = [makeRow({ extractedColumns: { col1: 'val1' } })];
     const cols = getAnalyticsColumnsCompare(rows);
 
     const extracted = cols.find((c) => (c as { headerName: string }).headerName === 'EXTRACTED') as {
-      children: { headerName: string }[];
+      children: { headerName: string; children: { headerName: string }[] }[];
     };
 
     expect(extracted).toBeDefined();
-    expect(extracted.children[0].headerName).toBe('Current');
-    expect(extracted.children[1].headerName).toBe('Compared');
+    expect(extracted.children).toHaveLength(1);
+    expect(extracted.children[0].headerName).toBe('col1');
+    expect(extracted.children[0].children[0].headerName).toBe('Current');
+    expect(extracted.children[0].children[1].headerName).toBe('Compared');
   });
 
   test('Compared extracted colIds are prefixed with cmp_extracted_', () => {
@@ -721,8 +652,9 @@ describe('Runs View :: getAnalyticsColumnsCompare', () => {
       children: { headerName: string; children: { colId?: string }[] }[];
     };
 
-    const comparedChildren = extracted.children[1].children;
-    expect(comparedChildren.every((c) => c.colId?.startsWith('cmp_extracted_'))).toBe(true);
+    // Each field key sub-group's second child is the Compared leaf
+    const comparedLeaves = extracted.children.map((keyGroup) => keyGroup.children[1]);
+    expect(comparedLeaves.every((c) => c.colId?.startsWith('cmp_extracted_'))).toBe(true);
   });
 
   test('Compared valueGetters return dash when _compared is null', () => {
@@ -730,10 +662,15 @@ describe('Runs View :: getAnalyticsColumnsCompare', () => {
     const cols = getAnalyticsColumnsCompare(rows);
 
     const grp = cols.find((c) => (c as { headerName: string }).headerName === 'grp') as {
-      children: { headerName: string; children: { valueGetter: (p: { data?: CompareAnalyticsRow }) => unknown }[] }[];
+      children: {
+        headerName: string;
+        children: { headerName: string; valueGetter: (p: { data?: CompareAnalyticsRow }) => unknown }[];
+      }[];
     };
 
-    const scoreComparedCol = grp.children[1].children[0];
-    expect(scoreComparedCol.valueGetter({ data: makeRow({ _compared: null }) })).toBe('—');
+    // grp → score sub-group → [Current leaf, Compared leaf]
+    const scoreKeyGroup = grp.children[0];
+    const comparedLeaf = scoreKeyGroup.children[1];
+    expect(comparedLeaf.valueGetter({ data: makeRow({ _compared: null }) })).toBe('—');
   });
 });

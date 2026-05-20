@@ -26,7 +26,6 @@ interface Props {
   selectedToolset: Toolset;
   names: string[];
   onChange: (toolset: Toolset) => void;
-  initialAuditTab?: EntityViewTab;
 }
 
 const TabsContent: FC<Props> = ({
@@ -37,7 +36,6 @@ const TabsContent: FC<Props> = ({
   roles,
   selectedToolset,
   originalToolset,
-  initialAuditTab,
   selectedFormat,
 }) => {
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
@@ -87,9 +85,7 @@ const TabsContent: FC<Props> = ({
           />
         )}
 
-        {activeTab === EntityViewTab.Audit && (
-          <EntityAudit entity={selectedToolset} view={ApplicationRoute.Toolsets} initialAuditTab={initialAuditTab} />
-        )}
+        {activeTab === EntityViewTab.Audit && <EntityAudit entity={selectedToolset} view={ApplicationRoute.Toolsets} />}
       </>
     )
   );

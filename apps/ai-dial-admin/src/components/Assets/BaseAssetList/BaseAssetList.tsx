@@ -572,6 +572,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
         onDeleteFolder={onDeleteFolder}
         onMultipleRemove={onMultipleRemove}
         onRemoveAssetEnd={onRemoveAssetEndHandler}
+        onCreateFolder={handleCreateFolder}
       />
     </>
   );

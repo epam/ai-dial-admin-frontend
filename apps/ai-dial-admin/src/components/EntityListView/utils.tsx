@@ -20,6 +20,8 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { isAssetWithVersion, isToolsetRoute } from '@/src/utils/is-view';
 import { RefObject } from 'react';
 import { prepareEntityForDuplicate } from './Components/utils';
+import { CreateAssetActionMap, getEmptyAsset } from '../Assets/BaseAssetList/utils';
+import { DialUploadFileItem } from '@epam/ai-dial-ui-kit';
 
 export const getDuplicateModal = async <T extends object>(
   currentEntity: T | undefined,
@@ -105,6 +107,7 @@ export const getDuplicateModal = async <T extends object>(
         onDuplicate={onDuplicate}
         isModalOpen={isModalOpen}
         onClose={handleModalClose}
+        onCreateFolder={getAssetCreateFolderHandler(route)}
       />
     );
   }
@@ -118,6 +121,24 @@ export const getDuplicateModal = async <T extends object>(
       onClose={handleModalClose}
     />
   );
+};
+
+export const getAssetCreateFolderHandler = (view: ApplicationRoute) => {
+  if (
+    view === ApplicationRoute.Prompts ||
+    view === ApplicationRoute.AssetsApplications ||
+    view === ApplicationRoute.AssetsToolsets
+  ) {
+    const callback = (_: DialUploadFileItem | undefined, folderPath: string) => {
+      const newPath = `${folderPath.replaceAll('//', '/')}/`;
+      const emptyAsset = getEmptyAsset(view, newPath);
+
+      const createAsset = CreateAssetActionMap[view];
+
+      return createAsset(emptyAsset);
+    };
+    return callback;
+  }
 };
 
 /**

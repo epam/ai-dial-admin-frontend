@@ -1,6 +1,6 @@
 import { JSONSchema7 } from 'json-schema';
 
-import { Metric, MetricBinding } from '@/src/models/evaluation/metric';
+import { Metric, MetricBinding, BindingSourceValue } from '@/src/models/evaluation/metric';
 import { MetricBindingType } from '@/src/types/evaluation';
 import { getSchemaDefaults } from '@/src/utils/schema';
 
@@ -9,7 +9,7 @@ export const generateMetricDefaultInputBindings = (schema: JSONSchema7) => {
     property: key,
     source: {
       $type: MetricBindingType.Constant,
-      value: value as string,
+      value: value as BindingSourceValue,
     },
   }));
 };

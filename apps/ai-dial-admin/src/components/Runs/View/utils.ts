@@ -24,11 +24,12 @@ export const RESULT_FILTERS = (run: Run): FilterDto[] => [
   },
 ];
 
-const getInputColumns = (input: Record<string, unknown>) => {
+const getInputColumns = (input: Record<string, unknown>, hide = false) => {
   return Object.keys(input).map((key) => {
     return {
       field: key,
       headerName: key,
+      hide,
       valueGetter: (params) => {
         const value = params.data?.testCaseData?.[key];
         if (typeof value === 'object') return JSON.stringify(value);
@@ -178,10 +179,12 @@ const comparedExecutionColumns: ColDef[] = [
 const staticColumns = [
   {
     headerName: ' ',
+    context: { panelName: 'Details' },
     children: [
       {
         field: 'executionStatus',
         headerName: ' ',
+        context: { panelName: 'Status' },
         colId: 'status',
         width: 50,
         minWidth: 50,
@@ -203,28 +206,17 @@ const staticColumns = [
   },
 ];
 
-export const getResultColumns = (results: ExtractionResult[]) => {
+export const getAnalyticsColumns = (results: AnalyticsResult[], errorText?: string) => {
+  const metrics = mergeMetricValuesSchema(results);
   const input = results[0]?.testCaseData || {};
 
   return [
     ...staticColumns,
+    ...getMetricsColumns(metrics, errorText),
     {
       headerName: 'INPUT BINDINGS',
-      children: getInputColumns(input),
+      children: getInputColumns(input, true),
     },
-    {
-      headerName: 'EXTRACTED',
-      children: getExtractedColumns(results[0]?.extractedColumns || {}),
-    },
-  ];
-};
-
-export const getAnalyticsColumns = (results: AnalyticsResult[], errorText?: string) => {
-  const metrics = mergeMetricValuesSchema(results);
-
-  return [
-    ...staticColumns,
-    ...getMetricsColumns(metrics, errorText),
     {
       headerName: 'EXTRACTED',
       children: getExtractedColumns(results[0]?.extractedColumns || {}),
@@ -248,16 +240,13 @@ export const mergeByTestCaseId = (current: AnalyticsResult[], compared: Analytic
 const getComparedMetricsColumns = (metrics: Record<string, Record<string, unknown>>, errorText?: string) => {
   return Object.entries(metrics).map(([groupKey, groupValues]) => ({
     headerName: groupKey,
-    children: [
-      {
-        headerName: 'Current',
-        children: Object.keys(groupValues).map((key) => buildMetricColDef(groupKey, key, errorText, false)),
-      },
-      {
-        headerName: 'Compared',
-        children: Object.keys(groupValues).map((key) => buildMetricColDef(groupKey, key, errorText, true)),
-      },
-    ],
+    children: Object.keys(groupValues).map((key) => ({
+      headerName: key,
+      children: [
+        buildMetricColDef(groupKey, key, errorText, false, 'Current'),
+        buildMetricColDef(groupKey, key, errorText, true, 'Compared'),
+      ],
+    })),
   }));
 };
 
@@ -266,6 +255,7 @@ const buildMetricColDef = (
   key: string,
   errorText: string | undefined,
   isCompared: boolean,
+  headerNameOverride?: string,
 ): ColDef => {
   const colId = isCompared ? `cmp_${groupKey}_${key}` : undefined;
   const getValue = (params: { data?: CompareAnalyticsRow }) => {
@@ -276,7 +266,7 @@ const buildMetricColDef = (
   return {
     field: isCompared ? `cmp_${groupKey}_${key}` : key,
     colId,
-    headerName: key,
+    headerName: headerNameOverride ?? key,
     cellRendererSelector: (params) => {
       if (isCompared && !params.data?._compared) return;
       const value = getValue(params);
@@ -322,22 +312,11 @@ const buildMetricColDef = (
   };
 };
 
-const getComparedExtractedColumns = (extracted: Record<string, unknown>): ColDef[] => {
-  return Object.keys(extracted).map((key) => ({
-    colId: `cmp_extracted_${key}`,
-    field: `cmp_extracted_${key}`,
-    headerName: key,
-    valueGetter: (params) => {
-      if (!params.data?._compared) return '—';
-      const value = params.data._compared.extractedColumns?.[key];
-      if (typeof value === 'object') return JSON.stringify(value);
-      return value ?? '—';
-    },
-  }));
-};
-
 export const getAnalyticsColumnsCompare = (results: CompareAnalyticsRow[], errorText?: string) => {
   const metrics = mergeMetricValuesSchema(results);
+  const currentInput = results[0]?.testCaseData || {};
+  const comparedInput = results[0]?._compared?.testCaseData || {};
+  const inputSchema = { ...currentInput, ...comparedInput };
   const currentExtracted = results[0]?.extractedColumns || {};
   const comparedExtracted = results[0]?._compared?.extractedColumns || {};
   const extractedSchema = { ...currentExtracted, ...comparedExtracted };
@@ -346,18 +325,72 @@ export const getAnalyticsColumnsCompare = (results: CompareAnalyticsRow[], error
     staticColumns[0],
     {
       headerName: 'EXECUTION',
-      children: [
-        { headerName: 'Current', children: executionColumns },
-        { headerName: 'Compared', children: comparedExecutionColumns },
-      ],
+      children: executionColumns.map((curr, i) => ({
+        headerName: curr.headerName,
+        children: [
+          { ...curr, headerName: 'Current' },
+          { ...comparedExecutionColumns[i], headerName: 'Compared' },
+        ],
+      })),
     },
     ...getComparedMetricsColumns(metrics, errorText),
     {
+      headerName: 'INPUT BINDINGS',
+      children: Object.keys(inputSchema).map((key) => ({
+        headerName: key,
+        children: [
+          {
+            field: key,
+            headerName: 'Current',
+            hide: true,
+            valueGetter: (params) => {
+              const value = params.data?.testCaseData?.[key];
+              if (typeof value === 'object') return JSON.stringify(value);
+              return value ?? '—';
+            },
+          } as ColDef,
+          {
+            colId: `cmp_input_${key}`,
+            field: `cmp_input_${key}`,
+            headerName: 'Compared',
+            hide: true,
+            valueGetter: (params) => {
+              if (!params.data?._compared) return '—';
+              const value = params.data._compared.testCaseData?.[key];
+              if (typeof value === 'object') return JSON.stringify(value);
+              return value ?? '—';
+            },
+          } as ColDef,
+        ],
+      })),
+    },
+    {
       headerName: 'EXTRACTED',
-      children: [
-        { headerName: 'Current', children: getExtractedColumns(currentExtracted) },
-        { headerName: 'Compared', children: getComparedExtractedColumns(extractedSchema) },
-      ],
+      children: Object.keys(extractedSchema).map((key) => ({
+        headerName: key,
+        children: [
+          {
+            field: key,
+            headerName: 'Current',
+            valueGetter: (params) => {
+              const value = params.data?.extractedColumns?.[key];
+              if (typeof value === 'object') return JSON.stringify(value);
+              return value ?? '—';
+            },
+          } as ColDef,
+          {
+            colId: `cmp_extracted_${key}`,
+            field: `cmp_extracted_${key}`,
+            headerName: 'Compared',
+            valueGetter: (params) => {
+              if (!params.data?._compared) return '—';
+              const value = params.data._compared.extractedColumns?.[key];
+              if (typeof value === 'object') return JSON.stringify(value);
+              return value ?? '—';
+            },
+          } as ColDef,
+        ],
+      })),
     },
   ];
 };

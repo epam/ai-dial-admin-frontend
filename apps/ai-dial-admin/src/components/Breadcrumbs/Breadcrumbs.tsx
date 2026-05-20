@@ -6,7 +6,12 @@ import { usePathname } from 'next/navigation';
 import { useI18n, useCurrentLocale } from '@/src/locales/client';
 import { IconChevronRight } from '@tabler/icons-react';
 import Link from 'next/link';
-import { getBreadcrumbs } from '@/src/components/Breadcrumbs/utils';
+import {
+  enrichWithFolderBreadcrumbs,
+  getBreadcrumbs,
+  getFolderContext,
+  shouldEnrichWithFolderBreadcrumbs,
+} from '@/src/components/Breadcrumbs/utils';
 import { Breadcrumb } from '@/src/components/Breadcrumbs/models';
 import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
@@ -22,9 +27,21 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
 
   if (!pathname) return null;
 
+  const folderContext = getFolderContext?.(pathname, currentLocale)?.();
+
   useEffect(() => {
-    setBreadcrumbs(getBreadcrumbs(pathname, currentLocale));
-  }, [pathname, currentLocale]);
+    const basicBreadcrumbs = getBreadcrumbs(pathname, currentLocale);
+    if (shouldEnrichWithFolderBreadcrumbs(pathname, currentLocale) && folderContext?.filePath) {
+      const breadcrumbs = enrichWithFolderBreadcrumbs(
+        basicBreadcrumbs,
+        folderContext?.filePath,
+        folderContext?.setFilePath,
+      );
+      setBreadcrumbs(breadcrumbs);
+    } else {
+      setBreadcrumbs(basicBreadcrumbs);
+    }
+  }, [pathname, currentLocale, folderContext?.filePath, folderContext?.setFilePath]);
 
   return (
     <div
@@ -34,7 +51,7 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
       )}
     >
       <ol className="flex tiny whitespace-nowrap">
-        {breadcrumbs.map(({ href, key, name }, index) => {
+        {breadcrumbs.map(({ href, key, name, callback }, index) => {
           const label = key ? t(key) : name;
           const linkClassName = classNames(
             'flex text-secondary relative group-[:last-child]:text-primary w-full',
@@ -44,9 +61,23 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
 
           return (
             <li key={`${href}_${index}`} className="flex items-center group max-w-[300px] truncate">
-              <Link prefetch={false} href={href} className={linkClassName}>
-                <DialEllipsisTooltip text={decodeURIComponent(label)} />
-              </Link>
+              {callback ? (
+                <Link
+                  prefetch={false}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    callback(href);
+                  }}
+                  href="/"
+                  className={linkClassName}
+                >
+                  <DialEllipsisTooltip text={decodeURIComponent(label)} />
+                </Link>
+              ) : (
+                <Link prefetch={false} href={href} className={linkClassName}>
+                  <DialEllipsisTooltip text={decodeURIComponent(label)} />
+                </Link>
+              )}
               {breadcrumbs.length !== index + 1 && (
                 <IconChevronRight width={16} height={16} className="text-secondary" />
               )}

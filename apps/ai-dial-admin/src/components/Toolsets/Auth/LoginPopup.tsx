@@ -19,7 +19,7 @@ interface Props {
 const LoginPopup: FC<Props> = ({ type, isModalOpen, isLoggedInAsUser, isLoggedInAsOrganization, onClose, onLogin }) => {
   const t = useI18n();
   const [loginOrganization, setLoginOrganization] = useState(!isLoggedInAsOrganization);
-  const [loginUser, setLoginUser] = useState(!!isLoggedInAsOrganization && !isLoggedInAsUser);
+  const [loginUser, setLoginUser] = useState(!isLoggedInAsUser);
   const [apiKeyValue, setApiKeyValue] = useState('');
 
   const showOrganizationCheckbox = !isLoggedInAsOrganization;
@@ -28,17 +28,11 @@ const LoginPopup: FC<Props> = ({ type, isModalOpen, isLoggedInAsUser, isLoggedIn
   const handleOrganizationChange = (value?: boolean) => {
     const nextValue = !!value;
     setLoginOrganization(nextValue);
-    if (type === ToolsetAuthType.OAUTH && nextValue) {
-      setLoginUser(false);
-    }
   };
 
   const handleUserChange = (value?: boolean) => {
     const nextValue = !!value;
     setLoginUser(nextValue);
-    if (type === ToolsetAuthType.OAUTH && nextValue) {
-      setLoginOrganization(false);
-    }
   };
 
   const handleSubmit = () => {
@@ -61,13 +55,14 @@ const LoginPopup: FC<Props> = ({ type, isModalOpen, isLoggedInAsUser, isLoggedIn
       cancelLabel={t(ButtonsI18nKey.Cancel)}
       disableSubmitButton={!loginOrganization && !loginUser}
     >
-      <div className="flex px-6 py-4 h-full flex-col gap-y-6">
+      <div className="flex px-6 py-4 h-full flex-col gap-y-4">
         {showOrganizationCheckbox && (
           <DialCheckbox
             id="organization-login-checkbox"
             label={t(ToolsetI18nKey.Organization)}
             checked={loginOrganization}
             onChange={handleOrganizationChange}
+            disabled={!showUserCheckbox}
           />
         )}
         {showUserCheckbox && (
@@ -76,6 +71,7 @@ const LoginPopup: FC<Props> = ({ type, isModalOpen, isLoggedInAsUser, isLoggedIn
             label={t(ToolsetI18nKey.Personal)}
             checked={loginUser}
             onChange={handleUserChange}
+            disabled={!showOrganizationCheckbox}
           />
         )}
 

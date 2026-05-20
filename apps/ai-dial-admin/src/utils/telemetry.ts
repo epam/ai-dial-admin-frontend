@@ -154,8 +154,8 @@ export const getDefaultFilterValue = (
 
 export function prepareChartData(data: Record<string, string>[], t: (key: string) => string): EChartsOption {
   const config = { ...lineChartDefaultOptions(t) };
-  const xData = data.map((item) => item.time);
-  const yData = data.map((item) => item.requests);
+  const xData = data.map((item) => item.time || item.window);
+  const yData = data.map((item) => item.requests || item.count);
 
   (config.xAxis as unknown as { data: string[] }).data = xData;
   (config.series as unknown as { data: string[] }[])[0].data = yData;
@@ -231,8 +231,6 @@ export function extractTelemetryMaxRangeMs(res: ServerActionResponse): number | 
 
 const toUsageLogSourceColumn = (colId: string): string => USAGE_LOG_COLUMN_ID_TO_SOURCE[colId] ?? colId;
 
-const NEGATING_TEXT_OPERATORS = new Set(['$ne', '$not_contains']);
-
 const translateUsageLogTextFilter = (colId: string, filter: AgGridTextFilter): UsageLogFilterClause | null => {
   const operator = filter.type ? USAGE_LOG_TEXT_OPERATOR_MAP[filter.type] : undefined;
   if (!operator || filter.filter == null || filter.filter === '') {
@@ -240,12 +238,11 @@ const translateUsageLogTextFilter = (colId: string, filter: AgGridTextFilter): U
   }
   const column = toUsageLogSourceColumn(colId);
   if (USAGE_LOG_NUMERIC_COLUMNS.has(column)) {
-    const asNumber = Number(filter.filter);
+    const asNumber = Number(filter.filter.toString().replace(/,/g, ''));
     if (Number.isNaN(asNumber)) {
       return null;
     }
-    const numericOperator = NEGATING_TEXT_OPERATORS.has(operator) ? '$ne' : '$eq';
-    return { [numericOperator]: { left: column, right: asNumber } };
+    return { [operator]: { left: column, right: asNumber } };
   }
   return { [operator]: { left: column, right: `'${filter.filter}'` } };
 };

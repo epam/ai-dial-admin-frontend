@@ -190,6 +190,7 @@ export enum EntitiesI18nKey {
   InterceptorTemplate = 'Entities.InterceptorTemplate',
   InterceptorName = 'Entities.InterceptorName',
   ModelDisplayName = 'Entities.ModelDisplayName',
+  ToolsetDisplayName = 'Entities.ToolsetDisplayName',
   Author = 'Entities.Author',
   JSONEditor = 'Entities.JSONEditor',
   JSONViewer = 'Entities.JSONViewer',
@@ -528,6 +529,7 @@ export enum ForwardTokenI18nKey {
   UseForThisModel = 'ForwardToken.UseForThisModel',
   UseForThisApplication = 'ForwardToken.UseForThisApplication',
   UseForThisInterceptor = 'ForwardToken.UseForThisInterceptor',
+  UseForThisToolset = 'ForwardToken.UseForThisToolset',
   ForwardTokenModalTitle = 'ForwardToken.ForwardTokenModalTitle',
   ForwardTokenModalAlert = 'ForwardToken.ForwardTokenModalAlert',
 }
@@ -1531,6 +1533,7 @@ export enum DeploymentsI18nKey {
   NodePoolUnknownHint = 'Deployments.NodePoolUnknownHint',
   NodePoolSearchPlaceholder = 'Deployments.NodePoolSearchPlaceholder',
   NodePoolNoMatches = 'Deployments.NodePoolNoMatches',
+  ViewInActivityAudit = 'Deployments.ViewInActivityAudit',
 }
 
 export enum KubEventsI18nKey {
@@ -1714,6 +1717,7 @@ export enum RunsI18nKey {
   TextDiff = 'Runs.TextDiff',
   MetricBindings = 'Runs.MetricBindings',
   CompareWith = 'Runs.CompareWith',
+  RunCompareNoMatch = 'Runs.RunCompareNoMatch',
 }
 
 export enum FileManagerI18nKey {

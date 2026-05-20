@@ -6,6 +6,7 @@ import { useI18n } from '@/src/locales/client';
 import { BindingSourceValue, MetricBinding } from '@/src/models/evaluation/metric';
 
 import MetricArrayControl from './MetricArrayControl';
+import MetricObjectMapControl from './MetricObjectMapControl';
 import MetricPrimitiveConstantInput from './MetricPrimitiveConstantInput';
 
 interface Props {
@@ -31,6 +32,16 @@ const MetricControl: FC<Props> = ({ binding, field, label = true, onChangeValue 
           onChange={(v) => onChangeValue(field.name, v)}
           valuePlaceholder={valuePlaceholder}
           showFieldLabel={label}
+        />
+      )}
+
+      {field.type === 'object' && field.additionalPropertiesArrayItemType && (
+        <MetricObjectMapControl
+          field={field}
+          binding={binding}
+          label={label}
+          onChangeValue={onChangeValue}
+          renderNestedField={(nested) => <MetricControl {...nested} />}
         />
       )}
 

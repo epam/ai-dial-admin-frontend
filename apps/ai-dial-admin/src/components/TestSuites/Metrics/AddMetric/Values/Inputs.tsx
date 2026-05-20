@@ -5,7 +5,7 @@ import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
 import TabSelector from '@/src/components/Common/TabSelector/TabSelector';
 import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { MetricBinding } from '@/src/models/evaluation/metric';
+import { BindingSourceValue, MetricBinding } from '@/src/models/evaluation/metric';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { MetricBindingType } from '@/src/types/evaluation';
 import MetricControl from './MetricControl';
@@ -75,7 +75,7 @@ const MetricInput: FC<{
   );
 
   const onChangeConstant = useCallback(
-    (value: string | string[]) => {
+    (value: BindingSourceValue) => {
       onChange({ ...binding, source: { $type: MetricBindingType.Constant, value } } as MetricBinding);
     },
     [onChange, binding],
@@ -105,7 +105,7 @@ const MetricInput: FC<{
           label={false}
           field={field}
           binding={binding}
-          onChangeValue={(_field, value) => onChangeConstant(value as string)}
+          onChangeValue={(_field, value) => onChangeConstant(value)}
         />
       )}
 

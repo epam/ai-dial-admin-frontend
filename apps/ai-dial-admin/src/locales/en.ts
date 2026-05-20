@@ -204,6 +204,7 @@ export default {
     AppRunner: 'Application runner',
     ModelDisplayName: 'Model display name',
     ApplicationDisplayName: 'Application display name',
+    ToolsetDisplayName: 'Toolset display name',
     InterceptorName: 'Interceptor Name',
     ChangeIcon: 'Change icon',
     Source: 'Source',
@@ -594,6 +595,7 @@ export default {
   ForwardToken: {
     ForwardTokenModalTitle: 'Forward Auth Token',
     UseForThisModel: 'Use for this model',
+    UseForThisToolset: 'Use for this toolset',
     UseForThisInterceptor: 'Use for this interceptor',
     UseForThisApplication: 'Use for this application',
     ForwardTokenModalAlert:
@@ -1586,6 +1588,7 @@ export default {
     NodePoolUnknownHint: 'This pool is no longer configured. Pick another pool to fix it.',
     NodePoolSearchPlaceholder: 'Search by name or description…',
     NodePoolNoMatches: 'No pools match your search',
+    ViewInActivityAudit: 'View in Activity Audit',
   },
   TestSuites: {
     CreateTestSuite: 'Create Test Suite',
@@ -1817,6 +1820,7 @@ export default {
     NumericDiff: 'Numeric',
     TextDiff: 'Text',
     CompareWith: 'Compare with',
+    RunCompareNoMatch: 'No matching test case in compared run',
   },
   JsonAta: {
     JSONAtaDoc: 'JSONata Expression Reference',

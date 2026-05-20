@@ -995,6 +995,29 @@ describe('fieldsToJsonSchema and jsonSchemaToFields round-trip', () => {
     expect(result).toEqual(original);
   });
 
+  test('should round-trip object with additionalProperties array of strings', () => {
+    const original: JSONSchema7 = {
+      type: 'object',
+      properties: {
+        actual: {
+          type: 'object',
+          title: 'Actual',
+          additionalProperties: {
+            type: 'array',
+            items: { type: 'string' },
+          },
+        },
+      },
+    };
+
+    const fields = jsonSchemaToFields(original);
+    expect(fields[0].additionalPropertiesArrayItemType).toBe('string');
+    expect(fields[0].children).toHaveLength(0);
+
+    const result = fieldsToJsonSchema(fields);
+    expect(result).toEqual(original);
+  });
+
   test('should round-trip an array with object items', () => {
     const original: JSONSchema7 = {
       type: 'object',
