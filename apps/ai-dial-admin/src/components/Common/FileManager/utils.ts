@@ -11,7 +11,6 @@ import { ROOT_FOLDER, TEMP_FOLDER } from '@/src/constants/file';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import { CREATE_FOLDER_FORBIDDEN_CHARS, FILE_NAME_MAX_LENGTH, NEW_FOLDER_NAME } from './constants';
-import { Asset } from '@/src/models/dial/deployment-asset';
 import { FORBIDDEN_NAME_SYMBOLS } from '@/src/constants/validation';
 
 export const findFolderByPath = (items: DialFile[], targetPath: string): DialFile | undefined => {
