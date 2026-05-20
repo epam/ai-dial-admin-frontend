@@ -58,6 +58,7 @@ vi.mock('../MetricBindingsDisplay', () => ({
 }));
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
+  ButtonAppearance: { Outlined: 'outlined' },
   DialLoader: () => <div role="progressbar" aria-label="loading" />,
   DialNoDataContent: ({ title }: any) => (
     <div role="status" aria-label={title}>
@@ -70,6 +71,11 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
     </button>
   ),
   DialNeutralButton: ({ label, onClick }: any) => (
+    <button type="button" onClick={onClick}>
+      {label}
+    </button>
+  ),
+  DialErrorButton: ({ label, onClick }: any) => (
     <button type="button" onClick={onClick}>
       {label}
     </button>

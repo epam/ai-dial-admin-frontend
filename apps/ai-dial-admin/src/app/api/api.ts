@@ -23,6 +23,7 @@ import { WhitelistApi } from '@/src/server/deployments/whitelist';
 import { MetricsApi } from '@/src/server/eval/metrics-api';
 import { HuggingfaceApi } from '@/src/server/deployments/huggingface';
 import { McpRegistryApi } from '@/src/server/deployments/mcp-registry';
+import { NodePoolsApi } from '@/src/server/deployments/node-pools';
 import { DeploymentConfigApi } from '@/src/server/deployments/config';
 import { DeploymentAuditApi } from '@/src/server/deployments/audit-api';
 import { GlobalFirewallApi } from '@/src/server/deployments/global-firewall';
@@ -118,6 +119,10 @@ export const huggingFaceApi = new HuggingfaceApi({
 });
 
 export const mcpRegistryApi = new McpRegistryApi({
+  host: process.env.DIAL_DEPLOYMENTS_API_URL,
+});
+
+export const nodePoolsApi = new NodePoolsApi({
   host: process.env.DIAL_DEPLOYMENTS_API_URL,
 });
 

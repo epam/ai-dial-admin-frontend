@@ -78,10 +78,14 @@ import { dateTimeColumn, numericColumn, priceColumn } from './configs';
 import { baseNumberFilter, baseStringFilter, dateFilter, evalStringFilter } from './filters';
 import RowExpanderCellRenderer from '@/src/components/Grid/CellRenderers/RowExpanderCellRenderer';
 import ChildrenActivityTypeCellRenderer from '@/src/components/Grid/CellRenderers/ChildrenActivityTypeCellRenderer';
+import { TreeRow } from '@/src/components/Common/TreeGrid/types';
+import { EntityRow } from '@/src/models/telemetry';
 import { ActivityAuditView } from '@/src/types/activity-audit';
 import { GridFilterType } from '@/src/types/grid-filter';
 
 export const COLUMN_PANEL_PREFIX = 'column_';
+
+export const RESOURCE_TYPE_COLUMN = 'resourceType';
 
 export const BASE_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN, NAME_COLUMN];
 
@@ -244,11 +248,10 @@ export const ACTIVITY_AUDIT_COLUMNS = (
   ...(!isSingleEntity
     ? [
         {
-          field: 'resourceType',
+          field: RESOURCE_TYPE_COLUMN,
           headerName: 'Resource type',
           valueFormatter: ({ value }) => getFormattedResourceType(value, t),
           tooltipValueGetter: ({ value }) => getFormattedResourceType(value, t),
-          filterValueGetter: (params) => getFormattedResourceType(params.data[params.colDef.field || ''], t),
           ...baseStringFilter,
         } as ColDef,
         { field: 'resourceId', headerName: 'Resource identifier', ...baseStringFilter } as ColDef,
@@ -456,6 +459,21 @@ export const TELEMETRY_GRID_COLUMNS: ColDef[] = [
   },
 ];
 
+export const ENTITIES_CONSUMPTION_TREE_COLUMNS: ColDef[] = TELEMETRY_GRID_COLUMNS.map((col) => {
+  if (col.field === 'name') {
+    return {
+      ...col,
+      valueFormatter: (params) => {
+        const row = params.data as TreeRow<EntityRow> | undefined;
+        const n = row?.children?.length ?? 0;
+        const suffix = n > 0 ? ` (+${n})` : '';
+        return `${params.value ?? ''}${suffix}`;
+      },
+    };
+  }
+  return col;
+});
+
 const completionTimeColumn = (headerName: string): ColDef => ({
   field: 'completion_time',
   headerName,
@@ -470,7 +488,7 @@ export const USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
   completionTimeColumn('Completion Time'),
   { field: 'trace_id', headerName: 'Trace ID', hide: false, ...baseStringFilter },
   { field: 'topic', headerName: 'Topic', hide: false, ...baseStringFilter },
-  { field: 'reactions', headerName: 'Reactions', hide: true }, // TODO: not implemented
+  // { field: 'reactions', headerName: 'Reactions', hide: true , ...baseStringFilter}, // TODO: not implemented
   {
     field: 'cached_prompt_tokens',
     headerName: 'Cached Prompt Tokens',
@@ -618,6 +636,7 @@ export const CALL_BY_DEPLOYMENT_COLUMNS: ColDef[] = [
 
 export const CALL_BY_PARENT_DEPLOYMENT_COLUMNS: ColDef[] = [
   { field: 'parent_deployment', headerName: 'Parent Deployment', hide: false },
+  { field: 'name', headerName: 'Deployment', hide: false },
   { field: 'requests', headerName: 'Calls', hide: false, ...numericColumn },
 ];
 

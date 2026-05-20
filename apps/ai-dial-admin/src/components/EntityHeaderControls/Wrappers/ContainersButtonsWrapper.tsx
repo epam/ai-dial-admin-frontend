@@ -2,6 +2,7 @@ import {
   ButtonAppearance,
   ButtonVariant,
   DialButtonDropdown,
+  DialErrorButton,
   DialNeutralButton,
   DropdownItem,
 } from '@epam/ai-dial-ui-kit';
@@ -18,6 +19,7 @@ import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonTo
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
+import Delete from '@/src/components/EntityView/Modals/Delete/Delete';
 import { ButtonsI18nKey, CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import {
   BASE_BUTTON_ICON_PROPS,
@@ -47,7 +49,6 @@ import {
 } from '@/src/utils/deployments/entity';
 import { isImageNotInstalled } from '@/src/utils/deployments/images';
 import { getErrorNotification } from '@/src/utils/notification';
-import Delete from '@/src/components/EntityView/Modals/Delete/Delete';
 
 export interface ContainersButtonsWrapperProps {
   route: ApplicationRoute;
@@ -216,9 +217,10 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
                   </>
                 )}
 
-                <DialNeutralButton
+                <DialErrorButton
                   className={buttonsClassNames}
                   label={t(ButtonsI18nKey.Delete)}
+                  appearance={ButtonAppearance.Outlined}
                   iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
                   onClick={onOpenDeleteModal}
                 />

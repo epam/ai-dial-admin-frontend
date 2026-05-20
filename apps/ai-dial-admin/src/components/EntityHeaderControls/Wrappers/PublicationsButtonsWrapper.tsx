@@ -6,8 +6,10 @@ import { createPortal } from 'react-dom';
 
 import {
   AlertVariant,
+  ButtonAppearance,
   DialAlert,
   DialConfirmationPopup,
+  DialErrorButton,
   DialNeutralButton,
   DialPrimaryButton,
   DialTextarea,
@@ -29,8 +31,8 @@ import {
 } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { ActionType, Publication } from '@/src/models/dial/publications';
@@ -187,9 +189,10 @@ const PublicationsButtonsWrapper = <T extends Publication>({
             {!isEditorEnabled && (
               <div className="flex-1 flex flex-row gap-x-4 justify-center">
                 <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
-                  <DialNeutralButton
+                  <DialErrorButton
                     className={buttonsClassName}
                     label={t(ButtonsI18nKey.Delete)}
+                    appearance={ButtonAppearance.Outlined}
                     onClick={() => setIsOpenDeleteModal(true)}
                     iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
                   />

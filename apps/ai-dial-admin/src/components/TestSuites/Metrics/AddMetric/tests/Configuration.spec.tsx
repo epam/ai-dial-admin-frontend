@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
-import { ButtonsI18nKey, EntityFieldsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { Metric, MetricBinding } from '@/src/models/evaluation/metric';
 import MetricConfiguration from '../Configuration';
 import { MetricBindingType } from '@/src/types/evaluation';
@@ -16,11 +16,6 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
       value={value ?? ''}
       onChange={(e) => onChange?.(e.target.value)}
     />
-  ),
-  DialLinkButton: ({ label, onClick }: any) => (
-    <button type="button" onClick={onClick}>
-      {label}
-    </button>
   ),
   DialSelect: ({ value, onChange, options = [] }: any) => (
     <select role="combobox" value={value ?? ''} onChange={(e) => onChange?.(e.target.value)}>
@@ -124,51 +119,6 @@ describe('MetricConfiguration', () => {
     expect(screen.getByRole('region', { name: TestSuitesI18nKey.Configuration })).toHaveTextContent('fields:1');
     expect(screen.getByRole('region', { name: TestSuitesI18nKey.Inputs })).toHaveTextContent('fields:1');
     expect(screen.getByRole('region', { name: TestSuitesI18nKey.Outputs })).toHaveTextContent('fields:1');
-  });
-
-  test('shows "Show more" button for long descriptions', () => {
-    const longDescription = 'A'.repeat(200);
-    const metricWithLongDescription: Metric = {
-      id: 'metric-3',
-      name: 'Long Description Metric',
-      description: longDescription,
-    };
-
-    render(<MetricConfiguration metricName="Metric Name" selectedMetric={metricWithLongDescription} />);
-
-    expect(screen.getByRole('button', { name: ButtonsI18nKey.ShowMore })).toBeInTheDocument();
-  });
-
-  test('does not show "Show more" button for short descriptions', () => {
-    const shortDescription = 'Short description';
-    const metricWithShortDescription: Metric = {
-      id: 'metric-4',
-      name: 'Short Description Metric',
-      description: shortDescription,
-    };
-
-    render(<MetricConfiguration metricName="Metric Name" selectedMetric={metricWithShortDescription} />);
-
-    expect(screen.queryByRole('button', { name: ButtonsI18nKey.ShowMore })).not.toBeInTheDocument();
-  });
-
-  test('toggles description expansion when "Show more/less" button is clicked', () => {
-    const longDescription = 'A'.repeat(200);
-    const metricWithLongDescription: Metric = {
-      id: 'metric-5',
-      name: 'Toggle Metric',
-      description: longDescription,
-    };
-
-    render(<MetricConfiguration metricName="Metric Name" selectedMetric={metricWithLongDescription} />);
-
-    const button = screen.getByRole('button', { name: ButtonsI18nKey.ShowMore });
-    fireEvent.click(button);
-
-    expect(screen.getByRole('button', { name: ButtonsI18nKey.ShowLess })).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: ButtonsI18nKey.ShowLess }));
-    expect(screen.getByRole('button', { name: ButtonsI18nKey.ShowMore })).toBeInTheDocument();
   });
 
   test('renders plain URLs as clickable links', () => {

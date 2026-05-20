@@ -47,6 +47,20 @@ export const getFormattedResourceType = (value: string, t: (key: string) => stri
   return value;
 };
 
+export type ResourceTypeLabelMap = Record<string, ActivityAuditResourceType[]>;
+
+export const buildResourceTypeLabelMap = (t: (key: string) => string): ResourceTypeLabelMap => {
+  const map: ResourceTypeLabelMap = {};
+  for (const value of Object.values(ActivityAuditResourceType)) {
+    const label = getFormattedResourceType(value, t).toLowerCase();
+    if (!map[label]) {
+      map[label] = [];
+    }
+    map[label].push(value);
+  }
+  return map;
+};
+
 export const getTopics = (data?: { topics?: string[]; descriptionKeywords?: string[] }) => {
   const value = data?.topics || data?.descriptionKeywords;
   return value?.length === 0 ? null : value?.sort() || null;

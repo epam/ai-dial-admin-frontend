@@ -31,6 +31,7 @@ vi.mock('@/src/constants/grid-columns/grid-columns', async () => {
         ? [{ colId: 'd1' }, { colId: 'd2' }]
         : [{ colId: 'a' }, { colId: 'b' }],
     ),
+    RESOURCE_TYPE_COLUMN: 'resourceType',
   };
 });
 
@@ -129,6 +130,132 @@ describe('Activity Audit List utils :: getGridFilters', () => {
         value: mockEndDate.getTime().toString(),
       },
     ]);
+  });
+
+  describe('resourceType label-aware filter transform', () => {
+    const labelMap = {
+      'global firewall': [ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST],
+      'adapter container': [ActivityAuditResourceType.ADAPTER_DEPLOYMENT],
+      'application container': [ActivityAuditResourceType.APPLICATION_DEPLOYMENT],
+      'interceptor container': [ActivityAuditResourceType.INTERCEPTOR_DEPLOYMENT],
+      'mcp container': [ActivityAuditResourceType.MCP_DEPLOYMENT],
+      'model serving': [ActivityAuditResourceType.NIM_DEPLOYMENT, ActivityAuditResourceType.INFERENCE_DEPLOYMENT],
+    };
+
+    test('single-match contains substring expands to eq with the matching enum', () => {
+      const gridFilter = {
+        resourceType: { filter: 'GLO', type: GridFilterType.CONTAINS, filterType: 'text' },
+      };
+
+      const result = getGridFilters(gridFilter, timeRange, labelMap);
+
+      expect(result[0]).toEqual({
+        column: 'resourceType',
+        operator: FilterOperatorDto.EQUALS,
+        value: ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST,
+      });
+    });
+
+    test('case-insensitive matching produces the same single-match expansion', () => {
+      const lower = getGridFilters(
+        { resourceType: { filter: 'global', type: GridFilterType.CONTAINS, filterType: 'text' } },
+        timeRange,
+        labelMap,
+      );
+      const upper = getGridFilters(
+        { resourceType: { filter: 'GLOBAL', type: GridFilterType.CONTAINS, filterType: 'text' } },
+        timeRange,
+        labelMap,
+      );
+
+      expect(lower[0]).toEqual({
+        column: 'resourceType',
+        operator: FilterOperatorDto.EQUALS,
+        value: ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST,
+      });
+      expect(lower[0]).toEqual(upper[0]);
+    });
+
+    // Known limitation: multi-match inputs fall through to the original `co` payload,
+    // which the backend runs as LIKE '%value%' against the raw enum string. Since the
+    // raw enums (e.g. AdapterDeployment) share no substring with localized labels
+    // (e.g. "container"), the user sees zero rows. Documented in design.md; a BE-side
+    // `in` operator is required to fix multi-match generally.
+    test('multi-match input passes through original co payload — known limitation, returns 0 rows on BE', () => {
+      const gridFilter = {
+        resourceType: { filter: 'container', type: GridFilterType.CONTAINS, filterType: 'text' },
+      };
+
+      const result = getGridFilters(gridFilter, timeRange, labelMap);
+
+      expect(result[0]).toEqual({
+        column: 'resourceType',
+        operator: FilterOperatorDto.CONTAINS,
+        value: 'container',
+      });
+    });
+
+    test('no-match input passes through original co payload', () => {
+      const gridFilter = {
+        resourceType: { filter: 'zzz-no-match', type: GridFilterType.CONTAINS, filterType: 'text' },
+      };
+
+      const result = getGridFilters(gridFilter, timeRange, labelMap);
+
+      expect(result[0]).toEqual({
+        column: 'resourceType',
+        operator: FilterOperatorDto.CONTAINS,
+        value: 'zzz-no-match',
+      });
+    });
+
+    test('equals operator on resourceType passes through unchanged', () => {
+      const gridFilter = {
+        resourceType: {
+          filter: ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST,
+          type: GridFilterType.EQUALS,
+          filterType: 'text',
+        },
+      };
+
+      const result = getGridFilters(gridFilter, timeRange, labelMap);
+
+      expect(result[0]).toEqual({
+        column: 'resourceType',
+        operator: FilterOperatorDto.EQUALS,
+        value: ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST,
+      });
+    });
+
+    test('non-resourceType filters are not affected by the transform', () => {
+      const gridFilter = {
+        resourceId: { filter: 'my-id', type: GridFilterType.CONTAINS, filterType: 'text' },
+        activityType: { filter: 'GLO', type: GridFilterType.CONTAINS, filterType: 'text' },
+      };
+
+      const result = getGridFilters(gridFilter, timeRange, labelMap);
+
+      const cols = result.map((f) => f.column);
+      expect(cols).toContain('resourceId');
+      expect(cols).toContain('activityType');
+      const activityType = result.find((f) => f.column === 'activityType');
+      expect(activityType?.operator).toBe(FilterOperatorDto.CONTAINS);
+      expect(activityType?.value).toBe('GLO');
+    });
+
+    test('omitting the labelMap leaves resourceType filters untouched', () => {
+      const gridFilter = {
+        resourceType: { filter: 'GLO', type: GridFilterType.CONTAINS, filterType: 'text' },
+      };
+
+      const result = getGridFilters(gridFilter, timeRange);
+
+      expect(result[0]).toEqual({
+        column: 'resourceType',
+        operator: FilterOperatorDto.CONTAINS,
+        value: 'GLO',
+      });
+    });
   });
 });
 

@@ -21,7 +21,7 @@ describe('Server :: Publications', () => {
     ];
     fetch.mockResponseOnce(JSON.stringify({ publications: mockPublications }));
 
-    await instance.getPublicationsPromptsList(TOKEN_MOCK);
+    await instance.getPublicationPromptList(TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/publications?type=prompt'),
@@ -36,7 +36,7 @@ describe('Server :: Publications', () => {
     ];
     fetch.mockResponseOnce(JSON.stringify({ publications: mockPublications }));
 
-    await instance.getToolsetPublicationsList(TOKEN_MOCK);
+    await instance.getPublicationToolsetList(TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/publications?type=tool_set'),
@@ -51,7 +51,7 @@ describe('Server :: Publications', () => {
     ];
     fetch.mockResponseOnce(JSON.stringify({ publications: mockPublications }));
 
-    await instance.getApplicationPublicationsList(TOKEN_MOCK);
+    await instance.getPublicationApplicationList(TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/publications?type=application'),
@@ -66,7 +66,7 @@ describe('Server :: Publications', () => {
     ];
     fetch.mockResponseOnce(JSON.stringify({ publications: mockPublications }));
 
-    await instance.getPublicationsFilesList(TOKEN_MOCK);
+    await instance.getPublicationFileList(TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/publications?type=file'),

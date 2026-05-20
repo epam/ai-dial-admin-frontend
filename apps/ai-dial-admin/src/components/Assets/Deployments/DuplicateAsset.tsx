@@ -26,13 +26,13 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useI18n } from '@/src/locales/client';
 import { AssetToolset, AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { ToolsetAuthType } from '@/src/models/dial/toolset';
+import { ServerActionResponse } from '@/src/models/server-action';
 import { DuplicationTypes } from '@/src/types/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
 import { duplicateEntityMap, getClonedEntityName, getCloneTitle } from '@/src/utils/entities/duplicate-entity';
+import { checkNameVersionCombination, getInitialVersion } from '@/src/utils/entities/versions';
 import { isDeploymentAsset } from '@/src/utils/is-view';
-import { checkNameVersionCombination, getInitialVersion } from '@/src/utils/prompts/versions';
 import { addTrailingSlash } from '@/src/utils/url';
-import { ServerActionResponse } from '@/src/models/server-action';
 
 interface Props {
   view: ApplicationRoute;

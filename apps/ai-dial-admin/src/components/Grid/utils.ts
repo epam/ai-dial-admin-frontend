@@ -44,6 +44,33 @@ export const haveColDefsSamePanelState = (columnDefs: ColDef[], nextColumnDefs: 
     (col, index) => col.field === nextColumnDefs[index].field && col.hide === nextColumnDefs[index].hide,
   );
 
+const getFirstLeafColId = (col: ColDef): string | undefined => {
+  const children = 'children' in col && col.children ? (col.children as ColDef[]) : [];
+  if (children.length > 0) {
+    for (const child of children) {
+      const id = getFirstLeafColId(child);
+      if (id != null) return id;
+    }
+    return undefined;
+  }
+  return (col.colId ?? col.field) as string | undefined;
+};
+
+export const applyColumnStateOrderToTreeColDefs = (columnDefs: ColDef[], columnState: ColumnState[]): ColDef[] => {
+  const colIdToIndex = new Map(columnState.map((state, i) => [state.colId, i]));
+
+  const getPosition = (col: ColDef): number => {
+    const leafId = getFirstLeafColId(col);
+    return leafId !== undefined ? (colIdToIndex.get(leafId) ?? Infinity) : Infinity;
+  };
+
+  return [...columnDefs].sort((a, b) => getPosition(a) - getPosition(b));
+};
+
+export const haveTreeColDefsSamePanelState = (columnDefs: ColDef[], nextColumnDefs: ColDef[]): boolean =>
+  columnDefs.length === nextColumnDefs.length &&
+  columnDefs.every((col, index) => getFirstLeafColId(col) === getFirstLeafColId(nextColumnDefs[index]));
+
 export const updateColumnVisibilityInStorage = (storageKey: string, colDefs: ColDef[]) => {
   const stored = getFromLocalStorage(`${GRID_COLUMNS_KEY}${storageKey}`) || '{}';
   const model: GridModel = JSON.parse(stored);

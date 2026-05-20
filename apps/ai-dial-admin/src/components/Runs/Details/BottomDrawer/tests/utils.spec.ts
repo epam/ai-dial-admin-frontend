@@ -49,15 +49,15 @@ describe('buildComparisonSections', () => {
     expect(metricSection!.rows.length).toBe(2);
   });
 
-  it('builds two-column sections with values ordered [pinned, active]', () => {
+  it('builds two-column sections with values ordered [active, pinned]', () => {
     const active = makeResult({ id: 'r1', testCaseData: { input: 'a' } });
     const pinned = makeResult({ id: 'r2', testCaseData: { input: 'b' } });
     const sections = buildComparisonSections(active, pinned, defaultVisibility, defaultOrder, defaultHidden);
 
     const tc = sections.find((s) => s.key === 'testCaseData');
     expect(tc!.rows[0].values).toHaveLength(2);
-    expect(tc!.rows[0].values[0].raw).toBe('b'); // pinned
-    expect(tc!.rows[0].values[1].raw).toBe('a'); // active
+    expect(tc!.rows[0].values[0].raw).toBe('a'); // active
+    expect(tc!.rows[0].values[1].raw).toBe('b'); // pinned
   });
 
   it('deduplicates when active === pinned (same id)', () => {
@@ -77,8 +77,8 @@ describe('buildComparisonSections', () => {
     expect(ec!.rows).toHaveLength(2);
 
     const extraRow = ec!.rows.find((r) => r.fieldKey === 'extra');
-    expect(extraRow!.values[0].raw).toBeNull(); // pinned doesn't have 'extra'
-    expect(extraRow!.values[1].raw).toBe('y'); // active has 'extra'
+    expect(extraRow!.values[0].raw).toBe('y'); // active has 'extra'
+    expect(extraRow!.values[1].raw).toBeNull(); // pinned doesn't have 'extra'
   });
 
   it('unions metric groups across results', () => {
@@ -90,8 +90,8 @@ describe('buildComparisonSections', () => {
     expect(sections.find((s) => s.key === 'metric:groupB')).toBeDefined();
 
     const groupA = sections.find((s) => s.key === 'metric:groupA')!;
-    expect(groupA.rows[0].values[0].raw).toBeNull(); // pinned doesn't have groupA
-    expect(groupA.rows[0].values[1].raw).toBe('0.5'); // active has groupA.f1
+    expect(groupA.rows[0].values[0].raw).toBe('0.5'); // active has groupA.f1
+    expect(groupA.rows[0].values[1].raw).toBeNull(); // pinned doesn't have groupA
   });
 
   it('filters fields by visibility', () => {

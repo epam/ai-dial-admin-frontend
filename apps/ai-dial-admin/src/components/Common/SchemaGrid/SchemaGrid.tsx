@@ -8,6 +8,7 @@ import { JSONSchema7 } from 'json-schema';
 import isEqual from 'lodash/isEqual';
 
 import GridView from '@/src/components/Grid/GridView/GridView';
+import { findRowInTree, updateRowInTree } from '@/src/components/Common/TreeGrid/utils';
 import { getRowIdById } from '@/src/components/Grid/utils';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
@@ -66,22 +67,9 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
     onChangeRef.current(newSchema, isSkipRefresh);
   }, []);
 
-  const updateFieldInList = useCallback(
-    (fieldList: SchemaFieldRow[], id: string, updater: (field: SchemaFieldRow) => SchemaFieldRow): SchemaFieldRow[] => {
-      return fieldList.map((field) => {
-        if (field.id === id) return updater(field);
-        if (field.children.length) {
-          return { ...field, children: updateFieldInList(field.children, id, updater) };
-        }
-        return field;
-      });
-    },
-    [],
-  );
-
   const onToggleExpand = useCallback(
     (data: SchemaFieldRow) => {
-      const updated = updateFieldInList(fieldsRef.current, data.id, (f) => ({
+      const updated = updateRowInTree(fieldsRef.current, data.id, (f) => ({
         ...f,
         expanded: !f.expanded,
       }));
@@ -92,20 +80,20 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
         gridApiRef.current?.updateGridOptions({ rowData: flattenFields(updated, 0, isReadonlyGrid) });
       }
     },
-    [updateFieldInList, isReadonlyGrid],
+    [isReadonlyGrid],
   );
 
   const onChangeName = useCallback(
     (value: string, data: SchemaFieldRow) => {
-      const updated = updateFieldInList(fieldsRef.current, data.id, (f) => ({ ...f, name: value }));
+      const updated = updateRowInTree(fieldsRef.current, data.id, (f) => ({ ...f, name: value }));
       updateFields(updated, true);
     },
-    [updateFieldInList, updateFields],
+    [updateFields],
   );
 
   const onChangeType = useCallback(
     (value: string, data: SchemaFieldRow) => {
-      const updated = updateFieldInList(fieldsRef.current, data.id, (f) => {
+      const updated = updateRowInTree(fieldsRef.current, data.id, (f) => {
         if (value.startsWith('array:')) {
           const itemsType = value.slice(6) as SchemaFieldRow['type'];
           return {
@@ -127,56 +115,56 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
       });
       updateFields(updated);
     },
-    [updateFieldInList, updateFields],
+    [updateFields],
   );
 
   const onChangeRequired = useCallback(
     (value: boolean, data: SchemaFieldRow) => {
-      const updated = updateFieldInList(fieldsRef.current, data.id, (f) => ({ ...f, required: value }));
+      const updated = updateRowInTree(fieldsRef.current, data.id, (f) => ({ ...f, required: value }));
       updateFields(updated);
     },
-    [updateFieldInList, updateFields],
+    [updateFields],
   );
 
   const onChangeTitle = useCallback(
     (value: string, data: SchemaFieldRow) => {
-      const updated = updateFieldInList(fieldsRef.current, data.id, (f) => ({ ...f, title: value }));
+      const updated = updateRowInTree(fieldsRef.current, data.id, (f) => ({ ...f, title: value }));
       updateFields(updated, true);
     },
-    [updateFieldInList, updateFields],
+    [updateFields],
   );
 
   const onChangeDescription = useCallback(
     (value: string, data: SchemaFieldRow) => {
-      const updated = updateFieldInList(fieldsRef.current, data.id, (f) => ({ ...f, description: value }));
+      const updated = updateRowInTree(fieldsRef.current, data.id, (f) => ({ ...f, description: value }));
       updateFields(updated, true);
     },
-    [updateFieldInList, updateFields],
+    [updateFields],
   );
 
   const onChangeOrder = useCallback(
     (value: number | string, data: SchemaFieldRow) => {
       if (data.parentId !== null) return;
       const num = typeof value === 'string' ? (value === '' ? undefined : Number(value)) : value;
-      const updated = updateFieldInList(fieldsRef.current, data.id, (f) => ({
+      const updated = updateRowInTree(fieldsRef.current, data.id, (f) => ({
         ...f,
         dialMeta: { ...f.dialMeta, 'dial:propertyOrder': num },
       }));
       updateFields(updated, true);
     },
-    [updateFieldInList, updateFields],
+    [updateFields],
   );
 
   const onChangePropertyKind = useCallback(
     (value: string, data: SchemaFieldRow) => {
       if (data.parentId !== null) return;
-      const updated = updateFieldInList(fieldsRef.current, data.id, (f) => ({
+      const updated = updateRowInTree(fieldsRef.current, data.id, (f) => ({
         ...f,
         dialMeta: { ...f.dialMeta, 'dial:propertyKind': value },
       }));
       updateFields(updated);
     },
-    [updateFieldInList, updateFields],
+    [updateFields],
   );
 
   const onRemoveField = useCallback(
@@ -185,7 +173,7 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
       let updated: SchemaFieldRow[];
 
       if (data.parentId) {
-        updated = updateFieldInList(fieldsRef.current, data.parentId, (parent) => ({
+        updated = updateRowInTree(fieldsRef.current, data.parentId, (parent) => ({
           ...parent,
           children: parent.children.filter((c) => c.id !== data.id),
         }));
@@ -194,7 +182,7 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
       }
       updateFields(updated);
     },
-    [updateFieldInList, updateFields],
+    [updateFields],
   );
 
   const onAddField = useCallback(() => {
@@ -203,27 +191,18 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
     updateFields(updated);
   }, [updateFields]);
 
-  const findFieldById = useCallback((id: string, fieldList: SchemaFieldRow[]): SchemaFieldRow | undefined => {
-    for (const field of fieldList) {
-      if (field.id === id) return field;
-      const found = findFieldById(id, field.children);
-      if (found) return found;
-    }
-    return undefined;
-  }, []);
-
   const onAddSubField = useCallback(
     (parentId: string) => {
-      const parent = findFieldById(parentId, fieldsRef.current);
+      const parent = findRowInTree(fieldsRef.current, parentId);
       const childDepth = (parent?.depth ?? 0) + 1;
-      const updated = updateFieldInList(fieldsRef.current, parentId, (p) => ({
+      const updated = updateRowInTree(fieldsRef.current, parentId, (p) => ({
         ...p,
         expanded: true,
         children: [...p.children, createEmptyField(parentId, childDepth)],
       }));
       updateFields(updated);
     },
-    [updateFieldInList, updateFields, findFieldById],
+    [updateFields],
   );
 
   const rowData = useMemo(() => flattenFields(fields, 0, isReadonlyGrid), [fields, isReadonlyGrid]);
@@ -299,7 +278,7 @@ const SchemaGrid: FC<SchemaGridProps> = ({ schema, onChange, isSkipRefresh, isDi
   );
 
   return (
-    <div className="h-[500px]">
+    <div className="h-full">
       <GridView<SchemaFieldRow>
         getIsEmptyData={() => fields.length === 0 && isReadonlyGrid}
         emptyDataProps={{ title: t(BasicI18nKey.NoData) }}

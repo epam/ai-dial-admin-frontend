@@ -2,12 +2,12 @@
 
 import { FC, useCallback } from 'react';
 
-import { DialNeutralButton, DialInput } from '@epam/ai-dial-ui-kit';
-import { useI18n } from '@/src/locales/client';
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
-import { IconTrashX } from '@tabler/icons-react';
 import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { useI18n } from '@/src/locales/client';
 import { FieldError } from '@/src/models/error';
+import { ButtonAppearance, DialErrorButton, DialInput } from '@epam/ai-dial-ui-kit';
+import { IconTrashX } from '@tabler/icons-react';
 
 interface Props {
   toolName: string;
@@ -30,8 +30,9 @@ const AddNewTool: FC<Props> = ({ toolName, error, onDelete, onChange }) => {
     <>
       <div className="flex flex-row justify-between items-center mb-4">
         <h2>{toolName}</h2>
-        <DialNeutralButton
+        <DialErrorButton
           label={t(ButtonsI18nKey.Delete)}
+          appearance={ButtonAppearance.Outlined}
           iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
           onClick={onDelete}
         />

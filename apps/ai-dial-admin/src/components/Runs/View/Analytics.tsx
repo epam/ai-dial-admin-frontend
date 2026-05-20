@@ -15,7 +15,7 @@ import {
   SelectVariant,
 } from '@epam/ai-dial-ui-kit';
 
-import { getRuns, getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
+import { getRuns, getMetricSnapshots, getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
 import ColorScale from '@/src/components/Common/ColorScale/ColorScale';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import TreeColumnsPanel from '@/src/components/Grid/TreeColumnsPanel/TreeColumnsPanel';
@@ -25,13 +25,22 @@ import { useDrawerPanel } from '@/src/components/Runs/Details/BottomDrawer/useDr
 import { ButtonsI18nKey, EntitiesI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
+import { MetricSnapshot } from '@/src/models/evaluation/metric';
 import { AnalyticsResult, Run, RunStatus } from '@/src/models/evaluation/run';
 import { FilterOperatorDto } from '@/src/types/request';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { CompareAnalyticsRow } from './models';
 
+import { applyColumnStateOrderToTreeColDefs, haveTreeColDefsSamePanelState } from '@/src/components/Grid/utils';
 import { useDetailMode } from './use-detail-mode';
-import { getAnalyticsColumns, getAnalyticsColumnsCompare, mergeByTestCaseId, RESULT_FILTERS } from './utils';
+import {
+  getAnalyticsColumns,
+  getAnalyticsColumnsCompare,
+  mergeByTestCaseId,
+  RESULT_FILTERS,
+  RUN_FILTER,
+  snapshotsToBindingsMap,
+} from './utils';
 
 interface Props {
   run: Run;
@@ -39,7 +48,9 @@ interface Props {
 
 const AnalyticsTab: FC<Props> = ({ run }) => {
   const t = useI18n();
-  const detailMode = useDetailMode();
+  const [snapshots, setSnapshots] = useState<MetricSnapshot[]>([]);
+  const metricBindings = useMemo(() => snapshotsToBindingsMap(snapshots), [snapshots]);
+  const detailMode = useDetailMode(metricBindings);
   const drawerPanel = useDrawerPanel();
 
   const gridApiRef = useRef<GridApi | null>(null);
@@ -68,6 +79,14 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
         });
     }
   }, [isLoading, results, run, t]);
+
+  useEffect(() => {
+    if (!run?.id) return;
+
+    getMetricSnapshots(RUN_FILTER(run.id)).then((data) => {
+      setSnapshots(data || []);
+    });
+  }, [run.id]);
 
   useEffect(() => {
     if (!run?.testSuiteId) return;
@@ -129,6 +148,30 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
   }, [computedColDefs]);
 
   const toggleTreePanel = useCallback(() => setShowTreePanel((prev) => !prev), []);
+
+  useEffect(() => {
+    if (!showTreePanel || !computedColDefs?.length) {
+      return;
+    }
+
+    const columnState = gridApiRef.current?.getColumnState();
+    if (!columnState?.length) {
+      return;
+    }
+
+    setPanelColDefs((prevColDefs) => {
+      if (!prevColDefs?.length) {
+        return prevColDefs;
+      }
+
+      const syncedColDefs = applyColumnStateOrderToTreeColDefs(prevColDefs, columnState);
+      if (haveTreeColDefsSamePanelState(prevColDefs, syncedColDefs)) {
+        return prevColDefs;
+      }
+
+      return syncedColDefs;
+    });
+  }, [showTreePanel, computedColDefs]);
 
   const onPanelColumnsChange = useCallback((newColDefs: ColDef[]) => {
     setPanelColDefs(newColDefs);

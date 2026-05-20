@@ -160,6 +160,10 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
           key: MenuI18nKey.FilePublications,
           href: ApplicationRoute.FilePublications,
         },
+        {
+          key: MenuI18nKey.ConversationPublications,
+          href: ApplicationRoute.ConversationPublications,
+        },
       ],
     },
     {

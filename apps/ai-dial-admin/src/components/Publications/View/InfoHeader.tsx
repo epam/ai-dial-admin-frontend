@@ -7,9 +7,10 @@ import { AuthHeader } from '@/src/components/Toolsets/Auth/Sections/AuthHeader';
 import { EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { ACTION_I18N_KEYS } from '@/src/constants/publications';
 import { useI18n } from '@/src/locales/client';
-import { Publication, ToolsetPublication } from '@/src/models/dial/publications';
+import { ConversationPublication, Publication, ToolsetPublication } from '@/src/models/dial/publications';
 import { Toolset } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getNameVersionFromAsset } from '@/src/utils/entities/versions';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getActionClassName } from '@/src/utils/publications';
 
@@ -21,6 +22,13 @@ interface Props {
 const PublicationInfoHeader: FC<Props> = ({ entity, view }) => {
   const t = useI18n();
   const indicatorClassName = classNames('flex w-2 h-2 mr-1 rounded no-user-select', getActionClassName(entity?.action));
+  const conversationName =
+    view === ApplicationRoute.ConversationPublications
+      ? getNameVersionFromAsset(
+          (entity as unknown as ConversationPublication)?.conversations?.[0]?.conversation?.name as string,
+        )
+      : undefined;
+
   return (
     <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-primary">
       {entity?.action && (
@@ -40,6 +48,7 @@ const PublicationInfoHeader: FC<Props> = ({ entity, view }) => {
       {view === ApplicationRoute.ToolsetPublications && (
         <AuthHeader toolset={(entity as ToolsetPublication).toolSetResources?.[0].toolSetResource as Toolset} />
       )}
+      {conversationName && <LabelledText label={t(EntityFieldsI18nKey.version)} text={conversationName.version} />}
     </div>
   );
 };

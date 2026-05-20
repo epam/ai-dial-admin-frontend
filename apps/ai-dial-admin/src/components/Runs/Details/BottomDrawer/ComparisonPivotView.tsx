@@ -93,8 +93,8 @@ const ComparisonPivotView: FC<Props> = ({
 
   const details = useMemo(() => {
     const arr: AnalyticsResult[] = [];
-    if (pinnedDetail && hasTwoRows) arr.push(pinnedDetail);
     if (activeDetail) arr.push(activeDetail);
+    if (pinnedDetail && hasTwoRows) arr.push(pinnedDetail);
     return arr;
   }, [activeDetail, pinnedDetail, hasTwoRows]);
 
@@ -118,11 +118,7 @@ const ComparisonPivotView: FC<Props> = ({
   // ── Build row data ──────────────────────────────────────────────────────
   const rowData = useMemo<PivotRow[]>(() => {
     return details.map((detail, rowIdx) => {
-      const runLabel = runCompareNames
-        ? rowIdx === 0 && hasTwoRows
-          ? runCompareNames.compared
-          : runCompareNames.current
-        : null;
+      const runLabel = runCompareNames ? (rowIdx === 0 ? runCompareNames.current : runCompareNames.compared) : null;
       const row: PivotRow = {
         _id: detail.id ?? String(rowIdx),
         _testCaseName: runLabel ?? detail.testCaseName ?? detail.id ?? '',
@@ -131,17 +127,17 @@ const ComparisonPivotView: FC<Props> = ({
         _hasTwoRows: hasTwoRows,
       };
 
-      const isPinnedRow = hasTwoRows && rowIdx === 0;
+      const isPinnedRow = hasTwoRows && rowIdx === details.length - 1;
 
       for (const field of flatFields) {
         const val = field.values[rowIdx];
         const raw = val?.raw ?? null;
 
-        // Diff highlighting on active row (non-pinned)
+        // Diff highlighting on compared row (pinned)
         let diffClass = '';
-        if (hasTwoRows && !isPinnedRow && field.values.length >= 2) {
-          const pinnedRaw = field.values[0]?.raw ?? null;
-          if (!valuesAreEqual(pinnedRaw, raw)) {
+        if (hasTwoRows && isPinnedRow && field.values.length >= 2) {
+          const currentRaw = field.values[0]?.raw ?? null;
+          if (!valuesAreEqual(currentRaw, raw)) {
             diffClass = field.isNumeric ? 'bg-warning' : 'bg-accent-secondary-alpha';
           }
         }
@@ -160,18 +156,18 @@ const ComparisonPivotView: FC<Props> = ({
       const colId = event.column.getColId();
       if (colId === '_testCaseName') return;
 
-      const activeRow = rowData[rowData.length - 1];
+      const activeRow = rowData[0];
       const activeCell = activeRow[colId] as FieldValueCell | undefined;
-      if (!activeCell?.diffClass) return;
 
-      const pinnedRow = rowData[0];
+      const pinnedRow = rowData[rowData.length - 1];
       const pinnedCell = pinnedRow[colId] as FieldValueCell | undefined;
+      if (!pinnedCell?.diffClass) return;
       const field = flatFields.find((f) => f.fullKey === colId);
 
       setDiffViewState({
         fieldLabel: field?.label ?? colId,
-        original: pinnedCell?.raw ?? '',
-        modified: activeCell?.raw ?? '',
+        original: activeCell?.raw ?? '',
+        modified: pinnedCell?.raw ?? '',
       });
     },
     [hasTwoRows, rowData, flatFields],
@@ -290,8 +286,8 @@ const ComparisonPivotView: FC<Props> = ({
           fieldLabel={diffViewState.fieldLabel}
           original={diffViewState.original}
           modified={diffViewState.modified}
-          originalLabel={runCompareNames?.compared ?? pinnedDetail?.testCaseName ?? pinnedDetail?.id ?? ''}
-          modifiedLabel={runCompareNames?.current ?? activeDetail?.testCaseName ?? activeDetail?.id ?? ''}
+          originalLabel={runCompareNames?.current ?? activeDetail?.testCaseName ?? activeDetail?.id ?? ''}
+          modifiedLabel={runCompareNames?.compared ?? pinnedDetail?.testCaseName ?? pinnedDetail?.id ?? ''}
           onClose={() => setDiffViewState(null)}
         />
       )}

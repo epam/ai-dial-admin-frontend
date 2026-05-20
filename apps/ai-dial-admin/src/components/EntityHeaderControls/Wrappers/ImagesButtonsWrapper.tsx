@@ -1,4 +1,4 @@
-import { DialNeutralButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, DialErrorButton, DialNeutralButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconBlocks, IconPlayerPause, IconPlus, IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { useRouter } from 'next/navigation';
@@ -277,9 +277,10 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
                   onChange={onVersionChange}
                   onClick={onOpenCreteNewVersionModal}
                 />
-                <DialNeutralButton
+                <DialErrorButton
                   className={buttonsClassNames}
                   label={t(ButtonsI18nKey.Delete)}
+                  appearance={ButtonAppearance.Outlined}
                   iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}
                   onClick={onOpenDeleteModal}
                 />

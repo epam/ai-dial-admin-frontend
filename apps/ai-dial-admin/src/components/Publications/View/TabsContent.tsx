@@ -1,22 +1,27 @@
 'use client';
 import { Dispatch, SetStateAction, useCallback } from 'react';
 
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import ParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
+import Conversations from '@/src/components/Assets/Conversations/View/Conversations';
 import FilesDetails from '@/src/components/Publications/Assets/Files/FilesDetails';
 import ApplicationProperties from '@/src/components/Publications/Properties/ApplicationProperties';
+import ConversationProperties from '@/src/components/Publications/Properties/ConversationProperties';
 import FileProperties from '@/src/components/Publications/Properties/FileProperties';
 import PromptProperties from '@/src/components/Publications/Properties/PromptProperties';
 import ToolsetProperties from '@/src/components/Publications/Properties/ToolsetProperties';
 import Tools from '@/src/components/Tools/Tools';
 import { AppsFolderProvider } from '@/src/context/assets/AppsFolderContext';
+import { ConversationFolderProvider } from '@/src/context/assets/ConversationsFolderContext';
 import { FileFolderProvider } from '@/src/context/assets/FileFolderContext';
 import { PromptFolderProvider } from '@/src/context/assets/PromptFolderContext';
 import { ToolsetFolderProvider } from '@/src/context/assets/ToolsetsFolderContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialApplicationResource } from '@/src/models/dial/application-resource';
+import { DialConversation } from '@/src/models/dial/conversation';
 import {
   ApplicationPublication,
+  ConversationPublication,
   FilePublication,
   PromptPublication,
   Publication,
@@ -110,6 +115,14 @@ const TabsContent = <T extends Publication>({
               />
             </ToolsetFolderProvider>
           )}
+          {view === ApplicationRoute.ConversationPublications && (
+            <ConversationFolderProvider>
+              <ConversationProperties
+                publication={selectedPublication as ConversationPublication}
+                onChange={onChange as (p: ConversationPublication) => void}
+              />
+            </ConversationFolderProvider>
+          )}
         </div>
       )}
       {activeTab === EntityViewTab.Parameters && (
@@ -145,7 +158,15 @@ const TabsContent = <T extends Publication>({
           onChange={onChange as (publication: FilePublication) => void}
           addedFiles={addedFiles}
           setAddedFiles={setAddedFiles}
-          disabled={isReadOnlyAdmin}
+          disabled={isReadOnlyAdmin || view === ApplicationRoute.ConversationPublications}
+        />
+      )}
+
+      {activeTab === EntityViewTab.Conversation && (
+        <Conversations
+          selectedConversation={
+            (selectedPublication as ConversationPublication).conversations?.[0].conversation as DialConversation
+          }
         />
       )}
     </>

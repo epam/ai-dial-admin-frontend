@@ -7,7 +7,7 @@ import { VALUE_TYPE } from '@/src/types/deployments/variables';
 import { getFileNameError } from '@/src/utils/deployments/validation';
 import { downloadFile } from '@/src/utils/download';
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
-import { DialErrorText, DialFileIcon, DialIconButton, DialLabel, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { DialErrorText, DialFileIcon, DialIconButton, DialTooltip } from '@epam/ai-dial-ui-kit';
 import { IconX } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, useCallback, useEffect, useState } from 'react';
@@ -16,12 +16,11 @@ interface Props {
   value: EnvVariableValue;
   onValueChange: (value: EnvVariableValue) => void;
   index: number;
-  fieldName?: string;
   ariaLabel?: string;
   disabled?: boolean;
 }
 
-const ValueFile: FC<Props> = ({ value, index, fieldName, ariaLabel, onValueChange, disabled }) => {
+const ValueFile: FC<Props> = ({ value, index, ariaLabel, onValueChange, disabled }) => {
   const t = useI18n();
   const { dispatch, resetCounter } = useSaveValidationContext();
 
@@ -67,7 +66,6 @@ const ValueFile: FC<Props> = ({ value, index, fieldName, ariaLabel, onValueChang
 
   return (
     <div className="flex flex-col flex-1 gap-y-1 max-w-full">
-      {fieldName && <DialLabel label={fieldName} htmlFor={`variable_value_${index}`} />}
       <div
         id={`variable_value_${index}`}
         aria-label={ariaLabel}

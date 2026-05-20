@@ -60,8 +60,8 @@ const ComparisonTableView: FC<Props> = ({
   const hasTwoColumns = pinnedDetail != null && pinnedDetail.id !== activeDetail?.id;
   const details = useMemo(() => {
     const arr: AnalyticsResult[] = [];
-    if (pinnedDetail && hasTwoColumns) arr.push(pinnedDetail);
     if (activeDetail) arr.push(activeDetail);
+    if (pinnedDetail && hasTwoColumns) arr.push(pinnedDetail);
     return arr;
   }, [activeDetail, pinnedDetail, hasTwoColumns]);
 
@@ -94,11 +94,7 @@ const ComparisonTableView: FC<Props> = ({
             {t(RunsI18nKey.FieldColumn)}
           </div>
           {details.map((detail, idx) => {
-            const runLabel = runCompareNames
-              ? idx === 0 && hasTwoColumns
-                ? runCompareNames.compared
-                : runCompareNames.current
-              : null;
+            const runLabel = runCompareNames ? (idx === 0 ? runCompareNames.current : runCompareNames.compared) : null;
             return (
               <div
                 key={detail.id ?? idx}
@@ -144,8 +140,8 @@ const ComparisonTableView: FC<Props> = ({
           fieldLabel={diffViewState.fieldLabel}
           original={diffViewState.original}
           modified={diffViewState.modified}
-          originalLabel={runCompareNames?.compared ?? pinnedDetail?.testCaseName ?? pinnedDetail?.id ?? ''}
-          modifiedLabel={runCompareNames?.current ?? activeDetail?.testCaseName ?? activeDetail?.id ?? ''}
+          originalLabel={runCompareNames?.current ?? activeDetail?.testCaseName ?? activeDetail?.id ?? ''}
+          modifiedLabel={runCompareNames?.compared ?? pinnedDetail?.testCaseName ?? pinnedDetail?.id ?? ''}
           onClose={() => setDiffViewState(null)}
         />
       )}
