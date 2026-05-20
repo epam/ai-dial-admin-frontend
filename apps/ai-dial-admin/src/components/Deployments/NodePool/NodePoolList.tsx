@@ -47,10 +47,9 @@ const NodePoolList: FC<Props> = ({ pools, selectedId, onSelect }) => {
         placeholder={t(DeploymentsI18nKey.NodePoolSearchPlaceholder)}
       />
       <div className="flex flex-1 flex-col overflow-hidden rounded border border-primary">
-        <div className="grid grid-cols-[36px_1fr_1.5fr] gap-3 items-center px-4 py-2.5 bg-layer-3 border-b border-primary dial-tiny-semi-text uppercase tracking-wide text-secondary">
+        <div className="grid grid-cols-[36px_1fr] gap-3 items-center px-4 py-2.5 bg-layer-3 border-b border-primary dial-tiny-semi-text uppercase tracking-wide text-secondary">
           <span />
           <span>{t(DeploymentsI18nKey.NodePoolColumnName)}</span>
-          <span>{t(DeploymentsI18nKey.NodePoolColumnDescription)}</span>
         </div>
         <ul className="flex flex-col overflow-auto">
           <NodePoolItem

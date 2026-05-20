@@ -1522,7 +1522,6 @@ export enum DeploymentsI18nKey {
   EventsError = 'Deployments.EventsError',
   LogsError = 'Deployments.LogsError',
   NodePoolColumnName = 'Deployments.NodePoolColumnName',
-  NodePoolColumnDescription = 'Deployments.NodePoolColumnDescription',
   NodePoolEmpty = 'Deployments.NodePoolEmpty',
   NodePoolLoadError = 'Deployments.NodePoolLoadError',
   NodePoolModalTitle = 'Deployments.NodePoolModalTitle',

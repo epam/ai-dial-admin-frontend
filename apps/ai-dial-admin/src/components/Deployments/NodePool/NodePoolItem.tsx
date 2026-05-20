@@ -26,14 +26,11 @@ const NodePoolItem: FC<Props> = ({ radioName, inputId, value, name, description,
   >
     <DialLabel
       htmlFor={inputId}
-      className="grid grid-cols-[36px_1fr_1.5fr] gap-3 items-center cursor-pointer px-4 py-3"
+      className="grid grid-cols-[36px_1fr] gap-3 items-start cursor-pointer px-4 py-3"
       label={
         <>
           <DialRadioButton name={radioName} inputId={inputId} value={value} checked={checked} onChange={onSelect} />
-          <NodePoolInfo name={name} poolId={poolId} />
-          <span className="dial-small-text text-secondary truncate" title={description || ''}>
-            {description || ''}
-          </span>
+          <NodePoolInfo name={name} poolId={poolId} caption={description} />
         </>
       }
     />

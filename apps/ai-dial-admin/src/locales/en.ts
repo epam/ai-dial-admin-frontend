@@ -1577,7 +1577,6 @@ export default {
     EventsError: 'Error getting Events',
     LogsError: 'Error getting Logs',
     NodePoolColumnName: 'Name',
-    NodePoolColumnDescription: 'Description',
     NodePoolEmpty: 'No node pools configured',
     NodePoolLoadError: 'Failed to load node pools',
     NodePoolModalTitle: 'Select node pool',
