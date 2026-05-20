@@ -27,6 +27,7 @@ export enum EntityViewTab {
   Routes = 'Routes',
   Traces = 'Traces',
   Conversations = 'Conversations',
+  Conversation = 'Conversation',
   Attachments = 'Attachments',
   Tools = 'Tools',
   ParameterSchema = 'ParameterSchema',
@@ -278,6 +279,11 @@ export const permissionsTab = (t: (key: string) => string) => ({
   label: t(TabsI18nKey.Permissions),
 });
 
+export const conversationTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.Conversation,
+  label: t(TabsI18nKey.Conversation),
+});
+
 export const bodyTab = (t: (key: string) => string) => ({
   id: EntityViewTab.Body,
   label: t(TabsI18nKey.Body),
@@ -494,6 +500,8 @@ export const getPublicationViewTabs = (t: (key: string) => string, view: Applica
       return getApplicationPublicationTabs(t);
     case ApplicationRoute.ToolsetPublications:
       return getToolsetPublicationTabs(t);
+    case ApplicationRoute.ConversationPublications:
+      return getConversationPublicationTabs(t);
     default:
       return [];
   }
@@ -513,6 +521,10 @@ export const getApplicationPublicationTabs = (t: (key: string) => string): TabMo
 
 export const getToolsetPublicationTabs = (t: (key: string) => string): TabModel[] => {
   return [propertiesTab(t), toolsTab(t), permissionsTab(t)];
+};
+
+export const getConversationPublicationTabs = (t: (key: string) => string): TabModel[] => {
+  return [propertiesTab(t), conversationTab(t), filesTab(t), permissionsTab(t)];
 };
 
 export const getTestSuiteRequestTemplateTabs = (t: (key: string) => string): TabModel[] => {

@@ -5,7 +5,7 @@ import { FieldError } from '@/src/models/error';
 import { isValidHttpUrl } from '@/src/utils/validation/url-error';
 import { MAX_NAME_SYMBOLS, MIN_NAME_SYMBOLS } from '@/src/constants/validation';
 import { isWrongFieldLength } from '@/src/utils/validation/name-error';
-import { checkNameVersionCombination } from '@/src/utils/prompts/versions';
+import { checkNameVersionCombination } from '@/src/utils/entities/versions';
 
 // Image
 const IMAGE_NAME_REGEX = /^[A-Za-z0-9 _-]+$/;

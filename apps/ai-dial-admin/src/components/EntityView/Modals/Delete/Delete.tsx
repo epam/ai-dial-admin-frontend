@@ -21,10 +21,10 @@ import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getNameVersionFromAsset } from '@/src/utils/entities/versions';
 import { isAssetView, isBuildersView } from '@/src/utils/is-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
-import { getNameVersionFromPrompt } from '@/src/utils/prompts/versions';
 import { AllVersionValue } from './constants';
 import RelatedArtefacts from './RelatedArtefact';
 import { getConfirmation, getNotificationDescription, getNotificationTitle, getTitle } from './utils';
@@ -114,7 +114,7 @@ const DeleteConfirmationModal = <T extends Artefact>({
       getReqRef.current(
         onRemoveEntity,
         entityKey,
-        getNameVersionFromPrompt(entityKey).version === entity.version ? etag : undefined,
+        getNameVersionFromAsset(entityKey).version === entity.version ? etag : undefined,
       ),
     );
 

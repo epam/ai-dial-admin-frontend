@@ -2,6 +2,7 @@ import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { DialRule } from '@/src/models/dial/rule';
 import { DialApplicationResource, DialToolsetResource } from '@/src/models/dial/application-resource';
+import { DialConversation } from './conversation';
 
 export interface Publication {
   path: string;
@@ -54,6 +55,13 @@ export interface PublicationApplication extends PublicationEntity {
 
 export interface ApplicationPublication extends Publication {
   applicationResources?: PublicationApplication[];
+}
+
+export interface PublicationConversation extends PublicationEntity {
+  conversation: DialConversation;
+}
+export interface ConversationPublication extends Publication {
+  conversations?: PublicationConversation[];
 }
 
 export interface ResourceIssue {

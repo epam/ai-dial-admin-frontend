@@ -1,79 +1,79 @@
 import {
   checkNameVersionCombination,
   getInitialVersion,
-  generateNameVersionForPrompt,
-  getNameVersionFromPrompt,
-  modifyNameVersionInPrompt,
+  getNameVersionForAsset,
+  getNameVersionFromAsset,
+  modifyNameVersionInAsset,
 } from '../versions';
 import { describe, expect, test } from 'vitest';
 
-describe('Prompts utils :: generateNameVersionForPrompt', () => {
+describe('Prompts utils :: getNameVersionForAsset', () => {
   test('Should return name + version', () => {
-    const res = generateNameVersionForPrompt('prompt', '1.0.0');
+    const res = getNameVersionForAsset('prompt', '1.0.0');
     expect(res).toEqual('prompt__1.0.0');
   });
 });
 
-describe('Prompts utils :: getNameVersionFromPrompt', () => {
+describe('Prompts utils :: getNameVersionFromAsset', () => {
   test('Should return name and version', () => {
-    const res = getNameVersionFromPrompt('prompt__1.0.0');
+    const res = getNameVersionFromAsset('prompt__1.0.0');
     expect(res).toEqual({ name: 'prompt', version: '1.0.0' });
   });
 
   test('Should return name', () => {
-    const res = getNameVersionFromPrompt('prompt1.0.0');
+    const res = getNameVersionFromAsset('prompt1.0.0');
     expect(res).toEqual({ name: 'prompt1.0.0', version: '' });
   });
 });
 
-describe('Prompts utils :: modifyNameVersionInPrompt', () => {
+describe('Prompts utils :: modifyNameVersionInAsset', () => {
   test('Should return name and changed version', () => {
-    const res = modifyNameVersionInPrompt('prompt__1.0.0', void 0, '2.0.0');
+    const res = modifyNameVersionInAsset('prompt__1.0.0', void 0, '2.0.0');
     expect(res).toEqual('prompt__2.0.0');
   });
 
   test('Should return changed name and version', () => {
-    const res = modifyNameVersionInPrompt('prompt__1.0.0', 'newName');
+    const res = modifyNameVersionInAsset('prompt__1.0.0', 'newName');
     expect(res).toEqual('newName__1.0.0');
   });
 
   test('Should return changed name and changed version', () => {
-    const res = modifyNameVersionInPrompt('prompt__1.0.0', 'newName', '3.0.0');
+    const res = modifyNameVersionInAsset('prompt__1.0.0', 'newName', '3.0.0');
     expect(res).toEqual('newName__3.0.0');
   });
 
   test('Should return changed name', () => {
-    const res = modifyNameVersionInPrompt('prompt1.0.0', 'newName');
+    const res = modifyNameVersionInAsset('prompt1.0.0', 'newName');
     expect(res).toEqual('newName');
   });
 
   test('Should add version to name', () => {
-    const res = modifyNameVersionInPrompt('prompt1.0.0', 'newName', '2.0.0');
+    const res = modifyNameVersionInAsset('prompt1.0.0', 'newName', '2.0.0');
     expect(res).toEqual('newName__2.0.0');
   });
 
   test('Should change name in path', () => {
-    const res = modifyNameVersionInPrompt('prompts/public/Test__1.0.0', 'NewName');
+    const res = modifyNameVersionInAsset('prompts/public/Test__1.0.0', 'NewName');
     expect(res).toEqual('prompts/public/NewName__1.0.0');
   });
 
   test('Should change version in path', () => {
-    const res = modifyNameVersionInPrompt('prompts/public/Test__1.0.0', undefined, '2.0.0');
+    const res = modifyNameVersionInAsset('prompts/public/Test__1.0.0', undefined, '2.0.0');
     expect(res).toEqual('prompts/public/Test__2.0.0');
   });
 
   test('Should change both name and version in path', () => {
-    const res = modifyNameVersionInPrompt('prompts/public/Test__1.0.0', 'FinalName', '3.0.0');
+    const res = modifyNameVersionInAsset('prompts/public/Test__1.0.0', 'FinalName', '3.0.0');
     expect(res).toEqual('prompts/public/FinalName__3.0.0');
   });
 
   test('Should handle path with no version', () => {
-    const res = modifyNameVersionInPrompt('prompts/public/JustName', undefined, '1.0.0');
+    const res = modifyNameVersionInAsset('prompts/public/JustName', undefined, '1.0.0');
     expect(res).toEqual('prompts/public/JustName__1.0.0');
   });
 
   test('Should handle path with name change but no version present', () => {
-    const res = modifyNameVersionInPrompt('prompts/public/JustName', 'Renamed');
+    const res = modifyNameVersionInAsset('prompts/public/JustName', 'Renamed');
     expect(res).toEqual('prompts/public/Renamed');
   });
 });

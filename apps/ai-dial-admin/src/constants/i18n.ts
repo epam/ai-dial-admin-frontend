@@ -42,6 +42,7 @@ export enum MenuI18nKey {
   ToolsetPublications = 'Menu.ToolsetPublications',
   ApplicationPublications = 'Menu.ApplicationPublications',
   FilePublications = 'Menu.FilePublications',
+  ConversationPublications = 'Menu.ConversationPublications',
   ImportConfig = 'Menu.ImportConfig',
   ExportConfig = 'Menu.ExportConfig',
   ReadOnlyAdminImportUnavailable = 'Menu.ReadOnlyAdminImportUnavailable',
@@ -583,6 +584,7 @@ export enum TabsI18nKey {
   Routes = 'Tabs.Routes',
   Traces = 'Tabs.Traces',
   Conversations = 'Tabs.Conversations',
+  Conversation = 'Tabs.Conversation',
   Attachments = 'Tabs.Attachments',
   Tools = 'Tabs.Tools',
   ParameterSchema = 'Tabs.ParameterSchema',
@@ -733,6 +735,13 @@ export enum PublicationsI18nKey {
   ToolsetUnpublishDeclineModalTitle = 'Publications.Toolset.UnpublishDeclineModalTitle',
   ToolsetPublishApproveDescription = 'Publications.Toolset.PublishApproveDescription',
   ToolsetUnpublishApproveDescription = 'Publications.Toolset.UnpublishApproveDescription',
+  // conversation publications
+  ConversationPublishApproveModalTitle = 'Publications.Conversation.PublishApproveModalTitle',
+  ConversationPublishDeclineModalTitle = 'Publications.Conversation.PublishDeclineModalTitle',
+  ConversationUnpublishApproveModalTitle = 'Publications.Conversation.UnpublishApproveModalTitle',
+  ConversationUnpublishDeclineModalTitle = 'Publications.Conversation.UnpublishDeclineModalTitle',
+  ConversationPublishApproveDescription = 'Publications.Conversation.PublishApproveDescription',
+  ConversationUnpublishApproveDescription = 'Publications.Conversation.UnpublishApproveDescription',
 }
 
 export enum CompareI18nKey {
@@ -1339,6 +1348,8 @@ export enum EntityFieldsI18nKey {
   ProbeType = 'EntityFields.ProbeType',
   ProbePath = 'EntityFields.ProbePath',
   ProbePort = 'EntityFields.ProbePort',
+  temperature = 'EntityFields.temperature',
+  agent = 'EntityFields.agent',
 }
 
 export enum ToolsetI18nKey {
