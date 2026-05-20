@@ -131,7 +131,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
   }, []);
 
   const handleDeleteModalOpen = useCallback((items: DialFile[], parentFolderPath: string) => {
-    if (items.length && items[0]?.path !== `${ROOT_FOLDER}/`) {
+    if (items.length && items[0]?.path !== parentFolderPath) {
       setDestinationFolder(parentFolderPath);
       setDeletedItems(items);
       setIsModalOpen(true);
@@ -216,6 +216,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
 
   const handleCreateFolder = useCallback(
     async (_: DialUploadFileItem | undefined, folderPath: string) => {
+      setSelectedPaths(new Set());
       const newPath = `${folderPath.replaceAll('//', '/')}/`;
       const emptyAsset = getEmptyAsset(view, newPath);
 
