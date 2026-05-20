@@ -27,8 +27,8 @@ import { useI18n } from '@/src/locales/client';
 import { AssetWithVersion, DeploymentAsset } from '@/src/models/dial/deployment-asset';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
+import { modifyNameVersionInAsset } from '@/src/utils/entities/versions';
 import { isDeploymentAsset } from '@/src/utils/is-view';
-import { modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
 
 interface Props {
   view: ApplicationRoute;
@@ -71,7 +71,7 @@ const AssetVersionControl: FC<Props> = ({
         const path = `${encodeURIComponent(newAsset.name as string)}?path=${encodeURIComponent(newAsset.path)}`;
         router.push(`${view}/${path}`);
       } else {
-        const path = modifyNameVersionInPrompt(asset.path, void 0, version);
+        const path = modifyNameVersionInAsset(asset.path, void 0, version);
         const newAsset = {
           ...asset,
           version,

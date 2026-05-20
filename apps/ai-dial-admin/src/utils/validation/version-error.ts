@@ -1,5 +1,5 @@
 import { ErrorI18nKey } from '@/src/constants/i18n';
-import { checkNameVersionCombination } from '@/src/utils/prompts/versions';
+import { checkNameVersionCombination } from '@/src/utils/entities/versions';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 
 export const getPromptVersionError = (

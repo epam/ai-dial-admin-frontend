@@ -17,7 +17,7 @@ export default async function Page() {
   let data: Publication[] | undefined = undefined;
 
   try {
-    data = await publicationsApi.getPublicationsFilesList(token);
+    data = await publicationsApi.getPublicationFileList(token);
   } catch (e) {
     errorObjLog(e, 'Failed to fetch file publications view data');
   }

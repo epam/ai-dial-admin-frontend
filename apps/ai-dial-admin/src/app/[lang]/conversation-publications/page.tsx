@@ -17,13 +17,14 @@ export default async function Page() {
   let data: Publication[] | undefined = undefined;
 
   try {
-    data = await publicationsApi.getPublicationApplicationList(token);
+    data = await publicationsApi.getPublicationConversationList(token);
   } catch (e) {
-    errorObjLog(e, 'Failed to fetch application publications data');
+    errorObjLog(e, 'Failed to fetch publications conversation view data');
   }
+
   if (data == null) {
     notFound();
   }
 
-  return <PublicationsList data={data || []} route={ApplicationRoute.ApplicationPublications} />;
+  return <PublicationsList data={data || []} route={ApplicationRoute.ConversationPublications} />;
 }

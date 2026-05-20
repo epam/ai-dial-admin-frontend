@@ -48,6 +48,18 @@ export function getModalsTranslations(route: ApplicationRoute, action: ActionTyp
           DeclineModalTitle: PublicationsI18nKey.ToolsetUnpublishDeclineModalTitle,
           ApproveDescription: PublicationsI18nKey.ToolsetUnpublishApproveDescription,
         };
+  } else if (route === ApplicationRoute.ConversationPublications) {
+    return isAddAction(action)
+      ? {
+          ApproveModalTitle: PublicationsI18nKey.ConversationPublishApproveModalTitle,
+          DeclineModalTitle: PublicationsI18nKey.ConversationPublishDeclineModalTitle,
+          ApproveDescription: PublicationsI18nKey.ConversationPublishApproveDescription,
+        }
+      : {
+          ApproveModalTitle: PublicationsI18nKey.ConversationUnpublishApproveModalTitle,
+          DeclineModalTitle: PublicationsI18nKey.ConversationUnpublishDeclineModalTitle,
+          ApproveDescription: PublicationsI18nKey.ConversationUnpublishApproveDescription,
+        };
   }
 
   return isAddAction(action)

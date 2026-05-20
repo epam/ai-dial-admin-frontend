@@ -1,10 +1,10 @@
 import { getNameExtensionFromFile } from '@/src/utils/files/get-extension';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import {
-  generateNameVersionForPrompt,
-  getNameVersionFromPrompt,
-  modifyNameVersionInPrompt,
-} from '@/src/utils/prompts/versions';
+  getNameVersionForAsset,
+  getNameVersionFromAsset,
+  modifyNameVersionInAsset,
+} from '@/src/utils/entities/versions';
 import { NO_BORDER_CLASS } from '@/src/constants/ag-grid';
 import {
   ApplicationsI18nKey,
@@ -125,7 +125,7 @@ export const generateAssetRowDataForImportGrid = (
     if (!value.isInvalid) {
       value.files.forEach((file, index) => {
         const nameData = file.id
-          ? getNameVersionFromPrompt(getFolderNameAndPath(file.id as string).name)
+          ? getNameVersionFromAsset(getFolderNameAndPath(file.id as string).name)
           : { name: file.name as string, version: (file as AssetApp).version as string };
 
         data.push({
@@ -285,7 +285,7 @@ export const isErrorPromptNode = (data: AssetImportGridData): boolean => {
   const version = data.version;
   const name = data.assetName;
   const existingPrompts = data.existingNames as string[];
-  return existingPrompts.some((p) => p === generateNameVersionForPrompt(name, version));
+  return existingPrompts.some((p) => p === getNameVersionForAsset(name, version));
 };
 
 /**
@@ -371,9 +371,9 @@ export const changeFilesMap = (
     if (view === ApplicationRoute.Prompts || view === ApplicationRoute.Files) {
       if (targetFile) {
         if (field === 'version') {
-          targetFile.id = modifyNameVersionInPrompt((targetFile.id || targetFile.name) as string, void 0, value);
+          targetFile.id = modifyNameVersionInAsset((targetFile.id || targetFile.name) as string, void 0, value);
         } else if (field === 'assetName') {
-          targetFile.id = modifyNameVersionInPrompt((targetFile.id || targetFile.name) as string, value);
+          targetFile.id = modifyNameVersionInAsset((targetFile.id || targetFile.name) as string, value);
           targetFile.name = value;
         } else if (field === 'fileName') {
           const { extension } = getNameExtensionFromFile(key);
