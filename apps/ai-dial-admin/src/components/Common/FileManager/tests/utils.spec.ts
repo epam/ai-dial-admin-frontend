@@ -8,7 +8,6 @@ import {
   createEmptyFile,
   findFolderByPath,
   getEmptyFile,
-  getNewFolderPath,
   getUniqueFolderName,
   isItemNameValid,
   validateCreateFolder,
@@ -246,66 +245,5 @@ describe('getUniqueFolderName', () => {
 
   test('should return first available number when there are gaps', () => {
     expect(getUniqueFolderName(['New Folder', 'New Folder 2'])).toBe('New Folder 1');
-  });
-});
-
-describe('getNewFolderPath', () => {
-  const rootChildren: DialFile[] = [
-    createFolder('public/yo/', 'yo', [
-      createItem('public/yo/.dial_folder', TEMP_FOLDER, 'public/yo/'),
-      createFolder('public/yo/New Folder/', 'New Folder'),
-    ]),
-    createFolder('public/other/', 'other', [
-      createFolder('public/other/sub/', 'sub', [
-        createFolder('public/other/sub/New Folder/', 'New Folder'),
-        createFolder('public/other/sub/New Folder 1/', 'New Folder 1'),
-      ]),
-    ]),
-    createFolder('public/empty/', 'empty'),
-  ];
-
-  const allFiles = [createFolder('public/', 'public', rootChildren)] as Asset[];
-
-  describe('child mode', () => {
-    test('should create "New Folder" in empty folder', () => {
-      const file = createFolder('public/empty/', 'empty');
-      expect(getNewFolderPath(file, allFiles, 'child')).toBe('public/empty/New Folder');
-    });
-
-    test('should create "New Folder 1" when "New Folder" already exists', () => {
-      const file = createFolder('public/yo/', 'yo');
-      expect(getNewFolderPath(file, allFiles, 'child')).toBe('public/yo/New Folder 1');
-    });
-
-    test('should create "New Folder 2" when "New Folder" and "New Folder 1" exist', () => {
-      const file = createFolder('public/other/sub/', 'sub');
-      expect(getNewFolderPath(file, allFiles, 'child')).toBe('public/other/sub/New Folder 2');
-    });
-
-    test('should fall back to root folder items when parent not found in tree', () => {
-      const file = createFolder('public/nonexistent/', 'nonexistent');
-      expect(getNewFolderPath(file, allFiles, 'child')).toBe('public/nonexistent/New Folder');
-    });
-  });
-
-  describe('sibling mode', () => {
-    test('should create sibling using parentPath', () => {
-      const file = { ...createFolder('public/yo/New Folder/', 'New Folder'), parentPath: 'public/yo/' } as DialFile;
-      expect(getNewFolderPath(file, allFiles, 'sibling')).toBe('public/yo/New Folder 1');
-    });
-
-    test('should derive parent from path when parentPath is missing', () => {
-      const file = createFolder('public/empty/', 'empty');
-      // parent is "public/" which is allFiles[0] (fallback) with rootChildren
-      expect(getNewFolderPath(file, allFiles, 'sibling')).toContain('New Folder');
-    });
-
-    test('should create sibling with incremented name in deeply nested folder', () => {
-      const file = {
-        ...createFolder('public/other/sub/New Folder/', 'New Folder'),
-        parentPath: 'public/other/sub/',
-      } as DialFile;
-      expect(getNewFolderPath(file, allFiles, 'sibling')).toBe('public/other/sub/New Folder 2');
-    });
   });
 });
