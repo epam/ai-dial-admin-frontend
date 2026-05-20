@@ -53,7 +53,6 @@ import {
   getResourceTypeByRoute,
   ImportAssetActionMap,
   MoveAssetActionMap,
-  RemoveAssetActionMap,
 } from './utils';
 
 interface Props {
@@ -438,22 +437,6 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
     [exportedItems, handleModalClose, showNotification, t, view],
   );
 
-  const onDeleteFolder = useCallback(() => {
-    const pathToRemove = deletedItems?.[0]?.path;
-    if (pathToRemove) {
-      removeFolder(pathToRemove).then((result) => {
-        if (result.success) {
-          const parentPath = destinationFolder || `${ROOT_FOLDER}/`;
-          setFilePath(parentPath);
-          fetchFiles(parentPath);
-          removeSelection(pathToRemove);
-          const { title, description } = getDeleteNotificationContent(view, deletedItems as DialFile[], t, parentPath);
-          showNotification(getSuccessNotification(title, description));
-        }
-      });
-    }
-  }, [deletedItems, destinationFolder, fetchFiles, setFilePath, removeSelection, showNotification, t, view]);
-
   const onMultipleRemove = useCallback(async () => {
     if (deletedItems) {
       const assets = deletedItems.filter((item) => item.nodeType === DialFileNodeType.ITEM);
@@ -510,13 +493,6 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
     handleModalClose,
   ]);
 
-  const onRemoveAssetEndHandler = useCallback(() => {
-    const parentPath = destinationFolder || `${ROOT_FOLDER}/`;
-    setFilePath(parentPath);
-    fetchFiles(parentPath);
-    removeSelection(deletedItems?.map((item) => item.path));
-  }, [destinationFolder, setFilePath, fetchFiles, deletedItems, removeSelection]);
-
   const handleOpenInNewTab = useCallback(
     (file: DialFile) => {
       onOpenInNewTab(view, file);
@@ -559,6 +535,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
         names={names}
         runners={runners || []}
         versionsMap={versionsMap}
+        selectedVersionsMap={selectedVersionsMap}
         preselectedItems={dragAndDropsItems}
         duplicateItem={duplicateItem}
         deletedItems={deletedItems}
@@ -568,11 +545,9 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
         onImport={onImport}
         onExport={onExport}
         onDuplicate={handleDuplicate}
-        onRemove={RemoveAssetActionMap[view as BaseAssetRoute]}
-        onDeleteFolder={onDeleteFolder}
-        onMultipleRemove={onMultipleRemove}
-        onRemoveAssetEnd={onRemoveAssetEndHandler}
+        onRemove={onMultipleRemove}
         onCreateFolder={handleCreateFolder}
+        hasSelectedItems={hasSelectedItems}
       />
     </>
   );

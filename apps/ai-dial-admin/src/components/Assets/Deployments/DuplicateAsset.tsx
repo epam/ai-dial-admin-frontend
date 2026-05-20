@@ -38,10 +38,10 @@ interface Props {
   view: ApplicationRoute;
   isModalOpen: boolean;
   entity: AssetWithVersion;
-  versionsMap: Record<string, string[]>;
+  versionsMap?: Record<string, string[]>;
   context?: () => AssetsFolderContext;
   onClose: () => void;
-  onDuplicate: (entity: AssetWithVersion) => void;
+  onDuplicate?: (entity: AssetWithVersion) => void;
   onCreateFolder?: (_: DialUploadFileItem | undefined, folderPath: string) => Promise<ServerActionResponse>;
 }
 
@@ -49,7 +49,7 @@ const DuplicateAsset: FC<Props> = ({
   view,
   isModalOpen,
   entity,
-  versionsMap,
+  versionsMap = {},
   context,
   onDuplicate,
   onClose,
@@ -233,7 +233,7 @@ const DuplicateAsset: FC<Props> = ({
       header={t(getCloneTitle(view, t))}
       portalId="DuplicateAsset"
       open={isModalOpen}
-      onSubmit={() => onDuplicate({ ...clonedAsset, folderId: addTrailingSlash(clonedAsset.folderId) })}
+      onSubmit={() => onDuplicate?.({ ...clonedAsset, folderId: addTrailingSlash(clonedAsset.folderId) })}
       onCancel={onClose}
       disableSubmitButton={!isInnerValid || !isValid}
       cancelLabel={t(ButtonsI18nKey.Cancel)}

@@ -5,7 +5,6 @@ import ExportModal from '@/src/components/EntityListView/Export/ExportModal';
 import ImportModal from '@/src/components/EntityListView/Import/ImportModal';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
 import DuplicateAsset from '@/src/components/Assets/Deployments/DuplicateAsset';
-import DeleteModal from './DeleteModal';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ModalType } from './types';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
@@ -15,34 +14,34 @@ import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { DialFile, DialUploadFileItem } from '@epam/ai-dial-ui-kit';
+import DeleteAssetsModal from '../Modals/DeleteAssetsModal';
 
 interface Props {
   view: ApplicationRoute;
   isModalOpen: boolean;
   modalType: ModalType | null;
   preselectedItems?: File[];
-  names: string[];
-  versionsMap: Record<string, string[]>;
-  runners: DialApplicationScheme[];
-  duplicateItem: AssetWithVersion | null;
-  deletedItems: DialFile[] | null;
+  names?: string[];
+  versionsMap?: Record<string, string[]>;
+  selectedVersionsMap?: Record<string, string[]>;
+  runners?: DialApplicationScheme[];
+  duplicateItem?: AssetWithVersion | null;
+  deletedItems?: DialFile[] | null;
+  hasSelectedItems: boolean;
   getContext: () => AssetsFolderContext;
   onClose: () => void;
-  onImport: (
+  onImport?: (
     fileType: ImportFileType,
     file: ImportData,
     resolution: string,
     path: string,
     ignorePaths?: boolean,
   ) => void;
-  onExport: (fileType: ImportFileType) => void;
-  onCreate: (asset: AssetWithVersion) => Promise<ServerActionResponse>;
-  onDuplicate: (entity: AssetWithVersion) => void;
-  onRemove: (entity: string) => Promise<ServerActionResponse>;
-  onDeleteFolder: () => void;
-  onMultipleRemove: () => Promise<void>;
-  onRemoveAssetEnd: () => void;
-  onCreateFolder: (_: DialUploadFileItem | undefined, folderPath: string) => Promise<ServerActionResponse>;
+  onExport?: (fileType: ImportFileType) => void;
+  onCreate?: (asset: AssetWithVersion) => Promise<ServerActionResponse>;
+  onDuplicate?: (entity: AssetWithVersion) => void;
+  onRemove: () => Promise<void>;
+  onCreateFolder?: (_: DialUploadFileItem | undefined, folderPath: string) => Promise<ServerActionResponse>;
 }
 
 const Modals: FC<Props> = ({
@@ -51,20 +50,19 @@ const Modals: FC<Props> = ({
   modalType,
   names,
   versionsMap,
+  selectedVersionsMap,
   runners,
   preselectedItems,
   duplicateItem,
   deletedItems,
+  hasSelectedItems = false,
   getContext,
   onClose,
   onImport,
   onExport,
   onCreate,
   onDuplicate,
-  onDeleteFolder,
   onRemove,
-  onMultipleRemove,
-  onRemoveAssetEnd,
   onCreateFolder,
 }) => {
   return (
@@ -105,17 +103,14 @@ const Modals: FC<Props> = ({
         />
       )}
       {isModalOpen && modalType === ModalType.delete && deletedItems && (
-        <DeleteModal
+        <DeleteAssetsModal
+          context={getContext}
           view={view}
           isOpen={isModalOpen}
           onClose={onClose}
           itemsToDelete={deletedItems}
-          versionsMap={versionsMap}
-          getAssetContext={getContext}
-          onRemoveAsset={onRemove}
-          onRemoveFolder={onDeleteFolder}
-          onMultipleRemove={onMultipleRemove}
-          onRemoveAssetEnd={onRemoveAssetEnd}
+          onRemove={onRemove}
+          selectedVersionsMap={hasSelectedItems ? selectedVersionsMap : undefined}
         />
       )}
       {isModalOpen && modalType === ModalType.export && (
