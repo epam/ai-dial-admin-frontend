@@ -44,19 +44,19 @@ describe('EnvVariableValue', () => {
     expect(screen.getByText('config.yaml')).toBeInTheDocument();
   });
 
-  test('does not render a file-upload button (button now lives in Variable)', () => {
+  test('renders the file-upload button as a sibling of the input/pill so it stays aligned with the input row', () => {
     const { container } = render(<Value {...baseProps} />);
 
     const fileBtn = Array.from(container.querySelectorAll('button')).find((b) =>
       b.querySelector('svg[class*="tabler-icon-file-arrow-right"]'),
     );
-    expect(fileBtn).toBeUndefined();
-  });
+    expect(fileBtn).toBeDefined();
+    expect(container.querySelector('input[type="file"]')).toBeInTheDocument();
 
-  test('does not render a hidden file input (input now lives in Variable)', () => {
-    const { container } = render(<Value {...baseProps} />);
-
-    expect(container.querySelector('input[type="file"]')).not.toBeInTheDocument();
+    const inputBtnRow = fileBtn!.parentElement;
+    expect(inputBtnRow).not.toBeNull();
+    expect(inputBtnRow!.className).toMatch(/\bflex-row\b/);
+    expect(inputBtnRow!.className).toMatch(/\bitems-start\b/);
   });
 
   test('renders a label only when fieldName is provided', () => {

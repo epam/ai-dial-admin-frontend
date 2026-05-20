@@ -30,6 +30,7 @@ import { FilterOperatorDto } from '@/src/types/request';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { CompareAnalyticsRow } from './models';
 
+import { applyColumnStateOrderToTreeColDefs, haveTreeColDefsSamePanelState } from '@/src/components/Grid/utils';
 import { useDetailMode } from './use-detail-mode';
 import { getAnalyticsColumns, getAnalyticsColumnsCompare, mergeByTestCaseId, RESULT_FILTERS } from './utils';
 
@@ -129,6 +130,30 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
   }, [computedColDefs]);
 
   const toggleTreePanel = useCallback(() => setShowTreePanel((prev) => !prev), []);
+
+  useEffect(() => {
+    if (!showTreePanel || !computedColDefs?.length) {
+      return;
+    }
+
+    const columnState = gridApiRef.current?.getColumnState();
+    if (!columnState?.length) {
+      return;
+    }
+
+    setPanelColDefs((prevColDefs) => {
+      if (!prevColDefs?.length) {
+        return prevColDefs;
+      }
+
+      const syncedColDefs = applyColumnStateOrderToTreeColDefs(prevColDefs, columnState);
+      if (haveTreeColDefsSamePanelState(prevColDefs, syncedColDefs)) {
+        return prevColDefs;
+      }
+
+      return syncedColDefs;
+    });
+  }, [showTreePanel, computedColDefs]);
 
   const onPanelColumnsChange = useCallback((newColDefs: ColDef[]) => {
     setPanelColDefs(newColDefs);
