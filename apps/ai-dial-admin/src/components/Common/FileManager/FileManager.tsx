@@ -39,7 +39,6 @@ import {
   getBulkActionsToolbarOptions,
   getDestinationFolderPopupOptions,
   getGridOptions,
-  getNewFolderPath,
   getToolbarOptions,
   getTreeOptions,
   getValidationMessages,
@@ -205,22 +204,6 @@ const FileManager: FC<Props> = ({
     ],
   );
 
-  const handleAddChild = useCallback(
-    (files: DialFile[]) => {
-      const newPath = getNewFolderPath(files[0], filteredFiles, 'child');
-      handleCreateFolder(void 0, newPath);
-    },
-    [handleCreateFolder, filteredFiles],
-  );
-
-  const handleAddSibling = useCallback(
-    (files: DialFile[]) => {
-      const newPath = getNewFolderPath(files[0], filteredFiles, 'sibling');
-      handleCreateFolder(void 0, newPath);
-    },
-    [handleCreateFolder, filteredFiles],
-  );
-
   const handleOnPathChange = useCallback(
     (nextPath: string | undefined) => {
       if (!nextPath) {
@@ -369,8 +352,6 @@ const FileManager: FC<Props> = ({
         )}
         gridOptions={getGridOptions(view, isReadOnlyAdmin, columnDefs, t)}
         onPathChange={handleOnPathChange}
-        onAddChild={isReadOnlyAdmin ? undefined : handleAddChild}
-        onAddSibling={isReadOnlyAdmin ? undefined : handleAddSibling}
         onCreateFolder={isReadOnlyAdmin ? undefined : handleCreateFolder}
         onDownloadFiles={handleDownloadFiles}
         onCreateFolderValidate={handleCreateFolderValidate}
