@@ -131,10 +131,12 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
   }, []);
 
   const handleDeleteModalOpen = useCallback((items: DialFile[], parentFolderPath: string) => {
-    setDestinationFolder(parentFolderPath);
-    setDeletedItems(items);
-    setIsModalOpen(true);
-    setModalType(ModalType.delete);
+    if (items.length && items[0]?.path !== `${ROOT_FOLDER}/`) {
+      setDestinationFolder(parentFolderPath);
+      setDeletedItems(items);
+      setIsModalOpen(true);
+      setModalType(ModalType.delete);
+    }
   }, []);
 
   const handleExportModalOpen = useCallback((files?: DialFile[]) => {

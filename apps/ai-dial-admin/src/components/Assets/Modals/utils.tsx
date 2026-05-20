@@ -1,6 +1,6 @@
 import { Asset, AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialTag, FileManagerColumnKey, DialFile, NAME_COLUMN, SIZE_COLUMN } from '@epam/ai-dial-ui-kit';
-import { SelectCellRendererParams } from '../../Grid/CellRenderers/SelectCellRenderer';
+import { SelectCellRendererParams } from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import { ApplicationRoute } from '@/src/types/routes';
 import { FileManagerI18nKey } from '@/src/constants/i18n';
 import { DialFileNodeType } from '@/src/models/dial/file';

@@ -14,7 +14,7 @@ import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { DialFile, DialUploadFileItem } from '@epam/ai-dial-ui-kit';
-import DeleteAssetsModal from '../Modals/DeleteAssetsModal';
+import DeleteAssetsModal from '@/src/components/Assets/Modals/DeleteAssetsModal';
 
 interface Props {
   view: ApplicationRoute;
