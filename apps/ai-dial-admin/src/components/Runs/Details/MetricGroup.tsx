@@ -17,7 +17,8 @@ import MetricInfoPanel from './MetricInfoPanel';
 
 interface Props {
   group: MetricGroupModel;
-  bindings: MetricBinding[];
+  configBindings?: MetricBinding[];
+  inputBindings?: MetricBinding[];
 }
 
 const BINDING_CHIP_CLASSES: Record<MetricBindingType, string> = {
@@ -26,19 +27,71 @@ const BINDING_CHIP_CLASSES: Record<MetricBindingType, string> = {
   [MetricBindingType.Response]: 'text-accent-primary bg-accent-primary-alpha',
 };
 
-const MetricGroup: FC<Props> = ({ group, bindings }) => {
+interface BindingsSectionProps {
+  label: string;
+  bindings: MetricBinding[];
+  isExpanded: boolean;
+  onToggle: () => void;
+}
+
+const BindingsSection: FC<BindingsSectionProps> = ({ label, bindings, isExpanded, onToggle }) => (
+  <div className="flex flex-col gap-2">
+    <button className="flex items-center gap-2 dial-small-semi text-left" onClick={onToggle}>
+      {isExpanded ? (
+        <IconChevronDown className="text-secondary shrink-0" {...BASE_BUTTON_ICON_PROPS} />
+      ) : (
+        <IconChevronRight className="text-secondary shrink-0" {...BASE_BUTTON_ICON_PROPS} />
+      )}
+      {label}
+    </button>
+    {isExpanded && (
+      <div className="flex flex-col">
+        {bindings.map((binding, i) => {
+          const chipClass = BINDING_CHIP_CLASSES[binding.source.$type as MetricBindingType] ?? '';
+          const value =
+            binding.source.$type === MetricBindingType.Constant
+              ? String(binding.source.value ?? '')
+              : (binding.source.columnName ?? '');
+          return (
+            <div
+              key={i}
+              className="grid grid-cols-[minmax(70px,140px)_auto_1fr] gap-x-2 dial-tiny-text px-2 py-1.5 border-b border-tertiary last:border-b-0"
+            >
+              <span className="truncate">{binding.property}</span>
+              <span
+                className={classNames(
+                  'inline-block text-[9px] font-semibold px-[5px] py-px rounded-sm uppercase tracking-wide leading-[14px]',
+                  chipClass,
+                )}
+              >
+                {binding.source.$type}
+              </span>
+              <span className="truncate">{value}</span>
+            </div>
+          );
+        })}
+      </div>
+    )}
+  </div>
+);
+
+const MetricGroup: FC<Props> = ({ group, configBindings, inputBindings }) => {
   const t = useI18n();
   const [selectedMetricKey, setSelectedMetricKey] = useState<string | null>(null);
-  const [isBindingsExpanded, setIsBindingsExpanded] = useState(false);
+  const [isConfigBindingsExpanded, setIsConfigBindingsExpanded] = useState(false);
+  const [isInputBindingsExpanded, setIsInputBindingsExpanded] = useState(false);
 
   const toggleMetric = useCallback((key: string) => {
     setSelectedMetricKey((prev) => (prev === key ? null : key));
   }, []);
 
-  const toggleBindings = useCallback(() => {
-    setIsBindingsExpanded((prev) => !prev);
+  const toggleConfigBindings = useCallback(() => {
+    setIsConfigBindingsExpanded((prev) => !prev);
   }, []);
 
+  const toggleInputBindings = useCallback(() => {
+    setIsInputBindingsExpanded((prev) => !prev);
+  }, []);
   return (
     <section className="flex flex-col gap-3 border border-secondary rounded p-3">
       <div className={classNames('dial-small-semi', group.hasError && 'text-error')}>{group.title}</div>
@@ -52,45 +105,21 @@ const MetricGroup: FC<Props> = ({ group, bindings }) => {
       {selectedMetricKey && !!group.info?.[selectedMetricKey] && (
         <MetricInfoPanel info={{ [selectedMetricKey]: group.info[selectedMetricKey] }} />
       )}
-      {bindings.length > 0 && (
-        <div className="flex flex-col gap-2">
-          <button className="flex items-center gap-2 dial-small-semi text-left" onClick={toggleBindings}>
-            {isBindingsExpanded ? (
-              <IconChevronDown className="text-secondary shrink-0" {...BASE_BUTTON_ICON_PROPS} />
-            ) : (
-              <IconChevronRight className="text-secondary shrink-0" {...BASE_BUTTON_ICON_PROPS} />
-            )}
-            {t(RunsI18nKey.MetricBindings)}
-          </button>
-          {isBindingsExpanded && (
-            <div className="flex flex-col">
-              {bindings.map((binding, i) => {
-                const chipClass = BINDING_CHIP_CLASSES[binding.source.$type as MetricBindingType] ?? '';
-                const value =
-                  binding.source.$type === MetricBindingType.Constant
-                    ? String(binding.source.value ?? '')
-                    : (binding.source.columnName ?? '');
-                return (
-                  <div
-                    key={i}
-                    className="grid grid-cols-[minmax(70px,140px)_auto_1fr] gap-x-2 dial-tiny-text px-2 py-1.5 border-b border-tertiary last:border-b-0"
-                  >
-                    <span className="truncate">{binding.property}</span>
-                    <span
-                      className={classNames(
-                        'inline-block text-[9px] font-semibold px-[5px] py-px rounded-sm uppercase tracking-wide leading-[14px]',
-                        chipClass,
-                      )}
-                    >
-                      {binding.source.$type}
-                    </span>
-                    <span className="truncate">{value}</span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+      {!!configBindings?.length && (
+        <BindingsSection
+          label={t(RunsI18nKey.ConfigBindings)}
+          bindings={configBindings}
+          isExpanded={isConfigBindingsExpanded}
+          onToggle={toggleConfigBindings}
+        />
+      )}
+      {!!inputBindings?.length && (
+        <BindingsSection
+          label={t(RunsI18nKey.InputBindings)}
+          bindings={inputBindings}
+          isExpanded={isInputBindingsExpanded}
+          onToggle={toggleInputBindings}
+        />
       )}
     </section>
   );
