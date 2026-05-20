@@ -17,7 +17,7 @@ export default async function Page() {
   let data: Publication[] | undefined = undefined;
 
   try {
-    data = await publicationsApi.getPublicationsPromptsList(token);
+    data = await publicationsApi.getPublicationPromptList(token);
   } catch (e) {
     errorObjLog(e, 'Failed to fetch publications prompt view data');
   }

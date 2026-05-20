@@ -2,7 +2,8 @@ import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
 import { publicationsApi } from '@/src/app/api/api';
-import PublicationsList from '@/src/components/Publications/List/List';
+import PublicationView from '@/src/components/Publications/View/View';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { Publication } from '@/src/models/dial/publications';
 import { errorObjLog } from '@/src/server/logger';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -11,19 +12,24 @@ import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Page() {
+export default async function Page(params: { searchParams: Promise<{ path: string }> }) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
-  let data: Publication[] | undefined = undefined;
+  let data: Publication | null = null;
 
   try {
-    data = await publicationsApi.getPublicationApplicationList(token);
+    data = await publicationsApi.getPublication(token, (await params.searchParams).path);
   } catch (e) {
-    errorObjLog(e, 'Failed to fetch application publications data');
+    errorObjLog(e, 'Failed to fetch publication conversation view data');
   }
+
   if (data == null) {
     notFound();
   }
 
-  return <PublicationsList data={data || []} route={ApplicationRoute.ApplicationPublications} />;
+  return (
+    <SaveValidationContextProvider>
+      <PublicationView publication={data as Publication} view={ApplicationRoute.ConversationPublications} />
+    </SaveValidationContextProvider>
+  );
 }

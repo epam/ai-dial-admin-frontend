@@ -25,7 +25,8 @@ export const EXPORT_CONFIG_URL = `${CONFIG_URL}/export`;
 export const EXPORT_CONFIG_MAP_URL = `${EXPORT_CONFIG_URL}/raw/core`;
 export const EXPORT_PREVIEW_CONFIG_URL = `${EXPORT_CONFIG_URL}/preview`;
 export const RELOAD_CONFIG_URL = `${CONFIG_URL}/sync/status`;
-export const DEPLOYMENT_URL = (name: string) => `${API}/deployments/${name}`;
+export const DEPLOYMENTS_URL = `${API}/deployments`;
+export const DEPLOYMENT_URL = (name: string) => `${DEPLOYMENTS_URL}/${name}`;
 export const SECURITY_INFO_URL = `${API}/security-info`;
 
 export class UtilityApi extends BaseApi {
@@ -59,6 +60,10 @@ export class UtilityApi extends BaseApi {
 
   checkDeploymentByName(name: string, token: Token) {
     return this.head(DEPLOYMENT_URL(name), token);
+  }
+
+  getAllDeployments(token: Token): Promise<ServerActionResponse> {
+    return this.getAction(DEPLOYMENTS_URL, token);
   }
 
   getAppProcessStatus(token: Token): Promise<ServerActionResponse<AppProcessStatus>> {
