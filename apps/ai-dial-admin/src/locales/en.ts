@@ -1775,6 +1775,8 @@ export default {
     TestCaseData: 'Test case data',
     ExtractedColumns: 'Extracted Columns',
     MetricBindings: 'Metric bindings',
+    ConfigBindings: 'Config bindings',
+    InputBindings: 'Input bindings',
     Execution: 'Execution',
     GrafanaDetails: 'View trace in Grafana',
     GrafanaRun: 'Traces in Grafana',
