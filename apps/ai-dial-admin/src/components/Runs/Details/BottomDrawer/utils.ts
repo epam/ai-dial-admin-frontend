@@ -1,7 +1,14 @@
+import { MetricBinding, MetricBindings } from '@/src/models/evaluation/metric';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 import { serializeValue } from '@/src/utils/serialize';
 
 import { ComparisonRow, ComparisonSection } from './models';
+
+function formatBindingValue(binding: MetricBinding): string {
+  const val =
+    binding.source.$type === 'Constant' ? String(binding.source.value ?? '') : (binding.source.columnName ?? '');
+  return val ? `[${binding.source.$type}] ${val}` : `[${binding.source.$type}]`;
+}
 
 function buildRecordRows(
   pinnedRecord: Record<string, unknown> | undefined,
@@ -28,6 +35,7 @@ export function buildComparisonSections(
   fieldVisibility: Record<string, boolean>,
   sectionOrder: string[],
   sectionHidden: Record<string, boolean>,
+  metricBindings?: Record<string, MetricBindings>,
 ): ComparisonSection[] {
   const isDuplicate = pinned != null && pinned.id === active.id;
   const effectivePinned = isDuplicate ? null : pinned;
@@ -128,6 +136,37 @@ export function buildComparisonSections(
 
     const sectionKey = `metric:${groupKey}`;
     sectionsMap.set(sectionKey, { key: sectionKey, label: groupKey, rows });
+  }
+
+  // Binding sections (config and input) per metric group
+  if (metricBindings) {
+    for (const [groupKey, bindings] of Object.entries(metricBindings).sort(([a], [b]) => a.localeCompare(b))) {
+      if (bindings.configBindings.length > 0) {
+        const sectionKey = `binding:config:${groupKey}`;
+        const rows: ComparisonRow[] = bindings.configBindings.map((binding) => ({
+          fieldKey: binding.property,
+          label: binding.property,
+          isNumeric: false,
+          values: hasTwoResults
+            ? [{ raw: formatBindingValue(binding) }, { raw: formatBindingValue(binding) }]
+            : [{ raw: formatBindingValue(binding) }],
+        }));
+        sectionsMap.set(sectionKey, { key: sectionKey, label: `${groupKey} · Config bindings`, rows });
+      }
+
+      if (bindings.inputBindings.length > 0) {
+        const sectionKey = `binding:input:${groupKey}`;
+        const rows: ComparisonRow[] = bindings.inputBindings.map((binding) => ({
+          fieldKey: binding.property,
+          label: binding.property,
+          isNumeric: false,
+          values: hasTwoResults
+            ? [{ raw: formatBindingValue(binding) }, { raw: formatBindingValue(binding) }]
+            : [{ raw: formatBindingValue(binding) }],
+        }));
+        sectionsMap.set(sectionKey, { key: sectionKey, label: `${groupKey} · Input bindings`, rows });
+      }
+    }
   }
 
   // Apply field visibility filtering (create new section objects to avoid mutation)
