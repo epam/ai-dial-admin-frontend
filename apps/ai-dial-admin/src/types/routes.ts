@@ -28,6 +28,7 @@ export enum ApplicationRoute {
   ToolsetPublications = '/toolset-publications',
   PromptPublications = '/prompt-publications',
   FilePublications = '/file-publications',
+  ConversationPublications = '/conversation-publications',
 
   // Access Management
   Roles = '/roles',

@@ -1,11 +1,11 @@
-import { PROMPT_NAME_VERSION_DELIMITER } from '@/src/constants/prompt';
+import { ASSET_NAME_VERSION_DELIMITER } from '@/src/constants/prompt';
 
-export const generateNameVersionForPrompt = (name: string, version: string) => {
-  return `${name}${PROMPT_NAME_VERSION_DELIMITER}${version}`;
+export const getNameVersionForAsset = (name: string, version: string) => {
+  return `${name}${ASSET_NAME_VERSION_DELIMITER}${version}`;
 };
 
-export const getNameVersionFromPrompt = (input: string): { name: string; version: string } => {
-  const lastUnderscoreIndex = input.lastIndexOf(PROMPT_NAME_VERSION_DELIMITER);
+export const getNameVersionFromAsset = (input: string): { name: string; version: string } => {
+  const lastUnderscoreIndex = input.lastIndexOf(ASSET_NAME_VERSION_DELIMITER);
 
   if (lastUnderscoreIndex === -1) {
     return { name: input, version: '' };
@@ -17,10 +17,10 @@ export const getNameVersionFromPrompt = (input: string): { name: string; version
   return { name, version };
 };
 
-export const modifyNameVersionInPrompt = (input: string, newName?: string, newVersion?: string): string => {
+export const modifyNameVersionInAsset = (input: string, newName?: string, newVersion?: string): string => {
   const pathParts = input.split('/');
   const fileName = pathParts[pathParts.length - 1];
-  const lastUnderscoreIndex = fileName.lastIndexOf(PROMPT_NAME_VERSION_DELIMITER);
+  const lastUnderscoreIndex = fileName.lastIndexOf(ASSET_NAME_VERSION_DELIMITER);
 
   let name: string;
   let version: string;
@@ -30,7 +30,7 @@ export const modifyNameVersionInPrompt = (input: string, newName?: string, newVe
     version = '';
   } else {
     name = fileName.substring(0, lastUnderscoreIndex);
-    version = fileName.substring(lastUnderscoreIndex + PROMPT_NAME_VERSION_DELIMITER.length);
+    version = fileName.substring(lastUnderscoreIndex + ASSET_NAME_VERSION_DELIMITER.length);
   }
 
   if (newName !== undefined) {
@@ -40,7 +40,7 @@ export const modifyNameVersionInPrompt = (input: string, newName?: string, newVe
     version = newVersion;
   }
 
-  const modifiedFileName = version ? `${name}${PROMPT_NAME_VERSION_DELIMITER}${version}` : name;
+  const modifiedFileName = version ? `${name}${ASSET_NAME_VERSION_DELIMITER}${version}` : name;
 
   pathParts[pathParts.length - 1] = modifiedFileName;
   return pathParts.join('/');

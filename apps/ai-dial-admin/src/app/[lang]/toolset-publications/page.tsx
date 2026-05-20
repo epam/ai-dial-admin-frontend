@@ -17,7 +17,7 @@ export default async function Page() {
   let data: Publication[] | undefined = undefined;
 
   try {
-    data = await publicationsApi.getToolsetPublicationsList(token);
+    data = await publicationsApi.getPublicationToolsetList(token);
   } catch (e) {
     errorObjLog(e, 'Failed to fetch toolset publications data');
   }

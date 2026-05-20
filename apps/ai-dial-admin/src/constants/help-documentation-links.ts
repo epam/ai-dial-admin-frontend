@@ -92,7 +92,11 @@ export const HELP_DOCUMENTATION_LINKS: Partial<
     selectedView: 'tutorials/admin/approvals-file-publications#review-page',
     title: 'How to review File Publication requests',
   },
-
+  [ApplicationRoute.ConversationPublications]: {
+    listView: 'tutorials/admin/approvals-conversation-publications',
+    selectedView: 'tutorials/admin/approvals-conversation-publications#review-page',
+    title: 'How to review Conversation Publication requests',
+  },
   [ApplicationRoute.Roles]: {
     listView: 'tutorials/admin/access-management-roles',
     selectedView: 'tutorials/admin/access-management-roles#configuration',

@@ -1,6 +1,6 @@
 import { FC, useCallback } from 'react';
 
-import Properties from '@/src/components/Assets/Toolsets/View/Properties/Properties';
+import Properties from '@/src/components/Assets/Toolsets/View/Properties';
 import { DialApplicationResource } from '@/src/models/dial/application-resource';
 import { DeploymentAsset } from '@/src/models/dial/deployment-asset';
 import { ToolsetPublication } from '@/src/models/dial/publications';

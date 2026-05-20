@@ -1,11 +1,29 @@
 import { ImageVersion } from '@/src/models/deployments/images';
 import { AssetApp, AssetWithVersion } from '@/src/models/dial/deployment-asset';
-import { compareVersions, modifyNameVersionInPrompt } from '@/src/utils/prompts/versions';
+import { compareVersions, modifyNameVersionInAsset } from '@/src/utils/entities/versions';
 import { ApplicationRoute } from '@/src/types/routes';
 import { allActionLabels, baseToolbarOptionLabels } from './constants';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { ImportFileType } from '@/src/types/import';
 import { DialCopiedItem, DialDeletedItem, DialFile, DialFileNodeType } from '@epam/ai-dial-ui-kit';
+
+export const getAgentLinkForConversation = (
+  deployment: Record<string, string> | null,
+  currentLocale: string,
+): string => {
+  let path = '';
+
+  if (deployment?.model) {
+    path = `/${currentLocale}${ApplicationRoute.Models}/${encodeURIComponent(deployment.model)}`;
+  } else if (deployment?.application) {
+    if (deployment.application === deployment.reference) {
+      path = `/${currentLocale}${ApplicationRoute.Applications}/${encodeURIComponent(deployment.application)}`;
+    } else {
+      path = `/${currentLocale}${ApplicationRoute.AssetsApplications}/${encodeURIComponent(deployment.displayName)}?path=${deployment.application.replace('applications/', '')}`;
+    }
+  }
+  return path;
+};
 
 export const filterLatestVersions = (data: AssetWithVersion[]) => {
   const latestVersions: Record<string, AssetWithVersion> = {};
@@ -51,7 +69,7 @@ export const getEntityForUpdate = (entity: AssetWithVersion, initialEntity?: Ass
 };
 
 export const addNewVersion = (entity: AssetWithVersion, version: string) => {
-  const path = modifyNameVersionInPrompt(entity.path, void 0, version);
+  const path = modifyNameVersionInAsset(entity.path, void 0, version);
   delete (entity as AssetApp).reference;
   return {
     ...entity,
