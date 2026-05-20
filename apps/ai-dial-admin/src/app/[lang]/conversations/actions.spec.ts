@@ -29,7 +29,7 @@ describe('Assets conversations :: server actions', () => {
 
   test('Should call getDeployments action', async () => {
     const DEPLOYMENTS_RESPONSE_MOCK = { response: [{ reference: 'model1' }, { reference: 'model2' }] };
-    (utilityApi.getAllDeployments as any).mockResolvedValue(DEPLOYMENTS_RESPONSE_MOCK); 
+    (utilityApi.getAllDeployments as any).mockResolvedValue(DEPLOYMENTS_RESPONSE_MOCK);
 
     const result = await getAllDeployments();
     expect(getUserToken).toHaveBeenCalled();
