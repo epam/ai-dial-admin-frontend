@@ -5,17 +5,17 @@ import { FC, useMemo } from 'react';
 import FoldersStorageLabel from '@/src/components/Assets/Header/FolderStorage';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
+import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
 import Tools from '@/src/components/Tools/Tools';
 import { AuthHeader } from '@/src/components/Toolsets/Auth/Sections/AuthHeader';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
+import { useI18n } from '@/src/locales/client';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { Toolset } from '@/src/models/dial/toolset';
-import { EntityViewTab } from '@/src/utils/tabs/utils';
 import { ApplicationRoute } from '@/src/types/routes';
-import { useI18n } from '@/src/locales/client';
-import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
-import Properties from './Properties/Properties';
+import { EntityViewTab } from '@/src/utils/tabs/utils';
+import Properties from './Properties';
 
 interface Props {
   activeTab: EntityViewTab;

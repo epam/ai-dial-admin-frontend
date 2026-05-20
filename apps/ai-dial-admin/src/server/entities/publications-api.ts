@@ -9,6 +9,7 @@ export const PUBLICATIONS_PROMPTS_URL = `${PUBLICATIONS_BASE_URL}?type=prompt`;
 export const PUBLICATIONS_FILES_URL = `${PUBLICATIONS_BASE_URL}?type=file`;
 export const PUBLICATIONS_APPLICATION_URL = `${PUBLICATIONS_BASE_URL}?type=application`;
 export const PUBLICATIONS_TOOLSET_URL = `${PUBLICATIONS_BASE_URL}?type=tool_set`;
+export const PUBLICATIONS_CONVERSATION_URL = `${PUBLICATIONS_BASE_URL}?type=conversation`;
 export const PUBLICATION_GET_URL = `${PUBLICATIONS_BASE_URL}/get`;
 export const PUBLICATION_REJECT_URL = `${PUBLICATIONS_BASE_URL}/reject`;
 export const PUBLICATION_APPROVE_URL = `${PUBLICATIONS_BASE_URL}/approve`;
@@ -16,20 +17,24 @@ export const PUBLICATION_DELETE_URL = `${PUBLICATIONS_BASE_URL}/delete`;
 export const PUBLICATION_UPDATE_URL = `${PUBLICATIONS_BASE_URL}/update`;
 
 export class PublicationsApi extends BaseApi {
-  getApplicationPublicationsList(token: Token): Promise<Publication[] | undefined> {
+  getPublicationApplicationList(token: Token): Promise<Publication[] | undefined> {
     return this.getPublicationsList(PUBLICATIONS_APPLICATION_URL, token);
   }
 
-  getToolsetPublicationsList(token: Token): Promise<Publication[] | undefined> {
+  getPublicationToolsetList(token: Token): Promise<Publication[] | undefined> {
     return this.getPublicationsList(PUBLICATIONS_TOOLSET_URL, token);
   }
 
-  getPublicationsPromptsList(token: Token): Promise<Publication[] | undefined> {
+  getPublicationPromptList(token: Token): Promise<Publication[] | undefined> {
     return this.getPublicationsList(PUBLICATIONS_PROMPTS_URL, token);
   }
 
-  getPublicationsFilesList(token: Token): Promise<Publication[] | undefined> {
+  getPublicationFileList(token: Token): Promise<Publication[] | undefined> {
     return this.getPublicationsList(PUBLICATIONS_FILES_URL, token);
+  }
+
+  getPublicationConversationList(token: Token): Promise<Publication[] | undefined> {
+    return this.getPublicationsList(PUBLICATIONS_CONVERSATION_URL, token);
   }
 
   getPublicationsList(url: string, token: Token): Promise<Publication[] | undefined> {

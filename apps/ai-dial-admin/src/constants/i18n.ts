@@ -42,6 +42,7 @@ export enum MenuI18nKey {
   ToolsetPublications = 'Menu.ToolsetPublications',
   ApplicationPublications = 'Menu.ApplicationPublications',
   FilePublications = 'Menu.FilePublications',
+  ConversationPublications = 'Menu.ConversationPublications',
   ImportConfig = 'Menu.ImportConfig',
   ExportConfig = 'Menu.ExportConfig',
   ReadOnlyAdminImportUnavailable = 'Menu.ReadOnlyAdminImportUnavailable',
@@ -583,6 +584,7 @@ export enum TabsI18nKey {
   Routes = 'Tabs.Routes',
   Traces = 'Tabs.Traces',
   Conversations = 'Tabs.Conversations',
+  Conversation = 'Tabs.Conversation',
   Attachments = 'Tabs.Attachments',
   Tools = 'Tabs.Tools',
   ParameterSchema = 'Tabs.ParameterSchema',
@@ -733,6 +735,13 @@ export enum PublicationsI18nKey {
   ToolsetUnpublishDeclineModalTitle = 'Publications.Toolset.UnpublishDeclineModalTitle',
   ToolsetPublishApproveDescription = 'Publications.Toolset.PublishApproveDescription',
   ToolsetUnpublishApproveDescription = 'Publications.Toolset.UnpublishApproveDescription',
+  // conversation publications
+  ConversationPublishApproveModalTitle = 'Publications.Conversation.PublishApproveModalTitle',
+  ConversationPublishDeclineModalTitle = 'Publications.Conversation.PublishDeclineModalTitle',
+  ConversationUnpublishApproveModalTitle = 'Publications.Conversation.UnpublishApproveModalTitle',
+  ConversationUnpublishDeclineModalTitle = 'Publications.Conversation.UnpublishDeclineModalTitle',
+  ConversationPublishApproveDescription = 'Publications.Conversation.PublishApproveDescription',
+  ConversationUnpublishApproveDescription = 'Publications.Conversation.UnpublishApproveDescription',
 }
 
 export enum CompareI18nKey {
@@ -1312,6 +1321,7 @@ export enum EntityFieldsI18nKey {
   HFModelName = 'EntityFields.HFModelName',
   McpServerName = 'EntityFields.McpServerName',
   Resources = 'EntityFields.Resources',
+  Compute = 'EntityFields.Compute',
   StartupProbe = 'EntityFields.StartupProbe',
   Configuration = 'EntityFields.Configuration',
   Command = 'EntityFields.Command',
@@ -1319,6 +1329,7 @@ export enum EntityFieldsI18nKey {
   EndpointConfiguration = 'EntityFields.EndpointConfiguration',
   ToolName = 'EntityFields.ToolName',
   Autoscaling = 'EntityFields.Autoscaling',
+  NodePool = 'EntityFields.NodePool',
   Restarts = 'EntityFields.Restarts',
   LastRestartedAt = 'EntityFields.LastRestartedAt',
   LastReason = 'EntityFields.LastReason',
@@ -1339,6 +1350,8 @@ export enum EntityFieldsI18nKey {
   ProbeType = 'EntityFields.ProbeType',
   ProbePath = 'EntityFields.ProbePath',
   ProbePort = 'EntityFields.ProbePort',
+  temperature = 'EntityFields.temperature',
+  agent = 'EntityFields.agent',
 }
 
 export enum ToolsetI18nKey {
@@ -1519,6 +1532,17 @@ export enum DeploymentsI18nKey {
   AddDomain = 'Deployments.AddDomain',
   EventsError = 'Deployments.EventsError',
   LogsError = 'Deployments.LogsError',
+  NodePoolColumnName = 'Deployments.NodePoolColumnName',
+  NodePoolEmpty = 'Deployments.NodePoolEmpty',
+  NodePoolLoadError = 'Deployments.NodePoolLoadError',
+  NodePoolModalTitle = 'Deployments.NodePoolModalTitle',
+  NodePoolSelect = 'Deployments.NodePoolSelect',
+  NodePoolAny = 'Deployments.NodePoolAny',
+  NodePoolAnyDescription = 'Deployments.NodePoolAnyDescription',
+  NodePoolUnknown = 'Deployments.NodePoolUnknown',
+  NodePoolUnknownHint = 'Deployments.NodePoolUnknownHint',
+  NodePoolSearchPlaceholder = 'Deployments.NodePoolSearchPlaceholder',
+  NodePoolNoMatches = 'Deployments.NodePoolNoMatches',
   ViewInActivityAudit = 'Deployments.ViewInActivityAudit',
 }
 
@@ -1702,6 +1726,8 @@ export enum RunsI18nKey {
   NumericDiff = 'Runs.NumericDiff',
   TextDiff = 'Runs.TextDiff',
   MetricBindings = 'Runs.MetricBindings',
+  ConfigBindings = 'Runs.ConfigBindings',
+  InputBindings = 'Runs.InputBindings',
   CompareWith = 'Runs.CompareWith',
   RunCompareNoMatch = 'Runs.RunCompareNoMatch',
 }
