@@ -1,3 +1,4 @@
+import { MetricBindings } from '@/src/models/evaluation/metric';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 
 import { buildComparisonSections, countDiffs, valuesAreEqual } from '../utils';
@@ -137,6 +138,219 @@ describe('buildComparisonSections', () => {
     const tc = sections.find((s) => s.key === 'testCaseData');
     const flagRow = tc!.rows.find((r) => r.fieldKey === 'flag');
     expect(flagRow!.values[0].raw).toBe('true');
+  });
+
+  it('adds config and input binding sections when metricBindings provided', () => {
+    const result = makeResult();
+    const metricBindings: Record<string, MetricBindings> = {
+      'eval.accuracy': {
+        configBindings: [{ property: 'model', source: { $type: 'Constant', value: 'gpt-4' } }],
+        inputBindings: [{ property: 'actual', source: { $type: 'Response', columnName: 'answer' } }],
+      },
+    };
+    const sections = buildComparisonSections(
+      result,
+      null,
+      defaultVisibility,
+      defaultOrder,
+      defaultHidden,
+      metricBindings,
+    );
+
+    expect(sections.find((s) => s.key === 'binding:config:eval.accuracy')).toBeDefined();
+    expect(sections.find((s) => s.key === 'binding:input:eval.accuracy')).toBeDefined();
+  });
+
+  it('formats Constant binding value as [Constant] value', () => {
+    const result = makeResult();
+    const metricBindings: Record<string, MetricBindings> = {
+      myMetric: {
+        configBindings: [{ property: 'model', source: { $type: 'Constant', value: 'gpt-4' } }],
+        inputBindings: [],
+      },
+    };
+    const sections = buildComparisonSections(
+      result,
+      null,
+      defaultVisibility,
+      defaultOrder,
+      defaultHidden,
+      metricBindings,
+    );
+
+    const configSection = sections.find((s) => s.key === 'binding:config:myMetric')!;
+    expect(configSection.rows[0].fieldKey).toBe('model');
+    expect(configSection.rows[0].values[0].raw).toBe('[Constant] gpt-4');
+  });
+
+  it('formats TestCase binding value as [TestCase] columnName', () => {
+    const result = makeResult();
+    const metricBindings: Record<string, MetricBindings> = {
+      myMetric: {
+        configBindings: [],
+        inputBindings: [{ property: 'input', source: { $type: 'TestCase', columnName: 'Capital' } }],
+      },
+    };
+    const sections = buildComparisonSections(
+      result,
+      null,
+      defaultVisibility,
+      defaultOrder,
+      defaultHidden,
+      metricBindings,
+    );
+
+    const inputSection = sections.find((s) => s.key === 'binding:input:myMetric')!;
+    expect(inputSection.rows[0].values[0].raw).toBe('[TestCase] Capital');
+  });
+
+  it('formats Response binding value as [Response] columnName', () => {
+    const result = makeResult();
+    const metricBindings: Record<string, MetricBindings> = {
+      myMetric: {
+        configBindings: [],
+        inputBindings: [{ property: 'actual_output', source: { $type: 'Response', columnName: 'answer' } }],
+      },
+    };
+    const sections = buildComparisonSections(
+      result,
+      null,
+      defaultVisibility,
+      defaultOrder,
+      defaultHidden,
+      metricBindings,
+    );
+
+    const inputSection = sections.find((s) => s.key === 'binding:input:myMetric')!;
+    expect(inputSection.rows[0].values[0].raw).toBe('[Response] answer');
+  });
+
+  it('formats Constant binding with empty value as [Constant]', () => {
+    const result = makeResult();
+    const metricBindings: Record<string, MetricBindings> = {
+      myMetric: {
+        configBindings: [{ property: 'rubric', source: { $type: 'Constant' } }],
+        inputBindings: [],
+      },
+    };
+    const sections = buildComparisonSections(
+      result,
+      null,
+      defaultVisibility,
+      defaultOrder,
+      defaultHidden,
+      metricBindings,
+    );
+
+    const configSection = sections.find((s) => s.key === 'binding:config:myMetric')!;
+    expect(configSection.rows[0].values[0].raw).toBe('[Constant]');
+  });
+
+  it('repeats binding values in both columns when two results', () => {
+    const active = makeResult({ id: 'a' });
+    const pinned = makeResult({ id: 'b' });
+    const metricBindings: Record<string, MetricBindings> = {
+      myMetric: {
+        configBindings: [{ property: 'model', source: { $type: 'Constant', value: 'gpt-4' } }],
+        inputBindings: [],
+      },
+    };
+    const sections = buildComparisonSections(
+      active,
+      pinned,
+      defaultVisibility,
+      defaultOrder,
+      defaultHidden,
+      metricBindings,
+    );
+
+    const configSection = sections.find((s) => s.key === 'binding:config:myMetric')!;
+    expect(configSection.rows[0].values).toHaveLength(2);
+    expect(configSection.rows[0].values[0].raw).toBe('[Constant] gpt-4');
+    expect(configSection.rows[0].values[1].raw).toBe('[Constant] gpt-4');
+  });
+
+  it('does not add binding sections when metricBindings is undefined', () => {
+    const result = makeResult();
+    const sections = buildComparisonSections(result, null, defaultVisibility, defaultOrder, defaultHidden);
+
+    expect(sections.filter((s) => s.key.startsWith('binding:'))).toHaveLength(0);
+  });
+
+  it('does not add a section for empty configBindings or inputBindings', () => {
+    const result = makeResult();
+    const metricBindings: Record<string, MetricBindings> = {
+      myMetric: { configBindings: [], inputBindings: [] },
+    };
+    const sections = buildComparisonSections(
+      result,
+      null,
+      defaultVisibility,
+      defaultOrder,
+      defaultHidden,
+      metricBindings,
+    );
+
+    expect(sections.filter((s) => s.key.startsWith('binding:'))).toHaveLength(0);
+  });
+
+  it('adds binding sections for multiple groups sorted alphabetically', () => {
+    const result = makeResult();
+    const metricBindings: Record<string, MetricBindings> = {
+      zMetric: {
+        configBindings: [{ property: 'p', source: { $type: 'Constant', value: 'v' } }],
+        inputBindings: [],
+      },
+      aMetric: {
+        configBindings: [{ property: 'p', source: { $type: 'Constant', value: 'v' } }],
+        inputBindings: [],
+      },
+    };
+    const sections = buildComparisonSections(
+      result,
+      null,
+      defaultVisibility,
+      defaultOrder,
+      defaultHidden,
+      metricBindings,
+    );
+
+    const bindingSections = sections.filter((s) => s.key.startsWith('binding:config:'));
+    expect(bindingSections[0].key).toBe('binding:config:aMetric');
+    expect(bindingSections[1].key).toBe('binding:config:zMetric');
+  });
+
+  it('filters binding rows by field visibility', () => {
+    const result = makeResult();
+    const metricBindings: Record<string, MetricBindings> = {
+      myMetric: {
+        configBindings: [
+          { property: 'model', source: { $type: 'Constant', value: 'gpt-4' } },
+          { property: 'threshold', source: { $type: 'Constant', value: '0.5' } },
+        ],
+        inputBindings: [],
+      },
+    };
+    const visibility = { 'binding:config:myMetric:model': false };
+    const sections = buildComparisonSections(result, null, visibility, defaultOrder, defaultHidden, metricBindings);
+
+    const configSection = sections.find((s) => s.key === 'binding:config:myMetric')!;
+    expect(configSection.rows).toHaveLength(1);
+    expect(configSection.rows[0].fieldKey).toBe('threshold');
+  });
+
+  it('hides binding section via sectionHidden', () => {
+    const result = makeResult();
+    const metricBindings: Record<string, MetricBindings> = {
+      myMetric: {
+        configBindings: [{ property: 'model', source: { $type: 'Constant', value: 'gpt-4' } }],
+        inputBindings: [],
+      },
+    };
+    const hidden = { 'binding:config:myMetric': true };
+    const sections = buildComparisonSections(result, null, defaultVisibility, defaultOrder, hidden, metricBindings);
+
+    expect(sections.find((s) => s.key === 'binding:config:myMetric')).toBeUndefined();
   });
 });
 

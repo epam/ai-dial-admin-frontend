@@ -535,6 +535,7 @@ export default {
     AllAttachments: 'All attachments types',
     NoAttachments: 'No attachments',
     SpecificAttachments: 'Specific attachments types',
+    SpecificAttachmentsRequired: "This field is required when 'Specific attachments types' is selected",
     MaxNumber: 'Attachments max number',
     CaptionDescription: 'Choose from suggested MIME types or add a new one using <type>/<subtype>.',
   },

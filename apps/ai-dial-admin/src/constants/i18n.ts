@@ -472,6 +472,7 @@ export enum AttachmentsI18nKey {
   AllAttachments = 'Attachments.AllAttachments',
   NoAttachments = 'Attachments.NoAttachments',
   SpecificAttachments = 'Attachments.SpecificAttachments',
+  SpecificAttachmentsRequired = 'Attachments.SpecificAttachmentsRequired',
   MaxNumber = 'Attachments.MaxNumber',
   CaptionDescription = 'Attachments.CaptionDescription',
 }

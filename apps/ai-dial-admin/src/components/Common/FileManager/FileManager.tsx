@@ -229,18 +229,19 @@ const FileManager: FC<Props> = ({
 
   const handleFolderPopupPathChange = useCallback(
     (nextPath: string | undefined) => {
-      if (nextPath && !loadedPaths.has(nextPath)) {
-        setLoadedPaths((prev) => new Set(prev).add(nextPath));
-        fetchFiles(nextPath);
+      if (!nextPath) return;
+
+      const normalizedPath = nextPath.endsWith('/') ? nextPath : `${nextPath}/`;
+      if (normalizedPath && !loadedPaths.has(normalizedPath)) {
+        setLoadedPaths((prev) => new Set(prev).add(normalizedPath));
+        fetchFiles(normalizedPath);
       }
     },
     [loadedPaths, fetchFiles],
   );
 
   const handleManagePermissions = useCallback((path?: string) => {
-    if (!path) {
-      return;
-    }
+    if (!path) return;
 
     window.open(`${ApplicationRoute.FoldersStorage}?path=${encodeURIComponent(path)}`, '_blank');
   }, []);
