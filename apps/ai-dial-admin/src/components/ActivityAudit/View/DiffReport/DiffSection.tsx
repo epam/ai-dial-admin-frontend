@@ -20,7 +20,7 @@ interface Props {
 }
 
 const CONTAINER_SECTION_TITLE_KEYS: Record<string, EntityFieldsI18nKey> = {
-  [EntityParameterKeys.RESOURCES]: EntityFieldsI18nKey.Resources,
+  [EntityParameterKeys.RESOURCES]: EntityFieldsI18nKey.Compute,
   [EntityParameterKeys.SCALING]: EntityFieldsI18nKey.Autoscaling,
   [EntityParameterKeys.PROBE_PROPERTIES]: EntityFieldsI18nKey.StartupProbe,
   [EntityParameterKeys.METADATA]: EntityFieldsI18nKey.EnvironmentVariables,
