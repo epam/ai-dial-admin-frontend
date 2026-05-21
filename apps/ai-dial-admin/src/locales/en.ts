@@ -1184,6 +1184,8 @@ export default {
     ToolName: 'Tool name',
     Autoscaling: 'Autoscaling',
     NodePool: 'Node pool',
+    NodePoolId: 'Node pool ID',
+    NodePoolName: 'Node pool name',
     StartupProbe: 'Startup probe',
     Restarts: 'Restarts',
     LastRestartedAt: 'Last restarted at',
