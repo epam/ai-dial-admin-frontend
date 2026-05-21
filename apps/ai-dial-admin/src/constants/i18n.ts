@@ -107,6 +107,7 @@ export enum CoreVersionModalI18nKey {
 export enum BasicI18nKey {
   None = 'Basic.None',
   Preview = 'Basic.Preview',
+  PreviewPrompt = 'Basic.PreviewPrompt',
   Optional = 'Basic.Optional',
   Required = 'Basic.Required',
   Failed = 'Basic.Failed',
