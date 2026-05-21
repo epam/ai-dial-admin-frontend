@@ -315,12 +315,14 @@ const buildMetricColDef = (
 export const getAnalyticsColumnsCompare = (results: CompareAnalyticsRow[], errorText?: string) => {
   const allResults: AnalyticsResult[] = [...results, ...results.flatMap((r) => (r._compared ? [r._compared] : []))];
   const metrics = mergeMetricValuesSchema(allResults);
-  const currentInput = results[0]?.testCaseData || {};
-  const comparedInput = results[0]?._compared?.testCaseData || {};
-  const inputSchema = { ...currentInput, ...comparedInput };
-  const currentExtracted = results[0]?.extractedColumns || {};
-  const comparedExtracted = results[0]?._compared?.extractedColumns || {};
-  const extractedSchema = { ...currentExtracted, ...comparedExtracted };
+  const inputSchema = allResults.reduce<Record<string, unknown>>(
+    (acc, r) => ({ ...acc, ...(r.testCaseData || {}) }),
+    {},
+  );
+  const extractedSchema = allResults.reduce<Record<string, unknown>>(
+    (acc, r) => ({ ...acc, ...(r.extractedColumns || {}) }),
+    {},
+  );
 
   return [
     staticColumns[0],

@@ -656,6 +656,74 @@ describe('Runs View :: getAnalyticsColumnsCompare', () => {
     expect(comparedLeaves.every((c) => c.colId?.startsWith('cmp_extracted_'))).toBe(true);
   });
 
+  test('includes INPUT BINDINGS columns that exist only in compared run', () => {
+    const rows = [
+      makeRow({
+        testCaseData: undefined,
+        _compared: makeResult({ testCaseData: { comparedKey: 'val' } }),
+      }),
+    ];
+    const cols = getAnalyticsColumnsCompare(rows);
+
+    const bindings = cols.find((c) => (c as { headerName: string }).headerName === 'INPUT BINDINGS') as {
+      children: { headerName: string; children: { headerName: string }[] }[];
+    };
+
+    expect(bindings).toBeDefined();
+    expect(bindings.children).toHaveLength(1);
+    expect(bindings.children[0].headerName).toBe('comparedKey');
+  });
+
+  test('includes INPUT BINDINGS columns from all rows, not only first row', () => {
+    const rows = [
+      makeRow({ testCaseData: { key1: 'a' } }),
+      makeRow({ testCaseData: { key2: 'b' } }),
+    ];
+    const cols = getAnalyticsColumnsCompare(rows);
+
+    const bindings = cols.find((c) => (c as { headerName: string }).headerName === 'INPUT BINDINGS') as {
+      children: { headerName: string }[];
+    };
+
+    const keys = bindings.children.map((c) => c.headerName);
+    expect(keys).toContain('key1');
+    expect(keys).toContain('key2');
+  });
+
+  test('includes EXTRACTED columns that exist only in compared run', () => {
+    const rows = [
+      makeRow({
+        extractedColumns: undefined,
+        _compared: makeResult({ extractedColumns: { comparedCol: 'v' } }),
+      }),
+    ];
+    const cols = getAnalyticsColumnsCompare(rows);
+
+    const extracted = cols.find((c) => (c as { headerName: string }).headerName === 'EXTRACTED') as {
+      children: { headerName: string; children: { headerName: string }[] }[];
+    };
+
+    expect(extracted).toBeDefined();
+    expect(extracted.children).toHaveLength(1);
+    expect(extracted.children[0].headerName).toBe('comparedCol');
+  });
+
+  test('includes EXTRACTED columns from all rows, not only first row', () => {
+    const rows = [
+      makeRow({ extractedColumns: { col1: 'a' } }),
+      makeRow({ extractedColumns: { col2: 'b' } }),
+    ];
+    const cols = getAnalyticsColumnsCompare(rows);
+
+    const extracted = cols.find((c) => (c as { headerName: string }).headerName === 'EXTRACTED') as {
+      children: { headerName: string }[];
+    };
+
+    const keys = extracted.children.map((c) => c.headerName);
+    expect(keys).toContain('col1');
+    expect(keys).toContain('col2');
+  });
+
   test('includes metric columns that exist only in compared run', () => {
     const rows = [
       makeRow({

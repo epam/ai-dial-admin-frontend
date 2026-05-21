@@ -246,9 +246,9 @@ describe('buildComparisonSections', () => {
     expect(configSection.rows[0].values[0].raw).toBe('[Constant]');
   });
 
-  it('repeats binding values in both columns when two results', () => {
-    const active = makeResult({ id: 'a' });
-    const pinned = makeResult({ id: 'b' });
+  it('repeats binding values in both columns when both runs have the metric', () => {
+    const active = makeResult({ id: 'a', metricValues: { myMetric: { score: 1 } } });
+    const pinned = makeResult({ id: 'b', metricValues: { myMetric: { score: 0.8 } } });
     const metricBindings: Record<string, MetricBindings> = {
       myMetric: {
         configBindings: [{ property: 'model', source: { $type: 'Constant', value: 'gpt-4' } }],
@@ -268,6 +268,60 @@ describe('buildComparisonSections', () => {
     expect(configSection.rows[0].values).toHaveLength(2);
     expect(configSection.rows[0].values[0].raw).toBe('[Constant] gpt-4');
     expect(configSection.rows[0].values[1].raw).toBe('[Constant] gpt-4');
+  });
+
+  it('shows null for compared binding column when compared run lacks the metric', () => {
+    const active = makeResult({ id: 'a', metricValues: { myMetric: { score: 1 } } });
+    const pinned = makeResult({ id: 'b', metricValues: {} });
+    const metricBindings: Record<string, MetricBindings> = {
+      myMetric: {
+        configBindings: [{ property: 'model', source: { $type: 'Constant', value: 'gpt-4' } }],
+        inputBindings: [{ property: 'actual', source: { $type: 'Response', columnName: 'answer' } }],
+      },
+    };
+    const sections = buildComparisonSections(
+      active,
+      pinned,
+      defaultVisibility,
+      defaultOrder,
+      defaultHidden,
+      metricBindings,
+    );
+
+    const configSection = sections.find((s) => s.key === 'binding:config:myMetric')!;
+    expect(configSection.rows[0].values[0].raw).toBe('[Constant] gpt-4');
+    expect(configSection.rows[0].values[1].raw).toBeNull();
+
+    const inputSection = sections.find((s) => s.key === 'binding:input:myMetric')!;
+    expect(inputSection.rows[0].values[0].raw).toBe('[Response] answer');
+    expect(inputSection.rows[0].values[1].raw).toBeNull();
+  });
+
+  it('shows null for current binding column when current run lacks the metric', () => {
+    const active = makeResult({ id: 'a', metricValues: {} });
+    const pinned = makeResult({ id: 'b', metricValues: { myMetric: { score: 0.9 } } });
+    const metricBindings: Record<string, MetricBindings> = {
+      myMetric: {
+        configBindings: [{ property: 'model', source: { $type: 'Constant', value: 'gpt-4' } }],
+        inputBindings: [{ property: 'actual', source: { $type: 'Response', columnName: 'answer' } }],
+      },
+    };
+    const sections = buildComparisonSections(
+      active,
+      pinned,
+      defaultVisibility,
+      defaultOrder,
+      defaultHidden,
+      metricBindings,
+    );
+
+    const configSection = sections.find((s) => s.key === 'binding:config:myMetric')!;
+    expect(configSection.rows[0].values[0].raw).toBeNull();
+    expect(configSection.rows[0].values[1].raw).toBe('[Constant] gpt-4');
+
+    const inputSection = sections.find((s) => s.key === 'binding:input:myMetric')!;
+    expect(inputSection.rows[0].values[0].raw).toBeNull();
+    expect(inputSection.rows[0].values[1].raw).toBe('[Response] answer');
   });
 
   it('does not add binding sections when metricBindings is undefined', () => {
