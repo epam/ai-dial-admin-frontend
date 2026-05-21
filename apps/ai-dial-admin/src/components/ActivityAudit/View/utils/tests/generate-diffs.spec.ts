@@ -826,3 +826,71 @@ describe('Container detail :: metadata (envs) diff symmetry', () => {
     expect(rows.every((r) => r.diffStatus === undefined)).toBe(true);
   });
 });
+
+describe('Container detail :: nodePool rows', () => {
+  const containerType = ActivityAuditResourceType.INTERCEPTOR_DEPLOYMENT;
+  const propRows = (result: Record<string, ActivityAuditDiff[]>, key: string) =>
+    (result.properties || []).filter((r) => r.parameter === key);
+
+  test('both sides empty (both undefined): no nodePoolId or nodePoolName row', () => {
+    const result = generateCurrentResource({ displayName: 'x' }, { displayName: 'x' }, containerType, true);
+    expect(propRows(result, 'nodePoolId')).toEqual([]);
+    expect(propRows(result, 'nodePoolName')).toEqual([]);
+  });
+
+  test('both sides empty (mixed null + undefined): no rows', () => {
+    const current: ActivityAuditEntity = { nodePoolId: null, nodePoolName: null };
+    const compare: ActivityAuditEntity = {};
+    const result = generateCurrentResource(current, compare, containerType, true);
+    expect(propRows(result, 'nodePoolId')).toEqual([]);
+    expect(propRows(result, 'nodePoolName')).toEqual([]);
+  });
+
+  test('id added: nodePoolId row emitted with ADDED status, no other side effect', () => {
+    const previous: ActivityAuditEntity = {};
+    const latest: ActivityAuditEntity = { nodePoolId: 'cpu-pool', nodePoolName: 'CPU pool' };
+    const afterPass = generateCurrentResource(previous, latest, containerType, false);
+    expect(propRows(afterPass, 'nodePoolId')).toEqual([
+      { parameter: 'nodePoolId', value: 'cpu-pool', diffStatus: DiffStatus.ADDED },
+    ]);
+    expect(propRows(afterPass, 'nodePoolName')).toEqual([
+      { parameter: 'nodePoolName', value: 'CPU pool', diffStatus: DiffStatus.ADDED },
+    ]);
+  });
+
+  test('id changed but name preserved: only nodePoolId carries CHANGED status', () => {
+    const previous: ActivityAuditEntity = { nodePoolId: 'cpu-pool', nodePoolName: 'CPU pool' };
+    const latest: ActivityAuditEntity = { nodePoolId: 'gpu-pool', nodePoolName: 'CPU pool' };
+    const afterPass = generateCurrentResource(previous, latest, containerType, false);
+    expect(propRows(afterPass, 'nodePoolId')).toEqual([
+      { parameter: 'nodePoolId', value: 'gpu-pool', diffStatus: DiffStatus.CHANGED },
+    ]);
+    expect(propRows(afterPass, 'nodePoolName')).toEqual([{ parameter: 'nodePoolName', value: 'CPU pool' }]);
+  });
+
+  test('id present, name missing on one side only: both rows still appear with appropriate status', () => {
+    const previous: ActivityAuditEntity = {};
+    const latest: ActivityAuditEntity = { nodePoolId: 'ghost', nodePoolName: null };
+    const afterPass = generateCurrentResource(previous, latest, containerType, false);
+    expect(propRows(afterPass, 'nodePoolId')).toEqual([
+      { parameter: 'nodePoolId', value: 'ghost', diffStatus: DiffStatus.ADDED },
+    ]);
+    // both sides empty for nodePoolName (undefined vs null) -> no row
+    expect(propRows(afterPass, 'nodePoolName')).toEqual([]);
+  });
+
+  test('fill path (current null): only non-empty fields produce rows', () => {
+    const compare: ActivityAuditEntity = { nodePoolId: 'cpu-pool', nodePoolName: null };
+    const result = generateCurrentResource(null, compare, containerType);
+    expect(propRows(result, 'nodePoolId')).toEqual([{ parameter: 'nodePoolId', value: 'cpu-pool' }]);
+    expect(propRows(result, 'nodePoolName')).toEqual([]);
+  });
+
+  test('hide-when-empty is scoped to nodePool keys only', () => {
+    const current: ActivityAuditEntity = { displayName: '', nodePoolId: '' };
+    const compare: ActivityAuditEntity = { displayName: '', nodePoolId: '' };
+    const result = generateCurrentResource(current, compare, containerType, true);
+    expect(propRows(result, 'displayName')).toHaveLength(1);
+    expect(propRows(result, 'nodePoolId')).toEqual([]);
+  });
+});

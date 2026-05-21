@@ -75,6 +75,8 @@ const CONTAINER_HIDDEN_KEYS = new Set<string>([
   'modelFormat',
 ]);
 
+const CONTAINER_HIDE_IF_EMPTY_KEYS = new Set<string>(['nodePoolId', 'nodePoolName']);
+
 const CONTAINER_PRIMITIVE_SECTION_ROUTING: Record<string, EntityParameterKeys> = {
   transport: EntityParameterKeys.ENDPOINT_CONFIGURATION,
   mcpEndpointPath: EntityParameterKeys.ENDPOINT_CONFIGURATION,
@@ -131,6 +133,7 @@ const getPrimitiveBucket = (
   val2?: unknown,
 ): ActivityAuditDiff[] | null => {
   if (isContainerRow) {
+    if (CONTAINER_HIDE_IF_EMPTY_KEYS.has(key) && isEmptyPrimitive(val1) && isEmptyPrimitive(val2)) return null;
     const sectionKey = CONTAINER_PRIMITIVE_SECTION_ROUTING[key];
     if (sectionKey) {
       if (isEmptyPrimitive(val1) && isEmptyPrimitive(val2)) return null;
