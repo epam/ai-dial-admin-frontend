@@ -5,6 +5,7 @@ import {
   DialFile,
   DialInput,
   DialNeutralButton,
+  DialRootFolder,
   DialUploadFileItem,
 } from '@epam/ai-dial-ui-kit';
 import { IconFolderShare } from '@tabler/icons-react';
@@ -46,6 +47,7 @@ const FilePath: FC<Props> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { files, fetchFiles } = context?.() || {};
   const [loadedPaths, setLoadedPaths] = useState(new Set(['']));
+  const [path, setPath] = useState(`${ROOT_FOLDER}/`);
 
   useEffect(() => {
     const rootPath = `${ROOT_FOLDER}/`;
@@ -71,11 +73,15 @@ const FilePath: FC<Props> = ({
 
   const onDestinationFolderChange = useCallback(
     (path?: string) => {
-      if (path && !loadedPaths.has(path)) {
-        setLoadedPaths((prev) => new Set(prev).add(path));
-        fetchFiles?.(path);
+      if (!path) return;
+
+      const normalizedPath = path.endsWith('/') ? path : `${path}/`;
+      if (normalizedPath && !loadedPaths.has(normalizedPath)) {
+        setLoadedPaths((prev) => new Set(prev).add(normalizedPath));
+        fetchFiles?.(normalizedPath);
       }
-      onChange?.(path || '');
+      setPath(normalizedPath);
+      onChange?.(normalizedPath || '');
     },
     [loadedPaths, onChange, fetchFiles],
   );
@@ -117,14 +123,17 @@ const FilePath: FC<Props> = ({
         <DialDestinationFolderPopup
           open={isModalOpen}
           onClose={onCloseFilePathModal}
+          rootItem={files?.[0] as DialRootFolder}
           mode="move"
           items={processAssetsData(files, view) as DialFile[]}
           onFolderPopupPathChange={onDestinationFolderChange}
           onConfirm={onCloseFilePathModal}
           header={modalTitle}
-          sourceFolder={ROOT_FOLDER}
+          path={path}
+          defaultPath={`${ROOT_FOLDER}/`}
           onCreateFolder={handleCreateFolder}
           gridOptions={getFilePathGridOptions(t, view)}
+          showHiddenFileSwitcher={false}
         />
       </div>
     </div>

@@ -107,6 +107,7 @@ export enum CoreVersionModalI18nKey {
 export enum BasicI18nKey {
   None = 'Basic.None',
   Preview = 'Basic.Preview',
+  PreviewPrompt = 'Basic.PreviewPrompt',
   Optional = 'Basic.Optional',
   Required = 'Basic.Required',
   Failed = 'Basic.Failed',
@@ -472,6 +473,7 @@ export enum AttachmentsI18nKey {
   AllAttachments = 'Attachments.AllAttachments',
   NoAttachments = 'Attachments.NoAttachments',
   SpecificAttachments = 'Attachments.SpecificAttachments',
+  SpecificAttachmentsRequired = 'Attachments.SpecificAttachmentsRequired',
   MaxNumber = 'Attachments.MaxNumber',
   CaptionDescription = 'Attachments.CaptionDescription',
 }
@@ -1767,8 +1769,11 @@ export enum FileManagerI18nKey {
   // Modals
   DeleteItemsModalTitle = 'FileManager.DeleteItemsModalTitle',
   DeleteItemsModalDescription = 'FileManager.DeleteItemsModalDescription',
+  DeleteItemsAndFoldersModalTitle = 'FileManager.DeleteItemsAndFoldersModalTitle',
+  DeleteItemsAndFoldersModalDescription = 'FileManager.DeleteItemsAndFoldersModalDescription',
   MoreItems = 'FileManager.MoreItems',
   DeleteFolderAlert = 'FileManager.DeleteFolderAlert',
+  EmptyFolderDescription = 'FileManager.EmptyFolderDescription',
 
   // Notifications
   CreateFolderSuccessTitle = 'FileManager.Notifications.CreateFolder.Title',

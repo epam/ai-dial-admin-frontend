@@ -14,7 +14,7 @@ import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import AddDependenciesButton from './AddDependenciesModal/AddDependenciesButton';
-import { getDependenciesData } from './utils';
+import { countValidDependencies, getDependenciesData } from './utils';
 
 interface Props {
   application: DialApplication;
@@ -88,7 +88,7 @@ const Dependencies: FC<Props> = ({ application, applications, models, onChange }
     <div className="h-full flex flex-col">
       <div className="mb-4 flex flex-row items-center justify-between">
         <h1>
-          {t(TabsI18nKey.Dependencies)}: {application.dependencies?.length || 0}
+          {t(TabsI18nKey.Dependencies)}: {countValidDependencies(application.dependencies)}
         </h1>
         {!isReadOnlyAdmin && (
           <AddDependenciesButton

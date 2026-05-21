@@ -2,7 +2,15 @@ import { MenuI18nKey } from '@/src/constants/i18n';
 import { DialApplication } from '@/src/models/dial/application';
 import { DialModel } from '@/src/models/dial/model';
 import { describe, expect, test } from 'vitest';
-import { getDependenciesData } from '../utils';
+import { countValidDependencies, getDependenciesData } from '../utils';
+
+describe('countValidDependencies', () => {
+  test('should exclude null and undefined entries', () => {
+    expect(countValidDependencies(['modelA', null, undefined, 'appB'])).toBe(2);
+    expect(countValidDependencies([null])).toBe(0);
+    expect(countValidDependencies(undefined)).toBe(0);
+  });
+});
 
 describe('getDependenciesData', () => {
   const models: DialModel[] = [

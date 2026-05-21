@@ -7,7 +7,7 @@ import { getAllDeployments } from '@/src/app/[lang]/conversations/actions';
 import { getAgentLinkForConversation } from '@/src/components/Assets/utils';
 import ExpandableText from '@/src/components/Common/ExpandableText/ExpandableText';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
-import { EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { DialConversation } from '@/src/models/dial/conversation';
@@ -73,7 +73,7 @@ const Properties: FC<Props> = ({ selectedConversation }) => {
       {selectedConversation.prompt && (
         <div className="flex flex-col gap-2">
           <DialLabel label={t(EntityFieldsI18nKey.prompt)} />
-          <ExpandableText lines={5}>
+          <ExpandableText lines={5} popupHeader={t(BasicI18nKey.PreviewPrompt)}>
             <div className="text-sm whitespace-pre-wrap">{selectedConversation.prompt}</div>
           </ExpandableText>
         </div>
