@@ -18,7 +18,7 @@ export const processAssetsData = (
 
   const processedAssets = assets.map((asset) => {
     if (asset.nodeType === DialFileNodeType.FOLDER && asset.items) {
-      return { ...asset, items: processAssetsData(asset.items) };
+      return { ...asset, items: processAssetsData(asset.items, view) };
     }
     return asset;
   });
