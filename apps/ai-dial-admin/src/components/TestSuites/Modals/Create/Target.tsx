@@ -1,6 +1,6 @@
 'use client';
 
-import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { DialTabs } from '@epam/ai-dial-ui-kit';
 
@@ -27,6 +27,8 @@ const Target: FC<Props> = ({ selectedTargetId, suiteType, onChangeTarget, onChan
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<string>(getInitialTab(suiteType));
   const [deployments, setDeployments] = useState<Deployment[] | null>(null);
+  const initialSelectedIdRef = useRef(selectedTargetId);
+  const hasSwitchedTabRef = useRef(false);
 
   const tabs = useMemo(
     () => [
@@ -66,6 +68,20 @@ const Target: FC<Props> = ({ selectedTargetId, suiteType, onChangeTarget, onChan
       setIsLoading(false);
     });
   }, [activeTab]);
+
+  useEffect(() => {
+    if (!initialSelectedIdRef.current || isLoading || deployments === null) return;
+    const found = deployments.find((d) => d.deploymentId === initialSelectedIdRef.current);
+    if (found) {
+      onChangeTarget(found);
+      initialSelectedIdRef.current = undefined;
+    } else if (activeTab === TargetTab.Applications && !hasSwitchedTabRef.current) {
+      hasSwitchedTabRef.current = true;
+      setActiveTab(TargetTab.Models);
+    }
+    // onChangeTarget is a stable setState setter; activeTab is read via closure after deps update
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deployments, isLoading]);
 
   return (
     <div className="size-full flex flex-col">
