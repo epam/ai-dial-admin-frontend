@@ -675,10 +675,7 @@ describe('Runs View :: getAnalyticsColumnsCompare', () => {
   });
 
   test('includes INPUT BINDINGS columns from all rows, not only first row', () => {
-    const rows = [
-      makeRow({ testCaseData: { key1: 'a' } }),
-      makeRow({ testCaseData: { key2: 'b' } }),
-    ];
+    const rows = [makeRow({ testCaseData: { key1: 'a' } }), makeRow({ testCaseData: { key2: 'b' } })];
     const cols = getAnalyticsColumnsCompare(rows);
 
     const bindings = cols.find((c) => (c as { headerName: string }).headerName === 'INPUT BINDINGS') as {
@@ -709,10 +706,7 @@ describe('Runs View :: getAnalyticsColumnsCompare', () => {
   });
 
   test('includes EXTRACTED columns from all rows, not only first row', () => {
-    const rows = [
-      makeRow({ extractedColumns: { col1: 'a' } }),
-      makeRow({ extractedColumns: { col2: 'b' } }),
-    ];
+    const rows = [makeRow({ extractedColumns: { col1: 'a' } }), makeRow({ extractedColumns: { col2: 'b' } })];
     const cols = getAnalyticsColumnsCompare(rows);
 
     const extracted = cols.find((c) => (c as { headerName: string }).headerName === 'EXTRACTED') as {
