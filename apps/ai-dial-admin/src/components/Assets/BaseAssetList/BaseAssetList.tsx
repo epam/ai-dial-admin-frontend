@@ -28,7 +28,7 @@ import { DialApplicationScheme } from '@/src/models/dial/application';
 import { AssetApp, AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { ImportData } from '@/src/models/import-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { ImportFileType } from '@/src/types/import';
+import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { downloadFile, downloadJson } from '@/src/utils/download';
 import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
@@ -364,7 +364,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
           if (errorTitle && errorDescription) {
             showNotification(getErrorNotification(errorTitle, errorDescription));
           }
-          if (skippedTitle && skippedDescription) {
+          if (skippedTitle && skippedDescription && conflictResolutionStrategy !== ConflictResolutionPolicy.SKIP) {
             showNotification(getErrorNotification(skippedTitle, skippedDescription));
           }
         } else {
