@@ -75,6 +75,8 @@ const CONTAINER_HIDDEN_KEYS = new Set<string>([
   'modelFormat',
 ]);
 
+const CONTAINER_HIDE_IF_EMPTY_KEYS = new Set<string>(['nodePoolId', 'nodePoolName']);
+
 const CONTAINER_PRIMITIVE_SECTION_ROUTING: Record<string, EntityParameterKeys> = {
   transport: EntityParameterKeys.ENDPOINT_CONFIGURATION,
   mcpEndpointPath: EntityParameterKeys.ENDPOINT_CONFIGURATION,
@@ -82,6 +84,8 @@ const CONTAINER_PRIMITIVE_SECTION_ROUTING: Record<string, EntityParameterKeys> =
   containerGrpcPort: EntityParameterKeys.ENDPOINT_CONFIGURATION,
   command: EntityParameterKeys.CONFIGURATION,
   args: EntityParameterKeys.CONFIGURATION,
+  nodePoolId: EntityParameterKeys.RESOURCES,
+  nodePoolName: EntityParameterKeys.RESOURCES,
 };
 
 // Section render order for container detail (slotted between Properties and the
@@ -131,6 +135,7 @@ const getPrimitiveBucket = (
   val2?: unknown,
 ): ActivityAuditDiff[] | null => {
   if (isContainerRow) {
+    if (CONTAINER_HIDE_IF_EMPTY_KEYS.has(key) && isEmptyPrimitive(val1) && isEmptyPrimitive(val2)) return null;
     const sectionKey = CONTAINER_PRIMITIVE_SECTION_ROUTING[key];
     if (sectionKey) {
       if (isEmptyPrimitive(val1) && isEmptyPrimitive(val2)) return null;
@@ -231,14 +236,13 @@ export const compareObjectTypes = (
     };
     compareSimpleObjects(diffMap.properties, normalizeImageSource(value1), normalizeImageSource(value2), isCurrent);
   } else if (
-    !diffMap[key] &&
-    (separateObjectParameterKeys.includes(key) ||
-      (type === ActivityAuditResourceType.ROLE &&
-        (key === EntityParameterKeys.LIMITS ||
-          key === EntityParameterKeys.SHARE ||
-          key === EntityParameterKeys.COST_LIMIT)))
+    separateObjectParameterKeys.includes(key) ||
+    (type === ActivityAuditResourceType.ROLE &&
+      (key === EntityParameterKeys.LIMITS ||
+        key === EntityParameterKeys.SHARE ||
+        key === EntityParameterKeys.COST_LIMIT))
   ) {
-    diffMap[key] = [];
+    if (!diffMap[key]) diffMap[key] = [];
     compareSeparateObjects(diffMap[key], key, val1, val2, isCurrent);
   }
 };
@@ -300,14 +304,13 @@ export const fillObjectTypes = (
     };
     fillSimpleObjects(diffMap.properties, normalizeImageSource(value1));
   } else if (
-    !diffMap[key] &&
-    (separateObjectParameterKeys.includes(key) ||
-      (type === ActivityAuditResourceType.ROLE &&
-        (key === EntityParameterKeys.LIMITS ||
-          key === EntityParameterKeys.SHARE ||
-          key === EntityParameterKeys.COST_LIMIT)))
+    separateObjectParameterKeys.includes(key) ||
+    (type === ActivityAuditResourceType.ROLE &&
+      (key === EntityParameterKeys.LIMITS ||
+        key === EntityParameterKeys.SHARE ||
+        key === EntityParameterKeys.COST_LIMIT))
   ) {
-    diffMap[key] = [];
+    if (!diffMap[key]) diffMap[key] = [];
     fillSeparateObjects(diffMap[key], key, value);
   }
 };
