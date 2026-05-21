@@ -313,7 +313,8 @@ const buildMetricColDef = (
 };
 
 export const getAnalyticsColumnsCompare = (results: CompareAnalyticsRow[], errorText?: string) => {
-  const metrics = mergeMetricValuesSchema(results);
+  const allResults: AnalyticsResult[] = [...results, ...results.flatMap((r) => (r._compared ? [r._compared] : []))];
+  const metrics = mergeMetricValuesSchema(allResults);
   const currentInput = results[0]?.testCaseData || {};
   const comparedInput = results[0]?._compared?.testCaseData || {};
   const inputSchema = { ...currentInput, ...comparedInput };
@@ -325,13 +326,18 @@ export const getAnalyticsColumnsCompare = (results: CompareAnalyticsRow[], error
     staticColumns[0],
     {
       headerName: 'EXECUTION',
-      children: executionColumns.map((curr, i) => ({
-        headerName: curr.headerName,
-        children: [
-          { ...curr, headerName: 'Current' },
-          { ...comparedExecutionColumns[i], headerName: 'Compared' },
-        ],
-      })),
+      children: executionColumns
+        .filter((col) => col.colId !== 'runIndex')
+        .map((curr) => {
+          const cmpCol = comparedExecutionColumns.find((c) => c.colId === `cmp_${curr.colId}`);
+          return {
+            headerName: curr.headerName,
+            children: [
+              { ...curr, headerName: 'Current' },
+              { ...cmpCol, headerName: 'Compared' },
+            ],
+          };
+        }),
     },
     ...getComparedMetricsColumns(metrics, errorText),
     {

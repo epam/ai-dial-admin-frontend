@@ -581,7 +581,7 @@ describe('Runs View :: getAnalyticsColumnsCompare', () => {
     expect(blank.children).toHaveLength(2);
   });
 
-  test('EXECUTION group has field sub-groups each with Current and Compared leaves', () => {
+  test('EXECUTION group has field sub-groups each with Current and Compared leaves, without runIndex', () => {
     const cols = getAnalyticsColumnsCompare([makeRow()]);
     const exec = cols[1] as {
       headerName: string;
@@ -589,10 +589,9 @@ describe('Runs View :: getAnalyticsColumnsCompare', () => {
     };
 
     expect(exec.headerName).toBe('EXECUTION');
-    expect(exec.children).toHaveLength(3);
-    expect(exec.children[0].headerName).toBe('#');
-    expect(exec.children[1].headerName).toBe('HTTP');
-    expect(exec.children[2].headerName).toBe('Duration');
+    expect(exec.children).toHaveLength(2);
+    expect(exec.children[0].headerName).toBe('HTTP');
+    expect(exec.children[1].headerName).toBe('Duration');
 
     for (const fieldGroup of exec.children) {
       expect(fieldGroup.children).toHaveLength(2);
@@ -655,6 +654,24 @@ describe('Runs View :: getAnalyticsColumnsCompare', () => {
     // Each field key sub-group's second child is the Compared leaf
     const comparedLeaves = extracted.children.map((keyGroup) => keyGroup.children[1]);
     expect(comparedLeaves.every((c) => c.colId?.startsWith('cmp_extracted_'))).toBe(true);
+  });
+
+  test('includes metric columns that exist only in compared run', () => {
+    const rows = [
+      makeRow({
+        metricValues: undefined,
+        _compared: makeResult({ metricValues: { comparedOnly: { precision: 0.7 } } }),
+      }),
+    ];
+    const cols = getAnalyticsColumnsCompare(rows);
+
+    const comparedOnlyGroup = cols.find((c) => (c as { headerName: string }).headerName === 'comparedOnly') as {
+      children: { headerName: string; children: { headerName: string }[] }[];
+    };
+
+    expect(comparedOnlyGroup).toBeDefined();
+    expect(comparedOnlyGroup.children).toHaveLength(1);
+    expect(comparedOnlyGroup.children[0].headerName).toBe('precision');
   });
 
   test('Compared valueGetters return dash when _compared is null', () => {
