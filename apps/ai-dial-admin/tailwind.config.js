@@ -12,6 +12,8 @@ const backgroundsColors = {
   warning: 'var(--bg-warning, #3F3D25)',
   info: 'var(--bg-info, #1C2C47)',
   success: 'var(--bg-success, #1D3841)',
+  inverted: 'var(--bg-inverted, #EEF1F7)',
+  secondary: 'var(--text-secondary, #9FA6BD)',
   'accent-primary-alpha': 'var(--bg-accent-primary-alpha, #7DA4FF26)',
   'accent-secondary-alpha': 'var(--bg-accent-secondary-alpha, #37BABC2E)',
   'accent-tertiary-alpha': 'var(--bg-accent-tertiary-alpha, #A972FF2E)',
@@ -91,6 +93,7 @@ const textColors = {
   'warning-icon': 'var(--text-warning-icon, #EEC840)',
   info: 'var(--text-info, #7DA4FF)',
   success: 'var(--text-success, #37BABC)',
+  inverted: 'var(--text-inverted, #161B2D)',
   'accent-primary': 'var(--text-accent-primary, #7DA4FF)',
   'accent-secondary': 'var(--text-accent-secondary, #37BABC)',
   'accent-tertiary': 'var(--text-accent-tertiary, #A972FF)',
@@ -101,6 +104,7 @@ const textColors = {
 
 const placeholderColor = {
   primary: 'var(--text-primary, #EEF1F7)',
+  secondary: 'var(--controls-text-secondary-disable, #575F73)',
 };
 
 const controlsTextColors = {

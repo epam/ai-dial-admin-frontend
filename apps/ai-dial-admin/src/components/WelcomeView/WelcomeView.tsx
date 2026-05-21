@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { FC } from 'react';
 import { DialNeutralButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 
+import ReadOnlyAdminBanner from '@/src/components/Common/ReadOnlyBanner/ReadOnlyBanner';
 import HeaderIcon from '@/public/images/icons/welcome-page/header-icon.svg';
 import { MENU_CONFIGURATION } from '@/src/components/Menu/menu-configuration';
 import { MenuI18nKey } from '@/src/constants/i18n';
@@ -35,6 +36,7 @@ const WelcomeView: FC<Props> = ({ docLink, dialLink, disableMenuItems, dialButto
 
   return (
     <div className="flex flex-col size-full overflow-auto sm:px-2">
+      {isReadOnlyAdmin && <ReadOnlyAdminBanner />}
       <div className="mb-6 flex flex-row justify-between bg-layer-2 p-[32px] relative">
         <div className="flex flex-col w-full xl:w-[55%] xl:z-10">
           <h1 className="mb-3">{t(WelcomeViewI18nKey.Title)}</h1>

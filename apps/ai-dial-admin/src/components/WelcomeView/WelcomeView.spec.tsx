@@ -1,9 +1,14 @@
-import { MenuI18nKey } from '@/src/constants/i18n';
+import { MenuI18nKey, ReadOnlyI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { WelcomeViewI18nKey } from './i18n';
 import WelcomeView from './WelcomeView';
-import { beforeAll, describe, expect, test, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+
+const isReadOnlyAdminMock = vi.fn(() => false);
+vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
+  useIsReadOnlyAdmin: () => isReadOnlyAdminMock(),
+}));
 
 const router: ApplicationRoute[] = [];
 vi.mock('next/navigation', () => ({
@@ -14,6 +19,20 @@ vi.mock('next/navigation', () => ({
 describe('WelcomeView', () => {
   beforeAll(() => {
     global.window.open = vi.fn();
+  });
+
+  beforeEach(() => {
+    isReadOnlyAdminMock.mockReturnValue(false);
+  });
+
+  test('renders read-only banner and hides import/export for read-only admin', () => {
+    isReadOnlyAdminMock.mockReturnValue(true);
+    render(<WelcomeView disableMenuItems={[]} dialLink="link" docLink="link" />);
+
+    expect(screen.getByText(ReadOnlyI18nKey.BannerTitle)).toBeInTheDocument();
+    expect(screen.getByText(ReadOnlyI18nKey.BannerDescription)).toBeInTheDocument();
+    expect(screen.queryByText(MenuI18nKey.ImportConfig)).not.toBeInTheDocument();
+    expect(screen.queryByText(MenuI18nKey.ExportConfig)).not.toBeInTheDocument();
   });
 
   test('renders and triggers actions without test ids', () => {
