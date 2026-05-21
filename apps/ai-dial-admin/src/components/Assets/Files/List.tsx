@@ -2,12 +2,11 @@
 
 import { useCallback, useState } from 'react';
 
-import { DialCopiedItem, DialDeletedItem, DialFile, DialFileNodeType, DialUploadFileItem } from '@epam/ai-dial-ui-kit';
+import { DialCopiedItem, DialFile, DialFileNodeType, DialUploadFileItem } from '@epam/ai-dial-ui-kit';
 
 import { importFiles } from '@/src/utils/files/import-files';
 import { bulkDeleteFiles, exportFiles, moveFiles } from '@/src/app/[lang]/files/actions';
 import FileManager from '@/src/components/Common/FileManager/FileManager';
-import Modals, { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { MenuI18nKey } from '@/src/constants/i18n';
@@ -24,7 +23,9 @@ import { createEmptyFile } from '@/src/components/Common/FileManager/utils';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ResourceType } from '@/src/types/resource-type';
 import { downloadFile } from '@/src/utils/download';
-import { getExportNotificationContent, getImportNotificationContent } from '../utils';
+import { getDeleteNotificationContent, getExportNotificationContent, getImportNotificationContent } from '../utils';
+import Modals from '@/src/components/Assets/BaseAssetList/Modals';
+import { ModalType } from '@/src/components/Assets/BaseAssetList/types';
 
 const FilesList = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -33,21 +34,33 @@ const FilesList = () => {
   const [movingItems, setMovingItems] = useState(0);
   const [movedItems, setMovedItems] = useState(0);
   const [folderToRefetch, setFolderToRefetch] = useState<string | null>(null);
+  const [modalType, setModalType] = useState<ModalType | null>(null);
+  const [destinationFolder, setDestinationFolder] = useState<string | null>(null);
+  const [deletedItems, setDeletedItems] = useState<DialFile[] | null>(null);
 
   const { fetchFiles } = useFileFolder();
   const t = useI18n();
   const { showNotification } = useNotification();
 
-  const handleModalOpen = useCallback((_?: string, currentFolder?: DialFile, preselectedItems?: File[]) => {
+  const handleImportModalOpen = useCallback((_?: string, currentFolder?: DialFile, preselectedItems?: File[]) => {
     setIsModalOpen(true);
     setImportFolder(currentFolder || null);
     setDragAndDropsItems(preselectedItems || []);
+    setModalType(ModalType.import);
+  }, []);
+
+  const handleDeleteModalOpen = useCallback((items: DialFile[], parentFolderPath: string) => {
+    setDestinationFolder(parentFolderPath);
+    setDeletedItems(items);
+    setIsModalOpen(true);
+    setModalType(ModalType.delete);
   }, []);
 
   const handleModalClose = useCallback(() => {
     setIsModalOpen(false);
     setImportFolder(null);
     setDragAndDropsItems([]);
+    setModalType(null);
   }, []);
 
   const onImport = useCallback(
@@ -120,21 +133,43 @@ const FilesList = () => {
     return createFolderWithFiles(body, ImportFileType.FILES, ApplicationRoute.Files);
   }, []);
 
-  const handleDeleteItems = useCallback(async (fileNodes: DialDeletedItem[]) => {
-    const files = fileNodes.filter((file) => file.nodeType === DialFileNodeType.ITEM);
-    const folders = fileNodes.filter((file) => file.nodeType === DialFileNodeType.FOLDER);
+  const handleDeleteItems = useCallback(async () => {
+    if (deletedItems?.length) {
+      const files = deletedItems.filter((file) => file.nodeType === DialFileNodeType.ITEM);
+      const folders = deletedItems.filter((file) => file.nodeType === DialFileNodeType.FOLDER);
 
-    const promises: Promise<ServerActionResponse | ServerActionResponse[]>[] = [];
-    if (files.length > 0) {
-      const filePaths = files.map((file) => ({ path: file.sourceUrl }));
-      promises.push(bulkDeleteFiles(filePaths));
+      const promises: Promise<ServerActionResponse | ServerActionResponse[]>[] = [];
+      if (files.length > 0) {
+        const filePaths = files.map((file) => ({ path: file.path }));
+        promises.push(bulkDeleteFiles(filePaths));
+      }
+      folders.forEach((folder) => {
+        promises.push(removeFolder(folder.path));
+      });
+
+      handleModalClose();
+
+      return Promise.all(promises).then((result) => {
+        const isSuccess = result.every((res) => (Array.isArray(res) ? res.every((r) => r.success) : res.success));
+        if (isSuccess) {
+          const parentPath = destinationFolder || `${ROOT_FOLDER}/`;
+          fetchFiles(parentPath);
+          const { title, description } = getDeleteNotificationContent(
+            ApplicationRoute.Files,
+            deletedItems as DialFile[],
+            t,
+            parentPath,
+          );
+          showNotification(getSuccessNotification(title, description));
+        } else {
+          const errorRes = result.flat().find((res) => !res.success);
+          if (errorRes) {
+            showNotification(getErrorNotification(errorRes.errorHeader, errorRes.errorMessage, errorRes.requestId));
+          }
+        }
+      });
     }
-    folders.forEach((folder) => {
-      promises.push(removeFolder(folder.sourceUrl));
-    });
-
-    return Promise.all(promises);
-  }, []);
+  }, [deletedItems, handleModalClose, destinationFolder, fetchFiles, showNotification, t]);
 
   const handleMoveFiles = useCallback(
     async (items: DialCopiedItem[], sourceFolder: string, destinationFolder: string) => {
@@ -202,10 +237,10 @@ const FilesList = () => {
       <FileManager
         label={t(MenuI18nKey.Files)}
         columnDefs={FILES_GRID_COLUMNS}
-        customUploadFileAction={handleModalOpen}
+        customUploadFileAction={handleImportModalOpen}
+        customDeleteItemsAction={handleDeleteModalOpen}
         getContext={() => useFileFolder()}
         onCreateFolder={handleCreateFolder}
-        onDeleteItems={handleDeleteItems}
         onMoveItems={handleMoveFiles}
         onExport={onExport}
         view={ApplicationRoute.Files}
@@ -214,12 +249,16 @@ const FilesList = () => {
         folderToRefetch={folderToRefetch}
       />
       <Modals
-        route={ApplicationRoute.Files}
+        view={ApplicationRoute.Files}
+        getContext={() => useFileFolder()}
         isModalOpen={isModalOpen}
-        modalType={ModalType.import}
+        modalType={modalType}
         onImport={onImport}
         onClose={handleModalClose}
         preselectedItems={dragAndDropsItems}
+        deletedItems={deletedItems}
+        onRemove={handleDeleteItems}
+        hasSelectedItems={false}
       />
     </>
   );

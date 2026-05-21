@@ -1769,8 +1769,11 @@ export enum FileManagerI18nKey {
   // Modals
   DeleteItemsModalTitle = 'FileManager.DeleteItemsModalTitle',
   DeleteItemsModalDescription = 'FileManager.DeleteItemsModalDescription',
+  DeleteItemsAndFoldersModalTitle = 'FileManager.DeleteItemsAndFoldersModalTitle',
+  DeleteItemsAndFoldersModalDescription = 'FileManager.DeleteItemsAndFoldersModalDescription',
   MoreItems = 'FileManager.MoreItems',
   DeleteFolderAlert = 'FileManager.DeleteFolderAlert',
+  EmptyFolderDescription = 'FileManager.EmptyFolderDescription',
 
   // Notifications
   CreateFolderSuccessTitle = 'FileManager.Notifications.CreateFolder.Title',
