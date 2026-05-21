@@ -107,6 +107,25 @@ describe('Common components - AttachmentInput', () => {
     });
   });
 
+  test('shows required error when Specific is selected with no types', async () => {
+    renderComponent();
+
+    await userEvent.click(screen.getByLabelText(AttachmentsI18nKey.SpecificAttachments));
+
+    expect(screen.getByText(AttachmentsI18nKey.SpecificAttachmentsRequired)).toBeInTheDocument();
+  });
+
+  test('clears required error after adding an attachment type', async () => {
+    renderComponent();
+
+    await userEvent.click(screen.getByLabelText(AttachmentsI18nKey.SpecificAttachments));
+
+    const input = screen.getByPlaceholderText(placeHolder);
+    await userEvent.type(input, 'pdf{enter}');
+
+    expect(screen.queryByText(AttachmentsI18nKey.SpecificAttachmentsRequired)).not.toBeInTheDocument();
+  });
+
   test('clears All selection when switching to Specific', async () => {
     renderComponent();
 
