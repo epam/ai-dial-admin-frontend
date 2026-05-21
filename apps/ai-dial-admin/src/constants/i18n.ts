@@ -1332,6 +1332,8 @@ export enum EntityFieldsI18nKey {
   ToolName = 'EntityFields.ToolName',
   Autoscaling = 'EntityFields.Autoscaling',
   NodePool = 'EntityFields.NodePool',
+  NodePoolId = 'EntityFields.NodePoolId',
+  NodePoolName = 'EntityFields.NodePoolName',
   Restarts = 'EntityFields.Restarts',
   LastRestartedAt = 'EntityFields.LastRestartedAt',
   LastReason = 'EntityFields.LastReason',
