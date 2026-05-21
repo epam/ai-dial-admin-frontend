@@ -84,6 +84,8 @@ const CONTAINER_PRIMITIVE_SECTION_ROUTING: Record<string, EntityParameterKeys> =
   containerGrpcPort: EntityParameterKeys.ENDPOINT_CONFIGURATION,
   command: EntityParameterKeys.CONFIGURATION,
   args: EntityParameterKeys.CONFIGURATION,
+  nodePoolId: EntityParameterKeys.RESOURCES,
+  nodePoolName: EntityParameterKeys.RESOURCES,
 };
 
 // Section render order for container detail (slotted between Properties and the
@@ -234,14 +236,13 @@ export const compareObjectTypes = (
     };
     compareSimpleObjects(diffMap.properties, normalizeImageSource(value1), normalizeImageSource(value2), isCurrent);
   } else if (
-    !diffMap[key] &&
-    (separateObjectParameterKeys.includes(key) ||
-      (type === ActivityAuditResourceType.ROLE &&
-        (key === EntityParameterKeys.LIMITS ||
-          key === EntityParameterKeys.SHARE ||
-          key === EntityParameterKeys.COST_LIMIT)))
+    separateObjectParameterKeys.includes(key) ||
+    (type === ActivityAuditResourceType.ROLE &&
+      (key === EntityParameterKeys.LIMITS ||
+        key === EntityParameterKeys.SHARE ||
+        key === EntityParameterKeys.COST_LIMIT))
   ) {
-    diffMap[key] = [];
+    if (!diffMap[key]) diffMap[key] = [];
     compareSeparateObjects(diffMap[key], key, val1, val2, isCurrent);
   }
 };
@@ -303,14 +304,13 @@ export const fillObjectTypes = (
     };
     fillSimpleObjects(diffMap.properties, normalizeImageSource(value1));
   } else if (
-    !diffMap[key] &&
-    (separateObjectParameterKeys.includes(key) ||
-      (type === ActivityAuditResourceType.ROLE &&
-        (key === EntityParameterKeys.LIMITS ||
-          key === EntityParameterKeys.SHARE ||
-          key === EntityParameterKeys.COST_LIMIT)))
+    separateObjectParameterKeys.includes(key) ||
+    (type === ActivityAuditResourceType.ROLE &&
+      (key === EntityParameterKeys.LIMITS ||
+        key === EntityParameterKeys.SHARE ||
+        key === EntityParameterKeys.COST_LIMIT))
   ) {
-    diffMap[key] = [];
+    if (!diffMap[key]) diffMap[key] = [];
     fillSeparateObjects(diffMap[key], key, value);
   }
 };
