@@ -28,6 +28,12 @@ const InstallationLog: FC<Props> = ({ imageBuildId }) => {
 
     const handleError = (event: Event) => {
       const messageEvent = event as MessageEvent;
+
+      if (messageEvent.data == null) {
+        eventSource.close();
+        return;
+      }
+
       try {
         const { message } = JSON.parse(messageEvent.data);
         showNotification(getErrorNotification(t(ErrorI18nKey.Error), message));

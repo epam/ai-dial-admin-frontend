@@ -344,6 +344,7 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
           onClose={onDrawerClose}
           onSwitchToSidebar={detailMode.switchToSidebar}
           runCompareNames={runCompareNames}
+          metricBindings={metricBindings}
         />
       )}
       <ColorScale />

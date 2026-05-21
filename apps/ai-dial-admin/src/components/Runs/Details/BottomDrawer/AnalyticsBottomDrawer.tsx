@@ -8,6 +8,7 @@ import { DialLoader } from '@epam/ai-dial-ui-kit';
 import { getTestCaseRunResultDetails } from '@/src/app/[lang]/runs/actions';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { MetricBindings } from '@/src/models/evaluation/metric';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 import { Resizable } from 're-resizable';
 
@@ -29,6 +30,7 @@ interface Props {
   onClose: () => void;
   onSwitchToSidebar: () => void;
   runCompareNames?: { current: string; compared: string };
+  metricBindings?: Record<string, MetricBindings>;
 }
 
 const AnalyticsBottomDrawer: FC<Props> = ({
@@ -38,6 +40,7 @@ const AnalyticsBottomDrawer: FC<Props> = ({
   onClose,
   onSwitchToSidebar,
   runCompareNames,
+  metricBindings,
 }) => {
   const t = useI18n();
   const [activeDetail, setActiveDetail] = useState<AnalyticsResult | null>(null);
@@ -89,8 +92,8 @@ const AnalyticsBottomDrawer: FC<Props> = ({
   // Build comparison sections
   const sections = useMemo(() => {
     if (!activeDetail) return [];
-    return buildComparisonSections(activeDetail, pinnedDetail, {}, [], {});
-  }, [activeDetail, pinnedDetail]);
+    return buildComparisonSections(activeDetail, pinnedDetail, {}, [], {}, metricBindings);
+  }, [activeDetail, pinnedDetail, metricBindings]);
 
   const fieldSelector = useFieldSelector(sections);
 
@@ -103,6 +106,7 @@ const AnalyticsBottomDrawer: FC<Props> = ({
       fieldSelector.fieldVisibility,
       fieldSelector.sectionOrder,
       fieldSelector.sectionHidden,
+      metricBindings,
     );
   }, [
     activeDetail,
@@ -110,6 +114,7 @@ const AnalyticsBottomDrawer: FC<Props> = ({
     fieldSelector.fieldVisibility,
     fieldSelector.sectionOrder,
     fieldSelector.sectionHidden,
+    metricBindings,
   ]);
 
   // Init section order when sections change

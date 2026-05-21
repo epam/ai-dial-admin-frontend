@@ -3,6 +3,9 @@ import { DialApplication } from '@/src/models/dial/application';
 import { DialModel } from '@/src/models/dial/model';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 
+export const countValidDependencies = (dependencies?: Array<string | null | undefined>): number =>
+  dependencies?.filter((d) => d != null).length ?? 0;
+
 export const getDependenciesData = (
   dependencies: string[],
   allModels: DialModel[],
