@@ -452,27 +452,39 @@ describe('Utils :: telemetry :: buildUsageLogQuery', () => {
     endDate: new Date('2026-04-02T00:00:00.000Z'),
   };
 
-  test('always populates limit and offset', () => {
+  test('never sets limit; omits offset when zero', () => {
     const result = buildUsageLogQuery({
       baseQuery: TRACES_QUERY,
-      startRow: 200,
-      pageSize: 100,
+      offset: 0,
       sortModel: [],
       filterModel: null,
       timeRange,
       entityName: null,
     });
 
-    expect(result.query.limit).toBe(100);
-    expect(result.query.offset).toBe(200);
+    expect(result.query.limit).toBeUndefined();
+    expect(result.query.offset).toBeUndefined();
+  });
+
+  test('emits offset when greater than zero, still no limit', () => {
+    const result = buildUsageLogQuery({
+      baseQuery: TRACES_QUERY,
+      offset: 4217,
+      sortModel: [],
+      filterModel: null,
+      timeRange,
+      entityName: null,
+    });
+
+    expect(result.query.limit).toBeUndefined();
+    expect(result.query.offset).toBe(4217);
   });
 
   test('preserves baseQuery expressions and from without mutating the constant', () => {
     const snapshot = JSON.parse(JSON.stringify(TRACES_QUERY));
     const result = buildUsageLogQuery({
       baseQuery: TRACES_QUERY,
-      startRow: 0,
-      pageSize: 100,
+      offset: 0,
       sortModel: [],
       filterModel: null,
       timeRange,
@@ -487,8 +499,7 @@ describe('Utils :: telemetry :: buildUsageLogQuery', () => {
   test('composes time range, entity name, and grid filters inside where.$and', () => {
     const result = buildUsageLogQuery({
       baseQuery: TRACES_QUERY,
-      startRow: 0,
-      pageSize: 100,
+      offset: 0,
       sortModel: [],
       filterModel: {
         model: { filterType: 'text', type: 'contains', filter: 'gpt-4' },
@@ -508,8 +519,7 @@ describe('Utils :: telemetry :: buildUsageLogQuery', () => {
   test('uses grid sort model when present', () => {
     const result = buildUsageLogQuery({
       baseQuery: TRACES_QUERY,
-      startRow: 0,
-      pageSize: 100,
+      offset: 0,
       sortModel: [{ colId: 'model', sort: 'asc' }],
       filterModel: null,
       timeRange,
@@ -522,8 +532,7 @@ describe('Utils :: telemetry :: buildUsageLogQuery', () => {
   test('falls back to default sort when grid sort model is empty', () => {
     const result = buildUsageLogQuery({
       baseQuery: TRACES_QUERY,
-      startRow: 0,
-      pageSize: 100,
+      offset: 0,
       sortModel: [],
       filterModel: null,
       timeRange,

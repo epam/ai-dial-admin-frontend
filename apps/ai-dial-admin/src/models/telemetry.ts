@@ -48,8 +48,7 @@ export type UsageLogFilterClause = Record<string, { left: string; right: string 
 
 export interface BuildUsageLogQueryParams {
   baseQuery: TelemetryQuery;
-  startRow: number;
-  pageSize: number;
+  offset: number;
   sortModel: SortModelItem[];
   filterModel: UsageLogFilterModel | null | undefined;
   timeRange: TimeRange;
