@@ -52,6 +52,7 @@ export default {
   Basic: {
     None: '- None -',
     Preview: 'Preview',
+    PreviewPrompt: 'Preview prompt',
     Optional: 'Optional',
     Required: 'Required',
     Failed: 'Failed',
