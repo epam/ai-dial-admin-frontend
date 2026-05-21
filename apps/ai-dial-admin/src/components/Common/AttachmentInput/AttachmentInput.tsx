@@ -2,7 +2,7 @@
 
 import { ChangeEventHandler, FC, KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DialLabel, DialRadioButton, DialTag } from '@epam/ai-dial-ui-kit';
+import { DialErrorText, DialLabel, DialRadioButton, DialTag } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 import { isEqual } from 'lodash';
 
@@ -78,6 +78,23 @@ const AttachmentInput: FC<Props> = ({ availableItems, initialValues, label, plac
     return selectedRadio === AttachmentType.SPECIFIC && showSuggestions && filteredSuggestions.length > 0;
   }, [filteredSuggestions.length, selectedRadio, showSuggestions]);
 
+  const attachmentTypesError = useMemo(
+    () =>
+      selectedRadio === AttachmentType.SPECIFIC && selected.length === 0
+        ? t(AttachmentsI18nKey.SpecificAttachmentsRequired)
+        : '',
+    [selected.length, selectedRadio, t],
+  );
+
+  useEffect(() => {
+    const isAttachmentsValid = selectedRadio !== AttachmentType.SPECIFIC || selected.length > 0;
+    dispatch({
+      type: ValidationActionType.SetField,
+      field: 'attachments',
+      isValid: isAttachmentsValid,
+    });
+  }, [dispatch, selected.length, selectedRadio]);
+
   useEffect(() => {
     const observer = new ResizeObserver(() => {
       if (containerRef.current) {
@@ -97,21 +114,11 @@ const AttachmentInput: FC<Props> = ({ availableItems, initialValues, label, plac
     (items?: AttachmentOption[]) => {
       if (!items) {
         onChange?.(void 0);
-        dispatch({
-          type: ValidationActionType.SetField,
-          field: 'attachments',
-          isValid: true,
-        });
         return;
       }
       onChange?.(items?.map((i) => i.value));
-      dispatch({
-        type: ValidationActionType.SetField,
-        field: 'attachments',
-        isValid: items.length > 0,
-      });
     },
-    [dispatch, onChange],
+    [onChange],
   );
 
   const setValues = useCallback(
@@ -238,8 +245,10 @@ const AttachmentInput: FC<Props> = ({ availableItems, initialValues, label, plac
       </div>
 
       {selectedRadio === AttachmentType.SPECIFIC && (
-        <div className={classNames('flex flex-col', STANDARD_CONTROL_WIDTH)}>
-          <div className="dial-input h-auto min-h-[40px] p-[6px]">
+        <div className={classNames('flex flex-col gap-y-1', STANDARD_CONTROL_WIDTH)}>
+          <div
+            className={classNames('dial-input h-auto min-h-[40px] p-[6px]', attachmentTypesError && 'dial-input-error')}
+          >
             <div
               ref={containerRef}
               className={classNames('flex flex-wrap items-start gap-2', wraps ? 'flex-col-reverse' : 'flex-row')}
@@ -269,6 +278,7 @@ const AttachmentInput: FC<Props> = ({ availableItems, initialValues, label, plac
               onHightLightSuggestion={handleSetHightLight}
             />
           )}
+          {!isReadOnlyAdmin && <DialErrorText text={attachmentTypesError} />}
           <div className="text-secondary tiny pt-2">{t(AttachmentsI18nKey.CaptionDescription)}</div>
         </div>
       )}
