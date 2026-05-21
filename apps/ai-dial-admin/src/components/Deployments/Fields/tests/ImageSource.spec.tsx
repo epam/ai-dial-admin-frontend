@@ -72,4 +72,78 @@ describe('ImageSource', () => {
 
     expect(screen.queryByText('EntityFields.SourceURL')).toBeNull();
   });
+
+  describe.each([
+    ['Adapter', IMAGE_TYPE.ADAPTER],
+    ['Application', IMAGE_TYPE.APPLICATION],
+    ['Interceptor', IMAGE_TYPE.INTERCEPTOR],
+  ])('non-MCP image type: %s', (_label, $type) => {
+    test('renders source-type dropdown in modal', () => {
+      const image: Image = {
+        ...baseImage,
+        $type,
+        source: { $type: IMAGE_SOURCE_TYPE.DOCKER, imageUri: '' },
+      };
+
+      render(<ImageSource image={image} setImage={vi.fn()} verifyVersion={vi.fn()} isModal />);
+
+      expect(screen.getByText('Entities.SourceType')).toBeTruthy();
+    });
+
+    test('renders source-type dropdown in view', () => {
+      const image: Image = {
+        ...baseImage,
+        $type,
+        source: { $type: IMAGE_SOURCE_TYPE.DOCKER, imageUri: '' },
+      };
+
+      render(<ImageSource image={image} setImage={vi.fn()} verifyVersion={vi.fn()} />);
+
+      expect(screen.getByText('Entities.SourceType')).toBeTruthy();
+    });
+
+    test('renders DockerURI and hides code-source fields when source.$type is DOCKER', () => {
+      const image: Image = {
+        ...baseImage,
+        $type,
+        source: { $type: IMAGE_SOURCE_TYPE.DOCKER, imageUri: 'registry.example.com/img:tag' },
+      };
+
+      render(<ImageSource image={image} setImage={vi.fn()} verifyVersion={vi.fn()} />);
+
+      expect(screen.getByText('EntityFields.ImageURI')).toBeTruthy();
+      expect(screen.queryByText('EntityFields.SourceURL')).toBeNull();
+      expect(screen.queryByText('EntityFields.BranchName')).toBeNull();
+      expect(screen.queryByText('EntityFields.BaseDirectory')).toBeNull();
+    });
+
+    test('renders CodeURL + Branch + BaseDirectory when source.$type is CODE in view', () => {
+      const image: Image = {
+        ...baseImage,
+        $type,
+        source: { $type: IMAGE_SOURCE_TYPE.CODE, url: 'https://github.com/user/repo' },
+      };
+
+      render(<ImageSource image={image} setImage={vi.fn()} verifyVersion={vi.fn()} />);
+
+      expect(screen.getByText('EntityFields.SourceURL')).toBeTruthy();
+      expect(screen.getByText('EntityFields.BranchName')).toBeTruthy();
+      expect(screen.getByText('EntityFields.BaseDirectory')).toBeTruthy();
+      expect(screen.queryByText('EntityFields.ImageURI')).toBeNull();
+    });
+
+    test('renders CodeURL + Branch but hides BaseDirectory when source.$type is CODE in modal', () => {
+      const image: Image = {
+        ...baseImage,
+        $type,
+        source: { $type: IMAGE_SOURCE_TYPE.CODE, url: 'https://github.com/user/repo' },
+      };
+
+      render(<ImageSource image={image} setImage={vi.fn()} verifyVersion={vi.fn()} isModal />);
+
+      expect(screen.getByText('EntityFields.SourceURL')).toBeTruthy();
+      expect(screen.getByText('EntityFields.BranchName')).toBeTruthy();
+      expect(screen.queryByText('EntityFields.BaseDirectory')).toBeNull();
+    });
+  });
 });

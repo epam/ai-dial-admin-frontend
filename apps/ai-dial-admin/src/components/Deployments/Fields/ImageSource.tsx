@@ -1,7 +1,7 @@
 import { FC, useCallback, useMemo, useState } from 'react';
 import classNames from 'classnames';
 
-import { IMAGE_SOURCE_TYPE, IMAGE_TYPE } from '@/src/types/deployments/images';
+import { IMAGE_SOURCE_TYPE } from '@/src/types/deployments/images';
 import { Image } from '@/src/models/deployments/images';
 import { getControlClassName } from '@/src/utils/entities/view';
 import { McpServer } from '@/src/types/deployments/mcp-registry';
@@ -32,11 +32,8 @@ const ImageSource: FC<Props> = ({ image, setImage, isModal = false, verifyVersio
     setRegistryServer(server);
   }, []);
 
-  const isRegistryView = hasExternalRegistryRef && !isModal;
-  const showSourceType =
-    (isModal && !hasExternalRegistryRef) ||
-    (image.$type === IMAGE_TYPE.MCP &&
-      (!hasExternalRegistryRef || (isModal && registryServer && serverHasBoth) || isRegistryView));
+  const sourceTypeLockedByRegistry = isModal && hasExternalRegistryRef && !serverHasBoth;
+  const showSourceType = !sourceTypeLockedByRegistry;
 
   return (
     <div className="flex flex-col gap-y-8">
