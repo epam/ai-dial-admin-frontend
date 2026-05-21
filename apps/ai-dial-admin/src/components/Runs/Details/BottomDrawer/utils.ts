@@ -141,6 +141,9 @@ export function buildComparisonSections(
   // Binding sections (config and input) per metric group
   if (metricBindings) {
     for (const [groupKey, bindings] of Object.entries(metricBindings).sort(([a], [b]) => a.localeCompare(b))) {
+      const activeHasMetric = active.metricValues?.[groupKey] != null;
+      const pinnedHasMetric = effectivePinned?.metricValues?.[groupKey] != null;
+
       if (bindings.configBindings.length > 0) {
         const sectionKey = `binding:config:${groupKey}`;
         const rows: ComparisonRow[] = bindings.configBindings.map((binding) => ({
@@ -148,7 +151,10 @@ export function buildComparisonSections(
           label: binding.property,
           isNumeric: false,
           values: hasTwoResults
-            ? [{ raw: formatBindingValue(binding) }, { raw: formatBindingValue(binding) }]
+            ? [
+                { raw: activeHasMetric ? formatBindingValue(binding) : null },
+                { raw: pinnedHasMetric ? formatBindingValue(binding) : null },
+              ]
             : [{ raw: formatBindingValue(binding) }],
         }));
         sectionsMap.set(sectionKey, { key: sectionKey, label: `${groupKey} · Config bindings`, rows });
@@ -161,7 +167,10 @@ export function buildComparisonSections(
           label: binding.property,
           isNumeric: false,
           values: hasTwoResults
-            ? [{ raw: formatBindingValue(binding) }, { raw: formatBindingValue(binding) }]
+            ? [
+                { raw: activeHasMetric ? formatBindingValue(binding) : null },
+                { raw: pinnedHasMetric ? formatBindingValue(binding) : null },
+              ]
             : [{ raw: formatBindingValue(binding) }],
         }));
         sectionsMap.set(sectionKey, { key: sectionKey, label: `${groupKey} · Input bindings`, rows });
