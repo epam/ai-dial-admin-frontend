@@ -8,7 +8,12 @@ import ClientIdControl from '@/src/components/Toolsets/Auth/Controls/ClientIdCon
 import ClientSecretControl from '@/src/components/Toolsets/Auth/Controls/ClientSecretControl';
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { ToolsetAuthSettings, ToolsetAuthStatus, ToolsetCodeChallengeMethod } from '@/src/models/dial/toolset';
+import {
+  TokenEndpointAuthMethod,
+  ToolsetAuthSettings,
+  ToolsetAuthStatus,
+  ToolsetCodeChallengeMethod,
+} from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 
 enum AuthType {
@@ -34,6 +39,18 @@ const OAuthSection: FC<Props> = ({ disabled, authSettings, view, onChange }) => 
     { value: ToolsetCodeChallengeMethod.S256, label: ToolsetCodeChallengeMethod.S256 },
   ];
 
+  const tokenEndpointAuthMethods: SelectOption[] = [
+    {
+      value: TokenEndpointAuthMethod.CLIENT_SECRET_BASIC,
+      label: t(ToolsetI18nKey.TokenEndpointAuthMethodClientSecretBasic),
+    },
+    {
+      value: TokenEndpointAuthMethod.CLIENT_SECRET_POST,
+      label: t(ToolsetI18nKey.TokenEndpointAuthMethodClientSecretPost),
+    },
+    { value: TokenEndpointAuthMethod.CLIENT_SECRET_NONE, label: t(ToolsetI18nKey.TokenEndpointAuthMethodNone) },
+  ];
+
   const isLoggedIn = useMemo(() => {
     return (
       authSettings?.globalAuthStatus === ToolsetAuthStatus.SIGNED_IN ||
@@ -50,19 +67,35 @@ const OAuthSection: FC<Props> = ({ disabled, authSettings, view, onChange }) => 
           <DialAlert variant={AlertVariant.Info} message={t(ToolsetI18nKey.AuthSettingsLockedMessage)} />
         </div>
       )}
-      <DialSelectField
-        id="type"
-        disabled={isAuthDisabled}
-        label={t(ToolsetI18nKey.ClientRegistrationType)}
-        value={AuthType.EXISTING}
-        options={types}
-        onChange={(type) => {
-          onChange?.({
-            ...(authSettings || {}),
-            clientId: type === AuthType.EXISTING ? '' : undefined,
-          } as ToolsetAuthSettings);
-        }}
-      />
+      <div className="flex flex-col gap-y-3">
+        <DialSelectField
+          id="type"
+          disabled={isAuthDisabled}
+          label={t(ToolsetI18nKey.ClientRegistrationType)}
+          value={AuthType.EXISTING}
+          options={types}
+          onChange={(type) => {
+            onChange?.({
+              ...(authSettings || {}),
+              clientId: type === AuthType.EXISTING ? '' : undefined,
+            } as ToolsetAuthSettings);
+          }}
+        />
+
+        <DialSelectField
+          id="tokenEndpointAuthMethod"
+          disabled={isAuthDisabled}
+          label={t(ToolsetI18nKey.TokenEndpointAuthMethod)}
+          value={authSettings?.tokenEndpointAuthMethod ?? TokenEndpointAuthMethod.CLIENT_SECRET_BASIC}
+          options={tokenEndpointAuthMethods}
+          onChange={(tokenEndpointAuthMethod) => {
+            onChange?.({
+              ...(authSettings || {}),
+              tokenEndpointAuthMethod: tokenEndpointAuthMethod as TokenEndpointAuthMethod,
+            } as ToolsetAuthSettings);
+          }}
+        />
+      </div>
 
       <div className="flex flex-col gap-y-3 mt-3 w-full">
         <ClientIdControl

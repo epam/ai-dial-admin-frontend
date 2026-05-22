@@ -29,10 +29,17 @@ export interface ToolsetAuthSettings {
   codeVerifier?: string;
   codeChallengeMethod?: ToolsetCodeChallengeMethod;
   tokenEndpoint?: string;
+  tokenEndpointAuthMethod: TokenEndpointAuthMethod;
   scopesSupported?: string[];
 
   globalAuthStatus?: ToolsetAuthStatus;
   userLevelAuthStatus?: ToolsetAuthStatus;
+}
+
+export enum TokenEndpointAuthMethod {
+  CLIENT_SECRET_POST = 'CLIENT_SECRET_POST',
+  CLIENT_SECRET_BASIC = 'CLIENT_SECRET_BASIC',
+  CLIENT_SECRET_NONE = 'NONE',
 }
 
 export enum ToolsetCodeChallengeMethod {
