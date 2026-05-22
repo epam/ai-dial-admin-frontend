@@ -15,9 +15,17 @@ interface Props {
   query: TelemetryQuery;
   unit?: string;
   refreshTime?: string;
+  getValue?: (data: TelemetryData) => number;
 }
 
-const SingleValueChart: FC<Props> = ({ title, getData, unit, query, refreshTime }) => {
+const SingleValueChart: FC<Props> = ({
+  title,
+  getData,
+  unit,
+  query,
+  refreshTime,
+  getValue = getSingleValueChartData,
+}) => {
   const t = useI18n();
   const [data, setData] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -26,7 +34,7 @@ const SingleValueChart: FC<Props> = ({ title, getData, unit, query, refreshTime 
     const fetch = async () => {
       const response = await getData(query);
       if (response.success) {
-        setData(getSingleValueChartData(response.response as TelemetryData));
+        setData(getValue(response.response as TelemetryData));
       } else {
         setData(null);
       }
@@ -47,7 +55,7 @@ const SingleValueChart: FC<Props> = ({ title, getData, unit, query, refreshTime 
     return () => {
       clearInterval(intervalId);
     };
-  }, [query, getData, refreshTime]);
+  }, [query, getData, refreshTime, getValue]);
 
   return (
     <div className="flex flex-col rounded-lg border border-primary md:min-w-[250px] min-w-[120px] w-full p-4 flex-1 min-h-0">

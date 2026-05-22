@@ -35,4 +35,22 @@ describe('SingleValueChart', () => {
     render(<SingleValueChart {...defaultProps} />);
     expect(await screen.findByText(BasicI18nKey.NoData)).toBeInTheDocument();
   });
+
+  test('invokes the injected getValue reducer when provided', async () => {
+    const telemetryResponse = { headers: ['value'], data: [['1']] };
+    const getDataWithTelemetry = vi.fn(async () => ({ success: true, response: telemetryResponse }));
+    const getValue = vi.fn(() => 777);
+
+    render(
+      <SingleValueChart
+        title="With Reducer"
+        getData={getDataWithTelemetry}
+        query={validQuery}
+        getValue={getValue}
+      />,
+    );
+
+    expect(await screen.findByText('777')).toBeInTheDocument();
+    expect(getValue).toHaveBeenCalledWith(telemetryResponse);
+  });
 });
