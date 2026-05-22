@@ -246,12 +246,18 @@ describe('buildComparisonSections', () => {
     expect(configSection.rows[0].values[0].raw).toBe('[Constant]');
   });
 
-  it('repeats binding values in both columns when both runs have the metric', () => {
+  it("shows each run's own binding value in its column when both runs have the metric", () => {
     const active = makeResult({ id: 'a', metricValues: { myMetric: { score: 1 } } });
     const pinned = makeResult({ id: 'b', metricValues: { myMetric: { score: 0.8 } } });
-    const metricBindings: Record<string, MetricBindings> = {
+    const activeBindings: Record<string, MetricBindings> = {
       myMetric: {
         configBindings: [{ property: 'model', source: { $type: 'Constant', value: 'gpt-4' } }],
+        inputBindings: [],
+      },
+    };
+    const pinnedBindings: Record<string, MetricBindings> = {
+      myMetric: {
+        configBindings: [{ property: 'model', source: { $type: 'Constant', value: 'gpt-3.5' } }],
         inputBindings: [],
       },
     };
@@ -261,13 +267,14 @@ describe('buildComparisonSections', () => {
       defaultVisibility,
       defaultOrder,
       defaultHidden,
-      metricBindings,
+      activeBindings,
+      pinnedBindings,
     );
 
     const configSection = sections.find((s) => s.key === 'binding:config:myMetric')!;
     expect(configSection.rows[0].values).toHaveLength(2);
     expect(configSection.rows[0].values[0].raw).toBe('[Constant] gpt-4');
-    expect(configSection.rows[0].values[1].raw).toBe('[Constant] gpt-4');
+    expect(configSection.rows[0].values[1].raw).toBe('[Constant] gpt-3.5');
   });
 
   it('shows null for compared binding column when compared run lacks the metric', () => {
@@ -300,7 +307,7 @@ describe('buildComparisonSections', () => {
   it('shows null for current binding column when current run lacks the metric', () => {
     const active = makeResult({ id: 'a', metricValues: {} });
     const pinned = makeResult({ id: 'b', metricValues: { myMetric: { score: 0.9 } } });
-    const metricBindings: Record<string, MetricBindings> = {
+    const pinnedBindings: Record<string, MetricBindings> = {
       myMetric: {
         configBindings: [{ property: 'model', source: { $type: 'Constant', value: 'gpt-4' } }],
         inputBindings: [{ property: 'actual', source: { $type: 'Response', columnName: 'answer' } }],
@@ -312,7 +319,8 @@ describe('buildComparisonSections', () => {
       defaultVisibility,
       defaultOrder,
       defaultHidden,
-      metricBindings,
+      undefined,
+      pinnedBindings,
     );
 
     const configSection = sections.find((s) => s.key === 'binding:config:myMetric')!;

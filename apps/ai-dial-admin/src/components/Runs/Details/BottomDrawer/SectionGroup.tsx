@@ -101,6 +101,7 @@ const SectionGroup: FC<Props> = ({
                     <CellValue
                       text={displayText}
                       raw={raw}
+                      isFailed={val.isFailed}
                       isLong={isLong}
                       isExpanded={isExpanded}
                       cellKey={cellKey}

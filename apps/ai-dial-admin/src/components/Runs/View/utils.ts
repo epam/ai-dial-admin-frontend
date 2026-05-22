@@ -77,12 +77,16 @@ const getMetricsColumns = (metrics: Record<string, Record<string, unknown>>, err
           field: key,
           headerName: key,
           cellRendererSelector: (params) => {
+            const groupExists = params.data?.metricValues != null && groupKey in params.data.metricValues;
+            if (!groupExists) return;
             const value = params.data?.metricValues?.[groupKey]?.[key];
             if (value == null) {
               return { component: ErrorCellRenderer, params: { errorText } };
             }
           },
           valueGetter: (params) => {
+            const groupExists = params.data?.metricValues != null && groupKey in params.data.metricValues;
+            if (!groupExists) return '—';
             const value = params.data?.metricValues?.[groupKey]?.[key];
             if (typeof value === 'object') return JSON.stringify(value);
             if (value != null) {
@@ -269,6 +273,9 @@ const buildMetricColDef = (
     headerName: headerNameOverride ?? key,
     cellRendererSelector: (params) => {
       if (isCompared && !params.data?._compared) return;
+      const source = isCompared ? params.data?._compared : params.data;
+      const groupExists = source?.metricValues != null && groupKey in source.metricValues;
+      if (!groupExists) return;
       const value = getValue(params);
       if (value == null) {
         return { component: ErrorCellRenderer, params: { errorText } };
@@ -276,6 +283,9 @@ const buildMetricColDef = (
     },
     valueGetter: (params) => {
       if (isCompared && !params.data?._compared) return '—';
+      const source = isCompared ? params.data?._compared : params.data;
+      const groupExists = source?.metricValues != null && groupKey in source.metricValues;
+      if (!groupExists) return '—';
       const value = getValue(params);
       if (typeof value === 'object') return JSON.stringify(value);
       if (value != null) return +(value as number).toFixed(3);
