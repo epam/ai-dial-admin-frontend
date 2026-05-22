@@ -1,8 +1,5 @@
-# usage-log-pagination Specification
+## MODIFIED Requirements
 
-## Purpose
-TBD - created by archiving change usage-log-pagination. Update Purpose after archive.
-## Requirements
 ### Requirement: Day-chunked append-on-scroll fetch of Usage Log rows
 
 The Usage Log list (Traces, Conversations, MCP, and Toolset Traces tabs on both the `/usage-log` page and entity-embedded UsageLog views) SHALL use ag-grid's `clientSide` row model with React-owned `rowData`. The grid SHALL NOT send `limit` on telemetry requests for the Usage Log path.

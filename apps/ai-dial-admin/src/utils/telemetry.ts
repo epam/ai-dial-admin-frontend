@@ -269,8 +269,7 @@ export const translateUsageLogSortModel = (sortModel: SortModelItem[]): Record<s
 
 export const buildUsageLogQuery = ({
   baseQuery,
-  startRow,
-  pageSize,
+  offset,
   sortModel,
   filterModel,
   timeRange,
@@ -287,8 +286,7 @@ export const buildUsageLogQuery = ({
         $and: [...(baseFilters.$and ?? []), ...gridFilters],
       },
       orderBy: translateUsageLogSortModel(sortModel),
-      limit: pageSize,
-      offset: startRow,
+      ...(offset > 0 ? { offset } : {}),
     },
   };
 };

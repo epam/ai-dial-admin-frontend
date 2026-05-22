@@ -102,7 +102,7 @@ const FilesList = () => {
           if (errorTitle && errorDescription) {
             showNotification(getErrorNotification(errorTitle, errorDescription));
           }
-          if (skippedTitle && skippedDescription) {
+          if (skippedTitle && skippedDescription && conflictResolutionStrategy !== ConflictResolutionPolicy.SKIP) {
             showNotification(getErrorNotification(skippedTitle, skippedDescription));
           }
         } else {

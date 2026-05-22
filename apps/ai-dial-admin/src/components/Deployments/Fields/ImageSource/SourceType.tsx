@@ -3,9 +3,9 @@ import { DialSelectField } from '@epam/ai-dial-ui-kit';
 
 import { EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { IMAGE_SOURCE_TYPE, IMAGE_TRANSPORT_TYPE, IMAGE_TYPE } from '@/src/types/deployments/images';
-import { Image } from '@/src/models/deployments/images';
+import { Image, ImageSource } from '@/src/models/deployments/images';
 import { setTransport } from '@/src/utils/deployments/images';
-import { DEFAULT_IMAGE_SOURCE, IMAGE_TYPES, SOURCE_TYPES } from '@/src/constants/deployments/images';
+import { IMAGE_TYPES, SOURCE_TYPES } from '@/src/constants/deployments/images';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { McpServer } from '@/src/types/deployments/mcp-registry';
@@ -33,10 +33,19 @@ const SourceType: FC<Props> = ({ image, setImage, isModal, verifyVersion, regist
 
   const onImageTypeChange = useCallback(
     ($type: string | string[]) => {
+      const newType = $type as IMAGE_TYPE;
+      const leavingMcp = image.$type === IMAGE_TYPE.MCP && newType !== IMAGE_TYPE.MCP;
+
+      let nextSource: ImageSource = image.source;
+      if (leavingMcp && nextSource?.externalRegistryRef) {
+        nextSource = { ...nextSource };
+        delete nextSource.externalRegistryRef;
+      }
+
       const updated = {
-        ...setTransport({ ...image, $type: $type as IMAGE_TYPE }),
-        $type: $type as IMAGE_TYPE,
-        source: DEFAULT_IMAGE_SOURCE,
+        ...setTransport({ ...image, $type: newType }),
+        $type: newType,
+        source: nextSource,
       };
       verifyVersion(updated);
       setImage(updated);
@@ -105,17 +114,15 @@ const SourceType: FC<Props> = ({ image, setImage, isModal, verifyVersion, regist
           disabled={isReadOnlyAdmin}
         />
       )}
-      {image.$type === IMAGE_TYPE.MCP && (
-        <DialSelectField
-          id="sourceType"
-          containerClassName="w-[220px]"
-          value={image.source.$type}
-          options={sourcesList}
-          label={t(EntitiesI18nKey.SourceType)}
-          onChange={onSourceTypeChange}
-          disabled={isReadOnlyAdmin || isRegistryDisabled}
-        />
-      )}
+      <DialSelectField
+        id="sourceType"
+        containerClassName="w-[220px]"
+        value={image.source.$type}
+        options={sourcesList}
+        label={t(EntitiesI18nKey.SourceType)}
+        onChange={onSourceTypeChange}
+        disabled={isReadOnlyAdmin || isRegistryDisabled}
+      />
     </div>
   );
 };

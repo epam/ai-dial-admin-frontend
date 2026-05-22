@@ -49,7 +49,13 @@ interface Props {
 const AnalyticsTab: FC<Props> = ({ run }) => {
   const t = useI18n();
   const [snapshots, setSnapshots] = useState<MetricSnapshot[]>([]);
+  const [comparedSnapshots, setComparedSnapshots] = useState<MetricSnapshot[]>([]);
   const metricBindings = useMemo(() => snapshotsToBindingsMap(snapshots), [snapshots]);
+  const comparedMetricBindings = useMemo(() => snapshotsToBindingsMap(comparedSnapshots), [comparedSnapshots]);
+  const mergedMetricBindings = useMemo(
+    () => ({ ...comparedMetricBindings, ...metricBindings }),
+    [comparedMetricBindings, metricBindings],
+  );
   const detailMode = useDetailMode(metricBindings);
   const drawerPanel = useDrawerPanel();
 
@@ -108,15 +114,17 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
   useEffect(() => {
     if (!comparedRunId) {
       setComparedResults(null);
+      setComparedSnapshots([]);
       return;
     }
     const comparedRun = siblingRuns.find((r) => r.id === comparedRunId);
     if (!comparedRun) return;
 
     setIsCompareLoading(true);
-    getTestCaseRunResults(RESULT_FILTERS(comparedRun))
-      .then((res) => {
+    Promise.all([getTestCaseRunResults(RESULT_FILTERS(comparedRun)), getMetricSnapshots(RUN_FILTER(comparedRunId))])
+      .then(([res, snapData]) => {
         setComparedResults(res?.content || []);
+        setComparedSnapshots(snapData || []);
       })
       .finally(() => {
         setIsCompareLoading(false);
@@ -344,7 +352,7 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
           onClose={onDrawerClose}
           onSwitchToSidebar={detailMode.switchToSidebar}
           runCompareNames={runCompareNames}
-          metricBindings={metricBindings}
+          metricBindings={isCompareMode ? mergedMetricBindings : metricBindings}
         />
       )}
       <ColorScale />

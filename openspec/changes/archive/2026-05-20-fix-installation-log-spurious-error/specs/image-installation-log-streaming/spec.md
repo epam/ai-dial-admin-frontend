@@ -1,8 +1,5 @@
-# image-installation-log-streaming Specification
+## MODIFIED Requirements
 
-## Purpose
-TBD - created by archiving change fix-installation-log-sse-cutoff. Update Purpose after archive.
-## Requirements
 ### Requirement: Continuous SSE log streaming on the Installation log tab
 
 The Installation log tab for an image build SHALL stream build logs from the backend SSE endpoint `/api/sse?entity=image&id={imageBuildId}` and SHALL NOT close the SSE connection from the client in response to backend `status` notifications. The backend MUST own stream termination; the client SHALL only close the connection on transport errors, on component unmount, or when the dependent inputs to the subscription effect change. The client SHALL differentiate browser-native `error` events (no payload, fired when the backend completes the stream or the transport drops) from explicit backend error events (payload present, emitted by the backend to signal a user-relevant failure). A notification SHALL be shown only for the latter.

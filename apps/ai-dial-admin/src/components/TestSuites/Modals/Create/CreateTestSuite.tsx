@@ -87,7 +87,7 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEnti
     setSteps(
       baseSteps.map((step) => {
         if (step.id === TestSuitTab.Target) {
-          return { ...step, status: selectedTarget ? StepStatus.VALID : void 0 };
+          return { ...step, status: selectedTarget || !!currentEntity ? StepStatus.VALID : void 0 };
         }
         if (step.id === TestSuitTab.Methods) {
           const methodValid = isMcp ? !!testSuite.toolRef : !!testSuite.endpointRef?.method;
@@ -131,7 +131,9 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEnti
 
           {currentStepId === TestSuitTab.Target && (
             <Target
-              selectedTargetId={selectedTarget?.deploymentId}
+              selectedTargetId={
+                selectedTarget?.deploymentId ?? currentEntity?.deploymentRef?.id ?? currentEntity?.mcpDeploymentRef?.id
+              }
               suiteType={testSuite.suiteType}
               onChangeTarget={setSelectedTarget}
               onChange={setTestSuite}
