@@ -29,7 +29,7 @@ export interface ToolsetAuthSettings {
   codeVerifier?: string;
   codeChallengeMethod?: ToolsetCodeChallengeMethod;
   tokenEndpoint?: string;
-  tokenEndpointAuthMethod: TokenEndpointAuthMethod;
+  tokenEndpointAuthMethod?: TokenEndpointAuthMethod;
   scopesSupported?: string[];
 
   globalAuthStatus?: ToolsetAuthStatus;
