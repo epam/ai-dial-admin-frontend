@@ -50,12 +50,12 @@ const ContainerFields: FC<Props> = ({ container, setContainer, image, isModal, r
       )}
       {!isModal && (
         <div className="flex flex-col gap-y-8">
-          <ContainerCompute container={container} setContainer={setContainer} route={route} disabled={disabled} />
           <ContainerEndpoint container={container} setContainer={setContainer} route={route} disabled={disabled} />
           {container.source?.$type !== CONTAINER_SOURCE_TYPE.NGC_REGISTRY && (
             <ContainerAutoscaling container={container} setContainer={setContainer} disabled={disabled} />
           )}
           <ContainerVariables container={container} setContainer={setContainer} disabled={disabled} />
+          <ContainerCompute container={container} setContainer={setContainer} route={route} disabled={disabled} />
           <ContainerConfiguration container={container} setContainer={setContainer} disabled={disabled} />
           <ContainerStartupProbe container={container} setContainer={setContainer} disabled={disabled} />
         </div>
