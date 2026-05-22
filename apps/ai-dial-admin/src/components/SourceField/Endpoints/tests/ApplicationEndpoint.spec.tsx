@@ -105,7 +105,7 @@ vi.mock('@/src/components/Common/ComplexInput/ComplexInput', () => ({
   ),
 }));
 
-const makeEntity = (fields: Partial<DialApplication> = {}): DialApplication =>
+const makeEntity = (fields: Partial<DialApplication & { version?: string; path?: string }> = {}): DialApplication =>
   ({
     name: 'test-app',
     displayName: 'Test App',
@@ -212,6 +212,26 @@ describe('ApplicationEndpoint', () => {
     rerender(<ApplicationEndpoint entity={makeEntity()} onChange={vi.fn()} isEntityImmutable />);
     expect(screen.getByTestId('viewer-url')).toBeInTheDocument();
     expect(screen.getByTestId('editor-url')).toBeInTheDocument();
+  });
+
+  test('chat checkbox resets when switching to another version without chat endpoint', () => {
+    const v1 = makeEntity({ version: '1.0.0', mcp: { endpoint: 'https://mcp.example.com' } });
+    const { rerender } = render(<ApplicationEndpoint entity={v1} onChange={vi.fn()} />);
+
+    const chatCheckbox = screen.getByTestId('checkbox-chat_endpoint') as HTMLInputElement;
+    expect(chatCheckbox.checked).toBe(false);
+
+    fireEvent.click(chatCheckbox);
+    expect(chatCheckbox.checked).toBe(true);
+
+    const v2 = makeEntity({
+      version: '2.0.0',
+      path: 'folder/app__2.0.0',
+      mcp: { endpoint: 'https://mcp.example.com' },
+    });
+    rerender(<ApplicationEndpoint entity={v2} onChange={vi.fn()} />);
+
+    expect((screen.getByTestId('checkbox-chat_endpoint') as HTMLInputElement).checked).toBe(false);
   });
 
   test('ViewerUrl writes to entity.viewerUrl; EditorUrl writes to entity.editorUrl', () => {
