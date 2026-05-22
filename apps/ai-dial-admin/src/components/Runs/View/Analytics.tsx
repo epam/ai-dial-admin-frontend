@@ -52,10 +52,6 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
   const [comparedSnapshots, setComparedSnapshots] = useState<MetricSnapshot[]>([]);
   const metricBindings = useMemo(() => snapshotsToBindingsMap(snapshots), [snapshots]);
   const comparedMetricBindings = useMemo(() => snapshotsToBindingsMap(comparedSnapshots), [comparedSnapshots]);
-  const mergedMetricBindings = useMemo(
-    () => ({ ...comparedMetricBindings, ...metricBindings }),
-    [comparedMetricBindings, metricBindings],
-  );
   const detailMode = useDetailMode(metricBindings);
   const drawerPanel = useDrawerPanel();
 
@@ -352,7 +348,8 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
           onClose={onDrawerClose}
           onSwitchToSidebar={detailMode.switchToSidebar}
           runCompareNames={runCompareNames}
-          metricBindings={isCompareMode ? mergedMetricBindings : metricBindings}
+          metricBindings={metricBindings}
+          comparedMetricBindings={isCompareMode ? comparedMetricBindings : undefined}
         />
       )}
       <ColorScale />

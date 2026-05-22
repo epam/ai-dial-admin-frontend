@@ -9,6 +9,8 @@ export enum DetailMode {
 
 export interface CellValue {
   raw: string | null;
+  /** true = metric was evaluated but produced null (failed); false/undefined = not evaluated or has a value */
+  isFailed?: boolean;
 }
 
 export interface ComparisonRow {
