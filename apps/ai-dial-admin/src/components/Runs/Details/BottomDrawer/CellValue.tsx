@@ -2,7 +2,10 @@
 
 import { FC } from 'react';
 
-import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { DialTooltip } from '@epam/ai-dial-ui-kit';
+import { IconExclamationCircle } from '@tabler/icons-react';
+
+import { ButtonsI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 const PREVIEW_LENGTH = 200;
@@ -10,15 +13,23 @@ const PREVIEW_LENGTH = 200;
 interface Props {
   text: string;
   raw: string | null;
+  isFailed?: boolean;
   isLong: boolean;
   isExpanded: boolean;
   cellKey: string;
   onToggleExpand: (key: string) => void;
 }
 
-const CellValue: FC<Props> = ({ text, raw, isLong, isExpanded, cellKey, onToggleExpand }) => {
+const CellValue: FC<Props> = ({ text, raw, isFailed, isLong, isExpanded, cellKey, onToggleExpand }) => {
   const t = useI18n();
   if (raw === null) {
+    if (isFailed) {
+      return (
+        <DialTooltip tooltip={t(RunsI18nKey.MetricFailedText)}>
+          <IconExclamationCircle size={14} className="text-error" />
+        </DialTooltip>
+      );
+    }
     return <span className="dial-tiny-text text-secondary">—</span>;
   }
 

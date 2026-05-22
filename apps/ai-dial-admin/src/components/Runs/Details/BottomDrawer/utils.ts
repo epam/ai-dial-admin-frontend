@@ -35,7 +35,8 @@ export function buildComparisonSections(
   fieldVisibility: Record<string, boolean>,
   sectionOrder: string[],
   sectionHidden: Record<string, boolean>,
-  metricBindings?: Record<string, MetricBindings>,
+  activeMetricBindings?: Record<string, MetricBindings>,
+  pinnedMetricBindings?: Record<string, MetricBindings>,
 ): ComparisonSection[] {
   const isDuplicate = pinned != null && pinned.id === active.id;
   const effectivePinned = isDuplicate ? null : pinned;
@@ -116,15 +117,22 @@ export function buildComparisonSections(
   for (const groupKey of [...metricGroupKeys].sort()) {
     const activeGroup = active.metricValues?.[groupKey];
     const pinnedGroup = effectivePinned?.metricValues?.[groupKey];
+    const activeGroupExists = active.metricValues != null && groupKey in active.metricValues;
+    const pinnedGroupExists = effectivePinned?.metricValues != null && groupKey in effectivePinned.metricValues;
 
     const fieldKeys = new Set<string>();
     if (activeGroup) Object.keys(activeGroup).forEach((k) => fieldKeys.add(k));
     if (pinnedGroup) Object.keys(pinnedGroup).forEach((k) => fieldKeys.add(k));
 
     const rows: ComparisonRow[] = [...fieldKeys].sort().map((fieldKey) => {
+      const activeRaw = serializeValue(activeGroup?.[fieldKey]);
+      const pinnedRaw = serializeValue(pinnedGroup?.[fieldKey]);
       const values: ComparisonRow['values'] = hasTwoResults
-        ? [{ raw: serializeValue(activeGroup?.[fieldKey]) }, { raw: serializeValue(pinnedGroup?.[fieldKey]) }]
-        : [{ raw: serializeValue(activeGroup?.[fieldKey]) }];
+        ? [
+            { raw: activeRaw, isFailed: activeGroupExists && activeRaw === null },
+            { raw: pinnedRaw, isFailed: pinnedGroupExists && pinnedRaw === null },
+          ]
+        : [{ raw: activeRaw, isFailed: activeGroupExists && activeRaw === null }];
 
       return {
         fieldKey,
@@ -139,42 +147,54 @@ export function buildComparisonSections(
   }
 
   // Binding sections (config and input) per metric group
-  if (metricBindings) {
-    for (const [groupKey, bindings] of Object.entries(metricBindings).sort(([a], [b]) => a.localeCompare(b))) {
-      const activeHasMetric = active.metricValues?.[groupKey] != null;
-      const pinnedHasMetric = effectivePinned?.metricValues?.[groupKey] != null;
+  const allBindingGroupKeys = new Set<string>();
+  if (activeMetricBindings) Object.keys(activeMetricBindings).forEach((k) => allBindingGroupKeys.add(k));
+  if (pinnedMetricBindings) Object.keys(pinnedMetricBindings).forEach((k) => allBindingGroupKeys.add(k));
 
-      if (bindings.configBindings.length > 0) {
-        const sectionKey = `binding:config:${groupKey}`;
-        const rows: ComparisonRow[] = bindings.configBindings.map((binding) => ({
-          fieldKey: binding.property,
-          label: binding.property,
-          isNumeric: false,
-          values: hasTwoResults
-            ? [
-                { raw: activeHasMetric ? formatBindingValue(binding) : null },
-                { raw: pinnedHasMetric ? formatBindingValue(binding) : null },
-              ]
-            : [{ raw: formatBindingValue(binding) }],
-        }));
-        sectionsMap.set(sectionKey, { key: sectionKey, label: `${groupKey} · Config bindings`, rows });
-      }
+  for (const groupKey of [...allBindingGroupKeys].sort()) {
+    const activeBindings = activeMetricBindings?.[groupKey];
+    const pinnedBindings = hasTwoResults ? pinnedMetricBindings?.[groupKey] : undefined;
+    const activeHasMetric = active.metricValues?.[groupKey] != null;
+    const pinnedHasMetric = effectivePinned?.metricValues?.[groupKey] != null;
 
-      if (bindings.inputBindings.length > 0) {
-        const sectionKey = `binding:input:${groupKey}`;
-        const rows: ComparisonRow[] = bindings.inputBindings.map((binding) => ({
-          fieldKey: binding.property,
-          label: binding.property,
-          isNumeric: false,
-          values: hasTwoResults
-            ? [
-                { raw: activeHasMetric ? formatBindingValue(binding) : null },
-                { raw: pinnedHasMetric ? formatBindingValue(binding) : null },
-              ]
-            : [{ raw: formatBindingValue(binding) }],
-        }));
-        sectionsMap.set(sectionKey, { key: sectionKey, label: `${groupKey} · Input bindings`, rows });
-      }
+    const configProps = new Set<string>();
+    activeBindings?.configBindings.forEach((b) => configProps.add(b.property));
+    pinnedBindings?.configBindings.forEach((b) => configProps.add(b.property));
+
+    if (configProps.size > 0) {
+      const sectionKey = `binding:config:${groupKey}`;
+      const rows: ComparisonRow[] = [...configProps].sort().map((prop) => {
+        const activeBinding = activeBindings?.configBindings.find((b) => b.property === prop);
+        const pinnedBinding = pinnedBindings?.configBindings.find((b) => b.property === prop);
+        const values: ComparisonRow['values'] = hasTwoResults
+          ? [
+              { raw: activeHasMetric && activeBinding ? formatBindingValue(activeBinding) : null },
+              { raw: pinnedHasMetric && pinnedBinding ? formatBindingValue(pinnedBinding) : null },
+            ]
+          : [{ raw: activeBinding ? formatBindingValue(activeBinding) : null }];
+        return { fieldKey: prop, label: prop, isNumeric: false, values };
+      });
+      sectionsMap.set(sectionKey, { key: sectionKey, label: `${groupKey} · Config bindings`, rows });
+    }
+
+    const inputProps = new Set<string>();
+    activeBindings?.inputBindings.forEach((b) => inputProps.add(b.property));
+    pinnedBindings?.inputBindings.forEach((b) => inputProps.add(b.property));
+
+    if (inputProps.size > 0) {
+      const sectionKey = `binding:input:${groupKey}`;
+      const rows: ComparisonRow[] = [...inputProps].sort().map((prop) => {
+        const activeBinding = activeBindings?.inputBindings.find((b) => b.property === prop);
+        const pinnedBinding = pinnedBindings?.inputBindings.find((b) => b.property === prop);
+        const values: ComparisonRow['values'] = hasTwoResults
+          ? [
+              { raw: activeHasMetric && activeBinding ? formatBindingValue(activeBinding) : null },
+              { raw: pinnedHasMetric && pinnedBinding ? formatBindingValue(pinnedBinding) : null },
+            ]
+          : [{ raw: activeBinding ? formatBindingValue(activeBinding) : null }];
+        return { fieldKey: prop, label: prop, isNumeric: false, values };
+      });
+      sectionsMap.set(sectionKey, { key: sectionKey, label: `${groupKey} · Input bindings`, rows });
     }
   }
 
@@ -272,7 +292,7 @@ export function valuesAreEqual(a: string | null, b: string | null): boolean {
 export function getDiffClass(row: ComparisonRow): string {
   if (row.values.length < 2) return '';
   const [active, pinned] = row.values;
-  if (valuesAreEqual(active.raw, pinned.raw)) return '';
+  if (active.isFailed === pinned.isFailed && valuesAreEqual(active.raw, pinned.raw)) return '';
   return row.isNumeric ? 'bg-warning' : 'bg-accent-secondary-alpha';
 }
 
@@ -281,7 +301,8 @@ export function countDiffs(sections: ComparisonSection[]): number {
   for (const section of sections) {
     for (const row of section.rows) {
       if (row.values.length < 2) continue;
-      if (!valuesAreEqual(row.values[0].raw, row.values[1].raw)) {
+      const [a, b] = row.values;
+      if (a.isFailed !== b.isFailed || !valuesAreEqual(a.raw, b.raw)) {
         count++;
       }
     }
