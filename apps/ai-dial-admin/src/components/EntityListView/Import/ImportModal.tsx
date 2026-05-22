@@ -255,6 +255,7 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, 
   return (
     <DialPopup
       onClose={onClose}
+      closeOnOutsideClick={false}
       header={getModalTitle(route, t)}
       portalId="ImportModal"
       className="h-[660px]"
