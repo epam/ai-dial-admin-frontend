@@ -2,6 +2,8 @@ import { activityAuditApi, containersApi, deploymentAuditApi, globalFirewallApi,
 import { DialActivity, ListApi, ResolverHandlers, RevisionApi } from '@/src/models/activity-audit';
 import { Token } from '@/src/models/auth';
 import { BaseEntity } from '@/src/models/dial/base-entity';
+import { Container } from '@/src/models/deployments/containers';
+import { Image } from '@/src/models/deployments/images';
 import { FilterDto, SortDto } from '@/src/models/request';
 import { errorObjLog } from '@/src/server/logger';
 import {
@@ -85,7 +87,24 @@ export interface ActivityAuditDetailData {
   activityRevision: ActivityAuditEntity | null;
   previousRevision: ActivityAuditEntity | null;
   entity: BaseEntity | undefined;
+  currentResourceStatus?: string;
 }
+
+const fetchCurrentResourceStatus = async (activity: DialActivity, token: Token): Promise<string | undefined> => {
+  try {
+    if (isContainerDeploymentResource(activity.resourceType)) {
+      const res = await containersApi.getContainer(decodeURIComponent(activity.resourceId ?? ''), token);
+      return (res?.response as Container | undefined)?.status;
+    }
+    if (isImageDefinitionResource(activity.resourceType)) {
+      const res = await imagesApi.getImage(decodeURIComponent(activity.resourceId ?? ''), token);
+      return (res?.response as Image | undefined)?.buildStatus;
+    }
+  } catch (e) {
+    errorObjLog(e, `Failed to fetch live status for ${activity.resourceType}`);
+  }
+  return undefined;
+};
 
 export const getActivityAuditDetailData = async (
   activityId: string,
@@ -95,6 +114,7 @@ export const getActivityAuditDetailData = async (
   let activityRevision: ActivityAuditEntity | null = null;
   let previousRevision: ActivityAuditEntity | null = null;
   let entity: BaseEntity | undefined = void 0;
+  let currentResourceStatus: string | undefined = void 0;
 
   try {
     const adminResponse = await activityAuditApi.getActivityById(activityId, token);
@@ -109,13 +129,15 @@ export const getActivityAuditDetailData = async (
 
     const handlers = activity ? pickActivityHandlers(activity, isDeploymentActivity) : null;
     if (activity && handlers) {
-      const [activities, fetchedActivityRevision, fetchedPreviousRevision] = await Promise.all([
+      const [activities, fetchedActivityRevision, fetchedPreviousRevision, status] = await Promise.all([
         handlers.listActivities(handlers.filter(activity), token),
         handlers.fetchSnapshot(activity, activity.revision, token),
         handlers.fetchSnapshot(activity, activity.revision - 1, token),
+        fetchCurrentResourceStatus(activity, token),
       ]);
       activityRevision = fetchedActivityRevision;
       previousRevision = fetchedPreviousRevision;
+      currentResourceStatus = status;
       const latestRevision = activities?.data?.[0]?.revision;
       if (latestRevision != null) {
         entity = (await handlers.fetchSnapshot(activity, latestRevision, token)) as BaseEntity | undefined;
@@ -127,5 +149,5 @@ export const getActivityAuditDetailData = async (
     errorObjLog(e, 'Failed to fetch activity view data');
   }
 
-  return { activity, activityRevision, previousRevision, entity };
+  return { activity, activityRevision, previousRevision, entity, currentResourceStatus };
 };

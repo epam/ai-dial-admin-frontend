@@ -7,6 +7,7 @@ import {
   IMAGES_WITH_VERSIONS,
   INSTALL_IMAGES_URL,
   IMAGE_LOGS_URL,
+  ROLLBACK_IMAGE_URL,
 } from '../images';
 import createFetchMock from 'vitest-fetch-mock';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
@@ -102,6 +103,16 @@ describe('ImagesApi', () => {
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining(`${INSTALL_IMAGES_URL}/build1`),
       expect.objectContaining({ method: 'DELETE' }),
+    );
+  });
+
+  test('rollbackToRevision POSTs to /images/definitions/{id}/revision/{revision}/rollback', async () => {
+    fetch.mockResponseOnce(JSON.stringify({}));
+    await instance.rollbackToRevision('img-1', 5, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(ROLLBACK_IMAGE_URL('img-1', 5)),
+      expect.objectContaining({ method: 'POST' }),
     );
   });
 });

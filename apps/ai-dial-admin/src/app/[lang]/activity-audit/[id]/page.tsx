@@ -17,7 +17,8 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   }
 
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  const { activity, activityRevision, previousRevision, entity } = await getActivityAuditDetailData(auditViewId, token);
+  const { activity, activityRevision, previousRevision, entity, currentResourceStatus } =
+    await getActivityAuditDetailData(auditViewId, token);
 
   if (activity == null) {
     notFound();
@@ -29,6 +30,7 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
       activityRevision={activityRevision}
       previousRevision={previousRevision}
       entity={entity}
+      currentResourceStatus={currentResourceStatus}
     />
   );
 }

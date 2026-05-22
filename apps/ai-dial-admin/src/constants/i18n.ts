@@ -963,6 +963,11 @@ export enum RollbackI18nKey {
   Adapter = 'Rollback.Entities.Adapter',
   InterceptorTemplate = 'Rollback.Entities.InterceptorTemplate',
   ApplicationRunner = 'Rollback.Entities.ApplicationRunner',
+  Deployment = 'Rollback.Entities.Deployment',
+  ImageDefinition = 'Rollback.Entities.ImageDefinition',
+  ImageBuildDomainWhitelist = 'Rollback.Entities.ImageBuildDomainWhitelist',
+  DisabledDeploymentTooltip = 'Rollback.Disabled.DeploymentTooltip',
+  DisabledImageDefinitionTooltip = 'Rollback.Disabled.ImageDefinitionTooltip',
 }
 
 export enum ErrorI18nKey {

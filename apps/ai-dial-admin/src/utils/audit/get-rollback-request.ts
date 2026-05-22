@@ -16,16 +16,47 @@ import { createKey, removeKey, updateKey } from '@/src/app/[lang]/keys/actions';
 import { createModel, removeModel, updateModel } from '@/src/app/[lang]/models/actions';
 import { createRole, removeRole, updateRole } from '@/src/app/[lang]/roles/actions';
 import { createRoute, removeRoute, updateRoute } from '@/src/app/[lang]/routes/actions';
+import {
+  rollbackContainerToRevision,
+  rollbackImageBuildWhitelistToRevision,
+  rollbackImageDefinitionToRevision,
+} from '@/src/app/actions/deployments';
 import { DialActivity } from '@/src/models/activity-audit';
-import { ActivityAuditEntity, ActivityAuditResourceType, ActivityAuditType } from '@/src/types/activity-audit';
+import {
+  ActivityAuditEntity,
+  ActivityAuditResourceType,
+  ActivityAuditType,
+  isContainerDeploymentResource,
+  isDeploymentManagerResource,
+  isGlobalFirewallResource,
+  isImageDefinitionResource,
+} from '@/src/types/activity-audit';
 import { getRevisionRouteForEntityType } from './get-revision-route';
 import { createToolset, removeToolset, updateToolset } from '@/src/app/[lang]/toolsets/actions';
+
+const rollbackDeploymentManagerResource = (activity: DialActivity, targetRevision: number) => {
+  const id = decodeURIComponent(activity.resourceId ?? '');
+  if (isContainerDeploymentResource(activity.resourceType)) {
+    return rollbackContainerToRevision(id, targetRevision);
+  }
+  if (isImageDefinitionResource(activity.resourceType)) {
+    return rollbackImageDefinitionToRevision(id, targetRevision);
+  }
+  if (isGlobalFirewallResource(activity.resourceType)) {
+    return rollbackImageBuildWhitelistToRevision(targetRevision);
+  }
+  return null;
+};
 
 export const rollbackEntityPerRevision = async (
   activity: DialActivity,
   activityRevision: ActivityAuditEntity | null,
   previousRevision: ActivityAuditEntity | null,
 ) => {
+  if (isDeploymentManagerResource(activity.resourceType)) {
+    return rollbackDeploymentManagerResource(activity, activity.revision - 1);
+  }
+
   if (activity.activityType === ActivityAuditType.Create) {
     return getDeleteAction(activity.resourceType)?.(activityRevision?.name as string);
   }
@@ -38,6 +69,10 @@ export const rollbackEntityPerRevision = async (
 };
 
 export const rollbackEntityPerType = async (activity: DialActivity) => {
+  if (isDeploymentManagerResource(activity.resourceType)) {
+    return rollbackDeploymentManagerResource(activity, activity.revision - 1);
+  }
+
   const route = getRevisionRouteForEntityType(activity.resourceType, decodeURIComponent(activity.resourceId));
 
   if (activity.activityType === ActivityAuditType.Create) {

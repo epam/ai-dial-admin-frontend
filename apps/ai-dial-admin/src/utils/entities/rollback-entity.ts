@@ -12,6 +12,17 @@ const rollbackEntityMap: Record<string, RollbackI18nKey> = {
   [ActivityAuditResourceType.ADAPTER]: RollbackI18nKey.Adapter,
   [ActivityAuditResourceType.TOOLSET]: RollbackI18nKey.Toolsets,
   [ActivityAuditResourceType.INTERCEPTOR_TEMPLATE]: RollbackI18nKey.InterceptorTemplate,
+  [ActivityAuditResourceType.ADAPTER_DEPLOYMENT]: RollbackI18nKey.Deployment,
+  [ActivityAuditResourceType.APPLICATION_DEPLOYMENT]: RollbackI18nKey.Deployment,
+  [ActivityAuditResourceType.INTERCEPTOR_DEPLOYMENT]: RollbackI18nKey.Deployment,
+  [ActivityAuditResourceType.MCP_DEPLOYMENT]: RollbackI18nKey.Deployment,
+  [ActivityAuditResourceType.NIM_DEPLOYMENT]: RollbackI18nKey.Deployment,
+  [ActivityAuditResourceType.INFERENCE_DEPLOYMENT]: RollbackI18nKey.Deployment,
+  [ActivityAuditResourceType.ADAPTER_IMAGE_DEFINITION]: RollbackI18nKey.ImageDefinition,
+  [ActivityAuditResourceType.APPLICATION_IMAGE_DEFINITION]: RollbackI18nKey.ImageDefinition,
+  [ActivityAuditResourceType.INTERCEPTOR_IMAGE_DEFINITION]: RollbackI18nKey.ImageDefinition,
+  [ActivityAuditResourceType.MCP_IMAGE_DEFINITION]: RollbackI18nKey.ImageDefinition,
+  [ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST]: RollbackI18nKey.ImageBuildDomainWhitelist,
 };
 
 export const getRollbackErrorTitle = (

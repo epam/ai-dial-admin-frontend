@@ -1002,6 +1002,13 @@ export default {
       Adapter: 'Adapter',
       InterceptorTemplate: 'Interceptor Template',
       ApplicationRunner: 'Application Runner',
+      Deployment: 'Deployment',
+      ImageDefinition: 'Image definition',
+      ImageBuildDomainWhitelist: 'Image build domain whitelist',
+    },
+    Disabled: {
+      DeploymentTooltip: 'Undeploy this deployment before rolling back.',
+      ImageDefinitionTooltip: 'Stop the build or roll back to an earlier revision before rolling back this image.',
     },
   },
   EntityFields: {

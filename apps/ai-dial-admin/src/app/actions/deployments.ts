@@ -7,6 +7,7 @@ import { Image } from '@/src/models/deployments/images';
 import { Container } from '@/src/models/deployments/containers';
 import {
   containersApi,
+  globalFirewallApi,
   huggingFaceApi,
   imagesApi,
   mcpRegistryApi,
@@ -149,6 +150,21 @@ export async function runContainer(containerId: string) {
 export async function stopContainer(containerId: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return containersApi.stopContainer(containerId, token);
+}
+
+export async function rollbackContainerToRevision(id: string, revision: number) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return containersApi.rollbackToRevision(id, revision, token);
+}
+
+export async function rollbackImageDefinitionToRevision(id: string, revision: number) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return imagesApi.rollbackToRevision(id, revision, token);
+}
+
+export async function rollbackImageBuildWhitelistToRevision(revision: number) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return globalFirewallApi.rollbackToRevision(revision, token);
 }
 
 export async function getContainerTools(containerId: string) {

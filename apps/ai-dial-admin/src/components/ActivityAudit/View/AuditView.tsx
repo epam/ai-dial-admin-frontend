@@ -10,6 +10,7 @@ import {
   DialEllipsisTooltip,
   DialNeutralButton,
   DialSwitch,
+  DialTooltip,
 } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink, IconRestore } from '@tabler/icons-react';
 import classNames from 'classnames';
@@ -27,7 +28,16 @@ import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialActivity } from '@/src/models/activity-audit';
 import { BaseEntity } from '@/src/models/dial/base-entity';
-import { ActivityAuditEntity, CompareView, DiffView, isDeploymentManagerResource } from '@/src/types/activity-audit';
+import {
+  ActivityAuditEntity,
+  CompareView,
+  DiffView,
+  isContainerDeploymentResource,
+  isDeploymentManagerResource,
+  isImageDefinitionResource,
+} from '@/src/types/activity-audit';
+import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
+import { IMAGE_STATUS } from '@/src/types/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
 import { rollbackEntityPerRevision } from '@/src/utils/audit/get-rollback-request';
 import {
@@ -50,7 +60,15 @@ interface Props {
   hideComparator?: boolean;
   entity?: BaseEntity;
   isEntityActivity?: boolean;
+  currentResourceStatus?: string;
 }
+
+const CONTAINER_ROLLBACK_ALLOWED_STATUSES = new Set<string>([CONTAINER_STATUS.NOT_DEPLOYED, CONTAINER_STATUS.STOPPED]);
+const IMAGE_ROLLBACK_ALLOWED_STATUSES = new Set<string>([
+  IMAGE_STATUS.NOT_BUILT,
+  IMAGE_STATUS.BUILD_FAILED,
+  IMAGE_STATUS.BUILD_STOPPED,
+]);
 
 const AuditView: FC<Props> = ({
   activity,
@@ -60,6 +78,7 @@ const AuditView: FC<Props> = ({
   hideComparator,
   entity,
   isEntityActivity = false,
+  currentResourceStatus,
 }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
@@ -87,6 +106,26 @@ const AuditView: FC<Props> = ({
     false,
     t,
   );
+
+  const rollbackDisabledTooltip = (() => {
+    if (!isDeploymentManagerResource(activity.resourceType) || !currentResourceStatus) {
+      return undefined;
+    }
+    if (
+      isContainerDeploymentResource(activity.resourceType) &&
+      !CONTAINER_ROLLBACK_ALLOWED_STATUSES.has(currentResourceStatus)
+    ) {
+      return t(RollbackI18nKey.DisabledDeploymentTooltip);
+    }
+    if (
+      isImageDefinitionResource(activity.resourceType) &&
+      !IMAGE_ROLLBACK_ALLOWED_STATUSES.has(currentResourceStatus)
+    ) {
+      return t(RollbackI18nKey.DisabledImageDefinitionTooltip);
+    }
+    return undefined;
+  })();
+  const isRollbackDisabled = rollbackDisabledTooltip !== undefined;
 
   const onOpenModal = useCallback(() => {
     setIsOpenModal(true);
@@ -162,13 +201,23 @@ const AuditView: FC<Props> = ({
             <div className="flex flex-row items-center gap-4 flex-wrap">
               <CompareControl compareView={compareView} setCompareView={setCompareView} />
               <FilterControl diffView={diffView} setDiffView={setDiffView} />
-              {!isReadOnlyAdmin && !isDeploymentManagerResource(activity.resourceType) && (
-                <DialNeutralButton
-                  iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} />}
-                  label={t(RollbackI18nKey.Resource)}
-                  onClick={onOpenModal}
-                />
-              )}
+              {!isReadOnlyAdmin &&
+                (isRollbackDisabled ? (
+                  <DialTooltip tooltip={rollbackDisabledTooltip}>
+                    <DialNeutralButton
+                      iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} />}
+                      label={t(RollbackI18nKey.Resource)}
+                      onClick={onOpenModal}
+                      disabled
+                    />
+                  </DialTooltip>
+                ) : (
+                  <DialNeutralButton
+                    iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} />}
+                    label={t(RollbackI18nKey.Resource)}
+                    onClick={onOpenModal}
+                  />
+                ))}
               <div className="w-px h-6 bg-layer-4"></div>
               <DialSwitch
                 switchId="jsonView"

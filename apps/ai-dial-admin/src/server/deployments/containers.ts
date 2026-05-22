@@ -23,6 +23,8 @@ export const CONTAINER_LOGS_URL = (containerId: string, podId: string) =>
 export const CONTAINER_EVENTS_URL = (containerId?: string) =>
   `${BASE_CONTAINERS_URL}/${containerId || ''}/events/stream`;
 export const CHANGE_IMAGE_ID = `${BASE_CONTAINERS_URL}/change-image`;
+export const ROLLBACK_CONTAINER_URL = (id: string, revision: number) =>
+  `${BASE_CONTAINERS_URL}/${id}/revision/${revision}/rollback`;
 
 export class ContainersApi extends BaseApi {
   getContainers(type: string | undefined, token: Token): Promise<ServerActionResponse> {
@@ -101,6 +103,10 @@ export class ContainersApi extends BaseApi {
 
   stopContainer(containerId: string, token: Token): Promise<ServerActionResponse> {
     return this.postAction(STOP_CONTAINER_URL(containerId), {}, token);
+  }
+
+  rollbackToRevision(id: string, revision: number, token: Token): Promise<ServerActionResponse> {
+    return this.postAction(ROLLBACK_CONTAINER_URL(id, revision), {}, token);
   }
 
   getContainerTools(containerId: string, token: Token): Promise<ServerActionResponse> {

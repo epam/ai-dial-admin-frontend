@@ -15,6 +15,7 @@ import {
   CHANGE_IMAGE_ID,
   CONTAINER_EVENTS_URL,
   CONTAINER_CALL_TOOL_URL,
+  ROLLBACK_CONTAINER_URL,
 } from '../containers';
 import createFetchMock from 'vitest-fetch-mock';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
@@ -225,6 +226,15 @@ describe('ContainersApi', () => {
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining(CONTAINER_LOGS_URL('c1', 'pod1')),
       expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
+  test('rollbackToRevision POSTs to /deployments/{id}/revision/{revision}/rollback', async () => {
+    fetch.mockResponseOnce(JSON.stringify({}));
+    await instance.rollbackToRevision('dep-1', 3, TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(ROLLBACK_CONTAINER_URL('dep-1', 3)),
+      expect.objectContaining({ method: 'POST' }),
     );
   });
 });

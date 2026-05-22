@@ -12,6 +12,7 @@ export const IMAGE_URL = (id?: string) => `${IMAGES_URL}/${id || ''}`;
 export const IMAGE_VERSIONS_URL = (id: string, type: string) => `${IMAGES_URL}/${id}/versions?type=${type}`;
 export const IMAGE_LOGS_URL = (id: string) => `${INSTALL_IMAGES_URL}/${id}/logs`;
 export const IMAGES_WITH_VERSIONS = (type: string) => `${IMAGES_URL}/grouped?type=${type}`;
+export const ROLLBACK_IMAGE_URL = (id: string, revision: number) => `${IMAGES_URL}/${id}/revision/${revision}/rollback`;
 
 export class ImagesApi extends BaseApi {
   getImages(token: Token): Promise<ServerActionResponse> {
@@ -53,6 +54,10 @@ export class ImagesApi extends BaseApi {
 
   stopBuild(id: string, token: Token): Promise<ServerActionResponse> {
     return this.deleteAction(`${INSTALL_IMAGES_URL}/${id}`, token);
+  }
+
+  rollbackToRevision(id: string, revision: number, token: Token): Promise<ServerActionResponse> {
+    return this.postAction(ROLLBACK_IMAGE_URL(id, revision), {}, token);
   }
 
   getImageLogs(id: string, token: Token): Promise<Image | null> {
