@@ -125,6 +125,8 @@ export interface ContainerRedeploySnapshot {
   command?: string;
   args?: string;
   scaling?: Autoscaling;
+  nodePoolId?: string | null;
+  nodePoolName?: string | null;
 }
 
 export interface HuggingFaceModel {

@@ -58,6 +58,8 @@ export const getContainerRedeploySnapshot = (container: Container): ContainerRed
     command: container.command,
     args: container.args,
     scaling: container.scaling,
+    nodePoolId: container.nodePoolId ?? null,
+    nodePoolName: container.nodePoolName ?? null,
   };
 };
 
