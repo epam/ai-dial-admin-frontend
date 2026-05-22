@@ -1,5 +1,10 @@
 export default {
   User: 'User',
+  ReadOnlyAdmin: {
+    BannerTitle: 'Read-only mode access',
+    Description: 'No changes can be made. Access is managed by administrator',
+    BadgeLabel: 'READ ONLY',
+  },
   Home: {
     Title: 'Powering Artificial Intelligence with DIAL',
     Description:

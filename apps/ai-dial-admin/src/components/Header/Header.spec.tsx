@@ -1,6 +1,13 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
+import { ReadOnlyI18nKey } from '@/src/constants/i18n';
 import Header from './Header';
+
+const isReadOnlyAdminMock = vi.fn(() => false);
+vi.mock('@/src/hooks/use-is-read-only-admin', () => ({
+  useIsReadOnlyAdmin: () => isReadOnlyAdminMock(),
+}));
 
 vi.mock('next-auth/react', () => ({
   useSession: vi.fn(() => {
@@ -13,6 +20,21 @@ vi.mock('next/navigation', () => ({
 }));
 
 describe('Header', () => {
+  beforeEach(() => {
+    isReadOnlyAdminMock.mockReturnValue(false);
+  });
+
+  test('does not render read-only badge for full admin', () => {
+    render(<Header isEnableAuth={false} />);
+    expect(screen.queryByText(ReadOnlyI18nKey.BadgeLabel)).not.toBeInTheDocument();
+  });
+
+  test('renders read-only badge for read-only admin', () => {
+    isReadOnlyAdminMock.mockReturnValue(true);
+    render(<Header isEnableAuth={false} />);
+    expect(screen.getByText(ReadOnlyI18nKey.BadgeLabel)).toBeInTheDocument();
+  });
+
   test('calls toggleSidebar when menu button is clicked', () => {
     const { getByRole } = render(<Header isEnableAuth={false} />);
     const button = getByRole('button', { name: 'menu' });
