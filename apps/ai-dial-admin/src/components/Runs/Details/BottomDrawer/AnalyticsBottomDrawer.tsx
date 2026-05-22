@@ -31,6 +31,7 @@ interface Props {
   onSwitchToSidebar: () => void;
   runCompareNames?: { current: string; compared: string };
   metricBindings?: Record<string, MetricBindings>;
+  comparedMetricBindings?: Record<string, MetricBindings>;
 }
 
 const AnalyticsBottomDrawer: FC<Props> = ({
@@ -41,6 +42,7 @@ const AnalyticsBottomDrawer: FC<Props> = ({
   onSwitchToSidebar,
   runCompareNames,
   metricBindings,
+  comparedMetricBindings,
 }) => {
   const t = useI18n();
   const [activeDetail, setActiveDetail] = useState<AnalyticsResult | null>(null);
@@ -92,8 +94,8 @@ const AnalyticsBottomDrawer: FC<Props> = ({
   // Build comparison sections
   const sections = useMemo(() => {
     if (!activeDetail) return [];
-    return buildComparisonSections(activeDetail, pinnedDetail, {}, [], {}, metricBindings);
-  }, [activeDetail, pinnedDetail, metricBindings]);
+    return buildComparisonSections(activeDetail, pinnedDetail, {}, [], {}, metricBindings, comparedMetricBindings);
+  }, [activeDetail, pinnedDetail, metricBindings, comparedMetricBindings]);
 
   const fieldSelector = useFieldSelector(sections);
 
@@ -107,6 +109,7 @@ const AnalyticsBottomDrawer: FC<Props> = ({
       fieldSelector.sectionOrder,
       fieldSelector.sectionHidden,
       metricBindings,
+      comparedMetricBindings,
     );
   }, [
     activeDetail,
@@ -115,6 +118,7 @@ const AnalyticsBottomDrawer: FC<Props> = ({
     fieldSelector.sectionOrder,
     fieldSelector.sectionHidden,
     metricBindings,
+    comparedMetricBindings,
   ]);
 
   // Init section order when sections change

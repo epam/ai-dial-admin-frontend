@@ -4,6 +4,7 @@ import {
   getListingData,
   getGridData,
   getSingleValueChartData,
+  getTotalTokensFromTree,
   prepareChartData,
   prepareMultiSeriesChartData,
   getFilterTypeConfig,
@@ -77,6 +78,92 @@ describe('Utils :: telemetry :: getSingleValueChartData', () => {
   test('returns empty array for empty data', () => {
     expect(getSingleValueChartData({ headers: [], data: [] })).toEqual(0);
     expect(getSingleValueChartData({ headers: [] })).toEqual(0);
+  });
+});
+
+describe('Utils :: telemetry :: getTotalTokensFromTree', () => {
+  const TREE_HEADERS = ['deployment', 'parent_deployment', 'execution_path', 'tokens_p', 'tokens_c'];
+
+  test('returns 0 for empty data', () => {
+    expect(getTotalTokensFromTree({ headers: TREE_HEADERS, data: [] })).toEqual(0);
+    expect(getTotalTokensFromTree({ headers: TREE_HEADERS })).toEqual(0);
+  });
+
+  test('single real root row contributes its own tokens', () => {
+    expect(
+      getTotalTokensFromTree({
+        headers: TREE_HEADERS,
+        data: [['A', '', 'A', '100', '50']],
+      }),
+    ).toEqual(150);
+  });
+
+  test('orchestrator + child chain counts root tokens only (no double count)', () => {
+    expect(
+      getTotalTokensFromTree({
+        headers: TREE_HEADERS,
+        data: [
+          ['A', '', 'A', '100', '50'],
+          ['B', 'A', 'A/B', '80', '40'],
+        ],
+      }),
+    ).toEqual(150);
+  });
+
+  test('synthetic root contributes child tokens when declared parent has no row', () => {
+    expect(
+      getTotalTokensFromTree({
+        headers: TREE_HEADERS,
+        data: [['B', 'A', 'A/B', '80', '40']],
+      }),
+    ).toEqual(120);
+  });
+
+  test('multiple real roots are summed; non-root children excluded', () => {
+    expect(
+      getTotalTokensFromTree({
+        headers: TREE_HEADERS,
+        data: [
+          ['A', '', 'A', '100', '50'],
+          ['X', '', 'X', '30', '20'],
+          ['B', 'A', 'A/B', '999', '999'],
+        ],
+      }),
+    ).toEqual(200);
+  });
+
+  test('mixes real roots and synthetic root in one total', () => {
+    expect(
+      getTotalTokensFromTree({
+        headers: TREE_HEADERS,
+        data: [
+          ['A', '', 'A', '100', '50'],
+          ['B', 'missing', 'missing/B', '20', '10'],
+        ],
+      }),
+    ).toEqual(180);
+  });
+
+  test('handles large token totals via Big without float drift', () => {
+    const big = '9007199254740992';
+    expect(
+      getTotalTokensFromTree({
+        headers: TREE_HEADERS,
+        data: [
+          ['A', '', 'A', big, '0'],
+          ['X', '', 'X', '0', '1'],
+        ],
+      }),
+    ).toEqual(9007199254740993);
+  });
+
+  test('parent_deployment="undefined" sentinel on a root row stays a root', () => {
+    expect(
+      getTotalTokensFromTree({
+        headers: TREE_HEADERS,
+        data: [['A', 'undefined', 'A', '100', '50']],
+      }),
+    ).toEqual(150);
   });
 });
 

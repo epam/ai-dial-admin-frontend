@@ -4,6 +4,9 @@ import { FC, useCallback, useMemo, useState } from 'react';
 
 import { CellClickedEvent, ColDef, ColGroupDef, ICellRendererParams } from 'ag-grid-community';
 
+import { DialTooltip } from '@epam/ai-dial-ui-kit';
+import { IconExclamationCircle } from '@tabler/icons-react';
+
 import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -44,6 +47,7 @@ interface PivotRow {
 
 interface FieldValueCell {
   raw: string | null;
+  isFailed: boolean;
   diffClass: string;
 }
 
@@ -61,13 +65,21 @@ const TestCaseCellRenderer: FC<ICellRendererParams<PivotRow>> = (params) => {
 
 // ── Cell renderer for field value columns ───────────────────────────────────
 const FieldValueCellRenderer: FC<ICellRendererParams<PivotRow>> = (params) => {
+  const t = useI18n();
   const cell = params.value as FieldValueCell | undefined;
   if (!cell) return <span className="dial-caption-text text-secondary">—</span>;
 
-  const { raw } = cell;
+  const { raw, isFailed } = cell;
   const displayText = formatFieldValue(raw);
 
   if (raw === null) {
+    if (isFailed) {
+      return (
+        <DialTooltip tooltip={t(RunsI18nKey.MetricFailedText)}>
+          <IconExclamationCircle size={14} className="text-error" />
+        </DialTooltip>
+      );
+    }
     return <span className="dial-caption-text text-secondary">—</span>;
   }
   if (raw.includes('\n') || raw.length > 100) {
@@ -132,17 +144,20 @@ const ComparisonPivotView: FC<Props> = ({
       for (const field of flatFields) {
         const val = field.values[rowIdx];
         const raw = val?.raw ?? null;
+        const isFailed = val?.isFailed ?? false;
 
         // Diff highlighting on compared row (pinned)
         let diffClass = '';
         if (hasTwoRows && isPinnedRow && field.values.length >= 2) {
-          const currentRaw = field.values[0]?.raw ?? null;
-          if (!valuesAreEqual(currentRaw, raw)) {
+          const currentVal = field.values[0];
+          const currentRaw = currentVal?.raw ?? null;
+          const currentFailed = currentVal?.isFailed ?? false;
+          if (currentFailed !== isFailed || !valuesAreEqual(currentRaw, raw)) {
             diffClass = field.isNumeric ? 'bg-warning' : 'bg-accent-secondary-alpha';
           }
         }
 
-        row[field.fullKey] = { raw, diffClass } satisfies FieldValueCell;
+        row[field.fullKey] = { raw, isFailed, diffClass } satisfies FieldValueCell;
       }
 
       return row;

@@ -33,14 +33,6 @@ export const UNIQ_USERS_QUERY: TelemetryQuery = getUniqueUsersQuery(ANALYTICS_TA
 
 export const REQUEST_COUNT_QUERY: TelemetryQuery = getCountQuery(ANALYTICS_TABLE_NAME);
 
-export const TOTAL_TOKENS_QUERY: TelemetryQuery = {
-  $type: 'json',
-  query: {
-    expressions: ['sum(prompt_tokens)', 'sum(completion_tokens)'],
-    from: ANALYTICS_TABLE_NAME,
-  },
-};
-
 export const MONEY_QUERY: TelemetryQuery = {
   $type: 'json',
   query: {
