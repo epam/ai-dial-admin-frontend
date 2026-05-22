@@ -30,7 +30,7 @@ describe('WelcomeView', () => {
     render(<WelcomeView disableMenuItems={[]} dialLink="link" docLink="link" />);
 
     expect(screen.getByText(ReadOnlyI18nKey.BannerTitle)).toBeInTheDocument();
-    expect(screen.getByText(ReadOnlyI18nKey.BannerDescription)).toBeInTheDocument();
+    expect(screen.getByText(ReadOnlyI18nKey.Description)).toBeInTheDocument();
     expect(screen.queryByText(MenuI18nKey.ImportConfig)).not.toBeInTheDocument();
     expect(screen.queryByText(MenuI18nKey.ExportConfig)).not.toBeInTheDocument();
   });

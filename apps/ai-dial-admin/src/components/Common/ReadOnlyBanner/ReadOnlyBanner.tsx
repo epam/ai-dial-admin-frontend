@@ -13,7 +13,7 @@ const ReadOnlyBanner: FC = () => {
     <DialAlert
       variant={AlertVariant.Info}
       title={t(ReadOnlyI18nKey.BannerTitle)}
-      message={t(ReadOnlyI18nKey.BannerDescription)}
+      message={t(ReadOnlyI18nKey.Description)}
       className="mb-6"
     />
   );

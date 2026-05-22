@@ -63,9 +63,8 @@ export enum MenuI18nKey {
 
 export enum ReadOnlyI18nKey {
   BannerTitle = 'ReadOnlyAdmin.BannerTitle',
-  BannerDescription = 'ReadOnlyAdmin.BannerDescription',
+  Description = 'ReadOnlyAdmin.Description',
   BadgeLabel = 'ReadOnlyAdmin.BadgeLabel',
-  BadgeTooltip = 'ReadOnlyAdmin.BadgeTooltip',
 }
 
 export enum AuthI18nKey {
