@@ -42,12 +42,7 @@ describe('SingleValueChart', () => {
     const getValue = vi.fn(() => 777);
 
     render(
-      <SingleValueChart
-        title="With Reducer"
-        getData={getDataWithTelemetry}
-        query={validQuery}
-        getValue={getValue}
-      />,
+      <SingleValueChart title="With Reducer" getData={getDataWithTelemetry} query={validQuery} getValue={getValue} />,
     );
 
     expect(await screen.findByText('777')).toBeInTheDocument();
