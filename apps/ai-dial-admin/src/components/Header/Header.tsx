@@ -6,11 +6,13 @@ import { DialIconButton } from '@epam/ai-dial-ui-kit';
 import SidebarClose from '@/public/images/icons/sidebar-close.svg';
 import SidebarOpen from '@/public/images/icons/sidebar-open.svg';
 import Breadcrumbs from '@/src/components/Breadcrumbs/Breadcrumbs';
+import ReadOnlyAdminBadge from '@/src/components/Common/ReadOnlyBadge/ReadOnlyBadge';
 import { useAppContext } from '@/src/context/AppContext';
 import HelpButton from './HelpButton/HelpButton';
 import Logo from './Logo';
 import User from './User/User';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 
 interface Props {
   isEnableAuth: boolean;
@@ -21,6 +23,7 @@ const Header: FC<Props> = ({ isEnableAuth, docLink }) => {
   const { sidebarOpen, toggleSidebar } = useAppContext();
   const [sidebarIcon, setSidebarIcon] = useState<ReactNode>(<SidebarClose />);
   const isTabletScreen = useIsTabletScreen();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   useEffect(() => {
     setSidebarIcon(sidebarOpen ? <SidebarClose /> : <SidebarOpen />);
@@ -36,7 +39,10 @@ const Header: FC<Props> = ({ isEnableAuth, docLink }) => {
           icon={sidebarIcon}
         />
       </div>
-      <Logo />
+      <div className="absolute left-1/2 lg:left-[88px] top-0 flex h-full -translate-x-1/2 lg:translate-x-0 items-center gap-2 justify-center text-primary">
+        <Logo />
+        {isReadOnlyAdmin && <ReadOnlyAdminBadge />}
+      </div>
       <div className="lg:flex-1 lg:min-w-0 lg:flex lg:flex-row lg:items-center lg:pl-[200px]">
         {!isTabletScreen && <Breadcrumbs mobile={false} />}
       </div>

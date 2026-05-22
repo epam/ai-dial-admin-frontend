@@ -61,6 +61,12 @@ export enum MenuI18nKey {
   Images = 'Menu.Images',
 }
 
+export enum ReadOnlyI18nKey {
+  BannerTitle = 'ReadOnlyAdmin.BannerTitle',
+  Description = 'ReadOnlyAdmin.Description',
+  BadgeLabel = 'ReadOnlyAdmin.BadgeLabel',
+}
+
 export enum AuthI18nKey {
   Login = 'Auth.Login',
   Logout = 'Auth.Logout',
