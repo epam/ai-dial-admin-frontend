@@ -1,5 +1,6 @@
 import { signIn, signOut, useSession } from 'next-auth/react';
 import { useCallback } from 'react';
+
 import { UserSession } from '@/src/models/auth';
 import { requestRegistry } from '@/src/utils/api/request-registry';
 
