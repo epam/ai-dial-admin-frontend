@@ -4,7 +4,7 @@ import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
 import Filters from '@/src/components/Telemetry/TelemetryControls/Filters/Filters';
 import { describe, expect, test, vi } from 'vitest';
 const setFilters = vi.fn();
-const getData = vi.fn().mockReturnValue({ data: [] });
+const getBaseData = vi.fn().mockReturnValue({ data: [] });
 
 describe('Components - Filters', () => {
   test('renders correctly with single value', () => {
@@ -15,7 +15,14 @@ describe('Components - Filters', () => {
         type: FILTER_TYPE.Entity,
       },
     ];
-    render(<Filters filters={filters} setFilters={setFilters} route={ApplicationRoute.Dashboard} getData={getData} />);
+    render(
+      <Filters
+        filters={filters}
+        setFilters={setFilters}
+        route={ApplicationRoute.Dashboard}
+        getBaseData={getBaseData}
+      />,
+    );
 
     expect(screen.getByText('asd')).toBeInTheDocument();
   });
@@ -28,7 +35,14 @@ describe('Components - Filters', () => {
         type: FILTER_TYPE.Entity,
       },
     ];
-    render(<Filters filters={filters} setFilters={setFilters} route={ApplicationRoute.Dashboard} getData={getData} />);
+    render(
+      <Filters
+        filters={filters}
+        setFilters={setFilters}
+        route={ApplicationRoute.Dashboard}
+        getBaseData={getBaseData}
+      />,
+    );
 
     expect(screen.getByText('value1, value2, +1 more')).toBeInTheDocument();
   });
@@ -41,7 +55,14 @@ describe('Components - Filters', () => {
         type: FILTER_TYPE.Entity,
       },
     ];
-    render(<Filters filters={filters} setFilters={setFilters} route={ApplicationRoute.Dashboard} getData={getData} />);
+    render(
+      <Filters
+        filters={filters}
+        setFilters={setFilters}
+        route={ApplicationRoute.Dashboard}
+        getBaseData={getBaseData}
+      />,
+    );
     // Simulate add filter (if there is a button or link)
     // For demonstration, check for value text
     expect(screen.getByText('asd')).toBeInTheDocument();
