@@ -20,6 +20,7 @@ import {
 import {
   createTestCase,
   getTestCases,
+  getTestSuite,
   importTestCase,
   removeMultipleTestCases,
   removeTestCase,
@@ -273,8 +274,21 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
           showNotification(
             getSuccessNotification(t(TestSuitesI18nKey.ImportSuccess), t(TestSuitesI18nKey.ImportSuccessDescription)),
           );
-          setIsLoading(true);
-          router.refresh();
+          getTestSuite(selectedTestSuite.id!, '').then((suiteRes) => {
+            const updatedSuite = suiteRes?.response;
+            if (!updatedSuite) {
+              refreshGrid();
+              return;
+            }
+            const schemaChanged =
+              JSON.stringify(updatedSuite.testCaseSchema) !== JSON.stringify(selectedTestSuite.testCaseSchema);
+            if (!schemaChanged) {
+              refreshGrid();
+            } else {
+              setIsLoading(true);
+              router.refresh();
+            }
+          });
         } else {
           showNotification(
             getErrorNotification(t(TestSuitesI18nKey.ImportFailed), res?.errorMessage || 'Unknown error'),
@@ -282,7 +296,7 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
         }
       });
     },
-    [refreshGrid, selectedTestSuite.id, showNotification, t],
+    [refreshGrid, selectedTestSuite, showNotification, t, onChange],
   );
 
   const onExport = useCallback(() => {
