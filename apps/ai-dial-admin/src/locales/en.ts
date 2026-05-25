@@ -1529,7 +1529,7 @@ export default {
     ViewFullServerJson: 'View full server.json',
     NoServerDetails: 'No server details available',
     ContainerRestartWarning: '{entityType} will be restarted after changing image version.',
-    ContainersRestartWarning: '{entityType} with "Running" status will be restarted.',
+    ContainersRestartWarning: 'Container with "Running" status will be restarted.',
     ShowRelatedContainers: 'Show containers related to this image',
     SelectModelFromRegistry: 'Select model source from registry',
     SelectMcpServerFromRegistry: 'Select MCP server from registry',
