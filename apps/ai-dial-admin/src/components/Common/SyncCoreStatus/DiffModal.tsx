@@ -12,7 +12,7 @@ import { CoreSyncStatus } from '@/src/models/core-sync-status';
 import { EntitySyncStatus } from '@/src/types/entity-sync-status';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getCoreSyncStatusUrl } from '@/src/utils/core-sync/get-core-sync-status-url';
-import StatusText from './StatusText';
+import CoreSyncStatusBadge from './CoreSyncStatusBadge';
 
 interface Props {
   isModalOpen: boolean;
@@ -78,7 +78,7 @@ const CoreSyncDiffModal: FC<Props> = ({
             <div className="flex flex-row gap-x-10">
               <LabelledText label={t(CoreSyncI18nKey.SyncStatus)}>
                 <div className="flex flex-row gap-x-2 items-center">
-                  <StatusText status={newStatus?.status} />
+                  <CoreSyncStatusBadge status={newStatus?.status} />
                 </div>
               </LabelledText>
               <LabelledText label={t(CoreSyncI18nKey.Format)}>{t(CoreSyncI18nKey.Core)}</LabelledText>
