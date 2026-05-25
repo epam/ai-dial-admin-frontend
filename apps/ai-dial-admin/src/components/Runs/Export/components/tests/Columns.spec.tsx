@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import ColumnsAccordion from '@/src/components/Runs/Export/components/ColumnsAccordion';
+import Columns from '@/src/components/Runs/Export/components/Columns';
 import { ColumnGroup } from '@/src/components/Runs/Export/models';
 import { ColumnGroupId, groupColumns } from '@/src/components/Runs/Export/utils/group-columns';
 import { ExportRunI18nKey } from '@/src/constants/i18n';
@@ -11,38 +11,17 @@ function makeGroups(columnNames: string[]): ColumnGroup[] {
   return groupColumns(columnNames);
 }
 
-describe('ColumnsAccordion', () => {
+describe('Columns', () => {
   it('renders group labels', () => {
     const groups = makeGroups(['id', 'data:prompt']);
     const checkedColumns = new Set(['id', 'data:prompt']);
 
     render(
-      <ColumnsAccordion
-        groups={groups}
-        checkedColumns={checkedColumns}
-        onToggleColumn={vi.fn()}
-        onToggleGroup={vi.fn()}
-      />,
+      <Columns groups={groups} checkedColumns={checkedColumns} onToggleColumn={vi.fn()} onToggleGroup={vi.fn()} />,
     );
 
     expect(screen.getByText(ExportRunI18nKey.GroupIdentification)).toBeInTheDocument();
     expect(screen.getByText(ExportRunI18nKey.GroupData)).toBeInTheDocument();
-  });
-
-  it('shows selected count in accordion title', () => {
-    const groups = makeGroups(['id', 'data:prompt', 'requestBody']);
-    const checkedColumns = new Set(['id', 'data:prompt']);
-
-    render(
-      <ColumnsAccordion
-        groups={groups}
-        checkedColumns={checkedColumns}
-        onToggleColumn={vi.fn()}
-        onToggleGroup={vi.fn()}
-      />,
-    );
-
-    expect(screen.getByText(`${ExportRunI18nKey.ColumnsAccordionLabel} (2 / 3)`)).toBeInTheDocument();
   });
 
   it('calls onToggleColumn when a column checkbox is clicked', async () => {
@@ -51,7 +30,7 @@ describe('ColumnsAccordion', () => {
     const onToggleColumn = vi.fn();
 
     render(
-      <ColumnsAccordion
+      <Columns
         groups={groups}
         checkedColumns={checkedColumns}
         onToggleColumn={onToggleColumn}
@@ -70,7 +49,7 @@ describe('ColumnsAccordion', () => {
     const onToggleGroup = vi.fn();
 
     render(
-      <ColumnsAccordion
+      <Columns
         groups={groups}
         checkedColumns={checkedColumns}
         onToggleColumn={vi.fn()}
@@ -89,12 +68,7 @@ describe('ColumnsAccordion', () => {
     const checkedColumns = new Set(columns);
 
     const { container } = render(
-      <ColumnsAccordion
-        groups={groups}
-        checkedColumns={checkedColumns}
-        onToggleColumn={vi.fn()}
-        onToggleGroup={vi.fn()}
-      />,
+      <Columns groups={groups} checkedColumns={checkedColumns} onToggleColumn={vi.fn()} onToggleGroup={vi.fn()} />,
     );
 
     const grid = container.querySelector('.grid-cols-3');
@@ -106,12 +80,7 @@ describe('ColumnsAccordion', () => {
     const checkedColumns = new Set(['metric:Accuracy:score', 'metric:Recall:score']);
 
     render(
-      <ColumnsAccordion
-        groups={groups}
-        checkedColumns={checkedColumns}
-        onToggleColumn={vi.fn()}
-        onToggleGroup={vi.fn()}
-      />,
+      <Columns groups={groups} checkedColumns={checkedColumns} onToggleColumn={vi.fn()} onToggleGroup={vi.fn()} />,
     );
 
     expect(screen.getByText('metric:Accuracy')).toBeInTheDocument();
@@ -120,7 +89,7 @@ describe('ColumnsAccordion', () => {
 
   it('shows a loader when isLoading is true', () => {
     const { container } = render(
-      <ColumnsAccordion
+      <Columns
         groups={[]}
         checkedColumns={new Set()}
         isLoading={true}
