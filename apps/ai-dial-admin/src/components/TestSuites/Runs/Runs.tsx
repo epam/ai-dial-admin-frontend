@@ -8,9 +8,10 @@ import { GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } fro
 import { removeRun } from '@/src/app/[lang]/runs/actions';
 import { getRuns } from '@/src/app/[lang]/test-suites/actions';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
+import ExportRunModal from '@/src/components/Runs/Export/ExportRunModal';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { ACTION_COLUMN, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
-import { getDeleteOperation, getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
+import { getDeleteOperation, getExportOperation, getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
 import { RUNS_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -37,6 +38,8 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
   const [totalElements, setTotalElements] = useState(0);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedRun, setSelectedRun] = useState<Run | undefined>(undefined);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [selectedExportRun, setSelectedExportRun] = useState<Run | undefined>(undefined);
 
   useRunStatusStream(selectedTestSuite.id, gridApi);
 
@@ -119,6 +122,16 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
     setIsDeleteModalOpen(false);
   }, []);
 
+  const onOpenExportModal = useCallback((run?: Run) => {
+    setSelectedExportRun(run);
+    setIsExportModalOpen(true);
+  }, []);
+
+  const onCloseExportModal = useCallback(() => {
+    setSelectedExportRun(undefined);
+    setIsExportModalOpen(false);
+  }, []);
+
   const onRemoveRun = useCallback(
     async (id: string) => {
       const response = await removeRun(id);
@@ -151,9 +164,13 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
   const columnDefs = useMemo(
     () => [
       ...RUNS_COLUMN,
-      ACTION_COLUMN([getOpenInNewTabOperation(onOpenInNewTabAction), getDeleteOperation(onOpenDeleteModal)]),
+      ACTION_COLUMN([
+        getOpenInNewTabOperation(onOpenInNewTabAction),
+        getExportOperation(onOpenExportModal),
+        getDeleteOperation(onOpenDeleteModal),
+      ]),
     ],
-    [onOpenDeleteModal, onOpenInNewTabAction],
+    [onOpenDeleteModal, onOpenExportModal, onOpenInNewTabAction],
   );
 
   return (
@@ -174,6 +191,9 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
           />,
           document.body,
         )}
+      {isExportModalOpen &&
+        selectedExportRun?.id &&
+        createPortal(<ExportRunModal runId={selectedExportRun.id} onClose={onCloseExportModal} />, document.body)}
     </>
   );
 };

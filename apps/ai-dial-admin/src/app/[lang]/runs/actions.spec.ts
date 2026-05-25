@@ -6,6 +6,7 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
+  exportRunPreview,
   getRun,
   getRunResults,
   getRuns,
@@ -115,5 +116,16 @@ describe('Runs :: server actions', () => {
     expect(getUserToken).toHaveBeenCalled();
     expect(analyticsApi.getMetricSnapshots).toHaveBeenCalledWith(filters, TOKEN_MOCK);
     expect(result).toEqual(snapshots);
+  });
+
+  test('Should call exportRunPreview action and return preview data', async () => {
+    const preview = [['id', 'prompt'], ['run-1', 'hello']];
+    (analyticsApi.exportPreview as any).mockResolvedValue(preview);
+
+    const result = await exportRunPreview('run-1');
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(analyticsApi.exportPreview).toHaveBeenCalledWith('run-1', TOKEN_MOCK);
+    expect(result).toEqual(preview);
   });
 });

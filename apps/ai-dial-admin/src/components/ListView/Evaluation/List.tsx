@@ -18,11 +18,13 @@ import { duplicateTestSuite, runTestSuite } from '@/src/app/[lang]/test-suites/a
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 import ListEntities from '@/src/components/ListView/List';
+import ExportRunModal from '@/src/components/Runs/Export/ExportRunModal';
 import RunModal from '@/src/components/TestSuites/Runs/RunModal';
 import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
 import {
   getDeleteOperation,
   getDuplicateOperation,
+  getExportOperation,
   getOpenInNewTabOperation,
   getRunTestSuiteOperation,
 } from '@/src/constants/grid-columns/actions';
@@ -70,6 +72,8 @@ const EvaluationListView = <T extends object>({
   const [modalType, setModalType] = useState<ModalType>();
   const [currentEntity, setCurrentEntity] = useState<T | undefined>(undefined);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [exportRunId, setExportRunId] = useState<string | undefined>(undefined);
   const { showNotification } = useNotification();
 
   const gridOptions: GridOptions = {
@@ -166,6 +170,19 @@ const EvaluationListView = <T extends object>({
     [onOpenModal],
   );
 
+  const onOpenExportModal = useCallback((entity?: T) => {
+    const id = (entity as { id?: string })?.id;
+    if (id) {
+      setExportRunId(id);
+      setIsExportModalOpen(true);
+    }
+  }, []);
+
+  const onCloseExportModal = useCallback(() => {
+    setExportRunId(undefined);
+    setIsExportModalOpen(false);
+  }, []);
+
   const onRun = useCallback(
     (num?: string | number) => {
       runTestSuite((currentEntity as TestSuite)?.id as string, num).then((res) => {
@@ -209,6 +226,10 @@ const EvaluationListView = <T extends object>({
     actionColumn.push(
       ...[getRunTestSuiteOperation(onOpenRunTestSuiteModal), getDuplicateOperation(onOpenDuplicateModal)],
     );
+  }
+
+  if (route === ApplicationRoute.Runs) {
+    actionColumn.push(getExportOperation(onOpenExportModal));
   }
 
   const columnDefs = [...baseColumns, ACTION_COLUMN([...actionColumn, getDeleteOperation(onOpenDeleteModal)])];
@@ -266,6 +287,10 @@ const EvaluationListView = <T extends object>({
           </SaveValidationContextProvider>,
           document.body,
         )}
+
+      {isExportModalOpen &&
+        exportRunId &&
+        createPortal(<ExportRunModal runId={exportRunId} onClose={onCloseExportModal} />, document.body)}
     </>
   );
 };

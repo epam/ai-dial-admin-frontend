@@ -3,6 +3,7 @@ import {
   IconDownload,
   IconExternalLink,
   IconEye,
+  IconFileExport,
   IconFolderShare,
   IconInfinity,
   IconPencilMinus,
@@ -230,5 +231,18 @@ export function getTryOutOperation<T>(onClick: (entity?: T) => void): ActionMenu
     id: ActionMenuOperationI18nKey.Try_out,
     label: ActionMenuOperationI18nKey.Try_out,
     onClick,
+  };
+}
+
+export function getExportOperation<T>(
+  onClick: (entity?: T) => void,
+  hidden?: (api: GridApi, node: IRowNode) => boolean,
+): ActionMenuOperationDeclaration<T> {
+  return {
+    icon: <IconFileExport {...BASE_BUTTON_ICON_PROPS} />,
+    id: ActionMenuOperationI18nKey.Export,
+    label: ActionMenuOperationI18nKey.Export,
+    onClick,
+    hidden,
   };
 }
