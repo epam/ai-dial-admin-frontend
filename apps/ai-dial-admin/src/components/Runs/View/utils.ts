@@ -134,7 +134,7 @@ const executionColumns: ColDef[] = [
     headerName: '#',
     colId: 'runIndex',
     width: 50,
-    valueGetter: (params) => (params.node?.rowIndex != null ? params.node.rowIndex + 1 : null),
+    valueGetter: (params) => (params.data?.runIndex != null ? params.data.runIndex + 1 : null),
   },
   {
     field: 'responseStatusCode',
@@ -159,7 +159,7 @@ const comparedExecutionColumns: ColDef[] = [
     colId: 'cmp_runIndex',
     headerName: '#',
     width: 50,
-    valueGetter: (params) => params.data?._compared?.runIndex ?? '—',
+    valueGetter: (params) => (params.data?._compared?.runIndex != null ? params.data._compared.runIndex + 1 : '—'),
   },
   {
     colId: 'cmp_http',
@@ -338,18 +338,16 @@ export const getAnalyticsColumnsCompare = (results: CompareAnalyticsRow[], error
     staticColumns[0],
     {
       headerName: 'EXECUTION',
-      children: executionColumns
-        .filter((col) => col.colId !== 'runIndex')
-        .map((curr) => {
-          const cmpCol = comparedExecutionColumns.find((c) => c.colId === `cmp_${curr.colId}`);
-          return {
-            headerName: curr.headerName,
-            children: [
-              { ...curr, headerName: 'Current' },
-              { ...cmpCol, headerName: 'Compared' },
-            ],
-          };
-        }),
+      children: executionColumns.map((curr) => {
+        const cmpCol = comparedExecutionColumns.find((c) => c.colId === `cmp_${curr.colId}`);
+        return {
+          headerName: curr.headerName,
+          children: [
+            { ...curr, headerName: 'Current' },
+            { ...cmpCol, headerName: 'Compared' },
+          ],
+        };
+      }),
     },
     ...getComparedMetricsColumns(metrics, errorText),
     {
