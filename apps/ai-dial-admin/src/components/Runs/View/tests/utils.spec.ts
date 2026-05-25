@@ -5,14 +5,14 @@ import {
   RESULT_FILTERS,
   getTestCaseStatusClass,
   getAnalyticsColumns,
-  getFormattedDuration,
-  getPanelTitle,
+  getAnalyticsColumnsCompare,
   getDetailEntries,
   getDetailNestedEntries,
+  getFormattedDuration,
   getMetricGroups,
-  snapshotsToBindingsMap,
+  getPanelTitle,
   mergeByTestCaseId,
-  getAnalyticsColumnsCompare,
+  snapshotsToBindingsMap,
 } from '../utils';
 import { CompareAnalyticsRow } from '../models';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
@@ -513,6 +513,36 @@ describe('Runs View :: snapshotsToBindingsMap', () => {
   });
 });
 
+describe('Runs View :: executionColumns # (runIndex) valueGetter', () => {
+  const getRunIndexCol = (results = [] as any[]) => {
+    const cols = getAnalyticsColumns(results);
+    const execGroup = cols.find((c: any) => c.headerName === 'EXECUTION') as any;
+    return execGroup.children.find((c: any) => c.colId === 'runIndex');
+  };
+
+  test('Should display 1-based index (backend runIndex is 0-based)', () => {
+    const col = getRunIndexCol();
+    expect(col.valueGetter({ data: { runIndex: 0 } })).toBe(1);
+    expect(col.valueGetter({ data: { runIndex: 1 } })).toBe(2);
+    expect(col.valueGetter({ data: { runIndex: 2 } })).toBe(3);
+  });
+
+  test('Should return null when data is null', () => {
+    const col = getRunIndexCol();
+    expect(col.valueGetter({ data: null })).toBeNull();
+  });
+
+  test('Should return null when data is undefined', () => {
+    const col = getRunIndexCol();
+    expect(col.valueGetter({ data: undefined })).toBeNull();
+  });
+
+  test('Should return null when runIndex is undefined', () => {
+    const col = getRunIndexCol();
+    expect(col.valueGetter({ data: {} })).toBeNull();
+  });
+});
+
 const makeResult = (overrides: Partial<AnalyticsResult> = {}): AnalyticsResult => ({
   responseStatusCode: 200,
   runIndex: 0,
@@ -581,7 +611,7 @@ describe('Runs View :: getAnalyticsColumnsCompare', () => {
     expect(blank.children).toHaveLength(2);
   });
 
-  test('EXECUTION group has field sub-groups each with Current and Compared leaves, without runIndex', () => {
+  test('EXECUTION group has field sub-groups each with Current and Compared leaves, including runIndex (#)', () => {
     const cols = getAnalyticsColumnsCompare([makeRow()]);
     const exec = cols[1] as {
       headerName: string;
@@ -589,15 +619,36 @@ describe('Runs View :: getAnalyticsColumnsCompare', () => {
     };
 
     expect(exec.headerName).toBe('EXECUTION');
-    expect(exec.children).toHaveLength(2);
-    expect(exec.children[0].headerName).toBe('HTTP');
-    expect(exec.children[1].headerName).toBe('Duration');
+    expect(exec.children).toHaveLength(3);
+    expect(exec.children[0].headerName).toBe('#');
+    expect(exec.children[1].headerName).toBe('HTTP');
+    expect(exec.children[2].headerName).toBe('Duration');
 
     for (const fieldGroup of exec.children) {
       expect(fieldGroup.children).toHaveLength(2);
       expect(fieldGroup.children[0].headerName).toBe('Current');
       expect(fieldGroup.children[1].headerName).toBe('Compared');
     }
+  });
+
+  test('# field group Current leaf shows runIndex from row, Compared leaf shows _compared.runIndex', () => {
+    type ExecChild = {
+      headerName: string;
+      children: { headerName: string; valueGetter: (p: { data?: CompareAnalyticsRow }) => unknown }[];
+    };
+    const cols = getAnalyticsColumnsCompare([makeRow()]);
+    const exec = cols[1] as { children: ExecChild[] };
+    const hashGroup = exec.children[0];
+
+    expect(hashGroup.headerName).toBe('#');
+    const currentLeaf = hashGroup.children[0];
+    const comparedLeaf = hashGroup.children[1];
+
+    expect(currentLeaf.valueGetter({ data: makeRow({ runIndex: 2 }) })).toBe(3);
+    expect(currentLeaf.valueGetter({ data: undefined })).toBeNull();
+
+    expect(comparedLeaf.valueGetter({ data: makeRow({ _compared: makeResult({ runIndex: 3 }) }) })).toBe(4);
+    expect(comparedLeaf.valueGetter({ data: makeRow({ _compared: null }) })).toBe('—');
   });
 
   test('metric groups have metric key sub-groups each with Current and Compared leaves', () => {
