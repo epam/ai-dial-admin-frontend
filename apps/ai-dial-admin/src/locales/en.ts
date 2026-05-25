@@ -473,6 +473,7 @@ export default {
     McpRegistry: 'Select from registry',
     TryOut: 'Try out',
     Upload: 'Upload',
+    ExportCsv: 'Export CSV',
   },
   Compare: {
     CompareChanges: 'Compare changes',
@@ -1850,6 +1851,24 @@ export default {
     TextDiff: 'Text',
     CompareWith: 'Compare with',
     RunCompareNoMatch: 'No matching test case in compared run',
+  },
+  ExportRun: {
+    ExportRunTitle: 'Export run',
+    ColumnsAccordionLabel: 'Columns',
+    PreviewAccordionLabel: 'Preview',
+    ExportError: 'Export failed',
+    ExportSuccess: 'Export successful',
+    ExportSuccessDescription: 'CSV file has been downloaded',
+    ExportStarted: 'Export started',
+    ExportStartedDescription: 'Your file is being prepared and will be available shortly.',
+    GroupIdentification: 'Identification',
+    GroupData: 'Data',
+    GroupResponse: 'Response',
+    GroupMetrics: 'Metrics',
+    GroupBody: 'Body',
+    PreviewLoadError: 'Failed to load preview data',
+    PreviewDescription:
+      'Preview displays only the first 10 rows of your data. The full export will include all selected rows.',
   },
   JsonAta: {
     JSONAtaDoc: 'JSONata Expression Reference',
