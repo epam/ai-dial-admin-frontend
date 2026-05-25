@@ -25,6 +25,8 @@ import {
 import { USAGE_LOG_NUMERIC_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ServerActionResponse } from '@/src/models/server-action';
 import {
+  AgGridFilter,
+  AgGridNumberFilter,
   AgGridTextFilter,
   BuildUsageLogQueryParams,
   DatasetMetadata,
@@ -255,6 +257,30 @@ const translateUsageLogTextFilter = (colId: string, filter: AgGridTextFilter): U
   return { [operator]: { left: column, right: `'${filter.filter}'` } };
 };
 
+const translateUsageLogNumberFilter = (colId: string, filter: AgGridNumberFilter): UsageLogFilterClause | null => {
+  const column = toUsageLogSourceColumn(colId);
+  if (filter.type === 'inRange') {
+    if (filter.filter == null || filter.filterTo == null) {
+      return null;
+    }
+    return {
+      $and: [{ $gte: { left: column, right: filter.filter } }, { $lte: { left: column, right: filter.filterTo } }],
+    };
+  }
+  const operator = filter.type ? USAGE_LOG_TEXT_OPERATOR_MAP[filter.type] : undefined;
+  if (!operator || filter.filter == null) {
+    return null;
+  }
+  return { [operator]: { left: column, right: filter.filter } };
+};
+
+const translateUsageLogFilter = (colId: string, filter: AgGridFilter): UsageLogFilterClause | null => {
+  if (filter.filterType === 'number') {
+    return translateUsageLogNumberFilter(colId, filter);
+  }
+  return translateUsageLogTextFilter(colId, filter);
+};
+
 export const translateUsageLogFilterModel = (
   filterModel: UsageLogFilterModel | null | undefined,
 ): UsageLogFilterClause[] => {
@@ -262,7 +288,7 @@ export const translateUsageLogFilterModel = (
     return [];
   }
   return Object.entries(filterModel).flatMap(([colId, filter]) => {
-    const clause = translateUsageLogTextFilter(colId, filter);
+    const clause = translateUsageLogFilter(colId, filter);
     return clause == null ? [] : [clause];
   });
 };
