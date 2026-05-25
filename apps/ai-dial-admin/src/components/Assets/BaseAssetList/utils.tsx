@@ -18,7 +18,6 @@ import {
   getApp,
   importApps,
   moveApps,
-  removeApp,
 } from '@/src/app/[lang]/assets-applications/actions';
 import {
   bulkDeletePrompts,
@@ -26,7 +25,6 @@ import {
   exportPrompts,
   getPrompt,
   movePrompts,
-  removePrompt,
 } from '@/src/app/[lang]/prompts/actions';
 import {
   bulkDeleteToolsets,
@@ -35,12 +33,17 @@ import {
   getToolset,
   importToolsets,
   moveToolsets,
-  removeToolset,
 } from '@/src/app/[lang]/assets-toolsets/actions';
 import { ResourceType } from '@/src/types/resource-type';
+import { ImportFileType } from '@/src/types/import';
+import { ServerActionResponse } from '@/src/models/server-action';
 import { importPrompts } from '@/src/utils/prompts/import-prompts';
+import { getNameVersionFromAsset } from '@/src/utils/entities/versions';
 import MultiSelectTagsRenderer from '../../Grid/CellRenderers/MultiSelectTagsRenderer';
 import { TEMP_FOLDER } from '@/src/constants/file';
+import { useConversationFolder } from '@/src/context/assets/ConversationsFolderContext';
+import { deleteConversations, getConversation } from '@/src/app/[lang]/conversations/actions';
+import { CrudAssetRoute } from './types';
 
 export const getItems = (data: unknown) => {
   const asset = data as AssetWithVersion;
@@ -154,6 +157,8 @@ export const getFileManagerLabel = (view: ApplicationRoute): string => {
       return FileManagerI18nKey.Applications;
     case ApplicationRoute.AssetsToolsets:
       return FileManagerI18nKey.Toolsets;
+    case ApplicationRoute.Conversations:
+      return FileManagerI18nKey.Conversations;
     default:
       return '';
   }
@@ -179,6 +184,11 @@ export const getEmptyStateContent = (
         title: t(FileManagerI18nKey.ToolsetsEmptyStateTitle),
         description: t(FileManagerI18nKey.ToolsetsEmptyStateDescription),
       };
+    case ApplicationRoute.Conversations:
+      return {
+        title: t(FileManagerI18nKey.ConversationsEmptyStateTitle),
+        description: '',
+      };
     default:
       return { title: '', description: '' };
   }
@@ -192,6 +202,8 @@ export const getResourceTypeByRoute = (view: ApplicationRoute) => {
       return ResourceType.APPLICATION;
     case ApplicationRoute.AssetsToolsets:
       return ResourceType.TOOLSET;
+    case ApplicationRoute.Conversations:
+      return ResourceType.CONVERSATION;
     default:
       return null;
   }
@@ -201,46 +213,67 @@ export const AssetFolderContextMap = {
   [ApplicationRoute.Prompts]: usePromptFolder,
   [ApplicationRoute.AssetsApplications]: useAppsFolder,
   [ApplicationRoute.AssetsToolsets]: useToolsetFolder,
+  [ApplicationRoute.Conversations]: useConversationFolder,
 };
 
 export const GetAssetActionMap = {
   [ApplicationRoute.Prompts]: getPrompt,
   [ApplicationRoute.AssetsApplications]: getApp,
   [ApplicationRoute.AssetsToolsets]: getToolset,
+  [ApplicationRoute.Conversations]: getConversation,
 };
 
-export const CreateAssetActionMap = {
+export const CreateAssetActionMap: Record<
+  CrudAssetRoute,
+  (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>
+> = {
   [ApplicationRoute.Prompts]: createPrompt,
   [ApplicationRoute.AssetsApplications]: createApp,
   [ApplicationRoute.AssetsToolsets]: createToolset,
 };
 
-export const MoveAssetActionMap = {
+export const MoveAssetActionMap: Record<
+  CrudAssetRoute,
+  (
+    paths: string[],
+    newPath: string,
+    overwrite?: boolean,
+    duplicateName?: string,
+  ) => Promise<ServerActionResponse<Record<string, unknown>>[]>
+> = {
   [ApplicationRoute.Prompts]: movePrompts,
   [ApplicationRoute.AssetsApplications]: moveApps,
   [ApplicationRoute.AssetsToolsets]: moveToolsets,
 };
 
-export const ImportAssetActionMap = {
+export const ImportAssetActionMap: Record<
+  CrudAssetRoute,
+  (body: FormData, fileType: ImportFileType) => Promise<ServerActionResponse<Record<string, unknown>>>
+> = {
   [ApplicationRoute.Prompts]: importPrompts,
   [ApplicationRoute.AssetsApplications]: importApps,
   [ApplicationRoute.AssetsToolsets]: importToolsets,
 };
 
-export const ExportAssetActionMap = {
+export const ExportAssetActionMap: Record<
+  CrudAssetRoute,
+  (paths: string[], type?: ImportFileType) => Promise<unknown>
+> = {
   [ApplicationRoute.Prompts]: exportPrompts,
   [ApplicationRoute.AssetsApplications]: exportApps,
   [ApplicationRoute.AssetsToolsets]: exportToolsets,
-};
-
-export const RemoveAssetActionMap = {
-  [ApplicationRoute.Prompts]: removePrompt,
-  [ApplicationRoute.AssetsApplications]: removeApp,
-  [ApplicationRoute.AssetsToolsets]: removeToolset,
 };
 
 export const BulkDeleteAssetActionMap = {
   [ApplicationRoute.Prompts]: bulkDeletePrompts,
   [ApplicationRoute.AssetsApplications]: bulkDeleteApps,
   [ApplicationRoute.AssetsToolsets]: bulkDeleteToolsets,
+  [ApplicationRoute.Conversations]: deleteConversations,
+};
+
+export const enrichConversationWithVersion = (conversation: AssetWithVersion): AssetWithVersion => {
+  const fullName = conversation.path.split('/').pop() || '';
+  const { name, version } = getNameVersionFromAsset(fullName);
+
+  return { ...conversation, name, version };
 };
