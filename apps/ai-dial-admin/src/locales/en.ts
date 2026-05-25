@@ -27,11 +27,11 @@ export default {
   CoreSync: {
     SyncStatus: 'Sync status',
     SyncWithCore: 'Sync with core',
-    InProgress: 'In progress...',
+    InProgress: 'Sync in progress',
     Partially: 'Out of sync',
     Fully: 'Fully synced',
     Synced: 'Synced',
-    Unknown: 'Unavailable',
+    Unknown: 'Sync unavailable',
     Format: 'JSON format',
     Core: 'Core',
     Admin: 'Admin',

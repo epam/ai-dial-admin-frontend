@@ -4,20 +4,17 @@ import { createPortal } from 'react-dom';
 import { DialIconButton } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
-import OpenPopup from '@/public/images/icons/open-pop-up.svg';
+import Difference from '@/public/images/icons/difference.svg';
 import { getCoreSyncStatus } from '@/src/app/actions';
-import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
-import { CoreSyncI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
-import { useI18n } from '@/src/locales/client';
 import { CoreSyncStatus } from '@/src/models/core-sync-status';
 import { EntitySyncStatus } from '@/src/types/entity-sync-status';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getCoreSyncStatusUrl } from '@/src/utils/core-sync/get-core-sync-status-url';
+import CoreSyncStatusBadge from './CoreSyncStatusBadge';
 import CoreSyncDiffModal from './DiffModal';
-import StatusText from './StatusText';
 
 interface Props {
   view?: ApplicationRoute;
@@ -25,7 +22,6 @@ interface Props {
 }
 
 const CoreSyncEntityStatus: FC<Props> = ({ view, name }) => {
-  const t = useI18n();
   const { resetCounter } = useSaveValidationContext();
   const [coreSyncStatus, setCoreSyncStatus] = useState<CoreSyncStatus | undefined>();
   const [etag, setEtag] = useState<string>(DEFAULT_ETAG);
@@ -79,21 +75,19 @@ const CoreSyncEntityStatus: FC<Props> = ({ view, name }) => {
   }, [resetCounter]);
 
   return (
-    <div className={classNames(coreSyncStatus?.status ? 'block' : 'hidden')}>
-      <LabelledText label={t(CoreSyncI18nKey.SyncWithCore)}>
+    <>
+      <div className={classNames(coreSyncStatus?.status ? 'visible' : 'invisible', 'h-[20px]')}>
         <div className="flex flex-row gap-x-2 items-center">
-          <div className="flex flex-row gap-x-2 items-center flex-1 min-w-0">
-            <StatusText status={coreSyncStatus?.status} />
-          </div>
+          <CoreSyncStatusBadge status={coreSyncStatus?.status} />
           {diffStatus && (
             <DialIconButton
-              icon={<OpenPopup {...BASE_BUTTON_ICON_PROPS} className="cursor-pointer text-secondary" />}
+              icon={<Difference {...BASE_BUTTON_ICON_PROPS} className="cursor-pointer text-secondary" />}
               onClick={() => setIsModalOpen(true)}
               className="size-auto"
             />
           )}
         </div>
-      </LabelledText>
+      </div>
       {isModalOpen &&
         createPortal(
           <CoreSyncDiffModal
@@ -107,7 +101,7 @@ const CoreSyncEntityStatus: FC<Props> = ({ view, name }) => {
           />,
           document.body,
         )}
-    </div>
+    </>
   );
 };
 
