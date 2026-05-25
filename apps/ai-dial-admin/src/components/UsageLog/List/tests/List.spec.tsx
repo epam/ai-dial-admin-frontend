@@ -8,6 +8,11 @@ import List from '@/src/components/UsageLog/List/List';
 import { TRACES_QUERY } from '@/src/constants/telemetry';
 import { USAGE_LOG_TRACES_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 
+const showNotificationSpy = vi.fn();
+vi.mock('@/src/context/NotificationContext', () => ({
+  useNotification: () => ({ showNotification: showNotificationSpy }),
+}));
+
 describe('List', () => {
   const timeRange = {
     startDate: new Date('2026-04-01T00:00:00.000Z'),
@@ -238,4 +243,78 @@ describe('List', () => {
     await new Promise((r) => setTimeout(r, 50));
     expect(getData).toHaveBeenCalledTimes(1);
   });
+
+  test('initial fetch sends orderBy [{ $desc: "_time" }]', async () => {
+    const getData = vi.fn().mockResolvedValue({
+      success: true,
+      response: { data: [], headers: ['completion_time'] },
+    });
+
+    render(
+      <List
+        route={ApplicationRoute.UsageLog}
+        getData={getData}
+        query={TRACES_QUERY}
+        columnDefs={USAGE_LOG_TRACES_COLUMNS}
+        listLabel={TabsI18nKey.Traces}
+        emptyDataTitle={TelemetryI18nKey.NoTracesTitle}
+        timeRange={timeRange}
+        entityName={null}
+      />,
+    );
+
+    await waitFor(() => expect(getData).toHaveBeenCalledTimes(1));
+    const firstCall = getData.mock.calls[0][0];
+    expect(firstCall.query.orderBy).toEqual([{ $desc: '_time' }]);
+  });
+
+  test('error response shows a notification and does not append rows', async () => {
+    showNotificationSpy.mockClear();
+
+    const goodResponse = {
+      success: true as const,
+      response: {
+        data: [['2026-04-02T12:00:00.000Z'], ['2026-04-02T13:00:00.000Z']],
+        headers: ['completion_time'],
+      },
+    };
+    const errorResponse = {
+      success: false as const,
+      errorHeader: 'Backend exploded',
+      errorMessage: 'something failed',
+      requestId: 'req-123',
+    };
+    const getData = vi
+      .fn()
+      .mockResolvedValueOnce(goodResponse)
+      .mockResolvedValue(errorResponse);
+
+    render(
+      <List
+        route={ApplicationRoute.UsageLog}
+        getData={getData}
+        query={TRACES_QUERY}
+        columnDefs={USAGE_LOG_TRACES_COLUMNS}
+        listLabel={TabsI18nKey.Traces}
+        emptyDataTitle={TelemetryI18nKey.NoTracesTitle}
+        timeRange={{
+          startDate: new Date('2026-04-01T00:00:00.000Z'),
+          endDate: new Date('2026-04-03T00:00:00.000Z'),
+        }}
+        entityName={null}
+      />,
+    );
+
+    // Auto-fetch: first window succeeds (2 rows, < MIN_ROWS_TO_ENABLE_SCROLL),
+    // second window errors. Only one error notification should fire — the auto-fetch
+    // chain stops once we hit the error.
+    await waitFor(() => expect(getData).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(showNotificationSpy).toHaveBeenCalledTimes(1));
+
+    const notification = showNotificationSpy.mock.calls[0][0];
+    expect(notification.title).toBe('Backend exploded');
+    expect(notification.description).toBe('something failed');
+    expect(notification.requestId).toBe('req-123');
+  });
+
 });

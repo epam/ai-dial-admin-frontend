@@ -23,7 +23,6 @@ export const numericColumn: Partial<ColDef> = {
   headerClass: 'align-right',
   comparator: numberValueComparator,
   valueFormatter: ({ value }) => numberValueFormatter(value),
-  filterValueGetter: (params) => numberValueFormatter(params.data?.[params.colDef.field || '']),
 };
 
 export const priceColumn = (title: string): Partial<ColDef> => {

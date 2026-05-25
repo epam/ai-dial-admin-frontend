@@ -1,8 +1,5 @@
-# usage-log-pagination Specification
+## MODIFIED Requirements
 
-## Purpose
-TBD - created by archiving change usage-log-pagination. Update Purpose after archive.
-## Requirements
 ### Requirement: Day-chunked append-on-scroll fetch of Usage Log rows
 
 The Usage Log list (Traces, Conversations, MCP, Routes, and Toolset Traces tabs on both the `/usage-log` page and entity-embedded UsageLog views) SHALL use ag-grid's `clientSide` row model with React-owned `rowData`. The grid SHALL NOT send `limit` on telemetry requests for the Usage Log path.
@@ -96,29 +93,7 @@ A reset SHALL NOT clear `rowData` synchronously. The previously rendered rows re
 - **AND** the next request's `orderBy` carries `[{ $asc: '_time' }]` or `[{ $desc: '_time' }]` to match
 - **AND** `rowData` is replaced atomically when the first new response arrives — old rows remain visible until then
 
----
-
-### Requirement: Telemetry query model supports pagination fields
-
-The `TelemetryQuery.query` TypeScript interface in `models/telemetry.ts` SHALL continue to expose optional `limit?: number` and `offset?: number` fields. When either field is set on an outgoing request, the corresponding wire-level JSON field SHALL be emitted. When both are absent, the request SHALL omit them entirely.
-
-The Usage Log query builder (`buildUsageLogQuery`) SHALL NOT emit `limit`. It SHALL emit `offset` only when the passed value is strictly greater than zero. The Usage Log list always passes `offset: 0` because each request scopes to a single day window, so the field is effectively never emitted on the wire today.
-
-Other non-Usage-Log callers (e.g., charts via `createMcpUsageQuery`) SHALL be unaffected and may continue to set or omit `limit`/`offset` independently.
-
-#### Scenario: Usage Log request omits both fields
-
-- **WHEN** the Usage Log builds a request for any day window
-- **THEN** the outgoing JSON contains no `limit` key inside `query`
-- **AND** the outgoing JSON contains no `offset` key inside `query`
-
-#### Scenario: Existing chart call omits both fields
-
-- **WHEN** an existing non-paginated caller (e.g. `createMcpUsageQuery`) issues a request
-- **THEN** the outgoing JSON contains no `limit` key and no `offset` key inside `query`
-- **AND** the backend response is unchanged versus current behavior
-
----
+## ADDED Requirements
 
 ### Requirement: Sort restricted to `completion_time` with direction-aware day iteration
 

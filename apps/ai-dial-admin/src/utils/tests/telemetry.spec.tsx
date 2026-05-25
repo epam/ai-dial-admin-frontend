@@ -531,6 +531,61 @@ describe('Utils :: telemetry :: translateUsageLogFilterModel', () => {
       }),
     ).toEqual([{ $eq: { left: 'prompt_tokens', right: 0 } }]);
   });
+
+  test('translates agNumberColumnFilter greaterThan to $gt with numeric right-hand side', () => {
+    expect(
+      translateUsageLogFilterModel({
+        prompt_tokens: { filterType: 'number', type: 'greaterThan', filter: 5 },
+      }),
+    ).toEqual([{ $gt: { left: 'prompt_tokens', right: 5 } }]);
+  });
+
+  test('translates agNumberColumnFilter equals 0 — zero is a legitimate filter value', () => {
+    expect(
+      translateUsageLogFilterModel({
+        prompt_tokens: { filterType: 'number', type: 'equals', filter: 0 },
+      }),
+    ).toEqual([{ $eq: { left: 'prompt_tokens', right: 0 } }]);
+  });
+
+  test('skips number filter when value is missing', () => {
+    expect(
+      translateUsageLogFilterModel({
+        prompt_tokens: { filterType: 'number', type: 'greaterThan' },
+      }),
+    ).toEqual([]);
+  });
+
+  test('skips number filter when operator is unsupported', () => {
+    expect(
+      translateUsageLogFilterModel({
+        prompt_tokens: { filterType: 'number', type: 'blank', filter: 5 },
+      }),
+    ).toEqual([]);
+  });
+
+  test('defensively decomposes inRange into $gte + $lte under $and', () => {
+    expect(
+      translateUsageLogFilterModel({
+        prompt_tokens: { filterType: 'number', type: 'inRange', filter: 1, filterTo: 10 },
+      }),
+    ).toEqual([
+      {
+        $and: [
+          { $gte: { left: 'prompt_tokens', right: 1 } },
+          { $lte: { left: 'prompt_tokens', right: 10 } },
+        ],
+      },
+    ]);
+  });
+
+  test('skips inRange filter when either bound is missing', () => {
+    expect(
+      translateUsageLogFilterModel({
+        prompt_tokens: { filterType: 'number', type: 'inRange', filter: 1 },
+      }),
+    ).toEqual([]);
+  });
 });
 
 describe('Utils :: telemetry :: buildUsageLogQuery', () => {
