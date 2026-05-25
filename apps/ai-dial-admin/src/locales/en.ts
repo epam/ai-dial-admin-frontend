@@ -1,5 +1,10 @@
 export default {
   User: 'User',
+  ReadOnlyAdmin: {
+    BannerTitle: 'Read-only mode access',
+    Description: 'No changes can be made. Access is managed by administrator',
+    BadgeLabel: 'READ ONLY',
+  },
   Home: {
     Title: 'Powering Artificial Intelligence with DIAL',
     Description:
@@ -1184,6 +1189,8 @@ export default {
     ToolName: 'Tool name',
     Autoscaling: 'Autoscaling',
     NodePool: 'Node pool',
+    NodePoolId: 'Node pool ID',
+    NodePoolName: 'Node pool name',
     StartupProbe: 'Startup probe',
     Restarts: 'Restarts',
     LastRestartedAt: 'Last restarted at',
@@ -1391,6 +1398,10 @@ export default {
     Warning: 'List of tools from external endpoint may not display some tools. Add the missing tools manually.',
     AutoDetected: 'Auto-detected',
     ClientRegistrationType: 'Client Registration Type',
+    TokenEndpointAuthMethod: 'Token Endpoint Authentication Method',
+    TokenEndpointAuthMethodClientSecretBasic: 'Client secret (HTTP Basic)',
+    TokenEndpointAuthMethodClientSecretPost: 'Client secret (POST body)',
+    TokenEndpointAuthMethodNone: 'None',
     DynamicRegistration: 'Dynamic registration',
     ExistingClient: 'Existing client',
     ToolsWarning: 'Endpoint has been changed. Save changes to display auto-detected tools.',

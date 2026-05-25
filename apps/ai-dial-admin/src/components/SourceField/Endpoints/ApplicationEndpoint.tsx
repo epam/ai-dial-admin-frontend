@@ -33,28 +33,30 @@ interface Props {
   prefix?: string;
 }
 
+const getCheckboxStatesFromEntity = (
+  entity: DialApplication,
+  isContainerMode: boolean,
+): Record<ApplicationEndpointCheckbox, boolean> => ({
+  [ApplicationEndpointCheckbox.CHAT_ENDPOINT]: isContainerMode ? true : !!entity?.endpoint || !entity?.mcp,
+  [ApplicationEndpointCheckbox.MCP_ENDPOINT]: isContainerMode
+    ? !!(entity?.source?.mcpEndpointPath || entity?.mcp)
+    : !!entity?.mcp,
+});
+
 const ApplicationEndpoint: FC<Props> = ({ entity, onChange, isEntityImmutable, isModal, disabled, prefix }) => {
   const t = useI18n();
   const isContainerMode = !!prefix;
+  const versionKey = `${(entity as { path?: string }).path ?? ''}@${(entity as { version?: string }).version ?? ''}`;
 
-  const [checkboxStates, setCheckboxStates] = useState<Record<ApplicationEndpointCheckbox, boolean>>(() => ({
-    [ApplicationEndpointCheckbox.CHAT_ENDPOINT]: isContainerMode ? true : !!entity?.endpoint || !entity?.mcp,
-    [ApplicationEndpointCheckbox.MCP_ENDPOINT]: isContainerMode
-      ? !!(entity?.source?.mcpEndpointPath || entity?.mcp)
-      : !!entity?.mcp,
-  }));
+  const [checkboxStates, setCheckboxStates] = useState<Record<ApplicationEndpointCheckbox, boolean>>(() =>
+    getCheckboxStatesFromEntity(entity, isContainerMode),
+  );
 
   useEffect(() => {
     if (isContainerMode) return;
-    const isEndpointExisting = !!entity?.endpoint;
-    const isMCPContainerExisting = !!entity?.mcp;
-    setCheckboxStates((prev) => ({
-      [ApplicationEndpointCheckbox.CHAT_ENDPOINT]:
-        prev[ApplicationEndpointCheckbox.CHAT_ENDPOINT] || isEndpointExisting,
-      [ApplicationEndpointCheckbox.MCP_ENDPOINT]:
-        prev[ApplicationEndpointCheckbox.MCP_ENDPOINT] || isMCPContainerExisting,
-    }));
-  }, [entity, isContainerMode]);
+    setCheckboxStates(getCheckboxStatesFromEntity(entity, isContainerMode));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset only when asset version/path changes, not on every field edit
+  }, [versionKey, isContainerMode]);
 
   const toggleCheckbox = useCallback(
     (value?: boolean, id?: string) => {

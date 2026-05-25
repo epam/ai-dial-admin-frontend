@@ -16,13 +16,13 @@ import { v4 as uuidv4 } from 'uuid';
 interface Props {
   filters: FilterData[];
   setFilters: Dispatch<SetStateAction<FilterData[]>>;
-  getData: (query: TelemetryQuery) => Promise<ServerActionResponse>;
+  getBaseData: (query: TelemetryQuery) => Promise<ServerActionResponse>;
   route: ApplicationRoute;
   isMcpView?: boolean;
   isRouteView?: boolean;
 }
 
-const Filters: FC<Props> = ({ filters, setFilters, getData, route, isMcpView = false, isRouteView = false }) => {
+const Filters: FC<Props> = ({ filters, setFilters, getBaseData, route, isMcpView = false, isRouteView = false }) => {
   const t = useI18n();
   const [projects, setProjects] = useState<SelectOption[]>([]);
   const [entities, setEntities] = useState<SelectOption[]>([]);
@@ -31,7 +31,7 @@ const Filters: FC<Props> = ({ filters, setFilters, getData, route, isMcpView = f
 
   useEffect(() => {
     const fetch = async (query: TelemetryQuery): Promise<{ data: string[][] }> => {
-      const response = await getData(query);
+      const response = await getBaseData(query);
       if (response.success) {
         return response.response as { data: string[][] };
       }
@@ -63,7 +63,7 @@ const Filters: FC<Props> = ({ filters, setFilters, getData, route, isMcpView = f
         );
       }
     });
-  }, [getData, isMcpView, isRouteView]);
+  }, [getBaseData, isMcpView, isRouteView]);
 
   const onDelete = useCallback(
     (index: number) => {

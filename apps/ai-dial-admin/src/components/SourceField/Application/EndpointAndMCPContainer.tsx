@@ -32,6 +32,12 @@ export interface Props {
   isModal?: boolean;
 }
 
+const getCheckboxStatesFromEntity = (entity: DialApplicationScheme): Record<SourceType, boolean> => ({
+  [SourceType.CHAT_ENDPOINT]:
+    !!entity?.['dial:applicationTypeCompletionEndpoint'] || !entity?.['dial:applicationTypeMcp'],
+  [SourceType.MCP_ENDPOINT]: !!entity?.['dial:applicationTypeMcp'],
+});
+
 const EndpointAndMCPContainer: FC<Props> = ({
   entity,
   onChangeEntity,
@@ -39,22 +45,17 @@ const EndpointAndMCPContainer: FC<Props> = ({
   isReadOnlyAdmin,
   isModal,
 }) => {
-  const [checkboxStates, setCheckboxStates] = useState<Record<SourceType, boolean>>(() => ({
-    [SourceType.CHAT_ENDPOINT]:
-      !!entity?.['dial:applicationTypeCompletionEndpoint'] || !entity?.['dial:applicationTypeMcp'],
-    [SourceType.MCP_ENDPOINT]: !!entity?.['dial:applicationTypeMcp'],
-  }));
+  const entityKey = entity.$id ?? '';
+  const [checkboxStates, setCheckboxStates] = useState<Record<SourceType, boolean>>(() =>
+    getCheckboxStatesFromEntity(entity),
+  );
 
   const t = useI18n();
 
   useEffect(() => {
-    const isEndpointExisting = !!entity?.['dial:applicationTypeCompletionEndpoint'];
-    const isMCPContainerExisting = !!entity?.['dial:applicationTypeMcp'];
-    setCheckboxStates((prev) => ({
-      [SourceType.CHAT_ENDPOINT]: prev[SourceType.CHAT_ENDPOINT] || isEndpointExisting,
-      [SourceType.MCP_ENDPOINT]: prev[SourceType.MCP_ENDPOINT] || isMCPContainerExisting,
-    }));
-  }, [entity]);
+    setCheckboxStates(getCheckboxStatesFromEntity(entity));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset only when runner identity changes, not on every field edit
+  }, [entityKey]);
 
   const toggleCheckbox = useCallback(
     (value?: boolean, id?: string) => {

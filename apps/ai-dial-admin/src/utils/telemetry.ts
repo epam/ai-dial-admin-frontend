@@ -28,6 +28,7 @@ import {
   AgGridTextFilter,
   BuildUsageLogQueryParams,
   DatasetMetadata,
+  EntityRow,
   FilterData,
   TelemetryData,
   TelemetryQuery,
@@ -36,6 +37,7 @@ import {
 } from '@/src/models/telemetry';
 import { TimeRange } from '@/src/models/time-range';
 import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
+import { buildEntitiesConsumptionTree } from '@/src/utils/entities-consumption-tree';
 
 export const getGridData = (data: TelemetryData): Record<string, string>[] => {
   return (
@@ -55,6 +57,12 @@ export const getSingleValueChartData = (data: TelemetryData): number => {
   }
   const arr = (Array.isArray(rawData[0]) ? rawData[0] : rawData) as string[];
   return arr.map((value) => new Big(value).toNumber()).reduce((acc, curr) => acc + curr, 0);
+};
+
+export const getTotalTokensFromTree = (data: TelemetryData): number => {
+  const rows = getGridData(data) as EntityRow[];
+  const roots = buildEntitiesConsumptionTree(rows);
+  return roots.reduce((acc, r) => acc.plus(r.prompts || 0).plus(r.completions || 0), new Big(0)).toNumber();
 };
 
 export const getFormattedDataFilters = (filters: FilterData[], entityName?: string | null) => {
@@ -269,8 +277,7 @@ export const translateUsageLogSortModel = (sortModel: SortModelItem[]): Record<s
 
 export const buildUsageLogQuery = ({
   baseQuery,
-  startRow,
-  pageSize,
+  offset,
   sortModel,
   filterModel,
   timeRange,
@@ -287,8 +294,7 @@ export const buildUsageLogQuery = ({
         $and: [...(baseFilters.$and ?? []), ...gridFilters],
       },
       orderBy: translateUsageLogSortModel(sortModel),
-      limit: pageSize,
-      offset: startRow,
+      ...(offset > 0 ? { offset } : {}),
     },
   };
 };

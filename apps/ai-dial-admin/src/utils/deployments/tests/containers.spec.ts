@@ -435,6 +435,18 @@ describe('containers utils', () => {
       const b: Container = { ...baseContainer, scaling: undefined };
       expect(getContainerRedeploySnapshot(a)).toEqual(getContainerRedeploySnapshot(b));
     });
+
+    test('detects nodePool change via snapshot inequality', () => {
+      const a: Container = { ...baseContainer, nodePoolId: 'pool-1', nodePoolName: 'pool one' };
+      const b: Container = { ...baseContainer, nodePoolId: 'pool-2', nodePoolName: 'pool two' };
+      expect(getContainerRedeploySnapshot(a)).not.toEqual(getContainerRedeploySnapshot(b));
+    });
+
+    test('treats missing nodePool and null nodePool as equal', () => {
+      const a: Container = { ...baseContainer };
+      const b: Container = { ...baseContainer, nodePoolId: null, nodePoolName: null };
+      expect(getContainerRedeploySnapshot(a)).toEqual(getContainerRedeploySnapshot(b));
+    });
   });
 
   describe('normalizeEnvironmentVariables', () => {

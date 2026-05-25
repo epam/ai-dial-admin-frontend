@@ -61,6 +61,12 @@ export enum MenuI18nKey {
   Images = 'Menu.Images',
 }
 
+export enum ReadOnlyI18nKey {
+  BannerTitle = 'ReadOnlyAdmin.BannerTitle',
+  Description = 'ReadOnlyAdmin.Description',
+  BadgeLabel = 'ReadOnlyAdmin.BadgeLabel',
+}
+
 export enum AuthI18nKey {
   Login = 'Auth.Login',
   Logout = 'Auth.Logout',
@@ -1332,6 +1338,8 @@ export enum EntityFieldsI18nKey {
   ToolName = 'EntityFields.ToolName',
   Autoscaling = 'EntityFields.Autoscaling',
   NodePool = 'EntityFields.NodePool',
+  NodePoolId = 'EntityFields.NodePoolId',
+  NodePoolName = 'EntityFields.NodePoolName',
   Restarts = 'EntityFields.Restarts',
   LastRestartedAt = 'EntityFields.LastRestartedAt',
   LastReason = 'EntityFields.LastReason',
@@ -1368,6 +1376,10 @@ export enum ToolsetI18nKey {
   AutoDetected = 'Toolset.AutoDetected',
   ToolsWarning = 'Toolset.ToolsWarning',
   ClientRegistrationType = 'Toolset.ClientRegistrationType',
+  TokenEndpointAuthMethod = 'Toolset.TokenEndpointAuthMethod',
+  TokenEndpointAuthMethodClientSecretBasic = 'Toolset.TokenEndpointAuthMethodClientSecretBasic',
+  TokenEndpointAuthMethodClientSecretPost = 'Toolset.TokenEndpointAuthMethodClientSecretPost',
+  TokenEndpointAuthMethodNone = 'Toolset.TokenEndpointAuthMethodNone',
   ExistingClient = 'Toolset.ExistingClient',
   DynamicRegistration = 'Toolset.DynamicRegistration',
   ApiKey = 'Toolset.ApiKey',
