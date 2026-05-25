@@ -65,10 +65,25 @@ const Dashboard: FC<Props> = ({ route, entity, defaultTimeFilter, onTimeFilterCh
       } else {
         q.query.from.where = getFormattedFilters(currentTimeRange, filters, entityFilterName);
       }
-
       return getReqRef.current(getDashboardData, q);
     },
     [entityFilterName, filters, getCurrentTimeRange],
+  );
+
+  const getBaseData = useCallback(
+    (input: QueryInput) => {
+      const currentTimeRange = getCurrentTimeRange();
+      const resolution = getChartResolution(currentTimeRange);
+      const q = typeof input === 'function' ? input(resolution) : structuredClone(input);
+      if (typeof q.query.from === 'string') {
+        q.query.where = getFormattedFilters(currentTimeRange, [], entityFilterName);
+      } else {
+        q.query.from.where = getFormattedFilters(currentTimeRange, [], entityFilterName);
+      }
+
+      return getReqRef.current(getDashboardData, q);
+    },
+    [entityFilterName, getCurrentTimeRange],
   );
 
   const getMcpDataWithConditions = useCallback(
@@ -124,7 +139,7 @@ const Dashboard: FC<Props> = ({ route, entity, defaultTimeFilter, onTimeFilterCh
           filters={filters}
           timeRange={timeRange}
           setFilters={setFilters}
-          getData={getData}
+          getBaseData={getBaseData}
           route={route}
           canAutoRefresh={canAutoRefresh}
           isMcpView={isMcpDashboards}

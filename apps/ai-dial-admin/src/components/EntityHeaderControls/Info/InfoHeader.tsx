@@ -1,7 +1,6 @@
 import { FC, ReactNode } from 'react';
 
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
-import CoreSyncEntityStatus from '@/src/components/Common/SyncCoreStatus/SyncCoreStatus';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -15,7 +14,7 @@ interface Props {
   postfix?: ReactNode;
 }
 
-const EntityInfoHeader: FC<Props> = ({ id, entity, view, prefix, postfix }) => {
+const EntityInfoHeader: FC<Props> = ({ entity, view, prefix, postfix }) => {
   const t = useI18n();
 
   return (
@@ -28,7 +27,6 @@ const EntityInfoHeader: FC<Props> = ({ id, entity, view, prefix, postfix }) => {
         <LabelledText label={t(EntityFieldsI18nKey.createdAt)} text={formatDateTimeToLocalString(entity?.createdAt)} />
       )}
       {postfix}
-      <CoreSyncEntityStatus view={view} name={id} />
     </div>
   );
 };

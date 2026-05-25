@@ -42,6 +42,20 @@ export const VERSION_COLUMN: ColDef = {
   valueFormatter: (params) => params.value,
 };
 
+export const COMPLETION_TIME_COL_ID = 'completion_time';
+
+export const COMPLETION_TIME_COLUMN: ColDef = {
+  field: COMPLETION_TIME_COL_ID,
+  headerName: 'Completion Time',
+  hide: false,
+  sort: 'desc',
+  sortable: true,
+  sortingOrder: ['asc', 'desc'],
+  filter: false,
+  floatingFilter: false,
+  ...dateTimeColumn,
+};
+
 export const AUTHOR_COLUMN: ColDef = { field: 'author', colId: 'author', headerName: 'Author', hide: false };
 
 export const DISPLAY_NAME_COLUMN: ColDef = {

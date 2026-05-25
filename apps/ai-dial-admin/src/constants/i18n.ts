@@ -385,6 +385,7 @@ export enum ButtonsI18nKey {
   ShowMore = 'Buttons.ShowMore',
   ShowLess = 'Buttons.ShowLess',
   PrepareFile = 'Buttons.PrepareFile',
+  ExportCsv = 'Buttons.ExportCsv',
 }
 
 export enum UpdateI18nKey {
@@ -1667,6 +1668,7 @@ export enum TestSuitesI18nKey {
   EditField = 'TestSuites.EditField',
   NoSchemaFields = 'TestSuites.NoSchemaFields',
   DuplicateFieldName = 'TestSuites.DuplicateFieldName',
+  MetricNameInvalidChars = 'TestSuites.MetricNameInvalidChars',
   SchemaDescription = 'TestSuites.SchemaDescription',
   FinalPath = 'TestSuites.FinalPath',
   Tool = 'TestSuites.Tool',
@@ -1744,6 +1746,24 @@ export enum RunsI18nKey {
   InputBindings = 'Runs.InputBindings',
   CompareWith = 'Runs.CompareWith',
   RunCompareNoMatch = 'Runs.RunCompareNoMatch',
+}
+
+export enum ExportRunI18nKey {
+  ExportRunTitle = 'ExportRun.ExportRunTitle',
+  ColumnsAccordionLabel = 'ExportRun.ColumnsAccordionLabel',
+  PreviewAccordionLabel = 'ExportRun.PreviewAccordionLabel',
+  ExportError = 'ExportRun.ExportError',
+  ExportSuccess = 'ExportRun.ExportSuccess',
+  ExportSuccessDescription = 'ExportRun.ExportSuccessDescription',
+  ExportStarted = 'ExportRun.ExportStarted',
+  ExportStartedDescription = 'ExportRun.ExportStartedDescription',
+  GroupIdentification = 'ExportRun.GroupIdentification',
+  GroupData = 'ExportRun.GroupData',
+  GroupResponse = 'ExportRun.GroupResponse',
+  GroupMetrics = 'ExportRun.GroupMetrics',
+  GroupBody = 'ExportRun.GroupBody',
+  PreviewLoadError = 'ExportRun.PreviewLoadError',
+  PreviewDescription = 'ExportRun.PreviewDescription',
 }
 
 export enum FileManagerI18nKey {

@@ -40,6 +40,24 @@ describe('useLogout', () => {
     expect(cancelAllCallOrder).toBeLessThan(signOutCallOrder);
   });
 
+  test('should use Auth0 federated logout URL when provider is auth0', () => {
+    const cancelAllSpy = vi.spyOn(requestRegistryModule.requestRegistry, 'cancelAll');
+    const mockSignOut = vi.mocked(nextAuthReact.signOut);
+    vi.mocked(nextAuthReact.useSession).mockReturnValue({
+      data: { user: 'test', providerId: 'auth0' },
+    } as any);
+
+    const { result } = renderHook(() => useLogout());
+
+    result.current.handleLogout();
+
+    expect(cancelAllSpy).toHaveBeenCalledTimes(1);
+    expect(mockSignOut).toHaveBeenCalledWith({
+      redirect: true,
+      callbackUrl: '/api/auth/logout?provider=auth0',
+    });
+  });
+
   test('should call signIn when no session exists', () => {
     const mockSignIn = vi.mocked(nextAuthReact.signIn);
     const mockSignOut = vi.mocked(nextAuthReact.signOut);
