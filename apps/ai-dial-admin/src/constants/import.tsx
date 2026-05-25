@@ -10,16 +10,12 @@ export const ROW_IMPORT_META_KEY = '__import' as const;
 
 export const IMPORT_RESOLUTIONS = (
   t: (stringToTranslate: string) => string,
-  importType?: string,
+  _importType?: string,
 ): RadioButtonWithContent[] => {
-  const resolutions = [
+  return [
     { id: ConflictResolutionPolicy.OVERRIDE, name: t(ImportI18nKey.Override) },
     { id: ConflictResolutionPolicy.SKIP, name: t(ImportI18nKey.Skip) },
   ];
-  if (importType && (importType === ImportFileType.JSON || importType === ImportFileType.FILES)) {
-    resolutions.push({ id: ConflictResolutionPolicy.MANUAL, name: t(ImportI18nKey.EditManually) });
-  }
-  return resolutions;
 };
 
 export const IMPORT_STEPS = (t: (stringToTranslate: string) => string): Step[] => [

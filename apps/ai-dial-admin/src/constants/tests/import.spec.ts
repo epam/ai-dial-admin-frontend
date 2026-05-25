@@ -21,20 +21,6 @@ describe('IMPORT_RESOLUTIONS', () => {
     ]);
   });
 
-  test('adds MANUAL for JSON import type', () => {
-    const result = IMPORT_RESOLUTIONS(t, ImportFileType.JSON);
-    expect(result.some((r) => r.id === ConflictResolutionPolicy.MANUAL)).toBe(true);
-  });
-
-  test('adds MANUAL for FILES import type', () => {
-    const result = IMPORT_RESOLUTIONS(t, ImportFileType.FILES);
-    expect(result.some((r) => r.id === ConflictResolutionPolicy.MANUAL)).toBe(true);
-  });
-
-  test('does not add MANUAL for ARCHIVE import type', () => {
-    const result = IMPORT_RESOLUTIONS(t, ImportFileType.ARCHIVE);
-    expect(result.some((r) => r.id === ConflictResolutionPolicy.MANUAL)).toBe(false);
-  });
 });
 
 describe('IMPORT_STEPS', () => {
