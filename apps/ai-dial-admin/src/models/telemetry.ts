@@ -43,8 +43,20 @@ export interface AgGridTextFilter {
   filter?: string;
 }
 
-export type UsageLogFilterModel = Record<string, AgGridTextFilter>;
-export type UsageLogFilterClause = Record<string, { left: string; right: string | number }>;
+export interface AgGridNumberFilter {
+  filterType: 'number';
+  type?: string;
+  filter?: number;
+  filterTo?: number;
+}
+
+export type AgGridFilter = AgGridTextFilter | AgGridNumberFilter;
+export type UsageLogFilterModel = Record<string, AgGridFilter>;
+
+export type UsageLogFilterClauseValue = { left: string; right: string | number };
+export type UsageLogFilterClause = {
+  [op: string]: UsageLogFilterClauseValue | UsageLogFilterClause[];
+};
 
 export interface BuildUsageLogQueryParams {
   baseQuery: TelemetryQuery;

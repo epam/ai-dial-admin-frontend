@@ -58,6 +58,7 @@ import {
   ATTACHMENT_COLUMN,
   AUTHOR_COLUMN,
   BASE_STATUS_COLUMN,
+  COMPLETION_TIME_COLUMN,
   CREATED_AT_COLUMN,
   DESCRIPTION_COLUMN,
   DISPLAY_NAME_COLUMN,
@@ -474,18 +475,16 @@ export const ENTITIES_CONSUMPTION_TREE_COLUMNS: ColDef[] = TELEMETRY_GRID_COLUMN
   return col;
 });
 
-const completionTimeColumn = (headerName: string): ColDef => ({
-  field: 'completion_time',
-  headerName,
-  hide: false,
-  sort: 'desc',
-  filter: false,
-  floatingFilter: false,
-  ...dateTimeColumn,
-});
+// Sets `sortable: false` on every column except those whose field is in
+// `sortableFields`. Used by Usage Log grids to lock sort to completion_time —
+// non-time sorts only order rows within one day-chunk, which breaks the
+// user's intuition. New columns added to any of the arrays below inherit
+// the lock automatically.
+const restrictSort = (cols: ColDef[], sortableFields: string[] = []): ColDef[] =>
+  cols.map((col) => (col.field && sortableFields.includes(col.field) ? col : { ...col, sortable: false }));
 
-export const USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
-  completionTimeColumn('Completion Time'),
+const BASE_USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
+  COMPLETION_TIME_COLUMN,
   { field: 'trace_id', headerName: 'Trace ID', hide: false, ...baseStringFilter },
   { field: 'topic', headerName: 'Topic', hide: false, ...baseStringFilter },
   // { field: 'reactions', headerName: 'Reactions', hide: true , ...baseStringFilter}, // TODO: not implemented
@@ -528,9 +527,10 @@ export const USAGE_LOG_TRACES_COLUMNS: ColDef[] = [
   { field: 'core_span_id', headerName: 'Core span ID', hide: true, ...baseStringFilter },
   { field: 'core_parent_span_id', headerName: 'Core parent span ID', hide: false, ...baseStringFilter },
 ];
+export const USAGE_LOG_TRACES_COLUMNS = restrictSort(BASE_USAGE_LOG_TRACES_COLUMNS, ['completion_time']);
 
-export const USAGE_LOG_CONVERSATIONS_COLUMNS: ColDef[] = [
-  completionTimeColumn('Last activity'),
+const BASE_USAGE_LOG_CONVERSATIONS_COLUMNS: ColDef[] = [
+  COMPLETION_TIME_COLUMN,
   { field: 'chat_id', headerName: 'Conversation ID', hide: false, ...baseStringFilter },
   { field: 'topic', headerName: 'Topic', hide: false, ...baseStringFilter },
   {
@@ -562,18 +562,20 @@ export const USAGE_LOG_CONVERSATIONS_COLUMNS: ColDef[] = [
   { field: 'user_title', headerName: 'User Title', hide: true, ...baseStringFilter },
   { field: 'language', headerName: 'Language', hide: true, ...baseStringFilter },
 ];
+export const USAGE_LOG_CONVERSATIONS_COLUMNS = restrictSort(BASE_USAGE_LOG_CONVERSATIONS_COLUMNS, ['completion_time']);
 
-export const USAGE_LOG_MCP_COLUMNS: ColDef[] = [
-  completionTimeColumn('Last activity'),
+const BASE_USAGE_LOG_MCP_COLUMNS: ColDef[] = [
+  COMPLETION_TIME_COLUMN,
   { field: 'deployment', headerName: 'Deployment ID', hide: false, ...baseStringFilter },
   { field: 'project_id', headerName: 'Project', hide: false, ...baseStringFilter },
   { field: 'mcp_method', headerName: 'Method', hide: true, ...baseStringFilter },
   { field: 'mcp_tool_call_name', headerName: 'Tool Name', hide: false, ...baseStringFilter },
   { field: 'trace_id', headerName: 'Trace ID', hide: false, ...baseStringFilter },
 ];
+export const USAGE_LOG_MCP_COLUMNS = restrictSort(BASE_USAGE_LOG_MCP_COLUMNS, ['completion_time']);
 
-export const USAGE_LOG_ROUTES_COLUMNS: ColDef[] = [
-  completionTimeColumn('Last activity'),
+const BASE_USAGE_LOG_ROUTES_COLUMNS: ColDef[] = [
+  COMPLETION_TIME_COLUMN,
   { field: 'project_id', headerName: 'Project', hide: false, ...baseStringFilter },
   { field: 'deployment', headerName: 'Deployment ID', hide: false, ...baseStringFilter },
   { field: 'route_path', headerName: 'Route', hide: true, ...baseStringFilter },
@@ -581,14 +583,18 @@ export const USAGE_LOG_ROUTES_COLUMNS: ColDef[] = [
   { field: 'upstream', headerName: 'Upstream', hide: false, ...baseStringFilter },
   { field: 'trace_id', headerName: 'Trace ID', hide: false, ...baseStringFilter },
 ];
+export const USAGE_LOG_ROUTES_COLUMNS = restrictSort(BASE_USAGE_LOG_ROUTES_COLUMNS, ['completion_time']);
 
-export const USAGE_LOG_TOOLSET_TRACES_COLUMNS: ColDef[] = [
-  completionTimeColumn('Last activity'),
+const BASE_USAGE_LOG_TOOLSET_TRACES_COLUMNS: ColDef[] = [
+  COMPLETION_TIME_COLUMN,
   { field: 'project_id', headerName: 'Project', hide: false, ...baseStringFilter },
   { field: 'mcp_method', headerName: 'Method', hide: true, ...baseStringFilter },
   { field: 'mcp_tool_call_name', headerName: 'Tool Name', hide: false, ...baseStringFilter },
   { field: 'trace_id', headerName: 'Trace ID', hide: false, ...baseStringFilter },
 ];
+export const USAGE_LOG_TOOLSET_TRACES_COLUMNS = restrictSort(BASE_USAGE_LOG_TOOLSET_TRACES_COLUMNS, [
+  'completion_time',
+]);
 
 // Derived from the column defs — any column spread with ...numericColumn or
 // ...priceColumn(...) carries cellClass 'align-right', which we treat as the
