@@ -284,10 +284,7 @@ describe('List', () => {
       errorMessage: 'something failed',
       requestId: 'req-123',
     };
-    const getData = vi
-      .fn()
-      .mockResolvedValueOnce(goodResponse)
-      .mockResolvedValue(errorResponse);
+    const getData = vi.fn().mockResolvedValueOnce(goodResponse).mockResolvedValue(errorResponse);
 
     render(
       <List
@@ -316,5 +313,4 @@ describe('List', () => {
     expect(notification.description).toBe('something failed');
     expect(notification.requestId).toBe('req-123');
   });
-
 });

@@ -571,10 +571,7 @@ describe('Utils :: telemetry :: translateUsageLogFilterModel', () => {
       }),
     ).toEqual([
       {
-        $and: [
-          { $gte: { left: 'prompt_tokens', right: 1 } },
-          { $lte: { left: 'prompt_tokens', right: 10 } },
-        ],
+        $and: [{ $gte: { left: 'prompt_tokens', right: 1 } }, { $lte: { left: 'prompt_tokens', right: 10 } }],
       },
     ]);
   });
