@@ -5,11 +5,12 @@ import { ReactNode } from 'react';
 import { TabModel } from '@epam/ai-dial-ui-kit';
 
 import ReadonlyId from '@/src/components/BaseControls/Id/ReadonlyId';
+import CoreSyncEntityStatus from '@/src/components/Common/SyncCoreStatus/SyncCoreStatus';
 import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
+import { ApplicationRoute } from '@/src/types/routes';
 import { getHeaderClassName } from '@/src/utils/entities/view';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import SimpleButtonsWrapper, { SimpleButtonsWrapperProps } from './Wrappers/SimpleButtonsWrapper';
-import { ApplicationRoute } from '@/src/types/routes';
 
 interface Entity {
   id?: string;
@@ -42,7 +43,13 @@ const SimpleEntityHeader = <T extends Entity>({
   return (
     <div className="flex flex-col gap-y-4 mb-8">
       <div className={getHeaderClassName(isEditorEnabled)}>
-        {!isEditorEnabled && <ReadonlyId value={readonlyId} />}
+        {!isEditorEnabled && (
+          <div className="flex flex-col gap-0.5">
+            <CoreSyncEntityStatus view={props.view} name={readonlyId} />
+
+            <ReadonlyId value={readonlyId} />
+          </div>
+        )}
         <SimpleButtonsWrapper jsonConfiguration={jsonConfiguration} {...props}>
           {children}
         </SimpleButtonsWrapper>
