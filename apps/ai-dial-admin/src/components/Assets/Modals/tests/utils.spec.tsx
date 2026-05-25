@@ -115,6 +115,7 @@ describe('Assets Modals utils', () => {
       const { treeItems, pathMapping } = generateTreeForDeletingItems(
         originalItems as Asset[],
         itemsToDelete as DialFile[],
+        'Selected Items to delete',
       );
 
       expect(treeItems).toHaveLength(1);
@@ -132,6 +133,7 @@ describe('Assets Modals utils', () => {
       const { treeItems, pathMapping } = generateTreeForDeletingItems(
         originalItems as Asset[],
         itemsToDelete as DialFile[],
+        'Selected Items to delete',
       );
 
       expect(treeItems[0].items).toHaveLength(1);

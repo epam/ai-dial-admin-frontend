@@ -47,8 +47,11 @@ const DeleteAssetsModal: FC<Props> = ({
   onRemove,
   onClose,
 }) => {
-  const [loadedPaths, setLoadedPaths] = useState(new Set(['']));
   const t = useI18n();
+  const [loadedPaths, setLoadedPaths] = useState(new Set(['']));
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
+    new Set([`${t(FileManagerI18nKey.DeleteFolderTreeRootItem)}/`]),
+  );
   const { files, fetchFiles, isFetchingFiles } = context();
 
   const { treeItems, pathMapping } = useMemo(() => {
@@ -56,8 +59,12 @@ const DeleteAssetsModal: FC<Props> = ({
       view === ApplicationRoute.Files
         ? files
         : processAssetsData(files as AssetWithVersion[], selectedVersionsMap || {});
-    return generateTreeForDeletingItems(proccessedTreeItems, itemsToDelete);
-  }, [files, itemsToDelete, view, selectedVersionsMap]);
+    return generateTreeForDeletingItems(
+      proccessedTreeItems,
+      itemsToDelete,
+      t(FileManagerI18nKey.DeleteFolderTreeRootItem),
+    );
+  }, [files, itemsToDelete, view, selectedVersionsMap, t]);
 
   const hasFoldersToDelete = useMemo(() => {
     return itemsToDelete.some((item) => item.nodeType === DialFileNodeType.FOLDER);
@@ -65,6 +72,10 @@ const DeleteAssetsModal: FC<Props> = ({
 
   const handleOnPathChange = useCallback(
     (nextPath?: string) => {
+      if (!nextPath) {
+        return;
+      }
+
       const normalizedPath = normalizePath(nextPath || '');
       const originalPath = pathMapping.get(normalizedPath) || '';
 
@@ -72,8 +83,12 @@ const DeleteAssetsModal: FC<Props> = ({
         fetchFiles(originalPath);
         setLoadedPaths((prev) => new Set(prev).add(originalPath));
       }
+
+      const newExpanded = new Set(expandedFolders);
+      newExpanded.add(nextPath);
+      setExpandedFolders(newExpanded);
     },
-    [fetchFiles, loadedPaths, pathMapping],
+    [fetchFiles, loadedPaths, pathMapping, expandedFolders],
   );
 
   const getDeleteModalContent = useCallback(() => {
@@ -114,6 +129,11 @@ const DeleteAssetsModal: FC<Props> = ({
                   columnDefs: columnDefs,
                 } as GridOptions
               }
+              treeOptions={{
+                header: t(FileManagerI18nKey.FolderTree),
+                expandedPaths: expandedFolders,
+                onExpandedPathsChange: setExpandedFolders,
+              }}
               navigationPanelOptions={{
                 searchable: false,
               }}
@@ -122,7 +142,18 @@ const DeleteAssetsModal: FC<Props> = ({
         )}
       </div>
     );
-  }, [itemsToDelete, view, hasFoldersToDelete, t, treeItems, handleOnPathChange, isFetchingFiles, selectedVersionsMap]);
+  }, [
+    itemsToDelete,
+    view,
+    hasFoldersToDelete,
+    t,
+    treeItems,
+    handleOnPathChange,
+    isFetchingFiles,
+    selectedVersionsMap,
+    expandedFolders,
+    setExpandedFolders,
+  ]);
 
   return (
     <DialConfirmationPopup

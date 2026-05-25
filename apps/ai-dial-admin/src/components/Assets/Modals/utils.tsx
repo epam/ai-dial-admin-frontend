@@ -75,19 +75,19 @@ export const getDeleteModalTitle = (
   switch (view) {
     case ApplicationRoute.Prompts:
       return t(FileManagerI18nKey.DeleteItemsModalTitle, {
-        items: (itemsCount > 1 ? t(FileManagerI18nKey.Prompts) : t(FileManagerI18nKey.Prompt)).toLowerCase(),
+        items: itemsCount > 1 ? t(FileManagerI18nKey.Prompts) : t(FileManagerI18nKey.Prompt),
       });
     case ApplicationRoute.AssetsApplications:
       return t(FileManagerI18nKey.DeleteItemsModalTitle, {
-        items: (itemsCount > 1 ? t(FileManagerI18nKey.Applications) : t(FileManagerI18nKey.Application)).toLowerCase(),
+        items: itemsCount > 1 ? t(FileManagerI18nKey.Applications) : t(FileManagerI18nKey.Application),
       });
     case ApplicationRoute.AssetsToolsets:
       return t(FileManagerI18nKey.DeleteItemsModalTitle, {
-        items: (itemsCount > 1 ? t(FileManagerI18nKey.Toolsets) : t(FileManagerI18nKey.Toolset)).toLowerCase(),
+        items: itemsCount > 1 ? t(FileManagerI18nKey.Toolsets) : t(FileManagerI18nKey.Toolset),
       });
     case ApplicationRoute.Files:
       return t(FileManagerI18nKey.DeleteItemsModalTitle, {
-        items: (itemsCount > 1 ? t(FileManagerI18nKey.Files) : t(FileManagerI18nKey.File)).toLowerCase(),
+        items: itemsCount > 1 ? t(FileManagerI18nKey.Files) : t(FileManagerI18nKey.File),
       });
   }
 };
@@ -196,8 +196,9 @@ const updatePathsInItem = (item: DialFile, originalItemPath: string, newParentPa
 export const generateTreeForDeletingItems = (
   items: Asset[],
   itemsToDelete: DialFile[],
+  rootItemName: string,
 ): { treeItems: DialFile[]; pathMapping: Map<string, string> } => {
-  const ROOT_PATH = 'Selected Items to delete/';
+  const ROOT_PATH = `${rootItemName}/`;
   const pathMapping = new Map<string, string>();
 
   const rootItems = itemsToDelete.map((item) => {
@@ -229,7 +230,7 @@ export const generateTreeForDeletingItems = (
     treeItems: [
       {
         id: 'root',
-        name: 'Selected Items to delete',
+        name: rootItemName,
         path: ROOT_PATH,
         nodeType: DialFileNodeType.FOLDER,
         folderId: 'ItemsToDelete',

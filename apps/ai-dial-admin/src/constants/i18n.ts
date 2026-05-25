@@ -1786,6 +1786,7 @@ export enum FileManagerI18nKey {
   MoreItems = 'FileManager.MoreItems',
   DeleteFolderAlert = 'FileManager.DeleteFolderAlert',
   EmptyFolderDescription = 'FileManager.EmptyFolderDescription',
+  DeleteFolderTreeRootItem = 'FileManager.DeleteFolderTreeRootItem',
 
   // Notifications
   CreateFolderSuccessTitle = 'FileManager.Notifications.CreateFolder.Title',

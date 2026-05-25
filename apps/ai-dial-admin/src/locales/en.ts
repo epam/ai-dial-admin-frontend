@@ -1781,7 +1781,7 @@ export default {
     EmptyMoveFolderTitle: 'This folder is empty.',
     EmptyMoveFolderDescription: 'Select it to move {items} here',
     DeleteItemsModalTitle: 'Confirm Deleting {items}',
-    DeleteItemsAndFoldersModalTitle: 'Confirm Deleting items',
+    DeleteItemsAndFoldersModalTitle: 'Confirm Deleting Items',
     DeleteItemsModalDescription: 'You are about to delete the following {items}:',
     DeleteItemsAndFoldersModalDescription: 'You are about to delete the following folders and nested {items}:',
     EmptyFolderDescription: 'This folder is empty',
@@ -1795,6 +1795,7 @@ export default {
     ToolsetsEmptyStateDescription: 'Create or import a toolset using the Create button',
     MovingItems: 'Moving items',
     MovingProgress: '{count} of {total} items moved...',
+    DeleteFolderTreeRootItem: 'Selected items to delete',
   },
   Runs: {
     StartTime: 'Start time',
