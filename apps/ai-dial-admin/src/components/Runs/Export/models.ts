@@ -11,8 +11,3 @@ export interface ColumnGroup {
   id: ColumnGroupId;
   columns: ColumnItem[];
 }
-
-export interface Props {
-  runId: string;
-  onClose: () => void;
-}

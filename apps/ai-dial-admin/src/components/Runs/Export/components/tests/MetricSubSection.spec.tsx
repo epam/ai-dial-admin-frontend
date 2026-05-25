@@ -6,7 +6,12 @@ import MetricSubSection from '@/src/components/Runs/Export/components/MetricSubS
 import { ColumnItem } from '@/src/components/Runs/Export/models';
 
 const makeItems = (names: string[]): ColumnItem[] =>
-  names.map((name) => ({ name, displayName: name.split(':').pop() ?? name, defaultChecked: true, subGroup: 'Accuracy' }));
+  names.map((name) => ({
+    name,
+    displayName: name.split(':').pop() ?? name,
+    defaultChecked: true,
+    subGroup: 'Accuracy',
+  }));
 
 describe('MetricSubSection', () => {
   it('renders the metric group header label', () => {

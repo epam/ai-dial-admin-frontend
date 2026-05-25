@@ -119,7 +119,10 @@ describe('Runs :: server actions', () => {
   });
 
   test('Should call exportRunPreview action and return preview data', async () => {
-    const preview = [['id', 'prompt'], ['run-1', 'hello']];
+    const preview = [
+      ['id', 'prompt'],
+      ['run-1', 'hello'],
+    ];
     (analyticsApi.exportPreview as any).mockResolvedValue(preview);
 
     const result = await exportRunPreview('run-1');

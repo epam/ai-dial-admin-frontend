@@ -41,7 +41,9 @@ describe('POST /api/eval/export-csv', () => {
     const blob = new Blob([csvContent], { type: 'text/csv' });
     (analyticsApi.exportCsv as any).mockResolvedValue({ blob, fileName: 'export.csv' });
 
-    const res = await POST(makeRequest({ runId: 'run-1', computation: 'latest', columns: ['id', 'prompt'], delimiter: ',' }));
+    const res = await POST(
+      makeRequest({ runId: 'run-1', computation: 'latest', columns: ['id', 'prompt'], delimiter: ',' }),
+    );
 
     expect(res.status).toBe(200);
     expect(res.headers.get('Content-Type')).toBe('text/csv; charset=UTF-8');

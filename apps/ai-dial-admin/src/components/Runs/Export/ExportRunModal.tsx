@@ -7,13 +7,17 @@ import { DialNeutralButton, DialPopup, DialPrimaryButton, PopupSize } from '@epa
 import { exportRunPreview } from '@/src/app/[lang]/runs/actions';
 import ColumnsAccordion from '@/src/components/Runs/Export/components/ColumnsAccordion';
 import PreviewAccordion from '@/src/components/Runs/Export/components/PreviewAccordion';
-import { Props } from '@/src/components/Runs/Export/models';
 import { ColumnGroupId, groupColumns } from '@/src/components/Runs/Export/utils/group-columns';
 import { ButtonsI18nKey, ExportRunI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { downloadFile } from '@/src/utils/download';
 import { getErrorNotification, getPrepareNotification, getSuccessNotification } from '@/src/utils/notification';
+
+interface Props {
+  runId: string;
+  onClose: () => void;
+}
 
 const ExportRunModal: FC<Props> = ({ runId, onClose }) => {
   const t = useI18n();
