@@ -18,7 +18,7 @@ interface Props {
   timeRange: TimeRange;
   filters: FilterData[];
   setFilters: Dispatch<SetStateAction<FilterData[]>>;
-  getData: (query: TelemetryQuery) => Promise<ServerActionResponse>;
+  getBaseData: (query: TelemetryQuery) => Promise<ServerActionResponse>;
   route: ApplicationRoute;
   showFilters?: boolean;
   isRouteView?: boolean;
@@ -35,7 +35,7 @@ const TelemetryControls: FC<Props> = ({
   onTimeRangeChange,
   filters,
   setFilters,
-  getData,
+  getBaseData,
   route,
   showFilters = true,
   isRouteView = false,
@@ -57,7 +57,7 @@ const TelemetryControls: FC<Props> = ({
           <Filters
             filters={filters}
             setFilters={setFilters}
-            getData={getData}
+            getBaseData={getBaseData}
             route={route}
             isMcpView={isMcpView}
             isRouteView={isRouteView}
