@@ -17,6 +17,7 @@ interface Props {
   contentPaddingClassName?: string;
   contentClassName?: string;
   errorIndicator?: boolean;
+  onCollapsedChange?: (collapsed: boolean) => void;
 }
 
 // TODO: review after design implementation
@@ -31,13 +32,18 @@ const Accordion: FC<Props> = ({
   errorIndicator,
   containerPaddingClassName = 'p-4',
   contentPaddingClassName = 'px-6 pb-4',
+  onCollapsedChange,
 }) => {
   const t = useI18n();
   const [isCollapsed, setIsCollapsed] = useState(collapsed);
 
   const toggleCollapse = useCallback(() => {
-    setIsCollapsed((prev) => !prev);
-  }, []);
+    setIsCollapsed((prev) => {
+      const next = !prev;
+      onCollapsedChange?.(next);
+      return next;
+    });
+  }, [onCollapsedChange]);
 
   const icon = isCollapsed ? (
     <IconChevronRight className="text-secondary" {...BASE_BUTTON_ICON_PROPS} />

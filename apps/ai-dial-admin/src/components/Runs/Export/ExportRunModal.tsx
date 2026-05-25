@@ -5,8 +5,9 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { DialNeutralButton, DialPopup, DialPrimaryButton, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { exportRunPreview } from '@/src/app/[lang]/runs/actions';
-import ColumnsAccordion from '@/src/components/Runs/Export/components/ColumnsAccordion';
-import PreviewAccordion from '@/src/components/Runs/Export/components/PreviewAccordion';
+import Accordion from '@/src/components/Common/Accordion/Accordion';
+import Columns from '@/src/components/Runs/Export/components/Columns';
+import Preview from '@/src/components/Runs/Export/components/Preview';
 import { ColumnGroupId, groupColumns } from '@/src/components/Runs/Export/utils/group-columns';
 import { ButtonsI18nKey, ExportRunI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -28,6 +29,8 @@ const ExportRunModal: FC<Props> = ({ runId, onClose }) => {
   const [previewError, setPreviewError] = useState(false);
   const [checkedColumns, setCheckedColumns] = useState<Set<string>>(new Set());
   const [isExporting, setIsExporting] = useState(false);
+  const [isColumnsOpen, setIsColumnsOpen] = useState(true);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   useEffect(() => {
     setIsPreviewLoading(true);
@@ -56,6 +59,8 @@ const ExportRunModal: FC<Props> = ({ runId, onClose }) => {
     if (!previewData || previewData.length === 0) return [];
     return groupColumns(previewData[0] as string[]);
   }, [previewData]);
+
+  const totalColumns = useMemo(() => groups.reduce((acc, g) => acc + g.columns.length, 0), [groups]);
 
   const onToggleColumn = useCallback((columnName: string, checked?: boolean) => {
     setCheckedColumns((prev) => {
@@ -140,20 +145,36 @@ const ExportRunModal: FC<Props> = ({ runId, onClose }) => {
       size={PopupSize.Lg}
     >
       <div className="flex flex-col h-[80vh]">
-        <div className="flex flex-col gap-4 p-6 flex-1 overflow-y-auto">
-          <ColumnsAccordion
-            groups={groups}
-            checkedColumns={checkedColumns}
-            isLoading={isPreviewLoading}
-            onToggleColumn={onToggleColumn}
-            onToggleGroup={onToggleGroup}
-          />
-          <PreviewAccordion
-            previewData={previewData}
-            checkedColumns={checkedColumns}
-            isLoading={isPreviewLoading}
-            error={previewError}
-          />
+        <div className="flex flex-col gap-4 p-6 flex-1 min-h-0">
+          <Accordion
+            title={`${t(ExportRunI18nKey.ColumnsAccordionLabel)} (${checkedColumns.size} / ${totalColumns})`}
+            collapsed={false}
+            containerClassName={isColumnsOpen ? 'flex-1 min-h-0' : 'flex-none'}
+            contentClassName="flex-1 min-h-0"
+            onCollapsedChange={(collapsed) => setIsColumnsOpen(!collapsed)}
+          >
+            <Columns
+              groups={groups}
+              checkedColumns={checkedColumns}
+              isLoading={isPreviewLoading}
+              onToggleColumn={onToggleColumn}
+              onToggleGroup={onToggleGroup}
+            />
+          </Accordion>
+          <Accordion
+            title={t(ExportRunI18nKey.PreviewAccordionLabel)}
+            collapsed={true}
+            containerClassName={isPreviewOpen ? 'flex-1 min-h-0' : 'flex-none'}
+            contentClassName="flex-1 min-h-0"
+            onCollapsedChange={(collapsed) => setIsPreviewOpen(!collapsed)}
+          >
+            <Preview
+              previewData={previewData}
+              checkedColumns={checkedColumns}
+              isLoading={isPreviewLoading}
+              error={previewError}
+            />
+          </Accordion>
         </div>
         <div className="flex flex-row justify-end w-full gap-2 px-6 py-4 border-t border-primary flex-shrink-0">
           <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
