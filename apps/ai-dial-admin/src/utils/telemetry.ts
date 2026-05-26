@@ -30,7 +30,6 @@ import {
   AgGridTextFilter,
   BuildUsageLogQueryParams,
   DatasetMetadata,
-  EntityRow,
   FilterData,
   TelemetryData,
   TelemetryQuery,
@@ -39,6 +38,7 @@ import {
 } from '@/src/models/telemetry';
 import { TimeRange } from '@/src/models/time-range';
 import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
+import { aggregateByDeployment } from '@/src/utils/consumption-aggregation';
 import { buildEntitiesConsumptionTree } from '@/src/utils/entities-consumption-tree';
 
 export const getGridData = (data: TelemetryData): Record<string, string>[] => {
@@ -62,7 +62,7 @@ export const getSingleValueChartData = (data: TelemetryData): number => {
 };
 
 export const getTotalTokensFromTree = (data: TelemetryData): number => {
-  const rows = getGridData(data) as EntityRow[];
+  const rows = aggregateByDeployment(data);
   const roots = buildEntitiesConsumptionTree(rows);
   return roots.reduce((acc, r) => acc.plus(r.prompts || 0).plus(r.completions || 0), new Big(0)).toNumber();
 };

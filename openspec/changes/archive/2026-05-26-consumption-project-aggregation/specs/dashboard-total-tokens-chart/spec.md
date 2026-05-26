@@ -1,10 +1,4 @@
-# dashboard-total-tokens-chart Specification
-
-## Purpose
-
-The Dashboard's "Total tokens" headline card displays an aggregate token total across the analytics table. Because token counts repeat across orchestrator → model layers (an orchestrator's row carries the same tokens its child rows carry), summing every row double-counts. This capability defines the corrected math: the chart SHALL sum `prompt_tokens + completion_tokens` from tree roots only, where roots are defined by the [[entities-consumption-tree]] capability — real roots (rows whose `parent_deployment` is empty / `'undefined'`) and synthetic roots (placeholders inserted when a declared parent has no row of its own). The capability also defines a small extension point on `SingleValueChart` that lets a chart instance inject its own reducer over the server response.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Total tokens chart sums root-row tokens only
 
@@ -64,36 +58,3 @@ The Total tokens single-value chart on the Dashboard's `ChartsDashboard` section
 - **GIVEN** the sum of root tokens approaches or exceeds `Number.MAX_SAFE_INTEGER`
 - **WHEN** the chart renders
 - **THEN** both the aggregator and the root-sum reducer SHALL accumulate via `Big` and return a `number` representing the precise sum (within JS `Number` range), without intermediate float drift
-
-### Requirement: SingleValueChart supports an injected reducer
-
-`SingleValueChart` SHALL accept an optional prop `getValue?: (data: TelemetryData) => number`. When omitted, the component SHALL continue to reduce via `getSingleValueChartData` exactly as before. When provided, the component SHALL pass the server response (`response.response` as `TelemetryData`) to `getValue` and render the returned number using the existing presentation (loader during fetch, "no data" placeholder when the server reported failure, big-number formatting via `formatNumberWithExponent`).
-
-#### Scenario: Default reducer is used when getValue is omitted
-
-- **GIVEN** a `SingleValueChart` rendered without a `getValue` prop
-- **WHEN** the server response succeeds
-- **THEN** the displayed value SHALL equal `getSingleValueChartData(response.response)`
-
-#### Scenario: Custom reducer is used when getValue is supplied
-
-- **GIVEN** a `SingleValueChart` rendered with `getValue={getTotalTokensFromTree}`
-- **WHEN** the server response succeeds
-- **THEN** the displayed value SHALL equal `getTotalTokensFromTree(response.response)`
-- **AND** `getSingleValueChartData` SHALL NOT be invoked for that chart instance
-
-#### Scenario: Server failure path is unaffected by the new prop
-
-- **GIVEN** a `SingleValueChart` (with or without `getValue`)
-- **WHEN** the server response's `success` is `false`
-- **THEN** the chart SHALL render the "no data" placeholder
-- **AND** SHALL NOT invoke either reducer
-
-### Requirement: Legacy TOTAL_TOKENS_QUERY constant is removed
-
-After this change, `apps/ai-dial-admin/src/constants/telemetry.tsx` SHALL NOT export `TOTAL_TOKENS_QUERY`. The constant's previous shape (`sum(prompt_tokens), sum(completion_tokens)` over the whole analytics table without any parent-deployment filter) is incorrect for the headline total and SHALL NOT remain available for re-introduction by accident.
-
-#### Scenario: Importing TOTAL_TOKENS_QUERY fails compilation
-
-- **WHEN** any file attempts `import { TOTAL_TOKENS_QUERY } from '@/src/constants/telemetry'`
-- **THEN** TypeScript SHALL report a missing-export error
