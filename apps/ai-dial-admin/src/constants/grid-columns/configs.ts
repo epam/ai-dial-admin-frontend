@@ -3,11 +3,7 @@
 import { ColDef } from 'ag-grid-community';
 
 import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
-import {
-  currencyValueFormatter,
-  numberValueFormatter,
-  priceValueFormatter,
-} from '@/src/constants/grid-columns/formatters';
+import { currencyValueFormatter, numberValueFormatter, toNumberOrNull } from '@/src/constants/grid-columns/formatters';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 
 import HeaderWithHintButton from '@/src/components/Grid/HeaderComponents/HeaderWithHintButton';
@@ -23,6 +19,7 @@ export const numericColumn: Partial<ColDef> = {
   headerClass: 'align-right',
   comparator: numberValueComparator,
   valueFormatter: ({ value }) => numberValueFormatter(value),
+  filterValueGetter: ({ data, colDef }) => toNumberOrNull(data?.[colDef.field || '']),
 };
 
 export const priceColumn = (title: string): Partial<ColDef> => {
@@ -38,6 +35,5 @@ export const priceColumn = (title: string): Partial<ColDef> => {
       },
     },
     valueFormatter: ({ value }) => currencyValueFormatter(value),
-    filterValueGetter: (params) => priceValueFormatter(params.data?.[params.colDef.field || '']),
   };
 };
