@@ -19,7 +19,7 @@ import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { FileImportMap } from '@/src/models/file';
 import { ImportData, ParsedAssets } from '@/src/models/import-asset';
-import { ConflictResolutionPolicy, ImportFileType as FileType, ImportSteps } from '@/src/types/import';
+import { ImportFileType as FileType, ImportSteps } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getJsonFileName } from '@/src/utils/import/get-json-name';
 import ImportConflicts from './ImportConflicts';
@@ -129,8 +129,9 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, 
         const index = prev.findIndex((step) => step.id === ImportSteps.PROPERTIES);
         return prev.map((item, i) => (i === index ? { ...item, status: void 0 } : item));
       });
-      setResolutions(IMPORT_RESOLUTIONS(t, type));
+      setResolutions(IMPORT_RESOLUTIONS(t));
       setFileType(type);
+      setEditedFileMap(new Map());
       if (type === FileType.ARCHIVE) {
         setJsonFiles([]);
         setJsonFileMap(new Map());
@@ -145,6 +146,8 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, 
 
   const changeFiles = useCallback(
     (files: File[], type: string) => {
+      setEditedFileMap(new Map());
+
       if (type === FileType.ARCHIVE) {
         if (files.length === 0 || APPLICATION_ZIP_TYPES.includes(files[0].type)) {
           setZipFile(files[0]);
@@ -203,13 +206,13 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, 
     if (fileType === FileType.ARCHIVE) {
       onApply?.(fileType, zipFile as File, resolution, folderContext?.filePath as string, ignorePaths);
     } else if (fileType === FileType.JSON) {
-      const map = resolution === ConflictResolutionPolicy.MANUAL ? editedFileMap : jsonFileMap;
+      const map = editedFileMap.size ? editedFileMap : jsonFileMap;
       const jsonFile = {
         [getJsonFileName(route)]: Array.from(map.values()).flatMap((value) => value.files as DialPrompt[]),
       };
       onApply?.(fileType, jsonFile, resolution, folderContext?.filePath as string, ignorePaths);
     } else if (fileType === FileType.FILES) {
-      const map = resolution === ConflictResolutionPolicy.MANUAL ? editedFileMap : separateFileMap;
+      const map = editedFileMap.size ? editedFileMap : separateFileMap;
       onApply?.(
         fileType,
         Array.from(map.values()).flatMap((value) => value.files as unknown as File[]),

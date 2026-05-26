@@ -1,42 +1,64 @@
 'use client';
 
 import { DialLoader } from '@epam/ai-dial-ui-kit';
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import TreeGrid from '@/src/components/Common/TreeGrid/TreeGrid';
 import { TreeRow } from '@/src/components/Common/TreeGrid/types';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { refreshOptionsConfig } from '@/src/constants/telemetry/filters';
-import { ENTITIES_CONSUMPTION_TREE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { TELEMETRY_GRID_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ENTITY_CONSUMPTION_TREE_QUERY } from '@/src/constants/telemetry';
 import { useI18n } from '@/src/locales/client';
 import { EntityRow, TelemetryData, TelemetryQuery } from '@/src/models/telemetry';
 import { ServerActionResponse } from '@/src/models/server-action';
+import { aggregateByDeployment } from '@/src/utils/consumption-aggregation';
 import { buildEntitiesConsumptionTree } from '@/src/utils/entities-consumption-tree';
-import { getGridData } from '@/src/utils/telemetry';
 
 interface Props {
   title: string;
-  getData: (query: TelemetryQuery) => Promise<ServerActionResponse>;
+  getData?: (query: TelemetryQuery) => Promise<ServerActionResponse>;
   refreshTime?: string;
+  rows?: EntityRow[] | null;
+  loading?: boolean;
 }
 
-const EntitiesConsumptionTree: FC<Props> = ({ title, getData, refreshTime }) => {
+const EntitiesConsumptionTree: FC<Props> = ({ title, getData, refreshTime, rows, loading: loadingProp }) => {
   const t = useI18n();
-  const [loading, setLoading] = useState(true);
-  const [treeData, setTreeData] = useState<TreeRow<EntityRow>[] | null>(null);
+  const controlled = rows !== undefined;
+  const [internalLoading, setInternalLoading] = useState(!controlled);
+  const [internalTreeData, setInternalTreeData] = useState<TreeRow<EntityRow>[] | null>(null);
+
+  // Keep getData in a ref so the fetch effect doesn't re-run (and re-fetch)
+  // every time an ancestor passes a fresh function reference.
+  const getDataRef = useRef(getData);
+  useEffect(() => {
+    getDataRef.current = getData;
+  });
 
   useEffect(() => {
-    setLoading(true);
+    if (controlled) return;
+
+    setInternalLoading(true);
     const fetch = async () => {
-      const response = await getData(ENTITY_CONSUMPTION_TREE_QUERY);
-      if (response?.success) {
-        const rows = getGridData(response.response as TelemetryData) as EntityRow[];
-        setTreeData(buildEntitiesConsumptionTree(rows));
-      } else {
-        setTreeData(null);
+      const fn = getDataRef.current;
+      if (!fn) {
+        setInternalLoading(false);
+        return;
       }
-      setLoading(false);
+      try {
+        const response = await fn(ENTITY_CONSUMPTION_TREE_QUERY);
+        if (response?.success) {
+          const fetched = aggregateByDeployment(response.response as TelemetryData);
+          setInternalTreeData(buildEntitiesConsumptionTree(fetched));
+        } else {
+          setInternalTreeData(null);
+        }
+      } catch {
+        setInternalTreeData(null);
+      } finally {
+        setInternalLoading(false);
+      }
     };
 
     fetch();
@@ -49,7 +71,15 @@ const EntitiesConsumptionTree: FC<Props> = ({ title, getData, refreshTime }) => 
     }, timeout);
 
     return () => clearInterval(intervalId);
-  }, [getData, refreshTime]);
+  }, [controlled, refreshTime]);
+
+  const controlledTreeData = useMemo(
+    () => (controlled && rows ? buildEntitiesConsumptionTree(rows) : null),
+    [controlled, rows],
+  );
+
+  const loading = controlled ? !!loadingProp : internalLoading;
+  const treeData = controlled ? controlledTreeData : internalTreeData;
 
   return (
     <div className="flex flex-col size-full rounded-lg border border-primary p-4 max-h-[580px]">
@@ -62,7 +92,7 @@ const EntitiesConsumptionTree: FC<Props> = ({ title, getData, refreshTime }) => 
         <div className="flex-1 min-h-0">
           <TreeGrid<EntityRow>
             rows={treeData ?? []}
-            columnDefs={ENTITIES_CONSUMPTION_TREE_COLUMNS}
+            columnDefs={TELEMETRY_GRID_COLUMNS}
             expanderColumnField="name"
             emptyDataTitle={t(BasicI18nKey.NoData)}
           />
