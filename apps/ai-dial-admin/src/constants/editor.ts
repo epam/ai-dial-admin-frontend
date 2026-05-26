@@ -8,7 +8,7 @@ const DEFAULT_COLORS = {
   'editor.background': '#161B2D',
   'editorCursor.foreground': '#EEF1F7',
   'editor.selectionBackground': '#5C8DEA2B',
-  'editorLineNumber.foreground': '#575F73',
+  'editorLineNumber.foreground': '#7C8293',
   'scrollbarSlider.background': '#242C42',
   'scrollbarSlider.hoverBackground': '#242C42',
   'scrollbarSlider.activeBackground': '#242C42',
