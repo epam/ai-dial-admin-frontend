@@ -7,7 +7,7 @@ import TreeGrid from '@/src/components/Common/TreeGrid/TreeGrid';
 import { TreeRow } from '@/src/components/Common/TreeGrid/types';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { refreshOptionsConfig } from '@/src/constants/telemetry/filters';
-import { ENTITIES_CONSUMPTION_TREE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { TELEMETRY_GRID_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ENTITY_CONSUMPTION_TREE_QUERY } from '@/src/constants/telemetry';
 import { useI18n } from '@/src/locales/client';
 import { EntityRow, TelemetryData, TelemetryQuery } from '@/src/models/telemetry';
@@ -62,7 +62,7 @@ const EntitiesConsumptionTree: FC<Props> = ({ title, getData, refreshTime }) => 
         <div className="flex-1 min-h-0">
           <TreeGrid<EntityRow>
             rows={treeData ?? []}
-            columnDefs={ENTITIES_CONSUMPTION_TREE_COLUMNS}
+            columnDefs={TELEMETRY_GRID_COLUMNS}
             expanderColumnField="name"
             emptyDataTitle={t(BasicI18nKey.NoData)}
           />
