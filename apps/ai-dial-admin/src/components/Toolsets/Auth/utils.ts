@@ -5,6 +5,7 @@ import { isValueTruthy } from '@/src/utils/types';
 
 const key = 'toolset-auth-is-user';
 const urlKey = 'toolset-auth-redirect-url';
+const levelsKey = 'toolset-auth-levels';
 
 export const setIsUser = (type: ToolsetAuthCredentialLevel) => {
   if (typeof window !== 'undefined') {
@@ -19,6 +20,25 @@ export const getIsUser = () => {
     return isValueTruthy(isUser);
   }
   return null;
+};
+
+export const setLevels = (levels: ToolsetAuthCredentialLevel[]) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(levelsKey, JSON.stringify(levels));
+  }
+};
+
+export const getLevels = (): ToolsetAuthCredentialLevel[] => {
+  if (typeof window !== 'undefined') {
+    const raw = localStorage.getItem(levelsKey);
+    localStorage.removeItem(levelsKey);
+    try {
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
 };
 
 export const setUrl = (view: ApplicationRoute, selectedToolset: unknown) => {

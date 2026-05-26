@@ -24,7 +24,7 @@ import {
   isUserLoggedInToToolset,
   isAdminLoggedInToToolset,
 } from '@/src/utils/toolset/toolset-auth';
-import { getIsUser, setIsUser, setUrl } from './utils';
+import { getLevels, setLevels, setUrl } from './utils';
 
 export const TOOLSET_AUTH_REDIRECT_URL = '/toolset-signin';
 
@@ -74,35 +74,6 @@ const AuthButtons: FC<Props> = ({
     return isAdminLoggedInToToolset(selectedToolset);
   }, [selectedToolset]);
 
-  const signIn = useCallback(
-    (type: ToolsetAuthCredentialLevel, apiKeyValue?: string, code?: string) => {
-      isSignInProcessed = true;
-      getReqRef
-        .current(
-          signInToolset,
-          selectedToolset,
-          type,
-          `${window.location.origin}${TOOLSET_AUTH_REDIRECT_URL}`,
-          apiKeyValue,
-          code,
-        )
-        .then((res) => {
-          isSignInProcessed = false;
-          if (!res.success) {
-            showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
-          } else {
-            showNotification(
-              getSuccessNotification(t(ToolsetI18nKey.SuccessLogin), t(ToolsetI18nKey.SuccessLoginDescription)),
-            );
-          }
-          router.push(
-            getUrnForEntity(view, { ...selectedToolset, requestName: publicationName, path: publicationPath }),
-          );
-        });
-    },
-    [router, selectedToolset, showNotification, signInToolset, t, view, publicationName, publicationPath],
-  );
-
   const onLogin = useCallback(
     (levels: ToolsetAuthCredentialLevel[], apiKeyValue: string) => {
       if (!levels.length) {
@@ -111,7 +82,6 @@ const AuthButtons: FC<Props> = ({
 
       const authSettings = selectedToolset.authSettings;
       if (authSettings && authSettings?.authenticationType === ToolsetAuthType.OAUTH) {
-        const type = levels[0];
         const callbackUrl = `${window.location.pathname}${window.location.search}`;
         const state = {
           callbackUrl,
@@ -123,7 +93,7 @@ const AuthButtons: FC<Props> = ({
         url.searchParams.set('response_type', 'code');
         url.searchParams.set('client_id', authSettings.clientId as string);
 
-        setIsUser(type);
+        setLevels(levels);
         setUrl(view, { ...selectedToolset, requestName: publicationName, path: publicationPath });
         url.searchParams.set('redirect_uri', `${window.location.origin}${TOOLSET_AUTH_REDIRECT_URL}`);
         if (authSettings.codeChallenge) {
@@ -220,7 +190,43 @@ const AuthButtons: FC<Props> = ({
 
   useEffect(() => {
     if (oAuthCode && !isSignInProcessed) {
-      signIn(getIsUser() ? ToolsetAuthCredentialLevel.USER : ToolsetAuthCredentialLevel.GLOBAL, void 0, oAuthCode);
+      const levels = getLevels();
+      if (!levels.length) return;
+
+      isSignInProcessed = true;
+      let completedCount = 0;
+      let hasError = false;
+
+      levels.forEach((level) => {
+        getReqRef
+          .current(
+            signInToolset,
+            selectedToolset,
+            level,
+            `${window.location.origin}${TOOLSET_AUTH_REDIRECT_URL}`,
+            void 0,
+            oAuthCode,
+          )
+          .then((res) => {
+            completedCount++;
+            if (!res.success) {
+              hasError = true;
+              showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+            }
+
+            if (completedCount === levels.length) {
+              isSignInProcessed = false;
+              if (!hasError) {
+                showNotification(
+                  getSuccessNotification(t(ToolsetI18nKey.SuccessLogin), t(ToolsetI18nKey.SuccessLoginDescription)),
+                );
+              }
+              router.push(
+                getUrnForEntity(view, { ...selectedToolset, requestName: publicationName, path: publicationPath }),
+              );
+            }
+          });
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
