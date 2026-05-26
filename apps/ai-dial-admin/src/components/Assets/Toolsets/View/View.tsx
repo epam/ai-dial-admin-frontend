@@ -105,7 +105,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
           );
           if (isNeedToMove) {
             getToolsets(addTrailingSlash(updatedEntity.folderId)).then((toolsets) => {
-              const pathsToMove = getListOfPathsToMove(updatedEntity, null, (toolsets as AssetToolset[]) || []);
+              const pathsToMove = getListOfPathsToMove(updatedEntity, null, toolsets || []);
               const newPath = removeTrailingSlash(selectedToolset.folderId);
               moveToolsets(pathsToMove, newPath).then((r) => {
                 if (r.every((response) => response.success)) {

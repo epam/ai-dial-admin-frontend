@@ -1776,8 +1776,6 @@ export enum FileManagerI18nKey {
   Toolset = 'FileManager.Toolset',
   Prompts = 'FileManager.Prompts',
   Prompt = 'FileManager.Prompt',
-  Conversations = 'FileManager.Conversations',
-  Conversation = 'FileManager.Conversation',
   Folder = 'FileManager.Folder',
   Items = 'FileManager.Items',
   FolderTree = 'FileManager.FolderTree',
@@ -1797,7 +1795,6 @@ export enum FileManagerI18nKey {
   ApplicationsEmptyStateDescription = 'FileManager.ApplicationsEmptyStateDescription',
   ToolsetsEmptyStateTitle = 'FileManager.ToolsetsEmptyStateTitle',
   ToolsetsEmptyStateDescription = 'FileManager.ToolsetsEmptyStateDescription',
-  ConversationsEmptyStateTitle = 'FileManager.ConversationsEmptyStateTitle',
   MovingItems = 'FileManager.MovingItems',
   MovingProgress = 'FileManager.MovingProgress',
 

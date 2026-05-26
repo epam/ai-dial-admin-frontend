@@ -131,7 +131,7 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
           );
           if (isNeedToMove) {
             getApps(addTrailingSlash(updatedEntity.folderId)).then((apps) => {
-              const pathsToMove = getListOfPathsToMove(updatedEntity, null, (apps as Asset[]) || []);
+              const pathsToMove = getListOfPathsToMove(updatedEntity, null, apps || []);
               const newPath = removeTrailingSlash(selectedApp.folderId);
               moveApps(pathsToMove, newPath).then((r) => {
                 if (r.every((response) => response.success)) {

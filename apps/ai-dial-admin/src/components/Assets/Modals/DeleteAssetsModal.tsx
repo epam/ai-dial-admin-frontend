@@ -58,7 +58,7 @@ const DeleteAssetsModal: FC<Props> = ({
     const proccessedTreeItems =
       view === ApplicationRoute.Files
         ? files
-        : processAssetsData(files as AssetWithVersion[], selectedVersionsMap || {}, view);
+        : processAssetsData(files as AssetWithVersion[], selectedVersionsMap || {});
     return generateTreeForDeletingItems(
       proccessedTreeItems,
       itemsToDelete,
