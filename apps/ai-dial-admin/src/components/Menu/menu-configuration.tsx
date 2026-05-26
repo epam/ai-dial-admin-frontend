@@ -89,6 +89,10 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
           href: ApplicationRoute.Prompts,
         },
         {
+          key: MenuI18nKey.Conversations,
+          href: ApplicationRoute.Conversations,
+        },
+        {
           key: MenuI18nKey.Files,
           href: ApplicationRoute.Files,
         },

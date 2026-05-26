@@ -96,12 +96,18 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
     case ApplicationRoute.AssetsToolsets:
     case ApplicationRoute.Prompts:
       return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key !== 'preview');
+    case ApplicationRoute.Conversations:
+      return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key === 'delete');
     default:
       return [];
   }
 };
 
-export const getTreeActionLabels = (isReadOnlyAdmin: boolean) => {
+export const getTreeActionLabels = (isReadOnlyAdmin: boolean, view: ApplicationRoute) => {
+  if (view === ApplicationRoute.Conversations) {
+    return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key === 'delete');
+  }
+
   return isReadOnlyAdmin
     ? []
     : allActionLabels.filter(
@@ -182,6 +188,21 @@ export const getDeleteNotificationContent = (
   }
 
   switch (view) {
+    case ApplicationRoute.Conversations: {
+      const title = isDeleteSeveralFiles
+        ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Items) })
+        : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Conversation) });
+      const description = isDeleteSeveralFiles
+        ? t(FileManagerI18nKey.DeleteSuccessDescriptionForMany, {
+            count: fileNodes.length,
+          })
+        : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
+            item: t(FileManagerI18nKey.Prompt),
+            name: (fileNodes as DialFile[])?.[0].name || '',
+            path: destinationFolder || '/',
+          });
+      return { title, description };
+    }
     case ApplicationRoute.Files: {
       const title = isDeleteSeveralFiles
         ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Items) })
@@ -654,4 +675,16 @@ export const getImportNotificationContent = (
         skippedDescription: '',
       };
   }
+};
+
+export const getNameAndVersionByPath = (path: string): { name: string; version: string } => {
+  const nameWithVersion = path.split('/').pop() || '';
+  const lastUnderscoreIndex = nameWithVersion.lastIndexOf('__');
+  if (lastUnderscoreIndex === -1) {
+    return { name: nameWithVersion, version: '' };
+  }
+  return {
+    name: nameWithVersion.slice(0, lastUnderscoreIndex),
+    version: nameWithVersion.slice(lastUnderscoreIndex + 2),
+  };
 };

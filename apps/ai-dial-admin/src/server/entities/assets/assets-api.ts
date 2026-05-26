@@ -14,15 +14,20 @@ import { getToolsetBasicBody, getToolsetSignInBody } from '@/src/utils/toolset/t
 import { BaseApi } from '../../base-api';
 import { ResourceBasePaths, ResourceOperation } from './constants';
 import { buildAssetUrl } from './utils';
+import { DialConversation } from '@/src/models/dial/conversation';
 export class AssetsApi extends BaseApi {
-  async getAssetList(token: Token, path: string, type: ResourceType): Promise<Asset[] | null | undefined> {
+  async getAssetList(
+    token: Token,
+    path: string,
+    type: ResourceType,
+  ): Promise<Asset[] | DialConversation[] | null | undefined> {
     const url = buildAssetUrl(type, ResourceOperation.LIST);
     if (type === ResourceType.FILE) {
       return this.post(ResourceBasePaths[type], { path }, token).then((response) =>
         response === void 0 ? void 0 : (response as { items: DialFile[] })?.items || [],
       );
     } else {
-      const allItems: Asset[] = [];
+      const allItems: Asset[] | DialConversation[] = [];
       let nextToken: string | undefined = undefined;
 
       while (true) {
@@ -31,12 +36,14 @@ export class AssetsApi extends BaseApi {
           body.nextToken = nextToken;
         }
 
-        const response = (await this.post(url, body, token)) as { items: Asset[]; nextToken?: string } | undefined;
+        const response = (await this.post(url, body, token)) as
+          | { items: Asset[] | DialConversation[]; nextToken?: string }
+          | undefined;
 
         if (!response) break;
 
         if (Array.isArray(response.items) && response.items.length > 0) {
-          allItems.push(...response.items);
+          allItems.push(...(response.items as Asset[] & DialConversation[]));
         }
 
         if (!response.nextToken) break;
