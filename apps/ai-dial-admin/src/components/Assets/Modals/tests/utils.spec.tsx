@@ -54,14 +54,12 @@ describe('Assets Modals utils', () => {
 
     test('returns singular prompt title when deleting one prompt', () => {
       const result = getDeleteModalTitle(ApplicationRoute.Prompts, t, 1, false);
-      expect(result?.toLowerCase()).toBe(
-        `${FileManagerI18nKey.DeleteItemsModalTitle}:filemanager.prompt`.toLowerCase(),
-      );
+      expect(result).toBe(`${FileManagerI18nKey.DeleteItemsModalTitle}:FileManager.Prompt`);
     });
 
     test('returns plural file title when deleting multiple files', () => {
       const result = getDeleteModalTitle(ApplicationRoute.Files, t, 2, false);
-      expect(result?.toLowerCase()).toBe(`${FileManagerI18nKey.DeleteItemsModalTitle}:filemanager.files`.toLowerCase());
+      expect(result).toBe(`${FileManagerI18nKey.DeleteItemsModalTitle}:FileManager.Files`);
     });
   });
 
@@ -117,6 +115,7 @@ describe('Assets Modals utils', () => {
       const { treeItems, pathMapping } = generateTreeForDeletingItems(
         originalItems as Asset[],
         itemsToDelete as DialFile[],
+        'Selected Items to delete',
       );
 
       expect(treeItems).toHaveLength(1);
@@ -134,6 +133,7 @@ describe('Assets Modals utils', () => {
       const { treeItems, pathMapping } = generateTreeForDeletingItems(
         originalItems as Asset[],
         itemsToDelete as DialFile[],
+        'Selected Items to delete',
       );
 
       expect(treeItems[0].items).toHaveLength(1);

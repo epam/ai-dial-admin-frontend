@@ -51,6 +51,8 @@ const MetricConfiguration: FC<Props> = ({
   const t = useI18n();
   const [isJsonView, setIsJsonView] = useState(false);
 
+  const metricNameError = metricName?.includes(':') ? t(TestSuitesI18nKey.MetricNameInvalidChars) : undefined;
+
   const description = selectedMetric?.description || selectedMetricDetails?.description || '';
 
   const viewOptions: SelectOption[] = [
@@ -139,6 +141,8 @@ const MetricConfiguration: FC<Props> = ({
           <DialInput
             labelProps={{ label: t(EntityFieldsI18nKey.name), required: true }}
             value={metricName}
+            error={metricNameError}
+            invalid={!!metricNameError}
             onChange={onChangeName}
           />
 

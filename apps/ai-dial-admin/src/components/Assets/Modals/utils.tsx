@@ -213,8 +213,9 @@ const updatePathsInItem = (item: DialFile, originalItemPath: string, newParentPa
 export const generateTreeForDeletingItems = (
   items: Asset[],
   itemsToDelete: DialFile[],
+  rootItemName: string,
 ): { treeItems: DialFile[]; pathMapping: Map<string, string> } => {
-  const ROOT_PATH = 'Selected Items to delete/';
+  const ROOT_PATH = `${rootItemName}/`;
   const pathMapping = new Map<string, string>();
 
   const rootItems = itemsToDelete.map((item) => {
@@ -246,7 +247,7 @@ export const generateTreeForDeletingItems = (
     treeItems: [
       {
         id: 'root',
-        name: 'Selected Items to delete',
+        name: rootItemName,
         path: ROOT_PATH,
         nodeType: DialFileNodeType.FOLDER,
         folderId: 'ItemsToDelete',
