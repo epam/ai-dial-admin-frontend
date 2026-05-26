@@ -19,7 +19,6 @@ import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { FileImportGridData, FileImportMap } from '@/src/models/file';
-import { ConflictResolutionPolicy } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isAssetWithVersion } from '@/src/utils/is-view';
 import { getImportTitle } from '@/src/components/EntityListView/HeaderButtons/utils';
@@ -49,12 +48,13 @@ const ImportConflicts: FC<Props> = ({
 
   const isAssetWithVersionImport = isAssetWithVersion(route);
   const fileCount = [...filesMap.values()].reduce((total, value) => total + value.files.length, 0);
+  const shouldShowPreview = fileCount > 0;
 
   const changeFile = useCallback(
     (value: string, data: unknown, field: string) => {
-      setEditedFileMap((prev) => changeFilesMap(prev, data as FileImportGridData, field, value));
+      setEditedFileMap((prev) => changeFilesMap(prev, data as FileImportGridData, field, value, route));
     },
-    [setEditedFileMap],
+    [route, setEditedFileMap],
   );
 
   const rowData = isAssetWithVersionImport
@@ -70,17 +70,6 @@ const ImportConflicts: FC<Props> = ({
       return isAssetWithVersionImport ? isErrorPromptNode(params.data) : isErrorFileNode(params.data);
     },
   };
-  const setErrorState = (event: GridReadyEvent | CellValueChangedEvent) => {
-    let isError = false;
-
-    event.api?.forEachNode((node) => {
-      if (isAssetWithVersionImport ? isErrorPromptNode(node.data) : isErrorFileNode(node.data)) {
-        isError = true;
-      }
-    });
-    setStepsState(isError ? StepStatus.ERROR : StepStatus.VALID);
-  };
-
   const onGridReady = (event: GridReadyEvent) => {
     setEditedFileMap(filesMap);
     event.api?.updateGridOptions({
@@ -88,14 +77,14 @@ const ImportConflicts: FC<Props> = ({
       rowData,
       rowClassRules,
     });
-    setErrorState(event);
+    setStepsState(StepStatus.VALID);
   };
 
   const onCellValueChanged = (event: CellValueChangedEvent) => {
-    setErrorState(event);
     event.api?.updateGridOptions({
       rowClassRules,
     });
+    setStepsState(StepStatus.VALID);
   };
 
   const options: GridOptions = {
@@ -113,7 +102,7 @@ const ImportConflicts: FC<Props> = ({
         elementId="conflict-resolution"
         onChange={setResolution}
       />
-      {resolution === ConflictResolutionPolicy.MANUAL && (
+      {shouldShowPreview && (
         <div className="flex flex-col flex-1 min-h-0 mt-4">
           <div>
             {t(getImportTitle(route))}: {fileCount}

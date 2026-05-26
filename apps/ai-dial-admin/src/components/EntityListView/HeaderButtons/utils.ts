@@ -43,7 +43,7 @@ export const getFormDataForImport = (
   flatImport?: boolean,
   route?: ApplicationRoute,
 ): { body: FormData; fileSize: number } => {
-  if (resolutionStrategy === ConflictResolutionPolicy.MANUAL) {
+  if (fileType === ImportFileType.JSON) {
     switch (route) {
       case ApplicationRoute.Prompts: {
         (file as ParsedAssets).prompts?.forEach((prompt) => {
