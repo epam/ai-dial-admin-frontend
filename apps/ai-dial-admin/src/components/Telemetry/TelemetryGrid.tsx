@@ -1,6 +1,6 @@
 import { DialLoader } from '@epam/ai-dial-ui-kit';
 import { ColDef, GridOptions } from 'ag-grid-community';
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { refreshOptionsConfig } from '@/src/constants/telemetry/filters';
@@ -18,31 +18,60 @@ const additionalGridOptions: GridOptions = {
 interface Props {
   columnDefs: ColDef[];
   title: string;
-  getData: (query: TelemetryQuery) => Promise<ServerActionResponse>;
+  getData?: (query: TelemetryQuery) => Promise<ServerActionResponse>;
   query?: TelemetryQuery | null;
   refreshTime?: string;
+  data?: Record<string, string>[] | null;
+  loading?: boolean;
 }
 
-const TelemetryGrid: FC<Props> = ({ columnDefs, title, getData, query, refreshTime }) => {
+const TelemetryGrid: FC<Props> = ({
+  columnDefs,
+  title,
+  getData,
+  query,
+  refreshTime,
+  data: dataProp,
+  loading: loadingProp,
+}) => {
   const t = useI18n();
-  const [data, setData] = useState<Record<string, string>[] | null>(null);
-  const [loading, setLoading] = useState<boolean>(!!query);
+  const controlled = dataProp !== undefined;
+  const [internalData, setInternalData] = useState<Record<string, string>[] | null>(null);
+  const [internalLoading, setInternalLoading] = useState<boolean>(!controlled && !!query);
+
+  // Keep getData in a ref so the fetch effect doesn't re-run (and re-fetch)
+  // every time an ancestor passes a fresh function reference.
+  const getDataRef = useRef(getData);
+  useEffect(() => {
+    getDataRef.current = getData;
+  });
 
   useEffect(() => {
+    if (controlled) return;
     if (!query) {
-      setData(null);
-      setLoading(false);
+      setInternalData(null);
+      setInternalLoading(false);
       return;
     }
 
     const fetch = async () => {
-      const response = await getData(query);
-      if (response?.success) {
-        setData(getGridData(response.response as TelemetryData));
-      } else {
-        setData(null);
+      const fn = getDataRef.current;
+      if (!fn) {
+        setInternalLoading(false);
+        return;
       }
-      setLoading(false);
+      try {
+        const response = await fn(query);
+        if (response?.success) {
+          setInternalData(getGridData(response.response as TelemetryData));
+        } else {
+          setInternalData(null);
+        }
+      } catch {
+        setInternalData(null);
+      } finally {
+        setInternalLoading(false);
+      }
     };
 
     fetch();
@@ -59,7 +88,10 @@ const TelemetryGrid: FC<Props> = ({ columnDefs, title, getData, query, refreshTi
     return () => {
       clearInterval(intervalId);
     };
-  }, [query, getData, refreshTime]);
+  }, [controlled, query, refreshTime]);
+
+  const data = controlled ? (dataProp ?? null) : internalData;
+  const loading = controlled ? !!loadingProp : internalLoading;
 
   return (
     <div className="flex flex-col size-full rounded-lg border border-primary p-4 max-h-[580px]">

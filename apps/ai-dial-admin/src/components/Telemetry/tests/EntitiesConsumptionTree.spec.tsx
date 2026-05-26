@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import EntitiesConsumptionTree from '../EntitiesConsumptionTree';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { TelemetryQuery } from '@/src/models/telemetry';
+import { EntityRow, TelemetryQuery } from '@/src/models/telemetry';
 
 type GetDataFn = (query: TelemetryQuery) => Promise<ServerActionResponse>;
 
@@ -499,6 +499,60 @@ describe('EntitiesConsumptionTree', () => {
       const grid = screen.getByTestId('tree-grid');
       expect(grid.getAttribute('data-summary')).toBe('x(1)');
     });
+  });
+
+  test('renders provided rows without fetching when `rows` prop is supplied', async () => {
+    const rows: EntityRow[] = [
+      {
+        name: 'gpt-4',
+        parent_deployment: '',
+        execution_path: 'gpt-4',
+        requests: '10',
+        cost: '5',
+        deployment_cost: '6',
+        prompts: '100',
+        completions: '200',
+      },
+    ];
+
+    render(<EntitiesConsumptionTree title="Entities" rows={rows} loading={false} getData={getData} />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('tree-grid')).toBeInTheDocument();
+    });
+    expect(getData).not.toHaveBeenCalled();
+  });
+
+  test('respects external `loading` prop when `rows` are provided', () => {
+    render(<EntitiesConsumptionTree title="Entities" rows={null} loading={true} getData={getData} />);
+    expect(screen.getByTestId('loader')).toBeInTheDocument();
+    expect(getData).not.toHaveBeenCalled();
+  });
+
+  test('rejected getData clears loading (no stuck spinner)', async () => {
+    getData = vi.fn<GetDataFn>().mockRejectedValue(new Error('boom'));
+    render(<EntitiesConsumptionTree title="Entities" getData={getData} />);
+
+    // The promise rejects → catch sets treeData to null → finally clears loading.
+    // The empty-data shell renders (data-row-count="0"); the only failure mode
+    // we care about is "stuck spinner forever," which the loader assertion guards.
+    await waitFor(() => {
+      expect(screen.queryByTestId('loader')).not.toBeInTheDocument();
+    });
+    const grid = screen.getByTestId('tree-grid');
+    expect(grid.getAttribute('data-row-count')).toBe('0');
+  });
+
+  test('does not refetch when only the getData function reference changes', async () => {
+    const { rerender } = render(<EntitiesConsumptionTree title="Entities" getData={getData} />);
+    await waitFor(() => expect(getData).toHaveBeenCalledTimes(1));
+
+    const replacement = vi.fn<GetDataFn>().mockResolvedValue(makeTelemetryResponse(TREE_ROWS));
+    rerender(<EntitiesConsumptionTree title="Entities" getData={replacement} />);
+    await new Promise((resolve) => setTimeout(resolve, 30));
+
+    expect(getData).toHaveBeenCalledTimes(1);
+    expect(replacement).not.toHaveBeenCalled();
   });
 
   test('3-level execution_path with missing intermediate ancestors stays distinct from siblings', async () => {
