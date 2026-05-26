@@ -67,7 +67,7 @@ const CheckboxList: FC<Props> = ({
   const onRemoveNewItem = useCallback((index: number) => {
     setNewList((prev) => {
       const updated = [...prev];
-      prev.splice(index, 1);
+      updated.splice(index, 1);
 
       return updated;
     });

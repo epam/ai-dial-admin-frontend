@@ -298,6 +298,31 @@ describe('Import :: changeFilesMap', () => {
     expect(result.get('key1').files[1] instanceof File).toBe(true);
   });
 
+  test('should update imported file names for Files view', () => {
+    const fileMap = new Map([
+      [
+        'key1.txt',
+        {
+          files: [
+            { name: 'oldFileName.txt', type: 'text/plain' },
+            { name: 'anotherFile.txt', type: 'text/plain' },
+          ],
+          isInvalid: false,
+        },
+      ],
+    ]);
+    const result = changeFilesMap(
+      fileMap,
+      { name: 'key1.txt', index: 1 },
+      'fileName',
+      'newFileName',
+      ApplicationRoute.Files,
+    );
+
+    expect(result.get('key1.txt')?.files[1].name).toBe('newFileName.txt');
+    expect(result.get('key1.txt')?.files[1] instanceof File).toBe(true);
+  });
+
   test('should return a new map with updated file details', () => {
     const newMap = changeFilesMap(prevMap, { name: 'key1', index: 0 }, 'version', 'v2', ApplicationRoute.Prompts);
 
