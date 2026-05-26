@@ -4,7 +4,14 @@ import { Asset } from '@/src/models/dial/deployment-asset';
 import { DialFile, DialFileNodeType } from '@epam/ai-dial-ui-kit';
 import { describe, expect, test, vi } from 'vitest';
 import { CREATE_FOLDER_FORBIDDEN_CHARS, FILE_NAME_MAX_LENGTH } from '../constants';
-import { createEmptyFile, findFolderByPath, getEmptyFile, isItemNameValid, validateCreateFolder } from '../utils';
+import {
+  createEmptyFile,
+  findFolderByPath,
+  getEmptyFile,
+  getUniqueFolderName,
+  isItemNameValid,
+  validateCreateFolder,
+} from '../utils';
 
 describe('FileManager', () => {
   describe('createEmptyFile', () => {
@@ -215,5 +222,28 @@ describe('findFolderByPath', () => {
 
   test('should return undefined for empty items', () => {
     expect(findFolderByPath([], 'public/a/')).toBeUndefined();
+  });
+});
+
+describe('getUniqueFolderName', () => {
+  test('should return "New Folder" when no conflicts', () => {
+    expect(getUniqueFolderName([])).toBe('New Folder');
+    expect(getUniqueFolderName(['other'])).toBe('New Folder');
+  });
+
+  test('should return "New Folder 1" when "New Folder" exists', () => {
+    expect(getUniqueFolderName(['New Folder'])).toBe('New Folder 1');
+  });
+
+  test('should return "New Folder 2" when "New Folder" and "New Folder 1" exist', () => {
+    expect(getUniqueFolderName(['New Folder', 'New Folder 1'])).toBe('New Folder 2');
+  });
+
+  test('should skip to the next available number', () => {
+    expect(getUniqueFolderName(['New Folder', 'New Folder 1', 'New Folder 2', 'New Folder 3'])).toBe('New Folder 4');
+  });
+
+  test('should return first available number when there are gaps', () => {
+    expect(getUniqueFolderName(['New Folder', 'New Folder 2'])).toBe('New Folder 1');
   });
 });

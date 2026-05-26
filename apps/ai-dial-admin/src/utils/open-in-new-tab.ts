@@ -30,7 +30,6 @@ export const getEntityPath = (
     case ApplicationRoute.ApplicationRunners:
       return encodeURIComponent(`${(data as DialApplicationScheme).$id}`);
 
-    case ApplicationRoute.Conversations:
     case ApplicationRoute.Prompts:
     case ApplicationRoute.Files:
     case ApplicationRoute.AssetsApplications:

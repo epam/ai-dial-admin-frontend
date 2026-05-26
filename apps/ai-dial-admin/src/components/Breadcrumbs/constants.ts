@@ -52,15 +52,6 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
       },
     ],
   },
-  [ApplicationRoute.Conversations]: {
-    segments: [
-      { name: 'Conversations', i18nKey: MenuI18nKey.Conversations, shouldEnrichWithFolderBreadcrumbs: true },
-      {
-        name: 'Id',
-        href: false,
-      },
-    ],
-  },
   [ApplicationRoute.FoldersStorage]: {
     segments: [
       { name: 'FoldersStorage', i18nKey: MenuI18nKey.FoldersStorage },

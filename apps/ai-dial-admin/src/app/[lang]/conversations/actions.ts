@@ -12,22 +12,7 @@ export async function getConversations(path: string) {
   return assetsApi.getAssetList(token, path, ResourceType.CONVERSATION);
 }
 
-export async function getConversation(path: string, etag: string) {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.getAssetWithEtag(token, path, ResourceType.CONVERSATION, etag);
-}
-
 export async function getAllDeployments() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return utilityApi.getAllDeployments(token);
-}
-
-export async function deleteConversation(path: string, etag?: string) {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.removeAssetWithEtag(token, path, ResourceType.CONVERSATION, etag);
-}
-
-export async function deleteConversations(paths: { path: string }[]) {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.bulkDeleteAssets(token, paths, ResourceType.CONVERSATION);
 }

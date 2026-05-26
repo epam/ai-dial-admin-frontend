@@ -5,7 +5,7 @@ import { assetsApi } from '@/src/app/api/api';
 import ToolsetView from '@/src/components/Assets/Toolsets/View/View';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
-import { Asset, AssetToolset } from '@/src/models/dial/deployment-asset';
+import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { errorObjLog } from '@/src/server/logger';
 import { ResourceType } from '@/src/types/resource-type';
@@ -38,7 +38,7 @@ export default async function Page(params: {
     });
 
     toolsets = ((await assetsApi.getAssetList(token, `${toolset?.folderId}/`, ResourceType.TOOLSET))?.filter(
-      (p) => (p as Asset).nodeType === DialFileNodeType.ITEM && p.name === name,
+      (p) => p.nodeType === DialFileNodeType.ITEM && p.name === name,
     ) || []) as AssetToolset[];
   } catch (e) {
     errorObjLog(e, 'Failed to fetch toolset view data');

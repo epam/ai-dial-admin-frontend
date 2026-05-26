@@ -38,7 +38,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { useRouter } from 'next/navigation';
 import Modals from './Modals';
-import { BaseAssetRoute, CrudAssetRoute, ModalType } from './types';
+import { BaseAssetRoute, ModalType } from './types';
 import {
   AssetFolderContextMap,
   BulkDeleteAssetActionMap,
@@ -53,7 +53,6 @@ import {
   getResourceTypeByRoute,
   ImportAssetActionMap,
   MoveAssetActionMap,
-  enrichConversationWithVersion,
 } from './utils';
 
 interface Props {
@@ -221,7 +220,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
       const newPath = `${folderPath.replaceAll('//', '/')}/`;
       const emptyAsset = getEmptyAsset(view, newPath);
 
-      const createAsset = CreateAssetActionMap[view as CrudAssetRoute];
+      const createAsset = CreateAssetActionMap[view as BaseAssetRoute];
 
       return createAsset(emptyAsset);
     },
@@ -231,7 +230,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
   const handleCreateAsset = useCallback(
     async (asset: AssetWithVersion, path?: string, isCreateDuplicate?: boolean) => {
       const folderPath = path || destinationFolder || `${ROOT_FOLDER}/`;
-      const createAsset = CreateAssetActionMap[view as CrudAssetRoute];
+      const createAsset = CreateAssetActionMap[view as BaseAssetRoute];
 
       return createAsset({ ...asset, folderId: folderPath }).then((res) => {
         if (res.success) {
@@ -280,8 +279,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
       const folders = items.filter((file) => file.nodeType === DialFileNodeType.FOLDER);
       setMovingItems((files?.length || 0) + (folders?.length || 0));
       setMovedItems(0);
-      const moveAsset =
-        view === ApplicationRoute.Conversations ? undefined : MoveAssetActionMap[view as CrudAssetRoute];
+      const moveAsset = MoveAssetActionMap[view as BaseAssetRoute];
 
       const promises: Promise<ServerActionResponse | ServerActionResponse[]>[] = [];
       files.forEach((file) => {
@@ -352,17 +350,14 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
         view,
       );
 
-      const importAssetAction = ImportAssetActionMap[view as CrudAssetRoute];
+      const importAssetAction = ImportAssetActionMap[view as BaseAssetRoute];
 
       importAssetAction(body, fileType).then((res) => {
         setFolderToRefetch(null);
         if (res.success) {
           fetchFiles?.(importFolder);
-          const response = res.response as {
-            importResults?: { targetPath: string; status: string; error?: string }[];
-          };
           const { title, description, errorTitle, errorDescription, skippedTitle, skippedDescription } =
-            getImportNotificationContent(view, response.importResults || [], fileType, importFolder, t);
+            getImportNotificationContent(view, res.response.importResults, fileType, importFolder, t);
           if (title && description) {
             showNotification(getSuccessNotification(title, description));
           }
@@ -393,9 +388,6 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
 
       return processedAssets.reduce((acc: AssetWithVersion[], curr) => {
         if (curr.nodeType === DialFileNodeType.ITEM) {
-          if (view === ApplicationRoute.Conversations && !curr.version) {
-            curr = enrichConversationWithVersion(curr);
-          }
           curr.selectedVersions = selectedVersionsMap[`${curr.folderId}${curr.name}`] || [curr.version];
           const existing = acc.find((a) => a.nodeType === DialFileNodeType.ITEM && a.name === curr.name);
           if (existing) {
@@ -415,7 +407,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
         return acc;
       }, []);
     },
-    [selectedVersionsMap, view],
+    [selectedVersionsMap],
   );
 
   const onExport = useCallback(
@@ -431,7 +423,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
         }
       });
 
-      const exportAsset = ExportAssetActionMap[view as CrudAssetRoute];
+      const exportAsset = ExportAssetActionMap[view as BaseAssetRoute];
 
       exportAsset(filePaths, fileType).then((res) => {
         if (fileType === ImportFileType.ARCHIVE) {

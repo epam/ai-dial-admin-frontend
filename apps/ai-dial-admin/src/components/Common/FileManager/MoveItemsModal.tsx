@@ -10,13 +10,13 @@ import { MOVE_ITEMS_INDICATOR_SIZE, MOVE_ITEMS_INDICATOR_WIDTH } from './constan
 import ProgressBar from '@/src/components/Common/ProgressBar/ProgressBar';
 
 interface Props {
-  totalItems?: number;
-  movedItems?: number;
+  totalItems: number;
+  movedItems: number;
   isModalOpen: boolean;
   onCancel: () => void;
 }
 
-const MoveItemsModal: FC<Props> = ({ isModalOpen, totalItems = 0, movedItems = 0, onCancel }) => {
+const MoveItemsModal: FC<Props> = ({ isModalOpen, totalItems, movedItems, onCancel }) => {
   const t = useI18n();
 
   return (

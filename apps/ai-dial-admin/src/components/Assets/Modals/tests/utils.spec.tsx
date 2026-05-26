@@ -157,7 +157,7 @@ describe('Assets Modals utils', () => {
       ];
       const selectedVersionsMap = {};
 
-      const result = processAssetsData(assets, selectedVersionsMap, ApplicationRoute.Prompts);
+      const result = processAssetsData(assets, selectedVersionsMap);
 
       expect(result).toHaveLength(1);
       expect(result[0].name).toBe('prompt1');
@@ -178,7 +178,7 @@ describe('Assets Modals utils', () => {
       ];
       const selectedVersionsMap = { folder1app1: ['1.0', '2.0'] };
 
-      const result = processAssetsData(assets, selectedVersionsMap, ApplicationRoute.AssetsApplications);
+      const result = processAssetsData(assets, selectedVersionsMap);
 
       expect(result[0].selectedVersions).toEqual(['1.0', '2.0']);
     });
@@ -204,7 +204,7 @@ describe('Assets Modals utils', () => {
       ];
       const selectedVersionsMap = {};
 
-      const result = processAssetsData(assets, selectedVersionsMap, ApplicationRoute.AssetsToolsets);
+      const result = processAssetsData(assets, selectedVersionsMap);
 
       expect(result).toHaveLength(1);
       expect(result[0].name).toBe('toolset');
@@ -233,7 +233,7 @@ describe('Assets Modals utils', () => {
       ];
       const selectedVersionsMap = {};
 
-      const result = processAssetsData(assets, selectedVersionsMap, ApplicationRoute.AssetsApplications);
+      const result = processAssetsData(assets, selectedVersionsMap);
 
       expect(result).toHaveLength(1);
       expect(result[0].versions?.filter((v) => v === '1.0')).toHaveLength(1);
@@ -260,7 +260,7 @@ describe('Assets Modals utils', () => {
       ];
       const selectedVersionsMap = {};
 
-      const result = processAssetsData(assets as AssetWithVersion[], selectedVersionsMap, ApplicationRoute.Prompts);
+      const result = processAssetsData(assets as AssetWithVersion[], selectedVersionsMap);
 
       expect(result).toHaveLength(1);
       expect(result[0].nodeType).toBe(DialFileNodeType.FOLDER);
@@ -269,7 +269,7 @@ describe('Assets Modals utils', () => {
     });
 
     test('handles empty asset array', () => {
-      const result = processAssetsData([], {}, ApplicationRoute.Prompts);
+      const result = processAssetsData([], {});
       expect(result).toEqual([]);
     });
 
@@ -302,7 +302,7 @@ describe('Assets Modals utils', () => {
       ];
       const selectedVersionsMap = {};
 
-      const result = processAssetsData(assets as AssetWithVersion[], selectedVersionsMap, ApplicationRoute.Prompts);
+      const result = processAssetsData(assets as AssetWithVersion[], selectedVersionsMap);
 
       expect(result).toHaveLength(1);
       expect(result[0].items).toHaveLength(1);

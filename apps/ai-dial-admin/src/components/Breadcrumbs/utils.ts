@@ -8,7 +8,6 @@ import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { useFileFolder } from '@/src/context/assets/FileFolderContext';
 import { Dispatch, SetStateAction } from 'react';
-import { useConversationFolder } from '@/src/context/assets/ConversationsFolderContext';
 
 const IGNORE_BREADCRUMBS = [ApplicationRoute.Home];
 const TRANSLATE_BREADCRUMBS = { [SYSTEM_ROLLBACK_ID]: RollbackI18nKey.Rollback };
@@ -88,8 +87,6 @@ export function getFolderContext(pathname: string, currentLocale: string) {
       return useToolsetFolder;
     case ApplicationRoute.Files:
       return useFileFolder;
-    case ApplicationRoute.Conversations:
-      return useConversationFolder;
     default:
       return null;
   }
