@@ -20,7 +20,6 @@ describe('IMPORT_RESOLUTIONS', () => {
       { id: ConflictResolutionPolicy.SKIP, name: ImportI18nKey.Skip },
     ]);
   });
-
 });
 
 describe('IMPORT_STEPS', () => {
