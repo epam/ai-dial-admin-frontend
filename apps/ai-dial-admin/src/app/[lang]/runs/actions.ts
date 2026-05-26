@@ -41,3 +41,8 @@ export async function getMetricSnapshots(filters: FilterDto[]) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return analyticsApi.getMetricSnapshots(filters, token);
 }
+
+export async function exportRunPreview(runId: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return analyticsApi.exportPreview(runId, token);
+}

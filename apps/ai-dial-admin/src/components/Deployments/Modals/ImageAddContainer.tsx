@@ -139,12 +139,7 @@ const ImageAddContainer: FC<Props> = ({ title, isModalOpen, onClose, onApply, im
               <div className="flex flex-col gap-4 h-full min-h-0">
                 <GridView additionalGridOptions={additionalGridOptions} onGridReady={onGridReady} />
                 {selectedEntities.some((container) => container.status === CONTAINER_STATUS.RUNNING) && (
-                  <DialAlert
-                    message={t(ContainersI18nKey.ContainersRestartWarning, {
-                      entityType: getTranslatedDeploymentType(route, t),
-                    })}
-                    variant={AlertVariant.Warning}
-                  />
+                  <DialAlert message={t(ContainersI18nKey.ContainersRestartWarning)} variant={AlertVariant.Warning} />
                 )}
               </div>
             )}

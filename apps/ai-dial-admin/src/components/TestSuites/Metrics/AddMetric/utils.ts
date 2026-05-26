@@ -15,6 +15,10 @@ export const validateMetricBindings = (
     return false;
   }
 
+  if (metricName.includes(':')) {
+    return false;
+  }
+
   const allBindings = [...configBindings, ...inputBindings];
 
   const selectedMetricParameters = jsonSchemaToFields(configSchema, configSchema);
