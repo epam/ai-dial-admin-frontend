@@ -7,11 +7,13 @@ import {
   getGridFilters,
   getStartOfDay,
   groupByDay,
+  areFiltersEquals,
 } from '@/src/components/ActivityAudit/List/utils';
 import { GridFilterType } from '@/src/types/grid-filter';
 import { FilterOperatorDto } from '@/src/types/request';
 import { describe, expect, test, vi } from 'vitest';
 import { ActivityAuditResourceType } from '@/src/types/activity-audit';
+import type { FilterDto } from '@/src/models/request';
 
 vi.mock('@/src/constants/ag-grid', () => ({
   ACTION_COLUMN: vi.fn((actions) => ({ colId: 'actions', actions })),
@@ -398,5 +400,54 @@ describe('getStartOfDay and getEndOfDay', () => {
     expect(endOfDay.getMinutes()).toBe(59);
     expect(endOfDay.getSeconds()).toBe(59);
     expect(endOfDay.getMilliseconds()).toBe(999);
+  });
+});
+
+describe('ActivityAudit/List/utils :: areFiltersEquals', () => {
+  test('returns true for two empty filter objects', () => {
+    expect(areFiltersEquals({}, {})).toBe(true);
+  });
+
+  test('returns true for identical single filter', () => {
+    const f1: Record<string, FilterDto> = {
+      columnA: { column: 'columnA', operator: FilterOperatorDto.EQUALS, value: '1' },
+    };
+    const f2: Record<string, FilterDto> = {
+      columnA: { column: 'columnA', operator: FilterOperatorDto.EQUALS, value: '1' },
+    };
+    expect(areFiltersEquals(f1, f2)).toBe(true);
+  });
+
+  test('returns true when same filters present in different key order', () => {
+    const f1: Record<string, FilterDto> = {
+      a: { column: 'a', operator: FilterOperatorDto.EQUALS, value: '1' },
+      b: { column: 'b', operator: FilterOperatorDto.CONTAINS, value: 'x' },
+    };
+    const f2: Record<string, FilterDto> = {
+      b: { column: 'b', operator: FilterOperatorDto.CONTAINS, value: 'x' },
+      a: { column: 'a', operator: FilterOperatorDto.EQUALS, value: '1' },
+    };
+    expect(areFiltersEquals(f1, f2)).toBe(true);
+  });
+
+  test('returns false when a filter value differs', () => {
+    const f1: Record<string, FilterDto> = {
+      col: { column: 'col', operator: FilterOperatorDto.EQUALS, value: '1' },
+    };
+    const f2: Record<string, FilterDto> = {
+      col: { column: 'col', operator: FilterOperatorDto.EQUALS, value: '2' },
+    };
+    expect(areFiltersEquals(f1, f2)).toBe(false);
+  });
+
+  test('returns false when one object has extra key', () => {
+    const f1: Record<string, FilterDto> = {
+      col1: { column: 'col1', operator: FilterOperatorDto.EQUALS, value: '1' },
+    };
+    const f2: Record<string, FilterDto> = {
+      col1: { column: 'col1', operator: FilterOperatorDto.EQUALS, value: '1' },
+      col2: { column: 'col2', operator: FilterOperatorDto.EQUALS, value: 'x' },
+    };
+    expect(areFiltersEquals(f1, f2)).toBe(false);
   });
 });

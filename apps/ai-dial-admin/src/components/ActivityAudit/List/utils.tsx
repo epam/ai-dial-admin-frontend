@@ -180,3 +180,23 @@ export const getAuditActivityHref = (
   }
   return `${getUrnForEntity(route, entity)}/${encodeURIComponent(activityId)}`;
 };
+
+export const areFiltersEquals = (filters1: Record<string, FilterDto>, filters2: Record<string, FilterDto>): boolean => {
+  const keys1 = Object.keys(filters1);
+  const keys2 = Object.keys(filters2);
+
+  if (keys1.length !== keys2.length) return false;
+
+  for (const key of keys1) {
+    if (!filters2[key]) return false;
+
+    const filter1 = filters1[key];
+    const filter2 = filters2[key];
+
+    if (filter1.column !== filter2.column || filter1.value !== filter2.value || filter1.operator !== filter2.operator) {
+      return false;
+    }
+  }
+
+  return true;
+};
