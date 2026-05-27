@@ -57,6 +57,6 @@ New keys added to containers i18n namespace:
 
 ### Accessibility
 
-- `DialAlert` provides built-in `role="alert"` semantics
+- `DialNotification` provides built-in `role="alert"` semantics
 - Install button is a native `<button>` via `DialNeutralButton` — keyboard accessible
 - Disabled Run button communicates state via `disabled` attribute

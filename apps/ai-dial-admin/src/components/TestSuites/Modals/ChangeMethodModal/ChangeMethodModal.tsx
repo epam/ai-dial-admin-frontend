@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { AlertVariant, DialAlert, DialConfirmationPopup, PopupSize } from '@epam/ai-dial-ui-kit';
+import { NotificationVariant, DialNotification, DialConfirmationPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import Methods from '@/src/components/TestSuites/Methods/Methods';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -61,7 +61,7 @@ const ChangeMethodModal: FC<ChangeMethodModalProps> = ({
     >
       <div className="size-full flex flex-col gap-4 px-6 py-4">
         <Methods selectedTarget={selectedApplication} testSuite={currentSuite} onChange={setCurrentSuite}>
-          <DialAlert message={t(TestSuitesI18nKey.MethodChangeWarning)} variant={AlertVariant.Warning} />
+          <DialNotification message={t(TestSuitesI18nKey.MethodChangeWarning)} variant={NotificationVariant.Warning} />
         </Methods>
       </div>
     </DialConfirmationPopup>

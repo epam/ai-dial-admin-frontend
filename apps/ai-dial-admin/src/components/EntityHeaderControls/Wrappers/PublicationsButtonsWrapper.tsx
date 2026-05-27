@@ -5,9 +5,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import {
-  AlertVariant,
+  NotificationVariant,
   ButtonAppearance,
-  DialAlert,
+  DialNotification,
   DialConfirmationPopup,
   DialErrorButton,
   DialNeutralButton,
@@ -166,8 +166,8 @@ const PublicationsButtonsWrapper = <T extends Publication>({
     if (isAddAction(action) && !entity.rules?.length) {
       return (
         <div className="flex flex-col gap-2 px-6 py-4">
-          <DialAlert
-            variant={AlertVariant.Info}
+          <DialNotification
+            variant={NotificationVariant.Info}
             message={<span className="text-sm">{t(PublicationsI18nKey.PublishWarningTitle)}</span>}
           />
           <span className="text-sm text-secondary">{t(PublicationsI18nKey.PublishWarningDescription)}</span>

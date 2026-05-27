@@ -1,8 +1,8 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 
 import {
-  AlertVariant,
-  DialAlert,
+  NotificationVariant,
+  DialNotification,
   DialRadioGroupPopupField,
   DialInput,
   PopupSize,
@@ -77,7 +77,10 @@ const ForwardAuthTokenField: FC<Props> = ({ view, entity, onChangeEntity, disabl
       name: titleKey ? t(titleKey as ForwardTokenI18nKey) : '',
       content: (
         <div className="flex flex-col gap-y-8 mt-3">
-          <DialAlert variant={AlertVariant.Error} message={t(ForwardTokenI18nKey.ForwardTokenModalAlert)} />
+          <DialNotification
+            variant={NotificationVariant.Error}
+            message={t(ForwardTokenI18nKey.ForwardTokenModalAlert)}
+          />
           <DialInput
             id="entityName"
             labelProps={{ label: displayNameKey ? t(displayNameKey as CreateI18nKey) : '' }}

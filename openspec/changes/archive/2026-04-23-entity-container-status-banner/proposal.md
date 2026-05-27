@@ -9,7 +9,7 @@ Issue #2943 adds a prominent warning on the entity's detail view whenever its co
 - **Add** a new reusable component `<ContainerStatusBanner view={route} entity={entity} />` at `apps/ai-dial-admin/src/components/Deployments/Common/ContainerStatusBanner/ContainerStatusBanner.tsx`.
   - Fetches the container list client-side via `getContainersByView(view)` (a thin dispatcher that picks between `getModelContainers` / `getApplicationContainers` / `getMCPContainers`).
   - Derives the currently-selected container from `entity.source?.containerId`.
-  - Renders `<DialAlert variant={AlertVariant.Warning}>` with a parametrized message and a "Go to Container" button when the selected container is found and its status is not `running`.
+  - Renders `<DialNotification variant={NotificationVariant.Warning}>` with a parametrized message and a "Go to Container" button when the selected container is found and its status is not `running`.
   - The button opens the container view via `onOpenInNewTab(getContainerRoute(view), { name: containerId })` — reusing the same navigation the existing "Open" button on the Container field uses.
   - Returns `null` in all other cases (source is not a container, no `containerId`, container not found/deleted, status is `running`, still loading).
 - **Render** `<ContainerStatusBanner>` in each of the four entity View components, placed **below the tabs bar** and **above the tab content**:

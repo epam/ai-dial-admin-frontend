@@ -2,8 +2,8 @@
 import { FC, useCallback, useEffect, useRef, useMemo, useState } from 'react';
 
 import {
-  AlertVariant,
-  DialAlert,
+  NotificationVariant,
+  DialNotification,
   DialNoDataContent,
   DialPrimaryButton,
   DialRadioGroup,
@@ -219,7 +219,7 @@ const ExportConfig: FC<Props> = ({ enableExportConfigMap, deploymentsEnabled }) 
     return (
       <div className="flex flex-col size-full rounded p-4 bg-layer-2 gap-4">
         <h1>{t(MenuI18nKey.ExportConfig)}</h1>
-        <DialAlert variant={AlertVariant.Info} message={t(MenuI18nKey.ReadOnlyAdminExportUnavailable)} />
+        <DialNotification variant={NotificationVariant.Info} message={t(MenuI18nKey.ReadOnlyAdminExportUnavailable)} />
       </div>
     );
   }
