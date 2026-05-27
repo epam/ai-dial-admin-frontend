@@ -46,6 +46,7 @@ const PromptView: FC<Props> = ({ originalPrompt, etag, prompts }) => {
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
 
   const [addedVersions, setAddedVersions] = useState<string[]>([]);
+  const [discardKey, setDiscardKey] = useState(0);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -68,6 +69,7 @@ const PromptView: FC<Props> = ({ originalPrompt, etag, prompts }) => {
   const onDiscard = useCallback(() => {
     setSelectedPrompt(structuredClone(originalPrompt));
     setAddedVersions([]);
+    setDiscardKey((prev) => prev + 1);
   }, [originalPrompt]);
 
   const onSave = useCallback(
@@ -143,7 +145,12 @@ const PromptView: FC<Props> = ({ originalPrompt, etag, prompts }) => {
 
       <div className="flex-1 overflow-auto min-h-0">
         {isEditorEnabled ? (
-          <EntityJsonEditor entity={selectedPrompt} setSelectedEntity={setSelectedPrompt} setIsChanged={setIsChanged} />
+          <EntityJsonEditor
+            key={discardKey}
+            entity={selectedPrompt}
+            setSelectedEntity={setSelectedPrompt}
+            setIsChanged={setIsChanged}
+          />
         ) : (
           <TabsContent activeTab={activeTab} onChangePrompt={setSelectedPrompt} selectedPrompt={selectedPrompt} />
         )}

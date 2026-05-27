@@ -3,8 +3,6 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { cloneDeep } from 'lodash';
-
 import { getCoreRole, removeRole, updateCoreRole, updateRole } from '@/src/app/[lang]/roles/actions';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
@@ -48,13 +46,14 @@ const RolesView: FC<Props> = ({ originalRole, etag, keys, ...props }) => {
   const tabs = getRoleTabs(t);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
-  const [selectedRole, setSelectedRole] = useState(cloneDeep(originalRole));
+  const [selectedRole, setSelectedRole] = useState(structuredClone(originalRole));
   const [isChanged, setIsChanged] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
 
   const [isSkipRefresh, setIsSkipRefresh] = useState(true);
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
   const [coreRole, setCoreRole] = useState<DialKey | null>(null);
+  const [discardKey, setDiscardKey] = useState(0);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -79,7 +78,9 @@ const RolesView: FC<Props> = ({ originalRole, etag, keys, ...props }) => {
   }, [coreRole, originalRole]);
 
   useEffect(() => {
-    setSelectedRole(selectedFormat === ExportFormat.CORE ? cloneDeep(coreRole as DialRole) : cloneDeep(originalRole));
+    setSelectedRole(
+      selectedFormat === ExportFormat.CORE ? structuredClone(coreRole as DialRole) : structuredClone(originalRole),
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedFormat, originalRole]);
 
@@ -96,7 +97,8 @@ const RolesView: FC<Props> = ({ originalRole, etag, keys, ...props }) => {
     }
 
     setIsSkipRefresh(false);
-    setSelectedRole(originalRole);
+    setSelectedRole(structuredClone(originalRole));
+    setDiscardKey((prev) => prev + 1);
   }, [isEditorEnabled, originalRole]);
 
   const onChangeRole = useCallback(
@@ -146,7 +148,12 @@ const RolesView: FC<Props> = ({ originalRole, etag, keys, ...props }) => {
       />
       <div className="flex-1 overflow-auto min-h-0">
         {isEditorEnabled ? (
-          <EntityJsonEditor entity={selectedRole} setSelectedEntity={setSelectedRole} setIsChanged={setIsChanged} />
+          <EntityJsonEditor
+            key={discardKey}
+            entity={selectedRole}
+            setSelectedEntity={setSelectedRole}
+            setIsChanged={setIsChanged}
+          />
         ) : (
           <TabsContent
             isSkipRefresh={isSkipRefresh}

@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { TabModel } from '@epam/ai-dial-ui-kit';
-import { cloneDeep } from 'lodash';
 
 import {
   getCoreInterceptor,
@@ -51,11 +50,12 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, etag, ...props
   const tabs: TabModel[] = getInterceptorTabs(t);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
-  const [selectedInterceptor, setSelectedInterceptor] = useState(cloneDeep(originalInterceptor));
+  const [selectedInterceptor, setSelectedInterceptor] = useState(structuredClone(originalInterceptor));
   const [isChanged, setIsChanged] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [selectedFormat, setSelectedFormat] = useState(ExportFormat.ADMIN);
   const [coreInterceptor, setCoreInterceptor] = useState<DialInterceptor | null>(null);
+  const [discardKey, setDiscardKey] = useState(0);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -83,8 +83,8 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, etag, ...props
   useEffect(() => {
     setSelectedInterceptor(
       selectedFormat === ExportFormat.CORE
-        ? cloneDeep(coreInterceptor as DialInterceptor)
-        : cloneDeep(originalInterceptor),
+        ? structuredClone(coreInterceptor as DialInterceptor)
+        : structuredClone(originalInterceptor),
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedFormat, originalInterceptor]);
@@ -100,7 +100,8 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, etag, ...props
     if (isEditorEnabled) {
       setSelectedFormat(ExportFormat.ADMIN);
     }
-    setSelectedInterceptor(originalInterceptor);
+    setSelectedInterceptor(structuredClone(originalInterceptor));
+    setDiscardKey((prev) => prev + 1);
   }, [isEditorEnabled, originalInterceptor]);
 
   const onSave = useCallback(() => {
@@ -149,6 +150,7 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, etag, ...props
       <div className="flex-1 overflow-auto min-h-0">
         {isEditorEnabled ? (
           <EntityJsonEditor
+            key={discardKey}
             entity={selectedInterceptor}
             setSelectedEntity={setSelectedInterceptor}
             setIsChanged={setIsChanged}

@@ -33,6 +33,7 @@ interface Props {
   selectedApplication: DialApplication;
   originalApplication?: DialApplication;
   isSkipRefresh: boolean;
+  discardKey?: number;
   names: string[];
   isEditorEnabled: boolean;
   setIsChanged?: Dispatch<SetStateAction<boolean>>;
@@ -55,6 +56,7 @@ const TabsContent: FC<Props> = ({
   roles,
   models,
   isSkipRefresh,
+  discardKey,
   isEditorEnabled,
   isChanged,
   onSave,
@@ -118,6 +120,7 @@ const TabsContent: FC<Props> = ({
           applicationSchemes={applicationSchemes}
           isEditorEnabled={isEditorEnabled}
           isSkipRefresh={isSkipRefresh}
+          discardKey={discardKey}
           onChange={onChangeApplication}
           setIsChanged={setIsChanged}
           setSelectedApplication={setSelectedApplication}
