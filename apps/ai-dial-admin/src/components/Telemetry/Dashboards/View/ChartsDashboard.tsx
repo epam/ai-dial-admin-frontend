@@ -32,7 +32,7 @@ const ChartsDashboard: FC<Props> = ({ getData, refreshTime }) => {
       query: ENTITY_CONSUMPTION_TREE_QUERY,
       getValue: getTotalTokensFromTree,
     },
-    { title: TelemetryI18nKey.Money, query: MONEY_QUERY, unit: '$' },
+    { title: TelemetryI18nKey.TotalMoney, query: MONEY_QUERY, unit: '$' },
   ];
   return (
     <div className="flex shrink-0 overflow-auto">
