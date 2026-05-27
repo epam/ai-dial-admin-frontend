@@ -52,6 +52,7 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
   const [isChanged, setIsChanged] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [discardKey, setDiscardKey] = useState(0);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -71,6 +72,7 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
 
   const onDiscard = useCallback(() => {
     setSelectedAdapter(cloneDeep(originalAdapter));
+    setDiscardKey((prev) => prev + 1);
   }, [originalAdapter]);
 
   const onSave = useCallback(() => {
@@ -113,6 +115,7 @@ const AdapterView: FC<Props> = ({ originalAdapter, modelsNames, etag }) => {
       <div className="flex-1 overflow-auto min-h-0">
         {isEditorEnabled ? (
           <EntityJsonEditor
+            key={discardKey}
             entity={selectedAdapter}
             setSelectedEntity={setSelectedAdapter}
             setIsChanged={setIsChanged}

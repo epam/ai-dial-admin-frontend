@@ -52,6 +52,7 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [isSkipRefresh, setIsSkipRefresh] = useState(false);
+  const [discardKey, setDiscardKey] = useState(0);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -73,6 +74,7 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
     setSelectedTestSuite(structuredClone(originalTestSuite));
     setHasTestCaseChanges(false);
     setIsSkipRefresh(false);
+    setDiscardKey((prev) => prev + 1);
     testCasesActionsRef.current?.clearDirtyAndRefresh();
   }, [originalTestSuite]);
 
@@ -201,12 +203,14 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
         <div className="flex-1 overflow-auto min-h-0">
           {isEditorEnabled ? (
             <EntityJsonEditor
+              key={discardKey}
               entity={selectedTestSuite}
               setSelectedEntity={setSelectedTestSuite}
               setIsChanged={setIsChanged}
             />
           ) : (
             <TabsContent
+              key={discardKey}
               runRefreshRef={runRefreshRef}
               testCasesActionsRef={testCasesActionsRef}
               onTestCaseDirtyChange={setHasTestCaseChanges}

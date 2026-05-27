@@ -54,6 +54,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, ...props }) => {
 
   const [selectedFormat, setSelectedFormat] = useState(ExportFormat.ADMIN);
   const [coreKey, setCoreKey] = useState<DialKey | null>(null);
+  const [discardKey, setDiscardKey] = useState(0);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -94,7 +95,8 @@ const KeyView: FC<Props> = ({ originalKey, etag, ...props }) => {
     if (isEditorEnabled) {
       setSelectedFormat(ExportFormat.ADMIN);
     }
-    setSelectedKey(originalKey);
+    setSelectedKey(cloneDeep(originalKey));
+    setDiscardKey((prev) => prev + 1);
   }, [isEditorEnabled, originalKey]);
 
   const onSaveKey = useCallback(() => {
@@ -170,7 +172,12 @@ const KeyView: FC<Props> = ({ originalKey, etag, ...props }) => {
         </SimpleEntityHeader>
         <div className="flex-1 overflow-auto min-h-0">
           {isEditorEnabled ? (
-            <EntityJsonEditor entity={selectedKey} setSelectedEntity={setSelectedKey} setIsChanged={setIsChanged} />
+            <EntityJsonEditor
+              key={discardKey}
+              entity={selectedKey}
+              setSelectedEntity={setSelectedKey}
+              setIsChanged={setIsChanged}
+            />
           ) : (
             <TabsContent
               selectedFormat={selectedFormat}
