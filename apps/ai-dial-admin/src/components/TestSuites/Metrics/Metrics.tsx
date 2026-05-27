@@ -6,7 +6,7 @@ import { createPortal } from 'react-dom';
 import {
   ButtonAppearance,
   DialConfirmationPopup,
-  DialErrorButton,
+  DialDangerButton,
   DialLoader,
   DialNeutralButton,
   DialNoDataContent,
@@ -144,7 +144,7 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
                     <span className="dial-body-semi">{metric.name}</span>
 
                     <div className="flex flex-row items-center gap-3">
-                      <DialErrorButton
+                      <DialDangerButton
                         size={ElementSize.Small}
                         label={t(ButtonsI18nKey.Delete)}
                         appearance={ButtonAppearance.Outlined}

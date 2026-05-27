@@ -7,7 +7,7 @@ import {
   ButtonAppearance,
   ButtonVariant,
   DialButtonDropdown,
-  DialErrorButton,
+  DialDangerButton,
   DialPrimaryButton,
   DropdownItem,
 } from '@epam/ai-dial-ui-kit';
@@ -79,7 +79,7 @@ const HeaderButtons: FC<Props> = ({
       />
 
       {showBatchDelete && (
-        <DialErrorButton
+        <DialDangerButton
           label={t(ButtonsI18nKey.Delete)}
           appearance={ButtonAppearance.Outlined}
           iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}

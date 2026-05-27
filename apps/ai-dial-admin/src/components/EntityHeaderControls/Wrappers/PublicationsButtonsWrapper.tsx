@@ -9,7 +9,7 @@ import {
   ButtonAppearance,
   DialNotification,
   DialConfirmationPopup,
-  DialErrorButton,
+  DialDangerButton,
   DialNeutralButton,
   DialPrimaryButton,
   DialTextarea,
@@ -189,7 +189,7 @@ const PublicationsButtonsWrapper = <T extends Publication>({
             {!isEditorEnabled && (
               <div className="flex-1 flex flex-row gap-x-4 justify-center">
                 <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
-                  <DialErrorButton
+                  <DialDangerButton
                     className={buttonsClassName}
                     label={t(ButtonsI18nKey.Delete)}
                     appearance={ButtonAppearance.Outlined}

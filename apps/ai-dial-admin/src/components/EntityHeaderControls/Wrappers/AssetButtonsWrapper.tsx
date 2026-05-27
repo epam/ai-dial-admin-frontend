@@ -3,7 +3,7 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ButtonAppearance, DialErrorButton } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, DialDangerButton } from '@epam/ai-dial-ui-kit';
 import { IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -133,7 +133,7 @@ const AssetButtonsWrapper: FC<AssetButtonsWrapperProps> = ({
                   assets={assets}
                   onChangeAsset={onChangeAsset}
                 />
-                <DialErrorButton
+                <DialDangerButton
                   className={buttonsClassName}
                   label={t(ButtonsI18nKey.Delete)}
                   appearance={ButtonAppearance.Outlined}
