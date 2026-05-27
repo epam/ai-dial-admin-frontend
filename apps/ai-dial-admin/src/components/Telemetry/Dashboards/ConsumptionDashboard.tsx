@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useEffect, useRef, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 
 import EntitiesConsumptionTree from '@/src/components/Telemetry/EntitiesConsumptionTree';
 import TelemetryGrid from '@/src/components/Telemetry/TelemetryGrid';
@@ -26,18 +26,11 @@ const ConsumptionDashboard: FC<Props> = ({ route, getData, refreshTime }) => {
   const [deploymentRows, setDeploymentRows] = useState<EntityRow[] | null>(null);
   const [projectRows, setProjectRows] = useState<Record<string, string>[] | null>(null);
 
-  // Keep getData in a ref so the fetch effect doesn't re-run (and re-fetch)
-  // every time an ancestor passes a fresh function reference.
-  const getDataRef = useRef(getData);
-  useEffect(() => {
-    getDataRef.current = getData;
-  });
-
   useEffect(() => {
     setLoading(true);
     const fetch = async () => {
       try {
-        const response = await getDataRef.current(ENTITY_CONSUMPTION_TREE_QUERY);
+        const response = await getData(ENTITY_CONSUMPTION_TREE_QUERY);
         if (response?.success) {
           const raw = response.response as TelemetryData;
           setDeploymentRows(aggregateByDeployment(raw));
@@ -64,7 +57,7 @@ const ConsumptionDashboard: FC<Props> = ({ route, getData, refreshTime }) => {
     }, timeout);
 
     return () => clearInterval(intervalId);
-  }, [refreshTime]);
+  }, [refreshTime, getData]);
 
   return (
     <div className="flex flex-col w-full">
