@@ -107,12 +107,10 @@ export const isNullOnly = (schema: JSONSchema7): boolean => {
 };
 
 /**
- * Get the effective schema by resolving $ref and handling anyOf/oneOf to find the first non-null variant.
- * This is used to determine the actual structure of fields for the grid.
+ * Get the score of a variant schema.
  *
- * @param {JSONSchema7Definition} def - definition which may have $ref and/or anyOf/oneOf
- * @param {JSONSchema7} root - root schema for resolving $ref
- * @returns {(JSONSchema7 | null)} - effective schema with $ref resolved and anyOf/oneOf handled, or null if it cannot be determined
+ * @param {JSONSchema7} schema - schema to get the score of
+ * @returns {number} - score of the schema
  */
 const getVariantScore = (schema: JSONSchema7): number => {
   if (schema.properties && Object.keys(schema.properties).length > 0) {
@@ -124,6 +122,14 @@ const getVariantScore = (schema: JSONSchema7): number => {
   return 0;
 };
 
+/**
+ * Get the effective schema by resolving $ref and handling anyOf/oneOf to find the first non-null variant.
+ * This is used to determine the actual structure of fields for the grid.
+ *
+ * @param {JSONSchema7Definition} def - definition which may have $ref and/or anyOf/oneOf
+ * @param {JSONSchema7} root - root schema for resolving $ref
+ * @returns {(JSONSchema7 | null)} - effective schema with $ref resolved and anyOf/oneOf handled, or null if it cannot be determined
+ */
 export const getEffectiveSchema = (def: JSONSchema7Definition, root: JSONSchema7): JSONSchema7 | null => {
   if (typeof def !== 'object' || !def) {
     return null;
