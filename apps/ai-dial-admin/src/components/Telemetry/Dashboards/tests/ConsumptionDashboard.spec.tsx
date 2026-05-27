@@ -138,17 +138,14 @@ describe('ConsumptionDashboard', () => {
     expect(Number(screen.getByTestId('projects-grid').getAttribute('data-row-count'))).toBe(0);
   });
 
-  test('does not refetch when only the getData function reference changes', async () => {
+  test('refetches when the getData reference changes (time period / filter change)', async () => {
     const { rerender } = render(<ConsumptionDashboard route={ApplicationRoute.Dashboard} getData={getData} />);
     await waitFor(() => expect(getData).toHaveBeenCalledTimes(1));
 
     const replacement = vi.fn<GetDataFn>().mockResolvedValue(makeResponse([row({})]));
     rerender(<ConsumptionDashboard route={ApplicationRoute.Dashboard} getData={replacement} />);
 
-    // Give any rogue effect a chance to fire.
-    await new Promise((resolve) => setTimeout(resolve, 30));
-
+    await waitFor(() => expect(replacement).toHaveBeenCalledTimes(1));
     expect(getData).toHaveBeenCalledTimes(1);
-    expect(replacement).not.toHaveBeenCalled();
   });
 });
