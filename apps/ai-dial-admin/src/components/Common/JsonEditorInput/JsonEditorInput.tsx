@@ -1,5 +1,5 @@
 import { DialFormPopup, DialInputPopup, DialLabel } from '@epam/ai-dial-ui-kit';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import { BasicI18nKey, ButtonsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -34,21 +34,33 @@ const JsonEditorInput: FC<Props> = ({
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const committedJsonValue = useMemo(() => {
+    try {
+      return JSON.stringify(value, null, 2);
+    } catch {
+      console.error('Invalid JSON');
+      return undefined;
+    }
+  }, [value]);
+
+  const resetDraftFromCommitted = useCallback(() => {
+    setJsonValue(committedJsonValue);
+    setIsValidJSON(true);
+  }, [committedJsonValue]);
+
   const onOpenModal = useCallback(() => {
+    resetDraftFromCommitted();
     setIsModalOpen(true);
-  }, [setIsModalOpen]);
+  }, [resetDraftFromCommitted]);
 
   const onCloseModal = useCallback(() => {
     setIsModalOpen(false);
-  }, [setIsModalOpen]);
+  }, []);
 
-  useEffect(() => {
-    try {
-      setJsonValue(JSON.stringify(value, null, 2));
-    } catch {
-      console.error('Invalid JSON');
-    }
-  }, [value]);
+  const onCancelModal = useCallback(() => {
+    resetDraftFromCommitted();
+    onCloseModal();
+  }, [resetDraftFromCommitted, onCloseModal]);
 
   useEffect(() => {
     setIsValid(Boolean(jsonValue) && isValidJSON);
@@ -77,20 +89,20 @@ const JsonEditorInput: FC<Props> = ({
       <DialInputPopup
         disabled={disabled || isReadOnlyAdmin}
         open={isModalOpen}
-        selectedValue={jsonValue}
+        selectedValue={committedJsonValue}
         onOpen={onOpenModal}
         emptyValueText={t(BasicI18nKey.NoData)}
         inputClassName={inputClassName}
       >
         <DialFormPopup
-          onClose={onCloseModal}
+          onClose={onCancelModal}
           header={t(EntityPlaceholdersI18nKey.Object)}
           portalId="jsonInputModal"
           open={isModalOpen}
           submitLabel={t(ButtonsI18nKey.Apply)}
           onSubmit={onApply}
           cancelLabel={t(ButtonsI18nKey.Cancel)}
-          onCancel={onCloseModal}
+          onCancel={onCancelModal}
           disableSubmitButton={!isValid && !disableValidation}
         >
           <div className="px-6 py-4 h-[540px] max-h-[35vh]">
