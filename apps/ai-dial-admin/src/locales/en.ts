@@ -662,7 +662,7 @@ export default {
     RequestsNumber: 'Requests number',
     RequestCount: 'Request count',
     TotalTokens: 'Total tokens',
-    Money: 'Money',
+    TotalMoney: 'Total money',
     OpenGrafana: 'Open Grafana',
     Filter: {
       TypeProjects: 'Projects',

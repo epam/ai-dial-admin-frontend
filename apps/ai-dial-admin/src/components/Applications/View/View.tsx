@@ -4,8 +4,6 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { TabModel } from '@epam/ai-dial-ui-kit';
-import { cloneDeep } from 'lodash';
-
 import {
   getCoreApplication,
   removeApplication,
@@ -60,7 +58,7 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [isSkipRefresh, setIsSkipRefresh] = useState(true);
 
-  const [selectedApplication, setSelectedApplication] = useState(cloneDeep(originalApplication));
+  const [selectedApplication, setSelectedApplication] = useState(structuredClone(originalApplication));
   const [isChanged, setIsChanged] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
@@ -106,8 +104,8 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
   useEffect(() => {
     setSelectedApplication(
       selectedFormat === ExportFormat.CORE
-        ? cloneDeep(coreApplication as DialApplication)
-        : cloneDeep(originalApplication),
+        ? structuredClone(coreApplication as DialApplication)
+        : structuredClone(originalApplication),
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedFormat, originalApplication]);
@@ -123,7 +121,7 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
       setSelectedFormat(ExportFormat.ADMIN);
     }
 
-    setSelectedApplication(originalApplication);
+    setSelectedApplication(structuredClone(originalApplication));
     setIsSkipRefresh(false);
     setDiscardKey((prev) => prev + 1);
   }, [isEditorEnabled, originalApplication]);
@@ -218,6 +216,7 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
       <div className="flex-1 overflow-auto min-h-0">
         {isEditorEnabled && !(activeTab === EntityViewTab.Parameters) ? (
           <EntityJsonEditor
+            key={discardKey}
             entity={selectedApplication}
             setSelectedEntity={setSelectedApplication}
             setIsChanged={setIsChanged}
@@ -231,6 +230,7 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
             originalApplication={originalApplication}
             onChangeApplication={onChangeApplication}
             isSkipRefresh={isSkipRefresh}
+            discardKey={discardKey}
             isEditorEnabled={isEditorEnabled}
             isChanged={isChanged}
             onSave={onTryToSave}

@@ -69,7 +69,7 @@ const ContainerView: FC<Props> = ({
   const [isEditorEnabled, setIsEditorEnabled] = useState<boolean>(false);
   const [isChanged, setIsChanged] = useState<boolean>(false);
   const [isRedeployRequired, setIsRedeployRequired] = useState<boolean>(false);
-  const [key, setKey] = useState(0);
+  const [discardKey, setDiscardKey] = useState(0);
   const [events, setEvents] = useState<KubEvent[]>([]);
   const [restarts, setRestarts] = useState(0);
   const [pods, setPods] = useState<Pod[]>([]);
@@ -93,7 +93,7 @@ const ContainerView: FC<Props> = ({
       // TODO: Revisit solution
       // Due to we can't set invalid JSON as variable, we can't update entity in error state.
       // Force JSON Editor re-render to show originalEntity on discard.
-      setKey((prevKey) => prevKey + 1);
+      setDiscardKey((prev) => prev + 1);
     }
     setSelectedContainer(cloneDeep(container));
   }, [container, isEditorEnabled]);
@@ -304,7 +304,7 @@ const ContainerView: FC<Props> = ({
         <div className="flex-1 overflow-auto min-h-0">
           {isEditorEnabled ? (
             <EntityJsonEditor
-              key={key}
+              key={discardKey}
               entity={selectedContainer}
               setSelectedEntity={setSelectedContainer}
               setIsChanged={setIsChanged}

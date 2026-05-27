@@ -63,6 +63,20 @@ export function enrichWithFolderBreadcrumbs(
     });
   });
 
+  if (newBreadcrumbs.length > 3) {
+    const firstPart = newBreadcrumbs[0];
+    const secondPart = newBreadcrumbs.slice(-2);
+
+    newBreadcrumbs = [
+      firstPart,
+      {
+        name: '...',
+        href: '',
+      },
+      ...secondPart,
+    ];
+  }
+
   return [...breadcrumbs, ...newBreadcrumbs];
 }
 

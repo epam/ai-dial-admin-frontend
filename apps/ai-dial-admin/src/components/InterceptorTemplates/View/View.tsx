@@ -47,6 +47,7 @@ const View: FC<Props> = ({ etag, template, names }) => {
   const [selectedTemplate, setSelectedTemplate] = useState(cloneDeep(template));
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
+  const [discardKey, setDiscardKey] = useState(0);
 
   const tabs = getInterceptorTemplateTabs(t);
 
@@ -86,6 +87,7 @@ const View: FC<Props> = ({ etag, template, names }) => {
 
   const onDiscard = useCallback(() => {
     setSelectedTemplate(cloneDeep(template));
+    setDiscardKey((prev) => prev + 1);
   }, [template]);
 
   useEffect(() => {
@@ -118,6 +120,7 @@ const View: FC<Props> = ({ etag, template, names }) => {
       <div className="flex-1 overflow-auto min-h-0">
         {isEditorEnabled ? (
           <EntityJsonEditor
+            key={discardKey}
             entity={selectedTemplate}
             setSelectedEntity={setSelectedTemplate}
             setIsChanged={setIsChanged}

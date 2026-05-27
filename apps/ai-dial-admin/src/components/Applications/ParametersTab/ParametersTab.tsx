@@ -43,6 +43,7 @@ interface Props {
   view?: ApplicationRoute;
   isChanged?: boolean;
   isSkipRefresh?: boolean;
+  discardKey?: number;
   setIsChanged?: Dispatch<SetStateAction<boolean>>;
   setSelectedApplication?: Dispatch<SetStateAction<DialApplication | DialApplicationResource>>;
   onSave?: () => void;
@@ -57,6 +58,7 @@ const ParametersTab: FC<Props> = ({
   view,
   isChanged,
   isSkipRefresh,
+  discardKey,
   onSave,
   setIsChanged,
   setSelectedApplication,
@@ -209,6 +211,7 @@ const ParametersTab: FC<Props> = ({
           <>
             {paramsView !== ParamsView.UI && isEditorEnabled && (
               <EntityJsonEditor
+                key={discardKey}
                 entity={application as BaseEntity}
                 setSelectedEntity={setSelectedApplication}
                 setIsChanged={setIsChanged}

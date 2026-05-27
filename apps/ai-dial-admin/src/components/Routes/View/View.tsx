@@ -44,6 +44,7 @@ const RouteView: FC<Props> = ({ originalRoute, etag, names, roles }) => {
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [selectedFormat, setSelectedFormat] = useState(ExportFormat.ADMIN);
   const [coreRoute, setCoreRoute] = useState<DialRoute | null>(null);
+  const [discardKey, setDiscardKey] = useState(0);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -86,7 +87,8 @@ const RouteView: FC<Props> = ({ originalRoute, etag, names, roles }) => {
     if (isEditorEnabled) {
       setSelectedFormat(ExportFormat.ADMIN);
     }
-    setSelectedRoute(originalRoute);
+    setSelectedRoute(cloneDeep(originalRoute));
+    setDiscardKey((prev) => prev + 1);
   }, [isEditorEnabled, originalRoute]);
 
   const onSaveRoute = useCallback(() => {
@@ -127,7 +129,12 @@ const RouteView: FC<Props> = ({ originalRoute, etag, names, roles }) => {
       />
       <div className="flex-1 overflow-auto min-h-0">
         {isEditorEnabled ? (
-          <EntityJsonEditor entity={selectedRoute} setSelectedEntity={setSelectedRoute} setIsChanged={setIsChanged} />
+          <EntityJsonEditor
+            key={discardKey}
+            entity={selectedRoute}
+            setSelectedEntity={setSelectedRoute}
+            setIsChanged={setIsChanged}
+          />
         ) : (
           <TabsContent
             selectedFormat={selectedFormat}

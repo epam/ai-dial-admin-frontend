@@ -199,7 +199,12 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
 
       <div className="flex-1 overflow-auto min-h-0">
         {isEditorEnabled && !(activeTab === EntityViewTab.Parameters) ? (
-          <EntityJsonEditor entity={selectedApp} setSelectedEntity={setSelectedApp} setIsChanged={setIsChanged} />
+          <EntityJsonEditor
+            key={discardKey}
+            entity={selectedApp}
+            setSelectedEntity={setSelectedApp}
+            setIsChanged={setIsChanged}
+          />
         ) : (
           <TabsContent
             key={discardKey}
@@ -214,6 +219,7 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
             originalApplication={originalApp}
             isEditorEnabled={isEditorEnabled}
             isSkipRefresh={isSkipRefresh}
+            discardKey={discardKey}
             isChanged={isChanged}
             onSave={onSave}
             onChangeApplication={onChangeEntity as (application: DialApplication) => void}

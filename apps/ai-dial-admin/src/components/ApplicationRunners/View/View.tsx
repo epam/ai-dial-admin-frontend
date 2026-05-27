@@ -75,6 +75,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
   const [isCreateAppModalOpen, setIsCreateAppModalOpen] = useState(false);
   const [isCreateAssetAppModalOpen, setIsCreateAssetAppModalOpen] = useState(false);
   const [isSkipRefresh, setIsSkipRefresh] = useState(false);
+  const [discardKey, setDiscardKey] = useState(0);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -119,6 +120,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
     }
     setIsSkipRefresh(false);
     setSelectedRunner(cloneDeep(originalScheme));
+    setDiscardKey((prev) => prev + 1);
   }, [isEditorEnabled, originalScheme]);
 
   const onSave = useCallback(() => {
@@ -176,7 +178,12 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
 
       <div className="flex-1 overflow-auto min-h-0">
         {isEditorEnabled ? (
-          <EntityJsonEditor entity={selectedRunner} setSelectedEntity={setSelectedRunner} setIsChanged={setIsChanged} />
+          <EntityJsonEditor
+            key={discardKey}
+            entity={selectedRunner}
+            setSelectedEntity={setSelectedRunner}
+            setIsChanged={setIsChanged}
+          />
         ) : (
           <TabsContent
             activeTab={activeTab}

@@ -54,6 +54,7 @@ const View: FC<Props> = ({ originalModel, etag, ...props }) => {
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
   const [coreModel, setCoreModel] = useState<DialModel | null>(null);
+  const [discardKey, setDiscardKey] = useState(0);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -108,6 +109,7 @@ const View: FC<Props> = ({ originalModel, etag, ...props }) => {
     }
     setSelectedModel(cloneDeep(originalModel));
     setIsSkipRefresh(false);
+    setDiscardKey((prev) => prev + 1);
   }, [isEditorEnabled, originalModel]);
 
   const onSave = useCallback(() => {
@@ -202,7 +204,12 @@ const View: FC<Props> = ({ originalModel, etag, ...props }) => {
 
         <div className="flex-1 overflow-auto min-h-0">
           {isEditorEnabled ? (
-            <EntityJsonEditor entity={selectedModel} setSelectedEntity={setSelectedModel} setIsChanged={setIsChanged} />
+            <EntityJsonEditor
+              key={discardKey}
+              entity={selectedModel}
+              setSelectedEntity={setSelectedModel}
+              setIsChanged={setIsChanged}
+            />
           ) : (
             <TabsContent
               activeTab={activeTab}

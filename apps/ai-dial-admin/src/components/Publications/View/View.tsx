@@ -219,6 +219,7 @@ const PublicationView = <T extends Publication>({ view, publication, application
       <div className="flex-1 overflow-auto min-h-0">
         {isEditorEnabled ? (
           <EntityJsonEditor
+            key={discardKey}
             entity={selectedPublication}
             setSelectedEntity={setSelectedPublication}
             setIsChanged={setIsChanged}
