@@ -693,6 +693,25 @@ describe('getImportNotificationContent', () => {
     expect(result.skippedDescription).toBe('Skipped import of /dest/app1');
   });
 
+  test('should show import result error details for duplicated applications in JSON import', () => {
+    const duplicateError =
+      "Duplicated application name '_app' and version '1.0.0' and folder 'public/' appears multiple times in the import file.";
+    const importResults = [
+      { targetPath: 'public/_app__1.0.0', status: 'failure', error: duplicateError },
+      { targetPath: 'public/_app__1.0.0', status: 'failure', error: duplicateError },
+    ];
+    const result = getImportNotificationContent(
+      ApplicationRoute.AssetsApplications,
+      importResults,
+      ImportFileType.JSON,
+      'public/',
+      mockT,
+    );
+
+    expect(result.errorTitle).toBe('Import 2 Applications Failed');
+    expect(result.errorDescription).toBe(`Failed to import ${duplicateError}`);
+  });
+
   test('should return correct notification for single toolset import in Toolsets view', () => {
     const importResults = [{ targetPath: '/dest/toolset1', status: 'success' }];
     const result = getImportNotificationContent(

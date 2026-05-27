@@ -354,10 +354,12 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
 
       importAssetAction(body, fileType).then((res) => {
         setFolderToRefetch(null);
+        const importResults = res.success ? res.response?.importResults : undefined;
+
         if (res.success) {
           fetchFiles?.(importFolder);
           const { title, description, errorTitle, errorDescription, skippedTitle, skippedDescription } =
-            getImportNotificationContent(view, res.response.importResults, fileType, importFolder, t);
+            getImportNotificationContent(view, importResults, fileType, importFolder, t);
           if (title && description) {
             showNotification(getSuccessNotification(title, description));
           }
