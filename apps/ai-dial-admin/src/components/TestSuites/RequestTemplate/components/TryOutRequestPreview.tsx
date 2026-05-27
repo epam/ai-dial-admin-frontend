@@ -3,7 +3,7 @@ import { FC, useEffect, useState } from 'react';
 
 import { DialLoader } from '@epam/ai-dial-ui-kit';
 
-import { getTestCaseTemplateVariables, getTestSuiteTemplateVariables } from '@/src/app/[lang]/test-suites/actions';
+import { getTestSuiteTemplateVariables } from '@/src/app/[lang]/test-suites/actions';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { convertVariableIntoInitialRequest } from '@/src/components/TestSuites/utils/template-variables';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -22,7 +22,7 @@ interface Props {
 
 const TryOutRequestPreview: FC<Props> = ({
   testSuite,
-  testCaseId,
+  testCaseId: _testCaseId,
   resolvedRequest,
   isRequestSend,
   requestBody,
@@ -36,10 +36,7 @@ const TryOutRequestPreview: FC<Props> = ({
     const fetchVariables = async () => {
       setIsVariablesLoading(true);
       try {
-        const res = testCaseId
-          ? await getTestCaseTemplateVariables(testSuite.id || '', testCaseId || '')
-          : await getTestSuiteTemplateVariables(testSuite.id || '');
-
+        const res = await getTestSuiteTemplateVariables(testSuite.id || '');
         const vars = res || [];
         setVariables(vars);
         onChangeRequestBody(convertVariableIntoInitialRequest(vars));

@@ -4,6 +4,7 @@ import { DialFileIcon, DialLoader, DialLoadFileAreaField, SIZE_COLUMN } from '@e
 import { ColDef, GridOptions } from 'ag-grid-community';
 
 import { getTestSuiteFiles, removeTestSuiteFile, uploadTestSuiteFiles } from '@/src/app/[lang]/test-suites/actions';
+import { getDatasetFiles, removeDatasetFile, uploadDatasetFile } from '@/src/app/[lang]/datasets/actions';
 import { getFormDataForUpload } from '@/src/components/EntityListView/HeaderButtons/utils';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import GridView from '@/src/components/Grid/GridView/GridView';
@@ -21,12 +22,14 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 
 interface Props {
   id?: string;
+  view?: ApplicationRoute;
   value?: string;
   selectedFilePath: string | null;
   onChangeSelectedFilePath: (filePath: string | null) => void;
 }
 
-const ApplicationFileManager: FC<Props> = ({ id, value, selectedFilePath, onChangeSelectedFilePath }) => {
+const ApplicationFileManager: FC<Props> = ({ id, view, value, selectedFilePath, onChangeSelectedFilePath }) => {
+  const isDatasetScope = view === ApplicationRoute.Datasets;
   const t = useI18n();
   const { showNotification } = useNotification();
 
@@ -37,13 +40,13 @@ const ApplicationFileManager: FC<Props> = ({ id, value, selectedFilePath, onChan
   // const [separateFileMap, setSeparateFileMap] = useState(new Map<string, FileImportMap>());
 
   const getFiles = useCallback(() => {
-    if (id) {
-      getTestSuiteFiles(id).then((res) => {
-        setFiles(res || []);
-        setIsLoading(false);
-      });
-    }
-  }, [id]);
+    if (!id) return;
+    const listPromise = isDatasetScope ? getDatasetFiles(id) : getTestSuiteFiles(id);
+    listPromise.then((res) => {
+      setFiles(res || []);
+      setIsLoading(false);
+    });
+  }, [id, isDatasetScope]);
 
   useEffect(() => {
     getFiles();
@@ -75,14 +78,19 @@ const ApplicationFileManager: FC<Props> = ({ id, value, selectedFilePath, onChan
       const { body } = getFormDataForUpload(files);
       setSeparateFiles(files);
       setIsLoading(true);
-      uploadTestSuiteFiles(id as string, body).then((res) => {
+      const uploadPromise = isDatasetScope
+        ? uploadDatasetFile(id as string, body)
+        : uploadTestSuiteFiles(id as string, body);
+      uploadPromise.then((res) => {
         setSeparateFiles([]);
 
         if (res.success) {
           showNotification(
             getSuccessNotification(
               t(ImportI18nKey.FileUploadSuccessTitle),
-              t(ImportI18nKey.FileUploadSuccessDescription, { folder: `${ApplicationRoute.TestSuites}` }),
+              t(ImportI18nKey.FileUploadSuccessDescription, {
+                folder: `${isDatasetScope ? ApplicationRoute.Datasets : ApplicationRoute.TestSuites}`,
+              }),
             ),
           );
           getFiles();
@@ -92,13 +100,16 @@ const ApplicationFileManager: FC<Props> = ({ id, value, selectedFilePath, onChan
         }
       });
     },
-    [getFiles, id, showNotification, t],
+    [getFiles, id, isDatasetScope, showNotification, t],
   );
 
   const onRemoveFile = useCallback(
     (data?: CustomFileRowData) => {
       setIsLoading(true);
-      removeTestSuiteFile(id as string, data?.displayName as string).then((res) => {
+      const removePromise = isDatasetScope
+        ? removeDatasetFile(id as string, data?.displayName as string)
+        : removeTestSuiteFile(id as string, data?.displayName as string);
+      removePromise.then((res) => {
         if (res?.success) {
           showNotification(
             getSuccessNotification(t(ImportI18nKey.FileRemovedTitle), t(ImportI18nKey.FileRemovedDescription)),
@@ -110,7 +121,7 @@ const ApplicationFileManager: FC<Props> = ({ id, value, selectedFilePath, onChan
         }
       });
     },
-    [getFiles, showNotification, t, id],
+    [getFiles, showNotification, t, id, isDatasetScope],
   );
 
   // after implementing multiple upload, the code above should be used

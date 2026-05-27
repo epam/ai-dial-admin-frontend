@@ -4,7 +4,7 @@ import { DialLoader, DialLoadFileArea, DialPopup, DialSteps, PopupSize, Step, St
 import { ColDef } from 'ag-grid-community';
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import { importTestCasePreview } from '@/src/app/[lang]/test-suites/actions';
+import { importDatasetTestCasesPreview } from '@/src/app/[lang]/datasets/actions';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { BasicI18nKey, ButtonsI18nKey, ImportI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -62,7 +62,7 @@ const ImportFileModal: FC<Props> = ({ selectedTestSuiteId, isModalOpen, onClose,
 
     setIsLoading(true);
 
-    importTestCasePreview(selectedTestSuiteId, body).then((res) => {
+    importDatasetTestCasesPreview(selectedTestSuiteId, body).then((res) => {
       if (res.success) {
         const testCasesData = (res?.response || []) as ImportPreview;
         const { colDefs, rowData } = getGridDataFromImportPreview(testCasesData);

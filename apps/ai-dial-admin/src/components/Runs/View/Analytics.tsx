@@ -148,7 +148,6 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
 
   useEffect(() => {
     setPanelColDefs(computedColDefs);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [computedColDefs]);
 
   const toggleTreePanel = useCallback(() => setShowTreePanel((prev) => !prev), []);

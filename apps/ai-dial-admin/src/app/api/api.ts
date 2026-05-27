@@ -19,6 +19,7 @@ import { ImagesApi } from '@/src/server/deployments/images';
 import { ContainersApi } from '@/src/server/deployments/containers';
 import { TopicApi } from '@/src/server/deployments/topics';
 import { TestSuitesApi } from '@/src/server/eval/test-suites-api';
+import { DatasetsApi } from '@/src/server/eval/datasets-api';
 import { WhitelistApi } from '@/src/server/deployments/whitelist';
 import { MetricsApi } from '@/src/server/eval/metrics-api';
 import { HuggingfaceApi } from '@/src/server/deployments/huggingface';
@@ -140,6 +141,10 @@ export const globalFirewallApi = new GlobalFirewallApi({
 
 /// Evaluation APIs
 export const testSuitesApi = new TestSuitesApi({
+  host: process.env.DIAL_EVAL_API_URL,
+});
+
+export const datasetsApi = new DatasetsApi({
   host: process.env.DIAL_EVAL_API_URL,
 });
 

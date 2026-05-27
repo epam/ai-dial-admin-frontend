@@ -172,6 +172,7 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
       icon: <IconFlask width={iconSize} height={iconSize} />,
       items: [
         { key: MenuI18nKey.TestSuites, href: ApplicationRoute.TestSuites },
+        { key: MenuI18nKey.Datasets, href: ApplicationRoute.Datasets },
         { key: MenuI18nKey.Runs, href: ApplicationRoute.Runs },
       ],
     },

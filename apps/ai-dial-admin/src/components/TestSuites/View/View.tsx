@@ -7,23 +7,18 @@ import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconPlayerPlay } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 
-import {
-  bulkPatchTestCases,
-  removeTestSuite,
-  runTestSuite,
-  updateTestCases,
-  updateTestSuite,
-} from '@/src/app/[lang]/test-suites/actions';
+import { batchPutDatasetTestCases } from '@/src/app/[lang]/datasets/actions';
+import { removeTestSuite, runTestSuite, updateTestSuite } from '@/src/app/[lang]/test-suites/actions';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import RunModal from '@/src/components/TestSuites/Runs/RunModal';
 import { TestCasesActions } from '@/src/components/TestSuites/TestCases/TestCasesList';
-import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, TestSuitesI18nKey, UpdateI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { TestCase, TestCaseBatchPutItem, TestSuite } from '@/src/models/evaluation/test-suite';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -76,14 +71,14 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
     testCasesActionsRef.current?.clearDirtyAndRefresh();
   }, [originalTestSuite]);
 
-  const onSave = useCallback(() => {
-    const showSuccessAndRefresh = () => {
-      showNotification(
-        getSuccessNotification(
-          getUpdateNotificationTitle(ApplicationRoute.TestSuites, t),
-          getUpdateNotificationDescription(ApplicationRoute.TestSuites, selectedTestSuite.id, t),
-        ),
-      );
+  const onSave = useCallback(async () => {
+    const showSuccessAndRefresh = (testCasesSavedCount: number) => {
+      const baseDescription = getUpdateNotificationDescription(ApplicationRoute.TestSuites, selectedTestSuite.id, t);
+      const description =
+        testCasesSavedCount > 0
+          ? `${baseDescription} ${t(UpdateI18nKey.TestCasesSavedSuffix, { count: String(testCasesSavedCount) })}`
+          : baseDescription;
+      showNotification(getSuccessNotification(getUpdateNotificationTitle(ApplicationRoute.TestSuites, t), description));
       router.refresh();
     };
 
@@ -92,57 +87,33 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
       router.refresh();
     };
 
-    updateTestSuite(selectedTestSuite, etag).then((suiteRes) => {
+    const suiteDirty = !isEqualSkippingUndefined(originalTestSuite, selectedTestSuite);
+    if (suiteDirty) {
+      const suiteRes = await updateTestSuite(selectedTestSuite, etag);
       if (!suiteRes.success) {
         handleError(suiteRes.errorHeader, suiteRes.errorMessage, suiteRes.requestId);
         return;
       }
+    }
 
-      const dirtyTestCases = testCasesActionsRef.current?.getDirtyTestCases() ?? [];
-      const enabledOnlyChanges = testCasesActionsRef.current?.getEnabledOnlyChanges() ?? new Map<string, boolean>();
-
-      const runBulkPatch = () => {
-        if (enabledOnlyChanges.size === 0 || !selectedTestSuite.id) return Promise.resolve(true);
-
-        const enabledTrueIds = [...enabledOnlyChanges.entries()].filter(([, v]) => v).map(([id]) => id);
-        const enabledFalseIds = [...enabledOnlyChanges.entries()].filter(([, v]) => !v).map(([id]) => id);
-        const bulkOperations = [
-          ...(enabledTrueIds.length > 0 ? [{ selector: { ids: enabledTrueIds }, patch: { enabled: true } }] : []),
-          ...(enabledFalseIds.length > 0 ? [{ selector: { ids: enabledFalseIds }, patch: { enabled: false } }] : []),
-        ];
-
-        return bulkPatchTestCases(selectedTestSuite.id, { bulkOperations, itemOperations: [] }).then((bulkRes) => {
-          if (!bulkRes.success) {
-            handleError(bulkRes.errorHeader, bulkRes.errorMessage, bulkRes.requestId);
-            return false;
-          }
-          return true;
-        });
-      };
-
-      if (dirtyTestCases.length > 0 && selectedTestSuite.id) {
-        updateTestCases(selectedTestSuite.id, dirtyTestCases).then((testCasesRes) => {
-          if (!testCasesRes.success) {
-            handleError(testCasesRes.errorHeader, testCasesRes.errorMessage, testCasesRes.requestId);
-            return;
-          }
-          runBulkPatch().then((bulkOk) => {
-            if (!bulkOk) return;
-            testCasesActionsRef.current?.clearDirtyAndRefresh();
-            setHasTestCaseChanges(false);
-            showSuccessAndRefresh();
-          });
-        });
-      } else {
-        runBulkPatch().then((bulkOk) => {
-          if (!bulkOk) return;
-          testCasesActionsRef.current?.clearDirtyAndRefresh();
-          setHasTestCaseChanges(false);
-          showSuccessAndRefresh();
-        });
+    const dirtyCases = testCasesActionsRef.current?.getDirtyTestCases() ?? [];
+    if (dirtyCases.length > 0 && selectedTestSuite.datasetId) {
+      const items: TestCaseBatchPutItem[] = dirtyCases.map((tc: TestCase) => ({
+        id: tc.id,
+        testCaseName: tc.testCaseName,
+        data: tc.data,
+      }));
+      const tcRes = await batchPutDatasetTestCases(selectedTestSuite.datasetId, items);
+      if (!tcRes?.success) {
+        handleError(tcRes?.errorHeader, tcRes?.errorMessage, tcRes?.requestId);
+        return;
       }
-    });
-  }, [selectedTestSuite, etag, showNotification, t, router]);
+    }
+
+    testCasesActionsRef.current?.clearDirtyAndRefresh();
+    setHasTestCaseChanges(false);
+    showSuccessAndRefresh(dirtyCases.length);
+  }, [originalTestSuite, selectedTestSuite, etag, showNotification, t, router]);
 
   const onStartRunTestSuite = useCallback(() => {
     setIsModalOpen(true);
@@ -194,7 +165,7 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
             label={t(ButtonsI18nKey.Run)}
             iconBefore={<IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} />}
             onClick={onStartRunTestSuite}
-            disabled={!selectedTestSuite.valid}
+            disabled={!selectedTestSuite.valid || !selectedTestSuite.datasetId}
           />
         </SimpleEntityHeader>
 

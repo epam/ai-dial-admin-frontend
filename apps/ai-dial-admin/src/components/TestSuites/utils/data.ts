@@ -4,7 +4,6 @@ import { v4 as uuidv4 } from 'uuid';
 export const createNewTestCaseRow = (): Record<string, unknown> => {
   return {
     id: uuidv4(),
-    enabled: true,
     testCaseName: `new-test-case-${uuidv4().slice(0, 5)}`,
     data: {},
     createdAt: 0,
@@ -32,7 +31,6 @@ export const getTestCaseGridData = (testCases?: TestCase[] | null) => {
 export const rowToTestCase = (row: Record<string, unknown>): TestCase => {
   return {
     id: row.id as string,
-    enabled: row.enabled as boolean,
     testCaseName: row.testCaseName as string | undefined,
     createdAt: row.createdAt as number,
     updatedAt: row.updatedAt as number | undefined,

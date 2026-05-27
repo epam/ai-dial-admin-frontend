@@ -9,7 +9,7 @@ import {
 } from '@epam/ai-dial-ui-kit';
 import { FC, useEffect, useState } from 'react';
 
-import { getTestCases } from '@/src/app/[lang]/test-suites/actions';
+import { getDatasetTestCases } from '@/src/app/[lang]/datasets/actions';
 import { PAGE_SIZE } from '@/src/constants/ag-grid';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -32,18 +32,26 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
   const [allRuns, setAllRuns] = useState<number | undefined>();
 
   useEffect(() => {
-    if (!validRuns) {
-      setIsLoading(true);
-
-      const validTestCases = getTestCases(selectedTestSuite.id, 0, PAGE_SIZE, [], VALID_FILTERS);
-      const allTestCases = getTestCases(selectedTestSuite.id, 0, PAGE_SIZE, [], []);
-      Promise.all([validTestCases, allTestCases]).then(([validRes, allRes]) => {
-        setAllRuns(allRes?.totalElements || 0);
-        setValidRuns(validRes?.totalElements || 0);
-        setIsLoading(false);
-      });
+    if (validRuns !== undefined) return;
+    const datasetId = selectedTestSuite.datasetId;
+    if (!datasetId) {
+      setAllRuns(0);
+      setValidRuns(0);
+      return;
     }
-  }, [selectedTestSuite.id, validRuns]);
+    setIsLoading(true);
+
+    const validTestCases = getDatasetTestCases(datasetId, 0, PAGE_SIZE, [], VALID_FILTERS);
+    const allTestCases = getDatasetTestCases(datasetId, 0, PAGE_SIZE, [], []);
+    Promise.all([validTestCases, allTestCases]).then(([validRes, allRes]) => {
+      const validTotal = validRes?.totalElements ?? 0;
+      const disabledCount = selectedTestSuite.disabledTestCaseIds?.length ?? 0;
+      const selectedTotal = Math.max(0, validTotal - disabledCount);
+      setAllRuns(allRes?.totalElements ?? 0);
+      setValidRuns(selectedTotal);
+      setIsLoading(false);
+    });
+  }, [selectedTestSuite.datasetId, selectedTestSuite.disabledTestCaseIds, validRuns]);
 
   return (
     <DialFormPopup

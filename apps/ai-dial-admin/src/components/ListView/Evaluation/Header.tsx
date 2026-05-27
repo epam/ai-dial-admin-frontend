@@ -7,8 +7,11 @@ import { DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 
+import CreateDatasetModal from '@/src/components/Common/DatasetPicker/CreateDatasetModal';
 import CreateTestSuite from '@/src/components/TestSuites/Modals/Create/CreateTestSuite';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { Dataset } from '@/src/models/evaluation/dataset';
+import { DatasetVisibility } from '@/src/types/evaluation';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
@@ -71,6 +74,23 @@ const HeaderButtons = <T extends { id?: string }>({ route, onCreateEntity }: Pro
             isModalOpen={isModalOpen}
             onClose={onModalClose}
             onCreate={onCreate as (suite: TestSuite) => void}
+          />
+        )}
+        {route === ApplicationRoute.Datasets && (
+          <CreateDatasetModal
+            isModalOpen={isModalOpen}
+            visibility={DatasetVisibility.PUBLIC}
+            onClose={onModalClose}
+            onCreated={(dataset: Dataset) => {
+              showNotification(
+                getSuccessNotification(
+                  getCreateNotificationTitle(route, t),
+                  getCreateNotificationDescription(route, dataset.id, t),
+                ),
+              );
+              router.push(getUrnForEntity(route, dataset));
+              onModalClose();
+            }}
           />
         )}
       </SaveValidationContextProvider>

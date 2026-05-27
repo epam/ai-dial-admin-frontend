@@ -35,3 +35,16 @@ export enum ViewerContentType {
   Json = 'json',
   Text = 'text',
 }
+
+export enum DatasetVisibility {
+  PUBLIC = 'PUBLIC',
+  PRIVATE = 'PRIVATE',
+}
+
+export enum RevalidationStatus {
+  PENDING = 'PENDING',
+  RUNNING = 'RUNNING',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+  TIMED_OUT = 'TIMED_OUT',
+}

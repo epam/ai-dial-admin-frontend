@@ -30,6 +30,7 @@ export enum MenuI18nKey {
   Files = 'Menu.Files',
   Runs = 'Menu.Runs',
   TestSuites = 'Menu.TestSuites',
+  Datasets = 'Menu.Datasets',
   Metrics = 'Menu.Metrics',
   Audit = 'Menu.Audit',
   Toolsets = 'Menu.Toolsets',
@@ -159,6 +160,7 @@ export enum EntitiesI18nKey {
   NoPublications = 'Entities.NoPublications',
   NoInterceptors = 'Entities.NoInterceptors',
   NoTestSuites = 'Entities.NoTestSuites',
+  NoDatasets = 'Entities.NoDatasets',
   NoRuns = 'Entities.NoRuns',
   NoResults = 'Entities.NoResults',
   NoMetrics = 'Entities.NoMetrics',
@@ -273,6 +275,7 @@ export enum DeleteI18nKey {
   InterceptorTemplate = 'DeleteEntity.Entities.InterceptorTemplate',
   TestSuite = 'DeleteEntity.Entities.TestSuite',
   TestCase = 'DeleteEntity.Entities.TestCase',
+  Dataset = 'DeleteEntity.Entities.Dataset',
   Run = 'DeleteEntity.Entities.Run',
   ApplicationRunner = 'DeleteEntity.Entities.ApplicationRunner',
   McpContainer = 'DeleteEntity.Entities.McpContainer',
@@ -393,6 +396,7 @@ export enum UpdateI18nKey {
   NotificationTitle = 'UpdateEntity.Notification.Title',
   NotificationDescription = 'UpdateEntity.Notification.Description',
   NotificationDescriptionWithoutRollback = 'UpdateEntity.Notification.DescriptionWithoutRollback',
+  TestCasesSavedSuffix = 'UpdateEntity.Notification.TestCasesSavedSuffix',
 
   // Entities
   Model = 'UpdateEntity.Entities.Model',
@@ -406,6 +410,7 @@ export enum UpdateI18nKey {
   File = 'UpdateEntity.Entities.File',
   Adapter = 'UpdateEntity.Entities.Adapter',
   TestSuite = 'UpdateEntity.Entities.TestSuite',
+  Dataset = 'UpdateEntity.Entities.Dataset',
   InterceptorTemplate = 'UpdateEntity.Entities.InterceptorTemplate',
   ApplicationRunner = 'UpdateEntity.Entities.ApplicationRunner',
   SystemProperties = 'UpdateEntity.Entities.SystemProperties',
@@ -443,6 +448,7 @@ export enum CreateI18nKey {
   ApplicationRunner = 'CreateEntity.Entities.ApplicationRunner',
   AssetApplication = 'CreateEntity.Entities.AssetApplication',
   TestSuite = 'CreateEntity.Entities.TestSuite',
+  Dataset = 'CreateEntity.Entities.Dataset',
 }
 
 export enum UpstreamEndpointsI18nKey {
@@ -1878,4 +1884,31 @@ export enum JsonAtaI18nKey {
   UseCase = 'JsonAta.UseCase',
   Expression = 'JsonAta.Expression',
   ResultType = 'JsonAta.ResultType',
+}
+
+export enum DatasetsI18nKey {
+  CreateDataset = 'Datasets.CreateDataset',
+  UpdateDataset = 'Datasets.UpdateDataset',
+  Dataset = 'Datasets.Dataset',
+  PickExisting = 'Datasets.PickExisting',
+  PickPublic = 'Datasets.PickPublic',
+  CreatePrivate = 'Datasets.CreatePrivate',
+  Unbind = 'Datasets.Unbind',
+  Visibility = 'Datasets.Visibility',
+  Public = 'Datasets.Public',
+  Private = 'Datasets.Private',
+  PrivateBoundLocked = 'Datasets.PrivateBoundLocked',
+  NoDatasetBoundTitle = 'Datasets.NoDatasetBoundTitle',
+  NoDatasetBoundDescription = 'Datasets.NoDatasetBoundDescription',
+  PublicReadOnlyBanner = 'Datasets.PublicReadOnlyBanner',
+  OpenDataset = 'Datasets.OpenDataset',
+  MakePublic = 'Datasets.MakePublic',
+  MakePrivate = 'Datasets.MakePrivate',
+  RevalidationInProgress = 'Datasets.RevalidationInProgress',
+  RevalidationCompleted = 'Datasets.RevalidationCompleted',
+  RevalidationFailed = 'Datasets.RevalidationFailed',
+  Schema = 'Datasets.Schema',
+  TestCases = 'Datasets.TestCases',
+  Files = 'Datasets.Files',
+  RevalidationTasks = 'Datasets.RevalidationTasks',
 }

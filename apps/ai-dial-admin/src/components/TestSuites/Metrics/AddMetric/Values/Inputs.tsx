@@ -6,7 +6,7 @@ import TabSelector from '@/src/components/Common/TabSelector/TabSelector';
 import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { BindingSourceValue, MetricBinding } from '@/src/models/evaluation/metric';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
 import { MetricBindingType } from '@/src/types/evaluation';
 import MetricControl from './MetricControl';
 import MetricSectionTabs from './MetricSectionTabs';
@@ -17,10 +17,11 @@ interface Props {
   fields: SchemaFieldRow[];
   schema?: object;
   selectedTestSuite?: TestSuite;
+  testCaseSchema?: TestCaseSchema[];
   onChange?: (bindings: MetricBinding[]) => void;
 }
 
-const MetricInputs: FC<Props> = ({ selectedTestSuite, fields, title, bindings, schema, onChange }) => {
+const MetricInputs: FC<Props> = ({ selectedTestSuite, testCaseSchema, fields, title, bindings, schema, onChange }) => {
   if (!fields.length && !schema) {
     return null;
   }
@@ -33,6 +34,7 @@ const MetricInputs: FC<Props> = ({ selectedTestSuite, fields, title, bindings, s
           field={field}
           binding={bindings?.find((b) => b.property === field.name)}
           selectedTestSuite={selectedTestSuite}
+          testCaseSchema={testCaseSchema}
           onChange={(binding) => {
             const updatedBindings = bindings?.map((b) => (b.property === field.name ? binding : b));
             onChange?.(updatedBindings || []);
@@ -49,8 +51,9 @@ const MetricInput: FC<{
   field: SchemaFieldRow;
   binding?: MetricBinding;
   selectedTestSuite?: TestSuite;
+  testCaseSchema?: TestCaseSchema[];
   onChange: (binding: MetricBinding) => void;
-}> = ({ field, binding, selectedTestSuite, onChange }) => {
+}> = ({ field, binding, selectedTestSuite, testCaseSchema, onChange }) => {
   const t = useI18n();
 
   const tabs = [
@@ -123,7 +126,7 @@ const MetricInput: FC<{
       {binding?.source.$type === MetricBindingType.TestCase && (
         <DialSelect
           elementId={field.id}
-          options={selectedTestSuite?.testCaseSchema?.map((item) => ({ label: item.name, value: item.name })) || []}
+          options={testCaseSchema?.map((item) => ({ label: item.name, value: item.name })) || []}
           value={binding?.source.columnName as string | undefined}
           onChange={(v) => onChangeTestCase(v as string)}
         />

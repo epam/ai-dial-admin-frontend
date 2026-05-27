@@ -981,6 +981,26 @@ export const TEST_SUITES_COLUMN: ColDef[] = [
   },
 ];
 
+export const DATASETS_COLUMN: ColDef[] = [
+  {
+    field: 'name',
+    colId: 'name',
+    headerName: 'Display Name',
+    hide: false,
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
+  },
+  { ...DESCRIPTION_COLUMN, sortable: false, ...evalStringFilter([GridFilterType.CONTAINS]) },
+  { field: 'id', colId: 'id', headerName: 'ID', hide: false, ...evalStringFilter([GridFilterType.EQUALS]) },
+  {
+    field: 'createdBy',
+    headerName: 'Created By',
+    hide: false,
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL]),
+  },
+  { ...CREATED_AT_COLUMN, ...dateFilter },
+  { ...UPDATED_AT_COLUMN, ...dateFilter },
+];
+
 export const TEST_CASES_COLUMN: ColDef[] = [
   { field: 'id', colId: 'id', headerName: 'ID' },
   { field: 'testCaseName', colId: 'testCaseName', headerName: 'Test case name' },

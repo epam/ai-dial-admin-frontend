@@ -61,6 +61,7 @@ export const getEntityPath = (
     case ApplicationRoute.Images:
     case ApplicationRoute.TestSuites:
     case ApplicationRoute.TestCases:
+    case ApplicationRoute.Datasets:
     case ApplicationRoute.Runs:
       return `${encodeURIComponent((data as { id: string }).id)}`;
 

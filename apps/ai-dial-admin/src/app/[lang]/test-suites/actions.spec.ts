@@ -5,44 +5,32 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
-  bulkPatchTestCases,
-  createTestCase,
   createTestSuite,
+  createTestSuiteMetric,
   deleteTestSuiteMetric,
+  duplicateTestSuite,
   getDeployment,
   getDeployments,
+  getDeploymentTools,
   getMetricDeclarations,
   getMetricLatestVersion,
   getRuns,
+  getTestSuite,
   getTestSuiteByName,
+  getTestSuiteFiles,
   getTestSuiteMetricDetails,
   getTestSuiteMetricDetailsWithSchema,
   getTestSuiteMetrics,
-  getTestSuiteTemplateVariables,
-  getTestCase,
-  getTestCases,
-  getTestSuite,
   getTestSuites,
-  importTestCase,
-  importTestCasePreview,
-  removeTestCase,
+  getTestSuiteTemplateVariables,
   removeTestSuite,
+  removeTestSuiteFile,
   runTestSuite,
   tryOutTestSuite,
-  updateTestCases,
   updateTestSuite,
-  getTestCaseTemplateVariables,
-  tryOutTestCase,
-  createTestSuiteMetric,
   updateTestSuiteMetric,
   uploadTestSuiteFiles,
-  getTestSuiteFiles,
-  removeTestSuiteFile,
-  duplicateTestSuite,
-  getDeploymentTools,
-  removeMultipleTestCases,
 } from './actions';
-import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 import { FilterOperatorDto } from '@/src/types/request';
 
 vi.mock('@/src/utils/auth/auth-request');
@@ -68,7 +56,7 @@ describe('TestSuites :: server actions', () => {
   test('Should call createTestSuite action', async () => {
     (testSuitesApi.createTestSuite as any).mockResolvedValue(RESPONSE_MOCK);
 
-    const result = await createTestSuite({ id: 'aaa' });
+    const result = await createTestSuite({ id: 'aaa' } as any);
     expect(getUserToken).toHaveBeenCalled();
     expect(testSuitesApi.createTestSuite).toHaveBeenCalledWith({ id: 'aaa' }, TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
@@ -76,13 +64,17 @@ describe('TestSuites :: server actions', () => {
 
   test('Should call updateTestSuite action', async () => {
     (testSuitesApi.updateTestSuite as any).mockResolvedValue(RESPONSE_MOCK);
-    const result = await updateTestSuite({ id: 'test', description: 'test' }, 'etag');
+    const result = await updateTestSuite({ id: 'test', description: 'test' } as any, 'etag');
     expect(getUserToken).toHaveBeenCalled();
-    expect(testSuitesApi.updateTestSuite).toHaveBeenCalledWith({ id: 'test', description: 'test' }, 'etag', TOKEN_MOCK);
+    expect(testSuitesApi.updateTestSuite).toHaveBeenCalledWith(
+      { id: 'test', description: 'test' },
+      'etag',
+      TOKEN_MOCK,
+    );
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call getTestSuite action with undefined description', async () => {
+  test('Should call getTestSuite action', async () => {
     (testSuitesApi.getTestSuite as any).mockResolvedValue(RESPONSE_MOCK);
     const result = await getTestSuite('test', 'etag');
     expect(getUserToken).toHaveBeenCalled();
@@ -128,30 +120,6 @@ describe('TestSuites :: server actions', () => {
     expect(result).toEqual([RESPONSE_MOCK]);
   });
 
-  test('Should call getTestCases action', async () => {
-    (testSuitesApi.getTestCases as any).mockResolvedValue([RESPONSE_MOCK]);
-    const result = await getTestCases('test', 1, 10, [], []);
-    expect(getUserToken).toHaveBeenCalled();
-    expect(testSuitesApi.getTestCases).toHaveBeenCalledWith('test', 1, 10, [], [], TOKEN_MOCK);
-    expect(result).toEqual([RESPONSE_MOCK]);
-  });
-
-  test('Should call getTestCase action', async () => {
-    (testSuitesApi.getTestCase as any).mockResolvedValue(RESPONSE_MOCK);
-    const result = await getTestCase('test', 'case');
-    expect(getUserToken).toHaveBeenCalled();
-    expect(testSuitesApi.getTestCase).toHaveBeenCalledWith('test', 'case', TOKEN_MOCK);
-    expect(result).toBe(RESPONSE_MOCK);
-  });
-
-  test('Should call getTestCase action with undefined test case id', async () => {
-    (testSuitesApi.getTestCase as any).mockResolvedValue(RESPONSE_MOCK);
-    const result = await getTestCase('test');
-    expect(getUserToken).toHaveBeenCalled();
-    expect(testSuitesApi.getTestCase).toHaveBeenCalledWith('test', void 0, TOKEN_MOCK);
-    expect(result).toBe(RESPONSE_MOCK);
-  });
-
   test('Should call getDeployments action ', async () => {
     (testSuitesApi.getDeployments as any).mockResolvedValue(RESPONSE_MOCK);
     const result = await getDeployments();
@@ -176,45 +144,6 @@ describe('TestSuites :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call importTestCase action ', async () => {
-    (testSuitesApi.importTestCase as any).mockResolvedValue(RESPONSE_MOCK);
-    const result = await importTestCase('id', new FormData(), TestCaseImportMode.MERGE, TestCaseConflictStrategy.SKIP);
-    expect(getUserToken).toHaveBeenCalled();
-    expect(testSuitesApi.importTestCase).toHaveBeenCalledWith(
-      'id',
-      new FormData(),
-      TOKEN_MOCK,
-      TestCaseImportMode.MERGE,
-      TestCaseConflictStrategy.SKIP,
-    );
-    expect(result).toBe(RESPONSE_MOCK);
-  });
-
-  test('Should call importTestCasePreview action ', async () => {
-    (testSuitesApi.importTestCasePreview as any).mockResolvedValue(RESPONSE_MOCK);
-    const result = await importTestCasePreview('id', new FormData());
-    expect(getUserToken).toHaveBeenCalled();
-    expect(testSuitesApi.importTestCasePreview).toHaveBeenCalledWith('id', new FormData(), TOKEN_MOCK);
-    expect(result).toBe(RESPONSE_MOCK);
-  });
-
-  test('Should call removeTestCase action ', async () => {
-    (testSuitesApi.removeTestCase as any).mockResolvedValue(RESPONSE_MOCK);
-    const result = await removeTestCase('id', 'caseId');
-    expect(getUserToken).toHaveBeenCalled();
-    expect(testSuitesApi.removeTestCase).toHaveBeenCalledWith('id', 'caseId', TOKEN_MOCK);
-    expect(result).toBe(RESPONSE_MOCK);
-  });
-
-  test('Should call updateTestCases action ', async () => {
-    (testSuitesApi.updateTestCases as any).mockResolvedValue(RESPONSE_MOCK);
-    const testCases = [{ id: 'caseId' }];
-    const result = await updateTestCases('id', testCases as any);
-    expect(getUserToken).toHaveBeenCalled();
-    expect(testSuitesApi.updateTestCases).toHaveBeenCalledWith('id', testCases, TOKEN_MOCK);
-    expect(result).toBe(RESPONSE_MOCK);
-  });
-
   test('Should call getTestSuiteTemplateVariables action ', async () => {
     (testSuitesApi.getTestSuiteTemplateVariables as any).mockResolvedValue(RESPONSE_MOCK);
     const result = await getTestSuiteTemplateVariables('id');
@@ -223,45 +152,11 @@ describe('TestSuites :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call getTestCaseTemplateVariables action ', async () => {
-    (testSuitesApi.getTestCaseTemplateVariables as any).mockResolvedValue(RESPONSE_MOCK);
-    const result = await getTestCaseTemplateVariables('id', 'caseId');
-    expect(getUserToken).toHaveBeenCalled();
-    expect(testSuitesApi.getTestCaseTemplateVariables).toHaveBeenCalledWith('id', 'caseId', TOKEN_MOCK);
-    expect(result).toBe(RESPONSE_MOCK);
-  });
-
   test('Should call tryOutTestSuite action ', async () => {
     (testSuitesApi.tryOutTestSuite as any).mockResolvedValue(RESPONSE_MOCK);
     const result = await tryOutTestSuite('id', { variables: {} });
     expect(getUserToken).toHaveBeenCalled();
     expect(testSuitesApi.tryOutTestSuite).toHaveBeenCalledWith('id', { variables: {} }, TOKEN_MOCK);
-    expect(result).toBe(RESPONSE_MOCK);
-  });
-
-  test('Should call tryOutTestCase action ', async () => {
-    (testSuitesApi.tryOutTestCase as any).mockResolvedValue(RESPONSE_MOCK);
-    const result = await tryOutTestCase('id', 'caseId');
-    expect(getUserToken).toHaveBeenCalled();
-    expect(testSuitesApi.tryOutTestCase).toHaveBeenCalledWith('id', 'caseId', TOKEN_MOCK);
-    expect(result).toBe(RESPONSE_MOCK);
-  });
-
-  test('Should call createTestCase action', async () => {
-    (testSuitesApi.createTestCase as any).mockResolvedValue(RESPONSE_MOCK);
-    const body = { testCaseName: 'Case', data: [] };
-    const result = await createTestCase('suite-id', body as any);
-    expect(getUserToken).toHaveBeenCalled();
-    expect(testSuitesApi.createTestCase).toHaveBeenCalledWith('suite-id', body, TOKEN_MOCK, undefined);
-    expect(result).toBe(RESPONSE_MOCK);
-  });
-
-  test('Should call createTestCase action with includeWarnings', async () => {
-    (testSuitesApi.createTestCase as any).mockResolvedValue(RESPONSE_MOCK);
-    const body = { testCaseName: 'Case', data: [] };
-    const result = await createTestCase('suite-id', body as any, true);
-    expect(getUserToken).toHaveBeenCalled();
-    expect(testSuitesApi.createTestCase).toHaveBeenCalledWith('suite-id', body, TOKEN_MOCK, true);
     expect(result).toBe(RESPONSE_MOCK);
   });
 
@@ -301,7 +196,11 @@ describe('TestSuites :: server actions', () => {
     (testSuitesApi.getTestSuiteMetricDetailsWithSchema as any).mockResolvedValue(RESPONSE_MOCK);
     const result = await getTestSuiteMetricDetailsWithSchema('suite-id', 'metric-id');
     expect(getUserToken).toHaveBeenCalled();
-    expect(testSuitesApi.getTestSuiteMetricDetailsWithSchema).toHaveBeenCalledWith('suite-id', 'metric-id', TOKEN_MOCK);
+    expect(testSuitesApi.getTestSuiteMetricDetailsWithSchema).toHaveBeenCalledWith(
+      'suite-id',
+      'metric-id',
+      TOKEN_MOCK,
+    );
     expect(result).toBe(RESPONSE_MOCK);
   });
 
@@ -361,23 +260,6 @@ describe('TestSuites :: server actions', () => {
     const result = await duplicateTestSuite('suite-id', body as any);
     expect(getUserToken).toHaveBeenCalled();
     expect(testSuitesApi.duplicateTestSuite).toHaveBeenCalledWith('suite-id', body, TOKEN_MOCK);
-    expect(result).toBe(RESPONSE_MOCK);
-  });
-
-  test('Should call removeMultipleTestCases action', async () => {
-    (testSuitesApi.removeMultipleTestCases as any).mockResolvedValue(RESPONSE_MOCK);
-    const result = await removeMultipleTestCases('suite-id', ['case1', 'case2']);
-    expect(getUserToken).toHaveBeenCalled();
-    expect(testSuitesApi.removeMultipleTestCases).toHaveBeenCalledWith('suite-id', ['case1', 'case2'], TOKEN_MOCK);
-    expect(result).toBe(RESPONSE_MOCK);
-  });
-
-  test('Should call bulkPatchTestCases action', async () => {
-    (testSuitesApi.bulkPatchTestCases as any).mockResolvedValue(RESPONSE_MOCK);
-    const request = { bulkOperations: [{ selector: { type: 'ids', ids: ['case1'] }, patch: { enabled: true } }] };
-    const result = await bulkPatchTestCases('suite-id', request as any);
-    expect(getUserToken).toHaveBeenCalled();
-    expect(testSuitesApi.bulkPatchTestCases).toHaveBeenCalledWith('suite-id', request, TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

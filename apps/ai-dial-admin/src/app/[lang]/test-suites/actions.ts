@@ -4,9 +4,8 @@ import { cookies, headers } from 'next/headers';
 
 import { testSuitesApi } from '@/src/app/api/api';
 import { DeploymentType } from '@/src/models/evaluation/deployment';
-import { TestCase, TestCaseBulkPatchRequest, TestSuite } from '@/src/models/evaluation/test-suite';
+import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { FilterDto, SortDto } from '@/src/models/request';
-import type { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 import { FilterOperatorDto } from '@/src/types/request';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -63,66 +62,6 @@ export async function getTestSuite(id: string, etag: string) {
   return testSuitesApi.getTestSuite(id, etag, token);
 }
 
-export async function importTestCase(
-  id: string,
-  file: FormData,
-  mode: TestCaseImportMode,
-  strategy: TestCaseConflictStrategy,
-) {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return testSuitesApi.importTestCase(id, file, token, mode, strategy);
-}
-
-export async function importTestCasePreview(id: string, file: FormData) {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return testSuitesApi.importTestCasePreview(id, file, token);
-}
-
-export async function getTestCases(
-  id: string | undefined,
-  page: number,
-  size: number,
-  sorts: SortDto[],
-  filters: FilterDto[],
-) {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return testSuitesApi.getTestCases(id, page, size, sorts, filters, token);
-}
-
-export async function removeTestCase(id: string, testCaseId: string) {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return testSuitesApi.removeTestCase(id, testCaseId, token);
-}
-
-export async function removeMultipleTestCases(id: string, testCaseNames: string[]) {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return testSuitesApi.removeMultipleTestCases(id, testCaseNames, token);
-}
-
-export async function createTestCase(
-  testSuiteId: string,
-  body: Pick<TestCase, 'testCaseName' | 'data'>,
-  includeWarnings?: boolean,
-) {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return testSuitesApi.createTestCase(testSuiteId, body, token, includeWarnings);
-}
-
-export async function updateTestCases(id: string, testCases: TestCase[]) {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return testSuitesApi.updateTestCases(id, testCases, token);
-}
-
-export async function bulkPatchTestCases(id: string, request: TestCaseBulkPatchRequest) {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return testSuitesApi.bulkPatchTestCases(id, request, token);
-}
-
-export async function getTestCase(id: string, testCaseId?: string) {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return testSuitesApi.getTestCase(id, testCaseId, token);
-}
-
 export async function getDeployments(type?: DeploymentType, interfaceFilter?: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return testSuitesApi.getDeployments(token, type, interfaceFilter);
@@ -143,19 +82,9 @@ export async function getTestSuiteTemplateVariables(id: string) {
   return testSuitesApi.getTestSuiteTemplateVariables(id, token);
 }
 
-export async function getTestCaseTemplateVariables(id: string, testCaseId: string) {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return testSuitesApi.getTestCaseTemplateVariables(id, testCaseId, token);
-}
-
 export async function tryOutTestSuite(id: string, requestBody: Record<string, unknown>) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return testSuitesApi.tryOutTestSuite(id, requestBody, token);
-}
-
-export async function tryOutTestCase(id: string, testCaseId: string) {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return testSuitesApi.tryOutTestCase(id, testCaseId, token);
 }
 
 export async function getMetricDeclarations(page: number, size: number) {

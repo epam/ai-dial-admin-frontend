@@ -1,13 +1,6 @@
-import { DialTooltip } from '@epam/ai-dial-ui-kit';
+import { DialCheckbox, DialTooltip } from '@epam/ai-dial-ui-kit';
 import { IconInfoCircle } from '@tabler/icons-react';
-import {
-  ColDef,
-  ICellRendererParams,
-  IFilterOptionDef,
-  ITextFilterParams,
-  ITooltipParams,
-  ValueGetterParams,
-} from 'ag-grid-community';
+import { ColDef, ICellRendererParams, ITooltipParams, ValueGetterParams } from 'ag-grid-community';
 import { JSONSchema7 } from 'json-schema';
 
 import { getSchemaTypes, SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
@@ -18,97 +11,81 @@ import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSele
 import JsonAtaCellRenderer from '@/src/components/Grid/CellRenderers/JsonAtaCellRenderer';
 import JsonEditorCellRenderer from '@/src/components/Grid/CellRenderers/JsonEditorCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
-import BooleanColumnHeader from '@/src/components/Grid/HeaderComponents/BooleanColumnHeader';
 import { TYPE_OPTIONS } from '@/src/components/TestSuites/TestCaseSchema/constants';
-import { NO_BORDER_CLASS, UTILITY_COLUMN } from '@/src/constants/ag-grid';
+import { NO_BORDER_CLASS } from '@/src/constants/ag-grid';
 import { BASE_STATUS_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { TEST_CASES_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { MetricBinding } from '@/src/models/evaluation/metric';
-import {
-  InputBindingRowData,
-  ResponseColumn,
-  TestCase,
-  TestCaseSchema,
-  TestSuite,
-} from '@/src/models/evaluation/test-suite';
+import { InputBindingRowData, ResponseColumn, TestCase, TestCaseSchema } from '@/src/models/evaluation/test-suite';
 import { InputBindingType, MetricBindingType, TestCaseItemType } from '@/src/types/evaluation';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isValueTruthy } from '@/src/utils/types';
 
 export type onCellChange = (data: Record<string, unknown>, field: string, value: string | number | boolean) => void;
 
-const getEnabledColumnFilterOptions = (
-  allLabel: string,
-  enabledLabel: string,
-  disabledLabel: string,
-): IFilterOptionDef[] => [
-  {
-    displayKey: 'all',
-    displayName: allLabel,
-    numberOfInputs: 0,
-    predicate: () => true,
-  },
-  {
-    displayKey: 'enabled',
-    displayName: enabledLabel,
-    numberOfInputs: 0,
-    predicate: (_filterValues, cellValue) => cellValue === true,
-  },
-  {
-    displayKey: 'disabled',
-    displayName: disabledLabel,
-    numberOfInputs: 0,
-    predicate: (_filterValues, cellValue) => cellValue !== true,
-  },
-];
+export interface GetTestCaseColumnsOptions {
+  schema: TestCaseSchema[];
+  fileScopeId: string;
+  fileScopeView: ApplicationRoute;
+  readOnly?: boolean;
+  // When both are provided, an "Enabled" toggle column is prepended.
+  // Source of truth is the suite's `disabledTestCaseIds`, not the test case row.
+  disabledIds?: Set<string>;
+  onToggleDisabled?: (id: string, nextDisabled: boolean) => void;
+}
 
 export const getTestCaseColumns = (
-  suite: TestSuite,
+  options: GetTestCaseColumnsOptions,
   onCellChange: onCellChange,
   t?: (key: string) => string,
 ): ColDef[] => {
-  const enabledLabel = t?.(BasicI18nKey.Enabled) ?? 'Enabled';
-  const disabledLabel = t?.(BasicI18nKey.Disabled) ?? 'Disabled';
-  const allLabel = 'All';
-  const schema = suite.testCaseSchema || [];
+  const { schema, fileScopeId, fileScopeView, readOnly = false, disabledIds, onToggleDisabled } = options;
+  const showEnabledColumn = !!disabledIds && !!onToggleDisabled;
+  // colId intentionally NOT 'enabled' — that name was historically a backend filter field,
+  // so any saved ag-grid filter state keyed by 'enabled' would propagate as an invalid
+  // server-side filter. This keeps the toggle purely a client-side concern.
+  const enabledColumn: ColDef | null = showEnabledColumn
+    ? {
+        headerName: 'Run',
+        colId: '_runInclusion',
+        cellClass: NO_BORDER_CLASS,
+        valueGetter: (params: ValueGetterParams) => {
+          const id = params.data?.id as string | undefined;
+          return id ? !disabledIds!.has(id) : true;
+        },
+        cellRenderer: (params: ICellRendererParams) => {
+          const id = params.data?.id as string | undefined;
+          const checked = id ? !disabledIds!.has(id) : true;
+          return (
+            <div className="w-full flex items-center justify-center">
+              <DialCheckbox
+                id={`run-inclusion-${id ?? 'unknown'}`}
+                checked={checked}
+                disabled={readOnly || !id}
+                onChange={(next?: boolean) => {
+                  if (readOnly || !id) return;
+                  onToggleDisabled!(id, !next);
+                }}
+              />
+            </div>
+          );
+        },
+        sortable: false,
+        filter: false,
+        floatingFilter: false,
+        suppressColumnsToolPanel: true,
+        minWidth: 60,
+        maxWidth: 80,
+      }
+    : null;
   return [
-    {
-      ...UTILITY_COLUMN,
-      headerName: '',
-      headerComponent: BooleanColumnHeader,
-      field: 'enabled',
-      colId: 'enabled',
-      minWidth: 120,
-      width: 120,
-      maxWidth: 140,
-      filter: 'agTextColumnFilter',
-      filterParams: {
-        filterOptions: getEnabledColumnFilterOptions(allLabel, enabledLabel, disabledLabel),
-        defaultOption: 'all',
-        maxNumConditions: 1,
-        buttons: ['reset'],
-      } as ITextFilterParams,
-      floatingFilter: true,
-      floatingFilterComponent: 'agTextColumnFloatingFilter',
-      editable: true,
-      cellRenderer: 'agCheckboxCellRenderer',
-      cellEditor: 'agCheckboxCellEditor',
-      cellClass: 'flex justify-center',
-      valueGetter: (params) => params.data?.enabled,
-      valueSetter: (params) => {
-        params.data.enabled = params.newValue;
-        return true;
-      },
-      tooltipValueGetter: (params) => {
-        return params.data?.enabled ? 'Disable test case' : 'Enable test case';
-      },
-    } as ColDef,
+    ...(enabledColumn ? [enabledColumn] : []),
     ...TEST_CASES_COLUMN.map((col) => {
       if (col.field === 'id') {
         return { ...col, cellClass: 'select-none cursor-pointer' };
       }
-      if (col.field === 'testCaseName' && onCellChange) {
+      if (col.field === 'testCaseName' && onCellChange && !readOnly) {
         return {
           ...col,
           editable: false,
@@ -136,6 +113,7 @@ export const getTestCaseColumns = (
           hideTriangle: true,
           skipRequired: true,
           onChange: (value: string | number, rowData: unknown) => {
+            if (readOnly) return;
             onCellChange(rowData as Record<string, unknown>, field, value);
           },
         },
@@ -145,10 +123,11 @@ export const getTestCaseColumns = (
               component: FileSelectCellRenderer,
               params: {
                 onChange: (value: string | number, rowData: unknown) => {
+                  if (readOnly) return;
                   onCellChange(rowData as Record<string, unknown>, field, value);
                 },
-                id: suite.id,
-                view: ApplicationRoute.TestSuites,
+                id: fileScopeId,
+                view: fileScopeView,
               },
             };
           }

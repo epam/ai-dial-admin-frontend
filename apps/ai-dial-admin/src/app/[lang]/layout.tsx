@@ -1,10 +1,10 @@
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { ReactNode } from 'react';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+
 // @ts-ignore
 import '@epam/ai-dial-ui-kit/styles.css';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+
 // @ts-ignore
 import '@/src/app/[lang]/global.scss';
 

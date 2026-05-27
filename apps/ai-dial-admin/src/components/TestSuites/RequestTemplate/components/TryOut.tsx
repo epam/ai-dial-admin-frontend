@@ -11,7 +11,7 @@ import {
 import { IconEdit, IconRefresh } from '@tabler/icons-react';
 import classNames from 'classnames';
 
-import { tryOutTestCase, tryOutTestSuite } from '@/src/app/[lang]/test-suites/actions';
+import { tryOutTestSuite } from '@/src/app/[lang]/test-suites/actions';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
@@ -66,9 +66,7 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
   const onSendRequest = useCallback(async () => {
     setIsRequestSend(true);
     try {
-      const res = testCaseId
-        ? await tryOutTestCase(testSuite.id || '', testCaseId)
-        : await tryOutTestSuite(testSuite.id || '', requestBody);
+      const res = await tryOutTestSuite(testSuite.id || '', requestBody);
 
       const testSuiteId = testSuite.id || '';
       if (res?.success) {

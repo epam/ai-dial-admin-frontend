@@ -1,7 +1,7 @@
 import { TabModel } from '@epam/ai-dial-ui-kit';
 
 import { ALLOW_ALL_DOMAINS } from '@/src/components/Deployments/Common/Whitelists/Whitelists';
-import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { DatasetsI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { FeatureFlags } from '@/src/models/feature-flags';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { IMAGE_STATUS } from '@/src/types/deployments/images';
@@ -64,6 +64,8 @@ export enum EntityViewTab {
   Application = 'Application',
   InputSchema = 'InputSchema',
   OutputSchema = 'OutputSchema',
+  Schema = 'Schema',
+  RevalidationTasks = 'RevalidationTasks',
 }
 
 export const propertiesTab = (t: (key: string) => string, warning?: boolean) => ({
@@ -488,6 +490,16 @@ export const getSystemPropertiesTabs = (t: (key: string) => string): TabModel[] 
 
 export const getTestSuiteTabs = (t: (key: string) => string): TabModel[] => {
   return [propertiesTab(t), testSuiteMethodTab(t), testCasesTab(t), metricsTab(t), runsTab(t)];
+};
+
+export const getDatasetTabs = (t: (key: string) => string): TabModel[] => {
+  return [
+    propertiesTab(t),
+    { id: EntityViewTab.Schema, label: t(DatasetsI18nKey.Schema) },
+    testCasesTab(t),
+    { id: EntityViewTab.Files, label: t(DatasetsI18nKey.Files) },
+    { id: EntityViewTab.RevalidationTasks, label: t(DatasetsI18nKey.RevalidationTasks) },
+  ];
 };
 
 export const getPublicationViewTabs = (t: (key: string) => string, view: ApplicationRoute): TabModel[] => {
