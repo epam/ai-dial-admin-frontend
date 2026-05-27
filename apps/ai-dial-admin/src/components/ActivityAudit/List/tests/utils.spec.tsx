@@ -7,11 +7,15 @@ import {
   getGridFilters,
   getStartOfDay,
   groupByDay,
+  areFiltersEquals,
+  processActivitiesData,
 } from '@/src/components/ActivityAudit/List/utils';
 import { GridFilterType } from '@/src/types/grid-filter';
 import { FilterOperatorDto } from '@/src/types/request';
 import { describe, expect, test, vi } from 'vitest';
-import { ActivityAuditResourceType } from '@/src/types/activity-audit';
+import { ActivityAuditResourceType, ActivityAuditType } from '@/src/types/activity-audit';
+import type { FilterDto } from '@/src/models/request';
+import { DialActivity } from '@/src/models/activity-audit';
 
 vi.mock('@/src/constants/ag-grid', () => ({
   ACTION_COLUMN: vi.fn((actions) => ({ colId: 'actions', actions })),
@@ -398,5 +402,144 @@ describe('getStartOfDay and getEndOfDay', () => {
     expect(endOfDay.getMinutes()).toBe(59);
     expect(endOfDay.getSeconds()).toBe(59);
     expect(endOfDay.getMilliseconds()).toBe(999);
+  });
+});
+
+describe('ActivityAudit/List/utils :: areFiltersEquals', () => {
+  test('returns true for two empty filter objects', () => {
+    expect(areFiltersEquals({}, {})).toBe(true);
+  });
+
+  test('returns true for identical single filter', () => {
+    const f1: Record<string, FilterDto> = {
+      columnA: { column: 'columnA', operator: FilterOperatorDto.EQUALS, value: '1' },
+    };
+    const f2: Record<string, FilterDto> = {
+      columnA: { column: 'columnA', operator: FilterOperatorDto.EQUALS, value: '1' },
+    };
+    expect(areFiltersEquals(f1, f2)).toBe(true);
+  });
+
+  test('returns true when same filters present in different key order', () => {
+    const f1: Record<string, FilterDto> = {
+      a: { column: 'a', operator: FilterOperatorDto.EQUALS, value: '1' },
+      b: { column: 'b', operator: FilterOperatorDto.CONTAINS, value: 'x' },
+    };
+    const f2: Record<string, FilterDto> = {
+      b: { column: 'b', operator: FilterOperatorDto.CONTAINS, value: 'x' },
+      a: { column: 'a', operator: FilterOperatorDto.EQUALS, value: '1' },
+    };
+    expect(areFiltersEquals(f1, f2)).toBe(true);
+  });
+
+  test('returns false when a filter value differs', () => {
+    const f1: Record<string, FilterDto> = {
+      col: { column: 'col', operator: FilterOperatorDto.EQUALS, value: '1' },
+    };
+    const f2: Record<string, FilterDto> = {
+      col: { column: 'col', operator: FilterOperatorDto.EQUALS, value: '2' },
+    };
+    expect(areFiltersEquals(f1, f2)).toBe(false);
+  });
+
+  test('returns false when one object has extra key', () => {
+    const f1: Record<string, FilterDto> = {
+      col1: { column: 'col1', operator: FilterOperatorDto.EQUALS, value: '1' },
+    };
+    const f2: Record<string, FilterDto> = {
+      col1: { column: 'col1', operator: FilterOperatorDto.EQUALS, value: '1' },
+      col2: { column: 'col2', operator: FilterOperatorDto.EQUALS, value: 'x' },
+    };
+    expect(areFiltersEquals(f1, f2)).toBe(false);
+  });
+});
+
+const makeActivity = (overrides: Partial<DialActivity>): DialActivity => ({
+  activityType: ActivityAuditType.Create,
+  resourceType: ActivityAuditResourceType.MODEL,
+  resourceId: '',
+  epochTimestampMs: 0,
+  initiatedAuthor: 'author',
+  initiatedEmail: 'author@example.com',
+  activityId: '',
+  revision: 1,
+  ...overrides,
+});
+
+describe('ActivityAudit/List/utils :: processActivitiesData', () => {
+  test('returns parent rows with children expanded and children rows appended', () => {
+    const data: DialActivity[] = [
+      makeActivity({
+        activityId: 'p1',
+        resourceType: ActivityAuditResourceType.APPLICATION,
+        parentActivityId: undefined,
+        resourceId: 'r1',
+      }),
+      makeActivity({
+        activityId: 'c1',
+        resourceType: ActivityAuditResourceType.APPLICATION,
+        parentActivityId: 'p1',
+        resourceId: 'r2',
+      }),
+      makeActivity({
+        activityId: 'p2',
+        resourceType: ActivityAuditResourceType.APPLICATION,
+        parentActivityId: undefined,
+        resourceId: 'r3',
+      }),
+    ];
+    const childrenMap: Record<string, DialActivity[]> = {
+      p1: [
+        makeActivity({
+          activityId: 'c1',
+          resourceType: ActivityAuditResourceType.APPLICATION,
+          parentActivityId: 'p1',
+          resourceId: 'r2',
+        }),
+      ],
+    };
+
+    const result: (DialActivity & { children?: DialActivity[] })[] = processActivitiesData(data, childrenMap);
+
+    expect(result).toHaveLength(3);
+    expect(result[0].activityId).toBe('p1');
+    expect(result[0].children).toEqual(childrenMap.p1);
+    expect(result[1].activityId).toBe('c1');
+    expect(result[2].activityId).toBe('p2');
+    expect(result[2].children).toEqual([]);
+  });
+
+  test('preserves children order from childrenActivityMap and appends children for parent rows only', () => {
+    const data: DialActivity[] = [
+      makeActivity({
+        activityId: 'p1',
+        resourceType: ActivityAuditResourceType.APPLICATION,
+        parentActivityId: undefined,
+        resourceId: 'r1',
+      }),
+      makeActivity({
+        activityId: 'c1',
+        resourceType: ActivityAuditResourceType.APPLICATION,
+        parentActivityId: 'p1',
+        resourceId: 'r2',
+      }),
+    ];
+    const childrenMap: Record<string, DialActivity[]> = {
+      p1: [
+        makeActivity({
+          activityId: 'c1',
+          resourceType: ActivityAuditResourceType.APPLICATION,
+          parentActivityId: 'p1',
+          resourceId: 'r2',
+        }),
+      ],
+    };
+
+    const result: (DialActivity & { children?: DialActivity[] })[] = processActivitiesData(data, childrenMap);
+
+    expect(result[0].activityId).toBe('p1');
+    expect(result[1].activityId).toBe('c1');
+    expect(result[0].children).toHaveLength(1);
+    expect(result[0].children?.[0].activityId).toBe('c1');
   });
 });
