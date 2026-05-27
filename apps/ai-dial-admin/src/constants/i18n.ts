@@ -1616,6 +1616,8 @@ export enum TestSuitesI18nKey {
   RemoveSuccess = 'TestSuites.RemoveSuccess',
   RemoveFailed = 'TestSuites.RemoveFailed',
   ImportSuccessDescription = 'TestSuites.ImportSuccessDescription',
+  ImportSummary = 'TestSuites.ImportSummary',
+  ImportRevalidationStarted = 'TestSuites.ImportRevalidationStarted',
   MetricAddSuccess = 'TestSuites.MetricAddSuccess',
   MetricAddFailed = 'TestSuites.MetricAddFailed',
   MetricUpdateSuccess = 'TestSuites.MetricUpdateSuccess',
@@ -1911,4 +1913,6 @@ export enum DatasetsI18nKey {
   TestCases = 'Datasets.TestCases',
   Files = 'Datasets.Files',
   RevalidationTasks = 'Datasets.RevalidationTasks',
+  VersionConflictTitle = 'Datasets.VersionConflictTitle',
+  VersionConflictMessage = 'Datasets.VersionConflictMessage',
 }

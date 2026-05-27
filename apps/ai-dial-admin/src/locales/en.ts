@@ -1644,6 +1644,8 @@ export default {
     Warning: 'Request template has been changed. Save changes to update the list of test cases.',
     ImportSuccess: 'Test cases imported successfully',
     ImportSuccessDescription: 'You can now see them in the list of test cases',
+    ImportSummary: 'Imported {validCount} of {totalRows} rows ({skippedCount} skipped, {overriddenCount} overridden).',
+    ImportRevalidationStarted: 'Schema changed — revalidation in progress.',
     ImportFailed: 'Test cases import failed',
     MetricAddSuccess: 'Metric added successfully',
     MetricAddFailed: 'Metric add failed',
@@ -1951,5 +1953,7 @@ export default {
     TestCases: 'Test cases',
     Files: 'Files',
     RevalidationTasks: 'Revalidation tasks',
+    VersionConflictTitle: 'Dataset changed',
+    VersionConflictMessage: 'Someone else updated this dataset. Reload to see the latest version.',
   },
 } as const;

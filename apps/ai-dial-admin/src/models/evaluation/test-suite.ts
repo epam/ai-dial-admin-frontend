@@ -13,8 +13,8 @@ export interface TestSuite {
   description?: string;
   status?: string;
   createdBy?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  createdAt?: number;
+  updatedAt?: number;
   valid?: boolean;
   validationWarnings?: ValidationWarning[];
   suiteType?: SuiteType;

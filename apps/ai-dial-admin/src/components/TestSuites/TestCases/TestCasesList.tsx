@@ -33,9 +33,11 @@ import { getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import { ButtonsI18nKey, DeleteI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
+import { CsvImportResult } from '@/src/models/evaluation/dataset';
 import { TestCase, TestCaseSchema } from '@/src/models/evaluation/test-suite';
 import { ApplicationRoute } from '@/src/types/routes';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
+import { pollRevalidationTask } from '@/src/utils/api/revalidation-polling';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import HeaderButtons from './Header';
 import TestCasesSchemaModal from './TestCasesSchemaModal';
@@ -262,12 +264,34 @@ const TestCasesList: FC<Props> = ({
 
       importDatasetTestCases(datasetId, body, mode, strategy).then((res) => {
         if (res?.success) {
-          showNotification(
-            getSuccessNotification(t(TestSuitesI18nKey.ImportSuccess), t(TestSuitesI18nKey.ImportSuccessDescription)),
-          );
-          if (res.status === 202) {
+          const result = (res.response ?? {}) as Partial<CsvImportResult> & { taskId?: string };
+          const validCount = result.validCount ?? 0;
+          const totalRows = result.totalRows ?? 0;
+          const skippedCount = result.skippedCount ?? 0;
+          const overriddenCount = result.overriddenCount ?? 0;
+
+          const summary =
+            totalRows > 0
+              ? t(TestSuitesI18nKey.ImportSummary, {
+                  validCount: String(validCount),
+                  totalRows: String(totalRows),
+                  skippedCount: String(skippedCount),
+                  overriddenCount: String(overriddenCount),
+                })
+              : t(TestSuitesI18nKey.ImportSuccessDescription);
+
+          const description =
+            res.status === 202 ? `${summary} ${t(TestSuitesI18nKey.ImportRevalidationStarted)}` : summary;
+
+          showNotification(getSuccessNotification(t(TestSuitesI18nKey.ImportSuccess), description));
+
+          if (res.status === 202 && result.taskId) {
             setIsLoading(true);
-            router.refresh();
+            void pollRevalidationTask(datasetId, result.taskId).promise.then(() => {
+              setIsLoading(false);
+              router.refresh();
+              refreshGrid();
+            });
           } else {
             refreshGrid();
           }

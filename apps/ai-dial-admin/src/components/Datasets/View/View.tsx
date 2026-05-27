@@ -3,10 +3,12 @@
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { isEqual } from 'lodash';
 import { useRouter } from 'next/navigation';
 
 import {
   batchPutDatasetTestCases,
+  getDataset,
   patchDatasetVisibility,
   removeDataset,
   updateDataset,
@@ -14,6 +16,7 @@ import {
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import ApplicationFileManager from '@/src/components/Common/FileSelectInput/ApplicationFileManager';
+import RevalidationTaskIndicator from '@/src/components/Common/RevalidationTaskIndicator';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
@@ -22,10 +25,11 @@ import SchemaManager from '@/src/components/TestSuites/TestCaseSchema/SchemaMana
 import { DatasetsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
-import { Dataset } from '@/src/models/evaluation/dataset';
+import { Dataset, RevalidationTask } from '@/src/models/evaluation/dataset';
 import { TestCase, TestCaseBatchPutItem, TestCaseSchema } from '@/src/models/evaluation/test-suite';
 import { DatasetVisibility } from '@/src/types/evaluation';
 import { ApplicationRoute } from '@/src/types/routes';
+import { pollRevalidationTask } from '@/src/utils/api/revalidation-polling';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getPrepareNotification, getSuccessNotification } from '@/src/utils/notification';
 import { EntityViewTab, getDatasetTabs } from '@/src/utils/tabs/utils';
@@ -49,6 +53,7 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
   const [isChanged, setIsChanged] = useState(false);
   const [hasTestCaseChanges, setHasTestCaseChanges] = useState(false);
   const [isChangingVisibility, setIsChangingVisibility] = useState(false);
+  const [revalidationTask, setRevalidationTask] = useState<RevalidationTask | null>(null);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({ isEditorEnabled: false, onToggleEditor: () => undefined }),
@@ -87,30 +92,73 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
     return true;
   }, [dataset.id, showNotification]);
 
-  const onSave = useCallback(async () => {
-    const datasetDirty = !isEqualSkippingUndefined(originalDataset, dataset);
-    if (datasetDirty) {
-      const res = await updateDataset(
+  const putDataset = useCallback(
+    (currentEtag: string) =>
+      updateDataset(
         dataset.id,
         {
           name: dataset.name,
           description: dataset.description,
           testCaseSchema: dataset.testCaseSchema,
         },
-        etag,
-      );
-      if (!res?.success) {
-        showNotification(getErrorNotification(res?.errorHeader, res?.errorMessage, res?.requestId));
-        return;
+        currentEtag,
+      ),
+    [dataset.description, dataset.id, dataset.name, dataset.testCaseSchema],
+  );
+
+  const onSave = useCallback(async () => {
+    const datasetDirty = !isEqualSkippingUndefined(originalDataset, dataset);
+    let res = datasetDirty ? await putDataset(etag) : null;
+
+    // 412 retry: silently re-fetch latest etag and retry once if the user's edits
+    // don't overlap with any server-side changes to the same fields.
+    if (res && !res.success && res.status === 412) {
+      const fresh = await getDataset(dataset.id, '');
+      if (fresh?.success && fresh.response) {
+        const remote = fresh.response as Dataset;
+        const userEditedFields: Array<keyof Dataset> = ['name', 'description', 'testCaseSchema'];
+        const overlap = userEditedFields.some(
+          (f) => !isEqual(originalDataset[f], dataset[f]) && !isEqual(originalDataset[f], remote[f]),
+        );
+        if (!overlap) {
+          res = await putDataset(fresh.etag || '');
+        } else {
+          showNotification(
+            getErrorNotification(
+              t(DatasetsI18nKey.VersionConflictTitle),
+              t(DatasetsI18nKey.VersionConflictMessage),
+              res.requestId,
+            ),
+          );
+          return;
+        }
       }
     }
+
+    if (res && !res.success) {
+      showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+      return;
+    }
+
+    // 202 → schema-changing put spawned a revalidation task; start polling.
+    if (res && res.status === 202 && res.response && typeof res.response === 'object') {
+      const task = res.response as RevalidationTask;
+      setRevalidationTask(task);
+      void pollRevalidationTask(dataset.id, task.taskId, {
+        onProgress: (t) => setRevalidationTask(t),
+      }).promise.then((final) => {
+        setRevalidationTask(final);
+        router.refresh();
+      });
+    }
+
     const tcOk = await saveDirtyTestCases();
     if (!tcOk) return;
     testCasesActionsRef.current?.clearDirtyAndRefresh();
     setHasTestCaseChanges(false);
     showNotification(getSuccessNotification(t(DatasetsI18nKey.UpdateDataset), `${dataset.name} updated`));
     router.refresh();
-  }, [dataset, etag, originalDataset, router, saveDirtyTestCases, showNotification, t]);
+  }, [dataset, etag, originalDataset, putDataset, router, saveDirtyTestCases, showNotification, t]);
 
   const onChangeSchema = useCallback((schema: TestCaseSchema[]) => {
     setDataset((d) => ({ ...d, testCaseSchema: schema }));
@@ -178,6 +226,7 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
           onClick={onToggleVisibility}
           disabled={isChangingVisibility}
         />
+        <RevalidationTaskIndicator task={revalidationTask} />
       </SimpleEntityHeader>
 
       <div className="flex-1 overflow-auto min-h-0">
