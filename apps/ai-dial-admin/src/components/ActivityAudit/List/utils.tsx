@@ -200,3 +200,29 @@ export const areFiltersEquals = (filters1: Record<string, FilterDto>, filters2: 
 
   return true;
 };
+
+export const processActivitiesData = (data: DialActivity[], childrenActivityMap: Record<string, DialActivity[]>) => {
+  const processedData: DialActivity[] = [];
+
+  data.forEach((activity: DialActivity) => {
+    if (!activity?.parentActivityId) {
+      const activityWithChildren = {
+        ...activity,
+        resourceId:
+          activity.resourceType === ActivityAuditResourceType.ADMIN_PROPERTIES ||
+          activity.resourceType === ActivityAuditResourceType.SYSTEM_PROPERTIES
+            ? ''
+            : activity.resourceId,
+        children: childrenActivityMap?.[activity.activityId] || [],
+        expanded: true,
+        canToggleExpand: false,
+      };
+      processedData.push(activityWithChildren);
+    }
+
+    const childrenToPush = childrenActivityMap?.[activity.activityId] || [];
+    processedData.push(...childrenToPush);
+  });
+
+  return processedData;
+};

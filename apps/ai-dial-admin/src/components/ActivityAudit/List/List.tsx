@@ -28,6 +28,7 @@ import {
   getEndOfDay,
   getGridFilters,
   getStartOfDay,
+  processActivitiesData,
 } from '@/src/components/ActivityAudit/List/utils';
 import ActivityDetails from '@/src/components/ActivityAudit/Modals/Details';
 import { SYSTEM_ROLLBACK_ID } from '@/src/components/ActivityAudit/Rollback/constants';
@@ -63,6 +64,7 @@ import { getEntityAuditFilterId, onOpenInNewTab } from '@/src/utils/open-in-new-
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
 import { ActivityAuditResourceType, ActivityAuditView, isDeploymentManagerResource } from '@/src/types/activity-audit';
+import { FilterOperatorDto } from '@/src/types/request';
 
 interface Props {
   entity?: BaseEntity | DialApplicationScheme;
@@ -157,12 +159,12 @@ const ActivityAuditList: FC<Props> = ({
                 {
                   column: 'resourceId',
                   value: getEntityAuditFilterId(entity),
-                  operator: 'eq',
+                  operator: FilterOperatorDto.EQUALS,
                 } as FilterDto,
                 {
                   column: RESOURCE_TYPE_COLUMN,
                   value: entityType,
-                  operator: 'eq',
+                  operator: FilterOperatorDto.EQUALS,
                 } as FilterDto,
               ]
             : []),
@@ -183,7 +185,6 @@ const ActivityAuditList: FC<Props> = ({
             } else if (isDeploymentsView || entity) {
               params.successCallback(res.data, page + 1 === res.totalPages ? res.total : void 0);
             } else {
-              const newData: DialActivity[] = [];
               const parentActivitiesIds = Array.from(
                 new Set(
                   res.data.reduce((acc, a) => {
@@ -195,42 +196,13 @@ const ActivityAuditList: FC<Props> = ({
                 ),
               );
 
-              const buildResultData = () => {
-                res.data.forEach((activity: DialActivity) => {
-                  if (!activity?.parentActivityId) {
-                    const activityWithChildren = {
-                      ...activity,
-                      resourceId:
-                        activity.resourceType === ActivityAuditResourceType.ADMIN_PROPERTIES ||
-                        activity.resourceType === ActivityAuditResourceType.SYSTEM_PROPERTIES
-                          ? ''
-                          : activity.resourceId,
-                      children: childrenCacheRef.current[activity.activityId] || [],
-                      expanded: true,
-                      canToggleExpand: false,
-                    };
-                    newData.push(activityWithChildren);
-                  }
+              const missingParentIds = parentActivitiesIds.filter((id) => !childrenCacheRef.current[id]);
 
-                  const childrenToPush = childrenCacheRef.current[activity.activityId] || [];
-                  newData.push(...childrenToPush);
-                });
+              if (parentActivitiesIds.length === 0 || missingParentIds.length === 0) {
+                const newData = processActivitiesData(res.data, childrenCacheRef.current);
                 totalActivitiesRef.current += newData.length;
 
                 params.successCallback(newData, page + 1 === res.totalPages ? totalActivitiesRef.current : void 0);
-              };
-
-              if (parentActivitiesIds.length === 0) {
-                buildResultData();
-                gridApi?.setGridOption('loading', false);
-
-                return;
-              }
-
-              const missingParentIds = parentActivitiesIds.filter((id) => !childrenCacheRef.current[id]);
-
-              if (missingParentIds.length === 0) {
-                buildResultData();
                 gridApi?.setGridOption('loading', false);
 
                 return;
@@ -240,7 +212,7 @@ const ActivityAuditList: FC<Props> = ({
                 {
                   column: 'parentActivityId',
                   value: missingParentIds.join(','),
-                  operator: 'in',
+                  operator: FilterOperatorDto.INCLUDES,
                 } as FilterDto,
               ];
 
@@ -271,7 +243,10 @@ const ActivityAuditList: FC<Props> = ({
                   }
                 });
 
-                buildResultData();
+                const newData = processActivitiesData(res.data, childrenCacheRef.current);
+                totalActivitiesRef.current += newData.length;
+
+                params.successCallback(newData, page + 1 === res.totalPages ? totalActivitiesRef.current : void 0);
               });
             }
             gridApi?.setGridOption('loading', false);
