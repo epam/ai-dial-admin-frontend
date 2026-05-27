@@ -6,15 +6,15 @@ import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import classNames from 'classnames';
 
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { MetricGroup as MetricGroupModel } from '@/src/components/Runs/View/models';
 import { RunsI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { MetricBinding } from '@/src/models/evaluation/metric';
 import { MetricBindingType } from '@/src/types/evaluation';
-import { MetricGroup as MetricGroupModel } from '@/src/components/Runs/View/models';
-
 import MetricCardsGrid from './MetricCardsGrid';
 import MetricInfoPanel from './MetricInfoPanel';
+import { formatBindingValue } from './utils';
 
 interface Props {
   group: MetricGroupModel;
@@ -51,7 +51,7 @@ const BindingsSection: FC<BindingsSectionProps> = ({ label, bindings, isExpanded
           const chipClass = BINDING_CHIP_CLASSES[binding.source.$type as MetricBindingType] ?? '';
           const value =
             binding.source.$type === MetricBindingType.Constant
-              ? String(binding.source.value ?? '')
+              ? formatBindingValue(binding.source.value)
               : (binding.source.columnName ?? '');
           return (
             <div

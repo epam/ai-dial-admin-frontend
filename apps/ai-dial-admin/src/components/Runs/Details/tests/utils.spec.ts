@@ -3,6 +3,7 @@ import { describe, expect, test } from 'vitest';
 import {
   createArrayItems,
   createStructuredObjectValue,
+  formatBindingValue,
   getArrayItemText,
   isFlatStringArray,
   isPlainObject,
@@ -57,5 +58,23 @@ describe('AdaptiveValueRow utils', () => {
     expect(toPrimitiveValue(42)).toBe('42');
     expect(toPrimitiveValue(null)).toBe('null');
     expect(toPrimitiveValue('text')).toBe('text');
+  });
+
+  test('Should format binding values for display', () => {
+    expect(formatBindingValue(null)).toBe('');
+    expect(formatBindingValue(undefined)).toBe('');
+    expect(formatBindingValue('plain text')).toBe('plain text');
+    expect(formatBindingValue(42)).toBe('42');
+    expect(formatBindingValue(true)).toBe('true');
+    expect(formatBindingValue({ key: 'value' })).toBe('{"key":"value"}');
+    expect(formatBindingValue(['a', 'b'])).toBe('["a","b"]');
+    expect(formatBindingValue({ nested: { count: 1 } })).toBe('{"nested":{"count":1}}');
+  });
+
+  test('Should fall back when binding value cannot be stringified', () => {
+    const circular: Record<string, unknown> = {};
+    circular.self = circular;
+
+    expect(formatBindingValue(circular)).toBe('[object Object]');
   });
 });
