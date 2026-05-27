@@ -372,7 +372,6 @@ describe('createNewTestCaseRow', () => {
   test('should return a default test case row shape', () => {
     const result = createNewTestCaseRow();
 
-    expect(result.enabled).toBe(true);
     expect(result.data).toEqual({});
     expect(result.createdAt).toBe(0);
     expect(result.updatedAt).toBe(0);
@@ -385,7 +384,6 @@ describe('rowToTestCase', () => {
   test('should map row fields to test case object', () => {
     const row: Record<string, unknown> = {
       id: 'test-case-id',
-      enabled: false,
       testCaseName: 'Case A',
       createdAt: 1710000000,
       updatedAt: 1710000001,
@@ -398,7 +396,6 @@ describe('rowToTestCase', () => {
 
     expect(result).toEqual({
       id: 'test-case-id',
-      enabled: false,
       testCaseName: 'Case A',
       createdAt: 1710000000,
       updatedAt: 1710000001,
@@ -411,7 +408,6 @@ describe('rowToTestCase', () => {
   test('should preserve undefined optional values', () => {
     const row: Record<string, unknown> = {
       id: 'test-case-id',
-      enabled: true,
       testCaseName: undefined,
       createdAt: 0,
       updatedAt: undefined,
@@ -424,7 +420,6 @@ describe('rowToTestCase', () => {
 
     expect(result).toEqual({
       id: 'test-case-id',
-      enabled: true,
       testCaseName: undefined,
       createdAt: 0,
       updatedAt: undefined,
