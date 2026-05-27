@@ -22,11 +22,13 @@ export const getGridColumns = (
     field: 'version',
     headerName: 'Version',
     width: 200,
+    autoHeight: true,
+    wrapText: true,
     cellRenderer: (params: SelectCellRendererParams & { data: AssetWithVersion }) => {
       const selectedItemKey = `${params.data.folderId}${params.data.name}`;
       if (selectedVersionsMap?.[selectedItemKey]) {
         return (
-          <div className="flex gap-1">
+          <div className="flex flex-wrap gap-1 py-1">
             {selectedVersionsMap?.[selectedItemKey]?.map((v: string) => (
               <DialTag key={`${params.data.name}__${v}`} tag={v} className="max-w-full bg-layer-4 border-0 p-2" />
             ))}
@@ -34,7 +36,7 @@ export const getGridColumns = (
         );
       } else if (params.data.version) {
         return (
-          <div className="flex gap-1">
+          <div className="flex flex-wrap gap-1 py-1">
             <DialTag
               key={`${params.data.name}__${params.data.version}`}
               tag={params.data.version}
