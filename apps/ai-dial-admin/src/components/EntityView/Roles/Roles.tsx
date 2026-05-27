@@ -1,7 +1,7 @@
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { AlertVariant, DialAlert } from '@epam/ai-dial-ui-kit';
+import { NotificationVariant, DialNotification } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
@@ -202,7 +202,7 @@ const EntityRoles: FC<Props> = ({ entity, roles, view, onChangeEntity, isSkipRef
         </div>
       </div>
       {isDisableRole(entity) && view !== ApplicationRoute.Routes && (
-        <DialAlert variant={AlertVariant.Info} message={t(getNoAvailableTitle(view))} />
+        <DialNotification variant={NotificationVariant.Info} message={t(getNoAvailableTitle(view))} />
       )}
       {!isReadOnlyAdmin &&
         isModalOpen &&

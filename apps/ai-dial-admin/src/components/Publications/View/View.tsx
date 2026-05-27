@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { AlertVariant, DialAlert } from '@epam/ai-dial-ui-kit';
+import { NotificationVariant, DialNotification } from '@epam/ai-dial-ui-kit';
 
 import { getRules } from '@/src/app/[lang]/folders-storage/actions';
 import { signInToolset, signOutToolset } from '@/src/app/[lang]/toolsets/actions';
@@ -171,9 +171,9 @@ const PublicationView = <T extends Publication>({ view, publication, application
   const warning = useMemo(() => {
     if (publication.resourceIssues?.length) {
       return (
-        <DialAlert
+        <DialNotification
           className="mt-8"
-          variant={AlertVariant.Warning}
+          variant={NotificationVariant.Warning}
           message={
             <div className="flex flex-col gap-3">
               <h3>{publication.resourceIssues[0].message}</h3>

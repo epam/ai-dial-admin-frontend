@@ -1,6 +1,6 @@
 import { FC, useMemo } from 'react';
 
-import { ButtonAppearance, DialErrorButton } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, DialDangerButton } from '@epam/ai-dial-ui-kit';
 import { IconTrashX } from '@tabler/icons-react';
 
 import PromptProperties from '@/src/components/Assets/Prompts/View/Properties';
@@ -25,7 +25,7 @@ const PromptHeader: FC<HeaderProps> = ({ isCollapsed, promptName, changeName, re
     <div className="flex items-center justify-between gap-4 ml-1 w-full h-[38px]">
       <EditableTitle size={3} title={promptName || ''} changeTitle={changeName} disabled={isCollapsed} />
       {!isCollapsed && (
-        <DialErrorButton
+        <DialDangerButton
           label={t(ButtonsI18nKey.Delete)}
           appearance={ButtonAppearance.Outlined}
           iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}

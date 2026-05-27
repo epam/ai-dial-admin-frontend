@@ -1,6 +1,6 @@
 ## Context
 
-Container detail pages (`ContainerView` → `TabsContent`) already receive an optional `image` prop fetched at the page route level via `getImage(container.source.imageDefinitionId)`. The `Image` model has a `buildStatus` field (`NOT_BUILT`, `BUILDING`, `BUILT`, `BUILD_FAILED`). The app already has `installImage(id)` server action, `ImageInstall` confirmation modal, and `DialAlert` component that accepts `ReactNode` as `message`.
+Container detail pages (`ContainerView` → `TabsContent`) already receive an optional `image` prop fetched at the page route level via `getImage(container.source.imageDefinitionId)`. The `Image` model has a `buildStatus` field (`NOT_BUILT`, `BUILDING`, `BUILT`, `BUILD_FAILED`). The app already has `installImage(id)` server action, `ImageInstall` confirmation modal, and `DialNotification` component that accepts `ReactNode` as `message`.
 
 ## Goals / Non-Goals
 
@@ -17,9 +17,9 @@ Container detail pages (`ContainerView` → `TabsContent`) already receive an op
 
 ## Decisions
 
-**Warning banner using `DialAlert` with custom `ReactNode` message**
+**Warning banner using `DialNotification` with custom `ReactNode` message**
 
-Render a `DialAlert` with `AlertVariant.Warning` at the top of the Properties tab content in `TabsContent.tsx`. The `message` prop receives a flex row layout containing:
+Render a `DialNotification` with `NotificationVariant.Warning` at the top of the Properties tab content in `TabsContent.tsx`. The `message` prop receives a flex row layout containing:
 - Left: warning text with bold image name and version (using `Trans` or interpolation)
 - Right: `DialNeutralButton` with `IconBlocks` icon and "Install image" label
 
@@ -54,7 +54,7 @@ Two i18n keys with interpolation for image name and version:
 
 ```
 TabsContent (Properties tab active)
-├── DialAlert (variant=Warning, visible when imageNotInstalled)
+├── DialNotification (variant=Warning, visible when imageNotInstalled)
 │   └── message: ReactNode
 │       ├── <span> warning text with bold image name/version
 │       └── DialNeutralButton (iconBefore=IconBlocks, label="Install image")
@@ -66,6 +66,6 @@ TabsContent (Properties tab active)
 
 ## Risks / Trade-offs
 
-- **Low risk**: Reuses existing components (`DialAlert`, `ImageInstall`, `DialNeutralButton`) and server actions (`installImage`)
+- **Low risk**: Reuses existing components (`DialNotification`, `ImageInstall`, `DialNeutralButton`) and server actions (`installImage`)
 - **Navigation away from container**: After installing, the user leaves the container page. This is intentional — they need to monitor the image build on the image page. They can navigate back via breadcrumbs.
 - **No real-time status update**: If the image gets installed while the container page is open, the warning won't disappear until page refresh. This is acceptable since the install action navigates away anyway.

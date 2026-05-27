@@ -7,7 +7,7 @@ Entity detail views for Models, Applications, Toolsets, and Interceptors SHALL r
 #### Scenario: Model with stopped container shows banner
 
 - **WHEN** a user opens `/[lang]/models/[id]` for a model whose `source.$type === 'container'`, `source.containerId === 'ykchattest'`, and the container with `name === 'ykchattest'` has `status === 'stopped'`
-- **THEN** the detail view SHALL render a `DialAlert` with `variant === AlertVariant.Warning` positioned between the tabs bar and the tab content
+- **THEN** the detail view SHALL render a `DialNotification` with `variant === NotificationVariant.Warning` positioned between the tabs bar and the tab content
 
 #### Scenario: Application with crashed container shows banner
 
@@ -68,7 +68,7 @@ When the banner is rendered (i.e., the View's gates pass) but the `containerId` 
 
 ### Requirement: Banner renders "Go to Container" navigation button
 
-The banner SHALL include a button labelled `t(ContainersI18nKey.GoToContainer)` ("Go to Container") rendered as a child of `DialAlert`. Clicking the button SHALL open the container's detail page in a new tab via `onOpenInNewTab(getContainerRoute(view), { name: containerId })`, where `containerId` is the prop received from the parent View.
+The banner SHALL include a button labelled `t(ContainersI18nKey.GoToContainer)` ("Go to Container") rendered as a child of `DialNotification`. Clicking the button SHALL open the container's detail page in a new tab via `onOpenInNewTab(getContainerRoute(view), { name: containerId })`, where `containerId` is the prop received from the parent View.
 
 #### Scenario: Go to Container opens container detail for Models
 
@@ -160,19 +160,19 @@ Each of the four entity Views (`Models/View/View.tsx`, `Applications/View/View.t
 #### Scenario: Models view places banner between header and content
 
 - **WHEN** the Models detail view renders and the banner's trigger conditions are met
-- **THEN** the `DialAlert` SHALL appear in the DOM after the tab-bar header and before the tab-content scroll container
+- **THEN** the `DialNotification` SHALL appear in the DOM after the tab-bar header and before the tab-content scroll container
 
 #### Scenario: Applications view places banner between header and content
 
 - **WHEN** the Applications detail view renders and the banner's trigger conditions are met
-- **THEN** the `DialAlert` SHALL appear in the DOM after the tab-bar header and before the tab-content scroll container
+- **THEN** the `DialNotification` SHALL appear in the DOM after the tab-bar header and before the tab-content scroll container
 
 #### Scenario: Toolsets view places banner between header and content
 
 - **WHEN** the Toolsets detail view renders and the banner's trigger conditions are met
-- **THEN** the `DialAlert` SHALL appear in the DOM after the tab-bar header and before the tab-content scroll container
+- **THEN** the `DialNotification` SHALL appear in the DOM after the tab-bar header and before the tab-content scroll container
 
 #### Scenario: Interceptors view places banner between header and content
 
 - **WHEN** the Interceptors detail view renders and the banner's trigger conditions are met
-- **THEN** the `DialAlert` SHALL appear in the DOM after the tab-bar header and before the tab-content scroll container
+- **THEN** the `DialNotification` SHALL appear in the DOM after the tab-bar header and before the tab-content scroll container

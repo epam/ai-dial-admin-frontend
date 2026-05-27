@@ -40,7 +40,7 @@
 - [x] 4.1 Create `apps/ai-dial-admin/src/components/ImportConfig/ConfigurationPreview/ValidationBanner.tsx`
   - Props: `{ count: number }`
   - Renders nothing when `count <= 0`
-  - Otherwise renders `DialAlert` (error variant) with translated message including `count`
+  - Otherwise renders `DialNotification` (error variant) with translated message including `count`
   - Use `useI18n()` and `ImportI18nKey.ValidationBannerMessage`
 
 ## 5. Validation state cell renderer

@@ -9,7 +9,7 @@ Entity detail views for Models, Applications, Toolsets, Interceptors, and Adapte
 #### Scenario: Model with stopped container shows banner on Properties tab
 
 - **WHEN** a user opens `/[lang]/models/[id]` for a model whose `source.$type === 'container'`, `source.containerId === 'ykchattest'`, the container with `name === 'ykchattest'` has `status === 'stopped'`, and the active tab is Properties
-- **THEN** the detail view SHALL render an `EntityBanner` with `variant === AlertVariant.Warning` positioned above `<PropertiesTabContent>` inside the Properties tab content
+- **THEN** the detail view SHALL render an `EntityBanner` with `variant === NotificationVariant.Warning` positioned above `<PropertiesTabContent>` inside the Properties tab content
 
 #### Scenario: Application with crashed container shows banner on Properties tab
 
@@ -80,7 +80,7 @@ When the banner is rendered (i.e., the View's gates pass) but the `containerId` 
 
 ### Requirement: Banner renders "Go to Container" navigation button
 
-The banner SHALL include a button labelled `t(ContainersI18nKey.GoToContainer)` ("Go to Container") rendered as a child of `DialAlert`. Clicking the button SHALL open the container's detail page in a new tab via `onOpenInNewTab(getContainerRoute(view), { name: containerId })`, where `containerId` is the prop received from the parent View.
+The banner SHALL include a button labelled `t(ContainersI18nKey.GoToContainer)` ("Go to Container") rendered as a child of `DialNotification`. Clicking the button SHALL open the container's detail page in a new tab via `onOpenInNewTab(getContainerRoute(view), { name: containerId })`, where `containerId` is the prop received from the parent View.
 
 #### Scenario: Go to Container opens container detail for Models
 
@@ -206,13 +206,13 @@ Each entity view's `TabsContent` (`Models/View/TabsContent.tsx`, `Applications/V
 
 ### Requirement: ContainerStatusBanner delegates rendering to EntityBanner
 
-`ContainerStatusBanner.tsx` SHALL retain its existing data-fetch logic (resolving the container client-side via the route-specific `getContainersByView(view)` dispatcher), trigger conditions, and props (`view`, `containerId`). It SHALL replace its local `DialAlert` markup with a render of the shared `<EntityBanner>` component, passing the existing title (`t(ContainersI18nKey.ContainerNotRunningTitle, ...)`), description (`t(ContainersI18nKey.ContainerNotRunningDescription, ...)`), `className="mb-6"` (preserving current spacing), and the existing `Go to Container` `DialNeutralButton` as `EntityBanner` children. `ContainerStatusBanner` SHALL NOT import `DialAlert` directly.
+`ContainerStatusBanner.tsx` SHALL retain its existing data-fetch logic (resolving the container client-side via the route-specific `getContainersByView(view)` dispatcher), trigger conditions, and props (`view`, `containerId`). It SHALL replace its local `DialNotification` markup with a render of the shared `<EntityBanner>` component, passing the existing title (`t(ContainersI18nKey.ContainerNotRunningTitle, ...)`), description (`t(ContainersI18nKey.ContainerNotRunningDescription, ...)`), `className="mb-6"` (preserving current spacing), and the existing `Go to Container` `DialNeutralButton` as `EntityBanner` children. `ContainerStatusBanner` SHALL NOT import `DialNotification` directly.
 
 #### Scenario: ContainerStatusBanner imports EntityBanner
 
 - **WHEN** `ContainerStatusBanner.tsx` is read after the change
 - **THEN** it SHALL import `EntityBanner` from `@/src/components/Deployments/Common/EntityBanner/EntityBanner`
-- **AND** SHALL NOT import `DialAlert` from `@epam/ai-dial-ui-kit`
+- **AND** SHALL NOT import `DialNotification` from `@epam/ai-dial-ui-kit`
 
 #### Scenario: Title, description, and CTA are forwarded to EntityBanner
 
