@@ -114,6 +114,16 @@ export const isNullOnly = (schema: JSONSchema7): boolean => {
  * @param {JSONSchema7} root - root schema for resolving $ref
  * @returns {(JSONSchema7 | null)} - effective schema with $ref resolved and anyOf/oneOf handled, or null if it cannot be determined
  */
+const getVariantScore = (schema: JSONSchema7): number => {
+  if (schema.properties && Object.keys(schema.properties).length > 0) {
+    return 2;
+  }
+  if (schema.type && !isNullOnly(schema)) {
+    return 1;
+  }
+  return 0;
+};
+
 export const getEffectiveSchema = (def: JSONSchema7Definition, root: JSONSchema7): JSONSchema7 | null => {
   if (typeof def !== 'object' || !def) {
     return null;
@@ -124,15 +134,19 @@ export const getEffectiveSchema = (def: JSONSchema7Definition, root: JSONSchema7
   }
   const variants = current.anyOf ?? current.oneOf;
   if (Array.isArray(variants) && variants.length > 0) {
-    const chosen = variants.find((v) => {
-      if (typeof v !== 'object' || !v) {
-        return false;
-      }
-      const resolved = resolveDef(v, root) as JSONSchema7;
-      return !isNullOnly(resolved);
-    });
-    const variant = chosen ?? variants[0];
-    if (typeof variant === 'object' && variant) {
+    // Parent already defines shape (e.g. anyOf used only for validation constraints).
+    if (current.properties && Object.keys(current.properties).length > 0) {
+      return current;
+    }
+    const resolvedVariants = variants
+      .map((v) => (typeof v === 'object' && v ? (resolveDef(v, root) as JSONSchema7) : null))
+      .filter((v): v is JSONSchema7 => !!v && !isNullOnly(v));
+    const chosen =
+      resolvedVariants.length > 0
+        ? resolvedVariants.reduce((best, v) => (getVariantScore(v) > getVariantScore(best) ? v : best))
+        : null;
+    const variant = chosen ?? (typeof variants[0] === 'object' && variants[0] ? variants[0] : null);
+    if (variant) {
       const resolved = resolveDef(variant, root) as JSONSchema7;
       return resolved ?? null;
     }
