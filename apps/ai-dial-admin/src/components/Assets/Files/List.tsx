@@ -86,16 +86,12 @@ const FilesList = () => {
 
       importFiles(body, fileType).then((res) => {
         setFolderToRefetch(null);
+        const importResults = res.success ? res.response?.importResults : undefined;
+
         if (res.success) {
           fetchFiles?.(destinationFolder);
           const { title, description, errorTitle, errorDescription, skippedTitle, skippedDescription } =
-            getImportNotificationContent(
-              ApplicationRoute.Files,
-              res.response.importResults,
-              fileType,
-              destinationFolder,
-              t,
-            );
+            getImportNotificationContent(ApplicationRoute.Files, importResults, fileType, destinationFolder, t);
           if (title && description) {
             showNotification(getSuccessNotification(title, description));
           }

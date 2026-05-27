@@ -54,13 +54,13 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
         {breadcrumbs.map(({ href, key, name, callback }, index) => {
           const label = key ? t(key) : name;
           const linkClassName = classNames(
-            'flex text-secondary relative group-[:last-child]:text-primary w-full',
-            'group-[:last-child]:pointer-events-none group-[:not(:last-child)]:hover:text-accent-primary group-[:not(:last-child)]:focus-within:text-accent-primary',
+            'flex-1 min-w-0 text-secondary relative group-[:last-child]:text-primary',
+            'group-[:last-child]:cursor-default group-[:not(:last-child)]:hover:text-accent-primary group-[:not(:last-child)]:focus-within:text-accent-primary',
             !href.length && 'pointer-events-none',
           );
 
           return (
-            <li key={`${href}_${index}`} className="flex items-center group max-w-[300px] truncate">
+            <li key={`${href}_${index}`} className="flex items-center group max-w-[300px] overflow-hidden">
               {callback ? (
                 <Link
                   prefetch={false}
@@ -79,7 +79,7 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
                 </Link>
               )}
               {breadcrumbs.length !== index + 1 && (
-                <IconChevronRight width={16} height={16} className="text-secondary" />
+                <IconChevronRight width={12} height={12} className="text-secondary m-1" />
               )}
             </li>
           );
