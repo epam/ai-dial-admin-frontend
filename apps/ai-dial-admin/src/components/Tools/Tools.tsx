@@ -1,8 +1,8 @@
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
-  AlertVariant,
-  DialAlert,
+  NotificationVariant,
+  DialNotification,
   DialLoader,
   DialNoDataContent,
   DialPrimaryButton,
@@ -334,7 +334,7 @@ const Tools: FC<Props> = ({
       </div>
 
       {isNotSavedToolset && !disabled && (
-        <DialAlert variant={AlertVariant.Info} message={t(ToolsetI18nKey.ToolsWarning)} />
+        <DialNotification variant={NotificationVariant.Info} message={t(ToolsetI18nKey.ToolsWarning)} />
       )}
       {!useAllTools && !disabled && <span className="tiny text-secondary">{t(ToolsetI18nKey.Warning)}</span>}
       {isModalOpen && (

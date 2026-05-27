@@ -64,11 +64,11 @@ Each row in the deployment preview SHALL receive `row.__import = { validationSta
 ---
 
 ### Requirement: Per-tab validation banner
-A `ValidationBanner` component SHALL render inside the active tab's content area (between `DialTabs` and the grid) whenever `validationSummary.errorsByTab[selectedTab] > 0`. The banner MUST render nothing for tabs that have no failures and for the Global Firewall tab. The message SHALL be composed of two i18n keys: `ImportI18nKey.ValidationBannerHeading` (rendered with `dial-small-semi-text`, interpolating `{count}`) followed by `ImportI18nKey.ValidationBannerHelp` (rendered with `dial-small-text`). The component uses `DialAlert` with `AlertVariant.Error`.
+A `ValidationBanner` component SHALL render inside the active tab's content area (between `DialTabs` and the grid) whenever `validationSummary.errorsByTab[selectedTab] > 0`. The banner MUST render nothing for tabs that have no failures and for the Global Firewall tab. The message SHALL be composed of two i18n keys: `ImportI18nKey.ValidationBannerHeading` (rendered with `dial-small-semi-text`, interpolating `{count}`) followed by `ImportI18nKey.ValidationBannerHelp` (rendered with `dial-small-text`). The component uses `DialNotification` with `NotificationVariant.Error`.
 
 #### Scenario: Banner appears on the active tab when that tab has errors
 - **WHEN** the active tab's failure count is `2`
-- **THEN** the banner is visible inside that tab's content area, rendered as a `DialAlert` whose message contains the heading text (semi-bold, with the count interpolated) and the help text (regular weight)
+- **THEN** the banner is visible inside that tab's content area, rendered as a `DialNotification` whose message contains the heading text (semi-bold, with the count interpolated) and the help text (regular weight)
 
 #### Scenario: Banner is hidden when active tab has no errors
 - **WHEN** the active tab's failure count is `0`
@@ -172,7 +172,7 @@ The `importDeploymentConfig` action's error path SHALL remain identical to today
 ---
 
 ### Requirement: Performance and accessibility
-The validation enrichment SHALL run once per preview response in O(n) over the errors array; no memoization is required because the response arrives once per upload. The banner and tooltip primitives (`DialAlert`, `DialTooltip`) MUST inherit accessibility behavior from `@epam/ai-dial-ui-kit` (WCAG AA target). The State cell's tooltip trigger MUST carry an `aria-label` matching the state label so screen readers announce failure context even if the tooltip text is not exposed.
+The validation enrichment SHALL run once per preview response in O(n) over the errors array; no memoization is required because the response arrives once per upload. The banner and tooltip primitives (`DialNotification`, `DialTooltip`) MUST inherit accessibility behavior from `@epam/ai-dial-ui-kit` (WCAG AA target). The State cell's tooltip trigger MUST carry an `aria-label` matching the state label so screen readers announce failure context even if the tooltip text is not exposed.
 
 #### Scenario: Single-pass enrichment
 - **WHEN** the preview response is processed

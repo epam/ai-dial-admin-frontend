@@ -27,7 +27,7 @@ We extend the response, the preview-build util, the grid, the wizard step status
 
 - Surface validation errors at preview time, per row, per tab, per active-tab banner, in the wizard step indicator, and globally on the Import button.
 - Block Import while preview-time errors exist.
-- Reuse existing ui-kit affordances (`TabModel.invalid`, `DialTooltip`, `DialAlert`, `StepStatus`) — no new visual primitives.
+- Reuse existing ui-kit affordances (`TabModel.invalid`, `DialTooltip`, `DialNotification`, `StepStatus`) — no new visual primitives.
 - Keep the data model honest: each row stays a faithful BE entity, FE-only metadata isolated under a single `__import` namespace.
 
 **Non-goals**:
@@ -95,7 +95,7 @@ Multi-candidate trades a few cheap lookups for resilience to BE convention drift
 - `ImportI18nKey.ValidationBannerHeading` — semi-bold, with `{count}` interpolation: *"{count} artifacts could not be imported."*
 - `ImportI18nKey.ValidationBannerHelp` — regular: *"Update or replace the invalid files and try uploading again."*
 
-Renders inside `DialAlert` (`AlertVariant.Error`).
+Renders inside `DialNotification` (`NotificationVariant.Error`).
 
 ### 5. State column renderer
 

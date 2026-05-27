@@ -1,8 +1,8 @@
 'use client';
 
 import {
-  AlertVariant,
-  DialAlert,
+  NotificationVariant,
+  DialNotification,
   DialRadioGroup,
   RadioButtonWithContent,
   RadioGroupOrientation,
@@ -120,7 +120,7 @@ const Whitelists: FC<Props> = ({ entity, setEntity, route, disabled }) => {
         disabled={disabled}
       />
       {currentPolicy === WHITELIST_POLICY.ALL ? (
-        <DialAlert
+        <DialNotification
           id="alert"
           message={
             <p className="small">
@@ -130,7 +130,7 @@ const Whitelists: FC<Props> = ({ entity, setEntity, route, disabled }) => {
               })}
             </p>
           }
-          variant={AlertVariant.Warning}
+          variant={NotificationVariant.Warning}
         />
       ) : (
         <div className="flex flex-col ml-[34px] gap-8">

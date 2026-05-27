@@ -1,6 +1,6 @@
 import {
-  AlertVariant,
-  DialAlert,
+  NotificationVariant,
+  DialNotification,
   DialFormPopup,
   DialLabelledText,
   DialLoader,
@@ -71,7 +71,7 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
               containerClassName="w-[90px]"
               onChange={setValue}
             />
-            <DialAlert variant={AlertVariant.Info} message={t(TestSuitesI18nKey.RunWarning)} />
+            <DialNotification variant={NotificationVariant.Info} message={t(TestSuitesI18nKey.RunWarning)} />
           </>
         )}
       </div>
