@@ -155,7 +155,7 @@ const Endpoint: FC<Props> = ({
               id={`responses-${index}`}
               endpoint={endpoint.responsesEndpoint}
               placeholder={t(EntityPlaceholdersI18nKey.ResponsesEndpoint)}
-              caption={t(UpstreamEndpointsI18nKey.EndpointResponseCaption)}
+              caption={isFirstLine || isTablet ? t(UpstreamEndpointsI18nKey.EndpointResponseCaption) : ''}
               label={isFirstLine || isTablet ? t(EntityFieldsI18nKey.responsesEndpoint) : ''}
               onChange={onChangeResponses}
               iconAfter={<WarningIcon warningText={responsesEndpointWarning} />}
