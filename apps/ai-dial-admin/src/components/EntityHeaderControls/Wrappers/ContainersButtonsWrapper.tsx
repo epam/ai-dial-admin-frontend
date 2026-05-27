@@ -2,7 +2,7 @@ import {
   ButtonAppearance,
   ButtonVariant,
   DialButtonDropdown,
-  DialErrorButton,
+  DialDangerButton,
   DialNeutralButton,
   DropdownItem,
 } from '@epam/ai-dial-ui-kit';
@@ -217,7 +217,7 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
                   </>
                 )}
 
-                <DialErrorButton
+                <DialDangerButton
                   className={buttonsClassNames}
                   label={t(ButtonsI18nKey.Delete)}
                   appearance={ButtonAppearance.Outlined}
