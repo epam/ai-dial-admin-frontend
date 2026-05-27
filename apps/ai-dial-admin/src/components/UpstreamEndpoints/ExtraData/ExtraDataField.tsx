@@ -145,7 +145,7 @@ const ExtraDataField: FC<Props> = ({ endpoint, disabled, label, onChangeExtraDat
   }, [endpoint.extraData, t]);
 
   return (
-    <div className="flex flex-col">
+    <div className="flex w-[200px] max-w-[200px] shrink-0 flex-col overflow-hidden">
       <DialRadioGroupPopupField
         disabled={disabled}
         htmlFor="extraDataInput"
