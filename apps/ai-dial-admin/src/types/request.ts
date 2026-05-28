@@ -10,7 +10,7 @@ export enum FilterOperatorDto {
   NOT_CONTAINS = 'nc',
   LESS_THAN = 'lt',
   GREATER_THAN = 'gt',
-  LESS_THAN_OR_EQUAL = 'lte',
-  GREATER_THAN_OR_EQUAL = 'gte',
+  LESS_THAN_OR_EQUAL = 'le',
+  GREATER_THAN_OR_EQUAL = 'ge',
   INCLUDES = 'in',
 }
