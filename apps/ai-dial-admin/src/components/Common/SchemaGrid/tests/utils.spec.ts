@@ -186,6 +186,30 @@ describe('getEffectiveSchema', () => {
     };
     expect(getEffectiveSchema(def, root)).toEqual({ type: 'null' });
   });
+
+  test('should keep parent properties when anyOf only adds validation constraints', () => {
+    const root: JSONSchema7 = { type: 'object' };
+    const def: JSONSchema7 = {
+      anyOf: [{ required: ['deployment_id'] }, { required: ['name'] }],
+      properties: {
+        deployment_id: { type: 'string' },
+        name: { type: 'string' },
+      },
+      type: 'object',
+    };
+    expect(getEffectiveSchema(def, root)).toEqual(def);
+  });
+
+  test('should prefer anyOf variant with properties over required-only fragments', () => {
+    const root: JSONSchema7 = { type: 'object' };
+    const def: JSONSchema7 = {
+      anyOf: [{ required: ['id'] }, { type: 'object', properties: { id: { type: 'string' } } }],
+    };
+    expect(getEffectiveSchema(def, root)).toEqual({
+      type: 'object',
+      properties: { id: { type: 'string' } },
+    });
+  });
 });
 
 describe('jsonSchemaToFields', () => {
@@ -378,6 +402,32 @@ describe('jsonSchemaToFields', () => {
     expect(fields[0].expanded).toBe(false);
     expect(fields[0].itemsType).toBe('string');
     expect(fields[0].children).toHaveLength(0);
+  });
+
+  test('should expand $ref when target uses anyOf for alternate required fields', () => {
+    const schema: JSONSchema7 = {
+      type: 'object',
+      properties: {
+        deployment: { $ref: '#/$defs/DialDeploymentConfig' },
+      },
+      $defs: {
+        DialDeploymentConfig: {
+          anyOf: [{ required: ['deployment_id'] }, { required: ['name'] }],
+          properties: {
+            deployment_id: { type: 'string', title: 'Deployment Id' },
+            name: { type: 'string', title: 'Name' },
+            parameters: { type: 'object', properties: {} },
+          },
+          type: 'object',
+        },
+      },
+    };
+
+    const fields = jsonSchemaToFields(schema, schema);
+
+    expect(fields).toHaveLength(1);
+    expect(fields[0]).toMatchObject({ name: 'deployment', type: 'object', expanded: true });
+    expect(fields[0].children.map((c) => c.name)).toEqual(['deployment_id', 'name', 'parameters']);
   });
 
   test('should resolve $ref from $defs when building fields', () => {
