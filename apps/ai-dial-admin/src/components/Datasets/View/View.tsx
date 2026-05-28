@@ -54,6 +54,7 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
   const [hasTestCaseChanges, setHasTestCaseChanges] = useState(false);
   const [isChangingVisibility, setIsChangingVisibility] = useState(false);
   const [revalidationTask, setRevalidationTask] = useState<RevalidationTask | null>(null);
+  const [isSkipRefresh, setIsSkipRefresh] = useState(false);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({ isEditorEnabled: false, onToggleEditor: () => undefined }),
@@ -160,7 +161,8 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
     router.refresh();
   }, [dataset, etag, originalDataset, putDataset, router, saveDirtyTestCases, showNotification, t]);
 
-  const onChangeSchema = useCallback((schema: TestCaseSchema[]) => {
+  const onChangeSchema = useCallback((schema: TestCaseSchema[], skipRefresh = false) => {
+    setIsSkipRefresh(skipRefresh);
     setDataset((d) => ({ ...d, testCaseSchema: schema }));
   }, []);
 
@@ -248,7 +250,11 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
           </PropertiesTabContent>
         )}
         {activeTab === EntityViewTab.Schema && (
-          <SchemaManager testCaseSchema={dataset.testCaseSchema} onChangeTestCaseSchema={onChangeSchema} />
+          <SchemaManager
+            testCaseSchema={dataset.testCaseSchema}
+            onChangeTestCaseSchema={onChangeSchema}
+            isSkipRefresh={isSkipRefresh}
+          />
         )}
         {activeTab === EntityViewTab.TestCases && (
           <TestCasesList
