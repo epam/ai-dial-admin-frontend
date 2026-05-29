@@ -16,6 +16,7 @@ import { ErrorI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { isValidSourceField } from '@/src/components/SourceField/utils';
 import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
+import { clearUpstreamResponsesEndpoints } from '@/src/utils/models/upstream-responses';
 import { useI18n } from '@/src/locales/client';
 
 import Containers from '@/src/components/SourceField/Containers/Containers';
@@ -103,12 +104,21 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset | DialAppli
             responsesEndpoint: undefined,
           });
         }
+        if (view === ApplicationRoute.Models) {
+          Object.assign(reset, { responsesEndpoint: undefined });
+        }
 
-        onChangeEntity({
+        const nextEntity = {
           ...entity,
           source: { $type: sourceType as SOURCE_TYPE },
           ...reset,
-        });
+        };
+
+        onChangeEntity(
+          view === ApplicationRoute.Models
+            ? (clearUpstreamResponsesEndpoints(nextEntity as DialModel) as T)
+            : nextEntity,
+        );
       }
     },
     [dispatch, entity, onChangeEntity, source, view],

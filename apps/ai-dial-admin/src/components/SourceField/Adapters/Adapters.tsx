@@ -26,6 +26,7 @@ import { DialModel } from '@/src/models/dial/model';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
+import { clearUpstreamResponsesEndpoints, isDialModelEntity } from '@/src/utils/models/upstream-responses';
 import { getErrorNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 
@@ -65,7 +66,8 @@ const Adapters = <T extends DialModel | DialInterceptor>({
 
   const onSelect = useCallback(
     (name?: string) => {
-      onChange({
+      const adapter = adapters.find((item) => item.name === name);
+      const nextEntity = {
         ...entity,
         endpoint: '',
         source: {
@@ -75,10 +77,16 @@ const Adapters = <T extends DialModel | DialInterceptor>({
           completionEndpointPath:
             entity.source?.completionEndpointPath || `${entity.name}${getEndpointPostfix((entity as DialModel).type)}`,
         },
-      });
+      };
+
+      if (isDialModelEntity(nextEntity) && !adapter?.responsesEndpoint) {
+        onChange(clearUpstreamResponsesEndpoints(nextEntity) as T);
+      } else {
+        onChange(nextEntity);
+      }
       onCloseModal();
     },
-    [entity, onChange, onCloseModal],
+    [adapters, entity, onChange, onCloseModal],
   );
 
   const openAdapter = useCallback(() => {
