@@ -1,10 +1,7 @@
 import { DialModel } from '@/src/models/dial/model';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { describe, expect, test } from 'vitest';
-import {
-  clearUpstreamResponsesEndpoints,
-  shouldClearUpstreamResponsesEndpoints,
-} from './upstream-responses';
+import { clearUpstreamResponsesEndpoints, shouldClearUpstreamResponsesEndpoints } from './upstream-responses';
 
 describe('shouldClearUpstreamResponsesEndpoints', () => {
   test('returns false while adapter responses are still loading', () => {
