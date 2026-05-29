@@ -9,9 +9,12 @@ const DEFAULT_COLORS = {
   'editorCursor.foreground': '#EEF1F7',
   'editor.selectionBackground': '#5C8DEA2B',
   'editorLineNumber.foreground': '#7C8293',
-  'scrollbarSlider.background': '#242C42',
-  'scrollbarSlider.hoverBackground': '#242C42',
-  'scrollbarSlider.activeBackground': '#242C42',
+  'scrollbarSlider.background': '#242C4266',
+  'scrollbarSlider.hoverBackground': '#242C4299',
+  'scrollbarSlider.activeBackground': '#242C42CC',
+  'minimapSlider.background': '#EEF1F71A',
+  'minimapSlider.hoverBackground': '#EEF1F733',
+  'minimapSlider.activeBackground': '#242C42CC',
   'diffEditor.insertedTextBackground': '#1D3841',
   'diffEditor.removedTextBackground': '#402027',
   'diffEditor.insertedTextBorder': '#37BABC',
@@ -92,9 +95,11 @@ const defaultOptions: EditorOptions = {
 
 export const diffEditorOptions: EditorOptions = {
   ...defaultOptions,
+  minimap: { enabled: true },
+  overviewRulerLanes: 3,
   readOnly: true,
   renderIndicators: false,
-  renderOverviewRuler: false,
+  renderOverviewRuler: true,
   glyphMargin: false,
   // Force side-by-side so both original and modified panes get word wrap (Monaco bug workaround)
   useInlineViewWhenSpaceIsLimited: false,

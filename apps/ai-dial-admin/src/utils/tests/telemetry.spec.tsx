@@ -166,6 +166,18 @@ describe('Utils :: telemetry :: getTotalTokensFromTree', () => {
     ).toEqual(150);
   });
 
+  test('same root emitted with both "" and "undefined" parents counts both (no dropped tokens)', () => {
+    expect(
+      getTotalTokensFromTree({
+        headers: TREE_HEADERS,
+        data: [
+          ['A', '', 'A', '100', '50'],
+          ['A', 'undefined', 'A', '20', '7'],
+        ],
+      }),
+    ).toEqual(177);
+  });
+
   test('three projects under one root collapse into one root (no triple-count)', () => {
     const headers = ['deployment', 'parent_deployment', 'execution_path', 'project_id', 'tokens_p', 'tokens_c'];
     expect(

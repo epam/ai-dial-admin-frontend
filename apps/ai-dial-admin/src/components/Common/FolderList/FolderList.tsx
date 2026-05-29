@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialEllipsisTooltip, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { DialEllipsisTooltip, DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import { IconCaretDownFilled, IconCaretRightFilled, IconDotsVertical, IconFolder, IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -286,12 +286,24 @@ const FolderList: FC<Props> = ({
     });
   };
 
+  const ruleContext = folderContext as RuleFolderContextType | undefined;
+  const assetsContext = folderContext as AssetsFolderContext | undefined;
+  const isRuleFolderContext = ruleContext?.fetchFolderHierarchy != null;
+  const isFetching = isRuleFolderContext
+    ? ruleContext.isLoading || ruleContext.files == null
+    : !!assetsContext?.isFetchingFiles;
+  const showNoFolders = !isFetching && !folderContext?.files?.length && !isBulkDelete;
+
   return (
     <div className="flex-1 size-full overflow-y-auto">
-      {!folderContext?.files?.length && !isBulkDelete ? (
+      {isFetching ? (
+        <div className="flex size-full items-center justify-center">
+          <DialLoader size={40} />
+        </div>
+      ) : showNoFolders ? (
         <DialNoDataContent title={t(EntitiesI18nKey.NoFolders)} />
       ) : (
-        renderTree(folderData, 0, rootFolder)
+        renderTree(folderData ?? undefined, 0, rootFolder)
       )}
       <FolderListModals
         view={view}

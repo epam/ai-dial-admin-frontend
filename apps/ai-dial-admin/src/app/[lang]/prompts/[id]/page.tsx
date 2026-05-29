@@ -11,6 +11,7 @@ import { errorObjLog } from '@/src/server/logger';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { Asset } from '@/src/models/dial/deployment-asset';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,7 +36,7 @@ export default async function Page(params: {
     });
 
     prompts = ((await assetsApi.getAssetList(token, `${prompt?.folderId}/`, ResourceType.PROMPT))?.filter(
-      (p) => p.nodeType === DialFileNodeType.ITEM && p.name === name,
+      (p) => (p as Asset).nodeType === DialFileNodeType.ITEM && p.name === name,
     ) || []) as DialPrompt[];
   } catch (e) {
     errorObjLog(e, 'Failed to fetch prompt view data');
