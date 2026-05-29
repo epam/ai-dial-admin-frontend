@@ -110,6 +110,7 @@ const PublicFileManager: FC<Props> = ({ value, isModalOpen, onChangeSelectedFile
         isFetchingFiles,
         value ? expandedFolders : loadedPaths,
         expandedFolders,
+        ApplicationRoute.Files,
         setExpandedFolders,
         t,
       )}

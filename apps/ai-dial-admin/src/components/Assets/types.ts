@@ -10,3 +10,9 @@ export interface ActionLabelWithIcon {
   label: string;
   icon: ReactNode;
 }
+
+export interface ImportResult {
+  targetPath: string;
+  status: string;
+  error?: string;
+}

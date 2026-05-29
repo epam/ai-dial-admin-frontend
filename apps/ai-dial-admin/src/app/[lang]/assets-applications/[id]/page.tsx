@@ -7,7 +7,7 @@ import AppView from '@/src/components/Assets/Apps/View';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { AssetApp } from '@/src/models/dial/deployment-asset';
+import { Asset, AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
@@ -45,7 +45,7 @@ export default async function Page(params: {
     });
 
     apps = ((await assetsApi.getAssetList(token, `${app?.folderId}/`, ResourceType.APPLICATION))?.filter(
-      (p) => p.nodeType === DialFileNodeType.ITEM && p.name === name,
+      (p) => (p as Asset).nodeType === DialFileNodeType.ITEM && p.name === name,
     ) || []) as AssetApp[];
 
     models = await getModelsList();

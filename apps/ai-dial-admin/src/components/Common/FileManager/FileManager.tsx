@@ -50,12 +50,12 @@ interface Props {
   label: string;
   columnDefs: ColDef[];
   getContext: () => AssetsFolderContext;
-  onCreateFolder: (
+  onCreateFolder?: (
     file: DialUploadFileItem | undefined,
     folderPath: string,
   ) => Promise<ServerActionResponse | undefined>;
   onDeleteItems?: (fileNodes: DialDeletedItem[]) => Promise<(ServerActionResponse[] | ServerActionResponse)[]>;
-  onMoveItems: (
+  onMoveItems?: (
     items: DialCopiedItem[],
     sourceFolder: string,
     destinationFolder: string,
@@ -77,8 +77,8 @@ interface Props {
   emptyStateTitle?: string;
   emptyStateDescription?: string;
   showHiddenFileSwitcherInDestinationPopup?: boolean;
-  movingItems: number;
-  movedItems: number;
+  movingItems?: number;
+  movedItems?: number;
   folderToRefetch?: string | null;
 }
 
@@ -166,7 +166,7 @@ const FileManager: FC<Props> = ({
     async (_: DialUploadFileItem | undefined, folderPath: string) => {
       const newPath = `${folderPath.replaceAll('//', '/')}/`;
 
-      onCreateFolder(_, folderPath).then((res) => {
+      onCreateFolder?.(_, folderPath).then((res) => {
         if (res && res.success) {
           const parentPath = getParentPathByFullPath(newPath) || `${ROOT_FOLDER}/`;
 
@@ -287,7 +287,7 @@ const FileManager: FC<Props> = ({
         setIsMoveModalOpen(true);
       }
 
-      onMoveItems(items, sourceFolder, destinationFolder).then((result) => {
+      onMoveItems?.(items, sourceFolder, destinationFolder).then((result) => {
         setTimeout(() => {
           setIsMoveModalOpen(false);
         }, MOVE_ITEMS_INDICATOR_DELAY);
@@ -341,13 +341,14 @@ const FileManager: FC<Props> = ({
         rootItem={filteredFiles?.[0] as DialRootFolder}
         filesLoading={isFetchingFiles}
         showNavigationPanel={false}
-        bulkActionsToolbarOptions={getBulkActionsToolbarOptions(t)}
+        bulkActionsToolbarOptions={getBulkActionsToolbarOptions(view, t)}
         toolbarOptions={getToolbarOptions(view, isReadOnlyAdmin, t)}
         treeOptions={getTreeOptions(
           isReadOnlyAdmin,
           isFetchingFiles,
           loadedPaths,
           expandedFolders,
+          view,
           setExpandedFolders,
           t,
         )}
