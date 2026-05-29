@@ -425,7 +425,7 @@ export const getFormattedDuration = (durationMs: number | undefined) => {
 };
 
 export const getPanelTitle = (result: ExtractionResult | AnalyticsResult | null) => {
-  return `${result?.testCaseName} - Run #${result?.runIndex ?? 0}`;
+  return `${result?.testCaseName} - Run #${(result?.runIndex ?? 0) + 1}`;
 };
 
 export const getDetailEntries = (data: Record<string, unknown>): Array<[string, unknown]> => {

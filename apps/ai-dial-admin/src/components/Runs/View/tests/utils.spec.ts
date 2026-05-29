@@ -175,15 +175,15 @@ describe('Runs View :: getFormattedDuration', () => {
 
 describe('Runs View :: getPanelTitle', () => {
   test('Should format title with test case name and run index', () => {
-    expect(getPanelTitle({ testCaseName: 'Login Test', runIndex: 3 } as any)).toBe('Login Test - Run #3');
+    expect(getPanelTitle({ testCaseName: 'Login Test', runIndex: 3 } as any)).toBe('Login Test - Run #4');
   });
 
   test('Should default run index to 0 when missing', () => {
-    expect(getPanelTitle({ testCaseName: 'Test' } as any)).toBe('Test - Run #0');
+    expect(getPanelTitle({ testCaseName: 'Test' } as any)).toBe('Test - Run #1');
   });
 
   test('Should handle null result', () => {
-    expect(getPanelTitle(null)).toBe('undefined - Run #0');
+    expect(getPanelTitle(null)).toBe('undefined - Run #1');
   });
 });
 
