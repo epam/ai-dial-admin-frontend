@@ -21,6 +21,10 @@ import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialModel } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
+import {
+  clearUpstreamResponsesEndpoints,
+  shouldClearUpstreamResponsesEndpoints,
+} from '@/src/utils/models/upstream-responses';
 import ModelTypeProperties from './ModelTypeProperties';
 
 interface Props {
@@ -52,6 +56,15 @@ const ModelProperties: FC<Props> = ({ model, modelsNames, onChangeModel }) => {
     (model.source?.$type === SOURCE_TYPE.ENDPOINTS && !!model.responsesEndpoint) ||
     (model.source?.$type === SOURCE_TYPE.ADAPTER && !!selectedAdapter?.responsesEndpoint) ||
     (model.source?.$type === SOURCE_TYPE.CONTAINER && !!model.source?.responsesEndpointPath);
+
+  useEffect(() => {
+    if (!shouldClearUpstreamResponsesEndpoints(model, showResponsesDefaults, selectedAdapter)) {
+      return;
+    }
+    onChangeModel(clearUpstreamResponsesEndpoints(model));
+    // Runs when responses visibility or adapter resolution changes, not on every model edit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showResponsesDefaults, selectedAdapter]);
 
   return (
     <div className="h-full flex flex-col gap-8">

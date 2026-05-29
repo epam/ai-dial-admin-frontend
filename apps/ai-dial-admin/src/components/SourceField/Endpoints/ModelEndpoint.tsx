@@ -9,7 +9,6 @@ import { getUrlError } from '@/src/utils/validation/url-error';
 import { useI18n } from '@/src/locales/client';
 import ComplexInput from '@/src/components/Common/ComplexInput/ComplexInput';
 import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
-import { clearUpstreamResponsesEndpoints } from '@/src/utils/models/upstream-responses';
 import { addTrailingSlash, removeSlash } from '@/src/utils/url';
 
 interface Props {
@@ -65,15 +64,13 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal, disabled,
   const onChangeResponsesPath = useCallback(
     (value?: string) => {
       setResponsesEndpoint(value || '');
-      const responsesEndpointPath = value ? `${value || ''}${responsesPostfix}` : void 0;
-      const nextModel = {
+      onChange({
         ...entity,
         source: {
           ...(entity.source as SOURCE_FIELD),
-          responsesEndpointPath,
+          responsesEndpointPath: value ? `${value || ''}${responsesPostfix}` : void 0,
         },
-      };
-      onChange(responsesEndpointPath ? nextModel : clearUpstreamResponsesEndpoints(nextModel));
+      });
     },
     [entity, onChange],
   );
@@ -92,9 +89,10 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal, disabled,
   const onChangeResponsesEndpoint = useCallback(
     (value?: string) => {
       setResponsesEndpoint(value || '');
-      const responsesEndpoint = value ? `${value || ''}${responsesPostfix}` : void 0;
-      const nextModel = { ...entity, responsesEndpoint };
-      onChange(responsesEndpoint ? nextModel : clearUpstreamResponsesEndpoints(nextModel));
+      onChange({
+        ...entity,
+        responsesEndpoint: value ? `${value || ''}${responsesPostfix}` : void 0,
+      });
     },
     [entity, onChange],
   );
