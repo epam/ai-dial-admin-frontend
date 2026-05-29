@@ -2,7 +2,7 @@
 
 ### Requirement: ImageStatusBanner wrapper lives under Deployments/Common
 
-A wrapper component SHALL live at `components/Deployments/Common/ImageStatusBanner/ImageStatusBanner.tsx`. It SHALL encapsulate the trigger logic, copy branching, and Install-image CTA for the image-not-installed warning previously implemented inline in `Containers/View/TabsContent.tsx`. The component SHALL render `<EntityBanner>` for its visual output and SHALL NOT render `DialAlert` directly.
+A wrapper component SHALL live at `components/Deployments/Common/ImageStatusBanner/ImageStatusBanner.tsx`. It SHALL encapsulate the trigger logic, copy branching, and Install-image CTA for the image-not-installed warning previously implemented inline in `Containers/View/TabsContent.tsx`. The component SHALL render `<EntityBanner>` for its visual output and SHALL NOT render `DialNotification` directly.
 
 #### Scenario: Component file exists at the expected path
 
@@ -11,17 +11,17 @@ A wrapper component SHALL live at `components/Deployments/Common/ImageStatusBann
 
 ### Requirement: Banner renders only when image is not installed
 
-`ImageStatusBanner` SHALL accept a single prop `image?: Image`. The component SHALL render `null` when `image` is `undefined`, when `isImageNotInstalled(image)` returns `false`, or when `image.buildStatus` is anything other than `IMAGE_STATUS.NOT_BUILT` or `IMAGE_STATUS.BUILD_FAILED`. When `isImageNotInstalled(image)` returns `true`, the component SHALL render an `<EntityBanner>` (which renders a `DialAlert` with `variant === AlertVariant.Warning`).
+`ImageStatusBanner` SHALL accept a single prop `image?: Image`. The component SHALL render `null` when `image` is `undefined`, when `isImageNotInstalled(image)` returns `false`, or when `image.buildStatus` is anything other than `IMAGE_STATUS.NOT_BUILT` or `IMAGE_STATUS.BUILD_FAILED`. When `isImageNotInstalled(image)` returns `true`, the component SHALL render an `<EntityBanner>` (which renders a `DialNotification` with `variant === NotificationVariant.Warning`).
 
 #### Scenario: NOT_BUILT image shows banner
 
 - **WHEN** `<ImageStatusBanner image={{ buildStatus: IMAGE_STATUS.NOT_BUILT, ... }} />` is rendered
-- **THEN** an `EntityBanner` SHALL be rendered with `variant === AlertVariant.Warning`
+- **THEN** an `EntityBanner` SHALL be rendered with `variant === NotificationVariant.Warning`
 
 #### Scenario: BUILD_FAILED image shows banner
 
 - **WHEN** `<ImageStatusBanner image={{ buildStatus: IMAGE_STATUS.BUILD_FAILED, ... }} />` is rendered
-- **THEN** an `EntityBanner` SHALL be rendered with `variant === AlertVariant.Warning`
+- **THEN** an `EntityBanner` SHALL be rendered with `variant === NotificationVariant.Warning`
 
 #### Scenario: BUILT image hides banner
 
@@ -80,7 +80,7 @@ When the banner is rendered, `ImageStatusBanner` SHALL pass a `DialNeutralButton
 
 ### Requirement: Banner is rendered only on the Container view's Properties tab
 
-`Containers/View/TabsContent.tsx` SHALL render `<ImageStatusBanner image={image} />` inside the `activeTab === EntityViewTab.Properties` branch only, positioned **above** `<PropertiesTabContent>` (which is the component that renders `EntityInfoHeader`). The previous inline `DialAlert` implementation SHALL be removed.
+`Containers/View/TabsContent.tsx` SHALL render `<ImageStatusBanner image={image} />` inside the `activeTab === EntityViewTab.Properties` branch only, positioned **above** `<PropertiesTabContent>` (which is the component that renders `EntityInfoHeader`). The previous inline `DialNotification` implementation SHALL be removed.
 
 #### Scenario: ImageStatusBanner appears in Properties branch only
 
@@ -93,8 +93,8 @@ When the banner is rendered, `ImageStatusBanner` SHALL pass a `DialNeutralButton
 - **WHEN** the active tab is any value other than `EntityViewTab.Properties` (Tools, Resources, Prompts, Metrics, ExecutionLog, Events, Firewall)
 - **THEN** `<ImageStatusBanner>` SHALL NOT be rendered
 
-#### Scenario: Inline DialAlert is removed from TabsContent
+#### Scenario: Inline DialNotification is removed from TabsContent
 
 - **WHEN** `Containers/View/TabsContent.tsx` is read after the change
-- **THEN** the file SHALL NOT contain a direct `DialAlert` import or render related to image-not-installed
+- **THEN** the file SHALL NOT contain a direct `DialNotification` import or render related to image-not-installed
 - **AND** SHALL NOT contain the previous custom CSS overrides (`[&>div]:flex-1 [&>div>div:last-child]:w-full`) for the image-not-installed alert

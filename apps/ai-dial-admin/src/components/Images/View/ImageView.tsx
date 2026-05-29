@@ -40,7 +40,7 @@ const ImageView: FC<Props> = ({ image, containerNames, versions }) => {
   const [activeTab, setActiveTab] = useState<EntityViewTab>(EntityViewTab.Properties);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [isChanged, setIsChanged] = useState<boolean>(false);
-  const [key, setKey] = useState(0);
+  const [discardKey, setDiscardKey] = useState(0);
   const [imageVersions, setImageVersions] = useState<ImageVersion[]>(versions);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
@@ -76,7 +76,7 @@ const ImageView: FC<Props> = ({ image, containerNames, versions }) => {
       // TODO: Revisit solution
       // Due to we can't set invalid JSON as variable, we can't update entity in error state.
       // Force JSON Editor re-render to show originalEntity on discard.
-      setKey((prevKey) => prevKey + 1);
+      setDiscardKey((prev) => prev + 1);
     }
     setSelectedImage(cloneDeep(image));
   }, [isEditorEnabled, image]);
@@ -140,7 +140,7 @@ const ImageView: FC<Props> = ({ image, containerNames, versions }) => {
       <div className="flex-1 overflow-auto min-h-0">
         {isEditorEnabled ? (
           <EntityJsonEditor
-            key={key}
+            key={discardKey}
             entity={selectedImage}
             setSelectedEntity={setSelectedImage}
             setIsChanged={setIsChanged}

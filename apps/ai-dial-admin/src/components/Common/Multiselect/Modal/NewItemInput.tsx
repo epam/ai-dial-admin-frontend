@@ -59,7 +59,7 @@ const NewItemInput: FC<Props> = ({ value, index, placeholder, onRemoveItem, onCh
         </div>
         <DialErrorText text={error?.text} />
       </div>
-      <DialRemoveButton disabled={!value} onClick={onRemove} />
+      <DialRemoveButton onClick={onRemove} />
     </div>
   );
 };

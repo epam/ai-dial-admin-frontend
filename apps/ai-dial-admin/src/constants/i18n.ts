@@ -654,7 +654,7 @@ export enum TelemetryI18nKey {
   RequestsNumber = 'Telemetry.RequestsNumber',
   RequestCount = 'Telemetry.RequestCount',
   TotalTokens = 'Telemetry.TotalTokens',
-  Money = 'Telemetry.Money',
+  TotalMoney = 'Telemetry.TotalMoney',
   Grafana = 'Telemetry.OpenGrafana',
   FilterTypeMcp = 'Telemetry.Filter.TypeMcp',
   FilterTypeDeployment = 'Telemetry.Filter.TypeDeployment',

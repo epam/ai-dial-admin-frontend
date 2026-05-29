@@ -436,14 +436,15 @@ export const getExportNotificationContent = (
 
 export const getImportNotificationContent = (
   view: ApplicationRoute,
-  importResults: { targetPath: string; status: string; error?: string }[],
+  importResults: { targetPath: string; status: string; error?: string }[] | undefined,
   fileType: ImportFileType,
   destinationFolder: string,
   t: (key: string, options?: Record<string, string | number>) => string,
 ) => {
   const successfullyItems = importResults?.filter((result) => result.status === 'success') || [];
-  const failedItems =
-    importResults?.filter((result) => result.status === 'failure').map((result) => result.targetPath) || [];
+  const failedResults = importResults?.filter((result) => result.status === 'failure') || [];
+  const failedItems = failedResults.map((result) => result.targetPath);
+  const failedMessages = Array.from(new Set(failedResults.map((result) => result.error || result.targetPath)));
   const skippedItems =
     importResults?.filter((result) => result.status === 'skipped').map((result) => result.targetPath) || [];
   const isImportSeveralItems = successfullyItems.length > 1;
@@ -498,7 +499,7 @@ export const getImportNotificationContent = (
         errorDescription:
           failedItems.length > 0
             ? t(FileManagerI18nKey.ImportErrorDescription, {
-                list: failedItems.join(', '),
+                list: failedMessages.join(', '),
               })
             : '',
       };
@@ -552,7 +553,7 @@ export const getImportNotificationContent = (
         errorDescription:
           failedItems.length > 0
             ? t(FileManagerI18nKey.ImportErrorDescription, {
-                list: failedItems.join(', '),
+                list: failedMessages.join(', '),
               })
             : '',
       };
@@ -606,7 +607,7 @@ export const getImportNotificationContent = (
         errorDescription:
           failedItems.length > 0
             ? t(FileManagerI18nKey.ImportErrorDescription, {
-                list: failedItems.join(', '),
+                list: failedMessages.join(', '),
               })
             : '',
       };
@@ -660,7 +661,7 @@ export const getImportNotificationContent = (
         errorDescription:
           failedItems.length > 0
             ? t(FileManagerI18nKey.ImportErrorDescription, {
-                list: failedItems.join(', '),
+                list: failedMessages.join(', '),
               })
             : '',
       };

@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertVariant, DialAlert, DialSteps, StepStatus } from '@epam/ai-dial-ui-kit';
+import { NotificationVariant, DialNotification, DialSteps, StepStatus } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { importDeploymentConfig, importJsonConfigs, importZipConfig } from '@/src/app/[lang]/import-config/actions';
@@ -129,7 +129,7 @@ const ImportConfig: FC<Props> = ({ deploymentsEnabled }) => {
     return (
       <div className="flex flex-col size-full rounded p-4 bg-layer-2 gap-4">
         <h1>{t(MenuI18nKey.ImportConfig)}</h1>
-        <DialAlert variant={AlertVariant.Info} message={t(MenuI18nKey.ReadOnlyAdminImportUnavailable)} />
+        <DialNotification variant={NotificationVariant.Info} message={t(MenuI18nKey.ReadOnlyAdminImportUnavailable)} />
       </div>
     );
   }

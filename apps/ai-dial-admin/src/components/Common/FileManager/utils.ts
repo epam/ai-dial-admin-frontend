@@ -48,6 +48,9 @@ export const getDestinationFolderPopupOptions = (
   emptyStateDescription: t(FileManagerI18nKey.EmptyMoveFolderDescription, {
     items: t(assetEntityMap[view]).toLowerCase(),
   }),
+  navigationPanelOptions: {
+    searchable: false,
+  },
   getMoveHeader: (itemsCount: number, itemName?: string) =>
     itemsCount === 1 && itemName
       ? t(FileManagerI18nKey.MoveItem, { item: itemName })

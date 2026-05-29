@@ -54,3 +54,19 @@ export const toPrimitiveValue = (value: unknown): string => {
   if (value == null) return String(value);
   return typeof value === 'string' ? value : String(value);
 };
+
+export const formatBindingValue = (value: unknown): string => {
+  if (value === null || value === undefined) {
+    return '';
+  }
+
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  if (typeof value === 'object') {
+    return safeStringify(value);
+  }
+
+  return String(value);
+};

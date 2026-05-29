@@ -12,4 +12,5 @@ export enum FilterOperatorDto {
   GREATER_THAN = 'gt',
   LESS_THAN_OR_EQUAL = 'le',
   GREATER_THAN_OR_EQUAL = 'ge',
+  INCLUDES = 'in',
 }

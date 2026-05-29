@@ -21,12 +21,14 @@ import { getActivities, getDeploymentActivities } from '@/src/app/[lang]/activit
 import { buildResourceTypeLabelMap, getFormattedResourceType } from '@/src/constants/grid-columns/formatters';
 import { RESOURCE_TYPE_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import {
+  areFiltersEquals,
   getActivityAuditColumns,
   getAuditActivityHref,
   getDeploymentActivityAuditColumns,
   getEndOfDay,
   getGridFilters,
   getStartOfDay,
+  processActivitiesData,
 } from '@/src/components/ActivityAudit/List/utils';
 import ActivityDetails from '@/src/components/ActivityAudit/Modals/Details';
 import { SYSTEM_ROLLBACK_ID } from '@/src/components/ActivityAudit/Rollback/constants';
@@ -62,6 +64,7 @@ import { getEntityAuditFilterId, onOpenInNewTab } from '@/src/utils/open-in-new-
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
 import { ActivityAuditResourceType, ActivityAuditView, isDeploymentManagerResource } from '@/src/types/activity-audit';
+import { FilterOperatorDto } from '@/src/types/request';
 
 interface Props {
   entity?: BaseEntity | DialApplicationScheme;
@@ -102,9 +105,11 @@ const ActivityAuditList: FC<Props> = ({
       : (viewMode ?? ActivityAuditView.Config),
   );
   const effectiveViewType = viewMode ?? activityViewType;
-  const [fullActivityList, setFullActivityList] = useState<DialActivity[]>([]);
   const resourceTypeLabelMap = useMemo(() => buildResourceTypeLabelMap(t), [t]);
   const hasAppliedPreselectRef = useRef(false);
+  const childrenCacheRef = useRef<Record<string, DialActivity[]>>({});
+  const totalActivitiesRef = useRef(0);
+  const gridFiltersRef = useRef<Record<string, FilterDto>>({});
 
   const onCloseModal = useCallback(() => {
     setIsRollbackModalOpen(false);
@@ -137,43 +142,6 @@ const ActivityAuditList: FC<Props> = ({
     setSelectedActivity(activity);
   }, []);
 
-  const getProcessedActivityMap = useCallback(
-    (data: DialActivity[]) => {
-      const activityMap: Record<
-        string,
-        DialActivity & { children?: DialActivity[]; canToggleExpand?: boolean; expanded?: boolean }
-      > = {};
-
-      const existingIds = new Set(fullActivityList.map((a) => a.activityId));
-      const newActivities = data
-        .filter((a) => !existingIds.has(a.activityId))
-        .map((a) => ({
-          ...a,
-          resourceId:
-            a.resourceType === ActivityAuditResourceType.ADMIN_PROPERTIES ||
-            a.resourceType === ActivityAuditResourceType.SYSTEM_PROPERTIES
-              ? ''
-              : a.resourceId,
-        }));
-      const updatedActivityList = [...fullActivityList, ...newActivities];
-      setFullActivityList(updatedActivityList);
-
-      updatedActivityList.forEach((activity) => {
-        if (!activity.parentActivityId) {
-          activityMap[activity.activityId] = {
-            ...activity,
-            children: updatedActivityList.filter((a) => a.parentActivityId === activity.activityId),
-            expanded: true,
-            canToggleExpand: false,
-          };
-        }
-      });
-
-      return activityMap;
-    },
-    [fullActivityList],
-  );
-
   const isDeploymentsView = effectiveViewType === ActivityAuditView.Deployments;
 
   const gridDataSource: IDatasource = useMemo(
@@ -191,17 +159,22 @@ const ActivityAuditList: FC<Props> = ({
                 {
                   column: 'resourceId',
                   value: getEntityAuditFilterId(entity),
-                  operator: 'eq',
+                  operator: FilterOperatorDto.EQUALS,
                 } as FilterDto,
                 {
                   column: RESOURCE_TYPE_COLUMN,
                   value: entityType,
-                  operator: 'eq',
+                  operator: FilterOperatorDto.EQUALS,
                 } as FilterDto,
               ]
             : []),
           ...getGridFilters(params.filterModel, actualTimeRange, resourceTypeLabelMap),
         ];
+
+        if (!areFiltersEquals(params.filterModel, gridFiltersRef.current)) {
+          totalActivitiesRef.current = 0;
+        }
+        gridFiltersRef.current = params.filterModel || {};
 
         const fetchActivities = isDeploymentsView ? getDeploymentActivities : getActivities;
 
@@ -212,31 +185,69 @@ const ActivityAuditList: FC<Props> = ({
             } else if (isDeploymentsView || entity) {
               params.successCallback(res.data, page + 1 === res.totalPages ? res.total : void 0);
             } else {
-              const activityMap: Record<
-                string,
-                DialActivity & { children?: DialActivity[]; canToggleExpand?: boolean; expanded?: boolean }
-              > = getProcessedActivityMap(res.data);
+              const parentActivitiesIds = Array.from(
+                new Set(
+                  res.data.reduce((acc, a) => {
+                    if (!a?.parentActivityId) {
+                      acc.push(a.activityId);
+                    }
+                    return acc;
+                  }, [] as string[]),
+                ),
+              );
 
-              const newData: DialActivity[] = [];
-              res.data.forEach((activity: DialActivity) => {
-                if (!activity?.parentActivityId) {
-                  const activityWithChildren = {
-                    ...activity,
-                    resourceId:
-                      activity.resourceType === ActivityAuditResourceType.ADMIN_PROPERTIES ||
-                      activity.resourceType === ActivityAuditResourceType.SYSTEM_PROPERTIES
-                        ? ''
-                        : activity.resourceId,
-                    children: activityMap[activity.activityId]?.children || [],
-                    expanded: true,
-                    canToggleExpand: false,
-                  };
-                  newData.push(activityWithChildren);
+              const missingParentIds = parentActivitiesIds.filter((id) => !childrenCacheRef.current[id]);
+
+              if (parentActivitiesIds.length === 0 || missingParentIds.length === 0) {
+                const newData = processActivitiesData(res.data, childrenCacheRef.current);
+                totalActivitiesRef.current += newData.length;
+
+                params.successCallback(newData, page + 1 === res.totalPages ? totalActivitiesRef.current : void 0);
+                gridApi?.setGridOption('loading', false);
+
+                return;
+              }
+
+              const childrenFilters = [
+                {
+                  column: 'parentActivityId',
+                  value: missingParentIds.join(','),
+                  operator: FilterOperatorDto.INCLUDES,
+                } as FilterDto,
+              ];
+
+              fetchActivities(PAGE_SIZE, 0, sorts, childrenFilters).then(async (childrenRes) => {
+                const allChildren: DialActivity[] = [];
+                if (childrenRes?.data && childrenRes.data.length > 0) {
+                  allChildren.push(...childrenRes.data);
                 }
 
-                newData.push(...(activityMap[activity.activityId]?.children || []));
+                const totalPages = childrenRes?.totalPages || 1;
+                for (let p = 1; p < totalPages; p++) {
+                  const next = await fetchActivities(PAGE_SIZE, p, sorts, childrenFilters);
+                  if (next?.data && next.data.length > 0) {
+                    allChildren.push(...next.data);
+                  }
+                }
+
+                allChildren.forEach((child) => {
+                  if (!child.parentActivityId) return;
+                  if (!childrenCacheRef.current[child.parentActivityId]) {
+                    childrenCacheRef.current[child.parentActivityId] = [];
+                  }
+
+                  if (
+                    !childrenCacheRef.current[child.parentActivityId].some((c) => c.activityId === child.activityId)
+                  ) {
+                    childrenCacheRef.current[child.parentActivityId].push(child);
+                  }
+                });
+
+                const newData = processActivitiesData(res.data, childrenCacheRef.current);
+                totalActivitiesRef.current += newData.length;
+
+                params.successCallback(newData, page + 1 === res.totalPages ? totalActivitiesRef.current : void 0);
               });
-              params.successCallback(newData, page + 1 === res.totalPages ? res.total : void 0);
             }
             gridApi?.setGridOption('loading', false);
           })
@@ -261,7 +272,8 @@ const ActivityAuditList: FC<Props> = ({
       return;
     }
     gridApi.setFilterModel(null);
-    setFullActivityList([]);
+    childrenCacheRef.current = {};
+    totalActivitiesRef.current = 0;
     gridApi.setGridOption('datasource', gridDataSource);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectiveViewType]);
@@ -335,6 +347,7 @@ const ActivityAuditList: FC<Props> = ({
 
   const onRefresh = useCallback(() => {
     if (gridApi) {
+      totalActivitiesRef.current = 0;
       gridApi.setGridOption('loading', true);
 
       gridApi.setGridOption('datasource', gridDataSource);

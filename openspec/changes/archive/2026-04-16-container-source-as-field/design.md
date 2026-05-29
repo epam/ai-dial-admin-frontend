@@ -130,4 +130,4 @@ No data migration. Deploy is a pure frontend change.
 
 ## Open Questions
 
-- Should `InternalImageField` also expose the "install image" affordance that currently lives in the `DialAlert` at the top of `TabsContent.tsx` when `imageWarning` is true? Current proposal says **no** — the alert stays where it is. Flagging so we don't accidentally collapse the two during implementation.
+- Should `InternalImageField` also expose the "install image" affordance that currently lives in the `DialNotification` at the top of `TabsContent.tsx` when `imageWarning` is true? Current proposal says **no** — the alert stays where it is. Flagging so we don't accidentally collapse the two during implementation.

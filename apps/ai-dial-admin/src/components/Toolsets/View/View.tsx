@@ -212,6 +212,7 @@ const ToolsetView: FC<Props> = ({ names, oAuthCode, etag, roles, originalToolset
       <div className="flex-1 overflow-auto min-h-0">
         {isEditorEnabled ? (
           <EntityJsonEditor
+            key={discardKey}
             entity={selectedToolset}
             setSelectedEntity={setSelectedToolset}
             setIsChanged={setIsChanged}

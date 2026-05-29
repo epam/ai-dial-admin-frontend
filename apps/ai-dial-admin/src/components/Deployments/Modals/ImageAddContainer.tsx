@@ -1,6 +1,6 @@
 import {
-  AlertVariant,
-  DialAlert,
+  NotificationVariant,
+  DialNotification,
   DialFormPopup,
   DialLoader,
   DialNoDataContent,
@@ -139,7 +139,10 @@ const ImageAddContainer: FC<Props> = ({ title, isModalOpen, onClose, onApply, im
               <div className="flex flex-col gap-4 h-full min-h-0">
                 <GridView additionalGridOptions={additionalGridOptions} onGridReady={onGridReady} />
                 {selectedEntities.some((container) => container.status === CONTAINER_STATUS.RUNNING) && (
-                  <DialAlert message={t(ContainersI18nKey.ContainersRestartWarning)} variant={AlertVariant.Warning} />
+                  <DialNotification
+                    message={t(ContainersI18nKey.ContainersRestartWarning)}
+                    variant={NotificationVariant.Warning}
+                  />
                 )}
               </div>
             )}

@@ -109,6 +109,8 @@ const DeleteAssetsModal: FC<Props> = ({
                 defaultColDef: {
                   floatingFilter: false,
                 },
+                rowHeight: undefined,
+                onFirstDataRendered: (params) => params.api.resetRowHeights(),
               }}
             />
           </div>

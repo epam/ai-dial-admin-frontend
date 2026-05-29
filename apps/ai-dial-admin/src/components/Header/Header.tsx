@@ -11,7 +11,6 @@ import { useAppContext } from '@/src/context/AppContext';
 import HelpButton from './HelpButton/HelpButton';
 import Logo from './Logo';
 import User from './User/User';
-import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 
 interface Props {
@@ -22,7 +21,6 @@ interface Props {
 const Header: FC<Props> = ({ isEnableAuth, docLink }) => {
   const { sidebarOpen, toggleSidebar } = useAppContext();
   const [sidebarIcon, setSidebarIcon] = useState<ReactNode>(<SidebarClose />);
-  const isTabletScreen = useIsTabletScreen();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   useEffect(() => {
@@ -44,7 +42,7 @@ const Header: FC<Props> = ({ isEnableAuth, docLink }) => {
         {isReadOnlyAdmin && <ReadOnlyAdminBadge />}
       </div>
       <div className="lg:flex-1 lg:min-w-0 lg:flex lg:flex-row lg:items-center lg:pl-[200px]">
-        {!isTabletScreen && <Breadcrumbs mobile={false} />}
+        <Breadcrumbs mobile={false} />
       </div>
 
       <div className="flex items-center gap-3">

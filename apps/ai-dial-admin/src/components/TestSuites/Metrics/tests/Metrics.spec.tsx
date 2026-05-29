@@ -75,7 +75,7 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
       {label}
     </button>
   ),
-  DialErrorButton: ({ label, onClick }: any) => (
+  DialDangerButton: ({ label, onClick }: any) => (
     <button type="button" onClick={onClick}>
       {label}
     </button>

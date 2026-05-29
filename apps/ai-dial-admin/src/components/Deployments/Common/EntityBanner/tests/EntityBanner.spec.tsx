@@ -1,4 +1,4 @@
-import { AlertVariant } from '@epam/ai-dial-ui-kit';
+import { NotificationVariant } from '@epam/ai-dial-ui-kit';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
@@ -9,13 +9,13 @@ vi.mock('@epam/ai-dial-ui-kit', async () => {
   const actual = await vi.importActual<Record<string, unknown>>('@epam/ai-dial-ui-kit');
   return {
     ...actual,
-    DialAlert: ({
+    DialNotification: ({
       variant,
       className,
       message,
       children,
     }: {
-      variant: AlertVariant;
+      variant: NotificationVariant;
       className?: string;
       message: ReactNode;
       children?: ReactNode;
@@ -31,12 +31,18 @@ vi.mock('@epam/ai-dial-ui-kit', async () => {
 describe('EntityBanner', () => {
   test('defaults variant to Warning when none is provided', () => {
     render(<EntityBanner message="hello" />);
-    expect(screen.getByText('hello').closest('[data-variant]')).toHaveAttribute('data-variant', AlertVariant.Warning);
+    expect(screen.getByText('hello').closest('[data-variant]')).toHaveAttribute(
+      'data-variant',
+      NotificationVariant.Warning,
+    );
   });
 
-  test('forwards a custom variant to DialAlert', () => {
-    render(<EntityBanner variant={AlertVariant.Error} message="boom" />);
-    expect(screen.getByText('boom').closest('[data-variant]')).toHaveAttribute('data-variant', AlertVariant.Error);
+  test('forwards a custom variant to DialNotification', () => {
+    render(<EntityBanner variant={NotificationVariant.Error} message="boom" />);
+    expect(screen.getByText('boom').closest('[data-variant]')).toHaveAttribute(
+      'data-variant',
+      NotificationVariant.Error,
+    );
   });
 
   test('renders the title as a semibold prefix when provided', () => {
@@ -56,7 +62,7 @@ describe('EntityBanner', () => {
     expect(screen.getByText('my message')).toBeInTheDocument();
   });
 
-  test('renders CTA children inside DialAlert', () => {
+  test('renders CTA children inside DialNotification', () => {
     render(
       <EntityBanner message="msg">
         <button>do thing</button>
@@ -65,7 +71,7 @@ describe('EntityBanner', () => {
     expect(screen.getByRole('button', { name: 'do thing' })).toBeInTheDocument();
   });
 
-  test('forwards className to DialAlert', () => {
+  test('forwards className to DialNotification', () => {
     const { container } = render(<EntityBanner className="mb-6" message="msg" />);
     expect(container.firstChild).toHaveClass('mb-6');
   });

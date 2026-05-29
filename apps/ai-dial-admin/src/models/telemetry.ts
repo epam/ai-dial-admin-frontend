@@ -20,6 +20,18 @@ export interface EntityRow {
   synthetic?: boolean;
 }
 
+export interface RawConsumptionRow {
+  deployment: string;
+  parent_deployment: string;
+  execution_path: string;
+  project_id: string;
+  count: string;
+  money: string;
+  aggregated_money: string;
+  tokens_p: string;
+  tokens_c: string;
+}
+
 export interface TelemetryQuery {
   $type: string;
   fillGaps?: boolean;

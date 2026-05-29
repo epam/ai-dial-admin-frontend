@@ -32,8 +32,10 @@ const EntityJsonEditor = <T extends object>({
   const { dispatch, jsonErrorNotifications } = useSaveValidationContext();
   const { removeNotification } = useNotification();
   const [entityModel, setEntityModel] = useState<string>('');
-  /** Avoid resetting Monaco value when `entity` updates from our own parse — that resets the cursor. */
-  const skipEntityModelSyncRef = useRef(false);
+  /** Remount Monaco when `entity` is reset externally (e.g. discard) so the editor reflects the new value. */
+  const [editorInstanceKey, setEditorInstanceKey] = useState(0);
+  /** Avoid resetting Monaco text when `entity` updates from our own JSON parse — that resets the cursor. */
+  const lastEntityFromEditorRef = useRef<T | null>(null);
 
   const setJsonErrors = useCallback(
     (errors: JSONEditorError[]) => {
@@ -46,11 +48,12 @@ const EntityJsonEditor = <T extends object>({
     if (!entity) {
       return;
     }
-    if (skipEntityModelSyncRef.current) {
-      skipEntityModelSyncRef.current = false;
+    if (entity === lastEntityFromEditorRef.current) {
       return;
     }
+    lastEntityFromEditorRef.current = entity;
     setEntityModel(JSON.stringify(entity, null, 4));
+    setEditorInstanceKey((key) => key + 1);
   }, [entity]);
 
   const onChangeJSON = useCallback(
@@ -61,8 +64,9 @@ const EntityJsonEditor = <T extends object>({
       try {
         const parsed = JSON.parse(updatedConfig);
         if (setSelectedEntity) {
-          skipEntityModelSyncRef.current = true;
-          setSelectedEntity(mergeWithIgnoredFields(entity as T, parsed, ignoredFields));
+          const merged = mergeWithIgnoredFields(entity as T, parsed, ignoredFields);
+          lastEntityFromEditorRef.current = merged;
+          setSelectedEntity(merged);
         }
       } catch (error) {
         if (error) {
@@ -89,6 +93,7 @@ const EntityJsonEditor = <T extends object>({
 
   return (
     <JsonEditorBase
+      key={editorInstanceKey}
       value={entityModel}
       onChange={onChangeJSON}
       onValidateJSON={onValidateJSON}

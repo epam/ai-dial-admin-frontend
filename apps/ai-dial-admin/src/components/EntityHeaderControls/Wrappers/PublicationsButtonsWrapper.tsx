@@ -5,11 +5,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import {
-  AlertVariant,
+  NotificationVariant,
   ButtonAppearance,
-  DialAlert,
+  DialNotification,
   DialConfirmationPopup,
-  DialErrorButton,
+  DialDangerButton,
   DialNeutralButton,
   DialPrimaryButton,
   DialTextarea,
@@ -166,8 +166,8 @@ const PublicationsButtonsWrapper = <T extends Publication>({
     if (isAddAction(action) && !entity.rules?.length) {
       return (
         <div className="flex flex-col gap-2 px-6 py-4">
-          <DialAlert
-            variant={AlertVariant.Info}
+          <DialNotification
+            variant={NotificationVariant.Info}
             message={<span className="text-sm">{t(PublicationsI18nKey.PublishWarningTitle)}</span>}
           />
           <span className="text-sm text-secondary">{t(PublicationsI18nKey.PublishWarningDescription)}</span>
@@ -189,7 +189,7 @@ const PublicationsButtonsWrapper = <T extends Publication>({
             {!isEditorEnabled && (
               <div className="flex-1 flex flex-row gap-x-4 justify-center">
                 <div className="flex flex-row gap-3 w-full p-3 lg:p-0">
-                  <DialErrorButton
+                  <DialDangerButton
                     className={buttonsClassName}
                     label={t(ButtonsI18nKey.Delete)}
                     appearance={ButtonAppearance.Outlined}

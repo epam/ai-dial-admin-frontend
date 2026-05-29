@@ -165,6 +165,20 @@ describe('Utils :: telemetry :: getTotalTokensFromTree', () => {
       }),
     ).toEqual(150);
   });
+
+  test('three projects under one root collapse into one root (no triple-count)', () => {
+    const headers = ['deployment', 'parent_deployment', 'execution_path', 'project_id', 'tokens_p', 'tokens_c'];
+    expect(
+      getTotalTokensFromTree({
+        headers,
+        data: [
+          ['d_1', '', 'd_1', 'p_1', '0', '0'],
+          ['d_1', '', 'd_1', 'p_2', '100', '0'],
+          ['d_1', '', 'd_1', 'p_3', '200', '0'],
+        ],
+      }),
+    ).toEqual(300);
+  });
 });
 
 describe('Utils :: telemetry :: getFormattedDataFilters', () => {

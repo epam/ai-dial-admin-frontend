@@ -40,61 +40,40 @@ The Dashboard's Entities Consumption section SHALL render a toggle inline with t
 
 ### Requirement: Tree-mode query groups by parent_deployment in addition to deployment
 
-When the toggle is on, the Entities Consumption section SHALL issue `ENTITY_CONSUMPTION_TREE_QUERY` to `getDashboardData`. The query SHALL be identical to `ENTITY_CONSUMPTION_QUERY` except that `expressions` SHALL additionally include `'parent_deployment'` and `groupBy` SHALL be `['deployment', 'parent_deployment']`. Numeric aggregates (`count()`, `sum(deployment_price) as money`, `sum(price) as aggregated_money`, `sum(prompt_tokens) as tokens_p`, `sum(completion_tokens) as tokens_c`) SHALL be unchanged. The `from` clause SHALL remain `ANALYTICS_TABLE_NAME`.
+When tree mode is active, the Entities Consumption section SHALL issue `ENTITY_CONSUMPTION_TREE_QUERY` to `getDashboardData`. The query's `expressions` SHALL include `'deployment'`, `'parent_deployment'`, `'execution_path'`, `'project_id'`, `'count()'`, `'sum(deployment_price) as money'`, `'sum(price) as aggregated_money'`, `'sum(prompt_tokens) as tokens_p'`, `'sum(completion_tokens) as tokens_c'`. Its `groupBy` SHALL equal `['deployment', 'parent_deployment', 'execution_path', 'project_id']`. The `from` clause SHALL remain `ANALYTICS_TABLE_NAME`.
+
+The `project_id` dimension was added so the same response can feed both the Entities Consumption tree and the Projects Consumption grid via the [[consumption-project-aggregation]] capability. The response is therefore one row per `(deployment, parent_deployment, execution_path, project_id)` tuple, and the tree builder consumes the response *after* `aggregateByDeployment` has collapsed the project axis.
 
 #### Scenario: Tree query shape
 
-- **WHEN** tree mode is active
-- **THEN** the request payload to `getDashboardData` SHALL contain `query.expressions` including `'parent_deployment'` alongside the existing aggregates
-- **AND** `query.groupBy` SHALL equal `['deployment', 'parent_deployment']`
-
-#### Scenario: Flat query shape unchanged
-
-- **WHEN** flat mode is active
-- **THEN** the request payload SHALL match the existing `ENTITY_CONSUMPTION_QUERY` byte-for-byte (no `parent_deployment` in `expressions` or `groupBy`)
+- **WHEN** the consumption fetch fires
+- **THEN** the request payload's `query.expressions` SHALL include `'project_id'` alongside the existing `'deployment'`, `'parent_deployment'`, `'execution_path'`, and aggregate columns
+- **AND** `query.groupBy` SHALL equal `['deployment', 'parent_deployment', 'execution_path', 'project_id']`
 
 ### Requirement: Tree-mode rows are built from parent_deployment pointers and grouped per (deployment, caller) tuple
 
-When tree mode is active, the response rows from the server (one per (deployment, parent_deployment) tuple) SHALL be transformed into a tree by `buildTreeFromParentPointer` using `getId: r => r.deployment`, `getParentId: r => r.parent_deployment ?? null`, and `sumFields: ['count', 'money', 'aggregated_money', 'tokens_p', 'tokens_c']`. Empty-string `parent_deployment` values SHALL be normalized to `null` before tree construction (the backend may return either depending on the column NULL semantics). When a `parent_deployment` value references a deployment that has no row of its own in the response, a synthetic parent row SHALL be inserted as a placeholder with `synthetic: true` and every numeric field initialized to `'0'`; the synthetic row's displayed totals are computed by the rollup pass defined in "Synthetic rows display direct-child rollup totals" below.
+The Entities Consumption tree SHALL be constructed by `buildEntitiesConsumptionTree`. Its input SHALL be the output of `aggregateByDeployment` applied to the raw consumption response, NOT the raw response itself. After aggregation each row SHALL carry one unique `(deployment, parent_deployment, execution_path)` triplet with summed numeric fields across the collapsed `project_id` axis. Tree construction itself proceeds unchanged: `buildTreeFromParentPointer` keys by `execution_path|name`, synthesizes ancestors via `withSyntheticAncestors` when a referenced parent path is missing, and runs the post-order direct-children rollup pass for synthetic rows (per "Synthetic rows display direct-child rollup totals").
 
-#### Scenario: Flat response with parent pointers becomes a two-level tree
+#### Scenario: Tree input is the aggregator output, not the raw response
 
-- **GIVEN** the server returns rows:
-    `{ deployment: 'chat-orch', parent_deployment: null, count: 50 }`,
-    `{ deployment: 'gpt-4-router', parent_deployment: 'chat-orch', count: 320 }`,
-    `{ deployment: 'claude-fb', parent_deployment: 'chat-orch', count: 180 }`,
-    `{ deployment: 'embed-pipe', parent_deployment: null, count: 90 }`
+- **GIVEN** the raw response contains three rows for the same `(d_1, p_1, p_1/d_1)` triplet under three distinct `project_id` values with token sums `0`, `100`, `200`
 - **WHEN** the tree is built
-- **THEN** the output SHALL contain two roots: `chat-orch` (depth 0, count 50, children: [`gpt-4-router`, `claude-fb`]) and `embed-pipe` (depth 0, count 90, no children)
+- **THEN** `buildEntitiesConsumptionTree` SHALL receive exactly one row for that triplet with `prompts: '300'`
+- **AND** the tree SHALL contain exactly one node for `(d_1, p_1, p_1/d_1)` (no triplicate nodes from un-aggregated input)
 
-#### Scenario: Missing intermediate deployment is synthesized as a parent
+#### Scenario: Single-project response behaves identically to legacy behavior
 
-- **GIVEN** the server returns rows:
-    `{ deployment: 'gpt-4-router', parent_deployment: 'chat-orch', count: 320 }`,
-    `{ deployment: 'claude-fb', parent_deployment: 'chat-orch', count: 180 }`,
-    (no row for `chat-orch` itself)
+- **GIVEN** the raw response contains rows where each `(deployment, parent_deployment, execution_path)` appears under exactly one `project_id`
 - **WHEN** the tree is built
-- **THEN** the output SHALL contain one synthetic root `chat-orch` with `synthetic: true`
-- **AND** `gpt-4-router` and `claude-fb` SHALL be children of that synthetic root
-- **AND** the synthetic row's displayed totals SHALL be derived per the "Synthetic rows display direct-child rollup totals" requirement (not stored as backend data)
+- **THEN** the rows fed into `buildEntitiesConsumptionTree` SHALL be byte-for-byte equivalent to what the legacy (pre-`project_id`) query would have returned
+- **AND** the resulting tree structure and numbers SHALL match legacy behavior exactly
 
-#### Scenario: Empty parent_deployment value normalizes to null
+#### Scenario: Synthetic-ancestor injection still operates on aggregated rows
 
-- **GIVEN** a server row `{ deployment: 'a', parent_deployment: '', count: 10 }`
+- **GIVEN** the raw response contains rows for `(B, A, A/B, p_x)` and `(B, A, A/B, p_y)` but no row whose `execution_path` is `'A'`
 - **WHEN** the tree is built
-- **THEN** the row SHALL be treated as a root (parent normalized to `null`)
-- **AND** SHALL NOT be confused with a child whose parent id is the empty string
-
-#### Scenario: Same deployment called by multiple parents appears in multiple branches
-
-- **GIVEN** the server returns:
-    `{ deployment: 'gpt-4', parent_deployment: 'app-A', count: 100 }`,
-    `{ deployment: 'gpt-4', parent_deployment: 'app-B', count: 200 }`,
-    `{ deployment: 'app-A', parent_deployment: null, count: 0 }`,
-    `{ deployment: 'app-B', parent_deployment: null, count: 0 }`
-- **WHEN** the tree is built
-- **THEN** `gpt-4` SHALL appear once under `app-A` (count 100) and once under `app-B` (count 200)
-- **AND** the two appearances SHALL have distinct `id` values in the tree representation (composite of deployment + parent) so AG Grid's row identity is unique
+- **THEN** `aggregateByDeployment` SHALL emit one row for `(B, A, A/B)` with summed numerics
+- **AND** `withSyntheticAncestors` SHALL inject a synthetic root for `'A'` whose `requests` / `prompts` / `completions` / `deployment_cost` come from the post-order direct-children rollup pass
 
 ### Requirement: Rows display backend values as-is
 

@@ -178,7 +178,11 @@ const ExportRunModal: FC<Props> = ({ runId, onClose }) => {
         </div>
         <div className="flex flex-row justify-end w-full gap-2 px-6 py-4 border-t border-primary flex-shrink-0">
           <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-          <DialPrimaryButton label={t(ButtonsI18nKey.ExportCsv)} onClick={onExport} disabled={isExporting} />
+          <DialPrimaryButton
+            label={t(ButtonsI18nKey.ExportCsv)}
+            onClick={onExport}
+            disabled={isExporting || checkedColumns.size === 0}
+          />
         </div>
       </div>
     </DialPopup>

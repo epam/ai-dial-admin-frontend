@@ -2,7 +2,7 @@
 
 import { FC, RefObject, useMemo } from 'react';
 
-import { AlertVariant, DialAlert } from '@epam/ai-dial-ui-kit';
+import { NotificationVariant, DialNotification } from '@epam/ai-dial-ui-kit';
 import { isEqual } from 'lodash';
 
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -30,7 +30,7 @@ const TestCases: FC<Props> = ({ selectedTestSuite, originalTestSuite, onChange, 
     <div className="h-full flex flex-col gap-y-6">
       <TemplateVariables selectedTestSuite={selectedTestSuite} onChange={onChange} isSkipRefresh={isSkipRefresh} />
       <TestCasesList selectedTestSuite={selectedTestSuite} onChange={onChange} {...props} />
-      {isNotSaved && <DialAlert variant={AlertVariant.Info} message={t(TestSuitesI18nKey.Warning)} />}
+      {isNotSaved && <DialNotification variant={NotificationVariant.Info} message={t(TestSuitesI18nKey.Warning)} />}
     </div>
   );
 };

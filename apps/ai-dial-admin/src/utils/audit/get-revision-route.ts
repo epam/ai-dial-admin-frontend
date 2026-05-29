@@ -38,6 +38,8 @@ export const getRevisionRouteForEntityType = (type?: string, id?: string): strin
     case ActivityAuditResourceType.NIM_DEPLOYMENT:
     case ActivityAuditResourceType.INFERENCE_DEPLOYMENT:
       return `/deployments/${id}/revision/`;
+    case ActivityAuditResourceType.ADMIN_PROPERTIES:
+      return `/admin-settings/revision/`;
     default:
       return null;
   }
