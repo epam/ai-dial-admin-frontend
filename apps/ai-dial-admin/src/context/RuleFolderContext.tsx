@@ -13,7 +13,7 @@ export interface RuleFolderContextType {
   fetchFiles: (path: string) => void;
   fetchRules?: (path: string) => void;
   fetchFolderHierarchy?: (path: string, fullTree?: boolean) => void;
-  files: DialFolder[];
+  files: DialFolder[] | null;
   expandedFolders: Set<string>;
   filePath: string;
   toggleFolder: (folder: DialFile, skipFetch?: boolean, collapseAll?: boolean) => void;
@@ -27,7 +27,7 @@ export interface RuleFolderContextType {
 const RuleFolderContext = createContext<RuleFolderContextType | undefined>(undefined);
 
 export const RuleFolderProvider = ({ children, attributes }: { children: ReactNode; attributes?: string }) => {
-  const [files, setFiles] = useState<DialFolder[]>([]);
+  const [files, setFiles] = useState<DialFolder[] | null>(null);
   const [currentFolder, setCurrentFolder] = useState<DialFolder>();
   const [isLoading, setIsLoading] = useState(false);
   const [filePath, setFilePath] = useState('');
@@ -130,32 +130,41 @@ export const RuleFolderProvider = ({ children, attributes }: { children: ReactNo
   };
 
   const fetchFiles = (path: string) => {
-    Promise.all([getFolders(path), getRules(path)]).then(([folders, rules]) => {
-      setFetchedFoldersRule((prev) => ({
-        ...prev,
-        [path]: fillFolderRules(path, rules.response) as Record<string, DialRule[]>,
-      }));
-      if (folders && folders.length) {
-        const files = folders?.map((f) => ({ ...f, nodeType: DialFileNodeType.FOLDER }));
-        setFiles((prevFiles) => {
-          const newFiles = mergeFiles(prevFiles, files as DialFolder[], path);
-          if (prevFiles.length === 0) {
-            toggleFolder(newFiles[0], true);
-          }
-          return newFiles;
-        });
-        setFetchedFoldersData((prev) => ({
+    setIsLoading(true);
+    Promise.all([getFolders(path), getRules(path)])
+      .then(([folders, rules]) => {
+        setFetchedFoldersRule((prev) => ({
           ...prev,
-          [path]: files as DialFolder[],
+          [path]: fillFolderRules(path, rules.response) as Record<string, DialRule[]>,
         }));
-      } else {
-        setFolderToggled(path);
-        setFetchedFoldersData((prev) => ({
-          ...prev,
-          [path]: [],
-        }));
-      }
-    });
+        if (folders && folders.length) {
+          const files = folders?.map((f) => ({ ...f, nodeType: DialFileNodeType.FOLDER }));
+          setFiles((prevFiles) => {
+            const prev = prevFiles ?? [];
+            const newFiles = mergeFiles(prev, files as DialFolder[], path);
+            if (prev.length === 0) {
+              toggleFolder(newFiles[0], true);
+            }
+            return newFiles;
+          });
+          setFetchedFoldersData((prev) => ({
+            ...prev,
+            [path]: files as DialFolder[],
+          }));
+        } else {
+          setFolderToggled(path);
+          setFiles([]);
+          setFetchedFoldersData((prev) => ({
+            ...prev,
+            [path]: [],
+          }));
+        }
+        setIsLoading(false);
+      })
+      .catch(() => {
+        setFiles([]);
+        setIsLoading(false);
+      });
   };
 
   const toggleFolder = (folder: DialFolder, skipFetch?: boolean, collapseAll?: boolean) => {

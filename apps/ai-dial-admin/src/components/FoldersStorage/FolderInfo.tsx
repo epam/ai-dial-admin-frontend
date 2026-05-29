@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
-import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
 import { updateRules } from '@/src/app/[lang]/folders-storage/actions';
 import RulesList from '@/src/components/Rules/RulesList';
@@ -20,7 +20,7 @@ interface Props {
 
 const FolderInfo: FC<Props> = ({ isReadonly }) => {
   const t = useI18n();
-  const { currentFolder, fetchedFoldersRule, filePath, fetchRules } = useRuleFolder();
+  const { currentFolder, fetchedFoldersRule, filePath, fetchRules, isLoading, files } = useRuleFolder();
   const [originalRules, setOriginalRules] = useState(fetchedFoldersRule?.[filePath]);
   const [editableRules, setEditableRules] = useState(fetchedFoldersRule?.[filePath]);
   const [isChanged, setIsChanged] = useState<boolean>(false);
@@ -68,6 +68,16 @@ const FolderInfo: FC<Props> = ({ isReadonly }) => {
       ),
     );
   }, [originalRules, editableRules, filePath]);
+
+  const isFetching = isLoading || files == null;
+
+  if (isFetching) {
+    return (
+      <div className="flex size-full items-center justify-center bg-layer-3 rounded">
+        <DialLoader size={40} />
+      </div>
+    );
+  }
 
   return !currentFolder ? (
     <DialNoDataContent title={t(EntitiesI18nKey.NoFolders)} />
