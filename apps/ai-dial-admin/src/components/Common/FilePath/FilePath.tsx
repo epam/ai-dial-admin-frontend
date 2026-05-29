@@ -134,6 +134,9 @@ const FilePath: FC<Props> = ({
           onCreateFolder={handleCreateFolder}
           gridOptions={getFilePathGridOptions(t, view)}
           showHiddenFileSwitcher={false}
+          navigationPanelOptions={{
+            searchable: false,
+          }}
         />
       </div>
     </div>
