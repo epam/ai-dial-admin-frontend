@@ -88,7 +88,7 @@ const DeploymentProperties: FC<Props> = ({
   );
 
   const onChangeDisplayName = useCallback(
-    (displayName: string) => {
+    (displayName?: string) => {
       onChangeEntity({ ...entity, displayName });
       onValidationDisplayName(displayName);
     },
@@ -138,6 +138,7 @@ const DeploymentProperties: FC<Props> = ({
         value={entity.displayName}
         customSelectedValue={entity.displayName}
         onChange={(value) => onChangeDisplayName(value as string)}
+        onInlineQueryChange={(value) => onChangeDisplayName(value)}
         error={displayNameError}
         options={uniq(namesConfiguration.names)
           .sort()
