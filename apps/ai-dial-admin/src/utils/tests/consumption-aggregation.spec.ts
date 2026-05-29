@@ -156,6 +156,34 @@ describe('Utils :: consumption-aggregation :: aggregateByDeployment', () => {
     expect(out.find((r) => r.name === 'd_2')?.prompts).toBe('20');
   });
 
+  test('merges a root that the backend emits with both "" and "undefined" parent sentinels', () => {
+    const data = makeData([
+      { deployment: 'app-A', parent_deployment: '', execution_path: 'app-A', project_id: 'p_x', tokens_p: '100' },
+      {
+        deployment: 'app-A',
+        parent_deployment: 'undefined',
+        execution_path: 'app-A',
+        project_id: 'p_x',
+        tokens_p: '27',
+      },
+    ]);
+
+    const out = aggregateByDeployment(data);
+    expect(out).toHaveLength(1);
+    expect(out[0]).toMatchObject({ name: 'app-A', execution_path: 'app-A', prompts: '127' });
+  });
+
+  test('merges a child whose parent_deployment and path-derived parent resolve identically', () => {
+    const data = makeData([
+      { deployment: 'leaf', parent_deployment: 'X', execution_path: 'X/leaf', project_id: 'p_x', tokens_p: '40' },
+      { deployment: 'leaf', parent_deployment: '', execution_path: 'X/leaf', project_id: 'p_x', tokens_p: '2' },
+    ]);
+
+    const out = aggregateByDeployment(data);
+    expect(out).toHaveLength(1);
+    expect(out[0]).toMatchObject({ name: 'leaf', execution_path: 'X/leaf', prompts: '42' });
+  });
+
   test('emits numerics as strings (not numbers)', () => {
     const data = makeData([
       {
