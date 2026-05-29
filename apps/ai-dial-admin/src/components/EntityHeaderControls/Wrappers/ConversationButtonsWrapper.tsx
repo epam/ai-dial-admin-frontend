@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 
 import {
   ButtonAppearance,
-  DialErrorButton,
+  DialDangerButton,
   DialLoader,
   DialSelect,
   SelectSize,
@@ -96,7 +96,7 @@ const ConversationButtonsWrapper = <T extends object>({
               />
               {isVersionLoading && <DialLoader fullWidth={false} size={16} />}
             </div>
-            <DialErrorButton
+            <DialDangerButton
               className={buttonsClassName}
               label={t(ButtonsI18nKey.Delete)}
               appearance={ButtonAppearance.Outlined}
