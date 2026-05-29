@@ -65,6 +65,7 @@ export function enrichWithFolderBreadcrumbs(
 
   if (newBreadcrumbs.length > 3) {
     const firstPart = newBreadcrumbs[0];
+    const hiddenPart = newBreadcrumbs.slice(1, -2);
     const secondPart = newBreadcrumbs.slice(-2);
 
     newBreadcrumbs = [
@@ -72,6 +73,7 @@ export function enrichWithFolderBreadcrumbs(
       {
         name: '...',
         href: '',
+        hiddenBreadcrumbs: hiddenPart,
       },
       ...secondPart,
     ];
