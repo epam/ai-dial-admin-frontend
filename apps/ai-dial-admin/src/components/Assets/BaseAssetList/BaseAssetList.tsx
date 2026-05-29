@@ -55,6 +55,7 @@ import {
   MoveAssetActionMap,
   enrichConversationWithVersion,
 } from './utils';
+import { ImportResult } from '@/src/components/Assets/types';
 
 interface Props {
   view: ApplicationRoute;
@@ -361,7 +362,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
         if (res.success) {
           fetchFiles?.(importFolder);
           const { title, description, errorTitle, errorDescription, skippedTitle, skippedDescription } =
-            getImportNotificationContent(view, importResults, fileType, importFolder, t);
+            getImportNotificationContent(view, importResults as ImportResult[], fileType, importFolder, t);
           if (title && description) {
             showNotification(getSuccessNotification(title, description));
           }
