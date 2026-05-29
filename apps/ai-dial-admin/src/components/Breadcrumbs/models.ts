@@ -14,4 +14,5 @@ export interface Breadcrumb {
   name: string;
   href: string;
   callback?: (href: string) => void;
+  hiddenBreadcrumbs?: Breadcrumb[];
 }
