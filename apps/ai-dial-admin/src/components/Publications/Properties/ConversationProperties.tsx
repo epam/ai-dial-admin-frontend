@@ -17,7 +17,12 @@ const ConversationProperties: FC<Props> = ({ publication, onChange }) => {
       <div className="w-full flex flex-col gap-y-8">
         <Properties selectedConversation={publication.conversations?.[0].conversation as DialConversation} />
         <div className="w-full h-[1px] border-b border-primary"></div>
-        <BaseProperties publication={publication} onChange={onChange} getContext={useConversationFolder} />
+        <BaseProperties
+          publication={publication}
+          onChange={onChange}
+          getContext={useConversationFolder}
+          shouldAbleToCreateNewFolder={false}
+        />
       </div>
     </div>
   );

@@ -16,7 +16,12 @@ const ApplicationProperties: FC<Props> = ({ publication, onChange, applicationSc
   return (
     <div className="flex-1 min-h-0 pt-8">
       <div className="w-full flex flex-col gap-y-8">
-        <BaseProperties publication={publication} onChange={onChange} getContext={useAppsFolder} />
+        <BaseProperties
+          publication={publication}
+          onChange={onChange}
+          getContext={useAppsFolder}
+          shouldAbleToCreateNewFolder={false}
+        />
         <ApplicationDetails publication={publication} onChange={onChange} applicationSchemes={applicationSchemes} />
       </div>
     </div>
