@@ -18,7 +18,7 @@ import { formatDateToLocalString } from '@/src/utils/formatting/date';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 import { ActivityAuditRevision } from '@/src/components/ActivityAudit/models';
 import { auditResourceRoute } from '@/src/components/ActivityAudit/View/Header/constants';
-import { ActivityAuditResourceType, ActivityAuditView } from '@/src/types/activity-audit';
+import { ActivityAuditResourceType, ActivityAuditType, ActivityAuditView } from '@/src/types/activity-audit';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialApplicationScheme } from '@/src/models/dial/application';
@@ -62,7 +62,8 @@ export const getActivityAuditColumns = (
   if (open) {
     actions.push(
       getOpenInNewTabOperation(open, void 0, (_, node) => {
-        return !!(node.data as DialActivity & { children?: DialActivity[] })?.children?.length;
+        const activityType = (node.data as DialActivity)?.activityType;
+        return activityType === ActivityAuditType.Rollback || activityType === ActivityAuditType.Import;
       }),
     );
   }
@@ -72,7 +73,8 @@ export const getActivityAuditColumns = (
   if (resourceRollback) {
     actions.push(
       getResourceRollbackOperation(resourceRollback, (_, node) => {
-        return !!(node.data as DialActivity & { children?: DialActivity[] })?.children?.length;
+        const activityType = (node.data as DialActivity)?.activityType;
+        return activityType === ActivityAuditType.Rollback || activityType === ActivityAuditType.Import;
       }),
     );
   }
@@ -179,26 +181,6 @@ export const getAuditActivityHref = (
     return '';
   }
   return `${getUrnForEntity(route, entity)}/${encodeURIComponent(activityId)}`;
-};
-
-export const areFiltersEquals = (filters1: Record<string, FilterDto>, filters2: Record<string, FilterDto>): boolean => {
-  const keys1 = Object.keys(filters1);
-  const keys2 = Object.keys(filters2);
-
-  if (keys1.length !== keys2.length) return false;
-
-  for (const key of keys1) {
-    if (!filters2[key]) return false;
-
-    const filter1 = filters1[key];
-    const filter2 = filters2[key];
-
-    if (filter1.column !== filter2.column || filter1.value !== filter2.value || filter1.operator !== filter2.operator) {
-      return false;
-    }
-  }
-
-  return true;
 };
 
 export const processActivitiesData = (data: DialActivity[], childrenActivityMap: Record<string, DialActivity[]>) => {
