@@ -62,7 +62,12 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { getEntityAuditFilterId, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
-import { ActivityAuditResourceType, ActivityAuditView, isDeploymentManagerResource } from '@/src/types/activity-audit';
+import {
+  ActivityAuditResourceType,
+  ActivityAuditType,
+  ActivityAuditView,
+  isDeploymentManagerResource,
+} from '@/src/types/activity-audit';
 import { FilterOperatorDto } from '@/src/types/request';
 
 interface Props {
@@ -295,7 +300,7 @@ const ActivityAuditList: FC<Props> = ({
       if (isDeploymentsView && !isDeploymentManagerResource(e.data?.resourceType)) {
         return;
       }
-      if (e.data?.children?.length > 0) {
+      if (e.data?.activityType === ActivityAuditType.Rollback || e.data?.activityType === ActivityAuditType.Import) {
         return;
       }
 
