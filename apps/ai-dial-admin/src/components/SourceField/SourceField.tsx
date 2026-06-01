@@ -103,7 +103,6 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset | DialAppli
             responsesEndpoint: undefined,
           });
         }
-
         onChangeEntity({
           ...entity,
           source: { $type: sourceType as SOURCE_TYPE },

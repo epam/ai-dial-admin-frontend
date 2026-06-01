@@ -40,6 +40,7 @@ export interface DialModelLimit {
 export type DialEndpointExtraData = string | object;
 
 export interface DialModelEndpoint {
+  id?: string;
   endpoint?: string;
   key?: string;
   weight?: number | string;
