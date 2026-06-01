@@ -12,6 +12,7 @@ import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import { CREATE_FOLDER_FORBIDDEN_CHARS, FILE_NAME_MAX_LENGTH } from './constants';
 import { FORBIDDEN_NAME_SYMBOLS } from '@/src/constants/validation';
+import { addTrailingSlash } from '@/src/utils/url';
 
 export const findFolderByPath = (items: DialFile[], targetPath: string): DialFile | undefined => {
   for (const item of items) {
@@ -55,6 +56,7 @@ export const getDestinationFolderPopupOptions = (
     itemsCount === 1 && itemName
       ? t(FileManagerI18nKey.MoveItem, { item: itemName })
       : t(FileManagerI18nKey.MoveItems, { count: itemsCount }),
+  processDestinationFolderPath: (path: string) => addTrailingSlash(path),
 });
 
 export const createEmptyFile = () => {
