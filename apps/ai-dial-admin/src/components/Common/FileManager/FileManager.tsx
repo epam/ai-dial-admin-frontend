@@ -34,7 +34,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import MoveItemsModal from './MoveItemsModal';
-import { MOVE_ITEMS_INDICATOR_DELAY } from './constants';
+import { MAX_FOLDER_NESTING_DEPTH, MOVE_ITEMS_INDICATOR_DELAY } from './constants';
 import {
   getBulkActionsToolbarOptions,
   getDestinationFolderPopupOptions,
@@ -42,6 +42,7 @@ import {
   getToolbarOptions,
   getTreeOptions,
   getValidationMessages,
+  isFolderNestingDepthExceeded,
   validateCreateFolder,
 } from './utils';
 
@@ -165,6 +166,16 @@ const FileManager: FC<Props> = ({
   const handleCreateFolder = useCallback(
     async (_: DialUploadFileItem | undefined, folderPath: string) => {
       const newPath = `${folderPath.replaceAll('//', '/')}/`;
+
+      if (isFolderNestingDepthExceeded(folderPath, MAX_FOLDER_NESTING_DEPTH)) {
+        showNotification(
+          getErrorNotification(
+            t(FileManagerI18nKey.FolderNestingDepthExceededTitle),
+            t(FileManagerI18nKey.FolderNestingDepthExceededDescription, { depth: MAX_FOLDER_NESTING_DEPTH }),
+          ),
+        );
+        return;
+      }
 
       onCreateFolder?.(_, folderPath).then((res) => {
         if (res && res.success) {

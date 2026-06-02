@@ -79,6 +79,15 @@ export const getEmptyFile = () => {
   return uploadFileItem;
 };
 
+export const getFolderNestingDepth = (folderPath: string): number => {
+  const segments = folderPath.replace(/\/+$/, '').split('/').filter(Boolean);
+  return segments.length;
+};
+
+export const isFolderNestingDepthExceeded = (folderPath: string, maxDepth: number): boolean => {
+  return getFolderNestingDepth(folderPath) > maxDepth;
+};
+
 export const isItemNameValid = (name: string): boolean => {
   return !FORBIDDEN_NAME_SYMBOLS.some((symbol) => name.includes(symbol));
 };

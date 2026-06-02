@@ -1746,6 +1746,10 @@ export default {
     ManagePermissions: 'Manage Permissions',
     FolderTree: 'Folder Tree',
     Notifications: {
+      FolderNestingDepthExceeded: {
+        Title: 'Folder nesting limit reached',
+        Description: 'Folders can be nested up to {depth} levels deep. Please select a different location.',
+      },
       CreateFolder: {
         Title: 'Folder created successfully',
         Description: 'You can now add files to this folder.',
