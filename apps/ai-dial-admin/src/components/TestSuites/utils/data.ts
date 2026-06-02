@@ -1,3 +1,4 @@
+import { DatasetTestCase } from '@/src/models/evaluation/dataset';
 import { TestCase } from '@/src/models/evaluation/test-suite';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -12,9 +13,9 @@ export const createNewTestCaseRow = (): Record<string, unknown> => {
   };
 };
 
-export const getTestCaseGridData = (testCases?: TestCase[] | null) => {
+export const getTestCaseGridData = (testCases?: DatasetTestCase[] | null) => {
   return (
-    testCases?.reduce((acc: Record<string, unknown>[], testCase: TestCase) => {
+    testCases?.reduce((acc: Record<string, unknown>[], testCase: DatasetTestCase) => {
       const factsData = Object.keys(testCase.data || {}).reduce((factsAcc: Record<string, string>, factKey: string) => {
         factsAcc[factKey] = testCase.data?.[factKey] as string;
         return factsAcc;

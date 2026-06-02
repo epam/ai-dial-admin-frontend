@@ -36,7 +36,7 @@ const SimpleEntityHeader = <T extends Entity>({
 }: Props<T>) => {
   const isEditorEnabled = jsonConfiguration?.isEditorEnabled;
   const readonlyId =
-    props.view === ApplicationRoute.TestSuites
+    props.view === ApplicationRoute.TestSuites || props.view === ApplicationRoute.Datasets
       ? props.entity.name || ''
       : props.entity.id || props.entity.$id || props.entity.name || '';
 

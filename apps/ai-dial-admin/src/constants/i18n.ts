@@ -30,6 +30,7 @@ export enum MenuI18nKey {
   Files = 'Menu.Files',
   Runs = 'Menu.Runs',
   TestSuites = 'Menu.TestSuites',
+  Datasets = 'Menu.Datasets',
   Metrics = 'Menu.Metrics',
   Audit = 'Menu.Audit',
   Toolsets = 'Menu.Toolsets',
@@ -159,6 +160,7 @@ export enum EntitiesI18nKey {
   NoPublications = 'Entities.NoPublications',
   NoInterceptors = 'Entities.NoInterceptors',
   NoTestSuites = 'Entities.NoTestSuites',
+  NoDatasets = 'Entities.NoDatasets',
   NoRuns = 'Entities.NoRuns',
   NoResults = 'Entities.NoResults',
   NoMetrics = 'Entities.NoMetrics',
@@ -272,6 +274,7 @@ export enum DeleteI18nKey {
   Adapter = 'DeleteEntity.Entities.Adapter',
   InterceptorTemplate = 'DeleteEntity.Entities.InterceptorTemplate',
   TestSuite = 'DeleteEntity.Entities.TestSuite',
+  Dataset = 'DeleteEntity.Entities.Dataset',
   TestCase = 'DeleteEntity.Entities.TestCase',
   Run = 'DeleteEntity.Entities.Run',
   ApplicationRunner = 'DeleteEntity.Entities.ApplicationRunner',
@@ -406,6 +409,7 @@ export enum UpdateI18nKey {
   File = 'UpdateEntity.Entities.File',
   Adapter = 'UpdateEntity.Entities.Adapter',
   TestSuite = 'UpdateEntity.Entities.TestSuite',
+  Dataset = 'UpdateEntity.Entities.Dataset',
   InterceptorTemplate = 'UpdateEntity.Entities.InterceptorTemplate',
   ApplicationRunner = 'UpdateEntity.Entities.ApplicationRunner',
   SystemProperties = 'UpdateEntity.Entities.SystemProperties',
@@ -443,6 +447,7 @@ export enum CreateI18nKey {
   ApplicationRunner = 'CreateEntity.Entities.ApplicationRunner',
   AssetApplication = 'CreateEntity.Entities.AssetApplication',
   TestSuite = 'CreateEntity.Entities.TestSuite',
+  Dataset = 'CreateEntity.Entities.Dataset',
 }
 
 export enum UpstreamEndpointsI18nKey {
@@ -628,6 +633,7 @@ export enum TabsI18nKey {
   Application = 'Tabs.Application',
   InputSchema = 'Tabs.InputSchema',
   OutputSchema = 'Tabs.OutputSchema',
+  Schema = 'Tabs.Schema',
 }
 
 export enum InterceptorsI18nKey {
@@ -1694,6 +1700,49 @@ export enum TestSuitesI18nKey {
   TemplateVariablesExample = 'TestSuites.TemplateVariablesExample',
   TemplateVariablesDescCol = 'TestSuites.TemplateVariablesDescCol',
   TemplateVariablesSupportedTypes = 'TestSuites.TemplateVariablesSupportedTypes',
+  Dataset = 'TestSuites.Dataset',
+  DatasetNotBound = 'TestSuites.DatasetNotBound',
+  PickPublicDataset = 'TestSuites.PickPublicDataset',
+  CreatePrivateDataset = 'TestSuites.CreatePrivateDataset',
+  DatasetPrivateDescription = 'TestSuites.DatasetPrivateDescription',
+  DatasetPublicDescription = 'TestSuites.DatasetPublicDescription',
+  UnbindDataset = 'TestSuites.UnbindDataset',
+  UnbindDatasetConfirmTitle = 'TestSuites.UnbindDatasetConfirmTitle',
+  UnbindDatasetConfirmDescription = 'TestSuites.UnbindDatasetConfirmDescription',
+  MakePublicDatasetConfirmTitle = 'TestSuites.MakePublicDatasetConfirmTitle',
+  MakePublicDatasetConfirmDescription = 'TestSuites.MakePublicDatasetConfirmDescription',
+  EditOnDatasetPage = 'TestSuites.EditOnDatasetPage',
+  SchemaReadOnlyDescription = 'TestSuites.SchemaReadOnlyDescription',
+  NoDatasetLinked = 'TestSuites.NoDatasetLinked',
+  OpenDataset = 'TestSuites.OpenDataset',
+  ChangeDataset = 'TestSuites.ChangeDataset',
+}
+
+export enum DatasetsI18nKey {
+  CreateDataset = 'Datasets.CreateDataset',
+  UpdateDataset = 'Datasets.UpdateDataset',
+  NoTestCases = 'Datasets.NoTestCases',
+  NoSchemaFields = 'Datasets.NoSchemaFields',
+  SchemaDescription = 'Datasets.SchemaDescription',
+  ImportSuccess = 'Datasets.ImportSuccess',
+  ImportFailed = 'Datasets.ImportFailed',
+  ImportSuccessDescription = 'Datasets.ImportSuccessDescription',
+  RemoveSuccess = 'Datasets.RemoveSuccess',
+  RemoveFailed = 'Datasets.RemoveFailed',
+  SelectedTestCases = 'Datasets.SelectedTestCases',
+  MakePrivate = 'Datasets.MakePrivate',
+  MakePrivateConfirmTitle = 'Datasets.MakePrivateConfirmTitle',
+  MakePrivateConfirmDescription = 'Datasets.MakePrivateConfirmDescription',
+  MakePrivateSuccess = 'Datasets.MakePrivateSuccess',
+  MakePrivateFailed = 'Datasets.MakePrivateFailed',
+  MakePublic = 'Datasets.MakePublic',
+  MakePublicConfirmTitle = 'Datasets.MakePublicConfirmTitle',
+  MakePublicConfirmDescription = 'Datasets.MakePublicConfirmDescription',
+  MakePublicSuccess = 'Datasets.MakePublicSuccess',
+  MakePublicFailed = 'Datasets.MakePublicFailed',
+  VisibilityPrivate = 'Datasets.VisibilityPrivate',
+  VisibilityPublic = 'Datasets.VisibilityPublic',
+  RevalidatingTestCases = 'Datasets.RevalidatingTestCases',
 }
 
 export enum RunsI18nKey {

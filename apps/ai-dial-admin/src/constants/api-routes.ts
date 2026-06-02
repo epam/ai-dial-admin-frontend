@@ -12,5 +12,6 @@ export enum ApiRoute {
   RunsStatusStream = '/api/runs/status-stream',
   Sse = '/api/sse',
   TestSuitesExport = '/api/test-suites/export',
+  DatasetsExport = '/api/datasets/export',
   Themes = '/api/themes',
 }
