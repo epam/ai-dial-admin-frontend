@@ -130,7 +130,7 @@ const DuplicateEntity: FC<Props> = ({ onDuplicate, names, view, isModalOpen, onC
 
   const onDuplicateClick = useCallback(async () => {
     const isUnique = RoutesForCheckingUniqueName.includes(view)
-      ? await checkIsUniqueDeploymentName(clonedEntity.name as string)
+      ? await checkIsUniqueDeploymentName(clonedEntity.name as string, view)
       : true;
 
     setIsUniqueNameError(!isUnique);

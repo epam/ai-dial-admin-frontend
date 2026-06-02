@@ -48,7 +48,7 @@ const IdControl = <T extends { name?: string }>({
         ? getErrorForUrlId(name, names, t)
         : getErrorForName(
             name,
-            names,
+            undefined,
             t,
             isUniqueNameError,
             true,

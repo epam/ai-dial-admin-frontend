@@ -2,13 +2,19 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { utilityApi } from '@/src/app/api/api';
+import { interceptorsApi, utilityApi } from '@/src/app/api/api';
+import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
-export async function checkIsUniqueDeploymentName(name: string): Promise<boolean> {
+export async function checkIsUniqueDeploymentName(name: string, route?: ApplicationRoute): Promise<boolean> {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  const response = await utilityApi.checkDeploymentByName(name, token);
+
+  const response =
+    route === ApplicationRoute.Interceptors
+      ? await interceptorsApi.checkInterceptorByName(name, token)
+      : await utilityApi.checkDeploymentByName(name, token);
+
   return response === null;
 }
 

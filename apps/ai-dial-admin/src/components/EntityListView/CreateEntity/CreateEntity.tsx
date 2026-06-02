@@ -79,7 +79,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
       };
 
       const isUnique = RoutesForCheckingUniqueName.includes(route)
-        ? await checkIsUniqueDeploymentName(entity.name as string)
+        ? await checkIsUniqueDeploymentName(entity.name as string, route)
         : true;
 
       setIsUniqueNameError(!isUnique);
@@ -158,7 +158,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
       onCancel={onClose}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
       submitLabel={t(ButtonsI18nKey.Create)}
-      disableSubmitButton={(isUniqueNameError != null && !isUniqueNameError) || !isValid}
+      disableSubmitButton={(isUniqueNameError != null && isUniqueNameError) || !isValid}
     >
       <div className="flex flex-col overflow-auto px-6 py-4">
         <Properties

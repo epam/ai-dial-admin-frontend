@@ -15,7 +15,7 @@ vi.mock('@/src/app/actions/deployments', () => ({
 }));
 
 describe('DeploymentProperties', () => {
-  test('shows duplicate ID error when entity name matches an existing name', () => {
+  test('does not show duplicate ID error from local names while typing', () => {
     render(
       <DeploymentProperties
         view={ApplicationRoute.Models}
@@ -25,19 +25,20 @@ describe('DeploymentProperties', () => {
       />,
     );
 
-    expect(screen.getByText(ErrorI18nKey.NameExists)).toBeInTheDocument();
+    expect(screen.queryByText(ErrorI18nKey.NameExists)).not.toBeInTheDocument();
   });
 
-  test('does not show duplicate ID error when entity name is unique', () => {
+  test('shows duplicate ID error when backend reports non-unique name', () => {
     render(
       <DeploymentProperties
         view={ApplicationRoute.Models}
-        entity={{ name: 'new-model', displayName: '', description: '' }}
+        entity={{ name: 'existing-model', displayName: '', description: '' }}
         names={['existing-model']}
+        isUniqueNameError
         onChangeEntity={vi.fn()}
       />,
     );
 
-    expect(screen.queryByText(ErrorI18nKey.NameExists)).not.toBeInTheDocument();
+    expect(screen.getByText(ErrorI18nKey.NameExists)).toBeInTheDocument();
   });
 });

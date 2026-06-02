@@ -149,7 +149,7 @@ const DuplicateToolset: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose,
   }, []);
 
   const onDuplicateClick = useCallback(async () => {
-    const isUnique = await checkIsUniqueDeploymentName(clonedEntity.name as string);
+    const isUnique = await checkIsUniqueDeploymentName(clonedEntity.name as string, ApplicationRoute.Toolsets);
 
     setIsUniqueNameError(!isUnique);
 

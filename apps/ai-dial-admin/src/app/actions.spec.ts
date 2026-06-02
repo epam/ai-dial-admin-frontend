@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { utilityApi } from '@/src/app/api/api';
+import { interceptorsApi, utilityApi } from '@/src/app/api/api';
+import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
@@ -26,7 +27,7 @@ describe('Server actions', () => {
   test('Should call checkIsUniqueDeploymentName action', async () => {
     (utilityApi.checkDeploymentByName as any).mockResolvedValue(null);
 
-    const result = await checkIsUniqueDeploymentName('my-deployment');
+    const result = await checkIsUniqueDeploymentName('my-deployment', ApplicationRoute.Models);
 
     expect(getUserToken).toHaveBeenCalled();
     expect(utilityApi.checkDeploymentByName).toHaveBeenCalledWith('my-deployment', TOKEN_MOCK);
@@ -37,6 +38,24 @@ describe('Server actions', () => {
     (utilityApi.checkDeploymentByName as any).mockResolvedValue({ status: 200 });
 
     const result = await checkIsUniqueDeploymentName('existing-deployment');
+
+    expect(result).toBe(false);
+  });
+
+  test('Should call interceptor unique-name check for interceptors route', async () => {
+    (interceptorsApi.checkInterceptorByName as any).mockResolvedValue(null);
+
+    const result = await checkIsUniqueDeploymentName('my-interceptor', ApplicationRoute.Interceptors);
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(interceptorsApi.checkInterceptorByName).toHaveBeenCalledWith('my-interceptor', TOKEN_MOCK);
+    expect(result).toBe(true);
+  });
+
+  test('Should return false when interceptor already exists', async () => {
+    (interceptorsApi.checkInterceptorByName as any).mockResolvedValue({ status: 200 });
+
+    const result = await checkIsUniqueDeploymentName('existing-interceptor', ApplicationRoute.Interceptors);
 
     expect(result).toBe(false);
   });
