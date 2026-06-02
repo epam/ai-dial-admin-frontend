@@ -1714,6 +1714,7 @@ export enum TestSuitesI18nKey {
   EditOnDatasetPage = 'TestSuites.EditOnDatasetPage',
   SchemaReadOnlyDescription = 'TestSuites.SchemaReadOnlyDescription',
   NoDatasetLinked = 'TestSuites.NoDatasetLinked',
+  DatasetRequiredForMetrics = 'TestSuites.DatasetRequiredForMetrics',
   OpenDataset = 'TestSuites.OpenDataset',
   ChangeDataset = 'TestSuites.ChangeDataset',
 }

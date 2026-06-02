@@ -289,5 +289,4 @@ describe('TestSuites :: server actions', () => {
     expect(testSuitesApi.duplicateTestSuite).toHaveBeenCalledWith('suite-id', body, TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
-
 });

@@ -1749,6 +1749,7 @@ export default {
     EditOnDatasetPage: 'Edit on Dataset page',
     SchemaReadOnlyDescription: 'Schema is defined on the linked dataset and is read-only here.',
     NoDatasetLinked: 'No dataset linked. Link a dataset to manage test cases and run this suite.',
+    DatasetRequiredForMetrics: 'Please link a dataset to this test suite before adding metrics.',
     OpenDataset: 'Open dataset',
     ChangeDataset: 'Change dataset',
   },

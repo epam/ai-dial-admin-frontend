@@ -32,11 +32,7 @@ describe('getTestCaseColumns', () => {
   });
 
   test('should add columns for each schema field', () => {
-    const schema = [
-      makeSchema('temperature'),
-      makeSchema('model'),
-      makeSchema('maxTokens', TestCaseItemType.NUMBER),
-    ];
+    const schema = [makeSchema('temperature'), makeSchema('model'), makeSchema('maxTokens', TestCaseItemType.NUMBER)];
 
     const result = getTestCaseColumns(makeSuite(), onCellChange, undefined, schema);
 
@@ -75,11 +71,7 @@ describe('getTestCaseColumns', () => {
   });
 
   test('should handle schema fields with special characters in names', () => {
-    const schema = [
-      makeSchema('fact-with-dash'),
-      makeSchema('fact_with_underscore'),
-      makeSchema('fact.with.dot'),
-    ];
+    const schema = [makeSchema('fact-with-dash'), makeSchema('fact_with_underscore'), makeSchema('fact.with.dot')];
 
     const result = getTestCaseColumns(makeSuite(), onCellChange, undefined, schema);
 
