@@ -1,9 +1,9 @@
 import { FC, ReactNode } from 'react';
 
-import { AlertVariant, DialAlert } from '@epam/ai-dial-ui-kit';
+import { NotificationVariant, DialNotification } from '@epam/ai-dial-ui-kit';
 
 interface Props {
-  variant?: AlertVariant;
+  variant?: NotificationVariant;
   title?: ReactNode;
   message: ReactNode;
   className?: string;
@@ -12,9 +12,9 @@ interface Props {
 
 const EntityBanner: FC<Props> = ({ variant, title, message, className, children }) => {
   return (
-    <DialAlert
+    <DialNotification
       className={className}
-      variant={variant ?? AlertVariant.Warning}
+      variant={variant ?? NotificationVariant.Warning}
       message={
         <span className="small">
           {title && (
@@ -27,7 +27,7 @@ const EntityBanner: FC<Props> = ({ variant, title, message, className, children 
       }
     >
       {children}
-    </DialAlert>
+    </DialNotification>
   );
 };
 

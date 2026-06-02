@@ -37,7 +37,7 @@
 
 ## 7. Try-it-out MCP branch
 
-- [x] 7.1 Update `src/components/TestSuites/RequestTemplate/components/TryOut.tsx`: derive `isMcp = testSuite.suiteType === 'MCP_TOOL'`; replace "Request Body Preview" label with "Tool Arguments Preview" when `isMcp`; replace `endpointRef.method/relativeUrlPattern` line with `TOOL CALL deployment:tool` when `isMcp`; replace `DialAlert` status logic: use `response.isError` boolean for MCP, `response.statusCode` for DEPLOYMENT
+- [x] 7.1 Update `src/components/TestSuites/RequestTemplate/components/TryOut.tsx`: derive `isMcp = testSuite.suiteType === 'MCP_TOOL'`; replace "Request Body Preview" label with "Tool Arguments Preview" when `isMcp`; replace `endpointRef.method/relativeUrlPattern` line with `TOOL CALL deployment:tool` when `isMcp`; replace `DialNotification` status logic: use `response.isError` boolean for MCP, `response.statusCode` for DEPLOYMENT
 
 ## 8. Tests
 

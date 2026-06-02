@@ -80,9 +80,9 @@ const McpDashboard: FC<Props> = ({
             <TelemetryGrid
               getData={getData}
               refreshTime={refreshTime}
-              query={isEntityView ? null : MCP_CALLS_BY_DEPLOYMENT_QUERY}
+              query={MCP_CALLS_BY_DEPLOYMENT_QUERY}
               columnDefs={MCP_CALLS_BY_DEPLOYMENT_COLUMNS}
-              title={t(TelemetryI18nKey.CallsByDeployment)}
+              title={t(TelemetryI18nKey.CallsFromParentDeployments)}
             />
           </div>
           <div className="flex flex-1 relative">

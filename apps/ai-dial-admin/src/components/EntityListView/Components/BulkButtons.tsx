@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 
-import { ButtonAppearance, DialErrorButton, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { ButtonAppearance, DialDangerButton, DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconFileArrowRight, IconTrashX } from '@tabler/icons-react';
 
 import CloseButton from '@/src/components/Common/CloseButton/CloseButton';
@@ -59,7 +59,7 @@ const BulkButtons: FC<Props> = ({
         onClick={onBulkExport}
       />
       {isAssetView(route) && (
-        <DialErrorButton
+        <DialDangerButton
           label={t(ButtonsI18nKey.Delete)}
           appearance={ButtonAppearance.Outlined}
           iconBefore={<IconTrashX {...BASE_BUTTON_ICON_PROPS} />}

@@ -1,6 +1,6 @@
 import { FC } from 'react';
 
-import { AlertVariant, DialAlert } from '@epam/ai-dial-ui-kit';
+import { NotificationVariant, DialNotification } from '@epam/ai-dial-ui-kit';
 
 import { ImportI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -21,7 +21,7 @@ const ValidationBanner: FC<Props> = ({ count }) => {
     </span>
   );
 
-  return <DialAlert variant={AlertVariant.Error} message={message} />;
+  return <DialNotification variant={NotificationVariant.Error} message={message} />;
 };
 
 export default ValidationBanner;

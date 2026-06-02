@@ -13,7 +13,7 @@ import {
 } from '@/src/components/EntityListView/Import/utils';
 import { IMPORT_FILE_TYPES, IMPORT_RESOLUTIONS, IMPORT_STEPS } from '@/src/constants/import';
 import { APPLICATION_ZIP_TYPES } from '@/src/constants/request-headers';
-import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import type { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
@@ -39,9 +39,24 @@ interface Props {
   preselectedItems?: File[];
 }
 
+const getExistingFolderItems = (folderContext?: AssetsFolderContext) => {
+  if (!folderContext) {
+    return [];
+  }
+
+  const { filePath, fetchedFoldersData, data } = folderContext;
+  if (filePath != null && Object.hasOwn(fetchedFoldersData, filePath)) {
+    return fetchedFoldersData[filePath];
+  }
+
+  return data ?? [];
+};
+
 const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, onApply, preselectedItems }) => {
   const folderContext = getAssetContext?.();
   const t = useI18n();
+
+  const existingFolderItems = useMemo(() => getExistingFolderItems(folderContext), [folderContext]);
 
   const fileTypes = useMemo(() => IMPORT_FILE_TYPES(t, route), [t, route]);
   const [resolutions, setResolutions] = useState(IMPORT_RESOLUTIONS(t));
@@ -293,7 +308,7 @@ const ImportModal: FC<Props> = ({ isModalOpen, route, getAssetContext, onClose, 
         {currentStepId === ImportSteps.PROPERTIES && (
           <ImportConflicts
             route={route}
-            existing={folderContext?.data || []}
+            existing={existingFolderItems}
             filesMap={fileType === FileType.JSON ? jsonFileMap : separateFileMap}
             setEditedFileMap={setEditedFileMap}
             resolutions={resolutions}

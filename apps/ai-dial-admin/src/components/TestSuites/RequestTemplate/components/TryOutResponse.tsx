@@ -2,7 +2,13 @@
 import { FC, ReactNode, useMemo } from 'react';
 
 import Grafana from '@/public/images/icons/grafana.svg';
-import { AlertVariant, DialAlert, DialLoader, DialNeutralButton, ElementSize } from '@epam/ai-dial-ui-kit';
+import {
+  NotificationVariant,
+  DialNotification,
+  DialLoader,
+  DialNeutralButton,
+  ElementSize,
+} from '@epam/ai-dial-ui-kit';
 
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
@@ -39,11 +45,11 @@ const TryOutResponsePreview: FC<Props> = ({
       ? t(TestSuitesI18nKey.ToolCallFailed)
       : t(TestSuitesI18nKey.ToolCallSucceeded)
     : `${response.statusCode}`;
-  const alertVariant = isError ? AlertVariant.Error : AlertVariant.Success;
+  const alertVariant = isError ? NotificationVariant.Error : NotificationVariant.Success;
 
   return (
     <>
-      <DialAlert message={alertMessage} variant={alertVariant}>
+      <DialNotification message={alertMessage} variant={alertVariant}>
         {grafanaTraceUrl && (
           <DialNeutralButton
             size={ElementSize.Small}
@@ -53,7 +59,7 @@ const TryOutResponsePreview: FC<Props> = ({
             onClick={() => window.open(grafanaTraceUrl, '_blank')}
           />
         )}
-      </DialAlert>
+      </DialNotification>
 
       {/* todo: possible change this component to codeViewer */}
       <CollapsibleSection

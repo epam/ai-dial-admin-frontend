@@ -447,6 +447,7 @@ export enum CreateI18nKey {
 
 export enum UpstreamEndpointsI18nKey {
   Upstream = 'UpstreamEndpoints.Upstream',
+  Id = 'UpstreamEndpoints.Id',
   AddUpstream = 'UpstreamEndpoints.AddUpstream',
   Endpoints = 'UpstreamEndpoints.Endpoints',
   EndpointsWithResponses = 'UpstreamEndpoints.EndpointsWithResponses',
@@ -654,7 +655,7 @@ export enum TelemetryI18nKey {
   RequestsNumber = 'Telemetry.RequestsNumber',
   RequestCount = 'Telemetry.RequestCount',
   TotalTokens = 'Telemetry.TotalTokens',
-  Money = 'Telemetry.Money',
+  TotalMoney = 'Telemetry.TotalMoney',
   Grafana = 'Telemetry.OpenGrafana',
   FilterTypeMcp = 'Telemetry.Filter.TypeMcp',
   FilterTypeDeployment = 'Telemetry.Filter.TypeDeployment',
@@ -1088,6 +1089,7 @@ export enum EntityPlaceholdersI18nKey {
   Tier = 'EntityPlaceholders.Tier',
   Weight = 'EntityPlaceholders.Weight',
   UpstreamEndpoint = 'EntityPlaceholders.UpstreamEndpoint',
+  UpstreamId = 'EntityPlaceholders.UpstreamId',
   UpstreamEndpointWithResponses = 'EntityPlaceholders.UpstreamEndpointWithResponses',
   UpstreamKey = 'EntityPlaceholders.UpstreamKey',
   Value = 'EntityPlaceholders.Value',

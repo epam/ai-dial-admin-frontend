@@ -487,6 +487,7 @@ export default {
   },
   UpstreamEndpoints: {
     Upstream: 'Upstream',
+    Id: 'ID',
     AddUpstream: 'Add Upstream',
     Endpoints: 'Upstream Endpoints',
     EndpointsWithResponses: 'Chat completion endpoint',
@@ -662,7 +663,7 @@ export default {
     RequestsNumber: 'Requests number',
     RequestCount: 'Request count',
     TotalTokens: 'Total tokens',
-    Money: 'Money',
+    TotalMoney: 'Total money',
     OpenGrafana: 'Open Grafana',
     Filter: {
       TypeProjects: 'Projects',
@@ -1238,6 +1239,7 @@ export default {
     TokenEndpoint: 'Enter token endpoint',
     AuthorizationEndpoint: 'Enter authorization endpoint',
     UpstreamEndpoint: 'Enter upstream endpoint',
+    UpstreamId: 'Enter ID',
     UpstreamEndpointWithResponses: 'Enter chat completion endpoint',
     UpstreamKey: 'Enter upstream key',
     Value: 'Enter value',

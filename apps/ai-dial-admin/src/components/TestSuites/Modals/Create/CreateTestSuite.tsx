@@ -1,6 +1,13 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { AlertVariant, DialAlert, DialPopup, DialSteps, PopupSize, StepStatus } from '@epam/ai-dial-ui-kit';
+import {
+  NotificationVariant,
+  DialNotification,
+  DialPopup,
+  DialSteps,
+  PopupSize,
+  StepStatus,
+} from '@epam/ai-dial-ui-kit';
 
 import { getTestSuiteByName } from '@/src/app/[lang]/test-suites/actions';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
@@ -155,7 +162,10 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEnti
                 isCreate={!currentEntity}
               >
                 {!!currentEntity && (
-                  <DialAlert message={t(TestSuitesI18nKey.MethodChangeWarning)} variant={AlertVariant.Warning} />
+                  <DialNotification
+                    message={t(TestSuitesI18nKey.MethodChangeWarning)}
+                    variant={NotificationVariant.Warning}
+                  />
                 )}
               </Methods>
             ))}
