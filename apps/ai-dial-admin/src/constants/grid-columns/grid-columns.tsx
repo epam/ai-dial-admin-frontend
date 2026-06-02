@@ -607,8 +607,8 @@ export const TOOLS_CONSUMPTION_COLUMNS: ColDef[] = [
 ];
 
 export const MCP_CALLS_BY_DEPLOYMENT_COLUMNS: ColDef[] = [
-  { field: 'parent_deployment', headerName: 'Deployment Name', hide: false },
-  { field: 'name', headerName: 'MCP Name', hide: false },
+  { field: 'parent_deployment', headerName: 'Parent Deployment', hide: false },
+  { field: 'name', headerName: 'Toolset Name', hide: false },
   { field: 'requests', headerName: 'Calls', hide: false, ...numericColumn },
 ];
 
