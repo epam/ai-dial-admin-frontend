@@ -4,9 +4,16 @@
 #   Cursor      (.cursor/rules/testing.mdc symlinks here)              -> `globs` / `alwaysApply` / `description`
 #   Copilot     (.github/instructions/testing.instructions.md symlinks here) -> `applyTo`
 # Keep all three globs in sync. Editing the body updates every tool at once (the others are symlinks).
+# Note: VS Code Copilot also default-scans .claude/rules (reading `paths`), so with the symlink kept it
+# may load this rule twice when editing a test file. To dedupe, a dev can set, in their own VS Code
+# settings, chat.instructionsFilesLocations { ".claude/rules": false } (.vscode is gitignored here, so it
+# can't be committed). Copilot instructions affect chat/agent only — never inline tab-completions.
 description: Test-authoring rules — queries, mocks, per-type approach, cost discipline. Use when editing test files.
 paths:
-  - "**/*.{test,spec}.{ts,tsx}"
+  - "**/*.test.ts"
+  - "**/*.test.tsx"
+  - "**/*.spec.ts"
+  - "**/*.spec.tsx"
   - "**/test-setup.tsx"
 globs: "**/*.spec.ts, **/*.spec.tsx, **/*.test.ts, **/*.test.tsx, **/test-setup.tsx"
 applyTo: "**/*.spec.ts, **/*.spec.tsx, **/*.test.ts, **/*.test.tsx, **/test-setup.tsx"
@@ -32,8 +39,8 @@ Applies only when creating or editing:
 - `*.spec.ts` / `*.spec.tsx`
 - `apps/ai-dial-admin/test-setup.tsx`
 
-Read this once per task; don't re-read it. For non-test work, ignore this file and follow
-`CLAUDE.md` / `openspec/config.yaml`.
+This rule auto-attaches when you open a matching file — you don't need to read it again or re-open it
+mid-task. For non-test work it stays out of context; follow `CLAUDE.md` / `openspec/config.yaml` there.
 
 ## §2 Cost & usage discipline
 
@@ -146,13 +153,15 @@ Consolidated from `openspec/config.yaml` (kept here so test work is self-contain
 - Co-locate specs in a `tests/` subfolder next to the code: `feature/tests/<name>.spec.ts(x)`.
 - Use the `@/` alias for cross-dir imports, never `../../`.
 - `import { describe, test, expect } from 'vitest';` — prefer `test(...)` over `it(...)`.
-- Require unit tests for new/updated code; no manual-test tasks.
+
+Test *workflow/planning* rules (when to create a test task, no manual-test tasks, final quality gate) live
+in `openspec/config.yaml` — they fire at planning time, not while you edit a test file, so they're not here.
 
 ## §7 Coverage philosophy
 
-Behavior over lines. The gate in `apps/ai-dial-admin/vitest.config.ts` is **branches 40 /
-functions 40 / lines 50 / statements 50** (v8). **Don't regress it**; ratchet thresholds up as
-coverage grows. Check overall coverage with `npx vitest run --coverage` — a final gate, not a
+Behavior over lines. The gate lives in `apps/ai-dial-admin/vitest.config.ts` (at writing: **branches 40 /
+functions 40 / lines 50 / statements 50**, v8 — defer to that file if these numbers have drifted).
+**Don't regress it**; ratchet thresholds up as coverage grows. Check overall coverage with `npx vitest run --coverage` — a final gate, not a
 per-iteration command. By type: utils → chase branches; components → cover behaviors/states; API →
 url/params/response + error path.
 
