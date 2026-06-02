@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useState, useEffect } from 'react';
+import { FC, useState, useEffect, useCallback } from 'react';
 import classNames from 'classnames';
 import { usePathname } from 'next/navigation';
 import { useI18n, useCurrentLocale } from '@/src/locales/client';
@@ -13,7 +13,7 @@ import {
   shouldEnrichWithFolderBreadcrumbs,
 } from '@/src/components/Breadcrumbs/utils';
 import { Breadcrumb } from '@/src/components/Breadcrumbs/models';
-import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
+import { DialDropdown, DialEllipsisTooltip, DropdownItem } from '@epam/ai-dial-ui-kit';
 
 interface Props {
   mobile: boolean;
@@ -43,6 +43,64 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
     }
   }, [pathname, currentLocale, folderContext?.filePath, folderContext?.setFilePath]);
 
+  const getHiddenBreadcrumbsDropdown = useCallback(
+    (name: string, hiddenBreadcrumbs: Breadcrumb[]) => (
+      <DialDropdown
+        className="cursor-pointer text-secondary hover:text-accent-primary"
+        placement="bottom-start"
+        menu={{
+          items: hiddenBreadcrumbs.map(
+            (b): DropdownItem => ({
+              key: b.href,
+              label: <span className="small">{decodeURIComponent(b.name)}</span>,
+              onClick: () => (b.callback ? b.callback(b.href) : void 0),
+            }),
+          ),
+        }}
+      >
+        {name}
+      </DialDropdown>
+    ),
+    [],
+  );
+
+  const getBreadcrumbItem = useCallback(
+    (breadcrumb: Breadcrumb) => {
+      const { href, key, name, callback, hiddenBreadcrumbs } = breadcrumb;
+      const label = key ? t(key) : name;
+      const linkClassName = classNames(
+        'flex-1 min-w-0 text-secondary relative group-[:last-child]:text-primary',
+        'group-[:last-child]:cursor-default group-[:not(:last-child)]:hover:text-accent-primary group-[:not(:last-child)]:focus-within:text-accent-primary',
+        !href.length && 'pointer-events-none',
+      );
+
+      if (callback) {
+        return (
+          <Link
+            prefetch={false}
+            onClick={(e) => {
+              e.preventDefault();
+              callback(href);
+            }}
+            href="/"
+            className={linkClassName}
+          >
+            <DialEllipsisTooltip text={decodeURIComponent(label)} />
+          </Link>
+        );
+      } else if (hiddenBreadcrumbs && hiddenBreadcrumbs.length > 0) {
+        return getHiddenBreadcrumbsDropdown(name, hiddenBreadcrumbs);
+      } else {
+        return (
+          <Link prefetch={false} href={href} className={linkClassName}>
+            <DialEllipsisTooltip text={decodeURIComponent(label)} />
+          </Link>
+        );
+      }
+    },
+    [getHiddenBreadcrumbsDropdown, t],
+  );
+
   return (
     <div
       className={classNames(
@@ -51,33 +109,10 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
       )}
     >
       <ol className="flex tiny whitespace-nowrap">
-        {breadcrumbs.map(({ href, key, name, callback }, index) => {
-          const label = key ? t(key) : name;
-          const linkClassName = classNames(
-            'flex-1 min-w-0 text-secondary relative group-[:last-child]:text-primary',
-            'group-[:last-child]:cursor-default group-[:not(:last-child)]:hover:text-accent-primary group-[:not(:last-child)]:focus-within:text-accent-primary',
-            !href.length && 'pointer-events-none',
-          );
-
+        {breadcrumbs.map((breadcrumb, index) => {
           return (
-            <li key={`${href}_${index}`} className="flex items-center group max-w-[300px] overflow-hidden">
-              {callback ? (
-                <Link
-                  prefetch={false}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    callback(href);
-                  }}
-                  href="/"
-                  className={linkClassName}
-                >
-                  <DialEllipsisTooltip text={decodeURIComponent(label)} />
-                </Link>
-              ) : (
-                <Link prefetch={false} href={href} className={linkClassName}>
-                  <DialEllipsisTooltip text={decodeURIComponent(label)} />
-                </Link>
-              )}
+            <li key={`${breadcrumb.href}_${index}`} className="flex items-center group max-w-[300px] overflow-hidden">
+              {getBreadcrumbItem(breadcrumb)}
               {breadcrumbs.length !== index + 1 && (
                 <IconChevronRight width={12} height={12} className="text-secondary m-1" />
               )}

@@ -447,6 +447,7 @@ export enum CreateI18nKey {
 
 export enum UpstreamEndpointsI18nKey {
   Upstream = 'UpstreamEndpoints.Upstream',
+  Id = 'UpstreamEndpoints.Id',
   AddUpstream = 'UpstreamEndpoints.AddUpstream',
   Endpoints = 'UpstreamEndpoints.Endpoints',
   EndpointsWithResponses = 'UpstreamEndpoints.EndpointsWithResponses',
@@ -1088,6 +1089,7 @@ export enum EntityPlaceholdersI18nKey {
   Tier = 'EntityPlaceholders.Tier',
   Weight = 'EntityPlaceholders.Weight',
   UpstreamEndpoint = 'EntityPlaceholders.UpstreamEndpoint',
+  UpstreamId = 'EntityPlaceholders.UpstreamId',
   UpstreamEndpointWithResponses = 'EntityPlaceholders.UpstreamEndpointWithResponses',
   UpstreamKey = 'EntityPlaceholders.UpstreamKey',
   Value = 'EntityPlaceholders.Value',
@@ -1776,6 +1778,8 @@ export enum FileManagerI18nKey {
   Toolset = 'FileManager.Toolset',
   Prompts = 'FileManager.Prompts',
   Prompt = 'FileManager.Prompt',
+  Conversations = 'FileManager.Conversations',
+  Conversation = 'FileManager.Conversation',
   Folder = 'FileManager.Folder',
   Items = 'FileManager.Items',
   FolderTree = 'FileManager.FolderTree',
@@ -1795,6 +1799,7 @@ export enum FileManagerI18nKey {
   ApplicationsEmptyStateDescription = 'FileManager.ApplicationsEmptyStateDescription',
   ToolsetsEmptyStateTitle = 'FileManager.ToolsetsEmptyStateTitle',
   ToolsetsEmptyStateDescription = 'FileManager.ToolsetsEmptyStateDescription',
+  ConversationsEmptyStateTitle = 'FileManager.ConversationsEmptyStateTitle',
   MovingItems = 'FileManager.MovingItems',
   MovingProgress = 'FileManager.MovingProgress',
 

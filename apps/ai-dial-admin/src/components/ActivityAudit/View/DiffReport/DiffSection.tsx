@@ -48,33 +48,41 @@ const DiffSection: FC<Props> = ({ sections, name, type, diffView, compareView })
         : t(EntityFieldsI18nKey[name as keyof typeof EntityFieldsI18nKey]);
 
   return (
-    <Accordion
-      title={title}
-      contentClassName="gap-y-8"
-      containerClassName="bg-layer-3"
-      actionButtons={
-        <div className="flex items-center">
-          <DiffLegend added={added} changed={changed} removed={removed} />
-        </div>
-      }
+    <div
+      data-diff-section=""
+      data-diff-added={added > 0 ? '' : undefined}
+      data-diff-changed={changed > 0 ? '' : undefined}
+      data-diff-removed={removed > 0 ? '' : undefined}
     >
-      {validSections.map(({ index, currentData, compareData }) => {
-        const prefix = name === EntityParameterKeys.METADATA ? `Variable ${index + 1} ` : '';
-        const compareLabel = compareView === CompareView.CURRENT ? t(CompareI18nKey.Current) : t(CompareI18nKey.After);
-        return (
-          <div key={index} className="flex flex-row gap-8">
-            <div className="flex flex-col flex-1">
-              <h4 className="mb-2 text-secondary">{`${prefix}${t(CompareI18nKey.Before)}`}</h4>
-              <AuditEntityGrid data={currentData} parameter={name} type={type} index={index} diffView={diffView} />
-            </div>
-            <div className="flex flex-col flex-1">
-              <h4 className="mb-2 text-secondary">{`${prefix}${compareLabel}`}</h4>
-              <AuditEntityGrid data={compareData} parameter={name} type={type} index={index} diffView={diffView} />
-            </div>
+      <Accordion
+        title={title}
+        contentClassName="gap-y-8"
+        containerClassName="bg-layer-3"
+        actionButtons={
+          <div className="flex items-center">
+            <DiffLegend added={added} changed={changed} removed={removed} />
           </div>
-        );
-      })}
-    </Accordion>
+        }
+      >
+        {validSections.map(({ index, currentData, compareData }) => {
+          const prefix = name === EntityParameterKeys.METADATA ? `Variable ${index + 1} ` : '';
+          const compareLabel =
+            compareView === CompareView.CURRENT ? t(CompareI18nKey.Current) : t(CompareI18nKey.After);
+          return (
+            <div key={index} className="flex flex-row gap-8">
+              <div className="flex flex-col flex-1">
+                <h4 className="mb-2 text-secondary">{`${prefix}${t(CompareI18nKey.Before)}`}</h4>
+                <AuditEntityGrid data={currentData} parameter={name} type={type} index={index} diffView={diffView} />
+              </div>
+              <div className="flex flex-col flex-1">
+                <h4 className="mb-2 text-secondary">{`${prefix}${compareLabel}`}</h4>
+                <AuditEntityGrid data={compareData} parameter={name} type={type} index={index} diffView={diffView} />
+              </div>
+            </div>
+          );
+        })}
+      </Accordion>
+    </div>
   );
 };
 

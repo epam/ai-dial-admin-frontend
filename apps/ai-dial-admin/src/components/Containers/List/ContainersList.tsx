@@ -17,7 +17,7 @@ import ContainerDuplicate from '@/src/components/Deployments/Modals/ContainerDup
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import Delete from '@/src/components/EntityView/Modals/Delete/Delete';
 import ListEntities from '@/src/components/ListView/List';
-import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
+import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { IMAGE_BUILD_POLL_INTERVAL } from '@/src/constants/deployments/images';
 import {
   getDeleteOperation,
@@ -38,6 +38,7 @@ import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { onCellClicked } from '@/src/components/EntityListView/utils/on-cell-clicked';
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
@@ -59,11 +60,7 @@ const ContainersList: FC<Props> = ({ route, containersList, names }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const gridOptions: GridOptions = {
-    onCellClicked: (e: CellClickedEvent) => {
-      if (e.colDef.field !== ACTIONS_COLUMN_CEL_ID) {
-        router.push(getUrnForEntity(route, e.data));
-      }
-    },
+    onCellClicked: (e: CellClickedEvent) => onCellClicked(e, route, router.push),
   };
 
   const handleModalClose = useCallback(() => {
@@ -258,6 +255,7 @@ const ContainersList: FC<Props> = ({ route, containersList, names }) => {
         }}
         isEnableColumnPanel
         storageKey={route}
+        getHref={(data) => getUrnForEntity(route, data)}
       >
         <HeaderButtons route={route} names={names} isReadOnlyAdmin={isReadOnlyAdmin} />
       </ListEntities>

@@ -19,7 +19,9 @@ import {
 } from '@/src/components/Assets/utils';
 import FileManager from '@/src/components/Common/FileManager/FileManager';
 import { isItemNameValid } from '@/src/components/Common/FileManager/utils';
+import { navigateEntityUrl } from '@/src/components/EntityListView/utils/on-cell-clicked';
 import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';
+import { usePointerClickModifier } from '@/src/hooks/use-pointer-click-modifier';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -38,7 +40,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { useRouter } from 'next/navigation';
 import Modals from './Modals';
-import { BaseAssetRoute, ModalType } from './types';
+import { BaseAssetRoute, CrudAssetRoute, ModalType } from './types';
 import {
   AssetFolderContextMap,
   BulkDeleteAssetActionMap,
@@ -53,7 +55,9 @@ import {
   getResourceTypeByRoute,
   ImportAssetActionMap,
   MoveAssetActionMap,
+  enrichConversationWithVersion,
 } from './utils';
+import { ImportResult } from '@/src/components/Assets/types';
 
 interface Props {
   view: ApplicationRoute;
@@ -80,6 +84,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
+  const pointerClickModifierRef = usePointerClickModifier();
 
   const getContext = useCallback(() => {
     return AssetFolderContextMap[view as BaseAssetRoute]();
@@ -160,15 +165,19 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
   const handleGridItemClick = useCallback(
     (file: FileManagerGridRow) => {
       if (isItemNameValid(file.name)) {
-        router.push(
+        const pointerEvent = pointerClickModifierRef.current;
+        pointerClickModifierRef.current = null;
+        navigateEntityUrl(
           getUrnForEntity(view, {
             name: file.name,
             path: file.path,
           }),
+          router.push,
+          pointerEvent,
         );
       }
     },
-    [view, router],
+    [view, router, pointerClickModifierRef],
   );
 
   const gridItemVersionsChange = useCallback(
@@ -220,7 +229,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
       const newPath = `${folderPath.replaceAll('//', '/')}/`;
       const emptyAsset = getEmptyAsset(view, newPath);
 
-      const createAsset = CreateAssetActionMap[view as BaseAssetRoute];
+      const createAsset = CreateAssetActionMap[view as CrudAssetRoute];
 
       return createAsset(emptyAsset);
     },
@@ -230,7 +239,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
   const handleCreateAsset = useCallback(
     async (asset: AssetWithVersion, path?: string, isCreateDuplicate?: boolean) => {
       const folderPath = path || destinationFolder || `${ROOT_FOLDER}/`;
-      const createAsset = CreateAssetActionMap[view as BaseAssetRoute];
+      const createAsset = CreateAssetActionMap[view as CrudAssetRoute];
 
       return createAsset({ ...asset, folderId: folderPath }).then((res) => {
         if (res.success) {
@@ -279,7 +288,8 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
       const folders = items.filter((file) => file.nodeType === DialFileNodeType.FOLDER);
       setMovingItems((files?.length || 0) + (folders?.length || 0));
       setMovedItems(0);
-      const moveAsset = MoveAssetActionMap[view as BaseAssetRoute];
+      const moveAsset =
+        view === ApplicationRoute.Conversations ? undefined : MoveAssetActionMap[view as CrudAssetRoute];
 
       const promises: Promise<ServerActionResponse | ServerActionResponse[]>[] = [];
       files.forEach((file) => {
@@ -350,7 +360,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
         view,
       );
 
-      const importAssetAction = ImportAssetActionMap[view as BaseAssetRoute];
+      const importAssetAction = ImportAssetActionMap[view as CrudAssetRoute];
 
       importAssetAction(body, fileType).then((res) => {
         setFolderToRefetch(null);
@@ -359,7 +369,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
         if (res.success) {
           fetchFiles?.(importFolder);
           const { title, description, errorTitle, errorDescription, skippedTitle, skippedDescription } =
-            getImportNotificationContent(view, importResults, fileType, importFolder, t);
+            getImportNotificationContent(view, importResults as ImportResult[], fileType, importFolder, t);
           if (title && description) {
             showNotification(getSuccessNotification(title, description));
           }
@@ -390,6 +400,9 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
 
       return processedAssets.reduce((acc: AssetWithVersion[], curr) => {
         if (curr.nodeType === DialFileNodeType.ITEM) {
+          if (view === ApplicationRoute.Conversations && !curr.version) {
+            curr = enrichConversationWithVersion(curr);
+          }
           curr.selectedVersions = selectedVersionsMap[`${curr.folderId}${curr.name}`] || [curr.version];
           const existing = acc.find((a) => a.nodeType === DialFileNodeType.ITEM && a.name === curr.name);
           if (existing) {
@@ -409,7 +422,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
         return acc;
       }, []);
     },
-    [selectedVersionsMap],
+    [selectedVersionsMap, view],
   );
 
   const onExport = useCallback(
@@ -425,7 +438,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
         }
       });
 
-      const exportAsset = ExportAssetActionMap[view as BaseAssetRoute];
+      const exportAsset = ExportAssetActionMap[view as CrudAssetRoute];
 
       exportAsset(filePaths, fileType).then((res) => {
         if (fileType === ImportFileType.ARCHIVE) {

@@ -10,8 +10,9 @@ import FloatingFilter from '@/src/components/Grid/FloatingFilter/FloatingFilter'
 import { ROOT_FOLDER, TEMP_FOLDER } from '@/src/constants/file';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
-import { CREATE_FOLDER_FORBIDDEN_CHARS, FILE_NAME_MAX_LENGTH, NEW_FOLDER_NAME } from './constants';
+import { CREATE_FOLDER_FORBIDDEN_CHARS, FILE_NAME_MAX_LENGTH } from './constants';
 import { FORBIDDEN_NAME_SYMBOLS } from '@/src/constants/validation';
+import { addTrailingSlash } from '@/src/utils/url';
 
 export const findFolderByPath = (items: DialFile[], targetPath: string): DialFile | undefined => {
   for (const item of items) {
@@ -28,26 +29,12 @@ export const findFolderByPath = (items: DialFile[], targetPath: string): DialFil
   return undefined;
 };
 
-export const getUniqueFolderName = (siblingNames: (string | undefined)[]): string => {
-  const namesSet = new Set(siblingNames);
-
-  if (!namesSet.has(NEW_FOLDER_NAME)) {
-    return NEW_FOLDER_NAME;
-  }
-
-  let counter = 1;
-  while (namesSet.has(`${NEW_FOLDER_NAME} ${counter}`)) {
-    counter++;
-  }
-
-  return `${NEW_FOLDER_NAME} ${counter}`;
-};
-
 const assetEntityMap: Record<string, FileManagerI18nKey> = {
   [ApplicationRoute.AssetsApplications]: FileManagerI18nKey.Applications,
   [ApplicationRoute.AssetsToolsets]: FileManagerI18nKey.Toolsets,
   [ApplicationRoute.Prompts]: FileManagerI18nKey.Prompts,
   [ApplicationRoute.Files]: FileManagerI18nKey.Files,
+  [ApplicationRoute.Conversations]: FileManagerI18nKey.Conversations,
 };
 
 export const getValidationMessages = (t: (key: string) => string) => {
@@ -69,6 +56,7 @@ export const getDestinationFolderPopupOptions = (
     itemsCount === 1 && itemName
       ? t(FileManagerI18nKey.MoveItem, { item: itemName })
       : t(FileManagerI18nKey.MoveItems, { count: itemsCount }),
+  processDestinationFolderPath: (path: string) => addTrailingSlash(path),
 });
 
 export const createEmptyFile = () => {
@@ -161,6 +149,7 @@ export const getTreeOptions = (
   isFetchingFiles: boolean,
   loadedPaths: Set<string>,
   expandedPaths: Set<string>,
+  view: ApplicationRoute,
   setExpanded: (paths: Set<string>) => void,
   t: (key: string) => string,
 ) => {
@@ -169,7 +158,7 @@ export const getTreeOptions = (
     expandedPaths: expandedPaths,
     loadedPaths,
     loadingPaths: isFetchingFiles ? new Set<string>([ROOT_FOLDER]) : new Set<string>(),
-    actionLabels: getActionLabels(getTreeActionLabels(isReadOnlyAdmin), t),
+    actionLabels: getActionLabels(getTreeActionLabels(isReadOnlyAdmin, view), t),
     onExpandedPathsChange: setExpanded,
     header: t(FileManagerI18nKey.FolderTree),
   };
@@ -181,7 +170,14 @@ export const getToolbarOptions = (route: ApplicationRoute, isReadOnlyAdmin: bool
   newButtonLabel: route === ApplicationRoute.Files ? t(ButtonsI18nKey.Add) : t(ButtonsI18nKey.Create),
 });
 
-export const getBulkActionsToolbarOptions = (t: (key: string) => string) => ({
-  getSelectionLabel: (selectedCount: number) => `${selectedCount} ${t(FileManagerI18nKey.SelectedItems)}`,
-  actionLabels: getActionLabels(bulkActionLabels, t),
-});
+export const getBulkActionsToolbarOptions = (view: ApplicationRoute, t: (key: string) => string) => {
+  const actionLabels =
+    view === ApplicationRoute.Conversations
+      ? bulkActionLabels.filter((action) => action.key === 'delete')
+      : bulkActionLabels;
+
+  return {
+    getSelectionLabel: (selectedCount: number) => `${selectedCount} ${t(FileManagerI18nKey.SelectedItems)}`,
+    actionLabels: getActionLabels(actionLabels, t),
+  };
+};

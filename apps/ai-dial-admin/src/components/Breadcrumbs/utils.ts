@@ -8,6 +8,7 @@ import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { useFileFolder } from '@/src/context/assets/FileFolderContext';
 import { Dispatch, SetStateAction } from 'react';
+import { useConversationFolder } from '@/src/context/assets/ConversationsFolderContext';
 
 const IGNORE_BREADCRUMBS = [ApplicationRoute.Home];
 const TRANSLATE_BREADCRUMBS = { [SYSTEM_ROLLBACK_ID]: RollbackI18nKey.Rollback };
@@ -65,6 +66,7 @@ export function enrichWithFolderBreadcrumbs(
 
   if (newBreadcrumbs.length > 3) {
     const firstPart = newBreadcrumbs[0];
+    const hiddenPart = newBreadcrumbs.slice(1, -2);
     const secondPart = newBreadcrumbs.slice(-2);
 
     newBreadcrumbs = [
@@ -72,6 +74,7 @@ export function enrichWithFolderBreadcrumbs(
       {
         name: '...',
         href: '',
+        hiddenBreadcrumbs: hiddenPart,
       },
       ...secondPart,
     ];
@@ -101,6 +104,8 @@ export function getFolderContext(pathname: string, currentLocale: string) {
       return useToolsetFolder;
     case ApplicationRoute.Files:
       return useFileFolder;
+    case ApplicationRoute.Conversations:
+      return useConversationFolder;
     default:
       return null;
   }

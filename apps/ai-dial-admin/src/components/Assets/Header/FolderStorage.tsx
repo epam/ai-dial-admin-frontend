@@ -11,9 +11,10 @@ import { DialFile } from '@/src/models/dial/file';
 import { Publication } from '@/src/models/dial/publications';
 import { ApplicationRoute } from '@/src/types/routes';
 import { removeTrailingSlash } from '@/src/utils/files/path';
+import { DialConversation } from '@/src/models/dial/conversation';
 
 interface Props {
-  asset: AssetWithVersion | DialFile | Publication;
+  asset: AssetWithVersion | DialFile | Publication | DialConversation;
 }
 
 const FoldersStorageLabel: FC<Props> = ({ asset }) => {

@@ -4,6 +4,7 @@ import { SelectCellRendererParams } from '@/src/components/Grid/CellRenderers/Se
 import { ApplicationRoute } from '@/src/types/routes';
 import { FileManagerI18nKey } from '@/src/constants/i18n';
 import { DialFileNodeType } from '@/src/models/dial/file';
+import { enrichConversationWithVersion } from '@/src/components/Assets/BaseAssetList/utils';
 
 export const getGridColumns = (
   view: ApplicationRoute,
@@ -54,6 +55,7 @@ export const getGridColumns = (
     case ApplicationRoute.Prompts:
     case ApplicationRoute.AssetsApplications:
     case ApplicationRoute.AssetsToolsets:
+    case ApplicationRoute.Conversations:
       return hasFoldersToDelete ? [NAME_COLUMN('Display name'), VERSION_COLUMN] : [GRID_NAME_COLUMN, VERSION_COLUMN];
     case ApplicationRoute.Files:
       return hasFoldersToDelete
@@ -90,6 +92,10 @@ export const getDeleteModalTitle = (
     case ApplicationRoute.Files:
       return t(FileManagerI18nKey.DeleteItemsModalTitle, {
         items: itemsCount > 1 ? t(FileManagerI18nKey.Files) : t(FileManagerI18nKey.File),
+      });
+    case ApplicationRoute.Conversations:
+      return t(FileManagerI18nKey.DeleteItemsModalTitle, {
+        items: itemsCount > 1 ? t(FileManagerI18nKey.Conversations) : t(FileManagerI18nKey.Conversation),
       });
   }
 };
@@ -135,6 +141,17 @@ export const getDeleteModalDescription = (
           })
         : t(FileManagerI18nKey.DeleteItemsModalDescription, {
             items: (itemsCount > 1 ? t(FileManagerI18nKey.Files) : t(FileManagerI18nKey.File)).toLowerCase(),
+          });
+    case ApplicationRoute.Conversations:
+      return hasFoldersToDelete
+        ? t(FileManagerI18nKey.DeleteItemsAndFoldersModalDescription, {
+            items: t(FileManagerI18nKey.Conversations).toLowerCase(),
+          })
+        : t(FileManagerI18nKey.DeleteItemsModalDescription, {
+            items: (itemsCount > 1
+              ? t(FileManagerI18nKey.Conversations)
+              : t(FileManagerI18nKey.Conversation)
+            ).toLowerCase(),
           });
   }
 };
@@ -246,16 +263,20 @@ export const generateTreeForDeletingItems = (
 export const processAssetsData = (
   assets: AssetWithVersion[],
   selectedVersionsMap: Record<string, string[]>,
+  view: ApplicationRoute,
 ): AssetWithVersion[] => {
   const processedAssets = assets.map((asset) => {
     if (asset.nodeType === DialFileNodeType.FOLDER && asset.items) {
-      return { ...asset, items: processAssetsData(asset.items, selectedVersionsMap) };
+      return { ...asset, items: processAssetsData(asset.items, selectedVersionsMap, view) };
     }
     return asset;
   });
 
   return processedAssets.reduce((acc: AssetWithVersion[], curr) => {
     if (curr.nodeType === DialFileNodeType.ITEM) {
+      if (view === ApplicationRoute.Conversations && !curr.version) {
+        curr = enrichConversationWithVersion(curr);
+      }
       curr.selectedVersions = selectedVersionsMap[`${curr.folderId}${curr.name}`] || [curr.version];
       const existing = acc.find((a) => a.nodeType === DialFileNodeType.ITEM && a.name === curr.name);
       if (existing) {

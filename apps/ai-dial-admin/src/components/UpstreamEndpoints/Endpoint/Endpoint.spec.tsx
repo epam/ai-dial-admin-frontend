@@ -1,4 +1,5 @@
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { ApplicationRoute } from '@/src/types/routes';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import Endpoint from './Endpoint';
@@ -100,5 +101,64 @@ describe('Endpoint', () => {
       />,
     );
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Remove })).toBeNull();
+  });
+
+  test('renders id input and calls updateEndpoint on id change when view is Models', () => {
+    render(
+      <Endpoint
+        index={0}
+        disabled={false}
+        endpoint={baseEndpoint as any}
+        view={ApplicationRoute.Models}
+        updateEndpoint={updateEndpoint}
+        removeEndpoint={removeEndpoint}
+      />,
+    );
+    expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.UpstreamId)).toBeInTheDocument();
+    fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.UpstreamId), {
+      target: { value: 'new-id' },
+    });
+    expect(updateEndpoint).toHaveBeenCalledWith({ ...baseEndpoint, id: 'new-id' });
+  });
+
+  test('does not render id input when view is not Models', () => {
+    render(
+      <Endpoint
+        index={0}
+        disabled={false}
+        endpoint={baseEndpoint as any}
+        updateEndpoint={updateEndpoint}
+        removeEndpoint={removeEndpoint}
+      />,
+    );
+    expect(screen.queryByPlaceholderText(EntityPlaceholdersI18nKey.UpstreamId)).not.toBeInTheDocument();
+  });
+
+  test('does not render responses endpoint when withResponses is false', () => {
+    render(
+      <Endpoint
+        index={0}
+        disabled={false}
+        endpoint={baseEndpoint as any}
+        withResponses={false}
+        updateEndpoint={updateEndpoint}
+        removeEndpoint={removeEndpoint}
+      />,
+    );
+    expect(screen.queryByPlaceholderText(EntityPlaceholdersI18nKey.ResponsesEndpoint)).not.toBeInTheDocument();
+  });
+
+  test('renders responses endpoint when withResponses is true', () => {
+    render(
+      <Endpoint
+        index={0}
+        disabled={false}
+        endpoint={baseEndpoint as any}
+        withResponses={true}
+        updateEndpoint={updateEndpoint}
+        removeEndpoint={removeEndpoint}
+      />,
+    );
+    expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.ResponsesEndpoint)).toBeInTheDocument();
   });
 });
