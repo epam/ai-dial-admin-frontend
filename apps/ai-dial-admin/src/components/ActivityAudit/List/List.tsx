@@ -21,7 +21,6 @@ import { getActivities, getDeploymentActivities } from '@/src/app/[lang]/activit
 import { buildResourceTypeLabelMap, getFormattedResourceType } from '@/src/constants/grid-columns/formatters';
 import { RESOURCE_TYPE_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import {
-  areFiltersEquals,
   getActivityAuditColumns,
   getAuditActivityHref,
   getDeploymentActivityAuditColumns,
@@ -63,7 +62,12 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { getEntityAuditFilterId, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
-import { ActivityAuditResourceType, ActivityAuditView, isDeploymentManagerResource } from '@/src/types/activity-audit';
+import {
+  ActivityAuditResourceType,
+  ActivityAuditType,
+  ActivityAuditView,
+  isDeploymentManagerResource,
+} from '@/src/types/activity-audit';
 import { FilterOperatorDto } from '@/src/types/request';
 
 interface Props {
@@ -108,8 +112,9 @@ const ActivityAuditList: FC<Props> = ({
   const resourceTypeLabelMap = useMemo(() => buildResourceTypeLabelMap(t), [t]);
   const hasAppliedPreselectRef = useRef(false);
   const childrenCacheRef = useRef<Record<string, DialActivity[]>>({});
-  const totalActivitiesRef = useRef(0);
-  const gridFiltersRef = useRef<Record<string, FilterDto>>({});
+  const rowBufferRef = useRef<DialActivity[]>([]);
+  const apiPageRef = useRef(0);
+  const apiExhaustedRef = useRef(false);
 
   const onCloseModal = useCallback(() => {
     setIsRollbackModalOpen(false);
@@ -146,12 +151,20 @@ const ActivityAuditList: FC<Props> = ({
 
   const gridDataSource: IDatasource = useMemo(
     () => ({
-      getRows: (params: IGetRowsParams) => {
+      getRows: async (params: IGetRowsParams) => {
+        const { startRow, endRow } = params;
+
+        if (startRow === 0) {
+          rowBufferRef.current = [];
+          apiPageRef.current = 0;
+          apiExhaustedRef.current = false;
+          childrenCacheRef.current = {};
+        }
+
         const actualTimeRange = isCustom
           ? { startDate: getStartOfDay(timeRange.startDate), endDate: getEndOfDay(timeRange.endDate) }
           : getTimeRangeById(timePeriod || '');
         gridApi?.setGridOption('loading', true);
-        const page = Math.floor(params.startRow / PAGE_SIZE);
         const sorts = getRequestSorts(params.sortModel);
         const filters = [
           ...(entity
@@ -171,63 +184,40 @@ const ActivityAuditList: FC<Props> = ({
           ...getGridFilters(params.filterModel, actualTimeRange, resourceTypeLabelMap),
         ];
 
-        if (!areFiltersEquals(params.filterModel, gridFiltersRef.current)) {
-          totalActivitiesRef.current = 0;
-        }
-        gridFiltersRef.current = params.filterModel || {};
-
         const fetchActivities = isDeploymentsView ? getDeploymentActivities : getActivities;
 
-        fetchActivities(PAGE_SIZE, page, sorts, filters)
-          .then((res) => {
-            if (res == null || res.data.length === 0) {
-              params.successCallback([], 0);
-            } else if (isDeploymentsView || entity) {
-              params.successCallback(res.data, page + 1 === res.totalPages ? res.total : void 0);
+        try {
+          while (rowBufferRef.current.length < endRow && !apiExhaustedRef.current) {
+            const page = apiPageRef.current;
+            const res = await fetchActivities(PAGE_SIZE, page, sorts, filters);
+            apiPageRef.current++;
+
+            if (!res || res.data.length === 0) {
+              apiExhaustedRef.current = true;
+              break;
+            }
+
+            if (isDeploymentsView || entity) {
+              rowBufferRef.current.push(...res.data);
             } else {
-              const parentActivitiesIds = Array.from(
-                new Set(
-                  res.data.reduce((acc, a) => {
-                    if (!a?.parentActivityId) {
-                      acc.push(a.activityId);
-                    }
-                    return acc;
-                  }, [] as string[]),
-                ),
-              );
+              const missingParentIds = res.data
+                .filter((a) => !a.parentActivityId && !childrenCacheRef.current[a.activityId])
+                .map((a) => a.activityId);
 
-              const missingParentIds = parentActivitiesIds.filter((id) => !childrenCacheRef.current[id]);
+              if (missingParentIds.length > 0) {
+                const childrenFilters: FilterDto[] = [
+                  {
+                    column: 'parentActivityId',
+                    value: missingParentIds.join(','),
+                    operator: FilterOperatorDto.INCLUDES,
+                  },
+                ];
 
-              if (parentActivitiesIds.length === 0 || missingParentIds.length === 0) {
-                const newData = processActivitiesData(res.data, childrenCacheRef.current);
-                totalActivitiesRef.current += newData.length;
-
-                params.successCallback(newData, page + 1 === res.totalPages ? totalActivitiesRef.current : void 0);
-                gridApi?.setGridOption('loading', false);
-
-                return;
-              }
-
-              const childrenFilters = [
-                {
-                  column: 'parentActivityId',
-                  value: missingParentIds.join(','),
-                  operator: FilterOperatorDto.INCLUDES,
-                } as FilterDto,
-              ];
-
-              fetchActivities(PAGE_SIZE, 0, sorts, childrenFilters).then(async (childrenRes) => {
-                const allChildren: DialActivity[] = [];
-                if (childrenRes?.data && childrenRes.data.length > 0) {
-                  allChildren.push(...childrenRes.data);
-                }
-
-                const totalPages = childrenRes?.totalPages || 1;
-                for (let p = 1; p < totalPages; p++) {
+                const childrenRes = await fetchActivities(PAGE_SIZE, 0, sorts, childrenFilters);
+                const allChildren: DialActivity[] = childrenRes?.data ?? [];
+                for (let p = 1; p < (childrenRes?.totalPages ?? 1); p++) {
                   const next = await fetchActivities(PAGE_SIZE, p, sorts, childrenFilters);
-                  if (next?.data && next.data.length > 0) {
-                    allChildren.push(...next.data);
-                  }
+                  if (next?.data) allChildren.push(...next.data);
                 }
 
                 allChildren.forEach((child) => {
@@ -235,26 +225,30 @@ const ActivityAuditList: FC<Props> = ({
                   if (!childrenCacheRef.current[child.parentActivityId]) {
                     childrenCacheRef.current[child.parentActivityId] = [];
                   }
-
                   if (
                     !childrenCacheRef.current[child.parentActivityId].some((c) => c.activityId === child.activityId)
                   ) {
                     childrenCacheRef.current[child.parentActivityId].push(child);
                   }
                 });
+              }
 
-                const newData = processActivitiesData(res.data, childrenCacheRef.current);
-                totalActivitiesRef.current += newData.length;
-
-                params.successCallback(newData, page + 1 === res.totalPages ? totalActivitiesRef.current : void 0);
-              });
+              rowBufferRef.current.push(...processActivitiesData(res.data, childrenCacheRef.current));
             }
-            gridApi?.setGridOption('loading', false);
-          })
-          .catch(() => {
-            params.failCallback();
-            gridApi?.setGridOption('loading', false);
-          });
+
+            if (page + 1 >= (res?.totalPages ?? 1)) {
+              apiExhaustedRef.current = true;
+            }
+          }
+
+          const slice = rowBufferRef.current.slice(startRow, endRow);
+          const lastRow = apiExhaustedRef.current ? rowBufferRef.current.length : undefined;
+          params.successCallback(slice, lastRow);
+        } catch {
+          params.failCallback();
+        } finally {
+          gridApi?.setGridOption('loading', false);
+        }
       },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -273,7 +267,6 @@ const ActivityAuditList: FC<Props> = ({
     }
     gridApi.setFilterModel(null);
     childrenCacheRef.current = {};
-    totalActivitiesRef.current = 0;
     gridApi.setGridOption('datasource', gridDataSource);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectiveViewType]);
@@ -307,7 +300,7 @@ const ActivityAuditList: FC<Props> = ({
       if (isDeploymentsView && !isDeploymentManagerResource(e.data?.resourceType)) {
         return;
       }
-      if (e.data?.children?.length > 0) {
+      if (e.data?.activityType === ActivityAuditType.Rollback || e.data?.activityType === ActivityAuditType.Import) {
         return;
       }
 
@@ -347,7 +340,6 @@ const ActivityAuditList: FC<Props> = ({
 
   const onRefresh = useCallback(() => {
     if (gridApi) {
-      totalActivitiesRef.current = 0;
       gridApi.setGridOption('loading', true);
 
       gridApi.setGridOption('datasource', gridDataSource);

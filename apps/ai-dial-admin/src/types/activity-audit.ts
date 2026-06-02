@@ -21,6 +21,8 @@ export enum ActivityAuditType {
   Create = 'Create',
   Update = 'Update',
   Delete = 'Delete',
+  Rollback = 'Rollback',
+  Import = 'Import',
 }
 
 export enum ActivityAuditView {
