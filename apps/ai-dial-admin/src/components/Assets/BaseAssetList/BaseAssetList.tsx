@@ -19,7 +19,9 @@ import {
 } from '@/src/components/Assets/utils';
 import FileManager from '@/src/components/Common/FileManager/FileManager';
 import { isItemNameValid } from '@/src/components/Common/FileManager/utils';
+import { navigateEntityUrl } from '@/src/components/EntityListView/utils/on-cell-clicked';
 import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';
+import { usePointerClickModifier } from '@/src/hooks/use-pointer-click-modifier';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -82,6 +84,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
+  const pointerClickModifierRef = usePointerClickModifier();
 
   const getContext = useCallback(() => {
     return AssetFolderContextMap[view as BaseAssetRoute]();
@@ -162,15 +165,19 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
   const handleGridItemClick = useCallback(
     (file: FileManagerGridRow) => {
       if (isItemNameValid(file.name)) {
-        router.push(
+        const pointerEvent = pointerClickModifierRef.current;
+        pointerClickModifierRef.current = null;
+        navigateEntityUrl(
           getUrnForEntity(view, {
             name: file.name,
             path: file.path,
           }),
+          router.push,
+          pointerEvent,
         );
       }
     },
-    [view, router],
+    [view, router, pointerClickModifierRef],
   );
 
   const gridItemVersionsChange = useCallback(

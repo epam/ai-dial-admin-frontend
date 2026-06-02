@@ -20,7 +20,8 @@ import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/D
 import ListEntities from '@/src/components/ListView/List';
 import ExportRunModal from '@/src/components/Runs/Export/ExportRunModal';
 import RunModal from '@/src/components/TestSuites/Runs/RunModal';
-import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
+import { onCellClicked } from '@/src/components/EntityListView/utils/on-cell-clicked';
+import { ACTION_COLUMN, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
 import {
   getDeleteOperation,
   getDuplicateOperation,
@@ -78,11 +79,7 @@ const EvaluationListView = <T extends object>({
 
   const gridOptions: GridOptions = {
     ...infiniteGridOptions,
-    onCellClicked: (e: CellClickedEvent) => {
-      if (e.colDef.field !== ACTIONS_COLUMN_CEL_ID) {
-        router.push(getUrnForEntity(route, e.data));
-      }
-    },
+    onCellClicked: (e: CellClickedEvent) => onCellClicked(e, route, router.push),
   };
 
   const gridDataSource: IDatasource = useMemo(
@@ -245,6 +242,7 @@ const EvaluationListView = <T extends object>({
         isMainListView
         storageKey={route}
         onGridReady={onGridReady}
+        getHref={(data) => getUrnForEntity(route, data)}
       >
         <HeaderButtons route={route} onCreateEntity={onCreateEntity} />
       </ListEntities>
