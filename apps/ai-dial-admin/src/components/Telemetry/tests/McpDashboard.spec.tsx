@@ -25,7 +25,7 @@ describe('McpDashboard', () => {
     expect(screen.getByText(TelemetryI18nKey.TotalToolCalls)).toBeInTheDocument();
     expect(screen.getByText(TelemetryI18nKey.McpConsumption)).toBeInTheDocument();
     expect(screen.getByText(TelemetryI18nKey.ToolsConsumption)).toBeInTheDocument();
-    expect(screen.getByText(TelemetryI18nKey.CallsByDeployment)).toBeInTheDocument();
+    expect(screen.getByText(TelemetryI18nKey.CallsFromParentDeployments)).toBeInTheDocument();
     expect(screen.getByText(TelemetryI18nKey.CallsByProject)).toBeInTheDocument();
   });
 
@@ -42,7 +42,7 @@ describe('McpDashboard', () => {
 
     expect(screen.queryByText(TelemetryI18nKey.McpConsumption)).toBeNull();
     expect(screen.getByText(TelemetryI18nKey.ToolsConsumption)).toBeInTheDocument();
-    expect(screen.getByText(TelemetryI18nKey.CallsByDeployment)).toBeInTheDocument();
+    expect(screen.getByText(TelemetryI18nKey.CallsFromParentDeployments)).toBeInTheDocument();
     expect(screen.getByText(TelemetryI18nKey.CallsByProject)).toBeInTheDocument();
   });
 });
