@@ -161,7 +161,7 @@ const ActivityAuditList: FC<Props> = ({
     setSelectedActivity(activity);
     setRollbackBlockReason(null);
 
-    if (!needsDeploymentLifecycleCheck(activity)) {
+    if (!activity || !needsDeploymentLifecycleCheck(activity)) {
       return;
     }
 
