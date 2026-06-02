@@ -51,7 +51,13 @@ import { TimeFilterValue, TimeRange } from '@/src/models/time-range';
 import { ApplicationRoute } from '@/src/types/routes';
 import { AuditListPreselect } from '@/src/types/audit-list-preselect';
 import { clearAuditListPreselect, readAuditListPreselect } from '@/src/utils/audit-list-preselect';
+import {
+  needsDeploymentLifecycleCheck,
+  resolveDeploymentRollbackBlockReason,
+} from '@/src/utils/audit/deployment-lifecycle-check';
+import { rollbackDeploymentEntity } from '@/src/utils/audit/get-deployment-rollback-request';
 import { rollbackEntityPerType } from '@/src/utils/audit/get-rollback-request';
+import { getRollbackNavigation, RollbackRedirectTarget } from '@/src/utils/audit/get-rollback-navigation';
 import {
   getRollbackErrorDescription,
   getRollbackErrorTitle,
@@ -63,7 +69,12 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { getEntityAuditFilterId, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
-import { ActivityAuditResourceType, ActivityAuditView, isDeploymentManagerResource } from '@/src/types/activity-audit';
+import {
+  ActivityAuditResourceType,
+  ActivityAuditType,
+  ActivityAuditView,
+  isDeploymentManagerResource,
+} from '@/src/types/activity-audit';
 import { FilterOperatorDto } from '@/src/types/request';
 
 interface Props {
@@ -98,12 +109,18 @@ const ActivityAuditList: FC<Props> = ({
     onTimeFilterChange,
   });
   const [selectedActivity, setSelectedActivity] = useState<DialActivity | undefined>(void 0);
+  const [rollbackBlockReason, setRollbackBlockReason] = useState<RollbackI18nKey | null>(null);
+  const [isCheckingState, setIsCheckingState] = useState(false);
   const [preselect] = useState(() => (entity ? null : readAuditListPreselect()));
-  const [activityViewType, setActivityViewType] = useState<ActivityAuditView>(() =>
-    preselect === AuditListPreselect.GlobalFirewall
-      ? ActivityAuditView.Deployments
-      : (viewMode ?? ActivityAuditView.Config),
-  );
+  const [activityViewType, setActivityViewType] = useState<ActivityAuditView>(() => {
+    if (preselect === AuditListPreselect.GlobalFirewall || preselect === AuditListPreselect.Deployments) {
+      return ActivityAuditView.Deployments;
+    }
+    if (preselect === AuditListPreselect.Config) {
+      return ActivityAuditView.Config;
+    }
+    return viewMode ?? ActivityAuditView.Config;
+  });
   const effectiveViewType = viewMode ?? activityViewType;
   const resourceTypeLabelMap = useMemo(() => buildResourceTypeLabelMap(t), [t]);
   const hasAppliedPreselectRef = useRef(false);
@@ -115,6 +132,8 @@ const ActivityAuditList: FC<Props> = ({
     setIsRollbackModalOpen(false);
     setIsDetailsModalOpen(false);
     setSelectedActivity(void 0);
+    setRollbackBlockReason(null);
+    setIsCheckingState(false);
   }, [setIsRollbackModalOpen]);
 
   const openInNewTab = useCallback(
@@ -140,6 +159,16 @@ const ActivityAuditList: FC<Props> = ({
   const onOpenConfirmationModal = useCallback((activity?: DialActivity) => {
     setIsRollbackModalOpen(true);
     setSelectedActivity(activity);
+    setRollbackBlockReason(null);
+
+    if (!needsDeploymentLifecycleCheck(activity)) {
+      return;
+    }
+
+    setIsCheckingState(true);
+    resolveDeploymentRollbackBlockReason(activity)
+      .then((reason) => setRollbackBlockReason(reason))
+      .finally(() => setIsCheckingState(false));
   }, []);
 
   const isDeploymentsView = effectiveViewType === ActivityAuditView.Deployments;
@@ -278,6 +307,16 @@ const ActivityAuditList: FC<Props> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectiveViewType]);
 
+  // A view-only preselect (set by a rollback redirect) is consumed once on mount.
+  useEffect(() => {
+    if (entity) {
+      return;
+    }
+    if (preselect === AuditListPreselect.Config || preselect === AuditListPreselect.Deployments) {
+      clearAuditListPreselect();
+    }
+  }, [entity, preselect]);
+
   useEffect(() => {
     if (!gridApi || hasAppliedPreselectRef.current || preselect !== AuditListPreselect.GlobalFirewall) {
       return;
@@ -334,7 +373,7 @@ const ActivityAuditList: FC<Props> = ({
       );
     }
     if (isDeploymentsView) {
-      return getDeploymentActivityAuditColumns(t, openInNewTab);
+      return getDeploymentActivityAuditColumns(t, openInNewTab, isReadOnlyAdmin ? undefined : onOpenConfirmationModal);
     }
     return getActivityAuditColumns(
       t,
@@ -373,7 +412,12 @@ const ActivityAuditList: FC<Props> = ({
   const resourceRollback = useCallback(() => {
     if (selectedActivity) {
       setIsLoading(true);
-      rollbackEntityPerType(selectedActivity)
+      const isDeployment = isDeploymentManagerResource(selectedActivity.resourceType);
+      const isRecreate = isDeployment && selectedActivity.activityType === ActivityAuditType.Delete;
+      const rollbackRequest = isDeployment
+        ? rollbackDeploymentEntity(selectedActivity)
+        : rollbackEntityPerType(selectedActivity);
+      rollbackRequest
         .then((res) => {
           setIsLoading(false);
           onCloseModal();
@@ -381,12 +425,32 @@ const ActivityAuditList: FC<Props> = ({
             showNotification(
               getSuccessNotification(
                 getRollbackSuccessTitle(selectedActivity.resourceType, t),
-                getRollbackSuccessDescription(selectedActivity.resourceType, t),
+                isRecreate
+                  ? t(RollbackI18nKey.NotificationSuccessRecreateDescription)
+                  : getRollbackSuccessDescription(selectedActivity.resourceType, t),
               ),
             );
-            onRefresh();
-            if (refresh) {
-              router.refresh();
+            const nav = getRollbackNavigation(
+              selectedActivity.activityType,
+              selectedActivity.resourceType,
+              decodeURIComponent(selectedActivity.resourceId ?? ''),
+              !!entity,
+              res?.response,
+            );
+            if (nav.target === RollbackRedirectTarget.EntityList) {
+              router.push(nav.entityListHref ?? ApplicationRoute.ActivityAudit);
+            } else if (nav.target === RollbackRedirectTarget.EntityDetail) {
+              router.push(nav.entityDetailHref ?? ApplicationRoute.ActivityAudit);
+            } else if (nav.target === RollbackRedirectTarget.Refresh) {
+              // Entity audit tab → reload the entity page; otherwise reload the grid in place.
+              if (refresh) {
+                router.refresh();
+              } else {
+                onRefresh();
+              }
+            } else {
+              // Already on the activity-audit list → reload the grid in place.
+              onRefresh();
             }
           } else {
             showNotification(
@@ -407,7 +471,7 @@ const ActivityAuditList: FC<Props> = ({
           );
         });
     }
-  }, [selectedActivity, onCloseModal, showNotification, t, onRefresh, refresh, router]);
+  }, [selectedActivity, onCloseModal, showNotification, t, onRefresh, refresh, router, entity]);
 
   const systemRollback = useCallback(() => {
     router.push(`${ApplicationRoute.ActivityAudit}/${SYSTEM_ROLLBACK_ID}`);
@@ -498,6 +562,7 @@ const ActivityAuditList: FC<Props> = ({
             header={t(RollbackI18nKey.ConfirmResourceRollbackTitle)}
             onConfirm={resourceRollback}
             confirmLabel={t(ButtonsI18nKey.Rollback)}
+            disableConfirmButton={isCheckingState || !!rollbackBlockReason}
             onClose={onCloseModal}
           >
             <div className="text-secondary small-150 px-6 py-4">
@@ -513,7 +578,11 @@ const ActivityAuditList: FC<Props> = ({
                   {formatDateTimeToLocalString(selectedActivity?.epochTimestampMs)}
                 </span>
               </p>
-              <p>{t(RollbackI18nKey.ConfirmRollbackAsking)}</p>
+              {rollbackBlockReason ? (
+                <p className="text-error">{t(rollbackBlockReason)}</p>
+              ) : (
+                <p>{t(RollbackI18nKey.ConfirmRollbackAsking)}</p>
+              )}
             </div>
           </DialConfirmationPopup>,
           document.body,

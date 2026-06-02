@@ -3,7 +3,7 @@ import { FC, ReactNode } from 'react';
 import { DialIconButton, DialTooltip } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 
-import { auditResourceRoute } from '@/src/components/ActivityAudit/View/Header/constants';
+import { auditResourceRoute } from '@/src/constants/activity-audit';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import { getFormattedResourceType } from '@/src/constants/grid-columns/formatters';
 import { ActivityAuditI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';

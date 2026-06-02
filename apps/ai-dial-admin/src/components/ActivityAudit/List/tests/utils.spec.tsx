@@ -84,6 +84,19 @@ describe('Activity Audit List utils :: getDeploymentActivityAuditColumns', () =>
     const actions = (cols[2] as { actions: { type: string }[] }).actions;
     expect(actions).toHaveLength(0);
   });
+
+  test('adds a Rollback action when a rollback handler is provided', () => {
+    const openMock = vi.fn();
+    const rollbackMock = vi.fn();
+    const t = (s: string) => s;
+
+    const cols = getDeploymentActivityAuditColumns(t, openMock, rollbackMock);
+
+    const actions = (cols[2] as { actions: { type: string }[] }).actions;
+    expect(actions).toHaveLength(2);
+    expect(actions[0].type).toBe('open');
+    expect(actions[1].type).toBe('rollback');
+  });
 });
 
 describe('Activity Audit List utils :: getGridFilters', () => {
