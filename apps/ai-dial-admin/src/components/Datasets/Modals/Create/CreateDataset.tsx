@@ -1,6 +1,6 @@
 import { FC, useCallback, useState } from 'react';
 
-import { DialNeutralButton, DialPopup, DialPrimaryButton, PopupSize } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
@@ -25,12 +25,16 @@ const CreateDataset: FC<Props> = ({ onClose, isModalOpen, onCreate }) => {
   }, [onCreate, dataset]);
 
   return (
-    <DialPopup
+    <DialFormPopup
       onClose={onClose}
       header={t(DatasetsI18nKey.CreateDataset)}
       portalId="CreateDatasetModal"
       open={isModalOpen}
-      size={PopupSize.Sm}
+      size={PopupSize.Md}
+      onSubmit={onSubmit}
+      submitLabel={t(ButtonsI18nKey.Create)}
+      disableSubmitButton={!isValid}
+      onCancel={onClose}
     >
       <div className="flex flex-col py-4 px-6 gap-y-6">
         <DisplayNameControl
@@ -41,12 +45,7 @@ const CreateDataset: FC<Props> = ({ onClose, isModalOpen, onCreate }) => {
         />
         <DescriptionControl isFullWidth={false} entity={dataset} onChangeEntity={setDataset} />
       </div>
-
-      <div className="flex flex-row justify-end w-full gap-2 px-6 py-4 border-t border-primary flex-shrink-0">
-        <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
-        <DialPrimaryButton label={t(ButtonsI18nKey.Create)} onClick={onSubmit} disabled={!isValid} />
-      </div>
-    </DialPopup>
+    </DialFormPopup>
   );
 };
 

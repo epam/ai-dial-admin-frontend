@@ -133,7 +133,7 @@ describe('Metrics', () => {
   test('opens Add metric dialog when Add button is clicked', async () => {
     const user = userEvent.setup();
 
-    render(<Metrics selectedTestSuite={selectedTestSuite} />);
+    render(<Metrics selectedTestSuite={{ ...selectedTestSuite, datasetId: 'ds-1' }} dataset={{}}/>);
 
     await waitFor(() => {
       expect(mockGetTestSuiteMetrics).toHaveBeenCalled();
@@ -163,7 +163,7 @@ describe('Metrics', () => {
   test('creates metric after add modal confirmation', async () => {
     const user = userEvent.setup();
 
-    render(<Metrics selectedTestSuite={selectedTestSuite} />);
+    render(<Metrics selectedTestSuite={{ ...selectedTestSuite, datasetId: 'ds-1' }} dataset={{}} />);
 
     await waitFor(() => {
       expect(mockGetTestSuiteMetrics).toHaveBeenCalled();
