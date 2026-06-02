@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useState } from 'react';
 
-import { DialNumberInput, DialPasswordInput, DialRemoveButton, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { DialInput, DialNumberInput, DialPasswordInput, DialRemoveButton, DialTooltip } from '@epam/ai-dial-ui-kit';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import classNames from 'classnames';
 
@@ -18,6 +18,7 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
 import { DialEndpointExtraData, DialModelEndpoint } from '@/src/models/dial/model';
+import { ApplicationRoute } from '@/src/types/routes';
 import { isDangerEndpoint } from '@/src/utils/validation/url-error';
 import WarningIcon from '@/src/components/Common/WarningIcon/WarningIcon';
 
@@ -27,6 +28,7 @@ interface Props {
   endpoint: DialModelEndpoint;
   isKeyOptional?: boolean;
   required?: boolean;
+  view?: ApplicationRoute;
   withResponses?: boolean;
   updateEndpoint: (endpoint: DialModelEndpoint) => void;
   removeEndpoint: (index: number) => void;
@@ -38,11 +40,13 @@ const Endpoint: FC<Props> = ({
   endpoint,
   isKeyOptional,
   required,
+  view,
   withResponses,
   updateEndpoint,
   removeEndpoint,
 }) => {
   const t = useI18n();
+  const isModelView = view === ApplicationRoute.Models;
   const isFirstLine = index === 0;
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [endpointWarning, setEndpointWarning] = useState('');
@@ -65,6 +69,13 @@ const Endpoint: FC<Props> = ({
       setResponsesEndpointWarning(!url ? '' : isDangerEndpoint(url) ? t(ErrorI18nKey.WarningEndpoint) : '');
     },
     [endpoint, updateEndpoint, t],
+  );
+
+  const onChangeId = useCallback(
+    (id?: string) => {
+      updateEndpoint({ ...endpoint, id });
+    },
+    [endpoint, updateEndpoint],
   );
 
   const onChangeKey = useCallback(
@@ -128,6 +139,18 @@ const Endpoint: FC<Props> = ({
         <div
           className={classNames('flex flex-col mt-4 gap-y-4 lg:flex-row lg:gap-x-2 lg:mt-0', isCollapsed && 'hidden')}
         >
+          {isModelView && (
+            <DialInput
+              disabled={disabled}
+              id={`upstream-id-${index}`}
+              value={endpoint.id}
+              placeholder={t(EntityPlaceholdersI18nKey.UpstreamId)}
+              labelProps={{ label: isFirstLine || isTablet ? t(UpstreamEndpointsI18nKey.Id) : '' }}
+              containerClassName="w-[140px]"
+              onChange={onChangeId}
+            />
+          )}
+
           <EndpointControl
             disabled={disabled}
             id={`upstreamEndpoints-${index}`}

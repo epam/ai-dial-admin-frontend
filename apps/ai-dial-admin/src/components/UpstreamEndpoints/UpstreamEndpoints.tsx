@@ -9,6 +9,7 @@ import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialModel, DialModelEndpoint } from '@/src/models/dial/model';
 import { DialRoute } from '@/src/models/dial/route';
+import { ApplicationRoute } from '@/src/types/routes';
 import Endpoint from './Endpoint/Endpoint';
 
 interface Props {
@@ -17,10 +18,19 @@ interface Props {
   onChangeEntity: (entity: DialRoute | DialModel) => void;
   isKeyOptional?: boolean;
   required?: boolean;
+  view?: ApplicationRoute;
   withResponses?: boolean;
 }
 
-const UpstreamEndpoints: FC<Props> = ({ disabled, entity, onChangeEntity, isKeyOptional, required, withResponses }) => {
+const UpstreamEndpoints: FC<Props> = ({
+  disabled,
+  entity,
+  onChangeEntity,
+  isKeyOptional,
+  required,
+  view,
+  withResponses,
+}) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const isDisabled = disabled || isReadOnlyAdmin;
@@ -67,6 +77,7 @@ const UpstreamEndpoints: FC<Props> = ({ disabled, entity, onChangeEntity, isKeyO
             required={required}
             updateEndpoint={(point) => onUpdateEndPoint(point, 0)}
             removeEndpoint={onRemoveEndpoint}
+            view={view}
             withResponses={withResponses}
           />
         ) : (
@@ -80,6 +91,7 @@ const UpstreamEndpoints: FC<Props> = ({ disabled, entity, onChangeEntity, isKeyO
               required={required}
               updateEndpoint={(point) => onUpdateEndPoint(point, index)}
               removeEndpoint={onRemoveEndpoint}
+              view={view}
               withResponses={withResponses}
             />
           ))
