@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import { ColDef } from 'ag-grid-community';
 
 import ActivityDetails from '@/src/components/ActivityAudit/Modals/Details';
-import { importPreviewResource } from '@/src/components/ActivityAudit/View/Header/constants';
+import { importPreviewResource } from '@/src/constants/activity-audit';
 import {
   getComponentColDefs,
   getEntityByIdentifier,
