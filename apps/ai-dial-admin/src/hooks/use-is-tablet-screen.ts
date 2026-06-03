@@ -2,9 +2,10 @@ import { isMediumScreen, isOnlyMediumScreen } from '@/src/utils/mobile';
 import { useEffect, useState } from 'react';
 
 export const useIsTabletScreen = () => {
-  const [isTabletScreen, setIsTabletScreen] = useState(isMediumScreen());
+  const [isTabletScreen, setIsTabletScreen] = useState(false);
 
   useEffect(() => {
+    setIsTabletScreen(isMediumScreen());
     const resizeListener = () => setIsTabletScreen(isMediumScreen());
     window.addEventListener('resize', resizeListener);
     return () => window.removeEventListener('resize', resizeListener);
@@ -14,9 +15,10 @@ export const useIsTabletScreen = () => {
 };
 
 export const useIsOnlyTabletScreen = () => {
-  const [isTabletScreen, setIsTabletScreen] = useState(isOnlyMediumScreen());
+  const [isTabletScreen, setIsTabletScreen] = useState(false);
 
   useEffect(() => {
+    setIsTabletScreen(isOnlyMediumScreen());
     const resizeListener = () => setIsTabletScreen(isOnlyMediumScreen());
     window.addEventListener('resize', resizeListener);
     return () => window.removeEventListener('resize', resizeListener);
