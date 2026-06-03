@@ -7,22 +7,19 @@ import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconPlayerPlay } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 
-import {
-  bulkPatchTestCases,
-  removeTestSuite,
-  runTestSuite,
-  updateTestCases,
-  updateTestSuite,
-} from '@/src/app/[lang]/test-suites/actions';
+import { getDataset, updateDataset, updateTestCases } from '@/src/app/[lang]/datasets/actions';
+import { removeTestSuite, runTestSuite, updateTestSuite } from '@/src/app/[lang]/test-suites/actions';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import RunModal from '@/src/components/TestSuites/Runs/RunModal';
 import { TestCasesActions } from '@/src/components/TestSuites/TestCases/TestCasesList';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
+import { Dataset } from '@/src/models/evaluation/dataset';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
@@ -53,6 +50,8 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [isSkipRefresh, setIsSkipRefresh] = useState(false);
   const [discardKey, setDiscardKey] = useState(0);
+  const [dataset, setDataset] = useState<Dataset | null>(null);
+  const [datasetEtag, setDatasetEtag] = useState(DEFAULT_ETAG);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -70,12 +69,38 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
     setSelectedTestSuite(structuredClone(originalTestSuite));
   }, [originalTestSuite]);
 
+  useEffect(() => {
+    if (!originalTestSuite.datasetId) {
+      setDataset(null);
+      setDatasetEtag(DEFAULT_ETAG);
+      return;
+    }
+    getDataset(originalTestSuite.datasetId, DEFAULT_ETAG).then((res) => {
+      if (res?.response) {
+        setDataset(res.response as Dataset);
+        setDatasetEtag(res.etag ?? DEFAULT_ETAG);
+      }
+    });
+  }, [originalTestSuite.datasetId]);
+
+  const onChangeDataset = useCallback((updatedDataset: Dataset) => {
+    setDataset(updatedDataset);
+  }, []);
+
   const onDiscard = useCallback(() => {
     setSelectedTestSuite(structuredClone(originalTestSuite));
     setHasTestCaseChanges(false);
     setIsSkipRefresh(false);
     setDiscardKey((prev) => prev + 1);
     testCasesActionsRef.current?.clearDirtyAndRefresh();
+    if (originalTestSuite.datasetId) {
+      getDataset(originalTestSuite.datasetId, DEFAULT_ETAG).then((res) => {
+        if (res?.response) {
+          setDataset(res.response as Dataset);
+          setDatasetEtag(res.etag ?? DEFAULT_ETAG);
+        }
+      });
+    }
   }, [originalTestSuite]);
 
   const onSave = useCallback(() => {
@@ -101,50 +126,39 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
       }
 
       const dirtyTestCases = testCasesActionsRef.current?.getDirtyTestCases() ?? [];
-      const enabledOnlyChanges = testCasesActionsRef.current?.getEnabledOnlyChanges() ?? new Map<string, boolean>();
+      const datasetId = selectedTestSuite.datasetId;
 
-      const runBulkPatch = () => {
-        if (enabledOnlyChanges.size === 0 || !selectedTestSuite.id) return Promise.resolve(true);
-
-        const enabledTrueIds = [...enabledOnlyChanges.entries()].filter(([, v]) => v).map(([id]) => id);
-        const enabledFalseIds = [...enabledOnlyChanges.entries()].filter(([, v]) => !v).map(([id]) => id);
-        const bulkOperations = [
-          ...(enabledTrueIds.length > 0 ? [{ selector: { ids: enabledTrueIds }, patch: { enabled: true } }] : []),
-          ...(enabledFalseIds.length > 0 ? [{ selector: { ids: enabledFalseIds }, patch: { enabled: false } }] : []),
-        ];
-
-        return bulkPatchTestCases(selectedTestSuite.id, { bulkOperations, itemOperations: [] }).then((bulkRes) => {
-          if (!bulkRes.success) {
-            handleError(bulkRes.errorHeader, bulkRes.errorMessage, bulkRes.requestId);
-            return false;
-          }
-          return true;
-        });
+      const afterTestCases = () => {
+        if (dataset && datasetId) {
+          updateDataset(dataset, datasetEtag).then((datasetRes) => {
+            if (!datasetRes.success) {
+              handleError(datasetRes.errorHeader, datasetRes.errorMessage, datasetRes.requestId);
+              return;
+            }
+            showSuccessAndRefresh();
+          });
+        } else {
+          showSuccessAndRefresh();
+        }
       };
 
-      if (dirtyTestCases.length > 0 && selectedTestSuite.id) {
-        updateTestCases(selectedTestSuite.id, dirtyTestCases).then((testCasesRes) => {
+      if (dirtyTestCases.length > 0 && datasetId) {
+        updateTestCases(datasetId, dirtyTestCases).then((testCasesRes) => {
           if (!testCasesRes.success) {
             handleError(testCasesRes.errorHeader, testCasesRes.errorMessage, testCasesRes.requestId);
             return;
           }
-          runBulkPatch().then((bulkOk) => {
-            if (!bulkOk) return;
-            testCasesActionsRef.current?.clearDirtyAndRefresh();
-            setHasTestCaseChanges(false);
-            showSuccessAndRefresh();
-          });
-        });
-      } else {
-        runBulkPatch().then((bulkOk) => {
-          if (!bulkOk) return;
           testCasesActionsRef.current?.clearDirtyAndRefresh();
           setHasTestCaseChanges(false);
-          showSuccessAndRefresh();
+          afterTestCases();
         });
+      } else {
+        testCasesActionsRef.current?.clearDirtyAndRefresh();
+        setHasTestCaseChanges(false);
+        afterTestCases();
       }
     });
-  }, [selectedTestSuite, etag, showNotification, t, router]);
+  }, [selectedTestSuite, etag, showNotification, t, router, dataset, datasetEtag]);
 
   const onStartRunTestSuite = useCallback(() => {
     setIsModalOpen(true);
@@ -219,6 +233,9 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
               selectedTestSuite={selectedTestSuite}
               originalTestSuite={originalTestSuite}
               onChange={onChangeTestSuite}
+              dataset={dataset}
+              onChangeDataset={onChangeDataset}
+              suiteEtag={etag}
             />
           )}
         </div>

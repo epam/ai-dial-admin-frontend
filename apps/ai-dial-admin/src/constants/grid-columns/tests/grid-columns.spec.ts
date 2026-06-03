@@ -332,10 +332,11 @@ describe('Constants :: grid columns', () => {
   });
 
   test('PROJECT_GRID_COLUMNS returns expected columns', () => {
-    expect(Array.isArray(PROJECT_GRID_COLUMNS)).toBe(true);
-    expect(PROJECT_GRID_COLUMNS.some((c) => c.field === 'name')).toBe(true);
-    expect(PROJECT_GRID_COLUMNS.some((c) => c.field === 'requests')).toBe(true);
-    expect(PROJECT_GRID_COLUMNS.some((c) => c.field === 'cost')).toBe(true);
+    const columns = PROJECT_GRID_COLUMNS((key) => key);
+    expect(Array.isArray(columns)).toBe(true);
+    expect(columns.some((c) => c.field === 'name')).toBe(true);
+    expect(columns.some((c) => c.field === 'requests')).toBe(true);
+    expect(columns.some((c) => c.field === 'cost')).toBe(true);
   });
 
   const assertUsageLogColumnSet = (columns: ColDef[]) => {

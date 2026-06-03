@@ -4,7 +4,7 @@ import { DialLoader, DialLoadFileArea, DialPopup, DialSteps, PopupSize, Step, St
 import { ColDef } from 'ag-grid-community';
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import { importTestCasePreview } from '@/src/app/[lang]/test-suites/actions';
+import { importTestCasePreview } from '@/src/app/[lang]/datasets/actions';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { BasicI18nKey, ButtonsI18nKey, ImportI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -21,13 +21,13 @@ const STEP_FILE = 'file';
 const STEP_OPTIONS = 'options';
 
 interface Props {
-  selectedTestSuiteId: string;
+  datasetId: string;
   isModalOpen: boolean;
   onClose: () => void;
   onApply: (file: File, mode: TestCaseImportMode, strategy: TestCaseConflictStrategy) => void;
 }
 
-const ImportFileModal: FC<Props> = ({ selectedTestSuiteId, isModalOpen, onClose, onApply }) => {
+const ImportFileModal: FC<Props> = ({ datasetId, isModalOpen, onClose, onApply }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
 
@@ -62,7 +62,7 @@ const ImportFileModal: FC<Props> = ({ selectedTestSuiteId, isModalOpen, onClose,
 
     setIsLoading(true);
 
-    importTestCasePreview(selectedTestSuiteId, body).then((res) => {
+    importTestCasePreview(datasetId, body).then((res) => {
       if (res.success) {
         const testCasesData = (res?.response || []) as ImportPreview;
         const { colDefs, rowData } = getGridDataFromImportPreview(testCasesData);

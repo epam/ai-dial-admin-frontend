@@ -13,15 +13,22 @@ import {
 } from '@/src/components/TestSuites/utils/template-variables';
 import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { InputBinding, InputBindingRowData, TemplateVariable, TestSuite } from '@/src/models/evaluation/test-suite';
+import {
+  InputBinding,
+  InputBindingRowData,
+  TemplateVariable,
+  TestCaseSchema,
+  TestSuite,
+} from '@/src/models/evaluation/test-suite';
 
 interface Props {
   selectedTestSuite: TestSuite;
   onChange: (testSuite: TestSuite, isSkipRefresh?: boolean) => void;
   isSkipRefresh?: boolean;
+  schema?: TestCaseSchema[];
 }
 
-const TemplateVariables: FC<Props> = ({ selectedTestSuite, onChange, isSkipRefresh }) => {
+const TemplateVariables: FC<Props> = ({ selectedTestSuite, onChange, isSkipRefresh, schema }) => {
   const t = useI18n();
 
   const [gridApi, setGridApi] = useState<GridApi>();
@@ -91,12 +98,12 @@ const TemplateVariables: FC<Props> = ({ selectedTestSuite, onChange, isSkipRefre
       ...getDynamicConfigurationsColumns(
         onChangeParam,
         onChangeSelect,
-        selectedTestSuite.testCaseSchema || [],
+        schema || [],
         selectedTestSuite.id as string,
         t,
       ),
     ];
-  }, [onChangeParam, onChangeSelect, selectedTestSuite.id, selectedTestSuite.testCaseSchema, t]);
+  }, [onChangeParam, onChangeSelect, selectedTestSuite.id, schema, t]);
 
   const data = useMemo(
     () => generateInputBindingsRowData(variables || [], selectedTestSuite.inputBindings || []),

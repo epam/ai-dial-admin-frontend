@@ -24,7 +24,13 @@ import {
   STATUS_I18N_KEYS,
 } from '@/src/constants/deployments/images';
 import { ROW_IMPORT_META_KEY } from '@/src/constants/import';
-import { BasicI18nKey, EntityFieldsI18nKey, ImportI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import {
+  BasicI18nKey,
+  EntityFieldsI18nKey,
+  ImportI18nKey,
+  SourceI18nKey,
+  TelemetryI18nKey,
+} from '@/src/constants/i18n';
 import { RowImportMeta } from '@/src/models/deployments/import';
 import { ValidationState } from '@/src/types/deployments/import';
 import {
@@ -58,6 +64,8 @@ import {
   ATTACHMENT_COLUMN,
   AUTHOR_COLUMN,
   BASE_STATUS_COLUMN,
+  CALLS_PARENT_DEPLOYMENT_COLUMN,
+  CALLS_PROJECT_COLUMN,
   COMPLETION_TIME_COLUMN,
   CREATED_AT_COLUMN,
   DESCRIPTION_COLUMN,
@@ -593,7 +601,10 @@ export const USAGE_LOG_NUMERIC_COLUMNS = new Set<string>(
     .map((c) => c.field as string),
 );
 
-export const PROJECT_GRID_COLUMNS: ColDef[] = [{ field: 'name', headerName: 'Project' }, ...TELEMETRY_COLUMNS];
+export const PROJECT_GRID_COLUMNS = (t: (key: string) => string): ColDef[] => [
+  CALLS_PROJECT_COLUMN(t),
+  ...TELEMETRY_COLUMNS,
+];
 
 export const MCP_CONSUMPTION_COLUMNS: ColDef[] = [
   { field: 'name', headerName: 'MCP Name', hide: false },
@@ -606,14 +617,14 @@ export const TOOLS_CONSUMPTION_COLUMNS: ColDef[] = [
   { field: 'requests', headerName: 'Calls', hide: false, ...numericColumn },
 ];
 
-export const MCP_CALLS_BY_DEPLOYMENT_COLUMNS: ColDef[] = [
-  { field: 'parent_deployment', headerName: 'Parent Deployment', hide: false },
+export const MCP_CALLS_BY_DEPLOYMENT_COLUMNS = (t: (key: string) => string): ColDef[] => [
+  CALLS_PARENT_DEPLOYMENT_COLUMN(t),
   { field: 'name', headerName: 'Toolset Name', hide: false },
   { field: 'requests', headerName: 'Calls', hide: false, ...numericColumn },
 ];
 
-export const MCP_PROJECTS_CONSUMPTION_COLUMNS: ColDef[] = [
-  { field: 'name', headerName: 'Project', hide: false },
+export const MCP_PROJECTS_CONSUMPTION_COLUMNS = (t: (key: string) => string): ColDef[] => [
+  CALLS_PROJECT_COLUMN(t),
   { field: 'tool_calls', headerName: 'Tool Calls', hide: false, ...numericColumn },
   { field: 'mcp_calls', headerName: 'MCP Calls', hide: false, sort: 'desc', ...numericColumn },
 ];
@@ -623,14 +634,14 @@ export const CALL_BY_DEPLOYMENT_COLUMNS: ColDef[] = [
   { field: 'requests', headerName: 'Calls', hide: false, ...numericColumn },
 ];
 
-export const CALL_BY_PARENT_DEPLOYMENT_COLUMNS: ColDef[] = [
-  { field: 'parent_deployment', headerName: 'Parent Deployment', hide: false },
+export const CALL_BY_PARENT_DEPLOYMENT_COLUMNS = (t: (key: string) => string): ColDef[] => [
+  CALLS_PARENT_DEPLOYMENT_COLUMN(t, TelemetryI18nKey.DirectCallByKeyOrUserTooltip),
   { field: 'name', headerName: 'Deployment', hide: false },
   { field: 'requests', headerName: 'Calls', hide: false, ...numericColumn },
 ];
 
-export const CALL_BY_PROJECT_COLUMNS: ColDef[] = [
-  { field: 'name', headerName: 'Project', hide: false },
+export const CALL_BY_PROJECT_COLUMNS = (t: (key: string) => string): ColDef[] => [
+  CALLS_PROJECT_COLUMN(t),
   { field: 'requests', headerName: 'Calls', hide: false, ...numericColumn },
 ];
 
@@ -984,6 +995,19 @@ export const TEST_SUITES_COLUMN: ColDef[] = [
 export const TEST_CASES_COLUMN: ColDef[] = [
   { field: 'id', colId: 'id', headerName: 'ID' },
   { field: 'testCaseName', colId: 'testCaseName', headerName: 'Test case name' },
+];
+
+export const DATASETS_COLUMN: ColDef[] = [
+  {
+    field: 'name',
+    colId: 'name',
+    headerName: 'Display Name',
+    hide: false,
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
+  },
+  { ...DESCRIPTION_COLUMN, sortable: false, ...evalStringFilter([GridFilterType.CONTAINS]) },
+  { ...CREATED_AT_COLUMN, ...dateFilter },
+  { ...UPDATED_AT_COLUMN, ...dateFilter },
 ];
 
 export const RUNS_COLUMN: ColDef[] = [

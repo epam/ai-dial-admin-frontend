@@ -12,13 +12,14 @@ import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { CompareI18nKey, EntityFieldsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Metric, MetricBinding } from '@/src/models/evaluation/metric';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
 import MetricInputs from './Values/Inputs';
 import MetricOutputs from './Values/Outputs';
 import MetricSchemaSection from './Values/SchemaSection';
 
 interface Props {
   selectedTestSuite?: TestSuite;
+  testCaseSchema?: TestCaseSchema[];
   metricName?: string;
   selectedMetric?: Metric;
   selectedMetricDetails?: Metric;
@@ -46,6 +47,7 @@ const MetricConfiguration: FC<Props> = ({
   configBindings,
   onChangeName,
   selectedTestSuite,
+  testCaseSchema,
   onJsonViewChange,
 }) => {
   const t = useI18n();
@@ -165,6 +167,7 @@ const MetricConfiguration: FC<Props> = ({
                 schema={selectedMetricDetails?.inputSchema}
                 onChange={onChangeInputBindings}
                 selectedTestSuite={selectedTestSuite}
+                testCaseSchema={testCaseSchema}
               />
             </div>
 
