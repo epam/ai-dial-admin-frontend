@@ -9,9 +9,7 @@ import {
 import { ApplicationRoute } from '@/src/types/routes';
 
 import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRenderer';
-import TelemetryFallbackCellRenderer, {
-  isMissingTelemetryValue,
-} from '@/src/components/Grid/CellRenderers/TelemetryFallbackCellRenderer';
+import TelemetryFallbackCellRenderer from '@/src/components/Grid/CellRenderers/TelemetryFallbackCellRenderer';
 import ValidityStatusCellRenderer from '@/src/components/Grid/CellRenderers/ValidityStatusCellRenderer';
 import { TelemetryI18nKey } from '@/src/constants/i18n';
 import { dateTimeColumn } from './configs';
@@ -189,7 +187,7 @@ export const CALLS_PROJECT_COLUMN = (t: (str: string) => string): ColDef => ({
   field: 'name',
   headerName: 'Project',
   hide: false,
-  valueFormatter: ({ value }) => (isMissingTelemetryValue(value) ? t(TelemetryI18nKey.NoProject) : value),
+  valueFormatter: ({ value }) => (!value || value === 'undefined' ? t(TelemetryI18nKey.NoProject) : value),
   cellRenderer: TelemetryFallbackCellRenderer,
   cellRendererParams: { tooltip: t(TelemetryI18nKey.NoProjectTooltip) },
 });
@@ -201,7 +199,7 @@ export const CALLS_PARENT_DEPLOYMENT_COLUMN = (
   field: 'parent_deployment',
   headerName: 'Parent Deployment',
   hide: false,
-  valueFormatter: ({ value }) => (isMissingTelemetryValue(value) ? t(TelemetryI18nKey.DirectCall) : value),
+  valueFormatter: ({ value }) => (!value || value === 'undefined' ? t(TelemetryI18nKey.DirectCall) : value),
   cellRenderer: TelemetryFallbackCellRenderer,
   cellRendererParams: { tooltip: t(tooltipKey) },
 });
