@@ -990,6 +990,12 @@ export default {
       ErrorDescription: 'Error occurred while reverting, please try again',
       SuccessTitle: '{entity} rolled back successfully',
       SuccessDescription: 'Changes have been delivered to the system',
+      SuccessRecreateDescription:
+        'The resource was recreated. Secure environment values were not restored and must be re-supplied before deploy.',
+    },
+    Blocked: {
+      ActiveDeployment: 'Undeploy this deployment before rolling it back.',
+      ImageBuilding: 'Rollback is unavailable while the image is building or built. Stop the build first.',
     },
     Entities: {
       Model: 'Model',
@@ -1004,6 +1010,9 @@ export default {
       Adapter: 'Adapter',
       InterceptorTemplate: 'Interceptor Template',
       ApplicationRunner: 'Application Runner',
+      Deployment: 'Deployment',
+      ImageDefinition: 'Image definition',
+      GlobalWhitelist: 'Domain whitelist',
     },
   },
   EntityFields: {

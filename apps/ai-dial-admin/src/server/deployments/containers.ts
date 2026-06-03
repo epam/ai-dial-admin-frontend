@@ -12,6 +12,8 @@ export const CONTAINER_URL = (id?: string) => `${BASE_CONTAINERS_URL}/${id || ''
 export const DUPLICATE_CONTAINER_URL = `${BASE_CONTAINERS_URL}/duplicate`;
 export const RUN_CONTAINER_URL = (id: string) => `${BASE_CONTAINERS_URL}/${id}/deploy`;
 export const STOP_CONTAINER_URL = (id: string) => `${BASE_CONTAINERS_URL}/${id}/undeploy`;
+export const CONTAINER_ROLLBACK_URL = (id: string, revision: number) =>
+  `${BASE_CONTAINERS_URL}/${id}/revision/${revision}/rollback`;
 export const CONTAINER_DETAILS_URL = `${BASE_CONTAINERS_URL}/mcp`;
 export const CONTAINER_TOOLS_URL = (id: string) => `${CONTAINER_DETAILS_URL}/${id}/tools`;
 export const CONTAINER_CALL_TOOL_URL = (id: string) => `${CONTAINER_DETAILS_URL}/${id}/call-tool`;
@@ -93,6 +95,10 @@ export class ContainersApi extends BaseApi {
 
   deleteContainer(containerId: string, token: Token): Promise<ServerActionResponse> {
     return this.deleteAction(CONTAINER_URL(containerId), token);
+  }
+
+  rollbackContainer(id: string, revision: number, token: Token): Promise<ServerActionResponse> {
+    return this.postAction(CONTAINER_ROLLBACK_URL(id, revision), {}, token);
   }
 
   runContainer(containerId: string, token: Token): Promise<ServerActionResponse> {

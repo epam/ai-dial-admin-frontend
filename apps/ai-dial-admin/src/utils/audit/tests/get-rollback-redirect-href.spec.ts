@@ -35,8 +35,19 @@ describe('getRollbackRedirectHref', () => {
     expect(newHref).toBe('/keys/444');
   });
 
-  test('returns ActivityAudit page href for unknow entity type or empty resource id', () => {
-    let newHref = getRollbackRedirectHref(undefined, '444');
-    expect(newHref).toBe('/activity-audit');
+  test('returns deployment-manager entity detail hrefs', () => {
+    expect(getRollbackRedirectHref(ActivityAuditResourceType.MCP_DEPLOYMENT, 'svc')).toBe('/mcp-containers/svc');
+    expect(getRollbackRedirectHref(ActivityAuditResourceType.NIM_DEPLOYMENT, 'svc')).toBe('/model-servings/svc');
+    expect(getRollbackRedirectHref(ActivityAuditResourceType.MCP_IMAGE_DEFINITION, 'img-1')).toBe(
+      '/deployment-images/img-1',
+    );
+  });
+
+  test('returns ActivityAudit page href for unknown entity type or empty resource id', () => {
+    expect(getRollbackRedirectHref(undefined, '444')).toBe('/activity-audit');
+    expect(getRollbackRedirectHref(ActivityAuditResourceType.MODEL, undefined)).toBe('/activity-audit');
+    expect(getRollbackRedirectHref(ActivityAuditResourceType.IMAGE_BUILD_DOMAIN_WHITELIST, '1')).toBe(
+      '/activity-audit',
+    );
   });
 });
