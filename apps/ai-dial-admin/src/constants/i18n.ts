@@ -955,8 +955,13 @@ export enum RollbackI18nKey {
   NotificationErrorDescription = 'Rollback.Notification.ErrorDescription',
   NotificationSuccessTitle = 'Rollback.Notification.SuccessTitle',
   NotificationSuccessDescription = 'Rollback.Notification.SuccessDescription',
+  NotificationSuccessRecreateDescription = 'Rollback.Notification.SuccessRecreateDescription',
   NotificationPrepareTitle = 'Rollback.Notification.PrepareTitle',
   NotificationPrepareDescription = 'Rollback.Notification.PrepareDescription',
+
+  // Lifecycle pre-check (deployment-manager entities)
+  BlockedActiveDeployment = 'Rollback.Blocked.ActiveDeployment',
+  BlockedImageBuilding = 'Rollback.Blocked.ImageBuilding',
 
   // Entities
   Model = 'Rollback.Entities.Model',
@@ -971,6 +976,9 @@ export enum RollbackI18nKey {
   Adapter = 'Rollback.Entities.Adapter',
   InterceptorTemplate = 'Rollback.Entities.InterceptorTemplate',
   ApplicationRunner = 'Rollback.Entities.ApplicationRunner',
+  Deployment = 'Rollback.Entities.Deployment',
+  ImageDefinition = 'Rollback.Entities.ImageDefinition',
+  GlobalWhitelist = 'Rollback.Entities.GlobalWhitelist',
 }
 
 export enum ErrorI18nKey {

@@ -17,7 +17,7 @@ import { FilterOperatorDto } from '@/src/types/request';
 import { formatDateToLocalString } from '@/src/utils/formatting/date';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 import { ActivityAuditRevision } from '@/src/components/ActivityAudit/models';
-import { auditResourceRoute } from '@/src/components/ActivityAudit/View/Header/constants';
+import { auditResourceRoute } from '@/src/constants/activity-audit';
 import { ActivityAuditResourceType, ActivityAuditType, ActivityAuditView } from '@/src/types/activity-audit';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { BaseEntity } from '@/src/models/dial/base-entity';
@@ -84,16 +84,29 @@ export const getActivityAuditColumns = (
 
 /**
  * Generate columns with actions for the deployment activity audit grid.
- * The only available row action is `Open in new tab`.
+ * Row actions are `Open in new tab` and, when provided, `Rollback`
+ * (suppressed on parent/aggregate rows).
  *
  * @param {(activity: DialActivity) => void} open - open in new tab action
+ * @param {(activity: DialActivity) => void} resourceRollback - rollback action
  * @returns {ColDef[]} - columns
  */
 export const getDeploymentActivityAuditColumns = (
   t: (key: string) => string,
   open?: (activity?: DialActivity) => void,
+  resourceRollback?: (activity?: DialActivity) => void,
 ): ColDef[] => {
-  const actions = open ? [getOpenInNewTabOperation(open)] : [];
+  const actions = [];
+  if (open) {
+    actions.push(getOpenInNewTabOperation(open));
+  }
+  if (resourceRollback) {
+    actions.push(
+      getResourceRollbackOperation(resourceRollback, (_, node) => {
+        return !!(node.data as DialActivity & { children?: DialActivity[] })?.children?.length;
+      }),
+    );
+  }
   return [...ACTIVITY_AUDIT_COLUMNS(t, ActivityAuditView.Deployments), ACTION_COLUMN(actions)];
 };
 
