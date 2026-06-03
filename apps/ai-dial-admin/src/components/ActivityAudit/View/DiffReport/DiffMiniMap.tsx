@@ -17,6 +17,12 @@ const MARKER_BG: Record<string, string> = {
   [DiffStatus.CHANGED]: 'bg-info',
 };
 
+const MARKER_BORDER: Record<string, string> = {
+  [DiffStatus.ADDED]: 'border border-success',
+  [DiffStatus.REMOVED]: 'border border-error',
+  [DiffStatus.CHANGED]: 'border border-info',
+};
+
 const DiffMiniMap: FC<Props> = ({ scrollContainerRef }) => {
   const [markers, setMarkers] = useState<MinimapMarker[]>([]);
   const [thumbTop, setThumbTop] = useState(0);
@@ -136,8 +142,6 @@ const DiffMiniMap: FC<Props> = ({ scrollContainerRef }) => {
     };
   }, [scrollToClientY, scrollContainerRef]);
 
-  if (markers.length === 0) return null;
-
   return (
     <div
       ref={miniMapRef}
@@ -148,12 +152,16 @@ const DiffMiniMap: FC<Props> = ({ scrollContainerRef }) => {
       {markers.map((marker, i) => (
         <div
           key={i}
-          className={classNames('absolute left-0 right-0 opacity-90', MARKER_BG[marker.status])}
+          className={classNames(
+            'absolute left-0 right-0 opacity-90 rounded-sm',
+            MARKER_BG[marker.status],
+            MARKER_BORDER[marker.status],
+          )}
           style={{ top: `${marker.position * 100}%`, height: `${marker.height * 100}%` }}
         />
       ))}
       <div
-        className="absolute left-0 right-0 bg-inverted opacity-5 border-y border-primary cursor-pointer"
+        className="absolute left-0 right-0 bg-inverted opacity-5 border-y border-secondary cursor-pointer"
         onMouseDown={onThumbMouseDown}
         style={{ top: `${thumbTop * 100}%`, height: `${thumbHeight * 100}%` }}
       />
