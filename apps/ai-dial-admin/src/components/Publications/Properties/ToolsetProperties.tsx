@@ -14,12 +14,7 @@ const ToolsetProperties: FC<Props> = ({ publication, onChange }) => {
   return (
     <div className="flex-1 min-h-0 pt-8">
       <div className="w-full flex flex-col gap-y-8">
-        <BaseProperties
-          publication={publication}
-          onChange={onChange}
-          getContext={useToolsetFolder}
-          shouldAbleToCreateNewFolder={false}
-        />
+        <BaseProperties publication={publication} onChange={onChange} getContext={useToolsetFolder} />
         <ToolsetDetails publication={publication} onChange={onChange} />
       </div>
     </div>

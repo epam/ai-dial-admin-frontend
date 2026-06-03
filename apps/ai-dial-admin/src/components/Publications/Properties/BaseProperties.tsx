@@ -12,12 +12,11 @@ import { getControlClassName } from '@/src/utils/entities/view';
 
 interface Props {
   publication: Publication;
-  shouldAbleToCreateNewFolder?: boolean;
   onChange?: (publication: Publication) => void;
   getContext: () => AssetsFolderContext;
 }
 
-const BaseProperties: FC<Props> = ({ publication, shouldAbleToCreateNewFolder = true, onChange, getContext }) => {
+const BaseProperties: FC<Props> = ({ publication, onChange, getContext }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const containerClassName = useMemo(() => getControlClassName(false), []);
@@ -49,7 +48,7 @@ const BaseProperties: FC<Props> = ({ publication, shouldAbleToCreateNewFolder = 
         onChange={(folderId) => onChange?.({ ...publication, folderId })}
         context={getContext}
         disabled={isReadOnlyAdmin}
-        shouldAbleToCreateNewFolder={shouldAbleToCreateNewFolder}
+        shouldAbleToCreateNewFolder={false}
       />
     </>
   );

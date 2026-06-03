@@ -43,7 +43,7 @@ const FilePath: FC<Props> = ({
   context,
   onCreateFolder,
   view,
-  shouldAbleToCreateNewFolder,
+  shouldAbleToCreateNewFolder = true,
 }) => {
   const t = useI18n();
   const [isModalOpen, setIsModalOpen] = useState(false);
