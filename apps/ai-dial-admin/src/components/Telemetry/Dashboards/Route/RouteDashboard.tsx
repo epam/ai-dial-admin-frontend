@@ -71,7 +71,7 @@ const RouteDashboard: FC<Props> = ({ getData, refreshTime, isEntityView = false 
               getData={getData}
               refreshTime={refreshTime}
               query={isEntityView ? null : ROUTE_PARENT_DEPLOYMENT_QUERY}
-              columnDefs={CALL_BY_PARENT_DEPLOYMENT_COLUMNS}
+              columnDefs={CALL_BY_PARENT_DEPLOYMENT_COLUMNS(t)}
               title={t(TelemetryI18nKey.CallsFromParentDeployments)}
             />
           </div>
@@ -80,7 +80,7 @@ const RouteDashboard: FC<Props> = ({ getData, refreshTime, isEntityView = false 
               getData={getData}
               refreshTime={refreshTime}
               query={ROUTE_PROJECT_QUERY}
-              columnDefs={CALL_BY_PROJECT_COLUMNS}
+              columnDefs={CALL_BY_PROJECT_COLUMNS(t)}
               title={t(TelemetryI18nKey.CallsByProject)}
             />
           </div>
