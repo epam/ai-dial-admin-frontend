@@ -26,22 +26,17 @@ interface Props {
 }
 
 const Sidebar: FC<Props> = ({ isSidebarOpen, side, itemComponent }) => {
-  const sidebarMinWidth = isSmallScreen() ? MOBILE_SIDEBAR_MIN_WIDTH : SIDEBAR_MIN_WIDTH;
-  const savedWidth = getFromLocalStorage(LOCAL_STORAGE_CENTRAL_WINDOW_KEY);
+  const [sidebarMinWidth, setSidebarMinWidth] = useState(SIDEBAR_MIN_WIDTH);
 
   const [isResizing, setIsResizing] = useState(false);
-  const [sidebarWidth, setSidebarWidth] = useState(savedWidth ? Number(savedWidth) : SIDEBAR_DEFAULT_WIDTH);
+  const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_DEFAULT_WIDTH);
 
   const isLeftSidebar = side === SideBarOrientation.Left;
   const isRightSidebar = side === SideBarOrientation.Right;
 
   const sideBarElementRef = useRef<Resizable>(null);
 
-  const [windowWidth, setWindowWidth] = useState<number | undefined>(() => {
-    if (typeof window !== 'undefined') {
-      return window.innerWidth;
-    }
-  });
+  const [windowWidth, setWindowWidth] = useState<number | undefined>(undefined);
 
   const resizeTriggerClassName = classNames(
     'invisible h-full w-0.5 group-hover:visible md:visible xl:bg-accent-primary xl:text-accent-primary',
@@ -139,7 +134,17 @@ const Sidebar: FC<Props> = ({ isSidebarOpen, side, itemComponent }) => {
   const isTablet = useIsTabletScreen();
 
   useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth);
+    const savedWidth = getFromLocalStorage(LOCAL_STORAGE_CENTRAL_WINDOW_KEY);
+    if (savedWidth) {
+      setSidebarWidth(Number(savedWidth));
+    }
+    setSidebarMinWidth(isSmallScreen() ? MOBILE_SIDEBAR_MIN_WIDTH : SIDEBAR_MIN_WIDTH);
+    setWindowWidth(window.innerWidth);
+
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+      setSidebarMinWidth(isSmallScreen() ? MOBILE_SIDEBAR_MIN_WIDTH : SIDEBAR_MIN_WIDTH);
+    };
 
     window.addEventListener('resize', handleResize);
 
