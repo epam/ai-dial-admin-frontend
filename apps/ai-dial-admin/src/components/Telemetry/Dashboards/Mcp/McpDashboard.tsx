@@ -81,7 +81,7 @@ const McpDashboard: FC<Props> = ({
               getData={getData}
               refreshTime={refreshTime}
               query={MCP_CALLS_BY_DEPLOYMENT_QUERY}
-              columnDefs={MCP_CALLS_BY_DEPLOYMENT_COLUMNS}
+              columnDefs={MCP_CALLS_BY_DEPLOYMENT_COLUMNS(t)}
               title={t(TelemetryI18nKey.CallsFromParentDeployments)}
             />
           </div>
@@ -90,7 +90,7 @@ const McpDashboard: FC<Props> = ({
               getData={getData}
               refreshTime={refreshTime}
               query={MCP_PROJECTS_CONSUMPTION_QUERY}
-              columnDefs={MCP_PROJECTS_CONSUMPTION_COLUMNS}
+              columnDefs={MCP_PROJECTS_CONSUMPTION_COLUMNS(t)}
               title={t(TelemetryI18nKey.CallsByProject)}
             />
           </div>

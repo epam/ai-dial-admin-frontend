@@ -9,7 +9,11 @@ import {
 import { ApplicationRoute } from '@/src/types/routes';
 
 import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRenderer';
+import TelemetryFallbackCellRenderer, {
+  isMissingTelemetryValue,
+} from '@/src/components/Grid/CellRenderers/TelemetryFallbackCellRenderer';
 import ValidityStatusCellRenderer from '@/src/components/Grid/CellRenderers/ValidityStatusCellRenderer';
+import { TelemetryI18nKey } from '@/src/constants/i18n';
 import { dateTimeColumn } from './configs';
 import { getValidityStatus } from '@/src/components/Common/ValidityStatus/utils';
 
@@ -180,3 +184,24 @@ export const MAX_INPUT_ATTACHMENTS_COLUMN: ColDef = {
   headerName: 'Max attachment number',
   hide: true,
 };
+
+export const CALLS_PROJECT_COLUMN = (t: (str: string) => string): ColDef => ({
+  field: 'name',
+  headerName: 'Project',
+  hide: false,
+  valueFormatter: ({ value }) => (isMissingTelemetryValue(value) ? t(TelemetryI18nKey.NoProject) : value),
+  cellRenderer: TelemetryFallbackCellRenderer,
+  cellRendererParams: { tooltip: t(TelemetryI18nKey.NoProjectTooltip) },
+});
+
+export const CALLS_PARENT_DEPLOYMENT_COLUMN = (
+  t: (str: string) => string,
+  tooltipKey: string = TelemetryI18nKey.DirectCallTooltip,
+): ColDef => ({
+  field: 'parent_deployment',
+  headerName: 'Parent Deployment',
+  hide: false,
+  valueFormatter: ({ value }) => (isMissingTelemetryValue(value) ? t(TelemetryI18nKey.DirectCall) : value),
+  cellRenderer: TelemetryFallbackCellRenderer,
+  cellRendererParams: { tooltip: t(tooltipKey) },
+});
