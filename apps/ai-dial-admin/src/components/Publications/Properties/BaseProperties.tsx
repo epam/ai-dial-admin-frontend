@@ -48,6 +48,7 @@ const BaseProperties: FC<Props> = ({ publication, onChange, getContext }) => {
         onChange={(folderId) => onChange?.({ ...publication, folderId })}
         context={getContext}
         disabled={isReadOnlyAdmin}
+        shouldAbleToCreateNewFolder={false}
       />
     </>
   );
