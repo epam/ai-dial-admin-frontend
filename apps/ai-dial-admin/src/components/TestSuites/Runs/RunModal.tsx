@@ -9,12 +9,12 @@ import {
 } from '@epam/ai-dial-ui-kit';
 import { FC, useEffect, useState } from 'react';
 
-import { getTestCases } from '@/src/app/[lang]/test-suites/actions';
 import { PAGE_SIZE } from '@/src/constants/ag-grid';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { VALID_FILTERS } from './constants';
+import { getTestCases } from '@/src/app/[lang]/datasets/actions';
 
 interface Props {
   isModalOpen: boolean;
@@ -35,15 +35,15 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
     if (!validRuns) {
       setIsLoading(true);
 
-      const validTestCases = getTestCases(selectedTestSuite.id, 0, PAGE_SIZE, [], VALID_FILTERS);
-      const allTestCases = getTestCases(selectedTestSuite.id, 0, PAGE_SIZE, [], []);
+      const validTestCases = getTestCases(selectedTestSuite.datasetId, 0, PAGE_SIZE, [], VALID_FILTERS);
+      const allTestCases = getTestCases(selectedTestSuite.datasetId, 0, PAGE_SIZE, [], []);
       Promise.all([validTestCases, allTestCases]).then(([validRes, allRes]) => {
         setAllRuns(allRes?.totalElements || 0);
         setValidRuns(validRes?.totalElements || 0);
         setIsLoading(false);
       });
     }
-  }, [selectedTestSuite.id, validRuns]);
+  }, [selectedTestSuite.datasetId, validRuns]);
 
   return (
     <DialFormPopup

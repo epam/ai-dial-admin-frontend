@@ -7,6 +7,7 @@ import { DialPrimaryButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 
+import CreateDataset from '@/src/components/Datasets/Modals/Create/CreateDataset';
 import CreateTestSuite from '@/src/components/TestSuites/Modals/Create/CreateTestSuite';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -14,6 +15,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
+import { Dataset } from '@/src/models/evaluation/dataset';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -71,6 +73,13 @@ const HeaderButtons = <T extends { id?: string }>({ route, onCreateEntity }: Pro
             isModalOpen={isModalOpen}
             onClose={onModalClose}
             onCreate={onCreate as (suite: TestSuite) => void}
+          />
+        )}
+        {route === ApplicationRoute.Datasets && (
+          <CreateDataset
+            isModalOpen={isModalOpen}
+            onClose={onModalClose}
+            onCreate={onCreate as (dataset: Dataset) => void}
           />
         )}
       </SaveValidationContextProvider>

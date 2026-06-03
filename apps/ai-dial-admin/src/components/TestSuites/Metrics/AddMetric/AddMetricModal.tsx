@@ -22,6 +22,7 @@ import StepperModalButtons from '@/src/components/Common/StepperModalButtons/Ste
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Metric, MetricBinding } from '@/src/models/evaluation/metric';
+import { Dataset } from '@/src/models/evaluation/dataset';
 import classNames from 'classnames';
 import { generateMetricDefaultBindings, generateMetricDefaultInputBindings } from '../../utils/metric-bindings';
 import MetricConfiguration from './Configuration';
@@ -36,9 +37,10 @@ interface Props {
   onConfirm: (metric?: Metric | null) => void;
   editingMetric?: Metric;
   selectedTestSuite?: TestSuite;
+  dataset?: Dataset | null;
 }
 
-const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMetric, selectedTestSuite }) => {
+const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMetric, selectedTestSuite, dataset }) => {
   const t = useI18n();
 
   const isEditMode = !!editingMetric;
@@ -189,6 +191,7 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMet
               inputBindings={inputBindings}
               onChangeName={setMetricName}
               selectedTestSuite={selectedTestSuite}
+              testCaseSchema={dataset?.testCaseSchema}
               selectedMetricDetails={selectedMetricDetails}
               onChangeConfigBindings={setConfigBindings}
               onChangeInputBindings={setInputBindings}

@@ -11,9 +11,7 @@ const makeSchema = (name: string, type: TestCaseItemType = TestCaseItemType.STRI
   description: '',
 });
 
-const makeSuite = (testCaseSchema: TestCaseSchema[] = []): TestSuite => ({
-  testCaseSchema,
-});
+const makeSuite = (): TestSuite => ({});
 
 describe('getTestCaseColumns', () => {
   const onCellChange = vi.fn();
@@ -22,7 +20,7 @@ describe('getTestCaseColumns', () => {
   const BASE_COLUMN_COUNT = 4; // enabled + id + testCaseName + validityStatus
 
   test('should return only base columns when schema is empty', () => {
-    const result = getTestCaseColumns(makeSuite([]), onCellChange);
+    const result = getTestCaseColumns(makeSuite(), onCellChange, undefined, []);
 
     expect(result.length).toBe(BASE_COLUMN_COUNT);
   });
@@ -34,13 +32,9 @@ describe('getTestCaseColumns', () => {
   });
 
   test('should add columns for each schema field', () => {
-    const suite = makeSuite([
-      makeSchema('temperature'),
-      makeSchema('model'),
-      makeSchema('maxTokens', TestCaseItemType.NUMBER),
-    ]);
+    const schema = [makeSchema('temperature'), makeSchema('model'), makeSchema('maxTokens', TestCaseItemType.NUMBER)];
 
-    const result = getTestCaseColumns(suite, onCellChange);
+    const result = getTestCaseColumns(makeSuite(), onCellChange, undefined, schema);
 
     expect(result.length).toBe(BASE_COLUMN_COUNT + 3);
     expect(result[1]).toEqual(expect.objectContaining({ field: 'id', colId: 'id', headerName: 'ID' }));
@@ -53,23 +47,21 @@ describe('getTestCaseColumns', () => {
   });
 
   test('should handle single schema field', () => {
-    const suite = makeSuite([makeSchema('prompt')]);
-
-    const result = getTestCaseColumns(suite, onCellChange);
+    const result = getTestCaseColumns(makeSuite(), onCellChange, undefined, [makeSchema('prompt')]);
 
     expect(result[3]).toEqual(expect.objectContaining({ field: 'prompt', headerName: 'prompt' }));
   });
 
   test('should handle schema fields with various types', () => {
-    const suite = makeSuite([
+    const schema = [
       makeSchema('stringFact', TestCaseItemType.STRING),
       makeSchema('numberFact', TestCaseItemType.NUMBER),
       makeSchema('booleanFact', TestCaseItemType.BOOLEAN),
       makeSchema('arrayFact', TestCaseItemType.ARRAY),
       makeSchema('objectFact', TestCaseItemType.OBJECT),
-    ]);
+    ];
 
-    const result = getTestCaseColumns(suite, onCellChange);
+    const result = getTestCaseColumns(makeSuite(), onCellChange, undefined, schema);
 
     expect(result[3].field).toBe('stringFact');
     expect(result[4].field).toBe('numberFact');
@@ -79,13 +71,9 @@ describe('getTestCaseColumns', () => {
   });
 
   test('should handle schema fields with special characters in names', () => {
-    const suite = makeSuite([
-      makeSchema('fact-with-dash'),
-      makeSchema('fact_with_underscore'),
-      makeSchema('fact.with.dot'),
-    ]);
+    const schema = [makeSchema('fact-with-dash'), makeSchema('fact_with_underscore'), makeSchema('fact.with.dot')];
 
-    const result = getTestCaseColumns(suite, onCellChange);
+    const result = getTestCaseColumns(makeSuite(), onCellChange, undefined, schema);
 
     expect(result[3]).toEqual(expect.objectContaining({ field: 'fact-with-dash', headerName: 'fact-with-dash' }));
     expect(result[4]).toEqual(
@@ -95,9 +83,11 @@ describe('getTestCaseColumns', () => {
   });
 
   test('should preserve the order of schema fields', () => {
-    const suite = makeSuite([makeSchema('zFact'), makeSchema('aFact'), makeSchema('mFact')]);
-
-    const result = getTestCaseColumns(suite, onCellChange);
+    const result = getTestCaseColumns(makeSuite(), onCellChange, undefined, [
+      makeSchema('zFact'),
+      makeSchema('aFact'),
+      makeSchema('mFact'),
+    ]);
 
     expect(result[3].field).toBe('zFact');
     expect(result[4].field).toBe('aFact');
@@ -105,9 +95,7 @@ describe('getTestCaseColumns', () => {
   });
 
   test('should correctly spread TEST_CASES_COLUMN at the beginning', () => {
-    const suite = makeSuite([makeSchema('customFact')]);
-
-    const result = getTestCaseColumns(suite, onCellChange);
+    const result = getTestCaseColumns(makeSuite(), onCellChange, undefined, [makeSchema('customFact')]);
 
     // First columns should be from TEST_CASES_COLUMN
     expect(result[1]).toEqual({ ...TEST_CASES_COLUMN[0], cellClass: 'select-none cursor-pointer' });
@@ -117,9 +105,7 @@ describe('getTestCaseColumns', () => {
   });
 
   test('should use fallback row field value when nested data field is missing', () => {
-    const suite = makeSuite([makeSchema('prompt')]);
-
-    const result = getTestCaseColumns(suite, onCellChange);
+    const result = getTestCaseColumns(makeSuite(), onCellChange, undefined, [makeSchema('prompt')]);
     const promptColumn = result.find((column) => column.field === 'prompt');
 
     expect(promptColumn).toBeDefined();

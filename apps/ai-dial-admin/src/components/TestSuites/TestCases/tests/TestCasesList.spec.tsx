@@ -3,7 +3,7 @@ import { createRef } from 'react';
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 import TestCasesList, { TestCasesActions } from '../TestCasesList';
 import { TestSuite, TestCase as TestCaseModel } from '@/src/models/evaluation/test-suite';
-import * as actions from '@/src/app/[lang]/test-suites/actions';
+import * as actions from '@/src/app/[lang]/datasets/actions';
 
 type TestCase = Partial<TestCaseModel>;
 
@@ -17,19 +17,20 @@ const createPageData = (content: TestCase[]) => ({
 
 let capturedGridOptions: any = null;
 let capturedOnCellChange: ((data: Record<string, unknown>, field: string, value: unknown) => void) | null = null;
+let capturedRowData: any[] | null = null;
 
-// Mock the actions
-vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
+vi.mock('@/src/app/[lang]/datasets/actions', () => ({
   getTestCases: vi.fn(),
   createTestCase: vi.fn(),
   importTestCase: vi.fn(),
   removeTestCase: vi.fn(),
+  removeMultipleTestCases: vi.fn(),
 }));
 
-// Mock ListView component — captures additionalGridOptions and onGridReady
 vi.mock('@/src/components/ListView/List', () => ({
-  default: ({ listLabel, emptyDataProps, onGridReady, additionalGridOptions, children }: any) => {
+  default: ({ listLabel, emptyDataProps, onGridReady, additionalGridOptions, rowData, children }: any) => {
     capturedGridOptions = additionalGridOptions;
+    capturedRowData = rowData ?? null;
     return (
       <div>
         <div>List View Component</div>
@@ -44,7 +45,6 @@ vi.mock('@/src/components/ListView/List', () => ({
   },
 }));
 
-// Mock getTestCaseColumns to capture onCellChange
 vi.mock('@/src/components/TestSuites/utils/columns', () => ({
   getTestCaseColumns: (_suite: unknown, onCellChange: any) => {
     capturedOnCellChange = onCellChange;
@@ -52,7 +52,6 @@ vi.mock('@/src/components/TestSuites/utils/columns', () => ({
   },
 }));
 
-// Mock HeaderButtons component
 vi.mock('@/src/components/TestSuites/TestCases/Header', () => ({
   default: ({ selectedTestSuiteId }: any) => (
     <div>
@@ -66,40 +65,42 @@ describe('TestCasesList', () => {
   const mockTestSuite: TestSuite = {
     id: 'test-suite-123',
     name: 'Test Suite 1',
-    description: 'Test description',
+    datasetId: 'dataset-123',
   };
 
   const mockTestCases: TestCase[] = [
-    {
-      testCaseName: 'Test Case 1',
-      data: {
-        temperature: 0.7,
-      },
-    },
-    {
-      testCaseName: 'Test Case 2',
-      data: {
-        temperature: 0.5,
-      },
-    },
+    { id: 'tc-1', testCaseName: 'Test Case 1', createdAt: 0 },
+    { id: 'tc-2', testCaseName: 'Test Case 2', createdAt: 0 },
   ];
 
   const mockOnChange = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
+    capturedGridOptions = null;
+    capturedOnCellChange = null;
+    capturedRowData = null;
   });
 
-  test('fetches test cases on mount', async () => {
+  test('fetches test cases on mount using datasetId', async () => {
     vi.mocked(actions.getTestCases).mockResolvedValue(createPageData(mockTestCases));
 
     render(<TestCasesList selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
 
     await waitFor(() => {
-      expect(actions.getTestCases).toHaveBeenCalledWith(mockTestSuite.id, 0, 1000, [], []);
+      expect(actions.getTestCases).toHaveBeenCalledWith('dataset-123', 0, 1000, [], []);
     });
   });
-  test('handles null response from getTestCases', async () => {
+
+  test('does not fetch when datasetId is missing', async () => {
+    const suiteNoDataset: TestSuite = { id: 'suite-1', name: 'Suite' };
+    render(<TestCasesList selectedTestSuite={suiteNoDataset} onChange={mockOnChange} />);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(actions.getTestCases).not.toHaveBeenCalled();
+  });
+
+  test('handles null response from getTestCases gracefully', async () => {
     vi.mocked(actions.getTestCases).mockResolvedValue(null as any);
 
     render(<TestCasesList selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
@@ -109,87 +110,40 @@ describe('TestCasesList', () => {
     });
   });
 
-  test('initializes grid when onGridReady is called', async () => {
-    vi.mocked(actions.getTestCases).mockResolvedValue(createPageData(mockTestCases));
-
-    render(<TestCasesList selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
-
-    const initButton = await screen.findByText('Initialize Grid');
-    initButton.click();
-
-    // Grid initialization should complete without errors
-    expect(initButton).toBeInTheDocument();
-  });
-
-  test('handles test suite without id', async () => {
+  test('refetches when datasetId changes', async () => {
     vi.mocked(actions.getTestCases).mockResolvedValue(createPageData([]));
 
-    const testSuiteNoId: TestSuite = {
-      name: 'Test Suite',
-    };
+    const { rerender } = render(<TestCasesList selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
 
-    render(<TestCasesList selectedTestSuite={testSuiteNoId} onChange={mockOnChange} />);
+    await waitFor(() => expect(actions.getTestCases).toHaveBeenCalledTimes(1));
 
-    await waitFor(() => {
-      expect(actions.getTestCases).toHaveBeenCalledWith(undefined, 0, 1000, [], []);
-    });
-  });
+    rerender(
+      <TestCasesList selectedTestSuite={{ ...mockTestSuite, datasetId: 'dataset-456' }} onChange={mockOnChange} />,
+    );
 
-  test('handles multiple test cases with different facts', async () => {
-    const testCasesWithDifferentFacts: TestCase[] = [
-      {
-        testCaseName: 'Case 1',
-        data: { temp: 0.5 },
-      },
-      {
-        testCaseName: 'Case 2',
-        data: { model: 'gpt-4', tokens: 100 },
-      },
-    ];
-
-    vi.mocked(actions.getTestCases).mockResolvedValue({
-      ...createPageData(testCasesWithDifferentFacts),
-    });
-
-    render(<TestCasesList selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
-
-    await waitFor(() => {
-      expect(actions.getTestCases).toHaveBeenCalled();
-    });
-  });
-
-  test('does not refetch if test cases already exist and id remains same', async () => {
-    vi.mocked(actions.getTestCases).mockResolvedValue(createPageData(mockTestCases));
-
-    render(<TestCasesList selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
-
-    await waitFor(() => {
-      expect(actions.getTestCases).toHaveBeenCalledTimes(1);
-    });
-
-    // Even if we wait longer, it shouldn't call again
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    expect(actions.getTestCases).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(actions.getTestCases).toHaveBeenCalledTimes(2));
+    expect(actions.getTestCases).toHaveBeenLastCalledWith('dataset-456', 0, 1000, [], []);
   });
 });
 
-describe('TestCasesList — dirty-state tracking', () => {
-  const mockTestSuite: TestSuite = { id: 'suite-1', name: 'Suite' };
+describe('TestCasesList — disabledTestCaseIds logic', () => {
   const mockOnChange = vi.fn();
   const mockOnDirtyChange = vi.fn();
 
   const makeColumn = (colId: string) => ({ getColId: () => colId });
-  const makeCellEvent = (colId: string, rowData: Record<string, unknown>, newValue: unknown) => ({
+  const makeCellEvent = (colId: string, rowData: Record<string, unknown>, newValue: unknown, api?: any) => ({
     column: makeColumn(colId),
     data: rowData,
     newValue,
     node: {},
+    api: api ?? { refreshClientSideRowModel: vi.fn() },
   });
 
   beforeEach(() => {
     vi.clearAllMocks();
     capturedGridOptions = null;
     capturedOnCellChange = null;
+    capturedRowData = null;
     vi.mocked(actions.getTestCases).mockResolvedValue({
       page: 0,
       size: 1000,
@@ -199,11 +153,11 @@ describe('TestCasesList — dirty-state tracking', () => {
     });
   });
 
-  const renderWithRef = () => {
+  const renderList = (suite: TestSuite) => {
     const actionsRef = createRef<TestCasesActions | null>();
     render(
       <TestCasesList
-        selectedTestSuite={mockTestSuite}
+        selectedTestSuite={suite}
         onChange={mockOnChange}
         testCasesActionsRef={actionsRef}
         onDirtyChange={mockOnDirtyChange}
@@ -212,88 +166,76 @@ describe('TestCasesList — dirty-state tracking', () => {
     return actionsRef;
   };
 
-  test('4.2 — enabled change on existing row updates dirtyEnabledRef, not dirtyRowsRef', async () => {
-    const actionsRef = renderWithRef();
+  test('toggling enabled OFF adds row id to disabledTestCaseIds via onChange', async () => {
+    const suite: TestSuite = { id: 'suite-1', datasetId: 'ds-1', disabledTestCaseIds: [] };
+    renderList(suite);
 
     await waitFor(() => expect(capturedGridOptions).not.toBeNull());
 
-    const row = { id: 'row-1', enabled: false, testCaseName: 'tc', createdAt: 0 };
+    const row = { id: 'row-1', testCaseName: 'tc', createdAt: 0 };
     capturedGridOptions.onCellValueChanged(makeCellEvent('enabled', row, false));
 
-    const enabledChanges = actionsRef.current?.getEnabledOnlyChanges();
-    const dirtyTestCases = actionsRef.current?.getDirtyTestCases();
-
-    expect(enabledChanges?.get('row-1')).toBe(false);
-    // row-1 has no non-enabled changes, so it appears in enabledOnlyChanges but NOT in getDirtyTestCases
-    expect(dirtyTestCases?.some((tc) => tc.id === 'row-1')).toBe(false);
+    expect(mockOnChange).toHaveBeenCalledWith(expect.objectContaining({ disabledTestCaseIds: ['row-1'] }), true);
   });
 
-  test('4.1 — getEnabledOnlyChanges excludes rows also in dirtyRowsRef', async () => {
-    const actionsRef = renderWithRef();
-
-    await waitFor(() => expect(capturedGridOptions).not.toBeNull() && expect(capturedOnCellChange).not.toBeNull());
-
-    // First make a field change on row-1 (adds to dirtyRowsRef via onCellChange)
-    const row1 = { id: 'row-1', enabled: true, testCaseName: 'old', createdAt: 0 };
-    capturedOnCellChange!({ ...row1, testCaseName: 'new' }, 'testCaseName', 'new');
-
-    // Then toggle enabled on row-1 (already in dirtyRowsRef) and row-2 (not in dirtyRowsRef)
-    capturedGridOptions.onCellValueChanged(makeCellEvent('enabled', { ...row1, testCaseName: 'new' }, false));
-    const row2 = { id: 'row-2', enabled: true, testCaseName: 'tc2', createdAt: 0 };
-    capturedGridOptions.onCellValueChanged(makeCellEvent('enabled', row2, false));
-
-    const enabledOnlyChanges = actionsRef.current?.getEnabledOnlyChanges();
-    // row-1 is in dirtyRowsRef (field change) → excluded from enabledOnlyChanges
-    expect(enabledOnlyChanges?.has('row-1')).toBe(false);
-    // row-2 is enabled-only → included
-    expect(enabledOnlyChanges?.get('row-2')).toBe(false);
-  });
-
-  test('4.3 — field change after enabled change merges enabled into dirtyRowsRef entry', async () => {
-    const actionsRef = renderWithRef();
-
-    await waitFor(() => expect(capturedGridOptions).not.toBeNull() && expect(capturedOnCellChange).not.toBeNull());
-
-    const row = { id: 'row-1', enabled: true, testCaseName: 'old', createdAt: 0 };
-
-    // Toggle enabled first → goes to dirtyEnabledRef
-    capturedGridOptions.onCellValueChanged(makeCellEvent('enabled', row, false));
-
-    // Then change testCaseName via onCellChange (field editor path) → goes to dirtyRowsRef
-    const updatedRow = { ...row, testCaseName: 'new', enabled: false };
-    capturedOnCellChange!(updatedRow, 'testCaseName', 'new');
-
-    const dirtyTestCases = actionsRef.current?.getDirtyTestCases();
-    const savedRow = dirtyTestCases?.find((tc) => tc.id === 'row-1');
-
-    // dirtyRowsRef entry should carry the enabled=false from dirtyEnabledRef
-    expect(savedRow?.testCaseName).toBe('new');
-    expect(savedRow?.enabled).toBe(false);
-
-    // Row is now in dirtyRowsRef → excluded from enabledOnlyChanges
-    const enabledOnly = actionsRef.current?.getEnabledOnlyChanges();
-    expect(enabledOnly?.has('row-1')).toBe(false);
-  });
-
-  test('4.4 — clearDirtyAndRefresh clears both dirtyRowsRef and dirtyEnabledRef', async () => {
-    const actionsRef = renderWithRef();
+  test('toggling enabled ON removes row id from disabledTestCaseIds via onChange', async () => {
+    const suite: TestSuite = {
+      id: 'suite-1',
+      datasetId: 'ds-1',
+      disabledTestCaseIds: ['row-1'],
+    };
+    renderList(suite);
 
     await waitFor(() => expect(capturedGridOptions).not.toBeNull());
+
+    const row = { id: 'row-1', testCaseName: 'tc', createdAt: 0 };
+    capturedGridOptions.onCellValueChanged(makeCellEvent('enabled', row, true));
+
+    expect(mockOnChange).toHaveBeenCalledWith(expect.objectContaining({ disabledTestCaseIds: [] }), true);
+  });
+
+  test('disabled state is pre-populated from disabledTestCaseIds when data loads', async () => {
+    const suite: TestSuite = {
+      id: 'suite-1',
+      datasetId: 'ds-1',
+      disabledTestCaseIds: ['row-1'],
+    };
+
+    vi.mocked(actions.getTestCases).mockResolvedValue(
+      createPageData([
+        { id: 'row-1', testCaseName: 'disabled case', createdAt: 0 },
+        { id: 'row-2', testCaseName: 'enabled case', createdAt: 0 },
+      ]),
+    );
+
+    renderList(suite);
+
+    await waitFor(() => {
+      expect(capturedRowData).not.toBeNull();
+      expect(capturedRowData!.length).toBe(2);
+    });
+
+    const row1 = capturedRowData!.find((r: any) => r.id === 'row-1');
+    const row2 = capturedRowData!.find((r: any) => r.id === 'row-2');
+
+    expect(row1?.enabled).toBe(false);
+    expect(row2?.enabled).toBe(true);
+  });
+
+  test('clearDirtyAndRefresh clears dirty rows and calls onDirtyChange(false)', async () => {
+    const suite: TestSuite = { id: 'suite-1', datasetId: 'ds-1', disabledTestCaseIds: [] };
+    const actionsRef = renderList(suite);
 
     await waitFor(() => expect(capturedOnCellChange).not.toBeNull());
 
-    const row1 = { id: 'row-1', enabled: true, testCaseName: 'tc', createdAt: 0 };
-    const row2 = { id: 'row-2', enabled: true, testCaseName: 'tc2', createdAt: 0 };
-
-    capturedOnCellChange!({ ...row1, testCaseName: 'new' }, 'testCaseName', 'new');
-    capturedGridOptions.onCellValueChanged(makeCellEvent('enabled', row2, false));
+    const row = { id: 'row-1', testCaseName: 'tc', createdAt: 0 };
+    capturedOnCellChange!({ ...row, testCaseName: 'changed' }, 'testCaseName', 'changed');
 
     expect(actionsRef.current?.getDirtyTestCases().length).toBeGreaterThan(0);
-    expect(actionsRef.current?.getEnabledOnlyChanges().size).toBeGreaterThan(0);
 
     actionsRef.current?.clearDirtyAndRefresh();
 
     expect(actionsRef.current?.getDirtyTestCases().length).toBe(0);
-    expect(actionsRef.current?.getEnabledOnlyChanges().size).toBe(0);
+    expect(mockOnDirtyChange).toHaveBeenLastCalledWith(false);
   });
 });
