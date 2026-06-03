@@ -30,6 +30,7 @@ interface Props {
   context?: () => AssetsFolderContext;
   onCreateFolder?: (_: DialUploadFileItem | undefined, folderPath: string) => Promise<ServerActionResponse>;
   view?: ApplicationRoute;
+  shouldAbleToCreateNewFolder?: boolean;
 }
 
 const FilePath: FC<Props> = ({
@@ -42,6 +43,7 @@ const FilePath: FC<Props> = ({
   context,
   onCreateFolder,
   view,
+  shouldAbleToCreateNewFolder = true,
 }) => {
   const t = useI18n();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -137,6 +139,7 @@ const FilePath: FC<Props> = ({
           navigationPanelOptions={{
             searchable: false,
           }}
+          showCreateFolderButton={shouldAbleToCreateNewFolder}
         />
       </div>
     </div>
