@@ -93,6 +93,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
       }
       getReqRef.current(updateFunction, updatedEntity, etag).then((res) => {
         if (res.success) {
+          setAddedVersions([]);
           showNotification(
             getSuccessNotification(
               newVersion
