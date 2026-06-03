@@ -711,6 +711,11 @@ export default {
     CallsFromParentDeployments: 'Calls from Parent Deployments',
     CallsByRoute: 'Calls by Route',
     CallsByProject: 'Calls by Project',
+    NoProject: 'No Project',
+    NoProjectTooltip: 'Called outside of any project',
+    DirectCall: 'Direct call',
+    DirectCallTooltip: 'Called directly via Try out - no parent deployment',
+    DirectCallByKeyOrUserTooltip: 'Called directly by key or user - no parent deployment',
     RequestPerMcpUsage: 'Request per MCP usage',
     Unknown: 'Unknown',
     ActivityView: {

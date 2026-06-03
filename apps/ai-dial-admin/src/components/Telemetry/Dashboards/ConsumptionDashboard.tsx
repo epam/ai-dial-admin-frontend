@@ -73,7 +73,7 @@ const ConsumptionDashboard: FC<Props> = ({ route, getData, refreshTime }) => {
       <div className="flex size-full relative">
         <TelemetryGrid
           title={t(TelemetryI18nKey.ProjectsConsumption)}
-          columnDefs={PROJECT_GRID_COLUMNS}
+          columnDefs={PROJECT_GRID_COLUMNS(t)}
           data={projectRows}
           loading={loading}
         />
