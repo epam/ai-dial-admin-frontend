@@ -27,7 +27,6 @@ const createTestSuite = (overrides?: Partial<TestSuite>): TestSuite => ({
   id: 'suite-1',
   name: 'Test Suite 1',
   inputBindings: [],
-  testCaseSchema: [],
   ...overrides,
 });
 
@@ -39,41 +38,62 @@ describe('TestCases', () => {
     mockOnChange = vi.fn();
   });
 
+  const defaultDatasetProps = { dataset: null, suiteEtag: '' };
+
   test('renders both TemplateVariables and TestCasesList', () => {
-    render(<TestCases selectedTestSuite={createTestSuite()} onChange={mockOnChange} />);
+    render(<TestCases selectedTestSuite={createTestSuite()} onChange={mockOnChange} {...defaultDatasetProps} />);
 
     expect(screen.getByRole('region', { name: 'template variables' })).toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'test cases list' })).toBeInTheDocument();
   });
 
   test('passes selectedTestSuite to TemplateVariables', () => {
-    render(<TestCases selectedTestSuite={createTestSuite({ id: 'my-suite' })} onChange={mockOnChange} />);
+    render(
+      <TestCases
+        selectedTestSuite={createTestSuite({ id: 'my-suite' })}
+        onChange={mockOnChange}
+        {...defaultDatasetProps}
+      />,
+    );
 
     const tvSection = screen.getByRole('region', { name: 'template variables' });
     expect(tvSection).toHaveTextContent('my-suite');
   });
 
   test('passes selectedTestSuite to TestCasesList', () => {
-    render(<TestCases selectedTestSuite={createTestSuite({ id: 'my-suite' })} onChange={mockOnChange} />);
+    render(
+      <TestCases
+        selectedTestSuite={createTestSuite({ id: 'my-suite' })}
+        onChange={mockOnChange}
+        {...defaultDatasetProps}
+      />,
+    );
 
     const tclSection = screen.getByRole('region', { name: 'test cases list' });
     expect(tclSection).toHaveTextContent('my-suite');
   });
 
   test('passes isSkipRefresh to TemplateVariables', () => {
-    render(<TestCases selectedTestSuite={createTestSuite()} onChange={mockOnChange} isSkipRefresh={true} />);
+    render(
+      <TestCases
+        selectedTestSuite={createTestSuite()}
+        onChange={mockOnChange}
+        isSkipRefresh={true}
+        {...defaultDatasetProps}
+      />,
+    );
 
     expect(screen.getByRole('note')).toHaveTextContent('true');
   });
 
   test('defaults isSkipRefresh to undefined', () => {
-    render(<TestCases selectedTestSuite={createTestSuite()} onChange={mockOnChange} />);
+    render(<TestCases selectedTestSuite={createTestSuite()} onChange={mockOnChange} {...defaultDatasetProps} />);
 
     expect(screen.getByRole('note')).toHaveTextContent('undefined');
   });
 
   test('passes onChange to TemplateVariables and it triggers correctly', () => {
-    render(<TestCases selectedTestSuite={createTestSuite()} onChange={mockOnChange} />);
+    render(<TestCases selectedTestSuite={createTestSuite()} onChange={mockOnChange} {...defaultDatasetProps} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'TV Change' }));
 
@@ -82,7 +102,7 @@ describe('TestCases', () => {
   });
 
   test('passes onChange to TestCasesList and it triggers correctly', () => {
-    render(<TestCases selectedTestSuite={createTestSuite()} onChange={mockOnChange} />);
+    render(<TestCases selectedTestSuite={createTestSuite()} onChange={mockOnChange} {...defaultDatasetProps} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'TCL Change' }));
 
@@ -91,7 +111,9 @@ describe('TestCases', () => {
   });
 
   test('renders with correct container classes', () => {
-    const { container } = render(<TestCases selectedTestSuite={createTestSuite()} onChange={mockOnChange} />);
+    const { container } = render(
+      <TestCases selectedTestSuite={createTestSuite()} onChange={mockOnChange} {...defaultDatasetProps} />,
+    );
 
     const wrapper = container.firstChild as HTMLElement;
     expect(wrapper).toHaveClass('h-full', 'flex', 'flex-col', 'gap-y-6');

@@ -7,9 +7,11 @@ import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabConte
 import Metrics from '@/src/components/TestSuites/Metrics/Metrics';
 import TestSuiteProperties from '@/src/components/TestSuites/Properties/Properties';
 import Runs from '@/src/components/TestSuites/Runs/Runs';
+import DatasetBinding from '@/src/components/TestSuites/TestCases/DatasetBinding/DatasetBinding';
 import TestCases from '@/src/components/TestSuites/TestCases/TestCases';
 import { TestCasesActions } from '@/src/components/TestSuites/TestCases/TestCasesList';
 import MethodTabContent from '@/src/components/TestSuites/View/MethodTabContent';
+import { Dataset } from '@/src/models/evaluation/dataset';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
@@ -23,6 +25,9 @@ interface Props {
   originalTestSuite: TestSuite;
   onChange: (testSuite: TestSuite, isSkipRefresh?: boolean) => void;
   isSkipRefresh?: boolean;
+  dataset?: Dataset | null;
+  onChangeDataset?: (dataset: Dataset) => void;
+  suiteEtag?: string;
 }
 
 const TabsContent: FC<Props> = ({
@@ -34,6 +39,9 @@ const TabsContent: FC<Props> = ({
   onChange,
   selectedTestSuite,
   isSkipRefresh,
+  dataset,
+  onChangeDataset,
+  suiteEtag,
 }) => {
   const headerPostfix = useMemo(() => {
     return (
@@ -61,7 +69,10 @@ const TabsContent: FC<Props> = ({
       {activeTab === EntityViewTab.TestSuiteMethod && (
         <MethodTabContent testSuite={selectedTestSuite} onChange={onChange} isSkipRefresh={isSkipRefresh} />
       )}
-      {activeTab === EntityViewTab.TestCases && (
+      {activeTab === EntityViewTab.TestCases && !selectedTestSuite.datasetId && (
+        <DatasetBinding selectedTestSuite={selectedTestSuite} suiteEtag={suiteEtag ?? ''} />
+      )}
+      {activeTab === EntityViewTab.TestCases && selectedTestSuite.datasetId && (
         <TestCases
           testCasesActionsRef={testCasesActionsRef}
           onDirtyChange={onTestCaseDirtyChange}
@@ -69,10 +80,13 @@ const TabsContent: FC<Props> = ({
           selectedTestSuite={selectedTestSuite}
           onChange={onChange}
           isSkipRefresh={isSkipRefresh}
+          dataset={dataset ?? null}
+          suiteEtag={suiteEtag ?? ''}
+          onChangeDataset={onChangeDataset}
         />
       )}
       {activeTab === EntityViewTab.Runs && <Runs selectedTestSuite={selectedTestSuite} runRefreshRef={runRefreshRef} />}
-      {activeTab === EntityViewTab.Metrics && <Metrics selectedTestSuite={selectedTestSuite} />}
+      {activeTab === EntityViewTab.Metrics && <Metrics selectedTestSuite={selectedTestSuite} dataset={dataset} />}
     </>
   );
 };

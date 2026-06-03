@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import {
@@ -27,9 +27,24 @@ import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialActivity } from '@/src/models/activity-audit';
 import { BaseEntity } from '@/src/models/dial/base-entity';
-import { ActivityAuditEntity, CompareView, DiffView, isDeploymentManagerResource } from '@/src/types/activity-audit';
+import {
+  ActivityAuditEntity,
+  ActivityAuditType,
+  ActivityAuditView,
+  CompareView,
+  DiffView,
+  isDeploymentManagerResource,
+} from '@/src/types/activity-audit';
+import { AuditListPreselect } from '@/src/types/audit-list-preselect';
 import { ApplicationRoute } from '@/src/types/routes';
+import { saveAuditListPreselect } from '@/src/utils/audit-list-preselect';
+import {
+  needsDeploymentLifecycleCheck,
+  resolveDeploymentRollbackBlockReason,
+} from '@/src/utils/audit/deployment-lifecycle-check';
+import { rollbackDeploymentEntity } from '@/src/utils/audit/get-deployment-rollback-request';
 import { rollbackEntityPerRevision } from '@/src/utils/audit/get-rollback-request';
+import { getRollbackNavigation, RollbackRedirectTarget } from '@/src/utils/audit/get-rollback-navigation';
 import {
   getRollbackErrorDescription,
   getRollbackErrorTitle,
@@ -40,7 +55,6 @@ import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { generateCurrentResource } from './utils/generate-diffs';
-import { getRollbackRedirectHref } from './utils/get-rollback-redirect-href';
 
 interface Props {
   activity: DialActivity;
@@ -72,6 +86,26 @@ const AuditView: FC<Props> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [diffView, setDiffView] = useState(DiffView.ALL);
   const [compareView, setCompareView] = useState(CompareView.NEXT);
+  const [blockReason, setBlockReason] = useState<RollbackI18nKey | null>(null);
+
+  const isDeployment = isDeploymentManagerResource(activity.resourceType);
+  const needsLifecycleCheck = needsDeploymentLifecycleCheck(activity);
+
+  useEffect(() => {
+    if (!needsLifecycleCheck) {
+      setBlockReason(null);
+      return;
+    }
+    let active = true;
+    resolveDeploymentRollbackBlockReason(activity).then((reason) => {
+      if (active) {
+        setBlockReason(reason);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [needsLifecycleCheck, activity]);
 
   const before = generateCurrentResource(
     compareView === CompareView.NEXT ? activityRevision : (entity as ActivityAuditEntity),
@@ -98,20 +132,41 @@ const AuditView: FC<Props> = ({
 
   const resourceRollback = useCallback(() => {
     setIsLoading(true);
-    rollbackEntityPerRevision(activity, activityRevision, previousRevision)
+    const rollbackRequest = isDeployment
+      ? rollbackDeploymentEntity(activity)
+      : rollbackEntityPerRevision(activity, activityRevision, previousRevision);
+    const isRecreate = isDeployment && activity.activityType === ActivityAuditType.Delete;
+    rollbackRequest
       .then((res) => {
         setIsLoading(false);
         if (res?.success) {
           showNotification(
             getSuccessNotification(
               getRollbackSuccessTitle(activity.resourceType, t),
-              getRollbackSuccessDescription(activity.resourceType, t),
+              isRecreate
+                ? t(RollbackI18nKey.NotificationSuccessRecreateDescription)
+                : getRollbackSuccessDescription(activity.resourceType, t),
             ),
           );
-          if (isEntityActivity) {
-            const newRoute = getRollbackRedirectHref(activity.resourceType, activity.resourceId);
-            router.push(newRoute);
+          const nav = getRollbackNavigation(
+            activity.activityType,
+            activity.resourceType,
+            decodeURIComponent(activity.resourceId ?? ''),
+            isEntityActivity,
+            res?.response,
+          );
+          if (nav.target === RollbackRedirectTarget.Refresh) {
+            router.refresh();
+          } else if (nav.target === RollbackRedirectTarget.EntityList) {
+            router.push(nav.entityListHref ?? ApplicationRoute.ActivityAudit);
+          } else if (nav.target === RollbackRedirectTarget.EntityDetail) {
+            router.push(nav.entityDetailHref ?? ApplicationRoute.ActivityAudit);
           } else {
+            saveAuditListPreselect(
+              nav.auditView === ActivityAuditView.Deployments
+                ? AuditListPreselect.Deployments
+                : AuditListPreselect.Config,
+            );
             router.push(ApplicationRoute.ActivityAudit);
           }
         } else {
@@ -139,6 +194,7 @@ const AuditView: FC<Props> = ({
     onCloseModal,
     router,
     isEntityActivity,
+    isDeployment,
   ]);
 
   const openActivityInNewTab = (activity: DialActivity) => {
@@ -162,11 +218,13 @@ const AuditView: FC<Props> = ({
             <div className="flex flex-row items-center gap-4 flex-wrap">
               <CompareControl compareView={compareView} setCompareView={setCompareView} />
               <FilterControl diffView={diffView} setDiffView={setDiffView} />
-              {!isReadOnlyAdmin && !isDeploymentManagerResource(activity.resourceType) && (
+              {!isReadOnlyAdmin && (
                 <DialNeutralButton
                   iconBefore={<IconRestore {...BASE_BUTTON_ICON_PROPS} />}
                   label={t(RollbackI18nKey.Resource)}
                   onClick={onOpenModal}
+                  disabled={!!blockReason}
+                  tooltipProps={blockReason ? { tooltip: t(blockReason) } : void 0}
                 />
               )}
               <div className="w-px h-6 bg-layer-4"></div>

@@ -166,6 +166,15 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
       },
     ],
   },
+  [ApplicationRoute.Datasets]: {
+    segments: [
+      {
+        name: 'Datasets',
+        i18nKey: MenuI18nKey.Datasets,
+      },
+      { name: 'Id', href: false },
+    ],
+  },
   [ApplicationRoute.TestSuites]: {
     segments: [
       {

@@ -119,6 +119,7 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
       }
       getReqRef.current(updateFunction, updatedEntity, etag).then((res) => {
         if (res.success) {
+          setAddedVersions([]);
           showNotification(
             getSuccessNotification(
               newVersion

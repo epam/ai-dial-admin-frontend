@@ -64,6 +64,7 @@ export enum EntityViewTab {
   Application = 'Application',
   InputSchema = 'InputSchema',
   OutputSchema = 'OutputSchema',
+  Schema = 'Schema',
 }
 
 export const propertiesTab = (t: (key: string) => string, warning?: boolean) => ({
@@ -334,6 +335,11 @@ export const applicationTab = (t: (key: string) => string) => ({
   label: t(TabsI18nKey.Application),
 });
 
+export const schemaTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.Schema,
+  label: t(TabsI18nKey.Schema),
+});
+
 export const getRouteTabs = (t: (key: string) => string): TabModel[] => {
   return [propertiesTab(t), rolesTab(t), auditTab(t)];
 };
@@ -536,6 +542,10 @@ export const getTestSuiteRequestTemplateTabs = (t: (key: string) => string): Tab
 
 export const getRunTabs = (t: (key: string) => string): TabModel[] => {
   return [summaryTab(t), analyticsTab(t), extractionResultTab(t)];
+};
+
+export const getDatasetTabs = (t: (key: string) => string): TabModel[] => {
+  return [propertiesTab(t), schemaTab(t), testCasesTab(t)];
 };
 
 export const getEndpointSchemaTabs = (t: (key: string) => string): TabModel[] => {

@@ -26,6 +26,7 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { Metric } from '@/src/models/evaluation/metric';
+import { Dataset } from '@/src/models/evaluation/dataset';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import AddMetricModal from './AddMetric/AddMetricModal';
@@ -33,9 +34,10 @@ import MetricBindingsDisplay from './MetricBindingsDisplay';
 
 interface Props {
   selectedTestSuite: TestSuite;
+  dataset?: Dataset | null;
 }
 
-const Metrics: FC<Props> = ({ selectedTestSuite }) => {
+const Metrics: FC<Props> = ({ selectedTestSuite, dataset }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
 
@@ -129,9 +131,13 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
         <DialPrimaryButton
           iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
           label={t(ButtonsI18nKey.Add)}
+          disabled={!selectedTestSuite.datasetId}
           onClick={() => setIsAddModalOpen(true)}
         />
       </div>
+      {!selectedTestSuite.datasetId && (
+        <p className="dial-tiny-text text-secondary">{t(TestSuitesI18nKey.DatasetRequiredForMetrics)}</p>
+      )}
       {isMetricsLoading ? (
         <DialLoader size={44} />
       ) : (
@@ -188,6 +194,7 @@ const Metrics: FC<Props> = ({ selectedTestSuite }) => {
           <AddMetricModal
             isModalOpen={isAddModalOpen}
             selectedTestSuite={selectedTestSuite}
+            dataset={dataset}
             onClose={() => {
               setIsAddModalOpen(false);
               setMetricToEdit(undefined);

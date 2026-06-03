@@ -84,27 +84,35 @@ The `Version` column SHALL render the activity record's `version` field (a nulla
 
 ### Requirement: Rollback affordances hidden in Deployments view
 
-The system-level `Rollback` button in the page header SHALL NOT render when the active view is `Deployments`. The per-row action menu SHALL NOT include the `Rollback` action when the active view is `Deployments`. The existing rollback flow in the Config view SHALL remain unchanged.
+The system-level `Rollback` button in the page header SHALL NOT render when the active view is `Deployments`. The per-row action menu SHALL include a `Rollback` action when the active view is `Deployments`, available for deployment-manager resource types. The existing rollback flow in the Config view SHALL remain unchanged.
 
 #### Scenario: System rollback hidden
 - **WHEN** the user switches to the Deployments view
 - **THEN** the page-level `Rollback` button is not rendered
 
-#### Scenario: Per-row rollback action hidden
-- **WHEN** the user opens the action menu on any row in the Deployments view
-- **THEN** the menu does not list a `Rollback` option
+#### Scenario: Per-row rollback action present
+- **WHEN** the user opens the action menu on a deployment-manager row in the Deployments view
+- **THEN** the menu lists a `Rollback` option
 
 #### Scenario: Config view rollback preserved
 - **WHEN** the user is on the Config view
 - **THEN** the page-level `Rollback` button is rendered (unless the user is a read-only admin) and the per-row rollback action is available on each row
 
-### Requirement: Deployments view row action menu shows Open-in-new-tab; click behavior depends on resource type
+### Requirement: Deployments view row action menu shows Open-in-new-tab and Rollback; click behavior depends on resource type
 
-The per-row action menu in the Deployments view SHALL render exactly one item: `Open in new tab`. For every deployment-manager resource type (the four `*ImageDefinition` types, `ImageBuildDomainWhitelist`, and the six `*Deployment` container subtypes), clicking `Open in new tab` SHALL open `/activity-audit/{activityId}` in a new browser tab, and a row-body click anywhere outside the action menu SHALL navigate to the same URL in the current tab. No deployment-manager resource type remains as a no-op.
+The per-row action menu in the Deployments view SHALL render `Open in new tab` and, for deployment-manager resource types, `Rollback`. For every deployment-manager resource type (the four `*ImageDefinition` types, `ImageBuildDomainWhitelist`, and the six `*Deployment` container subtypes), clicking `Open in new tab` SHALL open `/activity-audit/{activityId}` in a new browser tab, and a row-body click anywhere outside the action menu SHALL navigate to the same URL in the current tab. No deployment-manager resource type remains as a no-op. The `Rollback` action SHALL open the rollback confirmation flow defined by the `deployment-entity-rollback` capability; for parent/aggregate rows (no single resolvable entity) the `Rollback` action SHALL be suppressed, matching the Config view's handling of grouped rows.
 
-#### Scenario: Only Open-in-new-tab is present in the menu
-- **WHEN** the user opens the action menu on a Deployments view row
-- **THEN** the only item is `Open in new tab`
+#### Scenario: Open-in-new-tab and Rollback are present in the menu
+- **WHEN** the user opens the action menu on a deployment-manager Deployments view row
+- **THEN** the menu includes `Open in new tab` and `Rollback`
+
+#### Scenario: Rollback action opens the confirmation flow
+- **WHEN** the user clicks `Rollback` on a deployment-manager row
+- **THEN** the rollback confirmation flow for that activity opens
+
+#### Scenario: Rollback suppressed on aggregate rows
+- **WHEN** a row represents a parent/aggregate with child activities
+- **THEN** the `Rollback` action is not offered for that row
 
 #### Scenario: Image row Open-in-new-tab opens the detail page in a new tab
 - **WHEN** the user clicks `Open in new tab` on a row whose `resourceType` is one of the four `*ImageDefinition` types
