@@ -3,9 +3,9 @@ import { GridOptions } from 'ag-grid-community';
 import { useRouter } from 'next/navigation';
 import { useCallback } from 'react';
 
+import { onCellClicked } from '@/src/components/EntityListView/utils/on-cell-clicked';
 import { emptyDataTitleMap, listViewTitleMap } from '@/src/components/ListView/constants';
 import ListEntities from '@/src/components/ListView/List';
-import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { getPublicationColumns } from '@/src/constants/grid-columns/grid-columns';
 import { useI18n } from '@/src/locales/client';
 import { Publication } from '@/src/models/dial/publications';
@@ -31,11 +31,7 @@ const PublicationsList = <T extends Publication>({ data, route }: Props<T>) => {
   const gridColumns = getPublicationColumns(openInNewTab);
 
   const gridOptions: GridOptions = {
-    onCellClicked: (e) => {
-      if (e.colDef.field !== ACTIONS_COLUMN_CEL_ID) {
-        router.push(getUrnForEntity(route, e.data));
-      }
-    },
+    onCellClicked: (e) => onCellClicked(e, route, router.push),
   };
 
   return (
@@ -46,6 +42,7 @@ const PublicationsList = <T extends Publication>({ data, route }: Props<T>) => {
       listLabel={t(listViewTitleMap[route])}
       emptyDataProps={{ title: t(emptyDataTitleMap[route]) }}
       isMainListView
+      getHref={(data) => getUrnForEntity(route, data)}
     />
   );
 };
