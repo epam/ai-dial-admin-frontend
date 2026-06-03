@@ -127,11 +127,7 @@ describe('PodView', () => {
 
   test('hides termination message when absent even with restarts', () => {
     render(
-      <PodView
-        pod={makePod('pod-1', { restartCount: 2 })}
-        containerId="c1"
-        route={ApplicationRoute.McpContainers}
-      />,
+      <PodView pod={makePod('pod-1', { restartCount: 2 })} containerId="c1" route={ApplicationRoute.McpContainers} />,
     );
     expect(screen.queryByTestId(`label-${EntityFieldsI18nKey.TerminationMessage}`)).not.toBeInTheDocument();
   });
