@@ -135,4 +135,4 @@ rules:
     - Keep tasks small enough to be reviewable in a single PR
     - For test-authoring rules (how to write tests — queries, mocks, per-type approach, cost discipline), follow .claude/rules/testing.md
     - Do not add manual testing tasks
-    - Run all code qualiсдty checks (lint, format, tests) as a final task after all implementation tasks are complete
+    - Run all code quality checks (lint, format, tests) as a final task after all implementation tasks are complete
