@@ -1,7 +1,8 @@
 'use client';
 import { createImage, deleteImage, getImageVersions } from '@/src/app/actions/deployments';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
-import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
+import { onCellClicked } from '@/src/components/EntityListView/utils/on-cell-clicked';
+import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import {
   getDeleteOperation,
   getDuplicateOperation,
@@ -76,11 +77,7 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
   }, []);
 
   const gridOptions: GridOptions = {
-    onCellClicked: (e: CellClickedEvent) => {
-      if (e.colDef.field !== ACTIONS_COLUMN_CEL_ID) {
-        router.push(getUrnForEntity(route, e.data));
-      }
-    },
+    onCellClicked: (e: CellClickedEvent) => onCellClicked(e, route, router.push),
   };
 
   const onDeleteAction = useCallback(
@@ -176,6 +173,7 @@ const ImagesList: FC<Props> = ({ route, imagesList }) => {
         toggleColumnsPanel={toggleColumnsPanel}
         storageKey={`${route}/${DEPLOYMENT_ENTITY.images}`}
         onGridReady={onGridReady}
+        getHref={(data) => getUrnForEntity(route, data)}
       >
         <HeaderButtons
           toggleColumnsPanel={toggleColumnsPanel}

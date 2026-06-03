@@ -4,7 +4,7 @@ import { CONTAINER_TYPE } from '@/src/types/deployments/containers';
 import { IMAGE_TYPE } from '@/src/types/deployments/images';
 import { ApplicationRoute } from '@/src/types/routes';
 
-import { CONTAINER_TYPE_TO_AUDIT, IMAGE_TYPE_TO_AUDIT, routeAuditResource } from './constants';
+import { CONTAINER_TYPE_TO_AUDIT, IMAGE_TYPE_TO_AUDIT, routeAuditResource } from '@/src/constants/activity-audit';
 
 export const resolveEntityAuditType = (
   entity: BaseEntity | undefined,

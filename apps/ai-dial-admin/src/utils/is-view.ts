@@ -28,6 +28,7 @@ export const isEvaluationView = (view?: ApplicationRoute): boolean => {
   return (
     view === ApplicationRoute.TestSuites ||
     view === ApplicationRoute.TestCases ||
+    view === ApplicationRoute.Datasets ||
     view === ApplicationRoute.Metrics ||
     view === ApplicationRoute.Runs
   );

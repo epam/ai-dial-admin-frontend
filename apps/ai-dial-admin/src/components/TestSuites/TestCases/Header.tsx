@@ -8,6 +8,7 @@ import {
   ButtonVariant,
   DialButtonDropdown,
   DialDangerButton,
+  DialGhostButton,
   DialPrimaryButton,
   DropdownItem,
 } from '@epam/ai-dial-ui-kit';
@@ -20,22 +21,24 @@ import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evalua
 import ImportFileModal from './Import/ImportFile';
 
 interface Props {
-  selectedTestSuiteId: string;
+  datasetId: string;
   onApplyImport: (file: File, mode: TestCaseImportMode, strategy: TestCaseConflictStrategy) => void;
   onAdd?: () => void;
   onExport?: () => void;
-  onOpenSchemaModal?: () => void;
   onBatchDelete?: () => void;
+  onOpenSchemaModal?: () => void;
   showBatchDelete?: boolean;
+  isReadOnly?: boolean;
 }
 const HeaderButtons: FC<Props> = ({
-  selectedTestSuiteId,
+  datasetId,
   onApplyImport,
   onAdd,
   onExport,
-  onOpenSchemaModal,
   onBatchDelete,
+  onOpenSchemaModal,
   showBatchDelete,
+  isReadOnly,
 }) => {
   const t = useI18n();
 
@@ -47,21 +50,22 @@ const HeaderButtons: FC<Props> = ({
 
   return (
     <div className="flex gap-4">
-      {onOpenSchemaModal && (
-        <DialPrimaryButton
+      {!isReadOnly && onOpenSchemaModal && (
+        <DialGhostButton
           label={t(TestSuitesI18nKey.TestCaseSchema)}
           iconBefore={<IconSettings {...BASE_BUTTON_ICON_PROPS} />}
           onClick={onOpenSchemaModal}
-          appearance={ButtonAppearance.Ghost}
         />
       )}
 
-      <DialButtonDropdown
-        label={t(ButtonsI18nKey.Import)}
-        items={items}
-        variant={ButtonVariant.Primary}
-        appearance={ButtonAppearance.Ghost}
-      />
+      {!isReadOnly && (
+        <DialButtonDropdown
+          label={t(ButtonsI18nKey.Import)}
+          items={items}
+          variant={ButtonVariant.Primary}
+          appearance={ButtonAppearance.Ghost}
+        />
+      )}
 
       {onExport && (
         <DialPrimaryButton
@@ -72,11 +76,13 @@ const HeaderButtons: FC<Props> = ({
         />
       )}
 
-      <DialPrimaryButton
-        label={t(ButtonsI18nKey.Add)}
-        iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-        onClick={onAdd}
-      />
+      {!isReadOnly && (
+        <DialPrimaryButton
+          label={t(ButtonsI18nKey.Add)}
+          iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
+          onClick={onAdd}
+        />
+      )}
 
       {showBatchDelete && (
         <DialDangerButton
@@ -90,7 +96,7 @@ const HeaderButtons: FC<Props> = ({
       {isImportModalOpen &&
         createPortal(
           <ImportFileModal
-            selectedTestSuiteId={selectedTestSuiteId}
+            datasetId={datasetId}
             isModalOpen={isImportModalOpen}
             onClose={() => setIsImportModalOpen(false)}
             onApply={onApplyImport}
