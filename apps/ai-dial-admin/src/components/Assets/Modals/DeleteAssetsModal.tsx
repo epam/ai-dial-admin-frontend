@@ -52,6 +52,7 @@ const DeleteAssetsModal: FC<Props> = ({
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
     new Set([`${t(FileManagerI18nKey.DeleteFolderTreeRootItem)}/`]),
   );
+  const [currentPath, setCurrentPath] = useState<string>(`${t(FileManagerI18nKey.DeleteFolderTreeRootItem)}/`);
   const { files, fetchFiles, isFetchingFiles } = context();
 
   const { treeItems, pathMapping } = useMemo(() => {
@@ -85,7 +86,8 @@ const DeleteAssetsModal: FC<Props> = ({
       }
 
       const newExpanded = new Set(expandedFolders);
-      newExpanded.add(nextPath);
+      newExpanded.add(normalizedPath);
+      setCurrentPath(normalizedPath);
       setExpandedFolders(newExpanded);
     },
     [fetchFiles, loadedPaths, pathMapping, expandedFolders],
@@ -121,6 +123,7 @@ const DeleteAssetsModal: FC<Props> = ({
               defaultPath={treeItems?.[0]?.path}
               rootItem={treeItems?.[0] as DialRootFolder}
               items={treeItems}
+              path={currentPath}
               onPathChange={handleOnPathChange}
               filesLoading={isFetchingFiles}
               emptyStateTitle={t(FileManagerI18nKey.EmptyFolderDescription)}
@@ -155,6 +158,7 @@ const DeleteAssetsModal: FC<Props> = ({
     selectedVersionsMap,
     expandedFolders,
     setExpandedFolders,
+    currentPath,
   ]);
 
   return (
