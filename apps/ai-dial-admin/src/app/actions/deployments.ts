@@ -7,6 +7,7 @@ import { Image } from '@/src/models/deployments/images';
 import { Container } from '@/src/models/deployments/containers';
 import {
   containersApi,
+  globalFirewallApi,
   huggingFaceApi,
   imagesApi,
   mcpRegistryApi,
@@ -14,6 +15,13 @@ import {
   topicApi,
   whitelistApi,
 } from '@/src/app/api/api';
+import {
+  ActivityAuditEntity,
+  isContainerDeploymentResource,
+  isImageDefinitionResource,
+} from '@/src/types/activity-audit';
+import { DeploymentEntityState } from '@/src/models/deployments/rollback';
+import { getRevisionRouteForEntityType } from '@/src/utils/audit/get-revision-route';
 import { unwrapSingleServerResponse } from '@/src/utils/deployments/mcp-registry';
 
 export async function getImages() {
@@ -174,6 +182,59 @@ export async function getContainerPrompts(containerId: string) {
 export async function getContainerPods(containerId: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return containersApi.getContainerPods(containerId, token);
+}
+
+export async function rollbackDeploymentContainer(id: string, revision: number) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return containersApi.rollbackContainer(id, revision, token);
+}
+
+export async function rollbackDeploymentImage(id: string, revision: number) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return imagesApi.rollbackImage(id, revision, token);
+}
+
+export async function rollbackDeploymentWhitelist(revision: number) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return globalFirewallApi.rollbackWhitelist(revision, token);
+}
+
+export async function getDeploymentRevisionDetails(
+  resourceType: string,
+  resourceId: string,
+  revision: number,
+): Promise<ActivityAuditEntity | null> {
+  if (revision < 0) {
+    return null;
+  }
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  const route = getRevisionRouteForEntityType(resourceType, decodeURIComponent(resourceId));
+  if (!route) {
+    return null;
+  }
+  if (isImageDefinitionResource(resourceType)) {
+    return imagesApi.getRevisionDetails(`${route}${revision}`, token);
+  }
+  if (isContainerDeploymentResource(resourceType)) {
+    return containersApi.getRevisionDetails(`${route}${revision}`, token);
+  }
+  return null;
+}
+
+export async function getDeploymentEntityState(
+  resourceType: string,
+  id: string,
+): Promise<DeploymentEntityState | null> {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  if (isContainerDeploymentResource(resourceType)) {
+    const res = await containersApi.getContainer(id, token);
+    return res?.success ? { status: (res.response as Container)?.status } : null;
+  }
+  if (isImageDefinitionResource(resourceType)) {
+    const res = await imagesApi.getImage(id, token);
+    return res?.success ? { buildStatus: (res.response as Image)?.buildStatus } : null;
+  }
+  return null;
 }
 
 export async function getGlobalWhitelist() {

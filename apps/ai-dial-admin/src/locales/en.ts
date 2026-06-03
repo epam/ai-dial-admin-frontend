@@ -106,6 +106,7 @@ export default {
     Playground: 'Playground',
     Metrics: 'Metrics',
     TestSuites: 'Test Suites',
+    Datasets: 'Datasets',
     Runs: 'Runs',
     Evaluation: 'Evaluation',
     Audit: 'Audit',
@@ -167,6 +168,7 @@ export default {
     NoApplications: 'No Applications',
     NoInterceptors: 'No Interceptors',
     NoTestSuites: 'No Test Suites',
+    NoDatasets: 'No Datasets',
     NoRuns: 'No Runs',
     NoMetrics: 'No Metrics',
     NoResults: 'No Results',
@@ -294,6 +296,7 @@ export default {
     Entities: {
       Model: 'Model',
       TestSuite: 'Test Suite',
+      Dataset: 'Dataset',
       TestCase: 'Test case',
       Application: 'Application',
       Toolset: 'Toolset',
@@ -365,6 +368,7 @@ export default {
       Prompt: 'Prompt',
       File: 'File',
       TestSuite: 'Test Suite',
+      Dataset: 'Dataset',
       Adapter: 'Adapter',
       InterceptorTemplate: 'Interceptor Template',
       ApplicationRunner: 'Application Runner',
@@ -382,6 +386,7 @@ export default {
       Application: 'Application',
       Toolset: 'Toolset',
       TestSuite: 'Test Suite',
+      Dataset: 'Dataset',
       Interceptor: 'Interceptor',
       Route: 'Route',
       Role: 'Role',
@@ -602,6 +607,7 @@ export default {
     Application: 'Application',
     InputSchema: 'Input Schema',
     OutputSchema: 'Output Schema',
+    Schema: 'Schema',
   },
   ForwardToken: {
     ForwardTokenModalTitle: 'Forward Auth Token',
@@ -990,6 +996,12 @@ export default {
       ErrorDescription: 'Error occurred while reverting, please try again',
       SuccessTitle: '{entity} rolled back successfully',
       SuccessDescription: 'Changes have been delivered to the system',
+      SuccessRecreateDescription:
+        'The resource was recreated. Secure environment values were not restored and must be re-supplied before deploy.',
+    },
+    Blocked: {
+      ActiveDeployment: 'Undeploy this deployment before rolling it back.',
+      ImageBuilding: 'Rollback is unavailable while the image is building or built. Stop the build first.',
     },
     Entities: {
       Model: 'Model',
@@ -1004,6 +1016,9 @@ export default {
       Adapter: 'Adapter',
       InterceptorTemplate: 'Interceptor Template',
       ApplicationRunner: 'Application Runner',
+      Deployment: 'Deployment',
+      ImageDefinition: 'Image definition',
+      GlobalWhitelist: 'Domain whitelist',
     },
   },
   EntityFields: {
@@ -1726,6 +1741,26 @@ export default {
     TemplateVariablesExample: 'Example',
     TemplateVariablesDescCol: 'Description',
     TemplateVariablesSupportedTypes: 'Supported Types',
+    Dataset: 'Dataset',
+    DatasetNotBound: 'No dataset linked',
+    PickPublicDataset: 'Pick public dataset',
+    CreatePrivateDataset: 'Create private dataset',
+    DatasetPrivateDescription: 'Private dataset is permanently bound to this test suite',
+    DatasetPublicDescription:
+      'Public dataset — test cases are read-only from this suite. Edit them on the Dataset page.',
+    UnbindDataset: 'Unbind',
+    UnbindDatasetConfirmTitle: 'Unbind dataset',
+    UnbindDatasetConfirmDescription:
+      'After unbinding, this test suite will have no dataset and test cases will not be available.',
+    MakePublicDatasetConfirmTitle: 'Make dataset public',
+    MakePublicDatasetConfirmDescription:
+      'Making this dataset public removes the permanent bind. The dataset can then be shared with other test suites.',
+    EditOnDatasetPage: 'Edit on Dataset page',
+    SchemaReadOnlyDescription: 'Schema is defined on the linked dataset and is read-only here.',
+    NoDatasetLinked: 'No dataset linked. Link a dataset to manage test cases and run this suite.',
+    DatasetRequiredForMetrics: 'Please link a dataset to this test suite before adding metrics.',
+    OpenDataset: 'Open dataset',
+    ChangeDataset: 'Change dataset',
   },
   FileManager: {
     SelectedItems: 'item(s) selected',
@@ -1746,6 +1781,10 @@ export default {
     ManagePermissions: 'Manage Permissions',
     FolderTree: 'Folder Tree',
     Notifications: {
+      FolderNestingDepthExceeded: {
+        Title: "Can't create folder here",
+        Description: 'Maximum nesting depth is {depth} levels. Choose a location closer to the root.',
+      },
       CreateFolder: {
         Title: 'Folder created successfully',
         Description: 'You can now add files to this folder.',
@@ -1803,6 +1842,34 @@ export default {
     MovingItems: 'Moving items',
     MovingProgress: '{count} of {total} items moved...',
     DeleteFolderTreeRootItem: 'Selected items to delete',
+  },
+  Datasets: {
+    CreateDataset: 'Create Dataset',
+    UpdateDataset: 'Update Dataset',
+    NoTestCases: 'No Test Cases',
+    NoSchemaFields: 'No Schema Fields',
+    SchemaDescription: 'Define the structure of test case data for this dataset.',
+    ImportSuccess: 'Import successful',
+    ImportFailed: 'Import failed',
+    ImportSuccessDescription: 'Test cases have been imported successfully.',
+    RemoveSuccess: 'Test cases removed',
+    RemoveFailed: 'Failed to remove test cases',
+    SelectedTestCases: 'Selected test cases',
+    MakePrivate: 'Make Private',
+    MakePrivateConfirmTitle: 'Make dataset private?',
+    MakePrivateConfirmDescription:
+      'Once private, this dataset will only be accessible to test suites currently using it.',
+    MakePrivateSuccess: 'Dataset is now private',
+    MakePrivateFailed: 'Failed to make dataset private',
+    MakePublic: 'Make Public',
+    MakePublicConfirmTitle: 'Make dataset public?',
+    MakePublicConfirmDescription:
+      'Once public, this dataset will appear in the datasets list and can be used by any test suite.',
+    MakePublicSuccess: 'Dataset is now public',
+    MakePublicFailed: 'Failed to make dataset public',
+    VisibilityPrivate: 'Private',
+    VisibilityPublic: 'Public',
+    RevalidatingTestCases: 'Schema updated. Test cases are being revalidated, please refresh shortly.',
   },
   Runs: {
     StartTime: 'Start time',

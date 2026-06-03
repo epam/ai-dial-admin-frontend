@@ -67,11 +67,12 @@ export const getTestCaseColumns = (
   suite: TestSuite,
   onCellChange: onCellChange,
   t?: (key: string) => string,
+  schema?: TestCaseSchema[],
 ): ColDef[] => {
   const enabledLabel = t?.(BasicI18nKey.Enabled) ?? 'Enabled';
   const disabledLabel = t?.(BasicI18nKey.Disabled) ?? 'Disabled';
   const allLabel = 'All';
-  const schema = suite.testCaseSchema || [];
+  const resolvedSchema = schema ?? [];
   return [
     {
       ...UTILITY_COLUMN,
@@ -125,7 +126,7 @@ export const getTestCaseColumns = (
       }
       return col;
     }),
-    ...schema.map((param) => {
+    ...resolvedSchema.map((param) => {
       const field = param.name;
       return {
         field: field,

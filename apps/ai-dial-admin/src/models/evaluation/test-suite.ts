@@ -18,12 +18,13 @@ export interface TestSuite {
   valid?: boolean;
   validationWarnings?: ValidationWarning[];
   suiteType?: SuiteType;
+  datasetId?: string;
+  disabledTestCaseIds?: string[];
 
   deploymentRef?: TestSuiteDeploymentRef;
   endpointRef?: TestSuiteEndpointRef;
   requestTemplate?: TestSuiteRequestTemplate;
   inputBindings?: InputBinding[];
-  testCaseSchema?: TestCaseSchema[];
   responseColumns?: ResponseColumn[];
 
   mcpDeploymentRef?: McpDeploymentRef;
@@ -96,10 +97,10 @@ export interface TestCase {
   updatedAt?: number;
   valid?: boolean;
   id: string;
-  enabled: boolean;
   createdAt: number;
   data?: Record<string, unknown>;
   validationWarnings?: ValidationWarning[];
+  enabled?: boolean;
 }
 
 export interface TemplateVariable {
@@ -148,19 +149,4 @@ export interface ResponseColumn {
   displayName: string;
   expression: string;
   type: string;
-}
-
-export interface TestCaseBulkSelectorDto {
-  ids?: string[];
-  filter?: string[];
-}
-
-export interface TestCaseBulkOperationDto {
-  selector: TestCaseBulkSelectorDto;
-  patch: { enabled: boolean };
-}
-
-export interface TestCaseBulkPatchRequest {
-  bulkOperations: TestCaseBulkOperationDto[];
-  itemOperations: [];
 }

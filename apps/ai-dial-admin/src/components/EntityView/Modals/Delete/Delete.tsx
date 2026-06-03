@@ -145,6 +145,10 @@ const DeleteConfirmationModal = <T extends Artefact>({
             router.push(view);
           }
           router.refresh();
+        } else if (isSelectedView) {
+          onCloseModal();
+          router.push(view);
+          router.refresh();
         }
       })
       .catch((error) => {
