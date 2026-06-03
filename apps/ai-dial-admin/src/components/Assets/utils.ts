@@ -97,7 +97,9 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
     case ApplicationRoute.Prompts:
       return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key !== 'preview');
     case ApplicationRoute.Conversations:
-      return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key === 'delete');
+      return isReadOnlyAdmin
+        ? []
+        : allActionLabels.filter((item) => item.key === 'delete' || item.key === 'openInNewTab');
     default:
       return [];
   }
