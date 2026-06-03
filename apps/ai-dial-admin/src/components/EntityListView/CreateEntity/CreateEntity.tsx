@@ -79,7 +79,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
       };
 
       const isUnique = RoutesForCheckingUniqueName.includes(route)
-        ? await checkIsUniqueDeploymentName(entity.name as string, route)
+        ? await checkIsUniqueDeploymentName(entity.name as string)
         : true;
 
       setIsUniqueNameError(!isUnique);

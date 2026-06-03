@@ -21,6 +21,7 @@ interface Props<T> {
   onChangeEntity?: (entity: T) => void;
   checkEmptySymbols?: boolean;
   isFullWidth?: boolean;
+  checkLocalDuplicate?: boolean;
 }
 
 const IdControl = <T extends { name?: string }>({
@@ -35,6 +36,7 @@ const IdControl = <T extends { name?: string }>({
   onChangeEntity,
   checkEmptySymbols,
   isFullWidth = true,
+  checkLocalDuplicate = true,
 }: Props<T>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
@@ -48,7 +50,7 @@ const IdControl = <T extends { name?: string }>({
         ? getErrorForUrlId(name, names, t)
         : getErrorForName(
             name,
-            undefined,
+            checkLocalDuplicate ? names : undefined,
             t,
             isUniqueNameError,
             true,
@@ -59,7 +61,7 @@ const IdControl = <T extends { name?: string }>({
       setNameError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !error });
     },
-    [isUrlId, names, t, isUniqueNameError, isDeploymentId, label, checkEmptySymbols, dispatch],
+    [isUrlId, names, checkLocalDuplicate, t, isUniqueNameError, isDeploymentId, label, checkEmptySymbols, dispatch],
   );
 
   const onChangeName = useCallback(
