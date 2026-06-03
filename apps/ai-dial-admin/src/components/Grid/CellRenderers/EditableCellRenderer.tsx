@@ -1,4 +1,4 @@
-import { ChangeEvent, useEffect, useMemo, useState } from 'react';
+import { ChangeEvent, ComponentProps, KeyboardEvent, useEffect, useMemo, useState } from 'react';
 
 import { ColDef, ICellRendererParams, IRowNode } from 'ag-grid-community';
 import classNames from 'classnames';
@@ -13,6 +13,7 @@ interface EditableCellRendererParams extends ICellRendererParams {
   placeholder?: string;
   defaultValue?: number;
   inputType?: 'text' | 'number';
+  inputMode?: ComponentProps<'input'>['inputMode'];
   hideTriangle?: boolean;
   skipRequired?: boolean;
   valueFormatter?: (value: number | string) => string;
@@ -30,6 +31,7 @@ const EditableCellRenderer = ({
   placeholder,
   defaultValue,
   inputType = 'text',
+  inputMode,
   hideTriangle,
   skipRequired,
   valueFormatter,
@@ -69,15 +71,21 @@ const EditableCellRenderer = ({
     return isMaxValue ? t(RolesI18nKey.Unlimited) : translatedPlaceholder;
   }, [isMaxValue, t, translatedPlaceholder]);
 
-  const handleKeyDown = (e: { ctrlKey: boolean; metaKey: boolean; stopPropagation(): void }) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.ctrlKey || e.metaKey) {
       e.stopPropagation();
+      if ((e.key === 'a' || e.key === 'A') && e.currentTarget.value.length > 0) {
+        e.currentTarget.select();
+      }
     }
   };
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
     const formattedValue = valueFormatter ? valueFormatter(newValue) : newValue;
+    if (formattedValue === undefined) {
+      return;
+    }
 
     setInputValue(formattedValue);
 
@@ -103,6 +111,7 @@ const EditableCellRenderer = ({
       <input
         id="editable-cell-renderer"
         type={inputType}
+        inputMode={inputMode}
         value={correctValue}
         placeholder={correctPlaceholder}
         onChange={handleChange}

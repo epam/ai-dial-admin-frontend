@@ -1755,6 +1755,10 @@ export default {
     ManagePermissions: 'Manage Permissions',
     FolderTree: 'Folder Tree',
     Notifications: {
+      FolderNestingDepthExceeded: {
+        Title: "Can't create folder here",
+        Description: 'Maximum nesting depth is {depth} levels. Choose a location closer to the root.',
+      },
       CreateFolder: {
         Title: 'Folder created successfully',
         Description: 'You can now add files to this folder.',

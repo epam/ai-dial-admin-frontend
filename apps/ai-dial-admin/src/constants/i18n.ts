@@ -1821,6 +1821,9 @@ export enum FileManagerI18nKey {
   EmptyFolderDescription = 'FileManager.EmptyFolderDescription',
   DeleteFolderTreeRootItem = 'FileManager.DeleteFolderTreeRootItem',
 
+  FolderNestingDepthExceededTitle = 'FileManager.Notifications.FolderNestingDepthExceeded.Title',
+  FolderNestingDepthExceededDescription = 'FileManager.Notifications.FolderNestingDepthExceeded.Description',
+
   // Notifications
   CreateFolderSuccessTitle = 'FileManager.Notifications.CreateFolder.Title',
   CreateFolderSuccessDescription = 'FileManager.Notifications.CreateFolder.Description',
