@@ -81,6 +81,7 @@ const PromptView: FC<Props> = ({ originalPrompt, etag, prompts }) => {
       }
       getReqRef.current(updateFunction, updatedEntity as DialPrompt, etag).then((res) => {
         if (res.success) {
+          setAddedVersions([]);
           showNotification(
             getSuccessNotification(
               newVersion
