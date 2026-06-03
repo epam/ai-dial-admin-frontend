@@ -3,13 +3,7 @@ import { CustomFile, DialFile } from '@/src/models/dial/file';
 import { Deployment, DeploymentType, ToolDefinition } from '@/src/models/evaluation/deployment';
 import { Metric, MetricResponse } from '@/src/models/evaluation/metric';
 import { Run } from '@/src/models/evaluation/run';
-import {
-  TemplateVariable,
-  TestCase,
-  TestSuite,
-  TryOutResponse,
-  TestCaseBulkPatchRequest,
-} from '@/src/models/evaluation/test-suite';
+import { TemplateVariable, TestCase, TestSuite, TryOutResponse } from '@/src/models/evaluation/test-suite';
 import { EvaluationPageData, FilterDto, SortDto } from '@/src/models/request';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { API } from '@/src/server/api';
@@ -119,10 +113,6 @@ export class TestSuitesApi extends BaseApi {
 
   updateTestCases(id: string, testCases: TestCase[], token: Token): Promise<ServerActionResponse> {
     return this.putAction(TEST_CASES_URL(id), testCases, token);
-  }
-
-  bulkPatchTestCases(id: string, request: TestCaseBulkPatchRequest, token: Token): Promise<ServerActionResponse> {
-    return this.patchAction(TEST_CASES_BULK_URL(id), request, token);
   }
 
   exportTestCasesCsv(testSuiteId: string, token: Token) {

@@ -19,12 +19,12 @@ import {
 
 import {
   createTestCase,
+  getDataset,
   getTestCases,
-  getTestSuite,
   importTestCase,
   removeMultipleTestCases,
   removeTestCase,
-} from '@/src/app/[lang]/test-suites/actions';
+} from '@/src/app/[lang]/datasets/actions';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 import ListEntities from '@/src/components/ListView/List';
 import TryOut from '@/src/components/TestSuites/RequestTemplate/components/TryOut';
@@ -43,11 +43,9 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import HeaderButtons from './Header';
-import TestCasesSchemaModal from './TestCasesSchemaModal';
 
 export interface TestCasesActions {
   getDirtyTestCases: () => TestCase[];
-  getEnabledOnlyChanges: () => Map<string, boolean>;
   clearDirtyAndRefresh: () => void;
 }
 
@@ -56,9 +54,22 @@ interface Props {
   onChange: (testSuite: TestSuite, isSkipRefresh?: boolean) => void;
   testCasesActionsRef?: RefObject<TestCasesActions | null>;
   onDirtyChange?: (hasDirty: boolean) => void;
+  onOpenSchemaModal?: () => void;
+  isReadOnly?: boolean;
+  schema?: TestCaseSchema[];
+  onSchemaChange?: (schema: TestCaseSchema[]) => void;
 }
 
-const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesActionsRef, onDirtyChange }) => {
+const TestCasesList: FC<Props> = ({
+  selectedTestSuite,
+  onChange,
+  testCasesActionsRef,
+  onDirtyChange,
+  onOpenSchemaModal,
+  isReadOnly,
+  schema,
+  onSchemaChange,
+}) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -70,29 +81,13 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
   const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState<Record<string, unknown>[]>([]);
   const [columnDefs, setColumnDefs] = useState<ColDef[]>([]);
-  const [isSchemaModalOpen, setIsSchemaModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isBatchDeleteModalOpen, setIsBatchDeleteModalOpen] = useState(false);
   const [selectedTestCase, setSelectedTestCase] = useState<TestCase | undefined>(undefined);
   const [selectedRows, setSelectedRows] = useState<TestCase[]>([]);
   const onRemoveCaseRef = useRef<(data?: TestCase) => void>(() => {});
   const dirtyRowsRef = useRef<Map<string, Record<string, unknown>>>(new Map());
-  const dirtyEnabledRef = useRef<Map<string, boolean>>(new Map());
-
-  const onOpenSchemaModal = useCallback(() => {
-    setIsSchemaModalOpen(true);
-  }, []);
-
-  const onCloseSchemaModal = useCallback(() => {
-    setIsSchemaModalOpen(false);
-  }, []);
-
-  const onChangeTestCaseSchema = useCallback(
-    (testCaseSchema: TestCaseSchema[]) => {
-      onChange({ ...selectedTestSuite, testCaseSchema });
-    },
-    [selectedTestSuite, onChange],
-  );
+  const refreshVersionRef = useRef(0);
 
   const updateData = useCallback(
     (row: Record<string, unknown>) => {
@@ -100,8 +95,7 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
         setNewTestCases((prev) => prev.map((r) => (r.id === row.id ? ({ ...row } as Record<string, unknown>) : r)));
       } else {
         const id = String(row.id);
-        const enabledOverride = dirtyEnabledRef.current.get(id);
-        dirtyRowsRef.current.set(id, enabledOverride !== undefined ? { ...row, enabled: enabledOverride } : { ...row });
+        dirtyRowsRef.current.set(id, { ...row });
       }
       onDirtyChange?.(true);
     },
@@ -124,14 +118,14 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
         return;
       }
 
-      dirtyEnabledRef.current.set(rowId, event.newValue as boolean);
-      if (dirtyRowsRef.current.has(rowId)) {
-        const existing = dirtyRowsRef.current.get(rowId)!;
-        dirtyRowsRef.current.set(rowId, { ...existing, enabled: event.newValue });
-      }
+      const currentDisabled = selectedTestSuite.disabledTestCaseIds ?? [];
+      const isEnabled = event.newValue as boolean;
+      const newDisabledIds = isEnabled ? currentDisabled.filter((id) => id !== rowId) : [...currentDisabled, rowId];
+
+      onChange({ ...selectedTestSuite, disabledTestCaseIds: newDisabledIds }, true);
       onDirtyChange?.(true);
     },
-    [newTestCases],
+    [newTestCases, selectedTestSuite, onChange, onDirtyChange],
   );
 
   const onCellChange = useCallback(
@@ -231,32 +225,48 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
   );
 
   const refreshGrid = useCallback(
-    (withRefreshPage?: boolean) => {
+    (withRefreshPage?: boolean, schemaOverride?: TestCaseSchema[]) => {
+      const datasetId = selectedTestSuite.datasetId;
+      if (!datasetId) return;
+
+      const activeSchema = schemaOverride ?? schema;
+      const version = ++refreshVersionRef.current;
+
       setIsLoading(true);
-      getTestCases(selectedTestSuite.id, 0, 1000, [], []).then((res) => {
+      getTestCases(datasetId, 0, 1000, [], []).then((res) => {
+        if (version !== refreshVersionRef.current) return;
         setIsLoading(false);
-        let data = res == null || res.content.length === 0 ? [] : getTestCaseGridData(res?.content || []);
+        const disabledIds = selectedTestSuite.disabledTestCaseIds ?? [];
+        let rawData = res == null || res.content.length === 0 ? [] : getTestCaseGridData(res?.content || []);
+        rawData = rawData.map((row) => ({
+          ...row,
+          enabled: !disabledIds.includes(String(row.id)),
+        }));
         if (dirtyRowsRef.current.size > 0) {
-          data = data.map((row) => {
+          rawData = rawData.map((row) => {
             const id = String(row.id);
             return dirtyRowsRef.current.has(id) ? dirtyRowsRef.current.get(id)! : row;
           });
         }
-        setData(data);
+        setData(rawData);
         setColumnDefs([
-          ...getTestCaseColumns(selectedTestSuite, onCellChange, t),
+          ...getTestCaseColumns(selectedTestSuite, onCellChange, t, activeSchema),
           { ...ONE_ACTION_COLUMN(getTryOutOperation(onOpenTryOutSidebar)), colId: 'action-tryout' },
-          {
-            ...ONE_ACTION_COLUMN(getRemoveOperation(stableOnRemoveCase, void 0, 'text-error w-4 h-4')),
-            colId: 'action-remove',
-          },
+          ...(!isReadOnly
+            ? [
+                {
+                  ...ONE_ACTION_COLUMN(getRemoveOperation(stableOnRemoveCase, void 0, 'text-error w-4 h-4')),
+                  colId: 'action-remove',
+                },
+              ]
+            : []),
         ]);
       });
       if (withRefreshPage) {
         router.refresh();
       }
     },
-    [gridApi, onCellChange, onOpenTryOutSidebar, selectedTestSuite, stableOnRemoveCase, t],
+    [gridApi, onCellChange, onOpenTryOutSidebar, selectedTestSuite, stableOnRemoveCase, t, isReadOnly, schema],
   );
 
   const onGridReady = useCallback(({ api }: GridReadyEvent) => {
@@ -266,27 +276,30 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
 
   const onApplyImport = useCallback(
     (file: File, mode: TestCaseImportMode, strategy: TestCaseConflictStrategy) => {
+      const datasetId = selectedTestSuite.datasetId;
+      if (!datasetId) return;
+
       const body = new FormData();
       body.append('file', file);
 
-      importTestCase(selectedTestSuite.id || '', body, mode, strategy).then((res) => {
+      importTestCase(datasetId, body, mode, strategy).then((res) => {
         if (res?.success) {
           showNotification(
             getSuccessNotification(t(TestSuitesI18nKey.ImportSuccess), t(TestSuitesI18nKey.ImportSuccessDescription)),
           );
-          getTestSuite(selectedTestSuite.id!, '').then((suiteRes) => {
-            const updatedSuite = suiteRes?.response;
-            if (!updatedSuite) {
+          getDataset(datasetId, '').then((datasetRes) => {
+            const updatedDataset = datasetRes?.response;
+            if (!updatedDataset) {
               refreshGrid();
               return;
             }
-            const schemaChanged =
-              JSON.stringify(updatedSuite.testCaseSchema) !== JSON.stringify(selectedTestSuite.testCaseSchema);
+            const freshSchema = updatedDataset.testCaseSchema as TestCaseSchema[] | undefined;
+            const schemaChanged = JSON.stringify(freshSchema) !== JSON.stringify(schema);
             if (!schemaChanged) {
               refreshGrid();
             } else {
-              setIsLoading(true);
-              router.refresh();
+              onSchemaChange?.(freshSchema ?? []);
+              refreshGrid(false, freshSchema);
             }
           });
         } else {
@@ -296,37 +309,39 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
         }
       });
     },
-    [refreshGrid, selectedTestSuite, showNotification, t, onChange],
+    [refreshGrid, selectedTestSuite.datasetId, showNotification, t, schema, onSchemaChange],
   );
 
   const onExport = useCallback(() => {
-    const testSuiteId = selectedTestSuite.id;
-    if (!testSuiteId) return;
+    const datasetId = selectedTestSuite.datasetId;
+    if (!datasetId) return;
 
-    window.open(`${ApiRoute.TestSuitesExport}?id=${encodeURIComponent(testSuiteId)}`, '_blank');
-  }, [selectedTestSuite.id, showNotification, t]);
+    window.open(`${ApiRoute.DatasetsExport}?id=${encodeURIComponent(datasetId)}`, '_blank');
+  }, [selectedTestSuite.datasetId]);
 
   const onAddTestCase = useCallback(() => {
-    const testSuiteId = selectedTestSuite.id;
-    if (!testSuiteId) return;
-    createTestCase(testSuiteId, createNewTestCaseRow(), true).then((res) => {
+    const datasetId = selectedTestSuite.datasetId;
+    if (!datasetId) return;
+    createTestCase(datasetId, createNewTestCaseRow()).then((res) => {
       if (res?.success) {
         refreshGrid();
       } else {
         showNotification(getErrorNotification(res?.errorHeader, res?.errorMessage));
       }
     });
-  }, [selectedTestSuite.id, refreshGrid, showNotification, t]);
+  }, [selectedTestSuite.datasetId, refreshGrid, showNotification]);
 
   const onRemoveTestCase = useCallback(
     async (testCaseId: string) => {
-      const response = await removeTestCase(selectedTestSuite.id as string, testCaseId);
+      const datasetId = selectedTestSuite.datasetId;
+      if (!datasetId) return { success: false };
+      const response = await removeTestCase(datasetId, testCaseId);
       if (response.success) {
         refreshGrid();
       }
       return response;
     },
-    [refreshGrid, selectedTestSuite.id],
+    [refreshGrid, selectedTestSuite.datasetId],
   );
 
   const onOpenBatchDeleteModal = useCallback(() => {
@@ -338,8 +353,10 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
   }, []);
 
   const onBatchDelete = useCallback(() => {
+    const datasetId = selectedTestSuite.datasetId;
+    if (!datasetId) return;
     const namesToDelete = selectedRows.map((r) => r.testCaseName as string);
-    removeMultipleTestCases(selectedTestSuite.id as string, namesToDelete).then((res) => {
+    removeMultipleTestCases(datasetId, namesToDelete).then((res) => {
       setIsBatchDeleteModalOpen(false);
       if (res?.success) {
         showNotification(getSuccessNotification(t(TestSuitesI18nKey.RemoveSuccess)));
@@ -348,7 +365,7 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
         showNotification(getErrorNotification(t(TestSuitesI18nKey.RemoveFailed), res?.errorMessage || 'Unknown error'));
       }
     });
-  }, [refreshGrid, selectedRows, selectedTestSuite.id, showNotification, t]);
+  }, [refreshGrid, selectedRows, selectedTestSuite.datasetId, showNotification, t]);
 
   const getDirtyTestCases = useCallback((): TestCase[] => {
     const dirty = Array.from(dirtyRowsRef.current.values()).map((row) => rowToTestCase(row));
@@ -356,19 +373,8 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
     return [...dirty, ...newCases];
   }, [newTestCases]);
 
-  const getEnabledOnlyChanges = useCallback((): Map<string, boolean> => {
-    const result = new Map<string, boolean>();
-    dirtyEnabledRef.current.forEach((value, id) => {
-      if (!dirtyRowsRef.current.has(id)) {
-        result.set(id, value);
-      }
-    });
-    return result;
-  }, []);
-
   const clearDirtyAndRefresh = useCallback(() => {
     dirtyRowsRef.current.clear();
-    dirtyEnabledRef.current.clear();
     setNewTestCases([]);
     onDirtyChange?.(false);
     refreshGrid();
@@ -382,23 +388,24 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
     }
   }, [gridApi, newTestCases]);
 
-  const testCaseSchemaKey = JSON.stringify(selectedTestSuite.testCaseSchema);
+  const datasetId = selectedTestSuite.datasetId;
+  const schemaKey = JSON.stringify(schema ?? null);
 
   useEffect(() => {
+    if (!datasetId) return;
     refreshGrid();
-  }, [testCaseSchemaKey]);
+  }, [datasetId, schemaKey]);
 
   useEffect(() => {
     if (!testCasesActionsRef) return;
     testCasesActionsRef.current = {
       getDirtyTestCases,
-      getEnabledOnlyChanges,
       clearDirtyAndRefresh,
     };
     return () => {
       testCasesActionsRef.current = null;
     };
-  }, [testCasesActionsRef, getDirtyTestCases, getEnabledOnlyChanges, clearDirtyAndRefresh]);
+  }, [testCasesActionsRef, getDirtyTestCases, clearDirtyAndRefresh]);
 
   useEffect(() => {
     onRemoveCaseRef.current = onOpenDeleteModal;
@@ -418,26 +425,17 @@ const TestCasesList: FC<Props> = ({ selectedTestSuite, onChange, testCasesAction
           columnDefs={columnDefs}
         >
           <HeaderButtons
-            selectedTestSuiteId={selectedTestSuite.id as string}
+            datasetId={selectedTestSuite.datasetId as string}
             onApplyImport={onApplyImport}
             onAdd={onAddTestCase}
             onExport={onExport}
             onOpenSchemaModal={onOpenSchemaModal}
             onBatchDelete={onOpenBatchDeleteModal}
-            showBatchDelete={selectedRows.length > 0}
+            showBatchDelete={!isReadOnly && selectedRows.length > 0}
+            isReadOnly={isReadOnly}
           />
         </ListEntities>
       )}
-      {isSchemaModalOpen &&
-        createPortal(
-          <TestCasesSchemaModal
-            isModalOpen={isSchemaModalOpen}
-            selectedTestSuite={selectedTestSuite}
-            onClose={onCloseSchemaModal}
-            onApply={onChangeTestCaseSchema}
-          />,
-          document.body,
-        )}
       {isDeleteModalOpen &&
         createPortal(
           <DeleteConfirmationModal
