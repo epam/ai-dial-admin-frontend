@@ -1,5 +1,5 @@
 'use client';
-import { createContext, useContext, useState, ReactNode, MouseEvent, SetStateAction, Dispatch } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, MouseEvent, SetStateAction, Dispatch } from 'react';
 
 import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
 
@@ -58,9 +58,15 @@ export const AppContextProvider = ({
   resourcesDefaults?: ResourcesDefaults;
   telemetryMaxRangeMs?: number;
 }) => {
-  const isSidebarOpenState = getFromLocalStorage(LOCAL_STORAGE_SIDEBAR_OPEN_KEY) !== 'false';
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const [sidebarOpen, setSidebarOpen] = useState(isSidebarOpenState);
+  useEffect(() => {
+    const stored = getFromLocalStorage(LOCAL_STORAGE_SIDEBAR_OPEN_KEY);
+    if (stored === 'false') {
+      setSidebarOpen(false);
+    }
+  }, []);
+
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [visualizerConnector, setVisualizerConnector] = useState<VisualizerConnector | null>(null);
   const [show, setShow] = useState(false);

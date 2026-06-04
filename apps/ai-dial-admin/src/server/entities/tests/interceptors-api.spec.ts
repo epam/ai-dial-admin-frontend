@@ -67,6 +67,29 @@ describe('Server :: InterceptorsApi', () => {
     expect(result.response).toEqual(JSON.stringify(mockInterceptor));
   });
 
+  test('should call checkInterceptorByName with HEAD method', async () => {
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
+
+    await instance.checkInterceptorByName('test-interceptor', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${INTERCEPTOR_URL('test-interceptor')}`,
+      expect.objectContaining({ method: 'HEAD' }),
+    );
+  });
+
+  test('should encode name in checkInterceptorByName request', async () => {
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
+    const name = 'test interceptor';
+
+    await instance.checkInterceptorByName(name, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${INTERCEPTOR_URL(encodeURIComponent(name))}`,
+      expect.objectContaining({ method: 'HEAD' }),
+    );
+  });
+
   test('Should call createInterceptor with POST method and body', async () => {
     fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 

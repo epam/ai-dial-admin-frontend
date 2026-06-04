@@ -4,5 +4,6 @@ export const RoutesForCheckingUniqueName = [
   ApplicationRoute.Models,
   ApplicationRoute.Applications,
   ApplicationRoute.Toolsets,
+  ApplicationRoute.Interceptors,
   ApplicationRoute.Routes,
 ];

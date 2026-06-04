@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { utilityApi } from '@/src/app/api/api';
+import { interceptorsApi, utilityApi } from '@/src/app/api/api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
@@ -21,22 +21,40 @@ describe('Server actions', () => {
     vi.clearAllMocks();
     (getUserToken as any).mockResolvedValue(TOKEN_MOCK);
     (getIsEnableAuthToggle as any).mockReturnValue(true);
+    (utilityApi.checkDeploymentByName as any).mockResolvedValue(null);
+    (interceptorsApi.checkInterceptorByName as any).mockResolvedValue(null);
   });
 
-  test('Should call checkIsUniqueDeploymentName action', async () => {
-    (utilityApi.checkDeploymentByName as any).mockResolvedValue(null);
-
-    const result = await checkIsUniqueDeploymentName('my-deployment');
+  test('Should call both deployment and interceptor endpoints for unique name check', async () => {
+    const result = await checkIsUniqueDeploymentName('my-id');
 
     expect(getUserToken).toHaveBeenCalled();
-    expect(utilityApi.checkDeploymentByName).toHaveBeenCalledWith('my-deployment', TOKEN_MOCK);
+    expect(utilityApi.checkDeploymentByName).toHaveBeenCalledWith('my-id', TOKEN_MOCK);
+    expect(interceptorsApi.checkInterceptorByName).toHaveBeenCalledWith('my-id', TOKEN_MOCK);
     expect(result).toBe(true);
   });
 
-  test('Should call checkIsUniqueDeploymentName action and return false', async () => {
+  test('Should return false when deployment already exists', async () => {
     (utilityApi.checkDeploymentByName as any).mockResolvedValue({ status: 200 });
 
-    const result = await checkIsUniqueDeploymentName('existing-deployment');
+    const result = await checkIsUniqueDeploymentName('existing-id');
+
+    expect(result).toBe(false);
+  });
+
+  test('Should return false when interceptor already exists', async () => {
+    (interceptorsApi.checkInterceptorByName as any).mockResolvedValue({ status: 200 });
+
+    const result = await checkIsUniqueDeploymentName('existing-id');
+
+    expect(result).toBe(false);
+  });
+
+  test('Should return false when both deployment and interceptor already exist', async () => {
+    (utilityApi.checkDeploymentByName as any).mockResolvedValue({ status: 200 });
+    (interceptorsApi.checkInterceptorByName as any).mockResolvedValue({ status: 200 });
+
+    const result = await checkIsUniqueDeploymentName('existing-id');
 
     expect(result).toBe(false);
   });
