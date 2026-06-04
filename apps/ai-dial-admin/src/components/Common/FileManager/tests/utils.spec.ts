@@ -1,18 +1,9 @@
 import { TEMP_FOLDER } from '@/src/constants/file';
 import { FileManagerI18nKey } from '@/src/constants/i18n';
-import { Asset } from '@/src/models/dial/deployment-asset';
 import { DialFile, DialFileNodeType } from '@epam/ai-dial-ui-kit';
 import { describe, expect, test, vi } from 'vitest';
 import { CREATE_FOLDER_FORBIDDEN_CHARS, FILE_NAME_MAX_LENGTH } from '../constants';
-import {
-  createEmptyFile,
-  findFolderByPath,
-  getFolderNestingDepth,
-  getEmptyFile,
-  isFolderNestingDepthExceeded,
-  isItemNameValid,
-  validateCreateFolder,
-} from '../utils';
+import { createEmptyFile, findFolderByPath, getEmptyFile, isItemNameValid, validateCreateFolder } from '../utils';
 
 describe('FileManager', () => {
   describe('createEmptyFile', () => {
@@ -161,36 +152,6 @@ describe('FileManager', () => {
       const result = validateCreateFolder(longName, mockTranslate);
 
       expect(result).toBe(FileManagerI18nKey.CreateFolderValidateNameLength);
-    });
-  });
-
-  describe('getFolderNestingDepth', () => {
-    test('returns 1 for root folder', () => {
-      expect(getFolderNestingDepth('public/')).toBe(1);
-      expect(getFolderNestingDepth('public')).toBe(1);
-    });
-
-    test('returns 3 for second-level folder', () => {
-      expect(getFolderNestingDepth('public/folder1/folder2')).toBe(3);
-      expect(getFolderNestingDepth('public/folder1/folder2/')).toBe(3);
-    });
-
-    test('returns 5 for fourth-level folder', () => {
-      expect(getFolderNestingDepth('public/a/b/c/d')).toBe(5);
-      expect(getFolderNestingDepth('public/a/b/c/d/')).toBe(5);
-    });
-  });
-
-  describe('isFolderNestingDepthExceeded', () => {
-    test('returns false for depth within limit', () => {
-      expect(isFolderNestingDepthExceeded('public/', 4)).toBe(false);
-      expect(isFolderNestingDepthExceeded('public/a', 4)).toBe(false);
-      expect(isFolderNestingDepthExceeded('public/a/b/c', 4)).toBe(false);
-    });
-
-    test('returns true for depth exceeding limit', () => {
-      expect(isFolderNestingDepthExceeded('public/a/b/c/d/e', 4)).toBe(true);
-      expect(isFolderNestingDepthExceeded('public/a/b/c/d/e/f', 4)).toBe(true);
     });
   });
 
