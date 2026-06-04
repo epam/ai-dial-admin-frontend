@@ -104,7 +104,7 @@ const PodView: FC<Props> = ({ pod, containerId, route }) => {
           )}
           {!!podData?.lastTerminationMessage && (
             <LabelledText
-              className="max-w-full"
+              className="max-w-[350px]"
               label={t(EntityFieldsI18nKey.TerminationMessage)}
               text={podData.lastTerminationMessage}
               tooltip={podData.lastTerminationMessage}
