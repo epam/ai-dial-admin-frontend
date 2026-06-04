@@ -12,6 +12,7 @@ import {
   getFormattedDataFilters,
   getFormattedFilters,
   getDefaultFilterValue,
+  isDeploymentFilter,
   translateUsageLogFilterModel,
   translateUsageLogSortModel,
 } from '../telemetry';
@@ -359,6 +360,18 @@ describe('Utils :: telemetry :: getDefaultFilterValue', () => {
   test('returns empty array when no options available', () => {
     const result = getDefaultFilterValue(FILTER_TYPE.Entity, [], []);
     expect(result).toEqual([]);
+  });
+});
+
+describe('Utils :: telemetry :: isDeploymentFilter', () => {
+  test('returns true for deployment-backed filter types', () => {
+    expect(isDeploymentFilter(FILTER_TYPE.Entity)).toBe(true);
+    expect(isDeploymentFilter(FILTER_TYPE.Mcp)).toBe(true);
+    expect(isDeploymentFilter(FILTER_TYPE.Deployment)).toBe(true);
+  });
+
+  test('returns false for the project filter type', () => {
+    expect(isDeploymentFilter(FILTER_TYPE.Project)).toBe(false);
   });
 });
 
