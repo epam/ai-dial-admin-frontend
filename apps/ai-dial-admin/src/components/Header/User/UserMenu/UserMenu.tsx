@@ -88,16 +88,14 @@ const UserMenu: FC<Props> = ({ isEnableAuth, isMobile }) => {
         <DialDropdown
           listClassName="!w-[280px]"
           onOpenChange={(open) => setIsOpen(open)}
-          menu={{
-            items: dropdownItems,
-            header: (
-              <div className="flex flex-row items-center gap-3 border-b border-secondary p-3">
-                <UserIcon userName={session?.user?.name || t(GlobalI18nKey.User)} />
+          items={dropdownItems}
+          menuHeader={
+            <div className="flex flex-row items-center gap-3 border-b border-secondary p-3">
+              <UserIcon userName={session?.user?.name || t(GlobalI18nKey.User)} />
 
-                <p className="dial-small-semi-text">{session?.user?.name}</p>
-              </div>
-            ),
-          }}
+              <p className="dial-small-semi-text">{session?.user?.name}</p>
+            </div>
+          }
         >
           <div role="menuitem" className="flex cursor-pointer items-center justify-between gap-2 pr-6">
             <UserIcon userName={session?.user?.name || t(GlobalI18nKey.User)} />
