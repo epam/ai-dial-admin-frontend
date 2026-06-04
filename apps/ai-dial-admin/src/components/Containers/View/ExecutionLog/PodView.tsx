@@ -32,6 +32,8 @@ const PodView: FC<Props> = ({ pod, containerId, route }) => {
 
   const restartReasons = RESTART_REASONS(t);
 
+  const hasPodStatus = !!podData?.restartCount || !!podData?.lastTerminationMessage;
+
   useEffect(() => {
     if (!containerId || !podData?.name) return;
 
@@ -78,18 +80,36 @@ const PodView: FC<Props> = ({ pod, containerId, route }) => {
 
   return (
     <div className="flex flex-col flex-1 min-h-0 h-full gap-4">
-      {!!podData?.restartCount && (
-        <div className="flex gap-10">
-          <LabelledText label={t(EntityFieldsI18nKey.Restarts)} text={podData?.restartCount?.toString()} />
-          <LabelledText
-            label={t(EntityFieldsI18nKey.LastRestartedAt)}
-            text={formatDateTimeToLocalString(podData?.lastFinishedAt)}
-          />
-          <LabelledText
-            className="max-w-[350px]"
-            label={t(EntityFieldsI18nKey.LastReason)}
-            text={restartReasons[podData?.lastTerminationReason as string]}
-          />
+      {hasPodStatus && (
+        <div className="flex flex-col gap-2">
+          {!!podData?.restartCount && (
+            <div className="flex gap-10">
+              {!!podData?.restartCount && (
+                <LabelledText label={t(EntityFieldsI18nKey.Restarts)} text={podData?.restartCount?.toString()} />
+              )}
+              {!!podData?.lastFinishedAt && (
+                <LabelledText
+                  label={t(EntityFieldsI18nKey.LastRestartedAt)}
+                  text={formatDateTimeToLocalString(podData?.lastFinishedAt)}
+                />
+              )}
+              {!!podData?.lastTerminationReason && (
+                <LabelledText
+                  className="max-w-[350px]"
+                  label={t(EntityFieldsI18nKey.LastReason)}
+                  text={restartReasons[podData?.lastTerminationReason as string]}
+                />
+              )}
+            </div>
+          )}
+          {!!podData?.lastTerminationMessage && (
+            <LabelledText
+              className="max-w-full"
+              label={t(EntityFieldsI18nKey.TerminationMessage)}
+              text={podData.lastTerminationMessage}
+              tooltip={podData.lastTerminationMessage}
+            />
+          )}
         </div>
       )}
       <div className="flex flex-1 min-h-0 h-full">
