@@ -408,6 +408,7 @@ export default {
     false: 'False',
   },
   Buttons: {
+    Compare: 'Compare',
     Copy: 'Copy',
     Delete: 'Delete',
     DeleteAll: 'Delete All',
@@ -1660,6 +1661,9 @@ export default {
     RunSuccess: 'Run is started',
     RunSuccessDescription: 'Evaluation results will be available in a few minutes',
     SelectedTestCases: 'Selected test cases',
+    SelectedRunsBanner: '{count} items selected',
+    SelectedRunsBannerForOne: '{count} item selected',
+    MaxRunsSelected: 'This is the maximum limit for comparison items in Runs',
     NumberOfRuns: 'Number of runs',
     TryoutWarning: 'Test this suite`s request template against a real deployment.',
     RunWarning:

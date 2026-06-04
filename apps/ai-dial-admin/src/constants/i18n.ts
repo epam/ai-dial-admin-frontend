@@ -320,6 +320,7 @@ export enum DuplicateI18nKey {
 }
 
 export enum ButtonsI18nKey {
+  Compare = 'Buttons.Compare',
   Copy = 'Buttons.Copy',
   Create = 'Buttons.Create',
   Edit = 'Buttons.Edit',
@@ -1631,6 +1632,9 @@ export enum TestSuitesI18nKey {
   NumberOfRuns = 'TestSuites.NumberOfRuns',
   TryoutWarning = 'TestSuites.TryoutWarning',
   SelectedTestCases = 'TestSuites.SelectedTestCases',
+  SelectedRunsBanner = 'TestSuites.SelectedRunsBanner',
+  SelectedRunsBannerForOne = 'TestSuites.SelectedRunsBannerForOne',
+  MaxRunsSelected = 'TestSuites.MaxRunsSelected',
   RequestTemplate = 'TestSuites.RequestTemplate',
   EndpointSchema = 'TestSuites.EndpointSchema',
   DynamicConfiguration = 'TestSuites.DynamicConfiguration',

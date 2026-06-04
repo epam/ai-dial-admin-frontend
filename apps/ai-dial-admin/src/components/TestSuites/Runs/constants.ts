@@ -11,3 +11,5 @@ export const VALID_FILTERS = [
   { column: 'valid', operator: FilterOperatorDto.EQUALS, value: 'true' },
   { column: 'enabled', operator: FilterOperatorDto.EQUALS, value: 'true' },
 ];
+
+export const MAX_SELECTED_RUNS = 10;
