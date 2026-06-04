@@ -30,6 +30,8 @@ const Filters: FC<Props> = ({ filters, setFilters, getBaseData, route, isMcpView
   const filtersWithId = useMemo(() => filters.map((filter) => ({ ...filter, id: uuidv4() })), [filters]);
 
   useEffect(() => {
+    let cancelled = false;
+
     const fetch = async (query: TelemetryQuery): Promise<{ data: string[][] }> => {
       const response = await getBaseData(query);
       if (response.success) {
@@ -38,31 +40,22 @@ const Filters: FC<Props> = ({ filters, setFilters, getBaseData, route, isMcpView
       return { data: [] };
     };
 
+    const toOptions = (data?: string[][]): SelectOption[] =>
+      (data ?? []).filter((v) => !!v[0]).map((arr) => ({ value: arr[0], label: arr[0] }));
+
     const tableName = isMcpView ? MCP_TABLE_NAME : isRouteView ? ROUTE_TABLE_NAME : undefined;
 
     Promise.all([fetch(getProjectQuery(tableName)), fetch(getEntityQuery(tableName))]).then((responses) => {
-      const { data: projectData } = responses[0];
-      const { data: entityData } = responses[1];
-
-      if (projectData?.length) {
-        setProjects(
-          projectData
-            .filter((v) => !!v[0])
-            .map((arr: string[]) => {
-              return { value: arr[0], label: arr[0] };
-            }),
-        );
+      if (cancelled) {
+        return;
       }
-      if (entityData?.length) {
-        setEntities(
-          entityData
-            .filter((v) => !!v[0])
-            .map((arr: string[]) => {
-              return { value: arr[0], label: arr[0] };
-            }),
-        );
-      }
+      setProjects(toOptions(responses[0].data));
+      setEntities(toOptions(responses[1].data));
     });
+
+    return () => {
+      cancelled = true;
+    };
   }, [getBaseData, isMcpView, isRouteView]);
 
   const onDelete = useCallback(
