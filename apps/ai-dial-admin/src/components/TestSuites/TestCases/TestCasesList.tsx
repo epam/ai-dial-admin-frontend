@@ -250,7 +250,7 @@ const TestCasesList: FC<Props> = ({
         }
         setData(rawData);
         setColumnDefs([
-          ...getTestCaseColumns(selectedTestSuite, onCellChange, t, activeSchema),
+          ...getTestCaseColumns(selectedTestSuite, onCellChange, t, activeSchema, isReadOnly),
           { ...ONE_ACTION_COLUMN(getTryOutOperation(onOpenTryOutSidebar)), colId: 'action-tryout' },
           ...(!isReadOnly
             ? [
@@ -394,7 +394,7 @@ const TestCasesList: FC<Props> = ({
   useEffect(() => {
     if (!datasetId) return;
     refreshGrid();
-  }, [datasetId, schemaKey]);
+  }, [datasetId, schemaKey, isReadOnly]);
 
   useEffect(() => {
     if (!testCasesActionsRef) return;
