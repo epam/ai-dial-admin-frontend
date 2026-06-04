@@ -130,7 +130,10 @@ export const RuleFolderProvider = ({ children, attributes }: { children: ReactNo
   };
 
   const fetchFiles = (path: string) => {
-    setIsLoading(true);
+    const isInitialLoad = files === null;
+    if (isInitialLoad) {
+      setIsLoading(true);
+    }
     Promise.all([getFolders(path), getRules(path)])
       .then(([folders, rules]) => {
         setFetchedFoldersRule((prev) => ({
@@ -159,11 +162,15 @@ export const RuleFolderProvider = ({ children, attributes }: { children: ReactNo
             [path]: [],
           }));
         }
-        setIsLoading(false);
+        if (isInitialLoad) {
+          setIsLoading(false);
+        }
       })
       .catch(() => {
         setFiles([]);
-        setIsLoading(false);
+        if (isInitialLoad) {
+          setIsLoading(false);
+        }
       });
   };
 
