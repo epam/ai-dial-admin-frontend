@@ -81,7 +81,7 @@ const PodView: FC<Props> = ({ pod, containerId, route }) => {
   return (
     <div className="flex flex-col flex-1 min-h-0 h-full gap-4">
       {hasPodStatus && (
-        <div className="flex flex-col gap-2">
+        <div className="flex gap-10">
           {!!podData?.restartCount && (
             <div className="flex gap-10">
               {!!podData?.restartCount && (
