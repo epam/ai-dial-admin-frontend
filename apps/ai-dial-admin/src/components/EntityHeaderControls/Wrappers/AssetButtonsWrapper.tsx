@@ -118,6 +118,7 @@ const AssetButtonsWrapper: FC<AssetButtonsWrapperProps> = ({
             existingVersions={getVersionsPerName(assets || [])}
             onDiscard={onStartDiscard}
             isEditorEnabled={isEditorEnabled}
+            isAddedVersion={!!addedVersions?.includes(entity.version)}
             onSave={onTryToSave}
             entityName={entity.name}
           />
