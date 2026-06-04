@@ -1,5 +1,6 @@
 # AI DIAL Admin Frontend
 
+
 ## Overview
 
 This project is a web application built using [Next.js](https://nextjs.org/), a React framework with server-rendering capabilities. It can be easily customized and adapted to your needs by following the steps mentioned below.
