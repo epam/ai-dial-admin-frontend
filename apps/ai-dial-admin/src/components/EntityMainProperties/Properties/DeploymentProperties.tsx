@@ -126,7 +126,6 @@ const DeploymentProperties: FC<Props> = ({
           names={names}
           onChangeEntity={onChangeEntity}
           isUniqueNameError={isUniqueNameError}
-          checkLocalDuplicate={false}
         />
       )}
 

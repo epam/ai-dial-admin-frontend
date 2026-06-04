@@ -63,7 +63,6 @@ const EntityProperties: FC<Props> = ({
           names={names}
           isUniqueNameError={isUniqueNameError}
           onChangeEntity={onChangeEntity}
-          checkLocalDuplicate={false}
         />
       )}
 

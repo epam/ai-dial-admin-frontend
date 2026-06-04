@@ -15,12 +15,12 @@ vi.mock('@/src/app/actions/deployments', () => ({
 }));
 
 describe('DeploymentProperties', () => {
-  test('does not show duplicate ID error from local names while typing', () => {
+  test('does not show duplicate ID error when names list uses display names not deployment ids', () => {
     render(
       <DeploymentProperties
         view={ApplicationRoute.Models}
-        entity={{ name: 'existing-model', displayName: '', description: '' }}
-        names={['existing-model']}
+        entity={{ name: 'my-deployment-id', displayName: '', description: '' }}
+        names={['Other Model___1.0.0']}
         onChangeEntity={vi.fn()}
       />,
     );
