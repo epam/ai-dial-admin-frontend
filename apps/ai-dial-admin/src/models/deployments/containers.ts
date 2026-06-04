@@ -87,6 +87,7 @@ export interface Pod {
   createdAt: number;
   restartCount?: number;
   lastTerminationReason?: string;
+  lastTerminationMessage?: string;
   lastExitCode?: string;
   lastFinishedAt?: number;
 }
