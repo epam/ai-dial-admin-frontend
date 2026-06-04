@@ -71,7 +71,7 @@ export const computeMinimapMarkers = (container: HTMLElement): MinimapMarker[] =
   const merged: MinimapMarker[] = [];
   for (const marker of raw) {
     const last = merged[merged.length - 1];
-    if (last && last.status === marker.status && marker.position <= last.position + last.height) {
+    if (last && last.status === marker.status && marker.position <= last.position + last.height + MIN_MARKER_HEIGHT) {
       last.height = Math.max(last.height, marker.position + marker.height - last.position);
     } else {
       merged.push({ ...marker });
