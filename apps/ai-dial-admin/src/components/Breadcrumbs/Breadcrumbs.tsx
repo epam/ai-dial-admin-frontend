@@ -48,15 +48,13 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
       <DialDropdown
         className="cursor-pointer text-secondary hover:text-accent-primary"
         placement="bottom-start"
-        menu={{
-          items: hiddenBreadcrumbs.map(
-            (b): DropdownItem => ({
-              key: b.href,
-              label: <span className="small">{decodeURIComponent(b.name)}</span>,
-              onClick: () => (b.callback ? b.callback(b.href) : void 0),
-            }),
-          ),
-        }}
+        items={hiddenBreadcrumbs.map(
+          (b): DropdownItem => ({
+            key: b.href,
+            label: <span className="dial-small-text">{decodeURIComponent(b.name)}</span>,
+            onClick: () => (b.callback ? b.callback(b.href) : void 0),
+          }),
+        )}
       >
         {name}
       </DialDropdown>

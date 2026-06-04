@@ -28,24 +28,23 @@ const FilledIcon: FC<Props> = ({ disabled, fileUrl, onChange }) => {
     setIsModalOpen(false);
   }, [setIsModalOpen]);
 
-  const menu = useMemo(() => {
-    return {
-      items: [
-        {
-          key: 'change-icon',
-          label: t(EntitiesI18nKey.ChangeIcon),
-          onClick: () => setIsModalOpen(true),
-          icon: <IconRefreshDot {...BASE_BUTTON_ICON_PROPS} />,
-        },
-        {
-          key: 'remove-icon',
-          label: t(ButtonsI18nKey.Delete),
-          onClick: () => onChange(''),
-          icon: <IconTrashX {...BASE_BUTTON_ICON_PROPS} />,
-        },
-      ],
-    };
-  }, [onChange, t]);
+  const items = useMemo(
+    () => [
+      {
+        key: 'change-icon',
+        label: t(EntitiesI18nKey.ChangeIcon),
+        onClick: () => setIsModalOpen(true),
+        icon: <IconRefreshDot {...BASE_BUTTON_ICON_PROPS} />,
+      },
+      {
+        key: 'remove-icon',
+        label: t(ButtonsI18nKey.Delete),
+        onClick: () => onChange(''),
+        icon: <IconTrashX {...BASE_BUTTON_ICON_PROPS} />,
+      },
+    ],
+    [onChange, t],
+  );
 
   const getImageSrc = () => {
     return (
@@ -68,7 +67,7 @@ const FilledIcon: FC<Props> = ({ disabled, fileUrl, onChange }) => {
     getImageSrc()
   ) : (
     <>
-      <DialDropdown menu={menu} className="w-[180px]">
+      <DialDropdown items={items} className="w-[180px]">
         {getImageSrc()}
       </DialDropdown>
 

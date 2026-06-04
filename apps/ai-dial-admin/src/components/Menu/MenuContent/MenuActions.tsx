@@ -44,7 +44,7 @@ const MenuActions: FC<Props> = ({ onExport, onImport, onOpenProperties, showImpo
 
   return (
     <div>
-      <DialDropdown menu={{ items: dropdownItems }} listClassName="w-[150px]">
+      <DialDropdown items={dropdownItems} listClassName="w-[150px]">
         <IconDotsVertical className="cursor-pointer" />
       </DialDropdown>
     </div>

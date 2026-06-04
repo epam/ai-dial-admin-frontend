@@ -5,7 +5,7 @@ import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
 import MetricOutputs from '../Outputs';
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
-  DialTag: ({ tag }: { tag: string }) => <span>{tag}</span>,
+  DialTag: ({ label }: { label: string }) => <span>{label}</span>,
 }));
 
 const makeField = (overrides: Partial<SchemaFieldRow>): SchemaFieldRow => ({

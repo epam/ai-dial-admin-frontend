@@ -41,7 +41,7 @@ const HelpButton: FC<Props> = ({ docLink }) => {
     return null;
   }
   return dropdownItems.length > 0 ? (
-    <DialDropdown menu={{ items: dropdownItems }} allowedPlacements={['bottom-end']}>
+    <DialDropdown items={dropdownItems} allowedPlacements={['bottom-end']}>
       <DialPrimaryIconButton
         appearance={ButtonAppearance.Ghost}
         aria-label="Help button"
