@@ -144,7 +144,7 @@ export const getListingData = (data: TelemetryData): Record<string, string>[] =>
 };
 
 export const isDeploymentFilter = (type: FILTER_TYPE): boolean => {
-  return type === FILTER_TYPE.Entity || type === FILTER_TYPE.Mcp;
+  return type === FILTER_TYPE.Entity || type === FILTER_TYPE.Mcp || type === FILTER_TYPE.Deployment;
 };
 
 export const getDefaultFilterValue = (
