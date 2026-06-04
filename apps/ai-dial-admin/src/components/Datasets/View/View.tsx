@@ -31,7 +31,7 @@ interface Props {
 const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
   const t = useI18n();
   const router = useRouter();
-  const { showNotification } = useNotification();
+  const { showNotification, removeNotification } = useNotification();
 
   const testCasesActionsRef = useRef<DatasetTestCasesActions | null>(null);
   const tabs = getDatasetTabs(t);
@@ -69,6 +69,10 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
     setSelectedDataset(structuredClone(originalDataset));
   }, [originalDataset]);
 
+  useEffect(() => {
+    setEtag(initialEtag);
+  }, [initialEtag]);
+
   const onDiscard = useCallback(() => {
     if (isEditorEnabled) {
       setSelectedFormat(ExportFormat.ADMIN);
@@ -81,12 +85,23 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
   }, [isEditorEnabled, originalDataset]);
 
   const onSave = useCallback(() => {
+    let prepareNotificationId: string | undefined;
+
+    const dismissPrepareNotification = () => {
+      if (prepareNotificationId) {
+        removeNotification(prepareNotificationId);
+        prepareNotificationId = undefined;
+      }
+    };
+
     const handleError = (header: string | undefined, message: string | undefined, requestId?: string) => {
+      dismissPrepareNotification();
       showNotification(getErrorNotification(header, message, requestId));
       router.refresh();
     };
 
     const showSuccessAndRefresh = () => {
+      dismissPrepareNotification();
       showNotification(
         getSuccessNotification(
           getUpdateNotificationTitle(ApplicationRoute.Datasets, t),
@@ -110,7 +125,7 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
         JSON.stringify(selectedDataset.testCaseSchema) !== JSON.stringify(originalDataset.testCaseSchema);
 
       if (schemaChanged) {
-        showNotification(getPrepareNotification(t(DatasetsI18nKey.RevalidatingTestCases)));
+        prepareNotificationId = showNotification(getPrepareNotification(t(DatasetsI18nKey.RevalidatingTestCases)));
       }
 
       const dirtyTestCases = testCasesActionsRef.current?.getDirtyTestCases() ?? [];
@@ -131,7 +146,7 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
         showSuccessAndRefresh();
       }
     });
-  }, [selectedDataset, etag, originalDataset, showNotification, t, router]);
+  }, [selectedDataset, etag, originalDataset, showNotification, removeNotification, t, router]);
 
   const onChangeDataset = useCallback((dataset: Dataset, skipRefresh = false) => {
     setSelectedDataset(dataset);
