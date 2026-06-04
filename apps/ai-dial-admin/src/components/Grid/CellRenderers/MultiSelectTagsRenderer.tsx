@@ -77,8 +77,9 @@ const MultiSelectTagsRenderer: FC<Props> = ({ items, options, handleRemoveTag })
         <div key={`shown-${item}-${index}`} ref={setItemRef(index)}>
           <DialTag
             key={item}
-            tag={options.find((o) => o.value === item)?.label ?? item}
-            remove={(e) => handleRemoveTag?.(e, item)}
+            label={options.find((o) => o.value === item)?.label ?? item}
+            closable
+            onRemove={(e) => handleRemoveTag?.(e, item)}
             className="max-w-full"
           />
         </div>
@@ -86,7 +87,7 @@ const MultiSelectTagsRenderer: FC<Props> = ({ items, options, handleRemoveTag })
 
       {visibleCount < items.length && (
         <div ref={hiddenCountRef}>
-          <DialTag key={'tags-count'} tag={`+${items.length - visibleCount}`} className="max-w-full" />
+          <DialTag key={'tags-count'} label={`+${items.length - visibleCount}`} className="max-w-full" />
         </div>
       )}
 
@@ -95,14 +96,15 @@ const MultiSelectTagsRenderer: FC<Props> = ({ items, options, handleRemoveTag })
           <div key={`hidden-${item}-${index}`} ref={setItemRef(index)} className={'inline-block'}>
             <DialTag
               key={item}
-              tag={options.find((o) => o.value === item)?.label ?? item}
-              remove={(e) => handleRemoveTag?.(e, item)}
+              label={options.find((o) => o.value === item)?.label ?? item}
+              closable
+              onRemove={(e) => handleRemoveTag?.(e, item)}
               className="max-w-full"
             />
           </div>
         ))}
         <div ref={hiddenCountRef} className={'inline-block'}>
-          <DialTag key={'tags-count'} tag={`+${items.length}`} className="max-w-full" />
+          <DialTag key={'tags-count'} label={`+${items.length}`} className="max-w-full" />
         </div>
       </div>
     </div>

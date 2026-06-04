@@ -33,7 +33,7 @@ const ActionsDropdown = <T extends object>({ items, data, rowIndex, ...props }: 
 
   return (
     <div>
-      <DialDropdown menu={{ items: dropdownItems }}>
+      <DialDropdown items={dropdownItems}>
         <ActionTrigger {...props} />
       </DialDropdown>
     </div>
