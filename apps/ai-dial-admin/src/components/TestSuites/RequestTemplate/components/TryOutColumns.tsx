@@ -53,10 +53,10 @@ const TryOutColumns: FC<Props> = ({ isLoading, responseBody, columns, response }
                 <div className="flex flex-row justify-between items-center">
                   <div className="flex flex-row gap-2 items-center">
                     <div className="small-text-semi text-primary">{column.name}</div>
-                    <DialTag tag={capitalize(column.type)} />
+                    <DialTag label={capitalize(column.type)} />
                   </div>
                   <DialTag
-                    tag={column.valid ? t(ValidityStatusI18nKey.Valid) : t(ValidityStatusI18nKey.Invalid)}
+                    label={column.valid ? t(ValidityStatusI18nKey.Valid) : t(ValidityStatusI18nKey.Invalid)}
                     className={classNames(
                       column.valid
                         ? 'border-success bg-controls-accent-success-alpha-hover'

@@ -112,6 +112,49 @@ describe('PodView', () => {
     expect(screen.queryByTestId(`label-${EntityFieldsI18nKey.Restarts}`)).not.toBeInTheDocument();
   });
 
+  test('shows termination message when present', () => {
+    render(
+      <PodView
+        pod={makePod('pod-1', { restartCount: 2, lastTerminationMessage: 'container failed: invalid --foo argument' })}
+        containerId="c1"
+        route={ApplicationRoute.McpContainers}
+      />,
+    );
+    expect(screen.getByTestId(`label-${EntityFieldsI18nKey.TerminationMessage}`)).toHaveTextContent(
+      'container failed: invalid --foo argument',
+    );
+  });
+
+  test('hides termination message when absent even with restarts', () => {
+    render(
+      <PodView pod={makePod('pod-1', { restartCount: 2 })} containerId="c1" route={ApplicationRoute.McpContainers} />,
+    );
+    expect(screen.queryByTestId(`label-${EntityFieldsI18nKey.TerminationMessage}`)).not.toBeInTheDocument();
+  });
+
+  test('shows termination message even when restartCount is 0 (fail-to-start)', () => {
+    render(
+      <PodView
+        pod={makePod('pod-1', {
+          restartCount: 0,
+          lastTerminationReason: 'StartError',
+          lastTerminationMessage: 'exec: "--model": bad argument',
+          lastFinishedAt: 1700000000000,
+        })}
+        containerId="c1"
+        route={ApplicationRoute.McpContainers}
+      />,
+    );
+    // The restart row stays gated on restartCount, so it is hidden at 0...
+    expect(screen.queryByTestId(`label-${EntityFieldsI18nKey.Restarts}`)).not.toBeInTheDocument();
+    expect(screen.queryByTestId(`label-${EntityFieldsI18nKey.LastReason}`)).not.toBeInTheDocument();
+    expect(screen.queryByTestId(`label-${EntityFieldsI18nKey.LastRestartedAt}`)).not.toBeInTheDocument();
+    // ...but the termination message is shown on its own.
+    expect(screen.getByTestId(`label-${EntityFieldsI18nKey.TerminationMessage}`)).toHaveTextContent(
+      'exec: "--model": bad argument',
+    );
+  });
+
   test('appends incoming log lines to the rendered buffer', () => {
     render(<PodView pod={makePod('pod-1')} containerId="c1" route={ApplicationRoute.McpContainers} />);
     const source = MockEventSource.instances[0];
