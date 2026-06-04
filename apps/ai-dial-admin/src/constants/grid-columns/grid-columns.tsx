@@ -302,8 +302,6 @@ export const KEYS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   ...BASE_KEYS_COLUMNS,
   VALIDITY_STATUS_COLUMN(t),
   TOPICS_COLUMN,
-  { ...CREATED_AT_COLUMN, filter: false },
-  { ...UPDATED_AT_COLUMN, filter: false },
   {
     headerName: 'Project',
     field: 'project',
