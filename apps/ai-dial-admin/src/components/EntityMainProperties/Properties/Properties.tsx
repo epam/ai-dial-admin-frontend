@@ -31,7 +31,7 @@ const Properties = <T extends object>({
   ...props
 }: Props<T>) => {
   if (isSimpleEntity(view)) {
-    return <EntityProperties entity={entity} view={view} {...props} />;
+    return <EntityProperties entity={entity} view={view} isUniqueNameError={isUniqueNameError} {...props} />;
   }
 
   if (isAssetView(view)) {

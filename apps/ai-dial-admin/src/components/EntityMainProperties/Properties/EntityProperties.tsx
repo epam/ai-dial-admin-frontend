@@ -22,6 +22,7 @@ interface Props {
   entity: BaseEntity;
   names: string[];
   versionsMap?: Record<string, string[]>;
+  isUniqueNameError?: boolean;
   isEntityImmutable?: boolean;
   onChangeEntity: (entity: BaseEntity) => void;
   initialValues?: Partial<BaseEntity>;
@@ -31,6 +32,7 @@ const EntityProperties: FC<Props> = ({
   view,
   entity,
   names,
+  isUniqueNameError,
   onChangeEntity,
   isEntityImmutable = false,
   initialValues,
@@ -59,6 +61,7 @@ const EntityProperties: FC<Props> = ({
           placeholder={t(EntityPlaceholdersI18nKey.Id)}
           entity={entity}
           names={names}
+          isUniqueNameError={isUniqueNameError}
           onChangeEntity={onChangeEntity}
         />
       )}

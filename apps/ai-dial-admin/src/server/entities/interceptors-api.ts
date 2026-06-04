@@ -24,6 +24,10 @@ export class InterceptorsApi extends BaseApi {
     return this.getActionWithEtag(INTERCEPTOR_URL(name), eTag, token);
   }
 
+  checkInterceptorByName(name: string, token: Token) {
+    return this.head(INTERCEPTOR_URL(encodeURIComponent(name)), token);
+  }
+
   removeInterceptor(token: Token, name?: string): Promise<ServerActionResponse> {
     return this.deleteAction(INTERCEPTOR_URL(name), token);
   }
