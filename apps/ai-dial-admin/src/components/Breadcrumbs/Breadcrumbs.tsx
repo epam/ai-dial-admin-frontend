@@ -51,7 +51,7 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
         items={hiddenBreadcrumbs.map(
           (b): DropdownItem => ({
             key: b.href,
-            label: <span className="small">{decodeURIComponent(b.name)}</span>,
+            label: <span className="dial-small-text">{decodeURIComponent(b.name)}</span>,
             onClick: () => (b.callback ? b.callback(b.href) : void 0),
           }),
         )}

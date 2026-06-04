@@ -56,7 +56,7 @@ const SchemaTreeItem: FC<TreeItemProps> = ({ node, depth, expandedSet, onToggleE
             ))}
         </div>
         <span className="flex-1 min-w-0 small truncate">{node.name}</span>
-        <DialTag tag={node.type} />
+        <DialTag label={node.type} />
         <button
           type="button"
           onClick={handleSelect}

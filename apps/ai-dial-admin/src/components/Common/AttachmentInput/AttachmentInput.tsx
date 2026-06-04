@@ -254,7 +254,7 @@ const AttachmentInput: FC<Props> = ({ availableItems, initialValues, label, plac
               className={classNames('flex flex-wrap items-start gap-2', wraps ? 'flex-col-reverse' : 'flex-row')}
             >
               {selected.map((att, idx) => (
-                <DialTag key={att.value} tag={att.label} remove={handleRemoveAttachment(idx)} />
+                <DialTag key={att.value} label={att.label} closable onRemove={handleRemoveAttachment(idx)} />
               ))}
               <div className="flex items-center gap-2 flex-1 min-w-[180px]">
                 <input

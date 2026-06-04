@@ -58,7 +58,7 @@ const RulesValueReadonly: FC<Props> = ({ rule, ruleDiff, setLastValueHeight }) =
           return (
             <DialTag
               key={tag}
-              tag={tag}
+              label={tag}
               className={
                 ruleDiff?.items?.includes(tag)
                   ? isTargetError
