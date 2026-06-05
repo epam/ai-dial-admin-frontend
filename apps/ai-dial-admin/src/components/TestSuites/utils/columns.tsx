@@ -568,6 +568,7 @@ export const getSchemaFieldGridColumns = (
         onChange: onChangeEditable,
         hideTriangle: true,
         skipRequired: true,
+        required: true,
       },
       sortable: false,
       filter: false,

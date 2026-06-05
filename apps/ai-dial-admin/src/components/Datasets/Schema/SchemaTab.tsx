@@ -1,10 +1,11 @@
 'use client';
 
-import { FC } from 'react';
+import { FC, useEffect } from 'react';
 
 import SchemaManager from '@/src/components/TestSuites/TestCaseSchema/SchemaManager';
 import { Dataset } from '@/src/models/evaluation/dataset';
 import { TestCaseSchema } from '@/src/models/evaluation/test-suite';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 
 interface Props {
   dataset: Dataset;
@@ -13,9 +14,19 @@ interface Props {
 }
 
 const DatasetSchemaTab: FC<Props> = ({ dataset, isSkipRefresh, onChange }) => {
+  const { dispatch } = useSaveValidationContext();
+
   const onChangeSchema = (schema: TestCaseSchema[], skipRefresh?: boolean) => {
     onChange({ ...dataset, testCaseSchema: schema }, skipRefresh);
   };
+
+  useEffect(() => {
+    dispatch({
+      type: ValidationActionType.SetField,
+      field: 'testCaseSchema',
+      isValid: !dataset.testCaseSchema?.some((item) => !item.name || !item.type),
+    });
+  }, [dataset.testCaseSchema, dispatch]);
 
   return (
     <SchemaManager

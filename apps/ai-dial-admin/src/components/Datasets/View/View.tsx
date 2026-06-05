@@ -12,7 +12,6 @@ import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models'
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { DatasetsI18nKey } from '@/src/constants/i18n';
-import { ExportFormat } from '@/src/types/export';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { Dataset, DatasetVisibility, DatasetVisibilityTransition } from '@/src/models/evaluation/dataset';
@@ -46,19 +45,15 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
   const [isMakePrivateOpen, setIsMakePrivateOpen] = useState(false);
   const [isMakePublicOpen, setIsMakePublicOpen] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
-  const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
       isEditorEnabled,
-      selectedFormat,
-      onChangeSelectedFormat: setSelectedFormat,
       onToggleEditor: () => {
-        setSelectedFormat(ExportFormat.ADMIN);
         setIsEditorEnabled((prev) => !prev);
       },
     }),
-    [isEditorEnabled, selectedFormat],
+    [isEditorEnabled],
   );
 
   useEffect(() => {
@@ -74,15 +69,12 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
   }, [initialEtag]);
 
   const onDiscard = useCallback(() => {
-    if (isEditorEnabled) {
-      setSelectedFormat(ExportFormat.ADMIN);
-    }
     setSelectedDataset(structuredClone(originalDataset));
     setHasTestCaseChanges(false);
     setIsSkipRefresh(false);
     setDiscardKey((prev) => prev + 1);
     testCasesActionsRef.current?.clearDirtyAndRefresh();
-  }, [isEditorEnabled, originalDataset]);
+  }, [originalDataset]);
 
   const onSave = useCallback(() => {
     let prepareNotificationId: string | undefined;
