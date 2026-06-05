@@ -6,8 +6,20 @@ import { datasetsApi } from '@/src/app/api/api';
 import { Dataset, DatasetTestCase, DatasetVisibilityTransition } from '@/src/models/evaluation/dataset';
 import { FilterDto, SortDto } from '@/src/models/request';
 import type { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
+import { FilterOperatorDto } from '@/src/types/request';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+
+export async function getDatasetByName(name: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return datasetsApi.getDatasets(
+    0,
+    1,
+    [],
+    [{ column: 'name', value: name, operator: FilterOperatorDto.EQUALS }],
+    token,
+  );
+}
 
 export async function getDatasets(page: number, size: number, sorts: SortDto[], filters: FilterDto[]) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());

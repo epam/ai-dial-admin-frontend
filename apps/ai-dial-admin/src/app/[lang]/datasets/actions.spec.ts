@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { datasetsApi } from '@/src/app/api/api';
 import { DatasetVisibility } from '@/src/models/evaluation/dataset';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
+import { FilterOperatorDto } from '@/src/types/request';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
@@ -11,6 +12,7 @@ import {
   createTestCase,
   exportTestCasesCsv,
   getDataset,
+  getDatasetByName,
   getDatasets,
   getTestCases,
   importTestCase,
@@ -32,6 +34,22 @@ describe('Datasets :: server actions', () => {
     vi.clearAllMocks();
     (getUserToken as any).mockResolvedValue(TOKEN_MOCK);
     (getIsEnableAuthToggle as any).mockReturnValue(true);
+  });
+
+  test('Should call getDatasetByName action', async () => {
+    (datasetsApi.getDatasets as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getDatasetByName('my-dataset');
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(datasetsApi.getDatasets).toHaveBeenCalledWith(
+      0,
+      1,
+      [],
+      [{ column: 'name', value: 'my-dataset', operator: FilterOperatorDto.EQUALS }],
+      TOKEN_MOCK,
+    );
+    expect(result).toBe(RESPONSE_MOCK);
   });
 
   test('Should call getDatasets action', async () => {
