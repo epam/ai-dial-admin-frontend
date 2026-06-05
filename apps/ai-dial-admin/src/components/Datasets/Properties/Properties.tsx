@@ -9,9 +9,11 @@ import { Dataset } from '@/src/models/evaluation/dataset';
 interface Props {
   dataset: Dataset;
   onChange: (dataset: Dataset) => void;
+  isModal?: boolean;
+  nameExistsError?: string;
 }
 
-const DatasetProperties: FC<Props> = ({ dataset, onChange }) => {
+const DatasetProperties: FC<Props> = ({ dataset, onChange, isModal, nameExistsError }) => {
   const onChangeName = useCallback(
     (name?: string) => {
       onChange({ ...dataset, name });
@@ -21,8 +23,14 @@ const DatasetProperties: FC<Props> = ({ dataset, onChange }) => {
 
   return (
     <div className="flex flex-col gap-y-8">
-      <DisplayNameControl displayName={dataset.name} required isFullWidth={false} onChange={onChangeName} />
-      <DescriptionControl isFullWidth={false} entity={dataset} onChangeEntity={onChange} />
+      <DisplayNameControl
+        isFullWidth={isModal}
+        onChange={onChangeName}
+        displayName={dataset.name}
+        externalError={nameExistsError}
+        required
+      />
+      <DescriptionControl isFullWidth={isModal} onChangeEntity={onChange} entity={dataset} />
     </div>
   );
 };

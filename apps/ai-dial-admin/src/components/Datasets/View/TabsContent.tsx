@@ -51,7 +51,7 @@ const DatasetTabsContent: FC<Props> = ({
             )}
           </div>
           <div className="pt-8">
-            <DatasetProperties dataset={selectedDataset} onChange={onChange} />
+            <DatasetProperties dataset={selectedDataset} onChange={onChange} isModal={false} />
           </div>
         </div>
       )}
