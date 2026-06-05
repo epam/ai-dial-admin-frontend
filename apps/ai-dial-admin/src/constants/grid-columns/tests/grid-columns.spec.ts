@@ -62,9 +62,12 @@ describe('Constants :: grid columns', () => {
 
   test('KEYS_COLUMNS returns expected columns', () => {
     const t = (s: string) => s;
-    expect(Array.isArray(KEYS_COLUMNS(t))).toBe(true);
-    expect(KEYS_COLUMNS(t).some((c) => c.field === 'name')).toBe(true);
-    expect(KEYS_COLUMNS(t).some((c) => c.field === 'status')).toBe(true);
+    const cols = KEYS_COLUMNS(t);
+    expect(Array.isArray(cols)).toBe(true);
+    expect(cols.some((c) => c.field === 'name')).toBe(true);
+    expect(cols.some((c) => c.field === 'status')).toBe(true);
+    expect(cols.filter((c) => c.field === 'createdAt')).toHaveLength(1);
+    expect(cols.filter((c) => c.field === 'updatedAt')).toHaveLength(1);
   });
 
   test('ASSETS_COLUMNS returns expected columns', () => {

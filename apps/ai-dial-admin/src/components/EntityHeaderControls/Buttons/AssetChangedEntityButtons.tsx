@@ -19,11 +19,19 @@ interface Props {
   entityName?: string;
   existingVersions?: Record<string, string[]>;
   isEditorEnabled?: boolean;
+  isAddedVersion?: boolean;
   onDiscard: () => void;
   onSave: (newVersion?: string) => void;
 }
 
-const AssetChangedEntityButtons: FC<Props> = ({ isEditorEnabled, onDiscard, onSave, existingVersions, entityName }) => {
+const AssetChangedEntityButtons: FC<Props> = ({
+  isEditorEnabled,
+  onDiscard,
+  onSave,
+  existingVersions,
+  entityName,
+  isAddedVersion,
+}) => {
   const t = useI18n();
 
   const { isValid, dispatch } = useSaveValidationContext();
@@ -65,12 +73,14 @@ const AssetChangedEntityButtons: FC<Props> = ({ isEditorEnabled, onDiscard, onSa
         disableSave={isDisableSave}
         saveLabel={t(ButtonsI18nKey.Save)}
       >
-        <DialNeutralButton
-          className={buttonsClassName}
-          label={t(ButtonsI18nKey.SaveAsNewVersion)}
-          onClick={() => setIsModalOpen(true)}
-          disabled={isDisableSave}
-        />
+        {!isAddedVersion && (
+          <DialNeutralButton
+            className={buttonsClassName}
+            label={t(ButtonsI18nKey.SaveAsNewVersion)}
+            onClick={() => setIsModalOpen(true)}
+            disabled={isDisableSave}
+          />
+        )}
       </ChangedEntityButtons>
 
       {isModalOpen &&

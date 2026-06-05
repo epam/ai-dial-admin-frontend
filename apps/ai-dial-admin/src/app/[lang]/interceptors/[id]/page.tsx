@@ -15,7 +15,6 @@ import { InterceptorTemplate } from '@/src/models/interceptor-template';
 import { errorObjLog } from '@/src/server/logger';
 import { InterceptorStatus } from '@/src/types/interceptor-status';
 import { getUserToken } from '@/src/utils/auth/auth-request';
-import { filterNames } from '@/src/utils/entities/filter-names';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 export const dynamic = 'force-dynamic';
@@ -24,7 +23,6 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
   let etag = DEFAULT_ETAG;
-  let interceptors: DialInterceptor[] | null = [];
   let interceptor: DialInterceptor | null = null;
   let globalInterceptors: string[] | null = [];
 
@@ -34,7 +32,6 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   let appRunners: DialApplicationScheme[] | null = [];
 
   try {
-    interceptors = await interceptorsApi.getInterceptorsList(token);
     models = await getModelsList();
     applications = await applicationsApi.getApplicationsList(token);
     appRunners = await applicationRunnersApi.getApplicationSchemesList(token);
@@ -66,12 +63,10 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
     notFound();
   }
 
-  const names = filterNames(interceptors, interceptor?.name);
-
   return (
     <SaveValidationContextProvider>
       <InterceptorView
-        names={names}
+        names={[]}
         originalInterceptor={interceptor}
         models={models || []}
         etag={etag}
