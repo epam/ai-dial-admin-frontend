@@ -76,12 +76,12 @@ const PodView: FC<Props> = ({ pod, containerId, route }) => {
       eventSource.removeEventListener('open', handleOpen);
       eventSource.close();
     };
-  }, [containerId, podData.name, showNotification, t]);
+  }, [containerId, podData?.name, showNotification, t]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 h-full gap-4">
       {hasPodStatus && (
-        <div className="flex flex-col gap-2">
+        <div className="flex gap-10">
           {!!podData?.restartCount && (
             <div className="flex gap-10">
               {!!podData?.restartCount && (
@@ -104,7 +104,7 @@ const PodView: FC<Props> = ({ pod, containerId, route }) => {
           )}
           {!!podData?.lastTerminationMessage && (
             <LabelledText
-              className="max-w-full"
+              className="max-w-[350px]"
               label={t(EntityFieldsI18nKey.TerminationMessage)}
               text={podData.lastTerminationMessage}
               tooltip={podData.lastTerminationMessage}

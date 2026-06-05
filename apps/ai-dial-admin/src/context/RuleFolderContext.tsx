@@ -46,12 +46,6 @@ export const RuleFolderProvider = ({ children, attributes }: { children: ReactNo
     });
   };
 
-  const setFolderToggled = (path: string) => {
-    const newExpanded = new Set(expandedFolders);
-    newExpanded.delete(path);
-    setExpandedFolders(newExpanded);
-  };
-
   const fetchFolderHierarchy = (fullPath?: string, fullTree?: boolean) => {
     const pathParts = fullPath?.split('/').filter(Boolean);
     let currentPath = '';
@@ -155,8 +149,7 @@ export const RuleFolderProvider = ({ children, attributes }: { children: ReactNo
             [path]: files as DialFolder[],
           }));
         } else {
-          setFolderToggled(path);
-          setFiles([]);
+          setFiles((prevFiles) => mergeFiles(prevFiles ?? [], [], path));
           setFetchedFoldersData((prev) => ({
             ...prev,
             [path]: [],
