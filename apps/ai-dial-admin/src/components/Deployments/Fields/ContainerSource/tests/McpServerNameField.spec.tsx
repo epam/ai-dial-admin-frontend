@@ -157,9 +157,7 @@ describe('McpServerNameField stale-response guard (Issue #3053)', () => {
       await Promise.resolve();
     });
 
-    expect(onServerSelect).toHaveBeenCalledWith(
-      expect.objectContaining({ name: SERVER_NAME, version: VERSION }),
-    );
+    expect(onServerSelect).toHaveBeenCalledWith(expect.objectContaining({ name: SERVER_NAME, version: VERSION }));
   });
 
   test('does not apply an older-version lookup that resolves after a newer-version pick of the same name', async () => {
@@ -216,8 +214,6 @@ describe('McpServerNameField stale-response guard (Issue #3053)', () => {
     });
 
     expect(onServerSelect).toHaveBeenCalledTimes(1);
-    expect(onServerSelect).toHaveBeenCalledWith(
-      expect.objectContaining({ name: SERVER_NAME, version: '2.0.0' }),
-    );
+    expect(onServerSelect).toHaveBeenCalledWith(expect.objectContaining({ name: SERVER_NAME, version: '2.0.0' }));
   });
 });
