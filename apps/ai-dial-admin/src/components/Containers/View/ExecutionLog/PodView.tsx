@@ -76,7 +76,7 @@ const PodView: FC<Props> = ({ pod, containerId, route }) => {
       eventSource.removeEventListener('open', handleOpen);
       eventSource.close();
     };
-  }, [containerId, podData.name, showNotification, t]);
+  }, [containerId, podData?.name, showNotification, t]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0 h-full gap-4">
