@@ -135,6 +135,7 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
               handleError(datasetRes.errorHeader, datasetRes.errorMessage, datasetRes.requestId);
               return;
             }
+            setDatasetEtag(datasetRes.etag ?? DEFAULT_ETAG);
             showSuccessAndRefresh();
           });
         } else {
