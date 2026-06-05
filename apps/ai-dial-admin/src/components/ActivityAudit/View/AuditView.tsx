@@ -244,11 +244,13 @@ const AuditView: FC<Props> = ({
                 <>
                   <h3 className="flex flex-row items-center gap-x-3">
                     <DialEllipsisTooltip text={activity.activityId} />
-                    <DialIconButton
-                      onClick={() => openActivityInNewTab(activity)}
-                      className="text-secondary size-auto"
-                      icon={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
-                    />
+                    {activity.activityId && (
+                      <DialIconButton
+                        onClick={() => openActivityInNewTab(activity)}
+                        className="text-secondary size-auto"
+                        icon={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
+                      />
+                    )}
                   </h3>
                   <div className="flex flex-row gap-3 items-center justify-end">
                     {!hideComparator && <CompareControl compareView={compareView} setCompareView={setCompareView} />}
