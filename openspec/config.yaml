@@ -88,12 +88,6 @@ rules:
     - Investigate the current codebase for related functionality before proposing — don't duplicate what already exists
     - Consider impact on existing features — flag if the proposal could affect other parts of the app (shared components, contexts, API routes)
   design:
-    # Code-authoring standards have moved to path-scoped rule files that auto-attach while editing the
-    # relevant files (in Claude Code, Cursor, and Copilot alike). At design time, consult the area(s) the
-    # change touches — these rules are equally the design standard for that area:
-    #   - Components / UI / context / hooks -> .claude/rules/components.md
-    #   - Utilities / pure functions        -> .claude/rules/utils.md
-    #   - Cross-cutting TypeScript standards -> .claude/rules/code-standards.md (always applies)
     - For component, context, and hook design, follow .claude/rules/components.md (design principles, Common-vs-feature placement, design-system reuse, styling, naming, state & memoization, accessibility, i18n, grid)
     - For utility / pure-function design, follow .claude/rules/utils.md (purity, placement, determinism, testability)
     - For cross-cutting TypeScript standards (import alias, enums, type placement, constants/models split), follow .claude/rules/code-standards.md
