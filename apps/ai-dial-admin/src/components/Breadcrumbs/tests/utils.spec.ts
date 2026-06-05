@@ -40,6 +40,12 @@ describe('Breadcrumbs :: getBreadcrumbConfig with language in path', () => {
     expect(config[2].key).toBeFalsy();
     expect(config[2].name).toEqual('auditActionId');
   });
+
+  test('Should decode URL-encoded path segments in breadcrumb names', () => {
+    const config = getBreadcrumbs('/en/models/foo%40bar', 'en');
+    expect(config.length).toEqual(2);
+    expect(config[1].name).toEqual('foo@bar');
+  });
 });
 
 describe('Breadcrumbs :: enrichWithFolderBreadcrumbs', () => {
