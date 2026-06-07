@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useState, useEffect, useCallback } from 'react';
+import { FC, useState, useEffect, useMemo, useCallback } from 'react';
 import classNames from 'classnames';
 import { usePathname } from 'next/navigation';
 import { useI18n, useCurrentLocale } from '@/src/locales/client';
@@ -23,40 +23,45 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
   const pathname = usePathname();
   const t = useI18n();
   const currentLocale = useCurrentLocale();
-  const [breadcrumbs, setBreadcrumbs] = useState<Breadcrumb[]>([]);
+  const folderContext = pathname ? getFolderContext?.(pathname, currentLocale)?.() : undefined;
 
-  if (!pathname) return null;
+  const basicBreadcrumbs = useMemo(() => {
+    if (!pathname) {
+      return [];
+    }
+    return getBreadcrumbs(pathname, currentLocale);
+  }, [pathname, currentLocale]);
 
-  const folderContext = getFolderContext?.(pathname, currentLocale)?.();
+  const [enrichedBreadcrumbs, setEnrichedBreadcrumbs] = useState<Breadcrumb[] | null>(null);
 
   useEffect(() => {
-    const basicBreadcrumbs = getBreadcrumbs(pathname, currentLocale);
-    if (shouldEnrichWithFolderBreadcrumbs(pathname, currentLocale) && folderContext?.filePath) {
-      const breadcrumbs = enrichWithFolderBreadcrumbs(
-        basicBreadcrumbs,
-        folderContext?.filePath,
-        folderContext?.setFilePath,
-      );
-      setBreadcrumbs(breadcrumbs);
-    } else {
-      setBreadcrumbs(basicBreadcrumbs);
+    if (!pathname) {
+      setEnrichedBreadcrumbs(null);
+      return;
     }
-  }, [pathname, currentLocale, folderContext?.filePath, folderContext?.setFilePath]);
+    if (shouldEnrichWithFolderBreadcrumbs(pathname, currentLocale) && folderContext?.filePath) {
+      setEnrichedBreadcrumbs(
+        enrichWithFolderBreadcrumbs(basicBreadcrumbs, folderContext.filePath, folderContext.setFilePath),
+      );
+    } else {
+      setEnrichedBreadcrumbs(null);
+    }
+  }, [pathname, currentLocale, basicBreadcrumbs, folderContext?.filePath, folderContext?.setFilePath]);
+
+  const breadcrumbs = enrichedBreadcrumbs ?? basicBreadcrumbs;
 
   const getHiddenBreadcrumbsDropdown = useCallback(
     (name: string, hiddenBreadcrumbs: Breadcrumb[]) => (
       <DialDropdown
         className="cursor-pointer text-secondary hover:text-accent-primary"
         placement="bottom-start"
-        menu={{
-          items: hiddenBreadcrumbs.map(
-            (b): DropdownItem => ({
-              key: b.href,
-              label: <span className="small">{decodeURIComponent(b.name)}</span>,
-              onClick: () => (b.callback ? b.callback(b.href) : void 0),
-            }),
-          ),
-        }}
+        items={hiddenBreadcrumbs.map(
+          (b): DropdownItem => ({
+            key: b.href,
+            label: <span className="dial-small-text">{b.name}</span>,
+            onClick: () => (b.callback ? b.callback(b.href) : void 0),
+          }),
+        )}
       >
         {name}
       </DialDropdown>
@@ -85,7 +90,7 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
             href="/"
             className={linkClassName}
           >
-            <DialEllipsisTooltip text={decodeURIComponent(label)} />
+            <DialEllipsisTooltip text={label} />
           </Link>
         );
       } else if (hiddenBreadcrumbs && hiddenBreadcrumbs.length > 0) {
@@ -93,13 +98,17 @@ const Breadcrumbs: FC<Props> = ({ mobile }) => {
       } else {
         return (
           <Link prefetch={false} href={href} className={linkClassName}>
-            <DialEllipsisTooltip text={decodeURIComponent(label)} />
+            <DialEllipsisTooltip text={label} />
           </Link>
         );
       }
     },
     [getHiddenBreadcrumbsDropdown, t],
   );
+
+  if (!pathname) {
+    return null;
+  }
 
   return (
     <div

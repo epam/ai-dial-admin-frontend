@@ -12,7 +12,6 @@ import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models'
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { DatasetsI18nKey } from '@/src/constants/i18n';
-import { ExportFormat } from '@/src/types/export';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { Dataset, DatasetVisibility, DatasetVisibilityTransition } from '@/src/models/evaluation/dataset';
@@ -31,7 +30,7 @@ interface Props {
 const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
   const t = useI18n();
   const router = useRouter();
-  const { showNotification } = useNotification();
+  const { showNotification, removeNotification } = useNotification();
 
   const testCasesActionsRef = useRef<DatasetTestCasesActions | null>(null);
   const tabs = getDatasetTabs(t);
@@ -46,19 +45,15 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
   const [isMakePrivateOpen, setIsMakePrivateOpen] = useState(false);
   const [isMakePublicOpen, setIsMakePublicOpen] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
-  const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
       isEditorEnabled,
-      selectedFormat,
-      onChangeSelectedFormat: setSelectedFormat,
       onToggleEditor: () => {
-        setSelectedFormat(ExportFormat.ADMIN);
         setIsEditorEnabled((prev) => !prev);
       },
     }),
-    [isEditorEnabled, selectedFormat],
+    [isEditorEnabled],
   );
 
   useEffect(() => {
@@ -69,24 +64,36 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
     setSelectedDataset(structuredClone(originalDataset));
   }, [originalDataset]);
 
+  useEffect(() => {
+    setEtag(initialEtag);
+  }, [initialEtag]);
+
   const onDiscard = useCallback(() => {
-    if (isEditorEnabled) {
-      setSelectedFormat(ExportFormat.ADMIN);
-    }
     setSelectedDataset(structuredClone(originalDataset));
     setHasTestCaseChanges(false);
     setIsSkipRefresh(false);
     setDiscardKey((prev) => prev + 1);
     testCasesActionsRef.current?.clearDirtyAndRefresh();
-  }, [isEditorEnabled, originalDataset]);
+  }, [originalDataset]);
 
   const onSave = useCallback(() => {
+    let prepareNotificationId: string | undefined;
+
+    const dismissPrepareNotification = () => {
+      if (prepareNotificationId) {
+        removeNotification(prepareNotificationId);
+        prepareNotificationId = undefined;
+      }
+    };
+
     const handleError = (header: string | undefined, message: string | undefined, requestId?: string) => {
+      dismissPrepareNotification();
       showNotification(getErrorNotification(header, message, requestId));
       router.refresh();
     };
 
     const showSuccessAndRefresh = () => {
+      dismissPrepareNotification();
       showNotification(
         getSuccessNotification(
           getUpdateNotificationTitle(ApplicationRoute.Datasets, t),
@@ -110,7 +117,7 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
         JSON.stringify(selectedDataset.testCaseSchema) !== JSON.stringify(originalDataset.testCaseSchema);
 
       if (schemaChanged) {
-        showNotification(getPrepareNotification(t(DatasetsI18nKey.RevalidatingTestCases)));
+        prepareNotificationId = showNotification(getPrepareNotification(t(DatasetsI18nKey.RevalidatingTestCases)));
       }
 
       const dirtyTestCases = testCasesActionsRef.current?.getDirtyTestCases() ?? [];
@@ -131,7 +138,7 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
         showSuccessAndRefresh();
       }
     });
-  }, [selectedDataset, etag, originalDataset, showNotification, t, router]);
+  }, [selectedDataset, etag, originalDataset, showNotification, removeNotification, t, router]);
 
   const onChangeDataset = useCallback((dataset: Dataset, skipRefresh = false) => {
     setSelectedDataset(dataset);

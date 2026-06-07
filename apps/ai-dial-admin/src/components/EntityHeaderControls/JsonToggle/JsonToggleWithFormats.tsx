@@ -19,6 +19,7 @@ const ONLY_ADMIN_ENTITIES = [
   ApplicationRoute.AssetsApplications,
   ApplicationRoute.AssetsToolsets,
   ApplicationRoute.TestSuites,
+  ApplicationRoute.Datasets,
 ];
 
 interface Props extends JsonConfiguration {

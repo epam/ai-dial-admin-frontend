@@ -1217,6 +1217,7 @@ export default {
     Restarts: 'Restarts',
     LastRestartedAt: 'Last restarted at',
     LastReason: 'Last reason',
+    TerminationMessage: 'Termination message',
     Mask: 'Mask',
     IpRange: 'IP Range',
     action: 'Action',

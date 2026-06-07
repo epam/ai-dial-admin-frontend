@@ -68,6 +68,7 @@ export const getTestCaseColumns = (
   onCellChange: onCellChange,
   t?: (key: string) => string,
   schema?: TestCaseSchema[],
+  isReadOnly?: boolean,
 ): ColDef[] => {
   const enabledLabel = t?.(BasicI18nKey.Enabled) ?? 'Enabled';
   const disabledLabel = t?.(BasicI18nKey.Disabled) ?? 'Disabled';
@@ -116,6 +117,7 @@ export const getTestCaseColumns = (
           cellRenderer: EditableCellRenderer,
           valueGetter: (params: ValueGetterParams) => params.data?.testCaseName ?? '',
           cellRendererParams: {
+            isReadonly: isReadOnly,
             hideTriangle: true,
             skipRequired: true,
             onChange: (value: string | number, rowData: unknown) => {
@@ -134,6 +136,7 @@ export const getTestCaseColumns = (
         editable: false,
         valueGetter: (params: ValueGetterParams) => params.data?.data?.[field] ?? params.data?.[field] ?? '',
         cellRendererParams: {
+          isReadonly: isReadOnly,
           hideTriangle: true,
           skipRequired: true,
           onChange: (value: string | number, rowData: unknown) => {
@@ -157,6 +160,7 @@ export const getTestCaseColumns = (
             return {
               component: EditableCellRenderer,
               params: {
+                isReadonly: isReadOnly,
                 hideTriangle: true,
                 skipRequired: true,
                 inputType: 'number' as const,
@@ -185,6 +189,7 @@ export const getTestCaseColumns = (
                   onCellChange(rowData as Record<string, unknown>, field, value);
                 },
                 disableValidation: true,
+                disabled: isReadOnly,
               },
             };
           }
@@ -207,6 +212,7 @@ export const getTestCaseColumns = (
                 onChange: (value: string | number, rowData: unknown) => {
                   onCellChange(rowData as Record<string, unknown>, field, isValueTruthy(value as string));
                 },
+                isReadonly: isReadOnly,
               },
             };
           }
@@ -215,6 +221,7 @@ export const getTestCaseColumns = (
             params: {
               hideTriangle: true,
               skipRequired: true,
+              isReadonly: isReadOnly,
               onChange: (value: string | number, rowData: unknown) => {
                 onCellChange(rowData as Record<string, unknown>, field, value);
               },
@@ -561,6 +568,7 @@ export const getSchemaFieldGridColumns = (
         onChange: onChangeEditable,
         hideTriangle: true,
         skipRequired: true,
+        required: true,
       },
       sortable: false,
       filter: false,

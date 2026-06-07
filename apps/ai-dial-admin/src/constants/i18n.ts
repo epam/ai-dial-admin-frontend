@@ -1365,6 +1365,7 @@ export enum EntityFieldsI18nKey {
   Restarts = 'EntityFields.Restarts',
   LastRestartedAt = 'EntityFields.LastRestartedAt',
   LastReason = 'EntityFields.LastReason',
+  TerminationMessage = 'EntityFields.TerminationMessage',
   Mask = 'EntityFields.Mask',
   IpRange = 'EntityFields.IpRange',
   action = 'EntityFields.action',

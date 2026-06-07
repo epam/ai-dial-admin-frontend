@@ -46,12 +46,6 @@ export const RuleFolderProvider = ({ children, attributes }: { children: ReactNo
     });
   };
 
-  const setFolderToggled = (path: string) => {
-    const newExpanded = new Set(expandedFolders);
-    newExpanded.delete(path);
-    setExpandedFolders(newExpanded);
-  };
-
   const fetchFolderHierarchy = (fullPath?: string, fullTree?: boolean) => {
     const pathParts = fullPath?.split('/').filter(Boolean);
     let currentPath = '';
@@ -130,7 +124,10 @@ export const RuleFolderProvider = ({ children, attributes }: { children: ReactNo
   };
 
   const fetchFiles = (path: string) => {
-    setIsLoading(true);
+    const isInitialLoad = files === null;
+    if (isInitialLoad) {
+      setIsLoading(true);
+    }
     Promise.all([getFolders(path), getRules(path)])
       .then(([folders, rules]) => {
         setFetchedFoldersRule((prev) => ({
@@ -152,18 +149,21 @@ export const RuleFolderProvider = ({ children, attributes }: { children: ReactNo
             [path]: files as DialFolder[],
           }));
         } else {
-          setFolderToggled(path);
-          setFiles([]);
+          setFiles((prevFiles) => mergeFiles(prevFiles ?? [], [], path));
           setFetchedFoldersData((prev) => ({
             ...prev,
             [path]: [],
           }));
         }
-        setIsLoading(false);
+        if (isInitialLoad) {
+          setIsLoading(false);
+        }
       })
       .catch(() => {
         setFiles([]);
-        setIsLoading(false);
+        if (isInitialLoad) {
+          setIsLoading(false);
+        }
       });
   };
 

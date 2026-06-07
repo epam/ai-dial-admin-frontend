@@ -31,7 +31,7 @@ export const getGridColumns = (
         return (
           <div className="flex flex-wrap gap-1 py-1">
             {selectedVersionsMap?.[selectedItemKey]?.map((v: string) => (
-              <DialTag key={`${params.data.name}__${v}`} tag={v} className="max-w-full bg-layer-4 border-0 p-2" />
+              <DialTag key={`${params.data.name}__${v}`} label={v} className="max-w-full bg-layer-4 border-0 p-2" />
             ))}
           </div>
         );
@@ -40,7 +40,7 @@ export const getGridColumns = (
           <div className="flex flex-wrap gap-1 py-1">
             <DialTag
               key={`${params.data.name}__${params.data.version}`}
-              tag={params.data.version}
+              label={params.data.version}
               className="max-w-full bg-layer-4 border-0 p-2"
             />
           </div>
@@ -208,7 +208,7 @@ const updatePathsInItem = (item: DialFile, originalItemPath: string, newParentPa
     ...item,
     path: newPath,
     parentPath: newParentPath,
-    items: item.items?.map((child) => updatePathsInItem(child, originalItemPath, normalizePath(newPath))),
+    items: item.items?.map((child) => updatePathsInItem(child, normalizePath(item.path), normalizePath(newPath))),
   };
 };
 

@@ -10,7 +10,7 @@ export const PreviewTag: FC = () => {
 
   return (
     <DialTag
-      tag={t(BasicI18nKey.Preview)}
+      label={t(BasicI18nKey.Preview)}
       className="text-primary !bg-info !border-blue800 !h-[16px] !text-[10px]/[12px]"
     />
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useEffect, useState } from 'react';
+import { FC } from 'react';
 
 import { SideBarOrientation } from '@/src/types/side-bar';
 import { useAppContext } from '@/src/context/AppContext';
@@ -14,17 +14,11 @@ interface Props {
 const Menu: FC<Props> = ({ ...props }) => {
   const { sidebarOpen } = useAppContext();
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  useEffect(() => {
-    setIsSidebarOpen(sidebarOpen);
-  }, [sidebarOpen]);
-
   return (
     <Sidebar
       side={SideBarOrientation.Left}
-      isSidebarOpen={isSidebarOpen}
-      itemComponent={<MenuContent {...props} isSidebarOpen={isSidebarOpen} />}
+      isSidebarOpen={sidebarOpen}
+      itemComponent={<MenuContent {...props} isSidebarOpen={sidebarOpen} />}
     />
   );
 };
