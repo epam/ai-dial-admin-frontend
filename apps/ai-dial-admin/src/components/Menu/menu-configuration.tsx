@@ -203,11 +203,11 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
 
   let result = [...config];
   if (!featureFlags.deploymentsEnabled) {
-    result = config.filter((item) => item.key !== MenuI18nKey.Deployments);
+    result = result.filter((item) => item.key !== MenuI18nKey.Deployments);
   }
 
   if (!featureFlags.evaluationEnabled) {
-    result = config.filter((item) => item.key !== MenuI18nKey.Evaluation);
+    result = result.filter((item) => item.key !== MenuI18nKey.Evaluation);
   }
 
   return result;
