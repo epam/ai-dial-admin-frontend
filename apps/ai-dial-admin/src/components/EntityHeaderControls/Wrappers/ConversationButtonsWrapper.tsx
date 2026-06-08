@@ -62,7 +62,7 @@ const ConversationButtonsWrapper = <T extends object>({
   const [containerClassName, setContainerClassName] = useState(SELECT_ENTITY_HEADER_CLASS);
   const [buttonsClassName, setButtonsClassName] = useState('');
 
-  const enricedEntity = useMemo(
+  const enrichedEntity = useMemo(
     () => ({ ...entity, name: getNameVersionFromAsset((entity as DialConversation)?.name || '').name, version }),
     [entity, version],
   );
@@ -117,7 +117,7 @@ const ConversationButtonsWrapper = <T extends object>({
       {isModalOpen &&
         createPortal(
           <DeleteConfirmationModal
-            entity={enricedEntity}
+            entity={enrichedEntity}
             onRemoveEntity={onRemove}
             view={view}
             onCloseModal={onCloseModal}
