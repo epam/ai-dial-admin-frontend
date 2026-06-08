@@ -316,6 +316,7 @@ export default {
       ApplicationContainer: 'Application Container',
       Image: 'Image',
       Run: 'Run',
+      Conversation: 'Conversation',
     },
     BulkDelete: {
       Prompt: 'Prompts',
