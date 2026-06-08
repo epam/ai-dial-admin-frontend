@@ -284,6 +284,7 @@ export enum DeleteI18nKey {
   AdapterContainer = 'DeleteEntity.Entities.AdapterContainer',
   ApplicationContainer = 'DeleteEntity.Entities.ApplicationContainer',
   Image = 'DeleteEntity.Entities.Image',
+  Conversation = 'DeleteEntity.Entities.Conversation',
 
   // Bulk Delete
   Applications = 'DeleteEntity.BulkDelete.Applications',
