@@ -85,71 +85,82 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
   }, [originalDataset]);
 
   const onSave = useCallback(() => {
+    let prepareNotificationId: string | undefined;
+
+    const dismissPrepareNotification = () => {
+      if (prepareNotificationId) {
+        removeNotification(prepareNotificationId);
+        prepareNotificationId = undefined;
+      }
+    };
+
+    const handleError = (header: string | undefined, message: string | undefined, requestId?: string) => {
+      dismissPrepareNotification();
+      showNotification(getErrorNotification(header, message, requestId));
+      router.refresh();
+    };
+
+    const showSuccessAndRefresh = () => {
+      dismissPrepareNotification();
+      showNotification(
+        getSuccessNotification(
+          getUpdateNotificationTitle(ApplicationRoute.Datasets, t),
+          getUpdateNotificationDescription(ApplicationRoute.Datasets, selectedDataset.id, t),
+        ),
+      );
+      router.refresh();
+    };
+
+    const performUpdate = () => {
+      updateDataset(selectedDataset, etag).then((datasetRes) => {
+        if (!datasetRes.success) {
+          handleError(datasetRes.errorHeader, datasetRes.errorMessage, datasetRes.requestId);
+          return;
+        }
+
+        if (datasetRes.etag) {
+          setEtag(datasetRes.etag);
+        }
+
+        const schemaChanged =
+          JSON.stringify(selectedDataset.testCaseSchema) !== JSON.stringify(originalDataset.testCaseSchema);
+
+        if (schemaChanged) {
+          prepareNotificationId = showNotification(getPrepareNotification(t(DatasetsI18nKey.RevalidatingTestCases)));
+        }
+
+        const dirtyTestCases = testCasesActionsRef.current?.getDirtyTestCases() ?? [];
+
+        if (dirtyTestCases.length > 0 && selectedDataset.id) {
+          updateTestCases(selectedDataset.id, dirtyTestCases).then((testCasesRes) => {
+            if (!testCasesRes.success) {
+              handleError(testCasesRes.errorHeader, testCasesRes.errorMessage, testCasesRes.requestId);
+              return;
+            }
+            testCasesActionsRef.current?.clearDirtyAndRefresh();
+            setHasTestCaseChanges(false);
+            showSuccessAndRefresh();
+          });
+        } else {
+          testCasesActionsRef.current?.clearDirtyAndRefresh();
+          setHasTestCaseChanges(false);
+          showSuccessAndRefresh();
+        }
+      });
+    };
+
+    const isNameUnchanged = selectedDataset.name === originalDataset.name;
+
+    if (isNameUnchanged) {
+      performUpdate();
+      return;
+    }
+
     getDatasetByName(selectedDataset.name!).then((res) => {
       if (res && res.content?.length > 0) {
         setNameExistsError(t(ErrorI18nKey.DisplayNameExists));
       } else {
-        let prepareNotificationId: string | undefined;
-
-        const dismissPrepareNotification = () => {
-          if (prepareNotificationId) {
-            removeNotification(prepareNotificationId);
-            prepareNotificationId = undefined;
-          }
-        };
-
-        const handleError = (header: string | undefined, message: string | undefined, requestId?: string) => {
-          dismissPrepareNotification();
-          showNotification(getErrorNotification(header, message, requestId));
-          router.refresh();
-        };
-
-        const showSuccessAndRefresh = () => {
-          dismissPrepareNotification();
-          showNotification(
-            getSuccessNotification(
-              getUpdateNotificationTitle(ApplicationRoute.Datasets, t),
-              getUpdateNotificationDescription(ApplicationRoute.Datasets, selectedDataset.id, t),
-            ),
-          );
-          router.refresh();
-        };
-
-        updateDataset(selectedDataset, etag).then((datasetRes) => {
-          if (!datasetRes.success) {
-            handleError(datasetRes.errorHeader, datasetRes.errorMessage, datasetRes.requestId);
-            return;
-          }
-
-          if (datasetRes.etag) {
-            setEtag(datasetRes.etag);
-          }
-
-          const schemaChanged =
-            JSON.stringify(selectedDataset.testCaseSchema) !== JSON.stringify(originalDataset.testCaseSchema);
-
-          if (schemaChanged) {
-            prepareNotificationId = showNotification(getPrepareNotification(t(DatasetsI18nKey.RevalidatingTestCases)));
-          }
-
-          const dirtyTestCases = testCasesActionsRef.current?.getDirtyTestCases() ?? [];
-
-          if (dirtyTestCases.length > 0 && selectedDataset.id) {
-            updateTestCases(selectedDataset.id, dirtyTestCases).then((testCasesRes) => {
-              if (!testCasesRes.success) {
-                handleError(testCasesRes.errorHeader, testCasesRes.errorMessage, testCasesRes.requestId);
-                return;
-              }
-              testCasesActionsRef.current?.clearDirtyAndRefresh();
-              setHasTestCaseChanges(false);
-              showSuccessAndRefresh();
-            });
-          } else {
-            testCasesActionsRef.current?.clearDirtyAndRefresh();
-            setHasTestCaseChanges(false);
-            showSuccessAndRefresh();
-          }
-        });
+        performUpdate();
       }
     });
   }, [selectedDataset, etag, originalDataset, showNotification, removeNotification, t, router]);
