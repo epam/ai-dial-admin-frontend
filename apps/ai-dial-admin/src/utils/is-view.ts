@@ -1,7 +1,12 @@
 import { ApplicationRoute } from '@/src/types/routes';
 
 export const isAssetView = (view?: ApplicationRoute): boolean => {
-  return view === ApplicationRoute.Prompts || view === ApplicationRoute.Files || isDeploymentAsset(view);
+  return (
+    view === ApplicationRoute.Prompts ||
+    view === ApplicationRoute.Files ||
+    view === ApplicationRoute.Conversations ||
+    isDeploymentAsset(view)
+  );
 };
 
 export const isAssetWithVersion = (view?: ApplicationRoute): boolean => {
