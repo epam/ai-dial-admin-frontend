@@ -110,7 +110,7 @@ describe('filterParameterBindings', () => {
     ]);
   });
 
-  test('should keep bindings when template variable contains a parameter name', () => {
+  test('should keep bindings when template variable exact parameter name', () => {
     const bindings: InputBinding[] = [
       { templateVariable: 'tenantId.raw', dataField: 'tenant.raw' },
       { templateVariable: 'tenant-id', dataField: 'tenant.id' },
@@ -118,7 +118,6 @@ describe('filterParameterBindings', () => {
     ];
 
     expect(filterParameterBindings(bindings, ['tenantId', 'tenant-id'])).toEqual([
-      { templateVariable: 'tenantId.raw', dataField: 'tenant.raw' },
       { templateVariable: 'tenant-id', dataField: 'tenant.id' },
     ]);
   });
