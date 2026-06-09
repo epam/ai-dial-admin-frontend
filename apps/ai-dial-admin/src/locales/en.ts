@@ -2007,5 +2007,7 @@ export default {
     Temperature: 'Temperature',
     SystemPrompt: 'System prompt',
     SystemPromptPlaceholder: 'Enter system prompt...',
+    ApplySettings: 'Apply settings',
+    Settings: 'Settings',
   },
 } as const;
