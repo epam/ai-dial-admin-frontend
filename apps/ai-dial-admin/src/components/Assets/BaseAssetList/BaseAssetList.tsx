@@ -466,7 +466,11 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
         const assetsPaths: { path: string }[] = [];
         assets.forEach((asset) => {
           const paths = getAllSelectedItemsPaths(asset.path, selectedVersionsMap);
-          assetsPaths.push(...paths.map((path: string) => ({ path: path })));
+          if (paths.length > 0) {
+            assetsPaths.push(...paths.map((path: string) => ({ path: path })));
+          } else {
+            assetsPaths.push({ path: asset.path });
+          }
           const prefix = asset.path.substring(0, asset.path.lastIndexOf('__'));
           setSelectedVersionsMap({
             ...selectedVersionsMap,
@@ -488,8 +492,15 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
           fetchFiles(parentPath);
           setFilePath(parentPath);
           removeSelection(deletedItems?.map((item) => item.path));
-          const { title, description } = getDeleteNotificationContent(view, deletedItems as DialFile[], t, parentPath);
-          showNotification(getSuccessNotification(title, description));
+          const notifications = getDeleteNotificationContent(view, deletedItems as DialFile[], t, parentPath);
+          if (Array.isArray(notifications)) {
+            notifications.forEach(({ title, description }) => {
+              showNotification(getSuccessNotification(title, description));
+            });
+          } else {
+            const { title, description } = notifications as { title: string; description: string };
+            showNotification(getSuccessNotification(title, description));
+          }
         } else {
           const errorRes = result.flat().find((res) => !res.success);
           if (errorRes) {

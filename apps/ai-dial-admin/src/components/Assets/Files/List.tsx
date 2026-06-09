@@ -155,7 +155,7 @@ const FilesList = () => {
             deletedItems as DialFile[],
             t,
             parentPath,
-          );
+          ) as { title: string; description: string };
           showNotification(getSuccessNotification(title, description));
         } else {
           const errorRes = result.flat().find((res) => !res.success);

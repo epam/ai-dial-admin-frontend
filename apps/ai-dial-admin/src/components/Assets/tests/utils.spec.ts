@@ -163,7 +163,10 @@ describe('getDeleteNotificationContent', () => {
 
   test('should return correct notification for single file delete in Files view', () => {
     const fileNodes = [{ sourceUrl: 'file.txt' }] as any[];
-    const result = getDeleteNotificationContent(ApplicationRoute.Files, fileNodes, mockT);
+    const result = getDeleteNotificationContent(ApplicationRoute.Files, fileNodes, mockT) as {
+      title: string;
+      description: string;
+    };
 
     expect(result.title).toBe('Delete File Success');
     expect(result.description).toContain('file.txt');
@@ -171,7 +174,10 @@ describe('getDeleteNotificationContent', () => {
 
   test('should return correct notification for multiple files delete in Files view', () => {
     const fileNodes = [{ sourceUrl: 'file1.txt' }, { sourceUrl: 'file2.txt' }, { sourceUrl: 'file3.txt' }] as any[];
-    const result = getDeleteNotificationContent(ApplicationRoute.Files, fileNodes, mockT);
+    const result = getDeleteNotificationContent(ApplicationRoute.Files, fileNodes, mockT) as {
+      title: string;
+      description: string;
+    };
 
     expect(result.title).toBe('Delete Items Success');
     expect(result.description).toContain('3');
@@ -179,7 +185,10 @@ describe('getDeleteNotificationContent', () => {
 
   test('should return correct notification for single prompt delete in Prompts view', () => {
     const fileNodes = [{ name: 'My Prompt' }] as any[];
-    const result = getDeleteNotificationContent(ApplicationRoute.Prompts, fileNodes, mockT);
+    const result = getDeleteNotificationContent(ApplicationRoute.Prompts, fileNodes, mockT) as {
+      title: string;
+      description: string;
+    };
 
     expect(result.title).toBe('Delete Prompt Success');
     expect(result.description).toContain('My Prompt');
@@ -187,7 +196,10 @@ describe('getDeleteNotificationContent', () => {
 
   test('should return correct notification for multiple prompts delete in Prompts view', () => {
     const fileNodes = [{ name: 'Prompt1' }, { name: 'Prompt2' }] as any[];
-    const result = getDeleteNotificationContent(ApplicationRoute.Prompts, fileNodes, mockT);
+    const result = getDeleteNotificationContent(ApplicationRoute.Prompts, fileNodes, mockT) as {
+      title: string;
+      description: string;
+    };
 
     expect(result.title).toBe('Delete Items Success');
     expect(result.description).toContain('2');
@@ -195,7 +207,10 @@ describe('getDeleteNotificationContent', () => {
 
   test('should return correct notification for single application delete in Applications view', () => {
     const fileNodes = [{ name: 'My Application' }] as any[];
-    const result = getDeleteNotificationContent(ApplicationRoute.AssetsApplications, fileNodes, mockT);
+    const result = getDeleteNotificationContent(ApplicationRoute.AssetsApplications, fileNodes, mockT) as {
+      title: string;
+      description: string;
+    };
 
     expect(result.title).toBe('Delete Application Success');
     expect(result.description).toContain('My Application');
@@ -203,7 +218,10 @@ describe('getDeleteNotificationContent', () => {
 
   test('should return correct notification for multiple applications delete in Applications view', () => {
     const fileNodes = [{ name: 'Application1' }, { name: 'Application2' }] as any[];
-    const result = getDeleteNotificationContent(ApplicationRoute.AssetsApplications, fileNodes, mockT);
+    const result = getDeleteNotificationContent(ApplicationRoute.AssetsApplications, fileNodes, mockT) as {
+      title: string;
+      description: string;
+    };
 
     expect(result.title).toBe('Delete Items Success');
     expect(result.description).toContain('2');
@@ -211,7 +229,10 @@ describe('getDeleteNotificationContent', () => {
 
   test('should return correct notification for single toolset delete in Toolsets view', () => {
     const fileNodes = [{ name: 'My Toolset' }] as any[];
-    const result = getDeleteNotificationContent(ApplicationRoute.AssetsToolsets, fileNodes, mockT);
+    const result = getDeleteNotificationContent(ApplicationRoute.AssetsToolsets, fileNodes, mockT) as {
+      title: string;
+      description: string;
+    };
 
     expect(result.title).toBe('Delete Toolset Success');
     expect(result.description).toContain('My Toolset');
@@ -219,7 +240,10 @@ describe('getDeleteNotificationContent', () => {
 
   test('should return correct notification for multiple toolsets delete in Toolsets view', () => {
     const fileNodes = [{ name: 'Toolset1' }, { name: 'Toolset2' }] as any[];
-    const result = getDeleteNotificationContent(ApplicationRoute.AssetsToolsets, fileNodes, mockT);
+    const result = getDeleteNotificationContent(ApplicationRoute.AssetsToolsets, fileNodes, mockT) as {
+      title: string;
+      description: string;
+    };
 
     expect(result.title).toBe('Delete Items Success');
     expect(result.description).toContain('2');
