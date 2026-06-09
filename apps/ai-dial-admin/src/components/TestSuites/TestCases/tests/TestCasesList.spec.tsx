@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import { createRef } from 'react';
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 import TestCasesList, { TestCasesActions } from '../TestCasesList';
@@ -18,6 +18,7 @@ const createPageData = (content: TestCase[]) => ({
 let capturedGridOptions: any = null;
 let capturedOnCellChange: ((data: Record<string, unknown>, field: string, value: unknown) => void) | null = null;
 let capturedRowData: any[] | null = null;
+let capturedOnGridReady: ((event: { api: any }) => void) | null = null;
 
 vi.mock('@/src/app/[lang]/datasets/actions', () => ({
   getTestCases: vi.fn(),
@@ -31,14 +32,12 @@ vi.mock('@/src/components/ListView/List', () => ({
   default: ({ listLabel, emptyDataProps, onGridReady, additionalGridOptions, rowData, children }: any) => {
     capturedGridOptions = additionalGridOptions;
     capturedRowData = rowData ?? null;
+    capturedOnGridReady = onGridReady;
     return (
       <div>
         <div>List View Component</div>
         <div>Title: {listLabel}</div>
         <div>Empty Title: {emptyDataProps?.title}</div>
-        <button onClick={() => onGridReady({ api: { setGridOption: vi.fn(), refreshClientSideRowModel: vi.fn() } })}>
-          Initialize Grid
-        </button>
         <div>{children}</div>
       </div>
     );
@@ -80,6 +79,7 @@ describe('TestCasesList', () => {
     capturedGridOptions = null;
     capturedOnCellChange = null;
     capturedRowData = null;
+    capturedOnGridReady = null;
   });
 
   test('fetches test cases on mount using datasetId', async () => {
@@ -131,12 +131,17 @@ describe('TestCasesList — disabledTestCaseIds logic', () => {
   const mockOnDirtyChange = vi.fn();
 
   const makeColumn = (colId: string) => ({ getColId: () => colId });
-  const makeCellEvent = (colId: string, rowData: Record<string, unknown>, newValue: unknown, api?: any) => ({
+  const makeCellEvent = (colId: string, rowData: Record<string, unknown>, newValue: unknown) => ({
     column: makeColumn(colId),
     data: rowData,
     newValue,
     node: {},
-    api: api ?? { refreshClientSideRowModel: vi.fn() },
+  });
+
+  const makeGridApi = (nodes: { data: Record<string, unknown>; rowPinned?: string }[]) => ({
+    setGridOption: vi.fn(),
+    refreshClientSideRowModel: vi.fn(),
+    forEachNode: vi.fn((cb: (node: any) => void) => nodes.forEach(cb)),
   });
 
   beforeEach(() => {
@@ -144,6 +149,7 @@ describe('TestCasesList — disabledTestCaseIds logic', () => {
     capturedGridOptions = null;
     capturedOnCellChange = null;
     capturedRowData = null;
+    capturedOnGridReady = null;
     vi.mocked(actions.getTestCases).mockResolvedValue({
       page: 0,
       size: 1000,
@@ -173,6 +179,9 @@ describe('TestCasesList — disabledTestCaseIds logic', () => {
     await waitFor(() => expect(capturedGridOptions).not.toBeNull());
 
     const row = { id: 'row-1', testCaseName: 'tc', createdAt: 0 };
+    // Initialize grid with a node showing the row as disabled (ag-grid updates node data before firing the event)
+    capturedOnGridReady?.({ api: makeGridApi([{ data: { ...row, enabled: false } }]) });
+
     capturedGridOptions.onCellValueChanged(makeCellEvent('enabled', row, false));
 
     expect(mockOnChange).toHaveBeenCalledWith(expect.objectContaining({ disabledTestCaseIds: ['row-1'] }), true);
@@ -189,6 +198,9 @@ describe('TestCasesList — disabledTestCaseIds logic', () => {
     await waitFor(() => expect(capturedGridOptions).not.toBeNull());
 
     const row = { id: 'row-1', testCaseName: 'tc', createdAt: 0 };
+    // Initialize grid with a node showing the row as enabled (ag-grid updates node data before firing the event)
+    capturedOnGridReady?.({ api: makeGridApi([{ data: { ...row, enabled: true } }]) });
+
     capturedGridOptions.onCellValueChanged(makeCellEvent('enabled', row, true));
 
     expect(mockOnChange).toHaveBeenCalledWith(expect.objectContaining({ disabledTestCaseIds: [] }), true);

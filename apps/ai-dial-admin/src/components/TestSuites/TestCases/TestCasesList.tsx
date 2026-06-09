@@ -118,9 +118,15 @@ const TestCasesList: FC<Props> = ({
         return;
       }
 
-      const currentDisabled = selectedTestSuite.disabledTestCaseIds ?? [];
-      const isEnabled = event.newValue as boolean;
-      const newDisabledIds = isEnabled ? currentDisabled.filter((id) => id !== rowId) : [...currentDisabled, rowId];
+      // Derive disabled IDs from current grid state to handle batch updates
+      // (select all / deselect all) correctly. Reading from selectedTestSuite
+      // closure would be stale when multiple cellValueChanged events fire
+      // synchronously before React processes any state update.
+      const newDisabledIds: string[] = [];
+      api?.forEachNode((node) => {
+        if (!node.data || node.rowPinned) return;
+        if (!node.data.enabled) newDisabledIds.push(String(node.data.id));
+      });
 
       onChange({ ...selectedTestSuite, disabledTestCaseIds: newDisabledIds }, true);
       onDirtyChange?.(true);
