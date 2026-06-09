@@ -47,6 +47,8 @@ const TelemetryGrid: FC<Props> = ({
       return;
     }
 
+    setInternalLoading(true);
+
     const fetch = async () => {
       if (!getData) {
         setInternalLoading(false);
