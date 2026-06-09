@@ -19,6 +19,8 @@ const baseFlags: FeatureFlags = {
 const findDeploymentsGroup = (flags: FeatureFlags) =>
   MENU_CONFIGURATION(ICON_SIZE, flags).find((group) => group.key === MenuI18nKey.Deployments);
 
+const groupKeys = (flags: FeatureFlags) => MENU_CONFIGURATION(ICON_SIZE, flags).map((group) => group.key);
+
 describe('MENU_CONFIGURATION — Model Servings entry gating', () => {
   test('includes Model Servings when hfEnabled is true', () => {
     const group = findDeploymentsGroup({ ...baseFlags, hfEnabled: true });
@@ -61,5 +63,35 @@ describe('MENU_CONFIGURATION — Model Servings entry gating', () => {
         MenuI18nKey.Images,
       ]),
     );
+  });
+});
+
+describe('MENU_CONFIGURATION — group visibility flags compose independently', () => {
+  test('both flags enabled keeps both groups', () => {
+    const keys = groupKeys({ ...baseFlags, deploymentsEnabled: true, evaluationEnabled: true });
+
+    expect(keys).toContain(MenuI18nKey.Deployments);
+    expect(keys).toContain(MenuI18nKey.Evaluation);
+  });
+
+  test('Deployments off, Evaluation on hides only Deployments', () => {
+    const keys = groupKeys({ ...baseFlags, deploymentsEnabled: false, evaluationEnabled: true });
+
+    expect(keys).not.toContain(MenuI18nKey.Deployments);
+    expect(keys).toContain(MenuI18nKey.Evaluation);
+  });
+
+  test('Deployments on, Evaluation off hides only Evaluation', () => {
+    const keys = groupKeys({ ...baseFlags, deploymentsEnabled: true, evaluationEnabled: false });
+
+    expect(keys).toContain(MenuI18nKey.Deployments);
+    expect(keys).not.toContain(MenuI18nKey.Evaluation);
+  });
+
+  test('both flags off hides both groups (regression — issue #3589)', () => {
+    const keys = groupKeys({ ...baseFlags, deploymentsEnabled: false, evaluationEnabled: false });
+
+    expect(keys).not.toContain(MenuI18nKey.Deployments);
+    expect(keys).not.toContain(MenuI18nKey.Evaluation);
   });
 });
