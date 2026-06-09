@@ -127,6 +127,16 @@ const ADMIN_SECTION_ORDER: EntityParameterKeys[] = [
 
 const isEmptyPrimitive = (v: unknown): boolean => v == null || v === '';
 
+const applyDiffStatus = (result: Record<string, ActivityAuditDiff[]>, status: DiffStatus): void => {
+  for (const diffs of Object.values(result)) {
+    for (const diff of diffs) {
+      if (diff.diffStatus == null) {
+        diff.diffStatus = status;
+      }
+    }
+  }
+};
+
 const getPrimitiveBucket = (
   result: Record<string, ActivityAuditDiff[]>,
   key: string,
@@ -180,11 +190,11 @@ export const generateCurrentResource = (
       }
     });
   }
-  if (!current) {
+  if (!current && compare) {
     allKeys.forEach((key) => {
       if (skipImageKeys && IMAGE_HIDDEN_KEYS.has(key)) return;
       if (skipContainerKeys && CONTAINER_HIDDEN_KEYS.has(key)) return;
-      const value = compare?.[key];
+      const value = compare[key];
       const isObject = typeof value === 'object';
       if (!isObject && !isAppRunnerParameter(key, type) && !isRoleSharingParameter(key, type)) {
         const bucket = getPrimitiveBucket(result, key, isContainerRow, undefined, value);
@@ -193,8 +203,10 @@ export const generateCurrentResource = (
         fillObjectTypes(result, key as EntityParameterKeys, value as object, type, t);
       }
     });
+    if (isCurrent !== undefined) {
+      applyDiffStatus(result, isCurrent ? DiffStatus.REMOVED : DiffStatus.ADDED);
+    }
   }
-
   return result;
 };
 

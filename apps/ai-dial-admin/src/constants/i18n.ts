@@ -284,6 +284,7 @@ export enum DeleteI18nKey {
   AdapterContainer = 'DeleteEntity.Entities.AdapterContainer',
   ApplicationContainer = 'DeleteEntity.Entities.ApplicationContainer',
   Image = 'DeleteEntity.Entities.Image',
+  Conversation = 'DeleteEntity.Entities.Conversation',
 
   // Bulk Delete
   Applications = 'DeleteEntity.BulkDelete.Applications',
@@ -1931,6 +1932,17 @@ export enum ActionMenuOperationI18nKey {
   Try_out = 'ActionMenuOperation.Try_out',
   Edit = 'ActionMenuOperation.Edit',
   Export = 'ActionMenuOperation.Export',
+}
+
+export enum PlaygroundI18nKey {
+  Title = 'Playground.Title',
+  Details = 'Playground.Details',
+  Tryout = 'Playground.Tryout',
+  SelectDeployment = 'Playground.SelectDeployment',
+  Deployment = 'Playground.Deployment',
+  Temperature = 'Playground.Temperature',
+  SystemPrompt = 'Playground.SystemPrompt',
+  SystemPromptPlaceholder = 'Playground.SystemPromptPlaceholder',
 }
 
 export enum JsonAtaI18nKey {

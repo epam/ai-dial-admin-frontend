@@ -172,6 +172,8 @@ const Files: FC<Props> = ({
               isInvalid={isLargeFile}
               errorText={t(ImportI18nKey.FileError)}
               onChange={onChangeFile}
+              deleteAllButtonLabel={t(ButtonsI18nKey.DeleteAll)}
+              addButtonLabel={t(ButtonsI18nKey.Add)}
             />
           )}
         </div>

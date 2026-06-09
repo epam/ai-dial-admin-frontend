@@ -1,6 +1,6 @@
 import { DialLoader } from '@epam/ai-dial-ui-kit';
 import { ColDef, GridOptions } from 'ag-grid-community';
-import { FC, useEffect, useRef, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { refreshOptionsConfig } from '@/src/constants/telemetry/filters';
@@ -39,13 +39,6 @@ const TelemetryGrid: FC<Props> = ({
   const [internalData, setInternalData] = useState<Record<string, string>[] | null>(null);
   const [internalLoading, setInternalLoading] = useState<boolean>(!controlled && !!query);
 
-  // Keep getData in a ref so the fetch effect doesn't re-run (and re-fetch)
-  // every time an ancestor passes a fresh function reference.
-  const getDataRef = useRef(getData);
-  useEffect(() => {
-    getDataRef.current = getData;
-  });
-
   useEffect(() => {
     if (controlled) return;
     if (!query) {
@@ -54,14 +47,15 @@ const TelemetryGrid: FC<Props> = ({
       return;
     }
 
+    setInternalLoading(true);
+
     const fetch = async () => {
-      const fn = getDataRef.current;
-      if (!fn) {
+      if (!getData) {
         setInternalLoading(false);
         return;
       }
       try {
-        const response = await fn(query);
+        const response = await getData(query);
         if (response?.success) {
           setInternalData(getGridData(response.response as TelemetryData));
         } else {
@@ -88,7 +82,7 @@ const TelemetryGrid: FC<Props> = ({
     return () => {
       clearInterval(intervalId);
     };
-  }, [controlled, query, refreshTime]);
+  }, [controlled, query, refreshTime, getData]);
 
   const data = controlled ? (dataProp ?? null) : internalData;
   const loading = controlled ? !!loadingProp : internalLoading;

@@ -1,10 +1,10 @@
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 
 import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 
-import DescriptionControl from '@/src/components/BaseControls/Description';
-import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
-import { ButtonsI18nKey, DatasetsI18nKey } from '@/src/constants/i18n';
+import { getDatasetByName } from '@/src/app/[lang]/datasets/actions';
+import DatasetProperties from '@/src/components/Datasets/Properties/Properties';
+import { ButtonsI18nKey, DatasetsI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { Dataset, DatasetVisibility } from '@/src/models/evaluation/dataset';
@@ -19,10 +19,21 @@ const CreateDataset: FC<Props> = ({ onClose, isModalOpen, onCreate }) => {
   const t = useI18n();
   const { isValid } = useSaveValidationContext();
   const [dataset, setDataset] = useState<Dataset>({ visibility: DatasetVisibility.PUBLIC });
+  const [nameExistsError, setNameExistsError] = useState<string>();
 
   const onSubmit = useCallback(() => {
-    onCreate(dataset);
-  }, [onCreate, dataset]);
+    getDatasetByName(dataset.name!).then((res) => {
+      if (res && res.content?.length > 0) {
+        setNameExistsError(t(ErrorI18nKey.DisplayNameExists));
+      } else {
+        onCreate(dataset);
+      }
+    });
+  }, [dataset, t, onCreate]);
+
+  useEffect(() => {
+    setNameExistsError(undefined);
+  }, [dataset.name, t]);
 
   return (
     <DialFormPopup
@@ -33,17 +44,11 @@ const CreateDataset: FC<Props> = ({ onClose, isModalOpen, onCreate }) => {
       size={PopupSize.Md}
       onSubmit={onSubmit}
       submitLabel={t(ButtonsI18nKey.Create)}
-      disableSubmitButton={!isValid}
+      disableSubmitButton={!isValid || nameExistsError !== undefined || !dataset.name}
       onCancel={onClose}
     >
       <div className="flex flex-col py-4 px-6 gap-y-6">
-        <DisplayNameControl
-          displayName={dataset.name}
-          required
-          isFullWidth={false}
-          onChange={(name) => setDataset((prev) => ({ ...prev, name }))}
-        />
-        <DescriptionControl isFullWidth={false} entity={dataset} onChangeEntity={setDataset} />
+        <DatasetProperties dataset={dataset} onChange={setDataset} nameExistsError={nameExistsError} isModal />
       </div>
     </DialFormPopup>
   );

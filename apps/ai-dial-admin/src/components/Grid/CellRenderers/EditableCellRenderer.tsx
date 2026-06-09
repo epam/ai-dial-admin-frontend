@@ -16,6 +16,7 @@ interface EditableCellRendererParams extends ICellRendererParams {
   inputMode?: ComponentProps<'input'>['inputMode'];
   hideTriangle?: boolean;
   skipRequired?: boolean;
+  required?: boolean;
   valueFormatter?: (value: number | string) => string;
   onChange?: (value: number | string, data: unknown, column: string, index?: number) => void;
   getDefaultPlaceholder?: (node: IRowNode, colDef?: ColDef) => string;
@@ -34,6 +35,7 @@ const EditableCellRenderer = ({
   inputMode,
   hideTriangle,
   skipRequired,
+  required,
   valueFormatter,
   onChange,
   setValue,
@@ -122,6 +124,7 @@ const EditableCellRenderer = ({
         className={classNames(
           'leading-[18px] h-[32px] dial-input px-2 py-1',
           !skipRequired && data.required && (correctValue == null || correctValue === '') && 'dial-input-error',
+          required && (correctValue == null || correctValue === '') && 'dial-input-error',
           isMaxValue && 'placeholder-primary',
         )}
       />

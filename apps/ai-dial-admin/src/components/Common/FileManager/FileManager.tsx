@@ -42,7 +42,6 @@ import {
   getToolbarOptions,
   getTreeOptions,
   getValidationMessages,
-  isFolderNestingDepthExceeded,
   validateCreateFolder,
 } from './utils';
 
@@ -166,16 +165,6 @@ const FileManager: FC<Props> = ({
   const handleCreateFolder = useCallback(
     async (_: DialUploadFileItem | undefined, folderPath: string) => {
       const newPath = `${folderPath.replaceAll('//', '/')}/`;
-
-      if (isFolderNestingDepthExceeded(folderPath, MAX_FOLDER_NESTING_DEPTH)) {
-        showNotification(
-          getErrorNotification(
-            t(FileManagerI18nKey.FolderNestingDepthExceededTitle),
-            t(FileManagerI18nKey.FolderNestingDepthExceededDescription, { depth: MAX_FOLDER_NESTING_DEPTH }),
-          ),
-        );
-        return;
-      }
 
       onCreateFolder?.(_, folderPath).then((res) => {
         if (res && res.success) {
@@ -348,6 +337,15 @@ const FileManager: FC<Props> = ({
     setIsMoveModalOpen(false);
   }, []);
 
+  const handleFolderNestingDepthExceeded = useCallback(() => {
+    showNotification(
+      getErrorNotification(
+        t(FileManagerI18nKey.FolderNestingDepthExceededTitle),
+        t(FileManagerI18nKey.FolderNestingDepthExceededDescription, { depth: MAX_FOLDER_NESTING_DEPTH }),
+      ),
+    );
+  }, [showNotification, t]);
+
   return (
     <>
       <DialFileManager
@@ -389,6 +387,8 @@ const FileManager: FC<Props> = ({
         isDuplicateFolderAvailable={false}
         previewExtensions={PREVIEW_EXTENSIONS}
         customUploadFileAction={customUploadFileAction}
+        maxNewFolderDepth={MAX_FOLDER_NESTING_DEPTH}
+        onNewFolderDepthExceeded={handleFolderNestingDepthExceeded}
         {...props}
       />
       <MoveItemsModal

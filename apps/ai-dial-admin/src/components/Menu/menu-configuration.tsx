@@ -178,6 +178,7 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
         { key: MenuI18nKey.TestSuites, href: ApplicationRoute.TestSuites },
         { key: MenuI18nKey.Datasets, href: ApplicationRoute.Datasets },
         { key: MenuI18nKey.Runs, href: ApplicationRoute.Runs },
+        { key: MenuI18nKey.Playground, href: ApplicationRoute.Playground },
       ],
     },
     {
@@ -203,11 +204,11 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
 
   let result = [...config];
   if (!featureFlags.deploymentsEnabled) {
-    result = config.filter((item) => item.key !== MenuI18nKey.Deployments);
+    result = result.filter((item) => item.key !== MenuI18nKey.Deployments);
   }
 
   if (!featureFlags.evaluationEnabled) {
-    result = config.filter((item) => item.key !== MenuI18nKey.Evaluation);
+    result = result.filter((item) => item.key !== MenuI18nKey.Evaluation);
   }
 
   return result;

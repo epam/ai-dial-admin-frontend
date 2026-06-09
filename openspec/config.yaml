@@ -17,13 +17,7 @@ context: |
 
   ## Key Libraries
   - @epam/ai-dial-ui-kit: Design system with base components
-  - AG Grid for data grids
-    - When a parent component owns grid data and inline edits should NOT trigger a full grid
-      refresh, use the isSkipRefresh pattern: pass `isSkipRefresh?: boolean` as a prop,
-      and guard `gridApi.updateGridOptions({ rowData })` with `if (!isSkipRefresh)`.
-      The parent passes `isSkipRefresh=true` when flushing batched inline edits, so the grid
-      keeps focus. See SchemaManager in TestSuites/TestCaseSchema/SchemaManager.tsx as the
-      reference pattern.
+  - AG Grid for data grids (grid conventions are in .claude/rules/components.md §11)
   - ECharts for charts
   - Monaco Editor for code editing
   - @tabler/icons-react + @svgr/webpack for icons/SVGs
@@ -94,42 +88,15 @@ rules:
     - Investigate the current codebase for related functionality before proposing — don't duplicate what already exists
     - Consider impact on existing features — flag if the proposal could affect other parts of the app (shared components, contexts, API routes)
   design:
-    - Use existing Tailwind theme tokens and CSS variables — don't introduce hardcoded colors
-    - Prefer reusing components from @epam/ai-dial-ui-kit and src/components/Common/ over creating new ones — check Common/ (CopyButton, Accordion, etc.) before building similar UI patterns
-    - Consider i18n — all user-facing strings go through next-international
-    - Follow existing patterns in src/components/ for structuring new features
-    - Name component props interfaces `Props`, not `ComponentNameProps`
-    - Use BooleanButtonCellRenderer (Grid/CellRenderers/) for boolean toggles in AG Grid, not agCheckboxCellRenderer
-    - Keep JSX clean — extract handlers, computed values, and complex props into named variables in the component body
-    - Apply base accessibility features targeting WCAG AA level
-    - Use classNames() from the classnames package for conditional CSS classes — not template literal concatenation
-    - Use @tabler/icons-react for all icons — do not use unicode characters or inline SVGs
-    - Extract pure functions (no React hooks/JSX) from components into utils files with tests — src/utils/ for cross-cutting, <feature>/utils/ for domain-specific
-    - Place types and interfaces in dedicated model files — src/models/ for domain types, adjacent models.ts for component-local types — avoid inline anonymous object types in interface properties
-    - React contexts, providers, and their hooks go in src/context/ — not co-located with components
-    - Break down complex components into smaller, reusable components — keep components focused and maintainable
-    - Use font classes from the Typography provided by @epam/ai-dial-ui-kit — avoid custom font styling
-    - Use button components from @epam/ai-dial-ui-kit — do not create custom buttons unless absolutely necessary
-    - Avoid HTML <table> elements for layout — use CSS grid or flexbox instead
-    - Do not truncate long values using break-all without a way to access the full content — always provide a way to view it
-    - Use DialEllipsisTooltip from @epam/ai-dial-ui-kit when truncating long text values to ensure full content is accessible
-    - Name handler functions with the on prefix (e.g., onOpenFullScreen, onClick, onSubmit) to keep naming consistent and predictable
-    - Always use the @/ path alias for imports — never use relative paths that go outside the current directory (e.g., ../../Common/)
-    - Name hook files in kebab-case (use-detail-mode.tsx), not camelCase (useDetailMode.tsx) — the exported function name stays camelCase
-    - Use TypeScript enums for fixed string sets (modes, statuses, view types) — not string union types
-    - Separate constants (constants.ts) from types/interfaces (models.ts) in feature directories — don't mix const values with type definitions
-    - Before adding i18n keys to a feature-specific enum (e.g., RunsI18nKey), check if the key already exists in shared sections (BasicI18nKey, ButtonsI18nKey, EntitiesI18nKey) — reuse shared keys for common labels like Close, Search, SelectAll
-    - Use @epam/ai-dial-ui-kit form and interactive components over custom HTML — DialSearch for search inputs, DialCheckbox for checkboxes, DialTabs for tab navigation, DialIconButton/DialGhostIconButton for icon buttons, DialPopup for modal overlays
-    - Use ag-grid (GridView/AgGridWrapper) for all tabular data display — not custom CSS grid or flexbox tables
-    - Reuse existing project dependencies for common UI patterns — re-resizable for resizable panels, react-dnd for drag-and-drop — don't reimplement these behaviors from scratch
-    - Prefer useState for simple state management — reserve useReducer for cases with genuinely complex state transitions involving multiple interdependent fields
+    - For component, context, and hook design, follow .claude/rules/components.md (design principles, Common-vs-feature placement, design-system reuse, styling, naming, state & memoization, accessibility, i18n, grid)
+    - For utility / pure-function design, follow .claude/rules/utils.md (purity, placement, determinism, testability)
+    - For cross-cutting TypeScript standards (import alias, enums, type placement, constants/models split), follow .claude/rules/code-standards.md
   specs:
     - Reference backend API contracts from ai-dial-admin-backend or ai-dial-admin-deployment-manager-backend
     - Include validation requirements for any form fields
     - Specify error/success notification behavior for actions
-    - Flag performance-sensitive areas that need memoization (useCallback/useMemo)
-    - Define aria/accessibility requirements for interactive components
   tasks:
+    - "REQUIRED, CHECK THIS FIRST: For changes with browser-observable acceptance criteria, you are required to ASK the user whether to add a verification task — never add it automatically, and never skip the question. When asking, explain what the task is: a dedicated task (placed after implementation, before the final quality-checks task) that runs the spec-browser-verify skill, which builds a VerificationRequest from the change's scenarios and spawns the spec-verification-gate sub-agent to check them against the running local app via the Playwright MCP (requires the local stack running with auth disabled), and requires resolving any `fail` verdicts before the change is complete. It is automated, not a manual testing task. Add the task only if the user confirms. To decide if the question applies, read each scenario's THEN clause: a scenario is browser-observable if its THEN describes UI state — an element present/absent, enabled/disabled, a navigation/redirect, or text shown. If ANY scenario in the change is browser-observable, you MUST ask — do not omit the question just because unit tests exist; having a unit test for the underlying logic does NOT make a scenario non-observable, they are separate tasks, not substitutes. The only case where the question may be omitted is when NO scenario's THEN clause describes UI (e.g. pure server-action contracts, model typing, util functions with no UI surface); in that case state in the task list why no verification task is needed. When server-side config (env vars set at launch) gates the behavior, still ask: scope the proposed task to the booted configuration that reproduces the reported case, and leave full-matrix coverage to unit tests."
     - Reference specific file paths and component names
     - Require unit tests for all new and updated code as a dedicated task
     - Keep tasks small enough to be reviewable in a single PR

@@ -6,13 +6,18 @@ import { createPortal } from 'react-dom';
 import { DialConfirmationPopup, DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { useRouter } from 'next/navigation';
 
-import { removeDataset, transitionVisibility, updateDataset, updateTestCases } from '@/src/app/[lang]/datasets/actions';
+import {
+  getDatasetByName,
+  removeDataset,
+  transitionVisibility,
+  updateDataset,
+  updateTestCases,
+} from '@/src/app/[lang]/datasets/actions';
 import { DatasetTestCasesActions } from '@/src/components/Datasets/TestCases/TestCasesList';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
-import { DatasetsI18nKey } from '@/src/constants/i18n';
-import { ExportFormat } from '@/src/types/export';
+import { DatasetsI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { Dataset, DatasetVisibility, DatasetVisibilityTransition } from '@/src/models/evaluation/dataset';
@@ -46,23 +51,21 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
   const [isMakePrivateOpen, setIsMakePrivateOpen] = useState(false);
   const [isMakePublicOpen, setIsMakePublicOpen] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
-  const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(ExportFormat.ADMIN);
+  const [nameExistsError, setNameExistsError] = useState<string>();
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
       isEditorEnabled,
-      selectedFormat,
-      onChangeSelectedFormat: setSelectedFormat,
       onToggleEditor: () => {
-        setSelectedFormat(ExportFormat.ADMIN);
         setIsEditorEnabled((prev) => !prev);
       },
     }),
-    [isEditorEnabled, selectedFormat],
+    [isEditorEnabled],
   );
 
   useEffect(() => {
     setIsChanged(!isEqualSkippingUndefined(originalDataset, selectedDataset) || hasTestCaseChanges);
+    setNameExistsError(undefined);
   }, [originalDataset, selectedDataset, hasTestCaseChanges]);
 
   useEffect(() => {
@@ -74,15 +77,12 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
   }, [initialEtag]);
 
   const onDiscard = useCallback(() => {
-    if (isEditorEnabled) {
-      setSelectedFormat(ExportFormat.ADMIN);
-    }
     setSelectedDataset(structuredClone(originalDataset));
     setHasTestCaseChanges(false);
     setIsSkipRefresh(false);
     setDiscardKey((prev) => prev + 1);
     testCasesActionsRef.current?.clearDirtyAndRefresh();
-  }, [isEditorEnabled, originalDataset]);
+  }, [originalDataset]);
 
   const onSave = useCallback(() => {
     let prepareNotificationId: string | undefined;
@@ -111,39 +111,56 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
       router.refresh();
     };
 
-    updateDataset(selectedDataset, etag).then((datasetRes) => {
-      if (!datasetRes.success) {
-        handleError(datasetRes.errorHeader, datasetRes.errorMessage, datasetRes.requestId);
-        return;
-      }
+    const performUpdate = () => {
+      updateDataset(selectedDataset, etag).then((datasetRes) => {
+        if (!datasetRes.success) {
+          handleError(datasetRes.errorHeader, datasetRes.errorMessage, datasetRes.requestId);
+          return;
+        }
 
-      if (datasetRes.etag) {
-        setEtag(datasetRes.etag);
-      }
+        if (datasetRes.etag) {
+          setEtag(datasetRes.etag);
+        }
 
-      const schemaChanged =
-        JSON.stringify(selectedDataset.testCaseSchema) !== JSON.stringify(originalDataset.testCaseSchema);
+        const schemaChanged =
+          JSON.stringify(selectedDataset.testCaseSchema) !== JSON.stringify(originalDataset.testCaseSchema);
 
-      if (schemaChanged) {
-        prepareNotificationId = showNotification(getPrepareNotification(t(DatasetsI18nKey.RevalidatingTestCases)));
-      }
+        if (schemaChanged) {
+          prepareNotificationId = showNotification(getPrepareNotification(t(DatasetsI18nKey.RevalidatingTestCases)));
+        }
 
-      const dirtyTestCases = testCasesActionsRef.current?.getDirtyTestCases() ?? [];
+        const dirtyTestCases = testCasesActionsRef.current?.getDirtyTestCases() ?? [];
 
-      if (dirtyTestCases.length > 0 && selectedDataset.id) {
-        updateTestCases(selectedDataset.id, dirtyTestCases).then((testCasesRes) => {
-          if (!testCasesRes.success) {
-            handleError(testCasesRes.errorHeader, testCasesRes.errorMessage, testCasesRes.requestId);
-            return;
-          }
+        if (dirtyTestCases.length > 0 && selectedDataset.id) {
+          updateTestCases(selectedDataset.id, dirtyTestCases).then((testCasesRes) => {
+            if (!testCasesRes.success) {
+              handleError(testCasesRes.errorHeader, testCasesRes.errorMessage, testCasesRes.requestId);
+              return;
+            }
+            testCasesActionsRef.current?.clearDirtyAndRefresh();
+            setHasTestCaseChanges(false);
+            showSuccessAndRefresh();
+          });
+        } else {
           testCasesActionsRef.current?.clearDirtyAndRefresh();
           setHasTestCaseChanges(false);
           showSuccessAndRefresh();
-        });
+        }
+      });
+    };
+
+    const isNameUnchanged = selectedDataset.name === originalDataset.name;
+
+    if (isNameUnchanged) {
+      performUpdate();
+      return;
+    }
+
+    getDatasetByName(selectedDataset.name!).then((res) => {
+      if (res && res.content?.length > 0) {
+        setNameExistsError(t(ErrorI18nKey.DisplayNameExists));
       } else {
-        testCasesActionsRef.current?.clearDirtyAndRefresh();
-        setHasTestCaseChanges(false);
-        showSuccessAndRefresh();
+        performUpdate();
       }
     });
   }, [selectedDataset, etag, originalDataset, showNotification, removeNotification, t, router]);
@@ -226,6 +243,7 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
               activeTab={activeTab}
               selectedDataset={selectedDataset}
               onChange={onChangeDataset}
+              nameExistsError={nameExistsError}
             />
           )}
         </div>

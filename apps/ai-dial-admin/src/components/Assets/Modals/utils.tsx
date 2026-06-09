@@ -208,7 +208,7 @@ const updatePathsInItem = (item: DialFile, originalItemPath: string, newParentPa
     ...item,
     path: newPath,
     parentPath: newParentPath,
-    items: item.items?.map((child) => updatePathsInItem(child, originalItemPath, normalizePath(newPath))),
+    items: item.items?.map((child) => updatePathsInItem(child, normalizePath(item.path), normalizePath(newPath))),
   };
 };
 

@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect } from 'react';
+import { FC, useCallback, useEffect, useRef } from 'react';
 
 import { IMAGE_SOURCE_TYPE, IMAGE_TRANSPORT_TYPE } from '@/src/types/deployments/images';
 import { Image } from '@/src/models/deployments/images';
@@ -78,13 +78,21 @@ const ImageMcpRegistry: FC<Props> = ({ image, setImage, selectedServer, onServer
 
   const selectedVersion = image.source?.externalRegistryRef?.version;
 
+  // Track the current name+version so a slow lookup that resolves after the user has
+  // changed/cleared the input — or picked a different version — is recognised as
+  // stale and ignored (Issue #3053).
+  const latestLookupKeyRef = useRef('');
+  latestLookupKeyRef.current = `${serverName}@${selectedVersion ?? ''}`;
+
   useEffect(() => {
     if (isModal || !serverName) return;
     const isMatch = selectedServer?.name === serverName && selectedServer?.version === selectedVersion;
     if (isMatch) return;
 
+    const lookupKey = `${serverName}@${selectedVersion ?? ''}`;
     getImageMcpServers({ search: serverName, limit: 10 }).then(({ success, response }) => {
       if (!success) return;
+      if (latestLookupKeyRef.current !== lookupKey) return;
       const servers = (response.servers || []).map((s: McpServerResponse) => s.server) as McpServer[];
       const exactMatch = selectedVersion
         ? servers.find((s) => s.name === serverName && s.version === selectedVersion)

@@ -13,6 +13,14 @@ import { useConversationFolder } from '@/src/context/assets/ConversationsFolderC
 const IGNORE_BREADCRUMBS = [ApplicationRoute.Home];
 const TRANSLATE_BREADCRUMBS = { [SYSTEM_ROLLBACK_ID]: RollbackI18nKey.Rollback };
 
+const decodePathSegment = (segment: string): string => {
+  try {
+    return decodeURIComponent(segment);
+  } catch {
+    return segment;
+  }
+};
+
 export function getBreadcrumbs(pathname: string, currentLocale: string): Breadcrumb[] {
   const segments = pathname.split('/').filter((segment) => segment);
   const isLocale = currentLocale?.includes(segments[0]);
@@ -30,7 +38,7 @@ export function getBreadcrumbs(pathname: string, currentLocale: string): Breadcr
     const translated = TRANSLATE_BREADCRUMBS[pathSegment as keyof typeof TRANSLATE_BREADCRUMBS];
     return {
       key: translated ? (translated as unknown as MenuI18nKey) : configSegment.i18nKey,
-      name: pathSegment,
+      name: decodePathSegment(pathSegment),
       href:
         configSegment.href !== false
           ? `/${[locale, ...pathSegments.slice(0, index + 1)].filter(Boolean).join('/')}`
@@ -56,7 +64,7 @@ export function enrichWithFolderBreadcrumbs(
   parts.forEach((part) => {
     href += part + '/';
     newBreadcrumbs.push({
-      name: part,
+      name: decodePathSegment(part),
       href: href,
       callback: (href: string) => {
         setFilePath?.(href);

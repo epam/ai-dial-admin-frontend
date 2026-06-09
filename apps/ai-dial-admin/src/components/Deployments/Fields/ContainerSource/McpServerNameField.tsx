@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { DialNeutralButton, DialSelectField } from '@epam/ai-dial-ui-kit';
 import { useI18n } from '@/src/locales/client';
@@ -44,6 +44,13 @@ const McpServerNameField: FC<Props> = ({
 
   const [serverNameError, setServerNameError] = useState<FieldError | null>(null);
 
+  // The identity (name, plus version when known) the user currently intends. A
+  // registry lookup is async, so its response may arrive after the user has changed
+  // or cleared the input — or picked a different version of the same name. We compare
+  // against this ref to drop such stale responses (Issue #3053). Keyed on
+  // `name@version` so two same-name/different-version lookups stay distinguishable.
+  const latestIntentRef = useRef(serverName);
+
   const containerClassName = useMemo(() => getControlClassName(isModal), [isModal]);
 
   const applyServer = useCallback(
@@ -63,8 +70,12 @@ const McpServerNameField: FC<Props> = ({
 
   const validateAndApplyServer = useCallback(
     (name: string, version?: string) => {
+      const intentKey = version ? `${name}@${version}` : name;
       fetchServers({ search: name, limit: 10 }).then(({ success, response }) => {
         if (!success) return;
+        // Drop the response if the user has since changed/cleared the input, or
+        // picked a different version of the same name.
+        if (latestIntentRef.current !== intentKey) return;
 
         const servers = (response.servers || []).map((s: McpServerResponse) => s.server) as McpServer[];
         const exactMatch = version
@@ -91,6 +102,7 @@ const McpServerNameField: FC<Props> = ({
       const isTypeaheadPick = atIndex >= 0;
       const name = isTypeaheadPick ? raw.slice(0, atIndex) : raw;
       const version = isTypeaheadPick ? raw.slice(atIndex + 1) : undefined;
+      latestIntentRef.current = version ? `${name}@${version}` : name;
 
       const formatError = getErrorForMcpServerName(name, t);
       if (formatError) {
@@ -131,6 +143,21 @@ const McpServerNameField: FC<Props> = ({
     [fetchServers],
   );
 
+  const handleInlineQueryChange = useCallback(
+    (value: string) => {
+      // Record intent synchronously so an in-flight lookup that resolves after this
+      // change is recognised as stale; the options fetch stays debounced. Ignore the
+      // kit's post-selection echo (it re-emits the label/name of the value we just
+      // committed) so it doesn't drop the version from a freshly applied pick.
+      const committedName = latestIntentRef.current.split('@')[0];
+      if (value !== committedName) {
+        latestIntentRef.current = value;
+      }
+      onServerNameType(value);
+    },
+    [onServerNameType],
+  );
+
   const handleModalClose = useCallback(() => {
     setIsModalOpen(false);
   }, []);
@@ -164,7 +191,7 @@ const McpServerNameField: FC<Props> = ({
           value={serverName}
           customSelectedValue={serverName}
           onChange={(value) => onChangeServerName(value as string)}
-          onInlineQueryChange={(value) => onServerNameType(value)}
+          onInlineQueryChange={handleInlineQueryChange}
           options={serverOptions}
           error={serverNameError?.text}
           containerClassName={containerClassName}

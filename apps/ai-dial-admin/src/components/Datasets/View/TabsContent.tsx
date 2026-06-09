@@ -20,6 +20,7 @@ interface Props {
   selectedDataset: Dataset;
   isSkipRefresh?: boolean;
   onChange: (dataset: Dataset, isSkipRefresh?: boolean) => void;
+  nameExistsError?: string;
 }
 
 const DatasetTabsContent: FC<Props> = ({
@@ -29,6 +30,7 @@ const DatasetTabsContent: FC<Props> = ({
   selectedDataset,
   isSkipRefresh,
   onChange,
+  nameExistsError,
 }) => {
   const t = useI18n();
 
@@ -51,7 +53,12 @@ const DatasetTabsContent: FC<Props> = ({
             )}
           </div>
           <div className="pt-8">
-            <DatasetProperties dataset={selectedDataset} onChange={onChange} />
+            <DatasetProperties
+              dataset={selectedDataset}
+              onChange={onChange}
+              isModal={false}
+              nameExistsError={nameExistsError}
+            />
           </div>
         </div>
       )}
