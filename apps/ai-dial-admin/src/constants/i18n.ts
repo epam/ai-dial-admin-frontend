@@ -1934,6 +1934,17 @@ export enum ActionMenuOperationI18nKey {
   Export = 'ActionMenuOperation.Export',
 }
 
+export enum PlaygroundI18nKey {
+  Title = 'Playground.Title',
+  Details = 'Playground.Details',
+  Tryout = 'Playground.Tryout',
+  SelectDeployment = 'Playground.SelectDeployment',
+  Deployment = 'Playground.Deployment',
+  Temperature = 'Playground.Temperature',
+  SystemPrompt = 'Playground.SystemPrompt',
+  SystemPromptPlaceholder = 'Playground.SystemPromptPlaceholder',
+}
+
 export enum JsonAtaI18nKey {
   JSONAtaDoc = 'JsonAta.JSONAtaDoc',
   OpenFullDoc = 'JsonAta.OpenFullDoc',

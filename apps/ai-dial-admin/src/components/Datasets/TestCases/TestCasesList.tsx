@@ -2,7 +2,6 @@
 'use client';
 
 import { FC, RefObject, useCallback, useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 
 import { DialConfirmationPopup, DialLoader } from '@epam/ai-dial-ui-kit';
@@ -48,7 +47,6 @@ interface Props {
 
 const DatasetTestCasesList: FC<Props> = ({ dataset, testCasesActionsRef, onDirtyChange }) => {
   const t = useI18n();
-  const router = useRouter();
   const { showNotification } = useNotification();
 
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
@@ -186,13 +184,13 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, testCasesActionsRef, onDirty
           showNotification(
             getSuccessNotification(t(DatasetsI18nKey.ImportSuccess), t(DatasetsI18nKey.ImportSuccessDescription)),
           );
-          router.refresh();
+          refreshGrid();
         } else {
           showNotification(getErrorNotification(t(DatasetsI18nKey.ImportFailed), res?.errorMessage || 'Unknown error'));
         }
       });
     },
-    [dataset.id, router, showNotification, t],
+    [dataset.id, showNotification, t],
   );
 
   const onExport = useCallback(() => {
@@ -266,11 +264,9 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, testCasesActionsRef, onDirty
     }
   }, [gridApi, newTestCases]);
 
-  const testCaseSchemaKey = JSON.stringify(dataset.testCaseSchema);
-
   useEffect(() => {
     refreshGrid();
-  }, [testCaseSchemaKey]);
+  }, []);
 
   useEffect(() => {
     if (!testCasesActionsRef) return;

@@ -1998,4 +1998,14 @@ export default {
     Edit: 'Edit',
     Export: 'Export',
   },
+  Playground: {
+    Title: 'Playground',
+    Details: 'Details',
+    Tryout: 'Tryout',
+    SelectDeployment: 'Select deployment',
+    Deployment: 'Deployment',
+    Temperature: 'Temperature',
+    SystemPrompt: 'System prompt',
+    SystemPromptPlaceholder: 'Enter system prompt...',
+  },
 } as const;
