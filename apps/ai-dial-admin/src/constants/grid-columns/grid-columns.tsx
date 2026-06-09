@@ -1438,6 +1438,5 @@ export const IMPORT_VALIDATION_COLUMN = (t: (str: string) => string): ColDef => 
   headerName: t(ImportI18nKey.State),
   cellRenderer: ImportValidationCellRenderer,
   sortable: false,
-  tooltipValueGetter: ({ data }) => getImportValidationStateLabel(data, t),
   filterValueGetter: ({ data }) => getImportValidationStateLabel(data, t),
 });
