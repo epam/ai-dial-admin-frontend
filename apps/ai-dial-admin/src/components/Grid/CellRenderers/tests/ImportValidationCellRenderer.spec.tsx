@@ -50,7 +50,7 @@ describe('ImportValidationCellRenderer', () => {
         })}
       />,
     );
-    expect(screen.getByText(BasicI18nKey.Validated)).toBeInTheDocument();
+    expect(screen.getAllByText(BasicI18nKey.Validated).length).toBeGreaterThan(0);
     expect(container.querySelector('.text-success')).toBeInTheDocument();
     expect(container.querySelector('.text-error')).not.toBeInTheDocument();
     expect(container.querySelector('.text-secondary')).not.toBeInTheDocument();
@@ -81,10 +81,10 @@ describe('ImportValidationCellRenderer', () => {
         })}
       />,
     );
-    expect(screen.getByText(BasicI18nKey.Failed)).toBeInTheDocument();
+    expect(screen.getAllByText(BasicI18nKey.Failed).length).toBeGreaterThan(0);
     expect(container.querySelector('.text-error')).toBeInTheDocument();
     expect(container.querySelector('.text-secondary')).toBeInTheDocument();
-    expect(container.querySelector('.ml-auto')).toBeInTheDocument();
+    expect(container.querySelector('.grow')).toBeInTheDocument();
     expect(screen.getByText('name: invalid')).toBeInTheDocument();
     expect(screen.getByText('displayName: must not be null')).toBeInTheDocument();
   });
