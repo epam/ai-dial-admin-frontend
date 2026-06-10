@@ -33,6 +33,7 @@ import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
+import { RunStatus } from '@/src/models/evaluation/run';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { EvaluationPageData, FilterDto, SortDto } from '@/src/models/request';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -226,10 +227,10 @@ const EvaluationListView = <T extends object>({
   }
 
   if (route === ApplicationRoute.Runs) {
-    actionColumn.push(getExportOperation(onOpenExportModal));
+    actionColumn.push(getExportOperation(onOpenExportModal, (_, node) => node.data?.status === RunStatus.RUNNING));
   }
 
-  const columnDefs = [...baseColumns, ACTION_COLUMN([...actionColumn, getDeleteOperation(onOpenDeleteModal)])];
+  const columnDefs = [...baseColumns, ACTION_COLUMN([...actionColumn, getDeleteOperation(onOpenDeleteModal)], true)];
 
   return (
     <>

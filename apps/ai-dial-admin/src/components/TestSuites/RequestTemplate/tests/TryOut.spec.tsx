@@ -23,7 +23,10 @@ vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
 
 vi.mock('@/src/components/TestSuites/utils/tryout-storage', () => ({
   saveTryoutResponseToStorage: vi.fn(),
-  getTryoutResponseFromStorage: vi.fn(),
+  getTryoutResponseFromStorage: vi.fn(() => ({
+    resolvedRequest: { foo: 'bar' },
+    response: null,
+  })),
 }));
 
 vi.mock('@/src/components/TestSuites/utils/template-variables', () => ({

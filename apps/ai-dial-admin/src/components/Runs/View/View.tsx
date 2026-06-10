@@ -15,7 +15,7 @@ import ExportRunModal from '@/src/components/Runs/Export/ExportRunModal';
 import { ButtonsI18nKey, EntityFieldsI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
-import { Run } from '@/src/models/evaluation/run';
+import { Run, RunStatus } from '@/src/models/evaluation/run';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
@@ -83,6 +83,7 @@ const RunView: FC<Props> = ({ run, onRemove }) => {
             label={t(ButtonsI18nKey.Export)}
             iconBefore={<IconFileExport {...BASE_BUTTON_ICON_PROPS} />}
             onClick={onOpenExportModal}
+            disabled={run.status === RunStatus.RUNNING}
           />
           {run.grafanaExploreUrl && (
             <div className="flex items-center">

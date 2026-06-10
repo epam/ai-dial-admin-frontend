@@ -72,17 +72,19 @@ const TryOutRequestPreview: FC<Props> = ({
         />
       </div>
 
-      <div className="flex flex-col">
-        <p className="dial-small-text mb-2">{previewLabel}</p>
-        <p className="text-secondary mb-2 dial-small-text">{previewDescription}</p>
-        <div className="h-[300px]">
-          <JsonEditor
-            entity={resolvedRequest}
-            options={{ stickyScroll: { enabled: false }, wordWrap: 'bounded' }}
-            readonly={true}
-          />
+      {Object.keys(resolvedRequest).length > 0 && (
+        <div className="flex flex-col">
+          <p className="dial-small-text mb-2">{previewLabel}</p>
+          <p className="text-secondary mb-2 dial-small-text">{previewDescription}</p>
+          <div className="h-[300px]">
+            <JsonEditor
+              entity={resolvedRequest}
+              options={{ stickyScroll: { enabled: false }, wordWrap: 'bounded' }}
+              readonly={true}
+            />
+          </div>
         </div>
-      </div>
+      )}
     </>
   );
 };
