@@ -380,7 +380,7 @@ const FileManager: FC<Props> = ({
         isDuplicateFolderAvailable={false}
         previewExtensions={PREVIEW_EXTENSIONS}
         customUploadFileAction={customUploadFileAction}
-        maxNewFolderDepth={MAX_FOLDER_NESTING_DEPTH}
+        maxNewFolderDepth={MAX_FOLDER_NESTING_DEPTH + 1}
         onNewFolderDepthExceeded={handleFolderNestingDepthExceeded}
         {...props}
       />
