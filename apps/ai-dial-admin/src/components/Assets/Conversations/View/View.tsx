@@ -12,6 +12,7 @@ import { getNameVersionFromAsset } from '@/src/utils/entities/versions';
 import { getConversationPathWithVersion, getConversationVersions } from './utils';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { useRouter } from 'next/navigation';
+import { useConversationFolder } from '@/src/context/assets/ConversationsFolderContext';
 import TabsContent from './TabsContent';
 
 interface Props {
@@ -76,6 +77,7 @@ const ConversationView: FC<Props> = ({ conversation, conversations }) => {
         versions={versions}
         onVersionChange={onVersionChange}
         isVersionLoading={isLoading}
+        getAssetContext={useConversationFolder}
       />
       <div className="flex-1 overflow-auto min-h-0">
         <TabsContent activeTab={activeTab} selectedConversation={selectedConversation} />
