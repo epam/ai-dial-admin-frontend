@@ -25,6 +25,7 @@ import {
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
+import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getNameVersionFromAsset } from '@/src/utils/entities/versions';
@@ -39,6 +40,7 @@ export interface ConversationButtonsWrapperProps<T> {
   versions?: string[];
   isVersionLoading?: boolean;
   onVersionChange?: (version: string) => void;
+  getAssetContext?: () => AssetsFolderContext;
 
   onRemove: (entity: string) => Promise<ServerActionResponse>;
 }
@@ -53,6 +55,7 @@ const ConversationButtonsWrapper = <T extends object>({
   versions,
   isVersionLoading,
   onVersionChange,
+  getAssetContext,
 }: ConversationButtonsWrapperProps<T>) => {
   const t = useI18n();
   const isTablet = useIsOnlyTabletScreen();
@@ -121,6 +124,7 @@ const ConversationButtonsWrapper = <T extends object>({
             onRemoveEntity={onRemove}
             view={view}
             onCloseModal={onCloseModal}
+            getAssetContext={getAssetContext}
             isSelectedView={true}
             existingVersions={versions}
             etag={etag}
