@@ -30,9 +30,10 @@ interface Props {
   currentState: Record<string, ActivityAuditEntity[]>;
   prevState: Record<string, ActivityAuditEntity[]>;
   globalFirewall?: FileComponentItem | null;
+  firewallErrorsByDomain?: Record<string, string[]>;
 }
 
-const DeploymentConfigurationGrid: FC<Props> = ({ selectedTab, tabData, globalFirewall }) => {
+const DeploymentConfigurationGrid: FC<Props> = ({ selectedTab, tabData, globalFirewall, firewallErrorsByDomain }) => {
   const t = useI18n();
 
   const [isFirewallModalOpen, setIsFirewallModalOpen] = useState(false);
@@ -72,7 +73,7 @@ const DeploymentConfigurationGrid: FC<Props> = ({ selectedTab, tabData, globalFi
                 onClick={onOpenCompare}
               />
             </div>
-            <DomainList domains={firewallNext || []} />
+            <DomainList domains={firewallNext || []} errors={firewallErrorsByDomain} />
           </div>
         </div>
 

@@ -67,6 +67,7 @@ const ConfigurationPreview: FC<Props> = ({
   const [prevState, setPrevState] = useState<Record<string, ActivityAuditEntity[]>>({});
 
   const [globalFirewall, setGlobalFirewall] = useState<FileComponentItem | null>(null);
+  const [firewallErrorsByDomain, setFirewallErrorsByDomain] = useState<Record<string, string[]>>({});
   const [validationSummary, setValidationSummary] = useState<ValidationSummary>(EMPTY_VALIDATION_SUMMARY);
 
   // Admin import preview
@@ -112,6 +113,7 @@ const ConfigurationPreview: FC<Props> = ({
           prevData,
           tabs,
           globalFirewall: previewFirewall,
+          firewallErrorsByDomain: previewFirewallErrors,
           validationSummary: nextValidationSummary,
         } = getDeploymentConfigurationPreview(response, t);
 
@@ -121,6 +123,7 @@ const ConfigurationPreview: FC<Props> = ({
         setTabs(tabs);
         setSelectedTab(tabs[0]?.id);
         setGlobalFirewall(previewFirewall);
+        setFirewallErrorsByDomain(previewFirewallErrors);
         setValidationSummary(nextValidationSummary);
         onValidationChangeRef.current?.(nextValidationSummary.totalFailed > 0);
       } else {
@@ -176,6 +179,7 @@ const ConfigurationPreview: FC<Props> = ({
                 currentState={currentState}
                 prevState={prevState}
                 globalFirewall={globalFirewall}
+                firewallErrorsByDomain={firewallErrorsByDomain}
               />
             ) : (
               <ConfigurationGrid
