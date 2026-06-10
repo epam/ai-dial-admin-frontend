@@ -70,7 +70,6 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
   const [destinationFolder, setDestinationFolder] = useState<string | null>(null);
   const [duplicateItem, setDuplicateItem] = useState<AssetWithVersion | null>(null);
   const [selectedVersionsMap, setSelectedVersionsMap] = useState<Record<string, string[]>>({});
-  const [currentPath, setCurrentPath] = useState<string | null>(null);
   const [names, setNames] = useState<string[]>([]);
   const [versionsMap, setVersionsMap] = useState<Record<string, string[]>>({});
   const [hasSelectedItems, setHasSelectedItems] = useState(false);
@@ -90,7 +89,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
     return AssetFolderContextMap[view as BaseAssetRoute]();
   }, [view]);
 
-  const { data, fetchFiles, fetchedFoldersData, setFilePath } = getContext();
+  const { data, fetchFiles, fetchedFoldersData, setFilePath, filePath } = getContext();
 
   const emptyStateContent = useMemo(() => {
     return getEmptyStateContent(view, t);
@@ -98,13 +97,13 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
 
   useEffect(() => {
     let folderData = data;
-    if (currentPath && fetchedFoldersData[currentPath]) {
-      folderData = fetchedFoldersData[currentPath];
+    if (filePath && fetchedFoldersData[filePath]) {
+      folderData = fetchedFoldersData[filePath];
     }
 
     setNames(filterNames(folderData));
     setVersionsMap(getVersionsPerName((folderData || []) as AssetWithVersion[]));
-  }, [currentPath, fetchedFoldersData, data]);
+  }, [filePath, fetchedFoldersData, data]);
 
   const handleCreateModalOpen = useCallback((_?: string, currentFolder?: DialFile) => {
     setIsModalOpen(true);
@@ -191,11 +190,14 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
     [selectedVersionsMap],
   );
 
-  const handlePathChange = useCallback((nextPath?: string) => {
-    if (nextPath) {
-      setCurrentPath(nextPath);
-    }
-  }, []);
+  const handlePathChange = useCallback(
+    (nextPath?: string) => {
+      if (nextPath) {
+        setFilePath(nextPath);
+      }
+    },
+    [setFilePath],
+  );
 
   const handleSelectedPathsChange = useCallback((paths: Set<string>) => {
     setSelectedPaths(paths);
