@@ -5,7 +5,6 @@ import { ColDef } from 'ag-grid-community';
 import { EntitiesI18nKey, InterceptorsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication } from '@/src/models/dial/application';
-import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { getSchemaSourceId } from '@/src/utils/entities/application-source';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import GridView from '@/src/components/Grid/GridView/GridView';
@@ -43,8 +42,7 @@ const CollapsableInterceptors = <T extends { interceptors?: string[]; 'dial:appl
           rowData={getInterceptorsGridData(interceptors, globalInterceptors)}
         />
       </CollapsableSection>
-      {(!!getSchemaSourceId((entity as DialApplication).source) ||
-        !!(entity as unknown as AssetApp).applicationTypeSchemaId) && (
+      {!!getSchemaSourceId((entity as DialApplication).source) && (
         <CollapsableSection title={`${t(InterceptorsI18nKey.Runner)}: ${runnerInterceptors?.length || 0}`}>
           <GridView
             emptyDataProps={{ title: t(EntitiesI18nKey.NoRunnerInterceptors) }}

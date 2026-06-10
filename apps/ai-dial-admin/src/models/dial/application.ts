@@ -15,7 +15,6 @@ export interface DialApplication extends ChatEntity, EntityValidityState {
   dependencies?: string[];
   applicationProperties?: Record<string, unknown>;
   applicationPropertiesTemp?: ApplicationPropertiesTemp[];
-  applicationTypeSchemaId?: string;
   mcp?: ApplicationMCPContainer;
   responsesEndpoint?: string;
 }

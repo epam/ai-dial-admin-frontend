@@ -60,53 +60,6 @@ The `CONTAINER` option SHALL be disabled when `featureFlags.deploymentsEnabled` 
 - **THEN** the previous `DialRadioGroup` labeled "Source type" is NOT displayed
 - **AND** the equivalent choice is expressed via the shared source dropdown
 
-### Requirement: Applications Endpoints panel writes to flat entity fields
-
-When source `$type === 'endpoints'` for a `DialApplication`, the `ApplicationEndpoint` component SHALL write chat endpoint to `entity.endpoint: string | undefined` and MCP endpoint data to `entity.mcp: ApplicationMCPContainer | undefined` — exactly as today. No migration of these fields into `source` is performed.
-
-The user MUST be able to enable chat endpoint and/or MCP endpoint independently via checkboxes (at least one must remain checked). MCP endpoint sub-fields (`transport`, `forwardPerRequestKey`, `configDelivery`) continue to live inside `entity.mcp`.
-
-#### Scenario: Chat endpoint toggled on
-
-- **WHEN** the user checks "Chat endpoint" and enters a URL
-- **THEN** the URL is written to `entity.endpoint`
-- **AND** `entity.mcp` is left untouched
-
-#### Scenario: MCP endpoint toggled on
-
-- **WHEN** the user checks "MCP endpoint" and enters a URL
-- **THEN** the URL is written to `entity.mcp.endpoint`
-- **AND** `entity.endpoint` is left untouched
-
-#### Scenario: At least one endpoint required
-
-- **WHEN** the user attempts to disable both chat and MCP endpoint checkboxes
-- **THEN** the UI prevents disabling the last remaining one (matches today's behavior)
-
-### Requirement: Applications Schema panel owns runner-scheme side-effects
-
-When source `$type === 'schema'` for a `DialApplication`, the `AppRunners` component SHALL own the runner-selection side-effects:
-
-1. On runner selection, it fetches the resolved application scheme via `getResolvedApplicationScheme(runnerId)`.
-2. If the fetch succeeds, it derives default `applicationProperties` via `getSchemaDefaults(scheme)`.
-3. It calls `onChange` once with the combined update: `{ ...entity, source: { $type: SCHEMA, applicationTypeSchemaId: runnerId }, applicationProperties }`.
-
-If the fetch fails, the component SHALL fall back to using the non-resolved runner (current behavior).
-
-#### Scenario: Runner selection with successful schema fetch
-
-- **WHEN** the user picks a runner and `getResolvedApplicationScheme` returns a schema
-- **THEN** `entity.source.$type` is set to `SCHEMA`
-- **AND** `entity.source.applicationTypeSchemaId` is set to the runner id
-- **AND** `entity.applicationProperties` is set to `getSchemaDefaults(schema)`
-
-#### Scenario: Runner selection with fetch failure
-
-- **WHEN** the user picks a runner and `getResolvedApplicationScheme` fails
-- **THEN** `entity.source.$type` is set to `SCHEMA`
-- **AND** `entity.source.applicationTypeSchemaId` is set to the runner id
-- **AND** `entity.applicationProperties` is derived from the unresolved runner
-
 ### Requirement: Source-type change clears stale Application fields
 
 When the source `$type` changes in the Applications view **or the AssetsApplications view**, `SourceField.onChangeSource` SHALL clear the following fields on the entity in addition to the common `endpoint` reset used by other entities:
@@ -138,41 +91,7 @@ The clearing policy MUST match the field set previously cleared by `ApplicationS
 - **THEN** the same field set (`endpoint`, `mcp`, `viewerUrl`, `editorUrl`, `applicationTypeSchemaId`, `applicationProperties`, `responsesEndpoint`) is cleared
 - **AND** `entity.source.$type` is updated to the newly selected type
 
-### Requirement: Unified validation via isValidSourceField
-
-The single validator `isValidSourceField` (in `components/SourceField/utils.ts`) SHALL handle every entity's source validation. It MUST include:
-
-- `CONTAINER`: valid iff `source.containerId` is truthy.
-- `ADAPTER`: valid iff `source.adapterName` and `source.completionEndpointPath` are both truthy.
-- `RUNNER`: valid iff `source.runnerName` is truthy.
-- `MCP_REGISTRY`: valid iff `source.serverName` is truthy.
-- `SCHEMA`: valid iff `source.applicationTypeSchemaId` is truthy (new branch).
-- `ENDPOINTS`:
-  - For Applications: valid iff at least one of `entity.endpoint` or `entity.mcp?.endpoint` is a valid URL (via `getUrlError`).
-  - For other entities: valid iff `entity.endpoint` or `entity.baseEndpoint` is a valid URL (unchanged from today).
-
-A separate `isValidApplicationSource` helper MUST NOT be introduced.
-
-#### Scenario: SCHEMA validation
-
-- **WHEN** `entity.source.$type === SCHEMA` and `entity.source.applicationTypeSchemaId` is set
-- **THEN** `isValidSourceField(entity)` returns `true`
-- **AND** when `applicationTypeSchemaId` is empty or undefined, it returns `false`
-
-#### Scenario: Applications ENDPOINTS validation — chat only
-
-- **WHEN** `entity` is a `DialApplication` with `source.$type === ENDPOINTS`, `entity.endpoint` is a valid URL, and `entity.mcp` is undefined
-- **THEN** `isValidSourceField(entity)` returns `true`
-
-#### Scenario: Applications ENDPOINTS validation — MCP only
-
-- **WHEN** `entity` is a `DialApplication` with `source.$type === ENDPOINTS`, `entity.endpoint` is undefined, and `entity.mcp.endpoint` is a valid URL
-- **THEN** `isValidSourceField(entity)` returns `true`
-
-#### Scenario: Applications ENDPOINTS validation — both invalid
-
-- **WHEN** `entity` is a `DialApplication` with `source.$type === ENDPOINTS` and neither `entity.endpoint` nor `entity.mcp?.endpoint` is a valid URL
-- **THEN** `isValidSourceField(entity)` returns `false`
+## ADDED Requirements
 
 ### Requirement: AssetApp uses the shared SourceField with Endpoints and App Runner only
 
@@ -206,12 +125,10 @@ Validation SHALL be handled by the shared `isValidSourceField`: `SCHEMA` is vali
 - **THEN** it reads `getSchemaSourceId(entity.source)`
 - **AND** no `|| (entity as AssetApp).applicationTypeSchemaId` fallback remains
 
-### Requirement: Runner editor keeps EndpointAndMCPContainer
+## REMOVED Requirements
 
-The application runner editor (`DialApplicationScheme`, accessed via `ApplicationRoute.ApplicationRunners`) SHALL continue to use `components/SourceField/Application/EndpointAndMCPContainer.tsx` for editing the runner's chat endpoint and MCP endpoint. The runner editor MUST NOT gain a source-type dropdown. `EndpointAndMCPContainer.tsx` MAY be simplified after the DialApplication branches are removed, but continues to write `dial:applicationTypeCompletionEndpoint` and `dial:applicationTypeMcp` fields as today.
+### Requirement: AssetApp editor remains the pruned ApplicationSource component
 
-#### Scenario: Runner editor unchanged
+**Reason**: Backend PR epam/ai-dial-admin-backend#907 migrates the application-resource DTOs to the polymorphic `source` object, removing the wire-format difference that justified keeping AssetApp on the flat `applicationTypeSchemaId` field and the bespoke `ApplicationSource.tsx` radio editor.
 
-- **WHEN** the user edits a `DialApplicationScheme`
-- **THEN** the endpoint + MCP editor renders via `EndpointAndMCPContainer.tsx`
-- **AND** no source-type selector is shown
+**Migration**: `AssetApp` now inherits `source: SOURCE_FIELD` (see "FE internal model uses a single shared source struct") and renders the shared `SourceField` component (see "AssetApp uses the shared SourceField with Endpoints and App Runner only"). `components/SourceField/Application/ApplicationSource.tsx` and its local `constants.ts` are deleted. Read schema id via `getSchemaSourceId(entity.source)`.
