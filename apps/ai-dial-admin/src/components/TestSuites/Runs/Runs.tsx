@@ -15,7 +15,7 @@ import { getDeleteOperation, getExportOperation, getOpenInNewTabOperation } from
 import { RUNS_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { Run } from '@/src/models/evaluation/run';
+import { Run, RunStatus } from '@/src/models/evaluation/run';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { ApplicationRoute } from '@/src/types/routes';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
@@ -164,11 +164,14 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
   const columnDefs = useMemo(
     () => [
       ...RUNS_COLUMN,
-      ACTION_COLUMN([
-        getOpenInNewTabOperation(onOpenInNewTabAction),
-        getExportOperation(onOpenExportModal),
-        getDeleteOperation(onOpenDeleteModal),
-      ]),
+      ACTION_COLUMN(
+        [
+          getOpenInNewTabOperation(onOpenInNewTabAction),
+          getExportOperation(onOpenExportModal, (_, node) => node.data?.status === RunStatus.RUNNING),
+          getDeleteOperation(onOpenDeleteModal),
+        ],
+        true,
+      ),
     ],
     [onOpenDeleteModal, onOpenExportModal, onOpenInNewTabAction],
   );
