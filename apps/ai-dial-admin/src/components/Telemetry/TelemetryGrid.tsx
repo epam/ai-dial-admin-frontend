@@ -1,5 +1,5 @@
 import { DialLoader } from '@epam/ai-dial-ui-kit';
-import { ColDef, GridOptions } from 'ag-grid-community';
+import { ColDef } from 'ag-grid-community';
 import { FC, useEffect, useState } from 'react';
 
 import { BasicI18nKey } from '@/src/constants/i18n';
@@ -10,11 +10,6 @@ import { TelemetryData, TelemetryQuery } from '@/src/models/telemetry';
 import { getGridData } from '@/src/utils/telemetry';
 import GridView from '@/src/components/Grid/GridView/GridView';
 
-const additionalGridOptions: GridOptions = {
-  defaultColDef: {
-    filter: false,
-  },
-};
 interface Props {
   columnDefs: ColDef[];
   title: string;
@@ -96,12 +91,7 @@ const TelemetryGrid: FC<Props> = ({
         <DialLoader size={24} />
       ) : (
         <div className="flex-1 min-h-0">
-          <GridView
-            emptyDataProps={{ title: t(BasicI18nKey.NoData) }}
-            rowData={data}
-            columnDefs={columnDefs}
-            additionalGridOptions={additionalGridOptions}
-          />
+          <GridView emptyDataProps={{ title: t(BasicI18nKey.NoData) }} rowData={data} columnDefs={columnDefs} />
         </div>
       )}
     </div>
