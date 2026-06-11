@@ -451,21 +451,21 @@ export const TELEMETRY_COLUMNS: ColDef[] = [
   },
 ];
 
-export const suppressCellTooltip = { tooltipValueGetter: () => null };
+export const suppressCellTooltips = (cols: ColDef[]): ColDef[] =>
+  cols.map((col) => ({ ...col, tooltipValueGetter: () => null }));
 
-export const TELEMETRY_GRID_COLUMNS: ColDef[] = [
-  { ...NAME_COLUMN, ...suppressCellTooltip },
-  ...TELEMETRY_COLUMNS.map((col) => ({ ...col, ...suppressCellTooltip })),
+export const TELEMETRY_GRID_COLUMNS: ColDef[] = suppressCellTooltips([
+  NAME_COLUMN,
+  ...TELEMETRY_COLUMNS,
   {
     field: 'deployment_cost',
     headerName: 'Total money',
     ...numericColumn,
-    ...suppressCellTooltip,
     valueFormatter: ({ value }) => `$${numberValueFormatter(priceValueFormatter(value) as string)}`,
     filterValueGetter: (params) =>
       numberValueFormatter(priceValueFormatter(params.data[params.colDef.field || '']) as string),
   },
-];
+]);
 
 // Sets `sortable: false` on every column except those whose field is in
 // `sortableFields`. Used by Usage Log grids to lock sort to completion_time —
@@ -602,10 +602,8 @@ export const USAGE_LOG_NUMERIC_COLUMNS = new Set<string>(
     .map((c) => c.field as string),
 );
 
-export const PROJECT_GRID_COLUMNS = (t: (key: string) => string): ColDef[] => [
-  CALLS_PROJECT_COLUMN(t),
-  ...TELEMETRY_COLUMNS,
-];
+export const PROJECT_GRID_COLUMNS = (t: (key: string) => string): ColDef[] =>
+  suppressCellTooltips([CALLS_PROJECT_COLUMN(t), ...TELEMETRY_COLUMNS]);
 
 export const MCP_CONSUMPTION_COLUMNS: ColDef[] = [
   { field: 'name', headerName: 'MCP Name', hide: false },

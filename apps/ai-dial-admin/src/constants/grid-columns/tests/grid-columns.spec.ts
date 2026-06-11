@@ -352,12 +352,11 @@ describe('Constants :: grid columns', () => {
     expect(columns.some((c) => c.field === 'cost')).toBe(true);
   });
 
-  test('PROJECT_GRID_COLUMNS keeps the shared TELEMETRY_COLUMNS free of tooltip overrides', () => {
-    // The Issue #3607 fix must be scoped to the entities grid — the shared
-    // numeric columns reused by the project grid must stay untouched.
-    const columns = PROJECT_GRID_COLUMNS((key) => key);
-    const requests = columns.find((c) => c.field === 'requests');
-    expect(requests?.tooltipValueGetter).toBeUndefined();
+  test('PROJECT_GRID_COLUMNS suppresses cell tooltips on every column', () => {
+    PROJECT_GRID_COLUMNS((key) => key).forEach((col) => {
+      expect(typeof col.tooltipValueGetter).toBe('function');
+      expect((col.tooltipValueGetter as (p: never) => unknown)({} as never)).toBeNull();
+    });
   });
 
   const assertUsageLogColumnSet = (columns: ColDef[]) => {
