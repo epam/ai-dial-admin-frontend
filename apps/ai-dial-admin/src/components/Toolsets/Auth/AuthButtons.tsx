@@ -74,6 +74,38 @@ const AuthButtons: FC<Props> = ({
     return isAdminLoggedInToToolset(selectedToolset);
   }, [selectedToolset]);
 
+  const startOAuthFlow = useCallback(
+    (levels: ToolsetAuthCredentialLevel[]) => {
+      const authSettings = selectedToolset.authSettings!;
+      const url = new URL(authSettings.authorizationEndpoint as string);
+      url.searchParams.set('response_type', 'code');
+      url.searchParams.set('client_id', authSettings.clientId as string);
+
+      setLevels(levels);
+      setUrl(view, { ...selectedToolset, requestName: publicationName, path: publicationPath });
+
+      url.searchParams.set('redirect_uri', `${window.location.origin}${TOOLSET_AUTH_REDIRECT_URL}`);
+      if (authSettings.codeChallenge) {
+        url.searchParams.set('code_challenge', authSettings.codeChallenge);
+      }
+      if (authSettings.codeChallengeMethod) {
+        url.searchParams.set('code_challenge_method', authSettings.codeChallengeMethod);
+      }
+      const state = {
+        callbackUrl: window.location.pathname,
+        toolsetId: selectedToolset.name,
+        credentialsLevel: authSettings.authenticationType,
+      };
+      url.searchParams.set('state', encodeToolsetRedirectState(state));
+      if (authSettings.scopesSupported) {
+        url.searchParams.set('scope', authSettings.scopesSupported.join(' '));
+      }
+
+      window.location.assign(url.toString());
+    },
+    [publicationName, publicationPath, selectedToolset, view],
+  );
+
   const onLogin = useCallback(
     (levels: ToolsetAuthCredentialLevel[], apiKeyValue: string) => {
       if (!levels.length) {
@@ -82,33 +114,7 @@ const AuthButtons: FC<Props> = ({
 
       const authSettings = selectedToolset.authSettings;
       if (authSettings && authSettings?.authenticationType === ToolsetAuthType.OAUTH) {
-        const callbackUrl = `${window.location.pathname}${window.location.search}`;
-        const state = {
-          callbackUrl,
-          toolsetId: selectedToolset.name,
-          credentialsLevel: authSettings.authenticationType,
-        };
-
-        const url = new URL(authSettings.authorizationEndpoint as string);
-        url.searchParams.set('response_type', 'code');
-        url.searchParams.set('client_id', authSettings.clientId as string);
-
-        setLevels(levels);
-        setUrl(view, { ...selectedToolset, requestName: publicationName, path: publicationPath });
-        url.searchParams.set('redirect_uri', `${window.location.origin}${TOOLSET_AUTH_REDIRECT_URL}`);
-        if (authSettings.codeChallenge) {
-          url.searchParams.set('code_challenge', authSettings.codeChallenge);
-        }
-        if (authSettings.codeChallengeMethod) {
-          url.searchParams.set('code_challenge_method', authSettings.codeChallengeMethod);
-        }
-
-        url.searchParams.set('state', encodeToolsetRedirectState(state));
-        if (authSettings.scopesSupported) {
-          url.searchParams.set('scope', authSettings.scopesSupported?.join(' '));
-        }
-
-        window.location.assign(url.toString());
+        startOAuthFlow(levels);
       } else {
         setIsLoginModalOpen(false);
 
@@ -143,7 +149,17 @@ const AuthButtons: FC<Props> = ({
         });
       }
     },
-    [publicationName, publicationPath, selectedToolset, signInToolset, showNotification, t, router, view],
+    [
+      publicationName,
+      publicationPath,
+      selectedToolset,
+      signInToolset,
+      showNotification,
+      t,
+      router,
+      view,
+      startOAuthFlow,
+    ],
   );
 
   const performLogout = useCallback(
@@ -194,39 +210,39 @@ const AuthButtons: FC<Props> = ({
       if (!levels.length) return;
 
       isSignInProcessed = true;
-      let completedCount = 0;
-      let hasError = false;
+      const [currentLevel, ...remainingLevels] = levels;
 
-      levels.forEach((level) => {
-        getReqRef
-          .current(
-            signInToolset,
-            selectedToolset,
-            level,
-            `${window.location.origin}${TOOLSET_AUTH_REDIRECT_URL}`,
-            void 0,
-            oAuthCode,
-          )
-          .then((res) => {
-            completedCount++;
-            if (!res.success) {
-              hasError = true;
-              showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
-            }
+      getReqRef
+        .current(
+          signInToolset,
+          selectedToolset,
+          currentLevel,
+          `${window.location.origin}${TOOLSET_AUTH_REDIRECT_URL}`,
+          void 0,
+          oAuthCode,
+        )
+        .then((res) => {
+          isSignInProcessed = false;
+          if (!res.success) {
+            showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+            router.push(
+              getUrnForEntity(view, { ...selectedToolset, requestName: publicationName, path: publicationPath }),
+            );
+            return;
+          }
 
-            if (completedCount === levels.length) {
-              isSignInProcessed = false;
-              if (!hasError) {
-                showNotification(
-                  getSuccessNotification(t(ToolsetI18nKey.SuccessLogin), t(ToolsetI18nKey.SuccessLoginDescription)),
-                );
-              }
-              router.push(
-                getUrnForEntity(view, { ...selectedToolset, requestName: publicationName, path: publicationPath }),
-              );
-            }
-          });
-      });
+          if (remainingLevels.length > 0) {
+            // OAuth codes are single-use — initiate a fresh authorization round for the next level
+            startOAuthFlow(remainingLevels);
+          } else {
+            showNotification(
+              getSuccessNotification(t(ToolsetI18nKey.SuccessLogin), t(ToolsetI18nKey.SuccessLoginDescription)),
+            );
+            router.push(
+              getUrnForEntity(view, { ...selectedToolset, requestName: publicationName, path: publicationPath }),
+            );
+          }
+        });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
