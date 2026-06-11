@@ -334,12 +334,30 @@ describe('Constants :: grid columns', () => {
     expect(TELEMETRY_GRID_COLUMNS.some((c) => c.field === 'cost')).toBe(true);
   });
 
+  test('TELEMETRY_GRID_COLUMNS suppresses cell tooltips on every column (Issue #3607)', () => {
+    // The tree stores all cell values as strings, so the grid's default
+    // tooltipValueGetter would render a redundant tooltip on every cell.
+    // Each column must override it to return null.
+    TELEMETRY_GRID_COLUMNS.forEach((col) => {
+      expect(typeof col.tooltipValueGetter).toBe('function');
+      expect((col.tooltipValueGetter as (p: never) => unknown)({} as never)).toBeNull();
+    });
+  });
+
   test('PROJECT_GRID_COLUMNS returns expected columns', () => {
     const columns = PROJECT_GRID_COLUMNS((key) => key);
     expect(Array.isArray(columns)).toBe(true);
     expect(columns.some((c) => c.field === 'name')).toBe(true);
     expect(columns.some((c) => c.field === 'requests')).toBe(true);
     expect(columns.some((c) => c.field === 'cost')).toBe(true);
+  });
+
+  test('PROJECT_GRID_COLUMNS keeps the shared TELEMETRY_COLUMNS free of tooltip overrides', () => {
+    // The Issue #3607 fix must be scoped to the entities grid — the shared
+    // numeric columns reused by the project grid must stay untouched.
+    const columns = PROJECT_GRID_COLUMNS((key) => key);
+    const requests = columns.find((c) => c.field === 'requests');
+    expect(requests?.tooltipValueGetter).toBeUndefined();
   });
 
   const assertUsageLogColumnSet = (columns: ColDef[]) => {
