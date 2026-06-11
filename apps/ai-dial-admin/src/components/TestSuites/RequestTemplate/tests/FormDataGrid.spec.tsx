@@ -227,7 +227,12 @@ describe('FormDataGrid', () => {
     const ref = createRef<FormDataGridRef>();
     const content = [createPart({ name: 'a', value: '1' })];
     render(
-      <FormDataGrid ref={ref} content={content} changeContent={mockChangeContent} selectedTestSuiteId="test-suite-id" />,
+      <FormDataGrid
+        ref={ref}
+        content={content}
+        changeContent={mockChangeContent}
+        selectedTestSuiteId="test-suite-id"
+      />,
     );
 
     ref.current?.add();
