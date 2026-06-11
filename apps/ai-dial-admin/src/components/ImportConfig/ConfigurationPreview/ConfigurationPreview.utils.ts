@@ -267,11 +267,20 @@ export const getDeploymentConfigurationPreview = (
   prevData: Record<string, (BaseEntity | undefined)[]>;
   tabs: TabModel[];
   globalFirewall: FileComponentItem | null;
+  firewallErrorsByDomain: Record<string, string[]>;
   validationSummary: ValidationSummary;
 } => {
   const filteredErrors = filterArtifactErrors(response.validationErrors);
   const groupedErrors = groupErrorsByEntity(filteredErrors);
   const errorsByTab = buildErrorsByTab(filteredErrors);
+
+  const firewallErrors = (response.validationErrors ?? []).filter(
+    (e) => e.entityType === ExportConfigComponentType.GLOBAL_DOMAIN_WHITELIST,
+  );
+  const firewallErrorsByDomain = firewallErrors.reduce<Record<string, string[]>>((acc, e) => {
+    (acc[e.entityIdentifier] ??= []).push(e.message);
+    return acc;
+  }, {});
 
   const grouped: Record<string, DeploymentRowEntry[]> = {};
 
@@ -325,13 +334,14 @@ export const getDeploymentConfigurationPreview = (
     tabs.push({
       id: GLOBAL_FIREWALL_TAB_ID,
       label: t(DeploymentsI18nKey.GlobalFirewall),
+      invalid: firewallErrors.length > 0,
     });
   }
 
   const validationSummary: ValidationSummary = {
-    totalFailed: groupedErrors.size,
+    totalFailed: groupedErrors.size + firewallErrors.length,
     errorsByTab,
   };
 
-  return { previewData, prevData, tabs, globalFirewall, validationSummary };
+  return { previewData, prevData, tabs, globalFirewall, firewallErrorsByDomain, validationSummary };
 };
