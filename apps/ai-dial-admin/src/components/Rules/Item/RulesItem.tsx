@@ -61,13 +61,13 @@ const RulesItem: FC<Props> = ({
   }, [isAlwaysToggled, setLastRuleHeight]);
 
   return (
-    <div ref={ref} className={classNames('flex flex-1', !folderName && 'border border-primary')}>
-      <div style={{ width: `${RULE_INDENT * indentIndex}px` }} className="flex items-center">
+    <div ref={ref} className={classNames('flex flex-1 min-w-0', !folderName && 'border border-primary')}>
+      <div style={{ width: `${RULE_INDENT * indentIndex}px` }} className="flex items-center shrink-0">
         <div className="h-px w-full bg-accent-secondary"></div>
       </div>
       <div
         className={classNames(
-          'flex-1 flex flex-col bg-layer-2 py-4 px-6 rounded',
+          'flex-1 min-w-0 flex flex-col bg-layer-2 py-4 px-6 rounded',
           isAlwaysToggled && folderName && 'bg-layer-3',
         )}
       >
