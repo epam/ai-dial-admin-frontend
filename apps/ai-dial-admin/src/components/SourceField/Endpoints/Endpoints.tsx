@@ -70,7 +70,7 @@ const Endpoints = <T extends object>({
           disabled={disabled}
         />
       )}
-      {view === ApplicationRoute.Applications && (
+      {(view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications) && (
         <ApplicationEndpoint
           entity={entity as DialApplication}
           onChange={onChange as (entity: DialApplication) => void}
