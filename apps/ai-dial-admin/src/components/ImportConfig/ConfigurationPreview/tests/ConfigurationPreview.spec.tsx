@@ -117,6 +117,32 @@ describe('ConfigurationPreview (deployments) — validation', () => {
     expect(importButton).toBeDisabled();
   });
 
+  test('disables Import when only a firewall domain is invalid', async () => {
+    const response = baseResponse();
+    response.globalImageBuildDomainWhitelist = {
+      importAction: 'UPDATE',
+      next: ['bad!'],
+    } as unknown as DeploymentImportPreviewResponse['globalImageBuildDomainWhitelist'];
+    response.validationErrors = [
+      {
+        entityType: ExportConfigComponentType.GLOBAL_DOMAIN_WHITELIST,
+        entityIdentifier: 'bad!',
+        fieldPath: 'globalImageBuildDomainWhitelist',
+        message: "domain 'bad!' is not a valid domain name",
+      },
+    ];
+    mockPreview.mockResolvedValue({ success: true, response });
+
+    renderPreview();
+
+    await waitFor(() => {
+      expect(screen.getByText('bad!')).toBeInTheDocument();
+    });
+    expect(screen.getByText('bad!')).toHaveClass('text-error');
+    const importButton = screen.getByRole('button', { name: /Buttons\.Import/i });
+    expect(importButton).toBeDisabled();
+  });
+
   test('hides banner and enables Import when there are no errors', async () => {
     const response = baseResponse();
     response.mcpDeployments = [

@@ -444,20 +444,46 @@ describe('ConfigurationPreview.utils', () => {
       expect(tabs.find((tab) => tab.id === DeploymentExportEntityType.MCP_CONTAINER)?.invalid).toBe(true);
     });
 
-    test('GLOBAL_DOMAIN_WHITELIST errors filtered out — summary clean', () => {
+    test('firewall errors are grouped by domain, counted in totalFailed, and mark the firewall tab invalid', () => {
       const response = baseResponse();
       response.mcpDeployments = [makeItem('CREATE', { name: 'echo' })];
+      response.globalImageBuildDomainWhitelist = makeItem('UPDATE', ['bad!', 'also bad!!'] as unknown as BaseEntity);
       response.validationErrors = [
+        error({ entityIdentifier: 'echo' }),
         error({
           entityType: ExportConfigComponentType.GLOBAL_DOMAIN_WHITELIST,
-          entityIdentifier: '',
+          entityIdentifier: 'bad!',
           fieldPath: 'globalImageBuildDomainWhitelist',
+          message: "domain 'bad!' is not a valid domain name",
+        }),
+        error({
+          entityType: ExportConfigComponentType.GLOBAL_DOMAIN_WHITELIST,
+          entityIdentifier: 'also bad!!',
+          fieldPath: 'globalImageBuildDomainWhitelist',
+          message: "domain 'also bad!!' is not a valid domain name",
         }),
       ];
 
-      const { tabs, validationSummary } = getDeploymentConfigurationPreview(response, t);
-      expect(validationSummary).toEqual({ totalFailed: 0, errorsByTab: {} });
-      tabs.forEach((tab) => expect(tab.invalid ?? false).toBe(false));
+      const { tabs, validationSummary, firewallErrorsByDomain } = getDeploymentConfigurationPreview(response, t);
+
+      expect(firewallErrorsByDomain).toEqual({
+        'bad!': ["domain 'bad!' is not a valid domain name"],
+        'also bad!!': ["domain 'also bad!!' is not a valid domain name"],
+      });
+      expect(validationSummary.totalFailed).toBe(3);
+      expect(validationSummary.errorsByTab).toEqual({ [DeploymentExportEntityType.MCP_CONTAINER]: 1 });
+      expect(tabs.find((tab) => tab.id === GLOBAL_FIREWALL_TAB_ID)?.invalid).toBe(true);
+    });
+
+    test('clean firewall → empty error map, tab not invalid', () => {
+      const response = baseResponse();
+      response.globalImageBuildDomainWhitelist = makeItem('UPDATE', ['a.com'] as unknown as BaseEntity);
+
+      const { tabs, validationSummary, firewallErrorsByDomain } = getDeploymentConfigurationPreview(response, t);
+
+      expect(firewallErrorsByDomain).toEqual({});
+      expect(validationSummary.totalFailed).toBe(0);
+      expect(tabs.find((tab) => tab.id === GLOBAL_FIREWALL_TAB_ID)?.invalid).toBe(false);
     });
 
     test('IMAGE-tab join: error matches by next.name even after row.name is clobbered', () => {
