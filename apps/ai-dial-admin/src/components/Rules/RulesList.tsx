@@ -39,10 +39,10 @@ const RulesList: FC<Props> = ({ rulesMap, isReadonly, onChange }) => {
       {!isEmpty && rulesMap && (
         <div className="relative flex flex-row">
           <div
-            style={{ height: `calc(100% - ${lastRuleHeight / 2}px)` }}
-            className={classNames('w-[1px] ml-1 bg-accent-secondary', isSingle && 'hidden')}
+            style={{ bottom: `${lastRuleHeight / 2}px` }}
+            className={classNames('absolute top-0 left-1 w-[1px] bg-accent-secondary', isSingle && 'hidden')}
           ></div>
-          <div className={classNames('flex-1 flex flex-col gap-4', !isSingle && 'mt-4')}>
+          <div className={classNames('flex-1 flex flex-col gap-4 ml-[5px] overflow-hidden', !isSingle && 'mt-4')}>
             {isSingle ? (
               <div className="small">{t(FoldersI18nKey.AllRules)}</div>
             ) : (
