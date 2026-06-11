@@ -1,5 +1,5 @@
 'use client';
-import { DialCheckbox, DialSelectField, DialSwitch } from '@epam/ai-dial-ui-kit';
+import { DialCheckbox, DialSelectField } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 import { FC, useCallback, useEffect, useState } from 'react';
 
@@ -11,12 +11,7 @@ import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, SourceI18nKey } from '@
 import { CONTROL_WIDTH, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { ONLY_HTTP_TRANSPORTS } from '@/src/constants/transport';
 import { useI18n } from '@/src/locales/client';
-import {
-  ApplicationMCPConfigDelivery,
-  ApplicationMCPContainer,
-  DialApplication,
-  MCP_CONFIG_DELIVERY_I18N_MAP,
-} from '@/src/models/dial/application';
+import { ApplicationMCPContainer, DialApplication } from '@/src/models/dial/application';
 import { SOURCE_FIELD } from '@/src/components/SourceField/types';
 
 enum ApplicationEndpointCheckbox {
@@ -74,7 +69,7 @@ const ApplicationEndpoint: FC<Props> = ({ entity, onChange, isEntityImmutable, i
             ...(entity.source as SOURCE_FIELD),
             mcpEndpointPath: mcpEnabled ? entity.source?.mcpEndpointPath : null,
           } as SOURCE_FIELD,
-          mcp: mcpEnabled ? { ...(entity.mcp || { endpoint: '' }), forwardPerRequestKey: true } : undefined,
+          mcp: mcpEnabled ? { ...(entity.mcp || { endpoint: '' }) } : undefined,
         });
       } else {
         onChange({
@@ -84,7 +79,7 @@ const ApplicationEndpoint: FC<Props> = ({ entity, onChange, isEntityImmutable, i
             ? entity?.responsesEndpoint
             : undefined,
           mcp: newCheckboxStates[ApplicationEndpointCheckbox.MCP_ENDPOINT]
-            ? ({ ...entity?.mcp, forwardPerRequestKey: true } as ApplicationMCPContainer)
+            ? ({ ...entity?.mcp } as ApplicationMCPContainer)
             : undefined,
         });
       }
@@ -130,17 +125,6 @@ const ApplicationEndpoint: FC<Props> = ({ entity, onChange, isEntityImmutable, i
     [entity, onChange],
   );
 
-  const onChangeForwardPerRequestKey = useCallback(
-    (newValue?: boolean) => {
-      const updatedMCPContainer: ApplicationMCPContainer = {
-        ...(entity?.mcp || { endpoint: '' }),
-        forwardPerRequestKey: newValue,
-      };
-      onChange({ ...entity, mcp: updatedMCPContainer });
-    },
-    [entity, onChange],
-  );
-
   const onChangeMCPTransport = useCallback(
     (transportId: string | string[]) => {
       const selectedTransport =
@@ -149,21 +133,6 @@ const ApplicationEndpoint: FC<Props> = ({ entity, onChange, isEntityImmutable, i
         ...(entity?.mcp || {}),
         endpoint: entity?.mcp?.endpoint || '',
         transport: selectedTransport.value,
-      };
-      onChange({ ...entity, mcp: updatedMCPContainer });
-    },
-    [entity, onChange],
-  );
-
-  const onChangeMCPConfigDelivery = useCallback(
-    (configDeliveryId: string | string[]) => {
-      const selectedConfigDelivery =
-        Object.values(ApplicationMCPConfigDelivery).find((source) => source === configDeliveryId) ||
-        Object.values(ApplicationMCPConfigDelivery)[0];
-      const updatedMCPContainer: ApplicationMCPContainer = {
-        ...(entity?.mcp || {}),
-        endpoint: entity?.mcp?.endpoint || '',
-        configDelivery: selectedConfigDelivery,
       };
       onChange({ ...entity, mcp: updatedMCPContainer });
     },
@@ -305,27 +274,6 @@ const ApplicationEndpoint: FC<Props> = ({ entity, onChange, isEntityImmutable, i
                 label={t(EntityFieldsI18nKey.Transport)}
                 onChange={onChangeMCPTransport}
                 disabled
-              />
-
-              <DialSwitch
-                switchId="forwardPerRequestKey"
-                isOn={entity.mcp?.forwardPerRequestKey}
-                label={t(EntityFieldsI18nKey.forwardPerRequestKey)}
-                onChange={onChangeForwardPerRequestKey}
-                disabled={disabled}
-              />
-
-              <DialSelectField
-                id="configDelivery"
-                value={entity.mcp?.configDelivery}
-                options={Object.values(ApplicationMCPConfigDelivery).map((value) => ({
-                  value,
-                  label: t(MCP_CONFIG_DELIVERY_I18N_MAP[value]),
-                }))}
-                containerClassName="max-w-[160px]"
-                label={t(EntityFieldsI18nKey.configDelivery)}
-                onChange={onChangeMCPConfigDelivery}
-                disabled={disabled}
               />
             </div>
           )}
