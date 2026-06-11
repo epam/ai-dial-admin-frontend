@@ -4,9 +4,10 @@ import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import IdControl from '@/src/components/BaseControls/Id/Id';
 import VersionControl from '@/src/components/BaseControls/Version';
-import ApplicationSource from '@/src/components/SourceField/Application/ApplicationSource';
+import SourceField from '@/src/components/SourceField/SourceField';
+import { ASSET_APPLICATION_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
 import ToolsetEndpoint from '@/src/components/SourceField/Endpoints/ToolsetEndpoint';
-import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
@@ -97,11 +98,15 @@ const AssetProperties: FC<Props> = ({
       <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} />
 
       {view === ApplicationRoute.AssetsApplications && !isEntityImmutable && !initialValues && (
-        <ApplicationSource
+        <SourceField
+          id="sourceType"
+          view={view}
+          label={t(EntitiesI18nKey.SourceType)}
+          sourceItems={ASSET_APPLICATION_SOURCE_ITEMS}
           entity={entity as AssetApp}
           runners={runners}
           isEntityImmutable={isEntityImmutable}
-          onChangeEntity={onChangeEntity}
+          onChange={onChangeEntity}
           isModal={isModal}
         />
       )}
