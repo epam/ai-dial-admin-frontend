@@ -1345,7 +1345,7 @@ export default {
     NameExists: 'This ID already exists.',
     DisplayNameExists: 'This Display name already exists.',
     Unique: 'This field must be unique.',
-    Version: 'For a entity with this Display name, specifying a version is mandatory.',
+    Version: 'For an entity with this Display name, specifying a version is mandatory.',
     NameVersionCombination: 'This combination of name and version already exists. Specify another',
     Length: 'User can add any characters, but not more than {number}.',
     MinMaxLength: 'User can add any allowed characters, but not less than {min} and not more than {max}.',
@@ -2007,5 +2007,7 @@ export default {
     Temperature: 'Temperature',
     SystemPrompt: 'System prompt',
     SystemPromptPlaceholder: 'Enter system prompt...',
+    ApplySettings: 'Apply settings',
+    Settings: 'Settings',
   },
 } as const;

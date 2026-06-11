@@ -23,11 +23,14 @@ const ImportValidationCellRenderer = (params: ICellRendererParams) => {
 
   return (
     <div className="flex items-center gap-2 py-3 px-2 w-full">
-      <StateIcon {...BASE_BUTTON_ICON_PROPS} className={isFailed ? 'text-error' : 'text-success'} />
-      <div>{label}</div>
+      <DialTooltip triggerClassName="grow" tooltip={label}>
+        <div className="flex items-center gap-2">
+          <StateIcon {...BASE_BUTTON_ICON_PROPS} className={isFailed ? 'text-error' : 'text-success'} />
+          <div>{label}</div>
+        </div>
+      </DialTooltip>
       {isFailed && (
         <DialTooltip
-          triggerClassName="ml-auto"
           tooltip={
             <div className="flex flex-col gap-1">
               {meta.validationErrors.map((e, i) => (

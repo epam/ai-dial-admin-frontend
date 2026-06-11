@@ -1943,6 +1943,8 @@ export enum PlaygroundI18nKey {
   Temperature = 'Playground.Temperature',
   SystemPrompt = 'Playground.SystemPrompt',
   SystemPromptPlaceholder = 'Playground.SystemPromptPlaceholder',
+  ApplySettings = 'Playground.ApplySettings',
+  Settings = 'Playground.Settings',
 }
 
 export enum JsonAtaI18nKey {

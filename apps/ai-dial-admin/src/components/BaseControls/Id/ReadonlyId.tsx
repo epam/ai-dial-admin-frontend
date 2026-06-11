@@ -1,9 +1,12 @@
 import { FC } from 'react';
 
+import classNames from 'classnames';
+
+import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
-import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 
 interface Props {
   value: string;
@@ -15,7 +18,7 @@ const ReadonlyId: FC<Props> = ({ value }) => {
   return (
     <div className="flex-1 min-w-0">
       <LabelledText copyLabel={t(EntityFieldsI18nKey.id)} copyable={true}>
-        <div className="flex flex-row gap-x-3 items-center">
+        <div className={classNames('flex flex-row gap-x-3 items-center', STANDARD_CONTROL_WIDTH)}>
           <p className="truncate">{value || ''}</p>
           <CopyButton value={value || ''} valueLabel={t(EntityFieldsI18nKey.id)} />
         </div>

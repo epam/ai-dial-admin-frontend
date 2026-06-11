@@ -38,7 +38,7 @@ import { ResourceType } from '@/src/types/resource-type';
 import { ImportFileType } from '@/src/types/import';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { importPrompts } from '@/src/utils/prompts/import-prompts';
-import { getNameVersionFromAsset } from '@/src/utils/entities/versions';
+import { compareVersions, getNameVersionFromAsset } from '@/src/utils/entities/versions';
 import MultiSelectTagsRenderer from '../../Grid/CellRenderers/MultiSelectTagsRenderer';
 import { TEMP_FOLDER } from '@/src/constants/file';
 import { useConversationFolder } from '@/src/context/assets/ConversationsFolderContext';
@@ -47,7 +47,10 @@ import { CrudAssetRoute } from './types';
 
 export const getItems = (data: unknown) => {
   const asset = data as AssetWithVersion;
-  return asset?.versions?.map((v) => ({ value: v, label: v })) as SelectOption[];
+  return asset?.versions
+    ?.slice()
+    .sort((a, b) => compareVersions(a, b))
+    .map((v) => ({ value: v, label: v })) as SelectOption[];
 };
 
 export const customMultiSelectTagsRenderer = (
