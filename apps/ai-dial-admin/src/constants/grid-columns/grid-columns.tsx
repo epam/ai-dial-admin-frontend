@@ -451,13 +451,16 @@ export const TELEMETRY_COLUMNS: ColDef[] = [
   },
 ];
 
+export const suppressCellTooltip = { tooltipValueGetter: () => null };
+
 export const TELEMETRY_GRID_COLUMNS: ColDef[] = [
-  NAME_COLUMN,
-  ...TELEMETRY_COLUMNS,
+  { ...NAME_COLUMN, ...suppressCellTooltip },
+  ...TELEMETRY_COLUMNS.map((col) => ({ ...col, ...suppressCellTooltip })),
   {
     field: 'deployment_cost',
     headerName: 'Total money',
     ...numericColumn,
+    ...suppressCellTooltip,
     valueFormatter: ({ value }) => `$${numberValueFormatter(priceValueFormatter(value) as string)}`,
     filterValueGetter: (params) =>
       numberValueFormatter(priceValueFormatter(params.data[params.colDef.field || '']) as string),
