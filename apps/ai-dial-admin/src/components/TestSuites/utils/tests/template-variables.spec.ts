@@ -378,7 +378,7 @@ describe('generateVariablesRowData', () => {
       {
         templateVariable: 'absent',
         effectiveType: TestCaseItemType.NUMBER,
-        value: '',
+        value: 42,
         defaultValue: 42,
       },
       {

@@ -5,10 +5,9 @@ import TestCases from '../TestCases';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 
 vi.mock('../TemplateVariables', () => ({
-  default: ({ selectedTestSuite, onChange, isSkipRefresh }: any) => (
+  default: ({ selectedTestSuite, onChange }: any) => (
     <section aria-label="template variables">
       <span>{selectedTestSuite.id}</span>
-      <span role="note">{String(isSkipRefresh)}</span>
       <button onClick={() => onChange({ ...selectedTestSuite, name: 'Changed by TV' }, true)}>TV Change</button>
     </section>
   ),
@@ -71,25 +70,6 @@ describe('TestCases', () => {
 
     const tclSection = screen.getByRole('region', { name: 'test cases list' });
     expect(tclSection).toHaveTextContent('my-suite');
-  });
-
-  test('passes isSkipRefresh to TemplateVariables', () => {
-    render(
-      <TestCases
-        selectedTestSuite={createTestSuite()}
-        onChange={mockOnChange}
-        isSkipRefresh={true}
-        {...defaultDatasetProps}
-      />,
-    );
-
-    expect(screen.getByRole('note')).toHaveTextContent('true');
-  });
-
-  test('defaults isSkipRefresh to undefined', () => {
-    render(<TestCases selectedTestSuite={createTestSuite()} onChange={mockOnChange} {...defaultDatasetProps} />);
-
-    expect(screen.getByRole('note')).toHaveTextContent('undefined');
   });
 
   test('passes onChange to TemplateVariables and it triggers correctly', () => {

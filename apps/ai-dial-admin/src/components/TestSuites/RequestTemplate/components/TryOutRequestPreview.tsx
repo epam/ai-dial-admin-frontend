@@ -62,15 +62,13 @@ const TryOutRequestPreview: FC<Props> = ({
     <DialLoader size={40} />
   ) : (
     <>
-      <div className="flex flex-col">
-        <p className="dial-small-text mb-2">{t(TestSuitesI18nKey.DynamicConfiguration)}</p>
-        <Variables
-          testSuiteId={testSuite.id as string}
-          variables={variables}
-          requestBody={requestBody}
-          onChangeRequestBody={onChangeRequestBody}
-        />
-      </div>
+      <Variables
+        testSuiteId={testSuite.id as string}
+        variables={variables}
+        requestBody={requestBody}
+        onChangeRequestBody={onChangeRequestBody}
+        readonly={!!testCaseId}
+      />
 
       {Object.keys(resolvedRequest).length > 0 && (
         <div className="flex flex-col">

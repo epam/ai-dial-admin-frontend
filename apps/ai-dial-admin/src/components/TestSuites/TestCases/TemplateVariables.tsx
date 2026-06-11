@@ -2,17 +2,13 @@
 
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { GridApi, GridReadyEvent } from 'ag-grid-community';
-
 import { getTestSuiteTemplateVariables } from '@/src/app/[lang]/test-suites/actions';
-import GridView from '@/src/components/Grid/GridView/GridView';
-import { getDynamicConfigurationsColumns } from '@/src/components/TestSuites/utils/columns';
+import DynamicConfiguration from '@/src/components/TestSuites/Common/DynamicConfiguration/DynamicConfiguration';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import {
   generateInputBinding,
   generateInputBindingsRowData,
 } from '@/src/components/TestSuites/utils/template-variables';
-import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
 import {
   InputBinding,
   InputBindingRowData,
@@ -20,19 +16,17 @@ import {
   TestCaseSchema,
   TestSuite,
 } from '@/src/models/evaluation/test-suite';
+import { InputBindingType } from '@/src/types/evaluation';
 
 interface Props {
   selectedTestSuite: TestSuite;
   onChange: (testSuite: TestSuite, isSkipRefresh?: boolean) => void;
-  isSkipRefresh?: boolean;
   schema?: TestCaseSchema[];
 }
 
-const TemplateVariables: FC<Props> = ({ selectedTestSuite, onChange, isSkipRefresh, schema }) => {
-  const t = useI18n();
-
-  const [gridApi, setGridApi] = useState<GridApi>();
+const TemplateVariables: FC<Props> = ({ selectedTestSuite, onChange, schema }) => {
   const [variables, setVariables] = useState<TemplateVariable[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const bindingsRef = useRef(selectedTestSuite.inputBindings || []);
   const onChangeRef = useRef(onChange);
@@ -45,100 +39,77 @@ const TemplateVariables: FC<Props> = ({ selectedTestSuite, onChange, isSkipRefre
   }, [onChange, selectedTestSuite]);
 
   useEffect(() => {
-    getTestSuiteTemplateVariables(selectedTestSuite.id as string).then((res) => {
-      setVariables(res || []);
-    });
+    setIsLoading(true);
+    getTestSuiteTemplateVariables(selectedTestSuite.id as string)
+      .then((res) => {
+        setVariables(res || []);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const onChangeParam = useCallback(
-    (value: string | object, data: InputBindingRowData, _field: string, _index?: number) => {
-      const inputBindings = [...bindingsRef.current];
-      const index = inputBindings.findIndex((b) => b.templateVariable === data.templateVariable);
-      if (index === -1) {
-        inputBindings.push({
-          templateVariable: data.templateVariable,
-          constantValue: value,
-        });
-      } else {
-        const binding = { ...inputBindings[index as number] };
-        binding.constantValue = value;
-        binding.templateVariable = data.templateVariable;
-        inputBindings.splice(index as number, 1, binding);
-      }
-      onChangeRef.current({ ...selectedTestSuiteRef.current, inputBindings }, true);
-    },
-    [],
-  );
-
-  const onChangeSelect = useCallback((value: string, data: InputBindingRowData, field: string, _index?: number) => {
-    const inputBindings = [...bindingsRef.current];
-    const index = inputBindings.findIndex((b) => b.templateVariable === data.templateVariable);
-    if (index === -1) {
-      let binding: InputBinding = {
-        templateVariable: data.templateVariable,
-        constantValue: void 0,
-        dataField: void 0,
-      };
-      binding = generateInputBinding(binding, field, value);
-
-      inputBindings.push(binding);
-    } else {
-      let binding = { ...inputBindings[index as number] };
-      binding = generateInputBinding(binding, field, value);
-
-      binding.templateVariable = data.templateVariable;
-      inputBindings.splice(index as number, 1, binding);
-    }
-    onChangeRef.current({ ...selectedTestSuiteRef.current, inputBindings });
-  }, []);
-
-  const columns = useMemo(() => {
-    return [
-      ...getDynamicConfigurationsColumns(
-        onChangeParam,
-        onChangeSelect,
-        schema || [],
-        selectedTestSuite.id as string,
-        t,
-      ),
-    ];
-  }, [onChangeParam, onChangeSelect, selectedTestSuite.id, schema, t]);
-
-  const data = useMemo(
+  const rows = useMemo(
     () => generateInputBindingsRowData(variables || [], selectedTestSuite.inputBindings || []),
     [variables, selectedTestSuite.inputBindings],
   );
 
-  const onGridReady = (event: GridReadyEvent) => {
-    setGridApi(event.api);
-    event.api?.updateGridOptions({
-      columnDefs: columns,
-      rowData: data,
-    });
-  };
-
-  useEffect(() => {
-    if (!gridApi?.isDestroyed()) {
-      gridApi?.updateGridOptions({ columnDefs: columns });
+  const upsertBinding = useCallback((templateVariable: string, update: (binding: InputBinding) => InputBinding) => {
+    const inputBindings = [...bindingsRef.current];
+    const index = inputBindings.findIndex((b) => b.templateVariable === templateVariable);
+    const base: InputBinding = index === -1 ? { templateVariable } : { ...inputBindings[index] };
+    const updated = update(base);
+    if (index === -1) {
+      inputBindings.push(updated);
+    } else {
+      inputBindings.splice(index, 1, updated);
     }
-  }, [columns, gridApi]);
+    return inputBindings;
+  }, []);
 
-  useEffect(() => {
-    if (!isSkipRefresh && !gridApi?.isDestroyed()) {
-      gridApi?.updateGridOptions({ rowData: data });
-    }
-  }, [isSkipRefresh, data, gridApi]);
+  const onChangeValue = useCallback(
+    (row: InputBindingRowData, value: unknown) => {
+      const inputBindings = upsertBinding(row.templateVariable, (b) => ({
+        ...b,
+        constantValue: value,
+      }));
+      onChangeRef.current({ ...selectedTestSuiteRef.current, inputBindings }, true);
+    },
+    [upsertBinding],
+  );
+
+  const onChangeType = useCallback(
+    (row: InputBindingRowData, type: InputBindingType) => {
+      const inputBindings = upsertBinding(row.templateVariable, (b) =>
+        generateInputBinding({ ...b, constantValue: void 0, dataField: void 0 }, 'type', type),
+      );
+      onChangeRef.current({ ...selectedTestSuiteRef.current, inputBindings });
+    },
+    [upsertBinding],
+  );
+
+  const onChangeDataField = useCallback(
+    (row: InputBindingRowData, dataField: string) => {
+      const inputBindings = upsertBinding(row.templateVariable, (b) => generateInputBinding(b, 'dataField', dataField));
+      onChangeRef.current({ ...selectedTestSuiteRef.current, inputBindings });
+    },
+    [upsertBinding],
+  );
 
   return (
-    <div className="flex flex-col gap-y-4 h-[250px]">
-      <h1>{t(TestSuitesI18nKey.DynamicConfiguration)}</h1>
-      <GridView
-        getIsEmptyData={() => !data.length}
-        emptyDataProps={{ title: t(BasicI18nKey.NoVariables) }}
-        onGridReady={onGridReady}
-      />
-    </div>
+    <DynamicConfiguration
+      testSuiteId={selectedTestSuite.id as string}
+      rows={rows}
+      schema={schema}
+      showTypeSelector
+      loading={isLoading}
+      containerClassName={STANDARD_CONTROL_WIDTH}
+      contentClassName="max-h-[350px] overflow-y-auto"
+      onChangeValue={onChangeValue}
+      onChangeType={onChangeType}
+      onChangeDataField={onChangeDataField}
+    />
   );
 };
 
