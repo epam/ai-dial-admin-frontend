@@ -225,7 +225,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
               onCreate={createApp}
               context={useAppsFolder}
               initialValues={{
-                applicationTypeSchemaId: selectedRunner.$id,
+                source: selectedRunner.$id ? createSchemaSource(selectedRunner.$id) : undefined,
               }}
             />,
             document.body,

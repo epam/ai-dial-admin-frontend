@@ -12,7 +12,9 @@ import FilePath from '@/src/components/Common/FilePath/FilePath';
 import Defaults from '@/src/components/Defaults/Defaults';
 import { getAssetCreateFolderHandler } from '@/src/components/EntityListView/utils';
 import EntityAttachments from '@/src/components/EntityMainProperties/EntityAttachments/EntityAttachments';
-import ApplicationSource from '@/src/components/SourceField/Application/ApplicationSource';
+import SourceField from '@/src/components/SourceField/SourceField';
+import { ASSET_APPLICATION_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
+import { getSchemaSourceId } from '@/src/utils/entities/application-source';
 import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
@@ -36,9 +38,10 @@ const ApplicationAssetProperties: FC<Props> = ({ asset, runners, onChange, isPub
 
   const appRunner = useMemo(() => getAppRunner(assetApp, runners), [assetApp, runners]);
 
+  const schemaSourceId = getSchemaSourceId(assetApp.source);
   const showResponsesDefaults =
-    (!assetApp.applicationTypeSchemaId && !!assetApp.responsesEndpoint) ||
-    (!!assetApp.applicationTypeSchemaId && !!appRunner?.['dial:applicationTypeResponsesEndpoint']);
+    (!schemaSourceId && !!assetApp.responsesEndpoint) ||
+    (!!schemaSourceId && !!appRunner?.['dial:applicationTypeResponsesEndpoint']);
 
   return (
     <div className="flex flex-col gap-y-8">
@@ -79,9 +82,13 @@ const ApplicationAssetProperties: FC<Props> = ({ asset, runners, onChange, isPub
         />
       )}
 
-      <ApplicationSource
+      <SourceField
+        id="sourceType"
+        view={ApplicationRoute.AssetsApplications}
+        label={t(EntitiesI18nKey.SourceType)}
+        sourceItems={ASSET_APPLICATION_SOURCE_ITEMS}
         entity={asset as AssetApp}
-        onChangeEntity={onChange as (entity: DialApplication) => void}
+        onChange={onChange as (entity: DialApplication) => void}
         runners={runners}
         isEntityImmutable={true}
       />
