@@ -101,36 +101,9 @@ describe('getAppRunner', () => {
     expect(result).toEqual(schemes[1]);
   });
 
-  test('returns scheme matching applicationTypeSchemaId from DialAssetApp', () => {
-    const entity = { applicationTypeSchemaId: 'scheme-789' };
-    const schemes = [
-      { $id: 'scheme-123', 'dial:applicationTypeEditorUrl': 'https://url1' },
-      { $id: 'scheme-789', 'dial:applicationTypeEditorUrl': 'https://url2' },
-    ];
-
-    const result = getAppRunner(entity, schemes);
-    expect(result).toEqual(schemes[1]);
-  });
-
-  test('returns scheme matching source when AssetApp applicationTypeSchemaId does not match', () => {
+  test('returns scheme matching source applicationTypeSchemaId (second scheme)', () => {
     const entity = {
-      applicationTypeSchemaId: 'nonexistent-id',
       source: { $type: ApplicationSourceType.SCHEMA, applicationTypeSchemaId: 'scheme-456' },
-    };
-    const schemes = [
-      { $id: 'scheme-123', 'dial:applicationTypeEditorUrl': 'https://url1' },
-      { $id: 'scheme-456', 'dial:applicationTypeEditorUrl': 'https://url2' },
-    ];
-
-    const result = getAppRunner(entity, schemes);
-    expect(result).toEqual(schemes[1]);
-  });
-
-  test('returns scheme matching editorUrl when both AssetApp applicationTypeSchemaId and source do not match', () => {
-    const entity = {
-      applicationTypeSchemaId: 'nonexistent-id',
-      source: { $type: ApplicationSourceType.SCHEMA, applicationTypeSchemaId: 'another-id' },
-      editorUrl: 'https://url2',
     };
     const schemes = [
       { $id: 'scheme-123', 'dial:applicationTypeEditorUrl': 'https://url1' },
@@ -160,34 +133,6 @@ describe('getAppRunner', () => {
 
     const result = getAppRunner(entity);
     expect(result).toEqual(entity);
-  });
-
-  test('returns scheme matching AssetApp applicationTypeSchemaId when both AssetApp id and source exist', () => {
-    const entity = {
-      applicationTypeSchemaId: 'scheme-123',
-      source: { $type: ApplicationSourceType.SCHEMA, applicationTypeSchemaId: 'scheme-456' },
-    };
-    const schemes = [
-      { $id: 'scheme-123', 'dial:applicationTypeEditorUrl': 'https://url1' },
-      { $id: 'scheme-456', 'dial:applicationTypeEditorUrl': 'https://url2' },
-    ];
-
-    const result = getAppRunner(entity, schemes);
-    expect(result).toEqual(schemes[0]);
-  });
-
-  test('returns scheme matching AssetApp applicationTypeSchemaId when source is invalid', () => {
-    const entity = {
-      applicationTypeSchemaId: 'scheme-123',
-      source: { $type: ApplicationSourceType.SCHEMA, applicationTypeSchemaId: 'invalid-id' },
-    };
-    const schemes = [
-      { $id: 'scheme-123', 'dial:applicationTypeEditorUrl': 'https://url1' },
-      { $id: 'scheme-456', 'dial:applicationTypeEditorUrl': 'https://url2' },
-    ];
-
-    const result = getAppRunner(entity, schemes);
-    expect(result).toEqual(schemes[0]);
   });
 
   test('returns undefined when no schemes match and applicationSchemes is non-empty', () => {

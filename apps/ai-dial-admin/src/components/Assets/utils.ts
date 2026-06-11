@@ -172,13 +172,20 @@ export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: 
 
 export const getDeleteNotificationContent = (
   view: ApplicationRoute,
-  fileNodes: DialDeletedItem[] | DialFile[],
+  fileNodes: DialDeletedItem[] | DialFile[] | AssetWithVersion[],
   t: (key: string, options?: Record<string, string | number>) => string,
   destinationFolder?: string,
 ) => {
-  const isDeleteSeveralFiles = fileNodes.length > 1;
+  const deletedItemsCount = fileNodes.reduce((count, item) => {
+    const itemCount =
+      item.nodeType === DialFileNodeType.ITEM ? (item as AssetWithVersion)?.selectedVersions?.length || 1 : 1;
+    return count + itemCount;
+  }, 0);
+
+  const isDeleteSeveralFiles = deletedItemsCount > 1;
   const isDeleteFolder =
     fileNodes.length === 1 && (fileNodes[0] as DialDeletedItem).nodeType === DialFileNodeType.FOLDER;
+  const isMultipleVersionsDelete = fileNodes.length === 1 && deletedItemsCount > 1;
 
   if (isDeleteFolder) {
     const title = t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Folder) });
@@ -191,15 +198,27 @@ export const getDeleteNotificationContent = (
 
   switch (view) {
     case ApplicationRoute.Conversations: {
+      if (isMultipleVersionsDelete) {
+        const title = t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Conversation) });
+        const descriptions = (fileNodes as AssetWithVersion[])[0].selectedVersions?.map((version) =>
+          t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
+            item: t(FileManagerI18nKey.Conversation),
+            name: `${(fileNodes as DialFile[])?.[0].name || ''}__${version}`,
+            path: destinationFolder || '/',
+          }),
+        );
+
+        return descriptions?.map((description) => ({ title, description }));
+      }
       const title = isDeleteSeveralFiles
         ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Items) })
         : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Conversation) });
       const description = isDeleteSeveralFiles
         ? t(FileManagerI18nKey.DeleteSuccessDescriptionForMany, {
-            count: fileNodes.length,
+            count: deletedItemsCount,
           })
         : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
-            item: t(FileManagerI18nKey.Prompt),
+            item: t(FileManagerI18nKey.Conversation),
             name: (fileNodes as DialFile[])?.[0].name || '',
             path: destinationFolder || '/',
           });
@@ -211,7 +230,7 @@ export const getDeleteNotificationContent = (
         : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.File) });
       const description = isDeleteSeveralFiles
         ? t(FileManagerI18nKey.DeleteSuccessDescriptionForMany, {
-            count: fileNodes.length,
+            count: deletedItemsCount,
           })
         : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
             item: t(FileManagerI18nKey.File),
@@ -220,12 +239,24 @@ export const getDeleteNotificationContent = (
       return { title, description };
     }
     case ApplicationRoute.Prompts: {
+      if (isMultipleVersionsDelete) {
+        const title = t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Prompt) });
+        const descriptions = (fileNodes as AssetWithVersion[])[0].selectedVersions?.map((version) =>
+          t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
+            item: t(FileManagerI18nKey.Prompt),
+            name: `${(fileNodes as DialFile[])?.[0].name || ''}__${version}`,
+            path: destinationFolder || '/',
+          }),
+        );
+
+        return descriptions?.map((description) => ({ title, description }));
+      }
       const title = isDeleteSeveralFiles
         ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Items) })
         : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Prompt) });
       const description = isDeleteSeveralFiles
         ? t(FileManagerI18nKey.DeleteSuccessDescriptionForMany, {
-            count: fileNodes.length,
+            count: deletedItemsCount,
           })
         : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
             item: t(FileManagerI18nKey.Prompt),
@@ -235,12 +266,25 @@ export const getDeleteNotificationContent = (
       return { title, description };
     }
     case ApplicationRoute.AssetsApplications: {
+      if (isMultipleVersionsDelete) {
+        const title = t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Application) });
+        const descriptions = (fileNodes as AssetWithVersion[])[0].selectedVersions?.map((version) =>
+          t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
+            item: t(FileManagerI18nKey.Application),
+            name: `${(fileNodes as DialFile[])?.[0].name || ''}__${version}`,
+            path: destinationFolder || '/',
+          }),
+        );
+
+        return descriptions?.map((description) => ({ title, description }));
+      }
+
       const title = isDeleteSeveralFiles
         ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Items) })
         : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Application) });
       const description = isDeleteSeveralFiles
         ? t(FileManagerI18nKey.DeleteSuccessDescriptionForMany, {
-            count: fileNodes.length,
+            count: deletedItemsCount,
           })
         : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
             item: t(FileManagerI18nKey.Application),
@@ -250,12 +294,25 @@ export const getDeleteNotificationContent = (
       return { title, description };
     }
     case ApplicationRoute.AssetsToolsets: {
+      if (isMultipleVersionsDelete) {
+        const title = t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Toolset) });
+        const descriptions = (fileNodes as AssetWithVersion[])[0].selectedVersions?.map((version) =>
+          t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
+            item: t(FileManagerI18nKey.Toolset),
+            name: `${(fileNodes as DialFile[])?.[0].name || ''}__${version}`,
+            path: destinationFolder || '/',
+          }),
+        );
+
+        return descriptions?.map((description) => ({ title, description }));
+      }
+
       const title = isDeleteSeveralFiles
         ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Items) })
         : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Toolset) });
       const description = isDeleteSeveralFiles
         ? t(FileManagerI18nKey.DeleteSuccessDescriptionForMany, {
-            count: fileNodes.length,
+            count: deletedItemsCount,
           })
         : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
             item: t(FileManagerI18nKey.Toolset),

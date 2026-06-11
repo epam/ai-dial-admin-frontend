@@ -29,6 +29,10 @@ export const isEntitiesWithDisplayVersion = (view?: ApplicationRoute) => {
   return view === ApplicationRoute.Models || view === ApplicationRoute.Applications;
 };
 
+export const isApplicationView = (view?: ApplicationRoute): boolean => {
+  return view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications;
+};
+
 export const isEvaluationView = (view?: ApplicationRoute): boolean => {
   return (
     view === ApplicationRoute.TestSuites ||

@@ -3,7 +3,7 @@ import { describe, expect, test, vi } from 'vitest';
 
 import SourceField from '@/src/components/SourceField/SourceField';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
-import { APPLICATION_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
+import { APPLICATION_SOURCE_ITEMS, ASSET_APPLICATION_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
 import { DialApplication } from '@/src/models/dial/application';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -216,6 +216,60 @@ describe('SourceField view-aware clearing (Applications view)', () => {
     );
 
     expect(screen.getByTestId('containers-branch')).toBeInTheDocument();
+  });
+});
+
+describe('SourceField (AssetsApplications view)', () => {
+  test('dropdown offers only Endpoints + App Runner (no Container)', () => {
+    const entity = makeApp({ source: { $type: SOURCE_TYPE.ENDPOINTS }, endpoint: 'https://chat.example.com' });
+
+    render(
+      <SourceField
+        id="sourceType"
+        view={ApplicationRoute.AssetsApplications}
+        sourceItems={ASSET_APPLICATION_SOURCE_ITEMS}
+        entity={entity}
+        onChange={vi.fn()}
+      />,
+    );
+
+    const options = Array.from(screen.getByTestId('select-sourceType').querySelectorAll('option'))
+      .map((o) => (o as HTMLOptionElement).value)
+      .filter(Boolean);
+    expect(options).toEqual([SOURCE_TYPE.ENDPOINTS, SOURCE_TYPE.SCHEMA]);
+    expect(options).not.toContain(SOURCE_TYPE.CONTAINER);
+  });
+
+  test('ENDPOINTS → SCHEMA clears mcp/viewerUrl/editorUrl/applicationProperties + endpoint', () => {
+    const onChange = vi.fn();
+    const entity = makeApp({
+      source: { $type: SOURCE_TYPE.ENDPOINTS },
+      endpoint: 'https://chat.example.com',
+      mcp: { endpoint: 'https://mcp.example.com' },
+      viewerUrl: 'https://viewer.example.com',
+      editorUrl: 'https://editor.example.com',
+      applicationProperties: { foo: 'bar' } as any,
+    });
+
+    render(
+      <SourceField
+        id="sourceType"
+        view={ApplicationRoute.AssetsApplications}
+        sourceItems={ASSET_APPLICATION_SOURCE_ITEMS}
+        entity={entity}
+        onChange={onChange}
+      />,
+    );
+
+    fireEvent.change(screen.getByTestId('select-sourceType'), { target: { value: SOURCE_TYPE.SCHEMA } });
+
+    const last = onChange.mock.calls.at(-1)?.[0] as DialApplication;
+    expect(last.source?.$type).toBe(SOURCE_TYPE.SCHEMA);
+    expect(last.endpoint).toBeUndefined();
+    expect(last.mcp).toBeUndefined();
+    expect(last.viewerUrl).toBeUndefined();
+    expect(last.editorUrl).toBeUndefined();
+    expect(last.applicationProperties).toBeUndefined();
   });
 });
 

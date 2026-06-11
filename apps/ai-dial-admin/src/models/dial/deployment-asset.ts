@@ -4,11 +4,10 @@ import { DialFile } from './file';
 import { DialPrompt } from './prompt';
 import { Toolset } from './toolset';
 
-export interface AssetApp extends DialFile, Omit<DialApplication, 'source'>, EntityValidityState {
+export interface AssetApp extends DialFile, DialApplication, EntityValidityState {
   version: string;
   items?: AssetApp[];
   versions?: string[];
-  applicationTypeSchemaId?: string;
   reference?: string;
   displayVersion?: string;
   selectedVersions?: string[];
