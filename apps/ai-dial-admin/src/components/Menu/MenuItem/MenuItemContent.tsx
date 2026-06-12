@@ -8,12 +8,7 @@ import { MenuI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { MenuItem } from '../menu-configuration';
 
-const PREVIEW_TAG_MENU_ITEMS = new Set([
-  MenuI18nKey.TestSuites,
-  MenuI18nKey.Datasets,
-  MenuI18nKey.Runs,
-  MenuI18nKey.Playground,
-]);
+const PREVIEW_TAG_MENU_ITEMS = new Set([MenuI18nKey.TestSuites, MenuI18nKey.Datasets, MenuI18nKey.Runs]);
 interface Props {
   menuItem: MenuItem;
   isActive: boolean;
