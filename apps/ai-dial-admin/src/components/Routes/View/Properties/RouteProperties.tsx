@@ -293,6 +293,7 @@ const RouteProperties: FC<Props> = ({ route, disabled, isAppRoute, routeNames, o
           entity={route}
           onChangeEntity={onChange}
           required={isUpstreamsRequired}
+          collapsible={false}
         />
       </div>
       <MaxRetryAttempts disabled={disabled} entity={route} onChangeEntity={onChange} />
