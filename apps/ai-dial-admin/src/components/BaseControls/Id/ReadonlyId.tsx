@@ -15,7 +15,7 @@ const ReadonlyId: FC<Props> = ({ value }) => {
   return (
     <div className="flex-1 min-w-0">
       <LabelledText copyLabel={t(EntityFieldsI18nKey.id)} copyable={true}>
-        <div className={'flex flex-row gap-x-3 items-center max-w-[640px]'}>
+        <div className="flex flex-row gap-x-3 items-center max-w-[640px]">
           <p className="truncate">{value || ''}</p>
           <CopyButton value={value || ''} valueLabel={t(EntityFieldsI18nKey.id)} />
         </div>
