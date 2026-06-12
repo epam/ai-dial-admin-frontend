@@ -10,7 +10,7 @@ const ReadOnlyBadge: FC = () => {
   const t = useI18n();
 
   return (
-    <DialTooltip tooltip={t(ReadOnlyI18nKey.Description)} triggerClassName="flex items-center">
+    <DialTooltip tooltip={t(ReadOnlyI18nKey.Description)} triggerClassName="flex items-center" placement="left">
       <DialTag
         label={t(ReadOnlyI18nKey.BadgeLabel)}
         className="text-inverted rounded-full bg-inverted border border-transparent h-4 dial-caption-text font-bold shrink-0"
