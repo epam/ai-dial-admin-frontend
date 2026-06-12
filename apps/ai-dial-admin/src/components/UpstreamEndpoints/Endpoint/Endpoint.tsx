@@ -53,7 +53,7 @@ const Endpoint: FC<Props> = ({
   const [responsesEndpointWarning, setResponsesEndpointWarning] = useState('');
   const isTablet = useIsTabletScreen();
 
-  const removeButtonClassName = index === 0 ? 'mt-[22px]' : 'mt-[-5px]';
+  const removeButtonClassName = index === 0 ? 'mt-[20px]' : 'mt-0';
 
   const onChangeEndPointUrl = useCallback(
     (url?: string) => {
@@ -225,7 +225,7 @@ const Endpoint: FC<Props> = ({
         </div>
       </div>
       {!disabled && (
-        <div className="w-[40px] shrink-0">
+        <div className="w-[40px] shrink-0 self-start">
           <DialRemoveButton onClick={onRemove} className={removeButtonClassName} aria-label="remove" />
         </div>
       )}
