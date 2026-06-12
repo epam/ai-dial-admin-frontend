@@ -79,7 +79,6 @@ const TabsContent: FC<Props> = ({
           originalTestSuite={originalTestSuite}
           selectedTestSuite={selectedTestSuite}
           onChange={onChange}
-          isSkipRefresh={isSkipRefresh}
           dataset={dataset ?? null}
           suiteEtag={suiteEtag ?? ''}
           onChangeDataset={onChangeDataset}

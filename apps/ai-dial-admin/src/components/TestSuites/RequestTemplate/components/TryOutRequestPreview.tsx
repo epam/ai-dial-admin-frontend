@@ -62,21 +62,19 @@ const TryOutRequestPreview: FC<Props> = ({
     <DialLoader size={40} />
   ) : (
     <>
-      <div className="flex flex-col">
-        <p className="dial-small-text mb-2">{t(TestSuitesI18nKey.DynamicConfiguration)}</p>
-        <Variables
-          testSuiteId={testSuite.id as string}
-          variables={variables}
-          requestBody={requestBody}
-          onChangeRequestBody={onChangeRequestBody}
-        />
-      </div>
+      <Variables
+        testSuiteId={testSuite.id as string}
+        variables={variables}
+        requestBody={requestBody}
+        onChangeRequestBody={onChangeRequestBody}
+        readonly={!!testCaseId}
+      />
 
       {Object.keys(resolvedRequest).length > 0 && (
-        <div className="flex flex-col">
+        <div className="flex flex-col flex-1 min-h-0">
           <p className="dial-small-text mb-2">{previewLabel}</p>
           <p className="text-secondary mb-2 dial-small-text">{previewDescription}</p>
-          <div className="h-[300px]">
+          <div className="flex-1 min-h-0">
             <JsonEditor
               entity={resolvedRequest}
               options={{ stickyScroll: { enabled: false }, wordWrap: 'bounded' }}

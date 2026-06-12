@@ -142,11 +142,13 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
                     iconBefore={<IconRefresh {...BASE_BUTTON_ICON_PROPS} />}
                     onClick={onSendRequest}
                   />
-                  <DialNeutralButton
-                    iconBefore={<IconEdit {...BASE_BUTTON_ICON_PROPS} />}
-                    label={t(ButtonsI18nKey.Change)}
-                    onClick={() => setResponse(null)}
-                  />
+                  {!testCaseId && (
+                    <DialNeutralButton
+                      iconBefore={<IconEdit {...BASE_BUTTON_ICON_PROPS} />}
+                      label={t(ButtonsI18nKey.Change)}
+                      onClick={() => setResponse(null)}
+                    />
+                  )}
                 </div>
               ) : null}
             </div>
@@ -161,7 +163,7 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
 
         {activeTab === EntityViewTab.Response && (
           <>
-            <div className="flex-1 flex flex-col gap-y-8 pb-2 min-h-0">
+            <div className="flex-1 flex flex-col gap-y-8 pb-2 min-h-0 overflow-auto">
               {!response && (
                 <TryOutRequestPreview
                   testSuite={testSuite}

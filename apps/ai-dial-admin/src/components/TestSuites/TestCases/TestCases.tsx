@@ -19,7 +19,6 @@ interface Props {
   selectedTestSuite: TestSuite;
   originalTestSuite?: TestSuite;
   onChange: (testSuite: TestSuite, isSkipRefresh?: boolean) => void;
-  isSkipRefresh?: boolean;
   testCasesActionsRef?: RefObject<TestCasesActions | null>;
   onDirtyChange?: (hasDirty: boolean) => void;
   dataset: Dataset | null;
@@ -31,7 +30,6 @@ const TestCases: FC<Props> = ({
   selectedTestSuite,
   originalTestSuite,
   onChange,
-  isSkipRefresh,
   dataset,
   suiteEtag,
   onChangeDataset,
@@ -57,12 +55,7 @@ const TestCases: FC<Props> = ({
 
   return (
     <div className="h-full flex flex-col gap-y-6">
-      <TemplateVariables
-        selectedTestSuite={selectedTestSuite}
-        schema={dataset?.testCaseSchema}
-        onChange={onChange}
-        isSkipRefresh={isSkipRefresh}
-      />
+      <TemplateVariables selectedTestSuite={selectedTestSuite} schema={dataset?.testCaseSchema} onChange={onChange} />
       {selectedTestSuite.datasetId && dataset && (
         <DatasetHeader
           dataset={dataset}

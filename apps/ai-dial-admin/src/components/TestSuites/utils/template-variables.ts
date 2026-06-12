@@ -24,7 +24,7 @@ export const generateInputBindingsRowData = (
       effectiveType: variable.effectiveType,
       constantValue: binding?.constantValue,
       type: InputBindingType.Constant,
-      value: binding?.constantValue ?? variable.defaultValue ?? '',
+      value: binding?.constantValue != null ? binding.constantValue : (variable.defaultValue ?? ''),
       defaultValue: variable.defaultValue,
     };
   });
@@ -39,7 +39,7 @@ export const generateVariablesRowData = (
     return {
       templateVariable: variable.name,
       effectiveType: variable.effectiveType,
-      value: variable.resolvedValue ?? binding ?? '',
+      value: binding != null ? binding : (variable.resolvedValue ?? variable.defaultValue ?? ''),
       defaultValue: variable.defaultValue,
     };
   });
