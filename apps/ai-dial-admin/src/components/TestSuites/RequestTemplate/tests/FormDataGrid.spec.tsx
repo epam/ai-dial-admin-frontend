@@ -1,9 +1,11 @@
+import { createRef } from 'react';
+
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { FormDataPart, FormDataType } from '@/src/models/form-data';
-import FormDataGrid from '../components/FormDataGrid';
+import FormDataGrid, { FormDataGridRef } from '../components/FormDataGrid';
 
 let capturedOnGridReady: (event: any) => void;
 let capturedGetIsEmptyData: () => boolean;
@@ -219,5 +221,26 @@ describe('FormDataGrid', () => {
     );
 
     expect(capturedGetIsEmptyData()).toBe(true);
+  });
+
+  test('ref.add appends a new empty part', () => {
+    const ref = createRef<FormDataGridRef>();
+    const content = [createPart({ name: 'a', value: '1' })];
+    render(
+      <FormDataGrid
+        ref={ref}
+        content={content}
+        changeContent={mockChangeContent}
+        selectedTestSuiteId="test-suite-id"
+      />,
+    );
+
+    ref.current?.add();
+
+    expect(mockChangeContent).toHaveBeenCalledTimes(1);
+    expect(mockChangeContent).toHaveBeenCalledWith([
+      { name: 'a', value: '1', type: FormDataType.Text },
+      { name: '', value: '', type: FormDataType.Text },
+    ]);
   });
 });

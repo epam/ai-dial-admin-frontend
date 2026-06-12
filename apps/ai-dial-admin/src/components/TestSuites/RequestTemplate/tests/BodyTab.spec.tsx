@@ -26,20 +26,27 @@ vi.mock('@/src/components/EntityTabs/JsonEditor/JsonEditor', () => ({
   },
 }));
 
-vi.mock('@/src/components/TestSuites/RequestTemplate/components/FormDataGrid', () => ({
-  default: ({ content, changeContent, hideAddButton }: any) => {
-    capturedChangeContent = changeContent;
-    return (
-      <div role="region" aria-label="Form data grid">
-        <span>FormData: {JSON.stringify(content)}</span>
-        <span data-hide-add={hideAddButton ? 'true' : 'false'} />
-        <button type="button" onClick={() => changeContent([{ name: 'x', type: FormDataType.Text, value: 'y' }])}>
-          AddPart
-        </button>
-      </div>
-    );
-  },
-}));
+vi.mock('@/src/components/TestSuites/RequestTemplate/components/FormDataGrid', async () => {
+  const { forwardRef, useImperativeHandle } = await import('react');
+  const { FormDataType } = await import('@/src/models/form-data');
+  return {
+    default: forwardRef(({ content, changeContent, hideAddButton }: any, ref: any) => {
+      capturedChangeContent = changeContent;
+      useImperativeHandle(ref, () => ({
+        add: () => changeContent([...(content || []), { name: '', value: '', type: FormDataType.Text }]),
+      }));
+      return (
+        <div role="region" aria-label="Form data grid">
+          <span>FormData: {JSON.stringify(content)}</span>
+          <span data-hide-add={hideAddButton ? 'true' : 'false'} />
+          <button type="button" onClick={() => changeContent([{ name: 'x', type: FormDataType.Text, value: 'y' }])}>
+            AddPart
+          </button>
+        </div>
+      );
+    }),
+  };
+});
 
 const createTemplate = (overrides?: Partial<TestSuiteRequestTemplate>): TestSuiteRequestTemplate => ({
   urlTemplate: '/api/test',
