@@ -180,6 +180,9 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
   const onPanelColumnsChange = useCallback((newColDefs: ColDef[]) => {
     setPanelColDefs(newColDefs);
     gridApiRef.current?.setGridOption('columnDefs', newColDefs);
+    // Resize visible columns to fill the space freed by hidden columns.
+    // Deferred so ag-grid applies the new column defs before measuring.
+    requestAnimationFrame(() => gridApiRef.current?.sizeColumnsToFit());
   }, []);
 
   const resultIds = useMemo(() => (results ?? []).map((r) => r.id!).filter(Boolean), [results]);

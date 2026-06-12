@@ -97,8 +97,8 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove, disabled })
 
   return (
     <div className="flex gap-x-3 items-end w-full">
-      <div className="flex flex-row gap-x-4 items-center w-full">
-        <div className="w-[320px]">
+      <div className="flex flex-row gap-x-4 items-center w-full min-w-0">
+        <div className="w-[320px] shrink-0">
           <DialInput
             id={`entity-default-key-${index}`}
             value={item.key}
@@ -108,7 +108,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove, disabled })
             disabled={disabled}
           />
         </div>
-        <div className="w-[136px]">
+        <div className="w-[136px] shrink-0">
           <DialSelectField
             value={item.type}
             id={`entity-default-type-${index}`}
@@ -118,7 +118,7 @@ const DefaultItem: FC<Props> = ({ index, item, changeItem, onRemove, disabled })
             disabled={disabled}
           />
         </div>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           {item.type === DefaultItemType.string && (
             <DialInput
               id={`entity-default-value-${index}`}
