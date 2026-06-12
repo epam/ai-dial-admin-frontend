@@ -49,7 +49,6 @@ export enum ApplicationRoute {
   Images = '/deployment-images',
 
   // evaluations
-  Playground = '/playground',
   TestSuites = '/test-suites',
   TestCases = '/test-cases',
   Datasets = '/datasets',

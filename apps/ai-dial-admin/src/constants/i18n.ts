@@ -7,7 +7,6 @@ export enum MenuI18nKey {
   EntitiesDescription = 'Menu.EntitiesDescription',
   AccessManagement = 'Menu.AccessManagement',
   AccessManagementDescription = 'Menu.AccessManagementDescription',
-  Playground = 'Menu.Playground',
   Approvals = 'Menu.Approvals',
   ApprovalsDescription = 'Menu.ApprovalsDescription',
   Deployments = 'Menu.Deployments',
@@ -1932,19 +1931,6 @@ export enum ActionMenuOperationI18nKey {
   Try_out = 'ActionMenuOperation.Try_out',
   Edit = 'ActionMenuOperation.Edit',
   Export = 'ActionMenuOperation.Export',
-}
-
-export enum PlaygroundI18nKey {
-  Title = 'Playground.Title',
-  Details = 'Playground.Details',
-  Tryout = 'Playground.Tryout',
-  SelectDeployment = 'Playground.SelectDeployment',
-  Deployment = 'Playground.Deployment',
-  Temperature = 'Playground.Temperature',
-  SystemPrompt = 'Playground.SystemPrompt',
-  SystemPromptPlaceholder = 'Playground.SystemPromptPlaceholder',
-  ApplySettings = 'Playground.ApplySettings',
-  Settings = 'Playground.Settings',
 }
 
 export enum JsonAtaI18nKey {

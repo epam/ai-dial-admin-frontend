@@ -103,7 +103,6 @@ export default {
     BuildersDescription:
       'Customize behavior, manage interactions, and optimize performance to ensure seamless operation.',
     Approvals: 'Approvals',
-    Playground: 'Playground',
     Metrics: 'Metrics',
     TestSuites: 'Test Suites',
     Datasets: 'Datasets',
@@ -1997,17 +1996,5 @@ export default {
     Try_out: 'Try out',
     Edit: 'Edit',
     Export: 'Export',
-  },
-  Playground: {
-    Title: 'Playground',
-    Details: 'Details',
-    Tryout: 'Tryout',
-    SelectDeployment: 'Select deployment',
-    Deployment: 'Deployment',
-    Temperature: 'Temperature',
-    SystemPrompt: 'System prompt',
-    SystemPromptPlaceholder: 'Enter system prompt...',
-    ApplySettings: 'Apply settings',
-    Settings: 'Settings',
   },
 } as const;
