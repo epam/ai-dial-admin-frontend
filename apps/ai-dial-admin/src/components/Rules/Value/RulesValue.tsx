@@ -102,6 +102,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
             label={isFirstLine ? t(FoldersI18nKey.AttributeTitle) : ''}
             placeholder={t(FoldersI18nKey.AttributePlaceholder)}
             onChange={(source) => onChangeSource(source as string)}
+            containerClassName={'gap-2'}
           />
         </div>
         <div className="shrink-0 w-[160px]">
@@ -112,6 +113,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
             label={isFirstLine ? t(FoldersI18nKey.OperationTitle) : ''}
             placeholder={t(FoldersI18nKey.OperationPlaceholder)}
             onChange={(fun) => onChangeFunction(fun as string)}
+            containerClassName={'gap-2'}
           />
         </div>
         <div className="flex-1">
