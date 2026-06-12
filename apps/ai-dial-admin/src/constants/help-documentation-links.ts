@@ -155,7 +155,6 @@ export const HELP_DOCUMENTATION_LINKS: Partial<
   },
 
   // TODO: update eval links when the documentation is ready
-  // [ApplicationRoute.Playground]: '/playground',
   // [ApplicationRoute.TestSuites]: '/test-suites',
   // [ApplicationRoute.Runs]: '/runs',
   // [ApplicationRoute.Metrics]: '/metrics',
