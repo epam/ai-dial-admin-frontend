@@ -279,6 +279,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
         ...asset,
         path: `${asset.folderId}${asset.name}__${asset.version}`,
       };
+      delete (newAsset as AssetApp).reference;
       handleCreateAsset(newAsset as AssetApp, asset.folderId, true);
       handleModalClose();
     },

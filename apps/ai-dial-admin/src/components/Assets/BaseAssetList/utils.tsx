@@ -111,12 +111,7 @@ export const getGridColumns = (
     },
   };
 
-  return [
-    NAME_COLUMN('Display name') as ColDef,
-    VERSION_COLUMN,
-    AUTHOR_COLUMN,
-    UPDATED_AT_COLUMN('Updated time') as ColDef,
-  ];
+  return [NAME_COLUMN('Name') as ColDef, VERSION_COLUMN, AUTHOR_COLUMN, UPDATED_AT_COLUMN('Updated time') as ColDef];
 };
 
 export const getAllSelectedItemsPaths = (basePath: string, selectedVersions: Record<string, string[]>): string[] => {
