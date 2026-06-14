@@ -39,13 +39,13 @@ const Header: FC<Props> = ({ isEnableAuth, docLink }) => {
       </div>
       <div className="absolute left-1/2 lg:left-[88px] top-0 flex h-full -translate-x-1/2 lg:translate-x-0 items-center gap-2 justify-center text-primary">
         <Logo />
-        {isReadOnlyAdmin && <ReadOnlyAdminBadge />}
       </div>
       <div className="lg:flex-1 lg:min-w-0 lg:flex lg:flex-row lg:items-center lg:pl-[200px]">
         <Breadcrumbs mobile={false} />
       </div>
 
       <div className="flex items-center gap-3">
+        {isReadOnlyAdmin && <ReadOnlyAdminBadge />}
         {docLink && <HelpButton docLink={docLink} />}
         <User isEnableAuth={isEnableAuth} />
       </div>
