@@ -1,6 +1,11 @@
 import { IF_MATCH } from '@/src/constants/api-headers';
 import { Token } from '@/src/models/auth';
-import { Dataset, DatasetTestCase, DatasetVisibilityTransition } from '@/src/models/evaluation/dataset';
+import {
+  Dataset,
+  DatasetPublishBody,
+  DatasetTestCase,
+  DatasetVisibilityTransition,
+} from '@/src/models/evaluation/dataset';
 import { EvaluationPageData, FilterDto, SortDto } from '@/src/models/request';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { API } from '@/src/server/api';
@@ -15,6 +20,7 @@ export const DATASET_TEST_CASES_URL = (id?: string) => `${DATASET_URL(id)}/test-
 export const DATASET_TEST_CASE_URL = (id?: string, testCaseId?: string) =>
   `${DATASET_TEST_CASES_URL(id)}/${testCaseId || ''}`;
 export const DATASET_VISIBILITY_URL = (id: string) => `${DATASET_URL(id)}/visibility`;
+export const DATASET_PUBLISH_URL = (id: string) => `${DATASET_URL(id)}/publish`;
 
 export class DatasetsApi extends BaseApi {
   getDatasets(
@@ -49,6 +55,10 @@ export class DatasetsApi extends BaseApi {
 
   transitionVisibility(id: string, body: DatasetVisibilityTransition, token: Token): Promise<ServerActionResponse> {
     return this.patchAction(DATASET_VISIBILITY_URL(id), body, token);
+  }
+
+  publishDataset(id: string, body: DatasetPublishBody, token: Token): Promise<ServerActionResponse> {
+    return this.postAction(DATASET_PUBLISH_URL(id), body, token);
   }
 
   getTestCases(

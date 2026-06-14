@@ -33,3 +33,8 @@ export interface DatasetTestCase {
 export interface DatasetVisibilityTransition {
   visibility: DatasetVisibility;
 }
+
+export interface DatasetPublishBody {
+  name: string;
+  description?: string;
+}

@@ -14,10 +14,11 @@ import ResetFiltersButton from './Header/ResetFiltersButton';
 import { mainListEntitiesViewClassName } from './constants';
 
 interface Props<T> extends Omit<GridViewProps<T>, 'showColumnsPanel' | 'toggleColumnsPanel'> {
-  listLabel?: string;
+  listLabel?: ReactNode;
   className?: string;
   children?: ReactNode;
   infoPanel?: ReactNode;
+  description?: ReactNode;
   isEnableColumnPanel?: boolean;
   isMainListView?: boolean;
   isEmbedToModal?: boolean;
@@ -30,6 +31,7 @@ const ListEntities = <T extends object>({
   isMainListView = false,
   isEmbedToModal = false,
   infoPanel,
+  description,
   children,
   onGridReady: onGridReadyCallback,
   ...props
@@ -89,6 +91,7 @@ const ListEntities = <T extends object>({
           {children}
         </div>
       </div>
+      {description && <div className="mb-4">{description}</div>}
       <div className="flex-1 min-h-0 flex flex-row gap-x-3">
         <div className="flex-1 min-w-0">
           <GridView
