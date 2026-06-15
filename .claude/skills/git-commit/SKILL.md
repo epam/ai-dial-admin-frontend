@@ -175,15 +175,18 @@ Issues:
 
 - Issue #<ticket>
 
-## Key Changes
+**Key Changes:**
+
 - [path/to/file.tsx](<github-file-link>) — short description
 - [path/to/file.tsx](<github-file-link>) — short description
 
-## New Components
+**New Components:**
+
 <List of newly created React components or reusable modules with a one-line description each.>
 <Omit this section entirely if no new components were added.>
 
-## Breaking Changes
+**Breaking Changes:**
+
 <Describe any breaking changes to APIs, props, or component interfaces.>
 <Omit this section entirely if there are no breaking changes.>
 
