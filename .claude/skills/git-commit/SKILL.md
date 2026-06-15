@@ -1,5 +1,11 @@
 ---
 name: git-commit
+model: claude-haiku-4-5-20251001
+context: fork
+effort: low
+allowed-tools: Bash(git:*), Bash(gh:*), Bash(grep:*), Edit(.claude/reference/areas.md)
+arguments: ticket area
+argument-hint: "[ticket] [area]"
 description: >
   Use this skill whenever the user wants to commit, push, or ship changes in a git repository.
   Triggers include: "commit changes", "push my changes", "ship it", "commit and push", "create a branch and commit",
@@ -41,8 +47,13 @@ gh pr view --json number,url,state 2>/dev/null   # open PR for current branch (i
 
 Before doing anything, ensure you have:
 
-- **Ticket number** — look in conversation context (e.g. from OpenSpec explore, recent messages). If not found, ask: _"What is the ticket number?"_
+- **Ticket number** — use the `ticket` argument if passed. Else look in conversation context (e.g. from
+  OpenSpec explore, recent messages). If still not found, ask: _"What is the ticket number?"_
+- **Area** — if the `area` argument is passed, use it directly in Step 3 (skip detection).
 - **Draft PR?** — if the user said "draft" or "draft PR", note it for Step 5.
+
+> This skill runs in a forked context (`context: fork`), so it does **not** see the main conversation.
+> Prefer passing `ticket` (and optionally `area`) as arguments: `/git-commit 3642 Deployments/Images`.
 
 ---
 
@@ -59,18 +70,39 @@ If there are no changes at all — report and stop.
 
 ## Step 3 — Determine `area`
 
-Read the menu configuration to understand the app's two-level navigation structure:
+Resolve the `area` with this 3-tier fallback (project-agnostic — works in any repo):
 
-```bash
-cat apps/ai-dial-admin/src/components/Menu/menu-configuration.tsx
-```
+1. **`area` argument given** → use it verbatim. Done.
+2. **Project defines an area taxonomy** → if `.claude/reference/areas.md` exists, read it and map the changed
+   files to an area using the rules in that file (`Parent/Child` for one leaf, `Parent` for several
+   under one parent, most-changed parent across many, technical area for infra/config).
+3. **Neither** → infer a sensible area from the **top-level directory** of the changed files
+   (e.g. most changes under `src/auth/**` → `auth`). For pure tooling/config with no feature home, use a
+   technical area: `infra`, `config`, `api`.
 
-Map changed files to menu areas using this logic:
+### Step 3a — Self-extend `.claude/reference/areas.md` (only if the file exists)
 
-- Changes touch **one leaf section** → use `Parent/Child` (e.g. `Deployments/Images`)
-- Changes span **multiple sections under one parent** → use just `Parent` (e.g. `Deployments`)
-- Changes span **multiple top-level sections** → pick the section with the **most changes**. Use ticket title/description as additional context to break ties.
-- Infrastructure/config with no clear menu mapping → use a technical area: `infra`, `config`, `api`
+If the resolved area is **not already listed** in `.claude/reference/areas.md`, append it so the taxonomy grows
+over time. Do this for both a new arg-supplied area and a tier-3 inferred area.
+
+Rules — be conservative, append-only, never rewrite or reorder existing rows:
+
+1. **Confirm it's new** — `grep -F "<area>" .claude/reference/areas.md`. If the exact area string is already
+   present, skip; do nothing.
+2. **Pick the right section:**
+   - New leaf under an existing parent (e.g. `Deployments/Foo`) → add a row to that parent's table.
+   - New top-level feature with a route/component but no parent → add a row under
+     **Cross-cutting feature areas**.
+   - New non-UI concern → add a row under **Technical areas** with a short "Covers" note.
+3. **Fill the evidence columns** from the actual change — the route slug (`app/[lang]/<slug>`) and/or
+   the component folder (`src/components/<Folder>`) the change touched. Leave a cell as `—` only if it
+   genuinely has none.
+4. **Only one new row per run**, matching the single resolved area. Don't bulk-invent areas.
+5. The edit is staged by `git add` in Step 5, so the taxonomy update ships **in the same commit** as the
+   change that introduced it. Mention the added area in the Step 7 summary.
+
+If `.claude/reference/areas.md` does **not** exist, skip 3a entirely (don't create it — that's a deliberate
+project-setup choice, not something this skill bootstraps).
 
 ---
 
