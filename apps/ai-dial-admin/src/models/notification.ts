@@ -1,3 +1,5 @@
+import { ReactNode } from 'react';
+
 export interface Notification {
   type: NotificationType;
   title: string;
@@ -6,7 +8,7 @@ export interface Notification {
   requestId?: string;
   onClose?: () => void;
   downloadDetails?: FileDetails[];
-  disableTitleTruncate?: boolean;
+  customTitle?: ReactNode;
 }
 
 export interface FileDetails {

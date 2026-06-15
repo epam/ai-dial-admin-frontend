@@ -1,3 +1,4 @@
+import { ReactNode } from 'react';
 import { NotificationType, Notification } from '@/src/models/notification';
 
 export const getErrorNotification = (
@@ -25,8 +26,8 @@ export const getPrepareNotification = (
   return getNotification(NotificationType.prepare, title, description, duration);
 };
 
-export const getCopyToClipboardNotification = (title: string): Notification => {
-  return getNotification(NotificationType.success, title, undefined, undefined, undefined, true);
+export const getCopyToClipboardNotification = (customTitle: ReactNode): Notification => {
+  return getNotification(NotificationType.success, undefined, undefined, undefined, undefined, customTitle);
 };
 
 export const getNotification = (
@@ -35,7 +36,7 @@ export const getNotification = (
   description?: string,
   duration?: number | null,
   requestId?: string,
-  disableTitleTruncate?: boolean,
+  customTitle?: ReactNode,
 ): Notification => {
   return {
     type,
@@ -43,6 +44,6 @@ export const getNotification = (
     description: description ?? '',
     duration,
     requestId,
-    disableTitleTruncate,
+    customTitle,
   };
 };

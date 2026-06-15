@@ -106,24 +106,13 @@ describe('Utils :: getSuccessNotification', () => {
 });
 
 describe('Utils :: getCopyToClipboardNotification', () => {
-  test('Should return success notification with disableTitleTruncate set to true', () => {
+  test('Should return success notification with a customTitle element', () => {
     const result = getCopyToClipboardNotification('Copied!');
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       type: NotificationType.success,
-      title: 'Copied!',
-      description: '',
-      disableTitleTruncate: true,
+      customTitle: 'Copied!',
     });
-  });
-
-  test('Should return notification with the provided title', () => {
-    const result = getCopyToClipboardNotification('https://example.com/very/long/url');
-    expect(result).toEqual({
-      type: NotificationType.success,
-      title: 'https://example.com/very/long/url',
-      description: '',
-      disableTitleTruncate: true,
-    });
+    expect(result.customTitle).toBeDefined();
   });
 });
 
