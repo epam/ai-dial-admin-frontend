@@ -1589,6 +1589,35 @@ export enum KubEventsI18nKey {
   Warning = 'KubEvents.Warning',
 }
 
+export enum DeploymentMetricsI18nKey {
+  SectionScaleHealth = 'DeploymentMetrics.SectionScaleHealth',
+  SectionCompute = 'DeploymentMetrics.SectionCompute',
+  SectionLatency = 'DeploymentMetrics.SectionLatency',
+  SectionThroughput = 'DeploymentMetrics.SectionThroughput',
+  SectionLoad = 'DeploymentMetrics.SectionLoad',
+  ReadyReplicas = 'DeploymentMetrics.ReadyReplicas',
+  TotalReplicas = 'DeploymentMetrics.TotalReplicas',
+  RequestErrorRatio = 'DeploymentMetrics.RequestErrorRatio',
+  Cpu = 'DeploymentMetrics.Cpu',
+  Memory = 'DeploymentMetrics.Memory',
+  GpuMemory = 'DeploymentMetrics.GpuMemory',
+  Ttft = 'DeploymentMetrics.Ttft',
+  InterTokenLatency = 'DeploymentMetrics.InterTokenLatency',
+  E2eLatencyMean = 'DeploymentMetrics.E2eLatencyMean',
+  E2eLatencyP50 = 'DeploymentMetrics.E2eLatencyP50',
+  E2eLatencyP95 = 'DeploymentMetrics.E2eLatencyP95',
+  E2eLatencyP99 = 'DeploymentMetrics.E2eLatencyP99',
+  RequestLatency = 'DeploymentMetrics.RequestLatency',
+  TokensPerSecond = 'DeploymentMetrics.TokensPerSecond',
+  Prompt = 'DeploymentMetrics.Prompt',
+  Generation = 'DeploymentMetrics.Generation',
+  RequestsPerSecond = 'DeploymentMetrics.RequestsPerSecond',
+  RunningRequests = 'DeploymentMetrics.RunningRequests',
+  QueueDepth = 'DeploymentMetrics.QueueDepth',
+  KvCacheUsage = 'DeploymentMetrics.KvCacheUsage',
+  RefreshError = 'DeploymentMetrics.RefreshError',
+}
+
 export enum EnvVariablesI18nKey {
   EnvVariable = 'EnvVariables.EnvVariable',
   Name = 'EnvVariables.Name',

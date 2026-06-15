@@ -477,6 +477,7 @@ export const getDeploymentsViewTabs = (
       deploymentsToolsTab(t, status as CONTAINER_STATUS),
       resourcesTab(t, status as CONTAINER_STATUS),
       promptsTab(t, status as CONTAINER_STATUS),
+      metricsTab(t, status as CONTAINER_STATUS),
       executionLogTab(t),
       eventsTab(t),
       auditTab(t),
@@ -485,6 +486,7 @@ export const getDeploymentsViewTabs = (
   return [
     propertiesTab(t, propertiesWarning),
     firewallTab(t, !!allowedWhitelist?.includes(ALLOW_ALL_DOMAINS)),
+    metricsTab(t, status as CONTAINER_STATUS),
     executionLogTab(t),
     eventsTab(t),
     auditTab(t),

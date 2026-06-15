@@ -9,6 +9,7 @@ import {
   CONTAINER_RESOURCES_URL,
   CONTAINER_LOGS_URL,
   CONTAINER_PODS_URL,
+  CONTAINER_METRICS_URL,
   CONTAINER_PROMPTS_URL,
   CONTAINER_TOOLS_URL,
   DUPLICATE_CONTAINER_URL,
@@ -65,6 +66,23 @@ describe('ContainersApi', () => {
       expect.stringContaining(CONTAINER_PODS_URL('container1')),
       expect.objectContaining({ method: 'GET' }),
     );
+  });
+
+  test('calls getContainerMetrics with correct URL, method and passes the token, returning the parsed snapshot', async () => {
+    const snapshot = { engine: 'VLLM', resources: { replicas: { total: 1, ready: 1 }, pods: [] } };
+    fetch.mockResponseOnce(JSON.stringify(snapshot), { headers: { 'content-type': 'application/json' } });
+    const result = await instance.getContainerMetrics('container1', TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(CONTAINER_METRICS_URL('container1')),
+      expect.objectContaining({ method: 'GET' }),
+    );
+    expect(result).toEqual(snapshot);
+  });
+
+  test('getContainerMetrics returns null on a failed response', async () => {
+    fetch.mockResponseOnce('', { status: 500 });
+    const result = await instance.getContainerMetrics('container1', TOKEN_MOCK);
+    expect(result).toBeNull();
   });
 
   test('calls getContainerPrompts with correct URL and method', async () => {
