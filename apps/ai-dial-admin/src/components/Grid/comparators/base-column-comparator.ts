@@ -29,6 +29,6 @@ export const checkColDefsChanges = (cols: ColDef[], initialCols: ColDef[]) => {
     if (col.field !== initialCols[index].field) {
       return true;
     }
-    return col.hide !== initialCols[index].hide;
+    return !!col.hide !== !!initialCols[index].hide;
   });
 };
