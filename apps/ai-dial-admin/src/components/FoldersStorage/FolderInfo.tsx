@@ -82,7 +82,7 @@ const FolderInfo: FC<Props> = ({ isReadonly }) => {
   return !currentFolder ? (
     <DialNoDataContent title={t(EntitiesI18nKey.NoFolders)} />
   ) : (
-    <div className="size-full bg-layer-3 rounded p-4 flex flex-col gap-4 overflow-hidden">
+    <div className="size-full min-w-0 bg-layer-3 rounded p-4 flex flex-col gap-4 overflow-hidden">
       <FolderInfoHeader
         isChanged={isChanged}
         title={currentFolder?.name as string}
