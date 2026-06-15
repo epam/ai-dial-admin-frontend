@@ -3,6 +3,24 @@ import { describe, expect, test, vi } from 'vitest';
 import HeaderButtons from '../Header';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 
+// Mock the "More" button dropdown so its items are queryable/clickable as buttons.
+vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
+  return {
+    ...actual,
+    DialButtonDropdown: ({ label, items }: any) => (
+      <div>
+        <span>{label}</span>
+        {items?.map((item: any) => (
+          <button key={item.key} onClick={() => item.onClick?.({ key: item.key })}>
+            {item.label}
+          </button>
+        ))}
+      </div>
+    ),
+  };
+});
+
 // Mock child components
 vi.mock('../Import/ImportFile', () => ({
   default: ({ datasetId, isModalOpen, onClose, onApply }: any) => (
@@ -19,44 +37,75 @@ vi.mock('../Import/ImportFile', () => ({
   ),
 }));
 
+vi.mock('../PickPublicDataset', () => ({
+  default: ({ isOpen, onClose, onConfirm }: any) =>
+    isOpen ? (
+      <div>
+        <div>Pick Public Dataset Modal</div>
+        <button onClick={onClose}>Close Attach Modal</button>
+        <button onClick={() => onConfirm('picked-dataset')}>Confirm Attach</button>
+      </div>
+    ) : null,
+}));
+
+vi.mock('../PublishDatasetModal', () => ({
+  default: ({ isOpen, onClose, onConfirm }: any) =>
+    isOpen ? (
+      <div>
+        <div>Publish Dataset Modal</div>
+        <button onClick={onClose}>Close Publish Modal</button>
+        <button onClick={() => onConfirm('display-name', 'description')}>Confirm Publish</button>
+      </div>
+    ) : null,
+}));
+
 describe('HeaderButtons', () => {
   const mockTestSuiteId = 'test-suite-123';
   const mockOnApplyImport = vi.fn();
 
-  test('renders Import and Add buttons', () => {
+  const openImportModal = () => {
+    const importItem = screen.getByText(TestSuitesI18nKey.ImportFromPC);
+    fireEvent.click(importItem);
+  };
+
+  test('renders More dropdown, Attach and Add buttons when editable', () => {
     render(<HeaderButtons datasetId={mockTestSuiteId} onApplyImport={mockOnApplyImport} />);
 
-    expect(screen.getByText(ButtonsI18nKey.Import)).toBeInTheDocument();
-    // expect(screen.getByText(ButtonsI18nKey.Add)).toBeInTheDocument();
+    expect(screen.getByText(TestSuitesI18nKey.More)).toBeInTheDocument();
+    expect(screen.getByText(TestSuitesI18nKey.AttachDataset)).toBeInTheDocument();
+    expect(screen.getByText(ButtonsI18nKey.Add)).toBeInTheDocument();
+  });
+
+  test('renders read-only actions when isReadOnly is true', () => {
+    render(<HeaderButtons datasetId={mockTestSuiteId} onApplyImport={mockOnApplyImport} isReadOnly />);
+
+    expect(screen.getByText(ButtonsI18nKey.ExportCsv)).toBeInTheDocument();
+    expect(screen.getByText(TestSuitesI18nKey.ChangeDataset)).toBeInTheDocument();
+    expect(screen.getByText(TestSuitesI18nKey.DetachFromDataset)).toBeInTheDocument();
+    expect(screen.queryByText(ButtonsI18nKey.Add)).not.toBeInTheDocument();
   });
 
   test('does not render modals initially', () => {
     render(<HeaderButtons datasetId={mockTestSuiteId} onApplyImport={mockOnApplyImport} />);
 
-    // expect(screen.queryByText('Add Test Case Modal')).not.toBeInTheDocument();
     expect(screen.queryByText('Import File Modal')).not.toBeInTheDocument();
+    expect(screen.queryByText('Pick Public Dataset Modal')).not.toBeInTheDocument();
+    expect(screen.queryByText('Publish Dataset Modal')).not.toBeInTheDocument();
   });
 
   test('calls onAdd callback when Add button is clicked', () => {
     const mockOnAdd = vi.fn();
     render(<HeaderButtons datasetId={mockTestSuiteId} onApplyImport={mockOnApplyImport} onAdd={mockOnAdd} />);
 
-    const addButton = screen.getByText(ButtonsI18nKey.Add);
-    fireEvent.click(addButton);
+    fireEvent.click(screen.getByText(ButtonsI18nKey.Add));
 
     expect(mockOnAdd).toHaveBeenCalledTimes(1);
   });
 
-  test('opens ImportFileModal when "From PC" is clicked', () => {
+  test('opens ImportFileModal when "Import from PC" item is clicked', () => {
     render(<HeaderButtons datasetId={mockTestSuiteId} onApplyImport={mockOnApplyImport} />);
 
-    // Click import dropdown (assuming it's accessible via the Import button text)
-    const importButton = screen.getByText(ButtonsI18nKey.Import);
-    fireEvent.click(importButton);
-
-    // Click "From PC" option
-    const fromPCOption = screen.getByText(TestSuitesI18nKey.FromPC);
-    fireEvent.click(fromPCOption);
+    openImportModal();
 
     expect(screen.getByText('Import File Modal')).toBeInTheDocument();
   });
@@ -64,11 +113,7 @@ describe('HeaderButtons', () => {
   test('passes datasetId to ImportFileModal', () => {
     render(<HeaderButtons datasetId={mockTestSuiteId} onApplyImport={mockOnApplyImport} />);
 
-    // Open import modal
-    const importButton = screen.getByText(ButtonsI18nKey.Import);
-    fireEvent.click(importButton);
-    const fromPCOption = screen.getByText(TestSuitesI18nKey.FromPC);
-    fireEvent.click(fromPCOption);
+    openImportModal();
 
     expect(screen.getByText(`Test Suite ID: ${mockTestSuiteId}`)).toBeInTheDocument();
   });
@@ -76,103 +121,118 @@ describe('HeaderButtons', () => {
   test('closes ImportFileModal when close is triggered', () => {
     render(<HeaderButtons datasetId={mockTestSuiteId} onApplyImport={mockOnApplyImport} />);
 
-    // Open import modal
-    const importButton = screen.getByText(ButtonsI18nKey.Import);
-    fireEvent.click(importButton);
-    const fromPCOption = screen.getByText(TestSuitesI18nKey.FromPC);
-    fireEvent.click(fromPCOption);
+    openImportModal();
     expect(screen.getByText('Import File Modal')).toBeInTheDocument();
 
-    // Close modal
-    const closeButton = screen.getByText('Close Import Modal');
-    fireEvent.click(closeButton);
+    fireEvent.click(screen.getByText('Close Import Modal'));
     expect(screen.queryByText('Import File Modal')).not.toBeInTheDocument();
   });
 
   test('keeps ImportFileModal open after apply action', () => {
     render(<HeaderButtons datasetId={mockTestSuiteId} onApplyImport={mockOnApplyImport} />);
 
-    // Open import modal
-    const importButton = screen.getByText(ButtonsI18nKey.Import);
-    fireEvent.click(importButton);
-    const fromPCOption = screen.getByText(TestSuitesI18nKey.FromPC);
-    fireEvent.click(fromPCOption);
+    openImportModal();
+    fireEvent.click(screen.getByText('Apply Import'));
 
-    // Trigger apply
-    const applyButton = screen.getByText('Apply Import');
-    fireEvent.click(applyButton);
-
-    // Modal should still be visible (only closes via close button)
+    // Modal stays open; closing is handled inside ImportFileModal itself.
     expect(screen.getByText('Import File Modal')).toBeInTheDocument();
   });
 
-  test('can invoke onAdd and open import modal independently', () => {
-    const mockOnAdd = vi.fn();
-    render(<HeaderButtons datasetId={mockTestSuiteId} onApplyImport={mockOnApplyImport} onAdd={mockOnAdd} />);
+  test('opens attach modal and forwards selected dataset on confirm', () => {
+    const mockOnAttachDataset = vi.fn();
+    render(
+      <HeaderButtons
+        datasetId={mockTestSuiteId}
+        onApplyImport={mockOnApplyImport}
+        onAttachDataset={mockOnAttachDataset}
+      />,
+    );
 
-    // Click add button
-    const addButton = screen.getByText(ButtonsI18nKey.Add);
-    fireEvent.click(addButton);
-    expect(mockOnAdd).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByText(TestSuitesI18nKey.AttachDataset));
+    expect(screen.getByText('Pick Public Dataset Modal')).toBeInTheDocument();
 
-    // Open import modal
-    const importButton = screen.getByText(ButtonsI18nKey.Import);
-    fireEvent.click(importButton);
-    const fromPCOption = screen.getByText(TestSuitesI18nKey.FromPC);
-    fireEvent.click(fromPCOption);
-    expect(screen.getByText('Import File Modal')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Confirm Attach'));
+
+    expect(mockOnAttachDataset).toHaveBeenCalledWith('picked-dataset');
+    expect(screen.queryByText('Pick Public Dataset Modal')).not.toBeInTheDocument();
   });
 
-  test('renders buttons in correct order', () => {
-    const { container } = render(<HeaderButtons datasetId={mockTestSuiteId} onApplyImport={mockOnApplyImport} />);
+  test('opens publish modal and forwards values on confirm', () => {
+    const mockOnPublish = vi.fn();
+    render(
+      <HeaderButtons datasetId={mockTestSuiteId} onApplyImport={mockOnApplyImport} onPublish={mockOnPublish} />,
+    );
 
-    const buttons = container.querySelectorAll('button');
-    const buttonTexts = Array.from(buttons).map((btn) => btn.textContent);
+    fireEvent.click(screen.getByText(TestSuitesI18nKey.PublishToDataset));
+    expect(screen.getByText('Publish Dataset Modal')).toBeInTheDocument();
 
-    // Import button should come before Add button
-    const importIndex = buttonTexts.findIndex((text) => text?.includes(ButtonsI18nKey.Import));
-    const addIndex = buttonTexts.findIndex((text) => text?.includes(ButtonsI18nKey.Add));
+    fireEvent.click(screen.getByText('Confirm Publish'));
 
-    expect(importIndex).toBeLessThan(addIndex);
+    expect(mockOnPublish).toHaveBeenCalledWith('display-name', 'description');
+    expect(screen.queryByText('Publish Dataset Modal')).not.toBeInTheDocument();
   });
 
-  test('renders Add button with icon', () => {
-    render(<HeaderButtons datasetId={mockTestSuiteId} onApplyImport={mockOnApplyImport} />);
+  test('invokes onOpenSchemaModal from the More dropdown', () => {
+    const mockOnOpenSchemaModal = vi.fn();
+    render(
+      <HeaderButtons
+        datasetId={mockTestSuiteId}
+        onApplyImport={mockOnApplyImport}
+        onOpenSchemaModal={mockOnOpenSchemaModal}
+      />,
+    );
 
-    const addButton = screen.getByText(ButtonsI18nKey.Add);
-    expect(addButton).toBeInTheDocument();
-    // Icon is rendered but we can't easily test it without test IDs
-    // We verify the button is present which should include the icon
+    fireEvent.click(screen.getByText(TestSuitesI18nKey.TestCaseSchema));
+
+    expect(mockOnOpenSchemaModal).toHaveBeenCalledTimes(1);
   });
 
-  test('renders dropdown with "From PC" item', () => {
-    render(<HeaderButtons datasetId={mockTestSuiteId} onApplyImport={mockOnApplyImport} />);
+  test('invokes onExport from the More dropdown', () => {
+    const mockOnExport = vi.fn();
+    render(
+      <HeaderButtons datasetId={mockTestSuiteId} onApplyImport={mockOnApplyImport} onExport={mockOnExport} />,
+    );
 
-    const importButton = screen.getByText(ButtonsI18nKey.Import);
-    fireEvent.click(importButton);
+    fireEvent.click(screen.getByText(ButtonsI18nKey.ExportCsv));
 
-    expect(screen.getByText(TestSuitesI18nKey.FromPC)).toBeInTheDocument();
+    expect(mockOnExport).toHaveBeenCalledTimes(1);
+  });
+
+  test('renders batch delete button only when showBatchDelete is true', () => {
+    const mockOnBatchDelete = vi.fn();
+    const { rerender } = render(
+      <HeaderButtons
+        datasetId={mockTestSuiteId}
+        onApplyImport={mockOnApplyImport}
+        onBatchDelete={mockOnBatchDelete}
+      />,
+    );
+
+    expect(screen.queryByText(ButtonsI18nKey.Delete)).not.toBeInTheDocument();
+
+    rerender(
+      <HeaderButtons
+        datasetId={mockTestSuiteId}
+        onApplyImport={mockOnApplyImport}
+        onBatchDelete={mockOnBatchDelete}
+        showBatchDelete
+      />,
+    );
+
+    fireEvent.click(screen.getByText(ButtonsI18nKey.Delete));
+    expect(mockOnBatchDelete).toHaveBeenCalledTimes(1);
   });
 
   test('handles different datasetId values', () => {
     const { rerender } = render(<HeaderButtons datasetId="suite-1" onApplyImport={mockOnApplyImport} />);
 
-    // Open import modal
-    const importButton = screen.getByText(ButtonsI18nKey.Import);
-    fireEvent.click(importButton);
-    const fromPCOption = screen.getByText(TestSuitesI18nKey.FromPC);
-    fireEvent.click(fromPCOption);
-
+    openImportModal();
     expect(screen.getByText('Test Suite ID: suite-1')).toBeInTheDocument();
 
-    // Close and rerender with different ID
     fireEvent.click(screen.getByText('Close Import Modal'));
     rerender(<HeaderButtons datasetId="suite-2" onApplyImport={mockOnApplyImport} />);
 
-    // Open import modal again
-    fireEvent.click(screen.getByText(ButtonsI18nKey.Import));
-    fireEvent.click(screen.getByText(TestSuitesI18nKey.FromPC));
-
+    openImportModal();
     expect(screen.getByText('Test Suite ID: suite-2')).toBeInTheDocument();
   });
 });
