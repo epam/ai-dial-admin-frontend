@@ -4,6 +4,7 @@ import { RESPONSE_MOCK, TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 import {
+  DATASET_PUBLISH_URL,
   DATASET_TEST_CASES_URL,
   DATASET_TEST_CASE_URL,
   DATASET_URL,
@@ -190,6 +191,21 @@ describe('Server :: DatasetsApi', () => {
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${DATASET_TEST_CASES_URL('dataset-1')}/import/preview`,
       expect.objectContaining({ method: 'POST' }),
+    );
+  });
+
+  test('Should call publishDataset with POST method and body', async () => {
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
+    const body = { name: 'Published Dataset', description: 'A public version' };
+
+    await instance.publishDataset(mockDataset.id as string, body, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${DATASET_PUBLISH_URL(mockDataset.id as string)}`,
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify(body),
+      }),
     );
   });
 

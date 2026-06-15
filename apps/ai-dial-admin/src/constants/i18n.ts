@@ -1731,6 +1731,20 @@ export enum TestSuitesI18nKey {
   DatasetRequiredForMetrics = 'TestSuites.DatasetRequiredForMetrics',
   OpenDataset = 'TestSuites.OpenDataset',
   ChangeDataset = 'TestSuites.ChangeDataset',
+  TestCasesPrivateTagTooltip = 'TestSuites.TestCasesPrivateTagTooltip',
+  NoTestCasesDescription = 'TestSuites.NoTestCasesDescription',
+  More = 'TestSuites.More',
+  AttachDataset = 'TestSuites.AttachDataset',
+  PublishToDataset = 'TestSuites.PublishToDataset',
+  PublishToDatasetCountText = 'TestSuites.PublishToDatasetCountText',
+  PublishSuccess = 'TestSuites.PublishSuccess',
+  PublishFailed = 'TestSuites.PublishFailed',
+  DetachFromDataset = 'TestSuites.DetachFromDataset',
+  DetachConfirmTitle = 'TestSuites.DetachConfirmTitle',
+  DetachConfirmDescription = 'TestSuites.DetachConfirmDescription',
+  DetachSuccess = 'TestSuites.DetachSuccess',
+  DetachFailed = 'TestSuites.DetachFailed',
+  PublicDatasetInfo = 'TestSuites.PublicDatasetInfo',
 }
 
 export enum DatasetsI18nKey {

@@ -3,7 +3,12 @@
 import { cookies, headers } from 'next/headers';
 
 import { datasetsApi } from '@/src/app/api/api';
-import { Dataset, DatasetTestCase, DatasetVisibilityTransition } from '@/src/models/evaluation/dataset';
+import {
+  Dataset,
+  DatasetPublishBody,
+  DatasetTestCase,
+  DatasetVisibilityTransition,
+} from '@/src/models/evaluation/dataset';
 import { FilterDto, SortDto } from '@/src/models/request';
 import type { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 import { FilterOperatorDto } from '@/src/types/request';
@@ -100,4 +105,9 @@ export async function importTestCase(
 ) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return datasetsApi.importTestCase(datasetId, file, token, mode, strategy);
+}
+
+export async function publishDataset(id: string, body: DatasetPublishBody) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return datasetsApi.publishDataset(id, body, token);
 }
