@@ -7,9 +7,9 @@ import classNames from 'classnames';
 
 import Grafana from '@/public/images/icons/grafana.svg';
 import { RunsI18nKey } from '@/src/constants/i18n';
+import { useLocalDateTimeString } from '@/src/hooks/use-local-date-time-string';
 import { useI18n } from '@/src/locales/client';
 import { ExtractionResultStatus } from '@/src/models/evaluation/run';
-import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { DialLinkButton } from '@epam/ai-dial-ui-kit';
 
 import { getFormattedDuration, getTestCaseStatusClass } from '../View/utils';
@@ -49,6 +49,7 @@ const MetaTag: FC<{ label: string; value: string; className?: string }> = ({ lab
 
 const ExecutionStatusBar: FC<Props> = ({ status, httpCode, durationMs, timestamp, timestampLabel, grafanaUrl }) => {
   const t = useI18n();
+  const formattedTimestamp = useLocalDateTimeString(timestamp);
   const httpClass = getTestCaseStatusClass(httpCode);
 
   return (
@@ -66,10 +67,7 @@ const ExecutionStatusBar: FC<Props> = ({ status, httpCode, durationMs, timestamp
         {timestamp != null && (
           <>
             <MetaSeparator />
-            <MetaTag
-              label={timestampLabel ?? t(RunsI18nKey.StartedLabel)}
-              value={formatDateTimeToLocalString(timestamp)}
-            />
+            <MetaTag label={timestampLabel ?? t(RunsI18nKey.StartedLabel)} value={formattedTimestamp} />
           </>
         )}
       </div>
