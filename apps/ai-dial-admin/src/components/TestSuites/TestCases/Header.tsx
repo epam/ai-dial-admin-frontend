@@ -7,18 +7,31 @@ import {
   ButtonAppearance,
   ButtonVariant,
   DialButtonDropdown,
+  DialConfirmationPopup,
   DialDangerButton,
   DialGhostButton,
-  DialPrimaryButton,
+  DialNeutralButton,
   DropdownItem,
 } from '@epam/ai-dial-ui-kit';
-import { IconDownload, IconPlus, IconSettings, IconTrashX } from '@tabler/icons-react';
+import {
+  IconDatabaseExport,
+  IconDatabaseImport,
+  IconFileArrowLeft,
+  IconFileArrowRight,
+  IconPencilMinus,
+  IconPlus,
+  IconSettings,
+  IconTrashX,
+  IconUnlink,
+} from '@tabler/icons-react';
 
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 import ImportFileModal from './Import/ImportFile';
+import PickPublicDataset from './PickPublicDataset';
+import PublishDatasetModal from './PublishDatasetModal';
 
 interface Props {
   datasetId: string;
@@ -27,9 +40,14 @@ interface Props {
   onExport?: () => void;
   onBatchDelete?: () => void;
   onOpenSchemaModal?: () => void;
+  testCaseCount?: number;
   showBatchDelete?: boolean;
   isReadOnly?: boolean;
+  onPublish?: (displayName: string, description?: string) => void;
+  onAttachDataset?: (datasetId: string) => void;
+  onDetachDataset?: () => void;
 }
+
 const HeaderButtons: FC<Props> = ({
   datasetId,
   onApplyImport,
@@ -37,47 +55,98 @@ const HeaderButtons: FC<Props> = ({
   onExport,
   onBatchDelete,
   onOpenSchemaModal,
+  testCaseCount = 0,
   showBatchDelete,
   isReadOnly,
+  onPublish,
+  onAttachDataset,
+  onDetachDataset,
 }) => {
   const t = useI18n();
-
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isAttachModalOpen, setIsAttachModalOpen] = useState(false);
+  const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+  const [isDetachConfirmOpen, setIsDetachConfirmOpen] = useState(false);
 
-  const items: DropdownItem[] = useMemo(() => {
-    return [{ key: 'storage', label: t(TestSuitesI18nKey.FromPC), onClick: () => setIsImportModalOpen(true) }];
-  }, [t]);
+  const moreItems: DropdownItem[] = useMemo(() => {
+    return [
+      {
+        key: 'schema',
+        label: t(TestSuitesI18nKey.TestCaseSchema),
+        icon: <IconSettings {...BASE_BUTTON_ICON_PROPS} />,
+        onClick: () => onOpenSchemaModal?.(),
+      },
+      {
+        key: 'publish',
+        label: t(TestSuitesI18nKey.PublishToDataset),
+        icon: <IconDatabaseExport {...BASE_BUTTON_ICON_PROPS} />,
+        onClick: () => setIsPublishModalOpen(true),
+      },
+      {
+        key: 'import',
+        label: t(TestSuitesI18nKey.ImportFromPC),
+        icon: <IconFileArrowLeft {...BASE_BUTTON_ICON_PROPS} />,
+        onClick: () => setIsImportModalOpen(true),
+      },
+      {
+        key: 'export',
+        label: t(ButtonsI18nKey.ExportCsv),
+        icon: <IconFileArrowRight {...BASE_BUTTON_ICON_PROPS} />,
+        onClick: () => onExport?.(),
+      },
+    ];
+  }, [t, onOpenSchemaModal, onExport]);
+
+  const onPublishConfirm = (displayName: string, description?: string) => {
+    setIsPublishModalOpen(false);
+    onPublish?.(displayName, description);
+  };
+
+  const onChangeDatasetConfirm = (selectedDatasetId: string) => {
+    setIsAttachModalOpen(false);
+    onAttachDataset?.(selectedDatasetId);
+  };
 
   return (
     <div className="flex gap-4">
-      {!isReadOnly && onOpenSchemaModal && (
-        <DialGhostButton
-          label={t(TestSuitesI18nKey.TestCaseSchema)}
-          iconBefore={<IconSettings {...BASE_BUTTON_ICON_PROPS} />}
-          onClick={onOpenSchemaModal}
-        />
+      {isReadOnly && (
+        <>
+          <DialGhostButton
+            label={t(ButtonsI18nKey.ExportCsv)}
+            iconBefore={<IconFileArrowRight {...BASE_BUTTON_ICON_PROPS} />}
+            onClick={onExport}
+          />
+          <DialGhostButton
+            label={t(TestSuitesI18nKey.ChangeDataset)}
+            iconBefore={<IconPencilMinus {...BASE_BUTTON_ICON_PROPS} />}
+            onClick={() => setIsAttachModalOpen(true)}
+          />
+          <DialNeutralButton
+            label={t(TestSuitesI18nKey.DetachFromDataset)}
+            iconBefore={<IconUnlink {...BASE_BUTTON_ICON_PROPS} />}
+            onClick={() => setIsDetachConfirmOpen(true)}
+          />
+        </>
       )}
 
       {!isReadOnly && (
-        <DialButtonDropdown
-          label={t(ButtonsI18nKey.Import)}
-          items={items}
-          variant={ButtonVariant.Primary}
-          appearance={ButtonAppearance.Ghost}
-        />
-      )}
-
-      {onExport && (
-        <DialPrimaryButton
-          label={t(ButtonsI18nKey.Export)}
-          iconBefore={<IconDownload {...BASE_BUTTON_ICON_PROPS} />}
-          onClick={onExport}
-          appearance={ButtonAppearance.Ghost}
-        />
+        <>
+          <DialButtonDropdown
+            label={t(TestSuitesI18nKey.More)}
+            items={moreItems}
+            variant={ButtonVariant.Primary}
+            appearance={ButtonAppearance.Ghost}
+          />
+          <DialGhostButton
+            label={t(TestSuitesI18nKey.AttachDataset)}
+            iconBefore={<IconDatabaseImport {...BASE_BUTTON_ICON_PROPS} />}
+            onClick={() => setIsAttachModalOpen(true)}
+          />
+        </>
       )}
 
       {!isReadOnly && (
-        <DialPrimaryButton
+        <DialNeutralButton
           label={t(ButtonsI18nKey.Add)}
           iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
           onClick={onAdd}
@@ -100,6 +169,39 @@ const HeaderButtons: FC<Props> = ({
             isModalOpen={isImportModalOpen}
             onClose={() => setIsImportModalOpen(false)}
             onApply={onApplyImport}
+          />,
+          document.body,
+        )}
+
+      {isAttachModalOpen && (
+        <PickPublicDataset
+          isOpen={isAttachModalOpen}
+          onClose={() => setIsAttachModalOpen(false)}
+          onConfirm={onChangeDatasetConfirm}
+        />
+      )}
+
+      {isPublishModalOpen && (
+        <PublishDatasetModal
+          isOpen={isPublishModalOpen}
+          testCaseCount={testCaseCount}
+          onClose={() => setIsPublishModalOpen(false)}
+          onConfirm={onPublishConfirm}
+        />
+      )}
+
+      {isDetachConfirmOpen &&
+        createPortal(
+          <DialConfirmationPopup
+            open={isDetachConfirmOpen}
+            header={t(TestSuitesI18nKey.DetachConfirmTitle)}
+            description={t(TestSuitesI18nKey.DetachConfirmDescription)}
+            confirmLabel={t(TestSuitesI18nKey.DetachFromDataset)}
+            onConfirm={() => {
+              setIsDetachConfirmOpen(false);
+              onDetachDataset?.();
+            }}
+            onClose={() => setIsDetachConfirmOpen(false)}
           />,
           document.body,
         )}

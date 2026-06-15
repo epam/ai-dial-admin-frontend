@@ -46,7 +46,7 @@ const PickPublicDataset: FC<Props> = ({ isOpen, onClose, onConfirm }) => {
   return (
     <DialPopup
       onClose={onClose}
-      header={t(TestSuitesI18nKey.PickPublicDataset)}
+      header={t(TestSuitesI18nKey.AttachDataset)}
       portalId="PickPublicDatasetModal"
       open={isOpen}
       size={PopupSize.Lg}
@@ -58,7 +58,6 @@ const PickPublicDataset: FC<Props> = ({ isOpen, onClose, onConfirm }) => {
           </div>
         ) : (
           <ListEntities
-            listLabel={t(TestSuitesI18nKey.PickPublicDataset)}
             rowData={datasets}
             columnDefs={DATASETS_COLUMN}
             additionalGridOptions={{
@@ -68,7 +67,6 @@ const PickPublicDataset: FC<Props> = ({ isOpen, onClose, onConfirm }) => {
           />
         )}
       </div>
-
       <div className="flex flex-row justify-end w-full gap-2 px-6 py-4 border-t border-primary flex-shrink-0">
         <DialNeutralButton label={t(ButtonsI18nKey.Cancel)} onClick={onClose} />
         <DialPrimaryButton label={t(ButtonsI18nKey.Confirm)} onClick={onConfirmClick} disabled={!selectedDataset} />

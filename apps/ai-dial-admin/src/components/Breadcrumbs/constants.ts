@@ -158,14 +158,6 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
     MenuI18nKey.ApplicationContainers,
   ),
   [ApplicationRoute.Images]: auditSubIdBreadcrumb('Images', MenuI18nKey.Images),
-  [ApplicationRoute.Playground]: {
-    segments: [
-      {
-        name: 'Playground',
-        i18nKey: MenuI18nKey.Playground,
-      },
-    ],
-  },
   [ApplicationRoute.Datasets]: {
     segments: [
       {

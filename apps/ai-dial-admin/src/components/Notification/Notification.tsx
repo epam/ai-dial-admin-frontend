@@ -13,7 +13,7 @@ export const NotificationIcons: Record<NotificationType, ReactNode> = {
   dynamic: <IconChevronDown {...BASE_BUTTON_ICON_PROPS} />,
 };
 
-const Notification: FC<NotificationConfig> = ({ type, title, description, requestId, onClose }) => {
+const Notification: FC<NotificationConfig> = ({ type, title, description, requestId, onClose, customTitle }) => {
   const Icon = NotificationIcons[type];
   const iconClassName = classNames('inline mr-2', NotificationIconColor[type]);
 
@@ -22,7 +22,7 @@ const Notification: FC<NotificationConfig> = ({ type, title, description, reques
       <div className="flex flex-row w-full relative pr-5 items-center">
         <div className="flex items-center w-full">
           <i className={iconClassName}>{Icon}</i>
-          <p className="small-text-semi truncate">{title}</p>
+          {customTitle ?? <p className="small-text-semi truncate">{title}</p>}
         </div>
         <DialIconButton
           aria-label="close"

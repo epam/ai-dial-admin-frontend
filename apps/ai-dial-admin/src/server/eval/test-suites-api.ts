@@ -26,6 +26,7 @@ export const TEST_CASE_TEMPLATE_VARIABLES_URL = (id: string, testCaseId: string)
 export const TEST_SUITE_TRY_OUT_URL = (id: string) => `${TEST_SUITE_URL(id)}/try-it-out`;
 export const TEST_CASE_TRY_OUT_URL = (id: string, testCaseId: string) => `${TEST_CASE_URL(id, testCaseId)}/try-it-out`;
 export const METRIC_DECLARATIONS_URL = `${API}/metric-declarations`;
+export const TEST_SUITE_DETACH_URL = (id: string) => `${TEST_SUITE_URL(id)}/detach-dataset`;
 export const TEST_SUITE_METRICS_URL = (id: string) => `${TEST_SUITE_URL(id)}/metric-definitions`;
 export const TEST_CASES_BULK_URL = (id?: string) => `${TEST_CASES_URL(id)}:bulk`;
 
@@ -130,6 +131,10 @@ export class TestSuitesApi extends BaseApi {
 
   removeTestSuite(id: string, token: Token): Promise<ServerActionResponse> {
     return this.deleteAction(TEST_SUITE_URL(id), token);
+  }
+
+  detachDataset(id: string, token: Token): Promise<ServerActionResponse> {
+    return this.postAction(TEST_SUITE_DETACH_URL(id), {}, token);
   }
 
   updateTestSuite(suite: TestSuite, etag: string, token: Token): Promise<ServerActionResponse> {

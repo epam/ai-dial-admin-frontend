@@ -103,7 +103,6 @@ export default {
     BuildersDescription:
       'Customize behavior, manage interactions, and optimize performance to ensure seamless operation.',
     Approvals: 'Approvals',
-    Playground: 'Playground',
     Metrics: 'Metrics',
     TestSuites: 'Test Suites',
     Datasets: 'Datasets',
@@ -1768,6 +1767,24 @@ export default {
     DatasetRequiredForMetrics: 'Please link a dataset to this test suite before adding metrics.',
     OpenDataset: 'Open dataset',
     ChangeDataset: 'Change dataset',
+    TestCasesPrivateTagTooltip:
+      'Test cases are private to this suite. To share them with other suites, publish them to a new dataset or attach from existing one.',
+    NoTestCasesDescription: 'Add test cases manually or attach from dataset',
+    More: 'More',
+    AttachDataset: 'Attach dataset',
+    PublishToDataset: 'Publish to a new dataset',
+    PublishToDatasetCountText:
+      '{count} test cases will be saved to a new dataset and current test suite will be linked to it automatically.',
+    PublishSuccess: 'Dataset published successfully',
+    PublishFailed: 'Failed to publish dataset',
+    DetachFromDataset: 'Detach from dataset',
+    DetachConfirmTitle: 'Detach from Dataset',
+    DetachConfirmDescription:
+      "When you detach test cases from the dataset, they become private to the current test suite. This lets you add, edit, or delete test cases without restrictions. The original dataset stays unchanged, so other suites using it won't be impacted.",
+    DetachSuccess: 'Dataset detached successfully',
+    DetachFailed: 'Failed to detach dataset',
+    PublicDatasetInfo:
+      'Test cases related to dataset are fixed. To change the test cases open the dataset page or detach them from dataset.',
   },
   FileManager: {
     SelectedItems: 'item(s) selected',
@@ -1997,17 +2014,5 @@ export default {
     Try_out: 'Try out',
     Edit: 'Edit',
     Export: 'Export',
-  },
-  Playground: {
-    Title: 'Playground',
-    Details: 'Details',
-    Tryout: 'Tryout',
-    SelectDeployment: 'Select deployment',
-    Deployment: 'Deployment',
-    Temperature: 'Temperature',
-    SystemPrompt: 'System prompt',
-    SystemPromptPlaceholder: 'Enter system prompt...',
-    ApplySettings: 'Apply settings',
-    Settings: 'Settings',
   },
 } as const;

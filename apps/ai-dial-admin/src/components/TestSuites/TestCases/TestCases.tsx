@@ -10,7 +10,6 @@ import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Dataset, DatasetVisibility } from '@/src/models/evaluation/dataset';
 import { TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
-import DatasetHeader from './DatasetHeader/DatasetHeader';
 import TestCasesList, { TestCasesActions } from './TestCasesList';
 import TestCasesSchemaModal from './TestCasesSchemaModal';
 import TemplateVariables from './TemplateVariables';
@@ -22,7 +21,7 @@ interface Props {
   testCasesActionsRef?: RefObject<TestCasesActions | null>;
   onDirtyChange?: (hasDirty: boolean) => void;
   dataset: Dataset | null;
-  suiteEtag: string;
+  suiteEtag?: string;
   onChangeDataset?: (dataset: Dataset) => void;
 }
 
@@ -56,21 +55,15 @@ const TestCases: FC<Props> = ({
   return (
     <div className="h-full flex flex-col gap-y-6">
       <TemplateVariables selectedTestSuite={selectedTestSuite} schema={dataset?.testCaseSchema} onChange={onChange} />
-      {selectedTestSuite.datasetId && dataset && (
-        <DatasetHeader
-          dataset={dataset}
-          selectedTestSuite={selectedTestSuite}
-          etag={suiteEtag}
-          onChangeDataset={onChangeDataset}
-        />
-      )}
       <TestCasesList
         selectedTestSuite={selectedTestSuite}
         onChange={onChange}
         isReadOnly={isReadOnly}
-        schema={dataset?.testCaseSchema}
+        dataset={dataset}
+        suiteEtag={suiteEtag}
         onOpenSchemaModal={!isReadOnly ? () => setIsSchemaModalOpen(true) : undefined}
         onSchemaChange={onApplySchema}
+        onChangeDataset={onChangeDataset}
         {...props}
       />
       {isNotSaved && <DialNotification variant={NotificationVariant.Info} message={t(TestSuitesI18nKey.Warning)} />}
