@@ -14,6 +14,29 @@ Full cycle: checkout new branch from `development` → stage → commit (Convent
 
 ---
 
+## Step 0 — Detect mode (new branch vs. update existing)
+
+First figure out which mode you're in. This decides whether you create a branch/PR or just push to what already exists.
+
+```bash
+git rev-parse --abbrev-ref HEAD          # current branch
+gh pr view --json number,url,state 2>/dev/null   # open PR for current branch (if any)
+```
+
+- **New-branch mode** — current branch is `development` (or another base branch), or there's no PR for it.
+  Run the full cycle: Steps 1–6 as written (create branch → commit → push → optional PR).
+- **Update-existing mode** — you're already on a feature branch **and** it has an open PR (or the user
+  says "push to the existing PR" / "update my PR"). **Do not** create a new branch and **do not** run
+  `gh pr create`. Stay on the current branch, then:
+  1. Step 2 — review the changes.
+  2. Step 4 — generate the commit message (reuse the existing PR's ticket; keep the same `area`/type style).
+  3. Step 5 — **skip the `git checkout` lines**; just `git add` → `git commit` → `git push` to the current branch.
+  4. Skip Step 6's `gh pr create`. Pushing updates the open PR automatically. Only refresh the PR body
+     (`gh pr edit --body`) if the user asks or the description is now stale/missing.
+  5. Step 7 — report the existing PR link, not a new one.
+
+---
+
 ## Step 1 — Gather required context
 
 Before doing anything, ensure you have:
@@ -107,11 +130,18 @@ If push fails for any reason (no permissions, rejected, conflict) — **report t
 
 ## Step 6 — Pull Request (if requested)
 
-If the user requested a PR or draft PR, first generate the PR body from the diff and ticket context:
+If the user requested a PR or draft PR, generate the body using the repo's PR template
+(`.github/pull_request_template.md`). **Always follow that template** — fill every placeholder,
+never leave `<SHORT_DESCRIPTION>` or `<TICKET_ID>` unreplaced.
 
 ```markdown
-## Summary
-<What was done and why — 2-4 sentences>
+**Description:**
+
+<2-4 sentences: what changed and why. Use the diff + ticket context. Explain the *why*, not just the *what*.>
+
+Issues:
+
+- Issue #<ticket>
 
 ## Key Changes
 - [path/to/file.tsx](<github-file-link>) — short description
@@ -126,14 +156,25 @@ If the user requested a PR or draft PR, first generate the PR body from the diff
 <Omit this section entirely if there are no breaking changes.>
 
 
-Closes #<ticket>
+**Checklist:**
+
+- [x] the pull request name complies with [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
+- [x] the pull request name ends with `(Issue #<ticket>)` (comma-separated list of issues)
 ```
 
-Rules for generating the body:
-- **Summary**: explain the *why*, not just the *what*; use ticket description for context
-- **Key Changes**: most impactful files only (max ~10); skip trivial files like formatting-only changes
-- **New Components**: newly created React components or shared modules only
-- **Breaking Changes**: only if interfaces, props, or contracts changed non-backward-compatibly; otherwise omit
+Rules for filling the template:
+- **Description**: required — always write a real summary, even for small chores. Explain the *why*,
+  not just the *what*; use ticket title/description for context.
+- **Issues**: one `- Issue #<ticket>` line per ticket. If there is genuinely no ticket, **remove the
+  whole `Issues:` block** and leave the second checklist item **unchecked** (`[ ]`), since the title
+  can't end with `(Issue #…)`.
+- **Summary**: explain the *why*, not just the *what*; use ticket description for context.
+- **Key Changes**: most impactful files only (max ~10); skip trivial files like formatting-only changes.
+- **New Components**: newly created React components or shared modules only. Omit the section if none.
+- **Breaking Changes**: only if interfaces, props, or contracts changed non-backward-compatibly;
+  otherwise omit the section.
+- **Checklist**: tick `[x]` the boxes this skill actually satisfies — the title is Conventional Commits
+  (always checked) and ends with `(Issue #<ticket>)` (checked only when a ticket exists).
 
 Then create the PR:
 
@@ -169,5 +210,5 @@ Always finish with a concise confirmation:
 Branch:  feat/<short-slug>
 Commit:  <type>(<area>): <description> (Issue #<ticket>)
 Push:    ✅ succeeded  /  ❌ failed — <reason>
-PR:      <link>  /  skipped
+PR:      <link> (created)  /  <link> (updated existing)  /  skipped
 ```
