@@ -123,7 +123,7 @@ export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   TOPICS_COLUMN,
   { ...CREATED_AT_COLUMN, filter: false },
   { ...UPDATED_AT_COLUMN, filter: false },
-  ATTACHMENT_COLUMN(t),
+  ATTACHMENT_COLUMN,
   MAX_INPUT_ATTACHMENTS_COLUMN,
   {
     field: 'limits.maxTotalTokens',
@@ -156,7 +156,7 @@ export const APPLICATIONS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   TOPICS_COLUMN,
   { ...CREATED_AT_COLUMN, filter: false },
   { ...UPDATED_AT_COLUMN, filter: false },
-  ATTACHMENT_COLUMN(t),
+  ATTACHMENT_COLUMN,
   MAX_INPUT_ATTACHMENTS_COLUMN,
 ];
 
