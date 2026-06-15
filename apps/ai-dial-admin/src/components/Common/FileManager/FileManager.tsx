@@ -269,7 +269,7 @@ const FileManager: FC<Props> = ({
           fetchFiles(parentPath);
           setFilePath(parentPath);
 
-          const notifications = getDeleteNotificationContent(view, fileNodes, t, parentPath);
+          const notifications = getDeleteNotificationContent(view, fileNodes, t);
           if (Array.isArray(notifications)) {
             notifications.forEach(({ title, description }) => {
               showNotification(getSuccessNotification(title, description));

@@ -154,7 +154,6 @@ const FilesList = () => {
             ApplicationRoute.Files,
             deletedItems as DialFile[],
             t,
-            parentPath,
           ) as { title: string; description: string };
           showNotification(getSuccessNotification(title, description));
         } else {
