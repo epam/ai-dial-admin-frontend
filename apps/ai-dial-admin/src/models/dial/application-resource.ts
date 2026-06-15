@@ -1,5 +1,4 @@
 import { BaseEntity, EntityDefaults } from '@/src/models/dial/base-entity';
-import { ApplicationPropertiesTemp } from './application';
 
 export interface DialApplicationResource extends BaseEntity, EntityDefaults {
   applicationTypeSchemaId: string;
@@ -19,7 +18,6 @@ export interface DialApplicationResource extends BaseEntity, EntityDefaults {
   editorUrl: string;
   viewerUrl: string;
   applicationProperties?: Record<string, unknown>;
-  applicationPropertiesTemp?: ApplicationPropertiesTemp[];
 }
 
 export interface DialToolsetResource extends BaseEntity {

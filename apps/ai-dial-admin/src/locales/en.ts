@@ -83,6 +83,8 @@ export default {
     Yes: 'Yes',
     No: 'No',
     DuplicateCopyPostfix: '(Copy)',
+    KeyRequired: 'Key cannot be empty',
+    KeyDuplicate: 'Key already exists',
     URL: 'URL',
     Request: 'Request body',
     Response: 'Response body',

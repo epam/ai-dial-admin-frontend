@@ -139,6 +139,8 @@ export enum BasicI18nKey {
   Yes = 'Basic.Yes',
   No = 'Basic.No',
   DuplicateCopyPostfix = 'Basic.DuplicateCopyPostfix',
+  KeyRequired = 'Basic.KeyRequired',
+  KeyDuplicate = 'Basic.KeyDuplicate',
   URL = 'Basic.URL',
   Request = 'Basic.Request',
   Response = 'Basic.Response',
