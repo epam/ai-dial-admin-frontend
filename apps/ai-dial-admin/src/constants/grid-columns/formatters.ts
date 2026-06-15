@@ -2,7 +2,7 @@ import { Big } from 'big.js';
 
 import { ALL_ATTACHMENTS } from '@/src/constants/dial-base-entity';
 import { IMAGE_SOURCE_TYPE_I18N_KEYS } from '@/src/constants/deployments/images';
-import { AttachmentsI18nKey, BasicI18nKey, EntitiesI18nKey, MenuI18nKey, SourceI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, EntitiesI18nKey, MenuI18nKey, SourceI18nKey } from '@/src/constants/i18n';
 import { ActivityAuditResourceType } from '@/src/types/activity-audit';
 import { IMAGE_SOURCE_TYPE } from '@/src/types/deployments/images';
 import { formatNumberByDelimiter } from '@/src/utils/formatting/number-formatting';
@@ -66,9 +66,9 @@ export const getTopics = (data?: { topics?: string[]; descriptionKeywords?: stri
   return value?.length === 0 ? null : value?.sort() || null;
 };
 
-export const formatAttachment = (value: string, t: (stringToTranslate: string) => string) => {
+export const formatAttachment = (value: string) => {
   if (value && value?.[0] === ALL_ATTACHMENTS) {
-    return t(AttachmentsI18nKey.AllAttachments);
+    return '*/*';
   } else if (value) {
     return value.toString();
   } else {
