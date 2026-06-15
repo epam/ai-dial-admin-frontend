@@ -1,6 +1,12 @@
 import { NotificationType } from '@/src/models/notification';
 import { describe, expect, test } from 'vitest';
-import { getCopyToClipboardNotification, getErrorNotification, getNotification, getPrepareNotification, getSuccessNotification } from '../notification';
+import {
+  getCopyToClipboardNotification,
+  getErrorNotification,
+  getNotification,
+  getPrepareNotification,
+  getSuccessNotification,
+} from '../notification';
 
 describe('Utils :: getErrorNotification', () => {
   test('Should return error notification', () => {
