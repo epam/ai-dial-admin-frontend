@@ -25,12 +25,17 @@ export const getPrepareNotification = (
   return getNotification(NotificationType.prepare, title, description, duration);
 };
 
+export const getCopyToClipboardNotification = (title: string): Notification => {
+  return getNotification(NotificationType.success, title, undefined, undefined, undefined, true);
+};
+
 export const getNotification = (
   type: NotificationType,
   title?: string,
   description?: string,
   duration?: number | null,
   requestId?: string,
+  disableTitleTruncate?: boolean,
 ): Notification => {
   return {
     type,
@@ -38,5 +43,6 @@ export const getNotification = (
     description: description ?? '',
     duration,
     requestId,
+    disableTitleTruncate,
   };
 };

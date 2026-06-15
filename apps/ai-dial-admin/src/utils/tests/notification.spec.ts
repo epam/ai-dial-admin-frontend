@@ -1,6 +1,6 @@
 import { NotificationType } from '@/src/models/notification';
 import { describe, expect, test } from 'vitest';
-import { getErrorNotification, getNotification, getPrepareNotification, getSuccessNotification } from '../notification';
+import { getCopyToClipboardNotification, getErrorNotification, getNotification, getPrepareNotification, getSuccessNotification } from '../notification';
 
 describe('Utils :: getErrorNotification', () => {
   test('Should return error notification', () => {
@@ -95,6 +95,28 @@ describe('Utils :: getSuccessNotification', () => {
       title: '',
       description: '',
       duration: null,
+    });
+  });
+});
+
+describe('Utils :: getCopyToClipboardNotification', () => {
+  test('Should return success notification with disableTitleTruncate set to true', () => {
+    const result = getCopyToClipboardNotification('Copied!');
+    expect(result).toEqual({
+      type: NotificationType.success,
+      title: 'Copied!',
+      description: '',
+      disableTitleTruncate: true,
+    });
+  });
+
+  test('Should return notification with the provided title', () => {
+    const result = getCopyToClipboardNotification('https://example.com/very/long/url');
+    expect(result).toEqual({
+      type: NotificationType.success,
+      title: 'https://example.com/very/long/url',
+      description: '',
+      disableTitleTruncate: true,
     });
   });
 });

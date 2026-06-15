@@ -6,6 +6,7 @@ export interface Notification {
   requestId?: string;
   onClose?: () => void;
   downloadDetails?: FileDetails[];
+  disableTitleTruncate?: boolean;
 }
 
 export interface FileDetails {
