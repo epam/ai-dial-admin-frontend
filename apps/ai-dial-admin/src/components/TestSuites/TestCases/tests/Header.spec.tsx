@@ -159,9 +159,7 @@ describe('HeaderButtons', () => {
 
   test('opens publish modal and forwards values on confirm', () => {
     const mockOnPublish = vi.fn();
-    render(
-      <HeaderButtons datasetId={mockTestSuiteId} onApplyImport={mockOnApplyImport} onPublish={mockOnPublish} />,
-    );
+    render(<HeaderButtons datasetId={mockTestSuiteId} onApplyImport={mockOnApplyImport} onPublish={mockOnPublish} />);
 
     fireEvent.click(screen.getByText(TestSuitesI18nKey.PublishToDataset));
     expect(screen.getByText('Publish Dataset Modal')).toBeInTheDocument();
@@ -189,9 +187,7 @@ describe('HeaderButtons', () => {
 
   test('invokes onExport from the More dropdown', () => {
     const mockOnExport = vi.fn();
-    render(
-      <HeaderButtons datasetId={mockTestSuiteId} onApplyImport={mockOnApplyImport} onExport={mockOnExport} />,
-    );
+    render(<HeaderButtons datasetId={mockTestSuiteId} onApplyImport={mockOnApplyImport} onExport={mockOnExport} />);
 
     fireEvent.click(screen.getByText(ButtonsI18nKey.ExportCsv));
 
@@ -201,11 +197,7 @@ describe('HeaderButtons', () => {
   test('renders batch delete button only when showBatchDelete is true', () => {
     const mockOnBatchDelete = vi.fn();
     const { rerender } = render(
-      <HeaderButtons
-        datasetId={mockTestSuiteId}
-        onApplyImport={mockOnApplyImport}
-        onBatchDelete={mockOnBatchDelete}
-      />,
+      <HeaderButtons datasetId={mockTestSuiteId} onApplyImport={mockOnApplyImport} onBatchDelete={mockOnBatchDelete} />,
     );
 
     expect(screen.queryByText(ButtonsI18nKey.Delete)).not.toBeInTheDocument();
