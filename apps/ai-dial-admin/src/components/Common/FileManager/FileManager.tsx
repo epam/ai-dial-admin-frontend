@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   DialCopiedItem,
@@ -12,7 +12,7 @@ import {
   FileManagerColumnKey,
   FileManagerGridRow,
 } from '@epam/ai-dial-ui-kit';
-import { ColDef } from 'ag-grid-community';
+import { AgGridEvent, ColDef, GridApi } from 'ag-grid-community';
 
 import {
   getDeleteNotificationContent,
@@ -34,7 +34,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import MoveItemsModal from './MoveItemsModal';
-import { MAX_FOLDER_NESTING_DEPTH, MOVE_ITEMS_INDICATOR_DELAY } from './constants';
+import { ASSET_LIST_FILTER_STORAGE_KEY, MAX_FOLDER_NESTING_DEPTH, MOVE_ITEMS_INDICATOR_DELAY } from './constants';
 import {
   getBulkActionsToolbarOptions,
   getDestinationFolderPopupOptions,
@@ -107,6 +107,7 @@ const FileManager: FC<Props> = ({
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
   const { files, fetchFiles, isFetchingFiles, filePath, setFilePath, expandedFolders, setExpandedFolders } =
     getContext();
+  const gridReadyRef = useRef(false);
 
   useEffect(() => {
     if (!folderToRefetch) {
@@ -346,6 +347,47 @@ const FileManager: FC<Props> = ({
     );
   }, [showNotification, t]);
 
+  const handleGridFilterChanged = useCallback(
+    (e: AgGridEvent) => {
+      if (!gridReadyRef.current) return;
+      const filters = e.api.getFilterModel();
+      const key = `${ASSET_LIST_FILTER_STORAGE_KEY}${view}`;
+      if (Object.keys(filters).length > 0) {
+        sessionStorage.setItem(key, JSON.stringify(filters));
+      } else {
+        sessionStorage.removeItem(key);
+      }
+    },
+    [view],
+  );
+
+  const handleGridApiChange = useCallback(
+    (api: GridApi) => {
+      const key = `${ASSET_LIST_FILTER_STORAGE_KEY}${view}`;
+      const saved = sessionStorage.getItem(key);
+      gridReadyRef.current = true;
+      if (saved) {
+        try {
+          api.setFilterModel(JSON.parse(saved));
+        } catch {
+          sessionStorage.removeItem(key);
+        }
+      }
+    },
+    [view],
+  );
+
+  const gridOptions = useMemo(() => {
+    const base = getGridOptions(view, isReadOnlyAdmin, columnDefs, t);
+    return {
+      ...base,
+      additionalGridOptions: {
+        ...base.additionalGridOptions,
+        onFilterChanged: handleGridFilterChanged,
+      },
+    };
+  }, [view, isReadOnlyAdmin, columnDefs, t, handleGridFilterChanged]);
+
   return (
     <>
       <DialFileManager
@@ -368,7 +410,8 @@ const FileManager: FC<Props> = ({
           setExpandedFolders,
           t,
         )}
-        gridOptions={getGridOptions(view, isReadOnlyAdmin, columnDefs, t)}
+        gridOptions={gridOptions}
+        onGridApiChange={handleGridApiChange}
         onPathChange={handleOnPathChange}
         onCreateFolder={isReadOnlyAdmin ? undefined : handleCreateFolder}
         onDownloadFiles={handleDownloadFiles}
