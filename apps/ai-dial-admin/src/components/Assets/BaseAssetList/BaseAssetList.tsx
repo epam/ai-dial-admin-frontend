@@ -498,7 +498,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
           fetchFiles(parentPath);
           setFilePath(parentPath);
           removeSelection(deletedItems?.map((item) => item.path));
-          const notifications = getDeleteNotificationContent(view, deletedItems as DialFile[], t, parentPath);
+          const notifications = getDeleteNotificationContent(view, deletedItems as DialFile[], t);
           if (Array.isArray(notifications)) {
             notifications.forEach(({ title, description }) => {
               showNotification(getSuccessNotification(title, description));
