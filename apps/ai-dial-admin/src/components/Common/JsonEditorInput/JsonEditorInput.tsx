@@ -1,4 +1,4 @@
-import { DialFormPopup, DialInputPopup, DialLabel } from '@epam/ai-dial-ui-kit';
+import { DialErrorText, DialFormPopup, DialInputPopup, DialLabel } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
@@ -31,7 +31,7 @@ const JsonEditorInput: FC<Props> = ({
   const [isValid, setIsValid] = useState(false);
   const [jsonValue, setJsonValue] = useState<string | undefined>(undefined);
   const [isValidJSON, setIsValidJSON] = useState(false);
-
+  const [parseError, setParseError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const committedJsonValue = useMemo(() => {
@@ -68,6 +68,7 @@ const JsonEditorInput: FC<Props> = ({
 
   const onChangeJsonValue = useCallback((v: string | undefined) => {
     setIsValidJSON(true);
+    setParseError(null);
     setJsonValue(v);
   }, []);
 
@@ -79,9 +80,18 @@ const JsonEditorInput: FC<Props> = ({
   );
 
   const onApply = useCallback(() => {
-    onChangeValue(JSON.parse(jsonValue as string));
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonValue as string);
+    } catch {
+      if (disableValidation) {
+        setParseError('Invalid JSON');
+        return;
+      }
+    }
+    onChangeValue(parsed);
     onCloseModal();
-  }, [onChangeValue, jsonValue, onCloseModal]);
+  }, [onChangeValue, onCloseModal, jsonValue, disableValidation]);
 
   return (
     <div className="flex flex-col gap-y-1">
@@ -103,15 +113,18 @@ const JsonEditorInput: FC<Props> = ({
           onSubmit={onApply}
           cancelLabel={t(ButtonsI18nKey.Cancel)}
           onCancel={onCancelModal}
-          disableSubmitButton={!isValid && !disableValidation}
+          disableSubmitButton={(!isValid && !disableValidation) || !!parseError}
         >
-          <div className="px-6 py-4 h-[540px] max-h-[35vh]">
-            <JsonEditorBase
-              value={jsonValue}
-              onChange={onChangeJsonValue}
-              onValidateJSON={onValidateJSON}
-              options={{ stickyScroll: { enabled: false } }}
-            />
+          <div className="px-6 py-4 flex flex-col gap-1">
+            <div className="h-[540px] max-h-[35vh]">
+              <JsonEditorBase
+                value={jsonValue}
+                onChange={onChangeJsonValue}
+                onValidateJSON={onValidateJSON}
+                options={{ stickyScroll: { enabled: false } }}
+              />
+            </div>
+            {disableValidation && parseError && <DialErrorText text={parseError} />}
           </div>
         </DialFormPopup>
       </DialInputPopup>
