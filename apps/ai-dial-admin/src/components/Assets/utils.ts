@@ -174,7 +174,6 @@ export const getDeleteNotificationContent = (
   view: ApplicationRoute,
   fileNodes: DialDeletedItem[] | DialFile[] | AssetWithVersion[],
   t: (key: string, options?: Record<string, string | number>) => string,
-  destinationFolder?: string,
 ) => {
   const deletedItemsCount = fileNodes.reduce((count, item) => {
     const itemCount =
@@ -186,6 +185,7 @@ export const getDeleteNotificationContent = (
   const isDeleteFolder =
     fileNodes.length === 1 && (fileNodes[0] as DialDeletedItem).nodeType === DialFileNodeType.FOLDER;
   const isMultipleVersionsDelete = fileNodes.length === 1 && deletedItemsCount > 1;
+  const nameWithPath = `${(fileNodes as DialFile[])?.[0].folderId || ''}${(fileNodes as DialFile[])?.[0].name || ''}`;
 
   if (isDeleteFolder) {
     const title = t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Folder) });
@@ -203,8 +203,7 @@ export const getDeleteNotificationContent = (
         const descriptions = (fileNodes as AssetWithVersion[])[0].selectedVersions?.map((version) =>
           t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
             item: t(FileManagerI18nKey.Conversation),
-            name: `${(fileNodes as DialFile[])?.[0].name || ''}__${version}`,
-            path: destinationFolder || '/',
+            name: `${nameWithPath}__${version}`,
           }),
         );
 
@@ -219,8 +218,7 @@ export const getDeleteNotificationContent = (
           })
         : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
             item: t(FileManagerI18nKey.Conversation),
-            name: (fileNodes as DialFile[])?.[0].name || '',
-            path: destinationFolder || '/',
+            name: `${nameWithPath}__${(fileNodes as AssetWithVersion[])?.[0].selectedVersions?.[0] || (fileNodes as AssetWithVersion[])?.[0].version || ''}`,
           });
       return { title, description };
     }
@@ -244,8 +242,7 @@ export const getDeleteNotificationContent = (
         const descriptions = (fileNodes as AssetWithVersion[])[0].selectedVersions?.map((version) =>
           t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
             item: t(FileManagerI18nKey.Prompt),
-            name: `${(fileNodes as DialFile[])?.[0].name || ''}__${version}`,
-            path: destinationFolder || '/',
+            name: `${nameWithPath}__${version}`,
           }),
         );
 
@@ -260,8 +257,7 @@ export const getDeleteNotificationContent = (
           })
         : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
             item: t(FileManagerI18nKey.Prompt),
-            name: (fileNodes as DialFile[])?.[0].name || '',
-            path: destinationFolder || '/',
+            name: `${nameWithPath}__${(fileNodes as AssetWithVersion[])?.[0].selectedVersions?.[0] || (fileNodes as AssetWithVersion[])?.[0].version || ''}`,
           });
       return { title, description };
     }
@@ -271,8 +267,7 @@ export const getDeleteNotificationContent = (
         const descriptions = (fileNodes as AssetWithVersion[])[0].selectedVersions?.map((version) =>
           t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
             item: t(FileManagerI18nKey.Application),
-            name: `${(fileNodes as DialFile[])?.[0].name || ''}__${version}`,
-            path: destinationFolder || '/',
+            name: `${nameWithPath}__${version}`,
           }),
         );
 
@@ -288,8 +283,7 @@ export const getDeleteNotificationContent = (
           })
         : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
             item: t(FileManagerI18nKey.Application),
-            name: (fileNodes as DialFile[])?.[0].name || '',
-            path: destinationFolder || '/',
+            name: `${nameWithPath}__${(fileNodes as AssetWithVersion[])?.[0].selectedVersions?.[0] || (fileNodes as AssetWithVersion[])?.[0].version || ''}`,
           });
       return { title, description };
     }
@@ -299,8 +293,7 @@ export const getDeleteNotificationContent = (
         const descriptions = (fileNodes as AssetWithVersion[])[0].selectedVersions?.map((version) =>
           t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
             item: t(FileManagerI18nKey.Toolset),
-            name: `${(fileNodes as DialFile[])?.[0].name || ''}__${version}`,
-            path: destinationFolder || '/',
+            name: `${nameWithPath}__${version}`,
           }),
         );
 
@@ -316,8 +309,7 @@ export const getDeleteNotificationContent = (
           })
         : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
             item: t(FileManagerI18nKey.Toolset),
-            name: (fileNodes as DialFile[])?.[0].name || '',
-            path: destinationFolder || '/',
+            name: `${nameWithPath}__${(fileNodes as AssetWithVersion[])?.[0].selectedVersions?.[0] || (fileNodes as AssetWithVersion[])?.[0].version || ''}`,
           });
       return { title, description };
     }
