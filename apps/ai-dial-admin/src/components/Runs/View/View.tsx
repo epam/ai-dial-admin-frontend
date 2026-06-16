@@ -14,11 +14,11 @@ import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHead
 import ExportRunModal from '@/src/components/Runs/Export/ExportRunModal';
 import { ButtonsI18nKey, EntityFieldsI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useLocalDateTimeString } from '@/src/hooks/use-local-date-time-string';
 import { useI18n } from '@/src/locales/client';
 import { Run, RunStatus } from '@/src/models/evaluation/run';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
-import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import AnalyticsTab from './Analytics';
 
@@ -29,6 +29,8 @@ interface Props {
 
 const RunView: FC<Props> = ({ run, onRemove }) => {
   const t = useI18n();
+  const startedAt = useLocalDateTimeString(run?.startedAt);
+  const completedAt = useLocalDateTimeString(run?.completedAt);
 
   const noop = useCallback(() => {}, []);
 
@@ -39,12 +41,8 @@ const RunView: FC<Props> = ({ run, onRemove }) => {
   const headerPostfix = useMemo(() => {
     return (
       <>
-        {!!run?.startedAt && (
-          <LabelledText label={t(RunsI18nKey.StartTime)} text={formatDateTimeToLocalString(run?.startedAt)} />
-        )}
-        {!!run?.completedAt && (
-          <LabelledText label={t(RunsI18nKey.EndTime)} text={formatDateTimeToLocalString(run?.completedAt)} />
-        )}
+        {!!run?.startedAt && <LabelledText label={t(RunsI18nKey.StartTime)} text={startedAt} />}
+        {!!run?.completedAt && <LabelledText label={t(RunsI18nKey.EndTime)} text={completedAt} />}
 
         {!!run?.status && (
           <LabelledText label={t(EntityFieldsI18nKey.status)}>
@@ -66,7 +64,7 @@ const RunView: FC<Props> = ({ run, onRemove }) => {
         )}
       </>
     );
-  }, [run?.completedAt, run?.startedAt, run.status, run.testRunName, run.testSuiteId, t]);
+  }, [completedAt, run.status, run.testRunName, run.testSuiteId, run?.completedAt, run?.startedAt, startedAt, t]);
 
   return (
     <>
