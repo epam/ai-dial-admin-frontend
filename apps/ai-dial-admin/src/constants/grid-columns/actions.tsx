@@ -22,6 +22,7 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { ActionMenuOperationI18nKey } from '@/src/constants/i18n';
+import IconCompare from '@/public/images/icons/difference.svg';
 
 export function getResourceRollbackOperation<T>(
   onClick: (entity?: T) => void,
@@ -242,6 +243,19 @@ export function getExportOperation<T>(
     icon: <IconFileExport {...BASE_BUTTON_ICON_PROPS} />,
     id: ActionMenuOperationI18nKey.Export,
     label: ActionMenuOperationI18nKey.Export,
+    onClick,
+    hidden,
+  };
+}
+
+export function getCompareOperation<T>(
+  onClick: (entity?: T) => void,
+  hidden?: (api: GridApi, node: IRowNode) => boolean,
+): ActionMenuOperationDeclaration<T> {
+  return {
+    icon: <IconCompare {...BASE_BUTTON_ICON_PROPS} className="mx-1" />,
+    id: ActionMenuOperationI18nKey.Compare,
+    label: ActionMenuOperationI18nKey.Compare,
     onClick,
     hidden,
   };

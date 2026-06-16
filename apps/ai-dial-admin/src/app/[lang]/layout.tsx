@@ -51,6 +51,7 @@ export default async function Layout({ children, params }: { children: ReactNode
     mcpRegistryEnabled: isValueTruthy(process.env.MCP_REGISTRY_ENABLED),
     nimEnabled: isValueTruthy(process.env.NIM_ENABLED),
     hfEnabled: isValueTruthy(process.env.HF_ENABLED),
+    runsCompareEnabled: isValueTruthy(process.env.RUNS_COMPARE_ENABLED),
   };
 
   const themesConfiguration = await themesApi.getThemesConfiguration();

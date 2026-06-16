@@ -52,6 +52,11 @@ describe('getUrnForEntity', () => {
     expect(urn).toBe(`/${originalRoute}/${encodeURIComponent('test')}`);
   });
 
+  test('returns compare url for RunsCompare route', () => {
+    const urn = getUrnForEntity(ApplicationRoute.RunsCompare, { id: 'run-123' });
+    expect(urn).toBe('/runs/compare?runs=run-123');
+  });
+
   test('returns correct URN for default case', () => {
     const entity = { name: 'DefaultName' };
     const urn = getUrnForEntity('OtherRoute' as any, entity);
@@ -133,6 +138,11 @@ describe('Entity list view :: getEntityPath', () => {
     const res1 = getEntityPath(ApplicationRoute.Runs, { data, id: 'id' }, void 0);
     expect(res1).toEqual('id');
   });
+
+  test('Should return compare query path for RunsCompare', () => {
+    const res = getEntityPath(ApplicationRoute.RunsCompare, { id: 'run-123' }, void 0);
+    expect(res).toEqual('compare?runs=run-123');
+  });
 });
 
 describe('onOpenInNewTab', () => {
@@ -152,6 +162,12 @@ describe('onOpenInNewTab', () => {
     const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
     onOpenInNewTab(undefined, { name: 'entity' });
     expect(windowOpenSpy).toHaveBeenCalledWith(expect.stringContaining('/entity'), '_blank');
+  });
+
+  test('calls window.open with compare url for RunsCompare route', () => {
+    const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+    onOpenInNewTab(ApplicationRoute.RunsCompare, { id: 'run-123' });
+    expect(windowOpenSpy).toHaveBeenCalledWith('/runs/compare?runs=run-123', '_blank');
   });
 });
 

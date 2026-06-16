@@ -1,5 +1,5 @@
 import { enrichWithFolderBreadcrumbs, getBreadcrumbs } from '@/src/components/Breadcrumbs/utils';
-import { MenuI18nKey } from '@/src/constants/i18n';
+import { MenuI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { describe, expect, test, vi } from 'vitest';
 import { Breadcrumb } from '../models';
 
@@ -45,6 +45,16 @@ describe('Breadcrumbs :: getBreadcrumbConfig with language in path', () => {
     const config = getBreadcrumbs('/en/models/foo%40bar', 'en');
     expect(config.length).toEqual(2);
     expect(config[1].name).toEqual('foo@bar');
+  });
+
+  test('Should translate runs compare segment via breadcrumb config', () => {
+    const config = getBreadcrumbs('/en/runs/compare', 'en');
+    expect(config.length).toEqual(2);
+    expect(config[0].href).toEqual('/en/runs');
+    expect(config[0].key).toEqual(MenuI18nKey.Runs);
+    expect(config[1].href).toBeFalsy();
+    expect(config[1].key).toEqual(RunsI18nKey.RunComparison);
+    expect(config[1].name).toEqual('compare');
   });
 });
 
