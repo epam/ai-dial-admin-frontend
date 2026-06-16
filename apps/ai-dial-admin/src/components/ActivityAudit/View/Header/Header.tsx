@@ -11,7 +11,7 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { DialActivity } from '@/src/models/activity-audit';
 import { ActivityAuditResourceType, ActivityAuditType } from '@/src/types/activity-audit';
-import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
+import { useLocalDateTimeString } from '@/src/hooks/use-local-date-time-string';
 
 interface Props {
   activity: DialActivity;
@@ -20,6 +20,7 @@ interface Props {
 const ViewHeader: FC<Props> = ({ activity, children }) => {
   const t = useI18n();
   const currentLocale = useCurrentLocale();
+  const epochTimestamp = useLocalDateTimeString(activity.epochTimestampMs);
 
   const openResourceInNewTab = (activity: DialActivity) => {
     window.open(
@@ -58,12 +59,7 @@ const ViewHeader: FC<Props> = ({ activity, children }) => {
               </div>
             </LabelledText>
           )}
-        {activity.epochTimestampMs && (
-          <LabelledText
-            label={t(ActivityAuditI18nKey.Time)}
-            text={formatDateTimeToLocalString(activity.epochTimestampMs)}
-          />
-        )}
+        {activity.epochTimestampMs && <LabelledText label={t(ActivityAuditI18nKey.Time)} text={epochTimestamp} />}
         {activity.initiatedEmail && (
           <LabelledText label={t(ActivityAuditI18nKey.Initiated)} text={activity.initiatedEmail} />
         )}
