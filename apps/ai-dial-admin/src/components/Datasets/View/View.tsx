@@ -48,7 +48,6 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
   const [isSkipRefresh, setIsSkipRefresh] = useState(false);
   const [discardKey, setDiscardKey] = useState(0);
   const [etag, setEtag] = useState(initialEtag);
-  const [isMakePrivateOpen, setIsMakePrivateOpen] = useState(false);
   const [isMakePublicOpen, setIsMakePublicOpen] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [nameExistsError, setNameExistsError] = useState<string>();
@@ -177,28 +176,12 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
       const body: DatasetVisibilityTransition = { visibility: targetVisibility };
       transitionVisibility(selectedDataset.id as string, body).then((res) => {
         if (res.success) {
-          const isNowPrivate = targetVisibility === DatasetVisibility.PRIVATE;
-          showNotification(
-            getSuccessNotification(
-              t(isNowPrivate ? DatasetsI18nKey.MakePrivateSuccess : DatasetsI18nKey.MakePublicSuccess),
-            ),
-          );
+          showNotification(getSuccessNotification(t(DatasetsI18nKey.MakePublicSuccess)));
           router.refresh();
         } else {
-          showNotification(
-            getErrorNotification(
-              t(
-                targetVisibility === DatasetVisibility.PRIVATE
-                  ? DatasetsI18nKey.MakePrivateFailed
-                  : DatasetsI18nKey.MakePublicFailed,
-              ),
-              res.errorMessage,
-              res.requestId,
-            ),
-          );
+          showNotification(getErrorNotification(t(DatasetsI18nKey.MakePublicFailed), res.errorMessage, res.requestId));
         }
       });
-      setIsMakePrivateOpen(false);
       setIsMakePublicOpen(false);
     },
     [selectedDataset.id, showNotification, t, router],
@@ -219,9 +202,7 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
           onChangeActiveTab={setActiveTab}
           onRemove={removeDataset}
         >
-          {isPublic ? (
-            <DialNeutralButton label={t(DatasetsI18nKey.MakePrivate)} onClick={() => setIsMakePrivateOpen(true)} />
-          ) : (
+          {!isPublic && (
             <DialNeutralButton label={t(DatasetsI18nKey.MakePublic)} onClick={() => setIsMakePublicOpen(true)} />
           )}
         </SimpleEntityHeader>
@@ -248,19 +229,6 @@ const DatasetView: FC<Props> = ({ originalDataset, etag: initialEtag }) => {
           )}
         </div>
       </div>
-
-      {isMakePrivateOpen &&
-        createPortal(
-          <DialConfirmationPopup
-            open={isMakePrivateOpen}
-            header={t(DatasetsI18nKey.MakePrivateConfirmTitle)}
-            description={t(DatasetsI18nKey.MakePrivateConfirmDescription)}
-            onConfirm={() => onTransitionVisibility(DatasetVisibility.PRIVATE)}
-            onClose={() => setIsMakePrivateOpen(false)}
-            confirmLabel={t(DatasetsI18nKey.MakePrivate)}
-          />,
-          document.body,
-        )}
 
       {isMakePublicOpen &&
         createPortal(

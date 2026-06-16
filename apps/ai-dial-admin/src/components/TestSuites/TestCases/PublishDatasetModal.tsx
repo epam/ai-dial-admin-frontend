@@ -1,11 +1,14 @@
 'use client';
 
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 
-import { DialFormPopup, DialInput, DialTextarea, PopupSize } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 
-import { ButtonsI18nKey, EntityFieldsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { getDatasetByName } from '@/src/app/[lang]/datasets/actions';
+import DatasetProperties from '@/src/components/Datasets/Properties/Properties';
+import { ButtonsI18nKey, ErrorI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { Dataset } from '@/src/models/evaluation/dataset';
 
 interface Props {
   isOpen: boolean;
@@ -16,16 +19,26 @@ interface Props {
 
 const PublishDatasetModal: FC<Props> = ({ isOpen, testCaseCount, onClose, onConfirm }) => {
   const t = useI18n();
-  const [displayName, setDisplayName] = useState('');
-  const [description, setDescription] = useState('');
+  const [dataset, setDataset] = useState<Dataset>({});
+  const [nameExistsError, setNameExistsError] = useState<string>();
 
   const onCreateClick = useCallback(() => {
-    onConfirm(displayName, description || undefined);
-  }, [displayName, description, onConfirm]);
+    getDatasetByName(dataset.name!).then((res) => {
+      if (res && res.content?.length > 0) {
+        setNameExistsError(t(ErrorI18nKey.DisplayNameExists));
+      } else {
+        onConfirm(dataset.name!, dataset.description || undefined);
+      }
+    });
+  }, [dataset, t, onConfirm]);
+
+  useEffect(() => {
+    setNameExistsError(undefined);
+  }, [dataset.name]);
 
   const onCloseModal = useCallback(() => {
-    setDisplayName('');
-    setDescription('');
+    setDataset({});
+    setNameExistsError(undefined);
     onClose();
   }, [onClose]);
 
@@ -39,25 +52,14 @@ const PublishDatasetModal: FC<Props> = ({ isOpen, testCaseCount, onClose, onConf
       onCancel={onCloseModal}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
       submitLabel={t(ButtonsI18nKey.Create)}
-      disableSubmitButton={!displayName.trim()}
-      size={PopupSize.Sm}
+      disableSubmitButton={!dataset.name?.trim() || nameExistsError !== undefined}
+      size={PopupSize.Md}
     >
       <div className="flex flex-col gap-4 py-4 px-6">
         <p className="dial-small text-secondary">
           {t(TestSuitesI18nKey.PublishToDatasetCountText, { count: testCaseCount })}
         </p>
-        <DialInput
-          labelProps={{ label: t(EntityFieldsI18nKey.displayName) }}
-          value={displayName}
-          onChange={(value) => setDisplayName(value ?? '')}
-          id="publish-display-name"
-        />
-        <DialTextarea
-          labelProps={{ label: t(EntityFieldsI18nKey.description) }}
-          value={description}
-          onChange={(value) => setDescription(value ?? '')}
-          id="publish-description"
-        />
+        <DatasetProperties dataset={dataset} onChange={setDataset} nameExistsError={nameExistsError} isModal />
       </div>
     </DialFormPopup>
   );
