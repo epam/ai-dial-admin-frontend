@@ -72,7 +72,7 @@ const Defaults: FC<Props> = ({ values, onChangeValues, disabled, title, validati
     dispatch({
       type: ValidationActionType.SetField,
       field: validationKey,
-      isValid: !defaultItems.some((d) => !d.key),
+      isValid: !defaultItems.some((d) => !d.key && d.value !== ''),
     });
     return () => {
       dispatch({ type: ValidationActionType.RemoveField, field: validationKey });
