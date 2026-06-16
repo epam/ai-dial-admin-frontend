@@ -79,8 +79,8 @@ describe('Assets application :: server actions', () => {
     const result = await updateApp(
       {
         folderId: 'public',
-        applicationPropertiesTemp: [{ key: 'key', required: true, type: 'str', value: 'value' }],
-        defaultsTemp: [{ key: 'key', type: 'str', value: 'value' }],
+        applicationProperties: { key: 'value' },
+        defaults: { key: 'value' },
         nodeType: DialFileNodeType.FOLDER,
         path: 'test',
         version: '1.0',

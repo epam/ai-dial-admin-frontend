@@ -7,7 +7,6 @@ import { DEFAULT_ROLE_LIMITS } from '@/src/constants/role';
 import { DialModel, DialModelType } from '@/src/models/dial/model';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { convertDefaultsToRecord } from '@/src/components/Defaults/utils';
 import { SOURCE_FIELD, SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 
@@ -48,17 +47,11 @@ export async function removeModel(name?: string) {
 
 export async function updateModel(model: DialModel, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  const defaults = model.defaultsTemp ? { ...convertDefaultsToRecord(model.defaultsTemp) } : { ...model.defaults };
-  const responsesDefaults = model.responsesDefaultsTemp
-    ? { ...convertDefaultsToRecord(model.responsesDefaultsTemp) }
-    : { ...model.responsesDefaults };
   const newModel = {
     ...model,
-    defaults,
-    responsesDefaults,
+    defaults: { ...model.defaults },
+    responsesDefaults: { ...model.responsesDefaults },
   };
-  delete newModel.defaultsTemp;
-  delete newModel.responsesDefaultsTemp;
   return modelsApi.updateModel(newModel, token, etag);
 }
 

@@ -97,17 +97,15 @@ const ApplicationAssetProperties: FC<Props> = ({ asset, runners, onChange, isPub
         onChangeEntity={onChange as (entity: DialApplication) => void}
       />
       <Defaults
-        entity={asset as DialApplication}
-        onChangeEntity={onChange as (entity: DialApplication) => void}
+        values={(asset as DialApplication).defaults}
+        onChangeValues={(defaults) => onChange({ ...asset, defaults } as DeploymentAsset)}
         title={t(EntityFieldsI18nKey.completionDefaults)}
       />
       {showResponsesDefaults && (
         <Defaults
-          entity={asset as DialApplication}
-          onChangeEntity={onChange as (entity: DialApplication) => void}
+          values={(asset as DialApplication).responsesDefaults}
+          onChangeValues={(responsesDefaults) => onChange({ ...asset, responsesDefaults } as DeploymentAsset)}
           title={t(EntityFieldsI18nKey.responsesDefaults)}
-          valuesKey="responsesDefaults"
-          tempKey="responsesDefaultsTemp"
           validationKey="responsesDefaultKeys"
         />
       )}

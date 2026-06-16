@@ -14,7 +14,6 @@ export interface DialApplication extends ChatEntity, EntityValidityState {
   displayVersion?: string;
   dependencies?: string[];
   applicationProperties?: Record<string, unknown>;
-  applicationPropertiesTemp?: ApplicationPropertiesTemp[];
   mcp?: ApplicationMCPContainer;
   responsesEndpoint?: string;
 }
@@ -68,14 +67,6 @@ export enum TypeEntity {
 export enum TypeBucketCopy {
   DISABLED = 'DISABLED',
   ENABLED = 'ENABLED',
-}
-
-export interface ApplicationPropertiesTemp {
-  key: string;
-  value: unknown;
-  type: string;
-  required: boolean;
-  isFromScheme?: boolean;
 }
 
 export interface ApplicationMCPContainer {

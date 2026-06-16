@@ -54,7 +54,10 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
         label={t(EntitiesI18nKey.SourceType)}
         sourceItems={getSourceItems(ApplicationRoute.Interceptors, featureFlags.deploymentsEnabled)}
       />
-      <Defaults entity={selectedInterceptor} onChangeEntity={onChangeInterceptor} />
+      <Defaults
+        values={selectedInterceptor.defaults}
+        onChangeValues={(defaults) => onChangeInterceptor({ ...selectedInterceptor, defaults })}
+      />
     </div>
   );
 };

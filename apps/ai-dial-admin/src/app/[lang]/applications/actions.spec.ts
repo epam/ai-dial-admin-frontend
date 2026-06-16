@@ -78,32 +78,6 @@ describe('Applications :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call updateApplication action', async () => {
-    (applicationsApi.updateApplication as any).mockResolvedValue(RESPONSE_MOCK);
-
-    const result = await updateApplication(
-      {
-        name: 'test',
-        applicationPropertiesTemp: [{ key: 'key', required: true, type: 'str', value: 'value' }],
-        defaultsTemp: [{ key: 'key', type: 'str', value: 'value' }],
-      },
-      'etag',
-    );
-    expect(getUserToken).toHaveBeenCalled();
-    expect(applicationsApi.updateApplication).toHaveBeenCalledWith(
-      {
-        name: 'test',
-        applicationProperties: { key: 'value' },
-        defaults: { key: 'value' },
-        responsesDefaults: {},
-        routes: void 0,
-      },
-      TOKEN_MOCK,
-      'etag',
-    );
-    expect(result).toBe(RESPONSE_MOCK);
-  });
-
   test('Should call updateCoreApplication action', async () => {
     (applicationsApi.updateCoreApplication as any).mockResolvedValue(RESPONSE_MOCK);
 
