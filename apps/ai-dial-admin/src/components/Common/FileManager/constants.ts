@@ -5,3 +5,4 @@ export const MAX_FOLDER_NESTING_DEPTH = 4;
 export const MOVE_ITEMS_INDICATOR_SIZE = 100;
 export const MOVE_ITEMS_INDICATOR_WIDTH = 4;
 export const MOVE_ITEMS_INDICATOR_DELAY = 500;
+export const ASSET_LIST_FILTER_STORAGE_KEY = 'assetListFilter_';
