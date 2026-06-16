@@ -43,9 +43,27 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     ? getIconPath(themesConfig?.images['admin-favicon'] || themesConfig?.images.favicon)
     : undefined;
 
+  // Runs synchronously in <head> before first paint to apply saved CSS variables,
+  // preventing a flash of the default dark theme on page refresh.
+  const themeInitScript = `
+    (function () {
+      try {
+        var colors = localStorage.getItem('theme-colors');
+        if (colors) {
+          var parsed = JSON.parse(colors);
+          var root = document.documentElement;
+          Object.keys(parsed).forEach(function (key) {
+            root.style.setProperty('--' + key, parsed[key]);
+          });
+        }
+      } catch (e) {}
+    })();
+  `;
+
   return (
-    <html>
+    <html suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <link rel="icon" href={faviconUrl || '/'} sizes="any" type="image/png" />
         <link rel="apple-touch-icon" href={faviconUrl || '/'} type="image/png" />
       </head>
