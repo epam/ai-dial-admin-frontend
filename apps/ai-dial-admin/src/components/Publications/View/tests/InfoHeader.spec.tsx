@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
 import { ActionType, Publication } from '@/src/models/dial/publications';
@@ -90,11 +90,13 @@ describe('Publications :: InfoHeader', () => {
     expect(actionIndicator).toBeInTheDocument();
   });
 
-  test('renders formatted creation date', () => {
+  test('renders formatted creation date', async () => {
     const entity = createMockPublication({ createdAt: '2024-01-15T10:30:00Z' });
     setup({ entity, view: ApplicationRoute.PromptPublications });
 
-    expect(screen.getByText(new Date('2024-01-15T10:30:00Z').toLocaleString())).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(new Date('2024-01-15T10:30:00Z').toLocaleString())).toBeInTheDocument();
+    });
   });
 
   test('renders display author', () => {
