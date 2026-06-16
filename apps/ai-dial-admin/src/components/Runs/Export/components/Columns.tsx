@@ -2,10 +2,12 @@
 
 import { FC, useMemo } from 'react';
 
-import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
 import { ColumnGroup, ColumnItem } from '@/src/components/Runs/Export/models';
 import { ColumnGroupId } from '@/src/components/Runs/Export/utils/group-columns';
+import { ExportRunI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
 import GroupSection from './GroupSection';
 import MetricSubSection from './MetricSubSection';
 
@@ -18,6 +20,7 @@ interface Props {
 }
 
 const Columns: FC<Props> = ({ groups, checkedColumns, isLoading, onToggleColumn, onToggleGroup }) => {
+  const t = useI18n();
   const metricsSubGroupMap = useMemo(() => {
     const metricsGroup = groups.find((g) => g.id === ColumnGroupId.Metrics);
     if (!metricsGroup) return new Map<string, ColumnItem[]>();
@@ -36,6 +39,10 @@ const Columns: FC<Props> = ({ groups, checkedColumns, isLoading, onToggleColumn,
         <DialLoader size={60} className="text-primary" />
       </div>
     );
+  }
+
+  if (groups.length === 0) {
+    return <DialNoDataContent title={t(ExportRunI18nKey.NoColumns)} />;
   }
 
   return (
