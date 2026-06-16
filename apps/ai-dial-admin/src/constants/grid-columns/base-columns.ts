@@ -132,15 +132,13 @@ export const VALIDITY_STATUS_COLUMN = (t: (str: string) => string): ColDef => {
   };
 };
 
-export const ATTACHMENT_COLUMN = (t: (str: string) => string): ColDef => {
-  return {
-    field: 'inputAttachmentTypes',
-    headerName: 'Attachment types',
-    hide: true,
-    valueFormatter: ({ value }) => formatAttachment(value, t),
-    filterValueGetter: (params) => formatAttachment(params.data[params.colDef.field || ''], t),
-    tooltipValueGetter: ({ value }) => formatAttachment(value, t),
-  };
+export const ATTACHMENT_COLUMN: ColDef = {
+  field: 'inputAttachmentTypes',
+  headerName: 'Attachment types',
+  hide: true,
+  valueFormatter: ({ value }) => formatAttachment(value),
+  filterValueGetter: (params) => formatAttachment(params.data[params.colDef.field || '']),
+  tooltipValueGetter: ({ value }) => formatAttachment(value),
 };
 
 export const SOURCE_TYPE_COLUMN = (t: (key: string) => string, view?: ApplicationRoute): ColDef => ({
