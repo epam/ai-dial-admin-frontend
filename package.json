@@ -112,11 +112,13 @@
   },
   "overrides": {
     "axios": "1.16.0",
-    "dompurify": "3.4.0",
-    "protobufjs": "8.2.0",
+    "protobufjs": "8.6.3",
+    "dompurify": "3.4.10",
     "follow-redirects": "1.16.0",
+    "tmp": "0.2.7",
     "yaml": "2.8.3",
-    "postcss": "^8.5.12"
+    "postcss": "^8.5.12",
+    "form-data": "4.0.6"
   },
   "engines": {
     "node": ">=24.12.0",
