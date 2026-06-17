@@ -1750,6 +1750,7 @@ export enum TestSuitesI18nKey {
   DetachConfirmDescription = 'TestSuites.DetachConfirmDescription',
   DetachSuccess = 'TestSuites.DetachSuccess',
   DetachFailed = 'TestSuites.DetachFailed',
+  AttachDatasetWarning = 'TestSuites.AttachDatasetWarning',
   PublicDatasetInfo = 'TestSuites.PublicDatasetInfo',
 }
 

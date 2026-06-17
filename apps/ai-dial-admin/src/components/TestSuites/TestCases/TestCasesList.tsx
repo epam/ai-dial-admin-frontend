@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { FC, RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialConfirmationPopup, DialLoader, DialTag, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { DialConfirmationPopup, DialEllipsisTooltip, DialLoader, DialTag, DialTooltip } from '@epam/ai-dial-ui-kit';
 import { IconDatabaseExport, IconExternalLink } from '@tabler/icons-react';
 import {
   CellClickedEvent,
@@ -492,7 +492,7 @@ const TestCasesList: FC<Props> = ({
       onClick={() => onOpenInNewTab(ApplicationRoute.Datasets, { id: selectedTestSuite.datasetId })}
     >
       <IconDatabaseExport size={12} className="text-accent-secondary" />
-      <span className="tiny">{dataset?.name}</span>
+      <DialEllipsisTooltip className="tiny max-w-[600px]" text={dataset?.name || ''} />
       <IconExternalLink size={12} />
     </button>
   );
