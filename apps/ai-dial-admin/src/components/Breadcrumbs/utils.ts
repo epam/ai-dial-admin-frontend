@@ -1,5 +1,5 @@
 import { SYSTEM_ROLLBACK_ID } from '@/src/components/ActivityAudit/Rollback/constants';
-import { RollbackI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { RollbackI18nKey, MenuI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import { breadcrumbConfig } from './constants';
 import { Breadcrumb } from './models';
@@ -9,9 +9,13 @@ import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { useFileFolder } from '@/src/context/assets/FileFolderContext';
 import { Dispatch, SetStateAction } from 'react';
 import { useConversationFolder } from '@/src/context/assets/ConversationsFolderContext';
+import { RUN_COMPARE_SEGMENT } from '@/src/components/Runs/Compare/constants';
 
 const IGNORE_BREADCRUMBS = [ApplicationRoute.Home];
-const TRANSLATE_BREADCRUMBS = { [SYSTEM_ROLLBACK_ID]: RollbackI18nKey.Rollback };
+const TRANSLATE_BREADCRUMBS = {
+  [SYSTEM_ROLLBACK_ID]: RollbackI18nKey.Rollback,
+  [RUN_COMPARE_SEGMENT]: RunsI18nKey.RunComparison,
+};
 
 const decodePathSegment = (segment: string): string => {
   try {

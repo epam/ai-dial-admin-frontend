@@ -11,9 +11,15 @@ import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/D
 import ExportRunModal from '@/src/components/Runs/Export/ExportRunModal';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { ACTION_COLUMN, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
-import { getDeleteOperation, getExportOperation, getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
+import {
+  getDeleteOperation,
+  getExportOperation,
+  getOpenInNewTabOperation,
+  getCompareOperation,
+} from '@/src/constants/grid-columns/actions';
 import { RUNS_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
+import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
 import { Run, RunStatus } from '@/src/models/evaluation/run';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
@@ -31,6 +37,7 @@ interface Props {
 
 const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
   const t = useI18n();
+  const { featureFlags } = useAppContext();
 
   const [isLoading, setIsLoading] = useState(false);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
@@ -161,6 +168,10 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
     onOpenInNewTab(ApplicationRoute.Runs, run);
   }, []);
 
+  const onCompareRun = useCallback((run?: Run) => {
+    onOpenInNewTab(ApplicationRoute.RunsCompare, run);
+  }, []);
+
   const columnDefs = useMemo(
     () => [
       ...RUNS_COLUMN,
@@ -168,12 +179,15 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
         [
           getOpenInNewTabOperation(onOpenInNewTabAction),
           getExportOperation(onOpenExportModal, (_, node) => node.data?.status === RunStatus.RUNNING),
+          ...(featureFlags.runsCompareEnabled
+            ? [getCompareOperation(onCompareRun, (_, node) => node.data?.status !== RunStatus.COMPLETED)]
+            : []),
           getDeleteOperation(onOpenDeleteModal),
         ],
         true,
       ),
     ],
-    [onOpenDeleteModal, onOpenExportModal, onOpenInNewTabAction],
+    [featureFlags.runsCompareEnabled, onCompareRun, onOpenDeleteModal, onOpenExportModal, onOpenInNewTabAction],
   );
 
   return (
