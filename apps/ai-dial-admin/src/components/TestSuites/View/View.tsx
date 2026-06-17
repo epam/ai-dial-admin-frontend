@@ -83,8 +83,9 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
     });
   }, [originalTestSuite.datasetId]);
 
-  const onChangeDataset = useCallback((updatedDataset: Dataset) => {
+  const onChangeDataset = useCallback((updatedDataset: Dataset, etag?: string) => {
     setDataset(updatedDataset);
+    if (etag) setDatasetEtag(etag);
   }, []);
 
   const onDiscard = useCallback(() => {

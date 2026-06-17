@@ -3,7 +3,7 @@ import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import { ApiRoute } from '@/src/constants/api-routes';
 import { Pod } from '@/src/models/deployments/containers';
 import { ErrorI18nKey, EntityFieldsI18nKey, DeploymentsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
-import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
+import { useLocalDateTimeString } from '@/src/hooks/use-local-date-time-string';
 import { RESTART_REASONS } from '@/src/constants/deployments/containers';
 import { useI18n } from '@/src/locales/client';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -25,6 +25,7 @@ const PodView: FC<Props> = ({ pod, containerId, route }) => {
   const { showNotification } = useNotification();
   const [logs, setLogs] = useState('');
   const [podData, setPodData] = useState(pod);
+  const lastFinishedAt = useLocalDateTimeString(podData?.lastFinishedAt);
 
   useEffect(() => {
     setPodData(pod);
@@ -88,10 +89,7 @@ const PodView: FC<Props> = ({ pod, containerId, route }) => {
                 <LabelledText label={t(EntityFieldsI18nKey.Restarts)} text={podData?.restartCount?.toString()} />
               )}
               {!!podData?.lastFinishedAt && (
-                <LabelledText
-                  label={t(EntityFieldsI18nKey.LastRestartedAt)}
-                  text={formatDateTimeToLocalString(podData?.lastFinishedAt)}
-                />
+                <LabelledText label={t(EntityFieldsI18nKey.LastRestartedAt)} text={lastFinishedAt} />
               )}
               {!!podData?.lastTerminationReason && (
                 <LabelledText

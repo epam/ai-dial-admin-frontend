@@ -26,7 +26,6 @@ const ExportRunModal: FC<Props> = ({ runId, onClose }) => {
 
   const [previewData, setPreviewData] = useState<unknown[][] | null>(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(true);
-  const [previewError, setPreviewError] = useState(false);
   const [checkedColumns, setCheckedColumns] = useState<Set<string>>(new Set());
   const [isExporting, setIsExporting] = useState(false);
   const [isColumnsOpen, setIsColumnsOpen] = useState(true);
@@ -36,10 +35,7 @@ const ExportRunModal: FC<Props> = ({ runId, onClose }) => {
     setIsPreviewLoading(true);
     exportRunPreview(runId)
       .then((data) => {
-        if (!data) {
-          setPreviewError(true);
-          return;
-        }
+        if (!data) return;
         setPreviewData(data);
         const headers = data[0] as string[];
         const groups = groupColumns(headers);
@@ -51,7 +47,6 @@ const ExportRunModal: FC<Props> = ({ runId, onClose }) => {
         );
         setCheckedColumns(defaults);
       })
-      .catch(() => setPreviewError(true))
       .finally(() => setIsPreviewLoading(false));
   }, [runId]);
 
@@ -168,12 +163,7 @@ const ExportRunModal: FC<Props> = ({ runId, onClose }) => {
             contentClassName="flex-1 min-h-0"
             onCollapsedChange={(collapsed) => setIsPreviewOpen(!collapsed)}
           >
-            <Preview
-              previewData={previewData}
-              checkedColumns={checkedColumns}
-              isLoading={isPreviewLoading}
-              error={previewError}
-            />
+            <Preview previewData={previewData} checkedColumns={checkedColumns} isLoading={isPreviewLoading} />
           </Accordion>
         </div>
         <div className="flex flex-row justify-end w-full gap-2 px-6 py-4 border-t border-primary flex-shrink-0">

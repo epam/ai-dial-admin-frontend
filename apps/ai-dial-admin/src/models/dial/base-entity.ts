@@ -1,4 +1,3 @@
-import { DefaultTemp } from '@/src/models/dial/defaults';
 import { DialRoleLimits, DialRoleLimitsMap, DialRoleShare, DialRoleShareMap } from '@/src/models/dial/role-limits';
 import { DialFeatures } from '@/src/models/dial/features';
 
@@ -16,9 +15,7 @@ export interface BaseEntity extends ModifiedEntity {
 
 export interface EntityDefaults {
   defaults?: Record<string, unknown>;
-  defaultsTemp?: DefaultTemp[];
   responsesDefaults?: Record<string, unknown>;
-  responsesDefaultsTemp?: DefaultTemp[];
 }
 
 export interface EntityAttachment {

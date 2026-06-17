@@ -78,15 +78,6 @@ describe('Interceptors :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call updateInterceptor action', async () => {
-    (interceptorsApi.updateInterceptor as any).mockResolvedValue(RESPONSE_MOCK);
-
-    const result = await updateInterceptor({ defaultsTemp: [{ key: 'key', type: 'type', value: 'value' }] }, 'etag');
-    expect(getUserToken).toHaveBeenCalled();
-    expect(interceptorsApi.updateInterceptor).toHaveBeenCalledWith({ defaults: { key: 'value' } }, TOKEN_MOCK, 'etag');
-    expect(result).toBe(RESPONSE_MOCK);
-  });
-
   test('Should call getConfigurationSchema action', async () => {
     (interceptorsApi.getConfigurationSchema as any).mockResolvedValue(RESPONSE_MOCK);
 

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { FC, RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialConfirmationPopup, DialLoader, DialTag, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { DialConfirmationPopup, DialEllipsisTooltip, DialLoader, DialTag, DialTooltip } from '@epam/ai-dial-ui-kit';
 import { IconDatabaseExport, IconExternalLink } from '@tabler/icons-react';
 import {
   CellClickedEvent,
@@ -24,6 +24,7 @@ import {
   getTestCases,
   importTestCase,
   publishDataset,
+  removeDataset,
   removeMultipleTestCases,
   removeTestCase,
 } from '@/src/app/[lang]/datasets/actions';
@@ -65,7 +66,7 @@ interface Props {
   onSchemaChange?: (schema: TestCaseSchema[]) => void;
   dataset: Dataset | null;
   suiteEtag?: string;
-  onChangeDataset?: (dataset: Dataset) => void;
+  onChangeDataset?: (dataset: Dataset, etag?: string) => void;
 }
 
 const TestCasesList: FC<Props> = ({
@@ -306,16 +307,17 @@ const TestCasesList: FC<Props> = ({
           getDataset(datasetId, '').then((datasetRes) => {
             const updatedDataset = datasetRes?.response;
             if (!updatedDataset) {
-              refreshGrid();
+              refreshGrid(true);
               return;
             }
+            onChangeDataset?.(updatedDataset as Dataset, datasetRes?.etag);
             const freshSchema = updatedDataset.testCaseSchema as TestCaseSchema[] | undefined;
             const schemaChanged = JSON.stringify(freshSchema) !== JSON.stringify(dataset?.testCaseSchema);
             if (!schemaChanged) {
-              refreshGrid();
+              refreshGrid(true);
             } else {
               onSchemaChange?.(freshSchema ?? []);
-              refreshGrid(false, freshSchema);
+              refreshGrid(true, freshSchema);
             }
           });
         } else {
@@ -325,7 +327,7 @@ const TestCasesList: FC<Props> = ({
         }
       });
     },
-    [refreshGrid, selectedTestSuite.datasetId, showNotification, t, dataset, onSchemaChange],
+    [refreshGrid, selectedTestSuite.datasetId, showNotification, t, dataset, onSchemaChange, onChangeDataset],
   );
 
   const onExport = useCallback(() => {
@@ -436,7 +438,7 @@ const TestCasesList: FC<Props> = ({
         showNotification(getSuccessNotification(t(TestSuitesI18nKey.PublishSuccess)));
         getDataset(datasetId, DEFAULT_ETAG).then((datasetRes) => {
           if (datasetRes?.response) {
-            onChangeDataset?.(datasetRes.response as Dataset);
+            onChangeDataset?.(datasetRes.response as Dataset, datasetRes?.etag);
           }
         });
         router.refresh();
@@ -450,6 +452,15 @@ const TestCasesList: FC<Props> = ({
   const onAttachDataset = useCallback(
     async (newDatasetId: string) => {
       if (!suiteEtag) return;
+
+      if (dataset?.visibility === DatasetVisibility.PRIVATE && dataset.id) {
+        const deleteRes = await removeDataset(dataset.id);
+        if (!deleteRes.success) {
+          showNotification(getErrorNotification(deleteRes.errorHeader, deleteRes.errorMessage));
+          return;
+        }
+      }
+
       const res = await updateTestSuite({ ...selectedTestSuite, datasetId: newDatasetId }, suiteEtag);
       if (res.success) {
         router.refresh();
@@ -457,7 +468,7 @@ const TestCasesList: FC<Props> = ({
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     },
-    [selectedTestSuite, suiteEtag, showNotification, router],
+    [selectedTestSuite, suiteEtag, dataset, showNotification, router],
   );
 
   const onDetachDatasetCallback = useCallback(async () => {
@@ -481,7 +492,7 @@ const TestCasesList: FC<Props> = ({
       onClick={() => onOpenInNewTab(ApplicationRoute.Datasets, { id: selectedTestSuite.datasetId })}
     >
       <IconDatabaseExport size={12} className="text-accent-secondary" />
-      <span className="tiny">{dataset?.name}</span>
+      <DialEllipsisTooltip className="tiny max-w-[600px]" text={dataset?.name || ''} />
       <IconExternalLink size={12} />
     </button>
   );

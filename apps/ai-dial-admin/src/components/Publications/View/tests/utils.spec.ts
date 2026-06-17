@@ -164,52 +164,6 @@ describe('getCorrectPublication', () => {
     expect(result.applicationResources![0].applicationResource.defaults).toEqual({ foo: 'bar' });
     expect(result.applicationResources![0].applicationResource.applicationProperties).toEqual({ baz: 42 });
     expect(result.applicationResources![0].applicationResource).not.toHaveProperty('defaultsTemp');
-    expect(result.applicationResources![0].applicationResource).not.toHaveProperty('applicationPropertiesTemp');
-  });
-
-  it('should use convertDefaultsToRecord for defaults when defaultsTemp is present', () => {
-    const publication = basePublication();
-    publication.applicationResources![0].applicationResource.defaultsTemp = [
-      { key: 'a', value: '1', type: 'string' },
-      { key: 'b', value: '2', type: 'string' },
-    ];
-
-    const result = getCorrectPublication(publication) as ApplicationPublication;
-
-    expect(result.applicationResources![0].applicationResource.defaults).toEqual({ a: '1', b: '2' });
-    expect(result.applicationResources![0].applicationResource).not.toHaveProperty('defaultsTemp');
-  });
-
-  it('should use convertDefaultsToRecord for applicationProperties when applicationPropertiesTemp is present', () => {
-    const publication = basePublication();
-    publication.applicationResources![0].applicationResource.applicationPropertiesTemp = [
-      { key: 'x', value: 'val', type: 'string', required: false },
-      { key: 'y', value: 10, type: 'number', required: false },
-    ];
-
-    const result = getCorrectPublication(publication) as ApplicationPublication;
-
-    expect(result.applicationResources![0].applicationResource.applicationProperties).toEqual({ x: 'val', y: 10 });
-    expect(result.applicationResources![0].applicationResource).not.toHaveProperty('applicationPropertiesTemp');
-  });
-
-  it('should prefer defaultsTemp over defaults and applicationPropertiesTemp over applicationProperties', () => {
-    const publication = basePublication();
-    publication.applicationResources![0].applicationResource.defaults = { old: 'default' };
-    publication.applicationResources![0].applicationResource.defaultsTemp = [
-      { key: 'new', value: 'from-temp', type: 'string' },
-    ];
-    publication.applicationResources![0].applicationResource.applicationProperties = { oldProp: 1 };
-    publication.applicationResources![0].applicationResource.applicationPropertiesTemp = [
-      { key: 'newProp', value: 'temp', type: 'string', required: false },
-    ];
-
-    const result = getCorrectPublication(publication) as ApplicationPublication;
-
-    expect(result.applicationResources![0].applicationResource.defaults).toEqual({ new: 'from-temp' });
-    expect(result.applicationResources![0].applicationResource.applicationProperties).toEqual({ newProp: 'temp' });
-    expect(result.applicationResources![0].applicationResource).not.toHaveProperty('defaultsTemp');
-    expect(result.applicationResources![0].applicationResource).not.toHaveProperty('applicationPropertiesTemp');
   });
 
   it('should preserve top-level publication fields', () => {

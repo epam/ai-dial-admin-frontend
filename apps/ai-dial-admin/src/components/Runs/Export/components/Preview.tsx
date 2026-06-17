@@ -2,7 +2,7 @@
 
 import { FC, useMemo } from 'react';
 
-import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import { ColDef } from 'ag-grid-community';
 
 import AgGridWrapper from '@/src/components/Grid/AgGridWrapper';
@@ -13,10 +13,9 @@ interface Props {
   previewData: unknown[][] | null;
   checkedColumns: Set<string>;
   isLoading: boolean;
-  error: boolean;
 }
 
-const Preview: FC<Props> = ({ previewData, checkedColumns, isLoading, error }) => {
+const Preview: FC<Props> = ({ previewData, checkedColumns, isLoading }) => {
   const t = useI18n();
 
   const columnDefs = useMemo<ColDef[]>(() => {
@@ -39,10 +38,8 @@ const Preview: FC<Props> = ({ previewData, checkedColumns, isLoading, error }) =
     );
   }
 
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-full text-error">{t(ExportRunI18nKey.PreviewLoadError)}</div>
-    );
+  if (columnDefs.length === 0) {
+    return <DialNoDataContent title={t(ExportRunI18nKey.NoPreview)} />;
   }
 
   return (

@@ -14,6 +14,7 @@ import {
 } from 'ag-grid-community';
 import { useRouter } from 'next/navigation';
 
+import { createDataset } from '@/src/app/[lang]/datasets/actions';
 import { duplicateTestSuite, runTestSuite } from '@/src/app/[lang]/test-suites/actions';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
@@ -35,6 +36,7 @@ import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
+import { Dataset } from '@/src/models/evaluation/dataset';
 import { RunStatus } from '@/src/models/evaluation/run';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { EvaluationPageData, FilterDto, SortDto } from '@/src/models/request';
@@ -46,6 +48,7 @@ import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { emptyDataTitleMap, listViewTitleMap } from '../constants';
+import DuplicateDataset from './DuplicateDataset';
 import DuplicateTestSuite from './Duplicate';
 import HeaderButtons from './Header';
 
@@ -225,12 +228,37 @@ const EvaluationListView = <T extends object>({
     [currentEntity, onModalClose, route, router, showNotification, t],
   );
 
+  const onDuplicateDataset = useCallback(
+    (entity: Dataset) => {
+      createDataset(entity).then((res) => {
+        if (res.success) {
+          showNotification(
+            getSuccessNotification(
+              getCreateNotificationTitle(route, t),
+              getCreateNotificationDescription(route, res.response.name, t),
+            ),
+          );
+          router.push(getUrnForEntity(route, res.response));
+          router.refresh();
+          onModalClose();
+        } else {
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+        }
+      });
+    },
+    [onModalClose, route, router, showNotification, t],
+  );
+
   const actionColumn = [getOpenInNewTabOperation(onOpenInNewTabAction)];
 
   if (route === ApplicationRoute.TestSuites) {
     actionColumn.push(
       ...[getRunTestSuiteOperation(onOpenRunTestSuiteModal), getDuplicateOperation(onOpenDuplicateModal)],
     );
+  }
+
+  if (route === ApplicationRoute.Datasets) {
+    actionColumn.push(getDuplicateOperation(onOpenDuplicateModal));
   }
 
   if (route === ApplicationRoute.Runs) {
@@ -285,6 +313,7 @@ const EvaluationListView = <T extends object>({
 
       {isModalOpen &&
         modalType === ModalType.duplicate &&
+        route === ApplicationRoute.TestSuites &&
         createPortal(
           <SaveValidationContextProvider>
             <DuplicateTestSuite
@@ -292,6 +321,21 @@ const EvaluationListView = <T extends object>({
               onClose={onModalClose}
               onDuplicate={onDuplicate}
               entity={currentEntity as TestSuite}
+            />
+          </SaveValidationContextProvider>,
+          document.body,
+        )}
+
+      {isModalOpen &&
+        modalType === ModalType.duplicate &&
+        route === ApplicationRoute.Datasets &&
+        createPortal(
+          <SaveValidationContextProvider>
+            <DuplicateDataset
+              isModalOpen={isModalOpen}
+              onClose={onModalClose}
+              onDuplicate={onDuplicateDataset}
+              entity={currentEntity as Dataset}
             />
           </SaveValidationContextProvider>,
           document.body,
