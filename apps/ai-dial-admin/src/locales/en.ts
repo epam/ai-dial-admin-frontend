@@ -1789,6 +1789,7 @@ export default {
       "When you detach test cases from the dataset, they become private to the current test suite. This lets you add, edit, or delete test cases without restrictions. The original dataset stays unchanged, so other suites using it won't be impacted.",
     DetachSuccess: 'Dataset detached successfully',
     DetachFailed: 'Failed to detach dataset',
+    AttachDatasetWarning: 'Attaching a public dataset will permanently remove all currently existing test cases.',
     PublicDatasetInfo:
       'Test cases related to dataset are fixed. To change the test cases open the dataset page or detach them from dataset.',
   },

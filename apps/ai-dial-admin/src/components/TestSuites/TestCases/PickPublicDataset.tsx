@@ -2,7 +2,14 @@
 
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialPopup, DialSteps, PopupSize, StepStatus } from '@epam/ai-dial-ui-kit';
+import {
+  DialNotification,
+  DialPopup,
+  DialSteps,
+  NotificationVariant,
+  PopupSize,
+  StepStatus,
+} from '@epam/ai-dial-ui-kit';
 import { ColDef } from 'ag-grid-community';
 
 import { getDataset, getDatasets, getTestCases } from '@/src/app/[lang]/datasets/actions';
@@ -20,9 +27,10 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: (datasetId: string) => void;
+  showWarning?: boolean;
 }
 
-const PickPublicDataset: FC<Props> = ({ isOpen, onClose, onConfirm }) => {
+const PickPublicDataset: FC<Props> = ({ isOpen, onClose, onConfirm, showWarning }) => {
   const t = useI18n();
   const [datasets, setDatasets] = useState<Dataset[]>([]);
   const [isLoadingDatasets, setIsLoadingDatasets] = useState(true);
@@ -116,6 +124,9 @@ const PickPublicDataset: FC<Props> = ({ isOpen, onClose, onConfirm }) => {
       size={PopupSize.Lg}
     >
       <div className="flex flex-col py-4 px-6 overflow-auto gap-y-6 h-[600px]">
+        {showWarning && (
+          <DialNotification variant={NotificationVariant.Warning} message={t(TestSuitesI18nKey.AttachDatasetWarning)} />
+        )}
         <DialSteps steps={steps} currentStep={currentStepId} onChangeStep={onChangeStep} />
         <div className="flex-1 min-h-0">
           {currentStepId === AttachDatasetTab.SelectDataset && (
