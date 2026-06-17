@@ -22,5 +22,4 @@ describe('Utils :: Session Storage', () => {
       expect(getFromSessionStorage('ss-key')).toBe('ss-value');
     });
   });
-
 });
