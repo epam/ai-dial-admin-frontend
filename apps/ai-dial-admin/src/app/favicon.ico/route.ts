@@ -8,5 +8,10 @@ export async function GET(request: NextRequest) {
   const faviconUrl = themesConfig
     ? getIconPath(themesConfig?.images['admin-favicon'] || themesConfig?.images.favicon)
     : '/images/favicon.svg';
-  return NextResponse.redirect(new URL(faviconUrl, request.url));
+
+  // Workaround: https://github.com/vercel/next.js/issues/37536
+  const proto = request.headers.get('x-forwarded-proto') ?? 'https';
+  const host = request.headers.get('x-forwarded-host') ?? request.headers.get('host') ?? new URL(request.url).host;
+
+  return NextResponse.redirect(new URL(faviconUrl, `${proto}://${host}`));
 }
