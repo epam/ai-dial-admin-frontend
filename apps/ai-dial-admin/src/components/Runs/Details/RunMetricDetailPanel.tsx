@@ -2,7 +2,9 @@
 
 import { FC, useEffect, useMemo, useState } from 'react';
 
-import { DialCloseButton, DialGhostIconButton, DialLoader, DialSwitch, ElementSize } from '@epam/ai-dial-ui-kit';
+import { DialGhostIconButton, DialLoader, DialSwitch, ElementSize } from '@epam/ai-dial-ui-kit';
+
+import SidePanel from '@/src/components/Common/SidePanel/SidePanel';
 
 import { getTestCaseRunResultDetails } from '@/src/app/[lang]/runs/actions';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
@@ -61,26 +63,27 @@ const RunMetricDetailPanel: FC<Props> = ({ resultId, grafanaTraceUrl, onClose, m
   }, [resultId]);
 
   return (
-    <div className="flex flex-col size-full pb-2">
-      <div className="flex items-start justify-between">
-        <h1 className="truncate">{title}</h1>
-        <div className="flex flex-row gap-4 items-center">
-          <DialSwitch
-            isOn={isJsonView}
-            label={t(EntitiesI18nKey.JSONViewer)}
-            switchId="jsonViewer"
-            onChange={() => setIsJsonView(!isJsonView)}
+    <SidePanel
+      label={<h1 className="truncate">{title}</h1>}
+      isOpen={true}
+      onClose={onClose}
+      className="lg:w-full w-full"
+    >
+      <div className="flex flex-row gap-4 items-center justify-end mb-2">
+        <DialSwitch
+          isOn={isJsonView}
+          label={t(EntitiesI18nKey.JSONViewer)}
+          switchId="jsonViewer"
+          onChange={() => setIsJsonView(!isJsonView)}
+        />
+        {onSwitchMode && (
+          <DialGhostIconButton
+            size={ElementSize.Small}
+            icon={<IconLayoutBottombar size={16} />}
+            onClick={onSwitchMode}
+            title={t(RunsI18nKey.SwitchToDrawer)}
           />
-          {onSwitchMode && (
-            <DialGhostIconButton
-              size={ElementSize.Small}
-              icon={<IconLayoutBottombar size={16} />}
-              onClick={onSwitchMode}
-              title={t(RunsI18nKey.SwitchToDrawer)}
-            />
-          )}
-          <DialCloseButton onClose={onClose} />
-        </div>
+        )}
       </div>
 
       {isJsonView ? (
@@ -122,7 +125,7 @@ const RunMetricDetailPanel: FC<Props> = ({ resultId, grafanaTraceUrl, onClose, m
           )}
         </>
       )}
-    </div>
+    </SidePanel>
   );
 };
 
