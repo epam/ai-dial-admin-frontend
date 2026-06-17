@@ -49,11 +49,7 @@ describe('Runs Compare :: getCompareColumns', () => {
 
     const executionGroup = columns[2];
     expect(executionGroup.headerName).toBe(EXECUTION_GROUP_HEADER);
-    expect(executionGroup.children?.map((column) => column.headerName)).toEqual([
-      '# Run number',
-      'HTTP',
-      'Duration',
-    ]);
+    expect(executionGroup.children?.map((column) => column.headerName)).toEqual(['# Run number', 'HTTP', 'Duration']);
     expect(executionGroup.children?.every((column) => column.filter === false)).toBe(true);
     expect(executionGroup.children?.[0]).toEqual(
       expect.objectContaining({
@@ -93,11 +89,7 @@ describe('Runs Compare :: getCompareColumns', () => {
 
     const extractedGroup = columns[5];
     expect(extractedGroup.headerName).toBe(EXTRACTED_GROUP_HEADER);
-    expect(extractedGroup.children?.map((column) => column.headerName)).toEqual([
-      'answer',
-      'context',
-      'context_urls',
-    ]);
+    expect(extractedGroup.children?.map((column) => column.headerName)).toEqual(['answer', 'context', 'context_urls']);
     expect(extractedGroup.children?.every((column) => column.filter === false)).toBe(true);
     expect(extractedGroup.children?.every((column) => column.flex === 1)).toBe(true);
     expect(extractedGroup.children?.every((column) => column.minWidth === EXTRACTED_COLUMN_MIN_WIDTH)).toBe(true);
