@@ -10,6 +10,7 @@ const flags = (overrides: Partial<FeatureFlags> = {}): FeatureFlags => ({
   mcpRegistryEnabled: false,
   nimEnabled: false,
   hfEnabled: false,
+  runsCompareEnabled: false,
   ...overrides,
 });
 import {
