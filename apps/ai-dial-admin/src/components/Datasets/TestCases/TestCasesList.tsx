@@ -9,6 +9,7 @@ import { CellClickedEvent, ColDef, GridApi, GridReadyEvent, IRowNode, SelectionC
 
 import {
   createTestCase,
+  getDataset,
   getTestCases,
   importTestCase,
   removeMultipleTestCases,
@@ -33,6 +34,8 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import DatasetTestCasesHeader from './Header';
+import { useRouter } from 'next/navigation';
+import { TestCaseSchema } from '@/src/models/evaluation/test-suite';
 
 export interface DatasetTestCasesActions {
   getDirtyTestCases: () => DatasetTestCase[];
@@ -47,6 +50,7 @@ interface Props {
 
 const DatasetTestCasesList: FC<Props> = ({ dataset, testCasesActionsRef, onDirtyChange }) => {
   const t = useI18n();
+  const router = useRouter();
   const { showNotification } = useNotification();
 
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
@@ -148,27 +152,33 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, testCasesActionsRef, onDirty
     onRemoveCaseRef.current(data);
   }, []);
 
-  const refreshGrid = useCallback(() => {
-    setIsLoading(true);
-    getTestCases(dataset.id, 0, 1000, [], []).then((res) => {
-      setIsLoading(false);
-      let rows = res == null || res.content.length === 0 ? [] : getDatasetTestCaseGridData(res.content);
-      if (dirtyRowsRef.current.size > 0) {
-        rows = rows.map((row) => {
-          const id = String(row.id);
-          return dirtyRowsRef.current.has(id) ? dirtyRowsRef.current.get(id)! : row;
-        });
+  const refreshGrid = useCallback(
+    (withRefreshPage?: boolean) => {
+      setIsLoading(true);
+      getTestCases(dataset.id, 0, 1000, [], []).then((res) => {
+        setIsLoading(false);
+        let rows = res == null || res.content.length === 0 ? [] : getDatasetTestCaseGridData(res.content);
+        if (dirtyRowsRef.current.size > 0) {
+          rows = rows.map((row) => {
+            const id = String(row.id);
+            return dirtyRowsRef.current.has(id) ? dirtyRowsRef.current.get(id)! : row;
+          });
+        }
+        setData(rows);
+        setColumnDefs([
+          ...getDatasetTestCaseColumns(dataset, onCellChange, t),
+          {
+            ...ONE_ACTION_COLUMN(getRemoveOperation(stableOnRemoveCase, void 0, 'text-error w-4 h-4')),
+            colId: 'action-remove',
+          },
+        ]);
+      });
+      if (withRefreshPage) {
+        router.refresh();
       }
-      setData(rows);
-      setColumnDefs([
-        ...getDatasetTestCaseColumns(dataset, onCellChange, t),
-        {
-          ...ONE_ACTION_COLUMN(getRemoveOperation(stableOnRemoveCase, void 0, 'text-error w-4 h-4')),
-          colId: 'action-remove',
-        },
-      ]);
-    });
-  }, [dataset, onCellChange, stableOnRemoveCase, t]);
+    },
+    [dataset, onCellChange, stableOnRemoveCase, t],
+  );
 
   const onGridReady = useCallback(({ api }: GridReadyEvent) => {
     gridApiRef.current = api;
@@ -184,7 +194,20 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, testCasesActionsRef, onDirty
           showNotification(
             getSuccessNotification(t(DatasetsI18nKey.ImportSuccess), t(DatasetsI18nKey.ImportSuccessDescription)),
           );
-          refreshGrid();
+          getDataset(dataset.id as string, '').then((datasetRes) => {
+            const updatedDataset = datasetRes?.response;
+            if (!updatedDataset) {
+              refreshGrid();
+              return;
+            }
+            const freshSchema = updatedDataset.testCaseSchema as TestCaseSchema[] | undefined;
+            const schemaChanged = JSON.stringify(freshSchema) !== JSON.stringify(dataset?.testCaseSchema);
+            if (!schemaChanged) {
+              refreshGrid(true);
+            } else {
+              router.refresh();
+            }
+          });
         } else {
           showNotification(getErrorNotification(t(DatasetsI18nKey.ImportFailed), res?.errorMessage || 'Unknown error'));
         }
@@ -264,9 +287,11 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, testCasesActionsRef, onDirty
     }
   }, [gridApi, newTestCases]);
 
+  const schemaKey = JSON.stringify(dataset.testCaseSchema ?? null);
+
   useEffect(() => {
     refreshGrid();
-  }, []);
+  }, [schemaKey]);
 
   useEffect(() => {
     if (!testCasesActionsRef) return;
