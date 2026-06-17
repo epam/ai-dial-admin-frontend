@@ -12,17 +12,18 @@ import {
   getTypeFromUnion,
   convertAppPropertiesToArray,
   validateAppProperties,
+  inferTypeFromValue,
 } from '../utils';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { DialSchemePropertyType } from '@/src/models/dial/scheme';
 import {
-  ApplicationPropertiesTemp,
   ApplicationSourceType,
   DialApplication,
   DialApplicationScheme,
   TypeEntity,
 } from '@/src/models/dial/application';
 import { UserSession } from '@/src/models/auth';
+import { ApplicationPropertyRow } from '../models';
 
 describe('getFrameConfig', () => {
   test('returns config for DialApplicationScheme', () => {
@@ -245,7 +246,7 @@ describe('convertJsonSchema', () => {
       field2: 'value2',
     };
 
-    const result: ApplicationPropertiesTemp[] = convertJsonSchema(schema, schemeData);
+    const result: ApplicationPropertyRow[] = convertJsonSchema(schema, schemeData);
 
     expect(result).toEqual([
       {
@@ -277,7 +278,7 @@ describe('convertJsonSchema', () => {
       field1: 'value1',
     };
 
-    const result: ApplicationPropertiesTemp[] = convertJsonSchema(schema, schemeData);
+    const result: ApplicationPropertyRow[] = convertJsonSchema(schema, schemeData);
 
     expect(result).toEqual([
       {
@@ -302,7 +303,7 @@ describe('convertJsonSchema', () => {
       field1: true,
     };
 
-    const result: ApplicationPropertiesTemp[] = convertJsonSchema(schema, schemeData);
+    const result: ApplicationPropertyRow[] = convertJsonSchema(schema, schemeData);
 
     expect(result).toEqual([
       {
@@ -327,7 +328,7 @@ describe('convertJsonSchema', () => {
       field1: ['value1', 'value2'],
     };
 
-    const result: ApplicationPropertiesTemp[] = convertJsonSchema(schema, schemeData);
+    const result: ApplicationPropertyRow[] = convertJsonSchema(schema, schemeData);
 
     expect(result).toEqual([
       {
@@ -348,7 +349,7 @@ describe('convertJsonSchema', () => {
 
     const schemeData: Record<string, unknown> = {};
 
-    const result: ApplicationPropertiesTemp[] = convertJsonSchema(schema, schemeData);
+    const result: ApplicationPropertyRow[] = convertJsonSchema(schema, schemeData);
 
     expect(result).toEqual([]);
   });
@@ -367,7 +368,7 @@ describe('convertJsonSchema', () => {
       field2: 123,
     };
 
-    const result: ApplicationPropertiesTemp[] = convertJsonSchema(schema, schemeData);
+    const result: ApplicationPropertyRow[] = convertJsonSchema(schema, schemeData);
 
     expect(result).toEqual([
       {
@@ -494,7 +495,7 @@ describe('convertAppPropertiesToArray', () => {
       field1: 'new value',
     };
 
-    const schemeProperties: ApplicationPropertiesTemp[] = [
+    const schemeProperties: ApplicationPropertyRow[] = [
       {
         key: 'field1',
         type: 'string',
@@ -522,7 +523,7 @@ describe('convertAppPropertiesToArray', () => {
       field1: 'value1',
     };
 
-    const schemeProperties: ApplicationPropertiesTemp[] = [];
+    const schemeProperties: ApplicationPropertyRow[] = [];
 
     const result = convertAppPropertiesToArray(properties, schemeProperties);
 
@@ -543,7 +544,7 @@ describe('convertAppPropertiesToArray', () => {
       field2: 123,
     };
 
-    const schemeProperties: ApplicationPropertiesTemp[] = [
+    const schemeProperties: ApplicationPropertyRow[] = [
       {
         key: 'field3',
         type: 'string',
@@ -620,7 +621,7 @@ describe('convertAppPropertiesToArray', () => {
       field2: 123,
     };
 
-    const schemeProperties: ApplicationPropertiesTemp[] = [
+    const schemeProperties: ApplicationPropertyRow[] = [
       {
         key: 'field1',
         type: 'string',
@@ -756,9 +757,39 @@ describe('getTargetUrl', () => {
   });
 });
 
+describe('inferTypeFromValue', () => {
+  test('should return "object" for null', () => {
+    expect(inferTypeFromValue(null)).toBe(TypeEntity.OBJECT);
+  });
+
+  test('should return "object" for undefined', () => {
+    expect(inferTypeFromValue(undefined)).toBe(TypeEntity.OBJECT);
+  });
+
+  test('should return "boolean" for boolean values', () => {
+    expect(inferTypeFromValue(true)).toBe(TypeEntity.BOOLEAN);
+    expect(inferTypeFromValue(false)).toBe(TypeEntity.BOOLEAN);
+  });
+
+  test('should return "number" for number values', () => {
+    expect(inferTypeFromValue(42)).toBe(TypeEntity.NUMBER);
+    expect(inferTypeFromValue(0)).toBe(TypeEntity.NUMBER);
+  });
+
+  test('should return "object" for objects and arrays', () => {
+    expect(inferTypeFromValue({})).toBe(TypeEntity.OBJECT);
+    expect(inferTypeFromValue([])).toBe(TypeEntity.OBJECT);
+  });
+
+  test('should return "string" for string values', () => {
+    expect(inferTypeFromValue('hello')).toBe(TypeEntity.STRING);
+    expect(inferTypeFromValue('')).toBe(TypeEntity.STRING);
+  });
+});
+
 describe('validateAppProperties', () => {
   test('should return true when all required properties have values', () => {
-    const properties: ApplicationPropertiesTemp[] = [
+    const properties: ApplicationPropertyRow[] = [
       { key: 'name', value: 'test', type: 'string', required: true },
       { key: 'opt', value: '', type: 'string', required: false },
     ];
@@ -766,12 +797,12 @@ describe('validateAppProperties', () => {
   });
 
   test('should return false when a required property has no value', () => {
-    const properties: ApplicationPropertiesTemp[] = [{ key: 'name', value: '' as any, type: 'string', required: true }];
+    const properties: ApplicationPropertyRow[] = [{ key: 'name', value: '' as any, type: 'string', required: true }];
     expect(validateAppProperties(properties)).toBe(false);
   });
 
   test('should return false when a required property has undefined value', () => {
-    const properties: ApplicationPropertiesTemp[] = [
+    const properties: ApplicationPropertyRow[] = [
       { key: 'name', value: undefined as any, type: 'string', required: true },
     ];
     expect(validateAppProperties(properties)).toBe(false);
@@ -782,7 +813,7 @@ describe('validateAppProperties', () => {
   });
 
   test('should return true when no properties are required', () => {
-    const properties: ApplicationPropertiesTemp[] = [
+    const properties: ApplicationPropertyRow[] = [
       { key: 'a', value: '' as any, type: 'string', required: false },
       { key: 'b', value: undefined as any, type: 'string', required: false },
     ];

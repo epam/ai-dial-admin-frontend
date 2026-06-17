@@ -65,17 +65,15 @@ const EntityProperties: FC<Props> = ({ runners, view, ...props }) => {
       />
       <EntityAttachments {...props} />
       <Defaults
-        entity={props.entity}
-        onChangeEntity={props.onChangeEntity}
+        values={application.defaults}
+        onChangeValues={(defaults) => props.onChangeEntity({ ...props.entity, defaults })}
         title={t(EntityFieldsI18nKey.completionDefaults)}
       />
       {showResponsesDefaults && (
         <Defaults
-          entity={props.entity}
-          onChangeEntity={props.onChangeEntity}
+          values={application.responsesDefaults}
+          onChangeValues={(responsesDefaults) => props.onChangeEntity({ ...props.entity, responsesDefaults })}
           title={t(EntityFieldsI18nKey.responsesDefaults)}
-          valuesKey="responsesDefaults"
-          tempKey="responsesDefaultsTemp"
           validationKey="responsesDefaultKeys"
         />
       )}

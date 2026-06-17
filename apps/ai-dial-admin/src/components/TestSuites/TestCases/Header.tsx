@@ -178,6 +178,7 @@ const HeaderButtons: FC<Props> = ({
           isOpen={isAttachModalOpen}
           onClose={() => setIsAttachModalOpen(false)}
           onConfirm={onChangeDatasetConfirm}
+          showWarning={!isReadOnly}
         />
       )}
 

@@ -119,7 +119,6 @@ const TabsContent: FC<Props> = ({
           application={selectedApplication}
           applicationSchemes={applicationSchemes}
           isEditorEnabled={isEditorEnabled}
-          isSkipRefresh={isSkipRefresh}
           discardKey={discardKey}
           onChange={onChangeApplication}
           setIsChanged={setIsChanged}

@@ -78,15 +78,17 @@ const ModelProperties: FC<Props> = ({ model, modelsNames, onChangeModel }) => {
 
       <ModelTypeProperties model={model} onChangeModel={onChangeModel} />
 
-      <Defaults entity={model} onChangeEntity={onChangeModel} title={t(EntityFieldsI18nKey.completionDefaults)} />
+      <Defaults
+        values={model.defaults}
+        onChangeValues={(defaults) => onChangeModel({ ...model, defaults })}
+        title={t(EntityFieldsI18nKey.completionDefaults)}
+      />
 
       {showResponsesDefaults && (
         <Defaults
-          entity={model}
-          onChangeEntity={onChangeModel}
+          values={model.responsesDefaults}
+          onChangeValues={(responsesDefaults) => onChangeModel({ ...model, responsesDefaults })}
           title={t(EntityFieldsI18nKey.responsesDefaults)}
-          valuesKey="responsesDefaults"
-          tempKey="responsesDefaultsTemp"
           validationKey="responsesDefaultKeys"
         />
       )}

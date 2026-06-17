@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { DialGhostButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
@@ -9,80 +9,75 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
-import { EntityDefaults } from '@/src/models/dial/base-entity';
 import { DefaultTemp } from '@/src/models/dial/defaults';
 import DefaultItemDeclaration from './DefaultItem';
-import { convertDefaultsToArray } from './utils';
+import { convertDefaultsToArray, convertDefaultsToRecord } from './utils';
 
 interface Props {
-  entity: EntityDefaults;
-  onChangeEntity: (entity: EntityDefaults) => void;
+  values?: Record<string, unknown>;
+  onChangeValues: (values: Record<string, unknown>) => void;
   disabled?: boolean;
   title?: string;
-  valuesKey?: 'defaults' | 'responsesDefaults';
-  tempKey?: 'defaultsTemp' | 'responsesDefaultsTemp';
   validationKey?: string;
 }
 
-const Defaults: FC<Props> = ({
-  entity,
-  onChangeEntity,
-  disabled,
-  title,
-  valuesKey = 'defaults',
-  tempKey = 'defaultsTemp',
-  validationKey = 'defaultKeys',
-}) => {
+const Defaults: FC<Props> = ({ values, onChangeValues, disabled, title, validationKey = 'defaultKeys' }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const isReadonly = disabled || isReadOnlyAdmin;
 
-  const [defaultItems, setDefaultItems] = useState<DefaultTemp[]>([]);
+  const [defaultItems, setDefaultItems] = useState<DefaultTemp[]>(() => convertDefaultsToArray(values || {}));
   const [count, setCount] = useState(0);
-
-  const entityTempValues = entity[tempKey];
-  const entityValues = entity[valuesKey];
+  const isLocalChangeRef = useRef(false);
 
   const onAddItem = useCallback(() => {
-    const defaultsTemp = [...defaultItems, { key: '', value: '', type: 'string' }];
-    onChangeEntity({ ...entity, [tempKey]: defaultsTemp });
-  }, [defaultItems, entity, onChangeEntity, tempKey]);
+    const newItems = [...defaultItems, { key: '', value: '', type: 'string' }];
+    setDefaultItems(newItems);
+    isLocalChangeRef.current = true;
+    onChangeValues(convertDefaultsToRecord(newItems));
+  }, [defaultItems, onChangeValues]);
 
   const onRemoveItem = useCallback(
     (index: number) => {
-      const defaultsTemp = [...defaultItems];
-      defaultsTemp.splice(index, 1);
-      onChangeEntity({ ...entity, [tempKey]: defaultsTemp });
+      const newItems = [...defaultItems];
+      newItems.splice(index, 1);
+      setDefaultItems(newItems);
+      isLocalChangeRef.current = true;
+      onChangeValues(convertDefaultsToRecord(newItems));
     },
-    [defaultItems, entity, onChangeEntity, tempKey],
+    [defaultItems, onChangeValues],
   );
 
   const onChangeDefaultItem = useCallback(
     (item: DefaultTemp, index: number) => {
-      const defaultsTemp = [...defaultItems];
-      defaultsTemp.splice(index, 1, item);
-      onChangeEntity({ ...entity, [tempKey]: defaultsTemp });
+      const newItems = [...defaultItems];
+      newItems.splice(index, 1, item);
+      setDefaultItems(newItems);
+      isLocalChangeRef.current = true;
+      onChangeValues(convertDefaultsToRecord(newItems));
     },
-    [defaultItems, entity, onChangeEntity, tempKey],
+    [defaultItems, onChangeValues],
   );
 
   useEffect(() => {
-    if (entityTempValues) {
-      setDefaultItems(entityTempValues);
-    } else {
-      const defaults = convertDefaultsToArray(entityValues || {});
-      setDefaultItems(defaults);
+    if (isLocalChangeRef.current) {
+      isLocalChangeRef.current = false;
+      return;
     }
+    setDefaultItems(convertDefaultsToArray(values || {}));
+  }, [values]);
+
+  useEffect(() => {
     dispatch({
       type: ValidationActionType.SetField,
       field: validationKey,
-      isValid: !entityTempValues?.some((d) => !d.key),
+      isValid: !defaultItems.some((d) => !d.key && d.value !== ''),
     });
     return () => {
       dispatch({ type: ValidationActionType.RemoveField, field: validationKey });
     };
-  }, [dispatch, entityValues, entityTempValues, validationKey]);
+  }, [dispatch, defaultItems, validationKey]);
 
   useEffect(() => {
     if (defaultItems.length === 1 && !defaultItems[0].key && !defaultItems[0].value) {

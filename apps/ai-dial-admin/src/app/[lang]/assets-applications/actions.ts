@@ -3,7 +3,6 @@
 import { cookies, headers } from 'next/headers';
 
 import { assetsApi } from '@/src/app/api/api';
-import { convertDefaultsToRecord } from '@/src/components/Defaults/utils';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -17,12 +16,7 @@ export async function getApps(path: string) {
 
 export async function createApp(app: AssetApp) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  const applicationProperties =
-    app.applicationPropertiesTemp || app.applicationProperties
-      ? app.applicationPropertiesTemp
-        ? { ...convertDefaultsToRecord(app.applicationPropertiesTemp) }
-        : { ...app.applicationProperties }
-      : undefined;
+  const applicationProperties = app.applicationProperties ? { ...app.applicationProperties } : undefined;
   const asset = {
     ...app,
     ...(applicationProperties !== undefined && { applicationProperties }),
@@ -46,23 +40,13 @@ export async function importApps(body: FormData, fileType: ImportFileType) {
 
 export async function updateApp(app: AssetApp, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  const defaults = app.defaultsTemp ? { ...convertDefaultsToRecord(app.defaultsTemp) } : { ...app.defaults };
-  const responsesDefaults = app.responsesDefaultsTemp
-    ? { ...convertDefaultsToRecord(app.responsesDefaultsTemp) }
-    : { ...app.responsesDefaults };
-  const applicationProperties = app.applicationPropertiesTemp
-    ? { ...convertDefaultsToRecord(app.applicationPropertiesTemp) }
-    : { ...app.applicationProperties };
   const application = {
     ...app,
-    applicationProperties,
-    defaults,
-    responsesDefaults,
+    applicationProperties: { ...app.applicationProperties },
+    defaults: { ...app.defaults },
+    responsesDefaults: { ...app.responsesDefaults },
     displayVersion: app.version,
   };
-  delete application.defaultsTemp;
-  delete application.responsesDefaultsTemp;
-  delete application.applicationPropertiesTemp;
   return assetsApi.updateAssetWithEtag(token, application, ResourceType.APPLICATION, etag);
 }
 

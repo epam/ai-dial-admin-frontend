@@ -139,6 +139,8 @@ export enum BasicI18nKey {
   Yes = 'Basic.Yes',
   No = 'Basic.No',
   DuplicateCopyPostfix = 'Basic.DuplicateCopyPostfix',
+  KeyRequired = 'Basic.KeyRequired',
+  KeyDuplicate = 'Basic.KeyDuplicate',
   URL = 'Basic.URL',
   Request = 'Basic.Request',
   Response = 'Basic.Response',
@@ -320,6 +322,7 @@ export enum DuplicateI18nKey {
   InterceptorTemplate = 'DuplicateEntity.Entities.InterceptorTemplate',
   ApplicationRunner = 'DuplicateEntity.Entities.ApplicationRunner',
   TestSuite = 'DuplicateEntity.Entities.TestSuite',
+  Dataset = 'DuplicateEntity.Entities.Dataset',
 }
 
 export enum ButtonsI18nKey {
@@ -1735,6 +1738,9 @@ export enum TestSuitesI18nKey {
   NoTestCasesDescription = 'TestSuites.NoTestCasesDescription',
   More = 'TestSuites.More',
   AttachDataset = 'TestSuites.AttachDataset',
+  SelectDataset = 'TestSuites.SelectDataset',
+  SelectDatasetDescription = 'TestSuites.SelectDatasetDescription',
+  PreviewTestCases = 'TestSuites.PreviewTestCases',
   PublishToDataset = 'TestSuites.PublishToDataset',
   PublishToDatasetCountText = 'TestSuites.PublishToDatasetCountText',
   PublishSuccess = 'TestSuites.PublishSuccess',
@@ -1744,6 +1750,7 @@ export enum TestSuitesI18nKey {
   DetachConfirmDescription = 'TestSuites.DetachConfirmDescription',
   DetachSuccess = 'TestSuites.DetachSuccess',
   DetachFailed = 'TestSuites.DetachFailed',
+  AttachDatasetWarning = 'TestSuites.AttachDatasetWarning',
   PublicDatasetInfo = 'TestSuites.PublicDatasetInfo',
 }
 
@@ -1842,8 +1849,9 @@ export enum ExportRunI18nKey {
   GroupResponse = 'ExportRun.GroupResponse',
   GroupMetrics = 'ExportRun.GroupMetrics',
   GroupBody = 'ExportRun.GroupBody',
-  PreviewLoadError = 'ExportRun.PreviewLoadError',
   PreviewDescription = 'ExportRun.PreviewDescription',
+  NoColumns = 'ExportRun.NoColumns',
+  NoPreview = 'ExportRun.NoPreview',
 }
 
 export enum FileManagerI18nKey {

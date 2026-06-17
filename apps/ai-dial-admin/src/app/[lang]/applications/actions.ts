@@ -3,7 +3,6 @@
 import { cookies, headers } from 'next/headers';
 
 import { applicationsApi } from '@/src/app/api/api';
-import { convertDefaultsToRecord } from '@/src/components/Defaults/utils';
 import { DEFAULT_ROLE_LIMITS } from '@/src/constants/role';
 import { DialApplication } from '@/src/models/dial/application';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -32,29 +31,13 @@ export async function createApplication(application: DialApplication) {
 
 export async function updateApplication(application: DialApplication, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  const defaults = application.defaultsTemp
-    ? { ...convertDefaultsToRecord(application.defaultsTemp) }
-    : { ...application.defaults };
-
-  const responsesDefaults = application.responsesDefaultsTemp
-    ? { ...convertDefaultsToRecord(application.responsesDefaultsTemp) }
-    : { ...application.responsesDefaults };
-
-  const applicationProperties = application.applicationPropertiesTemp
-    ? { ...convertDefaultsToRecord(application.applicationPropertiesTemp) }
-    : { ...application.applicationProperties };
-
   const app = {
     ...application,
     routes: getAppRoutes(application.routes),
-    defaults,
-    responsesDefaults,
-    applicationProperties,
+    defaults: { ...application.defaults },
+    responsesDefaults: { ...application.responsesDefaults },
+    applicationProperties: { ...application.applicationProperties },
   };
-  delete app.defaultsTemp;
-  delete app.responsesDefaultsTemp;
-  delete app.applicationPropertiesTemp;
-
   return applicationsApi.updateApplication(app, token, etag);
 }
 

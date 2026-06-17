@@ -11,7 +11,7 @@ import { ConversationPublication, Publication, ToolsetPublication } from '@/src/
 import { Toolset } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getNameVersionFromAsset } from '@/src/utils/entities/versions';
-import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
+import { useLocalDateTimeString } from '@/src/hooks/use-local-date-time-string';
 import { getActionClassName } from '@/src/utils/publications';
 
 interface Props {
@@ -21,6 +21,7 @@ interface Props {
 
 const PublicationInfoHeader: FC<Props> = ({ entity, view }) => {
   const t = useI18n();
+  const createdAt = useLocalDateTimeString(entity?.createdAt);
   const indicatorClassName = classNames('flex w-2 h-2 mr-1 rounded no-user-select', getActionClassName(entity?.action));
   const conversationName =
     view === ApplicationRoute.ConversationPublications
@@ -39,9 +40,7 @@ const PublicationInfoHeader: FC<Props> = ({ entity, view }) => {
           </p>
         </LabelledText>
       )}
-      {entity?.createdAt && (
-        <LabelledText label={t(EntityFieldsI18nKey.createdAt)} text={formatDateTimeToLocalString(entity?.createdAt)} />
-      )}
+      {entity?.createdAt && <LabelledText label={t(EntityFieldsI18nKey.createdAt)} text={createdAt} />}
       {entity?.displayAuthor && (
         <LabelledText label={t(EntityFieldsI18nKey.displayAuthor)} text={entity?.displayAuthor} />
       )}

@@ -10,6 +10,7 @@ import { EntityViewTab } from '@/src/utils/tabs/utils';
 import ConversationButtonsWrapper, { ConversationButtonsWrapperProps } from './Wrappers/ConversationButtonsWrapper';
 import { DialConversation } from '@/src/models/dial/conversation';
 import { getNameVersionFromAsset } from '@/src/utils/entities/versions';
+import ReadonlyId from '@/src/components/BaseControls/Id/ReadonlyId';
 
 interface Props extends ConversationButtonsWrapperProps<DialConversation> {
   tabs: TabModel[];
@@ -28,7 +29,7 @@ const ConversationHeader: FC<Props> = ({ children, tabs, activeTab, onChangeActi
   return (
     <div className="flex flex-col gap-y-4 mb-8">
       <div className={getHeaderClassName(false)}>
-        <h1>{conversationName}</h1>
+        <ReadonlyId value={conversationName} />
         <ConversationButtonsWrapper {...props}>{children}</ConversationButtonsWrapper>
       </div>
       <Tabs isEditorEnabled={false} tabs={tabs} activeTab={activeTab} onChangeActiveTab={onChangeActiveTab} />

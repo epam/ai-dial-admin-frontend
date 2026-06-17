@@ -5,10 +5,7 @@ import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState
 
 import { DialLoader, DialNoDataContent, DialPrimaryButton, JsonSchema, SelectOption } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
-import classNames from 'classnames';
-
 import {
-  convertAppPropertiesToArray,
   convertJsonSchema,
   generateViewItems,
   getAppRunner,
@@ -27,7 +24,7 @@ import { useTheme } from '@/src/context/ThemeContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { UserSession } from '@/src/models/auth';
-import { ApplicationPropertiesTemp, DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
+import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialApplicationResource } from '@/src/models/dial/application-resource';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { ParamsView } from '@/src/types/parameters';
@@ -42,7 +39,6 @@ interface Props {
   isEditorEnabled?: boolean;
   view?: ApplicationRoute;
   isChanged?: boolean;
-  isSkipRefresh?: boolean;
   discardKey?: number;
   setIsChanged?: Dispatch<SetStateAction<boolean>>;
   setSelectedApplication?: Dispatch<SetStateAction<DialApplication | DialApplicationResource>>;
@@ -57,7 +53,6 @@ const ParametersTab: FC<Props> = ({
   isEditorEnabled,
   view,
   isChanged,
-  isSkipRefresh,
   discardKey,
   onSave,
   setIsChanged,
@@ -73,6 +68,7 @@ const ParametersTab: FC<Props> = ({
 
   const [viewItems, setViewItems] = useState<SelectOption[]>([]);
   const [paramsView, setParamsView] = useState<ParamsView>(ParamsView.TABLE);
+  const [isAddClicked, setIsAddClicked] = useState(false);
 
   useEffect(() => {
     let scheme = undefined;
@@ -86,9 +82,6 @@ const ParametersTab: FC<Props> = ({
       }
       setIsSchemeLoading(false);
       setScheme(scheme);
-      if (!scheme && !appPropertiesTemp) {
-        setAppPropertiesTemp(convertAppPropertiesToArray(application?.applicationProperties || {}));
-      }
       const config = getCorrectConfig(scheme, application, currentTheme, session as UserSession);
       const targetUrl = getTargetUrl(view, application, config);
 
@@ -99,9 +92,10 @@ const ParametersTab: FC<Props> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [(application as AssetApp)?.version]);
 
-  const [appPropertiesTemp, setAppPropertiesTemp] = useState<ApplicationPropertiesTemp[] | undefined>();
-  const [schemeProperties, setSchemeProperties] = useState<ApplicationPropertiesTemp[]>([]);
-  const [isAddClicked, setIsAddClicked] = useState(false);
+  const schemeProperties = useMemo(() => {
+    if (!scheme?.properties) return [];
+    return convertJsonSchema(scheme as DialApplicationScheme, {});
+  }, [scheme]);
 
   const frameConfig = useMemo(() => {
     return getCorrectConfig(scheme, application, currentTheme, session as UserSession);
@@ -126,31 +120,24 @@ const ParametersTab: FC<Props> = ({
     return viewItems.length > 1;
   }, [viewItems.length]);
 
-  const onGetSchemeDefaults = useCallback(
-    (data: Record<string, unknown>) => {
-      if (application?.applicationPropertiesTemp) {
-        setAppPropertiesTemp(application.applicationPropertiesTemp || []);
-      } else {
-        const schemeProps = convertJsonSchema(scheme as unknown as DialApplicationScheme, data);
-        const appProperties = convertAppPropertiesToArray(application?.applicationProperties || {}, schemeProps);
-        setSchemeProperties(schemeProps);
-        setAppPropertiesTemp(appProperties);
-      }
-    },
-    [application?.applicationProperties, application?.applicationPropertiesTemp, scheme],
-  );
+  const onGetSchemeDefaults = useCallback((_data: Record<string, unknown>) => {}, []);
 
   const onChangeProperties = useCallback(
-    (props?: ApplicationPropertiesTemp[], isSkipRefresh?: boolean) => {
+    (props: Record<string, unknown>) => {
       const newEntity = {
         ...application,
-        applicationPropertiesTemp: props,
+        applicationProperties: props,
       } as unknown as BaseEntity;
-      onChange?.(newEntity, isSkipRefresh);
-      const isValid = !props?.some((p) => !p.key);
+      onChange?.(newEntity);
+    },
+    [application, onChange],
+  );
+
+  const onValidityChange = useCallback(
+    (isValid: boolean) => {
       dispatch({ type: ValidationActionType.SetField, field: 'applicationProperties', isValid });
     },
-    [dispatch, application, onChange],
+    [dispatch],
   );
 
   const onChangeConfiguration = useCallback(
@@ -162,20 +149,11 @@ const ParametersTab: FC<Props> = ({
             ...data,
           },
         } as unknown as BaseEntity;
-        onGetSchemeDefaults(data);
         onChange?.(newEntity);
       }
     },
-    [application, onChange, onGetSchemeDefaults, paramsView],
+    [application, onChange, paramsView],
   );
-
-  useEffect(() => {
-    const properties =
-      application?.applicationPropertiesTemp ||
-      convertAppPropertiesToArray(application?.applicationProperties || {}, schemeProperties);
-    setAppPropertiesTemp(properties);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [application?.applicationPropertiesTemp, application?.applicationProperties]);
 
   return (
     <div className="flex flex-col size-full">
@@ -219,34 +197,34 @@ const ParametersTab: FC<Props> = ({
             )}
             {paramsView === ParamsView.TABLE && !isEditorEnabled && (
               <TableView
+                key={discardKey}
+                applicationProperties={application?.applicationProperties || {}}
+                schemeProperties={schemeProperties}
+                onChangeProperties={onChangeProperties}
+                onValidityChange={onValidityChange}
                 isAddClicked={isAddClicked}
                 setIsAddClicked={setIsAddClicked}
-                properties={appPropertiesTemp || []}
-                onChangeProperties={onChangeProperties}
-                isSkipRefresh={isSkipRefresh}
                 disabled={isReadOnlyAdmin}
               />
             )}
-            <div
-              className={classNames(
-                paramsView === ParamsView.FORM && !isEditorEnabled ? 'block size-full overflow-y-auto' : 'hidden',
-              )}
-            >
-              {!scheme || !scheme?.properties || !Object.keys(scheme.properties).length ? (
-                <DialNoDataContent title={t(EntitiesI18nKey.NoConfigurationSchema)} />
-              ) : (
-                <div className="flex-1 min-h-0 p-4 bg-layer-0">
-                  <SchemaUiRenderer
-                    schema={jsonSchema}
-                    data={application?.applicationProperties}
-                    onChangeConfiguration={onChangeConfiguration}
-                    onGetSchemeDefaults={onGetSchemeDefaults}
-                    disabled={view === ApplicationRoute.ApplicationPublications}
-                    defaultExpanded={false}
-                  />
-                </div>
-              )}
-            </div>
+            {paramsView === ParamsView.FORM && !isEditorEnabled && (
+              <div className="size-full overflow-y-auto">
+                {!scheme || !scheme?.properties || !Object.keys(scheme.properties).length ? (
+                  <DialNoDataContent title={t(EntitiesI18nKey.NoConfigurationSchema)} />
+                ) : (
+                  <div className="flex-1 min-h-0 p-4 bg-layer-0">
+                    <SchemaUiRenderer
+                      schema={jsonSchema}
+                      data={application?.applicationProperties}
+                      onChangeConfiguration={onChangeConfiguration}
+                      onGetSchemeDefaults={onGetSchemeDefaults}
+                      disabled={view === ApplicationRoute.ApplicationPublications}
+                      defaultExpanded={false}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
             {paramsView === ParamsView.UI && (
               <FrameRenderer
                 iframeUrl={targetUrl?.href ?? ''}

@@ -166,22 +166,6 @@ describe('Models :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call updateModel action', async () => {
-    (modelsApi.updateModel as any).mockResolvedValue(RESPONSE_MOCK);
-
-    const result = await updateModel(
-      { name: 'test', defaultsTemp: [{ key: 'key', type: 'str', value: 'value' }] },
-      'etag',
-    );
-    expect(getUserToken).toHaveBeenCalled();
-    expect(modelsApi.updateModel).toHaveBeenCalledWith(
-      { name: 'test', defaults: { key: 'value' }, responsesDefaults: {} },
-      TOKEN_MOCK,
-      'etag',
-    );
-    expect(result).toBe(RESPONSE_MOCK);
-  });
-
   test('Should call updateCoreModel action', async () => {
     (modelsApi.updateCoreModel as any).mockResolvedValue(RESPONSE_MOCK);
 

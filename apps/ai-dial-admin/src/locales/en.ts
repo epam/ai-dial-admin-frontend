@@ -83,6 +83,8 @@ export default {
     Yes: 'Yes',
     No: 'No',
     DuplicateCopyPostfix: '(Copy)',
+    KeyRequired: 'Key cannot be empty',
+    KeyDuplicate: 'Key already exists',
     URL: 'URL',
     Request: 'Request body',
     Response: 'Response body',
@@ -340,6 +342,7 @@ export default {
       InterceptorTemplate: 'Interceptor Template',
       ApplicationRunner: 'Application Runner',
       TestSuite: 'Test Suite',
+      Dataset: 'Dataset',
     },
   },
   CreateEntity: {
@@ -1772,6 +1775,9 @@ export default {
     NoTestCasesDescription: 'Add test cases manually or attach from dataset',
     More: 'More',
     AttachDataset: 'Attach dataset',
+    SelectDataset: 'Select Dataset',
+    SelectDatasetDescription: 'Select a dataset to link its test cases to the current test suite.',
+    PreviewTestCases: 'Preview Test Cases',
     PublishToDataset: 'Publish to a new dataset',
     PublishToDatasetCountText:
       '{count} test cases will be saved to a new dataset and current test suite will be linked to it automatically.',
@@ -1783,6 +1789,7 @@ export default {
       "When you detach test cases from the dataset, they become private to the current test suite. This lets you add, edit, or delete test cases without restrictions. The original dataset stays unchanged, so other suites using it won't be impacted.",
     DetachSuccess: 'Dataset detached successfully',
     DetachFailed: 'Failed to detach dataset',
+    AttachDatasetWarning: 'Attaching a public dataset will permanently remove all currently existing test cases.',
     PublicDatasetInfo:
       'Test cases related to dataset are fixed. To change the test cases open the dataset page or detach them from dataset.',
   },
@@ -1964,9 +1971,10 @@ export default {
     GroupResponse: 'Response',
     GroupMetrics: 'Metrics',
     GroupBody: 'Body',
-    PreviewLoadError: 'Failed to load preview data',
     PreviewDescription:
       'Preview displays only the first 10 rows of your data. The full export will include all selected rows.',
+    NoColumns: 'No columns',
+    NoPreview: 'No preview',
   },
   JsonAta: {
     JSONAtaDoc: 'JSONata Expression Reference',

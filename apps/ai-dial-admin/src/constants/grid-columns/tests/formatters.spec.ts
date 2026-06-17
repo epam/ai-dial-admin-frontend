@@ -147,13 +147,13 @@ describe('Formatters :: buildResourceTypeLabelMap', () => {
 
 describe('Formatters :: formatAttachment ', () => {
   test('Should return custom', () => {
-    const result = formatAttachment('custom', (v: string) => v);
+    const result = formatAttachment('custom');
     expect(result).toEqual('custom');
   });
 
   test('Should return custom', () => {
-    const result = formatAttachment(['*/*'] as any, (v: string) => v);
-    expect(result).toEqual(AttachmentsI18nKey.AllAttachments);
+    const result = formatAttachment(['*/*'] as any);
+    expect(result).toEqual('*/*');
   });
 });
 
