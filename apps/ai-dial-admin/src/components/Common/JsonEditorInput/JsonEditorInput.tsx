@@ -89,6 +89,10 @@ const JsonEditorInput: FC<Props> = ({
         return;
       }
     }
+    if (typeof parsed === 'number') {
+      setParseError('Invalid JSON');
+      return;
+    }
     onChangeValue(parsed);
     onCloseModal();
   }, [onChangeValue, onCloseModal, jsonValue, disableValidation]);
