@@ -62,6 +62,7 @@ const Authentication: FC<Props> = ({ disabled, view, toolset, onChange, ...props
       <div className="flex flex-col gap-y-3">
         {isDisabled ? (
           <AuthTypeSection
+            toolsetName={toolset.name || ''}
             config={authOptions.find((option) => option.id === selectedAuthType)!}
             isSelected={true}
             disabled={true}
@@ -73,6 +74,7 @@ const Authentication: FC<Props> = ({ disabled, view, toolset, onChange, ...props
           authOptions.map((option) => (
             <AuthTypeSection
               key={option.id}
+              toolsetName={toolset.name || ''}
               view={view}
               config={option}
               isSelected={option.id === selectedAuthType}

@@ -5,10 +5,12 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { ToolsetI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ToolsetAuthSettings, ToolsetAuthType } from '@/src/models/dial/toolset';
+import { getFromSessionStorage, setToSessionStorage } from '@/src/utils/session-storage';
 import { AuthConfig } from '../Authentication';
 import ApiKeySection from './ApiKeySection';
 import OAuthSection from './OAuthSection';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getAuthTypeStorageKey } from '@/src/components/Toolsets/Auth/utils';
 
 enum AuthType {
   With_login = 'With_login',
@@ -16,6 +18,7 @@ enum AuthType {
 }
 
 interface Props {
+  toolsetName: string;
   config: AuthConfig;
   isSelected: boolean;
   disabled?: boolean;
@@ -26,6 +29,7 @@ interface Props {
 }
 
 const AuthTypeSection: FC<Props> = ({
+  toolsetName,
   disabled,
   config,
   view,
@@ -37,7 +41,9 @@ const AuthTypeSection: FC<Props> = ({
 }) => {
   const t = useI18n();
 
-  const [selectedAuthType, setSelectedAuthType] = useState(AuthType.With_login);
+  const [selectedAuthType, setSelectedAuthType] = useState(
+    () => (getFromSessionStorage(getAuthTypeStorageKey(toolsetName)) as AuthType) || AuthType.With_login,
+  );
 
   const radioLogin: RadioButtonWithContent[] = useMemo(() => {
     const buttons = [
@@ -58,12 +64,6 @@ const AuthTypeSection: FC<Props> = ({
   }, [config.id, t]);
 
   useEffect(() => {
-    const value = authSettings?.clientId ? AuthType.With_config_and_login : AuthType.With_login;
-    setSelectedAuthType(value);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
     if (view === ApplicationRoute.Toolsets) {
       setSelectedAuthType(AuthType.With_config_and_login);
     }
@@ -73,9 +73,13 @@ const AuthTypeSection: FC<Props> = ({
     onClick?.(config.id);
   }, [config.id, onClick]);
 
-  const onChangeAuth = useCallback((value: string) => {
-    setSelectedAuthType(value as AuthType);
-  }, []);
+  const onChangeAuth = useCallback(
+    (value: string) => {
+      setSelectedAuthType(value as AuthType);
+      setToSessionStorage(getAuthTypeStorageKey(toolsetName), value);
+    },
+    [toolsetName],
+  );
 
   return (
     <div className="flex flex-col w-full rounded bg-layer-3 border border-tertiary">
