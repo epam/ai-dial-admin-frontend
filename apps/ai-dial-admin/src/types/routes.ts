@@ -53,5 +53,6 @@ export enum ApplicationRoute {
   TestCases = '/test-cases',
   Datasets = '/datasets',
   Runs = '/runs',
+  RunsCompare = '/runs/compare',
   Metrics = '/metrics',
 }

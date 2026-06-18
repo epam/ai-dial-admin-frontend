@@ -1789,6 +1789,7 @@ export default {
       "When you detach test cases from the dataset, they become private to the current test suite. This lets you add, edit, or delete test cases without restrictions. The original dataset stays unchanged, so other suites using it won't be impacted.",
     DetachSuccess: 'Dataset detached successfully',
     DetachFailed: 'Failed to detach dataset',
+    AttachDatasetWarning: 'Attaching a public dataset will permanently remove all currently existing test cases.',
     PublicDatasetInfo:
       'Test cases related to dataset are fixed. To change the test cases open the dataset page or detach them from dataset.',
   },
@@ -1955,6 +1956,12 @@ export default {
     TextDiff: 'Text',
     CompareWith: 'Compare with',
     RunCompareNoMatch: 'No matching test case in compared run',
+    RunComparison: 'Run Comparison',
+    RunCompareVs: 'vs.',
+    RunCompareAddRun: 'Add',
+    RunCompareAddSecondRunTitle: 'Add a second run to start comparing.',
+    RunCompareAddSecondRunMessage: 'Metrics will appear side by side so you can spot differences across test cases.',
+    RunCompareTag: '[{index}] {name}',
   },
   ExportRun: {
     ExportRunTitle: 'Export run',
@@ -2013,6 +2020,7 @@ export default {
     Manage_folder: 'Manage permissions',
     Rename: 'Rename',
     Move_to: 'Move to',
+    Compare: 'Compare',
     Compare_changes: 'Compare changes',
     Install: 'Install',
     Run: 'Run',

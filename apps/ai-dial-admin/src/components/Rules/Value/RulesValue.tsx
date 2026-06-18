@@ -116,7 +116,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
             containerClassName={'gap-2'}
           />
         </div>
-        <div className="flex-1">
+        <div className="flex-1 min-w-[160px]">
           {rule.function === RuleFunction.REGEX ? (
             <DialInput
               id={`rule-regex-${index}`}

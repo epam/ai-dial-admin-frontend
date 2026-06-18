@@ -1750,6 +1750,7 @@ export enum TestSuitesI18nKey {
   DetachConfirmDescription = 'TestSuites.DetachConfirmDescription',
   DetachSuccess = 'TestSuites.DetachSuccess',
   DetachFailed = 'TestSuites.DetachFailed',
+  AttachDatasetWarning = 'TestSuites.AttachDatasetWarning',
   PublicDatasetInfo = 'TestSuites.PublicDatasetInfo',
 }
 
@@ -1832,6 +1833,12 @@ export enum RunsI18nKey {
   InputBindings = 'Runs.InputBindings',
   CompareWith = 'Runs.CompareWith',
   RunCompareNoMatch = 'Runs.RunCompareNoMatch',
+  RunComparison = 'Runs.RunComparison',
+  RunCompareVs = 'Runs.RunCompareVs',
+  RunCompareAddRun = 'Runs.RunCompareAddRun',
+  RunCompareAddSecondRunTitle = 'Runs.RunCompareAddSecondRunTitle',
+  RunCompareAddSecondRunMessage = 'Runs.RunCompareAddSecondRunMessage',
+  RunCompareTag = 'Runs.RunCompareTag',
 }
 
 export enum ExportRunI18nKey {
@@ -1944,6 +1951,7 @@ export enum ActionMenuOperationI18nKey {
   Manage_folder = 'ActionMenuOperation.Manage_folder',
   Rename = 'ActionMenuOperation.Rename',
   Move_to = 'ActionMenuOperation.Move_to',
+  Compare = 'ActionMenuOperation.Compare',
   Compare_changes = 'ActionMenuOperation.Compare_changes',
   Install = 'ActionMenuOperation.Install',
   Run = 'ActionMenuOperation.Run',

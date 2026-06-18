@@ -67,7 +67,7 @@ const RulesItem: FC<Props> = ({
       </div>
       <div
         className={classNames(
-          'flex-1 min-w-[720px] flex flex-col bg-layer-2 py-4 px-6 rounded',
+          'flex-1 flex flex-col bg-layer-2 py-4 px-6 rounded',
           isAlwaysToggled && folderName && 'bg-layer-3',
         )}
       >

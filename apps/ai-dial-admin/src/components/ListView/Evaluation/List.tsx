@@ -24,6 +24,7 @@ import RunModal from '@/src/components/TestSuites/Runs/RunModal';
 import { onCellClicked } from '@/src/components/EntityListView/utils/on-cell-clicked';
 import { ACTION_COLUMN, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
 import {
+  getCompareOperation,
   getDeleteOperation,
   getDuplicateOperation,
   getExportOperation,
@@ -31,6 +32,7 @@ import {
   getRunTestSuiteOperation,
 } from '@/src/constants/grid-columns/actions';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
+import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
@@ -72,6 +74,7 @@ const EvaluationListView = <T extends object>({
 }: Props<T>) => {
   const t = useI18n();
   const router = useRouter();
+  const { featureFlags } = useAppContext();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType>();
@@ -138,6 +141,10 @@ const EvaluationListView = <T extends object>({
     },
     [route],
   );
+
+  const onCompareRun = useCallback((entity?: T) => {
+    onOpenInNewTab(ApplicationRoute.RunsCompare, entity);
+  }, []);
 
   const onOpenModal = useCallback(
     (modalType: ModalType) => {
@@ -256,6 +263,9 @@ const EvaluationListView = <T extends object>({
 
   if (route === ApplicationRoute.Runs) {
     actionColumn.push(getExportOperation(onOpenExportModal, (_, node) => node.data?.status === RunStatus.RUNNING));
+    if (featureFlags.runsCompareEnabled) {
+      actionColumn.push(getCompareOperation(onCompareRun, (_, node) => node.data?.status !== RunStatus.COMPLETED));
+    }
   }
 
   const columnDefs = [...baseColumns, ACTION_COLUMN([...actionColumn, getDeleteOperation(onOpenDeleteModal)], true)];
