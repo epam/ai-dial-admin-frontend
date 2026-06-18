@@ -560,6 +560,9 @@ export enum FeaturesI18nKey {
   allowResume = 'Features.allowResume',
   addonsSupported = 'Features.addonsSupported',
   temperatureSupported = 'Features.temperatureSupported',
+  customTemperatureSupported = 'Features.customTemperatureSupported',
+  maxTokensSupported = 'Features.maxTokensSupported',
+  maxCompletionTokensSupported = 'Features.maxCompletionTokensSupported',
   cacheSupported = 'Features.cacheSupported',
   autoCachingSupported = 'Features.autoCachingSupported',
   contentPartsSupported = 'Features.contentPartsSupported',
@@ -575,6 +578,14 @@ export enum FeaturesI18nKey {
   tokenizeEndpoint = 'Features.tokenizeEndpoint',
   truncatePromptEndpoint = 'Features.truncatePromptEndpoint',
   AppRunnerInherited = 'Features.AppRunnerInherited',
+  reasoningEfforts = 'Features.reasoningEfforts',
+  GroupSamplingOutputControl = 'Features.Groups.SamplingOutputControl',
+  GroupToolsFunctionCalling = 'Features.Groups.ToolsFunctionCalling',
+  GroupPromptMessageComposition = 'Features.Groups.PromptMessageComposition',
+  GroupAttachments = 'Features.Groups.Attachments',
+  GroupCaching = 'Features.Groups.Caching',
+  GroupSessionAccess = 'Features.Groups.SessionAccess',
+  GroupFeedback = 'Features.Groups.Feedback',
 }
 
 export enum TopicsI18nKey {
@@ -1162,6 +1173,8 @@ export enum EntityPlaceholdersI18nKey {
   TimeoutSeconds = 'EntityPlaceholders.TimeoutSeconds',
   FailureThreshold = 'EntityPlaceholders.FailureThreshold',
   Expression = 'EntityPlaceholders.Expression',
+  ReasoningEfforts = 'EntityPlaceholders.ReasoningEfforts',
+  EmbeddingDimensions = 'EntityPlaceholders.EmbeddingDimensions',
 }
 
 export enum EntityCaptionsI18nKey {
@@ -1295,6 +1308,7 @@ export enum EntityFieldsI18nKey {
   secured = 'EntityFields.secured',
   parameters = 'EntityFields.parameters',
   extraData = 'EntityFields.extraData',
+  secretExtraData = 'EntityFields.secretExtraData',
   models = 'EntityFields.models',
   order = 'EntityFields.order',
   baseEndpoint = 'EntityFields.baseEndpoint',
@@ -1388,6 +1402,7 @@ export enum EntityFieldsI18nKey {
   ProbePort = 'EntityFields.ProbePort',
   temperature = 'EntityFields.temperature',
   agent = 'EntityFields.agent',
+  embeddingDimensions = 'EntityFields.embeddingDimensions',
 }
 
 export enum ToolsetI18nKey {
