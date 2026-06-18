@@ -283,10 +283,13 @@ export default {
       NoInterceptors: 'No related Interceptors',
       NoModels: 'No related Models',
       NoContainers: 'No related Containers',
+      DatasetWarning:
+        'This dataset and all its test cases will be permanently deleted. Any test suites linked to it will be unlinked and their test cases removed.',
       RelatedApplications: 'Related Applications',
       RelatedInterceptors: 'Related Interceptors',
       RelatedModels: 'Related Models',
       RelatedContainers: 'Related Containers',
+      RelatedTestSuites: 'Related Test Suites',
     },
     Notification: {
       Title: '{entity} deleted successfully',

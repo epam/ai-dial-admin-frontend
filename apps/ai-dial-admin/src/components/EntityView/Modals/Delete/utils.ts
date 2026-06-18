@@ -1,6 +1,15 @@
+import { ColDef } from 'ag-grid-community';
+
 import { DeleteI18nKey } from '@/src/constants/i18n';
+import {
+  ASSET_NAME_COLUMN,
+  DESCRIPTION_COLUMN,
+  DISPLAY_NAME_COLUMN,
+  NAME_COLUMN,
+} from '@/src/constants/grid-columns/base-columns';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getApplications } from '@/src/app/[lang]/applications/actions';
+import { getDatasetTestSuites } from '@/src/app/[lang]/datasets/actions';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { getModelsListAction } from '@/src/app/[lang]/models/actions';
 import { getInterceptorsList } from '@/src/app/[lang]/interceptors/actions';
@@ -91,6 +100,8 @@ export const getWarningText = (view: ApplicationRoute, t: (str: string) => strin
       return t(DeleteI18nKey.AdapterWarning);
     case ApplicationRoute.Images:
       return t(DeleteI18nKey.ImageWarning);
+    case ApplicationRoute.Datasets:
+      return t(DeleteI18nKey.DatasetWarning);
     default:
       return '';
   }
@@ -106,6 +117,8 @@ export const getRelatedText = (view: ApplicationRoute, t: (str: string) => strin
       return t(DeleteI18nKey.RelatedModels);
     case ApplicationRoute.Images:
       return t(DeleteI18nKey.RelatedContainers);
+    case ApplicationRoute.Datasets:
+      return t(DeleteI18nKey.RelatedTestSuites);
     default:
       return '';
   }
@@ -161,6 +174,20 @@ const getRelatedContainers = (image: {
   });
 };
 
+export const getRelatedColumns = (view: ApplicationRoute): ColDef[] => {
+  if (view === ApplicationRoute.Datasets) {
+    return [ASSET_NAME_COLUMN, DESCRIPTION_COLUMN];
+  }
+  return [DISPLAY_NAME_COLUMN, NAME_COLUMN];
+};
+
+const getRelatedTestSuites = (entity: { id?: string }) => {
+  if (!entity.id) {
+    return Promise.resolve([]);
+  }
+  return getDatasetTestSuites(entity.id).then((res) => res?.response as BaseEntity[] | undefined);
+};
+
 export const getRelatedArtifacts = (view: ApplicationRoute, entity: BaseEntity) => {
   switch (view) {
     case ApplicationRoute.ApplicationRunners:
@@ -173,6 +200,8 @@ export const getRelatedArtifacts = (view: ApplicationRoute, entity: BaseEntity) 
       return getRelatedContainers(
         entity as { existingVersions: ImageVersion[]; $type: IMAGE_TYPE; selectedVersion: string },
       );
+    case ApplicationRoute.Datasets:
+      return getRelatedTestSuites(entity as { id?: string });
     default:
       return Promise.resolve([]);
   }

@@ -7,6 +7,7 @@ import {
   DATASET_PUBLISH_URL,
   DATASET_TEST_CASES_URL,
   DATASET_TEST_CASE_URL,
+  DATASET_TEST_SUITES_URL,
   DATASET_URL,
   DATASET_VISIBILITY_URL,
   DATASETS_URL,
@@ -88,6 +89,21 @@ describe('Server :: DatasetsApi', () => {
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${DATASET_URL(mockDataset.id)}`,
       expect.objectContaining({ method: 'DELETE' }),
+    );
+  });
+
+  test('Should call getDatasetTestSuites with GET method', async () => {
+    const mockTestSuites = [
+      { id: 'ts-1', name: 'Suite 1' },
+      { id: 'ts-2', name: 'Suite 2' },
+    ];
+    fetch.mockResponseOnce(JSON.stringify(mockTestSuites));
+
+    await instance.getDatasetTestSuites(mockDataset.id as string, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${DATASET_TEST_SUITES_URL(mockDataset.id as string)}`,
+      expect.objectContaining({ method: 'GET' }),
     );
   });
 
