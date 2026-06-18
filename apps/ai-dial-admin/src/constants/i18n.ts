@@ -1839,6 +1839,7 @@ export enum RunsI18nKey {
   RunCompareAddSecondRunTitle = 'Runs.RunCompareAddSecondRunTitle',
   RunCompareAddSecondRunMessage = 'Runs.RunCompareAddSecondRunMessage',
   RunCompareTag = 'Runs.RunCompareTag',
+  RunCompareSelectRun = 'Runs.RunCompareSelectRun',
 }
 
 export enum ExportRunI18nKey {

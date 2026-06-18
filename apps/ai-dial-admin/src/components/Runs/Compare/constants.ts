@@ -1,5 +1,10 @@
 import { ColDef } from 'ag-grid-community';
 
+export enum CompareRunSlot {
+  Primary = 'primary',
+  Secondary = 'secondary',
+}
+
 export const RUN_COMPARE_SEGMENT = 'compare';
 export const RUN_COMPARE_RUNS_QUERY_PARAM = 'runs';
 
@@ -31,6 +36,13 @@ export const NO_FILTER_COL_DEF: Pick<ColDef, 'filter' | 'floatingFilter'> = {
   filter: false,
   floatingFilter: false,
 };
+
+export const RUN_COMPARE_PRIMARY_INDEX = '1';
+export const RUN_COMPARE_SECONDARY_INDEX = '2';
+
+export const formatCompareColumnHeader = (runIndex: string, label: string) => `[${runIndex}] ${label}`;
+
+export const formatCompareRunIndexHeader = (runIndex: string) => `[${runIndex}]`;
 
 export const compareGridOptions = {
   groupHeaderHeight: COMPARE_GROUP_HEADER_HEIGHT,

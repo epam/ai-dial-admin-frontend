@@ -1962,6 +1962,7 @@ export default {
     RunCompareAddSecondRunTitle: 'Add a second run to start comparing.',
     RunCompareAddSecondRunMessage: 'Metrics will appear side by side so you can spot differences across test cases.',
     RunCompareTag: '[{index}] {name}',
+    RunCompareSelectRun: 'Select Run to Compare',
   },
   ExportRun: {
     ExportRunTitle: 'Export run',
