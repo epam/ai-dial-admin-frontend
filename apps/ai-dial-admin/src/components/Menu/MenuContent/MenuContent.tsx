@@ -51,7 +51,7 @@ const MenuContent: FC<Props> = ({ disableMenuItems, isSidebarOpen }) => {
 
   const MenuNavigation = ({ showExpanded }: { showExpanded?: boolean }) => (
     <nav className={classNames('p-2 overflow-auto flex-1 min-h-0', !showExpanded && 'mt-[-1px]')}>
-      <ul className="divide-primary divide-y">
+      <ul className="divide-tertiary divide-y">
         {actualConfig.map((config, i) => (
           <MenuItem
             key={`menu-${showExpanded ? 'expanded' : 'default'}-${i}`}
