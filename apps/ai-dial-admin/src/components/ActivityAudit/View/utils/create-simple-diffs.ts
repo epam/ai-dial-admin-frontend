@@ -126,7 +126,12 @@ export const compareAllowedDomains = (
   if (key1 === key2) {
     diffs.push({ parameter: DOMAIN_ACCESS_POLICY_KEY, value: key1 });
   } else {
-    diffs.push({ parameter: DOMAIN_ACCESS_POLICY_KEY, value: key2, diffStatus: DiffStatus.CHANGED });
+    diffs.push({
+      parameter: DOMAIN_ACCESS_POLICY_KEY,
+      value: key2,
+      pairedValue: key1,
+      diffStatus: DiffStatus.CHANGED,
+    });
   }
   walkSortedArrayDiff(diffs, visibleDomains(val1), visibleDomains(val2), isCurrent, ALLOWED_DOMAIN_FACTORY);
 };
@@ -165,7 +170,12 @@ export const compareInterceptors = (
     } else if (value1 == null && value2 != null) {
       diffs.push({ parameter, value: value2 || '', diffStatus: isCurrent ? DiffStatus.MIRROR : DiffStatus.ADDED });
     } else if (value1 != null && value2 != null && value1 !== value2) {
-      diffs.push({ parameter, value: value2 || '', diffStatus: DiffStatus.CHANGED });
+      diffs.push({
+        parameter,
+        value: value2 || '',
+        pairedValue: value1 || '',
+        diffStatus: DiffStatus.CHANGED,
+      });
     } else {
       diffs.push({ parameter, value: value1 || '' });
     }
@@ -217,7 +227,12 @@ export const compareNestedFlatObject = (
         ),
       );
     } else if (value1 !== value2) {
-      diffs.push(withMountType({ parameter, value: value2 || '', diffStatus: DiffStatus.CHANGED }, mountType));
+      diffs.push(
+        withMountType(
+          { parameter, value: value2 || '', pairedValue: value1 || '', diffStatus: DiffStatus.CHANGED },
+          mountType,
+        ),
+      );
     } else {
       diffs.push(withMountType({ parameter, value: value1 || '' }, mountType));
     }

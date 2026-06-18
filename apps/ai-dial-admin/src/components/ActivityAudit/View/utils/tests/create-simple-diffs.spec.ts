@@ -181,7 +181,7 @@ describe('Activity audit :: compareInterceptors', () => {
     const diffs: ActivityAuditDiff[] = [];
     compareInterceptors(diffs, ['old', 'same'], ['new', 'same']);
     expect(diffs).toEqual([
-      { parameter: '1', value: 'new', diffStatus: DiffStatus.CHANGED },
+      { parameter: '1', value: 'new', pairedValue: 'old', diffStatus: DiffStatus.CHANGED },
       { parameter: '2', value: 'same' },
     ]);
   });
@@ -567,7 +567,7 @@ describe('Activity audit :: compareNestedFlatObject', () => {
   test('changed value carries CHANGED', () => {
     const diffs: ActivityAuditDiff[] = [];
     compareNestedFlatObject(diffs, [{ parameter: 'a', value: '1' }], [{ parameter: 'a', value: '2' }], false);
-    expect(diffs).toEqual([{ parameter: 'a', value: '2', diffStatus: DiffStatus.CHANGED }]);
+    expect(diffs).toEqual([{ parameter: 'a', value: '2', pairedValue: '1', diffStatus: DiffStatus.CHANGED }]);
   });
 
   test('hides rows where both sides are empty', () => {

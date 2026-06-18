@@ -51,6 +51,7 @@ describe('compareAllowedDomains :: synthesized Domain access policy row', () => 
     expect(diffs[0]).toMatchObject({
       parameter: DOMAIN_ACCESS_POLICY_KEY,
       value: EntityFieldsI18nKey.specificDomains,
+      pairedValue: EntityFieldsI18nKey.allDomains,
       diffStatus: DiffStatus.CHANGED,
     });
   });

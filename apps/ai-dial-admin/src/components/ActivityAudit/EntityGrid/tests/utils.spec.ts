@@ -87,7 +87,8 @@ describe('getColumnsByParameter', () => {
 
   test('returns INTERCEPTORS_DIFF_COLUMNS when parameter is INTERCEPTORS', () => {
     const result = getColumnsByParameter(EntityParameterKeys.INTERCEPTORS);
-    expect(result).toEqual(constants.INTERCEPTORS_DIFF_COLUMNS);
+    expect(result.map((col) => col.field)).toEqual(['parameter', 'value']);
+    expect(result[1].cellRenderer).toBeDefined();
   });
 
   test.each([
@@ -137,19 +138,19 @@ describe('Activity audit :: RESOURCE_DIFF_COLUMNS cellRendererSelector for env-v
     },
   );
 
-  test('returns undefined for non-envValue rows in METADATA section', () => {
+  test('returns AuditDiffValueCellRenderer for non-envValue rows in METADATA section', () => {
     const result = getValueSelector(EntityParameterKeys.METADATA)({
       data: { parameter: 'envName', mountType: 'secure_content' },
       value: 'API_KEY',
     });
-    expect(result).toBeUndefined();
+    expect(result?.component?.displayName || result?.component?.name).toMatch(/AuditDiffValueCellRenderer/);
   });
 
-  test('returns undefined for env-var-like row when parameter is not METADATA', () => {
+  test('returns AuditDiffValueCellRenderer for env-var-like row when parameter is not METADATA', () => {
     const result = getValueSelector(EntityParameterKeys.KEYS)({
       data: { parameter: 'envValue', mountType: 'secure_content' },
       value: 'v',
     });
-    expect(result).toBeUndefined();
+    expect(result?.component?.displayName || result?.component?.name).toMatch(/AuditDiffValueCellRenderer/);
   });
 });

@@ -4,6 +4,7 @@ import { EntityParameterKeys } from '@/src/components/ActivityAudit/constants';
 import { CompareI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { ActivityAuditDiffSection } from '@/src/models/activity-audit';
 import { ActivityAuditResourceType, CompareView, DiffStatus, DiffView } from '@/src/types/activity-audit';
+import { InlineTextDiffSide } from '@/src/utils/diff/models';
 import { filterNotEmptySections, getDiffCount } from '@/src/components/ActivityAudit/View/DiffReport/utils';
 import { useI18n } from '@/src/locales/client';
 
@@ -72,11 +73,25 @@ const DiffSection: FC<Props> = ({ sections, name, type, diffView, compareView })
             <div key={index} className="flex flex-row gap-8">
               <div className="flex flex-col flex-1">
                 <h4 className="mb-2 text-secondary">{`${prefix}${t(CompareI18nKey.Before)}`}</h4>
-                <AuditEntityGrid data={currentData} parameter={name} type={type} index={index} diffView={diffView} />
+                <AuditEntityGrid
+                  data={currentData}
+                  parameter={name}
+                  type={type}
+                  index={index}
+                  diffView={diffView}
+                  diffSide={InlineTextDiffSide.Before}
+                />
               </div>
               <div className="flex flex-col flex-1">
                 <h4 className="mb-2 text-secondary">{`${prefix}${compareLabel}`}</h4>
-                <AuditEntityGrid data={compareData} parameter={name} type={type} index={index} diffView={diffView} />
+                <AuditEntityGrid
+                  data={compareData}
+                  parameter={name}
+                  type={type}
+                  index={index}
+                  diffView={diffView}
+                  diffSide={InlineTextDiffSide.After}
+                />
               </div>
             </div>
           );
