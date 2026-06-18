@@ -560,6 +560,9 @@ export enum FeaturesI18nKey {
   allowResume = 'Features.allowResume',
   addonsSupported = 'Features.addonsSupported',
   temperatureSupported = 'Features.temperatureSupported',
+  customTemperatureSupported = 'Features.customTemperatureSupported',
+  maxTokensSupported = 'Features.maxTokensSupported',
+  maxCompletionTokensSupported = 'Features.maxCompletionTokensSupported',
   cacheSupported = 'Features.cacheSupported',
   autoCachingSupported = 'Features.autoCachingSupported',
   contentPartsSupported = 'Features.contentPartsSupported',
@@ -576,6 +579,13 @@ export enum FeaturesI18nKey {
   truncatePromptEndpoint = 'Features.truncatePromptEndpoint',
   AppRunnerInherited = 'Features.AppRunnerInherited',
   reasoningEfforts = 'Features.reasoningEfforts',
+  GroupSamplingOutputControl = 'Features.Groups.SamplingOutputControl',
+  GroupToolsFunctionCalling = 'Features.Groups.ToolsFunctionCalling',
+  GroupPromptMessageComposition = 'Features.Groups.PromptMessageComposition',
+  GroupAttachments = 'Features.Groups.Attachments',
+  GroupCaching = 'Features.Groups.Caching',
+  GroupSessionAccess = 'Features.Groups.SessionAccess',
+  GroupFeedback = 'Features.Groups.Feedback',
 }
 
 export enum TopicsI18nKey {
@@ -1297,6 +1307,7 @@ export enum EntityFieldsI18nKey {
   secured = 'EntityFields.secured',
   parameters = 'EntityFields.parameters',
   extraData = 'EntityFields.extraData',
+  secretExtraData = 'EntityFields.secretExtraData',
   models = 'EntityFields.models',
   order = 'EntityFields.order',
   baseEndpoint = 'EntityFields.baseEndpoint',

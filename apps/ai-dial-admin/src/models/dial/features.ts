@@ -12,6 +12,9 @@ export interface DialFeatures {
   allowResume: boolean;
   addonsSupported: boolean;
   temperatureSupported: boolean;
+  customTemperatureSupported: boolean;
+  maxTokensSupported: boolean;
+  maxCompletionTokensSupported: boolean;
   accessibleByPerRequestKey: boolean;
   parallelToolCallsSupported: boolean;
   contentPartsSupported: boolean;
