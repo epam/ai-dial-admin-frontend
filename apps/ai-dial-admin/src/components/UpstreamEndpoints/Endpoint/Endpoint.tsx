@@ -47,13 +47,10 @@ const Endpoint: FC<Props> = ({
 }) => {
   const t = useI18n();
   const isModelView = view === ApplicationRoute.Models;
-  const isFirstLine = index === 0;
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [endpointWarning, setEndpointWarning] = useState('');
   const [responsesEndpointWarning, setResponsesEndpointWarning] = useState('');
   const isTablet = useIsTabletScreen();
-
-  const removeButtonClassName = index === 0 ? 'mt-[20px]' : 'mt-0';
 
   const onChangeEndPointUrl = useCallback(
     (url?: string) => {
@@ -71,39 +68,11 @@ const Endpoint: FC<Props> = ({
     [endpoint, updateEndpoint, t],
   );
 
-  const onChangeId = useCallback(
-    (id?: string) => {
-      updateEndpoint({ ...endpoint, id });
-    },
-    [endpoint, updateEndpoint],
-  );
-
-  const onChangeKey = useCallback(
-    (key?: string) => {
-      updateEndpoint({ ...endpoint, key });
-    },
-    [endpoint, updateEndpoint],
-  );
-
   const onRemove = useCallback(() => {
     setEndpointWarning('');
     setResponsesEndpointWarning('');
     removeEndpoint(index);
   }, [index, removeEndpoint]);
-
-  const onChangeWeight = useCallback(
-    (weight?: number | string) => {
-      updateEndpoint({ ...endpoint, weight });
-    },
-    [endpoint, updateEndpoint],
-  );
-
-  const onChangeTier = useCallback(
-    (tier?: number | string) => {
-      updateEndpoint({ ...endpoint, tier });
-    },
-    [endpoint, updateEndpoint],
-  );
 
   const onChangeExtraData = useCallback(
     (extraData: DialEndpointExtraData) => {
@@ -112,32 +81,62 @@ const Endpoint: FC<Props> = ({
     [endpoint, updateEndpoint],
   );
 
-  const toggleCollapse = useCallback(() => {
-    setIsCollapsed((prev) => !prev);
+  const onChangeSecretExtraData = useCallback(
+    (secretExtraData: DialEndpointExtraData) => {
+      updateEndpoint({ ...endpoint, secretExtraData });
+    },
+    [endpoint, updateEndpoint],
+  );
+
+  const toggleExpand = useCallback(() => {
+    setIsExpanded((prev) => !prev);
   }, []);
 
   return (
-    <div className="flex gap-4 items-center lg:gap-2 w-full">
+    <div className="flex gap-4 items-center w-full lg:gap-2 lg:bg-layer-3 lg:rounded lg:p-4">
+      {/* Desktop toggle — left of content, mirrors delete button positioning */}
+      {!isTablet && (
+        <div className="shrink-0 self-start">
+          <button
+            type="button"
+            className={'cursor-pointer block h-[40px] mt-[20px]'}
+            onClick={toggleExpand}
+            aria-label="toggle expanded fields"
+          >
+            {isExpanded ? (
+              <IconChevronDown className="text-primary" {...BASE_BUTTON_ICON_PROPS} />
+            ) : (
+              <IconChevronRight className="text-primary" {...BASE_BUTTON_ICON_PROPS} />
+            )}
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-1 min-w-0 flex-col rounded border border-primary p-3 lg:border-none lg:p-0 lg:flex-initial">
         {isTablet && (
-          <div className="flex flex-col justify-center cursor-pointer" onClick={toggleCollapse}>
+          <div className="flex flex-col justify-center cursor-pointer" onClick={toggleExpand}>
             <h3 className="small flex items-center">
-              {isCollapsed ? (
+              {!isExpanded ? (
                 <IconChevronRight className="text-primary" {...BASE_BUTTON_ICON_PROPS} />
               ) : (
                 <IconChevronDown className="text-primary" {...BASE_BUTTON_ICON_PROPS} />
               )}
               {t(UpstreamEndpointsI18nKey.Upstream)} {index + 1}
             </h3>
-            {isCollapsed && (
+            {!isExpanded && (
               <DialTooltip tooltip={endpoint.endpoint || '—'}>
                 <p className="max-w-[220px] truncate tiny text-secondary mt-3">{endpoint.endpoint || '—'}</p>
               </DialTooltip>
             )}
           </div>
         )}
+
+        {/* Row 1: always visible on desktop; hidden when tablet is collapsed */}
         <div
-          className={classNames('flex flex-col mt-4 gap-y-4 lg:flex-row lg:gap-x-2 lg:mt-0', isCollapsed && 'hidden')}
+          className={classNames(
+            'flex flex-col mt-4 gap-y-4 lg:flex-row lg:gap-x-2 lg:mt-0',
+            isTablet && !isExpanded && 'hidden',
+          )}
         >
           {isModelView && (
             <DialInput
@@ -145,9 +144,9 @@ const Endpoint: FC<Props> = ({
               id={`upstream-id-${index}`}
               value={endpoint.id}
               placeholder={t(EntityPlaceholdersI18nKey.UpstreamId)}
-              labelProps={{ label: isFirstLine || isTablet ? t(UpstreamEndpointsI18nKey.Id) : '' }}
-              containerClassName="w-[140px]"
-              onChange={onChangeId}
+              labelProps={{ label: t(UpstreamEndpointsI18nKey.Id) }}
+              containerClassName={isTablet ? 'w-full' : 'w-[200px] shrink-0'}
+              onChange={(id?: string) => updateEndpoint({ ...endpoint, id })}
             />
           )}
 
@@ -161,11 +160,9 @@ const Endpoint: FC<Props> = ({
                 : t(EntityPlaceholdersI18nKey.UpstreamEndpointWithResponses)
             }
             label={
-              isFirstLine || isTablet
-                ? !withResponses
-                  ? t(UpstreamEndpointsI18nKey.Endpoints)
-                  : t(UpstreamEndpointsI18nKey.EndpointsWithResponses)
-                : ''
+              !withResponses
+                ? t(UpstreamEndpointsI18nKey.Endpoints)
+                : t(UpstreamEndpointsI18nKey.EndpointsWithResponses)
             }
             onChange={onChangeEndPointUrl}
             iconAfter={<WarningIcon warningText={endpointWarning} />}
@@ -178,55 +175,101 @@ const Endpoint: FC<Props> = ({
               id={`responses-${index}`}
               endpoint={endpoint.responsesEndpoint}
               placeholder={t(EntityPlaceholdersI18nKey.ResponsesEndpoint)}
-              caption={isFirstLine || isTablet ? t(UpstreamEndpointsI18nKey.EndpointResponseCaption) : ''}
-              label={isFirstLine || isTablet ? t(EntityFieldsI18nKey.responsesEndpoint) : ''}
+              label={t(EntityFieldsI18nKey.responsesEndpoint)}
               onChange={onChangeResponses}
               iconAfter={<WarningIcon warningText={responsesEndpointWarning} />}
               required={required}
             />
           )}
 
-          <DialPasswordInput
-            disabled={disabled}
-            id={`key-${index}`}
-            value={endpoint.key}
-            placeholder={t(EntityPlaceholdersI18nKey.UpstreamKey)}
-            labelProps={{ label: isFirstLine || isTablet ? t(UpstreamEndpointsI18nKey.Keys) : '' }}
-            required={!isKeyOptional}
-            onChange={onChangeKey}
-          />
+          {isTablet && (
+            <DialPasswordInput
+              disabled={disabled}
+              id={`key-${index}`}
+              value={endpoint.key}
+              placeholder={t(EntityPlaceholdersI18nKey.UpstreamKey)}
+              labelProps={{ label: t(UpstreamEndpointsI18nKey.Keys) }}
+              required={!isKeyOptional}
+              onChange={(key?: string) => updateEndpoint({ ...endpoint, key })}
+            />
+          )}
 
           <DialNumberInput
             id={`weight-${index}`}
             disabled={disabled}
             value={endpoint.weight}
-            labelProps={{ label: isFirstLine || isTablet ? t(EntityFieldsI18nKey.weight) : '' }}
-            containerClassName="w-[120px]"
+            labelProps={{ label: t(EntityFieldsI18nKey.weight) }}
+            containerClassName={isTablet ? 'w-full' : 'w-[120px] shrink-0'}
             placeholder={t(EntityPlaceholdersI18nKey.Weight)}
-            onChange={onChangeWeight}
+            onChange={(weight?: number | string) => updateEndpoint({ ...endpoint, weight })}
           />
 
           <DialNumberInput
             id={`tier-${index}`}
             disabled={disabled}
             value={endpoint.tier}
-            labelProps={{ label: isFirstLine || isTablet ? t(EntityFieldsI18nKey.tier) : '' }}
-            containerClassName="w-[120px]"
+            labelProps={{ label: t(EntityFieldsI18nKey.tier) }}
+            containerClassName={isTablet ? 'w-full' : 'w-[120px] shrink-0'}
             placeholder={t(EntityPlaceholdersI18nKey.Tier)}
-            onChange={onChangeTier}
+            onChange={(tier?: number | string) => updateEndpoint({ ...endpoint, tier })}
           />
 
-          <ExtraDataField
-            label={isFirstLine || isTablet ? t(EntityFieldsI18nKey.extraData) : ''}
-            endpoint={endpoint}
-            disabled={disabled}
-            onChangeExtraData={onChangeExtraData}
-          />
+          {isTablet && (
+            <>
+              <ExtraDataField
+                label={isTablet ? t(EntityFieldsI18nKey.extraData) : ''}
+                value={endpoint.extraData}
+                disabled={disabled}
+                containerClassName="w-full"
+                onChange={onChangeExtraData}
+              />
+              <ExtraDataField
+                label={isTablet ? t(EntityFieldsI18nKey.secretExtraData) : ''}
+                value={endpoint.secretExtraData}
+                disabled={disabled}
+                containerClassName="w-full"
+                onChange={onChangeSecretExtraData}
+              />
+            </>
+          )}
         </div>
+
+        {/* Desktop expanded rows: row 2 (key full-width), row 3 (extraData + secretExtraData 50/50) */}
+        {!isTablet && isExpanded && (
+          <>
+            <div className="mt-2 w-full">
+              <DialPasswordInput
+                disabled={disabled}
+                id={`key-${index}`}
+                value={endpoint.key}
+                placeholder={t(EntityPlaceholdersI18nKey.UpstreamKey)}
+                labelProps={{ label: t(UpstreamEndpointsI18nKey.Keys) }}
+                required={!isKeyOptional}
+                onChange={(key?: string) => updateEndpoint({ ...endpoint, key })}
+              />
+            </div>
+            <div className="flex flex-row gap-x-2 mt-2">
+              <ExtraDataField
+                label={t(EntityFieldsI18nKey.extraData)}
+                value={endpoint.extraData}
+                disabled={disabled}
+                containerClassName="flex-1 min-w-0"
+                onChange={onChangeExtraData}
+              />
+              <ExtraDataField
+                label={t(EntityFieldsI18nKey.secretExtraData)}
+                value={endpoint.secretExtraData}
+                disabled={disabled}
+                containerClassName="flex-1 min-w-0"
+                onChange={onChangeSecretExtraData}
+              />
+            </div>
+          </>
+        )}
       </div>
       {!disabled && (
         <div className="w-[40px] shrink-0 self-start">
-          <DialRemoveButton onClick={onRemove} className={removeButtonClassName} aria-label="remove" />
+          <DialRemoveButton onClick={onRemove} className={!isTablet ? 'mt-[20px]' : 'mt-0'} aria-label="remove" />
         </div>
       )}
     </div>

@@ -36,7 +36,8 @@ const MaxRetryAttempts = <T extends { maxRetryAttempts?: number }>({ entity, onC
     <DialSelectField
       disabled={isReadonly}
       id="maxRetryAttempts"
-      containerClassName="w-[180px]"
+      className="w-[220px]"
+      containerClassName="w-[220px]"
       label={t(EntityFieldsI18nKey.maxRetryAttempts)}
       value={activeMaxAttempts}
       options={items}

@@ -2,20 +2,21 @@ import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialFeatures } from '@/src/models/dial/features';
 import { ApplicationRoute } from '@/src/types/routes';
 import {
-  applicationSwitchFeatures,
+  applicationSwitchGroups,
   applicationTextFeatures,
-  modelsSwitchFeatures,
+  modelsSwitchGroups,
   modelsTextFeatures,
   runnerApplicationMap,
 } from './constants';
+import { SwitchFeatureGroup } from './models';
 
-export const getSwitchControls = (view: ApplicationRoute): (keyof DialFeatures)[] => {
+export const getSwitchGroups = (view: ApplicationRoute): SwitchFeatureGroup[] => {
   if (view === ApplicationRoute.Models) {
-    return modelsSwitchFeatures;
+    return modelsSwitchGroups;
   }
 
   if (view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications) {
-    return applicationSwitchFeatures;
+    return applicationSwitchGroups;
   }
 
   return [];

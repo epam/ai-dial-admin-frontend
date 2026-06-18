@@ -25,6 +25,7 @@ import {
   clearUpstreamResponsesEndpoints,
   shouldClearUpstreamResponsesEndpoints,
 } from '@/src/utils/models/upstream-responses';
+import EmbeddingDimensions from './EmbeddingDimensions';
 import ModelTypeProperties from './ModelTypeProperties';
 
 interface Props {
@@ -106,6 +107,8 @@ const ModelProperties: FC<Props> = ({ model, modelsNames, onChangeModel }) => {
       <ForwardAuthTokenField view={ApplicationRoute.Models} entity={model} onChangeEntity={onChangeModel} />
 
       <Limits model={model} onChangeModel={onChangeModel} />
+
+      <EmbeddingDimensions model={model} onChangeModel={onChangeModel} />
 
       <MaxRetryAttempts entity={model} onChangeEntity={onChangeModel} />
 
