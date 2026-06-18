@@ -14,14 +14,14 @@ interface Props {
 }
 
 const HeaderWithHintButton: FC<Props> = ({ displayName, hintText, hintTitle }) => {
-  const { showSidebar } = useAppContext().sidebar;
+  const { showSidebar, closeSidebar } = useAppContext().sidebar;
 
   const onClick = useCallback(
     (e: MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation();
-      showSidebar(<Hint title={hintTitle} text={hintText} />);
+      showSidebar(<Hint title={hintTitle} text={hintText} onClose={closeSidebar} />);
     },
-    [hintText, hintTitle, showSidebar],
+    [hintText, hintTitle, showSidebar, closeSidebar],
   );
 
   return (
