@@ -46,6 +46,7 @@ export interface DialModelEndpoint {
   weight?: number | string;
   tier?: number | string;
   extraData?: DialEndpointExtraData;
+  secretExtraData?: DialEndpointExtraData;
   responsesEndpoint?: string;
 }
 

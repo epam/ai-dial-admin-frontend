@@ -1,5 +1,6 @@
+import { EntityPlaceholdersI18nKey, FeaturesI18nKey } from '@/src/constants/i18n';
 import { DialFeatures } from '@/src/models/dial/features';
-import { EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { SwitchFeatureGroup } from './models';
 
 export const modelsTextFeatures: (keyof DialFeatures)[] = [
   'rateEndpoint',
@@ -25,31 +26,76 @@ export const runnerApplicationMap: Record<string, string> = {
   assistantAttachmentsInRequestSupported: 'dial:applicationTypeAssistantAttachmentsInRequestSupported',
 };
 
-export const modelsSwitchFeatures: (keyof DialFeatures)[] = [
-  'systemPromptSupported',
-  'toolsSupported',
-  'temperatureSupported',
-  'seedSupported',
-  'urlAttachmentsSupported',
-  'folderAttachmentsSupported',
-  'assistantAttachmentsInRequestSupported',
-  'accessibleByPerRequestKey',
-  'contentPartsSupported',
-  'cacheSupported',
-  'autoCachingSupported',
-  'parallelToolCallsSupported',
-  'supportCommentInRateResponse',
+export const modelsSwitchGroups: SwitchFeatureGroup[] = [
+  {
+    title: FeaturesI18nKey.GroupSamplingOutputControl,
+    keys: [
+      'temperatureSupported',
+      'customTemperatureSupported',
+      'seedSupported',
+      'maxTokensSupported',
+      'maxCompletionTokensSupported',
+    ],
+  },
+  {
+    title: FeaturesI18nKey.GroupToolsFunctionCalling,
+    keys: ['toolsSupported', 'parallelToolCallsSupported'],
+  },
+  {
+    title: FeaturesI18nKey.GroupPromptMessageComposition,
+    keys: ['systemPromptSupported', 'contentPartsSupported'],
+  },
+  {
+    title: FeaturesI18nKey.GroupAttachments,
+    keys: ['urlAttachmentsSupported', 'folderAttachmentsSupported', 'assistantAttachmentsInRequestSupported'],
+  },
+  {
+    title: FeaturesI18nKey.GroupCaching,
+    keys: ['cacheSupported', 'autoCachingSupported'],
+  },
+  {
+    title: FeaturesI18nKey.GroupSessionAccess,
+    keys: ['allowResume', 'accessibleByPerRequestKey'],
+  },
+  {
+    title: FeaturesI18nKey.GroupFeedback,
+    keys: ['supportCommentInRateResponse'],
+  },
 ];
 
-export const applicationSwitchFeatures: (keyof DialFeatures)[] = [
-  'systemPromptSupported',
-  'toolsSupported',
-  'seedSupported',
-  'urlAttachmentsSupported',
-  'folderAttachmentsSupported',
-  'assistantAttachmentsInRequestSupported',
-  'accessibleByPerRequestKey',
-  'contentPartsSupported',
-  'consentRequired',
-  'supportCommentInRateResponse',
+export const applicationSwitchGroups: SwitchFeatureGroup[] = [
+  {
+    title: FeaturesI18nKey.GroupSamplingOutputControl,
+    keys: [
+      'temperatureSupported',
+      'customTemperatureSupported',
+      'seedSupported',
+      'maxTokensSupported',
+      'maxCompletionTokensSupported',
+    ],
+  },
+  {
+    title: FeaturesI18nKey.GroupToolsFunctionCalling,
+    keys: ['toolsSupported', 'parallelToolCallsSupported'],
+  },
+  {
+    title: FeaturesI18nKey.GroupPromptMessageComposition,
+    keys: ['systemPromptSupported', 'contentPartsSupported'],
+  },
+  {
+    title: FeaturesI18nKey.GroupAttachments,
+    keys: ['urlAttachmentsSupported', 'folderAttachmentsSupported', 'assistantAttachmentsInRequestSupported'],
+  },
+  {
+    title: FeaturesI18nKey.GroupSessionAccess,
+    keys: ['allowResume', 'accessibleByPerRequestKey', 'consentRequired'],
+  },
+  {
+    title: FeaturesI18nKey.GroupFeedback,
+    keys: ['supportCommentInRateResponse'],
+  },
 ];
+
+export const modelsSwitchFeatures: (keyof DialFeatures)[] = modelsSwitchGroups.flatMap((g) => g.keys);
+
+export const applicationSwitchFeatures: (keyof DialFeatures)[] = applicationSwitchGroups.flatMap((g) => g.keys);

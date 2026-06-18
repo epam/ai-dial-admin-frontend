@@ -1,29 +1,66 @@
 import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test } from 'vitest';
 import {
-  applicationSwitchFeatures,
+  applicationSwitchGroups,
   applicationTextFeatures,
-  modelsSwitchFeatures,
+  modelsSwitchGroups,
   modelsTextFeatures,
 } from '../constants';
-import { getReadOnlyValues, getSwitchControls, getTextControls } from '../utils';
+import { getReadOnlyValues, getSwitchGroups, getTextControls } from '../utils';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 
-describe('getSwitchControls', () => {
-  test('returns modelsSwitchFeatures for Models route', () => {
-    expect(getSwitchControls(ApplicationRoute.Models)).toEqual(modelsSwitchFeatures);
+describe('getSwitchGroups', () => {
+  test('returns modelsSwitchGroups for Models route', () => {
+    expect(getSwitchGroups(ApplicationRoute.Models)).toEqual(modelsSwitchGroups);
   });
 
-  test('returns applicationSwitchFeatures for Applications route', () => {
-    expect(getSwitchControls(ApplicationRoute.Applications)).toEqual(applicationSwitchFeatures);
+  test('returns applicationSwitchGroups for Applications route', () => {
+    expect(getSwitchGroups(ApplicationRoute.Applications)).toEqual(applicationSwitchGroups);
   });
 
-  test('returns applicationSwitchFeatures for Asset Application route', () => {
-    expect(getSwitchControls(ApplicationRoute.AssetsApplications)).toEqual(applicationSwitchFeatures);
+  test('returns applicationSwitchGroups for Asset Application route', () => {
+    expect(getSwitchGroups(ApplicationRoute.AssetsApplications)).toEqual(applicationSwitchGroups);
   });
 
   test('returns empty array for unknown route', () => {
-    expect(getSwitchControls(ApplicationRoute.Keys)).toEqual([]);
+    expect(getSwitchGroups(ApplicationRoute.Keys)).toEqual([]);
+  });
+
+  test('every group has a title and at least one key', () => {
+    for (const groups of [modelsSwitchGroups, applicationSwitchGroups]) {
+      for (const group of groups) {
+        expect(group.title).toBeTruthy();
+        expect(group.keys.length).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  test('modelsSwitchGroups contains new feature keys in Sampling group', () => {
+    const samplingGroup = modelsSwitchGroups[0];
+    expect(samplingGroup.keys).toContain('customTemperatureSupported');
+    expect(samplingGroup.keys).toContain('maxTokensSupported');
+    expect(samplingGroup.keys).toContain('maxCompletionTokensSupported');
+  });
+
+  test('applicationSwitchGroups contains new feature keys in Sampling group', () => {
+    const samplingGroup = applicationSwitchGroups[0];
+    expect(samplingGroup.keys).toContain('customTemperatureSupported');
+    expect(samplingGroup.keys).toContain('maxTokensSupported');
+    expect(samplingGroup.keys).toContain('maxCompletionTokensSupported');
+  });
+
+  test('modelsSwitchGroups has Caching group, applicationSwitchGroups does not', () => {
+    const modelsTitles = modelsSwitchGroups.map((g) => g.title);
+    const appTitles = applicationSwitchGroups.map((g) => g.title);
+    expect(modelsTitles).toContain('Features.Groups.Caching');
+    expect(appTitles).not.toContain('Features.Groups.Caching');
+  });
+
+  test('applicationSwitchGroups Session group includes consentRequired, models does not', () => {
+    const modelsSession = modelsSwitchGroups.find((g) => g.title === 'Features.Groups.SessionAccess');
+    const appSession = applicationSwitchGroups.find((g) => g.title === 'Features.Groups.SessionAccess');
+    expect(modelsSession?.keys).not.toContain('consentRequired');
+    expect(appSession?.keys).toContain('consentRequired');
   });
 });
 
