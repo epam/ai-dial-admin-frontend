@@ -1254,6 +1254,7 @@ export default {
     ProbePort: 'Probe port',
     temperature: 'Temperature',
     agent: 'Agent',
+    embeddingDimensions: 'Embedding Dimensions',
   },
   EntityPlaceholders: {
     Project: 'Enter project',
@@ -1331,6 +1332,7 @@ export default {
     FailureThreshold: 'Enter number of failure threshold',
     Expression: 'Enter expression',
     ReasoningEfforts: 'Select or type reasoning effort',
+    EmbeddingDimensions: 'Enter embedding dimensions',
   },
   EntityCaptions: {
     ProbeEnableCustom: 'Use custom values instead of default probe configuration',

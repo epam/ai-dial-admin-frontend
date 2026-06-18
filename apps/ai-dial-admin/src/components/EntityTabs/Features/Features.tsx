@@ -12,7 +12,7 @@ import { DialFeatures } from '@/src/models/dial/features';
 import { ApplicationRoute } from '@/src/types/routes';
 import { placeholdersMap } from './constants';
 import { getReadOnlyValues, getSwitchGroups, getTextControls } from './utils';
-import ReasoningEffortsInput from './ReasoningEffortsInput';
+import ReasoningEffortsInput from '@/src/components/EntityTabs/Features/ReasoningEffortsInput';
 
 interface Props<T> {
   view: ApplicationRoute;

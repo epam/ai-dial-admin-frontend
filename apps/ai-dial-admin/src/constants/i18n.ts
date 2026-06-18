@@ -1174,6 +1174,7 @@ export enum EntityPlaceholdersI18nKey {
   FailureThreshold = 'EntityPlaceholders.FailureThreshold',
   Expression = 'EntityPlaceholders.Expression',
   ReasoningEfforts = 'EntityPlaceholders.ReasoningEfforts',
+  EmbeddingDimensions = 'EntityPlaceholders.EmbeddingDimensions',
 }
 
 export enum EntityCaptionsI18nKey {
@@ -1401,6 +1402,7 @@ export enum EntityFieldsI18nKey {
   ProbePort = 'EntityFields.ProbePort',
   temperature = 'EntityFields.temperature',
   agent = 'EntityFields.agent',
+  embeddingDimensions = 'EntityFields.embeddingDimensions',
 }
 
 export enum ToolsetI18nKey {
