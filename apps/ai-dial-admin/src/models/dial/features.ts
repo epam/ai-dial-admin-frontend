@@ -19,4 +19,5 @@ export interface DialFeatures {
   autoCachingSupported: boolean;
   consentRequired: boolean;
   supportCommentInRateResponse: boolean;
+  reasoningEfforts?: string[];
 }

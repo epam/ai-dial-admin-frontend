@@ -575,6 +575,7 @@ export enum FeaturesI18nKey {
   tokenizeEndpoint = 'Features.tokenizeEndpoint',
   truncatePromptEndpoint = 'Features.truncatePromptEndpoint',
   AppRunnerInherited = 'Features.AppRunnerInherited',
+  reasoningEfforts = 'Features.reasoningEfforts',
 }
 
 export enum TopicsI18nKey {
@@ -1162,6 +1163,7 @@ export enum EntityPlaceholdersI18nKey {
   TimeoutSeconds = 'EntityPlaceholders.TimeoutSeconds',
   FailureThreshold = 'EntityPlaceholders.FailureThreshold',
   Expression = 'EntityPlaceholders.Expression',
+  ReasoningEfforts = 'EntityPlaceholders.ReasoningEfforts',
 }
 
 export enum EntityCaptionsI18nKey {

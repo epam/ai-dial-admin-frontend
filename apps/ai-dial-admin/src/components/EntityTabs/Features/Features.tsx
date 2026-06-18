@@ -12,6 +12,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { placeholdersMap } from './constants';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { getReadOnlyValues, getSwitchControls, getTextControls } from './utils';
+import ReasoningEffortsInput from './ReasoningEffortsInput';
 
 interface Props<T> {
   view: ApplicationRoute;
@@ -57,6 +58,19 @@ const EntityFeatures = <T extends { features?: DialFeatures }>({
     [onChangeEntity, entity],
   );
 
+  const onChangeReasoningEfforts = useCallback(
+    (values: string[]) => {
+      onChangeEntity({
+        ...entity,
+        features: {
+          ...(entity.features || {}),
+          reasoningEfforts: values,
+        } as DialFeatures,
+      });
+    },
+    [onChangeEntity, entity],
+  );
+
   return (
     <div className="flex flex-col gap-y-8">
       {textKeys.map((key) => {
@@ -84,6 +98,8 @@ const EntityFeatures = <T extends { features?: DialFeatures }>({
           />
         );
       })}
+
+      <ReasoningEffortsInput values={entity.features?.reasoningEfforts} onChange={onChangeReasoningEfforts} />
 
       {switchKeys.map((key) => {
         const { value, isReadonly } = getReadOnlyValues(key, appRunner);

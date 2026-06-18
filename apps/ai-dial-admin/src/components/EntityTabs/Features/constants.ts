@@ -1,5 +1,18 @@
 import { DialFeatures } from '@/src/models/dial/features';
 import { EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { MultiValueOption } from '@/src/components/Common/MultiValueAutocomplete/MultiValueAutocomplete';
+
+export enum ReasoningEffort {
+  Low = 'low',
+  Medium = 'medium',
+  High = 'high',
+}
+
+export const REASONING_EFFORTS_OPTIONS: MultiValueOption[] = [
+  { label: ReasoningEffort.Low, value: ReasoningEffort.Low },
+  { label: ReasoningEffort.Medium, value: ReasoningEffort.Medium },
+  { label: ReasoningEffort.High, value: ReasoningEffort.High },
+];
 
 export const modelsTextFeatures: (keyof DialFeatures)[] = [
   'rateEndpoint',

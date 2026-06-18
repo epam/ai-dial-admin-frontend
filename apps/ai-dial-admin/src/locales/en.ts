@@ -643,6 +643,7 @@ export default {
     supportCommentInRateResponse: 'Support comment in rate response',
     truncatePromptEndpoint: 'Truncate prompt endpoint',
     AppRunnerInherited: 'This value is inherited from Application Runner features',
+    reasoningEfforts: 'Reasoning Efforts',
   },
   Topics: {
     AddTopic: 'Add Topic',
@@ -1316,6 +1317,7 @@ export default {
     TimeoutSeconds: 'Enter timeout seconds',
     FailureThreshold: 'Enter number of failure threshold',
     Expression: 'Enter expression',
+    ReasoningEfforts: 'Select or type reasoning effort',
   },
   EntityCaptions: {
     ProbeEnableCustom: 'Use custom values instead of default probe configuration',
