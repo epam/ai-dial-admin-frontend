@@ -1,11 +1,6 @@
 import { ApplicationRoute } from '@/src/types/routes';
 import { describe, expect, test } from 'vitest';
-import {
-  applicationSwitchGroups,
-  applicationTextFeatures,
-  modelsSwitchGroups,
-  modelsTextFeatures,
-} from '../constants';
+import { applicationSwitchGroups, applicationTextFeatures, modelsSwitchGroups, modelsTextFeatures } from '../constants';
 import { getReadOnlyValues, getSwitchGroups, getTextControls } from '../utils';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 

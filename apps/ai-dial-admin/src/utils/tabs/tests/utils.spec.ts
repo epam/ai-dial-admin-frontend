@@ -177,6 +177,7 @@ describe('Entities :: tabs', () => {
       parametersTab(t),
       interceptorsTab(t),
       dependenciesTab(t),
+      appRouteTab(t),
     ]);
   });
 
