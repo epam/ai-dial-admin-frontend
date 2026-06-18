@@ -19,6 +19,7 @@ export const DATASET_URL = (id?: string) => `${DATASETS_URL}/${id || ''}`;
 export const DATASET_TEST_CASES_URL = (id?: string) => `${DATASET_URL(id)}/test-cases`;
 export const DATASET_TEST_CASE_URL = (id?: string, testCaseId?: string) =>
   `${DATASET_TEST_CASES_URL(id)}/${testCaseId || ''}`;
+export const DATASET_TEST_SUITES_URL = (id: string) => `${DATASET_URL(id)}/test-suites`;
 export const DATASET_VISIBILITY_URL = (id: string) => `${DATASET_URL(id)}/visibility`;
 export const DATASET_PUBLISH_URL = (id: string) => `${DATASET_URL(id)}/publish`;
 
@@ -51,6 +52,10 @@ export class DatasetsApi extends BaseApi {
 
   removeDataset(id: string, token: Token): Promise<ServerActionResponse> {
     return this.deleteAction(DATASET_URL(id), token);
+  }
+
+  getDatasetTestSuites(id: string, token: Token): Promise<ServerActionResponse> {
+    return this.getAction(DATASET_TEST_SUITES_URL(id), token);
   }
 
   transitionVisibility(id: string, body: DatasetVisibilityTransition, token: Token): Promise<ServerActionResponse> {
