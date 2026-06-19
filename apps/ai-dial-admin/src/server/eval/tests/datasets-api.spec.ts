@@ -103,7 +103,7 @@ describe('Server :: DatasetsApi', () => {
     await instance.removeDataset(mockDataset.id as string, TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
-      `${TEST_URL}${DATASET_URL(mockDataset.id)}`,
+      `${TEST_URL}${DATASET_URL(mockDataset.id)}?force=true`,
       expect.objectContaining({ method: 'DELETE' }),
     );
   });

@@ -56,7 +56,7 @@ export class DatasetsApi extends BaseApi {
   }
 
   removeDataset(id: string, token: Token): Promise<ServerActionResponse> {
-    return this.deleteAction(DATASET_URL(id), token);
+    return this.deleteAction(`${DATASET_URL(id)}?force=true`, token);
   }
 
   getDatasetTestSuites(id: string, token: Token): Promise<ServerActionResponse> {
