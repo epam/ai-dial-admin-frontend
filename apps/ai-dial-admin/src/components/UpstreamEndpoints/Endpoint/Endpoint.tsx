@@ -112,7 +112,7 @@ const Endpoint: FC<Props> = ({
         </div>
       )}
 
-      <div className="flex flex-1 min-w-0 flex-col rounded border border-primary p-3 lg:border-none lg:p-0 lg:flex-initial">
+      <div className="flex flex-1 min-w-0 flex-col rounded border border-primary p-3 lg:border-none lg:p-0">
         {isTablet && (
           <div className="flex flex-col justify-center cursor-pointer" onClick={toggleExpand}>
             <h3 className="small flex items-center">
@@ -150,36 +150,42 @@ const Endpoint: FC<Props> = ({
             />
           )}
 
-          <EndpointControl
-            disabled={disabled}
-            id={`upstreamEndpoints-${index}`}
-            endpoint={endpoint.endpoint}
-            placeholder={
-              !withResponses
-                ? t(EntityPlaceholdersI18nKey.UpstreamEndpoint)
-                : t(EntityPlaceholdersI18nKey.UpstreamEndpointWithResponses)
-            }
-            label={
-              !withResponses
-                ? t(UpstreamEndpointsI18nKey.Endpoints)
-                : t(UpstreamEndpointsI18nKey.EndpointsWithResponses)
-            }
-            onChange={onChangeEndPointUrl}
-            iconAfter={<WarningIcon warningText={endpointWarning} />}
-            required={required}
-          />
-
-          {withResponses && (
+          <div className="w-full lg:flex-1">
             <EndpointControl
               disabled={disabled}
-              id={`responses-${index}`}
-              endpoint={endpoint.responsesEndpoint}
-              placeholder={t(EntityPlaceholdersI18nKey.ResponsesEndpoint)}
-              label={t(EntityFieldsI18nKey.responsesEndpoint)}
-              onChange={onChangeResponses}
-              iconAfter={<WarningIcon warningText={responsesEndpointWarning} />}
+              id={`upstreamEndpoints-${index}`}
+              endpoint={endpoint.endpoint}
+              isFullWidth
+              placeholder={
+                !withResponses
+                  ? t(EntityPlaceholdersI18nKey.UpstreamEndpoint)
+                  : t(EntityPlaceholdersI18nKey.UpstreamEndpointWithResponses)
+              }
+              label={
+                !withResponses
+                  ? t(UpstreamEndpointsI18nKey.Endpoints)
+                  : t(UpstreamEndpointsI18nKey.EndpointsWithResponses)
+              }
+              onChange={onChangeEndPointUrl}
+              iconAfter={<WarningIcon warningText={endpointWarning} />}
               required={required}
             />
+          </div>
+
+          {withResponses && (
+            <div className="w-full lg:flex-1">
+              <EndpointControl
+                disabled={disabled}
+                id={`responses-${index}`}
+                endpoint={endpoint.responsesEndpoint}
+                isFullWidth
+                placeholder={t(EntityPlaceholdersI18nKey.ResponsesEndpoint)}
+                label={t(EntityFieldsI18nKey.responsesEndpoint)}
+                onChange={onChangeResponses}
+                iconAfter={<WarningIcon warningText={responsesEndpointWarning} />}
+                required={required}
+              />
+            </div>
           )}
 
           {isTablet && (
@@ -248,7 +254,7 @@ const Endpoint: FC<Props> = ({
                 onChange={(key?: string) => updateEndpoint({ ...endpoint, key })}
               />
             </div>
-            <div className="flex flex-row gap-x-2 mt-2">
+            <div className="flex flex-row gap-x-2 mt-2 w-full">
               <ExtraDataField
                 label={t(EntityFieldsI18nKey.extraData)}
                 value={endpoint.extraData}
