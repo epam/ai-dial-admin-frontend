@@ -176,3 +176,11 @@ export async function detachDataset(id: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return testSuitesApi.detachDataset(id, token);
 }
+
+export async function createDatasetForSuite(suiteId: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return datasetsApi.createDataset(
+    { name: `DATASET_${suiteId}`, visibility: DatasetVisibility.PRIVATE, bindToSuiteId: suiteId },
+    token,
+  );
+}

@@ -6,7 +6,7 @@ import { FileFolderProvider } from '@/src/context/assets/FileFolderContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { errorObjLog } from '@/src/server/logger';
-import { getTestSuite } from '../actions';
+import { createDatasetForSuite, getTestSuite } from '../actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,11 +14,19 @@ export default async function Page(params: { params: Promise<{ id: string }> }) 
   let testSuite: TestSuite | null = null;
   let etag = DEFAULT_ETAG;
 
+  const id = (await params.params).id;
+
   try {
-    testSuite = await getTestSuite((await params.params).id, etag).then((res) => {
-      etag = res?.etag || DEFAULT_ETAG;
-      return res?.response as TestSuite | null;
-    });
+    const res = await getTestSuite(id, etag);
+    etag = res?.etag || DEFAULT_ETAG;
+    testSuite = res?.response as TestSuite | null;
+
+    if (testSuite && !testSuite.datasetId) {
+      await createDatasetForSuite(id);
+      const refreshed = await getTestSuite(id, DEFAULT_ETAG);
+      etag = refreshed?.etag || DEFAULT_ETAG;
+      testSuite = (refreshed?.response as TestSuite | null) ?? testSuite;
+    }
   } catch (e) {
     errorObjLog(e, 'Failed to fetch test suite view data');
   }
