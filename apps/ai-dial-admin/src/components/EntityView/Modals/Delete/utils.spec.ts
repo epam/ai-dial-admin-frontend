@@ -30,6 +30,15 @@ vi.mock('@/src/app/[lang]/applications/actions', () => ({
     .mockResolvedValue({ response: [{ name: 'a1' }, { name: 'a2' }, { name: 'a3' }, { name: 'a4' }, { name: 'a5' }] }),
 }));
 
+vi.mock('@/src/app/[lang]/datasets/actions', () => ({
+  getDatasetTestSuites: vi.fn().mockResolvedValue({
+    response: [
+      { id: 'ts-1', name: 'Suite 1' },
+      { id: 'ts-2', name: 'Suite 2' },
+    ],
+  }),
+}));
+
 describe('EntityView :: Delete :: utils', () => {
   const t = (str: string) => str;
   const tWithProps = (str: string, props?: Record<string, string>) => str + ' with props';
@@ -74,6 +83,7 @@ describe('EntityView :: Delete :: utils', () => {
     expect(getWarningText(ApplicationRoute.InterceptorTemplates, t)).toBe(DeleteI18nKey.InterceptorTemplateWarning);
     expect(getWarningText(ApplicationRoute.Adapters, t)).toBe(DeleteI18nKey.AdapterWarning);
     expect(getWarningText(ApplicationRoute.Images, t)).toBe(DeleteI18nKey.ImageWarning);
+    expect(getWarningText(ApplicationRoute.Datasets, t)).toBe(DeleteI18nKey.DatasetWarning);
     expect(getWarningText(ApplicationRoute.Models, t)).toBe('');
   });
 
@@ -82,6 +92,7 @@ describe('EntityView :: Delete :: utils', () => {
     expect(getRelatedText(ApplicationRoute.InterceptorTemplates, t)).toBe(DeleteI18nKey.RelatedInterceptors);
     expect(getRelatedText(ApplicationRoute.Adapters, t)).toBe(DeleteI18nKey.RelatedModels);
     expect(getRelatedText(ApplicationRoute.Images, t)).toBe(DeleteI18nKey.RelatedContainers);
+    expect(getRelatedText(ApplicationRoute.Datasets, t)).toBe(DeleteI18nKey.RelatedTestSuites);
     expect(getRelatedText(ApplicationRoute.Models, t)).toBe('');
   });
 
@@ -97,5 +108,10 @@ describe('EntityView :: Delete :: utils', () => {
       { name: 'm1' },
       { name: 'm3' },
     ]);
+    expect(await getRelatedArtifacts(ApplicationRoute.Datasets, { id: 'dataset-1' })).toEqual([
+      { id: 'ts-1', name: 'Suite 1' },
+      { id: 'ts-2', name: 'Suite 2' },
+    ]);
+    expect(await getRelatedArtifacts(ApplicationRoute.Datasets, {})).toEqual([]);
   });
 });

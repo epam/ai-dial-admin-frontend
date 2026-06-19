@@ -297,10 +297,12 @@ export enum DeleteI18nKey {
   InterceptorTemplateWarning = 'DeleteEntity.NoRelatedArtefacts.InterceptorTemplateWarning',
   ApplicationRunnerWarning = 'DeleteEntity.NoRelatedArtefacts.ApplicationRunnerWarning',
   ImageWarning = 'DeleteEntity.NoRelatedArtefacts.ImageWarning',
+  DatasetWarning = 'DeleteEntity.NoRelatedArtefacts.DatasetWarning',
   RelatedApplications = 'DeleteEntity.NoRelatedArtefacts.RelatedApplications',
   RelatedInterceptors = 'DeleteEntity.NoRelatedArtefacts.RelatedInterceptors',
   RelatedModels = 'DeleteEntity.NoRelatedArtefacts.RelatedModels',
   RelatedContainers = 'DeleteEntity.NoRelatedArtefacts.RelatedContainers',
+  RelatedTestSuites = 'DeleteEntity.NoRelatedArtefacts.RelatedTestSuites',
 }
 
 export enum DuplicateI18nKey {
@@ -1854,6 +1856,7 @@ export enum RunsI18nKey {
   RunCompareAddSecondRunTitle = 'Runs.RunCompareAddSecondRunTitle',
   RunCompareAddSecondRunMessage = 'Runs.RunCompareAddSecondRunMessage',
   RunCompareTag = 'Runs.RunCompareTag',
+  RunCompareSelectRun = 'Runs.RunCompareSelectRun',
 }
 
 export enum ExportRunI18nKey {

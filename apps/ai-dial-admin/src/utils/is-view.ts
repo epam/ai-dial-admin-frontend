@@ -25,6 +25,10 @@ export const isBuildersView = (view?: ApplicationRoute): boolean => {
   );
 };
 
+export const hasRelatedArtefacts = (view?: ApplicationRoute): boolean => {
+  return isBuildersView(view) || view === ApplicationRoute.Datasets;
+};
+
 export const isEntitiesWithDisplayVersion = (view?: ApplicationRoute) => {
   return view === ApplicationRoute.Models || view === ApplicationRoute.Applications;
 };

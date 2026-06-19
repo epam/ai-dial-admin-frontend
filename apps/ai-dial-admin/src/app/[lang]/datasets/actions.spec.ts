@@ -13,6 +13,7 @@ import {
   exportTestCasesCsv,
   getDataset,
   getDatasetByName,
+  getDatasetTestSuites,
   getDatasets,
   getTestCases,
   importTestCase,
@@ -101,6 +102,16 @@ describe('Datasets :: server actions', () => {
 
     expect(getUserToken).toHaveBeenCalled();
     expect(datasetsApi.removeDataset).toHaveBeenCalledWith('dataset-1', TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getDatasetTestSuites action', async () => {
+    (datasetsApi.getDatasetTestSuites as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getDatasetTestSuites('dataset-1');
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(datasetsApi.getDatasetTestSuites).toHaveBeenCalledWith('dataset-1', TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 

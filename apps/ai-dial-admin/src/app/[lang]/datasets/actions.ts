@@ -51,6 +51,11 @@ export async function removeDataset(id: string) {
   return datasetsApi.removeDataset(id, token);
 }
 
+export async function getDatasetTestSuites(id: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return datasetsApi.getDatasetTestSuites(id, token);
+}
+
 export async function transitionVisibility(id: string, body: DatasetVisibilityTransition) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return datasetsApi.transitionVisibility(id, body, token);
