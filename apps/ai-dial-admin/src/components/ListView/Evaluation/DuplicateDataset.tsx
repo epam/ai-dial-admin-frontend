@@ -6,7 +6,7 @@ import DatasetProperties from '@/src/components/Datasets/Properties/Properties';
 import { ButtonsI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
-import { Dataset, DatasetVisibility } from '@/src/models/evaluation/dataset';
+import { Dataset } from '@/src/models/evaluation/dataset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getClonedEntityName, getCloneTitle } from '@/src/utils/entities/duplicate-entity';
 
@@ -14,7 +14,7 @@ interface Props {
   entity: Dataset;
   isModalOpen: boolean;
   onClose: () => void;
-  onDuplicate: (entity: Dataset) => void;
+  onDuplicate: (entity: Pick<Dataset, 'name' | 'description'>) => void;
 }
 
 const DuplicateDataset: FC<Props> = ({ entity, isModalOpen, onClose, onDuplicate }) => {
@@ -23,7 +23,6 @@ const DuplicateDataset: FC<Props> = ({ entity, isModalOpen, onClose, onDuplicate
   const [dataset, setDataset] = useState<Dataset>({
     name: getClonedEntityName(entity.name),
     description: entity.description,
-    visibility: DatasetVisibility.PUBLIC,
   });
   const [nameExistsError, setNameExistsError] = useState<string>();
   const [isCheckingName, setIsCheckingName] = useState(false);
@@ -40,9 +39,9 @@ const DuplicateDataset: FC<Props> = ({ entity, isModalOpen, onClose, onDuplicate
     if (res && res.content?.length > 0) {
       setNameExistsError(t(ErrorI18nKey.DisplayNameExists));
     } else {
-      onDuplicate({ ...dataset, testCaseSchema: entity.testCaseSchema });
+      onDuplicate({ name: dataset.name, description: dataset.description });
     }
-  }, [dataset, entity.testCaseSchema, onDuplicate, t]);
+  }, [dataset, onDuplicate, t]);
 
   return (
     <DialFormPopup

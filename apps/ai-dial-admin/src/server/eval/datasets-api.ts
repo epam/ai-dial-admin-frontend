@@ -20,6 +20,7 @@ export const DATASET_TEST_CASES_URL = (id?: string) => `${DATASET_URL(id)}/test-
 export const DATASET_TEST_CASE_URL = (id?: string, testCaseId?: string) =>
   `${DATASET_TEST_CASES_URL(id)}/${testCaseId || ''}`;
 export const DATASET_TEST_SUITES_URL = (id: string) => `${DATASET_URL(id)}/test-suites`;
+export const DATASET_CLONE_URL = (id: string) => `${DATASET_URL(id)}/clone`;
 export const DATASET_VISIBILITY_URL = (id: string) => `${DATASET_URL(id)}/visibility`;
 export const DATASET_PUBLISH_URL = (id: string) => `${DATASET_URL(id)}/publish`;
 
@@ -44,6 +45,10 @@ export class DatasetsApi extends BaseApi {
 
   createDataset(dataset: Dataset, token: Token): Promise<ServerActionResponse> {
     return this.postAction(DATASETS_URL, dataset, token);
+  }
+
+  cloneDataset(id: string, body: Pick<Dataset, 'name' | 'description'>, token: Token): Promise<ServerActionResponse> {
+    return this.postAction(DATASET_CLONE_URL(id), body, token);
   }
 
   updateDataset(dataset: Dataset, etag: string, token: Token): Promise<ServerActionResponse> {
