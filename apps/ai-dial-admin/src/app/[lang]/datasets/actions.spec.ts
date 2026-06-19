@@ -8,6 +8,7 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
+  cloneDataset,
   createDataset,
   createTestCase,
   exportTestCasesCsv,
@@ -81,6 +82,17 @@ describe('Datasets :: server actions', () => {
 
     expect(getUserToken).toHaveBeenCalled();
     expect(datasetsApi.createDataset).toHaveBeenCalledWith(dataset, TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call cloneDataset action', async () => {
+    (datasetsApi.cloneDataset as any).mockResolvedValue(RESPONSE_MOCK);
+    const body = { name: 'Cloned Dataset', description: 'Clone description' };
+
+    const result = await cloneDataset('dataset-1', body);
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(datasetsApi.cloneDataset).toHaveBeenCalledWith('dataset-1', body, TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 

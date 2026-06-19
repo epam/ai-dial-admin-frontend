@@ -4,6 +4,7 @@ import { RESPONSE_MOCK, TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 import {
+  DATASET_CLONE_URL,
   DATASET_PUBLISH_URL,
   DATASET_TEST_CASES_URL,
   DATASET_TEST_CASE_URL,
@@ -67,6 +68,21 @@ describe('Server :: DatasetsApi', () => {
     );
   });
 
+  test('Should call cloneDataset with POST to clone URL and correct body', async () => {
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
+    const body = { name: 'Cloned Dataset', description: 'Clone description' };
+
+    await instance.cloneDataset(mockDataset.id as string, body, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${DATASET_CLONE_URL(mockDataset.id as string)}`,
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify(body),
+      }),
+    );
+  });
+
   test('Should call updateDataset with correct payload and etag', async () => {
     fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 
@@ -87,7 +103,7 @@ describe('Server :: DatasetsApi', () => {
     await instance.removeDataset(mockDataset.id as string, TOKEN_MOCK);
 
     expect(fetch).toHaveBeenCalledWith(
-      `${TEST_URL}${DATASET_URL(mockDataset.id)}`,
+      `${TEST_URL}${DATASET_URL(mockDataset.id)}?force=true`,
       expect.objectContaining({ method: 'DELETE' }),
     );
   });
