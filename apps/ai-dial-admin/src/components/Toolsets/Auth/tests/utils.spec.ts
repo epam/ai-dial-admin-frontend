@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach, vi, afterEach } from 'vitest';
 import { Toolset, ToolsetAuthCredentialLevel } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
-import { setIsUser, getIsUser, setUrl, getUrl } from '../utils';
+import { setIsUser, getIsUser, setUrl, getUrl, getAuthTypeStorageKey } from '../utils';
 import * as openInNewTab from '@/src/utils/open-in-new-tab';
 import * as types from '@/src/utils/types';
 
@@ -319,6 +319,20 @@ describe('Toolsets Auth Utils', () => {
       getIsUser();
       expect(localStorage.getItem('toolset-auth-is-user')).toBeNull();
       expect(localStorage.getItem('toolset-auth-redirect-url')).toBe('/toolsets/test?');
+    });
+  });
+
+  describe('getAuthTypeStorageKey', () => {
+    test('returns correct key for a toolset name', () => {
+      expect(getAuthTypeStorageKey('my-toolset')).toBe('toolset-auth-selected-type:my-toolset');
+    });
+
+    test('returns correct key for an empty toolset name', () => {
+      expect(getAuthTypeStorageKey('')).toBe('toolset-auth-selected-type:');
+    });
+
+    test('handles toolset names with special characters', () => {
+      expect(getAuthTypeStorageKey('toolset:with:colons')).toBe('toolset-auth-selected-type:toolset:with:colons');
     });
   });
 });
