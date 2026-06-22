@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { testSuitesApi } from '@/src/app/api/api';
+import { datasetsApi, testSuitesApi } from '@/src/app/api/api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
@@ -33,6 +33,7 @@ import {
   removeTestSuiteFile,
   duplicateTestSuite,
   getDeploymentTools,
+  createDatasetForSuite,
 } from './actions';
 import { FilterOperatorDto } from '@/src/types/request';
 
@@ -287,6 +288,17 @@ describe('TestSuites :: server actions', () => {
     const result = await duplicateTestSuite('suite-id', body as any);
     expect(getUserToken).toHaveBeenCalled();
     expect(testSuitesApi.duplicateTestSuite).toHaveBeenCalledWith('suite-id', body, TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call createDatasetForSuite action', async () => {
+    (datasetsApi.createDataset as any).mockResolvedValue(RESPONSE_MOCK);
+    const result = await createDatasetForSuite('suite-id');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(datasetsApi.createDataset).toHaveBeenCalledWith(
+      { name: 'DATASET_suite-id', visibility: 'PRIVATE', bindToSuiteId: 'suite-id' },
+      TOKEN_MOCK,
+    );
     expect(result).toBe(RESPONSE_MOCK);
   });
 });
