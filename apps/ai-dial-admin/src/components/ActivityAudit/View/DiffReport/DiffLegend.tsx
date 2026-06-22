@@ -2,6 +2,10 @@ import { FC } from 'react';
 
 import classNames from 'classnames';
 
+import {
+  AUDIT_DIFF_DELETE_HIGHLIGHT_CLASS,
+  AUDIT_DIFF_INSERT_HIGHLIGHT_CLASS,
+} from '@/src/components/ActivityAudit/constants';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
@@ -25,7 +29,7 @@ const DiffLegend: FC<Props> = ({ description, added, removed, changed }) => {
   return (
     <div className={classNames('flex flex-row small', description ? 'gap-8 text-secondary' : 'gap-2 text-primary')}>
       <div className={classNames(itemClassName, !description && !added && 'hidden')}>
-        <span className={classNames(rectangleClassName, 'bg-success border-accent-secondary')}>{added}</span>
+        <span className={classNames(rectangleClassName, AUDIT_DIFF_INSERT_HIGHLIGHT_CLASS)}>{added}</span>
         <span className={descriptionClassName}>{t(ButtonsI18nKey.Create)}</span>
       </div>
       <div className={classNames(itemClassName, !description && !changed && 'hidden')}>
@@ -33,7 +37,7 @@ const DiffLegend: FC<Props> = ({ description, added, removed, changed }) => {
         <span className={descriptionClassName}>{t(ButtonsI18nKey.Update)}</span>
       </div>
       <div className={classNames(itemClassName, !description && !removed && 'hidden')}>
-        <span className={classNames(rectangleClassName, 'bg-error border-error')}>{removed}</span>
+        <span className={classNames(rectangleClassName, AUDIT_DIFF_DELETE_HIGHLIGHT_CLASS)}>{removed}</span>
         <span className={descriptionClassName}>{t(ButtonsI18nKey.Delete)}</span>
       </div>
     </div>

@@ -1,7 +1,5 @@
 import { ColDef } from 'ag-grid-community';
 
-import { EntitiesGridData } from '@/src/models/entities-grid-data';
-import { ActivityAuditEntity, ActivityAuditResourceType } from '@/src/types/activity-audit';
 import {
   DOMAINS_DIFF_COLUMNS,
   ENTITIES_DIFF_COLUMNS,
@@ -10,6 +8,9 @@ import {
   ROLE_LIMITS_DIFF_COLUMNS,
 } from '@/src/components/ActivityAudit/EntityGrid/constants';
 import { EntityParameterKeys } from '@/src/components/ActivityAudit/constants';
+import { EntitiesGridData } from '@/src/models/entities-grid-data';
+import { ActivityAuditEntity, ActivityAuditResourceType } from '@/src/types/activity-audit';
+import { InlineTextDiffSide } from '@/src/utils/diff/models';
 
 export const getCurrentAndRollbackEntities = (
   entity: EntitiesGridData,
@@ -37,6 +38,7 @@ export const getColumnsByParameter = (
   index?: number,
   t?: (stringToTranslate: string) => string,
   type?: ActivityAuditResourceType,
+  diffSide?: InlineTextDiffSide,
 ): ColDef[] => {
   if (parameter === EntityParameterKeys.ROLES && (index === 1 || type === ActivityAuditResourceType.ROLE)) {
     return ROLE_LIMITS_DIFF_COLUMNS;
@@ -47,7 +49,7 @@ export const getColumnsByParameter = (
     parameter === EntityParameterKeys.GLOBAL_INTERCEPTORS ||
     parameter === EntityParameterKeys.APP_RUNNER_INTERCEPTORS
   ) {
-    return INTERCEPTORS_DIFF_COLUMNS;
+    return INTERCEPTORS_DIFF_COLUMNS(diffSide, t, parameter, type);
   }
 
   if (
@@ -63,7 +65,7 @@ export const getColumnsByParameter = (
   }
 
   if (parameter === EntityParameterKeys.DOMAINS) {
-    return DOMAINS_DIFF_COLUMNS;
+    return DOMAINS_DIFF_COLUMNS(diffSide, t, parameter, type);
   }
-  return RESOURCE_DIFF_COLUMNS(t as (stringToTranslate: string) => string, parameter, type);
+  return RESOURCE_DIFF_COLUMNS(t as (stringToTranslate: string) => string, parameter, type, diffSide);
 };

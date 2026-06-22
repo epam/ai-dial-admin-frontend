@@ -13,6 +13,7 @@ import { useI18n } from '@/src/locales/client';
 import { ActivityAuditDiff, DialActivity } from '@/src/models/activity-audit';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ActivityAuditEntity, ActivityAuditResourceType, DiffStatus, DiffView } from '@/src/types/activity-audit';
+import { InlineTextDiffSide } from '@/src/utils/diff/models';
 
 interface Props {
   data?: ActivityAuditDiff[];
@@ -21,6 +22,7 @@ interface Props {
   type?: ActivityAuditResourceType;
   columns?: ColDef[];
   diffView?: DiffView;
+  diffSide?: InlineTextDiffSide;
   rollbackRows?: EntitiesGridData[];
   currentRows?: EntitiesGridData[];
   activity?: DialActivity;
@@ -33,6 +35,7 @@ const AuditEntityGrid: FC<Props> = ({
   type,
   columns,
   diffView,
+  diffSide,
   rollbackRows,
   currentRows,
   activity,
@@ -44,7 +47,7 @@ const AuditEntityGrid: FC<Props> = ({
   const [currentState, setCurrentState] = useState<ActivityAuditEntity | undefined>(void 0);
   const [rollbackState, setRollbackState] = useState<ActivityAuditEntity | undefined>(void 0);
 
-  const columnDefs = (columns || getColumnsByParameter(parameter, index, t, type)).map((c) => ({
+  const columnDefs = (columns || getColumnsByParameter(parameter, index, t, type, diffSide)).map((c) => ({
     ...c,
     sort: void 0,
   }));
@@ -73,7 +76,7 @@ const AuditEntityGrid: FC<Props> = ({
       rowData: data,
       columnDefs,
     });
-  }, [columns, gridApi, columnDefs, diffView, data]);
+  }, [columns, gridApi, columnDefs, diffView, diffSide, data]);
 
   const options: GridOptions = {
     domLayout: 'autoHeight',
