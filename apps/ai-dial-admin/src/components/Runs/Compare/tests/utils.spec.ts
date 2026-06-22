@@ -18,7 +18,13 @@ import {
   RUN_INDEX_COLUMN_WIDTH,
   STATUS_COLUMN_WIDTH,
 } from '../constants';
-import { getCompareColumns, getCompareColumnsCompare, getCompareRunsPath, getCompareRunsUrn, getSelectableCompareRuns } from '../utils';
+import {
+  getCompareColumns,
+  getCompareColumnsCompare,
+  getCompareRunsPath,
+  getCompareRunsUrn,
+  getSelectableCompareRuns,
+} from '../utils';
 import { CompareRunSlot } from '../constants';
 
 describe('Runs Compare :: getCompareColumns', () => {
