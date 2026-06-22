@@ -1,5 +1,5 @@
+import { getCompareRunsPath } from '@/src/components/Runs/Compare/utils';
 import { ApplicationRoute } from '@/src/types/routes';
-import { RUN_COMPARE_RUNS_QUERY_PARAM, RUN_COMPARE_SEGMENT } from '@/src/components/Runs/Compare/constants';
 import { DialActivity } from '@/src/models/activity-audit';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
@@ -66,8 +66,10 @@ export const getEntityPath = (
     case ApplicationRoute.Datasets:
     case ApplicationRoute.Runs:
       return `${encodeURIComponent((data as { id: string }).id)}`;
-    case ApplicationRoute.RunsCompare:
-      return `${RUN_COMPARE_SEGMENT}?${RUN_COMPARE_RUNS_QUERY_PARAM}=${encodeURIComponent((data as { id: string }).id)}`;
+    case ApplicationRoute.RunsCompare: {
+      const { id, compareWithId } = data as { id: string; compareWithId: string };
+      return getCompareRunsPath(id, compareWithId);
+    }
 
     default:
       return encodeURIComponent((data as BaseEntity).name || '');

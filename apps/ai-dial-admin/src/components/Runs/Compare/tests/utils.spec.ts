@@ -1,7 +1,10 @@
 import { describe, expect, test } from 'vitest';
 
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
+import CompareRunIndexHeader from '@/src/components/Runs/Compare/CompareRunIndexHeader';
 import {
+  DELTA_COLUMN_WIDTH,
+  DEFAULT_COMPARE_DELTA_HEADER,
   DURATION_COLUMN_WIDTH,
   EXTRACTED_COLUMN_MIN_WIDTH,
   EXTRACTED_GROUP_HEADER,
@@ -9,12 +12,13 @@ import {
   formatCompareColumnHeader,
   formatCompareRunIndexHeader,
   HTTP_COLUMN_WIDTH,
+  METRIC_COLUMN_WIDTH,
   RUN_COMPARE_PRIMARY_INDEX,
   RUN_COMPARE_SECONDARY_INDEX,
   RUN_INDEX_COLUMN_WIDTH,
   STATUS_COLUMN_WIDTH,
 } from '../constants';
-import { getCompareColumns, getCompareColumnsCompare, getSelectableCompareRuns } from '../utils';
+import { getCompareColumns, getCompareColumnsCompare, getCompareRunsPath, getCompareRunsUrn, getSelectableCompareRuns } from '../utils';
 import { CompareRunSlot } from '../constants';
 
 describe('Runs Compare :: getCompareColumns', () => {
@@ -141,10 +145,39 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     ]);
     expect(cols[0].colId).toBe('status');
     expect(cols[0].headerName).toBe(formatCompareRunIndexHeader(RUN_COMPARE_PRIMARY_INDEX));
+    expect(cols[0].headerComponent).toBe(CompareRunIndexHeader);
     expect(cols[1].colId).toBe('cmp_status');
     expect(cols[1].headerName).toBe(formatCompareRunIndexHeader(RUN_COMPARE_SECONDARY_INDEX));
+    expect(cols[1].headerComponent).toBe(CompareRunIndexHeader);
     expect(cols[2].colId).toBe('testCaseName');
     expect(cols.filter((col) => col.colId === 'testCaseName')).toHaveLength(1);
+  });
+
+  test('status columns highlight when execution status differs between runs', () => {
+    type StatusCol = {
+      cellClassRules?: Record<string, (params: { data?: CompareAnalyticsRow }) => boolean>;
+    };
+    const cols = getCompareColumnsCompare([
+      makeRow({
+        executionStatus: 'SUCCESS',
+        _compared: makeResult({ executionStatus: 'FAILED' }),
+      }),
+    ]);
+    const primaryCol = cols[0] as StatusCol;
+    const secondaryCol = cols[1] as StatusCol;
+    const row = makeRow({
+      executionStatus: 'SUCCESS',
+      _compared: makeResult({ executionStatus: 'FAILED' }),
+    });
+    const sameStatusRow = makeRow({
+      executionStatus: 'SUCCESS',
+      _compared: makeResult({ executionStatus: 'SUCCESS' }),
+    });
+
+    expect(primaryCol.cellClassRules?.['compare-status-diff-primary']?.({ data: row })).toBe(true);
+    expect(secondaryCol.cellClassRules?.['compare-status-diff-secondary']?.({ data: row })).toBe(true);
+    expect(primaryCol.cellClassRules?.['compare-status-diff-primary']?.({ data: sameStatusRow })).toBe(false);
+    expect(secondaryCol.cellClassRules?.['compare-status-diff-secondary']?.({ data: sameStatusRow })).toBe(false);
   });
 
   test('EXECUTION group has flat columns with run index in header name', () => {
@@ -178,26 +211,79 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     expect(secondaryCol.valueGetter({ data: makeRow({ _compared: null }) })).toBe('—');
   });
 
-  test('metric groups have paired columns with run index in header name', () => {
+  test('metric groups have primary, secondary, and delta columns per metric key', () => {
     const rows = [
       makeRow({
         metricValues: { 'Overall Accuracy': { Precision: 0.8 } },
         _compared: makeResult({ metricValues: { 'Overall Accuracy': { Precision: 0.5 } } }),
       }),
     ];
-    const cols = getCompareColumnsCompare(rows);
+    const cols = getCompareColumnsCompare(rows, undefined, DEFAULT_COMPARE_DELTA_HEADER);
     const metricGroup = cols[4] as {
       headerName: string;
-      children: { headerName: string; colId?: string }[];
+      children: { headerName: string; colId?: string; width?: number }[];
     };
 
     expect(metricGroup.headerName).toBe('Overall Accuracy');
-    expect(metricGroup.children).toHaveLength(2);
+    expect(metricGroup.children).toHaveLength(3);
     expect(metricGroup.children[0].headerName).toBe(formatCompareColumnHeader(RUN_COMPARE_PRIMARY_INDEX, 'Precision'));
+    expect(metricGroup.children[0].width).toBe(METRIC_COLUMN_WIDTH);
     expect(metricGroup.children[1].headerName).toBe(
       formatCompareColumnHeader(RUN_COMPARE_SECONDARY_INDEX, 'Precision'),
     );
     expect(metricGroup.children[1].colId).toBe('cmp_Overall Accuracy_Precision');
+    expect(metricGroup.children[2].headerName).toBe(DEFAULT_COMPARE_DELTA_HEADER);
+    expect(metricGroup.children[2].colId).toBe('delta_Overall Accuracy_Precision');
+    expect(metricGroup.children[2].width).toBe(DELTA_COLUMN_WIDTH);
+  });
+
+  test('metric columns highlight added, changed, and removed pairs', () => {
+    type MetricCol = {
+      cellClassRules?: Record<string, (params: { data?: CompareAnalyticsRow }) => boolean>;
+    };
+    const cols = getCompareColumnsCompare([
+      makeRow({
+        metricValues: { 'Overall Accuracy': { Precision: 0.8, Recall: null as unknown as number } },
+        _compared: makeResult({
+          metricValues: { 'Overall Accuracy': { Precision: 0.5, Recall: 0.9 } },
+        }),
+      }),
+    ]);
+    const metricGroup = cols[4] as { children: MetricCol[] };
+    const primaryPrecision = metricGroup.children[0];
+    const secondaryPrecision = metricGroup.children[1];
+    const primaryRecall = metricGroup.children[3];
+    const secondaryRecall = metricGroup.children[4];
+
+    const changedRow = makeRow({
+      metricValues: { 'Overall Accuracy': { Precision: 0.8 } },
+      _compared: makeResult({ metricValues: { 'Overall Accuracy': { Precision: 0.5 } } }),
+    });
+    const addedRow = makeRow({
+      metricValues: { 'Overall Accuracy': { Recall: null as unknown as number } },
+      _compared: makeResult({ metricValues: { 'Overall Accuracy': { Recall: 0.9 } } }),
+    });
+    const removedRow = makeRow({
+      metricValues: { 'Overall Accuracy': { Precision: 0.8 } },
+      _compared: makeResult({ metricValues: { 'Overall Accuracy': { Precision: null as unknown as number } } }),
+    });
+
+    expect(primaryPrecision.cellClassRules?.['compare-metric-new-primary']?.({ data: changedRow })).toBe(true);
+    expect(secondaryPrecision.cellClassRules?.['compare-metric-new-secondary']?.({ data: changedRow })).toBe(true);
+    expect(primaryRecall.cellClassRules?.['compare-metric-improved-primary']?.({ data: addedRow })).toBe(true);
+    expect(secondaryRecall.cellClassRules?.['compare-metric-improved-secondary']?.({ data: addedRow })).toBe(true);
+    expect(primaryPrecision.cellClassRules?.['compare-metric-regressed-primary']?.({ data: removedRow })).toBe(true);
+    expect(secondaryPrecision.cellClassRules?.['compare-metric-regressed-secondary']?.({ data: removedRow })).toBe(
+      true,
+    );
+  });
+
+  test('includes pinned eye action column at the end', () => {
+    const cols = getCompareColumnsCompare([makeRow()]);
+    const actionCol = cols[cols.length - 1];
+    expect(actionCol.colId).toBe('compare_action');
+    expect(actionCol.pinned).toBe('right');
+    expect(actionCol.lockPinned).toBe(true);
   });
 
   test('extracted group has paired columns with run index in header name', () => {
@@ -248,5 +334,17 @@ describe('Runs Compare :: getSelectableCompareRuns', () => {
   test('excludes primary run when selecting secondary run', () => {
     const runs = getSelectableCompareRuns([...suiteRuns], CompareRunSlot.Secondary, 'run-1', 'run-2');
     expect(runs.map((run) => run.id)).toEqual(['run-2', 'run-3']);
+  });
+});
+
+describe('Runs Compare :: getCompareRunsPath', () => {
+  test('returns compare path with encoded run ids', () => {
+    expect(getCompareRunsPath('run-1', 'run-2')).toBe('compare?runs=run-1,run-2');
+  });
+});
+
+describe('Runs Compare :: getCompareRunsUrn', () => {
+  test('returns full compare url', () => {
+    expect(getCompareRunsUrn('run-1', 'run-2')).toBe('/runs/compare?runs=run-1,run-2');
   });
 });

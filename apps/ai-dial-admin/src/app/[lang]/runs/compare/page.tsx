@@ -11,11 +11,19 @@ interface Props {
 
 export default async function Page({ searchParams }: Props) {
   const params = await searchParams;
-  const runId = params[RUN_COMPARE_RUNS_QUERY_PARAM]?.split(',')[0]?.trim();
+  const [primaryRunId, comparedRunId] =
+    params[RUN_COMPARE_RUNS_QUERY_PARAM]?.split(',')
+      .map((id) => id.trim())
+      .filter(Boolean)
+      .map(decodeURIComponent) ?? [];
 
-  if (!runId) {
+  if (!primaryRunId || !comparedRunId) {
     notFound();
   }
 
-  return <CompareView runId={decodeURIComponent(runId)} />;
+  return (
+    <div className="flex flex-col flex-1 min-h-0 h-full">
+      <CompareView runId={primaryRunId} comparedRunId={comparedRunId} />
+    </div>
+  );
 }

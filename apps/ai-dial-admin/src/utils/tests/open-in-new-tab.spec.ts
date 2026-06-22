@@ -53,8 +53,8 @@ describe('getUrnForEntity', () => {
   });
 
   test('returns compare url for RunsCompare route', () => {
-    const urn = getUrnForEntity(ApplicationRoute.RunsCompare, { id: 'run-123' });
-    expect(urn).toBe('/runs/compare?runs=run-123');
+    const urn = getUrnForEntity(ApplicationRoute.RunsCompare, { id: 'run-123', compareWithId: 'run-456' });
+    expect(urn).toBe('/runs/compare?runs=run-123,run-456');
   });
 
   test('returns correct URN for default case', () => {
@@ -140,8 +140,8 @@ describe('Entity list view :: getEntityPath', () => {
   });
 
   test('Should return compare query path for RunsCompare', () => {
-    const res = getEntityPath(ApplicationRoute.RunsCompare, { id: 'run-123' }, void 0);
-    expect(res).toEqual('compare?runs=run-123');
+    const res = getEntityPath(ApplicationRoute.RunsCompare, { id: 'run-123', compareWithId: 'run-456' }, void 0);
+    expect(res).toEqual('compare?runs=run-123,run-456');
   });
 });
 
@@ -166,8 +166,8 @@ describe('onOpenInNewTab', () => {
 
   test('calls window.open with compare url for RunsCompare route', () => {
     const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
-    onOpenInNewTab(ApplicationRoute.RunsCompare, { id: 'run-123' });
-    expect(windowOpenSpy).toHaveBeenCalledWith('/runs/compare?runs=run-123', '_blank');
+    onOpenInNewTab(ApplicationRoute.RunsCompare, { id: 'run-123', compareWithId: 'run-456' });
+    expect(windowOpenSpy).toHaveBeenCalledWith('/runs/compare?runs=run-123,run-456', '_blank');
   });
 });
 
