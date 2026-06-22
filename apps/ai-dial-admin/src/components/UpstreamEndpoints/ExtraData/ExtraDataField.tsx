@@ -16,11 +16,12 @@ interface Props {
   value?: DialEndpointExtraData;
   label?: string;
   disabled?: boolean;
+  isSecret?: boolean;
   containerClassName?: string;
   onChange: (extraData: DialEndpointExtraData) => void;
 }
 
-const ExtraDataField: FC<Props> = ({ value, disabled, label, containerClassName, onChange }) => {
+const ExtraDataField: FC<Props> = ({ value, disabled, label, isSecret, containerClassName, onChange }) => {
   const t = useI18n();
   const [isValid, setIsValid] = useState(false);
   const [stringValue, setStringValue] = useState<string | undefined>(undefined);
@@ -132,14 +133,21 @@ const ExtraDataField: FC<Props> = ({ value, disabled, label, containerClassName,
   ];
 
   const customInputValue = useMemo(() => {
-    return typeof value === 'object'
-      ? JSON.stringify(value, null, 2)
-      : typeof value === 'string'
-        ? value
-        : typeof value === 'number'
-          ? String(value)
-          : t(BasicI18nKey.None);
-  }, [value, t]);
+    const plainValue =
+      typeof value === 'object'
+        ? JSON.stringify(value, null, 2)
+        : typeof value === 'string'
+          ? value
+          : typeof value === 'number'
+            ? String(value)
+            : t(BasicI18nKey.None);
+
+    if (isSecret && plainValue !== t(BasicI18nKey.None)) {
+      return plainValue.replace(/\S/g, '*');
+    }
+
+    return plainValue;
+  }, [value, isSecret, t]);
 
   const isFlexible = Boolean(containerClassName);
 
