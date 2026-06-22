@@ -47,7 +47,7 @@ describe('Activity audit :: generateCurrentResource ', () => {
     const result = generateCurrentResource(current, compare);
     expect(result).toEqual({
       properties: [
-        { parameter: 'name', value: 'Doe', diffStatus: DiffStatus.CHANGED },
+        { parameter: 'name', value: 'Doe', pairedValue: 'John', diffStatus: DiffStatus.CHANGED },
         { parameter: 'age', value: '30' },
       ],
     });
@@ -60,7 +60,7 @@ describe('Activity audit :: generateCurrentResource ', () => {
     expect(result).toEqual({
       properties: [
         { parameter: 'name', value: 'John' },
-        { parameter: 'age', value: '31', diffStatus: DiffStatus.CHANGED },
+        { parameter: 'age', value: '31', pairedValue: '30', diffStatus: DiffStatus.CHANGED },
         { parameter: 'city', value: 'NY', diffStatus: DiffStatus.ADDED },
         { parameter: 'country', value: '', diffStatus: DiffStatus.REMOVED },
       ],
@@ -510,7 +510,7 @@ describe('Activity audit :: image with Firewall settings section', () => {
     const result = generateCurrentResource(before, after, ActivityAuditResourceType.MCP_IMAGE_DEFINITION, false);
 
     expect(result.properties).toEqual([
-      { parameter: 'displayName', value: 'GPT-4-turbo', diffStatus: DiffStatus.CHANGED },
+      { parameter: 'displayName', value: 'GPT-4-turbo', pairedValue: 'GPT-4', diffStatus: DiffStatus.CHANGED },
     ]);
     expect(result[EntityParameterKeys.ALLOWED_DOMAINS]).toBeUndefined();
   });
@@ -865,7 +865,7 @@ describe('Container detail :: nodePool rows', () => {
     const latest: ActivityAuditEntity = { nodePoolId: 'gpu-pool', nodePoolName: 'CPU pool' };
     const afterPass = generateCurrentResource(previous, latest, containerType, false);
     expect(computeRows(afterPass, 'nodePoolId')).toEqual([
-      { parameter: 'nodePoolId', value: 'gpu-pool', diffStatus: DiffStatus.CHANGED },
+      { parameter: 'nodePoolId', value: 'gpu-pool', pairedValue: 'cpu-pool', diffStatus: DiffStatus.CHANGED },
     ]);
     expect(computeRows(afterPass, 'nodePoolName')).toEqual([{ parameter: 'nodePoolName', value: 'CPU pool' }]);
   });

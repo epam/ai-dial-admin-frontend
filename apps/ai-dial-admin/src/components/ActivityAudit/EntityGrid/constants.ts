@@ -1,5 +1,6 @@
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
 
+import AuditDiffValueCellRenderer from '@/src/components/ActivityAudit/EntityGrid/AuditDiffValueCellRenderer';
 import { DOMAIN_ACCESS_POLICY_KEY, EntityParameterKeys } from '@/src/components/ActivityAudit/constants';
 import {
   CONTAINER_ROW_LABEL_KEYS,
@@ -26,15 +27,48 @@ import {
 } from '@/src/types/activity-audit';
 import { IMAGE_BUILDER_TYPE, IMAGE_STATUS, IMAGE_TRANSPORT_TYPE } from '@/src/types/deployments/images';
 import { splitCommaList } from '@/src/utils/formatting/comma-list';
+import { InlineTextDiffSide } from '@/src/utils/diff/models';
 
-export const INTERCEPTORS_DIFF_COLUMNS = [
+const auditDiffValueRenderer = (
+  diffSide: InlineTextDiffSide | undefined,
+  parameter: string | undefined,
+  resourceType: ActivityAuditResourceType | undefined,
+  t: (stringToTranslate: string, params?: Record<string, string>) => string,
+) => ({
+  component: AuditDiffValueCellRenderer,
+  params: { diffSide, parameter, resourceType, t },
+});
+
+export const INTERCEPTORS_DIFF_COLUMNS = (
+  diffSide?: InlineTextDiffSide,
+  t?: (stringToTranslate: string) => string,
+  parameter?: string,
+  resourceType?: ActivityAuditResourceType,
+): ColDef[] => [
   { field: 'parameter', headerName: 'Order', width: 90, maxWidth: 90, filter: false },
-  { field: 'value', headerName: 'Name' },
+  {
+    field: 'value',
+    headerName: 'Name',
+    cellRenderer: AuditDiffValueCellRenderer,
+    cellRendererParams: { diffSide, parameter, resourceType, t },
+  },
 ];
 
 export const ENTITIES_DIFF_COLUMNS = [{ field: 'parameter', headerName: 'Name' }];
 
-export const DOMAINS_DIFF_COLUMNS = [{ field: 'value', headerName: 'Domain' }];
+export const DOMAINS_DIFF_COLUMNS = (
+  diffSide?: InlineTextDiffSide,
+  t?: (stringToTranslate: string) => string,
+  parameter?: string,
+  resourceType?: ActivityAuditResourceType,
+): ColDef[] => [
+  {
+    field: 'value',
+    headerName: 'Domain',
+    cellRenderer: AuditDiffValueCellRenderer,
+    cellRendererParams: { diffSide, parameter, resourceType, t },
+  },
+];
 
 export const ROLE_LIMITS_DIFF_COLUMNS = [
   { field: 'parameter', headerName: 'Name' },
@@ -49,6 +83,7 @@ export const RESOURCE_DIFF_COLUMNS = (
   t: (stringToTranslate: string, params?: Record<string, string>) => string,
   parameter?: string,
   resourceType?: ActivityAuditResourceType,
+  diffSide?: InlineTextDiffSide,
 ): ColDef[] => {
   const isImageRow = isImageDefinitionResource(resourceType);
   const isContainerRow = isContainerDeploymentResource(resourceType);
@@ -88,7 +123,7 @@ export const RESOURCE_DIFF_COLUMNS = (
         if (parameter === EntityParameterKeys.METADATA && params.data?.parameter === 'envValue') {
           return { component: EnvVarValueCellRenderer };
         }
-        return void 0;
+        return auditDiffValueRenderer(diffSide, parameter, resourceType, t);
       },
     },
   ];
@@ -158,4 +193,15 @@ const formatValue = (
     if (containerValue != null) return containerValue;
   }
   return value;
+};
+
+export const formatAuditDiffValue = (
+  parameter: string | undefined,
+  value: string,
+  t: (key: string, params?: Record<string, string>) => string,
+  resourceType?: ActivityAuditResourceType,
+): string => {
+  const isImageRow = isImageDefinitionResource(resourceType);
+  const isContainerRow = isContainerDeploymentResource(resourceType);
+  return formatValue(parameter, value, t, isImageRow, isContainerRow, resourceType);
 };

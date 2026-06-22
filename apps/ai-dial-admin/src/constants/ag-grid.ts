@@ -121,6 +121,6 @@ export const SINGLE_ROW_SELECTION: Partial<GridOptions> = {
 export const DIFF_ROW_CLASS_RULES: GridOptions['rowClassRules'] = {
   'ag-error-row ag-error-border': (params) => (params.data as ActivityAuditDiff).diffStatus === DiffStatus.REMOVED,
   'ag-new-row ag-new-border': (params) => (params.data as ActivityAuditDiff).diffStatus === DiffStatus.ADDED,
-  'ag-changed-row ag-changed-border': (params) => (params.data as ActivityAuditDiff).diffStatus === DiffStatus.CHANGED,
+  'ag-diff-changed-marker': (params) => (params.data as ActivityAuditDiff).diffStatus === DiffStatus.CHANGED,
   'ag-empty-row': (params) => (params.data as ActivityAuditDiff).diffStatus === DiffStatus.MIRROR,
 };

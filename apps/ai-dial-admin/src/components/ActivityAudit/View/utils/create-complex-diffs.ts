@@ -42,6 +42,7 @@ export const compareSimpleTypes = (
     diffs.push({
       parameter: key,
       value: isTime ? formatDateTimeToLocalString(val2 as number) : val2?.toString() || '',
+      pairedValue: isTime ? formatDateTimeToLocalString(val1 as number) : val1?.toString() || '',
       diffStatus: DiffStatus.CHANGED,
     });
   } else {
