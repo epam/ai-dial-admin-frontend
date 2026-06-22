@@ -233,6 +233,7 @@ const Endpoint: FC<Props> = ({
                 label={isTablet ? t(EntityFieldsI18nKey.secretExtraData) : ''}
                 value={endpoint.secretExtraData}
                 disabled={disabled}
+                isSecret
                 containerClassName="w-full"
                 onChange={onChangeSecretExtraData}
               />
@@ -266,6 +267,7 @@ const Endpoint: FC<Props> = ({
                 label={t(EntityFieldsI18nKey.secretExtraData)}
                 value={endpoint.secretExtraData}
                 disabled={disabled}
+                isSecret
                 containerClassName="flex-1 min-w-0"
                 onChange={onChangeSecretExtraData}
               />
