@@ -10,7 +10,7 @@ import FloatingFilter from '@/src/components/Grid/FloatingFilter/FloatingFilter'
 import { ROOT_FOLDER, TEMP_FOLDER } from '@/src/constants/file';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
-import { CREATE_FOLDER_FORBIDDEN_CHARS, FILE_NAME_MAX_LENGTH } from './constants';
+import { CREATE_FOLDER_FORBIDDEN_CHARS, FILE_NAME_MAX_LENGTH, MAX_FOLDER_NESTING_DEPTH } from './constants';
 import { FORBIDDEN_NAME_SYMBOLS } from '@/src/constants/validation';
 import { addTrailingSlash } from '@/src/utils/url';
 
@@ -44,6 +44,7 @@ export const getValidationMessages = (t: (key: string) => string) => {
 export const getDestinationFolderPopupOptions = (
   view: ApplicationRoute,
   t: (key: string, options?: Record<string, string | number> | undefined) => string,
+  handleFolderNestingDepthExceeded: () => void,
 ) => ({
   emptyStateTitle: t(FileManagerI18nKey.EmptyMoveFolderTitle),
   emptyStateDescription: t(FileManagerI18nKey.EmptyMoveFolderDescription, {
@@ -52,6 +53,8 @@ export const getDestinationFolderPopupOptions = (
   navigationPanelOptions: {
     searchable: false,
   },
+  maxNewFolderDepth: MAX_FOLDER_NESTING_DEPTH + 1,
+  onNewFolderDepthExceeded: handleFolderNestingDepthExceeded,
   getMoveHeader: (itemsCount: number, itemName?: string) =>
     itemsCount === 1 && itemName
       ? t(FileManagerI18nKey.MoveItem, { item: itemName })

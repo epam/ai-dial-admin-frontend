@@ -3,8 +3,7 @@ import { FC, useEffect, useState } from 'react';
 
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getRelatedArtifacts, getRelatedText, getWarningText } from './utils';
-import { DISPLAY_NAME_COLUMN, NAME_COLUMN } from '@/src/constants/grid-columns/base-columns';
+import { getRelatedArtifacts, getRelatedColumns, getRelatedText, getWarningText } from './utils';
 import { useI18n } from '@/src/locales/client';
 import GridView from '@/src/components/Grid/GridView/GridView';
 
@@ -38,9 +37,11 @@ const RelatedArtefacts: FC<Props> = ({ entity, view }) => {
               <div className="flex flex-col gap-4">
                 <p>{getWarningText(view, t)}</p>
                 <div className="flex flex-col gap-2">
-                  <h3 className="text-primary">{getRelatedText(view, t)}</h3>
+                  <h3 className="text-primary">
+                    {getRelatedText(view, t)}: {data.length}
+                  </h3>
                   <div className="flex-1 min-h-0">
-                    <GridView rowData={data} columnDefs={[DISPLAY_NAME_COLUMN, NAME_COLUMN]} />
+                    <GridView rowData={data} columnDefs={getRelatedColumns(view)} />
                   </div>
                 </div>
               </div>

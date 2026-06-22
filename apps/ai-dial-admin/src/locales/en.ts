@@ -283,10 +283,13 @@ export default {
       NoInterceptors: 'No related Interceptors',
       NoModels: 'No related Models',
       NoContainers: 'No related Containers',
+      DatasetWarning:
+        'This dataset and all its test cases will be permanently deleted. Any test suites linked to it will be unlinked and their test cases removed.',
       RelatedApplications: 'Related Applications',
       RelatedInterceptors: 'Related Interceptors',
       RelatedModels: 'Related Models',
       RelatedContainers: 'Related Containers',
+      RelatedTestSuites: 'Related Test Suites',
     },
     Notification: {
       Title: '{entity} deleted successfully',
@@ -634,6 +637,9 @@ export default {
     allowResume: 'Allow resume',
     addonsSupported: 'Addons supported',
     temperatureSupported: 'Temperature supported',
+    customTemperatureSupported: 'Custom temperature',
+    maxTokensSupported: 'Max tokens',
+    maxCompletionTokensSupported: 'Max completion tokens',
     consentRequired: 'Consent required',
     autoCachingSupported: 'Auto caching ',
     parallelToolCallsSupported: 'Parallel tool calls',
@@ -643,6 +649,16 @@ export default {
     supportCommentInRateResponse: 'Support comment in rate response',
     truncatePromptEndpoint: 'Truncate prompt endpoint',
     AppRunnerInherited: 'This value is inherited from Application Runner features',
+    reasoningEfforts: 'Reasoning Efforts',
+    Groups: {
+      SamplingOutputControl: 'Sampling & Output Control',
+      ToolsFunctionCalling: 'Tools / Function Calling',
+      PromptMessageComposition: 'Prompt & Message Composition',
+      Attachments: 'Attachments',
+      Caching: 'Caching',
+      SessionAccess: 'Session & Access',
+      Feedback: 'Feedback',
+    },
   },
   Topics: {
     AddTopic: 'Add Topic',
@@ -1149,6 +1165,7 @@ export default {
     secured: 'Secured',
     parameters: 'Parameters',
     extraData: 'Extra data',
+    secretExtraData: 'Secret extra data',
     models: 'Models',
     baseEndpoint: 'Base endpoint',
     dependencies: 'Dependencies',
@@ -1240,6 +1257,7 @@ export default {
     ProbePort: 'Probe port',
     temperature: 'Temperature',
     agent: 'Agent',
+    embeddingDimensions: 'Embedding Dimensions',
   },
   EntityPlaceholders: {
     Project: 'Enter project',
@@ -1316,6 +1334,8 @@ export default {
     TimeoutSeconds: 'Enter timeout seconds',
     FailureThreshold: 'Enter number of failure threshold',
     Expression: 'Enter expression',
+    ReasoningEfforts: 'Select or type reasoning effort',
+    EmbeddingDimensions: 'Enter embedding dimensions',
   },
   EntityCaptions: {
     ProbeEnableCustom: 'Use custom values instead of default probe configuration',
@@ -1962,6 +1982,7 @@ export default {
     RunCompareAddSecondRunTitle: 'Add a second run to start comparing.',
     RunCompareAddSecondRunMessage: 'Metrics will appear side by side so you can spot differences across test cases.',
     RunCompareTag: '[{index}] {name}',
+    RunCompareSelectRun: 'Select Run to Compare',
   },
   ExportRun: {
     ExportRunTitle: 'Export run',

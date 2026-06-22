@@ -1,18 +1,18 @@
 import classNames from 'classnames';
 import React, { FC, MouseEventHandler, useCallback } from 'react';
 
-import { AttachmentOption } from './AttachmentInput';
+import { MultiValueOption } from '@/src/components/Common/MultiValueAutocomplete/MultiValueAutocomplete';
 
 interface Props {
-  suggestions: AttachmentOption[];
+  suggestions: MultiValueOption[];
   highlightIndex: number;
-  onSelectSuggestion: (suggestion: AttachmentOption) => void;
+  onSelectSuggestion: (suggestion: MultiValueOption) => void;
   onHightLightSuggestion: (idx: number) => void;
 }
 
 const Suggestions: FC<Props> = ({ suggestions, highlightIndex, onSelectSuggestion, onHightLightSuggestion }) => {
   const handleSelectSuggestion = useCallback(
-    (opt: AttachmentOption): MouseEventHandler<HTMLLIElement> =>
+    (opt: MultiValueOption): MouseEventHandler<HTMLLIElement> =>
       (e) => {
         e.preventDefault();
         onSelectSuggestion(opt);

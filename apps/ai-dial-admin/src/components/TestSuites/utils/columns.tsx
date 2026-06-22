@@ -153,6 +153,7 @@ export const getTestCaseColumns = (
                 },
                 id: suite.id,
                 view: ApplicationRoute.TestSuites,
+                isReadonly: isReadOnly,
               },
             };
           }

@@ -14,7 +14,7 @@ import {
 } from 'ag-grid-community';
 import { useRouter } from 'next/navigation';
 
-import { createDataset } from '@/src/app/[lang]/datasets/actions';
+import { cloneDataset } from '@/src/app/[lang]/datasets/actions';
 import { duplicateTestSuite, runTestSuite } from '@/src/app/[lang]/test-suites/actions';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
@@ -229,8 +229,8 @@ const EvaluationListView = <T extends object>({
   );
 
   const onDuplicateDataset = useCallback(
-    (entity: Dataset) => {
-      createDataset(entity).then((res) => {
+    (entity: Pick<Dataset, 'name' | 'description'>) => {
+      cloneDataset((currentEntity as Dataset).id!, entity).then((res) => {
         if (res.success) {
           showNotification(
             getSuccessNotification(
@@ -246,7 +246,7 @@ const EvaluationListView = <T extends object>({
         }
       });
     },
-    [onModalClose, route, router, showNotification, t],
+    [currentEntity, onModalClose, route, router, showNotification, t],
   );
 
   const actionColumn = [getOpenInNewTabOperation(onOpenInNewTabAction)];

@@ -59,6 +59,7 @@ const JsonEditorInput: FC<Props> = ({
 
   const onCancelModal = useCallback(() => {
     resetDraftFromCommitted();
+    setParseError(null);
     onCloseModal();
   }, [resetDraftFromCommitted, onCloseModal]);
 

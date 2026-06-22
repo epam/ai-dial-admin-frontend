@@ -41,6 +41,11 @@ export async function createDataset(dataset: Dataset) {
   return datasetsApi.createDataset(dataset, token);
 }
 
+export async function cloneDataset(id: string, body: Pick<Dataset, 'name' | 'description'>) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return datasetsApi.cloneDataset(id, body, token);
+}
+
 export async function updateDataset(dataset: Dataset, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return datasetsApi.updateDataset(dataset, etag, token);
@@ -49,6 +54,11 @@ export async function updateDataset(dataset: Dataset, etag: string) {
 export async function removeDataset(id: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return datasetsApi.removeDataset(id, token);
+}
+
+export async function getDatasetTestSuites(id: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return datasetsApi.getDatasetTestSuites(id, token);
 }
 
 export async function transitionVisibility(id: string, body: DatasetVisibilityTransition) {

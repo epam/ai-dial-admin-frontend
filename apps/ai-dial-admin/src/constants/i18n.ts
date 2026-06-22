@@ -297,10 +297,12 @@ export enum DeleteI18nKey {
   InterceptorTemplateWarning = 'DeleteEntity.NoRelatedArtefacts.InterceptorTemplateWarning',
   ApplicationRunnerWarning = 'DeleteEntity.NoRelatedArtefacts.ApplicationRunnerWarning',
   ImageWarning = 'DeleteEntity.NoRelatedArtefacts.ImageWarning',
+  DatasetWarning = 'DeleteEntity.NoRelatedArtefacts.DatasetWarning',
   RelatedApplications = 'DeleteEntity.NoRelatedArtefacts.RelatedApplications',
   RelatedInterceptors = 'DeleteEntity.NoRelatedArtefacts.RelatedInterceptors',
   RelatedModels = 'DeleteEntity.NoRelatedArtefacts.RelatedModels',
   RelatedContainers = 'DeleteEntity.NoRelatedArtefacts.RelatedContainers',
+  RelatedTestSuites = 'DeleteEntity.NoRelatedArtefacts.RelatedTestSuites',
 }
 
 export enum DuplicateI18nKey {
@@ -560,6 +562,9 @@ export enum FeaturesI18nKey {
   allowResume = 'Features.allowResume',
   addonsSupported = 'Features.addonsSupported',
   temperatureSupported = 'Features.temperatureSupported',
+  customTemperatureSupported = 'Features.customTemperatureSupported',
+  maxTokensSupported = 'Features.maxTokensSupported',
+  maxCompletionTokensSupported = 'Features.maxCompletionTokensSupported',
   cacheSupported = 'Features.cacheSupported',
   autoCachingSupported = 'Features.autoCachingSupported',
   contentPartsSupported = 'Features.contentPartsSupported',
@@ -575,6 +580,14 @@ export enum FeaturesI18nKey {
   tokenizeEndpoint = 'Features.tokenizeEndpoint',
   truncatePromptEndpoint = 'Features.truncatePromptEndpoint',
   AppRunnerInherited = 'Features.AppRunnerInherited',
+  reasoningEfforts = 'Features.reasoningEfforts',
+  GroupSamplingOutputControl = 'Features.Groups.SamplingOutputControl',
+  GroupToolsFunctionCalling = 'Features.Groups.ToolsFunctionCalling',
+  GroupPromptMessageComposition = 'Features.Groups.PromptMessageComposition',
+  GroupAttachments = 'Features.Groups.Attachments',
+  GroupCaching = 'Features.Groups.Caching',
+  GroupSessionAccess = 'Features.Groups.SessionAccess',
+  GroupFeedback = 'Features.Groups.Feedback',
 }
 
 export enum TopicsI18nKey {
@@ -1162,6 +1175,8 @@ export enum EntityPlaceholdersI18nKey {
   TimeoutSeconds = 'EntityPlaceholders.TimeoutSeconds',
   FailureThreshold = 'EntityPlaceholders.FailureThreshold',
   Expression = 'EntityPlaceholders.Expression',
+  ReasoningEfforts = 'EntityPlaceholders.ReasoningEfforts',
+  EmbeddingDimensions = 'EntityPlaceholders.EmbeddingDimensions',
 }
 
 export enum EntityCaptionsI18nKey {
@@ -1295,6 +1310,7 @@ export enum EntityFieldsI18nKey {
   secured = 'EntityFields.secured',
   parameters = 'EntityFields.parameters',
   extraData = 'EntityFields.extraData',
+  secretExtraData = 'EntityFields.secretExtraData',
   models = 'EntityFields.models',
   order = 'EntityFields.order',
   baseEndpoint = 'EntityFields.baseEndpoint',
@@ -1388,6 +1404,7 @@ export enum EntityFieldsI18nKey {
   ProbePort = 'EntityFields.ProbePort',
   temperature = 'EntityFields.temperature',
   agent = 'EntityFields.agent',
+  embeddingDimensions = 'EntityFields.embeddingDimensions',
 }
 
 export enum ToolsetI18nKey {
@@ -1839,6 +1856,7 @@ export enum RunsI18nKey {
   RunCompareAddSecondRunTitle = 'Runs.RunCompareAddSecondRunTitle',
   RunCompareAddSecondRunMessage = 'Runs.RunCompareAddSecondRunMessage',
   RunCompareTag = 'Runs.RunCompareTag',
+  RunCompareSelectRun = 'Runs.RunCompareSelectRun',
 }
 
 export enum ExportRunI18nKey {
