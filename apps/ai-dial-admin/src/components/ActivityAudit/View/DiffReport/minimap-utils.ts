@@ -9,7 +9,7 @@ export interface MinimapMarker {
 const ROW_CLASS_STATUS_MAP: [string, DiffStatus.ADDED | DiffStatus.REMOVED | DiffStatus.CHANGED][] = [
   ['ag-new-row', DiffStatus.ADDED],
   ['ag-error-row', DiffStatus.REMOVED],
-  ['ag-changed-row', DiffStatus.CHANGED],
+  ['ag-diff-changed-marker', DiffStatus.CHANGED],
 ];
 
 const COLLAPSED_STATUS_ATTRS: [string, DiffStatus.ADDED | DiffStatus.REMOVED | DiffStatus.CHANGED][] = [

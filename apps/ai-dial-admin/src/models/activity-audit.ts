@@ -26,6 +26,7 @@ export interface ActivityAuditDiff {
   parameter: string;
   value: string;
   diffStatus?: DiffStatus;
+  pairedValue?: string;
   mountType?: string;
   fileContent?: string;
   valueType?: string;
