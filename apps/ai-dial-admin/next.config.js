@@ -26,9 +26,7 @@ const ContentSecurityPolicy = `
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // NX sets NX_NEXT_OUTPUT_PATH during build; replicates withNx distDir logic without the deprecated wrapper.
-  distDir: process.env.NX_NEXT_OUTPUT_PATH
-    ? path.join('../../', process.env.NX_NEXT_OUTPUT_PATH, '.next')
-    : '.next',
+  distDir: process.env.NX_NEXT_OUTPUT_PATH ? path.join('../../', process.env.NX_NEXT_OUTPUT_PATH, '.next') : '.next',
   async redirects() {
     return [
       {
