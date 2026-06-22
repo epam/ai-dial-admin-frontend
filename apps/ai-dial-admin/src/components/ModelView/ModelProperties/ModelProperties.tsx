@@ -19,7 +19,7 @@ import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
-import { DialModel } from '@/src/models/dial/model';
+import { DialModel, DialModelType } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
 import {
   clearUpstreamResponsesEndpoints,
@@ -108,7 +108,7 @@ const ModelProperties: FC<Props> = ({ model, modelsNames, onChangeModel }) => {
 
       <Limits model={model} onChangeModel={onChangeModel} />
 
-      <EmbeddingDimensions model={model} onChangeModel={onChangeModel} />
+      {model.type === DialModelType.Embedding && <EmbeddingDimensions model={model} onChangeModel={onChangeModel} />}
 
       <MaxRetryAttempts entity={model} onChangeEntity={onChangeModel} />
 
