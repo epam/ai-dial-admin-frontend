@@ -74,7 +74,7 @@ const HfRegistryGrid: FC<Props> = ({ route, infoPanel, modelName, setModelName, 
         sorts = currentSorts;
 
         const requestFilters = Object.fromEntries(
-          currentFilters.map(({ column, value }) => [column === 'id' ? 'search' : column, encodeURIComponent(value)]),
+          currentFilters.map(({ column, value }) => [column === 'id' ? 'search' : column, value]),
         );
 
         getHuggingFaceModels({
