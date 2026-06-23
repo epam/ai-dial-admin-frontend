@@ -1982,7 +1982,13 @@ export default {
     RunCompareAddSecondRunTitle: 'Add a second run to start comparing.',
     RunCompareAddSecondRunMessage: 'Metrics will appear side by side so you can spot differences across test cases.',
     RunCompareTag: '[{index}] {name}',
+    RunCompareTagAria: 'Run [{index}]: {name}',
     RunCompareSelectRun: 'Select Run to Compare',
+    RunCompareTabSummaryOverview: 'Summary Overview',
+    RunCompareTabMetricsDetails: 'Metrics Details',
+    RunCompareTabExecutionResults: 'Execution Results',
+    RunCompareDelta: 'Delta',
+    RunCompareDiffLabel: 'Diff:',
   },
   ExportRun: {
     ExportRunTitle: 'Export run',

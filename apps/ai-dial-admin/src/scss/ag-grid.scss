@@ -170,6 +170,39 @@
       @apply bg-transparent;
     }
   }
+  .compare-row-failed {
+    @apply bg-error;
+    &.ag-row-hover:not(.ag-full-width-row):before {
+      @apply bg-transparent;
+    }
+    .ag-cell {
+      @apply bg-error;
+    }
+  }
+  .ag-cell.compare-metric-improved-primary {
+    @apply bg-success border-solid border-l border-t border-b border-accent-secondary border-r-0;
+  }
+  .ag-cell.compare-metric-improved-secondary {
+    @apply bg-success border-solid border-t border-b border-r border-accent-secondary border-l-0;
+  }
+  .ag-cell.compare-metric-regressed-primary {
+    @apply bg-error border-solid border-l border-t border-b border-error border-r-0;
+  }
+  .ag-cell.compare-metric-regressed-secondary {
+    @apply bg-error border-solid border-t border-b border-r border-error border-l-0;
+  }
+  .ag-cell.compare-metric-new-primary {
+    @apply bg-info border-solid border-l border-t border-b border-accent-primary border-r-0;
+  }
+  .ag-cell.compare-metric-new-secondary {
+    @apply bg-info border-solid border-t border-b border-r border-accent-primary border-l-0;
+  }
+  .ag-cell.compare-status-diff-primary {
+    @apply bg-info border-solid border-l border-t border-b border-accent-primary border-r-0;
+  }
+  .ag-cell.compare-status-diff-secondary {
+    @apply bg-info border-solid border-t border-b border-r border-accent-primary border-l-0;
+  }
   .ag-active-detail-row {
     @apply bg-controls-accent-alpha;
     &.ag-row-hover:not(.ag-full-width-row):before {

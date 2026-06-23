@@ -5,6 +5,12 @@ export enum CompareRunSlot {
   Secondary = 'secondary',
 }
 
+export enum CompareViewTab {
+  SummaryOverview = 'summaryOverview',
+  MetricsDetails = 'metricsDetails',
+  ExecutionResults = 'executionResults',
+}
+
 export const RUN_COMPARE_SEGMENT = 'compare';
 export const RUN_COMPARE_RUNS_QUERY_PARAM = 'runs';
 
@@ -14,6 +20,10 @@ export const TEST_CASE_NAME_COLUMN_WIDTH = 156;
 export const HTTP_COLUMN_WIDTH = 80;
 export const DURATION_COLUMN_WIDTH = 100;
 export const EXTRACTED_COLUMN_MIN_WIDTH = 120;
+export const METRIC_COLUMN_WIDTH = 148;
+export const DELTA_COLUMN_WIDTH = 80;
+export const DEFAULT_COMPARE_DELTA_HEADER = 'Delta';
+export const COMPARE_ACTION_COLUMN_WIDTH = 40;
 
 export const COMPARE_GROUP_HEADER_HEIGHT = 28;
 

@@ -9,6 +9,7 @@ import { removeRun } from '@/src/app/[lang]/runs/actions';
 import { getRuns } from '@/src/app/[lang]/test-suites/actions';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 import ExportRunModal from '@/src/components/Runs/Export/ExportRunModal';
+import { useCompareRunLauncher } from '@/src/components/Runs/Compare/useCompareRunLauncher';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { ACTION_COLUMN, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
 import {
@@ -38,6 +39,7 @@ interface Props {
 const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
   const t = useI18n();
   const { featureFlags } = useAppContext();
+  const { openCompareRun, compareRunModal } = useCompareRunLauncher();
 
   const [isLoading, setIsLoading] = useState(false);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
@@ -168,9 +170,12 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
     onOpenInNewTab(ApplicationRoute.Runs, run);
   }, []);
 
-  const onCompareRun = useCallback((run?: Run) => {
-    onOpenInNewTab(ApplicationRoute.RunsCompare, run);
-  }, []);
+  const onCompareRun = useCallback(
+    (run?: Run) => {
+      openCompareRun(run);
+    },
+    [openCompareRun],
+  );
 
   const columnDefs = useMemo(
     () => [
@@ -211,6 +216,7 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
       {isExportModalOpen &&
         selectedExportRun?.id &&
         createPortal(<ExportRunModal runId={selectedExportRun.id} onClose={onCloseExportModal} />, document.body)}
+      {compareRunModal}
     </>
   );
 };
