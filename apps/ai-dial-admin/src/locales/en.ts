@@ -1989,6 +1989,10 @@ export default {
     RunCompareTabExecutionResults: 'Execution Results',
     RunCompareDelta: 'Delta',
     RunCompareDiffLabel: 'Diff:',
+    RunCompareDifferences: 'Differences',
+    RunCompareViewDifferencesOnly: 'View differences only',
+    RunCompareHideHighlights: 'Hide highlights',
+    RunCompareDisplay: 'Display',
   },
   ExportRun: {
     ExportRunTitle: 'Export run',

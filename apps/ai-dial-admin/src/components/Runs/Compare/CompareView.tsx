@@ -1,10 +1,11 @@
 'use client';
 
+import { IconAdjustmentsHorizontal } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialTabs } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton, DialTabs } from '@epam/ai-dial-ui-kit';
 
 import { getRun } from '@/src/app/[lang]/runs/actions';
 import CompareRunTag from '@/src/components/Runs/Compare/CompareRunTag';
@@ -23,6 +24,7 @@ import {
   getSelectableCompareRuns,
 } from '@/src/components/Runs/Compare/utils';
 import { RunsI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { Run } from '@/src/models/evaluation/run';
 
@@ -41,6 +43,7 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
   const [selectRunSlot, setSelectRunSlot] = useState<CompareRunSlot | null>(null);
   const [comparedRunId, setComparedRunId] = useState(comparedRunIdProp);
   const [activeTab, setActiveTab] = useState(CompareViewTab.ExecutionResults);
+  const [showDisplayPanel, setShowDisplayPanel] = useState(false);
 
   const compareTabs = useMemo(() => getCompareViewTabs(t), [t]);
 
@@ -135,6 +138,14 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
     setActiveTab(tab as CompareViewTab);
   }, []);
 
+  const toggleDisplayPanel = useCallback(() => setShowDisplayPanel((prev) => !prev), []);
+
+  useEffect(() => {
+    if (activeTab !== CompareViewTab.ExecutionResults) {
+      setShowDisplayPanel(false);
+    }
+  }, [activeTab]);
+
   return (
     <div className="flex flex-col flex-1 min-h-0 h-full bg-layer-2 rounded p-4 gap-4 overflow-hidden">
       <h3 className="dial-h3 text-primary">{t(RunsI18nKey.RunComparison)}</h3>
@@ -157,10 +168,27 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
         />
       </div>
 
-      <DialTabs tabs={compareTabs} activeTab={activeTab} onClick={onChangeActiveTab} />
+      <div className="flex items-center justify-between gap-4 shrink-0">
+        <DialTabs tabs={compareTabs} activeTab={activeTab} onClick={onChangeActiveTab} />
+        {activeTab === CompareViewTab.ExecutionResults && (
+          <DialGhostButton
+            label={t(RunsI18nKey.RunCompareDisplay)}
+            iconBefore={<IconAdjustmentsHorizontal {...BASE_BUTTON_ICON_PROPS} />}
+            onClick={toggleDisplayPanel}
+          />
+        )}
+      </div>
 
       <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
-        <CompareTabsContent activeTab={activeTab} primaryRunId={primaryRunId} comparedRunId={comparedRunId} />
+        <CompareTabsContent
+          activeTab={activeTab}
+          primaryRunId={primaryRunId}
+          comparedRunId={comparedRunId}
+          primaryRunName={primaryRunName}
+          comparedRunName={comparedRunName}
+          showDisplayPanel={showDisplayPanel}
+          onToggleDisplayPanel={toggleDisplayPanel}
+        />
       </div>
 
       {selectRunModalConfig &&

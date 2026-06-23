@@ -3,9 +3,12 @@
 import { ICellRendererParams } from 'ag-grid-community';
 import classNames from 'classnames';
 
+import {
+  formatMetricDelta,
+  getMetricDelta,
+  MetricDeltaKind,
+} from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
-
-import { CompareMetricDeltaKind, formatCompareMetricDelta, getCompareMetricDelta } from './compare-metric-utils';
 
 interface CompareDeltaCellRendererParams extends ICellRendererParams<CompareAnalyticsRow> {
   groupKey: string;
@@ -17,13 +20,13 @@ const CompareDeltaCellRenderer = (params: CompareDeltaCellRendererParams) => {
 
   const primary = params.data?.metricValues?.[groupKey]?.[metricKey];
   const secondary = params.data?._compared?.metricValues?.[groupKey]?.[metricKey];
-  const delta = getCompareMetricDelta(primary, secondary);
+  const delta = getMetricDelta(primary, secondary);
 
-  if (delta.kind !== CompareMetricDeltaKind.Changed) {
+  if (delta.kind !== MetricDeltaKind.Changed) {
     return null;
   }
 
-  const label = formatCompareMetricDelta(delta);
+  const label = formatMetricDelta(delta);
   if (!label) return null;
 
   const isPositive = (delta.value ?? 0) > 0;
