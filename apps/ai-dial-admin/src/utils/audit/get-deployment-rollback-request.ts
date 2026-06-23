@@ -1,6 +1,4 @@
 import {
-  createContainer,
-  createImage,
   deleteContainer,
   deleteImage,
   getDeploymentRevisionDetails,
@@ -9,25 +7,16 @@ import {
   rollbackDeploymentWhitelist,
 } from '@/src/app/actions/deployments';
 import { DialActivity } from '@/src/models/activity-audit';
-import { Container } from '@/src/models/deployments/containers';
-import { Image } from '@/src/models/deployments/images';
 import {
   ActivityAuditType,
   isContainerDeploymentResource,
   isGlobalFirewallResource,
   isImageDefinitionResource,
 } from '@/src/types/activity-audit';
-import { buildCreateBodyFromSnapshot } from './build-create-body-from-snapshot';
 
 export const getDeploymentRollbackAction = (type?: string) => {
   if (isContainerDeploymentResource(type)) return rollbackDeploymentContainer;
   if (isImageDefinitionResource(type)) return rollbackDeploymentImage;
-  return null;
-};
-
-export const getDeploymentCreateAction = (type?: string) => {
-  if (isContainerDeploymentResource(type)) return createContainer;
-  if (isImageDefinitionResource(type)) return createImage;
   return null;
 };
 
@@ -43,7 +32,9 @@ export const getDeploymentDeleteAction = (type?: string) => {
  *
  * - `Update` → the deployment-manager rollback endpoint (backend point-in-time)
  * - `Create` → delete the entity (it did not exist before)
- * - `Delete` → recreate the entity from the prior snapshot
+ * - `Delete` → the deployment-manager rollback endpoint; the backend resurrects
+ *   the currently-deleted entity from audit history and resets sensitive values
+ *   server-side (no client-side recreate, which would 500 on masked secrets)
  * - whitelist (singleton) → full-replacement rollback endpoint regardless of type
  *
  * @param {DialActivity} activity - the audit activity being reverted
@@ -64,15 +55,6 @@ export const rollbackDeploymentEntity = async (activity: DialActivity) => {
       ? ((snapshot?.id as string) ?? id)
       : ((snapshot?.name as string) ?? id);
     return getDeploymentDeleteAction(resourceType)?.(deleteId);
-  }
-
-  if (activityType === ActivityAuditType.Delete) {
-    const snapshot = await getDeploymentRevisionDetails(resourceType, id, targetRevision);
-    const body = buildCreateBodyFromSnapshot(snapshot, resourceType);
-    if (isImageDefinitionResource(resourceType)) {
-      return createImage(body as Partial<Image>);
-    }
-    return createContainer(body as unknown as Container);
   }
 
   return getDeploymentRollbackAction(resourceType)?.(id, targetRevision);
