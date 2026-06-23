@@ -36,7 +36,7 @@ const AddVersionModal: FC<Props> = ({
   const { dispatch, errorFields } = useSaveValidationContext();
 
   const isValid = useMemo(
-    () => errorFields.get('version') !== false && errorFields.get(SEMANTIC_VERSION_VALIDATION_FIELD) !== false,
+    () => errorFields?.get('version') !== false && errorFields?.get(SEMANTIC_VERSION_VALIDATION_FIELD) !== false,
     [errorFields],
   );
 
