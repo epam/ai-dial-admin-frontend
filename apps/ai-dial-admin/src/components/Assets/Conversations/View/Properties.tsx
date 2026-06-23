@@ -11,7 +11,6 @@ import { BasicI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { DialConversation } from '@/src/models/dial/conversation';
-import { getNameVersionFromAsset } from '@/src/utils/entities/versions';
 
 interface Props {
   selectedConversation: DialConversation;
@@ -24,7 +23,6 @@ const Properties: FC<Props> = ({ selectedConversation }) => {
   const [deployment, setDeployment] = useState<Record<string, string> | null>(null);
 
   const model = selectedConversation.model?.id as string;
-  const conversationName = getNameVersionFromAsset(selectedConversation?.name as string);
 
   const openResourceInNewTab = () => {
     window.open(getAgentLinkForConversation(deployment, currentLocale), '_blank');
@@ -45,9 +43,9 @@ const Properties: FC<Props> = ({ selectedConversation }) => {
 
   return (
     <div className="size-full flex flex-col gap-y-8">
-      {conversationName && (
+      {selectedConversation.name && (
         <LabelledText label={t(EntityFieldsI18nKey.name)}>
-          <DialTooltip tooltip={conversationName.name}>{conversationName.name}</DialTooltip>
+          <DialTooltip tooltip={selectedConversation.name}>{selectedConversation.name}</DialTooltip>
         </LabelledText>
       )}
 
