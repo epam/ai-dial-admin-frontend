@@ -3,7 +3,13 @@
 import { DialCheckbox, DialFormPopup, DialPasswordInput, PopupSize } from '@epam/ai-dial-ui-kit';
 import { FC, useMemo, useState } from 'react';
 
-import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
+import {
+  ButtonsI18nKey,
+  EntityFieldsI18nKey,
+  EntityPlaceholdersI18nKey,
+  ErrorI18nKey,
+  ToolsetI18nKey,
+} from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ToolsetAuthCredentialLevel, ToolsetAuthType } from '@/src/models/dial/toolset';
 
@@ -86,10 +92,12 @@ const LoginPopup: FC<Props> = ({ type, isModalOpen, isLoggedInAsUser, isLoggedIn
         {type === ToolsetAuthType.API_KEY && (
           <DialPasswordInput
             id="apiKeyValue"
-            labelProps={{ label: t(EntityFieldsI18nKey.apiKeyValue) }}
+            labelProps={{ label: t(EntityFieldsI18nKey.apiKeyValue), required: true }}
             placeholder={t(EntityPlaceholdersI18nKey.Value)}
             value={apiKeyValue}
             onChange={(v) => setApiKeyValue(v || '')}
+            invalid={!apiKeyValue}
+            error={!apiKeyValue ? t(ErrorI18nKey.RequiredField) : undefined}
           />
         )}
       </div>
