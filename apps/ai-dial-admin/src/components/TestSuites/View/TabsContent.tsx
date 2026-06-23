@@ -7,7 +7,6 @@ import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabConte
 import Metrics from '@/src/components/TestSuites/Metrics/Metrics';
 import TestSuiteProperties from '@/src/components/TestSuites/Properties/Properties';
 import Runs from '@/src/components/TestSuites/Runs/Runs';
-import DatasetBinding from '@/src/components/TestSuites/TestCases/DatasetBinding/DatasetBinding';
 import TestCases from '@/src/components/TestSuites/TestCases/TestCases';
 import { TestCasesActions } from '@/src/components/TestSuites/TestCases/TestCasesList';
 import MethodTabContent from '@/src/components/TestSuites/View/MethodTabContent';
@@ -69,10 +68,7 @@ const TabsContent: FC<Props> = ({
       {activeTab === EntityViewTab.TestSuiteMethod && (
         <MethodTabContent testSuite={selectedTestSuite} onChange={onChange} isSkipRefresh={isSkipRefresh} />
       )}
-      {activeTab === EntityViewTab.TestCases && !selectedTestSuite.datasetId && (
-        <DatasetBinding selectedTestSuite={selectedTestSuite} suiteEtag={suiteEtag ?? ''} />
-      )}
-      {activeTab === EntityViewTab.TestCases && selectedTestSuite.datasetId && (
+      {activeTab === EntityViewTab.TestCases && (
         <TestCases
           testCasesActionsRef={testCasesActionsRef}
           onDirtyChange={onTestCaseDirtyChange}
@@ -80,7 +76,7 @@ const TabsContent: FC<Props> = ({
           selectedTestSuite={selectedTestSuite}
           onChange={onChange}
           dataset={dataset ?? null}
-          suiteEtag={suiteEtag ?? ''}
+          suiteEtag={suiteEtag}
           onChangeDataset={onChangeDataset}
         />
       )}

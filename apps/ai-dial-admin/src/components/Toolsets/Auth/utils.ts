@@ -56,3 +56,5 @@ export const getUrl = () => {
   localStorage.removeItem(urlKey);
   return url;
 };
+
+export const getAuthTypeStorageKey = (toolsetName: string) => `toolset-auth-selected-type:${toolsetName}`;

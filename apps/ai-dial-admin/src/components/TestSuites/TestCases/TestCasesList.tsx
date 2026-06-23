@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { FC, RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialConfirmationPopup, DialLoader } from '@epam/ai-dial-ui-kit';
+import { DialConfirmationPopup, DialEllipsisTooltip, DialLoader, DialTag, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { IconDatabaseExport, IconExternalLink } from '@tabler/icons-react';
 import {
   CellClickedEvent,
   CellValueChangedEvent,
@@ -22,26 +23,32 @@ import {
   getDataset,
   getTestCases,
   importTestCase,
+  publishDataset,
+  removeDataset,
   removeMultipleTestCases,
   removeTestCase,
 } from '@/src/app/[lang]/datasets/actions';
+import { detachDataset, updateTestSuite } from '@/src/app/[lang]/test-suites/actions';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 import ListEntities from '@/src/components/ListView/List';
 import TryOut from '@/src/components/TestSuites/RequestTemplate/components/TryOut';
 import { getTestCaseColumns } from '@/src/components/TestSuites/utils/columns';
 import { createNewTestCaseRow, getTestCaseGridData, rowToTestCase } from '@/src/components/TestSuites/utils/data';
 import { ONE_ACTION_COLUMN } from '@/src/constants/ag-grid';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { ApiRoute } from '@/src/constants/api-routes';
 import { getRemoveOperation, getTryOutOperation } from '@/src/constants/grid-columns/actions';
-import { ButtonsI18nKey, DeleteI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, DatasetsI18nKey, DeleteI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
+import { Dataset, DatasetVisibility } from '@/src/models/evaluation/dataset';
 import { TestCase, TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
-import { ApplicationRoute } from '@/src/types/routes';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
+import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import HeaderButtons from './Header';
 
 export interface TestCasesActions {
@@ -56,8 +63,10 @@ interface Props {
   onDirtyChange?: (hasDirty: boolean) => void;
   onOpenSchemaModal?: () => void;
   isReadOnly?: boolean;
-  schema?: TestCaseSchema[];
   onSchemaChange?: (schema: TestCaseSchema[]) => void;
+  dataset: Dataset | null;
+  suiteEtag?: string;
+  onChangeDataset?: (dataset: Dataset, etag?: string) => void;
 }
 
 const TestCasesList: FC<Props> = ({
@@ -67,8 +76,10 @@ const TestCasesList: FC<Props> = ({
   onDirtyChange,
   onOpenSchemaModal,
   isReadOnly,
-  schema,
   onSchemaChange,
+  suiteEtag,
+  dataset,
+  onChangeDataset,
 }) => {
   const t = useI18n();
   const router = useRouter();
@@ -235,7 +246,7 @@ const TestCasesList: FC<Props> = ({
       const datasetId = selectedTestSuite.datasetId;
       if (!datasetId) return;
 
-      const activeSchema = schemaOverride ?? schema;
+      const activeSchema = schemaOverride ?? dataset?.testCaseSchema;
       const version = ++refreshVersionRef.current;
 
       setIsLoading(true);
@@ -272,7 +283,7 @@ const TestCasesList: FC<Props> = ({
         router.refresh();
       }
     },
-    [gridApi, onCellChange, onOpenTryOutSidebar, selectedTestSuite, stableOnRemoveCase, t, isReadOnly, schema],
+    [gridApi, onCellChange, onOpenTryOutSidebar, selectedTestSuite, stableOnRemoveCase, t, isReadOnly, dataset],
   );
 
   const onGridReady = useCallback(({ api }: GridReadyEvent) => {
@@ -296,16 +307,17 @@ const TestCasesList: FC<Props> = ({
           getDataset(datasetId, '').then((datasetRes) => {
             const updatedDataset = datasetRes?.response;
             if (!updatedDataset) {
-              refreshGrid();
+              refreshGrid(true);
               return;
             }
+            onChangeDataset?.(updatedDataset as Dataset, datasetRes?.etag);
             const freshSchema = updatedDataset.testCaseSchema as TestCaseSchema[] | undefined;
-            const schemaChanged = JSON.stringify(freshSchema) !== JSON.stringify(schema);
+            const schemaChanged = JSON.stringify(freshSchema) !== JSON.stringify(dataset?.testCaseSchema);
             if (!schemaChanged) {
-              refreshGrid();
+              refreshGrid(true);
             } else {
               onSchemaChange?.(freshSchema ?? []);
-              refreshGrid(false, freshSchema);
+              refreshGrid(true, freshSchema);
             }
           });
         } else {
@@ -315,7 +327,7 @@ const TestCasesList: FC<Props> = ({
         }
       });
     },
-    [refreshGrid, selectedTestSuite.datasetId, showNotification, t, schema, onSchemaChange],
+    [refreshGrid, selectedTestSuite.datasetId, showNotification, t, dataset, onSchemaChange, onChangeDataset],
   );
 
   const onExport = useCallback(() => {
@@ -395,7 +407,7 @@ const TestCasesList: FC<Props> = ({
   }, [gridApi, newTestCases]);
 
   const datasetId = selectedTestSuite.datasetId;
-  const schemaKey = JSON.stringify(schema ?? null);
+  const schemaKey = JSON.stringify(dataset?.testCaseSchema ?? null);
 
   useEffect(() => {
     if (!datasetId) return;
@@ -417,6 +429,98 @@ const TestCasesList: FC<Props> = ({
     onRemoveCaseRef.current = onOpenDeleteModal;
   }, [onOpenDeleteModal]);
 
+  const onPublish = useCallback(
+    async (name: string, description?: string) => {
+      const datasetId = selectedTestSuite.datasetId;
+      if (!datasetId) return;
+      const res = await publishDataset(datasetId, { name, description });
+      if (res.success) {
+        showNotification(getSuccessNotification(t(TestSuitesI18nKey.PublishSuccess)));
+        getDataset(datasetId, DEFAULT_ETAG).then((datasetRes) => {
+          if (datasetRes?.response) {
+            onChangeDataset?.(datasetRes.response as Dataset, datasetRes?.etag);
+          }
+        });
+        router.refresh();
+      } else {
+        showNotification(getErrorNotification(t(TestSuitesI18nKey.PublishFailed), res.errorMessage));
+      }
+    },
+    [selectedTestSuite.datasetId, showNotification, t, router, onChangeDataset],
+  );
+
+  const onAttachDataset = useCallback(
+    async (newDatasetId: string) => {
+      if (!suiteEtag) return;
+
+      if (dataset?.visibility === DatasetVisibility.PRIVATE && dataset.id) {
+        const deleteRes = await removeDataset(dataset.id);
+        if (!deleteRes.success) {
+          showNotification(getErrorNotification(deleteRes.errorHeader, deleteRes.errorMessage));
+          return;
+        }
+      }
+
+      const res = await updateTestSuite({ ...selectedTestSuite, datasetId: newDatasetId }, suiteEtag);
+      if (res.success) {
+        router.refresh();
+      } else {
+        showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
+      }
+    },
+    [selectedTestSuite, suiteEtag, dataset, showNotification, router],
+  );
+
+  const onDetachDatasetCallback = useCallback(async () => {
+    const suiteId = selectedTestSuite.id;
+    if (!suiteId) return;
+    const res = await detachDataset(suiteId);
+    if (res.success) {
+      showNotification(getSuccessNotification(t(TestSuitesI18nKey.DetachSuccess)));
+      router.refresh();
+    } else {
+      showNotification(getErrorNotification(t(TestSuitesI18nKey.DetachFailed), res.errorMessage));
+    }
+  }, [selectedTestSuite.id, showNotification, t, router]);
+
+  const totalCount = data.length + newTestCases.length;
+  const isPrivate = dataset?.visibility === DatasetVisibility.PRIVATE;
+
+  const publicTag = !isPrivate && dataset?.visibility && (
+    <button
+      className="flex items-center gap-1 bg-accent-secondary-alpha border border-accent-secondary px-2 py-1 rounded-sm shrink-0 cursor-pointer"
+      onClick={() => onOpenInNewTab(ApplicationRoute.Datasets, { id: selectedTestSuite.datasetId })}
+    >
+      <IconDatabaseExport size={12} className="text-accent-secondary" />
+      <DialEllipsisTooltip className="tiny max-w-[600px]" text={dataset?.name || ''} />
+      <IconExternalLink size={12} />
+    </button>
+  );
+
+  const visibilityTag =
+    dataset?.visibility &&
+    (isPrivate ? (
+      <DialTooltip tooltip={t(TestSuitesI18nKey.TestCasesPrivateTagTooltip)} triggerClassName="flex items-center">
+        <DialTag
+          label={t(DatasetsI18nKey.VisibilityPrivate)}
+          className="bg-accent-tertiary-alpha border border-accent-tertiary rounded-sm shrink-0"
+        />
+      </DialTooltip>
+    ) : (
+      publicTag
+    ));
+
+  const listLabel = (
+    <div className="flex items-center gap-2">
+      {t(TabsI18nKey.TestCases)}: {totalCount}
+      {visibilityTag}
+    </div>
+  );
+
+  const listDescription = !isPrivate && dataset?.visibility && (
+    <span className="dial-small-text text-secondary">{t(TestSuitesI18nKey.PublicDatasetInfo)}</span>
+  );
+
   return (
     <div className="flex-1 min-h-0">
       {isLoading ? (
@@ -424,8 +528,12 @@ const TestCasesList: FC<Props> = ({
       ) : (
         <ListEntities
           additionalGridOptions={gridOptions}
-          listLabel={t(TabsI18nKey.TestCases)}
-          emptyDataProps={{ title: t(TestSuitesI18nKey.NoTestCases) }}
+          listLabel={listLabel}
+          description={listDescription}
+          emptyDataProps={{
+            title: t(TestSuitesI18nKey.NoTestCases),
+            description: t(TestSuitesI18nKey.NoTestCasesDescription),
+          }}
           onGridReady={onGridReady}
           rowData={data}
           columnDefs={columnDefs}
@@ -437,8 +545,12 @@ const TestCasesList: FC<Props> = ({
             onExport={onExport}
             onOpenSchemaModal={onOpenSchemaModal}
             onBatchDelete={onOpenBatchDeleteModal}
+            testCaseCount={totalCount}
             showBatchDelete={!isReadOnly && selectedRows.length > 0}
             isReadOnly={isReadOnly}
+            onPublish={onPublish}
+            onAttachDataset={onAttachDataset}
+            onDetachDataset={onDetachDatasetCallback}
           />
         </ListEntities>
       )}

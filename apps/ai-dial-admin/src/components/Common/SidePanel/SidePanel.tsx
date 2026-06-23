@@ -1,11 +1,8 @@
 'use client';
 
 import { DialCloseButton } from '@epam/ai-dial-ui-kit';
-import classNames from 'classnames';
 import { FC, ReactNode } from 'react';
-
-// TODO: adopt SidePanel in all ad-hoc details panels (Runs detail panels, MetricInfoPanel, etc.)
-//       so the app has a single source of truth for titled closable side-chrome.
+import classNames from 'classnames';
 
 interface Props {
   label: ReactNode;
@@ -23,7 +20,7 @@ const SidePanel: FC<Props> = ({ label, isOpen, onClose, children, className }) =
   return (
     <div className={classNames('flex flex-col lg:w-[420px] p-4 border border-primary rounded h-full', className)}>
       <div className="flex flex-row justify-between items-center mb-4">
-        <span className="dial-tiny-text text-secondary">{label}</span>
+        {typeof label === 'string' ? <span className="dial-tiny-text text-secondary">{label}</span> : label}
         <DialCloseButton className="h-[24px]" size={24} onClose={onClose} />
       </div>
       {children}

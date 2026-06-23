@@ -1,4 +1,3 @@
-const { composePlugins, withNx } = require('@nx/next');
 const fs = require('fs');
 const path = require('path');
 
@@ -24,10 +23,10 @@ const ContentSecurityPolicy = `
     ${process.env.NODE_ENV === 'production' ? 'upgrade-insecure-requests;' : ''}
 `;
 
-/**
- * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
- **/
+/** @type {import('next').NextConfig} */
 const nextConfig = {
+  // NX sets NX_NEXT_OUTPUT_PATH during build; replicates withNx distDir logic without the deprecated wrapper.
+  distDir: process.env.NX_NEXT_OUTPUT_PATH ? path.join('../../', process.env.NX_NEXT_OUTPUT_PATH, '.next') : '.next',
   async redirects() {
     return [
       {
@@ -60,7 +59,6 @@ const nextConfig = {
       },
     ];
   },
-  nx: {},
   transpilePackages: ['@epam/ai-dial-ui-kit'],
   experimental: {
     serverActions: {
@@ -106,9 +104,4 @@ const nextConfig = {
   },
 };
 
-const plugins = [
-  // Add more Next.js plugins to this list if needed.
-  withNx,
-];
-
-module.exports = composePlugins(...plugins)(nextConfig);
+module.exports = nextConfig;

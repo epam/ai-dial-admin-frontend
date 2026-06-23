@@ -9,6 +9,7 @@ import { useI18n } from '@/src/locales/client';
 interface Props {
   title?: string;
   collapsed?: boolean;
+  collapsible?: boolean;
   actionButtons?: ReactNode;
   children?: ReactNode;
   header?: ReactElement<{ isCollapsed: boolean }>;
@@ -26,6 +27,7 @@ const Accordion: FC<Props> = ({
   title,
   header,
   collapsed = true,
+  collapsible = true,
   actionButtons,
   contentClassName,
   containerClassName,
@@ -38,18 +40,21 @@ const Accordion: FC<Props> = ({
   const [isCollapsed, setIsCollapsed] = useState(collapsed);
 
   const toggleCollapse = useCallback(() => {
+    if (!collapsible) return;
     setIsCollapsed((prev) => {
       const next = !prev;
       onCollapsedChange?.(next);
       return next;
     });
-  }, [onCollapsedChange]);
+  }, [collapsible, onCollapsedChange]);
 
-  const icon = isCollapsed ? (
-    <IconChevronRight className="text-secondary" {...BASE_BUTTON_ICON_PROPS} />
-  ) : (
-    <IconChevronDown className="text-secondary" {...BASE_BUTTON_ICON_PROPS} />
-  );
+  const icon = collapsible ? (
+    isCollapsed ? (
+      <IconChevronRight className="text-secondary" {...BASE_BUTTON_ICON_PROPS} />
+    ) : (
+      <IconChevronDown className="text-secondary" {...BASE_BUTTON_ICON_PROPS} />
+    )
+  ) : null;
 
   return (
     <div

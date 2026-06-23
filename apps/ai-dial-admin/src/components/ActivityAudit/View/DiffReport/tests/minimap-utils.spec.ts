@@ -103,8 +103,8 @@ describe('computeMinimapMarkers', () => {
     expect(computeMinimapMarkers(container)[0].status).toBe(DiffStatus.REMOVED);
   });
 
-  test('maps ag-changed-row to CHANGED status', () => {
-    const container = makeContainer(800, 400, 0, 0, [{ className: 'ag-changed-row', top: 16, height: 32 }]);
+  test('maps ag-diff-changed-marker to CHANGED status', () => {
+    const container = makeContainer(800, 400, 0, 0, [{ className: 'ag-diff-changed-marker', top: 16, height: 32 }]);
     expect(computeMinimapMarkers(container)[0].status).toBe(DiffStatus.CHANGED);
   });
 
@@ -163,7 +163,7 @@ describe('computeMinimapMarkers', () => {
     const container = makeContainer(800, 400, 0, 0, [
       { className: 'ag-new-row', top: 100, height: 32 },
       { className: 'ag-error-row', top: 300, height: 32 },
-      { className: 'ag-changed-row', top: 500, height: 32 },
+      { className: 'ag-diff-changed-marker', top: 500, height: 32 },
     ]);
     const markers = computeMinimapMarkers(container);
     expect(markers).toHaveLength(3);

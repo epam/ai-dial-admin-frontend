@@ -1,6 +1,12 @@
 import { NotificationType } from '@/src/models/notification';
 import { describe, expect, test } from 'vitest';
-import { getErrorNotification, getNotification, getPrepareNotification, getSuccessNotification } from '../notification';
+import {
+  getCopyToClipboardNotification,
+  getErrorNotification,
+  getNotification,
+  getPrepareNotification,
+  getSuccessNotification,
+} from '../notification';
 
 describe('Utils :: getErrorNotification', () => {
   test('Should return error notification', () => {
@@ -96,6 +102,17 @@ describe('Utils :: getSuccessNotification', () => {
       description: '',
       duration: null,
     });
+  });
+});
+
+describe('Utils :: getCopyToClipboardNotification', () => {
+  test('Should return success notification with a customTitle element', () => {
+    const result = getCopyToClipboardNotification('Copied!');
+    expect(result).toMatchObject({
+      type: NotificationType.success,
+      customTitle: 'Copied!',
+    });
+    expect(result.customTitle).toBeDefined();
   });
 });
 

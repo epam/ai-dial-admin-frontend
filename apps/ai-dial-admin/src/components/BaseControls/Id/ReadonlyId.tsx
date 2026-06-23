@@ -1,5 +1,7 @@
 import { FC } from 'react';
 
+import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
+
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
@@ -16,7 +18,7 @@ const ReadonlyId: FC<Props> = ({ value }) => {
     <div className="flex-1 min-w-0">
       <LabelledText copyLabel={t(EntityFieldsI18nKey.id)} copyable={true}>
         <div className="flex flex-row gap-x-3 items-center max-w-[640px]">
-          <p className="truncate">{value || ''}</p>
+          <DialEllipsisTooltip className="flex-0" text={value || ''} />
           <CopyButton value={value || ''} valueLabel={t(EntityFieldsI18nKey.id)} />
         </div>
       </LabelledText>

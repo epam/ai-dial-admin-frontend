@@ -1,6 +1,7 @@
 import { ColDef, ValueGetterParams } from 'ag-grid-community';
 
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
+import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSelectCellRenderer';
 import JsonEditorCellRenderer from '@/src/components/Grid/CellRenderers/JsonEditorCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import { getValidityStatusColumn } from '@/src/components/TestSuites/utils/columns';
@@ -9,6 +10,7 @@ import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { Dataset } from '@/src/models/evaluation/dataset';
 import { TestCaseSchema } from '@/src/models/evaluation/test-suite';
 import { TestCaseItemType } from '@/src/types/evaluation';
+import { ApplicationRoute } from '@/src/types/routes';
 import { isValueTruthy } from '@/src/utils/types';
 
 export type onCellChange = (data: Record<string, unknown>, field: string, value: string | number | boolean) => void;
@@ -56,6 +58,18 @@ export const getDatasetTestCaseColumns = (
           },
         },
         cellRendererSelector: () => {
+          if (param.type === TestCaseItemType.FILE) {
+            return {
+              component: FileSelectCellRenderer,
+              params: {
+                onChange: (value: string | number, rowData: unknown) => {
+                  onCellChange(rowData as Record<string, unknown>, field, value);
+                },
+                id: dataset.id,
+                view: ApplicationRoute.Datasets,
+              },
+            };
+          }
           if (param.type === TestCaseItemType.INTEGER || param.type === TestCaseItemType.NUMBER) {
             return {
               component: EditableCellRenderer,

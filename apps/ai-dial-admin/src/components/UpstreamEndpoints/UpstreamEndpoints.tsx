@@ -1,8 +1,9 @@
 import { FC, useCallback } from 'react';
 
-import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 
+import Accordion from '@/src/components/Common/Accordion/Accordion';
 import { UpstreamEndpointsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
@@ -20,6 +21,7 @@ interface Props {
   required?: boolean;
   view?: ApplicationRoute;
   withResponses?: boolean;
+  collapsible?: boolean;
 }
 
 const UpstreamEndpoints: FC<Props> = ({
@@ -30,6 +32,7 @@ const UpstreamEndpoints: FC<Props> = ({
   required,
   view,
   withResponses,
+  collapsible = true,
 }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
@@ -64,49 +67,54 @@ const UpstreamEndpoints: FC<Props> = ({
     [onChangeEntity, entity],
   );
 
+  const count = entity.upstreams?.length ?? 0;
+
   return (
-    <div className="flex flex-col gap-y-4 lg:gap-y-2">
-      <div className="flex flex-col gap-4 lg:gap-2">
-        {entity.upstreams == null || entity.upstreams.length === 0 ? (
+    <Accordion
+      title={`${t(UpstreamEndpointsI18nKey.Endpoints)}: ${count}`}
+      contentClassName="gap-4 lg:gap-2"
+      collapsible={collapsible}
+      collapsed={collapsible ? true : false}
+    >
+      {entity.upstreams == null || entity.upstreams.length === 0 ? (
+        <Endpoint
+          key={0}
+          disabled={isDisabled}
+          endpoint={{}}
+          index={0}
+          isKeyOptional={isKeyOptional}
+          required={required}
+          updateEndpoint={(point) => onUpdateEndPoint(point, 0)}
+          removeEndpoint={onRemoveEndpoint}
+          view={view}
+          withResponses={withResponses}
+        />
+      ) : (
+        entity.upstreams?.map((endpoint, index) => (
           <Endpoint
-            key={0}
             disabled={isDisabled}
-            endpoint={{}}
-            index={0}
+            key={index}
+            endpoint={endpoint}
+            index={index}
             isKeyOptional={isKeyOptional}
             required={required}
-            updateEndpoint={(point) => onUpdateEndPoint(point, 0)}
+            updateEndpoint={(point) => onUpdateEndPoint(point, index)}
             removeEndpoint={onRemoveEndpoint}
             view={view}
             withResponses={withResponses}
           />
-        ) : (
-          entity.upstreams?.map((endpoint, index) => (
-            <Endpoint
-              disabled={isDisabled}
-              key={index}
-              endpoint={endpoint}
-              index={index}
-              isKeyOptional={isKeyOptional}
-              required={required}
-              updateEndpoint={(point) => onUpdateEndPoint(point, index)}
-              removeEndpoint={onRemoveEndpoint}
-              view={view}
-              withResponses={withResponses}
-            />
-          ))
-        )}
-      </div>
+        ))
+      )}
       {!isDisabled && (
         <div>
-          <DialNeutralButton
+          <DialGhostButton
             label={t(UpstreamEndpointsI18nKey.AddUpstream)}
             iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
             onClick={onAddEndpoint}
           />
         </div>
       )}
-    </div>
+    </Accordion>
   );
 };
 

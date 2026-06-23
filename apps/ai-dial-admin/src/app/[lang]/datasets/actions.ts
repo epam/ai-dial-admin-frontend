@@ -3,7 +3,12 @@
 import { cookies, headers } from 'next/headers';
 
 import { datasetsApi } from '@/src/app/api/api';
-import { Dataset, DatasetTestCase, DatasetVisibilityTransition } from '@/src/models/evaluation/dataset';
+import {
+  Dataset,
+  DatasetPublishBody,
+  DatasetTestCase,
+  DatasetVisibilityTransition,
+} from '@/src/models/evaluation/dataset';
 import { FilterDto, SortDto } from '@/src/models/request';
 import type { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 import { FilterOperatorDto } from '@/src/types/request';
@@ -36,6 +41,11 @@ export async function createDataset(dataset: Dataset) {
   return datasetsApi.createDataset(dataset, token);
 }
 
+export async function cloneDataset(id: string, body: Pick<Dataset, 'name' | 'description'>) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return datasetsApi.cloneDataset(id, body, token);
+}
+
 export async function updateDataset(dataset: Dataset, etag: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return datasetsApi.updateDataset(dataset, etag, token);
@@ -44,6 +54,11 @@ export async function updateDataset(dataset: Dataset, etag: string) {
 export async function removeDataset(id: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return datasetsApi.removeDataset(id, token);
+}
+
+export async function getDatasetTestSuites(id: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return datasetsApi.getDatasetTestSuites(id, token);
 }
 
 export async function transitionVisibility(id: string, body: DatasetVisibilityTransition) {
@@ -100,4 +115,9 @@ export async function importTestCase(
 ) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return datasetsApi.importTestCase(datasetId, file, token, mode, strategy);
+}
+
+export async function publishDataset(id: string, body: DatasetPublishBody) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return datasetsApi.publishDataset(id, body, token);
 }

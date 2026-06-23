@@ -14,10 +14,11 @@ import ResetFiltersButton from './Header/ResetFiltersButton';
 import { mainListEntitiesViewClassName } from './constants';
 
 interface Props<T> extends Omit<GridViewProps<T>, 'showColumnsPanel' | 'toggleColumnsPanel'> {
-  listLabel?: string;
+  listLabel?: ReactNode;
   className?: string;
   children?: ReactNode;
   infoPanel?: ReactNode;
+  description?: ReactNode;
   isEnableColumnPanel?: boolean;
   isMainListView?: boolean;
   isEmbedToModal?: boolean;
@@ -30,6 +31,7 @@ const ListEntities = <T extends object>({
   isMainListView = false,
   isEmbedToModal = false,
   infoPanel,
+  description,
   children,
   onGridReady: onGridReadyCallback,
   ...props
@@ -73,22 +75,25 @@ const ListEntities = <T extends object>({
         !isEmbedToModal && 'bg-layer-2',
       )}
     >
-      <div className="flex flex-row flex-wrap justify-between mb-4 items-center h-[40px]">
-        {listLabel && <h1>{listLabel}</h1>}
+      {listLabel && (
+        <div className="flex flex-row flex-wrap justify-between mb-4 items-center h-[40px]">
+          <h1>{listLabel}</h1>
 
-        <div className="flex gap-4">
-          <ResetFiltersButton gridApi={gridApi} />
-          {isEnableColumnPanel &&
-            (!!props.rowData?.length || props.additionalGridOptions?.rowModelType === 'infinite') && (
-              <DialGhostButton
-                label={t(ButtonsI18nKey.Columns)}
-                iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} />}
-                onClick={onToggleColumnsPanel}
-              />
-            )}
-          {children}
+          <div className="flex gap-4">
+            <ResetFiltersButton gridApi={gridApi} />
+            {isEnableColumnPanel &&
+              (!!props.rowData?.length || props.additionalGridOptions?.rowModelType === 'infinite') && (
+                <DialGhostButton
+                  label={t(ButtonsI18nKey.Columns)}
+                  iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} />}
+                  onClick={onToggleColumnsPanel}
+                />
+              )}
+            {children}
+          </div>
         </div>
-      </div>
+      )}
+      {description && <div className="mb-4">{description}</div>}
       <div className="flex-1 min-h-0 flex flex-row gap-x-3">
         <div className="flex-1 min-w-0">
           <GridView

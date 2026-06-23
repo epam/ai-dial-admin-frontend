@@ -19,12 +19,13 @@ import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
-import { DialModel } from '@/src/models/dial/model';
+import { DialModel, DialModelType } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
 import {
   clearUpstreamResponsesEndpoints,
   shouldClearUpstreamResponsesEndpoints,
 } from '@/src/utils/models/upstream-responses';
+import EmbeddingDimensions from './EmbeddingDimensions';
 import ModelTypeProperties from './ModelTypeProperties';
 
 interface Props {
@@ -78,15 +79,17 @@ const ModelProperties: FC<Props> = ({ model, modelsNames, onChangeModel }) => {
 
       <ModelTypeProperties model={model} onChangeModel={onChangeModel} />
 
-      <Defaults entity={model} onChangeEntity={onChangeModel} title={t(EntityFieldsI18nKey.completionDefaults)} />
+      <Defaults
+        values={model.defaults}
+        onChangeValues={(defaults) => onChangeModel({ ...model, defaults })}
+        title={t(EntityFieldsI18nKey.completionDefaults)}
+      />
 
       {showResponsesDefaults && (
         <Defaults
-          entity={model}
-          onChangeEntity={onChangeModel}
+          values={model.responsesDefaults}
+          onChangeValues={(responsesDefaults) => onChangeModel({ ...model, responsesDefaults })}
           title={t(EntityFieldsI18nKey.responsesDefaults)}
-          valuesKey="responsesDefaults"
-          tempKey="responsesDefaultsTemp"
           validationKey="responsesDefaultKeys"
         />
       )}
@@ -104,6 +107,8 @@ const ModelProperties: FC<Props> = ({ model, modelsNames, onChangeModel }) => {
       <ForwardAuthTokenField view={ApplicationRoute.Models} entity={model} onChangeEntity={onChangeModel} />
 
       <Limits model={model} onChangeModel={onChangeModel} />
+
+      {model.type === DialModelType.Embedding && <EmbeddingDimensions model={model} onChangeModel={onChangeModel} />}
 
       <MaxRetryAttempts entity={model} onChangeEntity={onChangeModel} />
 

@@ -2,14 +2,15 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { testSuitesApi } from '@/src/app/api/api';
+import { datasetsApi, testSuitesApi } from '@/src/app/api/api';
 import { DeploymentType } from '@/src/models/evaluation/deployment';
+import { DatasetVisibility } from '@/src/models/evaluation/dataset';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { Metric } from '@/src/models/evaluation/metric';
 import { FilterDto, SortDto } from '@/src/models/request';
 import { FilterOperatorDto } from '@/src/types/request';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { Metric } from '@/src/models/evaluation/metric';
 
 export async function removeTestSuite(id: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -19,6 +20,20 @@ export async function removeTestSuite(id: string) {
 export async function createTestSuite(suite: TestSuite) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return testSuitesApi.createTestSuite(suite, token);
+}
+
+export async function createTestSuiteWithDataset(suite: TestSuite) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  const suiteRes = await testSuitesApi.createTestSuite(suite, token);
+  if (!suiteRes.success || !suiteRes.response?.id) return suiteRes;
+
+  const suiteId = suiteRes.response.id;
+  await datasetsApi.createDataset(
+    { name: `DATASET_${suiteId}`, visibility: DatasetVisibility.PRIVATE, bindToSuiteId: suiteId },
+    token,
+  );
+
+  return suiteRes;
 }
 
 export async function duplicateTestSuite(id: string, suite: TestSuite) {
@@ -155,4 +170,17 @@ export async function uploadTestSuiteFiles(id: string, file: FormData) {
 export async function removeTestSuiteFile(id: string, fileName: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return testSuitesApi.removeTestSuiteFile(id, fileName, token);
+}
+
+export async function detachDataset(id: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return testSuitesApi.detachDataset(id, token);
+}
+
+export async function createDatasetForSuite(suiteId: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return datasetsApi.createDataset(
+    { name: `DATASET_${suiteId}`, visibility: DatasetVisibility.PRIVATE, bindToSuiteId: suiteId },
+    token,
+  );
 }

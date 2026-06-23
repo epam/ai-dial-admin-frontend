@@ -39,7 +39,7 @@ describe('Activity audit :: compareSimpleTypes', () => {
   test('should push CHANGE when val1 and val2 are different', () => {
     const diffs = [];
     compareSimpleTypes(diffs, 'key', 'old', 'new');
-    expect(diffs).toEqual([{ parameter: 'key', value: 'new', diffStatus: DiffStatus.CHANGED }]);
+    expect(diffs).toEqual([{ parameter: 'key', value: 'new', pairedValue: 'old', diffStatus: DiffStatus.CHANGED }]);
   });
 
   test('should push unchanged value when val1 and val2 are the same', () => {
@@ -51,13 +51,15 @@ describe('Activity audit :: compareSimpleTypes', () => {
   test('should handle number types and push CHANGE if different', () => {
     const diffs = [];
     compareSimpleTypes(diffs, 'count', 1, 2);
-    expect(diffs).toEqual([{ parameter: 'count', value: '2', diffStatus: DiffStatus.CHANGED }]);
+    expect(diffs).toEqual([{ parameter: 'count', value: '2', pairedValue: '1', diffStatus: DiffStatus.CHANGED }]);
   });
 
   test('should handle boolean types and push CHANGE if different', () => {
     const diffs = [];
     compareSimpleTypes(diffs, 'enabled', true, false);
-    expect(diffs).toEqual([{ parameter: 'enabled', value: 'false', diffStatus: DiffStatus.CHANGED }]);
+    expect(diffs).toEqual([
+      { parameter: 'enabled', value: 'false', pairedValue: 'true', diffStatus: DiffStatus.CHANGED },
+    ]);
   });
 
   test('should push unchanged value for boolean true === true', () => {
@@ -109,7 +111,7 @@ describe('Activity audit :: compareSimpleObjects', () => {
   test('should push CHANGED for primitive difference', () => {
     const diffs: ActivityAuditDiff[] = [];
     compareSimpleObjects(diffs, { name: 'Alice' }, { name: 'Bob' });
-    expect(diffs).toEqual([{ parameter: 'name', value: 'Bob', diffStatus: DiffStatus.CHANGED }]);
+    expect(diffs).toEqual([{ parameter: 'name', value: 'Bob', pairedValue: 'Alice', diffStatus: DiffStatus.CHANGED }]);
   });
 
   test('should push unchanged value when both primitives are same', () => {
@@ -139,7 +141,9 @@ describe('Activity audit :: compareSimpleObjects', () => {
   test('should handle nested object by calling compareStringArray', () => {
     const diffs: ActivityAuditDiff[] = [];
     compareSimpleObjects(diffs, { config: { enabled: true } }, { config: { enabled: false } });
-    expect(diffs).toEqual([{ parameter: 'config', value: 'enabled: false', diffStatus: DiffStatus.CHANGED }]);
+    expect(diffs).toEqual([
+      { parameter: 'config', value: 'enabled: false', pairedValue: 'enabled: true', diffStatus: DiffStatus.CHANGED },
+    ]);
   });
 
   test('should handle mix of primitive and nested values', () => {
@@ -151,8 +155,8 @@ describe('Activity audit :: compareSimpleObjects', () => {
     );
 
     expect(diffs).toEqual([
-      { parameter: 'name', value: 'Bob', diffStatus: DiffStatus.CHANGED },
-      { parameter: 'settings', value: 'theme: light', diffStatus: DiffStatus.CHANGED },
+      { parameter: 'name', value: 'Bob', pairedValue: 'Alice', diffStatus: DiffStatus.CHANGED },
+      { parameter: 'settings', value: 'theme: light', pairedValue: 'theme: dark', diffStatus: DiffStatus.CHANGED },
     ]);
   });
 
@@ -277,6 +281,7 @@ describe('Activity audit :: compareStringArray', () => {
     expect(diffs[0]).toEqual({
       parameter: 'key',
       value: 'a: 1, b: 3',
+      pairedValue: 'a: 1, b: 2',
       diffStatus: DiffStatus.CHANGED,
     });
   });
@@ -752,7 +757,7 @@ describe('Activity audit :: compareDefaults', () => {
     expect(diffMap[sectionKey]).toEqual([
       { parameter: 'key', value: 'defaultKey' },
       { parameter: 'type', value: 'string' },
-      { parameter: 'value', value: 'newValue', diffStatus: DiffStatus.CHANGED },
+      { parameter: 'value', value: 'newValue', pairedValue: 'oldValue', diffStatus: DiffStatus.CHANGED },
     ]);
   });
 
@@ -898,6 +903,7 @@ describe('Activity audit :: compareAppRunnerParameters', () => {
     expect(diffs[0]).toEqual({
       parameter: key,
       value: 'newValue',
+      pairedValue: 'oldValue',
       diffStatus: DiffStatus.CHANGED,
     });
   });

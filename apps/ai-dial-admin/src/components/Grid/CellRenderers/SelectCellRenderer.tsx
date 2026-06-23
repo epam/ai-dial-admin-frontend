@@ -27,10 +27,6 @@ const SelectCellRenderer = (params: SelectCellRendererParams) => {
     const values = Array.isArray(value) ? value : value ? [value] : [];
     const displayValue = params.isMulti ? values.join(STRINGS_DELIMITER) : values[0];
 
-    if (setValue) {
-      setValue(displayValue);
-    }
-
     params.onChange(
       value,
       params.data,
@@ -38,6 +34,10 @@ const SelectCellRenderer = (params: SelectCellRendererParams) => {
       params.node?.rowIndex as number,
       params.node?.isSelected(),
     );
+
+    if (setValue) {
+      setValue(displayValue);
+    }
   };
 
   const value = params.value?.toString();

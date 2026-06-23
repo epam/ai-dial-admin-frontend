@@ -21,7 +21,7 @@ describe('Endpoint', () => {
     removeEndpoint = vi.fn();
   });
 
-  test('renders all main fields and remove button', () => {
+  test('renders line 1 fields and remove button by default', () => {
     render(
       <Endpoint
         index={0}
@@ -31,13 +31,45 @@ describe('Endpoint', () => {
         removeEndpoint={removeEndpoint}
       />,
     );
-    // Check for input fields by placeholder
     expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.UpstreamEndpoint)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.UpstreamKey)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Weight)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Tier)).toBeInTheDocument();
-    expect(screen.getByText(EntityFieldsI18nKey.extraData)).toBeInTheDocument();
     expect(screen.getByLabelText('remove')).toBeInTheDocument();
+    // Key and extraData are behind the collapse toggle by default
+    expect(screen.queryByPlaceholderText(EntityPlaceholdersI18nKey.UpstreamKey)).not.toBeInTheDocument();
+    expect(screen.queryByText(EntityFieldsI18nKey.extraData)).not.toBeInTheDocument();
+  });
+
+  test('renders key and extraData fields after expanding', () => {
+    render(
+      <Endpoint
+        index={0}
+        disabled={false}
+        endpoint={baseEndpoint as any}
+        updateEndpoint={updateEndpoint}
+        removeEndpoint={removeEndpoint}
+      />,
+    );
+    fireEvent.click(screen.getByLabelText('toggle expanded fields'));
+    expect(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.UpstreamKey)).toBeInTheDocument();
+    expect(screen.getByText(EntityFieldsI18nKey.extraData)).toBeInTheDocument();
+    expect(screen.getByText(EntityFieldsI18nKey.secretExtraData)).toBeInTheDocument();
+  });
+
+  test('collapses key and extraData fields on second toggle click', () => {
+    render(
+      <Endpoint
+        index={0}
+        disabled={false}
+        endpoint={baseEndpoint as any}
+        updateEndpoint={updateEndpoint}
+        removeEndpoint={removeEndpoint}
+      />,
+    );
+    fireEvent.click(screen.getByLabelText('toggle expanded fields'));
+    fireEvent.click(screen.getByLabelText('toggle expanded fields'));
+    expect(screen.queryByPlaceholderText(EntityPlaceholdersI18nKey.UpstreamKey)).not.toBeInTheDocument();
+    expect(screen.queryByText(EntityFieldsI18nKey.extraData)).not.toBeInTheDocument();
   });
 
   test('calls updateEndpoint on endpoint url change', () => {
@@ -56,7 +88,7 @@ describe('Endpoint', () => {
     expect(updateEndpoint).toHaveBeenCalledWith({ ...baseEndpoint, endpoint: 'new-url' });
   });
 
-  test('calls updateEndpoint on key, weight, and tier change', () => {
+  test('calls updateEndpoint on weight and tier change', () => {
     render(
       <Endpoint
         index={0}
@@ -66,14 +98,27 @@ describe('Endpoint', () => {
         removeEndpoint={removeEndpoint}
       />,
     );
-    fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.UpstreamKey), {
-      target: { value: 'new-key' },
-    });
-    expect(updateEndpoint).toHaveBeenCalledWith({ ...baseEndpoint, key: 'new-key' });
     fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Weight), { target: { value: '5' } });
     expect(updateEndpoint).toHaveBeenCalledWith({ ...baseEndpoint, weight: 5 });
     fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.Tier), { target: { value: '3' } });
     expect(updateEndpoint).toHaveBeenCalledWith({ ...baseEndpoint, tier: 3 });
+  });
+
+  test('calls updateEndpoint on key change after expanding', () => {
+    render(
+      <Endpoint
+        index={0}
+        disabled={false}
+        endpoint={baseEndpoint as any}
+        updateEndpoint={updateEndpoint}
+        removeEndpoint={removeEndpoint}
+      />,
+    );
+    fireEvent.click(screen.getByLabelText('toggle expanded fields'));
+    fireEvent.change(screen.getByPlaceholderText(EntityPlaceholdersI18nKey.UpstreamKey), {
+      target: { value: 'new-key' },
+    });
+    expect(updateEndpoint).toHaveBeenCalledWith({ ...baseEndpoint, key: 'new-key' });
   });
 
   test('calls removeEndpoint on remove button click', () => {

@@ -15,6 +15,7 @@ import {
   TEST_CASE_URL,
   TEST_SUITES_RUNS_URL,
   TEST_SUITES_URL,
+  TEST_SUITE_DETACH_URL,
   TEST_SUITE_METRICS_URL,
   TEST_SUITE_RUN_URL,
   TEST_SUITE_TEMPLATE_VARIABLES_URL,
@@ -450,6 +451,20 @@ describe('Server :: TestSuiteApi', () => {
       `${TEST_URL}${TEST_CASES_URL('id')}?filter=testCaseName:in:testCase1,testCase2`,
       expect.objectContaining({
         method: 'DELETE',
+      }),
+    );
+  });
+
+  test('Should call detachDataset with POST method and empty body', async () => {
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
+
+    await instance.detachDataset(mockTestSuite.id as string, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_SUITE_DETACH_URL(mockTestSuite.id as string)}`,
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({}),
       }),
     );
   });

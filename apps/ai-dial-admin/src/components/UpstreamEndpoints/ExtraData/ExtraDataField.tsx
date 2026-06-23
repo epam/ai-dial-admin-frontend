@@ -1,22 +1,27 @@
+'use client';
+
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { DialRadioGroupPopupField, DialTextarea, RadioButtonWithContent } from '@epam/ai-dial-ui-kit';
+import classNames from 'classnames';
 
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, TypeI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DialEndpointExtraData, DialModelEndpoint } from '@/src/models/dial/model';
+import { DialEndpointExtraData } from '@/src/models/dial/model';
 import { JSONEditorError } from '@/src/types/editor';
-import { NONE_ID, USE_JSON_ID, USE_STRING_ID } from './constants';
+import { NONE_ID, SECRET_VALUE_PLACEHOLDER, USE_JSON_ID, USE_STRING_ID } from './constants';
 
 interface Props {
-  endpoint: DialModelEndpoint;
+  value?: DialEndpointExtraData;
   label?: string;
   disabled?: boolean;
-  onChangeExtraData: (extraData: DialEndpointExtraData) => void;
+  isSecret?: boolean;
+  containerClassName?: string;
+  onChange: (extraData: DialEndpointExtraData) => void;
 }
 
-const ExtraDataField: FC<Props> = ({ endpoint, disabled, label, onChangeExtraData }) => {
+const ExtraDataField: FC<Props> = ({ value, disabled, label, isSecret, containerClassName, onChange }) => {
   const t = useI18n();
   const [isValid, setIsValid] = useState(false);
   const [stringValue, setStringValue] = useState<string | undefined>(undefined);
@@ -24,46 +29,39 @@ const ExtraDataField: FC<Props> = ({ endpoint, disabled, label, onChangeExtraDat
   const [isValidJSON, setIsValidJSON] = useState(false);
   const [radioFieldId, setRadioFieldId] = useState(NONE_ID);
 
-  const onSetExtraData = useCallback(
-    (extraData: DialEndpointExtraData) => {
-      onChangeExtraData(extraData);
-    },
-    [onChangeExtraData],
-  );
-
   useEffect(() => {
-    if (typeof endpoint.extraData === 'object') {
+    if (typeof value === 'object') {
       try {
-        setJsonValue(JSON.stringify(endpoint.extraData, null, 2));
+        setJsonValue(JSON.stringify(value, null, 2));
         setRadioFieldId(USE_JSON_ID);
       } catch {
         console.error('Invalid JSON');
       }
-    } else if (typeof endpoint.extraData === 'number') {
-      setStringValue(String(endpoint.extraData));
+    } else if (typeof value === 'number') {
+      setStringValue(String(value));
       setRadioFieldId(USE_STRING_ID);
-    } else if (typeof endpoint.extraData === 'string' && endpoint.extraData.length) {
+    } else if (typeof value === 'string' && value.length) {
       try {
-        const parsed = JSON.parse(endpoint.extraData);
+        const parsed = JSON.parse(value);
 
         if (parsed == null) {
           setRadioFieldId(NONE_ID);
         } else if (typeof parsed === 'object') {
-          setJsonValue(JSON.stringify(JSON.parse(endpoint.extraData), null, 2));
+          setJsonValue(JSON.stringify(JSON.parse(value), null, 2));
           setIsValidJSON(true);
           setRadioFieldId(USE_JSON_ID);
         } else {
-          setStringValue(endpoint.extraData);
+          setStringValue(value);
           setRadioFieldId(USE_STRING_ID);
         }
       } catch {
-        setStringValue(endpoint.extraData);
+        setStringValue(value);
         setRadioFieldId(USE_STRING_ID);
       }
     } else {
       setRadioFieldId(NONE_ID);
     }
-  }, [endpoint.extraData]);
+  }, [value]);
 
   useEffect(() => {
     setIsValid(
@@ -96,18 +94,18 @@ const ExtraDataField: FC<Props> = ({ endpoint, disabled, label, onChangeExtraDat
   const onApply = useCallback(() => {
     switch (radioFieldId) {
       case NONE_ID:
-        onSetExtraData('');
+        onChange('');
         break;
       case USE_STRING_ID:
-        onSetExtraData(String(stringValue ?? ''));
+        onChange(String(stringValue ?? ''));
         break;
       case USE_JSON_ID:
-        onSetExtraData(JSON.parse(jsonValue as string));
+        onChange(JSON.parse(jsonValue as string));
         break;
       default:
         break;
     }
-  }, [onSetExtraData, radioFieldId, stringValue, jsonValue]);
+  }, [onChange, radioFieldId, stringValue, jsonValue]);
 
   const radioButtons: RadioButtonWithContent[] = [
     { id: NONE_ID, name: t(BasicI18nKey.None) },
@@ -134,30 +132,55 @@ const ExtraDataField: FC<Props> = ({ endpoint, disabled, label, onChangeExtraDat
     },
   ];
 
+  const hasValue = useMemo(() => {
+    if (typeof value === 'object') {
+      return value != null;
+    }
+    if (typeof value === 'number') {
+      return true;
+    }
+
+    return typeof value === 'string' && value.length > 0;
+  }, [value]);
+
+  // For secret fields we intentionally avoid passing the value through `customInputValue`:
+  // the popup field renders `customInputValue` as a real value (with a tooltip), which would
+  // expose the secret. Instead we leave it empty and rely on `emptyValueText` to show a fixed
+  // mask placeholder that signals "a secret value is set" without revealing it.
   const customInputValue = useMemo(() => {
-    return typeof endpoint.extraData === 'object'
-      ? JSON.stringify(endpoint.extraData, null, 2)
-      : typeof endpoint.extraData === 'string'
-        ? endpoint.extraData
-        : typeof endpoint.extraData === 'number'
-          ? String(endpoint.extraData)
+    if (isSecret) {
+      return undefined;
+    }
+
+    return typeof value === 'object'
+      ? JSON.stringify(value, null, 2)
+      : typeof value === 'string'
+        ? value
+        : typeof value === 'number'
+          ? String(value)
           : t(BasicI18nKey.None);
-  }, [endpoint.extraData, t]);
+  }, [value, isSecret, t]);
+
+  const emptyValueText = isSecret && hasValue ? SECRET_VALUE_PLACEHOLDER : t(BasicI18nKey.None);
+
+  const isFlexible = Boolean(containerClassName);
 
   return (
-    <div className="flex w-[200px] max-w-[200px] shrink-0 flex-col overflow-hidden">
+    <div
+      className={classNames('flex flex-col overflow-hidden', containerClassName ?? 'w-[200px] max-w-[200px] shrink-0')}
+    >
       <DialRadioGroupPopupField
         disabled={disabled}
         htmlFor="extraDataInput"
         id="extraDataInput"
-        emptyValueText={t(BasicI18nKey.None)}
+        emptyValueText={emptyValueText}
         label={label ?? ''}
         header={t(EntityFieldsI18nKey.extraData)}
         portalId="extraDataPortal"
         customInputValue={customInputValue}
         selectedRadioValue={radioFieldId}
-        inputClassName="max-w-[200px]"
-        valueClassName="w-[180px] truncate pr-2 text-left"
+        inputClassName={isFlexible ? 'w-full' : 'max-w-[200px]'}
+        valueClassName={isFlexible ? 'w-full truncate pr-2 text-left' : 'w-[180px] truncate pr-2 text-left'}
         isValid={isValid}
         radioButtons={radioButtons}
         onChangeRadioField={onChangeRadioField}

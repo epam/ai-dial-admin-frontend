@@ -7,7 +7,6 @@ export enum MenuI18nKey {
   EntitiesDescription = 'Menu.EntitiesDescription',
   AccessManagement = 'Menu.AccessManagement',
   AccessManagementDescription = 'Menu.AccessManagementDescription',
-  Playground = 'Menu.Playground',
   Approvals = 'Menu.Approvals',
   ApprovalsDescription = 'Menu.ApprovalsDescription',
   Deployments = 'Menu.Deployments',
@@ -140,6 +139,8 @@ export enum BasicI18nKey {
   Yes = 'Basic.Yes',
   No = 'Basic.No',
   DuplicateCopyPostfix = 'Basic.DuplicateCopyPostfix',
+  KeyRequired = 'Basic.KeyRequired',
+  KeyDuplicate = 'Basic.KeyDuplicate',
   URL = 'Basic.URL',
   Request = 'Basic.Request',
   Response = 'Basic.Response',
@@ -296,10 +297,12 @@ export enum DeleteI18nKey {
   InterceptorTemplateWarning = 'DeleteEntity.NoRelatedArtefacts.InterceptorTemplateWarning',
   ApplicationRunnerWarning = 'DeleteEntity.NoRelatedArtefacts.ApplicationRunnerWarning',
   ImageWarning = 'DeleteEntity.NoRelatedArtefacts.ImageWarning',
+  DatasetWarning = 'DeleteEntity.NoRelatedArtefacts.DatasetWarning',
   RelatedApplications = 'DeleteEntity.NoRelatedArtefacts.RelatedApplications',
   RelatedInterceptors = 'DeleteEntity.NoRelatedArtefacts.RelatedInterceptors',
   RelatedModels = 'DeleteEntity.NoRelatedArtefacts.RelatedModels',
   RelatedContainers = 'DeleteEntity.NoRelatedArtefacts.RelatedContainers',
+  RelatedTestSuites = 'DeleteEntity.NoRelatedArtefacts.RelatedTestSuites',
 }
 
 export enum DuplicateI18nKey {
@@ -321,6 +324,7 @@ export enum DuplicateI18nKey {
   InterceptorTemplate = 'DuplicateEntity.Entities.InterceptorTemplate',
   ApplicationRunner = 'DuplicateEntity.Entities.ApplicationRunner',
   TestSuite = 'DuplicateEntity.Entities.TestSuite',
+  Dataset = 'DuplicateEntity.Entities.Dataset',
 }
 
 export enum ButtonsI18nKey {
@@ -558,6 +562,9 @@ export enum FeaturesI18nKey {
   allowResume = 'Features.allowResume',
   addonsSupported = 'Features.addonsSupported',
   temperatureSupported = 'Features.temperatureSupported',
+  customTemperatureSupported = 'Features.customTemperatureSupported',
+  maxTokensSupported = 'Features.maxTokensSupported',
+  maxCompletionTokensSupported = 'Features.maxCompletionTokensSupported',
   cacheSupported = 'Features.cacheSupported',
   autoCachingSupported = 'Features.autoCachingSupported',
   contentPartsSupported = 'Features.contentPartsSupported',
@@ -573,6 +580,14 @@ export enum FeaturesI18nKey {
   tokenizeEndpoint = 'Features.tokenizeEndpoint',
   truncatePromptEndpoint = 'Features.truncatePromptEndpoint',
   AppRunnerInherited = 'Features.AppRunnerInherited',
+  reasoningEfforts = 'Features.reasoningEfforts',
+  GroupSamplingOutputControl = 'Features.Groups.SamplingOutputControl',
+  GroupToolsFunctionCalling = 'Features.Groups.ToolsFunctionCalling',
+  GroupPromptMessageComposition = 'Features.Groups.PromptMessageComposition',
+  GroupAttachments = 'Features.Groups.Attachments',
+  GroupCaching = 'Features.Groups.Caching',
+  GroupSessionAccess = 'Features.Groups.SessionAccess',
+  GroupFeedback = 'Features.Groups.Feedback',
 }
 
 export enum TopicsI18nKey {
@@ -1160,6 +1175,8 @@ export enum EntityPlaceholdersI18nKey {
   TimeoutSeconds = 'EntityPlaceholders.TimeoutSeconds',
   FailureThreshold = 'EntityPlaceholders.FailureThreshold',
   Expression = 'EntityPlaceholders.Expression',
+  ReasoningEfforts = 'EntityPlaceholders.ReasoningEfforts',
+  EmbeddingDimensions = 'EntityPlaceholders.EmbeddingDimensions',
 }
 
 export enum EntityCaptionsI18nKey {
@@ -1293,6 +1310,7 @@ export enum EntityFieldsI18nKey {
   secured = 'EntityFields.secured',
   parameters = 'EntityFields.parameters',
   extraData = 'EntityFields.extraData',
+  secretExtraData = 'EntityFields.secretExtraData',
   models = 'EntityFields.models',
   order = 'EntityFields.order',
   baseEndpoint = 'EntityFields.baseEndpoint',
@@ -1386,6 +1404,7 @@ export enum EntityFieldsI18nKey {
   ProbePort = 'EntityFields.ProbePort',
   temperature = 'EntityFields.temperature',
   agent = 'EntityFields.agent',
+  embeddingDimensions = 'EntityFields.embeddingDimensions',
 }
 
 export enum ToolsetI18nKey {
@@ -1761,6 +1780,24 @@ export enum TestSuitesI18nKey {
   DatasetRequiredForMetrics = 'TestSuites.DatasetRequiredForMetrics',
   OpenDataset = 'TestSuites.OpenDataset',
   ChangeDataset = 'TestSuites.ChangeDataset',
+  TestCasesPrivateTagTooltip = 'TestSuites.TestCasesPrivateTagTooltip',
+  NoTestCasesDescription = 'TestSuites.NoTestCasesDescription',
+  More = 'TestSuites.More',
+  AttachDataset = 'TestSuites.AttachDataset',
+  SelectDataset = 'TestSuites.SelectDataset',
+  SelectDatasetDescription = 'TestSuites.SelectDatasetDescription',
+  PreviewTestCases = 'TestSuites.PreviewTestCases',
+  PublishToDataset = 'TestSuites.PublishToDataset',
+  PublishToDatasetCountText = 'TestSuites.PublishToDatasetCountText',
+  PublishSuccess = 'TestSuites.PublishSuccess',
+  PublishFailed = 'TestSuites.PublishFailed',
+  DetachFromDataset = 'TestSuites.DetachFromDataset',
+  DetachConfirmTitle = 'TestSuites.DetachConfirmTitle',
+  DetachConfirmDescription = 'TestSuites.DetachConfirmDescription',
+  DetachSuccess = 'TestSuites.DetachSuccess',
+  DetachFailed = 'TestSuites.DetachFailed',
+  AttachDatasetWarning = 'TestSuites.AttachDatasetWarning',
+  PublicDatasetInfo = 'TestSuites.PublicDatasetInfo',
 }
 
 export enum DatasetsI18nKey {
@@ -1842,6 +1879,13 @@ export enum RunsI18nKey {
   InputBindings = 'Runs.InputBindings',
   CompareWith = 'Runs.CompareWith',
   RunCompareNoMatch = 'Runs.RunCompareNoMatch',
+  RunComparison = 'Runs.RunComparison',
+  RunCompareVs = 'Runs.RunCompareVs',
+  RunCompareAddRun = 'Runs.RunCompareAddRun',
+  RunCompareAddSecondRunTitle = 'Runs.RunCompareAddSecondRunTitle',
+  RunCompareAddSecondRunMessage = 'Runs.RunCompareAddSecondRunMessage',
+  RunCompareTag = 'Runs.RunCompareTag',
+  RunCompareSelectRun = 'Runs.RunCompareSelectRun',
 }
 
 export enum ExportRunI18nKey {
@@ -1858,8 +1902,9 @@ export enum ExportRunI18nKey {
   GroupResponse = 'ExportRun.GroupResponse',
   GroupMetrics = 'ExportRun.GroupMetrics',
   GroupBody = 'ExportRun.GroupBody',
-  PreviewLoadError = 'ExportRun.PreviewLoadError',
   PreviewDescription = 'ExportRun.PreviewDescription',
+  NoColumns = 'ExportRun.NoColumns',
+  NoPreview = 'ExportRun.NoPreview',
 }
 
 export enum FileManagerI18nKey {
@@ -1953,6 +1998,7 @@ export enum ActionMenuOperationI18nKey {
   Manage_folder = 'ActionMenuOperation.Manage_folder',
   Rename = 'ActionMenuOperation.Rename',
   Move_to = 'ActionMenuOperation.Move_to',
+  Compare = 'ActionMenuOperation.Compare',
   Compare_changes = 'ActionMenuOperation.Compare_changes',
   Install = 'ActionMenuOperation.Install',
   Run = 'ActionMenuOperation.Run',
@@ -1961,19 +2007,6 @@ export enum ActionMenuOperationI18nKey {
   Try_out = 'ActionMenuOperation.Try_out',
   Edit = 'ActionMenuOperation.Edit',
   Export = 'ActionMenuOperation.Export',
-}
-
-export enum PlaygroundI18nKey {
-  Title = 'Playground.Title',
-  Details = 'Playground.Details',
-  Tryout = 'Playground.Tryout',
-  SelectDeployment = 'Playground.SelectDeployment',
-  Deployment = 'Playground.Deployment',
-  Temperature = 'Playground.Temperature',
-  SystemPrompt = 'Playground.SystemPrompt',
-  SystemPromptPlaceholder = 'Playground.SystemPromptPlaceholder',
-  ApplySettings = 'Playground.ApplySettings',
-  Settings = 'Playground.Settings',
 }
 
 export enum JsonAtaI18nKey {

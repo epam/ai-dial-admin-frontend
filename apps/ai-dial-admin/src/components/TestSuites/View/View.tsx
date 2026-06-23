@@ -61,6 +61,17 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
     [isEditorEnabled],
   );
 
+  const loadDataset = useCallback(() => {
+    if (originalTestSuite.datasetId) {
+      getDataset(originalTestSuite.datasetId, DEFAULT_ETAG).then((res) => {
+        if (res?.response) {
+          setDataset(res.response as Dataset);
+          setDatasetEtag(res.etag ?? DEFAULT_ETAG);
+        }
+      });
+    }
+  }, [originalTestSuite.datasetId]);
+
   useEffect(() => {
     setIsChanged(!isEqualSkippingUndefined(originalTestSuite, selectedTestSuite) || hasTestCaseChanges);
   }, [originalTestSuite, selectedTestSuite, hasTestCaseChanges]);
@@ -75,17 +86,26 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
       setDatasetEtag(DEFAULT_ETAG);
       return;
     }
-    getDataset(originalTestSuite.datasetId, DEFAULT_ETAG).then((res) => {
-      if (res?.response) {
-        setDataset(res.response as Dataset);
-        setDatasetEtag(res.etag ?? DEFAULT_ETAG);
-      }
-    });
-  }, [originalTestSuite.datasetId]);
+    loadDataset();
+  }, [loadDataset, originalTestSuite.datasetId]);
 
-  const onChangeDataset = useCallback((updatedDataset: Dataset) => {
-    setDataset(updatedDataset);
-  }, []);
+  const onChangeDataset = useCallback(
+    (updatedDataset: Dataset, etag?: string) => {
+      if (etag) {
+        setDataset(updatedDataset);
+        setDatasetEtag(etag);
+        return;
+      }
+      updateDataset(updatedDataset, datasetEtag).then((res) => {
+        if (!res.success) {
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+          return;
+        }
+        loadDataset();
+      });
+    },
+    [datasetEtag, showNotification, loadDataset],
+  );
 
   const onDiscard = useCallback(() => {
     setSelectedTestSuite(structuredClone(originalTestSuite));
@@ -93,15 +113,9 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
     setIsSkipRefresh(false);
     setDiscardKey((prev) => prev + 1);
     testCasesActionsRef.current?.clearDirtyAndRefresh();
-    if (originalTestSuite.datasetId) {
-      getDataset(originalTestSuite.datasetId, DEFAULT_ETAG).then((res) => {
-        if (res?.response) {
-          setDataset(res.response as Dataset);
-          setDatasetEtag(res.etag ?? DEFAULT_ETAG);
-        }
-      });
-    }
-  }, [originalTestSuite]);
+
+    loadDataset();
+  }, [loadDataset, originalTestSuite]);
 
   const onSave = useCallback(() => {
     const showSuccessAndRefresh = () => {
@@ -135,7 +149,9 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
               handleError(datasetRes.errorHeader, datasetRes.errorMessage, datasetRes.requestId);
               return;
             }
-            setDatasetEtag(datasetRes.etag ?? DEFAULT_ETAG);
+            if (datasetRes.etag) {
+              setDatasetEtag(datasetRes.etag);
+            }
             showSuccessAndRefresh();
           });
         } else {

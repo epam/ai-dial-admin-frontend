@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines per-entity rollback for deployment-manager audit activities: how rollback is dispatched by activity type (Update → rollback endpoint, Create → delete, Delete → recreate from snapshot), the deployment-manager rollback endpoints, the snapshot-to-create-DTO mapper used by the recreate path, the lifecycle pre-check gate that governs the in-place rollback path, the success/error notifications keyed by resource type, and the post-rollback navigation rules by scenario and entry point.
+Defines per-entity rollback for deployment-manager audit activities: how rollback is dispatched by activity type (Update → rollback endpoint, Create → delete, Delete → rollback endpoint with backend resurrect), the deployment-manager rollback endpoints, the lifecycle pre-check gate that governs the in-place rollback path, the success/error notifications keyed by resource type, and the post-rollback navigation rules by scenario and entry point.
 
 ## Requirements
 
@@ -12,7 +12,7 @@ Triggering rollback from a deployment-manager audit activity SHALL restore the e
 
 - `Update` → call the deployment-manager rollback endpoint for the entity at revision `R`.
 - `Create` → delete the entity (it did not exist at `R`).
-- `Delete` → recreate the entity via its create endpoint with a body derived from the `R` snapshot.
+- `Delete` → call the deployment-manager rollback endpoint for the entity at revision `R`. The backend resurrects the currently-deleted entity from audit history and resets sensitive values server-side. The frontend SHALL NOT fetch the snapshot or build a client-side create request for this case.
 
 A dispatch utility (`get-deployment-rollback-request`) SHALL encapsulate this selection, sibling to the existing admin `get-rollback-request` util, and SHALL branch on the resource family (container deployment, image definition, or global firewall whitelist).
 
@@ -28,11 +28,17 @@ A dispatch utility (`get-deployment-rollback-request`) SHALL encapsulate this se
 - **THEN** the dispatch issues a delete request for the entity
 - **AND** no rollback-endpoint or create request is issued
 
-#### Scenario: Delete activity recreates the entity from the prior snapshot
+#### Scenario: Delete activity calls the rollback endpoint to resurrect the entity
 - **GIVEN** a deployment-manager activity with `activityType: "Delete"` and `revision: 42`
 - **WHEN** the user confirms rollback
-- **THEN** the dispatch fetches the snapshot at revision `41`
-- **AND** issues a create request whose body is the mapped create DTO built from that snapshot
+- **THEN** the dispatch issues the rollback request for that entity at revision `41`
+- **AND** no snapshot is fetched and no client-side create request is issued
+
+#### Scenario: Resurrecting a deleted entity with secure env values does not error
+- **GIVEN** a `Delete` activity for a container deployment that had secure environment values
+- **WHEN** the user confirms rollback
+- **THEN** the rollback endpoint resurrects the entity with secure values reset server-side
+- **AND** no Internal Server Error is shown
 
 ### Requirement: Deployment-manager rollback endpoints
 
@@ -64,28 +70,9 @@ Each method SHALL be reachable through a `'use server'` action and SHALL return 
 - **THEN** an error notification is shown carrying the backend `errorHeader`/`errorMessage`
 - **AND** the entity is left unchanged in the UI
 
-### Requirement: Snapshot-to-create-DTO mapper for the recreate scenario
-
-For the `Delete` (recreate) scenario, a mapper SHALL transform the revision snapshot into a valid create DTO. The mapper SHALL keep configuration fields — including `$type` (required by the create contract), the raw `source` object, `metadata.envs`, `resources`, `scaling`, `command`, `args`, `allowedDomains`, `probeProperties`, node-pool fields, `name`/`displayName`, and image build/version config — and SHALL drop server-managed and runtime fields: `id`, `createdAt`, `updatedAt`, `status`, `url`, and `author`. The mapper SHALL use the raw snapshot `source`, never the display-normalized form produced for the diff view. Masked or null secure environment values SHALL pass through unchanged. The mapper SHALL be a pure function with unit tests, branching by resource family.
-
-#### Scenario: Mapper keeps $type that the diff layer hides
-- **GIVEN** a container snapshot whose `$type` is hidden in the diff display
-- **WHEN** the mapper builds the create body
-- **THEN** the resulting body includes `$type`
-
-#### Scenario: Mapper drops server-managed and runtime fields
-- **GIVEN** a snapshot containing `id`, `createdAt`, `updatedAt`, `status`, `url`, and `author`
-- **WHEN** the mapper builds the create body
-- **THEN** none of `id`, `createdAt`, `updatedAt`, `status`, `url`, `author` are present in the body
-
-#### Scenario: Mapper preserves the raw source for an internal-image container
-- **GIVEN** a container snapshot whose `source` carries the raw `imageDefinition*` fields
-- **WHEN** the mapper builds the create body
-- **THEN** the body's `source` matches the raw snapshot source and is not the diff-normalized form
-
 ### Requirement: Lifecycle pre-check gate for the in-place rollback path
 
-Before allowing the `Update`→rollback path, the system SHALL determine whether the entity's current lifecycle state permits rollback. A container is blocked when its `status` is `PENDING`, `RUNNING`, `CRASHED`, or `STOPPING`; an image definition is blocked when its `buildStatus` is `BUILDING` or `BUILD_SUCCESSFUL`. The global whitelist is never blocked. The current state SHALL be fetched via the entity's GET endpoint, since the audit activity record does not carry live status. When blocked, the UI SHALL prevent submission and SHALL explain why. The gate is advisory; the backend 400 remains authoritative and any slip-through SHALL surface as an error notification. The `Create`→delete path is NOT gated by this check.
+Before allowing the `Update`→rollback path, the system SHALL determine whether the entity's current lifecycle state permits rollback. A container is blocked when its `status` is `PENDING`, `RUNNING`, `CRASHED`, or `STOPPING`; an image definition is blocked when its `buildStatus` is `BUILDING` or `BUILD_SUCCESSFUL`. The global whitelist is never blocked. The current state SHALL be fetched via the entity's GET endpoint, since the audit activity record does not carry live status. When blocked, the UI SHALL prevent submission and SHALL explain why. The gate is advisory; the backend 400 remains authoritative and any slip-through SHALL surface as an error notification. Neither the `Create`→delete path nor the `Delete`→rollback (resurrect) path is gated by this check — a currently-deleted entity has no live status to block on.
 
 #### Scenario: Active container blocks in-place rollback
 - **GIVEN** a container deployment whose current `status` is `RUNNING`
@@ -109,6 +96,11 @@ Before allowing the `Update`→rollback path, the system SHALL determine whether
 - **WHEN** the user attempts rollback
 - **THEN** no lifecycle pre-check is performed and submission is allowed
 
+#### Scenario: Delete activity is not gated by the lifecycle pre-check
+- **GIVEN** a `Delete` activity for a container deployment or image definition
+- **WHEN** the user attempts rollback
+- **THEN** no lifecycle pre-check is performed and submission is allowed
+
 ### Requirement: Rollback success and error notifications keyed by resource type
 
 On a successful rollback the system SHALL show a success notification whose title and description are localized per deployment-manager resource type, following the existing `rollback-entity` messaging pattern. On failure it SHALL show an error notification. All user-facing strings SHALL be provided through next-international i18n keys. After a successful rollback the UI SHALL navigate following the existing rollback flow (entity page when initiated from an entity-scoped audit, otherwise the activity-audit list) so the next datasource fetch reflects the new state.
@@ -127,7 +119,7 @@ On a successful rollback the system SHALL show a success notification whose titl
 After a successful rollback the UI SHALL navigate based on the activity type and where rollback was triggered, so the user never lands on a now-deleted entity's page:
 
 - `Create` (entity no longer exists): from the activity-audit context → the activity-audit list; from an entity audit tab/detail → the entity **list** for that resource type.
-- `Delete` (entity recreated): → the recreated entity's **detail** page.
+- `Delete` (entity resurrected via rollback): → the resurrected entity's **detail** page, built from the id returned in the rollback response.
 - `Update`: from the activity-audit context → the activity-audit list; from an entity audit tab/detail → reload in place.
 
 When navigating to the activity-audit list, the destination SHALL open in the view matching the rolled-back resource (`Deployments` for deployment-manager types, otherwise `Config`), carried via the existing `AuditListPreselect` sessionStorage mechanism and consumed once on mount. The list's time period is NOT preserved (it opens at its default). Targets that need an entity route SHALL fall back to the activity-audit list (audit context) or an in-place reload (entity context) when the resource type has no route or the identifier is missing.
@@ -143,14 +135,14 @@ When navigating to the activity-audit list, the destination SHALL open in the vi
 - **WHEN** the rollback (delete) succeeds
 - **THEN** the app navigates to the entity list route for that resource type
 
-#### Scenario: Delete rollback navigates to the recreated entity page
+#### Scenario: Delete rollback navigates to the resurrected entity page
 - **GIVEN** a `Delete` activity
-- **WHEN** the rollback (recreate) succeeds
-- **THEN** the app navigates to the recreated entity's detail page
+- **WHEN** the rollback (resurrect) succeeds
+- **THEN** the app navigates to the resurrected entity's detail page
 
-#### Scenario: Recreated entity detail href uses the new backend-assigned id
-- **GIVEN** an image-definition `Delete` rollback where the backend assigns a new id on recreate
-- **WHEN** the create response returns the recreated entity
+#### Scenario: Resurrected entity detail href uses the new backend-assigned id
+- **GIVEN** an image-definition `Delete` rollback where the backend assigns a new id on resurrect
+- **WHEN** the rollback response returns the resurrected entity
 - **THEN** the detail href is built from the response entity's new id, not the stale `resourceId`
 - **AND** name-keyed entities (containers, model-servings) resolve to the same path either way
 

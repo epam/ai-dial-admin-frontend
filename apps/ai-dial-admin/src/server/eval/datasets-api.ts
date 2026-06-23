@@ -1,6 +1,11 @@
 import { IF_MATCH } from '@/src/constants/api-headers';
 import { Token } from '@/src/models/auth';
-import { Dataset, DatasetTestCase, DatasetVisibilityTransition } from '@/src/models/evaluation/dataset';
+import {
+  Dataset,
+  DatasetPublishBody,
+  DatasetTestCase,
+  DatasetVisibilityTransition,
+} from '@/src/models/evaluation/dataset';
 import { EvaluationPageData, FilterDto, SortDto } from '@/src/models/request';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { API } from '@/src/server/api';
@@ -14,7 +19,10 @@ export const DATASET_URL = (id?: string) => `${DATASETS_URL}/${id || ''}`;
 export const DATASET_TEST_CASES_URL = (id?: string) => `${DATASET_URL(id)}/test-cases`;
 export const DATASET_TEST_CASE_URL = (id?: string, testCaseId?: string) =>
   `${DATASET_TEST_CASES_URL(id)}/${testCaseId || ''}`;
+export const DATASET_TEST_SUITES_URL = (id: string) => `${DATASET_URL(id)}/test-suites`;
+export const DATASET_CLONE_URL = (id: string) => `${DATASET_URL(id)}/clone`;
 export const DATASET_VISIBILITY_URL = (id: string) => `${DATASET_URL(id)}/visibility`;
+export const DATASET_PUBLISH_URL = (id: string) => `${DATASET_URL(id)}/publish`;
 
 export class DatasetsApi extends BaseApi {
   getDatasets(
@@ -39,16 +47,28 @@ export class DatasetsApi extends BaseApi {
     return this.postAction(DATASETS_URL, dataset, token);
   }
 
+  cloneDataset(id: string, body: Pick<Dataset, 'name' | 'description'>, token: Token): Promise<ServerActionResponse> {
+    return this.postAction(DATASET_CLONE_URL(id), body, token);
+  }
+
   updateDataset(dataset: Dataset, etag: string, token: Token): Promise<ServerActionResponse> {
     return this.putAction(DATASET_URL(dataset.id), dataset, token, { [IF_MATCH]: etag });
   }
 
   removeDataset(id: string, token: Token): Promise<ServerActionResponse> {
-    return this.deleteAction(DATASET_URL(id), token);
+    return this.deleteAction(`${DATASET_URL(id)}?force=true`, token);
+  }
+
+  getDatasetTestSuites(id: string, token: Token): Promise<ServerActionResponse> {
+    return this.getAction(DATASET_TEST_SUITES_URL(id), token);
   }
 
   transitionVisibility(id: string, body: DatasetVisibilityTransition, token: Token): Promise<ServerActionResponse> {
     return this.patchAction(DATASET_VISIBILITY_URL(id), body, token);
+  }
+
+  publishDataset(id: string, body: DatasetPublishBody, token: Token): Promise<ServerActionResponse> {
+    return this.postAction(DATASET_PUBLISH_URL(id), body, token);
   }
 
   getTestCases(

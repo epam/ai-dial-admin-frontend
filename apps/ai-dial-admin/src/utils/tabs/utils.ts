@@ -415,7 +415,7 @@ export const getTabsForAsset = (
   featureFlags?: FeatureFlags,
 ): TabModel[] => {
   if (view === ApplicationRoute.AssetsApplications) {
-    return [propertiesTab(t), featuresTab(t), parametersTab(t), interceptorsTab(t), dependenciesTab(t)];
+    return [propertiesTab(t), featuresTab(t), parametersTab(t), interceptorsTab(t), dependenciesTab(t), appRouteTab(t)];
   }
   if (view === ApplicationRoute.AssetsToolsets) {
     const tabs = [propertiesTab(t), toolsTab(t)];

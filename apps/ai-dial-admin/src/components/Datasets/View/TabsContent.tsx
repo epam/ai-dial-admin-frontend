@@ -8,9 +8,9 @@ import DatasetSchemaTab from '@/src/components/Datasets/Schema/SchemaTab';
 import DatasetTestCases from '@/src/components/Datasets/TestCases/TestCases';
 import { DatasetTestCasesActions } from '@/src/components/Datasets/TestCases/TestCasesList';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { useLocalDateTimeString } from '@/src/hooks/use-local-date-time-string';
 import { useI18n } from '@/src/locales/client';
 import { Dataset } from '@/src/models/evaluation/dataset';
-import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 
 interface Props {
@@ -33,24 +33,16 @@ const DatasetTabsContent: FC<Props> = ({
   nameExistsError,
 }) => {
   const t = useI18n();
+  const updatedAt = useLocalDateTimeString(selectedDataset.updatedAt);
+  const createdAt = useLocalDateTimeString(selectedDataset.createdAt);
 
   return (
     <>
       {activeTab === EntityViewTab.Properties && (
         <div className="flex flex-col">
           <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-primary">
-            {!!selectedDataset.updatedAt && (
-              <LabelledText
-                label={t(EntityFieldsI18nKey.updatedAt)}
-                text={formatDateTimeToLocalString(selectedDataset.updatedAt)}
-              />
-            )}
-            {!!selectedDataset.createdAt && (
-              <LabelledText
-                label={t(EntityFieldsI18nKey.createdAt)}
-                text={formatDateTimeToLocalString(selectedDataset.createdAt)}
-              />
-            )}
+            {!!selectedDataset.updatedAt && <LabelledText label={t(EntityFieldsI18nKey.updatedAt)} text={updatedAt} />}
+            {!!selectedDataset.createdAt && <LabelledText label={t(EntityFieldsI18nKey.createdAt)} text={createdAt} />}
           </div>
           <div className="pt-8">
             <DatasetProperties

@@ -3,17 +3,13 @@ import { ColDef, ICellRendererParams, ITooltipParams } from 'ag-grid-community';
 
 import { DefaultItemType } from '@/src/components/Defaults/types';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
+import EditableOnBlurCellRenderer from '@/src/components/Grid/CellRenderers/EditableOnBlurCellRenderer';
 import JsonEditorCellRenderer from '@/src/components/Grid/CellRenderers/JsonEditorCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import { NO_BORDER_CLASS } from '@/src/constants/ag-grid';
 import { BasicI18nKey, EntitiesI18nKey, TypeI18nKey } from '@/src/constants/i18n';
 import { UserSession } from '@/src/models/auth';
-import {
-  ApplicationPropertiesTemp,
-  DialApplication,
-  DialApplicationScheme,
-  TypeEntity,
-} from '@/src/models/dial/application';
+import { DialApplication, DialApplicationScheme, TypeEntity } from '@/src/models/dial/application';
 import { getSchemaSourceId } from '@/src/utils/entities/application-source';
 import { DialApplicationResource } from '@/src/models/dial/application-resource';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
@@ -21,6 +17,7 @@ import { DialSchemePropertyType } from '@/src/models/dial/scheme';
 import { FrameConfig } from '@/src/models/frame-config';
 import { ParamsFields, ParamsView } from '@/src/types/parameters';
 import { ApplicationRoute } from '@/src/types/routes';
+import { ApplicationPropertyRow } from './models';
 
 export const getFrameConfig = (
   scheme: DialApplicationScheme | DialApplicationResource,
@@ -129,11 +126,20 @@ export const generateViewItems = (
 
   return items;
 };
+
+export const inferTypeFromValue = (value: unknown): string => {
+  if (value === null || value === undefined) return TypeEntity.OBJECT;
+  if (typeof value === 'boolean') return TypeEntity.BOOLEAN;
+  if (typeof value === 'number') return TypeEntity.NUMBER;
+  if (typeof value === 'object') return TypeEntity.OBJECT;
+  return TypeEntity.STRING;
+};
+
 //todo support multiple types from scheme
 export const convertJsonSchema = (
   schema: DialApplicationScheme,
   schemeData: Record<string, unknown>,
-): ApplicationPropertiesTemp[] => {
+): ApplicationPropertyRow[] => {
   const result = [];
 
   for (const key in schema.properties) {
@@ -199,14 +205,14 @@ export const getTypeFromUnion = (types: DialSchemePropertyType[]): string => {
 
 export const convertAppPropertiesToArray = (
   properties: Record<string, unknown>,
-  schemeProperties: ApplicationPropertiesTemp[] = [],
+  schemeProperties: ApplicationPropertyRow[] = [],
 ) => {
   const mergedSchema = [...schemeProperties];
 
   for (const [key, value] of Object.entries(properties)) {
     const existingProperty = mergedSchema.find((item) => item.key === key);
 
-    const type = typeof value;
+    const type = inferTypeFromValue(value);
 
     if (existingProperty) {
       existingProperty.value = value;
@@ -232,9 +238,11 @@ export const convertAppPropertiesToArray = (
 };
 
 export const getAppPropertiesColumns = (
-  onChangeEditable: (value: string, data: ApplicationPropertiesTemp, column: string, index?: number) => void,
-  onChangeJSON: (value: object, data: ApplicationPropertiesTemp, column: string, index?: number) => void,
-  onChangeSelect: (value: string, data: ApplicationPropertiesTemp, column: string) => void,
+  onBlurKey: (value: string, data: unknown, column: string, index?: number) => void,
+  validateKey: (newValue: string, currentValue: string) => string | null,
+  onChangeEditable: (value: string, data: ApplicationPropertyRow, column: string, index?: number) => void,
+  onChangeJSON: (value: object, data: ApplicationPropertyRow, column: string, index?: number) => void,
+  onChangeSelect: (value: string, data: ApplicationPropertyRow, column: string) => void,
   t: (stringToTranslate: string) => string,
   readOnly = false,
 ): ColDef[] => {
@@ -245,15 +253,17 @@ export const getAppPropertiesColumns = (
       cellClass: NO_BORDER_CLASS,
       cellRendererSelector: (params: ICellRendererParams) => {
         if (!params.data.isFromScheme) {
-          return { component: EditableCellRenderer };
+          return {
+            component: EditableOnBlurCellRenderer,
+            params: {
+              onBlur: onBlurKey,
+              validate: validateKey,
+              isReadonly: readOnly,
+            },
+          };
         } else {
           return void 0;
         }
-      },
-      cellRendererParams: {
-        hideTriangle: true,
-        onChange: onChangeEditable,
-        isReadonly: readOnly,
       },
       cellDataType: 'text',
       flex: 1,
@@ -264,6 +274,12 @@ export const getAppPropertiesColumns = (
       field: ParamsFields.VALUE,
       cellClass: NO_BORDER_CLASS,
       cellRendererSelector: (params: ICellRendererParams) => {
+        if (params.data.key === '') {
+          return {
+            component: EditableCellRenderer,
+            params: { isReadonly: true, hideTriangle: true },
+          };
+        }
         if (params.data.type == 'object') {
           return {
             component: JsonEditorCellRenderer,
@@ -298,6 +314,7 @@ export const getAppPropertiesColumns = (
               inputType: params.data.type === 'string' ? 'text' : 'number',
               onChange: onChangeEditable,
               isReadonly: readOnly,
+              hideTriangle: true,
             },
           };
         }
@@ -319,7 +336,7 @@ export const getAppPropertiesColumns = (
       cellClass: NO_BORDER_CLASS,
       cellRenderer: SelectCellRenderer,
       cellRendererParams: {
-        getItems: (data: ApplicationPropertiesTemp) => {
+        getItems: (data: ApplicationPropertyRow) => {
           const items: SelectOption[] = [
             {
               value: DefaultItemType.string,
@@ -364,6 +381,6 @@ const formatRequired = (value: string, t: (stringToTranslate: string) => string)
   return value ? t(BasicI18nKey.Yes) : t(BasicI18nKey.No);
 };
 
-export const validateAppProperties = (properties: ApplicationPropertiesTemp[]): boolean => {
+export const validateAppProperties = (properties: ApplicationPropertyRow[]): boolean => {
   return !properties.some((p) => p.required && !p.value);
 };

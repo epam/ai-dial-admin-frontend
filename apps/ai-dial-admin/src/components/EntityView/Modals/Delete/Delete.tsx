@@ -22,7 +22,7 @@ import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getNameVersionFromAsset } from '@/src/utils/entities/versions';
-import { isAssetView, isBuildersView } from '@/src/utils/is-view';
+import { hasRelatedArtefacts, isAssetView } from '@/src/utils/is-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { AllVersionValue } from './constants';
@@ -68,12 +68,18 @@ const DeleteConfirmationModal = <T extends Artefact>({
   const { showNotification } = useNotification();
   const folderContext = getAssetContext?.();
   const getReqRef = useRef(useProtectedRequest());
-  const modalSize = isBuildersView(view) ? PopupSize.Md : PopupSize.Sm;
+  const modalSize = hasRelatedArtefacts(view) ? PopupSize.Md : PopupSize.Sm;
 
   const [selectedVersion, setSelectedVersion] = useState(entity?.version);
 
-  const name = useMemo(() => entity.displayName || entity['dial:applicationTypeDisplayName'], [entity]);
-  const id = useMemo(() => entity.name || entity.$id || (entity as { id?: string }).id, [entity]);
+  const name = useMemo(() => {
+    if (view === ApplicationRoute.Datasets) return entity.name;
+    return entity.displayName || entity['dial:applicationTypeDisplayName'];
+  }, [entity, view]);
+  const id = useMemo(() => {
+    if (view === ApplicationRoute.Datasets) return (entity as { id?: string }).id;
+    return entity.name || entity.$id || (entity as { id?: string }).id;
+  }, [entity, view]);
 
   const showSuccessNotification = useCallback(
     (entityKey: string) => {
@@ -187,7 +193,7 @@ const DeleteConfirmationModal = <T extends Artefact>({
     >
       <div className="flex flex-col gap-y-4 px-6 py-2 size-full">
         <span className="text-secondary dial-small">{getConfirmation(view, t)}</span>
-        <div className="flex flex-col gap-y-2">
+        <div className="flex flex-col gap-y-2 bg-layer-4 rounded px-4 py-3">
           {id && (
             <div className="text-primary dial-small flex flex-row items-center gap-x-1">
               <span className="text-secondary">{t(EntityFieldsI18nKey.id)}:</span>
@@ -219,7 +225,7 @@ const DeleteConfirmationModal = <T extends Artefact>({
             )
           )}
         </div>
-        {isBuildersView(view) && <RelatedArtefacts entity={entity} view={view} />}
+        {hasRelatedArtefacts(view) && <RelatedArtefacts entity={entity} view={view} />}
       </div>
     </DialConfirmationPopup>
   );

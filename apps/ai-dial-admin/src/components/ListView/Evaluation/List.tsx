@@ -14,6 +14,7 @@ import {
 } from 'ag-grid-community';
 import { useRouter } from 'next/navigation';
 
+import { cloneDataset } from '@/src/app/[lang]/datasets/actions';
 import { duplicateTestSuite, runTestSuite } from '@/src/app/[lang]/test-suites/actions';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
@@ -23,6 +24,7 @@ import RunModal from '@/src/components/TestSuites/Runs/RunModal';
 import { onCellClicked } from '@/src/components/EntityListView/utils/on-cell-clicked';
 import { ACTION_COLUMN, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
 import {
+  getCompareOperation,
   getDeleteOperation,
   getDuplicateOperation,
   getExportOperation,
@@ -30,9 +32,11 @@ import {
   getRunTestSuiteOperation,
 } from '@/src/constants/grid-columns/actions';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
+import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
+import { Dataset } from '@/src/models/evaluation/dataset';
 import { RunStatus } from '@/src/models/evaluation/run';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { EvaluationPageData, FilterDto, SortDto } from '@/src/models/request';
@@ -44,6 +48,7 @@ import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { getRequestFilters } from '@/src/utils/request/get-request-filters';
 import { getRequestSorts } from '@/src/utils/request/get-request-sorts';
 import { emptyDataTitleMap, listViewTitleMap } from '../constants';
+import DuplicateDataset from './DuplicateDataset';
 import DuplicateTestSuite from './Duplicate';
 import HeaderButtons from './Header';
 
@@ -69,6 +74,7 @@ const EvaluationListView = <T extends object>({
 }: Props<T>) => {
   const t = useI18n();
   const router = useRouter();
+  const { featureFlags } = useAppContext();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType>();
@@ -135,6 +141,10 @@ const EvaluationListView = <T extends object>({
     },
     [route],
   );
+
+  const onCompareRun = useCallback((entity?: T) => {
+    onOpenInNewTab(ApplicationRoute.RunsCompare, entity);
+  }, []);
 
   const onOpenModal = useCallback(
     (modalType: ModalType) => {
@@ -218,6 +228,27 @@ const EvaluationListView = <T extends object>({
     [currentEntity, onModalClose, route, router, showNotification, t],
   );
 
+  const onDuplicateDataset = useCallback(
+    (entity: Pick<Dataset, 'name' | 'description'>) => {
+      cloneDataset((currentEntity as Dataset).id!, entity).then((res) => {
+        if (res.success) {
+          showNotification(
+            getSuccessNotification(
+              getCreateNotificationTitle(route, t),
+              getCreateNotificationDescription(route, res.response.name, t),
+            ),
+          );
+          router.push(getUrnForEntity(route, res.response));
+          router.refresh();
+          onModalClose();
+        } else {
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+        }
+      });
+    },
+    [currentEntity, onModalClose, route, router, showNotification, t],
+  );
+
   const actionColumn = [getOpenInNewTabOperation(onOpenInNewTabAction)];
 
   if (route === ApplicationRoute.TestSuites) {
@@ -226,8 +257,15 @@ const EvaluationListView = <T extends object>({
     );
   }
 
+  if (route === ApplicationRoute.Datasets) {
+    actionColumn.push(getDuplicateOperation(onOpenDuplicateModal));
+  }
+
   if (route === ApplicationRoute.Runs) {
     actionColumn.push(getExportOperation(onOpenExportModal, (_, node) => node.data?.status === RunStatus.RUNNING));
+    if (featureFlags.runsCompareEnabled) {
+      actionColumn.push(getCompareOperation(onCompareRun, (_, node) => node.data?.status !== RunStatus.COMPLETED));
+    }
   }
 
   const columnDefs = [...baseColumns, ACTION_COLUMN([...actionColumn, getDeleteOperation(onOpenDeleteModal)], true)];
@@ -275,6 +313,7 @@ const EvaluationListView = <T extends object>({
 
       {isModalOpen &&
         modalType === ModalType.duplicate &&
+        route === ApplicationRoute.TestSuites &&
         createPortal(
           <SaveValidationContextProvider>
             <DuplicateTestSuite
@@ -282,6 +321,21 @@ const EvaluationListView = <T extends object>({
               onClose={onModalClose}
               onDuplicate={onDuplicate}
               entity={currentEntity as TestSuite}
+            />
+          </SaveValidationContextProvider>,
+          document.body,
+        )}
+
+      {isModalOpen &&
+        modalType === ModalType.duplicate &&
+        route === ApplicationRoute.Datasets &&
+        createPortal(
+          <SaveValidationContextProvider>
+            <DuplicateDataset
+              isModalOpen={isModalOpen}
+              onClose={onModalClose}
+              onDuplicate={onDuplicateDataset}
+              entity={currentEntity as Dataset}
             />
           </SaveValidationContextProvider>,
           document.body,

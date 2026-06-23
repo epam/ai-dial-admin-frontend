@@ -8,11 +8,13 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
+  cloneDataset,
   createDataset,
   createTestCase,
   exportTestCasesCsv,
   getDataset,
   getDatasetByName,
+  getDatasetTestSuites,
   getDatasets,
   getTestCases,
   importTestCase,
@@ -83,6 +85,17 @@ describe('Datasets :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
+  test('Should call cloneDataset action', async () => {
+    (datasetsApi.cloneDataset as any).mockResolvedValue(RESPONSE_MOCK);
+    const body = { name: 'Cloned Dataset', description: 'Clone description' };
+
+    const result = await cloneDataset('dataset-1', body);
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(datasetsApi.cloneDataset).toHaveBeenCalledWith('dataset-1', body, TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
   test('Should call updateDataset action', async () => {
     (datasetsApi.updateDataset as any).mockResolvedValue(RESPONSE_MOCK);
     const dataset = { id: 'dataset-1', name: 'Updated' };
@@ -101,6 +114,16 @@ describe('Datasets :: server actions', () => {
 
     expect(getUserToken).toHaveBeenCalled();
     expect(datasetsApi.removeDataset).toHaveBeenCalledWith('dataset-1', TOKEN_MOCK);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call getDatasetTestSuites action', async () => {
+    (datasetsApi.getDatasetTestSuites as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await getDatasetTestSuites('dataset-1');
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(datasetsApi.getDatasetTestSuites).toHaveBeenCalledWith('dataset-1', TOKEN_MOCK);
     expect(result).toBe(RESPONSE_MOCK);
   });
 

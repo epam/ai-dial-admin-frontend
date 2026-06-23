@@ -10,13 +10,13 @@ import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
 import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
 import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, EntityFieldsI18nKey, RolesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { useLocalDateTimeString } from '@/src/hooks/use-local-date-time-string';
 import { useI18n } from '@/src/locales/client';
 import { DialKey } from '@/src/models/dial/key';
 import { DialRole } from '@/src/models/dial/role';
 import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import { ExportFormat } from '@/src/types/export';
 import { ApplicationRoute } from '@/src/types/routes';
-import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import { cloneDeep } from 'lodash';
 import KeyProperties from './Properties/Properties';
@@ -43,22 +43,18 @@ const TabsContent: FC<Props> = ({
   names,
 }) => {
   const t = useI18n();
+  const keyGeneratedAt = useLocalDateTimeString(selectedKey.keyGeneratedAt);
+  const expiresAt = useLocalDateTimeString(selectedKey.expiresAt);
 
   const headerPostfix = useMemo(() => {
     return (
       <>
-        <LabelledText
-          label={t(EntityFieldsI18nKey.keyGeneratedAt)}
-          text={formatDateTimeToLocalString(selectedKey.keyGeneratedAt)}
-        />
-        <LabelledText
-          label={t(EntityFieldsI18nKey.expiresAt)}
-          text={formatDateTimeToLocalString(selectedKey.expiresAt)}
-        />
+        <LabelledText label={t(EntityFieldsI18nKey.keyGeneratedAt)} text={keyGeneratedAt} />
+        <LabelledText label={t(EntityFieldsI18nKey.expiresAt)} text={expiresAt} />
         <ValidityStatusLabel {...selectedKey.validityState} />
       </>
     );
-  }, [selectedKey.keyGeneratedAt, selectedKey.expiresAt, selectedKey.validityState, t]);
+  }, [expiresAt, keyGeneratedAt, selectedKey.validityState, t]);
 
   const onAddRoles = useCallback(
     (rows: EntitiesGridData[]) => {
