@@ -10,7 +10,7 @@ import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, TypeI18nK
 import { useI18n } from '@/src/locales/client';
 import { DialEndpointExtraData } from '@/src/models/dial/model';
 import { JSONEditorError } from '@/src/types/editor';
-import { NONE_ID, USE_JSON_ID, USE_STRING_ID } from './constants';
+import { NONE_ID, SECRET_VALUE_PLACEHOLDER, USE_JSON_ID, USE_STRING_ID } from './constants';
 
 interface Props {
   value?: DialEndpointExtraData;
@@ -132,22 +132,36 @@ const ExtraDataField: FC<Props> = ({ value, disabled, label, isSecret, container
     },
   ];
 
-  const customInputValue = useMemo(() => {
-    const plainValue =
-      typeof value === 'object'
-        ? JSON.stringify(value, null, 2)
-        : typeof value === 'string'
-          ? value
-          : typeof value === 'number'
-            ? String(value)
-            : t(BasicI18nKey.None);
-
-    if (isSecret && plainValue !== t(BasicI18nKey.None)) {
-      return plainValue.replace(/\S/g, '*');
+  const hasValue = useMemo(() => {
+    if (typeof value === 'object') {
+      return value != null;
+    }
+    if (typeof value === 'number') {
+      return true;
     }
 
-    return plainValue;
+    return typeof value === 'string' && value.length > 0;
+  }, [value]);
+
+  // For secret fields we intentionally avoid passing the value through `customInputValue`:
+  // the popup field renders `customInputValue` as a real value (with a tooltip), which would
+  // expose the secret. Instead we leave it empty and rely on `emptyValueText` to show a fixed
+  // mask placeholder that signals "a secret value is set" without revealing it.
+  const customInputValue = useMemo(() => {
+    if (isSecret) {
+      return undefined;
+    }
+
+    return typeof value === 'object'
+      ? JSON.stringify(value, null, 2)
+      : typeof value === 'string'
+        ? value
+        : typeof value === 'number'
+          ? String(value)
+          : t(BasicI18nKey.None);
   }, [value, isSecret, t]);
+
+  const emptyValueText = isSecret && hasValue ? SECRET_VALUE_PLACEHOLDER : t(BasicI18nKey.None);
 
   const isFlexible = Boolean(containerClassName);
 
@@ -159,7 +173,7 @@ const ExtraDataField: FC<Props> = ({ value, disabled, label, isSecret, container
         disabled={disabled}
         htmlFor="extraDataInput"
         id="extraDataInput"
-        emptyValueText={t(BasicI18nKey.None)}
+        emptyValueText={emptyValueText}
         label={label ?? ''}
         header={t(EntityFieldsI18nKey.extraData)}
         portalId="extraDataPortal"
