@@ -53,7 +53,7 @@ const MetricConfiguration: FC<Props> = ({
   const t = useI18n();
   const [isJsonView, setIsJsonView] = useState(false);
 
-  const metricNameError = metricName?.includes(':') ? t(TestSuitesI18nKey.MetricNameInvalidChars) : undefined;
+  const metricNameError = metricName?.includes('::') ? t(TestSuitesI18nKey.MetricNameInvalidChars) : undefined;
 
   const description = selectedMetric?.description || selectedMetricDetails?.description || '';
 

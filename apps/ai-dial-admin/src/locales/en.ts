@@ -1745,7 +1745,7 @@ export default {
     EditField: 'Edit field',
     NoSchemaFields: 'No schema fields',
     DuplicateFieldName: 'Field name already exists',
-    MetricNameInvalidChars: 'Name must not contain ":" symbol',
+    MetricNameInvalidChars: 'Name must not contain "::" symbols',
     SchemaDescription: 'Define the data fields available in test cases',
     FinalPath: 'Final path',
     Tool: 'Tool',

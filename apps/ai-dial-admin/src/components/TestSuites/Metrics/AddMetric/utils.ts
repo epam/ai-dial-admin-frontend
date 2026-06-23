@@ -15,7 +15,7 @@ export const validateMetricBindings = (
     return false;
   }
 
-  if (metricName.includes(':')) {
+  if (metricName.includes('::')) {
     return false;
   }
 
