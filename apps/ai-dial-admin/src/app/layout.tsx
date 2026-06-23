@@ -9,6 +9,8 @@ import classNames from 'classnames';
 // @ts-ignore
 import '@/src/app/[lang]/global.scss';
 import Page403 from '@/src/components/Page403/Page403';
+import { I18nProvider } from '@/src/context/I18nProvider';
+import { ThemeProvider } from '@/src/context/ThemeContext';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
@@ -50,7 +52,15 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <link rel="apple-touch-icon" href={faviconUrl || '/favicon.ico'} type="image/png" />
       </head>
       <body className={classNames(inter.variable, 'font min-w-[360px]')}>
-        {userInfo.success ? children : <Page403 />}
+        {userInfo.success ? (
+          children
+        ) : (
+          <I18nProvider locale="en">
+            <ThemeProvider themesConfiguration={themesConfig} themeImages={null}>
+              <Page403 />
+            </ThemeProvider>
+          </I18nProvider>
+        )}
       </body>
     </html>
   );

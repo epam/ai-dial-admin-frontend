@@ -1,18 +1,27 @@
-import { ErrorI18nKey, MenuI18nKey } from '@/src/constants/i18n';
+import { ErrorI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import { render, screen } from '@testing-library/react';
-import { describe, expect, test } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { useRouter } from 'next/navigation';
+import { describe, expect, test, vi } from 'vitest';
 import Page404 from './Page404';
 
 describe('Page404', () => {
-  test('Should render not found page with icon, messages, and link', () => {
-    render(<Page404 />);
-    expect(screen.getByText('Page not found')).toBeInTheDocument();
-    expect(screen.getByText('Resource not found or no longer available.')).toBeInTheDocument();
-    expect(screen.getByText('Please check the URL or go back to the')).toBeInTheDocument();
-    expect(screen.getByText('Homepage')).toBeInTheDocument();
+  test('Should render not found page with messages and button', async () => {
+    const mockPush = vi.fn();
+    vi.mocked(useRouter).mockReturnValue({ push: mockPush } as ReturnType<typeof useRouter>);
 
-    const link = screen.getByText('Homepage');
-    expect(link).toHaveAttribute('href', ApplicationRoute.Home);
+    const user = userEvent.setup();
+    render(<Page404 />);
+
+    expect(screen.getByText(ErrorI18nKey.Page404Code)).toBeInTheDocument();
+    expect(screen.getByText(ErrorI18nKey.Page404Title)).toBeInTheDocument();
+    expect(screen.getByText(ErrorI18nKey.Page404Description)).toBeInTheDocument();
+
+    const button = screen.getByRole('button', { name: ErrorI18nKey.Page404HomeButton });
+    expect(button).toBeInTheDocument();
+
+    await user.click(button);
+    expect(mockPush).toHaveBeenCalledWith(ApplicationRoute.Home);
   });
 });

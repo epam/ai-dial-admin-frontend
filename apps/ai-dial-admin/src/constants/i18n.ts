@@ -1063,6 +1063,13 @@ export enum ErrorI18nKey {
   MemoryError = 'Error.MemoryError',
   GPUError = 'Error.GPUError',
   AdvancedTimingsError = 'Error.AdvancedTimingsError',
+  Page403Code = 'Error.Page403Code',
+  Page403Title = 'Error.Page403Title',
+  Page403Description = 'Error.Page403Description',
+  Page404Code = 'Error.Page404Code',
+  Page404Title = 'Error.Page404Title',
+  Page404Description = 'Error.Page404Description',
+  Page404HomeButton = 'Error.Page404HomeButton',
 }
 
 export enum SourceI18nKey {

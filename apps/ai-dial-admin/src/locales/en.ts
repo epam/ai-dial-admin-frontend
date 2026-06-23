@@ -1410,6 +1410,13 @@ export default {
     MemoryError: 'Memory should be greater than 1',
     GPUError: 'GPU should be greater or equal to 0',
     AdvancedTimingsError: 'Value must be between 1 and {max}',
+    Page403Code: '403',
+    Page403Title: 'Access forbidden',
+    Page403Description: 'Access to this resource is denied. Refer to system administrator.',
+    Page404Code: '404',
+    Page404Title: 'Page not found',
+    Page404Description: "We're sorry, the page you have requested could not be found. Please go back to the home page",
+    Page404HomeButton: 'Home Page',
   },
   Source: {
     Container: 'Container',
