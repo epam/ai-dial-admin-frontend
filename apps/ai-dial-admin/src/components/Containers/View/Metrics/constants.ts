@@ -54,7 +54,7 @@ const CPU_CARD: MetricCardConfig = {
 };
 const MEMORY_CARD = memoryCard(DeploymentMetricsI18nKey.Memory, (p) => p.memoryBytes);
 // Inference-only (GPU placeholder until DCGM).
-const GPU_MEMORY_CARD = memoryCard(DeploymentMetricsI18nKey.GpuMemory, (p) => p.gpuMemoryUsedBytes);
+const GPU_MEMORY_CARD = memoryCard(DeploymentMetricsI18nKey.GpuMemory, (p) => p.gpuMemoryBytes);
 
 export const SCALE_HEALTH_BASE_CARDS: MetricCardConfig[] = [REPLICAS_CARD];
 export const SCALE_HEALTH_INFERENCE_CARDS: MetricCardConfig[] = [ERROR_RATIO_CARD];

@@ -45,7 +45,7 @@ const GaugeCard: FC<Props> = ({ title, value, loading, status = MetricStatus.Neu
           anchor: { show: true, size: 8, itemStyle: { color: CHART_COLOR.value } },
           title: { show: false },
           detail: {
-            valueFormatter: (v: number) => `${Math.round(v * 100)}%`,
+            formatter: (v: number) => `${Math.round(v * 100)}%`,
             fontSize: 24,
             fontWeight: 600,
             color: STATUS_COLOR[status],

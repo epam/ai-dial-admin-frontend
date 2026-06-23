@@ -62,5 +62,5 @@ export interface PodResourceUsage {
   cpuMillicores: number | null;
   memoryBytes: number | null;
   gpuUtilization: number | null;
-  gpuMemoryUsedBytes: number | null;
+  gpuMemoryBytes: number | null;
 }

@@ -38,7 +38,7 @@ const inferenceSnapshot = (): DeploymentMetrics =>
     operational: { requestErrorRatio: 0, e2eLatency: { mean: 1.2, p50: 1.1, p95: 2, p99: 3, count: 10 } },
     resources: {
       replicas: { total: 1, ready: 1 },
-      pods: [{ name: 'pod-1', cpuMillicores: 200, memoryBytes: 1000, gpuUtilization: null, gpuMemoryUsedBytes: null }],
+      pods: [{ name: 'pod-1', cpuMillicores: 200, memoryBytes: 1000, gpuUtilization: null, gpuMemoryBytes: null }],
     },
     rawCounters: {},
   }) as DeploymentMetrics;
