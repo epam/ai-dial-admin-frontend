@@ -1,10 +1,4 @@
-# deployment-entity-rollback Specification
-
-## Purpose
-
-Defines per-entity rollback for deployment-manager audit activities: how rollback is dispatched by activity type (Update → rollback endpoint, Create → delete, Delete → rollback endpoint with backend resurrect), the deployment-manager rollback endpoints, the lifecycle pre-check gate that governs the in-place rollback path, the success/error notifications keyed by resource type, and the post-rollback navigation rules by scenario and entry point.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Per-entity rollback restores the entity to the state before the selected activity
 
@@ -40,36 +34,6 @@ A dispatch utility (`get-deployment-rollback-request`) SHALL encapsulate this se
 - **THEN** the rollback endpoint resurrects the entity with secure values reset server-side
 - **AND** no Internal Server Error is shown
 
-### Requirement: Deployment-manager rollback endpoints
-
-The server API SHALL expose rollback methods that POST to the deployment-manager backend (`DIAL_DEPLOYMENTS_API_URL`):
-
-- Container deployments → `POST /api/v1/deployments/{id}/revision/{revision}/rollback`
-- Image definitions → `POST /api/v1/images/definitions/{id}/revision/{revision}/rollback`
-- Global domain whitelist (singleton, no id) → `POST /api/v1/global-whitelist/image-build/revision/{revision}/rollback`
-
-Each method SHALL be reachable through a `'use server'` action and SHALL return the standard `ServerActionResponse` so success and `{ success: false, errorHeader, errorMessage }` are surfaced uniformly. The backend resolves the target via point-in-time semantics (latest revision ≤ `revision`); the frontend SHALL NOT attempt to pre-resolve revision gaps.
-
-#### Scenario: Container rollback hits the deployment-manager backend
-- **GIVEN** a container deployment with id `abc` and target revision `41`
-- **WHEN** the rollback action runs
-- **THEN** it issues `POST /api/v1/deployments/abc/revision/41/rollback` against `DIAL_DEPLOYMENTS_API_URL`
-
-#### Scenario: Image-definition rollback hits the deployment-manager backend
-- **GIVEN** an image definition with id `img1` and target revision `41`
-- **WHEN** the rollback action runs
-- **THEN** it issues `POST /api/v1/images/definitions/img1/revision/41/rollback`
-
-#### Scenario: Whitelist rollback omits the id segment
-- **GIVEN** an `ImageBuildDomainWhitelist` activity with target revision `41`
-- **WHEN** the rollback action runs
-- **THEN** it issues `POST /api/v1/global-whitelist/image-build/revision/41/rollback` with no id segment
-
-#### Scenario: Backend rejection surfaces as an error notification
-- **WHEN** a rollback request returns a non-success response (e.g. HTTP 400/403/404)
-- **THEN** an error notification is shown carrying the backend `errorHeader`/`errorMessage`
-- **AND** the entity is left unchanged in the UI
-
 ### Requirement: Lifecycle pre-check gate for the in-place rollback path
 
 Before allowing the `Update`→rollback path, the system SHALL determine whether the entity's current lifecycle state permits rollback. A container is blocked when its `status` is `PENDING`, `RUNNING`, `CRASHED`, or `STOPPING`; an image definition is blocked when its `buildStatus` is `BUILDING` or `BUILD_SUCCESSFUL`. The global whitelist is never blocked. The current state SHALL be fetched via the entity's GET endpoint, since the audit activity record does not carry live status. When blocked, the UI SHALL prevent submission and SHALL explain why. The gate is advisory; the backend 400 remains authoritative and any slip-through SHALL surface as an error notification. Neither the `Create`→delete path nor the `Delete`→rollback (resurrect) path is gated by this check — a currently-deleted entity has no live status to block on.
@@ -100,19 +64,6 @@ Before allowing the `Update`→rollback path, the system SHALL determine whether
 - **GIVEN** a `Delete` activity for a container deployment or image definition
 - **WHEN** the user attempts rollback
 - **THEN** no lifecycle pre-check is performed and submission is allowed
-
-### Requirement: Rollback success and error notifications keyed by resource type
-
-On a successful rollback the system SHALL show a success notification whose title and description are localized per deployment-manager resource type, following the existing `rollback-entity` messaging pattern. On failure it SHALL show an error notification. All user-facing strings SHALL be provided through next-international i18n keys. After a successful rollback the UI SHALL navigate following the existing rollback flow (entity page when initiated from an entity-scoped audit, otherwise the activity-audit list) so the next datasource fetch reflects the new state.
-
-#### Scenario: Success notification on container rollback
-- **WHEN** a container rollback returns success
-- **THEN** a success notification with a container-specific title/description is shown
-- **AND** the UI navigates per the existing rollback redirect rule
-
-#### Scenario: Recreate success hints secure values need re-supply
-- **WHEN** a `Delete`-activity recreate succeeds for an entity that had secure environment values
-- **THEN** the success notification indicates secure values must be re-supplied before deploy
 
 ### Requirement: Post-rollback navigation by scenario and entry point
 
@@ -150,3 +101,11 @@ When navigating to the activity-audit list, the destination SHALL open in the vi
 - **GIVEN** an `Update` activity opened from an entity audit tab/detail
 - **WHEN** the rollback succeeds
 - **THEN** the current entity page is reloaded rather than navigating away
+
+## REMOVED Requirements
+
+### Requirement: Snapshot-to-create-DTO mapper for the recreate scenario
+
+**Reason**: The `Delete` rollback no longer recreates the entity via a client-built create request. It calls the backend rollback endpoint, which resurrects the deleted entity from audit history server-side. The mapper sent masked/null secure env values to the create path, causing an Internal Server Error (Issue #3700), and is now dead code.
+
+**Migration**: Delete `src/utils/audit/build-create-body-from-snapshot.ts` and its spec. The `Delete` branch of `get-deployment-rollback-request` calls the rollback action (`rollbackDeploymentContainer` / `rollbackDeploymentImage`) at revision `R` instead of fetching the snapshot and mapping a create DTO. No new mapper replaces it.

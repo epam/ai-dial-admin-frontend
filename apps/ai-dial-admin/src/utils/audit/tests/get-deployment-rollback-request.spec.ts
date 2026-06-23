@@ -6,16 +6,12 @@ vi.mock('@/src/app/actions/deployments', () => ({
   rollbackDeploymentContainer: vi.fn(() => Promise.resolve({ success: true })),
   rollbackDeploymentImage: vi.fn(() => Promise.resolve({ success: true })),
   rollbackDeploymentWhitelist: vi.fn(() => Promise.resolve({ success: true })),
-  createContainer: vi.fn(() => Promise.resolve({ success: true })),
-  createImage: vi.fn(() => Promise.resolve({ success: true })),
   deleteContainer: vi.fn(() => Promise.resolve({ success: true })),
   deleteImage: vi.fn(() => Promise.resolve({ success: true })),
   getDeploymentRevisionDetails: vi.fn(() => Promise.resolve({ id: 'snap-id', name: 'snap-name', $type: 'mcp' })),
 }));
 
 import {
-  createContainer,
-  createImage,
   deleteContainer,
   deleteImage,
   getDeploymentRevisionDetails,
@@ -69,26 +65,22 @@ describe('rollbackDeploymentEntity', () => {
     expect(deleteImage).toHaveBeenCalledWith('snap-id');
   });
 
-  test('Delete on container recreates from the prior snapshot', async () => {
+  test('Delete on container calls the container rollback endpoint at revision - 1', async () => {
     await rollbackDeploymentEntity(activity({ activityType: ActivityAuditType.Delete }));
-    expect(getDeploymentRevisionDetails).toHaveBeenCalledWith(ActivityAuditResourceType.MCP_DEPLOYMENT, 'dep-1', 41);
-    expect(createContainer).toHaveBeenCalledTimes(1);
-    const body = (createContainer as unknown as { mock: { calls: unknown[][] } }).mock.calls[0][0] as Record<
-      string,
-      unknown
-    >;
-    expect(body.id).toBeUndefined();
-    expect(body.$type).toBe('mcp');
+    expect(rollbackDeploymentContainer).toHaveBeenCalledWith('dep-1', 41);
+    expect(getDeploymentRevisionDetails).not.toHaveBeenCalled();
+    expect(deleteContainer).not.toHaveBeenCalled();
   });
 
-  test('Delete on image recreates via createImage', async () => {
+  test('Delete on image calls the image rollback endpoint at revision - 1', async () => {
     await rollbackDeploymentEntity(
       activity({
         activityType: ActivityAuditType.Delete,
         resourceType: ActivityAuditResourceType.MCP_IMAGE_DEFINITION,
       }),
     );
-    expect(createImage).toHaveBeenCalledTimes(1);
+    expect(rollbackDeploymentImage).toHaveBeenCalledWith('dep-1', 41);
+    expect(getDeploymentRevisionDetails).not.toHaveBeenCalled();
   });
 
   test('whitelist always rolls back via the whitelist endpoint without an id', async () => {
