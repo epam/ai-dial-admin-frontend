@@ -3,7 +3,7 @@ import { FC, useMemo } from 'react';
 
 import { DialPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 
-import DiffLegend from '@/src/components/ActivityAudit/View/DiffReport/DiffLegend';
+import DiffLegend from '@/src/components/Common/DiffLegend/DiffLegend';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { DIFF_ROW_CLASS_RULES } from '@/src/constants/ag-grid';

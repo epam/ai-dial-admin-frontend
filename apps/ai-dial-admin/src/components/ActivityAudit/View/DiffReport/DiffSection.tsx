@@ -9,7 +9,7 @@ import { filterNotEmptySections, getDiffCount } from '@/src/components/ActivityA
 import { useI18n } from '@/src/locales/client';
 
 import AuditEntityGrid from '@/src/components/ActivityAudit/EntityGrid/EntityGrid';
-import DiffLegend from '@/src/components/ActivityAudit/View/DiffReport/DiffLegend';
+import DiffLegend from '@/src/components/Common/DiffLegend/DiffLegend';
 import Accordion from '@/src/components/Common/Accordion/Accordion';
 
 interface Props {

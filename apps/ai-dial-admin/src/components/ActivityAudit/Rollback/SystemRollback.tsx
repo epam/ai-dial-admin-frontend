@@ -19,7 +19,7 @@ import RollbackRevisions from '@/src/components/ActivityAudit/Modals/Revisions';
 import { ActivityAuditRevision } from '@/src/components/ActivityAudit/models';
 import { SYSTEM_ROLLBACK_ENTITIES, SYSTEM_ROLLBACK_TAB_NAME } from '@/src/components/ActivityAudit/Rollback/constants';
 import { getSystemRollbackColumns } from '@/src/components/ActivityAudit/Rollback/utils';
-import DiffLegend from '@/src/components/ActivityAudit/View/DiffReport/DiffLegend';
+import DiffLegend from '@/src/components/Common/DiffLegend/DiffLegend';
 import FilterControl from '@/src/components/ActivityAudit/View/DiffReport/FilterControl';
 import { mergeEntityMaps } from '@/src/components/ActivityAudit/View/utils/generate-diffs';
 import JsonView from '@/src/components/Common/JsonView/JsonView';

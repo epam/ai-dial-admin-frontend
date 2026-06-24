@@ -3,7 +3,7 @@
 import { DialCheckbox } from '@epam/ai-dial-ui-kit';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
-import { FC, useState } from 'react';
+import { FC, ReactNode, useState } from 'react';
 
 import { getGroupCheckState, toggleColDefNode } from './utils';
 
@@ -13,9 +13,10 @@ interface Props {
   tree: ColDef[];
   onColumnsChange: (columns: ColDef[]) => void;
   skipLeafNames: string[];
+  renderLabel?: (node: ColDef, displayLabel: string) => ReactNode;
 }
 
-const TreeColumnNode: FC<Props> = ({ node, path, tree, onColumnsChange, skipLeafNames }) => {
+const TreeColumnNode: FC<Props> = ({ node, path, tree, onColumnsChange, skipLeafNames, renderLabel }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const children = 'children' in node && node.children ? (node.children as ColDef[]) : [];
@@ -23,6 +24,7 @@ const TreeColumnNode: FC<Props> = ({ node, path, tree, onColumnsChange, skipLeaf
   const nodeId = `tree_node_${path.join('_')}`;
   const ctx = node.context as { panelName?: string } | undefined;
   const displayLabel = ctx?.panelName || node.headerName?.trim();
+  const panelLabel = displayLabel ? (renderLabel?.(node, displayLabel) ?? displayLabel) : null;
 
   if (!displayLabel) return null;
 
@@ -33,7 +35,7 @@ const TreeColumnNode: FC<Props> = ({ node, path, tree, onColumnsChange, skipLeaf
       <div className="pl-6">
         <DialCheckbox
           id={nodeId}
-          label={displayLabel}
+          label={panelLabel}
           checked={node.hide !== true}
           onChange={(value) => {
             onColumnsChange(toggleColDefNode(tree, path, !value));
@@ -57,7 +59,7 @@ const TreeColumnNode: FC<Props> = ({ node, path, tree, onColumnsChange, skipLeaf
         </button>
         <DialCheckbox
           id={nodeId}
-          label={displayLabel}
+          label={panelLabel}
           checked={checkState === 'checked'}
           indeterminate={checkState === 'indeterminate'}
           onChange={(value) => {
@@ -75,6 +77,7 @@ const TreeColumnNode: FC<Props> = ({ node, path, tree, onColumnsChange, skipLeaf
                 tree={tree}
                 onColumnsChange={onColumnsChange}
                 skipLeafNames={skipLeafNames}
+                renderLabel={renderLabel}
               />
             </li>
           ))}

@@ -1,5 +1,6 @@
 'use client';
 
+import { DialSwitch } from '@epam/ai-dial-ui-kit';
 import { IconGripVertical } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
 import { FC, ReactNode, useCallback, useEffect, useRef, useState } from 'react';
@@ -12,6 +13,7 @@ import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 import TreeColumnNode from './TreeColumnNode';
+import { TreeColumnsPanelDiffSection } from './models';
 
 interface Props {
   columns: ColDef[];
@@ -19,6 +21,10 @@ interface Props {
   panelClassName: string;
   toggleColumnsPanel?: () => void;
   skipLeafNames?: string[];
+  title?: string;
+  renderLabel?: (node: ColDef, displayLabel: string) => ReactNode;
+  diffSection?: TreeColumnsPanelDiffSection;
+  treeSubtitle?: string;
 }
 
 const DEFAULT_SKIP_LEAF_NAMES: string[] = [];
@@ -82,6 +88,35 @@ const DraggableTreeItem: FC<DraggableTreeItemProps> = ({ id, onMove, onCommit, c
   );
 };
 
+const DEFAULT_SWITCH_ID_PREFIX = 'tree-columns-panel';
+
+const TreeColumnsPanelDiffSwitches: FC<TreeColumnsPanelDiffSection> = ({
+  differencesTitle,
+  viewDifferencesOnly,
+  onViewDifferencesOnlyChange,
+  viewDifferencesOnlyLabel,
+  hideHighlights,
+  onHideHighlightsChange,
+  hideHighlightsLabel,
+  switchIdPrefix = DEFAULT_SWITCH_ID_PREFIX,
+}) => (
+  <div className="flex flex-col gap-4 mb-4 pb-4">
+    <h3 className="dial-tiny-text text-secondary">{differencesTitle}</h3>
+    <DialSwitch
+      switchId={`${switchIdPrefix}-view-differences-only`}
+      label={viewDifferencesOnlyLabel}
+      isOn={viewDifferencesOnly}
+      onChange={onViewDifferencesOnlyChange}
+    />
+    <DialSwitch
+      switchId={`${switchIdPrefix}-hide-highlights`}
+      label={hideHighlightsLabel}
+      isOn={hideHighlights}
+      onChange={onHideHighlightsChange}
+    />
+  </div>
+);
+
 interface InnerProps extends Props {
   t: (key: string) => string;
 }
@@ -92,6 +127,10 @@ const TreeColumnsPanelInner: FC<InnerProps> = ({
   panelClassName,
   toggleColumnsPanel,
   skipLeafNames = DEFAULT_SKIP_LEAF_NAMES,
+  title,
+  renderLabel,
+  diffSection,
+  treeSubtitle,
   t,
 }) => {
   const [localColumns, setLocalColumns] = useState(columns);
@@ -127,18 +166,17 @@ const TreeColumnsPanelInner: FC<InnerProps> = ({
   const [, drop] = useDrop(() => ({ accept: DRAG_TYPE }));
   drop(listRef);
 
+  const panelTitle = title ?? t(ButtonsI18nKey.Columns);
+
   return (
-    <div
-      className={panelClassName}
-      onClick={(e) => e.stopPropagation()}
-      role="toolbar"
-      aria-label={t(ButtonsI18nKey.Columns)}
-    >
-      <div className="flex flex-row justify-between py-4 px-6 items-center h-[70px]">
-        <h3 className="flex-1 min-w-0 mr-3">{t(ButtonsI18nKey.Columns)}</h3>
+    <div className={panelClassName} onClick={(e) => e.stopPropagation()} role="toolbar" aria-label={panelTitle}>
+      <div className="flex flex-row justify-between py-4 px-6 items-center h-[70px] border-b border-tertiary">
+        <h3 className="flex-1 min-w-0 mr-3">{panelTitle}</h3>
         {toggleColumnsPanel && <CloseButton onClose={toggleColumnsPanel} />}
       </div>
       <div className="flex-1 flex flex-col p-6 overflow-y-auto">
+        {diffSection && <TreeColumnsPanelDiffSwitches {...diffSection} />}
+        {treeSubtitle && <h3 className="dial-tiny-text text-secondary mb-4">{treeSubtitle}</h3>}
         <ul ref={listRef} className="flex flex-col gap-4">
           {localColumns.map((col, i) => (
             <li key={getColId(col, i)}>
@@ -149,6 +187,7 @@ const TreeColumnsPanelInner: FC<InnerProps> = ({
                   tree={localColumns}
                   onColumnsChange={onColumnsChange}
                   skipLeafNames={skipLeafNames}
+                  renderLabel={renderLabel}
                 />
               </DraggableTreeItem>
             </li>

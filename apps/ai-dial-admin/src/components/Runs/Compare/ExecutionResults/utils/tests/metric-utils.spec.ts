@@ -4,12 +4,13 @@ import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import { ExtractionResultStatus } from '@/src/models/evaluation/run';
 
 import {
-  CompareMetricDeltaKind,
+  MetricDeltaKind,
   countCompareDiffs,
-  formatCompareMetricDelta,
-  getCompareMetricDelta,
+  formatMetricDelta,
+  getMetricDelta,
+  hasCompareRowDiff,
   roundMetricValue,
-} from '../compare-metric-utils';
+} from '../metric-utils';
 
 const makeRow = (overrides: Partial<CompareAnalyticsRow> = {}): CompareAnalyticsRow => ({
   id: 'result-1',
@@ -21,41 +22,41 @@ const makeRow = (overrides: Partial<CompareAnalyticsRow> = {}): CompareAnalytics
   ...overrides,
 });
 
-describe('Runs Compare :: compare-metric-utils', () => {
+describe('Runs Compare :: metric-utils', () => {
   test('returns empty when values are equal', () => {
-    expect(getCompareMetricDelta(0.5, 0.5)).toEqual({ kind: CompareMetricDeltaKind.Empty });
-    expect(getCompareMetricDelta(0.102, 0.102)).toEqual({ kind: CompareMetricDeltaKind.Empty });
+    expect(getMetricDelta(0.5, 0.5)).toEqual({ kind: MetricDeltaKind.Empty });
+    expect(getMetricDelta(0.102, 0.102)).toEqual({ kind: MetricDeltaKind.Empty });
   });
 
   test('returns changed when both values exist and differ', () => {
-    expect(getCompareMetricDelta(0, 0.303)).toEqual({
-      kind: CompareMetricDeltaKind.Changed,
+    expect(getMetricDelta(0, 0.303)).toEqual({
+      kind: MetricDeltaKind.Changed,
       value: 0.303,
     });
-    expect(getCompareMetricDelta(1, 0.102)).toEqual({
-      kind: CompareMetricDeltaKind.Changed,
+    expect(getMetricDelta(1, 0.102)).toEqual({
+      kind: MetricDeltaKind.Changed,
       value: -0.898,
     });
   });
 
   test('returns added when primary is missing and secondary exists', () => {
-    expect(getCompareMetricDelta(null, 1)).toEqual({ kind: CompareMetricDeltaKind.Added });
+    expect(getMetricDelta(null, 1)).toEqual({ kind: MetricDeltaKind.Added });
   });
 
   test('returns empty when both values are missing', () => {
-    expect(getCompareMetricDelta(null, null)).toEqual({ kind: CompareMetricDeltaKind.Empty });
+    expect(getMetricDelta(null, null)).toEqual({ kind: MetricDeltaKind.Empty });
   });
 
   test('returns removed when primary exists and secondary is missing', () => {
-    expect(getCompareMetricDelta(0.8, null)).toEqual({ kind: CompareMetricDeltaKind.Removed });
+    expect(getMetricDelta(0.8, null)).toEqual({ kind: MetricDeltaKind.Removed });
   });
 
-  test('formatCompareMetricDelta formats signed values for changed deltas', () => {
-    expect(formatCompareMetricDelta({ kind: CompareMetricDeltaKind.Changed, value: 0.303 })).toBe('+0.303');
-    expect(formatCompareMetricDelta({ kind: CompareMetricDeltaKind.Changed, value: -0.898 })).toBe('-0.898');
-    expect(formatCompareMetricDelta({ kind: CompareMetricDeltaKind.Empty })).toBeNull();
-    expect(formatCompareMetricDelta({ kind: CompareMetricDeltaKind.Added })).toBeNull();
-    expect(formatCompareMetricDelta({ kind: CompareMetricDeltaKind.Removed })).toBeNull();
+  test('formatMetricDelta formats signed values for changed deltas', () => {
+    expect(formatMetricDelta({ kind: MetricDeltaKind.Changed, value: 0.303 })).toBe('+0.303');
+    expect(formatMetricDelta({ kind: MetricDeltaKind.Changed, value: -0.898 })).toBe('-0.898');
+    expect(formatMetricDelta({ kind: MetricDeltaKind.Empty })).toBeNull();
+    expect(formatMetricDelta({ kind: MetricDeltaKind.Added })).toBeNull();
+    expect(formatMetricDelta({ kind: MetricDeltaKind.Removed })).toBeNull();
   });
 
   test('roundMetricValue rounds to 3 decimals', () => {
@@ -124,5 +125,59 @@ describe('Runs Compare :: countCompareDiffs', () => {
     ];
 
     expect(countCompareDiffs(rows)).toEqual({ improved: 1, changed: 0, regressed: 1 });
+  });
+});
+
+describe('Runs Compare :: hasCompareRowDiff', () => {
+  test('returns false when status and metrics match', () => {
+    const row = makeRow({
+      executionStatus: ExtractionResultStatus.SUCCESS,
+      metricValues: { Accuracy: { precision: 0.8 } },
+      _compared: {
+        ...makeRow(),
+        executionStatus: ExtractionResultStatus.SUCCESS,
+        metricValues: { Accuracy: { precision: 0.8 } },
+      },
+    });
+
+    expect(hasCompareRowDiff(row)).toBe(false);
+  });
+
+  test('returns true when execution status differs', () => {
+    const row = makeRow({
+      executionStatus: ExtractionResultStatus.SUCCESS,
+      _compared: { ...makeRow(), executionStatus: ExtractionResultStatus.FAILED },
+    });
+
+    expect(hasCompareRowDiff(row)).toBe(true);
+  });
+
+  test('returns true when a metric was added, changed, or removed', () => {
+    expect(
+      hasCompareRowDiff(
+        makeRow({
+          metricValues: { Accuracy: { precision: 0.5 } },
+          _compared: { ...makeRow(), metricValues: { Accuracy: { precision: 0.8 } } },
+        }),
+      ),
+    ).toBe(true);
+
+    expect(
+      hasCompareRowDiff(
+        makeRow({
+          metricValues: {},
+          _compared: { ...makeRow(), metricValues: { Accuracy: { f1: 0.9 } } },
+        }),
+      ),
+    ).toBe(true);
+
+    expect(
+      hasCompareRowDiff(
+        makeRow({
+          metricValues: { Accuracy: { precision: 0.8 } },
+          _compared: { ...makeRow(), metricValues: {} },
+        }),
+      ),
+    ).toBe(true);
   });
 });

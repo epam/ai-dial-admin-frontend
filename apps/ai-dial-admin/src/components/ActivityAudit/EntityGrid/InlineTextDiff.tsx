@@ -1,10 +1,7 @@
 import classNames from 'classnames';
 import { FC } from 'react';
 
-import {
-  AUDIT_DIFF_DELETE_HIGHLIGHT_CLASS,
-  AUDIT_DIFF_INSERT_HIGHLIGHT_CLASS,
-} from '@/src/components/ActivityAudit/constants';
+import { DIFF_DELETE_HIGHLIGHT_CLASS, DIFF_INSERT_HIGHLIGHT_CLASS } from '@/src/components/Common/DiffLegend/constants';
 import { InlineTextDiffKind, InlineTextDiffSegment } from '@/src/utils/diff/models';
 
 interface Props {
@@ -24,9 +21,7 @@ const InlineTextDiff: FC<Props> = ({ segments }) => {
         }
 
         const highlightClass =
-          segment.kind === InlineTextDiffKind.Insert
-            ? AUDIT_DIFF_INSERT_HIGHLIGHT_CLASS
-            : AUDIT_DIFF_DELETE_HIGHLIGHT_CLASS;
+          segment.kind === InlineTextDiffKind.Insert ? DIFF_INSERT_HIGHLIGHT_CLASS : DIFF_DELETE_HIGHLIGHT_CLASS;
 
         return (
           <span key={index} className={classNames('box-decoration-clone', highlightClass)}>
