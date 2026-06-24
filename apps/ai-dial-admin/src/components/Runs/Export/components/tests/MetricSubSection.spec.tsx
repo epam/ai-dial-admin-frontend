@@ -18,7 +18,7 @@ describe('MetricSubSection', () => {
     render(
       <MetricSubSection
         metricName="Accuracy"
-        items={makeItems(['metric:Accuracy:score'])}
+        items={makeItems(['metric::Accuracy::score'])}
         checkedColumns={new Set()}
         onToggleColumn={vi.fn()}
       />,
@@ -30,26 +30,26 @@ describe('MetricSubSection', () => {
     render(
       <MetricSubSection
         metricName="Accuracy"
-        items={makeItems(['metric:Accuracy:score', 'metric:Accuracy:value'])}
+        items={makeItems(['metric::Accuracy::score', 'metric::Accuracy::value'])}
         checkedColumns={new Set()}
         onToggleColumn={vi.fn()}
       />,
     );
-    expect(screen.getByText('metric:Accuracy:score')).toBeInTheDocument();
-    expect(screen.getByText('metric:Accuracy:value')).toBeInTheDocument();
+    expect(screen.getByText('metric::Accuracy::score')).toBeInTheDocument();
+    expect(screen.getByText('metric::Accuracy::value')).toBeInTheDocument();
   });
 
   it('hides items when collapsed', async () => {
     render(
       <MetricSubSection
         metricName="Accuracy"
-        items={makeItems(['metric:Accuracy:score'])}
+        items={makeItems(['metric::Accuracy::score'])}
         checkedColumns={new Set()}
         onToggleColumn={vi.fn()}
       />,
     );
     await userEvent.click(screen.getByRole('button'));
-    expect(screen.queryByText('metric:Accuracy:score')).not.toBeInTheDocument();
+    expect(screen.queryByText('metric::Accuracy::score')).not.toBeInTheDocument();
   });
 
   it('calls onToggleColumn when an item checkbox is clicked', async () => {
@@ -57,18 +57,18 @@ describe('MetricSubSection', () => {
     render(
       <MetricSubSection
         metricName="Accuracy"
-        items={makeItems(['metric:Accuracy:score'])}
-        checkedColumns={new Set(['metric:Accuracy:score'])}
+        items={makeItems(['metric::Accuracy::score'])}
+        checkedColumns={new Set(['metric::Accuracy::score'])}
         onToggleColumn={onToggleColumn}
       />,
     );
-    await userEvent.click(screen.getByLabelText('metric:Accuracy:score'));
-    expect(onToggleColumn).toHaveBeenCalledWith('metric:Accuracy:score', expect.any(Boolean));
+    await userEvent.click(screen.getByLabelText('metric::Accuracy::score'));
+    expect(onToggleColumn).toHaveBeenCalledWith('metric::Accuracy::score', expect.any(Boolean));
   });
 
   it('calls onToggleColumn for every item when the group header is toggled', async () => {
     const onToggleColumn = vi.fn();
-    const items = makeItems(['metric:Accuracy:score', 'metric:Accuracy:value']);
+    const items = makeItems(['metric::Accuracy::score', 'metric::Accuracy::value']);
     render(
       <MetricSubSection
         metricName="Accuracy"

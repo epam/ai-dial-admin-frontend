@@ -13,8 +13,8 @@ function makeGroups(columnNames: string[]): ColumnGroup[] {
 
 describe('Columns', () => {
   it('renders group labels', () => {
-    const groups = makeGroups(['id', 'data:prompt']);
-    const checkedColumns = new Set(['id', 'data:prompt']);
+    const groups = makeGroups(['id', 'data::prompt']);
+    const checkedColumns = new Set(['id', 'data::prompt']);
 
     render(
       <Columns groups={groups} checkedColumns={checkedColumns} onToggleColumn={vi.fn()} onToggleGroup={vi.fn()} />,
@@ -76,8 +76,8 @@ describe('Columns', () => {
   });
 
   it('renders metric sub-group headers', () => {
-    const groups = makeGroups(['metric:Accuracy:score', 'metric:Recall:score']);
-    const checkedColumns = new Set(['metric:Accuracy:score', 'metric:Recall:score']);
+    const groups = makeGroups(['metric::Accuracy::score', 'metric::Recall::score']);
+    const checkedColumns = new Set(['metric::Accuracy::score', 'metric::Recall::score']);
 
     render(
       <Columns groups={groups} checkedColumns={checkedColumns} onToggleColumn={vi.fn()} onToggleGroup={vi.fn()} />,
