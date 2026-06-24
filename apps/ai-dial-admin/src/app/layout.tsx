@@ -10,6 +10,8 @@ import classNames from 'classnames';
 import '@/src/app/[lang]/global.scss';
 import Page403 from '@/src/components/Page403/Page403';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
+import { I18nProvider } from '@/src/context/I18nProvider';
+import { ThemeProvider } from '@/src/context/ThemeContext';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -28,7 +30,14 @@ const inter = Inter({
   variable: '--font-inter',
 });
 
-export default async function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({
+  children,
+  params,
+}: {
+  children: ReactNode;
+  params: Promise<{ lang: string }>;
+}) {
+  const { lang } = await params;
   const isEnableAuth = getIsEnableAuthToggle();
   const token = await getUserToken(isEnableAuth, headers(), cookies());
   const isInvalidSession = await getIsInvalidSession(isEnableAuth, token);
@@ -38,6 +47,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   }
   const userInfo = await utilityApi.getUserInfo(token);
   const themesConfig = await themesApi.getThemesConfiguration();
+  const themeImages = await themesApi.getImages();
 
   const faviconUrl = themesConfig
     ? getIconPath(themesConfig?.images['admin-favicon'] || themesConfig?.images.favicon)
@@ -50,7 +60,15 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <link rel="apple-touch-icon" href={faviconUrl || '/favicon.ico'} type="image/png" />
       </head>
       <body className={classNames(inter.variable, 'font min-w-[360px]')}>
-        {userInfo.success ? children : <Page403 />}
+        {userInfo.success ? (
+          children
+        ) : (
+          <I18nProvider locale={lang || 'en'}>
+            <ThemeProvider themesConfiguration={themesConfig} themeImages={themeImages}>
+              <Page403 />
+            </ThemeProvider>
+          </I18nProvider>
+        )}
       </body>
     </html>
   );
