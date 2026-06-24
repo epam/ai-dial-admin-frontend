@@ -103,7 +103,9 @@ describe('panel-columns', () => {
         return collectColIds(children);
       });
 
-    expect(collectColIds(flattened)).toEqual(collectColIds(flatDefs.filter((col) => getColId(col) !== 'compare_action')));
+    expect(collectColIds(flattened)).toEqual(
+      collectColIds(flatDefs.filter((col) => getColId(col) !== 'compare_action')),
+    );
   });
 
   test('preservePanelHideState copies hide flags by colId', () => {

@@ -103,9 +103,9 @@ describe('Runs Compare :: getCompareColumns', () => {
       'Precision',
       'Recall',
     ]);
-    expect((overallAccuracyGroup.children as ColDef[])?.every((column) => column.filter === 'agNumberColumnFilter')).toBe(
-      true,
-    );
+    expect(
+      (overallAccuracyGroup.children as ColDef[])?.every((column) => column.filter === 'agNumberColumnFilter'),
+    ).toBe(true);
     expect((overallAccuracyGroup.children as ColDef[])?.every((column) => column.floatingFilter === true)).toBe(true);
 
     const contextGroup = columns[4] as ColGroupDef;
@@ -117,9 +117,9 @@ describe('Runs Compare :: getCompareColumns', () => {
     expect(extractedGroup.children?.map((column) => column.headerName)).toEqual(['answer', 'context', 'context_urls']);
     expect((extractedGroup.children as ColDef[])?.every((column) => column.filter === false)).toBe(true);
     expect((extractedGroup.children as ColDef[])?.every((column) => column.flex === 1)).toBe(true);
-    expect((extractedGroup.children as ColDef[])?.every((column) => column.minWidth === EXTRACTED_COLUMN_MIN_WIDTH)).toBe(
-      true,
-    );
+    expect(
+      (extractedGroup.children as ColDef[])?.every((column) => column.minWidth === EXTRACTED_COLUMN_MIN_WIDTH),
+    ).toBe(true);
   });
 
   test('omits extracted group when there is no extracted schema', () => {

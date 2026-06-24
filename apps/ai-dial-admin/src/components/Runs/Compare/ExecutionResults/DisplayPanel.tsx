@@ -56,7 +56,7 @@ const DisplayPanel: FC<Props> = ({
     }
 
     return (
-      <span className="inline-flex items-center gap-1 min-w-0">
+      <span className="inline-flex items-center gap-1 min-w-0 ml-2 text-primary">
         <span className="truncate">{displayLabel}</span>
         <CompareRunIndexBadge runIndex={ctx.panelRunIndex} />
       </span>
