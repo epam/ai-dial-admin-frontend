@@ -290,6 +290,7 @@ const ContainerView: FC<Props> = ({
           onChangeActiveTab={setActiveTab}
           route={route}
           container={selectedContainer}
+          transport={selectedContainer.transport}
           image={image}
           isChanged={isChanged}
           isRedeployRequired={isRedeployRequired}
