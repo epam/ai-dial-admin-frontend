@@ -411,6 +411,37 @@ const TestCasesList: FC<Props> = ({
 
   useEffect(() => {
     if (!datasetId) return;
+
+    const schemaFieldNames = new Set((dataset?.testCaseSchema ?? []).map((s) => s.name));
+
+    dirtyRowsRef.current.forEach((row, id) => {
+      const rowData = row.data as Record<string, unknown> | undefined;
+      if (!rowData) return;
+      const hasRemovedFields = Object.keys(rowData).some((key) => !schemaFieldNames.has(key));
+      if (hasRemovedFields) {
+        dirtyRowsRef.current.set(id, {
+          ...row,
+          data: Object.fromEntries(Object.entries(rowData).filter(([key]) => schemaFieldNames.has(key))),
+        });
+      }
+    });
+
+    setNewTestCases((prev) => {
+      const needsClean = prev.some((row) => {
+        const rowData = row.data as Record<string, unknown> | undefined;
+        return rowData && Object.keys(rowData).some((key) => !schemaFieldNames.has(key));
+      });
+      if (!needsClean) return prev;
+      return prev.map((row) => {
+        const rowData = row.data as Record<string, unknown> | undefined;
+        if (!rowData) return row;
+        return {
+          ...row,
+          data: Object.fromEntries(Object.entries(rowData).filter(([key]) => schemaFieldNames.has(key))),
+        };
+      });
+    });
+
     refreshGrid();
   }, [datasetId, schemaKey, isReadOnly]);
 
