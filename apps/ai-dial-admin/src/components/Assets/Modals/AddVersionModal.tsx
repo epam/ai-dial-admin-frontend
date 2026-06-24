@@ -1,5 +1,5 @@
 import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import semver from 'semver';
 
 import VersionControl from '@/src/components/BaseControls/Version';
@@ -33,7 +33,12 @@ const AddVersionModal: FC<Props> = ({
   defaultVersion,
 }) => {
   const t = useI18n();
-  const { isValid, dispatch } = useSaveValidationContext();
+  const { dispatch, errorFields } = useSaveValidationContext();
+
+  const isValid = useMemo(
+    () => errorFields?.get('version') !== false && errorFields?.get(SEMANTIC_VERSION_VALIDATION_FIELD) !== false,
+    [errorFields],
+  );
 
   const [version, setVersion] = useState(() => {
     if (defaultVersion) {

@@ -21,14 +21,14 @@ describe('GroupSection', () => {
   });
 
   it('shows leaf columns when expanded', () => {
-    const group = makeGroup(['data:prompt', 'data:systemPrompt'], ColumnGroupId.Data);
+    const group = makeGroup(['data::prompt', 'data::systemPrompt'], ColumnGroupId.Data);
     render(<GroupSection group={group} checkedColumns={new Set()} onToggleColumn={vi.fn()} onToggleGroup={vi.fn()} />);
     expect(screen.getByText('prompt')).toBeInTheDocument();
     expect(screen.getByText('systemPrompt')).toBeInTheDocument();
   });
 
   it('hides columns when collapsed', async () => {
-    const group = makeGroup(['data:prompt'], ColumnGroupId.Data);
+    const group = makeGroup(['data::prompt'], ColumnGroupId.Data);
     render(<GroupSection group={group} checkedColumns={new Set()} onToggleColumn={vi.fn()} onToggleGroup={vi.fn()} />);
     await userEvent.click(screen.getByRole('button'));
     expect(screen.queryByText('prompt')).not.toBeInTheDocument();
@@ -50,7 +50,7 @@ describe('GroupSection', () => {
   });
 
   it('renders metric sub-sections for the Metrics group', () => {
-    const group = makeGroup(['metric:Accuracy:score', 'metric:Recall:score'], ColumnGroupId.Metrics);
+    const group = makeGroup(['metric::Accuracy::score', 'metric::Recall::score'], ColumnGroupId.Metrics);
     render(<GroupSection group={group} checkedColumns={new Set()} onToggleColumn={vi.fn()} onToggleGroup={vi.fn()} />);
     expect(screen.getByText('metric:Accuracy')).toBeInTheDocument();
     expect(screen.getByText('metric:Recall')).toBeInTheDocument();

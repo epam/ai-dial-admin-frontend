@@ -1,9 +1,15 @@
 'use client';
 
 import { DialCheckbox, DialFormPopup, DialPasswordInput, PopupSize } from '@epam/ai-dial-ui-kit';
-import { FC, useState } from 'react';
+import { FC, useMemo, useState } from 'react';
 
-import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
+import {
+  ButtonsI18nKey,
+  EntityFieldsI18nKey,
+  EntityPlaceholdersI18nKey,
+  ErrorI18nKey,
+  ToolsetI18nKey,
+} from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ToolsetAuthCredentialLevel, ToolsetAuthType } from '@/src/models/dial/toolset';
 
@@ -42,6 +48,14 @@ const LoginPopup: FC<Props> = ({ type, isModalOpen, isLoggedInAsUser, isLoggedIn
     onLogin(levelsToLogin, apiKeyValue);
   };
 
+  const disableSubmitButton = useMemo(() => {
+    const isNoLoginSelected = !loginOrganization && !loginUser;
+    if (type === ToolsetAuthType.API_KEY) {
+      return isNoLoginSelected || !apiKeyValue;
+    }
+    return isNoLoginSelected;
+  }, [type, loginOrganization, loginUser, apiKeyValue]);
+
   return (
     <DialFormPopup
       onClose={onClose}
@@ -53,7 +67,7 @@ const LoginPopup: FC<Props> = ({ type, isModalOpen, isLoggedInAsUser, isLoggedIn
       onCancel={onClose}
       size={PopupSize.Sm}
       cancelLabel={t(ButtonsI18nKey.Cancel)}
-      disableSubmitButton={!loginOrganization && !loginUser}
+      disableSubmitButton={disableSubmitButton}
     >
       <div className="flex px-6 py-4 h-full flex-col gap-y-4">
         {showOrganizationCheckbox && (
@@ -78,10 +92,12 @@ const LoginPopup: FC<Props> = ({ type, isModalOpen, isLoggedInAsUser, isLoggedIn
         {type === ToolsetAuthType.API_KEY && (
           <DialPasswordInput
             id="apiKeyValue"
-            labelProps={{ label: t(EntityFieldsI18nKey.apiKeyValue) }}
+            labelProps={{ label: t(EntityFieldsI18nKey.apiKeyValue), required: true }}
             placeholder={t(EntityPlaceholdersI18nKey.Value)}
             value={apiKeyValue}
             onChange={(v) => setApiKeyValue(v || '')}
+            invalid={!apiKeyValue}
+            error={!apiKeyValue ? t(ErrorI18nKey.RequiredField) : undefined}
           />
         )}
       </div>

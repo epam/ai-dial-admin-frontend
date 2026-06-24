@@ -1,69 +1,55 @@
 'use client';
 
-import { IconPlus } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import {
-  DialLoader,
-  DialNotification,
-  DialPrimaryButton,
-  ElementSize,
-  NotificationVariant,
-} from '@epam/ai-dial-ui-kit';
+import { DialTabs } from '@epam/ai-dial-ui-kit';
 
-import { getRun, getRuns, getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
-import ColorScale from '@/src/components/Common/ColorScale/ColorScale';
-import GridView from '@/src/components/Grid/GridView/GridView';
+import { getRun } from '@/src/app/[lang]/runs/actions';
 import CompareRunTag from '@/src/components/Runs/Compare/CompareRunTag';
-import { CompareRunSlot, compareGridOptions } from '@/src/components/Runs/Compare/constants';
+import CompareTabsContent from '@/src/components/Runs/Compare/CompareTabsContent';
+import {
+  CompareRunSlot,
+  CompareViewTab,
+  RUN_COMPARE_PRIMARY_INDEX,
+  RUN_COMPARE_SECONDARY_INDEX,
+} from '@/src/components/Runs/Compare/constants';
 import SelectCompareRunModal from '@/src/components/Runs/Compare/SelectCompareRunModal';
 import {
-  getCompareColumns,
-  getCompareColumnsCompare,
+  fetchSuiteCompletedRuns,
+  getCompareRunsUrn,
+  getCompareViewTabs,
   getSelectableCompareRuns,
 } from '@/src/components/Runs/Compare/utils';
-import { mergeByTestCaseId, RESULT_FILTERS } from '@/src/components/Runs/View/utils';
-import { EntitiesI18nKey, RunsI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { AnalyticsResult, Run, RunStatus } from '@/src/models/evaluation/run';
-import { ApplicationRoute } from '@/src/types/routes';
-import { FilterOperatorDto } from '@/src/types/request';
-import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
+import { Run } from '@/src/models/evaluation/run';
 
 interface Props {
   runId: string;
+  comparedRunId: string;
 }
 
-const CompareView: FC<Props> = ({ runId }) => {
+const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => {
   const t = useI18n();
   const router = useRouter();
 
   const [primaryRunId, setPrimaryRunId] = useState(runId);
   const [run, setRun] = useState<Run | null>(null);
-  const [results, setResults] = useState<AnalyticsResult[] | null>(null);
   const [suiteRuns, setSuiteRuns] = useState<Run[]>([]);
   const [selectRunSlot, setSelectRunSlot] = useState<CompareRunSlot | null>(null);
-  const [comparedRunId, setComparedRunId] = useState<string | null>(null);
-  const [comparedResults, setComparedResults] = useState<AnalyticsResult[] | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isCompareLoading, setIsCompareLoading] = useState(false);
-  const [hasLoadError, setHasLoadError] = useState(false);
+  const [comparedRunId, setComparedRunId] = useState(comparedRunIdProp);
+  const [activeTab, setActiveTab] = useState(CompareViewTab.ExecutionResults);
 
-  const errorText = t(RunsI18nKey.MetricFailedText);
-  const isCompareMode = comparedRunId != null;
-  const hasCompareData = comparedResults != null;
-
-  const siblingRuns = useMemo(() => suiteRuns.filter((suiteRun) => suiteRun.id !== run?.id), [suiteRuns, run?.id]);
+  const compareTabs = useMemo(() => getCompareViewTabs(t), [t]);
 
   const selectRunModalConfig = useMemo(() => {
     if (!selectRunSlot) return null;
 
     return {
       runs: getSelectableCompareRuns(suiteRuns, selectRunSlot, run?.id, comparedRunId),
-      selectedRunId: selectRunSlot === CompareRunSlot.Primary ? run?.id : (comparedRunId ?? undefined),
+      selectedRunId: selectRunSlot === CompareRunSlot.Primary ? run?.id : comparedRunId,
     };
   }, [selectRunSlot, suiteRuns, run?.id, comparedRunId]);
 
@@ -78,45 +64,26 @@ const CompareView: FC<Props> = ({ runId }) => {
   );
 
   useEffect(() => {
-    setPrimaryRunId((current) => {
-      if (current === runId) return current;
-      setComparedRunId(null);
-      setComparedResults(null);
-      return runId;
-    });
+    setPrimaryRunId((current) => (current === runId ? current : runId));
   }, [runId]);
+
+  useEffect(() => {
+    setComparedRunId((current) => (current === comparedRunIdProp ? current : comparedRunIdProp));
+  }, [comparedRunIdProp]);
 
   useEffect(() => {
     let isCancelled = false;
 
-    setIsLoading(true);
-    setHasLoadError(false);
     setRun(null);
-    setResults(null);
 
     getRun(primaryRunId)
       .then((runData) => {
-        if (isCancelled) return;
-        if (!runData) {
-          setHasLoadError(true);
-          return;
+        if (!isCancelled && runData) {
+          setRun(runData);
         }
-        setRun(runData);
-        return getTestCaseRunResults(RESULT_FILTERS(runData));
-      })
-      .then((resultsResponse) => {
-        if (isCancelled || resultsResponse === undefined) return;
-        setResults(resultsResponse?.content || []);
       })
       .catch(() => {
-        if (!isCancelled) {
-          setHasLoadError(true);
-        }
-      })
-      .finally(() => {
-        if (!isCancelled) {
-          setIsLoading(false);
-        }
+        // ExecutionResultsTab handles load errors for compare data
       });
 
     return () => {
@@ -127,69 +94,14 @@ const CompareView: FC<Props> = ({ runId }) => {
   useEffect(() => {
     if (!run?.testSuiteId) return;
 
-    getRuns(
-      0,
-      100,
-      [],
-      [
-        { column: 'testSuiteId', operator: FilterOperatorDto.EQUALS, value: run.testSuiteId },
-        { column: 'status', operator: FilterOperatorDto.EQUALS, value: RunStatus.COMPLETED },
-      ],
-    ).then((res) => {
-      setSuiteRuns((res?.content || []) as Run[]);
+    fetchSuiteCompletedRuns(run.testSuiteId).then((runs) => {
+      setSuiteRuns(runs);
     });
   }, [run?.testSuiteId]);
 
-  useEffect(() => {
-    if (!comparedRunId) {
-      setComparedResults(null);
-      return;
-    }
-
-    const comparedRun = suiteRuns.find((suiteRun) => suiteRun.id === comparedRunId);
-    if (!comparedRun) return;
-
-    setIsCompareLoading(true);
-    getTestCaseRunResults(RESULT_FILTERS(comparedRun))
-      .then((res) => {
-        setComparedResults(res?.content || []);
-      })
-      .finally(() => {
-        setIsCompareLoading(false);
-      });
-  }, [comparedRunId, suiteRuns]);
-
-  const mergedRowData = useMemo(() => {
-    if (!results) return null;
-    if (!hasCompareData) return results;
-    return mergeByTestCaseId(results, comparedResults);
-  }, [results, hasCompareData, comparedResults]);
-
-  const columnDefs = useMemo(() => {
-    if (!results) return getCompareColumns([]);
-    if (hasCompareData) {
-      return getCompareColumnsCompare(mergeByTestCaseId(results, comparedResults), errorText);
-    }
-    return getCompareColumns(results, errorText);
-  }, [results, hasCompareData, comparedResults, errorText]);
-
-  const runTagLabel = useMemo(() => {
-    if (!run) return '';
-    return t(RunsI18nKey.RunCompareTag, {
-      index: 1,
-      name: run.testRunName || primaryRunId,
-    });
-  }, [run, primaryRunId, t]);
-
-  const comparedRunTagLabel = useMemo(() => {
-    if (!comparedRunId) return '';
-    const comparedRun = suiteRuns.find((suiteRun) => suiteRun.id === comparedRunId);
-    if (!comparedRun) return '';
-    return t(RunsI18nKey.RunCompareTag, {
-      index: 2,
-      name: comparedRun.testRunName || comparedRunId,
-    });
-  }, [comparedRunId, suiteRuns, t]);
+  const primaryRunName = run?.testRunName || primaryRunId;
+  const comparedRun = suiteRuns.find((suiteRun) => suiteRun.id === comparedRunId);
+  const comparedRunName = comparedRun?.testRunName || comparedRunId;
 
   const openSelectRun = (slot: CompareRunSlot) => setSelectRunSlot(slot);
   const closeSelectRun = () => setSelectRunSlot(null);
@@ -198,74 +110,58 @@ const CompareView: FC<Props> = ({ runId }) => {
     (selectedRunId: string) => {
       if (!selectRunSlot) return;
 
+      let newPrimary = primaryRunId;
+      let newSecondary = comparedRunId;
+
       if (selectRunSlot === CompareRunSlot.Primary) {
+        newPrimary = selectedRunId;
         if (selectedRunId === comparedRunId) {
-          setComparedRunId(null);
-          setComparedResults(null);
+          newSecondary = primaryRunId;
+          setComparedRunId(newSecondary);
         }
-        setPrimaryRunId(selectedRunId);
-        router.replace(getUrnForEntity(ApplicationRoute.RunsCompare, { id: selectedRunId }), { scroll: false });
+        setPrimaryRunId(newPrimary);
       } else {
-        setComparedRunId(selectedRunId);
+        newSecondary = selectedRunId;
+        setComparedRunId(newSecondary);
       }
+
+      router.replace(getCompareRunsUrn(newPrimary, newSecondary), { scroll: false });
       setSelectRunSlot(null);
     },
-    [selectRunSlot, comparedRunId, router],
+    [selectRunSlot, comparedRunId, primaryRunId, router],
   );
 
+  const onChangeActiveTab = useCallback((tab: string) => {
+    setActiveTab(tab as CompareViewTab);
+  }, []);
+
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 gap-4">
+    <div className="flex flex-col flex-1 min-h-0 h-full bg-layer-2 rounded p-4 gap-4 overflow-hidden">
       <h3 className="dial-h3 text-primary">{t(RunsI18nKey.RunComparison)}</h3>
 
       <div className="flex items-center gap-2">
         {run && (
           <CompareRunTag
-            label={runTagLabel}
+            runIndex={RUN_COMPARE_PRIMARY_INDEX}
+            name={primaryRunName}
             onEdit={() => openSelectRun(CompareRunSlot.Primary)}
             isEditDisabled={isPrimaryEditDisabled}
           />
         )}
         <span className="text-secondary dial-small-text">{t(RunsI18nKey.RunCompareVs)}</span>
-        {isCompareMode ? (
-          <CompareRunTag
-            label={comparedRunTagLabel}
-            onEdit={() => openSelectRun(CompareRunSlot.Secondary)}
-            isEditDisabled={isSecondaryEditDisabled}
-          />
-        ) : (
-          <DialPrimaryButton
-            size={ElementSize.Small}
-            label={t(RunsI18nKey.RunCompareAddRun)}
-            iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-            disabled={siblingRuns.length === 0}
-            onClick={() => openSelectRun(CompareRunSlot.Secondary)}
-          />
-        )}
-      </div>
-
-      <div className="flex-1 min-h-0 relative">
-        {isLoading || isCompareLoading ? (
-          <DialLoader size={40} />
-        ) : hasLoadError ? (
-          <p className="text-secondary dial-small-text">{t(RunsI18nKey.LoadError)}</p>
-        ) : (
-          <GridView
-            key={hasCompareData ? 'compare' : 'normal'}
-            columnDefs={columnDefs}
-            rowData={mergedRowData}
-            additionalGridOptions={compareGridOptions}
-            emptyDataProps={{ title: t(EntitiesI18nKey.NoResults) }}
-          />
-        )}
-      </div>
-
-      {!isCompareMode && (
-        <DialNotification
-          variant={NotificationVariant.Info}
-          title={t(RunsI18nKey.RunCompareAddSecondRunTitle)}
-          message={t(RunsI18nKey.RunCompareAddSecondRunMessage)}
+        <CompareRunTag
+          runIndex={RUN_COMPARE_SECONDARY_INDEX}
+          name={comparedRunName}
+          onEdit={() => openSelectRun(CompareRunSlot.Secondary)}
+          isEditDisabled={isSecondaryEditDisabled}
         />
-      )}
+      </div>
+
+      <DialTabs tabs={compareTabs} activeTab={activeTab} onClick={onChangeActiveTab} />
+
+      <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+        <CompareTabsContent activeTab={activeTab} primaryRunId={primaryRunId} comparedRunId={comparedRunId} />
+      </div>
 
       {selectRunModalConfig &&
         createPortal(
@@ -278,8 +174,6 @@ const CompareView: FC<Props> = ({ runId }) => {
           />,
           document.body,
         )}
-
-      <ColorScale />
     </div>
   );
 };
