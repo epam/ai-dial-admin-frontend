@@ -10,7 +10,6 @@ import { useI18n } from '@/src/locales/client';
 import { ConversationPublication, Publication, ToolsetPublication } from '@/src/models/dial/publications';
 import { Toolset } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getNameVersionFromAsset } from '@/src/utils/entities/versions';
 import { useLocalDateTimeString } from '@/src/hooks/use-local-date-time-string';
 import { getActionClassName } from '@/src/utils/publications';
 
@@ -23,11 +22,9 @@ const PublicationInfoHeader: FC<Props> = ({ entity, view }) => {
   const t = useI18n();
   const createdAt = useLocalDateTimeString(entity?.createdAt);
   const indicatorClassName = classNames('flex w-2 h-2 mr-1 rounded no-user-select', getActionClassName(entity?.action));
-  const conversationName =
+  const conversationVersion =
     view === ApplicationRoute.ConversationPublications
-      ? getNameVersionFromAsset(
-          (entity as unknown as ConversationPublication)?.conversations?.[0]?.conversation?.name as string,
-        )
+      ? (entity as ConversationPublication)?.conversations?.[0]?.conversation?.version
       : undefined;
 
   return (
@@ -47,7 +44,7 @@ const PublicationInfoHeader: FC<Props> = ({ entity, view }) => {
       {view === ApplicationRoute.ToolsetPublications && (
         <AuthHeader toolset={(entity as ToolsetPublication).toolSetResources?.[0].toolSetResource as Toolset} />
       )}
-      {conversationName && <LabelledText label={t(EntityFieldsI18nKey.version)} text={conversationName.version} />}
+      {conversationVersion && <LabelledText label={t(EntityFieldsI18nKey.version)} text={conversationVersion} />}
     </div>
   );
 };

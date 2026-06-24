@@ -18,7 +18,7 @@ vi.mock('@/src/context/NotificationContext', () => ({
 }));
 
 const PREVIEW_DATA: unknown[][] = [
-  ['id', 'data:prompt', 'response:answer'],
+  ['id', 'data::prompt', 'response::answer'],
   ['run-1', 'hello', 'world'],
 ];
 

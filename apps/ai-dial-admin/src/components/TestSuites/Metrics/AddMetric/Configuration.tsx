@@ -9,6 +9,7 @@ import ContentWithLinks from '@/src/components/Common/ContentWithLinks/ContentWi
 import ExpandableText from '@/src/components/Common/ExpandableText/ExpandableText';
 import { jsonSchemaToFields } from '@/src/components/Common/SchemaGrid/utils';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import { CSV_COLUMN_SEPARATOR } from '@/src/constants/eval-export';
 import { CompareI18nKey, EntityFieldsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Metric, MetricBinding } from '@/src/models/evaluation/metric';
@@ -53,7 +54,9 @@ const MetricConfiguration: FC<Props> = ({
   const t = useI18n();
   const [isJsonView, setIsJsonView] = useState(false);
 
-  const metricNameError = metricName?.includes(':') ? t(TestSuitesI18nKey.MetricNameInvalidChars) : undefined;
+  const metricNameError = metricName?.includes(CSV_COLUMN_SEPARATOR)
+    ? t(TestSuitesI18nKey.MetricNameInvalidChars)
+    : undefined;
 
   const description = selectedMetric?.description || selectedMetricDetails?.description || '';
 

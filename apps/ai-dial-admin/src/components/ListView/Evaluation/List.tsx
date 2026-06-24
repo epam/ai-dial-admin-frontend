@@ -20,6 +20,7 @@ import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
 import ListEntities from '@/src/components/ListView/List';
 import ExportRunModal from '@/src/components/Runs/Export/ExportRunModal';
+import { useCompareRunLauncher } from '@/src/components/Runs/Compare/useCompareRunLauncher';
 import RunModal from '@/src/components/TestSuites/Runs/RunModal';
 import { onCellClicked } from '@/src/components/EntityListView/utils/on-cell-clicked';
 import { ACTION_COLUMN, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
@@ -37,7 +38,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { Dataset } from '@/src/models/evaluation/dataset';
-import { RunStatus } from '@/src/models/evaluation/run';
+import { Run, RunStatus } from '@/src/models/evaluation/run';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 import { EvaluationPageData, FilterDto, SortDto } from '@/src/models/request';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -75,6 +76,7 @@ const EvaluationListView = <T extends object>({
   const t = useI18n();
   const router = useRouter();
   const { featureFlags } = useAppContext();
+  const { openCompareRun, compareRunModal } = useCompareRunLauncher();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType>();
@@ -142,9 +144,12 @@ const EvaluationListView = <T extends object>({
     [route],
   );
 
-  const onCompareRun = useCallback((entity?: T) => {
-    onOpenInNewTab(ApplicationRoute.RunsCompare, entity);
-  }, []);
+  const onCompareRun = useCallback(
+    (entity?: T) => {
+      openCompareRun(entity as Run | undefined);
+    },
+    [openCompareRun],
+  );
 
   const onOpenModal = useCallback(
     (modalType: ModalType) => {
@@ -344,6 +349,7 @@ const EvaluationListView = <T extends object>({
       {isExportModalOpen &&
         exportRunId &&
         createPortal(<ExportRunModal runId={exportRunId} onClose={onCloseExportModal} />, document.body)}
+      {compareRunModal}
     </>
   );
 };

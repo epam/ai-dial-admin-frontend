@@ -8,7 +8,6 @@ import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
 import { DialConversation } from '@/src/models/dial/conversation';
 import { deleteConversation } from '@/src/app/[lang]/conversations/actions';
 import ConversationHeader from '@/src/components/EntityHeaderControls/ConversationHeader';
-import { getNameVersionFromAsset } from '@/src/utils/entities/versions';
 import { getConversationPathWithVersion, getConversationVersions } from './utils';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { useRouter } from 'next/navigation';
@@ -32,10 +31,8 @@ const ConversationView: FC<Props> = ({ conversation, conversations }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const fullName = conversation.path.split('/').pop() || '';
-    const { version } = getNameVersionFromAsset(fullName);
     setSelectedConversation(structuredClone(conversation));
-    setVersion(version);
+    setVersion(conversation?.version || '');
     setIsLoading(false);
   }, [conversation]);
 
@@ -50,13 +47,11 @@ const ConversationView: FC<Props> = ({ conversation, conversations }) => {
     (version: string) => {
       if (!conversation) return;
 
-      const fullName = conversation.path.split('/').pop() || '';
-      const { name: nameWithoutVersion } = getNameVersionFromAsset(fullName);
       setIsLoading(true);
 
       router.push(
         getUrnForEntity(ApplicationRoute.Conversations, {
-          name: nameWithoutVersion,
+          name: conversation?.name,
           path: getConversationPathWithVersion(conversation, version),
         }),
       );

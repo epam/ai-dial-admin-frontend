@@ -1,14 +1,31 @@
 import { ColDef, ColGroupDef, ICellRendererParams, ValueGetterParams } from 'ag-grid-community';
 
+import { TabModel } from '@epam/ai-dial-ui-kit';
+
+import { isScoreIndicatorValue } from '@/src/components/Common/ScoreBar/utils';
 import { getAccuracyColors } from '@/src/components/Common/ColorScale/utils';
 import ErrorCellRenderer from '@/src/components/Grid/CellRenderers/ErrorCellRenderer';
 import ExecutionStatusCellRenderer from '@/src/components/Grid/CellRenderers/ExecutionStatusCellRenderer';
+import CompareDeltaCellRenderer from '@/src/components/Runs/Compare/CompareDeltaCellRenderer';
+import CompareEyeCellRenderer from '@/src/components/Runs/Compare/CompareEyeCellRenderer';
+import CompareRunIndexHeader from '@/src/components/Runs/Compare/CompareRunIndexHeader';
+import MetricScoreCellRenderer from '@/src/components/Runs/Compare/MetricScoreCellRenderer';
+import { CompareMetricDeltaKind, getCompareMetricDelta } from '@/src/components/Runs/Compare/compare-metric-utils';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import { getFormattedDuration } from '@/src/components/Runs/View/utils';
-import { AnalyticsResult, Run } from '@/src/models/evaluation/run';
+import { getRuns } from '@/src/app/[lang]/runs/actions';
+import { RunsI18nKey } from '@/src/constants/i18n';
+import { AnalyticsResult, Run, RunStatus } from '@/src/models/evaluation/run';
+import { FilterOperatorDto } from '@/src/types/request';
 
 import {
   CompareRunSlot,
+  CompareViewTab,
+  RUN_COMPARE_RUNS_QUERY_PARAM,
+  RUN_COMPARE_SEGMENT,
+  COMPARE_ACTION_COLUMN_WIDTH,
+  DEFAULT_COMPARE_DELTA_HEADER,
+  DELTA_COLUMN_WIDTH,
   DURATION_COLUMN_WIDTH,
   EXECUTION_GROUP_HEADER,
   EXTRACTED_COLUMN_MIN_WIDTH,
@@ -16,6 +33,7 @@ import {
   formatCompareColumnHeader,
   formatCompareRunIndexHeader,
   HTTP_COLUMN_WIDTH,
+  METRIC_COLUMN_WIDTH,
   NO_FILTER_COL_DEF,
   NUMBER_FILTER_COL_DEF,
   RUN_COMPARE_PRIMARY_INDEX,
@@ -25,6 +43,17 @@ import {
   TEST_CASE_NAME_COLUMN_WIDTH,
   TEXT_FILTER_COL_DEF,
 } from './constants';
+
+type CompareRunIndex = typeof RUN_COMPARE_PRIMARY_INDEX | typeof RUN_COMPARE_SECONDARY_INDEX;
+
+const compareRunIndexHeaderDef = (
+  runIndex: CompareRunIndex,
+  label?: string,
+): Pick<ColDef, 'headerName' | 'headerComponent' | 'headerComponentParams'> => ({
+  headerName: label ? formatCompareColumnHeader(runIndex, label) : formatCompareRunIndexHeader(runIndex),
+  headerComponent: CompareRunIndexHeader,
+  headerComponentParams: { runIndex, label },
+});
 
 const fixedWidthColDef = (width: number): Pick<ColDef, 'width' | 'minWidth' | 'maxWidth'> => ({
   width,
@@ -182,49 +211,179 @@ export const getSelectableCompareRuns = (
   return suiteRuns.filter((run) => run.id !== excludedRunId);
 };
 
+export const getCompareRunsPath = (primaryRunId: string, secondaryRunId: string): string => {
+  const runsParam = `${encodeURIComponent(primaryRunId)},${encodeURIComponent(secondaryRunId)}`;
+  return `${RUN_COMPARE_SEGMENT}?${RUN_COMPARE_RUNS_QUERY_PARAM}=${runsParam}`;
+};
+
+export const getCompareRunsUrn = (primaryRunId: string, secondaryRunId: string): string => {
+  return `/runs/${getCompareRunsPath(primaryRunId, secondaryRunId)}`;
+};
+
+export const fetchSuiteCompletedRuns = async (testSuiteId: string): Promise<Run[]> => {
+  const res = await getRuns(
+    0,
+    100,
+    [],
+    [
+      { column: 'testSuiteId', operator: FilterOperatorDto.EQUALS, value: testSuiteId },
+      { column: 'status', operator: FilterOperatorDto.EQUALS, value: RunStatus.COMPLETED },
+    ],
+  );
+  return (res?.content || []) as Run[];
+};
+
+export const getCompareViewTabs = (t: (key: string) => string): TabModel[] => [
+  { id: CompareViewTab.SummaryOverview, label: t(RunsI18nKey.RunCompareTabSummaryOverview) },
+  { id: CompareViewTab.MetricsDetails, label: t(RunsI18nKey.RunCompareTabMetricsDetails) },
+  { id: CompareViewTab.ExecutionResults, label: t(RunsI18nKey.RunCompareTabExecutionResults) },
+];
+
+const getMetricPairHighlightRules = (groupKey: string, key: string) => {
+  const getKind = (params: { data?: CompareAnalyticsRow }) => {
+    const primary = params.data?.metricValues?.[groupKey]?.[key];
+    const secondary = params.data?._compared?.metricValues?.[groupKey]?.[key];
+    return getCompareMetricDelta(primary, secondary).kind;
+  };
+
+  const isAdded = (params: { data?: CompareAnalyticsRow }) => getKind(params) === CompareMetricDeltaKind.Added;
+  const isChanged = (params: { data?: CompareAnalyticsRow }) => getKind(params) === CompareMetricDeltaKind.Changed;
+  const isRemoved = (params: { data?: CompareAnalyticsRow }) => getKind(params) === CompareMetricDeltaKind.Removed;
+
+  return { isAdded, isChanged, isRemoved };
+};
+
+const getMetricPairPrimaryCellClassRules = (groupKey: string, key: string) => {
+  const { isAdded, isChanged, isRemoved } = getMetricPairHighlightRules(groupKey, key);
+
+  return {
+    'compare-metric-improved-primary': isAdded,
+    'compare-metric-new-primary': isChanged,
+    'compare-metric-regressed-primary': isRemoved,
+  };
+};
+
+const getMetricPairSecondaryCellClassRules = (groupKey: string, key: string) => {
+  const { isAdded, isChanged, isRemoved } = getMetricPairHighlightRules(groupKey, key);
+
+  return {
+    'compare-metric-improved-secondary': isAdded,
+    'compare-metric-new-secondary': isChanged,
+    'compare-metric-regressed-secondary': isRemoved,
+  };
+};
+
+const hasExecutionStatusDiff = (params: { data?: CompareAnalyticsRow }) => {
+  const compared = params.data?._compared;
+  if (!compared) return false;
+
+  const primary = params.data?.executionStatus;
+  const secondary = compared.executionStatus;
+  if (primary == null && secondary == null) return false;
+  return primary !== secondary;
+};
+
+const statusPairPrimaryCellClassRules = {
+  'compare-status-diff-primary': hasExecutionStatusDiff,
+};
+
+const statusPairSecondaryCellClassRules = {
+  'compare-status-diff-secondary': hasExecutionStatusDiff,
+};
+
 const buildComparedMetricColumn = (groupKey: string, key: string, errorText?: string): ColDef => {
-  const getValue = (params: { data?: CompareAnalyticsRow }) => params.data?._compared?.metricValues?.[groupKey]?.[key];
+  const getRawValue = (params: { data?: CompareAnalyticsRow }) =>
+    params.data?._compared?.metricValues?.[groupKey]?.[key];
+
+  const getDisplayValue = (params: { data?: CompareAnalyticsRow }) => {
+    if (!params.data?._compared) return '—';
+    const source = params.data._compared;
+    const groupExists = source.metricValues != null && groupKey in source.metricValues;
+    if (!groupExists) return '—';
+    const value = getRawValue(params);
+    if (typeof value === 'object') return JSON.stringify(value);
+    if (value != null) return +(value as number).toFixed(3);
+    return '—';
+  };
 
   return {
     colId: `cmp_${groupKey}_${key}`,
     field: `cmp_${groupKey}_${key}`,
-    headerName: formatCompareColumnHeader(RUN_COMPARE_SECONDARY_INDEX, key),
+    ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, key),
     ...NUMBER_FILTER_COL_DEF,
+    ...fixedWidthColDef(METRIC_COLUMN_WIDTH),
     cellRendererSelector: (params) => {
       if (!params.data?._compared) return;
       const source = params.data._compared;
       const groupExists = source.metricValues != null && groupKey in source.metricValues;
       if (!groupExists) return;
-      const value = getValue(params);
+      const value = getRawValue(params);
       if (value == null) {
         return { component: ErrorCellRenderer, params: { errorText } };
       }
-    },
-    valueGetter: (params) => {
-      if (!params.data?._compared) return '—';
-      const source = params.data._compared;
-      const groupExists = source.metricValues != null && groupKey in source.metricValues;
-      if (!groupExists) return '—';
-      const value = getValue(params);
-      if (typeof value === 'object') return JSON.stringify(value);
-      if (value != null) return +(value as number).toFixed(3);
-      return '—';
-    },
-    cellStyle: (params) => {
-      const value = getValue(params);
-      if (typeof value === 'number' && value >= 0 && value <= 1) {
-        const colors = getAccuracyColors(value);
-        return { backgroundColor: colors.bg };
+      if (isScoreIndicatorValue(value)) {
+        return {
+          component: MetricScoreCellRenderer,
+          params: { getMetricValue: getDisplayValue, errorText },
+        };
       }
-      return undefined;
     },
+    valueGetter: (params) => getDisplayValue(params),
+    cellClassRules: getMetricPairSecondaryCellClassRules(groupKey, key),
   };
 };
+
+const buildComparePrimaryMetricColumn = (groupKey: string, key: string, errorText?: string): ColDef => {
+  const getRawValue = (params: { data?: CompareAnalyticsRow }) => params.data?.metricValues?.[groupKey]?.[key];
+
+  const getDisplayValue = (params: { data?: CompareAnalyticsRow }) => {
+    const groupExists = params.data?.metricValues != null && groupKey in params.data.metricValues;
+    if (!groupExists) return '—';
+    const value = getRawValue(params);
+    if (typeof value === 'object') return JSON.stringify(value);
+    if (value != null) return +(value as number).toFixed(3);
+    return '—';
+  };
+
+  return {
+    ...buildMetricColumn(groupKey, key, errorText),
+    ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, key),
+    ...fixedWidthColDef(METRIC_COLUMN_WIDTH),
+    cellStyle: undefined,
+    cellRendererSelector: (params) => {
+      const groupExists = params.data?.metricValues != null && groupKey in params.data.metricValues;
+      if (!groupExists) return;
+      const value = getRawValue(params);
+      if (value == null) {
+        return { component: ErrorCellRenderer, params: { errorText } };
+      }
+      if (isScoreIndicatorValue(value)) {
+        return {
+          component: MetricScoreCellRenderer,
+          params: { getMetricValue: getDisplayValue, errorText },
+        };
+      }
+    },
+    valueGetter: (params) => getDisplayValue(params),
+    cellClassRules: getMetricPairPrimaryCellClassRules(groupKey, key),
+  };
+};
+
+const buildMetricDeltaColumn = (groupKey: string, key: string, deltaHeader: string): ColDef => ({
+  colId: `delta_${groupKey}_${key}`,
+  field: `delta_${groupKey}_${key}`,
+  headerName: deltaHeader,
+  ...NO_FILTER_COL_DEF,
+  ...fixedWidthColDef(DELTA_COLUMN_WIDTH),
+  cellRenderer: CompareDeltaCellRenderer,
+  cellRendererParams: { groupKey, metricKey: key },
+  valueGetter: () => null,
+});
 
 const buildComparedExtractedColumn = (key: string): ColDef => ({
   colId: `cmp_extracted_${key}`,
   field: `cmp_extracted_${key}`,
-  headerName: formatCompareColumnHeader(RUN_COMPARE_SECONDARY_INDEX, key),
+  ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, key),
   flex: 1,
   minWidth: EXTRACTED_COLUMN_MIN_WIDTH,
   ...NO_FILTER_COL_DEF,
@@ -241,7 +400,7 @@ const getComparedExecutionColumns = (): ColGroupDef => ({
   children: [
     {
       field: 'runIndex',
-      headerName: formatCompareColumnHeader(RUN_COMPARE_PRIMARY_INDEX, '# Run number'),
+      ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, '# Run number'),
       colId: 'runIndex',
       ...NO_FILTER_COL_DEF,
       ...fixedWidthColDef(RUN_INDEX_COLUMN_WIDTH),
@@ -250,7 +409,7 @@ const getComparedExecutionColumns = (): ColGroupDef => ({
     },
     {
       colId: 'cmp_runIndex',
-      headerName: formatCompareColumnHeader(RUN_COMPARE_SECONDARY_INDEX, '# Run number'),
+      ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, '# Run number'),
       ...NO_FILTER_COL_DEF,
       ...fixedWidthColDef(RUN_INDEX_COLUMN_WIDTH),
       valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) =>
@@ -258,21 +417,21 @@ const getComparedExecutionColumns = (): ColGroupDef => ({
     },
     {
       field: 'responseStatusCode',
-      headerName: formatCompareColumnHeader(RUN_COMPARE_PRIMARY_INDEX, 'HTTP'),
+      ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, 'HTTP'),
       colId: 'http',
       ...NO_FILTER_COL_DEF,
       ...fixedWidthColDef(HTTP_COLUMN_WIDTH),
     },
     {
       colId: 'cmp_http',
-      headerName: formatCompareColumnHeader(RUN_COMPARE_SECONDARY_INDEX, 'HTTP'),
+      ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, 'HTTP'),
       ...NO_FILTER_COL_DEF,
       ...fixedWidthColDef(HTTP_COLUMN_WIDTH),
       valueGetter: (params) => params.data?._compared?.responseStatusCode ?? '—',
     },
     {
       field: 'durationMs',
-      headerName: formatCompareColumnHeader(RUN_COMPARE_PRIMARY_INDEX, 'Duration'),
+      ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, 'Duration'),
       colId: 'duration',
       ...NO_FILTER_COL_DEF,
       ...fixedWidthColDef(DURATION_COLUMN_WIDTH),
@@ -283,7 +442,7 @@ const getComparedExecutionColumns = (): ColGroupDef => ({
     },
     {
       colId: 'cmp_duration',
-      headerName: formatCompareColumnHeader(RUN_COMPARE_SECONDARY_INDEX, 'Duration'),
+      ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, 'Duration'),
       ...NO_FILTER_COL_DEF,
       ...fixedWidthColDef(DURATION_COLUMN_WIDTH),
       valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) => {
@@ -297,15 +456,14 @@ const getComparedExecutionColumns = (): ColGroupDef => ({
 const getComparedMetricGroupColumns = (
   metrics: Record<string, Record<string, unknown>>,
   errorText?: string,
+  deltaHeader: string = DEFAULT_COMPARE_DELTA_HEADER,
 ): ColGroupDef[] =>
   Object.entries(metrics).map(([groupKey, groupValues]) => ({
     headerName: groupKey,
     children: Object.keys(groupValues).flatMap((key) => [
-      {
-        ...buildMetricColumn(groupKey, key, errorText),
-        headerName: formatCompareColumnHeader(RUN_COMPARE_PRIMARY_INDEX, key),
-      },
+      buildComparePrimaryMetricColumn(groupKey, key, errorText),
       buildComparedMetricColumn(groupKey, key, errorText),
+      buildMetricDeltaColumn(groupKey, key, deltaHeader),
     ]),
   }));
 
@@ -316,7 +474,7 @@ const getComparedExtractedGroupColumn = (extracted: Record<string, unknown>): Co
   return {
     headerName: EXTRACTED_GROUP_HEADER,
     children: keys.flatMap((key) => [
-      { ...buildExtractedColumn(key), headerName: formatCompareColumnHeader(RUN_COMPARE_PRIMARY_INDEX, key) },
+      { ...buildExtractedColumn(key), ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, key) },
       buildComparedExtractedColumn(key),
     ]),
   };
@@ -325,6 +483,7 @@ const getComparedExtractedGroupColumn = (extracted: Record<string, unknown>): Co
 export const getCompareColumnsCompare = (
   results: CompareAnalyticsRow[],
   errorText?: string,
+  deltaHeader: string = DEFAULT_COMPARE_DELTA_HEADER,
 ): (ColDef | ColGroupDef)[] => {
   const allResults: AnalyticsResult[] = [...results, ...results.flatMap((r) => (r._compared ? [r._compared] : []))];
   const metrics = mergeMetricValuesSchema(allResults);
@@ -334,15 +493,16 @@ export const getCompareColumnsCompare = (
   return [
     {
       field: 'executionStatus',
-      headerName: formatCompareRunIndexHeader(RUN_COMPARE_PRIMARY_INDEX),
+      ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX),
       colId: 'status',
       ...fixedWidthColDef(STATUS_COLUMN_WIDTH),
       ...NO_FILTER_COL_DEF,
       cellRenderer: ExecutionStatusCellRenderer,
+      cellClassRules: statusPairPrimaryCellClassRules,
     },
     {
       colId: 'cmp_status',
-      headerName: formatCompareRunIndexHeader(RUN_COMPARE_SECONDARY_INDEX),
+      ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX),
       ...fixedWidthColDef(STATUS_COLUMN_WIDTH),
       ...NO_FILTER_COL_DEF,
       cellRenderer: (params: ICellRendererParams<CompareAnalyticsRow>) =>
@@ -350,6 +510,7 @@ export const getCompareColumnsCompare = (
           ...params,
           data: params.data?._compared ?? null,
         }),
+      cellClassRules: statusPairSecondaryCellClassRules,
     },
     {
       field: 'testCaseName',
@@ -359,7 +520,18 @@ export const getCompareColumnsCompare = (
       ...TEXT_FILTER_COL_DEF,
     },
     getComparedExecutionColumns(),
-    ...getComparedMetricGroupColumns(metrics, errorText),
+    ...getComparedMetricGroupColumns(metrics, errorText, deltaHeader),
     ...(extractedGroup ? [extractedGroup] : []),
+    {
+      colId: 'compare_action',
+      headerName: ' ',
+      ...fixedWidthColDef(COMPARE_ACTION_COLUMN_WIDTH),
+      ...NO_FILTER_COL_DEF,
+      cellRenderer: CompareEyeCellRenderer,
+      sortable: false,
+      suppressMovable: true,
+      pinned: 'right',
+      lockPinned: true,
+    },
   ];
 };

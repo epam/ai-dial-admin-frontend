@@ -1885,7 +1885,13 @@ export enum RunsI18nKey {
   RunCompareAddSecondRunTitle = 'Runs.RunCompareAddSecondRunTitle',
   RunCompareAddSecondRunMessage = 'Runs.RunCompareAddSecondRunMessage',
   RunCompareTag = 'Runs.RunCompareTag',
+  RunCompareTagAria = 'Runs.RunCompareTagAria',
   RunCompareSelectRun = 'Runs.RunCompareSelectRun',
+  RunCompareTabSummaryOverview = 'Runs.RunCompareTabSummaryOverview',
+  RunCompareTabMetricsDetails = 'Runs.RunCompareTabMetricsDetails',
+  RunCompareTabExecutionResults = 'Runs.RunCompareTabExecutionResults',
+  RunCompareDelta = 'Runs.RunCompareDelta',
+  RunCompareDiffLabel = 'Runs.RunCompareDiffLabel',
 }
 
 export enum ExportRunI18nKey {
