@@ -1,6 +1,7 @@
 import { JSONSchema7 } from 'json-schema';
 
 import { jsonSchemaToFields } from '@/src/components/Common/SchemaGrid/utils';
+import { CSV_COLUMN_SEPARATOR } from '@/src/constants/eval-export';
 import { MetricBinding } from '@/src/models/evaluation/metric';
 import { MetricBindingType } from '@/src/types/evaluation';
 
@@ -15,7 +16,7 @@ export const validateMetricBindings = (
     return false;
   }
 
-  if (metricName.includes('::')) {
+  if (metricName.includes(CSV_COLUMN_SEPARATOR)) {
     return false;
   }
 
