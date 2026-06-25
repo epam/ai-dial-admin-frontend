@@ -1,13 +1,9 @@
 'use client';
 
 import { ICellRendererParams } from 'ag-grid-community';
-import classNames from 'classnames';
 
-import {
-  formatMetricDelta,
-  getMetricDelta,
-  MetricDeltaKind,
-} from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
+import MetricDeltaBadge from '@/src/components/Runs/Compare/ExecutionResults/MetricDeltaBadge/MetricDeltaBadge';
+import { getMetricDelta } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 
 interface CompareDeltaCellRendererParams extends ICellRendererParams<CompareAnalyticsRow> {
@@ -22,25 +18,7 @@ const CompareDeltaCellRenderer = (params: CompareDeltaCellRendererParams) => {
   const secondary = params.data?._compared?.metricValues?.[groupKey]?.[metricKey];
   const delta = getMetricDelta(primary, secondary);
 
-  if (delta.kind !== MetricDeltaKind.Changed) {
-    return null;
-  }
-
-  const label = formatMetricDelta(delta);
-  if (!label) return null;
-
-  const isPositive = (delta.value ?? 0) > 0;
-
-  return (
-    <span
-      className={classNames(
-        'dial-tiny-text px-2 py-0.5 rounded-full inline-flex items-center font-semibold',
-        isPositive ? 'bg-success text-success' : 'bg-error text-error',
-      )}
-    >
-      {label}
-    </span>
-  );
+  return <MetricDeltaBadge delta={delta} />;
 };
 
 export default CompareDeltaCellRenderer;

@@ -4,7 +4,7 @@ import { FC, MouseEvent, RefObject, useCallback, useEffect, useRef, useState } f
 
 import classNames from 'classnames';
 
-import { computeMinimapMarkers, MinimapMarker } from '@/src/components/ActivityAudit/View/DiffReport/minimap-utils';
+import { computeMinimapMarkers, MinimapMarker } from '@/src/components/Common/DiffMiniMap/minimap-utils';
 import { DiffStatus } from '@/src/types/activity-audit';
 
 interface Props {

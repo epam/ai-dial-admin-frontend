@@ -25,6 +25,12 @@ const toPosition = (offsetFromTop: number, scrollHeight: number) =>
 
 const toHeight = (rawHeight: number, scrollHeight: number) => Math.max(MIN_MARKER_HEIGHT, rawHeight / scrollHeight);
 
+const COMPARE_DIFF_ATTR_MAP: [string, DiffStatus.ADDED | DiffStatus.REMOVED | DiffStatus.CHANGED][] = [
+  ['added', DiffStatus.ADDED],
+  ['changed', DiffStatus.CHANGED],
+  ['removed', DiffStatus.REMOVED],
+];
+
 export const computeMinimapMarkers = (container: HTMLElement): MinimapMarker[] => {
   const { scrollHeight } = container;
   if (scrollHeight === 0) return [];
@@ -57,6 +63,20 @@ export const computeMinimapMarkers = (container: HTMLElement): MinimapMarker[] =
       if (row.closest('.hidden')) return;
 
       const rowRect = row.getBoundingClientRect();
+      const offsetFromTop = rowRect.top - containerRect.top + container.scrollTop;
+      raw.push({
+        position: toPosition(offsetFromTop, scrollHeight),
+        height: toHeight(rowRect.height, scrollHeight),
+        status,
+      });
+    });
+  }
+
+  for (const [attrValue, status] of COMPARE_DIFF_ATTR_MAP) {
+    container.querySelectorAll(`[data-compare-diff="${attrValue}"]`).forEach((element) => {
+      if (element.closest('.hidden')) return;
+
+      const rowRect = element.getBoundingClientRect();
       const offsetFromTop = rowRect.top - containerRect.top + container.scrollTop;
       raw.push({
         position: toPosition(offsetFromTop, scrollHeight),

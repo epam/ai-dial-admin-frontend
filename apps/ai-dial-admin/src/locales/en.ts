@@ -1993,6 +1993,7 @@ export default {
     RunCompareViewDifferencesOnly: 'View differences only',
     RunCompareHideHighlights: 'Hide highlights',
     RunCompareDisplay: 'Display',
+    RunCompareViewRowDetails: 'View row details',
   },
   ExportRun: {
     ExportRunTitle: 'Export run',
