@@ -1,3 +1,5 @@
+'use client';
+
 import { DialNumberInput, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useMemo } from 'react';
 
