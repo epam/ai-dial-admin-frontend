@@ -1,17 +1,5 @@
-import Page404 from '@/src/components/Page404/Page404';
-import { I18nProvider } from '@/src/context/I18nProvider';
-import { ThemeProvider } from '@/src/context/ThemeContext';
-import { themesApi } from './api/api';
+import Page404Wrapper from '@/src/components/Page404/Page404Wrapper';
 
-export default async function NotFound() {
-  const themesConfiguration = await themesApi.getThemesConfiguration();
-  const themeImages = await themesApi.getImages();
-
-  return (
-    <I18nProvider locale="en">
-      <ThemeProvider themesConfiguration={themesConfiguration} themeImages={themeImages}>
-        <Page404 />
-      </ThemeProvider>
-    </I18nProvider>
-  );
+export default function NotFound() {
+  return <Page404Wrapper />;
 }

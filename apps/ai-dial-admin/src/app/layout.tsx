@@ -8,10 +8,8 @@ import classNames from 'classnames';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import '@/src/app/[lang]/global.scss';
-import Page403 from '@/src/components/Page403/Page403';
+import Page403Wrapper from '@/src/components/Page403/Page403Wrapper';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
-import { I18nProvider } from '@/src/context/I18nProvider';
-import { ThemeProvider } from '@/src/context/ThemeContext';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -35,7 +33,7 @@ export default async function RootLayout({
   params,
 }: {
   children: ReactNode;
-  params: Promise<{ lang: string }>;
+  params: Promise<{ lang?: string }>;
 }) {
   const { lang } = await params;
   const isEnableAuth = getIsEnableAuthToggle();
@@ -63,11 +61,7 @@ export default async function RootLayout({
         {userInfo.success ? (
           children
         ) : (
-          <I18nProvider locale={lang || 'en'}>
-            <ThemeProvider themesConfiguration={themesConfig} themeImages={themeImages}>
-              <Page403 />
-            </ThemeProvider>
-          </I18nProvider>
+          <Page403Wrapper lang={lang || 'en'} themesConfiguration={themesConfig} themeImages={themeImages} />
         )}
       </body>
     </html>
