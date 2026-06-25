@@ -246,4 +246,36 @@ describe('getSchemaDefaults', () => {
     };
     expect(getSchemaDefaults(root)).toEqual({ model: 'gemini-2.5-flash-lite' });
   });
+
+  test('should use properties when anyOf is a required-set constraint alongside type/properties', () => {
+    const root: JSONSchema7 = {
+      type: 'object',
+      properties: {
+        deployment: { $ref: '#/$defs/DialDeploymentConfig' },
+      },
+      $defs: {
+        DialDeploymentConfig: {
+          anyOf: [{ required: ['deployment_id'] }, { required: ['name'] }],
+          type: 'object',
+          properties: {
+            deployment_id: { type: 'string' },
+            name: { type: 'string' },
+          },
+        },
+      },
+    };
+    expect(getSchemaDefaults(root)).toEqual({
+      deployment: { deployment_id: '', name: '' },
+    });
+  });
+
+  test('should still treat anyOf/oneOf as type union when schema has no own type/properties', () => {
+    const schema: JSONSchema7 = {
+      type: 'object',
+      properties: {
+        value: { anyOf: [{ type: 'integer' }, { type: 'null' }] },
+      },
+    };
+    expect(getSchemaDefaults(schema)).toEqual({ value: null });
+  });
 });
