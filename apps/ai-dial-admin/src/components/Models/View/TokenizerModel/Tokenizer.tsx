@@ -1,3 +1,5 @@
+'use client';
+
 import { FC, useCallback, useState } from 'react';
 import { DialInputPopup, DialSwitch } from '@epam/ai-dial-ui-kit';
 

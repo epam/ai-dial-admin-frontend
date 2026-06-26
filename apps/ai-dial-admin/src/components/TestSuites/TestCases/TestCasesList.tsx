@@ -63,7 +63,6 @@ interface Props {
   onDirtyChange?: (hasDirty: boolean) => void;
   onOpenSchemaModal?: () => void;
   isReadOnly?: boolean;
-  onSchemaChange?: (schema: TestCaseSchema[]) => void;
   dataset: Dataset | null;
   suiteEtag?: string;
   onChangeDataset?: (dataset: Dataset, etag?: string) => void;
@@ -76,7 +75,6 @@ const TestCasesList: FC<Props> = ({
   onDirtyChange,
   onOpenSchemaModal,
   isReadOnly,
-  onSchemaChange,
   suiteEtag,
   dataset,
   onChangeDataset,
@@ -316,7 +314,6 @@ const TestCasesList: FC<Props> = ({
             if (!schemaChanged) {
               refreshGrid(true);
             } else {
-              onSchemaChange?.(freshSchema ?? []);
               refreshGrid(true, freshSchema);
             }
           });
@@ -327,7 +324,7 @@ const TestCasesList: FC<Props> = ({
         }
       });
     },
-    [refreshGrid, selectedTestSuite.datasetId, showNotification, t, dataset, onSchemaChange, onChangeDataset],
+    [refreshGrid, selectedTestSuite.datasetId, showNotification, t, dataset, onChangeDataset],
   );
 
   const onExport = useCallback(() => {

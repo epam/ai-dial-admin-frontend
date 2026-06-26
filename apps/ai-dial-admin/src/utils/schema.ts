@@ -136,7 +136,8 @@ function getDefaultOrEmptyValue(
   if (effective.default !== undefined) return effective.default;
 
   const variants = effective.anyOf ?? effective.oneOf;
-  if (Array.isArray(variants) && variants.length) {
+  const hasOwnShape = effective.type !== undefined || effective.properties !== undefined;
+  if (!hasOwnShape && Array.isArray(variants) && variants.length) {
     const branch = pickVariant(
       variants.filter((v): v is JSONSchema7 => typeof v === 'object') as JSONSchema7[],
       options?.variantChoice ?? 'preferNullIfNullableUnion',
