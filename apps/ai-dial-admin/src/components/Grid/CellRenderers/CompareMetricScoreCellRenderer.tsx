@@ -7,12 +7,12 @@ import { SCORE_INDICATOR_COMPARE_WIDTH } from '@/src/components/Common/ScoreBar/
 import { isScoreIndicatorValue } from '@/src/components/Common/ScoreBar/utils';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 
-interface MetricScoreCellRendererParams extends ICellRendererParams {
+interface CompareMetricScoreCellRendererParams extends ICellRendererParams {
   errorText?: string;
   getMetricValue: (params: { data?: CompareAnalyticsRow }) => unknown;
 }
 
-const MetricScoreCellRenderer = (params: MetricScoreCellRendererParams) => {
+const CompareMetricScoreCellRenderer = (params: CompareMetricScoreCellRendererParams) => {
   const value = params.getMetricValue(params);
 
   if (isScoreIndicatorValue(value)) {
@@ -29,4 +29,4 @@ const MetricScoreCellRenderer = (params: MetricScoreCellRendererParams) => {
   return <span className="text-primary dial-small-text">{text}</span>;
 };
 
-export default MetricScoreCellRenderer;
+export default CompareMetricScoreCellRenderer;

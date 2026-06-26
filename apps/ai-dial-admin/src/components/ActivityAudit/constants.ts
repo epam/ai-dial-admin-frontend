@@ -100,6 +100,3 @@ export const separateObjectParameterKeys = [
 ];
 
 export const DOMAIN_ACCESS_POLICY_KEY = 'domainAccessPolicy';
-
-export const AUDIT_DIFF_INSERT_HIGHLIGHT_CLASS = 'rounded-sm border bg-success border-accent-secondary';
-export const AUDIT_DIFF_DELETE_HIGHLIGHT_CLASS = 'rounded-sm border bg-error border-error';

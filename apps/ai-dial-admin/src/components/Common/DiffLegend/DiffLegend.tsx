@@ -1,11 +1,9 @@
-import { FC } from 'react';
+'use client';
 
 import classNames from 'classnames';
+import { FC } from 'react';
 
-import {
-  AUDIT_DIFF_DELETE_HIGHLIGHT_CLASS,
-  AUDIT_DIFF_INSERT_HIGHLIGHT_CLASS,
-} from '@/src/components/ActivityAudit/constants';
+import { DIFF_DELETE_HIGHLIGHT_CLASS, DIFF_INSERT_HIGHLIGHT_CLASS } from '@/src/components/Common/DiffLegend/constants';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
@@ -29,7 +27,7 @@ const DiffLegend: FC<Props> = ({ description, added, removed, changed }) => {
   return (
     <div className={classNames('flex flex-row small', description ? 'gap-8 text-secondary' : 'gap-2 text-primary')}>
       <div className={classNames(itemClassName, !description && !added && 'hidden')}>
-        <span className={classNames(rectangleClassName, AUDIT_DIFF_INSERT_HIGHLIGHT_CLASS)}>{added}</span>
+        <span className={classNames(rectangleClassName, DIFF_INSERT_HIGHLIGHT_CLASS)}>{added}</span>
         <span className={descriptionClassName}>{t(ButtonsI18nKey.Create)}</span>
       </div>
       <div className={classNames(itemClassName, !description && !changed && 'hidden')}>
@@ -37,7 +35,7 @@ const DiffLegend: FC<Props> = ({ description, added, removed, changed }) => {
         <span className={descriptionClassName}>{t(ButtonsI18nKey.Update)}</span>
       </div>
       <div className={classNames(itemClassName, !description && !removed && 'hidden')}>
-        <span className={classNames(rectangleClassName, AUDIT_DIFF_DELETE_HIGHLIGHT_CLASS)}>{removed}</span>
+        <span className={classNames(rectangleClassName, DIFF_DELETE_HIGHLIGHT_CLASS)}>{removed}</span>
         <span className={descriptionClassName}>{t(ButtonsI18nKey.Delete)}</span>
       </div>
     </div>

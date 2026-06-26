@@ -3,7 +3,7 @@
 import { FC, useRef } from 'react';
 
 import DiffMiniMap from '@/src/components/ActivityAudit/View/DiffReport/DiffMiniMap';
-import DiffLegend from '@/src/components/ActivityAudit/View/DiffReport/DiffLegend';
+import DiffLegend from '@/src/components/Common/DiffLegend/DiffLegend';
 import DiffSection from '@/src/components/ActivityAudit/View/DiffReport/DiffSection';
 import { createSectionFromDiffs } from '@/src/components/ActivityAudit/View/utils/generate-diffs';
 import { ActivityAuditDiff } from '@/src/models/activity-audit';

@@ -1,8 +1,8 @@
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 
-import { CompareDiffCounts } from './models';
+import { CompareDiffCounts } from '../models';
 
-export enum CompareMetricDeltaKind {
+export enum MetricDeltaKind {
   Empty = 'empty',
   /** Primary missing, secondary has a value — highlight green. */
   Added = 'added',
@@ -12,8 +12,8 @@ export enum CompareMetricDeltaKind {
   Removed = 'removed',
 }
 
-export interface CompareMetricDelta {
-  kind: CompareMetricDeltaKind;
+export interface MetricDelta {
+  kind: MetricDeltaKind;
   /** Signed delta value (secondary − primary), rounded to 3 decimals. */
   value?: number;
 }
@@ -30,43 +30,43 @@ export const getNumericMetricValue = (value: unknown): number | null => {
   return value;
 };
 
-export const getCompareMetricDelta = (primary: unknown, secondary: unknown): CompareMetricDelta => {
+export const getMetricDelta = (primary: unknown, secondary: unknown): MetricDelta => {
   const primaryNum = getNumericMetricValue(primary);
   const secondaryNum = getNumericMetricValue(secondary);
 
   if (primaryNum == null && secondaryNum == null) {
-    return { kind: CompareMetricDeltaKind.Empty };
+    return { kind: MetricDeltaKind.Empty };
   }
 
   if (primaryNum == null && secondaryNum != null) {
-    return { kind: CompareMetricDeltaKind.Added };
+    return { kind: MetricDeltaKind.Added };
   }
 
   if (primaryNum != null && secondaryNum == null) {
-    return { kind: CompareMetricDeltaKind.Removed };
+    return { kind: MetricDeltaKind.Removed };
   }
 
   const delta = roundMetricValue(secondaryNum! - primaryNum!);
 
   if (delta === 0) {
-    return { kind: CompareMetricDeltaKind.Empty };
+    return { kind: MetricDeltaKind.Empty };
   }
 
   return {
-    kind: CompareMetricDeltaKind.Changed,
+    kind: MetricDeltaKind.Changed,
     value: delta,
   };
 };
 
-export const formatCompareMetricDelta = (delta: CompareMetricDelta): string | null => {
-  if (delta.kind !== CompareMetricDeltaKind.Changed) return null;
+export const formatMetricDelta = (delta: MetricDelta): string | null => {
+  if (delta.kind !== MetricDeltaKind.Changed) return null;
   if (delta.value == null) return null;
 
   const sign = delta.value > 0 ? '+' : '';
   return `${sign}${delta.value.toFixed(3)}`;
 };
 
-const hasExecutionStatusDiff = (row: CompareAnalyticsRow): boolean => {
+export const hasExecutionStatusDiff = (row: CompareAnalyticsRow): boolean => {
   const compared = row._compared;
   if (!compared) return false;
 
@@ -75,6 +75,31 @@ const hasExecutionStatusDiff = (row: CompareAnalyticsRow): boolean => {
   if (primary == null && secondary == null) return false;
   return primary !== secondary;
 };
+
+const hasMetricDiffForRow = (row: CompareAnalyticsRow): boolean => {
+  const compared = row._compared;
+  const groupKeys = new Set([...Object.keys(row.metricValues ?? {}), ...Object.keys(compared?.metricValues ?? {})]);
+
+  for (const groupKey of groupKeys) {
+    const metricKeys = new Set([
+      ...Object.keys(row.metricValues?.[groupKey] ?? {}),
+      ...Object.keys(compared?.metricValues?.[groupKey] ?? {}),
+    ]);
+
+    for (const key of metricKeys) {
+      const primary = row.metricValues?.[groupKey]?.[key];
+      const secondary = compared?.metricValues?.[groupKey]?.[key];
+      if (getMetricDelta(primary, secondary).kind !== MetricDeltaKind.Empty) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+};
+
+export const hasCompareRowDiff = (row: CompareAnalyticsRow): boolean =>
+  hasExecutionStatusDiff(row) || hasMetricDiffForRow(row);
 
 const countMetricDiffsForRow = (row: CompareAnalyticsRow, counts: CompareDiffCounts): void => {
   const compared = row._compared;
@@ -89,16 +114,16 @@ const countMetricDiffsForRow = (row: CompareAnalyticsRow, counts: CompareDiffCou
     for (const key of metricKeys) {
       const primary = row.metricValues?.[groupKey]?.[key];
       const secondary = compared?.metricValues?.[groupKey]?.[key];
-      const delta = getCompareMetricDelta(primary, secondary);
+      const delta = getMetricDelta(primary, secondary);
 
       switch (delta.kind) {
-        case CompareMetricDeltaKind.Added:
+        case MetricDeltaKind.Added:
           counts.improved++;
           break;
-        case CompareMetricDeltaKind.Changed:
+        case MetricDeltaKind.Changed:
           counts.changed++;
           break;
-        case CompareMetricDeltaKind.Removed:
+        case MetricDeltaKind.Removed:
           counts.regressed++;
           break;
       }

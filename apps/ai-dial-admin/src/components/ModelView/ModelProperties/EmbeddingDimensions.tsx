@@ -1,3 +1,5 @@
+'use client';
+
 import { FC } from 'react';
 
 import { DialNumberInput } from '@epam/ai-dial-ui-kit';
