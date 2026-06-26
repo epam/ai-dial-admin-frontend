@@ -1033,6 +1033,7 @@ export enum ErrorI18nKey {
   EditorErrorLine = 'Error.EditorErrorLine',
   MaxNumberError = 'Error.MaxNumberError',
   CommentError = 'Error.CommentError',
+  CommentMaxLengthError = 'Error.CommentMaxLengthError',
   NotSemanticVersion = 'Error.NotSemanticVersion',
   NameError = 'Error.Name',
   URLError = 'Error.URL',

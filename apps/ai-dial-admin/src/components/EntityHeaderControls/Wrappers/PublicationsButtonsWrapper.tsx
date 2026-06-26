@@ -19,6 +19,7 @@ import classNames from 'classnames';
 
 import { approvePublication, declinePublication, deletePublication } from '@/src/app/actions/publications';
 import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
+import { DECLINE_REASON_MAX_LENGTH, DECLINE_REASON_MIN_LENGTH } from '@/src/components/EntityHeaderControls/constants';
 import { showEditorErrorNotifications } from '@/src/components/EntityHeaderControls/Buttons/utils';
 import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonToggle';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
@@ -83,10 +84,14 @@ const PublicationsButtonsWrapper = <T extends Publication>({
   const [isDeclineModalOpen, setIsOpenDeclineModal] = useState(false);
   const [isDeleteModalOpen, setIsOpenDeleteModal] = useState(false);
   const [declineReason, setDeclineReason] = useState('');
-  const isDeclineInvalid = useMemo(() => {
+  const declineErrorMessage = useMemo(() => {
     const value = declineReason.trim();
-    return !value || value.length < 15 || value.length > 255;
-  }, [declineReason]);
+    if (!value || value.length < DECLINE_REASON_MIN_LENGTH)
+      return t(ErrorI18nKey.CommentError, { min: DECLINE_REASON_MIN_LENGTH });
+    if (value.length > DECLINE_REASON_MAX_LENGTH)
+      return t(ErrorI18nKey.CommentMaxLengthError, { max: DECLINE_REASON_MAX_LENGTH });
+    return '';
+  }, [declineReason, t]);
 
   const onApprove = useCallback(() => {
     approvePublication(entity.path).then((res) => {
@@ -267,7 +272,7 @@ const PublicationsButtonsWrapper = <T extends Publication>({
             open={isDeclineModalOpen}
             header={t(keys.DeclineModalTitle)}
             onConfirm={decline}
-            disableConfirmButton={isDeclineInvalid}
+            disableConfirmButton={!!declineErrorMessage}
             onClose={() => {
               setIsOpenDeclineModal(false);
             }}
@@ -280,8 +285,8 @@ const PublicationsButtonsWrapper = <T extends Publication>({
                 placeholder={t(PublicationsI18nKey.DeclineReasonPlaceholder)}
                 value={declineReason}
                 onChange={setDeclineReason}
-                invalid={isDeclineInvalid}
-                error={isDeclineInvalid ? t(ErrorI18nKey.CommentError) : ''}
+                invalid={!!declineErrorMessage}
+                error={declineErrorMessage}
               />
             </div>
           </DialConfirmationPopup>,
