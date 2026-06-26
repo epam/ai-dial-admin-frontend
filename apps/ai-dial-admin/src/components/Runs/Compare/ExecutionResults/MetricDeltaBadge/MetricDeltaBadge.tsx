@@ -27,7 +27,7 @@ const MetricDeltaBadge: FC<Props> = ({ delta }) => {
   return (
     <span
       className={classNames(
-        'dial-tiny-text px-2 py-0.5 rounded-full inline-flex items-center font-semibold',
+        'dial-tiny-semi-text px-2 py-0.5 rounded-full inline-flex items-center',
         isPositive ? 'bg-success text-success' : 'bg-error text-error',
       )}
     >
