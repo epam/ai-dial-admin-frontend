@@ -92,6 +92,12 @@ vi.mock('next/image', () => ({
   default: (props: any) => <img {...props} />,
 }));
 
+// ECharts is heavy and not meaningful in jsdom — render a lightweight stub.
+vi.mock('echarts-for-react', () => ({
+  __esModule: true,
+  default: () => <div data-mock="echarts" />,
+}));
+
 // ------------------ Global console ------------------
 const originalConsole = console;
 global.console = {

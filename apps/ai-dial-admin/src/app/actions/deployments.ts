@@ -184,6 +184,11 @@ export async function getContainerPods(containerId: string) {
   return containersApi.getContainerPods(containerId, token);
 }
 
+export async function getContainerMetrics(containerId: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return containersApi.getContainerMetrics(containerId, token);
+}
+
 export async function rollbackDeploymentContainer(id: string, revision: number) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return containersApi.rollbackContainer(id, revision, token);

@@ -101,5 +101,5 @@ rules:
     - Require unit tests for all new and updated code as a dedicated task
     - Keep tasks small enough to be reviewable in a single PR
     - For test-authoring rules (how to write tests — queries, mocks, per-type approach, cost discipline), follow .claude/rules/testing.md
-    - Do not add manual testing tasks
+    - IMPORTANT - Do not add "Manual check" tasks
     - Run all code quality checks (lint, format, tests) as a final task after all implementation tasks are complete
