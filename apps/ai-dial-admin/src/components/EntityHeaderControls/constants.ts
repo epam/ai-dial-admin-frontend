@@ -1,0 +1,2 @@
+export const DECLINE_REASON_MIN_LENGTH = 15;
+export const DECLINE_REASON_MAX_LENGTH = 255;

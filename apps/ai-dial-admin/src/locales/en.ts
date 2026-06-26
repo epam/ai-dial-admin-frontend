@@ -1379,7 +1379,8 @@ export default {
     DisplayNameErrorVersion:
       'This name is used by versionless entity. Specify version for entity with this display name to group entities.',
     EditorErrorLine: 'The error line is {line}',
-    CommentError: 'Comment must be at least 15 characters long',
+    CommentError: 'Comment must be at least {min} characters long',
+    CommentMaxLengthError: 'Comment must not exceed {max} characters',
     Name: 'This name already exists.',
     URL: 'This value should be URL.',
     CpuError: 'Minimum value is 1 millicpu',
