@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, RefObject, useCallback, useMemo, useState } from 'react';
+import { FC, RefObject, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { NotificationVariant, DialNotification } from '@epam/ai-dial-ui-kit';
@@ -9,7 +9,7 @@ import { isEqual } from 'lodash';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Dataset, DatasetVisibility } from '@/src/models/evaluation/dataset';
-import { TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
+import { TestSuite } from '@/src/models/evaluation/test-suite';
 import TestCasesList, { TestCasesActions } from './TestCasesList';
 import TestCasesSchemaModal from './TestCasesSchemaModal';
 import TemplateVariables from './TemplateVariables';
@@ -43,15 +43,6 @@ const TestCases: FC<Props> = ({
 
   const isReadOnly = dataset?.visibility === DatasetVisibility.PUBLIC;
 
-  const onApplySchema = useCallback(
-    (schema: TestCaseSchema[]) => {
-      if (dataset) {
-        onChangeDataset?.({ ...dataset, testCaseSchema: schema });
-      }
-    },
-    [dataset, onChangeDataset],
-  );
-
   return (
     <div className="h-full flex flex-col gap-y-6">
       <TemplateVariables selectedTestSuite={selectedTestSuite} schema={dataset?.testCaseSchema} onChange={onChange} />
@@ -62,7 +53,6 @@ const TestCases: FC<Props> = ({
         dataset={dataset}
         suiteEtag={suiteEtag}
         onOpenSchemaModal={!isReadOnly ? () => setIsSchemaModalOpen(true) : undefined}
-        onSchemaChange={onApplySchema}
         onChangeDataset={onChangeDataset}
         {...props}
       />
@@ -73,7 +63,7 @@ const TestCases: FC<Props> = ({
             isModalOpen={isSchemaModalOpen}
             initialSchema={dataset?.testCaseSchema ?? []}
             onClose={() => setIsSchemaModalOpen(false)}
-            onApply={onApplySchema}
+            onApply={(testCaseSchema) => onChangeDataset?.({ ...dataset, testCaseSchema })}
           />,
           document.body,
         )}
