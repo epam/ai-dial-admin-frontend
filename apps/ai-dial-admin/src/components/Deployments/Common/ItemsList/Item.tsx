@@ -41,10 +41,12 @@ const Item = forwardRef<HTMLLIElement, Props>(
     );
 
     // Keep the validation error in view: when the error appears, the item grows and its
-    // message can fall outside the scrollable list — scroll it back into view.
+    // message can fall outside the scrollable list — scroll it back into view. Use an
+    // instant scroll (not smooth): while typing, the browser keeps the focused input in
+    // view, and a smooth (animated) scroll gets reverted by it before it completes.
     useEffect(() => {
       if (error) {
-        liRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        liRef.current?.scrollIntoView({ block: 'nearest' });
       }
     }, [error]);
 
