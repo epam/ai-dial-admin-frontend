@@ -32,6 +32,7 @@ const ApplicationAppRoutes: FC<Props> = ({ selectedEntity, applicationRunners, o
       routes={routes}
       isPublicApp={selectedEntity.isPublic}
       disabled={hasSchemaSource || isReadOnlyAdmin}
+      useAggregateRouteValidation={true}
       onChangeRoutes={(routes) => onChangeEntity({ ...selectedEntity, routes } as DialApplication)}
       {...props}
     />

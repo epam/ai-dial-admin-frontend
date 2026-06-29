@@ -13,7 +13,7 @@ import { DialRole } from '@/src/models/dial/role';
 import { DialRoleLimitsMap } from '@/src/models/dial/role-limits';
 import { DialAppRoute } from '@/src/models/dial/route';
 import { isValidRoutePath } from '@/src/utils/validation/path-error';
-import { getErrorForAppRouteName } from '@/src/utils/validation/name-error';
+import { getErrorForAppRouteName, getErrorForName } from '@/src/utils/validation/name-error';
 import AppRouteList from './AppRouteList';
 
 interface Props {
@@ -23,6 +23,7 @@ interface Props {
   disabled?: boolean;
   isPublicApp?: boolean;
   isAppRunnerView?: boolean;
+  useAggregateRouteValidation?: boolean;
   onChangeRoutes: (routes: DialAppRoute[]) => void;
 }
 
@@ -32,6 +33,7 @@ const EntityRoutes: FC<Props> = ({
   isPublicApp,
   disabled,
   isAppRunnerView,
+  useAggregateRouteValidation,
   routes,
   onChangeRoutes,
 }) => {
@@ -53,11 +55,13 @@ const EntityRoutes: FC<Props> = ({
 
   // Aggregate validity for all app routes — covers name, paths, methods, endpoints
   useEffect(() => {
-    if (!isAppRunnerView) return;
+    if (!isAppRunnerView && !useAggregateRouteValidation) return;
 
     const allValid = (routes || []).every((route, index) => {
       const otherNames = (routes || []).filter((_, i) => i !== index).map((r) => r.name || '');
-      const nameValid = !getErrorForAppRouteName(route.name, otherNames, t);
+      const nameValid = isAppRunnerView
+        ? !getErrorForAppRouteName(route.name, otherNames, t)
+        : !getErrorForName(route.name, otherNames, t, false, true, true);
       const pathsValid = !!route.paths?.length && route.paths.every((p) => !!p && isValidRoutePath(p));
       const methodsValid = !!route.methods?.length;
       const endpointsValid = !!route.response || !!route.upstreams?.length;
@@ -65,7 +69,7 @@ const EntityRoutes: FC<Props> = ({
     });
 
     dispatch({ type: ValidationActionType.SetField, field: 'appRoutes', isValid: allValid });
-  }, [routes, isAppRunnerView, t, dispatch]);
+  }, [routes, isAppRunnerView, useAggregateRouteValidation, t, dispatch]);
 
   const handleModalClose = useCallback(() => {
     setIsModalOpen(false);
@@ -143,6 +147,7 @@ const EntityRoutes: FC<Props> = ({
           {routes?.[activeRouteIndex as number] && (
             <RouteContent
               isAppRunnerView={isAppRunnerView}
+              useAggregateRouteValidation={useAggregateRouteValidation}
               route={routes?.[activeRouteIndex as number] || ({} as DialAppRoute)}
               roles={roles || []}
               parentRoles={!isPublicApp ? Object.keys(parentRoleLimits || {}) : roles?.map((r) => r.name as string)}
