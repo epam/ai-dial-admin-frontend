@@ -24,12 +24,12 @@ export const sanitizeComment = (comment?: string): string => {
   do {
     previous = sanitized;
     sanitized = sanitized
+      .replace(/&amp;|&lt;|&gt;|&quot;|&#39;|&nbsp;/g, (entity) => HTML_ENTITIES[entity] ?? entity)
       .replace(/<(script|style)[\s\S]*?<\/\1>/gi, '')
       .replace(/<[^>]*>/g, '');
   } while (sanitized !== previous);
 
   return sanitized
-    .replace(/&amp;|&lt;|&gt;|&quot;|&#39;|&nbsp;/g, (entity) => HTML_ENTITIES[entity] ?? entity)
     .replace(/\s+/g, ' ')
     .trim();
 };
