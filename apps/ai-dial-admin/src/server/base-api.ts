@@ -26,7 +26,7 @@ export class BaseApi {
    * `getError` / `getErrorMessage`. Override in subclasses whose upstream returns
    * a different error shape (e.g. the direct DIAL Core client).
    */
-  protected parseErrorBody(error: string): ErrorObject {
+  protected parseErrorBody(error: string, _status: number): ErrorObject {
     return getParsedError(error);
   }
 
@@ -201,7 +201,7 @@ export class BaseApi {
       this.setLoggerRequestInfoError(res);
 
       return res.text().then((error) => {
-        const errObject = this.parseErrorBody(error);
+        const errObject = this.parseErrorBody(error, res.status);
         this.setLoggerRequestError(error, res);
         return {
           success: false,
