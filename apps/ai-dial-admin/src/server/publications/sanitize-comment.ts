@@ -26,10 +26,9 @@ export const sanitizeComment = (comment?: string): string => {
     sanitized = sanitized
       .replace(/&amp;|&lt;|&gt;|&quot;|&#39;|&nbsp;/g, (entity) => HTML_ENTITIES[entity] ?? entity)
       .replace(/<(script|style)[\s\S]*?<\/\1>/gi, '')
-      .replace(/<[^>]*>/g, '');
+      .replace(/<[^>]*>/g, '')
+      .replace(/\s+/g, ' ');
   } while (sanitized !== previous);
 
-  return sanitized
-    .replace(/\s+/g, ' ')
-    .trim();
+  return sanitized.trim();
 };
