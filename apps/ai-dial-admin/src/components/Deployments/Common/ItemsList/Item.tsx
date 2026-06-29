@@ -41,10 +41,11 @@ const Item = forwardRef<HTMLLIElement, Props>(
     );
 
     // Keep the validation error in view: when the error appears, the item grows and its
-    // message can fall outside the scrollable list — scroll it back into view.
+    // message can fall outside the scrollable list. Align the item's bottom (where the
+    // message sits) to the bottom of the scroll area so the whole error stays visible.
     useEffect(() => {
       if (error) {
-        liRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        liRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
       }
     }, [error]);
 
