@@ -1,6 +1,6 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
 
-import { DialIconButton, DialLabel, DialLoader, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { DialIconButton, DialLabel, DialLoader, DialSelect, DialTooltip, SelectOption } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
 
 import { getAllDeployments } from '@/src/app/[lang]/conversations/actions';
@@ -14,18 +14,34 @@ import { DialConversation } from '@/src/models/dial/conversation';
 
 interface Props {
   selectedConversation: DialConversation;
+  conversations?: DialConversation[];
+  onConversationChange?: (conversation: DialConversation) => void;
 }
 
-const Properties: FC<Props> = ({ selectedConversation }) => {
+const Properties: FC<Props> = ({ selectedConversation, conversations, onConversationChange }) => {
   const t = useI18n();
   const currentLocale = useCurrentLocale();
   const [isModelLoading, setIsModelLoading] = useState(true);
   const [deployment, setDeployment] = useState<Record<string, string> | null>(null);
 
   const model = selectedConversation.model?.id as string;
+  const isMultiConversation = !!conversations && conversations.length > 1;
+
+  const conversationOptions: SelectOption[] = useMemo(() => {
+    if (!isMultiConversation) return [];
+    return conversations!.map((c) => ({
+      value: c.name as string,
+      label: c.name as string,
+    }));
+  }, [conversations, isMultiConversation]);
 
   const openResourceInNewTab = () => {
     window.open(getAgentLinkForConversation(deployment, currentLocale), '_blank');
+  };
+
+  const onSelectConversation = (name: string) => {
+    const found = conversations?.find((c) => c.name === name);
+    if (found) onConversationChange?.(found);
   };
 
   useEffect(() => {
@@ -43,10 +59,20 @@ const Properties: FC<Props> = ({ selectedConversation }) => {
 
   return (
     <div className="size-full flex flex-col gap-y-8">
-      {selectedConversation.name && (
+      {isMultiConversation ? (
         <LabelledText label={t(EntityFieldsI18nKey.name)}>
-          <DialTooltip tooltip={selectedConversation.name}>{selectedConversation.name}</DialTooltip>
+          <DialSelect
+            options={conversationOptions}
+            value={selectedConversation.name as string}
+            onChange={(v) => onSelectConversation(v as string)}
+          />
         </LabelledText>
+      ) : (
+        selectedConversation.name && (
+          <LabelledText label={t(EntityFieldsI18nKey.name)}>
+            <DialTooltip tooltip={selectedConversation.name}>{selectedConversation.name}</DialTooltip>
+          </LabelledText>
+        )
       )}
 
       <LabelledText label={t(EntityFieldsI18nKey.agent)}>
