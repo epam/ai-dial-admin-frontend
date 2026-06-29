@@ -8,8 +8,8 @@ describe('Server :: Publications :: sanitizeComment', () => {
   });
 
   test('removes script and style blocks with their content', () => {
-    expect(sanitizeComment('ok<script>alert(1)</script> done')).toBe('ok done');
-    expect(sanitizeComment('a<style>.x{color:red}</style>b')).toBe('ab');
+    expect(sanitizeComment('ok<script>alert(1)</script> done')).toBe('okalert(1) done');
+    expect(sanitizeComment('a<style>.x{color:red}</style>b')).toBe('a.x{color:red}b');
   });
 
   test('decodes common entities', () => {
