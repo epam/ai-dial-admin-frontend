@@ -18,9 +18,17 @@ export const sanitizeComment = (comment?: string): string => {
     return '';
   }
 
-  return comment
-    .replace(/<(script|style)[\s\S]*?<\/\1>/gi, '')
-    .replace(/<[^>]*>/g, '')
+  let sanitized = comment;
+  let previous: string;
+
+  do {
+    previous = sanitized;
+    sanitized = sanitized
+      .replace(/<(script|style)[\s\S]*?<\/\1>/gi, '')
+      .replace(/<[^>]*>/g, '');
+  } while (sanitized !== previous);
+
+  return sanitized
     .replace(/&amp;|&lt;|&gt;|&quot;|&#39;|&nbsp;/g, (entity) => HTML_ENTITIES[entity] ?? entity)
     .replace(/\s+/g, ' ')
     .trim();
