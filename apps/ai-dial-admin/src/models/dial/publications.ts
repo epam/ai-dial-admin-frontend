@@ -75,3 +75,9 @@ export enum ActionType {
   ADD_IF_ABSENT = 'add_if_absent',
   DELETE = 'delete',
 }
+
+export enum PublicationStatus {
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+}

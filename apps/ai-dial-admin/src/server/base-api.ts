@@ -21,6 +21,15 @@ export class BaseApi {
     this.config = { ...config, host: normalizeUrl(config.host) };
   }
 
+  /**
+   * Parses a failed-response body into the flat `ErrorObject` shape consumed by
+   * `getError` / `getErrorMessage`. Override in subclasses whose upstream returns
+   * a different error shape (e.g. the direct DIAL Core client).
+   */
+  protected parseErrorBody(error: string): ErrorObject {
+    return getParsedError(error);
+  }
+
   protected async deleteAction(url: string, token?: Token): Promise<ServerActionResponse> {
     return this.sendActionRequest(url, 'DELETE', token);
   }
@@ -192,7 +201,7 @@ export class BaseApi {
       this.setLoggerRequestInfoError(res);
 
       return res.text().then((error) => {
-        const errObject = getParsedError(error);
+        const errObject = this.parseErrorBody(error);
         this.setLoggerRequestError(error, res);
         return {
           success: false,

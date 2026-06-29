@@ -1,35 +1,39 @@
+import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
+import { BucketApi } from '@/src/server/core/bucket-api';
+import { FilesCoreApi } from '@/src/server/core/files-core-api';
+import { DeploymentAuditApi } from '@/src/server/deployments/audit-api';
+import { DeploymentConfigApi } from '@/src/server/deployments/config';
+import { ContainersApi } from '@/src/server/deployments/containers';
+import { GlobalFirewallApi } from '@/src/server/deployments/global-firewall';
+import { HuggingfaceApi } from '@/src/server/deployments/huggingface';
+import { ImagesApi } from '@/src/server/deployments/images';
+import { McpRegistryApi } from '@/src/server/deployments/mcp-registry';
+import { NodePoolsApi } from '@/src/server/deployments/node-pools';
+import { TopicApi } from '@/src/server/deployments/topics';
+import { WhitelistApi } from '@/src/server/deployments/whitelist';
 import { ActivityAuditApi } from '@/src/server/entities/activity-audit-api';
 import { AdaptersApi } from '@/src/server/entities/adapters-api';
 import { ApplicationRunnersApi } from '@/src/server/entities/application-runners-api';
 import { ApplicationsApi } from '@/src/server/entities/applications-api';
 import { AssetsApi } from '@/src/server/entities/assets/assets-api';
 import { FoldersApi } from '@/src/server/entities/assets/folders-api';
+import { CorePublicationsApi } from '@/src/server/entities/core-publications-api';
 import { InterceptorTemplatesApi } from '@/src/server/entities/interceptor-templates-api';
 import { InterceptorsApi } from '@/src/server/entities/interceptors-api';
 import { KeysApi } from '@/src/server/entities/keys-api';
 import { ModelsApi } from '@/src/server/entities/models-api';
-import { PublicationsApi } from '@/src/server/entities/publications-api';
 import { RolesApi } from '@/src/server/entities/roles-api';
 import { RoutesApi } from '@/src/server/entities/routes-api';
 import { ToolsetsApi } from '@/src/server/entities/toolsets-api';
+import { AnalyticsApi } from '@/src/server/eval/analytics-api';
+import { DatasetsApi } from '@/src/server/eval/datasets-api';
+import { MetricsApi } from '@/src/server/eval/metrics-api';
+import { RunsApi } from '@/src/server/eval/runs-api';
+import { TestSuitesApi } from '@/src/server/eval/test-suites-api';
+import { EnrichmentClients } from '@/src/server/publications/resolver/types';
 import { TelemetryApi } from '@/src/server/telemetry-api';
 import { ThemesApi } from '@/src/server/themes-api';
 import { UtilityApi } from '@/src/server/utility-api';
-import { ImagesApi } from '@/src/server/deployments/images';
-import { ContainersApi } from '@/src/server/deployments/containers';
-import { TopicApi } from '@/src/server/deployments/topics';
-import { DatasetsApi } from '@/src/server/eval/datasets-api';
-import { TestSuitesApi } from '@/src/server/eval/test-suites-api';
-import { WhitelistApi } from '@/src/server/deployments/whitelist';
-import { MetricsApi } from '@/src/server/eval/metrics-api';
-import { HuggingfaceApi } from '@/src/server/deployments/huggingface';
-import { McpRegistryApi } from '@/src/server/deployments/mcp-registry';
-import { NodePoolsApi } from '@/src/server/deployments/node-pools';
-import { DeploymentConfigApi } from '@/src/server/deployments/config';
-import { DeploymentAuditApi } from '@/src/server/deployments/audit-api';
-import { GlobalFirewallApi } from '@/src/server/deployments/global-firewall';
-import { RunsApi } from '@/src/server/eval/runs-api';
-import { AnalyticsApi } from '@/src/server/eval/analytics-api';
 
 // Admin APIs
 export const modelsApi = new ModelsApi({
@@ -65,10 +69,6 @@ export const telemetryApi = new TelemetryApi({
 });
 
 export const routesApi = new RoutesApi({
-  host: process.env.DIAL_ADMIN_API_URL,
-});
-
-export const publicationsApi = new PublicationsApi({
   host: process.env.DIAL_ADMIN_API_URL,
 });
 
@@ -159,3 +159,28 @@ export const runsApi = new RunsApi({
 export const analyticsApi = new AnalyticsApi({
   host: process.env.DIAL_EVAL_API_URL,
 });
+
+// DIAL Core direct clients (publications migration)
+export const bucketApi = new BucketApi({
+  host: process.env.DIAL_CORE_API_URL,
+});
+
+export const filesCoreApi = new FilesCoreApi({
+  host: process.env.DIAL_CORE_API_URL,
+});
+
+// Publications talk to DIAL Core directly. Per-resource enrichment (asset get/put)
+// is still delegated to the admin BE in this phase (migrates with assets in Phase 2).
+const publicationEnrichmentClients: EnrichmentClients = {
+  getAsset: (token, path, type, etag) => assetsApi.getAssetWithEtag(token, path, type, etag),
+  updateAsset: (token, asset, type, etag) =>
+    assetsApi.updateAssetWithEtag(token, asset as AssetWithVersion, type, etag),
+  getBucket: (token) => bucketApi.getBucket(token),
+  getFileMetadata: (token, path) => filesCoreApi.getFileMetadata(token, path),
+  uploadFile: (token, path, file) => filesCoreApi.uploadFile(token, path, file),
+};
+
+export const publicationsApi = new CorePublicationsApi(
+  { host: process.env.DIAL_CORE_API_URL },
+  publicationEnrichmentClients,
+);
