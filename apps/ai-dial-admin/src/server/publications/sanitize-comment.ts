@@ -29,7 +29,7 @@ export const sanitizeComment = (comment?: string): string => {
   // removed by `<[^>]*>?`, so raw markup such as `<script` can never leak through.
   do {
     previous = stripped;
-    stripped = stripped.replace(/<(script|style)[\s\S]*?<\/\1>/gi, '').replace(/<[^>]*>?/g, '');
+    stripped = stripped.replace(/<[^>]*>?/g, '');
   } while (stripped !== previous);
 
   // Decode entities last, on already tag-free text. Decoded angle brackets are
