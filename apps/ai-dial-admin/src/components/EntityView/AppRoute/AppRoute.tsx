@@ -23,7 +23,6 @@ interface Props {
   disabled?: boolean;
   isPublicApp?: boolean;
   isAppRunnerView?: boolean;
-  useAggregateRouteValidation?: boolean;
   onChangeRoutes: (routes: DialAppRoute[]) => void;
 }
 
@@ -33,7 +32,6 @@ const EntityRoutes: FC<Props> = ({
   isPublicApp,
   disabled,
   isAppRunnerView,
-  useAggregateRouteValidation,
   routes,
   onChangeRoutes,
 }) => {
@@ -55,8 +53,6 @@ const EntityRoutes: FC<Props> = ({
 
   // Aggregate validity for all app routes — covers name, paths, methods, endpoints
   useEffect(() => {
-    if (!isAppRunnerView && !useAggregateRouteValidation) return;
-
     const allValid = (routes || []).every((route, index) => {
       const otherNames = (routes || []).filter((_, i) => i !== index).map((r) => r.name || '');
       const nameValid = isAppRunnerView
@@ -69,7 +65,7 @@ const EntityRoutes: FC<Props> = ({
     });
 
     dispatch({ type: ValidationActionType.SetField, field: 'appRoutes', isValid: allValid });
-  }, [routes, isAppRunnerView, useAggregateRouteValidation, t, dispatch]);
+  }, [routes, isAppRunnerView, t, dispatch]);
 
   const handleModalClose = useCallback(() => {
     setIsModalOpen(false);
@@ -147,7 +143,6 @@ const EntityRoutes: FC<Props> = ({
           {routes?.[activeRouteIndex as number] && (
             <RouteContent
               isAppRunnerView={isAppRunnerView}
-              useAggregateRouteValidation={useAggregateRouteValidation}
               route={routes?.[activeRouteIndex as number] || ({} as DialAppRoute)}
               roles={roles || []}
               parentRoles={!isPublicApp ? Object.keys(parentRoleLimits || {}) : roles?.map((r) => r.name as string)}

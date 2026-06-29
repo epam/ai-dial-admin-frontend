@@ -14,7 +14,6 @@ import RouteRoles from './RouteRoles';
 interface Props {
   route: DialAppRoute;
   isAppRunnerView?: boolean;
-  useAggregateRouteValidation?: boolean;
   roles: DialRole[];
   disabled?: boolean;
   parentRoles?: string[];
@@ -43,7 +42,6 @@ const RouteContent: FC<Props> = ({ route, disabled, routeNames, onChangeRoute, .
             routeNames={routeNames}
             disabled={disabled}
             isAppRunnerView={props.isAppRunnerView}
-            useAggregateRouteValidation={props.useAggregateRouteValidation}
           />
         )}
 

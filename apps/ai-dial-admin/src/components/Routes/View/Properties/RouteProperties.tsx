@@ -43,24 +43,15 @@ interface Props {
   routeNames?: string[];
   onChange: (route: DialRoute | DialAppRoute) => void;
   isAppRunnerView?: boolean;
-  useAggregateRouteValidation?: boolean;
 }
 
-const RouteProperties: FC<Props> = ({
-  route,
-  disabled,
-  isAppRoute,
-  routeNames,
-  onChange,
-  isAppRunnerView,
-  useAggregateRouteValidation,
-}) => {
+const RouteProperties: FC<Props> = ({ route, disabled, isAppRoute, routeNames, onChange, isAppRunnerView }) => {
   const t = useI18n();
   const { dispatch, resetCounter } = useSaveValidationContext();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   // When true, all field-level validation is delegated to EntityRoutes aggregate key
-  const skipGlobalValidation = !!(isAppRoute && (isAppRunnerView || useAggregateRouteValidation));
+  const skipGlobalValidation = !!isAppRoute;
 
   const outputRadio: RadioButtonWithContent[] = [
     { id: RouteOutput.UPSTREAMS, name: t(EntityFieldsI18nKey.upstreams) },
