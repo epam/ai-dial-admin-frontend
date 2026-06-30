@@ -1,23 +1,24 @@
 'use client';
 
-import { FC, useMemo } from 'react';
+import { FC } from 'react';
+
+import classNames from 'classnames';
 
 import BaseDiffLegend from '@/src/components/Common/DiffLegend/DiffLegend';
-import { countCompareDiffs } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
-import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
+import { CompareDiffCounts } from '@/src/components/Runs/Compare/ExecutionResults/models';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
-  rows: CompareAnalyticsRow[];
+  counts: CompareDiffCounts;
+  className?: string;
 }
 
-const DiffLegend: FC<Props> = ({ rows }) => {
+const DiffLegend: FC<Props> = ({ counts, className }) => {
   const t = useI18n();
-  const counts = useMemo(() => countCompareDiffs(rows), [rows]);
 
   return (
-    <div className="flex items-center gap-2">
+    <div className={classNames('flex items-center gap-2', className)}>
       <span className="dial-tiny-text text-secondary whitespace-nowrap">{t(RunsI18nKey.RunCompareDiffLabel)}</span>
       <BaseDiffLegend added={counts.improved} changed={counts.changed} removed={counts.regressed} />
     </div>

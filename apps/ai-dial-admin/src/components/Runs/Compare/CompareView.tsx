@@ -2,7 +2,7 @@
 
 import { IconAdjustmentsHorizontal } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { DialGhostButton, DialTabs } from '@epam/ai-dial-ui-kit';
@@ -10,6 +10,8 @@ import { DialGhostButton, DialTabs } from '@epam/ai-dial-ui-kit';
 import { getRun } from '@/src/app/[lang]/runs/actions';
 import CompareRunTag from '@/src/components/Runs/Compare/CompareRunTag';
 import CompareTabsContent from '@/src/components/Runs/Compare/CompareTabsContent';
+import CompareRowDetailPanel from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareRowDetailPanel';
+import { ROW_DETAIL_SIDEBAR_CLASS } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/constants';
 import {
   CompareRunSlot,
   CompareViewTab,
@@ -23,8 +25,10 @@ import {
   getCompareViewTabs,
   getSelectableCompareRuns,
 } from '@/src/components/Runs/Compare/utils';
+import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
 import { Run } from '@/src/models/evaluation/run';
 
@@ -36,6 +40,10 @@ interface Props {
 const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => {
   const t = useI18n();
   const router = useRouter();
+  const { sidebar } = useAppContext();
+
+  const sidebarRef = useRef(sidebar);
+  sidebarRef.current = sidebar;
 
   const [primaryRunId, setPrimaryRunId] = useState(runId);
   const [run, setRun] = useState<Run | null>(null);
@@ -44,6 +52,7 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
   const [comparedRunId, setComparedRunId] = useState(comparedRunIdProp);
   const [activeTab, setActiveTab] = useState(CompareViewTab.ExecutionResults);
   const [showDisplayPanel, setShowDisplayPanel] = useState(false);
+  const [selectedRow, setSelectedRow] = useState<CompareAnalyticsRow | null>(null);
 
   const compareTabs = useMemo(() => getCompareViewTabs(t), [t]);
 
@@ -140,17 +149,49 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
 
   const toggleDisplayPanel = useCallback(() => setShowDisplayPanel((prev) => !prev), []);
 
+  const closeRowDetail = useCallback(() => {
+    setSelectedRow(null);
+    sidebarRef.current.closeSidebar();
+  }, []);
+
+  const openRowDetail = useCallback(
+    (row: CompareAnalyticsRow) => {
+      if (selectedRow?.id === row.id) {
+        closeRowDetail();
+        return;
+      }
+      setSelectedRow(row);
+      sidebarRef.current.showSidebar(
+        <CompareRowDetailPanel
+          row={row}
+          primaryRunName={primaryRunName}
+          comparedRunName={comparedRunName}
+          onClose={closeRowDetail}
+        />,
+        ROW_DETAIL_SIDEBAR_CLASS,
+      );
+    },
+    [selectedRow?.id, primaryRunName, comparedRunName, closeRowDetail],
+  );
+
   useEffect(() => {
     if (activeTab !== CompareViewTab.ExecutionResults) {
       setShowDisplayPanel(false);
+      closeRowDetail();
     }
-  }, [activeTab]);
+  }, [activeTab, closeRowDetail]);
+
+  useEffect(() => {
+    closeRowDetail();
+  }, [primaryRunId, comparedRunId, closeRowDetail]);
+
+  useEffect(() => () => sidebarRef.current.closeSidebar(), []);
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 h-full bg-layer-2 rounded p-4 gap-4 overflow-hidden">
-      <h3 className="dial-h3 text-primary">{t(RunsI18nKey.RunComparison)}</h3>
+    <div className="flex flex-col flex-1 min-h-0 h-full bg-layer-2 rounded overflow-hidden p-4 gap-4">
+      <h3 className="dial-h3 text-primary shrink-0">{t(RunsI18nKey.RunComparison)}</h3>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 shrink-0">
         {run && (
           <CompareRunTag
             runIndex={RUN_COMPARE_PRIMARY_INDEX}
@@ -188,6 +229,9 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
           comparedRunName={comparedRunName}
           showDisplayPanel={showDisplayPanel}
           onToggleDisplayPanel={toggleDisplayPanel}
+          selectedRow={selectedRow}
+          onOpenRowDetail={openRowDetail}
+          onCloseRowDetail={closeRowDetail}
         />
       </div>
 

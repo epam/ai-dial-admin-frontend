@@ -535,3 +535,12 @@ export const mergeComparePanelColumns = (panelColumns: ColDef[], actionColumn?: 
 
   return [...panelColumns, { ...actionColumn, hide: false }];
 };
+
+export interface CompareEyeRendererParams {
+  onOpenRowDetail?: (row: CompareAnalyticsRow) => void;
+  selectedRowId?: string | null;
+  viewRowDetailsLabel?: string;
+}
+
+export const applyEyeCellRendererParams = (columns: ColDef[], params: CompareEyeRendererParams): ColDef[] =>
+  columns.map((col) => (col.colId === COMPARE_ACTION_COL_ID ? { ...col, cellRendererParams: params } : col));
