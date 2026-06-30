@@ -10,6 +10,7 @@ import { cloneDeep } from 'lodash';
 
 import {
   getCoreRunner,
+  getResolvedApplicationScheme,
   removeApplicationScheme,
   updateApplicationScheme,
   updateCoreRunner,
@@ -76,6 +77,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
   const [isCreateAssetAppModalOpen, setIsCreateAssetAppModalOpen] = useState(false);
   const [isSkipRefresh, setIsSkipRefresh] = useState(false);
   const [discardKey, setDiscardKey] = useState(0);
+  const [applicationProperties, setApplicationProperties] = useState<Record<string, unknown>>();
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -90,6 +92,16 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
     }),
     [isEditorEnabled, selectedFormat],
   );
+
+  useEffect(() => {
+    getResolvedApplicationScheme(selectedRunner.$id ?? '').then((res) => {
+      const scheme: DialApplicationScheme =
+        res.success && (res.response as { schema?: DialApplicationScheme })?.schema
+          ? (res.response as { schema: DialApplicationScheme }).schema
+          : selectedRunner;
+      setApplicationProperties(getSchemaDefaults(scheme as JSONSchema7) as Record<string, unknown>);
+    });
+  }, [selectedRunner]);
 
   useEffect(() => {
     const name = originalScheme?.$id;
@@ -208,7 +220,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
               names={names}
               initialValues={{
                 source: selectedRunner.$id ? createSchemaSource(selectedRunner.$id) : undefined,
-                applicationProperties: getSchemaDefaults(selectedRunner as JSONSchema7) as Record<string, unknown>,
+                applicationProperties,
               }}
             />,
             document.body,
@@ -226,6 +238,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
               context={useAppsFolder}
               initialValues={{
                 source: selectedRunner.$id ? createSchemaSource(selectedRunner.$id) : undefined,
+                applicationProperties,
               }}
             />,
             document.body,
