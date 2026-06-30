@@ -69,7 +69,7 @@ export default async function Layout({ children, params }: { children: ReactNode
           disableDeploymentsJSONEditor={isValueTruthy(process.env.DEPLOYMENTS_DISABLE_JSON_EDITOR)}
           resourcesDefaults={JSON.parse(process.env.DEPLOYMENTS_RESOURCES_DEFAULTS || '{}') as ResourcesDefaults}
           telemetryMaxRangeMs={telemetryMaxRangeMs}
-          codeAppEditorUrl={normalizeUrl(process.env.CODE_APP_EDITOR_URL)}
+          codeAppEditorUrl={process.env.CODE_APP_EDITOR_URL}
           userInfo={(await utilityApi.getUserInfo(token)).response?.userInfo}
         >
           <ThemeProvider themesConfiguration={themesConfiguration} themeImages={themesImages}>
