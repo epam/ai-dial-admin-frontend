@@ -7,7 +7,12 @@ import { DialApplication } from '@/src/models/dial/application';
 import { Container } from '@/src/models/deployments/containers';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { ApplicationRoute } from '@/src/types/routes';
-import { CONTAINER_STATUS, CONTAINER_SOURCE_TYPE, CONTAINER_TYPE } from '@/src/types/deployments/containers';
+import {
+  CONTAINER_STATUS,
+  CONTAINER_SOURCE_TYPE,
+  CONTAINER_TYPE,
+  INFERENCE_TASK,
+} from '@/src/types/deployments/containers';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ refresh: vi.fn() }),
@@ -227,6 +232,75 @@ describe('Containers component', () => {
     });
     const warningIcon = container.querySelector('svg.tabler-icon-alert-triangle-filled');
     expect(warningIcon === null || (warningIcon.getAttribute('class') ?? '').includes('hidden')).toBe(true);
+  });
+
+  describe('inferenceTask capability filter (Models view)', () => {
+    const textGeneration: Container = {
+      ...hfContainer,
+      name: 'container-textgen',
+      displayName: 'Text Generation',
+      inferenceTask: INFERENCE_TASK.TEXT_GENERATION,
+    };
+    const textClassification: Container = {
+      ...hfContainer,
+      name: 'container-classify',
+      displayName: 'Text Classification',
+      inferenceTask: INFERENCE_TASK.TEXT_CLASSIFICATION,
+    };
+    const noneTask: Container = {
+      ...hfContainer,
+      name: 'container-none',
+      displayName: 'No Capability',
+      inferenceTask: INFERENCE_TASK.NONE,
+    };
+
+    const renderModelsPicker = (containers: Container[]) =>
+      render(
+        <Containers
+          entity={createEntity('')}
+          onChange={vi.fn()}
+          getContainers={mockGetContainers(containers)}
+          view={ApplicationRoute.Models}
+          isModal
+        />,
+      );
+
+    test('keeps TEXT_GENERATION and field-less (NIM) containers', async () => {
+      renderModelsPicker([textGeneration, runningContainer]);
+      await screen.findByRole('combobox');
+      expect(screen.getByRole('option', { name: 'Text Generation' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: 'Running Container' })).toBeInTheDocument();
+    });
+
+    test('hides TEXT_CLASSIFICATION and NONE containers', async () => {
+      renderModelsPicker([textGeneration, textClassification, noneTask]);
+      await screen.findByRole('combobox');
+      expect(screen.getByRole('option', { name: 'Text Generation' })).toBeInTheDocument();
+      expect(screen.queryByRole('option', { name: 'Text Classification' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('option', { name: 'No Capability' })).not.toBeInTheDocument();
+    });
+
+    test('does not filter by capability outside the Models view', async () => {
+      render(
+        <Containers
+          entity={
+            {
+              name: 'app',
+              displayName: 'App',
+              mcp: undefined,
+              source: { $type: SOURCE_TYPE.CONTAINER, containerId: '' },
+            } as unknown as DialApplication
+          }
+          onChange={vi.fn()}
+          getContainers={mockGetContainers([textClassification, noneTask])}
+          view={ApplicationRoute.Applications}
+          isModal
+        />,
+      );
+      await screen.findByRole('combobox');
+      expect(screen.getByRole('option', { name: 'Text Classification' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: 'No Capability' })).toBeInTheDocument();
+    });
   });
 
   test('Application branch: writes containerId, skips completionEndpointPath', async () => {

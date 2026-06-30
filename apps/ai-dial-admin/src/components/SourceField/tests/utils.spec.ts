@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { buildContainerSelection, isValidSourceField } from '../utils';
+import { buildContainerSelection, isModelCapableContainer, isValidSourceField } from '../utils';
 
 import { SOURCE_TYPE } from '../types';
 import { Toolset } from '@/src/models/dial/toolset';
@@ -8,7 +8,33 @@ import { DialModel, DialModelType } from '@/src/models/dial/model';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { Container } from '@/src/models/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
-import { CONTAINER_STATUS, CONTAINER_SOURCE_TYPE, CONTAINER_TYPE } from '@/src/types/deployments/containers';
+import {
+  CONTAINER_STATUS,
+  CONTAINER_SOURCE_TYPE,
+  CONTAINER_TYPE,
+  INFERENCE_TASK,
+} from '@/src/types/deployments/containers';
+
+describe('isModelCapableContainer', () => {
+  const container = (inferenceTask?: INFERENCE_TASK): Container =>
+    ({ name: 'c', $type: CONTAINER_TYPE.HF, inferenceTask }) as Container;
+
+  test('allows TEXT_GENERATION', () => {
+    expect(isModelCapableContainer(container(INFERENCE_TASK.TEXT_GENERATION))).toBe(true);
+  });
+
+  test('allows containers without an inferenceTask (e.g. NIM)', () => {
+    expect(isModelCapableContainer(container(undefined))).toBe(true);
+  });
+
+  test('rejects TEXT_CLASSIFICATION', () => {
+    expect(isModelCapableContainer(container(INFERENCE_TASK.TEXT_CLASSIFICATION))).toBe(false);
+  });
+
+  test('rejects NONE', () => {
+    expect(isModelCapableContainer(container(INFERENCE_TASK.NONE))).toBe(false);
+  });
+});
 
 describe('isValidSourceField', () => {
   describe('MCP_REGISTRY source type', () => {

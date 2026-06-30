@@ -33,6 +33,12 @@ export enum CreateSteps {
   PROPERTIES = 'properties',
 }
 
+export enum INFERENCE_TASK {
+  TEXT_GENERATION = 'TEXT_GENERATION',
+  TEXT_CLASSIFICATION = 'TEXT_CLASSIFICATION',
+  NONE = 'NONE',
+}
+
 export enum CONTAINER_SOURCE_TYPE {
   INTERNAL_IMAGE = 'internal_image',
   IMAGE_REFERENCE = 'image_reference',

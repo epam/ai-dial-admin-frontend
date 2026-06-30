@@ -39,7 +39,7 @@ import { Image } from '@/src/models/deployments/images';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { CONTAINER_STATUS, CONTAINER_TRANSPORT } from '@/src/types/deployments/containers';
+import { CONTAINER_STATUS, CONTAINER_TRANSPORT, INFERENCE_TASK } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 import {
   getAssetTemplate,
@@ -65,6 +65,8 @@ export interface ContainersButtonsWrapperProps {
   onSave: () => void;
   createEntity?: (entity: BaseEntity) => Promise<ServerActionResponse>;
   createEntityAsAsset?: (entity: AssetToolset) => Promise<ServerActionResponse>;
+  createToolset?: (entity: BaseEntity) => Promise<ServerActionResponse>;
+  toolsetNames?: string[];
 }
 
 const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
@@ -79,7 +81,9 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
   children,
   createEntity,
   createEntityAsAsset,
+  createToolset,
   entityNames,
+  toolsetNames,
   transport,
 }) => {
   const t = useI18n();
@@ -179,6 +183,18 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
     onDiscard?.();
   }, [dispatch, onDiscard]);
 
+  // On the Model-Serving page the backend-detected capability decides what gets created:
+  // text-classification -> MCP toolset, text-generation/absent -> model, NONE -> nothing.
+  const isModelServing = route === ApplicationRoute.ModelServings;
+  const isClassificationToolset =
+    isModelServing && container.inferenceTask === INFERENCE_TASK.TEXT_CLASSIFICATION && !!createToolset;
+  const isCapabilityBlocked = isModelServing && container.inferenceTask === INFERENCE_TASK.NONE;
+
+  const activeCreateEntity = isClassificationToolset ? createToolset : createEntity;
+  const createEntityRoute = isClassificationToolset ? ApplicationRoute.Toolsets : getEntityRoute(route);
+  const createEntityNames = isClassificationToolset ? (toolsetNames ?? []) : (entityNames ?? []);
+  const createLabelEntity = isClassificationToolset ? t(EntitiesI18nKey.Toolset) : getTranslatedEntity(route, t);
+
   return (
     <>
       <div className={containerClassNames}>
@@ -195,7 +211,7 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
           <div className="flex flex-row items-center w-full gap-x-4">
             {!jsonConfiguration.isEditorEnabled && (
               <div className="flex flex-row gap-3">
-                {createEntity && container.status === CONTAINER_STATUS.RUNNING && (
+                {activeCreateEntity && container.status === CONTAINER_STATUS.RUNNING && !isCapabilityBlocked && (
                   <>
                     {route === ApplicationRoute.McpContainers ? (
                       <DialButtonDropdown
@@ -208,7 +224,7 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
                     ) : (
                       <DialNeutralButton
                         className={buttonsClassNames}
-                        label={t(CreateI18nKey.CreateEntity, { entity: getTranslatedEntity(route, t) })}
+                        label={t(CreateI18nKey.CreateEntity, { entity: createLabelEntity })}
                         iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
                         onClick={onOpenCreateModal}
                         disabled={!isValid}
@@ -265,14 +281,14 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
         )}
       {isModalOpen &&
         modalType === ModalType.createEntity &&
-        createEntity &&
+        activeCreateEntity &&
         createPortal(
           <CreateEntity
-            route={getEntityRoute(route)}
+            route={createEntityRoute}
             isModalOpen={isModalOpen}
-            names={entityNames ?? []}
+            names={createEntityNames}
             onClose={onCloseModal}
-            createEntity={createEntity}
+            createEntity={activeCreateEntity}
             initialValues={getEntityTemplate(route, container, t, transport)}
           />,
           document.body,

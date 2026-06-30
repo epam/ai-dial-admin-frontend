@@ -6,8 +6,21 @@ import { Toolset } from '@/src/models/dial/toolset';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialApplication } from '@/src/models/dial/application';
 import { Container } from '@/src/models/deployments/containers';
+import { INFERENCE_TASK } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getEndpointPostfix, getEndpointPrefix } from '@/src/utils/models/model-endpoint';
+
+/**
+ * A container can back a chat-completion Model only when its backend-detected capability allows it.
+ * Inference containers carry an explicit `inferenceTask`; an explicit NONE (incapable) or
+ * TEXT_CLASSIFICATION (an MCP toolset, not a model) is excluded. Containers without the field
+ * (e.g. NIM) are unaffected and remain selectable.
+ */
+export const isModelCapableContainer = (container: Container): boolean => {
+  return (
+    container.inferenceTask !== INFERENCE_TASK.NONE && container.inferenceTask !== INFERENCE_TASK.TEXT_CLASSIFICATION
+  );
+};
 
 export const isDialApplication = (
   entity: DialModel | DialInterceptor | Toolset | DialAdapter | DialApplication,
