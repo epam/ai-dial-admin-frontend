@@ -23,7 +23,6 @@ const PublicationInfoHeader: FC<Props> = ({ entity, view, conversationVersion })
   const t = useI18n();
   const createdAt = useLocalDateTimeString(entity?.createdAt);
   const indicatorClassName = classNames('flex w-2 h-2 mr-1 rounded no-user-select', getActionClassName(entity?.action));
-  const resolvedConversationVersion = conversationVersion || undefined;
 
   return (
     <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-primary">
@@ -42,9 +41,7 @@ const PublicationInfoHeader: FC<Props> = ({ entity, view, conversationVersion })
       {view === ApplicationRoute.ToolsetPublications && (
         <AuthHeader toolset={(entity as ToolsetPublication).toolSetResources?.[0].toolSetResource as Toolset} />
       )}
-      {resolvedConversationVersion && (
-        <LabelledText label={t(EntityFieldsI18nKey.version)} text={resolvedConversationVersion} />
-      )}
+      {conversationVersion && <LabelledText label={t(EntityFieldsI18nKey.version)} text={conversationVersion} />}
     </div>
   );
 };

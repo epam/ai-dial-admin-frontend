@@ -8,7 +8,7 @@ import { getAgentLinkForConversation } from '@/src/components/Assets/utils';
 import ExpandableText from '@/src/components/Common/ExpandableText/ExpandableText';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import { BasicI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { DialConversation } from '@/src/models/dial/conversation';
 
@@ -60,7 +60,7 @@ const Properties: FC<Props> = ({ selectedConversation, conversations, onConversa
   return (
     <div className="size-full flex flex-col gap-y-8">
       {isMultiConversation ? (
-        <LabelledText label={t(EntityFieldsI18nKey.name)}>
+        <LabelledText label={t(EntityFieldsI18nKey.name)} className={STANDARD_CONTROL_WIDTH}>
           <DialSelect
             options={conversationOptions}
             value={selectedConversation.name as string}
@@ -69,7 +69,7 @@ const Properties: FC<Props> = ({ selectedConversation, conversations, onConversa
         </LabelledText>
       ) : (
         selectedConversation.name && (
-          <LabelledText label={t(EntityFieldsI18nKey.name)}>
+          <LabelledText label={t(EntityFieldsI18nKey.name)} className={STANDARD_CONTROL_WIDTH}>
             <DialTooltip tooltip={selectedConversation.name}>{selectedConversation.name}</DialTooltip>
           </LabelledText>
         )
