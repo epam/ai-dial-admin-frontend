@@ -1,6 +1,6 @@
 {
   "name": "@dial/source",
-  "version": "0.18.0-rc.1",
+  "version": "0.18.0-rc.2",
   "license": "Apache-2.0",
   "scripts": {
     "start": "nx serve ai-dial-admin",
