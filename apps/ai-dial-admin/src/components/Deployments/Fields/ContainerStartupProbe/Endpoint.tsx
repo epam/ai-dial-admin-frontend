@@ -139,15 +139,16 @@ const Endpoint: FC<Props> = ({ container, setContainer, disabled }) => {
   }, [container.probeProperties?.probe?.port, dispatch, resetCounter, t]);
 
   useEffect(() => {
+    const isHttpGet = container.probeProperties?.probe?.$type === PROBE_TYPE.HTTP_GET;
     if (
       resetCounter ||
       (container.probeProperties?.probe?.path != null && container.probeProperties?.probe?.path.length > 0)
     ) {
-      const error = getPathError(container.probeProperties?.probe?.path as string, t);
+      const error = getPathError(container.probeProperties?.probe?.path as string, t, isHttpGet);
       setPathError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'path', isValid: !error });
     }
-  }, [container.probeProperties?.probe?.path, dispatch, resetCounter, t]);
+  }, [container.probeProperties?.probe?.$type, container.probeProperties?.probe?.path, dispatch, resetCounter, t]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -164,7 +165,7 @@ const Endpoint: FC<Props> = ({ container, setContainer, disabled }) => {
         />
         <DialNumberInput
           id="port"
-          labelProps={{ label: t(EntityFieldsI18nKey.Port) }}
+          labelProps={{ label: t(EntityFieldsI18nKey.Port), required: true }}
           caption={!portError ? t(EntityCaptionsI18nKey.ProbePort) : ''}
           placeholder={t(EntityPlaceholdersI18nKey.Port)}
           value={container.probeProperties?.probe?.port}
@@ -177,7 +178,7 @@ const Endpoint: FC<Props> = ({ container, setContainer, disabled }) => {
         {container.probeProperties?.probe?.$type === PROBE_TYPE.HTTP_GET && (
           <DialInput
             id="path"
-            labelProps={{ label: t(EntityFieldsI18nKey.Path) }}
+            labelProps={{ label: t(EntityFieldsI18nKey.Path), required: true }}
             caption={!pathError ? t(EntityCaptionsI18nKey.ProbePath) : ''}
             placeholder={t(EntityPlaceholdersI18nKey.Path)}
             value={container.probeProperties?.probe?.path}
