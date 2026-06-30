@@ -52,7 +52,7 @@ const DeploymentProperties: FC<Props> = ({
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { dispatch } = useSaveValidationContext();
-  const { featureFlags } = useAppContext();
+  const { featureFlags, codeAppEditorUrl } = useAppContext();
   const [displayNameError, setDisplayNameError] = useState<string | undefined>(void 0);
 
   const namesConfiguration = useMemo(() => {
@@ -172,6 +172,7 @@ const DeploymentProperties: FC<Props> = ({
           getContainers={getApplicationContainers}
           isEntityImmutable={isEntityImmutable}
           isModal={isModal}
+          codeAppEditorUrl={codeAppEditorUrl}
         />
       )}
 

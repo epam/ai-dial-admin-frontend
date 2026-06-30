@@ -26,6 +26,7 @@ interface Props {
   isModal?: boolean;
   disabled?: boolean;
   prefix?: string;
+  isCodeApp?: boolean;
 }
 
 const getCheckboxStatesFromEntity = (
@@ -38,7 +39,15 @@ const getCheckboxStatesFromEntity = (
     : !!entity?.mcp,
 });
 
-const ApplicationEndpoint: FC<Props> = ({ entity, onChange, isEntityImmutable, isModal, disabled, prefix }) => {
+const ApplicationEndpoint: FC<Props> = ({
+  entity,
+  onChange,
+  isEntityImmutable,
+  isModal,
+  disabled,
+  prefix,
+  isCodeApp,
+}) => {
   const t = useI18n();
   const isContainerMode = !!prefix;
   const versionKey = `${(entity as { path?: string }).path ?? ''}@${(entity as { version?: string }).version ?? ''}`;
@@ -155,136 +164,142 @@ const ApplicationEndpoint: FC<Props> = ({ entity, onChange, isEntityImmutable, i
 
   return (
     <div className="h-full flex flex-col gap-y-8">
-      <div className="flex flex-col w-full gap-8 border border-primary rounded p-4">
-        <div className="flex flex-col w-full gap-4">
-          <DialCheckbox
-            checked={isContainerMode ? true : checkboxStates[ApplicationEndpointCheckbox.CHAT_ENDPOINT]}
-            label={t(SourceI18nKey.ChatEndpoint)}
-            id={ApplicationEndpointCheckbox.CHAT_ENDPOINT}
-            onChange={toggleCheckbox}
-            disabled={
-              isContainerMode
-                ? true
-                : disabled ||
-                  (checkboxStates[ApplicationEndpointCheckbox.CHAT_ENDPOINT] &&
-                    !checkboxStates[ApplicationEndpointCheckbox.MCP_ENDPOINT])
-            }
-          />
+      {!isCodeApp && (
+        <div className="flex flex-col w-full gap-8 border border-primary rounded p-4">
+          <div className="flex flex-col w-full gap-4">
+            <DialCheckbox
+              checked={isContainerMode ? true : checkboxStates[ApplicationEndpointCheckbox.CHAT_ENDPOINT]}
+              label={t(SourceI18nKey.ChatEndpoint)}
+              id={ApplicationEndpointCheckbox.CHAT_ENDPOINT}
+              onChange={toggleCheckbox}
+              disabled={
+                isContainerMode
+                  ? true
+                  : disabled ||
+                    (checkboxStates[ApplicationEndpointCheckbox.CHAT_ENDPOINT] &&
+                      !checkboxStates[ApplicationEndpointCheckbox.MCP_ENDPOINT])
+              }
+            />
 
-          {(isContainerMode || checkboxStates[ApplicationEndpointCheckbox.CHAT_ENDPOINT]) && (
-            <div className="w-full pl-6">
-              <div
-                className={classNames(
-                  isContainerMode ? CONTROL_WITH_BUTTON_WIDTH : CONTROL_WIDTH,
-                  'flex flex-col gap-y-2',
-                )}
-              >
+            {(isContainerMode || checkboxStates[ApplicationEndpointCheckbox.CHAT_ENDPOINT]) && (
+              <div className="w-full pl-6">
+                <div
+                  className={classNames(
+                    isContainerMode ? CONTROL_WITH_BUTTON_WIDTH : CONTROL_WIDTH,
+                    'flex flex-col gap-y-2',
+                  )}
+                >
+                  {isContainerMode ? (
+                    <ComplexInput
+                      id="endpoint"
+                      label={t(EntityFieldsI18nKey.completionEndpoint)}
+                      prefix={prefix}
+                      value={entity.source?.completionEndpointPath || ''}
+                      fullValue={`${prefix}${entity.source?.completionEndpointPath || ''}`}
+                      onChange={onChangeChatPath}
+                      isFullWidth={!isEntityImmutable}
+                      disabled={disabled}
+                      placeholder=""
+                    />
+                  ) : (
+                    <>
+                      <EndpointControl
+                        label={t(EntityFieldsI18nKey.completionEndpoint)}
+                        id="endpoint"
+                        placeholder={t(EntityPlaceholdersI18nKey.CompletionEndpoint)}
+                        required
+                        disabled={disabled}
+                        endpoint={entity?.endpoint}
+                        onChange={onChangeEndpoint}
+                        isFullWidth={!isEntityImmutable}
+                        isModal={isModal}
+                      />
+                      <EndpointControl
+                        label={t(EntityFieldsI18nKey.responsesEndpoint)}
+                        id="responsesEndpoint"
+                        placeholder={t(EntityPlaceholdersI18nKey.ResponsesEndpoint)}
+                        disabled={disabled}
+                        endpoint={entity?.responsesEndpoint}
+                        onChange={(responsesEndpoint) => onChange({ ...entity, responsesEndpoint })}
+                        isFullWidth={!isEntityImmutable}
+                        isModal={isModal}
+                      />
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col w-full gap-4">
+            <DialCheckbox
+              checked={checkboxStates[ApplicationEndpointCheckbox.MCP_ENDPOINT]}
+              label={t(SourceI18nKey.McpEndpoint)}
+              id={ApplicationEndpointCheckbox.MCP_ENDPOINT}
+              onChange={toggleCheckbox}
+              disabled={
+                isContainerMode
+                  ? disabled
+                  : disabled ||
+                    (checkboxStates[ApplicationEndpointCheckbox.MCP_ENDPOINT] &&
+                      !checkboxStates[ApplicationEndpointCheckbox.CHAT_ENDPOINT])
+              }
+            />
+
+            {checkboxStates[ApplicationEndpointCheckbox.MCP_ENDPOINT] && (
+              <div className="h-full flex flex-col gap-y-4 pl-6">
                 {isContainerMode ? (
                   <ComplexInput
-                    id="endpoint"
-                    label={t(EntityFieldsI18nKey.completionEndpoint)}
+                    id="mcp_endpoint"
+                    label={t(EntityFieldsI18nKey.endpoint)}
                     prefix={prefix}
-                    value={entity.source?.completionEndpointPath || ''}
-                    fullValue={`${prefix}${entity.source?.completionEndpointPath || ''}`}
-                    onChange={onChangeChatPath}
+                    value={entity.source?.mcpEndpointPath || ''}
+                    fullValue={`${prefix}${entity.source?.mcpEndpointPath || ''}`}
+                    onChange={onChangeMcpPath}
                     isFullWidth={!isEntityImmutable}
                     disabled={disabled}
                     placeholder=""
                   />
                 ) : (
-                  <>
+                  <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-row gap-x-2')}>
                     <EndpointControl
-                      label={t(EntityFieldsI18nKey.completionEndpoint)}
-                      id="endpoint"
-                      placeholder={t(EntityPlaceholdersI18nKey.CompletionEndpoint)}
+                      label={t(EntityFieldsI18nKey.endpoint)}
+                      id="mcp_endpoint"
+                      placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
                       required
                       disabled={disabled}
-                      endpoint={entity?.endpoint}
-                      onChange={onChangeEndpoint}
+                      endpoint={entity.mcp?.endpoint}
+                      onChange={onChangeMCPEndpoint}
                       isFullWidth={!isEntityImmutable}
                       isModal={isModal}
                     />
-                    <EndpointControl
-                      label={t(EntityFieldsI18nKey.responsesEndpoint)}
-                      id="responsesEndpoint"
-                      placeholder={t(EntityPlaceholdersI18nKey.ResponsesEndpoint)}
-                      disabled={disabled}
-                      endpoint={entity?.responsesEndpoint}
-                      onChange={(responsesEndpoint) => onChange({ ...entity, responsesEndpoint })}
-                      isFullWidth={!isEntityImmutable}
-                      isModal={isModal}
-                    />
-                  </>
+                  </div>
                 )}
-              </div>
-            </div>
-          )}
-        </div>
 
-        <div className="flex flex-col w-full gap-4">
-          <DialCheckbox
-            checked={checkboxStates[ApplicationEndpointCheckbox.MCP_ENDPOINT]}
-            label={t(SourceI18nKey.McpEndpoint)}
-            id={ApplicationEndpointCheckbox.MCP_ENDPOINT}
-            onChange={toggleCheckbox}
-            disabled={
-              isContainerMode
-                ? disabled
-                : disabled ||
-                  (checkboxStates[ApplicationEndpointCheckbox.MCP_ENDPOINT] &&
-                    !checkboxStates[ApplicationEndpointCheckbox.CHAT_ENDPOINT])
-            }
-          />
-
-          {checkboxStates[ApplicationEndpointCheckbox.MCP_ENDPOINT] && (
-            <div className="h-full flex flex-col gap-y-4 pl-6">
-              {isContainerMode ? (
-                <ComplexInput
-                  id="mcp_endpoint"
-                  label={t(EntityFieldsI18nKey.endpoint)}
-                  prefix={prefix}
-                  value={entity.source?.mcpEndpointPath || ''}
-                  fullValue={`${prefix}${entity.source?.mcpEndpointPath || ''}`}
-                  onChange={onChangeMcpPath}
-                  isFullWidth={!isEntityImmutable}
-                  disabled={disabled}
-                  placeholder=""
+                <DialSelectField
+                  id="transport"
+                  value={ONLY_HTTP_TRANSPORTS[0].value}
+                  options={ONLY_HTTP_TRANSPORTS}
+                  containerClassName="max-w-[160px]"
+                  label={t(EntityFieldsI18nKey.Transport)}
+                  onChange={onChangeMCPTransport}
+                  disabled
                 />
-              ) : (
-                <div className={classNames(CONTROL_WITH_BUTTON_WIDTH, 'flex flex-row gap-x-2')}>
-                  <EndpointControl
-                    label={t(EntityFieldsI18nKey.endpoint)}
-                    id="mcp_endpoint"
-                    placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
-                    required
-                    disabled={disabled}
-                    endpoint={entity.mcp?.endpoint}
-                    onChange={onChangeMCPEndpoint}
-                    isFullWidth={!isEntityImmutable}
-                    isModal={isModal}
-                  />
-                </div>
-              )}
-
-              <DialSelectField
-                id="transport"
-                value={ONLY_HTTP_TRANSPORTS[0].value}
-                options={ONLY_HTTP_TRANSPORTS}
-                containerClassName="max-w-[160px]"
-                label={t(EntityFieldsI18nKey.Transport)}
-                onChange={onChangeMCPTransport}
-                disabled
-              />
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
-      {isEntityImmutable && (
+      {isEntityImmutable && !isCodeApp && (
         <>
           <ViewerUrlControl endpoint={entity.viewerUrl} disabled={disabled} onChange={onChangeViewerUrl} />
           <EditorUrlControl endpoint={entity.editorUrl} disabled={disabled} onChange={onChangeEditorUrl} />
         </>
+      )}
+
+      {isCodeApp && (
+        <EditorUrlControl isFullWidth={isModal} endpoint={entity.editorUrl} disabled onChange={onChangeEditorUrl} />
       )}
     </div>
   );

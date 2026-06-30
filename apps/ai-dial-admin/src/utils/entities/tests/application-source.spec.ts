@@ -2,7 +2,14 @@ import { describe, expect, test } from 'vitest';
 
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { ApplicationSourceType } from '@/src/models/dial/application';
-import { createSchemaSource, ENDPOINTS_SOURCE, getSchemaSourceId, SCHEMA_SOURCE } from '../application-source';
+import {
+  createCodeAppFields,
+  createSchemaSource,
+  ENDPOINTS_SOURCE,
+  getSchemaSourceId,
+  isCodeAppSource,
+  SCHEMA_SOURCE,
+} from '../application-source';
 
 describe('getSchemaSourceId', () => {
   test('returns undefined for undefined input', () => {
@@ -60,5 +67,52 @@ describe('createSchemaSource', () => {
 
   test('round-trips through getSchemaSourceId', () => {
     expect(getSchemaSourceId(createSchemaSource('urn:app:456'))).toBe('urn:app:456');
+  });
+});
+
+describe('isCodeAppSource', () => {
+  const url = 'https://code-app.example.com';
+
+  test('returns true when endpoints source endpoint and editorUrl match the configured url', () => {
+    expect(isCodeAppSource({ source: { $type: SOURCE_TYPE.ENDPOINTS }, endpoint: url, editorUrl: url }, url)).toBe(
+      true,
+    );
+  });
+
+  test('returns false when no configured url is provided', () => {
+    expect(
+      isCodeAppSource({ source: { $type: SOURCE_TYPE.ENDPOINTS }, endpoint: url, editorUrl: url }, undefined),
+    ).toBe(false);
+  });
+
+  test('returns false when source type is not endpoints', () => {
+    expect(isCodeAppSource({ source: { $type: SOURCE_TYPE.SCHEMA }, endpoint: url, editorUrl: url }, url)).toBe(false);
+  });
+
+  test('returns false when endpoint does not match', () => {
+    expect(isCodeAppSource({ source: { $type: SOURCE_TYPE.ENDPOINTS }, endpoint: 'other', editorUrl: url }, url)).toBe(
+      false,
+    );
+  });
+
+  test('returns false when editorUrl does not match', () => {
+    expect(isCodeAppSource({ source: { $type: SOURCE_TYPE.ENDPOINTS }, endpoint: url, editorUrl: 'other' }, url)).toBe(
+      false,
+    );
+  });
+
+  test('returns false for undefined entity', () => {
+    expect(isCodeAppSource(undefined, url)).toBe(false);
+  });
+});
+
+describe('createCodeAppFields', () => {
+  test('builds endpoints source with endpoint and editorUrl set to the configured url', () => {
+    const url = 'https://code-app.example.com';
+    expect(createCodeAppFields(url)).toEqual({
+      source: { $type: SOURCE_TYPE.ENDPOINTS },
+      endpoint: url,
+      editorUrl: url,
+    });
   });
 });

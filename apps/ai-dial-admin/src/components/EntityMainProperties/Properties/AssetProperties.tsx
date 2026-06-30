@@ -8,6 +8,7 @@ import SourceField from '@/src/components/SourceField/SourceField';
 import { ASSET_APPLICATION_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
 import ToolsetEndpoint from '@/src/components/SourceField/Endpoints/ToolsetEndpoint';
 import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { useAppContext } from '@/src/context/AppContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
@@ -42,6 +43,7 @@ const AssetProperties: FC<Props> = ({
 }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
+  const { codeAppEditorUrl } = useAppContext();
 
   const [versionError, setVersionError] = useState<string | undefined>(void 0);
 
@@ -108,6 +110,7 @@ const AssetProperties: FC<Props> = ({
           isEntityImmutable={isEntityImmutable}
           onChange={onChangeEntity}
           isModal={isModal}
+          codeAppEditorUrl={codeAppEditorUrl}
         />
       )}
       {view === ApplicationRoute.AssetsToolsets && !isEntityImmutable && (

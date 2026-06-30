@@ -13,6 +13,7 @@ import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { getApplicationContainers } from '@/src/app/actions/deployments';
 import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
 import { EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { ChatEntity } from '@/src/models/dial/base-entity';
@@ -28,6 +29,7 @@ interface Props {
 
 const EntityProperties: FC<Props> = ({ runners, view, ...props }) => {
   const t = useI18n();
+  const { codeAppEditorUrl } = useAppContext();
 
   const application = props.entity as DialApplication;
 
@@ -62,6 +64,7 @@ const EntityProperties: FC<Props> = ({ runners, view, ...props }) => {
         runners={runners}
         getContainers={getApplicationContainers}
         isEntityImmutable={true}
+        codeAppEditorUrl={codeAppEditorUrl}
       />
       <EntityAttachments {...props} />
       <Defaults

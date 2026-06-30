@@ -285,6 +285,32 @@ describe('Formatters :: sourceTypeFormatter', () => {
   test('formats source type for unknown type', () => {
     expect(sourceTypeFormatter('UNKNOWN' as SOURCE_TYPE, t)).toBe('UNKNOWN');
   });
+
+  test('formats source type as Code App when endpoint and editorUrl match the configured url', () => {
+    const url = 'https://code-app.example.com';
+    expect(
+      sourceTypeFormatter(
+        SOURCE_TYPE.ENDPOINTS,
+        t,
+        ApplicationRoute.Applications,
+        { source: { $type: SOURCE_TYPE.ENDPOINTS }, endpoint: url, editorUrl: url },
+        url,
+      ),
+    ).toBe(SourceI18nKey.CodeApp);
+  });
+
+  test('keeps Endpoint label when editorUrl does not match the configured url', () => {
+    const url = 'https://code-app.example.com';
+    expect(
+      sourceTypeFormatter(
+        SOURCE_TYPE.ENDPOINTS,
+        t,
+        ApplicationRoute.Applications,
+        { source: { $type: SOURCE_TYPE.ENDPOINTS }, endpoint: url, editorUrl: 'other' },
+        url,
+      ),
+    ).toBe(SourceI18nKey.Endpoint);
+  });
 });
 
 describe('formatRequired', () => {

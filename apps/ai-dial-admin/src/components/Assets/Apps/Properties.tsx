@@ -16,6 +16,7 @@ import SourceField from '@/src/components/SourceField/SourceField';
 import { ASSET_APPLICATION_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
 import { getSchemaSourceId } from '@/src/utils/entities/application-source';
 import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { useAppContext } from '@/src/context/AppContext';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
@@ -33,6 +34,7 @@ interface Props {
 const ApplicationAssetProperties: FC<Props> = ({ asset, runners, onChange, isPublication }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  const { codeAppEditorUrl } = useAppContext();
 
   const assetApp = asset as AssetApp;
 
@@ -91,6 +93,7 @@ const ApplicationAssetProperties: FC<Props> = ({ asset, runners, onChange, isPub
         onChange={onChange as (entity: DialApplication) => void}
         runners={runners}
         isEntityImmutable={true}
+        codeAppEditorUrl={codeAppEditorUrl}
       />
       <EntityAttachments
         entity={asset as DialApplication}
