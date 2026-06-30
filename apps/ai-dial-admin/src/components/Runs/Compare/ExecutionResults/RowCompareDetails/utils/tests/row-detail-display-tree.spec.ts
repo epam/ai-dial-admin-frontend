@@ -87,10 +87,7 @@ describe('applyRowDetailDisplayTree', () => {
 
   test('filters out hidden fields and reorders remaining', () => {
     const tree = buildRowDetailDisplayTree(sections);
-    (tree[0] as ColDefGroup).children = [
-      getChildren(tree[0])[1],
-      { ...getChildren(tree[0])[0], hide: true },
-    ];
+    (tree[0] as ColDefGroup).children = [getChildren(tree[0])[1], { ...getChildren(tree[0])[0], hide: true }];
 
     const result = applyRowDetailDisplayTree(sections, tree);
 

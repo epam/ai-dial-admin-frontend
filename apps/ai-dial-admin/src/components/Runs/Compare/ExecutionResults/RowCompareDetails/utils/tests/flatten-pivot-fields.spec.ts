@@ -1,6 +1,9 @@
 import { describe, expect, test } from 'vitest';
 
-import { CompareRowDetailField, CompareRowDetailSection } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/models';
+import {
+  CompareRowDetailField,
+  CompareRowDetailSection,
+} from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/models';
 import { flattenPivotFields } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/flatten-pivot-fields';
 import { MetricDeltaKind } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
 
