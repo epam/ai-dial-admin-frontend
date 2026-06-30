@@ -58,22 +58,18 @@ const Properties: FC<Props> = ({ selectedConversation, conversations, onConversa
   }, []);
 
   return (
-    <div className="size-full flex flex-col gap-y-8">
-      {isMultiConversation ? (
-        <LabelledText label={t(EntityFieldsI18nKey.name)} className={STANDARD_CONTROL_WIDTH}>
+    <div className={`size-full flex flex-col gap-y-8 ${STANDARD_CONTROL_WIDTH}`}>
+      <LabelledText label={t(EntityFieldsI18nKey.name)}>
+        {isMultiConversation ? (
           <DialSelect
             options={conversationOptions}
             value={selectedConversation.name as string}
             onChange={(v) => onSelectConversation(v as string)}
           />
-        </LabelledText>
-      ) : (
-        selectedConversation.name && (
-          <LabelledText label={t(EntityFieldsI18nKey.name)} className={STANDARD_CONTROL_WIDTH}>
-            <DialTooltip tooltip={selectedConversation.name}>{selectedConversation.name}</DialTooltip>
-          </LabelledText>
-        )
-      )}
+        ) : (
+          <DialTooltip tooltip={selectedConversation.name}>{selectedConversation.name}</DialTooltip>
+        )}
+      </LabelledText>
 
       <LabelledText label={t(EntityFieldsI18nKey.agent)}>
         <div className="flex flex-row gap-1 items-center">
