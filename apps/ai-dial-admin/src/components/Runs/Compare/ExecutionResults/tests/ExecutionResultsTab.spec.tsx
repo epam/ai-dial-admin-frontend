@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -30,15 +30,23 @@ const defaultDisplayPanelProps = {
   onToggleDisplayPanel: vi.fn(),
 };
 
+const defaultRowDetailProps = {
+  selectedRow: null,
+  onOpenRowDetail: vi.fn(),
+};
+
 const renderExecutionResultsTab = (props: Partial<React.ComponentProps<typeof ExecutionResultsTab>> = {}) =>
   render(
-    <ExecutionResultsTab
-      primaryRunId="run-1"
-      comparedRunId="run-sibling"
-      {...defaultRunProps}
-      {...defaultDisplayPanelProps}
-      {...props}
-    />,
+    <div className="w-[1200px] h-[600px] flex flex-col">
+      <ExecutionResultsTab
+        primaryRunId="run-1"
+        comparedRunId="run-sibling"
+        {...defaultRunProps}
+        {...defaultDisplayPanelProps}
+        {...defaultRowDetailProps}
+        {...props}
+      />
+    </div>,
   );
 
 describe('ExecutionResultsTab', () => {
@@ -46,6 +54,7 @@ describe('ExecutionResultsTab', () => {
     getRunMock.mockReset();
     getTestCaseRunResultsMock.mockReset();
     defaultDisplayPanelProps.onToggleDisplayPanel.mockReset();
+    defaultRowDetailProps.onOpenRowDetail.mockReset();
     getRunMock.mockImplementation((id: string) =>
       Promise.resolve({
         id,
@@ -188,5 +197,26 @@ describe('ExecutionResultsTab', () => {
       expect(document.querySelector('[col-id="http"]')).not.toBeInTheDocument();
       expect(document.querySelector('[col-id="cmp_http"]')).not.toBeInTheDocument();
     });
+  });
+
+  test('calls onOpenRowDetail when eye button is clicked', async () => {
+    const onOpenRowDetail = vi.fn();
+
+    renderExecutionResultsTab({ onOpenRowDetail });
+
+    let eyeButton: HTMLButtonElement | null = null;
+    await waitFor(() => {
+      eyeButton = document.querySelector('.ag-pinned-right-cols-container [col-id="compare_action"] button');
+      expect(eyeButton).toBeTruthy();
+    });
+
+    fireEvent.click(eyeButton!);
+
+    expect(onOpenRowDetail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'result-1',
+        testCaseName: 'Test Case 1',
+      }),
+    );
   });
 });

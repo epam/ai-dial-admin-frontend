@@ -19,7 +19,7 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { Publication, ToolsetPublication } from '@/src/models/dial/publications';
+import { FilePublication, PromptPublication, Publication, ToolsetPublication } from '@/src/models/dial/publications';
 import { DialRule } from '@/src/models/dial/rule';
 import { Toolset, ToolsetAuthType } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -154,14 +154,25 @@ const PublicationView = <T extends Publication>({ view, publication, application
     req.then((res) => {
       if (res.success) {
         dispatch({ type: ValidationActionType.Reset });
-        showNotification(
-          getSuccessNotification(
-            getUpdateNotificationTitle(view, t),
-            getUpdateNotificationDescription(view, publication.requestName, t),
-          ),
-        );
-        setAddedFiles([]);
-        router.refresh();
+
+        const shouldRedirectToListView =
+          (view === ApplicationRoute.PromptPublications &&
+            (correctedPublication as unknown as PromptPublication).prompts?.length === 0) ||
+          (view === ApplicationRoute.FilePublications &&
+            (correctedPublication as unknown as FilePublication).files?.length === 0);
+
+        if (shouldRedirectToListView) {
+          router.push(view);
+        } else {
+          showNotification(
+            getSuccessNotification(
+              getUpdateNotificationTitle(view, t),
+              getUpdateNotificationDescription(view, publication.requestName, t),
+            ),
+          );
+          setAddedFiles([]);
+          router.refresh();
+        }
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
