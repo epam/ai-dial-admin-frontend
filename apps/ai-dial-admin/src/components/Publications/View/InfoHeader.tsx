@@ -7,7 +7,7 @@ import { AuthHeader } from '@/src/components/Toolsets/Auth/Sections/AuthHeader';
 import { EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { ACTION_I18N_KEYS } from '@/src/constants/publications';
 import { useI18n } from '@/src/locales/client';
-import { ConversationPublication, Publication, ToolsetPublication } from '@/src/models/dial/publications';
+import { Publication, ToolsetPublication } from '@/src/models/dial/publications';
 import { Toolset } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { useLocalDateTimeString } from '@/src/hooks/use-local-date-time-string';
@@ -16,16 +16,13 @@ import { getActionClassName } from '@/src/utils/publications';
 interface Props {
   entity: Publication;
   view: ApplicationRoute;
+  conversationVersion?: string;
 }
 
-const PublicationInfoHeader: FC<Props> = ({ entity, view }) => {
+const PublicationInfoHeader: FC<Props> = ({ entity, view, conversationVersion }) => {
   const t = useI18n();
   const createdAt = useLocalDateTimeString(entity?.createdAt);
   const indicatorClassName = classNames('flex w-2 h-2 mr-1 rounded no-user-select', getActionClassName(entity?.action));
-  const conversationVersion =
-    view === ApplicationRoute.ConversationPublications
-      ? (entity as ConversationPublication)?.conversations?.[0]?.conversation?.version
-      : undefined;
 
   return (
     <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-primary">
