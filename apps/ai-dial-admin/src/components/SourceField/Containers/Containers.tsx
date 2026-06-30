@@ -6,7 +6,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import WarningIcon from '@/src/components/Common/WarningIcon/WarningIcon';
 import SelectContainerModal from '@/src/components/SourceField/Containers/SelectContainerModal';
 import Endpoints from '@/src/components/SourceField/Endpoints/Endpoints';
-import { buildContainerSelection, getContainerRoute } from '@/src/components/SourceField/utils';
+import {
+  buildContainerSelection,
+  getContainerRoute,
+  isModelCapableContainer,
+} from '@/src/components/SourceField/utils';
 import {
   ButtonsI18nKey,
   ContainersI18nKey,
@@ -97,14 +101,17 @@ const Containers = <T extends DialInterceptor | DialModel | DialApplication>({
       const containers = (await getReqRef.current(getContainers)).response as Container[] | null;
       if (containers?.length) {
         setCurrentContainer(containers.find((c) => c.name === entity.source?.containerId) ?? null);
-        setContainers(containers.filter((container) => container.status === 'running'));
+        const runningContainers = containers.filter((container) => container.status === 'running');
+        setContainers(
+          view === ApplicationRoute.Models ? runningContainers.filter(isModelCapableContainer) : runningContainers,
+        );
       }
     };
 
     fetchContainers().catch((error) =>
       showNotificationRef.current(getErrorNotification(error.errorHeader, error.errorMessage, error.requestId)),
     );
-  }, [entity.source?.containerId, getContainers]);
+  }, [entity.source?.containerId, getContainers, view]);
 
   useEffect(() => {
     setSelectedContainer(containers?.find((container) => container.name === entity.source?.containerId) || null);

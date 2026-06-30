@@ -17,8 +17,10 @@ import {
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntitiesI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
 import { getEndpointPostfix, getEndpointPrefix } from '@/src/utils/models/model-endpoint';
-import { CONTAINER_TRANSPORT, CONTAINER_TYPE } from '@/src/types/deployments/containers';
+import { CONTAINER_TRANSPORT, CONTAINER_TYPE, INFERENCE_TASK } from '@/src/types/deployments/containers';
 import { ENTITY_TRANSPORT } from '@/src/constants/deployments/containers';
+import { SOURCE_TYPE } from '@/src/components/SourceField/types';
+import { ToolsetTransport } from '@/src/types/toolset';
 import { DialModelType } from '@/src/models/dial/model';
 import { IMAGE_TYPE } from '@/src/types/deployments/images';
 import { Image } from '@/src/models/deployments/images';
@@ -159,6 +161,22 @@ describe('entity utils', () => {
       const template = getEntityTemplate(ApplicationRoute.ModelServings, container, t) as any;
       expect(template.type).toBe(DialModelType.Chat);
       expect(template.source.completionEndpointPath).toBe('openai/v1/chat');
+    });
+
+    test('builds a fixed MCP toolset template for a TEXT_CLASSIFICATION ModelServings container', () => {
+      const container = {
+        displayName: 'MyContainer',
+        name: '123',
+        $type: CONTAINER_TYPE.HF,
+        inferenceTask: INFERENCE_TASK.TEXT_CLASSIFICATION,
+      } as any;
+      const template = getEntityTemplate(ApplicationRoute.ModelServings, container, t) as any;
+      expect(template.transport).toBe(ToolsetTransport.HTTP);
+      expect(template.source.$type).toBe(SOURCE_TYPE.CONTAINER);
+      expect(template.source.containerId).toBe('123');
+      expect(template.source.mcpEndpointPath).toBe('/mcp');
+      expect(template.source.completionEndpointPath).toBeUndefined();
+      expect(template.type).toBeUndefined();
     });
 
     test('configures transport for McpContainers', () => {

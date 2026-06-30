@@ -4,6 +4,7 @@ import {
   CONTAINER_TYPE,
   ContainerResources,
   ContainerSource,
+  INFERENCE_TASK,
   KubEventType,
   PROBE_TYPE,
   SCALING_STRATEGY_TYPE,
@@ -27,6 +28,7 @@ export interface Container extends BaseEntity {
     envs?: EnvironmentVariable[];
   };
   modelFormat?: string;
+  inferenceTask?: INFERENCE_TASK;
   command?: string;
   args?: string;
   scaling?: Autoscaling;

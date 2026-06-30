@@ -42,7 +42,9 @@ interface Props {
   names: string[];
   createEntity?: (entity: DialModel | Toolset | DialInterceptor | DialApplication) => Promise<ServerActionResponse>;
   createEntityAsAsset?: (entity: AssetToolset) => Promise<ServerActionResponse>;
+  createToolset?: (entity: Toolset) => Promise<ServerActionResponse>;
   entityNames?: string[];
+  toolsetNames?: string[];
 }
 
 const ContainerView: FC<Props> = ({
@@ -51,7 +53,9 @@ const ContainerView: FC<Props> = ({
   route,
   createEntity,
   createEntityAsAsset,
+  createToolset,
   entityNames,
+  toolsetNames,
   ...props
 }) => {
   const t = useI18n();
@@ -299,7 +303,9 @@ const ContainerView: FC<Props> = ({
           jsonConfiguration={jsonConfiguration}
           createEntity={createEntity}
           createEntityAsAsset={createEntityAsAsset}
+          createToolset={createToolset}
           entityNames={entityNames}
+          toolsetNames={toolsetNames}
         />
 
         <div className="flex-1 overflow-auto min-h-0">

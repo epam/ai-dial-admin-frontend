@@ -1,7 +1,8 @@
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntitiesI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
 import { Container } from '@/src/models/deployments/containers';
-import { CONTAINER_TRANSPORT } from '@/src/types/deployments/containers';
+import { CONTAINER_TRANSPORT, INFERENCE_TASK } from '@/src/types/deployments/containers';
+import { ToolsetTransport } from '@/src/types/toolset';
 import { SOURCE_FIELD, SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { DialModel, DialModelType } from '@/src/models/dial/model';
 import { Toolset } from '@/src/models/dial/toolset';
@@ -139,6 +140,18 @@ export const getEntityTemplate = (
   };
 
   if (route === ApplicationRoute.ModelServings) {
+    // A text-classification serving is consumed as an MCP toolset, not a chat model. The backend
+    // exposes no endpoint/transport for it (spec 024 FR-006), so fill a fixed MCP template.
+    if (container.inferenceTask === INFERENCE_TASK.TEXT_CLASSIFICATION) {
+      (template as Toolset).transport = ToolsetTransport.HTTP;
+      template.source = {
+        $type: SOURCE_TYPE.CONTAINER,
+        containerId: container.name,
+        mcpEndpointPath: '/mcp',
+      };
+      return template;
+    }
+
     (template as DialModel).type = DialModelType.Chat;
     template.source = {
       ...(template.source as SOURCE_FIELD),
