@@ -51,7 +51,7 @@ const RouteProperties: FC<Props> = ({ route, disabled, isAppRoute, routeNames, o
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   // When true, all field-level validation is delegated to EntityRoutes aggregate key
-  const skipGlobalValidation = !!(isAppRoute && isAppRunnerView);
+  const skipGlobalValidation = !!isAppRoute;
 
   const outputRadio: RadioButtonWithContent[] = [
     { id: RouteOutput.UPSTREAMS, name: t(EntityFieldsI18nKey.upstreams) },

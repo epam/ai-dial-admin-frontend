@@ -1,5 +1,5 @@
 'use client';
-import { Dispatch, SetStateAction, useCallback } from 'react';
+import { Dispatch, SetStateAction, useCallback, useEffect, useState } from 'react';
 
 import ParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
 import Conversations from '@/src/components/Assets/Conversations/View/Conversations';
@@ -61,6 +61,17 @@ const TabsContent = <T extends Publication>({
 }: Props<T>) => {
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
+  const [selectedConversation, setSelectedConversation] = useState<DialConversation | undefined>(
+    () =>
+      (selectedPublication as ConversationPublication).conversations?.[0]?.conversation as DialConversation | undefined,
+  );
+
+  useEffect(() => {
+    setSelectedConversation(
+      (selectedPublication as ConversationPublication).conversations?.[0]?.conversation as DialConversation | undefined,
+    );
+  }, [selectedPublication]);
+
   const onChangeToolset = useCallback(
     (toolSetResource: DialApplicationResource) => {
       const updatedToolsets = [...((selectedPublication as ToolsetPublication).toolSetResources || [])];
@@ -77,7 +88,11 @@ const TabsContent = <T extends Publication>({
     <>
       {activeTab === EntityViewTab.Properties && (
         <div className="flex flex-col h-full">
-          <PublicationInfoHeader view={view} entity={selectedPublication} />
+          <PublicationInfoHeader
+            view={view}
+            entity={selectedPublication}
+            conversationVersion={selectedConversation?.version}
+          />
 
           {view === ApplicationRoute.FilePublications && (
             <FileFolderProvider>
@@ -115,10 +130,12 @@ const TabsContent = <T extends Publication>({
               />
             </ToolsetFolderProvider>
           )}
-          {view === ApplicationRoute.ConversationPublications && (
+          {view === ApplicationRoute.ConversationPublications && selectedConversation && (
             <ConversationFolderProvider>
               <ConversationProperties
                 publication={selectedPublication as ConversationPublication}
+                selectedConversation={selectedConversation}
+                onConversationChange={setSelectedConversation}
                 onChange={onChange as (p: ConversationPublication) => void}
               />
             </ConversationFolderProvider>
@@ -162,12 +179,8 @@ const TabsContent = <T extends Publication>({
         />
       )}
 
-      {activeTab === EntityViewTab.Conversation && (
-        <Conversations
-          selectedConversation={
-            (selectedPublication as ConversationPublication).conversations?.[0].conversation as DialConversation
-          }
-        />
+      {activeTab === EntityViewTab.Conversation && selectedConversation && (
+        <Conversations selectedConversation={selectedConversation} />
       )}
     </>
   );
