@@ -1427,6 +1427,7 @@ export default {
     AdapterContainer: 'Adapter Container',
     ApplicationContainer: 'Application Container',
     McpRegistry: 'MCP Registry',
+    CodeApp: 'Code App',
     InternalImage: 'Internal {type} Image',
     DockerImageReference: 'Docker Image Reference',
     DockerImage: 'Docker Image',

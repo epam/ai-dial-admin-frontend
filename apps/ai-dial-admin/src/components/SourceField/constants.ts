@@ -1,4 +1,5 @@
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
+import { CODE_APP_SOURCE_TYPE } from '@/src/utils/entities/application-source';
 import { ApplicationRoute } from '@/src/types/routes';
 import { SelectOption } from '@epam/ai-dial-ui-kit';
 
@@ -32,6 +33,7 @@ export const APPLICATION_SOURCE_ITEMS: SelectOption[] = [
   // NOTE: Keep order
   { value: SOURCE_TYPE.ENDPOINTS, label: 'Endpoints' },
   { value: SOURCE_TYPE.SCHEMA, label: 'App Runner' },
+  { value: CODE_APP_SOURCE_TYPE, label: 'Code App' },
   { value: SOURCE_TYPE.CONTAINER, label: 'Application Container' },
 ];
 
@@ -39,6 +41,7 @@ export const ASSET_APPLICATION_SOURCE_ITEMS: SelectOption[] = [
   // NOTE: Keep order. Asset applications offer Endpoints + App Runner only (no Container).
   { value: SOURCE_TYPE.ENDPOINTS, label: 'Endpoints' },
   { value: SOURCE_TYPE.SCHEMA, label: 'App Runner' },
+  { value: CODE_APP_SOURCE_TYPE, label: 'Code App' },
 ];
 
 const getItems = (route: ApplicationRoute) => {

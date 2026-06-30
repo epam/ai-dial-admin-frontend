@@ -141,14 +141,24 @@ export const ATTACHMENT_COLUMN: ColDef = {
   tooltipValueGetter: ({ value }) => formatAttachment(value),
 };
 
-export const SOURCE_TYPE_COLUMN = (t: (key: string) => string, view?: ApplicationRoute): ColDef => ({
+export const SOURCE_TYPE_COLUMN = (
+  t: (key: string) => string,
+  view?: ApplicationRoute,
+  codeAppEditorUrl?: string,
+): ColDef => ({
   field: 'source.$type',
   headerName: 'Source type',
   hide: false,
-  valueFormatter: ({ value }) => sourceTypeFormatter(value, t, view),
+  valueFormatter: ({ value, data }) => sourceTypeFormatter(value, t, view, data, codeAppEditorUrl),
   filterValueGetter: (params) =>
-    sourceTypeFormatter((params.data as { source: { $type: string } }).source.$type, t, view),
-  tooltipValueGetter: ({ value }) => sourceTypeFormatter(value, t, view),
+    sourceTypeFormatter(
+      (params.data as { source: { $type: string } }).source.$type,
+      t,
+      view,
+      params.data,
+      codeAppEditorUrl,
+    ),
+  tooltipValueGetter: ({ value, data }) => sourceTypeFormatter(value, t, view, data, codeAppEditorUrl),
 });
 
 const SOURCE_VALUE_COLUMN = (view?: ApplicationRoute): ColDef => ({
@@ -160,10 +170,11 @@ const SOURCE_VALUE_COLUMN = (view?: ApplicationRoute): ColDef => ({
   tooltipValueGetter: ({ data, value }) => sourceValueFormatter(data, value, view),
 });
 
-export const SOURCE_FIELD_COLUMNS = (t: (key: string) => string, view?: ApplicationRoute): ColDef[] => [
-  SOURCE_TYPE_COLUMN(t, view),
-  SOURCE_VALUE_COLUMN(view),
-];
+export const SOURCE_FIELD_COLUMNS = (
+  t: (key: string) => string,
+  view?: ApplicationRoute,
+  codeAppEditorUrl?: string,
+): ColDef[] => [SOURCE_TYPE_COLUMN(t, view, codeAppEditorUrl), SOURCE_VALUE_COLUMN(view)];
 
 export const TYPE_COLUMN = (t: (str: string) => string): ColDef => {
   return {

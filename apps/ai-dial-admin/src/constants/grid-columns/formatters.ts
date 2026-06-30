@@ -10,6 +10,7 @@ import { SOURCE_FIELD, SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { CONTAINER_SOURCE_TYPE, ContainerSource } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
 import { convertBytesToMb, convertCoresToMilliCores } from '@/src/utils/deployments/containers';
+import { isCodeAppSource } from '@/src/utils/entities/application-source';
 
 export const getFormattedResourceType = (value: string, t: (key: string) => string): string => {
   if (value === ActivityAuditResourceType.APPLICATION_TYPE_SCHEMA) {
@@ -98,7 +99,16 @@ export const numberValueFormatter = (value?: string | number) => {
   return formatNumberByDelimiter(value);
 };
 
-export const sourceTypeFormatter = (value: string, t: (key: string) => string, view?: ApplicationRoute) => {
+export const sourceTypeFormatter = (
+  value: string,
+  t: (key: string) => string,
+  view?: ApplicationRoute,
+  data?: { source?: SOURCE_FIELD; endpoint?: string | null; editorUrl?: string },
+  codeAppEditorUrl?: string,
+) => {
+  if (data && isCodeAppSource(data, codeAppEditorUrl)) {
+    return t(SourceI18nKey.CodeApp);
+  }
   const imageSourceKey = IMAGE_SOURCE_TYPE_I18N_KEYS[value as IMAGE_SOURCE_TYPE];
   if (imageSourceKey) {
     return t(imageSourceKey);

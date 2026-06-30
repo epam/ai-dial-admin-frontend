@@ -145,12 +145,12 @@ export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   },
 ];
 
-export const APPLICATIONS_COLUMNS = (t: (str: string) => string): ColDef[] => [
+export const APPLICATIONS_COLUMNS = (t: (str: string) => string, codeAppEditorUrl?: string): ColDef[] => [
   DISPLAY_NAME_COLUMN_WITH_SORT,
   DISPLAY_VERSION_COLUMN,
   DESCRIPTION_COLUMN,
   NAME_COLUMN,
-  ...SOURCE_FIELD_COLUMNS(t, ApplicationRoute.Applications),
+  ...SOURCE_FIELD_COLUMNS(t, ApplicationRoute.Applications, codeAppEditorUrl),
   VALIDITY_STATUS_COLUMN(t),
   AUTHOR_COLUMN,
   TOPICS_COLUMN,
