@@ -2024,6 +2024,9 @@ export default {
     RunCompareHideHighlights: 'Hide highlights',
     RunCompareDisplay: 'Display',
     RunCompareViewRowDetails: 'View row details',
+    RunCompareRows: 'Rows',
+    RunCompareTable: 'Table',
+    RunComparePivot: 'Pivot',
   },
   ExportRun: {
     ExportRunTitle: 'Export run',

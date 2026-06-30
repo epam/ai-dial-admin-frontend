@@ -32,14 +32,24 @@ interface Props {
   primaryRunName: string;
   comparedRunName: string;
   hasComparedMatch: boolean;
+  showDiffsOnly: boolean;
+  onToggleDiffsOnly: () => void;
+  hideHighlights: boolean;
 }
 
-const CompareRowDetailTable: FC<Props> = ({ sections, primaryRunName, comparedRunName, hasComparedMatch }) => {
+const CompareRowDetailTable: FC<Props> = ({
+  sections,
+  primaryRunName,
+  comparedRunName,
+  hasComparedMatch,
+  showDiffsOnly,
+  onToggleDiffsOnly,
+  hideHighlights,
+}) => {
   const t = useI18n();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const [searchQuery, setSearchQuery] = useState('');
-  const [showDiffsOnly, setShowDiffsOnly] = useState(false);
   const [diffView, setDiffView] = useState<DiffViewState | null>(null);
 
   const filteredSections = useMemo(
@@ -53,10 +63,6 @@ const CompareRowDetailTable: FC<Props> = ({ sections, primaryRunName, comparedRu
 
   const onSearchChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value);
-  }, []);
-
-  const onToggleDiffsOnly = useCallback(() => {
-    setShowDiffsOnly((prev) => !prev);
   }, []);
 
   const onOpenDiff = useCallback((row: CompareRowDetailField) => {
@@ -120,6 +126,7 @@ const CompareRowDetailTable: FC<Props> = ({ sections, primaryRunName, comparedRu
                 failedLabel={t(RunsI18nKey.MetricFailedText)}
                 onOpenDiff={onOpenDiff}
                 openDiffLabel={t(RunsI18nKey.CompareFullscreen)}
+                hideHighlights={hideHighlights}
               />
             );
           })}

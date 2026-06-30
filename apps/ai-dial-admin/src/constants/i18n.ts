@@ -1899,6 +1899,9 @@ export enum RunsI18nKey {
   RunCompareHideHighlights = 'Runs.RunCompareHideHighlights',
   RunCompareDisplay = 'Runs.RunCompareDisplay',
   RunCompareViewRowDetails = 'Runs.RunCompareViewRowDetails',
+  RunCompareRows = 'Runs.RunCompareRows',
+  RunCompareTable = 'Runs.RunCompareTable',
+  RunComparePivot = 'Runs.RunComparePivot',
 }
 
 export enum ExportRunI18nKey {
