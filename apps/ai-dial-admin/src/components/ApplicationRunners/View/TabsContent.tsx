@@ -77,7 +77,6 @@ const TabsContent: FC<Props> = ({
 
         {activeTab === EntityViewTab.AppRoutes && (
           <EntityRoutes
-            isAppRunnerView={true}
             roles={roles}
             routes={selectedRunner['dial:applicationTypeRoutes']}
             onChangeRoutes={(routes) => onChange({ ...selectedRunner, ['dial:applicationTypeRoutes']: routes })}
