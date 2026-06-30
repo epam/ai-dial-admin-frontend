@@ -4,6 +4,37 @@ export const getSchemaSourceId = (source?: SOURCE_FIELD): string | undefined => 
   return source?.$type === SOURCE_TYPE.SCHEMA ? source.applicationTypeSchemaId : undefined;
 };
 
+/**
+ * Virtual source-type value used only in the UI (source selector / labels) to represent a Code App.
+ * It is never written to `source.$type`, which always stays {@link SOURCE_TYPE.ENDPOINTS} for a Code App.
+ */
+export const CODE_APP_SOURCE_TYPE = 'code-app';
+
+interface CodeAppCandidate {
+  source?: SOURCE_FIELD;
+  endpoint?: string | null;
+  editorUrl?: string;
+}
+
+/**
+ * A Code App is an endpoints-type application whose `endpoint` and `editorUrl` both equal the
+ * configured `CODE_APP_EDITOR_URL`.
+ */
+export const isCodeAppSource = (entity?: CodeAppCandidate, codeAppEditorUrl?: string): boolean =>
+  !!codeAppEditorUrl &&
+  entity?.source?.$type === SOURCE_TYPE.ENDPOINTS &&
+  entity?.endpoint === codeAppEditorUrl &&
+  entity?.editorUrl === codeAppEditorUrl;
+
+/**
+ * Fields applied to an application when the Code App source type is selected.
+ */
+export const createCodeAppFields = (codeAppEditorUrl?: string) => ({
+  source: { $type: SOURCE_TYPE.ENDPOINTS },
+  endpoint: codeAppEditorUrl,
+  editorUrl: codeAppEditorUrl,
+});
+
 export const ENDPOINTS_SOURCE: SOURCE_FIELD = {
   $type: SOURCE_TYPE.ENDPOINTS,
 };

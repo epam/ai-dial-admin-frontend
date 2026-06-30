@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
@@ -15,6 +15,7 @@ import { Toolset } from '@/src/models/dial/toolset';
 import { ErrorI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { isValidSourceField } from '@/src/components/SourceField/utils';
+import { CODE_APP_SOURCE_TYPE, createCodeAppFields, isCodeAppSource } from '@/src/utils/entities/application-source';
 import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 import { useI18n } from '@/src/locales/client';
 
@@ -40,6 +41,7 @@ interface Props<T> {
   isEntityImmutable?: boolean;
   isModal?: boolean;
   disabled?: boolean;
+  codeAppEditorUrl?: string;
 }
 
 const SourceField = <T extends DialInterceptor | DialModel | Toolset | DialApplication>({
@@ -56,6 +58,7 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset | DialAppli
   isEntityImmutable,
   isModal,
   disabled,
+  codeAppEditorUrl,
 }: Props<T>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
@@ -63,6 +66,12 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset | DialAppli
   const { dispatch } = useSaveValidationContext();
   const [source, setSource] = useState<string>();
   const [errorText, setErrorText] = useState('');
+
+  // The Code App option is only available when CODE_APP_EDITOR_URL is configured.
+  const visibleSourceItems = useMemo(
+    () => (codeAppEditorUrl ? sourceItems : sourceItems.filter((item) => item.value !== CODE_APP_SOURCE_TYPE)),
+    [sourceItems, codeAppEditorUrl],
+  );
 
   const onChangeEntity = useCallback(
     (entity: T) => {
@@ -85,7 +94,7 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset | DialAppli
   const onChangeSource = useCallback(
     (sourceType: string) => {
       if (sourceType !== source) {
-        setSource(sourceType as SOURCE_TYPE);
+        setSource(sourceType);
         dispatch({
           type: ValidationActionType.SetField,
           field: 'completionEndpoint',
@@ -102,6 +111,16 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset | DialAppli
             responsesEndpoint: undefined,
           });
         }
+
+        if (sourceType === CODE_APP_SOURCE_TYPE) {
+          onChangeEntity({
+            ...entity,
+            ...reset,
+            ...createCodeAppFields(codeAppEditorUrl),
+          });
+          return;
+        }
+
         onChangeEntity({
           ...entity,
           source: { $type: sourceType as SOURCE_TYPE },
@@ -109,7 +128,7 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset | DialAppli
         });
       }
     },
-    [dispatch, entity, onChangeEntity, source, view],
+    [codeAppEditorUrl, dispatch, entity, onChangeEntity, source, view],
   );
 
   useEffect(() => {
@@ -127,9 +146,11 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset | DialAppli
 
       onChangeEntity(entityWithSource);
     } else {
-      setSource(entity.source.$type || sourceItems[0].value);
+      setSource(
+        isCodeAppSource(entity, codeAppEditorUrl) ? CODE_APP_SOURCE_TYPE : entity.source.$type || sourceItems[0].value,
+      );
     }
-  }, [entity, isModal, onChangeEntity, sourceItems, view]);
+  }, [codeAppEditorUrl, entity, isModal, onChangeEntity, sourceItems, view]);
 
   return (
     <div className="flex flex-col gap-y-8">
@@ -137,13 +158,13 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset | DialAppli
         id={id}
         containerClassName="w-[180px]"
         label={label}
-        options={sourceItems}
+        options={visibleSourceItems}
         onChange={(v) => onChangeSource(v as string)}
         value={source}
         disabled={isReadonly}
       />
 
-      {source === SOURCE_TYPE.ENDPOINTS && (
+      {(source === SOURCE_TYPE.ENDPOINTS || source === CODE_APP_SOURCE_TYPE) && (
         <Endpoints
           entity={entity}
           onChange={onChangeEntity}
@@ -151,6 +172,7 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset | DialAppli
           isModal={isModal}
           isEntityImmutable={isEntityImmutable}
           disabled={isReadonly}
+          isCodeApp={source === CODE_APP_SOURCE_TYPE}
         />
       )}
       {source === SOURCE_TYPE.CONTAINER && getContainers && (

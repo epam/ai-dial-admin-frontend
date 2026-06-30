@@ -1081,6 +1081,7 @@ export enum SourceI18nKey {
   ExternalEndpoint = 'Source.ExternalEndpoint',
   Adapter = 'Source.Adapter',
   McpRegistry = 'Source.McpRegistry',
+  CodeApp = 'Source.CodeApp',
   InternalImage = 'Source.InternalImage',
   DockerImageReference = 'Source.DockerImageReference',
   DockerImage = 'Source.DockerImage',

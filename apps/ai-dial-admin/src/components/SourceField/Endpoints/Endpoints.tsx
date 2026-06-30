@@ -20,6 +20,7 @@ interface Props<T> {
   isEntityImmutable?: boolean;
   prefix?: string;
   disabled?: boolean;
+  isCodeApp?: boolean;
 }
 
 const Endpoints = <T extends object>({
@@ -30,6 +31,7 @@ const Endpoints = <T extends object>({
   isEntityImmutable,
   prefix,
   disabled,
+  isCodeApp,
 }: Props<T>) => {
   const toolsetDisabled = (entity as Toolset).source?.$type === SOURCE_TYPE.CONTAINER || disabled;
   return (
@@ -78,6 +80,7 @@ const Endpoints = <T extends object>({
           isModal={isModal}
           disabled={disabled}
           prefix={prefix}
+          isCodeApp={isCodeApp}
         />
       )}
     </>

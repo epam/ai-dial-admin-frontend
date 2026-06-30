@@ -22,6 +22,7 @@ export interface AppContextType {
   disableDeploymentsJSONEditor?: boolean;
   resourcesDefaults?: ResourcesDefaults;
   telemetryMaxRangeMs?: number;
+  codeAppEditorUrl?: string;
 
   // user info
   userInfo?: UserInfo;
@@ -49,6 +50,7 @@ export const AppContextProvider = ({
   resourcesDefaults,
   userInfo,
   telemetryMaxRangeMs,
+  codeAppEditorUrl,
 }: {
   children: ReactNode;
   themeUrl?: string;
@@ -57,6 +59,7 @@ export const AppContextProvider = ({
   userInfo?: UserInfo;
   resourcesDefaults?: ResourcesDefaults;
   telemetryMaxRangeMs?: number;
+  codeAppEditorUrl?: string;
 }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -124,6 +127,7 @@ export const AppContextProvider = ({
     disableDeploymentsJSONEditor,
     resourcesDefaults,
     telemetryMaxRangeMs,
+    codeAppEditorUrl,
     userInfo,
     isReadOnlyAdmin,
   };
