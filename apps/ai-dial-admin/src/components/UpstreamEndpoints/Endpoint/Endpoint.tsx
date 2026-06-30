@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 
 import { DialInput, DialNumberInput, DialPasswordInput, DialRemoveButton, DialTooltip } from '@epam/ai-dial-ui-kit';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
@@ -14,6 +14,7 @@ import {
   ErrorI18nKey,
   UpstreamEndpointsI18nKey,
 } from '@/src/constants/i18n';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 import { useI18n } from '@/src/locales/client';
@@ -46,7 +47,10 @@ const Endpoint: FC<Props> = ({
   removeEndpoint,
 }) => {
   const t = useI18n();
+  const { dispatch } = useSaveValidationContext();
   const isModelView = view === ApplicationRoute.Models;
+  const isIdRequiredForResponses = !!endpoint.responsesEndpoint && !endpoint.id;
+  const idValidationField = `upstream-id-${index}`;
   const [isExpanded, setIsExpanded] = useState(false);
   const [endpointWarning, setEndpointWarning] = useState('');
   const [responsesEndpointWarning, setResponsesEndpointWarning] = useState('');
@@ -73,6 +77,17 @@ const Endpoint: FC<Props> = ({
     setResponsesEndpointWarning('');
     removeEndpoint(index);
   }, [index, removeEndpoint]);
+
+  useEffect(() => {
+    if (!isModelView) {
+      return;
+    }
+    dispatch({ type: ValidationActionType.SetField, field: idValidationField, isValid: !isIdRequiredForResponses });
+
+    return () => {
+      dispatch({ type: ValidationActionType.RemoveField, field: idValidationField });
+    };
+  }, [dispatch, idValidationField, isModelView, isIdRequiredForResponses]);
 
   const onChangeExtraData = useCallback(
     (extraData: DialEndpointExtraData) => {
@@ -144,9 +159,11 @@ const Endpoint: FC<Props> = ({
               id={`upstream-id-${index}`}
               value={endpoint.id}
               placeholder={t(EntityPlaceholdersI18nKey.UpstreamId)}
-              labelProps={{ label: t(UpstreamEndpointsI18nKey.Id) }}
+              labelProps={{ label: t(UpstreamEndpointsI18nKey.Id), required: !!endpoint.responsesEndpoint }}
               containerClassName={isTablet ? 'w-full' : 'w-[200px] shrink-0'}
               onChange={(id?: string) => updateEndpoint({ ...endpoint, id })}
+              error={isIdRequiredForResponses ? t(ErrorI18nKey.RequiredField) : undefined}
+              invalid={isIdRequiredForResponses}
             />
           )}
 
