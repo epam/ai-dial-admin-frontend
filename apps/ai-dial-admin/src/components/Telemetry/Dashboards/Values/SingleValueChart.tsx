@@ -1,11 +1,8 @@
 import { FC, useEffect, useState } from 'react';
-import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
-import { useI18n } from '@/src/locales/client';
-import { formatNumberWithExponent } from '@/src/utils/formatting/number-formatting';
+import SingleValueContent from '@/src/components/Common/SingleValue/SingleValueContent';
 import { TelemetryData, TelemetryQuery } from '@/src/models/telemetry';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { BasicI18nKey } from '@/src/constants/i18n';
 import { getSingleValueChartData } from '@/src/utils/telemetry';
 import { refreshOptionsConfig } from '@/src/constants/telemetry/filters';
 
@@ -26,7 +23,6 @@ const SingleValueChart: FC<Props> = ({
   refreshTime,
   getValue = getSingleValueChartData,
 }) => {
-  const t = useI18n();
   const [data, setData] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -57,25 +53,7 @@ const SingleValueChart: FC<Props> = ({
     };
   }, [query, getData, refreshTime, getValue]);
 
-  return (
-    <div className="flex flex-col rounded-lg border border-primary md:min-w-[250px] min-w-[120px] w-full p-4 flex-1 min-h-0">
-      <h3 className="text-primary mb-4">{t(title)}</h3>
-      {loading ? (
-        <DialLoader size={24} />
-      ) : (
-        <>
-          {data === null ? (
-            <DialNoDataContent title={t(BasicI18nKey.NoData)} />
-          ) : (
-            <div className="flex items-center justify-center text-accent-primary md:text-6xl font-semibold h-full text-3xl nowrap">
-              {unit && <span className="text-secondary font-extralight mr-1">{unit}</span>}
-              {formatNumberWithExponent(data)}
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  );
+  return <SingleValueContent title={title} value={data} loading={loading} unit={unit} />;
 };
 
 export default SingleValueChart;

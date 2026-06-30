@@ -102,7 +102,7 @@ const TabsContent: FC<Props> = ({
       )}
       {activeTab === EntityViewTab.Resources && <Resources containerId={selectedContainer.name} />}
       {activeTab === EntityViewTab.Prompts && <Prompts containerId={selectedContainer.name} />}
-      {activeTab === EntityViewTab.Metrics && <Metrics />}
+      {activeTab === EntityViewTab.Metrics && <Metrics containerId={selectedContainer.name} route={route} />}
       {activeTab === EntityViewTab.ExecutionLog && (
         <ExecutionLog containerId={selectedContainer.name} route={route} pods={pods} />
       )}

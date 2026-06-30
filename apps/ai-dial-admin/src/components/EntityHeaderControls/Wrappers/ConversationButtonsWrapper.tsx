@@ -28,8 +28,6 @@ import { useI18n } from '@/src/locales/client';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getNameVersionFromAsset } from '@/src/utils/entities/versions';
-import { DialConversation } from '@/src/models/dial/conversation';
 
 export interface ConversationButtonsWrapperProps<T> {
   view: ApplicationRoute;
@@ -64,11 +62,6 @@ const ConversationButtonsWrapper = <T extends object>({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [containerClassName, setContainerClassName] = useState(SELECT_ENTITY_HEADER_CLASS);
   const [buttonsClassName, setButtonsClassName] = useState('');
-
-  const enrichedEntity = useMemo(
-    () => ({ ...entity, name: getNameVersionFromAsset((entity as DialConversation)?.name || '').name, version }),
-    [entity, version],
-  );
 
   const onOpenModal = useCallback(() => {
     setIsModalOpen(true);
@@ -120,7 +113,7 @@ const ConversationButtonsWrapper = <T extends object>({
       {isModalOpen &&
         createPortal(
           <DeleteConfirmationModal
-            entity={enrichedEntity}
+            entity={entity}
             onRemoveEntity={onRemove}
             view={view}
             onCloseModal={onCloseModal}

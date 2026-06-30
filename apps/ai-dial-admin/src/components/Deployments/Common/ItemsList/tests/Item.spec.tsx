@@ -41,6 +41,34 @@ describe('Common Item component', () => {
     });
   });
 
+  test('scrolls the item into view when a validation error appears', async () => {
+    const scrollSpy = vi.spyOn(HTMLLIElement.prototype, 'scrollIntoView').mockImplementation(vi.fn());
+    const validate = vi.fn().mockReturnValue({ type: 'LENGTH', text: 'too short' });
+
+    render(
+      <Item
+        item=""
+        index={1}
+        onChange={onChange}
+        onRemove={onRemove}
+        isModal={false}
+        disabled={false}
+        validate={validate}
+      />,
+    );
+
+    const input = screen.getByRole('textbox');
+    await user.click(input);
+    await user.paste('co');
+
+    await waitFor(() => {
+      expect(screen.getByText('too short')).toBeInTheDocument();
+      expect(scrollSpy).toHaveBeenCalled();
+    });
+
+    scrollSpy.mockRestore();
+  });
+
   test('onRemove called', async () => {
     render(<Item item="" index={1} onChange={onChange} onRemove={onRemove} isModal={false} disabled={false} />);
 

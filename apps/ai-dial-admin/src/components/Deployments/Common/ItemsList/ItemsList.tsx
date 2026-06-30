@@ -18,6 +18,7 @@ interface Props {
 
 const ItemsList: FC<Props> = ({ items, setItems, addItemLabel, validate, isModal = false, disabled = false }) => {
   const lastItemRef = useRef<HTMLLIElement | null>(null);
+  const prevItemsCount = useRef(0);
 
   const onChangeItem = useCallback(
     (item: string | undefined, index: number) => {
@@ -44,8 +45,12 @@ const ItemsList: FC<Props> = ({ items, setItems, addItemLabel, validate, isModal
   }, [items, setItems]);
 
   useEffect(() => {
-    lastItemRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }, []);
+    const count = items?.length ?? 0;
+    if (count > prevItemsCount.current) {
+      lastItemRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    prevItemsCount.current = count;
+  }, [items?.length]);
 
   return (
     <div className="flex flex-col items-start gap-4 h-full">

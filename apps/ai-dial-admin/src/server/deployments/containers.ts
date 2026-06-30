@@ -1,5 +1,6 @@
 import { Token } from '@/src/models/auth';
 import { Container, Pod, Prompt, Resource } from '@/src/models/deployments/containers';
+import { DeploymentMetrics } from '@/src/models/deployments/metrics';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { API } from '@/src/server/api';
 import { BaseApi } from '@/src/server/base-api';
@@ -20,6 +21,7 @@ export const CONTAINER_CALL_TOOL_URL = (id: string) => `${CONTAINER_DETAILS_URL}
 export const CONTAINER_RESOURCES_URL = (id: string) => `${CONTAINER_DETAILS_URL}/${id}/resources`;
 export const CONTAINER_PROMPTS_URL = (id: string) => `${CONTAINER_DETAILS_URL}/${id}/prompts`;
 export const CONTAINER_PODS_URL = (id: string) => `${BASE_CONTAINERS_URL}/${id}/pods`;
+export const CONTAINER_METRICS_URL = (id: string) => `${BASE_CONTAINERS_URL}/${id}/metrics`;
 export const CONTAINER_LOGS_URL = (containerId: string, podId: string) =>
   `${BASE_CONTAINERS_URL}/${containerId}/pods/${podId}/logs`;
 export const CONTAINER_EVENTS_URL = (containerId?: string) =>
@@ -131,6 +133,10 @@ export class ContainersApi extends BaseApi {
 
   getContainerPods(containerId: string, token: Token): Promise<Pod[] | null> {
     return this.get(CONTAINER_PODS_URL(containerId), token);
+  }
+
+  getContainerMetrics(containerId: string, token: Token): Promise<DeploymentMetrics | null> {
+    return this.get(CONTAINER_METRICS_URL(containerId), token);
   }
 
   getContainerLogs(containerId: string, podId: string, token: Token): Promise<string[] | null> {

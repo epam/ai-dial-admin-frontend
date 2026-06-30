@@ -276,10 +276,16 @@ describe('Entities :: tabs', () => {
       deploymentsToolsTab(t, status),
       resourcesTab(t, status),
       promptsTab(t, status),
+      metricsTab(t, status),
       executionLogTab(t),
       eventsTab(t),
       auditTab(t),
     ]);
+  });
+
+  test('does not include a metrics tab for deployment images', () => {
+    const tabs = getDeploymentsViewTabs(ApplicationRoute.Images, t, IMAGE_STATUS.BUILT, []);
+    expect(tabs).not.toContainEqual(metricsTab(t, undefined));
   });
 
   test('returns correct tabs for test suite', () => {
@@ -348,13 +354,14 @@ describe('Entities :: tabs', () => {
     expect(getDeploymentsViewTabs(ApplicationRoute.ModelServings, t, status, [])).toEqual([
       propertiesTab(t),
       firewallTab(t, false),
+      metricsTab(t, status),
       executionLogTab(t),
       eventsTab(t),
       auditTab(t),
     ]);
   });
 
-  test('appends audit tab for adapter / application / interceptor container routes', () => {
+  test('appends audit tab and includes metrics tab for adapter / application / interceptor container routes', () => {
     const status = CONTAINER_STATUS.RUNNING;
     const routes = [
       ApplicationRoute.AdapterContainers,
@@ -365,6 +372,7 @@ describe('Entities :: tabs', () => {
     for (const route of routes) {
       const tabs = getDeploymentsViewTabs(route, t, status, []);
       expect(tabs[tabs.length - 1]).toEqual(auditTab(t));
+      expect(tabs).toContainEqual(metricsTab(t, status));
     }
   });
 

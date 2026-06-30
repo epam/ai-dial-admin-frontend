@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DialInput, DialRemoveButton } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
 
@@ -24,8 +24,31 @@ const Item = forwardRef<HTMLLIElement, Props>(
     const t = useI18n();
     const { dispatch, resetCounter } = useSaveValidationContext();
     const [error, setError] = useState<FieldError | null>(null);
+    const liRef = useRef<HTMLLIElement | null>(null);
 
     const containerClassName = useMemo(() => getControlClassName(isModal), [isModal]);
+
+    const setLiRef = useCallback(
+      (node: HTMLLIElement | null) => {
+        liRef.current = node;
+        if (typeof ref === 'function') {
+          ref(node);
+        } else if (ref) {
+          ref.current = node;
+        }
+      },
+      [ref],
+    );
+
+    // Keep the validation error in view: when the error appears, the item grows and its
+    // message can fall outside the scrollable list — scroll it back into view. Use an
+    // instant scroll (not smooth): while typing, the browser keeps the focused input in
+    // view, and a smooth (animated) scroll gets reverted by it before it completes.
+    useEffect(() => {
+      if (error) {
+        liRef.current?.scrollIntoView({ block: 'nearest' });
+      }
+    }, [error]);
 
     useEffect(() => {
       if (resetCounter) {
@@ -63,7 +86,7 @@ const Item = forwardRef<HTMLLIElement, Props>(
       <li
         className={classNames('flex flex-row gap-2 w-full', error ? 'items-start' : 'items-center')}
         key={`item-${index}`}
-        ref={ref}
+        ref={setLiRef}
       >
         <DialInput
           id={`item-${index}`}
