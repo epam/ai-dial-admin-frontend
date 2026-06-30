@@ -185,6 +185,7 @@ const ExtraDataField: FC<Props> = ({ value, disabled, label, isSecret, container
         radioButtons={radioButtons}
         onChangeRadioField={onChangeRadioField}
         onApply={onApply}
+        placeholder={emptyValueText}
       />
     </div>
   );
