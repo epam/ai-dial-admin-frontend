@@ -74,9 +74,9 @@ describe('isCodeAppSource', () => {
   const url = 'https://code-app.example.com';
 
   test('returns true when endpoints source endpoint and editorUrl match the configured url', () => {
-    expect(
-      isCodeAppSource({ source: { $type: SOURCE_TYPE.ENDPOINTS }, endpoint: url, editorUrl: url }, url),
-    ).toBe(true);
+    expect(isCodeAppSource({ source: { $type: SOURCE_TYPE.ENDPOINTS }, endpoint: url, editorUrl: url }, url)).toBe(
+      true,
+    );
   });
 
   test('returns false when no configured url is provided', () => {
@@ -90,15 +90,15 @@ describe('isCodeAppSource', () => {
   });
 
   test('returns false when endpoint does not match', () => {
-    expect(
-      isCodeAppSource({ source: { $type: SOURCE_TYPE.ENDPOINTS }, endpoint: 'other', editorUrl: url }, url),
-    ).toBe(false);
+    expect(isCodeAppSource({ source: { $type: SOURCE_TYPE.ENDPOINTS }, endpoint: 'other', editorUrl: url }, url)).toBe(
+      false,
+    );
   });
 
   test('returns false when editorUrl does not match', () => {
-    expect(
-      isCodeAppSource({ source: { $type: SOURCE_TYPE.ENDPOINTS }, endpoint: url, editorUrl: 'other' }, url),
-    ).toBe(false);
+    expect(isCodeAppSource({ source: { $type: SOURCE_TYPE.ENDPOINTS }, endpoint: url, editorUrl: 'other' }, url)).toBe(
+      false,
+    );
   });
 
   test('returns false for undefined entity', () => {
