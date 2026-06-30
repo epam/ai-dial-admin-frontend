@@ -73,6 +73,8 @@ const IdControl = <T extends { name?: string }>({
   useEffect(() => {
     if (entity.name) {
       validateName(entity.name);
+    } else {
+      dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: false });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isUniqueNameError]);
