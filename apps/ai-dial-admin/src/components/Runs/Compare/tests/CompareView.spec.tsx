@@ -1,21 +1,31 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import CompareView from '../CompareView';
+import Sidebar from '@/src/components/Common/Sidebar/Sidebar';
+import { AppContextProvider } from '@/src/context/AppContext';
+import { FeatureFlags } from '@/src/models/feature-flags';
 
 const getRunMock = vi.fn();
 const getRunsMock = vi.fn();
 const getTestCaseRunResultsMock = vi.fn();
+const getTestCaseRunResultDetailsMock = vi.fn();
 const routerReplaceMock = vi.fn();
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: routerReplaceMock }),
 }));
 
+vi.mock('@/src/context/AppContext', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/src/context/AppContext')>();
+  return actual;
+});
+
 vi.mock('@/src/app/[lang]/runs/actions', () => ({
   getRun: (...args: unknown[]) => getRunMock(...args),
   getRuns: (...args: unknown[]) => getRunsMock(...args),
   getTestCaseRunResults: (...args: unknown[]) => getTestCaseRunResultsMock(...args),
+  getTestCaseRunResultDetails: (...args: unknown[]) => getTestCaseRunResultDetailsMock(...args),
 }));
 
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
@@ -31,11 +41,22 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   };
 });
 
+const renderCompareView = () =>
+  render(
+    <AppContextProvider featureFlags={{} as FeatureFlags}>
+      <div className="w-[1400px] h-[800px] flex flex-col">
+        <CompareView runId="run-1" comparedRunId="run-sibling" />
+      </div>
+      <Sidebar />
+    </AppContextProvider>,
+  );
+
 describe('CompareView', () => {
   beforeEach(() => {
     getRunMock.mockReset();
     getRunsMock.mockReset();
     getTestCaseRunResultsMock.mockReset();
+    getTestCaseRunResultDetailsMock.mockReset();
     routerReplaceMock.mockReset();
     getRunMock.mockImplementation((id: string) =>
       Promise.resolve({
@@ -50,21 +71,42 @@ describe('CompareView', () => {
         { id: 'run-sibling', testSuiteId: 'suite-1', testRunName: 'Run #317', status: 'COMPLETED' },
       ],
     });
-    getTestCaseRunResultsMock.mockResolvedValue({
-      content: [
-        {
-          id: 'result-1',
-          responseStatusCode: 200,
-          runIndex: 0,
-          executionStatus: 'SUCCESS',
-          testCaseName: 'Test Case 1',
-        },
-      ],
+    getTestCaseRunResultsMock.mockImplementation((filters: { column: string; value: string }[]) => {
+      const runId = filters.find((filter) => filter.column === 'runId')?.value;
+      const isPrimary = runId === 'run-1';
+      return Promise.resolve({
+        content: [
+          {
+            id: isPrimary ? 'result-1' : 'result-2',
+            testCaseId: 'tc-1',
+            responseStatusCode: 200,
+            runIndex: 0,
+            executionStatus: 'SUCCESS',
+            testCaseName: 'Test Case 1',
+            metricValues: {
+              Accuracy: { precision: isPrimary ? 0.5 : 0.8 },
+            },
+          },
+        ],
+      });
     });
+    getTestCaseRunResultDetailsMock.mockImplementation((id: string) =>
+      Promise.resolve({
+        id,
+        testCaseId: 'tc-1',
+        testCaseName: 'Test Case 1',
+        runIndex: 0,
+        executionStatus: 'SUCCESS',
+        execDurationMs: 100,
+        metricValues: {
+          Accuracy: { precision: id === 'result-1' ? 0.5 : 0.8 },
+        },
+      }),
+    );
   });
 
   test('renders title and both run tags', async () => {
-    render(<CompareView runId="run-1" comparedRunId="run-sibling" />);
+    renderCompareView();
 
     expect(screen.getByText('Runs.RunComparison')).toBeInTheDocument();
     expect(screen.getByText('Runs.RunCompareVs')).toBeInTheDocument();
@@ -87,7 +129,7 @@ describe('CompareView', () => {
       ],
     });
 
-    render(<CompareView runId="run-1" comparedRunId="run-sibling" />);
+    renderCompareView();
 
     await waitFor(() => {
       expect(screen.getAllByRole('button', { name: 'Runs.RunCompareTagAria' })[1]).toBeEnabled();
@@ -105,7 +147,7 @@ describe('CompareView', () => {
   });
 
   test('renders compare tabs with Execution Results active by default', async () => {
-    render(<CompareView runId="run-1" comparedRunId="run-sibling" />);
+    renderCompareView();
 
     expect(screen.getByRole('tab', { name: 'Runs.RunCompareTabSummaryOverview' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Runs.RunCompareTabMetricsDetails' })).toBeInTheDocument();
@@ -119,7 +161,7 @@ describe('CompareView', () => {
   test('switches tab content when clicking Summary Overview and back to Execution Results', async () => {
     const user = userEvent.setup();
 
-    render(<CompareView runId="run-1" comparedRunId="run-sibling" />);
+    renderCompareView();
 
     await waitFor(() => {
       expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
@@ -135,5 +177,56 @@ describe('CompareView', () => {
     await waitFor(() => {
       expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
     });
+  });
+
+  test('opens row detail panel when eye button is clicked and closes on close button', async () => {
+    const user = userEvent.setup();
+
+    renderCompareView();
+
+    let eyeButton: HTMLButtonElement | null = null;
+    await waitFor(() => {
+      eyeButton = document.querySelector('.ag-pinned-right-cols-container [col-id="compare_action"] button');
+      expect(eyeButton).toBeTruthy();
+    });
+
+    fireEvent.click(eyeButton!);
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { level: 3, name: 'Test Case 1' })).toBeInTheDocument();
+      expect(screen.getByText('Runs.FieldColumn')).toBeInTheDocument();
+    });
+
+    const panelHeading = screen.getByRole('heading', { level: 3, name: 'Test Case 1' });
+    const closeButton = within(panelHeading.parentElement as HTMLElement)
+      .getAllByRole('button')
+      .at(-1);
+    await user.click(closeButton!);
+
+    await waitFor(() => {
+      expect(screen.queryByText('Runs.FieldColumn')).not.toBeInTheDocument();
+    });
+  });
+
+  test('closes row detail panel when switching away from Execution Results tab', async () => {
+    const user = userEvent.setup();
+
+    renderCompareView();
+
+    let eyeButton: HTMLButtonElement | null = null;
+    await waitFor(() => {
+      eyeButton = document.querySelector('.ag-pinned-right-cols-container [col-id="compare_action"] button');
+      expect(eyeButton).toBeTruthy();
+    });
+
+    fireEvent.click(eyeButton!);
+
+    await waitFor(() => {
+      expect(screen.getByText('Runs.FieldColumn')).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('tab', { name: 'Runs.RunCompareTabSummaryOverview' }));
+
+    expect(screen.queryByText('Runs.FieldColumn')).not.toBeInTheDocument();
   });
 });

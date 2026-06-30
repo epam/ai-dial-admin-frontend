@@ -16,8 +16,12 @@ import {
   buildComparePanelColumnTree,
   flattenComparePanelColumnTree,
 } from '@/src/components/Runs/Compare/ExecutionResults/utils/panel-columns';
-import { hasCompareRowDiff } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
 import {
+  countCompareDiffs,
+  hasCompareRowDiff,
+} from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
+import {
+  applyEyeCellRendererParams,
   getCompareColumnsCompare,
   mergeComparePanelColumns,
   splitComparePanelColumns,
@@ -35,6 +39,8 @@ interface Props {
   comparedRunName: string;
   showDisplayPanel: boolean;
   onToggleDisplayPanel: () => void;
+  selectedRow: CompareAnalyticsRow | null;
+  onOpenRowDetail: (row: CompareAnalyticsRow) => void;
 }
 
 const FAILED_EXECUTION_STATUSES = new Set<ExtractionResultStatus>([
@@ -54,6 +60,8 @@ const ExecutionResultsTab: FC<Props> = ({
   comparedRunName,
   showDisplayPanel,
   onToggleDisplayPanel,
+  selectedRow,
+  onOpenRowDetail,
 }) => {
   const t = useI18n();
 
@@ -153,6 +161,26 @@ const ExecutionResultsTab: FC<Props> = ({
     return getCompareColumnsCompare(mergedRowData, errorText, t(RunsI18nKey.RunCompareDelta), { hideHighlights });
   }, [mergedRowData, errorText, t, hideHighlights]);
 
+  const eyeRendererParams = useMemo(
+    () => ({
+      onOpenRowDetail,
+      selectedRowId: selectedRow?.id ?? null,
+      viewRowDetailsLabel: t(RunsI18nKey.RunCompareViewRowDetails),
+    }),
+    [onOpenRowDetail, selectedRow?.id, t],
+  );
+
+  const displayColDefs = useMemo(() => {
+    const base = gridColDefs.length > 0 ? gridColDefs : computedColDefs;
+    if (!base.length) return base;
+    return applyEyeCellRendererParams(base as ColDef[], eyeRendererParams);
+  }, [gridColDefs, computedColDefs, eyeRendererParams]);
+
+  useEffect(() => {
+    if (!displayColDefs.length) return;
+    gridApiRef.current?.setGridOption('columnDefs', displayColDefs);
+  }, [displayColDefs]);
+
   useEffect(() => {
     if (!computedColDefs.length) {
       return;
@@ -161,7 +189,6 @@ const ExecutionResultsTab: FC<Props> = ({
     const flatDefs = computedColDefs as ColDef[];
     setPanelColDefs((prev) => buildComparePanelColumnTree(flatDefs, runNames, prev));
     setGridColDefs(flatDefs);
-    gridApiRef.current?.setGridOption('columnDefs', flatDefs);
   }, [computedColDefs, runNames]);
 
   const displayedRowData = useMemo(() => {
@@ -170,16 +197,20 @@ const ExecutionResultsTab: FC<Props> = ({
     return mergedRowData.filter(hasCompareRowDiff);
   }, [mergedRowData, viewDifferencesOnly]);
 
+  const diffCounts = useMemo(() => countCompareDiffs(mergedRowData ?? []), [mergedRowData]);
+
   const rowClassRules = useMemo<RowClassRules<CompareAnalyticsRow>>(
-    () =>
-      hideHighlights
-        ? ({} as RowClassRules<CompareAnalyticsRow>)
+    () => ({
+      ...(hideHighlights
+        ? {}
         : {
             'compare-row-failed': (params) =>
               isFailedExecution(params.data?.executionStatus) ||
               isFailedExecution(params.data?._compared?.executionStatus),
-          },
-    [hideHighlights],
+          }),
+      'ag-active-detail-row': (params) => params.data?.id === selectedRow?.id,
+    }),
+    [hideHighlights, selectedRow?.id],
   );
 
   const gridOptions = useMemo(
@@ -223,7 +254,6 @@ const ExecutionResultsTab: FC<Props> = ({
 
       setPanelColDefs(nestedPanelCols);
       setGridColDefs(mergedGridDefs);
-      gridApiRef.current?.setGridOption('columnDefs', mergedGridDefs);
       requestAnimationFrame(() => gridApiRef.current?.sizeColumnsToFit());
     },
     [computedColDefs],
@@ -252,7 +282,7 @@ const ExecutionResultsTab: FC<Props> = ({
       <div className="flex-1 min-h-0 relative overflow-hidden">
         <GridView
           key={`${primaryRunId}-${comparedRunId}`}
-          columnDefs={gridColDefs.length > 0 ? gridColDefs : computedColDefs}
+          columnDefs={displayColDefs}
           rowData={displayedRowData}
           additionalGridOptions={gridOptions}
           emptyDataProps={{ title: t(EntitiesI18nKey.NoResults) }}
@@ -274,7 +304,7 @@ const ExecutionResultsTab: FC<Props> = ({
         )}
       </div>
 
-      <DiffLegend rows={mergedRowData ?? []} />
+      <DiffLegend counts={diffCounts} />
     </div>
   );
 };
