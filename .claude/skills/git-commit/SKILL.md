@@ -162,8 +162,7 @@ If push fails for any reason (no permissions, rejected, conflict) — **report t
 
 ## Step 6 — Pull Request (if requested)
 
-If the user requested a PR or draft PR, generate the body using the repo's PR template
-(`.github/pull_request_template.md`). **Always follow that template** — fill every placeholder,
+If the user requested a PR or draft PR **Always follow that template** — fill every placeholder,
 never leave `<SHORT_DESCRIPTION>` or `<TICKET_ID>` unreplaced.
 
 ```markdown
