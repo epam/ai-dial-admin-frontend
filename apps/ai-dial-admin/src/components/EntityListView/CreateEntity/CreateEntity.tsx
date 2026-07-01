@@ -6,6 +6,7 @@ import { checkIsUniqueDeploymentName } from '@/src/app/actions';
 import Properties from '@/src/components/EntityMainProperties/Properties/Properties';
 import { isValidSourceField } from '@/src/components/SourceField/utils';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { DEFAULT_NEW_ENTITY_VERSION } from '@/src/constants/dial-base-entity';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -66,7 +67,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
 
   const [currentEntity, setEntity] = useState<T>(
     versionsMap
-      ? ({ name: '', description: '', version: '1.0.0' } as T)
+      ? ({ name: '', description: '', version: DEFAULT_NEW_ENTITY_VERSION } as T)
       : ({ name: '', description: '', ...initialValues } as T),
   );
   const [isUniqueNameError, setIsUniqueNameError] = useState<boolean | undefined>(void 0);
