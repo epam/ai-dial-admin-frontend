@@ -278,4 +278,26 @@ describe('getSchemaDefaults', () => {
     };
     expect(getSchemaDefaults(schema)).toEqual({ value: null });
   });
+
+  test('should skip fields marked with dial:file: true', () => {
+    const schema: JSONSchema7 = {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        attachment: { type: 'string', 'dial:file': true } as JSONSchema7,
+        count: { type: 'integer' },
+      },
+    };
+    expect(getSchemaDefaults(schema)).toEqual({ name: '', count: 0 });
+  });
+
+  test('should not skip fields when dial:file is not true', () => {
+    const schema: JSONSchema7 = {
+      type: 'object',
+      properties: {
+        attachment: { type: 'string', 'dial:file': false } as JSONSchema7,
+      },
+    };
+    expect(getSchemaDefaults(schema)).toEqual({ attachment: '' });
+  });
 });
