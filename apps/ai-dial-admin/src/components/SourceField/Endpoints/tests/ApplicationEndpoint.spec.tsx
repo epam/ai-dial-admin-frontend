@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
 import ApplicationEndpoint from '@/src/components/SourceField/Endpoints/ApplicationEndpoint';
-import { DialApplication } from '@/src/models/dial/application';
+import { ApplicationMCPConfigDelivery, DialApplication } from '@/src/models/dial/application';
 
 vi.mock('@epam/ai-dial-ui-kit', async () => {
   const actual = await vi.importActual<Record<string, unknown>>('@epam/ai-dial-ui-kit');
@@ -17,6 +17,19 @@ vi.mock('@epam/ai-dial-ui-kit', async () => {
           checked={!!checked}
           disabled={!!disabled}
           onChange={(e) => onChange(e.target.checked, id)}
+        />
+        {label}
+      </label>
+    ),
+    DialSwitch: ({ switchId, isOn, onChange, label, disabled }: any) => (
+      <label>
+        <input
+          type="checkbox"
+          aria-label={label}
+          data-testid={`switch-${switchId}`}
+          checked={!!isOn}
+          disabled={!!disabled}
+          onChange={(e) => onChange(e.target.checked)}
         />
         {label}
       </label>
@@ -148,6 +161,34 @@ describe('ApplicationEndpoint', () => {
     const mcpCheckbox = screen.getByTestId('checkbox-mcp_endpoint') as HTMLInputElement;
     expect(mcpCheckbox.checked).toBe(true);
     expect(mcpCheckbox.disabled).toBe(true);
+  });
+
+  test('MCP forwardPerRequestKey switch writes to entity.mcp.forwardPerRequestKey', () => {
+    const onChange = vi.fn();
+    render(
+      <ApplicationEndpoint entity={makeEntity({ mcp: { endpoint: 'https://mcp.example.com' } })} onChange={onChange} />,
+    );
+
+    const switchEl = screen.getByTestId('switch-forwardPerRequestKey');
+    fireEvent.click(switchEl);
+
+    const last = onChange.mock.calls.at(-1)?.[0] as DialApplication;
+    expect(last.mcp?.forwardPerRequestKey).toBe(true);
+    expect(last.mcp?.endpoint).toBe('https://mcp.example.com');
+  });
+
+  test('MCP configDelivery select writes to entity.mcp.configDelivery', () => {
+    const onChange = vi.fn();
+    render(
+      <ApplicationEndpoint entity={makeEntity({ mcp: { endpoint: 'https://mcp.example.com' } })} onChange={onChange} />,
+    );
+
+    const select = screen.getByTestId('select-configDelivery');
+    const firstOption = Object.values(ApplicationMCPConfigDelivery)[0];
+    fireEvent.change(select, { target: { value: firstOption } });
+
+    const last = onChange.mock.calls.at(-1)?.[0] as DialApplication;
+    expect(last.mcp?.configDelivery).toBe(firstOption);
   });
 
   test('writes to entity.mcp (not entity.source)', () => {
