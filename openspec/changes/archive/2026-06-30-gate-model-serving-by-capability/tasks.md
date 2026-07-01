@@ -1,6 +1,6 @@
 ## 1. Model the backend capability field
 
-- [x] 1.1 Add `INFERENCE_TASK` enum (`TEXT_GENERATION` / `TEXT_CLASSIFICATION` / `NONE`, string values = enum names) to `src/types/deployments/containers.ts`
+- [x] 1.1 Add `INFERENCE_TASK` enum (`text_generation` / `text_classification` / `none`, matching the backend wire format) to `src/types/deployments/containers.ts`
 - [x] 1.2 Add optional `inferenceTask?: INFERENCE_TASK` to the `Container` interface in `src/models/deployments/containers.ts`
 
 ## 2. Filter the Model-Serving source picker

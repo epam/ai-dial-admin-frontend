@@ -15,6 +15,14 @@ import {
   INFERENCE_TASK,
 } from '@/src/types/deployments/containers';
 
+describe('INFERENCE_TASK wire values', () => {
+  test('match the backend wire format', () => {
+    expect(INFERENCE_TASK.TEXT_GENERATION).toBe('text_generation');
+    expect(INFERENCE_TASK.TEXT_CLASSIFICATION).toBe('text_classification');
+    expect(INFERENCE_TASK.NONE).toBe('none');
+  });
+});
+
 describe('isModelCapableContainer', () => {
   const container = (inferenceTask?: INFERENCE_TASK): Container =>
     ({ name: 'c', $type: CONTAINER_TYPE.HF, inferenceTask }) as Container;
