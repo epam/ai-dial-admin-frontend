@@ -91,6 +91,11 @@ function isNullOnlySchema(s: JSONSchema7): boolean {
   return t === 'null' || (Array.isArray(t) && t.length === 1 && t[0] === 'null');
 }
 
+/** True when the schema is marked as a DIAL file field (`dial:file: true`) next to its `type`. */
+function isDialFileSchema(s: JSONSchema7): boolean {
+  return (s as Record<string, unknown>)['dial:file'] === true;
+}
+
 function pickVariant(
   variants: JSONSchema7[],
   variantChoice: VariantChoice,
@@ -164,6 +169,7 @@ function getDefaultOrEmptyValue(
  * - When no default: returns empty value by type ('' for string, 0 for number/integer, false for boolean, [] for array, {} for object, null for null).
  * - Resolves $ref against the root schema (definitions / $defs).
  * - For anyOf/oneOf: default `preferNullIfNullableUnion` (T|null → null); use `preferNonNull` or a numeric index to override.
+ * - Skips properties marked `dial:file: true` (left out of the result, value stays undefined).
  * - Recursively fills nested object properties and object items in arrays.
  *
  * @param schema - JSON Schema (typically type: 'object' with properties). May contain $ref.
@@ -197,6 +203,8 @@ export function getSchemaDefaults(
   for (const [key, def] of Object.entries(resolvedSchema.properties)) {
     if (def === undefined || typeof def !== 'object') continue;
     const propSchema = def as JSONSchema7;
+    // Skip `dial:file` fields — leave them without a type-based default (value stays undefined).
+    if (isDialFileSchema(propSchema)) continue;
     result[key] = getDefaultOrEmptyValue(propSchema, rootSchema, resolve, options, getSchemaDefaults);
   }
 
