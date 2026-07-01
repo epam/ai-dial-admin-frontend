@@ -7,6 +7,7 @@ import { getVersionsPerName } from '@/src/components/Assets/utils';
 import FolderList from '@/src/components/Common/FolderList/FolderList';
 import AssetProperties from '@/src/components/EntityMainProperties/Properties/AssetProperties';
 import { ButtonsI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, FoldersI18nKey } from '@/src/constants/i18n';
+import { DEFAULT_NEW_ENTITY_VERSION } from '@/src/constants/dial-base-entity';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -45,7 +46,7 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onC
 
   const [currentEntity, setCurrentEntity] = useState<AssetWithVersion>({
     ...initialValues,
-    version: '1.0.0',
+    version: DEFAULT_NEW_ENTITY_VERSION,
   } as AssetWithVersion);
 
   const onSubmit = useCallback(async () => {

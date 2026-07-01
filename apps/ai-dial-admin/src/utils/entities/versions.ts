@@ -1,4 +1,5 @@
 import { ASSET_NAME_VERSION_DELIMITER } from '@/src/constants/prompt';
+import { DEFAULT_NEW_ENTITY_VERSION } from '@/src/constants/dial-base-entity';
 
 export const getNameVersionForAsset = (name: string, version: string) => {
   return `${name}${ASSET_NAME_VERSION_DELIMITER}${version}`;
@@ -51,7 +52,7 @@ export const getInitialVersion = (versionsPerName: Record<string, string[]>, nam
 
   if (latest) {
     if (isNaN(+latest[2])) {
-      return '1.0.0';
+      return DEFAULT_NEW_ENTITY_VERSION;
     }
     latest[2] = `${+latest[2] + 1}`;
   }

@@ -1,6 +1,7 @@
 import { SelectOption } from '@epam/ai-dial-ui-kit';
 import { isEqual } from 'lodash';
 import { STATUS_CLASSNAMES } from '@/src/constants/deployments/images';
+import { DEFAULT_NEW_ENTITY_VERSION } from '@/src/constants/dial-base-entity';
 import {
   IMAGE_BUILDER_TYPE,
   IMAGE_SOURCE_TYPE,
@@ -152,7 +153,7 @@ export const getImageSource = (isRegistry?: boolean): ImageSource => {
 export const getImageTemplate = (isRegistry?: boolean): Image => ({
   id: '',
   $type: IMAGE_TYPE.MCP,
-  version: '1.0.0',
+  version: DEFAULT_NEW_ENTITY_VERSION,
   name: '',
   description: '',
   source: getImageSource(isRegistry),
