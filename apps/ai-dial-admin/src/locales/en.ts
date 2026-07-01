@@ -1733,6 +1733,9 @@ export default {
     RequestTemplate: 'Request Template',
     EndpointSchema: 'Endpoint schema',
     DynamicConfiguration: 'Dynamic configuration',
+    MultiStep: 'Multi-step conversation',
+    MultiStepDescription:
+      'Run a multi-turn conversation per test case. Bind a template variable to an ARRAY dataset column — each array element becomes one turn (max 10). Scalar and constant bindings are reused every turn.',
     Constant: 'Constant',
     Attribute: 'Attribute',
     TestCase: 'Test case',

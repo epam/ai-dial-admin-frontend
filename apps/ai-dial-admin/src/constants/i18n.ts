@@ -1696,6 +1696,8 @@ export enum TestSuitesI18nKey {
   RequestTemplate = 'TestSuites.RequestTemplate',
   EndpointSchema = 'TestSuites.EndpointSchema',
   DynamicConfiguration = 'TestSuites.DynamicConfiguration',
+  MultiStep = 'TestSuites.MultiStep',
+  MultiStepDescription = 'TestSuites.MultiStepDescription',
   RequestBodyPreview = 'TestSuites.RequestBodyPreview',
   Constant = 'TestSuites.Constant',
   ResponseColumn = 'TestSuites.ResponseColumn',

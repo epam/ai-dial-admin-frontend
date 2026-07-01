@@ -2,7 +2,8 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, expect, test, vi, beforeEach, Mock } from 'vitest';
 
 import TestCases from '../TestCases';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
+import { TestSuitesI18nKey } from '@/src/constants/i18n';
 
 vi.mock('../TemplateVariables', () => ({
   default: ({ selectedTestSuite, onChange }: any) => (
@@ -88,6 +89,57 @@ describe('TestCases', () => {
 
     expect(mockOnChange).toHaveBeenCalledTimes(1);
     expect(mockOnChange).toHaveBeenCalledWith(expect.objectContaining({ name: 'Changed by TCL' }));
+  });
+
+  test('hides the multi-step toggle for non-deployment suites', () => {
+    render(
+      <TestCases
+        selectedTestSuite={createTestSuite({ suiteType: SuiteType.McpTool })}
+        onChange={mockOnChange}
+        {...defaultDatasetProps}
+      />,
+    );
+
+    expect(screen.queryByRole('checkbox', { name: TestSuitesI18nKey.MultiStep })).not.toBeInTheDocument();
+  });
+
+  test('shows the multi-step toggle for deployment suites', () => {
+    render(
+      <TestCases
+        selectedTestSuite={createTestSuite({ suiteType: SuiteType.Deployment })}
+        onChange={mockOnChange}
+        {...defaultDatasetProps}
+      />,
+    );
+
+    expect(screen.getByRole('checkbox', { name: TestSuitesI18nKey.MultiStep })).toBeInTheDocument();
+  });
+
+  test('enabling multi-step sets the flag without adding per-turn bindings', () => {
+    render(
+      <TestCases
+        selectedTestSuite={createTestSuite({ suiteType: SuiteType.Deployment })}
+        onChange={mockOnChange}
+        {...defaultDatasetProps}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('checkbox', { name: TestSuitesI18nKey.MultiStep }));
+
+    expect(mockOnChange).toHaveBeenCalledWith(expect.objectContaining({ multiStep: true }));
+    expect(mockOnChange.mock.calls[0][0]).not.toHaveProperty('multistepInputBindings');
+  });
+
+  test('uses the single TemplateVariables editor for both single- and multi-step suites', () => {
+    render(
+      <TestCases
+        selectedTestSuite={createTestSuite({ suiteType: SuiteType.Deployment, multiStep: true })}
+        onChange={mockOnChange}
+        {...defaultDatasetProps}
+      />,
+    );
+
+    expect(screen.getByRole('region', { name: 'template variables' })).toBeInTheDocument();
   });
 
   test('renders with correct container classes', () => {

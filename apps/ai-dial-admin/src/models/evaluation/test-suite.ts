@@ -25,6 +25,7 @@ export interface TestSuite {
   endpointRef?: TestSuiteEndpointRef;
   requestTemplate?: TestSuiteRequestTemplate;
   inputBindings?: InputBinding[];
+  multiStep?: boolean;
   responseColumns?: ResponseColumn[];
 
   mcpDeploymentRef?: McpDeploymentRef;
