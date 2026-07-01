@@ -158,8 +158,8 @@ const ExtraDataField: FC<Props> = ({ value, disabled, label, isSecret, container
         ? value
         : typeof value === 'number'
           ? String(value)
-          : t(BasicI18nKey.None);
-  }, [value, isSecret, t]);
+          : undefined;
+  }, [value, isSecret]);
 
   const emptyValueText = isSecret && hasValue ? SECRET_VALUE_PLACEHOLDER : t(BasicI18nKey.None);
 
@@ -173,7 +173,7 @@ const ExtraDataField: FC<Props> = ({ value, disabled, label, isSecret, container
         disabled={disabled}
         htmlFor="extraDataInput"
         id="extraDataInput"
-        emptyValueText={emptyValueText}
+        placeholder={emptyValueText}
         label={label ?? ''}
         header={t(EntityFieldsI18nKey.extraData)}
         portalId="extraDataPortal"
