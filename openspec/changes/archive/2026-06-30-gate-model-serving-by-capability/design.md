@@ -33,7 +33,7 @@ Two FE surfaces consume containers for model creation:
 Rule: block/filter only when `inferenceTask` is explicitly `NONE` or `TEXT_CLASSIFICATION` (for the model path). `undefined` means non-inference (NIM) and keeps today's behavior. This avoids regressing NIM model-servings, which never carry the field. Inference is never null, so there is no ambiguity for inference containers.
 
 **Model the field as an enum, not a string union.**
-Add `INFERENCE_TASK` enum in `types/deployments/containers.ts` (string values equal to the BE enum names) and `inferenceTask?: INFERENCE_TASK` on `Container`. Follows the repo enum-over-union standard.
+Add `INFERENCE_TASK` enum in `types/deployments/containers.ts` (values `text_generation`/`text_classification`/`none`, matching the backend wire format) and `inferenceTask?: INFERENCE_TASK` on `Container`. Follows the repo enum-over-union standard.
 
 **Filter at the picker, not in `isValidSourceField`.**
 Excluding incompatible containers from the list (`Containers.tsx`, alongside the `status === 'running'` filter) is simpler and clearer than adding capability logic to validation, and means the user can't select an invalid option in the first place. Validation stays as-is.

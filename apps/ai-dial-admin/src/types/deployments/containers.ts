@@ -34,9 +34,9 @@ export enum CreateSteps {
 }
 
 export enum INFERENCE_TASK {
-  TEXT_GENERATION = 'TEXT_GENERATION',
-  TEXT_CLASSIFICATION = 'TEXT_CLASSIFICATION',
-  NONE = 'NONE',
+  TEXT_GENERATION = 'text_generation',
+  TEXT_CLASSIFICATION = 'text_classification',
+  NONE = 'none',
 }
 
 export enum CONTAINER_SOURCE_TYPE {
