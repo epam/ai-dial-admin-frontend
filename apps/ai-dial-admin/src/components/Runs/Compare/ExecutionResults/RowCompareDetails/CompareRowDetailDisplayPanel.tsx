@@ -1,11 +1,10 @@
 'use client';
 
+import { DialSegmentedControl, SegmentedControlOption } from '@epam/ai-dial-ui-kit';
 import { IconArrowsLeftRight, IconTable } from '@tabler/icons-react';
 import { ColDef } from 'ag-grid-community';
 import { FC, useCallback, useMemo } from 'react';
 
-import SegmentedControl from '@/src/components/Common/SegmentedControl/SegmentedControl';
-import { SegmentedControlOption } from '@/src/components/Common/SegmentedControl/models';
 import TreeColumnsPanel from '@/src/components/Grid/TreeColumnsPanel/TreeColumnsPanel';
 import { getCompareDiffSection } from '@/src/components/Runs/Compare/ExecutionResults/utils/diff-section';
 import { RowDetailViewMode } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/models';
@@ -86,7 +85,13 @@ const CompareRowDetailDisplayPanel: FC<Props> = ({
       diffSection={diffSection}
       treeSubtitle={t(RunsI18nKey.RunCompareRows)}
       topSlot={
-        <SegmentedControl options={viewModeOptions} value={viewMode} onChange={onViewModeChange} className="mb-4" />
+        <DialSegmentedControl
+          options={viewModeOptions}
+          value={viewMode}
+          onChange={onViewModeChange}
+          className="w-[165px] mb-4"
+          ariaLabel={t(RunsI18nKey.RunCompareDisplay)}
+        />
       }
       renderLabel={renderLabel}
     />
