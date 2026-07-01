@@ -3,6 +3,7 @@
 import { IconAdjustmentsHorizontal, IconLayoutBottombar } from '@tabler/icons-react';
 import { FC } from 'react';
 
+import classNames from 'classnames';
 import { DialCloseButton, DialGhostButton, DialGhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
 
 import { RunsI18nKey } from '@/src/constants/i18n';
@@ -12,9 +13,11 @@ import { useI18n } from '@/src/locales/client';
 interface Props {
   title: string;
   onClose: () => void;
+  onOpenDisplay: () => void;
+  isDisplayOpen: boolean;
 }
 
-const CompareRowDetailHeader: FC<Props> = ({ title, onClose }) => {
+const CompareRowDetailHeader: FC<Props> = ({ title, onClose, onOpenDisplay, isDisplayOpen }) => {
   const t = useI18n();
 
   return (
@@ -24,7 +27,8 @@ const CompareRowDetailHeader: FC<Props> = ({ title, onClose }) => {
         <DialGhostButton
           label={t(RunsI18nKey.RunCompareDisplay)}
           iconBefore={<IconAdjustmentsHorizontal {...BASE_BUTTON_ICON_PROPS} />}
-          disabled
+          onClick={onOpenDisplay}
+          className={classNames(isDisplayOpen && 'text-accent-primary')}
         />
         <DialGhostIconButton
           size={ElementSize.Small}
