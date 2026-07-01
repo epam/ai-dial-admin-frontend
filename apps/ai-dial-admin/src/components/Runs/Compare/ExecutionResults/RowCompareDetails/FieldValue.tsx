@@ -15,6 +15,7 @@ interface Props {
   isScoreIndicator: boolean;
   failedLabel: string;
   onOverflowChange?: (overflowing: boolean) => void;
+  singleLine?: boolean;
 }
 
 const parseNumericRaw = (raw: string | null): number | null => {
@@ -23,7 +24,7 @@ const parseNumericRaw = (raw: string | null): number | null => {
   return Number.isNaN(value) ? null : value;
 };
 
-const FieldValue: FC<Props> = ({ raw, isFailed, isScoreIndicator, failedLabel, onOverflowChange }) => {
+const FieldValue: FC<Props> = ({ raw, isFailed, isScoreIndicator, failedLabel, onOverflowChange, singleLine }) => {
   const textRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
@@ -58,6 +59,10 @@ const FieldValue: FC<Props> = ({ raw, isFailed, isScoreIndicator, failedLabel, o
 
   const displayText = formatFieldValue(raw);
   const isLong = raw !== null && raw.length > TRUNCATE_THRESHOLD;
+
+  if (singleLine) {
+    return <span className="text-primary dial-small-text truncate min-w-0">{displayText}</span>;
+  }
 
   return (
     <span

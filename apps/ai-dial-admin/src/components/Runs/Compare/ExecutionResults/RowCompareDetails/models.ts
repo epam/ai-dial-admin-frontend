@@ -18,3 +18,8 @@ export interface CompareRowDetailSection {
   label: string;
   rows: CompareRowDetailField[];
 }
+
+export enum RowDetailViewMode {
+  Table = 'table',
+  Pivot = 'pivot',
+}

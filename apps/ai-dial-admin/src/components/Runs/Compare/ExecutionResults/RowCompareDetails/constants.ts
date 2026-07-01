@@ -1,5 +1,8 @@
 export const ROW_DETAIL_SIDEBAR_CLASS = 'w-[942px] p-0';
 
+export const ROW_DETAIL_DISPLAY_PANEL_CLASS =
+  'flex flex-col absolute right-0 top-0 bottom-0 w-[397px] bg-layer-3 border-l border-primary shadow-lg z-20';
+
 export const ROW_DETAIL_FIELD_COL_MIN = 212;
 export const ROW_DETAIL_DELTA_COL_WIDTH = 78;
 export const ROW_DETAIL_ACTION_COL_WIDTH = 40;
@@ -8,6 +11,24 @@ export const ROW_DETAIL_HEADER_HEIGHT = 40;
 export const ROW_DETAIL_FILTER_ROW_HEIGHT = 28;
 
 export const ROW_DETAIL_GRID_TEMPLATE_COLUMNS = `${ROW_DETAIL_FIELD_COL_MIN}px minmax(0, 1fr) minmax(0, 1fr) ${ROW_DETAIL_DELTA_COL_WIDTH}px ${ROW_DETAIL_ACTION_COL_WIDTH}px`;
+
+export const ROW_DETAIL_PIVOT_LEFT_COL_WIDTH = 212;
+export const ROW_DETAIL_PIVOT_FIELD_COL_MIN = 96;
+export const ROW_DETAIL_PIVOT_FIELD_COL_MAX = 200;
+
+export const getPivotGridTemplateColumns = (fieldCount: number): string =>
+  `${ROW_DETAIL_PIVOT_LEFT_COL_WIDTH}px repeat(${fieldCount}, minmax(${ROW_DETAIL_PIVOT_FIELD_COL_MIN}px, ${ROW_DETAIL_PIVOT_FIELD_COL_MAX}px))`;
+
+export const ROW_DETAIL_EXECUTION_SECTION_KEY = 'execution';
+export const ROW_DETAIL_RUN_NUMBER_FIELD_KEY = 'runNumber';
+export const ROW_DETAIL_HTTP_FIELD_KEY = 'httpStatusCode';
+export const ROW_DETAIL_RUN_NUMBER_LABEL = '# Run number';
+export const ROW_DETAIL_HTTP_LABEL = 'HTTP';
+
+export const DEFAULT_HIDDEN_ROW_DETAIL_FIELDS = new Set<string>([
+  ROW_DETAIL_RUN_NUMBER_FIELD_KEY,
+  ROW_DETAIL_HTTP_FIELD_KEY,
+]);
 
 export const ROW_DETAIL_CELL_BASE = 'p-3 border-b border-tertiary bg-layer-3 max-h-[104px] overflow-hidden';
 export const ROW_DETAIL_HEADER_CELL_BASE =

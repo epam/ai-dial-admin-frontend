@@ -13,6 +13,7 @@ import {
 } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/constants';
 import { CompareRowDetailField } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/models';
 import { getCompareDiffCellProps } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/row-detail-styles';
+import { MetricDeltaKind } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
 import { EXECUTION_STATUS_FIELD_KEY } from '@/src/components/Runs/Details/BottomDrawer/constants';
 import { mergeClasses } from '@/src/utils/merge-classes';
 import { IconMaximize } from '@tabler/icons-react';
@@ -24,19 +25,29 @@ interface Props {
   failedLabel: string;
   onOpenDiff: (row: CompareRowDetailField) => void;
   openDiffLabel: string;
+  hideHighlights: boolean;
 }
 
 const diffCellDataAttr = (props: ReturnType<typeof getCompareDiffCellProps>) =>
   props['data-compare-diff'] ? { 'data-compare-diff': props['data-compare-diff'] } : {};
 
-const DetailRow: FC<Props> = ({ row, hasComparedMatch, noMatchLabel, failedLabel, onOpenDiff, openDiffLabel }) => {
+const DetailRow: FC<Props> = ({
+  row,
+  hasComparedMatch,
+  noMatchLabel,
+  failedLabel,
+  onOpenDiff,
+  openDiffLabel,
+  hideHighlights,
+}) => {
   const [primaryOverflow, setPrimaryOverflow] = useState(false);
   const [secondaryOverflow, setSecondaryOverflow] = useState(false);
 
-  const fieldProps = getCompareDiffCellProps(row.diffKind, 'field');
-  const valueProps = getCompareDiffCellProps(row.diffKind, 'value');
-  const deltaProps = getCompareDiffCellProps(row.diffKind, 'delta');
-  const actionProps = getCompareDiffCellProps(row.diffKind, 'action');
+  const diffKind = hideHighlights ? MetricDeltaKind.Empty : row.diffKind;
+  const fieldProps = getCompareDiffCellProps(diffKind, 'field');
+  const valueProps = getCompareDiffCellProps(diffKind, 'value');
+  const deltaProps = getCompareDiffCellProps(diffKind, 'delta');
+  const actionProps = getCompareDiffCellProps(diffKind, 'action');
   const showOpenDiff = primaryOverflow || secondaryOverflow;
   const isStatusRow = row.fieldKey === EXECUTION_STATUS_FIELD_KEY && !row.isMetric;
 
