@@ -151,7 +151,7 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEnti
             (isMcp && testSuite.mcpDeploymentRef ? (
               <McpTool
                 deploymentId={testSuite.mcpDeploymentRef.id}
-                initialToolName={testSuite.toolRef?.name}
+                selectedToolName={testSuite.toolRef?.name}
                 onSelect={onToolSelect}
               />
             ) : (
