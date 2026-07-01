@@ -10,6 +10,7 @@ import { Image, ImageSource } from '@/src/models/deployments/images';
 import { ContainersI18nKey, ImagesI18nKey, KubEventsI18nKey } from '@/src/constants/i18n';
 import { CONTAINER_STATUS, KubEventType } from '@/src/types/deployments/containers';
 import { getRouteByType, getTranslatedType } from '@/src/utils/deployments/entity';
+import { DEFAULT_NEW_ENTITY_VERSION } from '@/src/constants/dial-base-entity';
 
 export const SOURCE_TYPES = (t: (key: string) => string): SelectOption[] => [
   { label: t(ImagesI18nKey.SourceDocker), value: IMAGE_SOURCE_TYPE.DOCKER },
@@ -112,7 +113,7 @@ export const LOADING_STATUSES = [CONTAINER_STATUS.PENDING, CONTAINER_STATUS.STOP
 export const IMAGE_TEMPLATE: Image = {
   id: '',
   $type: IMAGE_TYPE.MCP,
-  version: '1.0.0',
+  version: DEFAULT_NEW_ENTITY_VERSION,
   name: '',
   description: '',
   source: {

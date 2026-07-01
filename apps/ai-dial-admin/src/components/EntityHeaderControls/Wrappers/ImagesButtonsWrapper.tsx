@@ -18,6 +18,7 @@ import JsonToggles from '@/src/components/EntityHeaderControls/JsonToggle/JsonTo
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import { ModalType } from '@/src/components/EntityListView/Components/Modals';
 import { ButtonsI18nKey, ContainersI18nKey, CreateI18nKey, ImagesI18nKey } from '@/src/constants/i18n';
+import { DEFAULT_NEW_ENTITY_VERSION } from '@/src/constants/dial-base-entity';
 import {
   BASE_BUTTON_ICON_PROPS,
   SELECT_ENTITY_HEADER_CLASS,
@@ -122,7 +123,7 @@ const ImagesButtonsWrapper: FC<ImagesButtonsWrapperProps> = ({
       return undefined;
     }
     const versionsForTypedName = existingVersionsByName[image.name ?? ''] ?? [];
-    return versionsForTypedName.length > 0 ? undefined : '1.0.0';
+    return versionsForTypedName.length > 0 ? undefined : DEFAULT_NEW_ENTITY_VERSION;
   }, [isNameChanged, existingVersionsByName, image.name]);
 
   const onOpenModal = useCallback((modalType: ModalType) => {
