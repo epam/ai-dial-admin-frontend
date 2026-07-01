@@ -31,7 +31,11 @@ const Notification: FC<NotificationConfig> = ({ type, title, description, reques
           icon={<IconX size={18} />}
         />
       </div>
-      {description ? <p className="tiny text-secondary break-words whitespace-pre-wrap mt-2">{description}</p> : null}
+      {description ? (
+        <p className="tiny text-secondary break-words whitespace-pre-wrap mt-2 max-h-40 overflow-y-auto">
+          {description}
+        </p>
+      ) : null}
       {requestId ? (
         <p className="tiny text-secondary break-words whitespace-pre-wrap mt-2">Request ID: {requestId}</p>
       ) : null}
