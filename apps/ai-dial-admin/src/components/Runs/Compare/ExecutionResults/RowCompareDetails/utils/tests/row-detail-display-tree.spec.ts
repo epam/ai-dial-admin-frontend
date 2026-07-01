@@ -69,6 +69,16 @@ describe('buildRowDetailDisplayTree', () => {
 
     expect(merged.map(keyOf)).toEqual(['execution', 'testCaseData']);
   });
+
+  test('preserves prev tree when sections are temporarily empty during row reload', () => {
+    const prev = buildRowDetailDisplayTree(sections);
+    (prev[0] as ColDefGroup).hide = true;
+    (prev[0] as ColDefGroup).children = getChildren(prev[0]).map((child) => ({ ...child, hide: true }));
+
+    const merged = buildRowDetailDisplayTree([], prev);
+
+    expect(merged).toEqual(prev);
+  });
 });
 
 describe('applyRowDetailDisplayTree', () => {

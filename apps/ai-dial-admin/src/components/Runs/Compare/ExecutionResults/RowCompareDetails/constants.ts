@@ -13,15 +13,17 @@ export const ROW_DETAIL_FILTER_ROW_HEIGHT = 28;
 export const ROW_DETAIL_GRID_TEMPLATE_COLUMNS = `${ROW_DETAIL_FIELD_COL_MIN}px minmax(0, 1fr) minmax(0, 1fr) ${ROW_DETAIL_DELTA_COL_WIDTH}px ${ROW_DETAIL_ACTION_COL_WIDTH}px`;
 
 export const ROW_DETAIL_PIVOT_LEFT_COL_WIDTH = 212;
-export const ROW_DETAIL_PIVOT_FIELD_COL_MIN = 96;
-export const ROW_DETAIL_PIVOT_FIELD_COL_MAX = 200;
-
-export const getPivotGridTemplateColumns = (fieldCount: number): string =>
-  `${ROW_DETAIL_PIVOT_LEFT_COL_WIDTH}px repeat(${fieldCount}, minmax(${ROW_DETAIL_PIVOT_FIELD_COL_MIN}px, ${ROW_DETAIL_PIVOT_FIELD_COL_MAX}px))`;
+export const ROW_DETAIL_PIVOT_STATUS_COL_WIDTH = 135;
+export const ROW_DETAIL_PIVOT_RUN_NUMBER_COL_WIDTH = 124;
+export const ROW_DETAIL_PIVOT_HTTP_COL_WIDTH = 66;
+export const ROW_DETAIL_PIVOT_DURATION_COL_WIDTH = 109;
+export const ROW_DETAIL_PIVOT_SCORE_COL_WIDTH = 124;
+export const ROW_DETAIL_PIVOT_DEFAULT_COL_WIDTH = 200;
 
 export const ROW_DETAIL_EXECUTION_SECTION_KEY = 'execution';
 export const ROW_DETAIL_RUN_NUMBER_FIELD_KEY = 'runNumber';
 export const ROW_DETAIL_HTTP_FIELD_KEY = 'httpStatusCode';
+export const ROW_DETAIL_DURATION_FIELD_KEY = 'execDurationMs';
 export const ROW_DETAIL_RUN_NUMBER_LABEL = '# Run number';
 export const ROW_DETAIL_HTTP_LABEL = 'HTTP';
 

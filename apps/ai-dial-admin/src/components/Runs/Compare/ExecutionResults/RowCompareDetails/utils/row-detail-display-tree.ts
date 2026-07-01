@@ -60,6 +60,10 @@ export const buildRowDetailDisplayTree = (sections: CompareRowDetailSection[], p
   if (!prevTree || prevTree.length === 0) {
     return fresh;
   }
+  // Row detail reloads clear sections before new data arrives; keep prior visibility until sections return.
+  if (fresh.length === 0) {
+    return prevTree;
+  }
   return mergeOrderAndHide(fresh, prevTree);
 };
 

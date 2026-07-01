@@ -3,8 +3,7 @@
 import { FC } from 'react';
 
 import ExecutionStatusIcon from '@/src/components/Common/ExecutionStatusIcon/ExecutionStatusIcon';
-import { parseExecutionStatus } from '@/src/components/Common/ExecutionStatusIcon/utils';
-import { formatFieldValue } from '@/src/components/Runs/Details/BottomDrawer/utils';
+import { formatExecutionStatusLabel, parseExecutionStatus } from '@/src/components/Common/ExecutionStatusIcon/utils';
 
 interface Props {
   raw: string | null;
@@ -16,7 +15,7 @@ const StatusValue: FC<Props> = ({ raw }) => {
   return (
     <div className="flex items-center gap-2">
       {status ? <ExecutionStatusIcon status={status} size={16} /> : null}
-      <span className="text-primary dial-small-text">{formatFieldValue(raw)}</span>
+      <span className="text-primary dial-small-text">{formatExecutionStatusLabel(raw)}</span>
     </div>
   );
 };
