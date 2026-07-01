@@ -21,6 +21,7 @@ import {
   EntityPlaceholdersI18nKey,
   ToolsetI18nKey,
 } from '@/src/constants/i18n';
+import { DEFAULT_NEW_ENTITY_VERSION } from '@/src/constants/dial-base-entity';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
@@ -152,16 +153,21 @@ const DuplicateAsset: FC<Props> = ({
     (type: string) => {
       setDuplicationType(type);
       if (type === DuplicationTypes.VERSION) {
-        setClonedAsset({ ...clonedAsset, name: initialName });
+        setClonedAsset({
+          ...clonedAsset,
+          name: initialName,
+          version: getInitialVersion(versionsMap, initialName),
+        });
       } else {
         setClonedAsset({
           ...clonedAsset,
           folderId: initialFolder,
           name: entity.name === initialName ? getClonedEntityName(entity.name) : entity.name,
+          version: DEFAULT_NEW_ENTITY_VERSION,
         });
       }
     },
-    [clonedAsset, initialName, initialFolder, entity.name],
+    [clonedAsset, initialName, initialFolder, entity.name, versionsMap],
   );
 
   const onChangeClientId = useCallback(

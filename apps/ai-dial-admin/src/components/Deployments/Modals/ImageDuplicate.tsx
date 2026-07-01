@@ -27,6 +27,7 @@ import { getRouteByType } from '@/src/utils/deployments/entity';
 import { getImageType } from '@/src/utils/deployments/images';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getClonedEntityName } from '@/src/utils/entities/duplicate-entity';
+import { DEFAULT_NEW_ENTITY_VERSION } from '@/src/constants/dial-base-entity';
 
 interface Props {
   title: string;
@@ -89,7 +90,7 @@ const ImageDuplicateModal: FC<Props> = ({ title, isModalOpen, image, onClose, on
         setCopyImage({
           ...copyImage,
           name: copyImage.name === initialName ? getClonedEntityName(copyImage.name, true) : copyImage.name,
-          version: originalVersion,
+          version: DEFAULT_NEW_ENTITY_VERSION,
         });
       }
     },
