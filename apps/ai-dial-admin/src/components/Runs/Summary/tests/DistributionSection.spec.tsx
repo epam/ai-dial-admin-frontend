@@ -65,7 +65,9 @@ describe('Runs Summary :: DistributionSection', () => {
   });
 
   test('prompts to pick a metric before any selection', () => {
-    render(<DistributionSection run={{ id: 'run-1' } as any} metricOptions={METRIC_OPTIONS} metricScores={METRIC_SCORES} />);
+    render(
+      <DistributionSection run={{ id: 'run-1' } as any} metricOptions={METRIC_OPTIONS} metricScores={METRIC_SCORES} />,
+    );
 
     expect(screen.getByText('Runs.DistributionTitle')).toBeInTheDocument();
     expect(screen.getByText('Runs.SelectMetricToSeeDistribution')).toBeInTheDocument();
@@ -73,13 +75,15 @@ describe('Runs Summary :: DistributionSection', () => {
   });
 
   test('fetches the distribution and renders histogram + stat cards on selection', async () => {
-    render(<DistributionSection run={{ id: 'run-1' } as any} metricOptions={METRIC_OPTIONS} metricScores={METRIC_SCORES} />);
+    render(
+      <DistributionSection run={{ id: 'run-1' } as any} metricOptions={METRIC_OPTIONS} metricScores={METRIC_SCORES} />,
+    );
 
     fireEvent.change(screen.getByLabelText('select-Runs.Metric'), {
       target: { value: 'DeepEval: Answer Relevancy.score' },
     });
 
-    const histogram = await screen.findByRole('figure', { name: 'DeepEval: Answer Relevancy.score' });
+    const histogram = await screen.findByRole('figure', { name: 'Average value per test case' });
     expect(histogram).toHaveTextContent('histogram:5'); // 2 + 3 reconstructed values
 
     const avgCard = screen.getByRole('region', { name: 'AVG' });
@@ -88,13 +92,15 @@ describe('Runs Summary :: DistributionSection', () => {
   });
 
   test('queries the distribution with the selected metric field', async () => {
-    render(<DistributionSection run={{ id: 'run-1' } as any} metricOptions={METRIC_OPTIONS} metricScores={METRIC_SCORES} />);
+    render(
+      <DistributionSection run={{ id: 'run-1' } as any} metricOptions={METRIC_OPTIONS} metricScores={METRIC_SCORES} />,
+    );
 
     fireEvent.change(screen.getByLabelText('select-Runs.Metric'), {
       target: { value: 'DeepEval: Answer Relevancy.score' },
     });
 
-    await screen.findByRole('figure', { name: 'DeepEval: Answer Relevancy.score' });
+    await screen.findByRole('figure', { name: 'Average value per test case' });
 
     const query = executeStructuredQueryMock.mock.calls[0][0] as StructuredQuery;
     const field = (query.select?.[0]?.expr as any)?.args?.[0]?.name;

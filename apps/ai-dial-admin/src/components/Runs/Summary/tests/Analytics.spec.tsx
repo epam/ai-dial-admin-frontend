@@ -17,7 +17,12 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
     ...actual,
     DialLoader: ({ size }: any) => <div aria-label={`loading-${size}`} />,
     DialSelect: ({ options, value, onChange, disabled }: any) => (
-      <select aria-label="metric-select" value={value ?? ''} disabled={disabled} onChange={(e) => onChange(e.target.value)}>
+      <select
+        aria-label="metric-select"
+        value={value ?? ''}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.value)}
+      >
         {(options || []).map((opt: any) => (
           <option key={opt.value} value={opt.value}>
             {opt.label}
