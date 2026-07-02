@@ -1,4 +1,4 @@
-import { DialLabel, DialSelect } from '@epam/ai-dial-ui-kit';
+import { DialInput, DialLabel, DialSelect } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useState } from 'react';
 
 import { SchemaFieldRow } from '@/src/components/Common/SchemaGrid/utils';
@@ -65,14 +65,31 @@ const MetricInput: FC<{
 
   const onChangeColumn = useCallback(
     (value: string) => {
-      onChange({ ...binding, source: { $type: MetricBindingType.Response, columnName: value } } as MetricBinding);
+      onChange({
+        ...binding,
+        source: { ...binding?.source, $type: MetricBindingType.Response, columnName: value },
+      } as MetricBinding);
     },
     [onChange, binding],
   );
 
   const onChangeTestCase = useCallback(
     (value: string) => {
-      onChange({ ...binding, source: { $type: MetricBindingType.TestCase, columnName: value } } as MetricBinding);
+      onChange({
+        ...binding,
+        source: { ...binding?.source, $type: MetricBindingType.TestCase, columnName: value },
+      } as MetricBinding);
+    },
+    [onChange, binding],
+  );
+
+  // jsonataExpression applies to both Response and TestCase bindings; keep the current $type/columnName.
+  const onChangeExpression = useCallback(
+    (value: string) => {
+      onChange({
+        ...binding,
+        source: { ...binding?.source, jsonataExpression: value || undefined },
+      } as MetricBinding);
     },
     [onChange, binding],
   );
@@ -129,6 +146,19 @@ const MetricInput: FC<{
           options={testCaseSchema?.map((item) => ({ label: item.name, value: item.name })) || []}
           value={binding?.source.columnName as string | undefined}
           onChange={(v) => onChangeTestCase(v as string)}
+        />
+      )}
+
+      {(binding?.source.$type === MetricBindingType.Response ||
+        binding?.source.$type === MetricBindingType.TestCase) && (
+        <DialInput
+          id={`${field.id}-jsonata`}
+          labelProps={{ label: t(TestSuitesI18nKey.TurnSelector) }}
+          caption={t(TestSuitesI18nKey.TurnSelectorHint)}
+          placeholder="$[-1]"
+          maxLength={2000}
+          value={(binding?.source.jsonataExpression as string) ?? ''}
+          onChange={(v) => onChangeExpression(v ?? '')}
         />
       )}
     </div>

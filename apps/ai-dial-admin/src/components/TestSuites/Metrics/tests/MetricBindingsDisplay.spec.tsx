@@ -73,4 +73,21 @@ describe('MetricBindingsDisplay', () => {
 
     expect(screen.getByText(/inputText\s*:\s*promptColumn/)).toBeInTheDocument();
   });
+
+  test('appends the JSONata selector to the column name for response bindings', () => {
+    const bindings: MetricBinding[] = [
+      {
+        property: 'actual',
+        source: {
+          $type: MetricBindingType.Response,
+          columnName: 'answer',
+          jsonataExpression: '$[-1]',
+        },
+      },
+    ];
+
+    render(<MetricBindingsDisplay title="Inputs" bindings={bindings} />);
+
+    expect(screen.getByText(/actual\s*:\s*answer\s*·\s*\$\[-1\]/)).toBeInTheDocument();
+  });
 });

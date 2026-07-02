@@ -1736,6 +1736,9 @@ export default {
     MultiStep: 'Multi-step conversation',
     MultiStepDescription:
       'Run a multi-turn conversation per test case. Bind a template variable to an ARRAY dataset column — each array element becomes one turn (max 10). Scalar and constant bindings are reused every turn.',
+    TurnSelector: 'Turn selector (JSONata)',
+    TurnSelectorHint:
+      'Optional. For multi-step suites this column holds a per-turn array — use a JSONata selector such as $[-1] (last turn), $[0] (first turn), or $[-1].score. Leave empty to pass the whole value.',
     Constant: 'Constant',
     Attribute: 'Attribute',
     TestCase: 'Test case',

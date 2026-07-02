@@ -1698,6 +1698,8 @@ export enum TestSuitesI18nKey {
   DynamicConfiguration = 'TestSuites.DynamicConfiguration',
   MultiStep = 'TestSuites.MultiStep',
   MultiStepDescription = 'TestSuites.MultiStepDescription',
+  TurnSelector = 'TestSuites.TurnSelector',
+  TurnSelectorHint = 'TestSuites.TurnSelectorHint',
   RequestBodyPreview = 'TestSuites.RequestBodyPreview',
   Constant = 'TestSuites.Constant',
   ResponseColumn = 'TestSuites.ResponseColumn',

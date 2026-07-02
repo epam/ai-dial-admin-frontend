@@ -26,7 +26,8 @@ export const getBindingDisplayValue = (binding: MetricBinding): string => {
 
   const columnName = binding.source.columnName;
   if (columnName != null && columnName !== '') {
-    return String(columnName);
+    const expression = binding.source.jsonataExpression;
+    return expression ? `${columnName} · ${expression}` : String(columnName);
   }
 
   return '-';
