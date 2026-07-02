@@ -20,7 +20,13 @@ h3 {
   .body {
     @apply font-normal;
     font-size: 16px;
-    line-height: 28px;
+    line-height: 24px;
+  }
+
+  .body-semi {
+    @apply font-semibold;
+    font-size: 16px;
+    line-height: 24px;
   }
 
   .small {
