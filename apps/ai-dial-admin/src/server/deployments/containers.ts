@@ -38,6 +38,10 @@ export class ContainersApi extends BaseApi {
     return this.getAction(`${BASE_CONTAINERS_URL}?type=MCP`, token);
   }
 
+  getToolsetContainers(token: Token): Promise<ServerActionResponse> {
+    return this.getAction(`${BASE_CONTAINERS_URL}?type=MCP,INFERENCE`, token);
+  }
+
   getInterceptorContainers(token: Token): Promise<ServerActionResponse> {
     return this.getAction(`${BASE_CONTAINERS_URL}?type=INTERCEPTOR`, token);
   }

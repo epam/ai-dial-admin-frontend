@@ -94,6 +94,11 @@ export async function getMCPContainers() {
   return containersApi.getMCPContainers(token);
 }
 
+export async function getToolsetContainers() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return containersApi.getToolsetContainers(token);
+}
+
 export async function getInterceptorContainers() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return containersApi.getInterceptorContainers(token);

@@ -122,7 +122,9 @@ export const sourceTypeFormatter = (
       case ApplicationRoute.Interceptors:
         return t(SourceI18nKey.InterceptorContainer);
       case ApplicationRoute.Toolsets:
-        return t(SourceI18nKey.McpContainer);
+        // A toolset container source can be an MCP or a Model Serving container; the row data
+        // carries only the containerId, not the type, so use the generic "Container" label.
+        return t(SourceI18nKey.Container);
       case ApplicationRoute.Adapters:
         return t(SourceI18nKey.AdapterContainer);
       case ApplicationRoute.Applications:

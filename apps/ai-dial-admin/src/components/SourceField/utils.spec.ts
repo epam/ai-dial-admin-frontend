@@ -1,7 +1,20 @@
 import { describe, expect, test } from 'vitest';
 import { SOURCE_TYPE } from './types';
-import { getContainerRoute, isValidSourceField } from './utils';
+import {
+  getContainerRoute,
+  getRouteForContainer,
+  isContainerFamilySource,
+  isMcpContainer,
+  isTextClassificationInferenceContainer,
+  isToolsetCapableContainer,
+  isValidSourceField,
+} from './utils';
+import { MODEL_SERVING_SOURCE_TYPE } from './constants';
 import { ApplicationRoute } from '@/src/types/routes';
+import { CONTAINER_TYPE, INFERENCE_TASK } from '@/src/types/deployments/containers';
+import { Container } from '@/src/models/deployments/containers';
+
+const container = (overrides: Partial<Container>): Container => overrides as Container;
 
 describe('isValidSourceField', () => {
   test('returns true for valid CONTAINER source', () => {
@@ -109,5 +122,80 @@ describe('getContainerRoute', () => {
   });
   test('return McpContainers route for Toolsets', () => {
     expect(getContainerRoute(ApplicationRoute.Toolsets)).toBe(ApplicationRoute.McpContainers);
+  });
+});
+
+describe('toolset container capability helpers', () => {
+  test('isMcpContainer is true only for MCP containers', () => {
+    expect(isMcpContainer(container({ $type: CONTAINER_TYPE.MCP }))).toBe(true);
+    expect(isMcpContainer(container({ $type: CONTAINER_TYPE.HF }))).toBe(false);
+  });
+
+  test('isTextClassificationInferenceContainer is true only for text-classification inference', () => {
+    expect(
+      isTextClassificationInferenceContainer(
+        container({ $type: CONTAINER_TYPE.HF, inferenceTask: INFERENCE_TASK.TEXT_CLASSIFICATION }),
+      ),
+    ).toBe(true);
+    expect(
+      isTextClassificationInferenceContainer(
+        container({ $type: CONTAINER_TYPE.HF, inferenceTask: INFERENCE_TASK.TEXT_GENERATION }),
+      ),
+    ).toBe(false);
+    expect(isTextClassificationInferenceContainer(container({ $type: CONTAINER_TYPE.MCP }))).toBe(false);
+  });
+
+  test('isToolsetCapableContainer accepts MCP and text-classification inference only', () => {
+    expect(isToolsetCapableContainer(container({ $type: CONTAINER_TYPE.MCP }))).toBe(true);
+    expect(
+      isToolsetCapableContainer(
+        container({ $type: CONTAINER_TYPE.HF, inferenceTask: INFERENCE_TASK.TEXT_CLASSIFICATION }),
+      ),
+    ).toBe(true);
+    expect(isToolsetCapableContainer(container({ $type: CONTAINER_TYPE.HF, inferenceTask: INFERENCE_TASK.NONE }))).toBe(
+      false,
+    );
+    expect(isToolsetCapableContainer(container({ $type: CONTAINER_TYPE.NIM }))).toBe(false);
+  });
+
+  test('isContainerFamilySource recognises both toolset container selector values', () => {
+    expect(isContainerFamilySource(SOURCE_TYPE.CONTAINER)).toBe(true);
+    expect(isContainerFamilySource(MODEL_SERVING_SOURCE_TYPE)).toBe(true);
+    expect(isContainerFamilySource(SOURCE_TYPE.ENDPOINTS)).toBe(false);
+    expect(isContainerFamilySource(undefined)).toBe(false);
+  });
+});
+
+describe('getRouteForContainer', () => {
+  test('routes an MCP container to McpContainers', () => {
+    expect(getRouteForContainer(container({ $type: CONTAINER_TYPE.MCP }), ApplicationRoute.Toolsets)).toBe(
+      ApplicationRoute.McpContainers,
+    );
+  });
+
+  test('routes an inference (Model Serving) container to ModelServings', () => {
+    expect(getRouteForContainer(container({ $type: CONTAINER_TYPE.HF }), ApplicationRoute.Toolsets)).toBe(
+      ApplicationRoute.ModelServings,
+    );
+    expect(getRouteForContainer(container({ $type: CONTAINER_TYPE.NIM }), ApplicationRoute.Toolsets)).toBe(
+      ApplicationRoute.ModelServings,
+    );
+  });
+
+  test('routes interceptor / adapter / application containers to their pages', () => {
+    expect(getRouteForContainer(container({ $type: CONTAINER_TYPE.INTERCEPTOR }), ApplicationRoute.Interceptors)).toBe(
+      ApplicationRoute.InterceptorContainers,
+    );
+    expect(getRouteForContainer(container({ $type: CONTAINER_TYPE.ADAPTER }), ApplicationRoute.Adapters)).toBe(
+      ApplicationRoute.AdapterContainers,
+    );
+    expect(getRouteForContainer(container({ $type: CONTAINER_TYPE.APPLICATION }), ApplicationRoute.Applications)).toBe(
+      ApplicationRoute.ApplicationContainers,
+    );
+  });
+
+  test('falls back to the view-based route when the container is unknown', () => {
+    expect(getRouteForContainer(null, ApplicationRoute.Toolsets)).toBe(ApplicationRoute.McpContainers);
+    expect(getRouteForContainer(undefined, ApplicationRoute.Models)).toBe(ApplicationRoute.ModelServings);
   });
 });
