@@ -3,7 +3,12 @@ import { describe, expect, test, vi } from 'vitest';
 
 import SourceField from '@/src/components/SourceField/SourceField';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
-import { APPLICATION_SOURCE_ITEMS, ASSET_APPLICATION_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
+import {
+  APPLICATION_SOURCE_ITEMS,
+  ASSET_APPLICATION_SOURCE_ITEMS,
+  MODEL_SERVING_SOURCE_TYPE,
+  TOOLSET_SOURCE_ITEMS,
+} from '@/src/components/SourceField/constants';
 import { DialApplication } from '@/src/models/dial/application';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -373,5 +378,68 @@ describe('SourceField onChangeSource produces a clean source object', () => {
     const last = onChange.mock.calls.at(-1)?.[0];
     expect(last.source).toEqual({ $type: SOURCE_TYPE.ENDPOINTS });
     expect(last.source.containerId).toBeUndefined();
+  });
+});
+
+describe('SourceField toolset Model Serving option', () => {
+  test('toolset dropdown offers both MCP Container and Model Serving options', () => {
+    const entity = { name: 't', source: { $type: SOURCE_TYPE.ENDPOINTS } } as any;
+
+    render(
+      <SourceField
+        id="sourceType"
+        view={ApplicationRoute.Toolsets}
+        sourceItems={TOOLSET_SOURCE_ITEMS}
+        entity={entity}
+        onChange={vi.fn()}
+        getContainers={vi.fn()}
+      />,
+    );
+
+    const options = Array.from(screen.getByTestId('select-sourceType').querySelectorAll('option'))
+      .map((o) => (o as HTMLOptionElement).value)
+      .filter(Boolean);
+    expect(options).toContain(SOURCE_TYPE.CONTAINER);
+    expect(options).toContain(MODEL_SERVING_SOURCE_TYPE);
+  });
+
+  test('selecting Model Serving persists a CONTAINER source', () => {
+    const onChange = vi.fn();
+    const entity = { name: 't', source: { $type: SOURCE_TYPE.ENDPOINTS } } as any;
+
+    render(
+      <SourceField
+        id="sourceType"
+        view={ApplicationRoute.Toolsets}
+        sourceItems={TOOLSET_SOURCE_ITEMS}
+        entity={entity}
+        onChange={onChange}
+        getContainers={vi.fn()}
+      />,
+    );
+
+    fireEvent.change(screen.getByTestId('select-sourceType'), { target: { value: MODEL_SERVING_SOURCE_TYPE } });
+
+    const last = onChange.mock.calls.at(-1)?.[0];
+    expect(last.source).toEqual({ $type: SOURCE_TYPE.CONTAINER });
+  });
+
+  test('renders the Containers branch after selecting Model Serving', () => {
+    const entity = { name: 't', source: { $type: SOURCE_TYPE.ENDPOINTS } } as any;
+
+    render(
+      <SourceField
+        id="sourceType"
+        view={ApplicationRoute.Toolsets}
+        sourceItems={TOOLSET_SOURCE_ITEMS}
+        entity={entity}
+        onChange={vi.fn()}
+        getContainers={vi.fn()}
+      />,
+    );
+
+    fireEvent.change(screen.getByTestId('select-sourceType'), { target: { value: MODEL_SERVING_SOURCE_TYPE } });
+
+    expect(screen.getByTestId('containers-branch')).toBeInTheDocument();
   });
 });

@@ -92,32 +92,40 @@ describe('ContainerStatusBanner', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  test('clicking "Go to Container" opens the container detail page for Models', async () => {
-    mockFetchResponse([buildContainer()]);
+  test('clicking "Go to Container" opens Model Servings for an inference container', async () => {
+    mockFetchResponse([buildContainer({ $type: CONTAINER_TYPE.HF })]);
     render(<ContainerStatusBanner view={ApplicationRoute.Models} containerId="ykchattest" />);
     await waitFor(() => screen.getByText('Containers.GoToContainer'));
     fireEvent.click(screen.getByText('Containers.GoToContainer'));
     expect(openInNewTabMock).toHaveBeenCalledWith(ApplicationRoute.ModelServings, { name: 'ykchattest' });
   });
 
-  test('clicking "Go to Container" opens the correct route for Applications', async () => {
-    mockFetchResponse([buildContainer()]);
+  test('clicking "Go to Container" opens the correct route for an application container', async () => {
+    mockFetchResponse([buildContainer({ $type: CONTAINER_TYPE.APPLICATION })]);
     render(<ContainerStatusBanner view={ApplicationRoute.Applications} containerId="ykchattest" />);
     await waitFor(() => screen.getByText('Containers.GoToContainer'));
     fireEvent.click(screen.getByText('Containers.GoToContainer'));
     expect(openInNewTabMock).toHaveBeenCalledWith(ApplicationRoute.ApplicationContainers, { name: 'ykchattest' });
   });
 
-  test('clicking "Go to Container" opens the correct route for Toolsets', async () => {
-    mockFetchResponse([buildContainer()]);
+  test('clicking "Go to Container" opens MCP Containers for an MCP toolset source', async () => {
+    mockFetchResponse([buildContainer({ $type: CONTAINER_TYPE.MCP })]);
     render(<ContainerStatusBanner view={ApplicationRoute.Toolsets} containerId="ykchattest" />);
     await waitFor(() => screen.getByText('Containers.GoToContainer'));
     fireEvent.click(screen.getByText('Containers.GoToContainer'));
     expect(openInNewTabMock).toHaveBeenCalledWith(ApplicationRoute.McpContainers, { name: 'ykchattest' });
   });
 
-  test('clicking "Go to Container" opens the correct route for Interceptors', async () => {
-    mockFetchResponse([buildContainer()]);
+  test('clicking "Go to Container" opens Model Servings for a Model Serving toolset source', async () => {
+    mockFetchResponse([buildContainer({ $type: CONTAINER_TYPE.HF })]);
+    render(<ContainerStatusBanner view={ApplicationRoute.Toolsets} containerId="ykchattest" />);
+    await waitFor(() => screen.getByText('Containers.GoToContainer'));
+    fireEvent.click(screen.getByText('Containers.GoToContainer'));
+    expect(openInNewTabMock).toHaveBeenCalledWith(ApplicationRoute.ModelServings, { name: 'ykchattest' });
+  });
+
+  test('clicking "Go to Container" opens the correct route for an interceptor container', async () => {
+    mockFetchResponse([buildContainer({ $type: CONTAINER_TYPE.INTERCEPTOR })]);
     render(<ContainerStatusBanner view={ApplicationRoute.Interceptors} containerId="ykchattest" />);
     await waitFor(() => screen.getByText('Containers.GoToContainer'));
     fireEvent.click(screen.getByText('Containers.GoToContainer'));

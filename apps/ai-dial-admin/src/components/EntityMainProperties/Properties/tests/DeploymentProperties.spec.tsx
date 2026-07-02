@@ -12,6 +12,8 @@ vi.mock('@/src/app/[lang]/models/actions', () => ({
 vi.mock('@/src/app/actions/deployments', () => ({
   getMCPContainers: vi.fn(),
   getModelContainers: vi.fn(),
+  getToolsetContainers: vi.fn(),
+  getApplicationContainers: vi.fn(),
 }));
 
 describe('DeploymentProperties', () => {

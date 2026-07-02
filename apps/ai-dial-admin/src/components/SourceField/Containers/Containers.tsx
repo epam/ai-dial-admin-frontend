@@ -8,7 +8,7 @@ import SelectContainerModal from '@/src/components/SourceField/Containers/Select
 import Endpoints from '@/src/components/SourceField/Endpoints/Endpoints';
 import {
   buildContainerSelection,
-  getContainerRoute,
+  getRouteForContainer,
   isModelCapableContainer,
 } from '@/src/components/SourceField/utils';
 import {
@@ -41,6 +41,7 @@ interface Props<T> {
   entity: T;
   onChange: (entity: T) => void;
   getContainers: () => Promise<ServerActionResponse<Container[]>>;
+  containerFilter?: (container: Container) => boolean;
   view: ApplicationRoute;
   isModal?: boolean;
   error?: string;
@@ -51,6 +52,7 @@ const Containers = <T extends DialInterceptor | DialModel | DialApplication>({
   entity,
   onChange,
   getContainers,
+  containerFilter,
   view,
   isModal,
   error,
@@ -92,9 +94,11 @@ const Containers = <T extends DialInterceptor | DialModel | DialApplication>({
 
   const openContainer = useCallback(() => {
     if (entity.source?.containerId) {
-      onOpenInNewTab(getContainerRoute(view), { name: entity.source.containerId });
+      onOpenInNewTab(getRouteForContainer(selectedContainer ?? currentContainer, view), {
+        name: entity.source.containerId,
+      });
     }
-  }, [entity.source?.containerId, view]);
+  }, [entity.source?.containerId, selectedContainer, currentContainer, view]);
 
   useEffect(() => {
     const fetchContainers = async () => {
@@ -102,16 +106,20 @@ const Containers = <T extends DialInterceptor | DialModel | DialApplication>({
       if (containers?.length) {
         setCurrentContainer(containers.find((c) => c.name === entity.source?.containerId) ?? null);
         const runningContainers = containers.filter((container) => container.status === 'running');
-        setContainers(
-          view === ApplicationRoute.Models ? runningContainers.filter(isModelCapableContainer) : runningContainers,
-        );
+        const visibleContainers =
+          view === ApplicationRoute.Models
+            ? runningContainers.filter(isModelCapableContainer)
+            : containerFilter
+              ? runningContainers.filter(containerFilter)
+              : runningContainers;
+        setContainers(visibleContainers);
       }
     };
 
     fetchContainers().catch((error) =>
       showNotificationRef.current(getErrorNotification(error.errorHeader, error.errorMessage, error.requestId)),
     );
-  }, [entity.source?.containerId, getContainers, view]);
+  }, [entity.source?.containerId, getContainers, view, containerFilter]);
 
   useEffect(() => {
     setSelectedContainer(containers?.find((container) => container.name === entity.source?.containerId) || null);

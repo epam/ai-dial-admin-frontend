@@ -3,6 +3,13 @@ import { CODE_APP_SOURCE_TYPE } from '@/src/utils/entities/application-source';
 import { ApplicationRoute } from '@/src/types/routes';
 import { SelectOption } from '@epam/ai-dial-ui-kit';
 
+/**
+ * Virtual source-type value used only in the toolset source selector to offer "Model Serving"
+ * as a distinct option next to "MCP Container". Both persist as {@link SOURCE_TYPE.CONTAINER};
+ * they differ only in which container list is shown. Never written to `source.$type`.
+ */
+export const MODEL_SERVING_SOURCE_TYPE = 'model-serving';
+
 export const INTERCEPTOR_SOURCE_ITEMS: SelectOption[] = [
   { value: SOURCE_TYPE.ENDPOINTS, label: 'External Endpoint' },
   { value: SOURCE_TYPE.CONTAINER, label: 'Interceptor Container' },
@@ -20,6 +27,7 @@ export const TOOLSET_SOURCE_ITEMS: SelectOption[] = [
   // NOTE: Keep order
   { value: SOURCE_TYPE.ENDPOINTS, label: 'External Endpoint' },
   { value: SOURCE_TYPE.CONTAINER, label: 'MCP Container' },
+  { value: MODEL_SERVING_SOURCE_TYPE, label: 'Model Serving' },
   { value: SOURCE_TYPE.MCP_REGISTRY, label: 'MCP Registry' },
 ];
 
@@ -67,7 +75,7 @@ export const getSourceItems = (route: ApplicationRoute, deploymentsEnabled?: boo
   const items = getItems(route);
 
   return items.map((item) => {
-    if (item.value === SOURCE_TYPE.CONTAINER && !deploymentsEnabled) {
+    if ((item.value === SOURCE_TYPE.CONTAINER || item.value === MODEL_SERVING_SOURCE_TYPE) && !deploymentsEnabled) {
       return { ...item, disabled: true };
     }
     if (item.value === SOURCE_TYPE.MCP_REGISTRY && !mcpRegistryEnabled) {

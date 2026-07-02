@@ -166,6 +166,15 @@ describe('ContainersApi', () => {
     );
   });
 
+  test('calls getToolsetContainers with type=MCP,INFERENCE and GET', async () => {
+    fetch.mockResponseOnce(JSON.stringify(['container4']));
+    await instance.getToolsetContainers(TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(`${BASE_CONTAINERS_URL}?type=MCP,INFERENCE`),
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
   test('calls getImageContainers with image id', async () => {
     fetch.mockResponseOnce(JSON.stringify(['img-containers']));
     const imageId = 'img-123';
