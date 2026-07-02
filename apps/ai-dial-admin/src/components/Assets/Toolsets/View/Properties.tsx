@@ -1,6 +1,6 @@
 import { FC } from 'react';
 
-import { DialSwitch } from '@epam/ai-dial-ui-kit';
+import { DialInput, DialSwitch } from '@epam/ai-dial-ui-kit';
 
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
@@ -14,6 +14,7 @@ import { getAssetCreateFolderHandler } from '@/src/components/EntityListView/uti
 import ToolsetEndpoint from '@/src/components/SourceField/Endpoints/ToolsetEndpoint';
 import Authentication from '@/src/components/Toolsets/Auth/Authentication';
 import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
@@ -52,6 +53,16 @@ const Properties: FC<Props> = ({ selectedToolset, onChange, isPublication }) => 
         />
       )}
       <DescriptionControl entity={selectedToolset} onChangeEntity={onChange} isFullWidth={false} />
+
+      <DialInput
+        containerClassName={STANDARD_CONTROL_WIDTH}
+        id="provider"
+        labelProps={{ label: t(EntityFieldsI18nKey.provider) }}
+        placeholder={t(EntityPlaceholdersI18nKey.Provider)}
+        value={selectedToolset.provider}
+        onChange={(provider?: string) => onChange({ ...selectedToolset, provider })}
+        disabled={isReadOnlyAdmin}
+      />
 
       <IconControl
         iconUrl={selectedToolset.iconUrl}
