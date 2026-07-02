@@ -6,7 +6,6 @@ import {
   AnalyticsCardVariant,
   DialAnalyticsCard,
   DialAnalyticsHistogram,
-  DialLoader,
   DialSelect,
   SelectOption,
   SelectSize,
@@ -27,20 +26,18 @@ interface Props {
   metricOptions: MetricOption[];
   /** Left-section metric scores, reused to fill the per-statistic cards. `null` while loading. */
   metricScores: MetricScoresData | null;
+  /** Currently selected metric name, owned by the parent and shared with the MetricScores section. */
+  selectedMetricName: string | null;
+  /** Updates the shared metric selection (dropdown change). */
+  onSelectMetric: (name: string | null) => void;
 }
 
 const formatValue = (value: number): string => String(Math.round(value * 100) / 100);
 
-const DistributionSection: FC<Props> = ({ run, metricOptions, metricScores }) => {
+const DistributionSection: FC<Props> = ({ run, metricOptions, metricScores, selectedMetricName, onSelectMetric }) => {
   const t = useI18n();
-  const [selectedMetricName, setSelectedMetricName] = useState<string | null>(null);
   const [histogramValues, setHistogramValues] = useState<number[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-
-  // Reset the selection whenever the shared options change (e.g. a new run).
-  useEffect(() => {
-    setSelectedMetricName(null);
-  }, [metricOptions]);
 
   useEffect(() => {
     const option = metricOptions.find((metric) => metric.name === selectedMetricName);
@@ -74,7 +71,7 @@ const DistributionSection: FC<Props> = ({ run, metricOptions, metricScores }) =>
     [metricScores, selectedMetricName],
   );
 
-  const onMetricChange = useCallback((value: string | string[]) => setSelectedMetricName(value as string), []);
+  const onMetricChange = useCallback((value: string | string[]) => onSelectMetric(value as string), [onSelectMetric]);
 
   const control = (
     <DialSelect
@@ -93,19 +90,13 @@ const DistributionSection: FC<Props> = ({ run, metricOptions, metricScores }) =>
     if (!selectedMetricName) {
       return <p className="dial-small-text text-secondary">{t(RunsI18nKey.SelectMetricToSeeDistribution)}</p>;
     }
-    if (isLoading || histogramValues === null) {
-      return (
-        <div className="flex h-full items-center justify-center">
-          <DialLoader size={32} />
-        </div>
-      );
-    }
     return (
       <div className="flex flex-col gap-4">
         <DialAnalyticsHistogram
-          title={'Average value per test case '}
-          values={histogramValues}
+          title=""
+          values={histogramValues ?? []}
           valueTitle={t(RunsI18nKey.DistributionValueTitle)}
+          isLoading={isLoading || histogramValues === null}
         />
         {statCards.length > 0 && (
           <div className="flex flex-wrap gap-3">

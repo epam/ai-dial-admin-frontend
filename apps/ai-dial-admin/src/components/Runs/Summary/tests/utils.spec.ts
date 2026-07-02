@@ -146,8 +146,8 @@ describe('Runs Summary :: overall score query', () => {
     ]);
   });
 
-  test('parseOverallScore rounds to two decimals and handles missing data', () => {
-    expect(parseOverallScore({ rows: [{ [OVERALL_SCORE_ALIAS]: 0.8532 }] })).toBe(0.85);
+  test('parseOverallScore rounds to three decimals and handles missing data', () => {
+    expect(parseOverallScore({ rows: [{ [OVERALL_SCORE_ALIAS]: 0.8532 }] })).toBe(0.853);
     expect(parseOverallScore({ rows: [{ [OVERALL_SCORE_ALIAS]: null }] })).toBeNull();
     expect(parseOverallScore({ rows: [] })).toBeNull();
     expect(parseOverallScore(null)).toBeNull();
@@ -201,10 +201,10 @@ describe('Runs Summary :: metric scores', () => {
   test('parseMetricScores groups metrics by prefix per statistic and collects statistics', () => {
     const parsed = parseMetricScores({
       rows: [
-        { metric_name: 'aidial_rag_eval.generation.context_to_answer', metric_score_name: 'AVG', value: 0.8 },
+        { metric_name: 'aidial_rag_eval.generation.context_to_answer', metric_score_name: 'AVG', value: 0.812345 },
         { metric_name: 'aidial_rag_eval.generation.answer_relevancy', metric_score_name: 'AVG', value: 0.6 },
         { metric_name: 'aidial_rag_eval.retrieval.context_recall', metric_score_name: 'AVG', value: 0.9 },
-        { metric_name: 'aidial_rag_eval.generation.context_to_answer', metric_score_name: 'P90', value: 0.95 },
+        { metric_name: 'aidial_rag_eval.generation.context_to_answer', metric_score_name: 'P90', value: 0.9556 },
         { metric_name: 'aidial_rag_eval.generation.context_to_answer', metric_score_name: 'AVG', value: 'x' },
       ],
     });
@@ -212,10 +212,10 @@ describe('Runs Summary :: metric scores', () => {
     expect(parsed.statistics).toEqual(['AVG', 'P90']);
     expect(parsed.byStatistic).toEqual({
       AVG: [
-        { name: 'aidial_rag_eval.generation', bars: { context_to_answer: 0.8, answer_relevancy: 0.6 } },
+        { name: 'aidial_rag_eval.generation', bars: { context_to_answer: 0.812, answer_relevancy: 0.6 } },
         { name: 'aidial_rag_eval.retrieval', bars: { context_recall: 0.9 } },
       ],
-      P90: [{ name: 'aidial_rag_eval.generation', bars: { context_to_answer: 0.95 } }],
+      P90: [{ name: 'aidial_rag_eval.generation', bars: { context_to_answer: 0.956 } }],
     });
   });
 
@@ -226,41 +226,37 @@ describe('Runs Summary :: metric scores', () => {
 });
 
 describe('Runs Summary :: distribution', () => {
-  test('buildDistributionQuery buckets the metric field with width_bucket over 0..1.01/10', () => {
+  test('buildDistributionQuery fetches the raw metric field values as rows', () => {
     const query = buildDistributionQuery('run-1', 'metric::DeepEval: Answer Relevancy::score');
 
-    expect(query.mode).toBe(QueryMode.Aggregate);
-    expect(query.group_by).toEqual(['bucket']);
-    expect(query.sort).toEqual([{ field: 'bucket', dir: SortDir.Asc, nulls: null }]);
+    expect(query.mode).toBe(QueryMode.Row);
+    expect(query.page).toEqual({ type: 'offset', offset: 0, limit: 10000, include_total: false });
+    expect(query.filter).toEqual({
+      op: ComparisonOp.Eq,
+      args: [
+        { type: ExprType.Field, name: 'test_suite_run_id' },
+        { type: ExprType.Value, value_type: ValueType.Uuid, value: 'run-1' },
+      ],
+    });
     expect(query.select).toEqual([
       {
-        expr: {
-          type: ExprType.Fn,
-          name: 'width_bucket',
-          args: [
-            { type: ExprType.Field, name: 'metric::DeepEval: Answer Relevancy::score' },
-            { type: ExprType.Value, value_type: ValueType.Decimal, value: '0' },
-            { type: ExprType.Value, value_type: ValueType.Decimal, value: '1.01' },
-            { type: ExprType.Value, value_type: ValueType.Integer, value: '10' },
-          ],
-        },
-        as: 'bucket',
+        expr: { type: ExprType.Field, name: 'metric::DeepEval: Answer Relevancy::score' },
+        as: 'value',
       },
-      { expr: { type: ExprType.Fn, name: 'count', args: [] }, as: 'cnt' },
     ]);
   });
 
-  test('parseHistogramValues expands bucket counts into midpoint values', () => {
+  test('parseHistogramValues extracts and clamps the raw values', () => {
     const values = parseHistogramValues({
-      rows: [
-        { bucket: 1, cnt: 2 },
-        { bucket: 10, cnt: 1 },
-        { bucket: 5, cnt: 0 },
-      ],
+      rows: [{ value: 0 }, { value: 0.42 }, { value: 1 }, { value: 1.2 }, { value: -0.1 }],
     });
 
-    // bucket 1 → 0.05 (x2), bucket 10 → 0.95 (x1); zero-count buckets skipped.
-    expect(values).toEqual([0.05, 0.05, 0.95]);
+    // exact 0 and 1 pass through; out-of-range values clamp into [0, 1].
+    expect(values).toEqual([0, 0.42, 1, 1, 0]);
+  });
+
+  test('parseHistogramValues skips null / non-numeric values', () => {
+    expect(parseHistogramValues({ rows: [{ value: null }, { value: 'x' }, { value: 0.5 }] })).toEqual([0.5]);
   });
 
   test('parseHistogramValues handles null/empty results', () => {

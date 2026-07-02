@@ -1854,6 +1854,7 @@ export enum RunsI18nKey {
   Fail = 'Runs.Fail',
   ExecError = 'Runs.ExecError',
   Milliseconds = 'Runs.Milliseconds',
+  Seconds = 'Runs.Seconds',
   TestSuite = 'Runs.TestSuite',
   TestCaseData = 'Runs.TestCaseData',
   Execution = 'Runs.Execution',

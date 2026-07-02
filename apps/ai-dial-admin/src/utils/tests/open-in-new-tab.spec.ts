@@ -134,9 +134,14 @@ describe('Entity list view :: getEntityPath', () => {
     expect(res1).toEqual('id');
   });
 
-  test('Should return id field for Images', () => {
+  test('Should return name with id query param for Runs', () => {
+    const res1 = getEntityPath(ApplicationRoute.Runs, { data, id: 'id', testRunName: 'run-name' }, void 0);
+    expect(res1).toEqual('run-name?id=id');
+  });
+
+  test('Should fall back to id as name when testRunName is missing for Runs', () => {
     const res1 = getEntityPath(ApplicationRoute.Runs, { data, id: 'id' }, void 0);
-    expect(res1).toEqual('id');
+    expect(res1).toEqual('id?id=id');
   });
 
   test('Should return compare query path for RunsCompare', () => {

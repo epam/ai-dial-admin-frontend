@@ -1,4 +1,5 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { FC, useState } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { StructuredQuery } from '@/src/models/evaluation/structured-query';
@@ -26,8 +27,8 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
         ))}
       </select>
     ),
-    DialAnalyticsHistogram: ({ title, values }: any) => (
-      <div role="figure" aria-label={String(title)}>
+    DialAnalyticsHistogram: ({ valueTitle, values }: any) => (
+      <div role="figure" aria-label={String(valueTitle)}>
         histogram:{(values || []).length}
       </div>
     ),
@@ -52,10 +53,24 @@ const METRIC_SCORES: MetricScoresData = {
 };
 
 const HISTOGRAM_ROWS = {
-  rows: [
-    { bucket: 1, cnt: 2 },
-    { bucket: 10, cnt: 3 },
-  ],
+  rows: [{ value: 0 }, { value: 0.2 }, { value: 0.5 }, { value: 0.9 }, { value: 1 }],
+};
+
+/** Wraps the controlled section so the lifted `selectedMetricName` behaves like the parent's. */
+const ControlledDistributionSection: FC<{ metricOptions?: MetricOption[]; metricScores?: MetricScoresData | null }> = ({
+  metricOptions = METRIC_OPTIONS,
+  metricScores = METRIC_SCORES,
+}) => {
+  const [selectedMetricName, setSelectedMetricName] = useState<string | null>(null);
+  return (
+    <DistributionSection
+      run={{ id: 'run-1' } as any}
+      metricOptions={metricOptions}
+      metricScores={metricScores}
+      selectedMetricName={selectedMetricName}
+      onSelectMetric={setSelectedMetricName}
+    />
+  );
 };
 
 describe('Runs Summary :: DistributionSection', () => {
@@ -65,9 +80,7 @@ describe('Runs Summary :: DistributionSection', () => {
   });
 
   test('prompts to pick a metric before any selection', () => {
-    render(
-      <DistributionSection run={{ id: 'run-1' } as any} metricOptions={METRIC_OPTIONS} metricScores={METRIC_SCORES} />,
-    );
+    render(<ControlledDistributionSection />);
 
     expect(screen.getByText('Runs.DistributionTitle')).toBeInTheDocument();
     expect(screen.getByText('Runs.SelectMetricToSeeDistribution')).toBeInTheDocument();
@@ -75,16 +88,14 @@ describe('Runs Summary :: DistributionSection', () => {
   });
 
   test('fetches the distribution and renders histogram + stat cards on selection', async () => {
-    render(
-      <DistributionSection run={{ id: 'run-1' } as any} metricOptions={METRIC_OPTIONS} metricScores={METRIC_SCORES} />,
-    );
+    render(<ControlledDistributionSection />);
 
     fireEvent.change(screen.getByLabelText('select-Runs.Metric'), {
       target: { value: 'DeepEval: Answer Relevancy.score' },
     });
 
-    const histogram = await screen.findByRole('figure', { name: 'Average value per test case' });
-    expect(histogram).toHaveTextContent('histogram:5'); // 2 + 3 reconstructed values
+    const histogram = await screen.findByRole('figure', { name: 'Runs.DistributionValueTitle' });
+    expect(histogram).toHaveTextContent('histogram:5'); // one value per fetched row
 
     const avgCard = screen.getByRole('region', { name: 'AVG' });
     expect(avgCard).toHaveTextContent('0.8');
@@ -92,18 +103,16 @@ describe('Runs Summary :: DistributionSection', () => {
   });
 
   test('queries the distribution with the selected metric field', async () => {
-    render(
-      <DistributionSection run={{ id: 'run-1' } as any} metricOptions={METRIC_OPTIONS} metricScores={METRIC_SCORES} />,
-    );
+    render(<ControlledDistributionSection />);
 
     fireEvent.change(screen.getByLabelText('select-Runs.Metric'), {
       target: { value: 'DeepEval: Answer Relevancy.score' },
     });
 
-    await screen.findByRole('figure', { name: 'Average value per test case' });
+    await screen.findByRole('figure', { name: 'Runs.DistributionValueTitle' });
 
     const query = executeStructuredQueryMock.mock.calls[0][0] as StructuredQuery;
-    const field = (query.select?.[0]?.expr as any)?.args?.[0]?.name;
+    const field = (query.select?.[0]?.expr as any)?.name;
     expect(field).toBe('metric::DeepEval: Answer Relevancy::score');
   });
 });
