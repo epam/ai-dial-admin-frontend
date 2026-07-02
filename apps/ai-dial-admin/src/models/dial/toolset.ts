@@ -9,6 +9,7 @@ export interface Toolset extends BaseEntity, EntityRoleLimits {
   descriptionKeywords?: string[];
   iconUrl?: string;
   author?: string;
+  provider?: string;
   endpoint?: string | null;
   maxRetryAttempts?: number;
   source?: SOURCE_FIELD;
