@@ -2,10 +2,11 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { analyticsApi, runsApi } from '@/src/app/api/api';
+import { analyticsApi, runsApi, structuredQueryApi } from '@/src/app/api/api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { FilterDto, SortDto } from '@/src/models/request';
+import { StructuredQuery } from '@/src/models/evaluation/structured-query';
 
 export async function getRuns(page: number, size: number, sorts: SortDto[], filters: FilterDto[]) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -45,4 +46,9 @@ export async function getMetricSnapshots(filters: FilterDto[]) {
 export async function exportRunPreview(runId: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return analyticsApi.exportPreview(runId, token);
+}
+
+export async function executeStructuredQuery(query: StructuredQuery) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return structuredQueryApi.execute(query, token);
 }

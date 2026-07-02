@@ -1,4 +1,10 @@
 import { AnalyticsResult } from '@/src/models/evaluation/run';
+import { ApplicationRoute } from '@/src/types/routes';
+
+export interface RunDeployment {
+  name: string;
+  route: ApplicationRoute;
+}
 
 export interface MetricEntry {
   key: string;
