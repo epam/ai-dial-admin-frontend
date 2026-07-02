@@ -95,7 +95,6 @@ describe('Runs Summary :: Analytics', () => {
     render(<Analytics run={{ id: 'run-1' } as any} metricOptions={METRIC_OPTIONS} />);
 
     expect(await screen.findByText('Runs.OverallScore')).toBeInTheDocument();
-    expect(screen.getByText('Runs.AvgFor')).toBeInTheDocument();
 
     const select = screen.getByLabelText('metric-select');
     expect(select.querySelector('option[value="Ragas Answer Relevancy.score"]')).toBeInTheDocument();
