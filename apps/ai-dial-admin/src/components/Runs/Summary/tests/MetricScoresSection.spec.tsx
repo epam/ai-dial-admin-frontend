@@ -93,7 +93,9 @@ describe('Runs Summary :: MetricScoresSection', () => {
   });
 
   test('shows an empty message when there are no metric scores', () => {
-    render(<MetricScoresSection data={{ statistics: [], byStatistic: {} }} testCaseCount={0} onSelectMetric={vi.fn()} />);
+    render(
+      <MetricScoresSection data={{ statistics: [], byStatistic: {} }} testCaseCount={0} onSelectMetric={vi.fn()} />,
+    );
 
     expect(screen.getByText('Runs.NoMetricScores')).toBeInTheDocument();
   });

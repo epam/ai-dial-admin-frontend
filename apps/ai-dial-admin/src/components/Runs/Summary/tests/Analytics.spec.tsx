@@ -166,11 +166,11 @@ describe('Runs Summary :: Analytics', () => {
     expect(screen.getByText('2 Runs.ExecError')).toBeInTheDocument();
   });
 
-  test('renders average run time card in milliseconds', async () => {
+  test('renders average run time card in seconds', async () => {
     mockQueries();
     render(<Analytics run={{ id: 'run-1' } as any} metricOptions={METRIC_OPTIONS} />);
 
-    expect(await screen.findByText('200 Runs.Milliseconds')).toBeInTheDocument();
+    expect(await screen.findByText('0.2 Runs.Seconds')).toBeInTheDocument();
   });
 
   test('marks cards as error when the run has no data', async () => {
