@@ -543,7 +543,7 @@ export const getTestSuiteRequestTemplateTabs = (t: (key: string) => string): Tab
 };
 
 export const getRunTabs = (t: (key: string) => string): TabModel[] => {
-  return [summaryTab(t), analyticsTab(t), extractionResultTab(t)];
+  return [summaryTab(t), extractionResultTab(t)];
 };
 
 export const getDatasetTabs = (t: (key: string) => string): TabModel[] => {

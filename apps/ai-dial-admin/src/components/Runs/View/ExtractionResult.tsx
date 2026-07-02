@@ -46,7 +46,7 @@ interface Props {
   run: Run;
 }
 
-const AnalyticsTab: FC<Props> = ({ run }) => {
+const ExtractionResultTab: FC<Props> = ({ run }) => {
   const t = useI18n();
   const [snapshots, setSnapshots] = useState<MetricSnapshot[]>([]);
   const [comparedSnapshots, setComparedSnapshots] = useState<MetricSnapshot[]>([]);
@@ -360,4 +360,4 @@ const AnalyticsTab: FC<Props> = ({ run }) => {
   );
 };
 
-export default AnalyticsTab;
+export default ExtractionResultTab;

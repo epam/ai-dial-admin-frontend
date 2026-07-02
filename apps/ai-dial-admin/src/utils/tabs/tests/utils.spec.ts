@@ -14,7 +14,6 @@ const flags = (overrides: Partial<FeatureFlags> = {}): FeatureFlags => ({
   ...overrides,
 });
 import {
-  analyticsTab,
   applicationRunnersTab,
   applicationsTab,
   appRouteTab,
@@ -299,7 +298,7 @@ describe('Entities :: tabs', () => {
   });
 
   test('returns correct tabs for run', () => {
-    expect(getRunTabs(t)).toEqual([summaryTab(t), analyticsTab(t), extractionResultTab(t)]);
+    expect(getRunTabs(t)).toEqual([summaryTab(t), extractionResultTab(t)]);
   });
 
   test('returns correct trends tab', () => {
