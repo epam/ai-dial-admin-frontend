@@ -1179,6 +1179,7 @@ export enum EntityPlaceholdersI18nKey {
   Expression = 'EntityPlaceholders.Expression',
   ReasoningEfforts = 'EntityPlaceholders.ReasoningEfforts',
   EmbeddingDimensions = 'EntityPlaceholders.EmbeddingDimensions',
+  Provider = 'EntityPlaceholders.Provider',
 }
 
 export enum EntityCaptionsI18nKey {
@@ -1407,6 +1408,7 @@ export enum EntityFieldsI18nKey {
   temperature = 'EntityFields.temperature',
   agent = 'EntityFields.agent',
   embeddingDimensions = 'EntityFields.embeddingDimensions',
+  provider = 'EntityFields.provider',
 }
 
 export enum ToolsetI18nKey {
