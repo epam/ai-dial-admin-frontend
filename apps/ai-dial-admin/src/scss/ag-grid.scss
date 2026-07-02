@@ -261,3 +261,35 @@
     @apply min-h-0;
   }
 }
+
+.heat-map-grid {
+  .ag-theme-balham-dark,
+  .ag-root-wrapper {
+    overflow-x: hidden !important;
+  }
+
+  .ag-header,
+  .ag-header-viewport,
+  .ag-header-row,
+  .ag-header-cell.heat-map-test-case-header {
+    overflow: visible !important;
+  }
+
+  .ag-header-cell.heat-map-test-case-header {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+
+    .ag-header-cell-comp-wrapper {
+      height: 100%;
+      overflow: visible;
+      padding-left: 0;
+      padding-right: 0;
+    }
+  }
+
+  .ag-cell {
+    border-top: none !important;
+    border-left: none !important;
+    padding: 0 !important;
+  }
+}

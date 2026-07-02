@@ -46,8 +46,8 @@ export const getCompareViewTabs = (t: (key: string) => string, runsCompareEnable
     disabled: !runsCompareEnabled,
   },
   {
-    id: CompareViewTab.MetricsDetails,
-    label: t(RunsI18nKey.RunCompareTabMetricsDetails),
+    id: CompareViewTab.HeatMap,
+    label: t(RunsI18nKey.RunCompareTabHeatMap),
     disabled: !runsCompareEnabled,
   },
   { id: CompareViewTab.ExecutionResults, label: t(RunsI18nKey.RunCompareTabExecutionResults) },
