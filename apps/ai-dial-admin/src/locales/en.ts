@@ -1258,6 +1258,7 @@ export default {
     temperature: 'Temperature',
     agent: 'Agent',
     embeddingDimensions: 'Embedding Dimensions',
+    provider: 'Provider',
   },
   EntityPlaceholders: {
     Project: 'Enter project',
@@ -1336,6 +1337,7 @@ export default {
     Expression: 'Enter expression',
     ReasoningEfforts: 'Select or type reasoning effort',
     EmbeddingDimensions: 'Enter embedding dimensions',
+    Provider: 'Enter provider',
   },
   EntityCaptions: {
     ProbeEnableCustom: 'Use custom values instead of default probe configuration',
