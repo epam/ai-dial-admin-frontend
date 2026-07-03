@@ -73,6 +73,7 @@ const CONTAINER_HIDDEN_KEYS = new Set<string>([
   'updatedAt',
   'parentDeploymentName',
   'modelFormat',
+  'inferenceTask',
 ]);
 
 const CONTAINER_HIDE_IF_EMPTY_KEYS = new Set<string>(['nodePoolId', 'nodePoolName']);
