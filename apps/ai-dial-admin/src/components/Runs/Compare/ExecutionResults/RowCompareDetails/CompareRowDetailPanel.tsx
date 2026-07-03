@@ -23,6 +23,7 @@ import {
   applyRowDetailDisplayTree,
   buildRowDetailDisplayTree,
 } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/row-detail-display-tree';
+import { DetailMode } from '@/src/components/Runs/Details/BottomDrawer/models';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -33,10 +34,20 @@ interface Props {
   primaryRunName: string;
   comparedRunName: string;
   onClose: () => void;
+  displayMode: DetailMode;
+  onSwitchDisplayMode: () => void;
   className?: string;
 }
 
-const CompareRowDetailPanel: FC<Props> = ({ row, primaryRunName, comparedRunName, onClose, className }) => {
+const CompareRowDetailPanel: FC<Props> = ({
+  row,
+  primaryRunName,
+  comparedRunName,
+  onClose,
+  displayMode,
+  onSwitchDisplayMode,
+  className,
+}) => {
   const t = useI18n();
   const [primaryDetail, setPrimaryDetail] = useState<AnalyticsResult | null>(null);
   const [comparedDetail, setComparedDetail] = useState<AnalyticsResult | null>(null);
@@ -44,7 +55,9 @@ const CompareRowDetailPanel: FC<Props> = ({ row, primaryRunName, comparedRunName
   const [hasError, setHasError] = useState(false);
 
   const [showDisplayPanel, setShowDisplayPanel] = useState(false);
-  const [viewMode, setViewMode] = useState(RowDetailViewMode.Table);
+  const [viewMode, setViewMode] = useState(
+    displayMode === DetailMode.Drawer ? RowDetailViewMode.Pivot : RowDetailViewMode.Table,
+  );
   const [viewDifferencesOnly, setViewDifferencesOnly] = useState(false);
   const [hideHighlights, setHideHighlights] = useState(false);
   const [displayTree, setDisplayTree] = useState<ColDef[]>([]);
@@ -104,6 +117,9 @@ const CompareRowDetailPanel: FC<Props> = ({ row, primaryRunName, comparedRunName
   const counts = useMemo(() => countRowDetailDiffs(sections), [sections]);
 
   useEffect(() => {
+    if (sections.length === 0) {
+      return;
+    }
     setDisplayTree((prev) => buildRowDetailDisplayTree(sections, prev));
   }, [sections]);
 
@@ -120,6 +136,8 @@ const CompareRowDetailPanel: FC<Props> = ({ row, primaryRunName, comparedRunName
         onClose={onClose}
         onOpenDisplay={onToggleDisplayPanel}
         isDisplayOpen={showDisplayPanel}
+        displayMode={displayMode}
+        onSwitchDisplayMode={onSwitchDisplayMode}
       />
 
       <div className="flex flex-col flex-1 min-h-0 gap-4 px-6 pb-6 overflow-hidden">

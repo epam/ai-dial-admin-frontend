@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { parseExecutionStatus } from '@/src/components/Common/ExecutionStatusIcon/utils';
+import { formatExecutionStatusLabel, parseExecutionStatus } from '@/src/components/Common/ExecutionStatusIcon/utils';
 import { ExtractionResultStatus } from '@/src/models/evaluation/run';
 
 describe('parseExecutionStatus', () => {
@@ -16,5 +16,22 @@ describe('parseExecutionStatus', () => {
 
   test('returns null when raw is null', () => {
     expect(parseExecutionStatus(null)).toBeNull();
+  });
+});
+
+describe('formatExecutionStatusLabel', () => {
+  test('formats known statuses with only the first letter capitalized', () => {
+    expect(formatExecutionStatusLabel('SUCCESS')).toBe('Success');
+    expect(formatExecutionStatusLabel('FAILED')).toBe('Failed');
+    expect(formatExecutionStatusLabel('TIMEOUT')).toBe('Timeout');
+    expect(formatExecutionStatusLabel('ERROR')).toBe('Error');
+  });
+
+  test('returns em dash for null', () => {
+    expect(formatExecutionStatusLabel(null)).toBe('—');
+  });
+
+  test('title-cases unknown status strings', () => {
+    expect(formatExecutionStatusLabel('PENDING')).toBe('Pending');
   });
 });

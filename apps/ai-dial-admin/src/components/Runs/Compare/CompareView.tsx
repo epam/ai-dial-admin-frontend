@@ -10,8 +10,10 @@ import { DialGhostButton, DialTabs } from '@epam/ai-dial-ui-kit';
 import { getRun } from '@/src/app/[lang]/runs/actions';
 import CompareRunTag from '@/src/components/Runs/Compare/CompareRunTag';
 import CompareTabsContent from '@/src/components/Runs/Compare/CompareTabsContent';
+import CompareRowDetailDrawer from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareRowDetailDrawer';
 import CompareRowDetailPanel from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareRowDetailPanel';
 import { ROW_DETAIL_SIDEBAR_CLASS } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/constants';
+import { DetailMode } from '@/src/components/Runs/Details/BottomDrawer/models';
 import {
   CompareRunSlot,
   CompareViewTab,
@@ -53,6 +55,7 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
   const [activeTab, setActiveTab] = useState(CompareViewTab.ExecutionResults);
   const [showDisplayPanel, setShowDisplayPanel] = useState(false);
   const [selectedRow, setSelectedRow] = useState<CompareAnalyticsRow | null>(null);
+  const [detailMode, setDetailMode] = useState(DetailMode.Sidebar);
 
   const compareTabs = useMemo(() => getCompareViewTabs(t), [t]);
 
@@ -151,8 +154,40 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
 
   const closeRowDetail = useCallback(() => {
     setSelectedRow(null);
+    setDetailMode(DetailMode.Sidebar);
     sidebarRef.current.closeSidebar();
   }, []);
+
+  const switchToDrawer = useCallback(() => {
+    sidebarRef.current.closeSidebar();
+    setDetailMode(DetailMode.Drawer);
+  }, []);
+
+  const showSidebarPanel = useCallback(
+    (row: CompareAnalyticsRow) => {
+      sidebarRef.current.showSidebar(
+        <CompareRowDetailPanel
+          row={row}
+          primaryRunName={primaryRunName}
+          comparedRunName={comparedRunName}
+          onClose={closeRowDetail}
+          displayMode={DetailMode.Sidebar}
+          onSwitchDisplayMode={switchToDrawer}
+        />,
+        ROW_DETAIL_SIDEBAR_CLASS,
+      );
+    },
+    [primaryRunName, comparedRunName, closeRowDetail, switchToDrawer],
+  );
+
+  const switchToSidebar = useCallback(() => {
+    setDetailMode(DetailMode.Sidebar);
+    const currentRow = selectedRow;
+    if (currentRow) {
+      // Let the drawer unmount before re-showing the sidebar panel.
+      setTimeout(() => showSidebarPanel(currentRow), 0);
+    }
+  }, [selectedRow, showSidebarPanel]);
 
   const openRowDetail = useCallback(
     (row: CompareAnalyticsRow) => {
@@ -161,17 +196,11 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
         return;
       }
       setSelectedRow(row);
-      sidebarRef.current.showSidebar(
-        <CompareRowDetailPanel
-          row={row}
-          primaryRunName={primaryRunName}
-          comparedRunName={comparedRunName}
-          onClose={closeRowDetail}
-        />,
-        ROW_DETAIL_SIDEBAR_CLASS,
-      );
+      if (detailMode === DetailMode.Sidebar) {
+        showSidebarPanel(row);
+      }
     },
-    [selectedRow?.id, primaryRunName, comparedRunName, closeRowDetail],
+    [selectedRow?.id, detailMode, closeRowDetail, showSidebarPanel],
   );
 
   useEffect(() => {
@@ -234,6 +263,16 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
           onCloseRowDetail={closeRowDetail}
         />
       </div>
+
+      {detailMode === DetailMode.Drawer && selectedRow && (
+        <CompareRowDetailDrawer
+          row={selectedRow}
+          primaryRunName={primaryRunName}
+          comparedRunName={comparedRunName}
+          onClose={closeRowDetail}
+          onSwitchToSidebar={switchToSidebar}
+        />
+      )}
 
       {selectRunModalConfig &&
         createPortal(

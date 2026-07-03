@@ -11,7 +11,7 @@ import { DEFAULT_COMPARE_DELTA_HEADER } from '@/src/components/Runs/Compare/Exec
 import CompareMetricDeltaValue from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareMetricDeltaValue';
 import FieldValue from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/FieldValue';
 import StatusValue from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/StatusValue';
-import { getPivotGridTemplateColumns } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/constants';
+import { getPivotGridTemplateColumns } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/pivot-column-width';
 import {
   CompareRowDetailField,
   CompareRowDetailSection,
@@ -78,7 +78,7 @@ const CompareRowDetailPivotTable: FC<Props> = ({
     setSearchQuery(event.target.value);
   }, []);
 
-  const gridTemplateColumns = getPivotGridTemplateColumns(columns.length);
+  const gridTemplateColumns = useMemo(() => getPivotGridTemplateColumns(columns), [columns]);
   const failedLabel = t(RunsI18nKey.MetricFailedText);
 
   const renderValueCell = (
