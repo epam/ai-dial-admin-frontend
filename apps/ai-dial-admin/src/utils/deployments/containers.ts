@@ -10,6 +10,7 @@ import {
   Autoscaling,
   Container,
   ContainerRedeploySnapshot,
+  ProbeProperties,
   ResourcesDefaults,
 } from '@/src/models/deployments/containers';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -21,7 +22,9 @@ import {
   ContainerResources,
   ContainerSource,
   MODEL_FORMAT,
+  PROBE_TYPE,
 } from '@/src/types/deployments/containers';
+import { getPathError, getPortError } from '@/src/utils/deployments/validation';
 import { DEFAULT_SCALING, DEFAULT_STRATEGY, SERVING_SCALING } from '@/src/constants/deployments/containers';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { SourceI18nKey } from '@/src/constants/i18n';
@@ -250,6 +253,40 @@ export const deriveScaling = (
  * if the route has no container source concept. Supported routes: Models, Applications,
  * Toolsets, Interceptors, Adapters.
  */
+/**
+ * A startup probe is only savable when its required fields are valid: a port in range, plus a path
+ * when the probe type is HTTP GET. Timings are optional and don't gate saving.
+ */
+export const isProbeSavable = (probeProperties?: ProbeProperties): boolean => {
+  const probe = probeProperties?.probe;
+  if (!probe) {
+    return false;
+  }
+  if (getPortError(probe.port as number, undefined, true)) {
+    return false;
+  }
+  if (probe.$type === PROBE_TYPE.HTTP_GET && getPathError(probe.path, undefined, true)) {
+    return false;
+  }
+  return true;
+};
+
+/**
+ * Prepares a container's startup probe for save. When the required probe fields aren't in place
+ * (e.g. the probe was enabled then disabled without a port), the invalid probe config is dropped and
+ * only `{ enabled: false }` is sent, so the backend doesn't reject an incomplete probe. A container
+ * with no probe, or with a valid probe, is returned unchanged.
+ */
+export const sanitizeContainerProbe = (container: Container): Container => {
+  if (!container.probeProperties) {
+    return container;
+  }
+  if (isProbeSavable(container.probeProperties)) {
+    return container;
+  }
+  return { ...container, probeProperties: { enabled: false } };
+};
+
 export const getContainersByView = (
   view: ApplicationRoute,
 ): (() => Promise<ServerActionResponse<Container[]>>) | null => {
