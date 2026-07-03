@@ -147,7 +147,9 @@ export const getEntityTemplate = (
       template.source = {
         $type: SOURCE_TYPE.CONTAINER,
         containerId: container.name,
-        mcpEndpointPath: '/mcp',
+        // Backend ToolSetContainerSource reads `completionEndpointPath`; it concatenates it with the
+        // container URL to build the toolset endpoint (container.url + /mcp), same as an MCP container.
+        completionEndpointPath: '/mcp',
       };
       return template;
     }

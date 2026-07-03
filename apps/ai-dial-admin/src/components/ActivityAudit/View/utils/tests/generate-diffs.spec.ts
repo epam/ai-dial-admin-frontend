@@ -432,6 +432,19 @@ describe('Activity audit :: image entity top-level $type is suppressed', () => {
   });
 });
 
+describe('Activity audit :: inferenceTask is suppressed for container deployments', () => {
+  test('does not emit an inferenceTask row for an inference deployment diff', () => {
+    const before = { displayName: 'deberta', inferenceTask: 'text_classification' };
+    const after = { displayName: 'deberta', inferenceTask: 'text_generation' };
+
+    const result = generateCurrentResource(before, after, ActivityAuditResourceType.INFERENCE_DEPLOYMENT, false);
+
+    expect(result.properties.find((d) => d.parameter === 'inferenceTask')).toBeUndefined();
+    // A normal field on the same entity still diffs.
+    expect(result.properties.find((d) => d.parameter === 'displayName')).toBeDefined();
+  });
+});
+
 describe('Activity audit :: image source normalization for MCP Registry', () => {
   test('flattens externalRegistryRef into $type=mcp-registry + packageName + version', () => {
     const before = {
