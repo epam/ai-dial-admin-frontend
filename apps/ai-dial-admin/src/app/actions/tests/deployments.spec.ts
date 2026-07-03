@@ -23,6 +23,7 @@ import {
   getApplicationContainers,
   getInterceptorContainers,
   getMCPContainers,
+  getToolsetContainers,
   getImages,
   getModelContainers,
   getTopics,
@@ -199,6 +200,17 @@ describe('Deployments actions', () => {
 
       expect(getUserToken).toHaveBeenCalled();
       expect(containersApi.getMCPContainers).toHaveBeenCalledWith(TOKEN_MOCK);
+      expect(result).toBe(mockResponse);
+    });
+
+    test('getToolsetContainers calls containersApi.getToolsetContainers with token', async () => {
+      const mockResponse = [{ id: '1', name: 'toolset-container' }];
+      (containersApi.getToolsetContainers as any).mockResolvedValue(mockResponse);
+
+      const result = await getToolsetContainers();
+
+      expect(getUserToken).toHaveBeenCalled();
+      expect(containersApi.getToolsetContainers).toHaveBeenCalledWith(TOKEN_MOCK);
       expect(result).toBe(mockResponse);
     });
 

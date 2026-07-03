@@ -440,12 +440,7 @@ const ActivityAuditList: FC<Props> = ({
               onRefresh();
             }
           } else {
-            showNotification(
-              getErrorNotification(
-                getRollbackErrorTitle(selectedActivity.resourceType, t),
-                getRollbackErrorDescription(selectedActivity.resourceType, t),
-              ),
-            );
+            showNotification(getErrorNotification(res?.errorHeader, res?.errorMessage, res?.requestId));
           }
         })
         .catch(() => {

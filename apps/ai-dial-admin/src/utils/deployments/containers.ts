@@ -2,8 +2,8 @@ import {
   getAdapterContainers,
   getApplicationContainers,
   getInterceptorContainers,
-  getMCPContainers,
   getModelContainers,
+  getToolsetContainers,
 } from '@/src/app/actions/deployments';
 import { EnvironmentVariable } from '@/src/models/deployments/variables';
 import {
@@ -259,7 +259,7 @@ export const getContainersByView = (
     case ApplicationRoute.Applications:
       return getApplicationContainers;
     case ApplicationRoute.Toolsets:
-      return getMCPContainers;
+      return getToolsetContainers;
     case ApplicationRoute.Interceptors:
       return getInterceptorContainers;
     case ApplicationRoute.Adapters:

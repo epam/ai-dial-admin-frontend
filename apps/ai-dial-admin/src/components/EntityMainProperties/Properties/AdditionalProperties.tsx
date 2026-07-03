@@ -1,8 +1,11 @@
 'use client';
 
+import { DialInput } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 
-import { EntityFieldsI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { ChatEntity } from '@/src/models/dial/base-entity';
@@ -25,6 +28,7 @@ interface Props {
 
 const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity, isEntityImmutable = false }) => {
   const t = useI18n();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   const applicationRunner = runners?.find(
     (runner) => runner.$id === getSchemaSourceId((entity as DialApplication).source),
@@ -57,6 +61,15 @@ const AdditionalProperties: FC<Props> = ({ view, entity, runners, onChangeEntity
       ) : null}
       {view == ApplicationRoute.Toolsets && isEntityImmutable && (
         <>
+          <DialInput
+            containerClassName={STANDARD_CONTROL_WIDTH}
+            id="provider"
+            labelProps={{ label: t(EntityFieldsI18nKey.provider) }}
+            placeholder={t(EntityPlaceholdersI18nKey.Provider)}
+            value={(entity as Toolset).provider}
+            onChange={(provider?: string) => onChangeEntity({ ...entity, provider } as Toolset)}
+            disabled={isReadOnlyAdmin}
+          />
           <IconControl iconUrl={entity.iconUrl} onChange={(icon) => onChangeEntity({ ...entity, iconUrl: icon })} />
           <TopicsControl
             entity={{ topics: (entity as Toolset)?.descriptionKeywords }}

@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import AnalyticsTab from '../Analytics';
+import ExtractionResultTab from '../ExtractionResult';
 
 const mockShowSidebar = vi.fn();
 const mockCloseSidebar = vi.fn();
@@ -96,20 +96,20 @@ const mockRun = {
   testSuiteRunId: 'tsr-1',
 } as any;
 
-describe('AnalyticsTab', () => {
+describe('ExtractionResultTab', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   test('renders grid after loading', async () => {
-    render(<AnalyticsTab run={mockRun} />);
+    render(<ExtractionResultTab run={mockRun} />);
     await waitFor(() => {
       expect(screen.getByRole('grid', { name: 'Analytics grid' })).toBeInTheDocument();
     });
   });
 
   test('opens sidebar on row click in default mode', async () => {
-    render(<AnalyticsTab run={mockRun} />);
+    render(<ExtractionResultTab run={mockRun} />);
     await waitFor(() => screen.getByRole('button', { name: 'Row 1' }));
 
     await userEvent.click(screen.getByRole('button', { name: 'Row 1' }));
@@ -118,7 +118,7 @@ describe('AnalyticsTab', () => {
   });
 
   test('toggles sidebar closed on same row click', async () => {
-    render(<AnalyticsTab run={mockRun} />);
+    render(<ExtractionResultTab run={mockRun} />);
     await waitFor(() => screen.getByRole('button', { name: 'Row 1' }));
 
     await userEvent.click(screen.getByRole('button', { name: 'Row 1' }));
@@ -128,7 +128,7 @@ describe('AnalyticsTab', () => {
   });
 
   test('calls closeSidebar on unmount', async () => {
-    const { unmount } = render(<AnalyticsTab run={mockRun} />);
+    const { unmount } = render(<ExtractionResultTab run={mockRun} />);
     mockCloseSidebar.mockClear();
 
     unmount();
@@ -137,7 +137,7 @@ describe('AnalyticsTab', () => {
   });
 });
 
-describe('AnalyticsTab :: compare dropdown', () => {
+describe('ExtractionResultTab :: compare dropdown', () => {
   const siblingRun = { id: 'run-sibling', testRunName: 'Sibling Run', startedAt: undefined };
   const mockRunWithSuite = { id: 'run-1', testSuiteId: 'suite-1' } as any;
 
@@ -148,7 +148,7 @@ describe('AnalyticsTab :: compare dropdown', () => {
   });
 
   test('renders sibling runs as dropdown options', async () => {
-    render(<AnalyticsTab run={mockRunWithSuite} />);
+    render(<ExtractionResultTab run={mockRunWithSuite} />);
 
     await waitFor(() => {
       const select = screen.getByLabelText('compare-with');
@@ -157,7 +157,7 @@ describe('AnalyticsTab :: compare dropdown', () => {
   });
 
   test('fetches compared results when a run is selected', async () => {
-    render(<AnalyticsTab run={mockRunWithSuite} />);
+    render(<ExtractionResultTab run={mockRunWithSuite} />);
 
     await waitFor(() => {
       expect(screen.getByLabelText('compare-with').querySelector('option[value="run-sibling"]')).toBeInTheDocument();
@@ -173,7 +173,7 @@ describe('AnalyticsTab :: compare dropdown', () => {
   });
 
   test('shows clear button when run is selected and removes it after clearing', async () => {
-    render(<AnalyticsTab run={mockRunWithSuite} />);
+    render(<ExtractionResultTab run={mockRunWithSuite} />);
 
     await waitFor(() => {
       expect(screen.getByLabelText('compare-with').querySelector('option[value="run-sibling"]')).toBeInTheDocument();

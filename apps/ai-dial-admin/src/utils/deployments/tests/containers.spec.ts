@@ -21,8 +21,8 @@ import {
 import {
   getApplicationContainers,
   getInterceptorContainers,
-  getMCPContainers,
   getModelContainers,
+  getToolsetContainers,
 } from '@/src/app/actions/deployments';
 import { ApplicationRoute } from '@/src/types/routes';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
@@ -691,8 +691,8 @@ describe('containers utils', () => {
       expect(getContainersByView(ApplicationRoute.Applications)).toBe(getApplicationContainers);
     });
 
-    test('returns getMCPContainers for Toolsets', () => {
-      expect(getContainersByView(ApplicationRoute.Toolsets)).toBe(getMCPContainers);
+    test('returns getToolsetContainers for Toolsets', () => {
+      expect(getContainersByView(ApplicationRoute.Toolsets)).toBe(getToolsetContainers);
     });
 
     test('returns getInterceptorContainers for Interceptors', () => {

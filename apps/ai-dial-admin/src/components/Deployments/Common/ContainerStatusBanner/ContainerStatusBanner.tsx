@@ -5,7 +5,7 @@ import { IconArrowDown } from '@tabler/icons-react';
 import { useEffect, useRef, useState } from 'react';
 
 import EntityBanner from '@/src/components/Deployments/Common/EntityBanner/EntityBanner';
-import { getContainerRoute } from '@/src/components/SourceField/utils';
+import { getRouteForContainer } from '@/src/components/SourceField/utils';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { ContainersI18nKey } from '@/src/constants/i18n';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -53,7 +53,8 @@ const ContainerStatusBanner = ({ view, containerId }: Props) => {
     return null;
   }
 
-  const type = getTranslatedEntity(getContainerRoute(view), t);
+  const containerRoute = getRouteForContainer(selectedContainer, view);
+  const type = getTranslatedEntity(containerRoute, t);
 
   return (
     <EntityBanner
@@ -66,7 +67,7 @@ const ContainerStatusBanner = ({ view, containerId }: Props) => {
         className="w-fit shrink-0"
         iconBefore={<IconArrowDown {...BASE_BUTTON_ICON_PROPS} />}
         label={t(ContainersI18nKey.GoToContainer)}
-        onClick={() => onOpenInNewTab(getContainerRoute(view), { name: containerId })}
+        onClick={() => onOpenInNewTab(containerRoute, { name: containerId })}
       />
     </EntityBanner>
   );

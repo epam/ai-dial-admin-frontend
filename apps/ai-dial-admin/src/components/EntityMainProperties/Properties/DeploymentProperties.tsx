@@ -5,7 +5,7 @@ import { uniq } from 'lodash';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
-import { getApplicationContainers, getMCPContainers, getModelContainers } from '@/src/app/actions/deployments';
+import { getApplicationContainers, getModelContainers, getToolsetContainers } from '@/src/app/actions/deployments';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import IdControl from '@/src/components/BaseControls/Id/Id';
 import VersionControl from '@/src/components/BaseControls/Version';
@@ -190,7 +190,7 @@ const DeploymentProperties: FC<Props> = ({
           entity={entity}
           id="sourceType"
           onChange={onChangeEntity}
-          getContainers={view === ApplicationRoute.Models ? getModelContainers : getMCPContainers}
+          getContainers={view === ApplicationRoute.Models ? getModelContainers : getToolsetContainers}
           label={t(EntitiesI18nKey.SourceType)}
           sourceItems={getSourceItems(view, featureFlags.deploymentsEnabled, featureFlags.mcpRegistryEnabled)}
           getAdapters={getModelsAdapters}
