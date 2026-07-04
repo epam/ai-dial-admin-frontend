@@ -26,7 +26,7 @@ import { Toolset } from '@/src/models/dial/toolset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { CONTAINER_STATUS, KubEventType } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
-import { getContainerRedeploySnapshot } from '@/src/utils/deployments/containers';
+import { getContainerRedeploySnapshot, sanitizeContainerProbe } from '@/src/utils/deployments/containers';
 import { decodeVariables } from '@/src/utils/deployments/variables';
 import { getTranslatedDeploymentType, getTranslatedType } from '@/src/utils/deployments/entity';
 import { isImageNotInstalled } from '@/src/utils/deployments/images';
@@ -103,17 +103,19 @@ const ContainerView: FC<Props> = ({
   }, [container, isEditorEnabled]);
 
   const onSave = useCallback(() => {
-    updateContainer(selectedContainer).then(({ success, errorMessage, errorHeader, response, requestId }) => {
-      if (success) {
-        const updatedContainer = response as Container | undefined;
-        if (updatedContainer) {
-          setSelectedContainer(decodeVariables(cloneDeep(updatedContainer)));
+    updateContainer(sanitizeContainerProbe(selectedContainer)).then(
+      ({ success, errorMessage, errorHeader, response, requestId }) => {
+        if (success) {
+          const updatedContainer = response as Container | undefined;
+          if (updatedContainer) {
+            setSelectedContainer(decodeVariables(cloneDeep(updatedContainer)));
+          }
+          router.refresh();
+        } else {
+          showNotification(getErrorNotification(errorHeader, errorMessage, requestId));
         }
-        router.refresh();
-      } else {
-        showNotification(getErrorNotification(errorHeader, errorMessage, requestId));
-      }
-    });
+      },
+    );
   }, [router, selectedContainer, showNotification]);
 
   useEffect(() => {
