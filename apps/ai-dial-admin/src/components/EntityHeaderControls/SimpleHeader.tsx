@@ -22,6 +22,7 @@ interface Props<T> extends SimpleButtonsWrapperProps<T> {
   tabs?: TabModel[];
   activeTab?: EntityViewTab;
   children?: ReactNode;
+  leadingActions?: ReactNode;
 
   onChangeActiveTab?: (tab: EntityViewTab) => void;
 }
@@ -29,6 +30,7 @@ interface Props<T> extends SimpleButtonsWrapperProps<T> {
 const SimpleEntityHeader = <T extends Entity>({
   jsonConfiguration,
   children,
+  leadingActions,
   tabs,
   activeTab,
   onChangeActiveTab,
@@ -50,7 +52,7 @@ const SimpleEntityHeader = <T extends Entity>({
             <ReadonlyId value={readonlyId} />
           </div>
         )}
-        <SimpleButtonsWrapper jsonConfiguration={jsonConfiguration} {...props}>
+        <SimpleButtonsWrapper jsonConfiguration={jsonConfiguration} leadingActions={leadingActions} {...props}>
           {children}
         </SimpleButtonsWrapper>
       </div>

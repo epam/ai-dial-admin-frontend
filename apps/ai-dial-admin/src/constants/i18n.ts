@@ -1902,7 +1902,6 @@ export enum RunsI18nKey {
   MetricBindings = 'Runs.MetricBindings',
   ConfigBindings = 'Runs.ConfigBindings',
   InputBindings = 'Runs.InputBindings',
-  CompareWith = 'Runs.CompareWith',
   RunCompareNoMatch = 'Runs.RunCompareNoMatch',
   RunComparison = 'Runs.RunComparison',
   RunCompareVs = 'Runs.RunCompareVs',

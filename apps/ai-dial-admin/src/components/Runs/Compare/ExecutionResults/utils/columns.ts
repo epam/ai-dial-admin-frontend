@@ -5,7 +5,6 @@ import { getAccuracyColors } from '@/src/components/Common/ColorScale/utils';
 import CompareDeltaCellRenderer from '@/src/components/Grid/CellRenderers/CompareDeltaCellRenderer';
 import CompareEyeCellRenderer from '@/src/components/Grid/CellRenderers/CompareEyeCellRenderer';
 import CompareMetricScoreCellRenderer from '@/src/components/Grid/CellRenderers/CompareMetricScoreCellRenderer';
-import ErrorCellRenderer from '@/src/components/Grid/CellRenderers/ErrorCellRenderer';
 import ExecutionStatusCellRenderer from '@/src/components/Grid/CellRenderers/ExecutionStatusCellRenderer';
 import CompareRunIndexHeader from '@/src/components/Grid/HeaderComponents/CompareRunIndexHeader';
 import {
@@ -75,19 +74,11 @@ const mergeExtractedColumnsSchema = (results: AnalyticsResult[]): Record<string,
   return results.reduce<Record<string, unknown>>((acc, result) => ({ ...acc, ...(result.extractedColumns || {}) }), {});
 };
 
-const buildMetricColumn = (groupKey: string, key: string, errorText?: string): ColDef => ({
+const buildMetricColumn = (groupKey: string, key: string): ColDef => ({
   field: `${groupKey}_${key}`,
   colId: `${groupKey}_${key}`,
   headerName: key,
   ...NUMBER_FILTER_COL_DEF,
-  cellRendererSelector: (params) => {
-    const groupExists = params.data?.metricValues != null && groupKey in params.data.metricValues;
-    if (!groupExists) return;
-    const value = params.data?.metricValues?.[groupKey]?.[key];
-    if (value == null) {
-      return { component: ErrorCellRenderer, params: { errorText } };
-    }
-  },
   valueGetter: (params) => {
     const groupExists = params.data?.metricValues != null && groupKey in params.data.metricValues;
     if (!groupExists) return '—';
@@ -119,82 +110,6 @@ const buildExtractedColumn = (key: string): ColDef => ({
     return value ?? '—';
   },
 });
-
-const getExecutionColumns = (): ColGroupDef => ({
-  headerName: EXECUTION_GROUP_HEADER,
-  children: [
-    {
-      field: 'runIndex',
-      headerName: '# Run number',
-      colId: 'runIndex',
-      ...NO_FILTER_COL_DEF,
-      ...fixedWidthColDef(RUN_INDEX_COLUMN_WIDTH),
-      valueGetter: (params: ValueGetterParams<AnalyticsResult>) =>
-        params.data?.runIndex != null ? params.data.runIndex + 1 : null,
-    },
-    {
-      field: 'responseStatusCode',
-      headerName: 'HTTP',
-      colId: 'http',
-      ...NO_FILTER_COL_DEF,
-      ...fixedWidthColDef(HTTP_COLUMN_WIDTH),
-    },
-    {
-      field: 'durationMs',
-      headerName: 'Duration',
-      colId: 'duration',
-      ...NO_FILTER_COL_DEF,
-      ...fixedWidthColDef(DURATION_COLUMN_WIDTH),
-      valueGetter: (params: ValueGetterParams<AnalyticsResult>) => {
-        const data = params.data as AnalyticsResult & { executionInfo?: { durationMs?: number } };
-        return getFormattedDuration(data?.executionInfo?.durationMs ?? data?.execDurationMs);
-      },
-    },
-  ],
-});
-
-const getMetricGroupColumns = (metrics: Record<string, Record<string, unknown>>, errorText?: string): ColGroupDef[] =>
-  Object.entries(metrics).map(([groupKey, groupValues]) => ({
-    headerName: groupKey,
-    children: Object.keys(groupValues).map((key) => buildMetricColumn(groupKey, key, errorText)),
-  }));
-
-const getExtractedGroupColumn = (extracted: Record<string, unknown>): ColGroupDef | null => {
-  const keys = Object.keys(extracted);
-  if (keys.length === 0) return null;
-
-  return {
-    headerName: EXTRACTED_GROUP_HEADER,
-    children: keys.map((key) => buildExtractedColumn(key)),
-  };
-};
-
-export const getCompareColumns = (results: AnalyticsResult[], errorText?: string): (ColDef | ColGroupDef)[] => {
-  const metrics = mergeMetricValuesSchema(results);
-  const extracted = mergeExtractedColumnsSchema(results);
-  const extractedGroup = getExtractedGroupColumn(extracted);
-
-  return [
-    {
-      field: 'executionStatus',
-      headerName: ' ',
-      colId: 'status',
-      ...fixedWidthColDef(STATUS_COLUMN_WIDTH),
-      ...NO_FILTER_COL_DEF,
-      cellRenderer: ExecutionStatusCellRenderer,
-    },
-    {
-      field: 'testCaseName',
-      headerName: 'Test Case name',
-      colId: 'testCaseName',
-      ...fixedWidthColDef(TEST_CASE_NAME_COLUMN_WIDTH),
-      ...TEXT_FILTER_COL_DEF,
-    },
-    getExecutionColumns(),
-    ...getMetricGroupColumns(metrics, errorText),
-    ...(extractedGroup ? [extractedGroup] : []),
-  ];
-};
 
 const getMetricPairHighlightRules = (groupKey: string, key: string) => {
   const getKind = (params: { data?: CompareAnalyticsRow }) => {
@@ -280,9 +195,7 @@ const buildComparedMetricColumn = (
       const groupExists = source.metricValues != null && groupKey in source.metricValues;
       if (!groupExists) return;
       const value = getRawValue(params);
-      if (value == null) {
-        return { component: ErrorCellRenderer, params: { errorText } };
-      }
+      if (value == null) return;
       if (isScoreIndicatorValue(value)) {
         return {
           component: CompareMetricScoreCellRenderer,
@@ -313,7 +226,7 @@ const buildComparePrimaryMetricColumn = (
   };
 
   return {
-    ...buildMetricColumn(groupKey, key, errorText),
+    ...buildMetricColumn(groupKey, key),
     ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, key),
     ...fixedWidthColDef(METRIC_COLUMN_WIDTH),
     cellStyle: undefined,
@@ -321,9 +234,7 @@ const buildComparePrimaryMetricColumn = (
       const groupExists = params.data?.metricValues != null && groupKey in params.data.metricValues;
       if (!groupExists) return;
       const value = getRawValue(params);
-      if (value == null) {
-        return { component: ErrorCellRenderer, params: { errorText } };
-      }
+      if (value == null) return;
       if (isScoreIndicatorValue(value)) {
         return {
           component: CompareMetricScoreCellRenderer,

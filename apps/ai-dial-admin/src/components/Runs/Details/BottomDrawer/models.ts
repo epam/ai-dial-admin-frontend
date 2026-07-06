@@ -35,7 +35,6 @@ export interface DrawerPanelState {
   activeId: string | null;
   pinnedId: string | null;
   currentHeight: number;
-  isRunCompareMode: boolean;
 }
 
 export interface DiffViewState {

@@ -20,7 +20,6 @@ import {
 } from '@/src/constants/grid-columns/actions';
 import { RUNS_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
-import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
 import { Run, RunStatus } from '@/src/models/evaluation/run';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
@@ -38,7 +37,6 @@ interface Props {
 
 const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
   const t = useI18n();
-  const { featureFlags } = useAppContext();
   const { openCompareRun, compareRunModal } = useCompareRunLauncher();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -184,15 +182,13 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
         [
           getOpenInNewTabOperation(onOpenInNewTabAction),
           getExportOperation(onOpenExportModal, (_, node) => node.data?.status === RunStatus.RUNNING),
-          ...(featureFlags.runsCompareEnabled
-            ? [getCompareOperation(onCompareRun, (_, node) => node.data?.status !== RunStatus.COMPLETED)]
-            : []),
+          getCompareOperation(onCompareRun, (_, node) => node.data?.status !== RunStatus.COMPLETED),
           getDeleteOperation(onOpenDeleteModal),
         ],
         true,
       ),
     ],
-    [featureFlags.runsCompareEnabled, onCompareRun, onOpenDeleteModal, onOpenExportModal, onOpenInNewTabAction],
+    [onCompareRun, onOpenDeleteModal, onOpenExportModal, onOpenInNewTabAction],
   );
 
   return (

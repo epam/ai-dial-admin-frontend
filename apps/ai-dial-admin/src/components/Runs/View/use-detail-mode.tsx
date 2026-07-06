@@ -18,7 +18,6 @@ interface UseDetailModeReturn {
   closeDetail: () => void;
   switchToDrawer: () => void;
   switchToSidebar: () => void;
-  setSelectedForCompare: (id: string) => void;
   clearSelected: () => void;
 }
 
@@ -109,10 +108,6 @@ export function useDetailMode(metricBindings: Record<string, MetricBindings> = {
     }
   }, [detailMode, sidebar]);
 
-  const setSelectedForCompare = useCallback((id: string) => {
-    setSelectedResultId(id);
-  }, []);
-
   const clearSelected = useCallback(() => {
     setSelectedResultId(null);
   }, []);
@@ -135,7 +130,6 @@ export function useDetailMode(metricBindings: Record<string, MetricBindings> = {
     closeDetail,
     switchToDrawer,
     switchToSidebar,
-    setSelectedForCompare,
     clearSelected,
   };
 }

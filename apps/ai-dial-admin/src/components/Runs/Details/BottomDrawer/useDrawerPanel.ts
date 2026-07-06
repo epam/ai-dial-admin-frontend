@@ -16,7 +16,6 @@ interface UseDrawerPanelReturn extends DrawerPanelState {
   setActiveId: (id: string) => void;
   setPanelHeight: (height: number) => void;
   clearPinIfMissing: (resultIds: string[]) => void;
-  openRunCompare: (activeId: string, comparedId: string | null) => void;
 }
 
 export function useDrawerPanel(): UseDrawerPanelReturn {
@@ -26,7 +25,6 @@ export function useDrawerPanel(): UseDrawerPanelReturn {
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Table);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [pinnedId, setPinnedId] = useState<string | null>(null);
-  const [isRunCompareMode, setIsRunCompareMode] = useState(false);
 
   const currentHeight = useMemo(() => {
     if (!isOpen) return 0;
@@ -43,7 +41,6 @@ export function useDrawerPanel(): UseDrawerPanelReturn {
     setActiveId(null);
     setPinnedId(null);
     setIsCollapsed(false);
-    setIsRunCompareMode(false);
   }, []);
 
   const collapse = useCallback(() => {
@@ -66,23 +63,12 @@ export function useDrawerPanel(): UseDrawerPanelReturn {
     setViewMode(mode);
   }, []);
 
-  const clearPinIfMissing = useCallback(
-    (resultIds: string[]) => {
-      if (isRunCompareMode) return;
-      setPinnedId((prev) => {
-        if (prev === null) return null;
-        if (!resultIds.includes(prev)) return null;
-        return prev;
-      });
-    },
-    [isRunCompareMode],
-  );
-
-  const openRunCompare = useCallback((newActiveId: string, comparedId: string | null) => {
-    setActiveId(newActiveId);
-    setPinnedId(comparedId);
-    setIsRunCompareMode(true);
-    setIsOpen(true);
+  const clearPinIfMissing = useCallback((resultIds: string[]) => {
+    setPinnedId((prev) => {
+      if (prev === null) return null;
+      if (!resultIds.includes(prev)) return null;
+      return prev;
+    });
   }, []);
 
   // Window resize listener to clamp panel height
@@ -103,7 +89,6 @@ export function useDrawerPanel(): UseDrawerPanelReturn {
     activeId,
     pinnedId,
     currentHeight,
-    isRunCompareMode,
     open,
     close,
     collapse,
@@ -114,6 +99,5 @@ export function useDrawerPanel(): UseDrawerPanelReturn {
     setActiveId,
     setPanelHeight,
     clearPinIfMissing,
-    openRunCompare,
   };
 }
