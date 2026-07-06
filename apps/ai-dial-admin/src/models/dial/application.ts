@@ -73,6 +73,8 @@ export interface ApplicationMCPContainer {
   endpoint: string;
   transport?: string;
   allowedTools?: string[];
+  forwardPerRequestKey?: boolean;
+  configDelivery?: ApplicationMCPConfigDelivery;
 }
 
 export enum ApplicationMCPConfigDelivery {
