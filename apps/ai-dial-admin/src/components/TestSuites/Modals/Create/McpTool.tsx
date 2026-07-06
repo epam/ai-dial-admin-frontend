@@ -11,11 +11,11 @@ import { ToolDefinition } from '@/src/models/evaluation/deployment';
 
 interface Props {
   deploymentId: string;
-  initialToolName?: string;
+  selectedToolName?: string;
   onSelect: (tool: ToolDefinition) => void;
 }
 
-const McpTool: FC<Props> = ({ deploymentId, initialToolName, onSelect }) => {
+const McpTool: FC<Props> = ({ deploymentId, selectedToolName, onSelect }) => {
   const t = useI18n();
   const [isLoading, setIsLoading] = useState(false);
   const [tools, setTools] = useState<ToolDefinition[] | null>(null);
@@ -41,7 +41,7 @@ const McpTool: FC<Props> = ({ deploymentId, initialToolName, onSelect }) => {
       data={tools}
       idField="name"
       onSelect={onSelect}
-      selectedId={initialToolName}
+      selectedId={selectedToolName}
       emptyTitle={t(TestSuitesI18nKey.NoToolsAvailable)}
     />
   );
