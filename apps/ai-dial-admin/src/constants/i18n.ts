@@ -1179,6 +1179,7 @@ export enum EntityPlaceholdersI18nKey {
   Expression = 'EntityPlaceholders.Expression',
   ReasoningEfforts = 'EntityPlaceholders.ReasoningEfforts',
   EmbeddingDimensions = 'EntityPlaceholders.EmbeddingDimensions',
+  Provider = 'EntityPlaceholders.Provider',
 }
 
 export enum EntityCaptionsI18nKey {
@@ -1407,6 +1408,7 @@ export enum EntityFieldsI18nKey {
   temperature = 'EntityFields.temperature',
   agent = 'EntityFields.agent',
   embeddingDimensions = 'EntityFields.embeddingDimensions',
+  provider = 'EntityFields.provider',
 }
 
 export enum ToolsetI18nKey {
@@ -1832,6 +1834,27 @@ export enum DatasetsI18nKey {
 export enum RunsI18nKey {
   StartTime = 'Runs.StartTime',
   EndTime = 'Runs.EndTime',
+  StartDate = 'Runs.StartDate',
+  EndDate = 'Runs.EndDate',
+  Application = 'Runs.Application',
+  OverallScore = 'Runs.OverallScore',
+  AvgFor = 'Runs.AvgFor',
+  SelectMetric = 'Runs.SelectMetric',
+  MetricScoresTitle = 'Runs.MetricScoresTitle',
+  MetricScoresDescription = 'Runs.MetricScoresDescription',
+  NoMetricScores = 'Runs.NoMetricScores',
+  DistributionTitle = 'Runs.DistributionTitle',
+  Metric = 'Runs.Metric',
+  DistributionValueTitle = 'Runs.DistributionValueTitle',
+  SelectMetricToSeeDistribution = 'Runs.SelectMetricToSeeDistribution',
+  TestCasesPassed = 'Runs.TestCasesPassed',
+  AvgTestCaseRunTime = 'Runs.AvgTestCaseRunTime',
+  AvgPerTestCase = 'Runs.AvgPerTestCase',
+  Pass = 'Runs.Pass',
+  Fail = 'Runs.Fail',
+  ExecError = 'Runs.ExecError',
+  Milliseconds = 'Runs.Milliseconds',
+  Seconds = 'Runs.Seconds',
   TestSuite = 'Runs.TestSuite',
   TestCaseData = 'Runs.TestCaseData',
   Execution = 'Runs.Execution',
@@ -1899,6 +1922,9 @@ export enum RunsI18nKey {
   RunCompareHideHighlights = 'Runs.RunCompareHideHighlights',
   RunCompareDisplay = 'Runs.RunCompareDisplay',
   RunCompareViewRowDetails = 'Runs.RunCompareViewRowDetails',
+  RunCompareRows = 'Runs.RunCompareRows',
+  RunCompareTable = 'Runs.RunCompareTable',
+  RunComparePivot = 'Runs.RunComparePivot',
 }
 
 export enum ExportRunI18nKey {

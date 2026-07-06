@@ -25,6 +25,7 @@ interface Props {
   renderLabel?: (node: ColDef, displayLabel: string) => ReactNode;
   diffSection?: TreeColumnsPanelDiffSection;
   treeSubtitle?: string;
+  topSlot?: ReactNode;
 }
 
 const DEFAULT_SKIP_LEAF_NAMES: string[] = [];
@@ -131,6 +132,7 @@ const TreeColumnsPanelInner: FC<InnerProps> = ({
   renderLabel,
   diffSection,
   treeSubtitle,
+  topSlot,
   t,
 }) => {
   const [localColumns, setLocalColumns] = useState(columns);
@@ -175,6 +177,7 @@ const TreeColumnsPanelInner: FC<InnerProps> = ({
         {toggleColumnsPanel && <CloseButton onClose={toggleColumnsPanel} />}
       </div>
       <div className="flex-1 flex flex-col p-6 overflow-y-auto">
+        {topSlot}
         {diffSection && <TreeColumnsPanelDiffSwitches {...diffSection} />}
         {treeSubtitle && <h3 className="dial-tiny-text text-secondary mb-4">{treeSubtitle}</h3>}
         <ul ref={listRef} className="flex flex-col gap-4">

@@ -17,12 +17,16 @@ import {
   isErrorPresent,
   isAutoscalingEnabled,
   deriveScaling,
+  isProbeSavable,
+  sanitizeContainerProbe,
 } from '../containers';
+import { getPathError, getPortError } from '@/src/utils/deployments/validation';
+import { ErrorType } from '@/src/types/error-type';
 import {
   getApplicationContainers,
   getInterceptorContainers,
-  getMCPContainers,
   getModelContainers,
+  getToolsetContainers,
 } from '@/src/app/actions/deployments';
 import { ApplicationRoute } from '@/src/types/routes';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
@@ -33,6 +37,7 @@ import {
   CONTAINER_STATUS,
   CONTAINER_TRANSPORT,
   CONTAINER_TYPE,
+  PROBE_TYPE,
   SCALING_STRATEGY_TYPE,
 } from '@/src/types/deployments/containers';
 import { Container } from '@/src/models/deployments/containers';
@@ -691,8 +696,8 @@ describe('containers utils', () => {
       expect(getContainersByView(ApplicationRoute.Applications)).toBe(getApplicationContainers);
     });
 
-    test('returns getMCPContainers for Toolsets', () => {
-      expect(getContainersByView(ApplicationRoute.Toolsets)).toBe(getMCPContainers);
+    test('returns getToolsetContainers for Toolsets', () => {
+      expect(getContainersByView(ApplicationRoute.Toolsets)).toBe(getToolsetContainers);
     });
 
     test('returns getInterceptorContainers for Interceptors', () => {
@@ -701,6 +706,68 @@ describe('containers utils', () => {
 
     test('returns null for an unsupported route', () => {
       expect(getContainersByView(ApplicationRoute.Home)).toBeNull();
+    });
+  });
+
+  describe('isProbeSavable', () => {
+    test('returns false when there is no probe config', () => {
+      expect(isProbeSavable(undefined)).toBe(false);
+      expect(isProbeSavable({ enabled: false })).toBe(false);
+    });
+
+    test('returns false when the port is invalid', () => {
+      vi.mocked(getPortError).mockReturnValue({ type: ErrorType.EMPTY, text: '' });
+      expect(isProbeSavable({ enabled: true, probe: { $type: PROBE_TYPE.TCP } })).toBe(false);
+    });
+
+    test('returns true for a TCP probe with a valid port', () => {
+      vi.mocked(getPortError).mockReturnValue(null);
+      expect(isProbeSavable({ enabled: true, probe: { $type: PROBE_TYPE.TCP, port: 8080 } })).toBe(true);
+    });
+
+    test('returns false for an HTTP GET probe with a valid port but invalid path', () => {
+      vi.mocked(getPortError).mockReturnValue(null);
+      vi.mocked(getPathError).mockReturnValue({ type: ErrorType.EMPTY, text: '' });
+      expect(isProbeSavable({ enabled: true, probe: { $type: PROBE_TYPE.HTTP_GET, port: 8080 } })).toBe(false);
+    });
+
+    test('returns true for an HTTP GET probe with a valid port and path', () => {
+      vi.mocked(getPortError).mockReturnValue(null);
+      vi.mocked(getPathError).mockReturnValue(null);
+      expect(
+        isProbeSavable({ enabled: true, probe: { $type: PROBE_TYPE.HTTP_GET, port: 8080, path: '/health' } }),
+      ).toBe(true);
+    });
+  });
+
+  describe('sanitizeContainerProbe', () => {
+    const baseContainer: Container = {
+      name: 'c',
+      $type: CONTAINER_TYPE.ADAPTER,
+      source: { $type: CONTAINER_SOURCE_TYPE.INTERNAL_IMAGE, imageDefinitionId: '' },
+      status: CONTAINER_STATUS.RUNNING,
+    };
+
+    test('returns the container unchanged when it has no probe properties', () => {
+      expect(sanitizeContainerProbe(baseContainer)).toBe(baseContainer);
+    });
+
+    test('drops an invalid probe and sends only enabled=false', () => {
+      vi.mocked(getPortError).mockReturnValue({ type: ErrorType.EMPTY, text: '' });
+      const container: Container = {
+        ...baseContainer,
+        probeProperties: { enabled: false, probe: { $type: PROBE_TYPE.TCP } },
+      };
+      expect(sanitizeContainerProbe(container).probeProperties).toEqual({ enabled: false });
+    });
+
+    test('keeps the container unchanged when the probe is valid', () => {
+      vi.mocked(getPortError).mockReturnValue(null);
+      const container: Container = {
+        ...baseContainer,
+        probeProperties: { enabled: true, probe: { $type: PROBE_TYPE.TCP, port: 8080 } },
+      };
+      expect(sanitizeContainerProbe(container)).toBe(container);
     });
   });
 });

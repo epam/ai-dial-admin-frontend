@@ -18,3 +18,17 @@ export interface CompareRowDetailSection {
   label: string;
   rows: CompareRowDetailField[];
 }
+
+export enum RowDetailViewMode {
+  Table = 'table',
+  Pivot = 'pivot',
+}
+
+export enum PivotColumnWidthTier {
+  Status = 'status',
+  RunNumber = 'runNumber',
+  Http = 'http',
+  Duration = 'duration',
+  Score = 'score',
+  Default = 'default',
+}

@@ -63,7 +63,11 @@ const ChangeMcpToolModal: FC<Props> = ({ testSuite, isOpen, onClose, onSave }) =
     >
       <div className="size-full flex flex-col gap-4 px-6 py-4">
         <div className="flex-1 min-h-0">
-          <McpTool deploymentId={deploymentId} initialToolName={testSuite.toolRef?.name} onSelect={onToolSelect} />
+          <McpTool
+            deploymentId={deploymentId}
+            selectedToolName={pendingTool?.name ?? testSuite.toolRef?.name}
+            onSelect={onToolSelect}
+          />
         </div>
       </div>
     </DialConfirmationPopup>,

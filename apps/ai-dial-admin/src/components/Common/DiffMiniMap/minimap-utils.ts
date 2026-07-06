@@ -86,6 +86,10 @@ export const computeMinimapMarkers = (container: HTMLElement): MinimapMarker[] =
     });
   }
 
+  return mergeMarkers(raw);
+};
+
+const mergeMarkers = (raw: MinimapMarker[]): MinimapMarker[] => {
   raw.sort((a, b) => a.position - b.position);
 
   const merged: MinimapMarker[] = [];
@@ -99,4 +103,28 @@ export const computeMinimapMarkers = (container: HTMLElement): MinimapMarker[] =
   }
 
   return merged;
+};
+
+export const computeHorizontalMinimapMarkers = (container: HTMLElement): MinimapMarker[] => {
+  const { scrollWidth } = container;
+  if (scrollWidth === 0) return [];
+
+  const containerRect = container.getBoundingClientRect();
+  const raw: MinimapMarker[] = [];
+
+  for (const [attrValue, status] of COMPARE_DIFF_ATTR_MAP) {
+    container.querySelectorAll(`[data-compare-diff="${attrValue}"]`).forEach((element) => {
+      if (element.closest('.hidden')) return;
+
+      const rect = element.getBoundingClientRect();
+      const offsetFromLeft = rect.left - containerRect.left + container.scrollLeft;
+      raw.push({
+        position: Math.min(1, Math.max(0, offsetFromLeft / scrollWidth)),
+        height: Math.max(MIN_MARKER_HEIGHT, rect.width / scrollWidth),
+        status,
+      });
+    });
+  }
+
+  return mergeMarkers(raw);
 };

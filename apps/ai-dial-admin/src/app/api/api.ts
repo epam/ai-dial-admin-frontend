@@ -29,6 +29,7 @@ import { AnalyticsApi } from '@/src/server/eval/analytics-api';
 import { DatasetsApi } from '@/src/server/eval/datasets-api';
 import { MetricsApi } from '@/src/server/eval/metrics-api';
 import { RunsApi } from '@/src/server/eval/runs-api';
+import { StructuredQueryApi } from '@/src/server/eval/structured-query-api';
 import { TestSuitesApi } from '@/src/server/eval/test-suites-api';
 import { EnrichmentClients } from '@/src/server/publications/resolver/types';
 import { TelemetryApi } from '@/src/server/telemetry-api';
@@ -157,6 +158,10 @@ export const runsApi = new RunsApi({
 });
 
 export const analyticsApi = new AnalyticsApi({
+  host: process.env.DIAL_EVAL_API_URL,
+});
+
+export const structuredQueryApi = new StructuredQueryApi({
   host: process.env.DIAL_EVAL_API_URL,
 });
 

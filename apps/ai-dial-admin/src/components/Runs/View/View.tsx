@@ -4,23 +4,19 @@ import { FC, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import Grafana from '@/public/images/icons/grafana.svg';
-import { DialIconButton, DialLabelledText, DialLinkButton, DialNeutralButton } from '@epam/ai-dial-ui-kit';
-import { IconExternalLink, IconFileExport } from '@tabler/icons-react';
+import { DialLinkButton, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { IconFileExport } from '@tabler/icons-react';
 
-import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
-import RunStatusComponent from '@/src/components/Common/RunStatus/RunStatus';
-import EntityInfoHeader from '@/src/components/EntityHeaderControls/Info/InfoHeader';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import ExportRunModal from '@/src/components/Runs/Export/ExportRunModal';
-import { ButtonsI18nKey, EntityFieldsI18nKey, RunsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-import { useLocalDateTimeString } from '@/src/hooks/use-local-date-time-string';
 import { useI18n } from '@/src/locales/client';
 import { Run, RunStatus } from '@/src/models/evaluation/run';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
-import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
-import AnalyticsTab from './Analytics';
+import { EntityViewTab, getRunTabs } from '@/src/utils/tabs/utils';
+import TabsContent from './TabsContent';
 
 interface Props {
   run: Run;
@@ -29,42 +25,15 @@ interface Props {
 
 const RunView: FC<Props> = ({ run, onRemove }) => {
   const t = useI18n();
-  const startedAt = useLocalDateTimeString(run?.startedAt);
-  const completedAt = useLocalDateTimeString(run?.completedAt);
 
   const noop = useCallback(() => {}, []);
+
+  const tabs = useMemo(() => getRunTabs(t), [t]);
+  const [activeTab, setActiveTab] = useState(EntityViewTab.Summary);
 
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const onOpenExportModal = useCallback(() => setIsExportModalOpen(true), []);
   const onCloseExportModal = useCallback(() => setIsExportModalOpen(false), []);
-
-  const headerPostfix = useMemo(() => {
-    return (
-      <>
-        {!!run?.startedAt && <LabelledText label={t(RunsI18nKey.StartTime)} text={startedAt} />}
-        {!!run?.completedAt && <LabelledText label={t(RunsI18nKey.EndTime)} text={completedAt} />}
-
-        {!!run?.status && (
-          <LabelledText label={t(EntityFieldsI18nKey.status)}>
-            <RunStatusComponent status={run.status} />
-          </LabelledText>
-        )}
-        {!!run?.testRunName && (
-          <DialLabelledText
-            label={t(RunsI18nKey.TestSuite)}
-            text={run.testSuiteId}
-            postfix={
-              <DialIconButton
-                className="text-secondary size-[20px]"
-                onClick={() => onOpenInNewTab(ApplicationRoute.TestSuites, { id: run.testSuiteId })}
-                icon={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
-              />
-            }
-          />
-        )}
-      </>
-    );
-  }, [completedAt, run.status, run.testRunName, run.testSuiteId, run?.completedAt, run?.startedAt, startedAt, t]);
 
   return (
     <>
@@ -76,6 +45,9 @@ const RunView: FC<Props> = ({ run, onRemove }) => {
           onDiscard={noop}
           onSave={noop}
           onRemove={onRemove}
+          tabs={tabs}
+          activeTab={activeTab}
+          onChangeActiveTab={setActiveTab}
         >
           <DialNeutralButton
             label={t(ButtonsI18nKey.Export)}
@@ -95,11 +67,8 @@ const RunView: FC<Props> = ({ run, onRemove }) => {
           )}
         </SimpleEntityHeader>
 
-        <div className="flex flex-col flex-1 min-h-0">
-          <EntityInfoHeader postfix={headerPostfix} view={ApplicationRoute.Runs} />
-          <div className="flex-1 min-h-0 mt-8">
-            <AnalyticsTab run={run} />
-          </div>
+        <div className="flex-1 overflow-auto min-h-0">
+          <TabsContent activeTab={activeTab} run={run} />
         </div>
       </div>
       {isExportModalOpen &&

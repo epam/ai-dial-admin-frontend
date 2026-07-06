@@ -14,7 +14,13 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { Toolset } from '@/src/models/dial/toolset';
 import { ErrorI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
-import { isValidSourceField } from '@/src/components/SourceField/utils';
+import {
+  isContainerFamilySource,
+  isMcpContainer,
+  isTextClassificationInferenceContainer,
+  isValidSourceField,
+} from '@/src/components/SourceField/utils';
+import { MODEL_SERVING_SOURCE_TYPE } from '@/src/components/SourceField/constants';
 import { CODE_APP_SOURCE_TYPE, createCodeAppFields, isCodeAppSource } from '@/src/utils/entities/application-source';
 import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 import { useI18n } from '@/src/locales/client';
@@ -73,6 +79,15 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset | DialAppli
     [sourceItems, codeAppEditorUrl],
   );
 
+  // Toolsets offer two container options backed by one fetch (MCP + inference); scope the list
+  // to the selected option. Other views keep their existing (unfiltered / Models) behaviour.
+  const containerFilter = useMemo(() => {
+    if (view !== ApplicationRoute.Toolsets) {
+      return undefined;
+    }
+    return source === MODEL_SERVING_SOURCE_TYPE ? isTextClassificationInferenceContainer : isMcpContainer;
+  }, [view, source]);
+
   const onChangeEntity = useCallback(
     (entity: T) => {
       onChange(entity);
@@ -121,9 +136,13 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset | DialAppli
           return;
         }
 
+        // Model Serving is a UI-only selector value; it persists as a container source.
+        const persistedType =
+          sourceType === MODEL_SERVING_SOURCE_TYPE ? SOURCE_TYPE.CONTAINER : (sourceType as SOURCE_TYPE);
+
         onChangeEntity({
           ...entity,
-          source: { $type: sourceType as SOURCE_TYPE },
+          source: { $type: persistedType },
           ...reset,
         });
       }
@@ -146,9 +165,18 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset | DialAppli
 
       onChangeEntity(entityWithSource);
     } else {
-      setSource(
-        isCodeAppSource(entity, codeAppEditorUrl) ? CODE_APP_SOURCE_TYPE : entity.source.$type || sourceItems[0].value,
-      );
+      setSource((prev) => {
+        if (isCodeAppSource(entity, codeAppEditorUrl)) {
+          return CODE_APP_SOURCE_TYPE;
+        }
+        const derived = entity.source?.$type || sourceItems[0].value;
+        // MCP Container and Model Serving both persist as CONTAINER — keep the user's
+        // container-family choice instead of collapsing Model Serving back to MCP Container.
+        if (derived === SOURCE_TYPE.CONTAINER && isContainerFamilySource(prev)) {
+          return prev;
+        }
+        return derived;
+      });
     }
   }, [codeAppEditorUrl, entity, isModal, onChangeEntity, sourceItems, view]);
 
@@ -175,14 +203,15 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset | DialAppli
           isCodeApp={source === CODE_APP_SOURCE_TYPE}
         />
       )}
-      {source === SOURCE_TYPE.CONTAINER && getContainers && (
+      {isContainerFamilySource(source) && getContainers && (
         <Containers
           entity={entity}
           onChange={onChangeEntity}
           getContainers={getContainers}
+          containerFilter={containerFilter}
           view={view}
           isModal={isModal}
-          error={source === SOURCE_TYPE.CONTAINER ? errorText : ''}
+          error={isContainerFamilySource(source) ? errorText : ''}
           disabled={isReadonly}
         />
       )}

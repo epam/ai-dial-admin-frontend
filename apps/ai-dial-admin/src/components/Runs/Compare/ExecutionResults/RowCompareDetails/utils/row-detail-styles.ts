@@ -56,3 +56,34 @@ export const getCompareDiffCellProps = (
     [COMPARE_DIFF_DATA_ATTR]: dataAttr,
   };
 };
+
+export type CompareDiffPivotPosition = 'top' | 'middle' | 'bottom' | 'single';
+
+const DIFF_PIVOT_BASE_CLASSES: Record<Exclude<MetricDeltaKind, MetricDeltaKind.Empty>, string> = {
+  [MetricDeltaKind.Added]: 'bg-success border-solid border-l border-r border-accent-secondary',
+  [MetricDeltaKind.Changed]: 'bg-info border-solid border-l border-r border-accent-primary',
+  [MetricDeltaKind.Removed]: 'bg-error border-solid border-l border-r border-error',
+};
+
+const DIFF_PIVOT_EDGE_BY_POSITION: Record<CompareDiffPivotPosition, string> = {
+  top: 'border-t border-b-0',
+  middle: 'border-t-0 border-b-0',
+  bottom: 'border-t-0 border-b',
+  single: 'border-t border-b',
+};
+
+export const getCompareDiffPivotCellProps = (
+  kind: MetricDeltaKind,
+  position: CompareDiffPivotPosition,
+): { className?: string; [COMPARE_DIFF_DATA_ATTR]?: string } => {
+  const dataAttr = compareDiffKindToDataAttr(kind);
+
+  if (!dataAttr || kind === MetricDeltaKind.Empty) {
+    return {};
+  }
+
+  return {
+    className: classNames(DIFF_PIVOT_BASE_CLASSES[kind], DIFF_PIVOT_EDGE_BY_POSITION[position]),
+    [COMPARE_DIFF_DATA_ATTR]: dataAttr,
+  };
+};

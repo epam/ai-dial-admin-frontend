@@ -174,8 +174,8 @@ describe('entity utils', () => {
       expect(template.transport).toBe(ToolsetTransport.HTTP);
       expect(template.source.$type).toBe(SOURCE_TYPE.CONTAINER);
       expect(template.source.containerId).toBe('123');
-      expect(template.source.mcpEndpointPath).toBe('/mcp');
-      expect(template.source.completionEndpointPath).toBeUndefined();
+      expect(template.source.completionEndpointPath).toBe('/mcp');
+      expect(template.source.mcpEndpointPath).toBeUndefined();
       expect(template.type).toBeUndefined();
     });
 

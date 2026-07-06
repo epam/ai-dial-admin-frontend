@@ -5,17 +5,22 @@ import ScoreBar from '../ScoreBar';
 import { getScoreIndicatorColor, getScoreIndicatorFillRatio, getScoreIndicatorStep } from '../utils';
 
 describe('ScoreBar utils', () => {
-  test('getScoreIndicatorStep rounds up to nearest 0.1 for color bucket', () => {
+  test('getScoreIndicatorStep floors to the lower bound of each 0.1 bucket', () => {
     expect(getScoreIndicatorStep(0)).toBe(0);
-    expect(getScoreIndicatorStep(0.102)).toBe(0.2);
-    expect(getScoreIndicatorStep(0.729)).toBe(0.8);
+    expect(getScoreIndicatorStep(0.102)).toBe(0.1);
+    expect(getScoreIndicatorStep(0.3)).toBe(0.3);
+    expect(getScoreIndicatorStep(0.729)).toBe(0.7);
+    expect(getScoreIndicatorStep(0.99)).toBe(0.9);
     expect(getScoreIndicatorStep(1)).toBe(1);
   });
 
-  test('getScoreIndicatorColor returns Figma custom colors', () => {
-    expect(getScoreIndicatorColor(0.1)).toBe('#f26b5b');
-    expect(getScoreIndicatorColor(0.8)).toBe('#4ecba8');
-    expect(getScoreIndicatorColor(1)).toBe('#4dc87a');
+  test('getScoreIndicatorColor returns Figma custom colors with inclusive lower bounds', () => {
+    expect(getScoreIndicatorColor(0)).toBe('transparent');
+    expect(getScoreIndicatorColor(0.05)).toBe('#f26b5b');
+    expect(getScoreIndicatorColor(0.1)).toBe('#e5764a');
+    expect(getScoreIndicatorColor(0.8)).toBe('#4ec5c5');
+    expect(getScoreIndicatorColor(0.95)).toBe('#4dc87a');
+    expect(getScoreIndicatorColor(1)).toBe('#30e070');
   });
 
   test('getScoreIndicatorFillRatio clamps to 0–1', () => {
@@ -30,7 +35,7 @@ describe('ScoreBar', () => {
     const { container } = render(<ScoreBar value={0.5} />);
     const fill = container.querySelector('.h-full.rounded-sm');
     expect(fill).toBeInTheDocument();
-    expect(fill).toHaveStyle({ width: '50%', backgroundColor: '#d4be3a' });
+    expect(fill).toHaveStyle({ width: '50%', backgroundColor: '#b8c94a' });
   });
 
   test('renders empty track for zero score', () => {

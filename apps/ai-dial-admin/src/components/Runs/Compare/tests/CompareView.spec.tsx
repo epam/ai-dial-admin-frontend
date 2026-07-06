@@ -208,6 +208,44 @@ describe('CompareView', () => {
     });
   });
 
+  test('switches row detail to the bottom drawer (pivot default) and back to the sidebar', async () => {
+    const user = userEvent.setup();
+
+    renderCompareView();
+
+    let eyeButton: HTMLButtonElement | null = null;
+    await waitFor(() => {
+      eyeButton = document.querySelector('.ag-pinned-right-cols-container [col-id="compare_action"] button');
+      expect(eyeButton).toBeTruthy();
+    });
+
+    fireEvent.click(eyeButton!);
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { level: 3, name: 'Test Case 1' })).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByTitle('Runs.SwitchToDrawer'));
+
+    await waitFor(() => {
+      expect(screen.getByRole('complementary', { name: 'Runs.AnalysisDrawerLabel' })).toBeInTheDocument();
+    });
+
+    const drawer = screen.getByRole('complementary', { name: 'Runs.AnalysisDrawerLabel' });
+    // Pivot is the default view in the drawer: the primary run-name row label is rendered.
+    await waitFor(() => {
+      expect(within(drawer).getByText('Run #316')).toBeInTheDocument();
+    });
+
+    await user.click(within(drawer).getByTitle('Runs.SwitchToSidebar'));
+
+    await waitFor(() => {
+      expect(screen.queryByRole('complementary', { name: 'Runs.AnalysisDrawerLabel' })).not.toBeInTheDocument();
+    });
+
+    expect(screen.getByTitle('Runs.SwitchToDrawer')).toBeInTheDocument();
+  });
+
   test('closes row detail panel when switching away from Execution Results tab', async () => {
     const user = userEvent.setup();
 

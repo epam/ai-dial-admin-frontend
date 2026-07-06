@@ -20,6 +20,7 @@ interface Props {
   failedLabel: string;
   onOpenDiff: (row: CompareRowDetailField) => void;
   openDiffLabel: string;
+  hideHighlights: boolean;
 }
 
 const SectionRows: FC<Props> = ({
@@ -32,6 +33,7 @@ const SectionRows: FC<Props> = ({
   failedLabel,
   onOpenDiff,
   openDiffLabel,
+  hideHighlights,
 }) => (
   <>
     <div
@@ -54,6 +56,7 @@ const SectionRows: FC<Props> = ({
           failedLabel={failedLabel}
           onOpenDiff={onOpenDiff}
           openDiffLabel={openDiffLabel}
+          hideHighlights={hideHighlights}
         />
       ))}
   </>
