@@ -23,12 +23,12 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
         ))}
       </div>
     ),
-    DialAnalyticsBarGroup: ({ title, data }: any) => (
+    DialAnalyticsBarGroup: ({ title, data, onBarClick }: any) => (
       <div role="group" aria-label={String(title)}>
         {Object.entries(data || {}).map(([name, value]) => (
-          <div key={name}>
+          <button key={name} onClick={() => onBarClick?.(name, value)}>
             {name}:{String(value)}
-          </div>
+          </button>
         ))}
       </div>
     ),
@@ -48,14 +48,14 @@ const DATA: MetricScoresData = {
 
 describe('Runs Summary :: MetricScoresSection', () => {
   test('shows a loader while data is null', () => {
-    render(<MetricScoresSection data={null} />);
+    render(<MetricScoresSection data={null} testCaseCount={0} onSelectMetric={vi.fn()} />);
 
     expect(screen.getByLabelText('loading-32')).toBeInTheDocument();
     expect(screen.getByText('Runs.MetricScoresTitle')).toBeInTheDocument();
   });
 
   test('renders a bar group per metric prefix with leaf-name bars for the selected statistic', () => {
-    render(<MetricScoresSection data={DATA} />);
+    render(<MetricScoresSection data={DATA} testCaseCount={0} onSelectMetric={vi.fn()} />);
 
     const generation = screen.getByRole('group', { name: 'aidial_rag_eval.generation' });
     expect(within(generation).getByText('context_to_answer:0.8')).toBeInTheDocument();
@@ -64,14 +64,14 @@ describe('Runs Summary :: MetricScoresSection', () => {
   });
 
   test('exposes the statistics as segmented-control tabs, first selected by default', () => {
-    render(<MetricScoresSection data={DATA} />);
+    render(<MetricScoresSection data={DATA} testCaseCount={0} onSelectMetric={vi.fn()} />);
 
     expect(screen.getByRole('tab', { name: 'AVG' })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByRole('tab', { name: 'P90' })).toHaveAttribute('aria-selected', 'false');
   });
 
   test('switches the shown statistic values when a tab is selected', () => {
-    render(<MetricScoresSection data={DATA} />);
+    render(<MetricScoresSection data={DATA} testCaseCount={0} onSelectMetric={vi.fn()} />);
 
     const before = screen.getByRole('group', { name: 'aidial_rag_eval.generation' });
     expect(within(before).getByText('context_to_answer:0.8')).toBeInTheDocument();
@@ -83,8 +83,19 @@ describe('Runs Summary :: MetricScoresSection', () => {
     expect(screen.queryByRole('group', { name: 'aidial_rag_eval.retrieval' })).not.toBeInTheDocument();
   });
 
+  test('selects the full metric name when a bar is clicked', () => {
+    const onSelectMetric = vi.fn();
+    render(<MetricScoresSection data={DATA} testCaseCount={0} onSelectMetric={onSelectMetric} />);
+
+    fireEvent.click(screen.getByText('context_to_answer:0.8'));
+
+    expect(onSelectMetric).toHaveBeenCalledWith('aidial_rag_eval.generation.context_to_answer');
+  });
+
   test('shows an empty message when there are no metric scores', () => {
-    render(<MetricScoresSection data={{ statistics: [], byStatistic: {} }} />);
+    render(
+      <MetricScoresSection data={{ statistics: [], byStatistic: {} }} testCaseCount={0} onSelectMetric={vi.fn()} />,
+    );
 
     expect(screen.getByText('Runs.NoMetricScores')).toBeInTheDocument();
   });

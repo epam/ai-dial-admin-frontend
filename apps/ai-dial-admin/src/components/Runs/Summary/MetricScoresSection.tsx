@@ -14,9 +14,11 @@ interface Props {
   data: MetricScoresData | null;
   /** Number of test cases the metric scores are averaged across. */
   testCaseCount: number;
+  /** Selects a metric (shared with the Distribution section) when a bar is clicked. */
+  onSelectMetric: (name: string) => void;
 }
 
-const MetricScoresSection: FC<Props> = ({ data, testCaseCount }) => {
+const MetricScoresSection: FC<Props> = ({ data, testCaseCount, onSelectMetric }) => {
   const t = useI18n();
   const [selectedStatistic, setSelectedStatistic] = useState<string | null>(null);
 
@@ -62,6 +64,7 @@ const MetricScoresSection: FC<Props> = ({ data, testCaseCount }) => {
             title={group.name}
             data={group.bars}
             maxValue={Math.max(1, ...Object.values(group.bars))}
+            onBarClick={(bar) => onSelectMetric(`${group.name}.${bar}`)}
           />
         ))}
       </div>

@@ -31,6 +31,13 @@ const SummaryTab: FC<Props> = ({ run }) => {
   const [metricScores, setMetricScores] = useState<MetricScoresData | null>(null);
   const [metricOptions, setMetricOptions] = useState<MetricOption[]>([]);
   const [testCaseCount, setTestCaseCount] = useState(0);
+  // Shared across sections: set from the Distribution dropdown or a MetricScores bar click.
+  const [selectedMetricName, setSelectedMetricName] = useState<string | null>(null);
+
+  // Reset the selection whenever the shared options change (e.g. a new run).
+  useEffect(() => {
+    setSelectedMetricName(null);
+  }, [metricOptions]);
 
   useEffect(() => {
     if (!run?.testSuiteId) {
@@ -82,8 +89,14 @@ const SummaryTab: FC<Props> = ({ run }) => {
       <Header run={run} testSuite={testSuite} />
       <Analytics run={run} metricOptions={metricOptions} />
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-2">
-        <MetricScoresSection data={metricScores} testCaseCount={testCaseCount} />
-        <DistributionSection run={run} metricOptions={metricOptions} metricScores={metricScores} />
+        <MetricScoresSection data={metricScores} testCaseCount={testCaseCount} onSelectMetric={setSelectedMetricName} />
+        <DistributionSection
+          run={run}
+          metricOptions={metricOptions}
+          metricScores={metricScores}
+          selectedMetricName={selectedMetricName}
+          onSelectMetric={setSelectedMetricName}
+        />
       </div>
     </div>
   );

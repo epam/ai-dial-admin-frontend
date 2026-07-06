@@ -3,20 +3,27 @@ import { JSONSchema7 } from 'json-schema';
 import { MetricSnapshot } from '@/src/models/evaluation/metric';
 import { ExtractionResultStatus } from '@/src/models/evaluation/run';
 import { SortDir, StructuredQuery, StructuredQueryResult, ValueType } from '@/src/models/evaluation/structured-query';
-import { aggregateQuery, and, col, eq, field, fn, rowQuery, sortItem, value } from '@/src/utils/structured-query/build';
+import {
+  aggregateQuery,
+  and,
+  col,
+  eq,
+  field,
+  fn,
+  offsetPage,
+  rowQuery,
+  sortItem,
+} from '@/src/utils/structured-query/build';
 import {
   AVG_DURATION_ALIAS,
-  BUCKET_ALIAS,
-  BUCKET_COUNT_ALIAS,
   COMPUTATION_ID_FIELD,
   COUNT_ALIAS,
   DEFAULT_METRIC_SCORE_FIELD,
+  DISTRIBUTION_ROW_LIMIT,
+  DISTRIBUTION_VALUE_ALIAS,
   EVAL_SUMMARIES_ENTITY,
   EXEC_DURATION_MS_FIELD,
   EXECUTION_STATUS_FIELD,
-  HISTOGRAM_BUCKET_COUNT,
-  HISTOGRAM_LOWER_BOUND,
-  HISTOGRAM_UPPER_BOUND,
   LATEST_COMPUTATION,
   METRIC_FIELD_PREFIX,
   METRIC_FIELD_SEPARATOR,
@@ -100,14 +107,14 @@ export const buildOverallScoreQuery = (runId: string, option: MetricOption): Str
     select: [col(fn('avg', [field(option.field)]), OVERALL_SCORE_ALIAS)],
   });
 
-/** Reads the single overall-score value, rounded to two decimals, or null when absent. */
+/** Reads the single overall-score value, rounded to three decimals, or null when absent. */
 export const parseOverallScore = (result: StructuredQueryResult | null): number | null => {
   const raw = result?.rows?.[0]?.[OVERALL_SCORE_ALIAS];
   if (raw == null) {
     return null;
   }
   const num = Number(raw);
-  return Number.isFinite(num) ? Math.round(num * 100) / 100 : null;
+  return Number.isFinite(num) ? Math.round(num * 1000) / 1000 : null;
 };
 
 /**
@@ -170,54 +177,43 @@ export const parseMetricScores = (result: StructuredQueryResult | null): MetricS
       group = { name: groupName, bars: {} };
       groups.push(group);
     }
-    group.bars[barName] = value;
+    group.bars[barName] = Math.round(value * 1000) / 1000;
   }
 
   return { statistics, byStatistic };
 };
 
 /**
- * Query: score distribution for a metric across a run's eval summaries, bucketed server-side with
- * `width_bucket(field, 0, 1.01, 10)`. Rows shape: `[{ bucket, cnt }]` — bucket index 1..10.
+ * Query: the raw metric-score values for a run's eval summaries, one row per test case. The values are
+ * fed directly to `DialAnalyticsHistogram`, which buckets them into its 12 columns (a dedicated exact-`0`
+ * bucket, ten 0.1-wide bands, and an exact-`1` band). Rows shape: `[{ value: number }]`.
  */
 export const buildDistributionQuery = (runId: string, metricField: string): StructuredQuery =>
-  aggregateQuery({
+  rowQuery({
     entity: EVAL_SUMMARIES_ENTITY,
+    select: [col(field(metricField), DISTRIBUTION_VALUE_ALIAS)],
     filter: eq(RUN_ID_FIELD, ValueType.Uuid, runId),
-    select: [
-      col(
-        fn('width_bucket', [
-          field(metricField),
-          value(ValueType.Decimal, HISTOGRAM_LOWER_BOUND),
-          value(ValueType.Decimal, HISTOGRAM_UPPER_BOUND),
-          value(ValueType.Integer, String(HISTOGRAM_BUCKET_COUNT)),
-        ]),
-        BUCKET_ALIAS,
-      ),
-      col(fn('count'), BUCKET_COUNT_ALIAS),
-    ],
-    groupBy: [BUCKET_ALIAS],
-    sort: [sortItem(BUCKET_ALIAS, SortDir.Asc)],
+    page: offsetPage(0, DISTRIBUTION_ROW_LIMIT),
   });
 
 /**
- * Expands bucketed distribution rows into a flat value list for `DialAnalyticsHistogram`, which
- * re-buckets raw values into its 10 color bands (0–1). Each bucket contributes `cnt` values at its
- * midpoint, so the histogram's columns reproduce the server-side buckets.
+ * Extracts the raw metric-score values from the distribution rows for `DialAnalyticsHistogram`, which
+ * buckets them into its 12 columns. Null / non-numeric values (e.g. unscored test cases) are skipped;
+ * finite values are clamped to the histogram's 0–1 range so exact `0` and exact `1` land in their
+ * dedicated columns.
  */
 export const parseHistogramValues = (result: StructuredQueryResult | null): number[] => {
   const values: number[] = [];
   for (const row of result?.rows ?? []) {
-    const bucket = Number(row[BUCKET_ALIAS]);
-    const count = Number(row[BUCKET_COUNT_ALIAS]);
-    if (!Number.isFinite(bucket) || !Number.isFinite(count) || count <= 0) {
+    const raw = row[DISTRIBUTION_VALUE_ALIAS];
+    if (raw == null) {
       continue;
     }
-    const clamped = Math.min(HISTOGRAM_BUCKET_COUNT, Math.max(1, bucket));
-    const midpoint = (clamped - 0.5) / HISTOGRAM_BUCKET_COUNT;
-    for (let i = 0; i < count; i += 1) {
-      values.push(midpoint);
+    const num = Number(raw);
+    if (!Number.isFinite(num)) {
+      continue;
     }
+    values.push(Math.min(1, Math.max(0, num)));
   }
   return values;
 };

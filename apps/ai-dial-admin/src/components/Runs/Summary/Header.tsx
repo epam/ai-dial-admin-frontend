@@ -47,7 +47,7 @@ const Header: FC<Props> = ({ run, testSuite }) => {
       {!!run?.testSuiteId && (
         <DialLabelledText
           label={t(RunsI18nKey.TestSuite)}
-          text={run.testSuiteId}
+          text={testSuite?.name || run.testSuiteId}
           postfix={
             <DialIconButton
               className="text-secondary size-[20px]"

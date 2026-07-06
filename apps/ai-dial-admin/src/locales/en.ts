@@ -1977,6 +1977,7 @@ export default {
     Fail: 'fail',
     ExecError: 'error',
     Milliseconds: 'ms',
+    Seconds: 's',
     TestSuite: 'Test suite',
     TestCaseData: 'Test case data',
     ExtractedColumns: 'Extracted Columns',

@@ -64,8 +64,11 @@ export const getEntityPath = (
     case ApplicationRoute.TestSuites:
     case ApplicationRoute.TestCases:
     case ApplicationRoute.Datasets:
-    case ApplicationRoute.Runs:
       return `${encodeURIComponent((data as { id: string }).id)}`;
+    case ApplicationRoute.Runs: {
+      const { id, testRunName } = data as { id: string; testRunName?: string };
+      return `${encodeURIComponent(testRunName || id)}?id=${encodeURIComponent(id)}`;
+    }
     case ApplicationRoute.RunsCompare: {
       const { id, compareWithId } = data as { id: string; compareWithId: string };
       return getCompareRunsPath(id, compareWithId);

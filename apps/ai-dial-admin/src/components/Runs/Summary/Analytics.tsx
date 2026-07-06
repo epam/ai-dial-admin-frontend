@@ -160,7 +160,7 @@ const Analytics: FC<Props> = ({ run, metricOptions }) => {
       <DialAnalyticsCard
         className="flex-1 sm:max-w-xs"
         title={t(RunsI18nKey.AvgTestCaseRunTime)}
-        value={avgRunTimeMs != null ? `${avgRunTimeMs} ${t(RunsI18nKey.Milliseconds)}` : undefined}
+        value={avgRunTimeMs != null ? `${Math.round(avgRunTimeMs / 100) / 10} ${t(RunsI18nKey.Seconds)}` : undefined}
         description={t(RunsI18nKey.AvgPerTestCase)}
         error={avgRunTimeMs == null}
       />

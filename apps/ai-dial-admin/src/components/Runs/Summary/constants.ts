@@ -18,13 +18,15 @@ export const EXEC_DURATION_MS_FIELD = 'exec_duration_ms';
 export const COUNT_ALIAS = 'count';
 export const AVG_DURATION_ALIAS = 'avg_duration_ms';
 export const OVERALL_SCORE_ALIAS = 'value';
-export const BUCKET_ALIAS = 'bucket';
-export const BUCKET_COUNT_ALIAS = 'cnt';
 
-/** Distribution histogram bucketing: `width_bucket(field, 0, 1.01, 10)` over the 0–1 score range. */
-export const HISTOGRAM_LOWER_BOUND = '0';
-export const HISTOGRAM_UPPER_BOUND = '1.01';
-export const HISTOGRAM_BUCKET_COUNT = 10;
+/**
+ * Distribution histogram: the raw metric-score values are fetched and passed straight to
+ * `DialAnalyticsHistogram`, which buckets them into its 12 columns — a dedicated exact-`0` bucket,
+ * the ten 0.1-wide bands (`0-0.1` … `0.9-1`), and an exact-`1` band. `DISTRIBUTION_VALUE_ALIAS` is
+ * the result column alias; `DISTRIBUTION_ROW_LIMIT` caps how many test-case rows are fetched.
+ */
+export const DISTRIBUTION_VALUE_ALIAS = 'value';
+export const DISTRIBUTION_ROW_LIMIT = 10000;
 
 /** Flattened metric field family: `metric::<metricName>::<outputField>` (backend column naming). */
 export const METRIC_FIELD_PREFIX = 'metric';

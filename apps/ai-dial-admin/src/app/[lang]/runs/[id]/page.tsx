@@ -8,11 +8,11 @@ import { getRun, removeRun } from '../actions';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Page(params: { params: Promise<{ id: string }> }) {
+export default async function Page(params: { params: Promise<{ id: string }>; searchParams: Promise<{ id: string }> }) {
   let run: Run | null = null;
 
   try {
-    const { id } = await params.params;
+    const { id } = await params.searchParams;
     run = await getRun(decodeURIComponent(id));
   } catch (e) {
     errorObjLog(e, 'Failed to fetch run view data');
