@@ -33,6 +33,7 @@ export interface SimpleButtonsWrapperProps<T> {
   isChanged: boolean;
   jsonConfiguration?: JsonConfiguration;
   children?: ReactNode;
+  leadingActions?: ReactNode;
   entity: T;
   etag?: string;
 
@@ -47,6 +48,7 @@ const SimpleButtonsWrapper = <T extends object>({
   etag,
   jsonConfiguration,
   children,
+  leadingActions,
   isChanged,
   onDiscard,
   onSave,
@@ -107,6 +109,7 @@ const SimpleButtonsWrapper = <T extends object>({
           <div className="flex flex-row items-center w-full gap-x-4">
             {!isEditorEnabled && (
               <div className="flex-1 flex flex-row gap-x-4 justify-center">
+                {leadingActions}
                 <DialDangerButton
                   className={buttonsClassName}
                   label={t(ButtonsI18nKey.Delete)}

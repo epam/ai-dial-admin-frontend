@@ -42,7 +42,7 @@ interface Props {
 const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => {
   const t = useI18n();
   const router = useRouter();
-  const { sidebar } = useAppContext();
+  const { sidebar, featureFlags } = useAppContext();
 
   const sidebarRef = useRef(sidebar);
   sidebarRef.current = sidebar;
@@ -57,7 +57,10 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
   const [selectedRow, setSelectedRow] = useState<CompareAnalyticsRow | null>(null);
   const [detailMode, setDetailMode] = useState(DetailMode.Sidebar);
 
-  const compareTabs = useMemo(() => getCompareViewTabs(t), [t]);
+  const compareTabs = useMemo(
+    () => getCompareViewTabs(t, featureFlags.runsCompareEnabled),
+    [t, featureFlags.runsCompareEnabled],
+  );
 
   const selectRunModalConfig = useMemo(() => {
     if (!selectRunSlot) return null;

@@ -1,7 +1,17 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
+import { RunStatus } from '@/src/models/evaluation/run';
 import RunView from '../View';
+
+const openCompareRunMock = vi.fn();
+
+vi.mock('@/src/components/Runs/Compare/useCompareRunLauncher', () => ({
+  useCompareRunLauncher: () => ({
+    openCompareRun: openCompareRunMock,
+    compareRunModal: null,
+  }),
+}));
 
 vi.mock('@/src/components/EntityHeaderControls/SimpleHeader', () => ({
   default: ({ entity, onRemove, children, tabs, onChangeActiveTab }: any) => (
@@ -78,5 +88,36 @@ describe('Runs View :: View', () => {
     );
 
     expect(screen.getByRole('region', { name: 'simple-header' })).toBeInTheDocument();
+  });
+
+  test('renders Compare button for completed run', () => {
+    const onRemove = vi.fn().mockResolvedValue({ success: true });
+
+    render(
+      <RunView run={{ id: 'run-5', status: RunStatus.COMPLETED, testSuiteId: 'suite-1' } as any} onRemove={onRemove} />,
+    );
+
+    expect(screen.getByRole('button', { name: 'ActionMenuOperation.Compare' })).toBeEnabled();
+  });
+
+  test('disables Compare button for running run', () => {
+    const onRemove = vi.fn().mockResolvedValue({ success: true });
+
+    render(
+      <RunView run={{ id: 'run-6', status: RunStatus.RUNNING, testSuiteId: 'suite-1' } as any} onRemove={onRemove} />,
+    );
+
+    expect(screen.getByRole('button', { name: 'ActionMenuOperation.Compare' })).toBeDisabled();
+  });
+
+  test('calls openCompareRun when Compare button is clicked', () => {
+    const onRemove = vi.fn().mockResolvedValue({ success: true });
+    const run = { id: 'run-7', status: RunStatus.COMPLETED, testSuiteId: 'suite-1' } as any;
+
+    render(<RunView run={run} onRemove={onRemove} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'ActionMenuOperation.Compare' }));
+
+    expect(openCompareRunMock).toHaveBeenCalledWith(run);
   });
 });

@@ -41,9 +41,9 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   };
 });
 
-const renderCompareView = () =>
+const renderCompareView = (featureFlags: Partial<FeatureFlags> = { runsCompareEnabled: true }) =>
   render(
-    <AppContextProvider featureFlags={{} as FeatureFlags}>
+    <AppContextProvider featureFlags={featureFlags as FeatureFlags}>
       <div className="w-[1400px] h-[800px] flex flex-col">
         <CompareView runId="run-1" comparedRunId="run-sibling" />
       </div>
@@ -156,6 +156,14 @@ describe('CompareView', () => {
     await waitFor(() => {
       expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
     });
+  });
+
+  test('disables summary and metrics tabs when runsCompareEnabled is false', () => {
+    renderCompareView({ runsCompareEnabled: false });
+
+    expect(screen.getByRole('tab', { name: 'Runs.RunCompareTabSummaryOverview' })).toBeDisabled();
+    expect(screen.getByRole('tab', { name: 'Runs.RunCompareTabMetricsDetails' })).toBeDisabled();
+    expect(screen.getByRole('tab', { name: 'Runs.RunCompareTabExecutionResults' })).toBeEnabled();
   });
 
   test('switches tab content when clicking Summary Overview and back to Execution Results', async () => {

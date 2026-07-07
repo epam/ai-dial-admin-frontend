@@ -29,9 +29,7 @@ interface Props {
   clearPendingFocus: () => void;
   onClose: () => void;
   onSwitchToSidebar: () => void;
-  runCompareNames?: { current: string; compared: string };
   metricBindings?: Record<string, MetricBindings>;
-  comparedMetricBindings?: Record<string, MetricBindings>;
 }
 
 const AnalyticsBottomDrawer: FC<Props> = ({
@@ -40,9 +38,7 @@ const AnalyticsBottomDrawer: FC<Props> = ({
   clearPendingFocus,
   onClose,
   onSwitchToSidebar,
-  runCompareNames,
   metricBindings,
-  comparedMetricBindings,
 }) => {
   const t = useI18n();
   const [activeDetail, setActiveDetail] = useState<AnalyticsResult | null>(null);
@@ -94,8 +90,8 @@ const AnalyticsBottomDrawer: FC<Props> = ({
   // Build comparison sections
   const sections = useMemo(() => {
     if (!activeDetail) return [];
-    return buildComparisonSections(activeDetail, pinnedDetail, {}, [], {}, metricBindings, comparedMetricBindings);
-  }, [activeDetail, pinnedDetail, metricBindings, comparedMetricBindings]);
+    return buildComparisonSections(activeDetail, pinnedDetail, {}, [], {}, metricBindings);
+  }, [activeDetail, pinnedDetail, metricBindings]);
 
   const fieldSelector = useFieldSelector(sections);
 
@@ -109,7 +105,6 @@ const AnalyticsBottomDrawer: FC<Props> = ({
       fieldSelector.sectionOrder,
       fieldSelector.sectionHidden,
       metricBindings,
-      comparedMetricBindings,
     );
   }, [
     activeDetail,
@@ -118,7 +113,6 @@ const AnalyticsBottomDrawer: FC<Props> = ({
     fieldSelector.sectionOrder,
     fieldSelector.sectionHidden,
     metricBindings,
-    comparedMetricBindings,
   ]);
 
   // Init section order when sections change
@@ -167,13 +161,6 @@ const AnalyticsBottomDrawer: FC<Props> = ({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const resolvedRunCompareNames = runCompareNames
-    ? {
-        current: runCompareNames.current,
-        compared: drawerPanel.pinnedId === null ? t(RunsI18nKey.RunCompareNoMatch) : runCompareNames.compared,
-      }
-    : undefined;
 
   const onPinActive = useCallback(() => {
     if (drawerPanel.activeId) {
@@ -232,7 +219,6 @@ const AnalyticsBottomDrawer: FC<Props> = ({
             onExpand={drawerPanel.expand}
             onClose={onCloseDrawer}
             onSwitchToSidebar={onSwitchSidebar}
-            runCompareNames={resolvedRunCompareNames}
           />
         </div>
         {!drawerPanel.isCollapsed && (
@@ -257,7 +243,6 @@ const AnalyticsBottomDrawer: FC<Props> = ({
                   pinnedDetail={pinnedDetail}
                   spotlightedFields={fieldSelector.spotlightedFields}
                   onToggleSpotlight={fieldSelector.toggleSpotlight}
-                  runCompareNames={runCompareNames}
                 />
               ) : (
                 <ComparisonPivotView
@@ -266,7 +251,6 @@ const AnalyticsBottomDrawer: FC<Props> = ({
                   activeDetail={activeDetail}
                   pinnedDetail={pinnedDetail}
                   spotlightedFields={fieldSelector.spotlightedFields}
-                  runCompareNames={runCompareNames}
                 />
               )}
             </div>

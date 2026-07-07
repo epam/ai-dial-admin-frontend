@@ -33,7 +33,6 @@ import {
   getRunTestSuiteOperation,
 } from '@/src/constants/grid-columns/actions';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
-import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
@@ -75,7 +74,6 @@ const EvaluationListView = <T extends object>({
 }: Props<T>) => {
   const t = useI18n();
   const router = useRouter();
-  const { featureFlags } = useAppContext();
   const { openCompareRun, compareRunModal } = useCompareRunLauncher();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -268,9 +266,7 @@ const EvaluationListView = <T extends object>({
 
   if (route === ApplicationRoute.Runs) {
     actionColumn.push(getExportOperation(onOpenExportModal, (_, node) => node.data?.status === RunStatus.RUNNING));
-    if (featureFlags.runsCompareEnabled) {
-      actionColumn.push(getCompareOperation(onCompareRun, (_, node) => node.data?.status !== RunStatus.COMPLETED));
-    }
+    actionColumn.push(getCompareOperation(onCompareRun, (_, node) => node.data?.status !== RunStatus.COMPLETED));
   }
 
   const columnDefs = [...baseColumns, ACTION_COLUMN([...actionColumn, getDeleteOperation(onOpenDeleteModal)], true)];
