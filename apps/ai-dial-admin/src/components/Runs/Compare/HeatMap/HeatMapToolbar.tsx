@@ -4,22 +4,22 @@ import { DialSegmentedControl, SegmentedControlOption } from '@epam/ai-dial-ui-k
 import { IconChevronDown } from '@tabler/icons-react';
 import { FC, useMemo } from 'react';
 
-import { HeatMapColourDisplayMode } from '@/src/components/Runs/Compare/HeatMap/models';
+import { HeatMapColorDisplayMode } from '@/src/components/Runs/Compare/HeatMap/models';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
-  colourDisplayMode: HeatMapColourDisplayMode;
-  onColourDisplayModeChange: (mode: HeatMapColourDisplayMode) => void;
+  colorDisplayMode: HeatMapColorDisplayMode;
+  onColorDisplayModeChange: (mode: HeatMapColorDisplayMode) => void;
 }
 
-const HeatMapToolbar: FC<Props> = ({ colourDisplayMode, onColourDisplayModeChange }) => {
+const HeatMapToolbar: FC<Props> = ({ colorDisplayMode, onColorDisplayModeChange }) => {
   const t = useI18n();
 
-  const colourDisplayOptions = useMemo<SegmentedControlOption<HeatMapColourDisplayMode>[]>(
+  const colorDisplayOptions = useMemo<SegmentedControlOption<HeatMapColorDisplayMode>[]>(
     () => [
-      { value: HeatMapColourDisplayMode.Absolute, label: t(RunsI18nKey.RunCompareAbsoluteValues) },
-      { value: HeatMapColourDisplayMode.Delta, label: t(RunsI18nKey.RunCompareDelta), disabled: true },
+      { value: HeatMapColorDisplayMode.Absolute, label: t(RunsI18nKey.RunCompareAbsoluteValues) },
+      { value: HeatMapColorDisplayMode.Delta, label: t(RunsI18nKey.RunCompareDelta), disabled: true },
     ],
     [t],
   );
@@ -38,13 +38,13 @@ const HeatMapToolbar: FC<Props> = ({ colourDisplayMode, onColourDisplayModeChang
 
       <div className="flex items-center gap-1">
         <span className="dial-small-text text-secondary whitespace-nowrap">
-          {t(RunsI18nKey.RunCompareColourDisplay)}
+          {t(RunsI18nKey.RunCompareColorDisplay)}
         </span>
         <DialSegmentedControl
-          options={colourDisplayOptions}
-          value={colourDisplayMode}
-          onChange={onColourDisplayModeChange}
-          ariaLabel={t(RunsI18nKey.RunCompareColourDisplay)}
+          options={colorDisplayOptions}
+          value={colorDisplayMode}
+          onChange={onColorDisplayModeChange}
+          ariaLabel={t(RunsI18nKey.RunCompareColorDisplay)}
         />
       </div>
     </div>

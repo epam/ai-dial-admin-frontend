@@ -21,7 +21,7 @@ import {
   RUN_COMPARE_SECONDARY_INDEX,
 } from '@/src/components/Runs/Compare/constants';
 import HeatMapToolbar from '@/src/components/Runs/Compare/HeatMap/HeatMapToolbar';
-import { HeatMapColourDisplayMode } from '@/src/components/Runs/Compare/HeatMap/models';
+import { HeatMapColorDisplayMode } from '@/src/components/Runs/Compare/HeatMap/models';
 import SelectCompareRunModal from '@/src/components/Runs/Compare/SelectCompareRunModal';
 import {
   fetchSuiteCompletedRuns,
@@ -58,7 +58,7 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
   const [showDisplayPanel, setShowDisplayPanel] = useState(false);
   const [selectedRow, setSelectedRow] = useState<CompareAnalyticsRow | null>(null);
   const [detailMode, setDetailMode] = useState(DetailMode.Sidebar);
-  const [colourDisplayMode, setColourDisplayMode] = useState(HeatMapColourDisplayMode.Absolute);
+  const [colorDisplayMode, setColorDisplayMode] = useState(HeatMapColorDisplayMode.Absolute);
 
   const compareTabs = useMemo(
     () => getCompareViewTabs(t, featureFlags.runsCompareEnabled),
@@ -158,11 +158,11 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
 
   const toggleDisplayPanel = useCallback(() => setShowDisplayPanel((prev) => !prev), []);
 
-  const onColourDisplayModeChange = useCallback((mode: HeatMapColourDisplayMode) => {
-    if (mode === HeatMapColourDisplayMode.Delta) {
+  const onColorDisplayModeChange = useCallback((mode: HeatMapColorDisplayMode) => {
+    if (mode === HeatMapColorDisplayMode.Delta) {
       return;
     }
-    setColourDisplayMode(mode);
+    setColorDisplayMode(mode);
   }, []);
 
   const closeRowDetail = useCallback(() => {
@@ -254,7 +254,7 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
       <div className="flex items-center justify-between gap-4 shrink-0">
         <DialTabs tabs={compareTabs} activeTab={activeTab} onClick={onChangeActiveTab} />
         {activeTab === CompareViewTab.HeatMap && (
-          <HeatMapToolbar colourDisplayMode={colourDisplayMode} onColourDisplayModeChange={onColourDisplayModeChange} />
+          <HeatMapToolbar colorDisplayMode={colorDisplayMode} onColorDisplayModeChange={onColorDisplayModeChange} />
         )}
         {activeTab === CompareViewTab.ExecutionResults && (
           <DialGhostButton
@@ -272,8 +272,8 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
           comparedRunId={comparedRunId}
           primaryRunName={primaryRunName}
           comparedRunName={comparedRunName}
-          colourDisplayMode={colourDisplayMode}
-          onColourDisplayModeChange={onColourDisplayModeChange}
+          colorDisplayMode={colorDisplayMode}
+          onColorDisplayModeChange={onColorDisplayModeChange}
           showDisplayPanel={showDisplayPanel}
           onToggleDisplayPanel={toggleDisplayPanel}
           selectedRow={selectedRow}

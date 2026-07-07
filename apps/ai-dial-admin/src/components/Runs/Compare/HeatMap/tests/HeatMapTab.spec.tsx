@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import HeatMapTab from '@/src/components/Runs/Compare/HeatMap/HeatMapTab';
-import { HeatMapColourDisplayMode } from '@/src/components/Runs/Compare/HeatMap/models';
+import { HeatMapColorDisplayMode } from '@/src/components/Runs/Compare/HeatMap/models';
 
 const getRunMock = vi.fn();
 const getTestCaseRunResultsMock = vi.fn();
@@ -26,8 +26,8 @@ const renderHeatMapTab = () =>
       <HeatMapTab
         primaryRunId="run-1"
         comparedRunId="run-sibling"
-        colourDisplayMode={HeatMapColourDisplayMode.Absolute}
-        onColourDisplayModeChange={vi.fn()}
+        colorDisplayMode={HeatMapColorDisplayMode.Absolute}
+        onColorDisplayModeChange={vi.fn()}
       />
     </div>,
   );

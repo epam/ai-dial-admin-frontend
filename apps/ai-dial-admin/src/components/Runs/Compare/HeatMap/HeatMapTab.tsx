@@ -9,7 +9,7 @@ import { getRun, getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
 import ColorScale, { ColorScaleVariant } from '@/src/components/Common/ColorScale/ColorScale';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { HEAT_MAP_HEADER_HEIGHT, HEAT_MAP_ROW_HEIGHT } from '@/src/components/Runs/Compare/HeatMap/constants';
-import { HeatMapColourDisplayMode, HeatMapRow } from '@/src/components/Runs/Compare/HeatMap/models';
+import { HeatMapColorDisplayMode, HeatMapRow } from '@/src/components/Runs/Compare/HeatMap/models';
 import { buildHeatMapColumns } from '@/src/components/Runs/Compare/HeatMap/utils/build-heat-map-columns';
 import {
   getHeatMapValueColumnWidth,
@@ -28,15 +28,15 @@ import { AnalyticsResult } from '@/src/models/evaluation/run';
 interface Props {
   primaryRunId: string;
   comparedRunId: string;
-  colourDisplayMode: HeatMapColourDisplayMode;
-  onColourDisplayModeChange: (mode: HeatMapColourDisplayMode) => void;
+  colorDisplayMode: HeatMapColorDisplayMode;
+  onColorDisplayModeChange: (mode: HeatMapColorDisplayMode) => void;
 }
 
 const HeatMapTab: FC<Props> = ({
   primaryRunId,
   comparedRunId,
-  colourDisplayMode: _colourDisplayMode,
-  onColourDisplayModeChange: _onColourDisplayModeChange,
+  colorDisplayMode: _colorDisplayMode,
+  onColorDisplayModeChange: _onColorDisplayModeChange,
 }) => {
   const t = useI18n();
 

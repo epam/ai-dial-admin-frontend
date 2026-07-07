@@ -180,7 +180,7 @@ describe('CompareView', () => {
     await user.click(screen.getByRole('tab', { name: 'Runs.RunCompareTabHeatMap' }));
 
     expect(screen.getByText('Runs.RunCompareHeatMapMetricsAll')).toBeInTheDocument();
-    expect(screen.getByText('Runs.RunCompareColourDisplay')).toBeInTheDocument();
+    expect(screen.getByText('Runs.RunCompareColorDisplay')).toBeInTheDocument();
     expect(screen.getByText('Runs.RunCompareAbsoluteValues')).toBeInTheDocument();
   });
 

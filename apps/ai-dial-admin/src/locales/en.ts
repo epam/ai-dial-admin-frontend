@@ -2040,7 +2040,7 @@ export default {
     RunCompareTabHeatMap: 'Heat Map',
     RunCompareTabExecutionResults: 'Execution Results',
     RunCompareHeatMapMetricsAll: 'Metrics: All',
-    RunCompareColourDisplay: 'Colour display:',
+    RunCompareColorDisplay: 'Color display:',
     RunCompareAbsoluteValues: 'Absolute values',
     RunCompareDelta: 'Delta',
     RunCompareDiffLabel: 'Diff:',

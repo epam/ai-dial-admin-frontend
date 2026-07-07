@@ -1,6 +1,6 @@
 import { RUN_COMPARE_PRIMARY_INDEX, RUN_COMPARE_SECONDARY_INDEX } from '@/src/components/Runs/Compare/constants';
 
-export enum HeatMapColourDisplayMode {
+export enum HeatMapColorDisplayMode {
   Absolute = 'absolute',
   Delta = 'delta',
 }

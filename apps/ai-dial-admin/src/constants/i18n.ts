@@ -1915,7 +1915,7 @@ export enum RunsI18nKey {
   RunCompareTabHeatMap = 'Runs.RunCompareTabHeatMap',
   RunCompareTabExecutionResults = 'Runs.RunCompareTabExecutionResults',
   RunCompareHeatMapMetricsAll = 'Runs.RunCompareHeatMapMetricsAll',
-  RunCompareColourDisplay = 'Runs.RunCompareColourDisplay',
+  RunCompareColorDisplay = 'Runs.RunCompareColorDisplay',
   RunCompareAbsoluteValues = 'Runs.RunCompareAbsoluteValues',
   RunCompareDelta = 'Runs.RunCompareDelta',
   RunCompareDiffLabel = 'Runs.RunCompareDiffLabel',

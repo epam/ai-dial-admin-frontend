@@ -5,7 +5,7 @@ import { FC } from 'react';
 import { CompareViewTab } from '@/src/components/Runs/Compare/constants';
 import ExecutionResultsTab from '@/src/components/Runs/Compare/ExecutionResults/ExecutionResultsTab';
 import HeatMapTab from '@/src/components/Runs/Compare/HeatMap/HeatMapTab';
-import { HeatMapColourDisplayMode } from '@/src/components/Runs/Compare/HeatMap/models';
+import { HeatMapColorDisplayMode } from '@/src/components/Runs/Compare/HeatMap/models';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 
 interface Props {
@@ -14,8 +14,8 @@ interface Props {
   comparedRunId: string;
   primaryRunName: string;
   comparedRunName: string;
-  colourDisplayMode: HeatMapColourDisplayMode;
-  onColourDisplayModeChange: (mode: HeatMapColourDisplayMode) => void;
+  colorDisplayMode: HeatMapColorDisplayMode;
+  onColorDisplayModeChange: (mode: HeatMapColorDisplayMode) => void;
   showDisplayPanel: boolean;
   onToggleDisplayPanel: () => void;
   selectedRow: CompareAnalyticsRow | null;
@@ -29,8 +29,8 @@ const CompareTabsContent: FC<Props> = ({
   comparedRunId,
   primaryRunName,
   comparedRunName,
-  colourDisplayMode,
-  onColourDisplayModeChange,
+  colorDisplayMode,
+  onColorDisplayModeChange,
   showDisplayPanel,
   onToggleDisplayPanel,
   selectedRow,
@@ -43,8 +43,8 @@ const CompareTabsContent: FC<Props> = ({
         <HeatMapTab
           primaryRunId={primaryRunId}
           comparedRunId={comparedRunId}
-          colourDisplayMode={colourDisplayMode}
-          onColourDisplayModeChange={onColourDisplayModeChange}
+          colorDisplayMode={colorDisplayMode}
+          onColorDisplayModeChange={onColorDisplayModeChange}
         />
       )}
       {activeTab === CompareViewTab.ExecutionResults && (
