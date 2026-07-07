@@ -41,9 +41,9 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   };
 });
 
-const renderCompareView = () =>
+const renderCompareView = (featureFlags: Partial<FeatureFlags> = { runsCompareEnabled: true }) =>
   render(
-    <AppContextProvider featureFlags={{} as FeatureFlags}>
+    <AppContextProvider featureFlags={featureFlags as FeatureFlags}>
       <div className="w-[1400px] h-[800px] flex flex-col">
         <CompareView runId="run-1" comparedRunId="run-sibling" />
       </div>
@@ -150,12 +150,38 @@ describe('CompareView', () => {
     renderCompareView();
 
     expect(screen.getByRole('tab', { name: 'Runs.RunCompareTabSummaryOverview' })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'Runs.RunCompareTabMetricsDetails' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Runs.RunCompareTabHeatMap' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Runs.RunCompareTabExecutionResults' })).toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
     });
+  });
+
+  test('disables summary and heat map tabs when runsCompareEnabled is false', () => {
+    renderCompareView({ runsCompareEnabled: false });
+
+    expect(screen.getByRole('tab', { name: 'Runs.RunCompareTabSummaryOverview' })).toBeDisabled();
+    expect(screen.getByRole('tab', { name: 'Runs.RunCompareTabHeatMap' })).toBeDisabled();
+    expect(screen.getByRole('tab', { name: 'Runs.RunCompareTabExecutionResults' })).toBeEnabled();
+  });
+
+  test('shows heat map toolbar in the tabs row when Heat Map tab is active', async () => {
+    const user = userEvent.setup();
+
+    renderCompareView();
+
+    await waitFor(() => {
+      expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
+    });
+
+    expect(screen.queryByText('Runs.RunCompareHeatMapMetricsAll')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: 'Runs.RunCompareTabHeatMap' }));
+
+    expect(screen.getByText('Runs.RunCompareHeatMapMetricsAll')).toBeInTheDocument();
+    expect(screen.getByText('Runs.RunCompareColorDisplay')).toBeInTheDocument();
+    expect(screen.getByText('Runs.RunCompareAbsoluteValues')).toBeInTheDocument();
   });
 
   test('switches tab content when clicking Summary Overview and back to Execution Results', async () => {

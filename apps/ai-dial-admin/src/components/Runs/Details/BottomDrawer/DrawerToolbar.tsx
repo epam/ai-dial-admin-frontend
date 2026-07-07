@@ -35,7 +35,6 @@ interface Props {
   onExpand: () => void;
   onClose: () => void;
   onSwitchToSidebar: () => void;
-  runCompareNames?: { current: string; compared: string };
 }
 
 const DrawerToolbar: FC<Props> = ({
@@ -53,7 +52,6 @@ const DrawerToolbar: FC<Props> = ({
   onExpand,
   onClose,
   onSwitchToSidebar,
-  runCompareNames,
 }) => {
   const t = useI18n();
 
@@ -63,39 +61,29 @@ const DrawerToolbar: FC<Props> = ({
       role="toolbar"
       aria-label={t(RunsI18nKey.AnalysisToolbarLabel)}
     >
-      {/* Left group — identity, pin, or run-compare labels */}
+      {/* Left group — identity and pin */}
       <div className="flex items-center gap-2 px-3 flex-1 min-w-0">
         <span className="font-semibold text-primary shrink-0">{t(RunsI18nKey.Analysis)}</span>
 
-        {runCompareNames ? (
-          activeId && (
-            <div className="flex items-center gap-1 bg-layer-2 rounded px-1.5 py-0.5 text-secondary">
-              <DialEllipsisTooltip text={activeName ?? activeId} className="dial-caption-text max-w-[200px]" />
-            </div>
-          )
-        ) : (
-          <>
-            {!pinnedId && activeId && (
-              <button
-                onClick={onPin}
-                className="flex items-center gap-1 bg-layer-2 rounded px-1.5 py-0.5 text-secondary hover:text-primary hover:bg-layer-3"
-                title={t(RunsI18nKey.Pin)}
-              >
-                <IconPin size={12} />
-                <DialEllipsisTooltip text={activeName ?? activeId ?? ''} className="dial-caption-text max-w-[120px]" />
-              </button>
-            )}
+        {!pinnedId && activeId && (
+          <button
+            onClick={onPin}
+            className="flex items-center gap-1 bg-layer-2 rounded px-1.5 py-0.5 text-secondary hover:text-primary hover:bg-layer-3"
+            title={t(RunsI18nKey.Pin)}
+          >
+            <IconPin size={12} />
+            <DialEllipsisTooltip text={activeName ?? activeId ?? ''} className="dial-caption-text max-w-[120px]" />
+          </button>
+        )}
 
-            {pinnedId && (
-              <div className="flex items-center gap-1 bg-layer-3 rounded px-1.5 py-0.5 text-secondary">
-                <IconPinFilled size={12} />
-                <DialEllipsisTooltip text={pinnedName ?? pinnedId ?? ''} className="max-w-[120px]" />
-                <button onClick={onUnpin} className="ml-0.5 hover:text-primary" title={t(RunsI18nKey.Unpin)}>
-                  <IconX size={12} />
-                </button>
-              </div>
-            )}
-          </>
+        {pinnedId && (
+          <div className="flex items-center gap-1 bg-layer-3 rounded px-1.5 py-0.5 text-secondary">
+            <IconPinFilled size={12} />
+            <DialEllipsisTooltip text={pinnedName ?? pinnedId ?? ''} className="max-w-[120px]" />
+            <button onClick={onUnpin} className="ml-0.5 hover:text-primary" title={t(RunsI18nKey.Unpin)}>
+              <IconX size={12} />
+            </button>
+          </div>
         )}
 
         {pinnedId && diffCount > 0 && (
@@ -141,14 +129,12 @@ const DrawerToolbar: FC<Props> = ({
 
       {/* Right group — actions */}
       <div className="flex items-center gap-1 px-3 flex-1 justify-end">
-        {!runCompareNames && (
-          <DialGhostIconButton
-            size={ElementSize.Small}
-            icon={<IconLayoutSidebarRight size={16} />}
-            onClick={onSwitchToSidebar}
-            title={t(RunsI18nKey.SwitchToSidebar)}
-          />
-        )}
+        <DialGhostIconButton
+          size={ElementSize.Small}
+          icon={<IconLayoutSidebarRight size={16} />}
+          onClick={onSwitchToSidebar}
+          title={t(RunsI18nKey.SwitchToSidebar)}
+        />
 
         <DialGhostIconButton
           size={ElementSize.Small}

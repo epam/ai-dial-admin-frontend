@@ -1,7 +1,6 @@
 import { ColDef } from 'ag-grid-community';
 
 import { getAccuracyColors } from '@/src/components/Common/ColorScale/utils';
-import ErrorCellRenderer from '@/src/components/Grid/CellRenderers/ErrorCellRenderer';
 import ExecutionStatusCellRenderer from '@/src/components/Grid/CellRenderers/ExecutionStatusCellRenderer';
 import { MetricBindings, MetricSnapshot } from '@/src/models/evaluation/metric';
 import { AnalyticsResult, ExtractionResult, Run } from '@/src/models/evaluation/run';
@@ -68,7 +67,7 @@ const mergeMetricValuesSchema = (results: AnalyticsResult[]): Record<string, Rec
   return merged;
 };
 
-const getMetricsColumns = (metrics: Record<string, Record<string, unknown>>, errorText?: string) => {
+const getMetricsColumns = (metrics: Record<string, Record<string, unknown>>) => {
   return Object.entries(metrics).map(([groupKey, groupValues]) => ({
     headerName: groupKey,
     children: Object.keys(groupValues).map(
@@ -76,14 +75,6 @@ const getMetricsColumns = (metrics: Record<string, Record<string, unknown>>, err
         ({
           field: key,
           headerName: key,
-          cellRendererSelector: (params) => {
-            const groupExists = params.data?.metricValues != null && groupKey in params.data.metricValues;
-            if (!groupExists) return;
-            const value = params.data?.metricValues?.[groupKey]?.[key];
-            if (value == null) {
-              return { component: ErrorCellRenderer, params: { errorText } };
-            }
-          },
           valueGetter: (params) => {
             const groupExists = params.data?.metricValues != null && groupKey in params.data.metricValues;
             if (!groupExists) return '—';
@@ -154,32 +145,6 @@ const executionColumns: ColDef[] = [
   },
 ];
 
-const comparedExecutionColumns: ColDef[] = [
-  {
-    colId: 'cmp_runIndex',
-    headerName: '#',
-    width: 50,
-    valueGetter: (params) => (params.data?._compared?.runIndex != null ? params.data._compared.runIndex + 1 : '—'),
-  },
-  {
-    colId: 'cmp_http',
-    headerName: 'HTTP',
-    valueGetter: (params) => params.data?._compared?.responseStatusCode ?? '—',
-    cellClass: (params) =>
-      params.data?._compared ? getTestCaseStatusClass(params.data._compared.responseStatusCode) : '',
-  },
-  {
-    colId: 'cmp_duration',
-    headerName: 'Duration',
-    valueGetter: (params) => {
-      if (!params.data?._compared) return '—';
-      return getFormattedDuration(params.data._compared.execDurationMs);
-    },
-    cellClass: (params) =>
-      params.data?._compared ? getTestCaseStatusClass(params.data._compared.responseStatusCode) : '',
-  },
-];
-
 const staticColumns = [
   {
     headerName: ' ',
@@ -210,13 +175,13 @@ const staticColumns = [
   },
 ];
 
-export const getAnalyticsColumns = (results: AnalyticsResult[], errorText?: string) => {
+export const getAnalyticsColumns = (results: AnalyticsResult[]) => {
   const metrics = mergeMetricValuesSchema(results);
   const input = results[0]?.testCaseData || {};
 
   return [
     ...staticColumns,
-    ...getMetricsColumns(metrics, errorText),
+    ...getMetricsColumns(metrics),
     {
       headerName: 'INPUT BINDINGS',
       children: getInputColumns(input, true),
@@ -239,176 +204,6 @@ export const mergeByTestCaseId = (current: AnalyticsResult[], compared: Analytic
     const match = key ? (comparedMap.get(key) ?? null) : null;
     return { ...row, _compared: match };
   });
-};
-
-const getComparedMetricsColumns = (metrics: Record<string, Record<string, unknown>>, errorText?: string) => {
-  return Object.entries(metrics).map(([groupKey, groupValues]) => ({
-    headerName: groupKey,
-    children: Object.keys(groupValues).map((key) => ({
-      headerName: key,
-      children: [
-        buildMetricColDef(groupKey, key, errorText, false, 'Current'),
-        buildMetricColDef(groupKey, key, errorText, true, 'Compared'),
-      ],
-    })),
-  }));
-};
-
-const buildMetricColDef = (
-  groupKey: string,
-  key: string,
-  errorText: string | undefined,
-  isCompared: boolean,
-  headerNameOverride?: string,
-): ColDef => {
-  const colId = isCompared ? `cmp_${groupKey}_${key}` : undefined;
-  const getValue = (params: { data?: CompareAnalyticsRow }) => {
-    const source = isCompared ? params.data?._compared : params.data;
-    return source?.metricValues?.[groupKey]?.[key];
-  };
-
-  return {
-    field: isCompared ? `cmp_${groupKey}_${key}` : key,
-    colId,
-    headerName: headerNameOverride ?? key,
-    cellRendererSelector: (params) => {
-      if (isCompared && !params.data?._compared) return;
-      const source = isCompared ? params.data?._compared : params.data;
-      const groupExists = source?.metricValues != null && groupKey in source.metricValues;
-      if (!groupExists) return;
-      const value = getValue(params);
-      if (value == null) {
-        return { component: ErrorCellRenderer, params: { errorText } };
-      }
-    },
-    valueGetter: (params) => {
-      if (isCompared && !params.data?._compared) return '—';
-      const source = isCompared ? params.data?._compared : params.data;
-      const groupExists = source?.metricValues != null && groupKey in source.metricValues;
-      if (!groupExists) return '—';
-      const value = getValue(params);
-      if (typeof value === 'object') return JSON.stringify(value);
-      if (value != null) return +(value as number).toFixed(3);
-      return '—';
-    },
-    cellStyle: (params) => {
-      const value = getValue(params);
-      if (typeof value === 'number' && value >= 0 && value <= 1) {
-        const colors = getAccuracyColors(value);
-        return { backgroundColor: colors.bg };
-      }
-      return undefined;
-    },
-    comparator(valueA, valueB, nodeA, nodeB, isDescending) {
-      const metricA = getValue({ data: nodeA?.data });
-      const metricB = getValue({ data: nodeB?.data });
-
-      const isErrorA = metricA == null;
-      const isErrorB = metricB == null;
-
-      if (isErrorA && isErrorB) return 0;
-      if (isErrorA) return isDescending ? -1 : 1;
-      if (isErrorB) return isDescending ? 1 : -1;
-
-      if (typeof metricA === 'number' && typeof metricB === 'number') {
-        if (metricA === metricB) return 0;
-        return metricA > metricB ? 1 : -1;
-      }
-
-      const normalizedA = typeof valueA === 'string' ? valueA : String(valueA);
-      const normalizedB = typeof valueB === 'string' ? valueB : String(valueB);
-      return normalizedA.localeCompare(normalizedB);
-    },
-  };
-};
-
-export const getAnalyticsColumnsCompare = (results: CompareAnalyticsRow[], errorText?: string) => {
-  const allResults: AnalyticsResult[] = [...results, ...results.flatMap((r) => (r._compared ? [r._compared] : []))];
-  const metrics = mergeMetricValuesSchema(allResults);
-  const inputSchema = allResults.reduce<Record<string, unknown>>(
-    (acc, r) => ({ ...acc, ...(r.testCaseData || {}) }),
-    {},
-  );
-  const extractedSchema = allResults.reduce<Record<string, unknown>>(
-    (acc, r) => ({ ...acc, ...(r.extractedColumns || {}) }),
-    {},
-  );
-
-  return [
-    staticColumns[0],
-    {
-      headerName: 'EXECUTION',
-      children: executionColumns.map((curr) => {
-        const cmpCol = comparedExecutionColumns.find((c) => c.colId === `cmp_${curr.colId}`);
-        return {
-          headerName: curr.headerName,
-          children: [
-            { ...curr, headerName: 'Current' },
-            { ...cmpCol, headerName: 'Compared' },
-          ],
-        };
-      }),
-    },
-    ...getComparedMetricsColumns(metrics, errorText),
-    {
-      headerName: 'INPUT BINDINGS',
-      children: Object.keys(inputSchema).map((key) => ({
-        headerName: key,
-        children: [
-          {
-            field: key,
-            headerName: 'Current',
-            hide: true,
-            valueGetter: (params) => {
-              const value = params.data?.testCaseData?.[key];
-              if (typeof value === 'object') return JSON.stringify(value);
-              return value ?? '—';
-            },
-          } as ColDef,
-          {
-            colId: `cmp_input_${key}`,
-            field: `cmp_input_${key}`,
-            headerName: 'Compared',
-            hide: true,
-            valueGetter: (params) => {
-              if (!params.data?._compared) return '—';
-              const value = params.data._compared.testCaseData?.[key];
-              if (typeof value === 'object') return JSON.stringify(value);
-              return value ?? '—';
-            },
-          } as ColDef,
-        ],
-      })),
-    },
-    {
-      headerName: 'EXTRACTED',
-      children: Object.keys(extractedSchema).map((key) => ({
-        headerName: key,
-        children: [
-          {
-            field: key,
-            headerName: 'Current',
-            valueGetter: (params) => {
-              const value = params.data?.extractedColumns?.[key];
-              if (typeof value === 'object') return JSON.stringify(value);
-              return value ?? '—';
-            },
-          } as ColDef,
-          {
-            colId: `cmp_extracted_${key}`,
-            field: `cmp_extracted_${key}`,
-            headerName: 'Compared',
-            valueGetter: (params) => {
-              if (!params.data?._compared) return '—';
-              const value = params.data._compared.extractedColumns?.[key];
-              if (typeof value === 'object') return JSON.stringify(value);
-              return value ?? '—';
-            },
-          } as ColDef,
-        ],
-      })),
-    },
-  ];
 };
 
 export const getTestCaseStatusClass = (code: number | undefined) => {

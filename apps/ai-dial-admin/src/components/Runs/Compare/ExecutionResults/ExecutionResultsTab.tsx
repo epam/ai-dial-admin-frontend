@@ -19,6 +19,8 @@ import {
 import {
   countCompareDiffs,
   hasCompareRowDiff,
+  isCompareRowFullyEmpty,
+  mergeCompareMetricValuesSchema,
 } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
 import {
   applyEyeCellRendererParams,
@@ -30,7 +32,7 @@ import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import { mergeByTestCaseId, RESULT_FILTERS } from '@/src/components/Runs/View/utils';
 import { EntitiesI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { AnalyticsResult, ExtractionResultStatus } from '@/src/models/evaluation/run';
+import { AnalyticsResult } from '@/src/models/evaluation/run';
 
 interface Props {
   primaryRunId: string;
@@ -42,13 +44,6 @@ interface Props {
   selectedRow: CompareAnalyticsRow | null;
   onOpenRowDetail: (row: CompareAnalyticsRow) => void;
 }
-
-const FAILED_EXECUTION_STATUSES = new Set<ExtractionResultStatus>([
-  ExtractionResultStatus.FAILED,
-  ExtractionResultStatus.ERROR,
-]);
-
-const isFailedExecution = (status?: ExtractionResultStatus) => status != null && FAILED_EXECUTION_STATUSES.has(status);
 
 const DISPLAY_PANEL_CLASS_NAME =
   'flex flex-col absolute right-0 top-0 bottom-0 w-[397px] bg-layer-3 border-l border-primary shadow-lg z-20';
@@ -156,10 +151,22 @@ const ExecutionResultsTab: FC<Props> = ({
     return mergeByTestCaseId(results, comparedResults);
   }, [results, comparedResults]);
 
+  const metricsSchema = useMemo(() => {
+    if (!mergedRowData) return {};
+    const allResults: AnalyticsResult[] = [
+      ...mergedRowData,
+      ...mergedRowData.flatMap((row) => (row._compared ? [row._compared] : [])),
+    ];
+    return mergeCompareMetricValuesSchema(allResults);
+  }, [mergedRowData]);
+
   const computedColDefs = useMemo(() => {
     if (mergedRowData === null) return [];
-    return getCompareColumnsCompare(mergedRowData, errorText, t(RunsI18nKey.RunCompareDelta), { hideHighlights });
-  }, [mergedRowData, errorText, t, hideHighlights]);
+    return getCompareColumnsCompare(mergedRowData, errorText, t(RunsI18nKey.RunCompareDelta), {
+      hideHighlights,
+      metricsSchema,
+    });
+  }, [mergedRowData, errorText, t, hideHighlights, metricsSchema]);
 
   const eyeRendererParams = useMemo(
     () => ({
@@ -204,13 +211,15 @@ const ExecutionResultsTab: FC<Props> = ({
       ...(hideHighlights
         ? {}
         : {
-            'compare-row-failed': (params) =>
-              isFailedExecution(params.data?.executionStatus) ||
-              isFailedExecution(params.data?._compared?.executionStatus),
+            'compare-row-empty compare-row-empty-border': (params) => {
+              const row = params.data;
+              if (!row) return false;
+              return isCompareRowFullyEmpty(row, metricsSchema);
+            },
           }),
       'ag-active-detail-row': (params) => params.data?.id === selectedRow?.id,
     }),
-    [hideHighlights, selectedRow?.id],
+    [hideHighlights, metricsSchema, selectedRow?.id],
   );
 
   const gridOptions = useMemo(

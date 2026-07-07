@@ -1,7 +1,8 @@
 import { describe, expect, test } from 'vitest';
 
-import { CompareRunSlot } from '../constants';
-import { getCompareRunsPath, getCompareRunsUrn, getSelectableCompareRuns } from '../utils';
+import { CompareRunSlot, CompareViewTab } from '../constants';
+import { getCompareRunsPath, getCompareRunsUrn, getCompareViewTabs, getSelectableCompareRuns } from '../utils';
+import { RunsI18nKey } from '@/src/constants/i18n';
 
 describe('Runs Compare :: getSelectableCompareRuns', () => {
   const suiteRuns = [
@@ -30,5 +31,29 @@ describe('Runs Compare :: getCompareRunsPath', () => {
 describe('Runs Compare :: getCompareRunsUrn', () => {
   test('returns full compare url', () => {
     expect(getCompareRunsUrn('run-1', 'run-2')).toBe('/runs/compare?runs=run-1,run-2');
+  });
+});
+
+const t = (key: string) => key;
+
+describe('Runs Compare :: getCompareViewTabs', () => {
+  test('disables summary and heat map tabs when runsCompareEnabled is false', () => {
+    const tabs = getCompareViewTabs(t, false);
+
+    expect(tabs).toEqual([
+      { id: CompareViewTab.SummaryOverview, label: RunsI18nKey.RunCompareTabSummaryOverview, disabled: true },
+      { id: CompareViewTab.HeatMap, label: RunsI18nKey.RunCompareTabHeatMap, disabled: true },
+      { id: CompareViewTab.ExecutionResults, label: RunsI18nKey.RunCompareTabExecutionResults },
+    ]);
+  });
+
+  test('enables all tabs when runsCompareEnabled is true', () => {
+    const tabs = getCompareViewTabs(t, true);
+
+    expect(tabs).toEqual([
+      { id: CompareViewTab.SummaryOverview, label: RunsI18nKey.RunCompareTabSummaryOverview, disabled: false },
+      { id: CompareViewTab.HeatMap, label: RunsI18nKey.RunCompareTabHeatMap, disabled: false },
+      { id: CompareViewTab.ExecutionResults, label: RunsI18nKey.RunCompareTabExecutionResults },
+    ]);
   });
 });

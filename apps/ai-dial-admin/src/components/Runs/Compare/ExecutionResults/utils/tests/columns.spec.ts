@@ -24,121 +24,11 @@ import {
   STATUS_COLUMN_WIDTH,
 } from '@/src/components/Runs/Compare/ExecutionResults/constants';
 import {
-  getCompareColumns,
   getCompareColumnsCompare,
   mergeComparePanelColumns,
   splitComparePanelColumns,
 } from '@/src/components/Runs/Compare/ExecutionResults/utils/columns';
 import { ExtractionResultStatus } from '@/src/models/evaluation/run';
-
-describe('Runs Compare :: getCompareColumns', () => {
-  test('builds flat status and test case columns with execution, metrics, and extracted groups', () => {
-    const columns = getCompareColumns([
-      {
-        id: 'result-1',
-        responseStatusCode: 200,
-        runIndex: 0,
-        executionStatus: ExtractionResultStatus.SUCCESS,
-        testCaseName: 'Test Case 1',
-        metricValues: {
-          'Overall Accuracy': {
-            'Equality check': 1,
-            Precision: 0.8,
-            Recall: 0.7,
-          },
-          'Context Appropriateness': {
-            'Equality Check': 1,
-            Recall: 0.9,
-          },
-        },
-        extractedColumns: {
-          answer: 'yes',
-          context: 'ctx',
-          context_urls: 'http://example.com',
-        },
-      },
-    ]);
-
-    expect(columns).toHaveLength(6);
-
-    const statusCol = columns[0] as ColDef;
-    const testCaseCol = columns[1] as ColDef;
-    expect(statusCol.colId).toBe('status');
-    expect(statusCol.width).toBe(STATUS_COLUMN_WIDTH);
-    expect(statusCol.filter).toBe(false);
-    expect(testCaseCol.colId).toBe('testCaseName');
-    expect(testCaseCol.filter).toBe('agTextColumnFilter');
-    expect(testCaseCol.floatingFilter).toBe(true);
-
-    const executionGroup = columns[2] as ColGroupDef;
-    expect(executionGroup.headerName).toBe(EXECUTION_GROUP_HEADER);
-    expect(executionGroup.children?.map((column) => column.headerName)).toEqual(['# Run number', 'HTTP', 'Duration']);
-    expect((executionGroup.children as ColDef[])?.every((column) => column.filter === false)).toBe(true);
-    expect(executionGroup.children?.[0]).toEqual(
-      expect.objectContaining({
-        width: RUN_INDEX_COLUMN_WIDTH,
-        minWidth: RUN_INDEX_COLUMN_WIDTH,
-        maxWidth: RUN_INDEX_COLUMN_WIDTH,
-      }),
-    );
-    expect(executionGroup.children?.[1]).toEqual(
-      expect.objectContaining({
-        width: HTTP_COLUMN_WIDTH,
-        minWidth: HTTP_COLUMN_WIDTH,
-        maxWidth: HTTP_COLUMN_WIDTH,
-      }),
-    );
-    expect(executionGroup.children?.[2]).toEqual(
-      expect.objectContaining({
-        width: DURATION_COLUMN_WIDTH,
-        minWidth: DURATION_COLUMN_WIDTH,
-        maxWidth: DURATION_COLUMN_WIDTH,
-      }),
-    );
-
-    const overallAccuracyGroup = columns[3] as ColGroupDef;
-    expect(overallAccuracyGroup.headerName).toBe('Overall Accuracy');
-    expect(overallAccuracyGroup.children?.map((column) => column.headerName)).toEqual([
-      'Equality check',
-      'Precision',
-      'Recall',
-    ]);
-    expect(
-      (overallAccuracyGroup.children as ColDef[])?.every((column) => column.filter === 'agNumberColumnFilter'),
-    ).toBe(true);
-    expect((overallAccuracyGroup.children as ColDef[])?.every((column) => column.floatingFilter === true)).toBe(true);
-
-    const contextGroup = columns[4] as ColGroupDef;
-    expect(contextGroup.headerName).toBe('Context Appropriateness');
-    expect(contextGroup.children?.map((column) => column.headerName)).toEqual(['Equality Check', 'Recall']);
-
-    const extractedGroup = columns[5] as ColGroupDef;
-    expect(extractedGroup.headerName).toBe(EXTRACTED_GROUP_HEADER);
-    expect(extractedGroup.children?.map((column) => column.headerName)).toEqual(['answer', 'context', 'context_urls']);
-    expect((extractedGroup.children as ColDef[])?.every((column) => column.filter === false)).toBe(true);
-    expect((extractedGroup.children as ColDef[])?.every((column) => column.flex === 1)).toBe(true);
-    expect(
-      (extractedGroup.children as ColDef[])?.every((column) => column.minWidth === EXTRACTED_COLUMN_MIN_WIDTH),
-    ).toBe(true);
-  });
-
-  test('omits extracted group when there is no extracted schema', () => {
-    const columns = getCompareColumns([
-      {
-        id: 'result-1',
-        responseStatusCode: 200,
-        runIndex: 0,
-        testCaseName: 'Test Case 1',
-        metricValues: {
-          'Overall Accuracy': { Precision: 1 },
-        },
-      },
-    ]);
-
-    expect(columns).toHaveLength(4);
-    expect(columns.at(-1)?.headerName).toBe('Overall Accuracy');
-  });
-});
 
 const makeRow = (overrides: Partial<CompareAnalyticsRow> = {}): CompareAnalyticsRow => ({
   responseStatusCode: 200,
@@ -179,7 +69,7 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     expect(cols.filter((col) => (col as ColDef).colId === 'testCaseName')).toHaveLength(1);
   });
 
-  test('status columns highlight when execution status differs between runs', () => {
+  test('status columns highlight added, changed, and removed pairs', () => {
     type StatusCol = {
       cellClassRules?: Record<string, (params: { data?: CompareAnalyticsRow }) => boolean>;
     };
@@ -192,19 +82,88 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     const statusGroup = cols[0] as { children: StatusCol[] };
     const primaryCol = statusGroup.children[0];
     const secondaryCol = statusGroup.children[1];
-    const row = makeRow({
+
+    const changedRow = makeRow({
       executionStatus: ExtractionResultStatus.SUCCESS,
       _compared: makeResult({ executionStatus: ExtractionResultStatus.FAILED }),
+    });
+    const removedRow = makeRow({
+      executionStatus: ExtractionResultStatus.SUCCESS,
+      _compared: makeResult({ executionStatus: ExtractionResultStatus.ERROR }),
+    });
+    const addedRow = makeRow({
+      executionStatus: ExtractionResultStatus.ERROR,
+      _compared: makeResult({ executionStatus: ExtractionResultStatus.SUCCESS }),
     });
     const sameStatusRow = makeRow({
       executionStatus: ExtractionResultStatus.SUCCESS,
       _compared: makeResult({ executionStatus: ExtractionResultStatus.SUCCESS }),
     });
 
-    expect(primaryCol.cellClassRules?.['compare-status-diff-primary']?.({ data: row })).toBe(true);
-    expect(secondaryCol.cellClassRules?.['compare-status-diff-secondary']?.({ data: row })).toBe(true);
-    expect(primaryCol.cellClassRules?.['compare-status-diff-primary']?.({ data: sameStatusRow })).toBe(false);
-    expect(secondaryCol.cellClassRules?.['compare-status-diff-secondary']?.({ data: sameStatusRow })).toBe(false);
+    expect(primaryCol.cellClassRules?.['compare-metric-new-primary']?.({ data: changedRow })).toBe(true);
+    expect(secondaryCol.cellClassRules?.['compare-metric-new-secondary']?.({ data: changedRow })).toBe(true);
+    expect(primaryCol.cellClassRules?.['compare-metric-regressed-primary']?.({ data: removedRow })).toBe(true);
+    expect(secondaryCol.cellClassRules?.['compare-metric-regressed-secondary']?.({ data: removedRow })).toBe(true);
+    expect(primaryCol.cellClassRules?.['compare-metric-improved-primary']?.({ data: addedRow })).toBe(true);
+    expect(secondaryCol.cellClassRules?.['compare-metric-improved-secondary']?.({ data: addedRow })).toBe(true);
+    expect(primaryCol.cellClassRules?.['compare-metric-new-primary']?.({ data: sameStatusRow })).toBe(false);
+    expect(secondaryCol.cellClassRules?.['compare-metric-new-secondary']?.({ data: sameStatusRow })).toBe(false);
+  });
+
+  test('execution columns highlight http and duration diffs', () => {
+    type ExecCol = {
+      colId?: string;
+      cellClassRules?: Record<string, (params: { data?: CompareAnalyticsRow }) => boolean>;
+    };
+    const cols = getCompareColumnsCompare([
+      makeRow({
+        responseStatusCode: 200,
+        execDurationMs: 100,
+        _compared: makeResult({ responseStatusCode: 500, execDurationMs: 250 }),
+      }),
+    ]);
+    const exec = cols[2] as { children: ExecCol[] };
+    const httpPrimary = exec.children.find((col) => col.colId === 'http');
+    const httpSecondary = exec.children.find((col) => col.colId === 'cmp_http');
+    const durationPrimary = exec.children.find((col) => col.colId === 'duration');
+    const durationSecondary = exec.children.find((col) => col.colId === 'cmp_duration');
+    const runPrimary = exec.children.find((col) => col.colId === 'runIndex');
+    const changedRow = makeRow({
+      responseStatusCode: 200,
+      execDurationMs: 100,
+      _compared: makeResult({ responseStatusCode: 500, execDurationMs: 250 }),
+    });
+
+    expect(httpPrimary?.cellClassRules?.['compare-metric-new-primary']?.({ data: changedRow })).toBe(true);
+    expect(httpSecondary?.cellClassRules?.['compare-metric-new-secondary']?.({ data: changedRow })).toBe(true);
+    expect(durationPrimary?.cellClassRules?.['compare-metric-new-primary']?.({ data: changedRow })).toBe(true);
+    expect(durationSecondary?.cellClassRules?.['compare-metric-new-secondary']?.({ data: changedRow })).toBe(true);
+    expect(runPrimary?.cellClassRules).toBeUndefined();
+  });
+
+  test('extracted columns highlight when values differ between runs', () => {
+    type ExtractedCol = {
+      colId?: string;
+      cellClassRules?: Record<string, (params: { data?: CompareAnalyticsRow }) => boolean>;
+    };
+    const cols = getCompareColumnsCompare([
+      makeRow({
+        extractedColumns: { answer: 'yes' },
+        _compared: makeResult({ extractedColumns: { answer: 'no' } }),
+      }),
+    ]);
+    const extractedGroup = cols.find((col) => col.headerName === EXTRACTED_GROUP_HEADER) as {
+      children: ExtractedCol[];
+    };
+    const primaryCol = extractedGroup.children.find((col) => col.colId === 'extracted_answer');
+    const secondaryCol = extractedGroup.children.find((col) => col.colId === 'cmp_extracted_answer');
+    const changedRow = makeRow({
+      extractedColumns: { answer: 'yes' },
+      _compared: makeResult({ extractedColumns: { answer: 'no' } }),
+    });
+
+    expect(primaryCol?.cellClassRules?.['compare-metric-new-primary']?.({ data: changedRow })).toBe(true);
+    expect(secondaryCol?.cellClassRules?.['compare-metric-new-secondary']?.({ data: changedRow })).toBe(true);
   });
 
   test('EXECUTION group has flat columns with run index in header name', () => {
@@ -333,6 +292,25 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
       formatCompareColumnHeader(RUN_COMPARE_SECONDARY_INDEX, 'answer'),
     );
     expect(extractedGroup.children[1].colId).toBe('cmp_extracted_answer');
+  });
+
+  test('metric valueGetters return dash for null metric values', () => {
+    const rows = [
+      makeRow({
+        metricValues: { 'Overall Accuracy': { Precision: null as unknown as number } },
+        _compared: makeResult({ metricValues: { 'Overall Accuracy': { Precision: 0.8 } } }),
+      }),
+    ];
+    const cols = getCompareColumnsCompare(rows);
+    const metricGroup = cols[3] as {
+      children: { valueGetter: (p: { data?: CompareAnalyticsRow }) => unknown }[];
+    };
+    const primaryCol = metricGroup.children[0];
+    const secondaryCol = metricGroup.children[1];
+    const row = rows[0];
+
+    expect(primaryCol.valueGetter({ data: row })).toBe('—');
+    expect(secondaryCol.valueGetter({ data: row })).toBe(0.8);
   });
 
   test('compared valueGetters return dash when _compared is null', () => {

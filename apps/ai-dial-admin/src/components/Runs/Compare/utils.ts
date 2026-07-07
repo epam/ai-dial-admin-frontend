@@ -39,8 +39,16 @@ export const fetchSuiteCompletedRuns = async (testSuiteId: string): Promise<Run[
   return (res?.content || []) as Run[];
 };
 
-export const getCompareViewTabs = (t: (key: string) => string): TabModel[] => [
-  { id: CompareViewTab.SummaryOverview, label: t(RunsI18nKey.RunCompareTabSummaryOverview) },
-  { id: CompareViewTab.MetricsDetails, label: t(RunsI18nKey.RunCompareTabMetricsDetails) },
+export const getCompareViewTabs = (t: (key: string) => string, runsCompareEnabled: boolean): TabModel[] => [
+  {
+    id: CompareViewTab.SummaryOverview,
+    label: t(RunsI18nKey.RunCompareTabSummaryOverview),
+    disabled: !runsCompareEnabled,
+  },
+  {
+    id: CompareViewTab.HeatMap,
+    label: t(RunsI18nKey.RunCompareTabHeatMap),
+    disabled: !runsCompareEnabled,
+  },
   { id: CompareViewTab.ExecutionResults, label: t(RunsI18nKey.RunCompareTabExecutionResults) },
 ];

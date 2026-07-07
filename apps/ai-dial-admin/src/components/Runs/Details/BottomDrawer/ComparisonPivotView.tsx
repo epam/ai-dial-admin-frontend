@@ -23,7 +23,6 @@ interface Props {
   activeDetail: AnalyticsResult | null;
   pinnedDetail: AnalyticsResult | null;
   spotlightedFields: Set<string>;
-  runCompareNames?: { current: string; compared: string };
 }
 
 /** Shape of each row fed to the ag-grid. */
@@ -92,13 +91,7 @@ const FieldValueCellRenderer: FC<ICellRendererParams<PivotRow>> = (params) => {
   return <span className="dial-caption-text">{displayText}</span>;
 };
 
-const ComparisonPivotView: FC<Props> = ({
-  sections,
-  activeDetail,
-  pinnedDetail,
-  spotlightedFields,
-  runCompareNames,
-}) => {
+const ComparisonPivotView: FC<Props> = ({ sections, activeDetail, pinnedDetail, spotlightedFields }) => {
   const t = useI18n();
   const hasTwoRows = pinnedDetail != null && pinnedDetail.id !== activeDetail?.id;
   const [diffViewState, setDiffViewState] = useState<DiffViewState | null>(null);
@@ -130,11 +123,10 @@ const ComparisonPivotView: FC<Props> = ({
   // ── Build row data ──────────────────────────────────────────────────────
   const rowData = useMemo<PivotRow[]>(() => {
     return details.map((detail, rowIdx) => {
-      const runLabel = runCompareNames ? (rowIdx === 0 ? runCompareNames.current : runCompareNames.compared) : null;
       const row: PivotRow = {
         _id: detail.id ?? String(rowIdx),
-        _testCaseName: runLabel ?? detail.testCaseName ?? detail.id ?? '',
-        _executionStatus: runLabel ? undefined : detail.executionStatus,
+        _testCaseName: detail.testCaseName ?? detail.id ?? '',
+        _executionStatus: detail.executionStatus,
         _rowIndex: rowIdx,
         _hasTwoRows: hasTwoRows,
       };
@@ -162,7 +154,7 @@ const ComparisonPivotView: FC<Props> = ({
 
       return row;
     });
-  }, [details, flatFields, hasTwoRows, runCompareNames]);
+  }, [details, flatFields, hasTwoRows]);
 
   // ── Open fullscreen diff on cell click ───────────────────────────────────
   const onCellClicked = useCallback(
@@ -192,7 +184,7 @@ const ComparisonPivotView: FC<Props> = ({
   const columnDefs = useMemo<(ColDef | ColGroupDef)[]>(() => {
     // Test Case / Run column (pinned left)
     const testCaseCol: ColDef<PivotRow> = {
-      headerName: runCompareNames ? t(RunsI18nKey.FieldColumn) : t(RunsI18nKey.TestCaseColumn),
+      headerName: t(RunsI18nKey.TestCaseColumn),
       colId: '_testCaseName',
       field: '_testCaseName',
       pinned: 'left',
@@ -263,7 +255,7 @@ const ComparisonPivotView: FC<Props> = ({
     }
 
     return [testCaseCol, ...groupDefs];
-  }, [t, flatFields, spotlightedFields, runCompareNames]);
+  }, [t, flatFields, spotlightedFields]);
 
   return (
     <div className="animate-fadeIn h-full overflow-auto pivot-grid-container">
@@ -301,8 +293,8 @@ const ComparisonPivotView: FC<Props> = ({
           fieldLabel={diffViewState.fieldLabel}
           original={diffViewState.original}
           modified={diffViewState.modified}
-          originalLabel={runCompareNames?.current ?? activeDetail?.testCaseName ?? activeDetail?.id ?? ''}
-          modifiedLabel={runCompareNames?.compared ?? pinnedDetail?.testCaseName ?? pinnedDetail?.id ?? ''}
+          originalLabel={activeDetail?.testCaseName ?? activeDetail?.id ?? ''}
+          modifiedLabel={pinnedDetail?.testCaseName ?? pinnedDetail?.id ?? ''}
           onClose={() => setDiffViewState(null)}
         />
       )}
