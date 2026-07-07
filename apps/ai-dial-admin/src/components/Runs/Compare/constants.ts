@@ -5,7 +5,7 @@ export enum CompareRunSlot {
 
 export enum CompareViewTab {
   SummaryOverview = 'summaryOverview',
-  MetricsDetails = 'metricsDetails',
+  HeatMap = 'heatMap',
   ExecutionResults = 'executionResults',
 }
 

@@ -37,12 +37,12 @@ describe('Runs Compare :: getCompareRunsUrn', () => {
 const t = (key: string) => key;
 
 describe('Runs Compare :: getCompareViewTabs', () => {
-  test('disables summary and metrics tabs when runsCompareEnabled is false', () => {
+  test('disables summary and heat map tabs when runsCompareEnabled is false', () => {
     const tabs = getCompareViewTabs(t, false);
 
     expect(tabs).toEqual([
       { id: CompareViewTab.SummaryOverview, label: RunsI18nKey.RunCompareTabSummaryOverview, disabled: true },
-      { id: CompareViewTab.MetricsDetails, label: RunsI18nKey.RunCompareTabMetricsDetails, disabled: true },
+      { id: CompareViewTab.HeatMap, label: RunsI18nKey.RunCompareTabHeatMap, disabled: true },
       { id: CompareViewTab.ExecutionResults, label: RunsI18nKey.RunCompareTabExecutionResults },
     ]);
   });
@@ -52,7 +52,7 @@ describe('Runs Compare :: getCompareViewTabs', () => {
 
     expect(tabs).toEqual([
       { id: CompareViewTab.SummaryOverview, label: RunsI18nKey.RunCompareTabSummaryOverview, disabled: false },
-      { id: CompareViewTab.MetricsDetails, label: RunsI18nKey.RunCompareTabMetricsDetails, disabled: false },
+      { id: CompareViewTab.HeatMap, label: RunsI18nKey.RunCompareTabHeatMap, disabled: false },
       { id: CompareViewTab.ExecutionResults, label: RunsI18nKey.RunCompareTabExecutionResults },
     ]);
   });
