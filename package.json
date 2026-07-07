@@ -37,7 +37,7 @@
     "ag-grid-react": "^35.2.1",
     "big.js": "^7.0.1",
     "classnames": "^2.5.1",
-    "echarts": "^6.0.0",
+    "echarts": "^6.1.0",
     "echarts-for-react": "^3.0.6",
     "gray-matter": "^4.0.3",
     "jsonata": "^2.2.1",
