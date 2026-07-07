@@ -139,6 +139,11 @@ describe('Entity list view :: getEntityPath', () => {
     expect(res1).toEqual('run-name?id=id');
   });
 
+  test('Should return id only for Runs when forRemove is true', () => {
+    const res = getEntityPath(ApplicationRoute.Runs, { data, id: 'id', testRunName: 'run-name' }, true);
+    expect(res).toEqual('id');
+  });
+
   test('Should fall back to id as name when testRunName is missing for Runs', () => {
     const res1 = getEntityPath(ApplicationRoute.Runs, { data, id: 'id' }, void 0);
     expect(res1).toEqual('id?id=id');
