@@ -24,7 +24,12 @@ const CompareMetricScoreCellRenderer = (params: CompareMetricScoreCellRendererPa
     );
   }
 
-  const text = value == null || value === '—' ? '—' : typeof value === 'string' ? value : String(value);
+  const text =
+    value == null || value === '—' || (typeof value === 'number' && Number.isNaN(value))
+      ? '—'
+      : typeof value === 'string'
+        ? value
+        : String(value);
 
   return <span className="text-primary dial-small-text">{text}</span>;
 };

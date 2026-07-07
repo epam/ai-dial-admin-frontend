@@ -16,11 +16,11 @@ describe('ExecutionStatusCellRenderer', () => {
     expect(container.querySelector('svg.text-success.shrink-0')).toBeInTheDocument();
   });
 
-  test('renders dash for failed status', () => {
+  test('renders failed icon with error class', () => {
     const { container } = renderStatus({ executionInfo: { status: ExtractionResultStatus.FAILED } });
 
-    expect(container).toHaveTextContent('—');
-    expect(container.querySelector('svg')).not.toBeInTheDocument();
+    expect(container.querySelector('svg.text-error.shrink-0')).toBeInTheDocument();
+    expect(container).not.toHaveTextContent('—');
   });
 
   test('renders timeout icon with warning class', () => {
@@ -47,6 +47,13 @@ describe('ExecutionStatusCellRenderer', () => {
     const { container } = renderStatus({ executionStatus: ExtractionResultStatus.SUCCESS });
 
     expect(container.querySelector('svg.text-success.shrink-0')).toBeInTheDocument();
+  });
+
+  test('renders failed icon from AnalyticsResult executionStatus', () => {
+    const { container } = renderStatus({ executionStatus: ExtractionResultStatus.FAILED });
+
+    expect(container.querySelector('svg.text-error.shrink-0')).toBeInTheDocument();
+    expect(container).not.toHaveTextContent('—');
   });
 
   test('renders dash from AnalyticsResult error executionStatus', () => {

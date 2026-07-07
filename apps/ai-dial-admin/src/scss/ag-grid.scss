@@ -170,8 +170,11 @@
       @apply bg-transparent;
     }
   }
-  .compare-row-failed {
+  .compare-row-empty {
     @apply bg-error;
+    &.compare-row-empty-border {
+      @apply border border-error;
+    }
     &.ag-row-hover:not(.ag-full-width-row):before {
       @apply bg-transparent;
     }
@@ -195,12 +198,6 @@
     @apply bg-info border-solid border-l border-t border-b border-accent-primary border-r-0;
   }
   .ag-cell.compare-metric-new-secondary {
-    @apply bg-info border-solid border-t border-b border-r border-accent-primary border-l-0;
-  }
-  .ag-cell.compare-status-diff-primary {
-    @apply bg-info border-solid border-l border-t border-b border-accent-primary border-r-0;
-  }
-  .ag-cell.compare-status-diff-secondary {
     @apply bg-info border-solid border-t border-b border-r border-accent-primary border-l-0;
   }
   .ag-active-detail-row {
