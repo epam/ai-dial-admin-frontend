@@ -8,6 +8,7 @@ import { DialTooltip } from '@epam/ai-dial-ui-kit';
 import { MenuGroupConfiguration } from '../menu-configuration';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
+import { PreviewTag } from '@/src/components/Common/PreviewTag/PreviewTag';
 
 import MenuItemContent from './MenuItemContent';
 
@@ -41,6 +42,11 @@ const MenuItem: FC<Props> = ({ config, activeMenuItem, isOpenByDefault = false, 
             <div className={classNames('mr-4', iconClassName)}>{config.icon}</div>
             <span className="text-left truncate text-primary"> {t(config.key) ?? ''}</span>
           </div>
+          {config.isPreview && isSidebarOpen && (
+            <div className="ml-2 mr-1 shrink-0">
+              <PreviewTag />
+            </div>
+          )}
           {isSidebarOpen && (
             <div className={classNames('ml-4', iconClassName)}>
               {isOpen ? <IconChevronUp {...BASE_BUTTON_ICON_PROPS} /> : <IconChevronDown {...BASE_BUTTON_ICON_PROPS} />}
