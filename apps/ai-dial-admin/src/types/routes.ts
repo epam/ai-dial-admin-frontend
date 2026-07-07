@@ -55,4 +55,8 @@ export enum ApplicationRoute {
   Runs = '/runs',
   RunsCompare = '/runs/compare',
   Metrics = '/metrics',
+
+  // Analytics 2.0
+  AnalyticsV2QueryBuilder = '/analytics-v2/query-builder',
+  AnalyticsV2Tables = '/analytics-v2/tables',
 }

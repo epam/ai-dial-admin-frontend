@@ -1,4 +1,5 @@
 import {
+  IconChartBar,
   IconDashboard,
   IconFlask,
   IconFolders,
@@ -19,6 +20,7 @@ export interface MenuGroupConfiguration {
   descriptionKey: MenuI18nKey;
   icon?: JSX.Element;
   items: MenuItem[];
+  isPreview?: boolean;
 }
 
 export interface MenuItem {
@@ -199,6 +201,22 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
         },
       ],
     },
+    {
+      key: MenuI18nKey.AnalyticsV2,
+      descriptionKey: MenuI18nKey.AnalyticsV2,
+      icon: <IconChartBar width={iconSize} height={iconSize} />,
+      isPreview: true,
+      items: [
+        {
+          key: MenuI18nKey.QueryBuilder,
+          href: ApplicationRoute.AnalyticsV2QueryBuilder,
+        },
+        {
+          key: MenuI18nKey.Tables,
+          href: ApplicationRoute.AnalyticsV2Tables,
+        },
+      ],
+    },
   ];
 
   let result = [...config];
@@ -208,6 +226,10 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
 
   if (!featureFlags.evaluationEnabled) {
     result = result.filter((item) => item.key !== MenuI18nKey.Evaluation);
+  }
+
+  if (!featureFlags.analyticsV2Enabled) {
+    result = result.filter((item) => item.key !== MenuI18nKey.AnalyticsV2);
   }
 
   return result;

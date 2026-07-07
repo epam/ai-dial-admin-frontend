@@ -6,4 +6,5 @@ export interface FeatureFlags {
   nimEnabled: boolean;
   hfEnabled: boolean;
   runsCompareEnabled: boolean;
+  analyticsV2Enabled: boolean;
 }

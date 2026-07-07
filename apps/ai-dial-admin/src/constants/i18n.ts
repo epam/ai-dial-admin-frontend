@@ -59,6 +59,9 @@ export enum MenuI18nKey {
   InterceptorTemplates = 'Menu.InterceptorTemplates',
   ActivityAudit = 'Menu.ActivityAudit',
   Images = 'Menu.Images',
+  AnalyticsV2 = 'Menu.AnalyticsV2',
+  QueryBuilder = 'Menu.QueryBuilder',
+  Tables = 'Menu.Tables',
 }
 
 export enum ReadOnlyI18nKey {

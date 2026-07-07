@@ -152,6 +152,10 @@ export default {
     InterceptorTemplates: 'Interceptor Templates',
     Images: 'Images',
 
+    AnalyticsV2: 'Analytics 2.0',
+    QueryBuilder: 'Query Builder',
+    Tables: 'Tables',
+
     EntitiesDescription: 'Centralized space to configure and oversee key components of your AI ecosystem.',
     AccessManagementDescription:
       'Control who can access and modify AI resources, ensuring security and efficiency across your organization.',
