@@ -67,6 +67,9 @@ export const getEntityPath = (
       return `${encodeURIComponent((data as { id: string }).id)}`;
     case ApplicationRoute.Runs: {
       const { id, testRunName } = data as { id: string; testRunName?: string };
+      if (forRemove) {
+        return `${encodeURIComponent(id)}`;
+      }
       return `${encodeURIComponent(testRunName || id)}?id=${encodeURIComponent(id)}`;
     }
     case ApplicationRoute.RunsCompare: {
