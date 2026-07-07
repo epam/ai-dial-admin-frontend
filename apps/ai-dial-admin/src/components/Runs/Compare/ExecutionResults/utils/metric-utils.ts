@@ -1,4 +1,5 @@
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
+import { AnalyticsResult, ExtractionResultStatus } from '@/src/models/evaluation/run';
 
 import { CompareDiffCounts } from '../models';
 
@@ -24,6 +25,34 @@ export const roundMetricValue = (value: number): number => Math.round(value * RO
 
 export const isMissingMetricValue = (value: unknown): boolean =>
   value == null || (typeof value === 'number' && Number.isNaN(value));
+
+export const formatCompareMetricCellValue = (value: unknown): string | number => {
+  if (isMissingMetricValue(value)) {
+    return '—';
+  }
+
+  if (typeof value === 'object') {
+    return JSON.stringify(value);
+  }
+
+  if (typeof value === 'number') {
+    return +value.toFixed(3);
+  }
+
+  return String(value);
+};
+
+export const formatCompareExtractedCellValue = (value: unknown): string => {
+  if (value == null) {
+    return '—';
+  }
+
+  if (typeof value === 'object') {
+    return JSON.stringify(value);
+  }
+
+  return String(value);
+};
 
 export const getNumericMetricValue = (value: unknown): number | null => {
   if (typeof value !== 'number' || Number.isNaN(value)) return null;
@@ -66,14 +95,109 @@ export const formatMetricDelta = (delta: MetricDelta): string | null => {
   return `${sign}${delta.value.toFixed(3)}`;
 };
 
-export const hasExecutionStatusDiff = (row: CompareAnalyticsRow): boolean => {
+export const isMissingCompareFieldValue = (value: unknown): boolean => value == null || value === '—';
+
+export const getCompareFieldDelta = (
+  primary: unknown,
+  secondary: unknown,
+  options?: { isNumeric?: boolean },
+): MetricDeltaKind => {
+  const isNumeric = options?.isNumeric ?? false;
+  const primaryMissing = isMissingCompareFieldValue(primary);
+  const secondaryMissing = isMissingCompareFieldValue(secondary);
+
+  if (primaryMissing && secondaryMissing) {
+    return MetricDeltaKind.Empty;
+  }
+
+  if (primaryMissing && !secondaryMissing) {
+    return MetricDeltaKind.Added;
+  }
+
+  if (!primaryMissing && secondaryMissing) {
+    return MetricDeltaKind.Removed;
+  }
+
+  if (isNumeric) {
+    const primaryNum = typeof primary === 'number' ? primary : Number(primary);
+    const secondaryNum = typeof secondary === 'number' ? secondary : Number(secondary);
+    return getMetricDelta(primaryNum, secondaryNum).kind;
+  }
+
+  if (String(primary) === String(secondary)) {
+    return MetricDeltaKind.Empty;
+  }
+
+  return MetricDeltaKind.Changed;
+};
+
+export const getCompareRowDurationMs = (row: AnalyticsResult): number | null => {
+  const executionInfo = (row as AnalyticsResult & { executionInfo?: { durationMs?: number } }).executionInfo;
+  const durationMs = executionInfo?.durationMs ?? row.execDurationMs;
+  return durationMs ?? null;
+};
+
+const isExecutionStatusDisplayEmpty = (status?: ExtractionResultStatus): boolean =>
+  status == null || status === ExtractionResultStatus.ERROR;
+
+export const getExecutionStatusDelta = (
+  primary?: ExtractionResultStatus,
+  secondary?: ExtractionResultStatus,
+): MetricDeltaKind => {
+  const primaryEmpty = isExecutionStatusDisplayEmpty(primary);
+  const secondaryEmpty = isExecutionStatusDisplayEmpty(secondary);
+
+  if (primaryEmpty && secondaryEmpty) {
+    return MetricDeltaKind.Empty;
+  }
+
+  if (primaryEmpty && !secondaryEmpty) {
+    return MetricDeltaKind.Added;
+  }
+
+  if (!primaryEmpty && secondaryEmpty) {
+    return MetricDeltaKind.Removed;
+  }
+
+  if (primary === secondary) {
+    return MetricDeltaKind.Empty;
+  }
+
+  return MetricDeltaKind.Changed;
+};
+
+const hasExecutionStatusDiff = (row: CompareAnalyticsRow): boolean => {
   const compared = row._compared;
   if (!compared) return false;
 
-  const primary = row.executionStatus;
-  const secondary = compared.executionStatus;
-  if (primary == null && secondary == null) return false;
-  return primary !== secondary;
+  return getExecutionStatusDelta(row.executionStatus, compared.executionStatus) !== MetricDeltaKind.Empty;
+};
+
+const hasExecutionFieldDiff = (row: CompareAnalyticsRow): boolean => {
+  const compared = row._compared;
+  if (!compared) return false;
+
+  const httpDelta = getCompareFieldDelta(row.responseStatusCode, compared.responseStatusCode, { isNumeric: true });
+  if (httpDelta !== MetricDeltaKind.Empty) return true;
+
+  const durationDelta = getCompareFieldDelta(getCompareRowDurationMs(row), getCompareRowDurationMs(compared), {
+    isNumeric: true,
+  });
+  return durationDelta !== MetricDeltaKind.Empty;
+};
+
+const hasExtractedDiff = (row: CompareAnalyticsRow): boolean => {
+  const compared = row._compared;
+  if (!compared) return false;
+
+  const keys = new Set([...Object.keys(row.extractedColumns ?? {}), ...Object.keys(compared.extractedColumns ?? {})]);
+
+  for (const key of keys) {
+    const delta = getCompareFieldDelta(row.extractedColumns?.[key] ?? null, compared.extractedColumns?.[key] ?? null);
+    if (delta !== MetricDeltaKind.Empty) return true;
+  }
+
+  return false;
 };
 
 const hasMetricDiffForRow = (row: CompareAnalyticsRow): boolean => {
@@ -99,7 +223,100 @@ const hasMetricDiffForRow = (row: CompareAnalyticsRow): boolean => {
 };
 
 export const hasCompareRowDiff = (row: CompareAnalyticsRow): boolean =>
-  hasExecutionStatusDiff(row) || hasMetricDiffForRow(row);
+  hasExecutionStatusDiff(row) || hasExecutionFieldDiff(row) || hasExtractedDiff(row) || hasMetricDiffForRow(row);
+
+export const mergeCompareMetricValuesSchema = (results: AnalyticsResult[]): Record<string, Record<string, unknown>> => {
+  const merged: Record<string, Record<string, unknown>> = {};
+  for (const result of results) {
+    const metricValues = result.metricValues;
+    if (!metricValues) continue;
+    for (const [groupKey, groupValues] of Object.entries(metricValues)) {
+      if (!merged[groupKey]) merged[groupKey] = {};
+      for (const [key, value] of Object.entries(groupValues)) {
+        if (!(key in merged[groupKey])) merged[groupKey][key] = value;
+      }
+    }
+  }
+  return merged;
+};
+
+export const isCompareRowAllMetricsEmpty = (
+  row: CompareAnalyticsRow,
+  schemaMetrics: Record<string, Record<string, unknown>>,
+): boolean => {
+  const compared = row._compared;
+  const schemaEntries = Object.entries(schemaMetrics).flatMap(([groupKey, groupValues]) =>
+    Object.keys(groupValues).map((key) => ({ groupKey, key })),
+  );
+
+  if (schemaEntries.length === 0) {
+    return true;
+  }
+
+  return schemaEntries.every(({ groupKey, key }) => {
+    const primary = row.metricValues?.[groupKey]?.[key];
+    const secondary = compared?.metricValues?.[groupKey]?.[key];
+    return isMissingMetricValue(primary) && isMissingMetricValue(secondary);
+  });
+};
+
+export const isCompareRunExecutionDataEmpty = (result: AnalyticsResult | null | undefined): boolean => {
+  if (!result) return true;
+  if (result.runIndex != null) return false;
+  if (result.responseStatusCode != null) return false;
+  if (getCompareRowDurationMs(result) != null) return false;
+  return true;
+};
+
+export const isCompareRowFullyEmpty = (
+  row: CompareAnalyticsRow,
+  schemaMetrics: Record<string, Record<string, unknown>>,
+): boolean =>
+  isCompareRunExecutionDataEmpty(row) &&
+  isCompareRunExecutionDataEmpty(row._compared) &&
+  isCompareRowAllMetricsEmpty(row, schemaMetrics);
+
+const countFieldDelta = (delta: MetricDeltaKind, counts: CompareDiffCounts): void => {
+  switch (delta) {
+    case MetricDeltaKind.Added:
+      counts.improved++;
+      break;
+    case MetricDeltaKind.Changed:
+      counts.changed++;
+      break;
+    case MetricDeltaKind.Removed:
+      counts.regressed++;
+      break;
+  }
+};
+
+const countExecutionFieldDiffsForRow = (row: CompareAnalyticsRow, counts: CompareDiffCounts): void => {
+  const compared = row._compared;
+  if (!compared) return;
+
+  countFieldDelta(
+    getCompareFieldDelta(row.responseStatusCode, compared.responseStatusCode, { isNumeric: true }),
+    counts,
+  );
+  countFieldDelta(
+    getCompareFieldDelta(getCompareRowDurationMs(row), getCompareRowDurationMs(compared), { isNumeric: true }),
+    counts,
+  );
+};
+
+const countExtractedDiffsForRow = (row: CompareAnalyticsRow, counts: CompareDiffCounts): void => {
+  const compared = row._compared;
+  if (!compared) return;
+
+  const keys = new Set([...Object.keys(row.extractedColumns ?? {}), ...Object.keys(compared.extractedColumns ?? {})]);
+
+  for (const key of keys) {
+    countFieldDelta(
+      getCompareFieldDelta(row.extractedColumns?.[key] ?? null, compared.extractedColumns?.[key] ?? null),
+      counts,
+    );
+  }
+};
 
 const countMetricDiffsForRow = (row: CompareAnalyticsRow, counts: CompareDiffCounts): void => {
   const compared = row._compared;
@@ -138,6 +355,8 @@ export const countCompareDiffs = (rows: CompareAnalyticsRow[]): CompareDiffCount
     if (hasExecutionStatusDiff(row)) {
       counts.changed++;
     }
+    countExecutionFieldDiffsForRow(row, counts);
+    countExtractedDiffsForRow(row, counts);
     countMetricDiffsForRow(row, counts);
   }
 

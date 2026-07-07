@@ -8,6 +8,7 @@ export interface CompareDiffCounts {
 
 export interface CompareColumnsCompareOptions {
   hideHighlights?: boolean;
+  metricsSchema?: Record<string, Record<string, unknown>>;
 }
 
 export interface ComparePanelRunNames {
