@@ -1739,6 +1739,12 @@ export default {
     TurnSelector: 'Turn selector (JSONata)',
     TurnSelectorHint:
       'Optional. For multi-step suites this column holds a per-turn array — use a JSONata selector such as $[-1] (last turn), $[0] (first turn), or $[-1].score. Leave empty to pass the whole value.',
+    Condition: 'Condition',
+    ConditionHint:
+      'Optional JSONata evaluated per test case — the metric runs only when it is true. Use data.<column> and response.<column>, e.g. $exists(response.answer). Leave blank to always run.',
+    ConditionAlwaysRun: 'Always run',
+    ConditionSystemFunctionUnavailable:
+      'System functions such as name() are not available yet. Use a JSONata expression (e.g. $exists(response.answer)) or leave blank.',
     Constant: 'Constant',
     Attribute: 'Attribute',
     TestCase: 'Test case',

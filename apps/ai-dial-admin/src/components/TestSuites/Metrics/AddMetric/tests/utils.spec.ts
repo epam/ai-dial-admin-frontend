@@ -2,7 +2,7 @@ import { JSONSchema7 } from 'json-schema';
 import { describe, expect, test } from 'vitest';
 
 import { MetricBinding } from '@/src/models/evaluation/metric';
-import { validateMetricBindings } from '../utils';
+import { isReservedSystemFunctionCondition, validateMetricBindings } from '../utils';
 import { MetricBindingType } from '@/src/types/evaluation';
 
 describe('validateMetricBindings', () => {
@@ -205,5 +205,28 @@ describe('validateMetricBindings', () => {
     const isValid = validateMetricBindings('Metric name', [], [], schemaWithoutRequired, schemaWithoutRequired);
 
     expect(isValid).toBe(true);
+  });
+});
+
+describe('isReservedSystemFunctionCondition', () => {
+  test('returns false for undefined, null and empty conditions', () => {
+    expect(isReservedSystemFunctionCondition(undefined)).toBe(false);
+    expect(isReservedSystemFunctionCondition('')).toBe(false);
+    expect(isReservedSystemFunctionCondition('   ')).toBe(false);
+  });
+
+  test('returns true for a bare system-function call', () => {
+    expect(isReservedSystemFunctionCondition('isLastTurn()')).toBe(true);
+    expect(isReservedSystemFunctionCondition('  _first()  ')).toBe(true);
+  });
+
+  test('returns false for JSONata expressions ($-prefixed, paths, operators)', () => {
+    expect(isReservedSystemFunctionCondition('$exists(response.answer)')).toBe(false);
+    expect(isReservedSystemFunctionCondition('$count(data.turns) > 1')).toBe(false);
+    expect(isReservedSystemFunctionCondition('response.answer')).toBe(false);
+  });
+
+  test('returns false for a call with arguments', () => {
+    expect(isReservedSystemFunctionCondition('foo(bar)')).toBe(false);
   });
 });

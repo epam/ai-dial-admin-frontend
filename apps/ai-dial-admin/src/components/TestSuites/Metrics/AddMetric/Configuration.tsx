@@ -17,6 +17,7 @@ import { TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
 import MetricInputs from './Values/Inputs';
 import MetricOutputs from './Values/Outputs';
 import MetricSchemaSection from './Values/SchemaSection';
+import { CONDITION_MAX_LENGTH } from './constants';
 
 interface Props {
   selectedTestSuite?: TestSuite;
@@ -26,6 +27,9 @@ interface Props {
   selectedMetricDetails?: Metric;
   inputBindings?: MetricBinding[];
   configBindings?: MetricBinding[];
+  condition?: string;
+  conditionError?: string;
+  onChangeCondition?: (condition: string) => void;
   onChangeName?: (name: string | undefined) => void;
   onChangeConfigBindings?: (bindings: MetricBinding[]) => void;
   onChangeInputBindings?: (bindings: MetricBinding[]) => void;
@@ -34,6 +38,7 @@ interface Props {
 
 interface MetricConfigurationData {
   name?: string;
+  condition?: string;
   configBindings?: MetricBinding[];
   inputBindings?: MetricBinding[];
 }
@@ -47,6 +52,9 @@ const MetricConfiguration: FC<Props> = ({
   inputBindings,
   configBindings,
   onChangeName,
+  condition,
+  conditionError,
+  onChangeCondition,
   selectedTestSuite,
   testCaseSchema,
   onJsonViewChange,
@@ -78,16 +86,20 @@ const MetricConfiguration: FC<Props> = ({
   const metricConfigData: MetricConfigurationData = useMemo(
     () => ({
       name: metricName,
+      condition,
       configBindings,
       inputBindings,
     }),
-    [metricName, configBindings, inputBindings],
+    [metricName, condition, configBindings, inputBindings],
   );
 
   const onChangeMetricConfigData = useCallback(
     (data: MetricConfigurationData) => {
       if (data.name != null && onChangeName) {
         onChangeName(data.name);
+      }
+      if (data.condition != null && onChangeCondition) {
+        onChangeCondition(data.condition);
       }
       if (data.configBindings && onChangeConfigBindings) {
         onChangeConfigBindings(data.configBindings);
@@ -96,7 +108,7 @@ const MetricConfiguration: FC<Props> = ({
         onChangeInputBindings(data.inputBindings);
       }
     },
-    [onChangeName, onChangeConfigBindings, onChangeInputBindings],
+    [onChangeName, onChangeCondition, onChangeConfigBindings, onChangeInputBindings],
   );
 
   const selectedMetricParameters = useMemo(() => {
@@ -149,6 +161,17 @@ const MetricConfiguration: FC<Props> = ({
             error={metricNameError}
             invalid={!!metricNameError}
             onChange={onChangeName}
+          />
+
+          <DialInput
+            labelProps={{ label: t(TestSuitesI18nKey.Condition) }}
+            caption={t(TestSuitesI18nKey.ConditionHint)}
+            placeholder="$exists(response.answer)"
+            maxLength={CONDITION_MAX_LENGTH}
+            value={condition ?? ''}
+            error={conditionError}
+            invalid={!!conditionError}
+            onChange={(value) => onChangeCondition?.(value ?? '')}
           />
 
           <div className="flex-1 min-h-0 gap-y-6 flex flex-col">

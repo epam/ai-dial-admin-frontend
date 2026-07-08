@@ -4,6 +4,15 @@ import { jsonSchemaToFields } from '@/src/components/Common/SchemaGrid/utils';
 import { CSV_COLUMN_SEPARATOR } from '@/src/constants/eval-export';
 import { MetricBinding } from '@/src/models/evaluation/metric';
 import { MetricBindingType } from '@/src/types/evaluation';
+import { SYSTEM_FUNCTION_CONDITION_REGEX } from './constants';
+
+// Client-side guard for the one condition mistake we can catch without the backend: a bare `name()`
+// system-function call, which is always rejected (no such functions exist yet). Real JSONata syntax
+// errors are left to the backend's eager 400. Returns true when the condition is a reserved call.
+export const isReservedSystemFunctionCondition = (condition?: string): boolean => {
+  const trimmed = condition?.trim();
+  return !!trimmed && SYSTEM_FUNCTION_CONDITION_REGEX.test(trimmed);
+};
 
 export const validateMetricBindings = (
   metricName: string | undefined,
