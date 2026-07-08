@@ -1,8 +1,10 @@
 import { describe, expect, test } from 'vitest';
 
-import { HeatMapRowType } from '@/src/components/Runs/Compare/HeatMap/models';
+import { HeatMapColorDisplayMode, HeatMapRowType } from '@/src/components/Runs/Compare/HeatMap/models';
 import {
+  buildHeatMapDeltaRows,
   buildHeatMapRows,
+  buildHeatMapRowsForMode,
   filterHeatMapRowsByExpandedGroups,
   getHeatMapGroupKeys,
 } from '@/src/components/Runs/Compare/HeatMap/utils/build-heat-map-rows';
@@ -87,6 +89,76 @@ describe('buildHeatMapRows', () => {
 
     const groupRow = rows.find((row) => row.rowType === HeatMapRowType.Group);
     expect(groupRow?.values).toEqual({});
+  });
+});
+
+describe('buildHeatMapDeltaRows', () => {
+  test('creates one metric row per metric without run index', () => {
+    const rows = buildHeatMapDeltaRows([
+      makeRow({
+        testCaseId: 'tc-1',
+        metricValues: { Accuracy: { precision: 0.5 } },
+        _compared: makeResult({
+          id: 'result-2',
+          metricValues: { Accuracy: { precision: 0.8 } },
+        }),
+      }),
+    ]);
+
+    const metricRows = rows.filter((row) => row.rowType === HeatMapRowType.Metric);
+    expect(metricRows).toHaveLength(1);
+    expect(metricRows[0].runIndex).toBeUndefined();
+    expect(metricRows[0].metricKey).toBe('precision');
+  });
+
+  test('maps signed delta values per test case column', () => {
+    const rows = buildHeatMapDeltaRows([
+      makeRow({
+        testCaseId: 'tc-1',
+        metricValues: { Accuracy: { precision: 0.5 } },
+        _compared: makeResult({ metricValues: { Accuracy: { precision: 0.8 } } }),
+      }),
+      makeRow({
+        id: 'r3',
+        testCaseId: 'tc-2',
+        metricValues: { Accuracy: { precision: 0.5 } },
+        _compared: makeResult({ id: 'r4', metricValues: { Accuracy: { precision: 0.5 } } }),
+      }),
+      makeRow({
+        id: 'r5',
+        testCaseId: 'tc-3',
+        metricValues: { Accuracy: { precision: 0.8 } },
+        _compared: makeResult({ id: 'r6', metricValues: { Accuracy: {} } }),
+      }),
+      makeRow({
+        id: 'r7',
+        testCaseId: 'tc-4',
+        metricValues: { Accuracy: {} },
+        _compared: makeResult({ id: 'r8', metricValues: { Accuracy: { precision: 0.3 } } }),
+      }),
+    ]);
+
+    const deltaRow = rows.find((row) => row.rowType === HeatMapRowType.Metric);
+    expect(deltaRow?.values[formatHeatMapTestCaseColId('tc-1')]).toBe(0.3);
+    expect(deltaRow?.values[formatHeatMapTestCaseColId('tc-2')]).toBe(0);
+    expect(deltaRow?.values[formatHeatMapTestCaseColId('tc-3')]).toBe(-0.8);
+    expect(deltaRow?.values[formatHeatMapTestCaseColId('tc-4')]).toBe(0.3);
+  });
+});
+
+describe('buildHeatMapRowsForMode', () => {
+  test('returns absolute rows by default and delta rows in delta mode', () => {
+    const mergedRows = [
+      makeRow({
+        metricValues: { Accuracy: { precision: 0.5 } },
+        _compared: makeResult({ metricValues: { Accuracy: { precision: 0.8 } } }),
+      }),
+    ];
+
+    expect(buildHeatMapRowsForMode(mergedRows, HeatMapColorDisplayMode.Absolute)).toEqual(buildHeatMapRows(mergedRows));
+    expect(buildHeatMapRowsForMode(mergedRows, HeatMapColorDisplayMode.Delta)).toEqual(
+      buildHeatMapDeltaRows(mergedRows),
+    );
   });
 });
 

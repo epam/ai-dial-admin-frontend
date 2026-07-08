@@ -19,7 +19,7 @@ const HeatMapToolbar: FC<Props> = ({ colorDisplayMode, onColorDisplayModeChange 
   const colorDisplayOptions = useMemo<SegmentedControlOption<HeatMapColorDisplayMode>[]>(
     () => [
       { value: HeatMapColorDisplayMode.Absolute, label: t(RunsI18nKey.RunCompareAbsoluteValues) },
-      { value: HeatMapColorDisplayMode.Delta, label: t(RunsI18nKey.RunCompareDelta), disabled: true },
+      { value: HeatMapColorDisplayMode.Delta, label: t(RunsI18nKey.RunCompareDelta) },
     ],
     [t],
   );

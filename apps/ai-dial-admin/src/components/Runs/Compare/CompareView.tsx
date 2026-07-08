@@ -159,9 +159,6 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
   const toggleDisplayPanel = useCallback(() => setShowDisplayPanel((prev) => !prev), []);
 
   const onColorDisplayModeChange = useCallback((mode: HeatMapColorDisplayMode) => {
-    if (mode === HeatMapColorDisplayMode.Delta) {
-      return;
-    }
     setColorDisplayMode(mode);
   }, []);
 

@@ -1,6 +1,10 @@
 import { formatHeatMapTestCaseColId } from '@/src/components/Runs/Compare/HeatMap/constants';
-import { HeatMapRow, HeatMapRowType } from '@/src/components/Runs/Compare/HeatMap/models';
+import { HeatMapColorDisplayMode, HeatMapRow, HeatMapRowType } from '@/src/components/Runs/Compare/HeatMap/models';
 import { RUN_COMPARE_PRIMARY_INDEX, RUN_COMPARE_SECONDARY_INDEX } from '@/src/components/Runs/Compare/constants';
+import {
+  getNumericMetricValue,
+  roundMetricValue,
+} from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 
@@ -53,6 +57,100 @@ const buildMetricValuesForRun = (
 
   return values;
 };
+
+const getHeatMapDeltaValue = (primary: unknown, secondary: unknown): number | null | undefined => {
+  const primaryNum = getNumericMetricValue(primary);
+  const secondaryNum = getNumericMetricValue(secondary);
+
+  if (primaryNum == null && secondaryNum == null) {
+    return undefined;
+  }
+
+  if (primaryNum == null && secondaryNum != null) {
+    return roundMetricValue(secondaryNum);
+  }
+
+  if (primaryNum != null && secondaryNum == null) {
+    return roundMetricValue(-primaryNum);
+  }
+
+  return roundMetricValue(secondaryNum! - primaryNum!);
+};
+
+const buildDeltaValuesForMetric = (
+  mergedRows: CompareAnalyticsRow[],
+  groupKey: string,
+  metricKey: string,
+): Record<string, number | null | undefined> => {
+  const values: Record<string, number | null | undefined> = {};
+
+  for (const row of mergedRows) {
+    const testCaseKey = getTestCaseKey(row);
+    const colId = formatHeatMapTestCaseColId(testCaseKey);
+    const primaryGroupExists = row?.metricValues != null && groupKey in row.metricValues;
+    const secondaryGroupExists = row._compared?.metricValues != null && groupKey in row._compared.metricValues;
+
+    if (!primaryGroupExists && !secondaryGroupExists) {
+      values[colId] = undefined;
+      continue;
+    }
+
+    const primaryRaw = row?.metricValues?.[groupKey]?.[metricKey];
+    const secondaryRaw = row._compared?.metricValues?.[groupKey]?.[metricKey];
+
+    if (primaryGroupExists && primaryRaw !== undefined && getNumericMetricValue(primaryRaw) === null) {
+      values[colId] = null;
+      continue;
+    }
+
+    if (secondaryGroupExists && secondaryRaw !== undefined && getNumericMetricValue(secondaryRaw) === null) {
+      values[colId] = null;
+      continue;
+    }
+
+    values[colId] = getHeatMapDeltaValue(primaryRaw, secondaryRaw);
+  }
+
+  return values;
+};
+
+export const buildHeatMapDeltaRows = (mergedRows: CompareAnalyticsRow[]): HeatMapRow[] => {
+  const allResults: AnalyticsResult[] = [
+    ...mergedRows,
+    ...mergedRows.flatMap((row) => (row._compared ? [row._compared] : [])),
+  ];
+  const metricsSchema = mergeMetricValuesSchema(allResults);
+  const rows: HeatMapRow[] = [];
+
+  for (const [groupKey, groupValues] of Object.entries(metricsSchema)) {
+    rows.push({
+      id: `group_${groupKey}`,
+      rowType: HeatMapRowType.Group,
+      groupKey,
+      label: groupKey,
+      values: {},
+    });
+
+    for (const metricKey of Object.keys(groupValues)) {
+      rows.push({
+        id: `metric_${groupKey}_delta_${metricKey}`,
+        rowType: HeatMapRowType.Metric,
+        groupKey,
+        metricKey,
+        label: metricKey,
+        values: buildDeltaValuesForMetric(mergedRows, groupKey, metricKey),
+      });
+    }
+  }
+
+  return rows;
+};
+
+export const buildHeatMapRowsForMode = (
+  mergedRows: CompareAnalyticsRow[],
+  colorDisplayMode: HeatMapColorDisplayMode,
+): HeatMapRow[] =>
+  colorDisplayMode === HeatMapColorDisplayMode.Delta ? buildHeatMapDeltaRows(mergedRows) : buildHeatMapRows(mergedRows);
 
 export const buildHeatMapRows = (mergedRows: CompareAnalyticsRow[]): HeatMapRow[] => {
   const allResults: AnalyticsResult[] = [

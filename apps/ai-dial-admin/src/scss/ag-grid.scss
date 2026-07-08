@@ -284,9 +284,16 @@
     }
   }
 
+  .ag-header-cell {
+    border-top: none !important;
+    border-left: none !important;
+    @apply border-r border-b border-tertiary;
+  }
+
   .ag-cell {
     border-top: none !important;
     border-left: none !important;
+    @apply border-r border-b border-tertiary;
     padding: 0 !important;
   }
 }

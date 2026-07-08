@@ -43,7 +43,7 @@ const HeatMapLabelCellRenderer: FC<HeatMapLabelCellRendererParams> = ({ data, ex
 
   return (
     <div className="flex items-center gap-2 pl-9 h-full text-primary dial-small-text">
-      <CompareRunIndexBadge runIndex={runIndex} />
+      {data.runIndex != null && <CompareRunIndexBadge runIndex={runIndex} />}
       <span className="truncate">{data.label}</span>
     </div>
   );

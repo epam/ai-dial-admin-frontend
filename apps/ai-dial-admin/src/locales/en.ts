@@ -2064,6 +2064,12 @@ export default {
     RunCompareRows: 'Rows',
     RunCompareTable: 'Table',
     RunComparePivot: 'Pivot',
+    RunCompareHeatMapTooltipTestCase: 'Test Case:',
+    RunCompareHeatMapTooltipMetric: 'Metric:',
+    RunCompareHeatMapTooltipInput: 'Input:',
+    RunCompareHeatMapTooltipRun: 'Run:',
+    RunCompareHeatMapTooltipScore: 'Score:',
+    RunCompareHeatMapTooltipDelta: 'Delta:',
   },
   ExportRun: {
     ExportRunTitle: 'Export run',

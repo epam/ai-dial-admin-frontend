@@ -43,6 +43,8 @@ const CompareTabsContent: FC<Props> = ({
         <HeatMapTab
           primaryRunId={primaryRunId}
           comparedRunId={comparedRunId}
+          primaryRunName={primaryRunName}
+          comparedRunName={comparedRunName}
           colorDisplayMode={colorDisplayMode}
           onColorDisplayModeChange={onColorDisplayModeChange}
         />

@@ -1938,6 +1938,12 @@ export enum RunsI18nKey {
   RunCompareRows = 'Runs.RunCompareRows',
   RunCompareTable = 'Runs.RunCompareTable',
   RunComparePivot = 'Runs.RunComparePivot',
+  RunCompareHeatMapTooltipTestCase = 'Runs.RunCompareHeatMapTooltipTestCase',
+  RunCompareHeatMapTooltipMetric = 'Runs.RunCompareHeatMapTooltipMetric',
+  RunCompareHeatMapTooltipInput = 'Runs.RunCompareHeatMapTooltipInput',
+  RunCompareHeatMapTooltipRun = 'Runs.RunCompareHeatMapTooltipRun',
+  RunCompareHeatMapTooltipScore = 'Runs.RunCompareHeatMapTooltipScore',
+  RunCompareHeatMapTooltipDelta = 'Runs.RunCompareHeatMapTooltipDelta',
 }
 
 export enum ExportRunI18nKey {

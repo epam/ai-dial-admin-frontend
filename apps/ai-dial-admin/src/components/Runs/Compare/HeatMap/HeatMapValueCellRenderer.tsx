@@ -3,13 +3,17 @@
 import { ICellRendererParams } from 'ag-grid-community';
 import { FC } from 'react';
 
-import { HeatMapRow, HeatMapRowType } from '@/src/components/Runs/Compare/HeatMap/models';
+import { HeatMapColorDisplayMode, HeatMapRow, HeatMapRowType } from '@/src/components/Runs/Compare/HeatMap/models';
 import {
-  formatHeatMapCellValue,
+  formatHeatMapCellValueForMode,
   shouldShowHeatMapCellValue,
 } from '@/src/components/Runs/Compare/HeatMap/utils/format-heat-map-cell-value';
 
-const HeatMapValueCellRenderer: FC<ICellRendererParams<HeatMapRow>> = ({ data, column }) => {
+interface Props extends ICellRendererParams<HeatMapRow> {
+  colorDisplayMode?: HeatMapColorDisplayMode;
+}
+
+const HeatMapValueCellRenderer: FC<Props> = ({ data, column, colorDisplayMode = HeatMapColorDisplayMode.Absolute }) => {
   if (!data || data.rowType === HeatMapRowType.Group) {
     return null;
   }
@@ -21,11 +25,14 @@ const HeatMapValueCellRenderer: FC<ICellRendererParams<HeatMapRow>> = ({ data, c
 
   const colId = column?.getColId() ?? '';
   const rawValue = colId ? data.values[colId] : undefined;
-  const displayValue = rawValue === undefined ? '—' : formatHeatMapCellValue(rawValue);
+  const isDeltaMode = colorDisplayMode === HeatMapColorDisplayMode.Delta;
+  const displayValue = formatHeatMapCellValueForMode(rawValue, isDeltaMode);
 
   return (
     <div className="flex items-center justify-center size-full overflow-hidden px-1">
-      <span className="dial-small-text text-primary truncate">{displayValue}</span>
+      <span className={`dial-small-text truncate ${rawValue === 0 ? 'text-secondary' : 'text-primary'}`}>
+        {displayValue}
+      </span>
     </div>
   );
 };

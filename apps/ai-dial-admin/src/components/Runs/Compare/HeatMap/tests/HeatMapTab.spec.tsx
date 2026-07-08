@@ -20,13 +20,15 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   };
 });
 
-const renderHeatMapTab = () =>
+const renderHeatMapTab = (colorDisplayMode = HeatMapColorDisplayMode.Absolute) =>
   render(
     <div className="w-[1200px] h-[600px] flex flex-col">
       <HeatMapTab
         primaryRunId="run-1"
         comparedRunId="run-sibling"
-        colorDisplayMode={HeatMapColorDisplayMode.Absolute}
+        primaryRunName="Run #316"
+        comparedRunName="Run #317"
+        colorDisplayMode={colorDisplayMode}
         onColorDisplayModeChange={vi.fn()}
       />
     </div>,
@@ -74,5 +76,17 @@ describe('HeatMapTab', () => {
     expect(screen.getByRole('table')).toBeInTheDocument();
     expect(screen.getByText('0')).toBeInTheDocument();
     expect(screen.getByText('1')).toBeInTheDocument();
+  });
+
+  test('renders delta color scale in delta mode', async () => {
+    renderHeatMapTab(HeatMapColorDisplayMode.Delta);
+
+    await waitFor(() => {
+      expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
+    });
+
+    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(screen.getByText('-1')).toBeInTheDocument();
+    expect(screen.getByText('+1')).toBeInTheDocument();
   });
 });

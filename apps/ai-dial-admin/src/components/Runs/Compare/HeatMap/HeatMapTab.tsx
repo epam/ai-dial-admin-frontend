@@ -13,10 +13,11 @@ import { HeatMapColorDisplayMode, HeatMapRow } from '@/src/components/Runs/Compa
 import { buildHeatMapColumns } from '@/src/components/Runs/Compare/HeatMap/utils/build-heat-map-columns';
 import {
   getHeatMapValueColumnWidth,
+  resolveHeatMapHeaderHeight,
   resolveHeatMapRowHeight,
 } from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-layout';
 import {
-  buildHeatMapRows,
+  buildHeatMapRowsForMode,
   filterHeatMapRowsByExpandedGroups,
   getHeatMapGroupKeys,
 } from '@/src/components/Runs/Compare/HeatMap/utils/build-heat-map-rows';
@@ -28,6 +29,8 @@ import { AnalyticsResult } from '@/src/models/evaluation/run';
 interface Props {
   primaryRunId: string;
   comparedRunId: string;
+  primaryRunName: string;
+  comparedRunName: string;
   colorDisplayMode: HeatMapColorDisplayMode;
   onColorDisplayModeChange: (mode: HeatMapColorDisplayMode) => void;
 }
@@ -35,7 +38,9 @@ interface Props {
 const HeatMapTab: FC<Props> = ({
   primaryRunId,
   comparedRunId,
-  colorDisplayMode: _colorDisplayMode,
+  primaryRunName,
+  comparedRunName,
+  colorDisplayMode,
   onColorDisplayModeChange: _onColorDisplayModeChange,
 }) => {
   const t = useI18n();
@@ -122,10 +127,12 @@ const HeatMapTab: FC<Props> = ({
     return mergeByTestCaseId(results, comparedResults);
   }, [results, comparedResults]);
 
+  const isDeltaMode = colorDisplayMode === HeatMapColorDisplayMode.Delta;
+
   const allHeatMapRows = useMemo(() => {
     if (mergedRowData === null) return [];
-    return buildHeatMapRows(mergedRowData);
-  }, [mergedRowData]);
+    return buildHeatMapRowsForMode(mergedRowData, colorDisplayMode);
+  }, [mergedRowData, colorDisplayMode]);
 
   useEffect(() => {
     if (!allHeatMapRows.length) {
@@ -154,15 +161,22 @@ const HeatMapTab: FC<Props> = ({
   const columnDefs = useMemo(() => {
     if (mergedRowData === null) return [];
     return buildHeatMapColumns(mergedRowData, {
+      colorDisplayMode,
       errorText,
       expandedGroups,
       onToggleGroup,
+      primaryRunName,
+      comparedRunName,
     });
-  }, [mergedRowData, errorText, expandedGroups, onToggleGroup]);
+  }, [mergedRowData, colorDisplayMode, errorText, expandedGroups, onToggleGroup, primaryRunName, comparedRunName]);
 
   const fitHeatMapColumns = useCallback((api: GridApi) => {
     api.sizeColumnsToFit();
+    const valueColumnWidth = getHeatMapValueColumnWidth(api);
+    const headerHeight = resolveHeatMapHeaderHeight(valueColumnWidth);
+    api.setGridOption('headerHeight', headerHeight);
     api.resetRowHeights();
+    api.refreshHeader();
     api.refreshCells({ force: true });
   }, []);
 
@@ -175,7 +189,7 @@ const HeatMapTab: FC<Props> = ({
       autoSizeStrategy: undefined,
       getRowHeight: (params: RowHeightParams<HeatMapRow>) => {
         const valueColumnWidth = params.api ? getHeatMapValueColumnWidth(params.api) : 0;
-        return resolveHeatMapRowHeight(valueColumnWidth);
+        return resolveHeatMapRowHeight(valueColumnWidth, isDeltaMode);
       },
       defaultColDef: {
         filter: false,
@@ -196,7 +210,7 @@ const HeatMapTab: FC<Props> = ({
         }
       },
     }),
-    [fitHeatMapColumns],
+    [fitHeatMapColumns, isDeltaMode],
   );
 
   const isCompareDataReady = results !== null && comparedResults !== null;
@@ -217,7 +231,7 @@ const HeatMapTab: FC<Props> = ({
     <div className="flex flex-col flex-1 min-h-0 h-full overflow-hidden">
       <div className="flex-1 min-h-0 overflow-hidden heat-map-grid">
         <GridView
-          key={`${primaryRunId}-${comparedRunId}`}
+          key={`${primaryRunId}-${comparedRunId}-${colorDisplayMode}`}
           columnDefs={columnDefs}
           rowData={visibleRows}
           additionalGridOptions={gridOptions}
@@ -227,7 +241,7 @@ const HeatMapTab: FC<Props> = ({
       </div>
 
       <div className="flex justify-start shrink-0 pb-2">
-        <ColorScale variant={ColorScaleVariant.Compact} />
+        <ColorScale variant={isDeltaMode ? ColorScaleVariant.Delta : ColorScaleVariant.Compact} />
       </div>
     </div>
   );
