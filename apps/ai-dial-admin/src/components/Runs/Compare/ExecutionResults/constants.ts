@@ -1,4 +1,4 @@
-import { ColDef } from 'ag-grid-community';
+import { CellClassParams, ColDef } from 'ag-grid-community';
 
 export const STATUS_COLUMN_WIDTH = 40;
 export const RUN_INDEX_COLUMN_WIDTH = 140;
@@ -37,7 +37,16 @@ export const NO_FILTER_COL_DEF: Pick<ColDef, 'filter' | 'floatingFilter'> = {
 
 export const formatCompareColumnHeader = (runIndex: string, label: string) => `[${runIndex}] ${label}`;
 
+export const COMPARE_MISSING_DISPLAY = '—';
+
+export const compareMissingValueCellClassRules = {
+  'text-secondary': (params: CellClassParams) => params.value === COMPARE_MISSING_DISPLAY,
+};
+
 export const compareGridOptions = {
   groupHeaderHeight: COMPARE_GROUP_HEADER_HEIGHT,
   hidePaddedHeaderRows: true,
+  defaultColDef: {
+    cellClassRules: compareMissingValueCellClassRules,
+  },
 };

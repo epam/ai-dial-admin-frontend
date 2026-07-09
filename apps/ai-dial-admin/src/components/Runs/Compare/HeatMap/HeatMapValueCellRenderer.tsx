@@ -27,10 +27,16 @@ const HeatMapValueCellRenderer: FC<Props> = ({ data, column, colorDisplayMode = 
   const rawValue = colId ? data.values[colId] : undefined;
   const isDeltaMode = colorDisplayMode === HeatMapColorDisplayMode.Delta;
   const displayValue = formatHeatMapCellValueForMode(rawValue, isDeltaMode);
+  const isMissing = rawValue === undefined;
+  const isSecondaryText = isMissing || (isDeltaMode && rawValue === 0);
 
   return (
     <div className="flex items-center justify-center size-full overflow-hidden px-1">
-      <span className={`dial-small-text truncate ${rawValue === 0 ? 'text-secondary' : 'text-primary'}`}>
+      <span
+        className={
+          isSecondaryText ? 'dial-small-text text-secondary truncate' : 'dial-small-text text-primary truncate'
+        }
+      >
         {displayValue}
       </span>
     </div>

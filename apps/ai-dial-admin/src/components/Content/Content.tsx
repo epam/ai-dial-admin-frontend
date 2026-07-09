@@ -5,6 +5,7 @@ import { getAppProcessStatus, getCoreVersions } from '@/src/app/actions';
 import Breadcrumbs from '@/src/components/Breadcrumbs/Breadcrumbs';
 import Blackout from '@/src/components/Common/Blackout/Blackout';
 import Sidebar from '@/src/components/Common/Sidebar/Sidebar';
+import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
 import Footer from '@/src/components/Footer/Footer';
 import UserMobile from '@/src/components/Header/User/UserMobile';
 import { ErrorI18nKey } from '@/src/constants/i18n';
@@ -87,6 +88,7 @@ const Content: FC<Props> = ({ children, beVersion, isEnableAuth }) => {
         </div>
         <Sidebar />
       </div>
+      <Sidebar slot={SidebarPosition.Bottom} />
       <Footer beVersion={beVersion} coreVersions={coreVersions} onChangeCoreVersion={setCoreVersions} />
     </div>
   );

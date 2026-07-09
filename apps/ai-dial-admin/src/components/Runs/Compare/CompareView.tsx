@@ -10,10 +10,13 @@ import { DialGhostButton, DialTabs } from '@epam/ai-dial-ui-kit';
 import { getRun } from '@/src/app/[lang]/runs/actions';
 import CompareRunTag from '@/src/components/Runs/Compare/CompareRunTag';
 import CompareTabsContent from '@/src/components/Runs/Compare/CompareTabsContent';
-import CompareRowDetailDrawer from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareRowDetailDrawer';
+import CompareRowDetailBottomPanel from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareRowDetailBottomPanel';
 import CompareRowDetailPanel from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/CompareRowDetailPanel';
-import { ROW_DETAIL_SIDEBAR_CLASS } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/constants';
-import { DetailMode } from '@/src/components/Runs/Details/BottomDrawer/models';
+import {
+  ROW_DETAIL_BOTTOM_CLASS,
+  ROW_DETAIL_SIDEBAR_CLASS,
+} from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/constants';
+import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
 import {
   CompareRunSlot,
   CompareViewTab,
@@ -49,6 +52,8 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
   const sidebarRef = useRef(sidebar);
   sidebarRef.current = sidebar;
 
+  const showDetailPanelRef = useRef<(row: CompareAnalyticsRow, position: SidebarPosition) => void>(() => {});
+
   const [primaryRunId, setPrimaryRunId] = useState(runId);
   const [run, setRun] = useState<Run | null>(null);
   const [suiteRuns, setSuiteRuns] = useState<Run[]>([]);
@@ -57,10 +62,13 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
   const [activeTab, setActiveTab] = useState(CompareViewTab.ExecutionResults);
   const [showDisplayPanel, setShowDisplayPanel] = useState(false);
   const [selectedRow, setSelectedRow] = useState<CompareAnalyticsRow | null>(null);
-  const [detailMode, setDetailMode] = useState(DetailMode.Sidebar);
+  const [detailPosition, setDetailPosition] = useState(SidebarPosition.Right);
   const [colorDisplayMode, setColorDisplayMode] = useState(HeatMapColorDisplayMode.Absolute);
   const [availableMetricGroups, setAvailableMetricGroups] = useState<string[]>([]);
   const [selectedMetricGroups, setSelectedMetricGroups] = useState<Set<string>>(new Set());
+
+  const selectedRowRef = useRef(selectedRow);
+  selectedRowRef.current = selectedRow;
 
   const compareTabs = useMemo(
     () => getCompareViewTabs(t, featureFlags.runsCompareEnabled),
@@ -175,40 +183,54 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
 
   const closeRowDetail = useCallback(() => {
     setSelectedRow(null);
-    setDetailMode(DetailMode.Sidebar);
+    setDetailPosition(SidebarPosition.Right);
     sidebarRef.current.closeSidebar();
   }, []);
 
-  const switchToDrawer = useCallback(() => {
-    sidebarRef.current.closeSidebar();
-    setDetailMode(DetailMode.Drawer);
+  const switchToBottom = useCallback(() => {
+    setDetailPosition(SidebarPosition.Bottom);
+    const currentRow = selectedRowRef.current;
+    if (currentRow) {
+      showDetailPanelRef.current(currentRow, SidebarPosition.Bottom);
+    }
   }, []);
 
-  const showSidebarPanel = useCallback(
-    (row: CompareAnalyticsRow) => {
-      sidebarRef.current.showSidebar(
+  const switchToSidebar = useCallback(() => {
+    setDetailPosition(SidebarPosition.Right);
+    const currentRow = selectedRowRef.current;
+    if (currentRow) {
+      showDetailPanelRef.current(currentRow, SidebarPosition.Right);
+    }
+  }, []);
+
+  const showDetailPanel = useCallback(
+    (row: CompareAnalyticsRow, position: SidebarPosition) => {
+      const isBottom = position === SidebarPosition.Bottom;
+      const content = isBottom ? (
+        <CompareRowDetailBottomPanel
+          row={row}
+          primaryRunName={primaryRunName}
+          comparedRunName={comparedRunName}
+          onClose={closeRowDetail}
+          onSwitchToSidebar={switchToSidebar}
+        />
+      ) : (
         <CompareRowDetailPanel
           row={row}
           primaryRunName={primaryRunName}
           comparedRunName={comparedRunName}
           onClose={closeRowDetail}
-          displayMode={DetailMode.Sidebar}
-          onSwitchDisplayMode={switchToDrawer}
-        />,
-        ROW_DETAIL_SIDEBAR_CLASS,
+          position={SidebarPosition.Right}
+          onSwitchDisplayMode={switchToBottom}
+        />
       );
+      const className = isBottom ? ROW_DETAIL_BOTTOM_CLASS : ROW_DETAIL_SIDEBAR_CLASS;
+      sidebarRef.current.showSidebar(content, className, position);
     },
-    [primaryRunName, comparedRunName, closeRowDetail, switchToDrawer],
+    [primaryRunName, comparedRunName, closeRowDetail, switchToBottom, switchToSidebar],
   );
 
-  const switchToSidebar = useCallback(() => {
-    setDetailMode(DetailMode.Sidebar);
-    const currentRow = selectedRow;
-    if (currentRow) {
-      // Let the drawer unmount before re-showing the sidebar panel.
-      setTimeout(() => showSidebarPanel(currentRow), 0);
-    }
-  }, [selectedRow, showSidebarPanel]);
+  showDetailPanelRef.current = showDetailPanel;
 
   const openRowDetail = useCallback(
     (row: CompareAnalyticsRow) => {
@@ -217,11 +239,9 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
         return;
       }
       setSelectedRow(row);
-      if (detailMode === DetailMode.Sidebar) {
-        showSidebarPanel(row);
-      }
+      showDetailPanel(row, detailPosition);
     },
-    [selectedRow?.id, detailMode, closeRowDetail, showSidebarPanel],
+    [selectedRow?.id, detailPosition, closeRowDetail, showDetailPanel],
   );
 
   useEffect(() => {
@@ -299,16 +319,6 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
           onCloseRowDetail={closeRowDetail}
         />
       </div>
-
-      {detailMode === DetailMode.Drawer && selectedRow && (
-        <CompareRowDetailDrawer
-          row={selectedRow}
-          primaryRunName={primaryRunName}
-          comparedRunName={comparedRunName}
-          onClose={closeRowDetail}
-          onSwitchToSidebar={switchToSidebar}
-        />
-      )}
 
       {selectRunModalConfig &&
         createPortal(

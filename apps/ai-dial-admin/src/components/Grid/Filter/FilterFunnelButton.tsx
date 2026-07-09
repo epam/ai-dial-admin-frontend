@@ -7,21 +7,20 @@ import classNames from 'classnames';
 
 interface Props {
   isActive: boolean;
-  onClick: () => void;
+  title: string;
 }
 
-const FilterToggleButton: FC<Props> = ({ isActive, onClick }) => (
-  <button
-    type="button"
-    onClick={onClick}
+const FilterFunnelButton: FC<Props> = ({ isActive, title }) => (
+  <span
+    title={title}
+    aria-label={title}
     className={classNames(
-      'shrink-0 flex items-center justify-center size-[22px] rounded-sm',
+      'shrink-0 flex items-center justify-center size-[22px] rounded-sm cursor-pointer',
       isActive ? 'text-accent-primary bg-accent-primary-alpha' : 'text-secondary hover:text-primary',
     )}
-    aria-pressed={isActive}
   >
     <IconFilter size={16} />
-  </button>
+  </span>
 );
 
-export default FilterToggleButton;
+export default FilterFunnelButton;
