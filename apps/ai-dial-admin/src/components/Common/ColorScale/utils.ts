@@ -27,12 +27,10 @@ export const getDeltaColors = (value: number): { bg: string; border: string } | 
     return DELTA_POSITIVE_COLOR_MAP[threshold];
   }
 
-  if (value < 0) {
-    const descendingThresholds = [...DELTA_NEGATIVE_THRESHOLDS].reverse();
-    const threshold =
-      descendingThresholds.find((t) => value >= t) ?? descendingThresholds[descendingThresholds.length - 1];
-    return DELTA_NEGATIVE_COLOR_MAP[threshold];
-  }
+  const descendingThresholds = [...DELTA_NEGATIVE_THRESHOLDS].reverse();
+  const threshold =
+    descendingThresholds.find((t) => value >= t) ?? descendingThresholds[descendingThresholds.length - 1];
+  return DELTA_NEGATIVE_COLOR_MAP[threshold];
 };
 
 export const getAccuracyHeatCellStyleFromColors = (colors: { bg: string; border: string }): AccuracyHeatCellStyle => ({
