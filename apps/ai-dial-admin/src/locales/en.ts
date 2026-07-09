@@ -2215,6 +2215,8 @@ export default {
     Description: 'Description',
     Type: 'Type',
     ColumnsCount: 'Columns',
+    System: 'System',
+    SystemReadOnly: 'System table — read-only',
     NoTables: 'No tables',
     TablesLoadFailed: 'Could not load tables.',
     CreateSourceTitle: 'Create source table',

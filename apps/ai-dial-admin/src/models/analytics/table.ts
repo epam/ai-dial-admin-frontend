@@ -33,6 +33,7 @@ export interface AnalyticsTable {
   name: string;
   description?: string;
   status?: string;
+  system?: boolean;
   type: AnalyticsTableType;
   columns?: AnalyticsTableColumn[];
   grain?: AnalyticsTableGrain;
