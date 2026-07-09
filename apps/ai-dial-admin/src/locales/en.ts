@@ -2052,6 +2052,8 @@ export default {
     RunCompareTabHeatMap: 'Heat Map',
     RunCompareTabExecutionResults: 'Execution Results',
     RunCompareHeatMapMetricsAll: 'Metrics: All',
+    RunCompareHeatMapMetricsPrefix: 'Metrics:',
+    RunCompareHeatMapMetricsOptionAll: 'All',
     RunCompareColorDisplay: 'Color display:',
     RunCompareAbsoluteValues: 'Absolute values',
     RunCompareDelta: 'Delta',

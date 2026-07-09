@@ -5,7 +5,6 @@ import {
   getDeltaHeatCellStyle,
   getDeltaNeutralHeatCellStyle,
 } from '@/src/components/Common/ColorScale/utils';
-import ErrorCellRenderer from '@/src/components/Grid/CellRenderers/ErrorCellRenderer';
 import HeatMapCellTooltip from '@/src/components/Runs/Compare/HeatMap/HeatMapCellTooltip';
 import HeatMapLabelCellRenderer from '@/src/components/Runs/Compare/HeatMap/HeatMapLabelCellRenderer';
 import HeatMapTestCaseHeader from '@/src/components/Runs/Compare/HeatMap/HeatMapTestCaseHeader';
@@ -25,7 +24,6 @@ import { NO_FILTER_COL_DEF } from '@/src/components/Runs/Compare/ExecutionResult
 
 interface BuildHeatMapColumnsOptions {
   colorDisplayMode: HeatMapColorDisplayMode;
-  errorText?: string;
   expandedGroups: Set<string>;
   onToggleGroup: (groupKey: string) => void;
   primaryRunName: string;
@@ -36,14 +34,7 @@ const getTestCaseKey = (row: CompareAnalyticsRow): string => row.testCaseId ?? r
 
 export const buildHeatMapColumns = (
   mergedRows: CompareAnalyticsRow[],
-  {
-    colorDisplayMode,
-    errorText,
-    expandedGroups,
-    onToggleGroup,
-    primaryRunName,
-    comparedRunName,
-  }: BuildHeatMapColumnsOptions,
+  { colorDisplayMode, expandedGroups, onToggleGroup, primaryRunName, comparedRunName }: BuildHeatMapColumnsOptions,
 ): ColDef<HeatMapRow>[] => {
   const isDeltaMode = colorDisplayMode === HeatMapColorDisplayMode.Delta;
   const labelColumn: ColDef<HeatMapRow> = {
@@ -82,10 +73,6 @@ export const buildHeatMapColumns = (
       cellRendererSelector: (params) => {
         if (params.data?.rowType === HeatMapRowType.Group) {
           return undefined;
-        }
-        const value = params.data?.values?.[colId];
-        if (value === null) {
-          return { component: ErrorCellRenderer, params: { errorText } };
         }
         return { component: HeatMapValueCellRenderer, params: { colorDisplayMode } };
       },

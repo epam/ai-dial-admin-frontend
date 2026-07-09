@@ -198,6 +198,9 @@ export const buildHeatMapRows = (mergedRows: CompareAnalyticsRow[]): HeatMapRow[
   return rows;
 };
 
+export const filterHeatMapRowsByMetricGroups = (rows: HeatMapRow[], selectedGroups: Set<string>): HeatMapRow[] =>
+  rows.filter((row) => selectedGroups.has(row.groupKey));
+
 export const filterHeatMapRowsByExpandedGroups = (rows: HeatMapRow[], expandedGroups: Set<string>): HeatMapRow[] =>
   rows.filter((row) => row.rowType === HeatMapRowType.Group || expandedGroups.has(row.groupKey));
 

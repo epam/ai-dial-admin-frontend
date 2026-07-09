@@ -59,6 +59,8 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
   const [selectedRow, setSelectedRow] = useState<CompareAnalyticsRow | null>(null);
   const [detailMode, setDetailMode] = useState(DetailMode.Sidebar);
   const [colorDisplayMode, setColorDisplayMode] = useState(HeatMapColorDisplayMode.Absolute);
+  const [availableMetricGroups, setAvailableMetricGroups] = useState<string[]>([]);
+  const [selectedMetricGroups, setSelectedMetricGroups] = useState<Set<string>>(new Set());
 
   const compareTabs = useMemo(
     () => getCompareViewTabs(t, featureFlags.runsCompareEnabled),
@@ -162,6 +164,15 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
     setColorDisplayMode(mode);
   }, []);
 
+  const onAvailableMetricGroupsChange = useCallback((groups: string[]) => {
+    setAvailableMetricGroups(groups);
+    setSelectedMetricGroups(new Set(groups));
+  }, []);
+
+  const onSelectedMetricGroupsChange = useCallback((groups: Set<string>) => {
+    setSelectedMetricGroups(groups);
+  }, []);
+
   const closeRowDetail = useCallback(() => {
     setSelectedRow(null);
     setDetailMode(DetailMode.Sidebar);
@@ -222,6 +233,8 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
 
   useEffect(() => {
     closeRowDetail();
+    setAvailableMetricGroups([]);
+    setSelectedMetricGroups(new Set());
   }, [primaryRunId, comparedRunId, closeRowDetail]);
 
   useEffect(() => () => sidebarRef.current.closeSidebar(), []);
@@ -251,7 +264,13 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
       <div className="flex items-center justify-between gap-4 shrink-0">
         <DialTabs tabs={compareTabs} activeTab={activeTab} onClick={onChangeActiveTab} />
         {activeTab === CompareViewTab.HeatMap && (
-          <HeatMapToolbar colorDisplayMode={colorDisplayMode} onColorDisplayModeChange={onColorDisplayModeChange} />
+          <HeatMapToolbar
+            availableMetricGroups={availableMetricGroups}
+            selectedMetricGroups={selectedMetricGroups}
+            onSelectedMetricGroupsChange={onSelectedMetricGroupsChange}
+            colorDisplayMode={colorDisplayMode}
+            onColorDisplayModeChange={onColorDisplayModeChange}
+          />
         )}
         {activeTab === CompareViewTab.ExecutionResults && (
           <DialGhostButton
@@ -271,6 +290,8 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
           comparedRunName={comparedRunName}
           colorDisplayMode={colorDisplayMode}
           onColorDisplayModeChange={onColorDisplayModeChange}
+          selectedMetricGroups={selectedMetricGroups}
+          onAvailableMetricGroupsChange={onAvailableMetricGroupsChange}
           showDisplayPanel={showDisplayPanel}
           onToggleDisplayPanel={toggleDisplayPanel}
           selectedRow={selectedRow}

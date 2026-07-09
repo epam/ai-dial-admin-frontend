@@ -16,6 +16,8 @@ interface Props {
   comparedRunName: string;
   colorDisplayMode: HeatMapColorDisplayMode;
   onColorDisplayModeChange: (mode: HeatMapColorDisplayMode) => void;
+  selectedMetricGroups: Set<string>;
+  onAvailableMetricGroupsChange: (groups: string[]) => void;
   showDisplayPanel: boolean;
   onToggleDisplayPanel: () => void;
   selectedRow: CompareAnalyticsRow | null;
@@ -31,6 +33,8 @@ const CompareTabsContent: FC<Props> = ({
   comparedRunName,
   colorDisplayMode,
   onColorDisplayModeChange,
+  selectedMetricGroups,
+  onAvailableMetricGroupsChange,
   showDisplayPanel,
   onToggleDisplayPanel,
   selectedRow,
@@ -47,6 +51,8 @@ const CompareTabsContent: FC<Props> = ({
           comparedRunName={comparedRunName}
           colorDisplayMode={colorDisplayMode}
           onColorDisplayModeChange={onColorDisplayModeChange}
+          selectedMetricGroups={selectedMetricGroups}
+          onAvailableMetricGroupsChange={onAvailableMetricGroupsChange}
         />
       )}
       {activeTab === CompareViewTab.ExecutionResults && (

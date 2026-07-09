@@ -12,6 +12,16 @@ vi.mock('@/src/app/[lang]/runs/actions', () => ({
   getTestCaseRunResults: (...args: unknown[]) => getTestCaseRunResultsMock(...args),
 }));
 
+vi.mock('@/src/components/Grid/GridView/GridView', () => ({
+  default: ({ rowData }: { rowData: { id: string; label: string; groupKey: string; rowType: string }[] }) => (
+    <div role="table">
+      {rowData.map((row) => (
+        <div key={row.id}>{row.rowType === 'group' ? row.groupKey : row.label}</div>
+      ))}
+    </div>
+  ),
+}));
+
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>;
   return {
@@ -20,7 +30,10 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   };
 });
 
-const renderHeatMapTab = (colorDisplayMode = HeatMapColorDisplayMode.Absolute) =>
+const renderHeatMapTab = (
+  colorDisplayMode = HeatMapColorDisplayMode.Absolute,
+  selectedMetricGroups = new Set(['Accuracy']),
+) =>
   render(
     <div className="w-[1200px] h-[600px] flex flex-col">
       <HeatMapTab
@@ -30,6 +43,8 @@ const renderHeatMapTab = (colorDisplayMode = HeatMapColorDisplayMode.Absolute) =
         comparedRunName="Run #317"
         colorDisplayMode={colorDisplayMode}
         onColorDisplayModeChange={vi.fn()}
+        selectedMetricGroups={selectedMetricGroups}
+        onAvailableMetricGroupsChange={vi.fn()}
       />
     </div>,
   );
@@ -59,6 +74,7 @@ describe('HeatMapTab', () => {
             testCaseName: 'Test Case 1',
             metricValues: {
               Accuracy: { precision: isPrimary ? 0.5 : 0.8 },
+              Quality: { score: isPrimary ? 0.6 : 0.7 },
             },
           },
         ],
@@ -88,5 +104,15 @@ describe('HeatMapTab', () => {
     expect(screen.getByRole('table')).toBeInTheDocument();
     expect(screen.getByText('-1')).toBeInTheDocument();
     expect(screen.getByText('+1')).toBeInTheDocument();
+  });
+
+  test('shows only selected metric groups in the grid', async () => {
+    renderHeatMapTab(HeatMapColorDisplayMode.Absolute, new Set(['Accuracy']));
+
+    await waitFor(() => {
+      expect(screen.getByText('Accuracy')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText('Quality')).not.toBeInTheDocument();
   });
 });
