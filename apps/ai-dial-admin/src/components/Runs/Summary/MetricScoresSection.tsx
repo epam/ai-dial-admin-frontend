@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useMemo } from 'react';
 
 import { DialAnalyticsBarGroup, DialLoader, DialSegmentedControl, SegmentedControlOption } from '@epam/ai-dial-ui-kit';
 
@@ -14,24 +14,27 @@ interface Props {
   data: MetricScoresData | null;
   /** Number of test cases the metric scores are averaged across. */
   testCaseCount: number;
+  selectedStatistic: string | null;
+  onSelectStatistic: (statistic: string) => void;
   /** Selects a metric (shared with the Distribution section) when a bar is clicked. */
   onSelectMetric: (name: string) => void;
 }
 
-const MetricScoresSection: FC<Props> = ({ data, testCaseCount, onSelectMetric }) => {
+const MetricScoresSection: FC<Props> = ({
+  data,
+  testCaseCount,
+  selectedStatistic,
+  onSelectStatistic,
+  onSelectMetric,
+}) => {
   const t = useI18n();
-  const [selectedStatistic, setSelectedStatistic] = useState<string | null>(null);
-
-  useEffect(() => {
-    setSelectedStatistic(data?.statistics[0] ?? null);
-  }, [data]);
 
   const options = useMemo<SegmentedControlOption[]>(
     () => (data?.statistics ?? []).map((statistic) => ({ value: statistic, label: statistic })),
     [data?.statistics],
   );
 
-  const onSelectStatistic = useCallback((value: string) => setSelectedStatistic(value), []);
+  const onStatisticChange = useCallback((value: string) => onSelectStatistic(value), [onSelectStatistic]);
 
   const groups = selectedStatistic ? (data?.byStatistic[selectedStatistic] ?? []) : [];
 
@@ -41,7 +44,7 @@ const MetricScoresSection: FC<Props> = ({ data, testCaseCount, onSelectMetric })
         ariaLabel={t(RunsI18nKey.MetricScoresTitle)}
         options={options}
         value={selectedStatistic}
-        onChange={onSelectStatistic}
+        onChange={onStatisticChange}
       />
     ) : undefined;
 

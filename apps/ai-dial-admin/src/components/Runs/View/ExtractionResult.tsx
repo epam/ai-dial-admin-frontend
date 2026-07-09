@@ -2,7 +2,7 @@
 
 import { IconColumns2 } from '@tabler/icons-react';
 import { ColDef, GridApi, GridReadyEvent, RowClassRules, RowClickedEvent } from 'ag-grid-community';
-import { FC, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 
 import { DialGhostButton, DialLoader } from '@epam/ai-dial-ui-kit';
 
@@ -13,65 +13,59 @@ import TreeColumnsPanel from '@/src/components/Grid/TreeColumnsPanel/TreeColumns
 import AnalyticsBottomDrawer from '@/src/components/Runs/Details/BottomDrawer/AnalyticsBottomDrawer';
 import { DetailMode } from '@/src/components/Runs/Details/BottomDrawer/models';
 import { useDrawerPanel } from '@/src/components/Runs/Details/BottomDrawer/useDrawerPanel';
+import { ExtractionResultTabUiState } from '@/src/components/Runs/View/models';
 import { ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
-import { MetricSnapshot } from '@/src/models/evaluation/metric';
-import { AnalyticsResult, Run } from '@/src/models/evaluation/run';
+import { Run } from '@/src/models/evaluation/run';
 import { applyColumnStateOrderToTreeColDefs, haveTreeColDefsSamePanelState } from '@/src/components/Grid/utils';
 import { useDetailMode } from './use-detail-mode';
 import { getAnalyticsColumns, RESULT_FILTERS, RUN_FILTER, snapshotsToBindingsMap } from './utils';
 
 interface Props {
   run: Run;
+  extractionResultState: ExtractionResultTabUiState;
+  setExtractionResultState: (patch: Partial<ExtractionResultTabUiState>) => void;
 }
 
-const ExtractionResultTab: FC<Props> = ({ run }) => {
+const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtractionResultState }) => {
   const t = useI18n();
-  const [snapshots, setSnapshots] = useState<MetricSnapshot[]>([]);
+  const { showTreePanel, colDefs, panelColDefs, results, snapshots } = extractionResultState;
   const metricBindings = useMemo(() => snapshotsToBindingsMap(snapshots), [snapshots]);
   const detailMode = useDetailMode(metricBindings);
   const { openDetail } = detailMode;
   const drawerPanel = useDrawerPanel();
 
   const gridApiRef = useRef<GridApi | null>(null);
-  const [results, setResults] = useState<AnalyticsResult[] | null>(null);
-  const [colDefs, setColDefs] = useState<ColDef[]>(() => getAnalyticsColumns([]));
-  const [isLoading, setIsLoading] = useState(false);
+  const isLoading = results === null;
 
   useEffect(() => {
-    if (!run?.id) return;
-
-    if (!isLoading && !results) {
-      setIsLoading(true);
-      getTestCaseRunResults(RESULT_FILTERS(run))
-        .then((resultsSettled) => {
-          const content = resultsSettled?.content || [];
-          setResults(content);
-          setColDefs(getAnalyticsColumns(content));
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
+    if (!run?.id || results !== null) {
+      return;
     }
-  }, [isLoading, results, run]);
+
+    getTestCaseRunResults(RESULT_FILTERS(run)).then((resultsSettled) => {
+      const content = resultsSettled?.content || [];
+      setExtractionResultState({
+        results: content,
+        colDefs: getAnalyticsColumns(content),
+        panelColDefs: getAnalyticsColumns(content),
+      });
+    });
+  }, [run, results, setExtractionResultState]);
 
   useEffect(() => {
-    if (!run?.id) return;
+    if (!run?.id || snapshots.length > 0) {
+      return;
+    }
 
     getMetricSnapshots(RUN_FILTER(run.id)).then((data) => {
-      setSnapshots(data || []);
+      setExtractionResultState({ snapshots: data || [] });
     });
-  }, [run.id]);
+  }, [run?.id, snapshots.length, setExtractionResultState]);
 
-  const [showTreePanel, setShowTreePanel] = useState(false);
-  const [panelColDefs, setPanelColDefs] = useState<ColDef[]>(() => getAnalyticsColumns([]));
-
-  useEffect(() => {
-    setPanelColDefs(colDefs);
-  }, [colDefs]);
-
-  const toggleTreePanel = useCallback(() => setShowTreePanel((prev) => !prev), []);
+  const panelColDefsRef = useRef(panelColDefs);
+  panelColDefsRef.current = panelColDefs;
 
   useEffect(() => {
     if (!showTreePanel || !colDefs?.length) {
@@ -83,25 +77,32 @@ const ExtractionResultTab: FC<Props> = ({ run }) => {
       return;
     }
 
-    setPanelColDefs((prevColDefs) => {
-      if (!prevColDefs?.length) {
-        return prevColDefs;
-      }
+    const prevColDefs = panelColDefsRef.current;
+    if (!prevColDefs?.length) {
+      return;
+    }
 
-      const syncedColDefs = applyColumnStateOrderToTreeColDefs(prevColDefs, columnState);
-      if (haveTreeColDefsSamePanelState(prevColDefs, syncedColDefs)) {
-        return prevColDefs;
-      }
+    const syncedColDefs = applyColumnStateOrderToTreeColDefs(prevColDefs, columnState);
+    if (haveTreeColDefsSamePanelState(prevColDefs, syncedColDefs)) {
+      return;
+    }
 
-      return syncedColDefs;
-    });
-  }, [showTreePanel, colDefs]);
+    setExtractionResultState({ panelColDefs: syncedColDefs });
+  }, [showTreePanel, colDefs, setExtractionResultState]);
 
-  const onPanelColumnsChange = useCallback((newColDefs: ColDef[]) => {
-    setPanelColDefs(newColDefs);
-    gridApiRef.current?.setGridOption('columnDefs', newColDefs);
-    requestAnimationFrame(() => gridApiRef.current?.sizeColumnsToFit());
-  }, []);
+  const toggleTreePanel = useCallback(
+    () => setExtractionResultState({ showTreePanel: !showTreePanel }),
+    [setExtractionResultState, showTreePanel],
+  );
+
+  const onPanelColumnsChange = useCallback(
+    (newColDefs: ColDef[]) => {
+      setExtractionResultState({ panelColDefs: newColDefs, colDefs: newColDefs });
+      gridApiRef.current?.setGridOption('columnDefs', newColDefs);
+      requestAnimationFrame(() => gridApiRef.current?.sizeColumnsToFit());
+    },
+    [setExtractionResultState],
+  );
 
   const resultIds = useMemo(() => (results ?? []).map((r) => r.id!).filter(Boolean), [results]);
   useEffect(() => {

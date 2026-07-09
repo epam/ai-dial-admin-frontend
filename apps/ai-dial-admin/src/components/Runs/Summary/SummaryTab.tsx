@@ -1,9 +1,10 @@
 'use client';
 
-import { FC, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 
 import { executeStructuredQuery, getMetricSnapshots } from '@/src/app/[lang]/runs/actions';
 import { getTestSuite } from '@/src/app/[lang]/test-suites/actions';
+import { SummaryTabUiState } from '@/src/components/Runs/View/models';
 import { RUN_FILTER } from '@/src/components/Runs/View/utils';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { Run } from '@/src/models/evaluation/run';
@@ -23,21 +24,26 @@ import {
 
 interface Props {
   run: Run;
+  summaryState: SummaryTabUiState;
+  setSummaryState: (patch: Partial<SummaryTabUiState>) => void;
 }
 
-const SummaryTab: FC<Props> = ({ run }) => {
+const SummaryTab: FC<Props> = ({ run, summaryState, setSummaryState }) => {
   const [testSuite, setTestSuite] = useState<TestSuite | null>(null);
-  // Fetched here (not in the sections) so both Summary sections can share this data.
   const [metricScores, setMetricScores] = useState<MetricScoresData | null>(null);
   const [metricOptions, setMetricOptions] = useState<MetricOption[]>([]);
   const [testCaseCount, setTestCaseCount] = useState(0);
-  // Shared across sections: set from the Distribution dropdown or a MetricScores bar click.
-  const [selectedMetricName, setSelectedMetricName] = useState<string | null>(null);
 
-  // Reset the selection whenever the shared options change (e.g. a new run).
   useEffect(() => {
-    setSelectedMetricName(null);
-  }, [metricOptions]);
+    if (!metricScores || summaryState.selectedStatistic != null) {
+      return;
+    }
+
+    const defaultStatistic = metricScores.statistics[0] ?? null;
+    if (defaultStatistic) {
+      setSummaryState({ selectedStatistic: defaultStatistic });
+    }
+  }, [metricScores, summaryState.selectedStatistic, setSummaryState]);
 
   useEffect(() => {
     if (!run?.testSuiteId) {
@@ -84,18 +90,44 @@ const SummaryTab: FC<Props> = ({ run }) => {
     };
   }, [run?.id]);
 
+  const onSelectOverallScoreMetric = useCallback(
+    (name: string) => setSummaryState({ overallScoreMetricName: name }),
+    [setSummaryState],
+  );
+
+  const onSelectStatistic = useCallback(
+    (statistic: string) => setSummaryState({ selectedStatistic: statistic }),
+    [setSummaryState],
+  );
+
+  const onSelectDistributionMetric = useCallback(
+    (name: string | null) => setSummaryState({ selectedDistributionMetricName: name }),
+    [setSummaryState],
+  );
+
   return (
     <div className="flex h-full min-h-0 flex-col gap-8">
       <Header run={run} testSuite={testSuite} />
-      <Analytics run={run} metricOptions={metricOptions} />
+      <Analytics
+        run={run}
+        metricOptions={metricOptions}
+        selectedMetricName={summaryState.overallScoreMetricName}
+        onSelectMetric={onSelectOverallScoreMetric}
+      />
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-2">
-        <MetricScoresSection data={metricScores} testCaseCount={testCaseCount} onSelectMetric={setSelectedMetricName} />
+        <MetricScoresSection
+          data={metricScores}
+          testCaseCount={testCaseCount}
+          selectedStatistic={summaryState.selectedStatistic}
+          onSelectStatistic={onSelectStatistic}
+          onSelectMetric={(name) => onSelectDistributionMetric(name)}
+        />
         <DistributionSection
           run={run}
           metricOptions={metricOptions}
           metricScores={metricScores}
-          selectedMetricName={selectedMetricName}
-          onSelectMetric={setSelectedMetricName}
+          selectedMetricName={summaryState.selectedDistributionMetricName}
+          onSelectMetric={onSelectDistributionMetric}
         />
       </div>
     </div>

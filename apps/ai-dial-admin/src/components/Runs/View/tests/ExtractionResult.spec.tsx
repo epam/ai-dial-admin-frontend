@@ -1,7 +1,11 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { FC, useCallback, useState } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+
+import { ExtractionResultTabUiState } from '../models';
 import ExtractionResultTab from '../ExtractionResult';
+import { createDefaultRunViewTabState } from '../use-run-view-tab-state';
 
 const mockShowSidebar = vi.fn();
 const mockCloseSidebar = vi.fn();
@@ -76,20 +80,66 @@ const mockRun = {
   testSuiteRunId: 'tsr-1',
 } as any;
 
+const ControlledExtractionResultTab: FC<{ initialState?: Partial<ExtractionResultTabUiState> }> = ({
+  initialState,
+}) => {
+  const [extractionResultState, setState] = useState<ExtractionResultTabUiState>(() => ({
+    ...createDefaultRunViewTabState().extractionResult,
+    ...initialState,
+  }));
+
+  const setExtractionResultState = useCallback((patch: Partial<ExtractionResultTabUiState>) => {
+    setState((prev) => ({ ...prev, ...patch }));
+  }, []);
+
+  return (
+    <ExtractionResultTab
+      run={mockRun}
+      extractionResultState={extractionResultState}
+      setExtractionResultState={setExtractionResultState}
+    />
+  );
+};
+
 describe('ExtractionResultTab', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   test('renders grid after loading', async () => {
-    render(<ExtractionResultTab run={mockRun} />);
+    render(<ControlledExtractionResultTab />);
     await waitFor(() => {
       expect(screen.getByRole('grid', { name: 'Analytics grid' })).toBeInTheDocument();
     });
   });
 
+  test('does not refetch results when cached state is provided', async () => {
+    render(
+      <ControlledExtractionResultTab
+        initialState={{
+          results: [
+            {
+              id: 'r1',
+              responseStatusCode: 200,
+              runIndex: 0,
+              executionStatus: 'SUCCESS',
+              testCaseName: 'Test Case 1',
+            },
+          ],
+          snapshots: [],
+        }}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('grid', { name: 'Analytics grid' })).toBeInTheDocument();
+    });
+
+    expect(getTestCaseRunResultsMock).not.toHaveBeenCalled();
+  });
+
   test('opens sidebar on row click in default mode', async () => {
-    render(<ExtractionResultTab run={mockRun} />);
+    render(<ControlledExtractionResultTab />);
     await waitFor(() => screen.getByRole('button', { name: 'Row 1' }));
 
     await userEvent.click(screen.getByRole('button', { name: 'Row 1' }));
@@ -98,7 +148,7 @@ describe('ExtractionResultTab', () => {
   });
 
   test('toggles sidebar closed on same row click', async () => {
-    render(<ExtractionResultTab run={mockRun} />);
+    render(<ControlledExtractionResultTab />);
     await waitFor(() => screen.getByRole('button', { name: 'Row 1' }));
 
     await userEvent.click(screen.getByRole('button', { name: 'Row 1' }));
@@ -108,7 +158,7 @@ describe('ExtractionResultTab', () => {
   });
 
   test('calls closeSidebar on unmount', async () => {
-    const { unmount } = render(<ExtractionResultTab run={mockRun} />);
+    const { unmount } = render(<ControlledExtractionResultTab />);
     mockCloseSidebar.mockClear();
 
     unmount();
