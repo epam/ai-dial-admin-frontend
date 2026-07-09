@@ -2154,6 +2154,10 @@ export enum QueryBuilderI18nKey {
   WarningMissingBucketField = 'QueryBuilder.WarningMissingBucketField',
   WarningMissingBucketAlias = 'QueryBuilder.WarningMissingBucketAlias',
   WarningEmptyAggregate = 'QueryBuilder.WarningEmptyAggregate',
+  ViewForm = 'QueryBuilder.ViewForm',
+  ViewSql = 'QueryBuilder.ViewSql',
+  ViewSwitcher = 'QueryBuilder.ViewSwitcher',
+  SqlQuery = 'QueryBuilder.SqlQuery',
 }
 
 export enum AnalyticsTablesI18nKey {
