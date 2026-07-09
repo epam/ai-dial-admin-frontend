@@ -4,23 +4,20 @@ import { AnalyticsTableType, CreateTableDto } from '@/src/models/analytics/table
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
-import { AnalyticsV2Api } from '../analytics-v2-api';
+import { AnalyticsDataApi } from '../analytics-data-api';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
 
-// getResponse() only calls res.json() when the content-type is not text/plain,
-// so JSON bodies whose parsed value we assert must advertise application/json.
 const JSON_HEADERS = { headers: { 'content-type': 'application/json' } };
 
-describe('Server :: AnalyticsV2Api', () => {
-  const instance = new AnalyticsV2Api({ host: TEST_URL });
+describe('Server :: AnalyticsDataApi', () => {
+  const instance = new AnalyticsDataApi({ host: TEST_URL });
 
   beforeEach(() => {
     fetch.resetMocks();
   });
 
-  // --- Queries ---
   test('getEntities issues GET /v1/queries/entities and returns the parsed list', async () => {
     const entities = [{ name: 'conversation' }, { name: 'message', complex: true }];
     fetch.mockResponseOnce(JSON.stringify(entities), JSON_HEADERS);
@@ -47,14 +44,13 @@ describe('Server :: AnalyticsV2Api', () => {
     );
   });
 
-  test('execute POSTs the structured-query envelope to /v1/queries/execute', async () => {
+  test('executeAction POSTs the structured-query envelope to /v1/queries/execute', async () => {
     const query: StructuredQuery = { entity: 'conversation', mode: QueryMode.Row };
-    const result = { columns: ['id'], rows: [{ id: '1' }] };
-    fetch.mockResponseOnce(JSON.stringify(result), JSON_HEADERS);
+    fetch.mockResponseOnce(JSON.stringify({ columns: ['id'], rows: [{ id: '1' }] }));
 
-    const res = await instance.execute(query, TOKEN_MOCK);
+    const res = await instance.executeAction(query, TOKEN_MOCK);
 
-    expect(res).toEqual(result);
+    expect(res.success).toBe(true);
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/v1/queries/execute'),
       expect.objectContaining({ method: 'POST', body: JSON.stringify(query) }),
@@ -69,12 +65,13 @@ describe('Server :: AnalyticsV2Api', () => {
     expect(res).toBeNull();
   });
 
-  // --- Tables ---
-  test('getTables issues GET /v1/tables', async () => {
-    fetch.mockResponseOnce(JSON.stringify([]));
+  test('getTables issues GET /v1/tables and unwraps the { tables } envelope', async () => {
+    const tables = [{ name: 'dial_usage_log', type: AnalyticsTableType.Source }];
+    fetch.mockResponseOnce(JSON.stringify({ tables }), { headers: { 'content-type': 'application/json' } });
 
-    await instance.getTables(TOKEN_MOCK);
+    const res = await instance.getTables(TOKEN_MOCK);
 
+    expect(res).toEqual(tables);
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/v1/tables'),
       expect.objectContaining({ method: 'GET' }),

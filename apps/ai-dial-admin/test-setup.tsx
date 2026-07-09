@@ -64,7 +64,7 @@ vi.mock('@/src/context/RuleFolderContext', () => ({ useRuleFolder: createFnConte
 
 vi.mock('@/src/context/AppContext', () => ({
   useAppContext: () => ({
-    sidebar: { show: false, content: null, showSidebar: vi.fn() },
+    sidebar: { show: false, content: null, showSidebar: vi.fn(), closeSidebar: vi.fn() },
     featureFlags: { deploymentsEnabled: true },
     isReadOnlyAdmin: false,
   }),

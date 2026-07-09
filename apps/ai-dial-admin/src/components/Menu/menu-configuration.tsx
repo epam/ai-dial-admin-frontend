@@ -202,18 +202,18 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
       ],
     },
     {
-      key: MenuI18nKey.AnalyticsV2,
-      descriptionKey: MenuI18nKey.AnalyticsV2,
+      key: MenuI18nKey.Analytics,
+      descriptionKey: MenuI18nKey.Analytics,
       icon: <IconChartBar width={iconSize} height={iconSize} />,
       isPreview: true,
       items: [
         {
-          key: MenuI18nKey.QueryBuilder,
-          href: ApplicationRoute.AnalyticsV2QueryBuilder,
+          key: MenuI18nKey.Tables,
+          href: ApplicationRoute.AnalyticsTables,
         },
         {
-          key: MenuI18nKey.Tables,
-          href: ApplicationRoute.AnalyticsV2Tables,
+          key: MenuI18nKey.QueryBuilder,
+          href: ApplicationRoute.AnalyticsQueryBuilder,
         },
       ],
     },
@@ -228,8 +228,8 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
     result = result.filter((item) => item.key !== MenuI18nKey.Evaluation);
   }
 
-  if (!featureFlags.analyticsV2Enabled) {
-    result = result.filter((item) => item.key !== MenuI18nKey.AnalyticsV2);
+  if (!featureFlags.analyticsEnabled) {
+    result = result.filter((item) => item.key !== MenuI18nKey.Analytics);
   }
 
   return result;

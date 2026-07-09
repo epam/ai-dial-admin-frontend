@@ -1,11 +1,14 @@
-// Analytics 2.0 — table definitions, create/enrichment payloads, schema patches and row writes.
-// Mirrors the analytics-data-access-service `/v1/tables` demo.
-
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 
 export enum AnalyticsTableType {
   Source = 'source',
   Enrichment = 'enrichment',
+}
+
+export enum PartitionGranularity {
+  Day = 'day',
+  Month = 'month',
+  Year = 'year',
 }
 
 export interface AnalyticsTableColumn {
@@ -18,7 +21,7 @@ export interface AnalyticsTableColumn {
 
 export interface AnalyticsTablePartition {
   column: string;
-  granularity: string;
+  granularity: PartitionGranularity;
 }
 
 export interface AnalyticsTableGrain {
@@ -29,6 +32,7 @@ export interface AnalyticsTableGrain {
 export interface AnalyticsTable {
   name: string;
   description?: string;
+  status?: string;
   type: AnalyticsTableType;
   columns?: AnalyticsTableColumn[];
   grain?: AnalyticsTableGrain;
@@ -36,7 +40,6 @@ export interface AnalyticsTable {
   partition_by?: AnalyticsTablePartition;
 }
 
-// Create payloads (POST /v1/tables) — discriminated on `type`.
 export interface CreateSourceTableDto {
   name: string;
   description?: string;
@@ -56,7 +59,6 @@ export interface CreateEnrichmentTableDto {
 
 export type CreateTableDto = CreateSourceTableDto | CreateEnrichmentTableDto;
 
-// Schema patch (PATCH /v1/tables/{name}/schema).
 export interface AnalyticsColumnRename {
   from: string;
   to: string;
@@ -74,11 +76,6 @@ export interface AnalyticsSchemaPatch {
   retag?: AnalyticsColumnRetag[];
 }
 
-// Row writes (POST /v1/tables/{name}/rows).
 export interface WriteRowsDto {
   rows: Array<Record<string, unknown>>;
-}
-
-export interface WriteRowsResult {
-  inserted: number;
 }
