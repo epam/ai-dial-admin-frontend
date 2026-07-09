@@ -1,6 +1,3 @@
-// Analytics 2.0 — queryable entities and their field schemas.
-// Mirrors the analytics-data-access-service `/v1/queries/entities` responses.
-
 export enum AnalyticsFieldType {
   Uuid = 'uuid',
   String = 'string',

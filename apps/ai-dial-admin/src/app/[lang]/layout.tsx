@@ -52,7 +52,7 @@ export default async function Layout({ children, params }: { children: ReactNode
     nimEnabled: isValueTruthy(process.env.NIM_ENABLED),
     hfEnabled: isValueTruthy(process.env.HF_ENABLED),
     runsCompareEnabled: isValueTruthy(process.env.RUNS_COMPARE_ENABLED),
-    analyticsV2Enabled: isValueTruthy(process.env.ANALYTICS_V2_ENABLED),
+    analyticsEnabled: isValueTruthy(process.env.ANALYTICS_ENABLED),
   };
 
   const themesConfiguration = await themesApi.getThemesConfiguration();

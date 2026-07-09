@@ -9,10 +9,10 @@ import MenuItem from '../MenuItem';
 const PREVIEW_LABEL = BasicI18nKey.Preview; // mocked t() returns the key as-is
 
 const analyticsGroup = (overrides: Partial<MenuGroupConfiguration> = {}): MenuGroupConfiguration => ({
-  key: MenuI18nKey.AnalyticsV2,
-  descriptionKey: MenuI18nKey.AnalyticsV2,
+  key: MenuI18nKey.Analytics,
+  descriptionKey: MenuI18nKey.Analytics,
   isPreview: true,
-  items: [{ key: MenuI18nKey.QueryBuilder, href: ApplicationRoute.AnalyticsV2QueryBuilder }],
+  items: [{ key: MenuI18nKey.QueryBuilder, href: ApplicationRoute.AnalyticsQueryBuilder }],
   ...overrides,
 });
 

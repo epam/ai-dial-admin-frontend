@@ -1,5 +1,5 @@
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
-import { AnalyticsV2Api } from '@/src/server/analytics/analytics-v2-api';
+import { AnalyticsDataApi } from '@/src/server/analytics/analytics-data-api';
 import { BucketApi } from '@/src/server/core/bucket-api';
 import { FilesCoreApi } from '@/src/server/core/files-core-api';
 import { DeploymentAuditApi } from '@/src/server/deployments/audit-api';
@@ -166,7 +166,7 @@ export const structuredQueryApi = new StructuredQueryApi({
   host: process.env.DIAL_EVAL_API_URL,
 });
 
-export const analyticsV2Api = new AnalyticsV2Api({
+export const analyticsDataApi = new AnalyticsDataApi({
   host: process.env.DIAL_ANALYTICS_API_URL,
 });
 
