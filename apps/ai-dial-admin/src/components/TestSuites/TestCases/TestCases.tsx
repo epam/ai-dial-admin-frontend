@@ -44,10 +44,10 @@ const TestCases: FC<Props> = ({
   const isReadOnly = dataset?.visibility === DatasetVisibility.PUBLIC;
 
   const isDeployment = selectedTestSuite.suiteType === SuiteType.Deployment;
-  const isMultiStep = !!selectedTestSuite.multiStep;
+  const isMultiTurn = !!selectedTestSuite.multiTurn;
 
-  const onToggleMultiStep = (checked: boolean) => {
-    onChange({ ...selectedTestSuite, multiStep: checked });
+  const onToggleMultiTurn = (checked: boolean) => {
+    onChange({ ...selectedTestSuite, multiTurn: checked });
   };
 
   return (
@@ -55,12 +55,12 @@ const TestCases: FC<Props> = ({
       {isDeployment && (
         <div className="flex flex-col gap-1">
           <DialCheckbox
-            id="test-suite-multi-step"
-            label={t(TestSuitesI18nKey.MultiStep)}
-            checked={isMultiStep}
-            onChange={(checked) => onToggleMultiStep(!!checked)}
+            id="test-suite-multi-turn"
+            label={t(TestSuitesI18nKey.MultiTurn)}
+            checked={isMultiTurn}
+            onChange={(checked) => onToggleMultiTurn(!!checked)}
           />
-          <span className="text-secondary small">{t(TestSuitesI18nKey.MultiStepDescription)}</span>
+          <span className="text-secondary small">{t(TestSuitesI18nKey.MultiTurnDescription)}</span>
         </div>
       )}
       <TemplateVariables selectedTestSuite={selectedTestSuite} schema={dataset?.testCaseSchema} onChange={onChange} />

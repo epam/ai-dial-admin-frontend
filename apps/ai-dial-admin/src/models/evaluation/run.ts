@@ -7,6 +7,10 @@ export interface ResultDto {
   testSuiteRunId?: string;
   responseStatusCode: number;
   runIndex: number;
+  /** 0-based turn within the conversation (single-turn rows are 0). */
+  turnIndex: number;
+  /** Planned turn count of the conversation (single-turn rows are 1; 0 ⇒ conversation never ran). */
+  totalTurns: number;
 
   testCaseData?: Record<string, unknown>;
   extractedColumns?: Record<string, unknown>;

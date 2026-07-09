@@ -46,9 +46,6 @@ export interface BindingSource {
   $type: MetricBindingType;
   value?: BindingSourceValue;
   columnName?: string;
-  // Response bindings only: JSONata selector applied to the resolved column value.
-  // For multi-step suites the column value is a per-turn array (e.g. "$[-1]" picks the last turn).
-  jsonataExpression?: string;
 }
 
 export type BindingSourceValue =

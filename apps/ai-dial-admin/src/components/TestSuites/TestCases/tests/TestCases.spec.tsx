@@ -91,7 +91,7 @@ describe('TestCases', () => {
     expect(mockOnChange).toHaveBeenCalledWith(expect.objectContaining({ name: 'Changed by TCL' }));
   });
 
-  test('hides the multi-step toggle for non-deployment suites', () => {
+  test('hides the multi-turn toggle for non-deployment suites', () => {
     render(
       <TestCases
         selectedTestSuite={createTestSuite({ suiteType: SuiteType.McpTool })}
@@ -100,10 +100,10 @@ describe('TestCases', () => {
       />,
     );
 
-    expect(screen.queryByRole('checkbox', { name: TestSuitesI18nKey.MultiStep })).not.toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: TestSuitesI18nKey.MultiTurn })).not.toBeInTheDocument();
   });
 
-  test('shows the multi-step toggle for deployment suites', () => {
+  test('shows the multi-turn toggle for deployment suites', () => {
     render(
       <TestCases
         selectedTestSuite={createTestSuite({ suiteType: SuiteType.Deployment })}
@@ -112,10 +112,10 @@ describe('TestCases', () => {
       />,
     );
 
-    expect(screen.getByRole('checkbox', { name: TestSuitesI18nKey.MultiStep })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: TestSuitesI18nKey.MultiTurn })).toBeInTheDocument();
   });
 
-  test('enabling multi-step sets the flag without adding per-turn bindings', () => {
+  test('enabling multi-turn sets the flag without adding per-turn bindings', () => {
     render(
       <TestCases
         selectedTestSuite={createTestSuite({ suiteType: SuiteType.Deployment })}
@@ -124,16 +124,16 @@ describe('TestCases', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('checkbox', { name: TestSuitesI18nKey.MultiStep }));
+    fireEvent.click(screen.getByRole('checkbox', { name: TestSuitesI18nKey.MultiTurn }));
 
-    expect(mockOnChange).toHaveBeenCalledWith(expect.objectContaining({ multiStep: true }));
-    expect(mockOnChange.mock.calls[0][0]).not.toHaveProperty('multistepInputBindings');
+    expect(mockOnChange).toHaveBeenCalledWith(expect.objectContaining({ multiTurn: true }));
+    expect(mockOnChange.mock.calls[0][0]).not.toHaveProperty('multiturnInputBindings');
   });
 
-  test('uses the single TemplateVariables editor for both single- and multi-step suites', () => {
+  test('uses the single TemplateVariables editor for both single- and multi-turn suites', () => {
     render(
       <TestCases
-        selectedTestSuite={createTestSuite({ suiteType: SuiteType.Deployment, multiStep: true })}
+        selectedTestSuite={createTestSuite({ suiteType: SuiteType.Deployment, multiTurn: true })}
         onChange={mockOnChange}
         {...defaultDatasetProps}
       />,

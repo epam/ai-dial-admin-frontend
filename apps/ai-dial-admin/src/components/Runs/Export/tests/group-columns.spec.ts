@@ -72,6 +72,18 @@ describe('groupColumns', () => {
     expect(identGroup!.columns).toHaveLength(4);
   });
 
+  it('classifies turnIndex/totalTurns into Identification, checked, preserving backend order after runIndex', () => {
+    const groups = groupColumns(['runIndex', 'turnIndex', 'totalTurns', 'testCaseId']);
+    const identGroup = groups.find((g) => g.id === ColumnGroupId.Identification)!;
+    expect(identGroup.columns.map((c) => c.name)).toEqual(['runIndex', 'turnIndex', 'totalTurns', 'testCaseId']);
+    const turn = identGroup.columns.find((c) => c.name === 'turnIndex')!;
+    const total = identGroup.columns.find((c) => c.name === 'totalTurns')!;
+    expect(turn.defaultChecked).toBe(true);
+    expect(total.defaultChecked).toBe(true);
+    expect(turn.displayName).toBe('turnIndex');
+    expect(total.displayName).toBe('totalTurns');
+  });
+
   it('defaults body columns to unchecked', () => {
     const groups = groupColumns(['requestBody', 'responseBody']);
     const bodyGroup = groups.find((g) => g.id === ColumnGroupId.Body)!;

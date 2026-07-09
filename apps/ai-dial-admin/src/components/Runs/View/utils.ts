@@ -137,6 +137,20 @@ const executionColumns: ColDef[] = [
     valueGetter: (params) => (params.data?.runIndex != null ? params.data.runIndex + 1 : null),
   },
   {
+    field: 'turnIndex',
+    headerName: 'Turn',
+    colId: 'turnIndex',
+    width: 60,
+    valueGetter: (params) => (params.data?.turnIndex != null ? params.data.turnIndex + 1 : null),
+  },
+  {
+    field: 'totalTurns',
+    headerName: 'Total turns',
+    colId: 'totalTurns',
+    width: 90,
+    valueGetter: (params) => params.data?.totalTurns ?? null,
+  },
+  {
     field: 'responseStatusCode',
     headerName: 'HTTP',
     colId: 'http',
@@ -160,6 +174,18 @@ const comparedExecutionColumns: ColDef[] = [
     headerName: '#',
     width: 50,
     valueGetter: (params) => (params.data?._compared?.runIndex != null ? params.data._compared.runIndex + 1 : '—'),
+  },
+  {
+    colId: 'cmp_turnIndex',
+    headerName: 'Turn',
+    width: 60,
+    valueGetter: (params) => (params.data?._compared?.turnIndex != null ? params.data._compared.turnIndex + 1 : '—'),
+  },
+  {
+    colId: 'cmp_totalTurns',
+    headerName: 'Total turns',
+    width: 90,
+    valueGetter: (params) => params.data?._compared?.totalTurns ?? '—',
   },
   {
     colId: 'cmp_http',
@@ -210,11 +236,30 @@ const staticColumns = [
   },
 ];
 
+// Default multi-sort so a multi-turn conversation's rows load contiguous and correctly ordered:
+// group by test case, then by run, then by turn. runIndex sits between name and turn so multiple
+// runs of the same test case don't interleave their turns. Users can re-sort freely afterward —
+// ag-grid treats colDef.sort as the initial sort only, so it isn't reapplied on column toggles.
+const DEFAULT_SORT_INDEX: Record<string, number> = {
+  testCaseName: 0,
+  runIndex: 1,
+  turnIndex: 2,
+};
+
+const applyDefaultSort = (colDefs: ColDef[]): ColDef[] =>
+  colDefs.map((col: ColDef & { children?: ColDef[] }) => {
+    if (Array.isArray(col.children)) {
+      return { ...col, children: applyDefaultSort(col.children) };
+    }
+    const sortIndex = DEFAULT_SORT_INDEX[col.colId ?? ''];
+    return sortIndex == null ? col : { ...col, sort: 'asc' as const, sortIndex };
+  });
+
 export const getAnalyticsColumns = (results: AnalyticsResult[], errorText?: string) => {
   const metrics = mergeMetricValuesSchema(results);
   const input = results[0]?.testCaseData || {};
 
-  return [
+  return applyDefaultSort([
     ...staticColumns,
     ...getMetricsColumns(metrics, errorText),
     {
@@ -225,7 +270,7 @@ export const getAnalyticsColumns = (results: AnalyticsResult[], errorText?: stri
       headerName: 'EXTRACTED',
       children: getExtractedColumns(results[0]?.extractedColumns || {}),
     },
-  ];
+  ] as ColDef[]);
 };
 
 export const mergeByTestCaseId = (current: AnalyticsResult[], compared: AnalyticsResult[]): CompareAnalyticsRow[] => {

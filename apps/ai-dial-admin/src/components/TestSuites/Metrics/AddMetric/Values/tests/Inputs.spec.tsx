@@ -151,132 +151,30 @@ describe('MetricInputs (Values)', () => {
     expect(updatedBindings[0].source).toEqual({ $type: MetricBindingType.Response, columnName: 'answer' });
   });
 
-  test('renders the JSONata turn selector for response bindings', () => {
-    const onChange = vi.fn();
-    const fields: SchemaFieldRow[] = [makeField({ id: 'f1', name: 'prompt' })];
-    const bindings: MetricBinding[] = [
-      { property: 'prompt', source: { $type: MetricBindingType.Response, columnName: 'answer' } },
-    ];
-
-    render(<MetricInputs title="Inputs" fields={fields} bindings={bindings} onChange={onChange} />);
-
-    expect(screen.getByRole('textbox', { name: TestSuitesI18nKey.TurnSelector })).toBeInTheDocument();
-  });
-
-  test('renders the JSONata turn selector for test case bindings', () => {
-    const onChange = vi.fn();
-    const fields: SchemaFieldRow[] = [makeField({ id: 'f1', name: 'prompt' })];
-    const bindings: MetricBinding[] = [
-      { property: 'prompt', source: { $type: MetricBindingType.TestCase, columnName: 'user_turns' } },
-    ];
-
-    render(<MetricInputs title="Inputs" fields={fields} bindings={bindings} onChange={onChange} />);
-
-    expect(screen.getByRole('textbox', { name: TestSuitesI18nKey.TurnSelector })).toBeInTheDocument();
-  });
-
-  test('does not render the JSONata turn selector for constant bindings', () => {
-    const onChange = vi.fn();
-    const fields: SchemaFieldRow[] = [makeField({ id: 'f1', name: 'prompt' })];
-    const bindings: MetricBinding[] = [
-      { property: 'prompt', source: { $type: MetricBindingType.Constant, value: 'gpt-4' } },
-    ];
-
-    render(<MetricInputs title="Inputs" fields={fields} bindings={bindings} onChange={onChange} />);
-
-    expect(screen.queryByRole('textbox', { name: TestSuitesI18nKey.TurnSelector })).not.toBeInTheDocument();
-  });
-
-  test('sets jsonataExpression on a test case binding and preserves it across column changes', () => {
+  test('updates test case column binding when test case tab is active', () => {
     const onChange = vi.fn();
     const fields: SchemaFieldRow[] = [makeField({ id: 'f1', name: 'prompt' })];
     const bindings: MetricBinding[] = [
       { property: 'prompt', source: { $type: MetricBindingType.TestCase, columnName: 'user_turns' } },
     ];
     const testCaseSchema = [
-      { name: 'user_turns', type: TestCaseItemType.ARRAY, required: false, description: '' },
-      { name: 'other_turns', type: TestCaseItemType.ARRAY, required: false, description: '' },
+      { name: 'user_turns', type: TestCaseItemType.STRING, required: false, description: '' },
+      { name: 'other_turns', type: TestCaseItemType.STRING, required: false, description: '' },
     ];
-
-    const { rerender } = render(
-      <MetricInputs title="Inputs" fields={fields} bindings={bindings} testCaseSchema={testCaseSchema} onChange={onChange} />,
-    );
-
-    fireEvent.change(screen.getByRole('textbox', { name: TestSuitesI18nKey.TurnSelector }), {
-      target: { value: '$[0]' },
-    });
-
-    const afterExpr = onChange.mock.calls[onChange.mock.calls.length - 1][0] as MetricBinding[];
-    expect(afterExpr[0].source).toEqual({
-      $type: MetricBindingType.TestCase,
-      columnName: 'user_turns',
-      jsonataExpression: '$[0]',
-    });
-
-    rerender(
-      <MetricInputs title="Inputs" fields={fields} bindings={afterExpr} testCaseSchema={testCaseSchema} onChange={onChange} />,
-    );
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'other_turns' } });
-
-    const afterColumn = onChange.mock.calls[onChange.mock.calls.length - 1][0] as MetricBinding[];
-    expect(afterColumn[0].source).toEqual({
-      $type: MetricBindingType.TestCase,
-      columnName: 'other_turns',
-      jsonataExpression: '$[0]',
-    });
-  });
-
-  test('sets jsonataExpression when the turn selector changes', () => {
-    const onChange = vi.fn();
-    const fields: SchemaFieldRow[] = [makeField({ id: 'f1', name: 'prompt' })];
-    const bindings: MetricBinding[] = [
-      { property: 'prompt', source: { $type: MetricBindingType.Response, columnName: 'answer' } },
-    ];
-
-    render(<MetricInputs title="Inputs" fields={fields} bindings={bindings} onChange={onChange} />);
-
-    fireEvent.change(screen.getByRole('textbox', { name: TestSuitesI18nKey.TurnSelector }), {
-      target: { value: '$[-1]' },
-    });
-
-    const updatedBindings = onChange.mock.calls[onChange.mock.calls.length - 1][0] as MetricBinding[];
-    expect(updatedBindings[0].source).toEqual({
-      $type: MetricBindingType.Response,
-      columnName: 'answer',
-      jsonataExpression: '$[-1]',
-    });
-  });
-
-  test('preserves the jsonataExpression when the response column changes', () => {
-    const onChange = vi.fn();
-    const fields: SchemaFieldRow[] = [makeField({ id: 'f1', name: 'prompt' })];
-    const bindings: MetricBinding[] = [
-      { property: 'prompt', source: { $type: MetricBindingType.Response, columnName: 'answer', jsonataExpression: '$[-1]' } },
-    ];
-    const selectedTestSuite: TestSuite = {
-      responseColumns: [
-        { name: 'answer', displayName: 'Answer', expression: '', type: 'string' },
-        { name: 'score', displayName: 'Score', expression: '', type: 'number' },
-      ],
-    };
 
     render(
       <MetricInputs
         title="Inputs"
         fields={fields}
         bindings={bindings}
-        selectedTestSuite={selectedTestSuite}
+        testCaseSchema={testCaseSchema}
         onChange={onChange}
       />,
     );
 
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'score' } });
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'other_turns' } });
 
     const updatedBindings = onChange.mock.calls[onChange.mock.calls.length - 1][0] as MetricBinding[];
-    expect(updatedBindings[0].source).toEqual({
-      $type: MetricBindingType.Response,
-      columnName: 'score',
-      jsonataExpression: '$[-1]',
-    });
+    expect(updatedBindings[0].source).toEqual({ $type: MetricBindingType.TestCase, columnName: 'other_turns' });
   });
 });

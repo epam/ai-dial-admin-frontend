@@ -32,6 +32,8 @@ const makeDetail = (overrides: Partial<AnalyticsResult> = {}): AnalyticsResult =
   id: 'r1',
   responseStatusCode: 200,
   runIndex: 0,
+  turnIndex: 0,
+  totalTurns: 1,
   executionStatus: 'SUCCESS' as const,
   execDurationMs: 1000,
   testCaseName: 'Test Case 1',

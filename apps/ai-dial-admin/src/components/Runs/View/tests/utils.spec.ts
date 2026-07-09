@@ -125,6 +125,35 @@ describe('Runs View :: getAnalyticsColumns', () => {
     expect((columns[3] as any).children).toHaveLength(0);
   });
 
+  test('Should apply default multi-sort: testCaseName, then runIndex, then turnIndex', () => {
+    const columns = getAnalyticsColumns([]);
+
+    const findLeaf = (colId: string) => {
+      for (const group of columns as any[]) {
+        const leaf = group.children?.find((c: any) => c.colId === colId);
+        if (leaf) return leaf;
+      }
+      return undefined;
+    };
+
+    const testCaseName = findLeaf('testCaseName');
+    const runIndex = findLeaf('runIndex');
+    const turnIndex = findLeaf('turnIndex');
+
+    expect(testCaseName).toEqual(expect.objectContaining({ sort: 'asc', sortIndex: 0 }));
+    expect(runIndex).toEqual(expect.objectContaining({ sort: 'asc', sortIndex: 1 }));
+    expect(turnIndex).toEqual(expect.objectContaining({ sort: 'asc', sortIndex: 2 }));
+  });
+
+  test('Should not apply a default sort to non-identity columns (e.g. HTTP status)', () => {
+    const columns = getAnalyticsColumns([]);
+    const execGroup = (columns as any[]).find((c) => c.headerName === 'EXECUTION');
+    const http = execGroup.children.find((c: any) => c.colId === 'http');
+
+    expect(http.sort).toBeUndefined();
+    expect(http.sortIndex).toBeUndefined();
+  });
+
   test('Should sort error metric cells last for ascending and first for descending', () => {
     const results = [{ metricValues: { Accuracy: { score: 0.8 } } }] as any[];
     const columns = getAnalyticsColumns(results as any);
@@ -543,9 +572,44 @@ describe('Runs View :: executionColumns # (runIndex) valueGetter', () => {
   });
 });
 
+describe('Runs View :: executionColumns turn columns valueGetter', () => {
+  const getExecCol = (colId: string) => {
+    const cols = getAnalyticsColumns([]);
+    const execGroup = cols.find((c: any) => c.headerName === 'EXECUTION') as any;
+    return execGroup.children.find((c: any) => c.colId === colId);
+  };
+
+  test('Turn should display 1-based index (backend turnIndex is 0-based)', () => {
+    const col = getExecCol('turnIndex');
+    expect(col.valueGetter({ data: { turnIndex: 0 } })).toBe(1);
+    expect(col.valueGetter({ data: { turnIndex: 2 } })).toBe(3);
+  });
+
+  test('Turn should return null when data/turnIndex is missing', () => {
+    const col = getExecCol('turnIndex');
+    expect(col.valueGetter({ data: null })).toBeNull();
+    expect(col.valueGetter({ data: {} })).toBeNull();
+  });
+
+  test('Total turns should display the raw count', () => {
+    const col = getExecCol('totalTurns');
+    expect(col.valueGetter({ data: { totalTurns: 1 } })).toBe(1);
+    expect(col.valueGetter({ data: { totalTurns: 3 } })).toBe(3);
+    expect(col.valueGetter({ data: { totalTurns: 0 } })).toBe(0);
+  });
+
+  test('Total turns should return null when data/totalTurns is missing', () => {
+    const col = getExecCol('totalTurns');
+    expect(col.valueGetter({ data: null })).toBeNull();
+    expect(col.valueGetter({ data: {} })).toBeNull();
+  });
+});
+
 const makeResult = (overrides: Partial<AnalyticsResult> = {}): AnalyticsResult => ({
   responseStatusCode: 200,
   runIndex: 0,
+  turnIndex: 0,
+  totalTurns: 1,
   ...overrides,
 });
 
@@ -598,6 +662,8 @@ describe('Runs View :: mergeByTestCaseId', () => {
 const makeRow = (overrides: Partial<CompareAnalyticsRow> = {}): CompareAnalyticsRow => ({
   responseStatusCode: 200,
   runIndex: 0,
+  turnIndex: 0,
+  totalTurns: 1,
   _compared: null,
   ...overrides,
 });
@@ -619,10 +685,12 @@ describe('Runs View :: getAnalyticsColumnsCompare', () => {
     };
 
     expect(exec.headerName).toBe('EXECUTION');
-    expect(exec.children).toHaveLength(3);
+    expect(exec.children).toHaveLength(5);
     expect(exec.children[0].headerName).toBe('#');
-    expect(exec.children[1].headerName).toBe('HTTP');
-    expect(exec.children[2].headerName).toBe('Duration');
+    expect(exec.children[1].headerName).toBe('Turn');
+    expect(exec.children[2].headerName).toBe('Total turns');
+    expect(exec.children[3].headerName).toBe('HTTP');
+    expect(exec.children[4].headerName).toBe('Duration');
 
     for (const fieldGroup of exec.children) {
       expect(fieldGroup.children).toHaveLength(2);
@@ -649,6 +717,25 @@ describe('Runs View :: getAnalyticsColumnsCompare', () => {
 
     expect(comparedLeaf.valueGetter({ data: makeRow({ _compared: makeResult({ runIndex: 3 }) }) })).toBe(4);
     expect(comparedLeaf.valueGetter({ data: makeRow({ _compared: null }) })).toBe('—');
+  });
+
+  test('Turn / Total turns field groups show Current from row and Compared from _compared', () => {
+    type ExecChild = {
+      headerName: string;
+      children: { headerName: string; valueGetter: (p: { data?: CompareAnalyticsRow }) => unknown }[];
+    };
+    const cols = getAnalyticsColumnsCompare([makeRow()]);
+    const exec = cols[1] as { children: ExecChild[] };
+
+    const turnGroup = exec.children.find((c) => c.headerName === 'Turn')!;
+    expect(turnGroup.children[0].valueGetter({ data: makeRow({ turnIndex: 1 }) })).toBe(2);
+    expect(turnGroup.children[1].valueGetter({ data: makeRow({ _compared: makeResult({ turnIndex: 2 }) }) })).toBe(3);
+    expect(turnGroup.children[1].valueGetter({ data: makeRow({ _compared: null }) })).toBe('—');
+
+    const totalGroup = exec.children.find((c) => c.headerName === 'Total turns')!;
+    expect(totalGroup.children[0].valueGetter({ data: makeRow({ totalTurns: 3 }) })).toBe(3);
+    expect(totalGroup.children[1].valueGetter({ data: makeRow({ _compared: makeResult({ totalTurns: 4 }) }) })).toBe(4);
+    expect(totalGroup.children[1].valueGetter({ data: makeRow({ _compared: null }) })).toBe('—');
   });
 
   test('metric groups have metric key sub-groups each with Current and Compared leaves', () => {
