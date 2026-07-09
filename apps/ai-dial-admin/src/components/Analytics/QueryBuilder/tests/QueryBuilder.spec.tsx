@@ -20,12 +20,7 @@ const FIELDS: AnalyticsEntityField[] = [
 
 const renderBuilder = (props?: Partial<Parameters<typeof QueryBuilder>[0]>) =>
   render(
-    <QueryBuilder
-      initialEntities={ENTITIES}
-      initialEntityName="dial_usage_log"
-      initialFields={FIELDS}
-      {...props}
-    />,
+    <QueryBuilder initialEntities={ENTITIES} initialEntityName="dial_usage_log" initialFields={FIELDS} {...props} />,
   );
 
 beforeEach(() => {

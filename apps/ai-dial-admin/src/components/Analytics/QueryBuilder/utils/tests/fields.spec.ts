@@ -9,11 +9,7 @@ import {
   havingFieldOptions,
   sortFieldOptions,
 } from '@/src/components/Analytics/QueryBuilder/utils/fields';
-import {
-  createAggregate,
-  createBucket,
-  createInitialState,
-} from '@/src/components/Analytics/QueryBuilder/utils/state';
+import { createAggregate, createBucket, createInitialState } from '@/src/components/Analytics/QueryBuilder/utils/state';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryMode, QueryValueType } from '@/src/models/analytics/query';
 
