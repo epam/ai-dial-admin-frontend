@@ -1,7 +1,7 @@
 ---
 name: create-ticket
 model: haiku
-description: Interactively create GitHub issues (Bug, Feature, Task) for the current repository. Infrastructure changes are Tasks auto-labeled `infra-task`. Parses optional args for type and description, asks targeted questions, assigns labels, and creates the issue via gh CLI.
+description: Interactively create GitHub issues (Bug, Feature, Task) for the current repository. Infrastructure changes are Tasks auto-labeled `ops-request`. Parses optional args for type and description, asks targeted questions, assigns labels, and creates the issue via gh CLI.
 alwaysApply: false
 metadata:
   author: project
@@ -41,7 +41,7 @@ If the user provided arguments after `/create-ticket`, parse them:
   - `bug:` → Bug
   - `feature:` → Feature
   - `task:` → Task (general engineering)
-  - `infra:` → Task + force `infra-task` label (shortcut for infra change)
+  - `infra:` → Task + force `ops-request` label (shortcut for infra change)
   - If found → set issue type, use the rest as a seed for the title/description
   - If not found → treat the entire arg string as a description seed and ask for type
 - If no args at all → start fully interactive from Step 1
@@ -67,7 +67,7 @@ Options (these match the repo's GitHub issue types):
 - **Feature** — Request a new feature or enhancement
 - **Task** — Engineering work that is not a user-facing feature (refactor, reuse, tech debt, cleanup, test/build improvements, AND infrastructure changes — env var, secret, config, deployment setting)
 
-Infrastructure changes are NOT a separate top-level type. They're a Task that gets auto-labeled `infra-task`. Detection happens in Step 3 from context keywords (env var, secret, prod/uat, deployment, config, LOG_LEVEL, etc.).
+Infrastructure changes are NOT a separate top-level type. They're a Task that gets auto-labeled `ops-request`. Detection happens in Step 3 from context keywords (env var, secret, prod/uat, deployment, config, LOG_LEVEL, etc.).
 
 ---
 
@@ -189,17 +189,17 @@ Covers engineering work (refactor, reuse, tech debt, cleanup, test/build improve
 
 Before gathering fields, detect whether this Task is an infrastructure change.
 
-**Infra signals** (auto-apply `infra-task` label when ANY are present):
+**Infra signals** (auto-apply `ops-request` label when ANY are present):
 - Keywords: environment variable, env var, secret, credential, config change, deployment, `LOG_LEVEL`, `NODE_ENV`, prod / uat / development, Kubernetes, Helm, CI/CD, pipeline
-- The user invoked `/create-ticket infra: …` (args prefix forces infra-task label)
+- The user invoked `/create-ticket infra: …` (args prefix forces ops-request label)
 - The description only describes a runtime/config change with no code change
 
-If infra signals are clearly present → auto-apply `infra-task` label (tell the user), go to the infra field set below.
+If infra signals are clearly present → auto-apply `ops-request` label (tell the user), go to the infra field set below.
 If genuinely ambiguous → use **AskUserQuestion**:
 > "This looks like a Task. Is it an infrastructure change (env var, secret, config, deployment)?"
-Options: **Yes, infra** (adds `infra-task` label) / **No, general task**
+Options: **Yes, infra** (adds `ops-request` label) / **No, general task**
 
-**General Task fields** (no `infra-task` label):
+**General Task fields** (no `ops-request` label):
 1. **Description**: Ask:
    > "Describe the task. What needs to change and why? (problem/motivation)"
 2. **Acceptance criteria** (optional): Ask:
@@ -208,7 +208,7 @@ Options: **Yes, infra** (adds `infra-task` label) / **No, general task**
 3. **Related issues** (optional): Ask:
    > "Are there any related issues or PRs? (paste numbers/URLs or skip)"
 
-**Infra Task fields** (`infra-task` label auto-applied):
+**Infra Task fields** (`ops-request` label auto-applied):
 1. **Change type**: Use **AskUserQuestion** with options:
    - environment variable
    - secret
@@ -233,10 +233,11 @@ Options: **Yes, infra** (adds `infra-task` label) / **No, general task**
 Use **AskUserQuestion**:
 > "What priority level?"
 
-Options:
-- **High** — Requires immediate action
-- **Medium** — Important but not urgent
-- **Low** — Low urgency
+Options (map to the repo's `P#` labels — note the exact label text includes the en dash ` – `):
+- **Critical** — Feature or system completely broken for all users, no workaround → `P1 – Critical`
+- **High** — Broken for a specific segment; workaround exists but inconvenient → `P2 – High`
+- **Medium** — Secondary flow/UX degraded, reasonable workaround → `P3 – Medium`
+- **Low** — Cosmetic or edge-case, trivial/no workaround needed → `P4 – Low`
 
 ---
 
@@ -256,15 +257,19 @@ Only ask the user when it's genuinely ambiguous (e.g., "improve the user list" �
 > "Does this issue require design work?"
 Options: Yes / No
 
-### SIA (Security Impact Analysis)
+### Security Impact Analysis
 
-Auto-assign `SIA-required` if the user mentions: authentication, authorization, tokens, secrets, passwords, permissions, session, credentials, encryption, PII.
+This repo has **no** `SIA-*` labels, so security impact is **not** captured via a label. If the user
+mentions a security-relevant surface (authentication, authorization, tokens, secrets, passwords,
+permissions, session, credentials, encryption, PII), note "Security impact: needs review" in the
+issue **body** instead of applying a label. Do not attempt to add an `SIA-required` /
+`SIA-not required` label — creation will fail (`label not found`).
 
-Otherwise ask:
-> "Does this issue have a security impact that needs analysis?"
-Options:
-- **SIA-required** — Yes, needs security review
-- **SIA-not required** — No security impact
+### Area label (optional)
+
+The repo has area labels — `analytics-2.0`, `eval`, `cli`, `ui-kit`. When the issue clearly belongs to
+one area, offer to add the matching label (e.g. an Analytics feature → `analytics-2.0`). Only apply
+when confident; otherwise skip.
 
 ---
 
@@ -295,7 +300,7 @@ ISSUE PREVIEW
 
 Title:    <title>
 Type:     <Bug/Feature/Task> (reflected via labels)
-Labels:   <comma-separated list — includes `infra-task` if this is an infra change>
+Labels:   <comma-separated list — includes `ops-request` if this is an infra change>
 Assignee: <@me (creator) / username>
 Project:  epam/68
 
@@ -336,7 +341,7 @@ gh issue create \
 
 Notes:
 - `--type` is not supported by `gh issue create`. Issue type (Bug/Feature/Task) is conveyed via labels (`bug`, `enhancement`, or task-specific labels) — there is no separate type flag.
-- There is no separate "Infra Task" type — infrastructure work is a Task with the `infra-task` label auto-applied and the infra-specific body structure (change type, target environment, task list).
+- There is no separate "Infra Task" type — infrastructure work is a Task with the `ops-request` label auto-applied and the infra-specific body structure (change type, target environment, task list).
 - `--assignee` is ALWAYS set (default `@me`). Never omit it — the skill guarantees every ticket has an owner.
 - The `<details-section>` placeholder in the templates below is the code-research findings from Step 2a. If research was NOT performed, omit the entire `### Details` heading and its content — do not leave an empty section.
 - The body must be formatted to match the GitHub issue template output format:
@@ -398,7 +403,7 @@ Notes:
 - [X] I confirm that do not share any confidential information
 ```
 
-**Task body format (infra variant — used when `infra-task` label is applied):**
+**Task body format (infra variant — used when `ops-request` label is applied):**
 ```markdown
 ### Type of change
 <change type>
@@ -423,22 +428,28 @@ After successful creation, display the issue URL returned by `gh`.
 
 ## Label Reference
 
+Exact label names as configured in `epam/ai-dial-admin-frontend` (verified via `gh label list`).
+When in doubt, run `gh label list --limit 300` to confirm before applying — creation fails hard on an
+unknown label.
+
 | Label | Applied When |
 |---|---|
 | `bug` | Type = Bug |
 | `enhancement` | Type = Feature |
 | `to-be-documented` | Type = Feature (always) |
-| `infra-task` | Type = Task AND infra signals detected (keywords: env var, secret, config change, deployment, prod/uat, `LOG_LEVEL`, etc.) OR user invoked `/create-ticket infra: …` OR user confirms "Yes, infra" in Step 3 |
-| `Priority-Low` | User selects Low priority |
-| `Priority-Medium` | User selects Medium priority |
-| `Priority-High` | User selects High priority |
+| `ops-request` | Type = Task AND infra signals detected (keywords: env var, secret, config change, deployment, prod/uat, `LOG_LEVEL`, etc.) OR user invoked `/create-ticket infra: …` OR user confirms "Yes, infra" in Step 3. (Infra/ops work; this repo has no dedicated infra label, so `ops-request` is the equivalent.) |
+| `P1 – Critical` | User selects Critical priority |
+| `P2 – High` | User selects High priority |
+| `P3 – Medium` | User selects Medium priority |
+| `P4 – Low` | User selects Low priority |
 | `Severity-Low` | Bug — user selects Low |
 | `Severity-Minor` | Bug — user selects Minor |
 | `Severity-Major` | Bug — user selects Major |
 | `Severity-Critical` | Bug — user selects Critical |
 | `Design Required` | Auto or asked — see Step 5 |
-| `SIA-required` | Auto or asked — see Step 5 |
-| `SIA-not required` | User confirms no security impact |
+| `analytics-2.0` / `eval` / `cli` / `ui-kit` | Optional area label — apply when the issue clearly belongs to that area (see Step 5) |
+
+Note: this repo has **no** `SIA-*` labels — capture security impact in the body, not a label (see Step 5).
 
 ## Guardrails
 
