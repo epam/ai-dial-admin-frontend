@@ -1,5 +1,5 @@
-import Page404 from '@/src/components/Page404/Page404';
+import Page404Wrapper from '@/src/components/Page404/Page404Wrapper';
 
 export default function NotFound() {
-  return <Page404 />;
+  return <Page404Wrapper />;
 }

@@ -8,7 +8,7 @@ import classNames from 'classnames';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import '@/src/app/[lang]/global.scss';
-import Page403 from '@/src/components/Page403/Page403';
+import Page403Wrapper from '@/src/components/Page403/Page403Wrapper';
 import { SIGN_IN_LINK } from '@/src/constants/auth';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsInvalidSession } from '@/src/utils/auth/is-valid-session';
@@ -28,7 +28,14 @@ const inter = Inter({
   variable: '--font-inter',
 });
 
-export default async function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({
+  children,
+  params,
+}: {
+  children: ReactNode;
+  params: Promise<{ lang?: string }>;
+}) {
+  const { lang } = await params;
   const isEnableAuth = getIsEnableAuthToggle();
   const token = await getUserToken(isEnableAuth, headers(), cookies());
   const isInvalidSession = await getIsInvalidSession(isEnableAuth, token);
@@ -38,6 +45,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   }
   const userInfo = await utilityApi.getUserInfo(token);
   const themesConfig = await themesApi.getThemesConfiguration();
+  const themeImages = await themesApi.getImages();
 
   const faviconUrl = themesConfig
     ? getIconPath(themesConfig?.images['admin-favicon'] || themesConfig?.images.favicon)
@@ -50,7 +58,11 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <link rel="apple-touch-icon" href={faviconUrl || '/favicon.ico'} type="image/png" />
       </head>
       <body className={classNames(inter.variable, 'font min-w-[360px]')}>
-        {userInfo.success ? children : <Page403 />}
+        {userInfo.success ? (
+          children
+        ) : (
+          <Page403Wrapper lang={lang || 'en'} themesConfiguration={themesConfig} themeImages={themeImages} />
+        )}
       </body>
     </html>
   );
