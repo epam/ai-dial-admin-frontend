@@ -45,6 +45,7 @@ const METRIC_OPTIONS: MetricOption[] = [
 ];
 
 const METRIC_SCORES: MetricScoresData = {
+  overallScore: null,
   statistics: ['AVG', 'MAX'],
   byStatistic: {
     AVG: [{ name: 'DeepEval: Answer Relevancy', bars: { score: 0.8 } }],

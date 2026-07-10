@@ -7,7 +7,6 @@ import { getAnalyticsColumns } from '@/src/components/Runs/View/utils';
 import { ExtractionResultTabUiState, RunViewTabUiState, SummaryTabUiState } from './models';
 
 const createDefaultSummaryState = (): SummaryTabUiState => ({
-  overallScoreMetricName: null,
   selectedStatistic: null,
   selectedDistributionMetricName: null,
 });
@@ -63,7 +62,6 @@ export const useRunViewTabState = (runId: string | undefined): UseRunViewTabStat
       ...prev,
       summary: {
         ...prev.summary,
-        overallScoreMetricName: null,
         selectedDistributionMetricName: null,
       },
     }));

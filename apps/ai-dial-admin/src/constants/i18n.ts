@@ -1849,6 +1849,7 @@ export enum RunsI18nKey {
   EndDate = 'Runs.EndDate',
   Application = 'Runs.Application',
   OverallScore = 'Runs.OverallScore',
+  OverallScoreDescription = 'Runs.OverallScoreDescription',
   AvgFor = 'Runs.AvgFor',
   SelectMetric = 'Runs.SelectMetric',
   MetricScoresTitle = 'Runs.MetricScoresTitle',
@@ -2162,6 +2163,10 @@ export enum QueryBuilderI18nKey {
   WarningMissingBucketField = 'QueryBuilder.WarningMissingBucketField',
   WarningMissingBucketAlias = 'QueryBuilder.WarningMissingBucketAlias',
   WarningEmptyAggregate = 'QueryBuilder.WarningEmptyAggregate',
+  ViewForm = 'QueryBuilder.ViewForm',
+  ViewSql = 'QueryBuilder.ViewSql',
+  ViewSwitcher = 'QueryBuilder.ViewSwitcher',
+  SqlQuery = 'QueryBuilder.SqlQuery',
 }
 
 export enum AnalyticsTablesI18nKey {

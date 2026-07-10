@@ -8,13 +8,12 @@ import {
   SortDir,
   ValueType,
 } from '@/src/models/evaluation/structured-query';
-import { AVG_DURATION_ALIAS, COUNT_ALIAS, EXECUTION_STATUS_FIELD, OVERALL_SCORE_ALIAS } from '../constants';
-import { MetricOption, MetricScoresData } from '../models';
+import { AVG_DURATION_ALIAS, COUNT_ALIAS, EXECUTION_STATUS_FIELD } from '../constants';
+import { MetricScoresData } from '../models';
 import {
   buildAvgRunTimeQuery,
   buildDistributionQuery,
   buildMetricScoresQuery,
-  buildOverallScoreQuery,
   buildTestCasesStatusQuery,
   getMetricFieldPath,
   getMetricOutputFields,
@@ -22,7 +21,6 @@ import {
   parseAvgRunTimeMs,
   parseHistogramValues,
   parseMetricScores,
-  parseOverallScore,
   parseTestCaseStatusCounts,
   splitMetricName,
   toMetricOptions,
@@ -104,56 +102,6 @@ describe('Runs Summary :: metric options', () => {
   });
 });
 
-describe('Runs Summary :: overall score query', () => {
-  const option: MetricOption = {
-    name: 'Ragas Answer Relevancy',
-    field: 'metric::Ragas Answer Relevancy::score',
-    computationId: 'comp-1',
-  };
-
-  test('buildOverallScoreQuery averages the metric field within run + computation', () => {
-    const query = buildOverallScoreQuery('run-1', option);
-
-    expect(query.mode).toBe(QueryMode.Aggregate);
-    expect(query.filter).toEqual({
-      op: LogicalOp.And,
-      args: [
-        {
-          op: ComparisonOp.Eq,
-          args: [
-            { type: ExprType.Field, name: 'test_suite_run_id' },
-            { type: ExprType.Value, value_type: ValueType.Uuid, value: 'run-1' },
-          ],
-        },
-        {
-          op: ComparisonOp.Eq,
-          args: [
-            { type: ExprType.Field, name: 'computation_id' },
-            { type: ExprType.Value, value_type: ValueType.Uuid, value: 'comp-1' },
-          ],
-        },
-      ],
-    });
-    expect(query.select).toEqual([
-      {
-        expr: {
-          type: ExprType.Fn,
-          name: 'avg',
-          args: [{ type: ExprType.Field, name: 'metric::Ragas Answer Relevancy::score' }],
-        },
-        as: OVERALL_SCORE_ALIAS,
-      },
-    ]);
-  });
-
-  test('parseOverallScore rounds to three decimals and handles missing data', () => {
-    expect(parseOverallScore({ rows: [{ [OVERALL_SCORE_ALIAS]: 0.8532 }] })).toBe(0.853);
-    expect(parseOverallScore({ rows: [{ [OVERALL_SCORE_ALIAS]: null }] })).toBeNull();
-    expect(parseOverallScore({ rows: [] })).toBeNull();
-    expect(parseOverallScore(null)).toBeNull();
-  });
-});
-
 describe('Runs Summary :: metric scores', () => {
   test('buildMetricScoresQuery selects the metric-score columns, scoped to run + latest computation', () => {
     const query = buildMetricScoresQuery('run-1');
@@ -209,6 +157,7 @@ describe('Runs Summary :: metric scores', () => {
       ],
     });
 
+    expect(parsed.overallScore).toBeNull();
     expect(parsed.statistics).toEqual(['AVG', 'P90']);
     expect(parsed.byStatistic).toEqual({
       AVG: [
@@ -219,9 +168,25 @@ describe('Runs Summary :: metric scores', () => {
     });
   });
 
+  test('parseMetricScores extracts overall score and excludes it from statistics', () => {
+    const parsed = parseMetricScores({
+      rows: [
+        { metric_name: 'overall', metric_score_name: 'overall', value: 0.812345 },
+        { metric_name: 'aidial_rag_eval.generation.context_to_answer', metric_score_name: 'AVG', value: 0.6 },
+        { metric_name: 'overall', metric_score_name: 'overall', value: 0.999 },
+      ],
+    });
+
+    expect(parsed.overallScore).toBe(0.812);
+    expect(parsed.statistics).toEqual(['AVG']);
+    expect(parsed.byStatistic).toEqual({
+      AVG: [{ name: 'aidial_rag_eval.generation', bars: { context_to_answer: 0.6 } }],
+    });
+  });
+
   test('parseMetricScores handles null/empty results', () => {
-    expect(parseMetricScores(null)).toEqual({ statistics: [], byStatistic: {} });
-    expect(parseMetricScores({ rows: [] })).toEqual({ statistics: [], byStatistic: {} });
+    expect(parseMetricScores(null)).toEqual({ overallScore: null, statistics: [], byStatistic: {} });
+    expect(parseMetricScores({ rows: [] })).toEqual({ overallScore: null, statistics: [], byStatistic: {} });
   });
 });
 
@@ -266,6 +231,7 @@ describe('Runs Summary :: distribution', () => {
 
   test('getMetricStatCards extracts per-statistic values for a metric name', () => {
     const data: MetricScoresData = {
+      overallScore: null,
       statistics: ['AVG', 'P90', 'MIN'],
       byStatistic: {
         AVG: [{ name: 'DeepEval: Answer Relevancy', bars: { score: 0.8 } }],
@@ -282,7 +248,7 @@ describe('Runs Summary :: distribution', () => {
 
   test('getMetricStatCards returns [] for missing data or metric', () => {
     expect(getMetricStatCards(null, 'x.score')).toEqual([]);
-    expect(getMetricStatCards({ statistics: [], byStatistic: {} }, null)).toEqual([]);
+    expect(getMetricStatCards({ overallScore: null, statistics: [], byStatistic: {} }, null)).toEqual([]);
   });
 });
 

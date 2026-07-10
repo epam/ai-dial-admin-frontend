@@ -13,6 +13,7 @@ import Analytics from './Analytics';
 import DistributionSection from './DistributionSection';
 import Header from './Header';
 import MetricScoresSection from './MetricScoresSection';
+import { OVERALL_METRIC_SCORE_NAME } from './constants';
 import { MetricOption, MetricScoresData } from './models';
 import {
   buildMetricScoresQuery,
@@ -33,9 +34,16 @@ const SummaryTab: FC<Props> = ({ run, summaryState, setSummaryState }) => {
   const [metricScores, setMetricScores] = useState<MetricScoresData | null>(null);
   const [metricOptions, setMetricOptions] = useState<MetricOption[]>([]);
   const [testCaseCount, setTestCaseCount] = useState(0);
+  const { selectedStatistic } = summaryState;
 
   useEffect(() => {
-    if (!metricScores || summaryState.selectedStatistic != null) {
+    if (!metricScores) {
+      return;
+    }
+
+    const isStaleOverall = selectedStatistic === OVERALL_METRIC_SCORE_NAME;
+    const isMissingSelection = selectedStatistic == null;
+    if (!isStaleOverall && !isMissingSelection) {
       return;
     }
 
@@ -43,7 +51,7 @@ const SummaryTab: FC<Props> = ({ run, summaryState, setSummaryState }) => {
     if (defaultStatistic) {
       setSummaryState({ selectedStatistic: defaultStatistic });
     }
-  }, [metricScores, summaryState.selectedStatistic, setSummaryState]);
+  }, [metricScores, selectedStatistic, setSummaryState]);
 
   useEffect(() => {
     if (!run?.testSuiteId) {
@@ -90,11 +98,6 @@ const SummaryTab: FC<Props> = ({ run, summaryState, setSummaryState }) => {
     };
   }, [run?.id]);
 
-  const onSelectOverallScoreMetric = useCallback(
-    (name: string) => setSummaryState({ overallScoreMetricName: name }),
-    [setSummaryState],
-  );
-
   const onSelectStatistic = useCallback(
     (statistic: string) => setSummaryState({ selectedStatistic: statistic }),
     [setSummaryState],
@@ -108,12 +111,7 @@ const SummaryTab: FC<Props> = ({ run, summaryState, setSummaryState }) => {
   return (
     <div className="flex h-full min-h-0 flex-col gap-8">
       <Header run={run} testSuite={testSuite} />
-      <Analytics
-        run={run}
-        metricOptions={metricOptions}
-        selectedMetricName={summaryState.overallScoreMetricName}
-        onSelectMetric={onSelectOverallScoreMetric}
-      />
+      <Analytics run={run} overallScore={metricScores?.overallScore} />
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-2">
         <MetricScoresSection
           data={metricScores}
