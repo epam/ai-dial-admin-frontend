@@ -32,6 +32,9 @@ export const defaultValueType = (fieldType?: string): QueryValueType => {
   }
 };
 
+export const sortByName = <T extends { name: string }>(items: T[]): T[] =>
+  [...items].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+
 export const tagOf = (field: AnalyticsEntityField): string => field.tag || UNTAGGED_KEY;
 
 export const distinctTags = (fields: AnalyticsEntityField[]): string[] => {
@@ -55,7 +58,7 @@ export const filterFieldsByTags = (fields: AnalyticsEntityField[], selectedTags:
 
 export const bucketFieldOptions = (fields: AnalyticsEntityField[]): AnalyticsEntityField[] => {
   const temporal = fields.filter((f) => f.type === AnalyticsFieldType.Timestamp || f.type === AnalyticsFieldType.Date);
-  return temporal.length ? temporal : fields;
+  return sortByName(temporal.length ? temporal : fields);
 };
 
 export const havingFieldOptions = (state: QueryBuilderState): FieldOption[] => {
@@ -66,10 +69,10 @@ export const havingFieldOptions = (state: QueryBuilderState): FieldOption[] => {
   const aggAliases = state.aggregates
     .filter((a) => a.alias)
     .map((a) => ({ name: a.alias, type: AnalyticsFieldType.Decimal }));
-  return [...groupBy, ...bucketAliases, ...aggAliases];
+  return sortByName([...groupBy, ...bucketAliases, ...aggAliases]);
 };
 
 export const sortFieldOptions = (state: QueryBuilderState): FieldOption[] => {
-  if (state.mode === QueryMode.Row) return state.fields.map((f) => ({ name: f.name, type: f.type }));
+  if (state.mode === QueryMode.Row) return sortByName(state.fields.map((f) => ({ name: f.name, type: f.type })));
   return havingFieldOptions(state);
 };
