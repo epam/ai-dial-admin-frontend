@@ -1849,6 +1849,7 @@ export enum RunsI18nKey {
   EndDate = 'Runs.EndDate',
   Application = 'Runs.Application',
   OverallScore = 'Runs.OverallScore',
+  OverallScoreDescription = 'Runs.OverallScoreDescription',
   AvgFor = 'Runs.AvgFor',
   SelectMetric = 'Runs.SelectMetric',
   MetricScoresTitle = 'Runs.MetricScoresTitle',

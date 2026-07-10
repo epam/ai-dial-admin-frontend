@@ -37,6 +37,7 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
 });
 
 const DATA: MetricScoresData = {
+  overallScore: null,
   statistics: ['AVG', 'P90'],
   byStatistic: {
     AVG: [
@@ -120,10 +121,24 @@ describe('Runs Summary :: MetricScoresSection', () => {
     expect(onSelectMetric).toHaveBeenCalledWith('aidial_rag_eval.generation.context_to_answer');
   });
 
+  test('excludes the overall statistic from segmented-control tabs', () => {
+    const dataWithOverall: MetricScoresData = {
+      overallScore: 0.812,
+      statistics: ['AVG', 'P90'],
+      byStatistic: DATA.byStatistic,
+    };
+
+    render(<ControlledMetricScoresSection data={dataWithOverall} />);
+
+    expect(screen.getByRole('tab', { name: 'AVG' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'P90' })).toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: 'overall' })).not.toBeInTheDocument();
+  });
+
   test('shows an empty message when there are no metric scores', () => {
     render(
       <MetricScoresSection
-        data={{ statistics: [], byStatistic: {} }}
+        data={{ overallScore: null, statistics: [], byStatistic: {} }}
         testCaseCount={0}
         selectedStatistic={null}
         onSelectStatistic={vi.fn()}
