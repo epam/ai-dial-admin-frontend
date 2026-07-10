@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { FC, useState } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { StructuredQuery } from '@/src/models/evaluation/structured-query';
@@ -61,6 +62,19 @@ const metricFieldOf = (query: StructuredQuery): string | undefined => {
   return arg?.name;
 };
 
+const ControlledAnalytics: FC<{ metricOptions: MetricOption[] }> = ({ metricOptions }) => {
+  const [selectedMetricName, setSelectedMetricName] = useState<string | null>(null);
+
+  return (
+    <Analytics
+      run={{ id: 'run-1' } as any}
+      metricOptions={metricOptions}
+      selectedMetricName={selectedMetricName}
+      onSelectMetric={setSelectedMetricName}
+    />
+  );
+};
+
 const mockQueries = () => {
   executeStructuredQueryMock.mockImplementation((query: StructuredQuery) => {
     if (query.group_by) {
@@ -84,7 +98,7 @@ describe('Runs Summary :: Analytics', () => {
 
   test('shows a loader until data resolves', async () => {
     mockQueries();
-    render(<Analytics run={{ id: 'run-1' } as any} metricOptions={METRIC_OPTIONS} />);
+    render(<ControlledAnalytics metricOptions={METRIC_OPTIONS} />);
 
     expect(screen.getByLabelText('loading-32')).toBeInTheDocument();
     await waitFor(() => expect(screen.getByText('Runs.TestCasesPassed')).toBeInTheDocument());
@@ -92,7 +106,7 @@ describe('Runs Summary :: Analytics', () => {
 
   test('renders overall score card with the metric dropdown in its description', async () => {
     mockQueries();
-    render(<Analytics run={{ id: 'run-1' } as any} metricOptions={METRIC_OPTIONS} />);
+    render(<ControlledAnalytics metricOptions={METRIC_OPTIONS} />);
 
     expect(await screen.findByText('Runs.OverallScore')).toBeInTheDocument();
 
@@ -103,7 +117,7 @@ describe('Runs Summary :: Analytics', () => {
 
   test('selects no metric by default and does not query an overall score', async () => {
     mockQueries();
-    render(<Analytics run={{ id: 'run-1' } as any} metricOptions={METRIC_OPTIONS} />);
+    render(<ControlledAnalytics metricOptions={METRIC_OPTIONS} />);
 
     await screen.findByText('Runs.OverallScore');
 
@@ -115,7 +129,7 @@ describe('Runs Summary :: Analytics', () => {
 
   test('queries the overall score with the selected metric field', async () => {
     mockQueries();
-    render(<Analytics run={{ id: 'run-1' } as any} metricOptions={METRIC_OPTIONS} />);
+    render(<ControlledAnalytics metricOptions={METRIC_OPTIONS} />);
 
     await screen.findByText('Runs.OverallScore');
 
@@ -147,7 +161,7 @@ describe('Runs Summary :: Analytics', () => {
       return Promise.resolve({ rows: [] });
     });
 
-    render(<Analytics run={{ id: 'run-1' } as any} metricOptions={METRIC_OPTIONS} />);
+    render(<ControlledAnalytics metricOptions={METRIC_OPTIONS} />);
 
     await screen.findByText('Runs.OverallScore');
     fireEvent.change(screen.getByLabelText('metric-select'), { target: { value: 'Ragas Answer Relevancy.score' } });
@@ -158,7 +172,7 @@ describe('Runs Summary :: Analytics', () => {
 
   test('renders passed test cases card with N/M value and status breakdown', async () => {
     mockQueries();
-    render(<Analytics run={{ id: 'run-1' } as any} metricOptions={METRIC_OPTIONS} />);
+    render(<ControlledAnalytics metricOptions={METRIC_OPTIONS} />);
 
     await screen.findByText('37/43');
     expect(screen.getByText('37 Runs.Pass')).toBeInTheDocument();
@@ -168,14 +182,16 @@ describe('Runs Summary :: Analytics', () => {
 
   test('renders average run time card in seconds', async () => {
     mockQueries();
-    render(<Analytics run={{ id: 'run-1' } as any} metricOptions={METRIC_OPTIONS} />);
+    render(<ControlledAnalytics metricOptions={METRIC_OPTIONS} />);
 
     expect(await screen.findByText('0.2 Runs.Seconds')).toBeInTheDocument();
   });
 
   test('marks cards as error when the run has no data', async () => {
     executeStructuredQueryMock.mockResolvedValue({ rows: [] });
-    render(<Analytics run={{ id: 'run-1' } as any} metricOptions={[]} />);
+    render(
+      <Analytics run={{ id: 'run-1' } as any} metricOptions={[]} selectedMetricName={null} onSelectMetric={vi.fn()} />,
+    );
 
     await waitFor(() => expect(screen.getAllByText('error-tag').length).toBeGreaterThanOrEqual(3));
   });

@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
+import { FC, useState } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
 import { MetricScoresData } from '../models';
@@ -46,16 +47,43 @@ const DATA: MetricScoresData = {
   },
 };
 
+const ControlledMetricScoresSection: FC<{
+  data: MetricScoresData | null;
+  testCaseCount?: number;
+  onSelectMetric?: (name: string) => void;
+  initialStatistic?: string | null;
+}> = ({ data, testCaseCount = 0, onSelectMetric = vi.fn(), initialStatistic = 'AVG' }) => {
+  const [selectedStatistic, setSelectedStatistic] = useState<string | null>(initialStatistic);
+
+  return (
+    <MetricScoresSection
+      data={data}
+      testCaseCount={testCaseCount}
+      selectedStatistic={selectedStatistic}
+      onSelectStatistic={setSelectedStatistic}
+      onSelectMetric={onSelectMetric}
+    />
+  );
+};
+
 describe('Runs Summary :: MetricScoresSection', () => {
   test('shows a loader while data is null', () => {
-    render(<MetricScoresSection data={null} testCaseCount={0} onSelectMetric={vi.fn()} />);
+    render(
+      <MetricScoresSection
+        data={null}
+        testCaseCount={0}
+        selectedStatistic={null}
+        onSelectStatistic={vi.fn()}
+        onSelectMetric={vi.fn()}
+      />,
+    );
 
     expect(screen.getByLabelText('loading-32')).toBeInTheDocument();
     expect(screen.getByText('Runs.MetricScoresTitle')).toBeInTheDocument();
   });
 
   test('renders a bar group per metric prefix with leaf-name bars for the selected statistic', () => {
-    render(<MetricScoresSection data={DATA} testCaseCount={0} onSelectMetric={vi.fn()} />);
+    render(<ControlledMetricScoresSection data={DATA} />);
 
     const generation = screen.getByRole('group', { name: 'aidial_rag_eval.generation' });
     expect(within(generation).getByText('context_to_answer:0.8')).toBeInTheDocument();
@@ -63,15 +91,15 @@ describe('Runs Summary :: MetricScoresSection', () => {
     expect(screen.getByRole('group', { name: 'aidial_rag_eval.retrieval' })).toBeInTheDocument();
   });
 
-  test('exposes the statistics as segmented-control tabs, first selected by default', () => {
-    render(<MetricScoresSection data={DATA} testCaseCount={0} onSelectMetric={vi.fn()} />);
+  test('exposes the statistics as segmented-control tabs with the controlled selection', () => {
+    render(<ControlledMetricScoresSection data={DATA} initialStatistic="AVG" />);
 
     expect(screen.getByRole('tab', { name: 'AVG' })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByRole('tab', { name: 'P90' })).toHaveAttribute('aria-selected', 'false');
   });
 
   test('switches the shown statistic values when a tab is selected', () => {
-    render(<MetricScoresSection data={DATA} testCaseCount={0} onSelectMetric={vi.fn()} />);
+    render(<ControlledMetricScoresSection data={DATA} />);
 
     const before = screen.getByRole('group', { name: 'aidial_rag_eval.generation' });
     expect(within(before).getByText('context_to_answer:0.8')).toBeInTheDocument();
@@ -85,7 +113,7 @@ describe('Runs Summary :: MetricScoresSection', () => {
 
   test('selects the full metric name when a bar is clicked', () => {
     const onSelectMetric = vi.fn();
-    render(<MetricScoresSection data={DATA} testCaseCount={0} onSelectMetric={onSelectMetric} />);
+    render(<ControlledMetricScoresSection data={DATA} onSelectMetric={onSelectMetric} />);
 
     fireEvent.click(screen.getByText('context_to_answer:0.8'));
 
@@ -94,7 +122,13 @@ describe('Runs Summary :: MetricScoresSection', () => {
 
   test('shows an empty message when there are no metric scores', () => {
     render(
-      <MetricScoresSection data={{ statistics: [], byStatistic: {} }} testCaseCount={0} onSelectMetric={vi.fn()} />,
+      <MetricScoresSection
+        data={{ statistics: [], byStatistic: {} }}
+        testCaseCount={0}
+        selectedStatistic={null}
+        onSelectStatistic={vi.fn()}
+        onSelectMetric={vi.fn()}
+      />,
     );
 
     expect(screen.getByText('Runs.NoMetricScores')).toBeInTheDocument();

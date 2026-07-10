@@ -1,5 +1,27 @@
+import { ColDef } from 'ag-grid-community';
+
+import { MetricSnapshot } from '@/src/models/evaluation/metric';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 import { ApplicationRoute } from '@/src/types/routes';
+
+export interface SummaryTabUiState {
+  overallScoreMetricName: string | null;
+  selectedStatistic: string | null;
+  selectedDistributionMetricName: string | null;
+}
+
+export interface ExtractionResultTabUiState {
+  showTreePanel: boolean;
+  colDefs: ColDef[];
+  panelColDefs: ColDef[];
+  results: AnalyticsResult[] | null;
+  snapshots: MetricSnapshot[];
+}
+
+export interface RunViewTabUiState {
+  summary: SummaryTabUiState;
+  extractionResult: ExtractionResultTabUiState;
+}
 
 export interface RunDeployment {
   name: string;

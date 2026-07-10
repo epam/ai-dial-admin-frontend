@@ -19,6 +19,7 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab, getRunTabs } from '@/src/utils/tabs/utils';
 import TabsContent from './TabsContent';
+import { useRunViewTabState } from './use-run-view-tab-state';
 
 interface Props {
   run: Run;
@@ -33,6 +34,7 @@ const RunView: FC<Props> = ({ run, onRemove }) => {
 
   const tabs = useMemo(() => getRunTabs(t), [t]);
   const [activeTab, setActiveTab] = useState(EntityViewTab.Summary);
+  const tabState = useRunViewTabState(run.id);
 
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const onOpenExportModal = useCallback(() => setIsExportModalOpen(true), []);
@@ -83,7 +85,7 @@ const RunView: FC<Props> = ({ run, onRemove }) => {
         </SimpleEntityHeader>
 
         <div className="flex-1 overflow-auto min-h-0">
-          <TabsContent activeTab={activeTab} run={run} />
+          <TabsContent activeTab={activeTab} run={run} tabState={tabState} />
         </div>
       </div>
       {isExportModalOpen &&
