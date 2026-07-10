@@ -84,11 +84,11 @@ Use `Parent/Child` for a single leaf, or just `Parent` when several children cha
 | `Audit/ActivityAudit` | `activity-audit` | `ActivityAudit` |
 | `Audit/UsageLog` | `usage-log` | `UsageLog` |
 
-### `analytics-v2`
+### `analytics`
 | Area | Route slug | Component folder |
 |------|-----------|------------------|
-| `analytics-v2/QueryBuilder` | `analytics-v2/query-builder` | `AnalyticsV2` |
-| `analytics-v2/Tables` | `analytics-v2/tables` | `AnalyticsV2` |
+| `analytics/QueryBuilder` | `query-builder` | `Analytics` |
+| `analytics/Tables` | `tables` | `Analytics` |
 
 ---
 

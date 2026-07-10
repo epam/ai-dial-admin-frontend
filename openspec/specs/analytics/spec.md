@@ -4,7 +4,7 @@
 
 Define the Analytics 2.0 feature: a new, experimental left-navigation menu group ("Analytics 2.0") gated by the `ANALYTICS_V2_ENABLED` environment variable, carrying a "Preview" tag on its group header, with two sub-items — "Query Builder" and "Tables" — that open dedicated pages. In this iteration the pages intentionally render no content; the deliverable is the menu, the routes, the feature flag, and the server-side API layer wired to the Analytics data-access service (`analytics-data-access-service`, sourced from `DIAL_ANALYTICS_API_URL`). The API layer covers every request surfaced by the service's demo pages (`/v1/queries` and `/v1/tables`) so later stories can build the UI without touching transport.
 
-This folder (`openspec/specs/analytics-v2/`) is the single home for all Analytics 2.0 specs; this file is the consolidated master spec for the feature.
+This folder (`openspec/specs/analytics/`) is the single home for all Analytics 2.0 specs; this file is the consolidated master spec for the feature.
 
 ## Requirements
 
@@ -29,14 +29,14 @@ The system SHALL expose an environment variable `ANALYTICS_V2_ENABLED` whose val
 
 ### Requirement: Analytics 2.0 menu group with Query Builder and Tables sub-items
 
-The left-navigation menu configuration (`MENU_CONFIGURATION` in `menu-configuration.tsx`) SHALL define an "Analytics 2.0" menu group whose sub-items are, in order, "Query Builder" (linking to the Query Builder route) and "Tables" (linking to the Tables route). The group MUST use its own icon and follow the existing `MenuGroupConfiguration` shape. New routes SHALL be added to the `ApplicationRoute` enum (`types/routes.ts`) — `/analytics-v2/query-builder` and `/analytics-v2/tables` — and new labels SHALL be added to `MenuI18nKey` (`constants/i18n.ts`) with English strings in `locales/en.ts` ("Analytics 2.0", "Query Builder", "Tables").
+The left-navigation menu configuration (`MENU_CONFIGURATION` in `menu-configuration.tsx`) SHALL define an "Analytics 2.0" menu group whose sub-items are, in order, "Query Builder" (linking to the Query Builder route) and "Tables" (linking to the Tables route). The group MUST use its own icon and follow the existing `MenuGroupConfiguration` shape. New routes SHALL be added to the `ApplicationRoute` enum (`types/routes.ts`) — `/query-builder` and `/tables` — and new labels SHALL be added to `MenuI18nKey` (`constants/i18n.ts`) with English strings in `locales/en.ts` ("Analytics 2.0", "Query Builder", "Tables").
 
 #### Scenario: Group and sub-items render when flag enabled
 
 - **WHEN** `featureFlags.analyticsV2Enabled` is `true` and the sidebar menu renders
 - **THEN** an "Analytics 2.0" group is present
-- **AND** expanding it shows a "Query Builder" sub-item linking to `/analytics-v2/query-builder`
-- **AND** it shows a "Tables" sub-item linking to `/analytics-v2/tables`
+- **AND** expanding it shows a "Query Builder" sub-item linking to `/query-builder`
+- **AND** it shows a "Tables" sub-item linking to `/tables`
 
 ### Requirement: Analytics 2.0 menu group is gated by the feature flag
 
@@ -70,17 +70,17 @@ The "Analytics 2.0" menu group header SHALL display the existing `PreviewTag` co
 
 ### Requirement: Query Builder and Tables pages render no content
 
-Two App Router pages SHALL exist so both menu links resolve without error: `app/[lang]/analytics-v2/query-builder/page.tsx` and `app/[lang]/analytics-v2/tables/page.tsx`. In this iteration each page SHALL render no visible content (return `null` or an equivalent empty render). No data fetching is performed by these pages yet.
+Two App Router pages SHALL exist so both menu links resolve without error: `app/[lang]/query-builder/page.tsx` and `app/[lang]/tables/page.tsx`. In this iteration each page SHALL render no visible content (return `null` or an equivalent empty render). No data fetching is performed by these pages yet.
 
 #### Scenario: Query Builder route resolves and renders nothing
 
-- **WHEN** the user navigates to `/analytics-v2/query-builder`
+- **WHEN** the user navigates to `/query-builder`
 - **THEN** the route resolves without error
 - **AND** the page renders no visible content
 
 #### Scenario: Tables route resolves and renders nothing
 
-- **WHEN** the user navigates to `/analytics-v2/tables`
+- **WHEN** the user navigates to `/tables`
 - **THEN** the route resolves without error
 - **AND** the page renders no visible content
 
