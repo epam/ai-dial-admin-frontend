@@ -18,7 +18,7 @@ describe('Runs View :: useRunViewTabState', () => {
     });
 
     expect(result.current.state.summary.selectedStatistic).toBe('MIN');
-    expect(result.current.state.summary.overallScoreMetricName).toBeNull();
+    expect(result.current.state.summary.selectedDistributionMetricName).toBeNull();
   });
 
   test('merges partial extraction result state', () => {
@@ -36,7 +36,6 @@ describe('Runs View :: useRunViewTabState', () => {
 
     act(() => {
       result.current.setSummaryState({
-        overallScoreMetricName: 'metric.a',
         selectedStatistic: 'MIN',
         selectedDistributionMetricName: 'metric.b',
       });
@@ -47,7 +46,6 @@ describe('Runs View :: useRunViewTabState', () => {
     });
 
     expect(result.current.state.summary).toEqual({
-      overallScoreMetricName: null,
       selectedStatistic: 'MIN',
       selectedDistributionMetricName: null,
     });
