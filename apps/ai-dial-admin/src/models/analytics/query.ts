@@ -1,7 +1,3 @@
-// Analytics 2.0 — structured query DSL envelope and result.
-// Mirrors the request built by the analytics-data-access-service Query Builder demo
-// and posted to `/v1/queries/execute`.
-
 export enum QueryMode {
   Row = 'row',
   Aggregate = 'aggregate',
@@ -70,7 +66,12 @@ export enum QueryPageType {
   Cursor = 'cursor',
 }
 
-// Expression tree (discriminated on `type`).
+export enum QuerySortNulls {
+  Default = 'default',
+  First = 'first',
+  Last = 'last',
+}
+
 export interface QueryFieldExpr {
   type: QueryExprType.Field;
   name: string;
@@ -96,7 +97,6 @@ export interface QueryArrayExpr {
 
 export type QueryExpr = QueryFieldExpr | QueryValueExpr | QueryFnExpr | QueryArrayExpr;
 
-// Filter / having node: a comparison predicate or a logical group of nodes.
 export interface QueryPredicate {
   op: QueryOperator;
   args: QueryExpr[];
@@ -117,7 +117,7 @@ export interface QueryOutputColumn {
 export interface QuerySortItem {
   field: string;
   dir: QuerySortDirection;
-  nulls?: string;
+  nulls?: QuerySortNulls;
 }
 
 export interface QueryOffsetPage {
@@ -150,6 +150,6 @@ export interface StructuredQuery {
 export interface StructuredQueryResult {
   columns: string[];
   rows: Array<Record<string, unknown>>;
-  total?: number | null;
+  totalCount?: number | null;
   cursor?: string | null;
 }

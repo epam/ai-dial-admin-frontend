@@ -16,7 +16,7 @@ const baseFlags: FeatureFlags = {
   nimEnabled: false,
   hfEnabled: false,
   runsCompareEnabled: false,
-  analyticsV2Enabled: false,
+  analyticsEnabled: false,
 };
 
 const findDeploymentsGroup = (flags: FeatureFlags) =>
@@ -99,35 +99,35 @@ describe('MENU_CONFIGURATION — group visibility flags compose independently', 
   });
 });
 
-describe('MENU_CONFIGURATION — Analytics 2.0 group', () => {
+describe('MENU_CONFIGURATION — Analytics group', () => {
   const findAnalyticsGroup = (flags: FeatureFlags) =>
-    MENU_CONFIGURATION(ICON_SIZE, flags).find((group) => group.key === MenuI18nKey.AnalyticsV2);
+    MENU_CONFIGURATION(ICON_SIZE, flags).find((group) => group.key === MenuI18nKey.Analytics);
 
-  test('shows the Analytics 2.0 group with Query Builder + Tables when the flag is enabled', () => {
-    const group = findAnalyticsGroup({ ...baseFlags, analyticsV2Enabled: true });
+  test('shows the Analytics group with Query Builder + Tables when the flag is enabled', () => {
+    const group = findAnalyticsGroup({ ...baseFlags, analyticsEnabled: true });
 
     expect(group).toBeDefined();
     expect(group?.isPreview).toBe(true);
-    expect(group?.items.map((item) => item.key)).toEqual([MenuI18nKey.QueryBuilder, MenuI18nKey.Tables]);
+    expect(group?.items.map((item) => item.key)).toEqual([MenuI18nKey.Tables, MenuI18nKey.QueryBuilder]);
     expect(group?.items.map((item) => item.href)).toEqual([
-      ApplicationRoute.AnalyticsV2QueryBuilder,
-      ApplicationRoute.AnalyticsV2Tables,
+      ApplicationRoute.AnalyticsTables,
+      ApplicationRoute.AnalyticsQueryBuilder,
     ]);
   });
 
-  test('hides the Analytics 2.0 group when the flag is disabled', () => {
-    expect(findAnalyticsGroup({ ...baseFlags, analyticsV2Enabled: false })).toBeUndefined();
+  test('hides the Analytics group when the flag is disabled', () => {
+    expect(findAnalyticsGroup({ ...baseFlags, analyticsEnabled: false })).toBeUndefined();
   });
 
   test('gating composes independently of Deployments and Evaluation', () => {
     const keys = groupKeys({
       ...baseFlags,
-      analyticsV2Enabled: true,
+      analyticsEnabled: true,
       deploymentsEnabled: false,
       evaluationEnabled: false,
     });
 
-    expect(keys).toContain(MenuI18nKey.AnalyticsV2);
+    expect(keys).toContain(MenuI18nKey.Analytics);
     expect(keys).not.toContain(MenuI18nKey.Deployments);
     expect(keys).not.toContain(MenuI18nKey.Evaluation);
   });
