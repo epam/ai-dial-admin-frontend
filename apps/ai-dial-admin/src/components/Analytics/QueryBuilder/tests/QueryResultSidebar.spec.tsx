@@ -43,7 +43,9 @@ describe('QueryResultSidebar', () => {
     render(<QueryResultSidebar request={SQL_REQUEST} />);
 
     expect(await screen.findByText('grid rows: 1')).toBeInTheDocument();
-    expect(actions.executeSqlQuery).toHaveBeenCalledWith(SQL_REQUEST.kind === QueryRequestKind.Sql ? SQL_REQUEST.sql : '');
+    expect(actions.executeSqlQuery).toHaveBeenCalledWith(
+      SQL_REQUEST.kind === QueryRequestKind.Sql ? SQL_REQUEST.sql : '',
+    );
     expect(actions.executeQuery).not.toHaveBeenCalled();
   });
 
