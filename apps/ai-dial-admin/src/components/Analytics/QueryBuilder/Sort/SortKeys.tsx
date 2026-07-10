@@ -3,7 +3,7 @@ import { FC } from 'react';
 import { DialGhostButton, DialRemoveButton, DialSelectField } from '@epam/ai-dial-ui-kit';
 
 import { SORT_DIRECTION_OPTIONS, SORT_NULLS_OPTIONS } from '@/src/constants/analytics/query-builder';
-import { QueryBuilderI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';
@@ -28,6 +28,8 @@ const SortKeys: FC = () => {
               options={fieldOptions.map((f) => ({ value: f.name, label: f.name }))}
               value={sort.field}
               placeholder={t(QueryBuilderI18nKey.FieldPlaceholder)}
+              searchable
+              searchPlaceholder={t(BasicI18nKey.Search)}
               onChange={(v) => {
                 sort.field = v as string;
                 refresh();

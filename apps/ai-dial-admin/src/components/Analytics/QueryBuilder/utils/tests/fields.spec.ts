@@ -7,6 +7,7 @@ import {
   family,
   filterFieldsByTags,
   havingFieldOptions,
+  sortByName,
   sortFieldOptions,
 } from '@/src/components/Analytics/QueryBuilder/utils/fields';
 import { createAggregate, createBucket, createInitialState } from '@/src/components/Analytics/QueryBuilder/utils/state';
@@ -80,9 +81,26 @@ describe('filterFieldsByTags', () => {
   });
 });
 
+describe('sortByName', () => {
+  test('orders alphabetically, case-insensitively', () => {
+    const items = [{ name: 'banana' }, { name: 'Apple' }, { name: 'cherry' }];
+    expect(sortByName(items).map((i) => i.name)).toEqual(['Apple', 'banana', 'cherry']);
+  });
+
+  test('does not mutate the input array', () => {
+    const items = [{ name: 'b' }, { name: 'a' }];
+    sortByName(items);
+    expect(items.map((i) => i.name)).toEqual(['b', 'a']);
+  });
+
+  test('empty array returns empty', () => {
+    expect(sortByName([])).toEqual([]);
+  });
+});
+
 describe('bucketFieldOptions', () => {
-  test('prefers temporal fields', () => {
-    expect(bucketFieldOptions(FIELDS).map((f) => f.name)).toEqual(['request_time', '_ingested_at']);
+  test('prefers temporal fields, sorted by name', () => {
+    expect(bucketFieldOptions(FIELDS).map((f) => f.name)).toEqual(['_ingested_at', 'request_time']);
   });
 
   test('falls back to all fields when none are temporal', () => {
@@ -102,14 +120,20 @@ describe('having/sort field options', () => {
     const agg = createAggregate();
     agg.alias = 'cnt';
     s.aggregates = [agg];
-    expect(havingFieldOptions(s).map((o) => o.name)).toEqual(['project_id', 'bucket', 'cnt']);
+    expect(havingFieldOptions(s).map((o) => o.name)).toEqual(['bucket', 'cnt', 'project_id']);
   });
 
   test('sortFieldOptions uses schema fields in row mode, aggregate outputs in aggregate mode', () => {
     const s = createInitialState();
     s.fields = FIELDS;
     s.groupBy = ['project_id'];
-    expect(sortFieldOptions(s).map((o) => o.name)).toEqual(FIELDS.map((f) => f.name));
+    expect(sortFieldOptions(s).map((o) => o.name)).toEqual([
+      '_ingested_at',
+      'event_id',
+      'orphan',
+      'project_id',
+      'request_time',
+    ]);
     s.mode = QueryMode.Aggregate;
     expect(sortFieldOptions(s).map((o) => o.name)).toEqual(['project_id']);
   });
