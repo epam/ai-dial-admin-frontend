@@ -39,7 +39,7 @@ resolutions:
       comment: 'The dependency has MIT license in github repo'
 license_choices:
   package_license_choices:
-    - package_id: "NPM::jszip:3.10.1"
+    - package_id: 'NPM::jszip:3.10.1'
       license_choices:
-        - given: "MIT OR GPL-3.0-or-later"
-          choice: "MIT"
+        - given: 'MIT OR GPL-3.0-or-later'
+          choice: 'MIT'
