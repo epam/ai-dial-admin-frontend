@@ -14,9 +14,9 @@ export enum RuleSource {
 }
 
 export enum RuleFunction {
-  CONTAIN = 'contain',
-  EQUAL = 'equal',
-  REGEX = 'regex',
+  CONTAIN = 'CONTAIN',
+  EQUAL = 'EQUAL',
+  REGEX = 'REGEX',
 }
 
 export interface RuleDiffModel {

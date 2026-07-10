@@ -4,6 +4,8 @@ import { Dispatch, FC, SetStateAction, useMemo } from 'react';
 
 import ParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
 import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
+import ApplicationAssetProperties from '@/src/components/Assets/Apps/Properties';
+import ResourceFeatures from '@/src/components/Assets/Resources/ResourceFeatures';
 import ContainerStatusBanner from '@/src/components/Deployments/Common/ContainerStatusBanner/ContainerStatusBanner';
 import EntityAudit from '@/src/components/EntityTabs/Audit/EntityAudit';
 import EntityFeatures from '@/src/components/EntityTabs/Features/Features';
@@ -16,6 +18,7 @@ import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
+import { DialApplicationResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
@@ -37,10 +40,10 @@ interface Props {
   names: string[];
   isEditorEnabled: boolean;
   setIsChanged?: Dispatch<SetStateAction<boolean>>;
-  setSelectedApplication?: Dispatch<SetStateAction<DialApplication>>;
+  setSelectedApplication?: Dispatch<SetStateAction<DialApplication | DialApplicationResource>>;
   isChanged?: boolean;
   onSave?: () => void;
-  onChangeApplication: (application: DialApplication) => void;
+  onChangeApplication: (application: DialApplication | DialApplicationResource) => void;
 }
 
 const TabsContent: FC<Props> = ({
@@ -70,6 +73,10 @@ const TabsContent: FC<Props> = ({
     }
   }, [applicationSchemes, selectedApplication, view]);
 
+  const onChangeAsset = (application: DialApplicationResource) => {
+    onChangeApplication(application as DialApplication);
+  };
+
   return (
     <>
       {activeTab === EntityViewTab.Properties && (
@@ -80,13 +87,21 @@ const TabsContent: FC<Props> = ({
               containerId={originalApplication.source.containerId}
             />
           )}
-          <TabContent
-            selectedApp={selectedApplication}
-            applicationSchemes={applicationSchemes || []}
-            names={names}
-            view={view}
-            onChange={onChangeApplication}
-          />
+          {view === ApplicationRoute.AssetsApplications ? (
+            <ApplicationAssetProperties
+              asset={selectedApplication as DialApplicationResource}
+              runners={applicationSchemes || []}
+              onChange={onChangeAsset}
+            />
+          ) : (
+            <TabContent
+              selectedApp={selectedApplication}
+              applicationSchemes={applicationSchemes || []}
+              names={names}
+              view={view}
+              onChange={onChangeApplication}
+            />
+          )}
         </>
       )}
 
@@ -102,14 +117,17 @@ const TabsContent: FC<Props> = ({
         />
       )}
 
-      {activeTab === EntityViewTab.Features && (
-        <EntityFeatures
-          appRunner={appRunner}
-          entity={selectedApplication}
-          onChangeEntity={onChangeApplication}
-          view={view}
-        />
-      )}
+      {activeTab === EntityViewTab.Features &&
+        (view === ApplicationRoute.AssetsApplications ? (
+          <ResourceFeatures entity={selectedApplication as DialApplicationResource} onChangeEntity={onChangeAsset} />
+        ) : (
+          <EntityFeatures
+            appRunner={appRunner}
+            entity={selectedApplication}
+            onChangeEntity={onChangeApplication}
+            view={view}
+          />
+        ))}
 
       {activeTab === EntityViewTab.Parameters && (
         <ParametersTab
@@ -135,6 +153,7 @@ const TabsContent: FC<Props> = ({
       )}
       {activeTab === EntityViewTab.AppRoutes && (
         <ApplicationAppRoutes
+          view={view}
           roles={roles}
           applicationRunners={applicationSchemes || []}
           selectedEntity={selectedApplication}

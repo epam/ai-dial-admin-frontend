@@ -25,6 +25,7 @@ import { DialApplication, DialApplicationScheme } from '@/src/models/dial/applic
 import { Asset, AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
+import { DialApplicationResource } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
@@ -223,9 +224,11 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
             discardKey={discardKey}
             isChanged={isChanged}
             onSave={onSave}
-            onChangeApplication={onChangeEntity as (application: DialApplication) => void}
+            onChangeApplication={onChangeEntity as (application: DialApplication | DialApplicationResource) => void}
             setIsChanged={setIsChanged}
-            setSelectedApplication={setSelectedApp as Dispatch<SetStateAction<DialApplication>>}
+            setSelectedApplication={
+              setSelectedApp as Dispatch<SetStateAction<DialApplication | DialApplicationResource>>
+            }
           />
         )}
       </div>

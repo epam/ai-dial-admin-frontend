@@ -2,14 +2,9 @@
 import { FC, ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
-import FilePathModal from '@/src/components/Common/FilePath/FilePathModal';
-import DeleteFolder from '@/src/components/Common/FolderList/Modals/DeleteFolder';
-import ExportModal from '@/src/components/EntityListView/Export/ExportModal';
 import ImportModal from '@/src/components/EntityListView/Import/ImportModal';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
-import { BasicI18nKey } from '@/src/constants/i18n';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
-import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { ImportData } from '@/src/models/import-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -50,7 +45,6 @@ export enum ModalType {
 interface Props {
   entity?: BaseEntity;
   route: ApplicationRoute;
-  initialPath?: string;
   isModalOpen: boolean;
   modalType?: ModalType;
   createModal?: ReactNode;
@@ -58,7 +52,6 @@ interface Props {
   existingVersions?: string[];
   onResetCurrentEntity?: () => void;
   onRemove?: (entity: string) => Promise<ServerActionResponse>;
-  onExport?: (fileType?: ImportFileType) => void;
   onImport?: (
     fileType: ImportFileType,
     file: ImportData,
@@ -66,8 +59,6 @@ interface Props {
     path: string,
     ignorePaths?: boolean,
   ) => void;
-  onMove?: (path: string) => void;
-  onDeleteBulk?: () => void;
   onClose: () => void;
   getAssetContext?: () => AssetsFolderContext;
   preselectedItems?: File[];
@@ -76,23 +67,17 @@ interface Props {
 const Modals: FC<Props> = ({
   entity,
   route,
-  initialPath,
   isModalOpen,
   modalType,
   createModal,
   duplicateModal,
   existingVersions,
   preselectedItems,
-  onExport,
   onImport,
-  onMove,
-  onDeleteBulk,
   onClose,
   getAssetContext,
   onRemove,
 }) => {
-  const t = useI18n();
-
   return (
     <>
       {isModalOpen && modalType === ModalType.create && createPortal(createModal, document.body)}
@@ -124,38 +109,6 @@ const Modals: FC<Props> = ({
           document.body,
         )}
       {isModalOpen && modalType === ModalType.duplicate && createPortal(duplicateModal, document.body)}
-      {isModalOpen &&
-        modalType === ModalType.move &&
-        createPortal(
-          <FilePathModal
-            modalTitle={t(BasicI18nKey.MoveToFolder)}
-            isModalOpen={isModalOpen}
-            onClose={onClose}
-            onApply={onMove as () => void}
-            initialPath={initialPath}
-            context={getAssetContext}
-          />,
-          document.body,
-        )}
-      {isModalOpen &&
-        modalType === ModalType.deleteBulk &&
-        createPortal(
-          <DeleteFolder
-            view={route}
-            isModalOpen={isModalOpen}
-            onClose={onClose}
-            onApply={onDeleteBulk}
-            context={getAssetContext}
-            isBulkDelete={true}
-          />,
-          document.body,
-        )}
-      {isModalOpen &&
-        modalType === ModalType.export &&
-        createPortal(
-          <ExportModal route={route} isModalOpen={isModalOpen} onClose={onClose} onApply={onExport} />,
-          document.body,
-        )}
     </>
   );
 };

@@ -94,3 +94,11 @@ export const extractVersionByPath = (path: string) => {
   const match = path.match(/__(.+)$/);
   return match ? match[1] : null;
 };
+
+export const getPathFromUrl = (url?: string): string => {
+  if (!url) {
+    return '';
+  }
+
+  return decodeURIComponent(url.replace(/^files\//, ''));
+};

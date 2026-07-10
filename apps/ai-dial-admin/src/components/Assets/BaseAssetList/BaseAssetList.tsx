@@ -254,12 +254,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
                 getCreateNotificationDescription(view, `${asset.name}__${asset.version}`, t),
               ),
             );
-            router.push(
-              getUrnForEntity(view, {
-                name: asset.name,
-                path: asset.path,
-              }),
-            );
+            router.push(getUrnForEntity(view, { name: asset.name, version: asset.version, folderId: folderPath }));
           }
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));

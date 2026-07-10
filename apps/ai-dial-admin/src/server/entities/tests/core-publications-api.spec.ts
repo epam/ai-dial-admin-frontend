@@ -135,6 +135,58 @@ describe('Server :: CorePublicationsApi', () => {
     expect(JSON.parse((fetch.mock.calls[1][1] as RequestInit).body as string)).toEqual({ url: 'publications/p/2' });
   });
 
+  test('createPublication posts targetFolder/resources/rules to the create op', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ success: true }));
+
+    await instance.createPublication(
+      TOKEN_MOCK,
+      'public/folder/',
+      [{ action: 'DELETE', targetUrl: 'prompts/public/folder/p__1' } as never],
+      [{ source: 'title', function: 'equal', targets: ['x'] } as never],
+    );
+
+    const [url, init] = fetch.mock.calls[0];
+    expect(url).toContain('/v1/ops/publication/create');
+    expect(JSON.parse((init as RequestInit).body as string)).toEqual({
+      targetFolder: 'public/folder/',
+      resources: [{ action: 'DELETE', targetUrl: 'prompts/public/folder/p__1' }],
+      rules: [{ source: 'title', function: 'equal', targets: ['x'] }],
+    });
+  });
+
+  test('ruleList posts the folder url to the rule/list op and returns the rules map', async () => {
+    fetch.mockResponseOnce(
+      JSON.stringify({ rules: { 'public/folder/': [{ source: 'title', function: 'equal', targets: ['x'] }] } }),
+      JSON_HEADERS,
+    );
+
+    const result = await instance.ruleList(TOKEN_MOCK, 'public/folder/');
+
+    const [url, init] = fetch.mock.calls[0];
+    expect(url).toContain('/v1/ops/publication/rule/list');
+    expect(JSON.parse((init as RequestInit).body as string)).toEqual({ url: 'public/folder/' });
+    expect(result.success).toBe(true);
+    expect(result.response?.rules).toEqual({
+      'public/folder/': [{ source: 'title', function: 'equal', targets: ['x'] }],
+    });
+  });
+
+  test('createPublication then approvePublication chain (integration-style)', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ success: true }));
+    fetch.mockResponseOnce(JSON.stringify({ success: true }));
+
+    const createResult = await instance.createPublication(TOKEN_MOCK, 'public/folder/', [
+      { action: 'DELETE', targetUrl: 'prompts/public/folder/p__1' } as never,
+    ]);
+    expect(createResult.success).toBe(true);
+
+    const approveResult = await instance.approvePublication(TOKEN_MOCK, 'folder/');
+    expect(approveResult.success).toBe(true);
+
+    expect(fetch.mock.calls[0][0]).toContain('/v1/ops/publication/create');
+    expect(fetch.mock.calls[1][0]).toContain('/v1/ops/publication/approve');
+  });
+
   test('updatePublication recalculates targets, posts the dto, and PUTs each resource', async () => {
     fetch.mockResponse(JSON.stringify({ success: true }));
     (clients.updateAsset as ReturnType<typeof vi.fn>).mockResolvedValue({ success: true });

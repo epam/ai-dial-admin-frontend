@@ -3,15 +3,15 @@
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { NotificationVariant, DialNotification } from '@epam/ai-dial-ui-kit';
+import { DialNotification, NotificationVariant } from '@epam/ai-dial-ui-kit';
 
 import { getRules } from '@/src/app/[lang]/folders-storage/actions';
 import { signInToolset, signOutToolset } from '@/src/app/[lang]/toolsets/actions';
 import { updatePublication } from '@/src/app/actions/publications';
+import ResourceAuthButtons from '@/src/components/Assets/Resources/Auth/ResourceAuthButtons';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import PublicationsHeader from '@/src/components/EntityHeaderControls/PublicationsHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
-import AuthButtons from '@/src/components/Toolsets/Auth/AuthButtons';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { PublicationsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -216,7 +216,7 @@ const PublicationView = <T extends Publication>({ view, publication, application
           !isChanged &&
           toolset.authSettings?.authenticationType &&
           toolset.authSettings?.authenticationType !== ToolsetAuthType.NONE && (
-            <AuthButtons
+            <ResourceAuthButtons
               selectedToolset={toolset}
               oAuthCode={oAuthCode}
               publicationName={publication.requestName}

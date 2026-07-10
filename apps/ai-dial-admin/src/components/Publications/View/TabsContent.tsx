@@ -17,7 +17,7 @@ import { PromptFolderProvider } from '@/src/context/assets/PromptFolderContext';
 import { ToolsetFolderProvider } from '@/src/context/assets/ToolsetsFolderContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { DialApplicationResource } from '@/src/models/dial/application-resource';
+import { DialApplicationResource } from '@/src/models/dial/resource';
 import { DialConversation } from '@/src/models/dial/conversation';
 import {
   ApplicationPublication,

@@ -12,11 +12,11 @@ import {
   signOutToolset,
   updateToolset,
 } from '@/src/app/[lang]/assets-toolsets/actions';
+import ResourceAuthButtons from '@/src/components/Assets/Resources/Auth/ResourceAuthButtons';
 import { addNewVersion, getEntityForUpdate, getIsNeedToMove } from '@/src/components/Assets/utils';
 import AssetHeader from '@/src/components/EntityHeaderControls/AssetHeader';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
-import AuthButtons from '@/src/components/Toolsets/Auth/AuthButtons';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { useAppContext } from '@/src/context/AppContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
@@ -153,7 +153,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
         addedVersions={addedVersions}
         onChangeAddedVersion={setAddedVersions}
       >
-        <AuthButtons
+        <ResourceAuthButtons
           view={ApplicationRoute.AssetsToolsets}
           selectedToolset={selectedToolset}
           signInToolset={signInToolset}

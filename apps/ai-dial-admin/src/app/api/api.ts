@@ -1,7 +1,8 @@
-import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { AnalyticsDataApi } from '@/src/server/analytics/analytics-data-api';
+import { AssetApi } from '@/src/server/core/asset-api';
 import { BucketApi } from '@/src/server/core/bucket-api';
 import { FilesCoreApi } from '@/src/server/core/files-core-api';
+import { ToolsetOpsApi } from '@/src/server/core/toolset-ops-api';
 import { DeploymentAuditApi } from '@/src/server/deployments/audit-api';
 import { DeploymentConfigApi } from '@/src/server/deployments/config';
 import { ContainersApi } from '@/src/server/deployments/containers';
@@ -179,12 +180,26 @@ export const filesCoreApi = new FilesCoreApi({
   host: process.env.DIAL_CORE_API_URL,
 });
 
-// Publications talk to DIAL Core directly. Per-resource enrichment (asset get/put)
-// is still delegated to the admin BE in this phase (migrates with assets in Phase 2).
+// Generic direct-to-Core client for application-resource, toolset-resource, conversation,
+// and prompt (migrate-conversations-to-core is the first consumer; the other three types
+// switch over in their own changes).
+export const assetApi = new AssetApi({
+  host: process.env.DIAL_CORE_API_URL,
+});
+
+// Toolset-only Core operations (discovered-tools, sign-in, sign-out) with no equivalent
+// on the other three versioned types, so they don't fit the generic AssetApi.
+export const toolsetOpsApi = new ToolsetOpsApi({
+  host: process.env.DIAL_CORE_API_URL,
+});
+
+// Publications talk to DIAL Core directly, including per-resource enrichment (asset get/put)
+// for the four versioned types, now that the assets→Core migration has landed AssetApi.
+// File resources were already Core-native via filesCoreApi since Phase 1.
 const publicationEnrichmentClients: EnrichmentClients = {
-  getAsset: (token, path, type, etag) => assetsApi.getAssetWithEtag(token, path, type, etag),
+  getAsset: (token, path, type, etag) => assetApi.getMergedWithEtag(token, type, path, etag),
   updateAsset: (token, asset, type, etag) =>
-    assetsApi.updateAssetWithEtag(token, asset as AssetWithVersion, type, etag),
+    assetApi.put(token, type, (asset as { path: string }).path, asset, { etag }),
   getBucket: (token) => bucketApi.getBucket(token),
   getFileMetadata: (token, path) => filesCoreApi.getFileMetadata(token, path),
   uploadFile: (token, path, file) => filesCoreApi.uploadFile(token, path, file),

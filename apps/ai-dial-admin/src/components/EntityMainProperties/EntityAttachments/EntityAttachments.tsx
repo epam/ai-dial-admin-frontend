@@ -1,30 +1,37 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { DialNumberInput } from '@epam/ai-dial-ui-kit';
 
 import AttachmentInput from '@/src/components/Common/AttachmentInput/AttachmentInput';
 import { AttachmentsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
-import { EntityAttachment } from '@/src/models/dial/base-entity';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { getMaxAttachmentError } from '@/src/utils/validation/get-max-attachment-error';
 import { mimeMapping } from './constants';
 
-interface Props {
-  entity: EntityAttachment;
-  onChangeEntity: (entity: EntityAttachment) => void;
+interface Props<T> {
+  entity: T;
+  onChangeEntity: (entity: T) => void;
+  isAsset?: boolean;
 }
 
-const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
+const EntityAttachments = <T extends object>({ entity, onChangeEntity, isAsset }: Props<T>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
+  const maxAttachmentsKey = isAsset ? 'max_input_attachments' : 'maxInputAttachments';
+  const attachmentTypesKey = isAsset ? 'input_attachment_types' : 'inputAttachmentTypes';
+
+  const record = entity as Record<string, unknown>;
+  const maxInputAttachments = record[maxAttachmentsKey] as number | string | undefined;
+  const inputAttachmentTypes = record[attachmentTypesKey] as string[] | undefined;
+
   const { dispatch } = useSaveValidationContext();
   const error = useMemo(() => {
-    return getMaxAttachmentError(entity.maxInputAttachments, t);
-  }, [t, entity.maxInputAttachments]);
+    return getMaxAttachmentError(maxInputAttachments, t);
+  }, [t, maxInputAttachments]);
 
   useEffect(() => {
     dispatch({ type: ValidationActionType.SetField, field: 'maxRetryAttempts', isValid: !error });
@@ -32,43 +39,43 @@ const EntityAttachments: FC<Props> = ({ entity, onChangeEntity }) => {
 
   const onChangeAttachmentMax = useCallback(
     (value?: number | string) => {
-      onChangeEntity({ ...entity, maxInputAttachments: value });
+      onChangeEntity({ ...entity, [maxAttachmentsKey]: value } as T);
     },
-    [entity, onChangeEntity],
+    [entity, onChangeEntity, maxAttachmentsKey],
   );
 
   const onChangeAttachmentTypes = useCallback(
     (types?: string[]) => {
       if (types) {
-        onChangeEntity({ ...entity, inputAttachmentTypes: types });
+        onChangeEntity({ ...entity, [attachmentTypesKey]: types } as T);
       } else {
         onChangeEntity({
           ...entity,
-          maxInputAttachments: void 0,
-          inputAttachmentTypes: void 0,
-        });
+          [maxAttachmentsKey]: void 0,
+          [attachmentTypesKey]: void 0,
+        } as T);
       }
     },
-    [entity, onChangeEntity],
+    [entity, onChangeEntity, maxAttachmentsKey, attachmentTypesKey],
   );
 
   return (
     <div className="flex flex-col gap-y-8">
       <AttachmentInput
-        initialValues={entity.inputAttachmentTypes}
+        initialValues={inputAttachmentTypes}
         label={t(AttachmentsI18nKey.Attachments)}
         placeholder={t(EntityPlaceholdersI18nKey.AttachmentsTypes)}
         availableItems={mimeMapping}
         onChange={(values) => onChangeAttachmentTypes(values)}
       />
-      {!!entity.inputAttachmentTypes?.length && (
+      {!!inputAttachmentTypes?.length && (
         <DialNumberInput
           containerClassName="w-[180px]"
           disabled={isReadOnlyAdmin}
           id="maxAttachment"
           labelProps={{ label: t(AttachmentsI18nKey.MaxNumber) }}
           placeholder={t(EntityPlaceholdersI18nKey.Number)}
-          value={entity.maxInputAttachments}
+          value={maxInputAttachments}
           onChange={onChangeAttachmentMax}
           error={error}
           invalid={!!error}

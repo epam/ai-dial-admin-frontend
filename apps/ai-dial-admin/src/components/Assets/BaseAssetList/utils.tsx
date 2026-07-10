@@ -140,7 +140,7 @@ export const getEmptyAsset = (view: ApplicationRoute, path: string): AssetWithVe
         ...baseEmptyAsset,
         endpoint: 'http://mock',
         displayName: TEMP_FOLDER,
-        transport: ToolsetTransport.HTTP,
+        transport: ToolsetTransport.HTTP.toUpperCase() as ToolsetTransport,
       };
     default:
       return baseEmptyAsset;

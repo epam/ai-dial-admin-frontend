@@ -1,7 +1,12 @@
-import { FC } from 'react';
+import { FC, useMemo } from 'react';
 
 import { DialInput, DialSwitch } from '@epam/ai-dial-ui-kit';
+import classNames from 'classnames';
 
+import FoldersStorageLabel from '@/src/components/Assets/Header/FolderStorage';
+import ResourceAuthentication from '@/src/components/Assets/Resources/Auth/ResourceAuthentication';
+import ResourceAuthHeader from '@/src/components/Assets/Resources/Auth/ResourceAuthHeader';
+import ResourceInfoHeader from '@/src/components/Assets/Resources/ResourceInfoHeader';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import IconControl from '@/src/components/BaseControls/Icon';
@@ -12,95 +17,102 @@ import VersionControl from '@/src/components/BaseControls/Version';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import { getAssetCreateFolderHandler } from '@/src/components/EntityListView/utils';
 import ToolsetEndpoint from '@/src/components/SourceField/Endpoints/ToolsetEndpoint';
-import Authentication from '@/src/components/Toolsets/Auth/Authentication';
 import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
-import { AssetToolset } from '@/src/models/dial/deployment-asset';
-import { Toolset, ToolsetAuthType } from '@/src/models/dial/toolset';
+import { DialToolsetResource, ToolsetAuthType } from '@/src/models/dial/resource';
+import { Toolset } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
-  selectedToolset: AssetToolset;
-  onChange: (asset: AssetToolset) => void;
+  selectedToolset: DialToolsetResource;
+  onChange: (asset: DialToolsetResource) => void;
   isPublication?: boolean;
 }
 
-const Properties: FC<Props> = ({ selectedToolset, onChange, isPublication }) => {
+const ToolsetAssetProperties: FC<Props> = ({ selectedToolset, onChange, isPublication }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
+  const headerPostfix = useMemo(() => {
+    return (
+      <>
+        <ResourceAuthHeader toolset={selectedToolset} />
+        <FoldersStorageLabel asset={selectedToolset} />
+      </>
+    );
+  }, [selectedToolset]);
+
   return (
-    <div className="size-full flex flex-col gap-y-8">
-      {isPublication && (
-        <IdControl entity={selectedToolset} onChangeEntity={onChange} checkEmptySymbols={false} isFullWidth={false} />
-      )}
-      <DisplayNameControl
-        displayName={selectedToolset.displayName}
-        required
-        isFullWidth={false}
-        onChange={(displayName) => onChange({ ...selectedToolset, displayName })}
-      />
-      {isPublication && (
-        <VersionControl
-          containerClassName="w-[175px]"
-          version={selectedToolset.version}
-          onChange={(version?: string) =>
-            onChange?.({ ...selectedToolset, version: version || '', displayVersion: version || '' })
-          }
+    <div className="flex flex-col">
+      {!isPublication && <ResourceInfoHeader entity={selectedToolset} postfix={headerPostfix} />}
+      <div className={classNames('flex flex-col gap-y-8', !isPublication && 'mt-8')}>
+        {isPublication && (
+          <IdControl entity={selectedToolset} onChangeEntity={onChange} checkEmptySymbols={false} isFullWidth={false} />
+        )}
+        <DisplayNameControl
+          displayName={selectedToolset.display_name}
+          required
+          isFullWidth={false}
+          onChange={(display_name) => onChange({ ...selectedToolset, display_name })}
         />
-      )}
-      <DescriptionControl entity={selectedToolset} onChangeEntity={onChange} isFullWidth={false} />
+        {isPublication && (
+          <VersionControl
+            containerClassName="w-[175px]"
+            version={selectedToolset.version}
+            onChange={(version?: string) =>
+              onChange?.({ ...selectedToolset, version: version || '', display_version: version || '' })
+            }
+          />
+        )}
+        <DescriptionControl entity={selectedToolset} onChangeEntity={onChange} isFullWidth={false} />
 
-      <DialInput
-        containerClassName={STANDARD_CONTROL_WIDTH}
-        id="provider"
-        labelProps={{ label: t(EntityFieldsI18nKey.provider) }}
-        placeholder={t(EntityPlaceholdersI18nKey.Provider)}
-        value={selectedToolset.provider}
-        onChange={(provider?: string) => onChange({ ...selectedToolset, provider })}
-        disabled={isReadOnlyAdmin}
-      />
-
-      <IconControl
-        iconUrl={selectedToolset.iconUrl}
-        onChange={(icon) => onChange({ ...selectedToolset, iconUrl: icon })}
-      />
-      <TopicsControl entity={selectedToolset} onChange={onChange} view={ApplicationRoute.AssetsToolsets} />
-
-      {!isPublication && (
-        <FilePath
-          value={selectedToolset.folderId}
-          label={t(EntitiesI18nKey.FolderStorage)}
-          modalTitle={t(BasicI18nKey.MoveToFolder)}
-          placeholder={t(EntityPlaceholdersI18nKey.Path)}
-          onChange={(folderId) => onChange?.({ ...selectedToolset, folderId })}
-          context={useToolsetFolder}
+        <DialInput
+          containerClassName={STANDARD_CONTROL_WIDTH}
+          id="provider"
+          labelProps={{ label: t(EntityFieldsI18nKey.provider) }}
+          placeholder={t(EntityPlaceholdersI18nKey.Provider)}
+          value={selectedToolset.provider}
+          onChange={(provider?: string) => onChange({ ...selectedToolset, provider })}
           disabled={isReadOnlyAdmin}
-          onCreateFolder={getAssetCreateFolderHandler(ApplicationRoute.AssetsToolsets)}
-          view={ApplicationRoute.AssetsToolsets}
         />
-      )}
-      <ToolsetEndpoint entity={selectedToolset} onChange={onChange as (entity: Toolset) => void} />
-      <Authentication
-        toolset={selectedToolset}
-        view={ApplicationRoute.AssetsToolsets}
-        onChange={onChange as (entity: Toolset) => void}
-      />
-      <DialSwitch
-        isOn={selectedToolset.forwardPerRequestKey}
-        label={t(EntityFieldsI18nKey.forwardPerRequestKey)}
-        switchId="forwardPerRequestKey"
-        disabled={selectedToolset.authSettings?.authenticationType === ToolsetAuthType.API_KEY || isReadOnlyAdmin}
-        onChange={(value: boolean) => {
-          onChange({ ...selectedToolset, forwardPerRequestKey: value });
-        }}
-      />
-      <MaxRetryAttempts entity={selectedToolset} onChangeEntity={onChange} />
+
+        <IconControl
+          iconUrl={selectedToolset.icon_url}
+          onChange={(icon_url) => onChange({ ...selectedToolset, icon_url })}
+        />
+        <TopicsControl entity={selectedToolset} onChange={onChange} view={ApplicationRoute.AssetsToolsets} />
+
+        {!isPublication && (
+          <FilePath
+            value={selectedToolset.folderId}
+            label={t(EntitiesI18nKey.FolderStorage)}
+            modalTitle={t(BasicI18nKey.MoveToFolder)}
+            placeholder={t(EntityPlaceholdersI18nKey.Path)}
+            onChange={(folderId) => onChange?.({ ...selectedToolset, folderId })}
+            context={useToolsetFolder}
+            disabled={isReadOnlyAdmin}
+            onCreateFolder={getAssetCreateFolderHandler(ApplicationRoute.AssetsToolsets)}
+            view={ApplicationRoute.AssetsToolsets}
+          />
+        )}
+        <ToolsetEndpoint entity={selectedToolset} onChange={onChange as (entity: Toolset) => void} isAsset />
+        <ResourceAuthentication toolset={selectedToolset} onChange={onChange} />
+        <DialSwitch
+          isOn={selectedToolset.forward_per_request_key}
+          label={t(EntityFieldsI18nKey.forwardPerRequestKey)}
+          switchId="forwardPerRequestKey"
+          disabled={selectedToolset.auth_settings?.authentication_type === ToolsetAuthType.API_KEY || isReadOnlyAdmin}
+          onChange={(value: boolean) => {
+            onChange({ ...selectedToolset, forward_per_request_key: value });
+          }}
+        />
+        <MaxRetryAttempts entity={selectedToolset} onChangeEntity={onChange} isAsset />
+      </div>
     </div>
   );
 };
 
-export default Properties;
+export default ToolsetAssetProperties;

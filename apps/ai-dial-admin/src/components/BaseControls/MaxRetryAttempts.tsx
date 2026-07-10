@@ -9,12 +9,20 @@ interface Props<T> {
   entity?: T;
   disabled?: boolean;
   onChangeEntity: (entity: T) => void;
+  isAsset?: boolean;
 }
 
-const MaxRetryAttempts = <T extends { maxRetryAttempts?: number }>({ entity, onChangeEntity, disabled }: Props<T>) => {
+const MaxRetryAttempts = <T extends { maxRetryAttempts?: number } | { max_retry_attempts?: number }>({
+  entity,
+  onChangeEntity,
+  disabled,
+  isAsset,
+}: Props<T>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const isReadonly = disabled || isReadOnlyAdmin;
+
+  const fieldKey = isAsset ? 'max_retry_attempts' : 'maxRetryAttempts';
 
   const items: SelectOption[] = [
     { value: '1', label: '1' },
@@ -24,12 +32,12 @@ const MaxRetryAttempts = <T extends { maxRetryAttempts?: number }>({ entity, onC
     { value: '5', label: '5' },
   ];
 
-  const activeMaxAttempts = entity?.maxRetryAttempts?.toString() || '1';
+  const activeMaxAttempts = (entity as Record<string, number | undefined>)?.[fieldKey]?.toString() || '1';
   const onChange = useCallback(
     (value: string) => {
-      onChangeEntity({ ...entity, maxRetryAttempts: Number(value) } as T);
+      onChangeEntity({ ...entity, [fieldKey]: Number(value) } as T);
     },
-    [entity, onChangeEntity],
+    [entity, onChangeEntity, fieldKey],
   );
 
   return (

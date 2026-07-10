@@ -32,8 +32,6 @@ interface Props<T> {
   showColumnsButton?: boolean;
   onCreateEntity?: (entity: T) => Promise<ServerActionResponse>;
   onRemoveEntity: (entity: string) => Promise<ServerActionResponse>;
-  onMoveFiles?: (paths: string[], newPath: string) => Promise<ServerActionResponse[]>;
-  onBulkDelete?: (paths: { path: string }[]) => Promise<ServerActionResponse>;
   getAssetContext?: () => AssetsFolderContext;
 }
 
@@ -47,8 +45,6 @@ const BaseEntityList = <T extends object>({
   versionsMap,
   onCreateEntity,
   onRemoveEntity,
-  onMoveFiles,
-  onBulkDelete,
   showColumnsButton,
   getAssetContext,
 }: Props<T>) => {
@@ -67,7 +63,6 @@ const BaseEntityList = <T extends object>({
   const [showColumnsPanel, setShowColumnsPanel] = useState(false);
 
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
-  const [isBulkView, setIsBulkView] = useState(false);
 
   const onGridReady = useCallback(({ api }: GridReadyEvent) => {
     setGridApi(api);
@@ -143,9 +138,7 @@ const BaseEntityList = <T extends object>({
         showColumnsPanel={showColumnsPanel}
         toggleColumnsPanel={toggleColumnsPanel}
         view={route}
-        context={getAssetContext}
         onGridReady={onGridReady}
-        isBulkView={isBulkView}
         getHref={(data) => getUrnForEntity(route, data)}
       >
         <EntityListHeaderButtons
@@ -158,8 +151,6 @@ const BaseEntityList = <T extends object>({
           toggleColumnsPanel={toggleColumnsPanel}
           createEntity={isReadOnlyAdmin ? undefined : onCreateEntity}
           context={getAssetContext}
-          setIsBulkView={setIsBulkView}
-          isBulkView={isBulkView}
           gridApi={gridApi}
           isReadOnlyAdmin={isReadOnlyAdmin}
         />
@@ -171,17 +162,12 @@ const BaseEntityList = <T extends object>({
         versionsMap={versionsMap}
         onCreateEntity={isReadOnlyAdmin ? undefined : onCreateEntity}
         onRemoveEntity={onRemoveEntity}
-        onMoveFiles={onMoveFiles}
-        onBulkDelete={onBulkDelete}
-        getAssetContext={getAssetContext}
         isModalOpen={isModalOpen}
         onChangeIsModalOpen={setIsModalOpen}
         modalType={modalType}
         onChangeModalType={setModalType}
         currentEntity={currentEntity}
         onChangeCurrentEntity={setCurrentEntity}
-        isBulkView={isBulkView}
-        onChangeIsBulkView={setIsBulkView}
       />
     </>
   );

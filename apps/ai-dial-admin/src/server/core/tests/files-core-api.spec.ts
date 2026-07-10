@@ -37,4 +37,24 @@ describe('Server :: Core :: FilesCoreApi', () => {
     expect((init as RequestInit).method).toBe('PUT');
     expect((init as RequestInit).body).toBeInstanceOf(FormData);
   });
+
+  test('uploadFile defaults to overwrite semantics (no conflict header)', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ success: true }));
+    const file = new File(['data'], 'doc.txt', { type: 'text/plain' });
+
+    await instance.uploadFile(TOKEN_MOCK, 'bucket/doc.txt', file);
+
+    const [, init] = fetch.mock.calls[0];
+    expect((init as RequestInit).headers).not.toHaveProperty('If-None-Match');
+  });
+
+  test('uploadFile with overwrite: false sends If-None-Match: *', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ success: true }));
+    const file = new File(['data'], 'doc.txt', { type: 'text/plain' });
+
+    await instance.uploadFile(TOKEN_MOCK, 'bucket/doc.txt', file, { overwrite: false });
+
+    const [, init] = fetch.mock.calls[0];
+    expect((init as RequestInit).headers).toMatchObject({ 'If-None-Match': '*' });
+  });
 });
