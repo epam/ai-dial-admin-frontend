@@ -14,3 +14,36 @@ export const ACCURACY_COLOR_MAP: Record<number, { bg: string; border: string }> 
 export const ACCURACY_THRESHOLDS = Object.keys(ACCURACY_COLOR_MAP)
   .map(Number)
   .sort((a, b) => a - b);
+
+export const DELTA_NEGATIVE_COLOR_MAP: Record<number, { bg: string; border: string }> = {
+  [-0.25]: { bg: '#2b0f04', border: '#b5552f' },
+  [-0.5]: { bg: '#481719', border: '#a35638' },
+  [-0.75]: { bg: '#6c210d', border: '#eb503e' },
+  [-1.0]: { bg: '#820610', border: '#ff4e50' },
+};
+
+export const DELTA_POSITIVE_COLOR_MAP: Record<number, { bg: string; border: string }> = {
+  0.25: { bg: '#1e2a16', border: '#7fa666' },
+  0.5: { bg: '#283f16', border: '#378520' },
+  0.75: { bg: '#30511b', border: '#4a950e' },
+  1.0: { bg: '#32640b', border: '#30e070' },
+};
+
+export const DELTA_NEUTRAL_SEGMENT = {
+  bg: 'var(--bg-layer-2, #161b2d)',
+  border: 'var(--stroke-secondary, #242c42)',
+};
+
+export const DELTA_NEGATIVE_THRESHOLDS = Object.keys(DELTA_NEGATIVE_COLOR_MAP)
+  .map(Number)
+  .sort((a, b) => a - b);
+
+export const DELTA_POSITIVE_THRESHOLDS = Object.keys(DELTA_POSITIVE_COLOR_MAP)
+  .map(Number)
+  .sort((a, b) => a - b);
+
+export const DELTA_SCALE_THRESHOLDS = [
+  ...DELTA_NEGATIVE_THRESHOLDS.slice().reverse(),
+  0,
+  ...DELTA_POSITIVE_THRESHOLDS,
+] as const;

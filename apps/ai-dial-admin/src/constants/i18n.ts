@@ -1926,6 +1926,8 @@ export enum RunsI18nKey {
   RunCompareTabHeatMap = 'Runs.RunCompareTabHeatMap',
   RunCompareTabExecutionResults = 'Runs.RunCompareTabExecutionResults',
   RunCompareHeatMapMetricsAll = 'Runs.RunCompareHeatMapMetricsAll',
+  RunCompareHeatMapMetricsPrefix = 'Runs.RunCompareHeatMapMetricsPrefix',
+  RunCompareHeatMapMetricsOptionAll = 'Runs.RunCompareHeatMapMetricsOptionAll',
   RunCompareColorDisplay = 'Runs.RunCompareColorDisplay',
   RunCompareAbsoluteValues = 'Runs.RunCompareAbsoluteValues',
   RunCompareDelta = 'Runs.RunCompareDelta',
@@ -1938,6 +1940,12 @@ export enum RunsI18nKey {
   RunCompareRows = 'Runs.RunCompareRows',
   RunCompareTable = 'Runs.RunCompareTable',
   RunComparePivot = 'Runs.RunComparePivot',
+  RunCompareHeatMapTooltipTestCase = 'Runs.RunCompareHeatMapTooltipTestCase',
+  RunCompareHeatMapTooltipMetric = 'Runs.RunCompareHeatMapTooltipMetric',
+  RunCompareHeatMapTooltipInput = 'Runs.RunCompareHeatMapTooltipInput',
+  RunCompareHeatMapTooltipRun = 'Runs.RunCompareHeatMapTooltipRun',
+  RunCompareHeatMapTooltipScore = 'Runs.RunCompareHeatMapTooltipScore',
+  RunCompareHeatMapTooltipDelta = 'Runs.RunCompareHeatMapTooltipDelta',
 }
 
 export enum ExportRunI18nKey {
