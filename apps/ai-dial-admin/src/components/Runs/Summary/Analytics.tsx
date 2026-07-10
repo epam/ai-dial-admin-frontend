@@ -31,6 +31,8 @@ interface Props {
   run: Run;
   /** Selectable metric output fields (shared with the parent); drives the metric dropdown. */
   metricOptions: MetricOption[];
+  selectedMetricName: string | null;
+  onSelectMetric: (name: string) => void;
 }
 
 const StatusDot: FC<{ className: string; count: number; label: string }> = ({ className, count, label }) => (
@@ -42,11 +44,10 @@ const StatusDot: FC<{ className: string; count: number; label: string }> = ({ cl
   </span>
 );
 
-const Analytics: FC<Props> = ({ run, metricOptions }) => {
+const Analytics: FC<Props> = ({ run, metricOptions, selectedMetricName, onSelectMetric }) => {
   const t = useI18n();
   const [statusCounts, setStatusCounts] = useState<TestCaseStatusCounts | null>(null);
   const [avgRunTimeMs, setAvgRunTimeMs] = useState<number | null>(null);
-  const [selectedMetricName, setSelectedMetricName] = useState<string | null>(null);
   const [overallScore, setOverallScore] = useState<number | null>(null);
   const [isOverallScoreLoading, setIsOverallScoreLoading] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -76,11 +77,6 @@ const Analytics: FC<Props> = ({ run, metricOptions }) => {
     };
   }, [run?.id]);
 
-  // Reset the metric selection whenever the shared options change (e.g. a new run).
-  useEffect(() => {
-    setSelectedMetricName(null);
-  }, [metricOptions]);
-
   useEffect(() => {
     const option = metricOptions.find((metric) => metric.name === selectedMetricName);
     if (!run?.id || !option) {
@@ -108,7 +104,7 @@ const Analytics: FC<Props> = ({ run, metricOptions }) => {
     [metricOptions],
   );
 
-  const onMetricChange = useCallback((value: string | string[]) => setSelectedMetricName(value as string), []);
+  const onMetricChange = useCallback((value: string | string[]) => onSelectMetric(value as string), [onSelectMetric]);
 
   if (!isLoaded || !statusCounts) {
     return (
