@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest';
 
 import HeatMapValueCellRenderer from '@/src/components/Runs/Compare/HeatMap/HeatMapValueCellRenderer';
 import { HEAT_MAP_VALUE_TEXT_MIN_WIDTH } from '@/src/components/Runs/Compare/HeatMap/constants';
-import { HeatMapRowType } from '@/src/components/Runs/Compare/HeatMap/models';
+import { HeatMapColorDisplayMode, HeatMapRowType } from '@/src/components/Runs/Compare/HeatMap/models';
 
 const metricRow = {
   id: 'metric-1',
@@ -44,6 +44,34 @@ describe('HeatMapValueCellRenderer', () => {
     );
 
     expect(screen.getByText('—')).toBeInTheDocument();
+  });
+
+  test('shows signed delta values in delta mode', () => {
+    render(
+      <HeatMapValueCellRenderer
+        data={{ ...metricRow, values: { tc_case1: 0.3 } }}
+        column={column(HEAT_MAP_VALUE_TEXT_MIN_WIDTH)}
+        value="+0.300"
+        colorDisplayMode={HeatMapColorDisplayMode.Delta}
+        {...({} as never)}
+      />,
+    );
+
+    expect(screen.getByText('+0.300')).toBeInTheDocument();
+  });
+
+  test('shows zero with secondary text in delta mode', () => {
+    render(
+      <HeatMapValueCellRenderer
+        data={{ ...metricRow, values: { tc_case1: 0 } }}
+        column={column(HEAT_MAP_VALUE_TEXT_MIN_WIDTH)}
+        value="0"
+        colorDisplayMode={HeatMapColorDisplayMode.Delta}
+        {...({} as never)}
+      />,
+    );
+
+    expect(screen.getByText('0')).toHaveClass('text-secondary');
   });
 
   test('renders nothing in minified view for numeric values', () => {
