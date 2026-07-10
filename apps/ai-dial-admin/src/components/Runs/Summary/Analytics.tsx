@@ -1,38 +1,22 @@
 'use client';
 
 import classNames from 'classnames';
-import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, ReactNode, useEffect, useState } from 'react';
 
-import {
-  DialAnalyticsCard,
-  DialLoader,
-  DialSelect,
-  SelectOption,
-  SelectSize,
-  SelectVariant,
-} from '@epam/ai-dial-ui-kit';
+import { DialAnalyticsCard, DialLoader } from '@epam/ai-dial-ui-kit';
 
 import { executeStructuredQuery } from '@/src/app/[lang]/runs/actions';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Run } from '@/src/models/evaluation/run';
 import { STATUS_DOT_CLASSES } from './constants';
-import { MetricOption, TestCaseStatusCounts } from './models';
-import {
-  buildAvgRunTimeQuery,
-  buildOverallScoreQuery,
-  buildTestCasesStatusQuery,
-  parseAvgRunTimeMs,
-  parseOverallScore,
-  parseTestCaseStatusCounts,
-} from './utils';
+import { TestCaseStatusCounts } from './models';
+import { buildAvgRunTimeQuery, buildTestCasesStatusQuery, parseAvgRunTimeMs, parseTestCaseStatusCounts } from './utils';
 
 interface Props {
   run: Run;
-  /** Selectable metric output fields (shared with the parent); drives the metric dropdown. */
-  metricOptions: MetricOption[];
-  selectedMetricName: string | null;
-  onSelectMetric: (name: string) => void;
+  /** Run-level overall score from metric scores data; omitted while loading, null when absent. */
+  overallScore?: number | null;
 }
 
 const StatusDot: FC<{ className: string; count: number; label: string }> = ({ className, count, label }) => (
@@ -44,12 +28,10 @@ const StatusDot: FC<{ className: string; count: number; label: string }> = ({ cl
   </span>
 );
 
-const Analytics: FC<Props> = ({ run, metricOptions, selectedMetricName, onSelectMetric }) => {
+const Analytics: FC<Props> = ({ run, overallScore }) => {
   const t = useI18n();
   const [statusCounts, setStatusCounts] = useState<TestCaseStatusCounts | null>(null);
   const [avgRunTimeMs, setAvgRunTimeMs] = useState<number | null>(null);
-  const [overallScore, setOverallScore] = useState<number | null>(null);
-  const [isOverallScoreLoading, setIsOverallScoreLoading] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -77,35 +59,6 @@ const Analytics: FC<Props> = ({ run, metricOptions, selectedMetricName, onSelect
     };
   }, [run?.id]);
 
-  useEffect(() => {
-    const option = metricOptions.find((metric) => metric.name === selectedMetricName);
-    if (!run?.id || !option) {
-      setOverallScore(null);
-      setIsOverallScoreLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-    setIsOverallScoreLoading(true);
-    executeStructuredQuery(buildOverallScoreQuery(run.id, option)).then((result) => {
-      if (!cancelled) {
-        setOverallScore(parseOverallScore(result));
-        setIsOverallScoreLoading(false);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [run?.id, selectedMetricName, metricOptions]);
-
-  const metricSelectOptions = useMemo<SelectOption[]>(
-    () => metricOptions.map((metric) => ({ value: metric.name, label: metric.name })),
-    [metricOptions],
-  );
-
-  const onMetricChange = useCallback((value: string | string[]) => onSelectMetric(value as string), [onSelectMetric]);
-
   if (!isLoaded || !statusCounts) {
     return (
       <div className="flex h-24 items-center">
@@ -113,20 +66,6 @@ const Analytics: FC<Props> = ({ run, metricOptions, selectedMetricName, onSelect
       </div>
     );
   }
-
-  const overallScoreDescription: ReactNode = (
-    <div className="w-full">
-      <DialSelect
-        size={SelectSize.Sm}
-        variant={SelectVariant.Secondary}
-        options={metricSelectOptions}
-        value={selectedMetricName ?? undefined}
-        placeholder={t(RunsI18nKey.SelectMetric)}
-        disabled={metricSelectOptions.length === 0}
-        onChange={onMetricChange}
-      />
-    </div>
-  );
 
   const statusDescription: ReactNode = (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -138,14 +77,14 @@ const Analytics: FC<Props> = ({ run, metricOptions, selectedMetricName, onSelect
 
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap">
-      <DialAnalyticsCard
-        className="flex-1 sm:max-w-xs"
-        title={t(RunsI18nKey.OverallScore)}
-        value={overallScore != null ? String(overallScore) : undefined}
-        description={overallScoreDescription}
-        isLoading={isOverallScoreLoading}
-        error={metricSelectOptions.length === 0}
-      />
+      {overallScore != null && (
+        <DialAnalyticsCard
+          className="flex-1 sm:max-w-xs"
+          title={t(RunsI18nKey.OverallScore)}
+          value={String(overallScore)}
+          description={t(RunsI18nKey.OverallScoreDescription)}
+        />
+      )}
       <DialAnalyticsCard
         className="flex-1 sm:max-w-xs"
         title={t(RunsI18nKey.TestCasesPassed)}

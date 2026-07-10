@@ -30,7 +30,7 @@ import {
   METRIC_NAME_FIELD,
   METRIC_SCORE_NAME_FIELD,
   METRIC_SCORE_RESULTS_ENTITY,
-  OVERALL_SCORE_ALIAS,
+  OVERALL_METRIC_SCORE_NAME,
   RUN_ID_FIELD,
   VALUE_FIELD,
 } from './constants';
@@ -70,7 +70,7 @@ export const getMetricOutputFields = (outputSchema?: JSONSchema7): string[] => {
 };
 
 /**
- * Expands run metric snapshots into selectable Overall Score options — one per metric output field.
+ * Expands run metric snapshots into selectable Distribution options — one per metric output field.
  * `name` is the UI label (`<metric>.<field>`, e.g. `DeepEval: Answer Relevancy.score`); `field` is the
  * request path (`metric::<metric>::<field>`). Snapshots without a name/computation are skipped.
  */
@@ -91,30 +91,6 @@ export const toMetricOptions = (snapshots: MetricSnapshot[] | null): MetricOptio
   }
 
   return options;
-};
-
-/**
- * Query: average of a metric's score across a run's eval summaries, scoped to one computation.
- * Values are inlined (the public execute endpoint is paramless). Rows shape: `[{ value: number }]`.
- */
-export const buildOverallScoreQuery = (runId: string, option: MetricOption): StructuredQuery =>
-  aggregateQuery({
-    entity: EVAL_SUMMARIES_ENTITY,
-    filter: and([
-      eq(RUN_ID_FIELD, ValueType.Uuid, runId),
-      eq(COMPUTATION_ID_FIELD, ValueType.Uuid, option.computationId),
-    ]),
-    select: [col(fn('avg', [field(option.field)]), OVERALL_SCORE_ALIAS)],
-  });
-
-/** Reads the single overall-score value, rounded to three decimals, or null when absent. */
-export const parseOverallScore = (result: StructuredQueryResult | null): number | null => {
-  const raw = result?.rows?.[0]?.[OVERALL_SCORE_ALIAS];
-  if (raw == null) {
-    return null;
-  }
-  const num = Number(raw);
-  return Number.isFinite(num) ? Math.round(num * 1000) / 1000 : null;
 };
 
 /**
@@ -156,12 +132,20 @@ export const splitMetricName = (metricName: string): { group: string; bar: strin
 export const parseMetricScores = (result: StructuredQueryResult | null): MetricScoresData => {
   const statistics: string[] = [];
   const byStatistic: Record<string, MetricScoreGroup[]> = {};
+  let overallScore: number | null = null;
 
   for (const row of result?.rows ?? []) {
     const metricName = row[METRIC_NAME_FIELD];
     const statName = row[METRIC_SCORE_NAME_FIELD];
     const value = Number(row[VALUE_FIELD]);
     if (typeof metricName !== 'string' || typeof statName !== 'string' || !Number.isFinite(value)) {
+      continue;
+    }
+
+    if (statName === OVERALL_METRIC_SCORE_NAME) {
+      if (overallScore == null) {
+        overallScore = Math.round(value * 1000) / 1000;
+      }
       continue;
     }
 
@@ -180,7 +164,7 @@ export const parseMetricScores = (result: StructuredQueryResult | null): MetricS
     group.bars[barName] = Math.round(value * 1000) / 1000;
   }
 
-  return { statistics, byStatistic };
+  return { overallScore, statistics, byStatistic };
 };
 
 /**
