@@ -37,3 +37,9 @@ resolutions:
         'NPM::@vitest:ui:3\\.2\\.4'\\."
       reason: 'CANT_FIX_EXCEPTION'
       comment: 'The dependency has MIT license in github repo'
+license_choices:
+  package_license_choices:
+    - package_id: "NPM::jszip:3.10.1"
+      license_choices:
+        - given: "MIT OR GPL-3.0-or-later"
+          choice: "MIT"
