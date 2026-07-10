@@ -9,6 +9,7 @@ import {
   QuerySortDirection,
   QuerySortNulls,
   QueryValueType,
+  StructuredQuery,
 } from '@/src/models/analytics/query';
 
 export enum FilterNodeKind {
@@ -99,7 +100,20 @@ export interface SchemaPreviewRow {
 export enum QueryBuilderView {
   Form = 'form',
   Json = 'json',
+  Sql = 'sql',
 }
+
+// A query run request. Structured (Form/JSON views) posts a StructuredQuery to /execute; SQL posts
+// the editor text to /execute-sql. Discriminated so the result sidebar can branch the transport
+// while sharing all result rendering.
+export enum QueryRequestKind {
+  Structured = 'structured',
+  Sql = 'sql',
+}
+
+export type QueryRunRequest =
+  | { kind: QueryRequestKind.Structured; query: StructuredQuery }
+  | { kind: QueryRequestKind.Sql; sql: string };
 
 export enum QueryBuilderWarning {
   MissingAggregateAlias = 'MissingAggregateAlias',

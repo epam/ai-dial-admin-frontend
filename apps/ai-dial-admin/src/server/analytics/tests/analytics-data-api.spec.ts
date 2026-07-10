@@ -57,6 +57,19 @@ describe('Server :: AnalyticsDataApi', () => {
     );
   });
 
+  test('executeSqlAction POSTs { sql } to /v1/queries/execute-sql', async () => {
+    const sql = 'SELECT id FROM conversation LIMIT 10';
+    fetch.mockResponseOnce(JSON.stringify({ columns: ['id'], rows: [{ id: '1' }] }));
+
+    const res = await instance.executeSqlAction(sql, TOKEN_MOCK);
+
+    expect(res.success).toBe(true);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/queries/execute-sql'),
+      expect.objectContaining({ method: 'POST', body: JSON.stringify({ sql }) }),
+    );
+  });
+
   test('getEntities returns null on a failed response', async () => {
     fetch.mockResponseOnce('nope', { status: 500 });
 

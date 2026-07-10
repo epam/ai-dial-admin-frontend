@@ -5,7 +5,7 @@ import { FC, useEffect, useMemo, useState } from 'react';
 import { ColDef } from 'ag-grid-community';
 import { DialCloseButton, DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
-import { executeQuery } from '@/src/app/[lang]/query-builder/actions';
+import { executeQuery, executeSqlQuery } from '@/src/app/[lang]/query-builder/actions';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import StatChip from '@/src/components/Analytics/QueryBuilder/Result/StatChip';
 import { getResultColumns, getResultTotal } from '@/src/components/Analytics/QueryBuilder/utils/result';
@@ -13,14 +13,15 @@ import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
-import { StructuredQuery, StructuredQueryResult } from '@/src/models/analytics/query';
+import { StructuredQueryResult } from '@/src/models/analytics/query';
+import { QueryRequestKind, QueryRunRequest } from '@/src/models/analytics/query-builder';
 import { getErrorNotification } from '@/src/utils/notification';
 
 interface Props {
-  query: StructuredQuery;
+  request: QueryRunRequest;
 }
 
-const QueryResultSidebar: FC<Props> = ({ query }) => {
+const QueryResultSidebar: FC<Props> = ({ request }) => {
   const t = useI18n();
   const { sidebar } = useAppContext();
   const { showNotification } = useNotification();
@@ -28,13 +29,14 @@ const QueryResultSidebar: FC<Props> = ({ query }) => {
   const [isRunning, setIsRunning] = useState(true);
   const [result, setResult] = useState<StructuredQueryResult | null>(null);
 
-  const queryKey = useMemo(() => JSON.stringify(query), [query]);
+  const queryKey = useMemo(() => JSON.stringify(request), [request]);
 
   useEffect(() => {
     let cancelled = false;
     setIsRunning(true);
     (async () => {
-      const res = await executeQuery(query);
+      const res =
+        request.kind === QueryRequestKind.Sql ? await executeSqlQuery(request.sql) : await executeQuery(request.query);
       if (cancelled) return;
       if (res.success) {
         setResult(res.response ?? null);

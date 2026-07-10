@@ -1,6 +1,6 @@
 import { Token } from '@/src/models/auth';
 import { AnalyticsEntity, AnalyticsEntitySchema } from '@/src/models/analytics/entity';
-import { StructuredQuery, StructuredQueryResult } from '@/src/models/analytics/query';
+import { SqlQueryRequest, StructuredQuery, StructuredQueryResult } from '@/src/models/analytics/query';
 import { AnalyticsSchemaPatch, AnalyticsTable, CreateTableDto, WriteRowsDto } from '@/src/models/analytics/table';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { BaseApi } from '@/src/server/base-api';
@@ -8,6 +8,7 @@ import { BaseApi } from '@/src/server/base-api';
 export const QUERIES_URL = 'v1/queries';
 export const QUERIES_ENTITIES_URL = `${QUERIES_URL}/entities`;
 export const QUERIES_EXECUTE_URL = `${QUERIES_URL}/execute`;
+export const QUERIES_EXECUTE_SQL_URL = `${QUERIES_URL}/execute-sql`;
 export const QUERIES_ENTITY_SCHEMA_URL = (name: string): string =>
   `${QUERIES_ENTITIES_URL}/schema/${encodeURIComponent(name)}`;
 export const QUERIES_ENTITY_DETAILED_SCHEMA_URL = (name: string, idField: string, id: string): string =>
@@ -38,6 +39,12 @@ export class AnalyticsDataApi extends BaseApi {
 
   executeAction(query: StructuredQuery, token: Token): Promise<ServerActionResponse<StructuredQueryResult>> {
     return this.postAction<StructuredQuery>(QUERIES_EXECUTE_URL, query, token);
+  }
+
+  // Ad-hoc SQL: the backend translates a single read-only SELECT to the structured DSL and runs it
+  // through the same pipeline as `executeAction`, returning the same result envelope (no totalCount).
+  executeSqlAction(sql: string, token: Token): Promise<ServerActionResponse<StructuredQueryResult>> {
+    return this.postAction<SqlQueryRequest>(QUERIES_EXECUTE_SQL_URL, { sql }, token);
   }
 
   async getTables(token: Token): Promise<AnalyticsTable[] | null> {

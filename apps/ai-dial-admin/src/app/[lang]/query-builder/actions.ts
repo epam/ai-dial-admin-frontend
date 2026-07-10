@@ -30,3 +30,7 @@ export async function getDetailedEntitySchema(
 export async function executeQuery(query: StructuredQuery): Promise<ServerActionResponse<StructuredQueryResult>> {
   return analyticsDataApi.executeAction(query, await token());
 }
+
+export async function executeSqlQuery(sql: string): Promise<ServerActionResponse<StructuredQueryResult>> {
+  return analyticsDataApi.executeSqlAction(sql, await token());
+}

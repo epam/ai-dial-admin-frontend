@@ -2,11 +2,13 @@
 
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import { DialLoader, DialNoDataContent, DialPrimaryButton, DialSwitch } from '@epam/ai-dial-ui-kit';
+import { DialLoader, DialNoDataContent, DialPrimaryButton, DialSegmentedControl } from '@epam/ai-dial-ui-kit';
+import type { SegmentedControlOption } from '@epam/ai-dial-ui-kit';
 import { IconPlayerPlay } from '@tabler/icons-react';
 
 import { getDetailedEntitySchema, getEntitySchema } from '@/src/app/[lang]/query-builder/actions';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
+import SqlEditor from '@/src/components/Analytics/QueryBuilder/Sql/SqlEditor';
 import { QueryBuilderContext } from '@/src/components/Analytics/QueryBuilder/context';
 import LabeledField from '@/src/components/Analytics/QueryBuilder/LabeledField';
 import SourceSection from '@/src/components/Analytics/QueryBuilder/Source/SourceSection';
@@ -26,13 +28,19 @@ import { buildQuery, getAggregateWarnings } from '@/src/components/Analytics/Que
 import { parseQuery } from '@/src/components/Analytics/QueryBuilder/utils/deserialize';
 import { createInitialState } from '@/src/components/Analytics/QueryBuilder/utils/state';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-import { ButtonsI18nKey, EntitiesI18nKey, MenuI18nKey, QueryBuilderI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, MenuI18nKey, QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsEntity, AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { QueryMode, StructuredQuery } from '@/src/models/analytics/query';
-import { QueryBuilderState, QueryBuilderView, QueryBuilderWarning } from '@/src/models/analytics/query-builder';
+import {
+  QueryBuilderState,
+  QueryBuilderView,
+  QueryBuilderWarning,
+  QueryRequestKind,
+  QueryRunRequest,
+} from '@/src/models/analytics/query-builder';
 import { getErrorNotification } from '@/src/utils/notification';
 
 const WARNING_KEYS: Record<QueryBuilderWarning, QueryBuilderI18nKey> = {
@@ -65,6 +73,9 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
   const [view, setView] = useState<QueryBuilderView>(QueryBuilderView.Form);
   const [jsonText, setJsonText] = useState('');
   const [jsonInvalid, setJsonInvalid] = useState(false);
+  // SQL is an independent buffer: it seeds from nothing, persists across view switches, and never
+  // back-propagates into the builder state (the DSL cannot round-trip arbitrary SQL).
+  const [sqlText, setSqlText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -129,13 +140,22 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
   const contextValue = useMemo(() => ({ state, refresh, patch }), [state, refresh, patch]);
   const isAggregate = state.mode === QueryMode.Aggregate;
   const isJsonView = view === QueryBuilderView.Json;
+  const isSqlView = view === QueryBuilderView.Sql;
 
-  const onToggleJsonView = (value: boolean) => {
-    if (value) {
+  const viewOptions: SegmentedControlOption<QueryBuilderView>[] = [
+    { value: QueryBuilderView.Form, label: t(QueryBuilderI18nKey.ViewForm) },
+    { value: QueryBuilderView.Json, label: t(QueryBuilderI18nKey.ViewJson) },
+    { value: QueryBuilderView.Sql, label: t(QueryBuilderI18nKey.ViewSql) },
+  ];
+
+  // Switching views preserves each view's own buffer. Entering JSON re-seeds it from the current
+  // builder state (JSON mirrors the form); the SQL buffer is left untouched either way.
+  const onChangeView = (next: QueryBuilderView) => {
+    if (next === QueryBuilderView.Json) {
       setJsonText(json);
       setJsonInvalid(false);
     }
-    setView(value ? QueryBuilderView.Json : QueryBuilderView.Form);
+    setView(next);
   };
 
   const onChangeJson = (text: string | undefined) => {
@@ -151,15 +171,22 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
   };
 
   const onRun = () => {
-    let runQuery: StructuredQuery = query;
-    if (isJsonView) {
-      try {
-        runQuery = JSON.parse(jsonText) as StructuredQuery;
-      } catch {
-        return;
+    let request: QueryRunRequest;
+    if (isSqlView) {
+      if (!sqlText.trim()) return;
+      request = { kind: QueryRequestKind.Sql, sql: sqlText };
+    } else {
+      let runQuery: StructuredQuery = query;
+      if (isJsonView) {
+        try {
+          runQuery = JSON.parse(jsonText) as StructuredQuery;
+        } catch {
+          return;
+        }
       }
+      request = { kind: QueryRequestKind.Structured, query: runQuery };
     }
-    sidebar.showSidebar(<QueryResultSidebar query={runQuery} />, 'w-1/2 max-w-[800px]');
+    sidebar.showSidebar(<QueryResultSidebar request={request} />, 'w-1/2 max-w-[800px]');
   };
 
   return (
@@ -170,39 +197,24 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
           <div className="flex items-center gap-4">
             {fieldsLoaded && (
               <CopyButton
-                value={isJsonView ? jsonText : json}
-                valueLabel={t(QueryBuilderI18nKey.StructuredQueryJson)}
+                value={isSqlView ? sqlText : isJsonView ? jsonText : json}
+                valueLabel={isSqlView ? t(QueryBuilderI18nKey.SqlQuery) : t(QueryBuilderI18nKey.StructuredQueryJson)}
                 buttonLabel={t(ButtonsI18nKey.Copy)}
               />
             )}
             <DialPrimaryButton
               label={t(QueryBuilderI18nKey.Run)}
               iconBefore={<IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} />}
-              disabled={!fieldsLoaded || (isJsonView && jsonInvalid)}
+              disabled={!fieldsLoaded || (isJsonView && jsonInvalid) || (isSqlView && !sqlText.trim())}
               onClick={onRun}
             />
-            {fieldsLoaded && (
-              <DialSwitch
-                switchId="qb-json-view"
-                label={t(EntitiesI18nKey.JSONEditor)}
-                isOn={isJsonView}
-                onChange={onToggleJsonView}
-              />
-            )}
           </div>
         </div>
 
         {!entities.length ? (
           <DialNoDataContent title={t(QueryBuilderI18nKey.EntitiesLoadFailed)} />
-        ) : isJsonView && fieldsLoaded ? (
-          <div className="flex flex-1 min-h-0 flex-col gap-2">
-            {jsonInvalid && <span className="text-error dial-tiny-text">{t(QueryBuilderI18nKey.InvalidJson)}</span>}
-            <div className="min-h-0 flex-1 overflow-hidden rounded border border-primary">
-              <JsonEditorBase value={jsonText} onChange={onChangeJson} />
-            </div>
-          </div>
         ) : (
-          <div className="flex flex-1 min-h-0 flex-col gap-6 overflow-auto">
+          <div className="flex flex-1 min-h-0 flex-col gap-6">
             <LabeledField title={t(QueryBuilderI18nKey.Source)}>
               <SourceSection
                 entities={entities}
@@ -217,7 +229,36 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
               />
             </LabeledField>
 
-            {fieldsLoaded ? (
+            {fieldsLoaded && (
+              <DialSegmentedControl
+                className="w-fit"
+                ariaLabel={t(QueryBuilderI18nKey.ViewSwitcher)}
+                options={viewOptions}
+                value={view}
+                onChange={onChangeView}
+              />
+            )}
+
+            {!fieldsLoaded ? (
+              isLoading ? (
+                <DialLoader size={40} />
+              ) : error ? (
+                <DialNoDataContent title={error} />
+              ) : isComplex ? (
+                <DialNoDataContent title={t(QueryBuilderI18nKey.InstanceIdRequired)} />
+              ) : null
+            ) : isJsonView ? (
+              <div className="flex flex-1 min-h-0 flex-col gap-2">
+                {jsonInvalid && <span className="text-error dial-tiny-text">{t(QueryBuilderI18nKey.InvalidJson)}</span>}
+                <div className="min-h-0 flex-1 overflow-hidden rounded border border-primary">
+                  <JsonEditorBase value={jsonText} onChange={onChangeJson} />
+                </div>
+              </div>
+            ) : isSqlView ? (
+              <div className="min-h-0 flex-1 overflow-hidden rounded border border-primary">
+                <SqlEditor value={sqlText} onChange={setSqlText} fields={state.fields} entityName={state.entityName} />
+              </div>
+            ) : (
               <div className="flex flex-1 min-h-0 flex-col gap-6 overflow-y-auto">
                 {warnings.length > 0 && (
                   <div className="flex flex-col gap-1 rounded border border-warning bg-warning px-3 py-2 dial-tiny-text text-primary">
@@ -269,13 +310,7 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
                   <PageSection />
                 </LabeledField>
               </div>
-            ) : isLoading ? (
-              <DialLoader size={40} />
-            ) : error ? (
-              <DialNoDataContent title={error} />
-            ) : isComplex ? (
-              <DialNoDataContent title={t(QueryBuilderI18nKey.InstanceIdRequired)} />
-            ) : null}
+            )}
           </div>
         )}
       </div>
