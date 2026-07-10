@@ -41,6 +41,7 @@ const Applications: FC<Props> = ({ deployments, selectedApplicationId, onChangeA
           id: event.data.deploymentId,
           name: event.data.displayName,
           version: event.data.version,
+          type: event.data.$type,
         },
         endpointRef: void 0,
       }));

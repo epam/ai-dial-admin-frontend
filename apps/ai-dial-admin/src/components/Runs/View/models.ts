@@ -25,6 +25,7 @@ export interface RunViewTabUiState {
 
 export interface RunDeployment {
   name: string;
+  linkId: string;
   route: ApplicationRoute;
 }
 
