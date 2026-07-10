@@ -12,6 +12,14 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
   default: ({ rowData }: { rowData?: unknown[] }) => <div>grid rows: {rowData?.length ?? 0}</div>,
 }));
 
+// Mock the Monaco-backed SQL editor with a plain textarea so view/buffer behavior is testable
+// without booting Monaco (testing rule §4.5).
+vi.mock('@/src/components/Analytics/QueryBuilder/Sql/SqlEditor', () => ({
+  default: ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+    <textarea aria-label="sql-editor" value={value} onChange={(e) => onChange(e.target.value)} />
+  ),
+}));
+
 const ENTITIES: AnalyticsEntity[] = [{ name: 'dial_usage_log' }];
 const FIELDS: AnalyticsEntityField[] = [
   { name: 'event_id', type: AnalyticsFieldType.Uuid, source: 'event_id', tag: 'identity' },
@@ -58,5 +66,49 @@ describe('QueryBuilder', () => {
 
     expect(screen.getByText(QueryBuilderI18nKey.EntitiesLoadFailed)).toBeInTheDocument();
     expect(screen.queryByText(QueryBuilderI18nKey.Mode)).not.toBeInTheDocument();
+  });
+
+  test('offers Form, JSON and SQL view options once a schema is loaded', () => {
+    renderBuilder();
+
+    expect(screen.getByText(QueryBuilderI18nKey.ViewForm)).toBeInTheDocument();
+    expect(screen.getByText(QueryBuilderI18nKey.ViewJson)).toBeInTheDocument();
+    expect(screen.getByText(QueryBuilderI18nKey.ViewSql)).toBeInTheDocument();
+  });
+
+  test('switching to SQL shows the editor and hides the builder sections', async () => {
+    const user = userEvent.setup();
+    renderBuilder();
+
+    await user.click(screen.getByText(QueryBuilderI18nKey.ViewSql));
+
+    expect(screen.getByLabelText('sql-editor')).toBeInTheDocument();
+    expect(screen.getByText(QueryBuilderI18nKey.Source)).toBeInTheDocument();
+    expect(screen.queryByText(QueryBuilderI18nKey.Mode)).not.toBeInTheDocument();
+  });
+
+  test('preserves the SQL buffer across view switches while keeping form state', async () => {
+    const user = userEvent.setup();
+    renderBuilder();
+
+    await user.click(screen.getByText(QueryBuilderI18nKey.ViewSql));
+    await user.type(screen.getByLabelText('sql-editor'), 'SELECT event_id FROM dial_usage_log');
+
+    await user.click(screen.getByText(QueryBuilderI18nKey.ViewForm));
+    expect(screen.getByText(QueryBuilderI18nKey.Mode)).toBeInTheDocument();
+
+    await user.click(screen.getByText(QueryBuilderI18nKey.ViewSql));
+    expect(screen.getByLabelText('sql-editor')).toHaveValue('SELECT event_id FROM dial_usage_log');
+  });
+
+  test('disables Run for empty SQL and enables it once SQL is entered', async () => {
+    const user = userEvent.setup();
+    renderBuilder();
+
+    await user.click(screen.getByText(QueryBuilderI18nKey.ViewSql));
+    expect(screen.getByRole('button', { name: QueryBuilderI18nKey.Run })).toBeDisabled();
+
+    await user.type(screen.getByLabelText('sql-editor'), 'SELECT 1');
+    expect(screen.getByRole('button', { name: QueryBuilderI18nKey.Run })).toBeEnabled();
   });
 });

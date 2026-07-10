@@ -2215,6 +2215,10 @@ export default {
     WarningMissingBucketField: 'Every time bucket needs a timestamp field.',
     WarningMissingBucketAlias: 'Every time bucket needs an alias.',
     WarningEmptyAggregate: 'Aggregate mode usually needs group_by and/or aggregate entries.',
+    ViewForm: 'Form',
+    ViewSql: 'SQL',
+    ViewSwitcher: 'View',
+    SqlQuery: 'SQL query',
   },
   AnalyticsTables: {
     CreateSource: 'Create source',

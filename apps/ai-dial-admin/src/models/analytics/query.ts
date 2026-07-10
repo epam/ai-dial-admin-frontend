@@ -153,3 +153,10 @@ export interface StructuredQueryResult {
   totalCount?: number | null;
   cursor?: string | null;
 }
+
+// Body for `POST /v1/queries/execute-sql`: a single read-only SQL SELECT. An object (not a bare
+// string) so the backend can add fields (e.g. a total-count opt-in) without breaking clients.
+// The response reuses `StructuredQueryResult`; on this path `totalCount` is never populated.
+export interface SqlQueryRequest {
+  sql: string;
+}
