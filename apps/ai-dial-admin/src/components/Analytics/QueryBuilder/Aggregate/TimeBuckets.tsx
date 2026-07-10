@@ -3,7 +3,7 @@ import { FC } from 'react';
 import { DialGhostButton, DialInput, DialNumberInput, DialRemoveButton, DialSelectField } from '@epam/ai-dial-ui-kit';
 
 import { BUCKET_UNIT_OPTIONS } from '@/src/constants/analytics/query-builder';
-import { QueryBuilderI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';
@@ -54,6 +54,8 @@ const TimeBuckets: FC = () => {
               options={fieldOptions.map((f) => ({ value: f.name, label: f.name }))}
               value={bucket.field}
               placeholder={t(QueryBuilderI18nKey.TimestampFieldPlaceholder)}
+              searchable
+              searchPlaceholder={t(BasicI18nKey.Search)}
               onChange={(v) => {
                 bucket.field = v as string;
                 refresh();

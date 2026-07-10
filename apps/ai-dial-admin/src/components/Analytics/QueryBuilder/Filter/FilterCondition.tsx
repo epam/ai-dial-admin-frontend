@@ -3,7 +3,7 @@ import { FC } from 'react';
 import { DialInput, DialRemoveButton, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 
 import { OPERATOR_OPTIONS, VALUE_TYPE_OPTIONS } from '@/src/constants/analytics/query-builder';
-import { QueryBuilderI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';
 import { defaultValueType } from '@/src/components/Analytics/QueryBuilder/utils/fields';
@@ -62,6 +62,8 @@ const FilterCondition: FC<Props> = ({ node, parent, fieldOptions, showLabels }) 
         options={fieldOptions.map((o) => ({ value: o.name, label: o.name }))}
         value={node.field}
         placeholder={t(QueryBuilderI18nKey.FieldPlaceholder)}
+        searchable
+        searchPlaceholder={t(BasicI18nKey.Search)}
         onChange={(v) => onChangeField(v as string)}
       />
       <DialSelectField

@@ -23,7 +23,7 @@ import SortKeys from '@/src/components/Analytics/QueryBuilder/Sort/SortKeys';
 import PageSection from '@/src/components/Analytics/QueryBuilder/Page/PageSection';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import QueryResultSidebar from '@/src/components/Analytics/QueryBuilder/Result/QueryResultSidebar';
-import { havingFieldOptions } from '@/src/components/Analytics/QueryBuilder/utils/fields';
+import { havingFieldOptions, sortByName } from '@/src/components/Analytics/QueryBuilder/utils/fields';
 import { buildQuery, getAggregateWarnings } from '@/src/components/Analytics/QueryBuilder/utils/serialize';
 import { parseQuery } from '@/src/components/Analytics/QueryBuilder/utils/deserialize';
 import { createInitialState } from '@/src/components/Analytics/QueryBuilder/utils/state';
@@ -275,7 +275,7 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
                   <FilterGroup
                     node={state.filter}
                     parent={null}
-                    fieldOptions={state.fields.map((f) => ({ name: f.name, type: f.type }))}
+                    fieldOptions={sortByName(state.fields).map((f) => ({ name: f.name, type: f.type }))}
                   />
                 </LabeledField>
 
