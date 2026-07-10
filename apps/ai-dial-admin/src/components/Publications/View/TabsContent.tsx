@@ -17,7 +17,6 @@ import { PromptFolderProvider } from '@/src/context/assets/PromptFolderContext';
 import { ToolsetFolderProvider } from '@/src/context/assets/ToolsetsFolderContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { DialApplicationResource } from '@/src/models/dial/resource';
 import { DialConversation } from '@/src/models/dial/conversation';
 import {
   ApplicationPublication,
@@ -27,6 +26,7 @@ import {
   Publication,
   ToolsetPublication,
 } from '@/src/models/dial/publications';
+import { DialToolsetResource } from '@/src/models/dial/resource';
 import { DialRule } from '@/src/models/dial/rule';
 import { Toolset } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -73,11 +73,11 @@ const TabsContent = <T extends Publication>({
   }, [selectedPublication]);
 
   const onChangeToolset = useCallback(
-    (toolSetResource: DialApplicationResource) => {
+    (toolSetResource: DialToolsetResource) => {
       const updatedToolsets = [...((selectedPublication as ToolsetPublication).toolSetResources || [])];
       updatedToolsets[0] = {
         ...updatedToolsets[0],
-        toolSetResource: toolSetResource as unknown as DialApplicationResource,
+        toolSetResource: toolSetResource,
       };
       onChange({ ...selectedPublication, toolSetResources: updatedToolsets } as T);
     },

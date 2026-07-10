@@ -40,10 +40,10 @@ interface Props {
   names: string[];
   isEditorEnabled: boolean;
   setIsChanged?: Dispatch<SetStateAction<boolean>>;
-  setSelectedApplication?: Dispatch<SetStateAction<DialApplication | DialApplicationResource>>;
+  setSelectedApplication?: Dispatch<SetStateAction<DialApplication>>;
   isChanged?: boolean;
   onSave?: () => void;
-  onChangeApplication: (application: DialApplication | DialApplicationResource) => void;
+  onChangeApplication: (application: DialApplication) => void;
 }
 
 const TabsContent: FC<Props> = ({

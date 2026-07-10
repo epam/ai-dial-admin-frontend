@@ -6,7 +6,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DialNotification, NotificationVariant } from '@epam/ai-dial-ui-kit';
 
 import { getRules } from '@/src/app/[lang]/folders-storage/actions';
-import { signInToolset, signOutToolset } from '@/src/app/[lang]/toolsets/actions';
 import { updatePublication } from '@/src/app/actions/publications';
 import ResourceAuthButtons from '@/src/components/Assets/Resources/Auth/ResourceAuthButtons';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
@@ -30,6 +29,7 @@ import { EntityViewTab, getPublicationViewTabs } from '@/src/utils/tabs/utils';
 import { addTrailingSlash } from '@/src/utils/url';
 import TabsContent from './TabsContent';
 import { getCorrectPublication, getFormDataForPublication } from './utils';
+import { signInToolset, signOutToolset } from '@/src/app/[lang]/assets-toolsets/actions';
 
 interface Props<T> {
   view: ApplicationRoute;

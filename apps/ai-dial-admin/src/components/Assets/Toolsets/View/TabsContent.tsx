@@ -23,7 +23,7 @@ const TabsContent: FC<Props> = ({ activeTab, onChange, selectedToolset, original
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
   const onChangeResource = (toolset: DialToolsetResource) => {
-    onChange({ ...selectedToolset, ...toolset });
+    onChange({ ...selectedToolset, ...toolset } as AssetToolset);
   };
 
   return (

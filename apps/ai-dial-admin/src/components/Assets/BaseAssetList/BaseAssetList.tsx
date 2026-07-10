@@ -118,9 +118,9 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
         return;
       }
 
-      const { folderId, name = '', version } = files[0] as AssetWithVersion;
+      const { folderId } = files[0] as AssetWithVersion;
       const getAsset = GetAssetActionMap[view as BaseAssetRoute];
-      const fullAsset = await getAsset(folderId, name, version, DEFAULT_ETAG);
+      const fullAsset = await getAsset(folderId, DEFAULT_ETAG);
       setDuplicateItem(fullAsset?.response as AssetWithVersion);
       setIsModalOpen(true);
       setModalType(ModalType.duplicate);

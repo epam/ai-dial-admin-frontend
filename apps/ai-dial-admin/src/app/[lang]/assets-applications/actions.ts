@@ -41,7 +41,7 @@ export async function getApps(path: string) {
 }
 
 //todo Re-check createEntity modal, to not add unused fields
-export async function createApp(app: DialApplicationResource | AssetApp) {
+export async function createApp(app: DialApplicationResource) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   const validationErrors = validateApp(app as DialApplicationResource);
   if (Object.keys(validationErrors).length > 0) {

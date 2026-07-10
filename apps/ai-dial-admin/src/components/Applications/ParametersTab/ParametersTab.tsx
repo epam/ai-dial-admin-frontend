@@ -41,9 +41,9 @@ interface Props {
   isChanged?: boolean;
   discardKey?: number;
   setIsChanged?: Dispatch<SetStateAction<boolean>>;
-  setSelectedApplication?: Dispatch<SetStateAction<DialApplication | DialApplicationResource>>;
+  setSelectedApplication?: Dispatch<SetStateAction<DialApplication>>;
   onSave?: () => void;
-  onChange?: (application: DialApplication | DialApplicationResource, isSkipRefresh?: boolean) => void;
+  onChange?: (application: DialApplication, isSkipRefresh?: boolean) => void;
 }
 
 const ParametersTab: FC<Props> = ({

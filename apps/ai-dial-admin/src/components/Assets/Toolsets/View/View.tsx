@@ -34,6 +34,8 @@ import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
 import { addTrailingSlash } from '@/src/utils/url';
 import TabsContent from './TabsContent';
+import { ServerActionResponse } from '@/src/models/server-action';
+import { DialToolsetResource } from '@/src/models/dial/resource';
 
 interface Props {
   etag: string;
@@ -89,7 +91,9 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
       let updateFunction = updateToolset;
       if (newVersion) {
         updatedEntity = addNewVersion(updatedEntity, newVersion);
-        updateFunction = createToolset;
+        updateFunction = createToolset as (
+          asset: AssetToolset,
+        ) => Promise<ServerActionResponse<Record<string, unknown>>>;
       }
       getReqRef.current(updateFunction, updatedEntity, etag).then((res) => {
         if (res.success) {
@@ -155,7 +159,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
       >
         <ResourceAuthButtons
           view={ApplicationRoute.AssetsToolsets}
-          selectedToolset={selectedToolset}
+          selectedToolset={selectedToolset as DialToolsetResource}
           signInToolset={signInToolset}
           signOutToolset={signOutToolset}
           oAuthCode={oAuthCode}
