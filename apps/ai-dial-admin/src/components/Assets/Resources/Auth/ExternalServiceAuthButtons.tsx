@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { DialLoader, DialNeutralButton } from '@epam/ai-dial-ui-kit';
 import { IconLogin, IconLogout } from '@tabler/icons-react';
@@ -20,16 +20,22 @@ import {
 import { ServerActionResponse } from '@/src/models/server-action';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import {
+  consumeExternalServiceServiceId,
+  getExternalServiceLevels,
   isApplicationLoggedInToExternalService,
   isFullLoggedInToExternalService,
   isUserLoggedInToExternalService,
-  setExternalServiceAuthState,
+  peekExternalServiceServiceId,
   setExternalServiceLevels,
+  setExternalServiceServiceId,
+  setExternalServiceUrl,
 } from './external-service-auth-utils';
 import ResourceLoginPopup from './ResourceLoginPopup';
 import ResourceLogoutPopup from './ResourceLogoutPopup';
 
 export const EXTERNAL_SERVICE_AUTH_REDIRECT_URL = '/external-service-signin';
+
+let isSignInProcessed = false;
 
 interface Props {
   appPath: string;
@@ -97,23 +103,14 @@ const ExternalServiceAuthButtons: FC<Props> = ({ appPath, serviceId, service, si
         url.searchParams.set('scope', authSettings.scopes_supported.join(' '));
       }
 
+      const sep = window.location.search ? '&' : '?';
       setExternalServiceLevels(levels);
-      setExternalServiceAuthState({
-        appPath,
-        serviceId,
-        callbackUrl: window.location.pathname,
-        authType: ToolsetAuthType.OAUTH,
-        redirectUri,
-        authorizationEndpoint: authSettings.authorization_endpoint,
-        clientId: authSettings.client_id,
-        codeChallenge: authSettings.code_challenge,
-        codeChallengeMethod: authSettings.code_challenge_method,
-        scopes: authSettings.scopes_supported,
-      });
+      setExternalServiceServiceId(serviceId);
+      setExternalServiceUrl(`${window.location.pathname}${window.location.search}${sep}`);
 
       window.location.assign(url.toString());
     },
-    [appPath, authSettings, serviceId],
+    [authSettings, serviceId],
   );
 
   const onLogin = useCallback(
@@ -201,6 +198,55 @@ const ExternalServiceAuthButtons: FC<Props> = ({ appPath, serviceId, service, si
       performLogout([level]);
     }
   }, [isFullSignedIn, isUserSignedIn, performLogout]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if (!code || !authType || authType !== ToolsetAuthType.OAUTH || isSignInProcessed) return;
+
+    const storedServiceId = peekExternalServiceServiceId();
+    if (storedServiceId !== serviceId) return;
+
+    consumeExternalServiceServiceId();
+    const levels = getExternalServiceLevels();
+    if (!levels.length) return;
+
+    isSignInProcessed = true;
+    const [currentLevel, ...remainingLevels] = levels;
+
+    getReqRef
+      .current(
+        signIn,
+        appPath,
+        serviceId,
+        currentLevel,
+        authType,
+        `${window.location.origin}${EXTERNAL_SERVICE_AUTH_REDIRECT_URL}`,
+        undefined,
+        code,
+      )
+      .then((res: ServerActionResponse) => {
+        isSignInProcessed = false;
+        if (!res.success) {
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+          router.refresh();
+          return;
+        }
+
+        if (remainingLevels.length > 0) {
+          startOAuthFlow(remainingLevels);
+        } else {
+          showNotification(
+            getSuccessNotification(
+              t(ExternalServiceI18nKey.SuccessLogin),
+              t(ExternalServiceI18nKey.SuccessLoginDescription),
+            ),
+          );
+          router.refresh();
+        }
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!authType || authType === ToolsetAuthType.NONE) return null;
 

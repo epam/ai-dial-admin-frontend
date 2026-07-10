@@ -34,6 +34,7 @@ vi.mock('@/src/components/Assets/Resources/Auth/ResourceAuthButtons', () => ({
       Auth buttons for {selectedToolset.name}
     </div>
   ),
+  TOOLSET_AUTH_REDIRECT_URL: '/toolset-signin',
 }));
 
 vi.mock('./TabsContent', () => ({

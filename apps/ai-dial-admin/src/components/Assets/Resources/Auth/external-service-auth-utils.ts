@@ -1,43 +1,41 @@
-import {
-  DialExternalService,
-  ExternalServiceCredentialLevel,
-  ToolsetAuthStatus,
-  ToolsetAuthType,
-} from '@/src/models/dial/resource';
+import { DialExternalService, ExternalServiceCredentialLevel, ToolsetAuthStatus } from '@/src/models/dial/resource';
 
-const STATE_KEY = 'external-service-auth-state';
 const LEVELS_KEY = 'external-service-auth-levels';
+const URL_KEY = 'external-service-auth-url';
+const SERVICE_ID_KEY = 'external-service-auth-service-id';
 
-export interface ExternalServiceAuthState {
-  appPath: string;
-  serviceId: string;
-  callbackUrl: string;
-  authType: ToolsetAuthType;
-  redirectUri: string;
-  authorizationEndpoint?: string;
-  clientId?: string;
-  codeChallenge?: string;
-  codeChallengeMethod?: string;
-  scopes?: string[];
-}
-
-export const setExternalServiceAuthState = (state: ExternalServiceAuthState) => {
+export const setExternalServiceUrl = (url: string) => {
   if (typeof window !== 'undefined') {
-    localStorage.setItem(STATE_KEY, JSON.stringify(state));
+    localStorage.setItem(URL_KEY, url);
   }
 };
 
-export const getExternalServiceAuthState = (): ExternalServiceAuthState | null => {
+export const getExternalServiceUrl = (): string | null => {
   if (typeof window !== 'undefined') {
-    const raw = localStorage.getItem(STATE_KEY);
-    localStorage.removeItem(STATE_KEY);
-    try {
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
+    const url = localStorage.getItem(URL_KEY);
+    localStorage.removeItem(URL_KEY);
+    return url;
   }
   return null;
+};
+
+export const setExternalServiceServiceId = (id: string) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(SERVICE_ID_KEY, id);
+  }
+};
+
+export const peekExternalServiceServiceId = (): string | null => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem(SERVICE_ID_KEY);
+  }
+  return null;
+};
+
+export const consumeExternalServiceServiceId = () => {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem(SERVICE_ID_KEY);
+  }
 };
 
 export const setExternalServiceLevels = (levels: ExternalServiceCredentialLevel[]) => {
