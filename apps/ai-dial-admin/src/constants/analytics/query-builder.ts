@@ -13,8 +13,10 @@ import {
 
 const capitalize = (s: string): string => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 const toOptions = (values: string[]): SelectOption[] => values.map((value) => ({ value, label: capitalize(value) }));
+const toUpperOptions = (values: string[]): SelectOption[] =>
+  values.map((value) => ({ value, label: value.toUpperCase() }));
 
-export const OPERATOR_OPTIONS: SelectOption[] = toOptions(Object.values(QueryOperator));
+export const OPERATOR_OPTIONS: SelectOption[] = toUpperOptions(Object.values(QueryOperator));
 
 export const VALUE_TYPE_OPTIONS: SelectOption[] = toOptions(
   Object.values(QueryValueType).filter((t) => t !== QueryValueType.Null),
@@ -26,13 +28,13 @@ export const LOGICAL_OPERATOR_OPTIONS: SelectOption[] = [
   { value: QueryLogicalOperator.Not, label: 'NOT' },
 ];
 
-export const AGGREGATE_FN_OPTIONS: SelectOption[] = toOptions(Object.values(QueryAggregateFn));
+export const AGGREGATE_FN_OPTIONS: SelectOption[] = toUpperOptions(Object.values(QueryAggregateFn));
 
 export const BUCKET_UNIT_OPTIONS: SelectOption[] = toOptions(Object.values(QueryBucketUnit));
 
 export const SORT_DIRECTION_OPTIONS: SelectOption[] = [
-  { value: QuerySortDirection.Asc, label: 'Asc' },
-  { value: QuerySortDirection.Desc, label: 'Desc' },
+  { value: QuerySortDirection.Asc, label: 'ASC' },
+  { value: QuerySortDirection.Desc, label: 'DESC' },
 ];
 
 export const SORT_NULLS_DEFAULT = QuerySortNulls.Default;
