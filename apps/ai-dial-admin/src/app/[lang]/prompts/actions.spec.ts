@@ -45,11 +45,9 @@ describe('Assets Prompt :: server actions', () => {
 
   test('Should call getPrompt action', async () => {
     (assetApi.getMergedWithEtag as any).mockResolvedValue(RESPONSE_MOCK);
-    (assetApi.list as any).mockResolvedValue([{ name: 'test', version: '1.0.0', path: 'path' }]);
 
-    const result = await getPrompt('path', 'test', '1.0.0', 'etag');
+    const result = await getPrompt('path', 'etag');
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetApi.list).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.PROMPT, 'path/');
     expect(assetApi.getMergedWithEtag).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.PROMPT, 'path', 'etag');
     expect(result).toBe(RESPONSE_MOCK);
   });
@@ -155,10 +153,7 @@ describe('Assets Prompt :: server actions', () => {
 
     const document = { prompts: [{ id: 'prompts/public/name__1.0' }] };
     const body = new FormData();
-    body.append(
-      'config',
-      new Blob([JSON.stringify({ path: 'public/', conflictResolutionStrategy: 'override' })]),
-    );
+    body.append('config', new Blob([JSON.stringify({ path: 'public/', conflictResolutionStrategy: 'override' })]));
     body.append('file', new Blob([JSON.stringify(document)]));
 
     const result = await importPrompts(body, ImportFileType.JSON);

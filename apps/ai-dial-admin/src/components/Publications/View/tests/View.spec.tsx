@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
 import { ActionType, ToolsetPublication } from '@/src/models/dial/publications';
-import { ToolsetAuthType } from '@/src/models/dial/toolset';
+import { ToolsetAuthType } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
 import PublicationView from '../View';
 
@@ -28,7 +28,7 @@ vi.mock('@/src/components/EntityHeaderControls/PublicationsHeader', () => ({
   ),
 }));
 
-vi.mock('@/src/components/Toolsets/Auth/AuthButtons', () => ({
+vi.mock('@/src/components/Assets/Resources/Auth/ResourceAuthButtons', () => ({
   default: ({ selectedToolset }: any) => (
     <div role="region" aria-label="auth-buttons">
       Auth buttons for {selectedToolset.name}
@@ -80,9 +80,9 @@ const createMockPublication = (authType: ToolsetAuthType | null): ToolsetPublica
         name: 'test-toolset',
         displayName: 'Test Toolset',
         description: 'Test toolset description',
-        authSettings: authType
+        auth_settings: authType
           ? {
-              authenticationType: authType,
+              authentication_type: authType,
             }
           : undefined,
       },

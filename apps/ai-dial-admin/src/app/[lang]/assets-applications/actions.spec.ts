@@ -45,17 +45,15 @@ describe('Assets application :: server actions', () => {
   });
 
   test('Should call getApp action', async () => {
-    (assetApi.list as any).mockResolvedValue([{ name: 'app', version: '1.0.0', path: 'app-path' }]);
     (assetApi.getMergedWithEtag as any).mockResolvedValue({
       success: true,
       response: { name: 'app', path: 'app-path' },
       etag: 'e1',
     });
 
-    const result = await getApp('app-path', 'app', '1.0.0', 'etag');
+    const result = await getApp('app-path', 'etag');
 
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetApi.list).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.APPLICATION, 'app-path/');
     expect(assetApi.getMergedWithEtag).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.APPLICATION, 'app-path', 'etag');
     expect(assetsApi.getAsset).not.toHaveBeenCalled();
     expect(result.response?.validityState).toBeUndefined();
@@ -139,16 +137,16 @@ describe('Assets application :: server actions', () => {
     expect(assetApi.put).toHaveBeenCalledWith(
       TOKEN_MOCK,
       ResourceType.APPLICATION,
-      'test',
+      'public__1.0',
       {
-        folderId: 'public',
+        folderId: undefined,
         nodeType: DialFileNodeType.FOLDER,
         applicationProperties: { key: 'value' },
         defaults: { key: 'value' },
-        responsesDefaults: {},
-        path: 'test',
-        version: '1.0',
-        displayVersion: '1.0',
+        path: undefined,
+        version: undefined,
+        source: undefined,
+        display_version: '1.0',
       },
       { etag: 'etag' },
     );
@@ -164,7 +162,7 @@ describe('Assets application :: server actions', () => {
         nodeType: DialFileNodeType.FOLDER,
         path: 'test',
         version: '1.0',
-        maxInputAttachments: 2000,
+        max_input_attachments: 2000,
       },
       'etag',
     );
@@ -184,10 +182,11 @@ describe('Assets application :: server actions', () => {
     });
     expect(getUserToken).toHaveBeenCalled();
     expect(assetApi.put).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.APPLICATION, 'public__1.0', {
-      folderId: 'public',
+      folderId: undefined,
       nodeType: DialFileNodeType.FOLDER,
       path: 'test',
-      version: '1.0',
+      version: undefined,
+      source: undefined,
       displayVersion: '1.0',
     });
     expect(result).toBe(RESPONSE_MOCK);
@@ -201,7 +200,7 @@ describe('Assets application :: server actions', () => {
       nodeType: DialFileNodeType.FOLDER,
       path: 'test',
       version: '1.0',
-      viewerUrl: 'https://exa mple.com',
+      viewer_url: 'https://exa mple.com',
     });
 
     expect(result.success).toBe(false);

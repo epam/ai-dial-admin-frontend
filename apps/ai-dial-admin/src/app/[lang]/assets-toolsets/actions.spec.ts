@@ -52,11 +52,9 @@ describe('Assets Toolset :: server actions', () => {
 
   test('Should call getToolset action', async () => {
     (assetApi.getMergedWithEtag as any).mockResolvedValue(RESPONSE_MOCK);
-    (assetApi.list as any).mockResolvedValue([{ name: 'test', version: '1.0.0', path: 'path' }]);
 
-    const result = await getToolset('path', 'test', '1.0.0', 'etag');
+    const result = await getToolset('path', 'etag');
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetApi.list).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.TOOLSET, 'path/');
     expect(assetApi.getMergedWithEtag).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.TOOLSET, 'path', 'etag');
     expect(result).toBe(RESPONSE_MOCK);
   });
@@ -79,10 +77,10 @@ describe('Assets Toolset :: server actions', () => {
       ResourceType.TOOLSET,
       'test',
       {
-        folderId: 'public',
+        folderId: undefined,
         nodeType: DialFileNodeType.FOLDER,
-        path: 'test',
-        version: '1.0',
+        path: undefined,
+        version: undefined,
         displayVersion: '1.0',
       },
       { etag: 'etag' },
@@ -113,12 +111,12 @@ describe('Assets Toolset :: server actions', () => {
     });
     expect(getUserToken).toHaveBeenCalled();
     expect(assetApi.put).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.TOOLSET, 'public__1.0', {
-      folderId: 'public',
+      folderId: undefined,
       nodeType: DialFileNodeType.FOLDER,
-      path: 'test',
-      version: '1.0',
+      path: undefined,
+      version: undefined,
       allowedTools: void 0,
-      transport: 'sse',
+      transport: 'SSE',
       displayVersion: '1.0',
     });
     expect(result).toBe(RESPONSE_MOCK);

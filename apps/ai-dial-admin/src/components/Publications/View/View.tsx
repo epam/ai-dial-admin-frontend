@@ -20,8 +20,8 @@ import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { FilePublication, PromptPublication, Publication, ToolsetPublication } from '@/src/models/dial/publications';
+import { DialToolsetResource, ToolsetAuthType } from '@/src/models/dial/resource';
 import { DialRule } from '@/src/models/dial/rule';
-import { Toolset, ToolsetAuthType } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -49,7 +49,7 @@ const PublicationView = <T extends Publication>({ view, publication, application
   const toolset = useMemo(() => {
     if (view === ApplicationRoute.ToolsetPublications) {
       const toolsetPub = publication as unknown as ToolsetPublication;
-      return toolsetPub.toolSetResources?.[0]?.toolSetResource as unknown as Toolset;
+      return toolsetPub.toolSetResources?.[0]?.toolSetResource as unknown as DialToolsetResource;
     }
     return null;
   }, [view, publication]);
@@ -214,8 +214,8 @@ const PublicationView = <T extends Publication>({ view, publication, application
         {view === ApplicationRoute.ToolsetPublications &&
           toolset &&
           !isChanged &&
-          toolset.authSettings?.authenticationType &&
-          toolset.authSettings?.authenticationType !== ToolsetAuthType.NONE && (
+          toolset.auth_settings?.authentication_type &&
+          toolset.auth_settings?.authentication_type !== ToolsetAuthType.NONE && (
             <ResourceAuthButtons
               selectedToolset={toolset}
               oAuthCode={oAuthCode}

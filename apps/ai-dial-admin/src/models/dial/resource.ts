@@ -9,6 +9,7 @@ export interface DialResource extends BaseEntity {
   interceptors: string[];
   path: string;
   folderId: string;
+  nodeType?: string;
   version: string;
   author: string;
   endpoint?: string;
@@ -63,7 +64,7 @@ export interface DialToolsetResource extends DialResource {
   defaults?: Record<string, unknown>;
   responses_defaults?: Record<string, unknown>;
   forward_per_request_key: boolean;
-  auth_settings: DialToolsetResourceAuthSettings;
+  auth_settings?: DialToolsetResourceAuthSettings;
   transport?: ToolsetTransport;
   allowed_tools: string[];
   provider?: string;

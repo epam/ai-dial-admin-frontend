@@ -72,7 +72,11 @@ describe('Server :: Toolsets :: exim :: importToolsetsExport', () => {
       { allowOverride: true },
     );
     expect(result.importResults).toEqual([
-      { sourcePath: 'toolsets/public/source/name__1.0', targetPath: 'public/target/name__1.0', status: ImportStatus.SUCCESS },
+      {
+        sourcePath: 'toolsets/public/source/name__1.0',
+        targetPath: 'public/target/name__1.0',
+        status: ImportStatus.SUCCESS,
+      },
     ]);
   });
 
@@ -88,7 +92,9 @@ describe('Server :: Toolsets :: exim :: importToolsetsExport', () => {
 
     expect(assetApi.list).not.toHaveBeenCalled();
     expect(assetApi.put).not.toHaveBeenCalled();
-    expect(result.importResults).toEqual([{ sourcePath: 'not-a-valid-id', targetPath: '', status: ImportStatus.FAILED }]);
+    expect(result.importResults).toEqual([
+      { sourcePath: 'not-a-valid-id', targetPath: '', status: ImportStatus.FAILED },
+    ]);
   });
 
   test('SKIP reports an existing conflict as skipped, not failed', async () => {
@@ -106,7 +112,11 @@ describe('Server :: Toolsets :: exim :: importToolsetsExport', () => {
 
     expect(assetApi.put).not.toHaveBeenCalled();
     expect(result.importResults).toEqual([
-      { sourcePath: 'toolsets/public/source/name__1.0', targetPath: 'public/target/name__1.0', status: ImportStatus.SKIP },
+      {
+        sourcePath: 'toolsets/public/source/name__1.0',
+        targetPath: 'public/target/name__1.0',
+        status: ImportStatus.SKIP,
+      },
     ]);
   });
 

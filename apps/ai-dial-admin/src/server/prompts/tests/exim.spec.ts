@@ -2,12 +2,7 @@ import { describe, expect, test, vi } from 'vitest';
 
 import { ImportStatus } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
-import {
-  buildPromptsExport,
-  importPromptsExport,
-  isValidPromptExportId,
-  resolveImportDestination,
-} from '../exim';
+import { buildPromptsExport, importPromptsExport, isValidPromptExportId, resolveImportDestination } from '../exim';
 
 describe('Server :: Prompts :: exim :: isValidPromptExportId', () => {
   test('accepts a well-shaped id', () => {
@@ -41,9 +36,7 @@ describe('Server :: Prompts :: exim :: resolveImportDestination', () => {
   });
 
   test('non-flat import with no nested subfolder', () => {
-    expect(resolveImportDestination('public/target/', 'public/', 'name', undefined, false)).toBe(
-      'public/target/name',
-    );
+    expect(resolveImportDestination('public/target/', 'public/', 'name', undefined, false)).toBe('public/target/name');
   });
 });
 
@@ -94,7 +87,11 @@ describe('Server :: Prompts :: exim :: importPromptsExport', () => {
       { allowOverride: true },
     );
     expect(result.importResults).toEqual([
-      { sourcePath: 'prompts/public/source/name__1.0', targetPath: 'public/target/name__1.0', status: ImportStatus.SUCCESS },
+      {
+        sourcePath: 'prompts/public/source/name__1.0',
+        targetPath: 'public/target/name__1.0',
+        status: ImportStatus.SUCCESS,
+      },
     ]);
   });
 
@@ -110,7 +107,9 @@ describe('Server :: Prompts :: exim :: importPromptsExport', () => {
 
     expect(assetApi.list).not.toHaveBeenCalled();
     expect(assetApi.put).not.toHaveBeenCalled();
-    expect(result.importResults).toEqual([{ sourcePath: 'not-a-valid-id', targetPath: '', status: ImportStatus.FAILED }]);
+    expect(result.importResults).toEqual([
+      { sourcePath: 'not-a-valid-id', targetPath: '', status: ImportStatus.FAILED },
+    ]);
   });
 
   test('SKIP reports an existing conflict as skipped, not failed', async () => {
@@ -128,7 +127,11 @@ describe('Server :: Prompts :: exim :: importPromptsExport', () => {
 
     expect(assetApi.put).not.toHaveBeenCalled();
     expect(result.importResults).toEqual([
-      { sourcePath: 'prompts/public/source/name__1.0', targetPath: 'public/target/name__1.0', status: ImportStatus.SKIP },
+      {
+        sourcePath: 'prompts/public/source/name__1.0',
+        targetPath: 'public/target/name__1.0',
+        status: ImportStatus.SKIP,
+      },
     ]);
   });
 

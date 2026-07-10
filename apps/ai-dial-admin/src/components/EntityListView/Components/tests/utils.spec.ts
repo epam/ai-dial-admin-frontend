@@ -30,8 +30,8 @@ vi.mock('@/src/app/[lang]/assets-applications/actions', () => ({
 }));
 
 vi.mock('@/src/app/[lang]/assets-toolsets/actions', () => ({
-  getToolset: vi.fn((folderId, name, version) => {
-    if (name === 'toolset1') {
+  getToolset: vi.fn((path) => {
+    if (path.includes('toolset1')) {
       return Promise.resolve({
         response: {
           name: 'toolset1',
@@ -48,7 +48,7 @@ vi.mock('@/src/app/[lang]/assets-toolsets/actions', () => ({
           },
         },
       });
-    } else if (name === 'toolset2') {
+    } else if (path.includes('toolset2')) {
       return Promise.resolve({
         response: {
           name: 'toolset2',
@@ -62,7 +62,7 @@ vi.mock('@/src/app/[lang]/assets-toolsets/actions', () => ({
           },
         },
       });
-    } else if (name === 'toolset4') {
+    } else if (path.includes('toolset4')) {
       return Promise.resolve({
         response: {
           name: 'toolset4',
@@ -73,9 +73,9 @@ vi.mock('@/src/app/[lang]/assets-toolsets/actions', () => ({
     }
     return Promise.resolve({
       response: {
-        name,
+        name: path,
         displayName: 'Default Toolset',
-        folderId,
+        folderId: undefined,
       },
     });
   }),
@@ -172,6 +172,7 @@ describe('Utils :: prepareEntityForDuplicate', () => {
         folderId: 'folder',
         name: 'toolset1',
         version: '1.0.0',
+        path: 'folder/toolset1__1.0.0',
       },
     } as any);
 
@@ -209,6 +210,7 @@ describe('Utils :: prepareEntityForDuplicate', () => {
         folderId: 'folder',
         name: 'toolset2',
         version: '1.0.0',
+        path: 'folder/toolset2__1.0.0',
       },
     } as any);
 
@@ -273,6 +275,7 @@ describe('Utils :: prepareEntityForDuplicate', () => {
         folderId: 'folder',
         name: 'toolset4',
         version: '1.0.0',
+        path: 'folder/toolset4__1.0.0',
       },
     } as any);
 

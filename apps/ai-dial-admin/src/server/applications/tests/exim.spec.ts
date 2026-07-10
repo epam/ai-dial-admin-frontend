@@ -87,7 +87,9 @@ describe('Server :: Applications :: exim :: importApplicationsExport', () => {
 
     expect(assetApi.list).not.toHaveBeenCalled();
     expect(assetApi.put).not.toHaveBeenCalled();
-    expect(result.importResults).toEqual([{ sourcePath: 'not-a-valid-id', targetPath: '', status: ImportStatus.FAILED }]);
+    expect(result.importResults).toEqual([
+      { sourcePath: 'not-a-valid-id', targetPath: '', status: ImportStatus.FAILED },
+    ]);
   });
 
   test('SKIP reports an existing conflict as skipped, not failed', async () => {
