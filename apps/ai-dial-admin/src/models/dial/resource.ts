@@ -32,6 +32,17 @@ export interface DialApplicationResource extends DialResource, EntityDefaults {
   application_properties: Record<string, unknown>;
   routes?: Record<string, unknown>;
   features?: DialApplicationResourceFeatures;
+  external_services?: Record<string, DialExternalService>;
+}
+
+export interface DialExternalService {
+  display_name?: string;
+  description?: string;
+  auth_settings?: DialExternalServiceAuthSettings;
+}
+
+export interface DialExternalServiceAuthSettings extends DialToolsetResourceAuthSettings {
+  app_level_auth_status?: ToolsetAuthStatus;
 }
 
 export interface DialApplicationResourceFeatures {
@@ -103,6 +114,11 @@ export enum ToolsetAuthCredentialLevel {
   GLOBAL = 'GLOBAL',
   USER = 'USER',
   APP = 'APP',
+}
+
+export enum ExternalServiceCredentialLevel {
+  APPLICATION = 'APPLICATION',
+  USER = 'USER',
 }
 
 export enum ToolsetAuthStatus {

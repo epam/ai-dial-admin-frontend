@@ -22,6 +22,7 @@ interface Props {
   config: AuthConfig;
   isSelected: boolean;
   disabled?: boolean;
+  withLoginVisible?: boolean;
   onClick?: (type: ToolsetAuthType) => void;
   authSettings?: DialToolsetResourceAuthSettings;
   onChange?: (authSettings: DialToolsetResourceAuthSettings) => void;
@@ -35,21 +36,25 @@ const ResourceAuthTypeSection: FC<Props> = ({
   onClick,
   authSettings,
   onChange,
+  withLoginVisible = true,
   ...props
 }) => {
   const t = useI18n();
 
-  const [selectedAuthType, setSelectedAuthType] = useState(
-    () => (getFromSessionStorage(getAuthTypeStorageKey(toolsetName)) as AuthType) || AuthType.With_login,
-  );
+  const [selectedAuthType, setSelectedAuthType] = useState(() => {
+    if (!withLoginVisible) return AuthType.With_config_and_login;
+    return (getFromSessionStorage(getAuthTypeStorageKey(toolsetName)) as AuthType) || AuthType.With_login;
+  });
 
   const radioLogin: RadioButtonWithContent[] = useMemo(() => {
-    const buttons = [
-      {
+    const buttons: RadioButtonWithContent[] = [];
+
+    if (withLoginVisible) {
+      buttons.push({
         id: AuthType.With_login,
         name: t(ToolsetI18nKey.WithLogin),
-      },
-    ];
+      });
+    }
 
     if (config.id === ToolsetAuthType.OAUTH) {
       buttons.push({
@@ -59,7 +64,7 @@ const ResourceAuthTypeSection: FC<Props> = ({
     }
 
     return buttons;
-  }, [config.id, t]);
+  }, [config.id, t, withLoginVisible]);
 
   const handleOnClick = useCallback(() => {
     onClick?.(config.id);
@@ -88,7 +93,7 @@ const ResourceAuthTypeSection: FC<Props> = ({
       </div>
       {isSelected && config.id !== ToolsetAuthType.NONE && (
         <div className="flex flex-col gap-4 border-t border-tertiary p-4">
-          {config.id === ToolsetAuthType.OAUTH && (
+          {config.id === ToolsetAuthType.OAUTH && radioLogin.length > 1 && (
             <DialRadioGroup
               elementId="auth"
               disabled={disabled}

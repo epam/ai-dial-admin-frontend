@@ -2,9 +2,9 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { assetApi, assetsApi } from '@/src/app/api/api';
+import { assetApi, assetsApi, externalServiceOpsApi } from '@/src/app/api/api';
 import { ROOT_FOLDER } from '@/src/constants/file';
-import { DialApplicationResource } from '@/src/models/dial/resource';
+import { DialApplicationResource, DialExternalServiceAuthSettings, ToolsetAuthType } from '@/src/models/dial/resource';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { buildApplicationsExport, importApplicationsExport } from '@/src/server/applications/exim';
@@ -25,6 +25,20 @@ function validationFailure(errors: Record<string, string | undefined>): ServerAc
     errorHeader: 'Validation Error',
     errorMessage: Object.values(errors).filter(Boolean).join(', '),
   };
+}
+
+function stripExternalServiceAuthStatuses(app: DialApplicationResource): DialApplicationResource {
+  if (!app.external_services) return app;
+  const external_services = Object.fromEntries(
+    Object.entries(app.external_services).map(([id, service]) => {
+      if (!service.auth_settings) return [id, service];
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { app_level_auth_status, user_level_auth_status, global_auth_status, ...cleanSettings } =
+        service.auth_settings as DialExternalServiceAuthSettings;
+      return [id, { ...service, auth_settings: cleanSettings }];
+    }),
+  );
+  return { ...app, external_services };
 }
 
 function validateApp(app: DialApplicationResource) {
@@ -84,10 +98,11 @@ export async function updateApp(app: DialApplicationResource, etag: string) {
 
   const folderId = app.folderId || ROOT_FOLDER;
   const path = `${folderId}${getVersionedName(app.name || '', app.version)}`;
+  const cleaned = stripExternalServiceAuthStatuses(app);
   const application = {
-    ...app,
-    defaults: { ...app.defaults },
-    display_version: app.version,
+    ...cleaned,
+    defaults: { ...cleaned.defaults },
+    display_version: cleaned.version,
     folderId: undefined,
     source: undefined,
     version: undefined,
@@ -124,4 +139,37 @@ export async function exportApps(paths: string[], type?: ImportFileType) {
 export async function getAssetTools(name: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return assetsApi.getTools(name, token, ResourceType.APPLICATION);
+}
+
+export async function signInExternalService(
+  appPath: string,
+  serviceId: string,
+  level: string,
+  authType: string,
+  redirectUri?: string,
+  apiKey?: string,
+  code?: string,
+) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  const body: Record<string, unknown> = {
+    url: `applications/${appPath}/external_services/${serviceId}`,
+    credentialsLevel: level,
+    authenticationType: authType,
+  };
+  if (authType === ToolsetAuthType.OAUTH) {
+    body.code = code;
+    body.redirectUri = redirectUri;
+  } else {
+    body.apiKey = apiKey;
+  }
+  return externalServiceOpsApi.signIn(token, body);
+}
+
+export async function signOutExternalService(appPath: string, serviceId: string, level: string, authType: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return externalServiceOpsApi.signOut(token, {
+    url: `applications/${appPath}/external_services/${serviceId}`,
+    credentialsLevel: level,
+    authenticationType: authType,
+  });
 }

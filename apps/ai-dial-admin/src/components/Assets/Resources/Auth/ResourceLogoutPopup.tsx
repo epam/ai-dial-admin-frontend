@@ -11,6 +11,8 @@ interface Props {
   isModalOpen: boolean;
   isLoggedInAsUser: boolean;
   isLoggedInAsOrganization: boolean;
+  orgLabel?: string;
+  userLabel?: string;
   onClose: () => void;
   onConfirm: (levels: ToolsetAuthCredentialLevel[]) => void;
 }
@@ -19,6 +21,8 @@ const ResourceLogoutPopup: FC<Props> = ({
   isModalOpen,
   isLoggedInAsUser,
   isLoggedInAsOrganization,
+  orgLabel,
+  userLabel,
   onClose,
   onConfirm,
 }) => {
@@ -51,7 +55,7 @@ const ResourceLogoutPopup: FC<Props> = ({
         {isLoggedInAsUser && (
           <DialCheckbox
             id="personal-logout-checkbox"
-            label={t(ToolsetI18nKey.Personal)}
+            label={userLabel ?? t(ToolsetI18nKey.Personal)}
             checked={logoutUser}
             onChange={(v) => setLogoutUser(!!v)}
           />
@@ -59,7 +63,7 @@ const ResourceLogoutPopup: FC<Props> = ({
         {isLoggedInAsOrganization && (
           <DialCheckbox
             id="organization-logout-checkbox"
-            label={t(ToolsetI18nKey.Organization)}
+            label={orgLabel ?? t(ToolsetI18nKey.Organization)}
             checked={logoutOrganization}
             onChange={(v) => setLogoutOrganization(!!v)}
           />

@@ -16,6 +16,7 @@ import FilePath from '@/src/components/Common/FilePath/FilePath';
 import Defaults from '@/src/components/Defaults/Defaults';
 import { getAssetCreateFolderHandler } from '@/src/components/EntityListView/utils';
 import EntityAttachments from '@/src/components/EntityMainProperties/EntityAttachments/EntityAttachments';
+import ResourceMultiAuth from '@/src/components/Assets/Resources/Auth/ResourceMultiAuth';
 import { ASSET_APPLICATION_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
 import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
@@ -116,6 +117,7 @@ const ApplicationAssetProperties: FC<Props> = ({ asset, runners, onChange, isPub
           isEntityImmutable={true}
           codeAppEditorUrl={codeAppEditorUrl}
         />
+        <ResourceMultiAuth asset={asset} onChange={onChange} />
         <EntityAttachments entity={asset} onChangeEntity={onChange} isAsset />
         <Defaults
           values={(asset as DialApplication).defaults}

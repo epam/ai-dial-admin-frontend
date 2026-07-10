@@ -23,6 +23,7 @@ import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialToolsetResource, ToolsetAuthType } from '@/src/models/dial/resource';
+import { TOOLSET_AUTH_REDIRECT_URL } from '@/src/components/Assets/Resources/Auth/ResourceAuthButtons';
 import { Toolset } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -99,7 +100,13 @@ const ToolsetAssetProperties: FC<Props> = ({ selectedToolset, onChange, isPublic
           />
         )}
         <ToolsetEndpoint entity={selectedToolset} onChange={onChange as (entity: Toolset) => void} isAsset />
-        <ResourceAuthentication toolset={selectedToolset} onChange={onChange} />
+        <ResourceAuthentication
+          name={selectedToolset.name || ''}
+          authSettings={selectedToolset.auth_settings}
+          redirectUrl={TOOLSET_AUTH_REDIRECT_URL}
+          onChange={(auth_settings) => onChange({ ...selectedToolset, auth_settings })}
+          onChangeForwardPerRequestKey={(val) => onChange({ ...selectedToolset, forward_per_request_key: val })}
+        />
         <DialSwitch
           isOn={selectedToolset.forward_per_request_key}
           label={t(EntityFieldsI18nKey.forwardPerRequestKey)}

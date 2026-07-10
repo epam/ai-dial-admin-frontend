@@ -1468,6 +1468,20 @@ export enum ToolsetI18nKey {
   SelectLogoutLevels = 'Toolset.SelectLogoutLevels',
 }
 
+export enum ExternalServiceI18nKey {
+  ExternalServices = 'ExternalService.ExternalServices',
+  ServiceId = 'ExternalService.ServiceId',
+  ApplicationLevel = 'ExternalService.ApplicationLevel',
+  UserLevel = 'ExternalService.UserLevel',
+  AddService = 'ExternalService.AddService',
+  EditService = 'ExternalService.EditService',
+  NoServices = 'ExternalService.NoServices',
+  SuccessLogin = 'ExternalService.SuccessLogin',
+  SuccessLoginDescription = 'ExternalService.SuccessLoginDescription',
+  SuccessLogout = 'ExternalService.SuccessLogout',
+  SuccessLogoutDescription = 'ExternalService.SuccessLogoutDescription',
+}
+
 export enum ImagesI18nKey {
   ImagesListTitle = 'Images.ImagesListTitle',
   AddModalTitle = 'Images.AddModalTitle',
