@@ -18,6 +18,7 @@ import { ImportFileType } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { DialApplication } from '@/src/models/dial/application';
 
 function validationFailure(errors: Record<string, string | undefined>): ServerActionResponse {
   return {
@@ -70,6 +71,8 @@ export async function createApp(app: DialApplicationResource) {
     folderId: undefined,
     source: undefined,
     version: undefined,
+    application_type_schema_id:
+      app.application_type_schema_id || (app as DialApplication)?.source?.applicationTypeSchemaId,
   };
 
   return assetApi.put(token, ResourceType.APPLICATION, path, asset);
