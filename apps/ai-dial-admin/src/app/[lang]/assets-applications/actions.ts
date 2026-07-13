@@ -71,6 +71,7 @@ export async function createApp(app: DialApplicationResource) {
     folderId: undefined,
     source: undefined,
     version: undefined,
+    path: undefined,
     application_type_schema_id:
       app.application_type_schema_id || (app as DialApplication)?.source?.applicationTypeSchemaId,
   };
