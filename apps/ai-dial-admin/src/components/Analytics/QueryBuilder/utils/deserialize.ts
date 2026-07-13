@@ -79,6 +79,22 @@ const parseFilterNode = (node: QueryFilterNode): FilterNode => {
   return predicate;
 };
 
+// The visual builder shows at most two filter levels: the root group plus one level of nested
+// groups holding only conditions. `depth` is the group nesting level of `node`'s parent.
+const groupDepthOk = (node: QueryFilterNode, depth: number): boolean => {
+  if (!isGroup(node)) return true;
+  if (depth >= 2) return false;
+  return (node.args || []).every((child) => groupDepthOk(child, depth + 1));
+};
+
+// The sole representability rule: filter (and having) trees deeper than root + one group level
+// cannot be displayed in the visual builder — such queries stay editable/runnable in written modes.
+export const isBuilderRepresentable = (query: StructuredQuery): boolean => {
+  const filterOk = !query.filter || groupDepthOk(query.filter, 0);
+  const havingOk = !query.having || groupDepthOk(query.having, 0);
+  return filterOk && havingOk;
+};
+
 const parseFilterRoot = (node?: QueryFilterNode): FilterGroupNode => {
   if (!node) return createGroup();
   const parsed = parseFilterNode(node);
