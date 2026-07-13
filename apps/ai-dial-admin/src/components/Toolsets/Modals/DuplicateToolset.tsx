@@ -6,7 +6,6 @@ import { checkIsUniqueDeploymentName } from '@/src/app/actions';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import IdControl from '@/src/components/BaseControls/Id/Id';
 import ApiKeyHeaderControl from '@/src/components/Toolsets/Auth/Controls/ApiKeyHeaderControl';
-import OAuthAuthSectionControl from '@/src/components/Toolsets/Auth/Controls/OAuthAuthSectionControl';
 import { ButtonsI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
@@ -45,21 +44,9 @@ const DuplicateToolset: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose,
 
     // Auth-specific validation
     if (authType === ToolsetAuthType.OAUTH) {
-      dispatch({
-        type: ValidationActionType.SetField,
-        field: 'authSettings.clientId',
-        isValid: !!clonedEntity.authSettings?.clientId,
-      });
-      dispatch({
-        type: ValidationActionType.SetField,
-        field: 'authSettings.clientSecret',
-        isValid: !!clonedEntity.authSettings?.clientSecret,
-      });
-      dispatch({
-        type: ValidationActionType.SetField,
-        field: 'authSettings.authorizationEndpoint',
-        isValid: !!clonedEntity.authSettings?.authorizationEndpoint,
-      });
+      clonedEntity.authSettings = {
+        authenticationType: ToolsetAuthType.NONE,
+      };
     } else if (authType === ToolsetAuthType.API_KEY) {
       dispatch({
         type: ValidationActionType.SetField,
@@ -76,60 +63,6 @@ const DuplicateToolset: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose,
       setEntity({ ...clonedEntity, displayName });
     },
     [clonedEntity],
-  );
-
-  const onChangeClientId = useCallback(
-    (clientId: string) => {
-      const updatedEntity = {
-        ...clonedEntity,
-        authSettings: { ...clonedEntity.authSettings!, clientId },
-      };
-      setEntity(updatedEntity);
-    },
-    [clonedEntity],
-  );
-
-  const onChangeClientSecret = useCallback(
-    (clientSecret: string) => {
-      const updatedEntity = {
-        ...clonedEntity,
-        authSettings: { ...clonedEntity.authSettings!, clientSecret },
-      };
-      setEntity(updatedEntity);
-    },
-    [clonedEntity],
-  );
-
-  const onChangeAuthorizationEndpoint = useCallback(
-    (authorizationEndpoint?: string) => {
-      const updatedEntity = {
-        ...clonedEntity,
-        authSettings: { ...clonedEntity.authSettings!, authorizationEndpoint },
-      };
-      setEntity(updatedEntity);
-      dispatch({
-        type: ValidationActionType.SetField,
-        field: 'authSettings.authorizationEndpoint',
-        isValid: !!authorizationEndpoint,
-      });
-    },
-    [clonedEntity, dispatch],
-  );
-
-  const onChangeTokenEndpoint = useCallback(
-    (tokenEndpoint?: string) => {
-      const updatedEntity = {
-        ...clonedEntity,
-        authSettings: { ...clonedEntity.authSettings!, tokenEndpoint },
-      };
-      setEntity(updatedEntity);
-      dispatch({
-        type: ValidationActionType.SetField,
-        field: 'authSettings.tokenEndpoint',
-        isValid: !!tokenEndpoint,
-      });
-    },
-    [clonedEntity, dispatch],
   );
 
   const onChangeApiKeyHeader = useCallback(
@@ -181,25 +114,7 @@ const DuplicateToolset: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose,
             required
           />
 
-          {authType !== ToolsetAuthType.NONE && (
-            <h3>
-              {authType === ToolsetAuthType.OAUTH && t(ToolsetI18nKey.OAuth)}
-              {authType === ToolsetAuthType.API_KEY && t(ToolsetI18nKey.ApiKey)}
-            </h3>
-          )}
-
-          {authType === ToolsetAuthType.OAUTH && (
-            <OAuthAuthSectionControl
-              clientId={clonedEntity.authSettings?.clientId}
-              clientSecret={clonedEntity.authSettings?.clientSecret}
-              authorizationEndpoint={clonedEntity.authSettings?.authorizationEndpoint}
-              tokenEndpoint={clonedEntity.authSettings?.tokenEndpoint}
-              onChangeClientId={onChangeClientId}
-              onChangeClientSecret={onChangeClientSecret}
-              onChangeAuthorizationEndpoint={onChangeAuthorizationEndpoint}
-              onChangeTokenEndpoint={onChangeTokenEndpoint}
-            />
-          )}
+          {authType === ToolsetAuthType.API_KEY && <h3>{t(ToolsetI18nKey.ApiKey)}</h3>}
 
           {authType === ToolsetAuthType.API_KEY && (
             <ApiKeyHeaderControl

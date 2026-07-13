@@ -315,15 +315,15 @@ export enum DuplicateI18nKey {
 
   // Entities
   Model = 'DuplicateEntity.Entities.Model',
-  Application = 'DeleteEntity.Entities.Application',
-  Toolsets = 'DuplicateEntity.Entities.Toolsets',
+  Application = 'DuplicateEntity.Entities.Application',
+  Toolset = 'DuplicateEntity.Entities.Toolset',
   Route = 'DuplicateEntity.Entities.Route',
   Interceptor = 'DuplicateEntity.Entities.Interceptor',
   Role = 'DuplicateEntity.Entities.Role',
   Key = 'DuplicateEntity.Entities.Key',
   Prompt = 'DuplicateEntity.Entities.Prompt',
   File = 'DuplicateEntity.Entities.File',
-  Adapter = 'DeleteEntity.Entities.Adapter',
+  Adapter = 'DuplicateEntity.Entities.Adapter',
   InterceptorTemplate = 'DuplicateEntity.Entities.InterceptorTemplate',
   ApplicationRunner = 'DuplicateEntity.Entities.ApplicationRunner',
   TestSuite = 'DuplicateEntity.Entities.TestSuite',
