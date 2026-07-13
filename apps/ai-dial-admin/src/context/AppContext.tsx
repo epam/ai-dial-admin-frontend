@@ -5,6 +5,7 @@ import { VisualizerConnector } from '@epam/ai-dial-visualizer-connector';
 
 import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storage';
 import { LOCAL_STORAGE_SIDEBAR_OPEN_KEY } from '@/src/constants/main-layout';
+import { DockPosition, ShowSidebarOptions } from '@/src/components/Common/Sidebar/models';
 import { ResourcesDefaults } from '@/src/models/deployments/containers';
 import { UserInfo, UserRole } from '@/src/models/user-info';
 import { FeatureFlags } from '@/src/models/feature-flags';
@@ -35,8 +36,18 @@ interface AppContextSidebar {
   content: ReactNode | null;
   isMenuClosed?: boolean;
   className?: string;
-  showSidebar: (content: ReactNode, className?: string) => void;
+  /** True when the current content opted into the right/bottom dock toggle. */
+  dockable: boolean;
+  /** Current dock position for the active content (defaults to Right). */
+  dockPosition: DockPosition;
+  /** Whether the bottom-docked overlay is collapsed to its header. Only meaningful in Bottom position. */
+  dockCollapsed: boolean;
+  showSidebar: (content: ReactNode, className?: string, options?: ShowSidebarOptions) => void;
   closeSidebar: () => void;
+  /** Toggles the dock position between Right and Bottom, persisting when a persistKey was supplied. */
+  toggleDock: () => void;
+  /** Collapses/expands the bottom-docked overlay. */
+  toggleDockCollapsed: () => void;
   toggleIsMenuClosed?: () => void;
 }
 
@@ -75,6 +86,10 @@ export const AppContextProvider = ({
   const [show, setShow] = useState(false);
   const [content, setContent] = useState<ReactNode | null>(null);
   const [sideBarClassName, setSideBarClassName] = useState<string | undefined>(undefined);
+  const [dockable, setDockable] = useState(false);
+  const [dockPosition, setDockPosition] = useState<DockPosition>(DockPosition.Right);
+  const [dockPersistKey, setDockPersistKey] = useState<string | undefined>(undefined);
+  const [dockCollapsed, setDockCollapsed] = useState(false);
 
   const [isMenuClosed, setIsMenuClosed] = useState(false);
 
@@ -92,15 +107,42 @@ export const AppContextProvider = ({
     setIsMenuClosed(!isMenuClosed);
   };
 
-  const showSidebar = (c: ReactNode, className?: string) => {
+  const showSidebar = (c: ReactNode, className?: string, options?: ShowSidebarOptions) => {
     setContent(c);
     setSideBarClassName(className);
     setShow(true);
+
+    const nextDockable = options?.dockable ?? false;
+    setDockable(nextDockable);
+    setDockPersistKey(options?.persistKey);
+    setDockCollapsed(false);
+
+    // Initialize dock position: Right by default, or the persisted choice when a key is supplied.
+    // showSidebar only runs on the client (event/effect), so reading localStorage here is SSR-safe.
+    const stored = nextDockable && options?.persistKey ? getFromLocalStorage(options.persistKey) : null;
+    setDockPosition(stored === DockPosition.Bottom ? DockPosition.Bottom : DockPosition.Right);
   };
 
   const closeSidebar = () => {
     setContent(null);
     setShow(false);
+    setDockable(false);
+    setDockPersistKey(undefined);
+    setDockPosition(DockPosition.Right);
+    setDockCollapsed(false);
+  };
+
+  const toggleDock = () => {
+    const next = dockPosition === DockPosition.Right ? DockPosition.Bottom : DockPosition.Right;
+    setDockPosition(next);
+    setDockCollapsed(false);
+    if (dockPersistKey) {
+      setToLocalStorage(dockPersistKey, next);
+    }
+  };
+
+  const toggleDockCollapsed = () => {
+    setDockCollapsed((prev) => !prev);
   };
 
   const isReadOnlyAdmin =
@@ -120,6 +162,11 @@ export const AppContextProvider = ({
       content,
       showSidebar,
       className: sideBarClassName,
+      dockable,
+      dockPosition,
+      dockCollapsed,
+      toggleDock,
+      toggleDockCollapsed,
       closeSidebar,
       isMenuClosed,
       toggleIsMenuClosed,

@@ -27,7 +27,7 @@ import { havingFieldOptions, sortByName } from '@/src/components/Analytics/Query
 import { buildQuery, getAggregateWarnings } from '@/src/components/Analytics/QueryBuilder/utils/serialize';
 import { parseQuery } from '@/src/components/Analytics/QueryBuilder/utils/deserialize';
 import { createInitialState } from '@/src/components/Analytics/QueryBuilder/utils/state';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, LOCAL_STORAGE_QUERY_RESULT_DOCK_KEY } from '@/src/constants/main-layout';
 import { ButtonsI18nKey, MenuI18nKey, QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -186,7 +186,10 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
       }
       request = { kind: QueryRequestKind.Structured, query: runQuery };
     }
-    sidebar.showSidebar(<QueryResultSidebar request={request} />, 'w-1/2 max-w-[800px]');
+    sidebar.showSidebar(<QueryResultSidebar request={request} />, 'w-1/2 max-w-[800px]', {
+      dockable: true,
+      persistKey: LOCAL_STORAGE_QUERY_RESULT_DOCK_KEY,
+    });
   };
 
   return (

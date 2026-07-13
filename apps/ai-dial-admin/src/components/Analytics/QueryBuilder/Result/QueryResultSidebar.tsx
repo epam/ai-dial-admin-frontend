@@ -3,18 +3,20 @@
 import { FC, useEffect, useMemo, useState } from 'react';
 
 import { ColDef } from 'ag-grid-community';
-import { DialCloseButton, DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { DialCloseButton, DialGhostIconButton, DialLoader, DialNoDataContent, ElementSize } from '@epam/ai-dial-ui-kit';
+import { IconChevronDown, IconChevronUp, IconLayoutBottombar, IconLayoutSidebarRight } from '@tabler/icons-react';
 
 import { executeQuery, executeSqlQuery } from '@/src/app/[lang]/query-builder/actions';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import StatChip from '@/src/components/Analytics/QueryBuilder/Result/StatChip';
 import { getResultColumns, getResultTotal } from '@/src/components/Analytics/QueryBuilder/utils/result';
-import { QueryBuilderI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { StructuredQueryResult } from '@/src/models/analytics/query';
 import { QueryRequestKind, QueryRunRequest } from '@/src/models/analytics/query-builder';
+import { DockPosition } from '@/src/components/Common/Sidebar/models';
 import { getErrorNotification } from '@/src/utils/notification';
 
 interface Props {
@@ -56,12 +58,30 @@ const QueryResultSidebar: FC<Props> = ({ request }) => {
   const columns = useMemo(() => getResultColumns(result), [result]);
   const rows = result?.rows ?? [];
   const total = getResultTotal(result);
+  const isDockedBottom = sidebar.dockPosition === DockPosition.Bottom;
+  const isCollapsed = sidebar.dockCollapsed;
 
   return (
     <div className="flex size-full min-h-0 flex-col gap-y-4">
       <div className="flex items-center justify-between">
         <h3>{t(QueryBuilderI18nKey.Result)}</h3>
-        <DialCloseButton onClose={() => sidebar.closeSidebar()} />
+        <div className="flex items-center gap-2">
+          {isDockedBottom && (
+            <DialGhostIconButton
+              size={ElementSize.Small}
+              icon={isCollapsed ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
+              title={isCollapsed ? t(BasicI18nKey.Expand) : t(BasicI18nKey.Collapse)}
+              onClick={() => sidebar.toggleDockCollapsed()}
+            />
+          )}
+          <DialGhostIconButton
+            size={ElementSize.Small}
+            icon={isDockedBottom ? <IconLayoutSidebarRight size={16} /> : <IconLayoutBottombar size={16} />}
+            title={isDockedBottom ? t(QueryBuilderI18nKey.DockToRight) : t(QueryBuilderI18nKey.DockToBottom)}
+            onClick={() => sidebar.toggleDock()}
+          />
+          <DialCloseButton onClose={() => sidebar.closeSidebar()} />
+        </div>
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col">

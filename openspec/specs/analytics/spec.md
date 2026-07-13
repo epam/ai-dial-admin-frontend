@@ -369,6 +369,45 @@ The header Run action SHALL execute the current query and open the result in a s
 - **THEN** an error notification is shown
 - **AND** the previous result (if any) is not replaced by a broken grid
 
+### Requirement: Result sidebar can be docked right or bottom
+
+The result panel SHALL open dockable, with a dock toggle in its header that switches its position between the right sidebar (default) and a bottom overlay. The bottom overlay SHALL be positioned within the main content area (to the right of the left navigation menu, not covering it), SHALL be resizable in height by a top drag handle, and SHALL float over the page without reflowing the query form. The result content (row/total meta line and the result grid) SHALL be identical in both positions. The toggle SHALL indicate its target: a dock-to-bottom affordance when docked right, and a dock-to-right affordance when docked bottom.
+
+#### Scenario: Dock the result to the bottom
+
+- **WHEN** the result is shown in the right sidebar and the user activates the dock toggle
+- **THEN** the same result content moves to a bottom overlay spanning the main content area
+- **AND** the overlay does not cover the left navigation menu
+- **AND** the query form above is not reflowed
+
+#### Scenario: Dock the result back to the right
+
+- **WHEN** the result is shown in the bottom overlay and the user activates the dock toggle
+- **THEN** the same result content moves back to the right sidebar
+
+### Requirement: Bottom result overlay can be collapsed
+
+When the result is docked to the bottom, its header SHALL provide a collapse/expand control. Collapsing SHALL shrink the overlay to its header row (keeping the meta line and controls reachable) so the query form behind it is visible; expanding SHALL restore the previous height. The collapsed state SHALL reset to expanded when the result is reopened or its dock position changes.
+
+#### Scenario: Collapse reveals the query form
+
+- **WHEN** the result is docked to the bottom and the user activates the collapse control
+- **THEN** the overlay shrinks to its header and the full query form below becomes visible
+
+#### Scenario: Expand restores the result
+
+- **WHEN** the bottom overlay is collapsed and the user activates the expand control
+- **THEN** the overlay returns to its prior height showing the result grid
+
+### Requirement: Result dock position is remembered
+
+The chosen result dock position (right or bottom) SHALL be persisted in the browser's local storage under a Query-Builder-specific key and restored when the result is next opened, including after a page reload. Persistence SHALL be SSR-safe (the default right position is used until the persisted value is read on the client).
+
+#### Scenario: Bottom position persists across reload
+
+- **WHEN** the user has docked the result to the bottom, then reloads the page and runs a query
+- **THEN** the result opens docked to the bottom
+
 ### Requirement: SQL view shows only the source selector and a SQL editor
 
 In the SQL view the page SHALL render the persistent Source section (entity selector and, for complex entities, the instance-id controls) and a SQL code editor filling the remaining area, and SHALL NOT render the Mode, Filter, Select, Group by, Time bucket, Aggregate, Having, Sort, or Page sections. The editor SHALL provide SQL syntax highlighting (via the Monaco `sql` language). The Copy and Run actions SHALL remain available; Copy SHALL copy the SQL editor text.
