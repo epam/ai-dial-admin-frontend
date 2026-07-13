@@ -45,7 +45,7 @@ const TabsContent: FC<Props> = ({ activeTab, selectedConversation }) => {
         </PropertiesTabContent>
       )}
 
-      {activeTab === EntityViewTab.Conversation && <Conversations selectedConversation={selectedConversation} />}
+      {activeTab === EntityViewTab.Conversation && <Conversations conversation={selectedConversation} />}
     </>
   );
 };
