@@ -5,7 +5,9 @@ import {
   defaultValueType,
   distinctTags,
   family,
+  fieldsToOptions,
   filterFieldsByTags,
+  groupFieldOptions,
   havingFieldOptions,
   sortByName,
   sortFieldOptions,
@@ -136,5 +138,45 @@ describe('having/sort field options', () => {
     ]);
     s.mode = QueryMode.Aggregate;
     expect(sortFieldOptions(s).map((o) => o.name)).toEqual(['project_id']);
+  });
+
+  test('sortFieldOptions keeps tags in row mode so the dropdown can group by category', () => {
+    const s = createInitialState();
+    s.fields = FIELDS;
+    const eventId = sortFieldOptions(s).find((o) => o.name === 'event_id');
+    expect(eventId?.tag).toBe('identity');
+  });
+});
+
+describe('groupFieldOptions', () => {
+  const options = fieldsToOptions(FIELDS);
+
+  test('groups by tag preserving first-seen tag order, options sorted by name', () => {
+    const groups = groupFieldOptions(options);
+    expect(groups.map((g) => g.tag)).toEqual(['identity', 'system', 'lineage', 'untagged']);
+    expect(groups[0].options.map((o) => o.name)).toEqual(['event_id', 'request_time']);
+  });
+
+  test('search filters by name across groups', () => {
+    const groups = groupFieldOptions(options, 'time');
+    expect(groups.map((g) => g.tag)).toEqual(['identity']);
+    expect(groups[0].options.map((o) => o.name)).toEqual(['request_time']);
+  });
+
+  test('search matches tags too', () => {
+    const groups = groupFieldOptions(options, 'lineage');
+    expect(groups.map((g) => g.tag)).toEqual(['lineage']);
+  });
+
+  test('no match returns empty list; empty input returns empty list', () => {
+    expect(groupFieldOptions(options, 'zzz')).toEqual([]);
+    expect(groupFieldOptions([], '')).toEqual([]);
+  });
+
+  test('untagged options land under the untagged key', () => {
+    const groups = groupFieldOptions([{ name: 'alias_a' }, { name: 'alias_b' }]);
+    expect(groups).toHaveLength(1);
+    expect(groups[0].tag).toBe('untagged');
+    expect(groups[0].options.map((o) => o.name)).toEqual(['alias_a', 'alias_b']);
   });
 });

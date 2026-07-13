@@ -1,35 +1,41 @@
 import { FC } from 'react';
 
-import { DialGhostButton, DialRemoveButton, DialSelectField } from '@epam/ai-dial-ui-kit';
 import classNames from 'classnames';
+import { DialGhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
+import { IconTrashX } from '@tabler/icons-react';
 
-import { LOGICAL_OPERATOR_OPTIONS } from '@/src/constants/analytics/query-builder';
-import { QueryBuilderI18nKey } from '@/src/constants/i18n';
-import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
-import { useI18n } from '@/src/locales/client';
-import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';
 import FilterCondition from '@/src/components/Analytics/QueryBuilder/Filter/FilterCondition';
-import { createGroup, createPredicate } from '@/src/components/Analytics/QueryBuilder/utils/state';
-import { FieldOption, FilterGroupNode, FilterNodeKind } from '@/src/models/analytics/query-builder';
+import CompactSelect from '@/src/components/Analytics/QueryBuilder/Common/CompactSelect';
+import SectionAction from '@/src/components/Analytics/QueryBuilder/Common/SectionAction';
+import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';
+import { createPredicate } from '@/src/components/Analytics/QueryBuilder/utils/state';
+import { LOGICAL_OPERATOR_OPTIONS } from '@/src/constants/analytics/query-builder';
+import { QUERY_BUILDER_PALETTE } from '@/src/constants/analytics/query-builder-palette';
+import { ButtonsI18nKey, QueryBuilderI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
+import { FieldOption, FilterGroupNode, FilterNodeKind, QueryBuilderColor } from '@/src/models/analytics/query-builder';
 import { QueryLogicalOperator } from '@/src/models/analytics/query';
 
 interface Props {
   node: FilterGroupNode;
   parent: FilterGroupNode | null;
   fieldOptions: FieldOption[];
+  // Group nesting level: the visual builder shows the root (0) plus one nested level (1). Nested
+  // groups hold only conditions — deeper nesting is expressible only in the SQL view. The root's
+  // add actions live in the surrounding SectionBlock header, not here.
+  depth?: number;
 }
 
-const FilterGroup: FC<Props> = ({ node, parent, fieldOptions }) => {
+const FilterGroup: FC<Props> = ({ node, parent, fieldOptions, depth = 0 }) => {
   const t = useI18n();
   const { refresh } = useQueryBuilder();
 
+  const isRoot = depth === 0;
+  // Combining conditions only matters once there is something to combine.
+  const showOperator = node.children.length > 1 || !isRoot;
+
   const addCondition = () => {
     node.children.push(createPredicate());
-    refresh();
-  };
-
-  const addGroup = () => {
-    node.children.push(createGroup());
     refresh();
   };
 
@@ -39,41 +45,53 @@ const FilterGroup: FC<Props> = ({ node, parent, fieldOptions }) => {
     refresh();
   };
 
-  const firstConditionId = node.children.find((c) => c.kind === FilterNodeKind.Predicate)?.id;
+  const operatorSelect = (
+    <div className="w-[84px] shrink-0">
+      <CompactSelect
+        ariaLabel={t(QueryBuilderI18nKey.Operator)}
+        options={LOGICAL_OPERATOR_OPTIONS}
+        value={node.op}
+        onChange={(v) => {
+          node.op = v as QueryLogicalOperator;
+          refresh();
+        }}
+      />
+    </div>
+  );
 
   return (
     <div
-      className={classNames('flex flex-col gap-2', parent ? 'border-l border-primary pl-3' : STANDARD_CONTROL_WIDTH)}
+      className={classNames(
+        'flex flex-col gap-1.5',
+        !isRoot &&
+          classNames(
+            'rounded border border-primary border-l-2 bg-layer-2 p-2',
+            QUERY_BUILDER_PALETTE[QueryBuilderColor.Grouping].borderAccent,
+          ),
+      )}
     >
-      <div className="flex items-end gap-2">
-        <DialSelectField
-          id={`qb-group-op-${node.id}`}
-          containerClassName="w-[120px]"
-          options={LOGICAL_OPERATOR_OPTIONS}
-          value={node.op}
-          onChange={(v) => {
-            node.op = v as QueryLogicalOperator;
-            refresh();
-          }}
-        />
-        <DialGhostButton label={t(QueryBuilderI18nKey.AddCondition)} onClick={addCondition} />
-        <DialGhostButton label={t(QueryBuilderI18nKey.AddGroup)} onClick={addGroup} />
-        {parent && <DialRemoveButton onClick={remove} />}
-      </div>
+      {!isRoot && (
+        <div className="flex items-center gap-1.5">
+          {operatorSelect}
+          <SectionAction label={t(QueryBuilderI18nKey.AddCondition)} onClick={addCondition} />
+          <div className="flex-1" />
+          <DialGhostIconButton
+            size={ElementSize.Small}
+            aria-label={t(ButtonsI18nKey.Remove)}
+            icon={<IconTrashX size={16} className="text-error" />}
+            onClick={remove}
+          />
+        </div>
+      )}
+      {isRoot && showOperator && <div className="flex items-center gap-1.5">{operatorSelect}</div>}
 
       {node.children.length > 0 && (
-        <div className="flex flex-col gap-2 pl-3">
+        <div className={classNames('flex flex-col gap-1.5', !isRoot && 'border-l border-primary pl-2')}>
           {node.children.map((child) =>
             child.kind === FilterNodeKind.Group ? (
-              <FilterGroup key={child.id} node={child} parent={node} fieldOptions={fieldOptions} />
+              <FilterGroup key={child.id} node={child} parent={node} fieldOptions={fieldOptions} depth={depth + 1} />
             ) : (
-              <FilterCondition
-                key={child.id}
-                node={child}
-                parent={node}
-                fieldOptions={fieldOptions}
-                showLabels={child.id === firstConditionId}
-              />
+              <FilterCondition key={child.id} node={child} parent={node} fieldOptions={fieldOptions} />
             ),
           )}
         </div>

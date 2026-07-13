@@ -1,31 +1,35 @@
 import { FC } from 'react';
 
-import {
-  DialCheckbox,
-  DialGhostButton,
-  DialInput,
-  DialRemoveButton,
-  DialSelectField,
-  SelectOption,
-} from '@epam/ai-dial-ui-kit';
-
-import { AGGREGATE_FN_OPTIONS } from '@/src/constants/analytics/query-builder';
-import { BasicI18nKey, QueryBuilderI18nKey } from '@/src/constants/i18n';
-import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
-import { useI18n } from '@/src/locales/client';
+import CategorizedFieldDropdown from '@/src/components/Analytics/QueryBuilder/Common/CategorizedFieldDropdown';
+import ChipRow from '@/src/components/Analytics/QueryBuilder/Common/ChipRow';
+import CompactInput from '@/src/components/Analytics/QueryBuilder/Common/CompactInput';
+import CompactSelect from '@/src/components/Analytics/QueryBuilder/Common/CompactSelect';
+import SectionAction from '@/src/components/Analytics/QueryBuilder/Common/SectionAction';
+import SectionBlock from '@/src/components/Analytics/QueryBuilder/Common/SectionBlock';
 import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';
-import { sortByName } from '@/src/components/Analytics/QueryBuilder/utils/fields';
+import { fieldsToOptions } from '@/src/components/Analytics/QueryBuilder/utils/fields';
+import { getAggregateWarnings } from '@/src/components/Analytics/QueryBuilder/utils/serialize';
 import { createAggregate } from '@/src/components/Analytics/QueryBuilder/utils/state';
+import {
+  AGGREGATE_FN_OPTIONS,
+  AGGREGATE_SECTION_WARNINGS,
+  WARNING_I18N,
+} from '@/src/constants/analytics/query-builder';
+import { QueryBuilderI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
 import { QueryAggregateFn } from '@/src/models/analytics/query';
+import { AggregateRow, QueryBuilderColor } from '@/src/models/analytics/query-builder';
+import { QUERY_BUILDER_PALETTE } from '@/src/constants/analytics/query-builder-palette';
+
+const summaryOf = (agg: AggregateRow): string => `${agg.fn}(${agg.field || '*'})${agg.alias ? ` AS ${agg.alias}` : ''}`;
 
 const Aggregates: FC = () => {
   const t = useI18n();
   const { state, refresh } = useQueryBuilder();
 
-  const fieldOptions: SelectOption[] = [
-    { value: '', label: t(QueryBuilderI18nKey.NoArgCountAll) },
-    ...sortByName(state.fields).map((f) => ({ value: f.name, label: f.name })),
-  ];
+  const fieldOptions = fieldsToOptions(state.fields);
+  const warnings = getAggregateWarnings(state).filter((w) => AGGREGATE_SECTION_WARNINGS.includes(w));
+  const warning = warnings.length ? warnings.map((w) => t(WARNING_I18N[w])).join(' ') : undefined;
 
   const addAggregate = () => {
     state.aggregates.push(createAggregate());
@@ -33,69 +37,64 @@ const Aggregates: FC = () => {
   };
 
   return (
-    <div className={STANDARD_CONTROL_WIDTH}>
-      <div className="flex flex-col gap-2">
-        {state.aggregates.map((agg, index) => (
-          <div key={agg.id} className="flex items-end gap-2">
-            <DialSelectField
-              id={`qb-agg-fn-${agg.id}`}
-              containerClassName="w-[120px] shrink-0"
-              label={index === 0 ? t(QueryBuilderI18nKey.Function) : undefined}
-              options={AGGREGATE_FN_OPTIONS}
-              value={agg.fn}
-              onChange={(v) => {
-                agg.fn = v as QueryAggregateFn;
-                refresh();
-              }}
-            />
-            <DialSelectField
-              id={`qb-agg-field-${agg.id}`}
-              containerClassName="flex-1 min-w-[160px]"
-              label={index === 0 ? t(QueryBuilderI18nKey.Field) : undefined}
-              options={fieldOptions}
-              value={agg.field}
-              searchable
-              searchPlaceholder={t(BasicI18nKey.Search)}
-              onChange={(v) => {
-                agg.field = v as string;
-                refresh();
-              }}
-            />
-            <DialInput
-              id={`qb-agg-alias-${agg.id}`}
-              containerClassName="w-[160px] shrink-0"
-              labelProps={index === 0 ? { label: t(QueryBuilderI18nKey.Alias) } : undefined}
-              value={agg.alias}
-              placeholder={t(QueryBuilderI18nKey.AliasPlaceholder)}
-              onChange={(v) => {
-                agg.alias = v ?? '';
-                refresh();
-              }}
-            />
-            <div className="flex h-[38px] items-center gap-2">
-              <DialCheckbox
-                id={`qb-agg-distinct-${agg.id}`}
-                label={t(QueryBuilderI18nKey.Distinct)}
-                checked={agg.distinct}
-                onChange={(value) => {
-                  agg.distinct = !!value;
-                  refresh();
-                }}
-              />
-              <DialRemoveButton
-                onClick={() => {
-                  state.aggregates = state.aggregates.filter((a) => a !== agg);
+    <SectionBlock
+      title={t(QueryBuilderI18nKey.Aggregate)}
+      markerClassName={QUERY_BUILDER_PALETTE[QueryBuilderColor.Measure].marker}
+      warning={warning}
+      action={<SectionAction label={t(QueryBuilderI18nKey.AddField)} onClick={addAggregate} />}
+    >
+      <div className="flex flex-col gap-1.5">
+        {state.aggregates.map((agg) => (
+          <ChipRow
+            key={agg.id}
+            inline
+            summary={summaryOf(agg)}
+            onRemove={() => {
+              state.aggregates = state.aggregates.filter((a) => a !== agg);
+              refresh();
+            }}
+          >
+            <div className="w-[92px] shrink-0">
+              <CompactSelect
+                ariaLabel={t(QueryBuilderI18nKey.Function)}
+                options={AGGREGATE_FN_OPTIONS}
+                value={agg.fn}
+                onChange={(v) => {
+                  agg.fn = v as QueryAggregateFn;
                   refresh();
                 }}
               />
             </div>
-          </div>
+            <div className="min-w-0 flex-1">
+              <CategorizedFieldDropdown
+                id={`qb-agg-field-${agg.id}`}
+                options={fieldOptions}
+                value={agg.field}
+                emptyOptionLabel={t(QueryBuilderI18nKey.NoArgCountAll)}
+                ariaLabel={t(QueryBuilderI18nKey.Field)}
+                onSelect={(name) => {
+                  agg.field = name;
+                  refresh();
+                }}
+              />
+            </div>
+            <CompactInput
+              ariaLabel={t(QueryBuilderI18nKey.AliasPlaceholder)}
+              className="w-[88px] shrink-0"
+              value={agg.alias}
+              placeholder={t(QueryBuilderI18nKey.AliasPlaceholder)}
+              onChange={(value) => {
+                agg.alias = value;
+                refresh();
+              }}
+            />
+          </ChipRow>
         ))}
-        <div>
-          <DialGhostButton label={t(QueryBuilderI18nKey.AddAggregate)} onClick={addAggregate} />
-        </div>
+        {!state.aggregates.length && (
+          <span className="dial-tiny-text text-secondary">{t(QueryBuilderI18nKey.CountOnly)}</span>
+        )}
       </div>
-    </div>
+    </SectionBlock>
   );
 };
 

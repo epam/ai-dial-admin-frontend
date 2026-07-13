@@ -1,6 +1,6 @@
 import { UNTAGGED_KEY } from '@/src/constants/analytics/query-builder';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { FieldOption, QueryBuilderState } from '@/src/models/analytics/query-builder';
+import { FieldOption, FieldOptionGroup, QueryBuilderState } from '@/src/models/analytics/query-builder';
 import { QueryMode, QueryValueType } from '@/src/models/analytics/query';
 
 export const family = (name: string): string => {
@@ -56,6 +56,26 @@ export const filterFieldsByTags = (fields: AnalyticsEntityField[], selectedTags:
   return fields.filter((f) => selected.has(tagOf(f)));
 };
 
+// Groups options by tag for the categorized dropdown, preserving first-seen tag order. Untagged
+// options land in a group keyed UNTAGGED_KEY; a search term filters by name and tag beforehand.
+export const groupFieldOptions = (options: FieldOption[], search = ''): FieldOptionGroup[] => {
+  const term = search.trim().toLowerCase();
+  const visible = term
+    ? options.filter((o) => o.name.toLowerCase().includes(term) || (o.tag || '').toLowerCase().includes(term))
+    : options;
+  const groups = new Map<string, FieldOption[]>();
+  visible.forEach((o) => {
+    const tag = o.tag || UNTAGGED_KEY;
+    const bucket = groups.get(tag);
+    if (bucket) bucket.push(o);
+    else groups.set(tag, [o]);
+  });
+  return [...groups.entries()].map(([tag, opts]) => ({ tag, options: sortByName(opts) }));
+};
+
+export const fieldsToOptions = (fields: AnalyticsEntityField[]): FieldOption[] =>
+  fields.map((f) => ({ name: f.name, type: f.type, tag: f.tag }));
+
 export const bucketFieldOptions = (fields: AnalyticsEntityField[]): AnalyticsEntityField[] => {
   const temporal = fields.filter((f) => f.type === AnalyticsFieldType.Timestamp || f.type === AnalyticsFieldType.Date);
   return sortByName(temporal.length ? temporal : fields);
@@ -73,6 +93,7 @@ export const havingFieldOptions = (state: QueryBuilderState): FieldOption[] => {
 };
 
 export const sortFieldOptions = (state: QueryBuilderState): FieldOption[] => {
-  if (state.mode === QueryMode.Row) return sortByName(state.fields.map((f) => ({ name: f.name, type: f.type })));
+  // Keep tags so the categorized dropdown can group; aggregate-mode options are aliases (untagged).
+  if (state.mode === QueryMode.Row) return sortByName(fieldsToOptions(state.fields));
   return havingFieldOptions(state);
 };
