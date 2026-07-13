@@ -313,7 +313,7 @@ const ExecutionResultsTab: FC<Props> = ({
         )}
       </div>
 
-      <DiffLegend counts={diffCounts} />
+      {!selectedRow && <DiffLegend counts={diffCounts} />}
     </div>
   );
 };

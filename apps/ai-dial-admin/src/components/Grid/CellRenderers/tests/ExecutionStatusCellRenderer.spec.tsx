@@ -33,6 +33,7 @@ describe('ExecutionStatusCellRenderer', () => {
     const { container } = renderStatus({ executionInfo: { status: ExtractionResultStatus.ERROR } });
 
     expect(container).toHaveTextContent('—');
+    expect(container.querySelector('.text-secondary')).toBeInTheDocument();
     expect(container.querySelector('svg')).not.toBeInTheDocument();
   });
 
@@ -40,6 +41,7 @@ describe('ExecutionStatusCellRenderer', () => {
     const { container } = renderStatus({ executionInfo: {} });
 
     expect(container).toHaveTextContent('—');
+    expect(container.querySelector('.text-secondary')).toBeInTheDocument();
     expect(container.querySelector('svg')).not.toBeInTheDocument();
   });
 
@@ -60,6 +62,7 @@ describe('ExecutionStatusCellRenderer', () => {
     const { container } = renderStatus({ executionStatus: ExtractionResultStatus.ERROR });
 
     expect(container).toHaveTextContent('—');
+    expect(container.querySelector('.text-secondary')).toBeInTheDocument();
     expect(container.querySelector('svg')).not.toBeInTheDocument();
   });
 
@@ -76,6 +79,7 @@ describe('ExecutionStatusCellRenderer', () => {
     const { container } = renderStatus({});
 
     expect(container).toHaveTextContent('—');
+    expect(container.querySelector('.text-secondary')).toBeInTheDocument();
     expect(container.querySelector('svg')).not.toBeInTheDocument();
   });
 });

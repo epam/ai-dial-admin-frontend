@@ -58,16 +58,18 @@ const FieldValue: FC<Props> = ({ raw, isFailed, isScoreIndicator, failedLabel, o
   }
 
   const displayText = formatFieldValue(raw);
+  const isMissing = raw === null;
   const isLong = raw !== null && raw.length > TRUNCATE_THRESHOLD;
+  const textClassName = isMissing ? 'text-secondary dial-small-text' : 'text-primary dial-small-text';
 
   if (singleLine) {
-    return <span className="text-primary dial-small-text truncate min-w-0">{displayText}</span>;
+    return <span className={classNames(textClassName, 'truncate min-w-0')}>{displayText}</span>;
   }
 
   return (
     <span
       ref={textRef}
-      className={classNames('text-primary dial-small-text line-clamp-4 break-words', isLong && 'whitespace-pre-wrap')}
+      className={classNames(textClassName, 'line-clamp-4 break-words', isLong && 'whitespace-pre-wrap')}
     >
       {displayText}
     </span>

@@ -6,7 +6,7 @@ import { FC } from 'react';
 import classNames from 'classnames';
 import { DialCloseButton, DialGhostButton, DialGhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
 
-import { DetailMode } from '@/src/components/Runs/Details/BottomDrawer/models';
+import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
@@ -16,7 +16,7 @@ interface Props {
   onClose: () => void;
   onOpenDisplay: () => void;
   isDisplayOpen: boolean;
-  displayMode: DetailMode;
+  position: SidebarPosition;
   onSwitchDisplayMode: () => void;
 }
 
@@ -25,12 +25,12 @@ const CompareRowDetailHeader: FC<Props> = ({
   onClose,
   onOpenDisplay,
   isDisplayOpen,
-  displayMode,
+  position,
   onSwitchDisplayMode,
 }) => {
   const t = useI18n();
 
-  const isDrawer = displayMode === DetailMode.Drawer;
+  const isBottom = position === SidebarPosition.Bottom;
 
   return (
     <div className="flex items-center justify-between gap-4 shrink-0 px-6 py-4">
@@ -44,9 +44,9 @@ const CompareRowDetailHeader: FC<Props> = ({
         />
         <DialGhostIconButton
           size={ElementSize.Small}
-          icon={isDrawer ? <IconLayoutSidebarRight size={24} /> : <IconLayoutBottombar size={24} />}
+          icon={isBottom ? <IconLayoutSidebarRight size={24} /> : <IconLayoutBottombar size={24} />}
           onClick={onSwitchDisplayMode}
-          title={t(isDrawer ? RunsI18nKey.SwitchToSidebar : RunsI18nKey.SwitchToDrawer)}
+          title={t(isBottom ? RunsI18nKey.SwitchToSidebar : RunsI18nKey.SwitchToBottom)}
         />
         <div className="h-4 w-px bg-secondary shrink-0" aria-hidden />
         <DialCloseButton className="h-10" size={24} onClose={onClose} />

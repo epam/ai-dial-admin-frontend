@@ -1,4 +1,5 @@
 import { MetricDeltaKind } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
+import { NumericGridFilter, TextGridFilter } from '@/src/components/Grid/Filter/models';
 
 export interface CompareRowDetailField {
   fieldKey: string;
@@ -18,6 +19,10 @@ export interface CompareRowDetailSection {
   label: string;
   rows: CompareRowDetailField[];
 }
+
+export type RowDetailFieldFilter = TextGridFilter;
+
+export type RowDetailDeltaFilter = NumericGridFilter;
 
 export enum RowDetailViewMode {
   Table = 'table',

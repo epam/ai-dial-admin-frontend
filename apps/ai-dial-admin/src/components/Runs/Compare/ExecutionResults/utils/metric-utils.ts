@@ -87,6 +87,17 @@ export const getMetricDelta = (primary: unknown, secondary: unknown): MetricDelt
   };
 };
 
+/**
+ * Numeric sort key for the delta column: signed (secondary − primary) when both
+ * sides are numeric (0 for equal values), otherwise null when a side is missing.
+ */
+export const getMetricDeltaSortValue = (primary: unknown, secondary: unknown): number | null => {
+  const primaryNum = getNumericMetricValue(primary);
+  const secondaryNum = getNumericMetricValue(secondary);
+  if (primaryNum == null || secondaryNum == null) return null;
+  return roundMetricValue(secondaryNum - primaryNum);
+};
+
 export const formatMetricDelta = (delta: MetricDelta): string | null => {
   if (delta.kind !== MetricDeltaKind.Changed) return null;
   if (delta.value == null) return null;
