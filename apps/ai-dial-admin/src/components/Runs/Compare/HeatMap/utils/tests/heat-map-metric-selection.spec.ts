@@ -3,8 +3,11 @@ import { describe, expect, test } from 'vitest';
 import { HeatMapRowType } from '@/src/components/Runs/Compare/HeatMap/models';
 import { filterHeatMapRowsByMetricGroups } from '@/src/components/Runs/Compare/HeatMap/utils/build-heat-map-rows';
 import {
+  filterMetricGroupsBySearch,
   formatHeatMapMetricsTriggerLabel,
+  getMetricGroupsCheckState,
   isAllMetricGroupsSelected,
+  MetricGroupsCheckState,
   toggleAllMetricGroups,
   toggleMetricGroup,
 } from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-metric-selection';
@@ -38,6 +41,35 @@ describe('isAllMetricGroupsSelected', () => {
   });
 });
 
+describe('getMetricGroupsCheckState', () => {
+  test('returns checked when every group is selected', () => {
+    expect(getMetricGroupsCheckState(new Set(['A', 'B']), ['A', 'B'])).toBe(MetricGroupsCheckState.Checked);
+  });
+
+  test('returns unchecked when nothing is selected or available is empty', () => {
+    expect(getMetricGroupsCheckState(new Set(), ['A', 'B'])).toBe(MetricGroupsCheckState.Unchecked);
+    expect(getMetricGroupsCheckState(new Set(['A']), [])).toBe(MetricGroupsCheckState.Unchecked);
+  });
+
+  test('returns indeterminate for partial selection', () => {
+    expect(getMetricGroupsCheckState(new Set(['A']), ['A', 'B'])).toBe(MetricGroupsCheckState.Indeterminate);
+  });
+});
+
+describe('filterMetricGroupsBySearch', () => {
+  const groups = ['Overall Accuracy', 'Context Appropriateness', 'Precision Score'];
+
+  test('returns all groups when query is empty', () => {
+    expect(filterMetricGroupsBySearch('', groups)).toEqual(groups);
+    expect(filterMetricGroupsBySearch('   ', groups)).toEqual(groups);
+  });
+
+  test('filters groups case-insensitively', () => {
+    expect(filterMetricGroupsBySearch('accuracy', groups)).toEqual(['Overall Accuracy']);
+    expect(filterMetricGroupsBySearch('PRECISION', groups)).toEqual(['Precision Score']);
+  });
+});
+
 describe('toggleAllMetricGroups', () => {
   test('selects all groups when not all are selected', () => {
     expect(toggleAllMetricGroups(new Set(['A']), ['A', 'B'])).toEqual(new Set(['A', 'B']));
@@ -62,9 +94,15 @@ describe('formatHeatMapMetricsTriggerLabel', () => {
     );
   });
 
-  test('returns prefix with selected group names for partial selection', () => {
+  test('returns count format for partial selection', () => {
     expect(formatHeatMapMetricsTriggerLabel(new Set(['B']), ['A', 'B'], t)).toBe(
-      `${RunsI18nKey.RunCompareHeatMapMetricsPrefix} B`,
+      `${RunsI18nKey.RunCompareHeatMapMetricsPrefix} 1/2`,
+    );
+  });
+
+  test('returns count format when nothing is selected', () => {
+    expect(formatHeatMapMetricsTriggerLabel(new Set(), ['A', 'B'], t)).toBe(
+      `${RunsI18nKey.RunCompareHeatMapMetricsPrefix} 0/2`,
     );
   });
 });

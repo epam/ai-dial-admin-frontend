@@ -4,20 +4,28 @@ import {
   DialCheckbox,
   DialDropdown,
   DialEllipsisTooltip,
+  DialSearch,
   DialSegmentedControl,
+  ElementSize,
   SegmentedControlOption,
 } from '@epam/ai-dial-ui-kit';
 import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
 import { FC, useCallback, useMemo, useState } from 'react';
 
+import {
+  HEAT_MAP_METRICS_DROPDOWN_MAX_HEIGHT,
+  HEAT_MAP_METRICS_SEARCH_THRESHOLD,
+} from '@/src/components/Runs/Compare/HeatMap/constants';
 import { HeatMapColorDisplayMode } from '@/src/components/Runs/Compare/HeatMap/models';
 import {
+  filterMetricGroupsBySearch,
   formatHeatMapMetricsTriggerLabel,
-  isAllMetricGroupsSelected,
+  getMetricGroupsCheckState,
+  MetricGroupsCheckState,
   toggleAllMetricGroups,
   toggleMetricGroup,
 } from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-metric-selection';
-import { RunsI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -37,10 +45,18 @@ const HeatMapToolbar: FC<Props> = ({
 }) => {
   const t = useI18n();
   const [isMetricsDropdownOpen, setIsMetricsDropdownOpen] = useState(false);
+  const [metricsSearchQuery, setMetricsSearchQuery] = useState('');
 
-  const isAllSelected = useMemo(
-    () => isAllMetricGroupsSelected(selectedMetricGroups, availableMetricGroups),
+  const isSearchVisible = availableMetricGroups.length >= HEAT_MAP_METRICS_SEARCH_THRESHOLD;
+
+  const allCheckState = useMemo(
+    () => getMetricGroupsCheckState(selectedMetricGroups, availableMetricGroups),
     [selectedMetricGroups, availableMetricGroups],
+  );
+
+  const filteredMetricGroups = useMemo(
+    () => filterMetricGroupsBySearch(metricsSearchQuery, availableMetricGroups),
+    [metricsSearchQuery, availableMetricGroups],
   );
 
   const triggerLabel = useMemo(
@@ -57,6 +73,14 @@ const HeatMapToolbar: FC<Props> = ({
       ),
     [isMetricsDropdownOpen],
   );
+
+  const onMetricsDropdownOpenChange = useCallback((open: boolean) => {
+    setIsMetricsDropdownOpen(open);
+
+    if (!open) {
+      setMetricsSearchQuery('');
+    }
+  }, []);
 
   const onToggleAll = useCallback(() => {
     onSelectedMetricGroupsChange(toggleAllMetricGroups(selectedMetricGroups, availableMetricGroups));
@@ -88,19 +112,31 @@ const HeatMapToolbar: FC<Props> = ({
       <DialDropdown
         listClassName="w-[280px]"
         disabled={isMetricsDropdownDisabled}
-        onOpenChange={setIsMetricsDropdownOpen}
+        onOpenChange={onMetricsDropdownOpenChange}
         renderOverlay={() => (
           <div className="bg-layer-0 rounded shadow flex flex-col w-[280px]">
+            {isSearchVisible && (
+              <div className="pt-2 px-2 pb-1">
+                <DialSearch
+                  id="heat-map-metrics-search"
+                  value={metricsSearchQuery}
+                  onChange={setMetricsSearchQuery}
+                  placeholder={t(BasicI18nKey.Search)}
+                  size={ElementSize.Small}
+                />
+              </div>
+            )}
             <div className="flex h-[34px] items-center px-3">
               <DialCheckbox
-                checked={isAllSelected}
+                checked={allCheckState === MetricGroupsCheckState.Checked}
+                indeterminate={allCheckState === MetricGroupsCheckState.Indeterminate}
                 id="heat-map-metrics-all"
                 label={t(RunsI18nKey.RunCompareHeatMapMetricsOptionAll)}
                 onChange={onToggleAll}
               />
             </div>
-            <div className="flex flex-col">
-              {availableMetricGroups.map((groupKey) => (
+            <div className="flex flex-col overflow-y-auto" style={{ maxHeight: HEAT_MAP_METRICS_DROPDOWN_MAX_HEIGHT }}>
+              {filteredMetricGroups.map((groupKey) => (
                 <div key={groupKey} className="flex h-[34px] items-center pl-10 pr-3">
                   <DialCheckbox
                     checked={selectedMetricGroups.has(groupKey)}
