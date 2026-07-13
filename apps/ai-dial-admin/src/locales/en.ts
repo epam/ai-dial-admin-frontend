@@ -2100,6 +2100,7 @@ export default {
     RunCompareHeatMapTooltipRun: 'Run:',
     RunCompareHeatMapTooltipScore: 'Score:',
     RunCompareHeatMapTooltipDelta: 'Delta:',
+    RunCompareHeatMapNotApplicable: 'N/A',
   },
   ExportRun: {
     ExportRunTitle: 'Export run',

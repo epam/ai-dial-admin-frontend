@@ -1976,6 +1976,7 @@ export enum RunsI18nKey {
   RunCompareHeatMapTooltipRun = 'Runs.RunCompareHeatMapTooltipRun',
   RunCompareHeatMapTooltipScore = 'Runs.RunCompareHeatMapTooltipScore',
   RunCompareHeatMapTooltipDelta = 'Runs.RunCompareHeatMapTooltipDelta',
+  RunCompareHeatMapNotApplicable = 'Runs.RunCompareHeatMapNotApplicable',
 }
 
 export enum ExportRunI18nKey {

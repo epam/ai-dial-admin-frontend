@@ -35,5 +35,6 @@ export interface HeatMapCellTooltipData {
   input: string;
   runLabel?: string;
   valueRow?: HeatMapCellTooltipSwatch;
+  valueTextKey?: RunsI18nKey;
   valueLabelKey: RunsI18nKey;
 }
