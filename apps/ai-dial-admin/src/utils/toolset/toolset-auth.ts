@@ -1,27 +1,34 @@
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
+import { DialToolsetResource } from '@/src/models/dial/resource';
 import { Toolset, ToolsetAuthStatus, ToolsetAuthType } from '@/src/models/dial/toolset';
 
 export const getToolsetSignInBody = (
-  toolset: Toolset,
+  toolset: Toolset | DialToolsetResource,
   level: string,
   apiKey?: string,
   authCode?: string,
   redirectUri?: string,
 ) => {
+  const authType =
+    (toolset as Toolset).authSettings?.authenticationType ||
+    (toolset as DialToolsetResource).auth_settings?.authentication_type;
   const body = { ...getToolsetBasicBody(toolset, level) };
 
-  if (toolset.authSettings?.authenticationType === ToolsetAuthType.OAUTH) {
+  if (authType === ToolsetAuthType.OAUTH) {
     return { ...body, code: authCode, redirectUri };
   }
 
   return { ...body, apiKey };
 };
 
-export const getToolsetBasicBody = (toolset: Toolset, level: string) => {
+export const getToolsetBasicBody = (toolset: Toolset | DialToolsetResource, level: string) => {
+  const authType =
+    (toolset as Toolset).authSettings?.authenticationType ||
+    (toolset as DialToolsetResource).auth_settings?.authentication_type;
   return {
     url: (toolset as AssetToolset).path ? `toolsets/${(toolset as AssetToolset).path}` : toolset.name,
     credentialsLevel: level,
-    authenticationType: toolset.authSettings?.authenticationType,
+    authenticationType: authType,
   };
 };
 
