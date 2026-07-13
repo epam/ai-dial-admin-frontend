@@ -7,7 +7,8 @@ import ConversationsSidebar from './ConversationsSidebar';
 import Properties from './Properties';
 
 interface Props {
-  publication: ConversationPublication;
+  publication?: ConversationPublication;
+  conversation?: DialConversation;
 }
 
 const UserMessage: FC<{ message: string }> = ({ message }) => (
@@ -32,17 +33,20 @@ const AssistantMessage: FC<{ message: string }> = ({ message }) => (
   </div>
 );
 
-const Conversations: FC<Props> = ({ publication }) => {
+const Conversations: FC<Props> = ({ publication, conversation }) => {
   const [selectedConversation, setSelectedConversation] = useState<DialConversation | undefined>(
-    () => (publication as ConversationPublication).conversations?.[0]?.conversation as DialConversation | undefined,
+    () =>
+      conversation ??
+      ((publication as ConversationPublication).conversations?.[0]?.conversation as DialConversation | undefined),
   );
 
   useEffect(() => {
     setSelectedConversation(
-      (publication as ConversationPublication).conversations?.[0]?.conversation as DialConversation | undefined,
+      conversation ??
+        ((publication as ConversationPublication).conversations?.[0]?.conversation as DialConversation | undefined),
     );
-  }, [publication]);
-  const conversations = (publication.conversations ?? []).map((pc) => pc.conversation as DialConversation);
+  }, [publication, conversation]);
+  const conversations = (publication?.conversations ?? []).map((pc) => pc.conversation as DialConversation);
 
   return (
     <div className="flex gap-4 size-full">
