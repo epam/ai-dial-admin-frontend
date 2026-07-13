@@ -34,7 +34,7 @@ describe('HeatMapValueCellRenderer', () => {
   });
 
   test('shows em dash for missing values in normal view', () => {
-    render(
+    const { container } = render(
       <HeatMapValueCellRenderer
         data={metricRow}
         column={column(HEAT_MAP_VALUE_TEXT_MIN_WIDTH, 'tc_case2')}
@@ -44,6 +44,7 @@ describe('HeatMapValueCellRenderer', () => {
     );
 
     expect(screen.getByText('—')).toBeInTheDocument();
+    expect(container.querySelector('.text-secondary')).toBeInTheDocument();
   });
 
   test('shows signed delta values in delta mode', () => {

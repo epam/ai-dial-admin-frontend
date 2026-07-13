@@ -178,19 +178,72 @@ describe('ExecutionResultsTab', () => {
     expect(screen.queryByText('Test Case 2')).not.toBeInTheDocument();
   });
 
+  test('hides diff legend when row detail panel is open', async () => {
+    renderExecutionResultsTab({
+      selectedRow: {
+        id: 'result-1',
+        testCaseId: 'tc-1',
+        testCaseName: 'Test Case 1',
+        responseStatusCode: 200,
+        runIndex: 0,
+        executionStatus: 'SUCCESS',
+        metricValues: { Accuracy: { precision: 0.5 } },
+        _compared: null,
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
+    });
+
+    expect(screen.queryByText('Runs.RunCompareDiffLabel')).not.toBeInTheDocument();
+  });
+
+  test('shows HTTP columns in grid when HTTP group is checked in display panel', async () => {
+    const user = userEvent.setup();
+    renderExecutionResultsTab({ showDisplayPanel: true });
+
+    await waitFor(() => {
+      expect(screen.getByRole('toolbar', { name: 'Runs.RunCompareDisplay' })).toBeInTheDocument();
+    });
+
+    expect(document.querySelector('[col-id="http"]')).not.toBeInTheDocument();
+    expect(document.querySelector('[col-id="cmp_http"]')).not.toBeInTheDocument();
+
+    const panel = screen.getByRole('toolbar', { name: 'Runs.RunCompareDisplay' });
+    await user.click(within(panel).getAllByRole('button', { name: 'Expand' })[1]);
+
+    const httpCheckbox = within(panel).getByRole('checkbox', { name: 'HTTP' });
+    await user.click(httpCheckbox);
+
+    await waitFor(() => {
+      expect(document.querySelector('[col-id="http"]')).toBeInTheDocument();
+      expect(document.querySelector('[col-id="cmp_http"]')).toBeInTheDocument();
+    });
+  });
+
   test('hides HTTP columns in grid when HTTP group is unchecked in display panel', async () => {
     const user = userEvent.setup();
     renderExecutionResultsTab({ showDisplayPanel: true });
+
+    await waitFor(() => {
+      expect(screen.getByRole('table')).toBeInTheDocument();
+    });
+
+    expect(document.querySelector('[col-id="http"]')).not.toBeInTheDocument();
+    expect(document.querySelector('[col-id="cmp_http"]')).not.toBeInTheDocument();
+
+    const panel = screen.getByRole('toolbar', { name: 'Runs.RunCompareDisplay' });
+    await user.click(within(panel).getAllByRole('button', { name: 'Expand' })[1]);
+
+    const httpCheckbox = within(panel).getByRole('checkbox', { name: 'HTTP' });
+    await user.click(httpCheckbox);
 
     await waitFor(() => {
       expect(document.querySelector('[col-id="http"]')).toBeInTheDocument();
       expect(document.querySelector('[col-id="cmp_http"]')).toBeInTheDocument();
     });
 
-    const panel = screen.getByRole('toolbar', { name: 'Runs.RunCompareDisplay' });
-    await user.click(within(panel).getAllByRole('button', { name: 'Expand' })[1]);
-
-    const httpCheckbox = within(panel).getByRole('checkbox', { name: 'HTTP' });
     await user.click(httpCheckbox);
 
     await waitFor(() => {

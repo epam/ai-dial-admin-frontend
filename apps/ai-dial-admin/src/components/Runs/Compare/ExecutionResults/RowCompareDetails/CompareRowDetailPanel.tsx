@@ -23,7 +23,7 @@ import {
   applyRowDetailDisplayTree,
   buildRowDetailDisplayTree,
 } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/row-detail-display-tree';
-import { DetailMode } from '@/src/components/Runs/Details/BottomDrawer/models';
+import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -34,7 +34,7 @@ interface Props {
   primaryRunName: string;
   comparedRunName: string;
   onClose: () => void;
-  displayMode: DetailMode;
+  position: SidebarPosition;
   onSwitchDisplayMode: () => void;
   className?: string;
 }
@@ -44,7 +44,7 @@ const CompareRowDetailPanel: FC<Props> = ({
   primaryRunName,
   comparedRunName,
   onClose,
-  displayMode,
+  position,
   onSwitchDisplayMode,
   className,
 }) => {
@@ -56,7 +56,7 @@ const CompareRowDetailPanel: FC<Props> = ({
 
   const [showDisplayPanel, setShowDisplayPanel] = useState(false);
   const [viewMode, setViewMode] = useState(
-    displayMode === DetailMode.Drawer ? RowDetailViewMode.Pivot : RowDetailViewMode.Table,
+    position === SidebarPosition.Bottom ? RowDetailViewMode.Pivot : RowDetailViewMode.Table,
   );
   const [viewDifferencesOnly, setViewDifferencesOnly] = useState(false);
   const [hideHighlights, setHideHighlights] = useState(false);
@@ -127,7 +127,6 @@ const CompareRowDetailPanel: FC<Props> = ({
 
   const onToggleDisplayPanel = useCallback(() => setShowDisplayPanel((prev) => !prev), []);
   const onCloseDisplayPanel = useCallback(() => setShowDisplayPanel(false), []);
-  const onToggleDiffsOnly = useCallback(() => setViewDifferencesOnly((prev) => !prev), []);
 
   return (
     <div className={classNames('relative flex flex-col w-full h-full min-h-0 overflow-hidden bg-layer-0', className)}>
@@ -136,7 +135,7 @@ const CompareRowDetailPanel: FC<Props> = ({
         onClose={onClose}
         onOpenDisplay={onToggleDisplayPanel}
         isDisplayOpen={showDisplayPanel}
-        displayMode={displayMode}
+        position={position}
         onSwitchDisplayMode={onSwitchDisplayMode}
       />
 
@@ -157,7 +156,6 @@ const CompareRowDetailPanel: FC<Props> = ({
                 comparedRunName={comparedRunName}
                 hasComparedMatch={hasComparedMatch}
                 showDiffsOnly={viewDifferencesOnly}
-                onToggleDiffsOnly={onToggleDiffsOnly}
                 hideHighlights={hideHighlights}
               />
             ) : (

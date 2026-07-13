@@ -1856,6 +1856,19 @@ export enum DatasetsI18nKey {
   RevalidatingTestCases = 'Datasets.RevalidatingTestCases',
 }
 
+export enum GridI18nKey {
+  Filter = 'Grid.Filter',
+  FilterValue = 'Grid.FilterValue',
+  FilterContains = 'Grid.FilterContains',
+  FilterNotContains = 'Grid.FilterNotContains',
+  FilterEquals = 'Grid.FilterEquals',
+  FilterNotEqual = 'Grid.FilterNotEqual',
+  FilterGreaterThan = 'Grid.FilterGreaterThan',
+  FilterGreaterThanOrEqual = 'Grid.FilterGreaterThanOrEqual',
+  FilterLessThan = 'Grid.FilterLessThan',
+  FilterLessThanOrEqual = 'Grid.FilterLessThanOrEqual',
+}
+
 export enum RunsI18nKey {
   StartTime = 'Runs.StartTime',
   EndTime = 'Runs.EndTime',
@@ -1900,7 +1913,7 @@ export enum RunsI18nKey {
   Unpin = 'Runs.Unpin',
   Collapse = 'Runs.Collapse',
   Expand = 'Runs.Expand',
-  SwitchToDrawer = 'Runs.SwitchToDrawer',
+  SwitchToBottom = 'Runs.SwitchToBottom',
   SwitchToSidebar = 'Runs.SwitchToSidebar',
   Spotlight = 'Runs.Spotlight',
   RemoveSpotlight = 'Runs.RemoveSpotlight',
@@ -1946,6 +1959,8 @@ export enum RunsI18nKey {
   RunCompareColorDisplay = 'Runs.RunCompareColorDisplay',
   RunCompareAbsoluteValues = 'Runs.RunCompareAbsoluteValues',
   RunCompareDelta = 'Runs.RunCompareDelta',
+  RunCompareFilterDelta = 'Runs.RunCompareFilterDelta',
+  RunCompareFilterField = 'Runs.RunCompareFilterField',
   RunCompareDiffLabel = 'Runs.RunCompareDiffLabel',
   RunCompareDifferences = 'Runs.RunCompareDifferences',
   RunCompareViewDifferencesOnly = 'Runs.RunCompareViewDifferencesOnly',

@@ -8,6 +8,7 @@ import { LOCAL_STORAGE_SIDEBAR_OPEN_KEY } from '@/src/constants/main-layout';
 import { ResourcesDefaults } from '@/src/models/deployments/containers';
 import { UserInfo, UserRole } from '@/src/models/user-info';
 import { FeatureFlags } from '@/src/models/feature-flags';
+import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
 
 export interface AppContextType {
   themeUrl?: string;
@@ -35,7 +36,8 @@ interface AppContextSidebar {
   content: ReactNode | null;
   isMenuClosed?: boolean;
   className?: string;
-  showSidebar: (content: ReactNode, className?: string) => void;
+  position?: SidebarPosition;
+  showSidebar: (content: ReactNode, className?: string, position?: SidebarPosition) => void;
   closeSidebar: () => void;
   toggleIsMenuClosed?: () => void;
 }
@@ -75,6 +77,7 @@ export const AppContextProvider = ({
   const [show, setShow] = useState(false);
   const [content, setContent] = useState<ReactNode | null>(null);
   const [sideBarClassName, setSideBarClassName] = useState<string | undefined>(undefined);
+  const [sidebarPosition, setSidebarPosition] = useState(SidebarPosition.Right);
 
   const [isMenuClosed, setIsMenuClosed] = useState(false);
 
@@ -92,15 +95,17 @@ export const AppContextProvider = ({
     setIsMenuClosed(!isMenuClosed);
   };
 
-  const showSidebar = (c: ReactNode, className?: string) => {
+  const showSidebar = (c: ReactNode, className?: string, position: SidebarPosition = SidebarPosition.Right) => {
     setContent(c);
     setSideBarClassName(className);
+    setSidebarPosition(position);
     setShow(true);
   };
 
   const closeSidebar = () => {
     setContent(null);
     setShow(false);
+    setSidebarPosition(SidebarPosition.Right);
   };
 
   const isReadOnlyAdmin =
@@ -120,6 +125,7 @@ export const AppContextProvider = ({
       content,
       showSidebar,
       className: sideBarClassName,
+      position: sidebarPosition,
       closeSidebar,
       isMenuClosed,
       toggleIsMenuClosed,

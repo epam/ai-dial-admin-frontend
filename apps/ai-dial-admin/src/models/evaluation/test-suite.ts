@@ -60,6 +60,7 @@ export interface TestSuiteDeploymentRef {
   id?: string;
   name?: string;
   version?: string;
+  type?: string;
 }
 
 export interface TestSuiteEndpointRef {

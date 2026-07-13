@@ -3,6 +3,7 @@ import { ColDef, ColGroupDef, ICellRendererParams, ValueGetterParams } from 'ag-
 import { isScoreIndicatorValue } from '@/src/components/Common/ScoreBar/utils';
 import { getAccuracyColors } from '@/src/components/Common/ColorScale/utils';
 import CompareDeltaCellRenderer from '@/src/components/Grid/CellRenderers/CompareDeltaCellRenderer';
+import NumericGridFilterFloatingFilter from '@/src/components/Grid/Filter/NumericGridFilterFloatingFilter';
 import CompareEyeCellRenderer from '@/src/components/Grid/CellRenderers/CompareEyeCellRenderer';
 import CompareMetricScoreCellRenderer from '@/src/components/Grid/CellRenderers/CompareMetricScoreCellRenderer';
 import ExecutionStatusCellRenderer from '@/src/components/Grid/CellRenderers/ExecutionStatusCellRenderer';
@@ -39,9 +40,12 @@ import {
   getCompareFieldDelta,
   getCompareRowDurationMs,
   getExecutionStatusDelta,
+  getMetricDeltaSortValue,
   mergeCompareMetricValuesSchema,
   MetricDeltaKind,
 } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
+import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
+import { baseNumberFilter } from '@/src/constants/grid-columns/filters';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import { getFormattedDuration } from '@/src/components/Runs/View/utils';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
@@ -257,11 +261,24 @@ const buildMetricDeltaColumn = (groupKey: string, key: string, deltaHeader: stri
   colId: `delta_${groupKey}_${key}`,
   field: `delta_${groupKey}_${key}`,
   headerName: deltaHeader,
-  ...NO_FILTER_COL_DEF,
+  filter: 'agNumberColumnFilter',
+  floatingFilter: true,
+  floatingFilterComponent: NumericGridFilterFloatingFilter,
+  suppressFloatingFilterButton: true,
+  suppressHeaderFilterButton: true,
+  filterParams: {
+    ...baseNumberFilter.filterParams,
+    buttons: ['reset'],
+  },
   ...fixedWidthColDef(DELTA_COLUMN_WIDTH),
   cellRenderer: CompareDeltaCellRenderer,
   cellRendererParams: { groupKey, metricKey: key },
-  valueGetter: () => null,
+  comparator: numberValueComparator,
+  valueGetter: (params) => {
+    const primary = params.data?.metricValues?.[groupKey]?.[key];
+    const secondary = params.data?._compared?.metricValues?.[groupKey]?.[key];
+    return getMetricDeltaSortValue(primary, secondary) ?? undefined;
+  },
 });
 
 const buildComparedExtractedColumn = (key: string, hideHighlights?: boolean): ColDef => ({
@@ -286,6 +303,7 @@ const getComparedExecutionColumns = (hideHighlights?: boolean): ColGroupDef => (
       field: 'runIndex',
       ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, '# Run number'),
       colId: 'runIndex',
+      hide: true,
       ...NO_FILTER_COL_DEF,
       ...fixedWidthColDef(RUN_INDEX_COLUMN_WIDTH),
       valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) =>
@@ -294,6 +312,7 @@ const getComparedExecutionColumns = (hideHighlights?: boolean): ColGroupDef => (
     {
       colId: 'cmp_runIndex',
       ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, '# Run number'),
+      hide: true,
       ...NO_FILTER_COL_DEF,
       ...fixedWidthColDef(RUN_INDEX_COLUMN_WIDTH),
       valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) =>
@@ -303,6 +322,7 @@ const getComparedExecutionColumns = (hideHighlights?: boolean): ColGroupDef => (
       field: 'responseStatusCode',
       ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, 'HTTP'),
       colId: 'http',
+      hide: true,
       ...NO_FILTER_COL_DEF,
       ...fixedWidthColDef(HTTP_COLUMN_WIDTH),
       ...maybePairCellClassRules(hideHighlights, getHttpPairKind, 'primary'),
@@ -310,6 +330,7 @@ const getComparedExecutionColumns = (hideHighlights?: boolean): ColGroupDef => (
     {
       colId: 'cmp_http',
       ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, 'HTTP'),
+      hide: true,
       ...NO_FILTER_COL_DEF,
       ...fixedWidthColDef(HTTP_COLUMN_WIDTH),
       valueGetter: (params) => params.data?._compared?.responseStatusCode ?? '—',
@@ -319,6 +340,7 @@ const getComparedExecutionColumns = (hideHighlights?: boolean): ColGroupDef => (
       field: 'durationMs',
       ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, 'Duration'),
       colId: 'duration',
+      hide: true,
       ...NO_FILTER_COL_DEF,
       ...fixedWidthColDef(DURATION_COLUMN_WIDTH),
       valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) =>
@@ -328,6 +350,7 @@ const getComparedExecutionColumns = (hideHighlights?: boolean): ColGroupDef => (
     {
       colId: 'cmp_duration',
       ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, 'Duration'),
+      hide: true,
       ...NO_FILTER_COL_DEF,
       ...fixedWidthColDef(DURATION_COLUMN_WIDTH),
       valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) => {

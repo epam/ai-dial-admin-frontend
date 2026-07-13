@@ -62,9 +62,17 @@ vi.mock('@/src/context/ThemeContext', () => ({ useTheme: createFnContext }));
 vi.mock('@/src/context/RuleFolderProvider', () => ({ useRuleFolder: createFnContext }));
 vi.mock('@/src/context/RuleFolderContext', () => ({ useRuleFolder: createFnContext }));
 
+import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
+
 vi.mock('@/src/context/AppContext', () => ({
   useAppContext: () => ({
-    sidebar: { show: false, content: null, showSidebar: vi.fn(), closeSidebar: vi.fn() },
+    sidebar: {
+      show: false,
+      content: null,
+      showSidebar: vi.fn(),
+      closeSidebar: vi.fn(),
+      position: SidebarPosition.Right,
+    },
     featureFlags: { deploymentsEnabled: true },
     isReadOnlyAdmin: false,
   }),

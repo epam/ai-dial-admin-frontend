@@ -28,6 +28,7 @@ import {
   mergeComparePanelColumns,
   splitComparePanelColumns,
 } from '@/src/components/Runs/Compare/ExecutionResults/utils/columns';
+import NumericGridFilterFloatingFilter from '@/src/components/Grid/Filter/NumericGridFilterFloatingFilter';
 import { ExtractionResultStatus } from '@/src/models/evaluation/run';
 
 const makeRow = (overrides: Partial<CompareAnalyticsRow> = {}): CompareAnalyticsRow => ({
@@ -141,6 +142,18 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     expect(runPrimary?.cellClassRules).toBeUndefined();
   });
 
+  test('execution columns are hidden by default', () => {
+    type ExecCol = { colId?: string; hide?: boolean };
+    const cols = getCompareColumnsCompare([makeRow()]);
+    const exec = cols[2] as { children: ExecCol[] };
+    const executionColIds = ['runIndex', 'cmp_runIndex', 'http', 'cmp_http', 'duration', 'cmp_duration'];
+
+    executionColIds.forEach((colId) => {
+      const col = exec.children.find((child) => child.colId === colId);
+      expect(col?.hide).toBe(true);
+    });
+  });
+
   test('extracted columns highlight when values differ between runs', () => {
     type ExtractedCol = {
       colId?: string;
@@ -207,7 +220,14 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     const cols = getCompareColumnsCompare(rows, undefined, DEFAULT_COMPARE_DELTA_HEADER);
     const metricGroup = cols[3] as {
       headerName: string;
-      children: { headerName: string; colId?: string; width?: number }[];
+      children: {
+        headerName: string;
+        colId?: string;
+        width?: number;
+        filter?: string | boolean;
+        floatingFilter?: boolean;
+        floatingFilterComponent?: unknown;
+      }[];
     };
 
     expect(metricGroup.headerName).toBe('Overall Accuracy');
@@ -221,6 +241,9 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     expect(metricGroup.children[2].headerName).toBe(DEFAULT_COMPARE_DELTA_HEADER);
     expect(metricGroup.children[2].colId).toBe('delta_Overall Accuracy_Precision');
     expect(metricGroup.children[2].width).toBe(DELTA_COLUMN_WIDTH);
+    expect(metricGroup.children[2].filter).toBe('agNumberColumnFilter');
+    expect(metricGroup.children[2].floatingFilter).toBe(true);
+    expect(metricGroup.children[2].floatingFilterComponent).toBe(NumericGridFilterFloatingFilter);
   });
 
   test('metric columns highlight added, changed, and removed pairs', () => {
