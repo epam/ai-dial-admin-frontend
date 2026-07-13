@@ -16,10 +16,9 @@ import { getActionClassName } from '@/src/utils/publications';
 interface Props {
   entity: Publication;
   view: ApplicationRoute;
-  conversationVersion?: string;
 }
 
-const PublicationInfoHeader: FC<Props> = ({ entity, view, conversationVersion }) => {
+const PublicationInfoHeader: FC<Props> = ({ entity, view }) => {
   const t = useI18n();
   const createdAt = useLocalDateTimeString(entity?.createdAt);
   const indicatorClassName = classNames('flex w-2 h-2 mr-1 rounded no-user-select', getActionClassName(entity?.action));
@@ -41,7 +40,6 @@ const PublicationInfoHeader: FC<Props> = ({ entity, view, conversationVersion })
       {view === ApplicationRoute.ToolsetPublications && (
         <AuthHeader toolset={(entity as ToolsetPublication).toolSetResources?.[0].toolSetResource as Toolset} />
       )}
-      {conversationVersion && <LabelledText label={t(EntityFieldsI18nKey.version)} text={conversationVersion} />}
     </div>
   );
 };
