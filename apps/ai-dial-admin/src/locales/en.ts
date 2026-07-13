@@ -908,6 +908,8 @@ export default {
     Custom: 'Custom',
     ActiveConfig: 'Active Config',
     Dependencies: 'Dependencies',
+    DependenciesInfo:
+      'Linked entities (e.g. roles, keys) will not be exported unless they are also selected. References in the exported config will point to entities that may not exist in the target environment.',
     Resources: 'Resources',
     FilePreview: 'Export File Preview',
     IncludeSecrets: 'Include secrets',
