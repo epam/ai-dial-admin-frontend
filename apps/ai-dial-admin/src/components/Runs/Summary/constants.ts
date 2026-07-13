@@ -17,7 +17,9 @@ export const EXEC_DURATION_MS_FIELD = 'exec_duration_ms';
 /** Aggregate output aliases requested from the query. */
 export const COUNT_ALIAS = 'count';
 export const AVG_DURATION_ALIAS = 'avg_duration_ms';
-export const OVERALL_SCORE_ALIAS = 'value';
+
+/** `metric_score_name` value for the run-level overall score; excluded from the Metric Scores segmented control. */
+export const OVERALL_METRIC_SCORE_NAME = 'overall';
 
 /**
  * Distribution histogram: the raw metric-score values are fetched and passed straight to

@@ -1985,6 +1985,7 @@ export default {
     EndDate: 'End date',
     Application: 'Application',
     OverallScore: 'Overall Score',
+    OverallScoreDescription: 'avg across all metrics',
     AvgFor: 'avg for:',
     SelectMetric: 'Select metric',
     MetricScoresTitle: 'Metric Scores',

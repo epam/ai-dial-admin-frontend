@@ -5,7 +5,6 @@ import { AnalyticsResult } from '@/src/models/evaluation/run';
 import { ApplicationRoute } from '@/src/types/routes';
 
 export interface SummaryTabUiState {
-  overallScoreMetricName: string | null;
   selectedStatistic: string | null;
   selectedDistributionMetricName: string | null;
 }

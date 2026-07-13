@@ -19,6 +19,8 @@ export interface MetricScoreGroup {
 
 /** Parsed `metric_score_results` for a run: the statistic names plus the bar groups per statistic. */
 export interface MetricScoresData {
+  /** Run-level overall score from the `overall` statistic row, or null when absent. */
+  overallScore: number | null;
   /** Distinct `metric_score_name` values (AVG/P10/…) in first-seen order — the SegmentedControl options. */
   statistics: string[];
   /** Bar groups keyed by statistic name. */
@@ -31,7 +33,7 @@ export interface MetricStatCard {
   value: number;
 }
 
-/** A selectable metric output field for the Overall Score card, from the run's metric snapshots. */
+/** A selectable metric output field for the Distribution section, from the run's metric snapshots. */
 export interface MetricOption {
   /** UI label / dropdown value: `<metric>.<outputField>`, e.g. `DeepEval: Answer Relevancy.score`. */
   name: string;

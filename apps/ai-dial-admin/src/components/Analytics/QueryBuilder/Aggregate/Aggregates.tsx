@@ -10,10 +10,11 @@ import {
 } from '@epam/ai-dial-ui-kit';
 
 import { AGGREGATE_FN_OPTIONS } from '@/src/constants/analytics/query-builder';
-import { QueryBuilderI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';
+import { sortByName } from '@/src/components/Analytics/QueryBuilder/utils/fields';
 import { createAggregate } from '@/src/components/Analytics/QueryBuilder/utils/state';
 import { QueryAggregateFn } from '@/src/models/analytics/query';
 
@@ -23,7 +24,7 @@ const Aggregates: FC = () => {
 
   const fieldOptions: SelectOption[] = [
     { value: '', label: t(QueryBuilderI18nKey.NoArgCountAll) },
-    ...state.fields.map((f) => ({ value: f.name, label: f.name })),
+    ...sortByName(state.fields).map((f) => ({ value: f.name, label: f.name })),
   ];
 
   const addAggregate = () => {
@@ -53,6 +54,8 @@ const Aggregates: FC = () => {
               label={index === 0 ? t(QueryBuilderI18nKey.Field) : undefined}
               options={fieldOptions}
               value={agg.field}
+              searchable
+              searchPlaceholder={t(BasicI18nKey.Search)}
               onChange={(v) => {
                 agg.field = v as string;
                 refresh();
