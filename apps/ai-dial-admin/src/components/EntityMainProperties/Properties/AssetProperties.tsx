@@ -114,7 +114,7 @@ const AssetProperties: FC<Props> = ({
         />
       )}
       {view === ApplicationRoute.AssetsToolsets && !isEntityImmutable && (
-        <ToolsetEndpoint isModal={isModal} entity={entity} onChange={onChangeEntity} />
+        <ToolsetEndpoint isModal={isModal} entity={entity} onChange={onChangeEntity} isAsset />
       )}
     </div>
   );

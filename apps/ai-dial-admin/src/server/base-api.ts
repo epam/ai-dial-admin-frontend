@@ -79,8 +79,15 @@ export class BaseApi {
     return this.sendActionRequest<T>(url, 'POST', token, dto, initHeaders);
   }
 
-  protected async postFiles(url: string, dto: FormData, token?: Token, method?: string): Promise<ServerActionResponse> {
-    return fileRequest(`${this.config.host || ''}${url}`, getAuthorizationHeader(token), dto, method).then((res) => {
+  protected async postFiles(
+    url: string,
+    dto: FormData,
+    token?: Token,
+    method?: string,
+    extraHeaders?: HeadersInit,
+  ): Promise<ServerActionResponse> {
+    const headers = { ...getAuthorizationHeader(token), ...extraHeaders };
+    return fileRequest(`${this.config.host || ''}${url}`, headers, dto, method).then((res) => {
       return this.handleResponse(res, method || 'POST');
     });
   }

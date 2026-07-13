@@ -17,6 +17,8 @@ export interface DialFile extends ModifiedEntity {
   extension?: string;
   id?: string;
   permissions?: string[];
+  /** Core resource etag, required to delete a file (see `migrate-files-to-core`'s etag bugfix). */
+  etag?: string;
 }
 
 export enum DialFileNodeType {

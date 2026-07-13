@@ -58,3 +58,15 @@ export interface CorePublicationUpdateDto {
   rules: CorePublicationRule[];
   displayAuthor?: string;
 }
+
+/** Body sent to `POST /v1/ops/publication/create` (`CreatePublicationDto`). */
+export interface CorePublicationCreateDto {
+  targetFolder: string;
+  resources: CorePublicationResource[];
+  rules?: CorePublicationRule[];
+}
+
+/** Response shape of `POST /v1/ops/publication/rule/list` (`RulesDto`). */
+export interface CorePublicationRulesResponse {
+  rules?: Record<string, CorePublicationRule[]>;
+}

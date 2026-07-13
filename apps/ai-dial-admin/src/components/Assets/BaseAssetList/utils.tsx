@@ -140,7 +140,7 @@ export const getEmptyAsset = (view: ApplicationRoute, path: string): AssetWithVe
         ...baseEmptyAsset,
         endpoint: 'http://mock',
         displayName: TEMP_FOLDER,
-        transport: ToolsetTransport.HTTP,
+        transport: ToolsetTransport.HTTP.toUpperCase() as ToolsetTransport,
       };
     default:
       return baseEmptyAsset;
@@ -226,8 +226,12 @@ export const CreateAssetActionMap: Record<
   (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>
 > = {
   [ApplicationRoute.Prompts]: createPrompt,
-  [ApplicationRoute.AssetsApplications]: createApp,
-  [ApplicationRoute.AssetsToolsets]: createToolset,
+  [ApplicationRoute.AssetsApplications]: createApp as (
+    asset: AssetWithVersion,
+  ) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  [ApplicationRoute.AssetsToolsets]: createToolset as (
+    asset: AssetWithVersion,
+  ) => Promise<ServerActionResponse<Record<string, unknown>>>,
 };
 
 export const MoveAssetActionMap: Record<

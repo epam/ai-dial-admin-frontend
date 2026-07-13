@@ -81,6 +81,7 @@ const Endpoints = <T extends object>({
           disabled={disabled}
           prefix={prefix}
           isCodeApp={isCodeApp}
+          view={view}
         />
       )}
     </>
