@@ -1,7 +1,5 @@
 import { SelectOption } from '@epam/ai-dial-ui-kit';
 
-import { QueryBuilderWarning } from '@/src/models/analytics/query-builder';
-import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import {
   QueryAggregateFn,
   QueryBucketUnit,
@@ -12,6 +10,8 @@ import {
   QuerySortNulls,
   QueryValueType,
 } from '@/src/models/analytics/query';
+import { ChartConfig, ChartType, QueryBuilderWarning } from '@/src/models/analytics/query-builder';
+import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 
 const capitalize = (s: string): string => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 const toOptions = (values: string[]): SelectOption[] => values.map((value) => ({ value, label: capitalize(value) }));
@@ -59,9 +59,16 @@ export const UNTAGGED_KEY = 'untagged';
 
 export const DATE_BIN_FN = 'date_bin';
 
+// Alias of the count() column added to aggregate queries that define no aggregates of their own.
+export const IMPLICIT_COUNT_ALIAS = 'count';
+
 export const LOCAL_STORAGE_QUERY_BUILDER_RAIL_KEY = 'query-builder-rail-collapsed';
 
 export const QUERY_BUILDER_RAIL_WIDTH_CLASS = 'w-[420px]';
+
+export const CHART_TYPE_OPTIONS: SelectOption[] = toOptions(Object.values(ChartType));
+
+export const DEFAULT_CHART_CONFIG: ChartConfig = { type: ChartType.Bar, xField: null, yField: null };
 
 export const WARNING_I18N: Record<QueryBuilderWarning, QueryBuilderI18nKey> = {
   [QueryBuilderWarning.MissingAggregateAlias]: QueryBuilderI18nKey.WarningMissingAggregateAlias,

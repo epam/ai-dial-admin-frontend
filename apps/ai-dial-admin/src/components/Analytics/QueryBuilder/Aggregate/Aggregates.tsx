@@ -91,7 +91,7 @@ const Aggregates: FC = () => {
           </ChipRow>
         ))}
         {!state.aggregates.length && (
-          <span className="dial-tiny-text text-secondary">{t(QueryBuilderI18nKey.NoFields)}</span>
+          <span className="dial-tiny-text text-secondary">{t(QueryBuilderI18nKey.CountOnly)}</span>
         )}
       </div>
     </SectionBlock>

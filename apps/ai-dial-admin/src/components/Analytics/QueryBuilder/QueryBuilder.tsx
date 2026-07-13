@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { DialLoader, DialNoDataContent, DialSegmentedControl } from '@epam/ai-dial-ui-kit';
 import type { SegmentedControlOption } from '@epam/ai-dial-ui-kit';
@@ -15,6 +15,7 @@ import SectionAction from '@/src/components/Analytics/QueryBuilder/Common/Sectio
 import SectionBlock from '@/src/components/Analytics/QueryBuilder/Common/SectionBlock';
 import FilterGroup from '@/src/components/Analytics/QueryBuilder/Filter/FilterGroup';
 import ModeSwitcher from '@/src/components/Analytics/QueryBuilder/Mode/ModeSwitcher';
+import DiscardQueryPopup from '@/src/components/Analytics/QueryBuilder/Modals/DiscardQueryPopup';
 import PageSection from '@/src/components/Analytics/QueryBuilder/Page/PageSection';
 import BuilderRail from '@/src/components/Analytics/QueryBuilder/Rail/BuilderRail';
 import CollapsedRail from '@/src/components/Analytics/QueryBuilder/Rail/CollapsedRail';
@@ -26,11 +27,12 @@ import QueryBuilderToolbar from '@/src/components/Analytics/QueryBuilder/Toolbar
 import { QueryBuilderContext } from '@/src/components/Analytics/QueryBuilder/context';
 import { fieldsToOptions, havingFieldOptions } from '@/src/components/Analytics/QueryBuilder/utils/fields';
 import { buildQuery } from '@/src/components/Analytics/QueryBuilder/utils/serialize';
-import { parseQuery } from '@/src/components/Analytics/QueryBuilder/utils/deserialize';
+import { sqlFromQuery } from '@/src/components/Analytics/QueryBuilder/utils/sql-generate';
+import { isBuilderRepresentable, parseQuery } from '@/src/components/Analytics/QueryBuilder/utils/deserialize';
+import { getResultColumns } from '@/src/components/Analytics/QueryBuilder/utils/result';
 import { createGroup, createInitialState, createPredicate } from '@/src/components/Analytics/QueryBuilder/utils/state';
 import { findTimestampField, liftTimeRange } from '@/src/components/Analytics/QueryBuilder/utils/time';
 import { LOCAL_STORAGE_QUERY_BUILDER_RAIL_KEY } from '@/src/constants/analytics/query-builder';
-import { QUERY_BUILDER_PALETTE } from '@/src/constants/analytics/query-builder-palette';
 import { ButtonsI18nKey, MenuI18nKey, QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useTimeFilter } from '@/src/hooks/use-time-filter';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -38,6 +40,7 @@ import { useI18n } from '@/src/locales/client';
 import { AnalyticsEntity, AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { QueryMode, StructuredQuery, StructuredQueryResult } from '@/src/models/analytics/query';
 import {
+  ExecutedQueryMeta,
   QueryBuilderColor,
   QueryBuilderState,
   QueryBuilderView,
@@ -48,6 +51,7 @@ import {
 import { TimeRange } from '@/src/models/time-range';
 import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storage';
 import { getErrorNotification } from '@/src/utils/notification';
+import { QUERY_BUILDER_PALETTE } from '@/src/constants/analytics/query-builder-palette';
 
 interface Props {
   initialEntities: AnalyticsEntity[];
@@ -68,13 +72,19 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
   const [view, setView] = useState<QueryBuilderView>(QueryBuilderView.Form);
   const [jsonText, setJsonText] = useState('');
   const [jsonInvalid, setJsonInvalid] = useState(false);
-  // SQL is an independent buffer: it seeds from nothing, persists across view switches, and never
-  // back-propagates into the builder state (the DSL cannot round-trip arbitrary SQL).
+  // Diverged: the JSON holds a valid query the visual builder cannot display (filter nesting deeper
+  // than root + one group level). It stays editable and runnable; only switching to Builder is guarded.
+  const [jsonDiverged, setJsonDiverged] = useState(false);
+  // SQL seeds from the builder (compiled on entering the view) but never back-propagates — the DSL
+  // cannot round-trip arbitrary SQL, which is why leaving *edited* SQL for the Builder is guarded.
   const [sqlText, setSqlText] = useState('');
+  const lastGeneratedSql = useRef('');
+  const [pendingView, setPendingView] = useState<QueryBuilderView | null>(null);
   const [isLoadingSchema, setIsLoadingSchema] = useState(false);
   const [schemaError, setSchemaError] = useState<string | null>(null);
   const [railCollapsed, setRailCollapsed] = useState(false);
   const [result, setResult] = useState<StructuredQueryResult | null>(null);
+  const [resultMeta, setResultMeta] = useState<ExecutedQueryMeta | null>(null);
   const [isRunning, setIsRunning] = useState(false);
 
   const timeFilter = useTimeFilter();
@@ -126,14 +136,43 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
     { value: QueryBuilderView.Sql, label: t(QueryBuilderI18nKey.ViewSql) },
   ];
 
-  // Switching views preserves each view's own buffer. Entering JSON re-seeds it from the current
-  // builder state (JSON mirrors the form); the SQL buffer is left untouched either way.
+  // Written modes (SQL, diverged JSON) can hold queries the Builder cannot display; switching to the
+  // Builder then requires confirming that the written query is dropped. SQL ⇄ JSON stays unguarded.
+  // Generated (unedited) SQL is the builder's own query in another notation — never guarded.
+  const sqlEdited = !!sqlText.trim() && sqlText !== lastGeneratedSql.current;
+
   const onChangeView = (next: QueryBuilderView) => {
-    if (next === QueryBuilderView.Json) {
+    if (next === view) return;
+    if (next === QueryBuilderView.Form) {
+      const sqlBlocks = isSqlView && sqlEdited;
+      const jsonBlocks = isJsonView && jsonDiverged;
+      if (sqlBlocks || jsonBlocks) {
+        setPendingView(next);
+        return;
+      }
+    }
+    if (next === QueryBuilderView.Json && !jsonDiverged) {
       setJsonText(json);
       setJsonInvalid(false);
     }
+    // Entering SQL compiles the builder query into the editor; user-edited SQL is never overwritten.
+    if (next === QueryBuilderView.Sql && !sqlEdited) {
+      const generated = sqlFromQuery(query);
+      setSqlText(generated);
+      lastGeneratedSql.current = generated;
+    }
     setView(next);
+  };
+
+  const onConfirmDiscard = () => {
+    setSqlText('');
+    lastGeneratedSql.current = '';
+    setJsonText('');
+    setJsonInvalid(false);
+    setJsonDiverged(false);
+    setState({ ...createInitialState(), entityName: state.entityName, fields: state.fields });
+    setView(pendingView ?? QueryBuilderView.Form);
+    setPendingView(null);
   };
 
   const onChangeJson = (text: string | undefined) => {
@@ -142,6 +181,11 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
     try {
       const parsed = JSON.parse(value) as StructuredQuery;
       setJsonInvalid(false);
+      if (!isBuilderRepresentable(parsed)) {
+        setJsonDiverged(true);
+        return;
+      }
+      setJsonDiverged(false);
       // A ge/le pair on the timestamp field belongs to the toolbar control, not the filter tree.
       const lifted = timestampField ? liftTimeRange(parsed.filter, timestampField) : null;
       const forState = lifted ? { ...parsed, filter: lifted.rest } : parsed;
@@ -161,6 +205,7 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
       request = { kind: QueryRequestKind.Sql, sql: sqlText };
     } else if (isJsonView) {
       try {
+        // The JSON view runs the query as written — including edits the builder cannot display.
         request = { kind: QueryRequestKind.Structured, query: JSON.parse(jsonText) as StructuredQuery };
       } catch {
         return;
@@ -174,7 +219,9 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
     const res =
       request.kind === QueryRequestKind.Sql ? await executeSqlQuery(request.sql) : await executeQuery(request.query);
     if (res.success) {
-      setResult(res.response ?? { rows: [] });
+      const response = res.response ?? { rows: [] };
+      setResult(response);
+      setResultMeta(buildExecutedMeta(request, response));
     } else {
       // Keep the previously shown result instead of replacing it with a broken grid.
       showNotification(
@@ -218,7 +265,7 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
           <DialNoDataContent title={t(QueryBuilderI18nKey.EntitiesLoadFailed)} />
         ) : (
           <div className="flex min-h-0 flex-1 border-t border-primary">
-            <ResultArea result={result} isRunning={isRunning} />
+            <ResultArea result={result} meta={resultMeta} isRunning={isRunning} />
             {railCollapsed ? (
               <CollapsedRail onExpand={() => onToggleRail(false)} />
             ) : (
@@ -245,6 +292,9 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
                   <div className="flex h-full min-h-0 flex-col gap-2">
                     {jsonInvalid && (
                       <span className="text-error dial-tiny-text">{t(QueryBuilderI18nKey.InvalidJson)}</span>
+                    )}
+                    {!jsonInvalid && jsonDiverged && (
+                      <span className="text-secondary dial-tiny-text">{t(QueryBuilderI18nKey.NotShownInBuilder)}</span>
                     )}
                     <div className="min-h-0 flex-1 overflow-hidden rounded border border-primary">
                       <JsonEditorBase value={jsonText} onChange={onChangeJson} />
@@ -333,11 +383,29 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
           </div>
         )}
       </div>
+
+      {pendingView !== null && <DiscardQueryPopup onConfirm={onConfirmDiscard} onCancel={() => setPendingView(null)} />}
     </QueryBuilderContext.Provider>
   );
 };
 
 const sameRange = (a: TimeRange, b?: TimeRange): boolean =>
   !!b && a.startDate.getTime() === b.startDate.getTime() && a.endDate.getTime() === b.endDate.getTime();
+
+const buildExecutedMeta = (request: QueryRunRequest, response: StructuredQueryResult): ExecutedQueryMeta => {
+  if (request.kind === QueryRequestKind.Sql) {
+    return { kind: request.kind, mode: QueryMode.Row, dimensionColumns: [], aggregateColumns: [] };
+  }
+  const dimensionColumns = request.query.group_by ?? [];
+  const resultColumns = getResultColumns(response)
+    .map((c) => c.field)
+    .filter((c): c is string => !!c);
+  return {
+    kind: request.kind,
+    mode: request.query.mode,
+    dimensionColumns,
+    aggregateColumns: resultColumns.filter((c) => !dimensionColumns.includes(c)),
+  };
+};
 
 export default QueryBuilder;
