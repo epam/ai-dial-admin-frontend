@@ -94,6 +94,8 @@ export default {
     HighAccuracy: 'High accuracy',
     LowAccuracy: 'Low accuracy',
     DeselectAll: 'Deselect all',
+    Collapse: 'Collapse',
+    Expand: 'Expand',
   },
   Menu: {
     Entities: 'Entities',
@@ -2234,6 +2236,8 @@ export default {
     ViewSql: 'SQL',
     ViewSwitcher: 'View',
     SqlQuery: 'SQL query',
+    DockToBottom: 'Dock to bottom',
+    DockToRight: 'Dock to right',
   },
   AnalyticsTables: {
     CreateSource: 'Create source',

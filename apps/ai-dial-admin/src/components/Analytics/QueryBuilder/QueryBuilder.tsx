@@ -27,7 +27,9 @@ import { havingFieldOptions, sortByName } from '@/src/components/Analytics/Query
 import { buildQuery, getAggregateWarnings } from '@/src/components/Analytics/QueryBuilder/utils/serialize';
 import { parseQuery } from '@/src/components/Analytics/QueryBuilder/utils/deserialize';
 import { createInitialState } from '@/src/components/Analytics/QueryBuilder/utils/state';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, LOCAL_STORAGE_QUERY_RESULT_DOCK_KEY } from '@/src/constants/main-layout';
+import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
+import { getFromLocalStorage } from '@/src/utils/local-storage';
 import { ButtonsI18nKey, MenuI18nKey, QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -186,7 +188,11 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
       }
       request = { kind: QueryRequestKind.Structured, query: runQuery };
     }
-    sidebar.showSidebar(<QueryResultSidebar request={request} />, 'w-1/2 max-w-[800px]');
+    const persisted = getFromLocalStorage(LOCAL_STORAGE_QUERY_RESULT_DOCK_KEY);
+    const position = persisted === SidebarPosition.Bottom ? SidebarPosition.Bottom : SidebarPosition.Right;
+    // No width class: it is fixed at open time but the user can toggle position at runtime, and a width
+    // utility would leak into the full-width bottom slot. Each slot uses its own default sizing.
+    sidebar.showSidebar(<QueryResultSidebar request={request} />, undefined, position);
   };
 
   return (

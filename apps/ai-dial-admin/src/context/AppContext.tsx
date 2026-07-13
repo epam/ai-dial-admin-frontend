@@ -37,8 +37,14 @@ interface AppContextSidebar {
   isMenuClosed?: boolean;
   className?: string;
   position?: SidebarPosition;
+  /** Whether the bottom-positioned sidebar is collapsed to its header. Only meaningful when position is Bottom. */
+  collapsed?: boolean;
   showSidebar: (content: ReactNode, className?: string, position?: SidebarPosition) => void;
   closeSidebar: () => void;
+  /** Switch the open sidebar between Right and Bottom at runtime; resets the collapsed state. */
+  setPosition: (position: SidebarPosition) => void;
+  /** Collapse/expand the bottom-positioned sidebar. */
+  toggleCollapsed: () => void;
   toggleIsMenuClosed?: () => void;
 }
 
@@ -78,6 +84,7 @@ export const AppContextProvider = ({
   const [content, setContent] = useState<ReactNode | null>(null);
   const [sideBarClassName, setSideBarClassName] = useState<string | undefined>(undefined);
   const [sidebarPosition, setSidebarPosition] = useState(SidebarPosition.Right);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const [isMenuClosed, setIsMenuClosed] = useState(false);
 
@@ -99,6 +106,7 @@ export const AppContextProvider = ({
     setContent(c);
     setSideBarClassName(className);
     setSidebarPosition(position);
+    setSidebarCollapsed(false);
     setShow(true);
   };
 
@@ -106,6 +114,16 @@ export const AppContextProvider = ({
     setContent(null);
     setShow(false);
     setSidebarPosition(SidebarPosition.Right);
+    setSidebarCollapsed(false);
+  };
+
+  const setPosition = (position: SidebarPosition) => {
+    setSidebarPosition(position);
+    setSidebarCollapsed(false);
+  };
+
+  const toggleCollapsed = () => {
+    setSidebarCollapsed((prev) => !prev);
   };
 
   const isReadOnlyAdmin =
@@ -126,7 +144,10 @@ export const AppContextProvider = ({
       showSidebar,
       className: sideBarClassName,
       position: sidebarPosition,
+      collapsed: sidebarCollapsed,
       closeSidebar,
+      setPosition,
+      toggleCollapsed,
       isMenuClosed,
       toggleIsMenuClosed,
     },

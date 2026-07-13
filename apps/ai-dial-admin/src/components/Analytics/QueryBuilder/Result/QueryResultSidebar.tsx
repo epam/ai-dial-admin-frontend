@@ -3,18 +3,22 @@
 import { FC, useEffect, useMemo, useState } from 'react';
 
 import { ColDef } from 'ag-grid-community';
-import { DialCloseButton, DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { DialCloseButton, DialGhostIconButton, DialLoader, DialNoDataContent, ElementSize } from '@epam/ai-dial-ui-kit';
+import { IconChevronDown, IconChevronUp, IconLayoutBottombar, IconLayoutSidebarRight } from '@tabler/icons-react';
 
 import { executeQuery, executeSqlQuery } from '@/src/app/[lang]/query-builder/actions';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import StatChip from '@/src/components/Analytics/QueryBuilder/Result/StatChip';
+import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
 import { getResultColumns, getResultTotal } from '@/src/components/Analytics/QueryBuilder/utils/result';
-import { QueryBuilderI18nKey } from '@/src/constants/i18n';
+import { BasicI18nKey, QueryBuilderI18nKey } from '@/src/constants/i18n';
+import { LOCAL_STORAGE_QUERY_RESULT_DOCK_KEY } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { StructuredQueryResult } from '@/src/models/analytics/query';
 import { QueryRequestKind, QueryRunRequest } from '@/src/models/analytics/query-builder';
+import { setToLocalStorage } from '@/src/utils/local-storage';
 import { getErrorNotification } from '@/src/utils/notification';
 
 interface Props {
@@ -57,11 +61,36 @@ const QueryResultSidebar: FC<Props> = ({ request }) => {
   const rows = result?.rows ?? [];
   const total = getResultTotal(result);
 
+  const isBottom = sidebar.position === SidebarPosition.Bottom;
+  const isCollapsed = sidebar.collapsed;
+
+  const onToggleDock = () => {
+    const next = isBottom ? SidebarPosition.Right : SidebarPosition.Bottom;
+    sidebar.setPosition(next);
+    setToLocalStorage(LOCAL_STORAGE_QUERY_RESULT_DOCK_KEY, next);
+  };
+
   return (
     <div className="flex size-full min-h-0 flex-col gap-y-4">
       <div className="flex items-center justify-between">
         <h3>{t(QueryBuilderI18nKey.Result)}</h3>
-        <DialCloseButton onClose={() => sidebar.closeSidebar()} />
+        <div className="flex items-center gap-2">
+          {isBottom && (
+            <DialGhostIconButton
+              size={ElementSize.Small}
+              icon={isCollapsed ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
+              title={isCollapsed ? t(BasicI18nKey.Expand) : t(BasicI18nKey.Collapse)}
+              onClick={() => sidebar.toggleCollapsed()}
+            />
+          )}
+          <DialGhostIconButton
+            size={ElementSize.Small}
+            icon={isBottom ? <IconLayoutSidebarRight size={16} /> : <IconLayoutBottombar size={16} />}
+            title={isBottom ? t(QueryBuilderI18nKey.DockToRight) : t(QueryBuilderI18nKey.DockToBottom)}
+            onClick={onToggleDock}
+          />
+          <DialCloseButton onClose={() => sidebar.closeSidebar()} />
+        </div>
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col">

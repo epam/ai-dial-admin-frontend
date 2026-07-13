@@ -28,4 +28,26 @@ describe('Sidebar', () => {
 
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
   });
+
+  test('renders the bottom slot (not the right aside) when position is Bottom', () => {
+    vi.mocked(useAppContext).mockReturnValue({
+      sidebar: { show: true, content: <div>content</div>, position: SidebarPosition.Bottom, collapsed: false },
+    } as AppContextType);
+
+    render(<Sidebar slot={SidebarPosition.Bottom} />);
+
+    expect(screen.getByText('content')).toBeInTheDocument();
+    expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
+  });
+
+  test('a slot only renders when it matches the active position', () => {
+    vi.mocked(useAppContext).mockReturnValue({
+      sidebar: { show: true, content: <div>content</div>, position: SidebarPosition.Bottom, collapsed: false },
+    } as AppContextType);
+
+    // Right slot must stay empty while the sidebar is docked to the bottom.
+    render(<Sidebar slot={SidebarPosition.Right} />);
+
+    expect(screen.queryByText('content')).not.toBeInTheDocument();
+  });
 });

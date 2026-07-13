@@ -153,6 +153,8 @@ export enum BasicI18nKey {
   HighAccuracy = 'Basic.HighAccuracy',
   LowAccuracy = 'Basic.LowAccuracy',
   DeselectAll = 'Basic.DeselectAll',
+  Collapse = 'Basic.Collapse',
+  Expand = 'Basic.Expand',
 }
 
 export enum EntitiesI18nKey {
@@ -2182,6 +2184,8 @@ export enum QueryBuilderI18nKey {
   ViewSql = 'QueryBuilder.ViewSql',
   ViewSwitcher = 'QueryBuilder.ViewSwitcher',
   SqlQuery = 'QueryBuilder.SqlQuery',
+  DockToBottom = 'QueryBuilder.DockToBottom',
+  DockToRight = 'QueryBuilder.DockToRight',
 }
 
 export enum AnalyticsTablesI18nKey {
