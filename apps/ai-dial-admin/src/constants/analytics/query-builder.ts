@@ -56,3 +56,7 @@ export const DEFAULT_BUCKET_AMOUNT = 5;
 export const UNTAGGED_KEY = 'untagged';
 
 export const DATE_BIN_FN = 'date_bin';
+
+export const LOCAL_STORAGE_QUERY_BUILDER_RAIL_KEY = 'query-builder-rail-collapsed';
+
+export const QUERY_BUILDER_RAIL_WIDTH_CLASS = 'w-[420px]';

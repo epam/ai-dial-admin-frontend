@@ -38,11 +38,11 @@ describe('getResultTotal', () => {
     expect(getResultTotal(null)).toBeUndefined();
   });
 
-  test('reads totalCount', () => {
-    expect(getResultTotal({ columns: [], rows: [], totalCount: 7 })).toBe(7);
+  test('reads the totalCount from a row-mode include_total response', () => {
+    expect(getResultTotal({ rows: [], totalCount: 42 })).toBe(42);
   });
 
-  test('undefined when totalCount absent', () => {
-    expect(getResultTotal({ columns: [], rows: [] })).toBeUndefined();
+  test('undefined when no total is present (aggregate/SQL runs)', () => {
+    expect(getResultTotal({ rows: [] })).toBeUndefined();
   });
 });

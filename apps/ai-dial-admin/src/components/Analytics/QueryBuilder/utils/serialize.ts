@@ -1,9 +1,11 @@
 import { DATE_BIN_FN, SORT_NULLS_DEFAULT } from '@/src/constants/analytics/query-builder';
+import { withTimeBound } from '@/src/components/Analytics/QueryBuilder/utils/time';
 import {
   FilterNode,
   FilterNodeKind,
   QueryBuilderState,
   QueryBuilderWarning,
+  QueryTimeBound,
 } from '@/src/models/analytics/query-builder';
 import {
   QueryExpr,
@@ -54,12 +56,15 @@ export const serializeNode = (node: FilterNode): QueryFilterNode | null => {
   return { op: node.op, args: [left, right] };
 };
 
-export const buildQuery = (state: QueryBuilderState): StructuredQuery => {
+// The optional time bound comes from the toolbar time filter: it serializes into the query filter
+// as visible ge/le predicates, so the JSON view, Copy, and Run all carry the same time bound.
+export const buildQuery = (state: QueryBuilderState, timeBound?: QueryTimeBound | null): StructuredQuery => {
   const q: StructuredQuery = { entity: state.entityName, mode: state.mode };
 
   if (state.distinct) q.distinct = true;
 
-  const filter = serializeNode(state.filter);
+  let filter = serializeNode(state.filter);
+  if (timeBound) filter = withTimeBound(filter, timeBound);
   if (filter) q.filter = filter;
 
   if (state.mode === QueryMode.Row) {
