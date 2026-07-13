@@ -11,6 +11,14 @@ import {
   QueryValueType,
   StructuredQuery,
 } from '@/src/models/analytics/query';
+import { TimeRange } from '@/src/models/time-range';
+
+// The toolbar time filter serializes into the structured query as ge/le predicates on this field —
+// resolved once per build so the JSON view, Copy, and Run all carry the same visible time bound.
+export interface QueryTimeBound {
+  field: string;
+  range: TimeRange;
+}
 
 export enum FilterNodeKind {
   Group = 'group',
@@ -87,14 +95,6 @@ export interface QueryBuilderState {
 export interface FieldOption {
   name: string;
   type?: string;
-}
-
-export interface SchemaPreviewRow {
-  field: string;
-  type: string;
-  family: string;
-  source: string;
-  tag: string;
 }
 
 export enum QueryBuilderView {

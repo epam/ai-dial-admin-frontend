@@ -13,8 +13,6 @@ export enum AnalyticsFieldType {
 
 export interface AnalyticsEntity {
   name: string;
-  complex?: boolean;
-  schemaIdField?: string;
 }
 
 export interface AnalyticsEntityField {

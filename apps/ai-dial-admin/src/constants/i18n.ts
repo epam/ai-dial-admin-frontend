@@ -2121,9 +2121,6 @@ export enum JsonAtaI18nKey {
 
 export enum QueryBuilderI18nKey {
   Source = 'QueryBuilder.Source',
-  InstanceId = 'QueryBuilder.InstanceId',
-  LoadSchema = 'QueryBuilder.LoadSchema',
-  SchemaPreview = 'QueryBuilder.SchemaPreview',
   Mode = 'QueryBuilder.Mode',
   RowMode = 'QueryBuilder.RowMode',
   RowModeCaption = 'QueryBuilder.RowModeCaption',
@@ -2180,14 +2177,8 @@ export enum QueryBuilderI18nKey {
   TimestampFieldPlaceholder = 'QueryBuilder.TimestampFieldPlaceholder',
   ViewJson = 'QueryBuilder.ViewJson',
   InvalidJson = 'QueryBuilder.InvalidJson',
-  SchemaGridField = 'QueryBuilder.SchemaGridField',
-  SchemaGridType = 'QueryBuilder.SchemaGridType',
-  SchemaGridFamily = 'QueryBuilder.SchemaGridFamily',
-  SchemaGridSource = 'QueryBuilder.SchemaGridSource',
-  SchemaGridTag = 'QueryBuilder.SchemaGridTag',
   EntitiesLoadFailed = 'QueryBuilder.EntitiesLoadFailed',
   SchemaLoadFailed = 'QueryBuilder.SchemaLoadFailed',
-  InstanceIdRequired = 'QueryBuilder.InstanceIdRequired',
   RunFailed = 'QueryBuilder.RunFailed',
   WarningMissingAggregateAlias = 'QueryBuilder.WarningMissingAggregateAlias',
   WarningMissingBucketField = 'QueryBuilder.WarningMissingBucketField',
@@ -2197,6 +2188,10 @@ export enum QueryBuilderI18nKey {
   ViewSql = 'QueryBuilder.ViewSql',
   ViewSwitcher = 'QueryBuilder.ViewSwitcher',
   SqlQuery = 'QueryBuilder.SqlQuery',
+  CollapsePanel = 'QueryBuilder.CollapsePanel',
+  OpenPanel = 'QueryBuilder.OpenPanel',
+  ResultsEmptyTitle = 'QueryBuilder.ResultsEmptyTitle',
+  ResultsEmptyDescription = 'QueryBuilder.ResultsEmptyDescription',
 }
 
 export enum AnalyticsTablesI18nKey {

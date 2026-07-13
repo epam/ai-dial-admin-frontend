@@ -19,14 +19,6 @@ export async function getEntitySchema(name: string): Promise<AnalyticsEntitySche
   return analyticsDataApi.getEntitySchema(name, await token());
 }
 
-export async function getDetailedEntitySchema(
-  name: string,
-  idField: string,
-  id: string,
-): Promise<AnalyticsEntitySchema | null> {
-  return analyticsDataApi.getDetailedEntitySchema(name, idField, id, await token());
-}
-
 export async function executeQuery(query: StructuredQuery): Promise<ServerActionResponse<StructuredQueryResult>> {
   return analyticsDataApi.executeAction(query, await token());
 }
