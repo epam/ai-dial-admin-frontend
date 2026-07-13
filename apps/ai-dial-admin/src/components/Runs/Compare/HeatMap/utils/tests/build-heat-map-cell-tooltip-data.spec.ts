@@ -1,9 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import {
-  ACCURACY_COLOR_MAP,
-  DELTA_POSITIVE_COLOR_MAP,
-} from '@/src/components/Common/ColorScale/constants';
+import { ACCURACY_COLOR_MAP, DELTA_POSITIVE_COLOR_MAP } from '@/src/components/Common/ColorScale/constants';
 import { RUN_COMPARE_PRIMARY_INDEX, RUN_COMPARE_SECONDARY_INDEX } from '@/src/components/Runs/Compare/constants';
 import { formatHeatMapTestCaseColId } from '@/src/components/Runs/Compare/HeatMap/constants';
 import { HeatMapColorDisplayMode, HeatMapRowType } from '@/src/components/Runs/Compare/HeatMap/models';
