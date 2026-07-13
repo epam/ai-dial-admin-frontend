@@ -62,6 +62,15 @@ describe('panel-columns', () => {
     expect((httpLeaves[1].context as CompareColumnPanelContext).panelName).toBe('Run #315');
     expect((httpLeaves[1].context as CompareColumnPanelContext).panelRunIndex).toBe('2');
     expect(getColId(httpLeaves[1])).toBe('cmp_http');
+    expect(httpLeaves.every((leaf) => leaf.hide === true)).toBe(true);
+  });
+
+  test('buildComparePanelColumnTree hides execution leaves by default', () => {
+    const panelTree = buildComparePanelColumnTree(getFlatDefs(), runNames);
+    const executionGroup = panelTree.find((col) => col.headerName === EXECUTION_GROUP_HEADER) as ColDef;
+    const executionLeaves = getChildren(executionGroup).flatMap((fieldGroup) => getChildren(fieldGroup));
+
+    expect(executionLeaves.every((leaf) => leaf.hide === true)).toBe(true);
   });
 
   test('buildComparePanelColumnTree nests execution status and metric groups', () => {

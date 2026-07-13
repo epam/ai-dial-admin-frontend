@@ -1,8 +1,7 @@
 'use client';
 
-import { ChangeEvent, FC, useCallback, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useMemo, useRef, useState } from 'react';
 
-import { IconSearch } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
@@ -28,7 +27,7 @@ import { EXECUTION_STATUS_FIELD_KEY, SECTION_I18N } from '@/src/components/Runs/
 import FullscreenDiffViewer from '@/src/components/Runs/Details/BottomDrawer/FullscreenDiffViewer';
 import { DiffViewState } from '@/src/components/Runs/Details/BottomDrawer/models';
 import { MetricDeltaKind } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
-import { BasicI18nKey, RunsI18nKey } from '@/src/constants/i18n';
+import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { mergeClasses } from '@/src/utils/merge-classes';
 
@@ -58,7 +57,6 @@ const CompareRowDetailPivotTable: FC<Props> = ({
 }) => {
   const t = useI18n();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [searchQuery, setSearchQuery] = useState('');
   const [diffView, setDiffView] = useState<DiffViewState | null>(null);
 
   const onOpenDiff = useCallback((field: CompareRowDetailField) => {
@@ -68,15 +66,11 @@ const CompareRowDetailPivotTable: FC<Props> = ({
   const onCloseDiff = useCallback(() => setDiffView(null), []);
 
   const filteredSections = useMemo(
-    () => filterRowDetailSections(sections, { searchQuery, showDiffsOnly }),
-    [sections, searchQuery, showDiffsOnly],
+    () => filterRowDetailSections(sections, { searchQuery: '', showDiffsOnly }),
+    [sections, showDiffsOnly],
   );
 
   const columns = useMemo(() => flattenPivotFields(filteredSections), [filteredSections]);
-
-  const onSearchChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(event.target.value);
-  }, []);
 
   const gridTemplateColumns = useMemo(() => getPivotGridTemplateColumns(columns), [columns]);
   const failedLabel = t(RunsI18nKey.MetricFailedText);
@@ -138,19 +132,8 @@ const CompareRowDetailPivotTable: FC<Props> = ({
             );
           })}
 
-          {/* Field label + search row */}
-          <div className={classNames(HEADER_CELL_BASE, LEFT_CELL_STICKY, 'z-30 border-r gap-2')}>
-            <div className="flex-1 min-w-0 h-6 pl-2 flex flex-row items-center border border-primary rounded text-secondary">
-              <IconSearch width={12} height={12} className="shrink-0" />
-              <input
-                type="text"
-                className="w-full border-0 dial-tiny dial-input px-2 py-0 bg-transparent outline-none"
-                value={searchQuery}
-                onChange={onSearchChange}
-                placeholder={t(BasicI18nKey.Search)}
-              />
-            </div>
-          </div>
+          {/* Field label row */}
+          <div className={classNames(HEADER_CELL_BASE, LEFT_CELL_STICKY, 'z-30 border-r')} aria-hidden />
           {columns.map((column) => (
             <div
               key={`field-${column.sectionKey}-${column.field.fieldKey}`}

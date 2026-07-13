@@ -17,6 +17,8 @@ import {
 import {
   CompareRowDetailField,
   CompareRowDetailSection,
+  RowDetailDeltaFilter,
+  RowDetailFieldFilter,
 } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/models';
 import { filterRowDetailSections } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/filter-row-detail-sections';
 import CompareRunIndexBadge from '@/src/components/Runs/Compare/CompareRunIndexBadge';
@@ -33,7 +35,6 @@ interface Props {
   comparedRunName: string;
   hasComparedMatch: boolean;
   showDiffsOnly: boolean;
-  onToggleDiffsOnly: () => void;
   hideHighlights: boolean;
 }
 
@@ -43,18 +44,19 @@ const CompareRowDetailTable: FC<Props> = ({
   comparedRunName,
   hasComparedMatch,
   showDiffsOnly,
-  onToggleDiffsOnly,
   hideHighlights,
 }) => {
   const t = useI18n();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const [searchQuery, setSearchQuery] = useState('');
+  const [fieldFilter, setFieldFilter] = useState<RowDetailFieldFilter | null>(null);
+  const [deltaFilter, setDeltaFilter] = useState<RowDetailDeltaFilter | null>(null);
   const [diffView, setDiffView] = useState<DiffViewState | null>(null);
 
   const filteredSections = useMemo(
-    () => filterRowDetailSections(sections, { searchQuery, showDiffsOnly }),
-    [sections, searchQuery, showDiffsOnly],
+    () => filterRowDetailSections(sections, { searchQuery, showDiffsOnly, fieldFilter, deltaFilter }),
+    [sections, searchQuery, showDiffsOnly, fieldFilter, deltaFilter],
   );
 
   const onToggleSection = useCallback((key: string) => {
@@ -103,10 +105,12 @@ const CompareRowDetailTable: FC<Props> = ({
 
           <FilterRow
             searchQuery={searchQuery}
-            showDiffsOnly={showDiffsOnly}
             onSearchChange={onSearchChange}
-            onToggleDiffsOnly={onToggleDiffsOnly}
             searchPlaceholder={t(BasicI18nKey.Search)}
+            fieldFilter={fieldFilter}
+            onFieldFilterChange={setFieldFilter}
+            deltaFilter={deltaFilter}
+            onDeltaFilterChange={setDeltaFilter}
           />
 
           {filteredSections.map((section) => {
