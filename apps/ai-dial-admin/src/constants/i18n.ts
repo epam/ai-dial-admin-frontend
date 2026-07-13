@@ -2158,8 +2158,6 @@ export enum QueryBuilderI18nKey {
   Cursor = 'QueryBuilder.Cursor',
   StructuredQueryJson = 'QueryBuilder.StructuredQueryJson',
   Run = 'QueryBuilder.Run',
-  Result = 'QueryBuilder.Result',
-  Rows = 'QueryBuilder.Rows',
   NoRows = 'QueryBuilder.NoRows',
   Total = 'QueryBuilder.Total',
   FieldPlaceholder = 'QueryBuilder.FieldPlaceholder',
@@ -2191,6 +2189,16 @@ export enum QueryBuilderI18nKey {
   HavingSubtitle = 'QueryBuilder.HavingSubtitle',
   NoConditions = 'QueryBuilder.NoConditions',
   NoHaving = 'QueryBuilder.NoHaving',
+  CountOnly = 'QueryBuilder.CountOnly',
+  RowsReturned = 'QueryBuilder.RowsReturned',
+  Fields = 'QueryBuilder.Fields',
+  ViewTable = 'QueryBuilder.ViewTable',
+  ViewChart = 'QueryBuilder.ViewChart',
+  ResultViewSwitcher = 'QueryBuilder.ResultViewSwitcher',
+  ChartTypeSwitcher = 'QueryBuilder.ChartTypeSwitcher',
+  ChartXAxis = 'QueryBuilder.ChartXAxis',
+  ChartYAxis = 'QueryBuilder.ChartYAxis',
+  ChartUnavailable = 'QueryBuilder.ChartUnavailable',
 }
 
 export enum AnalyticsTablesI18nKey {

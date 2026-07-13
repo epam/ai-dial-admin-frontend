@@ -240,6 +240,36 @@ describe('getAggregateWarnings', () => {
   });
 });
 
+describe('buildQuery implicit count', () => {
+  test('aggregate mode without aggregates appends count() so the result has a value column', () => {
+    const s = baseState();
+    s.mode = QueryMode.Aggregate;
+    s.groupBy = ['project_id'];
+    const q = buildQuery(s);
+    expect(q.select).toEqual([
+      { expr: { type: 'field', name: 'project_id' } },
+      { expr: { type: 'fn', name: 'count', args: [] }, as: 'count' },
+    ]);
+  });
+
+  test('user-defined aggregates suppress the implicit count', () => {
+    const s = baseState();
+    s.mode = QueryMode.Aggregate;
+    s.groupBy = ['project_id'];
+    const agg = createAggregate();
+    agg.field = 'total_tokens';
+    agg.alias = 'tokens';
+    s.aggregates = [agg];
+    const q = buildQuery(s);
+    expect(q.select?.filter((c) => c.expr.type === 'fn')).toHaveLength(1);
+  });
+
+  test('row mode never gets an implicit count', () => {
+    const q = buildQuery(baseState());
+    expect(q.select).toBeUndefined();
+  });
+});
+
 describe('buildQuery time bound', () => {
   const bound = {
     field: 'request_time',

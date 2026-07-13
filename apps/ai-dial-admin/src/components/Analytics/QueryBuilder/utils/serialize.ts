@@ -1,4 +1,4 @@
-import { DATE_BIN_FN, SORT_NULLS_DEFAULT } from '@/src/constants/analytics/query-builder';
+import { DATE_BIN_FN, IMPLICIT_COUNT_ALIAS, SORT_NULLS_DEFAULT } from '@/src/constants/analytics/query-builder';
 import { withTimeBound } from '@/src/components/Analytics/QueryBuilder/utils/time';
 import {
   FilterNode,
@@ -8,6 +8,7 @@ import {
   QueryTimeBound,
 } from '@/src/models/analytics/query-builder';
 import {
+  QueryAggregateFn,
   QueryExpr,
   QueryExprType,
   QueryFieldExpr,
@@ -100,6 +101,14 @@ export const buildQuery = (state: QueryBuilderState, timeBound?: QueryTimeBound 
       if (a.distinct) fnExpr.distinct = true;
       selectEntries.push({ expr: fnExpr, as: a.alias || '' });
     });
+    // Aggregate mode without aggregates counts the group rows: bare group tuples are useless and
+    // charts need at least one value column, so count() is the implicit measure.
+    if (!state.aggregates.length) {
+      selectEntries.push({
+        expr: { type: QueryExprType.Fn, name: QueryAggregateFn.Count, args: [] },
+        as: IMPLICIT_COUNT_ALIAS,
+      });
+    }
     if (selectEntries.length) q.select = selectEntries;
 
     const having = serializeNode(state.having);

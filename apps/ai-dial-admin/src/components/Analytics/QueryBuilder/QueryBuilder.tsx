@@ -27,6 +27,7 @@ import { QueryBuilderContext } from '@/src/components/Analytics/QueryBuilder/con
 import { fieldsToOptions, havingFieldOptions } from '@/src/components/Analytics/QueryBuilder/utils/fields';
 import { buildQuery } from '@/src/components/Analytics/QueryBuilder/utils/serialize';
 import { parseQuery } from '@/src/components/Analytics/QueryBuilder/utils/deserialize';
+import { getResultColumns } from '@/src/components/Analytics/QueryBuilder/utils/result';
 import { createGroup, createInitialState, createPredicate } from '@/src/components/Analytics/QueryBuilder/utils/state';
 import { findTimestampField, liftTimeRange } from '@/src/components/Analytics/QueryBuilder/utils/time';
 import { LOCAL_STORAGE_QUERY_BUILDER_RAIL_KEY } from '@/src/constants/analytics/query-builder';
@@ -38,6 +39,7 @@ import { useI18n } from '@/src/locales/client';
 import { AnalyticsEntity, AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { QueryMode, StructuredQuery, StructuredQueryResult } from '@/src/models/analytics/query';
 import {
+  ExecutedQueryMeta,
   QueryBuilderColor,
   QueryBuilderState,
   QueryBuilderView,
@@ -75,6 +77,7 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
   const [schemaError, setSchemaError] = useState<string | null>(null);
   const [railCollapsed, setRailCollapsed] = useState(false);
   const [result, setResult] = useState<StructuredQueryResult | null>(null);
+  const [resultMeta, setResultMeta] = useState<ExecutedQueryMeta | null>(null);
   const [isRunning, setIsRunning] = useState(false);
 
   const timeFilter = useTimeFilter();
@@ -174,7 +177,9 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
     const res =
       request.kind === QueryRequestKind.Sql ? await executeSqlQuery(request.sql) : await executeQuery(request.query);
     if (res.success) {
-      setResult(res.response ?? { rows: [] });
+      const response = res.response ?? { rows: [] };
+      setResult(response);
+      setResultMeta(buildExecutedMeta(request, response));
     } else {
       // Keep the previously shown result instead of replacing it with a broken grid.
       showNotification(
@@ -218,7 +223,7 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
           <DialNoDataContent title={t(QueryBuilderI18nKey.EntitiesLoadFailed)} />
         ) : (
           <div className="flex min-h-0 flex-1 border-t border-primary">
-            <ResultArea result={result} isRunning={isRunning} />
+            <ResultArea result={result} meta={resultMeta} isRunning={isRunning} />
             {railCollapsed ? (
               <CollapsedRail onExpand={() => onToggleRail(false)} />
             ) : (
@@ -335,6 +340,22 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
       </div>
     </QueryBuilderContext.Provider>
   );
+};
+
+const buildExecutedMeta = (request: QueryRunRequest, response: StructuredQueryResult): ExecutedQueryMeta => {
+  if (request.kind === QueryRequestKind.Sql) {
+    return { kind: request.kind, mode: QueryMode.Row, dimensionColumns: [], aggregateColumns: [] };
+  }
+  const dimensionColumns = request.query.group_by ?? [];
+  const resultColumns = getResultColumns(response)
+    .map((c) => c.field)
+    .filter((c): c is string => !!c);
+  return {
+    kind: request.kind,
+    mode: request.query.mode,
+    dimensionColumns,
+    aggregateColumns: resultColumns.filter((c) => !dimensionColumns.includes(c)),
+  };
 };
 
 const sameRange = (a: TimeRange, b?: TimeRange): boolean =>

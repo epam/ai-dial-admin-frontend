@@ -103,25 +103,6 @@ export interface FieldOptionGroup {
   options: FieldOption[];
 }
 
-// The builder's own color language, mirroring how the same query reads in the Monaco JSON view:
-// fields/keys are teal, values blue, grouping brackets purple, keywords yellow, numbers orange.
-export enum QueryBuilderColor {
-  Dimension = 'dimension',
-  Measure = 'measure',
-  Grouping = 'grouping',
-  Constraint = 'constraint',
-  Keyword = 'keyword',
-  Numeric = 'numeric',
-}
-
-export interface QueryBuilderColorClasses {
-  marker: string;
-  text: string;
-  chipBg: string;
-  chipText: string;
-  borderAccent: string;
-}
-
 export enum QueryBuilderView {
   Form = 'form',
   Json = 'json',
@@ -145,4 +126,49 @@ export enum QueryBuilderWarning {
   MissingBucketField = 'MissingBucketField',
   MissingBucketAlias = 'MissingBucketAlias',
   EmptyAggregate = 'EmptyAggregate',
+}
+
+// The builder's own color language, mirroring how the same query reads in the Monaco JSON view:
+// fields/keys are teal, values blue, grouping brackets purple, keywords yellow, numbers orange.
+export enum QueryBuilderColor {
+  Dimension = 'dimension',
+  Measure = 'measure',
+  Grouping = 'grouping',
+  Constraint = 'constraint',
+  Keyword = 'keyword',
+  Numeric = 'numeric',
+}
+
+export interface QueryBuilderColorClasses {
+  marker: string;
+  text: string;
+  chipBg: string;
+  chipText: string;
+  borderAccent: string;
+}
+
+export enum QueryResultView {
+  Table = 'table',
+  Chart = 'chart',
+}
+
+export enum ChartType {
+  Bar = 'bar',
+  Line = 'line',
+  Area = 'area',
+}
+
+export interface ChartConfig {
+  type: ChartType;
+  xField: string | null;
+  yField: string | null;
+}
+
+// Snapshot of the query a result came from. Chart availability and the X/Y option lists must follow
+// what was actually executed — the live builder state can diverge from the shown result between runs.
+export interface ExecutedQueryMeta {
+  kind: QueryRequestKind;
+  mode: QueryMode;
+  dimensionColumns: string[];
+  aggregateColumns: string[];
 }
