@@ -11,9 +11,10 @@ import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import Aggregates from '@/src/components/Analytics/QueryBuilder/Aggregate/Aggregates';
 import GroupBySection from '@/src/components/Analytics/QueryBuilder/Aggregate/GroupBySection';
 import TimeBuckets from '@/src/components/Analytics/QueryBuilder/Aggregate/TimeBuckets';
+import SectionAction from '@/src/components/Analytics/QueryBuilder/Common/SectionAction';
+import SectionBlock from '@/src/components/Analytics/QueryBuilder/Common/SectionBlock';
 import FilterGroup from '@/src/components/Analytics/QueryBuilder/Filter/FilterGroup';
-import LabeledField from '@/src/components/Analytics/QueryBuilder/LabeledField';
-import ModeSelector from '@/src/components/Analytics/QueryBuilder/Mode/ModeSelector';
+import ModeSwitcher from '@/src/components/Analytics/QueryBuilder/Mode/ModeSwitcher';
 import PageSection from '@/src/components/Analytics/QueryBuilder/Page/PageSection';
 import BuilderRail from '@/src/components/Analytics/QueryBuilder/Rail/BuilderRail';
 import CollapsedRail from '@/src/components/Analytics/QueryBuilder/Rail/CollapsedRail';
@@ -23,12 +24,13 @@ import SortKeys from '@/src/components/Analytics/QueryBuilder/Sort/SortKeys';
 import SqlEditor from '@/src/components/Analytics/QueryBuilder/Sql/SqlEditor';
 import QueryBuilderToolbar from '@/src/components/Analytics/QueryBuilder/Toolbar/QueryBuilderToolbar';
 import { QueryBuilderContext } from '@/src/components/Analytics/QueryBuilder/context';
-import { havingFieldOptions, sortByName } from '@/src/components/Analytics/QueryBuilder/utils/fields';
-import { buildQuery, getAggregateWarnings } from '@/src/components/Analytics/QueryBuilder/utils/serialize';
+import { fieldsToOptions, havingFieldOptions } from '@/src/components/Analytics/QueryBuilder/utils/fields';
+import { buildQuery } from '@/src/components/Analytics/QueryBuilder/utils/serialize';
 import { parseQuery } from '@/src/components/Analytics/QueryBuilder/utils/deserialize';
-import { createInitialState } from '@/src/components/Analytics/QueryBuilder/utils/state';
+import { createGroup, createInitialState, createPredicate } from '@/src/components/Analytics/QueryBuilder/utils/state';
 import { findTimestampField, liftTimeRange } from '@/src/components/Analytics/QueryBuilder/utils/time';
 import { LOCAL_STORAGE_QUERY_BUILDER_RAIL_KEY } from '@/src/constants/analytics/query-builder';
+import { QUERY_BUILDER_PALETTE } from '@/src/constants/analytics/query-builder-palette';
 import { ButtonsI18nKey, MenuI18nKey, QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useTimeFilter } from '@/src/hooks/use-time-filter';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -36,9 +38,9 @@ import { useI18n } from '@/src/locales/client';
 import { AnalyticsEntity, AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { QueryMode, StructuredQuery, StructuredQueryResult } from '@/src/models/analytics/query';
 import {
+  QueryBuilderColor,
   QueryBuilderState,
   QueryBuilderView,
-  QueryBuilderWarning,
   QueryRequestKind,
   QueryRunRequest,
   QueryTimeBound,
@@ -46,13 +48,6 @@ import {
 import { TimeRange } from '@/src/models/time-range';
 import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storage';
 import { getErrorNotification } from '@/src/utils/notification';
-
-const WARNING_KEYS: Record<QueryBuilderWarning, QueryBuilderI18nKey> = {
-  [QueryBuilderWarning.MissingAggregateAlias]: QueryBuilderI18nKey.WarningMissingAggregateAlias,
-  [QueryBuilderWarning.MissingBucketField]: QueryBuilderI18nKey.WarningMissingBucketField,
-  [QueryBuilderWarning.MissingBucketAlias]: QueryBuilderI18nKey.WarningMissingBucketAlias,
-  [QueryBuilderWarning.EmptyAggregate]: QueryBuilderI18nKey.WarningEmptyAggregate,
-};
 
 interface Props {
   initialEntities: AnalyticsEntity[];
@@ -120,7 +115,6 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
   );
   const query = useMemo(() => buildQuery(state, timeBound), [state, timeBound]);
   const json = useMemo(() => JSON.stringify(query, null, 2), [query]);
-  const warnings = useMemo(() => getAggregateWarnings(state).map((w) => t(WARNING_KEYS[w])), [state, t]);
   const contextValue = useMemo(() => ({ state, refresh, patch }), [state, refresh, patch]);
   const isAggregate = state.mode === QueryMode.Aggregate;
   const isJsonView = view === QueryBuilderView.Json;
@@ -266,56 +260,72 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
                     />
                   </div>
                 ) : (
-                  <div className="flex flex-col gap-6">
-                    {warnings.length > 0 && (
-                      <div className="flex flex-col gap-1 rounded border border-warning bg-warning px-3 py-2 dial-tiny-text text-primary">
-                        {warnings.map((w) => (
-                          <span key={w}>{w}</span>
-                        ))}
-                      </div>
-                    )}
-                    <LabeledField title={t(QueryBuilderI18nKey.Mode)}>
-                      <ModeSelector />
-                    </LabeledField>
+                  <div className="flex flex-col gap-3">
+                    <ModeSwitcher />
 
-                    <LabeledField title={t(QueryBuilderI18nKey.Filter)} pill={t(QueryBuilderI18nKey.Where)}>
-                      <FilterGroup
-                        node={state.filter}
-                        parent={null}
-                        fieldOptions={sortByName(state.fields).map((f) => ({ name: f.name, type: f.type }))}
-                      />
-                    </LabeledField>
-
-                    {!isAggregate && (
-                      <LabeledField title={t(QueryBuilderI18nKey.Select)} pill={t(QueryBuilderI18nKey.Projection)}>
-                        <SelectProjection />
-                      </LabeledField>
+                    {isAggregate ? (
+                      <>
+                        <GroupBySection />
+                        <TimeBuckets />
+                        <Aggregates />
+                      </>
+                    ) : (
+                      <SelectProjection />
                     )}
+
+                    <SectionBlock
+                      title={t(QueryBuilderI18nKey.Filter)}
+                      markerClassName={QUERY_BUILDER_PALETTE[QueryBuilderColor.Grouping].marker}
+                      action={
+                        <>
+                          <SectionAction
+                            label={t(QueryBuilderI18nKey.AddCondition)}
+                            onClick={() => {
+                              state.filter.children.push(createPredicate());
+                              refresh();
+                            }}
+                          />
+                          <SectionAction
+                            label={t(QueryBuilderI18nKey.AddGroup)}
+                            colorClassName={QUERY_BUILDER_PALETTE[QueryBuilderColor.Grouping].text}
+                            onClick={() => {
+                              state.filter.children.push(createGroup());
+                              refresh();
+                            }}
+                          />
+                        </>
+                      }
+                    >
+                      {!state.filter.children.length && (
+                        <span className="dial-tiny-text text-secondary">{t(QueryBuilderI18nKey.NoConditions)}</span>
+                      )}
+                      <FilterGroup node={state.filter} parent={null} fieldOptions={fieldsToOptions(state.fields)} />
+                    </SectionBlock>
 
                     {isAggregate && (
-                      <>
-                        <LabeledField title={t(QueryBuilderI18nKey.GroupBy)}>
-                          <GroupBySection />
-                        </LabeledField>
-                        <LabeledField title={t(QueryBuilderI18nKey.TimeBucket)}>
-                          <TimeBuckets />
-                        </LabeledField>
-                        <LabeledField title={t(QueryBuilderI18nKey.Aggregate)}>
-                          <Aggregates />
-                        </LabeledField>
-                        <LabeledField title={t(QueryBuilderI18nKey.Having)}>
-                          <FilterGroup node={state.having} parent={null} fieldOptions={havingFieldOptions(state)} />
-                        </LabeledField>
-                      </>
+                      <SectionBlock
+                        title={t(QueryBuilderI18nKey.Having)}
+                        subtitle={t(QueryBuilderI18nKey.HavingSubtitle)}
+                        markerClassName={QUERY_BUILDER_PALETTE[QueryBuilderColor.Constraint].marker}
+                        action={
+                          <SectionAction
+                            label={t(QueryBuilderI18nKey.AddCondition)}
+                            onClick={() => {
+                              state.having.children.push(createPredicate());
+                              refresh();
+                            }}
+                          />
+                        }
+                      >
+                        {!state.having.children.length && (
+                          <span className="dial-tiny-text text-secondary">{t(QueryBuilderI18nKey.NoHaving)}</span>
+                        )}
+                        <FilterGroup node={state.having} parent={null} fieldOptions={havingFieldOptions(state)} />
+                      </SectionBlock>
                     )}
 
-                    <LabeledField title={t(QueryBuilderI18nKey.Sort)}>
-                      <SortKeys />
-                    </LabeledField>
-
-                    <LabeledField title={t(QueryBuilderI18nKey.Page)}>
-                      <PageSection />
-                    </LabeledField>
+                    <SortKeys />
+                    <PageSection />
                   </div>
                 )}
               </BuilderRail>

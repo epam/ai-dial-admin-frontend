@@ -1,5 +1,7 @@
 import { SelectOption } from '@epam/ai-dial-ui-kit';
 
+import { QueryBuilderWarning } from '@/src/models/analytics/query-builder';
+import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import {
   QueryAggregateFn,
   QueryBucketUnit,
@@ -60,3 +62,18 @@ export const DATE_BIN_FN = 'date_bin';
 export const LOCAL_STORAGE_QUERY_BUILDER_RAIL_KEY = 'query-builder-rail-collapsed';
 
 export const QUERY_BUILDER_RAIL_WIDTH_CLASS = 'w-[420px]';
+
+export const WARNING_I18N: Record<QueryBuilderWarning, QueryBuilderI18nKey> = {
+  [QueryBuilderWarning.MissingAggregateAlias]: QueryBuilderI18nKey.WarningMissingAggregateAlias,
+  [QueryBuilderWarning.MissingBucketField]: QueryBuilderI18nKey.WarningMissingBucketField,
+  [QueryBuilderWarning.MissingBucketAlias]: QueryBuilderI18nKey.WarningMissingBucketAlias,
+  [QueryBuilderWarning.EmptyAggregate]: QueryBuilderI18nKey.WarningEmptyAggregate,
+};
+
+// Which section header surfaces which aggregate-validation warning.
+export const GROUP_BY_SECTION_WARNINGS = [QueryBuilderWarning.EmptyAggregate];
+export const BUCKET_SECTION_WARNINGS = [QueryBuilderWarning.MissingBucketField, QueryBuilderWarning.MissingBucketAlias];
+export const AGGREGATE_SECTION_WARNINGS = [
+  QueryBuilderWarning.MissingAggregateAlias,
+  QueryBuilderWarning.EmptyAggregate,
+];

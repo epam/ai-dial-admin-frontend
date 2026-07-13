@@ -95,6 +95,31 @@ export interface QueryBuilderState {
 export interface FieldOption {
   name: string;
   type?: string;
+  tag?: string;
+}
+
+export interface FieldOptionGroup {
+  tag: string;
+  options: FieldOption[];
+}
+
+// The builder's own color language, mirroring how the same query reads in the Monaco JSON view:
+// fields/keys are teal, values blue, grouping brackets purple, keywords yellow, numbers orange.
+export enum QueryBuilderColor {
+  Dimension = 'dimension',
+  Measure = 'measure',
+  Grouping = 'grouping',
+  Constraint = 'constraint',
+  Keyword = 'keyword',
+  Numeric = 'numeric',
+}
+
+export interface QueryBuilderColorClasses {
+  marker: string;
+  text: string;
+  chipBg: string;
+  chipText: string;
+  borderAccent: string;
 }
 
 export enum QueryBuilderView {

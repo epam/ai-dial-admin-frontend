@@ -2121,14 +2121,9 @@ export enum JsonAtaI18nKey {
 
 export enum QueryBuilderI18nKey {
   Source = 'QueryBuilder.Source',
-  Mode = 'QueryBuilder.Mode',
   RowMode = 'QueryBuilder.RowMode',
-  RowModeCaption = 'QueryBuilder.RowModeCaption',
   AggregateMode = 'QueryBuilder.AggregateMode',
-  AggregateModeCaption = 'QueryBuilder.AggregateModeCaption',
-  DistinctRows = 'QueryBuilder.DistinctRows',
   Filter = 'QueryBuilder.Filter',
-  Where = 'QueryBuilder.Where',
   AddCondition = 'QueryBuilder.AddCondition',
   AddGroup = 'QueryBuilder.AddGroup',
   IsNull = 'QueryBuilder.IsNull',
@@ -2139,8 +2134,6 @@ export enum QueryBuilderI18nKey {
   Direction = 'QueryBuilder.Direction',
   Nulls = 'QueryBuilder.Nulls',
   Select = 'QueryBuilder.Select',
-  Projection = 'QueryBuilder.Projection',
-  Tags = 'QueryBuilder.Tags',
   Untagged = 'QueryBuilder.Untagged',
   NoFields = 'QueryBuilder.NoFields',
   GroupBy = 'QueryBuilder.GroupBy',
@@ -2151,7 +2144,6 @@ export enum QueryBuilderI18nKey {
   Aggregate = 'QueryBuilder.Aggregate',
   Function = 'QueryBuilder.Function',
   AddAggregate = 'QueryBuilder.AddAggregate',
-  Distinct = 'QueryBuilder.Distinct',
   Alias = 'QueryBuilder.Alias',
   NoArgCountAll = 'QueryBuilder.NoArgCountAll',
   Having = 'QueryBuilder.Having',
@@ -2192,6 +2184,13 @@ export enum QueryBuilderI18nKey {
   OpenPanel = 'QueryBuilder.OpenPanel',
   ResultsEmptyTitle = 'QueryBuilder.ResultsEmptyTitle',
   ResultsEmptyDescription = 'QueryBuilder.ResultsEmptyDescription',
+  ModeSwitcher = 'QueryBuilder.ModeSwitcher',
+  SearchFields = 'QueryBuilder.SearchFields',
+  NoMatchingFields = 'QueryBuilder.NoMatchingFields',
+  AddField = 'QueryBuilder.AddField',
+  HavingSubtitle = 'QueryBuilder.HavingSubtitle',
+  NoConditions = 'QueryBuilder.NoConditions',
+  NoHaving = 'QueryBuilder.NoHaving',
 }
 
 export enum AnalyticsTablesI18nKey {

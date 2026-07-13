@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -46,26 +46,45 @@ describe('QueryBuilder', () => {
     expect(screen.getByText(/dial_usage_log/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /QueryBuilder.Run/ })).toBeEnabled();
     expect(screen.getByText('QueryBuilder.ResultsEmptyTitle')).toBeInTheDocument();
-    expect(screen.getByText(QueryBuilderI18nKey.Mode)).toBeInTheDocument();
-    expect(screen.getByText('event_id')).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'QueryBuilder.AggregateMode' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'QueryBuilder.Filter' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'QueryBuilder.Sort' })).toBeInTheDocument();
   });
 
   test('shows the empty state when no entities were provided', () => {
     renderBuilder({ initialEntities: [], initialEntityName: '', initialFields: [] });
 
     expect(screen.getByText(QueryBuilderI18nKey.EntitiesLoadFailed)).toBeInTheDocument();
-    expect(screen.queryByText(QueryBuilderI18nKey.Mode)).not.toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: QueryBuilderI18nKey.ViewForm })).not.toBeInTheDocument();
   });
 
-  test('projection tag filter narrows visible fields without changing selection', async () => {
+  test('mode switcher swaps projection and aggregate sections without DISTINCT controls', async () => {
     const user = userEvent.setup();
     renderBuilder();
 
-    await user.click(screen.getByText('event_id'));
-    await user.click(screen.getByText('lineage'));
+    expect(screen.getByRole('heading', { name: 'QueryBuilder.Select' })).toBeInTheDocument();
 
-    await waitFor(() => expect(screen.queryByText('event_id')).not.toBeInTheDocument());
-    expect(screen.getByText('project_id')).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.AggregateMode' }));
+
+    expect(screen.getByRole('heading', { name: /QueryBuilder.GroupBy/ })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /QueryBuilder\.Aggregate/ })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /QueryBuilder.Having/ })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'QueryBuilder.Select' })).not.toBeInTheDocument();
+    expect(screen.queryByText('QueryBuilder.DistinctRows')).not.toBeInTheDocument();
+    // Empty aggregate setup surfaces warning icons on the affected section headers (text in tooltip).
+    expect(screen.getAllByLabelText(/QueryBuilder.WarningEmptyAggregate/).length).toBeGreaterThan(0);
+    // The service computes totals only for row-mode offset paging — the toggle hides in aggregate.
+    expect(screen.queryByText('QueryBuilder.IncludeTotal')).not.toBeInTheDocument();
+  });
+
+  test('nested filter groups offer no add-group action', async () => {
+    const user = userEvent.setup();
+    renderBuilder();
+
+    await user.click(screen.getByRole('button', { name: 'QueryBuilder.AddGroup' }));
+
+    expect(screen.getAllByRole('button', { name: 'QueryBuilder.AddGroup' })).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: 'QueryBuilder.AddCondition' }).length).toBeGreaterThan(1);
   });
 
   test('offers Form, JSON and SQL views in the rail once a schema is loaded', () => {
@@ -98,7 +117,7 @@ describe('QueryBuilder', () => {
     await user.type(screen.getByLabelText('sql-editor'), 'SELECT 1');
 
     await user.click(screen.getByRole('tab', { name: QueryBuilderI18nKey.ViewForm }));
-    expect(screen.getByText(QueryBuilderI18nKey.Mode)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'QueryBuilder.Filter' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('tab', { name: QueryBuilderI18nKey.ViewSql }));
     expect(screen.getByLabelText('sql-editor')).toHaveValue('SELECT 1');
