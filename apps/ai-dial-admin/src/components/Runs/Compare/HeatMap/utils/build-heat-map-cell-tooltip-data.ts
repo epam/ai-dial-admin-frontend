@@ -71,6 +71,16 @@ export const buildHeatMapCellTooltipData = (
   const isDeltaMode = colorDisplayMode === HeatMapColorDisplayMode.Delta;
   const input = row.metricKey ?? row.label;
 
+  if (isDeltaMode && value === 0) {
+    return {
+      testCase: testCaseLabel,
+      metric: row.groupKey,
+      input,
+      valueLabelKey: RunsI18nKey.RunCompareHeatMapTooltipDelta,
+      valueTextKey: RunsI18nKey.RunCompareHeatMapNotApplicable,
+    };
+  }
+
   const tooltipData: HeatMapCellTooltipData = {
     testCase: testCaseLabel,
     metric: row.groupKey,

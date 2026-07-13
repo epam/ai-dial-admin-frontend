@@ -24,6 +24,8 @@ const HeatMapCellTooltip: FC<ITooltipParams<HeatMapRow, HeatMapCellTooltipData>>
     rows.push({ labelKey: RunsI18nKey.RunCompareHeatMapTooltipRun, value: value.runLabel });
   }
 
+  const hasValueDisplay = value.valueRow != null || value.valueTextKey != null;
+
   return (
     <div className="flex flex-col items-center isolate">
       <div className="h-1 w-[9px] relative z-[2] -mb-px">
@@ -38,7 +40,7 @@ const HeatMapCellTooltip: FC<ITooltipParams<HeatMapRow, HeatMapCellTooltipData>>
               {t(row.labelKey)}
             </span>
           ))}
-          {value.valueRow && (
+          {hasValueDisplay && (
             <span className="dial-tiny-text text-secondary whitespace-nowrap">{t(value.valueLabelKey)}</span>
           )}
         </div>
@@ -60,6 +62,9 @@ const HeatMapCellTooltip: FC<ITooltipParams<HeatMapRow, HeatMapCellTooltipData>>
               />
               <span className="dial-tiny-text text-primary whitespace-nowrap">{value.valueRow.value}</span>
             </div>
+          )}
+          {!value.valueRow && value.valueTextKey && (
+            <span className="dial-tiny-text text-primary whitespace-nowrap">{t(value.valueTextKey)}</span>
           )}
         </div>
       </div>
