@@ -1,9 +1,9 @@
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
-import { Toolset, ToolsetAuthCredentialLevel, ToolsetAuthStatus, ToolsetAuthType } from '@/src/models/dial/toolset';
+import { Toolset, ToolsetAuthStatus, ToolsetAuthType } from '@/src/models/dial/toolset';
 
 export const getToolsetSignInBody = (
   toolset: Toolset,
-  level: ToolsetAuthCredentialLevel,
+  level: string,
   apiKey?: string,
   authCode?: string,
   redirectUri?: string,
@@ -17,7 +17,7 @@ export const getToolsetSignInBody = (
   return { ...body, apiKey };
 };
 
-export const getToolsetBasicBody = (toolset: Toolset, level: ToolsetAuthCredentialLevel) => {
+export const getToolsetBasicBody = (toolset: Toolset, level: string) => {
   return {
     url: (toolset as AssetToolset).path ? `toolsets/${(toolset as AssetToolset).path}` : toolset.name,
     credentialsLevel: level,

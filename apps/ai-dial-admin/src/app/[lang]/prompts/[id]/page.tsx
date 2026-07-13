@@ -1,17 +1,13 @@
-import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
-import { assetsApi } from '@/src/app/api/api';
 import PromptView from '@/src/components/Assets/Prompts/View/View';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
+import { Asset } from '@/src/models/dial/deployment-asset';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { errorObjLog } from '@/src/server/logger';
-import { ResourceType } from '@/src/types/resource-type';
-import { getUserToken } from '@/src/utils/auth/auth-request';
-import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
-import { Asset } from '@/src/models/dial/deployment-asset';
+import { getPrompt, getPrompts } from '../actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,8 +15,6 @@ export default async function Page(params: {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ path: string }>;
 }) {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-
   let etag = DEFAULT_ETAG;
 
   let prompts: DialPrompt[] = [];
@@ -30,12 +24,12 @@ export default async function Page(params: {
     const path = decodeURIComponent((await params.searchParams).path);
     const name = decodeURIComponent((await params.params).id);
 
-    prompt = await assetsApi.getAssetWithEtag(token, path, ResourceType.PROMPT, etag).then((res) => {
+    prompt = await getPrompt(path, etag).then((res) => {
       etag = res?.etag || DEFAULT_ETAG;
       return res?.response as DialPrompt | null;
     });
 
-    prompts = ((await assetsApi.getAssetList(token, `${prompt?.folderId}/`, ResourceType.PROMPT))?.filter(
+    prompts = ((await getPrompts(prompt?.folderId as string))?.filter(
       (p) => (p as Asset).nodeType === DialFileNodeType.ITEM && p.name === name,
     ) || []) as DialPrompt[];
   } catch (e) {

@@ -19,6 +19,22 @@ describe('Utils :: formatDateTimeToLocalString', () => {
 
     vi.useRealTimers();
   });
+
+  test('formats a numeric timestamp', () => {
+    const timestamp = new Date('2023-12-25T12:00:00Z').getTime();
+
+    const result = formatDateTimeToLocalString(timestamp);
+
+    expect(result).toBe(new Date(timestamp).toLocaleString());
+  });
+
+  test('formats a numeric timestamp passed as a string', () => {
+    const timestamp = new Date('2023-12-25T12:00:00Z').getTime();
+
+    const result = formatDateTimeToLocalString(String(timestamp));
+
+    expect(result).toBe(new Date(timestamp).toLocaleString());
+  });
 });
 
 describe('Utils :: formatDateToLocalString', () => {
@@ -38,5 +54,21 @@ describe('Utils :: formatDateToLocalString', () => {
     expect(result).toBe(mockDate.toLocaleDateString());
 
     vi.useRealTimers();
+  });
+
+  test('formats a numeric timestamp', () => {
+    const timestamp = new Date('2023-12-25T12:00:00Z').getTime();
+
+    const result = formatDateToLocalString(timestamp);
+
+    expect(result).toBe(new Date(timestamp).toLocaleDateString());
+  });
+
+  test('formats a numeric timestamp passed as a string', () => {
+    const timestamp = new Date('2023-12-25T12:00:00Z').getTime();
+
+    const result = formatDateToLocalString(String(timestamp));
+
+    expect(result).toBe(new Date(timestamp).toLocaleDateString());
   });
 });

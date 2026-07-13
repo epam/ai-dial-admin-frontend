@@ -3,15 +3,14 @@
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { NotificationVariant, DialNotification } from '@epam/ai-dial-ui-kit';
+import { DialNotification, NotificationVariant } from '@epam/ai-dial-ui-kit';
 
 import { getRules } from '@/src/app/[lang]/folders-storage/actions';
-import { signInToolset, signOutToolset } from '@/src/app/[lang]/toolsets/actions';
 import { updatePublication } from '@/src/app/actions/publications';
+import ResourceAuthButtons from '@/src/components/Assets/Resources/Auth/ResourceAuthButtons';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import PublicationsHeader from '@/src/components/EntityHeaderControls/PublicationsHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
-import AuthButtons from '@/src/components/Toolsets/Auth/AuthButtons';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { PublicationsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -20,8 +19,8 @@ import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { FilePublication, PromptPublication, Publication, ToolsetPublication } from '@/src/models/dial/publications';
+import { DialToolsetResource, ToolsetAuthType } from '@/src/models/dial/resource';
 import { DialRule } from '@/src/models/dial/rule';
-import { Toolset, ToolsetAuthType } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -30,6 +29,7 @@ import { EntityViewTab, getPublicationViewTabs } from '@/src/utils/tabs/utils';
 import { addTrailingSlash } from '@/src/utils/url';
 import TabsContent from './TabsContent';
 import { getCorrectPublication, getFormDataForPublication } from './utils';
+import { signInToolset, signOutToolset } from '@/src/app/[lang]/assets-toolsets/actions';
 
 interface Props<T> {
   view: ApplicationRoute;
@@ -49,7 +49,7 @@ const PublicationView = <T extends Publication>({ view, publication, application
   const toolset = useMemo(() => {
     if (view === ApplicationRoute.ToolsetPublications) {
       const toolsetPub = publication as unknown as ToolsetPublication;
-      return toolsetPub.toolSetResources?.[0]?.toolSetResource as unknown as Toolset;
+      return toolsetPub.toolSetResources?.[0]?.toolSetResource as unknown as DialToolsetResource;
     }
     return null;
   }, [view, publication]);
@@ -214,9 +214,9 @@ const PublicationView = <T extends Publication>({ view, publication, application
         {view === ApplicationRoute.ToolsetPublications &&
           toolset &&
           !isChanged &&
-          toolset.authSettings?.authenticationType &&
-          toolset.authSettings?.authenticationType !== ToolsetAuthType.NONE && (
-            <AuthButtons
+          toolset.auth_settings?.authentication_type &&
+          toolset.auth_settings?.authentication_type !== ToolsetAuthType.NONE && (
+            <ResourceAuthButtons
               selectedToolset={toolset}
               oAuthCode={oAuthCode}
               publicationName={publication.requestName}

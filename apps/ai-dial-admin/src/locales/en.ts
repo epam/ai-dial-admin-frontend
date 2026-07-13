@@ -1495,6 +1495,19 @@ export default {
     AuthSettingsLockedMessage:
       'Authentication settings cannot be modified while the toolset is logged in. Please log out to edit.',
   },
+  ExternalService: {
+    ExternalServices: 'External Services',
+    ServiceId: 'Service ID',
+    ApplicationLevel: 'Application',
+    UserLevel: 'User',
+    AddService: 'Add Service',
+    EditService: 'Edit Service',
+    NoServices: 'No external services configured',
+    SuccessLogin: 'External service logged in successfully',
+    SuccessLoginDescription: 'Authentication credentials have been stored.',
+    SuccessLogout: 'External service logged out successfully',
+    SuccessLogoutDescription: 'Authentication credentials have been revoked.',
+  },
   Images: {
     ImagesListTitle: 'Images',
     AddModalTitle: 'Add Image',

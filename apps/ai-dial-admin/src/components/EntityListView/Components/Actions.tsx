@@ -3,29 +3,18 @@
 import { useRouter } from 'next/navigation';
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { generateExportList } from '@/src/components/Assets/ExportAssets/export';
-import { getDuplicateModal, getExportFunction, getNotificationType } from '@/src/components/EntityListView/utils';
-import { getBulkNotificationTitle } from '@/src/components/EntityView/Modals/Delete/utils';
-import { ROOT_FOLDER } from '@/src/constants/file';
-import { DeleteI18nKey, ExportI18nKey } from '@/src/constants/i18n';
+import { getDuplicateModal } from '@/src/components/EntityListView/utils';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
-import { DialFile } from '@/src/models/dial/file';
-import { DialPrompt } from '@/src/models/dial/prompt';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
-import { downloadFile, downloadJson } from '@/src/utils/download';
 import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
-import { getListOfPathsToBulkDelete, getListOfPathsToMove } from '@/src/utils/files/path';
-import { getJsonFileName } from '@/src/utils/import/get-json-name';
 import { isAssetWithVersion } from '@/src/utils/is-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
-import BulkButtons from './BulkButtons';
 import Modals, { ModalType } from './Modals';
 import { preparePathForAsset } from './utils';
 
@@ -37,16 +26,12 @@ interface Props<T> {
   isModalOpen: boolean;
   modalType?: ModalType;
   currentEntity?: T;
-  isBulkView?: boolean;
 
   onChangeIsModalOpen: (value: boolean) => void;
   onChangeModalType: (value?: ModalType) => void;
   onChangeCurrentEntity: (value?: T) => void;
-  onChangeIsBulkView: (value: boolean) => void;
   onCreateEntity?: (entity: T, duplicate?: boolean) => Promise<ServerActionResponse>;
   onRemoveEntity: (entity: string) => Promise<ServerActionResponse>;
-  onMoveFiles?: (paths: string[], newPath: string) => Promise<ServerActionResponse[]>;
-  onBulkDelete?: (paths: { path: string }[]) => Promise<ServerActionResponse>;
   getAssetContext?: () => AssetsFolderContext;
 }
 
@@ -57,17 +42,13 @@ const Actions = <T extends object>({
   versionsMap,
   onCreateEntity,
   onRemoveEntity,
-  onMoveFiles,
-  onBulkDelete,
   getAssetContext,
   isModalOpen,
   modalType,
   currentEntity,
-  isBulkView,
   onChangeIsModalOpen,
   onChangeModalType,
   onChangeCurrentEntity,
-  onChangeIsBulkView,
 }: Props<T>) => {
   const t = useI18n();
   const router = useRouter();
@@ -76,11 +57,6 @@ const Actions = <T extends object>({
   const getReqRef = useRef(useProtectedRequest());
 
   const entityRef = useRef(currentEntity);
-  const filesRef = useRef(folderContext?.fetchedFoldersData);
-
-  const exportData = useMemo(() => {
-    return generateExportList(folderContext?.bulkSelectedData);
-  }, [folderContext?.bulkSelectedData]);
 
   const existingVersions = useMemo(() => {
     if (!versionsMap || !currentEntity) return [];
@@ -92,7 +68,6 @@ const Actions = <T extends object>({
 
   useEffect(() => {
     entityRef.current = currentEntity;
-    filesRef.current = folderContext?.fetchedFoldersData;
   }, [currentEntity, folderContext?.fetchedFoldersData]);
 
   const handleModalClose = useCallback(() => {
@@ -132,71 +107,6 @@ const Actions = <T extends object>({
     [route, onCreateEntity, handleModalClose, onChangeCurrentEntity, showNotification, t, router, folderContext],
   );
 
-  const onMove = useCallback(
-    (newPath: string) => {
-      if (!entityRef.current) return;
-      const pathsToMove = getListOfPathsToMove(
-        entityRef.current as DialFile,
-        folderContext?.fetchedFoldersData as Record<string, DialFile[]>,
-        null,
-        route === ApplicationRoute.Files,
-      );
-
-      onMoveFiles?.(pathsToMove, newPath).then((res) => {
-        if (res.every((r) => r.success)) {
-          folderContext?.fetchFiles?.(`${ROOT_FOLDER}/`, true);
-        }
-      });
-    },
-    [route, folderContext, onMoveFiles],
-  );
-
-  const onDeleteBulk = useCallback(() => {
-    getReqRef.current(onBulkDelete, getListOfPathsToBulkDelete(folderContext?.bulkSelectedData)).then((res) => {
-      if (res.success) {
-        showNotification(getSuccessNotification(getBulkNotificationTitle(route, t), t(DeleteI18nKey.ShortDescription)));
-        onChangeIsBulkView(false);
-        folderContext?.setBulkSelectedData({});
-        folderContext?.fetchFiles?.(`${ROOT_FOLDER}/`, true);
-        router.refresh();
-      }
-    });
-  }, [onBulkDelete, folderContext, route, router, onChangeIsBulkView, showNotification, t]);
-
-  const onExport = useCallback(
-    (exportType?: ImportFileType) => {
-      const type = t(getNotificationType(route));
-      const exportFunction = getExportFunction(route);
-
-      exportFunction?.(exportData, exportType)
-        .then((res) => {
-          showNotification(
-            getSuccessNotification(t(ExportI18nKey.SuccessTitle, { type }), t(ExportI18nKey.SuccessDescription)),
-          );
-          if (
-            route === ApplicationRoute.Files ||
-            (isAssetWithVersion(route) && exportType === ImportFileType.ARCHIVE)
-          ) {
-            const { blob, fileName } = res as { blob: Blob; fileName: string };
-            downloadFile(blob, fileName);
-          } else {
-            downloadJson(res, getJsonFileName(route));
-          }
-        })
-        .catch(() => {
-          showNotification(
-            getErrorNotification(t(ExportI18nKey.ErrorTitle, { type }), t(ExportI18nKey.ErrorDescription)),
-          );
-        })
-        .finally(() => {
-          handleModalClose();
-          folderContext?.setBulkSelectedData({});
-          onChangeIsBulkView(false);
-        });
-    },
-    [exportData, folderContext, handleModalClose, route, onChangeIsBulkView, showNotification, t],
-  );
-
   const getDuplicateModalContent = async () => {
     if (currentEntity) {
       const modal = await getDuplicateModal(
@@ -226,35 +136,20 @@ const Actions = <T extends object>({
 
   return (
     <>
-      {modalType && (isBulkView ? true : currentEntity) ? (
+      {modalType && currentEntity ? (
         <Modals
           entity={currentEntity}
           route={route}
-          initialPath={(currentEntity as DialPrompt)?.folderId}
           isModalOpen={isModalOpen}
           modalType={modalType}
           duplicateModal={duplicateModalContent}
-          onExport={onExport}
           onClose={handleModalClose}
           onRemove={onRemoveEntity}
-          onDeleteBulk={onDeleteBulk}
-          onMove={onMove}
           getAssetContext={getAssetContext}
           onResetCurrentEntity={() => onChangeCurrentEntity(void 0)}
           existingVersions={existingVersions}
         />
       ) : null}
-      {isBulkView && (
-        <BulkButtons
-          itemsCount={exportData.length}
-          route={route}
-          getAssetContext={getAssetContext}
-          onChangeIsModalOpen={onChangeIsModalOpen}
-          onChangeModalType={onChangeModalType}
-          onChangeIsBulkView={onChangeIsBulkView}
-          onExport={onExport}
-        />
-      )}
     </>
   );
 };

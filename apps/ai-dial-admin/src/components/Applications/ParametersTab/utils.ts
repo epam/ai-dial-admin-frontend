@@ -11,7 +11,7 @@ import { BasicI18nKey, EntitiesI18nKey, TypeI18nKey } from '@/src/constants/i18n
 import { UserSession } from '@/src/models/auth';
 import { DialApplication, DialApplicationScheme, TypeEntity } from '@/src/models/dial/application';
 import { getSchemaSourceId } from '@/src/utils/entities/application-source';
-import { DialApplicationResource } from '@/src/models/dial/application-resource';
+import { DialApplicationResource } from '@/src/models/dial/resource';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialSchemePropertyType } from '@/src/models/dial/scheme';
 import { FrameConfig } from '@/src/models/frame-config';
@@ -20,7 +20,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { ApplicationPropertyRow } from './models';
 
 export const getFrameConfig = (
-  scheme: DialApplicationScheme | DialApplicationResource,
+  scheme: DialApplicationScheme | DialApplicationResource | DialApplication | undefined,
   currentTheme: string,
   session?: UserSession,
 ) => {
@@ -29,7 +29,8 @@ export const getFrameConfig = (
     providerId: session?.providerId,
     host:
       (scheme as DialApplicationScheme)?.['dial:applicationTypeEditorUrl'] ||
-      (scheme as DialApplicationResource)?.editorUrl,
+      (scheme as DialApplicationResource)?.editor_url ||
+      (scheme as DialApplication)?.editorUrl,
     name:
       (scheme as DialApplicationScheme)?.['dial:applicationTypeDisplayName'] ||
       (scheme as DialApplicationResource)?.name,
@@ -44,7 +45,7 @@ export const getCorrectConfig = (
 ) => {
   if (scheme) {
     return getFrameConfig(scheme, currentTheme, session as UserSession);
-  } else if (application?.editorUrl) {
+  } else if ((application as DialApplication)?.editorUrl || (application as DialApplicationResource)?.editor_url) {
     return getFrameConfig(application, currentTheme, session as UserSession);
   }
   return null;
@@ -68,14 +69,21 @@ export const getTargetUrl = (
 };
 
 export const getAppRunner = (
-  entity: DialApplication | AssetApp,
+  entity: DialApplication | DialApplicationResource,
   applicationSchemes?: DialApplicationScheme[] | null,
+  view?: ApplicationRoute,
 ): DialApplicationScheme | undefined => {
   if (!applicationSchemes) return entity as DialApplicationScheme;
 
   return applicationSchemes?.find((scheme) => {
-    const schemaSourceId = getSchemaSourceId((entity as DialApplication).source);
-    const editorUrl = entity?.editorUrl;
+    const schemaSourceId =
+      view === ApplicationRoute.AssetsApplications
+        ? (entity as DialApplicationResource).application_type_schema_id
+        : getSchemaSourceId((entity as DialApplication).source);
+    const editorUrl =
+      view === ApplicationRoute.AssetsApplications
+        ? (entity as DialApplicationResource).editor_url
+        : (entity as DialApplication).editorUrl;
 
     return (
       (scheme.$id && schemaSourceId && scheme.$id === schemaSourceId) ||

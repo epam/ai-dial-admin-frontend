@@ -914,9 +914,9 @@ export enum FoldersI18nKey {
   ValuePlaceholder = 'Folder.ValuePlaceholder',
   ValueCaption = 'Folder.ValueCaption',
   RegexPlaceholder = 'Folder.RegexPlaceholder',
-  equal = 'Folder.Function.Equal',
-  contain = 'Folder.Function.Contain',
-  regex = 'Folder.Function.Regex',
+  EQUAL = 'Folder.Function.Equal',
+  CONTAIN = 'Folder.Function.Contain',
+  REGEX = 'Folder.Function.Regex',
   Title = 'Folder.Attribute.Title',
   JobTitle = 'Folder.Attribute.JobTitle',
   Role = 'Folder.Attribute.Role',
@@ -1466,6 +1466,20 @@ export enum ToolsetI18nKey {
   CustomToolDescription = 'Toolset.CustomToolDescription',
   AuthSettingsLockedMessage = 'Toolset.AuthSettingsLockedMessage',
   SelectLogoutLevels = 'Toolset.SelectLogoutLevels',
+}
+
+export enum ExternalServiceI18nKey {
+  ExternalServices = 'ExternalService.ExternalServices',
+  ServiceId = 'ExternalService.ServiceId',
+  ApplicationLevel = 'ExternalService.ApplicationLevel',
+  UserLevel = 'ExternalService.UserLevel',
+  AddService = 'ExternalService.AddService',
+  EditService = 'ExternalService.EditService',
+  NoServices = 'ExternalService.NoServices',
+  SuccessLogin = 'ExternalService.SuccessLogin',
+  SuccessLoginDescription = 'ExternalService.SuccessLoginDescription',
+  SuccessLogout = 'ExternalService.SuccessLogout',
+  SuccessLogoutDescription = 'ExternalService.SuccessLogoutDescription',
 }
 
 export enum ImagesI18nKey {

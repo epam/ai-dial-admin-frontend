@@ -1,4 +1,17 @@
 /**
+ * Normalize a datetime value into a Date. Numeric strings (millisecond timestamps
+ * serialized as strings) are converted to numbers so they are not misparsed as date strings.
+ *
+ * @param {number | string} value - datetime in milliseconds or iso string
+ * @returns {Date} - parsed date
+ */
+const toDate = (value: number | string): Date => {
+  const normalized = typeof value === 'string' && value.trim() !== '' && !isNaN(Number(value)) ? Number(value) : value;
+
+  return new Date(normalized);
+};
+
+/**
  * Format date time to user local time format.
  *
  * @param {?number | string} [value] - datetime in milliseconds and iso string
@@ -8,7 +21,7 @@ export const formatDateTimeToLocalString = (value?: number | string): string => 
   if (!value) {
     return '';
   }
-  const date = new Date(value);
+  const date = toDate(value);
 
   return date.toLocaleString();
 };
@@ -23,7 +36,7 @@ export const formatDateToLocalString = (value?: number | string): string => {
   if (!value) {
     return '';
   }
-  const date = new Date(value);
+  const date = toDate(value);
 
   return date.toLocaleDateString();
 };

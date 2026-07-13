@@ -2,12 +2,11 @@
 import { FC, useMemo } from 'react';
 
 import EntityProperties from '@/src/components/Applications/View/Properties/Properties';
-import ApplicationAssetProperties from '@/src/components/Assets/Apps/Properties';
 import FoldersStorageLabel from '@/src/components/Assets/Header/FolderStorage';
 import ValidityStatusLabel from '@/src/components/Common/ValidityStatus/ValidityStatusLabel';
 import PropertiesTabContent from '@/src/components/EntityTabs/PropertiesTabContent';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { AssetApp, DeploymentAsset } from '@/src/models/dial/deployment-asset';
+import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
@@ -30,21 +29,13 @@ const TabContent: FC<Props> = ({ applicationSchemes, names, view, selectedApp, o
 
   return (
     <PropertiesTabContent entity={selectedApp} view={view} id={selectedApp.name} headerPostfix={headerPostfix}>
-      {view === ApplicationRoute.AssetsApplications ? (
-        <ApplicationAssetProperties
-          asset={selectedApp as DeploymentAsset}
-          runners={applicationSchemes || []}
-          onChange={onChange}
-        />
-      ) : (
-        <EntityProperties
-          entity={selectedApp}
-          runners={applicationSchemes || []}
-          names={names}
-          view={view}
-          onChangeEntity={onChange}
-        />
-      )}
+      <EntityProperties
+        entity={selectedApp}
+        runners={applicationSchemes || []}
+        names={names}
+        view={view}
+        onChangeEntity={onChange}
+      />
     </PropertiesTabContent>
   );
 };
