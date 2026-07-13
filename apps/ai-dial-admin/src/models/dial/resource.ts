@@ -23,7 +23,7 @@ export interface DialResource extends BaseEntity {
 }
 
 export interface DialApplicationResource extends DialResource, EntityDefaults {
-  application_type_schema_id: string;
+  application_type_schema_id?: string;
   input_attachment_types: string[];
   max_input_attachments?: number | string;
   responses_endpoint?: string;
