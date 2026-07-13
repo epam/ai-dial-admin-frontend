@@ -162,11 +162,11 @@ describe('CompareView', () => {
     });
   });
 
-  test('disables summary and heat map tabs when runsCompareEnabled is false', () => {
+  test('disables summary overview tab when runsCompareEnabled is false', () => {
     renderCompareView({ runsCompareEnabled: false });
 
     expect(screen.getByRole('tab', { name: 'Runs.RunCompareTabSummaryOverview' })).toBeDisabled();
-    expect(screen.getByRole('tab', { name: 'Runs.RunCompareTabHeatMap' })).toBeDisabled();
+    expect(screen.getByRole('tab', { name: 'Runs.RunCompareTabHeatMap' })).toBeEnabled();
     expect(screen.getByRole('tab', { name: 'Runs.RunCompareTabExecutionResults' })).toBeEnabled();
   });
 

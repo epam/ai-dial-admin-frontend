@@ -2,7 +2,6 @@ import { describe, expect, test } from 'vitest';
 
 import {
   ACCURACY_COLOR_MAP,
-  DELTA_NEUTRAL_SEGMENT,
   DELTA_POSITIVE_COLOR_MAP,
 } from '@/src/components/Common/ColorScale/constants';
 import { RUN_COMPARE_PRIMARY_INDEX, RUN_COMPARE_SECONDARY_INDEX } from '@/src/components/Runs/Compare/constants';
@@ -76,7 +75,7 @@ describe('buildHeatMapCellTooltipData', () => {
     expect(result?.runLabel).toBeUndefined();
   });
 
-  test('uses neutral swatch for zero delta', () => {
+  test('uses N/A text without swatch for zero delta', () => {
     const deltaRow = {
       ...metricRow,
       runIndex: undefined,
@@ -88,10 +87,12 @@ describe('buildHeatMapCellTooltipData', () => {
       colorDisplayMode: HeatMapColorDisplayMode.Delta,
     });
 
-    expect(result?.valueRow).toEqual({
-      value: '0',
-      backgroundColor: DELTA_NEUTRAL_SEGMENT.bg,
-      borderColor: DELTA_NEUTRAL_SEGMENT.border,
+    expect(result).toEqual({
+      testCase: 'Row 001',
+      metric: 'Context Appropriateness',
+      input: 'Recall',
+      valueLabelKey: RunsI18nKey.RunCompareHeatMapTooltipDelta,
+      valueTextKey: RunsI18nKey.RunCompareHeatMapNotApplicable,
     });
   });
 
