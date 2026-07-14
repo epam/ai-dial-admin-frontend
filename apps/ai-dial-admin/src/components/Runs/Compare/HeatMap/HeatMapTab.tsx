@@ -8,7 +8,7 @@ import { DialLoader } from '@epam/ai-dial-ui-kit';
 import { getRun, getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
 import ColorScale, { ColorScaleVariant } from '@/src/components/Common/ColorScale/ColorScale';
 import GridView from '@/src/components/Grid/GridView/GridView';
-import { HEAT_MAP_HEADER_HEIGHT, HEAT_MAP_ROW_HEIGHT } from '@/src/components/Runs/Compare/HeatMap/constants';
+import { HEAT_MAP_ROW_HEIGHT, getHeatMapTestCaseHeaderLabels } from '@/src/components/Runs/Compare/HeatMap/constants';
 import { HeatMapColorDisplayMode, HeatMapRow } from '@/src/components/Runs/Compare/HeatMap/models';
 import { buildHeatMapColumns } from '@/src/components/Runs/Compare/HeatMap/utils/build-heat-map-columns';
 import {
@@ -182,19 +182,24 @@ const HeatMapTab: FC<Props> = ({
     });
   }, [mergedRowData, colorDisplayMode, expandedGroups, onToggleGroup, primaryRunName, comparedRunName]);
 
-  const fitHeatMapColumns = useCallback((api: GridApi) => {
-    api.sizeColumnsToFit();
-    const valueColumnWidth = getHeatMapValueColumnWidth(api);
-    const headerHeight = resolveHeatMapHeaderHeight(valueColumnWidth);
-    api.setGridOption('headerHeight', headerHeight);
-    api.resetRowHeights();
-    api.refreshHeader();
-    api.refreshCells({ force: true });
-  }, []);
+  const headerLabels = useMemo(() => getHeatMapTestCaseHeaderLabels(mergedRowData?.length ?? 0), [mergedRowData]);
+
+  const fitHeatMapColumns = useCallback(
+    (api: GridApi) => {
+      api.sizeColumnsToFit();
+      const valueColumnWidth = getHeatMapValueColumnWidth(api);
+      const headerHeight = resolveHeatMapHeaderHeight(valueColumnWidth, headerLabels);
+      api.setGridOption('headerHeight', headerHeight);
+      api.resetRowHeights();
+      api.refreshHeader();
+      api.refreshCells({ force: true });
+    },
+    [headerLabels],
+  );
 
   const gridOptions = useMemo(
     () => ({
-      headerHeight: HEAT_MAP_HEADER_HEIGHT,
+      headerHeight: resolveHeatMapHeaderHeight(0, headerLabels),
       hidePaddedHeaderRows: false,
       rowHeight: HEAT_MAP_ROW_HEIGHT,
       suppressHorizontalScroll: true,
@@ -223,7 +228,7 @@ const HeatMapTab: FC<Props> = ({
       },
       postProcessPopup: centerHeatMapTooltipPopup,
     }),
-    [fitHeatMapColumns, isDeltaMode],
+    [fitHeatMapColumns, headerLabels, isDeltaMode],
   );
 
   const isCompareDataReady = results !== null && comparedResults !== null;
