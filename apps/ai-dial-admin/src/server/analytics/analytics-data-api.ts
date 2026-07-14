@@ -11,8 +11,6 @@ export const QUERIES_EXECUTE_URL = `${QUERIES_URL}/execute`;
 export const QUERIES_EXECUTE_SQL_URL = `${QUERIES_URL}/execute-sql`;
 export const QUERIES_ENTITY_SCHEMA_URL = (name: string): string =>
   `${QUERIES_ENTITIES_URL}/schema/${encodeURIComponent(name)}`;
-export const QUERIES_ENTITY_DETAILED_SCHEMA_URL = (name: string, idField: string, id: string): string =>
-  `${QUERIES_ENTITY_SCHEMA_URL(name)}/detailed?${encodeURIComponent(idField)}=${encodeURIComponent(id)}`;
 
 export const TABLES_URL = 'v1/tables';
 export const TABLE_URL = (name: string): string => `${TABLES_URL}/${encodeURIComponent(name)}`;
@@ -26,15 +24,6 @@ export class AnalyticsDataApi extends BaseApi {
 
   getEntitySchema(name: string, token: Token): Promise<AnalyticsEntitySchema | null> {
     return this.get<AnalyticsEntitySchema>(QUERIES_ENTITY_SCHEMA_URL(name), token);
-  }
-
-  getDetailedEntitySchema(
-    name: string,
-    idField: string,
-    id: string,
-    token: Token,
-  ): Promise<AnalyticsEntitySchema | null> {
-    return this.get<AnalyticsEntitySchema>(QUERIES_ENTITY_DETAILED_SCHEMA_URL(name, idField, id), token);
   }
 
   executeAction(query: StructuredQuery, token: Token): Promise<ServerActionResponse<StructuredQueryResult>> {

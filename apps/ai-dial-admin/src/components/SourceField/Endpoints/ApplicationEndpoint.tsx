@@ -18,6 +18,8 @@ import {
   DialApplication,
   MCP_CONFIG_DELIVERY_I18N_MAP,
 } from '@/src/models/dial/application';
+import { DialApplicationResource } from '@/src/models/dial/resource';
+import { ApplicationRoute } from '@/src/types/routes';
 
 enum ApplicationEndpointCheckbox {
   CHAT_ENDPOINT = 'chat_endpoint',
@@ -32,6 +34,7 @@ interface Props {
   disabled?: boolean;
   prefix?: string;
   isCodeApp?: boolean;
+  view?: ApplicationRoute;
 }
 
 const getCheckboxStatesFromEntity = (
@@ -52,9 +55,17 @@ const ApplicationEndpoint: FC<Props> = ({
   disabled,
   prefix,
   isCodeApp,
+  view,
 }) => {
   const t = useI18n();
   const isContainerMode = !!prefix;
+
+  // Asset applications carry snake_case `viewer_url` / `editor_url`; other views use camelCase.
+  const isAssetApplication = view === ApplicationRoute.AssetsApplications;
+  const assetResource = entity as unknown as DialApplicationResource;
+  const viewerUrlValue = isAssetApplication ? assetResource.viewer_url : entity.viewerUrl;
+  const editorUrlValue = isAssetApplication ? assetResource.editor_url : entity.editorUrl;
+  const responsesEndpointValue = isAssetApplication ? assetResource.responses_endpoint : entity.responsesEndpoint;
   const versionKey = `${(entity as { path?: string }).path ?? ''}@${(entity as { version?: string }).version ?? ''}`;
 
   const [checkboxStates, setCheckboxStates] = useState<Record<ApplicationEndpointCheckbox, boolean>>(() =>
@@ -181,16 +192,16 @@ const ApplicationEndpoint: FC<Props> = ({
 
   const onChangeViewerUrl = useCallback(
     (viewerUrl?: string) => {
-      onChange({ ...entity, viewerUrl });
+      onChange({ ...entity, [isAssetApplication ? 'viewer_url' : 'viewerUrl']: viewerUrl } as DialApplication);
     },
-    [entity, onChange],
+    [entity, onChange, isAssetApplication],
   );
 
   const onChangeEditorUrl = useCallback(
     (editorUrl?: string) => {
-      onChange({ ...entity, editorUrl });
+      onChange({ ...entity, [isAssetApplication ? 'editor_url' : 'editorUrl']: editorUrl } as DialApplication);
     },
-    [entity, onChange],
+    [entity, onChange, isAssetApplication],
   );
 
   return (
@@ -250,8 +261,13 @@ const ApplicationEndpoint: FC<Props> = ({
                         id="responsesEndpoint"
                         placeholder={t(EntityPlaceholdersI18nKey.ResponsesEndpoint)}
                         disabled={disabled}
-                        endpoint={entity?.responsesEndpoint}
-                        onChange={(responsesEndpoint) => onChange({ ...entity, responsesEndpoint })}
+                        endpoint={responsesEndpointValue}
+                        onChange={(responsesEndpoint) =>
+                          onChange({
+                            ...entity,
+                            [isAssetApplication ? 'responses_endpoint' : 'responsesEndpoint']: responsesEndpoint,
+                          } as DialApplication)
+                        }
                         isFullWidth={!isEntityImmutable}
                         isModal={isModal}
                       />
@@ -345,13 +361,13 @@ const ApplicationEndpoint: FC<Props> = ({
 
       {isEntityImmutable && !isCodeApp && (
         <>
-          <ViewerUrlControl endpoint={entity.viewerUrl} disabled={disabled} onChange={onChangeViewerUrl} />
-          <EditorUrlControl endpoint={entity.editorUrl} disabled={disabled} onChange={onChangeEditorUrl} />
+          <ViewerUrlControl endpoint={viewerUrlValue} disabled={disabled} onChange={onChangeViewerUrl} />
+          <EditorUrlControl endpoint={editorUrlValue} disabled={disabled} onChange={onChangeEditorUrl} />
         </>
       )}
 
       {isCodeApp && (
-        <EditorUrlControl isFullWidth={isModal} endpoint={entity.editorUrl} disabled onChange={onChangeEditorUrl} />
+        <EditorUrlControl isFullWidth={isModal} endpoint={editorUrlValue} disabled onChange={onChangeEditorUrl} />
       )}
     </div>
   );

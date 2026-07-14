@@ -25,7 +25,7 @@ import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { UserSession } from '@/src/models/auth';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
-import { DialApplicationResource } from '@/src/models/dial/application-resource';
+import { DialApplicationResource } from '@/src/models/dial/resource';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { ParamsView } from '@/src/types/parameters';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -41,9 +41,9 @@ interface Props {
   isChanged?: boolean;
   discardKey?: number;
   setIsChanged?: Dispatch<SetStateAction<boolean>>;
-  setSelectedApplication?: Dispatch<SetStateAction<DialApplication | DialApplicationResource>>;
+  setSelectedApplication?: Dispatch<SetStateAction<DialApplication>>;
   onSave?: () => void;
-  onChange?: (application: DialApplication | DialApplicationResource, isSkipRefresh?: boolean) => void;
+  onChange?: (application: DialApplication, isSkipRefresh?: boolean) => void;
 }
 
 const ParametersTab: FC<Props> = ({
@@ -72,7 +72,7 @@ const ParametersTab: FC<Props> = ({
 
   useEffect(() => {
     let scheme = undefined;
-    const foundRunner = getAppRunner(application as DialApplication, applicationSchemes);
+    const foundRunner = getAppRunner(application as DialApplication, applicationSchemes, view);
     setIsSchemeLoading(true);
     getResolvedApplicationScheme(foundRunner?.$id ?? '').then((res) => {
       if (res.success && (res.response as { schema?: DialApplicationScheme })?.schema) {
@@ -104,6 +104,12 @@ const ParametersTab: FC<Props> = ({
   const targetUrl = useMemo(() => {
     return getTargetUrl(view, application, frameConfig);
   }, [application, frameConfig, view]);
+
+  const applicationProperties = useMemo(() => {
+    return view === ApplicationRoute.AssetsApplications
+      ? (application as DialApplicationResource)?.application_properties
+      : (application as DialApplication)?.applicationProperties || {};
+  }, [application, view]);
 
   const jsonSchema = useMemo(
     () =>
@@ -198,7 +204,7 @@ const ParametersTab: FC<Props> = ({
             {paramsView === ParamsView.TABLE && !isEditorEnabled && (
               <TableView
                 key={discardKey}
-                applicationProperties={application?.applicationProperties || {}}
+                applicationProperties={applicationProperties}
                 schemeProperties={schemeProperties}
                 onChangeProperties={onChangeProperties}
                 onValidityChange={onValidityChange}
@@ -215,7 +221,7 @@ const ParametersTab: FC<Props> = ({
                   <div className="flex-1 min-h-0 p-4 bg-layer-0">
                     <SchemaUiRenderer
                       schema={jsonSchema}
-                      data={application?.applicationProperties}
+                      data={applicationProperties}
                       onChangeConfiguration={onChangeConfiguration}
                       onGetSchemeDefaults={onGetSchemeDefaults}
                       disabled={view === ApplicationRoute.ApplicationPublications}

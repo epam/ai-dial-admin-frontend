@@ -38,38 +38,6 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
     [t],
   );
 
-  const onChangeSource = useCallback(
-    (source: string) => {
-      const newRule = { ...rule, source };
-      onChangeValue(newRule);
-    },
-    [onChangeValue, rule],
-  );
-
-  const onChangeFunction = useCallback(
-    (func: string) => {
-      const newRule = { ...rule, function: func as RuleFunction, targets: [] };
-      onChangeValue(newRule);
-    },
-    [onChangeValue, rule],
-  );
-
-  const onChangeRegex = useCallback(
-    (regex?: string) => {
-      const newRule = { ...rule, targets: regex ? [regex] : [] };
-      onChangeValue(newRule);
-    },
-    [onChangeValue, rule],
-  );
-
-  const onChangeTags = useCallback(
-    (targets: string[]) => {
-      const newRule = { ...rule, targets };
-      onChangeValue(newRule);
-    },
-    [onChangeValue, rule],
-  );
-
   useEffect(() => {
     const observer = new ResizeObserver(() => {
       if (ref.current) {
@@ -101,7 +69,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
             options={attributeItems}
             label={isFirstLine ? t(FoldersI18nKey.AttributeTitle) : ''}
             placeholder={t(FoldersI18nKey.AttributePlaceholder)}
-            onChange={(source) => onChangeSource(source as string)}
+            onChange={(source) => onChangeValue({ ...rule, source: source as string })}
             containerClassName={'gap-2'}
           />
         </div>
@@ -112,7 +80,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
             options={functionItems}
             label={isFirstLine ? t(FoldersI18nKey.OperationTitle) : ''}
             placeholder={t(FoldersI18nKey.OperationPlaceholder)}
-            onChange={(fun) => onChangeFunction(fun as string)}
+            onChange={(func) => onChangeValue({ ...rule, function: func as RuleFunction, targets: [] })}
             containerClassName={'gap-2'}
           />
         </div>
@@ -123,7 +91,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
               value={rule.targets?.[0]}
               labelProps={{ label: isFirstLine ? t(BasicI18nKey.Value) : '' }}
               placeholder={t(FoldersI18nKey.RegexPlaceholder)}
-              onChange={onChangeRegex}
+              onChange={(regex?: string) => onChangeValue({ ...rule, targets: regex ? [regex] : [] })}
               error={errorText}
               invalid={!!errorText}
             />
@@ -134,7 +102,7 @@ const RulesValue: FC<Props> = ({ rule, attributes, index, setLastValueHeight, on
               placeholder={t(FoldersI18nKey.ValuePlaceholder)}
               captionDescription={t(FoldersI18nKey.ValueCaption)}
               initialTags={rule.targets}
-              onChange={onChangeTags}
+              onChange={(targets: string[]) => onChangeValue({ ...rule, targets })}
               errorText={errorText}
               invalid={!!errorText}
               collapseTagOverflow

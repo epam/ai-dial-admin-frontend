@@ -117,13 +117,21 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset | DialAppli
         });
 
         const reset: Partial<T> = { endpoint: undefined } as Partial<T>;
-        if (view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications) {
+        if (view === ApplicationRoute.Applications) {
           Object.assign(reset, {
             mcp: undefined,
             viewerUrl: undefined,
             editorUrl: undefined,
             applicationProperties: undefined,
             responsesEndpoint: undefined,
+          });
+        } else if (view === ApplicationRoute.AssetsApplications) {
+          Object.assign(reset, {
+            mcp: undefined,
+            viewer_url: undefined,
+            editor_url: undefined,
+            application_properties: undefined,
+            responses_endpoint: undefined,
           });
         }
 

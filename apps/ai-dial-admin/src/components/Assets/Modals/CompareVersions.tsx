@@ -26,8 +26,8 @@ const CompareVersions: FC<Props> = ({ heading, isModalOpen, onClose, prompts, pr
   const [modified, setModified] = useState<DialPrompt | null>(prompt);
 
   const fetchPrompt = useCallback(async (prompt: DialPrompt) => {
-    const { version, folderId, name } = prompt;
-    return (await getPrompt(folderId, name as string, version, DEFAULT_ETAG))?.response;
+    const { path } = prompt;
+    return (await getPrompt(path, DEFAULT_ETAG))?.response;
   }, []);
 
   const onChange = useCallback(
@@ -35,7 +35,7 @@ const CompareVersions: FC<Props> = ({ heading, isModalOpen, onClose, prompts, pr
       const prompt = prompts?.find((prompt) => prompt.version === version);
       if (prompt) {
         const data = await fetchPrompt(prompt);
-        cb(data);
+        cb(data as SetStateAction<DialPrompt | null>);
       } else {
         cb(null);
       }
@@ -46,7 +46,7 @@ const CompareVersions: FC<Props> = ({ heading, isModalOpen, onClose, prompts, pr
   useEffect(() => {
     const toCompare = prompts?.reverse().find((p) => p.version !== prompt.version);
 
-    fetchPrompt(toCompare as DialPrompt).then((data) => setOriginal(data));
+    fetchPrompt(toCompare as DialPrompt).then((data) => setOriginal(data as DialPrompt | null));
   }, [prompts, prompt, fetchPrompt]);
 
   return (

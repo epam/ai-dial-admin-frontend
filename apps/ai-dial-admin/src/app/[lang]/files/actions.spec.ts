@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { assetsApi } from '@/src/app/api/api';
+import { assetApi, filesCoreApi } from '@/src/app/api/api';
+import * as exportModule from '@/src/server/files/export';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -10,6 +11,7 @@ import { bulkDeleteFiles, exportFiles, getFiles, moveFiles, removeFile } from '.
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
 vi.mock('@/src/app/api/api');
+vi.mock('@/src/server/files/export');
 
 describe('Files :: server actions', () => {
   beforeEach(() => {
@@ -19,54 +21,91 @@ describe('Files :: server actions', () => {
   });
 
   test('Should call getFiles action', async () => {
-    (assetsApi.getAssetList as any).mockResolvedValue(RESPONSE_MOCK);
+    (filesCoreApi.getFileMetadata as any).mockResolvedValue({
+      name: 'folder',
+      items: [{ name: 'file.txt', url: 'files/public/file.txt', etag: 'etag-1', nodeType: 'ITEM' }],
+    });
 
     const result = await getFiles('test');
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetsApi.getAssetList).toHaveBeenCalledWith(TOKEN_MOCK, 'test', ResourceType.FILE);
-    expect(result).toBe(RESPONSE_MOCK);
+    expect(filesCoreApi.getFileMetadata).toHaveBeenCalledWith(TOKEN_MOCK, 'test', false);
+    expect(result).toEqual([
+      { name: 'file.txt', url: 'files/public/file.txt', path: 'public/file.txt', etag: 'etag-1', nodeType: 'item' },
+    ]);
+  });
+
+  test('getFiles returns an empty array when the folder has no metadata', async () => {
+    (filesCoreApi.getFileMetadata as any).mockResolvedValue(null);
+
+    const result = await getFiles('test');
+
+    expect(result).toEqual([]);
   });
 
   test('Should call removeFile action', async () => {
-    (assetsApi.removeAsset as any).mockResolvedValue(RESPONSE_MOCK);
+    (filesCoreApi.deleteFile as any).mockResolvedValue(RESPONSE_MOCK);
 
-    const result = await removeFile('test');
+    const result = await removeFile('test', 'etag-1');
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetsApi.removeAsset).toHaveBeenCalledWith(TOKEN_MOCK, 'test', ResourceType.FILE);
+    expect(filesCoreApi.deleteFile).toHaveBeenCalledWith(TOKEN_MOCK, 'test', 'etag-1');
     expect(result).toBe(RESPONSE_MOCK);
   });
 
   test('Should call moveFiles action', async () => {
-    (assetsApi.moveAssets as any).mockResolvedValue(RESPONSE_MOCK);
+    (assetApi.move as any).mockResolvedValue(RESPONSE_MOCK);
 
-    const result = await moveFiles(['path'], 'newPath');
+    const result = await moveFiles(['folder/path'], 'newFolder/');
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetsApi.moveAssets).toHaveBeenCalledWith(
+    expect(assetApi.move).toHaveBeenCalledWith(
       TOKEN_MOCK,
-      ['path'],
-      'newPath',
       ResourceType.FILE,
-      undefined,
+      'folder/path',
+      'newFolder//path',
       undefined,
     );
-    expect(result).toBe(RESPONSE_MOCK);
+    expect(result).toEqual([RESPONSE_MOCK]);
   });
 
   test('Should call exportFiles action', async () => {
-    (assetsApi.exportFiles as any).mockResolvedValue(RESPONSE_MOCK);
+    (exportModule.buildFilesExportZip as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await exportFiles(['test']);
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetsApi.exportFiles).toHaveBeenCalledWith(TOKEN_MOCK, ['test']);
+    expect(exportModule.buildFilesExportZip).toHaveBeenCalledWith(filesCoreApi, TOKEN_MOCK, ['test']);
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call bulkDeleteFiles action', async () => {
-    (assetsApi.bulkDeleteAssets as any).mockResolvedValue(RESPONSE_MOCK);
+  test('Should call bulkDeleteFiles action, deleting each item with its own etag', async () => {
+    (filesCoreApi.deleteFile as any).mockResolvedValue({ success: true });
 
-    const result = await bulkDeleteFiles([{ path: 'path' }]);
+    const result = await bulkDeleteFiles([{ path: 'path', etag: 'etag-1' }]);
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetsApi.bulkDeleteAssets).toHaveBeenCalledWith(TOKEN_MOCK, [{ path: 'path' }], ResourceType.FILE);
-    expect(result).toBe(RESPONSE_MOCK);
+    expect(filesCoreApi.deleteFile).toHaveBeenCalledWith(TOKEN_MOCK, 'path', 'etag-1');
+    expect(result).toEqual({ success: true });
+  });
+
+  test('bulkDeleteFiles rejects the whole batch before calling Core if any item lacks an etag', async () => {
+    (filesCoreApi.deleteFile as any).mockResolvedValue({ success: true });
+
+    const result = await bulkDeleteFiles([
+      { path: 'a', etag: 'etag-1' },
+      { path: 'b', etag: '' },
+    ]);
+
+    expect(result.success).toBe(false);
+    expect(filesCoreApi.deleteFile).not.toHaveBeenCalled();
+  });
+
+  test('bulkDeleteFiles stops at the first failure (fail-fast)', async () => {
+    const failure = { success: false, errorHeader: 'Error', errorMessage: 'boom' };
+    (filesCoreApi.deleteFile as any).mockResolvedValueOnce(failure).mockResolvedValueOnce({ success: true });
+
+    const result = await bulkDeleteFiles([
+      { path: 'a', etag: 'etag-1' },
+      { path: 'b', etag: 'etag-2' },
+    ]);
+
+    expect(filesCoreApi.deleteFile).toHaveBeenCalledTimes(1);
+    expect(result).toBe(failure);
   });
 });

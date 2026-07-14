@@ -125,9 +125,9 @@ describe('getOperationItems', () => {
     const items = getOperationItems(t);
 
     expect(items).toHaveLength(3);
-    expect(items[0]).toMatchObject({ value: RuleFunction.EQUAL, label: FoldersI18nKey.equal });
-    expect(items[1]).toMatchObject({ value: RuleFunction.CONTAIN, label: FoldersI18nKey.contain });
-    expect(items[2]).toMatchObject({ value: RuleFunction.REGEX, label: FoldersI18nKey.regex });
+    expect(items[0]).toMatchObject({ value: RuleFunction.EQUAL, label: FoldersI18nKey.EQUAL });
+    expect(items[1]).toMatchObject({ value: RuleFunction.CONTAIN, label: FoldersI18nKey.CONTAIN });
+    expect(items[2]).toMatchObject({ value: RuleFunction.REGEX, label: FoldersI18nKey.REGEX });
 
     // Check icons are present (JSX)
     expect(items[0].icon).toBeTruthy();

@@ -23,6 +23,7 @@ describe('Target utils', () => {
           id: 'app-1',
           name: 'My App',
           version: '1.0',
+          type: 'dial-application',
         },
         endpointRef: void 0,
         mcpDeploymentRef: void 0,

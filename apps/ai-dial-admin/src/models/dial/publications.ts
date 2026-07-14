@@ -1,7 +1,7 @@
 import { DialFile } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { DialRule } from '@/src/models/dial/rule';
-import { DialApplicationResource, DialToolsetResource } from '@/src/models/dial/application-resource';
+import { DialApplicationResource, DialToolsetResource } from '@/src/models/dial/resource';
 import { DialConversation } from './conversation';
 
 export interface Publication {

@@ -1,8 +1,11 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { assetsApi } from '@/src/app/api/api';
+import { assetApi } from '@/src/app/api/api';
+import * as eximModule from '@/src/server/prompts/exim';
+import * as zipEximModule from '@/src/server/prompts/zip-exim';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { ImportFileType } from '@/src/types/import';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import {
   bulkDeletePrompts,
@@ -12,6 +15,7 @@ import {
   exportPrompts,
   getPrompt,
   getPrompts,
+  importPrompts,
   updatePrompt,
 } from './actions';
 import { DialFileNodeType } from '@/src/models/dial/file';
@@ -20,6 +24,8 @@ import { ResourceType } from '@/src/types/resource-type';
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
 vi.mock('@/src/app/api/api');
+vi.mock('@/src/server/prompts/exim');
+vi.mock('@/src/server/prompts/zip-exim');
 
 describe('Assets Prompt :: server actions', () => {
   beforeEach(() => {
@@ -29,141 +35,220 @@ describe('Assets Prompt :: server actions', () => {
   });
 
   test('Should call getPrompts action', async () => {
-    (assetsApi.getAssetList as any).mockResolvedValue(RESPONSE_MOCK);
+    (assetApi.list as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await getPrompts('test');
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetsApi.getAssetList).toHaveBeenCalledWith(TOKEN_MOCK, 'test', ResourceType.PROMPT);
+    expect(assetApi.list).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.PROMPT, 'test');
     expect(result).toBe(RESPONSE_MOCK);
   });
 
   test('Should call getPrompt action', async () => {
-    (assetsApi.getAssetWithEtag as any).mockResolvedValue(RESPONSE_MOCK);
-    (assetsApi.getAssetList as any).mockResolvedValue([{ name: 'test', version: '1.0.0', path: 'path' }]);
+    (assetApi.getMergedWithEtag as any).mockResolvedValue(RESPONSE_MOCK);
 
-    const result = await getPrompt('path', 'test', '1.0.0', 'etag');
+    const result = await getPrompt('path', 'etag');
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetsApi.getAssetWithEtag).toHaveBeenCalledWith(TOKEN_MOCK, 'path', ResourceType.PROMPT, 'etag');
+    expect(assetApi.getMergedWithEtag).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.PROMPT, 'path', 'etag');
     expect(result).toBe(RESPONSE_MOCK);
   });
 
   test('Should call createPrompt action', async () => {
-    (assetsApi.createAsset as any).mockResolvedValue(RESPONSE_MOCK);
+    (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await createPrompt({
-      folderId: 'public',
+      name: 'test',
+      folderId: 'public/',
       nodeType: DialFileNodeType.FOLDER,
       path: 'test',
       version: '1.0',
       content: 'test',
     });
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetsApi.createAsset).toHaveBeenCalledWith(
-      {
-        folderId: 'public',
-        nodeType: DialFileNodeType.FOLDER,
-        path: 'test',
-        version: '1.0',
-        content: 'test',
-      },
-      ResourceType.PROMPT,
-      TOKEN_MOCK,
-    );
+    expect(assetApi.put).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.PROMPT, 'public/test__1.0', {
+      name: 'test',
+      folderId: 'public/',
+      nodeType: DialFileNodeType.FOLDER,
+      path: 'test',
+      version: '1.0',
+      content: 'test',
+    });
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call createPrompt action', async () => {
-    (assetsApi.createAsset as any).mockResolvedValue(RESPONSE_MOCK);
+  test('createPrompt defaults content to an empty string when omitted', async () => {
+    (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
-    const result = await createPrompt({
-      folderId: 'public',
+    await createPrompt({
+      name: 'test',
+      folderId: 'public/',
       nodeType: DialFileNodeType.FOLDER,
       path: 'test',
       version: '1.0',
     } as any);
-    expect(getUserToken).toHaveBeenCalled();
-    expect(assetsApi.createAsset).toHaveBeenCalledWith(
-      {
-        folderId: 'public',
-        nodeType: DialFileNodeType.FOLDER,
-        path: 'test',
-        version: '1.0',
-        content: '',
-      },
-      ResourceType.PROMPT,
-      TOKEN_MOCK,
-    );
-    expect(result).toBe(RESPONSE_MOCK);
+
+    const [, , , body] = (assetApi.put as any).mock.calls[0];
+    expect(body.content).toBe('');
+  });
+
+  test('createPrompt conflict surfaces a recognizable error', async () => {
+    (assetApi.put as any).mockResolvedValue({
+      success: false,
+      errorHeader: 'Conflict',
+      errorMessage: 'Prompt already exists',
+      status: 412,
+    });
+
+    const result = await createPrompt({
+      name: 'test',
+      folderId: 'public/',
+      nodeType: DialFileNodeType.FOLDER,
+      path: 'test',
+      version: '1.0',
+      content: 'test',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.errorMessage).toBe('Prompt already exists');
   });
 
   test('Should call removePrompt action', async () => {
-    (assetsApi.removeAssetWithEtag as any).mockResolvedValue(RESPONSE_MOCK);
+    (assetApi.delete as any).mockResolvedValue(RESPONSE_MOCK);
 
     await removePrompt('test');
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetsApi.removeAssetWithEtag).toHaveBeenCalledWith(TOKEN_MOCK, 'test', ResourceType.PROMPT, undefined);
+    expect(assetApi.delete).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.PROMPT, 'test', undefined);
   });
 
-  test('Should call exportPrompts action', async () => {
-    (assetsApi.exportAssets as any).mockResolvedValue(RESPONSE_MOCK);
+  test('removePrompt with a concrete etag sends it through', async () => {
+    (assetApi.delete as any).mockResolvedValue(RESPONSE_MOCK);
+
+    await removePrompt('test', 'etag-1');
+
+    expect(assetApi.delete).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.PROMPT, 'test', 'etag-1');
+  });
+
+  test('Should call exportPrompts action for JSON export', async () => {
+    (eximModule.buildPromptsExport as any).mockResolvedValue({ prompts: [] });
 
     const result = await exportPrompts(['test']);
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetsApi.exportAssets).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.PROMPT, ['test'], void 0);
-    expect(result).toBe(RESPONSE_MOCK);
+    expect(eximModule.buildPromptsExport).toHaveBeenCalledWith(assetApi, TOKEN_MOCK, ['test']);
+    expect(zipEximModule.buildPromptsZip).not.toHaveBeenCalled();
+    expect(result).toEqual({ prompts: [] });
+  });
+
+  test('exportPrompts wraps the document as a zip for archive export', async () => {
+    (eximModule.buildPromptsExport as any).mockResolvedValue({ prompts: [] });
+    const blob = new Blob(['zip']);
+    (zipEximModule.buildPromptsZip as any).mockResolvedValue(blob);
+
+    const result = await exportPrompts(['test'], ImportFileType.ARCHIVE);
+
+    expect(zipEximModule.buildPromptsZip).toHaveBeenCalledWith({ prompts: [] });
+    expect(result).toEqual({ blob, fileName: 'prompts-export.zip' });
+  });
+
+  test('importPrompts parses the JSON body and delegates to importPromptsExport', async () => {
+    (eximModule.importPromptsExport as any).mockResolvedValue({ importResults: [{ status: 'success' }] });
+
+    const document = { prompts: [{ id: 'prompts/public/name__1.0' }] };
+    const body = new FormData();
+    body.append('config', new Blob([JSON.stringify({ path: 'public/', conflictResolutionStrategy: 'override' })]));
+    body.append('file', new Blob([JSON.stringify(document)]));
+
+    const result = await importPrompts(body, ImportFileType.JSON);
+
+    expect(eximModule.importPromptsExport).toHaveBeenCalledWith(assetApi, TOKEN_MOCK, document, {
+      path: 'public/',
+      conflictResolutionStrategy: 'override',
+      flatImport: undefined,
+    });
+    expect(result).toEqual({ success: true, response: { importResults: [{ status: 'success' }] } });
+  });
+
+  test('importPrompts extracts a zip archive before delegating', async () => {
+    (zipEximModule.extractPromptsFromZip as any).mockResolvedValue({ prompts: [] });
+    (eximModule.importPromptsExport as any).mockResolvedValue({ importResults: [] });
+
+    const body = new FormData();
+    body.append('config', new Blob([JSON.stringify({ path: 'public/', conflictResolutionStrategy: 'skip' })]));
+    body.append('file', new Blob(['zip-bytes']));
+
+    const result = await importPrompts(body, ImportFileType.ARCHIVE);
+
+    expect(zipEximModule.extractPromptsFromZip).toHaveBeenCalled();
+    expect(result.success).toBe(true);
+  });
+
+  test('importPrompts rejects when the config part is missing', async () => {
+    const result = await importPrompts(new FormData(), ImportFileType.JSON);
+
+    expect(result.success).toBe(false);
   });
 
   test('Should call updatePrompt action', async () => {
-    (assetsApi.updateAssetWithEtag as any).mockResolvedValue(RESPONSE_MOCK);
+    (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
-    const result = await updatePrompt(
-      {
-        folderId: 'public',
-        nodeType: DialFileNodeType.FOLDER,
-        path: 'test',
-        version: '1.0',
-        content: 'content',
-      },
-      'etag',
-    );
+    const prompt = {
+      folderId: 'public/',
+      nodeType: DialFileNodeType.FOLDER,
+      path: 'test',
+      version: '1.0',
+      content: 'content',
+    };
+    const result = await updatePrompt(prompt as any, 'etag');
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetsApi.updateAssetWithEtag).toHaveBeenCalledWith(
-      TOKEN_MOCK,
-      {
-        folderId: 'public',
-        nodeType: DialFileNodeType.FOLDER,
-        path: 'test',
-        version: '1.0',
-        content: 'content',
-      },
-      ResourceType.PROMPT,
-      'etag',
-    );
+    expect(assetApi.put).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.PROMPT, 'test', prompt, { etag: 'etag' });
     expect(result).toBe(RESPONSE_MOCK);
   });
 
   test('Should call movePrompts action', async () => {
-    (assetsApi.moveAssets as any).mockResolvedValue(RESPONSE_MOCK);
+    (assetApi.move as any).mockResolvedValue(RESPONSE_MOCK);
 
-    const result = await movePrompts(['path'], 'newPath');
+    const result = await movePrompts(['folder/path'], 'newFolder/');
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetsApi.moveAssets).toHaveBeenCalledWith(
+    // changePath (unchanged, per design D4) concatenates `${newPath}/${fileName}` regardless of
+    // whether newPath already ends in a slash — this double-slash quirk is existing behavior.
+    expect(assetApi.move).toHaveBeenCalledWith(
       TOKEN_MOCK,
-      ['path'],
-      'newPath',
       ResourceType.PROMPT,
-      undefined,
+      'folder/path',
+      'newFolder//path',
       undefined,
     );
-    expect(result).toBe(RESPONSE_MOCK);
+    expect(result).toEqual([RESPONSE_MOCK]);
+  });
+
+  test('movePrompts with duplicateName keeps the source version suffix on the destination', async () => {
+    (assetApi.move as any).mockResolvedValue(RESPONSE_MOCK);
+
+    await movePrompts(['folder/name__2'], 'folder/', false, 'copy');
+
+    expect(assetApi.move).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.PROMPT,
+      'folder/name__2',
+      'folder//copy__2',
+      false,
+    );
   });
 
   test('Should call bulkDeletePrompts action', async () => {
-    (assetsApi.bulkDeleteAssets as any).mockResolvedValue(RESPONSE_MOCK);
+    (assetApi.delete as any).mockResolvedValue({ success: true });
 
     const result = await bulkDeletePrompts([{ path: 'path' }]);
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetsApi.bulkDeleteAssets).toHaveBeenCalledWith(TOKEN_MOCK, [{ path: 'path' }], ResourceType.PROMPT);
-    expect(result).toBe(RESPONSE_MOCK);
+    expect(assetApi.delete).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.PROMPT, 'path');
+    expect(result).toEqual({ success: true });
+  });
+
+  test('bulkDeletePrompts stops at the first failure (fail-fast)', async () => {
+    const failure = { success: false, errorHeader: 'Error', errorMessage: 'boom' };
+    (assetApi.delete as any).mockResolvedValueOnce(failure).mockResolvedValueOnce({ success: true });
+
+    const result = await bulkDeletePrompts([{ path: 'a' }, { path: 'b' }]);
+
+    expect(assetApi.delete).toHaveBeenCalledTimes(1);
+    expect(result).toBe(failure);
   });
 });

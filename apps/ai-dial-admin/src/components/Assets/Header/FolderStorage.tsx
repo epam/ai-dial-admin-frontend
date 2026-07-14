@@ -6,15 +6,16 @@ import { IconExternalLink } from '@tabler/icons-react';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useCurrentLocale, useI18n } from '@/src/locales/client';
+import { DialResource } from '@/src/models/dial/resource';
+import { DialConversation } from '@/src/models/dial/conversation';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialFile } from '@/src/models/dial/file';
 import { Publication } from '@/src/models/dial/publications';
 import { ApplicationRoute } from '@/src/types/routes';
 import { removeTrailingSlash } from '@/src/utils/files/path';
-import { DialConversation } from '@/src/models/dial/conversation';
 
 interface Props {
-  asset: AssetWithVersion | DialFile | Publication | DialConversation;
+  asset: AssetWithVersion | DialFile | Publication | DialConversation | DialResource;
 }
 
 const FoldersStorageLabel: FC<Props> = ({ asset }) => {

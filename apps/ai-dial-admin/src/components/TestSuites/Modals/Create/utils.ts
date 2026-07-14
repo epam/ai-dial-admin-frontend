@@ -9,6 +9,7 @@ export function buildDeploymentUpdate(data: Deployment): Partial<TestSuite> {
       id: data.deploymentId,
       name: data.displayName,
       version: data.version,
+      type: data.$type,
     },
     endpointRef: void 0,
     mcpDeploymentRef: void 0,

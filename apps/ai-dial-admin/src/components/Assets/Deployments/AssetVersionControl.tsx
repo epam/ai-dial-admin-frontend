@@ -94,7 +94,7 @@ const AssetVersionControl: FC<Props> = ({
             ? getToolset
             : getPrompt;
       setIsVersionLoading(true);
-      getReqRef.current(getAsset, asset.folderId, asset.name as string, version, DEFAULT_ETAG).then((res) => {
+      getReqRef.current(getAsset, `${asset.folderId}${asset.name}__${version}`, DEFAULT_ETAG).then((res) => {
         if (res.success) {
           const newVersionAsset = res.response as DeploymentAsset;
           changeAssetForNewVersion(version, newVersionAsset);

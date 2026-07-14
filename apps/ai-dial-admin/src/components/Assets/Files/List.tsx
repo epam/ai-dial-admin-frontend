@@ -136,7 +136,10 @@ const FilesList = () => {
 
       const promises: Promise<ServerActionResponse | ServerActionResponse[]>[] = [];
       if (files.length > 0) {
-        const filePaths = files.map((file) => ({ path: file.path }));
+        const filePaths = files.map((file) => ({
+          path: file.path,
+          etag: (file as DialFile & { etag?: string }).etag || '',
+        }));
         promises.push(bulkDeleteFiles(filePaths));
       }
       folders.forEach((folder) => {

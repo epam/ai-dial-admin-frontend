@@ -1,81 +1,90 @@
 import { FC } from 'react';
 
-import { DialGhostButton, DialRemoveButton, DialSelectField } from '@epam/ai-dial-ui-kit';
-
-import { SORT_DIRECTION_OPTIONS, SORT_NULLS_OPTIONS } from '@/src/constants/analytics/query-builder';
-import { BasicI18nKey, QueryBuilderI18nKey } from '@/src/constants/i18n';
-import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
-import { useI18n } from '@/src/locales/client';
+import CategorizedFieldDropdown from '@/src/components/Analytics/QueryBuilder/Common/CategorizedFieldDropdown';
+import ChipRow from '@/src/components/Analytics/QueryBuilder/Common/ChipRow';
+import CompactSelect from '@/src/components/Analytics/QueryBuilder/Common/CompactSelect';
+import SectionAction from '@/src/components/Analytics/QueryBuilder/Common/SectionAction';
+import SectionBlock from '@/src/components/Analytics/QueryBuilder/Common/SectionBlock';
 import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';
 import { sortFieldOptions } from '@/src/components/Analytics/QueryBuilder/utils/fields';
 import { createSort } from '@/src/components/Analytics/QueryBuilder/utils/state';
+import { SORT_DIRECTION_OPTIONS, SORT_NULLS_OPTIONS } from '@/src/constants/analytics/query-builder';
+import { QueryBuilderI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
 import { QuerySortDirection, QuerySortNulls } from '@/src/models/analytics/query';
+import { QueryBuilderColor, SortRow } from '@/src/models/analytics/query-builder';
+import { QUERY_BUILDER_PALETTE } from '@/src/constants/analytics/query-builder-palette';
+
+const summaryOf = (sort: SortRow): string => `${sort.field || '…'} ${sort.dir.toUpperCase()}`;
 
 const SortKeys: FC = () => {
   const t = useI18n();
   const { state, refresh } = useQueryBuilder();
+
   const fieldOptions = sortFieldOptions(state);
 
+  const addSort = () => {
+    state.sort.push(createSort());
+    refresh();
+  };
+
   return (
-    <div className={STANDARD_CONTROL_WIDTH}>
-      <div className="flex flex-col gap-2">
-        {state.sort.map((sort, index) => (
-          <div key={sort.id} className="flex items-end gap-2">
-            <DialSelectField
-              id={`qb-sort-field-${sort.id}`}
-              containerClassName="flex-1 min-w-[160px]"
-              label={index === 0 ? t(QueryBuilderI18nKey.Field) : undefined}
-              options={fieldOptions.map((f) => ({ value: f.name, label: f.name }))}
-              value={sort.field}
-              placeholder={t(QueryBuilderI18nKey.FieldPlaceholder)}
-              searchable
-              searchPlaceholder={t(BasicI18nKey.Search)}
-              onChange={(v) => {
-                sort.field = v as string;
-                refresh();
-              }}
-            />
-            <DialSelectField
-              id={`qb-sort-dir-${sort.id}`}
-              containerClassName="w-[96px] shrink-0"
-              label={index === 0 ? t(QueryBuilderI18nKey.Direction) : undefined}
-              options={SORT_DIRECTION_OPTIONS}
-              value={sort.dir}
-              onChange={(v) => {
-                sort.dir = v as QuerySortDirection;
-                refresh();
-              }}
-            />
-            <DialSelectField
-              id={`qb-sort-nulls-${sort.id}`}
-              containerClassName="w-[136px] shrink-0"
-              label={index === 0 ? t(QueryBuilderI18nKey.Nulls) : undefined}
-              options={SORT_NULLS_OPTIONS}
-              value={sort.nulls}
-              onChange={(v) => {
-                sort.nulls = v as QuerySortNulls;
-                refresh();
-              }}
-            />
-            <DialRemoveButton
-              onClick={() => {
-                state.sort = state.sort.filter((s) => s !== sort);
-                refresh();
-              }}
-            />
-          </div>
-        ))}
-        <div>
-          <DialGhostButton
-            label={t(QueryBuilderI18nKey.AddSortKey)}
-            onClick={() => {
-              state.sort.push(createSort());
+    <SectionBlock
+      title={t(QueryBuilderI18nKey.Sort)}
+      markerClassName={QUERY_BUILDER_PALETTE[QueryBuilderColor.Keyword].marker}
+      action={<SectionAction label={t(QueryBuilderI18nKey.AddField)} onClick={addSort} />}
+    >
+      <div className="flex flex-col gap-1.5">
+        {state.sort.map((sort) => (
+          <ChipRow
+            key={sort.id}
+            inline
+            summary={summaryOf(sort)}
+            onRemove={() => {
+              state.sort = state.sort.filter((s) => s !== sort);
               refresh();
             }}
-          />
-        </div>
+          >
+            <div className="min-w-0 flex-1">
+              <CategorizedFieldDropdown
+                id={`qb-sort-field-${sort.id}`}
+                options={fieldOptions}
+                value={sort.field}
+                placeholder={t(QueryBuilderI18nKey.FieldPlaceholder)}
+                ariaLabel={t(QueryBuilderI18nKey.Field)}
+                onSelect={(name) => {
+                  sort.field = name;
+                  refresh();
+                }}
+              />
+            </div>
+            <div className="w-[84px] shrink-0">
+              <CompactSelect
+                ariaLabel={t(QueryBuilderI18nKey.Direction)}
+                options={SORT_DIRECTION_OPTIONS}
+                value={sort.dir}
+                onChange={(v) => {
+                  sort.dir = v as QuerySortDirection;
+                  refresh();
+                }}
+              />
+            </div>
+            <div className="w-[92px] shrink-0">
+              <CompactSelect
+                ariaLabel={t(QueryBuilderI18nKey.Nulls)}
+                options={SORT_NULLS_OPTIONS}
+                value={sort.nulls}
+                onChange={(v) => {
+                  sort.nulls = v as QuerySortNulls;
+                  refresh();
+                }}
+              />
+            </div>
+          </ChipRow>
+        ))}
+        {!state.sort.length && <span className="dial-tiny-text text-secondary">{t(QueryBuilderI18nKey.NoFields)}</span>}
       </div>
-    </div>
+    </SectionBlock>
   );
 };
 

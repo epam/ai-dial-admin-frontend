@@ -15,10 +15,8 @@ export default async function Page() {
     const first = entities[0];
     if (first) {
       entityName = first.name;
-      if (!first.complex) {
-        const schema = await getEntitySchema(first.name);
-        fields = schema?.fields ?? [];
-      }
+      const schema = await getEntitySchema(first.name);
+      fields = schema?.fields ?? [];
     }
   } catch (e) {
     errorObjLog(e, 'Failed to fetch query builder data');

@@ -1,9 +1,9 @@
 'use client';
 
-import { Dispatch, MouseEvent, SetStateAction, useCallback, useRef, useState } from 'react';
+import { MouseEvent, useCallback, useRef, useState } from 'react';
 
-import { DialGhostButton, DialNeutralButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
-import { IconColumns2, IconFileArrowLeft, IconPlus, IconSquareCheck } from '@tabler/icons-react';
+import { DialGhostButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import { IconColumns2, IconPlus } from '@tabler/icons-react';
 import { GridApi } from 'ag-grid-community';
 
 import CreateAdapter from '@/src/components/Adapter/Modals/CreateAdapter';
@@ -31,7 +31,6 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
-import { isAssetView } from '@/src/utils/is-view';
 import { getErrorNotification, getPrepareNotification } from '@/src/utils/notification';
 import { getFormDataForImport, getImportFunction, getImportTitle } from './utils';
 
@@ -46,8 +45,6 @@ interface Props<T> {
   toggleColumnsPanel: () => void;
   createEntity?: (entity: T) => Promise<ServerActionResponse>;
   context?: () => AssetsFolderContext;
-  setIsBulkView?: Dispatch<SetStateAction<boolean>>;
-  isBulkView?: boolean;
   isReadOnlyAdmin?: boolean;
 }
 
@@ -62,8 +59,6 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
   toggleColumnsPanel,
   createEntity,
   context,
-  setIsBulkView,
-  isBulkView,
   isReadOnlyAdmin,
 }: Props<T>) => {
   const t = useI18n();
@@ -200,22 +195,8 @@ const EntityListHeaderButtons = <T extends BaseEntity>({
           onClick={onToggleColumnsPanel}
         />
       )}
-      {!isBulkView && !isReadOnlyAdmin && (
+      {!isReadOnlyAdmin && (
         <>
-          {isAssetView(route) && (
-            <>
-              <DialNeutralButton
-                label={isTabletScreen ? '' : t(ButtonsI18nKey.BulkActions)}
-                iconBefore={<IconSquareCheck {...BASE_BUTTON_ICON_PROPS} />}
-                onClick={() => setIsBulkView?.(true)}
-              />
-              <DialNeutralButton
-                label={isTabletScreen ? '' : t(ButtonsI18nKey.Import)}
-                iconBefore={<IconFileArrowLeft {...BASE_BUTTON_ICON_PROPS} />}
-                onClick={() => handleModalOpen(ModalType.import)}
-              />
-            </>
-          )}
           {!!createEntity && (
             <DialPrimaryButton
               label={isTabletScreen ? '' : t(ButtonsI18nKey.Create)}

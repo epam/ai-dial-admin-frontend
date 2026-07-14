@@ -37,7 +37,7 @@ import { useI18n } from '@/src/locales/client';
 import { Container } from '@/src/models/deployments/containers';
 import { Image } from '@/src/models/deployments/images';
 import { BaseEntity } from '@/src/models/dial/base-entity';
-import { AssetToolset } from '@/src/models/dial/deployment-asset';
+import { DialResource, DialToolsetResource } from '@/src/models/dial/resource';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { CONTAINER_STATUS, CONTAINER_TRANSPORT, INFERENCE_TASK } from '@/src/types/deployments/containers';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -64,7 +64,7 @@ export interface ContainersButtonsWrapperProps {
   onDiscard: () => void;
   onSave: () => void;
   createEntity?: (entity: BaseEntity) => Promise<ServerActionResponse>;
-  createEntityAsAsset?: (entity: AssetToolset) => Promise<ServerActionResponse>;
+  createEntityAsAsset?: (entity: DialToolsetResource) => Promise<ServerActionResponse>;
   createToolset?: (entity: BaseEntity) => Promise<ServerActionResponse>;
   toolsetNames?: string[];
 }
@@ -302,7 +302,7 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
             isModalOpen={isModalOpen}
             onClose={onCloseModal}
             initialValues={getAssetTemplate(route, container, t, transport as CONTAINER_TRANSPORT)}
-            onCreate={createEntityAsAsset}
+            onCreate={createEntityAsAsset as (entity: DialResource) => Promise<ServerActionResponse>}
             context={useToolsetFolder}
           />,
           document.body,

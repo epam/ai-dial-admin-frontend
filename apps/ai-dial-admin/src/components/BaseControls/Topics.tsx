@@ -18,7 +18,7 @@ interface Props<T> {
   onChange?: (entity: T) => void;
 }
 
-const TopicsControl = <T extends { topics?: string[]; descriptionKeywords?: string[] }>({
+const TopicsControl = <T extends { topics?: string[]; description_keywords?: string[] }>({
   entity,
   onChange,
   disabled,
@@ -27,13 +27,15 @@ const TopicsControl = <T extends { topics?: string[]; descriptionKeywords?: stri
 }: Props<T>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
-  const selectedItems = [...(isDeploymentAsset(view) ? entity.descriptionKeywords || [] : entity.topics || [])]?.sort();
-  const allItems = [...(isDeploymentAsset(view) ? entity.descriptionKeywords || [] : entity.topics || [])]?.sort();
+  const selectedItems = [
+    ...(isDeploymentAsset(view) ? entity.description_keywords || [] : entity.topics || []),
+  ]?.sort();
+  const allItems = [...(isDeploymentAsset(view) ? entity.description_keywords || [] : entity.topics || [])]?.sort();
 
   const onChangeTopics = useCallback(
     (items: string[]) => {
       if (isDeploymentAsset(view)) {
-        onChange?.({ ...entity, descriptionKeywords: items });
+        onChange?.({ ...entity, description_keywords: items });
       } else {
         onChange?.({ ...entity, topics: items });
       }

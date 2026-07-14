@@ -239,3 +239,79 @@ describe('getAggregateWarnings', () => {
     expect(warnings).toContain(QueryBuilderWarning.MissingBucketField);
   });
 });
+
+describe('buildQuery implicit count', () => {
+  test('aggregate mode without aggregates appends count() so the result has a value column', () => {
+    const s = baseState();
+    s.mode = QueryMode.Aggregate;
+    s.groupBy = ['project_id'];
+    const q = buildQuery(s);
+    expect(q.select).toEqual([
+      { expr: { type: 'field', name: 'project_id' } },
+      { expr: { type: 'fn', name: 'count', args: [] }, as: 'count' },
+    ]);
+  });
+
+  test('user-defined aggregates suppress the implicit count', () => {
+    const s = baseState();
+    s.mode = QueryMode.Aggregate;
+    s.groupBy = ['project_id'];
+    const agg = createAggregate();
+    agg.field = 'total_tokens';
+    agg.alias = 'tokens';
+    s.aggregates = [agg];
+    const q = buildQuery(s);
+    expect(q.select?.filter((c) => c.expr.type === 'fn')).toHaveLength(1);
+  });
+
+  test('row mode never gets an implicit count', () => {
+    const q = buildQuery(baseState());
+    expect(q.select).toBeUndefined();
+  });
+});
+
+describe('buildQuery time bound', () => {
+  const bound = {
+    field: 'request_time',
+    range: { startDate: new Date('2026-07-01T00:00:00.000Z'), endDate: new Date('2026-07-13T00:00:00.000Z') },
+  };
+
+  test('serializes the toolbar time range into the filter as an epoch-millis ge/le pair', () => {
+    const q = buildQuery(baseState(), bound);
+    expect(q.filter).toEqual({
+      op: QueryLogicalOperator.And,
+      args: [
+        {
+          op: QueryOperator.Ge,
+          args: [
+            { type: 'field', name: 'request_time' },
+            { type: 'value', value_type: QueryValueType.Timestamp, value: String(bound.range.startDate.getTime()) },
+          ],
+        },
+        {
+          op: QueryOperator.Le,
+          args: [
+            { type: 'field', name: 'request_time' },
+            { type: 'value', value_type: QueryValueType.Timestamp, value: String(bound.range.endDate.getTime()) },
+          ],
+        },
+      ],
+    });
+  });
+
+  test('appends the pair after user conditions in a root AND group', () => {
+    const s = baseState();
+    const pred = createPredicate();
+    pred.field = 'deployment';
+    pred.value = 'gpt-4o';
+    s.filter.children = [pred];
+    const q = buildQuery(s, bound);
+    const args = (q.filter as { args: unknown[] }).args;
+    expect(args).toHaveLength(3);
+  });
+
+  test('no bound leaves the filter untouched', () => {
+    const q = buildQuery(baseState());
+    expect(q.filter).toBeUndefined();
+  });
+});
