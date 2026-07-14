@@ -193,17 +193,62 @@ export const getAnalyticsColumns = (results: AnalyticsResult[]) => {
   ];
 };
 
+const getCompareRowKey = (row: AnalyticsResult): string | null => {
+  const testCaseKey = row.testCaseId || row.testCaseName;
+  if (!testCaseKey) return null;
+  return `${testCaseKey}::${row.runIndex}`;
+};
+
+const createComparedOnlyRow = (compared: AnalyticsResult): CompareAnalyticsRow => ({
+  testCaseId: compared.testCaseId,
+  testCaseName: compared.testCaseName,
+  runIndex: compared.runIndex,
+  responseStatusCode: undefined as unknown as number,
+  _compared: compared,
+});
+
+const sortCompareRows = (rows: CompareAnalyticsRow[]): CompareAnalyticsRow[] =>
+  [...rows].sort((a, b) => {
+    const nameCompare = (a.testCaseName ?? '').localeCompare(b.testCaseName ?? '');
+    if (nameCompare !== 0) return nameCompare;
+    return a.runIndex - b.runIndex;
+  });
+
 export const mergeByTestCaseId = (current: AnalyticsResult[], compared: AnalyticsResult[]): CompareAnalyticsRow[] => {
+  const currentMap = new Map<string, AnalyticsResult>();
   const comparedMap = new Map<string, AnalyticsResult>();
+  const unkeyedCurrent: AnalyticsResult[] = [];
+
+  for (const row of current) {
+    const key = getCompareRowKey(row);
+    if (key) currentMap.set(key, row);
+    else unkeyedCurrent.push(row);
+  }
+
   for (const row of compared) {
-    const key = row.testCaseId || row.testCaseName;
+    const key = getCompareRowKey(row);
     if (key) comparedMap.set(key, row);
   }
-  return current.map((row) => {
-    const key = row.testCaseId || row.testCaseName;
-    const match = key ? (comparedMap.get(key) ?? null) : null;
-    return { ...row, _compared: match };
-  });
+
+  const allKeys = new Set([...currentMap.keys(), ...comparedMap.keys()]);
+  const merged: CompareAnalyticsRow[] = [];
+
+  for (const key of allKeys) {
+    const primary = currentMap.get(key);
+    const comparedRow = comparedMap.get(key);
+
+    if (primary) {
+      merged.push({ ...primary, _compared: comparedRow ?? null });
+    } else if (comparedRow) {
+      merged.push(createComparedOnlyRow(comparedRow));
+    }
+  }
+
+  for (const row of unkeyedCurrent) {
+    merged.push({ ...row, _compared: null });
+  }
+
+  return sortCompareRows(merged);
 };
 
 export const getTestCaseStatusClass = (code: number | undefined) => {

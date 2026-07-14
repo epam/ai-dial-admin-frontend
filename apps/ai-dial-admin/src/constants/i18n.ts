@@ -1950,6 +1950,8 @@ export enum RunsI18nKey {
   RunCompareAddSecondRunMessage = 'Runs.RunCompareAddSecondRunMessage',
   RunCompareTag = 'Runs.RunCompareTag',
   RunCompareTagAria = 'Runs.RunCompareTagAria',
+  RunComparePrimaryRunName = 'Runs.RunComparePrimaryRunName',
+  RunComparePrimaryTagAria = 'Runs.RunComparePrimaryTagAria',
   RunCompareSelectRun = 'Runs.RunCompareSelectRun',
   RunCompareTabSummaryOverview = 'Runs.RunCompareTabSummaryOverview',
   RunCompareTabHeatMap = 'Runs.RunCompareTabHeatMap',
