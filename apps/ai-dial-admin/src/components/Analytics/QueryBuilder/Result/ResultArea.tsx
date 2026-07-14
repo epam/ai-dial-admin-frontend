@@ -81,10 +81,7 @@ const ResultArea: FC<Props> = ({ result, meta, isRunning }) => {
         {isRunning ? (
           <DialLoader size={40} />
         ) : !hasResult ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-1">
-            <DialNoDataContent title={t(QueryBuilderI18nKey.ResultsEmptyTitle)} />
-            <span className="dial-tiny-text text-secondary">{t(QueryBuilderI18nKey.ResultsEmptyDescription)}</span>
-          </div>
+          <DialNoDataContent title={t(QueryBuilderI18nKey.ResultsEmptyDescription)} />
         ) : isChartView ? (
           chartAvailable && meta ? (
             <ResultChart result={result} meta={meta} config={chartConfig} onChangeConfig={setChartConfig} />

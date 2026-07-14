@@ -12,9 +12,14 @@ import {
   sortByName,
   sortFieldOptions,
 } from '@/src/components/Analytics/QueryBuilder/utils/fields';
-import { createAggregate, createBucket, createInitialState } from '@/src/components/Analytics/QueryBuilder/utils/state';
+import {
+  createAggregate,
+  createGroupByColumn,
+  createGroupByFn,
+  createInitialState,
+} from '@/src/components/Analytics/QueryBuilder/utils/state';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { QueryMode, QueryValueType } from '@/src/models/analytics/query';
+import { QueryMode, QueryScalarFn, QueryValueType } from '@/src/models/analytics/query';
 
 const field = (name: string, type: AnalyticsFieldType, tag?: string): AnalyticsEntityField => ({
   name,
@@ -112,23 +117,31 @@ describe('bucketFieldOptions', () => {
 });
 
 describe('having/sort field options', () => {
-  test('havingFieldOptions combines group-by, bucket aliases and aggregate aliases', () => {
+  test('havingFieldOptions combines group-by columns, function aliases and aggregate aliases', () => {
     const s = createInitialState();
     s.fields = FIELDS;
-    s.groupBy = ['project_id'];
-    const bucket = createBucket('request_time');
+    const bucket = createGroupByFn(QueryScalarFn.DateBin, 'request_time');
     bucket.alias = 'bucket';
-    s.buckets = [bucket];
+    s.groupBy = [createGroupByColumn('project_id'), bucket];
     const agg = createAggregate();
     agg.alias = 'cnt';
     s.aggregates = [agg];
     expect(havingFieldOptions(s).map((o) => o.name)).toEqual(['bucket', 'cnt', 'project_id']);
   });
 
+  test('havingFieldOptions skips aliasless function entries', () => {
+    const s = createInitialState();
+    s.fields = FIELDS;
+    const fnRow = createGroupByFn(QueryScalarFn.Lower, 'project_id');
+    fnRow.alias = '';
+    s.groupBy = [fnRow];
+    expect(havingFieldOptions(s)).toEqual([]);
+  });
+
   test('sortFieldOptions uses schema fields in row mode, aggregate outputs in aggregate mode', () => {
     const s = createInitialState();
     s.fields = FIELDS;
-    s.groupBy = ['project_id'];
+    s.groupBy = [createGroupByColumn('project_id')];
     expect(sortFieldOptions(s).map((o) => o.name)).toEqual([
       '_ingested_at',
       'event_id',

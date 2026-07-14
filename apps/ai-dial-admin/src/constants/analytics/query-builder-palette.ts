@@ -49,9 +49,13 @@ export const QUERY_BUILDER_PALETTE: Record<QueryBuilderColor, QueryBuilderColorC
   },
 };
 
-// Field dropdowns cycle these for their category group headers.
+// Field dropdowns cycle these for their category group headers — the full palette, so adjacent
+// categories rarely repeat a color.
 export const FIELD_GROUP_COLOR_CYCLE: QueryBuilderColor[] = [
   QueryBuilderColor.Measure,
   QueryBuilderColor.Dimension,
   QueryBuilderColor.Grouping,
+  QueryBuilderColor.Keyword,
+  QueryBuilderColor.Constraint,
+  QueryBuilderColor.Numeric,
 ];

@@ -19,7 +19,7 @@ Reference prototype: results-first workbench layout ("report" variant) from the 
 └──────────────────────────────────────────┴───────────────────┘
 ```
 
-- `QueryBuilder.tsx` stays the layout hub and state owner (`QueryBuilderState` via `QueryBuilderContext`), restructured to: toolbar row, then a flex row of `ResultArea` (flex-1) and `BuilderRail` (fixed width ~`w-[420px]`, `border-l border-primary`).
+- `QueryBuilder.tsx` stays the layout hub and state owner (`QueryBuilderState` via `QueryBuilderContext`), restructured to: toolbar row, then a flex row of `ResultArea` (flex-1) and `BuilderRail` (fixed width ~`w-[480px]`, `border-l border-primary`).
 - Rail collapse: local state + persisted flag in `localStorage` (SSR-safe read on client, pattern from the removed dock-position persistence). Collapsed rail renders nothing (width 0); the results header shows a "Query builder" restore button.
 - The page `<h1>` title remains above the toolbar per current page conventions.
 

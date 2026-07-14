@@ -14,6 +14,27 @@ const toNumber = (value: unknown): number | null => {
   return Number.isFinite(n) ? n : null;
 };
 
+// A sortable key for an X value: its numeric value, or its timestamp for date-like strings.
+// null marks a value with no natural order (plain categories).
+const comparableKey = (value: unknown): number | null => {
+  const n = toNumber(value);
+  if (n !== null) return n;
+  if (typeof value === 'string') {
+    const ts = Date.parse(value);
+    return Number.isNaN(ts) ? null : ts;
+  }
+  return null;
+};
+
+// A query's sort order (e.g. top-N by count) is right for the table but reads wrong on an axis:
+// when every X value is a number or a date, the chart re-orders the points along the axis instead
+// of keeping row order. Mixed or plain-text X values keep the row order — there is nothing to sort by.
+export const sortRowsByX = (rows: ResultRows, xField: string): ResultRows => {
+  const keyed = rows.map((row) => ({ row, key: comparableKey(row[xField]) }));
+  if (!keyed.length || keyed.some((k) => k.key === null)) return rows;
+  return keyed.sort((a, b) => (a.key as number) - (b.key as number)).map((k) => k.row);
+};
+
 const baseOptions = (xData: string[], yField: string): EChartsOption => ({
   title: { show: false },
   tooltip: {
@@ -30,7 +51,9 @@ const baseOptions = (xData: string[], yField: string): EChartsOption => ({
     splitLine: { show: true, lineStyle: { color: CHART_COLOR.track, width: 1 } },
     axisLine: { show: false },
     axisTick: { show: false },
-    axisLabel: { color: CHART_COLOR.neutral },
+    // Long category values (resource paths, prompts…) get clipped to a fixed label width — the
+    // tooltip still carries the full value.
+    axisLabel: { color: CHART_COLOR.neutral, width: 120, overflow: 'truncate', hideOverlap: true },
   },
   yAxis: {
     type: 'value',
@@ -44,8 +67,9 @@ const baseOptions = (xData: string[], yField: string): EChartsOption => ({
 });
 
 const buildOptions = (type: ChartType, rows: ResultRows, xField: string, yField: string): EChartsOption => {
-  const xData = rows.map((row) => renderCell(row[xField]));
-  const yData = rows.map((row) => toNumber(row[yField]));
+  const ordered = sortRowsByX(rows, xField);
+  const xData = ordered.map((row) => renderCell(row[xField]));
+  const yData = ordered.map((row) => toNumber(row[yField]));
   const options = baseOptions(xData, yField);
 
   if (type === ChartType.Bar) {

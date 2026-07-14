@@ -47,7 +47,6 @@ const renderArea = (overrides: Partial<Parameters<typeof ResultArea>[0]> = {}) =
 describe('QueryBuilder :: ResultArea', () => {
   test('shows the pre-run empty state', () => {
     renderArea();
-    expect(screen.getByText('QueryBuilder.ResultsEmptyTitle')).toBeInTheDocument();
     expect(screen.getByText('QueryBuilder.ResultsEmptyDescription')).toBeInTheDocument();
   });
 

@@ -39,6 +39,7 @@ const SortKeys: FC = () => {
           <ChipRow
             key={sort.id}
             inline
+            color={QueryBuilderColor.Keyword}
             summary={summaryOf(sort)}
             onRemove={() => {
               state.sort = state.sort.filter((s) => s !== sort);
@@ -58,7 +59,7 @@ const SortKeys: FC = () => {
                 }}
               />
             </div>
-            <div className="w-[84px] shrink-0">
+            <div className="w-[68px] shrink-0">
               <CompactSelect
                 ariaLabel={t(QueryBuilderI18nKey.Direction)}
                 options={SORT_DIRECTION_OPTIONS}
@@ -69,9 +70,10 @@ const SortKeys: FC = () => {
                 }}
               />
             </div>
-            <div className="w-[92px] shrink-0">
+            <div className="w-[134px] shrink-0">
               <CompactSelect
                 ariaLabel={t(QueryBuilderI18nKey.Nulls)}
+                prefix={t(QueryBuilderI18nKey.NullsPrefix)}
                 options={SORT_NULLS_OPTIONS}
                 value={sort.nulls}
                 onChange={(v) => {

@@ -60,3 +60,14 @@
 ## 8. Quality checks
 
 - [x] 8.1 Run lint (`npm run lint`), format check (`npm run format`), and the full test suite (`npm run test` from `apps/ai-dial-admin/`); fix any failures.
+
+## 9. Feedback round (post-merge refinements)
+
+- [x] 9.1 Unify Group by: replace `groupBy: string[]` + `buckets: BucketRow[]` with `GroupByRow[]` (plain column or scalar-function entry); add `QueryScalarFn` enum mirroring the service allowlist (`date_bin`, `lower`, `upper`, `length`, `trim`, `abs`); update serialize/deserialize/warnings/having-options; delete the Time bucket section (`Aggregate/TimeBuckets.tsx`).
+- [x] 9.2 `CategorizedFieldDropdown`: collapsible category headers with option counts, accordion (one category open at a time, selection's group opens first, search overrides), a Functions group with per-function hints, "Columns" divider, full-palette color cycle for category headers, compact boxed search input (replaces `DialSearch`), no fixed overlay height (70vh guard).
+- [x] 9.3 `GroupBySection`: add-dropdown offers columns + functions; column picks render as chips, function picks as parameterized rows (`date_bin`: amount/unit/field/alias; others: field/alias).
+- [x] 9.4 Sort: "Nulls:" prefix on the nulls `CompactSelect` (new `prefix` prop), narrower direction select so the nulls text fits.
+- [x] 9.5 Chart: order points along X when all values are numeric/date-like (`sortRowsByX`); truncate long X-axis labels to a fixed width (full value stays in the tooltip).
+- [x] 9.6 ChipRow collapsed chips tinted with the owning section's palette color (Sort yellow, Aggregate blue, Group by teal, Filter purple, Having red) via a `color` prop threaded through `FilterGroup`/`FilterCondition`.
+- [x] 9.7 Page section controls on one line (Include total joins the strategy/offset/limit row); results empty state shows the "Press Run…" text only; builder rail widened to `w-[480px]`.
+- [x] 9.8 Tests updated/added for all of the above; lint + QueryBuilder suite green.

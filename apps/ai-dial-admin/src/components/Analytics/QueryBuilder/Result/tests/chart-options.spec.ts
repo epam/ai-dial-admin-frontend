@@ -49,4 +49,36 @@ describe('QueryBuilder :: chart-options', () => {
     expect(options.xAxis.data).toEqual([]);
     expect(options.series[0].data).toEqual([]);
   });
+
+  test('date-like x values are re-ordered chronologically regardless of row order', () => {
+    const rows = [
+      { bucket: '2026-07-13T08:00:00Z', cnt: 3 },
+      { bucket: '2026-07-12T00:00:00Z', cnt: 1 },
+      { bucket: '2026-07-12T10:00:00Z', cnt: 2 },
+    ];
+    const options = buildBarChartOptions(rows, 'bucket', 'cnt');
+    expect(options.xAxis.data).toEqual(['2026-07-12T00:00:00Z', '2026-07-12T10:00:00Z', '2026-07-13T08:00:00Z']);
+    expect(options.series[0].data).toEqual([1, 2, 3]);
+  });
+
+  test('numeric x values sort numerically, not lexicographically', () => {
+    const rows = [
+      { code: '200', cnt: 5 },
+      { code: '41', cnt: 7 },
+      { code: 100, cnt: 6 },
+    ];
+    const options = buildBarChartOptions(rows, 'code', 'cnt');
+    expect(options.xAxis.data).toEqual(['41', '100', '200']);
+    expect(options.series[0].data).toEqual([7, 6, 5]);
+  });
+
+  test('plain-text x values keep the query row order', () => {
+    const options = buildBarChartOptions(ROWS, 'deployment', 'total');
+    expect(options.xAxis.data).toEqual(['gpt-4o', 'claude', 'gemini']);
+  });
+
+  test('x labels are truncated to a fixed width, keeping the axis readable for long values', () => {
+    const options = buildBarChartOptions(ROWS, 'deployment', 'total');
+    expect(options.xAxis.axisLabel).toMatchObject({ width: 120, overflow: 'truncate' });
+  });
 });
