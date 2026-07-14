@@ -13,6 +13,12 @@ Deployment detail views (Model Servings and the container types) expose no live 
   - **Load** (inference only): running requests, queue depth, KV-cache usage.
 - Each metric uses the card type that fits it: replicas → ratio badge, latencies → p50/p95/p99 distribution, tokens/sec → dual value, KV-cache → gauge, the rest → single value. Threshold metrics (replicas, error ratio, KV-cache) are colored by status (green/amber/red). Byte values render in the most readable unit (Mb/Gb). A null/unavailable field shows the existing "No Data" state.
 - A manual **Refresh** button re-fetches the snapshot. No auto-poll (PoC is a point-in-time snapshot; backend caches ~5s).
+- **Filter gauges by inference task type** (issue #3895): on Model Servings, the card set follows the deployment's `inferenceTask` so classifiers never see generation-only gauges that can't have data:
+  - Universal (any task type): Ready replicas, CPU, Memory, GPU memory (hardware-gated, "No Data" on CPU pools), Requests/sec, E2E latency.
+  - Text classification only: Request latency (p50/p95/p99).
+  - Text generation only: Request error ratio, Tokens/sec, TTFT, Inter-token latency, Running requests, Queue depth, KV-cache usage. Request latency is **hidden** for generation — E2E latency + TTFT/ITL already tell its latency story.
+  - `inferenceTask` undefined or `none` → full card set (we can't infer capability, so hide nothing).
+  - A section whose cards are all filtered out (Load on classification) is hidden entirely.
 - **Refactor** `SingleValueChart` to extract a reusable, fetch-free presentational child so both telemetry dashboards and this tab share the same card rendering and "No Data" state.
 - New reusable `MetricsSection` (title + responsive card row) used for each metric group.
 - New API layer: `getContainerMetrics(id)` server action + `ContainersApi.getContainerMetrics`, plus a frontend model mirroring the backend `UnifiedDeploymentMetrics` DTO.
@@ -20,7 +26,7 @@ Deployment detail views (Model Servings and the container types) expose no live 
 ## Capabilities
 
 ### New Capabilities
-- `deployment-metrics-tab`: A Metrics tab on deployment/container detail views that fetches the live unified metrics snapshot and renders resource/serving/operational metrics as grouped single-value cards with a manual refresh and graceful per-field "No Data" handling.
+- `deployment-metrics-tab`: A Metrics tab on deployment/container detail views that fetches the live unified metrics snapshot and renders resource/serving/operational metrics as grouped single-value cards with a manual refresh, graceful per-field "No Data" handling, and a card set filtered by the deployment's inference task type.
 
 ### Modified Capabilities
 <!-- None — no existing capability's requirements change. The SingleValueChart refactor is an internal implementation change (behavior preserved), not a spec-level change. -->
@@ -37,6 +43,7 @@ Deployment detail views (Model Servings and the container types) expose no live 
   - `server/deployments/containers.ts` — add `CONTAINER_METRICS_URL` + `getContainerMetrics`
   - `utils/tabs/utils.ts` — register `metricsTab()` in `getDeploymentsViewTabs()` for the five deployment routes
   - `constants/i18n.ts` + `locales/en.ts` — add metric label / section keys (`TabsI18nKey.Metrics` already exists)
+  - `components/Containers/View/TabsContent.tsx` — pass `selectedContainer.inferenceTask` to `<Metrics />`; `Metrics/models.ts` + `Metrics/constants.ts` — per-card task applicability encoding the gauge matrix (issue #3895)
 - **External dependency:** backend endpoint `GET /deployments/{id}/metrics` from deployment-manager PR #357. Designed against its current contract; merges soon.
 - **No-time-series constraint:** the snapshot has no history, so no charts-over-time — point-in-time cards only (gauges/distributions show the current snapshot, not trends).
 
