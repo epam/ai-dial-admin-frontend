@@ -31,9 +31,7 @@ describe('HeatMapTestCaseHeader', () => {
   });
 
   test('renders vertical header label when column is too narrow', () => {
-    const { container } = render(
-      <HeatMapTestCaseHeader {...createHeaderParams(HEAT_MAP_VALUE_TEXT_MIN_WIDTH - 1)} />,
-    );
+    const { container } = render(<HeatMapTestCaseHeader {...createHeaderParams(HEAT_MAP_VALUE_TEXT_MIN_WIDTH - 1)} />);
 
     expect(screen.getByText('Row 001')).toBeInTheDocument();
     expect(container.firstChild).toHaveStyle({ paddingTop: '4px', paddingBottom: '4px' });
