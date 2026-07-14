@@ -41,7 +41,6 @@ export const APPLICATION_SOURCE_ITEMS: SelectOption[] = [
   // NOTE: Keep order
   { value: SOURCE_TYPE.ENDPOINTS, label: 'Endpoints' },
   { value: SOURCE_TYPE.SCHEMA, label: 'App Runner' },
-  { value: CODE_APP_SOURCE_TYPE, label: 'Code App' },
   { value: SOURCE_TYPE.CONTAINER, label: 'Application Container' },
 ];
 

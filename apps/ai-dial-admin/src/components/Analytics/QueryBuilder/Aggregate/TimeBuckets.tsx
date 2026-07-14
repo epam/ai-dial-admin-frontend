@@ -1,90 +1,112 @@
 import { FC } from 'react';
 
-import { DialGhostButton, DialInput, DialNumberInput, DialRemoveButton, DialSelectField } from '@epam/ai-dial-ui-kit';
-
-import { BUCKET_UNIT_OPTIONS } from '@/src/constants/analytics/query-builder';
-import { BasicI18nKey, QueryBuilderI18nKey } from '@/src/constants/i18n';
-import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
-import { useI18n } from '@/src/locales/client';
+import CategorizedFieldDropdown from '@/src/components/Analytics/QueryBuilder/Common/CategorizedFieldDropdown';
+import ChipRow from '@/src/components/Analytics/QueryBuilder/Common/ChipRow';
+import CompactInput from '@/src/components/Analytics/QueryBuilder/Common/CompactInput';
+import CompactSelect from '@/src/components/Analytics/QueryBuilder/Common/CompactSelect';
+import SectionAction from '@/src/components/Analytics/QueryBuilder/Common/SectionAction';
+import SectionBlock from '@/src/components/Analytics/QueryBuilder/Common/SectionBlock';
 import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';
-import { bucketFieldOptions } from '@/src/components/Analytics/QueryBuilder/utils/fields';
+import { bucketFieldOptions, fieldsToOptions } from '@/src/components/Analytics/QueryBuilder/utils/fields';
+import { getAggregateWarnings } from '@/src/components/Analytics/QueryBuilder/utils/serialize';
 import { createBucket } from '@/src/components/Analytics/QueryBuilder/utils/state';
+import {
+  BUCKET_SECTION_WARNINGS,
+  BUCKET_UNIT_OPTIONS,
+  DATE_BIN_FN,
+  WARNING_I18N,
+} from '@/src/constants/analytics/query-builder';
+import { QueryBuilderI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
 import { QueryBucketUnit } from '@/src/models/analytics/query';
+import { BucketRow, QueryBuilderColor } from '@/src/models/analytics/query-builder';
+import { QUERY_BUILDER_PALETTE } from '@/src/constants/analytics/query-builder-palette';
+
+const summaryOf = (bucket: BucketRow): string =>
+  `${DATE_BIN_FN}(${bucket.amount} ${bucket.unit}, ${bucket.field || '…'})${bucket.alias ? ` AS ${bucket.alias}` : ''}`;
 
 const TimeBuckets: FC = () => {
   const t = useI18n();
   const { state, refresh } = useQueryBuilder();
-  const fieldOptions = bucketFieldOptions(state.fields);
+
+  const fieldOptions = fieldsToOptions(bucketFieldOptions(state.fields));
+  const warnings = getAggregateWarnings(state).filter((w) => BUCKET_SECTION_WARNINGS.includes(w));
+  const warning = warnings.length ? warnings.map((w) => t(WARNING_I18N[w])).join(' ') : undefined;
 
   const addBucket = () => {
-    state.buckets.push(createBucket(fieldOptions[0]?.name || ''));
+    state.buckets.push(createBucket(bucketFieldOptions(state.fields)[0]?.name || ''));
     refresh();
   };
 
   return (
-    <div className={STANDARD_CONTROL_WIDTH}>
-      <div className="flex flex-col gap-2">
-        {state.buckets.map((bucket, index) => (
-          <div key={bucket.id} className="flex items-end gap-2">
-            <DialNumberInput
-              id={`qb-bucket-amount-${bucket.id}`}
-              containerClassName="w-[88px] shrink-0"
-              labelProps={index === 0 ? { label: t(QueryBuilderI18nKey.Every) } : undefined}
-              value={bucket.amount}
-              onChange={(v) => {
-                bucket.amount = Number(v || 0);
+    <SectionBlock
+      title={t(QueryBuilderI18nKey.TimeBucket)}
+      markerClassName={QUERY_BUILDER_PALETTE[QueryBuilderColor.Dimension].marker}
+      warning={warning}
+      action={<SectionAction label={t(QueryBuilderI18nKey.AddField)} onClick={addBucket} />}
+    >
+      <div className="flex flex-col gap-1.5">
+        {state.buckets.map((bucket) => (
+          <ChipRow
+            key={bucket.id}
+            inline
+            summary={summaryOf(bucket)}
+            onRemove={() => {
+              state.buckets = state.buckets.filter((b) => b !== bucket);
+              refresh();
+            }}
+          >
+            <CompactInput
+              ariaLabel={t(QueryBuilderI18nKey.Every)}
+              className="w-[44px] shrink-0"
+              numeric
+              value={String(bucket.amount)}
+              onChange={(value) => {
+                bucket.amount = Number(value || 0);
                 refresh();
               }}
             />
-            <DialSelectField
-              id={`qb-bucket-unit-${bucket.id}`}
-              containerClassName="w-[112px] shrink-0"
-              label={index === 0 ? t(QueryBuilderI18nKey.Unit) : undefined}
-              options={BUCKET_UNIT_OPTIONS}
-              value={bucket.unit}
-              onChange={(v) => {
-                bucket.unit = v as QueryBucketUnit;
-                refresh();
-              }}
-            />
-            <DialSelectField
-              id={`qb-bucket-field-${bucket.id}`}
-              containerClassName="flex-1 min-w-[160px]"
-              label={index === 0 ? t(QueryBuilderI18nKey.Field) : undefined}
-              options={fieldOptions.map((f) => ({ value: f.name, label: f.name }))}
-              value={bucket.field}
-              placeholder={t(QueryBuilderI18nKey.TimestampFieldPlaceholder)}
-              searchable
-              searchPlaceholder={t(BasicI18nKey.Search)}
-              onChange={(v) => {
-                bucket.field = v as string;
-                refresh();
-              }}
-            />
-            <DialInput
-              id={`qb-bucket-alias-${bucket.id}`}
-              containerClassName="w-[160px] shrink-0"
-              labelProps={index === 0 ? { label: t(QueryBuilderI18nKey.Alias) } : undefined}
+            <div className="w-[92px] shrink-0">
+              <CompactSelect
+                ariaLabel={t(QueryBuilderI18nKey.Unit)}
+                options={BUCKET_UNIT_OPTIONS}
+                value={bucket.unit}
+                onChange={(v) => {
+                  bucket.unit = v as QueryBucketUnit;
+                  refresh();
+                }}
+              />
+            </div>
+            <div className="min-w-0 flex-1">
+              <CategorizedFieldDropdown
+                id={`qb-bucket-field-${bucket.id}`}
+                options={fieldOptions}
+                value={bucket.field}
+                placeholder={t(QueryBuilderI18nKey.TimestampFieldPlaceholder)}
+                ariaLabel={t(QueryBuilderI18nKey.Field)}
+                onSelect={(name) => {
+                  bucket.field = name;
+                  refresh();
+                }}
+              />
+            </div>
+            <CompactInput
+              ariaLabel={t(QueryBuilderI18nKey.AliasPlaceholder)}
+              className="w-[72px] shrink-0"
               value={bucket.alias}
               placeholder={t(QueryBuilderI18nKey.AliasPlaceholder)}
-              onChange={(v) => {
-                bucket.alias = v ?? '';
+              onChange={(value) => {
+                bucket.alias = value;
                 refresh();
               }}
             />
-            <DialRemoveButton
-              onClick={() => {
-                state.buckets = state.buckets.filter((b) => b !== bucket);
-                refresh();
-              }}
-            />
-          </div>
+          </ChipRow>
         ))}
-        <div>
-          <DialGhostButton label={t(QueryBuilderI18nKey.AddTimeBucket)} onClick={addBucket} />
-        </div>
+        {!state.buckets.length && (
+          <span className="dial-tiny-text text-secondary">{t(QueryBuilderI18nKey.NoFields)}</span>
+        )}
       </div>
-    </div>
+    </SectionBlock>
   );
 };
 

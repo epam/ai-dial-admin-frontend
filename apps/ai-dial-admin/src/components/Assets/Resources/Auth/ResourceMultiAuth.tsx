@@ -10,15 +10,15 @@ import {
   DialPrimaryButton,
   ElementSize,
 } from '@epam/ai-dial-ui-kit';
-import { IconArrowLeft, IconEdit, IconPlus } from '@tabler/icons-react';
+import { IconArrowLeft, IconEdit, IconPlus, IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import { signInExternalService, signOutExternalService } from '@/src/app/[lang]/assets-applications/actions';
 import {
   ButtonsI18nKey,
-  ExternalServiceI18nKey,
   EntityFieldsI18nKey,
   EntityPlaceholdersI18nKey,
+  ExternalServiceI18nKey,
 } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
@@ -87,6 +87,15 @@ const ResourceMultiAuth: FC<Props> = ({ asset, onChange }) => {
   const onChangeService = useCallback((partial: Partial<DialExternalService>) => {
     setEditState((prev) => (prev ? { ...prev, service: { ...prev.service, ...partial } } : prev));
   }, []);
+
+  const onDelete = useCallback(
+    (serviceId: string) => {
+      const updated = { ...services };
+      delete updated[serviceId];
+      onChange({ ...asset, external_services: updated });
+    },
+    [asset, onChange, services],
+  );
 
   if (editState) {
     return (
@@ -190,11 +199,18 @@ const ResourceMultiAuth: FC<Props> = ({ asset, onChange }) => {
                   onLoadingChange={(loading) => setLoadingServiceId(loading ? serviceId : null)}
                 />
                 {!isReadOnlyAdmin && loadingServiceId !== serviceId && (
-                  <DialGhostIconButton
-                    size={ElementSize.Small}
-                    icon={<IconEdit {...BASE_BUTTON_ICON_PROPS} />}
-                    onClick={() => onEdit(serviceId)}
-                  />
+                  <>
+                    <DialGhostIconButton
+                      size={ElementSize.Small}
+                      icon={<IconEdit {...BASE_BUTTON_ICON_PROPS} />}
+                      onClick={() => onEdit(serviceId)}
+                    />
+                    <DialGhostIconButton
+                      size={ElementSize.Small}
+                      icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-error" />}
+                      onClick={() => onDelete(serviceId)}
+                    />
+                  </>
                 )}
               </div>
             </div>

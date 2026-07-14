@@ -293,7 +293,7 @@ describe('Formatters :: sourceTypeFormatter', () => {
         SOURCE_TYPE.ENDPOINTS,
         t,
         ApplicationRoute.Applications,
-        { source: { $type: SOURCE_TYPE.ENDPOINTS }, endpoint: url, editorUrl: url },
+        { source: { $type: SOURCE_TYPE.ENDPOINTS }, endpoint: url, editor_url: url } as any,
         url,
       ),
     ).toBe(SourceI18nKey.CodeApp);
@@ -306,7 +306,7 @@ describe('Formatters :: sourceTypeFormatter', () => {
         SOURCE_TYPE.ENDPOINTS,
         t,
         ApplicationRoute.Applications,
-        { source: { $type: SOURCE_TYPE.ENDPOINTS }, endpoint: url, editorUrl: 'other' },
+        { source: { $type: SOURCE_TYPE.ENDPOINTS }, endpoint: url, editor_url: 'other' } as any,
         url,
       ),
     ).toBe(SourceI18nKey.Endpoint);

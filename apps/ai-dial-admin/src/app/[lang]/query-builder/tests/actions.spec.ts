@@ -5,7 +5,7 @@ import { QueryMode, StructuredQuery } from '@/src/models/analytics/query';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { executeQuery, getDetailedEntitySchema, getEntities, getEntitySchema } from '../actions';
+import { executeQuery, getEntities, getEntitySchema } from '../actions';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -33,14 +33,6 @@ describe('Query builder server actions', () => {
     await getEntitySchema('conversation');
 
     expect(analyticsDataApi.getEntitySchema).toHaveBeenCalledWith('conversation', TOKEN_MOCK);
-  });
-
-  test('getDetailedEntitySchema passes name, id field, id + token', async () => {
-    (analyticsDataApi.getDetailedEntitySchema as any).mockResolvedValue(null);
-
-    await getDetailedEntitySchema('message', 'id', '42');
-
-    expect(analyticsDataApi.getDetailedEntitySchema).toHaveBeenCalledWith('message', 'id', '42', TOKEN_MOCK);
   });
 
   test('executeQuery passes the query + token', async () => {

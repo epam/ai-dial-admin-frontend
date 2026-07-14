@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { parseQuery } from '@/src/components/Analytics/QueryBuilder/utils/deserialize';
+import { isBuilderRepresentable, parseQuery } from '@/src/components/Analytics/QueryBuilder/utils/deserialize';
 import { buildQuery } from '@/src/components/Analytics/QueryBuilder/utils/serialize';
 import {
   createAggregate,
@@ -13,13 +13,17 @@ import {
 import { QueryBuilderState } from '@/src/models/analytics/query-builder';
 import {
   QueryBucketUnit,
+  QueryExprType,
+  QueryFilterNode,
   QueryLogicalOperator,
   QueryMode,
   QueryOperator,
   QueryPageType,
+  QueryPredicate,
   QuerySortDirection,
   QuerySortNulls,
   QueryValueType,
+  StructuredQuery,
 } from '@/src/models/analytics/query';
 
 const roundTrips = (state: QueryBuilderState) => {
@@ -121,5 +125,49 @@ describe('parseQuery round-trip', () => {
     const parsed = parseQuery({ entity: 'rate_analytics', mode: QueryMode.Aggregate }, []);
     expect(parsed.entityName).toBe('rate_analytics');
     expect(parsed.mode).toBe(QueryMode.Aggregate);
+  });
+});
+
+describe('isBuilderRepresentable', () => {
+  const pred = {
+    op: QueryOperator.Eq,
+    args: [
+      { type: QueryExprType.Field, name: 'deployment' },
+      { type: QueryExprType.Value, value_type: QueryValueType.String, value: 'gpt-4o' },
+    ],
+  } as QueryPredicate;
+  const base: StructuredQuery = { entity: 'dial_usage_log', mode: QueryMode.Row };
+
+  test('no filter, a bare predicate, and a flat group are representable', () => {
+    expect(isBuilderRepresentable(base)).toBe(true);
+    expect(isBuilderRepresentable({ ...base, filter: pred })).toBe(true);
+    expect(isBuilderRepresentable({ ...base, filter: { op: QueryLogicalOperator.And, args: [pred, pred] } })).toBe(
+      true,
+    );
+  });
+
+  test('root group + one nested group level is representable', () => {
+    const filter: QueryFilterNode = {
+      op: QueryLogicalOperator.And,
+      args: [pred, { op: QueryLogicalOperator.Or, args: [pred, pred] }],
+    };
+    expect(isBuilderRepresentable({ ...base, filter })).toBe(true);
+  });
+
+  test('a group nested inside a nested group is not representable', () => {
+    const filter: QueryFilterNode = {
+      op: QueryLogicalOperator.And,
+      args: [{ op: QueryLogicalOperator.Or, args: [pred, { op: QueryLogicalOperator.And, args: [pred] }] }],
+    };
+    expect(isBuilderRepresentable({ ...base, filter })).toBe(false);
+  });
+
+  test('the having tree follows the same rule', () => {
+    const deep: QueryFilterNode = {
+      op: QueryLogicalOperator.And,
+      args: [{ op: QueryLogicalOperator.Or, args: [{ op: QueryLogicalOperator.And, args: [pred] }] }],
+    };
+    expect(isBuilderRepresentable({ ...base, mode: QueryMode.Aggregate, having: deep })).toBe(false);
+    expect(isBuilderRepresentable({ ...base, mode: QueryMode.Aggregate, having: pred })).toBe(true);
   });
 });

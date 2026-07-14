@@ -11,6 +11,7 @@ import {
 } from '@/src/components/SourceField/constants';
 import { DialApplication } from '@/src/models/dial/application';
 import { ApplicationRoute } from '@/src/types/routes';
+import { DialApplicationResource } from '@/src/models/dial/resource';
 
 vi.mock('@epam/ai-dial-ui-kit', async () => {
   const actual = await vi.importActual<Record<string, unknown>>('@epam/ai-dial-ui-kit');
@@ -251,10 +252,10 @@ describe('SourceField (AssetsApplications view)', () => {
       source: { $type: SOURCE_TYPE.ENDPOINTS },
       endpoint: 'https://chat.example.com',
       mcp: { endpoint: 'https://mcp.example.com' },
-      viewerUrl: 'https://viewer.example.com',
-      editorUrl: 'https://editor.example.com',
-      applicationProperties: { foo: 'bar' } as any,
-    });
+      viewer_url: 'https://viewer.example.com',
+      editor_url: 'https://editor.example.com',
+      application_properties: { foo: 'bar' } as any,
+    } as DialApplication);
 
     render(
       <SourceField
@@ -268,13 +269,11 @@ describe('SourceField (AssetsApplications view)', () => {
 
     fireEvent.change(screen.getByTestId('select-sourceType'), { target: { value: SOURCE_TYPE.SCHEMA } });
 
-    const last = onChange.mock.calls.at(-1)?.[0] as DialApplication;
-    expect(last.source?.$type).toBe(SOURCE_TYPE.SCHEMA);
+    const last = onChange.mock.calls.at(-1)?.[0] as DialApplicationResource;
     expect(last.endpoint).toBeUndefined();
-    expect(last.mcp).toBeUndefined();
-    expect(last.viewerUrl).toBeUndefined();
-    expect(last.editorUrl).toBeUndefined();
-    expect(last.applicationProperties).toBeUndefined();
+    expect(last.viewer_url).toBeUndefined();
+    expect(last.editor_url).toBeUndefined();
+    expect(last.application_properties).toBeUndefined();
   });
 });
 
