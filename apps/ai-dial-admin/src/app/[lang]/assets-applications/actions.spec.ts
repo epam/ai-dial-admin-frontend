@@ -184,10 +184,11 @@ describe('Assets application :: server actions', () => {
     expect(assetApi.put).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.APPLICATION, 'public__1.0', {
       folderId: undefined,
       nodeType: DialFileNodeType.FOLDER,
-      path: 'test',
+      path: undefined,
       version: undefined,
       source: undefined,
       displayVersion: '1.0',
+      application_type_schema_id: undefined,
     });
     expect(result).toBe(RESPONSE_MOCK);
   });
