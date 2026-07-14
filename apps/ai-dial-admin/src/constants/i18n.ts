@@ -871,6 +871,7 @@ export enum ExportI18nKey {
   FullConfig = 'Export.FullConfig',
   Custom = 'Export.Custom',
   Dependencies = 'Export.Dependencies',
+  DependenciesInfo = 'Export.DependenciesInfo',
   Resources = 'Export.Resources',
   SuccessTitle = 'Export.SuccessTitle',
   SuccessDescription = 'Export.SuccessDescription',
