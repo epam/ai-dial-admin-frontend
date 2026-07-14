@@ -123,6 +123,45 @@ describe('Runs View :: getAnalyticsColumns', () => {
     expect((columns[3] as any).children).toHaveLength(0);
   });
 
+  test('Should expose Turn and Total turns columns in the EXECUTION group', () => {
+    const columns = getAnalyticsColumns([]);
+    const execGroup = (columns as any[]).find((c) => c.headerName === 'EXECUTION');
+    const turn = execGroup.children.find((c: any) => c.colId === 'turnIndex');
+    const totalTurns = execGroup.children.find((c: any) => c.colId === 'totalTurns');
+
+    expect(turn).toEqual(expect.objectContaining({ headerName: 'Turn' }));
+    expect(totalTurns).toEqual(expect.objectContaining({ headerName: 'Total turns' }));
+    // Turn is displayed 1-based; totalTurns as-is
+    expect(turn.valueGetter({ data: { turnIndex: 0 } })).toBe(1);
+    expect(turn.valueGetter({ data: {} })).toBeNull();
+    expect(totalTurns.valueGetter({ data: { totalTurns: 3 } })).toBe(3);
+    expect(totalTurns.valueGetter({ data: {} })).toBeNull();
+  });
+
+  test('Should apply default multi-sort: testCaseName, then runIndex, then turnIndex', () => {
+    const columns = getAnalyticsColumns([]);
+    const findLeaf = (colId: string) => {
+      for (const group of columns as any[]) {
+        const leaf = group.children?.find((c: any) => c.colId === colId);
+        if (leaf) return leaf;
+      }
+      return undefined;
+    };
+
+    expect(findLeaf('testCaseName')).toEqual(expect.objectContaining({ sort: 'asc', sortIndex: 0 }));
+    expect(findLeaf('runIndex')).toEqual(expect.objectContaining({ sort: 'asc', sortIndex: 1 }));
+    expect(findLeaf('turnIndex')).toEqual(expect.objectContaining({ sort: 'asc', sortIndex: 2 }));
+  });
+
+  test('Should not apply a default sort to non-identity columns (e.g. HTTP status)', () => {
+    const columns = getAnalyticsColumns([]);
+    const execGroup = (columns as any[]).find((c) => c.headerName === 'EXECUTION');
+    const http = execGroup.children.find((c: any) => c.colId === 'http');
+
+    expect(http.sort).toBeUndefined();
+    expect(http.sortIndex).toBeUndefined();
+  });
+
   test('Should sort error metric cells last for ascending and first for descending', () => {
     const results = [{ metricValues: { Accuracy: { score: 0.8 } } }] as any[];
     const columns = getAnalyticsColumns(results as any);
