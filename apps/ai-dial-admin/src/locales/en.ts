@@ -1730,6 +1730,12 @@ export default {
     Schema: 'Schema',
     Method: 'Method',
     Controls: 'Controls',
+    Condition: 'Condition',
+    ConditionHint:
+      'Optional JSONata evaluated per turn — the metric runs only when it is true. Use data.<column>, response.<column>, and turn.<field> (turn.index — 0-based, turn.total, turn.last — boolean), e.g. $exists(response.answer), or turn.last to run only on the final turn. Leave blank to always run.',
+    ConditionAlwaysRun: 'Always run',
+    ConditionSystemFunctionUnavailable:
+      'System functions such as name() are not available yet. Use a JSONata expression (e.g. $exists(response.answer)) or leave blank.',
     Configuration: 'Configuration',
     NoTestCases: 'No Test Cases',
     FromPC: 'From PC storage',

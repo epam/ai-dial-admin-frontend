@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { TestSuitesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { Metric } from '@/src/models/evaluation/metric';
 import AddMetricModal from '../AddMetricModal';
 
@@ -24,6 +24,7 @@ vi.mock('../../utils/metric-bindings', () => ({
 
 vi.mock('../utils', () => ({
   validateMetricBindings: () => true,
+  isReservedSystemFunctionCondition: (condition?: string) => condition?.trim() === 'name()',
 }));
 
 vi.mock('../MetricSelection', () => ({
@@ -163,6 +164,35 @@ describe('AddMetricModal', () => {
     expect(screen.getByRole('dialog', { name: TestSuitesI18nKey.EditMetric })).toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: 'steps' })).not.toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'metric-configuration' })).toBeInTheDocument();
+  });
+
+  test('includes the editing metric condition in the confirmed metric', async () => {
+    const user = userEvent.setup();
+    const onConfirm = vi.fn();
+    const editingMetric: Metric = {
+      id: 'suite-metric-1',
+      name: 'Edited metric',
+      metricDeclarationId: 'decl-1',
+      condition: '$exists(response.answer)',
+    };
+
+    render(
+      <AddMetricModal
+        isModalOpen
+        onClose={vi.fn()}
+        onConfirm={onConfirm}
+        editingMetric={editingMetric}
+        selectedTestSuite={{ id: 'suite-1' }}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(mockGetMetricLatestVersion).toHaveBeenCalledWith('decl-1');
+    });
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Confirm }));
+
+    expect(onConfirm).toHaveBeenCalledWith(expect.objectContaining({ condition: '$exists(response.answer)' }));
   });
 
   test('calls onClose when cancel is clicked', async () => {

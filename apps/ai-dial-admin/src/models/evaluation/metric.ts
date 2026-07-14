@@ -15,6 +15,11 @@ export interface Metric {
   configBindings?: MetricBinding[];
   inputBindings?: MetricBinding[];
 
+  // Optional condition evaluated once per test-case result — the metric runs only when it
+  // resolves truthy. Empty/omitted ⇒ metric always runs. Usually JSONata over a namespaced
+  // dictionary (e.g. "$exists(response.answer)"). Validated eagerly by the backend (hard 400).
+  condition?: string;
+
   // declaration
   metricDeclarationId?: string;
   metricDeclarationVersionId?: string;

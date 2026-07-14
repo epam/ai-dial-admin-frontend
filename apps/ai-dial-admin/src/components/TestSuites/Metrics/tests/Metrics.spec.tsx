@@ -160,6 +160,33 @@ describe('Metrics', () => {
     expect(within(bindingsRegion).getByText('threshold: 0.5')).toBeInTheDocument();
   });
 
+  test('shows "always run" for a metric without a condition', async () => {
+    mockGetTestSuiteMetrics.mockResolvedValue({ content: [metric] });
+
+    render(<Metrics selectedTestSuite={selectedTestSuite} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Metric One')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText(TestSuitesI18nKey.ConditionAlwaysRun)).toBeInTheDocument();
+  });
+
+  test('shows the condition expression for a conditional metric', async () => {
+    mockGetTestSuiteMetrics.mockResolvedValue({
+      content: [{ ...metric, condition: '$exists(response.answer)' }],
+    });
+
+    render(<Metrics selectedTestSuite={selectedTestSuite} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Metric One')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('$exists(response.answer)')).toBeInTheDocument();
+    expect(screen.queryByText(TestSuitesI18nKey.ConditionAlwaysRun)).not.toBeInTheDocument();
+  });
+
   test('creates metric after add modal confirmation', async () => {
     const user = userEvent.setup();
 
