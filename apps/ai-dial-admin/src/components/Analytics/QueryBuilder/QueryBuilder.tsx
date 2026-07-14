@@ -10,7 +10,6 @@ import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBas
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import Aggregates from '@/src/components/Analytics/QueryBuilder/Aggregate/Aggregates';
 import GroupBySection from '@/src/components/Analytics/QueryBuilder/Aggregate/GroupBySection';
-import TimeBuckets from '@/src/components/Analytics/QueryBuilder/Aggregate/TimeBuckets';
 import SectionAction from '@/src/components/Analytics/QueryBuilder/Common/SectionAction';
 import SectionBlock from '@/src/components/Analytics/QueryBuilder/Common/SectionBlock';
 import FilterGroup from '@/src/components/Analytics/QueryBuilder/Filter/FilterGroup';
@@ -316,7 +315,6 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
                     {isAggregate ? (
                       <>
                         <GroupBySection />
-                        <TimeBuckets />
                         <Aggregates />
                       </>
                     ) : (
@@ -370,7 +368,12 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
                         {!state.having.children.length && (
                           <span className="dial-tiny-text text-secondary">{t(QueryBuilderI18nKey.NoHaving)}</span>
                         )}
-                        <FilterGroup node={state.having} parent={null} fieldOptions={havingFieldOptions(state)} />
+                        <FilterGroup
+                          node={state.having}
+                          parent={null}
+                          fieldOptions={havingFieldOptions(state)}
+                          color={QueryBuilderColor.Constraint}
+                        />
                       </SectionBlock>
                     )}
 

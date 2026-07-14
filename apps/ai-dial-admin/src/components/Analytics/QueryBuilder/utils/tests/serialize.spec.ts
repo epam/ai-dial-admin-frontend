@@ -7,8 +7,9 @@ import {
 } from '@/src/components/Analytics/QueryBuilder/utils/serialize';
 import {
   createAggregate,
-  createBucket,
   createGroup,
+  createGroupByColumn,
+  createGroupByFn,
   createInitialState,
   createPredicate,
   createSort,
@@ -20,6 +21,7 @@ import {
   QueryMode,
   QueryOperator,
   QueryPageType,
+  QueryScalarFn,
   QuerySortNulls,
   QueryValueType,
 } from '@/src/models/analytics/query';
@@ -179,7 +181,7 @@ describe('buildQuery — aggregate mode', () => {
   test('group-by fields and aggregates land in select and group_by', () => {
     const s = baseState();
     s.mode = QueryMode.Aggregate;
-    s.groupBy = ['deployment'];
+    s.groupBy = [createGroupByColumn('deployment')];
     const agg = createAggregate();
     agg.field = 'total_tokens';
     agg.alias = 'sum_tokens';
@@ -193,14 +195,14 @@ describe('buildQuery — aggregate mode', () => {
     ]);
   });
 
-  test('time bucket becomes an aliased date_bin column referenced by group_by', () => {
+  test('date_bin group-by entry becomes an aliased date_bin column referenced by group_by', () => {
     const s = baseState();
     s.mode = QueryMode.Aggregate;
-    const bucket = createBucket('request_time');
+    const bucket = createGroupByFn(QueryScalarFn.DateBin, 'request_time');
     bucket.amount = 5;
     bucket.unit = QueryBucketUnit.Minute;
     bucket.alias = 'bucket';
-    s.buckets = [bucket];
+    s.groupBy = [bucket];
     const q = buildQuery(s);
     expect(q.group_by).toContain('bucket');
     expect(q.select).toContainEqual({
@@ -216,6 +218,35 @@ describe('buildQuery — aggregate mode', () => {
       as: 'bucket',
     });
   });
+
+  test('scalar function group-by entry serializes fn(field) AS alias, group_by uses the alias', () => {
+    const s = baseState();
+    s.mode = QueryMode.Aggregate;
+    const row = createGroupByFn(QueryScalarFn.Lower, 'deployment');
+    row.alias = 'dep';
+    s.groupBy = [row];
+    const q = buildQuery(s);
+    expect(q.group_by).toEqual(['dep']);
+    expect(q.select).toContainEqual({
+      expr: { type: 'fn', name: 'lower', args: [{ type: 'field', name: 'deployment' }] },
+      as: 'dep',
+    });
+  });
+
+  test('fieldless group-by entries are dropped; aliasless function entries stay out of group_by', () => {
+    const s = baseState();
+    s.mode = QueryMode.Aggregate;
+    const empty = createGroupByFn(QueryScalarFn.Upper);
+    const noAlias = createGroupByFn(QueryScalarFn.Trim, 'deployment');
+    noAlias.alias = '';
+    s.groupBy = [empty, noAlias];
+    const q = buildQuery(s);
+    expect(q.group_by).toBeUndefined();
+    expect(q.select).toContainEqual({
+      expr: { type: 'fn', name: 'trim', args: [{ type: 'field', name: 'deployment' }] },
+      as: '',
+    });
+  });
 });
 
 describe('getAggregateWarnings', () => {
@@ -229,14 +260,25 @@ describe('getAggregateWarnings', () => {
     expect(getAggregateWarnings(s)).toContain(QueryBuilderWarning.EmptyAggregate);
   });
 
-  test('missing aggregate alias and bucket field are flagged', () => {
+  test('missing aggregate alias and function field are flagged', () => {
     const s = baseState();
     s.mode = QueryMode.Aggregate;
     s.aggregates = [createAggregate()];
-    s.buckets = [createBucket('')];
+    s.groupBy = [createGroupByFn(QueryScalarFn.DateBin)];
     const warnings = getAggregateWarnings(s);
     expect(warnings).toContain(QueryBuilderWarning.MissingAggregateAlias);
-    expect(warnings).toContain(QueryBuilderWarning.MissingBucketField);
+    expect(warnings).toContain(QueryBuilderWarning.MissingGroupByField);
+  });
+
+  test('function entry with a field but no alias is flagged; plain columns are not', () => {
+    const s = baseState();
+    s.mode = QueryMode.Aggregate;
+    const fnRow = createGroupByFn(QueryScalarFn.Lower, 'deployment');
+    fnRow.alias = '';
+    s.groupBy = [createGroupByColumn('project_id'), fnRow];
+    const warnings = getAggregateWarnings(s);
+    expect(warnings).toContain(QueryBuilderWarning.MissingGroupByAlias);
+    expect(warnings).not.toContain(QueryBuilderWarning.MissingGroupByField);
   });
 });
 
@@ -244,7 +286,7 @@ describe('buildQuery implicit count', () => {
   test('aggregate mode without aggregates appends count() so the result has a value column', () => {
     const s = baseState();
     s.mode = QueryMode.Aggregate;
-    s.groupBy = ['project_id'];
+    s.groupBy = [createGroupByColumn('project_id')];
     const q = buildQuery(s);
     expect(q.select).toEqual([
       { expr: { type: 'field', name: 'project_id' } },
@@ -255,7 +297,7 @@ describe('buildQuery implicit count', () => {
   test('user-defined aggregates suppress the implicit count', () => {
     const s = baseState();
     s.mode = QueryMode.Aggregate;
-    s.groupBy = ['project_id'];
+    s.groupBy = [createGroupByColumn('project_id')];
     const agg = createAggregate();
     agg.field = 'total_tokens';
     agg.alias = 'tokens';

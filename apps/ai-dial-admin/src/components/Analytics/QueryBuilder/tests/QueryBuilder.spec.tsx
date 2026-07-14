@@ -78,7 +78,7 @@ describe('QueryBuilder', () => {
 
     expect(screen.getByText(/dial_usage_log/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /QueryBuilder.Run/ })).toBeEnabled();
-    expect(screen.getByText('QueryBuilder.ResultsEmptyTitle')).toBeInTheDocument();
+    expect(screen.getByText('QueryBuilder.ResultsEmptyDescription')).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'QueryBuilder.AggregateMode' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'QueryBuilder.Filter' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'QueryBuilder.Sort' })).toBeInTheDocument();

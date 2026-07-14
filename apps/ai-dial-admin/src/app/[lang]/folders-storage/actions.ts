@@ -48,9 +48,9 @@ export async function previewToolsetZip(body: FormData) {
   return foldersApi.previewToolsetZipFiles(token, body);
 }
 
-export async function removeFolder(path: string) {
+export async function removeFolder(path: string, resourceType: ResourceType) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return removeFolderCore(token, path);
+  return removeFolderCore(token, path, [resourceType]);
 }
 
 export async function changeFolder(oldPath: string, newPath: string, resourceType: ResourceType, overwrite?: boolean) {

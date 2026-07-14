@@ -1,16 +1,3 @@
-import { MouseEvent } from 'react';
-import { FileManagerColumnKey, NAME_COLUMN, SelectOption, UPDATED_AT_COLUMN } from '@epam/ai-dial-ui-kit';
-import { ColDef } from 'ag-grid-community';
-import SelectCellRenderer, { SelectCellRendererParams } from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
-import { STRINGS_DELIMITER } from '@/src/constants/prompt';
-import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
-import { DialFileNodeType } from '@/src/models/dial/file';
-import { ApplicationRoute } from '@/src/types/routes';
-import { FileManagerI18nKey } from '@/src/constants/i18n';
-import { ToolsetTransport } from '@/src/types/toolset';
-import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
-import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
-import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import {
   bulkDeleteApps,
   createApp,
@@ -20,13 +7,6 @@ import {
   moveApps,
 } from '@/src/app/[lang]/assets-applications/actions';
 import {
-  bulkDeletePrompts,
-  createPrompt,
-  exportPrompts,
-  getPrompt,
-  movePrompts,
-} from '@/src/app/[lang]/prompts/actions';
-import {
   bulkDeleteToolsets,
   createToolset,
   exportToolsets,
@@ -34,15 +14,34 @@ import {
   importToolsets,
   moveToolsets,
 } from '@/src/app/[lang]/assets-toolsets/actions';
-import { ResourceType } from '@/src/types/resource-type';
-import { ImportFileType } from '@/src/types/import';
-import { ServerActionResponse } from '@/src/models/server-action';
-import { importPrompts } from '@/src/utils/prompts/import-prompts';
-import { compareVersions, getNameVersionFromAsset } from '@/src/utils/entities/versions';
-import MultiSelectTagsRenderer from '../../Grid/CellRenderers/MultiSelectTagsRenderer';
-import { TEMP_FOLDER } from '@/src/constants/file';
-import { useConversationFolder } from '@/src/context/assets/ConversationsFolderContext';
 import { deleteConversations, getConversation } from '@/src/app/[lang]/conversations/actions';
+import {
+  bulkDeletePrompts,
+  createPrompt,
+  exportPrompts,
+  getPrompt,
+  movePrompts,
+} from '@/src/app/[lang]/prompts/actions';
+import SelectCellRenderer, { SelectCellRendererParams } from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
+import { TEMP_FOLDER } from '@/src/constants/file';
+import { FileManagerI18nKey } from '@/src/constants/i18n';
+import { STRINGS_DELIMITER } from '@/src/constants/prompt';
+import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
+import { useConversationFolder } from '@/src/context/assets/ConversationsFolderContext';
+import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
+import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
+import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
+import { ServerActionResponse } from '@/src/models/server-action';
+import { ImportFileType } from '@/src/types/import';
+import { ResourceType } from '@/src/types/resource-type';
+import { ApplicationRoute } from '@/src/types/routes';
+import { ToolsetTransport } from '@/src/types/toolset';
+import { compareVersions, getNameVersionFromAsset } from '@/src/utils/entities/versions';
+import { importPrompts } from '@/src/utils/prompts/import-prompts';
+import { FileManagerColumnKey, NAME_COLUMN, SelectOption, UPDATED_AT_COLUMN } from '@epam/ai-dial-ui-kit';
+import { ColDef } from 'ag-grid-community';
+import { MouseEvent } from 'react';
+import MultiSelectTagsRenderer from '../../Grid/CellRenderers/MultiSelectTagsRenderer';
 import { CrudAssetRoute } from './types';
 
 export const getItems = (data: unknown) => {
@@ -127,7 +126,6 @@ export const getEmptyAsset = (view: ApplicationRoute, path: string): AssetWithVe
     folderId: path,
     version: '',
     path: `${path}${TEMP_FOLDER}`,
-    nodeType: DialFileNodeType.ITEM,
   };
 
   switch (view) {

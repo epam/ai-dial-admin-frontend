@@ -61,12 +61,12 @@ The Query Builder page SHALL prefetch the queryable entities on the server and t
 
 ### Requirement: Query mode and DISTINCT
 
-In the Builder view the rail SHALL let the user choose the query mode — `row` (projection) or `aggregate` (group + metrics) — via a two-option `DialSegmentedControl` at the top of the view. Selecting `row` SHALL show the projection (Select) section and hide the aggregate sections; selecting `aggregate` SHALL show the Group by, Time bucket, Aggregate, and Having sections and hide the projection section. DISTINCT controls SHALL NOT be rendered (neither a query-level toggle nor per-aggregate checkboxes); the serializer's support for `distinct` remains for JSON-authored queries.
+In the Builder view the rail SHALL let the user choose the query mode — `row` (projection) or `aggregate` (group + metrics) — via a two-option `DialSegmentedControl` at the top of the view. Selecting `row` SHALL show the projection (Select) section and hide the aggregate sections; selecting `aggregate` SHALL show the Group by, Aggregate, and Having sections and hide the projection section. DISTINCT controls SHALL NOT be rendered (neither a query-level toggle nor per-aggregate checkboxes); the serializer's support for `distinct` remains for JSON-authored queries.
 
 #### Scenario: Switching to aggregate mode swaps sections
 
 - **WHEN** the user selects `aggregate` mode
-- **THEN** the Group by, Time bucket, Aggregate, and Having sections are shown
+- **THEN** the Group by, Aggregate, and Having sections are shown
 - **AND** the projection (Select) section is hidden
 
 #### Scenario: DISTINCT is not offered
@@ -166,7 +166,7 @@ The toolbar Run action SHALL execute the current query and render the result in 
 
 ### Requirement: SQL view shows only a SQL editor
 
-In the SQL view the rail SHALL render a SQL code editor filling the rail body, and SHALL NOT render the Mode, Filter, Select, Group by, Time bucket, Aggregate, Having, Sort, or Page sections. The source selector remains available in the toolbar. The editor SHALL provide SQL syntax highlighting (via the Monaco `sql` language). The Copy and Run actions SHALL remain available; Copy SHALL copy the SQL editor text.
+In the SQL view the rail SHALL render a SQL code editor filling the rail body, and SHALL NOT render the Mode, Filter, Select, Group by, Aggregate, Having, Sort, or Page sections. The source selector remains available in the toolbar. The editor SHALL provide SQL syntax highlighting (via the Monaco `sql` language). The Copy and Run actions SHALL remain available; Copy SHALL copy the SQL editor text.
 
 #### Scenario: SQL view hides the builder sections
 
@@ -220,6 +220,66 @@ SQL and JSON are "written" modes: they can hold queries the visual builder canno
 - **WHEN** the JSON editor holds a valid query the builder can represent and the user selects the Builder view
 - **THEN** no confirmation is shown
 - **AND** the builder reflects that query
+
+### Requirement: Aggregate-mode group by, time buckets, and metrics
+
+In `aggregate` mode the builder SHALL provide a single Group by section combining plain columns and scalar-function entries, and an Aggregate section for metrics. The Group by add-dropdown SHALL offer the schema columns (categorized) plus a Functions group with the service's scalar allowlist: `date_bin`, `lower`, `upper`, `length`, `trim`, `abs`. Picking a column SHALL add it as a removable chip; picking a function SHALL add a parameterized row — `date_bin` with an amount, a unit (`second`, `minute`, `hour`, `day`, `week`), a source timestamp/date field, and an alias; every other function with a field and an alias. There SHALL be no separate Time bucket section. Aggregate metrics keep a function (`count`, `sum`, `avg`, `min`, `max`), an optional field argument, and an alias. The serialized query SHALL place plain group-by field projections, aliased scalar-function columns, and aliased aggregate columns into `select`, and SHALL list plain group-by fields by name and function entries by alias in `group_by` (function entries without a field or alias are excluded from `group_by`).
+
+#### Scenario: Aggregate select and group_by are built
+
+- **WHEN** the user adds a group-by column and a `sum` aggregate over a field with alias `total`
+- **THEN** `select` includes the group-by field column and a `sum` function column aliased `total`
+- **AND** `group_by` includes the group-by field
+
+#### Scenario: date_bin function entry becomes a bucket column
+
+- **WHEN** the user picks `date_bin` from the Group by Functions group with 5 minutes over a timestamp field and alias `bucket`
+- **THEN** `select` includes a `date_bin` function column aliased `bucket`
+- **AND** `group_by` includes `bucket`
+
+#### Scenario: Scalar function entry serializes with its alias
+
+- **WHEN** the user picks `lower` over a string field with alias `dep`
+- **THEN** `select` includes a `lower` function column aliased `dep`
+- **AND** `group_by` includes `dep`
+
+#### Scenario: Scalar-function select entries parse back into Group by
+
+- **WHEN** a JSON query's `select` holds a scalar-function column from the allowlist
+- **THEN** switching views shows it as a Group by function row, not an aggregate
+
+### Requirement: Sort keys
+
+The Sort section SHALL let the user add, edit, and remove sort keys, each with a field, a direction (`asc` / `desc`), and an optional nulls ordering (default / nulls first / nulls last). The nulls select trigger SHALL carry a dimmed "Nulls:" prefix so its role is readable next to the direction select. In `row` mode the field options SHALL be the schema fields; in `aggregate` mode they SHALL be the aggregate output names (group-by columns, function-entry aliases, aggregate aliases). Fieldless sort keys SHALL be omitted, and `sort` SHALL be omitted entirely when no valid key remains; the nulls ordering SHALL be omitted when left at default.
+
+#### Scenario: Sort key serializes
+
+- **WHEN** the user adds a sort key on a field with direction `desc`
+- **THEN** the serialized `sort` contains an item with that field and `dir: "desc"`
+
+#### Scenario: Nulls control names itself
+
+- **WHEN** the user inspects a sort key row
+- **THEN** the nulls select shows a "Nulls:" prefix before the selected value
+
+### Requirement: Aggregate validation warnings
+
+While in `aggregate` mode the builder SHALL surface non-blocking warnings when: any aggregate lacks an alias; any Group by function entry lacks a source field or an alias; or the query has no group-by entries or aggregates. The warnings SHALL clear when resolved and SHALL NOT prevent running the query.
+
+#### Scenario: Missing aggregate alias warns
+
+- **WHEN** in aggregate mode an aggregate has no alias
+- **THEN** a warning states that every aggregate needs an alias
+
+#### Scenario: Missing function alias warns
+
+- **WHEN** a Group by function entry has a field but no alias
+- **THEN** a warning states that every group-by function needs an alias
+
+#### Scenario: Warnings clear when resolved
+
+- **WHEN** the aggregate gains an alias
+- **THEN** the corresponding warning is no longer shown
 
 ## ADDED Requirements
 
@@ -281,18 +341,19 @@ The query builder SHALL render in a fixed-width rail at the right edge of the co
 
 ### Requirement: Builder sections use section blocks with categorized field dropdowns and collapsible items
 
-Each Builder-view section (Group by, Time buckets, Aggregates, Select, Filters, Having, Sort, Page) SHALL render as a bordered section block with a labeled header and a header-level add action where applicable. Field pickers SHALL be searchable dropdowns whose options are grouped by the field's schema tag/category (untagged fields under a default group); the search SHALL filter the visible options. Added items SHALL render compactly — chips for plain fields, collapsible rows for parameterized items (aggregates, conditions, having rows) that expand into their editor and collapse back to a summary. Styling SHALL use the project's Tailwind theme tokens only.
+Each Builder-view section (Group by, Aggregates, Select, Filters, Having, Sort, Page) SHALL render as a bordered section block with a labeled header and a header-level add action where applicable. Field pickers SHALL be searchable dropdowns whose options are grouped by the field's schema tag/category (untagged fields under a default group). Category groups SHALL be collapsible headers showing the group's option count, with at most one category expanded at a time (accordion); the group holding the current selection SHALL start expanded, and an active search term SHALL show all matches regardless of collapse state. Category header colors SHALL cycle the full builder palette. The dropdown's search input SHALL use the same compact boxed style as the builder's other controls. Added items SHALL render compactly — chips for plain fields, collapsible rows for parameterized items (group-by functions, aggregates, conditions, having rows, sort keys) that expand into their editor and collapse back to a summary chip tinted with the owning section's palette color. Styling SHALL use the project's palette/theme tokens only.
 
 #### Scenario: Field dropdown groups by category
 
 - **WHEN** the user opens a field dropdown in a builder section
-- **THEN** the fields are grouped under category headers derived from the schema tags
-- **AND** typing in the search narrows the visible fields
+- **THEN** the fields are grouped under collapsible category headers with option counts
+- **AND** expanding one category collapses the previously expanded one
+- **AND** typing in the search shows all matching fields across categories
 
 #### Scenario: Parameterized item collapses to a summary
 
 - **WHEN** the user collapses an aggregate or filter-condition row
-- **THEN** the row shows a compact summary of its configuration
+- **THEN** the row shows a compact summary of its configuration in its section's color
 - **AND** expanding it restores the full editor
 
 ### Requirement: Result stat tiles
@@ -317,13 +378,19 @@ When a result is shown, the results area SHALL display a stat-tile row above the
 
 ### Requirement: Result table and chart views
 
-The results area SHALL offer a Table ⇄ Chart switcher. The Table view SHALL render the result grid. The Chart view SHALL render the result with ECharts and offer: a chart-type control (bar, line, area), an X-axis selector over the executed query's group-by/bucket columns, and a Y-axis selector over its aggregate columns (including the count column when present); sensible defaults SHALL be preselected (first dimension, first aggregate). The Chart view SHALL be available only when the shown result came from an aggregate-mode structured run with at least one group-by or bucket column; otherwise the Chart view SHALL show a hint that charts require an aggregate result with a group-by. Chart colors SHALL come from the shared chart color tokens.
+The results area SHALL offer a Table ⇄ Chart switcher. The Table view SHALL render the result grid. The Chart view SHALL render the result with ECharts and offer: a chart-type control (bar, line, area), an X-axis selector over the executed query's group-by/bucket columns, and a Y-axis selector over its aggregate columns (including the count column when present); sensible defaults SHALL be preselected (first dimension, first aggregate). The Chart view SHALL be available only when the shown result came from an aggregate-mode structured run with at least one group-by or bucket column; otherwise the Chart view SHALL show a hint that charts require an aggregate result with a group-by. When every X value is numeric or date-like, the chart SHALL order the points along the X axis by that natural order (chronological/numeric ascending) regardless of the query's row order; mixed or plain-text X values keep row order. Long X-axis labels SHALL be truncated to a fixed label width with the full value available in the tooltip. Chart colors SHALL come from the shared chart color tokens.
 
 #### Scenario: Chart renders for an aggregate result
 
 - **WHEN** the shown result came from an aggregate run grouped by one field and the user selects the Chart view
 - **THEN** a chart renders with the group-by column on X and an aggregate column on Y
 - **AND** the user can switch between bar, line, and area types
+
+#### Scenario: Comparable X values are ordered on the axis
+
+- **WHEN** a top-N-by-count aggregate result has time-bucket X values and the user opens the Chart view
+- **THEN** the chart shows the buckets in chronological order along the X axis
+- **AND** the table keeps the query's row order
 
 #### Scenario: Chart hint for non-aggregate results
 

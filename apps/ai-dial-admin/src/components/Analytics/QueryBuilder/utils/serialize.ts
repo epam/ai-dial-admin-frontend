@@ -1,8 +1,9 @@
-import { DATE_BIN_FN, IMPLICIT_COUNT_ALIAS, SORT_NULLS_DEFAULT } from '@/src/constants/analytics/query-builder';
+import { IMPLICIT_COUNT_ALIAS, SORT_NULLS_DEFAULT } from '@/src/constants/analytics/query-builder';
 import { withTimeBound } from '@/src/components/Analytics/QueryBuilder/utils/time';
 import {
   FilterNode,
   FilterNodeKind,
+  GroupByRow,
   QueryBuilderState,
   QueryBuilderWarning,
   QueryTimeBound,
@@ -20,11 +21,28 @@ import {
   QueryOperator,
   QueryOutputColumn,
   QueryPageType,
+  QueryScalarFn,
   QuerySortItem,
   QueryValueExpr,
   QueryValueType,
   StructuredQuery,
 } from '@/src/models/analytics/query';
+
+// date_bin takes (amount, unit, timestamp); every other scalar function takes the column alone.
+const groupByFnExpr = (g: GroupByRow): QueryFnExpr => {
+  if (g.fn === QueryScalarFn.DateBin) {
+    return {
+      type: QueryExprType.Fn,
+      name: QueryScalarFn.DateBin,
+      args: [
+        { type: QueryExprType.Value, value_type: QueryValueType.Integer, value: String(g.amount) },
+        { type: QueryExprType.Value, value_type: QueryValueType.String, value: g.unit },
+        { type: QueryExprType.Field, name: g.field },
+      ],
+    };
+  }
+  return { type: QueryExprType.Fn, name: g.fn as string, args: [{ type: QueryExprType.Field, name: g.field }] };
+};
 
 export const serializeNode = (node: FilterNode): QueryFilterNode | null => {
   if (node.kind === FilterNodeKind.Group) {
@@ -73,24 +91,18 @@ export const buildQuery = (state: QueryBuilderState, timeBound?: QueryTimeBound 
       q.select = state.select.map((name) => ({ expr: { type: QueryExprType.Field, name } }));
     }
   } else {
-    const activeBuckets = state.buckets.filter((b) => b.field && b.alias);
-    const groupBy = [...state.groupBy, ...activeBuckets.map((b) => b.alias)];
-    if (groupBy.length) q.group_by = groupBy;
+    // A function entry is addressable in group_by only through its alias; plain columns by name.
+    const activeGroupBy = state.groupBy.filter((g) => g.field);
+    const groupNames = activeGroupBy.map((g) => (g.fn ? g.alias : g.field)).filter(Boolean);
+    if (groupNames.length) q.group_by = groupNames;
 
     const selectEntries: QueryOutputColumn[] = [];
-    state.groupBy.forEach((name) => selectEntries.push({ expr: { type: QueryExprType.Field, name } }));
-    state.buckets.forEach((b) => {
-      if (!b.field) return;
-      const fnExpr: QueryFnExpr = {
-        type: QueryExprType.Fn,
-        name: DATE_BIN_FN,
-        args: [
-          { type: QueryExprType.Value, value_type: QueryValueType.Integer, value: String(b.amount) },
-          { type: QueryExprType.Value, value_type: QueryValueType.String, value: b.unit },
-          { type: QueryExprType.Field, name: b.field },
-        ],
-      };
-      selectEntries.push({ expr: fnExpr, as: b.alias || '' });
+    activeGroupBy.forEach((g) => {
+      if (!g.fn) {
+        selectEntries.push({ expr: { type: QueryExprType.Field, name: g.field } });
+        return;
+      }
+      selectEntries.push({ expr: groupByFnExpr(g), as: g.alias || '' });
     });
     state.aggregates.forEach((a) => {
       const fnExpr: QueryFnExpr = {
@@ -144,10 +156,11 @@ export const buildQuery = (state: QueryBuilderState, timeBound?: QueryTimeBound 
 export const getAggregateWarnings = (state: QueryBuilderState): QueryBuilderWarning[] => {
   if (state.mode !== QueryMode.Aggregate) return [];
   const warnings: QueryBuilderWarning[] = [];
+  const fnRows = state.groupBy.filter((g) => g.fn);
   if (state.aggregates.some((a) => !a.alias)) warnings.push(QueryBuilderWarning.MissingAggregateAlias);
-  if (state.buckets.some((b) => !b.field)) warnings.push(QueryBuilderWarning.MissingBucketField);
-  if (state.buckets.some((b) => b.field && !b.alias)) warnings.push(QueryBuilderWarning.MissingBucketAlias);
-  if (!state.groupBy.length && !state.buckets.length && !state.aggregates.length) {
+  if (fnRows.some((g) => !g.field)) warnings.push(QueryBuilderWarning.MissingGroupByField);
+  if (fnRows.some((g) => g.field && !g.alias)) warnings.push(QueryBuilderWarning.MissingGroupByAlias);
+  if (!state.groupBy.length && !state.aggregates.length) {
     warnings.push(QueryBuilderWarning.EmptyAggregate);
   }
   return warnings;

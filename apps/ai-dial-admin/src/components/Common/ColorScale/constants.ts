@@ -42,8 +42,4 @@ export const DELTA_POSITIVE_THRESHOLDS = Object.keys(DELTA_POSITIVE_COLOR_MAP)
   .map(Number)
   .sort((a, b) => a - b);
 
-export const DELTA_SCALE_THRESHOLDS = [
-  ...DELTA_NEGATIVE_THRESHOLDS.slice().reverse(),
-  0,
-  ...DELTA_POSITIVE_THRESHOLDS,
-] as const;
+export const DELTA_SCALE_THRESHOLDS = [...DELTA_NEGATIVE_THRESHOLDS, 0, ...DELTA_POSITIVE_THRESHOLDS] as const;
