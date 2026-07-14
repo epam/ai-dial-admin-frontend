@@ -338,7 +338,7 @@ export default {
     Entities: {
       Model: 'Model',
       Application: 'Application',
-      Toolsets: 'Toolsets',
+      Toolset: 'Toolset',
       Interceptor: 'Interceptor',
       Route: 'Route',
       Role: 'Role',
