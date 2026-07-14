@@ -5,6 +5,7 @@ import {
   DELTA_NEGATIVE_COLOR_MAP,
   DELTA_NEUTRAL_SEGMENT,
   DELTA_POSITIVE_COLOR_MAP,
+  DELTA_SCALE_THRESHOLDS,
 } from '@/src/components/Common/ColorScale/constants';
 import {
   getAccuracyHeatCellStyle,
@@ -86,5 +87,16 @@ describe('getDeltaHeatCellStyle', () => {
       borderRight: `1px solid ${DELTA_NEGATIVE_COLOR_MAP[-0.5].border}`,
       borderBottom: `1px solid ${DELTA_NEGATIVE_COLOR_MAP[-0.5].border}`,
     });
+  });
+});
+
+describe('DELTA_SCALE_THRESHOLDS', () => {
+  test('orders segments left-to-right from -1 through +1 per Figma', () => {
+    expect([...DELTA_SCALE_THRESHOLDS]).toEqual([-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1]);
+  });
+
+  test('places brightest red at -1 and mildest red at -0.25 on the negative side', () => {
+    expect(DELTA_NEGATIVE_COLOR_MAP[DELTA_SCALE_THRESHOLDS[0]].bg).toBe('#820610');
+    expect(DELTA_NEGATIVE_COLOR_MAP[DELTA_SCALE_THRESHOLDS[3]].bg).toBe('#2b0f04');
   });
 });
