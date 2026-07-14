@@ -129,7 +129,11 @@ describe('parseQuery round-trip', () => {
       mode: QueryMode.Aggregate,
       select: [
         {
-          expr: { type: QueryExprType.Fn, name: QueryScalarFn.Upper, args: [{ type: QueryExprType.Field, name: 'deployment' }] },
+          expr: {
+            type: QueryExprType.Fn,
+            name: QueryScalarFn.Upper,
+            args: [{ type: QueryExprType.Field, name: 'deployment' }],
+          },
           as: 'dep',
         },
       ],
