@@ -4,7 +4,7 @@ export interface DialFile extends ModifiedEntity {
   bucket?: string;
   contentLength?: number;
   contentType?: string;
-  nodeType: DialFileNodeType;
+  nodeType?: DialFileNodeType;
   parentPath?: string | null;
   resourceType?: DialFileResourceType;
   url?: string;
