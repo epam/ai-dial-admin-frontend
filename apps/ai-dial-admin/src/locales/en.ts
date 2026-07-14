@@ -2075,6 +2075,8 @@ export default {
     RunCompareAddSecondRunMessage: 'Metrics will appear side by side so you can spot differences across test cases.',
     RunCompareTag: '[{index}] {name}',
     RunCompareTagAria: 'Run [{index}]: {name}',
+    RunComparePrimaryRunName: '{name} (baseline)',
+    RunComparePrimaryTagAria: 'Run [{index}]: {name} (baseline)',
     RunCompareSelectRun: 'Compare Against',
     RunCompareTabSummaryOverview: 'Summary Overview',
     RunCompareTabHeatMap: 'Heat Map',

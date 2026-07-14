@@ -20,7 +20,11 @@ interface Props {
 
 const CompareRunTag: FC<Props> = ({ runIndex, name, onEdit, isEditDisabled }) => {
   const t = useI18n();
-  const ariaLabel = t(RunsI18nKey.RunCompareTagAria, { index: runIndex, name });
+  const isPrimaryRun = runIndex === RUN_COMPARE_PRIMARY_INDEX;
+  const displayName = isPrimaryRun ? t(RunsI18nKey.RunComparePrimaryRunName, { name }) : name;
+  const ariaLabel = isPrimaryRun
+    ? t(RunsI18nKey.RunComparePrimaryTagAria, { index: runIndex, name })
+    : t(RunsI18nKey.RunCompareTagAria, { index: runIndex, name });
 
   return (
     <DialTag
@@ -29,7 +33,7 @@ const CompareRunTag: FC<Props> = ({ runIndex, name, onEdit, isEditDisabled }) =>
       icon={
         <span className={classNames('inline-flex items-center gap-1', isEditDisabled && 'opacity-50')}>
           <CompareRunIndexBadge runIndex={runIndex} />
-          <span>{name}</span>
+          <span>{displayName}</span>
           <IconPencilMinus size={16} className="shrink-0 text-secondary" />
         </span>
       }
