@@ -24,11 +24,20 @@ export const getConversationFields = (
   row: Record<string, unknown>,
 ): { conversationId: string; turnIndex: number } | Record<string, never> => {
   const conversationId = row.conversationId;
-  const turnIndex = row.turnIndex;
+  const rawTurnIndex = row.turnIndex;
   const hasConversationId = typeof conversationId === 'string' && conversationId.trim() !== '';
-  const hasTurnIndex = typeof turnIndex === 'number' && Number.isFinite(turnIndex);
+  // `turnIndex` can reach here as a number (typed value) or as a numeric string — the grid's
+  // inline editor writes the raw input string back onto the row, and CSV import yields strings too.
+  // Normalize before validating so a valid "0" is not mistaken for "absent" and dropped.
+  const turnIndexNumber =
+    typeof rawTurnIndex === 'number'
+      ? rawTurnIndex
+      : typeof rawTurnIndex === 'string' && rawTurnIndex.trim() !== ''
+        ? Number(rawTurnIndex)
+        : NaN;
+  const hasTurnIndex = Number.isFinite(turnIndexNumber);
   if (hasConversationId && hasTurnIndex) {
-    return { conversationId: conversationId as string, turnIndex: turnIndex as number };
+    return { conversationId: (conversationId as string).trim(), turnIndex: Math.trunc(turnIndexNumber) };
   }
   return {};
 };

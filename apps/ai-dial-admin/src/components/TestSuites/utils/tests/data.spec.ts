@@ -488,6 +488,25 @@ describe('getConversationFields (both-or-neither guard)', () => {
     });
   });
 
+  test('coerces a numeric-string turnIndex to a number (grid inline editor / CSV path)', () => {
+    // the grid editor writes the raw input string back onto the row, e.g. turnIndex: '0'
+    expect(getConversationFields({ conversationId: 'conv-1', turnIndex: '0' })).toEqual({
+      conversationId: 'conv-1',
+      turnIndex: 0,
+    });
+    expect(getConversationFields({ conversationId: 'conv-1', turnIndex: '2' })).toEqual({
+      conversationId: 'conv-1',
+      turnIndex: 2,
+    });
+  });
+
+  test('trims conversationId and truncates a fractional turnIndex', () => {
+    expect(getConversationFields({ conversationId: '  conv-1  ', turnIndex: '3.9' })).toEqual({
+      conversationId: 'conv-1',
+      turnIndex: 3,
+    });
+  });
+
   test('emits neither when conversationId is empty/whitespace', () => {
     expect(getConversationFields({ conversationId: '   ', turnIndex: 1 })).toEqual({});
     expect(getConversationFields({ conversationId: '', turnIndex: 1 })).toEqual({});
