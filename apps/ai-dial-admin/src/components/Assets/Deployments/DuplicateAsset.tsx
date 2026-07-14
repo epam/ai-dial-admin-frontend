@@ -13,7 +13,7 @@ import IdControl from '@/src/components/BaseControls/Id/Id';
 import VersionControl from '@/src/components/BaseControls/Version';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import ApiKeyHeaderControl from '@/src/components/Toolsets/Auth/Controls/ApiKeyHeaderControl';
-import OAuthAuthSectionControl from '@/src/components/Toolsets/Auth/Controls/OAuthAuthSectionControl';
+import { DEFAULT_NEW_ENTITY_VERSION } from '@/src/constants/dial-base-entity';
 import {
   BasicI18nKey,
   ButtonsI18nKey,
@@ -21,7 +21,6 @@ import {
   EntityPlaceholdersI18nKey,
   ToolsetI18nKey,
 } from '@/src/constants/i18n';
-import { DEFAULT_NEW_ENTITY_VERSION } from '@/src/constants/dial-base-entity';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
@@ -101,22 +100,9 @@ const DuplicateAsset: FC<Props> = ({
   // Initial validation for auth fields
   useEffect(() => {
     if (authType === ToolsetAuthType.OAUTH) {
-      const toolset = entity as AssetToolset;
-      dispatch({
-        type: ValidationActionType.SetField,
-        field: 'authSettings.clientId',
-        isValid: !!toolset.authSettings?.clientId,
-      });
-      dispatch({
-        type: ValidationActionType.SetField,
-        field: 'authSettings.clientSecret',
-        isValid: !!toolset.authSettings?.clientSecret,
-      });
-      dispatch({
-        type: ValidationActionType.SetField,
-        field: 'authSettings.authorizationEndpoint',
-        isValid: !!toolset.authSettings?.authorizationEndpoint,
-      });
+      (clonedAsset as AssetToolset).authSettings = {
+        authenticationType: ToolsetAuthType.NONE,
+      };
     } else if (authType === ToolsetAuthType.API_KEY) {
       const toolset = entity as AssetToolset;
       dispatch({
@@ -170,58 +156,6 @@ const DuplicateAsset: FC<Props> = ({
     [clonedAsset, initialName, initialFolder, entity.name, versionsMap],
   );
 
-  const onChangeClientId = useCallback(
-    (clientId?: string) => {
-      const toolset = clonedAsset as AssetToolset;
-      setClonedAsset({
-        ...toolset,
-        authSettings: { ...toolset.authSettings!, clientId },
-      });
-      dispatch({ type: ValidationActionType.SetField, field: 'authSettings.clientId', isValid: !!clientId });
-    },
-    [clonedAsset, dispatch],
-  );
-
-  const onChangeClientSecret = useCallback(
-    (clientSecret?: string) => {
-      const toolset = clonedAsset as AssetToolset;
-      setClonedAsset({
-        ...toolset,
-        authSettings: { ...toolset.authSettings!, clientSecret },
-      });
-      dispatch({ type: ValidationActionType.SetField, field: 'authSettings.clientSecret', isValid: !!clientSecret });
-    },
-    [clonedAsset, dispatch],
-  );
-
-  const onChangeAuthorizationEndpoint = useCallback(
-    (authorizationEndpoint?: string) => {
-      const toolset = clonedAsset as AssetToolset;
-      setClonedAsset({
-        ...toolset,
-        authSettings: { ...toolset.authSettings!, authorizationEndpoint },
-      });
-      dispatch({
-        type: ValidationActionType.SetField,
-        field: 'authSettings.authorizationEndpoint',
-        isValid: !!authorizationEndpoint,
-      });
-    },
-    [clonedAsset, dispatch],
-  );
-
-  const onChangeTokenEndpoint = useCallback(
-    (tokenEndpoint?: string) => {
-      const toolset = clonedAsset as AssetToolset;
-      setClonedAsset({
-        ...toolset,
-        authSettings: { ...toolset.authSettings!, tokenEndpoint },
-      });
-      dispatch({ type: ValidationActionType.SetField, field: 'authSettings.tokenEndpoint', isValid: !!tokenEndpoint });
-    },
-    [clonedAsset, dispatch],
-  );
-
   const onChangeApiKeyHeader = useCallback(
     (apiKeyHeader: string) => {
       const toolset = clonedAsset as AssetToolset;
@@ -265,25 +199,7 @@ const DuplicateAsset: FC<Props> = ({
         )}
         <VersionControl version={clonedAsset.version} onChange={onChangeVersion} />
 
-        {isToolsetWithAuth && (
-          <h3>
-            {authType === ToolsetAuthType.OAUTH && t(ToolsetI18nKey.OAuth)}
-            {authType === ToolsetAuthType.API_KEY && t(ToolsetI18nKey.ApiKey)}
-          </h3>
-        )}
-
-        {authType === ToolsetAuthType.OAUTH && (
-          <OAuthAuthSectionControl
-            clientId={(clonedAsset as AssetToolset).authSettings?.clientId}
-            clientSecret={(clonedAsset as AssetToolset).authSettings?.clientSecret}
-            authorizationEndpoint={(clonedAsset as AssetToolset).authSettings?.authorizationEndpoint}
-            tokenEndpoint={(clonedAsset as AssetToolset).authSettings?.tokenEndpoint}
-            onChangeClientId={onChangeClientId}
-            onChangeClientSecret={onChangeClientSecret}
-            onChangeAuthorizationEndpoint={onChangeAuthorizationEndpoint}
-            onChangeTokenEndpoint={onChangeTokenEndpoint}
-          />
-        )}
+        {authType === ToolsetAuthType.API_KEY && <h3>{t(ToolsetI18nKey.ApiKey)}</h3>}
 
         {authType === ToolsetAuthType.API_KEY && (
           <ApiKeyHeaderControl

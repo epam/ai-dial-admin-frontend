@@ -124,6 +124,7 @@ const ResourceSourceField: FC<Props> = ({
         <AppRunners
           selectedValue={entity.application_type_schema_id}
           onChange={onChangeEntity}
+          onChangeValue={(value) => onChangeEntity({ ...entity, application_type_schema_id: value } as DialApplication)}
           runners={runners}
           isEntityImmutable={isEntityImmutable}
           isModal={isModal}

@@ -25,6 +25,8 @@ interface Props {
   node: FilterPredicateNode;
   parent: FilterGroupNode;
   fieldOptions: FieldOption[];
+  // Collapsed-chip tint from the owning section (Filter vs Having).
+  color?: QueryBuilderColor;
 }
 
 const isNullable = (op: QueryOperator): boolean => op === QueryOperator.Eq || op === QueryOperator.Ne;
@@ -36,7 +38,7 @@ const BOOLEAN_VALUES = ['true', 'false'];
 
 const BOOLEAN_ACTIVE = QUERY_BUILDER_PALETTE[QueryBuilderColor.Dimension];
 
-const FilterCondition: FC<Props> = ({ node, parent, fieldOptions }) => {
+const FilterCondition: FC<Props> = ({ node, parent, fieldOptions, color }) => {
   const t = useI18n();
   const { refresh } = useQueryBuilder();
 
@@ -79,7 +81,7 @@ const FilterCondition: FC<Props> = ({ node, parent, fieldOptions }) => {
   const isBoolean = node.valueType === QueryValueType.Boolean && node.op !== QueryOperator.In;
 
   return (
-    <ChipRow summary={summaryOf(node)} onRemove={remove}>
+    <ChipRow summary={summaryOf(node)} onRemove={remove} color={color}>
       <CategorizedFieldDropdown
         id={`qb-cond-field-${node.id}`}
         options={fieldOptions}

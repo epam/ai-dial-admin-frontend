@@ -38,12 +38,12 @@ The system SHALL read folder rules via a Core publication rule-list call and SHA
 - **WHEN** `updateRules(targetFolder, rules)` is called
 - **THEN** a publication targeting those rules is created and then immediately approved, with no separate approval step exposed to the caller
 
-### Requirement: Folder delete unpublishes across all resource types
-The system SHALL delete a folder by gathering every resource URL under it (recursively, across all five types), creating and approving a DELETE-action publication for those URLs, and then best-effort deleting the folder from each type's own storage, swallowing per-type deletion errors during that best-effort cleanup step.
+### Requirement: Folder delete unpublishes only the targeted resource type
+The system SHALL delete a folder for a single caller-specified resource type by gathering every resource URL under it for that type only (recursively), creating and approving a DELETE-action publication for those URLs, and then best-effort deleting the folder from that type's own storage, swallowing errors during that best-effort cleanup step. The folder is left untouched for every other resource type.
 
-#### Scenario: Delete gathers resources recursively across types
-- **WHEN** `removeFolder(path)` is called on a folder containing nested subfolders with resources of multiple types
-- **THEN** every resource URL under that folder tree, across all types, is included in the unpublish operation
+#### Scenario: Delete gathers resources recursively for the targeted type only
+- **WHEN** `removeFolder(path, resourceType)` is called on a folder containing nested subfolders with resources of multiple types
+- **THEN** every resource URL under that folder tree for `resourceType` is included in the unpublish operation, and resources of other types are left untouched
 
 #### Scenario: Best-effort cleanup does not fail the overall delete
 - **WHEN** a per-type storage delete fails during the post-unpublish cleanup step

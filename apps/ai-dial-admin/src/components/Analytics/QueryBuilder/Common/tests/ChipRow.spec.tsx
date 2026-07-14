@@ -88,6 +88,7 @@ describe('QueryBuilder :: ChipRow outside-click', () => {
     );
 
     await user.click(screen.getByRole('button', { name: 'Pick field' }));
+    await user.click(screen.getByRole('button', { name: /dimension/ }));
     await user.click(screen.getByRole('option', { name: /deployment/ }));
 
     expect(screen.getByRole('button', { name: 'Pick field' })).toBeInTheDocument();

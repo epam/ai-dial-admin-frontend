@@ -1,12 +1,12 @@
-import { DATE_BIN_FN, SORT_NULLS_DEFAULT } from '@/src/constants/analytics/query-builder';
+import { SORT_NULLS_DEFAULT } from '@/src/constants/analytics/query-builder';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 import {
   AggregateRow,
-  BucketRow,
   FilterGroupNode,
   FilterNode,
   FilterNodeKind,
   FilterPredicateNode,
+  GroupByRow,
   PageState,
   QueryBuilderState,
   SortRow,
@@ -23,10 +23,18 @@ import {
   QueryPageType,
   QueryPredicate,
   QueryExprType,
+  QueryScalarFn,
   QueryValueType,
   StructuredQuery,
 } from '@/src/models/analytics/query';
-import { createGroup, createInitialPage, createInitialState, nextId } from './state';
+import {
+  createGroup,
+  createGroupByColumn,
+  createGroupByFn,
+  createInitialPage,
+  createInitialState,
+  nextId,
+} from './state';
 
 const LOGICAL_OPS = new Set<string>([QueryLogicalOperator.And, QueryLogicalOperator.Or, QueryLogicalOperator.Not]);
 
@@ -104,24 +112,30 @@ const parseFilterRoot = (node?: QueryFilterNode): FilterGroupNode => {
   return root;
 };
 
-const parseAggregateSelect = (
-  select: QueryOutputColumn[],
-): { groupBy: string[]; buckets: BucketRow[]; aggregates: AggregateRow[] } => {
-  const groupBy: string[] = [];
-  const buckets: BucketRow[] = [];
+const SCALAR_FNS = new Set<string>(Object.values(QueryScalarFn));
+
+const parseAggregateSelect = (select: QueryOutputColumn[]): { groupBy: GroupByRow[]; aggregates: AggregateRow[] } => {
+  const groupBy: GroupByRow[] = [];
   const aggregates: AggregateRow[] = [];
 
   select.forEach((col) => {
     const expr = col.expr;
     if (expr.type === QueryExprType.Field) {
-      groupBy.push(expr.name);
-    } else if (expr.type === QueryExprType.Fn && expr.name === DATE_BIN_FN) {
+      groupBy.push({ ...createGroupByColumn(expr.name), alias: col.as ?? '' });
+    } else if (expr.type === QueryExprType.Fn && expr.name === QueryScalarFn.DateBin) {
       const [amountExpr, unitExpr, fieldExpr] = expr.args;
-      buckets.push({
+      groupBy.push({
         id: nextId(),
+        fn: QueryScalarFn.DateBin,
         amount: amountExpr?.type === QueryExprType.Value ? Number(amountExpr.value ?? 0) : 0,
         unit: unitExpr?.type === QueryExprType.Value ? (unitExpr.value as QueryBucketUnit) : QueryBucketUnit.Minute,
         field: fieldExpr?.type === QueryExprType.Field ? fieldExpr.name : '',
+        alias: col.as ?? '',
+      });
+    } else if (expr.type === QueryExprType.Fn && SCALAR_FNS.has(expr.name)) {
+      const arg = expr.args[0];
+      groupBy.push({
+        ...createGroupByFn(expr.name as QueryScalarFn, arg?.type === QueryExprType.Field ? arg.name : ''),
         alias: col.as ?? '',
       });
     } else if (expr.type === QueryExprType.Fn) {
@@ -136,7 +150,7 @@ const parseAggregateSelect = (
     }
   });
 
-  return { groupBy, buckets, aggregates };
+  return { groupBy, aggregates };
 };
 
 const parsePage = (page?: QueryPage): PageState => {
@@ -165,9 +179,8 @@ export const parseQuery = (query: StructuredQuery, fields: AnalyticsEntityField[
   state.having = parseFilterRoot(query.having);
 
   if (state.mode === QueryMode.Aggregate) {
-    const { groupBy, buckets, aggregates } = parseAggregateSelect(query.select || []);
+    const { groupBy, aggregates } = parseAggregateSelect(query.select || []);
     state.groupBy = groupBy;
-    state.buckets = buckets;
     state.aggregates = aggregates;
   } else {
     state.select = (query.select || [])
