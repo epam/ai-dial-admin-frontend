@@ -5,6 +5,7 @@ import {
   defaultValueType,
   distinctTags,
   family,
+  fieldDisplayName,
   fieldsToOptions,
   filterFieldsByTags,
   groupFieldOptions,
@@ -191,5 +192,84 @@ describe('groupFieldOptions', () => {
     expect(groups).toHaveLength(1);
     expect(groups[0].tag).toBe('untagged');
     expect(groups[0].options.map((o) => o.name)).toEqual(['alias_a', 'alias_b']);
+  });
+
+  test('search matches labels too', () => {
+    const labeled = [
+      { name: 'total_money', display_name: 'Total money spend', tag: 'metric' },
+      { name: 'event_id', tag: 'identity' },
+    ];
+    const groups = groupFieldOptions(labeled, 'spend');
+    expect(groups.map((g) => g.tag)).toEqual(['metric']);
+    expect(groups[0].options.map((o) => o.name)).toEqual(['total_money']);
+  });
+});
+
+describe('fieldsToOptions', () => {
+  test('projects label and description onto options', () => {
+    const withMeta: AnalyticsEntityField = {
+      ...field('total_money', AnalyticsFieldType.Decimal, 'metric'),
+      display_name: 'Total money spend',
+      description: 'Money spent on the request',
+    };
+    expect(fieldsToOptions([withMeta])).toEqual([
+      {
+        name: 'total_money',
+        type: AnalyticsFieldType.Decimal,
+        tag: 'metric',
+        display_name: 'Total money spend',
+        description: 'Money spent on the request',
+      },
+    ]);
+  });
+
+  test('fields without metadata keep undefined label/description', () => {
+    const [option] = fieldsToOptions([field('event_id', AnalyticsFieldType.Uuid, 'identity')]);
+    expect(option.display_name).toBeUndefined();
+    expect(option.description).toBeUndefined();
+  });
+});
+
+describe('fieldDisplayName', () => {
+  const fields = [
+    { ...field('total_money', AnalyticsFieldType.Decimal, 'metric'), display_name: 'Total money spend' },
+    field('event_id', AnalyticsFieldType.Uuid, 'identity'),
+  ];
+
+  test('returns the label when set', () => {
+    expect(fieldDisplayName(fields, 'total_money')).toBe('Total money spend');
+  });
+
+  test('falls back to the name when no label', () => {
+    expect(fieldDisplayName(fields, 'event_id')).toBe('event_id');
+  });
+
+  test('unknown names (aliases, stale refs) pass through unchanged', () => {
+    expect(fieldDisplayName(fields, 'sum_tokens')).toBe('sum_tokens');
+    expect(fieldDisplayName([], 'anything')).toBe('anything');
+  });
+
+  test('blank label falls back to the name', () => {
+    expect(fieldDisplayName([{ name: 'x', display_name: '' }], 'x')).toBe('x');
+  });
+});
+
+describe('havingFieldOptions label projection', () => {
+  test('plain group-by columns keep their schema label and description; aliases carry neither', () => {
+    const s = createInitialState();
+    s.fields = [
+      {
+        ...field('project_id', AnalyticsFieldType.String, 'lineage'),
+        display_name: 'Project',
+        description: 'Owning project',
+      },
+    ];
+    s.groupBy = [createGroupByColumn('project_id'), { ...createGroupByFn(QueryScalarFn.Lower, 'project_id'), alias: 'p' }];
+    const options = havingFieldOptions(s);
+    expect(options.find((o) => o.name === 'project_id')).toMatchObject({
+      display_name: 'Project',
+      description: 'Owning project',
+    });
+    expect(options.find((o) => o.name === 'p')?.display_name).toBeUndefined();
   });
 });

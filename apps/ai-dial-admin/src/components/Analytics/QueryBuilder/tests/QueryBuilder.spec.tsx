@@ -258,4 +258,33 @@ describe('QueryBuilder', () => {
     expect(await screen.findByText('grid rows: 1')).toBeInTheDocument();
     expect(screen.getByText('QueryBuilder.RowsReturned')).toBeInTheDocument();
   });
+
+  test('labeled field shows its label on the Select chip while the query keeps the raw name', async () => {
+    const user = userEvent.setup();
+    vi.mocked(executeQuery).mockResolvedValue({ success: true, response: { columns: [], rows: [] } });
+    const labeledFields: AnalyticsEntityField[] = [
+      ...FIELDS.filter((f) => f.name !== 'project_id'),
+      {
+        name: 'project_id',
+        type: AnalyticsFieldType.String,
+        source: 'project_id',
+        tag: 'lineage',
+        display_name: 'Project',
+        description: 'Owning project of the request',
+      },
+    ];
+    renderBuilder({ initialFields: labeledFields });
+
+    await user.click(screen.getByRole('button', { name: 'QueryBuilder.Select: QueryBuilder.AddField' }));
+    await user.click(screen.getByRole('button', { name: /lineage/ }));
+    await user.click(screen.getByRole('option', { name: /Project/ }));
+
+    // The chip renders the display label, not the raw field name.
+    expect(screen.getByText('Project')).toBeInTheDocument();
+    expect(screen.queryByText('project_id')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /QueryBuilder.Run/ }));
+    const sent = vi.mocked(executeQuery).mock.calls[0][0] as StructuredQuery;
+    expect(sent.select).toEqual([{ expr: { type: 'field', name: 'project_id' } }]);
+  });
 });

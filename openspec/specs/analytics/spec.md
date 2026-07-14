@@ -479,12 +479,38 @@ Creating a table SHALL open a form popup that is mounted only while open, so clo
 
 ### Requirement: Table detail column schema management
 
-The Table detail page SHALL show the table's columns in a grid (name, source name, type, tag, nullable rendered as a true/false value) with a per-column action menu offering rename, retag, and delete (drop). The column name SHALL also be editable inline in the grid. Adding columns SHALL be available from the header via a form popup reusing the column-row editor. Every schema change (add, drop, rename, retag) SHALL be sent as a schema patch to `updateTableSchema`, and on success the detail view SHALL refresh from the server. The header SHALL also offer deleting the whole table with a danger (red confirm) dialog, returning to the catalog on success.
+The Table detail page SHALL show the table's columns in a grid (name, source name, type, tag, display name, description, nullable rendered as a true/false value); long display name/description values SHALL be truncated with the full value reachable via an ellipsis tooltip. Each column row SHALL offer a per-column action menu with **edit** and **delete (drop)** actions. The column name SHALL also be editable inline in the grid.
+
+The edit action SHALL open a unified edit modal seeded with the column's current name, display name, and tag. The description SHALL NOT be offered for editing while the backend has no description-edit operation (the backend silently ignores unknown patch operations, which would make a save appear to do nothing); the field joins the modal once that operation ships. The name field SHALL be required (submit disabled while blank) and SHALL be disabled for columns the backend does not allow to rename (grain-key, ordering-key, and `_`-prefixed system columns) while the metadata fields remain editable. Blank display name or tag values SHALL be valid input meaning "clear the value". On submit the modal SHALL diff the form against the original column and send a **single** schema patch containing only the changed operations (`rename`, `retag`, `set_display_name`); when a rename is included, the metadata operations SHALL reference the new (post-rename) column name. Submit SHALL be disabled when no field changed.
+
+Adding columns SHALL be available from the header via a form popup reusing the column-row editor. Every schema change SHALL be sent as a schema patch to `updateTableSchema`, and on success the detail view SHALL refresh from the server. The header SHALL also offer deleting the whole table with a danger (red confirm) dialog, returning to the catalog on success.
 
 #### Scenario: Inline rename patches the schema
 
 - **WHEN** the user edits a column's name in the grid to a new non-empty value
 - **THEN** a rename schema patch is sent and the grid refreshes with the server state
+
+#### Scenario: Combined edit sends one patch with post-rename names
+
+- **WHEN** the user renames `total_money` to `total_cost` and sets its display name to "Total money spend" in the edit modal and submits
+- **THEN** a single schema patch is sent containing a rename from `total_money` to `total_cost` and a set_display_name targeting `total_cost`
+- **AND** the grid refreshes with the server state
+
+#### Scenario: Only changed fields become operations
+
+- **WHEN** the user changes only the display name and leaves name and tag untouched
+- **THEN** the patch contains only a set_display_name operation
+
+#### Scenario: Blank metadata clears the value
+
+- **WHEN** the user clears the display name field and submits
+- **THEN** a set_display_name operation with an empty value is sent, clearing the stored display name
+
+#### Scenario: Restricted columns cannot be renamed but keep metadata editable
+
+- **WHEN** the user opens the edit modal for a grain-key or ordering-key column
+- **THEN** the name input is disabled
+- **AND** display name and tag remain editable
 
 #### Scenario: Drop a column
 
@@ -512,7 +538,7 @@ The Table detail page SHALL let the user write rows by entering a JSON array of 
 
 ### Requirement: System-owned tables are read-only
 
-The catalog and detail views SHALL reflect the table's server-provided `system` flag. System-owned tables are seeded server-side and reject every modifying request (`409 table_is_system`), so the UI SHALL NOT offer modify actions for them: in the catalog the row's delete action SHALL be hidden and a System indicator SHALL be shown; in the detail view the delete-table / write-rows / add-columns actions and the per-column rename/retag/drop actions and inline rename SHALL be suppressed, replaced by a read-only indicator. System tables SHALL remain fully viewable and navigable.
+The catalog and detail views SHALL reflect the table's server-provided `system` flag. System-owned tables are seeded server-side and reject every modifying request (`409 table_is_system`), so the UI SHALL NOT offer modify actions for them: in the catalog the row's delete action SHALL be hidden and a System indicator SHALL be shown; in the detail view the delete-table / write-rows / add-columns actions and the per-column edit/drop actions and inline rename SHALL be suppressed, replaced by a read-only indicator. System tables SHALL remain fully viewable and navigable, including their column display names and descriptions.
 
 #### Scenario: System table in the catalog
 
@@ -524,5 +550,5 @@ The catalog and detail views SHALL reflect the table's server-provided `system` 
 
 - **WHEN** the user opens a system table's detail page
 - **THEN** the delete-table, write-rows, and add-columns actions are absent and a read-only indicator is shown
-- **AND** the column grid offers no rename/retag/drop actions and no inline editing
-- **AND** the table and its columns remain viewable
+- **AND** the column grid offers no edit/drop actions and no inline editing
+- **AND** the table, its columns, and their display names and descriptions remain viewable

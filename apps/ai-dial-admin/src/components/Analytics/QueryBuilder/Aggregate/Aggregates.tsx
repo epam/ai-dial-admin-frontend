@@ -7,7 +7,7 @@ import CompactSelect from '@/src/components/Analytics/QueryBuilder/Common/Compac
 import SectionAction from '@/src/components/Analytics/QueryBuilder/Common/SectionAction';
 import SectionBlock from '@/src/components/Analytics/QueryBuilder/Common/SectionBlock';
 import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';
-import { fieldsToOptions } from '@/src/components/Analytics/QueryBuilder/utils/fields';
+import { fieldDisplayName, fieldsToOptions } from '@/src/components/Analytics/QueryBuilder/utils/fields';
 import { getAggregateWarnings } from '@/src/components/Analytics/QueryBuilder/utils/serialize';
 import { createAggregate } from '@/src/components/Analytics/QueryBuilder/utils/state';
 import {
@@ -17,11 +17,13 @@ import {
 } from '@/src/constants/analytics/query-builder';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { QueryAggregateFn } from '@/src/models/analytics/query';
 import { AggregateRow, QueryBuilderColor } from '@/src/models/analytics/query-builder';
 import { QUERY_BUILDER_PALETTE } from '@/src/constants/analytics/query-builder-palette';
 
-const summaryOf = (agg: AggregateRow): string => `${agg.fn}(${agg.field || '*'})${agg.alias ? ` AS ${agg.alias}` : ''}`;
+const summaryOf = (agg: AggregateRow, fields: AnalyticsEntityField[]): string =>
+  `${agg.fn}(${agg.field ? fieldDisplayName(fields, agg.field) : '*'})${agg.alias ? ` AS ${agg.alias}` : ''}`;
 
 const Aggregates: FC = () => {
   const t = useI18n();
@@ -49,7 +51,7 @@ const Aggregates: FC = () => {
             key={agg.id}
             inline
             color={QueryBuilderColor.Measure}
-            summary={summaryOf(agg)}
+            summary={summaryOf(agg, state.fields)}
             onRemove={() => {
               state.aggregates = state.aggregates.filter((a) => a !== agg);
               refresh();

@@ -17,6 +17,8 @@ export interface AnalyticsTableColumn {
   type: AnalyticsFieldType;
   nullable?: boolean;
   tag?: string;
+  display_name?: string;
+  description?: string;
 }
 
 export interface AnalyticsTablePartition {
@@ -70,11 +72,24 @@ export interface AnalyticsColumnRetag {
   tag: string;
 }
 
+// Blank display_name/description means "clear the stored value" (backend normalizes blank to null).
+export interface AnalyticsColumnSetDisplayName {
+  name: string;
+  display_name: string;
+}
+
+export interface AnalyticsColumnRedescribe {
+  name: string;
+  description: string;
+}
+
 export interface AnalyticsSchemaPatch {
   add?: AnalyticsTableColumn[];
   drop?: string[];
   rename?: AnalyticsColumnRename[];
   retag?: AnalyticsColumnRetag[];
+  set_display_name?: AnalyticsColumnSetDisplayName[];
+  redescribe?: AnalyticsColumnRedescribe[];
 }
 
 export interface WriteRowsDto {
