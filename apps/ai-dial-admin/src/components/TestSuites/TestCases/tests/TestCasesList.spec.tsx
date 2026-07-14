@@ -250,4 +250,27 @@ describe('TestCasesList — disabledTestCaseIds logic', () => {
     expect(actionsRef.current?.getDirtyTestCases().length).toBe(0);
     expect(mockOnDirtyChange).toHaveBeenLastCalledWith(false);
   });
+
+  test('onCellChange writes conversationId/turnIndex top-level, never into data', async () => {
+    const suite: TestSuite = { id: 'suite-1', datasetId: 'ds-1', disabledTestCaseIds: [] };
+    const actionsRef = renderList(suite);
+
+    await waitFor(() => expect(capturedOnCellChange).not.toBeNull());
+
+    const row: Record<string, unknown> = { id: 'row-1', testCaseName: 'tc', createdAt: 0, data: { q: 'a' } };
+    capturedOnCellChange!(row, 'conversationId', 'conv-1');
+    capturedOnCellChange!(row, 'turnIndex', 2);
+
+    // top-level on the row, and NOT folded into data
+    expect(row.conversationId).toBe('conv-1');
+    expect(row.turnIndex).toBe(2);
+    expect(row.data).toEqual({ q: 'a' });
+
+    // and they survive the both-or-neither guard into the dirty test case
+    const dirty = actionsRef.current?.getDirtyTestCases() ?? [];
+    const saved = dirty.find((tc) => tc.id === 'row-1');
+    expect(saved?.conversationId).toBe('conv-1');
+    expect(saved?.turnIndex).toBe(2);
+    expect(saved?.data).toEqual({ q: 'a' });
+  });
 });

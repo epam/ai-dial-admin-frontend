@@ -38,6 +38,51 @@ import { isValueTruthy } from '@/src/utils/types';
 
 export type onCellChange = (data: Record<string, unknown>, field: string, value: string | number | boolean) => void;
 
+/**
+ * The two inline-editable conversation-grouping columns (`turnIndex`, `conversationId`), shared by the
+ * test-suite and dataset test-case grids. Both read/write the **top-level** row fields (never `data`)
+ * via `onCellChange`. Values are entered manually — no client-side UUID / contiguity validation; the
+ * backend enforces both-or-neither, UUID format, turn range and duplicate-turn rules (400/409).
+ */
+export const getConversationColumns = (onCellChange: onCellChange, isReadOnly?: boolean): ColDef[] => [
+  {
+    field: 'turnIndex',
+    colId: 'turnIndex',
+    headerName: 'Turn index',
+    editable: false,
+    cellRenderer: EditableCellRenderer,
+    valueGetter: (params: ValueGetterParams) => params.data?.turnIndex ?? '',
+    cellRendererParams: {
+      isReadonly: isReadOnly,
+      hideTriangle: true,
+      skipRequired: true,
+      inputType: 'number' as const,
+      step: 1,
+      onChange: (value: string | number, rowData: unknown) => {
+        const raw = typeof value === 'string' ? value.trim() : value;
+        const next = raw === '' ? '' : Math.trunc(+raw);
+        onCellChange(rowData as Record<string, unknown>, 'turnIndex', Number.isFinite(next as number) ? next : '');
+      },
+    },
+  },
+  {
+    field: 'conversationId',
+    colId: 'conversationId',
+    headerName: 'Conversation ID',
+    editable: false,
+    cellRenderer: EditableCellRenderer,
+    valueGetter: (params: ValueGetterParams) => params.data?.conversationId ?? '',
+    cellRendererParams: {
+      isReadonly: isReadOnly,
+      hideTriangle: true,
+      skipRequired: true,
+      onChange: (value: string | number, rowData: unknown) => {
+        onCellChange(rowData as Record<string, unknown>, 'conversationId', value);
+      },
+    },
+  },
+];
+
 const getEnabledColumnFilterOptions = (
   allLabel: string,
   enabledLabel: string,
@@ -128,6 +173,7 @@ export const getTestCaseColumns = (
       }
       return col;
     }),
+    ...getConversationColumns(onCellChange, isReadOnly),
     ...resolvedSchema.map((param) => {
       const field = param.name;
       return {

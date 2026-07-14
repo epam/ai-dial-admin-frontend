@@ -104,12 +104,12 @@ export class TestSuitesApi extends BaseApi {
 
   createTestCase(
     testSuiteId: string,
-    body: Pick<TestCase, 'testCaseName' | 'data'>,
+    body: Pick<TestCase, 'testCaseName' | 'data' | 'conversationId' | 'turnIndex'>,
     token: Token,
     includeWarnings = false,
   ): Promise<ServerActionResponse> {
     const url = `${TEST_CASES_URL(testSuiteId)}${includeWarnings ? '?includeWarnings=true' : ''}`;
-    return this.postAction<Pick<TestCase, 'testCaseName' | 'data'>>(url, body, token);
+    return this.postAction<Pick<TestCase, 'testCaseName' | 'data' | 'conversationId' | 'turnIndex'>>(url, body, token);
   }
 
   updateTestCases(id: string, testCases: TestCase[], token: Token): Promise<ServerActionResponse> {

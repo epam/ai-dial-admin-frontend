@@ -16,8 +16,9 @@ const makeSuite = (): TestSuite => ({});
 describe('getTestCaseColumns', () => {
   const onCellChange = vi.fn();
 
-  // Column layout: [enabled, ...TEST_CASES_COLUMN(id, testCaseName), ...schema, validityStatus]
-  const BASE_COLUMN_COUNT = 4; // enabled + id + testCaseName + validityStatus
+  // Column layout: [enabled, ...TEST_CASES_COLUMN(id, testCaseName), turnIndex, conversationId, ...schema, validityStatus]
+  const BASE_COLUMN_COUNT = 6; // enabled + id + testCaseName + turnIndex + conversationId + validityStatus
+  const FIRST_SCHEMA_INDEX = 5; // after enabled(0), id(1), testCaseName(2), turnIndex(3), conversationId(4)
 
   test('should return only base columns when schema is empty', () => {
     const result = getTestCaseColumns(makeSuite(), onCellChange, undefined, []);
@@ -41,15 +42,17 @@ describe('getTestCaseColumns', () => {
     expect(result[2]).toEqual(
       expect.objectContaining({ field: 'testCaseName', colId: 'testCaseName', headerName: 'Test case name' }),
     );
-    expect(result[3]).toEqual(expect.objectContaining({ field: 'temperature', headerName: 'temperature' }));
-    expect(result[4]).toEqual(expect.objectContaining({ field: 'model', headerName: 'model' }));
-    expect(result[5]).toEqual(expect.objectContaining({ field: 'maxTokens', headerName: 'maxTokens' }));
+    expect(result[3]).toEqual(expect.objectContaining({ field: 'turnIndex', colId: 'turnIndex' }));
+    expect(result[4]).toEqual(expect.objectContaining({ field: 'conversationId', colId: 'conversationId' }));
+    expect(result[5]).toEqual(expect.objectContaining({ field: 'temperature', headerName: 'temperature' }));
+    expect(result[6]).toEqual(expect.objectContaining({ field: 'model', headerName: 'model' }));
+    expect(result[7]).toEqual(expect.objectContaining({ field: 'maxTokens', headerName: 'maxTokens' }));
   });
 
   test('should handle single schema field', () => {
     const result = getTestCaseColumns(makeSuite(), onCellChange, undefined, [makeSchema('prompt')]);
 
-    expect(result[3]).toEqual(expect.objectContaining({ field: 'prompt', headerName: 'prompt' }));
+    expect(result[FIRST_SCHEMA_INDEX]).toEqual(expect.objectContaining({ field: 'prompt', headerName: 'prompt' }));
   });
 
   test('should handle schema fields with various types', () => {
@@ -63,11 +66,11 @@ describe('getTestCaseColumns', () => {
 
     const result = getTestCaseColumns(makeSuite(), onCellChange, undefined, schema);
 
-    expect(result[3].field).toBe('stringFact');
-    expect(result[4].field).toBe('numberFact');
-    expect(result[5].field).toBe('booleanFact');
-    expect(result[6].field).toBe('arrayFact');
-    expect(result[7].field).toBe('objectFact');
+    expect(result[5].field).toBe('stringFact');
+    expect(result[6].field).toBe('numberFact');
+    expect(result[7].field).toBe('booleanFact');
+    expect(result[8].field).toBe('arrayFact');
+    expect(result[9].field).toBe('objectFact');
   });
 
   test('should handle schema fields with special characters in names', () => {
@@ -75,11 +78,11 @@ describe('getTestCaseColumns', () => {
 
     const result = getTestCaseColumns(makeSuite(), onCellChange, undefined, schema);
 
-    expect(result[3]).toEqual(expect.objectContaining({ field: 'fact-with-dash', headerName: 'fact-with-dash' }));
-    expect(result[4]).toEqual(
+    expect(result[5]).toEqual(expect.objectContaining({ field: 'fact-with-dash', headerName: 'fact-with-dash' }));
+    expect(result[6]).toEqual(
       expect.objectContaining({ field: 'fact_with_underscore', headerName: 'fact_with_underscore' }),
     );
-    expect(result[5]).toEqual(expect.objectContaining({ field: 'fact.with.dot', headerName: 'fact.with.dot' }));
+    expect(result[7]).toEqual(expect.objectContaining({ field: 'fact.with.dot', headerName: 'fact.with.dot' }));
   });
 
   test('should preserve the order of schema fields', () => {
@@ -89,9 +92,9 @@ describe('getTestCaseColumns', () => {
       makeSchema('mFact'),
     ]);
 
-    expect(result[3].field).toBe('zFact');
-    expect(result[4].field).toBe('aFact');
-    expect(result[5].field).toBe('mFact');
+    expect(result[5].field).toBe('zFact');
+    expect(result[6].field).toBe('aFact');
+    expect(result[7].field).toBe('mFact');
   });
 
   test('should correctly spread TEST_CASES_COLUMN at the beginning', () => {
@@ -100,8 +103,10 @@ describe('getTestCaseColumns', () => {
     // First columns should be from TEST_CASES_COLUMN
     expect(result[1]).toEqual({ ...TEST_CASES_COLUMN[0], cellClass: 'select-none cursor-pointer' });
     expect(result[2]).toEqual(expect.objectContaining(TEST_CASES_COLUMN[1]));
-    // Then schema columns
-    expect(result[3]).toEqual(expect.objectContaining({ field: 'customFact', headerName: 'customFact' }));
+    // Then the conversation-grouping columns, then schema columns
+    expect(result[3]).toEqual(expect.objectContaining({ field: 'turnIndex' }));
+    expect(result[4]).toEqual(expect.objectContaining({ field: 'conversationId' }));
+    expect(result[FIRST_SCHEMA_INDEX]).toEqual(expect.objectContaining({ field: 'customFact', headerName: 'customFact' }));
   });
 
   test('should use fallback row field value when nested data field is missing', () => {
@@ -112,6 +117,57 @@ describe('getTestCaseColumns', () => {
     expect(promptColumn?.valueGetter?.({ data: { prompt: 'fallback value', data: undefined } } as never)).toBe(
       'fallback value',
     );
+  });
+
+  describe('conversation-grouping columns', () => {
+    const getColumns = (isReadOnly?: boolean) =>
+      getTestCaseColumns(makeSuite(), onCellChange, undefined, [], isReadOnly);
+    const turnCol = () => getColumns().find((c) => c.field === 'turnIndex');
+    const convCol = () => getColumns().find((c) => c.field === 'conversationId');
+
+    test('both columns are present', () => {
+      expect(turnCol()).toBeDefined();
+      expect(convCol()).toBeDefined();
+    });
+
+    test('valueGetter reads the top-level fields, not data', () => {
+      expect(turnCol()?.valueGetter?.({ data: { turnIndex: 3, data: { turnIndex: 99 } } } as never)).toBe(3);
+      expect(convCol()?.valueGetter?.({ data: { conversationId: 'conv-1', data: {} } } as never)).toBe('conv-1');
+    });
+
+    test('valueGetter falls back to empty string when absent', () => {
+      expect(turnCol()?.valueGetter?.({ data: {} } as never)).toBe('');
+      expect(convCol()?.valueGetter?.({ data: {} } as never)).toBe('');
+    });
+
+    test('turnIndex onChange routes an integer through onCellChange', () => {
+      onCellChange.mockClear();
+      const row = { id: 'r1' };
+      turnCol()?.cellRendererParams?.onChange('2', row);
+      expect(onCellChange).toHaveBeenCalledWith(row, 'turnIndex', 2);
+    });
+
+    test('turnIndex onChange coerces empty/non-numeric input to empty string', () => {
+      onCellChange.mockClear();
+      const row = { id: 'r1' };
+      turnCol()?.cellRendererParams?.onChange('', row);
+      turnCol()?.cellRendererParams?.onChange('abc', row);
+      expect(onCellChange).toHaveBeenNthCalledWith(1, row, 'turnIndex', '');
+      expect(onCellChange).toHaveBeenNthCalledWith(2, row, 'turnIndex', '');
+    });
+
+    test('conversationId onChange routes the value through onCellChange', () => {
+      onCellChange.mockClear();
+      const row = { id: 'r1' };
+      convCol()?.cellRendererParams?.onChange('conv-9', row);
+      expect(onCellChange).toHaveBeenCalledWith(row, 'conversationId', 'conv-9');
+    });
+
+    test('columns respect isReadOnly', () => {
+      const readOnly = getColumns(true);
+      expect(readOnly.find((c) => c.field === 'turnIndex')?.cellRendererParams?.isReadonly).toBe(true);
+      expect(readOnly.find((c) => c.field === 'conversationId')?.cellRendererParams?.isReadonly).toBe(true);
+    });
   });
 });
 

@@ -13,6 +13,26 @@ export const createNewTestCaseRow = (): Record<string, unknown> => {
   };
 };
 
+/**
+ * Extracts the top-level conversation grouping fields from a grid row, applying the backend
+ * both-or-neither rule: emit both `conversationId` and `turnIndex` only when `conversationId` is a
+ * non-empty string AND `turnIndex` is a finite number; otherwise emit neither. `turnIndex: 0` is a
+ * valid present value. Prevents an accidental "exactly one" write payload (which the backend rejects
+ * with HTTP 400).
+ */
+export const getConversationFields = (
+  row: Record<string, unknown>,
+): { conversationId: string; turnIndex: number } | Record<string, never> => {
+  const conversationId = row.conversationId;
+  const turnIndex = row.turnIndex;
+  const hasConversationId = typeof conversationId === 'string' && conversationId.trim() !== '';
+  const hasTurnIndex = typeof turnIndex === 'number' && Number.isFinite(turnIndex);
+  if (hasConversationId && hasTurnIndex) {
+    return { conversationId: conversationId as string, turnIndex: turnIndex as number };
+  }
+  return {};
+};
+
 export const getTestCaseGridData = (testCases?: DatasetTestCase[] | null) => {
   return (
     testCases?.reduce((acc: Record<string, unknown>[], testCase: DatasetTestCase) => {
@@ -40,5 +60,6 @@ export const rowToTestCase = (row: Record<string, unknown>): TestCase => {
     valid: row.valid as boolean | undefined,
     validationWarnings: row.validationWarnings as TestCase['validationWarnings'],
     data: row.data as Record<string, unknown>,
+    ...getConversationFields(row),
   };
 };

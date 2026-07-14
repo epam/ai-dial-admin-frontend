@@ -1,5 +1,10 @@
 import { describe, expect, test } from 'vitest';
-import { createNewTestCaseRow, getTestCaseGridData as getTestCaseGridDataRaw, rowToTestCase } from '../data';
+import {
+  createNewTestCaseRow,
+  getConversationFields,
+  getTestCaseGridData as getTestCaseGridDataRaw,
+  rowToTestCase,
+} from '../data';
 import { TestCase as TestCaseModel } from '@/src/models/evaluation/test-suite';
 
 type TestCase = Partial<TestCaseModel>;
@@ -432,5 +437,82 @@ describe('rowToTestCase', () => {
       validationWarnings: undefined,
       data: {},
     });
+  });
+
+  test('should include both conversation fields when both are present', () => {
+    const result = rowToTestCase({
+      id: 'x',
+      data: {},
+      conversationId: '11111111-1111-1111-1111-111111111111',
+      turnIndex: 2,
+    });
+
+    expect(result.conversationId).toBe('11111111-1111-1111-1111-111111111111');
+    expect(result.turnIndex).toBe(2);
+  });
+
+  test('should omit both when only conversationId is present (avoids "exactly one" 400)', () => {
+    const result = rowToTestCase({ id: 'x', data: {}, conversationId: 'abc' });
+
+    expect(result).not.toHaveProperty('conversationId');
+    expect(result).not.toHaveProperty('turnIndex');
+  });
+
+  test('should omit both when only turnIndex is present', () => {
+    const result = rowToTestCase({ id: 'x', data: {}, turnIndex: 0 });
+
+    expect(result).not.toHaveProperty('conversationId');
+    expect(result).not.toHaveProperty('turnIndex');
+  });
+
+  test('should treat turnIndex 0 as present (falsy-but-valid) when conversationId is set', () => {
+    const result = rowToTestCase({ id: 'x', data: {}, conversationId: 'conv-1', turnIndex: 0 });
+
+    expect(result.conversationId).toBe('conv-1');
+    expect(result.turnIndex).toBe(0);
+  });
+});
+
+describe('getConversationFields (both-or-neither guard)', () => {
+  test('emits both when conversationId is a non-empty string and turnIndex is finite', () => {
+    expect(getConversationFields({ conversationId: 'conv-1', turnIndex: 3 })).toEqual({
+      conversationId: 'conv-1',
+      turnIndex: 3,
+    });
+  });
+
+  test('turnIndex 0 counts as present', () => {
+    expect(getConversationFields({ conversationId: 'conv-1', turnIndex: 0 })).toEqual({
+      conversationId: 'conv-1',
+      turnIndex: 0,
+    });
+  });
+
+  test('emits neither when conversationId is empty/whitespace', () => {
+    expect(getConversationFields({ conversationId: '   ', turnIndex: 1 })).toEqual({});
+    expect(getConversationFields({ conversationId: '', turnIndex: 1 })).toEqual({});
+  });
+
+  test('emits neither when turnIndex is missing, empty, or non-numeric', () => {
+    expect(getConversationFields({ conversationId: 'conv-1' })).toEqual({});
+    expect(getConversationFields({ conversationId: 'conv-1', turnIndex: '' })).toEqual({});
+    expect(getConversationFields({ conversationId: 'conv-1', turnIndex: NaN })).toEqual({});
+  });
+
+  test('emits neither when both are absent', () => {
+    expect(getConversationFields({ id: 'x', data: {} })).toEqual({});
+  });
+});
+
+describe('getTestCaseGridData conversation passthrough', () => {
+  test('top-level conversationId/turnIndex land on the grid row', () => {
+    const result = getTestCaseGridData([
+      { testCaseName: 'c1', data: { input: 'hi' }, conversationId: 'conv-1', turnIndex: 1 },
+    ]);
+
+    expect(result[0].conversationId).toBe('conv-1');
+    expect(result[0].turnIndex).toBe(1);
+    expect(result[0].input).toBe('hi');
+    expect(result[0].data).toEqual({ input: 'hi' });
   });
 });

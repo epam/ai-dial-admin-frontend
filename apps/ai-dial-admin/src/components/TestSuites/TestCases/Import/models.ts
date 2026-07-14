@@ -27,6 +27,9 @@ export interface RowMapping {
   data: Record<string, string | number>;
   validationWarnings: ValidationWarning[];
   testCaseName: string;
+  /** Reserved top-level conversation-grouping columns, parsed by the backend from the CSV (not into `data`). */
+  conversationId?: string | null;
+  turnIndex?: number | null;
 }
 
 export interface CaseWarning {

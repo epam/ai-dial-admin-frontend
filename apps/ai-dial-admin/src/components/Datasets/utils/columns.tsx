@@ -4,7 +4,7 @@ import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCe
 import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSelectCellRenderer';
 import JsonEditorCellRenderer from '@/src/components/Grid/CellRenderers/JsonEditorCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
-import { getValidityStatusColumn } from '@/src/components/TestSuites/utils/columns';
+import { getConversationColumns, getValidityStatusColumn } from '@/src/components/TestSuites/utils/columns';
 import { TEST_CASES_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { Dataset } from '@/src/models/evaluation/dataset';
@@ -43,6 +43,7 @@ export const getDatasetTestCaseColumns = (
       }
       return col;
     }),
+    ...getConversationColumns(onCellChange),
     ...schema.map((param) => {
       const field = param.name;
       return {

@@ -147,7 +147,13 @@ const TestCasesList: FC<Props> = ({
     (data: Record<string, unknown>, field: string, value: string | number | boolean) => {
       if (!data) return;
       data[field] = value;
-      if (field !== 'testCaseName' && field !== 'enabled' && data.data != null) {
+      if (
+        field !== 'testCaseName' &&
+        field !== 'enabled' &&
+        field !== 'conversationId' &&
+        field !== 'turnIndex' &&
+        data.data != null
+      ) {
         data.data = { ...(data.data as Record<string, unknown>), [field]: value };
       }
 

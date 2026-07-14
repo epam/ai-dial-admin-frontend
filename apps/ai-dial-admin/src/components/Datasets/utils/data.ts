@@ -1,3 +1,4 @@
+import { getConversationFields } from '@/src/components/TestSuites/utils/data';
 import { DatasetTestCase } from '@/src/models/evaluation/dataset';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -37,5 +38,6 @@ export const rowToDatasetTestCase = (row: Record<string, unknown>): DatasetTestC
     valid: row.valid as boolean | undefined,
     validationWarnings: row.validationWarnings as DatasetTestCase['validationWarnings'],
     data: row.data as Record<string, unknown>,
+    ...getConversationFields(row),
   };
 };

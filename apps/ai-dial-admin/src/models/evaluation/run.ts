@@ -10,6 +10,11 @@ export interface ResultDto {
 
   testCaseData?: Record<string, unknown>;
   extractedColumns?: Record<string, unknown>;
+
+  /** 0-based turn number of this result row (single-turn = 0). */
+  turnIndex?: number;
+  /** Conversation's surviving turn count (single-turn = 1; broken conversation = 0). */
+  totalTurns?: number;
 }
 export interface ExtractionResult extends ResultDto {
   executionInfo?: {

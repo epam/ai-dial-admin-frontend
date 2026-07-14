@@ -148,4 +148,33 @@ describe('rowToDatasetTestCase', () => {
 
     expect(result).not.toHaveProperty('enabled');
   });
+
+  test('should include both conversation fields when both present (turnIndex 0 counts)', () => {
+    const result = rowToDatasetTestCase({ id: 'tc', createdAt: 0, data: {}, conversationId: 'conv-1', turnIndex: 0 });
+
+    expect(result.conversationId).toBe('conv-1');
+    expect(result.turnIndex).toBe(0);
+  });
+
+  test('should omit both when only one of the conversation fields is present', () => {
+    const onlyId = rowToDatasetTestCase({ id: 'tc', createdAt: 0, data: {}, conversationId: 'conv-1' });
+    const onlyTurn = rowToDatasetTestCase({ id: 'tc', createdAt: 0, data: {}, turnIndex: 1 });
+
+    expect(onlyId).not.toHaveProperty('conversationId');
+    expect(onlyId).not.toHaveProperty('turnIndex');
+    expect(onlyTurn).not.toHaveProperty('conversationId');
+    expect(onlyTurn).not.toHaveProperty('turnIndex');
+  });
+});
+
+describe('getDatasetTestCaseGridData conversation passthrough', () => {
+  test('top-level conversationId/turnIndex land on the grid row', () => {
+    const result = getDatasetTestCaseGridData([
+      { testCaseName: 'c1', data: { q: 'a' }, conversationId: 'conv-1', turnIndex: 2 },
+    ]);
+
+    expect(result[0].conversationId).toBe('conv-1');
+    expect(result[0].turnIndex).toBe(2);
+    expect(result[0].q).toBe('a');
+  });
 });
