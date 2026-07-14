@@ -6,10 +6,10 @@ import {
 } from '@/src/constants/analytics/query-builder';
 import {
   AggregateRow,
-  BucketRow,
   FilterGroupNode,
   FilterNodeKind,
   FilterPredicateNode,
+  GroupByRow,
   PageState,
   QueryBuilderState,
   SortRow,
@@ -21,6 +21,7 @@ import {
   QueryMode,
   QueryOperator,
   QueryPageType,
+  QueryScalarFn,
   QuerySortDirection,
 } from '@/src/models/analytics/query';
 import { defaultValueType } from './fields';
@@ -45,12 +46,24 @@ export const createPredicate = (fieldType?: string): FilterPredicateNode => ({
   isNull: false,
 });
 
-export const createBucket = (field = ''): BucketRow => ({
+export const createGroupByColumn = (field: string): GroupByRow => ({
   id: nextId(),
+  fn: null,
+  field,
+  alias: '',
   amount: DEFAULT_BUCKET_AMOUNT,
   unit: QueryBucketUnit.Minute,
+});
+
+// date_bin keeps its historical default alias so the generated group_by stays self-explanatory;
+// other functions leave the alias to the user (the section warns until it is set).
+export const createGroupByFn = (fn: QueryScalarFn, field = ''): GroupByRow => ({
+  id: nextId(),
+  fn,
   field,
-  alias: 'bucket',
+  alias: fn === QueryScalarFn.DateBin ? 'bucket' : '',
+  amount: DEFAULT_BUCKET_AMOUNT,
+  unit: QueryBucketUnit.Minute,
 });
 
 export const createAggregate = (): AggregateRow => ({
@@ -86,7 +99,6 @@ export const createInitialState = (): QueryBuilderState => ({
   filter: createGroup(),
   select: [],
   groupBy: [],
-  buckets: [],
   aggregates: [],
   having: createGroup(),
   sort: [],

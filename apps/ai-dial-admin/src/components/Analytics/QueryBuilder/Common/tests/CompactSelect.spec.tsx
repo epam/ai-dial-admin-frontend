@@ -34,4 +34,9 @@ describe('QueryBuilder :: CompactSelect', () => {
     expect(onChange).toHaveBeenCalledWith('avg');
     expect(screen.queryByRole('option', { name: 'AVG' })).not.toBeInTheDocument();
   });
+
+  test('renders the prefix before the selected label in the trigger', () => {
+    render(<CompactSelect ariaLabel="Nulls" prefix="Nulls:" options={OPTIONS} value="sum" onChange={vi.fn()} />);
+    expect(screen.getByRole('button', { name: 'Nulls' })).toHaveTextContent('Nulls: SUM');
+  });
 });

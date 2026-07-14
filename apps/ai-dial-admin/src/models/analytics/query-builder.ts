@@ -6,6 +6,7 @@ import {
   QueryMode,
   QueryOperator,
   QueryPageType,
+  QueryScalarFn,
   QuerySortDirection,
   QuerySortNulls,
   QueryValueType,
@@ -44,12 +45,15 @@ export interface FilterGroupNode {
 
 export type FilterNode = FilterGroupNode | FilterPredicateNode;
 
-export interface BucketRow {
+// One Group by entry: a plain column (fn = null) or a scalar-function expression over a column.
+// amount/unit parameterize date_bin only and are ignored for the other functions.
+export interface GroupByRow {
   id: string;
-  amount: number;
-  unit: QueryBucketUnit;
+  fn: QueryScalarFn | null;
   field: string;
   alias: string;
+  amount: number;
+  unit: QueryBucketUnit;
 }
 
 export interface AggregateRow {
@@ -84,8 +88,7 @@ export interface QueryBuilderState {
   distinct: boolean;
   filter: FilterGroupNode;
   select: string[];
-  groupBy: string[];
-  buckets: BucketRow[];
+  groupBy: GroupByRow[];
   aggregates: AggregateRow[];
   having: FilterGroupNode;
   sort: SortRow[];
@@ -101,6 +104,13 @@ export interface FieldOption {
 export interface FieldOptionGroup {
   tag: string;
   options: FieldOption[];
+}
+
+// A scalar-function entry offered by the categorized dropdown alongside columns; `hint` is the
+// short localized description shown next to the function name.
+export interface FunctionOption {
+  name: QueryScalarFn;
+  hint: string;
 }
 
 export enum QueryBuilderView {
@@ -123,8 +133,8 @@ export type QueryRunRequest =
 
 export enum QueryBuilderWarning {
   MissingAggregateAlias = 'MissingAggregateAlias',
-  MissingBucketField = 'MissingBucketField',
-  MissingBucketAlias = 'MissingBucketAlias',
+  MissingGroupByField = 'MissingGroupByField',
+  MissingGroupByAlias = 'MissingGroupByAlias',
   EmptyAggregate = 'EmptyAggregate',
 }
 

@@ -4,8 +4,9 @@ import { isBuilderRepresentable, parseQuery } from '@/src/components/Analytics/Q
 import { buildQuery } from '@/src/components/Analytics/QueryBuilder/utils/serialize';
 import {
   createAggregate,
-  createBucket,
   createGroup,
+  createGroupByColumn,
+  createGroupByFn,
   createInitialState,
   createPredicate,
   createSort,
@@ -20,6 +21,7 @@ import {
   QueryOperator,
   QueryPageType,
   QueryPredicate,
+  QueryScalarFn,
   QuerySortDirection,
   QuerySortNulls,
   QueryValueType,
@@ -87,16 +89,15 @@ describe('parseQuery round-trip', () => {
     roundTrips(s);
   });
 
-  test('aggregate query with group-by, time bucket, aggregate and having', () => {
+  test('aggregate query with group-by, date_bin, aggregate and having', () => {
     const s = base();
     s.mode = QueryMode.Aggregate;
-    s.groupBy = ['deployment'];
 
-    const bucket = createBucket('request_time');
+    const bucket = createGroupByFn(QueryScalarFn.DateBin, 'request_time');
     bucket.amount = 5;
     bucket.unit = QueryBucketUnit.Hour;
     bucket.alias = 'bucket';
-    s.buckets = [bucket];
+    s.groupBy = [createGroupByColumn('deployment'), bucket];
 
     const agg = createAggregate();
     agg.field = 'total_tokens';
@@ -111,6 +112,39 @@ describe('parseQuery round-trip', () => {
     s.having.children = [having];
 
     roundTrips(s);
+  });
+
+  test('aggregate query with a scalar-function group-by entry', () => {
+    const s = base();
+    s.mode = QueryMode.Aggregate;
+    const row = createGroupByFn(QueryScalarFn.Lower, 'deployment');
+    row.alias = 'dep';
+    s.groupBy = [row];
+    roundTrips(s);
+  });
+
+  test('scalar-function select entries parse back as group-by rows, not aggregates', () => {
+    const q: StructuredQuery = {
+      entity: 'dial_usage_log',
+      mode: QueryMode.Aggregate,
+      select: [
+        {
+          expr: {
+            type: QueryExprType.Fn,
+            name: QueryScalarFn.Upper,
+            args: [{ type: QueryExprType.Field, name: 'deployment' }],
+          },
+          as: 'dep',
+        },
+      ],
+      group_by: ['dep'],
+    };
+    const parsed = parseQuery(q, []);
+    expect(parsed.groupBy).toHaveLength(1);
+    expect(parsed.groupBy[0].fn).toBe(QueryScalarFn.Upper);
+    expect(parsed.groupBy[0].field).toBe('deployment');
+    expect(parsed.groupBy[0].alias).toBe('dep');
+    expect(parsed.aggregates).toHaveLength(0);
   });
 
   test('cursor paging', () => {

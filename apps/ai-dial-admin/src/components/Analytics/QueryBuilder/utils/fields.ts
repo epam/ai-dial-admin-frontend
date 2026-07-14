@@ -1,7 +1,7 @@
 import { UNTAGGED_KEY } from '@/src/constants/analytics/query-builder';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { FieldOption, FieldOptionGroup, QueryBuilderState } from '@/src/models/analytics/query-builder';
-import { QueryMode, QueryValueType } from '@/src/models/analytics/query';
+import { FieldOption, FieldOptionGroup, GroupByRow, QueryBuilderState } from '@/src/models/analytics/query-builder';
+import { QueryMode, QueryScalarFn, QueryValueType } from '@/src/models/analytics/query';
 
 export const family = (name: string): string => {
   const i = name.indexOf(':');
@@ -81,15 +81,31 @@ export const bucketFieldOptions = (fields: AnalyticsEntityField[]): AnalyticsEnt
   return sortByName(temporal.length ? temporal : fields);
 };
 
+// The output type a scalar group-by function produces — display-only, for the option lists.
+const scalarFnResultType = (fn: QueryScalarFn): AnalyticsFieldType => {
+  switch (fn) {
+    case QueryScalarFn.DateBin:
+      return AnalyticsFieldType.Timestamp;
+    case QueryScalarFn.Length:
+      return AnalyticsFieldType.Integer;
+    case QueryScalarFn.Abs:
+      return AnalyticsFieldType.Decimal;
+    default:
+      return AnalyticsFieldType.String;
+  }
+};
+
+const groupByOption = (state: QueryBuilderState, row: GroupByRow): FieldOption | null => {
+  if (!row.fn) return row.field ? { name: row.field, type: typeOf(state.fields, row.field) } : null;
+  return row.alias ? { name: row.alias, type: scalarFnResultType(row.fn) } : null;
+};
+
 export const havingFieldOptions = (state: QueryBuilderState): FieldOption[] => {
-  const groupBy = state.groupBy.map((name) => ({ name, type: typeOf(state.fields, name) }));
-  const bucketAliases = state.buckets
-    .filter((b) => b.alias)
-    .map((b) => ({ name: b.alias, type: AnalyticsFieldType.Timestamp }));
+  const groupBy = state.groupBy.map((g) => groupByOption(state, g)).filter((o): o is FieldOption => o !== null);
   const aggAliases = state.aggregates
     .filter((a) => a.alias)
     .map((a) => ({ name: a.alias, type: AnalyticsFieldType.Decimal }));
-  return sortByName([...groupBy, ...bucketAliases, ...aggAliases]);
+  return sortByName([...groupBy, ...aggAliases]);
 };
 
 export const sortFieldOptions = (state: QueryBuilderState): FieldOption[] => {

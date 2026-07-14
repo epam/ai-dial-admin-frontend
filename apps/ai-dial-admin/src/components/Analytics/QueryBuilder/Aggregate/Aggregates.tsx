@@ -48,6 +48,7 @@ const Aggregates: FC = () => {
           <ChipRow
             key={agg.id}
             inline
+            color={QueryBuilderColor.Measure}
             summary={summaryOf(agg)}
             onRemove={() => {
               state.aggregates = state.aggregates.filter((a) => a !== agg);

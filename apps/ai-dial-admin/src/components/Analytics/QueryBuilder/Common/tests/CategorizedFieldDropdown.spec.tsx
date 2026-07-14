@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import CategorizedFieldDropdown from '@/src/components/Analytics/QueryBuilder/Common/CategorizedFieldDropdown';
+import { QueryScalarFn } from '@/src/models/analytics/query';
 import { FieldOption } from '@/src/models/analytics/query-builder';
 
 const OPTIONS: FieldOption[] = [
@@ -17,7 +18,7 @@ const UNTAGGED_OPTIONS: FieldOption[] = [
 ];
 
 describe('QueryBuilder :: CategorizedFieldDropdown', () => {
-  test('opens on trigger click and lists options grouped by tag', async () => {
+  test('opens with collapsed tag groups showing counts; expanding a group reveals its options', async () => {
     const user = userEvent.setup();
     render(
       <CategorizedFieldDropdown
@@ -31,10 +32,93 @@ describe('QueryBuilder :: CategorizedFieldDropdown', () => {
 
     await user.click(screen.getByRole('button', { name: 'Add field' }));
 
-    expect(screen.getByText('cost')).toBeInTheDocument();
-    expect(screen.getByText('dimension')).toBeInTheDocument();
+    const costHeader = screen.getByRole('button', { name: /cost/ });
+    expect(costHeader).toHaveAttribute('aria-expanded', 'false');
+    expect(costHeader).toHaveTextContent('2');
+    expect(screen.queryByRole('option', { name: /total_price/ })).not.toBeInTheDocument();
+
+    await user.click(costHeader);
     expect(screen.getByRole('option', { name: /total_price/ })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /total_tokens/ })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: /deployment/ })).not.toBeInTheDocument();
+
+    // Accordion: opening another category closes the previous one.
+    await user.click(screen.getByRole('button', { name: /dimension/ }));
     expect(screen.getByRole('option', { name: /deployment/ })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: /total_price/ })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /dimension/ }));
+    expect(screen.queryByRole('option', { name: /deployment/ })).not.toBeInTheDocument();
+  });
+
+  test('the group holding the current value starts expanded', async () => {
+    const user = userEvent.setup();
+    render(
+      <CategorizedFieldDropdown
+        id="test"
+        options={OPTIONS}
+        onSelect={vi.fn()}
+        value="deployment"
+        placeholder="pick"
+        ariaLabel="Pick field"
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Pick field' }));
+
+    expect(screen.getByRole('option', { name: /deployment/ })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.queryByRole('option', { name: /total_price/ })).not.toBeInTheDocument();
+  });
+
+  test('functions render in their own group and fire onSelectFunction', async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    const onSelectFunction = vi.fn();
+    render(
+      <CategorizedFieldDropdown
+        id="test"
+        options={OPTIONS}
+        onSelect={onSelect}
+        functions={[
+          { name: QueryScalarFn.DateBin, hint: 'time bucket' },
+          { name: QueryScalarFn.Lower, hint: 'lowercase' },
+        ]}
+        onSelectFunction={onSelectFunction}
+        addLabel="+ Add"
+        ariaLabel="Add field"
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Add field' }));
+
+    expect(screen.getByText('QueryBuilder.Columns')).toBeInTheDocument();
+    const fnHeader = screen.getByRole('button', { name: /QueryBuilder.Functions/ });
+    await user.click(fnHeader);
+    await user.click(screen.getByRole('option', { name: /date_bin/ }));
+
+    expect(onSelectFunction).toHaveBeenCalledWith('date_bin');
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
+  test('searching matches functions by name and hint alongside columns', async () => {
+    const user = userEvent.setup();
+    render(
+      <CategorizedFieldDropdown
+        id="test"
+        options={OPTIONS}
+        onSelect={vi.fn()}
+        functions={[{ name: QueryScalarFn.Lower, hint: 'lowercase' }]}
+        onSelectFunction={vi.fn()}
+        addLabel="+ Add"
+        ariaLabel="Add field"
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Add field' }));
+    await user.type(screen.getByRole('textbox'), 'lowerc');
+
+    expect(screen.getByRole('option', { name: /lower/ })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: /deployment/ })).not.toBeInTheDocument();
   });
 
   test('search narrows visible options and shows empty state for no match', async () => {
@@ -74,6 +158,7 @@ describe('QueryBuilder :: CategorizedFieldDropdown', () => {
     );
 
     await user.click(screen.getByRole('button', { name: 'Add field' }));
+    await user.click(screen.getByRole('button', { name: /dimension/ }));
     await user.click(screen.getByRole('option', { name: /deployment/ }));
 
     expect(onSelect).toHaveBeenCalledWith('deployment');
