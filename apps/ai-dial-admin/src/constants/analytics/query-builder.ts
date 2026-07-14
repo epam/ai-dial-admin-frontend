@@ -6,6 +6,7 @@ import {
   QueryLogicalOperator,
   QueryOperator,
   QueryPageType,
+  QueryScalarFn,
   QuerySortDirection,
   QuerySortNulls,
   QueryValueType,
@@ -57,14 +58,12 @@ export const DEFAULT_BUCKET_AMOUNT = 5;
 
 export const UNTAGGED_KEY = 'untagged';
 
-export const DATE_BIN_FN = 'date_bin';
-
 // Alias of the count() column added to aggregate queries that define no aggregates of their own.
 export const IMPLICIT_COUNT_ALIAS = 'count';
 
 export const LOCAL_STORAGE_QUERY_BUILDER_RAIL_KEY = 'query-builder-rail-collapsed';
 
-export const QUERY_BUILDER_RAIL_WIDTH_CLASS = 'w-[420px]';
+export const QUERY_BUILDER_RAIL_WIDTH_CLASS = 'w-[480px]';
 
 export const CHART_TYPE_OPTIONS: SelectOption[] = toOptions(Object.values(ChartType));
 
@@ -72,15 +71,28 @@ export const DEFAULT_CHART_CONFIG: ChartConfig = { type: ChartType.Bar, xField: 
 
 export const WARNING_I18N: Record<QueryBuilderWarning, QueryBuilderI18nKey> = {
   [QueryBuilderWarning.MissingAggregateAlias]: QueryBuilderI18nKey.WarningMissingAggregateAlias,
-  [QueryBuilderWarning.MissingBucketField]: QueryBuilderI18nKey.WarningMissingBucketField,
-  [QueryBuilderWarning.MissingBucketAlias]: QueryBuilderI18nKey.WarningMissingBucketAlias,
+  [QueryBuilderWarning.MissingGroupByField]: QueryBuilderI18nKey.WarningMissingGroupByField,
+  [QueryBuilderWarning.MissingGroupByAlias]: QueryBuilderI18nKey.WarningMissingGroupByAlias,
   [QueryBuilderWarning.EmptyAggregate]: QueryBuilderI18nKey.WarningEmptyAggregate,
 };
 
 // Which section header surfaces which aggregate-validation warning.
-export const GROUP_BY_SECTION_WARNINGS = [QueryBuilderWarning.EmptyAggregate];
-export const BUCKET_SECTION_WARNINGS = [QueryBuilderWarning.MissingBucketField, QueryBuilderWarning.MissingBucketAlias];
+export const GROUP_BY_SECTION_WARNINGS = [
+  QueryBuilderWarning.EmptyAggregate,
+  QueryBuilderWarning.MissingGroupByField,
+  QueryBuilderWarning.MissingGroupByAlias,
+];
 export const AGGREGATE_SECTION_WARNINGS = [
   QueryBuilderWarning.MissingAggregateAlias,
   QueryBuilderWarning.EmptyAggregate,
 ];
+
+// Hint i18n key per scalar function offered by the Group by dropdown.
+export const GROUP_BY_FUNCTION_HINTS: Record<QueryScalarFn, QueryBuilderI18nKey> = {
+  [QueryScalarFn.DateBin]: QueryBuilderI18nKey.FnDateBinHint,
+  [QueryScalarFn.Lower]: QueryBuilderI18nKey.FnLowerHint,
+  [QueryScalarFn.Upper]: QueryBuilderI18nKey.FnUpperHint,
+  [QueryScalarFn.Length]: QueryBuilderI18nKey.FnLengthHint,
+  [QueryScalarFn.Trim]: QueryBuilderI18nKey.FnTrimHint,
+  [QueryScalarFn.Abs]: QueryBuilderI18nKey.FnAbsHint,
+};
