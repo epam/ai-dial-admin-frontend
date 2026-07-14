@@ -2,8 +2,7 @@ import { FC, useCallback } from 'react';
 
 import ApplicationAssetProperties from '@/src/components/Assets/Apps/Properties';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { DialApplicationResource } from '@/src/models/dial/application-resource';
-import { DeploymentAsset } from '@/src/models/dial/deployment-asset';
+import { DialApplicationResource } from '@/src/models/dial/resource';
 import { ApplicationPublication } from '@/src/models/dial/publications';
 import { updatePathWithNameAndVersion } from '@/src/utils/files/path';
 
@@ -15,7 +14,7 @@ interface Props {
 
 const ApplicationDetails: FC<Props> = ({ publication, applicationSchemes, onChange }) => {
   const onChangeApplication = useCallback(
-    (updatedApplication: DeploymentAsset) => {
+    (updatedApplication: DialApplicationResource) => {
       const path = updatePathWithNameAndVersion(
         updatedApplication.path,
         updatedApplication.name || '',
@@ -33,7 +32,7 @@ const ApplicationDetails: FC<Props> = ({ publication, applicationSchemes, onChan
   return (
     <div className="flex flex-col gap-y-8 h-full">
       <ApplicationAssetProperties
-        asset={publication.applicationResources?.[0].applicationResource as unknown as DeploymentAsset}
+        asset={publication.applicationResources?.[0].applicationResource as unknown as DialApplicationResource}
         onChange={onChangeApplication}
         runners={applicationSchemes}
         isPublication

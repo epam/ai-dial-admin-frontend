@@ -1,4 +1,6 @@
-export const ROW_DETAIL_SIDEBAR_CLASS = 'w-[942px] p-0';
+export const ROW_DETAIL_SIDEBAR_CLASS = 'w-1/2 p-0';
+
+export const ROW_DETAIL_BOTTOM_CLASS = 'p-0';
 
 export const ROW_DETAIL_DISPLAY_PANEL_CLASS =
   'flex flex-col absolute right-0 top-0 bottom-0 w-[397px] bg-layer-3 border-l border-primary shadow-lg z-20';

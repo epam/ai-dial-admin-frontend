@@ -1,9 +1,8 @@
 import { FC, useCallback } from 'react';
 
-import Properties from '@/src/components/Assets/Toolsets/View/Properties';
-import { DialApplicationResource } from '@/src/models/dial/application-resource';
-import { DeploymentAsset } from '@/src/models/dial/deployment-asset';
+import ToolsetAssetProperties from '@/src/components/Assets/Toolsets/View/Properties';
 import { ToolsetPublication } from '@/src/models/dial/publications';
+import { DialToolsetResource } from '@/src/models/dial/resource';
 import { updatePathWithNameAndVersion } from '@/src/utils/files/path';
 
 interface Props {
@@ -13,12 +12,12 @@ interface Props {
 
 const ToolsetDetails: FC<Props> = ({ publication, onChange }) => {
   const onChangeToolset = useCallback(
-    (updatedToolset: DeploymentAsset) => {
+    (updatedToolset: DialToolsetResource) => {
       const path = updatePathWithNameAndVersion(updatedToolset.path, updatedToolset.name || '', updatedToolset.version);
       const updatedToolsets = [...(publication.toolSetResources || [])];
       updatedToolsets[0] = {
         ...updatedToolsets[0],
-        toolSetResource: { ...updatedToolset, path } as unknown as DialApplicationResource,
+        toolSetResource: { ...updatedToolset, path },
       };
       onChange?.({ ...publication, toolSetResources: updatedToolsets });
     },
@@ -26,8 +25,8 @@ const ToolsetDetails: FC<Props> = ({ publication, onChange }) => {
   );
   return (
     <div className="flex flex-col gap-y-8 h-full">
-      <Properties
-        selectedToolset={publication.toolSetResources?.[0].toolSetResource as unknown as DeploymentAsset}
+      <ToolsetAssetProperties
+        selectedToolset={publication.toolSetResources?.[0].toolSetResource as DialToolsetResource}
         onChange={onChangeToolset}
         isPublication
       />

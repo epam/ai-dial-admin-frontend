@@ -147,8 +147,11 @@ export interface StructuredQuery {
   page?: QueryPage;
 }
 
+// Mirrors the service's StructuredQueryResultDto: rows as field-name → value maps (columns are
+// derived client-side from row keys), plus totalCount — set ONLY for row-mode offset paging with
+// include_total=true; aggregate and SQL runs never carry a total.
 export interface StructuredQueryResult {
-  columns: string[];
+  columns?: string[];
   rows: Array<Record<string, unknown>>;
   totalCount?: number | null;
   cursor?: string | null;

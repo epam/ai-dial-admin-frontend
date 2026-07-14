@@ -81,7 +81,7 @@ const RunMetricDetailPanel: FC<Props> = ({ resultId, grafanaTraceUrl, onClose, m
             size={ElementSize.Small}
             icon={<IconLayoutBottombar size={16} />}
             onClick={onSwitchMode}
-            title={t(RunsI18nKey.SwitchToDrawer)}
+            title={t(RunsI18nKey.SwitchToBottom)}
           />
         )}
       </div>

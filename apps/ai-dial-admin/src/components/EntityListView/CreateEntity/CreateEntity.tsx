@@ -102,7 +102,10 @@ const CreateEntity = <T extends CreatePromptEntity>({
             ),
           );
           const originalRoute = route.split('/')[1];
-          router.push(`${initialValues ? '/' : ''}${originalRoute}/${getEntityPath(route, res.response || entity)}`);
+          const newEntity = isAssetView(route)
+            ? { folderId: entity.folderId, name: entity.name, version: entity.version }
+            : res.response || entity;
+          router.push(`${initialValues ? '/' : ''}${originalRoute}/${getEntityPath(route, newEntity, false)}`);
           onClose();
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));

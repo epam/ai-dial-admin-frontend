@@ -15,18 +15,18 @@ import { isAssetWithVersion, isToolsetRoute } from '@/src/utils/is-view';
 
 export const getData = async <T>(route: ApplicationRoute, ref: RefObject<T | undefined>) => {
   if (route === ApplicationRoute.Prompts) {
-    const { folderId, name, version } = ref.current as DialPrompt;
-    return (await getPrompt(folderId, name as string, version, DEFAULT_ETAG)).response;
+    const { path } = ref.current as DialPrompt;
+    return (await getPrompt(path, DEFAULT_ETAG)).response;
   }
 
   if (route === ApplicationRoute.AssetsApplications) {
-    const { folderId, name, version } = ref.current as AssetApp;
-    return (await getApp(folderId, name as string, version, DEFAULT_ETAG)).response;
+    const { path } = ref.current as AssetApp;
+    return (await getApp(path, DEFAULT_ETAG)).response;
   }
 
   if (route === ApplicationRoute.AssetsToolsets) {
-    const { folderId, name, version } = ref.current as AssetToolset;
-    return (await getToolset(folderId, name as string, version, DEFAULT_ETAG)).response;
+    const { path } = ref.current as AssetToolset;
+    return (await getToolset(path, DEFAULT_ETAG)).response;
   }
 
   if (route === ApplicationRoute.Applications) {

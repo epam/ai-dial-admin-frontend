@@ -1,25 +1,42 @@
 import { FC } from 'react';
 
-import { DialInput, DialRemoveButton, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
+import classNames from 'classnames';
+import { SelectOption } from '@epam/ai-dial-ui-kit';
 
-import { OPERATOR_OPTIONS, VALUE_TYPE_OPTIONS } from '@/src/constants/analytics/query-builder';
-import { BasicI18nKey, QueryBuilderI18nKey } from '@/src/constants/i18n';
-import { useI18n } from '@/src/locales/client';
+import CategorizedFieldDropdown from '@/src/components/Analytics/QueryBuilder/Common/CategorizedFieldDropdown';
+import ChipRow from '@/src/components/Analytics/QueryBuilder/Common/ChipRow';
+import CompactInput from '@/src/components/Analytics/QueryBuilder/Common/CompactInput';
+import CompactSelect from '@/src/components/Analytics/QueryBuilder/Common/CompactSelect';
 import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';
 import { defaultValueType } from '@/src/components/Analytics/QueryBuilder/utils/fields';
-import { FieldOption, FilterGroupNode, FilterPredicateNode } from '@/src/models/analytics/query-builder';
+import { OPERATOR_OPTIONS, VALUE_TYPE_OPTIONS } from '@/src/constants/analytics/query-builder';
+import { QUERY_BUILDER_PALETTE } from '@/src/constants/analytics/query-builder-palette';
+import { QueryBuilderI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
+import {
+  FieldOption,
+  FilterGroupNode,
+  FilterPredicateNode,
+  QueryBuilderColor,
+} from '@/src/models/analytics/query-builder';
 import { QueryOperator, QueryValueType } from '@/src/models/analytics/query';
 
 interface Props {
   node: FilterPredicateNode;
   parent: FilterGroupNode;
   fieldOptions: FieldOption[];
-  showLabels?: boolean;
 }
 
 const isNullable = (op: QueryOperator): boolean => op === QueryOperator.Eq || op === QueryOperator.Ne;
 
-const FilterCondition: FC<Props> = ({ node, parent, fieldOptions, showLabels }) => {
+const summaryOf = (node: FilterPredicateNode): string =>
+  `${node.field || '…'} ${node.op} ${node.isNull ? 'null' : node.value || '…'}`;
+
+const BOOLEAN_VALUES = ['true', 'false'];
+
+const BOOLEAN_ACTIVE = QUERY_BUILDER_PALETTE[QueryBuilderColor.Dimension];
+
+const FilterCondition: FC<Props> = ({ node, parent, fieldOptions }) => {
   const t = useI18n();
   const { refresh } = useQueryBuilder();
 
@@ -49,61 +66,84 @@ const FilterCondition: FC<Props> = ({ node, parent, fieldOptions, showLabels }) 
     refresh();
   };
 
+  const setValue = (value: string) => {
+    node.value = value;
+    refresh();
+  };
+
   const remove = () => {
     parent.children = parent.children.filter((c) => c !== node);
     refresh();
   };
 
+  const isBoolean = node.valueType === QueryValueType.Boolean && node.op !== QueryOperator.In;
+
   return (
-    <div className="flex items-end gap-2">
-      <DialSelectField
+    <ChipRow summary={summaryOf(node)} onRemove={remove}>
+      <CategorizedFieldDropdown
         id={`qb-cond-field-${node.id}`}
-        label={showLabels ? t(QueryBuilderI18nKey.Field) : undefined}
-        options={fieldOptions.map((o) => ({ value: o.name, label: o.name }))}
+        options={fieldOptions}
         value={node.field}
         placeholder={t(QueryBuilderI18nKey.FieldPlaceholder)}
-        searchable
-        searchPlaceholder={t(BasicI18nKey.Search)}
-        onChange={(v) => onChangeField(v as string)}
+        ariaLabel={t(QueryBuilderI18nKey.Field)}
+        onSelect={onChangeField}
       />
-      <DialSelectField
-        id={`qb-cond-op-${node.id}`}
-        containerClassName="w-[72px] shrink-0"
-        label={showLabels ? t(QueryBuilderI18nKey.Operator) : undefined}
-        options={OPERATOR_OPTIONS}
-        value={node.op}
-        onChange={(v) => onChangeOperator(v as string)}
-      />
-
-      {!node.isNull && (
-        <DialInput
-          id={`qb-cond-value-${node.id}`}
-          containerClassName="flex-1 min-w-[160px]"
-          labelProps={showLabels ? { label: t(QueryBuilderI18nKey.Value) } : undefined}
-          value={node.value}
-          placeholder={
-            node.op === QueryOperator.In
-              ? t(QueryBuilderI18nKey.InValuePlaceholder)
-              : t(QueryBuilderI18nKey.ValuePlaceholder)
-          }
-          onChange={(v) => {
-            node.value = v ?? '';
-            refresh();
-          }}
-        />
-      )}
-
-      <DialSelectField
-        id={`qb-cond-type-${node.id}`}
-        containerClassName="w-[116px] shrink-0"
-        label={showLabels ? t(QueryBuilderI18nKey.ValueType) : undefined}
-        options={typeOptions}
-        value={node.isNull ? QueryValueType.Null : node.valueType}
-        onChange={(v) => onChangeType(v as string)}
-      />
-
-      <DialRemoveButton onClick={remove} />
-    </div>
+      <div className="flex items-center gap-1.5">
+        <div className="w-[76px] shrink-0">
+          <CompactSelect
+            ariaLabel={t(QueryBuilderI18nKey.Operator)}
+            options={OPERATOR_OPTIONS}
+            value={node.op}
+            onChange={onChangeOperator}
+          />
+        </div>
+        <div className="min-w-0 flex-1">
+          <CompactSelect
+            ariaLabel={t(QueryBuilderI18nKey.ValueType)}
+            options={typeOptions}
+            value={node.isNull ? QueryValueType.Null : node.valueType}
+            onChange={onChangeType}
+          />
+        </div>
+      </div>
+      {!node.isNull &&
+        (isBoolean ? (
+          <div
+            role="group"
+            aria-label={t(QueryBuilderI18nKey.ValuePlaceholder)}
+            className="flex w-fit overflow-hidden rounded border border-primary"
+          >
+            {BOOLEAN_VALUES.map((v) => (
+              <button
+                key={v}
+                type="button"
+                aria-pressed={node.value === v}
+                className={classNames(
+                  'px-4 py-1 font-mono dial-tiny-text',
+                  node.value === v
+                    ? classNames(BOOLEAN_ACTIVE.chipBg, BOOLEAN_ACTIVE.chipText)
+                    : 'text-secondary hover:bg-layer-4',
+                )}
+                onClick={() => setValue(v)}
+              >
+                {v}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <CompactInput
+            ariaLabel={t(QueryBuilderI18nKey.ValuePlaceholder)}
+            className="w-full"
+            value={node.value}
+            placeholder={
+              node.op === QueryOperator.In
+                ? t(QueryBuilderI18nKey.InValuePlaceholder)
+                : t(QueryBuilderI18nKey.ValuePlaceholder)
+            }
+            onChange={setValue}
+          />
+        ))}
+    </ChipRow>
   );
 };
 

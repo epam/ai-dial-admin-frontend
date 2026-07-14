@@ -21,7 +21,7 @@ export const getFormDataForPublication = (file: Publication, files: File[]): For
 export const getCorrectPublication = (publication: ApplicationPublication): Publication => {
   const defaults = { ...publication?.applicationResources?.[0]?.applicationResource.defaults };
   const applicationProperties = {
-    ...publication?.applicationResources?.[0]?.applicationResource.applicationProperties,
+    ...publication?.applicationResources?.[0]?.applicationResource.application_properties,
   };
 
   return {

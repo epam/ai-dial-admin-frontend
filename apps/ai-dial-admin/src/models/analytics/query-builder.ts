@@ -11,6 +11,14 @@ import {
   QueryValueType,
   StructuredQuery,
 } from '@/src/models/analytics/query';
+import { TimeRange } from '@/src/models/time-range';
+
+// The toolbar time filter serializes into the structured query as ge/le predicates on this field —
+// resolved once per build so the JSON view, Copy, and Run all carry the same visible time bound.
+export interface QueryTimeBound {
+  field: string;
+  range: TimeRange;
+}
 
 export enum FilterNodeKind {
   Group = 'group',
@@ -87,14 +95,12 @@ export interface QueryBuilderState {
 export interface FieldOption {
   name: string;
   type?: string;
+  tag?: string;
 }
 
-export interface SchemaPreviewRow {
-  field: string;
-  type: string;
-  family: string;
-  source: string;
+export interface FieldOptionGroup {
   tag: string;
+  options: FieldOption[];
 }
 
 export enum QueryBuilderView {
@@ -120,4 +126,49 @@ export enum QueryBuilderWarning {
   MissingBucketField = 'MissingBucketField',
   MissingBucketAlias = 'MissingBucketAlias',
   EmptyAggregate = 'EmptyAggregate',
+}
+
+// The builder's own color language, mirroring how the same query reads in the Monaco JSON view:
+// fields/keys are teal, values blue, grouping brackets purple, keywords yellow, numbers orange.
+export enum QueryBuilderColor {
+  Dimension = 'dimension',
+  Measure = 'measure',
+  Grouping = 'grouping',
+  Constraint = 'constraint',
+  Keyword = 'keyword',
+  Numeric = 'numeric',
+}
+
+export interface QueryBuilderColorClasses {
+  marker: string;
+  text: string;
+  chipBg: string;
+  chipText: string;
+  borderAccent: string;
+}
+
+export enum QueryResultView {
+  Table = 'table',
+  Chart = 'chart',
+}
+
+export enum ChartType {
+  Bar = 'bar',
+  Line = 'line',
+  Area = 'area',
+}
+
+export interface ChartConfig {
+  type: ChartType;
+  xField: string | null;
+  yField: string | null;
+}
+
+// Snapshot of the query a result came from. Chart availability and the X/Y option lists must follow
+// what was actually executed — the live builder state can diverge from the shown result between runs.
+export interface ExecutedQueryMeta {
+  kind: QueryRequestKind;
+  mode: QueryMode;
+  dimensionColumns: string[];
+  aggregateColumns: string[];
 }

@@ -18,8 +18,6 @@ export interface AssetsFolderContext {
   toggleFolder: (folder: Asset, skipFetch?: boolean, collapseAll?: boolean) => void;
   data: Asset[] | null;
   fetchedFoldersData: Record<string, Asset[]>;
-  bulkSelectedData: Record<string, Asset[]>;
-  setBulkSelectedData: Dispatch<SetStateAction<Record<string, Asset[]>>>;
 }
 
 export function createFolderContext(
@@ -33,7 +31,6 @@ export function createFolderContext(
     const [filePath, setFilePath] = useState('');
     const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
     const [fetchedFoldersData, setFetchedFoldersData] = useState<Record<string, Asset[]>>({});
-    const [bulkSelectedData, setBulkSelectedData] = useState<Record<string, Asset[]>>({});
     const [isFetchingFiles, setIsFetchingFiles] = useState(false);
 
     const [data, setData] = useState<Asset[] | null>(null);
@@ -166,8 +163,6 @@ export function createFolderContext(
       toggleFolder,
       data,
       fetchedFoldersData,
-      bulkSelectedData,
-      setBulkSelectedData,
     };
 
     return <Context.Provider value={value}>{children}</Context.Provider>;

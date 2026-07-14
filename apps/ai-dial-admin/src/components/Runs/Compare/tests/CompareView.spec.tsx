@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import CompareView from '../CompareView';
 import Sidebar from '@/src/components/Common/Sidebar/Sidebar';
+import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
 import { AppContextProvider } from '@/src/context/AppContext';
 import { FeatureFlags } from '@/src/models/feature-flags';
 
@@ -45,9 +46,12 @@ const renderCompareView = (featureFlags: Partial<FeatureFlags> = { runsCompareEn
   render(
     <AppContextProvider featureFlags={featureFlags as FeatureFlags}>
       <div className="w-[1400px] h-[800px] flex flex-col">
-        <CompareView runId="run-1" comparedRunId="run-sibling" />
+        <div className="flex flex-1 min-h-0">
+          <CompareView runId="run-1" comparedRunId="run-sibling" />
+          <Sidebar />
+        </div>
+        <Sidebar slot={SidebarPosition.Bottom} />
       </div>
-      <Sidebar />
     </AppContextProvider>,
   );
 
@@ -158,11 +162,11 @@ describe('CompareView', () => {
     });
   });
 
-  test('disables summary and heat map tabs when runsCompareEnabled is false', () => {
+  test('disables summary overview tab when runsCompareEnabled is false', () => {
     renderCompareView({ runsCompareEnabled: false });
 
     expect(screen.getByRole('tab', { name: 'Runs.RunCompareTabSummaryOverview' })).toBeDisabled();
-    expect(screen.getByRole('tab', { name: 'Runs.RunCompareTabHeatMap' })).toBeDisabled();
+    expect(screen.getByRole('tab', { name: 'Runs.RunCompareTabHeatMap' })).toBeEnabled();
     expect(screen.getByRole('tab', { name: 'Runs.RunCompareTabExecutionResults' })).toBeEnabled();
   });
 
@@ -238,7 +242,7 @@ describe('CompareView', () => {
     });
   });
 
-  test('switches row detail to the bottom drawer (pivot default) and back to the sidebar', async () => {
+  test('switches row detail to the bottom panel (pivot default) and back to the sidebar', async () => {
     const user = userEvent.setup();
 
     renderCompareView();
@@ -255,25 +259,24 @@ describe('CompareView', () => {
       expect(screen.getByRole('heading', { level: 3, name: 'Test Case 1' })).toBeInTheDocument();
     });
 
-    await user.click(screen.getByTitle('Runs.SwitchToDrawer'));
+    await user.click(screen.getByTitle('Runs.SwitchToBottom'));
 
     await waitFor(() => {
-      expect(screen.getByRole('complementary', { name: 'Runs.AnalysisDrawerLabel' })).toBeInTheDocument();
+      expect(screen.getByTitle('Runs.SwitchToSidebar')).toBeInTheDocument();
     });
 
-    const drawer = screen.getByRole('complementary', { name: 'Runs.AnalysisDrawerLabel' });
-    // Pivot is the default view in the drawer: the primary run-name row label is rendered.
+    // Pivot is the default view in the bottom panel: the primary run-name row label is rendered.
     await waitFor(() => {
-      expect(within(drawer).getByText('Run #316')).toBeInTheDocument();
+      expect(screen.getByText('Run #316')).toBeInTheDocument();
     });
 
-    await user.click(within(drawer).getByTitle('Runs.SwitchToSidebar'));
+    await user.click(screen.getByTitle('Runs.SwitchToSidebar'));
 
     await waitFor(() => {
-      expect(screen.queryByRole('complementary', { name: 'Runs.AnalysisDrawerLabel' })).not.toBeInTheDocument();
+      expect(screen.queryByTitle('Runs.SwitchToSidebar')).not.toBeInTheDocument();
     });
 
-    expect(screen.getByTitle('Runs.SwitchToDrawer')).toBeInTheDocument();
+    expect(screen.getByTitle('Runs.SwitchToBottom')).toBeInTheDocument();
   });
 
   test('closes row detail panel when switching away from Execution Results tab', async () => {

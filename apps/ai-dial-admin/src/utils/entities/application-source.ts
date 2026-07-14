@@ -13,18 +13,18 @@ export const CODE_APP_SOURCE_TYPE = 'code-app';
 interface CodeAppCandidate {
   source?: SOURCE_FIELD;
   endpoint?: string | null;
-  editorUrl?: string;
+  editor_url?: string;
 }
 
 /**
- * A Code App is an endpoints-type application whose `endpoint` and `editorUrl` both equal the
+ * A Code App is an endpoints-type application whose `endpoint` and `editor_url` both equal the
  * configured `CODE_APP_EDITOR_URL`.
  */
 export const isCodeAppSource = (entity?: CodeAppCandidate, codeAppEditorUrl?: string): boolean =>
   !!codeAppEditorUrl &&
   entity?.source?.$type === SOURCE_TYPE.ENDPOINTS &&
   entity?.endpoint === codeAppEditorUrl &&
-  entity?.editorUrl === codeAppEditorUrl;
+  entity?.editor_url === codeAppEditorUrl;
 
 /**
  * Fields applied to an application when the Code App source type is selected.
@@ -32,7 +32,7 @@ export const isCodeAppSource = (entity?: CodeAppCandidate, codeAppEditorUrl?: st
 export const createCodeAppFields = (codeAppEditorUrl?: string) => ({
   source: { $type: SOURCE_TYPE.ENDPOINTS },
   endpoint: codeAppEditorUrl,
-  editorUrl: codeAppEditorUrl,
+  editor_url: codeAppEditorUrl,
 });
 
 export const ENDPOINTS_SOURCE: SOURCE_FIELD = {

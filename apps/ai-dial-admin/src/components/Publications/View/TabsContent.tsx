@@ -1,5 +1,5 @@
 'use client';
-import { Dispatch, SetStateAction, useCallback, useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useCallback } from 'react';
 
 import ParametersTab from '@/src/components/Applications/ParametersTab/ParametersTab';
 import Conversations from '@/src/components/Assets/Conversations/View/Conversations';
@@ -17,8 +17,6 @@ import { PromptFolderProvider } from '@/src/context/assets/PromptFolderContext';
 import { ToolsetFolderProvider } from '@/src/context/assets/ToolsetsFolderContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { DialApplicationResource } from '@/src/models/dial/application-resource';
-import { DialConversation } from '@/src/models/dial/conversation';
 import {
   ApplicationPublication,
   ConversationPublication,
@@ -27,6 +25,7 @@ import {
   Publication,
   ToolsetPublication,
 } from '@/src/models/dial/publications';
+import { DialToolsetResource } from '@/src/models/dial/resource';
 import { DialRule } from '@/src/models/dial/rule';
 import { Toolset } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -61,23 +60,12 @@ const TabsContent = <T extends Publication>({
 }: Props<T>) => {
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
-  const [selectedConversation, setSelectedConversation] = useState<DialConversation | undefined>(
-    () =>
-      (selectedPublication as ConversationPublication).conversations?.[0]?.conversation as DialConversation | undefined,
-  );
-
-  useEffect(() => {
-    setSelectedConversation(
-      (selectedPublication as ConversationPublication).conversations?.[0]?.conversation as DialConversation | undefined,
-    );
-  }, [selectedPublication]);
-
   const onChangeToolset = useCallback(
-    (toolSetResource: DialApplicationResource) => {
+    (toolSetResource: DialToolsetResource) => {
       const updatedToolsets = [...((selectedPublication as ToolsetPublication).toolSetResources || [])];
       updatedToolsets[0] = {
         ...updatedToolsets[0],
-        toolSetResource: toolSetResource as unknown as DialApplicationResource,
+        toolSetResource: toolSetResource,
       };
       onChange({ ...selectedPublication, toolSetResources: updatedToolsets } as T);
     },
@@ -88,11 +76,7 @@ const TabsContent = <T extends Publication>({
     <>
       {activeTab === EntityViewTab.Properties && (
         <div className="flex flex-col h-full">
-          <PublicationInfoHeader
-            view={view}
-            entity={selectedPublication}
-            conversationVersion={selectedConversation?.version}
-          />
+          <PublicationInfoHeader view={view} entity={selectedPublication} />
 
           {view === ApplicationRoute.FilePublications && (
             <FileFolderProvider>
@@ -130,12 +114,10 @@ const TabsContent = <T extends Publication>({
               />
             </ToolsetFolderProvider>
           )}
-          {view === ApplicationRoute.ConversationPublications && selectedConversation && (
+          {view === ApplicationRoute.ConversationPublications && (
             <ConversationFolderProvider>
               <ConversationProperties
                 publication={selectedPublication as ConversationPublication}
-                selectedConversation={selectedConversation}
-                onConversationChange={setSelectedConversation}
                 onChange={onChange as (p: ConversationPublication) => void}
               />
             </ConversationFolderProvider>
@@ -179,8 +161,8 @@ const TabsContent = <T extends Publication>({
         />
       )}
 
-      {activeTab === EntityViewTab.Conversation && selectedConversation && (
-        <Conversations selectedConversation={selectedConversation} />
+      {activeTab === EntityViewTab.Conversation && (
+        <Conversations publication={selectedPublication as ConversationPublication} />
       )}
     </>
   );

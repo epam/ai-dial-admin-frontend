@@ -137,15 +137,15 @@ describe('getCorrectPublication', () => {
           version: '1.0',
           author: 'author',
           endpoint: 'https://example.com',
-          iconUrl: '',
+          icon_url: '',
           reference: '',
-          maxRetryAttempts: 0,
-          forwardAuthToken: false,
-          editorUrl: '',
-          viewerUrl: '',
-          applicationTypeSchemaId: 'schema-1',
-          descriptionKeywords: [],
-          inputAttachmentTypes: [],
+          max_retry_attempts: 0,
+          forward_auth_token: false,
+          editor_url: '',
+          viewer_url: '',
+          application_type_schema_id: 'schema-1',
+          description_keywords: [],
+          input_attachment_types: [],
           dependencies: [],
           interceptors: [],
         },
@@ -156,13 +156,13 @@ describe('getCorrectPublication', () => {
   it('should return publication with defaults and applicationProperties from record when no temp fields', () => {
     const publication = basePublication();
     publication.applicationResources![0].applicationResource.defaults = { foo: 'bar' };
-    publication.applicationResources![0].applicationResource.applicationProperties = { baz: 42 };
+    publication.applicationResources![0].applicationResource.application_properties = { baz: 42 };
 
     const result = getCorrectPublication(publication) as ApplicationPublication;
 
     expect(result.applicationResources).toHaveLength(1);
     expect(result.applicationResources![0].applicationResource.defaults).toEqual({ foo: 'bar' });
-    expect(result.applicationResources![0].applicationResource.applicationProperties).toEqual({ baz: 42 });
+    expect(result.applicationResources![0].applicationResource.application_properties).toEqual({ baz: 42 });
     expect(result.applicationResources![0].applicationResource).not.toHaveProperty('defaultsTemp');
   });
 

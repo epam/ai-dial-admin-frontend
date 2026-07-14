@@ -23,6 +23,7 @@ import {
 import { filterNames } from '@/src/utils/entities/filter-names';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import { DialResource } from '@/src/models/dial/resource';
 
 interface Props {
   view: ApplicationRoute;
@@ -30,7 +31,7 @@ interface Props {
   initialValues?: Partial<AssetWithVersion>;
   context?: () => AssetsFolderContext;
   onClose: () => void;
-  onCreate: (entity: AssetWithVersion) => Promise<ServerActionResponse>;
+  onCreate: (entity: DialResource) => Promise<ServerActionResponse>;
 }
 
 const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onCreate, onClose }) => {
@@ -44,10 +45,10 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onC
   const names = filterNames(data);
   const versionsMap = getVersionsPerName(data as AssetWithVersion[]);
 
-  const [currentEntity, setCurrentEntity] = useState<AssetWithVersion>({
+  const [currentEntity, setCurrentEntity] = useState<DialResource>({
     ...initialValues,
     version: DEFAULT_NEW_ENTITY_VERSION,
-  } as AssetWithVersion);
+  } as DialResource);
 
   const onSubmit = useCallback(async () => {
     onCreate(currentEntity).then((res) => {
@@ -72,7 +73,7 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onC
   }, [folderContext, currentEntity, initialValues, onClose, onCreate, router, showNotification, t, view]);
 
   const onChangeEntity = useCallback((entity: object) => {
-    setCurrentEntity(entity as AssetWithVersion);
+    setCurrentEntity(entity as DialResource);
   }, []);
 
   useEffect(() => {
@@ -118,7 +119,7 @@ const CreateAsset: FC<Props> = ({ view, isModalOpen, initialValues, context, onC
             ) : (
               <AssetProperties
                 view={view}
-                entity={currentEntity}
+                entity={currentEntity as AssetWithVersion}
                 onChangeEntity={onChangeEntity}
                 names={names}
                 versionsMap={versionsMap}
