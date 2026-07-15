@@ -264,7 +264,10 @@ describe('havingFieldOptions label projection', () => {
         description: 'Owning project',
       },
     ];
-    s.groupBy = [createGroupByColumn('project_id'), { ...createGroupByFn(QueryScalarFn.Lower, 'project_id'), alias: 'p' }];
+    s.groupBy = [
+      createGroupByColumn('project_id'),
+      { ...createGroupByFn(QueryScalarFn.Lower, 'project_id'), alias: 'p' },
+    ];
     const options = havingFieldOptions(s);
     expect(options.find((o) => o.name === 'project_id')).toMatchObject({
       display_name: 'Project',

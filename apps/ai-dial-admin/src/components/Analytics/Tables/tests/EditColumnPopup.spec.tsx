@@ -23,7 +23,8 @@ const renderPopup = (props?: Partial<Parameters<typeof EditColumnPopup>[0]>) => 
   return { onSubmit, onClose };
 };
 
-const setInput = (label: string, value: string) => fireEvent.change(screen.getByLabelText(label), { target: { value } });
+const setInput = (label: string, value: string) =>
+  fireEvent.change(screen.getByLabelText(label), { target: { value } });
 
 describe('EditColumnPopup', () => {
   test('seeds the form with the column values and disables submit while unchanged', () => {

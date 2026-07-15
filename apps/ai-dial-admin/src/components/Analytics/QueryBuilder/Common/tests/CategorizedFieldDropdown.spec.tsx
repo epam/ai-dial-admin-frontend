@@ -206,7 +206,16 @@ describe('QueryBuilder :: CategorizedFieldDropdown', () => {
     render(
       <CategorizedFieldDropdown
         id="test"
-        options={[...OPTIONS, { name: 'total_money', type: 'decimal', tag: 'cost', display_name: 'Total money spend', description: 'Money spent on the request' }]}
+        options={[
+          ...OPTIONS,
+          {
+            name: 'total_money',
+            type: 'decimal',
+            tag: 'cost',
+            display_name: 'Total money spend',
+            description: 'Money spent on the request',
+          },
+        ]}
         onSelect={onSelect}
         addLabel="+ Add"
         ariaLabel="Add field"
