@@ -107,7 +107,7 @@ const ParametersTab: FC<Props> = ({
 
   const applicationProperties = useMemo(() => {
     return view === ApplicationRoute.AssetsApplications
-      ? (application as DialApplicationResource)?.application_properties
+      ? (application as DialApplicationResource)?.application_properties || {}
       : (application as DialApplication)?.applicationProperties || {};
   }, [application, view]);
 
@@ -132,11 +132,13 @@ const ParametersTab: FC<Props> = ({
     (props: Record<string, unknown>) => {
       const newEntity = {
         ...application,
-        applicationProperties: props,
+        ...(view === ApplicationRoute.AssetsApplications
+          ? { application_properties: props }
+          : { applicationProperties: props }),
       } as unknown as BaseEntity;
       onChange?.(newEntity);
     },
-    [application, onChange],
+    [application, onChange, view],
   );
 
   const onValidityChange = useCallback(
