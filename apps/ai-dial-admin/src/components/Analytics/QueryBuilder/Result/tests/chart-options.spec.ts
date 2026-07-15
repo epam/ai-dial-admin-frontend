@@ -159,10 +159,7 @@ describe('QueryBuilder :: chart-options', () => {
       ];
       const options = buildScatterChartOptions(dated, 'day', 'cnt', []);
       expect(options.xAxis.type).toBe('time');
-      expect(options.series[0].data.map((d: { value: unknown[] }) => d.value[0])).toEqual([
-        '2026-07-02',
-        '2026-07-01',
-      ]);
+      expect(options.series[0].data.map((d: { value: unknown[] }) => d.value[0])).toEqual(['2026-07-02', '2026-07-01']);
     });
   });
 
