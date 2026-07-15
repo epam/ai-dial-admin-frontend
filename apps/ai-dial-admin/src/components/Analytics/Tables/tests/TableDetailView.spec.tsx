@@ -9,7 +9,12 @@ vi.mock('@/src/app/[lang]/tables/actions');
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
-  default: ({ rowData }: { rowData?: unknown[] }) => <div>columns: {rowData?.length ?? 0}</div>,
+  default: ({ rowData, columnDefs }: { rowData?: unknown[]; columnDefs?: { headerName?: string }[] }) => (
+    <div>
+      <div>headers: {columnDefs?.map((c) => c.headerName).join('|')}</div>
+      <div>columns: {rowData?.length ?? 0}</div>
+    </div>
+  ),
 }));
 
 const table = (system: boolean): AnalyticsTable => ({
@@ -40,5 +45,15 @@ describe('TableDetailView system flag', () => {
     expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.DeleteTable })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.WriteRows })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.AddColumns })).not.toBeInTheDocument();
+  });
+});
+
+describe('TableDetailView columns grid', () => {
+  test('the grid includes Label and Description columns', () => {
+    render(<TableDetailView name="dial_usage_log" initialTable={table(false)} />);
+
+    const headers = screen.getByText(/^headers:/);
+    expect(headers).toHaveTextContent(AnalyticsTablesI18nKey.DisplayName);
+    expect(headers).toHaveTextContent(AnalyticsTablesI18nKey.Description);
   });
 });

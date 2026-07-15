@@ -341,7 +341,11 @@ The query builder SHALL render in a fixed-width rail at the right edge of the co
 
 ### Requirement: Builder sections use section blocks with categorized field dropdowns and collapsible items
 
-Each Builder-view section (Group by, Aggregates, Select, Filters, Having, Sort, Page) SHALL render as a bordered section block with a labeled header and a header-level add action where applicable. Field pickers SHALL be searchable dropdowns whose options are grouped by the field's schema tag/category (untagged fields under a default group). Category groups SHALL be collapsible headers showing the group's option count, with at most one category expanded at a time (accordion); the group holding the current selection SHALL start expanded, and an active search term SHALL show all matches regardless of collapse state. Category header colors SHALL cycle the full builder palette. The dropdown's search input SHALL use the same compact boxed style as the builder's other controls. Added items SHALL render compactly — chips for plain fields, collapsible rows for parameterized items (group-by functions, aggregates, conditions, having rows, sort keys) that expand into their editor and collapse back to a summary chip tinted with the owning section's palette color. Styling SHALL use the project's palette/theme tokens only.
+<!-- Merged from add-column-labels-and-descriptions (archived): display names, descriptions, and the bounded-width dropdown with hover tooltips. -->
+
+Each Builder-view section (Group by, Aggregates, Select, Filters, Having, Sort, Page) SHALL render as a bordered section block with a labeled header and a header-level add action where applicable. Field pickers SHALL be searchable dropdowns whose options are grouped by the field's schema tag/category (untagged fields under a default group). Category groups SHALL be collapsible headers showing the group's option count, with at most one category expanded at a time (accordion); the group holding the current selection SHALL start expanded, and an active search term SHALL show all matches regardless of collapse state. Category header colors SHALL cycle the full builder palette. The dropdown's search input SHALL use the same compact boxed style as the builder's other controls.
+
+Field options SHALL display the field's **display name** — the schema `display_name` when set, otherwise the field `name` — as primary text, the field type right-aligned, and the schema `description` as a secondary line when present; fields without display name and description SHALL render as a single line. The dropdown overlay width SHALL stay bounded: long descriptions truncate to one line and the full text is reachable via a hover tooltip of reasonable width. The dropdown search SHALL match against both the field name and its display name. Added items SHALL render compactly — chips for plain fields, collapsible rows for parameterized items (group-by functions, aggregates, conditions, having rows, sort keys) that expand into their editor and collapse back to a summary chip tinted with the owning section's palette color — and chips and collapsed summaries SHALL refer to fields by their display name. Display names are presentation-only: structured-query serialization, the JSON view, and the SQL view SHALL always use the raw field `name`. Styling SHALL use the project's palette/theme tokens only.
 
 #### Scenario: Field dropdown groups by category
 
@@ -349,6 +353,30 @@ Each Builder-view section (Group by, Aggregates, Select, Filters, Having, Sort, 
 - **THEN** the fields are grouped under collapsible category headers with option counts
 - **AND** expanding one category collapses the previously expanded one
 - **AND** typing in the search shows all matching fields across categories
+
+#### Scenario: Display-named field renders display name, description, and type
+
+- **WHEN** the schema field `total_money` carries display name "Total money spend" and a description
+- **THEN** its dropdown option shows "Total money spend" as primary text with the type right-aligned
+- **AND** the description is shown as a secondary line
+
+#### Scenario: Field without a display name falls back to its name
+
+- **WHEN** a schema field has no display name and no description
+- **THEN** its dropdown option shows the raw field name in a single line, as before
+
+#### Scenario: Search matches the display name
+
+- **WHEN** the user types "money" and only the field `total_money` with display name "Total money spend" matches
+- **THEN** that field is shown in the results
+- **AND** searching by the raw name `total_money` finds it as well
+
+#### Scenario: Chips and summaries use the display name
+
+- **WHEN** the user adds a projection chip and an aggregate over a field with a display name
+- **THEN** the chip shows the field's display name
+- **AND** the collapsed aggregate summary refers to the field by its display name
+- **AND** the serialized query and the JSON view reference the raw field name
 
 #### Scenario: Parameterized item collapses to a summary
 

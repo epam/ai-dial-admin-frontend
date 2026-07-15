@@ -10,21 +10,19 @@ import {
   DialConfirmationPopup,
   DialDangerButton,
   DialFormPopup,
-  DialInput,
   DialNeutralButton,
   PopupSize,
 } from '@epam/ai-dial-ui-kit';
-import { IconPencil, IconTag } from '@tabler/icons-react';
 
 import { addRows, deleteTable, getTable, updateTableSchema } from '@/src/app/[lang]/tables/actions';
 import ColumnRowsEditor from '@/src/components/Analytics/Tables/ColumnRowsEditor';
-import { createColumnRow, toTableColumns } from '@/src/components/Analytics/Tables/utils';
+import EditColumnPopup from '@/src/components/Analytics/Tables/EditColumnPopup';
+import { createColumnRow, isRenameRestricted, toTableColumns } from '@/src/components/Analytics/Tables/utils';
 import { TypeCellRenderer } from '@/src/components/Analytics/Common/TypeBadge';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
-import { getDeleteOperation } from '@/src/constants/grid-columns/actions';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { getDeleteOperation, getEditOperation } from '@/src/constants/grid-columns/actions';
 import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -40,11 +38,6 @@ interface Props {
   initialTable: AnalyticsTable;
 }
 
-interface ColumnEdit {
-  column: string;
-  retag: boolean;
-}
-
 const TableDetailView: FC<Props> = ({ name, initialTable }) => {
   const t = useI18n();
   const router = useRouter();
@@ -56,8 +49,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
   const [writeOpen, setWriteOpen] = useState(false);
   const [addColumns, setAddColumns] = useState<ColumnRow[]>([createColumnRow()]);
   const [rowsJson, setRowsJson] = useState('[]');
-  const [edit, setEdit] = useState<ColumnEdit | null>(null);
-  const [editValue, setEditValue] = useState('');
+  const [editColumn, setEditColumn] = useState<AnalyticsTableColumn | null>(null);
 
   const isSystem = Boolean(table.system);
 
@@ -94,11 +86,6 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
     [name, reload, notifyFailed, showNotification, t],
   );
 
-  const openEdit = useCallback((column: AnalyticsTableColumn, retag: boolean) => {
-    setEdit({ column: column.name, retag });
-    setEditValue(retag ? (column.tag ?? '') : column.name);
-  }, []);
-
   const onDrop = useCallback(
     (column?: AnalyticsTableColumn) => column && void applyPatch({ drop: [column.name] }),
     [applyPatch],
@@ -112,14 +99,8 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
     [applyPatch],
   );
 
-  const onSubmitEdit = async () => {
-    if (!edit) return;
-    const value = editValue.trim();
-    if (!value) return;
-    const ok = await applyPatch(
-      edit.retag ? { retag: [{ name: edit.column, tag: value }] } : { rename: [{ from: edit.column, to: value }] },
-    );
-    if (ok) setEdit(null);
+  const onSubmitEditColumn = async (patch: AnalyticsSchemaPatch) => {
+    if (await applyPatch(patch)) setEditColumn(null);
   };
 
   const onSubmitAddColumns = async () => {
@@ -165,21 +146,10 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
 
   const actions = useMemo<ActionMenuOperationDeclaration<AnalyticsTableColumn>[]>(
     () => [
-      {
-        id: AnalyticsTablesI18nKey.Rename,
-        label: AnalyticsTablesI18nKey.Rename,
-        icon: <IconPencil {...BASE_BUTTON_ICON_PROPS} />,
-        onClick: (column) => column && openEdit(column, false),
-      },
-      {
-        id: AnalyticsTablesI18nKey.Retag,
-        label: AnalyticsTablesI18nKey.Retag,
-        icon: <IconTag {...BASE_BUTTON_ICON_PROPS} />,
-        onClick: (column) => column && openEdit(column, true),
-      },
+      getEditOperation<AnalyticsTableColumn>((column) => column && setEditColumn(column)),
       getDeleteOperation<AnalyticsTableColumn>((column) => onDrop(column)),
     ],
-    [openEdit, onDrop],
+    [onDrop],
   );
 
   const columnDefs = useMemo<ColDef[]>(
@@ -188,6 +158,9 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
       { headerName: t(AnalyticsTablesI18nKey.SourceName), field: 'source_name', flex: 2 },
       { headerName: t(AnalyticsTablesI18nKey.Type), field: 'type', cellRenderer: TypeCellRenderer, flex: 1 },
       { headerName: t(AnalyticsTablesI18nKey.Tag), field: 'tag', flex: 1 },
+      // Long display names/descriptions truncate in the cell; the grid's default tooltip exposes the full value.
+      { headerName: t(AnalyticsTablesI18nKey.DisplayName), field: 'display_name', flex: 2 },
+      { headerName: t(AnalyticsTablesI18nKey.Description), field: 'description', flex: 3 },
       {
         headerName: t(AnalyticsTablesI18nKey.Nullable),
         colId: 'nullable',
@@ -281,25 +254,13 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
         </DialFormPopup>
       )}
 
-      {edit && (
-        <DialFormPopup
-          open={!!edit}
-          portalId="qb-column-edit"
-          size={PopupSize.Sm}
-          header={t(edit.retag ? AnalyticsTablesI18nKey.RetagTitle : AnalyticsTablesI18nKey.RenameTitle)}
-          disableSubmitButton={!editValue.trim()}
-          onClose={() => setEdit(null)}
-          onSubmit={() => void onSubmitEdit()}
-        >
-          <div className="p-6">
-            <DialInput
-              id="column-edit-value"
-              labelProps={{ label: t(edit.retag ? AnalyticsTablesI18nKey.Tag : AnalyticsTablesI18nKey.ColumnName) }}
-              value={editValue}
-              onChange={(v) => setEditValue(v ?? '')}
-            />
-          </div>
-        </DialFormPopup>
+      {editColumn && (
+        <EditColumnPopup
+          column={editColumn}
+          renameDisabled={isRenameRestricted(table, editColumn)}
+          onClose={() => setEditColumn(null)}
+          onSubmit={(patch) => void onSubmitEditColumn(patch)}
+        />
       )}
     </div>
   );
