@@ -14,7 +14,11 @@
   "private": true,
   "lint-staged": {
     "*.{js,ts,tsx}": [
+      "prettier --write",
       "npm run lint"
+    ],
+    "*.{json,md,css,scss,html,yml,yaml}": [
+      "prettier --write"
     ]
   },
   "dependencies": {
