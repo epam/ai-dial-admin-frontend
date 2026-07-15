@@ -8,7 +8,7 @@ import ChipRow from '@/src/components/Analytics/QueryBuilder/Common/ChipRow';
 import CompactInput from '@/src/components/Analytics/QueryBuilder/Common/CompactInput';
 import CompactSelect from '@/src/components/Analytics/QueryBuilder/Common/CompactSelect';
 import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';
-import { defaultValueType } from '@/src/components/Analytics/QueryBuilder/utils/fields';
+import { defaultValueType, fieldDisplayName } from '@/src/components/Analytics/QueryBuilder/utils/fields';
 import { OPERATOR_OPTIONS, VALUE_TYPE_OPTIONS } from '@/src/constants/analytics/query-builder';
 import { QUERY_BUILDER_PALETTE } from '@/src/constants/analytics/query-builder-palette';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
@@ -31,8 +31,8 @@ interface Props {
 
 const isNullable = (op: QueryOperator): boolean => op === QueryOperator.Eq || op === QueryOperator.Ne;
 
-const summaryOf = (node: FilterPredicateNode): string =>
-  `${node.field || '…'} ${node.op} ${node.isNull ? 'null' : node.value || '…'}`;
+const summaryOf = (node: FilterPredicateNode, options: FieldOption[]): string =>
+  `${node.field ? fieldDisplayName(options, node.field) : '…'} ${node.op} ${node.isNull ? 'null' : node.value || '…'}`;
 
 const BOOLEAN_VALUES = ['true', 'false'];
 
@@ -81,7 +81,7 @@ const FilterCondition: FC<Props> = ({ node, parent, fieldOptions, color }) => {
   const isBoolean = node.valueType === QueryValueType.Boolean && node.op !== QueryOperator.In;
 
   return (
-    <ChipRow summary={summaryOf(node)} onRemove={remove} color={color}>
+    <ChipRow summary={summaryOf(node, fieldOptions)} onRemove={remove} color={color}>
       <CategorizedFieldDropdown
         id={`qb-cond-field-${node.id}`}
         options={fieldOptions}

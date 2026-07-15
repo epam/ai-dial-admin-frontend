@@ -6,16 +6,17 @@ import CompactSelect from '@/src/components/Analytics/QueryBuilder/Common/Compac
 import SectionAction from '@/src/components/Analytics/QueryBuilder/Common/SectionAction';
 import SectionBlock from '@/src/components/Analytics/QueryBuilder/Common/SectionBlock';
 import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';
-import { sortFieldOptions } from '@/src/components/Analytics/QueryBuilder/utils/fields';
+import { fieldDisplayName, sortFieldOptions } from '@/src/components/Analytics/QueryBuilder/utils/fields';
 import { createSort } from '@/src/components/Analytics/QueryBuilder/utils/state';
 import { SORT_DIRECTION_OPTIONS, SORT_NULLS_OPTIONS } from '@/src/constants/analytics/query-builder';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { QuerySortDirection, QuerySortNulls } from '@/src/models/analytics/query';
-import { QueryBuilderColor, SortRow } from '@/src/models/analytics/query-builder';
+import { FieldOption, QueryBuilderColor, SortRow } from '@/src/models/analytics/query-builder';
 import { QUERY_BUILDER_PALETTE } from '@/src/constants/analytics/query-builder-palette';
 
-const summaryOf = (sort: SortRow): string => `${sort.field || '…'} ${sort.dir.toUpperCase()}`;
+const summaryOf = (sort: SortRow, options: FieldOption[]): string =>
+  `${sort.field ? fieldDisplayName(options, sort.field) : '…'} ${sort.dir.toUpperCase()}`;
 
 const SortKeys: FC = () => {
   const t = useI18n();
@@ -40,7 +41,7 @@ const SortKeys: FC = () => {
             key={sort.id}
             inline
             color={QueryBuilderColor.Keyword}
-            summary={summaryOf(sort)}
+            summary={summaryOf(sort, fieldOptions)}
             onRemove={() => {
               state.sort = state.sort.filter((s) => s !== sort);
               refresh();

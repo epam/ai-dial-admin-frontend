@@ -3,7 +3,7 @@
 import { FC, useMemo, useState } from 'react';
 
 import classNames from 'classnames';
-import { DialDropdown } from '@epam/ai-dial-ui-kit';
+import { DialDropdown, DialTooltip } from '@epam/ai-dial-ui-kit';
 import { IconChevronDown, IconChevronRight, IconMathFunction } from '@tabler/icons-react';
 
 import CompactInput from '@/src/components/Analytics/QueryBuilder/Common/CompactInput';
@@ -120,6 +120,8 @@ const CategorizedFieldDropdown: FC<Props> = ({
     setOpen(false);
   };
 
+  const valueLabel = value ? options.find((o) => o.name === value)?.display_name || value : value;
+
   const onPickFunction = (name: string) => {
     onSelectFunction?.(name);
     setOpen(false);
@@ -132,7 +134,7 @@ const CategorizedFieldDropdown: FC<Props> = ({
       disabled={disabled}
       placement="bottom-start"
       renderOverlay={() => (
-        <div className="flex max-h-[70vh] w-full min-w-[280px] flex-col rounded border border-secondary bg-layer-0 shadow-lg">
+        <div className="flex max-h-[70vh] w-[400px] max-w-[90vw] flex-col rounded border border-secondary bg-layer-0 shadow-lg">
           <div className="border-b border-primary p-1.5">
             <CompactInput
               ariaLabel={t(QueryBuilderI18nKey.SearchFields)}
@@ -193,21 +195,37 @@ const CategorizedFieldDropdown: FC<Props> = ({
                 )}
                 {isExpanded(group.tag) &&
                   group.options.map((option) => (
-                    <button
+                    // Row-level tooltip: hovering anywhere on the option reveals the full
+                    // description (the visible line is truncated to keep the overlay compact).
+                    <DialTooltip
                       key={option.name}
-                      type="button"
-                      role="option"
-                      aria-selected={option.name === value}
-                      className={classNames(
-                        'flex w-full items-center justify-between gap-2 rounded px-2 py-1.5 text-left hover:bg-layer-4',
-                        showHeaders && 'pl-6',
-                        option.name === value && 'bg-accent-primary-alpha',
-                      )}
-                      onClick={() => onPick(option.name)}
+                      hideTooltip={!option.description}
+                      tooltip={option.description}
+                      triggerClassName="w-full"
+                      contentClassName="max-w-[320px]"
                     >
-                      <span className="truncate font-mono dial-tiny-text text-primary">{option.name}</span>
-                      {option.type && <span className="shrink-0 dial-tiny-text text-secondary">{option.type}</span>}
-                    </button>
+                      <button
+                        type="button"
+                        role="option"
+                        aria-selected={option.name === value}
+                        className={classNames(
+                          'flex w-full flex-col gap-0.5 rounded px-2 py-1.5 text-left hover:bg-layer-4',
+                          showHeaders && 'pl-6',
+                          option.name === value && 'bg-accent-primary-alpha',
+                        )}
+                        onClick={() => onPick(option.name)}
+                      >
+                        <span className="flex w-full items-center justify-between gap-2">
+                          <span className="truncate font-mono dial-tiny-text text-primary">
+                            {option.display_name || option.name}
+                          </span>
+                          {option.type && <span className="shrink-0 dial-tiny-text text-secondary">{option.type}</span>}
+                        </span>
+                        {option.description && (
+                          <span className="w-full truncate dial-tiny-text text-secondary">{option.description}</span>
+                        )}
+                      </button>
+                    </DialTooltip>
                   ))}
               </div>
             ))}
@@ -228,7 +246,7 @@ const CategorizedFieldDropdown: FC<Props> = ({
           className="flex h-[26px] w-full items-center justify-between gap-2 rounded border border-primary bg-layer-2 px-2 text-left hover:bg-layer-4"
         >
           <span className={classNames('truncate font-mono dial-tiny-text', value ? 'text-primary' : 'text-secondary')}>
-            {value || emptyOptionLabel || placeholder}
+            {valueLabel || emptyOptionLabel || placeholder}
           </span>
           <IconChevronDown size={12} className="shrink-0 text-secondary" />
         </button>

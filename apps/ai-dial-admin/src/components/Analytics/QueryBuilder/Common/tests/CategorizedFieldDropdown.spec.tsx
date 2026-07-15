@@ -199,4 +199,74 @@ describe('QueryBuilder :: CategorizedFieldDropdown', () => {
 
     expect(screen.getByRole('button', { name: 'Pick field' })).toHaveTextContent('deployment');
   });
+
+  test('labeled option renders label, description, and type; selection returns the raw name', async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    render(
+      <CategorizedFieldDropdown
+        id="test"
+        options={[
+          ...OPTIONS,
+          {
+            name: 'total_money',
+            type: 'decimal',
+            tag: 'cost',
+            display_name: 'Total money spend',
+            description: 'Money spent on the request',
+          },
+        ]}
+        onSelect={onSelect}
+        addLabel="+ Add"
+        ariaLabel="Add field"
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Add field' }));
+    await user.click(screen.getByRole('button', { name: /cost/ }));
+
+    const option = screen.getByRole('option', { name: /Total money spend/ });
+    expect(option).toHaveTextContent('Money spent on the request');
+    expect(option).toHaveTextContent('decimal');
+    expect(option).not.toHaveTextContent('total_money');
+    // Unlabeled options in the same group keep their single-line name rendering.
+    expect(screen.getByRole('option', { name: /total_price/ })).not.toHaveTextContent('Money spent');
+
+    await user.click(option);
+    expect(onSelect).toHaveBeenCalledWith('total_money');
+  });
+
+  test('search matches by label', async () => {
+    const user = userEvent.setup();
+    render(
+      <CategorizedFieldDropdown
+        id="test"
+        options={[...OPTIONS, { name: 'total_money', type: 'decimal', tag: 'cost', display_name: 'Total money spend' }]}
+        onSelect={vi.fn()}
+        addLabel="+ Add"
+        ariaLabel="Add field"
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Add field' }));
+    await user.type(screen.getByRole('textbox'), 'money spend');
+
+    expect(screen.getByRole('option', { name: /Total money spend/ })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: /deployment/ })).not.toBeInTheDocument();
+  });
+
+  test('picker-mode trigger shows the selected field label', () => {
+    render(
+      <CategorizedFieldDropdown
+        id="test"
+        options={[{ name: 'total_money', type: 'decimal', tag: 'cost', display_name: 'Total money spend' }]}
+        onSelect={vi.fn()}
+        value="total_money"
+        placeholder="pick"
+        ariaLabel="Pick field"
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: 'Pick field' })).toHaveTextContent('Total money spend');
+  });
 });

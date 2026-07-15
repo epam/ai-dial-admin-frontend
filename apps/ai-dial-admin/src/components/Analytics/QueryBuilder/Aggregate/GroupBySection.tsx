@@ -7,7 +7,11 @@ import CompactSelect from '@/src/components/Analytics/QueryBuilder/Common/Compac
 import FieldChip from '@/src/components/Analytics/QueryBuilder/Common/FieldChip';
 import SectionBlock from '@/src/components/Analytics/QueryBuilder/Common/SectionBlock';
 import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';
-import { bucketFieldOptions, fieldsToOptions } from '@/src/components/Analytics/QueryBuilder/utils/fields';
+import {
+  bucketFieldOptions,
+  fieldDisplayName,
+  fieldsToOptions,
+} from '@/src/components/Analytics/QueryBuilder/utils/fields';
 import { getAggregateWarnings } from '@/src/components/Analytics/QueryBuilder/utils/serialize';
 import { createGroupByColumn, createGroupByFn } from '@/src/components/Analytics/QueryBuilder/utils/state';
 import {
@@ -18,12 +22,14 @@ import {
 } from '@/src/constants/analytics/query-builder';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { QueryBucketUnit, QueryScalarFn } from '@/src/models/analytics/query';
 import { FunctionOption, GroupByRow, QueryBuilderColor } from '@/src/models/analytics/query-builder';
 import { QUERY_BUILDER_PALETTE } from '@/src/constants/analytics/query-builder-palette';
 
-const summaryOf = (row: GroupByRow): string => {
-  const args = row.fn === QueryScalarFn.DateBin ? `${row.amount} ${row.unit}, ${row.field || '…'}` : row.field || '…';
+const summaryOf = (row: GroupByRow, fields: AnalyticsEntityField[]): string => {
+  const field = row.field ? fieldDisplayName(fields, row.field) : '…';
+  const args = row.fn === QueryScalarFn.DateBin ? `${row.amount} ${row.unit}, ${field}` : field;
   return `${row.fn}(${args})${row.alias ? ` AS ${row.alias}` : ''}`;
 };
 
@@ -83,7 +89,11 @@ const GroupBySection: FC = () => {
         {!!columnRows.length && (
           <div className="flex flex-wrap gap-1.5">
             {columnRows.map((row) => (
-              <FieldChip key={row.id} label={row.field} onRemove={() => removeRow(row)} />
+              <FieldChip
+                key={row.id}
+                label={fieldDisplayName(state.fields, row.field)}
+                onRemove={() => removeRow(row)}
+              />
             ))}
           </div>
         )}
@@ -92,7 +102,7 @@ const GroupBySection: FC = () => {
             key={row.id}
             inline
             color={QueryBuilderColor.Dimension}
-            summary={summaryOf(row)}
+            summary={summaryOf(row, state.fields)}
             onRemove={() => removeRow(row)}
           >
             {row.fn === QueryScalarFn.DateBin && (

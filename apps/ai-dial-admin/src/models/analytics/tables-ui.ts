@@ -10,6 +10,13 @@ export interface ColumnRow {
   nullable: boolean;
 }
 
+export interface ColumnEditValues {
+  name: string;
+  display_name: string;
+  tag: string;
+  description: string;
+}
+
 export interface TableForm {
   name: string;
   description: string;
