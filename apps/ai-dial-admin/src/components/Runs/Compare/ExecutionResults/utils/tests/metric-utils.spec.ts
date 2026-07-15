@@ -307,6 +307,37 @@ describe('Runs Compare :: hasCompareRowDiff', () => {
       ),
     ).toBe(true);
   });
+
+  test('ignores duration diff when execution duration columns are hidden', () => {
+    const hiddenColIds = new Set(['duration', 'cmp_duration', 'http', 'cmp_http', 'runIndex', 'cmp_runIndex']);
+    const row = makeRow({
+      execDurationMs: 100,
+      _compared: { ...makeRow(), execDurationMs: 250 },
+    });
+
+    expect(hasCompareRowDiff(row)).toBe(true);
+    expect(hasCompareRowDiff(row, { hiddenColIds })).toBe(false);
+  });
+
+  test('ignores metric diff when metric columns are hidden', () => {
+    const hiddenColIds = new Set(['Accuracy_precision', 'cmp_Accuracy_precision', 'delta_Accuracy_precision']);
+    const row = makeRow({
+      metricValues: { Accuracy: { precision: 0.5 } },
+      _compared: { ...makeRow(), metricValues: { Accuracy: { precision: 0.8 } } },
+    });
+
+    expect(hasCompareRowDiff(row, { hiddenColIds })).toBe(false);
+  });
+
+  test('still counts visible metric diff when other groups are hidden', () => {
+    const hiddenColIds = new Set(['duration', 'cmp_duration']);
+    const row = makeRow({
+      metricValues: { Accuracy: { precision: 0.5 } },
+      _compared: { ...makeRow(), metricValues: { Accuracy: { precision: 0.8 } } },
+    });
+
+    expect(hasCompareRowDiff(row, { hiddenColIds })).toBe(true);
+  });
 });
 
 describe('Runs Compare :: isCompareRowAllMetricsEmpty', () => {

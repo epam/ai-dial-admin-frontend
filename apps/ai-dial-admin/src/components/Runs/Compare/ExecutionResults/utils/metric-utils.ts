@@ -1,7 +1,7 @@
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import { AnalyticsResult, ExtractionResultStatus } from '@/src/models/evaluation/run';
 
-import { CompareDiffCounts } from '../models';
+import { CompareDiffCounts, CompareRowDiffVisibility } from '../models';
 
 export enum MetricDeltaKind {
   Empty = 'empty',
@@ -184,26 +184,59 @@ const hasExecutionStatusDiff = (row: CompareAnalyticsRow): boolean => {
   return getExecutionStatusDelta(row.executionStatus, compared.executionStatus) !== MetricDeltaKind.Empty;
 };
 
-const hasExecutionFieldDiff = (row: CompareAnalyticsRow): boolean => {
+const isAnyColVisible = (colIds: string[], hiddenColIds: ReadonlySet<string>): boolean =>
+  colIds.some((colId) => !hiddenColIds.has(colId));
+
+const hasExecutionStatusDiffForVisibility = (row: CompareAnalyticsRow, hiddenColIds?: ReadonlySet<string>): boolean => {
+  if (hiddenColIds && !isAnyColVisible(['status', 'cmp_status'], hiddenColIds)) {
+    return false;
+  }
+
+  return hasExecutionStatusDiff(row);
+};
+
+const hasHttpDiffForVisibility = (row: CompareAnalyticsRow, hiddenColIds?: ReadonlySet<string>): boolean => {
+  if (hiddenColIds && !isAnyColVisible(['http', 'cmp_http'], hiddenColIds)) {
+    return false;
+  }
+
   const compared = row._compared;
   if (!compared) return false;
 
-  const httpDelta = getCompareFieldDelta(row.responseStatusCode, compared.responseStatusCode, { isNumeric: true });
-  if (httpDelta !== MetricDeltaKind.Empty) return true;
-
-  const durationDelta = getCompareFieldDelta(getCompareRowDurationMs(row), getCompareRowDurationMs(compared), {
-    isNumeric: true,
-  });
-  return durationDelta !== MetricDeltaKind.Empty;
+  return (
+    getCompareFieldDelta(row.responseStatusCode, compared.responseStatusCode, { isNumeric: true }) !==
+    MetricDeltaKind.Empty
+  );
 };
 
-const hasExtractedDiff = (row: CompareAnalyticsRow): boolean => {
+const hasDurationDiffForVisibility = (row: CompareAnalyticsRow, hiddenColIds?: ReadonlySet<string>): boolean => {
+  if (hiddenColIds && !isAnyColVisible(['duration', 'cmp_duration'], hiddenColIds)) {
+    return false;
+  }
+
+  const compared = row._compared;
+  if (!compared) return false;
+
+  return (
+    getCompareFieldDelta(getCompareRowDurationMs(row), getCompareRowDurationMs(compared), { isNumeric: true }) !==
+    MetricDeltaKind.Empty
+  );
+};
+
+const hasExecutionFieldDiffForVisibility = (row: CompareAnalyticsRow, hiddenColIds?: ReadonlySet<string>): boolean =>
+  hasHttpDiffForVisibility(row, hiddenColIds) || hasDurationDiffForVisibility(row, hiddenColIds);
+
+const hasExtractedDiffForVisibility = (row: CompareAnalyticsRow, hiddenColIds?: ReadonlySet<string>): boolean => {
   const compared = row._compared;
   if (!compared) return false;
 
   const keys = new Set([...Object.keys(row.extractedColumns ?? {}), ...Object.keys(compared.extractedColumns ?? {})]);
 
   for (const key of keys) {
+    if (hiddenColIds && !isAnyColVisible([`extracted_${key}`, `cmp_extracted_${key}`], hiddenColIds)) {
+      continue;
+    }
+
     const delta = getCompareFieldDelta(row.extractedColumns?.[key] ?? null, compared.extractedColumns?.[key] ?? null);
     if (delta !== MetricDeltaKind.Empty) return true;
   }
@@ -211,7 +244,7 @@ const hasExtractedDiff = (row: CompareAnalyticsRow): boolean => {
   return false;
 };
 
-const hasMetricDiffForRow = (row: CompareAnalyticsRow): boolean => {
+const hasMetricDiffForRowForVisibility = (row: CompareAnalyticsRow, hiddenColIds?: ReadonlySet<string>): boolean => {
   const compared = row._compared;
   const groupKeys = new Set([...Object.keys(row.metricValues ?? {}), ...Object.keys(compared?.metricValues ?? {})]);
 
@@ -222,6 +255,13 @@ const hasMetricDiffForRow = (row: CompareAnalyticsRow): boolean => {
     ]);
 
     for (const key of metricKeys) {
+      if (
+        hiddenColIds &&
+        !isAnyColVisible([`${groupKey}_${key}`, `cmp_${groupKey}_${key}`, `delta_${groupKey}_${key}`], hiddenColIds)
+      ) {
+        continue;
+      }
+
       const primary = row.metricValues?.[groupKey]?.[key];
       const secondary = compared?.metricValues?.[groupKey]?.[key];
       if (getMetricDelta(primary, secondary).kind !== MetricDeltaKind.Empty) {
@@ -233,8 +273,16 @@ const hasMetricDiffForRow = (row: CompareAnalyticsRow): boolean => {
   return false;
 };
 
-export const hasCompareRowDiff = (row: CompareAnalyticsRow): boolean =>
-  hasExecutionStatusDiff(row) || hasExecutionFieldDiff(row) || hasExtractedDiff(row) || hasMetricDiffForRow(row);
+export const hasCompareRowDiff = (row: CompareAnalyticsRow, visibility?: CompareRowDiffVisibility): boolean => {
+  const hiddenColIds = visibility?.hiddenColIds;
+
+  return (
+    hasExecutionStatusDiffForVisibility(row, hiddenColIds) ||
+    hasExecutionFieldDiffForVisibility(row, hiddenColIds) ||
+    hasExtractedDiffForVisibility(row, hiddenColIds) ||
+    hasMetricDiffForRowForVisibility(row, hiddenColIds)
+  );
+};
 
 export const mergeCompareMetricValuesSchema = (results: AnalyticsResult[]): Record<string, Record<string, unknown>> => {
   const merged: Record<string, Record<string, unknown>> = {};
