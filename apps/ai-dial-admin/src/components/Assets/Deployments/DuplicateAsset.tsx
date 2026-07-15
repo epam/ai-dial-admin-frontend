@@ -24,7 +24,7 @@ import {
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
-import { AssetToolset, AssetWithVersion } from '@/src/models/dial/deployment-asset';
+import { AssetToolset, AssetWithVersion, DeploymentAsset } from '@/src/models/dial/deployment-asset';
 import { ToolsetAuthType } from '@/src/models/dial/toolset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { DuplicationTypes } from '@/src/types/prompt';
@@ -69,7 +69,7 @@ const DuplicateAsset: FC<Props> = ({
   const [clonedAsset, setClonedAsset] = useState<AssetWithVersion>({
     ...entity,
     name: duplicationType === DuplicationTypes.VERSION ? entity.name : getClonedEntityName(entity.name),
-    displayName: isDeploymentAsset(view) ? entity.displayName : void 0,
+    display_name: isDeploymentAsset(view) ? (entity as DeploymentAsset).display_name : void 0,
     version: getInitialVersion(versionsMap, entity?.name),
   });
   const [isInnerValid, setIsInnerValid] = useState(false);
@@ -115,8 +115,8 @@ const DuplicateAsset: FC<Props> = ({
   }, []);
 
   const onChangeName = useCallback(
-    (displayName?: string) => {
-      setClonedAsset({ ...clonedAsset, displayName });
+    (display_name?: string) => {
+      setClonedAsset({ ...clonedAsset, display_name } as AssetWithVersion);
     },
     [setClonedAsset, clonedAsset],
   );
@@ -195,7 +195,11 @@ const DuplicateAsset: FC<Props> = ({
           checkEmptySymbols={false}
         />
         {isDeploymentAsset(view) && (
-          <DisplayNameControl displayName={clonedAsset.displayName} onChange={onChangeName} required />
+          <DisplayNameControl
+            displayName={(clonedAsset as DeploymentAsset).display_name}
+            onChange={onChangeName}
+            required
+          />
         )}
         <VersionControl version={clonedAsset.version} onChange={onChangeVersion} />
 
