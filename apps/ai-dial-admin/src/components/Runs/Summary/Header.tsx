@@ -29,23 +29,24 @@ const Header: FC<Props> = ({ run, testSuite }) => {
   const t = useI18n();
   const startedAt = useLocalDateTimeString(run?.startedAt);
   const completedAt = useLocalDateTimeString(run?.completedAt);
+  const suiteContext = run.suiteSnapshot ?? testSuite;
   const utilityDeployments = useUtilityDeployments();
-  const { deploymentType, isLoading: isDeploymentTypeLoading } = useDeploymentType(testSuite?.deploymentRef);
+  const { deploymentType, isLoading: isDeploymentTypeLoading } = useDeploymentType(suiteContext?.deploymentRef);
 
   const deployment = useMemo<RunDeployment | null>(() => {
-    if (!testSuite) {
+    if (!suiteContext) {
       return null;
     }
-    if (testSuite.suiteType === SuiteType.McpTool && testSuite.mcpDeploymentRef?.name) {
+    if (suiteContext.suiteType === SuiteType.McpTool && suiteContext.mcpDeploymentRef?.name) {
       return {
-        name: testSuite.mcpDeploymentRef.name,
+        name: suiteContext.mcpDeploymentRef.name,
         route: ApplicationRoute.McpContainers,
-        entity: { name: testSuite.mcpDeploymentRef.id ?? testSuite.mcpDeploymentRef.name },
+        entity: { name: suiteContext.mcpDeploymentRef.id ?? suiteContext.mcpDeploymentRef.name },
       };
     }
-    if (testSuite.deploymentRef?.name && testSuite.deploymentRef?.id && deploymentType) {
+    if (suiteContext.deploymentRef?.name && suiteContext.deploymentRef?.id && deploymentType) {
       const navigationTarget = resolveDeploymentNavigationTarget(
-        testSuite.deploymentRef,
+        suiteContext.deploymentRef,
         deploymentType,
         utilityDeployments,
       );
@@ -53,17 +54,17 @@ const Header: FC<Props> = ({ run, testSuite }) => {
         return null;
       }
       return {
-        name: testSuite.deploymentRef.name,
+        name: suiteContext.deploymentRef.name,
         route: navigationTarget.route,
         entity: navigationTarget.entity,
       };
     }
     return null;
-  }, [deploymentType, testSuite, utilityDeployments]);
+  }, [suiteContext, deploymentType, utilityDeployments]);
 
   const applicationName =
-    testSuite?.deploymentRef?.name ||
-    (testSuite?.suiteType === SuiteType.McpTool ? testSuite?.mcpDeploymentRef?.name : '');
+    suiteContext?.deploymentRef?.name ||
+    (suiteContext?.suiteType === SuiteType.McpTool ? suiteContext?.mcpDeploymentRef?.name : '');
 
   return (
     <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-primary">
