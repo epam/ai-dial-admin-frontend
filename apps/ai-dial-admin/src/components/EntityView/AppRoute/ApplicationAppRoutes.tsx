@@ -53,6 +53,7 @@ const ApplicationAppRoutes: FC<Props> = ({ view, selectedEntity, applicationRunn
 
   return (
     <EntityRoutes
+      isAssetView={isAsset}
       parentRoleLimits={(selectedEntity as DialApplication).roleLimits}
       routes={routes}
       isPublicApp={selectedEntity.isPublic}

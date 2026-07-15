@@ -23,6 +23,7 @@ interface Props {
   disabled?: boolean;
   isPublicApp?: boolean;
   isAppRunnerView?: boolean;
+  isAssetView?: boolean;
   onChangeRoutes: (routes: DialAppRoute[]) => void;
 }
 
@@ -32,6 +33,7 @@ const EntityRoutes: FC<Props> = ({
   isPublicApp,
   disabled,
   isAppRunnerView,
+  isAssetView,
   routes,
   onChangeRoutes,
 }) => {
@@ -92,7 +94,7 @@ const EntityRoutes: FC<Props> = ({
         ...(routes || []),
         {
           name,
-          displayName: name,
+          displayName: isAssetView ? undefined : name,
           upstreams: [],
           paths: [''],
           attachmentPaths: { requestBody: [''], responseBody: [''] },
@@ -102,7 +104,7 @@ const EntityRoutes: FC<Props> = ({
       ]);
       setActiveRouteIndex(routes?.length || 0);
     },
-    [handleModalClose, onChangeRoutes, routes],
+    [handleModalClose, isAssetView, onChangeRoutes, routes],
   );
 
   const onRemoveRoute = useCallback(
