@@ -10,11 +10,12 @@ import RunStatusComponent from '@/src/components/Common/RunStatus/RunStatus';
 import { EntityFieldsI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useLocalDateTimeString } from '@/src/hooks/use-local-date-time-string';
+import { useUtilityDeployments } from '@/src/hooks/use-utility-deployments';
 import { useI18n } from '@/src/locales/client';
-import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { Run } from '@/src/models/evaluation/run';
 import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
 import { ApplicationRoute } from '@/src/types/routes';
+import { resolveDeploymentNavigationTarget } from '@/src/utils/deployment-navigation';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { RunDeployment } from '../View/models';
 import { useDeploymentType } from './use-deployment-type';
@@ -28,6 +29,7 @@ const Header: FC<Props> = ({ run, testSuite }) => {
   const t = useI18n();
   const startedAt = useLocalDateTimeString(run?.startedAt);
   const completedAt = useLocalDateTimeString(run?.completedAt);
+  const utilityDeployments = useUtilityDeployments();
   const { deploymentType, isLoading: isDeploymentTypeLoading } = useDeploymentType(testSuite?.deploymentRef);
 
   const deployment = useMemo<RunDeployment | null>(() => {
@@ -37,21 +39,27 @@ const Header: FC<Props> = ({ run, testSuite }) => {
     if (testSuite.suiteType === SuiteType.McpTool && testSuite.mcpDeploymentRef?.name) {
       return {
         name: testSuite.mcpDeploymentRef.name,
-        linkId: testSuite.mcpDeploymentRef.id ?? testSuite.mcpDeploymentRef.name,
         route: ApplicationRoute.McpContainers,
+        entity: { name: testSuite.mcpDeploymentRef.id ?? testSuite.mcpDeploymentRef.name },
       };
     }
     if (testSuite.deploymentRef?.name && testSuite.deploymentRef?.id && deploymentType) {
-      const route =
-        deploymentType === DeploymentType.Application ? ApplicationRoute.Applications : ApplicationRoute.Models;
+      const navigationTarget = resolveDeploymentNavigationTarget(
+        testSuite.deploymentRef,
+        deploymentType,
+        utilityDeployments,
+      );
+      if (!navigationTarget) {
+        return null;
+      }
       return {
         name: testSuite.deploymentRef.name,
-        linkId: testSuite.deploymentRef.id,
-        route,
+        route: navigationTarget.route,
+        entity: navigationTarget.entity,
       };
     }
     return null;
-  }, [testSuite, deploymentType]);
+  }, [deploymentType, testSuite, utilityDeployments]);
 
   const applicationName =
     testSuite?.deploymentRef?.name ||
@@ -83,7 +91,7 @@ const Header: FC<Props> = ({ run, testSuite }) => {
             deployment ? (
               <DialIconButton
                 className="text-secondary size-[20px]"
-                onClick={() => onOpenInNewTab(deployment.route, { name: deployment.linkId })}
+                onClick={() => onOpenInNewTab(deployment.route, deployment.entity)}
                 icon={<IconExternalLink {...BASE_BUTTON_ICON_PROPS} />}
               />
             ) : isDeploymentTypeLoading ? (
