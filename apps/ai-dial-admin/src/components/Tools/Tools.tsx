@@ -26,6 +26,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { ApplicationMCPContainer, DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
+import { DialToolsetResource } from '@/src/models/dial/resource';
 import { Tool, Toolset } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
@@ -89,10 +90,23 @@ const Tools: FC<Props> = ({
     return view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications;
   }, [view]);
 
+  const isAssetToolset = useMemo(() => !!isAsset && !isApplicationTools, [isAsset, isApplicationTools]);
+
+  const getEntityAllowedTools = useCallback(
+    (entity?: Toolset | DialApplication): string[] | undefined => {
+      if (isApplicationTools) {
+        return (entity as DialApplication)?.mcp?.allowedTools;
+      }
+      if (isAssetToolset) {
+        return (entity as unknown as DialToolsetResource)?.allowed_tools;
+      }
+      return (entity as Toolset)?.allowedTools;
+    },
+    [isApplicationTools, isAssetToolset],
+  );
+
   const manualAddedTools = useMemo(() => {
-    const allowed = isApplicationTools
-      ? (selectedEntity as DialApplication)?.mcp?.allowedTools || []
-      : (selectedEntity as Toolset)?.allowedTools || [];
+    const allowed = getEntityAllowedTools(selectedEntity) || [];
     return allowed.reduce((acc, curr) => {
       if (!tools?.some((tool) => tool.name === curr) && curr !== '') {
         acc.push({
@@ -101,7 +115,7 @@ const Tools: FC<Props> = ({
       }
       return acc;
     }, [] as Tool[]);
-  }, [isApplicationTools, selectedEntity, tools]);
+  }, [getEntityAllowedTools, selectedEntity, tools]);
 
   const onSelectAll = useCallback(() => {
     if (isEqual(filtersConfiguration, selectedFilters)) {
@@ -141,6 +155,11 @@ const Tools: FC<Props> = ({
             allowedTools: [],
           } as ApplicationMCPContainer,
         });
+      } else if (isAssetToolset) {
+        onChangeEntity?.({
+          ...(selectedEntity as Toolset),
+          allowed_tools: [],
+        } as unknown as Toolset);
       } else {
         onChangeEntity?.({
           ...(selectedEntity as Toolset),
@@ -148,7 +167,7 @@ const Tools: FC<Props> = ({
         });
       }
     },
-    [isApplicationTools, onChangeEntity, selectedEntity],
+    [isApplicationTools, isAssetToolset, onChangeEntity, selectedEntity],
   );
 
   useEffect(() => {
@@ -204,9 +223,7 @@ const Tools: FC<Props> = ({
 
     debounceTimeout.current = setTimeout(() => {
       const allTools = [...(tools || []), ...manualAddedTools];
-      const allowedTools = isApplicationTools
-        ? (selectedEntity as DialApplication)?.mcp?.allowedTools?.filter((toolName) => toolName !== '') || []
-        : (selectedEntity as Toolset)?.allowedTools?.filter((toolName) => toolName !== '') || [];
+      const allowedTools = getEntityAllowedTools(selectedEntity)?.filter((toolName) => toolName !== '') || [];
       const allToolNames = allTools.map((tool) => tool.name);
       const filteredTools = getAllTools(useAllTools, allToolNames, !!appRunner, runnerTools, allowedTools);
 
@@ -246,12 +263,8 @@ const Tools: FC<Props> = ({
   }, [search, tools, manualAddedTools, selectedFilters, useAllTools]);
 
   useEffect(() => {
-    setUseAllTools(
-      isApplicationTools
-        ? (originalEntity as DialApplication)?.mcp?.allowedTools?.length === 0
-        : (originalEntity as Toolset)?.allowedTools?.length === 0,
-    );
-  }, [isApplicationTools, originalEntity]);
+    setUseAllTools(getEntityAllowedTools(originalEntity)?.length === 0);
+  }, [getEntityAllowedTools, originalEntity]);
 
   useEffect(() => {
     return () => sidebar.closeSidebar();
@@ -345,6 +358,7 @@ const Tools: FC<Props> = ({
           originalEntity={selectedEntity || {}}
           onConfirm={onChangeEntity}
           view={view}
+          isAsset={isAsset}
         />
       )}
     </div>

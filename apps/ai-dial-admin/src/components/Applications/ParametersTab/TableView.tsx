@@ -131,14 +131,13 @@ const TableView: FC<Props> = ({
   );
 
   const onChangeParam = useCallback(
-    (value: string, _data: ApplicationPropertyRow, _field: string, index?: number) => {
+    (value: string, data: ApplicationPropertyRow, _field: string, index?: number) => {
       const allKeys = [...schemePropsRef.current.map((s) => s.key), ...orderedKeysRef.current];
       const key = allKeys[index as number];
       if (!key) return;
 
       const props = { ...appPropsRef.current };
-      const currentType = inferTypeFromValue(props[key]);
-      props[key] = currentType === DefaultItemType.number && value !== '' ? +value : value;
+      props[key] = data.type === DefaultItemType.number && value !== '' ? +value : value;
       isSkipRefreshRef.current = true;
       onChangeProperties(props);
     },
