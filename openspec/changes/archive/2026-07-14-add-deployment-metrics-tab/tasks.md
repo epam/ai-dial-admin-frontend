@@ -39,3 +39,11 @@
 
 - [x] 6.1 Run the targeted specs from §1–§5 via `vitest run`; report output
 - [x] 6.2 `npm run lint` and `npm run format` clean on changed files
+
+## 7. Filter gauges by inference task type (issue #3895)
+
+- [x] 7.1 Add optional `tasks?: INFERENCE_TASK[]` applicability to `MetricCardConfig` in `Metrics/models.ts`; no `tasks` = universal card
+- [x] 7.2 Encode the gauge matrix in `Metrics/constants.ts`: classification-only → Request latency; generation-only → Error ratio, Tokens/sec, TTFT, Inter-token latency, Running requests, Queue depth, KV-cache; everything else universal
+- [x] 7.3 Pass `inferenceTask` from `TabsContent` (`selectedContainer.inferenceTask`) to `<Metrics />`; filter cards in the `sections` memo — undefined/`none` → no filtering; drop a section (title included) when all its cards filter out (Load on classification); keep the route + availability gates unchanged
+- [x] 7.4 Update the `Metrics` component spec: classification hides generation gauges + Load section, generation hides the request-latency card, untyped/`none` renders the full set, non-Model-Serving routes unaffected
+- [x] 7.5 Run the targeted specs via `vitest run`; `npm run lint` and `npm run format` clean on changed files

@@ -51,6 +51,23 @@ Add `CONTAINER_METRICS_URL(id) = ${BASE_CONTAINERS_URL}/${id}/metrics` and `Cont
 ### D6 — Tab registration
 Add `metricsTab(t, status)` to `getDeploymentsViewTabs()` for the McpContainers branch and the default branch (which already covers Model Servings, Interceptor, Adaptor, Application). Images keep their own branch with no metrics tab. The factory's existing `status !== RUNNING` disable covers the disabled-state requirement.
 
+### D7 — Inference-task gate as per-card data, composing with (not replacing) the route + availability gates
+Issue #3895: now that Model Servings carry `inferenceTask` (`text_generation` | `text_classification` | `none`), the card set follows the task type so classifiers don't render a wall of vLLM-only "No Data" cards. The gate is encoded as data — an optional `tasks?: INFERENCE_TASK[]` applicability field on `MetricCardConfig` — and applied once in the `sections` memo in `Metrics.tsx`, so the code stays isomorphic to the ticket's gauge matrix. A card with no `tasks` field is universal. A section whose cards all filter out (Load on classification) is dropped, title included.
+
+The matrix (from issue #3895, as updated):
+- **Universal:** Ready replicas, CPU, Memory, GPU memory (hardware-gated — "No Data" on CPU pools is a hardware reason, not a task-type reason), Requests/sec, E2E latency.
+- **Classification only:** Request latency (p50/p95/p99).
+- **Generation only:** Request error ratio, Tokens/sec, TTFT, Inter-token latency, Running requests, Queue depth, KV-cache usage.
+
+Request latency being *removed* from generation views is the one deliberate change to previously shipped behavior: for vLLM servings, E2E latency (distribution) plus TTFT/ITL already cover the latency story, and the request-latency card duplicated it.
+
+**Fallback:** `inferenceTask` undefined (legacy servings) or `none` → full card set. We can't infer capability, so we hide nothing — no behavior change for untyped deployments.
+
+The task gate is static (known from the container entity before any fetch), so unlike the availability gate it needs no loading-state handling. It composes with the existing gates: route gate (hard guard, non-Model-Serving views unchanged) → task gate (static card filter) → availability gate (dynamic section/No-Data handling).
+
+- *Alternative — per-task exported card arrays (`LATENCY_CLASSIFICATION_CARDS`, …):* rejected. Multiplies constants per section and scatters the matrix across many exports; the per-card field keeps it in one place.
+- *Alternative — rely on backend availability blocks to hide vLLM gauges for classifiers:* rejected. Availability is dynamic and engine-reported; the task matrix is a product decision the frontend owns, and the field is already used client-side for the same purpose elsewhere (`SourceField/utils.ts`, `utils/deployments/entity.ts`).
+
 ## Risks / Trade-offs
 
 - **Backend contract not yet merged (PR #357)** → Design against its current OpenAPI; isolate the shape in one `models/` file and one DTO→card config so a field rename is a localized edit. Verify field names against the merged contract before/at implementation.
