@@ -2262,6 +2262,9 @@ export default {
     ChartTypeSwitcher: 'Chart type',
     ChartXAxis: 'X',
     ChartYAxis: 'Y',
+    ChartCategory: 'Category',
+    ChartValue: 'Value',
+    ChartOtherSlice: 'Other',
     ChartUnavailable: 'Charts are available for aggregate results with at least one group-by column.',
   },
   AnalyticsTables: {
