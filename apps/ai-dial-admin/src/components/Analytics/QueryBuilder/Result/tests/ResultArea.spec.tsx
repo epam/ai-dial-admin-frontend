@@ -24,6 +24,7 @@ const AGG_META: ExecutedQueryMeta = {
   mode: QueryMode.Aggregate,
   dimensionColumns: ['deployment'],
   aggregateColumns: ['total'],
+  columnLabels: {},
 };
 
 const ROW_META: ExecutedQueryMeta = {
@@ -31,6 +32,7 @@ const ROW_META: ExecutedQueryMeta = {
   mode: QueryMode.Row,
   dimensionColumns: [],
   aggregateColumns: [],
+  columnLabels: {},
 };
 
 const renderArea = (overrides: Partial<Parameters<typeof ResultArea>[0]> = {}) => {

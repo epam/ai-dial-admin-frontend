@@ -2210,6 +2210,9 @@ export enum QueryBuilderI18nKey {
   ChartTypeSwitcher = 'QueryBuilder.ChartTypeSwitcher',
   ChartXAxis = 'QueryBuilder.ChartXAxis',
   ChartYAxis = 'QueryBuilder.ChartYAxis',
+  ChartCategory = 'QueryBuilder.ChartCategory',
+  ChartValue = 'QueryBuilder.ChartValue',
+  ChartOtherSlice = 'QueryBuilder.ChartOtherSlice',
   ChartUnavailable = 'QueryBuilder.ChartUnavailable',
 }
 
