@@ -99,6 +99,8 @@ export interface FieldOption {
   name: string;
   type?: string;
   tag?: string;
+  display_name?: string;
+  description?: string;
 }
 
 export interface FieldOptionGroup {

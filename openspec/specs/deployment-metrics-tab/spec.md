@@ -31,21 +31,39 @@ The system SHALL fetch a single live metrics snapshot from `GET /deployments/{id
 - **THEN** the system does not re-request the endpoint on a timer
 
 ### Requirement: Metric sections rendered from the snapshot
-The system SHALL render the snapshot as grouped, operator-oriented sections, each with a section title and a responsive row of metric cards. The **Scale & Health** and **Compute** sections SHALL render for every deployment type. The inference sections — **Latency**, **Throughput**, **Load** — and the inference-only cards (request error ratio in Scale & Health; GPU memory in Compute) SHALL render only on Model Servings (inference) views, gated additionally by the relevant block availability. On all non-Model-Serving deployment views (MCP, Interceptor, Adaptor, Application containers) the inference sections and inference-only cards SHALL be hidden entirely — including their titles and any "No Data" cards — regardless of what the snapshot returns. Each card SHALL display the metric label, value, and unit.
+The system SHALL render the snapshot as grouped, operator-oriented sections, each with a section title and a responsive row of metric cards. The **Scale & Health** and **Compute** sections SHALL render for every deployment type. The inference sections — **Latency**, **Throughput**, **Load** — and the inference-only cards (request error ratio in Scale & Health; GPU memory in Compute) SHALL render only on Model Servings (inference) views, gated additionally by the relevant block availability. Within Model Servings, the card set is further filtered by the deployment's inference task type (see *Gauge filtering by inference task type*). On all non-Model-Serving deployment views (MCP, Interceptor, Adaptor, Application containers) the inference sections and inference-only cards SHALL be hidden entirely — including their titles and any "No Data" cards — regardless of what the snapshot returns. Each card SHALL display the metric label, value, and unit.
 
 #### Scenario: Scale & Health and Compute for any deployment
 - **WHEN** the snapshot is rendered for any deployment type
 - **THEN** a Scale & Health section shows ready and total replicas, and a Compute section shows total CPU (millicores) and total memory (bytes) across pods
 
 #### Scenario: Inference sections and cards for a Model Serving
-- **WHEN** the snapshot is rendered for a Model Serving (inference) deployment whose serving/operational blocks are available
+- **WHEN** the snapshot is rendered for a Model Serving (inference) deployment with no inference task type set, whose serving/operational blocks are available
 - **THEN** Latency (TTFT, inter-token latency, e2e latency, request latency), Throughput (tokens/sec, requests/sec) and Load (running requests, queue depth, KV-cache usage) sections are shown, the Scale & Health section additionally shows request error ratio, and the Compute section additionally shows GPU memory
 
 #### Scenario: Inference sections and cards hidden on non-inference views
 - **WHEN** the snapshot is rendered for a non-Model-Serving deployment (MCP, Interceptor, Adaptor, Application container)
 - **THEN** only Scale & Health (replicas) and Compute (CPU, memory) are shown — no Latency/Throughput/Load section, no request-error-ratio card, and no GPU cards appear — even if the snapshot happens to carry those blocks
 
-### Requirement: Metric visualizations by type
+### Requirement: Gauge filtering by inference task type
+On Model Servings views, the system SHALL filter the metric cards by the deployment's `inferenceTask` so that gauges that cannot have data for the deployment's task type are not rendered:
+- **Universal cards** (shown for any task type): Ready replicas, CPU, Memory, GPU memory, Requests/sec, E2E latency. GPU memory stays universal because its emptiness is hardware-gated (GPU pool + DCGM exporter), not task-type-gated.
+- **Text classification only:** Request latency (p50/p95/p99).
+- **Text generation only:** Request error ratio, Tokens/sec, TTFT, Inter-token latency, Running requests, Queue depth, KV-cache usage.
+
+A deployment whose `inferenceTask` is unset or `none` SHALL render the full card set (no filtering). A section whose cards are all filtered out SHALL be hidden entirely, title included. Task-type filtering SHALL compose with the existing route and availability gates rather than replace them.
+
+#### Scenario: Text classification serving hides generation-only gauges
+- **WHEN** the Metrics tab is rendered for a Model Serving with `inferenceTask = text_classification`
+- **THEN** Scale & Health shows replicas only (no request error ratio), Throughput shows requests/sec only (no tokens/sec), Latency shows request latency and E2E latency only (no TTFT, no inter-token latency), the Load section is not rendered at all, and Compute still shows CPU, memory and GPU memory
+
+#### Scenario: Text generation serving hides the request latency card
+- **WHEN** the Metrics tab is rendered for a Model Serving with `inferenceTask = text_generation`
+- **THEN** the Latency section shows TTFT, inter-token latency and E2E latency but no request latency card, and all generation gauges (error ratio, tokens/sec, running requests, queue depth, KV-cache) are shown
+
+#### Scenario: Untyped serving keeps the full card set
+- **WHEN** the Metrics tab is rendered for a Model Serving whose `inferenceTask` is unset or `none`
+- **THEN** every card renders as before filtering was introduced (full set, including request latency and all generation gauges)
 The system SHALL render each metric with the card type that best fits its shape, so a metric is shown in one card rather than split across several:
 - **Replicas** → a ratio card showing `ready / total`.
 - **Latency** metrics (TTFT, inter-token, e2e, request latency) → a distribution card showing the p50 / p95 / p99 percentiles together.

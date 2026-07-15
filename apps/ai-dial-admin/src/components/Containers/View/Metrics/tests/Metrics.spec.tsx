@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import Metrics from '@/src/components/Containers/View/Metrics/Metrics';
 import { BasicI18nKey, ButtonsI18nKey, DeploymentMetricsI18nKey } from '@/src/constants/i18n';
 import { DeploymentMetrics } from '@/src/models/deployments/metrics';
+import { INFERENCE_TASK } from '@/src/types/deployments/containers';
 import { MetricsBlockKey } from '@/src/types/deployments/metrics';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -90,6 +91,80 @@ describe('Metrics', () => {
     expect(screen.queryByText(DeploymentMetricsI18nKey.SectionLoad)).not.toBeInTheDocument();
     expect(screen.queryByText(DeploymentMetricsI18nKey.GpuMemory)).not.toBeInTheDocument();
     expect(screen.queryByText(DeploymentMetricsI18nKey.RequestErrorRatio)).not.toBeInTheDocument();
+  });
+
+  test('text classification hides generation-only gauges and the Load section', async () => {
+    getContainerMetricsMock.mockResolvedValue(inferenceSnapshot());
+    render(
+      <Metrics
+        containerId="c1"
+        route={ApplicationRoute.ModelServings}
+        inferenceTask={INFERENCE_TASK.TEXT_CLASSIFICATION}
+      />,
+    );
+
+    // Universal + classification cards stay.
+    expect(await screen.findByText(DeploymentMetricsI18nKey.ReadyReplicas)).toBeInTheDocument();
+    expect(screen.getByText(DeploymentMetricsI18nKey.RequestsPerSecond)).toBeInTheDocument();
+    expect(screen.getByText(DeploymentMetricsI18nKey.RequestLatency)).toBeInTheDocument();
+    expect(screen.getByText(DeploymentMetricsI18nKey.E2eLatencyMean)).toBeInTheDocument();
+    expect(screen.getByText(DeploymentMetricsI18nKey.GpuMemory)).toBeInTheDocument();
+    // Generation-only gauges are gone, and Load (all generation-only) drops with its title.
+    expect(screen.queryByText(DeploymentMetricsI18nKey.RequestErrorRatio)).not.toBeInTheDocument();
+    expect(screen.queryByText(DeploymentMetricsI18nKey.TokensPerSecond)).not.toBeInTheDocument();
+    expect(screen.queryByText(DeploymentMetricsI18nKey.Ttft)).not.toBeInTheDocument();
+    expect(screen.queryByText(DeploymentMetricsI18nKey.InterTokenLatency)).not.toBeInTheDocument();
+    expect(screen.queryByText(DeploymentMetricsI18nKey.SectionLoad)).not.toBeInTheDocument();
+    expect(screen.queryByText(DeploymentMetricsI18nKey.RunningRequests)).not.toBeInTheDocument();
+    expect(screen.queryByText(DeploymentMetricsI18nKey.QueueDepth)).not.toBeInTheDocument();
+    expect(screen.queryByText(DeploymentMetricsI18nKey.KvCacheUsage)).not.toBeInTheDocument();
+  });
+
+  test('text generation hides the request latency card but keeps generation gauges', async () => {
+    getContainerMetricsMock.mockResolvedValue(inferenceSnapshot());
+    render(
+      <Metrics
+        containerId="c1"
+        route={ApplicationRoute.ModelServings}
+        inferenceTask={INFERENCE_TASK.TEXT_GENERATION}
+      />,
+    );
+
+    expect(await screen.findByText(DeploymentMetricsI18nKey.SectionLoad)).toBeInTheDocument();
+    expect(screen.getByText(DeploymentMetricsI18nKey.Ttft)).toBeInTheDocument();
+    expect(screen.getByText(DeploymentMetricsI18nKey.InterTokenLatency)).toBeInTheDocument();
+    expect(screen.getByText(DeploymentMetricsI18nKey.E2eLatencyMean)).toBeInTheDocument();
+    expect(screen.getByText(DeploymentMetricsI18nKey.RequestErrorRatio)).toBeInTheDocument();
+    expect(screen.getByText(DeploymentMetricsI18nKey.TokensPerSecond)).toBeInTheDocument();
+    expect(screen.getByText(DeploymentMetricsI18nKey.KvCacheUsage)).toBeInTheDocument();
+    expect(screen.queryByText(DeploymentMetricsI18nKey.RequestLatency)).not.toBeInTheDocument();
+  });
+
+  test('a NONE inference task keeps the full card set', async () => {
+    getContainerMetricsMock.mockResolvedValue(inferenceSnapshot());
+    render(<Metrics containerId="c1" route={ApplicationRoute.ModelServings} inferenceTask={INFERENCE_TASK.NONE} />);
+
+    expect(await screen.findByText(DeploymentMetricsI18nKey.SectionLoad)).toBeInTheDocument();
+    expect(screen.getByText(DeploymentMetricsI18nKey.RequestLatency)).toBeInTheDocument();
+    expect(screen.getByText(DeploymentMetricsI18nKey.Ttft)).toBeInTheDocument();
+    expect(screen.getByText(DeploymentMetricsI18nKey.RequestErrorRatio)).toBeInTheDocument();
+    expect(screen.getByText(DeploymentMetricsI18nKey.TokensPerSecond)).toBeInTheDocument();
+  });
+
+  test('task filtering does not affect non-Model-Serving routes', async () => {
+    getContainerMetricsMock.mockResolvedValue(nonInferenceSnapshot());
+    render(
+      <Metrics
+        containerId="c1"
+        route={ApplicationRoute.McpContainers}
+        inferenceTask={INFERENCE_TASK.TEXT_GENERATION}
+      />,
+    );
+
+    expect(await screen.findByText(DeploymentMetricsI18nKey.SectionScaleHealth)).toBeInTheDocument();
+    expect(screen.getByText(DeploymentMetricsI18nKey.SectionCompute)).toBeInTheDocument();
+    expect(screen.queryByText(DeploymentMetricsI18nKey.SectionLatency)).not.toBeInTheDocument();
+    expect(screen.queryByText(DeploymentMetricsI18nKey.SectionLoad)).not.toBeInTheDocument();
   });
 
   test('renders No Data for a null metric value', async () => {

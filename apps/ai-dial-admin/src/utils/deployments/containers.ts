@@ -273,9 +273,10 @@ export const isProbeSavable = (probeProperties?: ProbeProperties): boolean => {
 
 /**
  * Prepares a container's startup probe for save. When the required probe fields aren't in place
- * (e.g. the probe was enabled then disabled without a port), the invalid probe config is dropped and
- * only `{ enabled: false }` is sent, so the backend doesn't reject an incomplete probe. A container
- * with no probe, or with a valid probe, is returned unchanged.
+ * (e.g. the probe was enabled then disabled without a port), `probeProperties` is omitted entirely —
+ * the backend requires a non-null `probe` whenever `probeProperties` is present, so sending
+ * `{ enabled: false }` alone is rejected. A container with no probe, or with a valid probe, is
+ * returned unchanged.
  */
 export const sanitizeContainerProbe = (container: Container): Container => {
   if (!container.probeProperties) {
@@ -284,7 +285,7 @@ export const sanitizeContainerProbe = (container: Container): Container => {
   if (isProbeSavable(container.probeProperties)) {
     return container;
   }
-  return { ...container, probeProperties: { enabled: false } };
+  return { ...container, probeProperties: undefined };
 };
 
 export const getContainersByView = (

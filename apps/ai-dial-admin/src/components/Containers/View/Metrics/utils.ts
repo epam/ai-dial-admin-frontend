@@ -1,5 +1,16 @@
 import { MetricStatus } from '@/src/components/Common/MetricCard/models';
+import { MetricCardConfig } from '@/src/components/Containers/View/Metrics/models';
 import { DeploymentMetrics, PodResourceUsage } from '@/src/models/deployments/metrics';
+import { INFERENCE_TASK } from '@/src/types/deployments/containers';
+
+// Task-type gate (issue #3895): typed servings drop cards not applicable to their inference task;
+// an unset or NONE task keeps the full set — capability is unknown, so nothing is hidden.
+export const filterCardsByTask = (cards: MetricCardConfig[], task?: INFERENCE_TASK): MetricCardConfig[] => {
+  if (task !== INFERENCE_TASK.TEXT_GENERATION && task !== INFERENCE_TASK.TEXT_CLASSIFICATION) {
+    return cards;
+  }
+  return cards.filter((card) => !card.tasks || card.tasks.includes(task));
+};
 
 const pickPodValues = (metrics: DeploymentMetrics, pick: (pod: PodResourceUsage) => number | null): number[] => {
   const pods = metrics.resources?.pods ?? [];

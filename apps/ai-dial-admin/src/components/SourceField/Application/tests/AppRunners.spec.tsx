@@ -157,12 +157,19 @@ describe('AppRunners (entity-mode side-effects)', () => {
 });
 
 describe('AppRunners (legacy selectedValue/onChangeValue API)', () => {
-  test('calls onChangeValue when entity/onChange are not provided', () => {
+  test('calls onChangeValue when entity/onChange are not provided', async () => {
+    (getResolvedApplicationScheme as any).mockResolvedValue({
+      success: true,
+      response: { schema: runner },
+    });
+
     const onChangeValue = vi.fn();
     render(<AppRunners selectedValue={''} onChangeValue={onChangeValue} runners={[runner]} />);
 
     fireEvent.change(screen.getByTestId('select-sourceEntity'), { target: { value: 'urn:runner:1' } });
 
-    expect(onChangeValue).toHaveBeenCalledWith('urn:runner:1');
+    await waitFor(() => {
+      expect(onChangeValue).toHaveBeenCalledWith('urn:runner:1', { propA: 'default-a' });
+    });
   });
 });

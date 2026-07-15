@@ -104,8 +104,13 @@ const ToolsetAssetProperties: FC<Props> = ({ selectedToolset, onChange, isPublic
           name={selectedToolset.name || ''}
           authSettings={selectedToolset.auth_settings}
           redirectUrl={TOOLSET_AUTH_REDIRECT_URL}
-          onChange={(auth_settings) => onChange({ ...selectedToolset, auth_settings })}
-          onChangeForwardPerRequestKey={(val) => onChange({ ...selectedToolset, forward_per_request_key: val })}
+          onChange={(auth_settings, forward_per_request_key) =>
+            onChange({
+              ...selectedToolset,
+              auth_settings,
+              forward_per_request_key: forward_per_request_key ?? selectedToolset.forward_per_request_key,
+            })
+          }
         />
         <DialSwitch
           isOn={selectedToolset.forward_per_request_key}

@@ -18,8 +18,7 @@ interface Props {
   redirectUrl?: string;
   disabled?: boolean;
   hideWithLoginOption?: boolean;
-  onChange?: (authSettings: DialToolsetResourceAuthSettings) => void;
-  onChangeForwardPerRequestKey?: (val: boolean) => void;
+  onChange?: (authSettings: DialToolsetResourceAuthSettings, forwardPerRequestKey?: boolean) => void;
 }
 
 export interface AuthConfig {
@@ -35,7 +34,6 @@ const ResourceAuthentication: FC<Props> = ({
   redirectUrl,
   hideWithLoginOption,
   onChange,
-  onChangeForwardPerRequestKey,
   ...props
 }) => {
   const t = useI18n();
@@ -53,18 +51,19 @@ const ResourceAuthentication: FC<Props> = ({
   const onChangeAuthType = useCallback(
     (authenticationType: ToolsetAuthType) => {
       dispatch({ type: ValidationActionType.Reset });
-      if (authenticationType === ToolsetAuthType.API_KEY) {
-        onChangeForwardPerRequestKey?.(false);
-      }
-      onChange?.({
-        authentication_type: authenticationType,
-        redirect_uri:
-          authenticationType === ToolsetAuthType.OAUTH && redirectUrl
-            ? `${window.location.origin}${redirectUrl}`
-            : undefined,
-      });
+
+      onChange?.(
+        {
+          authentication_type: authenticationType,
+          redirect_uri:
+            authenticationType === ToolsetAuthType.OAUTH && redirectUrl
+              ? `${window.location.origin}${redirectUrl}`
+              : undefined,
+        },
+        authenticationType === ToolsetAuthType.API_KEY ? false : undefined,
+      );
     },
-    [dispatch, onChange, onChangeForwardPerRequestKey, redirectUrl],
+    [dispatch, onChange, redirectUrl],
   );
 
   return (
