@@ -13,11 +13,13 @@ import CreateTestSuite from '@/src/components/TestSuites/Modals/Create/CreateTes
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
+import { useUtilityDeployments } from '@/src/hooks/use-utility-deployments';
 import { useI18n } from '@/src/locales/client';
 import { Deployment } from '@/src/models/evaluation/deployment';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
-import { ApplicationRoute } from '@/src/types/routes';
+import { resolveDeploymentNavigationTarget } from '@/src/utils/deployment-navigation';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
+
 interface Props {
   isModal?: boolean;
   testSuite: TestSuite;
@@ -31,12 +33,24 @@ const TestSuiteProperties: FC<Props> = ({ testSuite, onChange, isModal = false, 
   const [selectedAppType, setSelectedAppType] = useState<string | undefined>(void 0);
   const [isAppModalOpen, setIsAppModalOpen] = useState(false);
   const isMobile = useIsMobileScreen();
+  const utilityDeployments = useUtilityDeployments();
 
   const openInNewTab = useCallback(() => {
-    onOpenInNewTab(selectedAppType === 'dial-application' ? ApplicationRoute.Applications : ApplicationRoute.Models, {
-      name: testSuite.deploymentRef?.id,
-    });
-  }, [selectedAppType, testSuite.deploymentRef?.id]);
+    if (!testSuite.deploymentRef) {
+      return;
+    }
+
+    const navigationTarget = resolveDeploymentNavigationTarget(
+      testSuite.deploymentRef,
+      selectedAppType,
+      utilityDeployments,
+    );
+    if (!navigationTarget) {
+      return;
+    }
+
+    onOpenInNewTab(navigationTarget.route, navigationTarget.entity);
+  }, [selectedAppType, testSuite.deploymentRef, utilityDeployments]);
 
   const onUpdate = useCallback(
     (suite: TestSuite) => {

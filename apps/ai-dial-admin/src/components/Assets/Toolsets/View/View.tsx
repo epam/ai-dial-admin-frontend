@@ -90,7 +90,7 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
       let updatedEntity = getEntityForUpdate(selectedToolset, originalToolset);
       let updateFunction = updateToolset;
       if (newVersion) {
-        updatedEntity = addNewVersion(updatedEntity, newVersion);
+        updatedEntity = { ...addNewVersion(updatedEntity, newVersion), auth_settings: {} } as unknown as AssetToolset;
         updateFunction = createToolset as (
           asset: AssetToolset,
         ) => Promise<ServerActionResponse<Record<string, unknown>>>;

@@ -253,6 +253,14 @@ export const preservePanelHideState = (newTree: ColDef[], oldTree: ColDef[]): Co
   return applyHideByColId(newTree, collectHideByColId(oldTree));
 };
 
+export const preserveFlatColDefHideState = (newDefs: ColDef[], oldDefs: ColDef[]): ColDef[] => {
+  if (oldDefs.length === 0) {
+    return newDefs;
+  }
+
+  return applyHideByColId(newDefs, collectHideByColId(oldDefs));
+};
+
 export const buildComparePanelColumnTree = (
   flatDefs: ColDef[],
   runNames: ComparePanelRunNames,
