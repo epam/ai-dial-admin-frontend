@@ -21,6 +21,7 @@ import { ButtonsI18nKey, EntitiesI18nKey, ErrorI18nKey, ToolsetI18nKey } from '@
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialApplication } from '@/src/models/dial/application';
+import { DialToolsetResource } from '@/src/models/dial/resource';
 import { Tool, Toolset } from '@/src/models/dial/toolset';
 import { ErrorType } from '@/src/types/error-type';
 import { ParamsView } from '@/src/types/parameters';
@@ -38,9 +39,10 @@ interface Props {
   onClose: () => void;
   onConfirm?: (newValue: Toolset) => void;
   view?: ApplicationRoute;
+  isAsset?: boolean;
 }
 
-const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalEntity, onClose, onConfirm, view }) => {
+const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalEntity, onClose, onConfirm, view, isAsset }) => {
   const t = useI18n();
   const [currentView, setCurrentView] = useState(ParamsView.TABLE);
 
@@ -48,11 +50,17 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalEntity, onClo
     return view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications;
   }, [view]);
 
+  const isAssetToolset = useMemo(() => !!isAsset && !isApplicationTools, [isAsset, isApplicationTools]);
+
   const allowedTools = useMemo(() => {
-    return isApplicationTools
-      ? (originalEntity as DialApplication).mcp?.allowedTools || []
-      : originalEntity.allowedTools || [];
-  }, [originalEntity, isApplicationTools]);
+    if (isApplicationTools) {
+      return (originalEntity as DialApplication).mcp?.allowedTools || [];
+    }
+    if (isAssetToolset) {
+      return (originalEntity as unknown as DialToolsetResource).allowed_tools || [];
+    }
+    return originalEntity.allowedTools || [];
+  }, [originalEntity, isApplicationTools, isAssetToolset]);
 
   const [toolsConfig, setToolsConfig] = useState<ToolConfig[]>(() => {
     return tools.map((tool) => ({
@@ -196,14 +204,19 @@ const ManageToolsModal: FC<Props> = ({ isModalOpen, tools, originalEntity, onClo
             allowedTools: uniqueAllowedTools.length ? uniqueAllowedTools : [''],
           },
         }
-      : {
-          ...originalEntity,
-          allowedTools: uniqueAllowedTools.length ? uniqueAllowedTools : [''],
-        };
+      : isAssetToolset
+        ? ({
+            ...originalEntity,
+            allowed_tools: uniqueAllowedTools.length ? uniqueAllowedTools : [''],
+          } as unknown as Toolset)
+        : {
+            ...originalEntity,
+            allowedTools: uniqueAllowedTools.length ? uniqueAllowedTools : [''],
+          };
 
     onConfirm?.(newEntity);
     onClose();
-  }, [toolsConfig, customToolsConfig, isApplicationTools, originalEntity, onConfirm, onClose]);
+  }, [toolsConfig, customToolsConfig, isApplicationTools, isAssetToolset, originalEntity, onConfirm, onClose]);
 
   return (
     <DialPopup

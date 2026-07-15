@@ -1,3 +1,5 @@
+import { SuiteSnapshot } from '@/src/models/evaluation/test-suite';
+
 export interface ResultDto {
   id?: string;
   createdAt?: number;
@@ -55,6 +57,7 @@ export interface Run {
     testRunName?: string;
   };
   numberOfTestCases?: number;
+  suiteSnapshot?: SuiteSnapshot;
   grafanaExploreUrl?: string;
   startedAt?: number;
   completedAt?: number;

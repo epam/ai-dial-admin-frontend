@@ -15,6 +15,7 @@ import { compareGridOptions } from '@/src/components/Runs/Compare/ExecutionResul
 import {
   buildComparePanelColumnTree,
   flattenComparePanelColumnTree,
+  preserveFlatColDefHideState,
 } from '@/src/components/Runs/Compare/ExecutionResults/utils/panel-columns';
 import {
   countCompareDiffs,
@@ -195,7 +196,7 @@ const ExecutionResultsTab: FC<Props> = ({
 
     const flatDefs = computedColDefs as ColDef[];
     setPanelColDefs((prev) => buildComparePanelColumnTree(flatDefs, runNames, prev));
-    setGridColDefs(flatDefs);
+    setGridColDefs((prev) => preserveFlatColDefHideState(flatDefs, prev));
   }, [computedColDefs, runNames]);
 
   const displayedRowData = useMemo(() => {
