@@ -14,6 +14,7 @@ import DiffLegend from '@/src/components/Runs/Compare/ExecutionResults/DiffLegen
 import { compareGridOptions } from '@/src/components/Runs/Compare/ExecutionResults/constants';
 import {
   buildComparePanelColumnTree,
+  collectHiddenColIds,
   flattenComparePanelColumnTree,
   preserveFlatColDefHideState,
 } from '@/src/components/Runs/Compare/ExecutionResults/utils/panel-columns';
@@ -199,11 +200,15 @@ const ExecutionResultsTab: FC<Props> = ({
     setGridColDefs((prev) => preserveFlatColDefHideState(flatDefs, prev));
   }, [computedColDefs, runNames]);
 
+  const hiddenColIds = useMemo(() => collectHiddenColIds(gridColDefs), [gridColDefs]);
+
   const displayedRowData = useMemo(() => {
     if (mergedRowData === null) return null;
     if (!viewDifferencesOnly) return mergedRowData;
-    return mergedRowData.filter(hasCompareRowDiff);
-  }, [mergedRowData, viewDifferencesOnly]);
+
+    const visibility = { hiddenColIds };
+    return mergedRowData.filter((row) => hasCompareRowDiff(row, visibility));
+  }, [mergedRowData, viewDifferencesOnly, hiddenColIds]);
 
   const diffCounts = useMemo(() => countCompareDiffs(mergedRowData ?? []), [mergedRowData]);
 
