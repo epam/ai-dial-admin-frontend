@@ -49,6 +49,18 @@ export const QUERY_BUILDER_PALETTE: Record<QueryBuilderColor, QueryBuilderColorC
   },
 };
 
+// ECharts paints canvas and needs concrete colors (same rationale as Common/MetricCard CHART_COLOR):
+// these mirror the palette's token fallbacks (tailwind.config.js) plus the two Monaco hexes above.
+// Pie slices cycle through this list in FIELD_GROUP_COLOR_CYCLE order.
+export const CHART_SERIES_COLOR_CYCLE: string[] = [
+  '#7DA4FF', // Measure / accent-primary
+  '#37BABC', // Dimension / accent-secondary
+  '#A972FF', // Grouping / accent-tertiary
+  '#F4CE46', // Keyword
+  '#F76464', // Constraint / error
+  '#D97C27', // Numeric
+];
+
 // Field dropdowns cycle these for their category group headers — the full palette, so adjacent
 // categories rarely repeat a color.
 export const FIELD_GROUP_COLOR_CYCLE: QueryBuilderColor[] = [

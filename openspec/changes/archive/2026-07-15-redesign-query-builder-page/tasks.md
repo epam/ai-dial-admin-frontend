@@ -71,3 +71,15 @@
 - [x] 9.6 ChipRow collapsed chips tinted with the owning section's palette color (Sort yellow, Aggregate blue, Group by teal, Filter purple, Having red) via a `color` prop threaded through `FilterGroup`/`FilterCondition`.
 - [x] 9.7 Page section controls on one line (Include total joins the strategy/offset/limit row); results empty state shows the "Press Run…" text only; builder rail widened to `w-[480px]`.
 - [x] 9.8 Tests updated/added for all of the above; lint + QueryBuilder suite green.
+
+## 10. Follow-up: chart type set — pie and scatter replace area
+
+> Ships as its own follow-up PR. Sorting behavior is intentionally untouched (`sortRowsByX` heuristic stays as-is for bar/line; revisit only on user feedback). `ChartConfig { type, xField, yField }` keeps its shape — only per-type slot metadata is added.
+
+- [x] 10.1 Models/constants: change `ChartType` to `Bar | Line | Pie | Scatter` (drop `Area`); regenerate `CHART_TYPE_OPTIONS`; add the per-type slot descriptor constant (allowed-column source, slot label keys, tooltip trigger per type); new i18n keys — Category/Value slot labels, "Other" slice label.
+- [x] 10.2 Chart transform utils (pure, in or beside `Result/chart-options.ts`): `getNumericColumns(rows, columns)` — columns whose every value passes the existing `comparableKey` test; `bucketTopSlices(rows, category, value, n = 10)` — top-N by value plus a merged "Other" slice.
+- [x] 10.3 Option builders: `buildPieChartOptions` (item tooltip, top-10 + Other, slice color cycle from `constants/analytics/query-builder-palette.ts`) and `buildScatterChartOptions` (numeric X/Y, one point per row, item tooltip listing the row's dimension values, no row re-ordering); remove `buildAreaChartOptions` and the `Area` branch.
+- [x] 10.4 `Result/ResultChart.tsx`: drive the two `DialSelect`s from the active type's slot descriptor (options + label prefix); scatter option hidden from the type control when the result has fewer than two numeric columns; on type switch keep picks valid for the new slot, otherwise fall back to the slot's first valid default.
+- [x] 10.5 Tests: transform utils (numeric-column detection incl. date-like and mixed columns; top-N bucketing incl. ≤N categories → no Other), option builders (pie slices/colors, scatter points/tooltip data, Area gone), `ResultChart` (per-type labels and option lists, scatter hidden path, pick continuity on type switch); update existing chart specs for the removed Area type.
+- [x] 10.6 Lint + QueryBuilder suite green (`npm run lint`, `npm run test` from `apps/ai-dial-admin/`).
+- [x] 10.7 Display names in the chart: add `columnLabels` to `ExecutedQueryMeta` (group-by column → schema `display_name`, built in `buildExecutedMeta` from the executed entity's fields); selector options, axis titles, and the scatter tooltip label columns via the map (aggregate/scalar-fn aliases display as themselves); fixtures/tests updated.

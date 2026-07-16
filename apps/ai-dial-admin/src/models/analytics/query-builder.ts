@@ -1,3 +1,4 @@
+import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 import {
   QueryAggregateFn,
@@ -167,7 +168,8 @@ export enum QueryResultView {
 export enum ChartType {
   Bar = 'bar',
   Line = 'line',
-  Area = 'area',
+  Pie = 'pie',
+  Scatter = 'scatter',
 }
 
 export interface ChartConfig {
@@ -176,11 +178,47 @@ export interface ChartConfig {
   yField: string | null;
 }
 
+// Where a chart slot draws its column options from. Numeric means "any result column whose every
+// value is numeric or date-like" — detected from the rows, since aggregates can be non-numeric
+// (min/max over text) and group-bys can be numeric (length(), numeric codes).
+export enum ChartColumnSource {
+  Dimensions = 'dimensions',
+  Aggregates = 'aggregates',
+  Numeric = 'numeric',
+}
+
+// Per-chart-type contract for the two column selectors: where each slot's options come from and how
+// the selector is labeled (X axis / Y axis vs Category / Value). ChartConfig stays shape-stable
+// across types; only this descriptor varies.
+export interface ChartSlotDescriptor {
+  xSource: ChartColumnSource;
+  ySource: ChartColumnSource;
+  xLabelKey: QueryBuilderI18nKey;
+  yLabelKey: QueryBuilderI18nKey;
+}
+
+// Result-derived context buildChartOptions needs beyond the two slot fields: pie localizes its
+// "Other" bucket, scatter labels points by the row's dimension values, and axis titles/tooltips
+// show columns by their display label (see ExecutedQueryMeta.columnLabels).
+export interface ChartBuildContext {
+  dimensionColumns: string[];
+  otherLabel: string;
+  columnLabels: Record<string, string>;
+}
+
+export interface PieSlice {
+  name: string;
+  value: number;
+}
+
 // Snapshot of the query a result came from. Chart availability and the X/Y option lists must follow
 // what was actually executed — the live builder state can diverge from the shown result between runs.
+// columnLabels maps result columns to their schema display names (group-by columns of the executed
+// entity); columns without an entry (aggregate aliases, scalar-fn aliases) display as themselves.
 export interface ExecutedQueryMeta {
   kind: QueryRequestKind;
   mode: QueryMode;
   dimensionColumns: string[];
   aggregateColumns: string[];
+  columnLabels: Record<string, string>;
 }

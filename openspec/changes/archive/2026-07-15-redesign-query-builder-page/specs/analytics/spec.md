@@ -406,13 +406,51 @@ When a result is shown, the results area SHALL display a stat-tile row above the
 
 ### Requirement: Result table and chart views
 
-The results area SHALL offer a Table ⇄ Chart switcher. The Table view SHALL render the result grid. The Chart view SHALL render the result with ECharts and offer: a chart-type control (bar, line, area), an X-axis selector over the executed query's group-by/bucket columns, and a Y-axis selector over its aggregate columns (including the count column when present); sensible defaults SHALL be preselected (first dimension, first aggregate). The Chart view SHALL be available only when the shown result came from an aggregate-mode structured run with at least one group-by or bucket column; otherwise the Chart view SHALL show a hint that charts require an aggregate result with a group-by. When every X value is numeric or date-like, the chart SHALL order the points along the X axis by that natural order (chronological/numeric ascending) regardless of the query's row order; mixed or plain-text X values keep row order. Long X-axis labels SHALL be truncated to a fixed label width with the full value available in the tooltip. Chart colors SHALL come from the shared chart color tokens.
+The results area SHALL offer a Table ⇄ Chart switcher. The Table view SHALL render the result grid. The Chart view SHALL render the result with ECharts and offer a chart-type control with four types — bar, line, pie, and scatter — plus two column selectors whose allowed columns and labels follow the selected type. The Chart view SHALL be available only when the shown result came from an aggregate-mode structured run with at least one group-by or bucket column; otherwise the Chart view SHALL show a hint that charts require an aggregate result with a group-by. Chart colors SHALL come from the shared chart color tokens.
+
+For **bar** and **line**, the selectors SHALL be labeled X axis and Y axis: X over the executed query's group-by/bucket columns, Y over its aggregate columns (including the count column when present); defaults SHALL be the first dimension and the first aggregate. When every X value is numeric or date-like, the chart SHALL order the points along the X axis by that natural order (chronological/numeric ascending) regardless of the query's row order; mixed or plain-text X values keep row order. Long X-axis labels SHALL be truncated to a fixed label width with the full value available in the tooltip.
+
+For **pie**, the same two selectors SHALL be labeled Category (group-by/bucket columns) and Value (aggregate columns). The chart SHALL show at most the top 10 categories by value as slices; any remaining categories SHALL be merged into a single "Other" slice.
+
+For **scatter**, both selectors SHALL be labeled X axis and Y axis and SHALL offer the result's numeric columns — the group-by/bucket and aggregate columns whose every value is numeric or date-like. Each result row (one group) SHALL render as one point, with the row's dimension values available in the point tooltip; scatter SHALL NOT re-order rows. The scatter type SHALL be offered only when the result has at least two numeric columns; otherwise it is hidden from the chart-type control.
+
+Switching chart type SHALL keep a column pick that is valid for the new type's selector and SHALL fall back to that selector's first valid default otherwise.
+
+Everywhere the chart names a column — selector options, in-chart axis titles, and point tooltips — a group-by/bucket column SHALL display by its schema display name when the executed entity defines one (raw name otherwise); aggregate and scalar-function columns display by their user-authored alias. The labels SHALL follow the executed query's entity, not the currently selected source.
+
+#### Scenario: Chart columns display by their schema display name
+
+- **WHEN** an aggregate result grouped by a column whose schema defines a display name is charted
+- **THEN** the axis selector and the chart axis title show the display name instead of the raw column name
+- **AND** aggregate columns keep their user-authored aliases
 
 #### Scenario: Chart renders for an aggregate result
 
 - **WHEN** the shown result came from an aggregate run grouped by one field and the user selects the Chart view
 - **THEN** a chart renders with the group-by column on X and an aggregate column on Y
-- **AND** the user can switch between bar, line, and area types
+- **AND** the user can switch between bar, line, pie, and scatter types
+
+#### Scenario: Pie buckets the long tail into Other
+
+- **WHEN** an aggregate result has more than 10 category values and the user selects the pie type
+- **THEN** the pie shows the top 10 categories by value as slices
+- **AND** the remaining categories are merged into a single "Other" slice
+
+#### Scenario: Scatter plots one point per group
+
+- **WHEN** an aggregate result grouped by one field has two aggregate columns and the user selects the scatter type
+- **THEN** each group renders as one point with one aggregate on X and the other on Y
+- **AND** the point tooltip shows the group's dimension value
+
+#### Scenario: Scatter requires two numeric columns
+
+- **WHEN** the shown aggregate result has only one numeric column
+- **THEN** the scatter type is not offered in the chart-type control
+
+#### Scenario: Column picks survive a compatible type switch
+
+- **WHEN** the user configured Category and Value on a pie and switches to the bar type
+- **THEN** the same columns stay selected as X and Y
 
 #### Scenario: Comparable X values are ordered on the axis
 
