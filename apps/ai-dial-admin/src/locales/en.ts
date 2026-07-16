@@ -2292,6 +2292,7 @@ export default {
     ColumnName: 'Name',
     Tag: 'Tag',
     Nullable: 'Nullable',
+    Sensitive: 'Sensitive',
     AddColumns: 'Add columns',
     WriteRows: 'Write rows',
     InsertRows: 'Insert rows',

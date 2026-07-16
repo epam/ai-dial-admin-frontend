@@ -37,6 +37,18 @@ const FIELDS: AnalyticsEntityField[] = [
   field('orphan', AnalyticsFieldType.String),
 ];
 
+describe('fieldsToOptions', () => {
+  test('carries the sensitive flag through to the option', () => {
+    const fields: AnalyticsEntityField[] = [
+      { name: 'email', type: AnalyticsFieldType.String, source: 'email', sensitive: true },
+      { name: 'total', type: AnalyticsFieldType.Decimal, source: 'total' },
+    ];
+    const options = fieldsToOptions(fields);
+    expect(options[0]).toMatchObject({ name: 'email', sensitive: true });
+    expect(options[1].sensitive).toBeUndefined();
+  });
+});
+
 describe('family', () => {
   test('returns "column" when no family prefix', () => {
     expect(family('event_id')).toBe('column');

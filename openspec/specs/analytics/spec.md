@@ -235,7 +235,13 @@ The query builder SHALL render in a fixed-width rail at the right edge of the co
 
 Each Builder-view section (Group by, Aggregates, Select, Filters, Having, Sort, Page) SHALL render as a bordered section block with a labeled header and a header-level add action where applicable. Field pickers SHALL be searchable dropdowns whose options are grouped by the field's schema tag/category (untagged fields under a default group). Category groups SHALL be collapsible headers showing the group's option count, with at most one category expanded at a time (accordion); the group holding the current selection SHALL start expanded, and an active search term SHALL show all matches regardless of collapse state. Category header colors SHALL cycle the full builder palette. The dropdown's search input SHALL use the same compact boxed style as the builder's other controls.
 
-Field options SHALL display the field's **display name** — the schema `display_name` when set, otherwise the field `name` — as primary text, the field type right-aligned, and the schema `description` as a secondary line when present; fields without display name and description SHALL render as a single line. The dropdown overlay width SHALL stay bounded: long descriptions truncate to one line and the full text is reachable via a hover tooltip of reasonable width. The dropdown search SHALL match against both the field name and its display name. Added items SHALL render compactly — chips for plain fields, collapsible rows for parameterized items (group-by functions, aggregates, conditions, having rows, sort keys) that expand into their editor and collapse back to a summary chip tinted with the owning section's palette color — and chips and collapsed summaries SHALL refer to fields by their display name. Display names are presentation-only: structured-query serialization, the JSON view, and the SQL view SHALL always use the raw field `name`. Styling SHALL use the project's palette/theme tokens only.
+Field options SHALL display the field's **display name** — the schema `display_name` when set, otherwise the field `name` — as primary text, the field type right-aligned, and the schema `description` as a secondary line when present; fields without display name and description SHALL render as a single line. The dropdown overlay width SHALL stay bounded: long descriptions truncate to one line and the full text is reachable via a hover tooltip of reasonable width. The dropdown search SHALL match against both the field name and its display name. Added items SHALL render compactly — chips for plain fields, collapsible rows for parameterized items (group-by functions, aggregates, conditions, having rows, sort keys) that expand into their editor and collapse back to a summary chip tinted with the owning section's palette color — and chips and collapsed summaries SHALL refer to fields by their display name. Display names are presentation-only: structured-query serialization, the JSON view, and the SQL view SHALL always use the raw field `name`. Styling SHALL use the project's palette/theme tokens only. A field whose schema `sensitive` flag is true SHALL show a sensitive marker (a colored dot with a "Sensitive" tooltip) in its dropdown option, after the display name.
+
+#### Scenario: Sensitive field shows a marker in the dropdown
+
+- **WHEN** a schema field whose `sensitive` flag is true is shown in a field dropdown
+- **THEN** its option renders a sensitive marker with a "Sensitive" tooltip
+- **AND** a non-sensitive field's option renders no such marker
 
 #### Scenario: Field dropdown groups by category
 
@@ -658,7 +664,7 @@ The Tables page SHALL render the tables the page fetched as a grid with columns 
 
 ### Requirement: Create table (source or enrichment)
 
-Creating a table SHALL open a form popup that is mounted only while open, so closing discards its state without a manual reset; the form SHALL be held as a single object seeded when the popup opens (enrichment defaults derived from the first source table). A **source** table SHALL collect a name, optional description, a repeatable set of columns (source name, exposed name, type, nullable, optional tag), an optional ordering key chosen from the declared column source names, and an optional partition consisting of a column and a granularity. The partition column SHALL be restricted to temporal (date/timestamp) columns and the granularity SHALL be one of a fixed set (day/month/year). An **enrichment** table SHALL collect a name, optional description, a source table, and a grain key chosen from the selected source table's ordering key; changing the source table SHALL reset the grain key. Submit SHALL build the type-discriminated create payload and show a success or error notification.
+Creating a table SHALL open a form popup that is mounted only while open, so closing discards its state without a manual reset; the form SHALL be held as a single object seeded when the popup opens (enrichment defaults derived from the first source table). A **source** table SHALL collect a name, optional description, a repeatable set of columns (source name, exposed name, type, nullable, optional tag, optional sensitive flag), an optional ordering key chosen from the declared column source names, and an optional partition consisting of a column and a granularity. A column's sensitive flag SHALL default off and, when on, SHALL be carried into the create payload (columns left non-sensitive omit the flag). The partition column SHALL be restricted to temporal (date/timestamp) columns and the granularity SHALL be one of a fixed set (day/month/year). An **enrichment** table SHALL collect a name, optional description, a source table, and a grain key chosen from the selected source table's ordering key; changing the source table SHALL reset the grain key. Submit SHALL build the type-discriminated create payload and show a success or error notification.
 
 #### Scenario: Popup state is discarded on close
 
@@ -679,9 +685,9 @@ Creating a table SHALL open a form popup that is mounted only while open, so clo
 
 ### Requirement: Table detail column schema management
 
-The Table detail page SHALL show the table's columns in a grid (name, source name, type, tag, display name, description, nullable rendered as a true/false value); long display name/description values SHALL be truncated with the full value reachable via an ellipsis tooltip. Each column row SHALL offer a per-column action menu with **edit** and **delete (drop)** actions. The column name SHALL also be editable inline in the grid.
+The Table detail page SHALL show the table's columns in a grid (name, source name, type, tag, display name, description, nullable rendered as a true/false value); long display name/description values SHALL be truncated with the full value reachable via an ellipsis tooltip. A column whose `sensitive` flag is true SHALL show a marker (a colored dot with a "Sensitive" tooltip) rendered inline in the name cell, after the name; non-sensitive columns SHALL show no marker. Each column row SHALL offer a per-column action menu with **edit** and **delete (drop)** actions. The column name SHALL also be editable inline in the grid.
 
-The edit action SHALL open a unified edit modal seeded with the column's current name, display name, and tag. The description SHALL NOT be offered for editing while the backend has no description-edit operation (the backend silently ignores unknown patch operations, which would make a save appear to do nothing); the field joins the modal once that operation ships. The name field SHALL be required (submit disabled while blank) and SHALL be disabled for columns the backend does not allow to rename (grain-key, ordering-key, and `_`-prefixed system columns) while the metadata fields remain editable. Blank display name or tag values SHALL be valid input meaning "clear the value". On submit the modal SHALL diff the form against the original column and send a **single** schema patch containing only the changed operations (`rename`, `retag`, `set_display_name`); when a rename is included, the metadata operations SHALL reference the new (post-rename) column name. Submit SHALL be disabled when no field changed.
+The edit action SHALL open a unified edit modal seeded with the column's current name, display name, tag, description, and sensitive flag. The name field SHALL be required (submit disabled while blank) and SHALL be disabled for columns the backend does not allow to rename (grain-key, ordering-key, and `_`-prefixed system columns) while the metadata fields remain editable. Blank display name, tag, or description values SHALL be valid input meaning "clear the value"; the sensitive flag SHALL be toggled with a switch. On submit the modal SHALL diff the form against the original column and send a **single** schema patch: a structural `rename` op when the name changed, plus a **single `update` merge-patch entry** carrying the target column name and only the metadata fields (tag, display name, description, sensitive) that changed. Within the `update` entry an omitted field leaves that attribute unchanged, a blank string value clears it, a non-blank string value sets it, and the boolean `sensitive` is sent as `true`/`false` when toggled. When a rename is included, the `update` entry SHALL reference the new (post-rename) column name. Submit SHALL be disabled when no field changed.
 
 Adding columns SHALL be available from the header via a form popup reusing the column-row editor. Every schema change SHALL be sent as a schema patch to `updateTableSchema`, and on success the detail view SHALL refresh from the server. The header SHALL also offer deleting the whole table with a danger (red confirm) dialog, returning to the catalog on success.
 
@@ -693,24 +699,41 @@ Adding columns SHALL be available from the header via a form popup reusing the c
 #### Scenario: Combined edit sends one patch with post-rename names
 
 - **WHEN** the user renames `total_money` to `total_cost` and sets its display name to "Total money spend" in the edit modal and submits
-- **THEN** a single schema patch is sent containing a rename from `total_money` to `total_cost` and a set_display_name targeting `total_cost`
+- **THEN** a single schema patch is sent containing a rename from `total_money` to `total_cost` and an `update` entry whose `name` is `total_cost` and `display_name` is "Total money spend"
 - **AND** the grid refreshes with the server state
 
-#### Scenario: Only changed fields become operations
+#### Scenario: Only changed fields become update fields
 
-- **WHEN** the user changes only the display name and leaves name and tag untouched
-- **THEN** the patch contains only a set_display_name operation
+- **WHEN** the user changes only the display name and leaves name, tag, and description untouched
+- **THEN** the patch contains a single `update` entry carrying only `name` and `display_name`, with no `tag` or `description` field
 
 #### Scenario: Blank metadata clears the value
 
 - **WHEN** the user clears the display name field and submits
-- **THEN** a set_display_name operation with an empty value is sent, clearing the stored display name
+- **THEN** the `update` entry sends `display_name` as an empty string, clearing the stored display name
+
+#### Scenario: Description is editable and patched
+
+- **WHEN** the user changes a column's description in the edit modal and submits
+- **THEN** the modal renders a description input
+- **AND** the patch contains a single `update` entry carrying `name` and the new `description`
+
+#### Scenario: Sensitive columns are marked in the grid
+
+- **WHEN** the columns grid renders a column whose `sensitive` flag is true
+- **THEN** the name cell shows a marker with a "Sensitive" tooltip after the name
+- **AND** a column whose flag is false shows no marker
+
+#### Scenario: Toggling sensitive is patched
+
+- **WHEN** the user toggles the Sensitive switch in the edit modal and submits
+- **THEN** the patch contains a single `update` entry carrying `name` and the new boolean `sensitive`
 
 #### Scenario: Restricted columns cannot be renamed but keep metadata editable
 
 - **WHEN** the user opens the edit modal for a grain-key or ordering-key column
 - **THEN** the name input is disabled
-- **AND** display name and tag remain editable
+- **AND** display name, tag, description, and sensitive remain editable
 
 #### Scenario: Drop a column
 
