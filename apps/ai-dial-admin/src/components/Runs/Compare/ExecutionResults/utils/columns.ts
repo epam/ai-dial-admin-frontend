@@ -141,12 +141,11 @@ const getMetricPairKind = (groupKey: string, key: string) =>
   );
 
 const getStatusPairKind = (params: { data?: CompareAnalyticsRow }): MetricDeltaKind => {
-  const compared = params.data?._compared;
-  if (!compared) {
+  if (!params.data?._compared) {
     return MetricDeltaKind.Empty;
   }
 
-  return getExecutionStatusDelta(params.data?.executionStatus, compared.executionStatus);
+  return getExecutionStatusDelta(params.data.executionStatus, params.data._compared.executionStatus);
 };
 
 const getHttpPairKind = getComparePairKind(

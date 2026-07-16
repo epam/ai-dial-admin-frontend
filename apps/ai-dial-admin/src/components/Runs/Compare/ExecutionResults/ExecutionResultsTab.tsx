@@ -21,7 +21,7 @@ import {
 import {
   countCompareDiffs,
   hasCompareRowDiff,
-  isCompareRowFullyEmpty,
+  isCompareSecondarySideEmpty,
   mergeCompareMetricValuesSchema,
 } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
 import {
@@ -226,7 +226,7 @@ const ExecutionResultsTab: FC<Props> = ({
             'compare-row-empty compare-row-empty-border': (params) => {
               const row = params.data;
               if (!row) return false;
-              return isCompareRowFullyEmpty(row, metricsSchema);
+              return isCompareSecondarySideEmpty(row, metricsSchema);
             },
           }),
       'ag-active-detail-row': (params) => {

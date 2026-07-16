@@ -287,6 +287,30 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     );
   });
 
+  test('metric columns skip cell-pair highlight when _compared is null (row highlight covers it)', () => {
+    type MetricCol = {
+      cellClassRules?: Record<string, (params: { data?: CompareAnalyticsRow }) => boolean>;
+    };
+    const cols = getCompareColumnsCompare([
+      makeRow({
+        metricValues: { 'Overall Accuracy': { Precision: 0.8 } },
+        _compared: null,
+      }),
+    ]);
+    const metricGroup = cols[3] as { children: MetricCol[] };
+    const primaryPrecision = metricGroup.children[0];
+    const secondaryPrecision = metricGroup.children[1];
+    const unmatchedRow = makeRow({
+      metricValues: { 'Overall Accuracy': { Precision: 0.8 } },
+      _compared: null,
+    });
+
+    expect(primaryPrecision.cellClassRules?.['compare-metric-regressed-primary']?.({ data: unmatchedRow })).toBe(false);
+    expect(secondaryPrecision.cellClassRules?.['compare-metric-regressed-secondary']?.({ data: unmatchedRow })).toBe(
+      false,
+    );
+  });
+
   test('includes pinned eye action column at the end', () => {
     const cols = getCompareColumnsCompare([makeRow()]);
     const actionCol = cols[cols.length - 1] as ColDef;
