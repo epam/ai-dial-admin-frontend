@@ -2,7 +2,7 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { assetApi, assetsApi, externalServiceOpsApi } from '@/src/app/api/api';
+import { assetApi, externalServiceOpsApi, toolsetOpsApi } from '@/src/app/api/api';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { DialApplicationResource, DialExternalServiceAuthSettings, ToolsetAuthType } from '@/src/models/dial/resource';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
@@ -142,7 +142,7 @@ export async function exportApps(paths: string[], type?: ImportFileType) {
 
 export async function getAssetTools(name: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.getTools(name, token, ResourceType.APPLICATION);
+  return toolsetOpsApi.discoveredTools(token, name, ResourceType.APPLICATION);
 }
 
 export async function signInExternalService(
