@@ -25,6 +25,3 @@ export const SQL_KEYWORDS: string[] = [
   'ASC',
   'DESC',
 ];
-
-// The closed function catalog the backend supports.
-export const SQL_FUNCTIONS: string[] = ['count', 'sum', 'avg', 'min', 'max', 'date_bin'];

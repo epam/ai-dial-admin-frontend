@@ -4,7 +4,6 @@ import { describe, expect, test, vi } from 'vitest';
 
 import CategorizedFieldDropdown from '@/src/components/Analytics/QueryBuilder/Common/CategorizedFieldDropdown';
 import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
-import { QueryScalarFn } from '@/src/models/analytics/query';
 import { FieldOption } from '@/src/models/analytics/query-builder';
 
 const OPTIONS: FieldOption[] = [
@@ -81,8 +80,8 @@ describe('QueryBuilder :: CategorizedFieldDropdown', () => {
         options={OPTIONS}
         onSelect={onSelect}
         functions={[
-          { name: QueryScalarFn.DateBin, hint: 'time bucket' },
-          { name: QueryScalarFn.Lower, hint: 'lowercase' },
+          { name: 'date_bin', hint: 'time bucket' },
+          { name: 'lower', hint: 'lowercase' },
         ]}
         onSelectFunction={onSelectFunction}
         addLabel="+ Add"
@@ -108,7 +107,7 @@ describe('QueryBuilder :: CategorizedFieldDropdown', () => {
         id="test"
         options={OPTIONS}
         onSelect={vi.fn()}
-        functions={[{ name: QueryScalarFn.Lower, hint: 'lowercase' }]}
+        functions={[{ name: 'lower', hint: 'lowercase' }]}
         onSelectFunction={vi.fn()}
         addLabel="+ Add"
         ariaLabel="Add field"

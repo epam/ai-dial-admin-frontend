@@ -162,18 +162,25 @@ const CategorizedFieldDropdown: FC<Props> = ({
                 />
                 {isExpanded(FUNCTIONS_GROUP_KEY) &&
                   visibleFunctions.map((fn) => (
-                    <button
+                    <DialTooltip
                       key={fn.name}
-                      type="button"
-                      role="option"
-                      aria-selected={false}
-                      className="flex w-full items-center gap-2 rounded px-2 py-1.5 pl-6 text-left hover:bg-layer-4"
-                      onClick={() => onPickFunction(fn.name)}
+                      hideTooltip={!fn.hint}
+                      tooltip={fn.hint}
+                      triggerClassName="w-full"
+                      contentClassName="max-w-[320px]"
                     >
-                      <IconMathFunction size={12} className={classNames('shrink-0', FUNCTIONS_TEXT_CLASS)} />
-                      <span className="truncate font-mono dial-tiny-text text-primary">{fn.name}</span>
-                      <span className="shrink-0 dial-tiny-text text-secondary">{fn.hint}</span>
-                    </button>
+                      <button
+                        type="button"
+                        role="option"
+                        aria-selected={false}
+                        className="flex w-full items-center gap-2 rounded px-2 py-1.5 pl-6 text-left hover:bg-layer-4"
+                        onClick={() => onPickFunction(fn.name)}
+                      >
+                        <IconMathFunction size={12} className={classNames('shrink-0', FUNCTIONS_TEXT_CLASS)} />
+                        <span className="shrink-0 font-mono dial-tiny-text text-primary">{fn.name}</span>
+                        <span className="min-w-0 flex-1 truncate dial-tiny-text text-secondary">{fn.hint}</span>
+                      </button>
+                    </DialTooltip>
                   ))}
               </div>
             )}

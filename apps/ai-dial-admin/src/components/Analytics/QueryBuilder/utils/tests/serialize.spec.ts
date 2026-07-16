@@ -16,18 +16,17 @@ import {
 } from '@/src/components/Analytics/QueryBuilder/utils/state';
 import { QueryBuilderState, QueryBuilderWarning } from '@/src/models/analytics/query-builder';
 import {
-  QueryBucketUnit,
   QueryLogicalOperator,
   QueryMode,
   QueryOperator,
   QueryPageType,
-  QueryScalarFn,
   QuerySortNulls,
   QueryValueType,
 } from '@/src/models/analytics/query';
+import { fnFixture, TEST_FUNCTIONS } from '@/src/components/Analytics/QueryBuilder/utils/tests/functions.fixture';
 
 const baseState = (): QueryBuilderState => {
-  const s = createInitialState();
+  const s = createInitialState(TEST_FUNCTIONS);
   s.entityName = 'dial_usage_log';
   return s;
 };
@@ -182,10 +181,8 @@ describe('buildQuery — aggregate mode', () => {
     const s = baseState();
     s.mode = QueryMode.Aggregate;
     s.groupBy = [createGroupByColumn('deployment')];
-    const agg = createAggregate();
-    agg.field = 'total_tokens';
+    const agg = createAggregate(fnFixture('sum'), [{ field: 'total_tokens' }]);
     agg.alias = 'sum_tokens';
-    agg.fn = 'sum' as never;
     s.aggregates = [agg];
     const q = buildQuery(s);
     expect(q.group_by).toEqual(['deployment']);
@@ -195,12 +192,14 @@ describe('buildQuery — aggregate mode', () => {
     ]);
   });
 
-  test('date_bin group-by entry becomes an aliased date_bin column referenced by group_by', () => {
+  test('date_bin group-by entry serializes its literal + field args from the catalog', () => {
     const s = baseState();
     s.mode = QueryMode.Aggregate;
-    const bucket = createGroupByFn(QueryScalarFn.DateBin, 'request_time');
-    bucket.amount = 5;
-    bucket.unit = QueryBucketUnit.Minute;
+    const bucket = createGroupByFn(fnFixture('date_bin'), [
+      { literal: '5' },
+      { literal: 'minute' },
+      { field: 'request_time' },
+    ]);
     bucket.alias = 'bucket';
     s.groupBy = [bucket];
     const q = buildQuery(s);
@@ -219,10 +218,38 @@ describe('buildQuery — aggregate mode', () => {
     });
   });
 
+  test('multi-arg scalar function (width_bucket) serializes four field args', () => {
+    const s = baseState();
+    s.mode = QueryMode.Aggregate;
+    const row = createGroupByFn(fnFixture('width_bucket'), [
+      { field: 'latency' },
+      { field: 'lo' },
+      { field: 'hi' },
+      { field: 'n' },
+    ]);
+    row.alias = 'bkt';
+    s.groupBy = [row];
+    const q = buildQuery(s);
+    expect(q.group_by).toEqual(['bkt']);
+    expect(q.select).toContainEqual({
+      expr: {
+        type: 'fn',
+        name: 'width_bucket',
+        args: [
+          { type: 'field', name: 'latency' },
+          { type: 'field', name: 'lo' },
+          { type: 'field', name: 'hi' },
+          { type: 'field', name: 'n' },
+        ],
+      },
+      as: 'bkt',
+    });
+  });
+
   test('scalar function group-by entry serializes fn(field) AS alias, group_by uses the alias', () => {
     const s = baseState();
     s.mode = QueryMode.Aggregate;
-    const row = createGroupByFn(QueryScalarFn.Lower, 'deployment');
+    const row = createGroupByFn(fnFixture('lower'), [{ field: 'deployment' }]);
     row.alias = 'dep';
     s.groupBy = [row];
     const q = buildQuery(s);
@@ -233,11 +260,42 @@ describe('buildQuery — aggregate mode', () => {
     });
   });
 
-  test('fieldless group-by entries are dropped; aliasless function entries stay out of group_by', () => {
+  test('ordered-set aggregate (percentile_cont) serializes its numeric literal + field args', () => {
     const s = baseState();
     s.mode = QueryMode.Aggregate;
-    const empty = createGroupByFn(QueryScalarFn.Upper);
-    const noAlias = createGroupByFn(QueryScalarFn.Trim, 'deployment');
+    const agg = createAggregate(fnFixture('percentile_cont'), [{ literal: '0.95' }, { field: 'latency' }]);
+    agg.alias = 'p95';
+    s.aggregates = [agg];
+    const q = buildQuery(s);
+    expect(q.select).toContainEqual({
+      expr: {
+        type: 'fn',
+        name: 'percentile_cont',
+        args: [
+          { type: 'value', value_type: 'decimal', value: '0.95' },
+          { type: 'field', name: 'latency' },
+        ],
+      },
+      as: 'p95',
+    });
+  });
+
+  test('distinct is emitted on an aggregate only when set', () => {
+    const s = baseState();
+    s.mode = QueryMode.Aggregate;
+    const agg = createAggregate(fnFixture('count'), [{ field: 'chat_id' }]);
+    agg.alias = 'chats';
+    agg.distinct = true;
+    s.aggregates = [agg];
+    const expr = buildQuery(s).select?.find((c) => c.as === 'chats')?.expr as { distinct?: boolean };
+    expect(expr.distinct).toBe(true);
+  });
+
+  test('incomplete function entries are dropped; aliasless complete entries stay out of group_by', () => {
+    const s = baseState();
+    s.mode = QueryMode.Aggregate;
+    const empty = createGroupByFn(fnFixture('upper')); // required text arg unfilled → dropped
+    const noAlias = createGroupByFn(fnFixture('trim'), [{ field: 'deployment' }]);
     noAlias.alias = '';
     s.groupBy = [empty, noAlias];
     const q = buildQuery(s);
@@ -246,6 +304,7 @@ describe('buildQuery — aggregate mode', () => {
       expr: { type: 'fn', name: 'trim', args: [{ type: 'field', name: 'deployment' }] },
       as: '',
     });
+    expect(q.select?.some((c) => (c.expr as { name?: string }).name === 'upper')).toBe(false);
   });
 });
 
@@ -263,17 +322,17 @@ describe('getAggregateWarnings', () => {
   test('missing aggregate alias and function field are flagged', () => {
     const s = baseState();
     s.mode = QueryMode.Aggregate;
-    s.aggregates = [createAggregate()];
-    s.groupBy = [createGroupByFn(QueryScalarFn.DateBin)];
+    s.aggregates = [createAggregate(fnFixture('sum'))];
+    s.groupBy = [createGroupByFn(fnFixture('date_bin'))];
     const warnings = getAggregateWarnings(s);
     expect(warnings).toContain(QueryBuilderWarning.MissingAggregateAlias);
     expect(warnings).toContain(QueryBuilderWarning.MissingGroupByField);
   });
 
-  test('function entry with a field but no alias is flagged; plain columns are not', () => {
+  test('function entry with all args filled but no alias is flagged; plain columns are not', () => {
     const s = baseState();
     s.mode = QueryMode.Aggregate;
-    const fnRow = createGroupByFn(QueryScalarFn.Lower, 'deployment');
+    const fnRow = createGroupByFn(fnFixture('lower'), [{ field: 'deployment' }]);
     fnRow.alias = '';
     s.groupBy = [createGroupByColumn('project_id'), fnRow];
     const warnings = getAggregateWarnings(s);
@@ -282,8 +341,8 @@ describe('getAggregateWarnings', () => {
   });
 });
 
-describe('buildQuery implicit count', () => {
-  test('aggregate mode without aggregates appends count() so the result has a value column', () => {
+describe('buildQuery implicit measure', () => {
+  test('aggregate mode without aggregates appends the catalog implicit measure (count)', () => {
     const s = baseState();
     s.mode = QueryMode.Aggregate;
     s.groupBy = [createGroupByColumn('project_id')];
@@ -294,19 +353,27 @@ describe('buildQuery implicit count', () => {
     ]);
   });
 
-  test('user-defined aggregates suppress the implicit count', () => {
+  test('no implicit measure when the catalog has no all-optional aggregate function', () => {
+    const s = baseState();
+    s.functions = TEST_FUNCTIONS.filter((f) => f.name !== 'count');
+    s.mode = QueryMode.Aggregate;
+    s.groupBy = [createGroupByColumn('project_id')];
+    const q = buildQuery(s);
+    expect(q.select).toEqual([{ expr: { type: 'field', name: 'project_id' } }]);
+  });
+
+  test('user-defined aggregates suppress the implicit measure', () => {
     const s = baseState();
     s.mode = QueryMode.Aggregate;
     s.groupBy = [createGroupByColumn('project_id')];
-    const agg = createAggregate();
-    agg.field = 'total_tokens';
+    const agg = createAggregate(fnFixture('sum'), [{ field: 'total_tokens' }]);
     agg.alias = 'tokens';
     s.aggregates = [agg];
     const q = buildQuery(s);
     expect(q.select?.filter((c) => c.expr.type === 'fn')).toHaveLength(1);
   });
 
-  test('row mode never gets an implicit count', () => {
+  test('row mode never gets an implicit measure', () => {
     const q = buildQuery(baseState());
     expect(q.select).toBeUndefined();
   });

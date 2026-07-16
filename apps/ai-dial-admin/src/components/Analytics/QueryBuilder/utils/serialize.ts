@@ -1,15 +1,23 @@
 import { IMPLICIT_COUNT_ALIAS, SORT_NULLS_DEFAULT } from '@/src/constants/analytics/query-builder';
 import { withTimeBound } from '@/src/components/Analytics/QueryBuilder/utils/time';
 import {
+  functionByName,
+  implicitMeasureFunction,
+  isArgFilled,
+  isExpressionArg,
+  requiredArgsFilled,
+  valueTypeForArgKind,
+} from '@/src/components/Analytics/QueryBuilder/utils/functions';
+import {
   FilterNode,
   FilterNodeKind,
-  GroupByRow,
+  FnArgValue,
   QueryBuilderState,
   QueryBuilderWarning,
   QueryTimeBound,
 } from '@/src/models/analytics/query-builder';
+import { QueryFunction } from '@/src/models/analytics/query-function';
 import {
-  QueryAggregateFn,
   QueryExpr,
   QueryExprType,
   QueryFieldExpr,
@@ -21,27 +29,31 @@ import {
   QueryOperator,
   QueryOutputColumn,
   QueryPageType,
-  QueryScalarFn,
   QuerySortItem,
   QueryValueExpr,
   QueryValueType,
   StructuredQuery,
 } from '@/src/models/analytics/query';
 
-// date_bin takes (amount, unit, timestamp); every other scalar function takes the column alone.
-const groupByFnExpr = (g: GroupByRow): QueryFnExpr => {
-  if (g.fn === QueryScalarFn.DateBin) {
-    return {
-      type: QueryExprType.Fn,
-      name: QueryScalarFn.DateBin,
-      args: [
-        { type: QueryExprType.Value, value_type: QueryValueType.Integer, value: String(g.amount) },
-        { type: QueryExprType.Value, value_type: QueryValueType.String, value: g.unit },
-        { type: QueryExprType.Field, name: g.field },
-      ],
-    };
-  }
-  return { type: QueryExprType.Fn, name: g.fn as string, args: [{ type: QueryExprType.Field, name: g.field }] };
+// Build a function-call expression by walking the catalog function's ordered args against the row's
+// arg-value slots: an `expression` arg serializes as a field reference, a literal arg as a value of
+// the kind's type. An empty optional arg (e.g. count's) is omitted entirely.
+const fnExpr = (fn: QueryFunction, args: FnArgValue[]): QueryFnExpr => {
+  const exprArgs: QueryExpr[] = [];
+  fn.args.forEach((argDef, i) => {
+    const value = args[i] ?? {};
+    if (argDef.optional && !isArgFilled(argDef, value)) return;
+    if (isExpressionArg(argDef)) {
+      exprArgs.push({ type: QueryExprType.Field, name: value.field ?? '' });
+    } else {
+      exprArgs.push({
+        type: QueryExprType.Value,
+        value_type: valueTypeForArgKind(argDef.kind),
+        value: value.literal ?? '',
+      });
+    }
+  });
+  return { type: QueryExprType.Fn, name: fn.name, args: exprArgs };
 };
 
 export const serializeNode = (node: FilterNode): QueryFilterNode | null => {
@@ -91,8 +103,13 @@ export const buildQuery = (state: QueryBuilderState, timeBound?: QueryTimeBound 
       q.select = state.select.map((name) => ({ expr: { type: QueryExprType.Field, name } }));
     }
   } else {
-    // A function entry is addressable in group_by only through its alias; plain columns by name.
-    const activeGroupBy = state.groupBy.filter((g) => g.field);
+    // A plain column is active once named; a function row once its required args are filled. In
+    // group_by a function entry is addressable only through its alias, a plain column by name.
+    const activeGroupBy = state.groupBy.filter((g) => {
+      if (!g.fn) return !!g.field;
+      const fn = functionByName(state.functions, g.fn);
+      return fn ? requiredArgsFilled(fn, g.args) : false;
+    });
     const groupNames = activeGroupBy.map((g) => (g.fn ? g.alias : g.field)).filter(Boolean);
     if (groupNames.length) q.group_by = groupNames;
 
@@ -102,24 +119,27 @@ export const buildQuery = (state: QueryBuilderState, timeBound?: QueryTimeBound 
         selectEntries.push({ expr: { type: QueryExprType.Field, name: g.field } });
         return;
       }
-      selectEntries.push({ expr: groupByFnExpr(g), as: g.alias || '' });
+      const fn = functionByName(state.functions, g.fn);
+      if (fn) selectEntries.push({ expr: fnExpr(fn, g.args), as: g.alias || '' });
     });
     state.aggregates.forEach((a) => {
-      const fnExpr: QueryFnExpr = {
-        type: QueryExprType.Fn,
-        name: a.fn,
-        args: a.field ? [{ type: QueryExprType.Field, name: a.field }] : [],
-      };
-      if (a.distinct) fnExpr.distinct = true;
-      selectEntries.push({ expr: fnExpr, as: a.alias || '' });
+      const fn = functionByName(state.functions, a.fn);
+      if (!fn) return;
+      const expr = fnExpr(fn, a.args);
+      if (a.distinct) expr.distinct = true;
+      selectEntries.push({ expr, as: a.alias || '' });
     });
     // Aggregate mode without aggregates counts the group rows: bare group tuples are useless and
-    // charts need at least one value column, so count() is the implicit measure.
+    // charts need at least one value column. The implicit measure is drawn from the catalog (the
+    // first aggregate-group function whose args are all optional — count), never a hardcoded name.
     if (!state.aggregates.length) {
-      selectEntries.push({
-        expr: { type: QueryExprType.Fn, name: QueryAggregateFn.Count, args: [] },
-        as: IMPLICIT_COUNT_ALIAS,
-      });
+      const measure = implicitMeasureFunction(state.functions);
+      if (measure) {
+        selectEntries.push({
+          expr: { type: QueryExprType.Fn, name: measure.name, args: [] },
+          as: IMPLICIT_COUNT_ALIAS,
+        });
+      }
     }
     if (selectEntries.length) q.select = selectEntries;
 
@@ -157,9 +177,14 @@ export const getAggregateWarnings = (state: QueryBuilderState): QueryBuilderWarn
   if (state.mode !== QueryMode.Aggregate) return [];
   const warnings: QueryBuilderWarning[] = [];
   const fnRows = state.groupBy.filter((g) => g.fn);
+  const rowComplete = (g: (typeof fnRows)[number]): boolean => {
+    const fn = functionByName(state.functions, g.fn);
+    return !!fn && requiredArgsFilled(fn, g.args);
+  };
   if (state.aggregates.some((a) => !a.alias)) warnings.push(QueryBuilderWarning.MissingAggregateAlias);
-  if (fnRows.some((g) => !g.field)) warnings.push(QueryBuilderWarning.MissingGroupByField);
-  if (fnRows.some((g) => g.field && !g.alias)) warnings.push(QueryBuilderWarning.MissingGroupByAlias);
+  // A function row with an unfilled required arg warns; once complete it warns for a missing alias.
+  if (fnRows.some((g) => !rowComplete(g))) warnings.push(QueryBuilderWarning.MissingGroupByField);
+  if (fnRows.some((g) => rowComplete(g) && !g.alias)) warnings.push(QueryBuilderWarning.MissingGroupByAlias);
   if (!state.groupBy.length && !state.aggregates.length) {
     warnings.push(QueryBuilderWarning.EmptyAggregate);
   }
