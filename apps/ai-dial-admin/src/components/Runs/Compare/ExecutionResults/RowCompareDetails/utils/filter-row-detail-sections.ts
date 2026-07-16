@@ -3,6 +3,7 @@ import {
   CompareRowDetailSection,
   RowDetailDeltaFilter,
   RowDetailFieldFilter,
+  RowDetailValueFilter,
 } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/models';
 import {
   getMetricDeltaSortValue,
@@ -14,6 +15,10 @@ export interface RowDetailSectionFilterOptions {
   searchQuery: string;
   showDiffsOnly: boolean;
   fieldFilter?: RowDetailFieldFilter | null;
+  primaryValueFilter?: RowDetailValueFilter | null;
+  secondaryValueFilter?: RowDetailValueFilter | null;
+  primarySearchQuery?: string;
+  secondarySearchQuery?: string;
   deltaFilter?: RowDetailDeltaFilter | null;
 }
 
@@ -23,8 +28,8 @@ const parseNumericRaw = (raw: string | null): number | null => {
   return Number.isNaN(value) ? null : value;
 };
 
-const matchesFieldFilter = (label: string, filter: RowDetailFieldFilter): boolean => {
-  const target = label.toLowerCase();
+const matchesTextFilter = (value: string, filter: RowDetailFieldFilter | RowDetailValueFilter): boolean => {
+  const target = value.toLowerCase();
   const query = filter.value.trim().toLowerCase();
   if (!query) return true;
 
@@ -40,6 +45,12 @@ const matchesFieldFilter = (label: string, filter: RowDetailFieldFilter): boolea
     default:
       return true;
   }
+};
+
+const matchesSearchQuery = (value: string, searchQuery: string | undefined): boolean => {
+  const normalizedQuery = searchQuery?.trim().toLowerCase();
+  if (!normalizedQuery) return true;
+  return value.toLowerCase().includes(normalizedQuery);
 };
 
 const matchesDeltaFilter = (delta: number | null, filter: RowDetailDeltaFilter): boolean => {
@@ -70,7 +81,16 @@ const getRowDeltaValue = (row: CompareRowDetailField): number | null => {
 
 export const filterRowDetailSections = (
   sections: CompareRowDetailSection[],
-  { searchQuery, showDiffsOnly, fieldFilter, deltaFilter }: RowDetailSectionFilterOptions,
+  {
+    searchQuery,
+    showDiffsOnly,
+    fieldFilter,
+    primaryValueFilter,
+    secondaryValueFilter,
+    primarySearchQuery,
+    secondarySearchQuery,
+    deltaFilter,
+  }: RowDetailSectionFilterOptions,
 ): CompareRowDetailSection[] => {
   const normalizedQuery = searchQuery.trim().toLowerCase();
 
@@ -84,7 +104,21 @@ export const filterRowDetailSections = (
         if (normalizedQuery && !row.label.toLowerCase().includes(normalizedQuery)) {
           return false;
         }
-        if (fieldFilter && !matchesFieldFilter(row.label, fieldFilter)) {
+        if (fieldFilter && !matchesTextFilter(row.label, fieldFilter)) {
+          return false;
+        }
+        const primaryValue = row.primaryRaw ?? '';
+        const secondaryValue = row.secondaryRaw ?? '';
+        if (!matchesSearchQuery(primaryValue, primarySearchQuery)) {
+          return false;
+        }
+        if (!matchesSearchQuery(secondaryValue, secondarySearchQuery)) {
+          return false;
+        }
+        if (primaryValueFilter && !matchesTextFilter(primaryValue, primaryValueFilter)) {
+          return false;
+        }
+        if (secondaryValueFilter && !matchesTextFilter(secondaryValue, secondaryValueFilter)) {
           return false;
         }
         if (deltaFilter && !matchesDeltaFilter(getRowDeltaValue(row), deltaFilter)) {

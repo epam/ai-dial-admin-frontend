@@ -140,6 +140,83 @@ describe('filterRowDetailSections', () => {
     });
   });
 
+  describe('primary/secondary value filters', () => {
+    test('primarySearchQuery filters on primaryRaw contains', () => {
+      const result = filterRowDetailSections(sections, {
+        searchQuery: '',
+        showDiffsOnly: false,
+        primarySearchQuery: 'hello',
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0].rows.map((row) => row.fieldKey)).toEqual(['prompt']);
+    });
+
+    test('secondarySearchQuery filters on secondaryRaw contains', () => {
+      const result = filterRowDetailSections(sections, {
+        searchQuery: '',
+        showDiffsOnly: false,
+        secondarySearchQuery: 'FAILED',
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0].rows.map((row) => row.fieldKey)).toEqual(['executionStatus']);
+    });
+
+    test('primaryValueFilter equals matches primaryRaw case-insensitively', () => {
+      const result = filterRowDetailSections(sections, {
+        searchQuery: '',
+        showDiffsOnly: false,
+        primaryValueFilter: { operator: GridFilterType.EQUALS, value: 'SUCCESS' },
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0].rows.map((row) => row.fieldKey)).toEqual(['executionStatus']);
+    });
+
+    test('secondaryValueFilter not contains excludes matching secondaryRaw', () => {
+      const result = filterRowDetailSections(sections, {
+        searchQuery: '',
+        showDiffsOnly: false,
+        secondaryValueFilter: { operator: GridFilterType.NOT_CONTAINS, value: 'hello' },
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0].key).toBe('execution');
+      expect(result[0].rows).toHaveLength(2);
+    });
+
+    test('treats null raw values as empty string', () => {
+      const sectionsWithNull: CompareRowDetailSection[] = [
+        {
+          key: 'execution',
+          label: 'Execution',
+          rows: [
+            {
+              fieldKey: 'missing',
+              label: 'missing',
+              primaryRaw: null,
+              secondaryRaw: null,
+              diffKind: MetricDeltaKind.Empty,
+              isNumeric: false,
+              isScoreIndicator: false,
+              isMetric: false,
+            },
+          ],
+        },
+      ];
+
+      const result = filterRowDetailSections(sectionsWithNull, {
+        searchQuery: '',
+        showDiffsOnly: false,
+        primaryValueFilter: { operator: GridFilterType.EQUALS, value: '' },
+        primarySearchQuery: 'x',
+      });
+
+      expect(result).toHaveLength(0);
+    });
+  });
+
   describe('deltaFilter', () => {
     const metricSections: CompareRowDetailSection[] = [
       {
