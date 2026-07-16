@@ -220,7 +220,7 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
     if (res.success) {
       const response = res.response ?? { rows: [] };
       setResult(response);
-      setResultMeta(buildExecutedMeta(request, response));
+      setResultMeta(buildExecutedMeta(request, response, state.fields));
     } else {
       // Keep the previously shown result instead of replacing it with a broken grid.
       showNotification(
@@ -395,19 +395,31 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
 const sameRange = (a: TimeRange, b?: TimeRange): boolean =>
   !!b && a.startDate.getTime() === b.startDate.getTime() && a.endDate.getTime() === b.endDate.getTime();
 
-const buildExecutedMeta = (request: QueryRunRequest, response: StructuredQueryResult): ExecutedQueryMeta => {
+const buildExecutedMeta = (
+  request: QueryRunRequest,
+  response: StructuredQueryResult,
+  fields: AnalyticsEntityField[],
+): ExecutedQueryMeta => {
   if (request.kind === QueryRequestKind.Sql) {
-    return { kind: request.kind, mode: QueryMode.Row, dimensionColumns: [], aggregateColumns: [] };
+    return { kind: request.kind, mode: QueryMode.Row, dimensionColumns: [], aggregateColumns: [], columnLabels: {} };
   }
   const dimensionColumns = request.query.group_by ?? [];
   const resultColumns = getResultColumns(response)
     .map((c) => c.field)
     .filter((c): c is string => !!c);
+  // Plain group-by columns carry the schema display name; scalar-fn group-bys and aggregate
+  // aliases are user-authored and display as themselves (no entry).
+  const columnLabels: Record<string, string> = {};
+  for (const column of dimensionColumns) {
+    const displayName = fields.find((f) => f.name === column)?.display_name;
+    if (displayName) columnLabels[column] = displayName;
+  }
   return {
     kind: request.kind,
     mode: request.query.mode,
     dimensionColumns,
     aggregateColumns: resultColumns.filter((c) => !dimensionColumns.includes(c)),
+    columnLabels,
   };
 };
 

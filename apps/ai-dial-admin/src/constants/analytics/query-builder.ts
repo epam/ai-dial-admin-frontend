@@ -11,7 +11,13 @@ import {
   QuerySortNulls,
   QueryValueType,
 } from '@/src/models/analytics/query';
-import { ChartConfig, ChartType, QueryBuilderWarning } from '@/src/models/analytics/query-builder';
+import {
+  ChartColumnSource,
+  ChartConfig,
+  ChartSlotDescriptor,
+  ChartType,
+  QueryBuilderWarning,
+} from '@/src/models/analytics/query-builder';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 
 const capitalize = (s: string): string => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
@@ -68,6 +74,26 @@ export const QUERY_BUILDER_RAIL_WIDTH_CLASS = 'w-[480px]';
 export const CHART_TYPE_OPTIONS: SelectOption[] = toOptions(Object.values(ChartType));
 
 export const DEFAULT_CHART_CONFIG: ChartConfig = { type: ChartType.Bar, xField: null, yField: null };
+
+// Pie shows at most this many slices; the remaining categories merge into one "Other" slice.
+export const PIE_MAX_SLICES = 10;
+
+const AXIS_SLOTS = {
+  xLabelKey: QueryBuilderI18nKey.ChartXAxis,
+  yLabelKey: QueryBuilderI18nKey.ChartYAxis,
+};
+
+export const CHART_SLOT_DESCRIPTORS: Record<ChartType, ChartSlotDescriptor> = {
+  [ChartType.Bar]: { xSource: ChartColumnSource.Dimensions, ySource: ChartColumnSource.Aggregates, ...AXIS_SLOTS },
+  [ChartType.Line]: { xSource: ChartColumnSource.Dimensions, ySource: ChartColumnSource.Aggregates, ...AXIS_SLOTS },
+  [ChartType.Pie]: {
+    xSource: ChartColumnSource.Dimensions,
+    ySource: ChartColumnSource.Aggregates,
+    xLabelKey: QueryBuilderI18nKey.ChartCategory,
+    yLabelKey: QueryBuilderI18nKey.ChartValue,
+  },
+  [ChartType.Scatter]: { xSource: ChartColumnSource.Numeric, ySource: ChartColumnSource.Numeric, ...AXIS_SLOTS },
+};
 
 export const WARNING_I18N: Record<QueryBuilderWarning, QueryBuilderI18nKey> = {
   [QueryBuilderWarning.MissingAggregateAlias]: QueryBuilderI18nKey.WarningMissingAggregateAlias,

@@ -64,13 +64,24 @@ Reference prototype: results-first workbench layout ("report" variant) from the 
 
 ## 7. Results area
 
-- **State**: `QueryBuilderState` (or local `QueryBuilder.tsx` state) gains `result: StructuredQueryResult | null`, `resultKind: QueryRequestKind | null`, `resultView: QueryResultView`, `chartConfig: { type: ChartType; xField: string | null; yField: string | null }`. New enums `QueryResultView { Table, Chart }` and `ChartType { Bar, Line, Area }` in `models/analytics/query-builder.ts`; option lists/defaults in `constants/analytics/query-builder.ts`.
+- **State**: `QueryBuilderState` (or local `QueryBuilder.tsx` state) gains `result: StructuredQueryResult | null`, `resultKind: QueryRequestKind | null`, `resultView: QueryResultView`, `chartConfig: { type: ChartType; xField: string | null; yField: string | null }`. New enums `QueryResultView { Table, Chart }` and `ChartType { Bar, Line, Pie, Scatter }` in `models/analytics/query-builder.ts`; option lists/defaults in `constants/analytics/query-builder.ts`. (Follow-up: `Area` was dropped from `ChartType` — it was line + fill with no informational gain — in favor of pie and scatter.)
 - **Stat tiles**: row of `StatChip`s (existing component, moved out of the deleted sidebar): Rows returned (`rows.length`), Fields (`columns.length`), Total (only when `totalCount` present — structured runs with `include_total`).
 - **Table view**: existing `GridView` + `utils/result.ts` column derivation, unchanged.
-- **Chart view** (`Result/ResultChart.tsx`): `ReactECharts` (`echarts-for-react`, already used in `Telemetry/Dashboards/LineChart`). Option builders in `Result/chart-options.ts` using `CHART_COLOR` tokens from `Common/MetricCard/constants.ts` (no hardcoded hex outside those tokens):
-  - `buildBarChartOptions(rows, x, y)` — new.
-  - Line/area options modeled on `lineChartDefaultOptions` from `Telemetry/Dashboards/LineChart/constants.ts` (area = line + `areaStyle`).
-  - Controls: chart type `DialSegmentedControl` (Bar/Line/Area), X `DialSelect` over the run's group-by/bucket columns, Y `DialSelect` over the run's aggregate columns (including the implicit count column when present). Defaults: first dimension X, first aggregate Y.
+- **Chart view** (`Result/ResultChart.tsx`): `ReactECharts` (`echarts-for-react`, already used in `Telemetry/Dashboards/LineChart`). Option builders in `Result/chart-options.ts` using `CHART_COLOR` tokens from `Common/MetricCard/constants.ts` (no hardcoded hex outside those tokens).
+  - **Per-type slot descriptor** (constants, keyed by `ChartType`): each type declares its two column slots — allowed column list, control label, tooltip trigger. `ChartConfig { type, xField, yField }` stays the shared shape; only the descriptor varies:
+
+    | type | X slot | Y slot | labels | tooltip | row order |
+    |---|---|---|---|---|---|
+    | bar / line | dimension columns | aggregate columns (incl. count) | X axis / Y axis | axis | `sortRowsByX` + X-label truncation |
+    | pie | dimension columns | aggregate columns | Category / Value | item | top-10 slices by value + "Other" bucket |
+    | scatter | numeric columns | numeric columns | X axis / Y axis | item | query row order (order is invisible) |
+
+  - **Numeric columns** (scatter): the result's dimension and aggregate columns whose every value passes the `comparableKey` test in `chart-options.ts` (numeric or date-parseable) — detected from the result rows by a small pure util. Aggregates are tested too: a text-valued aggregate (min/max over text) can't be plotted.
+  - **Pie**: `buildPieChartOptions(rows, category, value)`; a pure `bucketTopSlices(rows, category, value, n=10)` util merges the tail into one localized "Other" slice; slice colors cycle the existing builder palette (`constants/analytics/query-builder-palette.ts`) — no hardcoded hex.
+  - **Scatter**: `buildScatterChartOptions(rows, x, y, dimensionColumns)`; one point per row (= one group); the item tooltip lists the row's dimension values so points stay identifiable. Scatter is hidden from the type control when the result has fewer than two numeric columns — an unusable type isn't offered at all.
+  - `buildAreaChartOptions` and the `Area` branch are removed.
+  - **Display names**: `ExecutedQueryMeta` carries `columnLabels` (group-by column → schema `display_name`), built at run time from the executed entity's fields so labels stay true to the run snapshot. `ResultChart` uses it for selector option labels; `buildChartOptions` threads it into axis titles and the scatter tooltip. Columns without an entry (aggregate/scalar-fn aliases) display as themselves.
+  - Controls: chart type `DialSegmentedControl` (Bar/Line/Pie/Scatter), two `DialSelect`s driven by the active descriptor (options + label prefix). Defaults: the slot's first allowed column. On type switch, a pick that is valid for the new type's slot is kept; an invalid one falls back to that slot's first valid default.
 - **Chart availability**: derived from the *executed* query snapshot (kept alongside the result): structured aggregate run with ≥1 group-by/bucket column → chart enabled; otherwise the Chart tab shows the hint ("Charts are available for aggregate results with at least one group-by"). SQL results are table-only.
 - **Empty state**: before any run, the results area shows a centered empty state (icon + "Run the query to see results" copy via i18n). Failed runs keep the previous result (existing behavior).
 

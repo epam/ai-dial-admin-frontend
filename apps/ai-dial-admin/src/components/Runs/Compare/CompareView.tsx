@@ -33,6 +33,7 @@ import {
   getSelectableCompareRuns,
 } from '@/src/components/Runs/Compare/utils';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
+import { getCompareRowSelectionId } from '@/src/components/Runs/View/utils';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
@@ -234,14 +235,17 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
 
   const openRowDetail = useCallback(
     (row: CompareAnalyticsRow) => {
-      if (selectedRow?.id === row.id) {
+      const rowSelectionId = getCompareRowSelectionId(row);
+      const selectedSelectionId = selectedRow ? getCompareRowSelectionId(selectedRow) : null;
+      const isToggleClose = rowSelectionId != null && rowSelectionId === selectedSelectionId;
+      if (isToggleClose) {
         closeRowDetail();
         return;
       }
       setSelectedRow(row);
       showDetailPanel(row, detailPosition);
     },
-    [selectedRow?.id, detailPosition, closeRowDetail, showDetailPanel],
+    [selectedRow, detailPosition, closeRowDetail, showDetailPanel],
   );
 
   useEffect(() => {

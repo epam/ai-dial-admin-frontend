@@ -86,7 +86,7 @@ const ResourceSourceField: FC<Props> = ({
       }
 
       if (sourceType === SOURCE_TYPE.SCHEMA) {
-        onChange({ ...entity, endpoint: undefined, application_type_schema_id: '' });
+        onChange({ ...entity, endpoint: undefined, application_type_schema_id: '', routes: undefined });
         return;
       }
 
