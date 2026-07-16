@@ -7,6 +7,7 @@ import { executeQuery } from '@/src/app/[lang]/query-builder/actions';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { AnalyticsEntity, AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { StructuredQuery } from '@/src/models/analytics/query';
+import { TEST_FUNCTIONS } from '@/src/components/Analytics/QueryBuilder/utils/tests/functions.fixture';
 
 vi.mock('@/src/app/[lang]/query-builder/actions');
 
@@ -64,7 +65,13 @@ const DEEP_JSON = JSON.stringify({
 
 const renderBuilder = (props?: Partial<Parameters<typeof QueryBuilder>[0]>) =>
   render(
-    <QueryBuilder initialEntities={ENTITIES} initialEntityName="dial_usage_log" initialFields={FIELDS} {...props} />,
+    <QueryBuilder
+      initialEntities={ENTITIES}
+      initialEntityName="dial_usage_log"
+      initialFields={FIELDS}
+      initialFunctions={TEST_FUNCTIONS}
+      {...props}
+    />,
   );
 
 beforeEach(() => {

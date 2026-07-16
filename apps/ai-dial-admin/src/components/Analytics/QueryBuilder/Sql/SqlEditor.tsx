@@ -8,6 +8,7 @@ import type { IRange, editor, languages } from 'monaco-editor';
 import { buildSqlCompletions } from '@/src/components/Analytics/QueryBuilder/utils/sql-completions';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
+import { QueryFunction } from '@/src/models/analytics/query-function';
 import { SqlCompletionKind } from '@/src/models/analytics/sql';
 
 interface Props {
@@ -15,6 +16,7 @@ interface Props {
   onChange: (value: string) => void;
   fields: AnalyticsEntityField[];
   entityName: string;
+  functions: QueryFunction[];
 }
 
 const kindMap = (monaco: Monaco): Record<SqlCompletionKind, languages.CompletionItemKind> => ({
@@ -24,11 +26,11 @@ const kindMap = (monaco: Monaco): Record<SqlCompletionKind, languages.Completion
   [SqlCompletionKind.Function]: monaco.languages.CompletionItemKind.Function,
 });
 
-const SqlEditor: FC<Props> = ({ value, onChange, fields, entityName }) => {
-  const schemaRef = useRef({ fields, entityName });
+const SqlEditor: FC<Props> = ({ value, onChange, fields, entityName, functions }) => {
+  const schemaRef = useRef({ fields, entityName, functions });
   useEffect(() => {
-    schemaRef.current = { fields, entityName };
-  }, [fields, entityName]);
+    schemaRef.current = { fields, entityName, functions };
+  }, [fields, entityName, functions]);
 
   const disposableRef = useRef<{ dispose: () => void } | null>(null);
   const modelIdRef = useRef<string | null>(null);
@@ -49,8 +51,8 @@ const SqlEditor: FC<Props> = ({ value, onChange, fields, entityName }) => {
           endColumn: word.endColumn,
         };
 
-        const { fields: latestFields, entityName: latestEntity } = schemaRef.current;
-        const suggestions = buildSqlCompletions(latestFields, latestEntity).map((c) => ({
+        const { fields: latestFields, entityName: latestEntity, functions: latestFns } = schemaRef.current;
+        const suggestions = buildSqlCompletions(latestFields, latestEntity, latestFns).map((c) => ({
           label: c.label,
           kind: kinds[c.kind],
           insertText: c.insertText,
