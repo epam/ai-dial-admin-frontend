@@ -1,7 +1,7 @@
 'use client';
 
 import { FirstDataRenderedEvent, GridApi, RowHeightParams } from 'ag-grid-community';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 
 import { DialLoader } from '@epam/ai-dial-ui-kit';
 
@@ -23,10 +23,10 @@ import {
   getHeatMapGroupKeys,
 } from '@/src/components/Runs/Compare/HeatMap/utils/build-heat-map-rows';
 import { centerHeatMapTooltipPopup } from '@/src/components/Runs/Compare/HeatMap/utils/center-heat-map-tooltip-popup';
+import { HeatMapTabUiState } from '@/src/components/Runs/Compare/models';
 import { mergeByTestCaseId, RESULT_FILTERS } from '@/src/components/Runs/View/utils';
 import { EntitiesI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { AnalyticsResult } from '@/src/models/evaluation/run';
 
 interface Props {
   primaryRunId: string;
@@ -37,6 +37,8 @@ interface Props {
   onColorDisplayModeChange: (mode: HeatMapColorDisplayMode) => void;
   selectedMetricGroups: Set<string>;
   onAvailableMetricGroupsChange: (groups: string[]) => void;
+  heatMapState: HeatMapTabUiState;
+  setHeatMapState: (patch: Partial<HeatMapTabUiState>) => void;
 }
 
 const HeatMapTab: FC<Props> = ({
@@ -48,23 +50,21 @@ const HeatMapTab: FC<Props> = ({
   onColorDisplayModeChange: _onColorDisplayModeChange,
   selectedMetricGroups,
   onAvailableMetricGroupsChange,
+  heatMapState,
+  setHeatMapState,
 }) => {
   const t = useI18n();
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [isCompareLoading, setIsCompareLoading] = useState(false);
   const [hasLoadError, setHasLoadError] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
-
-  const [results, setResults] = useState<AnalyticsResult[] | null>(null);
-  const [comparedResults, setComparedResults] = useState<AnalyticsResult[] | null>(null);
+  const { expandedGroups, areExpandedGroupsInitialized, results, comparedResults } = heatMapState;
 
   useEffect(() => {
-    let isCancelled = false;
+    if (results !== null) {
+      return;
+    }
 
-    setIsLoading(true);
+    let isCancelled = false;
     setHasLoadError(false);
-    setResults(null);
 
     getRun(primaryRunId)
       .then((runData) => {
@@ -77,29 +77,25 @@ const HeatMapTab: FC<Props> = ({
       })
       .then((resultsResponse) => {
         if (isCancelled || resultsResponse === undefined) return;
-        setResults(resultsResponse?.content || []);
+        setHeatMapState({ results: resultsResponse?.content || [] });
       })
       .catch(() => {
         if (!isCancelled) {
           setHasLoadError(true);
-        }
-      })
-      .finally(() => {
-        if (!isCancelled) {
-          setIsLoading(false);
         }
       });
 
     return () => {
       isCancelled = true;
     };
-  }, [primaryRunId]);
+  }, [primaryRunId, results, setHeatMapState]);
 
   useEffect(() => {
-    let isCancelled = false;
+    if (comparedResults !== null) {
+      return;
+    }
 
-    setIsCompareLoading(true);
-    setComparedResults(null);
+    let isCancelled = false;
 
     getRun(comparedRunId)
       .then((comparedRun) => {
@@ -108,23 +104,18 @@ const HeatMapTab: FC<Props> = ({
       })
       .then((res) => {
         if (isCancelled || res === undefined) return;
-        setComparedResults(res?.content || []);
+        setHeatMapState({ comparedResults: res?.content || [] });
       })
       .catch(() => {
         if (!isCancelled) {
           setHasLoadError(true);
-        }
-      })
-      .finally(() => {
-        if (!isCancelled) {
-          setIsCompareLoading(false);
         }
       });
 
     return () => {
       isCancelled = true;
     };
-  }, [comparedRunId]);
+  }, [comparedRunId, comparedResults, setHeatMapState]);
 
   const mergedRowData = useMemo(() => {
     if (results === null || comparedResults === null) return null;
@@ -138,7 +129,7 @@ const HeatMapTab: FC<Props> = ({
     return buildHeatMapRowsForMode(mergedRowData, colorDisplayMode);
   }, [mergedRowData, colorDisplayMode]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     onAvailableMetricGroupsChange(getHeatMapGroupKeys(allHeatMapRows));
   }, [allHeatMapRows, onAvailableMetricGroupsChange]);
 
@@ -147,24 +138,29 @@ const HeatMapTab: FC<Props> = ({
     [allHeatMapRows, selectedMetricGroups],
   );
 
-  useEffect(() => {
-    if (!metricFilteredRows.length) {
+  useLayoutEffect(() => {
+    const groupKeys = getHeatMapGroupKeys(metricFilteredRows);
+    if (!groupKeys.length || areExpandedGroupsInitialized) {
       return;
     }
-    setExpandedGroups(new Set(getHeatMapGroupKeys(metricFilteredRows)));
-  }, [metricFilteredRows]);
+    setHeatMapState({
+      expandedGroups: new Set(groupKeys),
+      areExpandedGroupsInitialized: true,
+    });
+  }, [metricFilteredRows, areExpandedGroupsInitialized, setHeatMapState]);
 
-  const onToggleGroup = useCallback((groupKey: string) => {
-    setExpandedGroups((prev) => {
-      const next = new Set(prev);
+  const onToggleGroup = useCallback(
+    (groupKey: string) => {
+      const next = new Set(expandedGroups);
       if (next.has(groupKey)) {
         next.delete(groupKey);
       } else {
         next.add(groupKey);
       }
-      return next;
-    });
-  }, []);
+      setHeatMapState({ expandedGroups: next });
+    },
+    [expandedGroups, setHeatMapState],
+  );
 
   const visibleRows = useMemo(
     () => filterHeatMapRowsByExpandedGroups(metricFilteredRows, expandedGroups),
@@ -237,7 +233,7 @@ const HeatMapTab: FC<Props> = ({
     return <p className="text-secondary dial-small-text">{t(RunsI18nKey.LoadError)}</p>;
   }
 
-  if (isLoading || isCompareLoading || !isCompareDataReady) {
+  if (!isCompareDataReady) {
     return (
       <div className="flex flex-1 min-h-0 items-center justify-center">
         <DialLoader size={40} />
@@ -249,7 +245,7 @@ const HeatMapTab: FC<Props> = ({
     <div className="flex flex-col flex-1 min-h-0 h-full overflow-hidden gap-6">
       <div className="flex-1 min-h-0 overflow-hidden heat-map-grid">
         <GridView
-          key={`${primaryRunId}-${comparedRunId}-${colorDisplayMode}-${[...selectedMetricGroups].sort().join(',')}`}
+          key={`${primaryRunId}-${comparedRunId}`}
           columnDefs={columnDefs}
           rowData={visibleRows}
           additionalGridOptions={gridOptions}

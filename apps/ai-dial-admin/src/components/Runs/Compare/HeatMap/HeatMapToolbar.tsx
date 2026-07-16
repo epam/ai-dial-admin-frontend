@@ -21,6 +21,7 @@ import {
   filterMetricGroupsBySearch,
   formatHeatMapMetricsTriggerLabel,
   getMetricGroupsCheckState,
+  isMetricGroupSelected,
   MetricGroupsCheckState,
   toggleAllMetricGroups,
   toggleMetricGroup,
@@ -92,9 +93,9 @@ const HeatMapToolbar: FC<Props> = ({
         return;
       }
 
-      onSelectedMetricGroupsChange(toggleMetricGroup(selectedMetricGroups, groupKey));
+      onSelectedMetricGroupsChange(toggleMetricGroup(selectedMetricGroups, groupKey, availableMetricGroups));
     },
-    [onSelectedMetricGroupsChange, selectedMetricGroups],
+    [onSelectedMetricGroupsChange, selectedMetricGroups, availableMetricGroups],
   );
 
   const colorDisplayOptions = useMemo<SegmentedControlOption<HeatMapColorDisplayMode>[]>(
@@ -139,7 +140,7 @@ const HeatMapToolbar: FC<Props> = ({
               {filteredMetricGroups.map((groupKey) => (
                 <div key={groupKey} className="flex h-[34px] items-center pl-10 pr-3">
                   <DialCheckbox
-                    checked={selectedMetricGroups.has(groupKey)}
+                    checked={isMetricGroupSelected(selectedMetricGroups, groupKey)}
                     id={`heat-map-metric-${groupKey}`}
                     label={groupKey}
                     onChange={(value) => onToggleGroup(groupKey, value)}
