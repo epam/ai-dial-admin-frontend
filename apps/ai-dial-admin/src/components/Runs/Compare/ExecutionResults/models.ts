@@ -16,6 +16,10 @@ export interface ComparePanelRunNames {
   secondary: string;
 }
 
+export interface CompareRowDiffVisibility {
+  hiddenColIds: ReadonlySet<string>;
+}
+
 export interface CompareColumnPanelContext {
   panelName?: string;
   panelRunIndex?: typeof RUN_COMPARE_PRIMARY_INDEX | typeof RUN_COMPARE_SECONDARY_INDEX;

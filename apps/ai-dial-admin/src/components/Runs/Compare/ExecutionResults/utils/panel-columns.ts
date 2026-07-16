@@ -245,6 +245,19 @@ const applyHideByColId = (tree: ColDef[], hideMap: Map<string, boolean>): ColDef
     return { ...node, children: applyHideByColId(children, hideMap) };
   });
 
+export const collectHiddenColIds = (tree: ColDef[]): Set<string> => {
+  const hideMap = collectHideByColId(tree);
+  const hiddenColIds = new Set<string>();
+
+  for (const [colId, isHidden] of hideMap.entries()) {
+    if (isHidden) {
+      hiddenColIds.add(colId);
+    }
+  }
+
+  return hiddenColIds;
+};
+
 export const preservePanelHideState = (newTree: ColDef[], oldTree: ColDef[]): ColDef[] => {
   if (oldTree.length === 0) {
     return newTree;
