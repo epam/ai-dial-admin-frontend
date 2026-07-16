@@ -1,6 +1,6 @@
 'use client';
 
-import { ColDef, GridApi, GridReadyEvent, RowClassRules } from 'ag-grid-community';
+import { ColDef, FilterChangedEvent, GridApi, GridReadyEvent, RowClassRules } from 'ag-grid-community';
 import classNames from 'classnames';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -30,6 +30,7 @@ import {
   mergeComparePanelColumns,
   splitComparePanelColumns,
 } from '@/src/components/Runs/Compare/ExecutionResults/utils/columns';
+import { ExecutionResultsTabUiState } from '@/src/components/Runs/Compare/models';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import { getCompareRowSelectionId, mergeByTestCaseId, RESULT_FILTERS } from '@/src/components/Runs/View/utils';
 import { EntitiesI18nKey, RunsI18nKey } from '@/src/constants/i18n';
@@ -45,6 +46,8 @@ interface Props {
   onToggleDisplayPanel: () => void;
   selectedRow: CompareAnalyticsRow | null;
   onOpenRowDetail: (row: CompareAnalyticsRow) => void;
+  executionResultsState: ExecutionResultsTabUiState;
+  setExecutionResultsState: (patch: Partial<ExecutionResultsTabUiState>) => void;
 }
 
 const DISPLAY_PANEL_CLASS_NAME =
@@ -59,21 +62,30 @@ const ExecutionResultsTab: FC<Props> = ({
   onToggleDisplayPanel,
   selectedRow,
   onOpenRowDetail,
+  executionResultsState,
+  setExecutionResultsState,
 }) => {
   const t = useI18n();
 
   const gridApiRef = useRef<GridApi | null>(null);
-
-  const [results, setResults] = useState<AnalyticsResult[] | null>(null);
-  const [comparedResults, setComparedResults] = useState<AnalyticsResult[] | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isCompareLoading, setIsCompareLoading] = useState(false);
+  const [isGridReady, setIsGridReady] = useState(false);
   const [hasLoadError, setHasLoadError] = useState(false);
 
-  const [viewDifferencesOnly, setViewDifferencesOnly] = useState(false);
-  const [hideHighlights, setHideHighlights] = useState(false);
-  const [gridColDefs, setGridColDefs] = useState<ColDef[]>([]);
-  const [panelColDefs, setPanelColDefs] = useState<ColDef[]>([]);
+  const {
+    viewDifferencesOnly,
+    hideHighlights,
+    gridColDefs,
+    panelColDefs,
+    filterModel,
+    columnState,
+    results,
+    comparedResults,
+  } = executionResultsState;
+
+  const panelColDefsRef = useRef(panelColDefs);
+  panelColDefsRef.current = panelColDefs;
+  const gridColDefsRef = useRef(gridColDefs);
+  gridColDefsRef.current = gridColDefs;
 
   const errorText = t(RunsI18nKey.MetricFailedText);
   const runNames = useMemo(
@@ -82,11 +94,12 @@ const ExecutionResultsTab: FC<Props> = ({
   );
 
   useEffect(() => {
-    let isCancelled = false;
+    if (results !== null) {
+      return;
+    }
 
-    setIsLoading(true);
+    let isCancelled = false;
     setHasLoadError(false);
-    setResults(null);
 
     getRun(primaryRunId)
       .then((runData) => {
@@ -99,29 +112,25 @@ const ExecutionResultsTab: FC<Props> = ({
       })
       .then((resultsResponse) => {
         if (isCancelled || resultsResponse === undefined) return;
-        setResults(resultsResponse?.content || []);
+        setExecutionResultsState({ results: resultsResponse?.content || [] });
       })
       .catch(() => {
         if (!isCancelled) {
           setHasLoadError(true);
-        }
-      })
-      .finally(() => {
-        if (!isCancelled) {
-          setIsLoading(false);
         }
       });
 
     return () => {
       isCancelled = true;
     };
-  }, [primaryRunId]);
+  }, [primaryRunId, results, setExecutionResultsState]);
 
   useEffect(() => {
-    let isCancelled = false;
+    if (comparedResults !== null) {
+      return;
+    }
 
-    setIsCompareLoading(true);
-    setComparedResults(null);
+    let isCancelled = false;
 
     getRun(comparedRunId)
       .then((comparedRun) => {
@@ -130,23 +139,18 @@ const ExecutionResultsTab: FC<Props> = ({
       })
       .then((res) => {
         if (isCancelled || res === undefined) return;
-        setComparedResults(res?.content || []);
+        setExecutionResultsState({ comparedResults: res?.content || [] });
       })
       .catch(() => {
         if (!isCancelled) {
           setHasLoadError(true);
-        }
-      })
-      .finally(() => {
-        if (!isCancelled) {
-          setIsCompareLoading(false);
         }
       });
 
     return () => {
       isCancelled = true;
     };
-  }, [comparedRunId]);
+  }, [comparedRunId, comparedResults, setExecutionResultsState]);
 
   const mergedRowData = useMemo(() => {
     if (results === null || comparedResults === null) return null;
@@ -196,9 +200,11 @@ const ExecutionResultsTab: FC<Props> = ({
     }
 
     const flatDefs = computedColDefs as ColDef[];
-    setPanelColDefs((prev) => buildComparePanelColumnTree(flatDefs, runNames, prev));
-    setGridColDefs((prev) => preserveFlatColDefHideState(flatDefs, prev));
-  }, [computedColDefs, runNames]);
+    setExecutionResultsState({
+      panelColDefs: buildComparePanelColumnTree(flatDefs, runNames, panelColDefsRef.current),
+      gridColDefs: preserveFlatColDefHideState(flatDefs, gridColDefsRef.current),
+    });
+  }, [computedColDefs, runNames, setExecutionResultsState]);
 
   const hiddenColIds = useMemo(() => collectHiddenColIds(gridColDefs), [gridColDefs]);
 
@@ -231,13 +237,37 @@ const ExecutionResultsTab: FC<Props> = ({
     [hideHighlights, metricsSchema, selectedRow],
   );
 
+  const syncGridUiState = useCallback(
+    (api: GridApi) => {
+      setExecutionResultsState({
+        filterModel: api.getFilterModel(),
+        columnState: api.getColumnState(),
+      });
+    },
+    [setExecutionResultsState],
+  );
+
   const gridOptions = useMemo(
     () => ({
       ...compareGridOptions,
       rowHeight: 40,
       rowClassRules,
+      onFilterChanged: (event: FilterChangedEvent) => {
+        syncGridUiState(event.api);
+      },
+      onSortChanged: (event: { api: GridApi }) => {
+        syncGridUiState(event.api);
+      },
+      onColumnMoved: (event: { api: GridApi; finished?: boolean }) => {
+        if (event.finished !== false) {
+          syncGridUiState(event.api);
+        }
+      },
+      onColumnVisible: (event: { api: GridApi }) => {
+        syncGridUiState(event.api);
+      },
     }),
-    [rowClassRules],
+    [rowClassRules, syncGridUiState],
   );
 
   useEffect(() => {
@@ -245,24 +275,23 @@ const ExecutionResultsTab: FC<Props> = ({
       return;
     }
 
-    const columnState = gridApiRef.current?.getColumnState();
-    if (!columnState?.length) {
+    const gridColumnState = gridApiRef.current?.getColumnState();
+    if (!gridColumnState?.length) {
       return;
     }
 
-    setPanelColDefs((prevColDefs) => {
-      if (!prevColDefs?.length) {
-        return prevColDefs;
-      }
+    const prevPanelColDefs = panelColDefsRef.current;
+    if (!prevPanelColDefs.length) {
+      return;
+    }
 
-      const syncedColDefs = applyColumnStateOrderToTreeColDefs(prevColDefs, columnState);
-      if (haveTreeColDefsSamePanelState(prevColDefs, syncedColDefs)) {
-        return prevColDefs;
-      }
+    const syncedColDefs = applyColumnStateOrderToTreeColDefs(prevPanelColDefs, gridColumnState);
+    if (haveTreeColDefsSamePanelState(prevPanelColDefs, syncedColDefs)) {
+      return;
+    }
 
-      return syncedColDefs;
-    });
-  }, [showDisplayPanel, computedColDefs]);
+    setExecutionResultsState({ panelColDefs: syncedColDefs });
+  }, [showDisplayPanel, computedColDefs, setExecutionResultsState]);
 
   const onPanelColumnsChange = useCallback(
     (nestedPanelCols: ColDef[]) => {
@@ -270,16 +299,41 @@ const ExecutionResultsTab: FC<Props> = ({
       const { actionColumn } = splitComparePanelColumns(computedColDefs as ColDef[]);
       const mergedGridDefs = mergeComparePanelColumns(flatDefs, actionColumn);
 
-      setPanelColDefs(nestedPanelCols);
-      setGridColDefs(mergedGridDefs);
+      setExecutionResultsState({
+        panelColDefs: nestedPanelCols,
+        gridColDefs: mergedGridDefs,
+      });
       requestAnimationFrame(() => gridApiRef.current?.sizeColumnsToFit());
     },
-    [computedColDefs],
+    [computedColDefs, setExecutionResultsState],
   );
 
   const onGridReady = useCallback((event: GridReadyEvent) => {
     gridApiRef.current = event.api;
+    setIsGridReady(true);
   }, []);
+
+  // Restore after AgGridWrapper's setGridColumnsState (child effect runs first).
+  useEffect(() => {
+    const api = gridApiRef.current;
+    if (!isGridReady || !api) {
+      return;
+    }
+
+    if (filterModel && Object.keys(filterModel).length > 0) {
+      const current = api.getFilterModel() ?? {};
+      const isAlreadyApplied = Object.keys(filterModel).every(
+        (key) => JSON.stringify(current[key]) === JSON.stringify(filterModel[key]),
+      );
+      if (!isAlreadyApplied) {
+        api.setFilterModel(filterModel);
+      }
+    }
+
+    if (columnState?.length) {
+      api.applyColumnState({ state: columnState, applyOrder: true });
+    }
+  }, [isGridReady, filterModel, columnState, displayColDefs, displayedRowData]);
 
   const isCompareDataReady = results !== null && comparedResults !== null;
 
@@ -287,7 +341,7 @@ const ExecutionResultsTab: FC<Props> = ({
     return <p className="text-secondary dial-small-text">{t(RunsI18nKey.LoadError)}</p>;
   }
 
-  if (isLoading || isCompareLoading || !isCompareDataReady) {
+  if (!isCompareDataReady) {
     return (
       <div className="flex flex-1 min-h-0 items-center justify-center">
         <DialLoader size={40} />
@@ -312,9 +366,9 @@ const ExecutionResultsTab: FC<Props> = ({
               columns={panelColDefs}
               onColumnsChange={onPanelColumnsChange}
               viewDifferencesOnly={viewDifferencesOnly}
-              onViewDifferencesOnlyChange={setViewDifferencesOnly}
+              onViewDifferencesOnlyChange={(value) => setExecutionResultsState({ viewDifferencesOnly: value })}
               hideHighlights={hideHighlights}
-              onHideHighlightsChange={setHideHighlights}
+              onHideHighlightsChange={(value) => setExecutionResultsState({ hideHighlights: value })}
               onClose={onToggleDisplayPanel}
               panelClassName={DISPLAY_PANEL_CLASS_NAME}
             />

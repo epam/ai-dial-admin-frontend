@@ -25,7 +25,9 @@ import {
 } from '@/src/components/Runs/Compare/constants';
 import HeatMapToolbar from '@/src/components/Runs/Compare/HeatMap/HeatMapToolbar';
 import { HeatMapColorDisplayMode } from '@/src/components/Runs/Compare/HeatMap/models';
+import { resolveMetricGroupsSelection } from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-metric-selection';
 import SelectCompareRunModal from '@/src/components/Runs/Compare/SelectCompareRunModal';
+import { useCompareViewTabState } from '@/src/components/Runs/Compare/use-compare-view-tab-state';
 import {
   fetchSuiteCompletedRuns,
   getCompareRunsUrn,
@@ -67,6 +69,13 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
   const [colorDisplayMode, setColorDisplayMode] = useState(HeatMapColorDisplayMode.Absolute);
   const [availableMetricGroups, setAvailableMetricGroups] = useState<string[]>([]);
   const [selectedMetricGroups, setSelectedMetricGroups] = useState<Set<string>>(new Set());
+  const areMetricGroupsInitializedRef = useRef(false);
+
+  const {
+    state: tabState,
+    setExecutionResultsState,
+    setHeatMapState,
+  } = useCompareViewTabState(primaryRunId, comparedRunId);
 
   const selectedRowRef = useRef(selectedRow);
   selectedRowRef.current = selectedRow;
@@ -175,7 +184,11 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
 
   const onAvailableMetricGroupsChange = useCallback((groups: string[]) => {
     setAvailableMetricGroups(groups);
-    setSelectedMetricGroups(new Set(groups));
+    setSelectedMetricGroups((prev) => {
+      const resolved = resolveMetricGroupsSelection(groups, prev, areMetricGroupsInitializedRef.current);
+      areMetricGroupsInitializedRef.current = resolved.isInitialized;
+      return resolved.selection;
+    });
   }, []);
 
   const onSelectedMetricGroupsChange = useCallback((groups: Set<string>) => {
@@ -259,6 +272,7 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
     closeRowDetail();
     setAvailableMetricGroups([]);
     setSelectedMetricGroups(new Set());
+    areMetricGroupsInitializedRef.current = false;
   }, [primaryRunId, comparedRunId, closeRowDetail]);
 
   useEffect(() => () => sidebarRef.current.closeSidebar(), []);
@@ -321,6 +335,10 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
           selectedRow={selectedRow}
           onOpenRowDetail={openRowDetail}
           onCloseRowDetail={closeRowDetail}
+          executionResultsState={tabState.executionResults}
+          setExecutionResultsState={setExecutionResultsState}
+          heatMapState={tabState.heatMap}
+          setHeatMapState={setHeatMapState}
         />
       </div>
 
