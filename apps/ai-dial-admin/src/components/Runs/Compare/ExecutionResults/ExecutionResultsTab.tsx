@@ -30,7 +30,7 @@ import {
   splitComparePanelColumns,
 } from '@/src/components/Runs/Compare/ExecutionResults/utils/columns';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
-import { mergeByTestCaseId, RESULT_FILTERS } from '@/src/components/Runs/View/utils';
+import { getCompareRowSelectionId, mergeByTestCaseId, RESULT_FILTERS } from '@/src/components/Runs/View/utils';
 import { EntitiesI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
@@ -172,10 +172,10 @@ const ExecutionResultsTab: FC<Props> = ({
   const eyeRendererParams = useMemo(
     () => ({
       onOpenRowDetail,
-      selectedRowId: selectedRow?.id ?? null,
+      selectedRowId: selectedRow ? getCompareRowSelectionId(selectedRow) : null,
       viewRowDetailsLabel: t(RunsI18nKey.RunCompareViewRowDetails),
     }),
-    [onOpenRowDetail, selectedRow?.id, t],
+    [onOpenRowDetail, selectedRow, t],
   );
 
   const displayColDefs = useMemo(() => {
@@ -218,9 +218,12 @@ const ExecutionResultsTab: FC<Props> = ({
               return isCompareRowFullyEmpty(row, metricsSchema);
             },
           }),
-      'ag-active-detail-row': (params) => params.data?.id === selectedRow?.id,
+      'ag-active-detail-row': (params) => {
+        if (!params.data || !selectedRow) return false;
+        return getCompareRowSelectionId(params.data) === getCompareRowSelectionId(selectedRow);
+      },
     }),
-    [hideHighlights, metricsSchema, selectedRow?.id],
+    [hideHighlights, metricsSchema, selectedRow],
   );
 
   const gridOptions = useMemo(

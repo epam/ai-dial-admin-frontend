@@ -5,6 +5,7 @@ import { ICellRendererParams } from 'ag-grid-community';
 import classNames from 'classnames';
 
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
+import { getCompareRowSelectionId } from '@/src/components/Runs/View/utils';
 
 interface CompareEyeCellRendererParams extends ICellRendererParams<CompareAnalyticsRow> {
   onOpenRowDetail?: (row: CompareAnalyticsRow) => void;
@@ -14,7 +15,8 @@ interface CompareEyeCellRendererParams extends ICellRendererParams<CompareAnalyt
 
 const CompareEyeCellRenderer = (params: CompareEyeCellRendererParams) => {
   const row = params.data;
-  const isActive = row?.id != null && row.id === params.selectedRowId;
+  const selectionId = row ? getCompareRowSelectionId(row) : null;
+  const isActive = selectionId != null && selectionId === params.selectedRowId;
 
   const onClick = () => {
     if (!row) return;

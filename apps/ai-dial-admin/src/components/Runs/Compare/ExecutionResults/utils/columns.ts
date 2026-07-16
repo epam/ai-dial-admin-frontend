@@ -325,6 +325,7 @@ const getComparedExecutionColumns = (hideHighlights?: boolean): ColGroupDef => (
       hide: true,
       ...NO_FILTER_COL_DEF,
       ...fixedWidthColDef(HTTP_COLUMN_WIDTH),
+      valueGetter: (params) => params.data?.responseStatusCode ?? '—',
       ...maybePairCellClassRules(hideHighlights, getHttpPairKind, 'primary'),
     },
     {
