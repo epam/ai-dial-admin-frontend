@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { assetApi, assetsApi } from '@/src/app/api/api';
+import { assetApi, assetsApi, toolsetOpsApi } from '@/src/app/api/api';
 import * as eximModule from '@/src/server/applications/exim';
 import * as zipEximModule from '@/src/server/applications/zip-exim';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -292,11 +292,11 @@ describe('Assets application :: server actions', () => {
   });
 
   test('Should call getAssetTools action for APPLICATION resource type', async () => {
-    (assetsApi.getTools as any).mockResolvedValue(RESPONSE_MOCK);
+    (toolsetOpsApi.discoveredTools as any).mockResolvedValue(RESPONSE_MOCK);
 
     const result = await getAssetTools('test');
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetsApi.getTools).toHaveBeenCalledWith('test', TOKEN_MOCK, ResourceType.APPLICATION);
+    expect(toolsetOpsApi.discoveredTools).toHaveBeenCalledWith(TOKEN_MOCK, 'test', ResourceType.APPLICATION);
     expect(result).toBe(RESPONSE_MOCK);
   });
 });
