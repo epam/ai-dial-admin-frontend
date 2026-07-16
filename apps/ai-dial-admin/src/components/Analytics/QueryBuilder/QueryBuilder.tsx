@@ -37,6 +37,7 @@ import { useTimeFilter } from '@/src/hooks/use-time-filter';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsEntity, AnalyticsEntityField } from '@/src/models/analytics/entity';
+import { QueryFunction } from '@/src/models/analytics/query-function';
 import { QueryMode, StructuredQuery, StructuredQueryResult } from '@/src/models/analytics/query';
 import {
   ExecutedQueryMeta,
@@ -56,14 +57,15 @@ interface Props {
   initialEntities: AnalyticsEntity[];
   initialEntityName: string;
   initialFields: AnalyticsEntityField[];
+  initialFunctions: QueryFunction[];
 }
 
-const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFields }) => {
+const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFields, initialFunctions }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
 
   const [state, setState] = useState<QueryBuilderState>(() => ({
-    ...createInitialState(),
+    ...createInitialState(initialFunctions),
     entityName: initialEntityName,
     fields: initialFields,
   }));
@@ -106,9 +108,9 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
     setSchemaError(null);
     const schema = await getEntitySchema(name);
     if (schema) {
-      setState({ ...createInitialState(), entityName: name, fields: schema.fields || [] });
+      setState({ ...createInitialState(state.functions), entityName: name, fields: schema.fields || [] });
     } else {
-      setState({ ...createInitialState(), entityName: name });
+      setState({ ...createInitialState(state.functions), entityName: name });
       setSchemaError(t(QueryBuilderI18nKey.SchemaLoadFailed));
       showNotification(getErrorNotification(t(QueryBuilderI18nKey.SchemaLoadFailed)));
     }
@@ -169,7 +171,11 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
     setJsonText('');
     setJsonInvalid(false);
     setJsonDiverged(false);
-    setState({ ...createInitialState(), entityName: state.entityName, fields: state.fields });
+    setState({
+      ...createInitialState(state.functions),
+      entityName: state.entityName,
+      fields: state.fields,
+    });
     setView(pendingView ?? QueryBuilderView.Form);
     setPendingView(null);
   };
@@ -188,7 +194,7 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
       // A ge/le pair on the timestamp field belongs to the toolbar control, not the filter tree.
       const lifted = timestampField ? liftTimeRange(parsed.filter, timestampField) : null;
       const forState = lifted ? { ...parsed, filter: lifted.rest } : parsed;
-      setState(parseQuery(forState, state.fields));
+      setState(parseQuery(forState, state.fields, state.functions));
       if (lifted && !sameRange(lifted.range, timeBound?.range)) {
         timeFilter.onTimeRangeChange(lifted.range, true);
       }
@@ -306,6 +312,7 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
                       onChange={setSqlText}
                       fields={state.fields}
                       entityName={state.entityName}
+                      functions={state.functions}
                     />
                   </div>
                 ) : (

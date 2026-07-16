@@ -1,5 +1,6 @@
 import { Token } from '@/src/models/auth';
 import { AnalyticsEntity, AnalyticsEntitySchema } from '@/src/models/analytics/entity';
+import { QueryFunction } from '@/src/models/analytics/query-function';
 import { SqlQueryRequest, StructuredQuery, StructuredQueryResult } from '@/src/models/analytics/query';
 import { AnalyticsSchemaPatch, AnalyticsTable, CreateTableDto, WriteRowsDto } from '@/src/models/analytics/table';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -7,6 +8,7 @@ import { BaseApi } from '@/src/server/base-api';
 
 export const QUERIES_URL = 'v1/queries';
 export const QUERIES_ENTITIES_URL = `${QUERIES_URL}/entities`;
+export const QUERIES_FUNCTIONS_URL = `${QUERIES_URL}/functions`;
 export const QUERIES_EXECUTE_URL = `${QUERIES_URL}/execute`;
 export const QUERIES_EXECUTE_SQL_URL = `${QUERIES_URL}/execute-sql`;
 export const QUERIES_ENTITY_SCHEMA_URL = (name: string): string =>
@@ -24,6 +26,10 @@ export class AnalyticsDataApi extends BaseApi {
 
   getEntitySchema(name: string, token: Token): Promise<AnalyticsEntitySchema | null> {
     return this.get<AnalyticsEntitySchema>(QUERIES_ENTITY_SCHEMA_URL(name), token);
+  }
+
+  getFunctions(token: Token): Promise<QueryFunction[] | null> {
+    return this.get<QueryFunction[]>(QUERIES_FUNCTIONS_URL, token);
   }
 
   executeAction(query: StructuredQuery, token: Token): Promise<ServerActionResponse<StructuredQueryResult>> {

@@ -33,33 +33,6 @@ export enum QueryValueType {
   Null = 'null',
 }
 
-export enum QueryAggregateFn {
-  Count = 'count',
-  Sum = 'sum',
-  Avg = 'avg',
-  Min = 'min',
-  Max = 'max',
-}
-
-// Scalar functions the query translator accepts in select/group_by expressions. Mirrors the
-// service's closed allowlist — anything else is rejected with "unsupported function".
-export enum QueryScalarFn {
-  DateBin = 'date_bin',
-  Lower = 'lower',
-  Upper = 'upper',
-  Length = 'length',
-  Trim = 'trim',
-  Abs = 'abs',
-}
-
-export enum QueryBucketUnit {
-  Second = 'second',
-  Minute = 'minute',
-  Hour = 'hour',
-  Day = 'day',
-  Week = 'week',
-}
-
 export enum QueryExprType {
   Field = 'field',
   Value = 'value',

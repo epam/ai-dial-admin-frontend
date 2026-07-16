@@ -6,14 +6,14 @@ import {
   FilterNode,
   FilterNodeKind,
   FilterPredicateNode,
+  FnArgValue,
   GroupByRow,
   PageState,
   QueryBuilderState,
   SortRow,
 } from '@/src/models/analytics/query-builder';
+import { QueryFunction, QueryFunctionGroup } from '@/src/models/analytics/query-function';
 import {
-  QueryAggregateFn,
-  QueryBucketUnit,
   QueryFilterNode,
   QueryGroup,
   QueryLogicalOperator,
@@ -23,11 +23,12 @@ import {
   QueryPageType,
   QueryPredicate,
   QueryExprType,
-  QueryScalarFn,
   QueryValueType,
   StructuredQuery,
 } from '@/src/models/analytics/query';
+import { functionByName, isExpressionArg } from '@/src/components/Analytics/QueryBuilder/utils/functions';
 import {
+  createAggregate,
   createGroup,
   createGroupByColumn,
   createGroupByFn,
@@ -112,9 +113,21 @@ const parseFilterRoot = (node?: QueryFilterNode): FilterGroupNode => {
   return root;
 };
 
-const SCALAR_FNS = new Set<string>(Object.values(QueryScalarFn));
+// Reverse a serialized function call's ordered args into row arg-value slots, matched positionally
+// against the catalog function's argument list.
+const argsToSlots = (fn: QueryFunction, exprArgs: QueryOutputColumn['expr'][]): FnArgValue[] =>
+  fn.args.map((argDef, i) => {
+    const argExpr = exprArgs[i];
+    if (isExpressionArg(argDef)) {
+      return { field: argExpr?.type === QueryExprType.Field ? argExpr.name : '' };
+    }
+    return { literal: argExpr?.type === QueryExprType.Value ? (argExpr.value ?? '') : '' };
+  });
 
-const parseAggregateSelect = (select: QueryOutputColumn[]): { groupBy: GroupByRow[]; aggregates: AggregateRow[] } => {
+const parseAggregateSelect = (
+  select: QueryOutputColumn[],
+  functions: QueryFunction[],
+): { groupBy: GroupByRow[]; aggregates: AggregateRow[] } => {
   const groupBy: GroupByRow[] = [];
   const aggregates: AggregateRow[] = [];
 
@@ -122,31 +135,18 @@ const parseAggregateSelect = (select: QueryOutputColumn[]): { groupBy: GroupByRo
     const expr = col.expr;
     if (expr.type === QueryExprType.Field) {
       groupBy.push({ ...createGroupByColumn(expr.name), alias: col.as ?? '' });
-    } else if (expr.type === QueryExprType.Fn && expr.name === QueryScalarFn.DateBin) {
-      const [amountExpr, unitExpr, fieldExpr] = expr.args;
-      groupBy.push({
-        id: nextId(),
-        fn: QueryScalarFn.DateBin,
-        amount: amountExpr?.type === QueryExprType.Value ? Number(amountExpr.value ?? 0) : 0,
-        unit: unitExpr?.type === QueryExprType.Value ? (unitExpr.value as QueryBucketUnit) : QueryBucketUnit.Minute,
-        field: fieldExpr?.type === QueryExprType.Field ? fieldExpr.name : '',
-        alias: col.as ?? '',
-      });
-    } else if (expr.type === QueryExprType.Fn && SCALAR_FNS.has(expr.name)) {
-      const arg = expr.args[0];
-      groupBy.push({
-        ...createGroupByFn(expr.name as QueryScalarFn, arg?.type === QueryExprType.Field ? arg.name : ''),
-        alias: col.as ?? '',
-      });
-    } else if (expr.type === QueryExprType.Fn) {
-      const arg = expr.args[0];
-      aggregates.push({
-        id: nextId(),
-        fn: expr.name as QueryAggregateFn,
-        field: arg?.type === QueryExprType.Field ? arg.name : '',
-        distinct: !!expr.distinct,
-        alias: col.as ?? '',
-      });
+      return;
+    }
+    if (expr.type !== QueryExprType.Fn) return;
+    // A function absent from the served catalog cannot be shown in the builder — the query stays
+    // editable in the JSON/SQL views; here we simply skip it.
+    const fn = functionByName(functions, expr.name);
+    if (!fn) return;
+    const slots = argsToSlots(fn, expr.args);
+    if (fn.group === QueryFunctionGroup.Scalar) {
+      groupBy.push({ ...createGroupByFn(fn, slots), alias: col.as ?? '' });
+    } else {
+      aggregates.push({ ...createAggregate(fn, slots), distinct: !!expr.distinct, alias: col.as ?? '' });
     }
   });
 
@@ -169,8 +169,12 @@ const parsePage = (page?: QueryPage): PageState => {
   return { ...base, enabled: true, type: QueryPageType.Cursor, cursor: page.cursor ?? '', cursorLimit: page.limit };
 };
 
-export const parseQuery = (query: StructuredQuery, fields: AnalyticsEntityField[]): QueryBuilderState => {
-  const state = createInitialState();
+export const parseQuery = (
+  query: StructuredQuery,
+  fields: AnalyticsEntityField[],
+  functions: QueryFunction[] = [],
+): QueryBuilderState => {
+  const state = createInitialState(functions);
   state.entityName = query.entity ?? '';
   state.fields = fields;
   state.mode = query.mode === QueryMode.Aggregate ? QueryMode.Aggregate : QueryMode.Row;
@@ -179,7 +183,7 @@ export const parseQuery = (query: StructuredQuery, fields: AnalyticsEntityField[
   state.having = parseFilterRoot(query.having);
 
   if (state.mode === QueryMode.Aggregate) {
-    const { groupBy, aggregates } = parseAggregateSelect(query.select || []);
+    const { groupBy, aggregates } = parseAggregateSelect(query.select || [], functions);
     state.groupBy = groupBy;
     state.aggregates = aggregates;
   } else {

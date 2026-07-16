@@ -1,13 +1,11 @@
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
+import { QueryFunction } from '@/src/models/analytics/query-function';
 import {
-  QueryAggregateFn,
-  QueryBucketUnit,
   QueryLogicalOperator,
   QueryMode,
   QueryOperator,
   QueryPageType,
-  QueryScalarFn,
   QuerySortDirection,
   QuerySortNulls,
   QueryValueType,
@@ -46,23 +44,32 @@ export interface FilterGroupNode {
 
 export type FilterNode = FilterGroupNode | FilterPredicateNode;
 
-// One Group by entry: a plain column (fn = null) or a scalar-function expression over a column.
-// amount/unit parameterize date_bin only and are ignored for the other functions.
-export interface GroupByRow {
-  id: string;
-  fn: QueryScalarFn | null;
-  field: string;
-  alias: string;
-  amount: number;
-  unit: QueryBucketUnit;
+// One ordered argument value of a function row. Exactly one member is populated per the catalog
+// argument's kind: `field` for an `expression` argument, `literal` for a literal argument.
+export interface FnArgValue {
+  field?: string;
+  literal?: string;
 }
 
+// One Group by entry: a plain column (fn = null) or a scalar-function expression. When fn is a
+// catalog function name, `args` holds one value slot per that function's catalog argument (in
+// order) and `field` is unused; when fn is null the row is a plain column named by `field`.
+export interface GroupByRow {
+  id: string;
+  fn: string | null;
+  field: string;
+  alias: string;
+  args: FnArgValue[];
+}
+
+// One aggregate metric: a catalog function (aggregate / ordered_set_aggregate group) with one arg
+// value slot per catalog argument, an optional distinct flag, and an alias.
 export interface AggregateRow {
   id: string;
-  fn: QueryAggregateFn;
-  field: string;
+  fn: string;
   distinct: boolean;
   alias: string;
+  args: FnArgValue[];
 }
 
 export interface SortRow {
@@ -85,6 +92,9 @@ export interface PageState {
 export interface QueryBuilderState {
   entityName: string;
   fields: AnalyticsEntityField[];
+  // The served function catalog (GET /v1/queries/functions); empty when the fetch failed. Sole
+  // source of the builder's function set — preserved across entity/mode/state resets.
+  functions: QueryFunction[];
   mode: QueryMode;
   distinct: boolean;
   filter: FilterGroupNode;
@@ -110,10 +120,10 @@ export interface FieldOptionGroup {
   options: FieldOption[];
 }
 
-// A scalar-function entry offered by the categorized dropdown alongside columns; `hint` is the
-// short localized description shown next to the function name.
+// A function entry offered by the categorized dropdown alongside columns; `name` is the catalog
+// function name and `hint` is its catalog description shown next to the name.
 export interface FunctionOption {
-  name: QueryScalarFn;
+  name: string;
   hint: string;
 }
 

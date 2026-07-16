@@ -4,6 +4,7 @@ import { cookies, headers } from 'next/headers';
 
 import { analyticsDataApi } from '@/src/app/api/api';
 import { AnalyticsEntity, AnalyticsEntitySchema } from '@/src/models/analytics/entity';
+import { QueryFunction } from '@/src/models/analytics/query-function';
 import { StructuredQuery, StructuredQueryResult } from '@/src/models/analytics/query';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -17,6 +18,10 @@ export async function getEntities(): Promise<AnalyticsEntity[] | null> {
 
 export async function getEntitySchema(name: string): Promise<AnalyticsEntitySchema | null> {
   return analyticsDataApi.getEntitySchema(name, await token());
+}
+
+export async function getFunctions(): Promise<QueryFunction[] | null> {
+  return analyticsDataApi.getFunctions(await token());
 }
 
 export async function executeQuery(query: StructuredQuery): Promise<ServerActionResponse<StructuredQueryResult>> {

@@ -1,7 +1,8 @@
 import { UNTAGGED_KEY } from '@/src/constants/analytics/query-builder';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { FieldOption, FieldOptionGroup, GroupByRow, QueryBuilderState } from '@/src/models/analytics/query-builder';
-import { QueryMode, QueryScalarFn, QueryValueType } from '@/src/models/analytics/query';
+import { QueryMode, QueryValueType } from '@/src/models/analytics/query';
+import { functionByName, functionResultType } from '@/src/components/Analytics/QueryBuilder/utils/functions';
 
 export const family = (name: string): string => {
   const i = name.indexOf(':');
@@ -92,25 +93,6 @@ export const fieldsToOptions = (fields: AnalyticsEntityField[]): FieldOption[] =
     sensitive: f.sensitive,
   }));
 
-export const bucketFieldOptions = (fields: AnalyticsEntityField[]): AnalyticsEntityField[] => {
-  const temporal = fields.filter((f) => f.type === AnalyticsFieldType.Timestamp || f.type === AnalyticsFieldType.Date);
-  return sortByName(temporal.length ? temporal : fields);
-};
-
-// The output type a scalar group-by function produces — display-only, for the option lists.
-const scalarFnResultType = (fn: QueryScalarFn): AnalyticsFieldType => {
-  switch (fn) {
-    case QueryScalarFn.DateBin:
-      return AnalyticsFieldType.Timestamp;
-    case QueryScalarFn.Length:
-      return AnalyticsFieldType.Integer;
-    case QueryScalarFn.Abs:
-      return AnalyticsFieldType.Decimal;
-    default:
-      return AnalyticsFieldType.String;
-  }
-};
-
 const groupByOption = (state: QueryBuilderState, row: GroupByRow): FieldOption | null => {
   if (!row.fn) {
     if (!row.field) return null;
@@ -119,7 +101,8 @@ const groupByOption = (state: QueryBuilderState, row: GroupByRow): FieldOption |
     const field = state.fields.find((f) => f.name === row.field);
     return { name: row.field, type: field?.type, display_name: field?.display_name, description: field?.description };
   }
-  return row.alias ? { name: row.alias, type: scalarFnResultType(row.fn) } : null;
+  const fn = functionByName(state.functions, row.fn);
+  return row.alias && fn ? { name: row.alias, type: functionResultType(fn, row.args, state.fields) } : null;
 };
 
 export const havingFieldOptions = (state: QueryBuilderState): FieldOption[] => {
