@@ -346,6 +346,24 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     expect(secondaryCol.valueGetter({ data: makeRow({ _compared: null }) })).toBe('—');
   });
 
+  test('primary HTTP valueGetter returns dash for compared-only rows', () => {
+    type ExecChild = { colId?: string; valueGetter: (p: { data?: CompareAnalyticsRow }) => unknown };
+    const cols = getCompareColumnsCompare([makeRow()]);
+    const exec = cols[2] as { children: ExecChild[] };
+    const primaryHttpCol = exec.children[2];
+
+    expect(primaryHttpCol.colId).toBe('http');
+    expect(
+      primaryHttpCol.valueGetter({
+        data: makeRow({
+          responseStatusCode: undefined as unknown as number,
+          _compared: makeResult({ responseStatusCode: 200 }),
+        }),
+      }),
+    ).toBe('—');
+    expect(primaryHttpCol.valueGetter({ data: makeRow({ responseStatusCode: 404 }) })).toBe(404);
+  });
+
   test('omits cellClassRules on compare columns when hideHighlights is true', () => {
     const cols = getCompareColumnsCompare(
       [

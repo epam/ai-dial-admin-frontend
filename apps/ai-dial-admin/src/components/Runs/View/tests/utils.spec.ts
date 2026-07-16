@@ -10,6 +10,7 @@ import {
   getFormattedDuration,
   getMetricGroups,
   getPanelTitle,
+  getCompareRowSelectionId,
   mergeByTestCaseId,
   snapshotsToBindingsMap,
 } from '../utils';
@@ -545,6 +546,22 @@ const makeResult = (overrides: Partial<AnalyticsResult> = {}): AnalyticsResult =
   responseStatusCode: 200,
   runIndex: 0,
   ...overrides,
+});
+
+describe('Runs View :: getCompareRowSelectionId', () => {
+  test('returns primary id when present', () => {
+    expect(
+      getCompareRowSelectionId({ ...makeResult({ id: 'primary-id' }), _compared: makeResult({ id: 'compared-id' }) }),
+    ).toBe('primary-id');
+  });
+
+  test('falls back to compared id for compared-only rows', () => {
+    const comparedOnly = mergeByTestCaseId(
+      [],
+      [makeResult({ id: 'compared-only-id', testCaseId: 'tc1', runIndex: 1 })],
+    );
+    expect(getCompareRowSelectionId(comparedOnly[0])).toBe('compared-only-id');
+  });
 });
 
 describe('Runs View :: mergeByTestCaseId', () => {
