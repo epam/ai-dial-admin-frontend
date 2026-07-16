@@ -102,6 +102,7 @@ export interface FieldOption {
   tag?: string;
   display_name?: string;
   description?: string;
+  sensitive?: boolean;
 }
 
 export interface FieldOptionGroup {

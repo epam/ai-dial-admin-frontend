@@ -2241,6 +2241,7 @@ export enum AnalyticsTablesI18nKey {
   ColumnName = 'AnalyticsTables.ColumnName',
   Tag = 'AnalyticsTables.Tag',
   Nullable = 'AnalyticsTables.Nullable',
+  Sensitive = 'AnalyticsTables.Sensitive',
   AddColumns = 'AnalyticsTables.AddColumns',
   WriteRows = 'AnalyticsTables.WriteRows',
   InsertRows = 'AnalyticsTables.InsertRows',

@@ -89,6 +89,7 @@ export const fieldsToOptions = (fields: AnalyticsEntityField[]): FieldOption[] =
     tag: f.tag,
     display_name: f.display_name,
     description: f.description,
+    sensitive: f.sensitive,
   }));
 
 export const bucketFieldOptions = (fields: AnalyticsEntityField[]): AnalyticsEntityField[] => {

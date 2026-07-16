@@ -8,6 +8,7 @@ export interface ColumnRow {
   type: AnalyticsFieldType;
   tag: string;
   nullable: boolean;
+  sensitive: boolean;
 }
 
 export interface ColumnEditValues {
@@ -15,6 +16,7 @@ export interface ColumnEditValues {
   display_name: string;
   tag: string;
   description: string;
+  sensitive: boolean;
 }
 
 export interface TableForm {

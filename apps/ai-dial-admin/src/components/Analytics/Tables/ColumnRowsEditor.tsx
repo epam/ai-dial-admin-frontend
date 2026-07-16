@@ -62,6 +62,12 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange }) => {
                 isOn={row.nullable}
                 onChange={(value) => update(row.id, { nullable: value })}
               />
+              <DialSwitch
+                switchId={`col-sensitive-${row.id}`}
+                label={t(AnalyticsTablesI18nKey.Sensitive)}
+                isOn={row.sensitive}
+                onChange={(value) => update(row.id, { sensitive: value })}
+              />
               <DialRemoveButton onClick={() => onChange(rows.filter((r) => r.id !== row.id))} />
             </div>
           </div>
