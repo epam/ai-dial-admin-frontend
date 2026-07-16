@@ -4,14 +4,14 @@ import { ColDef } from 'ag-grid-community';
 
 import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
 import { currencyValueFormatter, numberValueFormatter, toNumberOrNull } from '@/src/constants/grid-columns/formatters';
-import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
+import { formatDateTimeToLocalString, toDateOrNull } from '@/src/utils/formatting/date';
 
 import HeaderWithHintButton from '@/src/components/Grid/HeaderComponents/HeaderWithHintButton';
 
 export const dateTimeColumn: Partial<ColDef> = {
   valueFormatter: ({ value }) => formatDateTimeToLocalString(value),
   tooltipValueGetter: ({ value }) => formatDateTimeToLocalString(value),
-  filterValueGetter: (params) => formatDateTimeToLocalString(params.data?.[params.colDef.field || '']),
+  filterValueGetter: (params) => toDateOrNull(params.data?.[params.colDef.field || '']),
 };
 
 export const numericColumn: Partial<ColDef> = {
