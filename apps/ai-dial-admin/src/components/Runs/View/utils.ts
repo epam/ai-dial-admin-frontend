@@ -199,11 +199,20 @@ const getCompareRowKey = (row: AnalyticsResult): string | null => {
   return `${testCaseKey}::${row.runIndex}`;
 };
 
-const createComparedOnlyRow = (compared: AnalyticsResult): CompareAnalyticsRow => ({
-  testCaseId: compared.testCaseId,
-  testCaseName: compared.testCaseName,
-  runIndex: compared.runIndex,
+export const createEmptyComparePrimaryRow = (
+  source: Pick<AnalyticsResult, 'testCaseId' | 'testCaseName' | 'runIndex'>,
+): AnalyticsResult => ({
+  testCaseId: source.testCaseId,
+  testCaseName: source.testCaseName,
+  runIndex: source.runIndex,
   responseStatusCode: undefined as unknown as number,
+});
+
+export const getCompareRowSelectionId = (row: CompareAnalyticsRow): string | null =>
+  row.id ?? row._compared?.id ?? null;
+
+const createComparedOnlyRow = (compared: AnalyticsResult): CompareAnalyticsRow => ({
+  ...createEmptyComparePrimaryRow(compared),
   _compared: compared,
 });
 

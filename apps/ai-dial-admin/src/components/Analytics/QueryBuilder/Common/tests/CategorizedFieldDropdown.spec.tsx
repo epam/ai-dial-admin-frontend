@@ -4,6 +4,7 @@ import { describe, expect, test, vi } from 'vitest';
 
 import CategorizedFieldDropdown from '@/src/components/Analytics/QueryBuilder/Common/CategorizedFieldDropdown';
 import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
+import { QueryScalarFn } from '@/src/models/analytics/query';
 import { FieldOption } from '@/src/models/analytics/query-builder';
 
 const OPTIONS: FieldOption[] = [

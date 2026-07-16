@@ -6,6 +6,7 @@ import { CompareViewTab } from '@/src/components/Runs/Compare/constants';
 import ExecutionResultsTab from '@/src/components/Runs/Compare/ExecutionResults/ExecutionResultsTab';
 import HeatMapTab from '@/src/components/Runs/Compare/HeatMap/HeatMapTab';
 import { HeatMapColorDisplayMode } from '@/src/components/Runs/Compare/HeatMap/models';
+import { ExecutionResultsTabUiState, HeatMapTabUiState } from '@/src/components/Runs/Compare/models';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 
 interface Props {
@@ -23,6 +24,10 @@ interface Props {
   selectedRow: CompareAnalyticsRow | null;
   onOpenRowDetail: (row: CompareAnalyticsRow) => void;
   onCloseRowDetail: () => void;
+  executionResultsState: ExecutionResultsTabUiState;
+  setExecutionResultsState: (patch: Partial<ExecutionResultsTabUiState>) => void;
+  heatMapState: HeatMapTabUiState;
+  setHeatMapState: (patch: Partial<HeatMapTabUiState>) => void;
 }
 
 const CompareTabsContent: FC<Props> = ({
@@ -39,6 +44,10 @@ const CompareTabsContent: FC<Props> = ({
   onToggleDisplayPanel,
   selectedRow,
   onOpenRowDetail,
+  executionResultsState,
+  setExecutionResultsState,
+  heatMapState,
+  setHeatMapState,
 }) => {
   return (
     <div className="flex flex-col flex-1 min-h-0 h-full overflow-hidden">
@@ -53,6 +62,8 @@ const CompareTabsContent: FC<Props> = ({
           onColorDisplayModeChange={onColorDisplayModeChange}
           selectedMetricGroups={selectedMetricGroups}
           onAvailableMetricGroupsChange={onAvailableMetricGroupsChange}
+          heatMapState={heatMapState}
+          setHeatMapState={setHeatMapState}
         />
       )}
       {activeTab === CompareViewTab.ExecutionResults && (
@@ -65,6 +76,8 @@ const CompareTabsContent: FC<Props> = ({
           onToggleDisplayPanel={onToggleDisplayPanel}
           selectedRow={selectedRow}
           onOpenRowDetail={onOpenRowDetail}
+          executionResultsState={executionResultsState}
+          setExecutionResultsState={setExecutionResultsState}
         />
       )}
     </div>
