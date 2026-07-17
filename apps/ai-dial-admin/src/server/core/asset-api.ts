@@ -9,7 +9,7 @@ import {
 import { RESOURCE_TYPE_PREFIX } from '@/src/constants/publications-core';
 import { Token } from '@/src/models/auth';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { encodeCorePath } from '@/src/server/publications/path';
+import { encodeCorePath, parseVersionedPath, VersionedPathParts } from '@/src/server/publications/path';
 import { ResourceType } from '@/src/types/resource-type';
 import { CoreApi } from './core-api';
 import { createHeadersForCreate, createIfMatchHeaders, createIfNoneMatchHeaders } from './asset-headers';
@@ -132,8 +132,16 @@ export class AssetApi extends CoreApi {
     return { success: true, response: merged, etag: contentResult.etag };
   }
 
-  /** Creates (rejects if already present, unless `allowOverride`) or updates a resource (`PUT /v1/{type}/{path}`). */
-  put<T extends object>(
+  /**
+   * Creates (rejects if already present, unless `allowOverride`) or updates a resource (`PUT /v1/{type}/{path}`).
+   *
+   * Core's PUT reply is a metadata node in Core format (`name`/`url`/`bucket`/…), but post-write consumers
+   * (e.g. the create-asset redirect via `getEntityPath`) expect the admin-format identity split
+   * (`path`/`folderId`/`name`/`version`) the BE proxy used to return. On success we derive those from the
+   * written `path` — authoritative for where the resource now lives — and merge them onto the response,
+   * keeping writes consistent with the merge readers (`getMerged*`).
+   */
+  async put<T extends object>(
     token: Token,
     type: ResourceType,
     path: string,
@@ -142,7 +150,27 @@ export class AssetApi extends CoreApi {
   ): Promise<ServerActionResponse> {
     const url = `${CORE_RESOURCE_URL[type]}${encodeCorePath(path)}`;
     const headers = createHeadersForCreate(Boolean(options.allowOverride || options.etag), options.etag);
-    return this.putAction(url, this.withContentId(type, path, body), token, headers);
+    const result = await this.putAction(url, this.withContentId(type, path, body), token, headers);
+    if (!result.success) {
+      return result;
+    }
+    const base = result.response && typeof result.response === 'object' ? result.response : {};
+    return { ...result, response: { ...base, ...this.parsePathFields(path) } };
+  }
+
+  /**
+   * Splits the written path into the admin-format identity fields. Guarded: a path with no `/`
+   * separator (e.g. an empty `folderId` falling back to the bare `ROOT_FOLDER` = `'public'`) makes
+   * `parseVersionedPath` throw — in that case we skip enrichment rather than fail an otherwise-
+   * successful write.
+   */
+  private parsePathFields(path: string): Partial<VersionedPathParts> {
+    try {
+      const { path: parsedPath, folderId, name, version } = parseVersionedPath(path);
+      return { path: parsedPath, folderId, name, version };
+    } catch {
+      return {};
+    }
   }
 
   /**
