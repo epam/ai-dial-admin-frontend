@@ -1,12 +1,9 @@
 import { SelectOption } from '@epam/ai-dial-ui-kit';
 
 import {
-  QueryAggregateFn,
-  QueryBucketUnit,
   QueryLogicalOperator,
   QueryOperator,
   QueryPageType,
-  QueryScalarFn,
   QuerySortDirection,
   QuerySortNulls,
   QueryValueType,
@@ -37,10 +34,6 @@ export const LOGICAL_OPERATOR_OPTIONS: SelectOption[] = [
   { value: QueryLogicalOperator.Not, label: 'NOT' },
 ];
 
-export const AGGREGATE_FN_OPTIONS: SelectOption[] = toUpperOptions(Object.values(QueryAggregateFn));
-
-export const BUCKET_UNIT_OPTIONS: SelectOption[] = toOptions(Object.values(QueryBucketUnit));
-
 export const SORT_DIRECTION_OPTIONS: SelectOption[] = [
   { value: QuerySortDirection.Asc, label: 'ASC' },
   { value: QuerySortDirection.Desc, label: 'DESC' },
@@ -60,7 +53,6 @@ export const PAGE_TYPE_OPTIONS: SelectOption[] = [
 
 export const DEFAULT_PAGE_LIMIT = 25;
 export const DEFAULT_CURSOR_LIMIT = 100;
-export const DEFAULT_BUCKET_AMOUNT = 5;
 
 export const UNTAGGED_KEY = 'untagged';
 
@@ -112,13 +104,3 @@ export const AGGREGATE_SECTION_WARNINGS = [
   QueryBuilderWarning.MissingAggregateAlias,
   QueryBuilderWarning.EmptyAggregate,
 ];
-
-// Hint i18n key per scalar function offered by the Group by dropdown.
-export const GROUP_BY_FUNCTION_HINTS: Record<QueryScalarFn, QueryBuilderI18nKey> = {
-  [QueryScalarFn.DateBin]: QueryBuilderI18nKey.FnDateBinHint,
-  [QueryScalarFn.Lower]: QueryBuilderI18nKey.FnLowerHint,
-  [QueryScalarFn.Upper]: QueryBuilderI18nKey.FnUpperHint,
-  [QueryScalarFn.Length]: QueryBuilderI18nKey.FnLengthHint,
-  [QueryScalarFn.Trim]: QueryBuilderI18nKey.FnTrimHint,
-  [QueryScalarFn.Abs]: QueryBuilderI18nKey.FnAbsHint,
-};

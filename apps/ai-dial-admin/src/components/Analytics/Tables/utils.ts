@@ -1,6 +1,7 @@
 import { PARTITION_NONE } from '@/src/constants/analytics/tables';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import {
+  AnalyticsColumnMetadataUpdate,
   AnalyticsSchemaPatch,
   AnalyticsTable,
   AnalyticsTableColumn,
@@ -18,6 +19,7 @@ export const createColumnRow = (): ColumnRow => ({
   type: AnalyticsFieldType.String,
   tag: '',
   nullable: false,
+  sensitive: false,
 });
 
 export const createTableForm = (tables: AnalyticsTable[]): TableForm => {
@@ -44,15 +46,21 @@ export const buildColumnEditPatch = (
   const name = edited.name.trim();
   if (name && name !== original.name) patch.rename = [{ from: original.name, to: name }];
   const target = patch.rename ? name : original.name;
-  if (normalized(edited.tag) !== normalized(original.tag)) {
-    patch.retag = [{ name: target, tag: normalized(edited.tag) }];
-  }
+
+  // Merge-patch: include only the metadata fields that changed (blank clears, non-blank sets); an
+  // omitted field leaves the attribute unchanged.
+  const update: AnalyticsColumnMetadataUpdate = { name: target };
+  if (normalized(edited.tag) !== normalized(original.tag)) update.tag = normalized(edited.tag);
   if (normalized(edited.display_name) !== normalized(original.display_name)) {
-    patch.set_display_name = [{ name: target, display_name: normalized(edited.display_name) }];
+    update.display_name = normalized(edited.display_name);
   }
   if (normalized(edited.description) !== normalized(original.description)) {
-    patch.redescribe = [{ name: target, description: normalized(edited.description) }];
+    update.description = normalized(edited.description);
   }
+  if (edited.sensitive !== Boolean(original.sensitive)) update.sensitive = edited.sensitive;
+  // >1 key means a metadata field changed alongside the always-present `name`.
+  if (Object.keys(update).length > 1) patch.update = [update];
+
   return Object.keys(patch).length ? patch : null;
 };
 
@@ -70,4 +78,5 @@ export const toTableColumns = (rows: ColumnRow[]): AnalyticsTableColumn[] =>
       type: r.type,
       nullable: r.nullable,
       ...(r.tag.trim() ? { tag: r.tag.trim() } : {}),
+      ...(r.sensitive ? { sensitive: true } : {}),
     }));

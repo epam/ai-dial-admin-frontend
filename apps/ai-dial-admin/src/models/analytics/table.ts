@@ -19,6 +19,7 @@ export interface AnalyticsTableColumn {
   tag?: string;
   display_name?: string;
   description?: string;
+  sensitive?: boolean;
 }
 
 export interface AnalyticsTablePartition {
@@ -67,29 +68,22 @@ export interface AnalyticsColumnRename {
   to: string;
 }
 
-export interface AnalyticsColumnRetag {
+// Per-column metadata merge-patch: an omitted field leaves that attribute unchanged, a blank string
+// clears it, and a non-blank string sets it; `sensitive` (omitted → unchanged, true/false → set) is
+// typed for contract completeness but never populated by the UI.
+export interface AnalyticsColumnMetadataUpdate {
   name: string;
-  tag: string;
-}
-
-// Blank display_name/description means "clear the stored value" (backend normalizes blank to null).
-export interface AnalyticsColumnSetDisplayName {
-  name: string;
-  display_name: string;
-}
-
-export interface AnalyticsColumnRedescribe {
-  name: string;
-  description: string;
+  tag?: string;
+  display_name?: string;
+  description?: string;
+  sensitive?: boolean;
 }
 
 export interface AnalyticsSchemaPatch {
   add?: AnalyticsTableColumn[];
   drop?: string[];
   rename?: AnalyticsColumnRename[];
-  retag?: AnalyticsColumnRetag[];
-  set_display_name?: AnalyticsColumnSetDisplayName[];
-  redescribe?: AnalyticsColumnRedescribe[];
+  update?: AnalyticsColumnMetadataUpdate[];
 }
 
 export interface WriteRowsDto {

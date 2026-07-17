@@ -44,6 +44,29 @@ describe('Server :: AnalyticsDataApi', () => {
     );
   });
 
+  test('getFunctions issues GET /v1/queries/functions and returns the parsed catalog', async () => {
+    const functions = [
+      {
+        name: 'count',
+        group: 'aggregate',
+        signature: 'count([value])',
+        returns: 'long',
+        distinct_supported: true,
+        description: 'row count',
+        args: [],
+      },
+    ];
+    fetch.mockResponseOnce(JSON.stringify(functions), JSON_HEADERS);
+
+    const res = await instance.getFunctions(TOKEN_MOCK);
+
+    expect(res).toEqual(functions);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/queries/functions'),
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
   test('executeAction POSTs the structured-query envelope to /v1/queries/execute', async () => {
     const query: StructuredQuery = { entity: 'conversation', mode: QueryMode.Row };
     fetch.mockResponseOnce(JSON.stringify({ columns: ['id'], rows: [{ id: '1' }] }));

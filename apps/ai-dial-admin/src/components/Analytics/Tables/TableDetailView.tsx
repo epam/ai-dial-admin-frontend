@@ -4,7 +4,7 @@ import { FC, useCallback, useMemo, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
-import { ColDef, ValueGetterParams } from 'ag-grid-community';
+import { ColDef, ICellRendererParams, ITooltipParams, ValueGetterParams } from 'ag-grid-community';
 import {
   ConfirmationPopupVariant,
   DialConfirmationPopup,
@@ -19,6 +19,7 @@ import ColumnRowsEditor from '@/src/components/Analytics/Tables/ColumnRowsEditor
 import EditColumnPopup from '@/src/components/Analytics/Tables/EditColumnPopup';
 import { createColumnRow, isRenameRestricted, toTableColumns } from '@/src/components/Analytics/Tables/utils';
 import { TypeCellRenderer } from '@/src/components/Analytics/Common/TypeBadge';
+import SensitiveIndicator from '@/src/components/Common/SensitiveIndicator/SensitiveIndicator';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
@@ -37,6 +38,16 @@ interface Props {
   name: string;
   initialTable: AnalyticsTable;
 }
+
+// Renders the column name with a trailing sensitive marker; editing still swaps in the cell editor.
+// The dot is tooltip-less — the grid's cell tooltip (see the name column's tooltipValueGetter) carries
+// the sensitive note, so the two don't double up.
+const ColumnNameCellRenderer: FC<ICellRendererParams<AnalyticsTableColumn>> = ({ value, data }) => (
+  <span className="flex items-center gap-1.5">
+    <span className="truncate">{value}</span>
+    {data?.sensitive && <SensitiveIndicator />}
+  </span>
+);
 
 const TableDetailView: FC<Props> = ({ name, initialTable }) => {
   const t = useI18n();
@@ -154,7 +165,18 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
 
   const columnDefs = useMemo<ColDef[]>(
     () => [
-      { headerName: t(AnalyticsTablesI18nKey.ColumnName), field: 'name', editable: !isSystem, flex: 2 },
+      {
+        headerName: t(AnalyticsTablesI18nKey.ColumnName),
+        field: 'name',
+        editable: !isSystem,
+        cellRenderer: ColumnNameCellRenderer,
+        // Fold the sensitive note into the single cell tooltip so it doesn't double with the dot.
+        tooltipValueGetter: (params: ITooltipParams<AnalyticsTableColumn>) =>
+          [params.data?.name, params.data?.sensitive ? t(AnalyticsTablesI18nKey.Sensitive) : '']
+            .filter(Boolean)
+            .join(' — '),
+        flex: 2,
+      },
       { headerName: t(AnalyticsTablesI18nKey.SourceName), field: 'source_name', flex: 2 },
       { headerName: t(AnalyticsTablesI18nKey.Type), field: 'type', cellRenderer: TypeCellRenderer, flex: 1 },
       { headerName: t(AnalyticsTablesI18nKey.Tag), field: 'tag', flex: 1 },

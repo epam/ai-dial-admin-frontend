@@ -1,8 +1,9 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import CategorizedFieldDropdown from '@/src/components/Analytics/QueryBuilder/Common/CategorizedFieldDropdown';
+import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
 import { QueryScalarFn } from '@/src/models/analytics/query';
 import { FieldOption } from '@/src/models/analytics/query-builder';
 
@@ -80,8 +81,8 @@ describe('QueryBuilder :: CategorizedFieldDropdown', () => {
         options={OPTIONS}
         onSelect={onSelect}
         functions={[
-          { name: QueryScalarFn.DateBin, hint: 'time bucket' },
-          { name: QueryScalarFn.Lower, hint: 'lowercase' },
+          { name: 'date_bin', hint: 'time bucket' },
+          { name: 'lower', hint: 'lowercase' },
         ]}
         onSelectFunction={onSelectFunction}
         addLabel="+ Add"
@@ -107,7 +108,7 @@ describe('QueryBuilder :: CategorizedFieldDropdown', () => {
         id="test"
         options={OPTIONS}
         onSelect={vi.fn()}
-        functions={[{ name: QueryScalarFn.Lower, hint: 'lowercase' }]}
+        functions={[{ name: 'lower', hint: 'lowercase' }]}
         onSelectFunction={vi.fn()}
         addLabel="+ Add"
         ariaLabel="Add field"
@@ -253,6 +254,29 @@ describe('QueryBuilder :: CategorizedFieldDropdown', () => {
 
     expect(screen.getByRole('option', { name: /Total money spend/ })).toBeInTheDocument();
     expect(screen.queryByRole('option', { name: /deployment/ })).not.toBeInTheDocument();
+  });
+
+  test('sensitive options render the sensitive indicator, others do not', async () => {
+    const user = userEvent.setup();
+    render(
+      <CategorizedFieldDropdown
+        id="test"
+        options={[
+          { name: 'email', type: 'string', sensitive: true },
+          { name: 'total', type: 'decimal' },
+        ]}
+        onSelect={vi.fn()}
+        addLabel="+ Add"
+        ariaLabel="Add field"
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Add field' }));
+
+    const sensitiveOption = screen.getByRole('option', { name: /email/ });
+    expect(within(sensitiveOption).getByRole('img', { name: AnalyticsTablesI18nKey.Sensitive })).toBeInTheDocument();
+    const plainOption = screen.getByRole('option', { name: /total/ });
+    expect(within(plainOption).queryByRole('img')).not.toBeInTheDocument();
   });
 
   test('picker-mode trigger shows the selected field label', () => {
