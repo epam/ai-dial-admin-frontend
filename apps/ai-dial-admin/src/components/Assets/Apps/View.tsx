@@ -134,16 +134,14 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
             getApps(addTrailingSlash(updatedEntity.folderId)).then((apps) => {
               const pathsToMove = getListOfPathsToMove(updatedEntity, null, (apps as Asset[]) || []);
               const newPath = removeTrailingSlash(selectedApp.folderId);
-              moveApps(pathsToMove, newPath).then((r) => {
-                if (r.every((response) => response.success)) {
-                  router.push(
-                    getUrnForEntity(ApplicationRoute.AssetsApplications, {
-                      name: updatedEntity.name,
-                      path: changePath(updatedEntity.path, newPath),
-                    }),
-                  );
-                  fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
-                }
+              moveApps(pathsToMove, newPath).then(() => {
+                fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
+                router.push(
+                  getUrnForEntity(ApplicationRoute.AssetsApplications, {
+                    name: updatedEntity.name,
+                    path: changePath(updatedEntity.path, newPath),
+                  }),
+                );
               });
             });
           } else {

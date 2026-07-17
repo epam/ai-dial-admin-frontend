@@ -22,6 +22,8 @@ export interface CompareRowDetailSection {
 
 export type RowDetailFieldFilter = TextGridFilter;
 
+export type RowDetailValueFilter = TextGridFilter;
+
 export type RowDetailDeltaFilter = NumericGridFilter;
 
 export enum RowDetailViewMode {
