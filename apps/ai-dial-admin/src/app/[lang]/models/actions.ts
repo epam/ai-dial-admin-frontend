@@ -9,6 +9,7 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { SOURCE_FIELD, SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
+import { stripEmptyInterfaces } from '@/src/utils/deployments/interfaces';
 
 export async function getModelsListAction() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -51,6 +52,7 @@ export async function updateModel(model: DialModel, etag: string) {
     ...model,
     defaults: { ...model.defaults },
     responsesDefaults: { ...model.responsesDefaults },
+    interfaces: stripEmptyInterfaces(model.interfaces),
   };
   return modelsApi.updateModel(newModel, token, etag);
 }
@@ -70,6 +72,7 @@ export async function createModel(model: DialModel, duplicate?: boolean) {
             ? model.source?.completionEndpointPath
             : `${model.name}${getEndpointPostfix(type)}`,
       } as SOURCE_FIELD,
+      interfaces: stripEmptyInterfaces(model.interfaces),
     },
     token,
   );

@@ -5,6 +5,7 @@ import { interceptorsApi } from '@/src/app/api/api';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { stripEmptyInterfaces } from '@/src/utils/deployments/interfaces';
 
 export async function getInterceptorsList() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -31,13 +32,17 @@ export async function updateInterceptor(interceptor: DialInterceptor, etag: stri
   const newInterceptor = {
     ...interceptor,
     defaults: { ...interceptor.defaults },
+    interfaces: stripEmptyInterfaces(interceptor.interfaces),
   };
   return interceptorsApi.updateInterceptor(newInterceptor, token, etag);
 }
 
 export async function createInterceptor(interceptor: DialInterceptor) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return interceptorsApi.createInterceptor(interceptor, token);
+  return interceptorsApi.createInterceptor(
+    { ...interceptor, interfaces: stripEmptyInterfaces(interceptor.interfaces) },
+    token,
+  );
 }
 
 export async function getConfigurationSchema(name: string) {

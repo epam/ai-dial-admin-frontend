@@ -153,6 +153,28 @@ describe('Assets application :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
+  test('updateApp strips empty interface entries before calling Core', async () => {
+    (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
+
+    await updateApp(
+      {
+        folderId: 'public',
+        path: 'test',
+        version: '1.0',
+        interfaces: { openaiChatCompletions: { base_url: '' } },
+      },
+      'etag',
+    );
+
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.APPLICATION,
+      'public__1.0',
+      expect.objectContaining({ interfaces: undefined }),
+      { etag: 'etag' },
+    );
+  });
+
   test('updateApp rejects an out-of-range maxInputAttachments before calling Core', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
@@ -191,6 +213,26 @@ describe('Assets application :: server actions', () => {
       application_type_schema_id: undefined,
     });
     expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('createApp keeps a non-empty interface entry when calling Core', async () => {
+    (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
+
+    await createApp({
+      folderId: 'public',
+      path: 'test',
+      version: '1.0',
+      interfaces: { openaiChatCompletions: { base_url: 'https://example.com' } },
+    });
+
+    expect(assetApi.put).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.APPLICATION,
+      'public__1.0',
+      expect.objectContaining({
+        interfaces: { openaiChatCompletions: { base_url: 'https://example.com' } },
+      }),
+    );
   });
 
   test('createApp rejects an invalid viewerUrl before calling Core', async () => {

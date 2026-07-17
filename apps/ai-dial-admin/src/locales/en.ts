@@ -1510,6 +1510,13 @@ export default {
     SuccessLogout: 'External service logged out successfully',
     SuccessLogoutDescription: 'Authentication credentials have been revoked.',
   },
+  Interfaces: {
+    Interfaces: 'Interfaces',
+    SelectType: 'Select interface type',
+    OpenAIChatCompletions: 'OpenAI Chat Completions',
+    OpenAIResponses: 'OpenAI Responses',
+    AnthropicMessages: 'Anthropic Messages',
+  },
   Images: {
     ImagesListTitle: 'Images',
     AddModalTitle: 'Add Image',

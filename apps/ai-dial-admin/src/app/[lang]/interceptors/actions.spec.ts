@@ -78,6 +78,35 @@ describe('Interceptors :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
+  test('Should strip empty interface entries when creating an interceptor', async () => {
+    (interceptorsApi.createInterceptor as any).mockResolvedValue(RESPONSE_MOCK);
+
+    await createInterceptor({
+      name: 'interceptor',
+      interfaces: { openaiChatCompletions: { baseUrl: '' } },
+    } as any);
+
+    expect(interceptorsApi.createInterceptor).toHaveBeenCalledWith(
+      expect.objectContaining({ interfaces: undefined }),
+      TOKEN_MOCK,
+    );
+  });
+
+  test('Should strip empty interface entries when updating an interceptor', async () => {
+    (interceptorsApi.updateInterceptor as any).mockResolvedValue(RESPONSE_MOCK);
+
+    await updateInterceptor(
+      { interfaces: { openaiChatCompletions: { baseUrl: 'https://example.com' } } } as any,
+      'etag',
+    );
+
+    expect(interceptorsApi.updateInterceptor).toHaveBeenCalledWith(
+      expect.objectContaining({ interfaces: { openaiChatCompletions: { baseUrl: 'https://example.com' } } }),
+      TOKEN_MOCK,
+      'etag',
+    );
+  });
+
   test('Should call getConfigurationSchema action', async () => {
     (interceptorsApi.getConfigurationSchema as any).mockResolvedValue(RESPONSE_MOCK);
 
