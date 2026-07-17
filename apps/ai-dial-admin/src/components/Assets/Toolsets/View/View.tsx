@@ -112,16 +112,14 @@ const ToolsetView: FC<Props> = ({ oAuthCode, etag, originalToolset, toolsets }) 
             getToolsets(addTrailingSlash(updatedEntity.folderId)).then((toolsets) => {
               const pathsToMove = getListOfPathsToMove(updatedEntity, null, (toolsets as AssetToolset[]) || []);
               const newPath = removeTrailingSlash(selectedToolset.folderId);
-              moveToolsets(pathsToMove, newPath).then((r) => {
-                if (r.every((response) => response.success)) {
-                  router.push(
-                    getUrnForEntity(ApplicationRoute.AssetsToolsets, {
-                      name: updatedEntity.name,
-                      path: changePath(updatedEntity.path, newPath),
-                    }),
-                  );
-                  fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
-                }
+              moveToolsets(pathsToMove, newPath).then(() => {
+                fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
+                router.push(
+                  getUrnForEntity(ApplicationRoute.AssetsToolsets, {
+                    name: updatedEntity.name,
+                    path: changePath(updatedEntity.path, newPath),
+                  }),
+                );
               });
             });
           } else {
