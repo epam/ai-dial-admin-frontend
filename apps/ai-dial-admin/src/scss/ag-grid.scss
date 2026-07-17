@@ -173,13 +173,43 @@
   .compare-row-empty {
     @apply bg-error;
     &.compare-row-empty-border {
-      @apply border border-error;
+      // Pseudo-element sits above cells (pointer-events none) so the stroke is not
+      // covered by cell backgrounds. Border is inside the row box so the right edge
+      // stays visible next to the pinned eye column (AG Grid clips outer border/outline).
+      &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        box-sizing: border-box;
+        border: 1px solid var(--stroke-error, #f76464);
+        pointer-events: none;
+        z-index: 2;
+      }
     }
     &.ag-row-hover:not(.ag-full-width-row):before {
       @apply bg-transparent;
     }
-    .ag-cell {
+    .ag-cell:not([col-id='compare_action']) {
       @apply bg-error;
+    }
+    // Full-row highlight is a single block — suppress per-cell diff pair borders.
+    .ag-cell.compare-metric-improved-primary,
+    .ag-cell.compare-metric-improved-secondary,
+    .ag-cell.compare-metric-regressed-primary,
+    .ag-cell.compare-metric-regressed-secondary,
+    .ag-cell.compare-metric-new-primary,
+    .ag-cell.compare-metric-new-secondary {
+      @apply border-0;
+    }
+  }
+  // Eye/action column stays on the default layer (Figma cell uses layer-3, not error).
+  .ag-pinned-right-cols-container .ag-row.compare-row-empty {
+    @apply bg-transparent;
+    &.compare-row-empty-border::after {
+      content: none;
+    }
+    .ag-cell[col-id='compare_action'] {
+      @apply bg-layer-3;
     }
   }
   .ag-cell.compare-metric-improved-primary {

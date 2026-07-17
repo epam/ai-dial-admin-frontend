@@ -276,6 +276,10 @@ const hasMetricDiffForRowForVisibility = (row: CompareAnalyticsRow, hiddenColIds
 export const hasCompareRowDiff = (row: CompareAnalyticsRow, visibility?: CompareRowDiffVisibility): boolean => {
   const hiddenColIds = visibility?.hiddenColIds;
 
+  if (row._compared === null) {
+    return true;
+  }
+
   return (
     hasExecutionStatusDiffForVisibility(row, hiddenColIds) ||
     hasExecutionFieldDiffForVisibility(row, hiddenColIds) ||
@@ -326,6 +330,33 @@ export const isCompareRunExecutionDataEmpty = (result: AnalyticsResult | null | 
   if (getCompareRowDurationMs(result) != null) return false;
   return true;
 };
+
+/** True when every secondary-side metric (per schema) is missing. */
+export const isCompareSecondaryMetricsEmpty = (
+  row: CompareAnalyticsRow,
+  schemaMetrics: Record<string, Record<string, unknown>>,
+): boolean => {
+  const schemaEntries = Object.entries(schemaMetrics).flatMap(([groupKey, groupValues]) =>
+    Object.keys(groupValues).map((key) => ({ groupKey, key })),
+  );
+
+  if (schemaEntries.length === 0) {
+    return true;
+  }
+
+  return schemaEntries.every(({ groupKey, key }) =>
+    isMissingMetricValue(row._compared?.metricValues?.[groupKey]?.[key]),
+  );
+};
+
+/**
+ * True when the compared run has no data for this row (unmatched or all secondary
+ * execution/metric cells would render as "—"). Used for full-row red highlighting.
+ */
+export const isCompareSecondarySideEmpty = (
+  row: CompareAnalyticsRow,
+  schemaMetrics: Record<string, Record<string, unknown>>,
+): boolean => isCompareRunExecutionDataEmpty(row._compared) && isCompareSecondaryMetricsEmpty(row, schemaMetrics);
 
 export const isCompareRowFullyEmpty = (
   row: CompareAnalyticsRow,

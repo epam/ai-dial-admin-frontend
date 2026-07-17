@@ -17,6 +17,7 @@ import {
   isCompareRowAllMetricsEmpty,
   isCompareRowFullyEmpty,
   isCompareRunExecutionDataEmpty,
+  isCompareSecondarySideEmpty,
   roundMetricValue,
 } from '../metric-utils';
 
@@ -250,6 +251,16 @@ describe('Runs Compare :: hasCompareRowDiff', () => {
     expect(hasCompareRowDiff(row)).toBe(true);
   });
 
+  test('returns true for unmatched primary-only rows (_compared null)', () => {
+    const row = makeRow({
+      executionStatus: ExtractionResultStatus.FAILED,
+      metricValues: {},
+      _compared: null,
+    });
+
+    expect(hasCompareRowDiff(row)).toBe(true);
+  });
+
   test('returns true when http, duration, or extracted values differ', () => {
     expect(
       hasCompareRowDiff(
@@ -445,5 +456,61 @@ describe('Runs Compare :: isCompareRowFullyEmpty', () => {
     });
 
     expect(isCompareRowFullyEmpty(row, schema)).toBe(true);
+  });
+});
+
+describe('Runs Compare :: isCompareSecondarySideEmpty', () => {
+  const schema = { Accuracy: { precision: 0, recall: 0 } };
+
+  test('returns true when _compared is null even if primary has metrics', () => {
+    const row = makeRow({
+      metricValues: { Accuracy: { precision: 0.8, recall: 0.5 } },
+      _compared: null,
+    });
+
+    expect(isCompareSecondarySideEmpty(row, schema)).toBe(true);
+    expect(isCompareRowFullyEmpty(row, schema)).toBe(false);
+  });
+
+  test('returns true when compared exists but has no execution or metric data', () => {
+    const row = makeRow({
+      metricValues: { Accuracy: { precision: 0.8 } },
+      _compared: {
+        ...makeRow(),
+        id: 'result-2',
+        runIndex: undefined as unknown as number,
+        responseStatusCode: undefined as unknown as number,
+        metricValues: {},
+      },
+    });
+
+    expect(isCompareSecondarySideEmpty(row, schema)).toBe(true);
+  });
+
+  test('returns false when compared has metric values', () => {
+    const row = makeRow({
+      metricValues: { Accuracy: { precision: 0.8 } },
+      _compared: {
+        ...makeRow(),
+        id: 'result-2',
+        metricValues: { Accuracy: { precision: 0.5 } },
+      },
+    });
+
+    expect(isCompareSecondarySideEmpty(row, schema)).toBe(false);
+  });
+
+  test('returns false when compared has execution data even if metrics are empty', () => {
+    const row = makeRow({
+      metricValues: { Accuracy: { precision: 0.8 } },
+      _compared: {
+        ...makeRow(),
+        id: 'result-2',
+        responseStatusCode: 200,
+        metricValues: {},
+      },
+    });
+
+    expect(isCompareSecondarySideEmpty(row, schema)).toBe(false);
   });
 });
