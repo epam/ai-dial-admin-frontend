@@ -2,7 +2,7 @@
 
 import { FC, useState } from 'react';
 
-import { DialFormPopup, DialInput, PopupSize } from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, DialInput, DialSwitch, PopupSize } from '@epam/ai-dial-ui-kit';
 
 import { buildColumnEditPatch } from '@/src/components/Analytics/Tables/utils';
 import { AnalyticsTablesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
@@ -25,10 +25,13 @@ const EditColumnPopup: FC<Props> = ({ column, renameDisabled, onClose, onSubmit 
     display_name: column.display_name ?? '',
     tag: column.tag ?? '',
     description: column.description ?? '',
+    sensitive: column.sensitive ?? false,
   });
 
-  const setValue = (key: keyof ColumnEditValues) => (value?: string) =>
+  const setValue = (key: 'name' | 'display_name' | 'tag' | 'description') => (value?: string) =>
     setValues((prev) => ({ ...prev, [key]: value ?? '' }));
+
+  const setSensitive = (value: boolean) => setValues((prev) => ({ ...prev, sensitive: value }));
 
   const patch = values.name.trim() ? buildColumnEditPatch(column, values) : null;
 
@@ -62,6 +65,18 @@ const EditColumnPopup: FC<Props> = ({ column, renameDisabled, onClose, onSubmit 
           labelProps={{ label: t(AnalyticsTablesI18nKey.Tag) }}
           value={values.tag}
           onChange={setValue('tag')}
+        />
+        <DialInput
+          id="column-edit-description"
+          labelProps={{ label: t(AnalyticsTablesI18nKey.Description) }}
+          value={values.description}
+          onChange={setValue('description')}
+        />
+        <DialSwitch
+          switchId="column-edit-sensitive"
+          label={t(AnalyticsTablesI18nKey.Sensitive)}
+          isOn={values.sensitive}
+          onChange={setSensitive}
         />
       </div>
     </DialFormPopup>

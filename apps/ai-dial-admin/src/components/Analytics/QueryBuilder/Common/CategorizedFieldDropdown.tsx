@@ -8,10 +8,11 @@ import { IconChevronDown, IconChevronRight, IconMathFunction } from '@tabler/ico
 
 import CompactInput from '@/src/components/Analytics/QueryBuilder/Common/CompactInput';
 import SectionAction from '@/src/components/Analytics/QueryBuilder/Common/SectionAction';
+import SensitiveIndicator from '@/src/components/Common/SensitiveIndicator/SensitiveIndicator';
 import { groupFieldOptions } from '@/src/components/Analytics/QueryBuilder/utils/fields';
 import { UNTAGGED_KEY } from '@/src/constants/analytics/query-builder';
 import { FIELD_GROUP_COLOR_CYCLE, QUERY_BUILDER_PALETTE } from '@/src/constants/analytics/query-builder-palette';
-import { QueryBuilderI18nKey } from '@/src/constants/i18n';
+import { AnalyticsTablesI18nKey, QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { FieldOption, FunctionOption, QueryBuilderColor } from '@/src/models/analytics/query-builder';
 
@@ -161,18 +162,25 @@ const CategorizedFieldDropdown: FC<Props> = ({
                 />
                 {isExpanded(FUNCTIONS_GROUP_KEY) &&
                   visibleFunctions.map((fn) => (
-                    <button
+                    <DialTooltip
                       key={fn.name}
-                      type="button"
-                      role="option"
-                      aria-selected={false}
-                      className="flex w-full items-center gap-2 rounded px-2 py-1.5 pl-6 text-left hover:bg-layer-4"
-                      onClick={() => onPickFunction(fn.name)}
+                      hideTooltip={!fn.hint}
+                      tooltip={fn.hint}
+                      triggerClassName="w-full"
+                      contentClassName="max-w-[320px]"
                     >
-                      <IconMathFunction size={12} className={classNames('shrink-0', FUNCTIONS_TEXT_CLASS)} />
-                      <span className="truncate font-mono dial-tiny-text text-primary">{fn.name}</span>
-                      <span className="shrink-0 dial-tiny-text text-secondary">{fn.hint}</span>
-                    </button>
+                      <button
+                        type="button"
+                        role="option"
+                        aria-selected={false}
+                        className="flex w-full items-center gap-2 rounded px-2 py-1.5 pl-6 text-left hover:bg-layer-4"
+                        onClick={() => onPickFunction(fn.name)}
+                      >
+                        <IconMathFunction size={12} className={classNames('shrink-0', FUNCTIONS_TEXT_CLASS)} />
+                        <span className="shrink-0 font-mono dial-tiny-text text-primary">{fn.name}</span>
+                        <span className="min-w-0 flex-1 truncate dial-tiny-text text-secondary">{fn.hint}</span>
+                      </button>
+                    </DialTooltip>
                   ))}
               </div>
             )}
@@ -194,39 +202,49 @@ const CategorizedFieldDropdown: FC<Props> = ({
                   />
                 )}
                 {isExpanded(group.tag) &&
-                  group.options.map((option) => (
-                    // Row-level tooltip: hovering anywhere on the option reveals the full
-                    // description (the visible line is truncated to keep the overlay compact).
-                    <DialTooltip
-                      key={option.name}
-                      hideTooltip={!option.description}
-                      tooltip={option.description}
-                      triggerClassName="w-full"
-                      contentClassName="max-w-[320px]"
-                    >
-                      <button
-                        type="button"
-                        role="option"
-                        aria-selected={option.name === value}
-                        className={classNames(
-                          'flex w-full flex-col gap-0.5 rounded px-2 py-1.5 text-left hover:bg-layer-4',
-                          showHeaders && 'pl-6',
-                          option.name === value && 'bg-accent-primary-alpha',
-                        )}
-                        onClick={() => onPick(option.name)}
+                  group.options.map((option) => {
+                    // One row-level tooltip carries both the sensitive note (when sensitive) and the
+                    // full description; the dot renders without its own tooltip so they don't nest.
+                    const rowTooltip = [option.sensitive && t(AnalyticsTablesI18nKey.Sensitive), option.description]
+                      .filter(Boolean)
+                      .join(' — ');
+                    return (
+                      <DialTooltip
+                        key={option.name}
+                        hideTooltip={!rowTooltip}
+                        tooltip={rowTooltip}
+                        triggerClassName="w-full"
+                        contentClassName="max-w-[320px]"
                       >
-                        <span className="flex w-full items-center justify-between gap-2">
-                          <span className="truncate font-mono dial-tiny-text text-primary">
-                            {option.display_name || option.name}
+                        <button
+                          type="button"
+                          role="option"
+                          aria-selected={option.name === value}
+                          className={classNames(
+                            'flex w-full flex-col gap-0.5 rounded px-2 py-1.5 text-left hover:bg-layer-4',
+                            showHeaders && 'pl-6',
+                            option.name === value && 'bg-accent-primary-alpha',
+                          )}
+                          onClick={() => onPick(option.name)}
+                        >
+                          <span className="flex w-full items-center justify-between gap-2">
+                            <span className="flex min-w-0 items-center gap-1.5">
+                              <span className="truncate font-mono dial-tiny-text text-primary">
+                                {option.display_name || option.name}
+                              </span>
+                              {option.sensitive && <SensitiveIndicator />}
+                            </span>
+                            {option.type && (
+                              <span className="shrink-0 dial-tiny-text text-secondary">{option.type}</span>
+                            )}
                           </span>
-                          {option.type && <span className="shrink-0 dial-tiny-text text-secondary">{option.type}</span>}
-                        </span>
-                        {option.description && (
-                          <span className="w-full truncate dial-tiny-text text-secondary">{option.description}</span>
-                        )}
-                      </button>
-                    </DialTooltip>
-                  ))}
+                          {option.description && (
+                            <span className="w-full truncate dial-tiny-text text-secondary">{option.description}</span>
+                          )}
+                        </button>
+                      </DialTooltip>
+                    );
+                  })}
               </div>
             ))}
             {!groups.length && !visibleFunctions.length && (

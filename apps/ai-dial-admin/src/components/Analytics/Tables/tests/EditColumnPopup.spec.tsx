@@ -46,18 +46,18 @@ describe('EditColumnPopup', () => {
 
     expect(onSubmit).toHaveBeenCalledWith({
       rename: [{ from: 'total_money', to: 'total_cost' }],
-      set_display_name: [{ name: 'total_cost', display_name: 'Total money spend' }],
+      update: [{ name: 'total_cost', display_name: 'Total money spend' }],
     });
   });
 
-  test('clearing the label submits an empty relabel (the clear signal)', async () => {
+  test('clearing the label submits an empty display_name (the clear signal)', async () => {
     const user = userEvent.setup();
     const { onSubmit } = renderPopup();
 
     setInput(AnalyticsTablesI18nKey.DisplayName, '');
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
 
-    expect(onSubmit).toHaveBeenCalledWith({ set_display_name: [{ name: 'total_money', display_name: '' }] });
+    expect(onSubmit).toHaveBeenCalledWith({ update: [{ name: 'total_money', display_name: '' }] });
   });
 
   test('a blank name disables submit', () => {
@@ -79,13 +79,32 @@ describe('EditColumnPopup', () => {
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
 
     expect(onSubmit).toHaveBeenCalledWith({
-      retag: [{ name: 'total_money', tag: 'cost' }],
+      update: [{ name: 'total_money', tag: 'cost' }],
     });
   });
 
-  test('the description field is hidden until the backend supports editing it', () => {
-    renderPopup();
+  test('editing the description submits it in the update entry', async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderPopup();
 
-    expect(screen.queryByLabelText(AnalyticsTablesI18nKey.Description)).not.toBeInTheDocument();
+    expect(screen.getByLabelText(AnalyticsTablesI18nKey.Description)).toHaveValue('Money spent');
+    setInput(AnalyticsTablesI18nKey.Description, 'Money spent on the request');
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+
+    expect(onSubmit).toHaveBeenCalledWith({
+      update: [{ name: 'total_money', description: 'Money spent on the request' }],
+    });
+  });
+
+  test('toggling sensitive submits it in the update entry', async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderPopup();
+
+    const sensitive = screen.getByRole('checkbox');
+    expect(sensitive).not.toBeChecked();
+    fireEvent.click(sensitive);
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+
+    expect(onSubmit).toHaveBeenCalledWith({ update: [{ name: 'total_money', sensitive: true }] });
   });
 });

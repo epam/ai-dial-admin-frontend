@@ -7,6 +7,7 @@ import {
   HEAT_MAP_HEADER_VERTICAL_CHAR_WIDTH,
   HEAT_MAP_HEADER_VERTICAL_LABEL_OVERFLOW_BUFFER,
   HEAT_MAP_HEADER_VERTICAL_MIN_HEIGHT,
+  HEAT_MAP_HEADER_VERTICAL_MAX_HEIGHT,
   HEAT_MAP_ROW_HEIGHT,
 } from '@/src/components/Runs/Compare/HeatMap/constants';
 import { shouldShowHeatMapCellValue } from '@/src/components/Runs/Compare/HeatMap/utils/format-heat-map-cell-value';
@@ -37,5 +38,8 @@ export const resolveHeatMapHeaderHeight = (valueColumnWidth: number, headerLabel
     0,
   );
 
-  return Math.max(HEAT_MAP_HEADER_VERTICAL_MIN_HEIGHT, maxLabelHeight + HEAT_MAP_HEADER_LABEL_VERTICAL_PADDING);
+  return Math.max(
+    HEAT_MAP_HEADER_VERTICAL_MIN_HEIGHT,
+    Math.min(maxLabelHeight + HEAT_MAP_HEADER_LABEL_VERTICAL_PADDING, HEAT_MAP_HEADER_VERTICAL_MAX_HEIGHT),
+  );
 };

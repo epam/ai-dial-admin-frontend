@@ -13,6 +13,7 @@ interface Props {
   onGetSchemeDefaults?: (value: Record<string, unknown>) => void;
   disabled?: boolean;
   defaultExpanded?: boolean;
+  acceptableResourceTypes?: Record<string, unknown>;
 }
 const SchemaUiRenderer: FC<Props> = ({
   schema,
@@ -21,6 +22,7 @@ const SchemaUiRenderer: FC<Props> = ({
   onGetSchemeDefaults,
   disabled,
   defaultExpanded = true,
+  acceptableResourceTypes,
 }) => {
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const isReadonly = disabled || isReadOnlyAdmin;
@@ -40,6 +42,7 @@ const SchemaUiRenderer: FC<Props> = ({
       readonly={isReadonly}
       inputClassName={STANDARD_CONTROL_WIDTH}
       defaultExpanded={defaultExpanded}
+      acceptableResourceTypes={acceptableResourceTypes}
     />
   );
 };

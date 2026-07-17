@@ -1,10 +1,10 @@
-import { formatHeatMapTestCaseColId } from '@/src/components/Runs/Compare/HeatMap/constants';
 import { HeatMapColorDisplayMode, HeatMapRow, HeatMapRowType } from '@/src/components/Runs/Compare/HeatMap/models';
 import { RUN_COMPARE_PRIMARY_INDEX, RUN_COMPARE_SECONDARY_INDEX } from '@/src/components/Runs/Compare/constants';
 import {
   getNumericMetricValue,
   roundMetricValue,
 } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
+import { getHeatMapTestCaseColId } from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-test-case-columns';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 
@@ -23,8 +23,6 @@ const mergeMetricValuesSchema = (results: AnalyticsResult[]): Record<string, Rec
   return merged;
 };
 
-const getTestCaseKey = (row: AnalyticsResult): string => row.testCaseId || row.testCaseName || row.id || '';
-
 const parseMetricValue = (value: unknown): number | null => {
   if (typeof value === 'number' && !Number.isNaN(value)) {
     return value;
@@ -41,8 +39,7 @@ const buildMetricValuesForRun = (
   const values: Record<string, number | null | undefined> = {};
 
   for (const row of mergedRows) {
-    const testCaseKey = getTestCaseKey(row);
-    const colId = formatHeatMapTestCaseColId(testCaseKey);
+    const colId = getHeatMapTestCaseColId(row);
     const source = isCompared ? row._compared : row;
     const groupExists = source?.metricValues != null && groupKey in source.metricValues;
 
@@ -62,19 +59,12 @@ const getHeatMapDeltaValue = (primary: unknown, secondary: unknown): number | nu
   const primaryNum = getNumericMetricValue(primary);
   const secondaryNum = getNumericMetricValue(secondary);
 
-  if (primaryNum == null && secondaryNum == null) {
+  // Match execution-results delta: no numeric delta when either side is missing.
+  if (primaryNum == null || secondaryNum == null) {
     return undefined;
   }
 
-  if (primaryNum == null && secondaryNum != null) {
-    return roundMetricValue(secondaryNum);
-  }
-
-  if (primaryNum != null && secondaryNum == null) {
-    return roundMetricValue(-primaryNum);
-  }
-
-  return roundMetricValue(secondaryNum! - primaryNum!);
+  return roundMetricValue(secondaryNum - primaryNum);
 };
 
 const buildDeltaValuesForMetric = (
@@ -85,8 +75,7 @@ const buildDeltaValuesForMetric = (
   const values: Record<string, number | null | undefined> = {};
 
   for (const row of mergedRows) {
-    const testCaseKey = getTestCaseKey(row);
-    const colId = formatHeatMapTestCaseColId(testCaseKey);
+    const colId = getHeatMapTestCaseColId(row);
     const primaryGroupExists = row?.metricValues != null && groupKey in row.metricValues;
     const secondaryGroupExists = row._compared?.metricValues != null && groupKey in row._compared.metricValues;
 

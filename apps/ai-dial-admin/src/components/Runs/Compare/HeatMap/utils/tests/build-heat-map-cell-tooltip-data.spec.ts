@@ -2,12 +2,12 @@ import { describe, expect, test } from 'vitest';
 
 import { ACCURACY_COLOR_MAP, DELTA_POSITIVE_COLOR_MAP } from '@/src/components/Common/ColorScale/constants';
 import { RUN_COMPARE_PRIMARY_INDEX, RUN_COMPARE_SECONDARY_INDEX } from '@/src/components/Runs/Compare/constants';
-import { formatHeatMapTestCaseColId } from '@/src/components/Runs/Compare/HeatMap/constants';
+import { formatHeatMapTestCaseColId } from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-test-case-columns';
 import { HeatMapColorDisplayMode, HeatMapRowType } from '@/src/components/Runs/Compare/HeatMap/models';
 import { buildHeatMapCellTooltipData } from '@/src/components/Runs/Compare/HeatMap/utils/build-heat-map-cell-tooltip-data';
 import { RunsI18nKey } from '@/src/constants/i18n';
 
-const colId = formatHeatMapTestCaseColId('tc-1');
+const colId = formatHeatMapTestCaseColId('tc-1', 0);
 const baseOptions = {
   testCaseLabel: 'Row 001',
   primaryRunName: 'Run #316',

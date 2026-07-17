@@ -5,7 +5,13 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DialLoader, DialNoDataContent, DialSegmentedControl } from '@epam/ai-dial-ui-kit';
 import type { SegmentedControlOption } from '@epam/ai-dial-ui-kit';
 
-import { executeQuery, executeSqlQuery, getEntitySchema } from '@/src/app/[lang]/query-builder/actions';
+import {
+  executeQuery,
+  executeSqlQuery,
+  getEntitySchema,
+  translateQuery,
+  translateSqlToQuery,
+} from '@/src/app/[lang]/query-builder/actions';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import Aggregates from '@/src/components/Analytics/QueryBuilder/Aggregate/Aggregates';
@@ -26,7 +32,6 @@ import QueryBuilderToolbar from '@/src/components/Analytics/QueryBuilder/Toolbar
 import { QueryBuilderContext } from '@/src/components/Analytics/QueryBuilder/context';
 import { fieldsToOptions, havingFieldOptions } from '@/src/components/Analytics/QueryBuilder/utils/fields';
 import { buildQuery } from '@/src/components/Analytics/QueryBuilder/utils/serialize';
-import { sqlFromQuery } from '@/src/components/Analytics/QueryBuilder/utils/sql-generate';
 import { isBuilderRepresentable, parseQuery } from '@/src/components/Analytics/QueryBuilder/utils/deserialize';
 import { getResultColumns } from '@/src/components/Analytics/QueryBuilder/utils/result';
 import { createGroup, createInitialState, createPredicate } from '@/src/components/Analytics/QueryBuilder/utils/state';
@@ -37,6 +42,7 @@ import { useTimeFilter } from '@/src/hooks/use-time-filter';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsEntity, AnalyticsEntityField } from '@/src/models/analytics/entity';
+import { QueryFunction } from '@/src/models/analytics/query-function';
 import { QueryMode, StructuredQuery, StructuredQueryResult } from '@/src/models/analytics/query';
 import {
   ExecutedQueryMeta,
@@ -56,14 +62,15 @@ interface Props {
   initialEntities: AnalyticsEntity[];
   initialEntityName: string;
   initialFields: AnalyticsEntityField[];
+  initialFunctions: QueryFunction[];
 }
 
-const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFields }) => {
+const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFields, initialFunctions }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
 
   const [state, setState] = useState<QueryBuilderState>(() => ({
-    ...createInitialState(),
+    ...createInitialState(initialFunctions),
     entityName: initialEntityName,
     fields: initialFields,
   }));
@@ -74,9 +81,12 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
   // Diverged: the JSON holds a valid query the visual builder cannot display (filter nesting deeper
   // than root + one group level). It stays editable and runnable; only switching to Builder is guarded.
   const [jsonDiverged, setJsonDiverged] = useState(false);
-  // SQL seeds from the builder (compiled on entering the view) but never back-propagates — the DSL
-  // cannot round-trip arbitrary SQL, which is why leaving *edited* SQL for the Builder is guarded.
+  // SQL seeds from the builder by translating the current query through the backend (authoritative);
+  // leaving *edited* SQL for the Builder attempts the reverse translation and only falls back to the
+  // discard guard when that fails or yields a query the builder cannot represent.
   const [sqlText, setSqlText] = useState('');
+  const [sqlLoading, setSqlLoading] = useState(false);
+  const [sqlError, setSqlError] = useState<string | null>(null);
   const lastGeneratedSql = useRef('');
   const [pendingView, setPendingView] = useState<QueryBuilderView | null>(null);
   const [isLoadingSchema, setIsLoadingSchema] = useState(false);
@@ -106,9 +116,9 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
     setSchemaError(null);
     const schema = await getEntitySchema(name);
     if (schema) {
-      setState({ ...createInitialState(), entityName: name, fields: schema.fields || [] });
+      setState({ ...createInitialState(state.functions), entityName: name, fields: schema.fields || [] });
     } else {
-      setState({ ...createInitialState(), entityName: name });
+      setState({ ...createInitialState(state.functions), entityName: name });
       setSchemaError(t(QueryBuilderI18nKey.SchemaLoadFailed));
       showNotification(getErrorNotification(t(QueryBuilderI18nKey.SchemaLoadFailed)));
     }
@@ -140,12 +150,61 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
   // Generated (unedited) SQL is the builder's own query in another notation — never guarded.
   const sqlEdited = !!sqlText.trim() && sqlText !== lastGeneratedSql.current;
 
-  const onChangeView = (next: QueryBuilderView) => {
+  // A ge/le pair on the timestamp field belongs to the toolbar control, not the visual filter tree.
+  const hydrateBuilderFromQuery = (parsed: StructuredQuery) => {
+    const lifted = timestampField ? liftTimeRange(parsed.filter, timestampField) : null;
+    const forState = lifted ? { ...parsed, filter: lifted.rest } : parsed;
+    setState(parseQuery(forState, state.fields, state.functions));
+    if (lifted && !sameRange(lifted.range, timeBound?.range)) {
+      timeFilter.onTimeRangeChange(lifted.range, true);
+    }
+  };
+
+  // Entering SQL seeds the editor from the backend translation of the current builder query — the
+  // authoritative SQL a run would execute. A query the SQL subset cannot express (translate 400)
+  // leaves the editor empty and surfaces the error; user-edited SQL is never re-seeded.
+  const seedSqlFromBuilder = async () => {
+    setSqlLoading(true);
+    setSqlError(null);
+    const freshBound = timestampField ? { field: timestampField, range: getCurrentTimeRange() } : null;
+    const res = await translateQuery(buildQuery(state, freshBound));
+    if (res.success) {
+      const sql = res.response?.sql ?? '';
+      setSqlText(sql);
+      lastGeneratedSql.current = sql;
+    } else {
+      setSqlText('');
+      lastGeneratedSql.current = '';
+      setSqlError(res.errorMessage || t(QueryBuilderI18nKey.SqlTranslateFailed));
+      showNotification(
+        getErrorNotification(
+          res.errorHeader || t(QueryBuilderI18nKey.SqlTranslateFailed),
+          res.errorMessage,
+          res.requestId,
+        ),
+      );
+    }
+    setSqlLoading(false);
+  };
+
+  const onChangeView = async (next: QueryBuilderView) => {
     if (next === view) return;
     if (next === QueryBuilderView.Form) {
-      const sqlBlocks = isSqlView && sqlEdited;
-      const jsonBlocks = isJsonView && jsonDiverged;
-      if (sqlBlocks || jsonBlocks) {
+      // Edited SQL: try to translate it back into the builder; only guard when that can't be shown.
+      if (isSqlView && sqlEdited) {
+        const res = await translateSqlToQuery(sqlText);
+        if (res.success && res.response?.query && isBuilderRepresentable(res.response.query)) {
+          hydrateBuilderFromQuery(res.response.query);
+          setSqlText('');
+          setSqlError(null);
+          lastGeneratedSql.current = '';
+          setView(next);
+          return;
+        }
+        setPendingView(next);
+        return;
+      }
+      if (isJsonView && jsonDiverged) {
         setPendingView(next);
         return;
       }
@@ -154,22 +213,27 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
       setJsonText(json);
       setJsonInvalid(false);
     }
-    // Entering SQL compiles the builder query into the editor; user-edited SQL is never overwritten.
+    // Entering SQL seeds asynchronously from the backend; user-edited SQL is never overwritten.
     if (next === QueryBuilderView.Sql && !sqlEdited) {
-      const generated = sqlFromQuery(query);
-      setSqlText(generated);
-      lastGeneratedSql.current = generated;
+      setView(next);
+      void seedSqlFromBuilder();
+      return;
     }
     setView(next);
   };
 
   const onConfirmDiscard = () => {
     setSqlText('');
+    setSqlError(null);
     lastGeneratedSql.current = '';
     setJsonText('');
     setJsonInvalid(false);
     setJsonDiverged(false);
-    setState({ ...createInitialState(), entityName: state.entityName, fields: state.fields });
+    setState({
+      ...createInitialState(state.functions),
+      entityName: state.entityName,
+      fields: state.fields,
+    });
     setView(pendingView ?? QueryBuilderView.Form);
     setPendingView(null);
   };
@@ -185,16 +249,15 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
         return;
       }
       setJsonDiverged(false);
-      // A ge/le pair on the timestamp field belongs to the toolbar control, not the filter tree.
-      const lifted = timestampField ? liftTimeRange(parsed.filter, timestampField) : null;
-      const forState = lifted ? { ...parsed, filter: lifted.rest } : parsed;
-      setState(parseQuery(forState, state.fields));
-      if (lifted && !sameRange(lifted.range, timeBound?.range)) {
-        timeFilter.onTimeRangeChange(lifted.range, true);
-      }
+      hydrateBuilderFromQuery(parsed);
     } catch {
       setJsonInvalid(true);
     }
+  };
+
+  const onChangeSql = (value: string) => {
+    setSqlText(value);
+    if (sqlError) setSqlError(null);
   };
 
   const onRun = async () => {
@@ -300,13 +363,23 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
                     </div>
                   </div>
                 ) : isSqlView ? (
-                  <div className="h-full min-h-0 overflow-hidden rounded border border-primary">
-                    <SqlEditor
-                      value={sqlText}
-                      onChange={setSqlText}
-                      fields={state.fields}
-                      entityName={state.entityName}
-                    />
+                  <div className="flex h-full min-h-0 flex-col gap-2">
+                    {sqlError && <span className="text-error dial-tiny-text">{sqlError}</span>}
+                    <div className="min-h-0 flex-1 overflow-hidden rounded border border-primary">
+                      {sqlLoading ? (
+                        <div className="flex h-full items-center justify-center">
+                          <DialLoader size={32} />
+                        </div>
+                      ) : (
+                        <SqlEditor
+                          value={sqlText}
+                          onChange={onChangeSql}
+                          fields={state.fields}
+                          entityName={state.entityName}
+                          functions={state.functions}
+                        />
+                      )}
+                    </div>
                   </div>
                 ) : (
                   <div className="flex flex-col gap-3">

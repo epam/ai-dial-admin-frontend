@@ -1,7 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
 import {
-  bucketFieldOptions,
   defaultValueType,
   distinctTags,
   family,
@@ -20,7 +19,8 @@ import {
   createInitialState,
 } from '@/src/components/Analytics/QueryBuilder/utils/state';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { QueryMode, QueryScalarFn, QueryValueType } from '@/src/models/analytics/query';
+import { QueryMode, QueryValueType } from '@/src/models/analytics/query';
+import { fnFixture, TEST_FUNCTIONS } from '@/src/components/Analytics/QueryBuilder/utils/tests/functions.fixture';
 
 const field = (name: string, type: AnalyticsFieldType, tag?: string): AnalyticsEntityField => ({
   name,
@@ -36,6 +36,18 @@ const FIELDS: AnalyticsEntityField[] = [
   field('project_id', AnalyticsFieldType.String, 'lineage'),
   field('orphan', AnalyticsFieldType.String),
 ];
+
+describe('fieldsToOptions', () => {
+  test('carries the sensitive flag through to the option', () => {
+    const fields: AnalyticsEntityField[] = [
+      { name: 'email', type: AnalyticsFieldType.String, source: 'email', sensitive: true },
+      { name: 'total', type: AnalyticsFieldType.Decimal, source: 'total' },
+    ];
+    const options = fieldsToOptions(fields);
+    expect(options[0]).toMatchObject({ name: 'email', sensitive: true });
+    expect(options[1].sensitive).toBeUndefined();
+  });
+});
 
 describe('family', () => {
   test('returns "column" when no family prefix', () => {
@@ -106,41 +118,46 @@ describe('sortByName', () => {
   });
 });
 
-describe('bucketFieldOptions', () => {
-  test('prefers temporal fields, sorted by name', () => {
-    expect(bucketFieldOptions(FIELDS).map((f) => f.name)).toEqual(['_ingested_at', 'request_time']);
-  });
-
-  test('falls back to all fields when none are temporal', () => {
-    const nonTemporal = [field('a', AnalyticsFieldType.String), field('b', AnalyticsFieldType.Long)];
-    expect(bucketFieldOptions(nonTemporal)).toHaveLength(2);
+describe('functionResultType (via havingFieldOptions)', () => {
+  test('same_as_argument resolves to the operand field type; fixed returns map directly', () => {
+    const s = createInitialState(TEST_FUNCTIONS);
+    s.fields = [field('latency', AnalyticsFieldType.Long), field('deployment', AnalyticsFieldType.String)];
+    // max → same_as_argument (Long from latency); date_bin → timestamp; length → integer
+    const maxRow = { ...createGroupByFn(fnFixture('length'), [{ field: 'deployment' }]), alias: 'len' };
+    s.groupBy = [maxRow];
+    const lenOption = havingFieldOptions(s).find((o) => o.name === 'len');
+    expect(lenOption?.type).toBe(AnalyticsFieldType.Integer);
   });
 });
 
 describe('having/sort field options', () => {
   test('havingFieldOptions combines group-by columns, function aliases and aggregate aliases', () => {
-    const s = createInitialState();
+    const s = createInitialState(TEST_FUNCTIONS);
     s.fields = FIELDS;
-    const bucket = createGroupByFn(QueryScalarFn.DateBin, 'request_time');
+    const bucket = createGroupByFn(fnFixture('date_bin'), [
+      { literal: '5' },
+      { literal: 'hour' },
+      { field: 'request_time' },
+    ]);
     bucket.alias = 'bucket';
     s.groupBy = [createGroupByColumn('project_id'), bucket];
-    const agg = createAggregate();
+    const agg = createAggregate(fnFixture('count'));
     agg.alias = 'cnt';
     s.aggregates = [agg];
     expect(havingFieldOptions(s).map((o) => o.name)).toEqual(['bucket', 'cnt', 'project_id']);
   });
 
   test('havingFieldOptions skips aliasless function entries', () => {
-    const s = createInitialState();
+    const s = createInitialState(TEST_FUNCTIONS);
     s.fields = FIELDS;
-    const fnRow = createGroupByFn(QueryScalarFn.Lower, 'project_id');
+    const fnRow = createGroupByFn(fnFixture('lower'), [{ field: 'project_id' }]);
     fnRow.alias = '';
     s.groupBy = [fnRow];
     expect(havingFieldOptions(s)).toEqual([]);
   });
 
   test('sortFieldOptions uses schema fields in row mode, aggregate outputs in aggregate mode', () => {
-    const s = createInitialState();
+    const s = createInitialState(TEST_FUNCTIONS);
     s.fields = FIELDS;
     s.groupBy = [createGroupByColumn('project_id')];
     expect(sortFieldOptions(s).map((o) => o.name)).toEqual([
@@ -256,7 +273,7 @@ describe('fieldDisplayName', () => {
 
 describe('havingFieldOptions label projection', () => {
   test('plain group-by columns keep their schema label and description; aliases carry neither', () => {
-    const s = createInitialState();
+    const s = createInitialState(TEST_FUNCTIONS);
     s.fields = [
       {
         ...field('project_id', AnalyticsFieldType.String, 'lineage'),
@@ -266,7 +283,7 @@ describe('havingFieldOptions label projection', () => {
     ];
     s.groupBy = [
       createGroupByColumn('project_id'),
-      { ...createGroupByFn(QueryScalarFn.Lower, 'project_id'), alias: 'p' },
+      { ...createGroupByFn(fnFixture('lower'), [{ field: 'project_id' }]), alias: 'p' },
     ];
     const options = havingFieldOptions(s);
     expect(options.find((o) => o.name === 'project_id')).toMatchObject({

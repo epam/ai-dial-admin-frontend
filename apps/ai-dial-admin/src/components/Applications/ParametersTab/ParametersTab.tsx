@@ -126,6 +126,11 @@ const ParametersTab: FC<Props> = ({
     return viewItems.length > 1;
   }, [viewItems.length]);
 
+  const acceptableResourceTypes = useMemo(() => {
+    const externalServices = (application as DialApplicationResource)?.external_services;
+    return { external_services: externalServices ? Object.keys(externalServices) : [] };
+  }, [application]);
+
   const onGetSchemeDefaults = useCallback((_data: Record<string, unknown>) => {}, []);
 
   const onChangeProperties = useCallback(
@@ -228,6 +233,7 @@ const ParametersTab: FC<Props> = ({
                       onGetSchemeDefaults={onGetSchemeDefaults}
                       disabled={view === ApplicationRoute.ApplicationPublications}
                       defaultExpanded={false}
+                      acceptableResourceTypes={acceptableResourceTypes}
                     />
                   </div>
                 )}

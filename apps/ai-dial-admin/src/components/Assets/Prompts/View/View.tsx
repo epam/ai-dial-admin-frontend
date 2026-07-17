@@ -98,16 +98,15 @@ const PromptView: FC<Props> = ({ originalPrompt, etag, prompts }) => {
             getPrompts(addTrailingSlash(updatedEntity.folderId)).then((prompts) => {
               const pathsToMove = getListOfPathsToMove(updatedEntity, null, (prompts as DialPrompt[]) || []);
               const newPath = removeTrailingSlash(selectedPrompt.folderId);
-              movePrompts(pathsToMove, newPath).then((r) => {
-                if (r.every((response) => response.success)) {
-                  router.push(
-                    getUrnForEntity(ApplicationRoute.Prompts, {
-                      name: updatedEntity.name,
-                      path: changePath(updatedEntity.path, newPath),
-                    }),
-                  );
-                  fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
-                }
+
+              movePrompts(pathsToMove, newPath).then(() => {
+                fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
+                router.push(
+                  getUrnForEntity(ApplicationRoute.Prompts, {
+                    name: updatedEntity.name,
+                    path: changePath(updatedEntity.path, newPath),
+                  }),
+                );
               });
             });
           } else {

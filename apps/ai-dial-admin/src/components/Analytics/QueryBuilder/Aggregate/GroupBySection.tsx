@@ -3,34 +3,30 @@ import { FC } from 'react';
 import CategorizedFieldDropdown from '@/src/components/Analytics/QueryBuilder/Common/CategorizedFieldDropdown';
 import ChipRow from '@/src/components/Analytics/QueryBuilder/Common/ChipRow';
 import CompactInput from '@/src/components/Analytics/QueryBuilder/Common/CompactInput';
-import CompactSelect from '@/src/components/Analytics/QueryBuilder/Common/CompactSelect';
 import FieldChip from '@/src/components/Analytics/QueryBuilder/Common/FieldChip';
+import FnArgEditor from '@/src/components/Analytics/QueryBuilder/Aggregate/FnArgEditor';
 import SectionBlock from '@/src/components/Analytics/QueryBuilder/Common/SectionBlock';
 import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';
+import { fieldDisplayName, fieldsToOptions } from '@/src/components/Analytics/QueryBuilder/utils/fields';
 import {
-  bucketFieldOptions,
-  fieldDisplayName,
-  fieldsToOptions,
-} from '@/src/components/Analytics/QueryBuilder/utils/fields';
+  functionArgSummary,
+  functionByName,
+  scalarFunctions,
+} from '@/src/components/Analytics/QueryBuilder/utils/functions';
 import { getAggregateWarnings } from '@/src/components/Analytics/QueryBuilder/utils/serialize';
 import { createGroupByColumn, createGroupByFn } from '@/src/components/Analytics/QueryBuilder/utils/state';
-import {
-  BUCKET_UNIT_OPTIONS,
-  GROUP_BY_FUNCTION_HINTS,
-  GROUP_BY_SECTION_WARNINGS,
-  WARNING_I18N,
-} from '@/src/constants/analytics/query-builder';
+import { GROUP_BY_SECTION_WARNINGS, WARNING_I18N } from '@/src/constants/analytics/query-builder';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
-import { QueryBucketUnit, QueryScalarFn } from '@/src/models/analytics/query';
 import { FunctionOption, GroupByRow, QueryBuilderColor } from '@/src/models/analytics/query-builder';
+import { QueryFunction } from '@/src/models/analytics/query-function';
 import { QUERY_BUILDER_PALETTE } from '@/src/constants/analytics/query-builder-palette';
 
-const summaryOf = (row: GroupByRow, fields: AnalyticsEntityField[]): string => {
-  const field = row.field ? fieldDisplayName(fields, row.field) : '…';
-  const args = row.fn === QueryScalarFn.DateBin ? `${row.amount} ${row.unit}, ${field}` : field;
-  return `${row.fn}(${args})${row.alias ? ` AS ${row.alias}` : ''}`;
+const summaryOf = (row: GroupByRow, functions: QueryFunction[], fields: AnalyticsEntityField[]): string => {
+  const fn = functionByName(functions, row.fn);
+  const inner = fn ? functionArgSummary(fn, row.args, (name) => fieldDisplayName(fields, name)) : '';
+  return `${row.fn}(${inner})${row.alias ? ` AS ${row.alias}` : ''}`;
 };
 
 const GroupBySection: FC = () => {
@@ -39,9 +35,10 @@ const GroupBySection: FC = () => {
 
   const pickedColumns = new Set(state.groupBy.filter((g) => !g.fn).map((g) => g.field));
   const addOptions = fieldsToOptions(state.fields).filter((f) => !pickedColumns.has(f.name));
-  const functionOptions: FunctionOption[] = Object.values(QueryScalarFn).map((fn) => ({
-    name: fn,
-    hint: t(GROUP_BY_FUNCTION_HINTS[fn]),
+  // The Functions group is sourced entirely from the served catalog's scalar functions.
+  const functionOptions: FunctionOption[] = scalarFunctions(state.functions).map((fn) => ({
+    name: fn.name,
+    hint: fn.description,
   }));
 
   const warnings = getAggregateWarnings(state).filter((w) => GROUP_BY_SECTION_WARNINGS.includes(w));
@@ -49,6 +46,7 @@ const GroupBySection: FC = () => {
 
   const columnRows = state.groupBy.filter((g) => !g.fn);
   const fnRows = state.groupBy.filter((g) => g.fn);
+  const fieldOptions = fieldsToOptions(state.fields);
 
   const addColumn = (name: string) => {
     state.groupBy.push(createGroupByColumn(name));
@@ -56,10 +54,9 @@ const GroupBySection: FC = () => {
   };
 
   const addFunction = (name: string) => {
-    const fn = name as QueryScalarFn;
-    // date_bin only makes sense over a temporal column, so it starts on the first one available.
-    const field = fn === QueryScalarFn.DateBin ? bucketFieldOptions(state.fields)[0]?.name || '' : '';
-    state.groupBy.push(createGroupByFn(fn, field));
+    const fn = functionByName(state.functions, name);
+    if (!fn) return;
+    state.groupBy.push(createGroupByFn(fn));
     refresh();
   };
 
@@ -97,72 +94,42 @@ const GroupBySection: FC = () => {
             ))}
           </div>
         )}
-        {fnRows.map((row) => (
-          <ChipRow
-            key={row.id}
-            inline
-            color={QueryBuilderColor.Dimension}
-            summary={summaryOf(row, state.fields)}
-            onRemove={() => removeRow(row)}
-          >
-            {row.fn === QueryScalarFn.DateBin && (
-              <>
-                <CompactInput
-                  ariaLabel={t(QueryBuilderI18nKey.Every)}
-                  className="w-[44px] shrink-0"
-                  numeric
-                  value={String(row.amount)}
+        {fnRows.map((row) => {
+          const fn = functionByName(state.functions, row.fn);
+          return (
+            <ChipRow
+              key={row.id}
+              inline
+              color={QueryBuilderColor.Dimension}
+              summary={summaryOf(row, state.functions, state.fields)}
+              onRemove={() => removeRow(row)}
+            >
+              {fn?.args.map((arg, i) => (
+                <FnArgEditor
+                  key={`${row.id}-${i}`}
+                  id={`qb-groupby-${row.id}-arg-${i}`}
+                  arg={arg}
+                  value={row.args[i] ?? {}}
+                  fieldOptions={fieldOptions}
                   onChange={(value) => {
-                    row.amount = Number(value || 0);
+                    row.args[i] = value;
                     refresh();
                   }}
                 />
-                <div className="w-[92px] shrink-0">
-                  <CompactSelect
-                    ariaLabel={t(QueryBuilderI18nKey.Unit)}
-                    options={BUCKET_UNIT_OPTIONS}
-                    value={row.unit}
-                    onChange={(v) => {
-                      row.unit = v as QueryBucketUnit;
-                      refresh();
-                    }}
-                  />
-                </div>
-              </>
-            )}
-            <div className="min-w-0 flex-1">
-              <CategorizedFieldDropdown
-                id={`qb-groupby-field-${row.id}`}
-                options={
-                  row.fn === QueryScalarFn.DateBin
-                    ? fieldsToOptions(bucketFieldOptions(state.fields))
-                    : fieldsToOptions(state.fields)
-                }
-                value={row.field}
-                placeholder={
-                  row.fn === QueryScalarFn.DateBin
-                    ? t(QueryBuilderI18nKey.TimestampFieldPlaceholder)
-                    : t(QueryBuilderI18nKey.FieldPlaceholder)
-                }
-                ariaLabel={t(QueryBuilderI18nKey.Field)}
-                onSelect={(name) => {
-                  row.field = name;
+              ))}
+              <CompactInput
+                ariaLabel={t(QueryBuilderI18nKey.AliasPlaceholder)}
+                className="w-[72px] shrink-0"
+                value={row.alias}
+                placeholder={t(QueryBuilderI18nKey.AliasPlaceholder)}
+                onChange={(value) => {
+                  row.alias = value;
                   refresh();
                 }}
               />
-            </div>
-            <CompactInput
-              ariaLabel={t(QueryBuilderI18nKey.AliasPlaceholder)}
-              className="w-[72px] shrink-0"
-              value={row.alias}
-              placeholder={t(QueryBuilderI18nKey.AliasPlaceholder)}
-              onChange={(value) => {
-                row.alias = value;
-                refresh();
-              }}
-            />
-          </ChipRow>
-        ))}
+            </ChipRow>
+          );
+        })}
         {!state.groupBy.length && (
           <span className="dial-tiny-text text-secondary">{t(QueryBuilderI18nKey.NoFields)}</span>
         )}

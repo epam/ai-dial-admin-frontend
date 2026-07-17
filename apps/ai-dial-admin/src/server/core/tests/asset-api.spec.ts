@@ -174,6 +174,61 @@ describe('Server :: Core :: AssetApi', () => {
     expect(body).toEqual({ name: 't' });
   });
 
+  test('put merges admin-format path fields (path/folderId/name/version) onto a successful response', async () => {
+    fetch.mockResponseOnce(
+      JSON.stringify({ name: 't__1.0', url: 'toolsets/folder/t__1.0', bucket: 'b', nodeType: 'ITEM' }),
+      {
+        headers: { 'content-type': 'application/json' },
+      },
+    );
+
+    const result = await instance.put(TOKEN_MOCK, ResourceType.TOOLSET, 'folder/t__1.0', { name: 't' });
+
+    expect(result.success).toBe(true);
+    expect(result.response).toMatchObject({
+      // Core-format fields preserved
+      url: 'toolsets/folder/t__1.0',
+      bucket: 'b',
+      // admin-format identity fields added, derived from the written path
+      path: 'folder/t__1.0',
+      folderId: 'folder/',
+      name: 't',
+      version: '1.0',
+    });
+  });
+
+  test('put leaves version undefined for an unversioned path', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ url: 'toolsets/folder/t' }), {
+      headers: { 'content-type': 'application/json' },
+    });
+
+    const result = await instance.put(TOKEN_MOCK, ResourceType.TOOLSET, 'folder/t', { name: 't' });
+
+    expect(result.response).toMatchObject({ path: 'folder/t', folderId: 'folder/', name: 't' });
+    expect((result.response as { version?: string }).version).toBeUndefined();
+  });
+
+  test('put does not throw on a slashless path and returns the response unchanged', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ url: 'toolsets/publict' }), {
+      headers: { 'content-type': 'application/json' },
+    });
+
+    const result = await instance.put(TOKEN_MOCK, ResourceType.TOOLSET, 'publict', { name: 't' });
+
+    expect(result.success).toBe(true);
+    expect(result.response).toEqual({ url: 'toolsets/publict' });
+    expect(result.response).not.toHaveProperty('folderId');
+  });
+
+  test('put returns a failed response unchanged, with no path fields added', async () => {
+    fetch.mockResponseOnce('conflict', { status: 412 });
+
+    const result = await instance.put(TOKEN_MOCK, ResourceType.TOOLSET, 'folder/t__1.0', { name: 't' });
+
+    expect(result.success).toBe(false);
+    expect(result.response).toBeUndefined();
+  });
+
   test('delete sends If-Match when an etag is supplied, no header otherwise', async () => {
     fetch.mockResponseOnce('');
     await instance.delete(TOKEN_MOCK, ResourceType.CONVERSATION, 'folder/c', 'etag-2');

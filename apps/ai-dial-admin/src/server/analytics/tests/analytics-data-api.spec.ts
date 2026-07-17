@@ -44,6 +44,29 @@ describe('Server :: AnalyticsDataApi', () => {
     );
   });
 
+  test('getFunctions issues GET /v1/queries/functions and returns the parsed catalog', async () => {
+    const functions = [
+      {
+        name: 'count',
+        group: 'aggregate',
+        signature: 'count([value])',
+        returns: 'long',
+        distinct_supported: true,
+        description: 'row count',
+        args: [],
+      },
+    ];
+    fetch.mockResponseOnce(JSON.stringify(functions), JSON_HEADERS);
+
+    const res = await instance.getFunctions(TOKEN_MOCK);
+
+    expect(res).toEqual(functions);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/queries/functions'),
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
   test('executeAction POSTs the structured-query envelope to /v1/queries/execute', async () => {
     const query: StructuredQuery = { entity: 'conversation', mode: QueryMode.Row };
     fetch.mockResponseOnce(JSON.stringify({ columns: ['id'], rows: [{ id: '1' }] }));
@@ -68,6 +91,40 @@ describe('Server :: AnalyticsDataApi', () => {
       expect.stringContaining('/v1/queries/execute-sql'),
       expect.objectContaining({ method: 'POST', body: JSON.stringify({ sql }) }),
     );
+  });
+
+  test('translateAction POSTs the structured query to /v1/queries/translate', async () => {
+    const query: StructuredQuery = { entity: 'conversation', mode: QueryMode.Row };
+    fetch.mockResponseOnce(JSON.stringify({ sql: 'SELECT *\nFROM conversation' }));
+
+    const res = await instance.translateAction(query, TOKEN_MOCK);
+
+    expect(res.success).toBe(true);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/queries/translate'),
+      expect.objectContaining({ method: 'POST', body: JSON.stringify(query) }),
+    );
+  });
+
+  test('translateSqlAction POSTs { sql } to /v1/queries/translate-sql', async () => {
+    const sql = 'SELECT id FROM conversation';
+    fetch.mockResponseOnce(JSON.stringify({ query: { entity: 'conversation', mode: 'row' } }));
+
+    const res = await instance.translateSqlAction(sql, TOKEN_MOCK);
+
+    expect(res.success).toBe(true);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/queries/translate-sql'),
+      expect.objectContaining({ method: 'POST', body: JSON.stringify({ sql }) }),
+    );
+  });
+
+  test('translateAction surfaces a backend 400 as a failed response', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ message: 'include_total not expressible' }), { status: 400 });
+
+    const res = await instance.translateAction({ entity: 'conversation', mode: QueryMode.Row }, TOKEN_MOCK);
+
+    expect(res.success).toBe(false);
   });
 
   test('getEntities returns null on a failed response', async () => {

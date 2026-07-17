@@ -1,7 +1,10 @@
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
+import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
-import { render, screen } from '@testing-library/react';
-import { describe, expect, test, vi } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { useRouter } from 'next/navigation';
+import { Mock, describe, expect, test, vi } from 'vitest';
 import CreateAsset from '../CreateAsset';
 
 vi.mock('@/src/components/EntityMainProperties/Properties/AssetProperties', () => ({
@@ -54,5 +57,43 @@ describe('CreateAsset', () => {
     renderWithData([{ name: 'existing', version: '1.0.0' }] as AssetsFolderContext['data']);
 
     expect(screen.getByText('AssetPropertiesStub')).toBeInTheDocument();
+  });
+
+  test('redirects to the created resource using admin-format path fields from the write response', async () => {
+    // Mirrors the MCP-container "Create Asset Toolset" flow: initialValues present (leading slash),
+    // and onCreate resolves the way the fixed AssetApi.put does — response carrying path/folderId/name/version.
+    const push = vi.fn();
+    (useRouter as Mock).mockReturnValue({ push, refresh: vi.fn() });
+
+    const onCreate = vi.fn(
+      (): Promise<ServerActionResponse> =>
+        Promise.resolve({
+          success: true,
+          response: {
+            name: 't',
+            path: 'public/t__1.0',
+            folderId: 'public/',
+            version: '1.0',
+            url: 'toolsets/public/t__1.0',
+          },
+        }),
+    );
+
+    const ctx = { ...baseContext, data: [] } as AssetsFolderContext;
+    render(
+      <CreateAsset
+        view={ApplicationRoute.AssetsToolsets}
+        isModalOpen={true}
+        initialValues={{ name: 't' }}
+        context={() => ctx}
+        onCreate={onCreate}
+        onClose={vi.fn()}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Buttons.Create' }));
+
+    await waitFor(() => expect(push).toHaveBeenCalledTimes(1));
+    expect(push).toHaveBeenCalledWith('/assets-toolsets/t?path=public%2Ft__1.0');
   });
 });

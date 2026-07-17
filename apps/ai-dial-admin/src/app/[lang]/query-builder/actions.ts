@@ -4,7 +4,13 @@ import { cookies, headers } from 'next/headers';
 
 import { analyticsDataApi } from '@/src/app/api/api';
 import { AnalyticsEntity, AnalyticsEntitySchema } from '@/src/models/analytics/entity';
-import { StructuredQuery, StructuredQueryResult } from '@/src/models/analytics/query';
+import { QueryFunction } from '@/src/models/analytics/query-function';
+import {
+  StructuredQuery,
+  StructuredQueryResult,
+  TranslateResponse,
+  TranslateSqlResponse,
+} from '@/src/models/analytics/query';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -19,10 +25,22 @@ export async function getEntitySchema(name: string): Promise<AnalyticsEntitySche
   return analyticsDataApi.getEntitySchema(name, await token());
 }
 
+export async function getFunctions(): Promise<QueryFunction[] | null> {
+  return analyticsDataApi.getFunctions(await token());
+}
+
 export async function executeQuery(query: StructuredQuery): Promise<ServerActionResponse<StructuredQueryResult>> {
   return analyticsDataApi.executeAction(query, await token());
 }
 
 export async function executeSqlQuery(sql: string): Promise<ServerActionResponse<StructuredQueryResult>> {
   return analyticsDataApi.executeSqlAction(sql, await token());
+}
+
+export async function translateQuery(query: StructuredQuery): Promise<ServerActionResponse<TranslateResponse>> {
+  return analyticsDataApi.translateAction(query, await token());
+}
+
+export async function translateSqlToQuery(sql: string): Promise<ServerActionResponse<TranslateSqlResponse>> {
+  return analyticsDataApi.translateSqlAction(sql, await token());
 }
