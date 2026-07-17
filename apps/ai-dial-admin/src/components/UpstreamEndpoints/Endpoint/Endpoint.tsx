@@ -49,7 +49,9 @@ const Endpoint: FC<Props> = ({
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
   const isModelView = view === ApplicationRoute.Models;
-  const isIdRequiredForResponses = !!endpoint.responsesEndpoint && !endpoint.id;
+
+  const isIdRequiredForResponses = !endpoint.id && (withResponses ? !!endpoint.responsesEndpoint : !!endpoint.endpoint);
+
   const idValidationField = `upstream-id-${index}`;
   const [isExpanded, setIsExpanded] = useState(false);
   const [endpointWarning, setEndpointWarning] = useState('');
