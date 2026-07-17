@@ -1,6 +1,7 @@
 import { describe, expect, test, vi } from 'vitest';
 
 import { HeatMapColorDisplayMode } from '@/src/components/Runs/Compare/HeatMap/models';
+import { HEAT_MAP_VALUE_COL_MIN_WIDTH } from '@/src/components/Runs/Compare/HeatMap/constants';
 import { buildHeatMapColumns } from '@/src/components/Runs/Compare/HeatMap/utils/build-heat-map-columns';
 import { getHeatMapTestCaseColId } from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-test-case-columns';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
@@ -41,6 +42,7 @@ const buildOptions = {
   onToggleGroup: vi.fn(),
   primaryRunName: 'Run #1',
   comparedRunName: 'Run #2',
+  theme: 'dark',
 };
 
 describe('buildHeatMapColumns', () => {
@@ -53,6 +55,7 @@ describe('buildHeatMapColumns', () => {
     const testCaseColumns = columns.slice(1);
     expect(testCaseColumns.map((col) => col.headerName)).toEqual(['Alpha', 'Beta']);
     expect(testCaseColumns.map((col) => col.headerComponentParams)).toEqual([{ label: 'Alpha' }, { label: 'Beta' }]);
+    expect(testCaseColumns.every((col) => col.minWidth === HEAT_MAP_VALUE_COL_MIN_WIDTH)).toBe(true);
   });
 
   test('uses distinct colIds and name_index headers for multiple sub-runs of the same test case', () => {

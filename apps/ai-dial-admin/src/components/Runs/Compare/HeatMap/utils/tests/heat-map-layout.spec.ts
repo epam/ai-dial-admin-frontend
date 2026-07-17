@@ -8,9 +8,11 @@ import {
   HEAT_MAP_HEADER_VERTICAL_LABEL_OVERFLOW_BUFFER,
   HEAT_MAP_HEADER_VERTICAL_MIN_HEIGHT,
   HEAT_MAP_ROW_HEIGHT,
+  HEAT_MAP_VALUE_COL_MIN_WIDTH,
   HEAT_MAP_VALUE_TEXT_MIN_WIDTH,
 } from '@/src/components/Runs/Compare/HeatMap/constants';
 import {
+  canFitHeatMapColumnsToContainer,
   measureVerticalHeatMapHeaderLabelHeight,
   resolveHeatMapHeaderHeight,
   resolveHeatMapRowHeight,
@@ -25,11 +27,6 @@ describe('resolveHeatMapRowHeight', () => {
   test('returns 20px when value columns are too narrow (minified view)', () => {
     expect(resolveHeatMapRowHeight(HEAT_MAP_VALUE_TEXT_MIN_WIDTH - 1)).toBe(HEAT_MAP_ROW_HEIGHT);
     expect(resolveHeatMapRowHeight(14)).toBe(HEAT_MAP_ROW_HEIGHT);
-  });
-
-  test('returns 40px in delta mode regardless of column width', () => {
-    expect(resolveHeatMapRowHeight(14, true)).toBe(HEAT_MAP_GROUP_ROW_HEIGHT);
-    expect(resolveHeatMapRowHeight(HEAT_MAP_VALUE_TEXT_MIN_WIDTH, true)).toBe(HEAT_MAP_GROUP_ROW_HEIGHT);
   });
 });
 
@@ -64,5 +61,21 @@ describe('resolveHeatMapHeaderHeight', () => {
   test('returns min height when no labels are provided in vertical mode', () => {
     expect(resolveHeatMapHeaderHeight(HEAT_MAP_VALUE_TEXT_MIN_WIDTH - 1)).toBe(HEAT_MAP_HEADER_VERTICAL_MIN_HEIGHT);
     expect(resolveHeatMapHeaderHeight(14, [])).toBe(HEAT_MAP_HEADER_VERTICAL_MIN_HEIGHT);
+  });
+});
+
+describe('canFitHeatMapColumnsToContainer', () => {
+  test('returns true when available width can fit all columns at min width', () => {
+    expect(canFitHeatMapColumnsToContainer(HEAT_MAP_VALUE_COL_MIN_WIDTH * 10, 10)).toBe(true);
+    expect(canFitHeatMapColumnsToContainer(HEAT_MAP_VALUE_COL_MIN_WIDTH * 10 + 5, 10)).toBe(true);
+  });
+
+  test('returns false when columns would be squeezed below min width', () => {
+    expect(canFitHeatMapColumnsToContainer(HEAT_MAP_VALUE_COL_MIN_WIDTH * 10 - 1, 10)).toBe(false);
+    expect(canFitHeatMapColumnsToContainer(0, 84)).toBe(false);
+  });
+
+  test('returns false for empty column count', () => {
+    expect(canFitHeatMapColumnsToContainer(1000, 0)).toBe(false);
   });
 });

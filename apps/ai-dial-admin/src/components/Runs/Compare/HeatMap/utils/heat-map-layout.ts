@@ -1,4 +1,4 @@
-import { GridApi } from 'ag-grid-community';
+import { Column, GridApi } from 'ag-grid-community';
 
 import {
   HEAT_MAP_GROUP_ROW_HEIGHT,
@@ -9,6 +9,7 @@ import {
   HEAT_MAP_HEADER_VERTICAL_MIN_HEIGHT,
   HEAT_MAP_HEADER_VERTICAL_MAX_HEIGHT,
   HEAT_MAP_ROW_HEIGHT,
+  HEAT_MAP_VALUE_COL_MIN_WIDTH,
 } from '@/src/components/Runs/Compare/HeatMap/constants';
 import { shouldShowHeatMapCellValue } from '@/src/components/Runs/Compare/HeatMap/utils/format-heat-map-cell-value';
 
@@ -20,13 +21,37 @@ export const getHeatMapValueColumnWidth = (api: GridApi): number => {
   return valueColumn?.getActualWidth() ?? 0;
 };
 
-export const resolveHeatMapRowHeight = (valueColumnWidth: number, isDeltaMode = false): number => {
-  if (isDeltaMode) {
-    return HEAT_MAP_GROUP_ROW_HEIGHT;
+export const getHeatMapTestCaseColumns = (api: GridApi): Column[] =>
+  (api.getColumns() ?? []).filter((col) => col.getColId().startsWith('tc_'));
+
+export const canFitHeatMapColumnsToContainer = (availableWidth: number, columnCount: number): boolean =>
+  columnCount > 0 && availableWidth >= columnCount * HEAT_MAP_VALUE_COL_MIN_WIDTH;
+
+export const applyHeatMapColumnWidths = (api: GridApi, availableForTestCases: number): void => {
+  const testCaseColumns = getHeatMapTestCaseColumns(api);
+  if (!testCaseColumns.length) {
+    return;
   }
 
-  return shouldShowHeatMapCellValue(valueColumnWidth) ? HEAT_MAP_GROUP_ROW_HEIGHT : HEAT_MAP_ROW_HEIGHT;
+  if (canFitHeatMapColumnsToContainer(availableForTestCases, testCaseColumns.length)) {
+    api.sizeColumnsToFit();
+    api.setGridOption('alwaysShowHorizontalScroll', false);
+    return;
+  }
+
+  // Prefer applyColumnState over setColumnWidths — ColumnResizeModule is not registered app-wide.
+  api.applyColumnState({
+    state: testCaseColumns.map((col) => ({
+      colId: col.getColId(),
+      width: HEAT_MAP_VALUE_COL_MIN_WIDTH,
+      flex: null,
+    })),
+  });
+  api.setGridOption('alwaysShowHorizontalScroll', true);
 };
+
+export const resolveHeatMapRowHeight = (valueColumnWidth: number): number =>
+  shouldShowHeatMapCellValue(valueColumnWidth) ? HEAT_MAP_GROUP_ROW_HEIGHT : HEAT_MAP_ROW_HEIGHT;
 
 export const resolveHeatMapHeaderHeight = (valueColumnWidth: number, headerLabels: string[] = []): number => {
   if (shouldShowHeatMapCellValue(valueColumnWidth)) {

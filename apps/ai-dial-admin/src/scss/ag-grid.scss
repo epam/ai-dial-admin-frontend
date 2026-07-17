@@ -260,16 +260,10 @@
 }
 
 .heat-map-grid {
-  .ag-theme-balham-dark,
-  .ag-root-wrapper {
-    overflow-x: hidden !important;
-  }
-
-  .ag-header,
-  .ag-header-viewport,
-  .ag-header-row,
-  .ag-header-cell.heat-map-test-case-header {
-    overflow: visible !important;
+  // Keep AG Grid's internal horizontal scroll usable. overflow:visible on the header
+  // viewport breaks scroll sync and clips trailing test-case columns.
+  .ag-theme-balham-dark {
+    overflow-x: hidden;
   }
 
   .ag-header-cell.heat-map-test-case-header {
@@ -278,7 +272,6 @@
 
     .ag-header-cell-comp-wrapper {
       height: 100%;
-      overflow: visible;
       padding-left: 0;
       padding-right: 0;
     }
@@ -295,5 +288,9 @@
     border-left: none !important;
     @apply border-r border-b border-tertiary;
     padding: 0 !important;
+  }
+
+  .ag-body-horizontal-scroll {
+    min-height: 12px;
   }
 }

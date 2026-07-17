@@ -5,6 +5,7 @@ import { FC } from 'react';
 import classNames from 'classnames';
 
 import { getAccuracyColors } from '@/src/components/Common/ColorScale/utils';
+import { useTheme } from '@/src/context/ThemeContext';
 
 interface Props {
   name: string;
@@ -15,6 +16,7 @@ interface Props {
 }
 
 const MetricCard: FC<Props> = ({ name, value, isError, isSelected, onClick }) => {
+  const { currentTheme } = useTheme();
   const formattedValue = value != null ? value.toFixed(3) : '\u2014';
   const fillWidth = value != null ? Math.min(value * 100, 100) : 0;
 
@@ -45,7 +47,7 @@ const MetricCard: FC<Props> = ({ name, value, isError, isSelected, onClick }) =>
           className={classNames('h-full rounded-sm transition-[width] duration-400', isError && 'bg-error')}
           style={{
             width: `${fillWidth}%`,
-            ...(!isError && value != null ? { backgroundColor: getAccuracyColors(value).bg } : {}),
+            ...(!isError && value != null ? { backgroundColor: getAccuracyColors(value, currentTheme).bg } : {}),
           }}
         />
       </div>

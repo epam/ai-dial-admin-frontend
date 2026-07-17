@@ -13,6 +13,7 @@ const baseOptions = {
   primaryRunName: 'Run #316',
   comparedRunName: 'Run #317',
   colId,
+  theme: 'dark',
 };
 
 const metricRow = {
@@ -123,6 +124,20 @@ describe('buildHeatMapCellTooltipData', () => {
     );
 
     expect(result).toBeUndefined();
+  });
+
+  test('returns absolute tooltip with light-theme swatch colors', () => {
+    const result = buildHeatMapCellTooltipData({ data: metricRow } as never, {
+      ...baseOptions,
+      theme: 'light',
+      colorDisplayMode: HeatMapColorDisplayMode.Absolute,
+    });
+
+    expect(result?.valueRow).toEqual({
+      value: '0.812',
+      backgroundColor: '#a1f5bf',
+      borderColor: ACCURACY_COLOR_MAP[0.9].border,
+    });
   });
 
   test('returns undefined for undefined and null cell values', () => {
