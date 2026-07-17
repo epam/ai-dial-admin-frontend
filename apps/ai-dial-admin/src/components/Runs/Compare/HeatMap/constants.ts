@@ -14,6 +14,7 @@ export const HEAT_MAP_HEADER_LABEL_VERTICAL_PADDING =
 export const HEAT_MAP_HEADER_VERTICAL_CHAR_WIDTH = 9;
 export const HEAT_MAP_HEADER_VERTICAL_LABEL_OVERFLOW_BUFFER = 2;
 export const HEAT_MAP_HEADER_VERTICAL_MIN_HEIGHT = 28;
+export const HEAT_MAP_HEADER_VERTICAL_MAX_HEIGHT = 140;
 export const HEAT_MAP_LABEL_COL_ID = 'heatMapLabel';
 export const HEAT_MAP_STROKE_TERTIARY = 'var(--stroke-tertiary, #0C101D)';
 export const HEAT_MAP_GRID_BORDER = `1px solid ${HEAT_MAP_STROKE_TERTIARY}`;
@@ -26,10 +27,3 @@ export const getHeatMapGridCellBorderStyle = (backgroundColor?: string) => ({
 });
 
 export const getHeatMapDefaultCellStyle = () => getHeatMapGridCellBorderStyle(HEAT_MAP_GROUP_ROW_BG);
-
-export const formatHeatMapTestCaseHeader = (index: number): string => `Row ${String(index + 1).padStart(3, '0')}`;
-
-export const getHeatMapTestCaseHeaderLabels = (testCaseCount: number): string[] =>
-  Array.from({ length: testCaseCount }, (_, index) => formatHeatMapTestCaseHeader(index));
-
-export const formatHeatMapTestCaseColId = (testCaseKey: string): string => `tc_${testCaseKey}`;

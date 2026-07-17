@@ -8,14 +8,9 @@ import { DialLoader } from '@epam/ai-dial-ui-kit';
 import { getRun, getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
 import ColorScale, { ColorScaleVariant } from '@/src/components/Common/ColorScale/ColorScale';
 import GridView from '@/src/components/Grid/GridView/GridView';
-import { HEAT_MAP_ROW_HEIGHT, getHeatMapTestCaseHeaderLabels } from '@/src/components/Runs/Compare/HeatMap/constants';
+import { HEAT_MAP_ROW_HEIGHT } from '@/src/components/Runs/Compare/HeatMap/constants';
 import { HeatMapColorDisplayMode, HeatMapRow } from '@/src/components/Runs/Compare/HeatMap/models';
 import { buildHeatMapColumns } from '@/src/components/Runs/Compare/HeatMap/utils/build-heat-map-columns';
-import {
-  getHeatMapValueColumnWidth,
-  resolveHeatMapHeaderHeight,
-  resolveHeatMapRowHeight,
-} from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-layout';
 import {
   buildHeatMapRowsForMode,
   filterHeatMapRowsByExpandedGroups,
@@ -23,6 +18,12 @@ import {
   getHeatMapGroupKeys,
 } from '@/src/components/Runs/Compare/HeatMap/utils/build-heat-map-rows';
 import { centerHeatMapTooltipPopup } from '@/src/components/Runs/Compare/HeatMap/utils/center-heat-map-tooltip-popup';
+import {
+  getHeatMapValueColumnWidth,
+  resolveHeatMapHeaderHeight,
+  resolveHeatMapRowHeight,
+} from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-layout';
+import { getHeatMapTestCaseHeaderLabels } from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-test-case-columns';
 import { HeatMapTabUiState } from '@/src/components/Runs/Compare/models';
 import { mergeByTestCaseId, RESULT_FILTERS } from '@/src/components/Runs/View/utils';
 import { EntitiesI18nKey, RunsI18nKey } from '@/src/constants/i18n';
@@ -178,7 +179,10 @@ const HeatMapTab: FC<Props> = ({
     });
   }, [mergedRowData, colorDisplayMode, expandedGroups, onToggleGroup, primaryRunName, comparedRunName]);
 
-  const headerLabels = useMemo(() => getHeatMapTestCaseHeaderLabels(mergedRowData?.length ?? 0), [mergedRowData]);
+  const headerLabels = useMemo(
+    () => (mergedRowData ? getHeatMapTestCaseHeaderLabels(mergedRowData) : []),
+    [mergedRowData],
+  );
 
   const fitHeatMapColumns = useCallback(
     (api: GridApi) => {
