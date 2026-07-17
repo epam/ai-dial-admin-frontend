@@ -78,6 +78,38 @@ describe('Applications :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
+  test('Should strip empty interface entries when creating an application', async () => {
+    (applicationsApi.createApplication as any).mockResolvedValue(RESPONSE_MOCK);
+
+    await createApplication({
+      name: 'test',
+      interfaces: { openaiChatCompletions: { baseUrl: '' } },
+    } as any);
+
+    expect(applicationsApi.createApplication).toHaveBeenCalledWith(
+      expect.objectContaining({ interfaces: undefined }),
+      TOKEN_MOCK,
+    );
+  });
+
+  test('Should strip empty interface entries when updating an application', async () => {
+    (applicationsApi.updateApplication as any).mockResolvedValue(RESPONSE_MOCK);
+
+    await updateApplication(
+      {
+        name: 'test',
+        interfaces: { openaiChatCompletions: { baseUrl: 'https://example.com' } },
+      } as any,
+      'etag',
+    );
+
+    expect(applicationsApi.updateApplication).toHaveBeenCalledWith(
+      expect.objectContaining({ interfaces: { openaiChatCompletions: { baseUrl: 'https://example.com' } } }),
+      TOKEN_MOCK,
+      'etag',
+    );
+  });
+
   test('Should call updateCoreApplication action', async () => {
     (applicationsApi.updateCoreApplication as any).mockResolvedValue(RESPONSE_MOCK);
 

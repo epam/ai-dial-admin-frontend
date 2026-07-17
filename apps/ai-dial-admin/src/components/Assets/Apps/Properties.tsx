@@ -9,6 +9,7 @@ import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import IconControl from '@/src/components/BaseControls/Icon';
 import IdControl from '@/src/components/BaseControls/Id/Id';
+import InterfacesField from '@/src/components/BaseControls/InterfacesField/InterfacesField';
 import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
 import TopicsControl from '@/src/components/BaseControls/Topics';
 import VersionControl from '@/src/components/BaseControls/Version';
@@ -18,6 +19,7 @@ import { getAssetCreateFolderHandler } from '@/src/components/EntityListView/uti
 import EntityAttachments from '@/src/components/EntityMainProperties/EntityAttachments/EntityAttachments';
 import ResourceMultiAuth from '@/src/components/Assets/Resources/Auth/ResourceMultiAuth';
 import { ASSET_APPLICATION_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
+import { ASSET_APPLICATION_INTERFACE_TYPES } from '@/src/constants/deployment-interfaces';
 import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
@@ -116,6 +118,12 @@ const ApplicationAssetProperties: FC<Props> = ({ asset, runners, onChange, isPub
           runners={runners}
           isEntityImmutable={true}
           codeAppEditorUrl={codeAppEditorUrl}
+        />
+        <InterfacesField
+          entity={asset}
+          onChangeEntity={onChange}
+          allowedTypes={ASSET_APPLICATION_INTERFACE_TYPES}
+          isAsset
         />
         <ResourceMultiAuth asset={asset} onChange={onChange} />
         <EntityAttachments entity={asset} onChangeEntity={onChange} isAsset />
