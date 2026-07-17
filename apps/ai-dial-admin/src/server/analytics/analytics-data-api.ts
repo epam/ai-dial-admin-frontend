@@ -1,7 +1,13 @@
 import { Token } from '@/src/models/auth';
 import { AnalyticsEntity, AnalyticsEntitySchema } from '@/src/models/analytics/entity';
 import { QueryFunction } from '@/src/models/analytics/query-function';
-import { SqlQueryRequest, StructuredQuery, StructuredQueryResult } from '@/src/models/analytics/query';
+import {
+  SqlQueryRequest,
+  StructuredQuery,
+  StructuredQueryResult,
+  TranslateResponse,
+  TranslateSqlResponse,
+} from '@/src/models/analytics/query';
 import { AnalyticsSchemaPatch, AnalyticsTable, CreateTableDto, WriteRowsDto } from '@/src/models/analytics/table';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { BaseApi } from '@/src/server/base-api';
@@ -11,6 +17,8 @@ export const QUERIES_ENTITIES_URL = `${QUERIES_URL}/entities`;
 export const QUERIES_FUNCTIONS_URL = `${QUERIES_URL}/functions`;
 export const QUERIES_EXECUTE_URL = `${QUERIES_URL}/execute`;
 export const QUERIES_EXECUTE_SQL_URL = `${QUERIES_URL}/execute-sql`;
+export const QUERIES_TRANSLATE_URL = `${QUERIES_URL}/translate`;
+export const QUERIES_TRANSLATE_SQL_URL = `${QUERIES_URL}/translate-sql`;
 export const QUERIES_ENTITY_SCHEMA_URL = (name: string): string =>
   `${QUERIES_ENTITIES_URL}/schema/${encodeURIComponent(name)}`;
 
@@ -40,6 +48,19 @@ export class AnalyticsDataApi extends BaseApi {
   // through the same pipeline as `executeAction`, returning the same result envelope (no totalCount).
   executeSqlAction(sql: string, token: Token): Promise<ServerActionResponse<StructuredQueryResult>> {
     return this.postAction<SqlQueryRequest>(QUERIES_EXECUTE_SQL_URL, { sql }, token);
+  }
+
+  // Validation-only translation (never contacts ClickHouse): renders a structured query as the
+  // external-dialect SQL subset `executeSqlAction` accepts. Rejected with 400 when the DSL is not
+  // expressible in that subset.
+  translateAction(query: StructuredQuery, token: Token): Promise<ServerActionResponse<TranslateResponse>> {
+    return this.postAction<StructuredQuery>(QUERIES_TRANSLATE_URL, query, token);
+  }
+
+  // Validation-only reverse translation: parses a SQL SELECT into the structured DSL the `execute`
+  // endpoint accepts verbatim. Rejected with 400 for unparseable/unsupported SQL.
+  translateSqlAction(sql: string, token: Token): Promise<ServerActionResponse<TranslateSqlResponse>> {
+    return this.postAction<SqlQueryRequest>(QUERIES_TRANSLATE_SQL_URL, { sql }, token);
   }
 
   async getTables(token: Token): Promise<AnalyticsTable[] | null> {

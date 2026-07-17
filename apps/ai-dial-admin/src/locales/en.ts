@@ -2261,6 +2261,8 @@ export default {
     ChartValue: 'Value',
     ChartOtherSlice: 'Other',
     ChartUnavailable: 'Charts are available for aggregate results with at least one group-by column.',
+    SqlTranslating: 'Translating query…',
+    SqlTranslateFailed: 'Could not translate the query to SQL.',
   },
   AnalyticsTables: {
     CreateSource: 'Create source',
