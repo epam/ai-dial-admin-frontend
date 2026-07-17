@@ -5,7 +5,7 @@ import { QueryMode, StructuredQuery } from '@/src/models/analytics/query';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { executeQuery, getEntities, getEntitySchema } from '../actions';
+import { executeQuery, getEntities, getEntitySchema, translateQuery, translateSqlToQuery } from '../actions';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -42,5 +42,22 @@ describe('Query builder server actions', () => {
     await executeQuery(query);
 
     expect(analyticsDataApi.executeAction).toHaveBeenCalledWith(query, TOKEN_MOCK);
+  });
+
+  test('translateQuery passes the query + token', async () => {
+    const query: StructuredQuery = { entity: 'conversation', mode: QueryMode.Row };
+    (analyticsDataApi.translateAction as any).mockResolvedValue({ success: true });
+
+    await translateQuery(query);
+
+    expect(analyticsDataApi.translateAction).toHaveBeenCalledWith(query, TOKEN_MOCK);
+  });
+
+  test('translateSqlToQuery passes the sql + token', async () => {
+    (analyticsDataApi.translateSqlAction as any).mockResolvedValue({ success: true });
+
+    await translateSqlToQuery('SELECT id FROM conversation');
+
+    expect(analyticsDataApi.translateSqlAction).toHaveBeenCalledWith('SELECT id FROM conversation', TOKEN_MOCK);
   });
 });

@@ -1,12 +1,9 @@
 import { SelectOption } from '@epam/ai-dial-ui-kit';
 
 import {
-  QueryAggregateFn,
-  QueryBucketUnit,
   QueryLogicalOperator,
   QueryOperator,
   QueryPageType,
-  QueryScalarFn,
   QuerySortDirection,
   QuerySortNulls,
   QueryValueType,
@@ -22,10 +19,34 @@ import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 
 const capitalize = (s: string): string => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 const toOptions = (values: string[]): SelectOption[] => values.map((value) => ({ value, label: capitalize(value) }));
-const toUpperOptions = (values: string[]): SelectOption[] =>
-  values.map((value) => ({ value, label: value.toUpperCase() }));
 
-export const OPERATOR_OPTIONS: SelectOption[] = toUpperOptions(Object.values(QueryOperator));
+// Filter operators offered for authoring. The contains operators author case-insensitive matching
+// (`ico`/`inc`, → SQL ILIKE) but are shown with the familiar short CO/NC codes; the case-sensitive
+// `co`/`nc` are excluded from authoring yet remain valid model values that deserialize and round-trip
+// when present in an authored/translated query.
+export const FILTER_OPERATORS: QueryOperator[] = [
+  QueryOperator.Eq,
+  QueryOperator.Ne,
+  QueryOperator.Ico,
+  QueryOperator.Inc,
+  QueryOperator.Lt,
+  QueryOperator.Gt,
+  QueryOperator.Le,
+  QueryOperator.Ge,
+  QueryOperator.In,
+];
+
+// Short display labels for the case-insensitive contains operators — the familiar CO/NC codes.
+// Every other operator shows its uppercased code.
+const OPERATOR_LABEL_OVERRIDE: Partial<Record<QueryOperator, string>> = {
+  [QueryOperator.Ico]: 'CO',
+  [QueryOperator.Inc]: 'NC',
+};
+
+export const OPERATOR_OPTIONS: SelectOption[] = FILTER_OPERATORS.map((op) => ({
+  value: op,
+  label: OPERATOR_LABEL_OVERRIDE[op] ?? op.toUpperCase(),
+}));
 
 export const VALUE_TYPE_OPTIONS: SelectOption[] = toOptions(
   Object.values(QueryValueType).filter((t) => t !== QueryValueType.Null),
@@ -36,10 +57,6 @@ export const LOGICAL_OPERATOR_OPTIONS: SelectOption[] = [
   { value: QueryLogicalOperator.Or, label: 'OR' },
   { value: QueryLogicalOperator.Not, label: 'NOT' },
 ];
-
-export const AGGREGATE_FN_OPTIONS: SelectOption[] = toUpperOptions(Object.values(QueryAggregateFn));
-
-export const BUCKET_UNIT_OPTIONS: SelectOption[] = toOptions(Object.values(QueryBucketUnit));
 
 export const SORT_DIRECTION_OPTIONS: SelectOption[] = [
   { value: QuerySortDirection.Asc, label: 'ASC' },
@@ -60,7 +77,6 @@ export const PAGE_TYPE_OPTIONS: SelectOption[] = [
 
 export const DEFAULT_PAGE_LIMIT = 25;
 export const DEFAULT_CURSOR_LIMIT = 100;
-export const DEFAULT_BUCKET_AMOUNT = 5;
 
 export const UNTAGGED_KEY = 'untagged';
 
@@ -112,13 +128,3 @@ export const AGGREGATE_SECTION_WARNINGS = [
   QueryBuilderWarning.MissingAggregateAlias,
   QueryBuilderWarning.EmptyAggregate,
 ];
-
-// Hint i18n key per scalar function offered by the Group by dropdown.
-export const GROUP_BY_FUNCTION_HINTS: Record<QueryScalarFn, QueryBuilderI18nKey> = {
-  [QueryScalarFn.DateBin]: QueryBuilderI18nKey.FnDateBinHint,
-  [QueryScalarFn.Lower]: QueryBuilderI18nKey.FnLowerHint,
-  [QueryScalarFn.Upper]: QueryBuilderI18nKey.FnUpperHint,
-  [QueryScalarFn.Length]: QueryBuilderI18nKey.FnLengthHint,
-  [QueryScalarFn.Trim]: QueryBuilderI18nKey.FnTrimHint,
-  [QueryScalarFn.Abs]: QueryBuilderI18nKey.FnAbsHint,
-};

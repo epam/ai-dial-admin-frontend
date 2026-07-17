@@ -3,10 +3,11 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import QueryBuilder from '@/src/components/Analytics/QueryBuilder/QueryBuilder';
-import { executeQuery } from '@/src/app/[lang]/query-builder/actions';
+import { executeQuery, translateQuery, translateSqlToQuery } from '@/src/app/[lang]/query-builder/actions';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { AnalyticsEntity, AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { StructuredQuery } from '@/src/models/analytics/query';
+import { TEST_FUNCTIONS } from '@/src/components/Analytics/QueryBuilder/utils/tests/functions.fixture';
 
 vi.mock('@/src/app/[lang]/query-builder/actions');
 
@@ -64,7 +65,13 @@ const DEEP_JSON = JSON.stringify({
 
 const renderBuilder = (props?: Partial<Parameters<typeof QueryBuilder>[0]>) =>
   render(
-    <QueryBuilder initialEntities={ENTITIES} initialEntityName="dial_usage_log" initialFields={FIELDS} {...props} />,
+    <QueryBuilder
+      initialEntities={ENTITIES}
+      initialEntityName="dial_usage_log"
+      initialFields={FIELDS}
+      initialFunctions={TEST_FUNCTIONS}
+      {...props}
+    />,
   );
 
 beforeEach(() => {
@@ -136,77 +143,121 @@ describe('QueryBuilder', () => {
     expect(localStorage.getItem('query-builder-rail-collapsed')).toBe('false');
   });
 
-  test('entering SQL seeds the editor with SQL generated from the builder', async () => {
+  test('entering SQL seeds the editor from the backend translation', async () => {
     const user = userEvent.setup();
+    vi.mocked(translateQuery).mockResolvedValue({
+      success: true,
+      response: { sql: 'SELECT *\nFROM dial_usage_log\nWHERE request_time >= 0' },
+    });
     renderBuilder();
 
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
 
-    const sql = (screen.getByLabelText('sql-editor') as HTMLTextAreaElement).value;
-    expect(sql).toMatch(/^SELECT/);
-    expect(sql).toContain('FROM dial_usage_log');
-    expect(sql).toContain('request_time >=');
+    const editor = (await screen.findByLabelText('sql-editor')) as HTMLTextAreaElement;
+    expect(translateQuery).toHaveBeenCalled();
+    expect(editor.value).toContain('FROM dial_usage_log');
+  });
+
+  test('a translate failure surfaces the error and leaves the editor empty with Run disabled', async () => {
+    const user = userEvent.setup();
+    vi.mocked(translateQuery).mockResolvedValue({ success: false, errorMessage: 'include_total not expressible' });
+    renderBuilder();
+
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
+
+    const editor = (await screen.findByLabelText('sql-editor')) as HTMLTextAreaElement;
+    expect(editor.value).toBe('');
+    expect(screen.getByText('include_total not expressible')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /QueryBuilder.Run/ })).toBeDisabled();
   });
 
   test('preserves edited SQL across SQL ⇄ JSON switches without a prompt', async () => {
     const user = userEvent.setup();
+    vi.mocked(translateQuery).mockResolvedValue({ success: true, response: { sql: 'SELECT * FROM dial_usage_log' } });
     renderBuilder();
 
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
-    await user.clear(screen.getByLabelText('sql-editor'));
-    await user.type(screen.getByLabelText('sql-editor'), 'SELECT 1');
+    const editor = await screen.findByLabelText('sql-editor');
+    await user.clear(editor);
+    await user.type(editor, 'SELECT 1');
 
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
     expect(screen.queryByText('QueryBuilder.DiscardQueryHeader')).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
-    expect(screen.getByLabelText('sql-editor')).toHaveValue('SELECT 1');
+    expect(await screen.findByLabelText('sql-editor')).toHaveValue('SELECT 1');
   });
 
-  test('switching edited SQL → Builder prompts; cancel stays with the buffer intact', async () => {
+  test('translatable SQL hydrates the builder without a prompt', async () => {
     const user = userEvent.setup();
+    vi.mocked(translateQuery).mockResolvedValue({ success: true, response: { sql: 'SELECT * FROM dial_usage_log' } });
+    vi.mocked(translateSqlToQuery).mockResolvedValue({
+      success: true,
+      response: {
+        query: { entity: 'dial_usage_log', mode: 'row', select: [{ expr: { type: 'field', name: 'project_id' } }] },
+      },
+    });
     renderBuilder();
 
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
-    await user.clear(screen.getByLabelText('sql-editor'));
-    await user.type(screen.getByLabelText('sql-editor'), 'SELECT 1');
+    const editor = await screen.findByLabelText('sql-editor');
+    await user.clear(editor);
+    await user.type(editor, 'SELECT project_id FROM dial_usage_log');
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' }));
 
-    expect(screen.getByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
+    // No discard prompt — the SQL was translated and shown in the builder.
+    expect(screen.queryByText('QueryBuilder.DiscardQueryHeader')).not.toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'QueryBuilder.Select' })).toBeInTheDocument();
+    expect(screen.getByText('project_id')).toBeInTheDocument();
+  });
+
+  test('SQL that cannot be translated → Builder prompts; cancel keeps the buffer intact', async () => {
+    const user = userEvent.setup();
+    vi.mocked(translateQuery).mockResolvedValue({ success: true, response: { sql: 'SELECT * FROM dial_usage_log' } });
+    vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, errorMessage: 'unsupported construct' });
+    renderBuilder();
+
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
+    const editor = await screen.findByLabelText('sql-editor');
+    await user.clear(editor);
+    await user.type(editor, 'SELECT bad');
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' }));
+
+    expect(await screen.findByText('QueryBuilder.DiscardQueryHeader')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Buttons.Cancel' }));
 
-    expect(screen.getByLabelText('sql-editor')).toHaveValue('SELECT 1');
+    expect(screen.getByLabelText('sql-editor')).toHaveValue('SELECT bad');
   });
 
-  test('confirming the prompt discards the edited SQL and resets the builder', async () => {
+  test('confirming the prompt discards the untranslatable SQL and resets the builder', async () => {
     const user = userEvent.setup();
+    vi.mocked(translateQuery).mockResolvedValue({ success: true, response: { sql: 'SELECT * FROM dial_usage_log' } });
+    vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false });
     renderBuilder();
 
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
-    await user.clear(screen.getByLabelText('sql-editor'));
-    await user.type(screen.getByLabelText('sql-editor'), 'SELECT 1');
+    const editor = await screen.findByLabelText('sql-editor');
+    await user.clear(editor);
+    await user.type(editor, 'SELECT bad');
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' }));
-    await user.click(screen.getByRole('button', { name: 'Buttons.Discard' }));
+    await user.click(await screen.findByRole('button', { name: 'Buttons.Discard' }));
 
     expect(screen.getByRole('heading', { name: 'QueryBuilder.Filter' })).toBeInTheDocument();
-
-    // Re-entering SQL regenerates from the (reset) builder — the edited text is gone.
-    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
-    const sql = (screen.getByLabelText('sql-editor') as HTMLTextAreaElement).value;
-    expect(sql).not.toBe('SELECT 1');
-    expect(sql).toMatch(/^SELECT/);
   });
 
   test('unedited (generated) SQL switches to Builder silently', async () => {
     const user = userEvent.setup();
+    vi.mocked(translateQuery).mockResolvedValue({ success: true, response: { sql: 'SELECT * FROM dial_usage_log' } });
     renderBuilder();
 
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
+    await screen.findByLabelText('sql-editor');
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewForm' }));
 
     expect(screen.queryByText('QueryBuilder.DiscardQueryHeader')).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'QueryBuilder.Filter' })).toBeInTheDocument();
+    expect(translateSqlToQuery).not.toHaveBeenCalled();
   });
 
   test('unrepresentable JSON keeps Run enabled, flags divergence, and guards Builder switch', async () => {

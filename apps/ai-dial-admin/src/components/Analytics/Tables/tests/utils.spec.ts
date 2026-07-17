@@ -15,7 +15,14 @@ describe('createColumnRow', () => {
     const a = createColumnRow();
     const b = createColumnRow();
     expect(a.id).not.toBe(b.id);
-    expect(a).toMatchObject({ source_name: '', name: '', type: AnalyticsFieldType.String, tag: '', nullable: false });
+    expect(a).toMatchObject({
+      source_name: '',
+      name: '',
+      type: AnalyticsFieldType.String,
+      tag: '',
+      nullable: false,
+      sensitive: false,
+    });
   });
 });
 
@@ -29,13 +36,57 @@ describe('toTableColumns', () => {
         type: AnalyticsFieldType.Uuid,
         tag: ' identity ',
         nullable: true,
+        sensitive: false,
       },
-      { id: '2', source_name: '', name: 'skip', type: AnalyticsFieldType.String, tag: '', nullable: false },
-      { id: '3', source_name: 'x', name: 'x', type: AnalyticsFieldType.Long, tag: '', nullable: false },
+      {
+        id: '2',
+        source_name: '',
+        name: 'skip',
+        type: AnalyticsFieldType.String,
+        tag: '',
+        nullable: false,
+        sensitive: false,
+      },
+      {
+        id: '3',
+        source_name: 'x',
+        name: 'x',
+        type: AnalyticsFieldType.Long,
+        tag: '',
+        nullable: false,
+        sensitive: false,
+      },
     ];
     expect(toTableColumns(rows)).toEqual([
       { source_name: 'event_id', name: 'event', type: AnalyticsFieldType.Uuid, nullable: true, tag: 'identity' },
       { source_name: 'x', name: 'x', type: AnalyticsFieldType.Long, nullable: false },
+    ]);
+  });
+
+  test('sensitive rows carry sensitive: true; non-sensitive rows omit the field', () => {
+    const rows = [
+      {
+        id: '1',
+        source_name: 'email',
+        name: 'email',
+        type: AnalyticsFieldType.String,
+        tag: '',
+        nullable: false,
+        sensitive: true,
+      },
+      {
+        id: '2',
+        source_name: 'total',
+        name: 'total',
+        type: AnalyticsFieldType.Decimal,
+        tag: '',
+        nullable: false,
+        sensitive: false,
+      },
+    ];
+    expect(toTableColumns(rows)).toEqual([
+      { source_name: 'email', name: 'email', type: AnalyticsFieldType.String, nullable: false, sensitive: true },
+      { source_name: 'total', name: 'total', type: AnalyticsFieldType.Decimal, nullable: false },
     ]);
   });
 });
@@ -54,6 +105,7 @@ const values = (overrides?: Partial<ColumnEditValues>): ColumnEditValues => ({
   display_name: 'Total money',
   tag: 'metric',
   description: 'Money spent',
+  sensitive: false,
   ...overrides,
 });
 
@@ -63,39 +115,60 @@ describe('buildColumnEditPatch', () => {
     expect(buildColumnEditPatch(COLUMN, values({ display_name: ' Total money ', tag: ' metric ' }))).toBeNull();
   });
 
-  test('single-field diffs produce a single op', () => {
+  test('single-field metadata diffs produce one update entry carrying only that field', () => {
     expect(buildColumnEditPatch(COLUMN, values({ display_name: 'Total money spend' }))).toEqual({
-      set_display_name: [{ name: 'total_money', display_name: 'Total money spend' }],
+      update: [{ name: 'total_money', display_name: 'Total money spend' }],
     });
     expect(buildColumnEditPatch(COLUMN, values({ tag: 'cost' }))).toEqual({
-      retag: [{ name: 'total_money', tag: 'cost' }],
+      update: [{ name: 'total_money', tag: 'cost' }],
     });
     expect(buildColumnEditPatch(COLUMN, values({ description: 'Money spent on the request' }))).toEqual({
-      redescribe: [{ name: 'total_money', description: 'Money spent on the request' }],
+      update: [{ name: 'total_money', description: 'Money spent on the request' }],
     });
+  });
+
+  test('a rename-only change produces no update entry', () => {
     expect(buildColumnEditPatch(COLUMN, values({ name: 'total_cost' }))).toEqual({
       rename: [{ from: 'total_money', to: 'total_cost' }],
     });
   });
 
-  test('combined rename + metadata ops reference the post-rename name', () => {
+  test('combined rename + metadata update references the post-rename name', () => {
     expect(buildColumnEditPatch(COLUMN, values({ name: 'total_cost', display_name: 'Total money spend' }))).toEqual({
       rename: [{ from: 'total_money', to: 'total_cost' }],
-      set_display_name: [{ name: 'total_cost', display_name: 'Total money spend' }],
+      update: [{ name: 'total_cost', display_name: 'Total money spend' }],
     });
   });
 
   test('blank metadata values are sent as the clear signal', () => {
     expect(buildColumnEditPatch(COLUMN, values({ display_name: '', description: '  ' }))).toEqual({
-      set_display_name: [{ name: 'total_money', display_name: '' }],
-      redescribe: [{ name: 'total_money', description: '' }],
+      update: [{ name: 'total_money', display_name: '', description: '' }],
     });
   });
 
-  test('setting metadata on a column without any produces the ops', () => {
+  test('setting metadata on a column without any produces one update entry', () => {
     const bare: AnalyticsTableColumn = { source_name: 'x', name: 'x', type: AnalyticsFieldType.String };
-    expect(buildColumnEditPatch(bare, { name: 'x', display_name: 'X value', tag: '', description: '' })).toEqual({
-      set_display_name: [{ name: 'x', display_name: 'X value' }],
+    expect(
+      buildColumnEditPatch(bare, { name: 'x', display_name: 'X value', tag: '', description: '', sensitive: false }),
+    ).toEqual({
+      update: [{ name: 'x', display_name: 'X value' }],
+    });
+  });
+
+  test('toggling sensitive is diffed into the update entry', () => {
+    expect(buildColumnEditPatch(COLUMN, values({ sensitive: true }))).toEqual({
+      update: [{ name: 'total_money', sensitive: true }],
+    });
+    const secret: AnalyticsTableColumn = { ...COLUMN, sensitive: true };
+    expect(buildColumnEditPatch(secret, values({ sensitive: false }))).toEqual({
+      update: [{ name: 'total_money', sensitive: false }],
+    });
+  });
+
+  test('sensitive rides along with other changed metadata and the post-rename name', () => {
+    expect(buildColumnEditPatch(COLUMN, values({ name: 'total_cost', sensitive: true }))).toEqual({
+      rename: [{ from: 'total_money', to: 'total_cost' }],
+      update: [{ name: 'total_cost', sensitive: true }],
     });
   });
 

@@ -90,6 +90,8 @@ Queries endpoints (base path `/v1/queries`):
 - `GET /v1/queries/entities/schema/{name}` — fetch the field schema for a named entity
 - `POST /v1/queries/execute` — execute a structured query; exposed as `executeAction`, returning a `ServerActionResponse` so callers can surface an error header/message on failure
 - `POST /v1/queries/execute-sql` — execute an ad-hoc SQL SELECT (body `{ sql }`); exposed as `executeSqlAction`, returning a `ServerActionResponse` with the same result envelope as `execute`
+- `POST /v1/queries/translate` — translate a structured query to the external-dialect SQL subset (validation only, no execution); exposed as `translateAction`, returning a `ServerActionResponse<{ sql }>`
+- `POST /v1/queries/translate-sql` — translate a SQL SELECT to the structured DSL (body `{ sql }`, validation only, no execution); exposed as `translateSqlAction`, returning a `ServerActionResponse<{ query }>`
 
 Tables endpoints (base path `/v1/tables`):
 - `GET /v1/tables` — list tables; the response is wrapped as `{ tables: [...] }` and the client SHALL unwrap it to a bare array
@@ -107,7 +109,7 @@ Tables endpoints (base path `/v1/tables`):
 #### Scenario: Client covers the queries endpoints
 
 - **WHEN** `analyticsDataApi` is used
-- **THEN** it can issue `GET /v1/queries/entities`, `GET /v1/queries/entities/schema/{name}`, `POST /v1/queries/execute` via `executeAction`, and `POST /v1/queries/execute-sql` via `executeSqlAction`
+- **THEN** it can issue `GET /v1/queries/entities`, `GET /v1/queries/entities/schema/{name}`, `POST /v1/queries/execute` via `executeAction`, `POST /v1/queries/execute-sql` via `executeSqlAction`, `POST /v1/queries/translate` via `translateAction`, and `POST /v1/queries/translate-sql` via `translateSqlAction`
 
 #### Scenario: Client covers the tables endpoints
 
@@ -235,7 +237,13 @@ The query builder SHALL render in a fixed-width rail at the right edge of the co
 
 Each Builder-view section (Group by, Aggregates, Select, Filters, Having, Sort, Page) SHALL render as a bordered section block with a labeled header and a header-level add action where applicable. Field pickers SHALL be searchable dropdowns whose options are grouped by the field's schema tag/category (untagged fields under a default group). Category groups SHALL be collapsible headers showing the group's option count, with at most one category expanded at a time (accordion); the group holding the current selection SHALL start expanded, and an active search term SHALL show all matches regardless of collapse state. Category header colors SHALL cycle the full builder palette. The dropdown's search input SHALL use the same compact boxed style as the builder's other controls.
 
-Field options SHALL display the field's **display name** — the schema `display_name` when set, otherwise the field `name` — as primary text, the field type right-aligned, and the schema `description` as a secondary line when present; fields without display name and description SHALL render as a single line. The dropdown overlay width SHALL stay bounded: long descriptions truncate to one line and the full text is reachable via a hover tooltip of reasonable width. The dropdown search SHALL match against both the field name and its display name. Added items SHALL render compactly — chips for plain fields, collapsible rows for parameterized items (group-by functions, aggregates, conditions, having rows, sort keys) that expand into their editor and collapse back to a summary chip tinted with the owning section's palette color — and chips and collapsed summaries SHALL refer to fields by their display name. Display names are presentation-only: structured-query serialization, the JSON view, and the SQL view SHALL always use the raw field `name`. Styling SHALL use the project's palette/theme tokens only.
+Field options SHALL display the field's **display name** — the schema `display_name` when set, otherwise the field `name` — as primary text, the field type right-aligned, and the schema `description` as a secondary line when present; fields without display name and description SHALL render as a single line. The dropdown overlay width SHALL stay bounded: long descriptions truncate to one line and the full text is reachable via a hover tooltip of reasonable width. The dropdown search SHALL match against both the field name and its display name. Added items SHALL render compactly — chips for plain fields, collapsible rows for parameterized items (group-by functions, aggregates, conditions, having rows, sort keys) that expand into their editor and collapse back to a summary chip tinted with the owning section's palette color — and chips and collapsed summaries SHALL refer to fields by their display name. Display names are presentation-only: structured-query serialization, the JSON view, and the SQL view SHALL always use the raw field `name`. Styling SHALL use the project's palette/theme tokens only. A field whose schema `sensitive` flag is true SHALL show a sensitive marker (a colored dot with a "Sensitive" tooltip) in its dropdown option, after the display name.
+
+#### Scenario: Sensitive field shows a marker in the dropdown
+
+- **WHEN** a schema field whose `sensitive` flag is true is shown in a field dropdown
+- **THEN** its option renders a sensitive marker with a "Sensitive" tooltip
+- **AND** a non-sensitive field's option renders no such marker
 
 #### Scenario: Field dropdown groups by category
 
@@ -274,9 +282,33 @@ Field options SHALL display the field's **display name** — the schema `display
 - **THEN** the row shows a compact summary of its configuration in its section's color
 - **AND** expanding it restores the full editor
 
+### Requirement: Served function catalog
+
+The Query Builder SHALL source the set of functions offered in `aggregate` mode exclusively from the backend function catalog `GET /v1/queries/functions`, fetched on the server when the query-builder page loads and seeded into the builder. The frontend SHALL NOT hardcode any function name, group, argument shape, allowed literal values, numeric bound, distinct support, return type, or hint text: every such property SHALL be read from the served catalog entry. Each catalog entry provides the function `name`, `group` (`scalar`, `aggregate`, or `ordered_set_aggregate`), a `signature`, a `returns` type, a `distinct_supported` flag, a `description`, and an ordered `args` list; each argument provides its `name`, its `kind` (`expression`, `integer_literal`, `numeric_literal`, or `string_literal`), an `optional` flag, and — when applicable — `constraints` with `allowed_values` and/or `min`/`max`.
+
+There SHALL be no local fallback catalog. When the catalog fetch fails or returns an empty list, no functions SHALL be offered: the Group by dropdown's Functions group SHALL be empty and the Aggregate section SHALL offer no metric functions, while plain-column querying (`row` mode, and plain group-by columns in `aggregate` mode) SHALL remain fully functional.
+
+#### Scenario: Functions offered come from the served catalog
+
+- **WHEN** the query-builder page loads and the function catalog lists `date_bin`, `width_bucket`, `lower`, `count`, `sum`, and `percentile_cont`
+- **THEN** the Group by Functions group offers the `scalar` functions (`date_bin`, `width_bucket`, `lower`) and the Aggregate section offers the `aggregate` / `ordered_set_aggregate` functions (`count`, `sum`, `percentile_cont`)
+
+#### Scenario: New backend functions appear with no frontend change
+
+- **WHEN** the catalog advertises a function the frontend has never named (e.g. `width_bucket`, `percentile_cont`, `percentile_disc`)
+- **THEN** it is offered in the appropriate section with an argument editor built from its catalog `args`, without any function-specific frontend code
+
+#### Scenario: Absent catalog degrades to plain columns
+
+- **WHEN** the function catalog fails to load or is empty
+- **THEN** the Group by dropdown offers only schema columns and the Aggregate section offers no metric functions
+- **AND** `row` mode and plain group-by columns still build and run
+
 ### Requirement: Query mode and DISTINCT
 
-In the Builder view the rail SHALL let the user choose the query mode — `row` (projection) or `aggregate` (group + metrics) — via a two-option `DialSegmentedControl` at the top of the view. Selecting `row` SHALL show the projection (Select) section and hide the aggregate sections; selecting `aggregate` SHALL show the Group by, Aggregate, and Having sections and hide the projection section. DISTINCT controls SHALL NOT be rendered (neither a query-level toggle nor per-aggregate checkboxes); the serializer's support for `distinct` remains for JSON-authored queries.
+In the Builder view the rail SHALL let the user choose the query mode — `row` (projection) or `aggregate` (group + metrics) — via a two-option `DialSegmentedControl` at the top of the view. Selecting `row` SHALL show the projection (Select) section and hide the aggregate sections; selecting `aggregate` SHALL show the Group by, Aggregate, and Having sections and hide the projection section.
+
+An aggregate metric whose catalog entry has `distinct_supported: true` SHALL render a per-aggregate DISTINCT control; aggregate metrics whose catalog entry has `distinct_supported: false` SHALL NOT render one, and there SHALL be no query-level DISTINCT toggle. When set, the control SHALL serialize into that aggregate's `distinct` flag. (This supersedes the previous rule that hid all DISTINCT controls: the served catalog now identifies exactly which functions accept `distinct`, so the control is offered precisely and only where it is valid.)
 
 #### Scenario: Switching to aggregate mode swaps sections
 
@@ -284,14 +316,20 @@ In the Builder view the rail SHALL let the user choose the query mode — `row` 
 - **THEN** the Group by, Aggregate, and Having sections are shown
 - **AND** the projection (Select) section is hidden
 
-#### Scenario: DISTINCT is not offered
+#### Scenario: DISTINCT is offered only where the catalog allows it
 
-- **WHEN** the user inspects the Builder view in either mode
-- **THEN** no DISTINCT toggle or checkbox is present
+- **WHEN** the user adds an aggregate whose catalog entry has `distinct_supported: true` (e.g. `count`, `sum`, `avg`)
+- **THEN** a DISTINCT control is rendered on that aggregate row
+- **AND** an aggregate whose catalog entry has `distinct_supported: false` (e.g. `min`, `max`, `percentile_cont`) renders no DISTINCT control
+
+#### Scenario: Setting DISTINCT serializes onto the aggregate
+
+- **WHEN** the user enables DISTINCT on a `count` aggregate over a field
+- **THEN** that aggregate's serialized `fn` expression carries `distinct: true`
 
 ### Requirement: Filter (WHERE) builder with nested groups
 
-The Filter section SHALL let the user build a WHERE tree limited to two levels: the root group holds conditions and groups, and nested groups hold only conditions. The "add nested group" action SHALL be offered only at the root group; nested groups SHALL offer only add-condition and remove actions. Each group SHALL expose a logical operator selector (AND / OR / NOT). Each condition SHALL expose a field selector (from the loaded schema, grouped by field category), an operator selector (`eq`, `ne`, `co`, `nc`, `lt`, `gt`, `le`, `ge`, `in`), a value input, a value-type selector, and a remove action. For `eq`/`ne` the condition SHALL offer an "is null" option that, when set, serializes the right operand as a null value (`value_type: null`) and hides the value input. For `in` the value SHALL be entered as comma-separated tokens and serialize to an array expression of value expressions (empty tokens dropped). Empty groups and fieldless conditions SHALL be omitted; a `not` group SHALL wrap its single child, or an `and` of its children. Deeper nesting SHALL be expressible only through the SQL view.
+The Filter section SHALL let the user build a WHERE tree limited to two levels: the root group holds conditions and groups, and nested groups hold only conditions. The "add nested group" action SHALL be offered only at the root group; nested groups SHALL offer only add-condition and remove actions. Each group SHALL expose a logical operator selector (AND / OR / NOT). Each condition SHALL expose a field selector (from the loaded schema, grouped by field category), an operator selector (`eq`, `ne`, `ico`, `inc`, `lt`, `gt`, `le`, `ge`, `in`), a value input, a value-type selector, and a remove action. Operators SHALL be shown as short uppercased codes (EQ, NE, LT, …); the two case-insensitive contains operators SHALL be shown with the familiar `CO`/`NC` labels while serializing to `ico`/`inc` (SQL ILIKE). The case-sensitive `co`/`nc` SHALL NOT be offered as authoring options but SHALL remain valid model values that serialize, deserialize, and round-trip without error when present in a JSON-authored or backend-translated query. For `eq`/`ne` the condition SHALL offer an "is null" option that, when set, serializes the right operand as a null value (`value_type: null`) and hides the value input. For `in` the value SHALL be entered as comma-separated tokens and serialize to an array expression of value expressions (empty tokens dropped). Empty groups and fieldless conditions SHALL be omitted; a `not` group SHALL wrap its single child, or an `and` of its children. Deeper nesting SHALL be expressible only through the SQL view.
 
 #### Scenario: Nested group with a condition serializes
 
@@ -316,6 +354,17 @@ The Filter section SHALL let the user build a WHERE tree limited to two levels: 
 - **WHEN** a condition uses `in` with value `a, b, c`
 - **THEN** the predicate's right operand serializes as an array expression with three value items
 
+#### Scenario: Contains authoring is case-insensitive
+
+- **WHEN** the user picks the CO (contains) operator for a condition
+- **THEN** the predicate serializes with `op: "ico"`
+- **AND** the case-sensitive `co`/`nc` operators are not offered in the operator selector
+
+#### Scenario: A case-sensitive contains from an authored query still round-trips
+
+- **WHEN** a JSON-authored or backend-translated query contains a predicate with `op: "co"`
+- **THEN** it deserializes and serializes without error and is not silently changed to `ico`
+
 ### Requirement: Row-mode projection
 
 In `row` mode the Select section SHALL let the user add projection fields through a categorized searchable dropdown; added fields SHALL render as removable chips. Added fields SHALL serialize to `select` as field-expression output columns, in selection order. When no field is added, `select` SHALL be omitted (default projection).
@@ -333,7 +382,13 @@ In `row` mode the Select section SHALL let the user add projection fields throug
 
 ### Requirement: Aggregate-mode group by, time buckets, and metrics
 
-In `aggregate` mode the builder SHALL provide a single Group by section combining plain columns and scalar-function entries, and an Aggregate section for metrics. The Group by add-dropdown SHALL offer the schema columns (categorized) plus a Functions group with the service's scalar allowlist: `date_bin`, `lower`, `upper`, `length`, `trim`, `abs`. Picking a column SHALL add it as a removable chip; picking a function SHALL add a parameterized row — `date_bin` with an amount, a unit (`second`, `minute`, `hour`, `day`, `week`), a source timestamp/date field, and an alias; every other function with a field and an alias. There SHALL be no separate Time bucket section. Aggregate metrics keep a function (`count`, `sum`, `avg`, `min`, `max`), an optional field argument, and an alias. The serialized query SHALL place plain group-by field projections, aliased scalar-function columns, and aliased aggregate columns into `select`, and SHALL list plain group-by fields by name and function entries by alias in `group_by` (function entries without a field or alias are excluded from `group_by`).
+In `aggregate` mode the builder SHALL provide a single Group by section combining plain columns and scalar-function entries, and an Aggregate section for metrics. The functions offered SHALL be exactly those served by the function catalog (see "Served function catalog"), grouped by their catalog `group`: `scalar` functions in the Group by Functions dropdown group, and `aggregate` / `ordered_set_aggregate` functions in the Aggregate section. There SHALL be no separate Time bucket section, and no function, argument, allowed-value, or bound SHALL be hardcoded.
+
+Picking a plain column SHALL add it as a removable chip. Picking a function SHALL add a parameterized row whose argument editors are generated from the catalog entry's ordered `args`: an `expression` argument SHALL render a field dropdown; an `integer_literal` or `numeric_literal` argument SHALL render a numeric input constrained to the argument's `min`/`max` when present; a `string_literal` argument SHALL render a select of the argument's `allowed_values` when present, otherwise a text input; an argument marked `optional` MAY be left empty and SHALL be omitted from the serialized call. Each function row SHALL also carry an alias. The row's hint text SHALL be the catalog `description`.
+
+The serialized query SHALL place plain group-by field projections, aliased scalar-function columns, and aliased aggregate columns into `select`, and SHALL list plain group-by fields by name and function entries by alias in `group_by` (function entries without required arguments or without an alias are excluded from `group_by`). Each function argument SHALL serialize by its catalog `kind`: an `expression` argument as a field expression, and a literal argument as a value expression of the kind's type. When `aggregate` mode defines no explicit aggregate, the builder SHALL add an implicit count measure chosen from the catalog — the first `aggregate`-group function whose arguments are all optional — so grouped results still carry a value column; if the catalog has no such function, no implicit measure is added.
+
+A function output's type (used to type Having and Sort options) SHALL be taken from the catalog `returns`; a `same_as_argument` return SHALL be resolved to the type of the function's first `expression` argument as declared in the entity schema.
 
 #### Scenario: Aggregate select and group_by are built
 
@@ -341,22 +396,33 @@ In `aggregate` mode the builder SHALL provide a single Group by section combinin
 - **THEN** `select` includes the group-by field column and a `sum` function column aliased `total`
 - **AND** `group_by` includes the group-by field
 
-#### Scenario: date_bin function entry becomes a bucket column
+#### Scenario: date_bin builds through the generic argument editor
 
-- **WHEN** the user picks `date_bin` from the Group by Functions group with 5 minutes over a timestamp field and alias `bucket`
-- **THEN** `select` includes a `date_bin` function column aliased `bucket`
+- **WHEN** the user picks `date_bin` from the Group by Functions group and its catalog args are `amount` (`integer_literal`, `min` 1), `unit` (`string_literal`, `allowed_values`), and `timestamp` (`expression`), and sets 5 / `minute` / a timestamp field with alias `bucket`
+- **THEN** the amount arg renders a numeric input floored at 1, the unit arg renders a select of the advertised units, and the timestamp arg renders a field dropdown
+- **AND** `select` includes a `date_bin` function column aliased `bucket` whose args serialize as an integer value, a string value, and a field expression
 - **AND** `group_by` includes `bucket`
 
-#### Scenario: Scalar function entry serializes with its alias
+#### Scenario: Multi-argument scalar function builds
 
-- **WHEN** the user picks `lower` over a string field with alias `dep`
-- **THEN** `select` includes a `lower` function column aliased `dep`
-- **AND** `group_by` includes `dep`
+- **WHEN** the user picks `width_bucket` whose catalog declares four `expression` args (`operand`, `low`, `high`, `count`) and fills each with a field, aliased `bkt`
+- **THEN** the row renders four field dropdowns and `select` includes a `width_bucket` column aliased `bkt` with four field-expression args
 
-#### Scenario: Scalar-function select entries parse back into Group by
+#### Scenario: Ordered-set aggregate with a bounded literal builds
 
-- **WHEN** a JSON query's `select` holds a scalar-function column from the allowlist
-- **THEN** switching views shows it as a Group by function row, not an aggregate
+- **WHEN** the user picks `percentile_cont` whose catalog declares a `fraction` (`numeric_literal`, `min` 0, `max` 1) and a `column` (`expression`) argument
+- **THEN** the fraction arg renders a numeric input constrained to `[0, 1]` and the column arg renders a field dropdown
+- **AND** the serialized aggregate carries a numeric value arg and a field-expression arg
+
+#### Scenario: Function select entries parse back into the correct section
+
+- **WHEN** a JSON query's `select` holds a `scalar` catalog function column and an `ordered_set_aggregate` catalog function column
+- **THEN** switching views shows the scalar one as a Group by function row and the ordered-set one as an Aggregate row
+
+#### Scenario: Implicit measure is chosen from the catalog
+
+- **WHEN** the user builds an `aggregate` query with a group-by column and no explicit aggregate
+- **THEN** the serialized `select` includes an implicit measure that is the first catalog `aggregate`-group function whose arguments are all optional (`count`), aliased with the implicit count alias
 
 ### Requirement: Aggregate-mode HAVING builder
 
@@ -542,6 +608,28 @@ Everywhere the chart names a column — selector options, in-chart axis titles, 
 - **WHEN** the shown result came from a row-mode or SQL run and the user selects the Chart view
 - **THEN** a hint explains that charts require an aggregate result with a group-by
 
+### Requirement: Backend-authoritative query translation
+
+The Query Builder SHALL treat the Analytics data-access service as the single source of truth for translating between the structured query DSL and SQL, via two validation-only endpoints that never run against ClickHouse. The server API layer SHALL expose `translateAction(query)` for `POST /v1/queries/translate` (DSL → SQL, success body `{ "sql": <text> }`) and `translateSqlAction(sql)` for `POST /v1/queries/translate-sql` (SQL → DSL, success body `{ "query": <StructuredQuery> }`), each returning a `ServerActionResponse` envelope and reached through a server action injecting the user token. The frontend SHALL NOT generate SQL from the structured query on the client; the client-side generator is removed. When the backend rejects a translation with a `400` (a DSL the SQL subset cannot express, or SQL that is unparseable or uses an unsupported construct), the failure SHALL be handled per the consuming requirement (SQL-view seeding surfaces the error; the Builder switch falls back to the discard guard) and SHALL NOT be presented as a successful translation.
+
+#### Scenario: DSL is translated to SQL through the backend
+
+- **WHEN** the SQL view needs to seed its editor from the current builder query
+- **THEN** the structured query is sent to `POST /v1/queries/translate`
+- **AND** the returned `{ sql }` text is used verbatim as the editor contents
+
+#### Scenario: SQL is translated to a structured query through the backend
+
+- **WHEN** SQL is translated for display in the visual builder
+- **THEN** the SQL is sent to `POST /v1/queries/translate-sql`
+- **AND** the returned `{ query }` is a structured query the `execute` endpoint would accept
+
+#### Scenario: A DSL the SQL subset cannot express is rejected
+
+- **WHEN** `POST /v1/queries/translate` is called for a query the SQL subset cannot express (for example `include_total`)
+- **THEN** the backend responds `400`
+- **AND** the frontend surfaces the failure rather than showing generated SQL
+
 ### Requirement: SQL view shows only a SQL editor
 
 In the SQL view the rail SHALL render a SQL code editor filling the rail body, and SHALL NOT render the Mode, Filter, Select, Group by, Aggregate, Having, Sort, or Page sections. The source selector remains available in the toolbar. The editor SHALL provide SQL syntax highlighting (via the Monaco `sql` language). The Copy and Run actions SHALL remain available; Copy SHALL copy the SQL editor text.
@@ -559,7 +647,7 @@ In the SQL view the rail SHALL render a SQL code editor filling the rail body, a
 
 ### Requirement: Schema-aware SQL autocomplete
 
-The SQL editor SHALL offer completion suggestions derived from the loaded schema and a fixed SQL catalog: the loaded schema's field names (each annotated with its field type), the selected entity name (as the query's source/`FROM` target), and the supported SQL keywords and functions. Suggestions SHALL reflect the schema currently loaded, so changing the selected entity SHALL change the suggested field names and source name. The autocomplete SHALL NOT perform SQL validation.
+The SQL editor SHALL offer completion suggestions derived from the loaded schema and a fixed SQL catalog: the loaded schema's field names (each annotated with its field type), the selected entity name (as the query's source/`FROM` target), and the supported SQL keywords and functions. The keyword catalog SHALL include both `LIKE` (case-sensitive contains) and `ILIKE` (case-insensitive contains). Suggestions SHALL reflect the schema currently loaded, so changing the selected entity SHALL change the suggested field names and source name. The autocomplete SHALL NOT perform SQL validation.
 
 #### Scenario: Schema fields are suggested
 
@@ -572,6 +660,11 @@ The SQL editor SHALL offer completion suggestions derived from the loaded schema
 
 - **WHEN** the user selects a different entity and triggers completion
 - **THEN** the suggested field names are those of the newly selected entity's schema
+
+#### Scenario: ILIKE is offered as a keyword
+
+- **WHEN** the user triggers keyword completion in the SQL editor
+- **THEN** both `LIKE` and `ILIKE` are offered as suggestions
 
 ### Requirement: SQL execution via the SQL endpoint
 
@@ -600,25 +693,40 @@ The SQL view SHALL NOT perform client-side SQL parsing or validation. When the b
 
 ### Requirement: SQL view state is an independent buffer
 
-The Query Builder SHALL keep the SQL editor text as its own buffer. Entering the SQL view SHALL seed the editor with SQL generated from the current builder query (including the toolbar time bound and the implicit count) when the buffer is empty or still matches the last generated text; user-edited SQL SHALL never be overwritten by generation. The SQL text SHALL NEVER be parsed back into the builder form state. Switching between the SQL and JSON views SHALL NOT prompt and SHALL leave both buffers intact.
+The Query Builder SHALL keep the SQL editor text as its own buffer. Entering the SQL view SHALL seed the editor by translating the current builder query (including the toolbar time bound and the implicit count) to SQL via `POST /v1/queries/translate` through a server action, when the buffer is empty or still matches the last generated text; the seed is asynchronous and the editor SHALL show a loading affordance while the translation is in flight. When the translation is rejected (`400` — a query the SQL subset cannot express), the failure SHALL surface via the app's error-notification convention and the editor SHALL be left empty (with Run disabled), rather than being seeded with a locally generated or partial statement. User-edited SQL SHALL never be overwritten by a re-seed. Switching between the SQL and JSON views SHALL NOT prompt and SHALL leave both buffers intact.
 
-#### Scenario: Entering SQL compiles the builder query
+#### Scenario: Entering SQL translates the builder query via the backend
 
 - **WHEN** the user opens the SQL view without prior SQL edits
-- **THEN** the editor is pre-filled with a SQL statement generated from the current builder query
+- **THEN** the current builder query is sent to `POST /v1/queries/translate`
+- **AND** the editor is pre-filled with the returned SQL
+
+#### Scenario: A non-expressible query surfaces a translate error
+
+- **WHEN** the user opens the SQL view for a query the SQL subset cannot express and the backend responds `400`
+- **THEN** an error notification is shown with the backend's message
+- **AND** the SQL editor is left empty and Run is disabled
 
 #### Scenario: SQL text persists across written-mode switches
 
 - **WHEN** the user edits SQL, switches to the JSON view, and switches back to the SQL view
 - **THEN** the SQL editor shows the previously edited text unchanged
+- **AND** the edited text is not re-translated over
 
 ### Requirement: Switching from a written mode to the Builder is guarded
 
-SQL and JSON are "written" modes: they can hold queries the visual builder cannot display (edited SQL text; JSON with e.g. filter nesting deeper than two levels). When the user switches from a written mode to the Builder view while the current written query cannot be shown in the builder (SQL: buffer edited away from the last generated text; JSON: valid but unrepresentable query), a confirmation popup (danger variant) SHALL warn that switching will drop the current query and reset the builder to its starting point. Confirming SHALL discard the written query (clear the SQL buffer / discard the JSON edits), reset the builder state to its initial defaults for the selected entity, and switch to the Builder view. Cancelling SHALL keep the user in the written mode with the query intact. Switching to the Builder SHALL NOT prompt when nothing would be lost (empty or unedited generated SQL; JSON that round-trips into the builder).
+SQL and JSON are "written" modes: they can hold queries the visual builder cannot display (edited SQL text; JSON with e.g. filter nesting deeper than two levels). When the user switches from the SQL view to the Builder view with an edited SQL buffer, the SQL SHALL first be translated to the structured DSL via `POST /v1/queries/translate-sql`. If the translation succeeds and the resulting query is representable in the two-level visual builder, the builder SHALL be hydrated from that query and the view SHALL switch with no confirmation and no data loss. If the translation fails (`400` — parse failure or an unsupported construct) or the resulting query is not builder-representable, a confirmation popup (danger variant) SHALL warn that switching will drop the current query and reset the builder to its starting point. From the JSON view the same guard applies when the JSON is valid but unrepresentable. Confirming SHALL discard the written query (clear the SQL buffer / discard the JSON edits), reset the builder state to its initial defaults for the selected entity, and switch to the Builder view. Cancelling SHALL keep the user in the written mode with the query intact. Switching to the Builder SHALL NOT prompt when nothing would be lost (empty or unedited generated SQL; SQL that translates to a representable query; JSON that round-trips into the builder).
 
-#### Scenario: Leaving SQL with edits asks for confirmation
+#### Scenario: Translatable SQL hydrates the builder without a prompt
 
-- **WHEN** the user edits SQL and selects the Builder view
+- **WHEN** the user edits SQL that translates to a builder-representable query and selects the Builder view
+- **THEN** no confirmation is shown
+- **AND** the builder reflects the translated query
+- **AND** the SQL buffer is cleared
+
+#### Scenario: Untranslatable SQL asks for confirmation
+
+- **WHEN** the user edits SQL that the backend rejects (or that translates to an unrepresentable query) and selects the Builder view
 - **THEN** a confirmation popup warns that the current query will be dropped and the builder reset
 
 #### Scenario: Confirming drops the written query and resets the builder
@@ -658,7 +766,7 @@ The Tables page SHALL render the tables the page fetched as a grid with columns 
 
 ### Requirement: Create table (source or enrichment)
 
-Creating a table SHALL open a form popup that is mounted only while open, so closing discards its state without a manual reset; the form SHALL be held as a single object seeded when the popup opens (enrichment defaults derived from the first source table). A **source** table SHALL collect a name, optional description, a repeatable set of columns (source name, exposed name, type, nullable, optional tag), an optional ordering key chosen from the declared column source names, and an optional partition consisting of a column and a granularity. The partition column SHALL be restricted to temporal (date/timestamp) columns and the granularity SHALL be one of a fixed set (day/month/year). An **enrichment** table SHALL collect a name, optional description, a source table, and a grain key chosen from the selected source table's ordering key; changing the source table SHALL reset the grain key. Submit SHALL build the type-discriminated create payload and show a success or error notification.
+Creating a table SHALL open a form popup that is mounted only while open, so closing discards its state without a manual reset; the form SHALL be held as a single object seeded when the popup opens (enrichment defaults derived from the first source table). A **source** table SHALL collect a name, optional description, a repeatable set of columns (source name, exposed name, type, nullable, optional tag, optional sensitive flag), an optional ordering key chosen from the declared column source names, and an optional partition consisting of a column and a granularity. A column's sensitive flag SHALL default off and, when on, SHALL be carried into the create payload (columns left non-sensitive omit the flag). The partition column SHALL be restricted to temporal (date/timestamp) columns and the granularity SHALL be one of a fixed set (day/month/year). An **enrichment** table SHALL collect a name, optional description, a source table, and a grain key chosen from the selected source table's ordering key; changing the source table SHALL reset the grain key. Submit SHALL build the type-discriminated create payload and show a success or error notification.
 
 #### Scenario: Popup state is discarded on close
 
@@ -679,9 +787,9 @@ Creating a table SHALL open a form popup that is mounted only while open, so clo
 
 ### Requirement: Table detail column schema management
 
-The Table detail page SHALL show the table's columns in a grid (name, source name, type, tag, display name, description, nullable rendered as a true/false value); long display name/description values SHALL be truncated with the full value reachable via an ellipsis tooltip. Each column row SHALL offer a per-column action menu with **edit** and **delete (drop)** actions. The column name SHALL also be editable inline in the grid.
+The Table detail page SHALL show the table's columns in a grid (name, source name, type, tag, display name, description, nullable rendered as a true/false value); long display name/description values SHALL be truncated with the full value reachable via an ellipsis tooltip. A column whose `sensitive` flag is true SHALL show a marker (a colored dot with a "Sensitive" tooltip) rendered inline in the name cell, after the name; non-sensitive columns SHALL show no marker. Each column row SHALL offer a per-column action menu with **edit** and **delete (drop)** actions. The column name SHALL also be editable inline in the grid.
 
-The edit action SHALL open a unified edit modal seeded with the column's current name, display name, and tag. The description SHALL NOT be offered for editing while the backend has no description-edit operation (the backend silently ignores unknown patch operations, which would make a save appear to do nothing); the field joins the modal once that operation ships. The name field SHALL be required (submit disabled while blank) and SHALL be disabled for columns the backend does not allow to rename (grain-key, ordering-key, and `_`-prefixed system columns) while the metadata fields remain editable. Blank display name or tag values SHALL be valid input meaning "clear the value". On submit the modal SHALL diff the form against the original column and send a **single** schema patch containing only the changed operations (`rename`, `retag`, `set_display_name`); when a rename is included, the metadata operations SHALL reference the new (post-rename) column name. Submit SHALL be disabled when no field changed.
+The edit action SHALL open a unified edit modal seeded with the column's current name, display name, tag, description, and sensitive flag. The name field SHALL be required (submit disabled while blank) and SHALL be disabled for columns the backend does not allow to rename (grain-key, ordering-key, and `_`-prefixed system columns) while the metadata fields remain editable. Blank display name, tag, or description values SHALL be valid input meaning "clear the value"; the sensitive flag SHALL be toggled with a switch. On submit the modal SHALL diff the form against the original column and send a **single** schema patch: a structural `rename` op when the name changed, plus a **single `update` merge-patch entry** carrying the target column name and only the metadata fields (tag, display name, description, sensitive) that changed. Within the `update` entry an omitted field leaves that attribute unchanged, a blank string value clears it, a non-blank string value sets it, and the boolean `sensitive` is sent as `true`/`false` when toggled. When a rename is included, the `update` entry SHALL reference the new (post-rename) column name. Submit SHALL be disabled when no field changed.
 
 Adding columns SHALL be available from the header via a form popup reusing the column-row editor. Every schema change SHALL be sent as a schema patch to `updateTableSchema`, and on success the detail view SHALL refresh from the server. The header SHALL also offer deleting the whole table with a danger (red confirm) dialog, returning to the catalog on success.
 
@@ -693,24 +801,41 @@ Adding columns SHALL be available from the header via a form popup reusing the c
 #### Scenario: Combined edit sends one patch with post-rename names
 
 - **WHEN** the user renames `total_money` to `total_cost` and sets its display name to "Total money spend" in the edit modal and submits
-- **THEN** a single schema patch is sent containing a rename from `total_money` to `total_cost` and a set_display_name targeting `total_cost`
+- **THEN** a single schema patch is sent containing a rename from `total_money` to `total_cost` and an `update` entry whose `name` is `total_cost` and `display_name` is "Total money spend"
 - **AND** the grid refreshes with the server state
 
-#### Scenario: Only changed fields become operations
+#### Scenario: Only changed fields become update fields
 
-- **WHEN** the user changes only the display name and leaves name and tag untouched
-- **THEN** the patch contains only a set_display_name operation
+- **WHEN** the user changes only the display name and leaves name, tag, and description untouched
+- **THEN** the patch contains a single `update` entry carrying only `name` and `display_name`, with no `tag` or `description` field
 
 #### Scenario: Blank metadata clears the value
 
 - **WHEN** the user clears the display name field and submits
-- **THEN** a set_display_name operation with an empty value is sent, clearing the stored display name
+- **THEN** the `update` entry sends `display_name` as an empty string, clearing the stored display name
+
+#### Scenario: Description is editable and patched
+
+- **WHEN** the user changes a column's description in the edit modal and submits
+- **THEN** the modal renders a description input
+- **AND** the patch contains a single `update` entry carrying `name` and the new `description`
+
+#### Scenario: Sensitive columns are marked in the grid
+
+- **WHEN** the columns grid renders a column whose `sensitive` flag is true
+- **THEN** the name cell shows a marker with a "Sensitive" tooltip after the name
+- **AND** a column whose flag is false shows no marker
+
+#### Scenario: Toggling sensitive is patched
+
+- **WHEN** the user toggles the Sensitive switch in the edit modal and submits
+- **THEN** the patch contains a single `update` entry carrying `name` and the new boolean `sensitive`
 
 #### Scenario: Restricted columns cannot be renamed but keep metadata editable
 
 - **WHEN** the user opens the edit modal for a grain-key or ordering-key column
 - **THEN** the name input is disabled
-- **AND** display name and tag remain editable
+- **AND** display name, tag, description, and sensitive remain editable
 
 #### Scenario: Drop a column
 

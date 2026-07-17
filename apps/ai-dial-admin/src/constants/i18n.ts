@@ -2145,14 +2145,9 @@ export enum QueryBuilderI18nKey {
   Unit = 'QueryBuilder.Unit',
   Functions = 'QueryBuilder.Functions',
   Columns = 'QueryBuilder.Columns',
-  FnDateBinHint = 'QueryBuilder.FnDateBinHint',
-  FnLowerHint = 'QueryBuilder.FnLowerHint',
-  FnUpperHint = 'QueryBuilder.FnUpperHint',
-  FnLengthHint = 'QueryBuilder.FnLengthHint',
-  FnTrimHint = 'QueryBuilder.FnTrimHint',
-  FnAbsHint = 'QueryBuilder.FnAbsHint',
   Aggregate = 'QueryBuilder.Aggregate',
   Function = 'QueryBuilder.Function',
+  Distinct = 'QueryBuilder.Distinct',
   AddAggregate = 'QueryBuilder.AddAggregate',
   Alias = 'QueryBuilder.Alias',
   NoArgCountAll = 'QueryBuilder.NoArgCountAll',
@@ -2214,6 +2209,8 @@ export enum QueryBuilderI18nKey {
   ChartValue = 'QueryBuilder.ChartValue',
   ChartOtherSlice = 'QueryBuilder.ChartOtherSlice',
   ChartUnavailable = 'QueryBuilder.ChartUnavailable',
+  SqlTranslating = 'QueryBuilder.SqlTranslating',
+  SqlTranslateFailed = 'QueryBuilder.SqlTranslateFailed',
 }
 
 export enum AnalyticsTablesI18nKey {
@@ -2241,6 +2238,7 @@ export enum AnalyticsTablesI18nKey {
   ColumnName = 'AnalyticsTables.ColumnName',
   Tag = 'AnalyticsTables.Tag',
   Nullable = 'AnalyticsTables.Nullable',
+  Sensitive = 'AnalyticsTables.Sensitive',
   AddColumns = 'AnalyticsTables.AddColumns',
   WriteRows = 'AnalyticsTables.WriteRows',
   InsertRows = 'AnalyticsTables.InsertRows',

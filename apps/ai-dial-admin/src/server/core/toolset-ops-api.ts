@@ -14,11 +14,19 @@ const CORE_TOOLSET_SIGN_OUT_URL = 'v1/ops/toolset/signout';
  * shared CRUD/move shape for all four versioned resource types): discovered-tools, sign-in,
  * and sign-out. The admin backend forwards each of these to Core unchanged — no BE-side
  * secret-holding or token exchange — so this is a direct passthrough client.
+ *
+ * Core's `v1/toolset/{id}/tools` route resolves the deployment by name regardless of type, so
+ * it already serves MCP-enabled Applications as well as Toolsets — `discoveredTools` accepts
+ * either resource type and encodes the matching path prefix.
  */
 export class ToolsetOpsApi extends CoreApi {
-  /** Fetches a toolset's discovered tools (`GET v1/toolset/{path}/tools`). */
-  discoveredTools(token: Token, path: string): Promise<ServerActionResponse> {
-    const url = `${CORE_TOOLSET_TOOLS_URL}/${encodeCorePath(`${RESOURCE_TYPE_PREFIX[ResourceType.TOOLSET]}${path}`)}/tools`;
+  /** Fetches a deployment's discovered tools (`GET v1/toolset/{path}/tools`). */
+  discoveredTools(
+    token: Token,
+    path: string,
+    resourceType: ResourceType = ResourceType.TOOLSET,
+  ): Promise<ServerActionResponse> {
+    const url = `${CORE_TOOLSET_TOOLS_URL}/${encodeCorePath(`${RESOURCE_TYPE_PREFIX[resourceType]}${path}`)}/tools`;
     return this.getAction(url, token);
   }
 
