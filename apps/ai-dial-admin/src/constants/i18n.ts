@@ -2211,6 +2211,20 @@ export enum QueryBuilderI18nKey {
   ChartUnavailable = 'QueryBuilder.ChartUnavailable',
   SqlTranslating = 'QueryBuilder.SqlTranslating',
   SqlTranslateFailed = 'QueryBuilder.SqlTranslateFailed',
+  ViewAi = 'QueryBuilder.ViewAi',
+  AiPanelHeading = 'QueryBuilder.AiPanelHeading',
+  AiPanelDescription = 'QueryBuilder.AiPanelDescription',
+  AiPromptPlaceholder = 'QueryBuilder.AiPromptPlaceholder',
+  AiGenerate = 'QueryBuilder.AiGenerate',
+  AiGenerating = 'QueryBuilder.AiGenerating',
+  AiProposedQuery = 'QueryBuilder.AiProposedQuery',
+  AiResponseLabel = 'QueryBuilder.AiResponseLabel',
+  AiRunHint = 'QueryBuilder.AiRunHint',
+  AiGenerateFailed = 'QueryBuilder.AiGenerateFailed',
+  AiSuggestionCost = 'QueryBuilder.AiSuggestionCost',
+  AiSuggestionFailedRequests = 'QueryBuilder.AiSuggestionFailedRequests',
+  AiSuggestionMcpLatency = 'QueryBuilder.AiSuggestionMcpLatency',
+  AiSuggestionSlowestCalls = 'QueryBuilder.AiSuggestionSlowestCalls',
 }
 
 export enum AnalyticsTablesI18nKey {

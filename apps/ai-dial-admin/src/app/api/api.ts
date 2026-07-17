@@ -3,6 +3,7 @@ import { AssetApi } from '@/src/server/core/asset-api';
 import { BucketApi } from '@/src/server/core/bucket-api';
 import { FilesCoreApi } from '@/src/server/core/files-core-api';
 import { ExternalServiceOpsApi } from '@/src/server/core/external-service-ops-api';
+import { QueryAssistantApi } from '@/src/server/core/query-assistant-api';
 import { ToolsetOpsApi } from '@/src/server/core/toolset-ops-api';
 import { DeploymentAuditApi } from '@/src/server/deployments/audit-api';
 import { DeploymentConfigApi } from '@/src/server/deployments/config';
@@ -196,6 +197,10 @@ export const toolsetOpsApi = new ToolsetOpsApi({
 
 // External service sign-in / sign-out — Core-direct, parallel to toolsetOpsApi.
 export const externalServiceOpsApi = new ExternalServiceOpsApi({
+  host: process.env.DIAL_CORE_API_URL,
+});
+
+export const queryAssistantApi = new QueryAssistantApi({
   host: process.env.DIAL_CORE_API_URL,
 });
 
