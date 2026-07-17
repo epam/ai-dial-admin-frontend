@@ -72,6 +72,7 @@ const DuplicateAdapter: FC<Props> = ({ names, onDuplicate, isModalOpen, onClose,
           label={t(EntityFieldsI18nKey.baseEndpoint)}
           endpoint={entity.baseEndpoint}
           onChange={onChangeEndpoint}
+          isFullWidth
         />
       </div>
     </DialFormPopup>
