@@ -19,6 +19,7 @@ import {
   CompareRowDetailSection,
   RowDetailDeltaFilter,
   RowDetailFieldFilter,
+  RowDetailValueFilter,
 } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/models';
 import { filterRowDetailSections } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/filter-row-detail-sections';
 import CompareRunIndexBadge from '@/src/components/Runs/Compare/CompareRunIndexBadge';
@@ -51,12 +52,36 @@ const CompareRowDetailTable: FC<Props> = ({
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [fieldFilter, setFieldFilter] = useState<RowDetailFieldFilter | null>(null);
+  const [primarySearchQuery, setPrimarySearchQuery] = useState('');
+  const [primaryValueFilter, setPrimaryValueFilter] = useState<RowDetailValueFilter | null>(null);
+  const [secondarySearchQuery, setSecondarySearchQuery] = useState('');
+  const [secondaryValueFilter, setSecondaryValueFilter] = useState<RowDetailValueFilter | null>(null);
   const [deltaFilter, setDeltaFilter] = useState<RowDetailDeltaFilter | null>(null);
   const [diffView, setDiffView] = useState<DiffViewState | null>(null);
 
   const filteredSections = useMemo(
-    () => filterRowDetailSections(sections, { searchQuery, showDiffsOnly, fieldFilter, deltaFilter }),
-    [sections, searchQuery, showDiffsOnly, fieldFilter, deltaFilter],
+    () =>
+      filterRowDetailSections(sections, {
+        searchQuery,
+        showDiffsOnly,
+        fieldFilter,
+        primarySearchQuery,
+        primaryValueFilter,
+        secondarySearchQuery,
+        secondaryValueFilter,
+        deltaFilter,
+      }),
+    [
+      sections,
+      searchQuery,
+      showDiffsOnly,
+      fieldFilter,
+      primarySearchQuery,
+      primaryValueFilter,
+      secondarySearchQuery,
+      secondaryValueFilter,
+      deltaFilter,
+    ],
   );
 
   const onToggleSection = useCallback((key: string) => {
@@ -65,6 +90,14 @@ const CompareRowDetailTable: FC<Props> = ({
 
   const onSearchChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value);
+  }, []);
+
+  const onPrimarySearchChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    setPrimarySearchQuery(event.target.value);
+  }, []);
+
+  const onSecondarySearchChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    setSecondarySearchQuery(event.target.value);
   }, []);
 
   const onOpenDiff = useCallback((row: CompareRowDetailField) => {
@@ -109,6 +142,14 @@ const CompareRowDetailTable: FC<Props> = ({
             searchPlaceholder={t(BasicI18nKey.Search)}
             fieldFilter={fieldFilter}
             onFieldFilterChange={setFieldFilter}
+            primarySearchQuery={primarySearchQuery}
+            onPrimarySearchChange={onPrimarySearchChange}
+            primaryValueFilter={primaryValueFilter}
+            onPrimaryValueFilterChange={setPrimaryValueFilter}
+            secondarySearchQuery={secondarySearchQuery}
+            onSecondarySearchChange={onSecondarySearchChange}
+            secondaryValueFilter={secondaryValueFilter}
+            onSecondaryValueFilterChange={setSecondaryValueFilter}
             deltaFilter={deltaFilter}
             onDeltaFilterChange={setDeltaFilter}
           />
