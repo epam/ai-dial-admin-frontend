@@ -12,13 +12,16 @@ import HeatMapValueCellRenderer from '@/src/components/Runs/Compare/HeatMap/Heat
 import {
   HEAT_MAP_LABEL_COL_ID,
   HEAT_MAP_LABEL_COL_WIDTH,
-  formatHeatMapTestCaseColId,
-  formatHeatMapTestCaseHeader,
   getHeatMapDefaultCellStyle,
 } from '@/src/components/Runs/Compare/HeatMap/constants';
 import { HeatMapColorDisplayMode, HeatMapRow, HeatMapRowType } from '@/src/components/Runs/Compare/HeatMap/models';
 import { formatHeatMapCellValueForMode } from '@/src/components/Runs/Compare/HeatMap/utils/format-heat-map-cell-value';
 import { buildHeatMapCellTooltipData } from '@/src/components/Runs/Compare/HeatMap/utils/build-heat-map-cell-tooltip-data';
+import {
+  formatHeatMapTestCaseHeader,
+  getHeatMapTestCaseColId,
+  hasHeatMapMultiSubRuns,
+} from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-test-case-columns';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import { NO_FILTER_COL_DEF } from '@/src/components/Runs/Compare/ExecutionResults/constants';
 
@@ -30,13 +33,12 @@ interface BuildHeatMapColumnsOptions {
   comparedRunName: string;
 }
 
-const getTestCaseKey = (row: CompareAnalyticsRow): string => row.testCaseId ?? row.testCaseName ?? row.id ?? '';
-
 export const buildHeatMapColumns = (
   mergedRows: CompareAnalyticsRow[],
   { colorDisplayMode, expandedGroups, onToggleGroup, primaryRunName, comparedRunName }: BuildHeatMapColumnsOptions,
 ): ColDef<HeatMapRow>[] => {
   const isDeltaMode = colorDisplayMode === HeatMapColorDisplayMode.Delta;
+  const includeSubRunIndex = hasHeatMapMultiSubRuns(mergedRows);
   const labelColumn: ColDef<HeatMapRow> = {
     colId: HEAT_MAP_LABEL_COL_ID,
     field: 'label',
@@ -56,11 +58,9 @@ export const buildHeatMapColumns = (
     tooltipValueGetter: () => undefined,
   };
 
-  const testCaseColumns: ColDef<HeatMapRow>[] = mergedRows.map((row, index) => {
-    const testCaseKey = getTestCaseKey(row);
-    const colId = formatHeatMapTestCaseColId(testCaseKey);
-
-    const headerLabel = formatHeatMapTestCaseHeader(index);
+  const testCaseColumns: ColDef<HeatMapRow>[] = mergedRows.map((row) => {
+    const colId = getHeatMapTestCaseColId(row);
+    const headerLabel = formatHeatMapTestCaseHeader(row, includeSubRunIndex);
 
     return {
       colId,
