@@ -125,6 +125,30 @@ describe('serializeNode — filter tree', () => {
     });
   });
 
+  test('case-insensitive contains (ico) serializes its operator verbatim', () => {
+    const pred = createPredicate();
+    pred.field = 'event_kind';
+    pred.op = QueryOperator.Ico;
+    pred.value = 'chat';
+    pred.valueType = QueryValueType.String;
+    const group = createGroup();
+    group.children.push(pred);
+    const serialized = serializeNode(group) as { args: { op: string }[] };
+    expect(serialized.args[0].op).toBe('ico');
+  });
+
+  test('case-sensitive contains (co) from an authored query still serializes without change', () => {
+    const pred = createPredicate();
+    pred.field = 'event_kind';
+    pred.op = QueryOperator.Co;
+    pred.value = 'Chat';
+    pred.valueType = QueryValueType.String;
+    const group = createGroup();
+    group.children.push(pred);
+    const serialized = serializeNode(group) as { args: { op: string }[] };
+    expect(serialized.args[0].op).toBe('co');
+  });
+
   test('is-null predicate → null value expression, ignores the text value', () => {
     const pred = createPredicate();
     pred.field = 'chat_id';

@@ -2209,6 +2209,8 @@ export enum QueryBuilderI18nKey {
   ChartValue = 'QueryBuilder.ChartValue',
   ChartOtherSlice = 'QueryBuilder.ChartOtherSlice',
   ChartUnavailable = 'QueryBuilder.ChartUnavailable',
+  SqlTranslating = 'QueryBuilder.SqlTranslating',
+  SqlTranslateFailed = 'QueryBuilder.SqlTranslateFailed',
 }
 
 export enum AnalyticsTablesI18nKey {
