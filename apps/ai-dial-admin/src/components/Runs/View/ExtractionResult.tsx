@@ -16,6 +16,7 @@ import { useDrawerPanel } from '@/src/components/Runs/Details/BottomDrawer/useDr
 import { ExtractionResultTabUiState } from '@/src/components/Runs/View/models';
 import { ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { useTheme } from '@/src/context/ThemeContext';
 import { useI18n } from '@/src/locales/client';
 import { Run } from '@/src/models/evaluation/run';
 import { applyColumnStateOrderToTreeColDefs, haveTreeColDefsSamePanelState } from '@/src/components/Grid/utils';
@@ -30,6 +31,7 @@ interface Props {
 
 const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtractionResultState }) => {
   const t = useI18n();
+  const { currentTheme } = useTheme();
   const { showTreePanel, colDefs, panelColDefs, results, snapshots } = extractionResultState;
   const metricBindings = useMemo(() => snapshotsToBindingsMap(snapshots), [snapshots]);
   const detailMode = useDetailMode(metricBindings);
@@ -48,11 +50,21 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
       const content = resultsSettled?.content || [];
       setExtractionResultState({
         results: content,
-        colDefs: getAnalyticsColumns(content),
-        panelColDefs: getAnalyticsColumns(content),
       });
     });
   }, [run, results, setExtractionResultState]);
+
+  useEffect(() => {
+    if (results === null) {
+      return;
+    }
+
+    const nextColDefs = getAnalyticsColumns(results, currentTheme);
+    setExtractionResultState({
+      colDefs: nextColDefs,
+      panelColDefs: nextColDefs,
+    });
+  }, [currentTheme, results, setExtractionResultState]);
 
   useEffect(() => {
     if (!run?.id || snapshots.length > 0) {

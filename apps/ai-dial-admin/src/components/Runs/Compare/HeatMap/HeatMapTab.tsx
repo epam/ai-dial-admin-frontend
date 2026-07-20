@@ -1,7 +1,7 @@
 'use client';
 
-import { FirstDataRenderedEvent, GridApi, RowHeightParams } from 'ag-grid-community';
-import { FC, useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import { FirstDataRenderedEvent, GridApi, GridReadyEvent, RowHeightParams } from 'ag-grid-community';
+import { FC, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { DialLoader } from '@epam/ai-dial-ui-kit';
 
@@ -19,6 +19,7 @@ import {
 } from '@/src/components/Runs/Compare/HeatMap/utils/build-heat-map-rows';
 import { centerHeatMapTooltipPopup } from '@/src/components/Runs/Compare/HeatMap/utils/center-heat-map-tooltip-popup';
 import {
+  applyHeatMapColumnWidths,
   getHeatMapValueColumnWidth,
   resolveHeatMapHeaderHeight,
   resolveHeatMapRowHeight,
@@ -27,6 +28,7 @@ import { getHeatMapTestCaseHeaderLabels } from '@/src/components/Runs/Compare/He
 import { HeatMapTabUiState } from '@/src/components/Runs/Compare/models';
 import { mergeByTestCaseId, RESULT_FILTERS } from '@/src/components/Runs/View/utils';
 import { EntitiesI18nKey, RunsI18nKey } from '@/src/constants/i18n';
+import { useTheme } from '@/src/context/ThemeContext';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -55,6 +57,8 @@ const HeatMapTab: FC<Props> = ({
   setHeatMapState,
 }) => {
   const t = useI18n();
+  const { currentTheme } = useTheme();
+  const gridApiRef = useRef<GridApi | null>(null);
 
   const [hasLoadError, setHasLoadError] = useState(false);
   const { expandedGroups, areExpandedGroupsInitialized, results, comparedResults } = heatMapState;
@@ -176,8 +180,9 @@ const HeatMapTab: FC<Props> = ({
       onToggleGroup,
       primaryRunName,
       comparedRunName,
+      theme: currentTheme,
     });
-  }, [mergedRowData, colorDisplayMode, expandedGroups, onToggleGroup, primaryRunName, comparedRunName]);
+  }, [mergedRowData, colorDisplayMode, expandedGroups, onToggleGroup, primaryRunName, comparedRunName, currentTheme]);
 
   const headerLabels = useMemo(
     () => (mergedRowData ? getHeatMapTestCaseHeaderLabels(mergedRowData) : []),
@@ -186,7 +191,10 @@ const HeatMapTab: FC<Props> = ({
 
   const fitHeatMapColumns = useCallback(
     (api: GridApi) => {
-      api.sizeColumnsToFit();
+      const centerViewport = document.querySelector('.heat-map-grid .ag-center-cols-viewport') as HTMLElement | null;
+      const availableForTestCases = centerViewport?.clientWidth ?? 0;
+      applyHeatMapColumnWidths(api, availableForTestCases);
+
       const valueColumnWidth = getHeatMapValueColumnWidth(api);
       const headerHeight = resolveHeatMapHeaderHeight(valueColumnWidth, headerLabels);
       api.setGridOption('headerHeight', headerHeight);
@@ -197,16 +205,34 @@ const HeatMapTab: FC<Props> = ({
     [headerLabels],
   );
 
+  // Re-fit after columnDefs updates from Absolute/Delta (or theme) switches.
+  // Runs after AgGridWrapper's columnDefs effect so widths are not left at minWidth.
+  useEffect(() => {
+    if (!gridApiRef.current || !columnDefs.length) {
+      return;
+    }
+    fitHeatMapColumns(gridApiRef.current);
+  }, [columnDefs, fitHeatMapColumns]);
+
+  const onGridReady = useCallback(
+    (event: GridReadyEvent) => {
+      gridApiRef.current = event.api;
+      fitHeatMapColumns(event.api);
+    },
+    [fitHeatMapColumns],
+  );
+
   const gridOptions = useMemo(
     () => ({
       headerHeight: resolveHeatMapHeaderHeight(0, headerLabels),
       hidePaddedHeaderRows: false,
       rowHeight: HEAT_MAP_ROW_HEIGHT,
-      suppressHorizontalScroll: true,
+      suppressHorizontalScroll: false,
+      alwaysShowHorizontalScroll: false,
       autoSizeStrategy: undefined,
       getRowHeight: (params: RowHeightParams<HeatMapRow>) => {
         const valueColumnWidth = params.api ? getHeatMapValueColumnWidth(params.api) : 0;
-        return resolveHeatMapRowHeight(valueColumnWidth, isDeltaMode);
+        return resolveHeatMapRowHeight(valueColumnWidth);
       },
       defaultColDef: {
         filter: false,
@@ -228,7 +254,7 @@ const HeatMapTab: FC<Props> = ({
       },
       postProcessPopup: centerHeatMapTooltipPopup,
     }),
-    [fitHeatMapColumns, headerLabels, isDeltaMode],
+    [fitHeatMapColumns, headerLabels],
   );
 
   const isCompareDataReady = results !== null && comparedResults !== null;
@@ -255,6 +281,7 @@ const HeatMapTab: FC<Props> = ({
           additionalGridOptions={gridOptions}
           emptyDataProps={{ title: t(EntitiesI18nKey.NoResults) }}
           getRowId={({ data }) => data.id}
+          onGridReady={onGridReady}
         />
       </div>
 

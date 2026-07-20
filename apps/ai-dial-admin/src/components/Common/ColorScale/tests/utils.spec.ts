@@ -2,9 +2,12 @@ import { describe, expect, test } from 'vitest';
 
 import {
   ACCURACY_COLOR_MAP,
+  ACCURACY_COLOR_MAP_LIGHT,
   DELTA_NEGATIVE_COLOR_MAP,
+  DELTA_NEGATIVE_COLOR_MAP_LIGHT,
   DELTA_NEUTRAL_SEGMENT,
   DELTA_POSITIVE_COLOR_MAP,
+  DELTA_POSITIVE_COLOR_MAP_LIGHT,
   DELTA_SCALE_THRESHOLDS,
 } from '@/src/components/Common/ColorScale/constants';
 import {
@@ -34,6 +37,17 @@ describe('getAccuracyHeatCellStyle', () => {
     expect(style.borderRight).toBe('1px solid #ff6b6b');
     expect(style.borderBottom).toBe('1px solid #ff6b6b');
   });
+
+  test('uses light-theme pastel backgrounds for light theme', () => {
+    const style = getAccuracyHeatCellStyle(0.85, 'light');
+
+    expect(style).toEqual({
+      backgroundColor: ACCURACY_COLOR_MAP_LIGHT[0.9].bg,
+      borderRight: `1px solid ${ACCURACY_COLOR_MAP_LIGHT[0.9].border}`,
+      borderBottom: `1px solid ${ACCURACY_COLOR_MAP_LIGHT[0.9].border}`,
+    });
+    expect(style.backgroundColor).toBe('#a1f5bf');
+  });
 });
 
 describe('getAccuracyHeatCellStyleFromThreshold', () => {
@@ -45,6 +59,13 @@ describe('getAccuracyHeatCellStyleFromThreshold', () => {
       borderRight: `1px solid ${ACCURACY_COLOR_MAP[1.0].border}`,
       borderBottom: `1px solid ${ACCURACY_COLOR_MAP[1.0].border}`,
     });
+  });
+
+  test('maps threshold to light-theme segment colors', () => {
+    const style = getAccuracyHeatCellStyleFromThreshold(1.0, 'light');
+
+    expect(style.backgroundColor).toBe(ACCURACY_COLOR_MAP_LIGHT[1.0].bg);
+    expect(style.backgroundColor).toBe('#85f3ac');
   });
 });
 
@@ -61,6 +82,15 @@ describe('getDeltaColors', () => {
   test('maps positive deltas to Figma green tiers', () => {
     expect(getDeltaColors(0.4)).toEqual(DELTA_POSITIVE_COLOR_MAP[0.5]);
     expect(getDeltaColors(1)).toEqual(DELTA_POSITIVE_COLOR_MAP[1.0]);
+  });
+
+  test('maps deltas to light-theme pastel tiers', () => {
+    expect(getDeltaColors(-1, 'light')).toEqual(DELTA_NEGATIVE_COLOR_MAP_LIGHT[-1.0]);
+    expect(getDeltaColors(-0.4, 'light')).toEqual(DELTA_NEGATIVE_COLOR_MAP_LIGHT[-0.5]);
+    expect(getDeltaColors(0.4, 'light')).toEqual(DELTA_POSITIVE_COLOR_MAP_LIGHT[0.5]);
+    expect(getDeltaColors(1, 'light')).toEqual(DELTA_POSITIVE_COLOR_MAP_LIGHT[1.0]);
+    expect(getDeltaColors(-1, 'light')?.bg).toBe('#ffc9cb');
+    expect(getDeltaColors(1, 'light')?.bg).toBe('#a8ecc0');
   });
 });
 
@@ -88,6 +118,16 @@ describe('getDeltaHeatCellStyle', () => {
       borderBottom: `1px solid ${DELTA_NEGATIVE_COLOR_MAP[-0.5].border}`,
     });
   });
+
+  test('returns light-theme heat cell style for non-zero deltas', () => {
+    const style = getDeltaHeatCellStyle(-0.4, 'light');
+
+    expect(style).toEqual({
+      backgroundColor: DELTA_NEGATIVE_COLOR_MAP_LIGHT[-0.5].bg,
+      borderRight: `1px solid ${DELTA_NEGATIVE_COLOR_MAP_LIGHT[-0.5].border}`,
+      borderBottom: `1px solid ${DELTA_NEGATIVE_COLOR_MAP_LIGHT[-0.5].border}`,
+    });
+  });
 });
 
 describe('DELTA_SCALE_THRESHOLDS', () => {
@@ -98,5 +138,10 @@ describe('DELTA_SCALE_THRESHOLDS', () => {
   test('places brightest red at -1 and mildest red at -0.25 on the negative side', () => {
     expect(DELTA_NEGATIVE_COLOR_MAP[DELTA_SCALE_THRESHOLDS[0]].bg).toBe('#820610');
     expect(DELTA_NEGATIVE_COLOR_MAP[DELTA_SCALE_THRESHOLDS[3]].bg).toBe('#2b0f04');
+  });
+
+  test('uses pastel reds for light-theme negative side', () => {
+    expect(DELTA_NEGATIVE_COLOR_MAP_LIGHT[DELTA_SCALE_THRESHOLDS[0]].bg).toBe('#ffc9cb');
+    expect(DELTA_NEGATIVE_COLOR_MAP_LIGHT[DELTA_SCALE_THRESHOLDS[3]].bg).toBe('#ffece9');
   });
 });
