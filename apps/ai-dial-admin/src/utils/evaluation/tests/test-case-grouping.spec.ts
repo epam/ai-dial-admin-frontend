@@ -9,9 +9,11 @@ import {
   promoteToMultiTurn,
   readMultiTurnId,
   readTurnIndex,
+  regroupSortedRows,
   renumberTurns,
   reorderTurns,
 } from '../test-case-grouping';
+import { GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
 
 const turn = (id: string, multiTurnId: string | null, turnIndex: number | null, extra: TestCaseRow = {}): TestCaseRow => ({
   id,
@@ -145,5 +147,94 @@ describe('projectGroupsToGridRows', () => {
     const rows = projectGroupsToGridRows(groups, new Set(), true);
     expect(rows.map((r) => r.rowType)).toEqual([GridRowType.TURN, GridRowType.TURN, GridRowType.SINGLE]);
     expect(rows.every((r) => r.rowType !== GridRowType.GROUP)).toBe(true);
+  });
+
+  test('defaultExpanded=true: multi-turn group is expanded on load with no toggled keys', () => {
+    const rows = projectGroupsToGridRows(groups, new Set(), false, true);
+    expect(rows.map((r) => r.rowType)).toEqual([
+      GridRowType.GROUP,
+      GridRowType.TURN,
+      GridRowType.TURN,
+      GridRowType.SINGLE,
+    ]);
+    expect(rows[0].expanded).toBe(true);
+  });
+
+  test('defaultExpanded=true: a toggled key collapses that group', () => {
+    const rows = projectGroupsToGridRows(groups, new Set(['conv']), false, true);
+    expect(rows.map((r) => r.rowType)).toEqual([GridRowType.GROUP, GridRowType.SINGLE]);
+    expect(rows[0].expanded).toBe(false);
+  });
+
+  describe('singlesFirst', () => {
+    // A multi-turn conversation that appears BEFORE a single-turn case in source order.
+    const mixed = groupTestCaseRows([turn('m1', 'conv', 0), turn('m2', 'conv', 1), turn('s1', null, null)]);
+
+    test('floats single-turn cases above multi-turn ones, keeping expanded turns beneath the group', () => {
+      const rows = projectGroupsToGridRows(mixed, new Set(), false, true, true);
+      expect(rows.map((r) => r.rowType)).toEqual([
+        GridRowType.SINGLE,
+        GridRowType.GROUP,
+        GridRowType.TURN,
+        GridRowType.TURN,
+      ]);
+    });
+
+    test('floats single-turn cases to the top in search (flattened) mode too', () => {
+      const rows = projectGroupsToGridRows(mixed, new Set(), true, true, true);
+      expect(rows.map((r) => r.rowType)).toEqual([GridRowType.SINGLE, GridRowType.TURN, GridRowType.TURN]);
+    });
+
+    test('preserves first-appearance order within each partition', () => {
+      const many = groupTestCaseRows([
+        turn('mA', 'convA', 0),
+        turn('sX', null, null),
+        turn('mB', 'convB', 0),
+        turn('sY', null, null),
+      ]);
+      const rows = projectGroupsToGridRows(many, new Set(), false, false, true);
+      expect(rows.map((r) => r.groupKey)).toEqual(['sX', 'sY', 'convA', 'convB']);
+    });
+
+    test('off by default: source order is unchanged', () => {
+      const rows = projectGroupsToGridRows(mixed, new Set(), false, true);
+      expect(rows[0].rowType).toBe(GridRowType.GROUP);
+    });
+  });
+});
+
+describe('regroupSortedRows', () => {
+  const group = (key: string): GroupedGridRow => ({ id: key, rowType: GridRowType.GROUP, groupKey: key });
+  const turnRow = (id: string, key: string, turnNumber: number): GroupedGridRow => ({
+    id,
+    rowType: GridRowType.TURN,
+    groupKey: key,
+    turnNumber,
+  });
+  const single = (id: string): GroupedGridRow => ({ id, rowType: GridRowType.SINGLE, groupKey: id });
+
+  test('pulls scattered turn rows back under their group in turnNumber order', () => {
+    // A sort scattered the turns of group A and B and reordered the groups.
+    const sorted = [
+      group('B'),
+      turnRow('a2', 'A', 2),
+      group('A'),
+      turnRow('b1', 'B', 1),
+      turnRow('a1', 'A', 1),
+    ];
+    const result = regroupSortedRows(sorted);
+    expect(result.map((r) => r.id)).toEqual(['B', 'b1', 'A', 'a1', 'a2']);
+  });
+
+  test('keeps single rows in their sorted position', () => {
+    const sorted = [single('s1'), group('A'), turnRow('a1', 'A', 1), single('s2')];
+    const result = regroupSortedRows(sorted);
+    expect(result.map((r) => r.id)).toEqual(['s1', 'A', 'a1', 's2']);
+  });
+
+  test('flat list with no group rows is returned unchanged', () => {
+    const sorted = [turnRow('a1', 'A', 1), single('s1'), turnRow('a2', 'A', 2)];
+    const result = regroupSortedRows(sorted);
+    expect(result).toBe(sorted);
   });
 });

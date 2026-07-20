@@ -15,6 +15,8 @@ export interface ResultDto {
   turnIndex?: number;
   /** Conversation's surviving turn count (single-turn = 1; broken conversation = 0). */
   totalTurns?: number;
+  /** Top-level conversation grouping key; shared by the turns of one multi-turn run. Absent = single-turn. */
+  multiTurnId?: string | null;
 }
 export interface ExtractionResult extends ResultDto {
   executionInfo?: {

@@ -1,25 +1,15 @@
 'use client';
 
-import { FilterChangedEvent, GetRowIdParams, GridApi, GridReadyEvent, RowHeightParams } from 'ag-grid-community';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { GridReadyEvent } from 'ag-grid-community';
+import { useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
-import { ROW_HEIGHT } from '@/src/components/Grid/constants';
+import { useTurnGroupProjection } from '@/src/components/Grid/hooks/use-turn-group-projection';
 import { createTestCase, removeTestCase, updateTestCases } from '@/src/app/[lang]/datasets/actions';
 import { ensureUniqueTestCaseNames } from '@/src/components/TestSuites/utils/data';
 import { DatasetTestCase } from '@/src/models/evaluation/dataset';
-import { GridRowType, GroupedGridRow, TestCaseGroup, TestCaseRow } from '@/src/models/evaluation/test-case-grouping';
-import {
-  demoteToSingle,
-  groupTestCaseRows,
-  projectGroupsToGridRows,
-  promoteToMultiTurn,
-  readTurnIndex,
-} from '@/src/utils/evaluation/test-case-grouping';
-
-/** Height (px) a single stacked turn line occupies in a GROUP summary row. */
-const STACKED_LINE_HEIGHT = 22;
-const STACKED_ROW_PADDING = 10;
+import { GroupedGridRow, TestCaseGroup, TestCaseRow } from '@/src/models/evaluation/test-case-grouping';
+import { demoteToSingle, promoteToMultiTurn, readTurnIndex } from '@/src/utils/evaluation/test-case-grouping';
 
 /**
  * Generate a fresh, likely-unique test-case name for a newly created turn. The backend enforces
@@ -44,9 +34,9 @@ const findGroup = (groups: TestCaseGroup[], key: string): TestCaseGroup | undefi
   groups.find((group) => group.key === key);
 
 /**
- * Owns UI-side grouping for a test-case grid: groups flat rows into multi-turn cases, projects the
- * collapsible row model, tracks expand/search state, and runs add/delete/reorder/promote/demote
- * operations against the existing test-case server actions.
+ * Owns UI-side grouping for an editable test-case grid: builds on the read-only
+ * `useTurnGroupProjection` primitive (collapsed by default) and adds add/delete/reorder/promote/
+ * demote operations against the existing test-case server actions.
  */
 export const useTurnGroupGrid = ({
   rawRows,
@@ -56,75 +46,8 @@ export const useTurnGroupGrid = ({
   rowToEntity,
   onGridReady,
 }: TurnGroupGridConfig) => {
-  const [expandedKeys, setExpandedKeys] = useState<Set<string>>(() => new Set());
-  const [isSearching, setIsSearching] = useState(false);
-  const gridApiRef = useRef<GridApi | null>(null);
-
-  const groups = useMemo(() => groupTestCaseRows(rawRows), [rawRows]);
-  const rowData = useMemo(
-    () => projectGroupsToGridRows(groups, expandedKeys, isSearching),
-    [groups, expandedKeys, isSearching],
-  );
-
-  // AG Grid only refreshes custom renderers when the displayed value changes; the chevron is driven
-  // by `data.expanded`, so force a refresh after every projection change.
-  useEffect(() => {
-    gridApiRef.current?.refreshCells({ force: true });
-  }, [rowData]);
-
-  // Drop expanded keys for groups that no longer exist after a reload.
-  useEffect(() => {
-    const liveKeys = new Set(groups.filter((group) => group.isMulti).map((group) => group.key));
-    setExpandedKeys((prev) => {
-      let changed = false;
-      const next = new Set<string>();
-      prev.forEach((key) => {
-        if (liveKeys.has(key)) {
-          next.add(key);
-        } else {
-          changed = true;
-        }
-      });
-      return changed ? next : prev;
-    });
-  }, [groups]);
-
-  const onToggleExpand = useCallback((key: string) => {
-    setExpandedKeys((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) {
-        next.delete(key);
-      } else {
-        next.add(key);
-      }
-      return next;
-    });
-  }, []);
-
-  const expandGroup = useCallback((key: string) => {
-    setExpandedKeys((prev) => (prev.has(key) ? prev : new Set(prev).add(key)));
-  }, []);
-
-  const onFilterChanged = useCallback((event: FilterChangedEvent) => {
-    setIsSearching(Object.keys(event.api.getFilterModel()).length > 0);
-  }, []);
-
-  const onGridReadyInternal = useCallback(
-    (event: GridReadyEvent) => {
-      gridApiRef.current = event.api;
-      onGridReady?.(event);
-    },
-    [onGridReady],
-  );
-
-  const getRowId = useCallback((params: GetRowIdParams<GroupedGridRow>) => String(params.data.id), []);
-
-  const getRowHeight = useCallback((params: RowHeightParams<GroupedGridRow>) => {
-    if (params.data?.rowType === GridRowType.GROUP) {
-      return Math.max(ROW_HEIGHT, (params.data.turnCount ?? 1) * STACKED_LINE_HEIGHT + STACKED_ROW_PADDING);
-    }
-    return ROW_HEIGHT;
-  }, []);
+  const projection = useTurnGroupProjection({ rawRows, onGridReady });
+  const { groups, expandGroup } = projection;
 
   const addTurn = useCallback(
     async (groupKey: string) => {
@@ -252,14 +175,7 @@ export const useTurnGroupGrid = ({
   );
 
   return {
-    rowData,
-    groups,
-    isSearching,
-    onToggleExpand,
-    onFilterChanged,
-    onGridReady: onGridReadyInternal,
-    getRowId,
-    getRowHeight,
+    ...projection,
     addTurn,
     deleteTurn,
     moveTurn,

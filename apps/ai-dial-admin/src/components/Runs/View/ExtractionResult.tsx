@@ -19,7 +19,10 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { Run } from '@/src/models/evaluation/run';
 import { applyColumnStateOrderToTreeColDefs, haveTreeColDefsSamePanelState } from '@/src/components/Grid/utils';
+import { useTurnGroupProjection } from '@/src/components/Grid/hooks/use-turn-group-projection';
+import { GridRowType, GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
 import { useDetailMode } from './use-detail-mode';
+import { applyResultsGrouping } from './results-grouping-columns';
 import { getAnalyticsColumns, RESULT_FILTERS, RUN_FILTER, snapshotsToBindingsMap } from './utils';
 
 interface Props {
@@ -38,6 +41,22 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
 
   const gridApiRef = useRef<GridApi | null>(null);
   const isLoading = results === null;
+
+  // Group multi-turn conversations (rows sharing `multiTurnId`), expanded by default. Falls back to a
+  // flat grid when no row carries a `multiTurnId`.
+  const projection = useTurnGroupProjection({
+    rawRows: (results ?? []) as unknown as GroupedGridRow[],
+    defaultExpanded: true,
+    singlesFirst: true,
+    onGridReady: (event: GridReadyEvent) => {
+      gridApiRef.current = event.api;
+    },
+  });
+
+  const groupedColDefs = useMemo(
+    () => applyResultsGrouping(colDefs ?? [], projection.onToggleExpand),
+    [colDefs, projection.onToggleExpand],
+  );
 
   useEffect(() => {
     if (!run?.id || results !== null) {
@@ -98,10 +117,10 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
   const onPanelColumnsChange = useCallback(
     (newColDefs: ColDef[]) => {
       setExtractionResultState({ panelColDefs: newColDefs, colDefs: newColDefs });
-      gridApiRef.current?.setGridOption('columnDefs', newColDefs);
+      gridApiRef.current?.setGridOption('columnDefs', applyResultsGrouping(newColDefs, projection.onToggleExpand));
       requestAnimationFrame(() => gridApiRef.current?.sizeColumnsToFit());
     },
-    [setExtractionResultState],
+    [setExtractionResultState, projection.onToggleExpand],
   );
 
   const resultIds = useMemo(() => (results ?? []).map((r) => r.id!).filter(Boolean), [results]);
@@ -114,8 +133,12 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
 
   const onRowClicked = useCallback(
     (event: RowClickedEvent) => {
-      if (!event.data) return;
-      openDetail(event.data.id);
+      const data = event.data as GroupedGridRow | undefined;
+      if (!data) return;
+      // The synthesized GROUP summary row has no result detail; its chevron owns expand/collapse, so
+      // a row-body click is a no-op (toggling here too would double-fire with the chevron).
+      if (data.rowType === GridRowType.GROUP) return;
+      openDetail(data.id);
     },
     [openDetail],
   );
@@ -139,10 +162,6 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
     [],
   );
 
-  const onGridReady = useCallback((event: GridReadyEvent) => {
-    gridApiRef.current = event.api;
-  }, []);
-
   useEffect(() => {
     gridApiRef.current?.redrawRows();
   }, [detailMode.selectedResultId]);
@@ -157,8 +176,13 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
       defaultColDef: { filter: false, floatingFilter: false },
       onRowClicked,
       rowClassRules,
+      // Intentionally NO getRowId: the grid must re-render rows in projection order on every
+      // expand/collapse. With getRowId, ag-grid does immutable id-diffing and appends re-expanded
+      // turn rows at the bottom instead of under their group. Highlight/detail key off data.id.
+      getRowHeight: projection.getRowHeight,
+      onFilterChanged: projection.onFilterChanged,
     }),
-    [onRowClicked, rowClassRules],
+    [onRowClicked, rowClassRules, projection.getRowHeight, projection.onFilterChanged],
   );
 
   return (
@@ -175,9 +199,9 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
           <DialLoader size={40} />
         ) : (
           <GridView
-            columnDefs={colDefs}
-            rowData={results}
-            onGridReady={onGridReady}
+            columnDefs={groupedColDefs}
+            rowData={projection.rowData}
+            onGridReady={projection.onGridReady}
             additionalGridOptions={gridOptions}
             emptyDataProps={{ title: t(EntitiesI18nKey.NoResults) }}
           />

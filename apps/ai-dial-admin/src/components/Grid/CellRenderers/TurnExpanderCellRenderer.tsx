@@ -35,7 +35,12 @@ const TurnExpanderCellRenderer = ({ data, onToggleExpand }: TurnExpanderCellRend
         className="flex items-center justify-center w-[18px] h-[18px] shrink-0 rounded cursor-pointer hover:bg-layer-3"
         role="button"
         aria-label={expanded ? 'Collapse test case' : 'Expand test case'}
-        onClick={() => onToggleExpand?.(data.groupKey)}
+        onClick={(event) => {
+          // Stop the row-level click handler (e.g. the results grid's onRowClicked) from also firing
+          // and double-toggling this group.
+          event.stopPropagation();
+          onToggleExpand?.(data.groupKey);
+        }}
       >
         {expanded ? (
           <IconChevronDown size={14} className={classNames('text-secondary')} />

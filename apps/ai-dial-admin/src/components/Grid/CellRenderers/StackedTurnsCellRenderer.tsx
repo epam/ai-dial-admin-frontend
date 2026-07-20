@@ -15,19 +15,42 @@ const readTurnFieldValue = (turn: TestCaseRow, field: string): string => {
   return String(value);
 };
 
+/** Optional per-turn value accessor (e.g. reusing a results column's own `valueGetter`). */
+interface StackedTurnsParams {
+  getTurnValue?: (turn: TestCaseRow) => unknown;
+}
+
 /**
- * Read-only cell for a GROUP summary row: renders every turn's value for the column's field, one
- * line per turn, so a collapsed multi-turn case previews all its turns at a glance.
+ * Read-only cell for a GROUP summary row: renders every turn's value for the column, one line per
+ * turn, so a collapsed multi-turn case/conversation previews all its turns at a glance. By default
+ * the value is read from the turn's `data[field]`/top-level field; a `getTurnValue` param overrides
+ * that (used by the results grid to reuse each column's computed value).
  */
-const StackedTurnsCellRenderer = ({ data, colDef }: ICellRendererParams<GroupedGridRow>) => {
+const StackedTurnsCellRenderer = ({
+  data,
+  colDef,
+  getTurnValue,
+}: ICellRendererParams<GroupedGridRow> & StackedTurnsParams) => {
   const field = colDef?.field;
   const turns = data?.turns;
-  if (!field || !turns?.length) return null;
+  // When the group is expanded, its turn rows already show each value — stacking here too is
+  // redundant noise, so the summary row stays blank until it is collapsed.
+  if (data?.expanded) return null;
+  if ((!field && !getTurnValue) || !turns?.length) return null;
+
+  const valueOf = (turn: TestCaseRow): string => {
+    if (getTurnValue) {
+      const raw = getTurnValue(turn);
+      if (raw == null || raw === '') return '';
+      return typeof raw === 'object' ? JSON.stringify(raw) : String(raw);
+    }
+    return readTurnFieldValue(turn, field as string);
+  };
 
   return (
     <div className="flex flex-col gap-0.5 py-1">
       {turns.map((turn, index) => {
-        const value = readTurnFieldValue(turn, field);
+        const value = valueOf(turn);
         return (
           <DialEllipsisTooltip
             key={String(turn.id ?? index)}
