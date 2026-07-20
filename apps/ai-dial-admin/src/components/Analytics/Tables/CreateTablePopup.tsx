@@ -6,7 +6,12 @@ import { DialFormPopup, DialInput, DialSelectField, PopupSize } from '@epam/ai-d
 
 import { createTable } from '@/src/app/[lang]/tables/actions';
 import ColumnRowsEditor from '@/src/components/Analytics/Tables/ColumnRowsEditor';
-import { createTableForm, getTableNameError, toTableColumns } from '@/src/components/Analytics/Tables/utils';
+import {
+  createTableForm,
+  getColumnRowErrors,
+  hasColumnRowErrors,
+  toTableColumns,
+} from '@/src/components/Analytics/Tables/utils';
 import { PARTITION_GRANULARITY_OPTIONS } from '@/src/constants/analytics/tables';
 import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -14,6 +19,7 @@ import { useI18n } from '@/src/locales/client';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { AnalyticsTable, AnalyticsTableType, CreateTableDto, PartitionGranularity } from '@/src/models/analytics/table';
 import { TableForm } from '@/src/models/analytics/tables-ui';
+import { getAnalyticsIdentifierError } from '@/src/utils/validation/analytics-table-error';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 
 interface Props {
@@ -69,13 +75,15 @@ const CreateTablePopup: FC<Props> = ({ tableType, tables, onClose, onCreated }) 
   const columnOptions = sourceNames.map((s) => ({ value: s, label: s }));
 
   const existingNames = tables.map((tbl) => tbl.name);
-  const nameError = getTableNameError(form.name, existingNames, t);
+  const nameError = getAnalyticsIdentifierError(form.name, existingNames, t);
 
   // Source tables require at least one fully-declared column and a non-empty ordering key (both are
-  // enforced by the backend); mirror that here so submit is blocked before the request is sent.
+  // enforced by the backend); mirror that here so submit is blocked before the request is sent. Column
+  // rows are validated for identifier grammar and uniqueness against each other (no pre-existing columns).
+  const columnErrors = getColumnRowErrors(form.columns, { sourceNames: [], names: [] }, t);
   const validColumns = toTableColumns(form.columns);
   const validOrdering = form.orderingKey.filter((k) => sourceNames.includes(k));
-  const sourceComplete = validColumns.length > 0 && validOrdering.length > 0;
+  const sourceComplete = validColumns.length > 0 && validOrdering.length > 0 && !hasColumnRowErrors(columnErrors);
   const canSubmit = Boolean(form.name.trim()) && !nameError && (isSource ? sourceComplete : true);
 
   const onSubmit = async () => {
@@ -133,7 +141,7 @@ const CreateTablePopup: FC<Props> = ({ tableType, tables, onClose, onCreated }) 
           id="table-name"
           labelProps={{ label: t(AnalyticsTablesI18nKey.Name), required: true }}
           value={form.name}
-          error={nameError ?? undefined}
+          error={nameError?.text}
           onChange={(v) => update('name', v ?? '')}
         />
         <DialInput
@@ -150,7 +158,11 @@ const CreateTablePopup: FC<Props> = ({ tableType, tables, onClose, onCreated }) 
                 {t(AnalyticsTablesI18nKey.Columns)}
                 <span className="text-error"> *</span>
               </span>
-              <ColumnRowsEditor rows={form.columns} onChange={(rows) => update('columns', rows)} />
+              <ColumnRowsEditor
+                rows={form.columns}
+                errors={columnErrors}
+                onChange={(rows) => update('columns', rows)}
+              />
             </div>
             <DialSelectField
               id="table-ordering-key"

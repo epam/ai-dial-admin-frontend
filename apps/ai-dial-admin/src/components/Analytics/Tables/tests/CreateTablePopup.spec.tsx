@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import CreateTablePopup from '@/src/components/Analytics/Tables/CreateTablePopup';
-import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
+import { AnalyticsTablesI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
 
 vi.mock('@/src/app/[lang]/tables/actions');
@@ -43,21 +43,21 @@ describe('CreateTablePopup source', () => {
   test('an invalid name shows the format error and keeps submit disabled', () => {
     setup();
     typeName('Bad Name');
-    expect(screen.getByText(AnalyticsTablesI18nKey.NameFormatError)).toBeInTheDocument();
+    expect(screen.getByText(ErrorI18nKey.SnakeCaseIdentifier)).toBeInTheDocument();
     expect(submitButton(AnalyticsTablesI18nKey.CreateSource)).toBeDisabled();
   });
 
   test('a name that collides with an existing table shows the exists error', () => {
     setup();
     typeName('events');
-    expect(screen.getByText(AnalyticsTablesI18nKey.NameExistsError)).toBeInTheDocument();
+    expect(screen.getByText(ErrorI18nKey.KeyValueExists)).toBeInTheDocument();
   });
 
   test('a valid, unique name clears the inline error (submit still gated on columns/ordering key)', () => {
     setup();
     typeName('orders');
-    expect(screen.queryByText(AnalyticsTablesI18nKey.NameFormatError)).not.toBeInTheDocument();
-    expect(screen.queryByText(AnalyticsTablesI18nKey.NameExistsError)).not.toBeInTheDocument();
+    expect(screen.queryByText(ErrorI18nKey.SnakeCaseIdentifier)).not.toBeInTheDocument();
+    expect(screen.queryByText(ErrorI18nKey.KeyValueExists)).not.toBeInTheDocument();
   });
 });
 

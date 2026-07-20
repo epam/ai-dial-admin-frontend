@@ -17,7 +17,13 @@ import {
 import { addRows, deleteTable, getTable, updateTableSchema } from '@/src/app/[lang]/tables/actions';
 import ColumnRowsEditor from '@/src/components/Analytics/Tables/ColumnRowsEditor';
 import EditColumnPopup from '@/src/components/Analytics/Tables/EditColumnPopup';
-import { createColumnRow, isRenameRestricted, toTableColumns } from '@/src/components/Analytics/Tables/utils';
+import {
+  createColumnRow,
+  getColumnRowErrors,
+  hasColumnRowErrors,
+  isRenameRestricted,
+  toTableColumns,
+} from '@/src/components/Analytics/Tables/utils';
 import { TypeCellRenderer } from '@/src/components/Analytics/Common/TypeBadge';
 import SensitiveIndicator from '@/src/components/Common/SensitiveIndicator/SensitiveIndicator';
 import GridView from '@/src/components/Grid/GridView/GridView';
@@ -32,6 +38,7 @@ import { AnalyticsSchemaPatch, AnalyticsTable, AnalyticsTableColumn } from '@/sr
 import { ColumnRow } from '@/src/models/analytics/tables-ui';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getAnalyticsIdentifierError } from '@/src/utils/validation/analytics-table-error';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 
 interface Props {
@@ -63,6 +70,15 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
   const [editColumn, setEditColumn] = useState<AnalyticsTableColumn | null>(null);
 
   const isSystem = Boolean(table.system);
+  const columns = useMemo(() => table.columns ?? [], [table.columns]);
+
+  // New columns must not collide with the table's existing source/exposed names (the backend rejects
+  // duplicates); validate the add-columns rows against them plus each other.
+  const addColumnErrors = getColumnRowErrors(
+    addColumns,
+    { sourceNames: columns.map((c) => c.source_name), names: columns.map((c) => c.name) },
+    t,
+  );
 
   const reload = useCallback(async () => {
     const tbl = await getTable(name);
@@ -105,9 +121,19 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
   const onRenameCell = useCallback(
     (from: string, to: string) => {
       const target = to.trim();
-      if (target && target !== from) void applyPatch({ rename: [{ from, to: target }] });
+      if (!target || target === from) return;
+      // Validate the new name against the grammar and the other columns' names; on failure notify and
+      // reload so the inline-edited grid cell reverts to its previous value.
+      const others = columns.filter((c) => c.name !== from).map((c) => c.name);
+      const error = getAnalyticsIdentifierError(target, others, t);
+      if (error) {
+        showNotification(getErrorNotification(error.text));
+        void reload();
+        return;
+      }
+      void applyPatch({ rename: [{ from, to: target }] });
     },
-    [applyPatch],
+    [applyPatch, columns, reload, showNotification, t],
   );
 
   const onSubmitEditColumn = async (patch: AnalyticsSchemaPatch) => {
@@ -218,7 +244,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
       <div className="flex min-h-0 flex-1 flex-col">
         <GridView
           columnDefs={columnDefs}
-          rowData={table.columns ?? []}
+          rowData={columns}
           getRowId={(params) => params.data.name}
           additionalGridOptions={{
             onCellValueChanged: (e) => {
@@ -248,12 +274,12 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
           size={PopupSize.Lg}
           header={t(AnalyticsTablesI18nKey.AddColumns)}
           submitLabel={t(AnalyticsTablesI18nKey.AddColumns)}
-          disableSubmitButton={toTableColumns(addColumns).length === 0}
+          disableSubmitButton={toTableColumns(addColumns).length === 0 || hasColumnRowErrors(addColumnErrors)}
           onClose={() => setAddOpen(false)}
           onSubmit={() => void onSubmitAddColumns()}
         >
           <div className="max-h-[70vh] overflow-auto p-6">
-            <ColumnRowsEditor rows={addColumns} onChange={setAddColumns} />
+            <ColumnRowsEditor rows={addColumns} errors={addColumnErrors} onChange={setAddColumns} />
           </div>
         </DialFormPopup>
       )}
@@ -280,6 +306,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
         <EditColumnPopup
           column={editColumn}
           renameDisabled={isRenameRestricted(table, editColumn)}
+          existingNames={columns.filter((c) => c.name !== editColumn.name).map((c) => c.name)}
           onClose={() => setEditColumn(null)}
           onSubmit={(patch) => void onSubmitEditColumn(patch)}
         />

@@ -3,14 +3,15 @@ import { describe, expect, test } from 'vitest';
 import {
   buildColumnEditPatch,
   createColumnRow,
-  getTableNameError,
+  getColumnRowErrors,
+  hasColumnRowErrors,
   isRenameRestricted,
   toTableColumns,
 } from '@/src/components/Analytics/Tables/utils';
-import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
+import { ErrorI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { AnalyticsTable, AnalyticsTableColumn, AnalyticsTableType } from '@/src/models/analytics/table';
-import { ColumnEditValues } from '@/src/models/analytics/tables-ui';
+import { ColumnEditValues, ColumnRow } from '@/src/models/analytics/tables-ui';
 
 describe('createColumnRow', () => {
   test('creates a blank row with a unique id and string default type', () => {
@@ -179,38 +180,50 @@ describe('buildColumnEditPatch', () => {
   });
 });
 
-describe('getTableNameError', () => {
+describe('getColumnRowErrors / hasColumnRowErrors', () => {
   // Stub t() returns the key so assertions target the i18n key, not translated text.
   const t = (key: string) => key;
+  const noExisting = { sourceNames: [], names: [] };
+  const row = (overrides: Partial<ColumnRow>): ColumnRow => ({ ...createColumnRow(), ...overrides });
 
-  test('returns null for an empty or whitespace-only name (emptiness is signalled elsewhere)', () => {
-    expect(getTableNameError('', [], t)).toBeNull();
-    expect(getTableNameError('   ', [], t)).toBeNull();
+  test('a blank or partial row (missing source_name or name) produces no identifier errors', () => {
+    const rows = [row({}), row({ source_name: 'only_source' }), row({ name: 'only_name' })];
+    const errors = getColumnRowErrors(rows, noExisting, t);
+    expect(errors).toEqual([{}, {}, {}]);
+    expect(hasColumnRowErrors(errors)).toBe(false);
   });
 
-  test('accepts valid lowercase snake_case identifiers (trimming first)', () => {
-    expect(getTableNameError('events', [], t)).toBeNull();
-    expect(getTableNameError('user_events_2', [], t)).toBeNull();
-    expect(getTableNameError('  events  ', [], t)).toBeNull();
+  test('fully-declared rows with valid, unique identifiers produce no errors', () => {
+    const rows = [row({ source_name: 'event_id', name: 'event' }), row({ source_name: 'total', name: 'total_cost' })];
+    expect(hasColumnRowErrors(getColumnRowErrors(rows, noExisting, t))).toBe(false);
   });
 
-  test('rejects names that violate the identifier grammar', () => {
-    expect(getTableNameError('Events', [], t)).toBe(AnalyticsTablesI18nKey.NameFormatError);
-    expect(getTableNameError('_events', [], t)).toBe(AnalyticsTablesI18nKey.NameFormatError);
-    expect(getTableNameError('2events', [], t)).toBe(AnalyticsTablesI18nKey.NameFormatError);
-    expect(getTableNameError('my-table', [], t)).toBe(AnalyticsTablesI18nKey.NameFormatError);
-    expect(getTableNameError('my table', [], t)).toBe(AnalyticsTablesI18nKey.NameFormatError);
+  test('flags source_name and name that violate the identifier grammar', () => {
+    const errors = getColumnRowErrors([row({ source_name: 'Bad Source', name: 'Bad-Name' })], noExisting, t);
+    expect(errors[0].source_name).toBe(ErrorI18nKey.SnakeCaseIdentifier);
+    expect(errors[0].name).toBe(ErrorI18nKey.SnakeCaseIdentifier);
   });
 
-  test('rejects names longer than the identifier max length', () => {
-    expect(getTableNameError('a'.repeat(65), [], t)).toBe(AnalyticsTablesI18nKey.NameLengthError);
-    expect(getTableNameError('a'.repeat(64), [], t)).toBeNull();
+  test('flags duplicate names among sibling rows', () => {
+    const rows = [row({ source_name: 'a', name: 'dup' }), row({ source_name: 'b', name: 'dup' })];
+    const errors = getColumnRowErrors(rows, noExisting, t);
+    expect(errors[0].name).toBe(ErrorI18nKey.KeyValueExists);
+    expect(errors[1].name).toBe(ErrorI18nKey.KeyValueExists);
   });
 
-  test('rejects a name that collides with an existing table (compared after trimming)', () => {
-    expect(getTableNameError('events', ['events', 'orders'], t)).toBe(AnalyticsTablesI18nKey.NameExistsError);
-    expect(getTableNameError('  events  ', ['events'], t)).toBe(AnalyticsTablesI18nKey.NameExistsError);
-    expect(getTableNameError('events', ['orders'], t)).toBeNull();
+  test('flags a row that collides with a pre-existing table column', () => {
+    const errors = getColumnRowErrors(
+      [row({ source_name: 'new_source', name: 'existing_name' })],
+      { sourceNames: [], names: ['existing_name'] },
+      t,
+    );
+    expect(errors[0].name).toBe(ErrorI18nKey.KeyValueExists);
+  });
+
+  test('flags a tag longer than the length cap even on an otherwise blank row', () => {
+    const errors = getColumnRowErrors([row({ tag: 'a'.repeat(65) })], noExisting, t);
+    expect(errors[0].tag).toBe(ErrorI18nKey.Length);
+    expect(hasColumnRowErrors(errors)).toBe(true);
   });
 });
 

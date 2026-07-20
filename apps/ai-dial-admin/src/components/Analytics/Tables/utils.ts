@@ -1,9 +1,4 @@
-import {
-  ANALYTICS_IDENTIFIER_MAX_LENGTH,
-  ANALYTICS_IDENTIFIER_PATTERN,
-  PARTITION_NONE,
-} from '@/src/constants/analytics/tables';
-import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
+import { ANALYTICS_TAG_MAX_LENGTH, PARTITION_NONE } from '@/src/constants/analytics/tables';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import {
   AnalyticsColumnMetadataUpdate,
@@ -12,7 +7,16 @@ import {
   AnalyticsTableColumn,
   AnalyticsTableType,
 } from '@/src/models/analytics/table';
-import { ColumnEditValues, ColumnRow, TableForm } from '@/src/models/analytics/tables-ui';
+import {
+  ColumnEditValues,
+  ColumnRow,
+  ColumnRowError,
+  ExistingColumnNames,
+  TableForm,
+} from '@/src/models/analytics/tables-ui';
+import { getAnalyticsIdentifierError, getAnalyticsLengthError } from '@/src/utils/validation/analytics-table-error';
+
+type Translate = (key: string, args?: Record<string, string | number>) => string;
 
 let counter = 0;
 export const nextColumnId = (): string => `col-${++counter}`;
@@ -41,23 +45,40 @@ export const createTableForm = (tables: AnalyticsTable[]): TableForm => {
   };
 };
 
-// Validates a table name against the backend identifier grammar and uniqueness, returning a localized
-// error message or null when valid. An empty value returns null — emptiness is signalled by the
-// required marker and a disabled submit, not an inline error, so the field stays quiet until typed.
-export const getTableNameError = (
-  name: string,
-  existingNames: string[],
-  t: (key: string, args?: Record<string, string | number>) => string,
-): string | null => {
-  const trimmed = name.trim();
-  if (!trimmed) return null;
-  if (trimmed.length > ANALYTICS_IDENTIFIER_MAX_LENGTH) {
-    return t(AnalyticsTablesI18nKey.NameLengthError, { max: ANALYTICS_IDENTIFIER_MAX_LENGTH });
-  }
-  if (!ANALYTICS_IDENTIFIER_PATTERN.test(trimmed)) return t(AnalyticsTablesI18nKey.NameFormatError);
-  if (existingNames.includes(trimmed)) return t(AnalyticsTablesI18nKey.NameExistsError);
-  return null;
+// Validates the column rows of a create/add-columns form against the backend rules: each row that will
+// actually be sent (both source_name and name filled — partial rows are dropped by toTableColumns) must
+// have snake_case identifiers unique within the table (against sibling rows and any pre-existing columns),
+// and a tag within its length cap. Returns one entry per row, aligned by index; empty entries are valid.
+export const getColumnRowErrors = (
+  rows: ColumnRow[],
+  existing: ExistingColumnNames,
+  t: Translate,
+): ColumnRowError[] => {
+  const trimmedRows = rows.map((r) => ({ source: r.source_name.trim(), name: r.name.trim() }));
+
+  return rows.map((row, index) => {
+    const error: ColumnRowError = {};
+    const source = trimmedRows[index].source;
+    const name = trimmedRows[index].name;
+
+    if (source && name) {
+      const siblingSources = trimmedRows.filter((_, i) => i !== index).map((r) => r.source);
+      const siblingNames = trimmedRows.filter((_, i) => i !== index).map((r) => r.name);
+      const sourceError = getAnalyticsIdentifierError(source, [...existing.sourceNames, ...siblingSources], t);
+      if (sourceError) error.source_name = sourceError.text;
+      const nameError = getAnalyticsIdentifierError(name, [...existing.names, ...siblingNames], t);
+      if (nameError) error.name = nameError.text;
+    }
+
+    const tagError = getAnalyticsLengthError(row.tag, ANALYTICS_TAG_MAX_LENGTH, t);
+    if (tagError) error.tag = tagError.text;
+
+    return error;
+  });
 };
+
+export const hasColumnRowErrors = (errors: ColumnRowError[]): boolean =>
+  errors.some((e) => e.source_name || e.name || e.tag);
 
 const normalized = (value?: string): string => (value ?? '').trim();
 

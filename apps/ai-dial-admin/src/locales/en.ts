@@ -1391,6 +1391,8 @@ export default {
     ForbiddenChars: 'Field must not contain forbidden characters: {list}',
     AlphanumericUnderscore:
       'Field must not contain forbidden characters. Only alphanumeric characters and underscore are allowed.',
+    SnakeCaseIdentifier:
+      "Must be lowercase snake_case: start with a letter, then letters, digits or underscores (must not start with '_').",
     KeyValueExists: 'This value already exists.',
     DisplayNameErrorVersion:
       'This name is used by versionless entity. Specify version for entity with this display name to group entities.',
@@ -2327,9 +2329,5 @@ export default {
     RowsInserted: 'Rows inserted.',
     ActionFailed: 'The operation failed.',
     InvalidRowsJson: 'Rows must be a valid JSON array of objects.',
-    NameFormatError:
-      "Name must be lowercase snake_case: start with a letter, then letters, digits or underscores (must not start with '_').",
-    NameLengthError: 'Name must be at most {max} characters.',
-    NameExistsError: 'A table with this name already exists.',
   },
 } as const;

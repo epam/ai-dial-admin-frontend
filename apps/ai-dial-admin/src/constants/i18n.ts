@@ -1039,6 +1039,7 @@ export enum ErrorI18nKey {
   KeyValueExists = 'Error.KeyValueExists',
   ForbiddenChars = 'Error.ForbiddenChars',
   AlphanumericUnderscore = 'Error.AlphanumericUnderscore',
+  SnakeCaseIdentifier = 'Error.SnakeCaseIdentifier',
   RequiredProperty = 'Error.RequiredProperty',
   InvalidPath = 'Error.InvalidPath',
   InvalidStatus = 'Error.InvalidStatus',
@@ -2276,7 +2277,4 @@ export enum AnalyticsTablesI18nKey {
   RowsInserted = 'AnalyticsTables.RowsInserted',
   ActionFailed = 'AnalyticsTables.ActionFailed',
   InvalidRowsJson = 'AnalyticsTables.InvalidRowsJson',
-  NameFormatError = 'AnalyticsTables.NameFormatError',
-  NameLengthError = 'AnalyticsTables.NameLengthError',
-  NameExistsError = 'AnalyticsTables.NameExistsError',
 }
