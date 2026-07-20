@@ -100,9 +100,9 @@ export interface TestCase {
   id: string;
   createdAt: number;
   data?: Record<string, unknown>;
-  /** Top-level conversation grouping key (sibling of `data`, never inside it). Both-or-neither with `turnIndex`. */
-  conversationId?: string | null;
-  /** Top-level 0-based turn position within the conversation. Both-or-neither with `conversationId`. */
+  /** Top-level multi-turn grouping key (sibling of `data`, never inside it). Both-or-neither with `turnIndex`. */
+  multiTurnId?: string | null;
+  /** Top-level 0-based turn position within the multi-turn case. Both-or-neither with `multiTurnId`. */
   turnIndex?: number | null;
   validationWarnings?: ValidationWarning[];
   enabled?: boolean;

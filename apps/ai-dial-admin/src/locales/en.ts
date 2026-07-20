@@ -1877,6 +1877,8 @@ export default {
     AttachDatasetWarning: 'Attaching a public dataset will permanently remove all currently existing test cases.',
     PublicDatasetInfo:
       'Test cases related to dataset are fixed. To change the test cases open the dataset page or detach them from dataset.',
+    TurnLabel: 'Turn {index}',
+    TurnCountBadge: '{count} turns',
   },
   FileManager: {
     SelectedItems: 'item(s) selected',
@@ -2176,6 +2178,11 @@ export default {
     Try_out: 'Try out',
     Edit: 'Edit',
     Export: 'Export',
+    Add_turn: 'Add turn',
+    Delete_turn: 'Delete turn',
+    Delete_case: 'Delete test case',
+    Move_turn_up: 'Move turn up',
+    Move_turn_down: 'Move turn down',
   },
   QueryBuilder: {
     Source: 'Source',

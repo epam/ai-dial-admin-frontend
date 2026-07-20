@@ -79,7 +79,7 @@ export async function getTestCases(
 
 export async function createTestCase(
   datasetId: string,
-  body: Pick<DatasetTestCase, 'testCaseName' | 'data' | 'conversationId' | 'turnIndex'>,
+  body: Pick<DatasetTestCase, 'testCaseName' | 'data' | 'multiTurnId' | 'turnIndex'>,
 ) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return datasetsApi.createTestCase(datasetId, body, token);

@@ -3,6 +3,7 @@ import { createRef } from 'react';
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 import TestCasesList, { TestCasesActions } from '../TestCasesList';
 import { TestSuite, TestCase as TestCaseModel } from '@/src/models/evaluation/test-suite';
+import { GridRowType } from '@/src/models/evaluation/test-case-grouping';
 import * as actions from '@/src/app/[lang]/datasets/actions';
 
 type TestCase = Partial<TestCaseModel>;
@@ -23,9 +24,13 @@ let capturedOnGridReady: ((event: { api: any }) => void) | null = null;
 vi.mock('@/src/app/[lang]/datasets/actions', () => ({
   getTestCases: vi.fn(),
   createTestCase: vi.fn(),
+  updateTestCases: vi.fn(),
   importTestCase: vi.fn(),
   removeTestCase: vi.fn(),
   removeMultipleTestCases: vi.fn(),
+  getDataset: vi.fn(),
+  publishDataset: vi.fn(),
+  removeDataset: vi.fn(),
 }));
 
 vi.mock('@/src/components/ListView/List', () => ({
@@ -85,7 +90,7 @@ describe('TestCasesList', () => {
   test('fetches test cases on mount using datasetId', async () => {
     vi.mocked(actions.getTestCases).mockResolvedValue(createPageData(mockTestCases));
 
-    render(<TestCasesList selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
+    render(<TestCasesList selectedTestSuite={mockTestSuite} onChange={mockOnChange} dataset={null} />);
 
     await waitFor(() => {
       expect(actions.getTestCases).toHaveBeenCalledWith('dataset-123', 0, 1000, [], []);
@@ -94,7 +99,7 @@ describe('TestCasesList', () => {
 
   test('does not fetch when datasetId is missing', async () => {
     const suiteNoDataset: TestSuite = { id: 'suite-1', name: 'Suite' };
-    render(<TestCasesList selectedTestSuite={suiteNoDataset} onChange={mockOnChange} />);
+    render(<TestCasesList selectedTestSuite={suiteNoDataset} onChange={mockOnChange} dataset={null} />);
 
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(actions.getTestCases).not.toHaveBeenCalled();
@@ -103,7 +108,7 @@ describe('TestCasesList', () => {
   test('handles null response from getTestCases gracefully', async () => {
     vi.mocked(actions.getTestCases).mockResolvedValue(null as any);
 
-    render(<TestCasesList selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
+    render(<TestCasesList selectedTestSuite={mockTestSuite} onChange={mockOnChange} dataset={null} />);
 
     await waitFor(() => {
       expect(actions.getTestCases).toHaveBeenCalled();
@@ -113,12 +118,16 @@ describe('TestCasesList', () => {
   test('refetches when datasetId changes', async () => {
     vi.mocked(actions.getTestCases).mockResolvedValue(createPageData([]));
 
-    const { rerender } = render(<TestCasesList selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
+    const { rerender } = render(<TestCasesList selectedTestSuite={mockTestSuite} onChange={mockOnChange} dataset={null} />);
 
     await waitFor(() => expect(actions.getTestCases).toHaveBeenCalledTimes(1));
 
     rerender(
-      <TestCasesList selectedTestSuite={{ ...mockTestSuite, datasetId: 'dataset-456' }} onChange={mockOnChange} />,
+      <TestCasesList
+        selectedTestSuite={{ ...mockTestSuite, datasetId: 'dataset-456' }}
+        onChange={mockOnChange}
+        dataset={null}
+      />,
     );
 
     await waitFor(() => expect(actions.getTestCases).toHaveBeenCalledTimes(2));
@@ -141,6 +150,7 @@ describe('TestCasesList — disabledTestCaseIds logic', () => {
   const makeGridApi = (nodes: { data: Record<string, unknown>; rowPinned?: string }[]) => ({
     setGridOption: vi.fn(),
     refreshClientSideRowModel: vi.fn(),
+    refreshCells: vi.fn(),
     forEachNode: vi.fn((cb: (node: any) => void) => nodes.forEach(cb)),
   });
 
@@ -165,6 +175,7 @@ describe('TestCasesList — disabledTestCaseIds logic', () => {
       <TestCasesList
         selectedTestSuite={suite}
         onChange={mockOnChange}
+        dataset={null}
         testCasesActionsRef={actionsRef}
         onDirtyChange={mockOnDirtyChange}
       />,
@@ -251,26 +262,65 @@ describe('TestCasesList — disabledTestCaseIds logic', () => {
     expect(mockOnDirtyChange).toHaveBeenLastCalledWith(false);
   });
 
-  test('onCellChange writes conversationId/turnIndex top-level, never into data', async () => {
+  test('onCellChange writes multiTurnId/turnIndex top-level, never into data', async () => {
     const suite: TestSuite = { id: 'suite-1', datasetId: 'ds-1', disabledTestCaseIds: [] };
     const actionsRef = renderList(suite);
 
     await waitFor(() => expect(capturedOnCellChange).not.toBeNull());
 
     const row: Record<string, unknown> = { id: 'row-1', testCaseName: 'tc', createdAt: 0, data: { q: 'a' } };
-    capturedOnCellChange!(row, 'conversationId', 'conv-1');
+    capturedOnCellChange!(row, 'multiTurnId', 'conv-1');
     capturedOnCellChange!(row, 'turnIndex', 2);
 
     // top-level on the row, and NOT folded into data
-    expect(row.conversationId).toBe('conv-1');
+    expect(row.multiTurnId).toBe('conv-1');
     expect(row.turnIndex).toBe(2);
     expect(row.data).toEqual({ q: 'a' });
 
     // and they survive the both-or-neither guard into the dirty test case
     const dirty = actionsRef.current?.getDirtyTestCases() ?? [];
     const saved = dirty.find((tc) => tc.id === 'row-1');
-    expect(saved?.conversationId).toBe('conv-1');
+    expect(saved?.multiTurnId).toBe('conv-1');
     expect(saved?.turnIndex).toBe(2);
     expect(saved?.data).toEqual({ q: 'a' });
+  });
+});
+
+describe('TestCasesList — turn grouping', () => {
+  const mockOnChange = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    capturedRowData = null;
+  });
+
+  test('rows sharing a multiTurnId collapse into one group row by default', async () => {
+    vi.mocked(actions.getTestCases).mockResolvedValue(
+      createPageData([
+        { id: 't0', testCaseName: 'multi', multiTurnId: 'conv-1', turnIndex: 0, createdAt: 0 },
+        { id: 't1', testCaseName: 'multi', multiTurnId: 'conv-1', turnIndex: 1, createdAt: 0 },
+        { id: 's0', testCaseName: 'single', createdAt: 0 },
+      ]),
+    );
+
+    render(
+      <TestCasesList
+        selectedTestSuite={{ id: 'suite-1', datasetId: 'ds-1' }}
+        onChange={mockOnChange}
+        dataset={null}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(capturedRowData).not.toBeNull();
+      expect(capturedRowData!.length).toBe(2);
+    });
+
+    const groupRow = capturedRowData!.find((r: any) => r.rowType === GridRowType.GROUP);
+    const singleRow = capturedRowData!.find((r: any) => r.rowType === GridRowType.SINGLE);
+    expect(groupRow?.turnCount).toBe(2);
+    expect(groupRow?.expanded).toBe(false);
+    expect(singleRow?.id).toBe('s0');
+    expect(capturedRowData!.some((r: any) => r.rowType === GridRowType.TURN)).toBe(false);
   });
 });

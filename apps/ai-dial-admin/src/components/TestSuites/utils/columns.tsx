@@ -22,7 +22,6 @@ import BooleanColumnHeader from '@/src/components/Grid/HeaderComponents/BooleanC
 import { TYPE_OPTIONS } from '@/src/components/TestSuites/TestCaseSchema/constants';
 import { NO_BORDER_CLASS, UTILITY_COLUMN } from '@/src/constants/ag-grid';
 import { BASE_STATUS_COLUMN } from '@/src/constants/grid-columns/base-columns';
-import { TEST_CASES_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { MetricBinding } from '@/src/models/evaluation/metric';
 import {
@@ -34,54 +33,18 @@ import {
 } from '@/src/models/evaluation/test-suite';
 import { InputBindingType, MetricBindingType, TestCaseItemType } from '@/src/types/evaluation';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isValueTruthy } from '@/src/utils/types';
+import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
+import { GridRowType, GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
+import {
+  getGroupedIdColumn,
+  getGroupedNameColumn,
+  getGroupedSchemaColumn,
+  getTurnActionsColumn,
+  getTurnExpanderColumn,
+  TurnActionHandlers,
+} from './grouped-columns';
 
 export type onCellChange = (data: Record<string, unknown>, field: string, value: string | number | boolean) => void;
-
-/**
- * The two inline-editable conversation-grouping columns (`turnIndex`, `conversationId`), shared by the
- * test-suite and dataset test-case grids. Both read/write the **top-level** row fields (never `data`)
- * via `onCellChange`. Values are entered manually — no client-side UUID / contiguity validation; the
- * backend enforces both-or-neither, UUID format, turn range and duplicate-turn rules (400/409).
- */
-export const getConversationColumns = (onCellChange: onCellChange, isReadOnly?: boolean): ColDef[] => [
-  {
-    field: 'turnIndex',
-    colId: 'turnIndex',
-    headerName: 'Turn index',
-    editable: false,
-    cellRenderer: EditableCellRenderer,
-    valueGetter: (params: ValueGetterParams) => params.data?.turnIndex ?? '',
-    cellRendererParams: {
-      isReadonly: isReadOnly,
-      hideTriangle: true,
-      skipRequired: true,
-      inputType: 'number' as const,
-      step: 1,
-      onChange: (value: string | number, rowData: unknown) => {
-        const raw = typeof value === 'string' ? value.trim() : value;
-        const next = raw === '' ? '' : Math.trunc(+raw);
-        onCellChange(rowData as Record<string, unknown>, 'turnIndex', Number.isFinite(next as number) ? next : '');
-      },
-    },
-  },
-  {
-    field: 'conversationId',
-    colId: 'conversationId',
-    headerName: 'Conversation ID',
-    editable: false,
-    cellRenderer: EditableCellRenderer,
-    valueGetter: (params: ValueGetterParams) => params.data?.conversationId ?? '',
-    cellRendererParams: {
-      isReadonly: isReadOnly,
-      hideTriangle: true,
-      skipRequired: true,
-      onChange: (value: string | number, rowData: unknown) => {
-        onCellChange(rowData as Record<string, unknown>, 'conversationId', value);
-      },
-    },
-  },
-];
 
 const getEnabledColumnFilterOptions = (
   allLabel: string,
@@ -108,18 +71,25 @@ const getEnabledColumnFilterOptions = (
   },
 ];
 
+const EmptyCell = () => null;
+
 export const getTestCaseColumns = (
   suite: TestSuite,
   onCellChange: onCellChange,
   t?: (key: string) => string,
   schema?: TestCaseSchema[],
   isReadOnly?: boolean,
+  onToggleExpand: (groupKey: string) => void = () => {},
+  turnHandlers?: TurnActionHandlers,
+  extraTurnActions?: ActionMenuOperationDeclaration<GroupedGridRow>[],
 ): ColDef[] => {
   const enabledLabel = t?.(BasicI18nKey.Enabled) ?? 'Enabled';
   const disabledLabel = t?.(BasicI18nKey.Disabled) ?? 'Disabled';
   const allLabel = 'All';
   const resolvedSchema = schema ?? [];
-  return [
+  const isGroupRow = (data?: GroupedGridRow) => data?.rowType === GridRowType.GROUP;
+  const columns: ColDef[] = [
+    getTurnExpanderColumn(onToggleExpand),
     {
       ...UTILITY_COLUMN,
       headerName: '',
@@ -138,11 +108,15 @@ export const getTestCaseColumns = (
       } as ITextFilterParams,
       floatingFilter: true,
       floatingFilterComponent: 'agTextColumnFloatingFilter',
-      editable: true,
-      cellRenderer: 'agCheckboxCellRenderer',
+      // Group summary rows are synthetic (no test-case id) — they carry no enable toggle.
+      editable: (params) => !isReadOnly && !isGroupRow(params.data as GroupedGridRow | undefined),
+      cellRendererSelector: (params) =>
+        isGroupRow(params.data as GroupedGridRow | undefined)
+          ? { component: EmptyCell }
+          : { component: 'agCheckboxCellRenderer' },
       cellEditor: 'agCheckboxCellEditor',
       cellClass: 'flex justify-center',
-      valueGetter: (params) => params.data?.enabled,
+      valueGetter: (params) => (isGroupRow(params.data as GroupedGridRow | undefined) ? null : params.data?.enabled),
       valueSetter: (params) => {
         params.data.enabled = params.newValue;
         return true;
@@ -151,134 +125,22 @@ export const getTestCaseColumns = (
         return params.data?.enabled ? 'Disable test case' : 'Enable test case';
       },
     } as ColDef,
-    ...TEST_CASES_COLUMN.map((col) => {
-      if (col.field === 'id') {
-        return { ...col, cellClass: 'select-none cursor-pointer' };
-      }
-      if (col.field === 'testCaseName' && onCellChange) {
-        return {
-          ...col,
-          editable: false,
-          cellRenderer: EditableCellRenderer,
-          valueGetter: (params: ValueGetterParams) => params.data?.testCaseName ?? '',
-          cellRendererParams: {
-            isReadonly: isReadOnly,
-            hideTriangle: true,
-            skipRequired: true,
-            onChange: (value: string | number, rowData: unknown) => {
-              onCellChange(rowData as Record<string, unknown>, 'testCaseName', value);
-            },
-          },
-        };
-      }
-      return col;
-    }),
-    ...getConversationColumns(onCellChange, isReadOnly),
-    ...resolvedSchema.map((param) => {
-      const field = param.name;
-      return {
-        field: field,
-        headerName: field,
-        editable: false,
-        valueGetter: (params: ValueGetterParams) => params.data?.data?.[field] ?? params.data?.[field] ?? '',
-        cellRendererParams: {
-          isReadonly: isReadOnly,
-          hideTriangle: true,
-          skipRequired: true,
-          onChange: (value: string | number, rowData: unknown) => {
-            onCellChange(rowData as Record<string, unknown>, field, value);
-          },
-        },
-        cellRendererSelector: () => {
-          if (param.type === TestCaseItemType.FILE) {
-            return {
-              component: FileSelectCellRenderer,
-              params: {
-                onChange: (value: string | number, rowData: unknown) => {
-                  onCellChange(rowData as Record<string, unknown>, field, value);
-                },
-                id: suite.id,
-                view: ApplicationRoute.TestSuites,
-                isReadonly: isReadOnly,
-              },
-            };
-          }
-          if (param.type === TestCaseItemType.INTEGER || param.type === TestCaseItemType.NUMBER) {
-            return {
-              component: EditableCellRenderer,
-              params: {
-                isReadonly: isReadOnly,
-                hideTriangle: true,
-                skipRequired: true,
-                inputType: 'number' as const,
-                step: param.type === TestCaseItemType.INTEGER ? 1 : void 0,
-                onChange: (value: string | number, rowData: unknown) => {
-                  // For INTEGER type, validate that the value is a whole number
-                  if (param.type === TestCaseItemType.INTEGER) {
-                    const numValue = typeof value === 'string' ? parseFloat(value) : value;
-                    if (value !== '' && !isNaN(numValue) && !Number.isInteger(numValue)) {
-                      // If the value is not an integer, round it to nearest integer
-                      const intValue = Math.round(numValue);
-                      onCellChange(rowData as Record<string, unknown>, field, intValue);
-                      return;
-                    }
-                  }
-                  onCellChange(rowData as Record<string, unknown>, field, +value);
-                },
-              },
-            };
-          }
-          if (param.type == TestCaseItemType.OBJECT || param.type == TestCaseItemType.ARRAY) {
-            return {
-              component: JsonEditorCellRenderer,
-              params: {
-                onChange: (value: string | number, rowData: unknown) => {
-                  onCellChange(rowData as Record<string, unknown>, field, value);
-                },
-                disableValidation: true,
-                disabled: isReadOnly,
-              },
-            };
-          }
-          if (param.type == TestCaseItemType.BOOLEAN) {
-            return {
-              component: SelectCellRenderer,
-              params: {
-                getItems: () => {
-                  return [
-                    {
-                      value: true.toString(),
-                      label: true.toString(),
-                    },
-                    {
-                      value: false.toString(),
-                      label: false.toString(),
-                    },
-                  ];
-                },
-                onChange: (value: string | number, rowData: unknown) => {
-                  onCellChange(rowData as Record<string, unknown>, field, isValueTruthy(value as string));
-                },
-                isReadonly: isReadOnly,
-              },
-            };
-          }
-          return {
-            component: EditableCellRenderer,
-            params: {
-              hideTriangle: true,
-              skipRequired: true,
-              isReadonly: isReadOnly,
-              onChange: (value: string | number, rowData: unknown) => {
-                onCellChange(rowData as Record<string, unknown>, field, value);
-              },
-            },
-          };
-        },
-      };
-    }),
+    getGroupedIdColumn(),
+    getGroupedNameColumn(onCellChange, isReadOnly),
+    ...resolvedSchema.map((param) =>
+      getGroupedSchemaColumn(
+        param,
+        onCellChange,
+        { entityId: suite.id, view: ApplicationRoute.TestSuites },
+        isReadOnly,
+      ),
+    ),
     getValidityStatusColumn(t?.(TestSuitesI18nKey.TestCaseError)),
   ];
+  if (!isReadOnly && turnHandlers) {
+    columns.push(getTurnActionsColumn(turnHandlers, extraTurnActions));
+  }
+  return columns;
 };
 
 export const getValidityStatusColumn = (label?: string): ColDef => {

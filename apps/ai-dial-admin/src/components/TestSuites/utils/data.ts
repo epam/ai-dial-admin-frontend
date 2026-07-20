@@ -13,19 +13,65 @@ export const createNewTestCaseRow = (): Record<string, unknown> => {
   };
 };
 
+interface NamedTestCaseRow {
+  id?: string;
+  testCaseName?: string | null;
+}
+
 /**
- * Extracts the top-level conversation grouping fields from a grid row, applying the backend
- * both-or-neither rule: emit both `conversationId` and `turnIndex` only when `conversationId` is a
+ * Guarantee every test case in a batch has a `testCaseName` that is unique both within the batch and
+ * against the rest of the dataset. The backend batch-update endpoint rejects a batch when an incoming
+ * name duplicates another batch item ("duplicate within batch") or an already-persisted row not being
+ * updated ("collision during batch update") — even though multi-turn turns are otherwise keyed by
+ * `multiTurnId` + `turnIndex`, so turns that share a name would break the whole batch.
+ *
+ * `existing` is the full known row set (grid rows); names of rows NOT in the batch are treated as
+ * taken. For each batch row the first free name is kept; collisions and blank names are regenerated to
+ * a fresh `new-test-case-<hash>`. Turn rows display as "Turn N" in the UI, so a regenerated backing
+ * name is not user-visible.
+ */
+export const ensureUniqueTestCaseNames = <T extends NamedTestCaseRow>(
+  rows: T[],
+  existing: NamedTestCaseRow[] = [],
+): T[] => {
+  const batchIds = new Set(rows.map((row) => String(row.id)));
+  const taken = new Set<string>();
+  existing.forEach((row) => {
+    if (batchIds.has(String(row.id))) return;
+    const name = typeof row.testCaseName === 'string' ? row.testCaseName.trim() : '';
+    if (name !== '') {
+      taken.add(name);
+    }
+  });
+
+  return rows.map((row) => {
+    const name = typeof row.testCaseName === 'string' ? row.testCaseName.trim() : '';
+    if (name !== '' && !taken.has(name)) {
+      taken.add(name);
+      return row;
+    }
+    let next = `new-test-case-${uuidv4().slice(0, 5)}`;
+    while (taken.has(next)) {
+      next = `new-test-case-${uuidv4().slice(0, 5)}`;
+    }
+    taken.add(next);
+    return { ...row, testCaseName: next };
+  });
+};
+
+/**
+ * Extracts the top-level multi-turn grouping fields from a grid row, applying the backend
+ * both-or-neither rule: emit both `multiTurnId` and `turnIndex` only when `multiTurnId` is a
  * non-empty string AND `turnIndex` is a finite number; otherwise emit neither. `turnIndex: 0` is a
  * valid present value. Prevents an accidental "exactly one" write payload (which the backend rejects
  * with HTTP 400).
  */
-export const getConversationFields = (
+export const getMultiTurnFields = (
   row: Record<string, unknown>,
-): { conversationId: string; turnIndex: number } | Record<string, never> => {
-  const conversationId = row.conversationId;
+): { multiTurnId: string; turnIndex: number } | Record<string, never> => {
+  const multiTurnId = row.multiTurnId;
   const rawTurnIndex = row.turnIndex;
-  const hasConversationId = typeof conversationId === 'string' && conversationId.trim() !== '';
+  const hasMultiTurnId = typeof multiTurnId === 'string' && multiTurnId.trim() !== '';
   // `turnIndex` can reach here as a number (typed value) or as a numeric string — the grid's
   // inline editor writes the raw input string back onto the row, and CSV import yields strings too.
   // Normalize before validating so a valid "0" is not mistaken for "absent" and dropped.
@@ -36,8 +82,8 @@ export const getConversationFields = (
         ? Number(rawTurnIndex)
         : NaN;
   const hasTurnIndex = Number.isFinite(turnIndexNumber);
-  if (hasConversationId && hasTurnIndex) {
-    return { conversationId: (conversationId as string).trim(), turnIndex: Math.trunc(turnIndexNumber) };
+  if (hasMultiTurnId && hasTurnIndex) {
+    return { multiTurnId: (multiTurnId as string).trim(), turnIndex: Math.trunc(turnIndexNumber) };
   }
   return {};
 };
@@ -69,6 +115,6 @@ export const rowToTestCase = (row: Record<string, unknown>): TestCase => {
     valid: row.valid as boolean | undefined,
     validationWarnings: row.validationWarnings as TestCase['validationWarnings'],
     data: row.data as Record<string, unknown>,
-    ...getConversationFields(row),
+    ...getMultiTurnFields(row),
   };
 };

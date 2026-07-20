@@ -1832,6 +1832,8 @@ export enum TestSuitesI18nKey {
   DetachFailed = 'TestSuites.DetachFailed',
   AttachDatasetWarning = 'TestSuites.AttachDatasetWarning',
   PublicDatasetInfo = 'TestSuites.PublicDatasetInfo',
+  TurnLabel = 'TestSuites.TurnLabel',
+  TurnCountBadge = 'TestSuites.TurnCountBadge',
 }
 
 export enum DatasetsI18nKey {
@@ -2103,6 +2105,11 @@ export enum ActionMenuOperationI18nKey {
   Try_out = 'ActionMenuOperation.Try_out',
   Edit = 'ActionMenuOperation.Edit',
   Export = 'ActionMenuOperation.Export',
+  Add_turn = 'ActionMenuOperation.Add_turn',
+  Delete_turn = 'ActionMenuOperation.Delete_turn',
+  Delete_case = 'ActionMenuOperation.Delete_case',
+  Move_turn_up = 'ActionMenuOperation.Move_turn_up',
+  Move_turn_down = 'ActionMenuOperation.Move_turn_down',
 }
 
 export enum JsonAtaI18nKey {

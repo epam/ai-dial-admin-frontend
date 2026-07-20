@@ -1,7 +1,8 @@
 import { describe, expect, test } from 'vitest';
 import {
   createNewTestCaseRow,
-  getConversationFields,
+  ensureUniqueTestCaseNames,
+  getMultiTurnFields,
   getTestCaseGridData as getTestCaseGridDataRaw,
   rowToTestCase,
 } from '../data';
@@ -439,99 +440,188 @@ describe('rowToTestCase', () => {
     });
   });
 
-  test('should include both conversation fields when both are present', () => {
+  test('should include both multi-turn fields when both are present', () => {
     const result = rowToTestCase({
       id: 'x',
       data: {},
-      conversationId: '11111111-1111-1111-1111-111111111111',
+      multiTurnId: '11111111-1111-1111-1111-111111111111',
       turnIndex: 2,
     });
 
-    expect(result.conversationId).toBe('11111111-1111-1111-1111-111111111111');
+    expect(result.multiTurnId).toBe('11111111-1111-1111-1111-111111111111');
     expect(result.turnIndex).toBe(2);
   });
 
-  test('should omit both when only conversationId is present (avoids "exactly one" 400)', () => {
-    const result = rowToTestCase({ id: 'x', data: {}, conversationId: 'abc' });
+  test('should omit both when only multiTurnId is present (avoids "exactly one" 400)', () => {
+    const result = rowToTestCase({ id: 'x', data: {}, multiTurnId: 'abc' });
 
-    expect(result).not.toHaveProperty('conversationId');
+    expect(result).not.toHaveProperty('multiTurnId');
     expect(result).not.toHaveProperty('turnIndex');
   });
 
   test('should omit both when only turnIndex is present', () => {
     const result = rowToTestCase({ id: 'x', data: {}, turnIndex: 0 });
 
-    expect(result).not.toHaveProperty('conversationId');
+    expect(result).not.toHaveProperty('multiTurnId');
     expect(result).not.toHaveProperty('turnIndex');
   });
 
-  test('should treat turnIndex 0 as present (falsy-but-valid) when conversationId is set', () => {
-    const result = rowToTestCase({ id: 'x', data: {}, conversationId: 'conv-1', turnIndex: 0 });
+  test('should treat turnIndex 0 as present (falsy-but-valid) when multiTurnId is set', () => {
+    const result = rowToTestCase({ id: 'x', data: {}, multiTurnId: 'conv-1', turnIndex: 0 });
 
-    expect(result.conversationId).toBe('conv-1');
+    expect(result.multiTurnId).toBe('conv-1');
     expect(result.turnIndex).toBe(0);
   });
 });
 
-describe('getConversationFields (both-or-neither guard)', () => {
-  test('emits both when conversationId is a non-empty string and turnIndex is finite', () => {
-    expect(getConversationFields({ conversationId: 'conv-1', turnIndex: 3 })).toEqual({
-      conversationId: 'conv-1',
+describe('getMultiTurnFields (both-or-neither guard)', () => {
+  test('emits both when multiTurnId is a non-empty string and turnIndex is finite', () => {
+    expect(getMultiTurnFields({ multiTurnId: 'conv-1', turnIndex: 3 })).toEqual({
+      multiTurnId: 'conv-1',
       turnIndex: 3,
     });
   });
 
   test('turnIndex 0 counts as present', () => {
-    expect(getConversationFields({ conversationId: 'conv-1', turnIndex: 0 })).toEqual({
-      conversationId: 'conv-1',
+    expect(getMultiTurnFields({ multiTurnId: 'conv-1', turnIndex: 0 })).toEqual({
+      multiTurnId: 'conv-1',
       turnIndex: 0,
     });
   });
 
   test('coerces a numeric-string turnIndex to a number (grid inline editor / CSV path)', () => {
     // the grid editor writes the raw input string back onto the row, e.g. turnIndex: '0'
-    expect(getConversationFields({ conversationId: 'conv-1', turnIndex: '0' })).toEqual({
-      conversationId: 'conv-1',
+    expect(getMultiTurnFields({ multiTurnId: 'conv-1', turnIndex: '0' })).toEqual({
+      multiTurnId: 'conv-1',
       turnIndex: 0,
     });
-    expect(getConversationFields({ conversationId: 'conv-1', turnIndex: '2' })).toEqual({
-      conversationId: 'conv-1',
+    expect(getMultiTurnFields({ multiTurnId: 'conv-1', turnIndex: '2' })).toEqual({
+      multiTurnId: 'conv-1',
       turnIndex: 2,
     });
   });
 
-  test('trims conversationId and truncates a fractional turnIndex', () => {
-    expect(getConversationFields({ conversationId: '  conv-1  ', turnIndex: '3.9' })).toEqual({
-      conversationId: 'conv-1',
+  test('trims multiTurnId and truncates a fractional turnIndex', () => {
+    expect(getMultiTurnFields({ multiTurnId: '  conv-1  ', turnIndex: '3.9' })).toEqual({
+      multiTurnId: 'conv-1',
       turnIndex: 3,
     });
   });
 
-  test('emits neither when conversationId is empty/whitespace', () => {
-    expect(getConversationFields({ conversationId: '   ', turnIndex: 1 })).toEqual({});
-    expect(getConversationFields({ conversationId: '', turnIndex: 1 })).toEqual({});
+  test('emits neither when multiTurnId is empty/whitespace', () => {
+    expect(getMultiTurnFields({ multiTurnId: '   ', turnIndex: 1 })).toEqual({});
+    expect(getMultiTurnFields({ multiTurnId: '', turnIndex: 1 })).toEqual({});
   });
 
   test('emits neither when turnIndex is missing, empty, or non-numeric', () => {
-    expect(getConversationFields({ conversationId: 'conv-1' })).toEqual({});
-    expect(getConversationFields({ conversationId: 'conv-1', turnIndex: '' })).toEqual({});
-    expect(getConversationFields({ conversationId: 'conv-1', turnIndex: NaN })).toEqual({});
+    expect(getMultiTurnFields({ multiTurnId: 'conv-1' })).toEqual({});
+    expect(getMultiTurnFields({ multiTurnId: 'conv-1', turnIndex: '' })).toEqual({});
+    expect(getMultiTurnFields({ multiTurnId: 'conv-1', turnIndex: NaN })).toEqual({});
   });
 
   test('emits neither when both are absent', () => {
-    expect(getConversationFields({ id: 'x', data: {} })).toEqual({});
+    expect(getMultiTurnFields({ id: 'x', data: {} })).toEqual({});
   });
 });
 
-describe('getTestCaseGridData conversation passthrough', () => {
-  test('top-level conversationId/turnIndex land on the grid row', () => {
+describe('getTestCaseGridData multi-turn passthrough', () => {
+  test('top-level multiTurnId/turnIndex land on the grid row', () => {
     const result = getTestCaseGridData([
-      { testCaseName: 'c1', data: { input: 'hi' }, conversationId: 'conv-1', turnIndex: 1 },
+      { testCaseName: 'c1', data: { input: 'hi' }, multiTurnId: 'conv-1', turnIndex: 1 },
     ]);
 
-    expect(result[0].conversationId).toBe('conv-1');
+    expect(result[0].multiTurnId).toBe('conv-1');
     expect(result[0].turnIndex).toBe(1);
     expect(result[0].input).toBe('hi');
     expect(result[0].data).toEqual({ input: 'hi' });
+  });
+});
+
+describe('ensureUniqueTestCaseNames', () => {
+  test('keeps distinct names untouched (same references)', () => {
+    const rows = [{ testCaseName: 'a' }, { testCaseName: 'b' }, { testCaseName: 'c' }];
+    const result = ensureUniqueTestCaseNames(rows);
+    expect(result.map((r) => r.testCaseName)).toEqual(['a', 'b', 'c']);
+    expect(result[0]).toBe(rows[0]);
+    expect(result[1]).toBe(rows[1]);
+  });
+
+  test('keeps the first occurrence and regenerates later collisions', () => {
+    const rows = [
+      { id: '0', testCaseName: 'dup' },
+      { id: '1', testCaseName: 'dup' },
+      { id: '2', testCaseName: 'dup' },
+    ];
+    const result = ensureUniqueTestCaseNames(rows);
+    expect(result[0].testCaseName).toBe('dup');
+    expect(result[1].testCaseName).not.toBe('dup');
+    expect(result[2].testCaseName).not.toBe('dup');
+    const names = result.map((r) => r.testCaseName);
+    expect(new Set(names).size).toBe(3);
+  });
+
+  test('preserves other fields on regenerated rows', () => {
+    const rows = [
+      { id: '0', testCaseName: 'dup', enabled: true, data: { q: 1 } },
+      { id: '1', testCaseName: 'dup', enabled: false, data: { q: 2 } },
+    ];
+    const result = ensureUniqueTestCaseNames(rows);
+    expect(result[1]).toMatchObject({ id: '1', enabled: false, data: { q: 2 } });
+    expect(result[1].testCaseName).not.toBe('dup');
+  });
+
+  test('regenerates blank, whitespace, null, and missing names', () => {
+    const rows = [
+      { testCaseName: '' },
+      { testCaseName: '   ' },
+      { testCaseName: null },
+      {},
+    ];
+    const result = ensureUniqueTestCaseNames(rows);
+    const names = result.map((r) => r.testCaseName as string);
+    names.forEach((n) => expect(typeof n === 'string' && n.trim() !== '').toBe(true));
+    expect(new Set(names).size).toBe(4);
+  });
+
+  test('trims when comparing so " a" collides with "a"', () => {
+    const rows = [{ testCaseName: 'a' }, { testCaseName: '  a  ' }];
+    const result = ensureUniqueTestCaseNames(rows);
+    expect(result[0].testCaseName).toBe('a');
+    expect(result[1].testCaseName).not.toBe('  a  ');
+    expect(result[1].testCaseName?.trim()).not.toBe('a');
+  });
+
+  test('empty input returns empty array', () => {
+    expect(ensureUniqueTestCaseNames([])).toEqual([]);
+  });
+
+  test('regenerates a batch name that collides with a persisted row not in the batch', () => {
+    const rows = [{ id: '1', testCaseName: 'dup' }];
+    const existing = [
+      { id: '0', testCaseName: 'dup' },
+      { id: '1', testCaseName: 'dup' },
+    ];
+    const result = ensureUniqueTestCaseNames(rows, existing);
+    expect(result[0].testCaseName).not.toBe('dup');
+  });
+
+  test('keeps a batch row that matches only its own persisted record (same id)', () => {
+    const rows = [{ id: '1', testCaseName: 'keep' }];
+    const existing = [{ id: '1', testCaseName: 'keep' }];
+    const result = ensureUniqueTestCaseNames(rows, existing);
+    expect(result[0].testCaseName).toBe('keep');
+    expect(result[0]).toBe(rows[0]);
+  });
+
+  test('regenerated name avoids both batch and existing names', () => {
+    const rows = [
+      { id: '1', testCaseName: 'dup' },
+      { id: '2', testCaseName: 'dup' },
+    ];
+    const existing = [{ id: '0', testCaseName: 'other' }];
+    const result = ensureUniqueTestCaseNames(rows, existing);
+    const names = result.map((r) => r.testCaseName as string);
+    expect(names).not.toContain('other');
+    expect(new Set(names).size).toBe(2);
   });
 });
