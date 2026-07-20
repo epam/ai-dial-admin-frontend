@@ -1,4 +1,9 @@
-import { PARTITION_NONE } from '@/src/constants/analytics/tables';
+import {
+  ANALYTICS_IDENTIFIER_MAX_LENGTH,
+  ANALYTICS_IDENTIFIER_PATTERN,
+  PARTITION_NONE,
+} from '@/src/constants/analytics/tables';
+import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import {
   AnalyticsColumnMetadataUpdate,
@@ -34,6 +39,24 @@ export const createTableForm = (tables: AnalyticsTable[]): TableForm => {
     sourceTable: firstSource?.name ?? '',
     grainKey: firstSource?.ordering_key?.[0] ?? '',
   };
+};
+
+// Validates a table name against the backend identifier grammar and uniqueness, returning a localized
+// error message or null when valid. An empty value returns null — emptiness is signalled by the
+// required marker and a disabled submit, not an inline error, so the field stays quiet until typed.
+export const getTableNameError = (
+  name: string,
+  existingNames: string[],
+  t: (key: string, args?: Record<string, string | number>) => string,
+): string | null => {
+  const trimmed = name.trim();
+  if (!trimmed) return null;
+  if (trimmed.length > ANALYTICS_IDENTIFIER_MAX_LENGTH) {
+    return t(AnalyticsTablesI18nKey.NameLengthError, { max: ANALYTICS_IDENTIFIER_MAX_LENGTH });
+  }
+  if (!ANALYTICS_IDENTIFIER_PATTERN.test(trimmed)) return t(AnalyticsTablesI18nKey.NameFormatError);
+  if (existingNames.includes(trimmed)) return t(AnalyticsTablesI18nKey.NameExistsError);
+  return null;
 };
 
 const normalized = (value?: string): string => (value ?? '').trim();

@@ -2327,5 +2327,9 @@ export default {
     RowsInserted: 'Rows inserted.',
     ActionFailed: 'The operation failed.',
     InvalidRowsJson: 'Rows must be a valid JSON array of objects.',
+    NameFormatError:
+      "Name must be lowercase snake_case: start with a letter, then letters, digits or underscores (must not start with '_').",
+    NameLengthError: 'Name must be at most {max} characters.',
+    NameExistsError: 'A table with this name already exists.',
   },
 } as const;

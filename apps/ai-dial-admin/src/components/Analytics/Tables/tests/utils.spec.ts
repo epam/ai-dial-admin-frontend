@@ -3,9 +3,11 @@ import { describe, expect, test } from 'vitest';
 import {
   buildColumnEditPatch,
   createColumnRow,
+  getTableNameError,
   isRenameRestricted,
   toTableColumns,
 } from '@/src/components/Analytics/Tables/utils';
+import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { AnalyticsTable, AnalyticsTableColumn, AnalyticsTableType } from '@/src/models/analytics/table';
 import { ColumnEditValues } from '@/src/models/analytics/tables-ui';
@@ -174,6 +176,41 @@ describe('buildColumnEditPatch', () => {
 
   test('a blank name never produces a rename op', () => {
     expect(buildColumnEditPatch(COLUMN, values({ name: '  ' }))).toBeNull();
+  });
+});
+
+describe('getTableNameError', () => {
+  // Stub t() returns the key so assertions target the i18n key, not translated text.
+  const t = (key: string) => key;
+
+  test('returns null for an empty or whitespace-only name (emptiness is signalled elsewhere)', () => {
+    expect(getTableNameError('', [], t)).toBeNull();
+    expect(getTableNameError('   ', [], t)).toBeNull();
+  });
+
+  test('accepts valid lowercase snake_case identifiers (trimming first)', () => {
+    expect(getTableNameError('events', [], t)).toBeNull();
+    expect(getTableNameError('user_events_2', [], t)).toBeNull();
+    expect(getTableNameError('  events  ', [], t)).toBeNull();
+  });
+
+  test('rejects names that violate the identifier grammar', () => {
+    expect(getTableNameError('Events', [], t)).toBe(AnalyticsTablesI18nKey.NameFormatError);
+    expect(getTableNameError('_events', [], t)).toBe(AnalyticsTablesI18nKey.NameFormatError);
+    expect(getTableNameError('2events', [], t)).toBe(AnalyticsTablesI18nKey.NameFormatError);
+    expect(getTableNameError('my-table', [], t)).toBe(AnalyticsTablesI18nKey.NameFormatError);
+    expect(getTableNameError('my table', [], t)).toBe(AnalyticsTablesI18nKey.NameFormatError);
+  });
+
+  test('rejects names longer than the identifier max length', () => {
+    expect(getTableNameError('a'.repeat(65), [], t)).toBe(AnalyticsTablesI18nKey.NameLengthError);
+    expect(getTableNameError('a'.repeat(64), [], t)).toBeNull();
+  });
+
+  test('rejects a name that collides with an existing table (compared after trimming)', () => {
+    expect(getTableNameError('events', ['events', 'orders'], t)).toBe(AnalyticsTablesI18nKey.NameExistsError);
+    expect(getTableNameError('  events  ', ['events'], t)).toBe(AnalyticsTablesI18nKey.NameExistsError);
+    expect(getTableNameError('events', ['orders'], t)).toBeNull();
   });
 });
 

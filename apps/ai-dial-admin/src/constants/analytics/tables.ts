@@ -10,6 +10,11 @@ export const COLUMN_TYPE_OPTIONS: SelectOption[] = Object.values(AnalyticsFieldT
   label: capitalize(value),
 }));
 
+// Backend grammar for user-declared table/column identifiers (ADAS `Identifiers.requireUserIdentifier`):
+// snake_case, must start with a lowercase letter, and must not start with `_` (reserved for system columns).
+export const ANALYTICS_IDENTIFIER_PATTERN = /^[a-z][a-z0-9_]*$/;
+export const ANALYTICS_IDENTIFIER_MAX_LENGTH = 64;
+
 export const PARTITION_NONE = '';
 export const PARTITION_GRANULARITY_OPTIONS: SelectOption[] = [
   { value: PARTITION_NONE, label: 'None' },

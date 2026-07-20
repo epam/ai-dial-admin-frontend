@@ -2276,4 +2276,7 @@ export enum AnalyticsTablesI18nKey {
   RowsInserted = 'AnalyticsTables.RowsInserted',
   ActionFailed = 'AnalyticsTables.ActionFailed',
   InvalidRowsJson = 'AnalyticsTables.InvalidRowsJson',
+  NameFormatError = 'AnalyticsTables.NameFormatError',
+  NameLengthError = 'AnalyticsTables.NameLengthError',
+  NameExistsError = 'AnalyticsTables.NameExistsError',
 }

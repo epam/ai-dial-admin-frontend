@@ -6,7 +6,7 @@ import { DialFormPopup, DialInput, DialSelectField, PopupSize } from '@epam/ai-d
 
 import { createTable } from '@/src/app/[lang]/tables/actions';
 import ColumnRowsEditor from '@/src/components/Analytics/Tables/ColumnRowsEditor';
-import { createTableForm, toTableColumns } from '@/src/components/Analytics/Tables/utils';
+import { createTableForm, getTableNameError, toTableColumns } from '@/src/components/Analytics/Tables/utils';
 import { PARTITION_GRANULARITY_OPTIONS } from '@/src/constants/analytics/tables';
 import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -68,17 +68,26 @@ const CreateTablePopup: FC<Props> = ({ tableType, tables, onClose, onCreated }) 
   }, [form.columns]);
   const columnOptions = sourceNames.map((s) => ({ value: s, label: s }));
 
+  const existingNames = tables.map((tbl) => tbl.name);
+  const nameError = getTableNameError(form.name, existingNames, t);
+
+  // Source tables require at least one fully-declared column and a non-empty ordering key (both are
+  // enforced by the backend); mirror that here so submit is blocked before the request is sent.
+  const validColumns = toTableColumns(form.columns);
+  const validOrdering = form.orderingKey.filter((k) => sourceNames.includes(k));
+  const sourceComplete = validColumns.length > 0 && validOrdering.length > 0;
+  const canSubmit = Boolean(form.name.trim()) && !nameError && (isSource ? sourceComplete : true);
+
   const onSubmit = async () => {
     const trimmed = form.name.trim();
-    if (!trimmed) return;
+    if (!canSubmit) return;
 
-    const validOrdering = form.orderingKey.filter((k) => sourceNames.includes(k));
     const dto: CreateTableDto = isSource
       ? {
           name: trimmed,
           type: AnalyticsTableType.Source,
-          columns: toTableColumns(form.columns),
-          ...(validOrdering.length ? { ordering_key: validOrdering } : {}),
+          columns: validColumns,
+          ordering_key: validOrdering,
           ...(form.description.trim() ? { description: form.description.trim() } : {}),
           ...(form.partitionColumn && form.granularity && temporalNames.includes(form.partitionColumn)
             ? { partition_by: { column: form.partitionColumn, granularity: form.granularity } }
@@ -116,7 +125,7 @@ const CreateTablePopup: FC<Props> = ({ tableType, tables, onClose, onCreated }) 
       size={PopupSize.Lg}
       header={t(isSource ? AnalyticsTablesI18nKey.CreateSourceTitle : AnalyticsTablesI18nKey.CreateEnrichmentTitle)}
       submitLabel={t(isSource ? AnalyticsTablesI18nKey.CreateSource : AnalyticsTablesI18nKey.CreateEnrichment)}
-      disableSubmitButton={!form.name.trim()}
+      disableSubmitButton={!canSubmit}
       onSubmit={onSubmit}
     >
       <div className="flex max-h-[70vh] flex-col gap-4 overflow-auto p-6">
@@ -124,6 +133,7 @@ const CreateTablePopup: FC<Props> = ({ tableType, tables, onClose, onCreated }) 
           id="table-name"
           labelProps={{ label: t(AnalyticsTablesI18nKey.Name), required: true }}
           value={form.name}
+          error={nameError ?? undefined}
           onChange={(v) => update('name', v ?? '')}
         />
         <DialInput
@@ -136,12 +146,16 @@ const CreateTablePopup: FC<Props> = ({ tableType, tables, onClose, onCreated }) 
         {isSource ? (
           <>
             <div className="flex flex-col gap-2">
-              <span className="dial-small-semi text-primary">{t(AnalyticsTablesI18nKey.Columns)}</span>
+              <span className="dial-small-semi text-primary">
+                {t(AnalyticsTablesI18nKey.Columns)}
+                <span className="text-error"> *</span>
+              </span>
               <ColumnRowsEditor rows={form.columns} onChange={(rows) => update('columns', rows)} />
             </div>
             <DialSelectField
               id="table-ordering-key"
               multiple
+              required
               label={t(AnalyticsTablesI18nKey.OrderingKey)}
               options={columnOptions}
               value={form.orderingKey}
