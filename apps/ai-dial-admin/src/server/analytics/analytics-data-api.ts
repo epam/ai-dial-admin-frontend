@@ -28,6 +28,10 @@ export const TABLE_SCHEMA_URL = (name: string): string => `${TABLE_URL(name)}/sc
 export const TABLE_ROWS_URL = (name: string): string => `${TABLE_URL(name)}/rows`;
 
 export class AnalyticsDataApi extends BaseApi {
+  checkAccess(token: Token): Promise<ServerActionResponse> {
+    return this.getAction(QUERIES_ENTITIES_URL, token);
+  }
+
   getEntities(token: Token): Promise<AnalyticsEntity[] | null> {
     return this.get<AnalyticsEntity[]>(QUERIES_ENTITIES_URL, token);
   }
