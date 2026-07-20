@@ -55,7 +55,7 @@ describe('HeatMapCellTooltip', () => {
     expect(screen.queryByText(RunsI18nKey.RunCompareHeatMapTooltipRun)).not.toBeInTheDocument();
   });
 
-  test('renders zero delta tooltip with N/A and without swatch', () => {
+  test('renders missing-value tooltip with N/A and without swatch', () => {
     const { container } = render(
       <HeatMapCellTooltip
         value={{
@@ -72,6 +72,28 @@ describe('HeatMapCellTooltip', () => {
     expect(screen.getByText(RunsI18nKey.RunCompareHeatMapTooltipDelta)).toBeInTheDocument();
     expect(screen.getByText(RunsI18nKey.RunCompareHeatMapNotApplicable)).toBeInTheDocument();
     expect(container.querySelector('[aria-hidden="true"]')).not.toBeInTheDocument();
+  });
+
+  test('renders zero delta tooltip with swatch value 0', () => {
+    render(
+      <HeatMapCellTooltip
+        value={{
+          testCase: 'Row 006',
+          metric: 'Context Appropriateness',
+          input: 'Equality check',
+          valueLabelKey: RunsI18nKey.RunCompareHeatMapTooltipDelta,
+          valueRow: {
+            value: '0',
+            backgroundColor: '#32640b',
+            borderColor: '#30e070',
+          },
+        }}
+        {...({} as never)}
+      />,
+    );
+
+    expect(screen.getByText(RunsI18nKey.RunCompareHeatMapTooltipDelta)).toBeInTheDocument();
+    expect(screen.getByText('0')).toBeInTheDocument();
   });
 
   test('renders nothing when value is missing', () => {
