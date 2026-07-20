@@ -7,6 +7,7 @@ import {
   DialAnalyticsCard,
   DialAnalyticsHistogram,
   DialSelect,
+  ElementSize,
   SelectOption,
   SelectSize,
   SelectVariant,
@@ -83,6 +84,8 @@ const DistributionSection: FC<Props> = ({ run, metricOptions, metricScores, sele
       placeholder={t(RunsI18nKey.SelectMetric)}
       disabled={options.length === 0}
       onChange={onMetricChange}
+      searchable
+      searchSize={ElementSize.Small}
     />
   );
 
