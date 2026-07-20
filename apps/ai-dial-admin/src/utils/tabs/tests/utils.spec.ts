@@ -12,6 +12,7 @@ const flags = (overrides: Partial<FeatureFlags> = {}): FeatureFlags => ({
   hfEnabled: false,
   runsCompareEnabled: false,
   analyticsEnabled: false,
+  queryAssistantEnabled: false,
   ...overrides,
 });
 import {

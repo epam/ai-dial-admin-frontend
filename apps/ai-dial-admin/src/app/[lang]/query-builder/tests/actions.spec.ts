@@ -1,11 +1,19 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { analyticsDataApi } from '@/src/app/api/api';
+import { analyticsDataApi, queryAssistantApi } from '@/src/app/api/api';
+import { QueryAssistantRole } from '@/src/models/analytics/query-assistant';
 import { QueryMode, StructuredQuery } from '@/src/models/analytics/query';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { executeQuery, getEntities, getEntitySchema, translateQuery, translateSqlToQuery } from '../actions';
+import {
+  executeQuery,
+  generateQuery,
+  getEntities,
+  getEntitySchema,
+  translateQuery,
+  translateSqlToQuery,
+} from '../actions';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -59,5 +67,31 @@ describe('Query builder server actions', () => {
     await translateSqlToQuery('SELECT id FROM conversation');
 
     expect(analyticsDataApi.translateSqlAction).toHaveBeenCalledWith('SELECT id FROM conversation', TOKEN_MOCK);
+  });
+
+  describe('generateQuery', () => {
+    const messages = [{ role: QueryAssistantRole.User, content: 'total cost by deployment' }];
+
+    test('passes messages, the configured deployment, and the token', async () => {
+      process.env.DIAL_QUERY_ASSISTANT_DEPLOYMENT = 'applications/public/query-helper__0.0.1';
+      (queryAssistantApi.chatCompletion as any).mockResolvedValue({ success: true });
+
+      await generateQuery(messages);
+
+      expect(queryAssistantApi.chatCompletion).toHaveBeenCalledWith(
+        messages,
+        'applications/public/query-helper__0.0.1',
+        TOKEN_MOCK,
+      );
+    });
+
+    test('returns a failure without calling the client when no deployment is configured', async () => {
+      delete process.env.DIAL_QUERY_ASSISTANT_DEPLOYMENT;
+
+      const res = await generateQuery(messages);
+
+      expect(res.success).toBe(false);
+      expect(queryAssistantApi.chatCompletion).not.toHaveBeenCalled();
+    });
   });
 });

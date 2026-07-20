@@ -4,6 +4,7 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { DialLoader, DialNoDataContent, DialSegmentedControl } from '@epam/ai-dial-ui-kit';
 import type { SegmentedControlOption } from '@epam/ai-dial-ui-kit';
+import { IconSparkles } from '@tabler/icons-react';
 
 import {
   executeQuery,
@@ -14,6 +15,7 @@ import {
 } from '@/src/app/[lang]/query-builder/actions';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
+import AiPanel from '@/src/components/Analytics/QueryBuilder/Ai/AiPanel';
 import Aggregates from '@/src/components/Analytics/QueryBuilder/Aggregate/Aggregates';
 import GroupBySection from '@/src/components/Analytics/QueryBuilder/Aggregate/GroupBySection';
 import SectionAction from '@/src/components/Analytics/QueryBuilder/Common/SectionAction';
@@ -39,6 +41,7 @@ import { findTimestampField, liftTimeRange } from '@/src/components/Analytics/Qu
 import { LOCAL_STORAGE_QUERY_BUILDER_RAIL_KEY } from '@/src/constants/analytics/query-builder';
 import { ButtonsI18nKey, MenuI18nKey, QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useTimeFilter } from '@/src/hooks/use-time-filter';
+import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsEntity, AnalyticsEntityField } from '@/src/models/analytics/entity';
@@ -68,6 +71,7 @@ interface Props {
 const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFields, initialFunctions }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
+  const { featureFlags } = useAppContext();
 
   const [state, setState] = useState<QueryBuilderState>(() => ({
     ...createInitialState(initialFunctions),
@@ -95,6 +99,15 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
   const [result, setResult] = useState<StructuredQueryResult | null>(null);
   const [resultMeta, setResultMeta] = useState<ExecutedQueryMeta | null>(null);
   const [isRunning, setIsRunning] = useState(false);
+  const [aiGeneratedSql, setAiGeneratedSql] = useState<string | null>(null);
+  const [aiRepresentable, setAiRepresentable] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+
+  const resetAiQuery = () => {
+    setAiGeneratedSql(null);
+    setAiRepresentable(false);
+    setAiLoading(false);
+  };
 
   const timeFilter = useTimeFilter();
 
@@ -112,6 +125,7 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
   const patch = useCallback((partial: Partial<QueryBuilderState>) => setState((prev) => ({ ...prev, ...partial })), []);
 
   const onSelectEntity = async (name: string) => {
+    resetAiQuery();
     setIsLoadingSchema(true);
     setSchemaError(null);
     const schema = await getEntitySchema(name);
@@ -138,11 +152,21 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
   const isAggregate = state.mode === QueryMode.Aggregate;
   const isJsonView = view === QueryBuilderView.Json;
   const isSqlView = view === QueryBuilderView.Sql;
+  const isAiView = view === QueryBuilderView.Ai;
 
   const viewOptions: SegmentedControlOption<QueryBuilderView>[] = [
     { value: QueryBuilderView.Form, label: t(QueryBuilderI18nKey.ViewForm) },
     { value: QueryBuilderView.Json, label: t(QueryBuilderI18nKey.ViewJson) },
     { value: QueryBuilderView.Sql, label: t(QueryBuilderI18nKey.ViewSql) },
+    ...(featureFlags.queryAssistantEnabled
+      ? [
+          {
+            value: QueryBuilderView.Ai,
+            label: t(QueryBuilderI18nKey.ViewAi),
+            icon: <IconSparkles size={16} stroke={2} />,
+          },
+        ]
+      : []),
   ];
 
   // Written modes (SQL, diverged JSON) can hold queries the Builder cannot display; switching to the
@@ -260,9 +284,41 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
     if (sqlError) setSqlError(null);
   };
 
+  const onQueryGenerated = async (sql: string | null) => {
+    if (!sql) {
+      resetAiQuery();
+      return;
+    }
+    setAiGeneratedSql(sql);
+    setAiRepresentable(false);
+    setAiLoading(true);
+    const res = await translateSqlToQuery(sql);
+    if (res.success && res.response?.query && isBuilderRepresentable(res.response.query)) {
+      hydrateBuilderFromQuery(res.response.query);
+      setSqlText('');
+      setJsonText('');
+      setJsonDiverged(false);
+      lastGeneratedSql.current = '';
+      setAiRepresentable(true);
+    } else {
+      setSqlText(sql);
+      lastGeneratedSql.current = '';
+      setAiRepresentable(false);
+    }
+    setAiLoading(false);
+  };
+
   const onRun = async () => {
     let request: QueryRunRequest;
-    if (isSqlView) {
+    if (isAiView) {
+      if (!aiGeneratedSql) return;
+      if (aiRepresentable) {
+        const freshBound = timestampField ? { field: timestampField, range: getCurrentTimeRange() } : null;
+        request = { kind: QueryRequestKind.Structured, query: buildQuery(state, freshBound) };
+      } else {
+        request = { kind: QueryRequestKind.Sql, sql: aiGeneratedSql };
+      }
+    } else if (isSqlView) {
       if (!sqlText.trim()) return;
       request = { kind: QueryRequestKind.Sql, sql: sqlText };
     } else if (isJsonView) {
@@ -293,7 +349,11 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
     setIsRunning(false);
   };
 
-  const runDisabled = !fieldsLoaded || (isJsonView && jsonInvalid) || (isSqlView && !sqlText.trim());
+  const runDisabled =
+    !fieldsLoaded ||
+    (isJsonView && jsonInvalid) ||
+    (isSqlView && !sqlText.trim()) ||
+    (isAiView && (!aiGeneratedSql || aiLoading));
 
   return (
     <QueryBuilderContext.Provider value={contextValue}>
@@ -314,8 +374,22 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
             >
               {fieldsLoaded && (
                 <CopyButton
-                  value={isSqlView ? sqlText : isJsonView ? jsonText : json}
-                  valueLabel={isSqlView ? t(QueryBuilderI18nKey.SqlQuery) : t(QueryBuilderI18nKey.StructuredQueryJson)}
+                  value={
+                    isAiView
+                      ? aiRepresentable
+                        ? json
+                        : (aiGeneratedSql ?? '')
+                      : isSqlView
+                        ? sqlText
+                        : isJsonView
+                          ? jsonText
+                          : json
+                  }
+                  valueLabel={
+                    (isAiView && !aiRepresentable) || isSqlView
+                      ? t(QueryBuilderI18nKey.SqlQuery)
+                      : t(QueryBuilderI18nKey.StructuredQueryJson)
+                  }
                   buttonLabel={t(ButtonsI18nKey.Copy)}
                 />
               )}
@@ -381,6 +455,8 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
                       )}
                     </div>
                   </div>
+                ) : isAiView ? (
+                  <AiPanel key={state.entityName} onGenerated={onQueryGenerated} />
                 ) : (
                   <div className="flex flex-col gap-3">
                     <ModeSwitcher />

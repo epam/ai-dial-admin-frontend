@@ -2,8 +2,9 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { analyticsDataApi } from '@/src/app/api/api';
+import { analyticsDataApi, queryAssistantApi } from '@/src/app/api/api';
 import { AnalyticsEntity, AnalyticsEntitySchema } from '@/src/models/analytics/entity';
+import { ChatCompletionResponse, QueryAssistantMessage } from '@/src/models/analytics/query-assistant';
 import { QueryFunction } from '@/src/models/analytics/query-function';
 import {
   StructuredQuery,
@@ -43,4 +44,14 @@ export async function translateQuery(query: StructuredQuery): Promise<ServerActi
 
 export async function translateSqlToQuery(sql: string): Promise<ServerActionResponse<TranslateSqlResponse>> {
   return analyticsDataApi.translateSqlAction(sql, await token());
+}
+
+export async function generateQuery(
+  messages: QueryAssistantMessage[],
+): Promise<ServerActionResponse<ChatCompletionResponse>> {
+  const deployment = process.env.DIAL_QUERY_ASSISTANT_DEPLOYMENT;
+  if (!deployment) {
+    return { success: false, status: 0, errorMessage: 'Query assistant is not configured.' };
+  }
+  return queryAssistantApi.chatCompletion(messages, deployment, await token());
 }

@@ -3,13 +3,27 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import QueryBuilder from '@/src/components/Analytics/QueryBuilder/QueryBuilder';
-import { executeQuery, translateQuery, translateSqlToQuery } from '@/src/app/[lang]/query-builder/actions';
+import {
+  executeQuery,
+  executeSqlQuery,
+  generateQuery,
+  translateQuery,
+  translateSqlToQuery,
+} from '@/src/app/[lang]/query-builder/actions';
+import { useAppContext } from '@/src/context/AppContext';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { AnalyticsEntity, AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { StructuredQuery } from '@/src/models/analytics/query';
+import { QueryMode, StructuredQuery } from '@/src/models/analytics/query';
 import { TEST_FUNCTIONS } from '@/src/components/Analytics/QueryBuilder/utils/tests/functions.fixture';
 
 vi.mock('@/src/app/[lang]/query-builder/actions');
+
+vi.mock('@/src/context/AppContext', () => ({
+  useAppContext: vi.fn(() => ({ featureFlags: { deploymentsEnabled: true } })),
+}));
+
+const setQueryAssistantEnabled = (enabled: boolean) =>
+  vi.mocked(useAppContext).mockReturnValue({ featureFlags: { queryAssistantEnabled: enabled } } as never);
 
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
   default: ({ rowData }: { rowData?: unknown[] }) => <div>grid rows: {rowData?.length ?? 0}</div>,
@@ -337,5 +351,121 @@ describe('QueryBuilder', () => {
     await user.click(screen.getByRole('button', { name: /QueryBuilder.Run/ }));
     const sent = vi.mocked(executeQuery).mock.calls[0][0] as StructuredQuery;
     expect(sent.select).toEqual([{ expr: { type: 'field', name: 'project_id' } }]);
+  });
+});
+
+describe('QueryBuilder AI view', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorage.clear();
+  });
+
+  test('offers the AI view only when the query assistant is enabled', () => {
+    setQueryAssistantEnabled(false);
+    const { unmount } = renderBuilder();
+    expect(screen.queryByRole('tab', { name: 'QueryBuilder.ViewAi' })).not.toBeInTheDocument();
+    unmount();
+
+    setQueryAssistantEnabled(true);
+    renderBuilder();
+    expect(screen.getByRole('tab', { name: 'QueryBuilder.ViewAi' })).toBeInTheDocument();
+  });
+
+  const generate = async (user: ReturnType<typeof userEvent.setup>, content: string) => {
+    vi.mocked(generateQuery).mockResolvedValue({
+      success: true,
+      response: { choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content } }] },
+    } as never);
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewAi' }));
+    await user.type(screen.getByRole('textbox', { name: 'QueryBuilder.AiPanelHeading' }), 'cost by deployment');
+    await user.click(screen.getByRole('button', { name: 'QueryBuilder.AiGenerate' }));
+  };
+
+  test('a generated query loads automatically (no Apply step) and Run executes it as SQL', async () => {
+    const user = userEvent.setup();
+    setQueryAssistantEnabled(true);
+    vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, status: 400 } as never);
+    vi.mocked(executeSqlQuery).mockResolvedValue({ success: true, response: { rows: [] } } as never);
+
+    renderBuilder();
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewAi' }));
+    expect(screen.getByRole('button', { name: /QueryBuilder.Run/ })).toBeDisabled();
+
+    await generate(user, '```sql\nSELECT 1\n```');
+
+    expect(screen.queryByRole('button', { name: 'QueryBuilder.AiApply' })).not.toBeInTheDocument();
+    const runButton = await screen.findByRole('button', { name: /QueryBuilder.Run/ });
+    await vi.waitFor(() => expect(runButton).toBeEnabled());
+
+    await user.click(runButton);
+    expect(executeSqlQuery).toHaveBeenCalledWith('SELECT 1');
+  });
+
+  test('a representable generated query loads into the builder and shows in the JSON view', async () => {
+    const user = userEvent.setup();
+    setQueryAssistantEnabled(true);
+    vi.mocked(translateSqlToQuery).mockResolvedValue({
+      success: true,
+      response: {
+        query: {
+          entity: 'dial_usage_log',
+          mode: QueryMode.Row,
+          filter: {
+            op: 'and',
+            args: [
+              {
+                op: 'eq',
+                args: [
+                  { type: 'field', name: 'project_id' },
+                  { type: 'value', value_type: 'string', value: 'p1' },
+                ],
+              },
+            ],
+          },
+        },
+      },
+    } as never);
+
+    renderBuilder();
+    await generate(user, '```sql\nSELECT 1 WHERE project_id = ~p1~\n```');
+
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewJson' }));
+    const jsonEditor = (await screen.findByRole('textbox', { name: 'json-editor' })) as HTMLTextAreaElement;
+    await vi.waitFor(() => expect(jsonEditor.value).toContain('p1'));
+  });
+
+  test('running a representable generated query executes the structured builder query, not SQL', async () => {
+    const user = userEvent.setup();
+    setQueryAssistantEnabled(true);
+    vi.mocked(translateSqlToQuery).mockResolvedValue({
+      success: true,
+      response: { query: { entity: 'dial_usage_log', mode: QueryMode.Row } },
+    } as never);
+    vi.mocked(executeQuery).mockResolvedValue({ success: true, response: { rows: [] } } as never);
+
+    renderBuilder();
+    await generate(user, '```sql\nSELECT 1\n```');
+    const runButton = await screen.findByRole('button', { name: /QueryBuilder.Run/ });
+    await vi.waitFor(() => expect(runButton).toBeEnabled());
+
+    await user.click(runButton);
+    expect(executeQuery).toHaveBeenCalled();
+    expect(executeSqlQuery).not.toHaveBeenCalled();
+  });
+
+  test('a follow-up reply without SQL clears the armed query and disables Run', async () => {
+    const user = userEvent.setup();
+    setQueryAssistantEnabled(true);
+    vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, status: 400 } as never);
+
+    renderBuilder();
+    await generate(user, '```sql\nSELECT 1\n```');
+    const runButton = await screen.findByRole('button', { name: /QueryBuilder.Run/ });
+    await vi.waitFor(() => expect(runButton).toBeEnabled());
+
+    await generate(user, 'Which project should I filter by?');
+
+    await vi.waitFor(() => expect(screen.getByRole('button', { name: /QueryBuilder.Run/ })).toBeDisabled());
+    expect(screen.getByText('QueryBuilder.AiResponseLabel')).toBeInTheDocument();
   });
 });
