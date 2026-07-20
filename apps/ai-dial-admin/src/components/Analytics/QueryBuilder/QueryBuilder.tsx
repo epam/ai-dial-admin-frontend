@@ -174,11 +174,26 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
   // Generated (unedited) SQL is the builder's own query in another notation — never guarded.
   const sqlEdited = !!sqlText.trim() && sqlText !== lastGeneratedSql.current;
 
+  // The AI, JSON, and SQL paths can each adopt a different entity than the one whose schema is loaded.
+  // Fields must follow the query's entity: running with a stale schema makes the toolbar time bound
+  // resolve its timestamp column against the wrong entity (e.g. "source_name_8"), which the backend
+  // then rejects as an unknown field. Re-fetch the schema whenever the entity changes.
+  const resolveFieldsForEntity = async (entityName: string): Promise<AnalyticsEntityField[]> => {
+    if (!entityName || entityName === state.entityName) return state.fields;
+    if (!entities.some((e) => e.name === entityName)) return state.fields;
+    const schema = await getEntitySchema(entityName);
+    if (schema) return schema.fields || [];
+    showNotification(getErrorNotification(t(QueryBuilderI18nKey.SchemaLoadFailed)));
+    return [];
+  };
+
   // A ge/le pair on the timestamp field belongs to the toolbar control, not the visual filter tree.
-  const hydrateBuilderFromQuery = (parsed: StructuredQuery) => {
-    const lifted = timestampField ? liftTimeRange(parsed.filter, timestampField) : null;
+  const hydrateBuilderFromQuery = async (parsed: StructuredQuery) => {
+    const fields = await resolveFieldsForEntity(parsed.entity ?? state.entityName);
+    const timestamp = findTimestampField(fields);
+    const lifted = timestamp ? liftTimeRange(parsed.filter, timestamp) : null;
     const forState = lifted ? { ...parsed, filter: lifted.rest } : parsed;
-    setState(parseQuery(forState, state.fields, state.functions));
+    setState(parseQuery(forState, fields, state.functions));
     if (lifted && !sameRange(lifted.range, timeBound?.range)) {
       timeFilter.onTimeRangeChange(lifted.range, true);
     }
@@ -218,7 +233,7 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
       if (isSqlView && sqlEdited) {
         const res = await translateSqlToQuery(sqlText);
         if (res.success && res.response?.query && isBuilderRepresentable(res.response.query)) {
-          hydrateBuilderFromQuery(res.response.query);
+          await hydrateBuilderFromQuery(res.response.query);
           setSqlText('');
           setSqlError(null);
           lastGeneratedSql.current = '';
@@ -273,7 +288,7 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
         return;
       }
       setJsonDiverged(false);
-      hydrateBuilderFromQuery(parsed);
+      void hydrateBuilderFromQuery(parsed);
     } catch {
       setJsonInvalid(true);
     }
@@ -294,7 +309,7 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
     setAiLoading(true);
     const res = await translateSqlToQuery(sql);
     if (res.success && res.response?.query && isBuilderRepresentable(res.response.query)) {
-      hydrateBuilderFromQuery(res.response.query);
+      await hydrateBuilderFromQuery(res.response.query);
       setSqlText('');
       setJsonText('');
       setJsonDiverged(false);
