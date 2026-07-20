@@ -1,12 +1,18 @@
 import QueryBuilder from '@/src/components/Analytics/QueryBuilder/QueryBuilder';
+import Page403 from '@/src/components/Page403/Page403';
 import { AnalyticsEntity, AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { QueryFunction } from '@/src/models/analytics/query-function';
+import { isAnalyticsForbidden } from '@/src/server/analytics/analytics-access';
 import { errorObjLog } from '@/src/server/logger';
 import { getEntities, getEntitySchema, getFunctions } from './actions';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Page() {
+  if (await isAnalyticsForbidden()) {
+    return <Page403 />;
+  }
+
   let entities: AnalyticsEntity[] = [];
   let entityName = '';
   let fields: AnalyticsEntityField[] = [];
