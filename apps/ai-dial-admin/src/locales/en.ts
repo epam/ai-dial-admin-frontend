@@ -1510,6 +1510,13 @@ export default {
     SuccessLogout: 'External service logged out successfully',
     SuccessLogoutDescription: 'Authentication credentials have been revoked.',
   },
+  Interfaces: {
+    Interfaces: 'Interfaces',
+    SelectType: 'Select interface type',
+    OpenAIChatCompletions: 'OpenAI Chat Completions',
+    OpenAIResponses: 'OpenAI Responses',
+    AnthropicMessages: 'Anthropic Messages',
+  },
   Images: {
     ImagesListTitle: 'Images',
     AddModalTitle: 'Add Image',
@@ -2261,6 +2268,8 @@ export default {
     ChartValue: 'Value',
     ChartOtherSlice: 'Other',
     ChartUnavailable: 'Charts are available for aggregate results with at least one group-by column.',
+    SqlTranslating: 'Translating query…',
+    SqlTranslateFailed: 'Could not translate the query to SQL.',
   },
   AnalyticsTables: {
     CreateSource: 'Create source',

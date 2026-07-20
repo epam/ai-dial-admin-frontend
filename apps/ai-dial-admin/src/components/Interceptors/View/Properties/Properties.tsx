@@ -12,10 +12,12 @@ import { ApplicationRoute } from '@/src/types/routes';
 
 import Defaults from '@/src/components/Defaults/Defaults';
 import MaintainerControl from '@/src/components/BaseControls/Maintainer';
+import InterfacesField from '@/src/components/BaseControls/InterfacesField/InterfacesField';
 import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
 import EntityProperties from '@/src/components/EntityMainProperties/Properties/EntityProperties';
 import SourceField from '@/src/components/SourceField/SourceField';
 import { getInterceptorContainers } from '@/src/app/actions/deployments';
+import { INTERCEPTOR_INTERFACE_TYPES } from '@/src/constants/deployment-interfaces';
 import TopicsControl from '@/src/components/BaseControls/Topics';
 
 interface Props {
@@ -57,6 +59,11 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
       <Defaults
         values={selectedInterceptor.defaults}
         onChangeValues={(defaults) => onChangeInterceptor({ ...selectedInterceptor, defaults })}
+      />
+      <InterfacesField
+        entity={selectedInterceptor}
+        onChangeEntity={onChangeInterceptor}
+        allowedTypes={INTERCEPTOR_INTERFACE_TYPES}
       />
     </div>
   );

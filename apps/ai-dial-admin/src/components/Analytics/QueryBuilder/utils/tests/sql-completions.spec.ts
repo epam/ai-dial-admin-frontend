@@ -54,4 +54,13 @@ describe('buildSqlCompletions', () => {
     const items = buildSqlCompletions(FIELDS, 'dial_usage_log');
     expect(items.some((i) => i.kind === SqlCompletionKind.Function)).toBe(false);
   });
+
+  test('offers both LIKE and ILIKE as keyword completions', () => {
+    const keywords = buildSqlCompletions([], 'dial_usage_log')
+      .filter((i) => i.kind === SqlCompletionKind.Keyword)
+      .map((i) => i.label);
+
+    expect(keywords).toContain('LIKE');
+    expect(keywords).toContain('ILIKE');
+  });
 });

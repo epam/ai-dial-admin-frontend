@@ -74,6 +74,25 @@ describe('parseQuery round-trip', () => {
     roundTrips(s);
   });
 
+  test('a case-sensitive contains (co) from a translated/authored query deserializes and is not coerced to ico', () => {
+    const query: StructuredQuery = {
+      entity: 'dial_usage_log',
+      mode: QueryMode.Row,
+      filter: {
+        op: QueryOperator.Co,
+        args: [
+          { type: QueryExprType.Field, name: 'event_kind' },
+          { type: QueryExprType.Value, value_type: QueryValueType.String, value: 'Chat' },
+        ],
+      },
+    };
+    const state = parseQuery(query, []);
+    expect(state.filter.children[0]).toMatchObject({ field: 'event_kind', op: QueryOperator.Co });
+    // The operator survives re-serialization — it is preserved, not silently switched to ico.
+    const rebuilt = buildQuery(state).filter as { args: QueryPredicate[] };
+    expect(rebuilt.args[0].op).toBe(QueryOperator.Co);
+  });
+
   test('NOT group with multiple children', () => {
     const s = base();
     const not = createGroup(QueryLogicalOperator.Not);

@@ -20,6 +20,7 @@ export const SQL_KEYWORDS: string[] = [
   'NOT',
   'IN',
   'LIKE',
+  'ILIKE',
   'IS NULL',
   'IS NOT NULL',
   'ASC',

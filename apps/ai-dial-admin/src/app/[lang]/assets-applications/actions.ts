@@ -19,6 +19,7 @@ import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { DialApplication } from '@/src/models/dial/application';
+import { stripEmptyInterfaces } from '@/src/utils/deployments/interfaces';
 
 function validationFailure(errors: Record<string, string | undefined>): ServerActionResponse {
   return {
@@ -74,6 +75,7 @@ export async function createApp(app: DialApplicationResource) {
     path: undefined,
     application_type_schema_id:
       app.application_type_schema_id || (app as DialApplication)?.source?.applicationTypeSchemaId,
+    interfaces: stripEmptyInterfaces(app.interfaces),
   };
 
   return assetApi.put(token, ResourceType.APPLICATION, path, asset);
@@ -111,6 +113,7 @@ export async function updateApp(app: DialApplicationResource, etag: string) {
     source: undefined,
     version: undefined,
     path: undefined,
+    interfaces: stripEmptyInterfaces(cleaned.interfaces),
   };
   return assetApi.put(token, ResourceType.APPLICATION, path, application, { etag });
 }

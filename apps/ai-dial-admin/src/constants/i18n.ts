@@ -1483,6 +1483,14 @@ export enum ExternalServiceI18nKey {
   SuccessLogoutDescription = 'ExternalService.SuccessLogoutDescription',
 }
 
+export enum InterfacesI18nKey {
+  Interfaces = 'Interfaces.Interfaces',
+  SelectType = 'Interfaces.SelectType',
+  OpenAIChatCompletions = 'Interfaces.OpenAIChatCompletions',
+  OpenAIResponses = 'Interfaces.OpenAIResponses',
+  AnthropicMessages = 'Interfaces.AnthropicMessages',
+}
+
 export enum ImagesI18nKey {
   ImagesListTitle = 'Images.ImagesListTitle',
   AddModalTitle = 'Images.AddModalTitle',
@@ -2209,6 +2217,8 @@ export enum QueryBuilderI18nKey {
   ChartValue = 'QueryBuilder.ChartValue',
   ChartOtherSlice = 'QueryBuilder.ChartOtherSlice',
   ChartUnavailable = 'QueryBuilder.ChartUnavailable',
+  SqlTranslating = 'QueryBuilder.SqlTranslating',
+  SqlTranslateFailed = 'QueryBuilder.SqlTranslateFailed',
 }
 
 export enum AnalyticsTablesI18nKey {

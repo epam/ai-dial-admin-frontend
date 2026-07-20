@@ -90,6 +90,8 @@ Queries endpoints (base path `/v1/queries`):
 - `GET /v1/queries/entities/schema/{name}` — fetch the field schema for a named entity
 - `POST /v1/queries/execute` — execute a structured query; exposed as `executeAction`, returning a `ServerActionResponse` so callers can surface an error header/message on failure
 - `POST /v1/queries/execute-sql` — execute an ad-hoc SQL SELECT (body `{ sql }`); exposed as `executeSqlAction`, returning a `ServerActionResponse` with the same result envelope as `execute`
+- `POST /v1/queries/translate` — translate a structured query to the external-dialect SQL subset (validation only, no execution); exposed as `translateAction`, returning a `ServerActionResponse<{ sql }>`
+- `POST /v1/queries/translate-sql` — translate a SQL SELECT to the structured DSL (body `{ sql }`, validation only, no execution); exposed as `translateSqlAction`, returning a `ServerActionResponse<{ query }>`
 
 Tables endpoints (base path `/v1/tables`):
 - `GET /v1/tables` — list tables; the response is wrapped as `{ tables: [...] }` and the client SHALL unwrap it to a bare array
@@ -107,7 +109,7 @@ Tables endpoints (base path `/v1/tables`):
 #### Scenario: Client covers the queries endpoints
 
 - **WHEN** `analyticsDataApi` is used
-- **THEN** it can issue `GET /v1/queries/entities`, `GET /v1/queries/entities/schema/{name}`, `POST /v1/queries/execute` via `executeAction`, and `POST /v1/queries/execute-sql` via `executeSqlAction`
+- **THEN** it can issue `GET /v1/queries/entities`, `GET /v1/queries/entities/schema/{name}`, `POST /v1/queries/execute` via `executeAction`, `POST /v1/queries/execute-sql` via `executeSqlAction`, `POST /v1/queries/translate` via `translateAction`, and `POST /v1/queries/translate-sql` via `translateSqlAction`
 
 #### Scenario: Client covers the tables endpoints
 
@@ -327,7 +329,7 @@ An aggregate metric whose catalog entry has `distinct_supported: true` SHALL ren
 
 ### Requirement: Filter (WHERE) builder with nested groups
 
-The Filter section SHALL let the user build a WHERE tree limited to two levels: the root group holds conditions and groups, and nested groups hold only conditions. The "add nested group" action SHALL be offered only at the root group; nested groups SHALL offer only add-condition and remove actions. Each group SHALL expose a logical operator selector (AND / OR / NOT). Each condition SHALL expose a field selector (from the loaded schema, grouped by field category), an operator selector (`eq`, `ne`, `co`, `nc`, `lt`, `gt`, `le`, `ge`, `in`), a value input, a value-type selector, and a remove action. For `eq`/`ne` the condition SHALL offer an "is null" option that, when set, serializes the right operand as a null value (`value_type: null`) and hides the value input. For `in` the value SHALL be entered as comma-separated tokens and serialize to an array expression of value expressions (empty tokens dropped). Empty groups and fieldless conditions SHALL be omitted; a `not` group SHALL wrap its single child, or an `and` of its children. Deeper nesting SHALL be expressible only through the SQL view.
+The Filter section SHALL let the user build a WHERE tree limited to two levels: the root group holds conditions and groups, and nested groups hold only conditions. The "add nested group" action SHALL be offered only at the root group; nested groups SHALL offer only add-condition and remove actions. Each group SHALL expose a logical operator selector (AND / OR / NOT). Each condition SHALL expose a field selector (from the loaded schema, grouped by field category), an operator selector (`eq`, `ne`, `ico`, `inc`, `lt`, `gt`, `le`, `ge`, `in`), a value input, a value-type selector, and a remove action. Operators SHALL be shown as short uppercased codes (EQ, NE, LT, …); the two case-insensitive contains operators SHALL be shown with the familiar `CO`/`NC` labels while serializing to `ico`/`inc` (SQL ILIKE). The case-sensitive `co`/`nc` SHALL NOT be offered as authoring options but SHALL remain valid model values that serialize, deserialize, and round-trip without error when present in a JSON-authored or backend-translated query. For `eq`/`ne` the condition SHALL offer an "is null" option that, when set, serializes the right operand as a null value (`value_type: null`) and hides the value input. For `in` the value SHALL be entered as comma-separated tokens and serialize to an array expression of value expressions (empty tokens dropped). Empty groups and fieldless conditions SHALL be omitted; a `not` group SHALL wrap its single child, or an `and` of its children. Deeper nesting SHALL be expressible only through the SQL view.
 
 #### Scenario: Nested group with a condition serializes
 
@@ -351,6 +353,17 @@ The Filter section SHALL let the user build a WHERE tree limited to two levels: 
 
 - **WHEN** a condition uses `in` with value `a, b, c`
 - **THEN** the predicate's right operand serializes as an array expression with three value items
+
+#### Scenario: Contains authoring is case-insensitive
+
+- **WHEN** the user picks the CO (contains) operator for a condition
+- **THEN** the predicate serializes with `op: "ico"`
+- **AND** the case-sensitive `co`/`nc` operators are not offered in the operator selector
+
+#### Scenario: A case-sensitive contains from an authored query still round-trips
+
+- **WHEN** a JSON-authored or backend-translated query contains a predicate with `op: "co"`
+- **THEN** it deserializes and serializes without error and is not silently changed to `ico`
 
 ### Requirement: Row-mode projection
 
@@ -595,6 +608,28 @@ Everywhere the chart names a column — selector options, in-chart axis titles, 
 - **WHEN** the shown result came from a row-mode or SQL run and the user selects the Chart view
 - **THEN** a hint explains that charts require an aggregate result with a group-by
 
+### Requirement: Backend-authoritative query translation
+
+The Query Builder SHALL treat the Analytics data-access service as the single source of truth for translating between the structured query DSL and SQL, via two validation-only endpoints that never run against ClickHouse. The server API layer SHALL expose `translateAction(query)` for `POST /v1/queries/translate` (DSL → SQL, success body `{ "sql": <text> }`) and `translateSqlAction(sql)` for `POST /v1/queries/translate-sql` (SQL → DSL, success body `{ "query": <StructuredQuery> }`), each returning a `ServerActionResponse` envelope and reached through a server action injecting the user token. The frontend SHALL NOT generate SQL from the structured query on the client; the client-side generator is removed. When the backend rejects a translation with a `400` (a DSL the SQL subset cannot express, or SQL that is unparseable or uses an unsupported construct), the failure SHALL be handled per the consuming requirement (SQL-view seeding surfaces the error; the Builder switch falls back to the discard guard) and SHALL NOT be presented as a successful translation.
+
+#### Scenario: DSL is translated to SQL through the backend
+
+- **WHEN** the SQL view needs to seed its editor from the current builder query
+- **THEN** the structured query is sent to `POST /v1/queries/translate`
+- **AND** the returned `{ sql }` text is used verbatim as the editor contents
+
+#### Scenario: SQL is translated to a structured query through the backend
+
+- **WHEN** SQL is translated for display in the visual builder
+- **THEN** the SQL is sent to `POST /v1/queries/translate-sql`
+- **AND** the returned `{ query }` is a structured query the `execute` endpoint would accept
+
+#### Scenario: A DSL the SQL subset cannot express is rejected
+
+- **WHEN** `POST /v1/queries/translate` is called for a query the SQL subset cannot express (for example `include_total`)
+- **THEN** the backend responds `400`
+- **AND** the frontend surfaces the failure rather than showing generated SQL
+
 ### Requirement: SQL view shows only a SQL editor
 
 In the SQL view the rail SHALL render a SQL code editor filling the rail body, and SHALL NOT render the Mode, Filter, Select, Group by, Aggregate, Having, Sort, or Page sections. The source selector remains available in the toolbar. The editor SHALL provide SQL syntax highlighting (via the Monaco `sql` language). The Copy and Run actions SHALL remain available; Copy SHALL copy the SQL editor text.
@@ -612,7 +647,7 @@ In the SQL view the rail SHALL render a SQL code editor filling the rail body, a
 
 ### Requirement: Schema-aware SQL autocomplete
 
-The SQL editor SHALL offer completion suggestions derived from the loaded schema and a fixed SQL catalog: the loaded schema's field names (each annotated with its field type), the selected entity name (as the query's source/`FROM` target), and the supported SQL keywords and functions. Suggestions SHALL reflect the schema currently loaded, so changing the selected entity SHALL change the suggested field names and source name. The autocomplete SHALL NOT perform SQL validation.
+The SQL editor SHALL offer completion suggestions derived from the loaded schema and a fixed SQL catalog: the loaded schema's field names (each annotated with its field type), the selected entity name (as the query's source/`FROM` target), and the supported SQL keywords and functions. The keyword catalog SHALL include both `LIKE` (case-sensitive contains) and `ILIKE` (case-insensitive contains). Suggestions SHALL reflect the schema currently loaded, so changing the selected entity SHALL change the suggested field names and source name. The autocomplete SHALL NOT perform SQL validation.
 
 #### Scenario: Schema fields are suggested
 
@@ -625,6 +660,11 @@ The SQL editor SHALL offer completion suggestions derived from the loaded schema
 
 - **WHEN** the user selects a different entity and triggers completion
 - **THEN** the suggested field names are those of the newly selected entity's schema
+
+#### Scenario: ILIKE is offered as a keyword
+
+- **WHEN** the user triggers keyword completion in the SQL editor
+- **THEN** both `LIKE` and `ILIKE` are offered as suggestions
 
 ### Requirement: SQL execution via the SQL endpoint
 
@@ -653,25 +693,40 @@ The SQL view SHALL NOT perform client-side SQL parsing or validation. When the b
 
 ### Requirement: SQL view state is an independent buffer
 
-The Query Builder SHALL keep the SQL editor text as its own buffer. Entering the SQL view SHALL seed the editor with SQL generated from the current builder query (including the toolbar time bound and the implicit count) when the buffer is empty or still matches the last generated text; user-edited SQL SHALL never be overwritten by generation. The SQL text SHALL NEVER be parsed back into the builder form state. Switching between the SQL and JSON views SHALL NOT prompt and SHALL leave both buffers intact.
+The Query Builder SHALL keep the SQL editor text as its own buffer. Entering the SQL view SHALL seed the editor by translating the current builder query (including the toolbar time bound and the implicit count) to SQL via `POST /v1/queries/translate` through a server action, when the buffer is empty or still matches the last generated text; the seed is asynchronous and the editor SHALL show a loading affordance while the translation is in flight. When the translation is rejected (`400` — a query the SQL subset cannot express), the failure SHALL surface via the app's error-notification convention and the editor SHALL be left empty (with Run disabled), rather than being seeded with a locally generated or partial statement. User-edited SQL SHALL never be overwritten by a re-seed. Switching between the SQL and JSON views SHALL NOT prompt and SHALL leave both buffers intact.
 
-#### Scenario: Entering SQL compiles the builder query
+#### Scenario: Entering SQL translates the builder query via the backend
 
 - **WHEN** the user opens the SQL view without prior SQL edits
-- **THEN** the editor is pre-filled with a SQL statement generated from the current builder query
+- **THEN** the current builder query is sent to `POST /v1/queries/translate`
+- **AND** the editor is pre-filled with the returned SQL
+
+#### Scenario: A non-expressible query surfaces a translate error
+
+- **WHEN** the user opens the SQL view for a query the SQL subset cannot express and the backend responds `400`
+- **THEN** an error notification is shown with the backend's message
+- **AND** the SQL editor is left empty and Run is disabled
 
 #### Scenario: SQL text persists across written-mode switches
 
 - **WHEN** the user edits SQL, switches to the JSON view, and switches back to the SQL view
 - **THEN** the SQL editor shows the previously edited text unchanged
+- **AND** the edited text is not re-translated over
 
 ### Requirement: Switching from a written mode to the Builder is guarded
 
-SQL and JSON are "written" modes: they can hold queries the visual builder cannot display (edited SQL text; JSON with e.g. filter nesting deeper than two levels). When the user switches from a written mode to the Builder view while the current written query cannot be shown in the builder (SQL: buffer edited away from the last generated text; JSON: valid but unrepresentable query), a confirmation popup (danger variant) SHALL warn that switching will drop the current query and reset the builder to its starting point. Confirming SHALL discard the written query (clear the SQL buffer / discard the JSON edits), reset the builder state to its initial defaults for the selected entity, and switch to the Builder view. Cancelling SHALL keep the user in the written mode with the query intact. Switching to the Builder SHALL NOT prompt when nothing would be lost (empty or unedited generated SQL; JSON that round-trips into the builder).
+SQL and JSON are "written" modes: they can hold queries the visual builder cannot display (edited SQL text; JSON with e.g. filter nesting deeper than two levels). When the user switches from the SQL view to the Builder view with an edited SQL buffer, the SQL SHALL first be translated to the structured DSL via `POST /v1/queries/translate-sql`. If the translation succeeds and the resulting query is representable in the two-level visual builder, the builder SHALL be hydrated from that query and the view SHALL switch with no confirmation and no data loss. If the translation fails (`400` — parse failure or an unsupported construct) or the resulting query is not builder-representable, a confirmation popup (danger variant) SHALL warn that switching will drop the current query and reset the builder to its starting point. From the JSON view the same guard applies when the JSON is valid but unrepresentable. Confirming SHALL discard the written query (clear the SQL buffer / discard the JSON edits), reset the builder state to its initial defaults for the selected entity, and switch to the Builder view. Cancelling SHALL keep the user in the written mode with the query intact. Switching to the Builder SHALL NOT prompt when nothing would be lost (empty or unedited generated SQL; SQL that translates to a representable query; JSON that round-trips into the builder).
 
-#### Scenario: Leaving SQL with edits asks for confirmation
+#### Scenario: Translatable SQL hydrates the builder without a prompt
 
-- **WHEN** the user edits SQL and selects the Builder view
+- **WHEN** the user edits SQL that translates to a builder-representable query and selects the Builder view
+- **THEN** no confirmation is shown
+- **AND** the builder reflects the translated query
+- **AND** the SQL buffer is cleared
+
+#### Scenario: Untranslatable SQL asks for confirmation
+
+- **WHEN** the user edits SQL that the backend rejects (or that translates to an unrepresentable query) and selects the Builder view
 - **THEN** a confirmation popup warns that the current query will be dropped and the builder reset
 
 #### Scenario: Confirming drops the written query and resets the builder

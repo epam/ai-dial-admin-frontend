@@ -19,10 +19,34 @@ import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 
 const capitalize = (s: string): string => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 const toOptions = (values: string[]): SelectOption[] => values.map((value) => ({ value, label: capitalize(value) }));
-const toUpperOptions = (values: string[]): SelectOption[] =>
-  values.map((value) => ({ value, label: value.toUpperCase() }));
 
-export const OPERATOR_OPTIONS: SelectOption[] = toUpperOptions(Object.values(QueryOperator));
+// Filter operators offered for authoring. The contains operators author case-insensitive matching
+// (`ico`/`inc`, → SQL ILIKE) but are shown with the familiar short CO/NC codes; the case-sensitive
+// `co`/`nc` are excluded from authoring yet remain valid model values that deserialize and round-trip
+// when present in an authored/translated query.
+export const FILTER_OPERATORS: QueryOperator[] = [
+  QueryOperator.Eq,
+  QueryOperator.Ne,
+  QueryOperator.Ico,
+  QueryOperator.Inc,
+  QueryOperator.Lt,
+  QueryOperator.Gt,
+  QueryOperator.Le,
+  QueryOperator.Ge,
+  QueryOperator.In,
+];
+
+// Short display labels for the case-insensitive contains operators — the familiar CO/NC codes.
+// Every other operator shows its uppercased code.
+const OPERATOR_LABEL_OVERRIDE: Partial<Record<QueryOperator, string>> = {
+  [QueryOperator.Ico]: 'CO',
+  [QueryOperator.Inc]: 'NC',
+};
+
+export const OPERATOR_OPTIONS: SelectOption[] = FILTER_OPERATORS.map((op) => ({
+  value: op,
+  label: OPERATOR_LABEL_OVERRIDE[op] ?? op.toUpperCase(),
+}));
 
 export const VALUE_TYPE_OPTIONS: SelectOption[] = toOptions(
   Object.values(QueryValueType).filter((t) => t !== QueryValueType.Null),

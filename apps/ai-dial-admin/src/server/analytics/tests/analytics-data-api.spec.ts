@@ -93,6 +93,40 @@ describe('Server :: AnalyticsDataApi', () => {
     );
   });
 
+  test('translateAction POSTs the structured query to /v1/queries/translate', async () => {
+    const query: StructuredQuery = { entity: 'conversation', mode: QueryMode.Row };
+    fetch.mockResponseOnce(JSON.stringify({ sql: 'SELECT *\nFROM conversation' }));
+
+    const res = await instance.translateAction(query, TOKEN_MOCK);
+
+    expect(res.success).toBe(true);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/queries/translate'),
+      expect.objectContaining({ method: 'POST', body: JSON.stringify(query) }),
+    );
+  });
+
+  test('translateSqlAction POSTs { sql } to /v1/queries/translate-sql', async () => {
+    const sql = 'SELECT id FROM conversation';
+    fetch.mockResponseOnce(JSON.stringify({ query: { entity: 'conversation', mode: 'row' } }));
+
+    const res = await instance.translateSqlAction(sql, TOKEN_MOCK);
+
+    expect(res.success).toBe(true);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/queries/translate-sql'),
+      expect.objectContaining({ method: 'POST', body: JSON.stringify({ sql }) }),
+    );
+  });
+
+  test('translateAction surfaces a backend 400 as a failed response', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ message: 'include_total not expressible' }), { status: 400 });
+
+    const res = await instance.translateAction({ entity: 'conversation', mode: QueryMode.Row }, TOKEN_MOCK);
+
+    expect(res.success).toBe(false);
+  });
+
   test('getEntities returns null on a failed response', async () => {
     fetch.mockResponseOnce('nope', { status: 500 });
 
