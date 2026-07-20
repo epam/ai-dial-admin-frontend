@@ -123,7 +123,7 @@ const buildComparePairCellClassRules = (
 const getComparePairKind =
   (resolveValues: (row: CompareAnalyticsRow) => { primary: unknown; secondary: unknown }, isNumeric = false) =>
   (params: { data?: CompareAnalyticsRow }): MetricDeltaKind => {
-    if (!params.data?._compared) {
+    if (!params.data) {
       return MetricDeltaKind.Empty;
     }
 
@@ -141,11 +141,11 @@ const getMetricPairKind = (groupKey: string, key: string) =>
   );
 
 const getStatusPairKind = (params: { data?: CompareAnalyticsRow }): MetricDeltaKind => {
-  if (!params.data?._compared) {
+  if (!params.data) {
     return MetricDeltaKind.Empty;
   }
 
-  return getExecutionStatusDelta(params.data.executionStatus, params.data._compared.executionStatus);
+  return getExecutionStatusDelta(params.data.executionStatus, params.data._compared?.executionStatus);
 };
 
 const getHttpPairKind = getComparePairKind(

@@ -21,7 +21,6 @@ import {
 import {
   countCompareDiffs,
   hasCompareRowDiff,
-  isCompareSecondarySideEmpty,
   mergeCompareMetricValuesSchema,
 } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
 import {
@@ -219,25 +218,19 @@ const ExecutionResultsTab: FC<Props> = ({
     return mergedRowData.filter((row) => hasCompareRowDiff(row, visibility));
   }, [mergedRowData, viewDifferencesOnly, hiddenColIds]);
 
-  const diffCounts = useMemo(() => countCompareDiffs(mergedRowData ?? []), [mergedRowData]);
+  const diffCounts = useMemo(
+    () => countCompareDiffs(mergedRowData ?? [], { hiddenColIds }),
+    [mergedRowData, hiddenColIds],
+  );
 
   const rowClassRules = useMemo<RowClassRules<CompareAnalyticsRow>>(
     () => ({
-      ...(hideHighlights
-        ? {}
-        : {
-            'compare-row-empty compare-row-empty-border': (params) => {
-              const row = params.data;
-              if (!row) return false;
-              return isCompareSecondarySideEmpty(row, metricsSchema);
-            },
-          }),
       'ag-active-detail-row': (params) => {
         if (!params.data || !selectedRow) return false;
         return getCompareRowSelectionId(params.data) === getCompareRowSelectionId(selectedRow);
       },
     }),
-    [hideHighlights, metricsSchema, selectedRow],
+    [selectedRow],
   );
 
   const syncGridUiState = useCallback(
