@@ -1,6 +1,7 @@
 import { FC, useMemo } from 'react';
 
 import IconControl from '@/src/components/BaseControls/Icon';
+import InterfacesField from '@/src/components/BaseControls/InterfacesField/InterfacesField';
 import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
 import TopicsControl from '@/src/components/BaseControls/Topics';
 import Defaults from '@/src/components/Defaults/Defaults';
@@ -12,6 +13,7 @@ import { APPLICATION_SOURCE_ITEMS } from '@/src/components/SourceField/constants
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import { getApplicationContainers } from '@/src/app/actions/deployments';
 import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
+import { APPLICATION_INTERFACE_TYPES } from '@/src/constants/deployment-interfaces';
 import { EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
@@ -65,6 +67,11 @@ const EntityProperties: FC<Props> = ({ runners, view, ...props }) => {
         getContainers={getApplicationContainers}
         isEntityImmutable={true}
         codeAppEditorUrl={codeAppEditorUrl}
+      />
+      <InterfacesField
+        entity={application}
+        onChangeEntity={props.onChangeEntity as (entity: DialApplication) => void}
+        allowedTypes={APPLICATION_INTERFACE_TYPES}
       />
       <EntityAttachments {...props} />
       <Defaults

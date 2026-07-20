@@ -34,6 +34,7 @@ import { ExecutionResultsTabUiState } from '@/src/components/Runs/Compare/models
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import { getCompareRowSelectionId, mergeByTestCaseId, RESULT_FILTERS } from '@/src/components/Runs/View/utils';
 import { EntitiesI18nKey, RunsI18nKey } from '@/src/constants/i18n';
+import { useTheme } from '@/src/context/ThemeContext';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 
@@ -66,6 +67,7 @@ const ExecutionResultsTab: FC<Props> = ({
   setExecutionResultsState,
 }) => {
   const t = useI18n();
+  const { currentTheme } = useTheme();
 
   const gridApiRef = useRef<GridApi | null>(null);
   const [isGridReady, setIsGridReady] = useState(false);
@@ -171,8 +173,9 @@ const ExecutionResultsTab: FC<Props> = ({
     return getCompareColumnsCompare(mergedRowData, errorText, t(RunsI18nKey.RunCompareDelta), {
       hideHighlights,
       metricsSchema,
+      theme: currentTheme,
     });
-  }, [mergedRowData, errorText, t, hideHighlights, metricsSchema]);
+  }, [mergedRowData, errorText, t, hideHighlights, metricsSchema, currentTheme]);
 
   const eyeRendererParams = useMemo(
     () => ({

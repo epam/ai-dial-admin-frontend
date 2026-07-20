@@ -5,12 +5,13 @@ import { FC } from 'react';
 import classNames from 'classnames';
 
 import { BasicI18nKey } from '@/src/constants/i18n';
+import { useTheme } from '@/src/context/ThemeContext';
 import { useI18n } from '@/src/locales/client';
 import {
   ACCURACY_THRESHOLDS,
-  DELTA_NEGATIVE_COLOR_MAP,
-  DELTA_POSITIVE_COLOR_MAP,
   DELTA_SCALE_THRESHOLDS,
+  getDeltaNegativeColorMap,
+  getDeltaPositiveColorMap,
 } from './constants';
 import {
   getAccuracyHeatCellStyleFromColors,
@@ -32,20 +33,21 @@ const COMPACT_SEGMENT_WIDTH = 52;
 const COMPACT_BAR_WIDTH = COMPACT_SEGMENT_WIDTH * ACCURACY_THRESHOLDS.length;
 const DELTA_BAR_WIDTH = COMPACT_SEGMENT_WIDTH * DELTA_SCALE_THRESHOLDS.length;
 
-const getDeltaSegmentStyle = (threshold: number) => {
+const getDeltaSegmentStyle = (threshold: number, theme: string) => {
   if (threshold === 0) {
     return getDeltaNeutralHeatCellStyle();
   }
 
   if (threshold < 0) {
-    return getAccuracyHeatCellStyleFromColors(DELTA_NEGATIVE_COLOR_MAP[threshold]);
+    return getAccuracyHeatCellStyleFromColors(getDeltaNegativeColorMap(theme)[threshold]);
   }
 
-  return getAccuracyHeatCellStyleFromColors(DELTA_POSITIVE_COLOR_MAP[threshold]);
+  return getAccuracyHeatCellStyleFromColors(getDeltaPositiveColorMap(theme)[threshold]);
 };
 
 const ColorScale: FC<Props> = ({ variant = ColorScaleVariant.Default }) => {
   const t = useI18n();
+  const { currentTheme } = useTheme();
   const isCompact = variant === ColorScaleVariant.Compact;
   const isDelta = variant === ColorScaleVariant.Delta;
 
@@ -59,7 +61,7 @@ const ColorScale: FC<Props> = ({ variant = ColorScaleVariant.Default }) => {
               className="h-2"
               style={{
                 width: COMPACT_SEGMENT_WIDTH,
-                ...getDeltaSegmentStyle(threshold),
+                ...getDeltaSegmentStyle(threshold, currentTheme),
               }}
             />
           ))}
@@ -93,7 +95,7 @@ const ColorScale: FC<Props> = ({ variant = ColorScaleVariant.Default }) => {
             className={classNames(isCompact ? 'h-2' : 'h-2', isCompact ? `w-[${COMPACT_SEGMENT_WIDTH}px]` : 'w-[70px]')}
             style={{
               width: isCompact ? COMPACT_SEGMENT_WIDTH : 70,
-              ...getAccuracyHeatCellStyleFromThreshold(threshold),
+              ...getAccuracyHeatCellStyleFromThreshold(threshold, currentTheme),
             }}
           />
         ))}

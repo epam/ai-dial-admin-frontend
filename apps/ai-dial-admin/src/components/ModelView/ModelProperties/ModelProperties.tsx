@@ -4,6 +4,7 @@ import { FC, useEffect, useRef, useState } from 'react';
 
 import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
 import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
+import InterfacesField from '@/src/components/BaseControls/InterfacesField/InterfacesField';
 import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import Defaults from '@/src/components/Defaults/Defaults';
 import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
@@ -15,6 +16,7 @@ import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import UpstreamEndpoints from '@/src/components/UpstreamEndpoints/UpstreamEndpoints';
 import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { MODEL_INTERFACE_TYPES } from '@/src/constants/deployment-interfaces';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
@@ -93,6 +95,8 @@ const ModelProperties: FC<Props> = ({ model, modelsNames, onChangeModel }) => {
           validationKey="responsesDefaultKeys"
         />
       )}
+
+      <InterfacesField entity={model} onChangeEntity={onChangeModel} allowedTypes={MODEL_INTERFACE_TYPES} />
 
       <UpstreamEndpoints
         entity={model}

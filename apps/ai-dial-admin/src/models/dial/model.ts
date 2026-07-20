@@ -1,4 +1,5 @@
 import { ChatEntity } from './base-entity';
+import { DialDeploymentInterface } from './interfaces';
 import { SOURCE_FIELD } from '@/src/components/SourceField/types';
 
 export interface DialModel extends ChatEntity {
@@ -13,6 +14,7 @@ export interface DialModel extends ChatEntity {
   source?: SOURCE_FIELD;
   responsesEndpoint?: string;
   embeddingDimensions?: number;
+  interfaces?: Record<string, DialDeploymentInterface>;
 }
 
 export interface DialTokenizer {

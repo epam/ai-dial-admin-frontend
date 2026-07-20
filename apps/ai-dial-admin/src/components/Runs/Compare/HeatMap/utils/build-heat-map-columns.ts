@@ -12,6 +12,7 @@ import HeatMapValueCellRenderer from '@/src/components/Runs/Compare/HeatMap/Heat
 import {
   HEAT_MAP_LABEL_COL_ID,
   HEAT_MAP_LABEL_COL_WIDTH,
+  HEAT_MAP_VALUE_COL_MIN_WIDTH,
   getHeatMapDefaultCellStyle,
 } from '@/src/components/Runs/Compare/HeatMap/constants';
 import { HeatMapColorDisplayMode, HeatMapRow, HeatMapRowType } from '@/src/components/Runs/Compare/HeatMap/models';
@@ -31,11 +32,19 @@ interface BuildHeatMapColumnsOptions {
   onToggleGroup: (groupKey: string) => void;
   primaryRunName: string;
   comparedRunName: string;
+  theme: string;
 }
 
 export const buildHeatMapColumns = (
   mergedRows: CompareAnalyticsRow[],
-  { colorDisplayMode, expandedGroups, onToggleGroup, primaryRunName, comparedRunName }: BuildHeatMapColumnsOptions,
+  {
+    colorDisplayMode,
+    expandedGroups,
+    onToggleGroup,
+    primaryRunName,
+    comparedRunName,
+    theme,
+  }: BuildHeatMapColumnsOptions,
 ): ColDef<HeatMapRow>[] => {
   const isDeltaMode = colorDisplayMode === HeatMapColorDisplayMode.Delta;
   const includeSubRunIndex = hasHeatMapMultiSubRuns(mergedRows);
@@ -68,7 +77,7 @@ export const buildHeatMapColumns = (
       headerComponent: HeatMapTestCaseHeader,
       headerComponentParams: { label: headerLabel },
       headerClass: 'heat-map-test-case-header',
-      minWidth: 0,
+      minWidth: HEAT_MAP_VALUE_COL_MIN_WIDTH,
       ...NO_FILTER_COL_DEF,
       cellRendererSelector: (params) => {
         if (params.data?.rowType === HeatMapRowType.Group) {
@@ -97,13 +106,13 @@ export const buildHeatMapColumns = (
             return getDeltaNeutralHeatCellStyle();
           }
           if (typeof value === 'number' && value !== 0) {
-            return getDeltaHeatCellStyle(value) ?? getHeatMapDefaultCellStyle();
+            return getDeltaHeatCellStyle(value, theme) ?? getHeatMapDefaultCellStyle();
           }
           return getHeatMapDefaultCellStyle();
         }
 
         if (typeof value === 'number' && value >= 0 && value <= 1) {
-          return getAccuracyHeatCellStyle(value);
+          return getAccuracyHeatCellStyle(value, theme);
         }
 
         return getHeatMapDefaultCellStyle();
@@ -116,6 +125,7 @@ export const buildHeatMapColumns = (
           primaryRunName,
           comparedRunName,
           colId,
+          theme,
         }),
     };
   });
