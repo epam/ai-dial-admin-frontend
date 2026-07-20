@@ -27,27 +27,40 @@ export const getHeatMapTestCaseColumns = (api: GridApi): Column[] =>
 export const canFitHeatMapColumnsToContainer = (availableWidth: number, columnCount: number): boolean =>
   columnCount > 0 && availableWidth >= columnCount * HEAT_MAP_VALUE_COL_MIN_WIDTH;
 
+/** Equal widths for test-case columns; remainder pixels go to the first columns (+1 each). */
+export const buildEqualHeatMapColumnWidths = (availableWidth: number, columnCount: number): number[] => {
+  if (columnCount <= 0) {
+    return [];
+  }
+
+  const baseWidth = Math.max(HEAT_MAP_VALUE_COL_MIN_WIDTH, Math.floor(availableWidth / columnCount));
+  const remainder = Math.max(0, availableWidth - baseWidth * columnCount);
+
+  return Array.from({ length: columnCount }, (_, index) => baseWidth + (index < remainder ? 1 : 0));
+};
+
 export const applyHeatMapColumnWidths = (api: GridApi, availableForTestCases: number): void => {
   const testCaseColumns = getHeatMapTestCaseColumns(api);
   if (!testCaseColumns.length) {
     return;
   }
 
-  if (canFitHeatMapColumnsToContainer(availableForTestCases, testCaseColumns.length)) {
-    api.sizeColumnsToFit();
-    api.setGridOption('alwaysShowHorizontalScroll', false);
-    return;
-  }
+  const canFit = canFitHeatMapColumnsToContainer(availableForTestCases, testCaseColumns.length);
 
   // Prefer applyColumnState over setColumnWidths — ColumnResizeModule is not registered app-wide.
+  // Avoid sizeColumnsToFit: it can leave the first test-case column at minWidth while others grow.
+  const widths = canFit
+    ? buildEqualHeatMapColumnWidths(availableForTestCases, testCaseColumns.length)
+    : testCaseColumns.map(() => HEAT_MAP_VALUE_COL_MIN_WIDTH);
+
   api.applyColumnState({
-    state: testCaseColumns.map((col) => ({
+    state: testCaseColumns.map((col, index) => ({
       colId: col.getColId(),
-      width: HEAT_MAP_VALUE_COL_MIN_WIDTH,
+      width: widths[index],
       flex: null,
     })),
   });
-  api.setGridOption('alwaysShowHorizontalScroll', true);
+  api.setGridOption('alwaysShowHorizontalScroll', !canFit);
 };
 
 export const resolveHeatMapRowHeight = (valueColumnWidth: number): number =>
