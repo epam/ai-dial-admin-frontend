@@ -67,7 +67,7 @@ const mergeMetricValuesSchema = (results: AnalyticsResult[]): Record<string, Rec
   return merged;
 };
 
-const getMetricsColumns = (metrics: Record<string, Record<string, unknown>>) => {
+const getMetricsColumns = (metrics: Record<string, Record<string, unknown>>, theme?: string) => {
   return Object.entries(metrics).map(([groupKey, groupValues]) => ({
     headerName: groupKey,
     children: Object.keys(groupValues).map(
@@ -88,7 +88,7 @@ const getMetricsColumns = (metrics: Record<string, Record<string, unknown>>) => 
           cellStyle: (params) => {
             const value = params.data?.metricValues?.[groupKey]?.[key];
             if (typeof value === 'number' && value >= 0 && value <= 1) {
-              const colors = getAccuracyColors(value);
+              const colors = getAccuracyColors(value, theme);
               return { backgroundColor: colors.bg };
             }
             return undefined;
@@ -175,13 +175,13 @@ const staticColumns = [
   },
 ];
 
-export const getAnalyticsColumns = (results: AnalyticsResult[]) => {
+export const getAnalyticsColumns = (results: AnalyticsResult[], theme?: string) => {
   const metrics = mergeMetricValuesSchema(results);
   const input = results[0]?.testCaseData || {};
 
   return [
     ...staticColumns,
-    ...getMetricsColumns(metrics),
+    ...getMetricsColumns(metrics, theme),
     {
       headerName: 'INPUT BINDINGS',
       children: getInputColumns(input, true),

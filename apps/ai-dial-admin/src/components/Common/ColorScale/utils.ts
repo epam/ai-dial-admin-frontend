@@ -1,52 +1,62 @@
+import { DEFAULT_THEME } from '@/src/constants/theme';
+
 import {
-  ACCURACY_COLOR_MAP,
   ACCURACY_THRESHOLDS,
-  DELTA_NEGATIVE_COLOR_MAP,
   DELTA_NEGATIVE_THRESHOLDS,
   DELTA_NEUTRAL_SEGMENT,
-  DELTA_POSITIVE_COLOR_MAP,
   DELTA_POSITIVE_THRESHOLDS,
+  getAccuracyColorMap,
+  getDeltaNegativeColorMap,
+  getDeltaPositiveColorMap,
 } from './constants';
-import { AccuracyHeatCellStyle } from './models';
+import { AccuracyHeatCellStyle, HeatColorSegment } from './models';
 
-export const getAccuracyColors = (value: number): { bg: string; border: string } => {
+export const getAccuracyColors = (value: number, theme: string = DEFAULT_THEME): HeatColorSegment => {
+  const colorMap = getAccuracyColorMap(theme);
   const threshold = ACCURACY_THRESHOLDS.find((t) => value <= t) ?? ACCURACY_THRESHOLDS[ACCURACY_THRESHOLDS.length - 1];
 
-  return ACCURACY_COLOR_MAP[threshold];
+  return colorMap[threshold];
 };
 
-export const getDeltaColors = (value: number): { bg: string; border: string } | null => {
+export const getDeltaColors = (value: number, theme: string = DEFAULT_THEME): HeatColorSegment | null => {
   if (value === 0) {
     return null;
   }
 
   if (value > 0) {
+    const colorMap = getDeltaPositiveColorMap(theme);
     const threshold =
       DELTA_POSITIVE_THRESHOLDS.find((t) => value <= t) ??
       DELTA_POSITIVE_THRESHOLDS[DELTA_POSITIVE_THRESHOLDS.length - 1];
-    return DELTA_POSITIVE_COLOR_MAP[threshold];
+    return colorMap[threshold];
   }
 
+  const colorMap = getDeltaNegativeColorMap(theme);
   const descendingThresholds = [...DELTA_NEGATIVE_THRESHOLDS].reverse();
   const threshold =
     descendingThresholds.find((t) => value >= t) ?? descendingThresholds[descendingThresholds.length - 1];
-  return DELTA_NEGATIVE_COLOR_MAP[threshold];
+  return colorMap[threshold];
 };
 
-export const getAccuracyHeatCellStyleFromColors = (colors: { bg: string; border: string }): AccuracyHeatCellStyle => ({
+export const getAccuracyHeatCellStyleFromColors = (colors: HeatColorSegment): AccuracyHeatCellStyle => ({
   backgroundColor: colors.bg,
   borderRight: `1px solid ${colors.border}`,
   borderBottom: `1px solid ${colors.border}`,
 });
 
-export const getAccuracyHeatCellStyleFromThreshold = (threshold: number): AccuracyHeatCellStyle =>
-  getAccuracyHeatCellStyleFromColors(ACCURACY_COLOR_MAP[threshold]);
+export const getAccuracyHeatCellStyleFromThreshold = (
+  threshold: number,
+  theme: string = DEFAULT_THEME,
+): AccuracyHeatCellStyle => getAccuracyHeatCellStyleFromColors(getAccuracyColorMap(theme)[threshold]);
 
-export const getAccuracyHeatCellStyle = (value: number): AccuracyHeatCellStyle =>
-  getAccuracyHeatCellStyleFromColors(getAccuracyColors(value));
+export const getAccuracyHeatCellStyle = (value: number, theme: string = DEFAULT_THEME): AccuracyHeatCellStyle =>
+  getAccuracyHeatCellStyleFromColors(getAccuracyColors(value, theme));
 
-export const getDeltaHeatCellStyle = (value: number): AccuracyHeatCellStyle | undefined => {
-  const colors = getDeltaColors(value);
+export const getDeltaHeatCellStyle = (
+  value: number,
+  theme: string = DEFAULT_THEME,
+): AccuracyHeatCellStyle | undefined => {
+  const colors = getDeltaColors(value, theme);
   return colors ? getAccuracyHeatCellStyleFromColors(colors) : undefined;
 };
 
