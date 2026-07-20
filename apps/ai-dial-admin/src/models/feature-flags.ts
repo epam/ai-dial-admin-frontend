@@ -7,4 +7,5 @@ export interface FeatureFlags {
   hfEnabled: boolean;
   runsCompareEnabled: boolean;
   analyticsEnabled: boolean;
+  queryAssistantEnabled: boolean;
 }

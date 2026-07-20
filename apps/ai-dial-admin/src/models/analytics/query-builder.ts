@@ -131,6 +131,7 @@ export enum QueryBuilderView {
   Form = 'form',
   Json = 'json',
   Sql = 'sql',
+  Ai = 'ai',
 }
 
 // A query run request. Structured (Form/JSON views) posts a StructuredQuery to /execute; SQL posts
