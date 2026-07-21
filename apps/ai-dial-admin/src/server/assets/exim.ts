@@ -52,6 +52,20 @@ export const buildAssetsExport = async <T extends { id?: string }>(
   return config.setEntities(entities);
 };
 
+/**
+ * `getMerged`/`buildAssetsExport` graft `folderId`/`path`/`version`/`id` onto every entity
+ * (frontend identity fields mirroring the admin backend's metadata split) — Core's content
+ * DTOs have no such fields and reject them outright (`FAIL_ON_UNKNOWN_PROPERTIES`, the
+ * Jackson default). Use as a type's `transformForPut` (or compose into one) whenever the
+ * entity carries no other admin-only fields needing to be stripped before `put`.
+ */
+export const stripAssetIdentityFields = <T extends { folderId?: string; path?: string; version?: string; id?: string }>(
+  entity: T,
+): T => {
+  const { folderId: __folderId, path: __path, version: __version, id: __id, ...rest } = entity;
+  return rest as T;
+};
+
 export interface ImportAssetsOptions {
   path: string;
   conflictResolutionStrategy: string;
