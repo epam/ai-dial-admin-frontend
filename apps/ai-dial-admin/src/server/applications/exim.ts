@@ -10,7 +10,13 @@ import { Token } from '@/src/models/auth';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
 import { ParsedAssets } from '@/src/models/import-asset';
 import { AssetApi } from '@/src/server/core/asset-api';
-import { AssetEximConfig, ImportAssetsOptions, buildAssetsExport, importAssetsExport } from '@/src/server/assets/exim';
+import {
+  AssetEximConfig,
+  ImportAssetsOptions,
+  buildAssetsExport,
+  importAssetsExport,
+  stripAssetIdentityFields,
+} from '@/src/server/assets/exim';
 import { ResourceType } from '@/src/types/resource-type';
 
 export { resolveImportDestination } from '@/src/server/assets/import-destination';
@@ -20,6 +26,7 @@ const APPLICATIONS_EXIM_CONFIG: AssetEximConfig<AssetApp> = {
   resourceType: ResourceType.APPLICATION,
   getEntities: (document) => document.applications,
   setEntities: (applications) => ({ applications }),
+  transformForPut: stripAssetIdentityFields,
 };
 
 /** Builds the `{ applications: AssetApp[] }` export document directly from DIAL Core. */
