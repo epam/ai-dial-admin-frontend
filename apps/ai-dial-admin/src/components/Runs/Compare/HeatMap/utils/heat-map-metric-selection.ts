@@ -33,9 +33,9 @@ export const filterMetricGroupsBySearch = (query: string, groups: string[]): str
 };
 
 export const toggleAllMetricGroups = (selected: Set<string>, available: string[]): Set<string> => {
-  // Empty set is the All sentinel. From All, stay on All; from a subset, reset to All.
+  // Empty set is the All sentinel. From a subset, select All; from All, keep only the first metric.
   if (isAllMetricGroupsSelected(selected, available)) {
-    return new Set();
+    return normalizeMetricGroupsSelection(available.length > 0 ? new Set([available[0]]) : new Set(), available);
   }
 
   return new Set();
