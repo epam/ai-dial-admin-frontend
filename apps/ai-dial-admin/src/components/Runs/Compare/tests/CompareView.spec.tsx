@@ -180,15 +180,17 @@ describe('CompareView', () => {
       expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
     });
 
-    expect(screen.queryByText('Runs.RunCompareHeatMapMetricsAll')).not.toBeInTheDocument();
+    const singleMetricTriggerLabel = 'Runs.RunCompareHeatMapMetricsPrefix Accuracy';
+
+    expect(screen.queryByText(singleMetricTriggerLabel)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('tab', { name: 'Runs.RunCompareTabHeatMap' }));
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Runs.RunCompareHeatMapMetricsAll' })).toBeEnabled();
+      expect(screen.getByRole('button', { name: singleMetricTriggerLabel })).toBeEnabled();
     });
 
-    expect(screen.getByText('Runs.RunCompareHeatMapMetricsAll')).toBeInTheDocument();
+    expect(screen.getByText(singleMetricTriggerLabel)).toBeInTheDocument();
     expect(screen.getByText('Runs.RunCompareColorDisplay')).toBeInTheDocument();
     expect(screen.getByText('Runs.RunCompareAbsoluteValues')).toBeInTheDocument();
   });

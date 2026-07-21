@@ -1968,6 +1968,7 @@ export enum RunsI18nKey {
   RunCompareHeatMapMetricsAll = 'Runs.RunCompareHeatMapMetricsAll',
   RunCompareHeatMapMetricsPrefix = 'Runs.RunCompareHeatMapMetricsPrefix',
   RunCompareHeatMapMetricsOptionAll = 'Runs.RunCompareHeatMapMetricsOptionAll',
+  RunCompareHeatMapMetricsMinOneSelected = 'Runs.RunCompareHeatMapMetricsMinOneSelected',
   RunCompareColorDisplay = 'Runs.RunCompareColorDisplay',
   RunCompareAbsoluteValues = 'Runs.RunCompareAbsoluteValues',
   RunCompareDelta = 'Runs.RunCompareDelta',
