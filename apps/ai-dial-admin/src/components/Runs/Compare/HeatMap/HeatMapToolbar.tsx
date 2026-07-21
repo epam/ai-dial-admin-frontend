@@ -6,6 +6,7 @@ import {
   DialEllipsisTooltip,
   DialSearch,
   DialSegmentedControl,
+  DialTooltip,
   ElementSize,
   SegmentedControlOption,
 } from '@epam/ai-dial-ui-kit';
@@ -21,6 +22,7 @@ import {
   filterMetricGroupsBySearch,
   formatHeatMapMetricsTriggerLabel,
   getMetricGroupsCheckState,
+  isLastSelectedMetricGroup,
   isMetricGroupSelected,
   MetricGroupsCheckState,
   toggleAllMetricGroups,
@@ -49,6 +51,8 @@ const HeatMapToolbar: FC<Props> = ({
   const [metricsSearchQuery, setMetricsSearchQuery] = useState('');
 
   const isSearchVisible = availableMetricGroups.length >= HEAT_MAP_METRICS_SEARCH_THRESHOLD;
+  const showAllCheckbox = availableMetricGroups.length > 1;
+  const minOneSelectedTooltip = t(RunsI18nKey.RunCompareHeatMapMetricsMinOneSelected);
 
   const allCheckState = useMemo(
     () => getMetricGroupsCheckState(selectedMetricGroups, availableMetricGroups),
@@ -127,26 +131,41 @@ const HeatMapToolbar: FC<Props> = ({
                 />
               </div>
             )}
-            <div className="flex h-[34px] items-center px-3">
-              <DialCheckbox
-                checked={allCheckState === MetricGroupsCheckState.Checked}
-                indeterminate={allCheckState === MetricGroupsCheckState.Indeterminate}
-                id="heat-map-metrics-all"
-                label={t(RunsI18nKey.RunCompareHeatMapMetricsOptionAll)}
-                onChange={onToggleAll}
-              />
-            </div>
+            {showAllCheckbox && (
+              <div className="flex h-[34px] items-center px-3">
+                <DialCheckbox
+                  checked={allCheckState === MetricGroupsCheckState.Checked}
+                  indeterminate={allCheckState === MetricGroupsCheckState.Indeterminate}
+                  id="heat-map-metrics-all"
+                  label={t(RunsI18nKey.RunCompareHeatMapMetricsOptionAll)}
+                  onChange={onToggleAll}
+                />
+              </div>
+            )}
             <div className="flex flex-col overflow-y-auto" style={{ maxHeight: HEAT_MAP_METRICS_DROPDOWN_MAX_HEIGHT }}>
-              {filteredMetricGroups.map((groupKey) => (
-                <div key={groupKey} className="flex h-[34px] items-center pl-10 pr-3">
-                  <DialCheckbox
-                    checked={isMetricGroupSelected(selectedMetricGroups, groupKey)}
-                    id={`heat-map-metric-${groupKey}`}
-                    label={groupKey}
-                    onChange={(value) => onToggleGroup(groupKey, value)}
-                  />
-                </div>
-              ))}
+              {filteredMetricGroups.map((groupKey) => {
+                const isChecked = isMetricGroupSelected(selectedMetricGroups, groupKey);
+                const isLastSelected = isLastSelectedMetricGroup(selectedMetricGroups, groupKey, availableMetricGroups);
+
+                return (
+                  <div key={groupKey} className="flex h-[34px] items-center pl-10 pr-3">
+                    <DialTooltip
+                      tooltip={minOneSelectedTooltip}
+                      hideTooltip={!isLastSelected}
+                      placement="top"
+                      triggerClassName="flex min-w-0"
+                    >
+                      <DialCheckbox
+                        checked={isChecked}
+                        disabled={isLastSelected}
+                        id={`heat-map-metric-${groupKey}`}
+                        label={groupKey}
+                        onChange={(value) => onToggleGroup(groupKey, value)}
+                      />
+                    </DialTooltip>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
