@@ -2,19 +2,38 @@ import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import TablesView from '@/src/components/Analytics/Tables/TablesView';
-import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
-import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
+import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
+import { ActionMenuOperationI18nKey, AnalyticsTablesI18nKey } from '@/src/constants/i18n';
+import { AnalyticsTable, AnalyticsTableType, TableStatus } from '@/src/models/analytics/table';
 
 vi.mock('@/src/app/[lang]/tables/actions');
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
+interface MockColDef {
+  colId?: string;
+  field?: string;
+  cellRendererParams?: { items?: { id: string }[] };
+}
+
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
-  default: ({ rowData }: { rowData?: unknown[] }) => <div>catalog rows: {rowData?.length ?? 0}</div>,
+  default: ({ rowData, columnDefs }: { rowData?: unknown[]; columnDefs?: MockColDef[] }) => (
+    <div>
+      <div>catalog rows: {rowData?.length ?? 0}</div>
+      <div>cols: {columnDefs?.map((c) => c.colId).join('|')}</div>
+      <div>
+        row actions:{' '}
+        {columnDefs
+          ?.find((c) => c.field === ACTIONS_COLUMN_CEL_ID)
+          ?.cellRendererParams?.items?.map((i) => i.id)
+          .join('|')}
+      </div>
+    </div>
+  ),
 }));
 
 const TABLES: AnalyticsTable[] = [
-  { name: 'dial_usage_log', type: AnalyticsTableType.Source },
-  { name: 'rate_analytics', type: AnalyticsTableType.Source },
+  { name: 'dial_usage_log', type: AnalyticsTableType.Source, status: TableStatus.Active },
+  { name: 'rate_analytics', type: AnalyticsTableType.Source, status: TableStatus.Pending },
 ];
 
 beforeEach(() => {
@@ -34,5 +53,19 @@ describe('TablesView', () => {
     render(<TablesView initialTables={[]} />);
 
     expect(screen.getByText('catalog rows: 0')).toBeInTheDocument();
+  });
+
+  test('the grid includes a status column', () => {
+    render(<TablesView initialTables={TABLES} />);
+
+    expect(screen.getByText(/^cols:/)).toHaveTextContent('status');
+  });
+
+  test('the row action menu offers Edit and Delete', () => {
+    render(<TablesView initialTables={TABLES} />);
+
+    const rowActions = screen.getByText(/^row actions:/);
+    expect(rowActions).toHaveTextContent(ActionMenuOperationI18nKey.Edit);
+    expect(rowActions).toHaveTextContent(ActionMenuOperationI18nKey.Delete);
   });
 });

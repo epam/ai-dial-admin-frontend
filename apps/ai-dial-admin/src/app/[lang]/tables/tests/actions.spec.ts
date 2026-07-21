@@ -5,7 +5,16 @@ import { AnalyticsTableType, CreateTableDto } from '@/src/models/analytics/table
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { addRows, createTable, deleteTable, getTable, getTables, updateTableSchema } from '../actions';
+import {
+  addRows,
+  createTable,
+  defineTableSchema,
+  deleteTable,
+  getTable,
+  getTables,
+  updateTable,
+  updateTableSchema,
+} from '../actions';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -35,13 +44,22 @@ describe('Tables server actions', () => {
     expect(analyticsDataApi.getTable).toHaveBeenCalledWith('events', TOKEN_MOCK);
   });
 
-  test('createTable passes the dto + token', async () => {
-    const dto: CreateTableDto = { name: 'events', type: AnalyticsTableType.Source, columns: [] };
+  test('createTable passes the identity-only dto + token', async () => {
+    const dto: CreateTableDto = { name: 'events', type: AnalyticsTableType.Source };
     (analyticsDataApi.createTable as any).mockResolvedValue({ success: true });
 
     await createTable(dto);
 
     expect(analyticsDataApi.createTable).toHaveBeenCalledWith(dto, TOKEN_MOCK);
+  });
+
+  test('updateTable passes name, dto + token', async () => {
+    const dto = { description: 'Updated', tag_order: ['pii'] };
+    (analyticsDataApi.updateTable as any).mockResolvedValue({ success: true });
+
+    await updateTable('events', dto);
+
+    expect(analyticsDataApi.updateTable).toHaveBeenCalledWith('events', dto, TOKEN_MOCK);
   });
 
   test('deleteTable passes name + token', async () => {
@@ -50,6 +68,15 @@ describe('Tables server actions', () => {
     await deleteTable('events');
 
     expect(analyticsDataApi.deleteTable).toHaveBeenCalledWith('events', TOKEN_MOCK);
+  });
+
+  test('defineTableSchema passes name, schema dto + token', async () => {
+    const schema = { columns: [], ordering_key: ['ts'] };
+    (analyticsDataApi.defineTableSchema as any).mockResolvedValue({ success: true });
+
+    await defineTableSchema('events', schema);
+
+    expect(analyticsDataApi.defineTableSchema).toHaveBeenCalledWith('events', schema, TOKEN_MOCK);
   });
 
   test('updateTableSchema passes name, patch + token', async () => {

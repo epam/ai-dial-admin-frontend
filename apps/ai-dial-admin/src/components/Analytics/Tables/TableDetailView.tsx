@@ -1,22 +1,16 @@
 'use client';
 
-import { FC, useCallback, useMemo, useState } from 'react';
-
-import { useRouter } from 'next/navigation';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { ColDef, ICellRendererParams, ITooltipParams, ValueGetterParams } from 'ag-grid-community';
-import {
-  ConfirmationPopupVariant,
-  DialConfirmationPopup,
-  DialDangerButton,
-  DialFormPopup,
-  DialNeutralButton,
-  PopupSize,
-} from '@epam/ai-dial-ui-kit';
+import { DialFormPopup, DialNeutralButton, DialPrimaryButton, PopupSize } from '@epam/ai-dial-ui-kit';
 
-import { addRows, deleteTable, getTable, updateTableSchema } from '@/src/app/[lang]/tables/actions';
+import { addRows, defineTableSchema, getTable, updateTableSchema } from '@/src/app/[lang]/tables/actions';
 import ColumnRowsEditor from '@/src/components/Analytics/Tables/ColumnRowsEditor';
+import DraftSchemaEditor from '@/src/components/Analytics/Tables/DraftSchemaEditor';
 import EditColumnPopup from '@/src/components/Analytics/Tables/EditColumnPopup';
+import TableStatusBadge from '@/src/components/Analytics/Tables/TableStatusBadge';
+import { useDraftSchemaForm } from '@/src/components/Analytics/Tables/use-draft-schema-form';
 import {
   createColumnRow,
   getColumnRowErrors,
@@ -30,14 +24,20 @@ import GridView from '@/src/components/Grid/GridView/GridView';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getDeleteOperation, getEditOperation } from '@/src/constants/grid-columns/actions';
-import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
+import { AnalyticsTablesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
-import { AnalyticsSchemaPatch, AnalyticsTable, AnalyticsTableColumn } from '@/src/models/analytics/table';
+import {
+  AnalyticsSchemaPatch,
+  AnalyticsTable,
+  AnalyticsTableColumn,
+  AnalyticsTableType,
+  DraftSchemaDto,
+  TableStatus,
+} from '@/src/models/analytics/table';
 import { ColumnRow } from '@/src/models/analytics/tables-ui';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { ApplicationRoute } from '@/src/types/routes';
 import { getAnalyticsIdentifierError } from '@/src/utils/validation/analytics-table-error';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 
@@ -58,19 +58,37 @@ const ColumnNameCellRenderer: FC<ICellRendererParams<AnalyticsTableColumn>> = ({
 
 const TableDetailView: FC<Props> = ({ name, initialTable }) => {
   const t = useI18n();
-  const router = useRouter();
   const { showNotification } = useNotification();
 
   const [table, setTable] = useState<AnalyticsTable>(initialTable);
-  const [confirmOpen, setConfirmOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [writeOpen, setWriteOpen] = useState(false);
   const [addColumns, setAddColumns] = useState<ColumnRow[]>([createColumnRow()]);
   const [rowsJson, setRowsJson] = useState('[]');
   const [editColumn, setEditColumn] = useState<AnalyticsTableColumn | null>(null);
+  const [sourceTable, setSourceTable] = useState<AnalyticsTable | null>(null);
 
   const isSystem = Boolean(table.system);
+  const isActive = table.status === TableStatus.Active;
   const columns = useMemo(() => table.columns ?? [], [table.columns]);
+
+  const draft = useDraftSchemaForm(table, sourceTable, t);
+
+  // An enrichment's draft grain-key options are the referenced source's declared columns; fetch it
+  // only while drafting (the live grain key is fixed and shown via `table.grain` instead).
+  useEffect(() => {
+    if (isActive || table.type !== AnalyticsTableType.Enrichment || !table.source_table) {
+      setSourceTable(null);
+      return;
+    }
+    let cancelled = false;
+    void getTable(table.source_table).then((tbl) => {
+      if (!cancelled) setSourceTable(tbl);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isActive, table.type, table.source_table]);
 
   // New columns must not collide with the table's existing source/exposed names (the backend rejects
   // duplicates); validate the add-columns rows against them plus each other.
@@ -84,8 +102,6 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
     const tbl = await getTable(name);
     if (tbl) setTable(tbl);
   }, [name]);
-
-  const goToCatalog = () => router.push(ApplicationRoute.AnalyticsTables);
 
   const notifyFailed = useCallback(
     (res: ServerActionResponse) =>
@@ -112,6 +128,24 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
     },
     [name, reload, notifyFailed, showNotification, t],
   );
+
+  const onDefineSchema = useCallback(
+    async (dto: DraftSchemaDto): Promise<boolean> => {
+      const res = await defineTableSchema(name, dto);
+      if (res.success) {
+        showNotification(getSuccessNotification(t(AnalyticsTablesI18nKey.TableActive)));
+        await reload();
+        return true;
+      }
+      notifyFailed(res);
+      return false;
+    },
+    [name, reload, notifyFailed, showNotification, t],
+  );
+
+  const onSubmitDefineSchema = () => {
+    if (draft.canMaterialize) void onDefineSchema(draft.buildDto());
+  };
 
   const onDrop = useCallback(
     (column?: AnalyticsTableColumn) => column && void applyPatch({ drop: [column.name] }),
@@ -170,17 +204,6 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
     }
   };
 
-  const onConfirmDelete = async () => {
-    setConfirmOpen(false);
-    const res = await deleteTable(name);
-    if (res.success) {
-      showNotification(getSuccessNotification(t(AnalyticsTablesI18nKey.Deleted)));
-      goToCatalog();
-    } else {
-      notifyFailed(res);
-    }
-  };
-
   const actions = useMemo<ActionMenuOperationDeclaration<AnalyticsTableColumn>[]>(
     () => [
       getEditOperation<AnalyticsTableColumn>((column) => column && setEditColumn(column)),
@@ -226,6 +249,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
       <div className="flex flex-row mb-8 justify-between items-center gap-4 h-[40px]">
         <div className="flex min-w-0 items-center gap-2">
           <h1 className="truncate">{name}</h1>
+          <TableStatusBadge status={table.status} />
           {isSystem && (
             <span className="shrink-0 rounded bg-layer-4 px-2 py-0.5 uppercase text-secondary dial-tiny-text">
               {t(AnalyticsTablesI18nKey.SystemReadOnly)}
@@ -234,38 +258,39 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
         </div>
         {!isSystem && (
           <div className="flex items-center gap-4">
-            <DialDangerButton label={t(AnalyticsTablesI18nKey.DeleteTable)} onClick={() => setConfirmOpen(true)} />
-            <DialNeutralButton label={t(AnalyticsTablesI18nKey.WriteRows)} onClick={() => setWriteOpen(true)} />
-            <DialNeutralButton label={t(AnalyticsTablesI18nKey.AddColumns)} onClick={() => setAddOpen(true)} />
+            {isActive ? (
+              <>
+                <DialNeutralButton label={t(AnalyticsTablesI18nKey.WriteRows)} onClick={() => setWriteOpen(true)} />
+                <DialNeutralButton label={t(AnalyticsTablesI18nKey.AddColumns)} onClick={() => setAddOpen(true)} />
+              </>
+            ) : (
+              <DialPrimaryButton
+                label={t(ButtonsI18nKey.Save)}
+                disabled={!draft.canMaterialize}
+                onClick={onSubmitDefineSchema}
+              />
+            )}
           </div>
         )}
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col">
-        <GridView
-          columnDefs={columnDefs}
-          rowData={columns}
-          getRowId={(params) => params.data.name}
-          additionalGridOptions={{
-            onCellValueChanged: (e) => {
-              if (e.colDef.field === 'name') onRenameCell(e.oldValue as string, e.newValue as string);
-            },
-          }}
-          emptyDataProps={{ title: t(AnalyticsTablesI18nKey.NoColumns) }}
-        />
+      <div className="flex min-h-0 flex-1 flex-col overflow-auto">
+        {isActive ? (
+          <GridView
+            columnDefs={columnDefs}
+            rowData={columns}
+            getRowId={(params) => params.data.name}
+            additionalGridOptions={{
+              onCellValueChanged: (e) => {
+                if (e.colDef.field === 'name') onRenameCell(e.oldValue as string, e.newValue as string);
+              },
+            }}
+            emptyDataProps={{ title: t(AnalyticsTablesI18nKey.NoColumns) }}
+          />
+        ) : (
+          <DraftSchemaEditor table={table} draft={draft} />
+        )}
       </div>
-
-      {confirmOpen && (
-        <DialConfirmationPopup
-          open={confirmOpen}
-          variant={ConfirmationPopupVariant.Danger}
-          header={t(AnalyticsTablesI18nKey.DeleteConfirmTitle)}
-          description={t(AnalyticsTablesI18nKey.DeleteConfirmDescription)}
-          confirmLabel={t(AnalyticsTablesI18nKey.DeleteTable)}
-          onConfirm={() => void onConfirmDelete()}
-          onClose={() => setConfirmOpen(false)}
-        />
-      )}
 
       {addOpen && (
         <DialFormPopup

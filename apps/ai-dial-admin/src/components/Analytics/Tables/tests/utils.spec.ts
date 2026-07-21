@@ -3,15 +3,71 @@ import { describe, expect, test } from 'vitest';
 import {
   buildColumnEditPatch,
   createColumnRow,
+  createDraftSchemaForm,
+  createTableForm,
   getColumnRowErrors,
   hasColumnRowErrors,
   isRenameRestricted,
+  tableDetailHref,
   toTableColumns,
 } from '@/src/components/Analytics/Tables/utils';
 import { ErrorI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { AnalyticsTable, AnalyticsTableColumn, AnalyticsTableType } from '@/src/models/analytics/table';
+import {
+  AnalyticsTable,
+  AnalyticsTableColumn,
+  AnalyticsTableType,
+  PartitionGranularity,
+} from '@/src/models/analytics/table';
 import { ColumnEditValues, ColumnRow } from '@/src/models/analytics/tables-ui';
+
+describe('createTableForm', () => {
+  test('starts blank, defaulting the enrichment source table to the first source in the catalog', () => {
+    const tables: AnalyticsTable[] = [
+      { name: 'events', type: AnalyticsTableType.Enrichment, source_table: 'orders' },
+      { name: 'orders', type: AnalyticsTableType.Source },
+    ];
+    expect(createTableForm(tables)).toEqual({ name: '', description: '', sourceTable: 'orders' });
+  });
+
+  test('has no default source table when the catalog has none', () => {
+    expect(createTableForm([])).toEqual({ name: '', description: '', sourceTable: '' });
+  });
+});
+
+describe('createDraftSchemaForm', () => {
+  test('seeds one empty column row when the table has no draft yet', () => {
+    const form = createDraftSchemaForm({ name: 'orders', type: AnalyticsTableType.Source });
+    expect(form.columns).toHaveLength(1);
+    expect(form.columns[0]).toMatchObject({ source_name: '', name: '' });
+    expect(form).toMatchObject({ orderingKey: [], partitionColumn: '', granularity: '', grainKey: '' });
+  });
+
+  test('seeds from an already-drafted table (columns, ordering key, partition, grain key)', () => {
+    const form = createDraftSchemaForm({
+      name: 'orders',
+      type: AnalyticsTableType.Source,
+      columns: [{ source_name: 'ts', name: 'timestamp', type: AnalyticsFieldType.Timestamp, tag: 'time' }],
+      ordering_key: ['ts'],
+      partition_by: { column: 'ts', granularity: PartitionGranularity.Month },
+      grain: { grain_key: 'order_id' },
+    });
+    expect(form.columns).toEqual([
+      expect.objectContaining({ source_name: 'ts', name: 'timestamp', tag: 'time', nullable: false, sensitive: false }),
+    ]);
+    expect(form.orderingKey).toEqual(['ts']);
+    expect(form.partitionColumn).toBe('ts');
+    expect(form.granularity).toBe(PartitionGranularity.Month);
+    expect(form.grainKey).toBe('order_id');
+  });
+});
+
+describe('tableDetailHref', () => {
+  test('builds the catalog-relative detail URL, URL-encoding the name', () => {
+    expect(tableDetailHref('events')).toBe('/tables/events');
+    expect(tableDetailHref('a/b')).toBe('/tables/a%2Fb');
+  });
+});
 
 describe('createColumnRow', () => {
   test('creates a blank row with a unique id and string default type', () => {

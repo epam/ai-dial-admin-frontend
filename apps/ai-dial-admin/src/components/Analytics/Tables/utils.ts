@@ -1,5 +1,6 @@
 import { ANALYTICS_TAG_MAX_LENGTH, PARTITION_NONE } from '@/src/constants/analytics/tables';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
+import { ApplicationRoute } from '@/src/types/routes';
 import {
   AnalyticsColumnMetadataUpdate,
   AnalyticsSchemaPatch,
@@ -11,12 +12,16 @@ import {
   ColumnEditValues,
   ColumnRow,
   ColumnRowError,
+  CreateTableForm,
+  DraftSchemaForm,
   ExistingColumnNames,
-  TableForm,
 } from '@/src/models/analytics/tables-ui';
 import { getAnalyticsIdentifierError, getAnalyticsLengthError } from '@/src/utils/validation/analytics-table-error';
 
 type Translate = (key: string, args?: Record<string, string | number>) => string;
+
+export const tableDetailHref = (name: string): string =>
+  `${ApplicationRoute.AnalyticsTables}/${encodeURIComponent(name)}`;
 
 let counter = 0;
 export const nextColumnId = (): string => `col-${++counter}`;
@@ -31,19 +36,35 @@ export const createColumnRow = (): ColumnRow => ({
   sensitive: false,
 });
 
-export const createTableForm = (tables: AnalyticsTable[]): TableForm => {
+export const createTableForm = (tables: AnalyticsTable[]): CreateTableForm => {
   const firstSource = tables.find((tbl) => tbl.type === AnalyticsTableType.Source);
   return {
     name: '',
     description: '',
-    columns: [createColumnRow()],
-    orderingKey: [],
-    partitionColumn: '',
-    granularity: PARTITION_NONE,
     sourceTable: firstSource?.name ?? '',
-    grainKey: firstSource?.ordering_key?.[0] ?? '',
   };
 };
+
+const toColumnRows = (columns: AnalyticsTableColumn[]): ColumnRow[] =>
+  columns.map((c) => ({
+    id: nextColumnId(),
+    source_name: c.source_name,
+    name: c.name,
+    type: c.type,
+    tag: c.tag ?? '',
+    nullable: Boolean(c.nullable),
+    sensitive: Boolean(c.sensitive),
+  }));
+
+// A FAILED table already has its last-submitted schema persisted (only the CREATE TABLE step failed);
+// seed from it when present, otherwise start from one empty column row.
+export const createDraftSchemaForm = (table: AnalyticsTable): DraftSchemaForm => ({
+  columns: table.columns?.length ? toColumnRows(table.columns) : [createColumnRow()],
+  orderingKey: table.ordering_key ?? [],
+  partitionColumn: table.partition_by?.column ?? '',
+  granularity: table.partition_by?.granularity ?? PARTITION_NONE,
+  grainKey: table.grain?.grain_key ?? '',
+});
 
 // Validates the column rows of a create/add-columns form against the backend rules: each row that will
 // actually be sent (both source_name and name filled — partial rows are dropped by toTableColumns) must

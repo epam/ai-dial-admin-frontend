@@ -4,7 +4,7 @@ import { FC, useCallback, useMemo, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
-import { ColDef } from 'ag-grid-community';
+import { ColDef, ICellRendererParams } from 'ag-grid-community';
 import {
   ConfirmationPopupVariant,
   DialConfirmationPopup,
@@ -13,26 +13,26 @@ import {
 } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 
-import { deleteTable, getTables } from '@/src/app/[lang]/tables/actions';
+import { deleteTable, getTable, getTables, updateTable } from '@/src/app/[lang]/tables/actions';
 import CreateTablePopup from '@/src/components/Analytics/Tables/CreateTablePopup';
+import EditTableMetadataPopup from '@/src/components/Analytics/Tables/EditTableMetadataPopup';
+import TableStatusBadge from '@/src/components/Analytics/Tables/TableStatusBadge';
+import { tableDetailHref } from '@/src/components/Analytics/Tables/utils';
 import { navigateEntityUrl } from '@/src/components/EntityListView/utils/on-cell-clicked';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
-import { getDeleteOperation } from '@/src/constants/grid-columns/actions';
+import { getDeleteOperation, getEditOperation } from '@/src/constants/grid-columns/actions';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { AnalyticsTablesI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
-import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
-import { ApplicationRoute } from '@/src/types/routes';
+import { AnalyticsTable, AnalyticsTableType, UpdateTableDto } from '@/src/models/analytics/table';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 
 interface Props {
   initialTables: AnalyticsTable[];
 }
-
-const toDetailHref = (name: string): string => `${ApplicationRoute.AnalyticsTables}/${encodeURIComponent(name)}`;
 
 const TablesView: FC<Props> = ({ initialTables }) => {
   const t = useI18n();
@@ -42,6 +42,7 @@ const TablesView: FC<Props> = ({ initialTables }) => {
   const [tables, setTables] = useState<AnalyticsTable[]>(initialTables);
   const [createType, setCreateType] = useState<AnalyticsTableType | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [editTarget, setEditTarget] = useState<AnalyticsTable | null>(null);
 
   const reload = useCallback(async () => {
     const list = await getTables();
@@ -68,8 +69,38 @@ const TablesView: FC<Props> = ({ initialTables }) => {
     }
   };
 
+  // The edit popup needs `columns` to derive the table's distinct tags for reordering — fetch the full
+  // definition before opening it.
+  const onOpenEdit = async (tbl?: AnalyticsTable) => {
+    if (!tbl) return;
+    const full = await getTable(tbl.name);
+    if (full) setEditTarget(full);
+  };
+
+  const onSubmitEditMetadata = async (dto: UpdateTableDto) => {
+    if (!editTarget) return;
+    const res = await updateTable(editTarget.name, dto);
+    if (res.success) {
+      showNotification(getSuccessNotification(t(AnalyticsTablesI18nKey.TableUpdated)));
+      setEditTarget(null);
+      void reload();
+    } else {
+      showNotification(
+        getErrorNotification(
+          res.errorHeader || t(AnalyticsTablesI18nKey.ActionFailed),
+          res.errorMessage,
+          res.requestId,
+        ),
+      );
+    }
+  };
+
   const rowActions: ActionMenuOperationDeclaration<AnalyticsTable>[] = useMemo(
     () => [
+      getEditOperation<AnalyticsTable>(
+        (tbl) => void onOpenEdit(tbl),
+        (_api, node) => Boolean((node.data as AnalyticsTable | undefined)?.system),
+      ),
       getDeleteOperation<AnalyticsTable>(
         (tbl) => tbl && setDeleteTarget(tbl.name),
         (_api, node) => Boolean((node.data as AnalyticsTable | undefined)?.system),
@@ -87,7 +118,14 @@ const TablesView: FC<Props> = ({ initialTables }) => {
         headerName: t(AnalyticsTablesI18nKey.ColumnsCount),
         colId: 'columnsCount',
         flex: 1,
-        valueGetter: (params) => (params.data as AnalyticsTable | undefined)?.columns?.length ?? 0,
+        valueGetter: (params) => (params.data as AnalyticsTable | undefined)?.column_count ?? 0,
+      },
+      {
+        headerName: t(AnalyticsTablesI18nKey.Status),
+        colId: 'status',
+        flex: 1,
+        cellDataType: false,
+        cellRenderer: ({ data }: ICellRendererParams<AnalyticsTable>) => <TableStatusBadge status={data?.status} />,
       },
       {
         headerName: t(AnalyticsTablesI18nKey.System),
@@ -127,7 +165,7 @@ const TablesView: FC<Props> = ({ initialTables }) => {
           additionalGridOptions={{
             onCellClicked: (e) => {
               if (e.colDef.field === ACTIONS_COLUMN_CEL_ID || !e.data) return;
-              navigateEntityUrl(toDetailHref(e.data.name), router.push, e.event as MouseEvent | undefined);
+              navigateEntityUrl(tableDetailHref(e.data.name), router.push, e.event as MouseEvent | undefined);
             },
           }}
           emptyDataProps={{ title: t(AnalyticsTablesI18nKey.NoTables) }}
@@ -152,6 +190,14 @@ const TablesView: FC<Props> = ({ initialTables }) => {
           tables={tables}
           onClose={() => setCreateType(null)}
           onCreated={() => void reload()}
+        />
+      )}
+
+      {editTarget && (
+        <EditTableMetadataPopup
+          table={editTarget}
+          onClose={() => setEditTarget(null)}
+          onSubmit={(dto) => void onSubmitEditMetadata(dto)}
         />
       )}
     </div>

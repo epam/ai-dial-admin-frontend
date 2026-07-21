@@ -159,12 +159,8 @@ describe('Server :: AnalyticsDataApi', () => {
     );
   });
 
-  test('createTable POSTs the create payload to /v1/tables', async () => {
-    const dto: CreateTableDto = {
-      name: 'events',
-      type: AnalyticsTableType.Source,
-      columns: [{ source_name: 'ts', name: 'timestamp', type: AnalyticsFieldType.Timestamp }],
-    };
+  test('createTable POSTs the identity-only create payload to /v1/tables', async () => {
+    const dto: CreateTableDto = { name: 'events', type: AnalyticsTableType.Source, description: 'Raw events' };
     fetch.mockResponseOnce(JSON.stringify({ success: true }));
 
     const res = await instance.createTable(dto, TOKEN_MOCK);
@@ -176,6 +172,18 @@ describe('Server :: AnalyticsDataApi', () => {
     );
   });
 
+  test('updateTable PUTs the metadata payload to /v1/tables/{name}', async () => {
+    const dto = { description: 'Updated', tag_order: ['pii'] };
+    fetch.mockResponseOnce(JSON.stringify({ success: true }));
+
+    await instance.updateTable('events', dto, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/tables/events'),
+      expect.objectContaining({ method: 'PUT', body: JSON.stringify(dto) }),
+    );
+  });
+
   test('deleteTable issues DELETE on the encoded table URL', async () => {
     fetch.mockResponseOnce(JSON.stringify({ success: true }));
 
@@ -184,6 +192,21 @@ describe('Server :: AnalyticsDataApi', () => {
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/v1/tables/events'),
       expect.objectContaining({ method: 'DELETE' }),
+    );
+  });
+
+  test('defineTableSchema POSTs the complete schema to /v1/tables/{name}/schema (defines + materializes)', async () => {
+    const schema = {
+      columns: [{ source_name: 'ts', name: 'timestamp', type: AnalyticsFieldType.Timestamp }],
+      ordering_key: ['ts'],
+    };
+    fetch.mockResponseOnce(JSON.stringify({ success: true }));
+
+    await instance.defineTableSchema('events', schema, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/tables/events/schema'),
+      expect.objectContaining({ method: 'POST', body: JSON.stringify(schema) }),
     );
   });
 
