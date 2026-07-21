@@ -5,7 +5,16 @@ import { AnalyticsTableType, CreateTableDto } from '@/src/models/analytics/table
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { addRows, createTable, deleteTable, getTable, getTables, updateTableSchema } from '../actions';
+import {
+  addRows,
+  createTable,
+  deleteTable,
+  getTable,
+  getTableAccess,
+  getTables,
+  replaceTableAccess,
+  updateTableSchema,
+} from '../actions';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -68,5 +77,22 @@ describe('Tables server actions', () => {
     await addRows('events', dto);
 
     expect(analyticsDataApi.addRows).toHaveBeenCalledWith('events', dto, TOKEN_MOCK);
+  });
+
+  test('getTableAccess passes name + token', async () => {
+    (analyticsDataApi.getTableAccess as any).mockResolvedValue({ write: [], modify: [] });
+
+    await getTableAccess('events');
+
+    expect(analyticsDataApi.getTableAccess).toHaveBeenCalledWith('events', TOKEN_MOCK);
+  });
+
+  test('replaceTableAccess passes name, access + token', async () => {
+    const access = { write: ['w'], modify: ['m'] };
+    (analyticsDataApi.replaceTableAccess as any).mockResolvedValue({ success: true });
+
+    await replaceTableAccess('events', access);
+
+    expect(analyticsDataApi.replaceTableAccess).toHaveBeenCalledWith('events', access, TOKEN_MOCK);
   });
 });
