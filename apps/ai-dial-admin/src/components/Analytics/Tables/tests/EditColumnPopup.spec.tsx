@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import EditColumnPopup from '@/src/components/Analytics/Tables/EditColumnPopup';
-import { AnalyticsTablesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { AnalyticsTablesI18nKey, ButtonsI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { AnalyticsTableColumn } from '@/src/models/analytics/table';
 
@@ -65,6 +65,33 @@ describe('EditColumnPopup', () => {
 
     setInput(AnalyticsTablesI18nKey.ColumnName, '');
 
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeDisabled();
+  });
+
+  test('a rename to an invalid identifier shows the format error and disables submit', () => {
+    renderPopup();
+
+    setInput(AnalyticsTablesI18nKey.ColumnName, 'Total-Cost');
+
+    expect(screen.getByText(ErrorI18nKey.SnakeCaseIdentifier)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeDisabled();
+  });
+
+  test('a rename that collides with another column shows the exists error and disables submit', () => {
+    renderPopup({ existingNames: ['total_cost'] });
+
+    setInput(AnalyticsTablesI18nKey.ColumnName, 'total_cost');
+
+    expect(screen.getByText(ErrorI18nKey.KeyValueExists)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeDisabled();
+  });
+
+  test('a tag longer than the length cap shows the length error and disables submit', () => {
+    renderPopup();
+
+    setInput(AnalyticsTablesI18nKey.Tag, 'a'.repeat(65));
+
+    expect(screen.getByText(ErrorI18nKey.Length)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeDisabled();
   });
 

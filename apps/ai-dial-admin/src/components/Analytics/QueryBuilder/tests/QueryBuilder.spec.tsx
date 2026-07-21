@@ -7,6 +7,7 @@ import {
   executeQuery,
   executeSqlQuery,
   generateQuery,
+  getEntitySchema,
   translateQuery,
   translateSqlToQuery,
 } from '@/src/app/[lang]/query-builder/actions';
@@ -451,6 +452,42 @@ describe('QueryBuilder AI view', () => {
     await user.click(runButton);
     expect(executeQuery).toHaveBeenCalled();
     expect(executeSqlQuery).not.toHaveBeenCalled();
+  });
+
+  test('a generated query targeting another entity refreshes the schema so the time bound uses the right timestamp field', async () => {
+    // Repro for the `unknown field 'source_name_8'` error: the page loads a first entity whose
+    // timestamp column is named differently, then the AI generates a query for a *different* entity.
+    // Without re-fetching the schema, the toolbar time bound resolves against the stale entity's
+    // timestamp column (source_name_8) — a field the queried entity doesn't have.
+    const user = userEvent.setup();
+    setQueryAssistantEnabled(true);
+    vi.mocked(getEntitySchema).mockResolvedValue({
+      fields: [{ name: 'request_time', type: AnalyticsFieldType.Timestamp, source: 'request_time' }],
+    });
+    vi.mocked(translateSqlToQuery).mockResolvedValue({
+      success: true,
+      response: { query: { entity: 'dial_usage_log', mode: QueryMode.Row } },
+    } as never);
+    vi.mocked(executeQuery).mockResolvedValue({ success: true, response: { rows: [] } } as never);
+
+    renderBuilder({
+      initialEntities: [{ name: 'custom_source' }, { name: 'dial_usage_log' }],
+      initialEntityName: 'custom_source',
+      initialFields: [{ name: 'source_name_8', type: AnalyticsFieldType.Timestamp, source: 'source_name_8' }],
+    });
+    await generate(user, '```sql\nSELECT 1\n```');
+    const runButton = await screen.findByRole('button', { name: /QueryBuilder.Run/ });
+    await vi.waitFor(() => expect(runButton).toBeEnabled());
+
+    await user.click(runButton);
+
+    expect(getEntitySchema).toHaveBeenCalledWith('dial_usage_log');
+    const sent = vi.mocked(executeQuery).mock.calls[0][0] as StructuredQuery;
+    expect(sent.entity).toBe('dial_usage_log');
+    const args = (sent.filter as { args: { op: string; args: { name?: string }[] }[] }).args;
+    expect(args.map((a) => a.op)).toEqual(['ge', 'le']);
+    expect(args[0].args[0].name).toBe('request_time');
+    expect(JSON.stringify(sent)).not.toContain('source_name_8');
   });
 
   test('a follow-up reply without SQL clears the armed query and disables Run', async () => {
