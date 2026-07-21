@@ -37,7 +37,7 @@ function stripExternalServiceAuthStatuses(app: DialApplicationResource): DialApp
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { app_level_auth_status, user_level_auth_status, global_auth_status, ...cleanSettings } =
         service.auth_settings as DialExternalServiceAuthSettings;
-      return [id, { ...service, auth_settings: { ...cleanSettings, offline_usage_consent: true } }];
+      return [id, { ...service, auth_settings: cleanSettings }];
     }),
   );
   return { ...app, external_services };
@@ -162,6 +162,7 @@ export async function signInExternalService(
     url: `applications/${appPath}/external_services/${serviceId}`,
     credentialsLevel: level,
     authenticationType: authType,
+    offline_usage_consent: true,
   };
   if (authType === ToolsetAuthType.OAUTH) {
     body.code = code;
