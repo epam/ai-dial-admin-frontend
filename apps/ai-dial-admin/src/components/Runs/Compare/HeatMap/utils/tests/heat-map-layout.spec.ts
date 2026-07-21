@@ -13,6 +13,7 @@ import {
 } from '@/src/components/Runs/Compare/HeatMap/constants';
 import {
   canFitHeatMapColumnsToContainer,
+  buildEqualHeatMapColumnWidths,
   measureVerticalHeatMapHeaderLabelHeight,
   resolveHeatMapHeaderHeight,
   resolveHeatMapRowHeight,
@@ -77,5 +78,20 @@ describe('canFitHeatMapColumnsToContainer', () => {
 
   test('returns false for empty column count', () => {
     expect(canFitHeatMapColumnsToContainer(1000, 0)).toBe(false);
+  });
+});
+
+describe('buildEqualHeatMapColumnWidths', () => {
+  test('returns empty array for empty column count', () => {
+    expect(buildEqualHeatMapColumnWidths(1000, 0)).toEqual([]);
+  });
+
+  test('distributes available width evenly with remainder on leading columns', () => {
+    // 1153 / 53 = 21 remainder 40 → first 40 columns are 22, rest are 21
+    expect(buildEqualHeatMapColumnWidths(1153, 53)).toEqual([...Array(40).fill(22), ...Array(13).fill(21)]);
+  });
+
+  test('never goes below min width', () => {
+    expect(buildEqualHeatMapColumnWidths(0, 5)).toEqual(Array(5).fill(HEAT_MAP_VALUE_COL_MIN_WIDTH));
   });
 });

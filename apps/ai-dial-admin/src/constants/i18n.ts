@@ -1039,6 +1039,7 @@ export enum ErrorI18nKey {
   KeyValueExists = 'Error.KeyValueExists',
   ForbiddenChars = 'Error.ForbiddenChars',
   AlphanumericUnderscore = 'Error.AlphanumericUnderscore',
+  SnakeCaseIdentifier = 'Error.SnakeCaseIdentifier',
   RequiredProperty = 'Error.RequiredProperty',
   InvalidPath = 'Error.InvalidPath',
   InvalidStatus = 'Error.InvalidStatus',

@@ -45,7 +45,6 @@ export interface DialExternalService {
 
 export interface DialExternalServiceAuthSettings extends DialToolsetResourceAuthSettings {
   app_level_auth_status?: ToolsetAuthStatus;
-  offline_usage_consent?: boolean;
 }
 
 export interface DialApplicationResourceFeatures {

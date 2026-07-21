@@ -106,5 +106,15 @@ describe('Server :: api :: publications enrichment re-pointed to AssetApi', () =
     const headers = (putCall[1] as RequestInit).headers as Record<string, string>;
     expect(headers[IF_MATCH]).toBeUndefined();
     expect(headers[IF_NONE_MATCH]).toBeUndefined();
+
+    // The PUT body must be a clean content DTO — Core rejects folderId/path/version as
+    // unrecognized properties (the same class of bug fixed for import in `stripAssetIdentityFields`).
+    // `id` is expected here: prompts require it in content, freshly recomputed by `AssetApi.put`'s
+    // `withContentId` — not the stale identity field `stripAssetIdentityFields` strips.
+    const body = JSON.parse((putCall[1] as RequestInit).body as string);
+    expect(body).not.toHaveProperty('folderId');
+    expect(body).not.toHaveProperty('path');
+    expect(body).not.toHaveProperty('version');
+    expect(body).toMatchObject({ name: 'P', content: 'body' });
   });
 });

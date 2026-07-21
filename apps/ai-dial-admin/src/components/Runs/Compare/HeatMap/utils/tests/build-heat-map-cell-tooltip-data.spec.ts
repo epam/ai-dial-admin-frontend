@@ -73,7 +73,7 @@ describe('buildHeatMapCellTooltipData', () => {
     expect(result?.runLabel).toBeUndefined();
   });
 
-  test('uses N/A text without swatch for zero delta', () => {
+  test('uses zero swatch for zero delta', () => {
     const deltaRow = {
       ...metricRow,
       runIndex: undefined,
@@ -85,13 +85,16 @@ describe('buildHeatMapCellTooltipData', () => {
       colorDisplayMode: HeatMapColorDisplayMode.Delta,
     });
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       testCase: 'Row 001',
       metric: 'Context Appropriateness',
       input: 'Recall',
+      valueRow: {
+        value: '0',
+      },
       valueLabelKey: RunsI18nKey.RunCompareHeatMapTooltipDelta,
-      valueTextKey: RunsI18nKey.RunCompareHeatMapNotApplicable,
     });
+    expect(result?.valueTextKey).toBeUndefined();
   });
 
   test('formats primary run label in absolute mode', () => {
@@ -140,7 +143,7 @@ describe('buildHeatMapCellTooltipData', () => {
     });
   });
 
-  test('returns undefined for undefined and null cell values', () => {
+  test('returns Score N/A tooltip with run for missing absolute values', () => {
     const undefinedValueRow = { ...metricRow, values: { [colId]: undefined } };
     const nullValueRow = { ...metricRow, values: { [colId]: null } };
 
@@ -149,13 +152,48 @@ describe('buildHeatMapCellTooltipData', () => {
         ...baseOptions,
         colorDisplayMode: HeatMapColorDisplayMode.Absolute,
       }),
-    ).toBeUndefined();
+    ).toEqual({
+      testCase: 'Row 001',
+      metric: 'Context Appropriateness',
+      input: 'Recall',
+      runLabel: '[2] Run #317',
+      valueLabelKey: RunsI18nKey.RunCompareHeatMapTooltipScore,
+      valueTextKey: RunsI18nKey.RunCompareHeatMapNotApplicable,
+    });
 
     expect(
       buildHeatMapCellTooltipData({ data: nullValueRow } as never, {
         ...baseOptions,
         colorDisplayMode: HeatMapColorDisplayMode.Absolute,
       }),
-    ).toBeUndefined();
+    ).toEqual({
+      testCase: 'Row 001',
+      metric: 'Context Appropriateness',
+      input: 'Recall',
+      runLabel: '[2] Run #317',
+      valueLabelKey: RunsI18nKey.RunCompareHeatMapTooltipScore,
+      valueTextKey: RunsI18nKey.RunCompareHeatMapNotApplicable,
+    });
+  });
+
+  test('returns Delta N/A tooltip without run for missing delta values', () => {
+    const missingDeltaRow = {
+      ...metricRow,
+      runIndex: undefined,
+      values: { [colId]: undefined },
+    };
+
+    expect(
+      buildHeatMapCellTooltipData({ data: missingDeltaRow } as never, {
+        ...baseOptions,
+        colorDisplayMode: HeatMapColorDisplayMode.Delta,
+      }),
+    ).toEqual({
+      testCase: 'Row 001',
+      metric: 'Context Appropriateness',
+      input: 'Recall',
+      valueLabelKey: RunsI18nKey.RunCompareHeatMapTooltipDelta,
+      valueTextKey: RunsI18nKey.RunCompareHeatMapNotApplicable,
+    });
   });
 });
