@@ -49,10 +49,21 @@ export const normalizeMetricGroupsSelection = (selected: Set<string>, available:
   return selected;
 };
 
+export const getSelectedMetricGroupsCount = (selected: Set<string>, available: string[]): number =>
+  selected.size === 0 ? available.length : available.filter((key) => selected.has(key)).length;
+
+export const isLastSelectedMetricGroup = (selected: Set<string>, groupKey: string, available: string[]): boolean =>
+  isMetricGroupSelected(selected, groupKey) && getSelectedMetricGroupsCount(selected, available) === 1;
+
 export const toggleMetricGroup = (selected: Set<string>, groupKey: string, available: string[] = []): Set<string> => {
   const base = selected.size === 0 ? new Set(available) : new Set(selected);
 
   if (base.has(groupKey)) {
+    // Keep at least one metric selected (empty set is the All sentinel, not "none").
+    if (base.size === 1) {
+      return normalizeMetricGroupsSelection(base, available);
+    }
+
     base.delete(groupKey);
   } else {
     base.add(groupKey);
@@ -95,10 +106,19 @@ export const formatHeatMapMetricsTriggerLabel = (
   available: string[],
   t: (key: RunsI18nKey) => string,
 ): string => {
-  if (available.length === 0 || isAllMetricGroupsSelected(selected, available)) {
+  if (available.length === 0) {
     return t(RunsI18nKey.RunCompareHeatMapMetricsAll);
   }
 
-  const selectedCount = available.filter((key) => selected.has(key)).length;
-  return `${t(RunsI18nKey.RunCompareHeatMapMetricsPrefix)} ${selectedCount}/${available.length}`;
+  const selectedKeys = selected.size === 0 ? available : available.filter((key) => selected.has(key));
+
+  if (selectedKeys.length === 1) {
+    return `${t(RunsI18nKey.RunCompareHeatMapMetricsPrefix)} ${selectedKeys[0]}`;
+  }
+
+  if (isAllMetricGroupsSelected(selected, available)) {
+    return t(RunsI18nKey.RunCompareHeatMapMetricsAll);
+  }
+
+  return `${t(RunsI18nKey.RunCompareHeatMapMetricsPrefix)} ${selectedKeys.length}/${available.length}`;
 };

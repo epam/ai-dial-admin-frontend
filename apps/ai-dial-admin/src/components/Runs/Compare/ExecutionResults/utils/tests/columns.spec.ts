@@ -287,7 +287,7 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     );
   });
 
-  test('metric columns skip cell-pair highlight when _compared is null (row highlight covers it)', () => {
+  test('metric columns highlight removed when _compared is null', () => {
     type MetricCol = {
       cellClassRules?: Record<string, (params: { data?: CompareAnalyticsRow }) => boolean>;
     };
@@ -305,9 +305,9 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
       _compared: null,
     });
 
-    expect(primaryPrecision.cellClassRules?.['compare-metric-regressed-primary']?.({ data: unmatchedRow })).toBe(false);
+    expect(primaryPrecision.cellClassRules?.['compare-metric-regressed-primary']?.({ data: unmatchedRow })).toBe(true);
     expect(secondaryPrecision.cellClassRules?.['compare-metric-regressed-secondary']?.({ data: unmatchedRow })).toBe(
-      false,
+      true,
     );
   });
 
