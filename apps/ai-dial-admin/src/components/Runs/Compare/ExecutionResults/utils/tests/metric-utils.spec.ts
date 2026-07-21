@@ -14,10 +14,6 @@ import {
   getExecutionStatusDelta,
   getMetricDelta,
   hasCompareRowDiff,
-  isCompareRowAllMetricsEmpty,
-  isCompareRowFullyEmpty,
-  isCompareRunExecutionDataEmpty,
-  isCompareSecondarySideEmpty,
   roundMetricValue,
 } from '../metric-utils';
 
@@ -225,6 +221,48 @@ describe('Runs Compare :: countCompareDiffs', () => {
 
     expect(countCompareDiffs(rows)).toEqual({ improved: 1, changed: 0, regressed: 1 });
   });
+
+  test('excludes diffs from hidden execution columns', () => {
+    const rows = [
+      makeRow({
+        responseStatusCode: 200,
+        execDurationMs: 100,
+        extractedColumns: { answer: 'yes' },
+        metricValues: { Accuracy: { precision: 0.5 } },
+        _compared: {
+          ...makeRow(),
+          responseStatusCode: 500,
+          execDurationMs: 250,
+          extractedColumns: { answer: 'no' },
+          metricValues: { Accuracy: { precision: 0.8 } },
+        },
+      }),
+    ];
+
+    const hiddenColIds = new Set(['duration', 'cmp_duration', 'http', 'cmp_http']);
+
+    expect(countCompareDiffs(rows, { hiddenColIds })).toEqual({ improved: 0, changed: 2, regressed: 0 });
+  });
+
+  test('excludes diffs from hidden metric columns', () => {
+    const rows = [
+      makeRow({
+        responseStatusCode: 200,
+        execDurationMs: 100,
+        metricValues: { Accuracy: { precision: 0.5 } },
+        _compared: {
+          ...makeRow(),
+          responseStatusCode: 500,
+          execDurationMs: 250,
+          metricValues: { Accuracy: { precision: 0.8 } },
+        },
+      }),
+    ];
+
+    const hiddenColIds = new Set(['Accuracy_precision', 'cmp_Accuracy_precision', 'delta_Accuracy_precision']);
+
+    expect(countCompareDiffs(rows, { hiddenColIds })).toEqual({ improved: 0, changed: 2, regressed: 0 });
+  });
 });
 
 describe('Runs Compare :: hasCompareRowDiff', () => {
@@ -348,169 +386,5 @@ describe('Runs Compare :: hasCompareRowDiff', () => {
     });
 
     expect(hasCompareRowDiff(row, { hiddenColIds })).toBe(true);
-  });
-});
-
-describe('Runs Compare :: isCompareRowAllMetricsEmpty', () => {
-  const schema = { 'DIAL RAG Eval: Retrieval': { f1: 0, mrr: 0, recall: 0, precision: 0 } };
-
-  test('returns true when both runs have no values for all schema metrics', () => {
-    const row = makeRow({
-      _compared: { ...makeRow(), id: 'result-2' },
-    });
-
-    expect(isCompareRowAllMetricsEmpty(row, schema)).toBe(true);
-  });
-
-  test('returns false when primary run has a metric value', () => {
-    const row = makeRow({
-      metricValues: { 'DIAL RAG Eval: Retrieval': { f1: 0.143 } },
-      _compared: { ...makeRow(), id: 'result-2' },
-    });
-
-    expect(isCompareRowAllMetricsEmpty(row, schema)).toBe(false);
-  });
-
-  test('returns false when secondary run has a metric value', () => {
-    const row = makeRow({
-      _compared: {
-        ...makeRow(),
-        id: 'result-2',
-        metricValues: { 'DIAL RAG Eval: Retrieval': { recall: 0.5 } },
-      },
-    });
-
-    expect(isCompareRowAllMetricsEmpty(row, schema)).toBe(false);
-  });
-
-  test('returns true when schema is empty', () => {
-    const row = makeRow({
-      metricValues: { Accuracy: { precision: 0.8 } },
-      _compared: { ...makeRow(), id: 'result-2' },
-    });
-
-    expect(isCompareRowAllMetricsEmpty(row, {})).toBe(true);
-  });
-});
-
-describe('Runs Compare :: isCompareRunExecutionDataEmpty', () => {
-  test('returns true when run has no execution fields', () => {
-    const row = makeRow({
-      runIndex: undefined as unknown as number,
-      responseStatusCode: undefined as unknown as number,
-    });
-
-    expect(isCompareRunExecutionDataEmpty(row)).toBe(true);
-  });
-
-  test('returns false when run index is present', () => {
-    expect(isCompareRunExecutionDataEmpty(makeRow({ runIndex: 0 }))).toBe(false);
-  });
-
-  test('returns false when http status is present', () => {
-    expect(isCompareRunExecutionDataEmpty(makeRow({ responseStatusCode: 200 }))).toBe(false);
-  });
-
-  test('returns false when duration is present', () => {
-    expect(isCompareRunExecutionDataEmpty(makeRow({ execDurationMs: 250 }))).toBe(false);
-  });
-
-  test('returns true for null compared run', () => {
-    expect(isCompareRunExecutionDataEmpty(null)).toBe(true);
-  });
-});
-
-describe('Runs Compare :: isCompareRowFullyEmpty', () => {
-  const schema = { 'DIAL RAG Eval: Retrieval': { f1: 0, mrr: 0, recall: 0, precision: 0 } };
-
-  test('returns false when primary run has execution data even if metrics are empty', () => {
-    const row = makeRow({
-      runIndex: 0,
-      responseStatusCode: 200,
-      _compared: { ...makeRow(), id: 'result-2', runIndex: undefined as unknown as number },
-    });
-
-    expect(isCompareRowFullyEmpty(row, schema)).toBe(false);
-  });
-
-  test('returns false when secondary run has execution data', () => {
-    const row = makeRow({
-      runIndex: undefined as unknown as number,
-      responseStatusCode: undefined as unknown as number,
-      _compared: { ...makeRow(), id: 'result-2', runIndex: 1, responseStatusCode: 500 },
-    });
-
-    expect(isCompareRowFullyEmpty(row, schema)).toBe(false);
-  });
-
-  test('returns true only when execution and metrics are empty on both runs', () => {
-    const row = makeRow({
-      runIndex: undefined as unknown as number,
-      responseStatusCode: undefined as unknown as number,
-      _compared: {
-        ...makeRow(),
-        id: 'result-2',
-        runIndex: undefined as unknown as number,
-        responseStatusCode: undefined as unknown as number,
-      },
-    });
-
-    expect(isCompareRowFullyEmpty(row, schema)).toBe(true);
-  });
-});
-
-describe('Runs Compare :: isCompareSecondarySideEmpty', () => {
-  const schema = { Accuracy: { precision: 0, recall: 0 } };
-
-  test('returns true when _compared is null even if primary has metrics', () => {
-    const row = makeRow({
-      metricValues: { Accuracy: { precision: 0.8, recall: 0.5 } },
-      _compared: null,
-    });
-
-    expect(isCompareSecondarySideEmpty(row, schema)).toBe(true);
-    expect(isCompareRowFullyEmpty(row, schema)).toBe(false);
-  });
-
-  test('returns true when compared exists but has no execution or metric data', () => {
-    const row = makeRow({
-      metricValues: { Accuracy: { precision: 0.8 } },
-      _compared: {
-        ...makeRow(),
-        id: 'result-2',
-        runIndex: undefined as unknown as number,
-        responseStatusCode: undefined as unknown as number,
-        metricValues: {},
-      },
-    });
-
-    expect(isCompareSecondarySideEmpty(row, schema)).toBe(true);
-  });
-
-  test('returns false when compared has metric values', () => {
-    const row = makeRow({
-      metricValues: { Accuracy: { precision: 0.8 } },
-      _compared: {
-        ...makeRow(),
-        id: 'result-2',
-        metricValues: { Accuracy: { precision: 0.5 } },
-      },
-    });
-
-    expect(isCompareSecondarySideEmpty(row, schema)).toBe(false);
-  });
-
-  test('returns false when compared has execution data even if metrics are empty', () => {
-    const row = makeRow({
-      metricValues: { Accuracy: { precision: 0.8 } },
-      _compared: {
-        ...makeRow(),
-        id: 'result-2',
-        responseStatusCode: 200,
-        metricValues: {},
-      },
-    });
-
-    expect(isCompareSecondarySideEmpty(row, schema)).toBe(false);
   });
 });
