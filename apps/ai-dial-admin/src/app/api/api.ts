@@ -1,4 +1,5 @@
 import { AnalyticsDataApi } from '@/src/server/analytics/analytics-data-api';
+import { stripAssetIdentityFields } from '@/src/server/assets/exim';
 import { AssetApi } from '@/src/server/core/asset-api';
 import { BucketApi } from '@/src/server/core/bucket-api';
 import { FilesCoreApi } from '@/src/server/core/files-core-api';
@@ -210,7 +211,13 @@ export const queryAssistantApi = new QueryAssistantApi({
 const publicationEnrichmentClients: EnrichmentClients = {
   getAsset: (token, path, type, etag) => assetApi.getMergedWithEtag(token, type, path, etag),
   updateAsset: (token, asset, type, etag) =>
-    assetApi.put(token, type, (asset as { path: string }).path, asset, { etag }),
+    assetApi.put(
+      token,
+      type,
+      (asset as { path: string }).path,
+      stripAssetIdentityFields(asset as { folderId?: string; path?: string; version?: string; id?: string }),
+      { etag },
+    ),
   getBucket: (token) => bucketApi.getBucket(token),
   getFileMetadata: (token, path) => filesCoreApi.getFileMetadata(token, path),
   uploadFile: (token, path, file) => filesCoreApi.uploadFile(token, path, file),
