@@ -2093,6 +2093,7 @@ export default {
     RunCompareHeatMapMetricsAll: 'Metrics: All',
     RunCompareHeatMapMetricsPrefix: 'Metrics:',
     RunCompareHeatMapMetricsOptionAll: 'All',
+    RunCompareHeatMapMetricsMinOneSelected: 'At least one metric \nshould be selected',
     RunCompareColorDisplay: 'Color display:',
     RunCompareAbsoluteValues: 'Absolute values',
     RunCompareDelta: 'Delta',
