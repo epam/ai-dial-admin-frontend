@@ -5,6 +5,7 @@ import { getInterceptorTemplatesList } from '@/src/app/[lang]/interceptor-templa
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import IdControl from '@/src/components/BaseControls/Id/Id';
+import IntroControl from '@/src/components/BaseControls/Intro';
 import { getSourceItems } from '@/src/components/SourceField/constants';
 import SourceField from '@/src/components/SourceField/SourceField';
 import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -74,6 +75,10 @@ const EntityProperties: FC<Props> = ({
       />
 
       <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} isFullWidth={!isEntityImmutable} />
+
+      {view === ApplicationRoute.Interceptors && (
+        <IntroControl entity={entity} onChangeEntity={onChangeEntity} isFullWidth={!isEntityImmutable} />
+      )}
 
       {view === ApplicationRoute.Interceptors && !isEntityImmutable && !initialValues && (
         <SourceField

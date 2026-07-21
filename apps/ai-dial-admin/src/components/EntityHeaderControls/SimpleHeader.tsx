@@ -8,6 +8,7 @@ import ReadonlyId from '@/src/components/BaseControls/Id/ReadonlyId';
 import CoreSyncEntityStatus from '@/src/components/Common/SyncCoreStatus/SyncCoreStatus';
 import Tabs from '@/src/components/EntityHeaderControls/Tabs/HeaderTabs';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getCoreSyncStatusUrl } from '@/src/utils/core-sync/get-core-sync-status-url';
 import { getHeaderClassName } from '@/src/utils/entities/view';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import SimpleButtonsWrapper, { SimpleButtonsWrapperProps } from './Wrappers/SimpleButtonsWrapper';
@@ -41,13 +42,14 @@ const SimpleEntityHeader = <T extends Entity>({
     props.view === ApplicationRoute.TestSuites || props.view === ApplicationRoute.Datasets
       ? props.entity.name || ''
       : props.entity.id || props.entity.$id || props.entity.name || '';
+  const hasCoreSyncStatus = getCoreSyncStatusUrl(props.view, readonlyId) !== null;
 
   return (
     <div className="flex flex-col gap-y-4 mb-8">
       <div className={getHeaderClassName(isEditorEnabled)}>
         {!isEditorEnabled && (
           <div className="flex flex-col gap-0.5">
-            <CoreSyncEntityStatus view={props.view} name={readonlyId} />
+            {hasCoreSyncStatus && <CoreSyncEntityStatus view={props.view} name={readonlyId} />}
 
             <ReadonlyId value={readonlyId} />
           </div>
