@@ -21,6 +21,7 @@ import {
   ExternalServiceI18nKey,
 } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationResource, DialExternalService, ToolsetAuthType } from '@/src/models/dial/resource';
@@ -42,6 +43,7 @@ interface Props {
 const ResourceMultiAuth: FC<Props> = ({ asset, onChange }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  const { isValid } = useSaveValidationContext();
   const [editState, setEditState] = useState<EditState | null>(null);
   const [loadingServiceId, setLoadingServiceId] = useState<string | null>(null);
 
@@ -150,7 +152,11 @@ const ResourceMultiAuth: FC<Props> = ({ asset, onChange }) => {
         {!isReadOnlyAdmin && (
           <div className="flex justify-end gap-x-2">
             <DialNeutralButton label={t(ButtonsI18nKey.Back)} onClick={onBack} />
-            <DialPrimaryButton label={t(ButtonsI18nKey.Apply)} onClick={onSave} disabled={!editState.currentId} />
+            <DialPrimaryButton
+              label={t(ButtonsI18nKey.Apply)}
+              onClick={onSave}
+              disabled={!editState.currentId || !isValid}
+            />
           </div>
         )}
       </div>
