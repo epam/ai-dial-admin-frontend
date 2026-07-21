@@ -177,12 +177,8 @@ export const getExecutionStatusDelta = (
   return MetricDeltaKind.Changed;
 };
 
-const hasExecutionStatusDiff = (row: CompareAnalyticsRow): boolean => {
-  const compared = row._compared;
-  if (!compared) return false;
-
-  return getExecutionStatusDelta(row.executionStatus, compared.executionStatus) !== MetricDeltaKind.Empty;
-};
+const hasExecutionStatusDiff = (row: CompareAnalyticsRow): boolean =>
+  getExecutionStatusDelta(row.executionStatus, row._compared?.executionStatus) !== MetricDeltaKind.Empty;
 
 const isAnyColVisible = (colIds: string[], hiddenColIds: ReadonlySet<string>): boolean =>
   colIds.some((colId) => !hiddenColIds.has(colId));
@@ -200,11 +196,8 @@ const hasHttpDiffForVisibility = (row: CompareAnalyticsRow, hiddenColIds?: Reado
     return false;
   }
 
-  const compared = row._compared;
-  if (!compared) return false;
-
   return (
-    getCompareFieldDelta(row.responseStatusCode, compared.responseStatusCode, { isNumeric: true }) !==
+    getCompareFieldDelta(row.responseStatusCode, row._compared?.responseStatusCode ?? null, { isNumeric: true }) !==
     MetricDeltaKind.Empty
   );
 };
@@ -214,12 +207,9 @@ const hasDurationDiffForVisibility = (row: CompareAnalyticsRow, hiddenColIds?: R
     return false;
   }
 
-  const compared = row._compared;
-  if (!compared) return false;
-
+  const secondaryDuration = row._compared ? getCompareRowDurationMs(row._compared) : null;
   return (
-    getCompareFieldDelta(getCompareRowDurationMs(row), getCompareRowDurationMs(compared), { isNumeric: true }) !==
-    MetricDeltaKind.Empty
+    getCompareFieldDelta(getCompareRowDurationMs(row), secondaryDuration, { isNumeric: true }) !== MetricDeltaKind.Empty
   );
 };
 
@@ -228,16 +218,14 @@ const hasExecutionFieldDiffForVisibility = (row: CompareAnalyticsRow, hiddenColI
 
 const hasExtractedDiffForVisibility = (row: CompareAnalyticsRow, hiddenColIds?: ReadonlySet<string>): boolean => {
   const compared = row._compared;
-  if (!compared) return false;
-
-  const keys = new Set([...Object.keys(row.extractedColumns ?? {}), ...Object.keys(compared.extractedColumns ?? {})]);
+  const keys = new Set([...Object.keys(row.extractedColumns ?? {}), ...Object.keys(compared?.extractedColumns ?? {})]);
 
   for (const key of keys) {
     if (hiddenColIds && !isAnyColVisible([`extracted_${key}`, `cmp_extracted_${key}`], hiddenColIds)) {
       continue;
     }
 
-    const delta = getCompareFieldDelta(row.extractedColumns?.[key] ?? null, compared.extractedColumns?.[key] ?? null);
+    const delta = getCompareFieldDelta(row.extractedColumns?.[key] ?? null, compared?.extractedColumns?.[key] ?? null);
     if (delta !== MetricDeltaKind.Empty) return true;
   }
 
@@ -323,20 +311,17 @@ const countExecutionFieldDiffsForRow = (
   hiddenColIds?: ReadonlySet<string>,
 ): void => {
   const compared = row._compared;
-  if (!compared) return;
 
   if (!hiddenColIds || isAnyColVisible(['http', 'cmp_http'], hiddenColIds)) {
     countFieldDelta(
-      getCompareFieldDelta(row.responseStatusCode, compared.responseStatusCode, { isNumeric: true }),
+      getCompareFieldDelta(row.responseStatusCode, compared?.responseStatusCode ?? null, { isNumeric: true }),
       counts,
     );
   }
 
   if (!hiddenColIds || isAnyColVisible(['duration', 'cmp_duration'], hiddenColIds)) {
-    countFieldDelta(
-      getCompareFieldDelta(getCompareRowDurationMs(row), getCompareRowDurationMs(compared), { isNumeric: true }),
-      counts,
-    );
+    const secondaryDuration = compared ? getCompareRowDurationMs(compared) : null;
+    countFieldDelta(getCompareFieldDelta(getCompareRowDurationMs(row), secondaryDuration, { isNumeric: true }), counts);
   }
 };
 
@@ -346,9 +331,7 @@ const countExtractedDiffsForRow = (
   hiddenColIds?: ReadonlySet<string>,
 ): void => {
   const compared = row._compared;
-  if (!compared) return;
-
-  const keys = new Set([...Object.keys(row.extractedColumns ?? {}), ...Object.keys(compared.extractedColumns ?? {})]);
+  const keys = new Set([...Object.keys(row.extractedColumns ?? {}), ...Object.keys(compared?.extractedColumns ?? {})]);
 
   for (const key of keys) {
     if (hiddenColIds && !isAnyColVisible([`extracted_${key}`, `cmp_extracted_${key}`], hiddenColIds)) {
@@ -356,7 +339,7 @@ const countExtractedDiffsForRow = (
     }
 
     countFieldDelta(
-      getCompareFieldDelta(row.extractedColumns?.[key] ?? null, compared.extractedColumns?.[key] ?? null),
+      getCompareFieldDelta(row.extractedColumns?.[key] ?? null, compared?.extractedColumns?.[key] ?? null),
       counts,
     );
   }
@@ -411,8 +394,8 @@ export const countCompareDiffs = (
   const hiddenColIds = visibility?.hiddenColIds;
 
   for (const row of rows) {
-    if (hasExecutionStatusDiffForVisibility(row, hiddenColIds)) {
-      counts.changed++;
+    if (!hiddenColIds || isAnyColVisible(['status', 'cmp_status'], hiddenColIds)) {
+      countFieldDelta(getExecutionStatusDelta(row.executionStatus, row._compared?.executionStatus), counts);
     }
     countExecutionFieldDiffsForRow(row, counts, hiddenColIds);
     countExtractedDiffsForRow(row, counts, hiddenColIds);
