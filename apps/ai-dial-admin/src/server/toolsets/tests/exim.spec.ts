@@ -21,6 +21,7 @@ describe('Server :: Toolsets :: exim :: resolveImportDestination', () => {
 describe('Server :: Toolsets :: exim :: buildToolsetsExport', () => {
   test('fetches each selected toolset, sets a prefixed id, keeps authSettings unredacted', async () => {
     const assetApi = {
+      getMetadata: vi.fn().mockResolvedValue({ url: 'toolsets/public/folder/name__1.0', nodeType: 'ITEM' }),
       getMerged: vi.fn().mockResolvedValue({
         name: 'name',
         version: '1.0',
@@ -40,7 +41,10 @@ describe('Server :: Toolsets :: exim :: buildToolsetsExport', () => {
   });
 
   test('skips a path that resolves to nothing', async () => {
-    const assetApi = { getMerged: vi.fn().mockResolvedValue(null) } as any;
+    const assetApi = {
+      getMetadata: vi.fn().mockResolvedValue(null),
+      getMerged: vi.fn().mockResolvedValue(null),
+    } as any;
 
     const result = await buildToolsetsExport(assetApi, {} as any, ['public/missing']);
 

@@ -53,7 +53,7 @@ The system SHALL send `If-Match` for single toolset delete when a concrete etag 
 - **THEN** the destination path carries the duplicate name with the source's version suffix reapplied, unchanged from current behavior
 
 ### Requirement: Toolset export builds a structured aggregate document directly against Core
-The system SHALL build a `{ toolSets: AssetToolset[] }` document (the existing `ParsedAssets` shape) from selected toolset paths by fetching each toolset's merged content+metadata directly from DIAL Core and setting each toolset's `id` to its Core-prefixed path — not a per-file zip archive, and not a new wire type. Exported toolsets SHALL include their `authSettings` exactly as stored, without redacting secrets, matching the admin BE's current export behavior.
+The system SHALL build a `{ toolSets: AssetToolset[] }` document (the existing `ParsedAssets` shape) from selected toolset paths by fetching each toolset's merged content+metadata directly from DIAL Core and setting each toolset's `id` to its Core-prefixed path — not a per-file zip archive, and not a new wire type. Exported toolsets SHALL include their `authSettings` exactly as stored, without redacting secrets, matching the admin BE's current export behavior. When a selected path is a folder, the system SHALL first expand it into every descendant toolset resource path at any nesting depth (a recursive walk, not a one-level listing) before fetching merged content+metadata for each; a folder that is empty of toolset resources SHALL contribute no entities without causing the export to fail.
 
 #### Scenario: JSON export returns the aggregate document directly
 - **WHEN** `exportToolsets` is called with `fileType=json`
@@ -66,6 +66,14 @@ The system SHALL build a `{ toolSets: AssetToolset[] }` document (the existing `
 #### Scenario: Secrets are not redacted from exported auth settings
 - **WHEN** a toolset with OAuth `authSettings` (including `clientSecret`) is exported
 - **THEN** the exported document includes those fields unredacted, matching the admin BE's current behavior
+
+#### Scenario: Exporting a folder includes every toolset inside it, at any depth
+- **WHEN** a selected path is a folder containing toolsets directly and inside nested subfolders
+- **THEN** the exported document includes every toolset found at any depth under that folder, not only ones at the folder's top level
+
+#### Scenario: Exporting a folder with no toolsets succeeds with an empty result for that path
+- **WHEN** a selected folder path contains no toolset resources at any depth
+- **THEN** the export still succeeds, contributing zero entities for that path rather than failing
 
 ### Requirement: Toolset import resolves conflicts against Core's live state
 The system SHALL check whether a toolset already exists at its resolved destination path directly against DIAL Core, and apply the caller-supplied conflict-resolution policy: `OVERRIDE` writes through regardless of an existing conflict; `SKIP` treats an existing conflict as a non-error skipped outcome rather than a failure. The system SHALL abort a multi-toolset import batch after a configured number of consecutive real failures, reusing the same circuit-breaker mechanism already built for files/prompts import.

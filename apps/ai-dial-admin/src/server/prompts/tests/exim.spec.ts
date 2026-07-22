@@ -43,6 +43,7 @@ describe('Server :: Prompts :: exim :: resolveImportDestination', () => {
 describe('Server :: Prompts :: exim :: buildPromptsExport', () => {
   test('fetches each selected prompt and sets a prefixed id', async () => {
     const assetApi = {
+      getMetadata: vi.fn().mockResolvedValue({ url: 'prompts/public/folder/name__1.0', nodeType: 'ITEM' }),
       getMerged: vi.fn().mockResolvedValue({ name: 'name', version: '1.0', content: 'hi' }),
     } as any;
 
@@ -55,7 +56,10 @@ describe('Server :: Prompts :: exim :: buildPromptsExport', () => {
   });
 
   test('skips a path that resolves to nothing', async () => {
-    const assetApi = { getMerged: vi.fn().mockResolvedValue(null) } as any;
+    const assetApi = {
+      getMetadata: vi.fn().mockResolvedValue(null),
+      getMerged: vi.fn().mockResolvedValue(null),
+    } as any;
 
     const result = await buildPromptsExport(assetApi, {} as any, ['public/missing']);
 

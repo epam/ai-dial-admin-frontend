@@ -16,9 +16,15 @@ const CONFIG: AssetEximConfig<Widget> = {
   setEntities: (widgets) => ({ widgets }) as any,
 };
 
+const itemNode = (url: string) => ({ url, nodeType: 'ITEM' });
+const folderNode = (url: string, items: unknown[] = []) => ({ url, nodeType: 'FOLDER', items });
+
 describe('Server :: Assets :: exim :: buildAssetsExport', () => {
   test('fetches each selected entity and sets a prefixed id', async () => {
-    const assetApi = { getMerged: vi.fn().mockResolvedValue({ name: 'name', version: '1.0' }) } as any;
+    const assetApi = {
+      getMetadata: vi.fn().mockResolvedValue(itemNode('prompts/public/folder/name__1.0')),
+      getMerged: vi.fn().mockResolvedValue({ name: 'name', version: '1.0' }),
+    } as any;
 
     const result = await buildAssetsExport(CONFIG, assetApi, {} as any, ['public/folder/name__1.0']);
 
@@ -31,11 +37,102 @@ describe('Server :: Assets :: exim :: buildAssetsExport', () => {
   });
 
   test('skips a path that resolves to nothing', async () => {
-    const assetApi = { getMerged: vi.fn().mockResolvedValue(null) } as any;
+    const assetApi = {
+      getMetadata: vi.fn().mockResolvedValue(null),
+      getMerged: vi.fn().mockResolvedValue(null),
+    } as any;
 
     const result = await buildAssetsExport(CONFIG, assetApi, {} as any, ['public/missing']);
 
     expect((result as any).widgets).toEqual([]);
+  });
+
+  test('expands a folder path into every entity it directly contains', async () => {
+    const assetApi = {
+      getMetadata: vi
+        .fn()
+        .mockImplementation((_t: unknown, _type: unknown, path: string, options: any) =>
+          options?.recursive
+            ? Promise.resolve(
+                folderNode('prompts/public/folder/', [
+                  itemNode('prompts/public/folder/a__1.0'),
+                  itemNode('prompts/public/folder/b__1.0'),
+                ]),
+              )
+            : Promise.resolve(folderNode('prompts/public/folder/')),
+        ),
+      getMerged: vi
+        .fn()
+        .mockImplementation((_t: unknown, _type: unknown, path: string) =>
+          Promise.resolve({ name: path, version: '1.0' }),
+        ),
+    } as any;
+
+    const result = await buildAssetsExport(CONFIG, assetApi, {} as any, ['public/folder/']);
+
+    expect((result as any).widgets).toEqual([
+      { name: 'public/folder/a__1.0', version: '1.0', id: 'prompts/public/folder/a__1.0' },
+      { name: 'public/folder/b__1.0', version: '1.0', id: 'prompts/public/folder/b__1.0' },
+    ]);
+  });
+
+  test('expands a folder path recursively, including entities in nested subfolders', async () => {
+    const assetApi = {
+      getMetadata: vi
+        .fn()
+        .mockImplementation((_t: unknown, _type: unknown, path: string, options: any) =>
+          options?.recursive
+            ? Promise.resolve(
+                folderNode('prompts/public/folder/', [
+                  itemNode('prompts/public/folder/a__1.0'),
+                  itemNode('prompts/public/folder/nested/b__1.0'),
+                ]),
+              )
+            : Promise.resolve(folderNode('prompts/public/folder/')),
+        ),
+      getMerged: vi
+        .fn()
+        .mockImplementation((_t: unknown, _type: unknown, path: string) =>
+          Promise.resolve({ name: path, version: '1.0' }),
+        ),
+    } as any;
+
+    const result = await buildAssetsExport(CONFIG, assetApi, {} as any, ['public/folder/']);
+
+    expect((result as any).widgets.map((w: any) => w.id)).toEqual([
+      'prompts/public/folder/a__1.0',
+      'prompts/public/folder/nested/b__1.0',
+    ]);
+  });
+
+  test('an empty folder contributes no entities without failing the export', async () => {
+    const assetApi = {
+      getMetadata: vi
+        .fn()
+        .mockImplementation((_t: unknown, _type: unknown, path: string, options: any) =>
+          options?.recursive
+            ? Promise.resolve(folderNode('prompts/public/folder/', []))
+            : Promise.resolve(folderNode('prompts/public/folder/')),
+        ),
+      getMerged: vi.fn(),
+    } as any;
+
+    const result = await buildAssetsExport(CONFIG, assetApi, {} as any, ['public/folder/']);
+
+    expect((result as any).widgets).toEqual([]);
+    expect(assetApi.getMerged).not.toHaveBeenCalled();
+  });
+
+  test('a non-folder path is passed straight through to getMerged, unchanged', async () => {
+    const assetApi = {
+      getMetadata: vi.fn().mockResolvedValue(itemNode('prompts/public/name__1.0')),
+      getMerged: vi.fn().mockResolvedValue({ name: 'name', version: '1.0' }),
+    } as any;
+
+    await buildAssetsExport(CONFIG, assetApi, {} as any, ['public/name__1.0']);
+
+    expect(assetApi.getMerged).toHaveBeenCalledTimes(1);
+    expect(assetApi.getMerged).toHaveBeenCalledWith({}, ResourceType.PROMPT, 'public/name__1.0');
   });
 });
 
