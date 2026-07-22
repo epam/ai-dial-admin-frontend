@@ -76,3 +76,13 @@ export const resourceFeaturePlaceholderMap: Record<string, EntityPlaceholdersI18
   truncate_prompt_endpoint: EntityPlaceholdersI18nKey.TruncatePromptEndpoint,
   configuration_endpoint: EntityPlaceholdersI18nKey.ConfigurationEndpoint,
 };
+
+// Resource features are snake_cased, but the app runner scheme keys are camelCased.
+// This maps the snake_cased resource feature key to its app runner scheme key.
+export const resourceRunnerApplicationMap: Record<string, string> = {
+  rate_endpoint: 'dial:applicationTypeRateEndpoint',
+  tokenize_endpoint: 'dial:applicationTypeTokenizeEndpoint',
+  truncate_prompt_endpoint: 'dial:applicationTypeTruncatePromptEndpoint',
+  configuration_endpoint: 'dial:applicationTypeConfigurationEndpoint',
+  assistant_attachments_in_request_supported: 'dial:applicationTypeAssistantAttachmentsInRequestSupported',
+};

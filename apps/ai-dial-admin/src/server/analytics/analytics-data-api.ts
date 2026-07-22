@@ -8,7 +8,15 @@ import {
   TranslateResponse,
   TranslateSqlResponse,
 } from '@/src/models/analytics/query';
-import { AnalyticsSchemaPatch, AnalyticsTable, CreateTableDto, WriteRowsDto } from '@/src/models/analytics/table';
+import {
+  AnalyticsSchemaPatch,
+  AnalyticsTable,
+  CreateTableDto,
+  DraftSchemaDto,
+  TableAccess,
+  UpdateTableDto,
+  WriteRowsDto,
+} from '@/src/models/analytics/table';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { BaseApi } from '@/src/server/base-api';
 
@@ -26,6 +34,7 @@ export const TABLES_URL = 'v1/tables';
 export const TABLE_URL = (name: string): string => `${TABLES_URL}/${encodeURIComponent(name)}`;
 export const TABLE_SCHEMA_URL = (name: string): string => `${TABLE_URL(name)}/schema`;
 export const TABLE_ROWS_URL = (name: string): string => `${TABLE_URL(name)}/rows`;
+export const TABLE_ACCESS_URL = (name: string): string => `${TABLE_URL(name)}/access`;
 
 export class AnalyticsDataApi extends BaseApi {
   checkAccess(token: Token): Promise<ServerActionResponse> {
@@ -80,8 +89,18 @@ export class AnalyticsDataApi extends BaseApi {
     return this.postAction<CreateTableDto>(TABLES_URL, dto, token);
   }
 
+  updateTable(name: string, dto: UpdateTableDto, token: Token): Promise<ServerActionResponse> {
+    return this.putAction<UpdateTableDto>(TABLE_URL(name), dto, token);
+  }
+
   deleteTable(name: string, token: Token): Promise<ServerActionResponse> {
     return this.deleteAction(TABLE_URL(name), token);
+  }
+
+  // Defines the complete physical schema of a not-yet-materialized table AND materializes it (issues
+  // CREATE TABLE, flips to ACTIVE) in one atomic call — there is no separate draft-save/materialize step.
+  defineTableSchema(name: string, dto: DraftSchemaDto, token: Token): Promise<ServerActionResponse> {
+    return this.postAction<DraftSchemaDto>(TABLE_SCHEMA_URL(name), dto, token);
   }
 
   updateTableSchema(name: string, patch: AnalyticsSchemaPatch, token: Token): Promise<ServerActionResponse> {
@@ -90,5 +109,15 @@ export class AnalyticsDataApi extends BaseApi {
 
   addRows(name: string, dto: WriteRowsDto, token: Token): Promise<ServerActionResponse> {
     return this.postAction<WriteRowsDto>(TABLE_ROWS_URL(name), dto, token);
+  }
+
+  // Per-table role lists (write/modify). Admin-only on the backend; a non-admin GET is rejected 403.
+  getTableAccess(name: string, token: Token): Promise<TableAccess | null> {
+    return this.get<TableAccess>(TABLE_ACCESS_URL(name), token);
+  }
+
+  // Full-replace of the table's role lists (admin-only).
+  replaceTableAccess(name: string, access: TableAccess, token: Token): Promise<ServerActionResponse> {
+    return this.putAction<TableAccess>(TABLE_ACCESS_URL(name), access, token);
   }
 }

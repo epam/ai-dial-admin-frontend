@@ -10,6 +10,7 @@ import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import IconControl from '@/src/components/BaseControls/Icon';
 import IdControl from '@/src/components/BaseControls/Id/Id';
 import InterfacesField from '@/src/components/BaseControls/InterfacesField/InterfacesField';
+import IntroControl from '@/src/components/BaseControls/Intro';
 import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
 import TopicsControl from '@/src/components/BaseControls/Topics';
 import VersionControl from '@/src/components/BaseControls/Version';
@@ -90,6 +91,7 @@ const ApplicationAssetProperties: FC<Props> = ({ asset, runners, onChange, isPub
           />
         )}
         <DescriptionControl entity={asset} onChangeEntity={onChange} isFullWidth={false} />
+        <IntroControl entity={asset} onChangeEntity={onChange} isFullWidth={false} />
 
         <IconControl iconUrl={asset.icon_url} onChange={(icon_url) => onChange({ ...asset, icon_url })} />
         <TopicsControl entity={asset} onChange={onChange} view={ApplicationRoute.AssetsApplications} />

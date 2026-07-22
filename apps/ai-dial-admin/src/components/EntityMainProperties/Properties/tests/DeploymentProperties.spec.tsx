@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 
 import DeploymentProperties from '../DeploymentProperties';
 import { ApplicationRoute } from '@/src/types/routes';
-import { ErrorI18nKey } from '@/src/constants/i18n';
+import { EntityFieldsI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 
 vi.mock('@/src/app/[lang]/models/actions', () => ({
   getModelsAdapters: vi.fn(),
@@ -42,5 +42,18 @@ describe('DeploymentProperties', () => {
     );
 
     expect(screen.getByText(ErrorI18nKey.NameExists)).toBeInTheDocument();
+  });
+
+  test('renders an intro field alongside description', () => {
+    render(
+      <DeploymentProperties
+        view={ApplicationRoute.Models}
+        entity={{ name: 'my-deployment-id', displayName: '', description: '', intro: '' }}
+        names={[]}
+        onChangeEntity={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText(EntityFieldsI18nKey.intro)).toBeInTheDocument();
   });
 });

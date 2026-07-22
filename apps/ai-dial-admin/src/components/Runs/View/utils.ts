@@ -193,11 +193,11 @@ export const getAnalyticsColumns = (results: AnalyticsResult[], theme?: string) 
   ];
 };
 
-const getCompareRowKey = (row: AnalyticsResult): string | null => {
-  const testCaseKey = row.testCaseId || row.testCaseName;
-  if (!testCaseKey) return null;
-  return `${testCaseKey}::${row.runIndex}`;
-};
+const getCompareIdKey = (row: AnalyticsResult): string | null =>
+  row.testCaseId ? `${row.testCaseId}::${row.runIndex}` : null;
+
+const getCompareNameKey = (row: AnalyticsResult): string | null =>
+  row.testCaseName ? `${row.testCaseName}::${row.runIndex}` : null;
 
 export const createEmptyComparePrimaryRow = (
   source: Pick<AnalyticsResult, 'testCaseId' | 'testCaseName' | 'runIndex'>,
@@ -223,38 +223,56 @@ const sortCompareRows = (rows: CompareAnalyticsRow[]): CompareAnalyticsRow[] =>
     return a.runIndex - b.runIndex;
   });
 
+const indexRowsByKey = (
+  rows: AnalyticsResult[],
+  getKey: (row: AnalyticsResult) => string | null,
+  exclude?: Set<AnalyticsResult>,
+): Map<string, AnalyticsResult> => {
+  const map = new Map<string, AnalyticsResult>();
+  for (const row of rows) {
+    if (exclude?.has(row)) continue;
+    const key = getKey(row);
+    if (key) map.set(key, row);
+  }
+  return map;
+};
+
 export const mergeByTestCaseId = (current: AnalyticsResult[], compared: AnalyticsResult[]): CompareAnalyticsRow[] => {
-  const currentMap = new Map<string, AnalyticsResult>();
-  const comparedMap = new Map<string, AnalyticsResult>();
-  const unkeyedCurrent: AnalyticsResult[] = [];
-
-  for (const row of current) {
-    const key = getCompareRowKey(row);
-    if (key) currentMap.set(key, row);
-    else unkeyedCurrent.push(row);
-  }
-
-  for (const row of compared) {
-    const key = getCompareRowKey(row);
-    if (key) comparedMap.set(key, row);
-  }
-
-  const allKeys = new Set([...currentMap.keys(), ...comparedMap.keys()]);
+  const usedCompared = new Set<AnalyticsResult>();
   const merged: CompareAnalyticsRow[] = [];
+  const unmatchedCurrent: AnalyticsResult[] = [];
 
-  for (const key of allKeys) {
-    const primary = currentMap.get(key);
-    const comparedRow = comparedMap.get(key);
-
-    if (primary) {
-      merged.push({ ...primary, _compared: comparedRow ?? null });
-    } else if (comparedRow) {
-      merged.push(createComparedOnlyRow(comparedRow));
+  // Phase 1: match by testCaseId + runIndex when both sides share the same id
+  const comparedById = indexRowsByKey(compared, getCompareIdKey);
+  for (const row of current) {
+    const idKey = getCompareIdKey(row);
+    const match = idKey ? comparedById.get(idKey) : undefined;
+    if (match) {
+      merged.push({ ...row, _compared: match });
+      usedCompared.add(match);
+    } else {
+      unmatchedCurrent.push(row);
     }
   }
 
-  for (const row of unkeyedCurrent) {
-    merged.push({ ...row, _compared: null });
+  // Phase 2: match remaining rows by testCaseName + runIndex (e.g. public vs detached private copy)
+  const comparedByName = indexRowsByKey(compared, getCompareNameKey, usedCompared);
+  for (const row of unmatchedCurrent) {
+    const nameKey = getCompareNameKey(row);
+    const match = nameKey ? comparedByName.get(nameKey) : undefined;
+    if (match && nameKey) {
+      merged.push({ ...row, _compared: match });
+      usedCompared.add(match);
+      comparedByName.delete(nameKey);
+    } else {
+      merged.push({ ...row, _compared: null });
+    }
+  }
+
+  for (const row of compared) {
+    if (!usedCompared.has(row)) {
+      merged.push(createComparedOnlyRow(row));
+    }
   }
 
   return sortCompareRows(merged);

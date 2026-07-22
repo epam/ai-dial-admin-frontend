@@ -1,10 +1,25 @@
+import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialToolsetResource, ToolsetAuthCredentialLevel, ToolsetAuthStatus } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ToolsetTransport } from '@/src/types/toolset';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
+import { resourceRunnerApplicationMap } from './constants';
 
 const urlKey = 'toolset-auth-redirect-url';
 const levelsKey = 'toolset-auth-levels';
+
+export const getResourceReadOnlyValues = (
+  key: string,
+  appRunner?: DialApplicationScheme,
+): { value: string; isReadonly: boolean } => {
+  const appRunnerKey = resourceRunnerApplicationMap[key];
+  const appRunnerValue = appRunner?.[appRunnerKey as keyof DialApplicationScheme];
+  const isReadonly = !!appRunner && !!appRunnerKey;
+  return {
+    value: appRunnerValue as string,
+    isReadonly,
+  };
+};
 
 export const isUserLoggedInToToolset = (toolset: DialToolsetResource): boolean => {
   const authSettings = toolset.auth_settings;

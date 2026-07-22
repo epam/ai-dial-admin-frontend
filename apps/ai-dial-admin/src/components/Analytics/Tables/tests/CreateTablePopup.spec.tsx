@@ -1,17 +1,13 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { createTable } from '@/src/app/[lang]/tables/actions';
 import CreateTablePopup from '@/src/components/Analytics/Tables/CreateTablePopup';
 import { AnalyticsTablesI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
 
 vi.mock('@/src/app/[lang]/tables/actions');
-
-// The rows editor is exercised in its own spec; stub it so these tests stay focused on the popup's
-// name validation, required markers, and submit gating.
-vi.mock('@/src/components/Analytics/Tables/ColumnRowsEditor', () => ({
-  default: () => <div>column-rows-editor</div>,
-}));
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 const tables: AnalyticsTable[] = [{ name: 'events', type: AnalyticsTableType.Source }];
 
@@ -28,14 +24,15 @@ beforeEach(() => {
 });
 
 describe('CreateTablePopup source', () => {
-  test('renders the name field and the required Columns / Ordering key sections', () => {
+  test('renders only identity fields — no columns/ordering key/partition sections', () => {
     setup();
     expect(nameField()).toBeInTheDocument();
-    expect(screen.getByText(AnalyticsTablesI18nKey.Columns)).toBeInTheDocument();
-    expect(screen.getByText(AnalyticsTablesI18nKey.OrderingKey)).toBeInTheDocument();
+    expect(screen.queryByText(AnalyticsTablesI18nKey.Columns)).not.toBeInTheDocument();
+    expect(screen.queryByText(AnalyticsTablesI18nKey.OrderingKey)).not.toBeInTheDocument();
+    expect(screen.queryByText(AnalyticsTablesI18nKey.PartitionColumn)).not.toBeInTheDocument();
   });
 
-  test('submit is disabled while the form is incomplete (no name, columns, or ordering key)', () => {
+  test('submit is disabled while the name is blank', () => {
     setup();
     expect(submitButton(AnalyticsTablesI18nKey.CreateSource)).toBeDisabled();
   });
@@ -53,20 +50,40 @@ describe('CreateTablePopup source', () => {
     expect(screen.getByText(ErrorI18nKey.KeyValueExists)).toBeInTheDocument();
   });
 
-  test('a valid, unique name clears the inline error (submit still gated on columns/ordering key)', () => {
+  test('a valid, unique name enables submit and sends an identity-only payload', async () => {
+    (createTable as any).mockResolvedValue({ success: true });
     setup();
     typeName('orders');
     expect(screen.queryByText(ErrorI18nKey.SnakeCaseIdentifier)).not.toBeInTheDocument();
-    expect(screen.queryByText(ErrorI18nKey.KeyValueExists)).not.toBeInTheDocument();
+    const button = submitButton(AnalyticsTablesI18nKey.CreateSource);
+    expect(button).not.toBeDisabled();
+
+    fireEvent.click(button);
+
+    expect(createTable).toHaveBeenCalledWith({ name: 'orders', type: AnalyticsTableType.Source });
   });
 });
 
 describe('CreateTablePopup enrichment', () => {
-  test('renders source table / grain key selects instead of the columns section', () => {
+  test('renders a required source-table select instead of the columns section', () => {
     setup(AnalyticsTableType.Enrichment);
     expect(nameField()).toBeInTheDocument();
     expect(screen.getByText(AnalyticsTablesI18nKey.SourceTable)).toBeInTheDocument();
-    expect(screen.getByText(AnalyticsTablesI18nKey.GrainKey)).toBeInTheDocument();
     expect(screen.queryByText(AnalyticsTablesI18nKey.Columns)).not.toBeInTheDocument();
+    expect(screen.queryByText(AnalyticsTablesI18nKey.GrainKey)).not.toBeInTheDocument();
+  });
+
+  test('a valid name and defaulted source table send an identity-only enrichment payload', () => {
+    (createTable as any).mockResolvedValue({ success: true });
+    setup(AnalyticsTableType.Enrichment);
+    typeName('user_flags');
+
+    fireEvent.click(submitButton(AnalyticsTablesI18nKey.CreateEnrichment));
+
+    expect(createTable).toHaveBeenCalledWith({
+      name: 'user_flags',
+      type: AnalyticsTableType.Enrichment,
+      source_table: 'events',
+    });
   });
 });

@@ -222,4 +222,81 @@ describe('Server :: Folders :: folders-core :: changeFolderCore', () => {
     expect(assetApi.move).toHaveBeenCalledTimes(1);
     expect(result.success).toBe(false);
   });
+
+  test('renaming a folder with contents does not glue the folder name onto the contained resource name', async () => {
+    (assetApi.getMetadata as any).mockImplementation(
+      (_t: unknown, _type: unknown, path: string, options: { recursive?: boolean }) =>
+        options?.recursive
+          ? Promise.resolve(
+              folderNode('applications/als_code_apps/', [itemNode('applications/als_code_apps/als-quickapp20')]),
+            )
+          : Promise.resolve(folderNode('applications/als_code_apps/')),
+    );
+    (publicationsApi.ruleList as any).mockResolvedValue({ success: true, response: { rules: {} } });
+    (assetApi.move as any).mockResolvedValue({ success: true });
+
+    const result = await changeFolderCore(TOKEN_MOCK, 'als_code_apps/', 'renamed_apps/', [ResourceType.APPLICATION]);
+
+    expect(assetApi.move).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.APPLICATION,
+      'als_code_apps/als-quickapp20',
+      'renamed_apps/als-quickapp20',
+      false,
+    );
+    expect(result.success).toBe(true);
+  });
+
+  test('computes correct destination paths when oldPath/newPath are passed without a trailing slash', async () => {
+    (assetApi.getMetadata as any).mockImplementation(
+      (_t: unknown, _type: unknown, path: string, options: { recursive?: boolean }) =>
+        options?.recursive
+          ? Promise.resolve(folderNode('prompts/old/', [itemNode('prompts/old/a__1')]))
+          : Promise.resolve(folderNode('prompts/old/')),
+    );
+    (publicationsApi.ruleList as any).mockResolvedValue({ success: true, response: { rules: {} } });
+    (assetApi.move as any).mockResolvedValue({ success: true });
+
+    const result = await changeFolderCore(TOKEN_MOCK, 'old', 'new', [ResourceType.PROMPT]);
+
+    expect(assetApi.move).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.PROMPT, 'old/a__1', 'new/a__1', false);
+    expect(result.success).toBe(true);
+  });
+
+  test('moving a folder represented only by its .dial_folder marker keeps the marker nested under the destination folder', async () => {
+    (assetApi.getMetadata as any).mockImplementation(
+      (_t: unknown, _type: unknown, path: string, options: { recursive?: boolean }) =>
+        options?.recursive
+          ? Promise.resolve(folderNode('prompts/old/', [itemNode('prompts/old/.dial_folder')]))
+          : Promise.resolve(folderNode('prompts/old/')),
+    );
+    (publicationsApi.ruleList as any).mockResolvedValue({ success: true, response: { rules: {} } });
+    (assetApi.move as any).mockResolvedValue({ success: true });
+
+    const result = await changeFolderCore(TOKEN_MOCK, 'old/', 'parent/new/', [ResourceType.PROMPT]);
+
+    expect(assetApi.move).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.PROMPT,
+      'old/.dial_folder',
+      'parent/new/.dial_folder',
+      false,
+    );
+    expect(result.success).toBe(true);
+  });
+
+  test('fails the move instead of silently misplacing a descendant whose path does not start with oldPath', async () => {
+    (assetApi.getMetadata as any).mockImplementation(
+      (_t: unknown, _type: unknown, path: string, options: { recursive?: boolean }) =>
+        options?.recursive
+          ? Promise.resolve(folderNode('prompts/old/', [itemNode('prompts/unrelated/a__1')]))
+          : Promise.resolve(folderNode('prompts/old/')),
+    );
+    (publicationsApi.ruleList as any).mockResolvedValue({ success: true, response: { rules: {} } });
+
+    const result = await changeFolderCore(TOKEN_MOCK, 'old/', 'new/', [ResourceType.PROMPT]);
+
+    expect(assetApi.move).not.toHaveBeenCalled();
+    expect(result.success).toBe(false);
+  });
 });

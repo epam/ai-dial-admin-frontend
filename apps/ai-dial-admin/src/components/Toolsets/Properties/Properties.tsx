@@ -3,6 +3,7 @@
 import { DialSwitch } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback } from 'react';
 
+import VendorWebsiteControl from '@/src/components/BaseControls/Endpoint/VendorWebsite';
 import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
 import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
 import DeploymentProperties from '@/src/components/EntityMainProperties/Properties/DeploymentProperties';
@@ -43,6 +44,11 @@ const ToolsetProperties: FC<Props> = ({ names, selectedToolset, onChangeToolset 
         names={names}
         isEntityImmutable={true}
         view={ApplicationRoute.Toolsets}
+      />
+      <VendorWebsiteControl
+        endpoint={selectedToolset.vendorWebsite}
+        onChange={(vendorWebsite) => handleChangeToolset({ ...selectedToolset, vendorWebsite })}
+        isFullWidth={false}
       />
       <Authentication toolset={selectedToolset} view={ApplicationRoute.Toolsets} onChange={handleChangeToolset} />
       <DialSwitch

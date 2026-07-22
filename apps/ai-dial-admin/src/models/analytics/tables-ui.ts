@@ -33,13 +33,16 @@ export interface ColumnEditValues {
   sensitive: boolean;
 }
 
-export interface TableForm {
+export interface CreateTableForm {
   name: string;
   description: string;
+  sourceTable: string;
+}
+
+export interface DraftSchemaForm {
   columns: ColumnRow[];
   orderingKey: string[];
   partitionColumn: string;
   granularity: PartitionGranularity | '';
-  sourceTable: string;
   grainKey: string;
 }
