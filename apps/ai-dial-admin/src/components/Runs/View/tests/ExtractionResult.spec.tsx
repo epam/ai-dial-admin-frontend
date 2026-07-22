@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { FC, useCallback, useState } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { ExtractionResultTabUiState } from '../models';
 import ExtractionResultTab from '../ExtractionResult';
 import { createDefaultRunViewTabState } from '../use-run-view-tab-state';
@@ -106,11 +107,12 @@ describe('ExtractionResultTab', () => {
     vi.clearAllMocks();
   });
 
-  test('renders grid after loading', async () => {
+  test('renders grid after loading without Columns button', async () => {
     render(<ControlledExtractionResultTab />);
     await waitFor(() => {
       expect(screen.getByRole('grid', { name: 'Analytics grid' })).toBeInTheDocument();
     });
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.Columns })).not.toBeInTheDocument();
   });
 
   test('does not refetch results when cached state is provided', async () => {

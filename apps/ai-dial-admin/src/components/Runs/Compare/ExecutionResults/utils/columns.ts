@@ -1,12 +1,13 @@
 import { ColDef, ColGroupDef, ICellRendererParams, ValueGetterParams } from 'ag-grid-community';
 
-import { isScoreIndicatorValue } from '@/src/components/Common/ScoreBar/utils';
 import { getAccuracyColors } from '@/src/components/Common/ColorScale/utils';
+import { SCORE_INDICATOR_COMPARE_WIDTH } from '@/src/components/Common/ScoreBar/constants';
+import { isScoreIndicatorValue } from '@/src/components/Common/ScoreBar/utils';
 import CompareDeltaCellRenderer from '@/src/components/Grid/CellRenderers/CompareDeltaCellRenderer';
-import NumericGridFilterFloatingFilter from '@/src/components/Grid/Filter/NumericGridFilterFloatingFilter';
 import CompareEyeCellRenderer from '@/src/components/Grid/CellRenderers/CompareEyeCellRenderer';
-import CompareMetricScoreCellRenderer from '@/src/components/Grid/CellRenderers/CompareMetricScoreCellRenderer';
 import ExecutionStatusCellRenderer from '@/src/components/Grid/CellRenderers/ExecutionStatusCellRenderer';
+import MetricScoreCellRenderer from '@/src/components/Grid/CellRenderers/MetricScoreCellRenderer';
+import NumericGridFilterFloatingFilter from '@/src/components/Grid/Filter/NumericGridFilterFloatingFilter';
 import CompareRunIndexHeader from '@/src/components/Grid/HeaderComponents/CompareRunIndexHeader';
 import {
   RUN_COMPARE_PRIMARY_INDEX,
@@ -23,6 +24,7 @@ import {
   EXECUTION_STATUS_GROUP_HEADER,
   EXTRACTED_COLUMN_MIN_WIDTH,
   EXTRACTED_GROUP_HEADER,
+  fixedWidthColDef,
   formatCompareColumnHeader,
   HTTP_COLUMN_WIDTH,
   METRIC_COLUMN_WIDTH,
@@ -59,12 +61,6 @@ const compareRunIndexHeaderDef = (
   headerName: label ? formatCompareColumnHeader(runIndex, label) : formatCompareRunIndexHeader(runIndex),
   headerComponent: CompareRunIndexHeader,
   headerComponentParams: { runIndex, label },
-});
-
-const fixedWidthColDef = (width: number): Pick<ColDef, 'width' | 'minWidth' | 'maxWidth'> => ({
-  width,
-  minWidth: width,
-  maxWidth: width,
 });
 
 const mergeExtractedColumnsSchema = (results: AnalyticsResult[]): Record<string, unknown> => {
@@ -179,7 +175,7 @@ const maybePairCellClassRules = (
 const buildComparedMetricColumn = (
   groupKey: string,
   key: string,
-  errorText?: string,
+  _errorText?: string,
   hideHighlights?: boolean,
 ): ColDef => {
   const getRawValue = (params: { data?: CompareAnalyticsRow }) =>
@@ -209,8 +205,8 @@ const buildComparedMetricColumn = (
       if (value == null) return;
       if (isScoreIndicatorValue(value)) {
         return {
-          component: CompareMetricScoreCellRenderer,
-          params: { getMetricValue: getDisplayValue, errorText },
+          component: MetricScoreCellRenderer,
+          params: { getMetricValue: getDisplayValue, width: SCORE_INDICATOR_COMPARE_WIDTH },
         };
       }
     },
@@ -222,7 +218,7 @@ const buildComparedMetricColumn = (
 const buildComparePrimaryMetricColumn = (
   groupKey: string,
   key: string,
-  errorText?: string,
+  _errorText?: string,
   hideHighlights?: boolean,
   theme?: string,
 ): ColDef => {
@@ -247,8 +243,8 @@ const buildComparePrimaryMetricColumn = (
       if (value == null) return;
       if (isScoreIndicatorValue(value)) {
         return {
-          component: CompareMetricScoreCellRenderer,
-          params: { getMetricValue: getDisplayValue, errorText },
+          component: MetricScoreCellRenderer,
+          params: { getMetricValue: getDisplayValue, width: SCORE_INDICATOR_COMPARE_WIDTH },
         };
       }
     },
