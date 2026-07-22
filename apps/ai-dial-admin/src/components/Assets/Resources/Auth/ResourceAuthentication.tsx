@@ -18,6 +18,7 @@ interface Props {
   redirectUrl?: string;
   disabled?: boolean;
   hideWithLoginOption?: boolean;
+  excludeAuthTypes?: ToolsetAuthType[];
   onChange?: (authSettings: DialToolsetResourceAuthSettings, forwardPerRequestKey?: boolean) => void;
 }
 
@@ -33,6 +34,7 @@ const ResourceAuthentication: FC<Props> = ({
   authSettings,
   redirectUrl,
   hideWithLoginOption,
+  excludeAuthTypes,
   onChange,
   ...props
 }) => {
@@ -42,11 +44,23 @@ const ResourceAuthentication: FC<Props> = ({
   const isDisabled = disabled || isReadOnlyAdmin;
   const selectedAuthType = useMemo(() => authSettings?.authentication_type || ToolsetAuthType.NONE, [authSettings]);
 
-  const authOptions: AuthConfig[] = [
-    { id: ToolsetAuthType.OAUTH, title: t(ToolsetI18nKey.OAuth), icon: <IconBrandOauth {...BASE_BUTTON_ICON_PROPS} /> },
-    { id: ToolsetAuthType.API_KEY, title: t(ToolsetI18nKey.ApiKey), icon: <IconKey {...BASE_BUTTON_ICON_PROPS} /> },
-    { id: ToolsetAuthType.NONE, title: t(ToolsetI18nKey.NoneAuth), icon: <IconLockOff {...BASE_BUTTON_ICON_PROPS} /> },
-  ];
+  const authOptions: AuthConfig[] = useMemo(
+    () =>
+      [
+        {
+          id: ToolsetAuthType.OAUTH,
+          title: t(ToolsetI18nKey.OAuth),
+          icon: <IconBrandOauth {...BASE_BUTTON_ICON_PROPS} />,
+        },
+        { id: ToolsetAuthType.API_KEY, title: t(ToolsetI18nKey.ApiKey), icon: <IconKey {...BASE_BUTTON_ICON_PROPS} /> },
+        {
+          id: ToolsetAuthType.NONE,
+          title: t(ToolsetI18nKey.NoneAuth),
+          icon: <IconLockOff {...BASE_BUTTON_ICON_PROPS} />,
+        },
+      ].filter((option) => authSettings?.authentication_type === option.id || !excludeAuthTypes?.includes(option.id)),
+    [t, excludeAuthTypes, authSettings],
+  );
 
   const onChangeAuthType = useCallback(
     (authenticationType: ToolsetAuthType) => {

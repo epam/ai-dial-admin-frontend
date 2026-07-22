@@ -95,9 +95,13 @@ describe('toggleAllMetricGroups', () => {
     expect(toggleAllMetricGroups(new Set(['A']), ['A', 'B'])).toEqual(new Set());
   });
 
-  test('keeps all (empty sentinel) when all groups are already selected', () => {
-    expect(toggleAllMetricGroups(new Set(['A', 'B']), ['A', 'B'])).toEqual(new Set());
-    expect(toggleAllMetricGroups(new Set(), ['A', 'B'])).toEqual(new Set());
+  test('keeps only the first metric when all groups are already selected', () => {
+    expect(toggleAllMetricGroups(new Set(['A', 'B']), ['A', 'B'])).toEqual(new Set(['A']));
+    expect(toggleAllMetricGroups(new Set(), ['A', 'B', 'C'])).toEqual(new Set(['A']));
+  });
+
+  test('keeps All sentinel when only one group is available', () => {
+    expect(toggleAllMetricGroups(new Set(), ['A'])).toEqual(new Set());
   });
 });
 
