@@ -40,7 +40,7 @@ describe('Common components - AttachmentInput', () => {
   test('renders tags from initialValues', () => {
     renderComponent({ initialValues: ['pdf'] });
 
-    expect(screen.getByText('PDF')).toBeInTheDocument();
+    expect(screen.getByText('pdf')).toBeInTheDocument();
     expect(screen.getByLabelText(AttachmentsI18nKey.SpecificAttachments)).toBeChecked();
   });
 

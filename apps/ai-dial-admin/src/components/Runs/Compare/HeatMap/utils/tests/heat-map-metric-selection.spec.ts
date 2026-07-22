@@ -6,7 +6,9 @@ import {
   filterMetricGroupsBySearch,
   formatHeatMapMetricsTriggerLabel,
   getMetricGroupsCheckState,
+  getSelectedMetricGroupsCount,
   isAllMetricGroupsSelected,
+  isLastSelectedMetricGroup,
   MetricGroupsCheckState,
   resolveMetricGroupsSelection,
   toggleAllMetricGroups,
@@ -99,6 +101,28 @@ describe('toggleAllMetricGroups', () => {
   });
 });
 
+describe('getSelectedMetricGroupsCount', () => {
+  test('counts All sentinel as every available group', () => {
+    expect(getSelectedMetricGroupsCount(new Set(), ['A', 'B'])).toBe(2);
+  });
+
+  test('counts explicit selection size among available groups', () => {
+    expect(getSelectedMetricGroupsCount(new Set(['A']), ['A', 'B'])).toBe(1);
+  });
+});
+
+describe('isLastSelectedMetricGroup', () => {
+  test('returns true for the only selected group', () => {
+    expect(isLastSelectedMetricGroup(new Set(['A']), 'A', ['A', 'B'])).toBe(true);
+    expect(isLastSelectedMetricGroup(new Set(), 'A', ['A'])).toBe(true);
+  });
+
+  test('returns false when more than one group is selected', () => {
+    expect(isLastSelectedMetricGroup(new Set(), 'A', ['A', 'B'])).toBe(false);
+    expect(isLastSelectedMetricGroup(new Set(['A']), 'B', ['A', 'B'])).toBe(false);
+  });
+});
+
 describe('toggleMetricGroup', () => {
   test('unchecking from All expands to remaining groups', () => {
     expect(toggleMetricGroup(new Set(), 'A', ['A', 'B'])).toEqual(new Set(['B']));
@@ -107,6 +131,11 @@ describe('toggleMetricGroup', () => {
   test('adds and removes a group from an explicit selection', () => {
     expect(toggleMetricGroup(new Set(['A']), 'B', ['A', 'B'])).toEqual(new Set());
     expect(toggleMetricGroup(new Set(['A', 'B']), 'B', ['A', 'B'])).toEqual(new Set(['A']));
+  });
+
+  test('keeps the last selected metric when unchecking it', () => {
+    expect(toggleMetricGroup(new Set(['A']), 'A', ['A', 'B'])).toEqual(new Set(['A']));
+    expect(toggleMetricGroup(new Set(), 'A', ['A'])).toEqual(new Set());
   });
 });
 
@@ -117,13 +146,25 @@ describe('formatHeatMapMetricsTriggerLabel', () => {
     );
   });
 
-  test('returns count format for partial selection', () => {
+  test('returns metric name when exactly one group is selected', () => {
     expect(formatHeatMapMetricsTriggerLabel(new Set(['B']), ['A', 'B'], t)).toBe(
-      `${RunsI18nKey.RunCompareHeatMapMetricsPrefix} 1/2`,
+      `${RunsI18nKey.RunCompareHeatMapMetricsPrefix} B`,
     );
   });
 
-  test('returns all label for empty selection (All sentinel)', () => {
+  test('returns metric name when only one group is available', () => {
+    expect(formatHeatMapMetricsTriggerLabel(new Set(), ['A'], t)).toBe(
+      `${RunsI18nKey.RunCompareHeatMapMetricsPrefix} A`,
+    );
+  });
+
+  test('returns count format for partial multi selection', () => {
+    expect(formatHeatMapMetricsTriggerLabel(new Set(['A', 'B']), ['A', 'B', 'C'], t)).toBe(
+      `${RunsI18nKey.RunCompareHeatMapMetricsPrefix} 2/3`,
+    );
+  });
+
+  test('returns all label for empty selection (All sentinel) with multiple groups', () => {
     expect(formatHeatMapMetricsTriggerLabel(new Set(), ['A', 'B'], t)).toBe(RunsI18nKey.RunCompareHeatMapMetricsAll);
   });
 });
