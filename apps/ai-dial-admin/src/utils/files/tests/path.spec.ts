@@ -12,6 +12,7 @@ import {
   getPathSegments,
   isFolder,
   removeTrailingSlash,
+  replacePathPrefix,
   updatePathWithNameAndVersion,
 } from '@/src/utils/files/path';
 import { describe, expect, test, vi } from 'vitest';
@@ -324,6 +325,56 @@ describe('Utils :: files :: changeFolderName', () => {
   test('Should handle path with only slashes', () => {
     const result = changeFolderName('////', 'newName');
     expect(result).toBe('////');
+  });
+});
+
+describe('Utils :: files :: replacePathPrefix', () => {
+  test('Should replace prefix when both sides have trailing slashes', () => {
+    const result = replacePathPrefix('old/a__1', 'old/', 'new/');
+    expect(result).toBe('new/a__1');
+  });
+
+  test('Should replace prefix when oldPrefix has no trailing slash', () => {
+    const result = replacePathPrefix('old/a__1', 'old', 'new/');
+    expect(result).toBe('new/a__1');
+  });
+
+  test('Should replace prefix when newPrefix has no trailing slash', () => {
+    const result = replacePathPrefix('old/a__1', 'old/', 'new');
+    expect(result).toBe('new/a__1');
+  });
+
+  test('Should replace prefix when neither side has a trailing slash', () => {
+    const result = replacePathPrefix('old/a__1', 'old', 'new');
+    expect(result).toBe('new/a__1');
+  });
+
+  test('Should not glue the destination folder name onto the descendant name', () => {
+    const result = replacePathPrefix('als_code_apps/als-quickapp20', 'als_code_apps', 'renamed_apps');
+    expect(result).toBe('renamed_apps/als-quickapp20');
+  });
+
+  test('Should rewrite a descendant one level deep inside the folder', () => {
+    const result = replacePathPrefix('old/sub/file', 'old/', 'new/');
+    expect(result).toBe('new/sub/file');
+  });
+
+  test('Should rewrite the .dial_folder marker resource, keeping it nested under the new folder', () => {
+    const result = replacePathPrefix('old/.dial_folder', 'old/', 'new/');
+    expect(result).toBe('new/.dial_folder');
+  });
+
+  test('Should preserve a trailing slash present on the input path', () => {
+    const result = replacePathPrefix('old/sub/', 'old/', 'new/');
+    expect(result).toBe('new/sub/');
+  });
+
+  test('Should throw when fullPath does not start with oldPrefix as a segment-aligned prefix', () => {
+    expect(() => replacePathPrefix('other/a__1', 'old/', 'new/')).toThrow();
+  });
+
+  test('Should throw when oldPrefix is a substring look-alike but not an actual ancestor segment', () => {
+    expect(() => replacePathPrefix('bucket/foobar/a__1', 'bucket/foo', 'bucket/renamed')).toThrow();
   });
 });
 

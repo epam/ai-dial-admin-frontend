@@ -44,6 +44,23 @@ export const changeFolderName = (oldPath: string, newFolderName: string): string
   return parts.join('/') + '/';
 };
 
+export const replacePathPrefix = (fullPath: string, oldPrefix: string, newPrefix: string): string => {
+  const oldSegments = oldPrefix.split('/').filter(Boolean);
+  const fullSegments = fullPath.split('/').filter(Boolean);
+  const newSegments = newPrefix.split('/').filter(Boolean);
+
+  const matchesPrefix =
+    fullSegments.length >= oldSegments.length && oldSegments.every((segment, index) => fullSegments[index] === segment);
+
+  if (!matchesPrefix) {
+    throw new Error(`Path "${fullPath}" does not start with prefix "${oldPrefix}" as a segment-aligned path`);
+  }
+
+  const remainder = fullSegments.slice(oldSegments.length);
+  const rewrittenPath = [...newSegments, ...remainder].join('/');
+  return fullPath.endsWith('/') ? `${rewrittenPath}/` : rewrittenPath;
+};
+
 export const getListOfPathsToMove = (
   file: DialFile,
   allFilesMap: Record<string, DialFile[]> | null,

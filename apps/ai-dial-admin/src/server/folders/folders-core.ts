@@ -6,6 +6,7 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { decodeCorePath, encodeCorePath, stripPrefix } from '@/src/server/publications/path';
 import { CoreResourceAction, CorePublicationResource, CorePublicationRule } from '@/src/server/publications/models';
 import { ResourceType } from '@/src/types/resource-type';
+import { replacePathPrefix } from '@/src/utils/files/path';
 import { FolderNode, mergeFolderTrees, toFolderTree } from './folder-tree';
 import { fetchAllPages, gatherResourceUrls, WalkableNode } from './resource-walk';
 
@@ -218,7 +219,16 @@ export async function changeFolderCore(
     const urls = await gatherResourceUrls(readRecursiveMetadata(token, type), oldPath);
     for (const url of urls) {
       const barePath = decodeCorePath(stripPrefix(url, prefix));
-      const destinationPath = barePath.replace(oldPath, newPath);
+      let destinationPath: string;
+      try {
+        destinationPath = replacePathPrefix(barePath, oldPath, newPath);
+      } catch (error) {
+        return {
+          success: false,
+          errorHeader: 'Error',
+          errorMessage: error instanceof Error ? error.message : `Cannot move "${barePath}"`,
+        };
+      }
       const moveResult = await assetApi.move(token, type, barePath, destinationPath, overwrite);
       if (!moveResult.success) {
         return moveResult;
