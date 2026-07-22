@@ -21,6 +21,7 @@ describe('Server :: Applications :: exim :: resolveImportDestination', () => {
 describe('Server :: Applications :: exim :: buildApplicationsExport', () => {
   test('fetches each selected application and sets a prefixed id', async () => {
     const assetApi = {
+      getMetadata: vi.fn().mockResolvedValue({ url: 'applications/public/folder/name__1.0', nodeType: 'ITEM' }),
       getMerged: vi.fn().mockResolvedValue({ name: 'name', version: '1.0' }),
     } as any;
 
@@ -35,7 +36,10 @@ describe('Server :: Applications :: exim :: buildApplicationsExport', () => {
   });
 
   test('skips a path that resolves to nothing', async () => {
-    const assetApi = { getMerged: vi.fn().mockResolvedValue(null) } as any;
+    const assetApi = {
+      getMetadata: vi.fn().mockResolvedValue(null),
+      getMerged: vi.fn().mockResolvedValue(null),
+    } as any;
 
     const result = await buildApplicationsExport(assetApi, {} as any, ['public/missing']);
 
