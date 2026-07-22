@@ -10,6 +10,11 @@ export const COLUMN_TYPE_OPTIONS: SelectOption[] = Object.values(AnalyticsFieldT
   label: capitalize(value),
 }));
 
+// An Array column's element type: any scalar, excluding Array/Object (backend rejects nested arrays/objects).
+export const ELEMENT_TYPE_OPTIONS: SelectOption[] = COLUMN_TYPE_OPTIONS.filter(
+  (option) => option.value !== AnalyticsFieldType.Array && option.value !== AnalyticsFieldType.Object,
+);
+
 // Backend grammar for user-declared table/column identifiers (ADAS `Identifiers.requireUserIdentifier`):
 // snake_case, must start with a lowercase letter, and must not start with `_` (reserved for system columns).
 export const ANALYTICS_IDENTIFIER_PATTERN = /^[a-z][a-z0-9_]*$/;

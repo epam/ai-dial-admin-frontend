@@ -138,6 +138,114 @@ flow.
   temporal names), validation errors, the `canMaterialize` completeness flag, and `buildDto()`. Shared
   by `TableDetailView`'s header Save button and the presentational `DraftSchemaEditor`.
 
+### D7 — Array columns carry a flat sibling `element_type` (issue #3847)
+
+The backend rejects a bare `type: "array"` column (`array column '<name>' requires an element_type`,
+`TableColumnRules`). It models the array's value type as a **flat sibling field** on the column DTO —
+`{ "type": "array", "element_type": "string" }` — not a nested JSON-Schema-style `{"items": {...}}`, and
+not a composite string like `"array<string>"` (the backend's own design considered and rejected that
+composite-string form in favor of the two-field shape; the frontend mirrors the same choice rather than
+inventing its own encoding).
+
+The frontend adds the matching field 1:1 rather than reshaping it:
+
+- `AnalyticsTableColumn.element_type?: AnalyticsFieldType` (table.ts) and `ColumnRow.element_type:
+  AnalyticsFieldType | ''` (tables-ui.ts, `''` meaning "not yet chosen," matching the existing
+  `granularity: PartitionGranularity | ''` pattern for an optional select with no default value).
+- `ColumnRowsEditor` renders a second `DialSelectField` ("Element type") **only when a row's `type` is
+  `Array`** — not a permanently-visible field left disabled, since it's meaningless for every other type
+  and a hidden-until-relevant control keeps the row compact for the common (non-array) case.
+- Element-type options are `COLUMN_TYPE_OPTIONS` filtered to exclude `Array` and `Object` — the backend
+  rejects nesting (`element_type` itself being `array`/`object`) with a 422, so the FE simply never offers
+  those as choices rather than offering them and surfacing a round-trip error.
+- Nullable is force-disabled for `Array` rows (switch shown but `isOn={false}` and non-interactive) — the
+  backend 422s `nullable: true` on an array column (no ClickHouse `Nullable(Array(...))`) and additionally
+  ignores/forces it server-side regardless of source, so disabling client-side avoids a submit that would
+  only be rejected.
+- Client-side validation mirrors `TableColumnRules` one-for-one: `element_type` is required when
+  `type === Array` (new `ColumnRowError.element_type` message) and is never sent for a non-array row.
+- Scope: this only affects **declaring** a column (create-schema and add-columns), both of which already
+  share `ColumnRowsEditor`, so one change covers both surfaces. It does not touch the edit-column modal —
+  that modal never edits `type` today (type is immutable after a column is declared, per the existing
+  "Table detail column schema management" requirement), so `element_type` is equally immutable and needs
+  no edit-surface change.
+
+### D8 — Manage table access reuses the DIAL Roles catalog instead of free text
+
+The backend has signaled it plans to reuse `RolesApi` for table-access role selection; rather than wait,
+the frontend adopts the catalog now:
+
+- `TableAccessPanel` fetches `getRoles()` (new action wrapping `rolesApi.getRolesList`, the exact
+  pattern already used unguarded in ~15 other page/action files) alongside the existing `getTableAccess`
+  call, via `Promise.all`.
+- Each `DialRole.name` becomes both the `value` and `label` of a `SelectOption`; there is no separate
+  role "id" — `DialRole` (like other DIAL entities) is keyed by `name`, which is also the raw provider-
+  role string the backend's `TableAccessEvaluator` matches against. The wire shape (`TableAccess {
+  write: string[]; modify: string[] }`) is unchanged — this is purely a client-side selection-source
+  swap, not a contract change.
+- Both `Write roles` and `Modify roles` render as `DialSelectField multiple` (checkbox dropdown)
+  populated from the same `roleOptions`, replacing the free-text `MultiValueAutocomplete` (which passed
+  `availableItems={[]}`, i.e. never offered a catalog).
+- **Loading state**: a `fetching` boolean (distinct from the pre-existing `loaded`, which still gates
+  Save) shows a `DialLoader` in place of the two pickers while the initial `Promise.all` is in flight,
+  modeled on `RelatedArtefact.tsx`'s `isLoading ? <DialLoader/> : (...)` pattern. `fetching` clears
+  regardless of success/failure so a failed fetch falls through to the existing (empty, Save-disabled)
+  form rather than spinning forever; `loaded` still only flips on a successful *access* fetch.
+- **Failure notifications**: the access fetch and the roles-catalog fetch are independent network calls
+  and can fail independently — each now surfaces its own error notification (`AccessLoadFailed` /
+  new `RolesLoadFailed`) rather than only the access one. Previously a roles-catalog failure alongside a
+  successful access fetch left already-granted roles silently invisible (empty `roleOptions`) with no
+  indication anything had gone wrong.
+- Not in scope: no change to the backend `TableAccess`/`ReplaceAccessRequest` contract, and no attempt to
+  reconcile a saved role name that no longer exists in the current `DialRole` catalog (an edge case, out
+  of scope for this pass).
+
+### D9 — Table-detail UI polish (issue #3847 review + hands-on testing follow-ups)
+
+A batch of smaller fixes to the same surfaces touched by D7, found via code review and manual testing:
+
+- **Header consolidation**: `TableDetailView`'s separate **Add columns**/**Write rows** buttons (ACTIVE
+  tables) become one `DialButtonDropdown` labeled **Add**, with items **Add rows** and **Add columns**
+  each still individually gated by `canWrite`/`canModify` (dropdown itself hidden if neither is
+  granted) — mirrors the existing `AddDependenciesButton.tsx` pattern for a labeled dropdown trigger.
+  Header order becomes Manage access → Delete table → Add/Save (previously Manage access → Add/Save →
+  Delete). The "Write rows" label/i18n key is renamed to "Add rows" everywhere it's user-facing (popup
+  header included) rather than leaving a mismatched trigger-vs-modal-title pair; the now-unused
+  `WriteRows` i18n key was removed rather than left dead.
+- **Add-rows JSON template**: `buildRowsTemplate(columns)` builds a one-row array keyed by each
+  column's `name`, mapped to a type-appropriate placeholder (`0` for Integer/Long/Decimal, `false` for
+  Boolean, `{}` for Object, `[]` for Array, `''` otherwise) instead of always `''` — an all-`''` template
+  would actively mislead the user into keeping string values for non-string columns, which the backend
+  would reject on insert.
+- **Insert-rows gating**: `parseRowsJson(json)` (extracted from `onSubmitWriteRows`'s inline try/catch)
+  returns the parsed array or `null` for a syntax error or a non-array; `TableDetailView` now also uses
+  it to compute `disableSubmitButton` on the Add-rows popup, so **Insert rows** is disabled the moment
+  the JSON becomes invalid rather than only failing after a click.
+- **`invalid` prop gap**: traced in the compiled `@epam/ai-dial-ui-kit` bundle — `DialInput`'s red-border
+  styling (`dial-input-error`) is applied only from the `invalid` boolean prop; the `error` prop only
+  renders the message text below the field (its doc comment claiming `error` "also adds error styling"
+  does not match the actual implementation). `ColumnRowsEditor.tsx`, `CreateTablePopup.tsx`, and
+  `EditColumnPopup.tsx` were all passing `error` without `invalid`, so validation errors showed text but
+  no red border; all now pass `invalid={Boolean(error)}` alongside, matching the convention already used
+  correctly in `Routes/Paths/Path.tsx`.
+- **Required asterisks**: `Source name`/`Name` (always required) and `Element type` (required whenever
+  shown, i.e. for an `Array` row) in `ColumnRowsEditor`, plus `Ordering key`/`Grain key` in
+  `DraftSchemaEditor` — both are functionally required for `useDraftSchemaForm`'s own completeness gate
+  even though the DTO field itself is optional (`ordering_key?`/`grain_key?`).
+- **Delete confirmation names the table**: `TableDetailView`'s delete-table `DialConfirmationPopup` gains
+  a "Name: `<table>`" row via `DialEllipsisTooltip`, matching the established pattern in
+  `EntityView/Modals/Delete/Delete.tsx` / `Deployments/Modals/ImageDelete.tsx` (both otherwise too heavy
+  to reuse directly here — no version/related-artefact concepts apply to tables).
+- **Row layout fixes** in `ColumnRowsEditor.tsx`: a row switches from bottom-aligned (`items-end`) to
+  top-aligned (`items-start`) whenever it has any validation error, with a `mt-[22px]` compensating
+  offset (named `LABEL_ROW_OFFSET_CLASS`) on the trailing Nullable/Sensitive/remove-button group so it
+  stays aligned with the input row instead of the label row — the same fix already established in
+  `Routes/Paths/Path.tsx` for an identical error-row-misalignment problem. Type/Element-type columns
+  widened `120px → 160px` so "Timestamp" doesn't truncate. `DraftSchemaEditor`'s Ordering key/Partition
+  column/Granularity switch from a mix of full-width/fixed-width classes to the shared
+  `STANDARD_CONTROL_WIDTH` (`constants/main-layout.ts`, the same base-width convention used elsewhere in
+  the admin app) and stack one-per-row instead of Partition+Granularity sharing a row.
+
 ## Risks / Trade-offs
 
 - **[Backend contract changed mid-implementation]** The two-step draft/materialize design was replaced
@@ -154,6 +262,11 @@ flow.
 - **[Test churn]** Create-popup and detail-view specs assume one-shot `ACTIVE`. → Reworked to the
   lifecycle; coverage added for schema-definition gating, status rendering, and the catalog-only
   edit/delete menu (mirrors the backend's own test churn for the same contract change).
+- **[Role-catalog vs. provider-role mismatch]** A table's saved `write`/`modify` role name might not
+  match any current `DialRole.name` (e.g. it was granted via the old free-text panel, or the DIAL Roles
+  catalog changed since). → Not reconciled in this pass; such a role stays in the saved `write`/`modify`
+  arrays (re-sent unchanged on the next Save) but won't render as a checked/visible option. Flagged as a
+  possible follow-up if it turns out to be a real gap once the backend's own roles-catalog reuse lands.
 
 ## Open Questions
 

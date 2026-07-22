@@ -70,6 +70,7 @@ const EditColumnPopup: FC<Props> = ({ column, renameDisabled, existingNames = []
           value={values.name}
           disabled={renameDisabled}
           error={nameError?.text}
+          invalid={Boolean(nameError)}
           onChange={setValue('name')}
         />
         <DialInput
@@ -77,6 +78,7 @@ const EditColumnPopup: FC<Props> = ({ column, renameDisabled, existingNames = []
           labelProps={{ label: t(AnalyticsTablesI18nKey.DisplayName) }}
           value={values.display_name}
           error={displayNameError?.text}
+          invalid={Boolean(displayNameError)}
           onChange={setValue('display_name')}
         />
         <DialInput
@@ -84,6 +86,7 @@ const EditColumnPopup: FC<Props> = ({ column, renameDisabled, existingNames = []
           labelProps={{ label: t(AnalyticsTablesI18nKey.Tag) }}
           value={values.tag}
           error={tagError?.text}
+          invalid={Boolean(tagError)}
           onChange={setValue('tag')}
         />
         <DialInput
@@ -91,6 +94,7 @@ const EditColumnPopup: FC<Props> = ({ column, renameDisabled, existingNames = []
           labelProps={{ label: t(AnalyticsTablesI18nKey.Description) }}
           value={values.description}
           error={descriptionError?.text}
+          invalid={Boolean(descriptionError)}
           onChange={setValue('description')}
         />
         <DialSwitch
