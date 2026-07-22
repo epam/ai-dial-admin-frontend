@@ -50,16 +50,14 @@ const DATA: MetricScoresData = {
 
 const ControlledMetricScoresSection: FC<{
   data: MetricScoresData | null;
-  testCaseCount?: number;
   onSelectMetric?: (name: string) => void;
   initialStatistic?: string | null;
-}> = ({ data, testCaseCount = 0, onSelectMetric = vi.fn(), initialStatistic = 'AVG' }) => {
+}> = ({ data, onSelectMetric = vi.fn(), initialStatistic = 'AVG' }) => {
   const [selectedStatistic, setSelectedStatistic] = useState<string | null>(initialStatistic);
 
   return (
     <MetricScoresSection
       data={data}
-      testCaseCount={testCaseCount}
       selectedStatistic={selectedStatistic}
       onSelectStatistic={setSelectedStatistic}
       onSelectMetric={onSelectMetric}
@@ -70,13 +68,7 @@ const ControlledMetricScoresSection: FC<{
 describe('Runs Summary :: MetricScoresSection', () => {
   test('shows a loader while data is null', () => {
     render(
-      <MetricScoresSection
-        data={null}
-        testCaseCount={0}
-        selectedStatistic={null}
-        onSelectStatistic={vi.fn()}
-        onSelectMetric={vi.fn()}
-      />,
+      <MetricScoresSection data={null} selectedStatistic={null} onSelectStatistic={vi.fn()} onSelectMetric={vi.fn()} />,
     );
 
     expect(screen.getByLabelText('loading-32')).toBeInTheDocument();
@@ -135,11 +127,25 @@ describe('Runs Summary :: MetricScoresSection', () => {
     expect(screen.queryByRole('tab', { name: 'overall' })).not.toBeInTheDocument();
   });
 
+  test('shows the description for the initially selected statistic', () => {
+    render(<ControlledMetricScoresSection data={DATA} initialStatistic="AVG" />);
+
+    expect(screen.getByText('Runs.MetricScoresDescriptionAvg')).toBeInTheDocument();
+  });
+
+  test('changes the description when a different statistic tab is selected', () => {
+    render(<ControlledMetricScoresSection data={DATA} initialStatistic="AVG" />);
+
+    fireEvent.click(screen.getByRole('tab', { name: 'P90' }));
+
+    expect(screen.queryByText('Runs.MetricScoresDescriptionAvg')).not.toBeInTheDocument();
+    expect(screen.getByText('Runs.MetricScoresDescriptionP90')).toBeInTheDocument();
+  });
+
   test('shows an empty message when there are no metric scores', () => {
     render(
       <MetricScoresSection
         data={{ overallScore: null, statistics: [], byStatistic: {} }}
-        testCaseCount={0}
         selectedStatistic={null}
         onSelectStatistic={vi.fn()}
         onSelectMetric={vi.fn()}

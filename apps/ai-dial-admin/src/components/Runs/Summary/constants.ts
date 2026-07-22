@@ -1,3 +1,8 @@
+import { IconCheck, IconCircleMinus, IconX } from '@tabler/icons-react';
+
+import { RunsI18nKey } from '@/src/constants/i18n';
+import { MetricStatistic } from './models';
+
 /** Structured-query entity + column names for the run analytics cards (backend `eval_summaries`). */
 export const EVAL_SUMMARIES_ENTITY = 'eval_summaries';
 
@@ -45,3 +50,21 @@ export const STATUS_DOT_CLASSES = {
   fail: 'text-error',
   error: 'text-secondary',
 } as const;
+
+/** Icons for the "Test Cases Passed" card status breakdown. */
+export const STATUS_DOT_ICONS = {
+  pass: IconCheck,
+  fail: IconX,
+  error: IconCircleMinus,
+} as const;
+
+/** Metric Scores section description, per selected statistic. */
+export const METRIC_STATISTIC_DESCRIPTIONS: Record<MetricStatistic, RunsI18nKey> = {
+  [MetricStatistic.Avg]: RunsI18nKey.MetricScoresDescriptionAvg,
+  [MetricStatistic.P90]: RunsI18nKey.MetricScoresDescriptionP90,
+  [MetricStatistic.P10]: RunsI18nKey.MetricScoresDescriptionP10,
+  [MetricStatistic.Max]: RunsI18nKey.MetricScoresDescriptionMax,
+  [MetricStatistic.Min]: RunsI18nKey.MetricScoresDescriptionMin,
+  [MetricStatistic.Med]: RunsI18nKey.MetricScoresDescriptionMed,
+  [MetricStatistic.Count]: RunsI18nKey.MetricScoresDescriptionCount,
+};

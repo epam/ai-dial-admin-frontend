@@ -1,6 +1,6 @@
 import { JSONSchema7 } from 'json-schema';
 
-import { MetricSnapshot } from '@/src/models/evaluation/metric';
+import { Metric, MetricSnapshot } from '@/src/models/evaluation/metric';
 import { ExtractionResultStatus } from '@/src/models/evaluation/run';
 import { SortDir, StructuredQuery, StructuredQueryResult, ValueType } from '@/src/models/evaluation/structured-query';
 import {
@@ -34,7 +34,14 @@ import {
   RUN_ID_FIELD,
   VALUE_FIELD,
 } from './constants';
-import { MetricOption, MetricScoreGroup, MetricScoresData, MetricStatCard, TestCaseStatusCounts } from './models';
+import {
+  MetricInfo,
+  MetricOption,
+  MetricScoreGroup,
+  MetricScoresData,
+  MetricStatCard,
+  TestCaseStatusCounts,
+} from './models';
 
 /**
  * Query: count of test-case eval summaries grouped by execution status within a run.
@@ -67,6 +74,59 @@ export const getMetricFieldPath = (metricName: string, outputField: string): str
 export const getMetricOutputFields = (outputSchema?: JSONSchema7): string[] => {
   const keys = outputSchema?.properties ? Object.keys(outputSchema.properties) : [];
   return keys.length > 0 ? keys : [DEFAULT_METRIC_SCORE_FIELD];
+};
+
+/** A metric's output-field descriptions, from its `outputSchema` property `description`s. */
+export const getMetricOutputDescriptions = (outputSchema?: JSONSchema7): Record<string, string> => {
+  const descriptions: Record<string, string> = {};
+  for (const [field, schema] of Object.entries(outputSchema?.properties ?? {})) {
+    if (typeof schema === 'object' && typeof schema.description === 'string') {
+      descriptions[field] = schema.description;
+    }
+  }
+  return descriptions;
+};
+
+/**
+ * Builds a `tsmdName -> MetricInfo` map for a run's metric snapshots, looking each snapshot's
+ * `metricDeclarationId` up in the already-fetched declaration versions to pull the metric's own
+ * description and its output-field descriptions.
+ */
+export const toMetricInfoByName = (
+  snapshots: MetricSnapshot[] | null,
+  declarationsById: Record<string, Metric>,
+): Record<string, MetricInfo> => {
+  const infoByName: Record<string, MetricInfo> = {};
+
+  for (const snapshot of snapshots ?? []) {
+    if (!snapshot.tsmdName || !snapshot.metricDeclarationId) {
+      continue;
+    }
+    const declaration = declarationsById[snapshot.metricDeclarationId];
+    infoByName[snapshot.tsmdName] = {
+      description: declaration?.description,
+      outputDescriptions: getMetricOutputDescriptions(declaration?.outputSchema),
+    };
+  }
+
+  return infoByName;
+};
+
+/**
+ * Merges per-metric description info onto the parsed bar groups. `MetricScoreGroup.name` matches a
+ * snapshot's `tsmdName`, so groups without a matching entry in `infoByName` are returned unchanged.
+ */
+export const attachMetricInfo = (data: MetricScoresData, infoByName: Record<string, MetricInfo>): MetricScoresData => {
+  const byStatistic: Record<string, MetricScoreGroup[]> = {};
+
+  for (const [statistic, groups] of Object.entries(data.byStatistic)) {
+    byStatistic[statistic] = groups.map((group) => {
+      const info = infoByName[group.name];
+      return info ? { ...group, description: info.description, barDescriptions: info.outputDescriptions } : group;
+    });
+  }
+
+  return { ...data, byStatistic };
 };
 
 /**
