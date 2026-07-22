@@ -1,5 +1,6 @@
 'use client';
 
+import { Icon } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, ReactNode, useEffect, useState } from 'react';
 
@@ -9,7 +10,7 @@ import { executeStructuredQuery } from '@/src/app/[lang]/runs/actions';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Run } from '@/src/models/evaluation/run';
-import { STATUS_DOT_CLASSES } from './constants';
+import { STATUS_DOT_CLASSES, STATUS_DOT_ICONS } from './constants';
 import { TestCaseStatusCounts } from './models';
 import { buildAvgRunTimeQuery, buildTestCasesStatusQuery, parseAvgRunTimeMs, parseTestCaseStatusCounts } from './utils';
 
@@ -19,9 +20,14 @@ interface Props {
   overallScore?: number | null;
 }
 
-const StatusDot: FC<{ className: string; count: number; label: string }> = ({ className, count, label }) => (
+const StatusDot: FC<{ className: string; count: number; icon: Icon; label: string }> = ({
+  className,
+  count,
+  icon: StatusIcon,
+  label,
+}) => (
   <span className={classNames('flex items-center gap-1', className)}>
-    <span aria-hidden="true">•</span>
+    <StatusIcon aria-hidden="true" size={14} />
     <span>
       {count} {label}
     </span>
@@ -69,9 +75,24 @@ const Analytics: FC<Props> = ({ run, overallScore }) => {
 
   const statusDescription: ReactNode = (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-      <StatusDot className={STATUS_DOT_CLASSES.pass} count={statusCounts.passed} label={t(RunsI18nKey.Pass)} />
-      <StatusDot className={STATUS_DOT_CLASSES.fail} count={statusCounts.failed} label={t(RunsI18nKey.Fail)} />
-      <StatusDot className={STATUS_DOT_CLASSES.error} count={statusCounts.error} label={t(RunsI18nKey.ExecError)} />
+      <StatusDot
+        className={STATUS_DOT_CLASSES.pass}
+        icon={STATUS_DOT_ICONS.pass}
+        count={statusCounts.passed}
+        label={t(RunsI18nKey.Pass)}
+      />
+      <StatusDot
+        className={STATUS_DOT_CLASSES.fail}
+        icon={STATUS_DOT_ICONS.fail}
+        count={statusCounts.failed}
+        label={t(RunsI18nKey.Fail)}
+      />
+      <StatusDot
+        className={STATUS_DOT_CLASSES.error}
+        icon={STATUS_DOT_ICONS.error}
+        count={statusCounts.error}
+        label={t(RunsI18nKey.ExecError)}
+      />
     </div>
   );
 
@@ -88,7 +109,12 @@ const Analytics: FC<Props> = ({ run, overallScore }) => {
       <DialAnalyticsCard
         className="flex-1 sm:max-w-xs"
         title={t(RunsI18nKey.TestCasesPassed)}
-        value={`${statusCounts.passed}/${statusCounts.total}`}
+        value={
+          <>
+            <span className="dial-display-2">{statusCounts.passed}</span>
+            <span className="dial-body-text text-secondary">/{statusCounts.total}</span>
+          </>
+        }
         description={statusDescription}
         error={statusCounts.total === 0}
       />

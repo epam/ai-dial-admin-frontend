@@ -6,27 +6,20 @@ import { DialAnalyticsBarGroup, DialLoader, DialSegmentedControl, SegmentedContr
 
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { MetricScoresData } from './models';
+import { METRIC_STATISTIC_DESCRIPTIONS } from './constants';
+import { MetricScoresData, MetricStatistic } from './models';
 import SummarySection from './SummarySection';
 
 interface Props {
   /** Parsed metric scores from the parent; `null` while loading. */
   data: MetricScoresData | null;
-  /** Number of test cases the metric scores are averaged across. */
-  testCaseCount: number;
   selectedStatistic: string | null;
   onSelectStatistic: (statistic: string) => void;
   /** Selects a metric (shared with the Distribution section) when a bar is clicked. */
   onSelectMetric: (name: string) => void;
 }
 
-const MetricScoresSection: FC<Props> = ({
-  data,
-  testCaseCount,
-  selectedStatistic,
-  onSelectStatistic,
-  onSelectMetric,
-}) => {
+const MetricScoresSection: FC<Props> = ({ data, selectedStatistic, onSelectStatistic, onSelectMetric }) => {
   const t = useI18n();
 
   const options = useMemo<SegmentedControlOption[]>(
@@ -37,6 +30,10 @@ const MetricScoresSection: FC<Props> = ({
   const onStatisticChange = useCallback((value: string) => onSelectStatistic(value), [onSelectStatistic]);
 
   const groups = selectedStatistic ? (data?.byStatistic[selectedStatistic] ?? []) : [];
+
+  const descriptionKey = selectedStatistic
+    ? METRIC_STATISTIC_DESCRIPTIONS[selectedStatistic as MetricStatistic]
+    : undefined;
 
   const control =
     options.length > 0 && selectedStatistic ? (
@@ -60,7 +57,7 @@ const MetricScoresSection: FC<Props> = ({
       return <p className="dial-small-text text-secondary">{t(RunsI18nKey.NoMetricScores)}</p>;
     }
     return (
-      <div className="flex flex-col gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {groups.map((group) => (
           <DialAnalyticsBarGroup
             key={group.name}
@@ -68,6 +65,14 @@ const MetricScoresSection: FC<Props> = ({
             data={group.bars}
             maxValue={Math.max(1, ...Object.values(group.bars))}
             onBarClick={(bar) => onSelectMetric(`${group.name}.${bar}`)}
+            inline
+            nonCollapsible
+            defaultExpanded
+            className="bg-layer-2"
+            barDescriptions={group.barDescriptions}
+            titleTooltip={group.description}
+            barClassName="hover:bg-accent-primary-alpha hover:cursor-pointer rounded-sm px-1"
+            barTitleClassName="text-secondary"
           />
         ))}
       </div>
@@ -77,7 +82,7 @@ const MetricScoresSection: FC<Props> = ({
   return (
     <SummarySection
       title={t(RunsI18nKey.MetricScoresTitle)}
-      description={t(RunsI18nKey.MetricScoresDescription, { count: testCaseCount })}
+      description={descriptionKey ? t(descriptionKey) : undefined}
       control={control}
     >
       {renderContent()}
