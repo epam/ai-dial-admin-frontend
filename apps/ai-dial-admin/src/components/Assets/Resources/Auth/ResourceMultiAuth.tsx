@@ -18,6 +18,7 @@ import {
   ButtonsI18nKey,
   EntityFieldsI18nKey,
   EntityPlaceholdersI18nKey,
+  ErrorI18nKey,
   ExternalServiceI18nKey,
 } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
@@ -48,6 +49,11 @@ const ResourceMultiAuth: FC<Props> = ({ asset, onChange }) => {
   const [loadingServiceId, setLoadingServiceId] = useState<string | null>(null);
 
   const services = useMemo(() => asset.external_services || {}, [asset.external_services]);
+
+  const isDuplicateId = useMemo(
+    () => !!editState && editState.currentId !== editState.originalId && !!services[editState.currentId],
+    [editState, services],
+  );
 
   const onEdit = useCallback(
     (serviceId: string) => {
@@ -120,6 +126,8 @@ const ResourceMultiAuth: FC<Props> = ({ asset, onChange }) => {
           value={editState.currentId}
           onChange={(v) => setEditState((prev) => (prev ? { ...prev, currentId: v || '' } : prev))}
           disabled={isReadOnlyAdmin}
+          error={isDuplicateId ? t(ErrorI18nKey.NameExists) : undefined}
+          invalid={isDuplicateId}
         />
 
         <DialInput
@@ -147,6 +155,7 @@ const ResourceMultiAuth: FC<Props> = ({ asset, onChange }) => {
           onChange={(auth_settings) => onChangeService({ auth_settings })}
           disabled={isReadOnlyAdmin}
           hideWithLoginOption
+          excludeAuthTypes={[ToolsetAuthType.NONE]}
         />
 
         {!isReadOnlyAdmin && (
@@ -155,7 +164,7 @@ const ResourceMultiAuth: FC<Props> = ({ asset, onChange }) => {
             <DialPrimaryButton
               label={t(ButtonsI18nKey.Apply)}
               onClick={onSave}
-              disabled={!editState.currentId || !isValid}
+              disabled={!editState.currentId || !isValid || isDuplicateId}
             />
           </div>
         )}
@@ -207,11 +216,13 @@ const ResourceMultiAuth: FC<Props> = ({ asset, onChange }) => {
                 {!isReadOnlyAdmin && loadingServiceId !== serviceId && (
                   <>
                     <DialGhostIconButton
+                      aria-label={t(ButtonsI18nKey.Edit)}
                       size={ElementSize.Small}
                       icon={<IconEdit {...BASE_BUTTON_ICON_PROPS} />}
                       onClick={() => onEdit(serviceId)}
                     />
                     <DialGhostIconButton
+                      aria-label={t(ButtonsI18nKey.Delete)}
                       size={ElementSize.Small}
                       icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-error" />}
                       onClick={() => onDelete(serviceId)}

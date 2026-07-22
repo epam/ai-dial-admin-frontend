@@ -20,6 +20,8 @@ import TableStatusBadge from '@/src/components/Analytics/Tables/TableStatusBadge
 import { tableDetailHref } from '@/src/components/Analytics/Tables/utils';
 import { navigateEntityUrl } from '@/src/components/EntityListView/utils/on-cell-clicked';
 import GridView from '@/src/components/Grid/GridView/GridView';
+import { useAppContext } from '@/src/context/AppContext';
+import { useAnalyticsTablePermissions } from '@/src/hooks/use-analytics-table-permissions';
 import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { getDeleteOperation, getEditOperation } from '@/src/constants/grid-columns/actions';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -38,6 +40,8 @@ const TablesView: FC<Props> = ({ initialTables }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
+  const { canCreate, canDelete } = useAnalyticsTablePermissions();
+  const { isEnableAuth } = useAppContext();
 
   const [tables, setTables] = useState<AnalyticsTable[]>(initialTables);
   const [createType, setCreateType] = useState<AnalyticsTableType | null>(null);
@@ -95,18 +99,24 @@ const TablesView: FC<Props> = ({ initialTables }) => {
     }
   };
 
+  // Edit (description/tag_order) is authorizable by a per-table `modify` role, not just FULL_ADMIN, so
+  // its visibility is checked per row against that row's own reported permissions — unlike Delete, which
+  // the backend never authorizes via an access role and stays FULL_ADMIN-only (`canDelete`).
   const rowActions: ActionMenuOperationDeclaration<AnalyticsTable>[] = useMemo(
     () => [
       getEditOperation<AnalyticsTable>(
         (tbl) => void onOpenEdit(tbl),
-        (_api, node) => Boolean((node.data as AnalyticsTable | undefined)?.system),
+        (_api, node) => {
+          const tbl = node.data as AnalyticsTable | undefined;
+          return Boolean(tbl?.system) || !(tbl?.permissions?.modify ?? !isEnableAuth);
+        },
       ),
       getDeleteOperation<AnalyticsTable>(
         (tbl) => tbl && setDeleteTarget(tbl.name),
-        (_api, node) => Boolean((node.data as AnalyticsTable | undefined)?.system),
+        (_api, node) => Boolean((node.data as AnalyticsTable | undefined)?.system) || !canDelete,
       ),
     ],
-    [],
+    [canDelete, isEnableAuth],
   );
 
   const columns: ColDef[] = useMemo(
@@ -143,18 +153,20 @@ const TablesView: FC<Props> = ({ initialTables }) => {
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 relative">
       <div className="flex flex-row mb-8 justify-between items-center gap-4 h-[40px]">
         <h1>{t(MenuI18nKey.Tables)}</h1>
-        <div className="flex items-center gap-4">
-          <DialNeutralButton
-            label={t(AnalyticsTablesI18nKey.CreateEnrichment)}
-            iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-            onClick={() => setCreateType(AnalyticsTableType.Enrichment)}
-          />
-          <DialPrimaryButton
-            label={t(AnalyticsTablesI18nKey.CreateSource)}
-            iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-            onClick={() => setCreateType(AnalyticsTableType.Source)}
-          />
-        </div>
+        {canCreate && (
+          <div className="flex items-center gap-4">
+            <DialNeutralButton
+              label={t(AnalyticsTablesI18nKey.CreateEnrichment)}
+              iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
+              onClick={() => setCreateType(AnalyticsTableType.Enrichment)}
+            />
+            <DialPrimaryButton
+              label={t(AnalyticsTablesI18nKey.CreateSource)}
+              iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
+              onClick={() => setCreateType(AnalyticsTableType.Source)}
+            />
+          </div>
+        )}
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col">

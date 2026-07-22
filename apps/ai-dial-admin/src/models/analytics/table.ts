@@ -44,6 +44,14 @@ export interface AnalyticsTableGrain {
   cardinality?: Cardinality;
 }
 
+// The calling identity's effective per-table permissions, reported by the data-access service on the
+// table read surfaces: `write` — may insert rows; `modify` — may change schema/description. The two are
+// independent. A system table reports both false for every caller; in `none` security mode both are true.
+export interface TablePermissions {
+  write: boolean;
+  modify: boolean;
+}
+
 export interface AnalyticsTable {
   name: string;
   description?: string;
@@ -58,6 +66,14 @@ export interface AnalyticsTable {
   ordering_key?: string[];
   partition_by?: AnalyticsTablePartition;
   tag_order?: string[];
+  permissions?: TablePermissions;
+}
+
+// A table's role-based access lists: raw provider role names permitted to write (insert rows) and to
+// modify (change schema/description). Managed via the admin-only access endpoint.
+export interface TableAccess {
+  write: string[];
+  modify: string[];
 }
 
 // POST /v1/tables is identity-only: no columns, no physical keys. The physical schema is defined

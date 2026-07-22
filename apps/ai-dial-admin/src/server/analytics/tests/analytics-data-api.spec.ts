@@ -233,4 +233,29 @@ describe('Server :: AnalyticsDataApi', () => {
       expect.objectContaining({ method: 'POST', body: JSON.stringify(dto) }),
     );
   });
+
+  test('getTableAccess issues GET /v1/tables/{name}/access and returns the parsed lists', async () => {
+    const access = { write: ['analytics-writer'], modify: [] };
+    fetch.mockResponseOnce(JSON.stringify(access), JSON_HEADERS);
+
+    const res = await instance.getTableAccess('events', TOKEN_MOCK);
+
+    expect(res).toEqual(access);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/tables/events/access'),
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
+  test('replaceTableAccess PUTs the lists to /v1/tables/{name}/access', async () => {
+    const access = { write: ['w'], modify: ['m'] };
+    fetch.mockResponseOnce(JSON.stringify({ success: true }));
+
+    await instance.replaceTableAccess('events', access, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/tables/events/access'),
+      expect.objectContaining({ method: 'PUT', body: JSON.stringify(access) }),
+    );
+  });
 });

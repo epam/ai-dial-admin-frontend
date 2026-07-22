@@ -2,13 +2,24 @@
 
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { ColDef, ICellRendererParams, ITooltipParams, ValueGetterParams } from 'ag-grid-community';
-import { DialFormPopup, DialNeutralButton, DialPrimaryButton, PopupSize } from '@epam/ai-dial-ui-kit';
+import { useRouter } from 'next/navigation';
 
-import { addRows, defineTableSchema, getTable, updateTableSchema } from '@/src/app/[lang]/tables/actions';
+import { ColDef, ICellRendererParams, ITooltipParams, ValueGetterParams } from 'ag-grid-community';
+import {
+  ConfirmationPopupVariant,
+  DialConfirmationPopup,
+  DialDangerButton,
+  DialFormPopup,
+  DialNeutralButton,
+  DialPrimaryButton,
+  PopupSize,
+} from '@epam/ai-dial-ui-kit';
+
+import { addRows, defineTableSchema, deleteTable, getTable, updateTableSchema } from '@/src/app/[lang]/tables/actions';
 import ColumnRowsEditor from '@/src/components/Analytics/Tables/ColumnRowsEditor';
 import DraftSchemaEditor from '@/src/components/Analytics/Tables/DraftSchemaEditor';
 import EditColumnPopup from '@/src/components/Analytics/Tables/EditColumnPopup';
+import TableAccessPanel from '@/src/components/Analytics/Tables/TableAccessPanel';
 import TableStatusBadge from '@/src/components/Analytics/Tables/TableStatusBadge';
 import { useDraftSchemaForm } from '@/src/components/Analytics/Tables/use-draft-schema-form';
 import {
@@ -22,6 +33,7 @@ import { TypeCellRenderer } from '@/src/components/Analytics/Common/TypeBadge';
 import SensitiveIndicator from '@/src/components/Common/SensitiveIndicator/SensitiveIndicator';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
+import { useAnalyticsTablePermissions } from '@/src/hooks/use-analytics-table-permissions';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getDeleteOperation, getEditOperation } from '@/src/constants/grid-columns/actions';
 import { AnalyticsTablesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
@@ -38,6 +50,7 @@ import {
 } from '@/src/models/analytics/table';
 import { ColumnRow } from '@/src/models/analytics/tables-ui';
 import { ServerActionResponse } from '@/src/models/server-action';
+import { ApplicationRoute } from '@/src/types/routes';
 import { getAnalyticsIdentifierError } from '@/src/utils/validation/analytics-table-error';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 
@@ -58,11 +71,14 @@ const ColumnNameCellRenderer: FC<ICellRendererParams<AnalyticsTableColumn>> = ({
 
 const TableDetailView: FC<Props> = ({ name, initialTable }) => {
   const t = useI18n();
+  const router = useRouter();
   const { showNotification } = useNotification();
 
   const [table, setTable] = useState<AnalyticsTable>(initialTable);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [writeOpen, setWriteOpen] = useState(false);
+  const [accessOpen, setAccessOpen] = useState(false);
   const [addColumns, setAddColumns] = useState<ColumnRow[]>([createColumnRow()]);
   const [rowsJson, setRowsJson] = useState('[]');
   const [editColumn, setEditColumn] = useState<AnalyticsTableColumn | null>(null);
@@ -70,6 +86,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
 
   const isSystem = Boolean(table.system);
   const isActive = table.status === TableStatus.Active;
+  const { canDelete, canWrite, canModify, canManageRoles } = useAnalyticsTablePermissions(table);
   const columns = useMemo(() => table.columns ?? [], [table.columns]);
 
   const draft = useDraftSchemaForm(table, sourceTable, t);
@@ -102,6 +119,8 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
     const tbl = await getTable(name);
     if (tbl) setTable(tbl);
   }, [name]);
+
+  const goToCatalog = () => router.push(ApplicationRoute.AnalyticsTables);
 
   const notifyFailed = useCallback(
     (res: ServerActionResponse) =>
@@ -204,6 +223,17 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
     }
   };
 
+  const onConfirmDelete = async () => {
+    setConfirmOpen(false);
+    const res = await deleteTable(name);
+    if (res.success) {
+      showNotification(getSuccessNotification(t(AnalyticsTablesI18nKey.Deleted)));
+      goToCatalog();
+    } else {
+      notifyFailed(res);
+    }
+  };
+
   const actions = useMemo<ActionMenuOperationDeclaration<AnalyticsTableColumn>[]>(
     () => [
       getEditOperation<AnalyticsTableColumn>((column) => column && setEditColumn(column)),
@@ -217,7 +247,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
       {
         headerName: t(AnalyticsTablesI18nKey.ColumnName),
         field: 'name',
-        editable: !isSystem,
+        editable: canModify,
         cellRenderer: ColumnNameCellRenderer,
         // Fold the sensitive note into the single cell tooltip so it doesn't double with the dot.
         tooltipValueGetter: (params: ITooltipParams<AnalyticsTableColumn>) =>
@@ -239,9 +269,9 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
         cellDataType: false,
         valueGetter: (params: ValueGetterParams<AnalyticsTableColumn>) => String(Boolean(params.data?.nullable)),
       },
-      ...(isSystem ? [] : [ACTION_COLUMN(actions)]),
+      ...(canModify ? [ACTION_COLUMN(actions)] : []),
     ],
-    [t, actions, isSystem],
+    [t, actions, canModify],
   );
 
   return (
@@ -256,19 +286,31 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
             </span>
           )}
         </div>
-        {!isSystem && (
+        {(canDelete || canWrite || canModify || canManageRoles) && (
           <div className="flex items-center gap-4">
+            {canManageRoles && (
+              <DialNeutralButton label={t(AnalyticsTablesI18nKey.ManageAccess)} onClick={() => setAccessOpen(true)} />
+            )}
             {isActive ? (
               <>
-                <DialNeutralButton label={t(AnalyticsTablesI18nKey.WriteRows)} onClick={() => setWriteOpen(true)} />
-                <DialNeutralButton label={t(AnalyticsTablesI18nKey.AddColumns)} onClick={() => setAddOpen(true)} />
+                {canModify && (
+                  <DialNeutralButton label={t(AnalyticsTablesI18nKey.AddColumns)} onClick={() => setAddOpen(true)} />
+                )}
+                {canWrite && (
+                  <DialNeutralButton label={t(AnalyticsTablesI18nKey.WriteRows)} onClick={() => setWriteOpen(true)} />
+                )}
               </>
             ) : (
-              <DialPrimaryButton
-                label={t(ButtonsI18nKey.Save)}
-                disabled={!draft.canMaterialize}
-                onClick={onSubmitDefineSchema}
-              />
+              canModify && (
+                <DialPrimaryButton
+                  label={t(ButtonsI18nKey.Save)}
+                  disabled={!draft.canMaterialize}
+                  onClick={onSubmitDefineSchema}
+                />
+              )
+            )}
+            {canDelete && (
+              <DialDangerButton label={t(AnalyticsTablesI18nKey.DeleteTable)} onClick={() => setConfirmOpen(true)} />
             )}
           </div>
         )}
@@ -291,6 +333,18 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
           <DraftSchemaEditor table={table} draft={draft} />
         )}
       </div>
+
+      {confirmOpen && (
+        <DialConfirmationPopup
+          open={confirmOpen}
+          variant={ConfirmationPopupVariant.Danger}
+          header={t(AnalyticsTablesI18nKey.DeleteConfirmTitle)}
+          description={t(AnalyticsTablesI18nKey.DeleteConfirmDescription)}
+          confirmLabel={t(AnalyticsTablesI18nKey.DeleteTable)}
+          onConfirm={() => void onConfirmDelete()}
+          onClose={() => setConfirmOpen(false)}
+        />
+      )}
 
       {addOpen && (
         <DialFormPopup
@@ -336,6 +390,8 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
           onSubmit={(patch) => void onSubmitEditColumn(patch)}
         />
       )}
+
+      {accessOpen && <TableAccessPanel name={name} onClose={() => setAccessOpen(false)} />}
     </div>
   );
 };

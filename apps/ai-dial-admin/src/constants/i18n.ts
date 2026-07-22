@@ -2289,4 +2289,13 @@ export enum AnalyticsTablesI18nKey {
   TableUpdated = 'AnalyticsTables.TableUpdated',
   TagOrder = 'AnalyticsTables.TagOrder',
   TagOrderEmpty = 'AnalyticsTables.TagOrderEmpty',
+  ManageAccess = 'AnalyticsTables.ManageAccess',
+  AccessTitle = 'AnalyticsTables.AccessTitle',
+  WriteRoles = 'AnalyticsTables.WriteRoles',
+  ModifyRoles = 'AnalyticsTables.ModifyRoles',
+  WriteRolesCaption = 'AnalyticsTables.WriteRolesCaption',
+  ModifyRolesCaption = 'AnalyticsTables.ModifyRolesCaption',
+  AddRolePlaceholder = 'AnalyticsTables.AddRolePlaceholder',
+  AccessSaved = 'AnalyticsTables.AccessSaved',
+  AccessLoadFailed = 'AnalyticsTables.AccessLoadFailed',
 }

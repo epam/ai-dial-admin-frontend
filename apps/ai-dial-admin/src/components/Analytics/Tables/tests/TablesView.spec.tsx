@@ -15,6 +15,11 @@ interface MockColDef {
   cellRendererParams?: { items?: { id: string }[] };
 }
 
+const permissions = { canCreate: true, canDelete: true, canManageRoles: true, canWrite: true, canModify: true };
+vi.mock('@/src/hooks/use-analytics-table-permissions', () => ({
+  useAnalyticsTablePermissions: () => permissions,
+}));
+
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
   default: ({ rowData, columnDefs }: { rowData?: unknown[]; columnDefs?: MockColDef[] }) => (
     <div>
@@ -38,10 +43,17 @@ const TABLES: AnalyticsTable[] = [
 
 beforeEach(() => {
   vi.clearAllMocks();
+  Object.assign(permissions, {
+    canCreate: true,
+    canDelete: true,
+    canManageRoles: true,
+    canWrite: true,
+    canModify: true,
+  });
 });
 
 describe('TablesView', () => {
-  test('renders the server-provided catalog and the create buttons', () => {
+  test('renders the server-provided catalog and the create buttons for an admin', () => {
     render(<TablesView initialTables={TABLES} />);
 
     expect(screen.getByText('catalog rows: 2')).toBeInTheDocument();
@@ -67,5 +79,14 @@ describe('TablesView', () => {
     const rowActions = screen.getByText(/^row actions:/);
     expect(rowActions).toHaveTextContent(ActionMenuOperationI18nKey.Edit);
     expect(rowActions).toHaveTextContent(ActionMenuOperationI18nKey.Delete);
+  });
+
+  test('hides the create buttons when the user cannot create', () => {
+    permissions.canCreate = false;
+    render(<TablesView initialTables={TABLES} />);
+
+    expect(screen.getByText('catalog rows: 2')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.CreateSource })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.CreateEnrichment })).not.toBeInTheDocument();
   });
 });

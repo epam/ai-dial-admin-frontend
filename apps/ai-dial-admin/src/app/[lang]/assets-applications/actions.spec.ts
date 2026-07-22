@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { assetApi, assetsApi, toolsetOpsApi } from '@/src/app/api/api';
+import { assetApi, assetsApi, externalServiceOpsApi, toolsetOpsApi } from '@/src/app/api/api';
 import * as eximModule from '@/src/server/applications/exim';
 import * as zipEximModule from '@/src/server/applications/zip-exim';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -17,6 +17,8 @@ import {
   importApps,
   exportApps,
   getAssetTools,
+  signInExternalService,
+  signOutExternalService,
 } from './actions';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { ResourceType } from '@/src/types/resource-type';
@@ -339,6 +341,43 @@ describe('Assets application :: server actions', () => {
     const result = await getAssetTools('test');
     expect(getUserToken).toHaveBeenCalled();
     expect(toolsetOpsApi.discoveredTools).toHaveBeenCalledWith(TOKEN_MOCK, 'test', ResourceType.APPLICATION);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('signInExternalService URL-encodes each path segment of a spaced app path', async () => {
+    (externalServiceOpsApi.signIn as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await signInExternalService(
+      'public/als code apps/my-app',
+      'test-service',
+      'APPLICATION',
+      'API_KEY',
+      undefined,
+      'api-key-value',
+    );
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(externalServiceOpsApi.signIn).toHaveBeenCalledWith(TOKEN_MOCK, {
+      url: 'applications/public/als%20code%20apps/my-app/external_services/test-service',
+      credentialsLevel: 'APPLICATION',
+      authenticationType: 'API_KEY',
+      offline_usage_consent: true,
+      apiKey: 'api-key-value',
+    });
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('signOutExternalService URL-encodes each path segment of a spaced app path', async () => {
+    (externalServiceOpsApi.signOut as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await signOutExternalService('public/als code apps/my-app', 'test-service', 'USER', 'API_KEY');
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(externalServiceOpsApi.signOut).toHaveBeenCalledWith(TOKEN_MOCK, {
+      url: 'applications/public/als%20code%20apps/my-app/external_services/test-service',
+      credentialsLevel: 'USER',
+      authenticationType: 'API_KEY',
+    });
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

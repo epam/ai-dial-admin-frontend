@@ -13,6 +13,7 @@ import {
   AnalyticsTable,
   CreateTableDto,
   DraftSchemaDto,
+  TableAccess,
   UpdateTableDto,
   WriteRowsDto,
 } from '@/src/models/analytics/table';
@@ -33,6 +34,7 @@ export const TABLES_URL = 'v1/tables';
 export const TABLE_URL = (name: string): string => `${TABLES_URL}/${encodeURIComponent(name)}`;
 export const TABLE_SCHEMA_URL = (name: string): string => `${TABLE_URL(name)}/schema`;
 export const TABLE_ROWS_URL = (name: string): string => `${TABLE_URL(name)}/rows`;
+export const TABLE_ACCESS_URL = (name: string): string => `${TABLE_URL(name)}/access`;
 
 export class AnalyticsDataApi extends BaseApi {
   checkAccess(token: Token): Promise<ServerActionResponse> {
@@ -107,5 +109,15 @@ export class AnalyticsDataApi extends BaseApi {
 
   addRows(name: string, dto: WriteRowsDto, token: Token): Promise<ServerActionResponse> {
     return this.postAction<WriteRowsDto>(TABLE_ROWS_URL(name), dto, token);
+  }
+
+  // Per-table role lists (write/modify). Admin-only on the backend; a non-admin GET is rejected 403.
+  getTableAccess(name: string, token: Token): Promise<TableAccess | null> {
+    return this.get<TableAccess>(TABLE_ACCESS_URL(name), token);
+  }
+
+  // Full-replace of the table's role lists (admin-only).
+  replaceTableAccess(name: string, access: TableAccess, token: Token): Promise<ServerActionResponse> {
+    return this.putAction<TableAccess>(TABLE_ACCESS_URL(name), access, token);
   }
 }

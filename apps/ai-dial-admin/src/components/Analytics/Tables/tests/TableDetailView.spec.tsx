@@ -8,6 +8,14 @@ import { AnalyticsTable, AnalyticsTableType, TableStatus } from '@/src/models/an
 vi.mock('@/src/app/[lang]/tables/actions');
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
+const permissions = { canCreate: true, canDelete: true, canManageRoles: true, canWrite: true, canModify: true };
+vi.mock('@/src/hooks/use-analytics-table-permissions', () => ({
+  useAnalyticsTablePermissions: () => permissions,
+}));
+
+// Panel loads server data on mount — stub it; its own behavior is covered in TableAccessPanel.spec.
+vi.mock('@/src/components/Analytics/Tables/TableAccessPanel', () => ({ default: () => <div>access panel</div> }));
+
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
   default: ({ rowData, columnDefs }: { rowData?: unknown[]; columnDefs?: { headerName?: string }[] }) => (
     <div>
@@ -23,6 +31,8 @@ vi.mock('@/src/components/Analytics/Tables/DraftSchemaEditor', () => ({
   default: () => <div>draft-schema-editor</div>,
 }));
 
+// Defaults to ACTIVE so the permission-gating tests below exercise the live (write/add-columns) surface;
+// the lifecycle-status tests at the bottom override `status` explicitly.
 const table = (overrides: Partial<AnalyticsTable> = {}): AnalyticsTable => ({
   name: 'dial_usage_log',
   type: AnalyticsTableType.Source,
@@ -31,32 +41,79 @@ const table = (overrides: Partial<AnalyticsTable> = {}): AnalyticsTable => ({
   ...overrides,
 });
 
+const setPerms = (over: Partial<typeof permissions>) =>
+  Object.assign(
+    permissions,
+    { canCreate: false, canDelete: false, canManageRoles: false, canWrite: false, canModify: false },
+    over,
+  );
+
 beforeEach(() => {
   vi.clearAllMocks();
+  Object.assign(permissions, {
+    canCreate: true,
+    canDelete: true,
+    canManageRoles: true,
+    canWrite: true,
+    canModify: true,
+  });
 });
 
-// Edit/Delete for the table itself now live only in the catalog's row action menu (TablesView) — this
-// view's header only ever offers Write rows / Add columns (ACTIVE) or Save (draft).
-describe('TableDetailView system flag', () => {
-  test('a non-system table shows the modify actions', () => {
-    render(<TableDetailView name="dial_usage_log" initialTable={table({ system: false })} />);
+describe('TableDetailView action gating', () => {
+  test('an admin with full permissions sees all mutating actions', () => {
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} />);
 
+    expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.DeleteTable })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.WriteRows })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.AddColumns })).toBeInTheDocument();
-    expect(screen.queryByText(AnalyticsTablesI18nKey.SystemReadOnly)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.ManageAccess })).toBeInTheDocument();
   });
 
-  test('a system table is read-only: modify actions hidden, read-only badge shown', () => {
+  test('write-only capability shows Write rows but not schema/delete actions', () => {
+    setPerms({ canWrite: true });
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} />);
+
+    expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.WriteRows })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.AddColumns })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.DeleteTable })).not.toBeInTheDocument();
+  });
+
+  test('modify-only capability shows Add columns but not Write rows', () => {
+    setPerms({ canModify: true });
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} />);
+
+    expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.AddColumns })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.WriteRows })).not.toBeInTheDocument();
+  });
+
+  test('delete is hidden when the user cannot delete even with edit permissions', () => {
+    setPerms({ canWrite: true, canModify: true });
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} />);
+
+    expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.DeleteTable })).not.toBeInTheDocument();
+  });
+
+  test('a fully-denied user (e.g. a system table) sees no actions but keeps the read-only badge', () => {
+    setPerms({});
     render(<TableDetailView name="dial_usage_log" initialTable={table({ system: true })} />);
 
     expect(screen.getByText(AnalyticsTablesI18nKey.SystemReadOnly)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.DeleteTable })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.WriteRows })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.AddColumns })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.ManageAccess })).not.toBeInTheDocument();
+  });
+
+  test('the role-management action is hidden when the user cannot manage roles', () => {
+    setPerms({ canWrite: true, canModify: true });
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} />);
+
+    expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.ManageAccess })).not.toBeInTheDocument();
   });
 });
 
 describe('TableDetailView columns grid', () => {
-  test('the grid includes Label and Description columns', () => {
+  test('the grid includes Display name and Description columns', () => {
     render(<TableDetailView name="dial_usage_log" initialTable={table()} />);
 
     const headers = screen.getByText(/^headers:/);

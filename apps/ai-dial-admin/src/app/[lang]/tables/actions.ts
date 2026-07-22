@@ -8,6 +8,7 @@ import {
   AnalyticsTable,
   CreateTableDto,
   DraftSchemaDto,
+  TableAccess,
   UpdateTableDto,
   WriteRowsDto,
 } from '@/src/models/analytics/table';
@@ -47,4 +48,12 @@ export async function updateTableSchema(name: string, patch: AnalyticsSchemaPatc
 
 export async function addRows(name: string, dto: WriteRowsDto): Promise<ServerActionResponse> {
   return analyticsDataApi.addRows(name, dto, await token());
+}
+
+export async function getTableAccess(name: string): Promise<TableAccess | null> {
+  return analyticsDataApi.getTableAccess(name, await token());
+}
+
+export async function replaceTableAccess(name: string, access: TableAccess): Promise<ServerActionResponse> {
+  return analyticsDataApi.replaceTableAccess(name, access, await token());
 }
