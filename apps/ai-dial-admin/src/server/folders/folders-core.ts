@@ -90,7 +90,7 @@ const createAndApprovePublication = async (
   resources: CorePublicationResource[],
   rules?: CorePublicationRule[],
 ): Promise<ServerActionResponse> => {
-  const createResult = await publicationsApi.createPublication(token, targetFolder, resources, rules);
+  const createResult = await publicationsApi.createPublication(token, encodeCorePath(targetFolder), resources, rules);
   if (!createResult.success) {
     return createResult;
   }
@@ -140,19 +140,24 @@ export async function updateRulesCore(
   targetFolder: string,
   rules: DialRule[],
 ): Promise<ServerActionResponse> {
-  return createAndApprovePublication(token, encodeCorePath(targetFolder), [], rules as CorePublicationRule[]);
+  return createAndApprovePublication(token, targetFolder, [], rules as CorePublicationRule[]);
 }
 
 /**
- * Deletes (unpublishes) a folder: gathers every resource URL under it across all five types,
- * publishes a DELETE-action publication for them, approves it, then best-effort deletes the
- * folder from each type's own storage. That final cleanup step swallows every exception — a
- * documented workaround for Azure Blob Storage's hierarchical-namespace empty-folder semantics
- * (design D6) — so a cleanup failure must never fail the overall folder delete.
+ * Deletes (unpublishes) a folder for a set of resource types: gathers every resource URL under
+ * it across only the targeted types, publishes a DELETE-action publication for them, approves
+ * it, then best-effort deletes the folder from each targeted type's own storage. That final
+ * cleanup step swallows every exception — a documented workaround for Azure Blob Storage's
+ * hierarchical-namespace empty-folder semantics (design D6) — so a cleanup failure must never
+ * fail the overall folder delete.
  */
-export async function removeFolderCore(token: Token, path: string): Promise<ServerActionResponse> {
+export async function removeFolderCore(
+  token: Token,
+  path: string,
+  resourceTypes: ResourceType[],
+): Promise<ServerActionResponse> {
   const urlLists = await Promise.all(
-    ALL_TYPES.map((type) => gatherResourceUrls(readRecursiveMetadata(token, type), path)),
+    resourceTypes.map((type) => gatherResourceUrls(readRecursiveMetadata(token, type), path)),
   );
   const resources: CorePublicationResource[] = urlLists
     .flat()
@@ -164,7 +169,7 @@ export async function removeFolderCore(token: Token, path: string): Promise<Serv
   }
 
   await Promise.allSettled(
-    ALL_TYPES.map((type) =>
+    resourceTypes.map((type) =>
       type === ResourceType.FILE
         ? filesCoreApi.deleteFile(token, path, DEFAULT_ETAG)
         : assetApi.delete(token, type, path, DEFAULT_ETAG),

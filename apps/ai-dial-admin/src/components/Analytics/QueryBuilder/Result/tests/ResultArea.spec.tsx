@@ -24,6 +24,7 @@ const AGG_META: ExecutedQueryMeta = {
   mode: QueryMode.Aggregate,
   dimensionColumns: ['deployment'],
   aggregateColumns: ['total'],
+  columnLabels: {},
 };
 
 const ROW_META: ExecutedQueryMeta = {
@@ -31,6 +32,7 @@ const ROW_META: ExecutedQueryMeta = {
   mode: QueryMode.Row,
   dimensionColumns: [],
   aggregateColumns: [],
+  columnLabels: {},
 };
 
 const renderArea = (overrides: Partial<Parameters<typeof ResultArea>[0]> = {}) => {
@@ -47,7 +49,6 @@ const renderArea = (overrides: Partial<Parameters<typeof ResultArea>[0]> = {}) =
 describe('QueryBuilder :: ResultArea', () => {
   test('shows the pre-run empty state', () => {
     renderArea();
-    expect(screen.getByText('QueryBuilder.ResultsEmptyTitle')).toBeInTheDocument();
     expect(screen.getByText('QueryBuilder.ResultsEmptyDescription')).toBeInTheDocument();
   });
 

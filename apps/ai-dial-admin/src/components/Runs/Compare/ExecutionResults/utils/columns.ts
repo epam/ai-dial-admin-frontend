@@ -71,7 +71,7 @@ const mergeExtractedColumnsSchema = (results: AnalyticsResult[]): Record<string,
   return results.reduce<Record<string, unknown>>((acc, result) => ({ ...acc, ...(result.extractedColumns || {}) }), {});
 };
 
-const buildMetricColumn = (groupKey: string, key: string): ColDef => ({
+const buildMetricColumn = (groupKey: string, key: string, theme?: string): ColDef => ({
   field: `${groupKey}_${key}`,
   colId: `${groupKey}_${key}`,
   headerName: key,
@@ -85,7 +85,7 @@ const buildMetricColumn = (groupKey: string, key: string): ColDef => ({
   cellStyle: (params) => {
     const value = params.data?.metricValues?.[groupKey]?.[key];
     if (typeof value === 'number' && value >= 0 && value <= 1) {
-      const colors = getAccuracyColors(value);
+      const colors = getAccuracyColors(value, theme);
       return { backgroundColor: colors.bg };
     }
     return undefined;
@@ -123,7 +123,7 @@ const buildComparePairCellClassRules = (
 const getComparePairKind =
   (resolveValues: (row: CompareAnalyticsRow) => { primary: unknown; secondary: unknown }, isNumeric = false) =>
   (params: { data?: CompareAnalyticsRow }): MetricDeltaKind => {
-    if (!params.data?._compared) {
+    if (!params.data) {
       return MetricDeltaKind.Empty;
     }
 
@@ -141,12 +141,11 @@ const getMetricPairKind = (groupKey: string, key: string) =>
   );
 
 const getStatusPairKind = (params: { data?: CompareAnalyticsRow }): MetricDeltaKind => {
-  const compared = params.data?._compared;
-  if (!compared) {
+  if (!params.data) {
     return MetricDeltaKind.Empty;
   }
 
-  return getExecutionStatusDelta(params.data?.executionStatus, compared.executionStatus);
+  return getExecutionStatusDelta(params.data.executionStatus, params.data._compared?.executionStatus);
 };
 
 const getHttpPairKind = getComparePairKind(
@@ -225,6 +224,7 @@ const buildComparePrimaryMetricColumn = (
   key: string,
   errorText?: string,
   hideHighlights?: boolean,
+  theme?: string,
 ): ColDef => {
   const getRawValue = (params: { data?: CompareAnalyticsRow }) => params.data?.metricValues?.[groupKey]?.[key];
 
@@ -236,7 +236,7 @@ const buildComparePrimaryMetricColumn = (
   };
 
   return {
-    ...buildMetricColumn(groupKey, key),
+    ...buildMetricColumn(groupKey, key, theme),
     ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, key),
     ...fixedWidthColDef(METRIC_COLUMN_WIDTH),
     cellStyle: undefined,
@@ -325,6 +325,7 @@ const getComparedExecutionColumns = (hideHighlights?: boolean): ColGroupDef => (
       hide: true,
       ...NO_FILTER_COL_DEF,
       ...fixedWidthColDef(HTTP_COLUMN_WIDTH),
+      valueGetter: (params) => params.data?.responseStatusCode ?? '—',
       ...maybePairCellClassRules(hideHighlights, getHttpPairKind, 'primary'),
     },
     {
@@ -367,11 +368,12 @@ const getComparedMetricGroupColumns = (
   errorText?: string,
   deltaHeader: string = DEFAULT_COMPARE_DELTA_HEADER,
   hideHighlights?: boolean,
+  theme?: string,
 ): ColGroupDef[] =>
   Object.entries(metrics).map(([groupKey, groupValues]) => ({
     headerName: groupKey,
     children: Object.keys(groupValues).flatMap((key) => [
-      buildComparePrimaryMetricColumn(groupKey, key, errorText, hideHighlights),
+      buildComparePrimaryMetricColumn(groupKey, key, errorText, hideHighlights, theme),
       buildComparedMetricColumn(groupKey, key, errorText, hideHighlights),
       buildMetricDeltaColumn(groupKey, key, deltaHeader),
     ]),
@@ -444,7 +446,7 @@ export const getCompareColumnsCompare = (
       suppressSpanHeaderHeight: true,
     },
     getComparedExecutionColumns(hideHighlights),
-    ...getComparedMetricGroupColumns(metrics, errorText, deltaHeader, hideHighlights),
+    ...getComparedMetricGroupColumns(metrics, errorText, deltaHeader, hideHighlights, options?.theme),
     ...(extractedGroup ? [extractedGroup] : []),
     {
       colId: COMPARE_ACTION_COL_ID,

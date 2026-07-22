@@ -4,7 +4,7 @@ import CategorizedFieldDropdown from '@/src/components/Analytics/QueryBuilder/Co
 import FieldChip from '@/src/components/Analytics/QueryBuilder/Common/FieldChip';
 import SectionBlock from '@/src/components/Analytics/QueryBuilder/Common/SectionBlock';
 import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';
-import { fieldsToOptions } from '@/src/components/Analytics/QueryBuilder/utils/fields';
+import { fieldDisplayName, fieldsToOptions } from '@/src/components/Analytics/QueryBuilder/utils/fields';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { QUERY_BUILDER_PALETTE } from '@/src/constants/analytics/query-builder-palette';
@@ -44,7 +44,7 @@ const SelectProjection: FC = () => {
     >
       <div className="flex flex-wrap gap-1.5">
         {state.select.map((name, index) => (
-          <FieldChip key={name} label={name} onRemove={() => removeField(index)} />
+          <FieldChip key={name} label={fieldDisplayName(state.fields, name)} onRemove={() => removeField(index)} />
         ))}
         {!state.select.length && (
           <span className="dial-tiny-text text-secondary">{t(QueryBuilderI18nKey.NoFields)}</span>

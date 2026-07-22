@@ -69,7 +69,7 @@ const TabsContent: FC<Props> = ({
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const appRunner = useMemo(() => {
     if (view === ApplicationRoute.Applications || view === ApplicationRoute.AssetsApplications) {
-      return getAppRunner(selectedApplication, applicationSchemes);
+      return getAppRunner(selectedApplication, applicationSchemes, view);
     }
   }, [applicationSchemes, selectedApplication, view]);
 

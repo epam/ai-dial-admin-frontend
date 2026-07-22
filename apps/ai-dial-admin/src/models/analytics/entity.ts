@@ -20,6 +20,9 @@ export interface AnalyticsEntityField {
   type: AnalyticsFieldType;
   source: string;
   tag?: string;
+  display_name?: string;
+  description?: string;
+  sensitive?: boolean;
 }
 
 export interface AnalyticsEntitySchema {

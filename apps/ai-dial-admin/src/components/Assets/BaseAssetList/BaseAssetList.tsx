@@ -118,9 +118,9 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
         return;
       }
 
-      const { folderId } = files[0] as AssetWithVersion;
+      const { path } = files[0] as AssetWithVersion;
       const getAsset = GetAssetActionMap[view as BaseAssetRoute];
-      const fullAsset = await getAsset(folderId, DEFAULT_ETAG);
+      const fullAsset = await getAsset(path, DEFAULT_ETAG);
       setDuplicateItem(fullAsset?.response as AssetWithVersion);
       setIsModalOpen(true);
       setModalType(ModalType.duplicate);
@@ -480,9 +480,12 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
         });
         promises.push(bulkDeleteAsset(assetsPaths));
       }
-      folders.forEach((folder) => {
-        promises.push(removeFolder(folder.path));
-      });
+      const resourceType = getResourceTypeByRoute(view);
+      if (resourceType) {
+        folders.forEach((folder) => {
+          promises.push(removeFolder(folder.path, resourceType));
+        });
+      }
 
       handleModalClose();
 

@@ -17,6 +17,9 @@ export interface AnalyticsTableColumn {
   type: AnalyticsFieldType;
   nullable?: boolean;
   tag?: string;
+  display_name?: string;
+  description?: string;
+  sensitive?: boolean;
 }
 
 export interface AnalyticsTablePartition {
@@ -29,6 +32,14 @@ export interface AnalyticsTableGrain {
   source_table?: string;
 }
 
+// The calling identity's effective per-table permissions, reported by the data-access service on the
+// table read surfaces: `write` — may insert rows; `modify` — may change schema/description. The two are
+// independent. A system table reports both false for every caller; in `none` security mode both are true.
+export interface TablePermissions {
+  write: boolean;
+  modify: boolean;
+}
+
 export interface AnalyticsTable {
   name: string;
   description?: string;
@@ -39,6 +50,14 @@ export interface AnalyticsTable {
   grain?: AnalyticsTableGrain;
   ordering_key?: string[];
   partition_by?: AnalyticsTablePartition;
+  permissions?: TablePermissions;
+}
+
+// A table's role-based access lists: raw provider role names permitted to write (insert rows) and to
+// modify (change schema/description). Managed via the admin-only access endpoint.
+export interface TableAccess {
+  write: string[];
+  modify: string[];
 }
 
 export interface CreateSourceTableDto {
@@ -65,16 +84,22 @@ export interface AnalyticsColumnRename {
   to: string;
 }
 
-export interface AnalyticsColumnRetag {
+// Per-column metadata merge-patch: an omitted field leaves that attribute unchanged, a blank string
+// clears it, and a non-blank string sets it; `sensitive` (omitted → unchanged, true/false → set) is
+// typed for contract completeness but never populated by the UI.
+export interface AnalyticsColumnMetadataUpdate {
   name: string;
-  tag: string;
+  tag?: string;
+  display_name?: string;
+  description?: string;
+  sensitive?: boolean;
 }
 
 export interface AnalyticsSchemaPatch {
   add?: AnalyticsTableColumn[];
   drop?: string[];
   rename?: AnalyticsColumnRename[];
-  retag?: AnalyticsColumnRetag[];
+  update?: AnalyticsColumnMetadataUpdate[];
 }
 
 export interface WriteRowsDto {

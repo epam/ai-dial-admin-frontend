@@ -75,6 +75,34 @@ describe('Server :: Applications :: exim :: importApplicationsExport', () => {
     ]);
   });
 
+  test('strips folderId/path/version/id before writing to Core', async () => {
+    const assetApi = {
+      list: vi.fn().mockResolvedValue([]),
+      put: vi.fn().mockResolvedValue({ success: true }),
+    } as any;
+
+    await importApplicationsExport(
+      assetApi,
+      {} as any,
+      {
+        applications: [
+          {
+            id: 'applications/public/source/name__1.0',
+            name: 'name',
+            version: '1.0',
+            folderId: 'public/source/',
+            path: 'public/source/name__1.0',
+            endpoint: 'http://123',
+          } as any,
+        ],
+      },
+      baseOptions,
+    );
+
+    const putBody = assetApi.put.mock.calls[0][3];
+    expect(putBody).toEqual({ name: 'name', endpoint: 'http://123' });
+  });
+
   test('rejects an id missing the applications/ prefix before calling Core', async () => {
     const assetApi = { list: vi.fn(), put: vi.fn() } as any;
 

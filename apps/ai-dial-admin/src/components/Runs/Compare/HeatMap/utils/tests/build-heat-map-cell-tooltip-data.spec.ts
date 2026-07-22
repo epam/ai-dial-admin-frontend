@@ -2,17 +2,18 @@ import { describe, expect, test } from 'vitest';
 
 import { ACCURACY_COLOR_MAP, DELTA_POSITIVE_COLOR_MAP } from '@/src/components/Common/ColorScale/constants';
 import { RUN_COMPARE_PRIMARY_INDEX, RUN_COMPARE_SECONDARY_INDEX } from '@/src/components/Runs/Compare/constants';
-import { formatHeatMapTestCaseColId } from '@/src/components/Runs/Compare/HeatMap/constants';
+import { formatHeatMapTestCaseColId } from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-test-case-columns';
 import { HeatMapColorDisplayMode, HeatMapRowType } from '@/src/components/Runs/Compare/HeatMap/models';
 import { buildHeatMapCellTooltipData } from '@/src/components/Runs/Compare/HeatMap/utils/build-heat-map-cell-tooltip-data';
 import { RunsI18nKey } from '@/src/constants/i18n';
 
-const colId = formatHeatMapTestCaseColId('tc-1');
+const colId = formatHeatMapTestCaseColId('tc-1', 0);
 const baseOptions = {
   testCaseLabel: 'Row 001',
   primaryRunName: 'Run #316',
   comparedRunName: 'Run #317',
   colId,
+  theme: 'dark',
 };
 
 const metricRow = {
@@ -72,7 +73,7 @@ describe('buildHeatMapCellTooltipData', () => {
     expect(result?.runLabel).toBeUndefined();
   });
 
-  test('uses N/A text without swatch for zero delta', () => {
+  test('uses zero swatch for zero delta', () => {
     const deltaRow = {
       ...metricRow,
       runIndex: undefined,
@@ -84,13 +85,16 @@ describe('buildHeatMapCellTooltipData', () => {
       colorDisplayMode: HeatMapColorDisplayMode.Delta,
     });
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       testCase: 'Row 001',
       metric: 'Context Appropriateness',
       input: 'Recall',
+      valueRow: {
+        value: '0',
+      },
       valueLabelKey: RunsI18nKey.RunCompareHeatMapTooltipDelta,
-      valueTextKey: RunsI18nKey.RunCompareHeatMapNotApplicable,
     });
+    expect(result?.valueTextKey).toBeUndefined();
   });
 
   test('formats primary run label in absolute mode', () => {
@@ -125,7 +129,21 @@ describe('buildHeatMapCellTooltipData', () => {
     expect(result).toBeUndefined();
   });
 
-  test('returns undefined for undefined and null cell values', () => {
+  test('returns absolute tooltip with light-theme swatch colors', () => {
+    const result = buildHeatMapCellTooltipData({ data: metricRow } as never, {
+      ...baseOptions,
+      theme: 'light',
+      colorDisplayMode: HeatMapColorDisplayMode.Absolute,
+    });
+
+    expect(result?.valueRow).toEqual({
+      value: '0.812',
+      backgroundColor: '#a1f5bf',
+      borderColor: ACCURACY_COLOR_MAP[0.9].border,
+    });
+  });
+
+  test('returns Score N/A tooltip with run for missing absolute values', () => {
     const undefinedValueRow = { ...metricRow, values: { [colId]: undefined } };
     const nullValueRow = { ...metricRow, values: { [colId]: null } };
 
@@ -134,13 +152,48 @@ describe('buildHeatMapCellTooltipData', () => {
         ...baseOptions,
         colorDisplayMode: HeatMapColorDisplayMode.Absolute,
       }),
-    ).toBeUndefined();
+    ).toEqual({
+      testCase: 'Row 001',
+      metric: 'Context Appropriateness',
+      input: 'Recall',
+      runLabel: '[2] Run #317',
+      valueLabelKey: RunsI18nKey.RunCompareHeatMapTooltipScore,
+      valueTextKey: RunsI18nKey.RunCompareHeatMapNotApplicable,
+    });
 
     expect(
       buildHeatMapCellTooltipData({ data: nullValueRow } as never, {
         ...baseOptions,
         colorDisplayMode: HeatMapColorDisplayMode.Absolute,
       }),
-    ).toBeUndefined();
+    ).toEqual({
+      testCase: 'Row 001',
+      metric: 'Context Appropriateness',
+      input: 'Recall',
+      runLabel: '[2] Run #317',
+      valueLabelKey: RunsI18nKey.RunCompareHeatMapTooltipScore,
+      valueTextKey: RunsI18nKey.RunCompareHeatMapNotApplicable,
+    });
+  });
+
+  test('returns Delta N/A tooltip without run for missing delta values', () => {
+    const missingDeltaRow = {
+      ...metricRow,
+      runIndex: undefined,
+      values: { [colId]: undefined },
+    };
+
+    expect(
+      buildHeatMapCellTooltipData({ data: missingDeltaRow } as never, {
+        ...baseOptions,
+        colorDisplayMode: HeatMapColorDisplayMode.Delta,
+      }),
+    ).toEqual({
+      testCase: 'Row 001',
+      metric: 'Context Appropriateness',
+      input: 'Recall',
+      valueLabelKey: RunsI18nKey.RunCompareHeatMapTooltipDelta,
+      valueTextKey: RunsI18nKey.RunCompareHeatMapNotApplicable,
+    });
   });
 });

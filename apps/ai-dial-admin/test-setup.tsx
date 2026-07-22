@@ -75,6 +75,8 @@ vi.mock('@/src/context/AppContext', () => ({
     },
     featureFlags: { deploymentsEnabled: true },
     isReadOnlyAdmin: false,
+    isFullAdmin: true,
+    isEnableAuth: false,
   }),
 }));
 

@@ -1,28 +1,24 @@
-import {
-  DEFAULT_BUCKET_AMOUNT,
-  DEFAULT_CURSOR_LIMIT,
-  DEFAULT_PAGE_LIMIT,
-  SORT_NULLS_DEFAULT,
-} from '@/src/constants/analytics/query-builder';
+import { DEFAULT_CURSOR_LIMIT, DEFAULT_PAGE_LIMIT, SORT_NULLS_DEFAULT } from '@/src/constants/analytics/query-builder';
 import {
   AggregateRow,
-  BucketRow,
   FilterGroupNode,
   FilterNodeKind,
   FilterPredicateNode,
+  FnArgValue,
+  GroupByRow,
   PageState,
   QueryBuilderState,
   SortRow,
 } from '@/src/models/analytics/query-builder';
 import {
-  QueryAggregateFn,
-  QueryBucketUnit,
   QueryLogicalOperator,
   QueryMode,
   QueryOperator,
   QueryPageType,
   QuerySortDirection,
 } from '@/src/models/analytics/query';
+import { QueryFunction } from '@/src/models/analytics/query-function';
+import { emptyArgs } from './functions';
 import { defaultValueType } from './fields';
 
 let counter = 0;
@@ -45,20 +41,31 @@ export const createPredicate = (fieldType?: string): FilterPredicateNode => ({
   isNull: false,
 });
 
-export const createBucket = (field = ''): BucketRow => ({
+export const createGroupByColumn = (field: string): GroupByRow => ({
   id: nextId(),
-  amount: DEFAULT_BUCKET_AMOUNT,
-  unit: QueryBucketUnit.Minute,
+  fn: null,
   field,
-  alias: 'bucket',
+  alias: '',
+  args: [],
 });
 
-export const createAggregate = (): AggregateRow => ({
+// A scalar-function Group by row: one empty arg slot per catalog argument (or pre-filled slots when
+// deserializing an existing query). The alias is left to the user (the section warns until set).
+export const createGroupByFn = (fn: QueryFunction, args?: FnArgValue[]): GroupByRow => ({
   id: nextId(),
-  fn: QueryAggregateFn.Count,
+  fn: fn.name,
   field: '',
+  alias: '',
+  args: args ?? emptyArgs(fn),
+});
+
+// An aggregate metric row over a catalog function: one arg slot per catalog argument.
+export const createAggregate = (fn: QueryFunction, args?: FnArgValue[]): AggregateRow => ({
+  id: nextId(),
+  fn: fn.name,
   distinct: false,
   alias: '',
+  args: args ?? emptyArgs(fn),
 });
 
 export const createSort = (): SortRow => ({
@@ -78,15 +85,15 @@ export const createInitialPage = (): PageState => ({
   cursorLimit: DEFAULT_CURSOR_LIMIT,
 });
 
-export const createInitialState = (): QueryBuilderState => ({
+export const createInitialState = (functions: QueryFunction[] = []): QueryBuilderState => ({
   entityName: '',
   fields: [],
+  functions,
   mode: QueryMode.Row,
   distinct: false,
   filter: createGroup(),
   select: [],
   groupBy: [],
-  buckets: [],
   aggregates: [],
   having: createGroup(),
   sort: [],

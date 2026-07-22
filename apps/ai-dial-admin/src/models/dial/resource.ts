@@ -1,4 +1,5 @@
 import { BaseEntity, EntityDefaults } from '@/src/models/dial/base-entity';
+import { DialResourceInterface } from '@/src/models/dial/interfaces';
 import { ToolsetTransport } from '@/src/types/toolset';
 
 export interface DialResource extends BaseEntity {
@@ -33,6 +34,7 @@ export interface DialApplicationResource extends DialResource, EntityDefaults {
   routes?: Record<string, unknown>;
   features?: DialApplicationResourceFeatures;
   external_services?: Record<string, DialExternalService>;
+  interfaces?: Record<string, DialResourceInterface>;
 }
 
 export interface DialExternalService {
@@ -100,9 +102,9 @@ export interface DialToolsetResourceAuthSettings {
 }
 
 export enum TokenEndpointAuthMethod {
-  CLIENT_SECRET_POST = 'CLIENT_SECRET_POST',
-  CLIENT_SECRET_BASIC = 'CLIENT_SECRET_BASIC',
-  CLIENT_SECRET_NONE = 'CLIENT_SECRET_NONE',
+  CLIENT_SECRET_POST = 'client_secret_post',
+  CLIENT_SECRET_BASIC = 'client_secret_basic',
+  CLIENT_SECRET_NONE = 'client_secret_none',
 }
 
 export enum ToolsetCodeChallengeMethod {

@@ -53,6 +53,8 @@ export default async function Layout({ children, params }: { children: ReactNode
     hfEnabled: isValueTruthy(process.env.HF_ENABLED),
     runsCompareEnabled: isValueTruthy(process.env.RUNS_COMPARE_ENABLED),
     analyticsEnabled: isValueTruthy(process.env.ANALYTICS_ENABLED),
+    queryAssistantEnabled:
+      isValueTruthy(process.env.ANALYTICS_ENABLED) && !!process.env.DIAL_QUERY_ASSISTANT_DEPLOYMENT,
   };
 
   const themesConfiguration = await themesApi.getThemesConfiguration();
@@ -72,6 +74,7 @@ export default async function Layout({ children, params }: { children: ReactNode
           telemetryMaxRangeMs={telemetryMaxRangeMs}
           codeAppEditorUrl={process.env.CODE_APP_EDITOR_URL}
           userInfo={(await utilityApi.getUserInfo(token)).response?.userInfo}
+          isEnableAuth={isEnableAuth}
         >
           <ThemeProvider themesConfiguration={themesConfiguration} themeImages={themesImages}>
             <RuleFolderProvider attributes={process.env.PUBLICATION_FILTERS || 'title,role,dial_roles'}>

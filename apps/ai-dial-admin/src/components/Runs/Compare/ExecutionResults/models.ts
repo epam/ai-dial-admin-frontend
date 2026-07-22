@@ -9,11 +9,16 @@ export interface CompareDiffCounts {
 export interface CompareColumnsCompareOptions {
   hideHighlights?: boolean;
   metricsSchema?: Record<string, Record<string, unknown>>;
+  theme?: string;
 }
 
 export interface ComparePanelRunNames {
   primary: string;
   secondary: string;
+}
+
+export interface CompareRowDiffVisibility {
+  hiddenColIds: ReadonlySet<string>;
 }
 
 export interface CompareColumnPanelContext {

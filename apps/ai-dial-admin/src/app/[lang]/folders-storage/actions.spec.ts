@@ -80,11 +80,11 @@ describe('Folders storage :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call removeFolder action (unpublish)', async () => {
+  test('Should call removeFolder action (unpublish), scoped to the single supplied resource type', async () => {
     (foldersCore.removeFolderCore as any).mockResolvedValue(RESPONSE_MOCK);
-    const result = await removeFolder('path');
+    const result = await removeFolder('path', ResourceType.PROMPT);
     expect(getUserToken).toHaveBeenCalled();
-    expect(foldersCore.removeFolderCore).toHaveBeenCalledWith(TOKEN_MOCK, 'path');
+    expect(foldersCore.removeFolderCore).toHaveBeenCalledWith(TOKEN_MOCK, 'path', [ResourceType.PROMPT]);
     expect(result).toBe(RESPONSE_MOCK);
   });
 

@@ -14,6 +14,6 @@ export const toFileList = (node: DialFile | null): DialFile[] => {
   return node.items.map((item) => ({
     ...item,
     path: getPathFromUrl(item.url),
-    nodeType: item.nodeType.toLowerCase() as DialFileNodeType,
+    nodeType: item.nodeType?.toLowerCase() as DialFileNodeType,
   }));
 };

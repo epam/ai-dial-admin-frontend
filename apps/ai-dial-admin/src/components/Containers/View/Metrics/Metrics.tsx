@@ -21,16 +21,19 @@ import { DeploymentMetricsI18nKey, ButtonsI18nKey, ErrorI18nKey } from '@/src/co
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DeploymentMetrics } from '@/src/models/deployments/metrics';
+import { INFERENCE_TASK } from '@/src/types/deployments/containers';
 import { MetricsBlockKey } from '@/src/types/deployments/metrics';
 import { ApplicationRoute } from '@/src/types/routes';
+import { filterCardsByTask } from '@/src/components/Containers/View/Metrics/utils';
 import { getErrorNotification } from '@/src/utils/notification';
 
 interface Props {
   containerId?: string;
   route: ApplicationRoute;
+  inferenceTask?: INFERENCE_TASK;
 }
 
-const Metrics: FC<Props> = ({ containerId, route }) => {
+const Metrics: FC<Props> = ({ containerId, route, inferenceTask }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
 
@@ -90,7 +93,8 @@ const Metrics: FC<Props> = ({ containerId, route }) => {
     const showThroughput = isModelServing && servingAvailable;
 
     // Scale & Health and Compute render for every type; their inference-only cards (error ratio, GPU)
-    // are appended only on Model Servings (route gate).
+    // are appended only on Model Servings (route gate). The task gate then drops cards not applicable
+    // to the deployment's inference task (issue #3895).
     const result: MetricsSectionConfig[] = [
       {
         titleKey: SCALE_HEALTH_TITLE,
@@ -118,8 +122,11 @@ const Metrics: FC<Props> = ({ containerId, route }) => {
       }
     }
 
-    return result;
-  }, [route, loading, metrics]);
+    // A section whose cards all filter out (e.g. Load on text classification) is dropped, title included.
+    return result
+      .map((section) => ({ ...section, cards: filterCardsByTask(section.cards, inferenceTask) }))
+      .filter((section) => section.cards.length > 0);
+  }, [route, loading, metrics, inferenceTask]);
 
   return (
     <div className="flex flex-col gap-6 overflow-auto">

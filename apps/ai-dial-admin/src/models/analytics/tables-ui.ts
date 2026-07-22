@@ -8,6 +8,29 @@ export interface ColumnRow {
   type: AnalyticsFieldType;
   tag: string;
   nullable: boolean;
+  sensitive: boolean;
+}
+
+// Per-row validation messages for a ColumnRow; an absent key means that field is valid.
+export interface ColumnRowError {
+  source_name?: string;
+  name?: string;
+  tag?: string;
+}
+
+// Names already declared on the table an "Add columns" patch targets; new rows must not collide with
+// them. Empty for the create-table flow, where no columns exist yet.
+export interface ExistingColumnNames {
+  sourceNames: string[];
+  names: string[];
+}
+
+export interface ColumnEditValues {
+  name: string;
+  display_name: string;
+  tag: string;
+  description: string;
+  sensitive: boolean;
 }
 
 export interface TableForm {

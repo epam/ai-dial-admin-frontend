@@ -287,6 +287,30 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     );
   });
 
+  test('metric columns highlight removed when _compared is null', () => {
+    type MetricCol = {
+      cellClassRules?: Record<string, (params: { data?: CompareAnalyticsRow }) => boolean>;
+    };
+    const cols = getCompareColumnsCompare([
+      makeRow({
+        metricValues: { 'Overall Accuracy': { Precision: 0.8 } },
+        _compared: null,
+      }),
+    ]);
+    const metricGroup = cols[3] as { children: MetricCol[] };
+    const primaryPrecision = metricGroup.children[0];
+    const secondaryPrecision = metricGroup.children[1];
+    const unmatchedRow = makeRow({
+      metricValues: { 'Overall Accuracy': { Precision: 0.8 } },
+      _compared: null,
+    });
+
+    expect(primaryPrecision.cellClassRules?.['compare-metric-regressed-primary']?.({ data: unmatchedRow })).toBe(true);
+    expect(secondaryPrecision.cellClassRules?.['compare-metric-regressed-secondary']?.({ data: unmatchedRow })).toBe(
+      true,
+    );
+  });
+
   test('includes pinned eye action column at the end', () => {
     const cols = getCompareColumnsCompare([makeRow()]);
     const actionCol = cols[cols.length - 1] as ColDef;
@@ -344,6 +368,24 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     };
     const secondaryCol = metricGroup.children[1];
     expect(secondaryCol.valueGetter({ data: makeRow({ _compared: null }) })).toBe('—');
+  });
+
+  test('primary HTTP valueGetter returns dash for compared-only rows', () => {
+    type ExecChild = { colId?: string; valueGetter: (p: { data?: CompareAnalyticsRow }) => unknown };
+    const cols = getCompareColumnsCompare([makeRow()]);
+    const exec = cols[2] as { children: ExecChild[] };
+    const primaryHttpCol = exec.children[2];
+
+    expect(primaryHttpCol.colId).toBe('http');
+    expect(
+      primaryHttpCol.valueGetter({
+        data: makeRow({
+          responseStatusCode: undefined as unknown as number,
+          _compared: makeResult({ responseStatusCode: 200 }),
+        }),
+      }),
+    ).toBe('—');
+    expect(primaryHttpCol.valueGetter({ data: makeRow({ responseStatusCode: 404 }) })).toBe(404);
   });
 
   test('omits cellClassRules on compare columns when hideHighlights is true', () => {

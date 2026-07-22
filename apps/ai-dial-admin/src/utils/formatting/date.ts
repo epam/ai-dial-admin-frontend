@@ -40,3 +40,19 @@ export const formatDateToLocalString = (value?: number | string): string => {
 
   return date.toLocaleDateString();
 };
+
+/**
+ * Coerce a datetime cell value into a Date for agDateColumnFilter comparisons.
+ *
+ * @param {?number | string | null} [value] - datetime in milliseconds or iso string
+ * @returns {?Date} parsed date, or null when missing/invalid
+ */
+export const toDateOrNull = (value?: number | string | null): Date | null => {
+  if (value == null || value === '') {
+    return null;
+  }
+
+  const date = toDate(value);
+
+  return Number.isNaN(date.getTime()) ? null : date;
+};

@@ -25,6 +25,7 @@ import {
 } from '@/src/components/Runs/Compare/ExecutionResults/RowCompareDetails/utils/row-detail-display-tree';
 import { SidebarPosition } from '@/src/components/Common/Sidebar/models';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
+import { createEmptyComparePrimaryRow, getCompareRowSelectionId } from '@/src/components/Runs/View/utils';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
@@ -63,11 +64,13 @@ const CompareRowDetailPanel: FC<Props> = ({
   const [displayTree, setDisplayTree] = useState<ColDef[]>([]);
 
   const comparedId = row._compared?.id ?? null;
+  const isComparedOnly = !row.id && comparedId != null;
   const hasComparedMatch = comparedId != null;
+  const rowSelectionId = getCompareRowSelectionId(row);
   const title = getCompareRowDetailTitle(row);
 
   useEffect(() => {
-    if (!row.id) {
+    if (!row.id && !comparedId) {
       setIsLoading(false);
       setHasError(true);
       return;
@@ -80,12 +83,21 @@ const CompareRowDetailPanel: FC<Props> = ({
     setPrimaryDetail(null);
     setComparedDetail(null);
 
-    const primaryPromise = getTestCaseRunResultDetails(row.id);
+    const primaryPromise = row.id ? getTestCaseRunResultDetails(row.id) : Promise.resolve(null);
     const comparedPromise = comparedId ? getTestCaseRunResultDetails(comparedId) : Promise.resolve(null);
 
     Promise.all([primaryPromise, comparedPromise])
       .then(([primary, compared]) => {
         if (isCancelled) return;
+        if (isComparedOnly) {
+          if (!compared) {
+            setHasError(true);
+            return;
+          }
+          setPrimaryDetail(createEmptyComparePrimaryRow(row));
+          setComparedDetail(compared);
+          return;
+        }
         if (!primary) {
           setHasError(true);
           return;
@@ -107,7 +119,7 @@ const CompareRowDetailPanel: FC<Props> = ({
     return () => {
       isCancelled = true;
     };
-  }, [row.id, comparedId]);
+  }, [row, row.id, comparedId, isComparedOnly]);
 
   const sections = useMemo(() => {
     if (!primaryDetail) return [];
@@ -150,7 +162,7 @@ const CompareRowDetailPanel: FC<Props> = ({
           <>
             {viewMode === RowDetailViewMode.Table ? (
               <CompareRowDetailTable
-                key={row.id}
+                key={rowSelectionId}
                 sections={displaySections}
                 primaryRunName={primaryRunName}
                 comparedRunName={comparedRunName}
@@ -160,7 +172,7 @@ const CompareRowDetailPanel: FC<Props> = ({
               />
             ) : (
               <CompareRowDetailPivotTable
-                key={row.id}
+                key={rowSelectionId}
                 sections={displaySections}
                 primaryRunName={primaryRunName}
                 comparedRunName={comparedRunName}

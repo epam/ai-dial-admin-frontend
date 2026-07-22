@@ -8,6 +8,7 @@ import { DialApplication } from '@/src/models/dial/application';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getAppRoutes } from '@/src/utils/entities/app-routes';
+import { stripEmptyInterfaces } from '@/src/utils/deployments/interfaces';
 
 export async function getApplications() {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -26,7 +27,10 @@ export async function removeApplication(name?: string) {
 
 export async function createApplication(application: DialApplication) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return applicationsApi.createApplication({ ...application, ...DEFAULT_ROLE_LIMITS }, token);
+  return applicationsApi.createApplication(
+    { ...application, ...DEFAULT_ROLE_LIMITS, interfaces: stripEmptyInterfaces(application.interfaces) },
+    token,
+  );
 }
 
 export async function updateApplication(application: DialApplication, etag: string) {
@@ -37,6 +41,7 @@ export async function updateApplication(application: DialApplication, etag: stri
     defaults: { ...application.defaults },
     responsesDefaults: { ...application.responsesDefaults },
     applicationProperties: { ...application.applicationProperties },
+    interfaces: stripEmptyInterfaces(application.interfaces),
   };
   return applicationsApi.updateApplication(app, token, etag);
 }

@@ -10,6 +10,7 @@ import {
   getFormattedDuration,
   getMetricGroups,
   getPanelTitle,
+  getCompareRowSelectionId,
   mergeByTestCaseId,
   snapshotsToBindingsMap,
 } from '../utils';
@@ -586,6 +587,22 @@ const makeResult = (overrides: Partial<AnalyticsResult> = {}): AnalyticsResult =
   ...overrides,
 });
 
+describe('Runs View :: getCompareRowSelectionId', () => {
+  test('returns primary id when present', () => {
+    expect(
+      getCompareRowSelectionId({ ...makeResult({ id: 'primary-id' }), _compared: makeResult({ id: 'compared-id' }) }),
+    ).toBe('primary-id');
+  });
+
+  test('falls back to compared id for compared-only rows', () => {
+    const comparedOnly = mergeByTestCaseId(
+      [],
+      [makeResult({ id: 'compared-only-id', testCaseId: 'tc1', runIndex: 1 })],
+    );
+    expect(getCompareRowSelectionId(comparedOnly[0])).toBe('compared-only-id');
+  });
+});
+
 describe('Runs View :: mergeByTestCaseId', () => {
   test('matches rows by testCaseId', () => {
     const current = [makeResult({ testCaseId: 'tc1', testCaseName: 'A' })];
@@ -619,7 +636,8 @@ describe('Runs View :: mergeByTestCaseId', () => {
     const compared = [makeResult({ testCaseId: 'tc1' })];
     const result = mergeByTestCaseId(current, compared);
 
-    expect(result[0]._compared).toBeNull();
+    const unkeyedRow = result.find((row) => !row.testCaseId && !row.testCaseName);
+    expect(unkeyedRow?._compared).toBeNull();
   });
 
   test('preserves all current row fields', () => {
@@ -629,5 +647,90 @@ describe('Runs View :: mergeByTestCaseId', () => {
     expect(result[0].runIndex).toBe(5);
     expect(result[0].responseStatusCode).toBe(201);
     expect(result[0]._compared).toBeNull();
+  });
+
+  test('matches rows by testCaseId and runIndex', () => {
+    const current = [
+      makeResult({ testCaseId: 'tc1', testCaseName: 'A', runIndex: 0, responseStatusCode: 200 }),
+      makeResult({ testCaseId: 'tc1', testCaseName: 'A', runIndex: 1, responseStatusCode: 201 }),
+      makeResult({ testCaseId: 'tc1', testCaseName: 'A', runIndex: 2, responseStatusCode: 202 }),
+    ];
+    const compared = [makeResult({ testCaseId: 'tc1', testCaseName: 'A', runIndex: 0, responseStatusCode: 404 })];
+    const result = mergeByTestCaseId(current, compared);
+
+    expect(result).toHaveLength(3);
+    expect(result[0]._compared?.responseStatusCode).toBe(404);
+    expect(result[1]._compared).toBeNull();
+    expect(result[2]._compared).toBeNull();
+  });
+
+  test('includes compared-only rows when primary has fewer sub-runs', () => {
+    const current = [makeResult({ testCaseId: 'tc1', testCaseName: 'A', runIndex: 0, responseStatusCode: 200 })];
+    const compared = [
+      makeResult({ testCaseId: 'tc1', testCaseName: 'A', runIndex: 0, responseStatusCode: 404 }),
+      makeResult({ testCaseId: 'tc1', testCaseName: 'A', runIndex: 1, responseStatusCode: 405 }),
+      makeResult({ testCaseId: 'tc1', testCaseName: 'A', runIndex: 2, responseStatusCode: 406 }),
+    ];
+    const result = mergeByTestCaseId(current, compared);
+
+    expect(result).toHaveLength(3);
+    expect(result[0].responseStatusCode).toBe(200);
+    expect(result[0]._compared?.responseStatusCode).toBe(404);
+    expect(result[1].metricValues).toBeUndefined();
+    expect(result[1]._compared?.responseStatusCode).toBe(405);
+    expect(result[2]._compared?.responseStatusCode).toBe(406);
+  });
+
+  test('falls back to testCaseName when testCaseIds differ (detached public copy)', () => {
+    const current = [
+      makeResult({
+        testCaseId: 'public-de',
+        testCaseName: 'DE',
+        responseStatusCode: 200,
+        metricValues: { Accuracy: { score: 0.9 } },
+      }),
+      makeResult({
+        testCaseId: 'public-pl',
+        testCaseName: 'PL',
+        responseStatusCode: 200,
+        metricValues: { Accuracy: { score: 0.8 } },
+      }),
+    ];
+    const compared = [
+      makeResult({
+        testCaseId: 'private-pl',
+        testCaseName: 'PL',
+        responseStatusCode: 201,
+        metricValues: { Accuracy: { score: 0.85 } },
+      }),
+      makeResult({
+        testCaseId: 'private-de',
+        testCaseName: 'DE',
+        responseStatusCode: 202,
+        metricValues: { Accuracy: { score: 0.95 } },
+      }),
+    ];
+    const result = mergeByTestCaseId(current, compared);
+
+    expect(result).toHaveLength(2);
+    const de = result.find((row) => row.testCaseName === 'DE');
+    const pl = result.find((row) => row.testCaseName === 'PL');
+    expect(de?._compared?.testCaseId).toBe('private-de');
+    expect(de?._compared?.responseStatusCode).toBe(202);
+    expect(pl?._compared?.testCaseId).toBe('private-pl');
+    expect(pl?._compared?.responseStatusCode).toBe(201);
+  });
+
+  test('prefers testCaseId match over testCaseName when both available', () => {
+    const current = [makeResult({ testCaseId: 'tc1', testCaseName: 'Renamed', responseStatusCode: 200 })];
+    const compared = [
+      makeResult({ testCaseId: 'tc1', testCaseName: 'Original', responseStatusCode: 404 }),
+      makeResult({ testCaseId: 'tc2', testCaseName: 'Renamed', responseStatusCode: 500 }),
+    ];
+    const result = mergeByTestCaseId(current, compared);
+
+    expect(result).toHaveLength(2);
+    expect(result[0]._compared?.responseStatusCode).toBe(404);
+    expect(result[0]._compared?.testCaseName).toBe('Original');
   });
 });

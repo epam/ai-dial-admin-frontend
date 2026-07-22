@@ -24,8 +24,7 @@ import {
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
-import { AssetToolset, AssetWithVersion } from '@/src/models/dial/deployment-asset';
-import { ToolsetAuthType } from '@/src/models/dial/toolset';
+import { AssetWithVersion, DeploymentAsset } from '@/src/models/dial/deployment-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { DuplicationTypes } from '@/src/types/prompt';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -33,6 +32,7 @@ import { duplicateEntityMap, getClonedEntityName, getCloneTitle } from '@/src/ut
 import { checkNameVersionCombination, getInitialVersion } from '@/src/utils/entities/versions';
 import { isDeploymentAsset } from '@/src/utils/is-view';
 import { addTrailingSlash } from '@/src/utils/url';
+import { DialToolsetResource, ToolsetAuthType } from '@/src/models/dial/resource';
 
 interface Props {
   view: ApplicationRoute;
@@ -69,23 +69,22 @@ const DuplicateAsset: FC<Props> = ({
   const [clonedAsset, setClonedAsset] = useState<AssetWithVersion>({
     ...entity,
     name: duplicationType === DuplicationTypes.VERSION ? entity.name : getClonedEntityName(entity.name),
-    displayName: isDeploymentAsset(view) ? entity.displayName : void 0,
+    display_name: isDeploymentAsset(view) ? (entity as DeploymentAsset).display_name : void 0,
     version: getInitialVersion(versionsMap, entity?.name),
   });
   const [isInnerValid, setIsInnerValid] = useState(false);
 
   const isToolsetWithAuth = useMemo(() => {
-    const assetToolset = entity as AssetToolset;
+    const assetToolset = entity as DialToolsetResource;
     return (
-      'authSettings' in entity &&
-      assetToolset.authSettings?.authenticationType &&
-      assetToolset.authSettings.authenticationType !== ToolsetAuthType.NONE
+      assetToolset.auth_settings?.authentication_type &&
+      assetToolset.auth_settings.authentication_type !== ToolsetAuthType.NONE
     );
   }, [entity]);
 
   const authType = useMemo(() => {
     if (!isToolsetWithAuth) return null;
-    return (entity as AssetToolset).authSettings?.authenticationType || null;
+    return (entity as DialToolsetResource).auth_settings?.authentication_type || null;
   }, [isToolsetWithAuth, entity]);
 
   useEffect(() => {
@@ -100,23 +99,23 @@ const DuplicateAsset: FC<Props> = ({
   // Initial validation for auth fields
   useEffect(() => {
     if (authType === ToolsetAuthType.OAUTH) {
-      (clonedAsset as AssetToolset).authSettings = {
-        authenticationType: ToolsetAuthType.NONE,
+      (clonedAsset as DialToolsetResource).auth_settings = {
+        authentication_type: ToolsetAuthType.NONE,
       };
     } else if (authType === ToolsetAuthType.API_KEY) {
-      const toolset = entity as AssetToolset;
+      const toolset = entity as DialToolsetResource;
       dispatch({
         type: ValidationActionType.SetField,
         field: 'authSettings.apiKeyHeader',
-        isValid: !!toolset.authSettings?.apiKeyHeader,
+        isValid: !!toolset.auth_settings?.api_key_header,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const onChangeName = useCallback(
-    (displayName?: string) => {
-      setClonedAsset({ ...clonedAsset, displayName });
+    (display_name?: string) => {
+      setClonedAsset({ ...clonedAsset, display_name } as AssetWithVersion);
     },
     [setClonedAsset, clonedAsset],
   );
@@ -157,12 +156,12 @@ const DuplicateAsset: FC<Props> = ({
   );
 
   const onChangeApiKeyHeader = useCallback(
-    (apiKeyHeader: string) => {
-      const toolset = clonedAsset as AssetToolset;
+    (api_key_header: string) => {
+      const toolset = clonedAsset as DialToolsetResource;
       setClonedAsset({
         ...toolset,
-        authSettings: { ...toolset.authSettings!, apiKeyHeader },
-      });
+        auth_settings: { ...toolset.auth_settings!, api_key_header },
+      } as AssetWithVersion);
     },
     [clonedAsset],
   );
@@ -195,7 +194,11 @@ const DuplicateAsset: FC<Props> = ({
           checkEmptySymbols={false}
         />
         {isDeploymentAsset(view) && (
-          <DisplayNameControl displayName={clonedAsset.displayName} onChange={onChangeName} required />
+          <DisplayNameControl
+            displayName={(clonedAsset as DeploymentAsset).display_name}
+            onChange={onChangeName}
+            required
+          />
         )}
         <VersionControl version={clonedAsset.version} onChange={onChangeVersion} />
 
@@ -203,7 +206,7 @@ const DuplicateAsset: FC<Props> = ({
 
         {authType === ToolsetAuthType.API_KEY && (
           <ApiKeyHeaderControl
-            apiKeyHeader={(clonedAsset as AssetToolset).authSettings?.apiKeyHeader}
+            apiKeyHeader={(clonedAsset as DialToolsetResource).auth_settings?.api_key_header}
             onChange={onChangeApiKeyHeader}
           />
         )}

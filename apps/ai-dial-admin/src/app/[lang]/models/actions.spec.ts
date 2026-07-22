@@ -166,6 +166,48 @@ describe('Models :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
+  test('Should strip empty interface entries when creating a model', async () => {
+    (modelsApi.createModel as any).mockResolvedValue(RESPONSE_MOCK);
+
+    await createModel({
+      name: 'test',
+      interfaces: {
+        openaiChatCompletions: { baseUrl: '' },
+        openaiResponses: { baseUrl: 'https://example.com' },
+      },
+    } as DialModel);
+
+    expect(modelsApi.createModel).toHaveBeenCalledWith(
+      expect.objectContaining({
+        interfaces: { openaiResponses: { baseUrl: 'https://example.com' } },
+      }),
+      TOKEN_MOCK,
+    );
+  });
+
+  test('Should strip empty interface entries when updating a model', async () => {
+    (modelsApi.updateModel as any).mockResolvedValue(RESPONSE_MOCK);
+
+    await updateModel(
+      {
+        name: 'test',
+        interfaces: {
+          openaiChatCompletions: { baseUrl: '' },
+          anthropicMessages: { baseUrl: 'https://example.com' },
+        },
+      } as DialModel,
+      'etag',
+    );
+
+    expect(modelsApi.updateModel).toHaveBeenCalledWith(
+      expect.objectContaining({
+        interfaces: { anthropicMessages: { baseUrl: 'https://example.com' } },
+      }),
+      TOKEN_MOCK,
+      'etag',
+    );
+  });
+
   test('Should call updateCoreModel action', async () => {
     (modelsApi.updateCoreModel as any).mockResolvedValue(RESPONSE_MOCK);
 

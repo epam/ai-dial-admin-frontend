@@ -23,28 +23,29 @@ interface BuildHeatMapCellTooltipDataOptions {
   primaryRunName: string;
   comparedRunName: string;
   colId: string;
+  theme: string;
 }
 
 const formatCompareRunLabel = (runIndex: string, runName: string): string => `[${runIndex}] ${runName}`;
 
-const getAbsoluteSwatchColors = (value: number): { bg: string; border: string } => {
+const getAbsoluteSwatchColors = (value: number, theme: string): { bg: string; border: string } => {
   if (value >= 0 && value <= 1) {
-    return getAccuracyColors(value);
+    return getAccuracyColors(value, theme);
   }
 
   return { bg: HEAT_MAP_GROUP_ROW_BG, border: HEAT_MAP_STROKE_TERTIARY };
 };
 
-const getDeltaSwatchColors = (value: number): { bg: string; border: string } => {
+const getDeltaSwatchColors = (value: number, theme: string): { bg: string; border: string } => {
   if (value === 0) {
     return DELTA_NEUTRAL_SEGMENT;
   }
 
-  return getDeltaColors(value) ?? DELTA_NEUTRAL_SEGMENT;
+  return getDeltaColors(value, theme) ?? DELTA_NEUTRAL_SEGMENT;
 };
 
-const buildValueSwatch = (value: number, isDeltaMode: boolean): HeatMapCellTooltipSwatch => {
-  const colors = isDeltaMode ? getDeltaSwatchColors(value) : getAbsoluteSwatchColors(value);
+const buildValueSwatch = (value: number, isDeltaMode: boolean, theme: string): HeatMapCellTooltipSwatch => {
+  const colors = isDeltaMode ? getDeltaSwatchColors(value, theme) : getAbsoluteSwatchColors(value, theme);
   const formattedValue = isDeltaMode ? formatHeatMapDeltaCellValue(value) : formatHeatMapCellValue(value);
 
   return {
@@ -56,7 +57,14 @@ const buildValueSwatch = (value: number, isDeltaMode: boolean): HeatMapCellToolt
 
 export const buildHeatMapCellTooltipData = (
   params: ITooltipParams<HeatMapRow>,
-  { colorDisplayMode, testCaseLabel, primaryRunName, comparedRunName, colId }: BuildHeatMapCellTooltipDataOptions,
+  {
+    colorDisplayMode,
+    testCaseLabel,
+    primaryRunName,
+    comparedRunName,
+    colId,
+    theme,
+  }: BuildHeatMapCellTooltipDataOptions,
 ): HeatMapCellTooltipData | undefined => {
   const row = params.data;
   if (!row || row.rowType === HeatMapRowType.Group) {
@@ -64,29 +72,35 @@ export const buildHeatMapCellTooltipData = (
   }
 
   const value = row.values[colId];
-  if (value === undefined || value === null) {
-    return undefined;
-  }
-
   const isDeltaMode = colorDisplayMode === HeatMapColorDisplayMode.Delta;
   const input = row.metricKey ?? row.label;
+  const valueLabelKey = isDeltaMode
+    ? RunsI18nKey.RunCompareHeatMapTooltipDelta
+    : RunsI18nKey.RunCompareHeatMapTooltipScore;
 
-  if (isDeltaMode && value === 0) {
-    return {
+  if (value === undefined || value === null) {
+    const tooltipData: HeatMapCellTooltipData = {
       testCase: testCaseLabel,
       metric: row.groupKey,
       input,
-      valueLabelKey: RunsI18nKey.RunCompareHeatMapTooltipDelta,
+      valueLabelKey,
       valueTextKey: RunsI18nKey.RunCompareHeatMapNotApplicable,
     };
+
+    if (!isDeltaMode && row.runIndex != null) {
+      const runName = row.runIndex === RUN_COMPARE_PRIMARY_INDEX ? primaryRunName : comparedRunName;
+      tooltipData.runLabel = formatCompareRunLabel(row.runIndex, runName);
+    }
+
+    return tooltipData;
   }
 
   const tooltipData: HeatMapCellTooltipData = {
     testCase: testCaseLabel,
     metric: row.groupKey,
     input,
-    valueRow: buildValueSwatch(value, isDeltaMode),
-    valueLabelKey: isDeltaMode ? RunsI18nKey.RunCompareHeatMapTooltipDelta : RunsI18nKey.RunCompareHeatMapTooltipScore,
+    valueRow: buildValueSwatch(value, isDeltaMode, theme),
+    valueLabelKey,
   };
 
   if (!isDeltaMode && row.runIndex != null) {

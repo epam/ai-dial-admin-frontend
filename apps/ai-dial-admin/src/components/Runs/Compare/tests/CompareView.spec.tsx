@@ -117,7 +117,8 @@ describe('CompareView', () => {
     expect(screen.queryByRole('button', { name: 'Runs.RunCompareAddRun' })).not.toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getAllByRole('button', { name: 'Runs.RunCompareTagAria' })).toHaveLength(2);
+      expect(screen.getByRole('button', { name: 'Runs.RunComparePrimaryTagAria' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Runs.RunCompareTagAria' })).toBeInTheDocument();
     });
 
     expect(getRunMock).toHaveBeenCalledWith('run-1');
@@ -136,10 +137,10 @@ describe('CompareView', () => {
     renderCompareView();
 
     await waitFor(() => {
-      expect(screen.getAllByRole('button', { name: 'Runs.RunCompareTagAria' })[1]).toBeEnabled();
+      expect(screen.getByRole('button', { name: 'Runs.RunCompareTagAria' })).toBeEnabled();
     });
 
-    await user.click(screen.getAllByRole('button', { name: 'Runs.RunCompareTagAria' })[1]);
+    await user.click(screen.getByRole('button', { name: 'Runs.RunCompareTagAria' }));
 
     await waitFor(() => {
       expect(screen.getByText('Runs.RunCompareSelectRun')).toBeInTheDocument();
@@ -179,15 +180,17 @@ describe('CompareView', () => {
       expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
     });
 
-    expect(screen.queryByText('Runs.RunCompareHeatMapMetricsAll')).not.toBeInTheDocument();
+    const singleMetricTriggerLabel = 'Runs.RunCompareHeatMapMetricsPrefix Accuracy';
+
+    expect(screen.queryByText(singleMetricTriggerLabel)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('tab', { name: 'Runs.RunCompareTabHeatMap' }));
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Runs.RunCompareHeatMapMetricsAll' })).toBeEnabled();
+      expect(screen.getByRole('button', { name: singleMetricTriggerLabel })).toBeEnabled();
     });
 
-    expect(screen.getByText('Runs.RunCompareHeatMapMetricsAll')).toBeInTheDocument();
+    expect(screen.getByText(singleMetricTriggerLabel)).toBeInTheDocument();
     expect(screen.getByText('Runs.RunCompareColorDisplay')).toBeInTheDocument();
     expect(screen.getByText('Runs.RunCompareAbsoluteValues')).toBeInTheDocument();
   });

@@ -1,5 +1,6 @@
 import { MetricStatus } from '@/src/components/Common/MetricCard/models';
 import { DeploymentMetrics, DistributionSummary } from '@/src/models/deployments/metrics';
+import { INFERENCE_TASK } from '@/src/types/deployments/containers';
 
 export enum MetricCardKind {
   Single = 'single',
@@ -17,6 +18,8 @@ export enum SectionWidth {
 
 interface BaseCard {
   labelKey: string;
+  // Inference task types this card applies to; omitted = universal (issue #3895 gauge matrix).
+  tasks?: INFERENCE_TASK[];
 }
 
 export interface SingleCardConfig extends BaseCard {

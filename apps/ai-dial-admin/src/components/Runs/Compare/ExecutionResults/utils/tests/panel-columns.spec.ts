@@ -13,6 +13,7 @@ import { getCompareColumnsCompare } from '@/src/components/Runs/Compare/Executio
 import {
   buildComparePanelColumnTree,
   flattenComparePanelColumnTree,
+  preserveFlatColDefHideState,
   preservePanelHideState,
 } from '@/src/components/Runs/Compare/ExecutionResults/utils/panel-columns';
 
@@ -139,5 +140,32 @@ describe('panel-columns', () => {
     const httpCol = getChildren(executionGroup).find((col) => getColId(col) === 'http');
 
     expect(httpCol?.hide).toBe(true);
+  });
+
+  test('preserveFlatColDefHideState copies hide flags from previous flat defs', () => {
+    const flatDefs = getFlatDefs();
+    const visibleFlatDefs = preserveFlatColDefHideState(
+      flatDefs,
+      flatDefs.map((col) => {
+        const children = getChildren(col);
+        if (children.length === 0) {
+          return col;
+        }
+
+        return {
+          ...col,
+          children: children.map((child) =>
+            ['runIndex', 'cmp_runIndex', 'http', 'cmp_http', 'duration', 'cmp_duration'].includes(getColId(child) ?? '')
+              ? { ...child, hide: false }
+              : child,
+          ),
+        };
+      }),
+    );
+
+    const executionGroup = visibleFlatDefs.find((col) => col.headerName === EXECUTION_GROUP_HEADER) as ColDef;
+    const executionLeaves = getChildren(executionGroup);
+
+    expect(executionLeaves.every((leaf) => leaf.hide !== true)).toBe(true);
   });
 });

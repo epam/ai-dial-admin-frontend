@@ -1,6 +1,8 @@
 import { ImageVersion } from '@/src/models/deployments/images';
 import { AssetApp, AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { compareVersions, modifyNameVersionInAsset } from '@/src/utils/entities/versions';
+import { resolveCatalogDeploymentNavigation } from '@/src/utils/deployment-navigation';
+import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { ApplicationRoute } from '@/src/types/routes';
 import { allActionLabels, baseToolbarOptionLabels } from './constants';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
@@ -11,18 +13,11 @@ export const getAgentLinkForConversation = (
   deployment: Record<string, string> | null,
   currentLocale: string,
 ): string => {
-  let path = '';
-
-  if (deployment?.model) {
-    path = `/${currentLocale}${ApplicationRoute.Models}/${encodeURIComponent(deployment.model)}`;
-  } else if (deployment?.application) {
-    if (deployment.application === deployment.reference) {
-      path = `/${currentLocale}${ApplicationRoute.Applications}/${encodeURIComponent(deployment.application)}`;
-    } else {
-      path = `/${currentLocale}${ApplicationRoute.AssetsApplications}/${encodeURIComponent(deployment.displayName)}?path=${deployment.application.replace('applications/', '')}`;
-    }
+  const target = resolveCatalogDeploymentNavigation(deployment);
+  if (!target) {
+    return '';
   }
-  return path;
+  return `/${currentLocale}${getUrnForEntity(target.route, target.entity)}`;
 };
 
 export const filterLatestVersions = (data: AssetWithVersion[]) => {

@@ -38,71 +38,69 @@ const PageSection: FC = () => {
       }
     >
       {page.enabled && (
-        <div className="flex flex-col gap-2">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <div className="w-[92px] shrink-0">
-              <CompactSelect
-                ariaLabel={t(QueryBuilderI18nKey.Strategy)}
-                options={PAGE_TYPE_OPTIONS}
-                value={page.type}
-                onChange={(v) => {
-                  page.type = v as QueryPageType;
+        <div className="flex flex-wrap items-center gap-1.5">
+          <div className="w-[92px] shrink-0">
+            <CompactSelect
+              ariaLabel={t(QueryBuilderI18nKey.Strategy)}
+              options={PAGE_TYPE_OPTIONS}
+              value={page.type}
+              onChange={(v) => {
+                page.type = v as QueryPageType;
+                refresh();
+              }}
+            />
+          </div>
+
+          {isOffset ? (
+            <>
+              <CompactInput
+                ariaLabel={t(QueryBuilderI18nKey.Offset)}
+                prefix={t(QueryBuilderI18nKey.Offset)}
+                className="w-[110px]"
+                numeric
+                value={String(page.offset)}
+                onChange={(value) => {
+                  page.offset = Number(value || 0);
                   refresh();
                 }}
               />
-            </div>
-
-            {isOffset ? (
-              <>
-                <CompactInput
-                  ariaLabel={t(QueryBuilderI18nKey.Offset)}
-                  prefix={t(QueryBuilderI18nKey.Offset)}
-                  className="w-[110px]"
-                  numeric
-                  value={String(page.offset)}
-                  onChange={(value) => {
-                    page.offset = Number(value || 0);
-                    refresh();
-                  }}
-                />
-                <CompactInput
-                  ariaLabel={t(QueryBuilderI18nKey.Limit)}
-                  prefix={t(QueryBuilderI18nKey.Limit)}
-                  className="w-[100px]"
-                  numeric
-                  value={String(page.limit)}
-                  onChange={(value) => {
-                    page.limit = Number(value || 0);
-                    refresh();
-                  }}
-                />
-              </>
-            ) : (
-              <>
-                <CompactInput
-                  ariaLabel={t(QueryBuilderI18nKey.Cursor)}
-                  prefix={t(QueryBuilderI18nKey.Cursor)}
-                  className="min-w-[140px] flex-1"
-                  value={page.cursor}
-                  onChange={(value) => {
-                    page.cursor = value;
-                    refresh();
-                  }}
-                />
-                <CompactInput
-                  ariaLabel={t(QueryBuilderI18nKey.Limit)}
-                  prefix={t(QueryBuilderI18nKey.Limit)}
-                  className="w-[100px]"
-                  numeric
-                  value={String(page.cursorLimit)}
-                  onChange={(value) => {
-                    page.cursorLimit = Number(value || 0);
-                    refresh();
-                  }}
-                />
-              </>
-            )}
-          </div>
+              <CompactInput
+                ariaLabel={t(QueryBuilderI18nKey.Limit)}
+                prefix={t(QueryBuilderI18nKey.Limit)}
+                className="w-[100px]"
+                numeric
+                value={String(page.limit)}
+                onChange={(value) => {
+                  page.limit = Number(value || 0);
+                  refresh();
+                }}
+              />
+            </>
+          ) : (
+            <>
+              <CompactInput
+                ariaLabel={t(QueryBuilderI18nKey.Cursor)}
+                prefix={t(QueryBuilderI18nKey.Cursor)}
+                className="min-w-[140px] flex-1"
+                value={page.cursor}
+                onChange={(value) => {
+                  page.cursor = value;
+                  refresh();
+                }}
+              />
+              <CompactInput
+                ariaLabel={t(QueryBuilderI18nKey.Limit)}
+                prefix={t(QueryBuilderI18nKey.Limit)}
+                className="w-[100px]"
+                numeric
+                value={String(page.cursorLimit)}
+                onChange={(value) => {
+                  page.cursorLimit = Number(value || 0);
+                  refresh();
+                }}
+              />
+            </>
+          )}
 
           {supportsTotal && (
             <DialCheckbox

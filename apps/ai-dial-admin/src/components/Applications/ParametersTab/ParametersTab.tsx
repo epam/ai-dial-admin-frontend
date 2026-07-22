@@ -107,7 +107,7 @@ const ParametersTab: FC<Props> = ({
 
   const applicationProperties = useMemo(() => {
     return view === ApplicationRoute.AssetsApplications
-      ? (application as DialApplicationResource)?.application_properties
+      ? (application as DialApplicationResource)?.application_properties || {}
       : (application as DialApplication)?.applicationProperties || {};
   }, [application, view]);
 
@@ -126,17 +126,24 @@ const ParametersTab: FC<Props> = ({
     return viewItems.length > 1;
   }, [viewItems.length]);
 
+  const acceptableResourceTypes = useMemo(() => {
+    const externalServices = (application as DialApplicationResource)?.external_services;
+    return { external_services: externalServices ? Object.keys(externalServices) : [] };
+  }, [application]);
+
   const onGetSchemeDefaults = useCallback((_data: Record<string, unknown>) => {}, []);
 
   const onChangeProperties = useCallback(
     (props: Record<string, unknown>) => {
       const newEntity = {
         ...application,
-        applicationProperties: props,
+        ...(view === ApplicationRoute.AssetsApplications
+          ? { application_properties: props }
+          : { applicationProperties: props }),
       } as unknown as BaseEntity;
       onChange?.(newEntity);
     },
-    [application, onChange],
+    [application, onChange, view],
   );
 
   const onValidityChange = useCallback(
@@ -226,6 +233,7 @@ const ParametersTab: FC<Props> = ({
                       onGetSchemeDefaults={onGetSchemeDefaults}
                       disabled={view === ApplicationRoute.ApplicationPublications}
                       defaultExpanded={false}
+                      acceptableResourceTypes={acceptableResourceTypes}
                     />
                   </div>
                 )}

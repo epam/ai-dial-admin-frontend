@@ -9,6 +9,7 @@ export interface AssetApp extends DialFile, DialApplication, EntityValidityState
   items?: AssetApp[];
   versions?: string[];
   reference?: string;
+  display_name?: string;
   displayVersion?: string;
   selectedVersions?: string[];
 }
@@ -17,6 +18,7 @@ export interface AssetToolset extends DialFile, Toolset {
   version: string;
   items?: AssetToolset[];
   versions?: string[];
+  display_name?: string;
   displayVersion?: string;
   selectedVersions?: string[];
 }

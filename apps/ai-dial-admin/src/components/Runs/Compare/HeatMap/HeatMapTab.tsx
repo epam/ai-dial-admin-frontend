@@ -1,21 +1,16 @@
 'use client';
 
-import { FirstDataRenderedEvent, GridApi, RowHeightParams } from 'ag-grid-community';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FirstDataRenderedEvent, GridApi, GridReadyEvent, RowHeightParams } from 'ag-grid-community';
+import { FC, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { DialLoader } from '@epam/ai-dial-ui-kit';
 
 import { getRun, getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
 import ColorScale, { ColorScaleVariant } from '@/src/components/Common/ColorScale/ColorScale';
 import GridView from '@/src/components/Grid/GridView/GridView';
-import { HEAT_MAP_HEADER_HEIGHT, HEAT_MAP_ROW_HEIGHT } from '@/src/components/Runs/Compare/HeatMap/constants';
+import { HEAT_MAP_ROW_HEIGHT } from '@/src/components/Runs/Compare/HeatMap/constants';
 import { HeatMapColorDisplayMode, HeatMapRow } from '@/src/components/Runs/Compare/HeatMap/models';
 import { buildHeatMapColumns } from '@/src/components/Runs/Compare/HeatMap/utils/build-heat-map-columns';
-import {
-  getHeatMapValueColumnWidth,
-  resolveHeatMapHeaderHeight,
-  resolveHeatMapRowHeight,
-} from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-layout';
 import {
   buildHeatMapRowsForMode,
   filterHeatMapRowsByExpandedGroups,
@@ -23,10 +18,18 @@ import {
   getHeatMapGroupKeys,
 } from '@/src/components/Runs/Compare/HeatMap/utils/build-heat-map-rows';
 import { centerHeatMapTooltipPopup } from '@/src/components/Runs/Compare/HeatMap/utils/center-heat-map-tooltip-popup';
+import {
+  applyHeatMapColumnWidths,
+  getHeatMapValueColumnWidth,
+  resolveHeatMapHeaderHeight,
+  resolveHeatMapRowHeight,
+} from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-layout';
+import { getHeatMapTestCaseHeaderLabels } from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-test-case-columns';
+import { HeatMapTabUiState } from '@/src/components/Runs/Compare/models';
 import { mergeByTestCaseId, RESULT_FILTERS } from '@/src/components/Runs/View/utils';
 import { EntitiesI18nKey, RunsI18nKey } from '@/src/constants/i18n';
+import { useTheme } from '@/src/context/ThemeContext';
 import { useI18n } from '@/src/locales/client';
-import { AnalyticsResult } from '@/src/models/evaluation/run';
 
 interface Props {
   primaryRunId: string;
@@ -37,6 +40,8 @@ interface Props {
   onColorDisplayModeChange: (mode: HeatMapColorDisplayMode) => void;
   selectedMetricGroups: Set<string>;
   onAvailableMetricGroupsChange: (groups: string[]) => void;
+  heatMapState: HeatMapTabUiState;
+  setHeatMapState: (patch: Partial<HeatMapTabUiState>) => void;
 }
 
 const HeatMapTab: FC<Props> = ({
@@ -48,23 +53,23 @@ const HeatMapTab: FC<Props> = ({
   onColorDisplayModeChange: _onColorDisplayModeChange,
   selectedMetricGroups,
   onAvailableMetricGroupsChange,
+  heatMapState,
+  setHeatMapState,
 }) => {
   const t = useI18n();
+  const { currentTheme } = useTheme();
+  const gridApiRef = useRef<GridApi | null>(null);
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [isCompareLoading, setIsCompareLoading] = useState(false);
   const [hasLoadError, setHasLoadError] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
-
-  const [results, setResults] = useState<AnalyticsResult[] | null>(null);
-  const [comparedResults, setComparedResults] = useState<AnalyticsResult[] | null>(null);
+  const { expandedGroups, areExpandedGroupsInitialized, results, comparedResults } = heatMapState;
 
   useEffect(() => {
-    let isCancelled = false;
+    if (results !== null) {
+      return;
+    }
 
-    setIsLoading(true);
+    let isCancelled = false;
     setHasLoadError(false);
-    setResults(null);
 
     getRun(primaryRunId)
       .then((runData) => {
@@ -77,29 +82,25 @@ const HeatMapTab: FC<Props> = ({
       })
       .then((resultsResponse) => {
         if (isCancelled || resultsResponse === undefined) return;
-        setResults(resultsResponse?.content || []);
+        setHeatMapState({ results: resultsResponse?.content || [] });
       })
       .catch(() => {
         if (!isCancelled) {
           setHasLoadError(true);
-        }
-      })
-      .finally(() => {
-        if (!isCancelled) {
-          setIsLoading(false);
         }
       });
 
     return () => {
       isCancelled = true;
     };
-  }, [primaryRunId]);
+  }, [primaryRunId, results, setHeatMapState]);
 
   useEffect(() => {
-    let isCancelled = false;
+    if (comparedResults !== null) {
+      return;
+    }
 
-    setIsCompareLoading(true);
-    setComparedResults(null);
+    let isCancelled = false;
 
     getRun(comparedRunId)
       .then((comparedRun) => {
@@ -108,23 +109,18 @@ const HeatMapTab: FC<Props> = ({
       })
       .then((res) => {
         if (isCancelled || res === undefined) return;
-        setComparedResults(res?.content || []);
+        setHeatMapState({ comparedResults: res?.content || [] });
       })
       .catch(() => {
         if (!isCancelled) {
           setHasLoadError(true);
-        }
-      })
-      .finally(() => {
-        if (!isCancelled) {
-          setIsCompareLoading(false);
         }
       });
 
     return () => {
       isCancelled = true;
     };
-  }, [comparedRunId]);
+  }, [comparedRunId, comparedResults, setHeatMapState]);
 
   const mergedRowData = useMemo(() => {
     if (results === null || comparedResults === null) return null;
@@ -138,7 +134,7 @@ const HeatMapTab: FC<Props> = ({
     return buildHeatMapRowsForMode(mergedRowData, colorDisplayMode);
   }, [mergedRowData, colorDisplayMode]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     onAvailableMetricGroupsChange(getHeatMapGroupKeys(allHeatMapRows));
   }, [allHeatMapRows, onAvailableMetricGroupsChange]);
 
@@ -147,24 +143,29 @@ const HeatMapTab: FC<Props> = ({
     [allHeatMapRows, selectedMetricGroups],
   );
 
-  useEffect(() => {
-    if (!metricFilteredRows.length) {
+  useLayoutEffect(() => {
+    const groupKeys = getHeatMapGroupKeys(metricFilteredRows);
+    if (!groupKeys.length || areExpandedGroupsInitialized) {
       return;
     }
-    setExpandedGroups(new Set(getHeatMapGroupKeys(metricFilteredRows)));
-  }, [metricFilteredRows]);
+    setHeatMapState({
+      expandedGroups: new Set(groupKeys),
+      areExpandedGroupsInitialized: true,
+    });
+  }, [metricFilteredRows, areExpandedGroupsInitialized, setHeatMapState]);
 
-  const onToggleGroup = useCallback((groupKey: string) => {
-    setExpandedGroups((prev) => {
-      const next = new Set(prev);
+  const onToggleGroup = useCallback(
+    (groupKey: string) => {
+      const next = new Set(expandedGroups);
       if (next.has(groupKey)) {
         next.delete(groupKey);
       } else {
         next.add(groupKey);
       }
-      return next;
-    });
-  }, []);
+      setHeatMapState({ expandedGroups: next });
+    },
+    [expandedGroups, setHeatMapState],
+  );
 
   const visibleRows = useMemo(
     () => filterHeatMapRowsByExpandedGroups(metricFilteredRows, expandedGroups),
@@ -179,29 +180,59 @@ const HeatMapTab: FC<Props> = ({
       onToggleGroup,
       primaryRunName,
       comparedRunName,
+      theme: currentTheme,
     });
-  }, [mergedRowData, colorDisplayMode, expandedGroups, onToggleGroup, primaryRunName, comparedRunName]);
+  }, [mergedRowData, colorDisplayMode, expandedGroups, onToggleGroup, primaryRunName, comparedRunName, currentTheme]);
 
-  const fitHeatMapColumns = useCallback((api: GridApi) => {
-    api.sizeColumnsToFit();
-    const valueColumnWidth = getHeatMapValueColumnWidth(api);
-    const headerHeight = resolveHeatMapHeaderHeight(valueColumnWidth);
-    api.setGridOption('headerHeight', headerHeight);
-    api.resetRowHeights();
-    api.refreshHeader();
-    api.refreshCells({ force: true });
-  }, []);
+  const headerLabels = useMemo(
+    () => (mergedRowData ? getHeatMapTestCaseHeaderLabels(mergedRowData) : []),
+    [mergedRowData],
+  );
+
+  const fitHeatMapColumns = useCallback(
+    (api: GridApi) => {
+      const centerViewport = document.querySelector('.heat-map-grid .ag-center-cols-viewport') as HTMLElement | null;
+      const availableForTestCases = centerViewport?.clientWidth ?? 0;
+      applyHeatMapColumnWidths(api, availableForTestCases);
+
+      const valueColumnWidth = getHeatMapValueColumnWidth(api);
+      const headerHeight = resolveHeatMapHeaderHeight(valueColumnWidth, headerLabels);
+      api.setGridOption('headerHeight', headerHeight);
+      api.resetRowHeights();
+      api.refreshHeader();
+      api.refreshCells({ force: true });
+    },
+    [headerLabels],
+  );
+
+  // Re-fit after columnDefs updates from Absolute/Delta (or theme) switches.
+  // Runs after AgGridWrapper's columnDefs effect so widths are not left at minWidth.
+  useEffect(() => {
+    if (!gridApiRef.current || !columnDefs.length) {
+      return;
+    }
+    fitHeatMapColumns(gridApiRef.current);
+  }, [columnDefs, fitHeatMapColumns]);
+
+  const onGridReady = useCallback(
+    (event: GridReadyEvent) => {
+      gridApiRef.current = event.api;
+      fitHeatMapColumns(event.api);
+    },
+    [fitHeatMapColumns],
+  );
 
   const gridOptions = useMemo(
     () => ({
-      headerHeight: HEAT_MAP_HEADER_HEIGHT,
+      headerHeight: resolveHeatMapHeaderHeight(0, headerLabels),
       hidePaddedHeaderRows: false,
       rowHeight: HEAT_MAP_ROW_HEIGHT,
-      suppressHorizontalScroll: true,
+      suppressHorizontalScroll: false,
+      alwaysShowHorizontalScroll: false,
       autoSizeStrategy: undefined,
       getRowHeight: (params: RowHeightParams<HeatMapRow>) => {
         const valueColumnWidth = params.api ? getHeatMapValueColumnWidth(params.api) : 0;
-        return resolveHeatMapRowHeight(valueColumnWidth, isDeltaMode);
+        return resolveHeatMapRowHeight(valueColumnWidth);
       },
       defaultColDef: {
         filter: false,
@@ -223,7 +254,7 @@ const HeatMapTab: FC<Props> = ({
       },
       postProcessPopup: centerHeatMapTooltipPopup,
     }),
-    [fitHeatMapColumns, isDeltaMode],
+    [fitHeatMapColumns, headerLabels],
   );
 
   const isCompareDataReady = results !== null && comparedResults !== null;
@@ -232,7 +263,7 @@ const HeatMapTab: FC<Props> = ({
     return <p className="text-secondary dial-small-text">{t(RunsI18nKey.LoadError)}</p>;
   }
 
-  if (isLoading || isCompareLoading || !isCompareDataReady) {
+  if (!isCompareDataReady) {
     return (
       <div className="flex flex-1 min-h-0 items-center justify-center">
         <DialLoader size={40} />
@@ -244,12 +275,13 @@ const HeatMapTab: FC<Props> = ({
     <div className="flex flex-col flex-1 min-h-0 h-full overflow-hidden gap-6">
       <div className="flex-1 min-h-0 overflow-hidden heat-map-grid">
         <GridView
-          key={`${primaryRunId}-${comparedRunId}-${colorDisplayMode}-${[...selectedMetricGroups].sort().join(',')}`}
+          key={`${primaryRunId}-${comparedRunId}`}
           columnDefs={columnDefs}
           rowData={visibleRows}
           additionalGridOptions={gridOptions}
           emptyDataProps={{ title: t(EntitiesI18nKey.NoResults) }}
           getRowId={({ data }) => data.id}
+          onGridReady={onGridReady}
         />
       </div>
 

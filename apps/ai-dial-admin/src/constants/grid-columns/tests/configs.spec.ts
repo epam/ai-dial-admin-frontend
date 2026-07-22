@@ -1,7 +1,7 @@
 import { ColDef, ValueGetterParams } from 'ag-grid-community';
 import { describe, expect, test } from 'vitest';
 
-import { numericColumn, priceColumn } from '../configs';
+import { numericColumn, priceColumn, dateTimeColumn } from '../configs';
 
 const callFilterValueGetter = (
   col: Partial<ColDef>,
@@ -47,5 +47,32 @@ describe('priceColumn.filterValueGetter (inherited from numericColumn)', () => {
   test('keeps the numericColumn behavior for missing and empty values', () => {
     expect(callFilterValueGetter(col, {}, 'price')).toBeNull();
     expect(callFilterValueGetter(col, { price: '' }, 'price')).toBeNull();
+  });
+});
+
+describe('dateTimeColumn.filterValueGetter', () => {
+  test('coerces millisecond timestamps to Date objects for agDateColumnFilter', () => {
+    const result = callFilterValueGetter(dateTimeColumn, { startedAt: 1784186472371 }, 'startedAt');
+
+    expect(result).toBeInstanceOf(Date);
+    expect((result as Date).getTime()).toBe(1784186472371);
+  });
+
+  test('coerces numeric string timestamps to Date objects', () => {
+    const result = callFilterValueGetter(dateTimeColumn, { createdAt: '1784186472371' }, 'createdAt');
+
+    expect(result).toBeInstanceOf(Date);
+    expect((result as Date).getTime()).toBe(1784186472371);
+  });
+
+  test('returns null for missing, empty, or invalid cell values', () => {
+    expect(callFilterValueGetter(dateTimeColumn, {}, 'startedAt')).toBeNull();
+    expect(callFilterValueGetter(dateTimeColumn, { startedAt: '' }, 'startedAt')).toBeNull();
+    expect(callFilterValueGetter(dateTimeColumn, { startedAt: null }, 'startedAt')).toBeNull();
+    expect(callFilterValueGetter(dateTimeColumn, { startedAt: 'not-a-date' }, 'startedAt')).toBeNull();
+  });
+
+  test('returns null when params.data is undefined', () => {
+    expect(callFilterValueGetter(dateTimeColumn, undefined, 'startedAt')).toBeNull();
   });
 });

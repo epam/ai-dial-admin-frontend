@@ -1,7 +1,8 @@
 import { UNTAGGED_KEY } from '@/src/constants/analytics/query-builder';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { FieldOption, FieldOptionGroup, QueryBuilderState } from '@/src/models/analytics/query-builder';
+import { FieldOption, FieldOptionGroup, GroupByRow, QueryBuilderState } from '@/src/models/analytics/query-builder';
 import { QueryMode, QueryValueType } from '@/src/models/analytics/query';
+import { functionByName, functionResultType } from '@/src/components/Analytics/QueryBuilder/utils/functions';
 
 export const family = (name: string): string => {
   const i = name.indexOf(':');
@@ -10,6 +11,9 @@ export const family = (name: string): string => {
 
 export const typeOf = (fields: AnalyticsEntityField[], name: string): string | undefined =>
   fields.find((f) => f.name === name)?.type;
+
+export const fieldDisplayName = (fields: Pick<AnalyticsEntityField, 'name' | 'display_name'>[], name: string): string =>
+  fields.find((f) => f.name === name)?.display_name || name;
 
 export const defaultValueType = (fieldType?: string): QueryValueType => {
   switch (fieldType) {
@@ -57,11 +61,17 @@ export const filterFieldsByTags = (fields: AnalyticsEntityField[], selectedTags:
 };
 
 // Groups options by tag for the categorized dropdown, preserving first-seen tag order. Untagged
-// options land in a group keyed UNTAGGED_KEY; a search term filters by name and tag beforehand.
+// options land in a group keyed UNTAGGED_KEY; a search term filters by name, display name, and tag
+// beforehand.
 export const groupFieldOptions = (options: FieldOption[], search = ''): FieldOptionGroup[] => {
   const term = search.trim().toLowerCase();
   const visible = term
-    ? options.filter((o) => o.name.toLowerCase().includes(term) || (o.tag || '').toLowerCase().includes(term))
+    ? options.filter(
+        (o) =>
+          o.name.toLowerCase().includes(term) ||
+          (o.display_name || '').toLowerCase().includes(term) ||
+          (o.tag || '').toLowerCase().includes(term),
+      )
     : options;
   const groups = new Map<string, FieldOption[]>();
   visible.forEach((o) => {
@@ -74,22 +84,33 @@ export const groupFieldOptions = (options: FieldOption[], search = ''): FieldOpt
 };
 
 export const fieldsToOptions = (fields: AnalyticsEntityField[]): FieldOption[] =>
-  fields.map((f) => ({ name: f.name, type: f.type, tag: f.tag }));
+  fields.map((f) => ({
+    name: f.name,
+    type: f.type,
+    tag: f.tag,
+    display_name: f.display_name,
+    description: f.description,
+    sensitive: f.sensitive,
+  }));
 
-export const bucketFieldOptions = (fields: AnalyticsEntityField[]): AnalyticsEntityField[] => {
-  const temporal = fields.filter((f) => f.type === AnalyticsFieldType.Timestamp || f.type === AnalyticsFieldType.Date);
-  return sortByName(temporal.length ? temporal : fields);
+const groupByOption = (state: QueryBuilderState, row: GroupByRow): FieldOption | null => {
+  if (!row.fn) {
+    if (!row.field) return null;
+    // Plain group-by columns keep their schema display name/description so the Having/Sort pickers
+    // can display them; function rows are alias-only and carry neither.
+    const field = state.fields.find((f) => f.name === row.field);
+    return { name: row.field, type: field?.type, display_name: field?.display_name, description: field?.description };
+  }
+  const fn = functionByName(state.functions, row.fn);
+  return row.alias && fn ? { name: row.alias, type: functionResultType(fn, row.args, state.fields) } : null;
 };
 
 export const havingFieldOptions = (state: QueryBuilderState): FieldOption[] => {
-  const groupBy = state.groupBy.map((name) => ({ name, type: typeOf(state.fields, name) }));
-  const bucketAliases = state.buckets
-    .filter((b) => b.alias)
-    .map((b) => ({ name: b.alias, type: AnalyticsFieldType.Timestamp }));
+  const groupBy = state.groupBy.map((g) => groupByOption(state, g)).filter((o): o is FieldOption => o !== null);
   const aggAliases = state.aggregates
     .filter((a) => a.alias)
     .map((a) => ({ name: a.alias, type: AnalyticsFieldType.Decimal }));
-  return sortByName([...groupBy, ...bucketAliases, ...aggAliases]);
+  return sortByName([...groupBy, ...aggAliases]);
 };
 
 export const sortFieldOptions = (state: QueryBuilderState): FieldOption[] => {

@@ -48,7 +48,7 @@ describe('HeatMapToolbar', () => {
   test('shows count label when only some groups are selected', () => {
     render(<HeatMapToolbar {...defaultProps} selectedMetricGroups={new Set(['Accuracy'])} />);
 
-    expect(screen.getByText(`${RunsI18nKey.RunCompareHeatMapMetricsPrefix} 1/2`)).toBeInTheDocument();
+    expect(screen.getByText(`${RunsI18nKey.RunCompareHeatMapMetricsPrefix} Accuracy`)).toBeInTheDocument();
   });
 
   test('calls onSelectedMetricGroupsChange when toggling a metric group', async () => {
@@ -61,6 +61,30 @@ describe('HeatMapToolbar', () => {
     await user.click(screen.getByRole('checkbox', { name: 'Quality' }));
 
     expect(onSelectedMetricGroupsChange).toHaveBeenCalledWith(new Set(['Accuracy']));
+  });
+
+  test('disables the last selected metric and hides All when only one metric is available', async () => {
+    const user = userEvent.setup();
+
+    render(<HeatMapToolbar {...defaultProps} availableMetricGroups={['Accuracy']} selectedMetricGroups={new Set()} />);
+
+    await user.click(screen.getByRole('button', { name: `${RunsI18nKey.RunCompareHeatMapMetricsPrefix} Accuracy` }));
+
+    expect(
+      screen.queryByRole('checkbox', { name: RunsI18nKey.RunCompareHeatMapMetricsOptionAll }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: 'Accuracy' })).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  test('disables the last remaining selected metric when multiple are available', async () => {
+    const user = userEvent.setup();
+
+    render(<HeatMapToolbar {...defaultProps} selectedMetricGroups={new Set(['Accuracy'])} />);
+
+    await user.click(screen.getByRole('button', { name: `${RunsI18nKey.RunCompareHeatMapMetricsPrefix} Accuracy` }));
+
+    expect(screen.getByRole('checkbox', { name: 'Accuracy' })).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByRole('checkbox', { name: 'Quality' })).not.toHaveAttribute('aria-disabled', 'true');
   });
 
   test('does not render search input when fewer than 8 metric groups are available', async () => {

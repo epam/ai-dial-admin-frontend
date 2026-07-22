@@ -1,5 +1,5 @@
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
-import { DialToolsetResource } from '@/src/models/dial/resource';
+import { DialToolsetResource, ToolsetAuthType as ResourceToolsetAuthType } from '@/src/models/dial/resource';
 import { Toolset, ToolsetAuthStatus, ToolsetAuthType } from '@/src/models/dial/toolset';
 
 export const getToolsetSignInBody = (
@@ -14,7 +14,7 @@ export const getToolsetSignInBody = (
     (toolset as DialToolsetResource).auth_settings?.authentication_type;
   const body = { ...getToolsetBasicBody(toolset, level) };
 
-  if (authType === ToolsetAuthType.OAUTH) {
+  if (authType === ToolsetAuthType.OAUTH || authType === ResourceToolsetAuthType.OAUTH) {
     return { ...body, code: authCode, redirectUri };
   }
 

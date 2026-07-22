@@ -20,11 +20,9 @@ export const SQL_KEYWORDS: string[] = [
   'NOT',
   'IN',
   'LIKE',
+  'ILIKE',
   'IS NULL',
   'IS NOT NULL',
   'ASC',
   'DESC',
 ];
-
-// The closed function catalog the backend supports.
-export const SQL_FUNCTIONS: string[] = ['count', 'sum', 'avg', 'min', 'max', 'date_bin'];

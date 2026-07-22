@@ -25,7 +25,7 @@ interface Props {
   onChange?: (entity: DialApplication) => void;
   /** Legacy callback-based API: used by AssetApp flow in ApplicationSource.tsx, where the write pattern differs. */
   selectedValue?: string;
-  onChangeValue?: (value?: string) => void;
+  onChangeValue?: (value?: string, application_properties?: Record<string, unknown>) => void;
   runners?: DialApplicationScheme[];
   label?: string;
   isEntityImmutable?: boolean;
@@ -81,38 +81,36 @@ const AppRunners: FC<Props> = ({
     (value?: string) => {
       onCloseModal();
 
-      if (entity && onChange) {
-        const baseEntity: DialApplication = {
-          ...entity,
-          source: value ? createSchemaSource(value) : undefined,
-          endpoint: undefined,
-          mcp: undefined,
-        };
+      let applicationProperties;
+      const baseEntity: DialApplication = {
+        ...entity,
+        source: value ? createSchemaSource(value) : undefined,
+        endpoint: undefined,
+        mcp: undefined,
+      };
 
-        const runner = runners?.find((r) => r.$id === value);
-        if (!runner) {
-          onChange(baseEntity);
-          return;
-        }
+      const runner = runners?.find((r) => r.$id === value);
 
-        getResolvedApplicationScheme(runner.$id ?? '').then((res) => {
-          const scheme: DialApplicationScheme =
-            res.success && (res.response as { schema?: DialApplicationScheme })?.schema
-              ? (res.response as { schema: DialApplicationScheme }).schema
-              : runner;
-          const applicationProperties = getSchemaDefaults(scheme as JSONSchema7) as Record<string, unknown>;
-          onChange({
-            ...baseEntity,
-            applicationProperties: isEntityImmutable ? { ...baseEntity.applicationProperties } : applicationProperties,
-          });
-        });
-
+      if (!runner && entity) {
+        onChange?.(baseEntity);
         return;
       }
 
-      if (onChangeValue) {
-        onChangeValue(value);
-      }
+      getResolvedApplicationScheme(runner?.$id ?? '').then((res) => {
+        const scheme: DialApplicationScheme | undefined =
+          res.success && (res.response as { schema?: DialApplicationScheme })?.schema
+            ? (res.response as { schema: DialApplicationScheme }).schema
+            : runner;
+        applicationProperties = getSchemaDefaults(scheme as JSONSchema7) as Record<string, unknown>;
+        if (entity) {
+          onChange?.({
+            ...baseEntity,
+            applicationProperties: isEntityImmutable ? { ...baseEntity.applicationProperties } : applicationProperties,
+          });
+        } else if (onChangeValue) {
+          onChangeValue(value, applicationProperties);
+        }
+      });
     },
     [entity, onChange, isEntityImmutable, onChangeValue, onCloseModal, runners],
   );

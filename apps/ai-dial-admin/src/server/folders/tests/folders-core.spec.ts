@@ -101,6 +101,18 @@ describe('Server :: Folders :: folders-core :: getRulesCore / updateRulesCore', 
     expect(publicationsApi.approvePublication).not.toHaveBeenCalled();
     expect(result.success).toBe(false);
   });
+
+  test('updateRulesCore encodes a targetFolder containing spaces before creating the publication', async () => {
+    (publicationsApi.createPublication as any).mockResolvedValue({
+      success: true,
+      response: { url: 'publications/public/y%20o2/' },
+    });
+    (publicationsApi.approvePublication as any).mockResolvedValue({ success: true });
+
+    await updateRulesCore(TOKEN_MOCK, 'public/y o2/', []);
+
+    expect(publicationsApi.createPublication).toHaveBeenCalledWith(TOKEN_MOCK, 'public/y%20o2/', [], []);
+  });
 });
 
 describe('Server :: Folders :: folders-core :: removeFolderCore', () => {
@@ -108,7 +120,7 @@ describe('Server :: Folders :: folders-core :: removeFolderCore', () => {
     vi.clearAllMocks();
   });
 
-  test('gathers resources across types, publishes+approves, and best-effort cleans up', async () => {
+  test('gathers resources only across the targeted types, publishes+approves, and best-effort cleans up', async () => {
     (assetApi.getMetadata as any).mockImplementation((_t: unknown, type: ResourceType) =>
       type === ResourceType.PROMPT
         ? Promise.resolve(folderNode('prompts/public/', [itemNode('prompts/public/a__1')]))
@@ -123,13 +135,19 @@ describe('Server :: Folders :: folders-core :: removeFolderCore', () => {
     (assetApi.delete as any).mockRejectedValue(new Error('cleanup failed'));
     (filesCoreApi.deleteFile as any).mockRejectedValue(new Error('cleanup failed'));
 
-    const result = await removeFolderCore(TOKEN_MOCK, 'public/');
+    const result = await removeFolderCore(TOKEN_MOCK, 'public/', [ResourceType.PROMPT]);
 
     expect(publicationsApi.createPublication).toHaveBeenCalledWith(
       TOKEN_MOCK,
       'public/',
       [{ action: 'DELETE', targetUrl: 'prompts/public/a__1' }],
       undefined,
+    );
+    expect(assetApi.getMetadata).not.toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      ResourceType.APPLICATION,
+      expect.anything(),
+      expect.anything(),
     );
     expect(result.success).toBe(true);
   });
@@ -139,7 +157,7 @@ describe('Server :: Folders :: folders-core :: removeFolderCore', () => {
     (filesCoreApi.getFileMetadata as any).mockResolvedValue(null);
     (publicationsApi.createPublication as any).mockResolvedValue({ success: false, errorMessage: 'boom' });
 
-    const result = await removeFolderCore(TOKEN_MOCK, 'public/');
+    const result = await removeFolderCore(TOKEN_MOCK, 'public/', [ResourceType.PROMPT]);
 
     expect(result.success).toBe(false);
   });

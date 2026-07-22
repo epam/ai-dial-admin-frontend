@@ -4,27 +4,34 @@ import { FC, useCallback, useMemo, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
-import { ColDef, ValueGetterParams } from 'ag-grid-community';
+import { ColDef, ICellRendererParams, ITooltipParams, ValueGetterParams } from 'ag-grid-community';
 import {
   ConfirmationPopupVariant,
   DialConfirmationPopup,
   DialDangerButton,
   DialFormPopup,
-  DialInput,
   DialNeutralButton,
   PopupSize,
 } from '@epam/ai-dial-ui-kit';
-import { IconPencil, IconTag } from '@tabler/icons-react';
 
 import { addRows, deleteTable, getTable, updateTableSchema } from '@/src/app/[lang]/tables/actions';
 import ColumnRowsEditor from '@/src/components/Analytics/Tables/ColumnRowsEditor';
-import { createColumnRow, toTableColumns } from '@/src/components/Analytics/Tables/utils';
+import EditColumnPopup from '@/src/components/Analytics/Tables/EditColumnPopup';
+import TableAccessPanel from '@/src/components/Analytics/Tables/TableAccessPanel';
+import {
+  createColumnRow,
+  getColumnRowErrors,
+  hasColumnRowErrors,
+  isRenameRestricted,
+  toTableColumns,
+} from '@/src/components/Analytics/Tables/utils';
 import { TypeCellRenderer } from '@/src/components/Analytics/Common/TypeBadge';
+import SensitiveIndicator from '@/src/components/Common/SensitiveIndicator/SensitiveIndicator';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
+import { useAnalyticsTablePermissions } from '@/src/hooks/use-analytics-table-permissions';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
-import { getDeleteOperation } from '@/src/constants/grid-columns/actions';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { getDeleteOperation, getEditOperation } from '@/src/constants/grid-columns/actions';
 import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
@@ -33,6 +40,7 @@ import { AnalyticsSchemaPatch, AnalyticsTable, AnalyticsTableColumn } from '@/sr
 import { ColumnRow } from '@/src/models/analytics/tables-ui';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getAnalyticsIdentifierError } from '@/src/utils/validation/analytics-table-error';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 
 interface Props {
@@ -40,10 +48,15 @@ interface Props {
   initialTable: AnalyticsTable;
 }
 
-interface ColumnEdit {
-  column: string;
-  retag: boolean;
-}
+// Renders the column name with a trailing sensitive marker; editing still swaps in the cell editor.
+// The dot is tooltip-less — the grid's cell tooltip (see the name column's tooltipValueGetter) carries
+// the sensitive note, so the two don't double up.
+const ColumnNameCellRenderer: FC<ICellRendererParams<AnalyticsTableColumn>> = ({ value, data }) => (
+  <span className="flex items-center gap-1.5">
+    <span className="truncate">{value}</span>
+    {data?.sensitive && <SensitiveIndicator />}
+  </span>
+);
 
 const TableDetailView: FC<Props> = ({ name, initialTable }) => {
   const t = useI18n();
@@ -54,12 +67,22 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [writeOpen, setWriteOpen] = useState(false);
+  const [accessOpen, setAccessOpen] = useState(false);
   const [addColumns, setAddColumns] = useState<ColumnRow[]>([createColumnRow()]);
   const [rowsJson, setRowsJson] = useState('[]');
-  const [edit, setEdit] = useState<ColumnEdit | null>(null);
-  const [editValue, setEditValue] = useState('');
+  const [editColumn, setEditColumn] = useState<AnalyticsTableColumn | null>(null);
 
   const isSystem = Boolean(table.system);
+  const { canDelete, canWrite, canModify, canManageRoles } = useAnalyticsTablePermissions(table);
+  const columns = useMemo(() => table.columns ?? [], [table.columns]);
+
+  // New columns must not collide with the table's existing source/exposed names (the backend rejects
+  // duplicates); validate the add-columns rows against them plus each other.
+  const addColumnErrors = getColumnRowErrors(
+    addColumns,
+    { sourceNames: columns.map((c) => c.source_name), names: columns.map((c) => c.name) },
+    t,
+  );
 
   const reload = useCallback(async () => {
     const tbl = await getTable(name);
@@ -94,11 +117,6 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
     [name, reload, notifyFailed, showNotification, t],
   );
 
-  const openEdit = useCallback((column: AnalyticsTableColumn, retag: boolean) => {
-    setEdit({ column: column.name, retag });
-    setEditValue(retag ? (column.tag ?? '') : column.name);
-  }, []);
-
   const onDrop = useCallback(
     (column?: AnalyticsTableColumn) => column && void applyPatch({ drop: [column.name] }),
     [applyPatch],
@@ -107,19 +125,23 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
   const onRenameCell = useCallback(
     (from: string, to: string) => {
       const target = to.trim();
-      if (target && target !== from) void applyPatch({ rename: [{ from, to: target }] });
+      if (!target || target === from) return;
+      // Validate the new name against the grammar and the other columns' names; on failure notify and
+      // reload so the inline-edited grid cell reverts to its previous value.
+      const others = columns.filter((c) => c.name !== from).map((c) => c.name);
+      const error = getAnalyticsIdentifierError(target, others, t);
+      if (error) {
+        showNotification(getErrorNotification(error.text));
+        void reload();
+        return;
+      }
+      void applyPatch({ rename: [{ from, to: target }] });
     },
-    [applyPatch],
+    [applyPatch, columns, reload, showNotification, t],
   );
 
-  const onSubmitEdit = async () => {
-    if (!edit) return;
-    const value = editValue.trim();
-    if (!value) return;
-    const ok = await applyPatch(
-      edit.retag ? { retag: [{ name: edit.column, tag: value }] } : { rename: [{ from: edit.column, to: value }] },
-    );
-    if (ok) setEdit(null);
+  const onSubmitEditColumn = async (patch: AnalyticsSchemaPatch) => {
+    if (await applyPatch(patch)) setEditColumn(null);
   };
 
   const onSubmitAddColumns = async () => {
@@ -165,29 +187,32 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
 
   const actions = useMemo<ActionMenuOperationDeclaration<AnalyticsTableColumn>[]>(
     () => [
-      {
-        id: AnalyticsTablesI18nKey.Rename,
-        label: AnalyticsTablesI18nKey.Rename,
-        icon: <IconPencil {...BASE_BUTTON_ICON_PROPS} />,
-        onClick: (column) => column && openEdit(column, false),
-      },
-      {
-        id: AnalyticsTablesI18nKey.Retag,
-        label: AnalyticsTablesI18nKey.Retag,
-        icon: <IconTag {...BASE_BUTTON_ICON_PROPS} />,
-        onClick: (column) => column && openEdit(column, true),
-      },
+      getEditOperation<AnalyticsTableColumn>((column) => column && setEditColumn(column)),
       getDeleteOperation<AnalyticsTableColumn>((column) => onDrop(column)),
     ],
-    [openEdit, onDrop],
+    [onDrop],
   );
 
   const columnDefs = useMemo<ColDef[]>(
     () => [
-      { headerName: t(AnalyticsTablesI18nKey.ColumnName), field: 'name', editable: !isSystem, flex: 2 },
+      {
+        headerName: t(AnalyticsTablesI18nKey.ColumnName),
+        field: 'name',
+        editable: canModify,
+        cellRenderer: ColumnNameCellRenderer,
+        // Fold the sensitive note into the single cell tooltip so it doesn't double with the dot.
+        tooltipValueGetter: (params: ITooltipParams<AnalyticsTableColumn>) =>
+          [params.data?.name, params.data?.sensitive ? t(AnalyticsTablesI18nKey.Sensitive) : '']
+            .filter(Boolean)
+            .join(' — '),
+        flex: 2,
+      },
       { headerName: t(AnalyticsTablesI18nKey.SourceName), field: 'source_name', flex: 2 },
       { headerName: t(AnalyticsTablesI18nKey.Type), field: 'type', cellRenderer: TypeCellRenderer, flex: 1 },
       { headerName: t(AnalyticsTablesI18nKey.Tag), field: 'tag', flex: 1 },
+      // Long display names/descriptions truncate in the cell; the grid's default tooltip exposes the full value.
+      { headerName: t(AnalyticsTablesI18nKey.DisplayName), field: 'display_name', flex: 2 },
+      { headerName: t(AnalyticsTablesI18nKey.Description), field: 'description', flex: 3 },
       {
         headerName: t(AnalyticsTablesI18nKey.Nullable),
         colId: 'nullable',
@@ -195,9 +220,9 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
         cellDataType: false,
         valueGetter: (params: ValueGetterParams<AnalyticsTableColumn>) => String(Boolean(params.data?.nullable)),
       },
-      ...(isSystem ? [] : [ACTION_COLUMN(actions)]),
+      ...(canModify ? [ACTION_COLUMN(actions)] : []),
     ],
-    [t, actions, isSystem],
+    [t, actions, canModify],
   );
 
   return (
@@ -211,11 +236,20 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
             </span>
           )}
         </div>
-        {!isSystem && (
+        {(canDelete || canWrite || canModify || canManageRoles) && (
           <div className="flex items-center gap-4">
-            <DialDangerButton label={t(AnalyticsTablesI18nKey.DeleteTable)} onClick={() => setConfirmOpen(true)} />
-            <DialNeutralButton label={t(AnalyticsTablesI18nKey.WriteRows)} onClick={() => setWriteOpen(true)} />
-            <DialNeutralButton label={t(AnalyticsTablesI18nKey.AddColumns)} onClick={() => setAddOpen(true)} />
+            {canManageRoles && (
+              <DialNeutralButton label={t(AnalyticsTablesI18nKey.ManageAccess)} onClick={() => setAccessOpen(true)} />
+            )}
+            {canModify && (
+              <DialNeutralButton label={t(AnalyticsTablesI18nKey.AddColumns)} onClick={() => setAddOpen(true)} />
+            )}
+            {canWrite && (
+              <DialNeutralButton label={t(AnalyticsTablesI18nKey.WriteRows)} onClick={() => setWriteOpen(true)} />
+            )}
+            {canDelete && (
+              <DialDangerButton label={t(AnalyticsTablesI18nKey.DeleteTable)} onClick={() => setConfirmOpen(true)} />
+            )}
           </div>
         )}
       </div>
@@ -223,7 +257,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
       <div className="flex min-h-0 flex-1 flex-col">
         <GridView
           columnDefs={columnDefs}
-          rowData={table.columns ?? []}
+          rowData={columns}
           getRowId={(params) => params.data.name}
           additionalGridOptions={{
             onCellValueChanged: (e) => {
@@ -253,12 +287,12 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
           size={PopupSize.Lg}
           header={t(AnalyticsTablesI18nKey.AddColumns)}
           submitLabel={t(AnalyticsTablesI18nKey.AddColumns)}
-          disableSubmitButton={toTableColumns(addColumns).length === 0}
+          disableSubmitButton={toTableColumns(addColumns).length === 0 || hasColumnRowErrors(addColumnErrors)}
           onClose={() => setAddOpen(false)}
           onSubmit={() => void onSubmitAddColumns()}
         >
           <div className="max-h-[70vh] overflow-auto p-6">
-            <ColumnRowsEditor rows={addColumns} onChange={setAddColumns} />
+            <ColumnRowsEditor rows={addColumns} errors={addColumnErrors} onChange={setAddColumns} />
           </div>
         </DialFormPopup>
       )}
@@ -281,26 +315,17 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
         </DialFormPopup>
       )}
 
-      {edit && (
-        <DialFormPopup
-          open={!!edit}
-          portalId="qb-column-edit"
-          size={PopupSize.Sm}
-          header={t(edit.retag ? AnalyticsTablesI18nKey.RetagTitle : AnalyticsTablesI18nKey.RenameTitle)}
-          disableSubmitButton={!editValue.trim()}
-          onClose={() => setEdit(null)}
-          onSubmit={() => void onSubmitEdit()}
-        >
-          <div className="p-6">
-            <DialInput
-              id="column-edit-value"
-              labelProps={{ label: t(edit.retag ? AnalyticsTablesI18nKey.Tag : AnalyticsTablesI18nKey.ColumnName) }}
-              value={editValue}
-              onChange={(v) => setEditValue(v ?? '')}
-            />
-          </div>
-        </DialFormPopup>
+      {editColumn && (
+        <EditColumnPopup
+          column={editColumn}
+          renameDisabled={isRenameRestricted(table, editColumn)}
+          existingNames={columns.filter((c) => c.name !== editColumn.name).map((c) => c.name)}
+          onClose={() => setEditColumn(null)}
+          onSubmit={(patch) => void onSubmitEditColumn(patch)}
+        />
       )}
+
+      {accessOpen && <TableAccessPanel name={name} onClose={() => setAccessOpen(false)} />}
     </div>
   );
 };

@@ -39,10 +39,8 @@ const AttachmentInput: FC<Props> = ({ availableItems, initialValues, label, plac
 
   const selected = useMemo(() => {
     if (!initialValues) return [];
-    return initialValues
-      .map((val) => availableItems.find((o) => o.value === val) || { label: val, value: val })
-      .filter(Boolean) as MultiValueOption[];
-  }, [availableItems, initialValues]);
+    return initialValues.map((val) => ({ label: val, value: val }));
+  }, [initialValues]);
 
   const selectedRadio = useMemo(() => {
     if (!initialValues) {

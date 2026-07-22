@@ -32,6 +32,14 @@ export interface TestSuite {
   argumentTemplate?: ArgumentTemplate;
 }
 
+/** Frozen suite configuration captured when a test suite run starts. */
+export interface SuiteSnapshot {
+  snapshotVersion?: string;
+  suiteType?: SuiteType;
+  deploymentRef?: TestSuiteDeploymentRef;
+  mcpDeploymentRef?: McpDeploymentRef;
+}
+
 export interface McpDeploymentRef {
   id: string;
   type: string;

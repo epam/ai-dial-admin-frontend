@@ -18,8 +18,8 @@ interface Props {
   redirectUrl?: string;
   disabled?: boolean;
   hideWithLoginOption?: boolean;
-  onChange?: (authSettings: DialToolsetResourceAuthSettings) => void;
-  onChangeForwardPerRequestKey?: (val: boolean) => void;
+  excludeAuthTypes?: ToolsetAuthType[];
+  onChange?: (authSettings: DialToolsetResourceAuthSettings, forwardPerRequestKey?: boolean) => void;
 }
 
 export interface AuthConfig {
@@ -34,8 +34,8 @@ const ResourceAuthentication: FC<Props> = ({
   authSettings,
   redirectUrl,
   hideWithLoginOption,
+  excludeAuthTypes,
   onChange,
-  onChangeForwardPerRequestKey,
   ...props
 }) => {
   const t = useI18n();
@@ -44,27 +44,40 @@ const ResourceAuthentication: FC<Props> = ({
   const isDisabled = disabled || isReadOnlyAdmin;
   const selectedAuthType = useMemo(() => authSettings?.authentication_type || ToolsetAuthType.NONE, [authSettings]);
 
-  const authOptions: AuthConfig[] = [
-    { id: ToolsetAuthType.OAUTH, title: t(ToolsetI18nKey.OAuth), icon: <IconBrandOauth {...BASE_BUTTON_ICON_PROPS} /> },
-    { id: ToolsetAuthType.API_KEY, title: t(ToolsetI18nKey.ApiKey), icon: <IconKey {...BASE_BUTTON_ICON_PROPS} /> },
-    { id: ToolsetAuthType.NONE, title: t(ToolsetI18nKey.NoneAuth), icon: <IconLockOff {...BASE_BUTTON_ICON_PROPS} /> },
-  ];
+  const authOptions: AuthConfig[] = useMemo(
+    () =>
+      [
+        {
+          id: ToolsetAuthType.OAUTH,
+          title: t(ToolsetI18nKey.OAuth),
+          icon: <IconBrandOauth {...BASE_BUTTON_ICON_PROPS} />,
+        },
+        { id: ToolsetAuthType.API_KEY, title: t(ToolsetI18nKey.ApiKey), icon: <IconKey {...BASE_BUTTON_ICON_PROPS} /> },
+        {
+          id: ToolsetAuthType.NONE,
+          title: t(ToolsetI18nKey.NoneAuth),
+          icon: <IconLockOff {...BASE_BUTTON_ICON_PROPS} />,
+        },
+      ].filter((option) => authSettings?.authentication_type === option.id || !excludeAuthTypes?.includes(option.id)),
+    [t, excludeAuthTypes, authSettings],
+  );
 
   const onChangeAuthType = useCallback(
     (authenticationType: ToolsetAuthType) => {
       dispatch({ type: ValidationActionType.Reset });
-      if (authenticationType === ToolsetAuthType.API_KEY) {
-        onChangeForwardPerRequestKey?.(false);
-      }
-      onChange?.({
-        authentication_type: authenticationType,
-        redirect_uri:
-          authenticationType === ToolsetAuthType.OAUTH && redirectUrl
-            ? `${window.location.origin}${redirectUrl}`
-            : undefined,
-      });
+
+      onChange?.(
+        {
+          authentication_type: authenticationType,
+          redirect_uri:
+            authenticationType === ToolsetAuthType.OAUTH && redirectUrl
+              ? `${window.location.origin}${redirectUrl}`
+              : undefined,
+        },
+        authenticationType === ToolsetAuthType.API_KEY ? false : undefined,
+      );
     },
-    [dispatch, onChange, onChangeForwardPerRequestKey, redirectUrl],
+    [dispatch, onChange, redirectUrl],
   );
 
   return (

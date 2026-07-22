@@ -68,17 +68,26 @@ const GridView = <T extends object>({
   );
 
   useEffect(() => {
-    if ((currentColDefs == null || currentColDefs.length === 0) && columnDefs) {
-      const storageColumns = storageKey ? getColumnVisibilityFromGridState(storageKey, columnDefs) : null;
-      setCurrentColDefs(
-        !(storageColumns && columnDefs && columnDefs.length > storageColumns?.length)
-          ? storageColumns || [...(columnDefs || [])]
-          : [...columnDefs],
-      );
-      setShowResetButton(storageColumns ? checkColDefsChanges(storageColumns, columnDefs || []) : false);
+    if (!columnDefs) {
+      return;
     }
+
+    if (showColumnsPanel) {
+      if (currentColDefs == null || currentColDefs.length === 0) {
+        const storageColumns = storageKey ? getColumnVisibilityFromGridState(storageKey, columnDefs) : null;
+        setCurrentColDefs(
+          !(storageColumns && columnDefs && columnDefs.length > storageColumns?.length)
+            ? storageColumns || [...(columnDefs || [])]
+            : [...columnDefs],
+        );
+        setShowResetButton(storageColumns ? checkColDefsChanges(storageColumns, columnDefs || []) : false);
+      }
+      return;
+    }
+
+    setCurrentColDefs([...columnDefs]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [columnDefs, storageKey]);
+  }, [columnDefs, storageKey, showColumnsPanel]);
 
   useEffect(() => {
     setPanelContainerClassName(classNames(staticPanelContainerClassName, isMobile || isTablet ? 'fixed' : 'absolute'));

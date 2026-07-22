@@ -1,6 +1,10 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { FC, useCallback, useState } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+
+import { ExecutionResultsTabUiState } from '@/src/components/Runs/Compare/models';
+import { createDefaultCompareViewTabState } from '@/src/components/Runs/Compare/use-compare-view-tab-state';
 
 import ExecutionResultsTab from '../ExecutionResultsTab';
 
@@ -35,8 +39,21 @@ const defaultRowDetailProps = {
   onOpenRowDetail: vi.fn(),
 };
 
-const renderExecutionResultsTab = (props: Partial<React.ComponentProps<typeof ExecutionResultsTab>> = {}) =>
-  render(
+const ControlledExecutionResultsTab: FC<
+  Partial<React.ComponentProps<typeof ExecutionResultsTab>> & {
+    initialState?: Partial<ExecutionResultsTabUiState>;
+  }
+> = ({ initialState, ...props }) => {
+  const [executionResultsState, setState] = useState<ExecutionResultsTabUiState>(() => ({
+    ...createDefaultCompareViewTabState().executionResults,
+    ...initialState,
+  }));
+
+  const setExecutionResultsState = useCallback((patch: Partial<ExecutionResultsTabUiState>) => {
+    setState((prev) => ({ ...prev, ...patch }));
+  }, []);
+
+  return (
     <div className="w-[1200px] h-[600px] flex flex-col">
       <ExecutionResultsTab
         primaryRunId="run-1"
@@ -44,10 +61,19 @@ const renderExecutionResultsTab = (props: Partial<React.ComponentProps<typeof Ex
         {...defaultRunProps}
         {...defaultDisplayPanelProps}
         {...defaultRowDetailProps}
+        executionResultsState={executionResultsState}
+        setExecutionResultsState={setExecutionResultsState}
         {...props}
       />
-    </div>,
+    </div>
   );
+};
+
+const renderExecutionResultsTab = (
+  props: Partial<React.ComponentProps<typeof ExecutionResultsTab>> & {
+    initialState?: Partial<ExecutionResultsTabUiState>;
+  } = {},
+) => render(<ControlledExecutionResultsTab {...props} />);
 
 describe('ExecutionResultsTab', () => {
   beforeEach(() => {
@@ -106,6 +132,106 @@ describe('ExecutionResultsTab', () => {
     expect(getTestCaseRunResultsMock).toHaveBeenCalledTimes(2);
     expect(screen.getByRole('table')).toBeInTheDocument();
     expect(screen.getByText('Runs.RunCompareDiffLabel')).toBeInTheDocument();
+  });
+
+  test('skips fetch when results are already lifted', async () => {
+    const content = [
+      {
+        id: 'result-1',
+        testCaseId: 'tc-1',
+        responseStatusCode: 200,
+        runIndex: 0,
+        executionStatus: 'SUCCESS',
+        testCaseName: 'Test Case 1',
+        metricValues: { Accuracy: { precision: 0.5 } },
+      },
+    ];
+
+    renderExecutionResultsTab({
+      initialState: {
+        results: content,
+        comparedResults: content.map((row) => ({
+          ...row,
+          id: 'result-2',
+          metricValues: { Accuracy: { precision: 0.8 } },
+        })),
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('table')).toBeInTheDocument();
+    });
+
+    expect(getTestCaseRunResultsMock).not.toHaveBeenCalled();
+  });
+
+  test('preserves hideHighlights across remount with lifted state', async () => {
+    const user = userEvent.setup();
+    let latestState: ExecutionResultsTabUiState | null = null;
+
+    const Harness: FC = () => {
+      const [executionResultsState, setState] = useState<ExecutionResultsTabUiState>(
+        () => createDefaultCompareViewTabState().executionResults,
+      );
+      latestState = executionResultsState;
+
+      const setExecutionResultsState = useCallback((patch: Partial<ExecutionResultsTabUiState>) => {
+        setState((prev) => ({ ...prev, ...patch }));
+      }, []);
+
+      return (
+        <div className="w-[1200px] h-[600px] flex flex-col">
+          <ExecutionResultsTab
+            primaryRunId="run-1"
+            comparedRunId="run-sibling"
+            {...defaultRunProps}
+            showDisplayPanel
+            onToggleDisplayPanel={vi.fn()}
+            {...defaultRowDetailProps}
+            executionResultsState={executionResultsState}
+            setExecutionResultsState={setExecutionResultsState}
+          />
+        </div>
+      );
+    };
+
+    const { unmount } = render(<Harness />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('toolbar', { name: 'Runs.RunCompareDisplay' })).toBeInTheDocument();
+    });
+
+    const hideHighlightsInput = document.getElementById('compare-hide-highlights');
+    expect(hideHighlightsInput).toBeTruthy();
+    await user.click(hideHighlightsInput!);
+
+    await waitFor(() => {
+      expect(latestState?.hideHighlights).toBe(true);
+    });
+
+    const preservedState = latestState!;
+    unmount();
+
+    render(
+      <div className="w-[1200px] h-[600px] flex flex-col">
+        <ExecutionResultsTab
+          primaryRunId="run-1"
+          comparedRunId="run-sibling"
+          {...defaultRunProps}
+          showDisplayPanel
+          onToggleDisplayPanel={vi.fn()}
+          {...defaultRowDetailProps}
+          executionResultsState={preservedState}
+          setExecutionResultsState={vi.fn()}
+        />
+      </div>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('toolbar', { name: 'Runs.RunCompareDisplay' })).toBeInTheDocument();
+    });
+
+    expect(document.getElementById('compare-hide-highlights')).toBeChecked();
   });
 
   test('shows load error when run fetch fails', async () => {

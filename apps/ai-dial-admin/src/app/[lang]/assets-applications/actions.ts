@@ -2,7 +2,7 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { assetApi, assetsApi, externalServiceOpsApi } from '@/src/app/api/api';
+import { assetApi, externalServiceOpsApi, toolsetOpsApi } from '@/src/app/api/api';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { DialApplicationResource, DialExternalServiceAuthSettings, ToolsetAuthType } from '@/src/models/dial/resource';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
@@ -13,12 +13,13 @@ import { bulkDeleteAssets } from '@/src/server/assets/bulk-delete';
 import { runAssetExportAction, runAssetImportAction } from '@/src/server/assets/import-export-action';
 import { moveAssets } from '@/src/server/assets/move';
 import { validateApplicationResourceFields } from '@/src/server/core/asset-validation';
-import { getVersionedName } from '@/src/server/publications/path';
+import { encodeCorePath, getVersionedName } from '@/src/server/publications/path';
 import { ImportFileType } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { DialApplication } from '@/src/models/dial/application';
+import { stripEmptyInterfaces } from '@/src/utils/deployments/interfaces';
 
 function validationFailure(errors: Record<string, string | undefined>): ServerActionResponse {
   return {
@@ -74,6 +75,7 @@ export async function createApp(app: DialApplicationResource) {
     path: undefined,
     application_type_schema_id:
       app.application_type_schema_id || (app as DialApplication)?.source?.applicationTypeSchemaId,
+    interfaces: stripEmptyInterfaces(app.interfaces),
   };
 
   return assetApi.put(token, ResourceType.APPLICATION, path, asset);
@@ -111,6 +113,7 @@ export async function updateApp(app: DialApplicationResource, etag: string) {
     source: undefined,
     version: undefined,
     path: undefined,
+    interfaces: stripEmptyInterfaces(cleaned.interfaces),
   };
   return assetApi.put(token, ResourceType.APPLICATION, path, application, { etag });
 }
@@ -142,7 +145,7 @@ export async function exportApps(paths: string[], type?: ImportFileType) {
 
 export async function getAssetTools(name: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return assetsApi.getTools(name, token, ResourceType.APPLICATION);
+  return toolsetOpsApi.discoveredTools(token, name, ResourceType.APPLICATION);
 }
 
 export async function signInExternalService(
@@ -156,9 +159,10 @@ export async function signInExternalService(
 ) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   const body: Record<string, unknown> = {
-    url: `applications/${appPath}/external_services/${serviceId}`,
+    url: `applications/${encodeCorePath(appPath)}/external_services/${serviceId}`,
     credentialsLevel: level,
     authenticationType: authType,
+    offline_usage_consent: true,
   };
   if (authType === ToolsetAuthType.OAUTH) {
     body.code = code;
@@ -172,7 +176,7 @@ export async function signInExternalService(
 export async function signOutExternalService(appPath: string, serviceId: string, level: string, authType: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return externalServiceOpsApi.signOut(token, {
-    url: `applications/${appPath}/external_services/${serviceId}`,
+    url: `applications/${encodeCorePath(appPath)}/external_services/${serviceId}`,
     credentialsLevel: level,
     authenticationType: authType,
   });

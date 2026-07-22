@@ -1,6 +1,7 @@
 import { SOURCE_FIELD } from '@/src/components/SourceField/types';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { ChatEntity, EntityValidityState, ModifiedEntity } from './base-entity';
+import { DialDeploymentInterface } from './interfaces';
 import { DialRoute } from './route';
 import { DialScheme } from './scheme';
 
@@ -16,6 +17,7 @@ export interface DialApplication extends ChatEntity, EntityValidityState {
   applicationProperties?: Record<string, unknown>;
   mcp?: ApplicationMCPContainer;
   responsesEndpoint?: string;
+  interfaces?: Record<string, DialDeploymentInterface>;
 }
 
 export interface DialApplicationScheme extends ModifiedEntity, DialScheme {

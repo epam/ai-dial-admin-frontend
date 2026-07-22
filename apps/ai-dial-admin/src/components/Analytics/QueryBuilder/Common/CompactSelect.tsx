@@ -12,12 +12,15 @@ interface Props {
   onChange: (value: string) => void;
   ariaLabel: string;
   className?: string;
+  // Dimmed label rendered before the value in the trigger, naming what the value controls
+  // (e.g. "Nulls:") when the options alone don't say it.
+  prefix?: string;
 }
 
 // The rail's small enum picker (aggregate fn, operator, unit, direction…): a ~26px mono trigger
 // with the same overlay styling as CategorizedFieldDropdown. The ui-kit select stays the choice
 // for regular forms; its smallest size is still too tall for the compact builder rows.
-const CompactSelect: FC<Props> = ({ options, value, onChange, ariaLabel, className }) => {
+const CompactSelect: FC<Props> = ({ options, value, onChange, ariaLabel, className, prefix }) => {
   const [open, setOpen] = useState(false);
 
   const selected = options.find((o) => o.value === value);
@@ -64,7 +67,10 @@ const CompactSelect: FC<Props> = ({ options, value, onChange, ariaLabel, classNa
           className,
         )}
       >
-        <span className="truncate">{selected?.label ?? value}</span>
+        <span className="truncate">
+          {prefix && <span className="text-secondary">{prefix} </span>}
+          {selected?.label ?? value}
+        </span>
         <IconChevronDown size={12} className="shrink-0 text-secondary" />
       </button>
     </DialDropdown>

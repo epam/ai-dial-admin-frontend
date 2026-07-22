@@ -11,7 +11,13 @@ import { Token } from '@/src/models/auth';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { ParsedAssets } from '@/src/models/import-asset';
 import { AssetApi } from '@/src/server/core/asset-api';
-import { AssetEximConfig, ImportAssetsOptions, buildAssetsExport, importAssetsExport } from '@/src/server/assets/exim';
+import {
+  AssetEximConfig,
+  ImportAssetsOptions,
+  buildAssetsExport,
+  importAssetsExport,
+  stripAssetIdentityFields,
+} from '@/src/server/assets/exim';
 import { ResourceType } from '@/src/types/resource-type';
 
 export { resolveImportDestination } from '@/src/server/assets/import-destination';
@@ -21,6 +27,7 @@ const TOOLSETS_EXIM_CONFIG: AssetEximConfig<AssetToolset> = {
   resourceType: ResourceType.TOOLSET,
   getEntities: (document) => document.toolSets,
   setEntities: (toolSets) => ({ toolSets }),
+  transformForPut: stripAssetIdentityFields,
 };
 
 /** Builds the `{ toolSets: AssetToolset[] }` export document directly from DIAL Core. */

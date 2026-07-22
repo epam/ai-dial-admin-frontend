@@ -37,7 +37,7 @@ const DiffField: FC<Props> = ({ original, modified, label, className, language }
           width="100%"
           className="diff-section"
           theme={currentTheme}
-          options={diffEditorOptions}
+          options={{ ...diffEditorOptions, stickyScroll: { enabled: false } }}
         />
       </div>
     </div>

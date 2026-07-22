@@ -86,7 +86,7 @@ const ResourceSourceField: FC<Props> = ({
       }
 
       if (sourceType === SOURCE_TYPE.SCHEMA) {
-        onChange({ ...entity, endpoint: undefined, application_type_schema_id: '' });
+        onChange({ ...entity, endpoint: undefined, application_type_schema_id: '', routes: undefined });
         return;
       }
 
@@ -124,7 +124,13 @@ const ResourceSourceField: FC<Props> = ({
         <AppRunners
           selectedValue={entity.application_type_schema_id}
           onChange={onChangeEntity}
-          onChangeValue={(value) => onChangeEntity({ ...entity, application_type_schema_id: value } as DialApplication)}
+          onChangeValue={(value, application_properties) =>
+            onChangeEntity({
+              ...entity,
+              application_type_schema_id: value,
+              applicationProperties: application_properties,
+            } as DialApplication)
+          }
           runners={runners}
           isEntityImmutable={isEntityImmutable}
           isModal={isModal}

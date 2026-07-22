@@ -7,14 +7,16 @@ import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { createColumnRow } from '@/src/components/Analytics/Tables/utils';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { ColumnRow } from '@/src/models/analytics/tables-ui';
+import { ColumnRow, ColumnRowError } from '@/src/models/analytics/tables-ui';
 
 interface Props {
   rows: ColumnRow[];
   onChange: (rows: ColumnRow[]) => void;
+  // Per-row validation messages, aligned by index with `rows`.
+  errors?: ColumnRowError[];
 }
 
-const ColumnRowsEditor: FC<Props> = ({ rows, onChange }) => {
+const ColumnRowsEditor: FC<Props> = ({ rows, onChange, errors }) => {
   const t = useI18n();
 
   const update = (id: string, patch: Partial<ColumnRow>) =>
@@ -24,6 +26,7 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange }) => {
     <div className="flex flex-col gap-2">
       {rows.map((row, index) => {
         const first = index === 0;
+        const rowError = errors?.[index];
         return (
           <div key={row.id} className="flex items-end gap-2">
             <DialInput
@@ -31,6 +34,7 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange }) => {
               containerClassName="flex-1 min-w-[120px]"
               labelProps={first ? { label: t(AnalyticsTablesI18nKey.SourceName) } : undefined}
               value={row.source_name}
+              error={rowError?.source_name}
               onChange={(v) => update(row.id, { source_name: v ?? '' })}
             />
             <DialInput
@@ -38,6 +42,7 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange }) => {
               containerClassName="flex-1 min-w-[120px]"
               labelProps={first ? { label: t(AnalyticsTablesI18nKey.ColumnName) } : undefined}
               value={row.name}
+              error={rowError?.name}
               onChange={(v) => update(row.id, { name: v ?? '' })}
             />
             <DialSelectField
@@ -53,6 +58,7 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange }) => {
               containerClassName="w-[120px] shrink-0"
               labelProps={first ? { label: t(AnalyticsTablesI18nKey.Tag) } : undefined}
               value={row.tag}
+              error={rowError?.tag}
               onChange={(v) => update(row.id, { tag: v ?? '' })}
             />
             <div className="flex h-[38px] items-center gap-2">
@@ -61,6 +67,12 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange }) => {
                 label={t(AnalyticsTablesI18nKey.Nullable)}
                 isOn={row.nullable}
                 onChange={(value) => update(row.id, { nullable: value })}
+              />
+              <DialSwitch
+                switchId={`col-sensitive-${row.id}`}
+                label={t(AnalyticsTablesI18nKey.Sensitive)}
+                isOn={row.sensitive}
+                onChange={(value) => update(row.id, { sensitive: value })}
               />
               <DialRemoveButton onClick={() => onChange(rows.filter((r) => r.id !== row.id))} />
             </div>

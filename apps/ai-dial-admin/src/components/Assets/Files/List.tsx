@@ -26,6 +26,7 @@ import { downloadFile } from '@/src/utils/download';
 import { getDeleteNotificationContent, getExportNotificationContent, getImportNotificationContent } from '../utils';
 import Modals from '@/src/components/Assets/BaseAssetList/Modals';
 import { ModalType } from '@/src/components/Assets/BaseAssetList/types';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 const FilesList = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -138,12 +139,12 @@ const FilesList = () => {
       if (files.length > 0) {
         const filePaths = files.map((file) => ({
           path: file.path,
-          etag: (file as DialFile & { etag?: string }).etag || '',
+          etag: DEFAULT_ETAG,
         }));
         promises.push(bulkDeleteFiles(filePaths));
       }
       folders.forEach((folder) => {
-        promises.push(removeFolder(folder.path));
+        promises.push(removeFolder(folder.path, ResourceType.FILE));
       });
 
       handleModalClose();

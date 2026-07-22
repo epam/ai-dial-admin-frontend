@@ -13,6 +13,12 @@ import {
 } from '@/src/components/Containers/View/Metrics/utils';
 import { DeploymentMetrics, PodResourceUsage } from '@/src/models/deployments/metrics';
 import { DeploymentMetricsI18nKey } from '@/src/constants/i18n';
+import { INFERENCE_TASK } from '@/src/types/deployments/containers';
+
+// Gauge matrix (issue #3895): cards without `tasks` are universal; vLLM-sourced gauges are
+// generation-only; request latency is classification-only (generation reads E2E + TTFT/ITL instead).
+const GENERATION_ONLY: INFERENCE_TASK[] = [INFERENCE_TASK.TEXT_GENERATION];
+const CLASSIFICATION_ONLY: INFERENCE_TASK[] = [INFERENCE_TASK.TEXT_CLASSIFICATION];
 
 // A memory card: sums a per-pod byte field and renders it in the most readable unit (Mb/Gb/…).
 const memoryCard = (
@@ -36,6 +42,7 @@ const REPLICAS_CARD: MetricCardConfig = {
 // Inference-only — value rendered as a percentage.
 const ERROR_RATIO_CARD: MetricCardConfig = {
   kind: MetricCardKind.Single,
+  tasks: GENERATION_ONLY,
   labelKey: DeploymentMetricsI18nKey.RequestErrorRatio,
   unit: '%',
   getValue: (m) => {
@@ -70,12 +77,14 @@ export const LATENCY_SECTION: MetricsSectionConfig = {
   cards: [
     {
       kind: MetricCardKind.Distribution,
+      tasks: GENERATION_ONLY,
       labelKey: DeploymentMetricsI18nKey.Ttft,
       unit: 's',
       getDistribution: (m) => m.serving?.ttft ?? null,
     },
     {
       kind: MetricCardKind.Distribution,
+      tasks: GENERATION_ONLY,
       labelKey: DeploymentMetricsI18nKey.InterTokenLatency,
       unit: 's',
       getDistribution: (m) => m.serving?.interTokenLatency ?? null,
@@ -88,6 +97,7 @@ export const LATENCY_SECTION: MetricsSectionConfig = {
     },
     {
       kind: MetricCardKind.Distribution,
+      tasks: CLASSIFICATION_ONLY,
       labelKey: DeploymentMetricsI18nKey.RequestLatency,
       unit: 's',
       getDistribution: (m) => m.serving?.requestLatency ?? null,
@@ -102,6 +112,7 @@ export const THROUGHPUT_SECTION: MetricsSectionConfig = {
   cards: [
     {
       kind: MetricCardKind.Dual,
+      tasks: GENERATION_ONLY,
       labelKey: DeploymentMetricsI18nKey.TokensPerSecond,
       unit: 'tok/s',
       primaryLabelKey: DeploymentMetricsI18nKey.Prompt,
@@ -124,16 +135,19 @@ export const LOAD_SECTION: MetricsSectionConfig = {
   cards: [
     {
       kind: MetricCardKind.Single,
+      tasks: GENERATION_ONLY,
       labelKey: DeploymentMetricsI18nKey.RunningRequests,
       getValue: (m) => m.serving?.runningRequests ?? null,
     },
     {
       kind: MetricCardKind.Single,
+      tasks: GENERATION_ONLY,
       labelKey: DeploymentMetricsI18nKey.QueueDepth,
       getValue: (m) => m.serving?.queueDepth ?? null,
     },
     {
       kind: MetricCardKind.Gauge,
+      tasks: GENERATION_ONLY,
       labelKey: DeploymentMetricsI18nKey.KvCacheUsage,
       getValue: (m) => m.serving?.kvCacheUsage ?? null,
       thresholds: { warn: 0.7, crit: 0.9 },

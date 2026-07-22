@@ -752,13 +752,13 @@ describe('containers utils', () => {
       expect(sanitizeContainerProbe(baseContainer)).toBe(baseContainer);
     });
 
-    test('drops an invalid probe and sends only enabled=false', () => {
+    test('omits probeProperties entirely when the probe is invalid', () => {
       vi.mocked(getPortError).mockReturnValue({ type: ErrorType.EMPTY, text: '' });
       const container: Container = {
         ...baseContainer,
         probeProperties: { enabled: false, probe: { $type: PROBE_TYPE.TCP } },
       };
-      expect(sanitizeContainerProbe(container).probeProperties).toEqual({ enabled: false });
+      expect(sanitizeContainerProbe(container).probeProperties).toBeUndefined();
     });
 
     test('keeps the container unchanged when the probe is valid', () => {

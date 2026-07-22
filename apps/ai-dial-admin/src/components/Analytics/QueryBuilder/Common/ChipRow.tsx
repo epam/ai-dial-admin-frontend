@@ -11,8 +11,6 @@ import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { QueryBuilderColor } from '@/src/models/analytics/query-builder';
 
-const COLLAPSED_CHIP = QUERY_BUILDER_PALETTE[QueryBuilderColor.Grouping];
-
 interface Props {
   summary: string;
   onRemove: () => void;
@@ -21,16 +19,26 @@ interface Props {
   // Inline: the expanded editor sits on the chevron's row (compact single-line items like
   // aggregates). Default: the editor stacks under a summary header inside a bordered box.
   inline?: boolean;
+  // Collapsed-chip tint — pass the owning section's palette color so the chip matches its header.
+  color?: QueryBuilderColor;
 }
 
 // A parameterized builder item (aggregate, condition, sort key…) that collapses to a compact
 // summary chip and expands into its full editor. Collapse state is presentation-only, so it is
 // owned here rather than in the query state. Clicking anywhere outside the item (finishing its
 // configuration) collapses it back to the summary chip.
-const ChipRow: FC<Props> = ({ summary, onRemove, children, defaultExpanded = true, inline }) => {
+const ChipRow: FC<Props> = ({
+  summary,
+  onRemove,
+  children,
+  defaultExpanded = true,
+  inline,
+  color = QueryBuilderColor.Grouping,
+}) => {
   const t = useI18n();
   const [expanded, setExpanded] = useState(defaultExpanded);
   const containerRef = useRef<HTMLDivElement>(null);
+  const collapsedChip = QUERY_BUILDER_PALETTE[color];
 
   useEffect(() => {
     if (!expanded) return;
@@ -62,12 +70,12 @@ const ChipRow: FC<Props> = ({ summary, onRemove, children, defaultExpanded = tru
           aria-expanded="false"
           className={classNames(
             'flex min-w-0 flex-1 items-center gap-1.5 rounded px-2 py-1 text-left hover:opacity-90',
-            COLLAPSED_CHIP.chipBg,
+            collapsedChip.chipBg,
           )}
           onClick={() => setExpanded(true)}
         >
-          <IconChevronDown size={14} className={classNames('shrink-0', COLLAPSED_CHIP.chipText)} />
-          <span className={classNames('truncate font-mono dial-tiny-text', COLLAPSED_CHIP.chipText)}>{summary}</span>
+          <IconChevronDown size={14} className={classNames('shrink-0', collapsedChip.chipText)} />
+          <span className={classNames('truncate font-mono dial-tiny-text', collapsedChip.chipText)}>{summary}</span>
         </button>
         {removeButton}
       </div>

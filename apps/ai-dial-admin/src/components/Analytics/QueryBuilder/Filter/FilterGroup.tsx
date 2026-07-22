@@ -24,9 +24,11 @@ interface Props {
   // groups hold only conditions — deeper nesting is expressible only in the SQL view. The root's
   // add actions live in the surrounding SectionBlock header, not here.
   depth?: number;
+  // The owning section's palette color (Filter vs Having) — tints group accents and condition chips.
+  color?: QueryBuilderColor;
 }
 
-const FilterGroup: FC<Props> = ({ node, parent, fieldOptions, depth = 0 }) => {
+const FilterGroup: FC<Props> = ({ node, parent, fieldOptions, depth = 0, color = QueryBuilderColor.Grouping }) => {
   const t = useI18n();
   const { refresh } = useQueryBuilder();
 
@@ -66,7 +68,7 @@ const FilterGroup: FC<Props> = ({ node, parent, fieldOptions, depth = 0 }) => {
         !isRoot &&
           classNames(
             'rounded border border-primary border-l-2 bg-layer-2 p-2',
-            QUERY_BUILDER_PALETTE[QueryBuilderColor.Grouping].borderAccent,
+            QUERY_BUILDER_PALETTE[color].borderAccent,
           ),
       )}
     >
@@ -89,9 +91,16 @@ const FilterGroup: FC<Props> = ({ node, parent, fieldOptions, depth = 0 }) => {
         <div className={classNames('flex flex-col gap-1.5', !isRoot && 'border-l border-primary pl-2')}>
           {node.children.map((child) =>
             child.kind === FilterNodeKind.Group ? (
-              <FilterGroup key={child.id} node={child} parent={node} fieldOptions={fieldOptions} depth={depth + 1} />
+              <FilterGroup
+                key={child.id}
+                node={child}
+                parent={node}
+                fieldOptions={fieldOptions}
+                depth={depth + 1}
+                color={color}
+              />
             ) : (
-              <FilterCondition key={child.id} node={child} parent={node} fieldOptions={fieldOptions} />
+              <FilterCondition key={child.id} node={child} parent={node} fieldOptions={fieldOptions} color={color} />
             ),
           )}
         </div>
