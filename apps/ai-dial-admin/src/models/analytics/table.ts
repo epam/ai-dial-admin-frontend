@@ -5,10 +5,22 @@ export enum AnalyticsTableType {
   Enrichment = 'enrichment',
 }
 
+export enum TableStatus {
+  Pending = 'pending',
+  Active = 'active',
+  Failed = 'failed',
+}
+
 export enum PartitionGranularity {
   Day = 'day',
   Month = 'month',
   Year = 'year',
+}
+
+// v1 supports a single cardinality; modeled as an enum for contract completeness even though the UI
+// never surfaces a choice (the enrichment draft always sends this value).
+export enum Cardinality {
+  ZeroOrOne = 'zero_or_one',
 }
 
 export interface AnalyticsTableColumn {
@@ -29,7 +41,7 @@ export interface AnalyticsTablePartition {
 
 export interface AnalyticsTableGrain {
   grain_key: string;
-  source_table?: string;
+  cardinality?: Cardinality;
 }
 
 // The calling identity's effective per-table permissions, reported by the data-access service on the
@@ -43,13 +55,17 @@ export interface TablePermissions {
 export interface AnalyticsTable {
   name: string;
   description?: string;
-  status?: string;
+  status?: TableStatus;
   system?: boolean;
   type: AnalyticsTableType;
+  source_table?: string;
   columns?: AnalyticsTableColumn[];
+  // Exposed-column count; present on list items only (single-get returns `columns` instead).
+  column_count?: number;
   grain?: AnalyticsTableGrain;
   ordering_key?: string[];
   partition_by?: AnalyticsTablePartition;
+  tag_order?: string[];
   permissions?: TablePermissions;
 }
 
@@ -60,24 +76,45 @@ export interface TableAccess {
   modify: string[];
 }
 
+// POST /v1/tables is identity-only: no columns, no physical keys. The physical schema is defined
+// afterwards via the draft-schema resource (see DraftSchemaDto below).
 export interface CreateSourceTableDto {
   name: string;
-  description?: string;
   type: AnalyticsTableType.Source;
+  description?: string;
+}
+
+export interface CreateEnrichmentTableDto {
+  name: string;
+  type: AnalyticsTableType.Enrichment;
+  source_table: string;
+  description?: string;
+}
+
+export type CreateTableDto = CreateSourceTableDto | CreateEnrichmentTableDto;
+
+// Body for POST /v1/tables/{name}/schema (see AnalyticsDataApi.defineTableSchema) — allowed only while
+// the table is PENDING/FAILED.
+export interface DraftSourceSchemaDto {
   columns: AnalyticsTableColumn[];
   ordering_key?: string[];
   partition_by?: AnalyticsTablePartition;
 }
 
-export interface CreateEnrichmentTableDto {
-  name: string;
-  description?: string;
-  type: AnalyticsTableType.Enrichment;
-  source_table: string;
-  grain_key: string;
+export interface DraftEnrichmentSchemaDto {
+  columns: AnalyticsTableColumn[];
+  grain_key?: string;
+  cardinality?: Cardinality;
 }
 
-export type CreateTableDto = CreateSourceTableDto | CreateEnrichmentTableDto;
+export type DraftSchemaDto = DraftSourceSchemaDto | DraftEnrichmentSchemaDto;
+
+// PUT /v1/tables/{name} — table catalog metadata merge-patch: absent/null leaves a field unchanged,
+// `tag_order: []` clears it, a non-empty `tag_order` replaces it.
+export interface UpdateTableDto {
+  description?: string;
+  tag_order?: string[];
+}
 
 export interface AnalyticsColumnRename {
   from: string;

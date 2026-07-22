@@ -7,7 +7,9 @@ import {
   AnalyticsSchemaPatch,
   AnalyticsTable,
   CreateTableDto,
+  DraftSchemaDto,
   TableAccess,
+  UpdateTableDto,
   WriteRowsDto,
 } from '@/src/models/analytics/table';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -28,8 +30,16 @@ export async function createTable(dto: CreateTableDto): Promise<ServerActionResp
   return analyticsDataApi.createTable(dto, await token());
 }
 
+export async function updateTable(name: string, dto: UpdateTableDto): Promise<ServerActionResponse> {
+  return analyticsDataApi.updateTable(name, dto, await token());
+}
+
 export async function deleteTable(name: string): Promise<ServerActionResponse> {
   return analyticsDataApi.deleteTable(name, await token());
+}
+
+export async function defineTableSchema(name: string, dto: DraftSchemaDto): Promise<ServerActionResponse> {
+  return analyticsDataApi.defineTableSchema(name, dto, await token());
 }
 
 export async function updateTableSchema(name: string, patch: AnalyticsSchemaPatch): Promise<ServerActionResponse> {

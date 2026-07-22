@@ -12,7 +12,9 @@ import {
   AnalyticsSchemaPatch,
   AnalyticsTable,
   CreateTableDto,
+  DraftSchemaDto,
   TableAccess,
+  UpdateTableDto,
   WriteRowsDto,
 } from '@/src/models/analytics/table';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -87,8 +89,18 @@ export class AnalyticsDataApi extends BaseApi {
     return this.postAction<CreateTableDto>(TABLES_URL, dto, token);
   }
 
+  updateTable(name: string, dto: UpdateTableDto, token: Token): Promise<ServerActionResponse> {
+    return this.putAction<UpdateTableDto>(TABLE_URL(name), dto, token);
+  }
+
   deleteTable(name: string, token: Token): Promise<ServerActionResponse> {
     return this.deleteAction(TABLE_URL(name), token);
+  }
+
+  // Defines the complete physical schema of a not-yet-materialized table AND materializes it (issues
+  // CREATE TABLE, flips to ACTIVE) in one atomic call — there is no separate draft-save/materialize step.
+  defineTableSchema(name: string, dto: DraftSchemaDto, token: Token): Promise<ServerActionResponse> {
+    return this.postAction<DraftSchemaDto>(TABLE_SCHEMA_URL(name), dto, token);
   }
 
   updateTableSchema(name: string, patch: AnalyticsSchemaPatch, token: Token): Promise<ServerActionResponse> {
