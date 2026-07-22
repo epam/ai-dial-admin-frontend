@@ -6,8 +6,12 @@ CVE-2026-45447
 # npm has no patched release yet (latest: 11.17.0, 2026-06-12, predates the CVE).
 # Remove this once npm bundles undici >=6.27.0 and update Dockerfile to use that npm version.
 CVE-2026-12151 exp:2026-09-01
+
 CVE-2026-13149
 CVE-2026-59869
 CVE-2026-59869
 CVE-2026-59874
 CVE-2026-59873
+CVE-2026-13676
+CVE-2026-16221
+GHSA-f88m-g3jw-g9cj
