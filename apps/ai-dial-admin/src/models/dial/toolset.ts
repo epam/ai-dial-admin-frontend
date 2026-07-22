@@ -10,6 +10,7 @@ export interface Toolset extends BaseEntity, EntityRoleLimits {
   iconUrl?: string;
   author?: string;
   provider?: string;
+  vendorWebsite?: string;
   endpoint?: string | null;
   maxRetryAttempts?: number;
   source?: SOURCE_FIELD;

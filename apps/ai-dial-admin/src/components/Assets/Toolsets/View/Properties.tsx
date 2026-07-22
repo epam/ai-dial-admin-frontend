@@ -8,9 +8,11 @@ import ResourceAuthentication from '@/src/components/Assets/Resources/Auth/Resou
 import ResourceAuthHeader from '@/src/components/Assets/Resources/Auth/ResourceAuthHeader';
 import ResourceInfoHeader from '@/src/components/Assets/Resources/ResourceInfoHeader';
 import DescriptionControl from '@/src/components/BaseControls/Description';
+import VendorWebsiteControl from '@/src/components/BaseControls/Endpoint/VendorWebsite';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import IconControl from '@/src/components/BaseControls/Icon';
 import IdControl from '@/src/components/BaseControls/Id/Id';
+import IntroControl from '@/src/components/BaseControls/Intro';
 import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
 import TopicsControl from '@/src/components/BaseControls/Topics';
 import VersionControl from '@/src/components/BaseControls/Version';
@@ -69,6 +71,7 @@ const ToolsetAssetProperties: FC<Props> = ({ selectedToolset, onChange, isPublic
           />
         )}
         <DescriptionControl entity={selectedToolset} onChangeEntity={onChange} isFullWidth={false} />
+        <IntroControl entity={selectedToolset} onChangeEntity={onChange} isFullWidth={false} />
 
         <DialInput
           containerClassName={STANDARD_CONTROL_WIDTH}
@@ -78,6 +81,12 @@ const ToolsetAssetProperties: FC<Props> = ({ selectedToolset, onChange, isPublic
           value={selectedToolset.provider}
           onChange={(provider?: string) => onChange({ ...selectedToolset, provider })}
           disabled={isReadOnlyAdmin}
+        />
+
+        <VendorWebsiteControl
+          endpoint={selectedToolset.vendor_website}
+          onChange={(vendor_website) => onChange({ ...selectedToolset, vendor_website })}
+          isFullWidth={false}
         />
 
         <IconControl
