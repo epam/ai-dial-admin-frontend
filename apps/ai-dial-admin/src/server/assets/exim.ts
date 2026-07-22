@@ -18,7 +18,8 @@ import {
   ConsecutiveFailureCircuitBreaker,
   FILES_IMPORT_CIRCUIT_BREAKER_THRESHOLD,
 } from '@/src/server/files/circuit-breaker';
-import { parseEncodedVersionedPath } from '@/src/server/publications/path';
+import { gatherResourceUrls, isFolderNode } from '@/src/server/folders/resource-walk';
+import { decodeCorePath, parseEncodedVersionedPath, stripPrefix } from '@/src/server/publications/path';
 import { ConflictResolutionPolicy, ImportStatus } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
 import { resolveImportDestination } from './import-destination';
@@ -35,6 +36,37 @@ export interface AssetEximConfig<T extends { id?: string }> {
   transformForPut?: (entity: T) => T;
 }
 
+const isFolderPath = async (assetApi: AssetApi, token: Token, resourceType: ResourceType, path: string) => {
+  const node = await assetApi.getMetadata(token, resourceType, path, { recursive: false });
+  return Boolean(node && isFolderNode(node));
+};
+
+/** Expands a folder path into every descendant resource's bare path, at any nesting depth. */
+const expandFolderPath = async (
+  assetApi: AssetApi,
+  token: Token,
+  resourceType: ResourceType,
+  path: string,
+): Promise<string[]> => {
+  const prefix = RESOURCE_TYPE_PREFIX[resourceType];
+  const urls = await gatherResourceUrls(
+    (folderPath, nextToken) => assetApi.getMetadata(token, resourceType, folderPath, { recursive: true, nextToken }),
+    path,
+  );
+  return urls.map((url) => decodeCorePath(stripPrefix(url, prefix)));
+};
+
+/** Resolves an incoming path to the leaf resource paths it stands for — itself, or every descendant if it's a folder. */
+const resolveExportPaths = async (
+  assetApi: AssetApi,
+  token: Token,
+  resourceType: ResourceType,
+  path: string,
+): Promise<string[]> =>
+  (await isFolderPath(assetApi, token, resourceType, path))
+    ? expandFolderPath(assetApi, token, resourceType, path)
+    : [path];
+
 /** Builds the `{ <field>: T[] }` export document directly from DIAL Core. */
 export const buildAssetsExport = async <T extends { id?: string }>(
   config: AssetEximConfig<T>,
@@ -44,9 +76,12 @@ export const buildAssetsExport = async <T extends { id?: string }>(
 ): Promise<ParsedAssets> => {
   const entities: T[] = [];
   for (const path of paths) {
-    const entity = await assetApi.getMerged<T>(token, config.resourceType, path);
-    if (entity) {
-      entities.push({ ...entity, id: `${RESOURCE_TYPE_PREFIX[config.resourceType]}${path}` });
+    const leafPaths = await resolveExportPaths(assetApi, token, config.resourceType, path);
+    for (const leafPath of leafPaths) {
+      const entity = await assetApi.getMerged<T>(token, config.resourceType, leafPath);
+      if (entity) {
+        entities.push({ ...entity, id: `${RESOURCE_TYPE_PREFIX[config.resourceType]}${leafPath}` });
+      }
     }
   }
   return config.setEntities(entities);

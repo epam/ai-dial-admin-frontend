@@ -10,6 +10,7 @@ export interface BaseEntity extends ModifiedEntity {
   name?: string;
   displayName?: string;
   description?: string;
+  intro?: string;
   topics?: string[];
 }
 

@@ -8,6 +8,7 @@ import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
 import { getApplicationContainers, getModelContainers, getToolsetContainers } from '@/src/app/actions/deployments';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import IdControl from '@/src/components/BaseControls/Id/Id';
+import IntroControl from '@/src/components/BaseControls/Intro';
 import VersionControl from '@/src/components/BaseControls/Version';
 import SourceField from '@/src/components/SourceField/SourceField';
 import { APPLICATION_SOURCE_ITEMS, getSourceItems } from '@/src/components/SourceField/constants';
@@ -160,6 +161,7 @@ const DeploymentProperties: FC<Props> = ({
       )}
 
       <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} isFullWidth={!isEntityImmutable} />
+      <IntroControl entity={entity} onChangeEntity={onChangeEntity} isFullWidth={!isEntityImmutable} />
       {view === ApplicationRoute.Applications && !isEntityImmutable && !initialValues && (
         <SourceField
           id="sourceType"

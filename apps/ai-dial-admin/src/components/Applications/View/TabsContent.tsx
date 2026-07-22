@@ -119,7 +119,11 @@ const TabsContent: FC<Props> = ({
 
       {activeTab === EntityViewTab.Features &&
         (view === ApplicationRoute.AssetsApplications ? (
-          <ResourceFeatures entity={selectedApplication as DialApplicationResource} onChangeEntity={onChangeAsset} />
+          <ResourceFeatures
+            entity={selectedApplication as DialApplicationResource}
+            appRunner={appRunner}
+            onChangeEntity={onChangeAsset}
+          />
         ) : (
           <EntityFeatures
             appRunner={appRunner}

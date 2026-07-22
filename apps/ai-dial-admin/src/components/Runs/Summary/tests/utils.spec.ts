@@ -11,11 +11,13 @@ import {
 import { AVG_DURATION_ALIAS, COUNT_ALIAS, EXECUTION_STATUS_FIELD } from '../constants';
 import { MetricScoresData } from '../models';
 import {
+  attachMetricInfo,
   buildAvgRunTimeQuery,
   buildDistributionQuery,
   buildMetricScoresQuery,
   buildTestCasesStatusQuery,
   getMetricFieldPath,
+  getMetricOutputDescriptions,
   getMetricOutputFields,
   getMetricStatCards,
   parseAvgRunTimeMs,
@@ -23,6 +25,7 @@ import {
   parseMetricScores,
   parseTestCaseStatusCounts,
   splitMetricName,
+  toMetricInfoByName,
   toMetricOptions,
 } from '../utils';
 
@@ -99,6 +102,104 @@ describe('Runs Summary :: metric options', () => {
 
   test('toMetricOptions handles null', () => {
     expect(toMetricOptions(null)).toEqual([]);
+  });
+});
+
+describe('Runs Summary :: metric info', () => {
+  test('getMetricOutputDescriptions extracts descriptions and skips fields without one', () => {
+    expect(
+      getMetricOutputDescriptions({
+        properties: {
+          score: { description: 'The relevancy score.' },
+          reason: {},
+        },
+      } as any),
+    ).toEqual({ score: 'The relevancy score.' });
+  });
+
+  test('getMetricOutputDescriptions handles empty properties and undefined schema', () => {
+    expect(getMetricOutputDescriptions({ properties: {} } as any)).toEqual({});
+    expect(getMetricOutputDescriptions(undefined)).toEqual({});
+  });
+
+  test('toMetricInfoByName maps snapshots to their declaration description + output descriptions', () => {
+    const infoByName = toMetricInfoByName(
+      [
+        {
+          tsmdName: 'DeepEval: Answer Relevancy',
+          metricDeclarationId: 'decl-1',
+        },
+        {
+          tsmdName: 'Exact Match',
+          metricDeclarationId: 'decl-missing',
+        },
+      ] as any,
+      {
+        'decl-1': {
+          description: 'Measures answer relevancy.',
+          outputSchema: { properties: { score: { description: 'The relevancy score.' } } },
+        },
+      } as any,
+    );
+
+    expect(infoByName).toEqual({
+      'DeepEval: Answer Relevancy': {
+        description: 'Measures answer relevancy.',
+        outputDescriptions: { score: 'The relevancy score.' },
+      },
+      'Exact Match': { description: undefined, outputDescriptions: {} },
+    });
+  });
+
+  test('toMetricInfoByName skips snapshots missing tsmdName or metricDeclarationId, and handles null', () => {
+    expect(toMetricInfoByName([{ metricDeclarationId: 'decl-1' }, { tsmdName: 'No Declaration' }] as any, {})).toEqual(
+      {},
+    );
+    expect(toMetricInfoByName(null, {})).toEqual({});
+  });
+
+  test('attachMetricInfo merges description + bar descriptions onto matching groups only', () => {
+    const data: MetricScoresData = {
+      overallScore: null,
+      statistics: ['AVG'],
+      byStatistic: {
+        AVG: [
+          { name: 'aidial_rag_eval.generation', bars: { context_to_answer: 0.8 } },
+          { name: 'aidial_rag_eval.retrieval', bars: { context_recall: 0.9 } },
+        ],
+      },
+    };
+
+    const enriched = attachMetricInfo(data, {
+      'aidial_rag_eval.generation': {
+        description: 'Generation metrics.',
+        outputDescriptions: { context_to_answer: 'How well the answer uses context.' },
+      },
+    });
+
+    expect(enriched.byStatistic).toEqual({
+      AVG: [
+        {
+          name: 'aidial_rag_eval.generation',
+          bars: { context_to_answer: 0.8 },
+          description: 'Generation metrics.',
+          barDescriptions: { context_to_answer: 'How well the answer uses context.' },
+        },
+        { name: 'aidial_rag_eval.retrieval', bars: { context_recall: 0.9 } },
+      ],
+    });
+    expect(enriched.overallScore).toBeNull();
+    expect(enriched.statistics).toEqual(['AVG']);
+  });
+
+  test('attachMetricInfo returns groups unchanged when infoByName is empty', () => {
+    const data: MetricScoresData = {
+      overallScore: 0.5,
+      statistics: ['AVG'],
+      byStatistic: { AVG: [{ name: 'Other', bars: { score: 0.1 } }] },
+    };
+
+    expect(attachMetricInfo(data, {})).toEqual(data);
   });
 });
 

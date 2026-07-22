@@ -1,3 +1,14 @@
+/** Known `metric_score_name` statistic values, each with its own Metric Scores section description. */
+export enum MetricStatistic {
+  Avg = 'AVG',
+  P90 = 'P90',
+  P10 = 'P10',
+  Max = 'MAX',
+  Min = 'MIN',
+  Med = 'MED',
+  Count = 'COUNT',
+}
+
 /** Aggregated test-case execution outcome counts for a run, derived from `eval_summaries`. */
 export interface TestCaseStatusCounts {
   passed: number;
@@ -15,6 +26,16 @@ export interface MetricScoreGroup {
   name: string;
   /** Leaf metric name (after the last `.`) → value, e.g. `{ context_to_answer: 0.8 }`. */
   bars: Record<string, number>;
+  /** The metric's own description, from its declaration; undefined until fetched. */
+  description?: string;
+  /** Leaf metric name (bar) → its output-field description, from the metric's `outputSchema`. */
+  barDescriptions?: Record<string, string>;
+}
+
+/** A metric's own description plus its per-output-field descriptions, keyed by output field name. */
+export interface MetricInfo {
+  description?: string;
+  outputDescriptions: Record<string, string>;
 }
 
 /** Parsed `metric_score_results` for a run: the statistic names plus the bar groups per statistic. */

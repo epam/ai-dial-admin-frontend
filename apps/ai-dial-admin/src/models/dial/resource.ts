@@ -81,6 +81,7 @@ export interface DialToolsetResource extends DialResource {
   transport?: ToolsetTransport;
   allowed_tools: string[];
   provider?: string;
+  vendor_website?: string;
   updatedAt: string;
 }
 
