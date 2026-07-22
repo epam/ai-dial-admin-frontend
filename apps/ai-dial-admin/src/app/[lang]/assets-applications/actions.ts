@@ -13,7 +13,7 @@ import { bulkDeleteAssets } from '@/src/server/assets/bulk-delete';
 import { runAssetExportAction, runAssetImportAction } from '@/src/server/assets/import-export-action';
 import { moveAssets } from '@/src/server/assets/move';
 import { validateApplicationResourceFields } from '@/src/server/core/asset-validation';
-import { getVersionedName } from '@/src/server/publications/path';
+import { encodeCorePath, getVersionedName } from '@/src/server/publications/path';
 import { ImportFileType } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -159,7 +159,7 @@ export async function signInExternalService(
 ) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   const body: Record<string, unknown> = {
-    url: `applications/${appPath}/external_services/${serviceId}`,
+    url: `applications/${encodeCorePath(appPath)}/external_services/${serviceId}`,
     credentialsLevel: level,
     authenticationType: authType,
     offline_usage_consent: true,
@@ -176,7 +176,7 @@ export async function signInExternalService(
 export async function signOutExternalService(appPath: string, serviceId: string, level: string, authType: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return externalServiceOpsApi.signOut(token, {
-    url: `applications/${appPath}/external_services/${serviceId}`,
+    url: `applications/${encodeCorePath(appPath)}/external_services/${serviceId}`,
     credentialsLevel: level,
     authenticationType: authType,
   });
