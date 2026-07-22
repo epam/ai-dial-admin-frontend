@@ -14,7 +14,7 @@ All notable infrastructure-relevant changes to this project will be documented i
 
 #### Configuration Management
 
-- `DIAL_CORE_API_URL` — DIAL Core API url (**required**); needed for Publications, which call DIAL Core directly forwarding the user JWT
+- `DIAL_CORE_API_URL` — DIAL Core API url (**required**); Publications and other Core-direct clients (buckets, files, assets, toolset ops, external-service sign-in, query assistant) call DIAL Core directly forwarding the user JWT. These features fail if unset.
 - `CODE_APP_EDITOR_URL` — editor URL for Code App applications; when an Endpoints application's `endpoint` and `editorUrl` both equal this value, it is shown as the `Code App` source type
 
 ## 0.16.0
