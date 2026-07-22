@@ -17,6 +17,7 @@ import { deleteTable, getTables } from '@/src/app/[lang]/tables/actions';
 import CreateTablePopup from '@/src/components/Analytics/Tables/CreateTablePopup';
 import { navigateEntityUrl } from '@/src/components/EntityListView/utils/on-cell-clicked';
 import GridView from '@/src/components/Grid/GridView/GridView';
+import { useAnalyticsTablePermissions } from '@/src/hooks/use-analytics-table-permissions';
 import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { getDeleteOperation } from '@/src/constants/grid-columns/actions';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -38,6 +39,7 @@ const TablesView: FC<Props> = ({ initialTables }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
+  const { canCreate, canDelete } = useAnalyticsTablePermissions();
 
   const [tables, setTables] = useState<AnalyticsTable[]>(initialTables);
   const [createType, setCreateType] = useState<AnalyticsTableType | null>(null);
@@ -96,27 +98,29 @@ const TablesView: FC<Props> = ({ initialTables }) => {
         valueGetter: (params) =>
           (params.data as AnalyticsTable | undefined)?.system ? t(AnalyticsTablesI18nKey.System) : '',
       },
-      ACTION_COLUMN(rowActions),
+      ...(canDelete ? [ACTION_COLUMN(rowActions)] : []),
     ],
-    [t, rowActions],
+    [t, rowActions, canDelete],
   );
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 relative">
       <div className="flex flex-row mb-8 justify-between items-center gap-4 h-[40px]">
         <h1>{t(MenuI18nKey.Tables)}</h1>
-        <div className="flex items-center gap-4">
-          <DialNeutralButton
-            label={t(AnalyticsTablesI18nKey.CreateEnrichment)}
-            iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-            onClick={() => setCreateType(AnalyticsTableType.Enrichment)}
-          />
-          <DialPrimaryButton
-            label={t(AnalyticsTablesI18nKey.CreateSource)}
-            iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-            onClick={() => setCreateType(AnalyticsTableType.Source)}
-          />
-        </div>
+        {canCreate && (
+          <div className="flex items-center gap-4">
+            <DialNeutralButton
+              label={t(AnalyticsTablesI18nKey.CreateEnrichment)}
+              iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
+              onClick={() => setCreateType(AnalyticsTableType.Enrichment)}
+            />
+            <DialPrimaryButton
+              label={t(AnalyticsTablesI18nKey.CreateSource)}
+              iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
+              onClick={() => setCreateType(AnalyticsTableType.Source)}
+            />
+          </div>
+        )}
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col">

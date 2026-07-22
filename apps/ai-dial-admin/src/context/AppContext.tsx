@@ -29,6 +29,10 @@ export interface AppContextType {
   userInfo?: UserInfo;
   /** True when user has READ_ONLY_ADMIN and does not have FULL_ADMIN */
   isReadOnlyAdmin: boolean;
+  /** True when the user holds FULL_ADMIN, or when authentication is disabled (nothing is enforced). */
+  isFullAdmin: boolean;
+  /** Whether authentication is enabled (NEXTAUTH_URL set). Needed to tell "auth off" from "no role". */
+  isEnableAuth: boolean;
 }
 
 interface AppContextSidebar {
@@ -53,6 +57,7 @@ export const AppContextProvider = ({
   userInfo,
   telemetryMaxRangeMs,
   codeAppEditorUrl,
+  isEnableAuth = false,
 }: {
   children: ReactNode;
   themeUrl?: string;
@@ -62,6 +67,7 @@ export const AppContextProvider = ({
   resourcesDefaults?: ResourcesDefaults;
   telemetryMaxRangeMs?: number;
   codeAppEditorUrl?: string;
+  isEnableAuth?: boolean;
 }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -111,6 +117,9 @@ export const AppContextProvider = ({
   const isReadOnlyAdmin =
     !!userInfo?.roles?.includes(UserRole.READ_ONLY_ADMIN) && !userInfo?.roles?.includes(UserRole.FULL_ADMIN);
 
+  // Auth off → nothing is enforced, so treat as full admin; otherwise only a mapped FULL_ADMIN.
+  const isFullAdmin = !isEnableAuth || !!userInfo?.roles?.includes(UserRole.FULL_ADMIN);
+
   const value = {
     sidebarOpen,
     toggleSidebar,
@@ -136,6 +145,8 @@ export const AppContextProvider = ({
     codeAppEditorUrl,
     userInfo,
     isReadOnlyAdmin,
+    isFullAdmin,
+    isEnableAuth,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

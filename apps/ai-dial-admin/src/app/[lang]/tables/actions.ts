@@ -3,7 +3,13 @@
 import { cookies, headers } from 'next/headers';
 
 import { analyticsDataApi } from '@/src/app/api/api';
-import { AnalyticsSchemaPatch, AnalyticsTable, CreateTableDto, WriteRowsDto } from '@/src/models/analytics/table';
+import {
+  AnalyticsSchemaPatch,
+  AnalyticsTable,
+  CreateTableDto,
+  TableAccess,
+  WriteRowsDto,
+} from '@/src/models/analytics/table';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -32,4 +38,12 @@ export async function updateTableSchema(name: string, patch: AnalyticsSchemaPatc
 
 export async function addRows(name: string, dto: WriteRowsDto): Promise<ServerActionResponse> {
   return analyticsDataApi.addRows(name, dto, await token());
+}
+
+export async function getTableAccess(name: string): Promise<TableAccess | null> {
+  return analyticsDataApi.getTableAccess(name, await token());
+}
+
+export async function replaceTableAccess(name: string, access: TableAccess): Promise<ServerActionResponse> {
+  return analyticsDataApi.replaceTableAccess(name, access, await token());
 }
