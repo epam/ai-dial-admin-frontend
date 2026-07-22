@@ -174,6 +174,18 @@ describe('Runs Compare :: countCompareDiffs', () => {
     expect(countCompareDiffs(rows)).toEqual({ improved: 0, changed: 1, regressed: 0 });
   });
 
+  test('counts removed status as regressed when secondary is missing', () => {
+    const rows = [
+      makeRow({
+        executionStatus: ExtractionResultStatus.SUCCESS,
+        responseStatusCode: undefined as unknown as number,
+        _compared: null,
+      }),
+    ];
+
+    expect(countCompareDiffs(rows)).toEqual({ improved: 0, changed: 0, regressed: 1 });
+  });
+
   test('does not count equal metric values or matching status', () => {
     const rows = [
       makeRow({
@@ -262,6 +274,22 @@ describe('Runs Compare :: countCompareDiffs', () => {
     const hiddenColIds = new Set(['Accuracy_precision', 'cmp_Accuracy_precision', 'delta_Accuracy_precision']);
 
     expect(countCompareDiffs(rows, { hiddenColIds })).toEqual({ improved: 0, changed: 2, regressed: 0 });
+  });
+
+  test('counts status, http, duration, extracted, and metrics when _compared is null', () => {
+    const rows = [
+      makeRow({
+        executionStatus: ExtractionResultStatus.SUCCESS,
+        responseStatusCode: 200,
+        execDurationMs: 100,
+        extractedColumns: { answer: 'yes' },
+        metricValues: { Accuracy: { precision: 0.8 } },
+        _compared: null,
+      }),
+    ];
+
+    // status/http/duration/extracted/metric → regressed (secondary missing)
+    expect(countCompareDiffs(rows)).toEqual({ improved: 0, changed: 0, regressed: 5 });
   });
 });
 
