@@ -17,6 +17,7 @@ import {
 import { addRows, deleteTable, getTable, updateTableSchema } from '@/src/app/[lang]/tables/actions';
 import ColumnRowsEditor from '@/src/components/Analytics/Tables/ColumnRowsEditor';
 import EditColumnPopup from '@/src/components/Analytics/Tables/EditColumnPopup';
+import TableAccessPanel from '@/src/components/Analytics/Tables/TableAccessPanel';
 import {
   createColumnRow,
   getColumnRowErrors,
@@ -28,6 +29,7 @@ import { TypeCellRenderer } from '@/src/components/Analytics/Common/TypeBadge';
 import SensitiveIndicator from '@/src/components/Common/SensitiveIndicator/SensitiveIndicator';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
+import { useAnalyticsTablePermissions } from '@/src/hooks/use-analytics-table-permissions';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getDeleteOperation, getEditOperation } from '@/src/constants/grid-columns/actions';
 import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
@@ -65,11 +67,13 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [writeOpen, setWriteOpen] = useState(false);
+  const [accessOpen, setAccessOpen] = useState(false);
   const [addColumns, setAddColumns] = useState<ColumnRow[]>([createColumnRow()]);
   const [rowsJson, setRowsJson] = useState('[]');
   const [editColumn, setEditColumn] = useState<AnalyticsTableColumn | null>(null);
 
   const isSystem = Boolean(table.system);
+  const { canDelete, canWrite, canModify, canManageRoles } = useAnalyticsTablePermissions(table);
   const columns = useMemo(() => table.columns ?? [], [table.columns]);
 
   // New columns must not collide with the table's existing source/exposed names (the backend rejects
@@ -194,7 +198,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
       {
         headerName: t(AnalyticsTablesI18nKey.ColumnName),
         field: 'name',
-        editable: !isSystem,
+        editable: canModify,
         cellRenderer: ColumnNameCellRenderer,
         // Fold the sensitive note into the single cell tooltip so it doesn't double with the dot.
         tooltipValueGetter: (params: ITooltipParams<AnalyticsTableColumn>) =>
@@ -216,9 +220,9 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
         cellDataType: false,
         valueGetter: (params: ValueGetterParams<AnalyticsTableColumn>) => String(Boolean(params.data?.nullable)),
       },
-      ...(isSystem ? [] : [ACTION_COLUMN(actions)]),
+      ...(canModify ? [ACTION_COLUMN(actions)] : []),
     ],
-    [t, actions, isSystem],
+    [t, actions, canModify],
   );
 
   return (
@@ -232,11 +236,20 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
             </span>
           )}
         </div>
-        {!isSystem && (
+        {(canDelete || canWrite || canModify || canManageRoles) && (
           <div className="flex items-center gap-4">
-            <DialDangerButton label={t(AnalyticsTablesI18nKey.DeleteTable)} onClick={() => setConfirmOpen(true)} />
-            <DialNeutralButton label={t(AnalyticsTablesI18nKey.WriteRows)} onClick={() => setWriteOpen(true)} />
-            <DialNeutralButton label={t(AnalyticsTablesI18nKey.AddColumns)} onClick={() => setAddOpen(true)} />
+            {canManageRoles && (
+              <DialNeutralButton label={t(AnalyticsTablesI18nKey.ManageAccess)} onClick={() => setAccessOpen(true)} />
+            )}
+            {canModify && (
+              <DialNeutralButton label={t(AnalyticsTablesI18nKey.AddColumns)} onClick={() => setAddOpen(true)} />
+            )}
+            {canWrite && (
+              <DialNeutralButton label={t(AnalyticsTablesI18nKey.WriteRows)} onClick={() => setWriteOpen(true)} />
+            )}
+            {canDelete && (
+              <DialDangerButton label={t(AnalyticsTablesI18nKey.DeleteTable)} onClick={() => setConfirmOpen(true)} />
+            )}
           </div>
         )}
       </div>
@@ -311,6 +324,8 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
           onSubmit={(patch) => void onSubmitEditColumn(patch)}
         />
       )}
+
+      {accessOpen && <TableAccessPanel name={name} onClose={() => setAccessOpen(false)} />}
     </div>
   );
 };
