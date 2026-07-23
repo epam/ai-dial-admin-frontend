@@ -1,0 +1,44 @@
+'use client';
+
+import { DialEllipsisTooltip, DialTag } from '@epam/ai-dial-ui-kit';
+import { ICellRendererParams } from 'ag-grid-community';
+
+import { TestSuitesI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
+import { GridRowType, GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
+
+/**
+ * Read-only name cell for grouped rows: a GROUP summary row shows the case name with a turn-count
+ * badge; a TURN row shows an indented `Turn k` label. SINGLE rows use the editable name renderer.
+ */
+const TestCaseNameCellRenderer = ({ data }: ICellRendererParams<GroupedGridRow>) => {
+  const t = useI18n();
+  if (!data) return null;
+
+  if (data.rowType === GridRowType.TURN) {
+    return (
+      <div className="flex items-center gap-2 min-w-0 pl-6">
+        <span className="text-secondary italic shrink-0">
+          {t(TestSuitesI18nKey.TurnLabel, { index: data.turnNumber ?? 0 })}
+        </span>
+        <DialEllipsisTooltip className="min-w-0" text={(data.testCaseName as string) || ''} />
+      </div>
+    );
+  }
+
+  if (data.rowType === GridRowType.GROUP) {
+    return (
+      <div className="flex items-center gap-2 min-w-0">
+        <DialEllipsisTooltip className="min-w-0" text={(data.testCaseName as string) || ''} />
+        <DialTag
+          label={t(TestSuitesI18nKey.TurnCountBadge, { count: data.turnCount ?? 0 })}
+          className="bg-accent-tertiary-alpha border border-accent-tertiary rounded-sm shrink-0"
+        />
+      </div>
+    );
+  }
+
+  return null;
+};
+
+export default TestCaseNameCellRenderer;
