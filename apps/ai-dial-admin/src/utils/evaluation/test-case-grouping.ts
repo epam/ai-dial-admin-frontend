@@ -88,10 +88,9 @@ export const renumberTurns = (turns: TestCaseRow[]): TestCaseRow[] =>
 
 /**
  * Promote a single-turn row to the first turn of a multi-turn case: set the client-only `_turnIndex`
- * to 0. The group key derives from the row's existing `id` — no separate id argument is needed. The
- * second parameter is kept for signature stability with callers still passing a (now-ignored) id.
+ * to 0. The group key derives from the row's existing `id` — no separate id argument is needed.
  */
-export const promoteToMultiTurn = (singleRow: TestCaseRow, _unused?: string): TestCaseRow => ({
+export const promoteToMultiTurn = (singleRow: TestCaseRow): TestCaseRow => ({
   ...singleRow,
   _turnIndex: 0,
 });
@@ -137,6 +136,7 @@ const toGroupRow = (group: TestCaseGroup, expanded: boolean): GroupedGridRow => 
   turns: group.turns,
   turnCount: group.turns.length,
   expanded,
+  enabled: group.turns[0]?.enabled,
   ...aggregateValidity(group.turns),
 });
 

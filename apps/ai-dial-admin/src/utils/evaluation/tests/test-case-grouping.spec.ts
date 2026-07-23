@@ -6,7 +6,9 @@ import {
   promoteToMultiTurn,
   demoteToSingle,
   reorderTurns,
+  projectGroupsToGridRows,
 } from '@/src/utils/evaluation/test-case-grouping';
+import { GridRowType } from '@/src/models/evaluation/test-case-grouping';
 
 describe('test-case-grouping (array model)', () => {
   it('reads group key from id only when _turnIndex is present', () => {
@@ -48,5 +50,23 @@ describe('test-case-grouping (array model)', () => {
     expect('_turnIndex' in demoteToSingle({ id: 'c1', _turnIndex: 0 })).toBe(false);
     const reordered = reorderTurns([{ _turnIndex: 0 }, { _turnIndex: 1 }, { _turnIndex: 2 }], 2, 0);
     expect(reordered.map((t) => t._turnIndex)).toEqual([0, 1, 2]);
+  });
+
+  it('a collapsed multi-turn GROUP row carries the case enabled state from its first turn', () => {
+    const groupsEnabled = groupTestCaseRows([
+      { id: 'c1', _turnIndex: 0, testCaseName: 'flow', enabled: true },
+      { id: 'c1', _turnIndex: 1, testCaseName: 'flow', enabled: true },
+    ]);
+    const projectedEnabled = projectGroupsToGridRows(groupsEnabled, new Set(), false);
+    const groupRowEnabled = projectedEnabled.find((row) => row.rowType === GridRowType.GROUP)!;
+    expect(groupRowEnabled.enabled).toBe(true);
+
+    const groupsDisabled = groupTestCaseRows([
+      { id: 'c2', _turnIndex: 0, testCaseName: 'flow2', enabled: false },
+      { id: 'c2', _turnIndex: 1, testCaseName: 'flow2', enabled: false },
+    ]);
+    const projectedDisabled = projectGroupsToGridRows(groupsDisabled, new Set(), false);
+    const groupRowDisabled = projectedDisabled.find((row) => row.rowType === GridRowType.GROUP)!;
+    expect(groupRowDisabled.enabled).toBe(false);
   });
 });
