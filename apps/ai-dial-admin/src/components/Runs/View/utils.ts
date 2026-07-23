@@ -129,6 +129,22 @@ const executionColumns: ColDef[] = [
     valueGetter: (params) => (params.data?.runIndex != null ? params.data.runIndex + 1 : null),
   },
   {
+    field: 'turnIndex',
+    headerName: 'Turn',
+    colId: 'turnIndex',
+    width: 60,
+    ...NO_FILTER_COL_DEF,
+    valueGetter: (params) => (params.data?.turnIndex != null ? params.data.turnIndex + 1 : null),
+  },
+  {
+    field: 'totalTurns',
+    headerName: 'Total turns',
+    colId: 'totalTurns',
+    width: 90,
+    ...NO_FILTER_COL_DEF,
+    valueGetter: (params) => params.data?.totalTurns ?? null,
+  },
+  {
     field: 'responseStatusCode',
     headerName: 'HTTP',
     colId: 'http',
@@ -179,17 +195,35 @@ const staticColumns = [
   },
 ];
 
+// Default multi-sort so a multi-turn conversation's rows load contiguous and correctly ordered:
+// group by test case, then by run, then by turn. runIndex sits between name and turn so multiple
+// runs of the same test case don't interleave their turns.
+const DEFAULT_SORT_INDEX: Record<string, number> = {
+  testCaseName: 0,
+  runIndex: 1,
+  turnIndex: 2,
+};
+
+const applyDefaultSort = (colDefs: ColDef[]): ColDef[] =>
+  colDefs.map((col: ColDef & { children?: ColDef[] }) => {
+    if (Array.isArray(col.children)) {
+      return { ...col, children: applyDefaultSort(col.children) };
+    }
+    const sortIndex = DEFAULT_SORT_INDEX[col.colId ?? ''];
+    return sortIndex == null ? col : { ...col, sort: 'asc' as const, sortIndex };
+  });
+
 export const getAnalyticsColumns = (results: AnalyticsResult[]) => {
   const metrics = mergeMetricValuesSchema(results);
 
-  return [
+  return applyDefaultSort([
     ...staticColumns,
     ...getMetricsColumns(metrics),
     {
       headerName: EXTRACTED_GROUP_HEADER,
       children: getExtractedColumns(results[0]?.extractedColumns || {}),
     },
-  ];
+  ] as ColDef[]);
 };
 
 const getCompareIdKey = (row: AnalyticsResult): string | null =>

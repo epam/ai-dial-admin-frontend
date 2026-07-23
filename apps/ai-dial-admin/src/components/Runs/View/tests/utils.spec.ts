@@ -568,6 +568,70 @@ describe('Runs View :: executionColumns # (runIndex) valueGetter', () => {
   });
 });
 
+describe('Runs View :: executionColumns turnIndex/totalTurns valueGetters', () => {
+  const getExecCol = (colId: string, results = [] as any[]) => {
+    const cols = getAnalyticsColumns(results);
+    const execGroup = cols.find((c: any) => c.headerName === 'Execution') as any;
+    return execGroup.children.find((c: any) => c.colId === colId);
+  };
+
+  test('Turn column should display 1-based index (backend turnIndex is 0-based)', () => {
+    const col = getExecCol('turnIndex');
+    expect(col.valueGetter({ data: { turnIndex: 0 } })).toBe(1);
+    expect(col.valueGetter({ data: { turnIndex: 1 } })).toBe(2);
+  });
+
+  test('Turn column should return null when turnIndex is absent', () => {
+    const col = getExecCol('turnIndex');
+    expect(col.valueGetter({ data: {} })).toBeNull();
+    expect(col.valueGetter({ data: null })).toBeNull();
+  });
+
+  test('Total turns column should return the raw value', () => {
+    const col = getExecCol('totalTurns');
+    expect(col.valueGetter({ data: { totalTurns: 3 } })).toBe(3);
+  });
+
+  test('Total turns column should return null when absent', () => {
+    const col = getExecCol('totalTurns');
+    expect(col.valueGetter({ data: {} })).toBeNull();
+    expect(col.valueGetter({ data: null })).toBeNull();
+  });
+});
+
+describe('Runs View :: default multi-sort', () => {
+  const findColByColId = (colDefs: any[], colId: string): any => {
+    for (const col of colDefs) {
+      if (col.colId === colId) return col;
+      if (Array.isArray(col.children)) {
+        const found = findColByColId(col.children, colId);
+        if (found) return found;
+      }
+    }
+    return undefined;
+  };
+
+  test('Should stamp ascending sort/sortIndex on testCaseName, runIndex, turnIndex', () => {
+    const cols = getAnalyticsColumns([]);
+
+    const testCaseNameCol = findColByColId(cols, 'testCaseName');
+    const runIndexCol = findColByColId(cols, 'runIndex');
+    const turnIndexCol = findColByColId(cols, 'turnIndex');
+
+    expect(testCaseNameCol).toEqual(expect.objectContaining({ sort: 'asc', sortIndex: 0 }));
+    expect(runIndexCol).toEqual(expect.objectContaining({ sort: 'asc', sortIndex: 1 }));
+    expect(turnIndexCol).toEqual(expect.objectContaining({ sort: 'asc', sortIndex: 2 }));
+  });
+
+  test('Should not stamp sort on unrelated columns', () => {
+    const cols = getAnalyticsColumns([]);
+    const httpCol = findColByColId(cols, 'http');
+
+    expect(httpCol.sort).toBeUndefined();
+    expect(httpCol.sortIndex).toBeUndefined();
+  });
+});
+
 const makeResult = (overrides: Partial<AnalyticsResult> = {}): AnalyticsResult => ({
   responseStatusCode: 200,
   runIndex: 0,
