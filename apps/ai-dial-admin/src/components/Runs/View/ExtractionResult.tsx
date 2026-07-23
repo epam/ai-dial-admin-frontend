@@ -7,6 +7,7 @@ import { DialLoader } from '@epam/ai-dial-ui-kit';
 
 import { getMetricSnapshots, getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
 import GridView from '@/src/components/Grid/GridView/GridView';
+import { useTurnGroupProjection } from '@/src/components/Grid/hooks/use-turn-group-projection';
 import AnalyticsBottomDrawer from '@/src/components/Runs/Details/BottomDrawer/AnalyticsBottomDrawer';
 import { DetailMode } from '@/src/components/Runs/Details/BottomDrawer/models';
 import { useDrawerPanel } from '@/src/components/Runs/Details/BottomDrawer/useDrawerPanel';
@@ -14,6 +15,8 @@ import { ExtractionResultTabUiState } from '@/src/components/Runs/View/models';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Run } from '@/src/models/evaluation/run';
+import { GridRowType, GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
+import { applyResultsGrouping, toGroupableResultRows } from './results-grouping-columns';
 import { useDetailMode } from './use-detail-mode';
 import { getAnalyticsColumns, RESULT_FILTERS, RUN_FILTER, snapshotsToBindingsMap } from './utils';
 
@@ -33,6 +36,22 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
 
   const gridApiRef = useRef<GridApi | null>(null);
   const isLoading = results === null;
+
+  const rawRows = useMemo(() => toGroupableResultRows(results ?? []), [results]);
+  const onGridReady = useCallback((event: GridReadyEvent) => {
+    gridApiRef.current = event.api;
+  }, []);
+  const projection = useTurnGroupProjection({
+    rawRows,
+    defaultExpanded: true,
+    singlesFirst: true,
+    onGridReady,
+  });
+
+  const groupedColDefs = useMemo(
+    () => applyResultsGrouping(colDefs ?? [], projection.onToggleExpand),
+    [colDefs, projection.onToggleExpand],
+  );
 
   useEffect(() => {
     if (!run?.id || results !== null) {
@@ -77,8 +96,12 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
 
   const onRowClicked = useCallback(
     (event: RowClickedEvent) => {
-      if (!event.data) return;
-      openDetail(event.data.id);
+      const data = event.data as GroupedGridRow | undefined;
+      if (!data) return;
+      // The synthesized GROUP summary row has no result detail; its chevron owns expand/collapse, so
+      // a row-body click is a no-op (toggling here too would double-fire with the chevron).
+      if (data.rowType === GridRowType.GROUP) return;
+      openDetail(data.id);
     },
     [openDetail],
   );
@@ -102,10 +125,6 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
     [],
   );
 
-  const onGridReady = useCallback((event: GridReadyEvent) => {
-    gridApiRef.current = event.api;
-  }, []);
-
   useEffect(() => {
     gridApiRef.current?.redrawRows();
   }, [detailMode.selectedResultId]);
@@ -120,8 +139,13 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
       defaultColDef: { filter: false, floatingFilter: false },
       onRowClicked,
       rowClassRules,
+      // Intentionally NO getRowId: the grid must re-render rows in projection order on every
+      // expand/collapse. With getRowId, ag-grid does immutable id-diffing and appends re-expanded
+      // turn rows at the bottom instead of under their group. Highlight/detail key off data.id.
+      getRowHeight: projection.getRowHeight,
+      onFilterChanged: projection.onFilterChanged,
     }),
-    [onRowClicked, rowClassRules],
+    [onRowClicked, rowClassRules, projection.getRowHeight, projection.onFilterChanged],
   );
 
   return (
@@ -131,9 +155,9 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
           <DialLoader size={40} />
         ) : (
           <GridView
-            columnDefs={colDefs}
-            rowData={results}
-            onGridReady={onGridReady}
+            columnDefs={groupedColDefs}
+            rowData={projection.rowData}
+            onGridReady={projection.onGridReady}
             additionalGridOptions={gridOptions}
             emptyDataProps={{ title: t(EntitiesI18nKey.NoResults) }}
           />
