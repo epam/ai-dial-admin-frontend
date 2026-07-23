@@ -524,6 +524,22 @@ describe('Runs View :: getMetricGroups', () => {
     expect(result).toHaveLength(1);
     expect(result.find((group) => group.title === 'conditional_metric')).toBeUndefined();
   });
+
+  test('Should surface metric whose JSONata condition errored via metricInfos error', () => {
+    // Metric present in result but empty: condition evaluation failed, so metric never ran
+    const metricValues = {
+      jsonata_eval: {},
+    };
+    const metricInfos = {
+      jsonata_eval: { error: 'JSONata condition evaluation failed' },
+    };
+    const result = getMetricGroups(metricValues, metricInfos);
+    expect(result).toHaveLength(1);
+    expect(result[0].title).toBe('jsonata_eval');
+    expect(result[0].hasError).toBe(true);
+    expect(result[0].errorMessage).toBe('JSONata condition evaluation failed');
+    expect(result[0].metrics).toEqual([]);
+  });
 });
 
 describe('Runs View :: snapshotsToBindingsMap', () => {
