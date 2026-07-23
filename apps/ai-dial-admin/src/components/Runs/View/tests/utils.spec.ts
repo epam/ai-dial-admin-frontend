@@ -70,19 +70,43 @@ describe('Runs View :: getAnalyticsColumns', () => {
 
     const columns = getAnalyticsColumns(results as any);
 
-    expect(columns).toHaveLength(6);
+    expect(columns).toHaveLength(5);
     expect(columns[0]).toEqual(expect.objectContaining({ headerName: ' ' }));
-    expect(columns[1]).toEqual(expect.objectContaining({ headerName: 'EXECUTION' }));
+    expect(columns[1]).toEqual(expect.objectContaining({ headerName: 'Execution' }));
     expect(columns[2]).toEqual(expect.objectContaining({ headerName: 'Accuracy' }));
     expect(columns[3]).toEqual(expect.objectContaining({ headerName: 'Details' }));
-    expect(columns[4]).toEqual(expect.objectContaining({ headerName: 'INPUT BINDINGS' }));
-    expect(columns[5]).toEqual(expect.objectContaining({ headerName: 'EXTRACTED' }));
+    expect(columns[4]).toEqual(expect.objectContaining({ headerName: 'Extracted' }));
 
     const accuracyChildren = (columns[2] as any).children;
     expect(accuracyChildren).toHaveLength(1);
-    expect(accuracyChildren[0]).toEqual(expect.objectContaining({ field: 'accuracy', headerName: 'accuracy' }));
+    expect(accuracyChildren[0]).toEqual(
+      expect.objectContaining({
+        field: 'accuracy',
+        headerName: 'accuracy',
+        cellRenderer: expect.any(Function),
+        filter: 'agNumberColumnFilter',
+        floatingFilter: true,
+        width: 148,
+      }),
+    );
+    expect(accuracyChildren[0].cellStyle).toBeUndefined();
     expect(accuracyChildren[0].valueGetter({ data: { metricValues: { Accuracy: { accuracy: 0.95 } } } })).toBe(0.95);
     expect(accuracyChildren[0].valueGetter({ data: { metricValues: { Accuracy: {} } } })).toBe('—');
+
+    const statusChildren = (columns[0] as any).children;
+    expect(statusChildren[0]).toEqual(expect.objectContaining({ colId: 'status', width: 40 }));
+    expect(statusChildren[1]).toEqual(
+      expect.objectContaining({
+        colId: 'testCaseName',
+        width: 156,
+        filter: 'agTextColumnFilter',
+      }),
+    );
+
+    const executionChildren = (columns[1] as any).children;
+    expect(executionChildren[0]).toEqual(
+      expect.objectContaining({ colId: 'runIndex', headerName: '# Run number', width: 140 }),
+    );
 
     const detailsChildren = (columns[3] as any).children;
     expect(detailsChildren).toHaveLength(1);
@@ -90,9 +114,11 @@ describe('Runs View :: getAnalyticsColumns', () => {
       detailsChildren[0].valueGetter({ data: { metricValues: { Details: { details: { matched: true } } } } }),
     ).toBe('{"matched":true}');
 
-    const extractedChildren = (columns[5] as any).children;
+    const extractedChildren = (columns[4] as any).children;
     expect(extractedChildren).toHaveLength(1);
-    expect(extractedChildren[0]).toEqual(expect.objectContaining({ field: 'score', headerName: 'score' }));
+    expect(extractedChildren[0]).toEqual(
+      expect.objectContaining({ field: 'score', headerName: 'score', minWidth: 120, flex: 1 }),
+    );
   });
 
   test('Should merge metric keys from all rows into column groups', () => {
@@ -117,11 +143,11 @@ describe('Runs View :: getAnalyticsColumns', () => {
   test('Should handle empty results', () => {
     const columns = getAnalyticsColumns([]);
 
-    expect(columns).toHaveLength(4);
+    expect(columns).toHaveLength(3);
     expect(columns[0]).toEqual(expect.objectContaining({ headerName: ' ' }));
-    expect(columns[1]).toEqual(expect.objectContaining({ headerName: 'EXECUTION' }));
-    expect(columns[2]).toEqual(expect.objectContaining({ headerName: 'INPUT BINDINGS' }));
-    expect((columns[3] as any).children).toHaveLength(0);
+    expect(columns[1]).toEqual(expect.objectContaining({ headerName: 'Execution' }));
+    expect(columns[2]).toEqual(expect.objectContaining({ headerName: 'Extracted' }));
+    expect((columns[2] as any).children).toHaveLength(0);
   });
 
   test('Should sort error metric cells last for ascending and first for descending', () => {
@@ -515,7 +541,7 @@ describe('Runs View :: snapshotsToBindingsMap', () => {
 describe('Runs View :: executionColumns # (runIndex) valueGetter', () => {
   const getRunIndexCol = (results = [] as any[]) => {
     const cols = getAnalyticsColumns(results);
-    const execGroup = cols.find((c: any) => c.headerName === 'EXECUTION') as any;
+    const execGroup = cols.find((c: any) => c.headerName === 'Execution') as any;
     return execGroup.children.find((c: any) => c.colId === 'runIndex');
   };
 
