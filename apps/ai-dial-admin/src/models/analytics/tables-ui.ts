@@ -6,6 +6,8 @@ export interface ColumnRow {
   source_name: string;
   name: string;
   type: AnalyticsFieldType;
+  // Required when `type` is Array; '' means not yet chosen (matches the `granularity: … | ''` pattern).
+  element_type: AnalyticsFieldType | '';
   tag: string;
   nullable: boolean;
   sensitive: boolean;
@@ -16,6 +18,7 @@ export interface ColumnRowError {
   source_name?: string;
   name?: string;
   tag?: string;
+  element_type?: string;
 }
 
 // Names already declared on the table an "Add columns" patch targets; new rows must not collide with

@@ -94,6 +94,7 @@ const CreateTablePopup: FC<Props> = ({ tableType, tables, onClose, onCreated }) 
           labelProps={{ label: t(AnalyticsTablesI18nKey.Name), required: true }}
           value={form.name}
           error={nameError?.text}
+          invalid={Boolean(nameError)}
           onChange={(v) => update('name', v ?? '')}
         />
         <DialInput

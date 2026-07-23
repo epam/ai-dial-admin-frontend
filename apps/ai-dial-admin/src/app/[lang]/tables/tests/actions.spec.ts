@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { analyticsDataApi } from '@/src/app/api/api';
+import { analyticsDataApi, rolesApi } from '@/src/app/api/api';
 import { AnalyticsTableType, CreateTableDto } from '@/src/models/analytics/table';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -10,6 +10,7 @@ import {
   createTable,
   defineTableSchema,
   deleteTable,
+  getRoles,
   getTable,
   getTableAccess,
   getTables,
@@ -114,5 +115,13 @@ describe('Tables server actions', () => {
     await replaceTableAccess('events', access);
 
     expect(analyticsDataApi.replaceTableAccess).toHaveBeenCalledWith('events', access, TOKEN_MOCK);
+  });
+
+  test('getRoles passes the token to the roles client', async () => {
+    (rolesApi.getRolesList as any).mockResolvedValue([{ name: 'Admin' }]);
+
+    await getRoles();
+
+    expect(rolesApi.getRolesList).toHaveBeenCalledWith(TOKEN_MOCK);
   });
 });
