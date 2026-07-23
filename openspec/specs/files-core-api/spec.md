@@ -73,11 +73,19 @@ The system SHALL assign a content type to each unpacked zip entry based on its f
 - **THEN** the created file's content type is a generic binary content type
 
 ### Requirement: File export builds an archive directly against Core
-The system SHALL build a zip archive of selected files/folders by resolving each selection to a flat list of exportable file paths against DIAL Core, fetching each file's content directly (not via the admin BE), and assembling them into an archive whose entry paths match the admin BE's rewriting rules.
+The system SHALL build a zip archive of selected files/folders by resolving each selection to a flat list of exportable file paths against DIAL Core, fetching each file's content directly (not via the admin BE), and assembling them into an archive whose entry paths match the admin BE's rewriting rules. The system SHALL determine whether a selected path is a folder from that path's current resource type in DIAL Core (its metadata `nodeType`), not from whether the path string itself ends in a trailing `/`, so a folder selection is never misclassified as a single file (or vice versa) and cannot silently resolve to zero exportable entries.
 
 #### Scenario: Selected files are fetched from Core
 - **WHEN** `exportFiles` is called with one or more file paths
 - **THEN** each file's content is fetched directly from DIAL Core, not through the admin BE
+
+#### Scenario: A folder selection is recognized regardless of its path's trailing-slash shape
+- **WHEN** a selected path resolves to a `FOLDER`-typed resource in DIAL Core, whether or not that path string ends in `/`
+- **THEN** the selection is expanded into its descendant files rather than being treated as a single file to download
+
+#### Scenario: A file whose name contains a non-Latin1 character is exported successfully
+- **WHEN** an exportable file's name contains a character outside the Latin1 range (e.g. `™`, U+2122)
+- **THEN** that file is fetched and included in the archive rather than the export hanging indefinitely
 
 ### Requirement: Archive path differs for single-file vs. folder selection
 The system SHALL place a single selected file at `files/public/<filename>` in the archive, and SHALL re-root a selected folder's contents under `files/public/<lastFolderSegment>/<path-relative-to-that-folder>`, preserving the folder's internal structure.
@@ -90,12 +98,16 @@ The system SHALL place a single selected file at `files/public/<filename>` in th
 - **WHEN** a folder is selected for export
 - **THEN** each of its child files' archive entries are re-rooted under `files/public/<lastFolderSegment>/`, preserving their relative path inside that folder
 
-### Requirement: Folder export expands one level deep only
-The system SHALL include only a selected folder's direct child files in the export, not files in nested subfolders — matching the admin BE's existing behavior exactly, not a design goal of this change.
+### Requirement: Folder export expands recursively at any depth
+The system SHALL include every descendant file of a selected folder in the export, at any nesting depth — not only the folder's direct children.
 
-#### Scenario: Nested subfolder contents are excluded
+#### Scenario: Nested subfolder contents are included
 - **WHEN** a selected folder contains a nested subfolder with files
-- **THEN** those nested files do not appear in the export archive
+- **THEN** those nested files appear in the export archive, re-rooted under the exported folder's structure, preserving their relative path inside that folder
+
+#### Scenario: Multiple nesting levels are all included
+- **WHEN** a selected folder contains subfolders nested more than one level deep, each holding files
+- **THEN** every file at every depth under the selected folder appears in the export archive
 
 ### Requirement: Technical folder-marker resources are excluded from export
 The system SHALL exclude `.dial_folder` and `.dial_folder__<version>` resources from any export, whether they are selected directly or picked up via folder expansion.

@@ -18,7 +18,7 @@ import {
   ConsecutiveFailureCircuitBreaker,
   FILES_IMPORT_CIRCUIT_BREAKER_THRESHOLD,
 } from '@/src/server/files/circuit-breaker';
-import { gatherResourceUrls, isFolderNode } from '@/src/server/folders/resource-walk';
+import { gatherResourceUrls, isFolderNode, isTechnicalItem } from '@/src/server/folders/resource-walk';
 import { decodeCorePath, parseEncodedVersionedPath, stripPrefix } from '@/src/server/publications/path';
 import { ConflictResolutionPolicy, ImportStatus } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
@@ -53,7 +53,7 @@ const expandFolderPath = async (
     (folderPath, nextToken) => assetApi.getMetadata(token, resourceType, folderPath, { recursive: true, nextToken }),
     path,
   );
-  return urls.map((url) => decodeCorePath(stripPrefix(url, prefix)));
+  return urls.map((url) => decodeCorePath(stripPrefix(url, prefix))).filter((leafPath) => !isTechnicalItem(leafPath));
 };
 
 /** Resolves an incoming path to the leaf resource paths it stands for — itself, or every descendant if it's a folder. */
