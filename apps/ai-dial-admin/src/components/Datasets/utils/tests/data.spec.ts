@@ -1,7 +1,12 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, it, test } from 'vitest';
 
 import { DatasetTestCase } from '@/src/models/evaluation/dataset';
-import { createNewDatasetTestCaseRow, getDatasetTestCaseGridData, rowToDatasetTestCase } from '../data';
+import {
+  collapseRowsToDatasetTestCases,
+  createNewDatasetTestCaseRow,
+  getDatasetTestCaseGridData,
+  rowToDatasetTestCase,
+} from '../data';
 
 describe('getDatasetTestCaseGridData', () => {
   test('should return empty array when input is empty', () => {
@@ -147,5 +152,45 @@ describe('rowToDatasetTestCase', () => {
     const result = rowToDatasetTestCase(row);
 
     expect(result).not.toHaveProperty('enabled');
+  });
+});
+
+describe('getDatasetTestCaseGridData (multi-turn)', () => {
+  it('keeps a single-turn case as one row with no _turnIndex', () => {
+    const rows = getDatasetTestCaseGridData([{ id: 's1', testCaseName: 'solo', data: { prompt: 'hi' }, createdAt: 0 }]);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]._turnIndex).toBeUndefined();
+    expect(rows[0].prompt).toBe('hi'); // flattened
+  });
+
+  it('expands a multi-turn case to one row per turn, sharing id, ordered by _turnIndex', () => {
+    const rows = getDatasetTestCaseGridData([
+      { id: 'c1', testCaseName: 'flow', multiTurnData: [{ prompt: 'a' }, { prompt: 'b' }], createdAt: 0 },
+    ]);
+    expect(rows).toHaveLength(2);
+    expect(rows.every((r) => r.id === 'c1')).toBe(true);
+    expect(rows.map((r) => r._turnIndex)).toEqual([0, 1]);
+    expect(rows.map((r) => (r.data as any).prompt)).toEqual(['a', 'b']);
+    expect(rows.map((r) => r.prompt)).toEqual(['a', 'b']); // flattened per turn
+  });
+});
+
+describe('collapseRowsToDatasetTestCases', () => {
+  it('collapses turn rows sharing an id into one multiTurnData DTO in _turnIndex order, no data', () => {
+    const [dto] = collapseRowsToDatasetTestCases([
+      { id: 'c1', _turnIndex: 1, testCaseName: 'flow', data: { prompt: 'b' }, createdAt: 0 },
+      { id: 'c1', _turnIndex: 0, testCaseName: 'flow', data: { prompt: 'a' }, createdAt: 0 },
+    ]);
+    expect(dto.multiTurnData).toEqual([{ prompt: 'a' }, { prompt: 'b' }]);
+    expect(dto.data).toBeUndefined();
+    expect((dto as any)._turnIndex).toBeUndefined();
+  });
+
+  it('emits a single-turn DTO with data and no multiTurnData', () => {
+    const [dto] = collapseRowsToDatasetTestCases([
+      { id: 's1', testCaseName: 'solo', data: { prompt: 'hi' }, createdAt: 0 },
+    ]);
+    expect(dto.data).toEqual({ prompt: 'hi' });
+    expect(dto.multiTurnData).toBeUndefined();
   });
 });
