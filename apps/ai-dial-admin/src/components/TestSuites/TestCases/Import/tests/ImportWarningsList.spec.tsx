@@ -10,6 +10,11 @@ describe('ImportWarningsList', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
+  test('renders nothing (no throw) when warnings is undefined', () => {
+    const { container } = render(<ImportWarningsList warnings={undefined} />);
+    expect(container).toBeEmptyDOMElement();
+  });
+
   test('surfaces a non-contiguous multi-turn conflict warning as-is', () => {
     const warnings: CaseWarning[] = [
       {

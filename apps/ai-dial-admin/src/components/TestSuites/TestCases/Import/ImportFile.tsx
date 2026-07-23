@@ -70,7 +70,7 @@ const ImportFileModal: FC<Props> = ({ datasetId, isModalOpen, onClose, onApply }
         const { colDefs, rowData } = getGridDataFromImportPreview(testCasesData);
         setTestCases(rowData);
         setColumnDefs(colDefs);
-        setWarnings(testCasesData.warnings);
+        setWarnings(testCasesData.warnings ?? []);
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }

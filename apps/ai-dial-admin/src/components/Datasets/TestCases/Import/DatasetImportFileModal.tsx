@@ -68,7 +68,7 @@ const DatasetImportFileModal: FC<Props> = ({ datasetId, isModalOpen, onClose, on
         const { colDefs, rowData } = getGridDataFromImportPreview(testCasesData);
         setTestCases(rowData);
         setColumnDefs(colDefs);
-        setWarnings(testCasesData.warnings);
+        setWarnings(testCasesData.warnings ?? []);
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
