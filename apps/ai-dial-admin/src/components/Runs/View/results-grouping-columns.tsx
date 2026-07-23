@@ -12,15 +12,17 @@ export const getResultGroupKey = (result: AnalyticsResult): string => `${result.
 
 /**
  * Map flat results to rows the shared grouping util (`groupTestCaseRows`/`readGroupKey`) understands.
- * This array model has no persisted `multiTurnId`: a multi-turn result (`totalTurns > 1`) gets its `id`
- * replaced by the shared conversation key and its `turnIndex` promoted to the client-only `_turnIndex`,
- * so same-conversation turns group under one id; a single-turn result keeps its own unique `id` and no
- * `_turnIndex`, so `readGroupKey` returns null and it renders as its own row.
+ * This array model has no persisted `multiTurnId`: a multi-turn result (`totalTurns > 1`) gets the
+ * shared conversation key set on the client-only `_groupKey` (not `id` — the real result `id` must
+ * survive so detail lookup/highlight/pinning, which key off `data.id`, target the correct result) and
+ * its `turnIndex` promoted to the client-only `_turnIndex`, so same-conversation turns group together
+ * while each keeps its own real `id`. A single-turn result keeps its own unique `id` and no
+ * `_turnIndex`/`_groupKey`, so `readGroupKey` returns null and it renders as its own row.
  */
 export const toGroupableResultRows = (results: AnalyticsResult[]): TestCaseRow[] =>
   results.map((result) =>
     (result.totalTurns ?? 1) > 1
-      ? ({ ...result, id: getResultGroupKey(result), _turnIndex: result.turnIndex } as unknown as TestCaseRow)
+      ? ({ ...result, _turnIndex: result.turnIndex, _groupKey: getResultGroupKey(result) } as unknown as TestCaseRow)
       : (result as unknown as TestCaseRow),
   );
 

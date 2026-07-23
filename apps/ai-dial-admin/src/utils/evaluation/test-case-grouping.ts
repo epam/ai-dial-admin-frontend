@@ -2,11 +2,16 @@ import { GridRowType, GroupedGridRow, TestCaseGroup, TestCaseRow } from '@/src/m
 import { ValidationWarning } from '@/src/models/evaluation/test-suite';
 
 /**
- * Group key for a multi-turn turn row: the shared case `id`. A row is a multi-turn turn iff it carries
- * a client-only `_turnIndex` (set at load when expanding a `multiTurnData` case). Returns null for
- * single-turn rows (no `_turnIndex`), which are grouped individually by their own id.
+ * Group key for a multi-turn turn row. Prefers an explicit client-only `_groupKey` when present — set
+ * by callers (e.g. the results grid) that need the row's own `id` to stay the real underlying entity id
+ * rather than doubling as the shared conversation key. Otherwise falls back to the shared case `id`: a
+ * row is a multi-turn turn iff it carries a client-only `_turnIndex` (set at load when expanding a
+ * `multiTurnData` case). Returns null for single-turn rows (no `_groupKey`, no `_turnIndex`), which are
+ * grouped individually by their own id.
  */
 export const readGroupKey = (row: TestCaseRow): string | null => {
+  const explicit = row._groupKey;
+  if (typeof explicit === 'string' && explicit.trim() !== '') return explicit;
   if (readTurnIndex(row) === null) return null;
   const id = row.id;
   return typeof id === 'string' && id.trim() !== '' ? id : null;

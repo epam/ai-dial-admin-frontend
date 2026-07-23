@@ -103,8 +103,10 @@ describe('toGroupableResultRows + groupTestCaseRows + projectGroupsToGridRows', 
     ] as unknown as AnalyticsResult[];
 
     const rows = toGroupableResultRows(multiTurnResults);
-    expect(rows[0].id).toBe('tc1::0');
-    expect(rows[1].id).toBe('tc1::0');
+    expect(rows[0].id).toBe('r1');
+    expect(rows[1].id).toBe('r2');
+    expect(rows[0]._groupKey).toBe('tc1::0');
+    expect(rows[1]._groupKey).toBe('tc1::0');
     expect(rows[0]._turnIndex).toBe(0);
     expect(rows[1]._turnIndex).toBe(1);
 
@@ -118,6 +120,12 @@ describe('toGroupableResultRows + groupTestCaseRows + projectGroupsToGridRows', 
     const groupRowProjected = projected[0];
     expect(groupRowProjected.expanded).toBe(true);
     expect(groupRowProjected.turnCount).toBe(2);
+
+    // Each TURN row must keep its own real result id (not the composite `_groupKey`), so detail
+    // lookup/highlight/pinning — which key off `data.id` — target the correct result.
+    const turnRows = projected.filter((row) => row.rowType === GridRowType.TURN);
+    expect(turnRows.map((row) => row.id)).toEqual(['r1', 'r2']);
+    expect(new Set(turnRows.map((row) => row.id)).size).toBe(2);
   });
 
   test('a single-turn result (totalTurns=1) projects to one SINGLE row, floated first ahead of multi-turn groups', () => {

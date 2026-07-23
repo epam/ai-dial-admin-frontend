@@ -15,7 +15,12 @@ export enum GridRowType {
   SINGLE = 'SINGLE',
 }
 
-/** A flat test-case row as held by the grid (case `id` + optional client-only `_turnIndex` + nested `data`). */
+/**
+ * A flat test-case row as held by the grid (case `id` + optional client-only `_turnIndex` + nested
+ * `data`). May also carry an optional client-only `_groupKey`: an explicit grouping override used when
+ * the row's own `id` must stay the real underlying entity id (e.g. results grid, where `id` must remain
+ * usable to fetch/select that entity's detail) instead of doubling as the shared conversation key.
+ */
 export type TestCaseRow = Record<string, unknown>;
 
 /** One logical test case grouped from flat rows. */

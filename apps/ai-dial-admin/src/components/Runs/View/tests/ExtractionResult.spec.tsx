@@ -4,6 +4,7 @@ import { FC, useCallback, useState } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ButtonsI18nKey } from '@/src/constants/i18n';
+import { ExtractionResultStatus } from '@/src/models/evaluation/run';
 import { ExtractionResultTabUiState } from '../models';
 import ExtractionResultTab from '../ExtractionResult';
 import { createDefaultRunViewTabState } from '../use-run-view-tab-state';
@@ -67,10 +68,15 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
 });
 
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
-  default: ({ additionalGridOptions }: any) => (
+  default: ({ additionalGridOptions, rowData }: any) => (
     <div role="grid" aria-label="Analytics grid">
       <button onClick={() => additionalGridOptions.onRowClicked({ data: { id: 'r1' } })}>Row 1</button>
       <button onClick={() => additionalGridOptions.onRowClicked({ data: { id: 'r2' } })}>Row 2</button>
+      {(rowData ?? []).map((row: any, index: number) => (
+        <button key={index} onClick={() => additionalGridOptions.onRowClicked({ data: row })}>
+          Grid Row {index}
+        </button>
+      ))}
     </div>
   ),
 }));
@@ -157,6 +163,46 @@ describe('ExtractionResultTab', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Row 1' }));
 
     expect(mockCloseSidebar).toHaveBeenCalled();
+  });
+
+  test('clicking a multi-turn TURN row opens detail with the real result id, not the composite group key', async () => {
+    render(
+      <ControlledExtractionResultTab
+        initialState={{
+          results: [
+            {
+              id: 'r1',
+              testCaseId: 'tc1',
+              runIndex: 0,
+              turnIndex: 0,
+              totalTurns: 2,
+              responseStatusCode: 200,
+              executionStatus: ExtractionResultStatus.SUCCESS,
+              testCaseName: 'conversation',
+            },
+            {
+              id: 'r2',
+              testCaseId: 'tc1',
+              runIndex: 0,
+              turnIndex: 1,
+              totalTurns: 2,
+              responseStatusCode: 200,
+              executionStatus: ExtractionResultStatus.SUCCESS,
+              testCaseName: 'conversation',
+            },
+          ],
+          snapshots: [],
+        }}
+      />,
+    );
+
+    // Projection order (defaultExpanded, singlesFirst, no singles here): [GROUP, TURN(r1), TURN(r2)].
+    await waitFor(() => screen.getByRole('button', { name: 'Grid Row 2' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Grid Row 2' }));
+
+    expect(mockShowSidebar).toHaveBeenCalledTimes(1);
+    const panelElement = mockShowSidebar.mock.calls[0][0];
+    expect(panelElement.props.resultId).toBe('r2');
   });
 
   test('calls closeSidebar on unmount', async () => {

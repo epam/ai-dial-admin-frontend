@@ -15,6 +15,15 @@ describe('test-case-grouping (array model)', () => {
     expect(readGroupKey({ id: 'c1' })).toBeNull(); // single-turn
   });
 
+  it('prefers an explicit _groupKey over the id-based rule, and still falls back correctly without it', () => {
+    expect(readGroupKey({ id: 'r1', _turnIndex: 0, _groupKey: 'tc1::0' })).toBe('tc1::0');
+    expect(readGroupKey({ id: 'r2', _turnIndex: 1, _groupKey: 'tc1::0' })).toBe('tc1::0');
+    expect(readGroupKey({ id: 'c1', _turnIndex: 0, _groupKey: '' })).toBe('c1'); // blank ignored, falls back to id
+    expect(readGroupKey({ id: 'c1', _turnIndex: 0 })).toBe('c1'); // no _groupKey, falls back to id
+    expect(readGroupKey({ id: 's1', _groupKey: 'x' })).toBe('x'); // explicit key wins even without _turnIndex
+    expect(readGroupKey({ id: 's1' })).toBeNull(); // neither present: single-turn
+  });
+
   it('coerces numeric-string _turnIndex and treats 0 as present', () => {
     expect(readTurnIndex({ _turnIndex: 0 })).toBe(0);
     expect(readTurnIndex({ _turnIndex: '2' })).toBe(2);
