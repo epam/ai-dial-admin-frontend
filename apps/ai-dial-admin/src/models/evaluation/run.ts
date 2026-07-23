@@ -12,6 +12,11 @@ export interface ResultDto {
 
   testCaseData?: Record<string, unknown>;
   extractedColumns?: Record<string, unknown>;
+
+  /** 0-based turn number of this result row (single-turn = 0). */
+  turnIndex?: number;
+  /** Total turn count of the conversation (single-turn = 1). */
+  totalTurns?: number;
 }
 export interface ExtractionResult extends ResultDto {
   executionInfo?: {
