@@ -1,4 +1,5 @@
 import { ANALYTICS_TAG_MAX_LENGTH, PARTITION_NONE } from '@/src/constants/analytics/tables';
+import { ErrorI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { ApplicationRoute } from '@/src/types/routes';
 import {
@@ -31,6 +32,7 @@ export const createColumnRow = (): ColumnRow => ({
   source_name: '',
   name: '',
   type: AnalyticsFieldType.String,
+  element_type: '',
   tag: '',
   nullable: false,
   sensitive: false,
@@ -51,6 +53,7 @@ const toColumnRows = (columns: AnalyticsTableColumn[]): ColumnRow[] =>
     source_name: c.source_name,
     name: c.name,
     type: c.type,
+    element_type: c.element_type ?? '',
     tag: c.tag ?? '',
     nullable: Boolean(c.nullable),
     sensitive: Boolean(c.sensitive),
@@ -94,12 +97,16 @@ export const getColumnRowErrors = (
     const tagError = getAnalyticsLengthError(row.tag, ANALYTICS_TAG_MAX_LENGTH, t);
     if (tagError) error.tag = tagError.text;
 
+    if (row.type === AnalyticsFieldType.Array && !row.element_type) {
+      error.element_type = t(ErrorI18nKey.RequiredField);
+    }
+
     return error;
   });
 };
 
 export const hasColumnRowErrors = (errors: ColumnRowError[]): boolean =>
-  errors.some((e) => e.source_name || e.name || e.tag);
+  errors.some((e) => e.source_name || e.name || e.tag || e.element_type);
 
 const normalized = (value?: string): string => (value ?? '').trim();
 
@@ -137,11 +144,54 @@ export const isRenameRestricted = (table: AnalyticsTable, column: AnalyticsTable
 export const toTableColumns = (rows: ColumnRow[]): AnalyticsTableColumn[] =>
   rows
     .filter((r) => r.source_name.trim() && r.name.trim())
-    .map((r) => ({
-      source_name: r.source_name.trim(),
-      name: r.name.trim(),
-      type: r.type,
-      nullable: r.nullable,
-      ...(r.tag.trim() ? { tag: r.tag.trim() } : {}),
-      ...(r.sensitive ? { sensitive: true } : {}),
-    }));
+    .map((r) => {
+      const isArray = r.type === AnalyticsFieldType.Array;
+      return {
+        source_name: r.source_name.trim(),
+        name: r.name.trim(),
+        type: r.type,
+        // The backend rejects a nullable array column, so an Array row is always sent as non-nullable.
+        nullable: isArray ? false : r.nullable,
+        ...(isArray && r.element_type ? { element_type: r.element_type } : {}),
+        ...(r.tag.trim() ? { tag: r.tag.trim() } : {}),
+        ...(r.sensitive ? { sensitive: true } : {}),
+      };
+    });
+
+// A type-shaped placeholder value for the write-rows template, so the example stays valid JSON for the
+// column's actual type instead of always suggesting a string (which the backend would reject for e.g. a
+// numeric or array column).
+const templateValueFor = (type: AnalyticsFieldType): unknown => {
+  switch (type) {
+    case AnalyticsFieldType.Integer:
+    case AnalyticsFieldType.Long:
+    case AnalyticsFieldType.Decimal:
+      return 0;
+    case AnalyticsFieldType.Boolean:
+      return false;
+    case AnalyticsFieldType.Object:
+      return {};
+    case AnalyticsFieldType.Array:
+      return [];
+    default:
+      return '';
+  }
+};
+
+// A one-row starting point for the write-rows JSON editor: every declared column's name as a key with
+// a type-appropriate empty value, so the user edits values in place rather than typing the row shape
+// from scratch.
+export const buildRowsTemplate = (columns: AnalyticsTableColumn[]): string =>
+  JSON.stringify([Object.fromEntries(columns.map((c) => [c.name, templateValueFor(c.type)]))], null, 2);
+
+// The write-rows editor's content is valid only as a JSON array (of row objects); returns null for
+// unparseable JSON or a parsed non-array, so callers can both submit-guard and disable Insert on the
+// same check.
+export const parseRowsJson = (json: string): Record<string, unknown>[] | null => {
+  try {
+    const parsed = JSON.parse(json);
+    return Array.isArray(parsed) ? (parsed as Record<string, unknown>[]) : null;
+  } catch {
+    return null;
+  }
+};

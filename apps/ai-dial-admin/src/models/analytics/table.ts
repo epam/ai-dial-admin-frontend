@@ -27,6 +27,8 @@ export interface AnalyticsTableColumn {
   source_name: string;
   name: string;
   type: AnalyticsFieldType;
+  // Required when `type` is Array; the array's scalar value type (no nested array/object).
+  element_type?: AnalyticsFieldType;
   nullable?: boolean;
   tag?: string;
   display_name?: string;

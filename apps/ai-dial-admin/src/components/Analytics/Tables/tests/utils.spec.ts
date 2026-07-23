@@ -2,12 +2,14 @@ import { describe, expect, test } from 'vitest';
 
 import {
   buildColumnEditPatch,
+  buildRowsTemplate,
   createColumnRow,
   createDraftSchemaForm,
   createTableForm,
   getColumnRowErrors,
   hasColumnRowErrors,
   isRenameRestricted,
+  parseRowsJson,
   tableDetailHref,
   toTableColumns,
 } from '@/src/components/Analytics/Tables/utils';
@@ -78,6 +80,7 @@ describe('createColumnRow', () => {
       source_name: '',
       name: '',
       type: AnalyticsFieldType.String,
+      element_type: '',
       tag: '',
       nullable: false,
       sensitive: false,
@@ -93,6 +96,7 @@ describe('toTableColumns', () => {
         source_name: ' event_id ',
         name: ' event ',
         type: AnalyticsFieldType.Uuid,
+        element_type: '' as const,
         tag: ' identity ',
         nullable: true,
         sensitive: false,
@@ -102,6 +106,7 @@ describe('toTableColumns', () => {
         source_name: '',
         name: 'skip',
         type: AnalyticsFieldType.String,
+        element_type: '' as const,
         tag: '',
         nullable: false,
         sensitive: false,
@@ -111,6 +116,7 @@ describe('toTableColumns', () => {
         source_name: 'x',
         name: 'x',
         type: AnalyticsFieldType.Long,
+        element_type: '' as const,
         tag: '',
         nullable: false,
         sensitive: false,
@@ -129,6 +135,7 @@ describe('toTableColumns', () => {
         source_name: 'email',
         name: 'email',
         type: AnalyticsFieldType.String,
+        element_type: '' as const,
         tag: '',
         nullable: false,
         sensitive: true,
@@ -138,6 +145,7 @@ describe('toTableColumns', () => {
         source_name: 'total',
         name: 'total',
         type: AnalyticsFieldType.Decimal,
+        element_type: '' as const,
         tag: '',
         nullable: false,
         sensitive: false,
@@ -146,6 +154,48 @@ describe('toTableColumns', () => {
     expect(toTableColumns(rows)).toEqual([
       { source_name: 'email', name: 'email', type: AnalyticsFieldType.String, nullable: false, sensitive: true },
       { source_name: 'total', name: 'total', type: AnalyticsFieldType.Decimal, nullable: false },
+    ]);
+  });
+
+  test('an Array row carries its element_type and is forced non-nullable', () => {
+    const rows = [
+      {
+        id: '1',
+        source_name: 'tags',
+        name: 'tags',
+        type: AnalyticsFieldType.Array,
+        element_type: AnalyticsFieldType.String,
+        tag: '',
+        nullable: true,
+        sensitive: false,
+      },
+    ];
+    expect(toTableColumns(rows)).toEqual([
+      {
+        source_name: 'tags',
+        name: 'tags',
+        type: AnalyticsFieldType.Array,
+        nullable: false,
+        element_type: AnalyticsFieldType.String,
+      },
+    ]);
+  });
+
+  test('an Array row with no element_type chosen yet omits the field rather than sending an empty value', () => {
+    const rows = [
+      {
+        id: '1',
+        source_name: 'tags',
+        name: 'tags',
+        type: AnalyticsFieldType.Array,
+        element_type: '' as const,
+        tag: '',
+        nullable: false,
+        sensitive: false,
+      },
+    ];
+    expect(toTableColumns(rows)).toEqual([
+      { source_name: 'tags', name: 'tags', type: AnalyticsFieldType.Array, nullable: false },
     ]);
   });
 });
@@ -281,6 +331,26 @@ describe('getColumnRowErrors / hasColumnRowErrors', () => {
     expect(errors[0].tag).toBe(ErrorI18nKey.Length);
     expect(hasColumnRowErrors(errors)).toBe(true);
   });
+
+  test('flags an Array row with no element_type chosen', () => {
+    const errors = getColumnRowErrors([row({ type: AnalyticsFieldType.Array, element_type: '' })], noExisting, t);
+    expect(errors[0].element_type).toBe(ErrorI18nKey.RequiredField);
+    expect(hasColumnRowErrors(errors)).toBe(true);
+  });
+
+  test('an Array row with an element_type chosen produces no element_type error', () => {
+    const errors = getColumnRowErrors(
+      [row({ type: AnalyticsFieldType.Array, element_type: AnalyticsFieldType.String })],
+      noExisting,
+      t,
+    );
+    expect(errors[0].element_type).toBeUndefined();
+  });
+
+  test('a non-Array row never requires an element_type', () => {
+    const errors = getColumnRowErrors([row({ type: AnalyticsFieldType.String, element_type: '' })], noExisting, t);
+    expect(errors[0].element_type).toBeUndefined();
+  });
 });
 
 describe('isRenameRestricted', () => {
@@ -303,5 +373,50 @@ describe('isRenameRestricted', () => {
 
   test('ordinary columns are not restricted', () => {
     expect(isRenameRestricted(tableWith({ ordering_key: ['request_time'] }), column('total_money'))).toBe(false);
+  });
+});
+
+describe('buildRowsTemplate', () => {
+  test('builds a one-row array with each column name as a key mapped to a type-appropriate value', () => {
+    const columns: AnalyticsTableColumn[] = [
+      { source_name: 'event_id', name: 'event', type: AnalyticsFieldType.Uuid },
+      { source_name: 'total_money', name: 'total_money', type: AnalyticsFieldType.Decimal },
+      { source_name: 'count', name: 'count', type: AnalyticsFieldType.Integer },
+      { source_name: 'total', name: 'total', type: AnalyticsFieldType.Long },
+      { source_name: 'active', name: 'active', type: AnalyticsFieldType.Boolean },
+      { source_name: 'ts', name: 'ts', type: AnalyticsFieldType.Timestamp },
+      { source_name: 'meta', name: 'meta', type: AnalyticsFieldType.Object },
+      { source_name: 'tags', name: 'tags', type: AnalyticsFieldType.Array, element_type: AnalyticsFieldType.String },
+    ];
+    expect(JSON.parse(buildRowsTemplate(columns))).toEqual([
+      {
+        event: '',
+        total_money: 0,
+        count: 0,
+        total: 0,
+        active: false,
+        ts: '',
+        meta: {},
+        tags: [],
+      },
+    ]);
+  });
+
+  test('a table with no columns produces a single empty row object', () => {
+    expect(JSON.parse(buildRowsTemplate([]))).toEqual([{}]);
+  });
+});
+
+describe('parseRowsJson', () => {
+  test('parses a valid JSON array of row objects', () => {
+    expect(parseRowsJson('[{"a": 1}, {"a": 2}]')).toEqual([{ a: 1 }, { a: 2 }]);
+  });
+
+  test('returns null for unparseable JSON', () => {
+    expect(parseRowsJson('{ "a": ')).toBeNull();
+  });
+
+  test('returns null for valid JSON that is not an array', () => {
+    expect(parseRowsJson('{"a": 1}')).toBeNull();
   });
 });
