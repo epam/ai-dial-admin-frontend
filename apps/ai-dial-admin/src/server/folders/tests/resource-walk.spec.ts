@@ -1,6 +1,20 @@
 import { describe, expect, test, vi } from 'vitest';
 
-import { fetchAllPages, flattenResourceUrls, gatherResourceUrls } from '../resource-walk';
+import { fetchAllPages, flattenResourceUrls, gatherResourceUrls, isTechnicalItem } from '../resource-walk';
+
+describe('Server :: Folders :: resource-walk :: isTechnicalItem', () => {
+  test('matches the bare marker file', () => {
+    expect(isTechnicalItem('bucket/folder/.dial_folder')).toBe(true);
+  });
+
+  test('matches a versioned marker file', () => {
+    expect(isTechnicalItem('bucket/folder/.dial_folder__1.0.0')).toBe(true);
+  });
+
+  test('does not match a regular file', () => {
+    expect(isTechnicalItem('bucket/folder/doc.txt')).toBe(false);
+  });
+});
 
 describe('Server :: Folders :: resource-walk :: flattenResourceUrls', () => {
   test('collects ITEM node urls at the top level', () => {

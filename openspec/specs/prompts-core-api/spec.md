@@ -53,7 +53,7 @@ The system SHALL send `If-Match` for single prompt delete when a concrete etag i
 - **THEN** the destination path carries the duplicate name with the source's version suffix reapplied, unchanged from current behavior
 
 ### Requirement: Prompt export builds a structured aggregate document directly against Core
-The system SHALL build a `{ prompts: DialPrompt[] }` document (the existing `ParsedAssets` shape) from selected prompt paths by fetching each prompt's merged content+metadata directly from DIAL Core and setting each prompt's `id` to its Core-prefixed path — not a per-file zip archive, and not a new wire type. When a selected path is a folder, the system SHALL first expand it into every descendant prompt resource path at any nesting depth (a recursive walk, not a one-level listing) before fetching merged content+metadata for each; a folder that is empty of prompt resources SHALL contribute no entities without causing the export to fail.
+The system SHALL build a `{ prompts: DialPrompt[] }` document (the existing `ParsedAssets` shape) from selected prompt paths by fetching each prompt's merged content+metadata directly from DIAL Core and setting each prompt's `id` to its Core-prefixed path — not a per-file zip archive, and not a new wire type. When a selected path is a folder, the system SHALL first expand it into every descendant prompt resource path at any nesting depth (a recursive walk, not a one-level listing) before fetching merged content+metadata for each; a folder that is empty of prompt resources SHALL contribute no entities without causing the export to fail. The system SHALL exclude `.dial_folder`/`.dial_folder__<version>` technical folder-marker resources encountered during folder expansion, whether they would otherwise be picked up as a folder's direct child or a deeper descendant.
 
 #### Scenario: JSON export returns the aggregate document directly
 - **WHEN** `exportPrompts` is called with `fileType=json`
@@ -70,6 +70,10 @@ The system SHALL build a `{ prompts: DialPrompt[] }` document (the existing `Par
 #### Scenario: Exporting a folder with no prompts succeeds with an empty result for that path
 - **WHEN** a selected folder path contains no prompt resources at any depth
 - **THEN** the export still succeeds, contributing zero entities for that path rather than failing
+
+#### Scenario: A folder-marker resource is excluded from a folder export
+- **WHEN** a selected folder contains a `.dial_folder` marker resource among its descendants
+- **THEN** the exported document excludes that marker entirely, and the resulting document can be re-imported without a manual edit
 
 ### Requirement: Prompt import resolves conflicts against Core's live state
 The system SHALL validate each incoming prompt's `id` against the prompt path shape, check whether a prompt already exists at its resolved destination path directly against DIAL Core, and apply the caller-supplied conflict-resolution policy: `OVERRIDE` writes through regardless of an existing conflict; `SKIP` treats an existing conflict as a non-error skipped outcome rather than a failure.

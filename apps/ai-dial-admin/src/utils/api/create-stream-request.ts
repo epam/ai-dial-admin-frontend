@@ -21,7 +21,7 @@ export const streamRequest = async (
       headers.append('Content-Type', contentType);
     }
 
-    headers.append('Content-Disposition', isPreview ? 'inline' : `attachment; filename=${fileName}`);
+    headers.append('Content-Disposition', isPreview ? 'inline' : `attachment; ${buildFilenameDisposition(fileName)}`);
     return new Response(stream, { headers });
   } catch (e) {
     errorObjLog(e, 'Stream request failed');
@@ -63,4 +63,17 @@ export const getContentType = (fileName: string): string | null => {
   }
 
   return null;
+};
+
+/**
+ * Builds the `filename=`/`filename*=` pair for a `Content-Disposition` header (RFC 6266/5987).
+ * `Headers` values must be Latin1-only (the Fetch API converts them to a `ByteString`) — any
+ * character outside that range (e.g. `™`, U+2122) throws at `headers.append(...)` otherwise.
+ * The ASCII fallback substitutes such characters; `filename*=UTF-8''<percent-encoded>` carries
+ * the exact name for clients that support it.
+ */
+export const buildFilenameDisposition = (fileName: string): string => {
+  const asciiFileName = fileName.replace(/[^\x20-\x7E]/g, '_').replace(/"/g, "'");
+  const encodedFileName = encodeURIComponent(fileName);
+  return `filename="${asciiFileName}"; filename*=UTF-8''${encodedFileName}`;
 };
