@@ -3,7 +3,7 @@ import { SelectOption } from '@epam/ai-dial-ui-kit';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { PartitionGranularity } from '@/src/models/analytics/table';
 
-const capitalize = (s: string): string => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+export const capitalize = (s: string): string => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
 export const COLUMN_TYPE_OPTIONS: SelectOption[] = Object.values(AnalyticsFieldType).map((value) => ({
   value,

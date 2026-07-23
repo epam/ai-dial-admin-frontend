@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest';
 
 import { useDraftSchemaForm } from '@/src/components/Analytics/Tables/use-draft-schema-form';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { AnalyticsTable, AnalyticsTableType, Cardinality } from '@/src/models/analytics/table';
+import { AnalyticsTable, AnalyticsTableType, Cardinality, PartitionGranularity } from '@/src/models/analytics/table';
 
 const t = (key: string) => key;
 
@@ -45,6 +45,29 @@ describe('useDraftSchemaForm source', () => {
       columns: [{ source_name: 'ts', name: 'ts', type: AnalyticsFieldType.Timestamp, nullable: false }],
       ordering_key: ['ts'],
     });
+  });
+
+  test('retyping the selected partition column away from Date/Timestamp clears both it and the granularity', () => {
+    const { result } = renderHook(() => useDraftSchemaForm(source, null, t));
+
+    act(() =>
+      result.current.update('columns', [
+        { ...result.current.form.columns[0], source_name: 'ts', name: 'ts', type: AnalyticsFieldType.Timestamp },
+      ]),
+    );
+    act(() => result.current.update('partitionColumn', 'ts'));
+    act(() => result.current.update('granularity', PartitionGranularity.Month));
+    expect(result.current.form.partitionColumn).toBe('ts');
+    expect(result.current.form.granularity).toBe(PartitionGranularity.Month);
+
+    act(() =>
+      result.current.update('columns', [
+        { ...result.current.form.columns[0], source_name: 'ts', name: 'ts', type: AnalyticsFieldType.Uuid },
+      ]),
+    );
+
+    expect(result.current.form.partitionColumn).toBe('');
+    expect(result.current.form.granularity).toBe('');
   });
 
   test('an invalid column row keeps Materialize disabled regardless of the ordering key', () => {

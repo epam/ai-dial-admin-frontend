@@ -4,7 +4,7 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
-import { ColDef, ICellRendererParams, ITooltipParams, ValueGetterParams } from 'ag-grid-community';
+import { ColDef, GridApi, ICellRendererParams, IRowNode, ITooltipParams, ValueGetterParams } from 'ag-grid-community';
 import {
   ButtonVariant,
   ConfirmationPopupVariant,
@@ -35,16 +35,19 @@ import {
   toTableColumns,
 } from '@/src/components/Analytics/Tables/utils';
 import { TypeCellRenderer } from '@/src/components/Analytics/Common/TypeBadge';
+import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import SensitiveIndicator from '@/src/components/Common/SensitiveIndicator/SensitiveIndicator';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import { useAnalyticsTablePermissions } from '@/src/hooks/use-analytics-table-permissions';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
+import { capitalize } from '@/src/constants/analytics/tables';
 import { getDeleteOperation, getEditOperation } from '@/src/constants/grid-columns/actions';
 import { AnalyticsTablesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
+import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import {
   AnalyticsSchemaPatch,
   AnalyticsTable,
@@ -74,6 +77,10 @@ const ColumnNameCellRenderer: FC<ICellRendererParams<AnalyticsTableColumn>> = ({
   </span>
 );
 
+// The grain-key row is pinned to the grid's top (see `grainKeyRow` below) rather than a real editable
+// column, so its inline rename and row actions are disabled wherever this check is used.
+const isPinnedRow = (_api: GridApi, node: IRowNode) => Boolean(node.rowPinned);
+
 const TableDetailView: FC<Props> = ({ name, initialTable }) => {
   const t = useI18n();
   const router = useRouter();
@@ -96,10 +103,11 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
 
   const draft = useDraftSchemaForm(table, sourceTable, t);
 
-  // An enrichment's draft grain-key options are the referenced source's declared columns; fetch it
-  // only while drafting (the live grain key is fixed and shown via `table.grain` instead).
+  // An enrichment's grain key is a column on its source table (draft: populates grain-key options;
+  // active: backfills the pinned grain-key row's type/tag/display metadata, which the enrichment table's
+  // own API response never exposes for that hidden column — see grainKeyRow below).
   useEffect(() => {
-    if (isActive || table.type !== AnalyticsTableType.Enrichment || !table.source_table) {
+    if (table.type !== AnalyticsTableType.Enrichment || !table.source_table) {
       setSourceTable(null);
       return;
     }
@@ -110,7 +118,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
     return () => {
       cancelled = true;
     };
-  }, [isActive, table.type, table.source_table]);
+  }, [table.type, table.source_table]);
 
   // New columns must not collide with the table's existing source/exposed names (the backend rejects
   // duplicates); validate the add-columns rows against them plus each other.
@@ -233,10 +241,37 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
     }
   };
 
+  const addColumnsAction = {
+    key: 'add-columns',
+    label: t(AnalyticsTablesI18nKey.AddColumns),
+    onClick: () => setAddOpen(true),
+  };
+  const addRowsAction = {
+    key: 'add-rows',
+    label: t(AnalyticsTablesI18nKey.AddRows),
+    onClick: () => {
+      setRowsJson(buildRowsTemplate(columns, table.grain?.grain_key));
+      setWriteOpen(true);
+    },
+  };
+  // The enrichment grain key is a hidden physical column (never part of `table.columns`, and the API
+  // never exposes its type/tag/display metadata directly) — shown pinned to the top of the grid for
+  // visibility, but it isn't a real editable column: it can't be renamed or dropped here. The backend
+  // creates it with the same name and type as the matching column on the source table, so we backfill
+  // its metadata from there; a source column later renamed/dropped just falls back to a bare name row.
+  const grainKeyRow = useMemo<AnalyticsTableColumn | null>(() => {
+    if (table.type !== AnalyticsTableType.Enrichment || !table.grain?.grain_key) return null;
+    const grainKey = table.grain.grain_key;
+    const sourceColumn = sourceTable?.columns?.find((c) => c.source_name === grainKey);
+    return sourceColumn
+      ? { ...sourceColumn, source_name: grainKey, name: grainKey }
+      : { source_name: grainKey, name: grainKey, type: '' as AnalyticsFieldType };
+  }, [table.type, table.grain, sourceTable]);
+
   const actions = useMemo<ActionMenuOperationDeclaration<AnalyticsTableColumn>[]>(
     () => [
-      getEditOperation<AnalyticsTableColumn>((column) => column && setEditColumn(column)),
-      getDeleteOperation<AnalyticsTableColumn>((column) => onDrop(column)),
+      getEditOperation<AnalyticsTableColumn>((column) => column && setEditColumn(column), isPinnedRow),
+      getDeleteOperation<AnalyticsTableColumn>((column) => onDrop(column), isPinnedRow),
     ],
     [onDrop],
   );
@@ -246,7 +281,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
       {
         headerName: t(AnalyticsTablesI18nKey.ColumnName),
         field: 'name',
-        editable: canModify,
+        editable: (params) => canModify && !params.node.rowPinned,
         cellRenderer: ColumnNameCellRenderer,
         // Fold the sensitive note into the single cell tooltip so it doesn't double with the dot.
         tooltipValueGetter: (params: ITooltipParams<AnalyticsTableColumn>) =>
@@ -255,7 +290,6 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
             .join(' — '),
         flex: 2,
       },
-      { headerName: t(AnalyticsTablesI18nKey.SourceName), field: 'source_name', flex: 2 },
       { headerName: t(AnalyticsTablesI18nKey.Type), field: 'type', cellRenderer: TypeCellRenderer, flex: 1 },
       { headerName: t(AnalyticsTablesI18nKey.Tag), field: 'tag', flex: 1 },
       // Long display names/descriptions truncate in the cell; the grid's default tooltip exposes the full value.
@@ -275,15 +309,18 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 relative">
-      <div className="flex flex-row mb-8 justify-between items-center gap-4 h-[40px]">
-        <div className="flex min-w-0 items-center gap-2">
-          <h1 className="truncate">{name}</h1>
-          <TableStatusBadge status={table.status} />
-          {isSystem && (
-            <span className="shrink-0 rounded bg-layer-4 px-2 py-0.5 uppercase text-secondary dial-tiny-text">
-              {t(AnalyticsTablesI18nKey.SystemReadOnly)}
-            </span>
-          )}
+      <div className="flex flex-row mb-8 justify-between items-center gap-4">
+        <div className="flex min-w-0 flex-col gap-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <h1 className="truncate">{name}</h1>
+            <TableStatusBadge status={table.status} />
+            {isSystem && (
+              <span className="shrink-0 rounded bg-layer-4 px-2 py-0.5 uppercase text-secondary dial-tiny-text">
+                {t(AnalyticsTablesI18nKey.SystemReadOnly)}
+              </span>
+            )}
+          </div>
+          {table.description && <DialEllipsisTooltip text={table.description} className="text-primary dial-small" />}
         </div>
         {(canDelete || canWrite || canModify || canManageRoles) && (
           <div className="flex items-center gap-4">
@@ -293,46 +330,55 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
             {canDelete && (
               <DialDangerButton label={t(AnalyticsTablesI18nKey.DeleteTable)} onClick={() => setConfirmOpen(true)} />
             )}
-            {isActive
-              ? (canWrite || canModify) && (
-                  <DialButtonDropdown
-                    label={t(ButtonsI18nKey.Add)}
-                    variant={ButtonVariant.Neutral}
-                    items={[
-                      ...(canWrite
-                        ? [
-                            {
-                              key: 'add-rows',
-                              label: t(AnalyticsTablesI18nKey.AddRows),
-                              onClick: () => {
-                                setRowsJson(buildRowsTemplate(columns));
-                                setWriteOpen(true);
-                              },
-                            },
-                          ]
-                        : []),
-                      ...(canModify
-                        ? [
-                            {
-                              key: 'add-columns',
-                              label: t(AnalyticsTablesI18nKey.AddColumns),
-                              onClick: () => setAddOpen(true),
-                            },
-                          ]
-                        : []),
-                    ]}
-                  />
-                )
-              : canModify && (
-                  <DialPrimaryButton
-                    label={t(ButtonsI18nKey.Save)}
-                    disabled={!draft.canMaterialize}
-                    onClick={onSubmitDefineSchema}
-                  />
-                )}
+            {isActive ? (
+              canModify && canWrite ? (
+                <DialButtonDropdown
+                  label={t(ButtonsI18nKey.Add)}
+                  items={[addColumnsAction, addRowsAction]}
+                  variant={ButtonVariant.Primary}
+                />
+              ) : canModify ? (
+                <DialPrimaryButton label={addColumnsAction.label} onClick={addColumnsAction.onClick} />
+              ) : (
+                canWrite && <DialPrimaryButton label={addRowsAction.label} onClick={addRowsAction.onClick} />
+              )
+            ) : (
+              canModify && (
+                <DialPrimaryButton
+                  label={t(ButtonsI18nKey.Save)}
+                  disabled={!draft.canMaterialize}
+                  onClick={onSubmitDefineSchema}
+                />
+              )
+            )}
           </div>
         )}
       </div>
+
+      {isActive && (
+        <div className="flex flex-wrap gap-8 mb-6">
+          {table.type === AnalyticsTableType.Source ? (
+            <>
+              {!!table.ordering_key?.length && (
+                <LabelledText label={t(AnalyticsTablesI18nKey.OrderingKey)} text={table.ordering_key.join(', ')} />
+              )}
+              {table.partition_by && (
+                <>
+                  <LabelledText label={t(AnalyticsTablesI18nKey.PartitionColumn)} text={table.partition_by.column} />
+                  <LabelledText
+                    label={t(AnalyticsTablesI18nKey.Granularity)}
+                    text={capitalize(table.partition_by.granularity)}
+                  />
+                </>
+              )}
+            </>
+          ) : (
+            !!table.grain?.grain_key && (
+              <LabelledText label={t(AnalyticsTablesI18nKey.GrainKey)} text={table.grain.grain_key} />
+            )
+          )}
+        </div>
+      )}
 
       <div className="flex min-h-0 flex-1 flex-col overflow-auto">
         {isActive ? (
@@ -341,6 +387,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
             rowData={columns}
             getRowId={(params) => params.data.name}
             additionalGridOptions={{
+              pinnedTopRowData: grainKeyRow ? [grainKeyRow] : undefined,
               onCellValueChanged: (e) => {
                 if (e.colDef.field === 'name') onRenameCell(e.oldValue as string, e.newValue as string);
               },

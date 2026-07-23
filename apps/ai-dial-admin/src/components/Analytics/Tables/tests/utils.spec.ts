@@ -377,7 +377,7 @@ describe('isRenameRestricted', () => {
 });
 
 describe('buildRowsTemplate', () => {
-  test('builds a one-row array with each column name as a key mapped to a type-appropriate value', () => {
+  test('builds a one-row array with each column source_name as a key mapped to a type-appropriate value', () => {
     const columns: AnalyticsTableColumn[] = [
       { source_name: 'event_id', name: 'event', type: AnalyticsFieldType.Uuid },
       { source_name: 'total_money', name: 'total_money', type: AnalyticsFieldType.Decimal },
@@ -390,7 +390,7 @@ describe('buildRowsTemplate', () => {
     ];
     expect(JSON.parse(buildRowsTemplate(columns))).toEqual([
       {
-        event: '',
+        event_id: '',
         total_money: 0,
         count: 0,
         total: 0,
@@ -400,6 +400,29 @@ describe('buildRowsTemplate', () => {
         tags: [],
       },
     ]);
+  });
+
+  // The write-rows endpoint is keyed by the physical column, so a renamed column's exposed `name` must
+  // never leak into the template — only its (unchanging) `source_name` may appear as a key.
+  test('keys by source_name, not name, when a column has been renamed since creation', () => {
+    const columns: AnalyticsTableColumn[] = [
+      { source_name: 'event_id', name: 'renamed_event', type: AnalyticsFieldType.String },
+    ];
+    const template = JSON.parse(buildRowsTemplate(columns));
+    expect(template).toEqual([{ event_id: '' }]);
+    expect(template[0]).not.toHaveProperty('renamed_event');
+  });
+
+  // An enrichment table's grain key is a hidden column (never part of `columns`) that the backend still
+  // requires in each inserted row to identify which entity the enrichment data attaches to.
+  test('adds the grain key as a leading field when provided, for an enrichment table', () => {
+    const columns: AnalyticsTableColumn[] = [{ source_name: 'flag', name: 'flag', type: AnalyticsFieldType.Boolean }];
+    expect(JSON.parse(buildRowsTemplate(columns, 'order_id'))).toEqual([{ order_id: '', flag: false }]);
+  });
+
+  test('omits the grain key field when not provided (a source table)', () => {
+    const columns: AnalyticsTableColumn[] = [{ source_name: 'flag', name: 'flag', type: AnalyticsFieldType.Boolean }];
+    expect(JSON.parse(buildRowsTemplate(columns))).toEqual([{ flag: false }]);
   });
 
   test('a table with no columns produces a single empty row object', () => {
