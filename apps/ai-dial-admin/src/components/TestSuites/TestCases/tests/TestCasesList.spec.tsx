@@ -1,4 +1,4 @@
-import { render, waitFor } from '@testing-library/react';
+import { render, waitFor, act } from '@testing-library/react';
 import { createRef } from 'react';
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 import TestCasesList, { TestCasesActions } from '../TestCasesList';
@@ -19,6 +19,7 @@ let capturedGridOptions: any = null;
 let capturedOnCellChange: ((data: Record<string, unknown>, field: string, value: unknown) => void) | null = null;
 let capturedRowData: any[] | null = null;
 let capturedOnGridReady: ((event: { api: any }) => void) | null = null;
+let capturedTurnHandlers: any = null;
 
 vi.mock('@/src/app/[lang]/datasets/actions', () => ({
   getTestCases: vi.fn(),
@@ -48,6 +49,13 @@ vi.mock('@/src/components/TestSuites/utils/columns', () => ({
   getTestCaseColumns: (_suite: unknown, onCellChange: any) => {
     capturedOnCellChange = onCellChange;
     return [];
+  },
+}));
+
+vi.mock('@/src/components/TestSuites/utils/grouped-columns', () => ({
+  getTurnActionsColumn: (handlers: any) => {
+    capturedTurnHandlers = handlers;
+    return { colId: 'action-turns' };
   },
 }));
 
@@ -141,6 +149,7 @@ describe('TestCasesList — disabledTestCaseIds logic', () => {
   const makeGridApi = (nodes: { data: Record<string, unknown>; rowPinned?: string }[]) => ({
     setGridOption: vi.fn(),
     refreshClientSideRowModel: vi.fn(),
+    refreshCells: vi.fn(),
     forEachNode: vi.fn((cb: (node: any) => void) => nodes.forEach(cb)),
   });
 
@@ -241,7 +250,9 @@ describe('TestCasesList — disabledTestCaseIds logic', () => {
     await waitFor(() => expect(capturedOnCellChange).not.toBeNull());
 
     const row = { id: 'row-1', testCaseName: 'tc', createdAt: 0 };
-    capturedOnCellChange!({ ...row, testCaseName: 'changed' }, 'testCaseName', 'changed');
+    const changedRow = { ...row, testCaseName: 'changed' };
+    capturedOnGridReady?.({ api: makeGridApi([{ data: changedRow }]) });
+    capturedOnCellChange!(changedRow, 'testCaseName', 'changed');
 
     expect(actionsRef.current?.getDirtyTestCases().length).toBeGreaterThan(0);
 
@@ -249,5 +260,139 @@ describe('TestCasesList — disabledTestCaseIds logic', () => {
 
     expect(actionsRef.current?.getDirtyTestCases().length).toBe(0);
     expect(mockOnDirtyChange).toHaveBeenLastCalledWith(false);
+  });
+});
+
+describe('TestCasesList — multi-turn grouping', () => {
+  const mockOnChange = vi.fn();
+  const mockOnDirtyChange = vi.fn();
+
+  const makeGridApi = (nodes: { data: Record<string, unknown> }[]) => ({
+    setGridOption: vi.fn(),
+    refreshClientSideRowModel: vi.fn(),
+    refreshCells: vi.fn(),
+    forEachNode: vi.fn((cb: (node: any) => void) => nodes.forEach(cb)),
+  });
+
+  // Mirrors real ag-grid: reads whatever the mocked grid last rendered, so it reflects
+  // structural changes (add/remove/reorder turn) made via setData without manual re-wiring.
+  const makeLiveGridApi = () => ({
+    setGridOption: vi.fn(),
+    refreshClientSideRowModel: vi.fn(),
+    refreshCells: vi.fn(),
+    forEachNode: vi.fn((cb: (node: any) => void) => (capturedRowData ?? []).forEach((data: any) => cb({ data }))),
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    capturedGridOptions = null;
+    capturedOnCellChange = null;
+    capturedRowData = null;
+    capturedOnGridReady = null;
+    capturedTurnHandlers = null;
+  });
+
+  const renderList = (suite: TestSuite) => {
+    const actionsRef = createRef<TestCasesActions | null>();
+    render(
+      <TestCasesList
+        selectedTestSuite={suite}
+        onChange={mockOnChange}
+        testCasesActionsRef={actionsRef}
+        onDirtyChange={mockOnDirtyChange}
+        dataset={null}
+      />,
+    );
+    return actionsRef;
+  };
+
+  test("editing a data cell on a TURN row writes into that row's data, never sets data._turnIndex", async () => {
+    const suite: TestSuite = { id: 'suite-1', datasetId: 'ds-1', disabledTestCaseIds: [] };
+    vi.mocked(actions.getTestCases).mockResolvedValue(createPageData([]));
+    renderList(suite);
+
+    await waitFor(() => expect(capturedOnCellChange).not.toBeNull());
+
+    const turnRow = { id: 'tc-1', _turnIndex: 0, testCaseName: 'Case', data: { foo: 'a' } };
+    capturedOnCellChange!(turnRow, 'foo', 'edited');
+
+    expect(turnRow.data).toEqual({ foo: 'edited' });
+    expect('_turnIndex' in turnRow.data).toBe(false);
+
+    capturedOnCellChange!(turnRow, '_turnIndex', 7);
+    expect('_turnIndex' in turnRow.data).toBe(false);
+  });
+
+  test('getDirtyTestCases() after editing one turn of a 2-turn case preserves both turns', async () => {
+    const suite: TestSuite = { id: 'suite-1', datasetId: 'ds-1', disabledTestCaseIds: [] };
+    vi.mocked(actions.getTestCases).mockResolvedValue(createPageData([]));
+    const actionsRef = renderList(suite);
+
+    await waitFor(() => expect(capturedOnCellChange).not.toBeNull());
+
+    const turn0 = { id: 'tc-1', _turnIndex: 0, testCaseName: 'Case', data: { foo: 'a' } };
+    const turn1 = { id: 'tc-1', _turnIndex: 1, testCaseName: 'Case', data: { foo: 'b' } };
+    capturedOnGridReady?.({ api: makeGridApi([{ data: turn0 }, { data: turn1 }]) });
+
+    capturedOnCellChange!(turn0, 'foo', 'edited');
+
+    const dirty = actionsRef.current!.getDirtyTestCases();
+    expect(dirty).toHaveLength(1);
+    expect(dirty[0].data).toBeUndefined();
+    expect(dirty[0].multiTurnData).toEqual([{ foo: 'edited' }, { foo: 'b' }]);
+  });
+
+  test('Add turn on a single case makes getDirtyTestCases() return a multiTurnData DTO (no data)', async () => {
+    const suite: TestSuite = { id: 'suite-1', datasetId: 'ds-1', disabledTestCaseIds: [] };
+    vi.mocked(actions.getTestCases).mockResolvedValue(
+      createPageData([{ id: 'tc-1', testCaseName: 'Case', createdAt: 0, data: { foo: 'a' } }]),
+    );
+    const actionsRef = renderList(suite);
+
+    await waitFor(() => expect(capturedRowData).not.toBeNull());
+    capturedOnGridReady?.({ api: makeLiveGridApi() });
+    await waitFor(() => expect(capturedRowData!.length).toBe(1));
+    expect(capturedTurnHandlers).not.toBeNull();
+
+    act(() => {
+      capturedTurnHandlers.onAddTurn('tc-1');
+    });
+
+    // Expanded group: GROUP summary row + its 2 turn rows.
+    await waitFor(() => expect(capturedRowData!.length).toBe(3));
+
+    const dirty = actionsRef.current!.getDirtyTestCases();
+    expect(dirty).toHaveLength(1);
+    expect(dirty[0].data).toBeUndefined();
+    expect(dirty[0].multiTurnData).toHaveLength(2);
+    expect(dirty[0].multiTurnData![0]).toEqual({ foo: 'a' });
+    expect(dirty[0].multiTurnData![1]).toEqual({});
+  });
+
+  test('removing down to one turn returns a single-turn data DTO', async () => {
+    const suite: TestSuite = { id: 'suite-1', datasetId: 'ds-1', disabledTestCaseIds: [] };
+    vi.mocked(actions.getTestCases).mockResolvedValue(
+      createPageData([{ id: 'tc-1', testCaseName: 'Case', createdAt: 0, multiTurnData: [{ foo: 'a' }, { foo: 'b' }] }]),
+    );
+    const actionsRef = renderList(suite);
+
+    await waitFor(() => expect(capturedRowData).not.toBeNull());
+    capturedOnGridReady?.({ api: makeLiveGridApi() });
+    await waitFor(() => expect(capturedRowData!.length).toBeGreaterThan(0));
+
+    const groupRow = capturedRowData!.find((r: any) => r.rowType === 'GROUP');
+    expect(groupRow).toBeTruthy();
+    const turnToRemove = { ...groupRow.turns[1], groupKey: 'tc-1' };
+
+    act(() => {
+      capturedTurnHandlers.onDeleteTurn(turnToRemove);
+    });
+
+    await waitFor(() => expect(capturedRowData!.some((r: any) => r.rowType === 'SINGLE')).toBe(true));
+
+    const dirty = actionsRef.current!.getDirtyTestCases();
+    expect(dirty).toHaveLength(1);
+    expect(dirty[0].multiTurnData).toBeUndefined();
+    expect(dirty[0].data).toEqual({ foo: 'a' });
   });
 });
