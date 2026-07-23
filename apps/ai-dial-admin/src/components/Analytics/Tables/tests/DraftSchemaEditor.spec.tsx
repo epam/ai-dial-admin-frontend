@@ -67,7 +67,10 @@ describe('DraftSchemaEditor source', () => {
     const draft = fixtureDraft();
     render(<DraftSchemaEditor table={source} draft={draft} />);
 
-    fireEvent.change(screen.getByLabelText(AnalyticsTablesI18nKey.SourceName), { target: { value: 'ts' } });
+    // Required fields append a trailing "*" to the label, so match by substring rather than exact text.
+    fireEvent.change(screen.getByLabelText(AnalyticsTablesI18nKey.SourceName, { exact: false }), {
+      target: { value: 'ts' },
+    });
 
     expect(draft.update).toHaveBeenCalledWith('columns', expect.any(Array));
   });

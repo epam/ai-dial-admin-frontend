@@ -6,9 +6,12 @@ import { useRouter } from 'next/navigation';
 
 import { ColDef, ICellRendererParams, ITooltipParams, ValueGetterParams } from 'ag-grid-community';
 import {
+  ButtonVariant,
   ConfirmationPopupVariant,
+  DialButtonDropdown,
   DialConfirmationPopup,
   DialDangerButton,
+  DialEllipsisTooltip,
   DialFormPopup,
   DialNeutralButton,
   DialPrimaryButton,
@@ -23,10 +26,12 @@ import TableAccessPanel from '@/src/components/Analytics/Tables/TableAccessPanel
 import TableStatusBadge from '@/src/components/Analytics/Tables/TableStatusBadge';
 import { useDraftSchemaForm } from '@/src/components/Analytics/Tables/use-draft-schema-form';
 import {
+  buildRowsTemplate,
   createColumnRow,
   getColumnRowErrors,
   hasColumnRowErrors,
   isRenameRestricted,
+  parseRowsJson,
   toTableColumns,
 } from '@/src/components/Analytics/Tables/utils';
 import { TypeCellRenderer } from '@/src/components/Analytics/Common/TypeBadge';
@@ -203,18 +208,12 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
   };
 
   const onSubmitWriteRows = async () => {
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(rowsJson);
-    } catch {
+    const parsed = parseRowsJson(rowsJson);
+    if (!parsed) {
       showNotification(getErrorNotification(t(AnalyticsTablesI18nKey.InvalidRowsJson)));
       return;
     }
-    if (!Array.isArray(parsed)) {
-      showNotification(getErrorNotification(t(AnalyticsTablesI18nKey.InvalidRowsJson)));
-      return;
-    }
-    const res = await addRows(name, { rows: parsed as Record<string, unknown>[] });
+    const res = await addRows(name, { rows: parsed });
     if (res.success) {
       showNotification(getSuccessNotification(t(AnalyticsTablesI18nKey.RowsInserted)));
       setWriteOpen(false);
@@ -291,27 +290,46 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
             {canManageRoles && (
               <DialNeutralButton label={t(AnalyticsTablesI18nKey.ManageAccess)} onClick={() => setAccessOpen(true)} />
             )}
-            {isActive ? (
-              <>
-                {canModify && (
-                  <DialNeutralButton label={t(AnalyticsTablesI18nKey.AddColumns)} onClick={() => setAddOpen(true)} />
-                )}
-                {canWrite && (
-                  <DialNeutralButton label={t(AnalyticsTablesI18nKey.WriteRows)} onClick={() => setWriteOpen(true)} />
-                )}
-              </>
-            ) : (
-              canModify && (
-                <DialPrimaryButton
-                  label={t(ButtonsI18nKey.Save)}
-                  disabled={!draft.canMaterialize}
-                  onClick={onSubmitDefineSchema}
-                />
-              )
-            )}
             {canDelete && (
               <DialDangerButton label={t(AnalyticsTablesI18nKey.DeleteTable)} onClick={() => setConfirmOpen(true)} />
             )}
+            {isActive
+              ? (canWrite || canModify) && (
+                  <DialButtonDropdown
+                    label={t(ButtonsI18nKey.Add)}
+                    variant={ButtonVariant.Neutral}
+                    items={[
+                      ...(canWrite
+                        ? [
+                            {
+                              key: 'add-rows',
+                              label: t(AnalyticsTablesI18nKey.AddRows),
+                              onClick: () => {
+                                setRowsJson(buildRowsTemplate(columns));
+                                setWriteOpen(true);
+                              },
+                            },
+                          ]
+                        : []),
+                      ...(canModify
+                        ? [
+                            {
+                              key: 'add-columns',
+                              label: t(AnalyticsTablesI18nKey.AddColumns),
+                              onClick: () => setAddOpen(true),
+                            },
+                          ]
+                        : []),
+                    ]}
+                  />
+                )
+              : canModify && (
+                  <DialPrimaryButton
+                    label={t(ButtonsI18nKey.Save)}
+                    disabled={!draft.canMaterialize}
+                    onClick={onSubmitDefineSchema}
+                  />
+                )}
           </div>
         )}
       </div>
@@ -339,7 +357,15 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
           open={confirmOpen}
           variant={ConfirmationPopupVariant.Danger}
           header={t(AnalyticsTablesI18nKey.DeleteConfirmTitle)}
-          description={t(AnalyticsTablesI18nKey.DeleteConfirmDescription)}
+          description={
+            <div className="flex flex-col gap-y-2">
+              <span>{t(AnalyticsTablesI18nKey.DeleteConfirmDescription)}</span>
+              <div className="flex flex-row items-center gap-x-1 text-primary dial-small">
+                <span className="text-secondary shrink-0">{t(AnalyticsTablesI18nKey.Name)}:</span>
+                <DialEllipsisTooltip text={name} />
+              </div>
+            </div>
+          }
           confirmLabel={t(AnalyticsTablesI18nKey.DeleteTable)}
           onConfirm={() => void onConfirmDelete()}
           onClose={() => setConfirmOpen(false)}
@@ -368,8 +394,9 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
           open={writeOpen}
           portalId="qb-write-rows"
           size={PopupSize.Lg}
-          header={t(AnalyticsTablesI18nKey.WriteRows)}
+          header={t(AnalyticsTablesI18nKey.AddRows)}
           submitLabel={t(AnalyticsTablesI18nKey.InsertRows)}
+          disableSubmitButton={!parseRowsJson(rowsJson)}
           onClose={() => setWriteOpen(false)}
           onSubmit={() => void onSubmitWriteRows()}
         >

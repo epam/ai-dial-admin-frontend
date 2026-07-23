@@ -28,6 +28,14 @@ export interface WalkableNode {
 export const isFolderNode = (node: WalkableNode): boolean => node.nodeType?.toUpperCase() === 'FOLDER';
 export const isItemNode = (node: WalkableNode): boolean => node.nodeType?.toUpperCase() === 'ITEM';
 
+const DIAL_FOLDER_MARKER = '.dial_folder';
+
+/** A folder-marker resource (`.dial_folder` or `.dial_folder__<version>`), excluded from export. */
+export const isTechnicalItem = (path: string): boolean => {
+  const name = path.split('/').filter(Boolean).pop() || '';
+  return name === DIAL_FOLDER_MARKER || name.startsWith(`${DIAL_FOLDER_MARKER}__`);
+};
+
 /**
  * Fetches every page of a `recursive=true` metadata read, following `nextToken` until
  * exhausted, and returns one node whose `items[]` is the full accumulated flat list.

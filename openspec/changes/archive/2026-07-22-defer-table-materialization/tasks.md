@@ -154,3 +154,99 @@
       reviews plus direct backend source inspection.
 - [ ] 12.3 `npx tsc --noEmit` surfaces ~139 pre-existing errors elsewhere in the repo (unrelated files —
       none in any file this change touches); not something to fix under this change.
+
+## 13. Array column element type (issue #3847)
+
+- [x] 13.1 `src/models/analytics/table.ts`: add `element_type?: AnalyticsFieldType` to
+      `AnalyticsTableColumn`.
+- [x] 13.2 `src/models/analytics/tables-ui.ts`: add `element_type: AnalyticsFieldType | ''` to
+      `ColumnRow`; add `element_type?: string` to `ColumnRowError`.
+- [x] 13.3 `src/constants/analytics/tables.ts`: add `ELEMENT_TYPE_OPTIONS` — `COLUMN_TYPE_OPTIONS`
+      filtered to exclude `AnalyticsFieldType.Array` and `AnalyticsFieldType.Object`.
+- [x] 13.4 `ColumnRowsEditor.tsx`: render an "Element type" `DialSelectField` per row, shown only when
+      `row.type === AnalyticsFieldType.Array`; force the Nullable switch off (non-interactive) for Array
+      rows. (Also clears `element_type` back to `''` when a row's type changes away from `Array`, so a
+      stale selection can't linger for a later switch back.)
+- [x] 13.5 `utils.ts` — `createColumnRow`: seed new rows with `element_type: ''`. Also updated
+      `toColumnRows` (used by `createDraftSchemaForm` to seed the editor from a `FAILED` table's
+      persisted schema) to carry `element_type` through from the server column.
+- [x] 13.6 `utils.ts` — `toTableColumns`: include `element_type` in the built `AnalyticsTableColumn` only
+      for rows whose `type` is `Array` and an element type is chosen; also forces `nullable: false` for
+      every `Array` row as a defensive backstop (mirrors the backend's own rejection of a nullable array
+      column), independent of the UI-level disabled toggle.
+- [x] 13.7 `utils.ts` — `getColumnRowErrors`: require `element_type` when `type === Array` (new
+      `ColumnRowError.element_type` message, reusing `ErrorI18nKey.RequiredField` per the repo's existing
+      required-field convention); `hasColumnRowErrors` now includes `element_type` in its check, so both
+      the schema-definition Save button and the Add-columns popup submit gate on it automatically.
+- [x] 13.8 i18n (`src/constants/i18n.ts`, `src/locales/en.ts`): add `ElementType` key
+      (`AnalyticsTablesI18nKey`).
+- [x] 13.9 Tests: new `ColumnRowsEditor.spec.tsx` (field shown/hidden by type, element-type patch,
+      element_type cleared on type change away from Array, Nullable disabled/forced-off for Array,
+      Nullable enabled for non-Array, validation error rendering); `utils.spec.ts` extended
+      (`toTableColumns` Array cases, `getColumnRowErrors`/`hasColumnRowErrors` Array cases,
+      `createColumnRow` default). `DraftSchemaEditor.spec.tsx` and `use-draft-schema-form.spec.ts`
+      needed no changes — their fixtures build rows via `createColumnRow()`/the real hook, which already
+      carry the new field.
+- [x] 13.10 Verify: `npx eslint` clean (0 errors) on every touched non-test file; `npx tsc --noEmit`
+      shows no new errors in any touched file; `npx vitest run` on the full `Analytics` + `tables`
+      actions suite: 336/336 passed (up from the pre-existing 306), no regressions.
+
+## 14. Role catalog for table access (supersedes free-text roles)
+
+- [x] 14.1 `src/app/[lang]/tables/actions.ts`: add `getRoles()` wrapping `rolesApi.getRolesList(token)`.
+- [x] 14.2 `TableAccessPanel.tsx`: fetch `getRoles()` alongside the existing `getTableAccess(name)` via
+      `Promise.all`; map `DialRole[]` to `SelectOption[]` (`{value: role.name, label: role.name}`).
+- [x] 14.3 Replace both `MultiValueAutocomplete` role pickers (`availableItems={[]}`, free text) with
+      `DialSelectField multiple` checkbox dropdowns bound to the fetched `roleOptions`.
+- [x] 14.4 Add a `fetching` state (distinct from `loaded`) that shows a `DialLoader` in place of the
+      pickers while the initial fetch is in flight; `fetching` clears on both success and failure so a
+      failed fetch falls through to the existing empty/Save-disabled form instead of spinning forever.
+- [x] 14.5 Add a `RolesLoadFailed` i18n key/notification for a failed roles-catalog fetch, independent
+      of the existing `AccessLoadFailed` notification for a failed access fetch — the two requests can
+      fail independently. Remove the now-unused `AddRolePlaceholder` i18n key.
+- [x] 14.6 Tests (`TableAccessPanel.spec.tsx`): mock `DialSelectField` as a checkbox-per-option group
+      (matching the `DialButtonDropdown` mocking convention elsewhere); cover loading spinner, checking/
+      unchecking a role and it reflecting in the saved payload, offering every catalog role (not just
+      granted ones), and the independent roles-catalog-failure notification.
+- [x] 14.7 Verify: `npx eslint` clean; `npx vitest run` on `TableAccessPanel.spec.tsx` and
+      `tables/tests/actions.spec.ts`: all passing, no regressions across the full Analytics suite.
+
+## 15. Table-detail UI polish (issue #3847 review + hands-on testing follow-ups)
+
+- [x] 15.1 `TableDetailView.tsx`: consolidate the ACTIVE-table header's **Add columns**/**Write rows**
+      buttons into one `DialButtonDropdown` (**Add**: Add rows, Add columns), each item still gated by
+      `canWrite`/`canModify`; reorder header actions to Manage access → Delete table → Add/Save.
+- [x] 15.2 Rename the "Write rows" label to "Add rows" everywhere user-facing (dropdown item and popup
+      header); remove the now-dead `WriteRows` i18n key rather than leaving it unused.
+- [x] 15.3 `utils.ts`: add `buildRowsTemplate(columns)` (type-shaped one-row JSON template) and
+      `parseRowsJson(json)` (parse-or-null, extracted from `onSubmitWriteRows`'s inline try/catch);
+      wire `buildRowsTemplate` into the Add-rows dropdown item's `onClick` and `parseRowsJson` into both
+      `onSubmitWriteRows` and the Add-rows popup's `disableSubmitButton`.
+- [x] 15.4 Add `invalid={Boolean(error)}` alongside every pre-existing `error={...}` prop in
+      `ColumnRowsEditor.tsx`, `CreateTablePopup.tsx`, and `EditColumnPopup.tsx` — the ui-kit's red-border
+      styling is driven by `invalid`, not `error` (traced in the compiled bundle; the prop doc comment is
+      misleading). Confirmed the same systemic gap existed in all three files, not just the one the user
+      first flagged.
+- [x] 15.5 Add `required: true` to `Source name`/`Name` labelProps and `required` to the `Element type`
+      select in `ColumnRowsEditor.tsx`; add `required` to `Ordering key` and `Grain key` in
+      `DraftSchemaEditor.tsx` (functionally required for `useDraftSchemaForm`'s completeness gate, even
+      though optional in the DTO).
+- [x] 15.6 `TableDetailView.tsx`: add a "Name: `<table>`" row (via `DialEllipsisTooltip`) to the
+      delete-table `DialConfirmationPopup`'s description, matching `EntityView/Modals/Delete/Delete.tsx`.
+- [x] 15.7 `ColumnRowsEditor.tsx` layout: switch a row to `items-start` (from `items-end`) whenever it
+      has any validation error, with a named `LABEL_ROW_OFFSET_CLASS` (`mt-[22px]`) compensating offset
+      on the trailing switches/remove-button group — mirrors the existing fix in `Routes/Paths/Path.tsx`
+      for the same problem. Widen the Type/Element-type columns `120px → 160px` so "Timestamp" fits.
+- [x] 15.8 `DraftSchemaEditor.tsx`: switch Ordering key/Partition column/Granularity to
+      `STANDARD_CONTROL_WIDTH` (`constants/main-layout.ts`) and stack them one-per-row instead of
+      Partition+Granularity sharing a row.
+- [x] 15.9 Tests: new `ColumnRowsEditor.spec.tsx` covers the element-type field, the Nullable
+      force-disable, and validation-error rendering (uses `userEvent`, not `fireEvent`, per this repo's
+      component-test convention); `utils.spec.ts` extended for `buildRowsTemplate` (per-type values,
+      empty-columns case) and `parseRowsJson` (valid array, syntax error, valid-non-array);
+      `TableDetailView.spec.tsx` extended for the Add dropdown, the rows template prefill, Insert-rows
+      gating, and the delete-confirmation table name; `DraftSchemaEditor.spec.tsx` updated for the
+      required-label text match (`{exact: false}`, since the asterisk changes the label's accessible
+      name).
+- [x] 15.10 Verify: `npx eslint` clean (0 errors) on every touched non-test file; `npx vitest run` on the
+      full `Analytics` suite: 104/104 passed, no regressions.

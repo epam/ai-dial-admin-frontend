@@ -2,7 +2,7 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { analyticsDataApi } from '@/src/app/api/api';
+import { analyticsDataApi, rolesApi } from '@/src/app/api/api';
 import {
   AnalyticsSchemaPatch,
   AnalyticsTable,
@@ -12,6 +12,7 @@ import {
   UpdateTableDto,
   WriteRowsDto,
 } from '@/src/models/analytics/table';
+import { DialRole } from '@/src/models/dial/role';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -56,4 +57,9 @@ export async function getTableAccess(name: string): Promise<TableAccess | null> 
 
 export async function replaceTableAccess(name: string, access: TableAccess): Promise<ServerActionResponse> {
   return analyticsDataApi.replaceTableAccess(name, access, await token());
+}
+
+// The catalog of DIAL-configured roles offered as checkboxes in the Manage table access panel.
+export async function getRoles(): Promise<DialRole[] | null> {
+  return rolesApi.getRolesList(await token());
 }

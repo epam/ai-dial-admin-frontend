@@ -1,7 +1,24 @@
 import { ColDef } from 'ag-grid-community';
 
-import { getAccuracyColors } from '@/src/components/Common/ColorScale/utils';
 import ExecutionStatusCellRenderer from '@/src/components/Grid/CellRenderers/ExecutionStatusCellRenderer';
+import MetricScoreCellRenderer from '@/src/components/Grid/CellRenderers/MetricScoreCellRenderer';
+import {
+  DURATION_COLUMN_WIDTH,
+  EXTRACTED_COLUMN_MIN_WIDTH,
+  fixedWidthColDef,
+  HTTP_COLUMN_WIDTH,
+  METRIC_COLUMN_WIDTH,
+  NO_FILTER_COL_DEF,
+  NUMBER_FILTER_COL_DEF,
+  RUN_INDEX_COLUMN_WIDTH,
+  STATUS_COLUMN_WIDTH,
+  TEST_CASE_NAME_COLUMN_WIDTH,
+  TEXT_FILTER_COL_DEF,
+} from '@/src/components/Runs/grid-column-layout';
+import {
+  EXECUTION_GROUP_HEADER,
+  EXTRACTED_GROUP_HEADER,
+} from '@/src/components/Runs/Compare/ExecutionResults/constants';
 import { MetricBindings, MetricSnapshot } from '@/src/models/evaluation/metric';
 import { AnalyticsResult, ExtractionResult, Run } from '@/src/models/evaluation/run';
 import { FilterDto } from '@/src/models/request';
@@ -23,26 +40,14 @@ export const RESULT_FILTERS = (run: Run): FilterDto[] => [
   },
 ];
 
-const getInputColumns = (input: Record<string, unknown>, hide = false) => {
-  return Object.keys(input).map((key) => {
-    return {
-      field: key,
-      headerName: key,
-      hide,
-      valueGetter: (params) => {
-        const value = params.data?.testCaseData?.[key];
-        if (typeof value === 'object') return JSON.stringify(value);
-        return value ?? '—';
-      },
-    } as ColDef;
-  });
-};
-
 const getExtractedColumns = (extracted: Record<string, unknown>) => {
   return Object.keys(extracted).map((key) => {
     return {
       field: key,
       headerName: key,
+      flex: 1,
+      minWidth: EXTRACTED_COLUMN_MIN_WIDTH,
+      ...NO_FILTER_COL_DEF,
       valueGetter: (params) => {
         const value = params.data?.extractedColumns?.[key];
         if (typeof value === 'object') return JSON.stringify(value);
@@ -67,7 +72,7 @@ const mergeMetricValuesSchema = (results: AnalyticsResult[]): Record<string, Rec
   return merged;
 };
 
-const getMetricsColumns = (metrics: Record<string, Record<string, unknown>>, theme?: string) => {
+const getMetricsColumns = (metrics: Record<string, Record<string, unknown>>) => {
   return Object.entries(metrics).map(([groupKey, groupValues]) => ({
     headerName: groupKey,
     children: Object.keys(groupValues).map(
@@ -75,6 +80,9 @@ const getMetricsColumns = (metrics: Record<string, Record<string, unknown>>, the
         ({
           field: key,
           headerName: key,
+          cellRenderer: MetricScoreCellRenderer,
+          ...NUMBER_FILTER_COL_DEF,
+          ...fixedWidthColDef(METRIC_COLUMN_WIDTH),
           valueGetter: (params) => {
             const groupExists = params.data?.metricValues != null && groupKey in params.data.metricValues;
             if (!groupExists) return '—';
@@ -84,14 +92,6 @@ const getMetricsColumns = (metrics: Record<string, Record<string, unknown>>, the
               return +value.toFixed(3);
             }
             return '—';
-          },
-          cellStyle: (params) => {
-            const value = params.data?.metricValues?.[groupKey]?.[key];
-            if (typeof value === 'number' && value >= 0 && value <= 1) {
-              const colors = getAccuracyColors(value, theme);
-              return { backgroundColor: colors.bg };
-            }
-            return undefined;
           },
           comparator(valueA, valueB, nodeA, nodeB, isDescending) {
             const metricA = nodeA?.data?.metricValues?.[groupKey]?.[key];
@@ -122,21 +122,26 @@ const getMetricsColumns = (metrics: Record<string, Record<string, unknown>>, the
 const executionColumns: ColDef[] = [
   {
     field: 'runIndex',
-    headerName: '#',
+    headerName: '# Run number',
     colId: 'runIndex',
-    width: 50,
+    ...fixedWidthColDef(RUN_INDEX_COLUMN_WIDTH),
+    ...NO_FILTER_COL_DEF,
     valueGetter: (params) => (params.data?.runIndex != null ? params.data.runIndex + 1 : null),
   },
   {
     field: 'responseStatusCode',
     headerName: 'HTTP',
     colId: 'http',
+    ...fixedWidthColDef(HTTP_COLUMN_WIDTH),
+    ...NO_FILTER_COL_DEF,
     cellClass: (params) => getTestCaseStatusClass(params.data?.responseStatusCode),
   },
   {
     field: 'durationMs',
     headerName: 'Duration',
     colId: 'duration',
+    ...fixedWidthColDef(DURATION_COLUMN_WIDTH),
+    ...NO_FILTER_COL_DEF,
     valueGetter: (params) => {
       const duration = params.data?.executionInfo?.durationMs ?? params.data?.execDurationMs;
       return getFormattedDuration(duration);
@@ -155,39 +160,33 @@ const staticColumns = [
         headerName: ' ',
         context: { panelName: 'Status' },
         colId: 'status',
-        width: 50,
-        minWidth: 50,
+        ...fixedWidthColDef(STATUS_COLUMN_WIDTH),
+        ...NO_FILTER_COL_DEF,
         cellRenderer: ExecutionStatusCellRenderer,
       },
       {
         field: 'testCaseName',
         headerName: 'Test Case name',
         colId: 'testCaseName',
-        filter: 'agTextColumnFilter',
-        floatingFilter: true,
-        floatingFilterComponent: 'agTextColumnFloatingFilter',
+        ...fixedWidthColDef(TEST_CASE_NAME_COLUMN_WIDTH),
+        ...TEXT_FILTER_COL_DEF,
       },
     ],
   },
   {
-    headerName: 'EXECUTION',
+    headerName: EXECUTION_GROUP_HEADER,
     children: executionColumns,
   },
 ];
 
-export const getAnalyticsColumns = (results: AnalyticsResult[], theme?: string) => {
+export const getAnalyticsColumns = (results: AnalyticsResult[]) => {
   const metrics = mergeMetricValuesSchema(results);
-  const input = results[0]?.testCaseData || {};
 
   return [
     ...staticColumns,
-    ...getMetricsColumns(metrics, theme),
+    ...getMetricsColumns(metrics),
     {
-      headerName: 'INPUT BINDINGS',
-      children: getInputColumns(input, true),
-    },
-    {
-      headerName: 'EXTRACTED',
+      headerName: EXTRACTED_GROUP_HEADER,
       children: getExtractedColumns(results[0]?.extractedColumns || {}),
     },
   ];
