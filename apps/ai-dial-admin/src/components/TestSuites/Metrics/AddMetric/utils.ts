@@ -4,6 +4,7 @@ import { jsonSchemaToFields } from '@/src/components/Common/SchemaGrid/utils';
 import { CSV_COLUMN_SEPARATOR } from '@/src/constants/eval-export';
 import { MetricBinding } from '@/src/models/evaluation/metric';
 import { MetricBindingType } from '@/src/types/evaluation';
+import { SYSTEM_FUNCTION_CONDITION_REGEX } from './constants';
 
 export const validateMetricBindings = (
   metricName: string | undefined,
@@ -52,4 +53,9 @@ export const validateMetricBindings = (
   }
 
   return true;
+};
+
+export const isReservedSystemFunctionCondition = (condition?: string): boolean => {
+  const trimmed = condition?.trim();
+  return !!trimmed && SYSTEM_FUNCTION_CONDITION_REGEX.test(trimmed);
 };

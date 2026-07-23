@@ -1844,6 +1844,10 @@ export enum TestSuitesI18nKey {
   PublicDatasetInfo = 'TestSuites.PublicDatasetInfo',
   TurnLabel = 'TestSuites.TurnLabel',
   TurnCountBadge = 'TestSuites.TurnCountBadge',
+  Condition = 'TestSuites.Condition',
+  ConditionHint = 'TestSuites.ConditionHint',
+  ConditionAlwaysRun = 'TestSuites.ConditionAlwaysRun',
+  ConditionSystemFunctionUnavailable = 'TestSuites.ConditionSystemFunctionUnavailable',
 }
 
 export enum DatasetsI18nKey {
