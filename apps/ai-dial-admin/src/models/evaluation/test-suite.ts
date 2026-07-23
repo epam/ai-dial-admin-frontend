@@ -62,6 +62,8 @@ export interface ValidationWarning {
   message: string;
   path: string;
   fieldName: string;
+  /** 0-based turn index the warning originates from; null for single-turn cases. */
+  turnIndex?: number | null;
 }
 
 export interface TestSuiteDeploymentRef {
@@ -108,6 +110,8 @@ export interface TestCase {
   id: string;
   createdAt: number;
   data?: Record<string, unknown>;
+  /** Present only for multi-turn cases — an ordered array of per-turn data maps. Mutually exclusive with `data`. */
+  multiTurnData?: Record<string, unknown>[];
   validationWarnings?: ValidationWarning[];
   enabled?: boolean;
 }

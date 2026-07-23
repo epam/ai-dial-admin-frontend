@@ -24,6 +24,8 @@ export interface DatasetTestCase {
   id?: string;
   testCaseName?: string;
   data?: Record<string, unknown>;
+  /** Present only for multi-turn cases — an ordered array of per-turn data maps. Mutually exclusive with `data`. */
+  multiTurnData?: Record<string, unknown>[];
   valid?: boolean;
   validationWarnings?: ValidationWarning[];
   createdAt?: number;
