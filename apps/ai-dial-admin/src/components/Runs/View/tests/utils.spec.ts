@@ -176,6 +176,18 @@ describe('Runs View :: getAnalyticsColumns', () => {
     expect(scoreColumn.comparator(0.9, 0.5, higherValueRow, lowerValueRow, false)).toBe(1);
     expect(scoreColumn.comparator(0.5, 0.5, lowerValueRow, lowerValueRow, false)).toBe(0);
   });
+
+  test('Should render blank cell without crash when a metric group is skipped entirely for a row (condition false)', () => {
+    const results = [{ metricValues: { GroupA: { a: 1 } } }, { metricValues: { GroupB: { x: 3 } } }] as any[];
+
+    const columns = getAnalyticsColumns(results as any);
+    const groupA = columns.find((c: any) => c.headerName === 'GroupA') as any;
+    const aCol = groupA.children.find((c: any) => c.field === 'a');
+
+    expect(() => aCol.valueGetter({ data: { metricValues: { GroupB: { x: 3 } } } })).not.toThrow();
+    expect(aCol.valueGetter({ data: { metricValues: { GroupB: { x: 3 } } } })).toBe('—');
+    expect(aCol.valueGetter({ data: { metricValues: undefined } })).toBe('—');
+  });
 });
 
 describe('Runs View :: getFormattedDuration', () => {
@@ -502,6 +514,15 @@ describe('Runs View :: getMetricGroups', () => {
     const result = getMetricGroups(metricValues);
     expect(result[0].metrics[0]).toEqual({ key: 'score', value: null, isError: true });
     expect(result[0].metrics[1]).toEqual({ key: 'confidence', value: null, isError: true });
+  });
+
+  test('Should omit a metric skipped by a false condition (absent from metricValues) without crashing', () => {
+    const metricValues = {
+      retrieval: { f1: 0.5 },
+    };
+    const result = getMetricGroups(metricValues);
+    expect(result).toHaveLength(1);
+    expect(result.find((group) => group.title === 'conditional_metric')).toBeUndefined();
   });
 });
 
