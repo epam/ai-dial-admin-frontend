@@ -92,7 +92,7 @@ For an `ACTIVE` table, the detail page SHALL show the table's columns in a grid 
 
 The edit action SHALL open a unified edit modal seeded with the column's current name, display name, tag, description, and sensitive flag. The name field SHALL be required (submit disabled while blank) and SHALL be disabled for columns the backend does not allow to rename (grain-key, ordering-key, and `_`-prefixed system columns) while the metadata fields remain editable. Blank display name, tag, or description values SHALL be valid input meaning "clear the value"; the sensitive flag SHALL be toggled with a switch. On submit the modal SHALL diff the form against the original column and send a **single** schema patch: a structural `rename` op when the name changed, plus a **single `update` merge-patch entry** carrying the target column name and only the metadata fields (tag, display name, description, sensitive) that changed. Within the `update` entry an omitted field leaves that attribute unchanged, a blank string value clears it, a non-blank string value sets it, and the boolean `sensitive` is sent as `true`/`false` when toggled. When a rename is included, the `update` entry SHALL reference the new (post-rename) column name. Submit SHALL be disabled when no field changed.
 
-Adding columns SHALL be available from the header via a form popup reusing the column-row editor. Every live schema change SHALL be sent as a schema patch to `updateTableSchema` (`PATCH /v1/tables/{name}/schema`), and on success the detail view SHALL refresh from the server. Deleting the whole table and editing its catalog metadata (description/tag order) SHALL NOT be offered from this view — both live only in the catalog list's row action menu (see "Tables catalog page").
+Adding columns SHALL be available from the header via a form popup reusing the column-row editor, including its element-type control and disabled-Nullable behavior for Array-typed rows (see "Define and materialize a table schema"). Every live schema change SHALL be sent as a schema patch to `updateTableSchema` (`PATCH /v1/tables/{name}/schema`), and on success the detail view SHALL refresh from the server. Deleting the whole table and editing its catalog metadata (description/tag order) SHALL NOT be offered from this view — both live only in the catalog list's row action menu (see "Tables catalog page").
 
 #### Scenario: Live column surface only for materialized tables
 
@@ -137,6 +137,101 @@ Adding columns SHALL be available from the header via a form popup reusing the c
 - **WHEN** the user adds one or more valid columns in the add-columns popup and submits
 - **THEN** an add schema patch is sent and the new columns appear after refresh
 
+#### Scenario: Adding an array column requires an element type
+
+- **WHEN** the user adds a column typed Array in the add-columns popup without choosing an element type
+- **THEN** submit is disabled until an element type is chosen
+
+### Requirement: Table detail gates edits by per-table permissions
+
+The table detail view (`components/Analytics/Tables/TableDetailView.tsx`) SHALL gate its mutating affordances independently:
+
+- **Delete table** SHALL be shown only when `canDelete` (`FULL_ADMIN` and non-system).
+- For an `ACTIVE` table, **Add rows** (inserting rows) and **Add columns** (schema evolution) SHALL be offered as items of a single header **Add** dropdown rather than two standalone buttons; **Add rows** SHALL be shown only when `canWrite`, **Add columns** only when `canModify`, and the dropdown itself SHALL NOT render when neither is available.
+- Per-column **edit/drop** (grid action column), **inline column rename**, column-metadata edits, and **description edits** SHALL be shown only when `canModify`.
+- Header actions SHALL be ordered **Manage access, Delete table, Add** (a not-yet-`ACTIVE` table shows **Save** in place of **Add** — see "Define and materialize a table schema").
+
+Because the backend reports `permissions {false,false}` for system tables, these edit affordances hide for system tables without a separate check.
+
+#### Scenario: Write-capable, not modify-capable
+
+- **WHEN** a table reports `permissions {write:true, modify:false}`
+- **THEN** the header **Add** dropdown offers **Add rows** but not **Add columns**, and the per-column action column and inline rename are absent
+
+#### Scenario: Modify-capable, not write-capable
+
+- **WHEN** a table reports `permissions {write:false, modify:true}`
+- **THEN** the schema-edit affordances and per-column action column are present, and the header **Add** dropdown offers **Add columns** but not **Add rows**
+
+#### Scenario: Neither capability hides the Add dropdown entirely
+
+- **WHEN** a table reports `permissions {write:false, modify:false}`
+- **THEN** the header **Add** dropdown is not rendered at all
+
+#### Scenario: Delete stays admin-only
+
+- **WHEN** a non-system table reports edit permissions but the user is not `FULL_ADMIN`
+- **THEN** the "Delete table" button is absent
+
+#### Scenario: Header actions follow the fixed order
+
+- **WHEN** the detail header renders for a user with every permission
+- **THEN** the actions appear in the order Manage access, Delete table, Add (or Save when not `ACTIVE`)
+
+### Requirement: Table detail row writes
+
+The Table detail page SHALL let the user write rows by entering a JSON array of row objects in a popup editor, opened via the header **Add** dropdown's **Add rows** item. Opening the editor SHALL prefill it with a one-row JSON template whose keys are the table's declared column names, each mapped to a value matching that column's type (`0` for Integer/Long/Decimal, `false` for Boolean, `{}` for Object, `[]` for Array, `""` otherwise) rather than a bare empty array, so the example stays valid input for every column. The **Insert rows** submit action SHALL be disabled while the editor's content does not parse as a JSON array, re-enabling as soon as it does; submitting invalid or non-array input SHALL additionally surface an error and SHALL NOT issue a request. Valid rows SHALL be posted via `addRows`, with a success or error notification.
+
+#### Scenario: Opening Add rows prefills a type-shaped template
+
+- **WHEN** the user opens the Add rows editor for a table with declared columns
+- **THEN** the editor is prefilled with one row object keyed by each column's name, with type-appropriate placeholder values
+
+#### Scenario: Insert rows is disabled while the JSON is invalid
+
+- **WHEN** the editor's content is not valid JSON, or is valid JSON that is not an array
+- **THEN** the Insert rows action is disabled
+- **AND** it re-enables once the content becomes a valid JSON array
+
+#### Scenario: Valid rows are inserted
+
+- **WHEN** the user enters a valid JSON array of objects and submits
+- **THEN** the rows are posted to the table and a success notification is shown
+
+#### Scenario: Invalid rows JSON is rejected
+
+- **WHEN** the user enters text that is not a JSON array
+- **THEN** an error is shown and no request is issued
+
+### Requirement: Full-admin per-table role management panel
+
+The table detail view SHALL provide a panel to view and manage the table's `write` / `modify` provider-role lists, backed by `AnalyticsDataApi.getTableAccess` / `replaceTableAccess` (`GET` / `PUT /v1/tables/{name}/access`) and a `TableAccess { write: string[]; modify: string[] }` model. Because the backend restricts `GET /access` to `FULL_ADMIN`, the panel SHALL be shown only when `canManageRoles` (`FULL_ADMIN`); a save SHALL full-replace the lists via `replaceTableAccess`. Role names SHALL be picked as checkboxes from the DIAL Roles catalog (fetched via `RolesApi.getRolesList`, the same source other admin surfaces such as App Routes already use for role selection) rather than typed free text — each option's value is the `DialRole.name`, which is also the raw provider-role string the backend matches against; there is no separate role id. While the initial fetch (the table's current access and the roles catalog, requested together) is in flight the panel SHALL show a loading spinner in place of the role pickers. A failed access fetch and a failed roles-catalog fetch SHALL each surface their own error notification (the two requests can fail independently); Save SHALL stay disabled until the access fetch succeeds.
+
+#### Scenario: Full admin edits the role lists
+
+- **WHEN** a `FULL_ADMIN` opens the role panel, checks a role in the `write` list, and saves
+- **THEN** `replaceTableAccess` is called with the full updated `{write, modify}` lists
+
+#### Scenario: Panel hidden for non-admins
+
+- **WHEN** the detail view renders for a user who is not `FULL_ADMIN`
+- **THEN** the role-management panel is not shown
+
+#### Scenario: Loading spinner while fetching
+
+- **WHEN** the panel opens
+- **THEN** a loading spinner is shown until both the table's current access and the roles catalog have been fetched
+
+#### Scenario: Every catalog role is offered, not just the granted ones
+
+- **WHEN** the roles catalog loads
+- **THEN** each write/modify picker offers every catalog role as a checkbox, with already-granted roles checked
+
+#### Scenario: Roles-catalog fetch failure is surfaced independently
+
+- **WHEN** the roles catalog fails to load even though the table's current access loads successfully
+- **THEN** an error notification distinct from the access-load-failure notification is shown
+
 ## ADDED Requirements
 
 ### Requirement: Table lifecycle status badge
@@ -155,7 +250,9 @@ The UI SHALL surface a table's lifecycle `status` (`PENDING`, `ACTIVE`, `FAILED`
 
 ### Requirement: Define and materialize a table schema
 
-For a not-yet-materialized table (`status` `PENDING` or `FAILED`), the table detail view SHALL present a schema-definition surface in place of the live column surface. The surface SHALL let the user define the whole physical schema: for a **source**, a repeatable set of columns (source name, exposed name, type, nullable, optional tag, optional sensitive flag), an ordering key chosen from the declared column source names, and an optional partition (a temporal column + a day/month/year granularity); for an **enrichment**, its columns plus a grain key chosen from its source table's columns. Cardinality SHALL NOT be user-selectable — the enrichment submission SHALL send the single supported value (`zero_or_one`). Column rows SHALL be validated for identifier grammar, uniqueness, and tag length exactly as the create/add-columns editor validates today.
+For a not-yet-materialized table (`status` `PENDING` or `FAILED`), the table detail view SHALL present a schema-definition surface in place of the live column surface. The surface SHALL let the user define the whole physical schema: for a **source**, a repeatable set of columns (source name, exposed name, type, nullable, optional tag, optional sensitive flag, and — for a column typed Array — a required element type), an ordering key chosen from the declared column source names, and an optional partition (a temporal column + a day/month/year granularity); for an **enrichment**, its columns plus a grain key chosen from its source table's columns. Cardinality SHALL NOT be user-selectable — the enrichment submission SHALL send the single supported value (`zero_or_one`). Column rows SHALL be validated for identifier grammar, uniqueness, and tag length exactly as the create/add-columns editor validates today.
+
+An Array-typed column row SHALL offer an additional element-type selector, restricted to the non-array, non-object column types (no nested arrays or objects). Submitting a row typed Array without an element type SHALL be rejected client-side (the backend also rejects it, 422). An Array-typed row's Nullable control SHALL be disabled and forced off — the backend rejects a nullable array column.
 
 Submitting the schema (a header **Save** action) SHALL send the whole document via `defineTableSchema` (`POST /v1/tables/{name}/schema`), which defines the schema **and** materializes the table in the same call — there is no separate save-draft step, and no way to persist an incomplete schema. Save SHALL be disabled until the schema is complete for its kind (a source needs at least one valid column and a non-empty ordering key; an enrichment needs a grain key), since the backend rejects an incomplete submission (422) without persisting it. On success the view SHALL refresh showing the table `ACTIVE` with its live column surface. On a backend (ClickHouse) failure the table becomes `FAILED`; the detail view SHALL present the same schema-definition surface with an indication that activation failed, allowing the user to adjust the schema and resubmit. While the table is not `ACTIVE`, the write-rows action SHALL NOT be offered.
 
@@ -180,6 +277,18 @@ Submitting the schema (a header **Save** action) SHALL send the whole document v
 
 - **WHEN** an enrichment schema is submitted
 - **THEN** the payload carries cardinality `zero_or_one` and no cardinality control is rendered
+
+#### Scenario: Array column requires an element type
+
+- **WHEN** the user sets a column row's type to Array and leaves its element type unset
+- **THEN** the row shows a validation error and Save is disabled
+- **AND** choosing an element type (a non-array, non-object type) clears the error
+
+#### Scenario: Array column cannot be nullable
+
+- **WHEN** a column row's type is Array
+- **THEN** its Nullable control is disabled and shows off
+- **AND** the built column payload does not send `nullable: true` for that row
 
 ### Requirement: Table metadata editing (description and tag order)
 

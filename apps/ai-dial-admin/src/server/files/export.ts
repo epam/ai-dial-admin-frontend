@@ -1,24 +1,15 @@
 import JSZip from 'jszip';
 
 import { Token } from '@/src/models/auth';
-import { getFolderNameAndPath } from '@/src/utils/files/path';
+import { getFolderNameAndPath, getPathFromUrl } from '@/src/utils/files/path';
 import { FilesCoreApi } from '@/src/server/core/files-core-api';
+import { gatherResourceUrls, isFolderNode, isTechnicalItem, WalkableNode } from '@/src/server/folders/resource-walk';
 
 /**
  * Ports the admin backend's `FileService.export` path-resolution and archive-path rewriting
  * (`ExportPathUtils`/`ResourceEximExportHelper`) — this is not a plain "zip the selected
  * files" operation; see `migrate-files-export-to-core`'s design.
  */
-
-const DIAL_FOLDER_MARKER = '.dial_folder';
-
-/** A folder-marker resource (`.dial_folder` or `.dial_folder__<version>`), excluded from export. */
-export const isTechnicalItem = (path: string): boolean => {
-  const { name } = getFolderNameAndPath(path);
-  return name === DIAL_FOLDER_MARKER || name.startsWith(`${DIAL_FOLDER_MARKER}__`);
-};
-
-const isFolderPath = (path: string): boolean => path.endsWith('/');
 
 export interface ExportEntry {
   storagePath: string;
@@ -27,14 +18,19 @@ export interface ExportEntry {
 }
 
 /**
- * Resolves user-selected paths into a flat list of exportable entries: folders expand to
- * their direct children only (one level deep — matching the backend's own behavior exactly,
- * not a design goal of this port), technical marker resources are excluded, and a duplicate
- * storage path across entries is rejected rather than silently colliding.
+ * Resolves user-selected paths into a flat list of exportable entries: folders expand
+ * recursively to every descendant file at any nesting depth, technical marker resources are
+ * excluded, and a duplicate storage path across entries is rejected rather than silently
+ * colliding.
+ *
+ * Folder-vs-file is decided from the path's own `nodeType` in DIAL Core — never from whether
+ * the path string happens to end in `/` — so a folder selection can't be silently misclassified
+ * as a single file and resolve to zero exportable entries.
  */
 export const resolveExportEntries = async (
   paths: string[],
-  listFolderChildren: (folderPath: string) => Promise<string[]>,
+  getNode: (path: string) => Promise<WalkableNode | null>,
+  gatherDescendantUrls: (path: string) => Promise<string[]>,
 ): Promise<ExportEntry[]> => {
   const entries: ExportEntry[] = [];
   const seen = new Set<string>();
@@ -51,9 +47,10 @@ export const resolveExportEntries = async (
   };
 
   for (const path of paths) {
-    if (isFolderPath(path)) {
-      const children = await listFolderChildren(path);
-      children.forEach((child) => addEntry(child, path));
+    const node = await getNode(path);
+    if (node && isFolderNode(node)) {
+      const urls = await gatherDescendantUrls(path);
+      urls.forEach((url) => addEntry(getPathFromUrl(url), path));
     } else {
       addEntry(path, null);
     }
@@ -93,16 +90,14 @@ export const buildFilesExportZip = async (
   token: Token,
   paths: string[],
 ): Promise<{ blob: Blob; fileName: string }> => {
-  const listFolderChildren = async (folderPath: string): Promise<string[]> => {
-    const node = await filesCoreApi.getFileMetadata(token, folderPath, false);
-    return (node?.items || [])
-      .filter((item) => String(item.nodeType).toUpperCase() === 'ITEM')
-      .map((item) => item.path)
-      .filter((path): path is string => Boolean(path));
-  };
+  const getNode = (path: string) => filesCoreApi.getFileMetadata(token, path, false);
+  const gatherDescendantUrls = (path: string) =>
+    gatherResourceUrls(
+      (folderPath, nextToken) => filesCoreApi.getFileMetadata(token, folderPath, true, nextToken),
+      path,
+    );
 
-  const entries = await resolveExportEntries(paths, listFolderChildren);
-
+  const entries = await resolveExportEntries(paths, getNode, gatherDescendantUrls);
   const zip = new JSZip();
   for (const entry of entries) {
     const fileName = getFolderNameAndPath(entry.storagePath).name;

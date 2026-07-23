@@ -123,6 +123,34 @@ describe('Server :: Assets :: exim :: buildAssetsExport', () => {
     expect(assetApi.getMerged).not.toHaveBeenCalled();
   });
 
+  test('excludes .dial_folder marker resources encountered during folder expansion', async () => {
+    const assetApi = {
+      getMetadata: vi
+        .fn()
+        .mockImplementation((_t: unknown, _type: unknown, path: string, options: any) =>
+          options?.recursive
+            ? Promise.resolve(
+                folderNode('prompts/public/folder/', [
+                  itemNode('prompts/public/folder/a__1.0'),
+                  itemNode('prompts/public/folder/.dial_folder'),
+                  itemNode('prompts/public/folder/.dial_folder__1.0'),
+                ]),
+              )
+            : Promise.resolve(folderNode('prompts/public/folder/')),
+        ),
+      getMerged: vi
+        .fn()
+        .mockImplementation((_t: unknown, _type: unknown, path: string) =>
+          Promise.resolve({ name: path, version: '1.0' }),
+        ),
+    } as any;
+
+    const result = await buildAssetsExport(CONFIG, assetApi, {} as any, ['public/folder/']);
+
+    expect((result as any).widgets.map((w: any) => w.id)).toEqual(['prompts/public/folder/a__1.0']);
+    expect(assetApi.getMerged).toHaveBeenCalledTimes(1);
+  });
+
   test('a non-folder path is passed straight through to getMerged, unchanged', async () => {
     const assetApi = {
       getMetadata: vi.fn().mockResolvedValue(itemNode('prompts/public/name__1.0')),
