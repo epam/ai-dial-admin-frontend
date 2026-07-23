@@ -87,7 +87,7 @@ export class DatasetsApi extends BaseApi {
 
   createTestCase(
     datasetId: string,
-    body: Pick<DatasetTestCase, 'testCaseName' | 'data'>,
+    body: Pick<DatasetTestCase, 'testCaseName' | 'data' | 'multiTurnData'>,
     token: Token,
   ): Promise<ServerActionResponse> {
     return this.postAction(DATASET_TEST_CASES_URL(datasetId), body, token);
