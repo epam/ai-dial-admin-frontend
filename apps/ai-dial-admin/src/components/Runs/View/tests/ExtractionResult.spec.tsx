@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { FC, useCallback, useState } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { EXPANDER_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { ExtractionResultStatus } from '@/src/models/evaluation/run';
 import { ExtractionResultTabUiState } from '../models';
@@ -68,8 +69,8 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
 });
 
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
-  default: ({ additionalGridOptions, rowData }: any) => (
-    <div role="grid" aria-label="Analytics grid">
+  default: ({ additionalGridOptions, rowData, columnDefs }: any) => (
+    <div role="grid" aria-label="Analytics grid" data-column-defs={JSON.stringify(columnDefs ?? [])}>
       <button onClick={() => additionalGridOptions.onRowClicked({ data: { id: 'r1' } })}>Row 1</button>
       <button onClick={() => additionalGridOptions.onRowClicked({ data: { id: 'r2' } })}>Row 2</button>
       {(rowData ?? []).map((row: any, index: number) => (
@@ -107,6 +108,12 @@ const ControlledExtractionResultTab: FC<{ initialState?: Partial<ExtractionResul
     />
   );
 };
+
+const flattenCols = (cols: any[]): any[] =>
+  cols.flatMap((col) => (Array.isArray(col.children) ? flattenCols(col.children) : [col]));
+
+const getRenderedColumnDefs = (): any[] =>
+  JSON.parse(screen.getByRole('grid', { name: 'Analytics grid' }).getAttribute('data-column-defs') ?? '[]');
 
 describe('ExtractionResultTab', () => {
   beforeEach(() => {
@@ -203,6 +210,77 @@ describe('ExtractionResultTab', () => {
     expect(mockShowSidebar).toHaveBeenCalledTimes(1);
     const panelElement = mockShowSidebar.mock.calls[0][0];
     expect(panelElement.props.resultId).toBe('r2');
+  });
+
+  test('keeps result columns sortable when all results are single-turn (no grouping transform)', async () => {
+    render(
+      <ControlledExtractionResultTab
+        initialState={{
+          results: [
+            {
+              id: 'r1',
+              responseStatusCode: 200,
+              runIndex: 0,
+              executionStatus: ExtractionResultStatus.SUCCESS,
+              testCaseName: 'Test Case 1',
+            },
+            {
+              id: 'r2',
+              responseStatusCode: 200,
+              runIndex: 1,
+              executionStatus: ExtractionResultStatus.SUCCESS,
+              testCaseName: 'Test Case 2',
+            },
+          ],
+          snapshots: [],
+        }}
+      />,
+    );
+
+    await waitFor(() => screen.getByRole('grid', { name: 'Analytics grid' }));
+
+    const cols = flattenCols(getRenderedColumnDefs());
+    expect(cols.find((c) => c.colId === EXPANDER_COLUMN_CEL_ID)).toBeUndefined();
+    expect(cols.length).toBeGreaterThan(0);
+    expect(cols.some((c) => c.sortable === false)).toBe(false);
+  });
+
+  test('uses the sort-disabled grouped columns when a multi-turn conversation is present', async () => {
+    render(
+      <ControlledExtractionResultTab
+        initialState={{
+          results: [
+            {
+              id: 'r1',
+              testCaseId: 'tc1',
+              runIndex: 0,
+              turnIndex: 0,
+              totalTurns: 2,
+              responseStatusCode: 200,
+              executionStatus: ExtractionResultStatus.SUCCESS,
+              testCaseName: 'conversation',
+            },
+            {
+              id: 'r2',
+              testCaseId: 'tc1',
+              runIndex: 0,
+              turnIndex: 1,
+              totalTurns: 2,
+              responseStatusCode: 200,
+              executionStatus: ExtractionResultStatus.SUCCESS,
+              testCaseName: 'conversation',
+            },
+          ],
+          snapshots: [],
+        }}
+      />,
+    );
+
+    await waitFor(() => screen.getByRole('grid', { name: 'Analytics grid' }));
+
+    const cols = flattenCols(getRenderedColumnDefs());
+    expect(cols.find((c) => c.colId === EXPANDER_COLUMN_CEL_ID)).toBeDefined();
+    expect(cols.filter((c) => c.colId !== EXPANDER_COLUMN_CEL_ID).every((c) => c.sortable === false)).toBe(true);
   });
 
   test('calls closeSidebar on unmount', async () => {

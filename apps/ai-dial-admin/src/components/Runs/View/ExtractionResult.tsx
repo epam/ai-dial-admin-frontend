@@ -48,9 +48,11 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
     onGridReady,
   });
 
-  const groupedColDefs = useMemo(
-    () => applyResultsGrouping(colDefs ?? [], projection.onToggleExpand),
-    [colDefs, projection.onToggleExpand],
+  const hasMultiTurn = useMemo(() => (results ?? []).some((r) => (r.totalTurns ?? 1) > 1), [results]);
+
+  const gridColDefs = useMemo(
+    () => (hasMultiTurn ? applyResultsGrouping(colDefs ?? [], projection.onToggleExpand) : (colDefs ?? [])),
+    [hasMultiTurn, colDefs, projection.onToggleExpand],
   );
 
   useEffect(() => {
@@ -155,7 +157,7 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
           <DialLoader size={40} />
         ) : (
           <GridView
-            columnDefs={groupedColDefs}
+            columnDefs={gridColDefs}
             rowData={projection.rowData}
             onGridReady={projection.onGridReady}
             additionalGridOptions={gridOptions}
