@@ -28,7 +28,7 @@ import { generateMetricDefaultBindings, generateMetricDefaultInputBindings } fro
 import MetricConfiguration from './Configuration';
 import { MetricStep } from './constants';
 import MetricSelection from './MetricSelection';
-import { validateMetricBindings } from './utils';
+import { isReservedSystemFunctionCondition, validateMetricBindings } from './utils';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 
 interface Props {
@@ -56,6 +56,7 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMet
   const [selectedMetricDetails, setSelectedMetricDetails] = useState<Metric | undefined>();
 
   const [metricName, setMetricName] = useState<string | undefined>('');
+  const [condition, setCondition] = useState<string>('');
 
   const [configBindings, setConfigBindings] = useState<MetricBinding[]>([]);
   const [inputBindings, setInputBindings] = useState<MetricBinding[]>([]);
@@ -94,16 +95,27 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMet
     setMetricName(selectedMetric?.displayName ?? editingMetric?.name ?? '');
   }, [selectedMetric, editingMetric?.name]);
 
+  // `condition` is only exposed on the plain list/detail item, not the aggregated schema call above.
+  useEffect(() => {
+    setCondition(editingMetric?.condition ?? '');
+  }, [editingMetric?.condition]);
+
+  const conditionError = isReservedSystemFunctionCondition(condition)
+    ? t(TestSuitesI18nKey.ConditionSystemFunctionUnavailable)
+    : undefined;
+
   const isStep1Valid = !!selectedMetricId;
-  const isStep2Valid = isJsonView
-    ? true
-    : validateMetricBindings(
-        metricName,
-        configBindings,
-        inputBindings,
-        selectedMetricDetails?.configSchema,
-        selectedMetricDetails?.inputSchema,
-      );
+  const isStep2Valid =
+    !conditionError &&
+    (isJsonView
+      ? true
+      : validateMetricBindings(
+          metricName,
+          configBindings,
+          inputBindings,
+          selectedMetricDetails?.configSchema,
+          selectedMetricDetails?.inputSchema,
+        ));
 
   const steps: Step[] = useMemo(
     () => [
@@ -123,9 +135,12 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMet
 
   const onFinishClick = useCallback(() => {
     if (selectedMetricDetails) {
-      onConfirm(generateMetricDefaultBindings(metricName ?? '', selectedMetricDetails, configBindings, inputBindings));
+      onConfirm({
+        ...generateMetricDefaultBindings(metricName ?? '', selectedMetricDetails, configBindings, inputBindings),
+        condition: condition.trim() || undefined,
+      });
     }
-  }, [configBindings, inputBindings, metricName, onConfirm, selectedMetricDetails]);
+  }, [condition, configBindings, inputBindings, metricName, onConfirm, selectedMetricDetails]);
 
   useEffect(() => {
     if (!metrics) {
@@ -189,6 +204,9 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMet
               selectedMetric={selectedMetric || editingMetric}
               configBindings={configBindings}
               inputBindings={inputBindings}
+              condition={condition}
+              conditionError={conditionError}
+              onChangeCondition={setCondition}
               onChangeName={setMetricName}
               selectedTestSuite={selectedTestSuite}
               testCaseSchema={dataset?.testCaseSchema}
