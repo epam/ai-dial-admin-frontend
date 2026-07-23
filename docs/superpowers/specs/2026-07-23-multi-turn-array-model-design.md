@@ -100,32 +100,37 @@ batch-write); condition builder / autocomplete.
 The reference branch's grouped-grid UX is reused; the persistence adapter is new because the array
 model stores turns inside one DTO rather than as separate rows.
 
-**Client-only grouping keys.** Grid rows carry ephemeral fields `_groupKey` (string) and `_turnIndex`
-(number) that are **never** persisted and **never** placed in `data`. They exist only to drive the
-reused grouping/projection primitive.
+**Grouping key = test case `id`; one client-only ordering field.** Turns of one multi-turn case all
+expand from a single DTO, so they share that DTO's `id` — grouping keys on the existing `id`, no
+separate group id is introduced (every case, saved or new, already has an `id` from
+`createNewTestCaseRow`). The one field that must be added is `_turnIndex` (number) — array position is
+not otherwise a per-row property, and it must survive re-sorts to rebuild `multiTurnData` in order. It
+is **never** persisted and **never** placed in `data`. Because multiple grid rows now share one `id`
+value, the grid sets `getRowId = \`${id}::${\_turnIndex}\`` so each turn row is a distinct AG-Grid node.
 
 **Load / expand** (`getTestCaseGridData` in `TestSuites/utils/data.ts`;
 `getDatasetTestCaseGridData` in `Datasets/utils/data.ts`):
 
 - A case with `data` (no `multiTurnData`) → one SINGLE grid row, exactly as today.
-- A case with `multiTurnData` → one TURN row per array element, each carrying `_groupKey =
-case.id` (or a generated key for unsaved cases) and `_turnIndex = arrayIndex`, plus the turn's data
-  flattened for the grid (same flatten pattern as today). The grouping util synthesizes the GROUP
-  summary row from the shared `_groupKey`.
+- A case with `multiTurnData` → one TURN row per array element, each carrying the case's `id` and
+  `_turnIndex = arrayIndex`, plus the turn's data flattened for the grid (same flatten pattern as
+  today). The grouping util synthesizes the GROUP summary row from the shared `id`.
 - Reuse the reference primitive: `src/utils/evaluation/test-case-grouping.ts` +
   `src/models/evaluation/test-case-grouping.ts` + `Grid/hooks/use-turn-group-projection.tsx` + the
   grouped cell renderers (`TestCaseNameCellRenderer`, `StackedTurnsCellRenderer`,
-  `TurnExpanderCellRenderer`) + `TestSuites/utils/grouped-columns.tsx`. Adapt the readers so grouping
-  keys come from `_groupKey`/`_turnIndex` instead of persisted `multiTurnId`/`turnIndex`.
+  `TurnExpanderCellRenderer`) + `TestSuites/utils/grouped-columns.tsx`. Adapt the readers so the group
+  key comes from `id` and the turn order from `_turnIndex`, instead of persisted
+  `multiTurnId`/`turnIndex`.
 
 **Save / collapse** (`rowToTestCase` / `rowToDatasetTestCase` + `getDirtyTestCases`):
 
 - SINGLE rows → `{ testCaseName, data }` (as today) — `multiTurnData` omitted.
-- TURN rows sharing a `_groupKey` → collapse into ONE DTO: sort by `_turnIndex`, build
+- TURN rows sharing an `id` → collapse into ONE DTO: sort by `_turnIndex`, build
   `multiTurnData = [turn0Data, turn1Data, …]`, set `{ testCaseName, multiTurnData }` — `data` omitted.
 - **Both-or-neither guard:** a saved DTO carries exactly one of `data` / `multiTurnData`, never both,
-  never neither, never an empty `multiTurnData`. Strip the ephemeral `_groupKey` / `_turnIndex` before
-  send.
+  never neither, never an empty `multiTurnData`. Strip the ephemeral `_turnIndex` before send.
+- Dirty-tracking keys on `id` (as today), so editing any turn marks the whole case dirty; at save all
+  grid rows with that `id` are gathered and collapsed together.
 
 **Identity on the GROUP row (diverges from the reference).** A multi-turn case is one entity with one
 name/enabled/validity. Turn sub-rows edit turn **data only**; `testCaseName`, `enabled`, and the
@@ -133,15 +138,15 @@ validity status render/edit on the GROUP row. `TestCaseNameCellRenderer` shows t
 `{count} turns` badge on the GROUP row and an indented `Turn k` label on TURN rows.
 
 **`onCellChange`** (`TestSuites/TestCases/TestCasesList.tsx`, `Datasets/TestCases/TestCasesList.tsx`):
-add `_groupKey` and `_turnIndex` to the field-exclusion set (never merged into `data`, like
-`testCaseName`/`enabled`). Editing a data field on a TURN row writes that turn row's `data`; on save the
+add `_turnIndex` to the field-exclusion set (never merged into `data`, like `testCaseName`/`enabled`;
+`id` is already excluded). Editing a data field on a TURN row writes that turn row's `data`; on save the
 turn rows collapse into the array in `_turnIndex` order.
 
 **Mutation affordances** (reuse reference helpers `promoteToMultiTurn`, `demoteToSingle`,
 `reorderTurns`, `renumberTurns` from `test-case-grouping.ts`):
 
 - Row action **Add turn** on a SINGLE case → promote to multi-turn (existing `data` becomes turn 0,
-  append an empty turn 1); assign a `_groupKey`.
+  append an empty turn 1); the case keeps its `id`, both turn rows share it.
 - **+ add turn** within a GROUP → append an empty TURN row, `_turnIndex = N`.
 - **Remove turn** → drop the TURN row, renumber `_turnIndex` contiguously. When exactly one turn
   remains, **auto-demote to single-turn**: convert the surviving turn's data back to `data`, drop the
@@ -228,15 +233,15 @@ ConditionSystemFunctionUnavailable }` in `constants/i18n.ts` + strings in `local
 ## 5. Testing
 
 - **Models / round-trip** (`TestSuites/utils/tests/data.spec.ts`, `Datasets/utils/tests/data.spec.ts`):
-  - `getTestCaseGridData`: a `multiTurnData` case expands to N TURN rows carrying `_groupKey` +
-    `_turnIndex`; a `data` case yields one SINGLE row.
-  - `rowToTestCase` / `rowToDatasetTestCase`: TURN rows sharing a `_groupKey` collapse to one DTO with
+  - `getTestCaseGridData`: a `multiTurnData` case expands to N TURN rows sharing the case `id` and
+    carrying `_turnIndex`; a `data` case yields one SINGLE row.
+  - `rowToTestCase` / `rowToDatasetTestCase`: TURN rows sharing an `id` collapse to one DTO with
     `multiTurnData` in `_turnIndex` order and no `data`; SINGLE row → `data`, no `multiTurnData`;
-    ephemeral keys stripped; never both, never empty `multiTurnData`.
+    `_turnIndex` stripped; never both, never empty `multiTurnData`.
 - **Mutations** (`test-case-grouping` util tests): promote single→multi; append turn; remove turn with
   auto-demote at 1 remaining; reorder + renumber contiguous.
 - **`onCellChange`** (`TestCasesList` component tests, both surfaces): editing a data field on a TURN
-  row writes that turn's data; `_groupKey` / `_turnIndex` never merged into `data`.
+  row writes that turn's data; `_turnIndex` never merged into `data`.
 - **Conditional metrics** (mirror reference): `isReservedSystemFunctionCondition` truth table;
   `Configuration` renders the Condition input, fires `onChangeCondition`, shows `conditionError`;
   `AddMetricModal` hydrates from `editingMetric`, blocks finish on reserved call, payload carries
@@ -253,8 +258,10 @@ ConditionSystemFunctionUnavailable }` in `constants/i18n.ts` + strings in `local
   bypasses it must apply the same rule (currently PUT batch is the only edit path; create goes through
   `createTestCase`).
 - The reference grouping util was written for a row-based model where `multiTurnId` / `turnIndex` are
-  persisted. Here they are client-only (`_groupKey` / `_turnIndex`); the readers must be adapted and
-  the mutation helpers must operate on the ephemeral keys and re-collapse on save.
+  persisted. Here the group key is the existing test case `id` and only turn order (`_turnIndex`) is
+  client-only; the readers must be adapted to those, and the mutation helpers must re-collapse on save.
+  Because turn rows share one `id`, the grid needs `getRowId` = `` `${id}::${_turnIndex}` `` for
+  distinct nodes.
 - Results grouping keys on `${testCaseId}::${runIndex}` — verify this is stable when the same case runs
   multiple times (runIndex disambiguates) and that trace id (if used) agrees.
 - MCP guard is toast-only; a future iteration may add a proactive disable once the run UI can cheaply
