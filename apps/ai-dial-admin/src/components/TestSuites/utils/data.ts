@@ -13,21 +13,59 @@ export const createNewTestCaseRow = (): Record<string, unknown> => {
   };
 };
 
+const flatten = (data?: Record<string, unknown>): Record<string, unknown> =>
+  Object.keys(data || {}).reduce((acc: Record<string, unknown>, key) => {
+    acc[key] = data?.[key];
+    return acc;
+  }, {});
+
 export const getTestCaseGridData = (testCases?: DatasetTestCase[] | null) => {
   return (
     testCases?.reduce((acc: Record<string, unknown>[], testCase: DatasetTestCase) => {
-      const factsData = Object.keys(testCase.data || {}).reduce((factsAcc: Record<string, string>, factKey: string) => {
-        factsAcc[factKey] = testCase.data?.[factKey] as string;
-        return factsAcc;
-      }, {});
-
-      acc.push({
-        ...testCase,
-        ...factsData,
-      });
+      const { multiTurnData, data, ...rest } = testCase;
+      if (multiTurnData && multiTurnData.length > 0) {
+        multiTurnData.forEach((turn, index) => {
+          acc.push({ ...rest, id: testCase.id, _turnIndex: index, data: turn, ...flatten(turn) });
+        });
+      } else {
+        acc.push({ ...rest, data: data ?? {}, ...flatten(data) });
+      }
       return acc;
     }, []) || []
   );
+};
+
+export const collapseRowsToTestCases = (rows: Record<string, unknown>[]): TestCase[] => {
+  const byId = new Map<string, Record<string, unknown>[]>();
+  const order: string[] = [];
+  rows.forEach((row) => {
+    const id = row.id as string;
+    if (!byId.has(id)) {
+      byId.set(id, []);
+      order.push(id);
+    }
+    byId.get(id)!.push(row);
+  });
+
+  return order.map((id) => {
+    const group = byId.get(id)!;
+    const first = group[0];
+    const base: TestCase = {
+      id,
+      enabled: first.enabled as boolean,
+      testCaseName: first.testCaseName as string | undefined,
+      createdAt: first.createdAt as number,
+      updatedAt: first.updatedAt as number | undefined,
+      valid: first.valid as boolean | undefined,
+      validationWarnings: first.validationWarnings as TestCase['validationWarnings'],
+    };
+    const isMulti = group.some((r) => r._turnIndex != null);
+    if (isMulti) {
+      const sorted = [...group].sort((a, b) => (a._turnIndex as number) - (b._turnIndex as number));
+      return { ...base, multiTurnData: sorted.map((r) => r.data as Record<string, unknown>) };
+    }
+    return { ...base, data: first.data as Record<string, unknown> };
+  });
 };
 
 export const rowToTestCase = (row: Record<string, unknown>): TestCase => {

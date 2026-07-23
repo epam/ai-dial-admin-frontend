@@ -1,5 +1,10 @@
-import { describe, expect, test } from 'vitest';
-import { createNewTestCaseRow, getTestCaseGridData as getTestCaseGridDataRaw, rowToTestCase } from '../data';
+import { describe, expect, it, test } from 'vitest';
+import {
+  collapseRowsToTestCases,
+  createNewTestCaseRow,
+  getTestCaseGridData as getTestCaseGridDataRaw,
+  rowToTestCase,
+} from '../data';
 import { TestCase as TestCaseModel } from '@/src/models/evaluation/test-suite';
 
 type TestCase = Partial<TestCaseModel>;
@@ -33,6 +38,7 @@ describe('getTestCaseGridData', () => {
     expect(result).toEqual([
       {
         testCaseName: 'Test Case 1',
+        data: {},
       },
     ]);
   });
@@ -50,7 +56,7 @@ describe('getTestCaseGridData', () => {
     expect(result).toEqual([
       {
         testCaseName: 'Test Case 1',
-        data: undefined,
+        data: {},
       },
     ]);
   });
@@ -432,5 +438,45 @@ describe('rowToTestCase', () => {
       validationWarnings: undefined,
       data: {},
     });
+  });
+});
+
+describe('getTestCaseGridData (multi-turn)', () => {
+  it('keeps a single-turn case as one row with no _turnIndex', () => {
+    const rows = getTestCaseGridDataRaw([
+      { id: 's1', testCaseName: 'solo', data: { prompt: 'hi' }, createdAt: 0 } as any,
+    ]);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]._turnIndex).toBeUndefined();
+    expect(rows[0].prompt).toBe('hi'); // flattened
+  });
+
+  it('expands a multi-turn case to one row per turn, sharing id, ordered by _turnIndex', () => {
+    const rows = getTestCaseGridDataRaw([
+      { id: 'c1', testCaseName: 'flow', multiTurnData: [{ prompt: 'a' }, { prompt: 'b' }], createdAt: 0 } as any,
+    ]);
+    expect(rows).toHaveLength(2);
+    expect(rows.every((r) => r.id === 'c1')).toBe(true);
+    expect(rows.map((r) => r._turnIndex)).toEqual([0, 1]);
+    expect(rows.map((r) => (r.data as any).prompt)).toEqual(['a', 'b']);
+    expect(rows.map((r) => r.prompt)).toEqual(['a', 'b']); // flattened per turn
+  });
+});
+
+describe('collapseRowsToTestCases', () => {
+  it('collapses turn rows sharing an id into one multiTurnData DTO in _turnIndex order, no data', () => {
+    const [dto] = collapseRowsToTestCases([
+      { id: 'c1', _turnIndex: 1, testCaseName: 'flow', data: { prompt: 'b' }, createdAt: 0 },
+      { id: 'c1', _turnIndex: 0, testCaseName: 'flow', data: { prompt: 'a' }, createdAt: 0 },
+    ]);
+    expect(dto.multiTurnData).toEqual([{ prompt: 'a' }, { prompt: 'b' }]);
+    expect(dto.data).toBeUndefined();
+    expect((dto as any)._turnIndex).toBeUndefined();
+  });
+
+  it('emits a single-turn DTO with data and no multiTurnData', () => {
+    const [dto] = collapseRowsToTestCases([{ id: 's1', testCaseName: 'solo', data: { prompt: 'hi' }, createdAt: 0 }]);
+    expect(dto.data).toEqual({ prompt: 'hi' });
+    expect(dto.multiTurnData).toBeUndefined();
   });
 });
