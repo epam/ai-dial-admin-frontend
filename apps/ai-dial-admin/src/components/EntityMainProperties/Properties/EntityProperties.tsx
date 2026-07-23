@@ -76,8 +76,8 @@ const EntityProperties: FC<Props> = ({
 
       <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} isFullWidth={!isEntityImmutable} />
 
-      {view === ApplicationRoute.Interceptors && (
-        <IntroControl entity={entity} onChangeEntity={onChangeEntity} isFullWidth={!isEntityImmutable} />
+      {view === ApplicationRoute.Interceptors && isEntityImmutable && (
+        <IntroControl entity={entity} onChangeEntity={onChangeEntity} />
       )}
 
       {view === ApplicationRoute.Interceptors && !isEntityImmutable && !initialValues && (
