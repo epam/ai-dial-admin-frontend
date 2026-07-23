@@ -1,8 +1,11 @@
 import { describe, expect, test, vi } from 'vitest';
 import { getTestCaseColumns, getSchemaFieldGridColumns } from '../columns';
 import { TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
-import { TEST_CASES_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { TestCaseItemType } from '@/src/types/evaluation';
+import { EXPANDER_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
+import { GridRowType } from '@/src/models/evaluation/test-case-grouping';
+import TestCaseNameCellRenderer from '@/src/components/Grid/CellRenderers/TestCaseNameCellRenderer';
+import StackedTurnsCellRenderer from '@/src/components/Grid/CellRenderers/StackedTurnsCellRenderer';
 
 const makeSchema = (name: string, type: TestCaseItemType = TestCaseItemType.STRING): TestCaseSchema => ({
   name,
@@ -16,8 +19,8 @@ const makeSuite = (): TestSuite => ({});
 describe('getTestCaseColumns', () => {
   const onCellChange = vi.fn();
 
-  // Column layout: [enabled, ...TEST_CASES_COLUMN(id, testCaseName), ...schema, validityStatus]
-  const BASE_COLUMN_COUNT = 4; // enabled + id + testCaseName + validityStatus
+  // Column layout: [expander, enabled, id, testCaseName, ...schema, validityStatus]
+  const BASE_COLUMN_COUNT = 5; // expander + enabled + id + testCaseName + validityStatus
 
   test('should return only base columns when schema is empty', () => {
     const result = getTestCaseColumns(makeSuite(), onCellChange, undefined, []);
@@ -31,25 +34,40 @@ describe('getTestCaseColumns', () => {
     expect(result.length).toBe(BASE_COLUMN_COUNT);
   });
 
+  test('should prepend the turn expander column', () => {
+    const result = getTestCaseColumns(makeSuite(), onCellChange, undefined, []);
+
+    expect(result[0]).toEqual(expect.objectContaining({ colId: EXPANDER_COLUMN_CEL_ID }));
+  });
+
+  test('should render testCaseName with TestCaseNameCellRenderer', () => {
+    const result = getTestCaseColumns(makeSuite(), onCellChange, undefined, []);
+    const nameColumn = result.find((column) => column.field === 'testCaseName');
+
+    expect(nameColumn).toEqual(expect.objectContaining({ colId: 'testCaseName', headerName: 'Test case name' }));
+    const selector = nameColumn?.cellRendererSelector?.({ data: { rowType: GridRowType.GROUP } } as never);
+    expect(selector?.component).toBe(TestCaseNameCellRenderer);
+  });
+
   test('should add columns for each schema field', () => {
     const schema = [makeSchema('temperature'), makeSchema('model'), makeSchema('maxTokens', TestCaseItemType.NUMBER)];
 
     const result = getTestCaseColumns(makeSuite(), onCellChange, undefined, schema);
 
     expect(result.length).toBe(BASE_COLUMN_COUNT + 3);
-    expect(result[1]).toEqual(expect.objectContaining({ field: 'id', colId: 'id', headerName: 'ID' }));
-    expect(result[2]).toEqual(
+    expect(result[2]).toEqual(expect.objectContaining({ field: 'id', colId: 'id', headerName: 'ID' }));
+    expect(result[3]).toEqual(
       expect.objectContaining({ field: 'testCaseName', colId: 'testCaseName', headerName: 'Test case name' }),
     );
-    expect(result[3]).toEqual(expect.objectContaining({ field: 'temperature', headerName: 'temperature' }));
-    expect(result[4]).toEqual(expect.objectContaining({ field: 'model', headerName: 'model' }));
-    expect(result[5]).toEqual(expect.objectContaining({ field: 'maxTokens', headerName: 'maxTokens' }));
+    expect(result[4]).toEqual(expect.objectContaining({ field: 'temperature', headerName: 'temperature' }));
+    expect(result[5]).toEqual(expect.objectContaining({ field: 'model', headerName: 'model' }));
+    expect(result[6]).toEqual(expect.objectContaining({ field: 'maxTokens', headerName: 'maxTokens' }));
   });
 
   test('should handle single schema field', () => {
     const result = getTestCaseColumns(makeSuite(), onCellChange, undefined, [makeSchema('prompt')]);
 
-    expect(result[3]).toEqual(expect.objectContaining({ field: 'prompt', headerName: 'prompt' }));
+    expect(result[4]).toEqual(expect.objectContaining({ field: 'prompt', headerName: 'prompt' }));
   });
 
   test('should handle schema fields with various types', () => {
@@ -63,11 +81,11 @@ describe('getTestCaseColumns', () => {
 
     const result = getTestCaseColumns(makeSuite(), onCellChange, undefined, schema);
 
-    expect(result[3].field).toBe('stringFact');
-    expect(result[4].field).toBe('numberFact');
-    expect(result[5].field).toBe('booleanFact');
-    expect(result[6].field).toBe('arrayFact');
-    expect(result[7].field).toBe('objectFact');
+    expect(result[4].field).toBe('stringFact');
+    expect(result[5].field).toBe('numberFact');
+    expect(result[6].field).toBe('booleanFact');
+    expect(result[7].field).toBe('arrayFact');
+    expect(result[8].field).toBe('objectFact');
   });
 
   test('should handle schema fields with special characters in names', () => {
@@ -75,11 +93,11 @@ describe('getTestCaseColumns', () => {
 
     const result = getTestCaseColumns(makeSuite(), onCellChange, undefined, schema);
 
-    expect(result[3]).toEqual(expect.objectContaining({ field: 'fact-with-dash', headerName: 'fact-with-dash' }));
-    expect(result[4]).toEqual(
+    expect(result[4]).toEqual(expect.objectContaining({ field: 'fact-with-dash', headerName: 'fact-with-dash' }));
+    expect(result[5]).toEqual(
       expect.objectContaining({ field: 'fact_with_underscore', headerName: 'fact_with_underscore' }),
     );
-    expect(result[5]).toEqual(expect.objectContaining({ field: 'fact.with.dot', headerName: 'fact.with.dot' }));
+    expect(result[6]).toEqual(expect.objectContaining({ field: 'fact.with.dot', headerName: 'fact.with.dot' }));
   });
 
   test('should preserve the order of schema fields', () => {
@@ -89,19 +107,9 @@ describe('getTestCaseColumns', () => {
       makeSchema('mFact'),
     ]);
 
-    expect(result[3].field).toBe('zFact');
-    expect(result[4].field).toBe('aFact');
-    expect(result[5].field).toBe('mFact');
-  });
-
-  test('should correctly spread TEST_CASES_COLUMN at the beginning', () => {
-    const result = getTestCaseColumns(makeSuite(), onCellChange, undefined, [makeSchema('customFact')]);
-
-    // First columns should be from TEST_CASES_COLUMN
-    expect(result[1]).toEqual({ ...TEST_CASES_COLUMN[0], cellClass: 'select-none cursor-pointer' });
-    expect(result[2]).toEqual(expect.objectContaining(TEST_CASES_COLUMN[1]));
-    // Then schema columns
-    expect(result[3]).toEqual(expect.objectContaining({ field: 'customFact', headerName: 'customFact' }));
+    expect(result[4].field).toBe('zFact');
+    expect(result[5].field).toBe('aFact');
+    expect(result[6].field).toBe('mFact');
   });
 
   test('should use fallback row field value when nested data field is missing', () => {
@@ -112,6 +120,18 @@ describe('getTestCaseColumns', () => {
     expect(promptColumn?.valueGetter?.({ data: { prompt: 'fallback value', data: undefined } } as never)).toBe(
       'fallback value',
     );
+  });
+
+  test('should render a data column with StackedTurnsCellRenderer on GROUP rows and the editable renderer on TURN rows', () => {
+    const result = getTestCaseColumns(makeSuite(), onCellChange, undefined, [makeSchema('prompt')]);
+    const promptColumn = result.find((column) => column.field === 'prompt');
+
+    const groupSelector = promptColumn?.cellRendererSelector?.({ data: { rowType: GridRowType.GROUP } } as never);
+    expect(groupSelector?.component).toBe(StackedTurnsCellRenderer);
+
+    const turnSelector = promptColumn?.cellRendererSelector?.({ data: { rowType: GridRowType.TURN } } as never);
+    expect(turnSelector?.component).not.toBe(StackedTurnsCellRenderer);
+    expect(turnSelector?.component).toBeDefined();
   });
 });
 
