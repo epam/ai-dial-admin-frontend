@@ -112,7 +112,20 @@ export const useTurnGroupProjection = ({
     [onGridReady],
   );
 
-  const getRowId = useCallback((params: GetRowIdParams<GroupedGridRow>) => String(params.data.id), []);
+  // Every turn (and the GROUP summary) of a multi-turn case shares the case `id`, so `id` alone
+  // collides across rows of the same case — the id must be qualified by `rowType` + the field that
+  // distinguishes rows within that type (`turnNumber` for TURN rows) to stay unique per grid row.
+  const getRowId = useCallback((params: GetRowIdParams<GroupedGridRow>) => {
+    const row = params.data;
+    switch (row.rowType) {
+      case GridRowType.GROUP:
+        return `group:${row.groupKey}`;
+      case GridRowType.TURN:
+        return `turn:${row.groupKey}:${row.turnNumber}`;
+      default:
+        return `single:${row.id}`;
+    }
+  }, []);
 
   const getRowHeight = useCallback((params: RowHeightParams<GroupedGridRow>) => {
     // Only a collapsed GROUP row stacks its turns and needs the extra height; an expanded group is a

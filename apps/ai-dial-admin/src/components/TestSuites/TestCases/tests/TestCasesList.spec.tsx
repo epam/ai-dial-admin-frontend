@@ -20,6 +20,7 @@ let capturedOnCellChange: ((data: Record<string, unknown>, field: string, value:
 let capturedRowData: any[] | null = null;
 let capturedOnGridReady: ((event: { api: any }) => void) | null = null;
 let capturedTurnHandlers: any = null;
+let capturedOnToggleExpand: ((groupKey: string) => void) | null = null;
 
 vi.mock('@/src/app/[lang]/datasets/actions', () => ({
   getTestCases: vi.fn(),
@@ -46,8 +47,16 @@ vi.mock('@/src/components/ListView/List', () => ({
 }));
 
 vi.mock('@/src/components/TestSuites/utils/columns', () => ({
-  getTestCaseColumns: (_suite: unknown, onCellChange: any) => {
+  getTestCaseColumns: (
+    _suite: unknown,
+    onCellChange: any,
+    _t: unknown,
+    _schema: unknown,
+    _isReadOnly: unknown,
+    onToggleExpand: any,
+  ) => {
     capturedOnCellChange = onCellChange;
+    capturedOnToggleExpand = onToggleExpand;
     return [];
   },
 }));
@@ -245,14 +254,16 @@ describe('TestCasesList — disabledTestCaseIds logic', () => {
 
   test('clearDirtyAndRefresh clears dirty rows and calls onDirtyChange(false)', async () => {
     const suite: TestSuite = { id: 'suite-1', datasetId: 'ds-1', disabledTestCaseIds: [] };
+    vi.mocked(actions.getTestCases).mockResolvedValue(
+      createPageData([{ id: 'row-1', testCaseName: 'tc', createdAt: 0 }]),
+    );
     const actionsRef = renderList(suite);
 
-    await waitFor(() => expect(capturedOnCellChange).not.toBeNull());
+    await waitFor(() => expect(capturedRowData).not.toBeNull());
+    await waitFor(() => expect(capturedRowData!.length).toBe(1));
+    capturedOnGridReady?.({ api: makeGridApi([{ data: capturedRowData![0] }]) });
 
-    const row = { id: 'row-1', testCaseName: 'tc', createdAt: 0 };
-    const changedRow = { ...row, testCaseName: 'changed' };
-    capturedOnGridReady?.({ api: makeGridApi([{ data: changedRow }]) });
-    capturedOnCellChange!(changedRow, 'testCaseName', 'changed');
+    capturedOnCellChange!(capturedRowData![0], 'testCaseName', 'changed');
 
     expect(actionsRef.current?.getDirtyTestCases().length).toBeGreaterThan(0);
 
@@ -290,6 +301,7 @@ describe('TestCasesList — multi-turn grouping', () => {
     capturedRowData = null;
     capturedOnGridReady = null;
     capturedTurnHandlers = null;
+    capturedOnToggleExpand = null;
   });
 
   const renderList = (suite: TestSuite) => {
@@ -306,40 +318,92 @@ describe('TestCasesList — multi-turn grouping', () => {
     return actionsRef;
   };
 
-  test("editing a data cell on a TURN row writes into that row's data, never sets data._turnIndex", async () => {
-    const suite: TestSuite = { id: 'suite-1', datasetId: 'ds-1', disabledTestCaseIds: [] };
-    vi.mocked(actions.getTestCases).mockResolvedValue(createPageData([]));
-    renderList(suite);
-
-    await waitFor(() => expect(capturedOnCellChange).not.toBeNull());
-
-    const turnRow = { id: 'tc-1', _turnIndex: 0, testCaseName: 'Case', data: { foo: 'a' } };
-    capturedOnCellChange!(turnRow, 'foo', 'edited');
-
-    expect(turnRow.data).toEqual({ foo: 'edited' });
-    expect('_turnIndex' in turnRow.data).toBe(false);
-
-    capturedOnCellChange!(turnRow, '_turnIndex', 7);
-    expect('_turnIndex' in turnRow.data).toBe(false);
-  });
-
-  test('getDirtyTestCases() after editing one turn of a 2-turn case preserves both turns', async () => {
-    const suite: TestSuite = { id: 'suite-1', datasetId: 'ds-1', disabledTestCaseIds: [] };
-    vi.mocked(actions.getTestCases).mockResolvedValue(createPageData([]));
+  /** Loads a real 2-turn case through the real projection and expands its group, returning the
+   * live GROUP row's key and both projected TURN rows — used by the tests below so edits and
+   * `getRowId` are exercised against the actual `useTurnGroupProjection` output, not hand-built
+   * grid rows. */
+  const setUpExpandedTwoTurnCase = async (suite: TestSuite) => {
+    vi.mocked(actions.getTestCases).mockResolvedValue(
+      createPageData([{ id: 'tc-1', testCaseName: 'Case', createdAt: 0, multiTurnData: [{ foo: 'a' }, { foo: 'b' }] }]),
+    );
     const actionsRef = renderList(suite);
 
-    await waitFor(() => expect(capturedOnCellChange).not.toBeNull());
+    await waitFor(() => expect(capturedRowData).not.toBeNull());
+    await waitFor(() => expect(capturedRowData!.length).toBe(1)); // collapsed by default: GROUP row only
+    expect(capturedOnToggleExpand).not.toBeNull();
 
-    const turn0 = { id: 'tc-1', _turnIndex: 0, testCaseName: 'Case', data: { foo: 'a' } };
-    const turn1 = { id: 'tc-1', _turnIndex: 1, testCaseName: 'Case', data: { foo: 'b' } };
-    capturedOnGridReady?.({ api: makeGridApi([{ data: turn0 }, { data: turn1 }]) });
+    const groupKey = (capturedRowData!.find((r: any) => r.rowType === 'GROUP') as any).groupKey as string;
+    act(() => capturedOnToggleExpand!(groupKey));
+    await waitFor(() => expect(capturedRowData!.length).toBe(3)); // GROUP + 2 TURN rows
+
+    const turn0 = capturedRowData!.find((r: any) => r.rowType === 'TURN' && r.turnNumber === 1);
+    const turn1 = capturedRowData!.find((r: any) => r.rowType === 'TURN' && r.turnNumber === 2);
+    return { actionsRef, groupKey, turn0, turn1 };
+  };
+
+  test("editing a TURN row's cell writes into the authoritative row's data, never lets _turnIndex leak into data", async () => {
+    const suite: TestSuite = { id: 'suite-1', datasetId: 'ds-1', disabledTestCaseIds: [] };
+    const { actionsRef, turn0 } = await setUpExpandedTwoTurnCase(suite);
 
     capturedOnCellChange!(turn0, 'foo', 'edited');
+    // Editing the client-only `_turnIndex` field itself must never leak into `.data`.
+    capturedOnCellChange!(turn0, '_turnIndex', 7);
+
+    const dirty = actionsRef.current!.getDirtyTestCases();
+    expect(dirty).toHaveLength(1);
+    expect(dirty[0].multiTurnData).toHaveLength(2);
+    const editedTurn = dirty[0].multiTurnData!.find((t: any) => t.foo === 'edited');
+    expect(editedTurn).toBeTruthy();
+    expect('_turnIndex' in (editedTurn as object)).toBe(false);
+  });
+
+  test('editing turn 0, then COLLAPSING the group, preserves the edit in getDirtyTestCases() (Critical 1 regression)', async () => {
+    const suite: TestSuite = { id: 'suite-1', datasetId: 'ds-1', disabledTestCaseIds: [] };
+    const { actionsRef, groupKey, turn0 } = await setUpExpandedTwoTurnCase(suite);
+
+    capturedOnCellChange!(turn0, 'foo', 'edited');
+
+    act(() => capturedOnToggleExpand!(groupKey)); // collapse
+    await waitFor(() => expect(capturedRowData!.length).toBe(1));
 
     const dirty = actionsRef.current!.getDirtyTestCases();
     expect(dirty).toHaveLength(1);
     expect(dirty[0].data).toBeUndefined();
     expect(dirty[0].multiTurnData).toEqual([{ foo: 'edited' }, { foo: 'b' }]);
+  });
+
+  test('an edit survives toggling expand/collapse multiple times before save (Important 3)', async () => {
+    const suite: TestSuite = { id: 'suite-1', datasetId: 'ds-1', disabledTestCaseIds: [] };
+    const { actionsRef, groupKey, turn0 } = await setUpExpandedTwoTurnCase(suite);
+
+    capturedOnCellChange!(turn0, 'foo', 'edited');
+
+    act(() => capturedOnToggleExpand!(groupKey)); // collapse
+    await waitFor(() => expect(capturedRowData!.length).toBe(1));
+    act(() => capturedOnToggleExpand!(groupKey)); // expand again
+    await waitFor(() => expect(capturedRowData!.length).toBe(3));
+
+    const reprojectedTurn0 = capturedRowData!.find((r: any) => r.rowType === 'TURN' && r.turnNumber === 1);
+    expect(reprojectedTurn0.data).toEqual({ foo: 'edited' });
+
+    act(() => capturedOnToggleExpand!(groupKey)); // collapse again, then save
+    await waitFor(() => expect(capturedRowData!.length).toBe(1));
+
+    const dirty = actionsRef.current!.getDirtyTestCases();
+    expect(dirty).toHaveLength(1);
+    expect(dirty[0].multiTurnData).toEqual([{ foo: 'edited' }, { foo: 'b' }]);
+  });
+
+  test('getRowId returns distinct ids for a GROUP row and each of its TURN rows (Fix A)', async () => {
+    const suite: TestSuite = { id: 'suite-1', datasetId: 'ds-1', disabledTestCaseIds: [] };
+    await setUpExpandedTwoTurnCase(suite);
+
+    const groupRow = capturedRowData!.find((r: any) => r.rowType === 'GROUP');
+    const turnRows = capturedRowData!.filter((r: any) => r.rowType === 'TURN');
+    expect(turnRows).toHaveLength(2);
+
+    const ids = [groupRow, ...turnRows].map((row: any) => capturedGridOptions.getRowId({ data: row }));
+    expect(new Set(ids).size).toBe(ids.length);
   });
 
   test('Add turn on a single case makes getDirtyTestCases() return a multiTurnData DTO (no data)', async () => {

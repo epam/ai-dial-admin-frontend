@@ -110,25 +110,82 @@ const TestCasesList: FC<Props> = ({
   const gridApiRef = useRef<GridApi | null>(null);
   const [newTestCases, setNewTestCases] = useState<Record<string, unknown>[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [data, setData] = useState<Record<string, unknown>[]>([]);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isBatchDeleteModalOpen, setIsBatchDeleteModalOpen] = useState(false);
   const [selectedTestCase, setSelectedTestCase] = useState<TestCase | undefined>(undefined);
   const [selectedRows, setSelectedRows] = useState<TestCase[]>([]);
-  const dirtyRowsRef = useRef<Map<string, Record<string, unknown>>>(new Map());
+  const dirtyIdsRef = useRef<Set<string>>(new Set());
   const refreshVersionRef = useRef(0);
 
-  const updateData = useCallback(
-    (row: Record<string, unknown>) => {
-      if (newTestCases.some((r) => r.id === row.id)) {
-        setNewTestCases((prev) => prev.map((r) => (r.id === row.id ? ({ ...row } as Record<string, unknown>) : r)));
-      } else {
-        const id = String(row.id);
-        dirtyRowsRef.current.set(id, { ...row });
-      }
+  // Authoritative flat-row store: every turn of every case, regardless of expand/collapse state.
+  // `useTurnGroupProjection` only ever derives from what it's given, so it can't itself be the
+  // source of truth for a collapsed group's turns or for an edit made off-screen — this ref is,
+  // and it survives the hook's internal expand/collapse re-renders (a plain `useState` wouldn't
+  // need to survive anything the hook doesn't already leave alone, but a ref also lets the
+  // imperative readers below — `getCaseRows`, `getDirtyTestCases` — read the latest rows with no
+  // stale-closure risk). `rawRowsVersion` is the only React state involved: bumping it forces
+  // `useTurnGroupProjection` to re-derive from a fresh array snapshot, while the row objects
+  // inside keep their identity so an in-place edit survives that re-derivation.
+  const flatRowsRef = useRef<Record<string, unknown>[]>([]);
+  const [rawRowsVersion, setRawRowsVersion] = useState(0);
+  const bumpRawRows = useCallback(() => setRawRowsVersion((v) => v + 1), []);
+  const rawRows = useMemo(() => [...flatRowsRef.current], [rawRowsVersion]);
+
+  const getCaseRows = useCallback(
+    (id: string): Record<string, unknown>[] => flatRowsRef.current.filter((row) => String(row.id) === id),
+    [],
+  );
+
+  const replaceCaseRows = useCallback(
+    (id: string, newRows: Record<string, unknown>[]) => {
+      const prev = flatRowsRef.current;
+      const insertAt = prev.findIndex((row) => String(row.id) === id);
+      const rest = prev.filter((row) => String(row.id) !== id);
+      const at = insertAt === -1 ? rest.length : Math.min(insertAt, rest.length);
+      flatRowsRef.current = [...rest.slice(0, at), ...newRows, ...rest.slice(at)];
+      dirtyIdsRef.current.add(id);
+      bumpRawRows();
       onDirtyChange?.(true);
     },
-    [newTestCases, onDirtyChange],
+    [bumpRawRows, onDirtyChange],
+  );
+
+  const onCellChange = useCallback(
+    (rowData: Record<string, unknown>, field: string, value: string | number | boolean) => {
+      if (!rowData) return;
+      const rowId = String(rowData.id);
+
+      if (newTestCases.some((r) => r.id === rowData.id)) {
+        // Unsaved new-case rows bypass the grouping projection entirely (they're set via
+        // `pinnedTopRowData`, never through `rawRows`), so the object the cell renderer hands
+        // back here *is* the one live in `newTestCases` — editing it in place is correct.
+        rowData[field] = value;
+        if (field !== 'testCaseName' && field !== 'enabled' && field !== '_turnIndex' && rowData.data != null) {
+          rowData.data = { ...(rowData.data as Record<string, unknown>), [field]: value };
+        }
+        setNewTestCases((prev) => prev.map((r) => (r.id === rowData.id ? { ...rowData } : r)));
+        onDirtyChange?.(true);
+        return;
+      }
+
+      // `rowData` is the row AG Grid renders — a spread copy `toTurnRow`/`toSingleRow` made from
+      // the underlying flat row, not that flat row itself. Editing it in place would never reach
+      // the authoritative store: the edit would vanish next time the projection re-derives (e.g.
+      // on expand/collapse) and `getDirtyTestCases` would never see it. Locate the real row by
+      // `id` (+ `_turnIndex` for a TURN row) and edit that instead.
+      const turnIndex = readTurnIndex(rowData);
+      const target = flatRowsRef.current.find((row) => String(row.id) === rowId && readTurnIndex(row) === turnIndex);
+      if (target) {
+        target[field] = value;
+        if (field !== 'testCaseName' && field !== 'enabled' && field !== '_turnIndex' && target.data != null) {
+          target.data = { ...(target.data as Record<string, unknown>), [field]: value };
+        }
+        bumpRawRows();
+      }
+      dirtyIdsRef.current.add(rowId);
+      onDirtyChange?.(true);
+    },
+    [newTestCases, onDirtyChange, bumpRawRows],
   );
 
   const onCellValueChanged = useCallback(
@@ -154,26 +211,18 @@ const TestCasesList: FC<Props> = ({
       const newDisabledIds: string[] = [];
       api?.forEachNode((node) => {
         if (!node.data || node.rowPinned) return;
-        if (!resolveRowEnabled(node.data)) newDisabledIds.push(String(node.data.id));
+        const row = node.data as GroupedGridRow;
+        // An expanded GROUP row's own (turns[0]-derived) `enabled` duplicates the id its TURN
+        // rows already contribute individually; a collapsed GROUP row is its case's only visible
+        // row, so it must still be counted here.
+        if (row.rowType === GridRowType.GROUP && row.expanded) return;
+        if (!resolveRowEnabled(row)) newDisabledIds.push(String(row.id));
       });
 
       onChange({ ...selectedTestSuite, disabledTestCaseIds: newDisabledIds }, true);
       onDirtyChange?.(true);
     },
     [newTestCases, selectedTestSuite, onChange, onDirtyChange],
-  );
-
-  const onCellChange = useCallback(
-    (data: Record<string, unknown>, field: string, value: string | number | boolean) => {
-      if (!data) return;
-      data[field] = value;
-      if (field !== 'testCaseName' && field !== 'enabled' && field !== '_turnIndex' && data.data != null) {
-        data.data = { ...(data.data as Record<string, unknown>), [field]: value };
-      }
-
-      updateData(data);
-    },
-    [updateData],
   );
 
   const onSelectionChanged = useCallback((event: SelectionChangedEvent) => {
@@ -212,7 +261,7 @@ const TestCasesList: FC<Props> = ({
   }, []);
 
   const projection = useTurnGroupProjection({
-    rawRows: data,
+    rawRows,
     defaultExpanded: false,
     singlesFirst: false,
     onGridReady,
@@ -248,42 +297,10 @@ const TestCasesList: FC<Props> = ({
     },
   };
 
-  /** Gather a case's current rows: live (possibly edited) turn/single grid rows when rendered, else
-   * the collapsed GROUP row's own `turns` snapshot (never individually edited while collapsed). */
-  const gatherLiveRows = useCallback((id: string): Record<string, unknown>[] => {
-    const collected: Record<string, unknown>[] = [];
-    let groupRow: GroupedGridRow | undefined;
-    gridApiRef.current?.forEachNode((node) => {
-      const row = node.data as GroupedGridRow | undefined;
-      if (!row || String(row.id) !== id) return;
-      if (row.rowType === GridRowType.GROUP) {
-        groupRow = row;
-      } else {
-        collected.push(row);
-      }
-    });
-    if (collected.length > 0) return collected;
-    return groupRow?.turns ?? [];
-  }, []);
-
-  const replaceCaseRows = useCallback(
-    (id: string, newRows: Record<string, unknown>[]) => {
-      setData((prev) => {
-        const insertAt = prev.findIndex((row) => String(row.id) === id);
-        const rest = prev.filter((row) => String(row.id) !== id);
-        const at = insertAt === -1 ? rest.length : Math.min(insertAt, rest.length);
-        return [...rest.slice(0, at), ...newRows, ...rest.slice(at)];
-      });
-      dirtyRowsRef.current.set(id, newRows[0] ?? {});
-      onDirtyChange?.(true);
-    },
-    [onDirtyChange],
-  );
-
   const onAddTurn = useCallback(
     (groupKey: string) => {
       if (!groupKey || newTestCases.some((r) => String(r.id) === groupKey)) return;
-      const rows = gatherLiveRows(groupKey);
+      const rows = getCaseRows(groupKey);
       if (rows.length === 0) return;
 
       if (rows.length === 1 && readTurnIndex(rows[0]) === null) {
@@ -306,32 +323,32 @@ const TestCasesList: FC<Props> = ({
       }
       expandGroup(groupKey);
     },
-    [newTestCases, gatherLiveRows, replaceCaseRows, expandGroup],
+    [newTestCases, getCaseRows, replaceCaseRows, expandGroup],
   );
 
   const onDeleteTurn = useCallback(
     (row: GroupedGridRow) => {
       const id = row.groupKey;
       const targetIndex = readTurnIndex(row);
-      const remaining = gatherLiveRows(id).filter((r) => readTurnIndex(r) !== targetIndex);
+      const remaining = getCaseRows(id).filter((r) => readTurnIndex(r) !== targetIndex);
       const renumbered = renumberTurns(remaining);
       const finalRows = renumbered.length === 1 ? [demoteToSingle(renumbered[0])] : renumbered;
       replaceCaseRows(id, finalRows);
       if (finalRows.length > 1) expandGroup(id);
     },
-    [gatherLiveRows, replaceCaseRows, expandGroup],
+    [getCaseRows, replaceCaseRows, expandGroup],
   );
 
   const moveTurn = useCallback(
     (row: GroupedGridRow, direction: -1 | 1) => {
       const id = row.groupKey;
-      const rows = gatherLiveRows(id);
+      const rows = getCaseRows(id);
       const from = readTurnIndex(row) ?? (row.turnNumber ? row.turnNumber - 1 : 0);
       const to = from + direction;
       replaceCaseRows(id, reorderTurns(rows, from, to));
       expandGroup(id);
     },
-    [gatherLiveRows, replaceCaseRows, expandGroup],
+    [getCaseRows, replaceCaseRows, expandGroup],
   );
 
   const onMoveTurnUp = useCallback((row: GroupedGridRow) => moveTurn(row, -1), [moveTurn]);
@@ -404,31 +421,32 @@ const TestCasesList: FC<Props> = ({
           ...row,
           enabled: !disabledIds.includes(String(row.id)),
         }));
-        if (dirtyRowsRef.current.size > 0) {
-          // Splice in the live (possibly turn-edited) rows for each dirty case, in place of
-          // whatever the server just returned for it, so an unsaved multi-turn edit survives a
-          // refetch without dropping sibling turns or duplicating the case.
-          const dirtyIds = new Set(dirtyRowsRef.current.keys());
+        if (dirtyIdsRef.current.size > 0) {
+          // Splice in the authoritative (possibly turn-edited) rows for each dirty case, in place
+          // of whatever the server just returned for it, so an unsaved multi-turn edit survives a
+          // refetch without dropping sibling turns or duplicating the case. Read before
+          // `flatRowsRef.current` is overwritten below.
           const injected = new Set<string>();
           rawData = rawData.reduce<Record<string, unknown>[]>((acc, row) => {
             const id = String(row.id);
-            if (!dirtyIds.has(id)) {
+            if (!dirtyIdsRef.current.has(id)) {
               acc.push(row);
               return acc;
             }
             if (injected.has(id)) return acc;
             injected.add(id);
-            acc.push(...gatherLiveRows(id));
+            acc.push(...getCaseRows(id));
             return acc;
           }, []);
         }
-        setData(rawData);
+        flatRowsRef.current = rawData;
+        bumpRawRows();
       });
       if (withRefreshPage) {
         router.refresh();
       }
     },
-    [gatherLiveRows, selectedTestSuite],
+    [getCaseRows, bumpRawRows, selectedTestSuite],
   );
 
   const onApplyImport = useCallback(
@@ -517,21 +535,16 @@ const TestCasesList: FC<Props> = ({
   }, [refreshGrid, selectedRows, selectedTestSuite.datasetId, showNotification, t]);
 
   const getDirtyTestCases = useCallback((): TestCase[] => {
-    const dirtyIds = new Set<string>([...dirtyRowsRef.current.keys(), ...newTestCases.map((r) => r.id as string)]);
-    const rowsById = new Map<string, Record<string, unknown>[]>();
-    gridApiRef.current?.forEachNode((node) => {
-      const row = node.data as Record<string, unknown> | undefined;
-      if (row && dirtyIds.has(row.id as string) && row.rowType !== GridRowType.GROUP) {
-        const bucket = rowsById.get(row.id as string) ?? [];
-        bucket.push(row);
-        rowsById.set(row.id as string, bucket);
-      }
-    });
-    return collapseRowsToTestCases([...rowsById.values()].flat());
+    // Collapsed from the authoritative store, not from currently-visible grid nodes: it always
+    // holds every turn of every case, so a case whose group is collapsed (and therefore renders
+    // only its GROUP summary row) still contributes all its TURN rows here.
+    const dirtyIds = new Set<string>([...dirtyIdsRef.current, ...newTestCases.map((r) => String(r.id))]);
+    const rows = [...flatRowsRef.current, ...newTestCases].filter((row) => dirtyIds.has(String(row.id)));
+    return collapseRowsToTestCases(rows);
   }, [newTestCases]);
 
   const clearDirtyAndRefresh = useCallback(() => {
-    dirtyRowsRef.current.clear();
+    dirtyIdsRef.current.clear();
     setNewTestCases([]);
     onDirtyChange?.(false);
     refreshGrid();
@@ -553,17 +566,22 @@ const TestCasesList: FC<Props> = ({
 
     const schemaFieldNames = new Set((dataset?.testCaseSchema ?? []).map((s) => s.name));
 
-    dirtyRowsRef.current.forEach((row, id) => {
+    // Prune fields the schema dropped from every dirty row in the authoritative store (not just
+    // one snapshot per id) so a removed field never leaks into a save payload.
+    let prunedAny = false;
+    flatRowsRef.current = flatRowsRef.current.map((row) => {
+      if (!dirtyIdsRef.current.has(String(row.id))) return row;
       const rowData = row.data as Record<string, unknown> | undefined;
-      if (!rowData) return;
+      if (!rowData) return row;
       const hasRemovedFields = Object.keys(rowData).some((key) => !schemaFieldNames.has(key));
-      if (hasRemovedFields) {
-        dirtyRowsRef.current.set(id, {
-          ...row,
-          data: Object.fromEntries(Object.entries(rowData).filter(([key]) => schemaFieldNames.has(key))),
-        });
-      }
+      if (!hasRemovedFields) return row;
+      prunedAny = true;
+      return {
+        ...row,
+        data: Object.fromEntries(Object.entries(rowData).filter(([key]) => schemaFieldNames.has(key))),
+      };
     });
+    if (prunedAny) bumpRawRows();
 
     setNewTestCases((prev) => {
       const needsClean = prev.some((row) => {
