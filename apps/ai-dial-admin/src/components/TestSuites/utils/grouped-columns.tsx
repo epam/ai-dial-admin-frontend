@@ -73,20 +73,23 @@ export const getGroupedNameColumn = (onCell: onCellChange, isReadOnly?: boolean)
   editable: false,
   valueGetter: (params: ValueGetterParams) => params.data?.testCaseName ?? '',
   cellRendererSelector: (params) => {
-    if ((params.data as GroupedGridRow | undefined)?.rowType === GridRowType.SINGLE) {
-      return {
-        component: EditableCellRenderer,
-        params: {
-          isReadonly: isReadOnly,
-          hideTriangle: true,
-          skipRequired: true,
-          onChange: (value: string | number, rowData: unknown) => {
-            onCell(rowData as Record<string, unknown>, 'testCaseName', value);
-          },
-        },
-      };
+    const rowType = (params.data as GroupedGridRow | undefined)?.rowType;
+    // Blacklist GROUP/TURN rather than whitelist SINGLE: rows with no rowType yet
+    // (unprojected callers that haven't wired turn-grouping) must stay editable.
+    if (rowType === GridRowType.GROUP || rowType === GridRowType.TURN) {
+      return { component: TestCaseNameCellRenderer };
     }
-    return { component: TestCaseNameCellRenderer };
+    return {
+      component: EditableCellRenderer,
+      params: {
+        isReadonly: isReadOnly,
+        hideTriangle: true,
+        skipRequired: true,
+        onChange: (value: string | number, rowData: unknown) => {
+          onCell(rowData as Record<string, unknown>, 'testCaseName', value);
+        },
+      },
+    };
   },
 });
 

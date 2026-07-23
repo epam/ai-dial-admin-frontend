@@ -6,6 +6,7 @@ import { EXPANDER_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { GridRowType } from '@/src/models/evaluation/test-case-grouping';
 import TestCaseNameCellRenderer from '@/src/components/Grid/CellRenderers/TestCaseNameCellRenderer';
 import StackedTurnsCellRenderer from '@/src/components/Grid/CellRenderers/StackedTurnsCellRenderer';
+import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 
 const makeSchema = (name: string, type: TestCaseItemType = TestCaseItemType.STRING): TestCaseSchema => ({
   name,
@@ -47,6 +48,16 @@ describe('getTestCaseColumns', () => {
     expect(nameColumn).toEqual(expect.objectContaining({ colId: 'testCaseName', headerName: 'Test case name' }));
     const selector = nameColumn?.cellRendererSelector?.({ data: { rowType: GridRowType.GROUP } } as never);
     expect(selector?.component).toBe(TestCaseNameCellRenderer);
+  });
+
+  test('should keep the editable name renderer for a row with no rowType (unprojected/single row)', () => {
+    const result = getTestCaseColumns(makeSuite(), onCellChange, undefined, []);
+    const nameColumn = result.find((column) => column.field === 'testCaseName');
+
+    const selector = nameColumn?.cellRendererSelector?.({ data: { testCaseName: 'x', data: {} } } as never);
+
+    expect(selector?.component).toBe(EditableCellRenderer);
+    expect(selector?.component).not.toBe(TestCaseNameCellRenderer);
   });
 
   test('should add columns for each schema field', () => {
@@ -130,8 +141,7 @@ describe('getTestCaseColumns', () => {
     expect(groupSelector?.component).toBe(StackedTurnsCellRenderer);
 
     const turnSelector = promptColumn?.cellRendererSelector?.({ data: { rowType: GridRowType.TURN } } as never);
-    expect(turnSelector?.component).not.toBe(StackedTurnsCellRenderer);
-    expect(turnSelector?.component).toBeDefined();
+    expect(turnSelector?.component).toBe(EditableCellRenderer);
   });
 });
 
