@@ -8,7 +8,8 @@ import { importTestCasePreview } from '@/src/app/[lang]/datasets/actions';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import ImportOptionsStep from '@/src/components/TestSuites/TestCases/Import/ImportOptionsStep';
-import { ImportPreview } from '@/src/components/TestSuites/TestCases/Import/models';
+import ImportWarningsList from '@/src/components/TestSuites/TestCases/Import/ImportWarningsList';
+import { CaseWarning, ImportPreview } from '@/src/components/TestSuites/TestCases/Import/models';
 import SelectedFile from '@/src/components/TestSuites/TestCases/Import/SelectedFile';
 import { getGridDataFromImportPreview } from '@/src/components/TestSuites/TestCases/Import/utils';
 import { BasicI18nKey, ButtonsI18nKey, ImportI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -36,6 +37,7 @@ const DatasetImportFileModal: FC<Props> = ({ datasetId, isModalOpen, onClose, on
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [testCases, setTestCases] = useState<object[] | null>(null);
   const [columnDefs, setColumnDefs] = useState<ColDef[]>([]);
+  const [warnings, setWarnings] = useState<CaseWarning[]>([]);
   const [importMode, setImportMode] = useState(TestCaseImportMode.OVERRIDE);
   const [conflictStrategy, setConflictStrategy] = useState(TestCaseConflictStrategy.FAIL);
 
@@ -66,6 +68,7 @@ const DatasetImportFileModal: FC<Props> = ({ datasetId, isModalOpen, onClose, on
         const { colDefs, rowData } = getGridDataFromImportPreview(testCasesData);
         setTestCases(rowData);
         setColumnDefs(colDefs);
+        setWarnings(testCasesData.warnings);
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
@@ -108,6 +111,7 @@ const DatasetImportFileModal: FC<Props> = ({ datasetId, isModalOpen, onClose, on
                 <div className="flex flex-col h-full">
                   <SelectedFile file={selectedFile} onChangeFile={onChangeFile} />
                   <span className="dial-small-sime-text mb-1 mt-4 text-secondary">{t(BasicI18nKey.Preview)}:</span>
+                  <ImportWarningsList warnings={warnings} />
                   <div className="flex-1 min-h-0">
                     <GridView columnDefs={columnDefs} rowData={testCases || []} />
                   </div>

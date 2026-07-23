@@ -13,7 +13,8 @@ import { useI18n } from '@/src/locales/client';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 import { getErrorNotification } from '@/src/utils/notification';
 import ImportOptionsStep from './ImportOptionsStep';
-import { ImportPreview } from './models';
+import ImportWarningsList from './ImportWarningsList';
+import { CaseWarning, ImportPreview } from './models';
 import SelectedFile from './SelectedFile';
 import { getGridDataFromImportPreview } from './utils';
 
@@ -36,6 +37,7 @@ const ImportFileModal: FC<Props> = ({ datasetId, isModalOpen, onClose, onApply }
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [testCases, setTestCases] = useState<object[] | null>(null);
   const [columnDefs, setColumnDefs] = useState<ColDef[]>([]);
+  const [warnings, setWarnings] = useState<CaseWarning[]>([]);
   const [importMode, setImportMode] = useState(TestCaseImportMode.OVERRIDE);
   const [conflictStrategy, setConflictStrategy] = useState(TestCaseConflictStrategy.FAIL);
 
@@ -68,6 +70,7 @@ const ImportFileModal: FC<Props> = ({ datasetId, isModalOpen, onClose, onApply }
         const { colDefs, rowData } = getGridDataFromImportPreview(testCasesData);
         setTestCases(rowData);
         setColumnDefs(colDefs);
+        setWarnings(testCasesData.warnings);
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
@@ -110,6 +113,7 @@ const ImportFileModal: FC<Props> = ({ datasetId, isModalOpen, onClose, onApply }
                 <div className="flex flex-col h-full">
                   <SelectedFile file={selectedFile} onChangeFile={onChangeFile} />
                   <span className="dial-small-sime-text mb-1 mt-4 text-secondary">{t(BasicI18nKey.Preview)}:</span>
+                  <ImportWarningsList warnings={warnings} />
                   <div className="flex-1 min-h-0">
                     <GridView columnDefs={columnDefs} rowData={testCases || []} />
                   </div>
