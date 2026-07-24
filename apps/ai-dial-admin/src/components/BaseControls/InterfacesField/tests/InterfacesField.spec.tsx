@@ -8,7 +8,7 @@ import InterfacesField from '@/src/components/BaseControls/InterfacesField/Inter
 import { ErrorI18nKey, InterfacesI18nKey } from '@/src/constants/i18n';
 import { DeploymentInterfaceType } from '@/src/models/dial/interfaces';
 
-type Entity = { interfaces?: Record<string, { baseUrl?: string }> };
+type Entity = { interfaces?: Record<string, { baseUrl?: string; deploymentName?: string }> };
 
 const ControlledInterfacesField = ({ initialEntity }: { initialEntity: Entity }) => {
   const [entity, setEntity] = useState(initialEntity);
@@ -42,17 +42,20 @@ const MULTI_TYPES = [
 
 const SINGLE_TYPE = [DeploymentInterfaceType.OpenAIChatCompletions];
 
+const getBaseUrlInput = () => screen.getByRole('textbox', { name: new RegExp(`^${InterfacesI18nKey.BaseUrl}`) });
+const getDeploymentNameInput = () => screen.getByRole('textbox', { name: InterfacesI18nKey.DeploymentName });
+
 describe('InterfacesField', () => {
-  test('single allowed type: clicking Add creates the input directly, no dropdown', async () => {
+  test('single allowed type: clicking Add creates the inputs directly, no dropdown', async () => {
     const user = userEvent.setup();
     const onChangeEntity = vi.fn();
     render(<InterfacesField entity={{ interfaces: {} }} onChangeEntity={onChangeEntity} allowedTypes={SINGLE_TYPE} />);
 
-    await user.click(screen.getByRole('button', { name: 'Buttons.Add' }));
+    await user.click(screen.getByRole('button', { name: 'Buttons.AddInterface' }));
 
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
     expect(onChangeEntity).toHaveBeenCalledWith({
-      interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: '' } },
+      interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: '', deploymentName: '' } },
     });
   });
 
@@ -65,7 +68,7 @@ describe('InterfacesField', () => {
       />,
     );
 
-    expect(screen.queryByRole('button', { name: 'Buttons.Add' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Buttons.AddInterface' })).not.toBeInTheDocument();
   });
 
   test('multiple allowed types: Add opens a dropdown listing only unused types', async () => {
@@ -78,7 +81,7 @@ describe('InterfacesField', () => {
       />,
     );
 
-    await user.click(screen.getByRole('button', { name: 'Buttons.Add' }));
+    await user.click(screen.getByRole('button', { name: 'Buttons.AddInterface' }));
 
     const select = screen.getByRole('combobox');
     const optionValues = Array.from(select.querySelectorAll('option'))
@@ -88,16 +91,16 @@ describe('InterfacesField', () => {
     expect(optionValues).toEqual([DeploymentInterfaceType.OpenAIResponses, DeploymentInterfaceType.AnthropicMessages]);
   });
 
-  test('multiple allowed types: selecting a type from the dropdown reveals its input and hides the dropdown', async () => {
+  test('multiple allowed types: selecting a type from the dropdown reveals its inputs and hides the dropdown', async () => {
     const user = userEvent.setup();
     const onChangeEntity = vi.fn();
     render(<InterfacesField entity={{ interfaces: {} }} onChangeEntity={onChangeEntity} allowedTypes={MULTI_TYPES} />);
 
-    await user.click(screen.getByRole('button', { name: 'Buttons.Add' }));
+    await user.click(screen.getByRole('button', { name: 'Buttons.AddInterface' }));
     await user.selectOptions(screen.getByRole('combobox'), DeploymentInterfaceType.AnthropicMessages);
 
     expect(onChangeEntity).toHaveBeenCalledWith({
-      interfaces: { [DeploymentInterfaceType.AnthropicMessages]: { baseUrl: '' } },
+      interfaces: { [DeploymentInterfaceType.AnthropicMessages]: { baseUrl: '', deploymentName: '' } },
     });
   });
 
@@ -116,7 +119,7 @@ describe('InterfacesField', () => {
       />,
     );
 
-    expect(screen.queryByRole('button', { name: 'Buttons.Add' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Buttons.AddInterface' })).not.toBeInTheDocument();
   });
 
   test('deleting a row removes it and restores add availability', async () => {
@@ -135,7 +138,7 @@ describe('InterfacesField', () => {
     expect(onChangeEntity).toHaveBeenCalledWith({ interfaces: {} });
   });
 
-  test('editing an input value calls onChangeEntity with the entity-backed camelCase baseUrl field', async () => {
+  test('editing the base URL input calls onChangeEntity with the entity-backed camelCase baseUrl field', async () => {
     const user = userEvent.setup();
     const onChangeEntity = vi.fn();
     render(
@@ -146,11 +149,28 @@ describe('InterfacesField', () => {
       />,
     );
 
-    const input = screen.getByRole('textbox', { name: InterfacesI18nKey.OpenAIChatCompletions });
-    await user.type(input, 'x');
+    await user.type(getBaseUrlInput(), 'x');
 
     expect(onChangeEntity).toHaveBeenCalledWith({
       interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: 'x' } },
+    });
+  });
+
+  test('editing the deployment name input calls onChangeEntity with the entity-backed camelCase deploymentName field', async () => {
+    const user = userEvent.setup();
+    const onChangeEntity = vi.fn();
+    render(
+      <InterfacesField
+        entity={{ interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { deploymentName: '' } } }}
+        onChangeEntity={onChangeEntity}
+        allowedTypes={SINGLE_TYPE}
+      />,
+    );
+
+    await user.type(getDeploymentNameInput(), 'x');
+
+    expect(onChangeEntity).toHaveBeenCalledWith({
+      interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { deploymentName: 'x' } },
     });
   });
 
@@ -166,8 +186,7 @@ describe('InterfacesField', () => {
       />,
     );
 
-    const input = screen.getByRole('textbox', { name: InterfacesI18nKey.OpenAIChatCompletions });
-    await user.type(input, 'x');
+    await user.type(getBaseUrlInput(), 'x');
 
     expect(onChangeEntity).toHaveBeenCalledWith({
       interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { base_url: 'x' } },
@@ -182,7 +201,7 @@ describe('InterfacesField', () => {
       />,
     );
 
-    const input = screen.getByRole('textbox', { name: InterfacesI18nKey.OpenAIChatCompletions });
+    const input = getBaseUrlInput();
     await user.type(input, 'not-a-url');
 
     expect(screen.getByText(ErrorI18nKey.UrlField)).toBeInTheDocument();
@@ -193,7 +212,7 @@ describe('InterfacesField', () => {
     expect(screen.queryByText(ErrorI18nKey.UrlField)).not.toBeInTheDocument();
   });
 
-  test('does not show a validation error for a blank value', () => {
+  test('does not show a validation error for a blank required base URL until edited', () => {
     render(
       <InterfacesField
         entity={{ interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: '' } } }}
@@ -209,7 +228,7 @@ describe('InterfacesField', () => {
   test('add button is wrapped in its own container so it does not stretch full width', () => {
     render(<InterfacesField entity={{ interfaces: {} }} onChangeEntity={vi.fn()} allowedTypes={SINGLE_TYPE} />);
 
-    const addButton = screen.getByRole('button', { name: 'Buttons.Add' });
+    const addButton = screen.getByRole('button', { name: 'Buttons.AddInterface' });
     expect(addButton.parentElement?.tagName).toBe('DIV');
     expect(addButton.parentElement?.children).toHaveLength(1);
   });
@@ -224,8 +243,21 @@ describe('InterfacesField', () => {
       />,
     );
 
-    expect(screen.queryByRole('button', { name: 'Buttons.Add' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Buttons.AddInterface' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Buttons.Delete' })).not.toBeInTheDocument();
-    expect(screen.getByRole('textbox', { name: InterfacesI18nKey.OpenAIChatCompletions })).toBeDisabled();
+    expect(getBaseUrlInput()).toBeDisabled();
+    expect(getDeploymentNameInput()).toBeDisabled();
+  });
+
+  test('renders the interface type as a row title', () => {
+    render(
+      <InterfacesField
+        entity={{ interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: '' } } }}
+        onChangeEntity={vi.fn()}
+        allowedTypes={SINGLE_TYPE}
+      />,
+    );
+
+    expect(screen.getByText(InterfacesI18nKey.OpenAIChatCompletions)).toBeInTheDocument();
   });
 });

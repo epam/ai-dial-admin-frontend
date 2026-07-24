@@ -350,6 +350,7 @@ export enum ButtonsI18nKey {
   Discard = 'Buttons.Discard',
   Add = 'Buttons.Add',
   AddDefault = 'Buttons.AddDefault',
+  AddInterface = 'Buttons.AddInterface',
   Columns = 'Buttons.Columns',
   Reset = 'Buttons.Reset',
   ResetToDefault = 'Buttons.ResetToDefault',
@@ -1495,6 +1496,12 @@ export enum InterfacesI18nKey {
   OpenAIChatCompletions = 'Interfaces.OpenAIChatCompletions',
   OpenAIResponses = 'Interfaces.OpenAIResponses',
   AnthropicMessages = 'Interfaces.AnthropicMessages',
+  BaseUrl = 'Interfaces.BaseUrl',
+  BaseUrlPlaceholder = 'Interfaces.BaseUrlPlaceholder',
+  DeploymentName = 'Interfaces.DeploymentName',
+  DeploymentNamePlaceholder = 'Interfaces.DeploymentNamePlaceholder',
+  InfoBaseUrl = 'Interfaces.InfoBaseUrl',
+  InfoDeploymentName = 'Interfaces.InfoDeploymentName',
 }
 
 export enum ImagesI18nKey {
