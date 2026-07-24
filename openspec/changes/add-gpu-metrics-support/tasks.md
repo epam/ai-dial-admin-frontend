@@ -32,3 +32,14 @@
 ## 6. Quality checks
 
 - [x] 6.1 Run lint, format check, and the full test suite (`npm run lint`, `npm run format`, `npm run test` from `apps/ai-dial-admin/`) and fix any failures. Lint: 0 errors (32 pre-existing warnings, none in touched files). Format: clean. Full suite: 6447 passed, 1 unrelated flaky failure in `Tools/ManageToolsModal/utils.spec.ts` (untouched by this change, passes in isolation). Coverage: 64.4% statements / 54.4% branches / 57.2% functions / 64.7% lines — gate (40/40/50/50) not regressed.
+
+## 7. Card-kind revision: Ratio/Single instead of Gauge
+
+Follow-up from product feedback on the rendered result: a dial/gauge is the wrong shape for GPU Memory (a plain used/total pair) and GPU Utilization (a plain percentage). Revises tasks 2–3 above.
+
+- [x] 7.1 Revert the `Gauge` detail-label extension: remove `getDetail` from `GaugeCardConfig`, remove the `detail` prop from `GaugeCard.tsx` (back to the original bare-percentage formatter), remove the `getDetail` wiring in `MetricsSection.tsx`'s `Gauge` case, and delete `GaugeCard.spec.tsx` (tested only the reverted feature).
+- [x] 7.2 Add an optional `getUnit`/`unit` to `RatioCardConfig`/`RatioBadgeCard`, rendered after the denominator (additive; Ready Replicas keeps rendering bare `ready / total` since it doesn't set a unit).
+- [x] 7.3 Convert `GPU_MEMORY_CARD` in `constants.ts` from `Gauge` to `Ratio`: `getNumerator`/`getDenominator`/`getUnit` from `formatMemoryPair`, `getStatus` from `ratioGaugeStatus` on the used/total ratio.
+- [x] 7.4 Convert `GPU_UTILIZATION_CARD` in `constants.ts` from `Gauge` to `Single`: `getValue` = `avgPodValue` as a percentage (0–100, one decimal, matching the existing `RequestErrorRatio` card's pattern), `unit: '%'`, `getStatus` from `ratioGaugeStatus` on the percentage ÷ 100.
+- [x] 7.5 Update `constants.spec.ts` for the new card kinds/fields; add a Ratio-with-unit case to `MetricsSection.spec.tsx`.
+- [x] 7.6 Re-run lint, format, and the Metrics/MetricCard test suites; confirm no regressions.

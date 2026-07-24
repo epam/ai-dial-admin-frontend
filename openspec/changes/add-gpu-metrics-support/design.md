@@ -2,15 +2,15 @@
 
 The Metrics tab (`src/components/Containers/View/Metrics/`) renders a snapshot fetched once per tab-open from `GET /deployments/{id}/metrics`, grouped into config-driven card sections (`constants.ts` → `MetricsSectionConfig`/`MetricCardConfig` → `MetricsSection.tsx` → per-kind card components). GPU fields (`gpuUtilization`, `gpuMemoryBytes`) have always been null on the backend (a documented PoC placeholder), so the current `GPU_MEMORY_CARD` is a plain `Single`/`memoryCard` (summed bytes, no ceiling) and `gpuUtilization` is not rendered anywhere. The deployment-manager backend's `feat/gpu-metric` branch makes these fields real (sourced from the DCGM exporter) and adds `gpuMemoryTotalBytes`, and gives the pre-existing `resources.gpu` availability block real, distinct (but free-text) reasons.
 
-The existing `MetricCardKind.Gauge` (used today only for KV-cache usage) renders a fixed 0–1 arc with a bare percentage label and optional warn/crit color zones — it has no concept of a used/total pair. The existing `MetricsAvailability { available, reason? }` is already modeled and already drives section visibility for `Serving`/`Operational` in `Metrics.tsx`, but `resources.gpu`'s availability has never been read anywhere in the frontend.
+The existing `MetricCardKind.Ratio` (used today only for Ready Replicas — `RatioBadgeCard`, e.g. "2 / 3") renders a bare numerator/denominator pair with no unit suffix. The existing `MetricsAvailability { available, reason? }` is already modeled and already drives section visibility for `Serving`/`Operational` in `Metrics.tsx`, but `resources.gpu`'s availability has never been read anywhere in the frontend.
 
 ## Goals / Non-Goals
 
 **Goals:**
-- Consume `gpuMemoryTotalBytes` and render GPU memory as a used/total gauge instead of a bare summed value.
-- Render `gpuUtilization` (currently unused) as a gauge, averaged across the deployment's pods.
+- Consume `gpuMemoryTotalBytes` and render GPU memory as a used/total pair instead of a bare summed value.
+- Render `gpuUtilization` (currently unused) as a percentage, averaged across the deployment's pods.
 - Hide both GPU cards when `resources.gpu.available` is false, for any reason, so a CPU-only model no longer shows a permanent empty GPU card.
-- Extend the shared `Gauge` card mechanism minimally so it can show a used/total label, reusable beyond GPU memory.
+- Extend the shared `Ratio` card mechanism minimally so it can show a unit suffix, reusable beyond GPU memory.
 
 **Non-Goals:**
 - Surfacing `MetricsAvailability.reason` text anywhere in the UI (for GPU or any other block) — the plumbing (`emptyReason` on `MetricCardShell`) already exists but is unused everywhere today; wiring it project-wide is a separate, larger change.
@@ -24,8 +24,8 @@ The existing `MetricCardKind.Gauge` (used today only for KV-cache usage) renders
 **1. Gate visibility on the `available` boolean only, never on `reason` text.**
 The backend spec documents `reason` as a "human-readable" string, not a stable enum/code — matching on its contents to distinguish "no GPU requested" (hide) from "exporter down" (show empty state) would be brittle across backend releases and versions. Gating on the boolean alone is simpler, forward-compatible, and matches the scope decision to treat this as a plain visibility gate, not a messaging feature. Alternative considered: parse `reason` for known substrings — rejected as fragile and out of scope.
 
-**2. Extend `GaugeCardConfig`/`GaugeCard` with an optional detail-label override rather than a new card kind.**
-GPU memory needs the same visual (arc + warn/crit color zones) that KV-cache usage already uses — only the center label needs to change from a bare percentage to a formatted "used / total" string. Adding an optional `getDetail`/`detail` prop that replaces the default `%` formatter when present keeps one `Gauge` implementation for both cases. Alternative considered: a distinct `MetricCardKind.UsageGauge` component — rejected as duplicating the arc/threshold/zone rendering for no behavioral difference.
+**2. Render GPU Memory as a `Ratio` card and GPU Utilization as a `Single` card — not a `Gauge`.**
+An earlier iteration of this design used `Gauge` (the semi-circular dial already used for KV-cache usage) for both cards, extended with a detail-label override so it could show "used / total" instead of a bare percentage. Product feedback on the rendered result was that a dial/needle visualization is the wrong shape for this data — GPU Memory is a plain used/total pair (the same shape Ready Replicas already renders via `RatioCardConfig`/`RatioBadgeCard`, e.g. "2 / 3"), and GPU Utilization is a plain percentage (the same shape CPU/Memory/error-ratio already render via `SingleCardConfig`). Reusing those two existing, simpler card kinds is a better fit than stretching `Gauge` to cover a shape it wasn't designed for. `RatioCardConfig`/`RatioBadgeCard` gained one small addition — an optional `getUnit`/`unit` suffix rendered after the denominator — so it can express "12.4 / 14.6 GB", not just bare counts. `GaugeCard` itself is left unchanged (still used only by KV-cache usage); the detail-label extension that had been added to it was reverted since nothing calls it anymore.
 
 **3. Aggregate `gpuUtilization` across pods with a new `avgPodValue` helper, mirroring the existing `sumPodValue`.**
 Each pod already carries one utilization value (backend averages across a pod's own GPUs). Averaging again across a deployment's pods (replicas) is the natural per-deployment roll-up and matches how CPU/memory are already summed across pods in this same section — one small, pure, testable helper per aggregation operation (`utils.md` convention).
@@ -41,7 +41,7 @@ The existing spec already establishes GPU memory as universal because its emptin
 
 - **[Risk]** Treating every unavailable reason identically means an operational problem (exporter down on a GPU deployment) is visually indistinguishable from "this model has no GPU" (both: card simply absent). → **Mitigation:** accepted per explicit scope decision; if this needs to change, it's the same follow-up as the broader reason-surfacing gap, not a new one.
 - **[Risk]** Averaging utilization across replica pods can hide one hot GPU among several idle ones. → **Mitigation:** consistent with the granularity the rest of the Compute section already uses (pod-summed CPU/memory); per-pod breakdown is out of scope for this snapshot-level dashboard.
-- **[Risk]** Changing `GaugeCard`'s label rendering could regress the existing KV-cache usage gauge. → **Mitigation:** the detail override is optional and additive; omitting it preserves today's percentage rendering exactly, covered by existing KV-cache tests.
+- **[Risk]** Adding a `unit` suffix to `RatioBadgeCard` could regress the existing Ready Replicas card. → **Mitigation:** the `unit` prop is optional and additive; omitting it (as Replicas does) preserves today's bare "ready / total" rendering exactly, covered by existing tests.
 
 ## Migration Plan
 

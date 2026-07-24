@@ -36,8 +36,6 @@ export interface GaugeCardConfig extends BaseCard {
   getValue: (metrics: DeploymentMetrics) => number | null;
   thresholds?: { warn: number; crit: number };
   getStatus?: (value: number | null) => MetricStatus;
-  // Overrides the default percentage center-label with a formatted string (e.g. "14.3 / 40 GB").
-  getDetail?: (metrics: DeploymentMetrics) => string | undefined;
 }
 
 export interface DistributionCardConfig extends BaseCard {
@@ -51,6 +49,8 @@ export interface RatioCardConfig extends BaseCard {
   getNumerator: (metrics: DeploymentMetrics) => number | null;
   getDenominator: (metrics: DeploymentMetrics) => number | null;
   getStatus?: (numerator: number | null, denominator: number | null) => MetricStatus;
+  // Resolve the shared unit for numerator/denominator (e.g. "GB"); omitted for unitless ratios (replicas).
+  getUnit?: (metrics: DeploymentMetrics) => string | undefined;
 }
 
 export interface DualCardConfig extends BaseCard {

@@ -13,19 +13,9 @@ interface Props {
   emptyReason?: string;
   // Colored zone boundaries on the arc (fractions of max), e.g. { warn: 0.7, crit: 0.9 }.
   thresholds?: { warn: number; crit: number };
-  // Overrides the default percentage center-label (e.g. "14.3 / 40 GB" for a used/total gauge).
-  detail?: string;
 }
 
-const GaugeCard: FC<Props> = ({
-  title,
-  value,
-  loading,
-  status = MetricStatus.Neutral,
-  emptyReason,
-  thresholds,
-  detail,
-}) => {
+const GaugeCard: FC<Props> = ({ title, value, loading, status = MetricStatus.Neutral, emptyReason, thresholds }) => {
   const option = useMemo(() => {
     const zones = thresholds
       ? [
@@ -55,7 +45,7 @@ const GaugeCard: FC<Props> = ({
           anchor: { show: true, size: 8, itemStyle: { color: CHART_COLOR.value } },
           title: { show: false },
           detail: {
-            formatter: (v: number) => detail ?? `${Math.round(v * 100)}%`,
+            formatter: (v: number) => `${Math.round(v * 100)}%`,
             fontSize: 24,
             fontWeight: 600,
             color: STATUS_COLOR[status],
@@ -65,7 +55,7 @@ const GaugeCard: FC<Props> = ({
         },
       ],
     };
-  }, [value, status, thresholds, detail]);
+  }, [value, status, thresholds]);
 
   return (
     <MetricCardShell title={title} loading={loading} isEmpty={value === null} emptyReason={emptyReason} status={status}>

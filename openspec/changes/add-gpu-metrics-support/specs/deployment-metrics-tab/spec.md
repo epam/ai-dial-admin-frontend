@@ -60,8 +60,8 @@ The system SHALL render each metric with the card type that best fits its shape,
 - **Latency** metrics (TTFT, inter-token, e2e, request latency) → a distribution card showing the p50 / p95 / p99 percentiles together.
 - **Tokens/sec** → a dual-value card showing prompt and generation side by side.
 - **KV-cache usage** (and other bare 0–1 ratios) → a gauge showing a percentage.
-- **GPU Memory** → a gauge showing used vs. total (e.g. "14.3 / 40 GB") instead of a bare percentage, with the same colored-zone styling as other gauges.
-- **GPU Utilization** → a gauge showing a percentage, averaged across the deployment's pods.
+- **GPU Memory** → a ratio card showing used vs. total with a shared unit suffix (e.g. "12.4 / 14.6 GB"), the same card kind used for replicas.
+- **GPU Utilization** → a single-value card showing a percentage, averaged across the deployment's pods.
 - All other scalars (CPU, memory, request error ratio, requests/sec, running requests, queue depth) → a single-value card with its unit.
 
 #### Scenario: Replicas as a ratio
@@ -80,13 +80,13 @@ The system SHALL render each metric with the card type that best fits its shape,
 - **WHEN** the Load section renders KV-cache usage
 - **THEN** a gauge shows the current value against its colored zones and labels where the zones start
 
-#### Scenario: GPU Memory as a used/total gauge
+#### Scenario: GPU Memory as a used/total ratio
 - **WHEN** the Compute section renders GPU Memory for an INFERENCE deployment whose `resources.gpu` is available
-- **THEN** a gauge shows the fill fraction (used ÷ total) against its colored zones, with the center label showing the formatted used and total values (e.g. "14.3 / 40 GB") rather than a bare percentage
+- **THEN** a ratio card shows the used and total values with a shared unit suffix (e.g. "12.4 / 14.6 GB"), colored by status, with no dial/gauge visualization
 
-#### Scenario: GPU Utilization as a percentage gauge
+#### Scenario: GPU Utilization as a single percentage value
 - **WHEN** the Compute section renders GPU Utilization for an INFERENCE deployment whose `resources.gpu` is available
-- **THEN** a gauge shows the percentage utilization averaged across the deployment's pods, against its colored zones
+- **THEN** a single-value card shows the percentage utilization averaged across the deployment's pods, colored by status, with no dial/gauge visualization
 
 ### Requirement: Status thresholds and color
 Threshold-bearing metrics SHALL be colored by health status — `ok` (green), `warn` (amber), `crit` (red) — applied to the card value and accent. Metrics without a meaningful threshold SHALL stay neutral and never signal an alarm. The thresholds are: replicas degraded (amber when some pods not ready, red when under half or zero ready), request error ratio (amber > 0.5%, red > 2%), KV-cache usage (amber > 0.7, red > 0.9), GPU Memory usage ratio (amber > 0.7, red > 0.9), and GPU Utilization (amber > 0.7, red > 0.9).

@@ -22,7 +22,8 @@ import { INFERENCE_TASK } from '@/src/types/deployments/containers';
 const GENERATION_ONLY: INFERENCE_TASK[] = [INFERENCE_TASK.TEXT_GENERATION];
 const CLASSIFICATION_ONLY: INFERENCE_TASK[] = [INFERENCE_TASK.TEXT_CLASSIFICATION];
 
-// Shared colored-zone thresholds for 0–1 ratio gauges (KV-cache usage, GPU memory, GPU utilization).
+// Colored-zone thresholds for the KV-cache usage gauge, matching `ratioGaugeStatus`'s convention
+// (also reused by GPU Memory/Utilization status, which render as Ratio/Single cards without a gauge arc).
 const RATIO_GAUGE_THRESHOLDS = { warn: 0.7, crit: 0.9 };
 
 // A memory card: sums a per-pod byte field and renders it in the most readable unit (Mb/Gb/…).
@@ -67,29 +68,34 @@ const CPU_CARD: MetricCardConfig = {
 const MEMORY_CARD = memoryCard(DeploymentMetricsI18nKey.Memory, (p) => p.memoryBytes);
 // Inference-only, gated additionally by `resources.gpu` availability (see Metrics.tsx).
 const GPU_MEMORY_CARD: MetricCardConfig = {
-  kind: MetricCardKind.Gauge,
+  kind: MetricCardKind.Ratio,
   labelKey: DeploymentMetricsI18nKey.GpuMemory,
-  getValue: (m) => {
-    const used = sumPodValue(m, (p) => p.gpuMemoryBytes);
-    const total = sumPodValue(m, (p) => p.gpuMemoryTotalBytes);
-    return used !== null && total ? used / total : null;
-  },
-  getDetail: (m) => {
-    const pair = formatMemoryPair(
+  getNumerator: (m) =>
+    formatMemoryPair(
       sumPodValue(m, (p) => p.gpuMemoryBytes),
       sumPodValue(m, (p) => p.gpuMemoryTotalBytes),
-    );
-    return pair ? `${pair.used} / ${pair.total} ${pair.unit}` : undefined;
-  },
-  thresholds: RATIO_GAUGE_THRESHOLDS,
-  getStatus: (v) => ratioGaugeStatus(v),
+    )?.used ?? null,
+  getDenominator: (m) =>
+    formatMemoryPair(
+      sumPodValue(m, (p) => p.gpuMemoryBytes),
+      sumPodValue(m, (p) => p.gpuMemoryTotalBytes),
+    )?.total ?? null,
+  getUnit: (m) =>
+    formatMemoryPair(
+      sumPodValue(m, (p) => p.gpuMemoryBytes),
+      sumPodValue(m, (p) => p.gpuMemoryTotalBytes),
+    )?.unit,
+  getStatus: (used, total) => ratioGaugeStatus(used !== null && total ? used / total : null),
 };
 const GPU_UTILIZATION_CARD: MetricCardConfig = {
-  kind: MetricCardKind.Gauge,
+  kind: MetricCardKind.Single,
   labelKey: DeploymentMetricsI18nKey.GpuUtilization,
-  getValue: (m) => avgPodValue(m, (p) => p.gpuUtilization),
-  thresholds: RATIO_GAUGE_THRESHOLDS,
-  getStatus: (v) => ratioGaugeStatus(v),
+  unit: '%',
+  getValue: (m) => {
+    const ratio = avgPodValue(m, (p) => p.gpuUtilization);
+    return ratio === null ? null : Math.round(ratio * 1000) / 10;
+  },
+  getStatus: (percent) => ratioGaugeStatus(percent === null ? null : percent / 100),
 };
 
 export const SCALE_HEALTH_BASE_CARDS: MetricCardConfig[] = [REPLICAS_CARD];
