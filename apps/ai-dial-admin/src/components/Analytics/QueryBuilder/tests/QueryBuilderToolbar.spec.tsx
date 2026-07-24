@@ -48,6 +48,11 @@ describe('QueryBuilder :: QueryBuilderToolbar', () => {
     expect(screen.getByRole('button', { name: /QueryBuilder.Run/ })).toBeDisabled();
   });
 
+  test('hides Run when showRun is false', () => {
+    renderToolbar({ showRun: false });
+    expect(screen.queryByRole('button', { name: /QueryBuilder.Run/ })).not.toBeInTheDocument();
+  });
+
   test('renders extra actions via children', () => {
     render(
       <QueryBuilderToolbar

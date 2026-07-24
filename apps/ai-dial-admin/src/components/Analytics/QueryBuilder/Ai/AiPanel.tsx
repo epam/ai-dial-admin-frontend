@@ -1,12 +1,20 @@
 'use client';
 
-import { FC, useState } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 
-import { ButtonAppearance, ButtonVariant, DialButton, DialPrimaryButton, DialTextarea } from '@epam/ai-dial-ui-kit';
-import { IconSparkles } from '@tabler/icons-react';
+import {
+  ButtonAppearance,
+  ButtonVariant,
+  DialButton,
+  DialPrimaryButton,
+  DialTextarea,
+  ElementSize,
+} from '@epam/ai-dial-ui-kit';
+import { IconPlayerPlay, IconSparkles } from '@tabler/icons-react';
+import classNames from 'classnames';
 
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
-import { extractSql } from '@/src/components/Analytics/QueryBuilder/utils/extract-sql';
+import { splitMessageAroundSql } from '@/src/components/Analytics/QueryBuilder/utils/extract-sql';
 import { generateQuery } from '@/src/app/[lang]/query-builder/actions';
 import { QUERY_ASSISTANT_SUGGESTIONS } from '@/src/constants/analytics/query-assistant';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
@@ -16,35 +24,41 @@ import { QueryAssistantMessage, QueryAssistantRole } from '@/src/models/analytic
 import { getErrorNotification } from '@/src/utils/notification';
 
 interface Props {
-  onGenerated: (sql: string | null) => void;
+  onRunMessage: (sql: string, messageIndex: number) => void;
+  loadedMessageIndex: number | null;
+  runInFlight: boolean;
 }
 
-const AiPanel: FC<Props> = ({ onGenerated }) => {
+const AiPanel: FC<Props> = ({ onRunMessage, loadedMessageIndex, runInFlight }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
 
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<QueryAssistantMessage[]>([]);
   const [loading, setLoading] = useState(false);
-  const [proposedSql, setProposedSql] = useState<string | null>(null);
-  const [rawReply, setRawReply] = useState<string | null>(null);
+  const lastUserMessageRef = useRef<HTMLDivElement | null>(null);
 
-  const onGenerate = async () => {
+  // Scrolls the latest user message to the top of the transcript, so the question that was just asked
+  // stays visible together with its reply instead of the view jumping straight to the transcript's end.
+  useEffect(() => {
+    lastUserMessageRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [messages]);
+
+  const onSend = async () => {
     const prompt = input.trim();
     if (!prompt || loading) {
       return;
     }
     const nextMessages: QueryAssistantMessage[] = [...messages, { role: QueryAssistantRole.User, content: prompt }];
+    setMessages(nextMessages);
+    setInput('');
     setLoading(true);
     const res = await generateQuery(nextMessages);
     if (res.success && res.response) {
       const reply = res.response.choices?.[0]?.message;
-      const content = reply?.content ?? '';
-      setMessages(reply ? [...nextMessages, reply] : nextMessages);
-      const sql = extractSql(content);
-      setProposedSql(sql);
-      setRawReply(sql ? null : content);
-      onGenerated(sql);
+      if (reply) {
+        setMessages([...nextMessages, reply]);
+      }
     } else {
       showNotification(
         getErrorNotification(
@@ -57,67 +71,103 @@ const AiPanel: FC<Props> = ({ onGenerated }) => {
     setLoading(false);
   };
 
-  const generateDisabled = !input.trim() || loading;
+  const sendDisabled = !input.trim() || loading;
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-3 overflow-y-auto">
+    <div className="flex h-full min-h-0 flex-col gap-3">
       <div className="flex items-center gap-2 text-accent-primary">
         <IconSparkles size={18} stroke={2} />
         <h2 className="dial-h6">{t(QueryBuilderI18nKey.AiPanelHeading)}</h2>
       </div>
       <p className="dial-tiny-text text-secondary">{t(QueryBuilderI18nKey.AiPanelDescription)}</p>
 
-      <DialTextarea
-        id="query-assistant-prompt"
-        aria-label={t(QueryBuilderI18nKey.AiPanelHeading)}
-        placeholder={t(QueryBuilderI18nKey.AiPromptPlaceholder)}
-        value={input}
-        onChange={setInput}
-        disabled={loading}
-        rows={3}
-      />
-
-      <div className="flex flex-wrap gap-2">
-        {QUERY_ASSISTANT_SUGGESTIONS.map((key) => (
-          <DialButton
-            key={key}
-            label={t(key)}
-            appearance={ButtonAppearance.Ghost}
-            variant={ButtonVariant.Secondary}
-            onClick={() => setInput(t(key))}
-            disabled={loading}
-          />
-        ))}
+      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
+        {messages.map((message, index) => {
+          const isUser = message.role === QueryAssistantRole.User;
+          const split = isUser ? null : splitMessageAroundSql(message.content);
+          const isLoaded = index === loadedMessageIndex;
+          const isLastUserMessage =
+            isUser && !messages.slice(index + 1).some((m) => m.role === QueryAssistantRole.User);
+          return (
+            <div
+              key={index}
+              ref={isLastUserMessage ? lastUserMessageRef : undefined}
+              className={classNames(
+                'flex max-w-[92%] flex-col gap-2 rounded border p-3',
+                isUser ? 'self-end border-transparent bg-layer-3' : 'self-start border-primary bg-layer-1',
+              )}
+            >
+              {split === null ? (
+                <p className="dial-small-text whitespace-pre-wrap text-primary">{message.content}</p>
+              ) : (
+                <>
+                  {split.before && <p className="dial-small-text whitespace-pre-wrap text-primary">{split.before}</p>}
+                  <div className="flex flex-col gap-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="dial-tiny-text text-secondary">{t(QueryBuilderI18nKey.SqlQuery)}</span>
+                      <div className="flex items-center gap-1">
+                        <CopyButton
+                          value={split.sql}
+                          valueLabel={t(QueryBuilderI18nKey.SqlQuery)}
+                          size={ElementSize.Small}
+                        />
+                        <DialButton
+                          label={t(QueryBuilderI18nKey.Run)}
+                          iconBefore={<IconPlayerPlay size={14} stroke={2} />}
+                          appearance={ButtonAppearance.Outlined}
+                          variant={ButtonVariant.Secondary}
+                          size={ElementSize.Small}
+                          onClick={() => onRunMessage(split.sql, index)}
+                          disabled={runInFlight || isLoaded}
+                        />
+                      </div>
+                    </div>
+                    <pre className="dial-small-text overflow-x-auto whitespace-pre-wrap rounded border border-primary bg-layer-3 p-2">
+                      {split.sql}
+                    </pre>
+                  </div>
+                  {split.after && <p className="dial-small-text whitespace-pre-wrap text-primary">{split.after}</p>}
+                </>
+              )}
+            </div>
+          );
+        })}
       </div>
 
-      <div>
-        <DialPrimaryButton
-          label={loading ? t(QueryBuilderI18nKey.AiGenerating) : t(QueryBuilderI18nKey.AiGenerate)}
-          iconBefore={<IconSparkles size={18} stroke={2} />}
-          onClick={onGenerate}
-          disabled={generateDisabled}
+      {messages.length === 0 && (
+        <div className="flex flex-wrap gap-2">
+          {QUERY_ASSISTANT_SUGGESTIONS.map((key) => (
+            <DialButton
+              key={key}
+              label={t(key)}
+              appearance={ButtonAppearance.Ghost}
+              variant={ButtonVariant.Secondary}
+              onClick={() => setInput(t(key))}
+              disabled={loading}
+            />
+          ))}
+        </div>
+      )}
+
+      <div className="flex flex-col gap-2">
+        <DialTextarea
+          id="query-assistant-prompt"
+          aria-label={t(QueryBuilderI18nKey.AiPanelHeading)}
+          placeholder={t(QueryBuilderI18nKey.AiPromptPlaceholder)}
+          value={input}
+          onChange={setInput}
+          disabled={loading}
+          rows={3}
         />
+        <div className="flex justify-end">
+          <DialPrimaryButton
+            label={loading ? t(QueryBuilderI18nKey.AiSending) : t(QueryBuilderI18nKey.AiSend)}
+            iconBefore={<IconSparkles size={18} stroke={2} />}
+            onClick={onSend}
+            disabled={sendDisabled}
+          />
+        </div>
       </div>
-
-      {proposedSql !== null && (
-        <div className="flex min-h-0 flex-col gap-2 border-t border-primary pt-3">
-          <div className="flex items-center justify-between">
-            <span className="dial-tiny-text text-secondary">{t(QueryBuilderI18nKey.AiProposedQuery)}</span>
-            <CopyButton value={proposedSql} valueLabel={t(QueryBuilderI18nKey.SqlQuery)} />
-          </div>
-          <pre className="dial-small-text overflow-x-auto whitespace-pre-wrap rounded border border-primary bg-layer-3 p-3">
-            {proposedSql}
-          </pre>
-          <span className="dial-tiny-text text-secondary">{t(QueryBuilderI18nKey.AiRunHint)}</span>
-        </div>
-      )}
-
-      {rawReply !== null && (
-        <div className="flex flex-col gap-2 border-t border-primary pt-3">
-          <span className="dial-tiny-text text-secondary">{t(QueryBuilderI18nKey.AiResponseLabel)}</span>
-          <p className="dial-small-text whitespace-pre-wrap text-primary">{rawReply}</p>
-        </div>
-      )}
     </div>
   );
 };
