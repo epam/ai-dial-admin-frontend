@@ -38,6 +38,15 @@ export const createColumnRow = (): ColumnRow => ({
   sensitive: false,
 });
 
+export const getTemporalColumnNames = (columns: ColumnRow[]): string[] => {
+  const seen = new Set<string>();
+  columns.forEach((c) => {
+    const s = c.source_name.trim();
+    if (s && (c.type === AnalyticsFieldType.Date || c.type === AnalyticsFieldType.Timestamp)) seen.add(s);
+  });
+  return [...seen];
+};
+
 export const createTableForm = (tables: AnalyticsTable[]): CreateTableForm => {
   const firstSource = tables.find((tbl) => tbl.type === AnalyticsTableType.Source);
   return {
@@ -178,11 +187,20 @@ const templateValueFor = (type: AnalyticsFieldType): unknown => {
   }
 };
 
-// A one-row starting point for the write-rows JSON editor: every declared column's name as a key with
-// a type-appropriate empty value, so the user edits values in place rather than typing the row shape
-// from scratch.
-export const buildRowsTemplate = (columns: AnalyticsTableColumn[]): string =>
-  JSON.stringify([Object.fromEntries(columns.map((c) => [c.name, templateValueFor(c.type)]))], null, 2);
+// A one-row starting point for the write-rows JSON editor: every declared column's *source* name as a
+// key (the backend's row-insert endpoint is keyed by the physical ClickHouse column, not the exposed
+// name a rename may have since diverged from) with a type-appropriate empty value, so the user edits
+// values in place rather than typing the row shape from scratch. An enrichment table's grain key is a
+// hidden column — never part of `columns` — but the backend still requires it in each row to identify
+// which entity the enrichment data attaches to, so it's added as a leading field when present.
+export const buildRowsTemplate = (columns: AnalyticsTableColumn[], grainKey?: string): string => {
+  const row: Record<string, unknown> = {};
+  if (grainKey) row[grainKey] = '';
+  columns.forEach((c) => {
+    row[c.source_name] = templateValueFor(c.type);
+  });
+  return JSON.stringify([row], null, 2);
+};
 
 // The write-rows editor's content is valid only as a JSON array (of row objects); returns null for
 // unparseable JSON or a parsed non-array, so callers can both submit-guard and disable Insert on the

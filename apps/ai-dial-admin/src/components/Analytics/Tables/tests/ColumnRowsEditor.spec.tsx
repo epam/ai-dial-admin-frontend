@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
@@ -44,6 +44,20 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
 const row = (overrides?: Partial<ColumnRow>): ColumnRow => ({ ...createColumnRow(), ...overrides });
 
 describe('ColumnRowsEditor', () => {
+  test('a single Name field fills both source_name and name on the row', () => {
+    const onChange = vi.fn();
+    render(<ColumnRowsEditor rows={[row()]} onChange={onChange} />);
+
+    // A dedicated "Source name" field was merged away — guard against it silently reappearing.
+    expect(screen.queryByLabelText('AnalyticsTables.SourceName', { exact: false })).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(AnalyticsTablesI18nKey.ColumnName, { exact: false }), {
+      target: { value: 'event_id' },
+    });
+
+    expect(onChange).toHaveBeenCalledWith([expect.objectContaining({ source_name: 'event_id', name: 'event_id' })]);
+  });
+
   test('does not render the element-type field for a non-Array row', () => {
     render(<ColumnRowsEditor rows={[row()]} onChange={vi.fn()} />);
     expect(screen.queryByLabelText(AnalyticsTablesI18nKey.ElementType)).not.toBeInTheDocument();

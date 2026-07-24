@@ -553,7 +553,7 @@ When a result is shown, the results area SHALL display a stat-tile row above the
 
 ### Requirement: Result table and chart views
 
-The results area SHALL offer a Table ⇄ Chart switcher. The Table view SHALL render the result grid. The Chart view SHALL render the result with ECharts and offer a chart-type control with four types — bar, line, pie, and scatter — plus two column selectors whose allowed columns and labels follow the selected type. The Chart view SHALL be available only when the shown result came from an aggregate-mode structured run with at least one group-by or bucket column; otherwise the Chart view SHALL show a hint that charts require an aggregate result with a group-by. Chart colors SHALL come from the shared chart color tokens.
+The results area SHALL offer a Table ⇄ Chart switcher. The Table view SHALL render the result grid. Each result column SHALL render its row's actual value looked up by its exact column name, including a column name that itself contains a literal `.` (for example an enrichment projection's `table.column`) — such a name SHALL NOT be treated as a nested-path lookup. The Chart view SHALL render the result with ECharts and offer a chart-type control with four types — bar, line, pie, and scatter — plus two column selectors whose allowed columns and labels follow the selected type. The Chart view SHALL be available only when the shown result came from an aggregate-mode structured run with at least one group-by or bucket column; otherwise the Chart view SHALL show a hint that charts require an aggregate result with a group-by. Chart colors SHALL come from the shared chart color tokens.
 
 For **bar** and **line**, the selectors SHALL be labeled X axis and Y axis: X over the executed query's group-by/bucket columns, Y over its aggregate columns (including the count column when present); defaults SHALL be the first dimension and the first aggregate. When every X value is numeric or date-like, the chart SHALL order the points along the X axis by that natural order (chronological/numeric ascending) regardless of the query's row order; mixed or plain-text X values keep row order. Long X-axis labels SHALL be truncated to a fixed label width with the full value available in the tooltip.
 
@@ -609,6 +609,11 @@ Everywhere the chart names a column — selector options, in-chart axis titles, 
 
 - **WHEN** the shown result came from a row-mode or SQL run and the user selects the Chart view
 - **THEN** a hint explains that charts require an aggregate result with a group-by
+
+#### Scenario: A dotted column name still shows its value
+
+- **WHEN** a result row includes a column whose name contains a literal `.` (e.g. an enrichment projection) and the backend response carries a value for it
+- **THEN** the Table view shows that value in the corresponding cell rather than leaving it blank
 
 ### Requirement: Backend-authoritative query translation
 
@@ -701,7 +706,7 @@ The Query Builder SHALL keep the SQL editor text as its own buffer. Entering the
 
 - **WHEN** the user opens the SQL view without prior SQL edits
 - **THEN** the current builder query is sent to `POST /v1/queries/translate`
-- **AND** the editor is pre-filled with the returned SQL
+- **AND** the editor is pre-filled with the returned SQL, auto-formatted for readability (see "SQL editor auto-formatting")
 
 #### Scenario: A non-expressible query surfaces a translate error
 
@@ -714,6 +719,30 @@ The Query Builder SHALL keep the SQL editor text as its own buffer. Entering the
 - **WHEN** the user edits SQL, switches to the JSON view, and switches back to the SQL view
 - **THEN** the SQL editor shows the previously edited text unchanged
 - **AND** the edited text is not re-translated over
+
+### Requirement: SQL editor auto-formatting
+
+The SQL editor SHALL auto-format its contents — there SHALL be no manual "Format" action. Formatting SHALL apply: when text is seeded into the editor (the translated builder query, or SQL returned from a rejected-JSON fallback), as the user types, and as the user pastes, using the Monaco `sql` language's document-formatting provider backed by the `sql-formatter` library. A syntax error in the current text SHALL leave that text unformatted rather than throwing or clearing it. Formatting is a display concern only: the text actually executed or copied is whatever the editor currently holds (the formatted text), and translating that SQL back to a structured query (see "Switching from a written mode to the Builder is guarded") is unaffected by whitespace/formatting differences.
+
+#### Scenario: Typed SQL is auto-formatted
+
+- **WHEN** the user types a SQL statement in the editor
+- **THEN** the statement is reformatted without a manual Format action
+
+#### Scenario: Pasted SQL is auto-formatted
+
+- **WHEN** the user pastes a SQL statement into the editor
+- **THEN** the pasted text is reformatted in place
+
+#### Scenario: Seeded SQL is pre-formatted
+
+- **WHEN** the editor is seeded from the translated builder query
+- **THEN** the seeded text is already formatted, with no separate user action required
+
+#### Scenario: Unformattable text is left as-is
+
+- **WHEN** the editor's current text is not valid SQL
+- **THEN** formatting leaves the text unchanged rather than erroring
 
 ### Requirement: Switching from a written mode to the Builder is guarded
 
@@ -799,9 +828,13 @@ Creating a table SHALL open a form popup that is mounted only while open, so clo
 
 ### Requirement: Table detail column schema management
 
-The Table detail page SHALL branch on the table's lifecycle `status`. The **live** column-management surface described here SHALL be offered only when the table is `ACTIVE`; for a `PENDING`/`FAILED` table the detail view SHALL instead offer the schema-definition surface (see "Define and materialize a table schema").
+The Table detail page SHALL branch on the table's lifecycle `status`. The **live** column-management surface described here SHALL be offered only when the table is `ACTIVE`; for a `PENDING`/`FAILED` table the detail view SHALL instead offer the schema-definition surface (see "Define and materialize a table schema"). The detail header SHALL show the table's name and status badge regardless of status, and, when the table has a `description`, the description SHALL be shown beneath them regardless of status too (truncated with the full value reachable via an ellipsis tooltip, as elsewhere long text is truncated).
 
-For an `ACTIVE` table, the detail page SHALL show the table's columns in a grid (name, source name, type, tag, display name, description, nullable rendered as a true/false value); long display name/description values SHALL be truncated with the full value reachable via an ellipsis tooltip. A column whose `sensitive` flag is true SHALL show a marker (a colored dot with a "Sensitive" tooltip) rendered inline in the name cell, after the name; non-sensitive columns SHALL show no marker. Each column row SHALL offer a per-column action menu with **edit** and **delete (drop)** actions. The column name SHALL also be editable inline in the grid.
+While the table is `ACTIVE`, the header SHALL also show a read-only schema-metadata summary: for a **source** table, its ordering key when set and its partition column and granularity together when a partition is set; for an **enrichment** table, its grain key when set. This summary SHALL NOT be shown for a `PENDING`/`FAILED` table, which instead exposes the same fields as editable inputs in the schema-definition surface.
+
+For an `ACTIVE` table, the detail page SHALL show the table's columns in a grid (name, type, tag, display name, description, nullable rendered as a true/false value); the physical source name SHALL NOT be shown as its own grid column — it is an internal identifier surfaced only where an operation requires it (see "Table detail row writes", whose insert template must key by source name). Long display name/description values SHALL be truncated with the full value reachable via an ellipsis tooltip. A column whose `sensitive` flag is true SHALL show a marker (a colored dot with a "Sensitive" tooltip) rendered inline in the name cell, after the name; non-sensitive columns SHALL show no marker. Each column row SHALL offer a per-column action menu with **edit** and **delete (drop)** actions. The column name SHALL also be editable inline in the grid — this SHALL rename the column's exposed name only; the immutable physical source name is unaffected.
+
+For an **enrichment** table, the columns grid SHALL additionally show the table's grain key as a pinned, non-editable row at the top of the grid — it carries no action menu and its name is not inline-editable. Because the grain key is never included in the table's declared `columns` (the backend derives its physical type from the matching column on the enrichment's source table and never exposes it as an ordinary column), the pinned row's type/tag/display-name metadata SHALL be backfilled by looking up the source table's column of the same name; when no matching source column is found, the row SHALL still render (name only, blank type/tag/display name) rather than being omitted.
 
 The edit action SHALL open a unified edit modal seeded with the column's current name, display name, tag, description, and sensitive flag. The name field SHALL be required (submit disabled while blank) and SHALL be disabled for columns the backend does not allow to rename (grain-key, ordering-key, and `_`-prefixed system columns) while the metadata fields remain editable. Blank display name, tag, or description values SHALL be valid input meaning "clear the value"; the sensitive flag SHALL be toggled with a switch. On submit the modal SHALL diff the form against the original column and send a **single** schema patch: a structural `rename` op when the name changed, plus a **single `update` merge-patch entry** carrying the target column name and only the metadata fields (tag, display name, description, sensitive) that changed. Within the `update` entry an omitted field leaves that attribute unchanged, a blank string value clears it, a non-blank string value sets it, and the boolean `sensitive` is sent as `true`/`false` when toggled. When a rename is included, the `update` entry SHALL reference the new (post-rename) column name. Submit SHALL be disabled when no field changed.
 
@@ -855,6 +888,34 @@ Adding columns SHALL be available from the header via a form popup reusing the c
 - **WHEN** the user adds a column typed Array in the add-columns popup without choosing an element type
 - **THEN** submit is disabled until an element type is chosen
 
+#### Scenario: Table description shown under the header
+
+- **WHEN** a table (of any status) has a non-empty `description`
+- **THEN** the description is shown under the name and status badge
+- **AND** a table with no description shows nothing in its place
+
+#### Scenario: Source table shows its schema metadata summary
+
+- **WHEN** an `ACTIVE` **source** table with an ordering key and a partition set renders
+- **THEN** its ordering key, partition column, and granularity are all shown
+- **AND** an `ACTIVE` source table with no partition shows only its ordering key
+
+#### Scenario: Enrichment table shows its grain key summary
+
+- **WHEN** an `ACTIVE` **enrichment** table renders
+- **THEN** its grain key is shown in the header summary
+
+#### Scenario: Enrichment grid pins the grain key with backfilled metadata
+
+- **WHEN** an `ACTIVE` enrichment table's columns grid renders and its source table has a column matching the grain key's name
+- **THEN** the grid shows the grain key as a pinned row at the top, with that source column's type, tag, and display name
+- **AND** the pinned row offers no action menu and its name is not inline-editable
+
+#### Scenario: Enrichment grid pins the grain key even without a source-column match
+
+- **WHEN** the enrichment's source table has no column matching the grain key's name
+- **THEN** the pinned row still renders, showing the grain key name with blank type, tag, and display name
+
 ### Requirement: Table detail gates edits by per-table permissions
 
 The table detail view (`components/Analytics/Tables/TableDetailView.tsx`) SHALL gate its mutating affordances independently:
@@ -893,12 +954,22 @@ Because the backend reports `permissions {false,false}` for system tables, these
 
 ### Requirement: Table detail row writes
 
-The Table detail page SHALL let the user write rows by entering a JSON array of row objects in a popup editor, opened via the header **Add** dropdown's **Add rows** item. Opening the editor SHALL prefill it with a one-row JSON template whose keys are the table's declared column names, each mapped to a value matching that column's type (`0` for Integer/Long/Decimal, `false` for Boolean, `{}` for Object, `[]` for Array, `""` otherwise) rather than a bare empty array, so the example stays valid input for every column. The **Insert rows** submit action SHALL be disabled while the editor's content does not parse as a JSON array, re-enabling as soon as it does; submitting invalid or non-array input SHALL additionally surface an error and SHALL NOT issue a request. Valid rows SHALL be posted via `addRows`, with a success or error notification.
+The Table detail page SHALL let the user write rows by entering a JSON array of row objects in a popup editor, opened via the header **Add** dropdown's **Add rows** item. Opening the editor SHALL prefill it with a one-row JSON template whose keys are the table's declared columns' **physical source names** (not their exposed names, which the backend's row-insert endpoint does not accept), each mapped to a value matching that column's type (`0` for Integer/Long/Decimal, `false` for Boolean, `{}` for Object, `[]` for Array, `""` otherwise) rather than a bare empty array, so the example stays valid input for every column. For an **enrichment** table the template SHALL additionally include the grain key as a top-level field, since the backend requires it on every inserted row. The **Insert rows** submit action SHALL be disabled while the editor's content does not parse as a JSON array, re-enabling as soon as it does; submitting invalid or non-array input SHALL additionally surface an error and SHALL NOT issue a request. Valid rows SHALL be posted via `addRows`, with a success or error notification.
 
 #### Scenario: Opening Add rows prefills a type-shaped template
 
 - **WHEN** the user opens the Add rows editor for a table with declared columns
-- **THEN** the editor is prefilled with one row object keyed by each column's name, with type-appropriate placeholder values
+- **THEN** the editor is prefilled with one row object keyed by each column's physical source name, with type-appropriate placeholder values
+
+#### Scenario: Add rows template keys a renamed column by its source name
+
+- **WHEN** a column's exposed name differs from its physical source name and the user opens Add rows
+- **THEN** the template key for that column is its source name, not its exposed name
+
+#### Scenario: Enrichment template includes the grain key
+
+- **WHEN** the user opens the Add rows editor for an enrichment table
+- **THEN** the template includes the grain key as a top-level field alongside the declared columns
 
 #### Scenario: Insert rows is disabled while the JSON is invalid
 
@@ -915,6 +986,20 @@ The Table detail page SHALL let the user write rows by entering a JSON array of 
 
 - **WHEN** the user enters text that is not a JSON array
 - **THEN** an error is shown and no request is issued
+
+### Requirement: Delete confirmation identifies the table by name
+
+Every delete-table confirmation dialog — the catalog list's row delete action and the detail view's **Delete table** action — SHALL show the target table's name as its own labeled row in the dialog, in addition to the standard warning copy, so the two surfaces present identical confirmation content.
+
+#### Scenario: Catalog delete confirmation shows the table name
+
+- **WHEN** the user activates a catalog row's delete action
+- **THEN** the confirmation dialog shows a Name row with that table's name
+
+#### Scenario: Detail delete confirmation shows the table name
+
+- **WHEN** the user activates the detail view's Delete table action
+- **THEN** the confirmation dialog shows a Name row with that table's name, matching the catalog's confirmation content
 
 ### Requirement: Full-admin per-table role management panel
 
@@ -1032,9 +1117,11 @@ The UI SHALL surface a table's lifecycle `status` (`PENDING`, `ACTIVE`, `FAILED`
 
 ### Requirement: Define and materialize a table schema
 
-For a not-yet-materialized table (`status` `PENDING` or `FAILED`), the table detail view SHALL present a schema-definition surface in place of the live column surface. The surface SHALL let the user define the whole physical schema: for a **source**, a repeatable set of columns (source name, exposed name, type, nullable, optional tag, optional sensitive flag, and — for a column typed Array — a required element type), an ordering key chosen from the declared column source names, and an optional partition (a temporal column + a day/month/year granularity); for an **enrichment**, its columns plus a grain key chosen from its source table's columns. Cardinality SHALL NOT be user-selectable — the enrichment submission SHALL send the single supported value (`zero_or_one`). Column rows SHALL be validated for identifier grammar, uniqueness, and tag length exactly as the create/add-columns editor validates today.
+For a not-yet-materialized table (`status` `PENDING` or `FAILED`), the table detail view SHALL present a schema-definition surface in place of the live column surface. The surface SHALL let the user define the whole physical schema: for a **source**, a repeatable set of columns (a single **Name** field, used as both the column's exposed name and its physical source name since the two are always equal at definition time, type, nullable, optional tag, optional sensitive flag, and — for a column typed Array — a required element type), an ordering key chosen from the declared column names, and an optional partition (a temporal column + a day/month/year granularity); for an **enrichment**, its columns plus a grain key chosen from its source table's columns. Cardinality SHALL NOT be user-selectable — the enrichment submission SHALL send the single supported value (`zero_or_one`). Column rows SHALL be validated for identifier grammar, uniqueness, and tag length exactly as the create/add-columns editor validates today, against both the exposed-name and source-name uniqueness constraints (which the merged Name field satisfies identically).
 
 An Array-typed column row SHALL offer an additional element-type selector, restricted to the non-array, non-object column types (no nested arrays or objects). Submitting a row typed Array without an element type SHALL be rejected client-side (the backend also rejects it, 422). An Array-typed row's Nullable control SHALL be disabled and forced off — the backend rejects a nullable array column.
+
+For a **source** table, the Partition column field's label SHALL carry an info affordance (an icon with a hover tooltip) explaining that only Date/Timestamp-typed columns are selectable, since that restriction is not otherwise visually obvious. The Granularity field SHALL be rendered only once a partition column is selected; deselecting the partition column (including indirectly, by retyping the selected column away from Date/Timestamp) SHALL also clear any chosen granularity.
 
 Submitting the schema (a header **Save** action) SHALL send the whole document via `defineTableSchema` (`POST /v1/tables/{name}/schema`), which defines the schema **and** materializes the table in the same call — there is no separate save-draft step, and no way to persist an incomplete schema. Save SHALL be disabled until the schema is complete for its kind (a source needs at least one valid column and a non-empty ordering key; an enrichment needs a grain key), since the backend rejects an incomplete submission (422) without persisting it. On success the view SHALL refresh showing the table `ACTIVE` with its live column surface. On a backend (ClickHouse) failure the table becomes `FAILED`; the detail view SHALL present the same schema-definition surface with an indication that activation failed, allowing the user to adjust the schema and resubmit. While the table is not `ACTIVE`, the write-rows action SHALL NOT be offered.
 
@@ -1071,6 +1158,24 @@ Submitting the schema (a header **Save** action) SHALL send the whole document v
 - **WHEN** a column row's type is Array
 - **THEN** its Nullable control is disabled and shows off
 - **AND** the built column payload does not send `nullable: true` for that row
+
+#### Scenario: Partition column restriction is explained via a tooltip
+
+- **WHEN** a source table's schema-definition surface renders
+- **THEN** the Partition column field's label shows an info icon
+- **AND** hovering it shows a tooltip explaining that only Date/Timestamp columns are selectable
+
+#### Scenario: Granularity is hidden until a partition column is chosen
+
+- **WHEN** no partition column is selected
+- **THEN** the Granularity field is not rendered
+- **AND** selecting a partition column reveals it
+
+#### Scenario: Retyping the selected partition column clears granularity too
+
+- **WHEN** the column currently selected as the partition column is retyped away from Date/Timestamp
+- **THEN** the partition column selection is cleared
+- **AND** the previously chosen granularity is cleared, and the Granularity field is hidden again
 
 ### Requirement: Table metadata editing (description and tag order)
 

@@ -8,6 +8,7 @@ import { ColDef, ICellRendererParams } from 'ag-grid-community';
 import {
   ConfirmationPopupVariant,
   DialConfirmationPopup,
+  DialEllipsisTooltip,
   DialNeutralButton,
   DialPrimaryButton,
 } from '@epam/ai-dial-ui-kit';
@@ -189,7 +190,15 @@ const TablesView: FC<Props> = ({ initialTables }) => {
           open={!!deleteTarget}
           variant={ConfirmationPopupVariant.Danger}
           header={t(AnalyticsTablesI18nKey.DeleteConfirmTitle)}
-          description={t(AnalyticsTablesI18nKey.DeleteConfirmDescription)}
+          description={
+            <div className="flex flex-col gap-y-2">
+              <span>{t(AnalyticsTablesI18nKey.DeleteConfirmDescription)}</span>
+              <div className="flex flex-row items-center gap-x-1 text-primary dial-small">
+                <span className="text-secondary shrink-0">{t(AnalyticsTablesI18nKey.Name)}:</span>
+                <DialEllipsisTooltip text={deleteTarget} />
+              </div>
+            </div>
+          }
           confirmLabel={t(AnalyticsTablesI18nKey.DeleteTable)}
           onConfirm={() => void onConfirmDelete()}
           onClose={() => setDeleteTarget(null)}

@@ -1,4 +1,4 @@
-import { ColDef, ValueFormatterParams } from 'ag-grid-community';
+import { ColDef, ValueFormatterParams, ValueGetterParams } from 'ag-grid-community';
 
 import { StructuredQueryResult } from '@/src/models/analytics/query';
 
@@ -19,6 +19,10 @@ export const getResultColumns = (result: StructuredQueryResult | null): ColDef[]
   return cols.map((col) => ({
     headerName: col,
     field: col,
+    // `field` alone makes ag-grid read a dotted column name (e.g. an enrichment's "table.column"
+    // projection) as a nested-property path; the API always returns a flat row object keyed by the
+    // literal column name, so resolve it directly — a `valueGetter` takes priority over `field`.
+    valueGetter: (params: ValueGetterParams) => (params.data as Record<string, unknown> | undefined)?.[col],
     valueFormatter: (params: ValueFormatterParams) => renderCell(params.value),
   }));
 };

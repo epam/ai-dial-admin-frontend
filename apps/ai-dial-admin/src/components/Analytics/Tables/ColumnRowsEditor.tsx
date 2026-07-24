@@ -46,26 +46,20 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange, errors }) => {
         return (
           <div key={row.id} className={classNames('flex gap-2', rowHasError ? 'items-start' : 'items-end')}>
             <DialInput
-              id={`col-source-${row.id}`}
-              containerClassName="flex-1 min-w-[120px]"
-              labelProps={first ? { label: t(AnalyticsTablesI18nKey.SourceName), required: true } : undefined}
-              value={row.source_name}
-              error={rowError?.source_name}
-              invalid={Boolean(rowError?.source_name)}
-              onChange={(v) => update(row.id, { source_name: v ?? '' })}
-            />
-            <DialInput
               id={`col-name-${row.id}`}
-              containerClassName="flex-1 min-w-[120px]"
+              containerClassName="flex-[2] min-w-[160px]"
               labelProps={first ? { label: t(AnalyticsTablesI18nKey.ColumnName), required: true } : undefined}
               value={row.name}
-              error={rowError?.name}
-              invalid={Boolean(rowError?.name)}
-              onChange={(v) => update(row.id, { name: v ?? '' })}
+              error={rowError?.source_name || rowError?.name}
+              invalid={Boolean(rowError?.source_name || rowError?.name)}
+              // Source name and name are always identical for a newly-defined column (a column can only
+              // diverge from its source name via a later rename, done in the grid on an active table —
+              // see TableDetailView's onRenameCell) — so one control fills both DTO fields.
+              onChange={(v) => update(row.id, { source_name: v ?? '', name: v ?? '' })}
             />
             <DialSelectField
               id={`col-type-${row.id}`}
-              containerClassName="w-[160px] shrink-0"
+              containerClassName="flex-1 min-w-[140px]"
               label={first ? t(AnalyticsTablesI18nKey.Type) : undefined}
               options={COLUMN_TYPE_OPTIONS}
               value={row.type}
@@ -74,7 +68,7 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange, errors }) => {
             {isArray && (
               <DialSelectField
                 id={`col-element-type-${row.id}`}
-                containerClassName="w-[160px] shrink-0"
+                containerClassName="flex-1 min-w-[140px]"
                 label={first ? t(AnalyticsTablesI18nKey.ElementType) : undefined}
                 required
                 options={ELEMENT_TYPE_OPTIONS}
@@ -86,7 +80,7 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange, errors }) => {
             )}
             <DialInput
               id={`col-tag-${row.id}`}
-              containerClassName="w-[120px] shrink-0"
+              containerClassName="flex-1 min-w-[120px]"
               labelProps={first ? { label: t(AnalyticsTablesI18nKey.Tag) } : undefined}
               value={row.tag}
               error={rowError?.tag}
