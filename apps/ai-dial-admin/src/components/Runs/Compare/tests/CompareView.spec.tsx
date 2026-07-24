@@ -11,6 +11,10 @@ const getRunMock = vi.fn();
 const getRunsMock = vi.fn();
 const getTestCaseRunResultsMock = vi.fn();
 const getTestCaseRunResultDetailsMock = vi.fn();
+const executeStructuredQueryMock = vi.fn();
+const getMetricSnapshotsMock = vi.fn();
+const getTestSuiteMock = vi.fn();
+const getMetricLatestVersionMock = vi.fn();
 const routerReplaceMock = vi.fn();
 
 vi.mock('next/navigation', () => ({
@@ -27,6 +31,13 @@ vi.mock('@/src/app/[lang]/runs/actions', () => ({
   getRuns: (...args: unknown[]) => getRunsMock(...args),
   getTestCaseRunResults: (...args: unknown[]) => getTestCaseRunResultsMock(...args),
   getTestCaseRunResultDetails: (...args: unknown[]) => getTestCaseRunResultDetailsMock(...args),
+  executeStructuredQuery: (...args: unknown[]) => executeStructuredQueryMock(...args),
+  getMetricSnapshots: (...args: unknown[]) => getMetricSnapshotsMock(...args),
+}));
+
+vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
+  getTestSuite: (...args: unknown[]) => getTestSuiteMock(...args),
+  getMetricLatestVersion: (...args: unknown[]) => getMetricLatestVersionMock(...args),
 }));
 
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
@@ -61,7 +72,15 @@ describe('CompareView', () => {
     getRunsMock.mockReset();
     getTestCaseRunResultsMock.mockReset();
     getTestCaseRunResultDetailsMock.mockReset();
+    executeStructuredQueryMock.mockReset();
+    getMetricSnapshotsMock.mockReset();
+    getTestSuiteMock.mockReset();
+    getMetricLatestVersionMock.mockReset();
     routerReplaceMock.mockReset();
+    executeStructuredQueryMock.mockResolvedValue({ rows: [] });
+    getMetricSnapshotsMock.mockResolvedValue([]);
+    getTestSuiteMock.mockResolvedValue({ response: { id: 'suite-1', name: 'General test-suite' } });
+    getMetricLatestVersionMock.mockResolvedValue(null);
     getRunMock.mockImplementation((id: string) =>
       Promise.resolve({
         id,

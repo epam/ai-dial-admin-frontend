@@ -39,6 +39,20 @@ describe('Compare :: useCompareViewTabState', () => {
     expect(result.current.state.heatMap.areExpandedGroupsInitialized).toBe(true);
   });
 
+  test('merges partial summary state', () => {
+    const { result } = renderHook(() => useCompareViewTabState('run-1', 'run-2'));
+
+    act(() => {
+      result.current.setSummaryState({
+        selectedStatistic: 'AVG',
+        selectedDistributionMetricName: 'ragas.context_recall',
+      });
+    });
+
+    expect(result.current.state.summary.selectedStatistic).toBe('AVG');
+    expect(result.current.state.summary.selectedDistributionMetricName).toBe('ragas.context_recall');
+  });
+
   test('resets all state when run pair changes', () => {
     const { result, rerender } = renderHook(
       ({ primaryRunId, comparedRunId }) => useCompareViewTabState(primaryRunId, comparedRunId),
@@ -48,6 +62,7 @@ describe('Compare :: useCompareViewTabState', () => {
     act(() => {
       result.current.setExecutionResultsState({ hideHighlights: true });
       result.current.setHeatMapState({ areExpandedGroupsInitialized: true });
+      result.current.setSummaryState({ selectedStatistic: 'AVG' });
     });
 
     rerender({ primaryRunId: 'run-1', comparedRunId: 'run-3' });
