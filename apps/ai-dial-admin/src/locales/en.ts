@@ -1718,6 +1718,7 @@ export default {
     Cpu: 'CPU',
     Memory: 'Memory',
     GpuMemory: 'GPU memory',
+    GpuUtilization: 'GPU utilization',
     Ttft: 'Time to first token',
     InterTokenLatency: 'Inter-token latency',
     E2eLatencyMean: 'E2E latency (mean)',

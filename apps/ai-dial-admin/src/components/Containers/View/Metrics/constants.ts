@@ -5,9 +5,11 @@ import {
   SectionWidth,
 } from '@/src/components/Containers/View/Metrics/models';
 import {
+  avgPodValue,
   errorRatioStatus,
   formatMemoryBytes,
-  kvCacheStatus,
+  formatMemoryPair,
+  ratioGaugeStatus,
   replicaStatus,
   sumPodValue,
 } from '@/src/components/Containers/View/Metrics/utils';
@@ -19,6 +21,9 @@ import { INFERENCE_TASK } from '@/src/types/deployments/containers';
 // generation-only; request latency is classification-only (generation reads E2E + TTFT/ITL instead).
 const GENERATION_ONLY: INFERENCE_TASK[] = [INFERENCE_TASK.TEXT_GENERATION];
 const CLASSIFICATION_ONLY: INFERENCE_TASK[] = [INFERENCE_TASK.TEXT_CLASSIFICATION];
+
+// Shared colored-zone thresholds for 0–1 ratio gauges (KV-cache usage, GPU memory, GPU utilization).
+const RATIO_GAUGE_THRESHOLDS = { warn: 0.7, crit: 0.9 };
 
 // A memory card: sums a per-pod byte field and renders it in the most readable unit (Mb/Gb/…).
 const memoryCard = (
@@ -60,13 +65,37 @@ const CPU_CARD: MetricCardConfig = {
   getValue: (m) => sumPodValue(m, (p) => p.cpuMillicores),
 };
 const MEMORY_CARD = memoryCard(DeploymentMetricsI18nKey.Memory, (p) => p.memoryBytes);
-// Inference-only (GPU placeholder until DCGM).
-const GPU_MEMORY_CARD = memoryCard(DeploymentMetricsI18nKey.GpuMemory, (p) => p.gpuMemoryBytes);
+// Inference-only, gated additionally by `resources.gpu` availability (see Metrics.tsx).
+const GPU_MEMORY_CARD: MetricCardConfig = {
+  kind: MetricCardKind.Gauge,
+  labelKey: DeploymentMetricsI18nKey.GpuMemory,
+  getValue: (m) => {
+    const used = sumPodValue(m, (p) => p.gpuMemoryBytes);
+    const total = sumPodValue(m, (p) => p.gpuMemoryTotalBytes);
+    return used !== null && total ? used / total : null;
+  },
+  getDetail: (m) => {
+    const pair = formatMemoryPair(
+      sumPodValue(m, (p) => p.gpuMemoryBytes),
+      sumPodValue(m, (p) => p.gpuMemoryTotalBytes),
+    );
+    return pair ? `${pair.used} / ${pair.total} ${pair.unit}` : undefined;
+  },
+  thresholds: RATIO_GAUGE_THRESHOLDS,
+  getStatus: (v) => ratioGaugeStatus(v),
+};
+const GPU_UTILIZATION_CARD: MetricCardConfig = {
+  kind: MetricCardKind.Gauge,
+  labelKey: DeploymentMetricsI18nKey.GpuUtilization,
+  getValue: (m) => avgPodValue(m, (p) => p.gpuUtilization),
+  thresholds: RATIO_GAUGE_THRESHOLDS,
+  getStatus: (v) => ratioGaugeStatus(v),
+};
 
 export const SCALE_HEALTH_BASE_CARDS: MetricCardConfig[] = [REPLICAS_CARD];
 export const SCALE_HEALTH_INFERENCE_CARDS: MetricCardConfig[] = [ERROR_RATIO_CARD];
 export const COMPUTE_BASE_CARDS: MetricCardConfig[] = [CPU_CARD, MEMORY_CARD];
-export const COMPUTE_INFERENCE_CARDS: MetricCardConfig[] = [GPU_MEMORY_CARD];
+export const COMPUTE_INFERENCE_CARDS: MetricCardConfig[] = [GPU_MEMORY_CARD, GPU_UTILIZATION_CARD];
 
 export const SCALE_HEALTH_TITLE = DeploymentMetricsI18nKey.SectionScaleHealth;
 export const COMPUTE_TITLE = DeploymentMetricsI18nKey.SectionCompute;
@@ -150,8 +179,8 @@ export const LOAD_SECTION: MetricsSectionConfig = {
       tasks: GENERATION_ONLY,
       labelKey: DeploymentMetricsI18nKey.KvCacheUsage,
       getValue: (m) => m.serving?.kvCacheUsage ?? null,
-      thresholds: { warn: 0.7, crit: 0.9 },
-      getStatus: (v) => kvCacheStatus(v),
+      thresholds: RATIO_GAUGE_THRESHOLDS,
+      getStatus: (v) => ratioGaugeStatus(v),
     },
   ],
 };

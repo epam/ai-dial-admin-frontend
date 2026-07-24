@@ -1664,6 +1664,7 @@ export enum DeploymentMetricsI18nKey {
   Cpu = 'DeploymentMetrics.Cpu',
   Memory = 'DeploymentMetrics.Memory',
   GpuMemory = 'DeploymentMetrics.GpuMemory',
+  GpuUtilization = 'DeploymentMetrics.GpuUtilization',
   Ttft = 'DeploymentMetrics.Ttft',
   InterTokenLatency = 'DeploymentMetrics.InterTokenLatency',
   E2eLatencyMean = 'DeploymentMetrics.E2eLatencyMean',

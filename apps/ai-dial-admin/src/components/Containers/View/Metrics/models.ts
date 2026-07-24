@@ -36,6 +36,8 @@ export interface GaugeCardConfig extends BaseCard {
   getValue: (metrics: DeploymentMetrics) => number | null;
   thresholds?: { warn: number; crit: number };
   getStatus?: (value: number | null) => MetricStatus;
+  // Overrides the default percentage center-label with a formatted string (e.g. "14.3 / 40 GB").
+  getDetail?: (metrics: DeploymentMetrics) => string | undefined;
 }
 
 export interface DistributionCardConfig extends BaseCard {

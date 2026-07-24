@@ -27,6 +27,7 @@ const renderCard = (card: MetricCardConfig, metrics: DeploymentMetrics | null, l
     case MetricCardKind.Gauge: {
       const value = metrics ? card.getValue(metrics) : null;
       const status = card.getStatus ? card.getStatus(value) : undefined;
+      const detail = metrics && card.getDetail ? card.getDetail(metrics) : undefined;
       return (
         <GaugeCard
           key={card.labelKey}
@@ -35,6 +36,7 @@ const renderCard = (card: MetricCardConfig, metrics: DeploymentMetrics | null, l
           loading={loading}
           status={status}
           thresholds={card.thresholds}
+          detail={detail}
         />
       );
     }
