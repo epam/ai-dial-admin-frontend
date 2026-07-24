@@ -4,6 +4,7 @@ import { ICellRendererParams } from 'ag-grid-community';
 
 import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
+import { STACKED_LINE_HEIGHT, STACKED_ROW_PADDING } from '@/src/components/Grid/constants';
 import { GroupedGridRow, TestCaseRow } from '@/src/models/evaluation/test-case-grouping';
 
 /** Read a single field's value from a turn row (nested `data` first, then top-level fallback). */
@@ -47,16 +48,24 @@ const StackedTurnsCellRenderer = ({
     return readTurnFieldValue(turn, field as string);
   };
 
+  // Each line is fixed to STACKED_LINE_HEIGHT and the wrapper to STACKED_ROW_PADDING so the rendered
+  // height matches `useTurnGroupProjection`'s row-height calc exactly — otherwise the ui-kit tooltip's
+  // own line-height would exceed the reserved row height and clip the last turn.
   return (
-    <div className="flex flex-col gap-0.5 py-1">
+    <div
+      className="flex flex-col"
+      style={{ paddingTop: STACKED_ROW_PADDING / 2, paddingBottom: STACKED_ROW_PADDING / 2 }}
+    >
       {turns.map((turn, index) => {
         const value = valueOf(turn);
         return (
-          <DialEllipsisTooltip
+          <div
             key={String(turn.id ?? index)}
-            className="leading-[18px] text-secondary"
-            text={value || '—'}
-          />
+            className="flex items-center min-w-0"
+            style={{ height: STACKED_LINE_HEIGHT }}
+          >
+            <DialEllipsisTooltip className="min-w-0 text-secondary" text={value || '—'} />
+          </div>
         );
       })}
     </div>

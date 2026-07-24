@@ -18,6 +18,8 @@ interface Props {
   run: Run;
   /** Run-level overall score from metric scores data; omitted while loading, null when absent. */
   overallScore?: number | null;
+  /** True when the run contains multi-turn test cases — switches card labels to turn-scoped wording. */
+  isMultiTurn?: boolean;
 }
 
 const StatusDot: FC<{ className: string; count: number; icon: Icon; label: string }> = ({
@@ -34,7 +36,7 @@ const StatusDot: FC<{ className: string; count: number; icon: Icon; label: strin
   </span>
 );
 
-const Analytics: FC<Props> = ({ run, overallScore }) => {
+const Analytics: FC<Props> = ({ run, overallScore, isMultiTurn }) => {
   const t = useI18n();
   const [statusCounts, setStatusCounts] = useState<TestCaseStatusCounts | null>(null);
   const [avgRunTimeMs, setAvgRunTimeMs] = useState<number | null>(null);
@@ -108,7 +110,7 @@ const Analytics: FC<Props> = ({ run, overallScore }) => {
       )}
       <DialAnalyticsCard
         className="flex-1 sm:max-w-xs"
-        title={t(RunsI18nKey.TestCasesPassed)}
+        title={t(isMultiTurn ? RunsI18nKey.TestCaseTurnsPassed : RunsI18nKey.TestCasesPassed)}
         value={
           <>
             <span className="dial-display-2">{statusCounts.passed}</span>
@@ -120,9 +122,9 @@ const Analytics: FC<Props> = ({ run, overallScore }) => {
       />
       <DialAnalyticsCard
         className="flex-1 sm:max-w-xs"
-        title={t(RunsI18nKey.AvgTestCaseRunTime)}
+        title={t(isMultiTurn ? RunsI18nKey.AvgTestCaseTurnRunTime : RunsI18nKey.AvgTestCaseRunTime)}
         value={avgRunTimeMs != null ? `${Math.round(avgRunTimeMs / 100) / 10} ${t(RunsI18nKey.Seconds)}` : undefined}
-        description={t(RunsI18nKey.AvgPerTestCase)}
+        description={t(isMultiTurn ? RunsI18nKey.AvgPerTestCaseTurn : RunsI18nKey.AvgPerTestCase)}
         error={avgRunTimeMs == null}
       />
     </div>

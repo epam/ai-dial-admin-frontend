@@ -3,13 +3,9 @@
 import { FilterChangedEvent, GetRowIdParams, GridApi, GridReadyEvent, RowHeightParams } from 'ag-grid-community';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { ROW_HEIGHT } from '@/src/components/Grid/constants';
+import { ROW_HEIGHT, STACKED_LINE_HEIGHT, STACKED_ROW_PADDING } from '@/src/components/Grid/constants';
 import { GridRowType, GroupedGridRow, TestCaseRow } from '@/src/models/evaluation/test-case-grouping';
 import { groupTestCaseRows, projectGroupsToGridRows } from '@/src/utils/evaluation/test-case-grouping';
-
-/** Height (px) a single stacked turn line occupies in a GROUP summary row. */
-const STACKED_LINE_HEIGHT = 22;
-const STACKED_ROW_PADDING = 10;
 
 export interface TurnGroupProjectionConfig {
   /** Flat backend grid rows (test cases or run results) to group by shared `id` + `_turnIndex`. */

@@ -57,6 +57,7 @@ import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evalua
 import { ApplicationRoute } from '@/src/types/routes';
 import {
   demoteToSingle,
+  getPerTurnFieldNames,
   promoteToMultiTurn,
   readTurnIndex,
   renumberTurns,
@@ -131,6 +132,8 @@ const TestCasesList: FC<Props> = ({
   const bumpRawRows = useCallback(() => setRawRowsVersion((v) => v + 1), []);
   const rawRows = useMemo(() => [...flatRowsRef.current], [rawRowsVersion]);
 
+  const perTurnFields = useMemo(() => getPerTurnFieldNames(dataset?.testCaseSchema), [dataset?.testCaseSchema]);
+
   const getCaseRows = useCallback(
     (id: string): Record<string, unknown>[] => flatRowsRef.current.filter((row) => String(row.id) === id),
     [],
@@ -168,24 +171,37 @@ const TestCasesList: FC<Props> = ({
         return;
       }
 
-      // `rowData` is the row AG Grid renders — a spread copy `toTurnRow`/`toSingleRow` made from
-      // the underlying flat row, not that flat row itself. Editing it in place would never reach
-      // the authoritative store: the edit would vanish next time the projection re-derives (e.g.
-      // on expand/collapse) and `getDirtyTestCases` would never see it. Locate the real row by
-      // `id` (+ `_turnIndex` for a TURN row) and edit that instead.
-      const turnIndex = readTurnIndex(rowData);
-      const target = flatRowsRef.current.find((row) => String(row.id) === rowId && readTurnIndex(row) === turnIndex);
-      if (target) {
-        target[field] = value;
-        if (field !== 'testCaseName' && field !== 'enabled' && field !== '_turnIndex' && target.data != null) {
-          target.data = { ...(target.data as Record<string, unknown>), [field]: value };
-        }
+      // `rowData` is the row AG Grid renders — a spread copy `toTurnRow`/`toSingleRow`/`toGroupRow`
+      // made from the underlying flat row(s), not those flat rows themselves. Editing it in place
+      // would never reach the authoritative store: the edit would vanish next time the projection
+      // re-derives (e.g. on expand/collapse) and `getDirtyTestCases` would never see it. Locate the
+      // real row(s) in the store and edit those instead.
+      const isDataField = field !== 'testCaseName' && field !== 'enabled' && field !== '_turnIndex';
+      if (isDataField && !perTurnFields.has(field)) {
+        // Shared field (edited on the GROUP master row): the value is constant across the case's
+        // turns, so write it to every turn row of the case.
+        flatRowsRef.current.forEach((row) => {
+          if (String(row.id) !== rowId) return;
+          row[field] = value;
+          if (row.data != null) row.data = { ...(row.data as Record<string, unknown>), [field]: value };
+        });
         bumpRawRows();
+      } else {
+        // Per-turn (or structural) field: edit the single row identified by id + `_turnIndex`.
+        const turnIndex = readTurnIndex(rowData);
+        const target = flatRowsRef.current.find((row) => String(row.id) === rowId && readTurnIndex(row) === turnIndex);
+        if (target) {
+          target[field] = value;
+          if (isDataField && target.data != null) {
+            target.data = { ...(target.data as Record<string, unknown>), [field]: value };
+          }
+          bumpRawRows();
+        }
       }
       dirtyIdsRef.current.add(rowId);
       onDirtyChange?.(true);
     },
-    [newTestCases, onDirtyChange, bumpRawRows],
+    [newTestCases, onDirtyChange, bumpRawRows, perTurnFields],
   );
 
   const onCellValueChanged = useCallback(
@@ -540,8 +556,8 @@ const TestCasesList: FC<Props> = ({
     // only its GROUP summary row) still contributes all its TURN rows here.
     const dirtyIds = new Set<string>([...dirtyIdsRef.current, ...newTestCases.map((r) => String(r.id))]);
     const rows = [...flatRowsRef.current, ...newTestCases].filter((row) => dirtyIds.has(String(row.id)));
-    return collapseRowsToTestCases(rows);
-  }, [newTestCases]);
+    return collapseRowsToTestCases(rows, perTurnFields);
+  }, [newTestCases, perTurnFields]);
 
   const clearDirtyAndRefresh = useCallback(() => {
     dirtyIdsRef.current.clear();

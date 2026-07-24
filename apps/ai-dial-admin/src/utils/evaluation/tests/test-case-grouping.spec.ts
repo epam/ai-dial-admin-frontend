@@ -7,8 +7,12 @@ import {
   demoteToSingle,
   reorderTurns,
   projectGroupsToGridRows,
+  getPerTurnFieldNames,
+  selectSharedFields,
+  selectPerTurnFields,
 } from '@/src/utils/evaluation/test-case-grouping';
 import { GridRowType } from '@/src/models/evaluation/test-case-grouping';
+import { TestCaseItemType } from '@/src/types/evaluation';
 
 describe('test-case-grouping (array model)', () => {
   it('reads group key from id only when _turnIndex is present', () => {
@@ -68,5 +72,36 @@ describe('test-case-grouping (array model)', () => {
     const projectedDisabled = projectGroupsToGridRows(groupsDisabled, new Set(), false);
     const groupRowDisabled = projectedDisabled.find((row) => row.rowType === GridRowType.GROUP)!;
     expect(groupRowDisabled.enabled).toBe(false);
+  });
+
+  it('projects a GROUP row carrying the first turn data so shared-field columns can read it', () => {
+    const groups = groupTestCaseRows([
+      { id: 'c1', _turnIndex: 0, testCaseName: 'flow', data: { temperature: 0.7, prompt: 'a' } },
+      { id: 'c1', _turnIndex: 1, testCaseName: 'flow', data: { temperature: 0.7, prompt: 'b' } },
+    ]);
+    const groupRow = projectGroupsToGridRows(groups, new Set(), false).find(
+      (row) => row.rowType === GridRowType.GROUP,
+    )!;
+    expect(groupRow.data).toEqual({ temperature: 0.7, prompt: 'a' });
+  });
+
+  describe('scope helpers', () => {
+    const schema = [
+      { name: 'temperature', type: TestCaseItemType.NUMBER, required: false, description: '', perTurn: false },
+      { name: 'prompt', type: TestCaseItemType.STRING, required: false, description: '', perTurn: true },
+    ];
+
+    it('getPerTurnFieldNames returns only the per-turn field names', () => {
+      expect(getPerTurnFieldNames(schema)).toEqual(new Set(['prompt']));
+      expect(getPerTurnFieldNames(undefined)).toEqual(new Set());
+    });
+
+    it('selectSharedFields keeps only non-per-turn keys; selectPerTurnFields keeps only per-turn keys', () => {
+      const perTurnFields = getPerTurnFieldNames(schema);
+      const data = { temperature: 0.7, prompt: 'hi' };
+      expect(selectSharedFields(data, perTurnFields)).toEqual({ temperature: 0.7 });
+      expect(selectPerTurnFields(data, perTurnFields)).toEqual({ prompt: 'hi' });
+      expect(selectSharedFields(undefined, perTurnFields)).toEqual({});
+    });
   });
 });

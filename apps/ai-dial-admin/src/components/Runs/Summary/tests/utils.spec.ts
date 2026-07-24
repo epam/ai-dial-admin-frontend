@@ -8,12 +8,13 @@ import {
   SortDir,
   ValueType,
 } from '@/src/models/evaluation/structured-query';
-import { AVG_DURATION_ALIAS, COUNT_ALIAS, EXECUTION_STATUS_FIELD } from '../constants';
+import { AVG_DURATION_ALIAS, COUNT_ALIAS, EXECUTION_STATUS_FIELD, MAX_TURNS_ALIAS } from '../constants';
 import { MetricScoresData } from '../models';
 import {
   attachMetricInfo,
   buildAvgRunTimeQuery,
   buildDistributionQuery,
+  buildMaxTurnsQuery,
   buildMetricScoresQuery,
   buildTestCasesStatusQuery,
   getMetricFieldPath,
@@ -21,6 +22,7 @@ import {
   getMetricOutputFields,
   getMetricStatCards,
   parseAvgRunTimeMs,
+  parseHasMultiTurn,
   parseHistogramValues,
   parseMetricScores,
   parseTestCaseStatusCounts,
@@ -56,6 +58,20 @@ describe('Runs Summary :: query builders', () => {
       {
         expr: { type: ExprType.Fn, name: 'avg', args: [{ type: ExprType.Field, name: 'exec_duration_ms' }] },
         as: AVG_DURATION_ALIAS,
+      },
+    ]);
+    expect(query.group_by).toBeUndefined();
+  });
+
+  test('buildMaxTurnsQuery selects max(total_turns) within the run', () => {
+    const query = buildMaxTurnsQuery('run-1');
+
+    expect(query.entity).toBe('eval_summaries');
+    expect(query.mode).toBe(QueryMode.Aggregate);
+    expect(query.select).toEqual([
+      {
+        expr: { type: ExprType.Fn, name: 'max', args: [{ type: ExprType.Field, name: 'total_turns' }] },
+        as: MAX_TURNS_ALIAS,
       },
     ]);
     expect(query.group_by).toBeUndefined();
@@ -377,5 +393,13 @@ describe('Runs Summary :: result parsers', () => {
     expect(parseAvgRunTimeMs({ rows: [{ [AVG_DURATION_ALIAS]: null }] })).toBeNull();
     expect(parseAvgRunTimeMs({ rows: [] })).toBeNull();
     expect(parseAvgRunTimeMs(null)).toBeNull();
+  });
+
+  test('parseHasMultiTurn is true only when max total_turns exceeds 1', () => {
+    expect(parseHasMultiTurn({ rows: [{ [MAX_TURNS_ALIAS]: 3 }] })).toBe(true);
+    expect(parseHasMultiTurn({ rows: [{ [MAX_TURNS_ALIAS]: 1 }] })).toBe(false);
+    expect(parseHasMultiTurn({ rows: [{ [MAX_TURNS_ALIAS]: null }] })).toBe(false);
+    expect(parseHasMultiTurn({ rows: [] })).toBe(false);
+    expect(parseHasMultiTurn(null)).toBe(false);
   });
 });

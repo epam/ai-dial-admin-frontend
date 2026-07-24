@@ -52,7 +52,8 @@ const ControlledMetricScoresSection: FC<{
   data: MetricScoresData | null;
   onSelectMetric?: (name: string) => void;
   initialStatistic?: string | null;
-}> = ({ data, onSelectMetric = vi.fn(), initialStatistic = 'AVG' }) => {
+  isMultiTurn?: boolean;
+}> = ({ data, onSelectMetric = vi.fn(), initialStatistic = 'AVG', isMultiTurn }) => {
   const [selectedStatistic, setSelectedStatistic] = useState<string | null>(initialStatistic);
 
   return (
@@ -61,6 +62,7 @@ const ControlledMetricScoresSection: FC<{
       selectedStatistic={selectedStatistic}
       onSelectStatistic={setSelectedStatistic}
       onSelectMetric={onSelectMetric}
+      isMultiTurn={isMultiTurn}
     />
   );
 };
@@ -140,6 +142,13 @@ describe('Runs Summary :: MetricScoresSection', () => {
 
     expect(screen.queryByText('Runs.MetricScoresDescriptionAvg')).not.toBeInTheDocument();
     expect(screen.getByText('Runs.MetricScoresDescriptionP90')).toBeInTheDocument();
+  });
+
+  test('uses the turn-scoped description when the run is multi-turn', () => {
+    render(<ControlledMetricScoresSection data={DATA} initialStatistic="AVG" isMultiTurn />);
+
+    expect(screen.getByText('Runs.MetricScoresDescriptionAvgTurns')).toBeInTheDocument();
+    expect(screen.queryByText('Runs.MetricScoresDescriptionAvg')).not.toBeInTheDocument();
   });
 
   test('shows an empty message when there are no metric scores', () => {

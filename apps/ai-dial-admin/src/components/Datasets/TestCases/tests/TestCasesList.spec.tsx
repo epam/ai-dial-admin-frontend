@@ -144,7 +144,12 @@ describe('DatasetTestCasesList', () => {
 });
 
 describe('DatasetTestCasesList — multi-turn grouping', () => {
-  const mockDataset: Dataset = { id: 'dataset-123', name: 'Dataset 1' };
+  // `foo` is per-turn, so it round-trips through `multiTurnData`; shared `data` stays empty.
+  const mockDataset: Dataset = {
+    id: 'dataset-123',
+    name: 'Dataset 1',
+    testCaseSchema: [{ name: 'foo', type: 'STRING' as any, required: false, description: '', perTurn: true }],
+  };
   const mockOnDirtyChange = vi.fn();
 
   const makeLiveGridApi = () => ({
@@ -217,7 +222,7 @@ describe('DatasetTestCasesList — multi-turn grouping', () => {
 
     const dirty = actionsRef.current!.getDirtyTestCases();
     expect(dirty).toHaveLength(1);
-    expect(dirty[0].data).toBeUndefined();
+    expect(dirty[0].data).toEqual({});
     expect(dirty[0].multiTurnData).toEqual([{ foo: 'edited' }, { foo: 'b' }]);
   });
 
@@ -273,7 +278,7 @@ describe('DatasetTestCasesList — multi-turn grouping', () => {
 
     const dirty = actionsRef.current!.getDirtyTestCases();
     expect(dirty).toHaveLength(1);
-    expect(dirty[0].data).toBeUndefined();
+    expect(dirty[0].data).toEqual({});
     expect(dirty[0].multiTurnData).toHaveLength(2);
     expect(dirty[0].multiTurnData![0]).toEqual({ foo: 'a' });
     expect(dirty[0].multiTurnData![1]).toEqual({});

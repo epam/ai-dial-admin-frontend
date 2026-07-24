@@ -173,17 +173,46 @@ describe('getDatasetTestCaseGridData (multi-turn)', () => {
     expect(rows.map((r) => (r.data as any).prompt)).toEqual(['a', 'b']);
     expect(rows.map((r) => r.prompt)).toEqual(['a', 'b']); // flattened per turn
   });
+
+  it('merges shared `data` into every turn row (execution merged view)', () => {
+    const rows = getDatasetTestCaseGridData([
+      {
+        id: 'c1',
+        testCaseName: 'flow',
+        data: { temperature: 0.7 },
+        multiTurnData: [{ prompt: 'a' }, { prompt: 'b' }],
+        createdAt: 0,
+      },
+    ]);
+    expect(rows.map((r) => r.data)).toEqual([
+      { temperature: 0.7, prompt: 'a' },
+      { temperature: 0.7, prompt: 'b' },
+    ]);
+    expect(rows.map((r) => r.temperature)).toEqual([0.7, 0.7]); // shared flattened onto every turn row
+  });
 });
 
 describe('collapseRowsToDatasetTestCases', () => {
-  it('collapses turn rows sharing an id into one multiTurnData DTO in _turnIndex order, no data', () => {
-    const [dto] = collapseRowsToDatasetTestCases([
-      { id: 'c1', _turnIndex: 1, testCaseName: 'flow', data: { prompt: 'b' }, createdAt: 0 },
-      { id: 'c1', _turnIndex: 0, testCaseName: 'flow', data: { prompt: 'a' }, createdAt: 0 },
-    ]);
+  it('splits merged turn rows into shared `data` and per-turn `multiTurnData` by scope', () => {
+    const [dto] = collapseRowsToDatasetTestCases(
+      [
+        { id: 'c1', _turnIndex: 1, testCaseName: 'flow', data: { temperature: 0.7, prompt: 'b' }, createdAt: 0 },
+        { id: 'c1', _turnIndex: 0, testCaseName: 'flow', data: { temperature: 0.7, prompt: 'a' }, createdAt: 0 },
+      ],
+      new Set(['prompt']),
+    );
+    expect(dto.data).toEqual({ temperature: 0.7 });
     expect(dto.multiTurnData).toEqual([{ prompt: 'a' }, { prompt: 'b' }]);
-    expect(dto.data).toBeUndefined();
     expect((dto as any)._turnIndex).toBeUndefined();
+  });
+
+  it('with no per-turn fields, all fields collapse to shared `data` and turn maps are empty', () => {
+    const [dto] = collapseRowsToDatasetTestCases([
+      { id: 'c1', _turnIndex: 0, testCaseName: 'flow', data: { temperature: 0.7 }, createdAt: 0 },
+      { id: 'c1', _turnIndex: 1, testCaseName: 'flow', data: { temperature: 0.7 }, createdAt: 0 },
+    ]);
+    expect(dto.data).toEqual({ temperature: 0.7 });
+    expect(dto.multiTurnData).toEqual([{}, {}]);
   });
 
   it('emits a single-turn DTO with data and no multiTurnData', () => {

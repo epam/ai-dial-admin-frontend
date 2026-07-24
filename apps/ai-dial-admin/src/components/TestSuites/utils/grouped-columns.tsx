@@ -1,6 +1,7 @@
 import { IconArrowDown, IconArrowUp, IconPlus, IconTrash } from '@tabler/icons-react';
 import { ColDef, GridApi, ICellRendererParams, IRowNode, ValueGetterParams } from 'ag-grid-community';
 
+import BlankCellRenderer from '@/src/components/Grid/CellRenderers/BlankCellRenderer';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSelectCellRenderer';
 import JsonEditorCellRenderer from '@/src/components/Grid/CellRenderers/JsonEditorCellRenderer';
@@ -8,6 +9,7 @@ import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRe
 import StackedTurnsCellRenderer from '@/src/components/Grid/CellRenderers/StackedTurnsCellRenderer';
 import TestCaseNameCellRenderer from '@/src/components/Grid/CellRenderers/TestCaseNameCellRenderer';
 import TurnExpanderCellRenderer from '@/src/components/Grid/CellRenderers/TurnExpanderCellRenderer';
+import TurnIdCellRenderer from '@/src/components/Grid/CellRenderers/TurnIdCellRenderer';
 import { ACTION_COLUMN, EXPANDER_COLUMN_CEL_ID, NO_BORDER_CLASS, UTILITY_COLUMN } from '@/src/constants/ag-grid';
 import { ActionMenuOperationI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
@@ -54,15 +56,17 @@ export const getTurnExpanderColumn = (onToggleExpand: (groupKey: string) => void
   cellRendererParams: { onToggleExpand },
 });
 
-/** ID column: shown only for single-turn rows (kept as the selection click target). */
+/** ID column: shared case id on GROUP/SINGLE rows, blank on TURN rows; the selection click target. */
 export const getGroupedIdColumn = (): ColDef => ({
   field: 'id',
   colId: 'id',
   headerName: 'ID',
   cellClass: 'select-none cursor-pointer',
-  // Show the backend id on SINGLE and TURN rows; the GROUP master row has no id of its own.
+  // A multi-turn case's id is shared across its turns, so it belongs only on the GROUP master row;
+  // TURN rows stay blank and surface their position via the `Turn N` label in the name column.
   valueGetter: (params: ValueGetterParams) =>
-    (params.data as GroupedGridRow | undefined)?.rowType === GridRowType.GROUP ? '' : (params.data?.id ?? ''),
+    (params.data as GroupedGridRow | undefined)?.rowType === GridRowType.TURN ? '' : (params.data?.id ?? ''),
+  cellRenderer: TurnIdCellRenderer,
 });
 
 /** Name column: editable for single rows; case name + turn badge for groups; `Turn k` for turns. */
@@ -93,14 +97,20 @@ export const getGroupedNameColumn = (onCell: onCellChange, isReadOnly?: boolean)
   },
 });
 
-/** Schema column: stacked read-only turns on GROUP rows; existing editable renderers otherwise. */
+/**
+ * Schema column. For a per-turn field: the GROUP master row stacks its turns (read-only) and each TURN
+ * row is editable. For a shared (test-case-level) field: the GROUP master row is the single editable
+ * cell and TURN rows render blank (the value shows once on the master row). SINGLE and unprojected rows
+ * are always editable.
+ */
 export const getGroupedSchemaColumn = (
-  param: { name: string; type: TestCaseItemType },
+  param: { name: string; type: TestCaseItemType; perTurn?: boolean },
   onCell: onCellChange,
   ctx: SchemaColumnContext,
   isReadOnly?: boolean,
 ): ColDef => {
   const field = param.name;
+  const isPerTurn = Boolean(param.perTurn);
   const onChange = (value: string | number, rowData: unknown) => {
     onCell(rowData as Record<string, unknown>, field, value);
   };
@@ -110,8 +120,14 @@ export const getGroupedSchemaColumn = (
     editable: false,
     valueGetter: (params: ValueGetterParams) => params.data?.data?.[field] ?? params.data?.[field] ?? '',
     cellRendererSelector: (params) => {
-      if ((params.data as GroupedGridRow | undefined)?.rowType === GridRowType.GROUP) {
+      const rowType = (params.data as GroupedGridRow | undefined)?.rowType;
+      // Per-turn field on the collapsed master row → stack every turn's value.
+      if (rowType === GridRowType.GROUP && isPerTurn) {
         return { component: StackedTurnsCellRenderer };
+      }
+      // Shared field on a turn row → blank; the value lives once on the master row.
+      if (rowType === GridRowType.TURN && !isPerTurn) {
+        return { component: BlankCellRenderer };
       }
       if (param.type === TestCaseItemType.FILE) {
         return {

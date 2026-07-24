@@ -8,12 +8,19 @@ import { GridRowType } from '@/src/models/evaluation/test-case-grouping';
 import TestCaseNameCellRenderer from '@/src/components/Grid/CellRenderers/TestCaseNameCellRenderer';
 import StackedTurnsCellRenderer from '@/src/components/Grid/CellRenderers/StackedTurnsCellRenderer';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
+import TurnIdCellRenderer from '@/src/components/Grid/CellRenderers/TurnIdCellRenderer';
+import BlankCellRenderer from '@/src/components/Grid/CellRenderers/BlankCellRenderer';
 
-const makeSchema = (name: string, type: TestCaseItemType = TestCaseItemType.STRING): TestCaseSchema => ({
+const makeSchema = (
+  name: string,
+  type: TestCaseItemType = TestCaseItemType.STRING,
+  perTurn = false,
+): TestCaseSchema => ({
   name,
   type,
   required: false,
   description: '',
+  perTurn,
 });
 
 const makeDataset = (): Dataset => ({});
@@ -55,6 +62,16 @@ describe('getDatasetTestCaseColumns', () => {
     expect(turnSelector?.component).toBe(TestCaseNameCellRenderer);
   });
 
+  test('should render the id column with TurnIdCellRenderer, id on GROUP/SINGLE rows and blank on TURN rows', () => {
+    const result = getDatasetTestCaseColumns(makeDataset(), onCellChange, undefined);
+    const idColumn = result.find((column) => column.colId === 'id');
+
+    expect(idColumn?.cellRenderer).toBe(TurnIdCellRenderer);
+    expect(idColumn?.valueGetter?.({ data: { rowType: GridRowType.GROUP, id: 'case-1' } } as never)).toBe('case-1');
+    expect(idColumn?.valueGetter?.({ data: { rowType: GridRowType.TURN, id: 'case-1' } } as never)).toBe('');
+    expect(idColumn?.valueGetter?.({ data: { rowType: GridRowType.SINGLE, id: 'case-2' } } as never)).toBe('case-2');
+  });
+
   test('should keep the editable name renderer for SINGLE rows and rows with no rowType', () => {
     const result = getDatasetTestCaseColumns(makeDataset(), onCellChange, undefined);
     const nameColumn = result.find((column) => column.field === 'testCaseName');
@@ -93,8 +110,8 @@ describe('getDatasetTestCaseColumns', () => {
     );
   });
 
-  test('should render a data column with StackedTurnsCellRenderer on GROUP rows and the editable renderer on plain-text TURN rows', () => {
-    const result = getDatasetTestCaseColumnsForSchema([makeSchema('prompt')]);
+  test('per-turn field: stacks turns on the GROUP row and is editable on TURN rows', () => {
+    const result = getDatasetTestCaseColumnsForSchema([makeSchema('prompt', TestCaseItemType.STRING, true)]);
     const promptColumn = result.find((column) => column.field === 'prompt');
 
     const groupSelector = promptColumn?.cellRendererSelector?.({ data: { rowType: GridRowType.GROUP } } as never);
@@ -102,6 +119,20 @@ describe('getDatasetTestCaseColumns', () => {
 
     const turnSelector = promptColumn?.cellRendererSelector?.({ data: { rowType: GridRowType.TURN } } as never);
     expect(turnSelector?.component).toBe(EditableCellRenderer);
+  });
+
+  test('shared field: editable on the GROUP master row and blank on TURN rows', () => {
+    const result = getDatasetTestCaseColumnsForSchema([makeSchema('temperature', TestCaseItemType.STRING, false)]);
+    const column = result.find((c) => c.field === 'temperature');
+
+    const groupSelector = column?.cellRendererSelector?.({ data: { rowType: GridRowType.GROUP } } as never);
+    expect(groupSelector?.component).toBe(EditableCellRenderer);
+
+    const turnSelector = column?.cellRendererSelector?.({ data: { rowType: GridRowType.TURN } } as never);
+    expect(turnSelector?.component).toBe(BlankCellRenderer);
+
+    const singleSelector = column?.cellRendererSelector?.({ data: { rowType: GridRowType.SINGLE } } as never);
+    expect(singleSelector?.component).toBe(EditableCellRenderer);
   });
 
   test('should not render an enabled column', () => {

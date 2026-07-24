@@ -25,6 +25,7 @@ import {
   EXEC_DURATION_MS_FIELD,
   EXECUTION_STATUS_FIELD,
   LATEST_COMPUTATION,
+  MAX_TURNS_ALIAS,
   METRIC_FIELD_PREFIX,
   METRIC_FIELD_SEPARATOR,
   METRIC_NAME_FIELD,
@@ -32,6 +33,7 @@ import {
   METRIC_SCORE_RESULTS_ENTITY,
   OVERALL_METRIC_SCORE_NAME,
   RUN_ID_FIELD,
+  TOTAL_TURNS_FIELD,
   VALUE_FIELD,
 } from './constants';
 import {
@@ -65,6 +67,25 @@ export const buildAvgRunTimeQuery = (runId: string): StructuredQuery =>
     filter: eq(RUN_ID_FIELD, ValueType.Uuid, runId),
     select: [col(fn('avg', [field(EXEC_DURATION_MS_FIELD)]), AVG_DURATION_ALIAS)],
   });
+
+/**
+ * Query: the maximum conversation turn count across a run's test-case eval summaries. Used to tell
+ * whether the run contains any multi-turn test case (`max_turns > 1`), which switches the summary
+ * labels to their turn-scoped wording. Rows shape: `[{ max_turns: number }]`.
+ */
+export const buildMaxTurnsQuery = (runId: string): StructuredQuery =>
+  aggregateQuery({
+    entity: EVAL_SUMMARIES_ENTITY,
+    filter: eq(RUN_ID_FIELD, ValueType.Uuid, runId),
+    select: [col(fn('max', [field(TOTAL_TURNS_FIELD)]), MAX_TURNS_ALIAS)],
+  });
+
+/** True when the run's eval summaries include any multi-turn conversation (`max total_turns > 1`). */
+export const parseHasMultiTurn = (result: StructuredQueryResult | null): boolean => {
+  const raw = result?.rows?.[0]?.[MAX_TURNS_ALIAS];
+  const num = Number(raw);
+  return Number.isFinite(num) && num > 1;
+};
 
 /** Builds the flattened metric field path, e.g. `metric::Ragas Answer Relevancy::score`. */
 export const getMetricFieldPath = (metricName: string, outputField: string): string =>

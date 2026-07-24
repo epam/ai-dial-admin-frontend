@@ -6,7 +6,7 @@ import { DialAnalyticsBarGroup, DialLoader, DialSegmentedControl, SegmentedContr
 
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { METRIC_STATISTIC_DESCRIPTIONS } from './constants';
+import { METRIC_STATISTIC_DESCRIPTIONS, METRIC_STATISTIC_DESCRIPTIONS_TURNS } from './constants';
 import { MetricScoresData, MetricStatistic } from './models';
 import SummarySection from './SummarySection';
 
@@ -17,9 +17,17 @@ interface Props {
   onSelectStatistic: (statistic: string) => void;
   /** Selects a metric (shared with the Distribution section) when a bar is clicked. */
   onSelectMetric: (name: string) => void;
+  /** True when the run contains multi-turn test cases — switches the description to turn-scoped wording. */
+  isMultiTurn?: boolean;
 }
 
-const MetricScoresSection: FC<Props> = ({ data, selectedStatistic, onSelectStatistic, onSelectMetric }) => {
+const MetricScoresSection: FC<Props> = ({
+  data,
+  selectedStatistic,
+  onSelectStatistic,
+  onSelectMetric,
+  isMultiTurn,
+}) => {
   const t = useI18n();
 
   const options = useMemo<SegmentedControlOption[]>(
@@ -31,9 +39,8 @@ const MetricScoresSection: FC<Props> = ({ data, selectedStatistic, onSelectStati
 
   const groups = selectedStatistic ? (data?.byStatistic[selectedStatistic] ?? []) : [];
 
-  const descriptionKey = selectedStatistic
-    ? METRIC_STATISTIC_DESCRIPTIONS[selectedStatistic as MetricStatistic]
-    : undefined;
+  const descriptions = isMultiTurn ? METRIC_STATISTIC_DESCRIPTIONS_TURNS : METRIC_STATISTIC_DESCRIPTIONS;
+  const descriptionKey = selectedStatistic ? descriptions[selectedStatistic as MetricStatistic] : undefined;
 
   const control =
     options.length > 0 && selectedStatistic ? (

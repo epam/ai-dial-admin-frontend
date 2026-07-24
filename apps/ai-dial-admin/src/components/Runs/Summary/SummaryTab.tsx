@@ -18,7 +18,9 @@ import { OVERALL_METRIC_SCORE_NAME } from './constants';
 import { MetricInfo, MetricOption, MetricScoresData } from './models';
 import {
   attachMetricInfo,
+  buildMaxTurnsQuery,
   buildMetricScoresQuery,
+  parseHasMultiTurn,
   parseMetricScores,
   toMetricInfoByName,
   toMetricOptions,
@@ -35,6 +37,7 @@ const SummaryTab: FC<Props> = ({ run, summaryState, setSummaryState }) => {
   const [metricScores, setMetricScores] = useState<MetricScoresData | null>(null);
   const [metricOptions, setMetricOptions] = useState<MetricOption[]>([]);
   const [metricInfoByName, setMetricInfoByName] = useState<Record<string, MetricInfo>>({});
+  const [isMultiTurn, setIsMultiTurn] = useState(false);
   const { selectedStatistic } = summaryState;
 
   const enrichedMetricScores = useMemo(
@@ -75,16 +78,24 @@ const SummaryTab: FC<Props> = ({ run, summaryState, setSummaryState }) => {
       setMetricScores(null);
       setMetricOptions([]);
       setMetricInfoByName({});
+      setIsMultiTurn(false);
       return;
     }
 
     let cancelled = false;
     setMetricScores(null);
     setMetricInfoByName({});
+    setIsMultiTurn(false);
 
     executeStructuredQuery(buildMetricScoresQuery(run.id)).then((result) => {
       if (!cancelled) {
         setMetricScores(parseMetricScores(result));
+      }
+    });
+
+    executeStructuredQuery(buildMaxTurnsQuery(run.id)).then((result) => {
+      if (!cancelled) {
+        setIsMultiTurn(parseHasMultiTurn(result));
       }
     });
 
@@ -130,13 +141,14 @@ const SummaryTab: FC<Props> = ({ run, summaryState, setSummaryState }) => {
   return (
     <div className="flex h-full min-h-0 flex-col gap-8">
       <Header run={run} testSuite={testSuite} />
-      <Analytics run={run} overallScore={enrichedMetricScores?.overallScore} />
+      <Analytics run={run} overallScore={enrichedMetricScores?.overallScore} isMultiTurn={isMultiTurn} />
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-2">
         <MetricScoresSection
           data={enrichedMetricScores}
           selectedStatistic={summaryState.selectedStatistic}
           onSelectStatistic={onSelectStatistic}
           onSelectMetric={(name) => onSelectDistributionMetric(name)}
+          isMultiTurn={isMultiTurn}
         />
         <DistributionSection
           run={run}
@@ -144,6 +156,7 @@ const SummaryTab: FC<Props> = ({ run, summaryState, setSummaryState }) => {
           metricScores={enrichedMetricScores}
           selectedMetricName={summaryState.selectedDistributionMetricName}
           onSelectMetric={onSelectDistributionMetric}
+          isMultiTurn={isMultiTurn}
         />
       </div>
     </div>

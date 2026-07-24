@@ -18,10 +18,13 @@ export const RUN_ID_FIELD = 'test_suite_run_id';
 export const COMPUTATION_ID_FIELD = 'computation_id';
 export const EXECUTION_STATUS_FIELD = 'execution_status';
 export const EXEC_DURATION_MS_FIELD = 'exec_duration_ms';
+/** Per-turn eval summaries carry the conversation's total turn count (single-turn = 1). */
+export const TOTAL_TURNS_FIELD = 'total_turns';
 
 /** Aggregate output aliases requested from the query. */
 export const COUNT_ALIAS = 'count';
 export const AVG_DURATION_ALIAS = 'avg_duration_ms';
+export const MAX_TURNS_ALIAS = 'max_turns';
 
 /** `metric_score_name` value for the run-level overall score; excluded from the Metric Scores segmented control. */
 export const OVERALL_METRIC_SCORE_NAME = 'overall';
@@ -67,4 +70,15 @@ export const METRIC_STATISTIC_DESCRIPTIONS: Record<MetricStatistic, RunsI18nKey>
   [MetricStatistic.Min]: RunsI18nKey.MetricScoresDescriptionMin,
   [MetricStatistic.Med]: RunsI18nKey.MetricScoresDescriptionMed,
   [MetricStatistic.Count]: RunsI18nKey.MetricScoresDescriptionCount,
+};
+
+/** Turn-scoped Metric Scores descriptions, used when the run has multi-turn test cases. */
+export const METRIC_STATISTIC_DESCRIPTIONS_TURNS: Record<MetricStatistic, RunsI18nKey> = {
+  [MetricStatistic.Avg]: RunsI18nKey.MetricScoresDescriptionAvgTurns,
+  [MetricStatistic.P90]: RunsI18nKey.MetricScoresDescriptionP90Turns,
+  [MetricStatistic.P10]: RunsI18nKey.MetricScoresDescriptionP10Turns,
+  [MetricStatistic.Max]: RunsI18nKey.MetricScoresDescriptionMaxTurns,
+  [MetricStatistic.Min]: RunsI18nKey.MetricScoresDescriptionMinTurns,
+  [MetricStatistic.Med]: RunsI18nKey.MetricScoresDescriptionMedTurns,
+  [MetricStatistic.Count]: RunsI18nKey.MetricScoresDescriptionCountTurns,
 };

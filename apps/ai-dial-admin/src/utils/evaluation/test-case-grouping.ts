@@ -1,5 +1,21 @@
 import { GridRowType, GroupedGridRow, TestCaseGroup, TestCaseRow } from '@/src/models/evaluation/test-case-grouping';
-import { ValidationWarning } from '@/src/models/evaluation/test-suite';
+import { TestCaseSchema, ValidationWarning } from '@/src/models/evaluation/test-suite';
+
+/** Names of the schema's per-turn fields (`perTurn === true`); everything else is shared. */
+export const getPerTurnFieldNames = (schema?: TestCaseSchema[] | null): Set<string> =>
+  new Set((schema ?? []).filter((field) => field.perTurn).map((field) => field.name));
+
+/** The shared (test-case-level) subset of a data map: entries whose field is NOT per-turn. */
+export const selectSharedFields = (
+  data: Record<string, unknown> | undefined,
+  perTurnFields: Set<string>,
+): Record<string, unknown> => Object.fromEntries(Object.entries(data ?? {}).filter(([key]) => !perTurnFields.has(key)));
+
+/** The per-turn subset of a data map: entries whose field is per-turn. */
+export const selectPerTurnFields = (
+  data: Record<string, unknown> | undefined,
+  perTurnFields: Set<string>,
+): Record<string, unknown> => Object.fromEntries(Object.entries(data ?? {}).filter(([key]) => perTurnFields.has(key)));
 
 /**
  * Group key for a multi-turn turn row. Prefers an explicit client-only `_groupKey` when present — set
@@ -137,6 +153,9 @@ const toGroupRow = (group: TestCaseGroup, expanded: boolean): GroupedGridRow => 
   turnCount: group.turns.length,
   expanded,
   enabled: group.turns[0]?.enabled,
+  // Shared (test-case-level) fields are identical across turns, so the master row reads them off the
+  // first turn's data — this is what makes shared-field columns render (and edit) on the GROUP row.
+  data: (group.turns[0]?.data as Record<string, unknown> | undefined) ?? {},
   ...aggregateValidity(group.turns),
 });
 

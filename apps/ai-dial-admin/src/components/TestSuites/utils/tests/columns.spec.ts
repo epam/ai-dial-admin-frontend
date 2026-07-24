@@ -7,12 +7,19 @@ import { GridRowType } from '@/src/models/evaluation/test-case-grouping';
 import TestCaseNameCellRenderer from '@/src/components/Grid/CellRenderers/TestCaseNameCellRenderer';
 import StackedTurnsCellRenderer from '@/src/components/Grid/CellRenderers/StackedTurnsCellRenderer';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
+import TurnIdCellRenderer from '@/src/components/Grid/CellRenderers/TurnIdCellRenderer';
+import BlankCellRenderer from '@/src/components/Grid/CellRenderers/BlankCellRenderer';
 
-const makeSchema = (name: string, type: TestCaseItemType = TestCaseItemType.STRING): TestCaseSchema => ({
+const makeSchema = (
+  name: string,
+  type: TestCaseItemType = TestCaseItemType.STRING,
+  perTurn = false,
+): TestCaseSchema => ({
   name,
   type,
   required: false,
   description: '',
+  perTurn,
 });
 
 const makeSuite = (): TestSuite => ({});
@@ -75,6 +82,17 @@ describe('getTestCaseColumns', () => {
     expect(result[6]).toEqual(expect.objectContaining({ field: 'maxTokens', headerName: 'maxTokens' }));
   });
 
+  test('should render the id column with TurnIdCellRenderer, id on GROUP/SINGLE rows and blank on TURN rows', () => {
+    const idColumn = getTestCaseColumns(makeSuite(), onCellChange, undefined, []).find(
+      (column) => column.colId === 'id',
+    );
+
+    expect(idColumn?.cellRenderer).toBe(TurnIdCellRenderer);
+    expect(idColumn?.valueGetter?.({ data: { rowType: GridRowType.GROUP, id: 'case-1' } } as never)).toBe('case-1');
+    expect(idColumn?.valueGetter?.({ data: { rowType: GridRowType.TURN, id: 'case-1' } } as never)).toBe('');
+    expect(idColumn?.valueGetter?.({ data: { rowType: GridRowType.SINGLE, id: 'case-2' } } as never)).toBe('case-2');
+  });
+
   test('should handle single schema field', () => {
     const result = getTestCaseColumns(makeSuite(), onCellChange, undefined, [makeSchema('prompt')]);
 
@@ -133,8 +151,10 @@ describe('getTestCaseColumns', () => {
     );
   });
 
-  test('should render a data column with StackedTurnsCellRenderer on GROUP rows and the editable renderer on TURN rows', () => {
-    const result = getTestCaseColumns(makeSuite(), onCellChange, undefined, [makeSchema('prompt')]);
+  test('per-turn field: stacks turns on the GROUP row and is editable on TURN rows', () => {
+    const result = getTestCaseColumns(makeSuite(), onCellChange, undefined, [
+      makeSchema('prompt', TestCaseItemType.STRING, true),
+    ]);
     const promptColumn = result.find((column) => column.field === 'prompt');
 
     const groupSelector = promptColumn?.cellRendererSelector?.({ data: { rowType: GridRowType.GROUP } } as never);
@@ -142,6 +162,19 @@ describe('getTestCaseColumns', () => {
 
     const turnSelector = promptColumn?.cellRendererSelector?.({ data: { rowType: GridRowType.TURN } } as never);
     expect(turnSelector?.component).toBe(EditableCellRenderer);
+  });
+
+  test('shared field: editable on the GROUP master row and blank on TURN rows', () => {
+    const result = getTestCaseColumns(makeSuite(), onCellChange, undefined, [
+      makeSchema('temperature', TestCaseItemType.STRING, false),
+    ]);
+    const column = result.find((c) => c.field === 'temperature');
+
+    const groupSelector = column?.cellRendererSelector?.({ data: { rowType: GridRowType.GROUP } } as never);
+    expect(groupSelector?.component).toBe(EditableCellRenderer);
+
+    const turnSelector = column?.cellRendererSelector?.({ data: { rowType: GridRowType.TURN } } as never);
+    expect(turnSelector?.component).toBe(BlankCellRenderer);
   });
 });
 
@@ -151,16 +184,17 @@ describe('getSchemaFieldGridColumns', () => {
   const onChangeRequired = vi.fn();
   const t = (key: string) => key;
 
-  test('should return four columns: Name, Type, Required, Description', () => {
+  test('should return five columns: Name, Type, Required, Scope, Description', () => {
     const columns = getSchemaFieldGridColumns(onChangeEditable, onChangeSelect, onChangeRequired, t);
 
-    expect(columns).toHaveLength(4);
+    expect(columns).toHaveLength(5);
     expect(columns[0]).toEqual(expect.objectContaining({ colId: 'name', field: 'name', headerName: 'Name' }));
     expect(columns[1]).toEqual(expect.objectContaining({ colId: 'type', field: 'type', headerName: 'Type' }));
     expect(columns[2]).toEqual(
       expect.objectContaining({ colId: 'required', field: 'required', headerName: 'Required' }),
     );
-    expect(columns[3]).toEqual(
+    expect(columns[3]).toEqual(expect.objectContaining({ colId: 'perTurn', field: 'perTurn', headerName: 'Scope' }));
+    expect(columns[4]).toEqual(
       expect.objectContaining({ colId: 'description', field: 'description', headerName: 'Description' }),
     );
   });
@@ -172,10 +206,21 @@ describe('getSchemaFieldGridColumns', () => {
     expect(columns[0].cellRendererParams).toEqual(
       expect.objectContaining({ onChange: onChangeEditable, hideTriangle: true, skipRequired: true }),
     );
-    expect(columns[3].cellRenderer).toBeDefined();
-    expect(columns[3].cellRendererParams).toEqual(
+    expect(columns[4].cellRenderer).toBeDefined();
+    expect(columns[4].cellRendererParams).toEqual(
       expect.objectContaining({ onChange: onChangeEditable, hideTriangle: true, skipRequired: true }),
     );
+  });
+
+  test('should have a Scope column wired to onChangePerTurn', () => {
+    const onChangePerTurn = vi.fn();
+    const columns = getSchemaFieldGridColumns(onChangeEditable, onChangeSelect, onChangeRequired, t, onChangePerTurn);
+    const scopeColumn = columns.find((c) => c.colId === 'perTurn');
+
+    expect(scopeColumn?.cellRenderer).toBeDefined();
+    expect(scopeColumn?.cellRendererParams).toEqual(expect.objectContaining({ onChange: onChangePerTurn }));
+    expect(scopeColumn?.valueGetter?.({ data: { perTurn: true } } as never)).toBe(true);
+    expect(scopeColumn?.valueGetter?.({ data: {} } as never)).toBe(false);
   });
 
   test('should have Type column with SelectCellRenderer', () => {

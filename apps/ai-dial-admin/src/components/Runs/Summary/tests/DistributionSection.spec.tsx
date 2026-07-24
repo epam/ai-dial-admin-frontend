@@ -58,10 +58,11 @@ const HISTOGRAM_ROWS = {
 };
 
 /** Wraps the controlled section so the lifted `selectedMetricName` behaves like the parent's. */
-const ControlledDistributionSection: FC<{ metricOptions?: MetricOption[]; metricScores?: MetricScoresData | null }> = ({
-  metricOptions = METRIC_OPTIONS,
-  metricScores = METRIC_SCORES,
-}) => {
+const ControlledDistributionSection: FC<{
+  metricOptions?: MetricOption[];
+  metricScores?: MetricScoresData | null;
+  isMultiTurn?: boolean;
+}> = ({ metricOptions = METRIC_OPTIONS, metricScores = METRIC_SCORES, isMultiTurn }) => {
   const [selectedMetricName, setSelectedMetricName] = useState<string | null>(null);
   return (
     <DistributionSection
@@ -70,6 +71,7 @@ const ControlledDistributionSection: FC<{ metricOptions?: MetricOption[]; metric
       metricScores={metricScores}
       selectedMetricName={selectedMetricName}
       onSelectMetric={setSelectedMetricName}
+      isMultiTurn={isMultiTurn}
     />
   );
 };
@@ -115,5 +117,15 @@ describe('Runs Summary :: DistributionSection', () => {
     const query = executeStructuredQueryMock.mock.calls[0][0] as StructuredQuery;
     const field = (query.select?.[0]?.expr as any)?.name;
     expect(field).toBe('metric::DeepEval: Answer Relevancy::score');
+  });
+
+  test('labels the histogram axis with turns when the run is multi-turn', async () => {
+    render(<ControlledDistributionSection isMultiTurn />);
+
+    fireEvent.change(screen.getByLabelText('select-Runs.Metric'), {
+      target: { value: 'DeepEval: Answer Relevancy.score' },
+    });
+
+    expect(await screen.findByRole('figure', { name: 'Runs.DistributionValueTitleTurns' })).toBeInTheDocument();
   });
 });

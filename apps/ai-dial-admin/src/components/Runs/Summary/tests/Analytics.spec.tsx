@@ -101,6 +101,16 @@ describe('Runs Summary :: Analytics', () => {
     expect(await screen.findByText('0.2 Runs.Seconds')).toBeInTheDocument();
   });
 
+  test('uses turn-scoped card labels when the run is multi-turn', async () => {
+    mockQueries();
+    render(<Analytics run={{ id: 'run-1' } as any} isMultiTurn />);
+
+    await screen.findByText('Runs.TestCaseTurnsPassed');
+    expect(screen.getByText('Runs.AvgTestCaseTurnRunTime')).toBeInTheDocument();
+    expect(screen.getByText('Runs.AvgPerTestCaseTurn')).toBeInTheDocument();
+    expect(screen.queryByText('Runs.TestCasesPassed')).not.toBeInTheDocument();
+  });
+
   test('marks cards as error when the run has no data', async () => {
     executeStructuredQueryMock.mockResolvedValue({ rows: [] });
     render(<Analytics run={{ id: 'run-1' } as any} overallScore={null} />);

@@ -109,8 +109,12 @@ export interface TestCase {
   valid?: boolean;
   id: string;
   createdAt: number;
+  /** Shared (test-case-level) fields, constant across turns. Coexists with `multiTurnData`. */
   data?: Record<string, unknown>;
-  /** Present only for multi-turn cases — an ordered array of per-turn data maps. Mutually exclusive with `data`. */
+  /**
+   * Present only for multi-turn cases — an ordered array of per-turn data maps. Coexists with `data`
+   * (shared fields live in `data`, per-turn fields in each turn map); the two are NOT mutually exclusive.
+   */
   multiTurnData?: Record<string, unknown>[];
   validationWarnings?: ValidationWarning[];
   enabled?: boolean;
@@ -130,6 +134,11 @@ export interface TestCaseSchema {
   type: TestCaseItemType;
   required: boolean;
   description: string;
+  /**
+   * When true the field varies per turn and lives in each `multiTurnData[i]`; when false/absent it is
+   * shared (test-case-level) and lives in the case's `data`. Absent on pre-existing schemas ⇒ shared.
+   */
+  perTurn?: boolean;
 }
 
 export interface InputBinding {

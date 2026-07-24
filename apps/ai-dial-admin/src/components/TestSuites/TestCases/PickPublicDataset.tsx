@@ -10,16 +10,19 @@ import {
   PopupSize,
   StepStatus,
 } from '@epam/ai-dial-ui-kit';
-import { ColDef } from 'ag-grid-community';
+import { ColDef, GridOptions } from 'ag-grid-community';
 
 import { getDataset, getDatasets, getTestCases } from '@/src/app/[lang]/datasets/actions';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
+import { getDatasetTestCaseColumns } from '@/src/components/Datasets/utils/columns';
+import { getDatasetTestCaseGridData } from '@/src/components/Datasets/utils/data';
 import RadioSelectGrid from '@/src/components/Grid/GridView/RadioSelectGrid';
+import { useTurnGroupProjection } from '@/src/components/Grid/hooks/use-turn-group-projection';
 import ListEntities from '@/src/components/ListView/List';
 import { ButtonsI18nKey, EntitiesI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
-import { DATASETS_COLUMN, TEST_CASES_COLUMN } from '@/src/constants/grid-columns/grid-columns';
+import { DATASETS_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { useI18n } from '@/src/locales/client';
-import { Dataset } from '@/src/models/evaluation/dataset';
+import { Dataset, DatasetTestCase } from '@/src/models/evaluation/dataset';
 import { TestCaseSchema } from '@/src/models/evaluation/test-suite';
 import { ATTACH_DATASET_STEPS, AttachDatasetTab } from './pick-dataset-constants';
 
@@ -75,14 +78,33 @@ const PickPublicDataset: FC<Props> = ({ isOpen, onClose, onConfirm, showWarning 
       .finally(() => setIsLoadingDatasets(false));
   }, []);
 
-  const previewColumns = useMemo<ColDef[]>(() => {
-    const schemaColumns: ColDef[] = schema.map((param) => ({
-      field: param.name,
-      headerName: param.name,
-      valueGetter: (p) => p.data?.data?.[param.name] ?? p.data?.[param.name] ?? '',
-    }));
-    return [...TEST_CASES_COLUMN, ...schemaColumns];
-  }, [schema]);
+  const rawPreviewRows = useMemo(() => getDatasetTestCaseGridData(testCasesData as DatasetTestCase[]), [testCasesData]);
+
+  const projection = useTurnGroupProjection({ rawRows: rawPreviewRows, defaultExpanded: false });
+  const {
+    rowData: projectedPreviewRows,
+    onToggleExpand,
+    onFilterChanged,
+    onGridReady: onPreviewGridReady,
+    getRowId: getPreviewRowId,
+    getRowHeight: getPreviewRowHeight,
+  } = projection;
+
+  const previewColumns = useMemo<ColDef[]>(
+    () =>
+      getDatasetTestCaseColumns({ ...selectedDataset, testCaseSchema: schema } as Dataset, () => {}, t, onToggleExpand),
+    [selectedDataset, schema, t, onToggleExpand],
+  );
+
+  const previewGridOptions = useMemo<GridOptions>(
+    () => ({
+      suppressClickEdit: true,
+      getRowId: getPreviewRowId,
+      getRowHeight: getPreviewRowHeight,
+      onFilterChanged,
+    }),
+    [getPreviewRowId, getPreviewRowHeight, onFilterChanged],
+  );
 
   const onNextStep = useCallback(async () => {
     if (!selectedDataset?.id) return;
@@ -148,9 +170,10 @@ const PickPublicDataset: FC<Props> = ({ isOpen, onClose, onConfirm, showWarning 
 
           {currentStepId === AttachDatasetTab.PreviewTestCases && (
             <ListEntities
-              rowData={testCasesData}
+              rowData={projectedPreviewRows}
               columnDefs={previewColumns}
-              additionalGridOptions={{ suppressClickEdit: true }}
+              onGridReady={onPreviewGridReady}
+              additionalGridOptions={previewGridOptions}
             />
           )}
         </div>

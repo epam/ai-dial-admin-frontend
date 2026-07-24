@@ -1,4 +1,5 @@
 import { DatasetTestCase } from '@/src/models/evaluation/dataset';
+import { selectPerTurnFields, selectSharedFields } from '@/src/utils/evaluation/test-case-grouping';
 import { v4 as uuidv4 } from 'uuid';
 
 export const createNewDatasetTestCaseRow = (): Record<string, unknown> => {
@@ -22,8 +23,12 @@ export const getDatasetTestCaseGridData = (testCases?: DatasetTestCase[] | null)
     testCases?.reduce((acc: Record<string, unknown>[], testCase: DatasetTestCase) => {
       const { multiTurnData, data, ...rest } = testCase;
       if (multiTurnData && multiTurnData.length > 0) {
+        // Each turn row carries the merged view (shared `data` + that turn's per-turn map), matching
+        // execution's per-turn resolution. Columns decide what to actually show per scope.
+        const shared = data ?? {};
         multiTurnData.forEach((turn, index) => {
-          acc.push({ ...rest, id: testCase.id, _turnIndex: index, data: turn, ...flatten(turn) });
+          const merged = { ...shared, ...turn };
+          acc.push({ ...rest, id: testCase.id, _turnIndex: index, data: merged, ...flatten(merged) });
         });
       } else {
         acc.push({ ...rest, data: data ?? {}, ...flatten(data) });
@@ -33,7 +38,10 @@ export const getDatasetTestCaseGridData = (testCases?: DatasetTestCase[] | null)
   );
 };
 
-export const collapseRowsToDatasetTestCases = (rows: Record<string, unknown>[]): DatasetTestCase[] => {
+export const collapseRowsToDatasetTestCases = (
+  rows: Record<string, unknown>[],
+  perTurnFields: Set<string> = new Set(),
+): DatasetTestCase[] => {
   const byId = new Map<string, Record<string, unknown>[]>();
   const order: string[] = [];
   rows.forEach((row) => {
@@ -59,7 +67,13 @@ export const collapseRowsToDatasetTestCases = (rows: Record<string, unknown>[]):
     const isMulti = group.some((r) => r._turnIndex != null);
     if (isMulti) {
       const sorted = [...group].sort((a, b) => (a._turnIndex as number) - (b._turnIndex as number));
-      return { ...base, multiTurnData: sorted.map((r) => r.data as Record<string, unknown>) };
+      // Split the merged per-turn rows back into shared `data` (constant across turns, read off the
+      // first turn) and per-turn `multiTurnData`, per the schema's `perTurn` flags.
+      return {
+        ...base,
+        data: selectSharedFields(sorted[0].data as Record<string, unknown>, perTurnFields),
+        multiTurnData: sorted.map((r) => selectPerTurnFields(r.data as Record<string, unknown>, perTurnFields)),
+      };
     }
     return { ...base, data: first.data as Record<string, unknown> };
   });

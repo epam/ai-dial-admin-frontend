@@ -278,6 +278,12 @@ describe('TestCasesList — multi-turn grouping', () => {
   const mockOnChange = vi.fn();
   const mockOnDirtyChange = vi.fn();
 
+  // `foo` is per-turn, so it round-trips through `multiTurnData`; shared `data` stays empty.
+  const mockDataset = {
+    id: 'dataset-123',
+    testCaseSchema: [{ name: 'foo', type: 'STRING' as any, required: false, description: '', perTurn: true }],
+  } as any;
+
   const makeGridApi = (nodes: { data: Record<string, unknown> }[]) => ({
     setGridOption: vi.fn(),
     refreshClientSideRowModel: vi.fn(),
@@ -312,7 +318,7 @@ describe('TestCasesList — multi-turn grouping', () => {
         onChange={mockOnChange}
         testCasesActionsRef={actionsRef}
         onDirtyChange={mockOnDirtyChange}
-        dataset={null}
+        dataset={mockDataset}
       />,
     );
     return actionsRef;
@@ -368,7 +374,7 @@ describe('TestCasesList — multi-turn grouping', () => {
 
     const dirty = actionsRef.current!.getDirtyTestCases();
     expect(dirty).toHaveLength(1);
-    expect(dirty[0].data).toBeUndefined();
+    expect(dirty[0].data).toEqual({});
     expect(dirty[0].multiTurnData).toEqual([{ foo: 'edited' }, { foo: 'b' }]);
   });
 
@@ -427,7 +433,7 @@ describe('TestCasesList — multi-turn grouping', () => {
 
     const dirty = actionsRef.current!.getDirtyTestCases();
     expect(dirty).toHaveLength(1);
-    expect(dirty[0].data).toBeUndefined();
+    expect(dirty[0].data).toEqual({});
     expect(dirty[0].multiTurnData).toHaveLength(2);
     expect(dirty[0].multiTurnData![0]).toEqual({ foo: 'a' });
     expect(dirty[0].multiTurnData![1]).toEqual({});

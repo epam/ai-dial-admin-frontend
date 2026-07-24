@@ -9,7 +9,8 @@ import { GridRowType, GroupedGridRow } from '@/src/models/evaluation/test-case-g
 
 /**
  * Read-only name cell for grouped rows: a GROUP summary row shows the case name with a turn-count
- * badge; a TURN row shows an indented `Turn k` label. SINGLE rows use the editable name renderer.
+ * badge; a TURN row shows a `Turn N` label (grayish italic) in place of the case name, which is
+ * redundant on every turn. SINGLE rows use the editable name renderer.
  */
 const TestCaseNameCellRenderer = ({ data }: ICellRendererParams<GroupedGridRow>) => {
   const t = useI18n();
@@ -17,11 +18,8 @@ const TestCaseNameCellRenderer = ({ data }: ICellRendererParams<GroupedGridRow>)
 
   if (data.rowType === GridRowType.TURN) {
     return (
-      <div className="flex items-center gap-2 min-w-0 pl-6">
-        <span className="text-secondary italic shrink-0">
-          {t(TestSuitesI18nKey.TurnLabel, { index: data.turnNumber ?? 0 })}
-        </span>
-        <DialEllipsisTooltip className="min-w-0" text={(data.testCaseName as string) || ''} />
+      <div className="flex items-center min-w-0 pl-6">
+        <span className="text-secondary italic">{t(TestSuitesI18nKey.TurnLabel, { index: data.turnNumber ?? 0 })}</span>
       </div>
     );
   }

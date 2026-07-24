@@ -31,11 +31,20 @@ interface Props {
   selectedMetricName: string | null;
   /** Updates the shared metric selection (dropdown change). */
   onSelectMetric: (name: string | null) => void;
+  /** True when the run contains multi-turn test cases — switches the histogram axis to turn-scoped wording. */
+  isMultiTurn?: boolean;
 }
 
 const formatValue = (value: number): string => String(Math.round(value * 100) / 100);
 
-const DistributionSection: FC<Props> = ({ run, metricOptions, metricScores, selectedMetricName, onSelectMetric }) => {
+const DistributionSection: FC<Props> = ({
+  run,
+  metricOptions,
+  metricScores,
+  selectedMetricName,
+  onSelectMetric,
+  isMultiTurn,
+}) => {
   const t = useI18n();
   const [histogramValues, setHistogramValues] = useState<number[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -98,7 +107,7 @@ const DistributionSection: FC<Props> = ({ run, metricOptions, metricScores, sele
         <DialAnalyticsHistogram
           title=""
           values={histogramValues ?? []}
-          valueTitle={t(RunsI18nKey.DistributionValueTitle)}
+          valueTitle={t(isMultiTurn ? RunsI18nKey.DistributionValueTitleTurns : RunsI18nKey.DistributionValueTitle)}
           isLoading={isLoading || histogramValues === null}
         />
         {statCards.length > 0 && (
