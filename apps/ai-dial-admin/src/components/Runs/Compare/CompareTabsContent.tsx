@@ -6,7 +6,12 @@ import { CompareViewTab } from '@/src/components/Runs/Compare/constants';
 import ExecutionResultsTab from '@/src/components/Runs/Compare/ExecutionResults/ExecutionResultsTab';
 import HeatMapTab from '@/src/components/Runs/Compare/HeatMap/HeatMapTab';
 import { HeatMapColorDisplayMode } from '@/src/components/Runs/Compare/HeatMap/models';
-import { ExecutionResultsTabUiState, HeatMapTabUiState } from '@/src/components/Runs/Compare/models';
+import {
+  ExecutionResultsTabUiState,
+  HeatMapTabUiState,
+  SummaryOverviewTabUiState,
+} from '@/src/components/Runs/Compare/models';
+import SummaryOverviewTab from '@/src/components/Runs/Compare/Summary/SummaryOverviewTab';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 
 interface Props {
@@ -28,6 +33,8 @@ interface Props {
   setExecutionResultsState: (patch: Partial<ExecutionResultsTabUiState>) => void;
   heatMapState: HeatMapTabUiState;
   setHeatMapState: (patch: Partial<HeatMapTabUiState>) => void;
+  summaryState: SummaryOverviewTabUiState;
+  setSummaryState: (patch: Partial<SummaryOverviewTabUiState>) => void;
 }
 
 const CompareTabsContent: FC<Props> = ({
@@ -48,10 +55,21 @@ const CompareTabsContent: FC<Props> = ({
   setExecutionResultsState,
   heatMapState,
   setHeatMapState,
+  summaryState,
+  setSummaryState,
 }) => {
   return (
     <div className="flex flex-col flex-1 min-h-0 h-full overflow-hidden">
-      {activeTab === CompareViewTab.SummaryOverview && <div className="size-full" />}
+      {activeTab === CompareViewTab.SummaryOverview && (
+        <SummaryOverviewTab
+          primaryRunId={primaryRunId}
+          comparedRunId={comparedRunId}
+          primaryRunName={primaryRunName}
+          comparedRunName={comparedRunName}
+          summaryState={summaryState}
+          setSummaryState={setSummaryState}
+        />
+      )}
       {activeTab === CompareViewTab.HeatMap && (
         <HeatMapTab
           primaryRunId={primaryRunId}

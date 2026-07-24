@@ -100,14 +100,17 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
   const [result, setResult] = useState<StructuredQueryResult | null>(null);
   const [resultMeta, setResultMeta] = useState<ExecutedQueryMeta | null>(null);
   const [isRunning, setIsRunning] = useState(false);
-  const [aiGeneratedSql, setAiGeneratedSql] = useState<string | null>(null);
-  const [aiRepresentable, setAiRepresentable] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  const [aiLoadedMessageIndex, setAiLoadedMessageIndex] = useState<number | null>(null);
+  // Remounts AiPanel (clearing its conversation) only on an explicit user entity switch — not on
+  // `state.entityName` directly, since running a message can itself change entityName (the generated
+  // query may target a different entity than the one currently selected) and must NOT wipe the chat.
+  const [aiConversationKey, setAiConversationKey] = useState(0);
 
   const resetAiQuery = () => {
-    setAiGeneratedSql(null);
-    setAiRepresentable(false);
     setAiLoading(false);
+    setAiLoadedMessageIndex(null);
+    setAiConversationKey((key) => key + 1);
   };
 
   const timeFilter = useTimeFilter();
@@ -189,15 +192,22 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
   };
 
   // A ge/le pair on the timestamp field belongs to the toolbar control, not the visual filter tree.
-  const hydrateBuilderFromQuery = async (parsed: StructuredQuery) => {
+  // Returns the just-computed state/time bound (not the stale `state` closure) so a caller that needs
+  // to build and run a query in the same synchronous handler doesn't have to wait for a re-render.
+  const hydrateBuilderFromQuery = async (
+    parsed: StructuredQuery,
+  ): Promise<{ fields: AnalyticsEntityField[]; state: QueryBuilderState; timeBound: QueryTimeBound | null }> => {
     const fields = await resolveFieldsForEntity(parsed.entity ?? state.entityName);
     const timestamp = findTimestampField(fields);
     const lifted = timestamp ? liftTimeRange(parsed.filter, timestamp) : null;
     const forState = lifted ? { ...parsed, filter: lifted.rest } : parsed;
-    setState(parseQuery(forState, fields, state.functions));
+    const nextState = parseQuery(forState, fields, state.functions);
+    setState(nextState);
     if (lifted && !sameRange(lifted.range, timeBound?.range)) {
       timeFilter.onTimeRangeChange(lifted.range, true);
     }
+    const range = lifted ? lifted.range : getCurrentTimeRange();
+    return { fields, state: nextState, timeBound: timestamp ? { field: timestamp, range } : null };
   };
 
   // Entering SQL seeds the editor from the backend translation of the current builder query — the
@@ -300,41 +310,53 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
     if (sqlError) setSqlError(null);
   };
 
-  const onQueryGenerated = async (sql: string | null) => {
-    if (!sql) {
-      resetAiQuery();
-      return;
-    }
-    setAiGeneratedSql(sql);
-    setAiRepresentable(false);
+  // Clicking a chat message's Run both loads the query (translate → hydrate, or fall back to raw SQL —
+  // same path the old generate-time auto-load used) and immediately executes it. Building the request
+  // from `hydrateBuilderFromQuery`'s return value (not the `state` closure) picks up both the hydrated
+  // filter/group-by and a freshly computed time bound without waiting for a re-render, so the AI view's
+  // one-click run gets the same live-time-bound behavior as the other views' Run.
+  const onRunAiMessage = async (sql: string, index: number) => {
+    setAiLoadedMessageIndex(index);
     setAiLoading(true);
     const res = await translateSqlToQuery(sql);
+    let runFields = state.fields;
+    let request: QueryRunRequest = { kind: QueryRequestKind.Sql, sql };
     if (res.success && res.response?.query && isBuilderRepresentable(res.response.query)) {
-      await hydrateBuilderFromQuery(res.response.query);
+      const hydrated = await hydrateBuilderFromQuery(res.response.query);
+      runFields = hydrated.fields;
       setSqlText('');
       setJsonText('');
       setJsonDiverged(false);
       lastGeneratedSql.current = '';
-      setAiRepresentable(true);
+      request = { kind: QueryRequestKind.Structured, query: buildQuery(hydrated.state, hydrated.timeBound) };
     } else {
       setSqlText(formatSql(sql));
       lastGeneratedSql.current = '';
-      setAiRepresentable(false);
     }
     setAiLoading(false);
+
+    setIsRunning(true);
+    const runRes =
+      request.kind === QueryRequestKind.Sql ? await executeSqlQuery(request.sql) : await executeQuery(request.query);
+    if (runRes.success) {
+      const response = runRes.response ?? { rows: [] };
+      setResult(response);
+      setResultMeta(buildExecutedMeta(request, response, runFields));
+    } else {
+      showNotification(
+        getErrorNotification(
+          runRes.errorHeader || t(QueryBuilderI18nKey.RunFailed),
+          runRes.errorMessage,
+          runRes.requestId,
+        ),
+      );
+    }
+    setIsRunning(false);
   };
 
   const onRun = async () => {
     let request: QueryRunRequest;
-    if (isAiView) {
-      if (!aiGeneratedSql) return;
-      if (aiRepresentable) {
-        const freshBound = timestampField ? { field: timestampField, range: getCurrentTimeRange() } : null;
-        request = { kind: QueryRequestKind.Structured, query: buildQuery(state, freshBound) };
-      } else {
-        request = { kind: QueryRequestKind.Sql, sql: aiGeneratedSql };
-      }
-    } else if (isSqlView) {
+    if (isSqlView) {
       if (!sqlText.trim()) return;
       request = { kind: QueryRequestKind.Sql, sql: sqlText };
     } else if (isJsonView) {
@@ -365,11 +387,7 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
     setIsRunning(false);
   };
 
-  const runDisabled =
-    !fieldsLoaded ||
-    (isJsonView && jsonInvalid) ||
-    (isSqlView && !sqlText.trim()) ||
-    (isAiView && (!aiGeneratedSql || aiLoading));
+  const runDisabled = !fieldsLoaded || (isJsonView && jsonInvalid) || (isSqlView && !sqlText.trim());
 
   return (
     <QueryBuilderContext.Provider value={contextValue}>
@@ -387,25 +405,12 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
               onTimeRangeChange={timeFilter.onTimeRangeChange}
               onRun={onRun}
               runDisabled={runDisabled}
+              showRun={!isAiView}
             >
-              {fieldsLoaded && (
+              {fieldsLoaded && !isAiView && (
                 <CopyButton
-                  value={
-                    isAiView
-                      ? aiRepresentable
-                        ? json
-                        : (aiGeneratedSql ?? '')
-                      : isSqlView
-                        ? sqlText
-                        : isJsonView
-                          ? jsonText
-                          : json
-                  }
-                  valueLabel={
-                    (isAiView && !aiRepresentable) || isSqlView
-                      ? t(QueryBuilderI18nKey.SqlQuery)
-                      : t(QueryBuilderI18nKey.StructuredQueryJson)
-                  }
+                  value={isSqlView ? sqlText : isJsonView ? jsonText : json}
+                  valueLabel={isSqlView ? t(QueryBuilderI18nKey.SqlQuery) : t(QueryBuilderI18nKey.StructuredQueryJson)}
                   buttonLabel={t(ButtonsI18nKey.Copy)}
                 />
               )}
@@ -472,7 +477,12 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
                     </div>
                   </div>
                 ) : isAiView ? (
-                  <AiPanel key={state.entityName} onGenerated={onQueryGenerated} />
+                  <AiPanel
+                    key={aiConversationKey}
+                    onRunMessage={onRunAiMessage}
+                    loadedMessageIndex={aiLoadedMessageIndex}
+                    runInFlight={aiLoading || isRunning}
+                  />
                 ) : (
                   <div className="flex flex-col gap-3">
                     <ModeSwitcher />

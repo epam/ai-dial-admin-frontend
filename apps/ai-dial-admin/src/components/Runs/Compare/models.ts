@@ -20,7 +20,13 @@ export interface HeatMapTabUiState {
   comparedResults: AnalyticsResult[] | null;
 }
 
+export interface SummaryOverviewTabUiState {
+  selectedStatistic: string | null;
+  selectedDistributionMetricName: string | null;
+}
+
 export interface CompareViewTabUiState {
   executionResults: ExecutionResultsTabUiState;
   heatMap: HeatMapTabUiState;
+  summary: SummaryOverviewTabUiState;
 }

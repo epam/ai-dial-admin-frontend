@@ -10,7 +10,9 @@ export interface SummaryTabUiState {
 }
 
 export interface ExtractionResultTabUiState {
+  showTreePanel: boolean;
   colDefs: ColDef[];
+  panelColDefs: ColDef[];
   results: AnalyticsResult[] | null;
   snapshots: MetricSnapshot[];
 }

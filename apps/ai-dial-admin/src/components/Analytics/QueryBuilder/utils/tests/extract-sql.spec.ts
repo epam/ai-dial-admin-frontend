@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { extractSql } from '@/src/components/Analytics/QueryBuilder/utils/extract-sql';
+import { extractSql, splitMessageAroundSql } from '@/src/components/Analytics/QueryBuilder/utils/extract-sql';
 
 describe('extractSql', () => {
   test('returns the SQL from a ```sql-tagged block', () => {
@@ -52,5 +52,37 @@ describe('extractSql', () => {
 
   test('ignores an empty fenced block', () => {
     expect(extractSql('```sql\n\n```')).toBeNull();
+  });
+});
+
+describe('splitMessageAroundSql', () => {
+  test('splits surrounding prose from the winning SQL block', () => {
+    const content = 'Here you go:\n\n```sql\nSELECT a FROM t\n```\n\n**Note:** trimmed.';
+    expect(splitMessageAroundSql(content)).toEqual({
+      before: 'Here you go:',
+      sql: 'SELECT a FROM t',
+      after: '**Note:** trimmed.',
+    });
+  });
+
+  test('returns empty before/after when the block has no surrounding prose', () => {
+    expect(splitMessageAroundSql('```sql\nSELECT 1\n```')).toEqual({ before: '', sql: 'SELECT 1', after: '' });
+  });
+
+  test('uses only the last block for the split when several are present', () => {
+    const content = '```sql\nSELECT 1\n```\nthen\n```sql\nSELECT 2\n```\nfinally';
+    expect(splitMessageAroundSql(content)).toEqual({
+      before: '```sql\nSELECT 1\n```\nthen',
+      sql: 'SELECT 2',
+      after: 'finally',
+    });
+  });
+
+  test('returns null when there is no fenced block', () => {
+    expect(splitMessageAroundSql('just prose, no code')).toBeNull();
+  });
+
+  test('returns null for empty input', () => {
+    expect(splitMessageAroundSql('')).toBeNull();
   });
 });
