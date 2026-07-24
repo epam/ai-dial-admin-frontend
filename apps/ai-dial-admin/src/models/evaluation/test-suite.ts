@@ -1,4 +1,5 @@
 import { DialScheme } from '@/src/models/dial/scheme';
+import { StructuredQuery } from '@/src/models/evaluation/structured-query';
 import { FormDataPart } from '@/src/models/form-data';
 import { InputBindingType, TestCaseItemType } from '@/src/types/evaluation';
 
@@ -6,6 +7,34 @@ export enum SuiteType {
   Deployment = 'DEPLOYMENT',
   McpTool = 'MCP_TOOL',
 }
+
+export enum OverallScoreType {
+  Mean = 'mean',
+  WeightedMean = 'weighted_mean',
+  Function = 'custom_function',
+}
+
+export interface OverallScoreWeight {
+  metricName: string;
+  outputField: string;
+  weight: number;
+}
+
+export interface OverallScoreMean {
+  type: OverallScoreType.Mean;
+}
+
+export interface OverallScoreWeightedMean {
+  type: OverallScoreType.WeightedMean;
+  weights: OverallScoreWeight[];
+}
+
+export interface OverallScoreFunction {
+  type: OverallScoreType.Function;
+  expression: StructuredQuery;
+}
+
+export type OverallScoreConfig = OverallScoreMean | OverallScoreWeightedMean | OverallScoreFunction;
 
 export interface TestSuite {
   id?: string;
@@ -20,6 +49,8 @@ export interface TestSuite {
   suiteType?: SuiteType;
   datasetId?: string;
   disabledTestCaseIds?: string[];
+  overallScoreThreshold?: number;
+  overallScore?: OverallScoreConfig;
 
   deploymentRef?: TestSuiteDeploymentRef;
   endpointRef?: TestSuiteEndpointRef;

@@ -1,4 +1,4 @@
-import { MetricBinding } from '@/src/models/evaluation/metric';
+import { Metric, MetricBinding } from '@/src/models/evaluation/metric';
 
 export const formatBindingValue = (value: unknown): string => {
   if (value == null) {
@@ -31,3 +31,23 @@ export const getBindingDisplayValue = (binding: MetricBinding): string => {
 
   return '-';
 };
+
+export const mergeMetricsWithDeclarations = (metrics: Metric[], declarations: Metric[]): Metric[] => {
+  const declarationsById = new Map(declarations.map((declaration) => [declaration.id, declaration]));
+
+  return metrics.map((metric) => ({
+    ...metric,
+    description: metric.description || declarationsById.get(metric.metricDeclarationId ?? '')?.description,
+  }));
+};
+
+export const mergeMetricsWithOutputSchemas = (
+  metrics: Metric[],
+  outputSchemasById: Map<string, Metric['outputSchema']>,
+): Metric[] =>
+  metrics.map((metric) => ({
+    ...metric,
+    outputSchema: metric.outputSchema?.properties
+      ? metric.outputSchema
+      : outputSchemasById.get(metric.id ?? '') || metric.outputSchema,
+  }));

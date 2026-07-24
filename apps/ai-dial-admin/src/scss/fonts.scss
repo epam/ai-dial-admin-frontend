@@ -57,6 +57,10 @@ h3 {
     line-height: 14px;
   }
 
+  .tiny-semi {
+    @apply tiny font-semibold;
+  }
+
   .tiny-150 {
     @apply font-normal;
     font-size: 12px;

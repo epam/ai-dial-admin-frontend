@@ -15,7 +15,7 @@ const MetricBindingsDisplay: FC<Props> = ({ title, bindings }) => {
 
   return (
     <div className="flex flex-row gap-3 items-start">
-      <p className="dial-tiny-semi-text">{title}:</p>
+      <p className="dial-tiny-semi-text p-1">{title}:</p>
       <div className="flex flex-row flex-wrap gap-2">
         {bindings.map((binding) => (
           <div
