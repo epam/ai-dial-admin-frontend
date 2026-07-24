@@ -12,16 +12,6 @@ The Execution log tab's pod metadata header SHALL display the selected pod's las
 - **WHEN** the selected pod has `lastTerminationMessage` as a non-empty string
 - **THEN** the header displays a "Termination message" field showing that message verbatim (not mapped through the restart-reason lookup)
 
-#### Scenario: Pod has no termination message
-
-- **WHEN** the selected pod has no `lastTerminationMessage` (missing or empty)
-- **THEN** no "Termination message" field is rendered (no empty label)
-
-#### Scenario: Long termination message
-
-- **WHEN** the `lastTerminationMessage` is long
-- **THEN** the header layout is preserved (the message is constrained/wrapped) and the other header fields remain readable
-
 ### Requirement: Termination message visibility is decoupled from restart count
 
 The backend emits `restartCount` and the `lastTermination*` fields independently — a container can be terminated (e.g. fail-to-start) with a termination message while `restartCount` is `0`. The termination message SHALL be shown whenever `lastTerminationMessage` is present, independent of `restartCount`. The existing restart row (Restarts, Last restarted at, Last reason) remains gated on `restartCount > 0`. The metadata header SHALL render when either `restartCount` is non-zero or `lastTerminationMessage` is present.
@@ -36,3 +26,13 @@ The backend emits `restartCount` and the `lastTermination*` fields independently
 
 - **WHEN** the selected pod has `restartCount` of `0` and no `lastTerminationMessage`
 - **THEN** no metadata header is rendered
+
+#### Scenario: Pod has no termination message
+
+- **WHEN** the selected pod has no `lastTerminationMessage` (missing or empty)
+- **THEN** no "Termination message" field is rendered (no empty label)
+
+#### Scenario: Long termination message
+
+- **WHEN** the `lastTerminationMessage` is long
+- **THEN** the header layout is preserved (the message is constrained/wrapped) and the other header fields remain readable

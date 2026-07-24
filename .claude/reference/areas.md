@@ -112,6 +112,7 @@ For work with no feature home, use a technical area:
 | `i18n` | Locales / translations (`src/locales`, `src/constants/i18n`) |
 | `config` | App/build/tooling config, deps, lint/format, husky |
 | `infra` | CI, scripts, Docker, agent tooling (`.claude`, `.github`, `.cursor`) |
+| `openspec` | Specification framework (`openspec/specs`, `openspec/changes`) |
 
 ---
 
