@@ -1434,6 +1434,7 @@ export default {
     MemoryError: 'Memory should be greater than 1',
     GPUError: 'GPU should be greater or equal to 0',
     AdvancedTimingsError: 'Value must be between 1 and {max}',
+    AllowedRange: 'Allowed range: {min}-{max}',
   },
   Source: {
     Container: 'Container',
@@ -1885,6 +1886,28 @@ export default {
     AttachDatasetWarning: 'Attaching a public dataset will permanently remove all currently existing test cases.',
     PublicDatasetInfo:
       'Test cases related to dataset are fixed. To change the test cases open the dataset page or detach them from dataset.',
+    OverallScore: 'Overall score',
+    OverallScoreDescription:
+      'Define how the overall score is calculated for each individual test case and test suite in general.',
+    OverallScoreMean: 'Mean of all metric output',
+    OverallScoreMeanFormula: 'score = mean(m₁, m₂, … mₙ)',
+    OverallScoreWeightedMean: 'Weighted mean of specific metric output',
+    OverallScoreWeightedMeanFormula: 'score = Σ(wᵢ × mᵢ) / Σwᵢ',
+    OverallScoreFunction: 'Specific function',
+    OverallScoreMetricLabel: 'Metric',
+    OverallScoreWeightLabel: 'Weight',
+    OverallScoreFunctionLabel: 'Function',
+    OverallScoreFunctionRocAuc: 'roc auc',
+    OverallScoreFunctionParameters: 'Function parameters',
+    OverallScoreDatasetColumn: 'Dataset column',
+    OverallScoreParameterP: 'P column',
+    ScoreThreshold: 'Score threshold',
+    ScoreThresholdDescription:
+      'Minimum score for a test case, suite, or evaluatee to be considered passing. Scores below this threshold are shown in red across all dashboards.',
+    ScoreThresholdPass: 'Pass',
+    ScoreThresholdCondition: 'if score >=',
+    ScoreThresholdOtherwise: 'otherwise',
+    ScoreThresholdFail: 'Fail',
   },
   FileManager: {
     SelectedItems: 'item(s) selected',

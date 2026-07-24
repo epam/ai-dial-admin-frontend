@@ -16,6 +16,7 @@ import {
   OffsetPage,
   OutputColumn,
   PageType,
+  ParamExpr,
   QueryMode,
   SortDir,
   SortItem,
@@ -25,6 +26,8 @@ import {
 } from '@/src/models/evaluation/structured-query';
 
 export const field = (name: string): FieldExpr => ({ type: ExprType.Field, name });
+
+export const param = (name: string): ParamExpr => ({ type: ExprType.Param, name });
 
 export const value = (valueType: ValueType, val: string | null): ValueExpr => ({
   type: ExprType.Value,
