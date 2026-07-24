@@ -3,6 +3,7 @@
 import { cookies, headers } from 'next/headers';
 
 import { assetApi, filesCoreApi } from '@/src/app/api/api';
+import { DialFile } from '@/src/models/dial/file';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -13,8 +14,14 @@ import { toFileList } from '@/src/server/core/file-metadata';
 
 export async function getFiles(path: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  const metadata = await filesCoreApi.getFileMetadata(token, path, false);
-  return toFileList(metadata);
+  const files: DialFile[] = [];
+  let nextToken: string | undefined;
+  do {
+    const metadata = await filesCoreApi.getFileMetadata(token, path, false, nextToken);
+    files.push(...toFileList(metadata));
+    nextToken = metadata?.nextToken;
+  } while (nextToken);
+  return files;
 }
 
 export async function bulkDeleteFiles(items: { path: string; etag: string }[]): Promise<ServerActionResponse> {

@@ -28,7 +28,7 @@ describe('Files :: server actions', () => {
 
     const result = await getFiles('test');
     expect(getUserToken).toHaveBeenCalled();
-    expect(filesCoreApi.getFileMetadata).toHaveBeenCalledWith(TOKEN_MOCK, 'test', false);
+    expect(filesCoreApi.getFileMetadata).toHaveBeenCalledWith(TOKEN_MOCK, 'test', false, undefined);
     expect(result).toEqual([
       { name: 'file.txt', url: 'files/public/file.txt', path: 'public/file.txt', etag: 'etag-1', nodeType: 'item' },
     ]);
