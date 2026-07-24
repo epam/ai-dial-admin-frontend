@@ -21,6 +21,7 @@ describe('EntityProperties', () => {
         entity={{ name: 'my-interceptor', displayName: '', description: '' }}
         names={[]}
         onChangeEntity={vi.fn()}
+        isEntityImmutable={true}
       />,
     );
 
