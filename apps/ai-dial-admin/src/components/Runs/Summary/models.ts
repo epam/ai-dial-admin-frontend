@@ -63,3 +63,9 @@ export interface MetricOption {
   /** Computation the snapshot belongs to; scopes the aggregate to a single computation. */
   computationId: string;
 }
+
+/** Status counts + avg runtime for a single run's analytics KPI cards. */
+export interface RunAnalyticsSlice {
+  statusCounts: TestCaseStatusCounts;
+  avgRunTimeMs: number | null;
+}

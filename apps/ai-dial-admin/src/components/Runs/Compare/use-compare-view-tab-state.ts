@@ -6,6 +6,7 @@ import {
   CompareViewTabUiState,
   ExecutionResultsTabUiState,
   HeatMapTabUiState,
+  SummaryOverviewTabUiState,
 } from '@/src/components/Runs/Compare/models';
 
 const createDefaultExecutionResultsState = (): ExecutionResultsTabUiState => ({
@@ -26,9 +27,15 @@ const createDefaultHeatMapState = (): HeatMapTabUiState => ({
   comparedResults: null,
 });
 
+const createDefaultSummaryState = (): SummaryOverviewTabUiState => ({
+  selectedStatistic: null,
+  selectedDistributionMetricName: null,
+});
+
 const createDefaultTabState = (): CompareViewTabUiState => ({
   executionResults: createDefaultExecutionResultsState(),
   heatMap: createDefaultHeatMapState(),
+  summary: createDefaultSummaryState(),
 });
 
 export const createDefaultCompareViewTabState = createDefaultTabState;
@@ -37,6 +44,7 @@ export interface UseCompareViewTabStateReturn {
   state: CompareViewTabUiState;
   setExecutionResultsState: (patch: Partial<ExecutionResultsTabUiState>) => void;
   setHeatMapState: (patch: Partial<HeatMapTabUiState>) => void;
+  setSummaryState: (patch: Partial<SummaryOverviewTabUiState>) => void;
 }
 
 export const useCompareViewTabState = (primaryRunId: string, comparedRunId: string): UseCompareViewTabStateReturn => {
@@ -60,9 +68,17 @@ export const useCompareViewTabState = (primaryRunId: string, comparedRunId: stri
     }));
   }, []);
 
+  const setSummaryState = useCallback((patch: Partial<SummaryOverviewTabUiState>) => {
+    setState((prev) => ({
+      ...prev,
+      summary: { ...prev.summary, ...patch },
+    }));
+  }, []);
+
   return {
     state,
     setExecutionResultsState,
     setHeatMapState,
+    setSummaryState,
   };
 };

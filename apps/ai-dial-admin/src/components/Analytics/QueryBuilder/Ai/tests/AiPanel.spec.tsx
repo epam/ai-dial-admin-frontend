@@ -18,70 +18,126 @@ const reply = (content: string) => ({
 });
 
 const promptBox = () => screen.getByRole('textbox', { name: 'QueryBuilder.AiPanelHeading' });
-const generateButton = () => screen.getByRole('button', { name: 'QueryBuilder.AiGenerate' });
+const sendButton = () => screen.getByRole('button', { name: 'QueryBuilder.AiSend' });
+
+const renderPanel = (overrides: Partial<Parameters<typeof AiPanel>[0]> = {}) => {
+  const props = { onRunMessage: vi.fn(), loadedMessageIndex: null, runInFlight: false, ...overrides };
+  render(<AiPanel {...props} />);
+  return props;
+};
 
 beforeEach(() => {
   vi.clearAllMocks();
 });
 
 describe('AiPanel', () => {
-  test('renders the heading, prompt, suggestions, and a disabled Generate button', () => {
-    render(<AiPanel onGenerated={vi.fn()} />);
+  test('renders the heading, prompt, suggestions, and a disabled Send button', () => {
+    renderPanel();
 
     expect(screen.getByRole('heading', { name: 'QueryBuilder.AiPanelHeading' })).toBeInTheDocument();
     expect(promptBox()).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'QueryBuilder.AiSuggestionCost' })).toBeInTheDocument();
-    expect(generateButton()).toBeDisabled();
+    expect(sendButton()).toBeDisabled();
   });
 
-  test('clicking a suggestion fills the prompt and enables Generate', async () => {
+  test('clicking a suggestion fills the prompt and enables Send', async () => {
     const user = userEvent.setup();
-    render(<AiPanel onGenerated={vi.fn()} />);
+    renderPanel();
 
     await user.click(screen.getByRole('button', { name: 'QueryBuilder.AiSuggestionCost' }));
 
     expect(promptBox()).toHaveValue('QueryBuilder.AiSuggestionCost');
-    expect(generateButton()).toBeEnabled();
+    expect(sendButton()).toBeEnabled();
   });
 
-  test('a successful generation shows the SQL and hands it up automatically (no Apply step)', async () => {
+  test('sending appends the user message immediately and the reply with SQL gets an inline Run/Copy', async () => {
     const user = userEvent.setup();
-    const onGenerated = vi.fn();
     vi.mocked(generateQuery).mockResolvedValue(reply('Here you go:\n```sql\nSELECT 1\n```') as never);
+    const { onRunMessage } = renderPanel();
 
-    render(<AiPanel onGenerated={onGenerated} />);
     await user.type(promptBox(), 'cost by deployment');
-    await user.click(generateButton());
+    await user.click(sendButton());
 
+    expect(screen.getByText('cost by deployment')).toBeInTheDocument();
+    expect(promptBox()).toHaveValue('');
     expect(await screen.findByText('SELECT 1')).toBeInTheDocument();
-    expect(screen.getByText('QueryBuilder.AiRunHint')).toBeInTheDocument();
-    expect(onGenerated).toHaveBeenCalledWith('SELECT 1');
+
+    await user.click(screen.getByRole('button', { name: 'QueryBuilder.Run' }));
+    expect(onRunMessage).toHaveBeenCalledWith('SELECT 1', 1);
     expect(generateQuery).toHaveBeenCalledWith([{ role: 'user', content: 'cost by deployment' }]);
   });
 
-  test('a reply without SQL shows the response text and is not loaded', async () => {
+  test('sending a message scrolls the new user message into view', async () => {
     const user = userEvent.setup();
-    const onGenerated = vi.fn();
-    vi.mocked(generateQuery).mockResolvedValue(reply('I need more detail — which project?') as never);
+    const scrollIntoView = vi.spyOn(HTMLElement.prototype, 'scrollIntoView');
+    vi.mocked(generateQuery).mockResolvedValue(reply('```sql\nSELECT 1\n```') as never);
+    renderPanel();
 
-    render(<AiPanel onGenerated={onGenerated} />);
-    await user.type(promptBox(), 'something vague');
-    await user.click(generateButton());
+    await user.type(promptBox(), 'cost by deployment');
+    await user.click(sendButton());
 
-    expect(await screen.findByText('QueryBuilder.AiResponseLabel')).toBeInTheDocument();
-    expect(onGenerated).toHaveBeenCalledWith(null);
+    await screen.findByText('SELECT 1');
+    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
   });
 
-  test('a failed generation surfaces a notification and loads nothing', async () => {
+  test('suggestions are hidden once a message has been sent', async () => {
     const user = userEvent.setup();
-    const onGenerated = vi.fn();
+    vi.mocked(generateQuery).mockResolvedValue(reply('Sure, one moment.') as never);
+    renderPanel();
+
+    await user.type(promptBox(), 'cost by deployment');
+    await user.click(sendButton());
+
+    await screen.findByText('Sure, one moment.');
+    expect(screen.queryByRole('button', { name: 'QueryBuilder.AiSuggestionCost' })).not.toBeInTheDocument();
+  });
+
+  test('a reply without SQL renders as a plain message with no Run or Copy action', async () => {
+    const user = userEvent.setup();
+    const { onRunMessage } = renderPanel();
+    vi.mocked(generateQuery).mockResolvedValue(reply('I need more detail — which project?') as never);
+
+    await user.type(promptBox(), 'something vague');
+    await user.click(sendButton());
+
+    expect(await screen.findByText('I need more detail — which project?')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'QueryBuilder.Run' })).not.toBeInTheDocument();
+    expect(onRunMessage).not.toHaveBeenCalled();
+  });
+
+  test('a failed send surfaces a notification and keeps the user message in the transcript', async () => {
+    const user = userEvent.setup();
+    renderPanel();
     vi.mocked(generateQuery).mockResolvedValue({ success: false, status: 500 } as never);
 
-    render(<AiPanel onGenerated={onGenerated} />);
     await user.type(promptBox(), 'cost');
-    await user.click(generateButton());
+    await user.click(sendButton());
 
     await waitFor(() => expect(showNotification).toHaveBeenCalled());
-    expect(onGenerated).not.toHaveBeenCalled();
+    expect(screen.getByText('cost')).toBeInTheDocument();
+  });
+
+  test('inline Run is disabled for the currently loaded message, and while a run is in flight', async () => {
+    const user = userEvent.setup();
+    vi.mocked(generateQuery).mockResolvedValue(reply('```sql\nSELECT 1\n```') as never);
+    renderPanel({ loadedMessageIndex: 1, runInFlight: false });
+
+    await user.type(promptBox(), 'cost by deployment');
+    await user.click(sendButton());
+
+    await screen.findByText('SELECT 1');
+    expect(screen.getByRole('button', { name: 'QueryBuilder.Run' })).toBeDisabled();
+  });
+
+  test('inline Run is disabled while a run is in flight even for a not-yet-loaded message', async () => {
+    const user = userEvent.setup();
+    vi.mocked(generateQuery).mockResolvedValue(reply('```sql\nSELECT 1\n```') as never);
+    renderPanel({ loadedMessageIndex: null, runInFlight: true });
+
+    await user.type(promptBox(), 'cost by deployment');
+    await user.click(sendButton());
+
+    await screen.findByText('SELECT 1');
+    expect(screen.getByRole('button', { name: 'QueryBuilder.Run' })).toBeDisabled();
   });
 });

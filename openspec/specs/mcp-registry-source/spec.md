@@ -77,21 +77,56 @@ The system SHALL define TypeScript interfaces mirroring the BE contract:
 
 These interfaces SHALL be located in `src/types/deployments/mcp-registry.ts`.
 
+### ExternalRegistryRef includes version field
+
+The `ExternalRegistryRef` interface SHALL include an optional `version?: string` field, alongside `$type` and `packageName`. The interface SHALL be defined in `src/types/deployments/mcp-registry.ts`. Consumers (container and image types) SHALL import directly from this file — no re-exports.
+
+#### Scenario: Version stored on server selection
+- **WHEN** a server is selected from the MCP registry
+- **THEN** `externalRegistryRef.version` SHALL be set to `server.version`
+
+### McpRegistryFetchFn type in shared types
+
+The `McpRegistryFetchFn` type SHALL be defined in `src/types/deployments/mcp-registry.ts` instead of the `McpRegistryGrid` component, to avoid pulling ag-grid dependencies when only the type is needed.
+
+#### Scenario: Import without ag-grid dependency
+- **WHEN** a component imports `McpRegistryFetchFn`
+- **THEN** it SHALL import from `@/src/types/deployments/mcp-registry`
+- **AND** the import SHALL NOT trigger ag-grid module resolution
+
 ### Remote Utility Functions
 
 `utils/deployments/mcp-registry.ts` SHALL export `getPreferredRemote(server: McpServer)` and `mapRemoteTransportType(type: string)` alongside existing `getPreferredOciPackage()` and `mapTransportType()`.
 
 ### MCP Server Name Field
 
+The `McpServerNameField` SHALL be generalized to work with both containers and images. It SHALL accept callback props instead of directly importing container types and actions:
+
+- `fetchServers: McpRegistryFetchFn` — the fetch function for autocomplete and freeform validation
+- `onServerSelect: (server: McpServer) => void` — callback when a server is selected
+- `serverName: string` — current server name value
+- `onServerNameChange: (name: string) => void` — callback when server name text changes
+- `isModal?: boolean` — layout mode
+- `disabled?: boolean` — disabled state
+
 - SHALL render a `DialSelectField` with inline search (debounced, same pattern as `HFModelNameField`)
-- Autocomplete SHALL call `getContainerMcpServers({ search: value, limit: 5 })` on input (debounce ~100ms, trigger after 2+ characters)
+- Autocomplete SHALL call `fetchServers({ search: value, limit: 5 })` on input (debounce ~100ms, trigger after 2+ characters)
 - All autocomplete results SHALL be shown as options without client-side filtering
 - SHALL maintain a server cache (`Map<string, McpServer>`) for instant pre-fill on autocomplete selection
 - SHALL render a "Select from registry" button that opens the registry browser modal
 - SHALL validate server name against pattern `^[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+$`
 - SHALL register validity with `SaveValidationContext` (field: `mcpServerName`)
-- SHALL be disabled when container is in edit-disabled state or running
 - SHALL clear dropdown options when input has 2 or fewer characters
+
+Container-specific logic (OCI package extraction, transport mapping, imageReference population) SHALL be handled by `ContainerSource`'s callbacks. The RUNNING status disabled check SHALL be applied only to the MCP server name field in `ContainerSource`, not globally.
+
+#### Scenario: Container parent provides container-specific callbacks
+- **WHEN** `McpServerNameField` is used in a container context
+- **THEN** `ContainerSource` SHALL provide `fetchServers=getContainerMcpServers` and an `onServerSelect` that extracts OCI package info and populates container source fields
+
+#### Scenario: Image parent provides image-specific callbacks
+- **WHEN** `McpServerNameField` is used in an image context
+- **THEN** `ImageMcpRegistry` SHALL provide `fetchServers=getImageMcpServers` and an `onServerSelect` that populates image source fields based on server capabilities
 
 ### Freeform Validation
 
@@ -112,9 +147,15 @@ When a server is selected, the following fields SHALL be populated on the contai
 | `source.imageReference` | Preferred OCI package's `identifier` (e.g., `docker.io/org/image:tag`) |
 | `source.externalRegistryRef.$type` | `"mcp-registry"` |
 | `source.externalRegistryRef.packageName` | `server.name` |
+| `source.externalRegistryRef.version` | `server.version` |
 | `transport` | Mapped from preferred OCI package's `transport.type`: `streamable-http` → `HTTP`, `sse` → `SSE`. Skip if no supported transport. |
 
 Package preference: prefer OCI package with `streamable-http` transport over `sse`.
+
+#### Scenario: Server selection stores name and version separately
+- **WHEN** user selects server `io.github.user/weather` version `2.1.0` from autocomplete or modal
+- **THEN** `source.externalRegistryRef.packageName` SHALL be `io.github.user/weather`
+- **AND** `source.externalRegistryRef.version` SHALL be `2.1.0`
 
 ### Registry Browser Modal
 

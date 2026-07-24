@@ -161,7 +161,7 @@ const DeploymentProperties: FC<Props> = ({
       )}
 
       <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} isFullWidth={!isEntityImmutable} />
-      {!isModal && <IntroControl entity={entity} onChangeEntity={onChangeEntity} />}
+      {!isModal && <IntroControl entity={entity} onChangeEntity={onChangeEntity} isFullWidth={!isEntityImmutable} />}
       {view === ApplicationRoute.Applications && !isEntityImmutable && !initialValues && (
         <SourceField
           id="sourceType"

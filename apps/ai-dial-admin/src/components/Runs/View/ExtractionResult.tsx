@@ -1,12 +1,14 @@
 'use client';
 
-import { GridApi, GridReadyEvent, RowClassRules, RowClickedEvent } from 'ag-grid-community';
+import { ColDef, GridApi, GridReadyEvent, RowClassRules, RowClickedEvent } from 'ag-grid-community';
 import { FC, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 
 import { DialLoader } from '@epam/ai-dial-ui-kit';
 
 import { getMetricSnapshots, getTestCaseRunResults } from '@/src/app/[lang]/runs/actions';
 import GridView from '@/src/components/Grid/GridView/GridView';
+import TreeColumnsPanel from '@/src/components/Grid/TreeColumnsPanel/TreeColumnsPanel';
+import { applyColumnStateOrderToTreeColDefs, haveTreeColDefsSamePanelState } from '@/src/components/Grid/utils';
 import AnalyticsBottomDrawer from '@/src/components/Runs/Details/BottomDrawer/AnalyticsBottomDrawer';
 import { DetailMode } from '@/src/components/Runs/Details/BottomDrawer/models';
 import { useDrawerPanel } from '@/src/components/Runs/Details/BottomDrawer/useDrawerPanel';
@@ -25,7 +27,7 @@ interface Props {
 
 const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtractionResultState }) => {
   const t = useI18n();
-  const { colDefs, results, snapshots } = extractionResultState;
+  const { showTreePanel, colDefs, panelColDefs, results, snapshots } = extractionResultState;
   const metricBindings = useMemo(() => snapshotsToBindingsMap(snapshots), [snapshots]);
   const detailMode = useDetailMode(metricBindings);
   const { openDetail } = detailMode;
@@ -41,21 +43,14 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
 
     getTestCaseRunResults(RESULT_FILTERS(run)).then((resultsSettled) => {
       const content = resultsSettled?.content || [];
+      const nextColDefs = getAnalyticsColumns(content);
       setExtractionResultState({
         results: content,
+        colDefs: nextColDefs,
+        panelColDefs: nextColDefs,
       });
     });
   }, [run, results, setExtractionResultState]);
-
-  useEffect(() => {
-    if (results === null) {
-      return;
-    }
-
-    setExtractionResultState({
-      colDefs: getAnalyticsColumns(results),
-    });
-  }, [results, setExtractionResultState]);
 
   useEffect(() => {
     if (!run?.id || snapshots.length > 0) {
@@ -66,6 +61,46 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
       setExtractionResultState({ snapshots: data || [] });
     });
   }, [run?.id, snapshots.length, setExtractionResultState]);
+
+  const panelColDefsRef = useRef(panelColDefs);
+  panelColDefsRef.current = panelColDefs;
+
+  useEffect(() => {
+    if (!showTreePanel || !colDefs?.length) {
+      return;
+    }
+
+    const columnState = gridApiRef.current?.getColumnState();
+    if (!columnState?.length) {
+      return;
+    }
+
+    const prevColDefs = panelColDefsRef.current;
+    if (!prevColDefs?.length) {
+      return;
+    }
+
+    const syncedColDefs = applyColumnStateOrderToTreeColDefs(prevColDefs, columnState);
+    if (haveTreeColDefsSamePanelState(prevColDefs, syncedColDefs)) {
+      return;
+    }
+
+    setExtractionResultState({ panelColDefs: syncedColDefs });
+  }, [showTreePanel, colDefs, setExtractionResultState]);
+
+  const toggleTreePanel = useCallback(
+    () => setExtractionResultState({ showTreePanel: !showTreePanel }),
+    [setExtractionResultState, showTreePanel],
+  );
+
+  const onPanelColumnsChange = useCallback(
+    (newColDefs: ColDef[]) => {
+      setExtractionResultState({ panelColDefs: newColDefs, colDefs: newColDefs });
+      gridApiRef.current?.setGridOption('columnDefs', newColDefs);
+      requestAnimationFrame(() => gridApiRef.current?.sizeColumnsToFit());
+    },
+    [setExtractionResultState],
+  );
 
   const resultIds = useMemo(() => (results ?? []).map((r) => r.id!).filter(Boolean), [results]);
   useEffect(() => {
@@ -136,6 +171,14 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
             onGridReady={onGridReady}
             additionalGridOptions={gridOptions}
             emptyDataProps={{ title: t(EntitiesI18nKey.NoResults) }}
+          />
+        )}
+        {showTreePanel && (
+          <TreeColumnsPanel
+            columns={panelColDefs}
+            onColumnsChange={onPanelColumnsChange}
+            panelClassName="absolute right-0 top-0 h-full w-72 bg-layer-3 flex flex-col border-l border-primary shadow-lg z-10"
+            toggleColumnsPanel={toggleTreePanel}
           />
         )}
       </div>
