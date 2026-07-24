@@ -12,8 +12,11 @@ const createDefaultSummaryState = (): SummaryTabUiState => ({
 });
 
 const createDefaultExtractionResultState = (): ExtractionResultTabUiState => {
+  const defaultColDefs = getAnalyticsColumns([]);
   return {
-    colDefs: getAnalyticsColumns([]),
+    showTreePanel: false,
+    colDefs: defaultColDefs,
+    panelColDefs: defaultColDefs,
     results: null,
     snapshots: [],
   };

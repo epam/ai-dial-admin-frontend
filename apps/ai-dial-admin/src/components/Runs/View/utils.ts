@@ -40,6 +40,24 @@ export const RESULT_FILTERS = (run: Run): FilterDto[] => [
   },
 ];
 
+const getInputColumns = (input: Record<string, unknown>, hide = false) => {
+  return Object.keys(input).map((key) => {
+    return {
+      field: key,
+      headerName: key,
+      hide,
+      flex: 1,
+      minWidth: EXTRACTED_COLUMN_MIN_WIDTH,
+      ...NO_FILTER_COL_DEF,
+      valueGetter: (params) => {
+        const value = params.data?.testCaseData?.[key];
+        if (typeof value === 'object') return JSON.stringify(value);
+        return value ?? '—';
+      },
+    } as ColDef;
+  });
+};
+
 const getExtractedColumns = (extracted: Record<string, unknown>) => {
   return Object.keys(extracted).map((key) => {
     return {
@@ -181,10 +199,15 @@ const staticColumns = [
 
 export const getAnalyticsColumns = (results: AnalyticsResult[]) => {
   const metrics = mergeMetricValuesSchema(results);
+  const input = results[0]?.testCaseData || {};
 
   return [
     ...staticColumns,
     ...getMetricsColumns(metrics),
+    {
+      headerName: 'INPUT BINDINGS',
+      children: getInputColumns(input, true),
+    },
     {
       headerName: EXTRACTED_GROUP_HEADER,
       children: getExtractedColumns(results[0]?.extractedColumns || {}),

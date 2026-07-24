@@ -75,6 +75,14 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
   ),
 }));
 
+vi.mock('@/src/components/Grid/TreeColumnsPanel/TreeColumnsPanel', () => ({
+  default: ({ toggleColumnsPanel }: any) => (
+    <div role="dialog" aria-label="Columns panel">
+      <button onClick={toggleColumnsPanel}>Close panel</button>
+    </div>
+  ),
+}));
+
 const mockRun = {
   id: 'run-1',
   name: 'Test Run',
@@ -107,12 +115,20 @@ describe('ExtractionResultTab', () => {
     vi.clearAllMocks();
   });
 
-  test('renders grid after loading without Columns button', async () => {
+  test('renders grid after loading without Columns button in tab body', async () => {
     render(<ControlledExtractionResultTab />);
     await waitFor(() => {
       expect(screen.getByRole('grid', { name: 'Analytics grid' })).toBeInTheDocument();
     });
     expect(screen.queryByRole('button', { name: ButtonsI18nKey.Columns })).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Columns panel' })).not.toBeInTheDocument();
+  });
+
+  test('shows Columns panel when showTreePanel is true', async () => {
+    render(<ControlledExtractionResultTab initialState={{ showTreePanel: true }} />);
+    await waitFor(() => {
+      expect(screen.getByRole('dialog', { name: 'Columns panel' })).toBeInTheDocument();
+    });
   });
 
   test('does not refetch results when cached state is provided', async () => {
