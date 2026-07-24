@@ -24,6 +24,7 @@ interface Props<T> extends SimpleButtonsWrapperProps<T> {
   activeTab?: EntityViewTab;
   children?: ReactNode;
   leadingActions?: ReactNode;
+  tabsTrailing?: ReactNode;
 
   onChangeActiveTab?: (tab: EntityViewTab) => void;
 }
@@ -35,6 +36,7 @@ const SimpleEntityHeader = <T extends Entity>({
   tabs,
   activeTab,
   onChangeActiveTab,
+  tabsTrailing,
   ...props
 }: Props<T>) => {
   const isEditorEnabled = jsonConfiguration?.isEditorEnabled;
@@ -59,12 +61,15 @@ const SimpleEntityHeader = <T extends Entity>({
         </SimpleButtonsWrapper>
       </div>
       {tabs && activeTab && onChangeActiveTab && (
-        <Tabs
-          isEditorEnabled={isEditorEnabled}
-          tabs={tabs}
-          activeTab={activeTab}
-          onChangeActiveTab={onChangeActiveTab}
-        />
+        <div className="flex items-center justify-between gap-4">
+          <Tabs
+            isEditorEnabled={isEditorEnabled}
+            tabs={tabs}
+            activeTab={activeTab}
+            onChangeActiveTab={onChangeActiveTab}
+          />
+          {tabsTrailing}
+        </div>
       )}
     </div>
   );
