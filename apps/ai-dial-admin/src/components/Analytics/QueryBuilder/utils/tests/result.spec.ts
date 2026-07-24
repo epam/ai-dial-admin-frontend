@@ -31,6 +31,23 @@ describe('getResultColumns', () => {
     const result: StructuredQueryResult = { columns: [], rows: [{ a: 1 }, { b: 2, c: 3 }] };
     expect(getResultColumns(result).map((c) => c.field)).toEqual(['a', 'b', 'c']);
   });
+
+  // ag-grid's default `field`-based lookup treats a dot as a nested-property path (`data.test.test`),
+  // but an enrichment's "table.column" projection is a single flat key on the row — the column's
+  // valueGetter must read it literally or the cell renders blank despite the row actually having data.
+  test('a dotted column name (e.g. an enrichment projection) resolves the flat key, not a nested path', () => {
+    const result: StructuredQueryResult = {
+      columns: ['event_id', 'test.test'],
+      rows: [{ event_id: '1', 'test.test': 'test_value' }],
+    };
+    const dottedCol = getResultColumns(result).find((c) => c.field === 'test.test');
+
+    const value = dottedCol?.valueGetter?.({
+      data: { event_id: '1', 'test.test': 'test_value' },
+    } as Parameters<NonNullable<typeof dottedCol.valueGetter>>[0]);
+
+    expect(value).toBe('test_value');
+  });
 });
 
 describe('getResultTotal', () => {

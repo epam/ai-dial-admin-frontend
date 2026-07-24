@@ -36,6 +36,7 @@ import { fieldsToOptions, havingFieldOptions } from '@/src/components/Analytics/
 import { buildQuery } from '@/src/components/Analytics/QueryBuilder/utils/serialize';
 import { isBuilderRepresentable, parseQuery } from '@/src/components/Analytics/QueryBuilder/utils/deserialize';
 import { getResultColumns } from '@/src/components/Analytics/QueryBuilder/utils/result';
+import { formatSql } from '@/src/components/Analytics/QueryBuilder/utils/sql-format';
 import { createGroup, createInitialState, createPredicate } from '@/src/components/Analytics/QueryBuilder/utils/state';
 import { findTimestampField, liftTimeRange } from '@/src/components/Analytics/QueryBuilder/utils/time';
 import { LOCAL_STORAGE_QUERY_BUILDER_RAIL_KEY } from '@/src/constants/analytics/query-builder';
@@ -208,7 +209,7 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
     const freshBound = timestampField ? { field: timestampField, range: getCurrentTimeRange() } : null;
     const res = await translateQuery(buildQuery(state, freshBound));
     if (res.success) {
-      const sql = res.response?.sql ?? '';
+      const sql = formatSql(res.response?.sql ?? '');
       setSqlText(sql);
       lastGeneratedSql.current = sql;
     } else {
@@ -316,7 +317,7 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
       lastGeneratedSql.current = '';
       setAiRepresentable(true);
     } else {
-      setSqlText(sql);
+      setSqlText(formatSql(sql));
       lastGeneratedSql.current = '';
       setAiRepresentable(false);
     }

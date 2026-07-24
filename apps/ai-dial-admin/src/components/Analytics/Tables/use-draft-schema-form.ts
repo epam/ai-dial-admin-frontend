@@ -3,10 +3,10 @@ import { useMemo, useState } from 'react';
 import {
   createDraftSchemaForm,
   getColumnRowErrors,
+  getTemporalColumnNames,
   hasColumnRowErrors,
   toTableColumns,
 } from '@/src/components/Analytics/Tables/utils';
-import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { AnalyticsTable, AnalyticsTableType, Cardinality, DraftSchemaDto } from '@/src/models/analytics/table';
 import { DraftSchemaForm } from '@/src/models/analytics/tables-ui';
 
@@ -33,7 +33,20 @@ export const useDraftSchemaForm = (
   const [form, setForm] = useState<DraftSchemaForm>(() => createDraftSchemaForm(table));
 
   const update = <K extends keyof DraftSchemaForm>(key: K, value: DraftSchemaForm[K]) =>
-    setForm((prev) => ({ ...prev, [key]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [key]: value };
+      // Retyping a column away from Date/Timestamp can invalidate an already-selected partition
+      // column; without this it silently keeps its (now stale) granularity selection too.
+      if (
+        key === 'columns' &&
+        next.partitionColumn &&
+        !getTemporalColumnNames(next.columns).includes(next.partitionColumn)
+      ) {
+        next.partitionColumn = '';
+        next.granularity = '';
+      }
+      return next;
+    });
 
   const sourceNames = useMemo(() => {
     const seen = new Set<string>();
@@ -45,14 +58,7 @@ export const useDraftSchemaForm = (
   }, [form.columns]);
   const columnOptions = sourceNames.map((s) => ({ value: s, label: s }));
 
-  const temporalNames = useMemo(() => {
-    const seen = new Set<string>();
-    form.columns.forEach((c) => {
-      const s = c.source_name.trim();
-      if (s && (c.type === AnalyticsFieldType.Date || c.type === AnalyticsFieldType.Timestamp)) seen.add(s);
-    });
-    return [...seen];
-  }, [form.columns]);
+  const temporalNames = useMemo(() => getTemporalColumnNames(form.columns), [form.columns]);
 
   const grainOptions = (sourceTable?.columns ?? []).map((c) => ({ value: c.source_name, label: c.source_name }));
 
