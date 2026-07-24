@@ -25,10 +25,10 @@ describe('Runs View :: useRunViewTabState', () => {
     const { result } = renderHook(() => useRunViewTabState('run-1'));
 
     act(() => {
-      result.current.setExtractionResultState({ results: [] });
+      result.current.setExtractionResultState({ showTreePanel: true });
     });
 
-    expect(result.current.state.extractionResult.results).toEqual([]);
+    expect(result.current.state.extractionResult.showTreePanel).toBe(true);
   });
 
   test('resetSummarySelections clears metric selections but keeps statistic', () => {
@@ -58,7 +58,7 @@ describe('Runs View :: useRunViewTabState', () => {
 
     act(() => {
       result.current.setSummaryState({ selectedStatistic: 'P90' });
-      result.current.setExtractionResultState({ results: [] });
+      result.current.setExtractionResultState({ showTreePanel: true });
     });
 
     rerender({ runId: 'run-2' });

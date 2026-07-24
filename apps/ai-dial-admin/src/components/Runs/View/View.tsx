@@ -5,8 +5,8 @@ import { createPortal } from 'react-dom';
 
 import Grafana from '@/public/images/icons/grafana.svg';
 import IconCompare from '@/public/images/icons/difference.svg';
-import { DialLinkButton, DialNeutralButton } from '@epam/ai-dial-ui-kit';
-import { IconFileExport } from '@tabler/icons-react';
+import { DialGhostButton, DialLinkButton, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import { IconColumns2, IconFileExport } from '@tabler/icons-react';
 
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import { useCompareRunLauncher } from '@/src/components/Runs/Compare/useCompareRunLauncher';
@@ -35,12 +35,29 @@ const RunView: FC<Props> = ({ run, onRemove }) => {
   const tabs = useMemo(() => getRunTabs(t), [t]);
   const [activeTab, setActiveTab] = useState(EntityViewTab.Summary);
   const tabState = useRunViewTabState(run.id);
+  const { setExtractionResultState } = tabState;
+  const showTreePanel = tabState.state.extractionResult.showTreePanel;
 
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const onOpenExportModal = useCallback(() => setIsExportModalOpen(true), []);
   const onCloseExportModal = useCallback(() => setIsExportModalOpen(false), []);
 
   const onOpenCompare = useCallback(() => openCompareRun(run), [openCompareRun, run]);
+
+  const onChangeActiveTab = useCallback(
+    (tab: EntityViewTab) => {
+      setActiveTab(tab);
+      if (tab !== EntityViewTab.ExtractionResult) {
+        setExtractionResultState({ showTreePanel: false });
+      }
+    },
+    [setExtractionResultState],
+  );
+
+  const toggleTreePanel = useCallback(
+    () => setExtractionResultState({ showTreePanel: !showTreePanel }),
+    [setExtractionResultState, showTreePanel],
+  );
 
   const isCompareDisabled = run.status !== RunStatus.COMPLETED || !run.testSuiteId;
 
@@ -55,6 +72,15 @@ const RunView: FC<Props> = ({ run, onRemove }) => {
     </>
   ) : null;
 
+  const columnsTabsTrailing =
+    activeTab === EntityViewTab.ExtractionResult ? (
+      <DialGhostButton
+        label={t(ButtonsI18nKey.Columns)}
+        iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} />}
+        onClick={toggleTreePanel}
+      />
+    ) : null;
+
   return (
     <>
       <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
@@ -67,8 +93,9 @@ const RunView: FC<Props> = ({ run, onRemove }) => {
           onRemove={onRemove}
           tabs={tabs}
           activeTab={activeTab}
-          onChangeActiveTab={setActiveTab}
+          onChangeActiveTab={onChangeActiveTab}
           leadingActions={grafanaLeadingActions}
+          tabsTrailing={columnsTabsTrailing}
         >
           <DialNeutralButton
             label={t(ButtonsI18nKey.Export)}

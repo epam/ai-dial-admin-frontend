@@ -116,7 +116,7 @@ const Endpoint: FC<Props> = ({
         <div className="shrink-0 self-start">
           <button
             type="button"
-            className={'cursor-pointer block h-[40px] mt-[20px]'}
+            className={'cursor-pointer block h-[40px] mt-7'}
             onClick={toggleExpand}
             aria-label="toggle expanded fields"
           >
@@ -296,7 +296,7 @@ const Endpoint: FC<Props> = ({
       </div>
       {!disabled && (
         <div className="w-[40px] shrink-0 self-start">
-          <DialRemoveButton onClick={onRemove} className={!isTablet ? 'mt-[20px]' : 'mt-0'} aria-label="remove" />
+          <DialRemoveButton onClick={onRemove} className={!isTablet ? 'mt-7' : 'mt-0'} aria-label="remove" />
         </div>
       )}
     </div>
