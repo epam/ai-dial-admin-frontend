@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
+import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import DraftSchemaEditor from '@/src/components/Analytics/Tables/DraftSchemaEditor';
@@ -7,6 +8,21 @@ import { useDraftSchemaForm } from '@/src/components/Analytics/Tables/use-draft-
 import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
 import { AnalyticsTable, AnalyticsTableType, TableStatus } from '@/src/models/analytics/table';
 import { DraftSchemaForm } from '@/src/models/analytics/tables-ui';
+
+// Render DialTooltip content inline so the hint message is queryable (the real component only mounts
+// its content on hover, via a portal).
+vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
+  return {
+    ...actual,
+    DialTooltip: ({ children, tooltip }: { children: ReactNode; tooltip?: ReactNode }) => (
+      <>
+        {children}
+        {tooltip}
+      </>
+    ),
+  };
+});
 
 // DraftSchemaEditor is purely presentational: it renders whatever `draft` (a useDraftSchemaForm result)
 // hands it. A hand-built fixture keeps these tests focused on rendering/wiring, not on the hook's own
@@ -53,6 +69,21 @@ describe('DraftSchemaEditor source', () => {
     expect(screen.queryByText(AnalyticsTablesI18nKey.GrainKey)).not.toBeInTheDocument();
   });
 
+  test('the partition column label carries an info tooltip on the Date/Timestamp restriction', () => {
+    render(<DraftSchemaEditor table={source} draft={fixtureDraft()} />);
+    expect(screen.getByText(AnalyticsTablesI18nKey.PartitionColumnHint)).toBeInTheDocument();
+  });
+
+  test('hides Granularity until a partition column is chosen', () => {
+    render(<DraftSchemaEditor table={source} draft={fixtureDraft()} />);
+    expect(screen.queryByText(AnalyticsTablesI18nKey.Granularity)).not.toBeInTheDocument();
+  });
+
+  test('shows Granularity once a partition column is selected', () => {
+    render(<DraftSchemaEditor table={source} draft={fixtureDraft({ partitionColumn: 'event_time' })} />);
+    expect(screen.getByText(AnalyticsTablesI18nKey.Granularity)).toBeInTheDocument();
+  });
+
   test('shows the failure hint for a FAILED table', () => {
     render(<DraftSchemaEditor table={{ ...source, status: TableStatus.Failed }} draft={fixtureDraft()} />);
     expect(screen.getByText(AnalyticsTablesI18nKey.ActivationFailedHint)).toBeInTheDocument();
@@ -68,7 +99,7 @@ describe('DraftSchemaEditor source', () => {
     render(<DraftSchemaEditor table={source} draft={draft} />);
 
     // Required fields append a trailing "*" to the label, so match by substring rather than exact text.
-    fireEvent.change(screen.getByLabelText(AnalyticsTablesI18nKey.SourceName, { exact: false }), {
+    fireEvent.change(screen.getByLabelText(AnalyticsTablesI18nKey.ColumnName, { exact: false }), {
       target: { value: 'ts' },
     });
 

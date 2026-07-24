@@ -158,7 +158,7 @@ describe('QueryBuilder', () => {
     expect(localStorage.getItem('query-builder-rail-collapsed')).toBe('false');
   });
 
-  test('entering SQL seeds the editor from the backend translation', async () => {
+  test('entering SQL seeds the editor from the backend translation, formatted', async () => {
     const user = userEvent.setup();
     vi.mocked(translateQuery).mockResolvedValue({
       success: true,
@@ -170,7 +170,8 @@ describe('QueryBuilder', () => {
 
     const editor = (await screen.findByLabelText('sql-editor')) as HTMLTextAreaElement;
     expect(translateQuery).toHaveBeenCalled();
-    expect(editor.value).toContain('FROM dial_usage_log');
+    // Backend SQL is reformatted (one clause per line) rather than shown as raw text from the response.
+    expect(editor.value).toBe('SELECT\n  *\nFROM\n  dial_usage_log\nWHERE\n  request_time >= 0');
   });
 
   test('a translate failure surfaces the error and leaves the editor empty with Run disabled', async () => {

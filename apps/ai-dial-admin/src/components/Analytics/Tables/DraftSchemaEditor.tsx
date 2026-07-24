@@ -2,7 +2,8 @@
 
 import { FC } from 'react';
 
-import { DialSelectField } from '@epam/ai-dial-ui-kit';
+import { DialSelectField, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { IconInfoCircle } from '@tabler/icons-react';
 
 import ColumnRowsEditor from '@/src/components/Analytics/Tables/ColumnRowsEditor';
 import { useDraftSchemaForm } from '@/src/components/Analytics/Tables/use-draft-schema-form';
@@ -49,7 +50,14 @@ const DraftSchemaEditor: FC<Props> = ({ table, draft }) => {
           <DialSelectField
             id="draft-partition-col"
             containerClassName={STANDARD_CONTROL_WIDTH}
-            label={t(AnalyticsTablesI18nKey.PartitionColumn)}
+            label={
+              <span className="flex items-center gap-1">
+                <span>{t(AnalyticsTablesI18nKey.PartitionColumn)}</span>
+                <DialTooltip tooltip={<span>{t(AnalyticsTablesI18nKey.PartitionColumnHint)}</span>}>
+                  <IconInfoCircle size={14} className="text-secondary" />
+                </DialTooltip>
+              </span>
+            }
             options={[
               { value: '', label: t(AnalyticsTablesI18nKey.PartitionNone) },
               ...temporalNames.map((s) => ({ value: s, label: s })),
@@ -57,14 +65,16 @@ const DraftSchemaEditor: FC<Props> = ({ table, draft }) => {
             value={form.partitionColumn}
             onChange={(v) => update('partitionColumn', v as string)}
           />
-          <DialSelectField
-            id="draft-partition-gran"
-            containerClassName={STANDARD_CONTROL_WIDTH}
-            label={t(AnalyticsTablesI18nKey.Granularity)}
-            options={PARTITION_GRANULARITY_OPTIONS}
-            value={form.granularity}
-            onChange={(v) => update('granularity', v as PartitionGranularity | '')}
-          />
+          {form.partitionColumn && (
+            <DialSelectField
+              id="draft-partition-gran"
+              containerClassName={STANDARD_CONTROL_WIDTH}
+              label={t(AnalyticsTablesI18nKey.Granularity)}
+              options={PARTITION_GRANULARITY_OPTIONS}
+              value={form.granularity}
+              onChange={(v) => update('granularity', v as PartitionGranularity | '')}
+            />
+          )}
         </>
       ) : (
         <DialSelectField
