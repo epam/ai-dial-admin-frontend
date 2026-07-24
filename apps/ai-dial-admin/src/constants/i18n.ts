@@ -1079,6 +1079,7 @@ export enum ErrorI18nKey {
   MemoryError = 'Error.MemoryError',
   GPUError = 'Error.GPUError',
   AdvancedTimingsError = 'Error.AdvancedTimingsError',
+  AllowedRange = 'Error.AllowedRange',
 }
 
 export enum SourceI18nKey {
@@ -1850,6 +1851,26 @@ export enum TestSuitesI18nKey {
   DetachFailed = 'TestSuites.DetachFailed',
   AttachDatasetWarning = 'TestSuites.AttachDatasetWarning',
   PublicDatasetInfo = 'TestSuites.PublicDatasetInfo',
+  OverallScore = 'TestSuites.OverallScore',
+  OverallScoreDescription = 'TestSuites.OverallScoreDescription',
+  OverallScoreMean = 'TestSuites.OverallScoreMean',
+  OverallScoreMeanFormula = 'TestSuites.OverallScoreMeanFormula',
+  OverallScoreWeightedMean = 'TestSuites.OverallScoreWeightedMean',
+  OverallScoreWeightedMeanFormula = 'TestSuites.OverallScoreWeightedMeanFormula',
+  OverallScoreFunction = 'TestSuites.OverallScoreFunction',
+  OverallScoreMetricLabel = 'TestSuites.OverallScoreMetricLabel',
+  OverallScoreWeightLabel = 'TestSuites.OverallScoreWeightLabel',
+  OverallScoreFunctionLabel = 'TestSuites.OverallScoreFunctionLabel',
+  OverallScoreFunctionRocAuc = 'TestSuites.OverallScoreFunctionRocAuc',
+  OverallScoreFunctionParameters = 'TestSuites.OverallScoreFunctionParameters',
+  OverallScoreDatasetColumn = 'TestSuites.OverallScoreDatasetColumn',
+  OverallScoreParameterP = 'TestSuites.OverallScoreParameterP',
+  ScoreThreshold = 'TestSuites.ScoreThreshold',
+  ScoreThresholdDescription = 'TestSuites.ScoreThresholdDescription',
+  ScoreThresholdPass = 'TestSuites.ScoreThresholdPass',
+  ScoreThresholdCondition = 'TestSuites.ScoreThresholdCondition',
+  ScoreThresholdOtherwise = 'TestSuites.ScoreThresholdOtherwise',
+  ScoreThresholdFail = 'TestSuites.ScoreThresholdFail',
 }
 
 export enum DatasetsI18nKey {
