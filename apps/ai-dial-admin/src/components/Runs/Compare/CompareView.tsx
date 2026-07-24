@@ -75,6 +75,7 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
     state: tabState,
     setExecutionResultsState,
     setHeatMapState,
+    setSummaryState,
   } = useCompareViewTabState(primaryRunId, comparedRunId);
 
   const selectedRowRef = useRef(selectedRow);
@@ -339,6 +340,8 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
           setExecutionResultsState={setExecutionResultsState}
           heatMapState={tabState.heatMap}
           setHeatMapState={setHeatMapState}
+          summaryState={tabState.summary}
+          setSummaryState={setSummaryState}
         />
       </div>
 
