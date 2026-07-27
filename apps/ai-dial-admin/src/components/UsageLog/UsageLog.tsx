@@ -21,13 +21,7 @@ import {
 } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, TabsI18nKey, TelemetryI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
-import {
-  CONVERSATIONS_QUERY,
-  MCP_QUERY,
-  ROUTES_QUERY,
-  TOOLSET_DEPLOYMENT_PREFIX,
-  TRACES_QUERY,
-} from '@/src/constants/telemetry';
+import { CONVERSATIONS_QUERY, MCP_QUERY, ROUTES_QUERY, TRACES_QUERY } from '@/src/constants/telemetry';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
@@ -36,6 +30,7 @@ import { TimeFilterValue } from '@/src/models/time-range';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab, getUsageLogTabs } from '@/src/utils/tabs/utils';
 import { isToolsetRoute } from '@/src/utils/is-view';
+import { getEntityFilterName } from '@/src/utils/telemetry';
 
 interface Props {
   route: ApplicationRoute;
@@ -59,13 +54,7 @@ const UsageLog: FC<Props> = ({ route, className, entity, entityView, onTimeFilte
     onTimeFilterChange,
   });
 
-  const entityFilterName = useMemo(() => {
-    if (route === ApplicationRoute.AssetsToolsets) {
-      const path = (entity as unknown as { path?: string })?.path;
-      return path ? `${TOOLSET_DEPLOYMENT_PREFIX}${path}` : entity?.name || null;
-    }
-    return entity?.name || null;
-  }, [route, entity]);
+  const entityFilterName = useMemo(() => getEntityFilterName(route, entity), [route, entity]);
 
   const getData = useCallback((query: TelemetryQuery) => {
     return getReqRef.current(getDashboardData, query);
