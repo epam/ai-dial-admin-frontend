@@ -166,9 +166,13 @@ module.exports = {
           '0%': { opacity: '0' },
           '100%': { opacity: '1' },
         },
+        spin: {
+          to: { transform: 'rotate(1turn)' },
+        },
       },
       animation: {
         fadeIn: 'fadeIn 100ms ease-in',
+        'spin-steps': 'spin 0.75s steps(8) infinite',
       },
       typography: {
         DEFAULT: {

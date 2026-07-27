@@ -15,8 +15,8 @@ const baseFlags: FeatureFlags = {
   mcpRegistryEnabled: false,
   nimEnabled: false,
   hfEnabled: false,
-  runsCompareEnabled: false,
   analyticsEnabled: false,
+  queryAssistantEnabled: false,
 };
 
 const findDeploymentsGroup = (flags: FeatureFlags) =>

@@ -51,7 +51,6 @@ export default async function Layout({ children, params }: { children: ReactNode
     mcpRegistryEnabled: isValueTruthy(process.env.MCP_REGISTRY_ENABLED),
     nimEnabled: isValueTruthy(process.env.NIM_ENABLED),
     hfEnabled: isValueTruthy(process.env.HF_ENABLED),
-    runsCompareEnabled: isValueTruthy(process.env.RUNS_COMPARE_ENABLED),
     analyticsEnabled: isValueTruthy(process.env.ANALYTICS_ENABLED),
     queryAssistantEnabled:
       isValueTruthy(process.env.ANALYTICS_ENABLED) && !!process.env.DIAL_QUERY_ASSISTANT_DEPLOYMENT,
