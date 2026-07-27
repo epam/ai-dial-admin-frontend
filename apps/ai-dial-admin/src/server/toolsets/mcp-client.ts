@@ -1,9 +1,10 @@
 /**
- * Toolset try-out-tool, ported from the admin backend's `ToolCallService.callTool`: a real
- * MCP client session (initialize handshake + a single `callTool`) against DIAL Core's MCP
- * endpoint, opened and closed per request — no persistent session, matching the BE's own
- * lifecycle. Core applies the toolset's stored credentials server-side; this client only
- * needs to authenticate as the admin (bearer token), same as every other Core call.
+ * Toolset and application try-out-tool, ported from the admin backend's
+ * `ToolCallService.callTool`: a real MCP client session (initialize handshake + a single
+ * `callTool`) against DIAL Core's MCP endpoint, opened and closed per request — no persistent
+ * session, matching the BE's own lifecycle. Core applies the resource's stored credentials
+ * server-side; this client only needs to authenticate as the admin (bearer token), same as
+ * every other Core call.
  */
 
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
@@ -25,16 +26,26 @@ export const buildToolsetMcpUrl = (host: string, path: string): URL => {
 };
 
 /**
+ * Builds the absolute Core MCP endpoint URL for an application path. Core's application MCP
+ * route is deployment-scoped (`/v1/deployments/{deployment_name}/mcp`), not resource-path-scoped
+ * like the toolset route — but `DeploymentService.findDeployment` resolves a custom
+ * application's `deployment_name` as its full resource URL (same as `ToolSetService`), so the
+ * same prefixed-path construction as `buildToolsetMcpUrl` applies here too.
+ */
+export const buildApplicationMcpUrl = (host: string, path: string): URL => {
+  const prefixedPath = encodeCorePath(`${RESOURCE_TYPE_PREFIX[ResourceType.APPLICATION]}${path}`);
+  return new URL(`${normalizeUrl(host)}v1/deployments/${prefixedPath}/mcp`);
+};
+
+/**
  * Opens a short-lived MCP client session against Core, issues a single `callTool` request,
  * and closes the session — whether the call succeeds or fails.
  */
 export const callToolViaMcp = async (
-  host: string,
+  url: URL,
   token: Token,
-  path: string,
   callToolRequest: CallToolRequest['params'],
 ): Promise<ServerActionResponse> => {
-  const url = buildToolsetMcpUrl(host, path);
   const transport = new StreamableHTTPClientTransport(url, {
     requestInit: { headers: getAuthorizationHeader(token) },
   });

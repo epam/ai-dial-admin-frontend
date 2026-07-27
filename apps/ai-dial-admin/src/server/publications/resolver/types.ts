@@ -30,8 +30,6 @@ export interface PublicationTypeConfig {
 /**
  * The upstream calls publication resolution needs. Injected so the resolver stays
  * pure/testable and to avoid a circular import with `app/api/api`.
- *
- * Phase 1: asset get/put go to the admin BE (`assetsApi`); bucket/file go to Core.
  */
 export interface EnrichmentClients {
   getAsset: (token: Token, path: string, type: ResourceType, etag: string) => Promise<ServerActionResponse>;
