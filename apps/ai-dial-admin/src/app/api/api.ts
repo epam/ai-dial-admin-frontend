@@ -20,8 +20,6 @@ import { ActivityAuditApi } from '@/src/server/entities/activity-audit-api';
 import { AdaptersApi } from '@/src/server/entities/adapters-api';
 import { ApplicationRunnersApi } from '@/src/server/entities/application-runners-api';
 import { ApplicationsApi } from '@/src/server/entities/applications-api';
-import { AssetsApi } from '@/src/server/entities/assets/assets-api';
-import { FoldersApi } from '@/src/server/entities/assets/folders-api';
 import { CorePublicationsApi } from '@/src/server/entities/core-publications-api';
 import { InterceptorTemplatesApi } from '@/src/server/entities/interceptor-templates-api';
 import { InterceptorsApi } from '@/src/server/entities/interceptors-api';
@@ -78,10 +76,6 @@ export const routesApi = new RoutesApi({
   host: process.env.DIAL_ADMIN_API_URL,
 });
 
-export const foldersApi = new FoldersApi({
-  host: process.env.DIAL_ADMIN_API_URL,
-});
-
 export const utilityApi = new UtilityApi({
   host: process.env.DIAL_ADMIN_API_URL,
 });
@@ -97,10 +91,6 @@ export const interceptorTemplatesApi = new InterceptorTemplatesApi({
 });
 
 export const toolSetsApi = new ToolsetsApi({
-  host: process.env.DIAL_ADMIN_API_URL,
-});
-
-export const assetsApi = new AssetsApi({
   host: process.env.DIAL_ADMIN_API_URL,
 });
 

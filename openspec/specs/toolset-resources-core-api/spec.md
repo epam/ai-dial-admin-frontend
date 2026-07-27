@@ -1,7 +1,7 @@
 # toolset-resources-core-api Specification
 
 ## Purpose
-Toolset-resource list, get, create, update, delete, bulk-delete, move, JSON/zip export, JSON/zip import, discovered-tools, sign-in/sign-out, and try-out-tool executed directly against DIAL Core via the shared `core-asset-client` (or, for try-out-tool, a direct MCP client session), replacing the admin-BE proxy for these operations, while the FE-facing `Toolset`/`AssetToolset` contract, routes, and server-action signatures stay identical — CRUD/move created by archiving change `migrate-toolset-resources-to-core`, import/export/discovery/auth completed by archiving change `migrate-toolset-auth-discovery-import-to-core`, try-out-tool completed by archiving change `migrate-toolset-tryout-tool-to-core`. Toolsets have zero remaining admin-BE dependency, except that `tryOutAssetTool` for `ResourceType.APPLICATION` still routes through the admin BE pending the applications migration.
+Toolset-resource list, get, create, update, delete, bulk-delete, move, JSON/zip export, JSON/zip import, discovered-tools, sign-in/sign-out, and try-out-tool executed directly against DIAL Core via the shared `core-asset-client` (or, for try-out-tool, a direct MCP client session), replacing the admin-BE proxy for these operations, while the FE-facing `Toolset`/`AssetToolset` contract, routes, and server-action signatures stay identical — CRUD/move created by archiving change `migrate-toolset-resources-to-core`, import/export/discovery/auth completed by archiving change `migrate-toolset-auth-discovery-import-to-core`, try-out-tool completed by archiving change `migrate-toolset-tryout-tool-to-core`. Toolsets have zero remaining admin-BE dependency: `tryOutAssetTool` for `ResourceType.APPLICATION` now routes through Core too, completed by archiving change `finalize-assets-core-migration` alongside the prior toolset try-out-tool migration.
 
 ## Requirements
 
@@ -160,9 +160,26 @@ The system SHALL accept the same `{ toolSetPath: { path }, callToolRequest: { na
 - **WHEN** `tryOutAssetTool` is called with a toolset path and a `callToolRequest`
 - **THEN** the response shape matches what the admin-BE-backed implementation previously returned
 
-### Requirement: Application try-out-tool remains unaffected
-The system SHALL continue routing `tryOutAssetTool` calls for `ResourceType.APPLICATION` through the admin BE, unchanged by this capability.
+### Requirement: Application try-out-tool runs a direct MCP client session against Core
+The system SHALL invoke an application's tool directly against DIAL Core's application MCP endpoint by
+opening a short-lived MCP client session (initialize handshake, then a single `callTool` request),
+authenticated with the admin bearer token, and SHALL close that session after the call completes or
+fails — mirroring the toolset try-out-tool behavior, but addressed via Core's deployment-scoped MCP
+route rather than the toolset-scoped one.
 
-#### Scenario: Application resource type is unaffected
+#### Scenario: Try-out-tool calls Core's application MCP endpoint directly
 - **WHEN** `tryOutAssetTool` is called for `ResourceType.APPLICATION`
-- **THEN** the request is still routed through the admin BE, not DIAL Core
+- **THEN** an MCP client session is opened directly against DIAL Core's application (deployment-scoped)
+  MCP endpoint, not the admin BE
+
+#### Scenario: The session is closed after a successful call
+- **WHEN** an application tool call completes successfully
+- **THEN** the MCP client session is closed before the result is returned
+
+#### Scenario: The session is closed after a failed call
+- **WHEN** an application tool call fails
+- **THEN** the MCP client session is still closed, and a recognizable error response is returned
+
+#### Scenario: Request and response shapes are unchanged
+- **WHEN** `tryOutAssetTool` is called for `ResourceType.APPLICATION` with a path and a `callToolRequest`
+- **THEN** the response shape matches what the admin-BE-backed implementation previously returned

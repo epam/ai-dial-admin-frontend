@@ -2,7 +2,7 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { assetApi, assetsApi, toolsetOpsApi } from '@/src/app/api/api';
+import { assetApi, toolsetOpsApi } from '@/src/app/api/api';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { AssetToolset } from '@/src/models/dial/deployment-asset';
 import { DialToolsetResource, ToolsetAuthCredentialLevel } from '@/src/models/dial/resource';
@@ -17,7 +17,7 @@ import { bulkDeleteAssets } from '@/src/server/assets/bulk-delete';
 import { runAssetExportAction, runAssetImportAction } from '@/src/server/assets/import-export-action';
 import { moveAssets } from '@/src/server/assets/move';
 import { buildToolsetsExport, importToolsetsExport } from '@/src/server/toolsets/exim';
-import { callToolViaMcp } from '@/src/server/toolsets/mcp-client';
+import { buildApplicationMcpUrl, buildToolsetMcpUrl, callToolViaMcp } from '@/src/server/toolsets/mcp-client';
 import { buildToolsetsZip, extractToolsetsFromZip } from '@/src/server/toolsets/zip-exim';
 import { getAllowTools, getTransport } from '@/src/components/Assets/Resources/utils';
 
@@ -115,13 +115,11 @@ export async function exportToolsets(paths: string[], type?: ImportFileType) {
 export async function tryOutAssetTool(body: Record<string, unknown>, resourceType = ResourceType.TOOLSET) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
-  if (resourceType === ResourceType.TOOLSET) {
-    const { toolSetPath, callToolRequest } = body as {
-      toolSetPath: { path: string };
-      callToolRequest: { name: string; arguments?: Record<string, unknown> };
-    };
-    return callToolViaMcp(process.env.DIAL_CORE_API_URL || '', token, toolSetPath.path, callToolRequest);
-  }
-
-  return assetsApi.tryOutTool(body, token, resourceType);
+  const { toolSetPath, callToolRequest } = body as {
+    toolSetPath: { path: string };
+    callToolRequest: { name: string; arguments?: Record<string, unknown> };
+  };
+  const buildMcpUrl = resourceType === ResourceType.TOOLSET ? buildToolsetMcpUrl : buildApplicationMcpUrl;
+  const url = buildMcpUrl(process.env.DIAL_CORE_API_URL || '', toolSetPath.path);
+  return callToolViaMcp(url, token, callToolRequest);
 }
