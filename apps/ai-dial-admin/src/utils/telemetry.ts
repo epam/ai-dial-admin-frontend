@@ -11,6 +11,7 @@ import { TelemetryI18nKey } from '@/src/constants/i18n';
 import {
   TELEMETRY_DATASET_NAME,
   TELEMETRY_GRID_HEADERS_MAP,
+  TOOLSET_DEPLOYMENT_PREFIX,
   USAGE_LOG_COLUMN_ID_TO_SOURCE,
   USAGE_LOG_DEFAULT_ORDER_BY,
   USAGE_LOG_TEXT_OPERATOR_MAP,
@@ -23,6 +24,7 @@ import {
   routerFilterTypeConfig,
 } from '@/src/constants/telemetry/filters';
 import { USAGE_LOG_NUMERIC_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 import { ServerActionResponse } from '@/src/models/server-action';
 import {
   AgGridFilter,
@@ -37,9 +39,11 @@ import {
   UsageLogFilterModel,
 } from '@/src/models/telemetry';
 import { TimeRange } from '@/src/models/time-range';
+import { ApplicationRoute } from '@/src/types/routes';
 import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
 import { aggregateByDeployment } from '@/src/utils/consumption-aggregation';
 import { buildEntitiesConsumptionTree } from '@/src/utils/entities-consumption-tree';
+import { encodeCorePath } from '@/src/server/publications/path';
 
 export const getGridData = (data: TelemetryData): Record<string, string>[] => {
   return (
@@ -130,6 +134,19 @@ const getFormattedTimeFilter = (timePeriod: TimeRange) => {
       },
     },
   ];
+};
+
+/**
+ * Asset Toolsets carry a decoded `path` (folder/name segments already run through
+ * `decodeURIComponent`), but InfluxDB's `deployment` field stores the path exactly as it appeared
+ * on the wire — segment-encoded. Re-encoding here keeps the filter matching what Core recorded.
+ */
+export const getEntityFilterName = (route: ApplicationRoute, entity?: BaseEntity): string | null => {
+  if (route === ApplicationRoute.AssetsToolsets) {
+    const path = (entity as unknown as { path?: string })?.path;
+    return path ? `${TOOLSET_DEPLOYMENT_PREFIX}${encodeCorePath(path)}` : entity?.name || null;
+  }
+  return entity?.name || null;
 };
 
 export const getListingData = (data: TelemetryData): Record<string, string>[] => {
