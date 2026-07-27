@@ -2,11 +2,12 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { foldersApi } from '@/src/app/api/api';
+import { filesCoreApi } from '@/src/app/api/api';
 import { DialFolder } from '@/src/models/dial/folder';
 import { DialRule } from '@/src/models/dial/rule';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { ConflictResolutionPolicy } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
 import { ApplicationRoute } from '@/src/types/routes';
 import {
@@ -33,19 +34,15 @@ export async function updateRules(targetFolder: string, rules: DialRule[]) {
   return updateRulesCore(token, targetFolder, rules);
 }
 
-export async function createFolderWithFiles(body: FormData, type?: string, view?: ApplicationRoute) {
+export async function createFolderWithFiles(body: FormData, _type?: string, _view?: ApplicationRoute) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return foldersApi.createFolder(token, body, type, view);
-}
-
-export async function previewAppZip(body: FormData) {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return foldersApi.previewAppZipFiles(token, body);
-}
-
-export async function previewToolsetZip(body: FormData) {
-  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return foldersApi.previewToolsetZipFiles(token, body);
+  const config = JSON.parse(await (body.get('config') as Blob).text()) as {
+    path: string;
+    conflictResolutionStrategy: string;
+  };
+  const file = body.getAll('files')[0] as File;
+  const overwrite = config.conflictResolutionStrategy === ConflictResolutionPolicy.OVERRIDE;
+  return filesCoreApi.uploadFile(token, `${config.path}${file.name}`, file, { overwrite });
 }
 
 export async function removeFolder(path: string, resourceType: ResourceType) {
