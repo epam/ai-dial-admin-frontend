@@ -84,14 +84,6 @@ const InterfaceRow = ({
       <p className="dial-body-text font-semibold text-primary">{typeLabel}</p>
       <div className="flex items-start gap-x-2">
         <DialInput
-          id={`${fieldId}-deploymentName`}
-          labelProps={{ label: t(InterfacesI18nKey.DeploymentName) }}
-          placeholder={t(InterfacesI18nKey.DeploymentNamePlaceholder)}
-          value={deploymentName}
-          onChange={onChangeDeploymentNameValue}
-          disabled={disabled}
-        />
-        <DialInput
           id={fieldId}
           labelProps={{ label: t(InterfacesI18nKey.BaseUrl), required: true }}
           placeholder={t(InterfacesI18nKey.BaseUrlPlaceholder, { type: typeLabel })}
@@ -101,6 +93,14 @@ const InterfaceRow = ({
           error={error?.text}
           invalid={!!error}
           containerClassName={STANDARD_CONTROL_WIDTH}
+        />
+        <DialInput
+          id={`${fieldId}-deploymentName`}
+          labelProps={{ label: t(InterfacesI18nKey.DeploymentName) }}
+          placeholder={t(InterfacesI18nKey.DeploymentNamePlaceholder)}
+          value={deploymentName}
+          onChange={onChangeDeploymentNameValue}
+          disabled={disabled}
         />
         {!disabled && <DialRemoveButton aria-label={t(ButtonsI18nKey.Delete)} onClick={onDelete} className="mt-7" />}
       </div>
