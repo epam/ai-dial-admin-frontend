@@ -7,7 +7,6 @@ import { EntitiesGridData } from '@/src/models/entities-grid-data';
 import {
   DESCRIPTION_COLUMN,
   DISPLAY_NAME_COLUMN_WITH_SORT,
-  NAME_COLUMN,
   VERSION_COLUMN,
 } from '@/src/constants/grid-columns/base-columns';
 import {
@@ -75,7 +74,6 @@ describe('ExportConfig :: getDeploymentColDefs', () => {
 
     expect(columns).toContainEqual(DISPLAY_NAME_COLUMN_WITH_SORT);
     expect(columns).toContainEqual(DESCRIPTION_COLUMN);
-    expect(columns).toContainEqual(NAME_COLUMN);
     expect(columns).not.toContainEqual(VERSION_COLUMN);
   });
 
@@ -85,13 +83,12 @@ describe('ExportConfig :: getDeploymentColDefs', () => {
     expect(columns).toContainEqual(DISPLAY_NAME_COLUMN_WITH_SORT);
     expect(columns).toContainEqual(DESCRIPTION_COLUMN);
     expect(columns).toContainEqual(VERSION_COLUMN);
-    expect(columns).toContainEqual(NAME_COLUMN);
   });
 
-  test('image tab columns are in correct order: Display name, Description, Version, ID', () => {
+  test('image tab columns are in correct order: Display name, Description, Version', () => {
     const columns = getDeploymentColDefs((key) => key, undefined, DeploymentExportEntityType.IMAGE);
     const fields = columns.map((c) => c.field);
-    expect(fields).toEqual(['displayName', 'description', 'version', 'name']);
+    expect(fields).toEqual(['displayName', 'description', 'version']);
   });
 
   test('appends action column when remove callback provided', () => {

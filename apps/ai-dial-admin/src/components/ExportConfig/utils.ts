@@ -6,7 +6,6 @@ import {
   DESCRIPTION_COLUMN,
   DISPLAY_NAME_COLUMN_WITH_SORT,
   DISPLAY_VERSION_COLUMN,
-  NAME_COLUMN,
 } from '@/src/constants/grid-columns/base-columns';
 import { BASE_COLUMNS, BASE_KEYS_COLUMNS, LIST_RUNNER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ExportI18nKey, MenuI18nKey } from '@/src/constants/i18n';
@@ -44,7 +43,7 @@ export const getActualColDefs = (
 ): ColDef[] => {
   let columns: ColDef[] = [...BASE_COLUMNS];
   if (type === EntityType.MODEL) {
-    columns = [DISPLAY_NAME_COLUMN_WITH_SORT, DISPLAY_VERSION_COLUMN, DESCRIPTION_COLUMN, NAME_COLUMN];
+    columns = [DISPLAY_NAME_COLUMN_WITH_SORT, DISPLAY_VERSION_COLUMN, DESCRIPTION_COLUMN];
   }
 
   if (
