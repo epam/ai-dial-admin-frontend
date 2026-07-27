@@ -6,7 +6,7 @@ export interface AnalyticsTablePermissions {
   canCreate: boolean;
   /** Delete the table (FULL_ADMIN, never a system table). */
   canDelete: boolean;
-  /** View and edit the table's role lists (FULL_ADMIN; the access API is admin-only). */
+  /** View and edit the table's role lists (FULL_ADMIN, never a system table; the access API is admin-only). */
   canManageRoles: boolean;
   /** Insert rows — the backend-reported per-table write capability. */
   canWrite: boolean;
@@ -24,7 +24,7 @@ export const useAnalyticsTablePermissions = (table?: AnalyticsTable): AnalyticsT
   return {
     canCreate: isFullAdmin,
     canDelete: isFullAdmin && !table?.system,
-    canManageRoles: isFullAdmin,
+    canManageRoles: isFullAdmin && !table?.system,
     canWrite: table?.permissions?.write ?? !isEnableAuth,
     canModify: table?.permissions?.modify ?? !isEnableAuth,
   };

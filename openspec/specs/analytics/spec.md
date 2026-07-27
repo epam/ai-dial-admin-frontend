@@ -920,12 +920,13 @@ Adding columns SHALL be available from the header via a form popup reusing the c
 
 The table detail view (`components/Analytics/Tables/TableDetailView.tsx`) SHALL gate its mutating affordances independently:
 
+- **Manage access** SHALL be shown only when `canManageRoles` (`FULL_ADMIN` and non-system).
 - **Delete table** SHALL be shown only when `canDelete` (`FULL_ADMIN` and non-system).
 - For an `ACTIVE` table, **Add rows** (inserting rows) and **Add columns** (schema evolution) SHALL be offered as items of a single header **Add** dropdown rather than two standalone buttons; **Add rows** SHALL be shown only when `canWrite`, **Add columns** only when `canModify`, and the dropdown itself SHALL NOT render when neither is available.
 - Per-column **edit/drop** (grid action column), **inline column rename**, column-metadata edits, and **description edits** SHALL be shown only when `canModify`.
 - Header actions SHALL be ordered **Manage access, Delete table, Add** (a not-yet-`ACTIVE` table shows **Save** in place of **Add** — see "Define and materialize a table schema").
 
-Because the backend reports `permissions {false,false}` for system tables, these edit affordances hide for system tables without a separate check.
+Because the backend reports `permissions {false,false}` for system tables, the write/modify-gated affordances (Add rows, Add columns, per-column edit/drop, inline rename, description edits) hide for system tables without a separate check. **Manage access** and **Delete table** are gated on `FULL_ADMIN`, which the backend does not scope per-table, so each carries its own explicit `!table.system` check.
 
 #### Scenario: Write-capable, not modify-capable
 
@@ -946,6 +947,11 @@ Because the backend reports `permissions {false,false}` for system tables, these
 
 - **WHEN** a non-system table reports edit permissions but the user is not `FULL_ADMIN`
 - **THEN** the "Delete table" button is absent
+
+#### Scenario: Manage access is hidden for a system table even for a full admin
+
+- **WHEN** a `FULL_ADMIN` opens a system table's detail page
+- **THEN** the "Manage access" button is absent
 
 #### Scenario: Header actions follow the fixed order
 
@@ -1003,7 +1009,7 @@ Every delete-table confirmation dialog — the catalog list's row delete action 
 
 ### Requirement: Full-admin per-table role management panel
 
-The table detail view SHALL provide a panel to view and manage the table's `write` / `modify` provider-role lists, backed by `AnalyticsDataApi.getTableAccess` / `replaceTableAccess` (`GET` / `PUT /v1/tables/{name}/access`) and a `TableAccess { write: string[]; modify: string[] }` model. Because the backend restricts `GET /access` to `FULL_ADMIN`, the panel SHALL be shown only when `canManageRoles` (`FULL_ADMIN`); a save SHALL full-replace the lists via `replaceTableAccess`. Role names SHALL be picked as checkboxes from the DIAL Roles catalog (fetched via `RolesApi.getRolesList`, the same source other admin surfaces such as App Routes already use for role selection) rather than typed free text — each option's value is the `DialRole.name`, which is also the raw provider-role string the backend matches against; there is no separate role id. While the initial fetch (the table's current access and the roles catalog, requested together) is in flight the panel SHALL show a loading spinner in place of the role pickers. A failed access fetch and a failed roles-catalog fetch SHALL each surface their own error notification (the two requests can fail independently); Save SHALL stay disabled until the access fetch succeeds.
+The table detail view SHALL provide a panel to view and manage the table's `write` / `modify` provider-role lists, backed by `AnalyticsDataApi.getTableAccess` / `replaceTableAccess` (`GET` / `PUT /v1/tables/{name}/access`) and a `TableAccess { write: string[]; modify: string[] }` model. Because the backend restricts `GET /access` to `FULL_ADMIN` and system tables carry no per-table roles to manage, the panel SHALL be shown only when `canManageRoles` (`FULL_ADMIN` and non-system); a save SHALL full-replace the lists via `replaceTableAccess`. Role names SHALL be picked as checkboxes from the DIAL Roles catalog (fetched via `RolesApi.getRolesList`, the same source other admin surfaces such as App Routes already use for role selection) rather than typed free text — each option's value is the `DialRole.name`, which is also the raw provider-role string the backend matches against; there is no separate role id. While the initial fetch (the table's current access and the roles catalog, requested together) is in flight the panel SHALL show a loading spinner in place of the role pickers. A failed access fetch and a failed roles-catalog fetch SHALL each surface their own error notification (the two requests can fail independently); Save SHALL stay disabled until the access fetch succeeds.
 
 #### Scenario: Full admin edits the role lists
 
@@ -1013,6 +1019,11 @@ The table detail view SHALL provide a panel to view and manage the table's `writ
 #### Scenario: Panel hidden for non-admins
 
 - **WHEN** the detail view renders for a user who is not `FULL_ADMIN`
+- **THEN** the role-management panel is not shown
+
+#### Scenario: Panel hidden for system tables even for a full admin
+
+- **WHEN** a `FULL_ADMIN` opens a system table's detail view
 - **THEN** the role-management panel is not shown
 
 #### Scenario: Loading spinner while fetching
@@ -1032,7 +1043,7 @@ The table detail view SHALL provide a panel to view and manage the table's `writ
 
 ### Requirement: System-owned tables are read-only
 
-The catalog and detail views SHALL reflect the table's server-provided `system` flag. System-owned tables are seeded server-side and reject every modifying request (`409 table_is_system`), so the UI SHALL NOT offer modify actions for them: in the catalog the row's delete action SHALL be hidden and a System indicator SHALL be shown; in the detail view the delete-table / write-rows / add-columns actions and the per-column edit/drop actions and inline rename SHALL be suppressed, replaced by a read-only indicator. System tables SHALL remain fully viewable and navigable, including their column display names and descriptions.
+The catalog and detail views SHALL reflect the table's server-provided `system` flag. System-owned tables are seeded server-side and reject every modifying request (`409 table_is_system`), so the UI SHALL NOT offer modify actions for them: in the catalog the row's delete action SHALL be hidden and a System indicator SHALL be shown; in the detail view the manage-access / delete-table / write-rows / add-columns actions and the per-column edit/drop actions and inline rename SHALL be suppressed, replaced by a read-only indicator. System tables SHALL remain fully viewable and navigable, including their column display names and descriptions.
 
 #### Scenario: System table in the catalog
 
@@ -1043,7 +1054,7 @@ The catalog and detail views SHALL reflect the table's server-provided `system` 
 #### Scenario: System table detail is read-only
 
 - **WHEN** the user opens a system table's detail page
-- **THEN** the delete-table, write-rows, and add-columns actions are absent and a read-only indicator is shown
+- **THEN** the manage-access, delete-table, write-rows, and add-columns actions are absent and a read-only indicator is shown
 - **AND** the column grid offers no edit/drop actions and no inline editing
 - **AND** the table, its columns, and their display names and descriptions remain viewable
 
@@ -1055,8 +1066,8 @@ The system SHALL expose, on `AppContext`, the capability inputs for Analytics ta
 `permissions: { write: boolean; modify: boolean }` object supplied by the data-access service. A hook
 `useAnalyticsTablePermissions(table?)` (`src/hooks/`) SHALL derive:
 
-- `canCreate` and `canManageRoles` SHALL equal `isFullAdmin`.
-- `canDelete` SHALL equal `isFullAdmin && !table.system`.
+- `canCreate` SHALL equal `isFullAdmin`.
+- `canDelete` and `canManageRoles` SHALL equal `isFullAdmin && !table.system`.
 - `canWrite` SHALL equal `table.permissions.write` when present, otherwise `!isEnableAuth`.
 - `canModify` SHALL equal `table.permissions.modify` when present, otherwise `!isEnableAuth`.
 
@@ -1072,11 +1083,11 @@ The system SHALL expose, on `AppContext`, the capability inputs for Analytics ta
 - **THEN** `canWrite` is `true`, `canModify` is `false`, and `canCreate`/`canDelete`/`canManageRoles`
   are `false`
 
-#### Scenario: System table exposes no edits
+#### Scenario: System table exposes no edits, even for a full admin
 
 - **WHEN** a system table reports `permissions {write:false, modify:false}` (as the backend does for
-  every caller)
-- **THEN** `canWrite`, `canModify`, and `canDelete` are `false`
+  every caller) and the user is `FULL_ADMIN`
+- **THEN** `canWrite`, `canModify`, `canDelete`, and `canManageRoles` are all `false`
 
 #### Scenario: Missing permissions default safely
 
