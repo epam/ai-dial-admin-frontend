@@ -33,12 +33,12 @@ describe('getSystemRollbackColumns', () => {
 
   test('returns BASE_COLUMNS for MODEL', () => {
     const cols = getSystemRollbackColumns(ActivityAuditResourceType.MODEL, t);
-    expect(cols.length).toEqual(15);
+    expect(cols.length).toEqual(14);
   });
 
   test('returns BASE_COLUMNS for APPLICATION', () => {
     const cols = getSystemRollbackColumns(ActivityAuditResourceType.APPLICATION, t);
-    expect(cols.length).toEqual(13);
+    expect(cols.length).toEqual(12);
   });
 
   test('returns BASE_COLUMNS for INTERCEPTOR TEMPLATE', () => {
