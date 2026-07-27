@@ -21,7 +21,7 @@ import { DeploymentMetricsI18nKey, ButtonsI18nKey, ErrorI18nKey } from '@/src/co
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DeploymentMetrics } from '@/src/models/deployments/metrics';
-import { INFERENCE_TASK } from '@/src/types/deployments/containers';
+import { CONTAINER_TYPE, INFERENCE_TASK } from '@/src/types/deployments/containers';
 import { MetricsBlockKey } from '@/src/types/deployments/metrics';
 import { ApplicationRoute } from '@/src/types/routes';
 import { filterCardsByTask } from '@/src/components/Containers/View/Metrics/utils';
@@ -31,9 +31,10 @@ interface Props {
   containerId?: string;
   route: ApplicationRoute;
   inferenceTask?: INFERENCE_TASK;
+  containerType?: CONTAINER_TYPE;
 }
 
-const Metrics: FC<Props> = ({ containerId, route, inferenceTask }) => {
+const Metrics: FC<Props> = ({ containerId, route, inferenceTask, containerType }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
 
@@ -88,6 +89,12 @@ const Metrics: FC<Props> = ({ containerId, route, inferenceTask }) => {
     // While loading, show inference sections so their cards render the loading state.
     const servingAvailable = loading || !!metrics?.availability?.[MetricsBlockKey.Serving]?.available;
     const operationalAvailable = loading || !!metrics?.availability?.[MetricsBlockKey.Operational]?.available;
+    // GPU telemetry is engine-independent (resources.gpu can be available for any GPU-requesting
+    // deployment, NIM included), so it needs its own type gate — GPU cards are supported for
+    // INFERENCE (HF) Model Servings only, not NIM.
+    const gpuAvailable =
+      containerType === CONTAINER_TYPE.HF &&
+      (loading || !!metrics?.availability?.[MetricsBlockKey.ResourcesGpu]?.available);
 
     // Throughput (half) pairs beside Scale & Health; when it isn't shown, Scale & Health spans full width.
     const showThroughput = isModelServing && servingAvailable;
@@ -109,7 +116,7 @@ const Metrics: FC<Props> = ({ containerId, route, inferenceTask }) => {
 
     result.push({
       titleKey: COMPUTE_TITLE,
-      cards: [...COMPUTE_BASE_CARDS, ...(isModelServing ? COMPUTE_INFERENCE_CARDS : [])],
+      cards: [...COMPUTE_BASE_CARDS, ...(isModelServing && gpuAvailable ? COMPUTE_INFERENCE_CARDS : [])],
     });
 
     // Latency / Load are inference-only, gated by the relevant block availability.
@@ -126,7 +133,7 @@ const Metrics: FC<Props> = ({ containerId, route, inferenceTask }) => {
     return result
       .map((section) => ({ ...section, cards: filterCardsByTask(section.cards, inferenceTask) }))
       .filter((section) => section.cards.length > 0);
-  }, [route, loading, metrics, inferenceTask]);
+  }, [route, loading, metrics, inferenceTask, containerType]);
 
   return (
     <div className="flex flex-col gap-6 overflow-auto">

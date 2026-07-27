@@ -42,6 +42,22 @@ export const formatMemoryBytes = (bytes: number | null): { value: number; unit: 
   return { value: Math.round(value * 10) / 10, unit: BYTE_UNITS[index] };
 };
 
+// Format a used/total byte pair in the total's unit, for gauges needing a shared scale (e.g. "14.3 / 40 GB").
+export const formatMemoryPair = (
+  used: number | null,
+  total: number | null,
+): { used: number; total: number; unit: string } | null => {
+  if (used === null || total === null || total <= 0) {
+    return null;
+  }
+  const totalFormatted = formatMemoryBytes(total);
+  if (!totalFormatted) {
+    return null;
+  }
+  const divisor = total / totalFormatted.value;
+  return { used: Math.round((used / divisor) * 10) / 10, total: totalFormatted.value, unit: totalFormatted.unit };
+};
+
 // --- Threshold → status helpers (worst-of rollup happens at section/overall level) ---
 
 export const replicaStatus = (ready: number | null, total: number | null): MetricStatus => {
@@ -68,8 +84,8 @@ export const errorRatioStatus = (percent: number | null): MetricStatus => {
   return percent > 0.5 ? MetricStatus.Warn : MetricStatus.Ok;
 };
 
-// Input is the KV-cache usage ratio (0–1).
-export const kvCacheStatus = (ratio: number | null): MetricStatus => {
+// Shared 0–1 ratio gauge thresholds (KV-cache usage, GPU memory usage, GPU utilization).
+export const ratioGaugeStatus = (ratio: number | null): MetricStatus => {
   if (ratio === null) {
     return MetricStatus.NoData;
   }
@@ -77,4 +93,13 @@ export const kvCacheStatus = (ratio: number | null): MetricStatus => {
     return MetricStatus.Crit;
   }
   return ratio > 0.7 ? MetricStatus.Warn : MetricStatus.Ok;
+};
+
+// Average a nullable per-pod numeric field across pods (e.g. GPU utilization); null when nothing contributes.
+export const avgPodValue = (
+  metrics: DeploymentMetrics,
+  pick: (pod: PodResourceUsage) => number | null,
+): number | null => {
+  const values = pickPodValues(metrics, pick);
+  return values.length ? values.reduce((acc, value) => acc + value, 0) / values.length : null;
 };
