@@ -57,7 +57,7 @@ describe('useAnalyticsTablePermissions', () => {
     expect(result.current.canModify).toBe(false);
   });
 
-  test('system table: delete is false even for a full admin', () => {
+  test('system table: delete and manage roles are false even for a full admin', () => {
     ctx.isFullAdmin = true;
     const { result } = renderHook(() =>
       useAnalyticsTablePermissions(table({ system: true, permissions: perms(false, false) })),
@@ -65,7 +65,7 @@ describe('useAnalyticsTablePermissions', () => {
     expect(result.current.canDelete).toBe(false);
     expect(result.current.canWrite).toBe(false);
     expect(result.current.canModify).toBe(false);
-    expect(result.current.canManageRoles).toBe(true);
+    expect(result.current.canManageRoles).toBe(false);
   });
 
   test('missing permissions default to read-only when auth is enabled', () => {
