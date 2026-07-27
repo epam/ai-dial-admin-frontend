@@ -1,6 +1,7 @@
 import {
   buildUsageLogQuery,
   extractTelemetryMaxRangeMs,
+  getEntityFilterName,
   getListingData,
   getGridData,
   getSingleValueChartData,
@@ -20,7 +21,9 @@ import { describe, test, vi, expect } from 'vitest';
 
 import { lineChartDefaultOptions } from '@/src/components/Telemetry/Dashboards/LineChart/constants';
 import { TRACES_QUERY } from '@/src/constants/telemetry';
+import { BaseEntity } from '@/src/models/dial/base-entity';
 import { TimeRange } from '@/src/models/time-range';
+import { ApplicationRoute } from '@/src/types/routes';
 import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
 
 describe('Utils :: telemetry :: getListingData', () => {
@@ -245,6 +248,29 @@ describe('Utils :: telemetry :: getFormattedDataFilters', () => {
   test('returns empty array for no filters and no entityName', () => {
     const result = getFormattedDataFilters([], null);
     expect(result).toEqual([]);
+  });
+});
+
+describe('Utils :: telemetry :: getEntityFilterName', () => {
+  test('encodes a toolset path with special characters for AssetsToolsets route', () => {
+    const entity = { name: 'als-api-key', path: 'public/ALS toolsets/als-api-key__1' } as unknown as BaseEntity;
+    const result = getEntityFilterName(ApplicationRoute.AssetsToolsets, entity);
+    expect(result).toEqual('toolsets/public/ALS%20toolsets/als-api-key__1');
+  });
+
+  test('falls back to entity name when AssetsToolsets entity has no path', () => {
+    const entity = { name: 'als-api-key' } as unknown as BaseEntity;
+    expect(getEntityFilterName(ApplicationRoute.AssetsToolsets, entity)).toEqual('als-api-key');
+  });
+
+  test('returns entity name for a non-AssetsToolsets route, ignoring any path', () => {
+    const entity = { name: 'als-api-key', path: 'public/ALS toolsets/als-api-key__1' } as unknown as BaseEntity;
+    expect(getEntityFilterName(ApplicationRoute.Toolsets, entity)).toEqual('als-api-key');
+  });
+
+  test('returns null when no entity is provided', () => {
+    expect(getEntityFilterName(ApplicationRoute.AssetsToolsets, undefined)).toBeNull();
+    expect(getEntityFilterName(ApplicationRoute.Toolsets, undefined)).toBeNull();
   });
 });
 

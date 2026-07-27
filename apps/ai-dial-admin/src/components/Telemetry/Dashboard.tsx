@@ -6,7 +6,6 @@ import {
   DEFAULT_REFRESH_TIME,
   MCP_TOOL_CALLS_EXTRA_CONDITIONS,
   MCP_TOOLS_CONSUMPTION_EXTRA_CONDITIONS,
-  TOOLSET_DEPLOYMENT_PREFIX,
 } from '@/src/constants/telemetry';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useTimeFilter } from '@/src/hooks/use-time-filter';
@@ -16,7 +15,7 @@ import { TimeFilterValue } from '@/src/models/time-range';
 import { ApplicationRoute } from '@/src/types/routes';
 import { DASHBOARD_VIEW_TYPE } from '@/src/types/telemetry';
 import { isToolsetRoute } from '@/src/utils/is-view';
-import { getFormattedFilters } from '@/src/utils/telemetry';
+import { getEntityFilterName, getFormattedFilters } from '@/src/utils/telemetry';
 import { ChartResolution, getChartResolution } from '@/src/utils/time-filter/get-chart-resolution';
 import { FC, useCallback, useMemo, useRef, useState } from 'react';
 import RouteDashboard from './Dashboards/Route/RouteDashboard';
@@ -47,13 +46,7 @@ const Dashboard: FC<Props> = ({ route, entity, defaultTimeFilter, onTimeFilterCh
   const isMcpDashboards = isMcpOnly || viewType === DASHBOARD_VIEW_TYPE.Mcp;
   const isRouteDashboards = viewType === DASHBOARD_VIEW_TYPE.Route;
 
-  const entityFilterName = useMemo(() => {
-    if (route === ApplicationRoute.AssetsToolsets) {
-      const path = (entity as unknown as { path?: string })?.path;
-      return path ? `${TOOLSET_DEPLOYMENT_PREFIX}${path}` : entity?.name || null;
-    }
-    return entity?.name || null;
-  }, [route, entity]);
+  const entityFilterName = useMemo(() => getEntityFilterName(route, entity), [route, entity]);
 
   const getData = useCallback(
     (input: QueryInput) => {
