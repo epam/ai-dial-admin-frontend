@@ -44,6 +44,7 @@ const SINGLE_TYPE = [DeploymentInterfaceType.OpenAIChatCompletions];
 
 const getBaseUrlInput = () => screen.getByRole('textbox', { name: new RegExp(`^${InterfacesI18nKey.BaseUrl}`) });
 const getDeploymentNameInput = () => screen.getByRole('textbox', { name: InterfacesI18nKey.DeploymentName });
+const getToggleButton = () => screen.getByRole('button', { name: InterfacesI18nKey.ToggleDeploymentName });
 
 describe('InterfacesField', () => {
   test('single allowed type: clicking Add creates the inputs directly, no dropdown', async () => {
@@ -100,7 +101,7 @@ describe('InterfacesField', () => {
     await user.selectOptions(screen.getByRole('combobox'), DeploymentInterfaceType.AnthropicMessages);
 
     expect(onChangeEntity).toHaveBeenCalledWith({
-      interfaces: { [DeploymentInterfaceType.AnthropicMessages]: { baseUrl: '', deploymentName: '' } },
+      interfaces: { [DeploymentInterfaceType.AnthropicMessages]: { baseUrl: '' } },
     });
   });
 
@@ -167,6 +168,7 @@ describe('InterfacesField', () => {
       />,
     );
 
+    await user.click(getToggleButton());
     await user.type(getDeploymentNameInput(), 'x');
 
     expect(onChangeEntity).toHaveBeenCalledWith({
@@ -236,7 +238,11 @@ describe('InterfacesField', () => {
   test('disabled: hides add/delete controls and disables inputs', () => {
     render(
       <InterfacesField
-        entity={{ interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: 'https://x' } } }}
+        entity={{
+          interfaces: {
+            [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: 'https://x', deploymentName: 'dep' },
+          },
+        }}
         onChangeEntity={vi.fn()}
         allowedTypes={SINGLE_TYPE}
         disabled
@@ -259,5 +265,52 @@ describe('InterfacesField', () => {
     );
 
     expect(screen.getByText(InterfacesI18nKey.OpenAIChatCompletions)).toBeInTheDocument();
+  });
+
+  test('chat completions: deployment name is hidden until the toggler is expanded', async () => {
+    const user = userEvent.setup();
+    render(
+      <InterfacesField
+        entity={{ interfaces: { [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: 'https://x' } } }}
+        onChangeEntity={vi.fn()}
+        allowedTypes={SINGLE_TYPE}
+      />,
+    );
+
+    expect(screen.queryByRole('textbox', { name: InterfacesI18nKey.DeploymentName })).not.toBeInTheDocument();
+
+    await user.click(getToggleButton());
+
+    expect(getDeploymentNameInput()).toBeInTheDocument();
+  });
+
+  test('chat completions: an existing deployment name auto-expands the row', () => {
+    render(
+      <InterfacesField
+        entity={{
+          interfaces: {
+            [DeploymentInterfaceType.OpenAIChatCompletions]: { baseUrl: 'https://x', deploymentName: 'dep' },
+          },
+        }}
+        onChangeEntity={vi.fn()}
+        allowedTypes={SINGLE_TYPE}
+      />,
+    );
+
+    expect(getDeploymentNameInput()).toBeInTheDocument();
+  });
+
+  test('non-chat types: render only a base URL with no toggler or deployment name', () => {
+    render(
+      <InterfacesField
+        entity={{ interfaces: { [DeploymentInterfaceType.AnthropicMessages]: { baseUrl: 'https://x' } } }}
+        onChangeEntity={vi.fn()}
+        allowedTypes={MULTI_TYPES}
+      />,
+    );
+
+    expect(getBaseUrlInput()).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: InterfacesI18nKey.ToggleDeploymentName })).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: InterfacesI18nKey.DeploymentName })).not.toBeInTheDocument();
   });
 });

@@ -1502,6 +1502,7 @@ export enum InterfacesI18nKey {
   DeploymentNamePlaceholder = 'Interfaces.DeploymentNamePlaceholder',
   InfoBaseUrl = 'Interfaces.InfoBaseUrl',
   InfoDeploymentName = 'Interfaces.InfoDeploymentName',
+  ToggleDeploymentName = 'Interfaces.ToggleDeploymentName',
 }
 
 export enum ImagesI18nKey {
