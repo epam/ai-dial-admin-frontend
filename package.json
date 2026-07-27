@@ -125,8 +125,9 @@
     "follow-redirects": "1.16.0",
     "tmp": "0.2.7",
     "yaml": "2.8.3",
-    "postcss": "^8.5.12",
-    "form-data": "4.0.6"
+    "postcss": "^8.5.18",
+    "form-data": "4.0.6",
+    "brace-expansion": "5.0.8"
   },
   "engines": {
     "node": ">=24.12.0",
