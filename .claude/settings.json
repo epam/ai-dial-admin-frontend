@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Grep|Bash|Edit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/block-env-local-access.sh\"",
+            "timeout": 10,
+            "statusMessage": "Checking for local env file access"
+          }
+        ]
+      }
+    ]
+  }
+}
