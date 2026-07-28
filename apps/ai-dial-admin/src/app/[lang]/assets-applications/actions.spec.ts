@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { assetApi, assetsApi, externalServiceOpsApi, toolsetOpsApi } from '@/src/app/api/api';
+import { assetApi, externalServiceOpsApi, toolsetOpsApi } from '@/src/app/api/api';
 import * as eximModule from '@/src/server/applications/exim';
 import * as zipEximModule from '@/src/server/applications/zip-exim';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -57,7 +57,6 @@ describe('Assets application :: server actions', () => {
 
     expect(getUserToken).toHaveBeenCalled();
     expect(assetApi.getMergedWithEtag).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.APPLICATION, 'app-path', 'etag');
-    expect(assetsApi.getAsset).not.toHaveBeenCalled();
     expect(result.response?.validityState).toBeUndefined();
   });
 

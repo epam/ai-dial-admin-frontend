@@ -1,7 +1,7 @@
 # folders-core-api Specification
 
 ## Purpose
-Folder listing (cross-type merge), rules get/update (via Core publications create+approve), and folder delete/move (cross-type fan-out with unpublish-via-publication semantics) executed directly against DIAL Core, replacing the admin-BE proxy, while `FoldersStorage`/`RuleFolderContext`, routes, and the `folders-storage/actions.ts` signatures stay identical — created by archiving change `migrate-folders-to-core`. This is the capstone of the assets→Core migration: `FolderService` makes no direct Core calls of its own, instead fanning out to the five per-type Core clients and the Core publications client. Import-related folder actions (`createFolderWithFiles`, the three `previewXZip` actions) remain on the admin BE, deferred to the corresponding per-type fast-follows.
+Folder listing (cross-type merge), rules get/update (via Core publications create+approve), and folder delete/move (cross-type fan-out with unpublish-via-publication semantics) executed directly against DIAL Core, replacing the admin-BE proxy, while `FoldersStorage`/`RuleFolderContext`, routes, and the `folders-storage/actions.ts` signatures stay identical — created by archiving change `migrate-folders-to-core`. This is the capstone of the assets→Core migration: `FolderService` makes no direct Core calls of its own, instead fanning out to the five per-type Core clients and the Core publications client. Folders have zero remaining admin-BE dependency: `createFolderWithFiles` (Files view) is Core-native, and the unused `previewAppZip`/`previewToolsetZip` actions were deleted as dead code rather than migrated — completed by archiving change `finalize-assets-core-migration` alongside the original `migrate-folders-to-core`.
 
 ## Requirements
 
@@ -86,3 +86,17 @@ The system SHALL add a `createPublication` operation (Core `POST /v1/ops/publica
 #### Scenario: Create is used only by folder flows
 - **WHEN** `createPublication` is invoked
 - **THEN** the caller is folder rules-update or folder-delete logic, not a publication-authoring UI action
+
+### Requirement: Files-view folder creation uploads directly via Core
+The system SHALL create a folder in the Files view by uploading an empty marker file to the target
+path directly via the Core files client, with no admin-BE involvement. `previewAppZip` and
+`previewToolsetZip` — the two other admin-BE-backed folder-storage actions with no remaining callers —
+SHALL be removed rather than migrated, since there is no live behavior to preserve for either.
+
+#### Scenario: Creating a folder in the Files view calls Core directly
+- **WHEN** `createFolderWithFiles` is called for the Files view
+- **THEN** an empty file is uploaded to the target folder path directly via the Core files client, not the admin BE
+
+#### Scenario: The unused zip-preview actions are gone, not routed to Core
+- **WHEN** the codebase is searched for `previewAppZip` or `previewToolsetZip` callers after this change
+- **THEN** neither action exists — they were deleted as dead code, not given a Core-backed implementation
