@@ -78,7 +78,7 @@ const Analytics: FC<Props> = ({
             value: (
               <div className="flex flex-col gap-0.5">
                 <PassedTestCasesValue counts={primary.statusCounts} />
-                <TestCaseStatusBreakdown counts={primary.statusCounts} compact />
+                <TestCaseStatusBreakdown counts={primary.statusCounts} compact tooltipTitle={primaryRunName} />
               </div>
             ),
           },
@@ -87,7 +87,7 @@ const Analytics: FC<Props> = ({
             value: (
               <div className="flex flex-col gap-0.5">
                 <PassedTestCasesValue counts={compared.statusCounts} />
-                <TestCaseStatusBreakdown counts={compared.statusCounts} compact />
+                <TestCaseStatusBreakdown counts={compared.statusCounts} compact tooltipTitle={comparedRunName} />
               </div>
             ),
           },

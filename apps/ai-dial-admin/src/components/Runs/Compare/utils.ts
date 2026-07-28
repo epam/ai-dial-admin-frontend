@@ -39,11 +39,10 @@ export const fetchSuiteCompletedRuns = async (testSuiteId: string): Promise<Run[
   return (res?.content || []) as Run[];
 };
 
-export const getCompareViewTabs = (t: (key: string) => string, runsCompareEnabled: boolean): TabModel[] => [
+export const getCompareViewTabs = (t: (key: string) => string): TabModel[] => [
   {
     id: CompareViewTab.SummaryOverview,
     label: t(RunsI18nKey.RunCompareTabSummaryOverview),
-    disabled: !runsCompareEnabled,
   },
   {
     id: CompareViewTab.HeatMap,
