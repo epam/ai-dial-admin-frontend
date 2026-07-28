@@ -155,7 +155,7 @@ describe('Assets application :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('updateApp strips empty interface entries before calling Core', async () => {
+  test('updateApp passes interfaces through unchanged before calling Core', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
     await updateApp(
@@ -163,7 +163,7 @@ describe('Assets application :: server actions', () => {
         folderId: 'public',
         path: 'test',
         version: '1.0',
-        interfaces: { openaiChatCompletions: { base_url: '' } },
+        interfaces: { openaiChatCompletions: { base_url: 'https://example.com', deployment_name: 'alias' } },
       },
       'etag',
     );
@@ -172,7 +172,9 @@ describe('Assets application :: server actions', () => {
       TOKEN_MOCK,
       ResourceType.APPLICATION,
       'public__1.0',
-      expect.objectContaining({ interfaces: undefined }),
+      expect.objectContaining({
+        interfaces: { openaiChatCompletions: { base_url: 'https://example.com', deployment_name: 'alias' } },
+      }),
       { etag: 'etag' },
     );
   });
