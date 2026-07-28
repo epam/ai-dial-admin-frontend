@@ -58,9 +58,13 @@ const InterfacesField = <T extends { interfaces?: InterfaceValueMap }>({
 
   const onAddType = useCallback(
     (type: DeploymentInterfaceType) => {
+      const isChatCompletions = type === DeploymentInterfaceType.OpenAIChatCompletions;
       onChangeEntity({
         ...entity,
-        interfaces: { ...interfaces, [type]: { [baseUrlKey]: '', [deploymentNameKey]: '' } },
+        interfaces: {
+          ...interfaces,
+          [type]: { [baseUrlKey]: '', ...(isChatCompletions ? { [deploymentNameKey]: '' } : {}) },
+        },
       });
       setIsSelectingType(false);
     },
@@ -121,6 +125,7 @@ const InterfacesField = <T extends { interfaces?: InterfaceValueMap }>({
             baseUrl={interfaces[type]?.[baseUrlKey] || ''}
             deploymentName={interfaces[type]?.[deploymentNameKey] || ''}
             disabled={isReadonly}
+            supportsDeploymentName={type === DeploymentInterfaceType.OpenAIChatCompletions}
             onChangeBaseUrl={(value) => onChangeField(type, baseUrlKey, value)}
             onChangeDeploymentName={(value) => onChangeField(type, deploymentNameKey, value)}
             onDelete={() => onDeleteType(type)}
