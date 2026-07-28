@@ -1,8 +1,9 @@
 'use client';
 
+import { DialTooltip } from '@epam/ai-dial-ui-kit';
 import { Icon } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { FC } from 'react';
+import { FC, ReactNode } from 'react';
 
 import { STATUS_DOT_CLASSES, STATUS_DOT_ICONS } from '@/src/components/Runs/Summary/constants';
 import { TestCaseStatusCounts } from '@/src/components/Runs/Summary/models';
@@ -35,37 +36,66 @@ const StatusDot: FC<StatusDotProps> = ({ className, count, icon: StatusIcon, lab
 
 interface Props {
   counts: TestCaseStatusCounts;
-  /** When true, shows count only (label is screen-reader only). */
   compact?: boolean;
+  tooltipTitle?: string;
 }
 
-const TestCaseStatusBreakdown: FC<Props> = ({ counts, compact = false }) => {
+const TestCaseStatusBreakdown: FC<Props> = ({ counts, compact = false, tooltipTitle }) => {
   const t = useI18n();
 
-  return (
+  const passLabel = t(RunsI18nKey.Pass);
+  const failLabel = t(RunsI18nKey.Fail);
+  const errorLabel = t(RunsI18nKey.ExecError);
+
+  const breakdown = (
     <div className={classNames('flex flex-wrap items-center gap-y-1', compact ? 'gap-x-2 dial-small-text' : 'gap-x-3')}>
       <StatusDot
         className={STATUS_DOT_CLASSES.pass}
         icon={STATUS_DOT_ICONS.pass}
         count={counts.passed}
-        label={t(RunsI18nKey.Pass)}
+        label={passLabel}
         compact={compact}
       />
       <StatusDot
         className={STATUS_DOT_CLASSES.fail}
         icon={STATUS_DOT_ICONS.fail}
         count={counts.failed}
-        label={t(RunsI18nKey.Fail)}
+        label={failLabel}
         compact={compact}
       />
       <StatusDot
         className={STATUS_DOT_CLASSES.error}
         icon={STATUS_DOT_ICONS.error}
         count={counts.error}
-        label={t(RunsI18nKey.ExecError)}
+        label={errorLabel}
         compact={compact}
       />
     </div>
+  );
+
+  if (!tooltipTitle) {
+    return breakdown;
+  }
+
+  const tooltipContent: ReactNode = (
+    <div className="dial-tiny-text flex flex-col">
+      <span>{tooltipTitle}</span>
+      <span>
+        • {counts.passed} {passLabel}
+      </span>
+      <span>
+        • {counts.failed} {failLabel}
+      </span>
+      <span>
+        • {counts.error} {errorLabel}
+      </span>
+    </div>
+  );
+
+  return (
+    <DialTooltip tooltip={tooltipContent} placement="right" triggerClassName="inline-flex w-fit max-w-full self-start">
+      {breakdown}
+    </DialTooltip>
   );
 };
 

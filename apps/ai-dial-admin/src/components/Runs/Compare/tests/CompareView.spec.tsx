@@ -53,9 +53,20 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   };
 });
 
-const renderCompareView = (featureFlags: Partial<FeatureFlags> = { runsCompareEnabled: true }) =>
+const defaultFeatureFlags: FeatureFlags = {
+  dashboardEnabled: false,
+  deploymentsEnabled: false,
+  evaluationEnabled: true,
+  mcpRegistryEnabled: false,
+  nimEnabled: false,
+  hfEnabled: false,
+  analyticsEnabled: false,
+  queryAssistantEnabled: false,
+};
+
+const renderCompareView = () =>
   render(
-    <AppContextProvider featureFlags={featureFlags as FeatureFlags}>
+    <AppContextProvider featureFlags={defaultFeatureFlags}>
       <div className="w-[1400px] h-[800px] flex flex-col">
         <div className="flex flex-1 min-h-0">
           <CompareView runId="run-1" comparedRunId="run-sibling" />
@@ -170,7 +181,7 @@ describe('CompareView', () => {
     expect(routerReplaceMock).toHaveBeenCalledWith('/runs/compare?runs=run-1,run-sibling', { scroll: false });
   });
 
-  test('renders compare tabs with Execution Results active by default', async () => {
+  test('renders compare tabs with Summary Overview active by default', async () => {
     renderCompareView();
 
     expect(screen.getByRole('tab', { name: 'Runs.RunCompareTabSummaryOverview' })).toBeInTheDocument();
@@ -180,14 +191,9 @@ describe('CompareView', () => {
     await waitFor(() => {
       expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
     });
-  });
 
-  test('disables summary overview tab when runsCompareEnabled is false', () => {
-    renderCompareView({ runsCompareEnabled: false });
-
-    expect(screen.getByRole('tab', { name: 'Runs.RunCompareTabSummaryOverview' })).toBeDisabled();
-    expect(screen.getByRole('tab', { name: 'Runs.RunCompareTabHeatMap' })).toBeEnabled();
-    expect(screen.getByRole('tab', { name: 'Runs.RunCompareTabExecutionResults' })).toBeEnabled();
+    expect(screen.queryByText('Runs.RunCompareColorDisplay')).not.toBeInTheDocument();
+    expect(document.querySelector('.ag-pinned-right-cols-container')).not.toBeInTheDocument();
   });
 
   test('shows heat map toolbar in the tabs row when Heat Map tab is active', async () => {
@@ -214,10 +220,16 @@ describe('CompareView', () => {
     expect(screen.getByText('Runs.RunCompareAbsoluteValues')).toBeInTheDocument();
   });
 
-  test('switches tab content when clicking Summary Overview and back to Execution Results', async () => {
+  test('switches tab content when clicking Execution Results and back to Summary Overview', async () => {
     const user = userEvent.setup();
 
     renderCompareView();
+
+    await waitFor(() => {
+      expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('tab', { name: 'Runs.RunCompareTabExecutionResults' }));
 
     await waitFor(() => {
       expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
@@ -227,18 +239,14 @@ describe('CompareView', () => {
 
     expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole('tab', { name: 'Runs.RunCompareTabExecutionResults' }));
-
-    await waitFor(() => {
-      expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
-    });
   });
 
   test('opens row detail panel when eye button is clicked and closes on close button', async () => {
     const user = userEvent.setup();
 
     renderCompareView();
+
+    await user.click(screen.getByRole('tab', { name: 'Runs.RunCompareTabExecutionResults' }));
 
     let eyeButton: HTMLButtonElement | null = null;
     await waitFor(() => {
@@ -268,6 +276,8 @@ describe('CompareView', () => {
     const user = userEvent.setup();
 
     renderCompareView();
+
+    await user.click(screen.getByRole('tab', { name: 'Runs.RunCompareTabExecutionResults' }));
 
     let eyeButton: HTMLButtonElement | null = null;
     await waitFor(() => {
@@ -305,6 +315,8 @@ describe('CompareView', () => {
     const user = userEvent.setup();
 
     renderCompareView();
+
+    await user.click(screen.getByRole('tab', { name: 'Runs.RunCompareTabExecutionResults' }));
 
     let eyeButton: HTMLButtonElement | null = null;
     await waitFor(() => {

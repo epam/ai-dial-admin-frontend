@@ -5,7 +5,6 @@ export interface FeatureFlags {
   mcpRegistryEnabled: boolean;
   nimEnabled: boolean;
   hfEnabled: boolean;
-  runsCompareEnabled: boolean;
   analyticsEnabled: boolean;
   queryAssistantEnabled: boolean;
 }
