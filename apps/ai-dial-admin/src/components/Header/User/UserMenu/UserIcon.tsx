@@ -14,25 +14,50 @@ interface Props {
   className?: string;
 }
 
-export const UserIcon = ({ className, userName }: Props) => {
-  const { data: session } = useSession();
-  const [showFallbackIcon, setShowFallbackIcon] = useState(!session?.user?.image);
+const getFirstLetter = (word: string): string => word.match(/\p{L}/u)?.[0]?.toUpperCase() ?? '';
 
+const getShortName = (name?: string | null): string | null | undefined => {
+  if (!name) {
+    return name;
+  }
+
+  const letters = name.split(' ').map(getFirstLetter).filter(Boolean);
+
+  return letters.slice(0, 2).join('') || name;
+};
+
+interface FallbackIconProps {
+  name?: string | null;
+  seed?: string | null;
+  className?: string;
+}
+
+export const FallbackIcon = ({ name, seed, className }: FallbackIconProps) => {
   const bg = randomColor({
     luminosity: 'bright',
-    seed: session?.user?.email || '',
+    seed: seed || name || '',
   });
 
   const textColor = readableColor(bg);
 
-  const shortName = useMemo(() => {
-    const [part1, part2] = session?.user?.name?.split(' ') ?? [];
-    if (part1 && part2) {
-      return `${part1[0]}${part2[0]}`;
-    }
+  const shortName = useMemo(() => getShortName(name), [name]);
 
-    return session?.user?.name;
-  }, [session?.user?.name]);
+  return (
+    <div
+      className={classNames(
+        'flex size-[28px] shrink-0 items-center justify-center rounded-full text-[12px]/[16px] font-normal',
+        className,
+      )}
+      style={{ backgroundColor: bg, color: textColor }}
+    >
+      {shortName}
+    </div>
+  );
+};
+
+export const UserIcon = ({ className, userName }: Props) => {
+  const { data: session } = useSession();
+  const [showFallbackIcon, setShowFallbackIcon] = useState(!session?.user?.image);
 
   useEffect(() => {
     if (session?.user?.image) {
@@ -43,12 +68,7 @@ export const UserIcon = ({ className, userName }: Props) => {
   return (
     <DialTooltip tooltip={userName}>
       {showFallbackIcon ? (
-        <div
-          className="flex size-[28px] items-center justify-center rounded-full text-[12px]/[16px] font-normal"
-          style={{ backgroundColor: bg, color: textColor }}
-        >
-          {shortName}
-        </div>
+        <FallbackIcon name={session?.user?.name} seed={session?.user?.email} />
       ) : (
         <img
           className={classNames('rounded-full', className)}

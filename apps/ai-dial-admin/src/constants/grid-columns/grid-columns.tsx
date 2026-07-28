@@ -94,7 +94,7 @@ export const COLUMN_PANEL_PREFIX = 'column_';
 
 export const RESOURCE_TYPE_COLUMN = 'resourceType';
 
-export const BASE_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN, NAME_COLUMN];
+export const BASE_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN];
 
 export const BASE_COLUMNS_WITH_TOPICS: ColDef[] = [
   ...BASE_COLUMNS,
@@ -103,7 +103,7 @@ export const BASE_COLUMNS_WITH_TOPICS: ColDef[] = [
   { ...UPDATED_AT_COLUMN, filter: false },
 ];
 
-export const DEPENDENCIES_COLUMNS = [DISPLAY_NAME_COLUMN, VERSION_COLUMN, DESCRIPTION_COLUMN, NAME_COLUMN];
+export const DEPENDENCIES_COLUMNS = [DISPLAY_NAME_COLUMN, VERSION_COLUMN, DESCRIPTION_COLUMN];
 
 export const ADAPTER_COLUMNS = (t: (str: string) => string): ColDef[] => [
   ...BASE_COLUMNS,
@@ -117,7 +117,6 @@ export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   DISPLAY_NAME_COLUMN_WITH_SORT,
   DISPLAY_VERSION_COLUMN,
   DESCRIPTION_COLUMN,
-  NAME_COLUMN,
   ...SOURCE_FIELD_COLUMNS(t, ApplicationRoute.Models),
   AUTHOR_COLUMN,
   TOPICS_COLUMN,
@@ -149,7 +148,6 @@ export const APPLICATIONS_COLUMNS = (t: (str: string) => string, codeAppEditorUr
   DISPLAY_NAME_COLUMN_WITH_SORT,
   DISPLAY_VERSION_COLUMN,
   DESCRIPTION_COLUMN,
-  NAME_COLUMN,
   ...SOURCE_FIELD_COLUMNS(t, ApplicationRoute.Applications, codeAppEditorUrl),
   VALIDITY_STATUS_COLUMN(t),
   AUTHOR_COLUMN,
@@ -163,7 +161,6 @@ export const APPLICATIONS_COLUMNS = (t: (str: string) => string, codeAppEditorUr
 export const TOOLSETS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   DISPLAY_NAME_COLUMN,
   DESCRIPTION_COLUMN,
-  NAME_COLUMN_WITH_SORT,
   ...SOURCE_FIELD_COLUMNS(t, ApplicationRoute.Toolsets),
   AUTHOR_COLUMN,
   TOPICS_COLUMN,
@@ -174,7 +171,6 @@ export const TOOLSETS_COLUMNS = (t: (str: string) => string): ColDef[] => [
 export const INTERCEPTORS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   DISPLAY_NAME_COLUMN,
   DESCRIPTION_COLUMN,
-  NAME_COLUMN_WITH_SORT,
   ...SOURCE_FIELD_COLUMNS(t, ApplicationRoute.Interceptors),
   AUTHOR_COLUMN,
   TOPICS_COLUMN,
@@ -186,7 +182,6 @@ export const INTERCEPTORS_COLUMNS = (t: (str: string) => string): ColDef[] => [
 export const ROUTES_COLUMNS: ColDef[] = [
   DISPLAY_NAME_COLUMN,
   DESCRIPTION_COLUMN,
-  NAME_COLUMN_WITH_SORT,
   PATHS_COLUMN,
   ORDER_COLUMN,
   TOPICS_COLUMN,
@@ -283,7 +278,6 @@ export const ACTIVITY_AUDIT_COLUMNS = (
 export const BASE_KEYS_COLUMNS: ColDef[] = [
   DISPLAY_NAME_COLUMN,
   DESCRIPTION_COLUMN,
-  NAME_COLUMN_WITH_SORT,
   { ...CREATED_AT_COLUMN, filter: false },
   { ...UPDATED_AT_COLUMN, filter: false },
   {
@@ -353,6 +347,7 @@ export const NON_DEPLOYMENT_ASSETS_COLUMNS: ColDef[] = [ASSET_NAME_COLUMN, ...AS
 export const FILES_COLUMNS: ColDef[] = [
   {
     ...ASSET_NAME_COLUMN,
+    cellRenderer: undefined,
     valueFormatter: ({ value }) => value,
     tooltipValueGetter: () => '',
   },
@@ -654,7 +649,6 @@ export const CALL_BY_ROUTES_COLUMNS: ColDef[] = [
 export const SOURCE_CONTAINERS_COLUMNS: ColDef[] = [
   DISPLAY_NAME_COLUMN_WITH_SORT,
   DESCRIPTION_COLUMN,
-  NAME_COLUMN,
   {
     headerName: 'Image',
     field: 'source',
@@ -668,7 +662,6 @@ export const SOURCE_CONTAINERS_COLUMNS: ColDef[] = [
 export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, route: ApplicationRoute): ColDef[] => [
   DISPLAY_NAME_COLUMN,
   DESCRIPTION_COLUMN,
-  NAME_COLUMN,
   ...(route === ApplicationRoute.ModelServings
     ? [
         {

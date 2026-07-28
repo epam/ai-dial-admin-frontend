@@ -64,7 +64,7 @@ describe('Constants :: grid columns', () => {
     const t = (s: string) => s;
     const cols = KEYS_COLUMNS(t);
     expect(Array.isArray(cols)).toBe(true);
-    expect(cols.some((c) => c.field === 'name')).toBe(true);
+    expect(cols.some((c) => c.field === 'displayName')).toBe(true);
     expect(cols.some((c) => c.field === 'status')).toBe(true);
     expect(cols.filter((c) => c.field === 'createdAt')).toHaveLength(1);
     expect(cols.filter((c) => c.field === 'updatedAt')).toHaveLength(1);
@@ -157,7 +157,7 @@ describe('Constants :: grid columns', () => {
     const t = (s: string) => s;
     const cols1 = CONTAINERS_COLUMNS(t, 'type', ApplicationRoute.ModelServings);
     expect(Array.isArray(cols1)).toBe(true);
-    expect(cols1.some((c) => c.field === 'name')).toBe(true);
+    expect(cols1.some((c) => c.field === 'displayName')).toBe(true);
     expect(cols1.some((c) => c.field === 'description')).toBe(true);
     expect(cols1.some((c) => c.field === 'topics')).toBe(true);
   });

@@ -8,6 +8,7 @@ import {
 } from '@/src/constants/grid-columns/formatters';
 import { ApplicationRoute } from '@/src/types/routes';
 
+import DisplayNameCellRenderer from '@/src/components/Grid/CellRenderers/DisplayNameCellRenderer';
 import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRenderer';
 import TelemetryFallbackCellRenderer from '@/src/components/Grid/CellRenderers/TelemetryFallbackCellRenderer';
 import ValidityStatusCellRenderer from '@/src/components/Grid/CellRenderers/ValidityStatusCellRenderer';
@@ -64,6 +65,7 @@ export const DISPLAY_NAME_COLUMN: ColDef = {
   field: 'displayName',
   colId: 'displayName',
   headerName: 'Display Name',
+  cellRenderer: DisplayNameCellRenderer,
   hide: false,
 };
 
@@ -71,7 +73,12 @@ export const DISPLAY_NAME_COLUMN_WITH_SORT: ColDef = { ...DISPLAY_NAME_COLUMN, s
 
 export const NAME_COLUMN: ColDef = { field: 'name', colId: 'name', headerName: 'ID', hide: false };
 
-export const ASSET_NAME_COLUMN: ColDef = { field: 'name', colId: 'name', headerName: 'Display Name' };
+export const ASSET_NAME_COLUMN: ColDef = {
+  field: 'name',
+  colId: 'name',
+  headerName: 'Display Name',
+  cellRenderer: DisplayNameCellRenderer,
+};
 
 export const NAME_COLUMN_WITH_SORT: ColDef = { ...NAME_COLUMN, sort: 'asc' };
 

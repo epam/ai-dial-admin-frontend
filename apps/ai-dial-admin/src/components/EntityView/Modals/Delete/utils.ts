@@ -1,12 +1,7 @@
 import { ColDef } from 'ag-grid-community';
 
 import { DeleteI18nKey } from '@/src/constants/i18n';
-import {
-  ASSET_NAME_COLUMN,
-  DESCRIPTION_COLUMN,
-  DISPLAY_NAME_COLUMN,
-  NAME_COLUMN,
-} from '@/src/constants/grid-columns/base-columns';
+import { ASSET_NAME_COLUMN, DESCRIPTION_COLUMN, DISPLAY_NAME_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getApplications } from '@/src/app/[lang]/applications/actions';
 import { getDatasetTestSuites } from '@/src/app/[lang]/datasets/actions';
@@ -178,7 +173,7 @@ export const getRelatedColumns = (view: ApplicationRoute): ColDef[] => {
   if (view === ApplicationRoute.Datasets) {
     return [ASSET_NAME_COLUMN, DESCRIPTION_COLUMN];
   }
-  return [DISPLAY_NAME_COLUMN, NAME_COLUMN];
+  return [DISPLAY_NAME_COLUMN];
 };
 
 const getRelatedTestSuites = (entity: { id?: string }) => {
