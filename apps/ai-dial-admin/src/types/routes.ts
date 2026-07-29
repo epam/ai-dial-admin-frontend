@@ -59,4 +59,5 @@ export enum ApplicationRoute {
   // Analytics
   AnalyticsQueryBuilder = '/query-builder',
   AnalyticsTables = '/tables',
+  ConversationsTrace = '/conversations-trace',
 }

@@ -215,6 +215,10 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
           key: MenuI18nKey.QueryBuilder,
           href: ApplicationRoute.AnalyticsQueryBuilder,
         },
+        {
+          key: MenuI18nKey.AnalyticsConversations,
+          href: ApplicationRoute.ConversationsTrace,
+        },
       ],
     },
   ];
