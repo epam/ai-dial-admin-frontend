@@ -83,12 +83,12 @@ describe('Applications :: server actions', () => {
 
     await createApplication({
       name: 'test',
-      interfaces: { openaiChatCompletions: { baseUrl: 'https://example.com', deploymentName: 'alias' } },
+      interfaces: { openaiChatCompletions: { baseUrl: 'https://example.com' } },
     } as any);
 
     expect(applicationsApi.createApplication).toHaveBeenCalledWith(
       expect.objectContaining({
-        interfaces: { openaiChatCompletions: { baseUrl: 'https://example.com', deploymentName: 'alias' } },
+        interfaces: { openaiChatCompletions: { baseUrl: 'https://example.com' } },
       }),
       TOKEN_MOCK,
     );

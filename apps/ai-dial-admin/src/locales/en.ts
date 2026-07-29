@@ -1526,11 +1526,7 @@ export default {
     AnthropicMessages: 'Anthropic Messages',
     BaseUrl: 'Base URL',
     BaseUrlPlaceholder: 'Enter {type} host',
-    DeploymentName: 'Deployment ID',
-    DeploymentNamePlaceholder: 'Enter alias for deployments',
     InfoBaseUrl: 'Base URL - service host',
-    InfoDeploymentName: 'Deployment name - optional, used for alias deployments',
-    ToggleDeploymentName: 'Toggle deployment ID',
   },
   Images: {
     ImagesListTitle: 'Images',

@@ -1498,11 +1498,7 @@ export enum InterfacesI18nKey {
   AnthropicMessages = 'Interfaces.AnthropicMessages',
   BaseUrl = 'Interfaces.BaseUrl',
   BaseUrlPlaceholder = 'Interfaces.BaseUrlPlaceholder',
-  DeploymentName = 'Interfaces.DeploymentName',
-  DeploymentNamePlaceholder = 'Interfaces.DeploymentNamePlaceholder',
   InfoBaseUrl = 'Interfaces.InfoBaseUrl',
-  InfoDeploymentName = 'Interfaces.InfoDeploymentName',
-  ToggleDeploymentName = 'Interfaces.ToggleDeploymentName',
 }
 
 export enum ImagesI18nKey {
