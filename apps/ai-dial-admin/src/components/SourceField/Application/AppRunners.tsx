@@ -105,7 +105,7 @@ const AppRunners: FC<Props> = ({
         if (entity) {
           onChange?.({
             ...baseEntity,
-            applicationProperties,
+            applicationProperties: { ...baseEntity.applicationProperties, ...applicationProperties },
           });
         } else if (onChangeValue) {
           onChangeValue(value, applicationProperties);
