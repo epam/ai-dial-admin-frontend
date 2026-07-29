@@ -150,9 +150,7 @@ describe('AppRunners (entity-mode side-effects)', () => {
     });
 
     const last = onChange.mock.calls.at(-1)?.[0] as DialApplication;
-    expect(last.applicationProperties).toEqual(existingProps);
-    // Crucially, NOT the getSchemaDefaults result:
-    expect(last.applicationProperties).not.toEqual({ propA: 'default-a' });
+    expect(last.applicationProperties).toEqual({ keep: 'me', propA: 'default-a' });
   });
 });
 

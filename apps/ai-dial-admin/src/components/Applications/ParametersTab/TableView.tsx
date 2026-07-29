@@ -10,8 +10,8 @@ import { BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { BooleanType } from '@/src/types/boolean';
 import { ParamsFields } from '@/src/types/parameters';
-import { ApplicationPropertyRow } from './models';
-import { getAppPropertiesColumns, inferTypeFromValue } from './utils';
+import { ApplicationPropertyRow, UserParamRow } from './models';
+import { getAppPropertiesColumns, getDefaultValueForType, inferTypeFromValue } from './utils';
 
 interface Props {
   applicationProperties: Record<string, unknown>;
@@ -34,12 +34,14 @@ const TableView: FC<Props> = ({
 }) => {
   const t = useI18n();
   const [gridApi, setGridApi] = useState<GridApi>();
-  const [orderedUserKeys, setOrderedUserKeys] = useState<string[]>(() =>
-    Object.keys(applicationProperties).filter((k) => !schemeProperties.some((s) => s.key === k)),
+  const [orderedUserRows, setOrderedUserRows] = useState<UserParamRow[]>(() =>
+    Object.keys(applicationProperties)
+      .filter((k) => !schemeProperties.some((s) => s.key === k))
+      .map((key) => ({ key, type: inferTypeFromValue(applicationProperties[key]) })),
   );
 
   const appPropsRef = useRef(applicationProperties);
-  const orderedKeysRef = useRef(orderedUserKeys);
+  const orderedRowsRef = useRef(orderedUserRows);
   const schemePropsRef = useRef(schemeProperties);
   const isSkipRefreshRef = useRef(false);
 
@@ -48,8 +50,8 @@ const TableView: FC<Props> = ({
   }, [applicationProperties]);
 
   useEffect(() => {
-    orderedKeysRef.current = orderedUserKeys;
-  }, [orderedUserKeys]);
+    orderedRowsRef.current = orderedUserRows;
+  }, [orderedUserRows]);
 
   useEffect(() => {
     schemePropsRef.current = schemeProperties;
@@ -64,16 +66,16 @@ const TableView: FC<Props> = ({
       isFromScheme: true,
     }));
 
-    const userRows = orderedUserKeys.map((key) => ({
+    const userRows = orderedUserRows.map(({ key, type }) => ({
       key,
       value: key !== '' ? applicationProperties[key] : '',
-      type: key !== '' ? inferTypeFromValue(applicationProperties[key]) : DefaultItemType.string,
+      type,
       required: false,
       isFromScheme: false,
     }));
 
     return [...schemeRows, ...userRows];
-  }, [schemeProperties, orderedUserKeys, applicationProperties]);
+  }, [schemeProperties, orderedUserRows, applicationProperties]);
 
   const onValidityChangeRef = useRef(onValidityChange);
 
@@ -82,8 +84,8 @@ const TableView: FC<Props> = ({
   }, [onValidityChange]);
 
   useEffect(() => {
-    onValidityChange(!orderedUserKeys.includes(''));
-  }, [orderedUserKeys, onValidityChange]);
+    onValidityChange(!orderedUserRows.some((r) => r.key === ''));
+  }, [orderedUserRows, onValidityChange]);
 
   const validateKey = useCallback(
     (newValue: string, currentValue: string): string | null => {
@@ -93,13 +95,13 @@ const TableView: FC<Props> = ({
       }
       if (newValue !== currentValue) {
         const schemeKeys = schemePropsRef.current.map((s) => s.key);
-        const otherUserKeys = orderedKeysRef.current.filter((k) => k !== currentValue);
+        const otherUserKeys = orderedRowsRef.current.map((r) => r.key).filter((k) => k !== currentValue);
         if ([...schemeKeys, ...otherUserKeys].includes(newValue)) {
           onValidityChangeRef.current(false);
           return t(BasicI18nKey.KeyDuplicate);
         }
       }
-      onValidityChangeRef.current(!orderedKeysRef.current.includes(''));
+      onValidityChangeRef.current(!orderedRowsRef.current.some((r) => r.key === ''));
       return null;
     },
     [t],
@@ -109,7 +111,8 @@ const TableView: FC<Props> = ({
     (value: string, _data: unknown, _column: string, index?: number) => {
       const schemeCount = schemePropsRef.current.length;
       const userRowIndex = (index as number) - schemeCount;
-      const currentKey = orderedKeysRef.current[userRowIndex];
+      const currentRow = orderedRowsRef.current[userRowIndex];
+      const currentKey = currentRow.key;
 
       if (currentKey === value) return;
 
@@ -119,12 +122,12 @@ const TableView: FC<Props> = ({
         delete props[currentKey];
         props[value] = existingValue;
       } else {
-        props[value] = '';
+        props[value] = getDefaultValueForType(currentRow.type);
       }
 
-      const newKeys = [...orderedKeysRef.current];
-      newKeys[userRowIndex] = value;
-      setOrderedUserKeys(newKeys);
+      const newRows = [...orderedRowsRef.current];
+      newRows[userRowIndex] = { ...currentRow, key: value };
+      setOrderedUserRows(newRows);
       onChangeProperties(props);
     },
     [onChangeProperties],
@@ -132,7 +135,7 @@ const TableView: FC<Props> = ({
 
   const onChangeParam = useCallback(
     (value: string, data: ApplicationPropertyRow, _field: string, index?: number) => {
-      const allKeys = [...schemePropsRef.current.map((s) => s.key), ...orderedKeysRef.current];
+      const allKeys = [...schemePropsRef.current.map((s) => s.key), ...orderedRowsRef.current.map((r) => r.key)];
       const key = allKeys[index as number];
       if (!key) return;
 
@@ -146,7 +149,7 @@ const TableView: FC<Props> = ({
 
   const onChangeJSON = useCallback(
     (value: object, _data: ApplicationPropertyRow, _field: string, index?: number) => {
-      const allKeys = [...schemePropsRef.current.map((s) => s.key), ...orderedKeysRef.current];
+      const allKeys = [...schemePropsRef.current.map((s) => s.key), ...orderedRowsRef.current.map((r) => r.key)];
       const key = allKeys[index as number];
       if (!key) return;
 
@@ -160,8 +163,25 @@ const TableView: FC<Props> = ({
 
   const onChangeSelect = useCallback(
     (value: string, _data: unknown, field?: string, index?: number) => {
-      const allKeys = [...schemePropsRef.current.map((s) => s.key), ...orderedKeysRef.current];
+      const schemeCount = schemePropsRef.current.length;
+      const userRowIndex = (index as number) - schemeCount;
+      const allKeys = [...schemePropsRef.current.map((s) => s.key), ...orderedRowsRef.current.map((r) => r.key)];
       const key = allKeys[index as number];
+
+      if (field === ParamsFields.TYPE) {
+        if (userRowIndex >= 0 && userRowIndex < orderedRowsRef.current.length) {
+          const newRows = [...orderedRowsRef.current];
+          newRows[userRowIndex] = { ...newRows[userRowIndex], type: value };
+          setOrderedUserRows(newRows);
+        }
+        if (key) {
+          const props = { ...appPropsRef.current };
+          props[key] = getDefaultValueForType(value);
+          onChangeProperties(props);
+        }
+        return;
+      }
+
       if (!key) return;
 
       const props = { ...appPropsRef.current };
@@ -170,31 +190,25 @@ const TableView: FC<Props> = ({
           props[key] = value === BooleanType.true;
         }
       }
-      if (field === ParamsFields.TYPE) {
-        if (value === DefaultItemType.number) props[key] = 0;
-        else if (value === DefaultItemType.boolean) props[key] = false;
-        else if (value === DefaultItemType.object) props[key] = {};
-        else props[key] = '';
-      }
       onChangeProperties(props);
     },
     [onChangeProperties],
   );
 
   const onAddProperty = useCallback(() => {
-    if (orderedKeysRef.current.includes('')) return;
-    setOrderedUserKeys((prev) => [...prev, '']);
+    if (orderedRowsRef.current.some((r) => r.key === '')) return;
+    setOrderedUserRows((prev) => [...prev, { key: '', type: DefaultItemType.string }]);
   }, []);
 
   const onRemoveProperty = useCallback(
     (_data?: ApplicationPropertyRow, index?: number) => {
       const schemeCount = schemePropsRef.current.length;
       const userRowIndex = (index as number) - schemeCount;
-      const keyToRemove = orderedKeysRef.current[userRowIndex];
+      const keyToRemove = orderedRowsRef.current[userRowIndex].key;
 
-      const newKeys = [...orderedKeysRef.current];
-      newKeys.splice(userRowIndex, 1);
-      setOrderedUserKeys(newKeys);
+      const newRows = [...orderedRowsRef.current];
+      newRows.splice(userRowIndex, 1);
+      setOrderedUserRows(newRows);
 
       if (keyToRemove !== '') {
         const props = { ...appPropsRef.current };

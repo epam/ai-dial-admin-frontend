@@ -38,6 +38,7 @@ import { EnrichmentClients } from '@/src/server/publications/resolver/types';
 import { TelemetryApi } from '@/src/server/telemetry-api';
 import { ThemesApi } from '@/src/server/themes-api';
 import { UtilityApi } from '@/src/server/utility-api';
+import { ResourceType } from '@/src/types/resource-type';
 
 // Admin APIs
 export const modelsApi = new ModelsApi({
@@ -195,6 +196,18 @@ export const queryAssistantApi = new QueryAssistantApi({
   host: process.env.DIAL_CORE_API_URL,
 });
 
+/**
+ * Application/toolset-resource content DTOs reject `folderId`/`path`/`version`/`id`
+ * (`FAIL_ON_UNKNOWN_PROPERTIES`) — those must be stripped before `put`. Conversation/prompt
+ * content DTOs are the opposite: they require `path`/`folderId` back on the body (confirmed by
+ * reproducing the publications-update 400 with/without the strip), so stripping them there is
+ * itself the bug, not the fix.
+ */
+const RESOURCE_TYPES_STRIPPED_BEFORE_PUT: ReadonlySet<ResourceType> = new Set([
+  ResourceType.APPLICATION,
+  ResourceType.TOOLSET,
+]);
+
 // Publications talk to DIAL Core directly, including per-resource enrichment (asset get/put)
 // for the four versioned types, now that the assets→Core migration has landed AssetApi.
 // File resources were already Core-native via filesCoreApi since Phase 1.
@@ -205,7 +218,9 @@ const publicationEnrichmentClients: EnrichmentClients = {
       token,
       type,
       (asset as { path: string }).path,
-      stripAssetIdentityFields(asset as { folderId?: string; path?: string; version?: string; id?: string }),
+      RESOURCE_TYPES_STRIPPED_BEFORE_PUT.has(type)
+        ? stripAssetIdentityFields(asset as { folderId?: string; path?: string; version?: string; id?: string })
+        : asset,
       { etag },
     ),
   getBucket: (token) => bucketApi.getBucket(token),

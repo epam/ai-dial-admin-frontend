@@ -1,6 +1,7 @@
 import { ColDef } from 'ag-grid-community';
 
 import {
+  displayNameFilterValue,
   formatAttachment,
   getTopics,
   sourceTypeFormatter,
@@ -66,6 +67,7 @@ export const DISPLAY_NAME_COLUMN: ColDef = {
   colId: 'displayName',
   headerName: 'Display Name',
   cellRenderer: DisplayNameCellRenderer,
+  filterValueGetter: ({ data }) => displayNameFilterValue(data),
   hide: false,
 };
 
@@ -78,6 +80,7 @@ export const ASSET_NAME_COLUMN: ColDef = {
   colId: 'name',
   headerName: 'Display Name',
   cellRenderer: DisplayNameCellRenderer,
+  filterValueGetter: ({ data }) => displayNameFilterValue(data),
 };
 
 export const NAME_COLUMN_WITH_SORT: ColDef = { ...NAME_COLUMN, sort: 'asc' };
