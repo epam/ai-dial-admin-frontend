@@ -27,6 +27,7 @@ const WeightRow: FC<Props> = ({ index, row, availableOptions, onUpdate, onRemove
   const [weightError, setWeightError] = useState<FieldError | null>(null);
 
   const metricValue = row.metricName ? `${row.metricName}::${row.outputField}` : '';
+  const metricExists = availableOptions.some((option) => option.value === metricValue);
   const metricOptions = availableOptions.map((option) => ({
     value: option.value,
     label: option.label,
@@ -39,7 +40,7 @@ const WeightRow: FC<Props> = ({ index, row, availableOptions, onUpdate, onRemove
   }));
 
   useEffect(() => {
-    const error = getMetricSelectionError(metricValue, t);
+    const error = getMetricSelectionError(metricValue, t, metricExists);
     dispatch({ type: ValidationActionType.SetField, field: `overallScoreMetric_${index}`, isValid: !error });
 
     const currentWeightError = getWeightError(row.weight, t);
@@ -58,11 +59,11 @@ const WeightRow: FC<Props> = ({ index, row, availableOptions, onUpdate, onRemove
 
   useEffect(() => {
     if (resetCounter || metricValue) {
-      const error = getMetricSelectionError(metricValue, t);
+      const error = getMetricSelectionError(metricValue, t, metricExists);
       setMetricError(error);
       dispatch({ type: ValidationActionType.SetField, field: `overallScoreMetric_${index}`, isValid: !error });
     }
-  }, [dispatch, index, metricValue, resetCounter, t]);
+  }, [dispatch, index, metricValue, metricExists, resetCounter, t]);
 
   useEffect(() => {
     if (resetCounter || row.weight !== undefined) {
