@@ -105,14 +105,14 @@ const AppRunners: FC<Props> = ({
         if (entity) {
           onChange?.({
             ...baseEntity,
-            applicationProperties: isEntityImmutable ? { ...baseEntity.applicationProperties } : applicationProperties,
+            applicationProperties,
           });
         } else if (onChangeValue) {
           onChangeValue(value, applicationProperties);
         }
       });
     },
-    [entity, onChange, isEntityImmutable, onChangeValue, onCloseModal, runners],
+    [entity, onChange, onChangeValue, onCloseModal, runners],
   );
 
   const openInNewTab = useCallback(() => {
