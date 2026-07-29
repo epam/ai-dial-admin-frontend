@@ -44,7 +44,7 @@ const TestCases: FC<Props> = ({
   const isReadOnly = dataset?.visibility === DatasetVisibility.PUBLIC;
 
   return (
-    <div className="h-full flex flex-col gap-y-6">
+    <div className="h-full flex flex-col gap-y-4">
       <TemplateVariables selectedTestSuite={selectedTestSuite} schema={dataset?.testCaseSchema} onChange={onChange} />
       <TestCasesList
         selectedTestSuite={selectedTestSuite}

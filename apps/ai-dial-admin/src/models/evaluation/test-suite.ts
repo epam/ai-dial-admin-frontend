@@ -1,5 +1,5 @@
 import { DialScheme } from '@/src/models/dial/scheme';
-import { StructuredQuery } from '@/src/models/evaluation/structured-query';
+import { FilterNode, StructuredQuery } from '@/src/models/evaluation/structured-query';
 import { FormDataPart } from '@/src/models/form-data';
 import { InputBindingType, TestCaseItemType } from '@/src/types/evaluation';
 
@@ -49,6 +49,7 @@ export interface TestSuite {
   suiteType?: SuiteType;
   datasetId?: string;
   disabledTestCaseIds?: string[];
+  testCaseFilter?: FilterNode | null;
   overallScoreThreshold?: number;
   overallScore?: OverallScoreConfig;
 

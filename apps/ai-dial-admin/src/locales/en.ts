@@ -1913,6 +1913,14 @@ export default {
     ScoreThresholdCondition: 'if score >=',
     ScoreThresholdOtherwise: 'otherwise',
     ScoreThresholdFail: 'Fail',
+    RunCondition: 'Run condition',
+    RunConditionTooltip:
+      'Filters which test cases are included when this suite runs. Matching is evaluated by the backend against the bound dataset.',
+    IncludeInRun: 'Include in run',
+    IncludedInRun: 'Included',
+    ExcludedFromRun: 'Excluded',
+    RunConditionSelect: 'Select',
+    ViewOnlyIncludedInRun: 'View only included in run ({count})',
   },
   FileManager: {
     SelectedItems: 'item(s) selected',
