@@ -2,10 +2,10 @@ import { DialInput } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useState } from 'react';
 
 import { getInterceptorTemplatesList } from '@/src/app/[lang]/interceptor-templates/actions';
+import { getInterceptorContainers } from '@/src/app/actions/deployments';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import IdControl from '@/src/components/BaseControls/Id/Id';
-import IntroControl from '@/src/components/BaseControls/Intro';
 import { getSourceItems } from '@/src/components/SourceField/constants';
 import SourceField from '@/src/components/SourceField/SourceField';
 import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -16,7 +16,6 @@ import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialRoute } from '@/src/models/dial/route';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorForPath } from '@/src/utils/validation/path-error';
-import { getInterceptorContainers } from '@/src/app/actions/deployments';
 
 interface Props {
   view?: ApplicationRoute;
@@ -75,10 +74,6 @@ const EntityProperties: FC<Props> = ({
       />
 
       <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} isFullWidth={!isEntityImmutable} />
-
-      {view === ApplicationRoute.Interceptors && isEntityImmutable && (
-        <IntroControl entity={entity} onChangeEntity={onChangeEntity} isFullWidth={!isEntityImmutable} />
-      )}
 
       {view === ApplicationRoute.Interceptors && !isEntityImmutable && !initialValues && (
         <SourceField
