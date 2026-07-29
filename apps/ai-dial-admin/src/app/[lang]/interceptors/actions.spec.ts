@@ -83,12 +83,12 @@ describe('Interceptors :: server actions', () => {
 
     await createInterceptor({
       name: 'interceptor',
-      interfaces: { openaiChatCompletions: { baseUrl: 'https://example.com', deploymentName: 'alias' } },
+      interfaces: { openaiChatCompletions: { baseUrl: 'https://example.com' } },
     } as any);
 
     expect(interceptorsApi.createInterceptor).toHaveBeenCalledWith(
       expect.objectContaining({
-        interfaces: { openaiChatCompletions: { baseUrl: 'https://example.com', deploymentName: 'alias' } },
+        interfaces: { openaiChatCompletions: { baseUrl: 'https://example.com' } },
       }),
       TOKEN_MOCK,
     );

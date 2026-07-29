@@ -7,16 +7,13 @@ import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import { ButtonsI18nKey, InterfacesI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DeploymentInterfaceType } from '@/src/models/dial/interfaces';
 import InterfaceRow from './InterfaceRow';
 
-type InterfaceValueMap = Record<
-  string,
-  { baseUrl?: string; base_url?: string; deploymentName?: string; deployment_name?: string }
->;
+type InterfaceValueMap = Record<string, { baseUrl?: string; base_url?: string }>;
 
 interface Props<T extends { interfaces?: InterfaceValueMap }> {
   entity: T;
@@ -48,7 +45,6 @@ const InterfacesField = <T extends { interfaces?: InterfaceValueMap }>({
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const isReadonly = disabled || isReadOnlyAdmin;
   const baseUrlKey = isAsset ? 'base_url' : 'baseUrl';
-  const deploymentNameKey = isAsset ? 'deployment_name' : 'deploymentName';
 
   const [isSelectingType, setIsSelectingType] = useState(false);
 
@@ -58,17 +54,13 @@ const InterfacesField = <T extends { interfaces?: InterfaceValueMap }>({
 
   const onAddType = useCallback(
     (type: DeploymentInterfaceType) => {
-      const isChatCompletions = type === DeploymentInterfaceType.OpenAIChatCompletions;
       onChangeEntity({
         ...entity,
-        interfaces: {
-          ...interfaces,
-          [type]: { [baseUrlKey]: '', ...(isChatCompletions ? { [deploymentNameKey]: '' } : {}) },
-        },
+        interfaces: { ...interfaces, [type]: { [baseUrlKey]: '' } },
       });
       setIsSelectingType(false);
     },
-    [entity, interfaces, baseUrlKey, deploymentNameKey, onChangeEntity],
+    [entity, interfaces, baseUrlKey, onChangeEntity],
   );
 
   const onAddClick = useCallback(() => {
@@ -108,7 +100,6 @@ const InterfacesField = <T extends { interfaces?: InterfaceValueMap }>({
           tooltip={
             <div className="flex flex-col gap-1">
               <div>{t(InterfacesI18nKey.InfoBaseUrl)}</div>
-              <div>{t(InterfacesI18nKey.InfoDeploymentName)}</div>
             </div>
           }
         >
@@ -116,18 +107,15 @@ const InterfacesField = <T extends { interfaces?: InterfaceValueMap }>({
         </DialTooltip>
       </div>
 
-      <div className="flex flex-col gap-y-2 rounded border border-primary p-4">
+      <div className={classNames('flex flex-col gap-y-2 rounded border border-primary p-4', STANDARD_CONTROL_WIDTH)}>
         {usedTypes.map((type) => (
           <InterfaceRow
             key={type}
             fieldId={`interface-${type}`}
             typeLabel={getInterfaceTypeLabel(t, type)}
             baseUrl={interfaces[type]?.[baseUrlKey] || ''}
-            deploymentName={interfaces[type]?.[deploymentNameKey] || ''}
             disabled={isReadonly}
-            supportsDeploymentName={type === DeploymentInterfaceType.OpenAIChatCompletions}
             onChangeBaseUrl={(value) => onChangeField(type, baseUrlKey, value)}
-            onChangeDeploymentName={(value) => onChangeField(type, deploymentNameKey, value)}
             onDelete={() => onDeleteType(type)}
           />
         ))}
