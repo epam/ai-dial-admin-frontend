@@ -14,7 +14,7 @@ vi.mock('@/src/app/actions/deployments', () => ({
 }));
 
 describe('EntityProperties', () => {
-  test('shows an intro field for Interceptors', () => {
+  test('does not show an intro field for Interceptors', () => {
     render(
       <EntityProperties
         view={ApplicationRoute.Interceptors}
@@ -25,7 +25,7 @@ describe('EntityProperties', () => {
       />,
     );
 
-    expect(screen.getByText(EntityFieldsI18nKey.intro)).toBeInTheDocument();
+    expect(screen.queryByText(EntityFieldsI18nKey.intro)).not.toBeInTheDocument();
   });
 
   test('does not show an intro field for Routes', () => {
