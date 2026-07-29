@@ -234,7 +234,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
 
       const createAsset = CreateAssetActionMap[view as CreateAssetRoute];
 
-      return createAsset(emptyAsset);
+      return createAsset(emptyAsset as AssetWithVersion);
     },
     [view],
   );

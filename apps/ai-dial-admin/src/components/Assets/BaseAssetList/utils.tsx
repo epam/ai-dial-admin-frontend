@@ -6,6 +6,7 @@ import {
   importApps,
   moveApps,
 } from '@/src/app/[lang]/assets-applications/actions';
+import { bulkDeleteModels, createModel, getModel } from '@/src/app/[lang]/assets-models/actions';
 import {
   bulkDeleteToolsets,
   createToolset,
@@ -15,7 +16,6 @@ import {
   moveToolsets,
 } from '@/src/app/[lang]/assets-toolsets/actions';
 import { deleteConversations, getConversation } from '@/src/app/[lang]/conversations/actions';
-import { bulkDeleteModels, createModel, getModel } from '@/src/app/[lang]/assets-models/actions';
 import {
   bulkDeletePrompts,
   createPrompt,
@@ -45,7 +45,6 @@ import { ColDef } from 'ag-grid-community';
 import { MouseEvent } from 'react';
 import MultiSelectTagsRenderer from '../../Grid/CellRenderers/MultiSelectTagsRenderer';
 import { CreateAssetRoute, CrudAssetRoute } from './types';
-import { DialModelResource } from '@/src/models/dial/resource';
 
 export const getItems = (data: unknown) => {
   const asset = data as AssetWithVersion;
@@ -128,7 +127,7 @@ export const getAllSelectedItemsPaths = (basePath: string, selectedVersions: Rec
   return versions ? versions.map((v) => `${prefix}__${v}`) : [basePath];
 };
 
-export const getEmptyAsset = (view: ApplicationRoute, path: string): AssetWithVersion | DialModelResource => {
+export const getEmptyAsset = (view: ApplicationRoute, path: string): AssetWithVersion => {
   const baseEmptyAsset = {
     name: TEMP_FOLDER,
     folderId: path,
@@ -148,8 +147,6 @@ export const getEmptyAsset = (view: ApplicationRoute, path: string): AssetWithVe
         displayName: TEMP_FOLDER,
         transport: ToolsetTransport.HTTP.toUpperCase() as ToolsetTransport,
       };
-    case ApplicationRoute.AssetsModels:
-      return { name: TEMP_FOLDER, folderId: path, path: `${path}${TEMP_FOLDER}` };
     default:
       return baseEmptyAsset;
   }
