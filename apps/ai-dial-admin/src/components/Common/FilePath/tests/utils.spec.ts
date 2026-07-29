@@ -213,7 +213,12 @@ describe('FilePath utils', () => {
     it('should call getGridColumns and getGridOptions for AssetsApplications', () => {
       getFilePathGridOptions(mockTranslate, ApplicationRoute.AssetsApplications);
 
-      expect(baseAssetListUtils.getGridColumns).toHaveBeenCalledWith(expect.any(Function), {}, false);
+      expect(baseAssetListUtils.getGridColumns).toHaveBeenCalledWith(
+        ApplicationRoute.AssetsApplications,
+        expect.any(Function),
+        {},
+        false,
+      );
       expect(fileManagerUtils.getGridOptions).toHaveBeenCalledWith(
         ApplicationRoute.AssetsApplications,
         true,
@@ -225,7 +230,12 @@ describe('FilePath utils', () => {
     it('should call getGridColumns and getGridOptions for AssetsToolsets', () => {
       getFilePathGridOptions(mockTranslate, ApplicationRoute.AssetsToolsets);
 
-      expect(baseAssetListUtils.getGridColumns).toHaveBeenCalledWith(expect.any(Function), {}, false);
+      expect(baseAssetListUtils.getGridColumns).toHaveBeenCalledWith(
+        ApplicationRoute.AssetsToolsets,
+        expect.any(Function),
+        {},
+        false,
+      );
       expect(fileManagerUtils.getGridOptions).toHaveBeenCalledWith(
         ApplicationRoute.AssetsToolsets,
         true,
@@ -237,7 +247,12 @@ describe('FilePath utils', () => {
     it('should call getGridColumns and getGridOptions for Prompts', () => {
       getFilePathGridOptions(mockTranslate, ApplicationRoute.Prompts);
 
-      expect(baseAssetListUtils.getGridColumns).toHaveBeenCalledWith(expect.any(Function), {}, false);
+      expect(baseAssetListUtils.getGridColumns).toHaveBeenCalledWith(
+        ApplicationRoute.Prompts,
+        expect.any(Function),
+        {},
+        false,
+      );
       expect(fileManagerUtils.getGridOptions).toHaveBeenCalledWith(ApplicationRoute.Prompts, true, [], mockTranslate);
     });
 
