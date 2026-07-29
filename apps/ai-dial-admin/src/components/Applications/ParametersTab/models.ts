@@ -5,3 +5,8 @@ export interface ApplicationPropertyRow {
   required: boolean;
   isFromScheme?: boolean;
 }
+
+export interface UserParamRow {
+  key: string;
+  type: string;
+}
