@@ -163,7 +163,7 @@ describe('Assets application :: server actions', () => {
         folderId: 'public',
         path: 'test',
         version: '1.0',
-        interfaces: { openaiChatCompletions: { base_url: 'https://example.com', deployment_name: 'alias' } },
+        interfaces: { openaiChatCompletions: { base_url: 'https://example.com' } },
       },
       'etag',
     );
@@ -173,7 +173,7 @@ describe('Assets application :: server actions', () => {
       ResourceType.APPLICATION,
       'public__1.0',
       expect.objectContaining({
-        interfaces: { openaiChatCompletions: { base_url: 'https://example.com', deployment_name: 'alias' } },
+        interfaces: { openaiChatCompletions: { base_url: 'https://example.com' } },
       }),
       { etag: 'etag' },
     );

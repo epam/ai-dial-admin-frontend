@@ -172,13 +172,13 @@ describe('Models :: server actions', () => {
     await createModel({
       name: 'test',
       interfaces: {
-        openaiResponses: { baseUrl: 'https://example.com', deploymentName: 'alias' },
+        openaiResponses: { baseUrl: 'https://example.com' },
       },
     } as DialModel);
 
     expect(modelsApi.createModel).toHaveBeenCalledWith(
       expect.objectContaining({
-        interfaces: { openaiResponses: { baseUrl: 'https://example.com', deploymentName: 'alias' } },
+        interfaces: { openaiResponses: { baseUrl: 'https://example.com' } },
       }),
       TOKEN_MOCK,
     );
