@@ -64,7 +64,7 @@ const filterToNode = (filter: RunConditionFilter): FilterNode | null => {
     return predicateToComparison(filter.field, predicates[0]);
   }
   return {
-    op: filter.logicalOp,
+    op: filter.logicalOp as unknown as LogicalOp,
     args: predicates.map((p) => predicateToComparison(filter.field, p)),
   };
 };
