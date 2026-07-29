@@ -23,7 +23,7 @@ import {
   getCreateNotificationDescription,
   getCreateNotificationTitle,
 } from '@/src/utils/entities/create-entity';
-import { isAssetView } from '@/src/utils/is-view';
+import { isAssetView, isAssetWithVersion } from '@/src/utils/is-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { RoutesForCheckingUniqueName } from './constants';
@@ -66,7 +66,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
   const { showNotification } = useNotification();
 
   const [currentEntity, setEntity] = useState<T>(
-    versionsMap
+    isAssetWithVersion(route)
       ? ({ name: '', description: '', version: DEFAULT_NEW_ENTITY_VERSION } as T)
       : ({ name: '', description: '', ...initialValues } as T),
   );
@@ -134,7 +134,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
       });
     }
 
-    if (versionsMap) {
+    if (isAssetWithVersion(route)) {
       dispatch({
         type: ValidationActionType.SetField,
         field: 'version',

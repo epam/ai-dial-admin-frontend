@@ -153,6 +153,33 @@ describe('Entity list view :: getEntityPath', () => {
     const res = getEntityPath(ApplicationRoute.RunsCompare, { id: 'run-123', compareWithId: 'run-456' }, void 0);
     expect(res).toEqual('compare?runs=run-123,run-456');
   });
+
+  test('Should derive path from name for AssetsModels when path is missing (newly created model)', () => {
+    const result = getEntityPath(ApplicationRoute.AssetsModels, { name: 'example-from-admin' });
+    expect(result).toEqual('example-from-admin?path=example-from-admin');
+  });
+
+  test('Should use provided path for AssetsModels when browsing an existing model', () => {
+    const result = getEntityPath(ApplicationRoute.AssetsModels, {
+      name: 'example-from-admin',
+      path: 'platform/example-from-admin',
+    });
+    expect(result).toEqual('example-from-admin?path=platform%2Fexample-from-admin');
+  });
+
+  test('Should return decoded path for AssetsModels when forRemove is true', () => {
+    const result = getEntityPath(
+      ApplicationRoute.AssetsModels,
+      { name: 'example-from-admin', path: 'platform/example-from-admin' },
+      true,
+    );
+    expect(result).toEqual('platform/example-from-admin');
+  });
+
+  test('Should return decoded name for AssetsModels when forRemove is true and path is missing', () => {
+    const result = getEntityPath(ApplicationRoute.AssetsModels, { name: 'example-from-admin' }, true);
+    expect(result).toEqual('example-from-admin');
+  });
 });
 
 describe('onOpenInNewTab', () => {

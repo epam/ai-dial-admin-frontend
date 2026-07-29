@@ -4,6 +4,7 @@ import { isAssetView, isEvaluationView } from '../is-view';
 
 const createEntityMap: Record<string, UpdateI18nKey> = {
   [ApplicationRoute.Models]: UpdateI18nKey.Model,
+  [ApplicationRoute.AssetsModels]: UpdateI18nKey.Model,
   [ApplicationRoute.Applications]: UpdateI18nKey.Application,
   [ApplicationRoute.AssetsApplications]: UpdateI18nKey.Application,
   [ApplicationRoute.ApplicationRunners]: UpdateI18nKey.ApplicationRunner,
