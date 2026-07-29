@@ -45,6 +45,7 @@ import { ColDef } from 'ag-grid-community';
 import { MouseEvent } from 'react';
 import MultiSelectTagsRenderer from '../../Grid/CellRenderers/MultiSelectTagsRenderer';
 import { CreateAssetRoute, CrudAssetRoute } from './types';
+import { DialModelResource } from '@/src/models/dial/resource';
 
 export const getItems = (data: unknown) => {
   const asset = data as AssetWithVersion;
@@ -127,7 +128,7 @@ export const getAllSelectedItemsPaths = (basePath: string, selectedVersions: Rec
   return versions ? versions.map((v) => `${prefix}__${v}`) : [basePath];
 };
 
-export const getEmptyAsset = (view: ApplicationRoute, path: string): AssetWithVersion => {
+export const getEmptyAsset = (view: ApplicationRoute, path: string): AssetWithVersion | DialModelResource => {
   const baseEmptyAsset = {
     name: TEMP_FOLDER,
     folderId: path,

@@ -76,7 +76,7 @@ export interface DialModelResource extends EntityAttachment, EntityDefaults, Mod
   name: string;
   path: string;
   folderId: string;
-  status: DialModelResourceStatus;
+  status?: DialModelResourceStatus;
   type?: DialModelResourceType;
   tokenizerModel?: string;
   overrideName?: string;
