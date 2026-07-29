@@ -95,6 +95,7 @@ export const getTestCaseColumns = (
       } as ITextFilterParams,
       floatingFilter: true,
       floatingFilterComponent: 'agTextColumnFloatingFilter',
+      sortable: true,
       editable: false,
       cellRenderer: IncludeInRunCellRenderer,
       valueGetter: (params) => {

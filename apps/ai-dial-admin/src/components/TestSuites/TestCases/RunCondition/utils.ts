@@ -2,6 +2,7 @@ import { TestCaseSchema } from '@/src/models/evaluation/test-suite';
 import {
   ComparisonNode,
   ComparisonOp,
+  Expr,
   ExprType,
   FilterNode,
   LogicalNode,
@@ -10,7 +11,7 @@ import {
   ValueType,
 } from '@/src/models/evaluation/structured-query';
 import { TestCaseItemType } from '@/src/types/evaluation';
-import { and, col, eq, field, offsetPage, rowQuery, value } from '@/src/utils/structured-query/build';
+import { and, col, eq, field, fn, offsetPage, rowQuery, value } from '@/src/utils/structured-query/build';
 import { v4 as uuidv4 } from 'uuid';
 
 import {
@@ -50,10 +51,23 @@ const isComparisonNode = (node: FilterNode): node is ComparisonNode => COMPARISO
 const isLogicalNode = (node: FilterNode): node is LogicalNode =>
   node.op === LogicalOp.And || node.op === LogicalOp.Or || node.op === LogicalOp.Not;
 
-const predicateToComparison = (fieldName: string, predicate: RunConditionPredicate): ComparisonNode => ({
-  op: predicate.operator as unknown as ComparisonOp,
-  args: [field(normalizeFieldName(fieldName)), value(ValueType.String, predicate.value)],
-});
+const usesArrayContains = (isArray: boolean, operator: RunConditionOperator): boolean =>
+  isArray && (operator === RunConditionOperator.Contain || operator === RunConditionOperator.NotContains);
+
+const predicateToComparison = (
+  fieldName: string,
+  predicate: RunConditionPredicate,
+  isArray: boolean,
+): ComparisonNode => {
+  const normalized = normalizeFieldName(fieldName);
+  const leftExpr = usesArrayContains(isArray, predicate.operator)
+    ? fn('lower', [field(normalized)])
+    : field(normalized);
+  return {
+    op: predicate.operator as unknown as ComparisonOp,
+    args: [leftExpr, value(ValueType.String, predicate.value)],
+  };
+};
 
 const filterToNode = (filter: RunConditionFilter): FilterNode | null => {
   const predicates = filter.predicates.filter((p) => p.value.trim() !== '');
@@ -61,11 +75,11 @@ const filterToNode = (filter: RunConditionFilter): FilterNode | null => {
     return null;
   }
   if (predicates.length === 1) {
-    return predicateToComparison(filter.field, predicates[0]);
+    return predicateToComparison(filter.field, predicates[0], filter.isArray);
   }
   return {
     op: filter.logicalOp as unknown as LogicalOp,
-    args: predicates.map((p) => predicateToComparison(filter.field, p)),
+    args: predicates.map((p) => predicateToComparison(filter.field, p, filter.isArray)),
   };
 };
 
@@ -96,10 +110,16 @@ const comparisonToPredicate = (node: ComparisonNode): RunConditionPredicate | nu
 
 const getComparisonFieldName = (node: ComparisonNode): string | null => {
   const left = node.args[0];
-  if (!left || left.type !== ExprType.Field) {
+  if (!left) {
     return null;
   }
-  return left.name ? normalizeFieldName(left.name) : null;
+  if (left.type === ExprType.Field) {
+    return left.name ? normalizeFieldName(left.name) : null;
+  }
+  if (left.type === ExprType.Fn && left.name === 'lower' && left.args[0]?.type === ExprType.Field) {
+    return left.args[0].name ? normalizeFieldName(left.args[0].name) : null;
+  }
+  return null;
 };
 
 const fieldDisplayName = (fieldName: string, options: RunConditionFieldOption[]): string =>
@@ -203,6 +223,142 @@ export const parseIncludedIds = (rows: Record<string, unknown>[] | null | undefi
     const id = row.id;
     if (id != null) {
       ids.add(String(id));
+    }
+  });
+  return ids;
+};
+
+export const resolveRowFieldValue = (row: Record<string, unknown>, fieldName: string): unknown => {
+  const normalized = normalizeFieldName(fieldName);
+  if (normalized === 'id') {
+    return row.id;
+  }
+  if (normalized === 'test_case_name') {
+    return row.testCaseName ?? row.test_case_name;
+  }
+  if (normalized.startsWith(DATA_FIELD_PREFIX)) {
+    const dataField = normalized.slice(DATA_FIELD_PREFIX.length);
+    const rowData = row.data as Record<string, unknown> | undefined;
+    return rowData?.[dataField] ?? row[dataField];
+  }
+  return row[normalized];
+};
+
+const parseArrayValue = (value: unknown): unknown[] | null => {
+  if (Array.isArray(value)) {
+    return value;
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+          return parsed;
+        }
+      } catch {
+        return null;
+      }
+    }
+  }
+  return null;
+};
+
+const scalarContains = (left: unknown, right: string): boolean => {
+  if (left == null) {
+    return false;
+  }
+  return String(left).toLowerCase().includes(right.toLowerCase());
+};
+
+const arrayContainsElement = (left: unknown, right: string): boolean => {
+  const parsed = parseArrayValue(left);
+  if (parsed != null) {
+    return parsed.some((item) => scalarContains(item, right));
+  }
+  return scalarContains(left, right);
+};
+
+const arrayNotContainsElement = (left: unknown, right: string): boolean => !arrayContainsElement(left, right);
+
+const getFieldNameFromLeftExpr = (expr: Expr): string | null => {
+  if (expr.type === ExprType.Field) {
+    return expr.name ? normalizeFieldName(expr.name) : null;
+  }
+  if (expr.type === ExprType.Fn && expr.name === 'lower' && expr.args[0]?.type === ExprType.Field) {
+    return expr.args[0].name ? normalizeFieldName(expr.args[0].name) : null;
+  }
+  return null;
+};
+
+const evaluateComparison = (
+  node: ComparisonNode,
+  row: Record<string, unknown>,
+  fieldOptions: RunConditionFieldOption[],
+): boolean => {
+  const leftExpr = node.args[0];
+  const rightExpr = node.args[1];
+  if (!leftExpr || !rightExpr || rightExpr.type !== ExprType.Value) {
+    return false;
+  }
+  const fieldName = getFieldNameFromLeftExpr(leftExpr);
+  if (!fieldName) {
+    return false;
+  }
+  const rightValue = rightExpr.value ?? '';
+  const leftValue = resolveRowFieldValue(row, fieldName);
+  const isArray =
+    fieldOptions.find((option) => option.field === fieldName)?.isArray ?? fieldName.startsWith(DATA_FIELD_PREFIX);
+
+  switch (node.op) {
+    case ComparisonOp.Co:
+      return isArray ? arrayContainsElement(leftValue, rightValue) : scalarContains(leftValue, rightValue);
+    case ComparisonOp.Nc:
+      return isArray ? arrayNotContainsElement(leftValue, rightValue) : !scalarContains(leftValue, rightValue);
+    case ComparisonOp.Eq:
+      return String(leftValue ?? '') === rightValue;
+    case ComparisonOp.Ne:
+      return String(leftValue ?? '') !== rightValue;
+    default:
+      return false;
+  }
+};
+
+export const rowMatchesFilter = (
+  row: Record<string, unknown>,
+  filter: FilterNode,
+  schema?: TestCaseSchema[],
+): boolean => {
+  const fieldOptions = getRunConditionFieldOptions(schema);
+
+  if (isComparisonNode(filter)) {
+    return evaluateComparison(filter, row, fieldOptions);
+  }
+  if (!isLogicalNode(filter)) {
+    return false;
+  }
+  if (filter.op === LogicalOp.Not) {
+    const child = filter.args[0];
+    return child ? !rowMatchesFilter(row, child, schema) : false;
+  }
+  if (filter.op === LogicalOp.And) {
+    return filter.args.every((arg) => rowMatchesFilter(row, arg, schema));
+  }
+  return filter.args.some((arg) => rowMatchesFilter(row, arg, schema));
+};
+
+export const computeIncludedIdsFromRows = (
+  rows: Record<string, unknown>[],
+  filter: FilterNode | null | undefined,
+  schema?: TestCaseSchema[],
+): Set<string> | null => {
+  if (!filter) {
+    return null;
+  }
+  const ids = new Set<string>();
+  rows.forEach((row) => {
+    if (row.id != null && rowMatchesFilter(row, filter, schema)) {
+      ids.add(String(row.id));
     }
   });
   return ids;

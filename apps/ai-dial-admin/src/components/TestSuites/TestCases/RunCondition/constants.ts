@@ -47,5 +47,3 @@ export const BASE_RUN_CONDITION_FIELDS = [
 export const DATA_FIELD_PREFIX = 'data::';
 
 export const INCLUDED_IDS_PAGE_SIZE = 1000;
-
-export const PREVIEW_DEBOUNCE_MS = 300;

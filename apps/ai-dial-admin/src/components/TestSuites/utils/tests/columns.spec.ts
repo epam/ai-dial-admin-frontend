@@ -23,7 +23,9 @@ describe('getTestCaseColumns', () => {
     const result = getTestCaseColumns(makeSuite(), onCellChange, undefined, []);
 
     expect(result.length).toBe(BASE_COLUMN_COUNT);
-    expect(result[0]).toEqual(expect.objectContaining({ field: 'includedInRun', colId: 'includedInRun' }));
+    expect(result[0]).toEqual(
+      expect.objectContaining({ field: 'includedInRun', colId: 'includedInRun', sortable: true }),
+    );
   });
 
   test('should return only base columns when testCaseSchema is undefined', () => {

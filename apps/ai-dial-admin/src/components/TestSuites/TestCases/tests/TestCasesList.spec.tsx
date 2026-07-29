@@ -304,6 +304,7 @@ describe('TestCasesList — header and included-only filter', () => {
     vi.mocked(useIncludedIds).mockReturnValue(new Set(['row-1']));
 
     const onFilterChanged = vi.fn();
+    const applyColumnState = vi.fn();
     render(
       <TestCasesList
         selectedTestSuite={{ id: 'suite-1', datasetId: 'ds-1', testCaseFilter: filterNode }}
@@ -312,7 +313,9 @@ describe('TestCasesList — header and included-only filter', () => {
     );
 
     await waitFor(() => expect(capturedGridOptions).not.toBeNull());
-    capturedOnGridReady?.({ api: { onFilterChanged, refreshCells: vi.fn(), setGridOption: vi.fn() } });
+    capturedOnGridReady?.({
+      api: { onFilterChanged, refreshCells: vi.fn(), applyColumnState, setGridOption: vi.fn() },
+    });
 
     const isPresent = capturedGridOptions!.isExternalFilterPresent as () => boolean;
     const doesPass = capturedGridOptions!.doesExternalFilterPass as (node: {
@@ -327,5 +330,31 @@ describe('TestCasesList — header and included-only filter', () => {
     await waitFor(() => expect(isPresent()).toBe(true));
     expect(doesPass({ data: { id: 'row-1' } })).toBe(true);
     expect(doesPass({ data: { id: 'row-2' } })).toBe(false);
+  });
+
+  test('sorts included rows to the top when run condition filter is active', async () => {
+    vi.mocked(useIncludedIds).mockReturnValue(new Set(['row-1']));
+
+    const applyColumnState = vi.fn();
+    const refreshCells = vi.fn();
+    const onFilterChanged = vi.fn();
+
+    render(
+      <TestCasesList
+        selectedTestSuite={{ id: 'suite-1', datasetId: 'ds-1', testCaseFilter: filterNode }}
+        onChange={mockOnChange}
+      />,
+    );
+
+    await waitFor(() => expect(capturedOnGridReady).not.toBeNull());
+
+    capturedOnGridReady?.({
+      api: { applyColumnState, refreshCells, onFilterChanged, setGridOption: vi.fn() },
+    });
+
+    expect(applyColumnState).toHaveBeenCalledWith({
+      state: [{ colId: 'includedInRun', sort: 'desc', sortIndex: 0 }],
+      defaultState: { sort: null },
+    });
   });
 });

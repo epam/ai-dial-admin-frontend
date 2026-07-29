@@ -2,7 +2,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, RefObject, useCallback, useEffect, useRef, useState } from 'react';
+import { FC, RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { DialConfirmationPopup, DialEllipsisTooltip, DialSwitch, DialTag, DialTooltip } from '@epam/ai-dial-ui-kit';
@@ -100,7 +100,8 @@ const TestCasesList: FC<Props> = ({
   const onRemoveCaseRef = useRef<(data?: TestCase) => void>(() => {});
   const dirtyRowsRef = useRef<Map<string, Record<string, unknown>>>(new Map());
   const refreshVersionRef = useRef(0);
-  const includedIds = useIncludedIds(selectedTestSuite.datasetId, selectedTestSuite.testCaseFilter);
+  const gridRows = useMemo(() => [...data, ...newTestCases], [data, newTestCases]);
+  const includedIds = useIncludedIds(selectedTestSuite.testCaseFilter, gridRows, dataset?.testCaseSchema);
   const includedIdsRef = useRef(includedIds);
   includedIdsRef.current = includedIds;
   const showIncludedOnlyRef = useRef(showIncludedOnly);
@@ -278,10 +279,30 @@ const TestCasesList: FC<Props> = ({
     [buildColumnDefs, selectedTestSuite.datasetId, dataset, router],
   );
 
-  const onGridReady = useCallback(({ api }: GridReadyEvent) => {
-    gridApiRef.current = api;
-    setGridApi(api);
-  }, []);
+  const applyIncludedInRunSort = useCallback(() => {
+    const api = gridApiRef.current;
+    if (!api) return;
+
+    if (selectedTestSuite.testCaseFilter) {
+      api.applyColumnState({
+        state: [{ colId: 'includedInRun', sort: 'desc', sortIndex: 0 }],
+        defaultState: { sort: null },
+      });
+    } else {
+      api.applyColumnState({
+        state: [{ colId: 'includedInRun', sort: null }],
+      });
+    }
+  }, [selectedTestSuite.testCaseFilter]);
+
+  const onGridReady = useCallback(
+    ({ api }: GridReadyEvent) => {
+      gridApiRef.current = api;
+      setGridApi(api);
+      applyIncludedInRunSort();
+    },
+    [applyIncludedInRunSort, setGridApi],
+  );
 
   const onApplyImport = useCallback(
     (file: File, mode: TestCaseImportMode, strategy: TestCaseConflictStrategy) => {
@@ -439,7 +460,8 @@ const TestCasesList: FC<Props> = ({
   useEffect(() => {
     gridApiRef.current?.refreshCells({ force: true, columns: ['includedInRun'] });
     gridApiRef.current?.onFilterChanged();
-  }, [includedIds, showIncludedOnly]);
+    applyIncludedInRunSort();
+  }, [includedIds, showIncludedOnly, applyIncludedInRunSort]);
 
   useEffect(() => {
     if (!testCasesActionsRef) return;

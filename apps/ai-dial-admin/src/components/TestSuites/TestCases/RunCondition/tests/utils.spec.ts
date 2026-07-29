@@ -5,11 +5,13 @@ import { TestCaseItemType } from '@/src/types/evaluation';
 
 import {
   buildIncludedIdsQuery,
+  computeIncludedIdsFromRows,
   createEmptyRunConditionFilter,
   deserializeRunConditionFilters,
   getRunConditionFieldOptions,
   isRunConditionFilterComplete,
   parseIncludedIds,
+  rowMatchesFilter,
   serializeRunConditionFilters,
 } from '../utils';
 import { RunConditionLogicalOp, RunConditionOperator } from '../models';
@@ -160,5 +162,107 @@ describe('RunCondition utils', () => {
     empty.field = 'id';
     empty.displayName = 'ID';
     expect(isRunConditionFilterComplete(empty)).toBe(true);
+  });
+
+  test('rowMatchesFilter matches scalar contains case-insensitively', () => {
+    const filter: FilterNode = {
+      op: ComparisonOp.Co,
+      args: [
+        { type: ExprType.Field, name: 'data::filename' },
+        { type: ExprType.Value, value_type: ValueType.String, value: 'gpt' },
+      ],
+    };
+
+    expect(
+      rowMatchesFilter({ id: '1', data: { filename: 'My-GPT-file' } }, filter, [
+        { name: 'filename', type: TestCaseItemType.STRING, required: false, description: '' },
+      ]),
+    ).toBe(true);
+    expect(
+      rowMatchesFilter({ id: '2', data: { filename: 'other' } }, filter, [
+        { name: 'filename', type: TestCaseItemType.STRING, required: false, description: '' },
+      ]),
+    ).toBe(false);
+  });
+
+  test('serializeRunConditionFilters wraps array contains in lower() for substring matching', () => {
+    const node = serializeRunConditionFilters([
+      {
+        id: '1',
+        field: 'data::fasts',
+        displayName: 'fasts',
+        isArray: true,
+        logicalOp: RunConditionLogicalOp.And,
+        predicates: [{ operator: RunConditionOperator.Contain, value: 'With' }],
+      },
+    ]);
+
+    expect(node).toEqual({
+      op: ComparisonOp.Co,
+      args: [
+        { type: ExprType.Fn, name: 'lower', args: [{ type: ExprType.Field, name: 'data::fasts' }] },
+        { type: ExprType.Value, value_type: ValueType.String, value: 'With' },
+      ],
+    });
+  });
+
+  test('deserializeRunConditionFilters unwraps lower() on array contains', () => {
+    const filters = deserializeRunConditionFilters(
+      {
+        op: ComparisonOp.Co,
+        args: [
+          { type: ExprType.Fn, name: 'lower', args: [{ type: ExprType.Field, name: 'data::fasts' }] },
+          { type: ExprType.Value, value_type: ValueType.String, value: 'With' },
+        ],
+      },
+      [{ name: 'fasts', type: TestCaseItemType.ARRAY, required: false, description: '' }],
+    );
+
+    expect(filters).toHaveLength(1);
+    expect(filters[0].field).toBe('data::fasts');
+    expect(filters[0].predicates).toEqual([{ operator: RunConditionOperator.Contain, value: 'With' }]);
+  });
+
+  test('rowMatchesFilter matches substring within array elements', () => {
+    const filter: FilterNode = {
+      op: ComparisonOp.Co,
+      args: [
+        { type: ExprType.Fn, name: 'lower', args: [{ type: ExprType.Field, name: 'data::fasts' }] },
+        { type: ExprType.Value, value_type: ValueType.String, value: 'With' },
+      ],
+    };
+    const schema = [{ name: 'fasts', type: TestCaseItemType.ARRAY, required: false, description: '' }];
+
+    expect(
+      rowMatchesFilter(
+        {
+          id: '1',
+          data: {
+            fasts: ['With over 120 million visitors a year tourism is integral to the Alpine economy'],
+          },
+        },
+        filter,
+        schema,
+      ),
+    ).toBe(true);
+    expect(
+      rowMatchesFilter({ id: '2', data: { fasts: ['several new villages were built in France'] } }, filter, schema),
+    ).toBe(false);
+  });
+
+  test('computeIncludedIdsFromRows returns null without a filter', () => {
+    expect(computeIncludedIdsFromRows([{ id: '1' }], null)).toBeNull();
+  });
+
+  test('computeIncludedIdsFromRows collects matching row ids', () => {
+    const filter: FilterNode = {
+      op: ComparisonOp.Eq,
+      args: [
+        { type: ExprType.Field, name: 'id' },
+        { type: ExprType.Value, value_type: ValueType.String, value: 'b' },
+      ],
+    };
+
+    expect(computeIncludedIdsFromRows([{ id: 'a' }, { id: 'b' }], filter)).toEqual(new Set(['b']));
   });
 });
