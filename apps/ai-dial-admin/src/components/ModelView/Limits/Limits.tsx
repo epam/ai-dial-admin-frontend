@@ -1,21 +1,21 @@
 'use client';
 
 import { DialNumberInput, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
-import { FC, useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { BasicI18nKey, EntityPlaceholdersI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
-import { DialModel } from '@/src/models/dial/model';
+import { DialModelLimit } from '@/src/models/dial/model';
 import { LimitType } from './constants';
 import { getActiveLimitType, isLimitTypeSeparateTokenAndCompletions, isLimitTypeTotal } from './utils';
 
-interface Props {
-  model: DialModel;
-  onChangeModel: (model: DialModel) => void;
+interface Props<T> {
+  model: T;
+  onChangeModel: (model: T) => void;
 }
 
-const Limits: FC<Props> = ({ model, onChangeModel }) => {
+const Limits = <T extends { limits?: DialModelLimit }>({ model, onChangeModel }: Props<T>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 

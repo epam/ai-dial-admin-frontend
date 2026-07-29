@@ -18,7 +18,9 @@ interface Props<T> {
   onChange?: (entity: T) => void;
 }
 
-const TopicsControl = <T extends { topics?: string[]; description_keywords?: string[] }>({
+const TopicsControl = <
+  T extends { topics?: string[]; description_keywords?: string[]; descriptionKeywords?: string[] },
+>({
   entity,
   onChange,
   disabled,
@@ -27,20 +29,26 @@ const TopicsControl = <T extends { topics?: string[]; description_keywords?: str
 }: Props<T>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
-  const selectedItems = [
-    ...(isDeploymentAsset(view) ? entity.description_keywords || [] : entity.topics || []),
-  ]?.sort();
-  const allItems = [...(isDeploymentAsset(view) ? entity.description_keywords || [] : entity.topics || [])]?.sort();
+  const isAssetModels = view === ApplicationRoute.AssetsModels;
+  const currentTopics = isDeploymentAsset(view)
+    ? entity.description_keywords
+    : isAssetModels
+      ? entity.descriptionKeywords
+      : entity.topics;
+  const selectedItems = [...(currentTopics || [])]?.sort();
+  const allItems = [...(currentTopics || [])]?.sort();
 
   const onChangeTopics = useCallback(
     (items: string[]) => {
       if (isDeploymentAsset(view)) {
         onChange?.({ ...entity, description_keywords: items });
+      } else if (isAssetModels) {
+        onChange?.({ ...entity, descriptionKeywords: items });
       } else {
         onChange?.({ ...entity, topics: items });
       }
     },
-    [entity, onChange, view],
+    [entity, onChange, view, isAssetModels],
   );
 
   return (

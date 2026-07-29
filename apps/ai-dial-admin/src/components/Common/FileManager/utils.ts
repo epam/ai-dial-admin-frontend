@@ -7,11 +7,12 @@ import { bulkActionLabels } from '@/src/components/Assets/constants';
 import { getGridActionLabels, getToolbarOptionLabels, getTreeActionLabels } from '@/src/components/Assets/utils';
 import { baseColumnComparator } from '@/src/components/Grid/comparators/base-column-comparator';
 import FloatingFilter from '@/src/components/Grid/FloatingFilter/FloatingFilter';
-import { ROOT_FOLDER, TEMP_FOLDER } from '@/src/constants/file';
+import { TEMP_FOLDER } from '@/src/constants/file';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import { CREATE_FOLDER_FORBIDDEN_CHARS, FILE_NAME_MAX_LENGTH, MAX_FOLDER_NESTING_DEPTH } from './constants';
 import { FORBIDDEN_NAME_SYMBOLS } from '@/src/constants/validation';
+import { getRootFolder } from '@/src/utils/files/root-folder';
 import { addTrailingSlash } from '@/src/utils/url';
 
 export const findFolderByPath = (items: DialFile[], targetPath: string): DialFile | undefined => {
@@ -30,6 +31,7 @@ export const findFolderByPath = (items: DialFile[], targetPath: string): DialFil
 };
 
 const assetEntityMap: Record<string, FileManagerI18nKey> = {
+  [ApplicationRoute.AssetsModels]: FileManagerI18nKey.Models,
   [ApplicationRoute.AssetsApplications]: FileManagerI18nKey.Applications,
   [ApplicationRoute.AssetsToolsets]: FileManagerI18nKey.Toolsets,
   [ApplicationRoute.Prompts]: FileManagerI18nKey.Prompts,
@@ -160,7 +162,7 @@ export const getTreeOptions = (
     collapsed: false,
     expandedPaths: expandedPaths,
     loadedPaths,
-    loadingPaths: isFetchingFiles ? new Set<string>([ROOT_FOLDER]) : new Set<string>(),
+    loadingPaths: isFetchingFiles ? new Set<string>([getRootFolder(view)]) : new Set<string>(),
     actionLabels: getActionLabels(getTreeActionLabels(isReadOnlyAdmin, view), t),
     onExpandedPathsChange: setExpanded,
     header: t(FileManagerI18nKey.FolderTree),
@@ -175,7 +177,7 @@ export const getToolbarOptions = (route: ApplicationRoute, isReadOnlyAdmin: bool
 
 export const getBulkActionsToolbarOptions = (view: ApplicationRoute, t: (key: string) => string) => {
   const actionLabels =
-    view === ApplicationRoute.Conversations
+    view === ApplicationRoute.Conversations || view === ApplicationRoute.AssetsModels
       ? bulkActionLabels.filter((action) => action.key === 'delete')
       : bulkActionLabels;
 

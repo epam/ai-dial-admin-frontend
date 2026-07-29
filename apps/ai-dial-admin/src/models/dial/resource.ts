@@ -1,5 +1,6 @@
-import { BaseEntity, EntityDefaults } from '@/src/models/dial/base-entity';
+import { BaseEntity, EntityAttachment, EntityDefaults, ModifiedEntity } from '@/src/models/dial/base-entity';
 import { DialResourceInterface } from '@/src/models/dial/interfaces';
+import { DialModelEndpoint, DialModelLimit, DialModelPricing } from '@/src/models/dial/model';
 import { ToolsetTransport } from '@/src/types/toolset';
 
 export interface DialResource extends BaseEntity {
@@ -62,6 +63,76 @@ export interface DialApplicationResourceFeatures {
   content_parts_supported: boolean;
   temperature_supported: boolean;
   consent_required: boolean;
+  parallel_tool_calls_supported: boolean;
+  assistant_attachments_in_request_supported: boolean;
+  support_comment_in_rate_response: boolean;
+  max_tokens_supported: boolean;
+  max_completion_tokens_supported: boolean;
+  custom_temperature_supported: boolean;
+  reasoning_efforts?: string[];
+}
+
+export interface DialModelResource extends EntityAttachment, EntityDefaults, ModifiedEntity {
+  name: string;
+  path: string;
+  folderId: string;
+  status?: DialModelResourceStatus;
+  type?: DialModelResourceType;
+  tokenizerModel?: string;
+  overrideName?: string;
+  limits?: DialModelLimit;
+  pricing?: DialModelPricing;
+  upstreams?: DialModelEndpoint[];
+  fieldsHashingOrder?: string[];
+  embeddingDimensions?: number;
+  displayName?: string;
+  displayVersion?: string;
+  description?: string;
+  intro?: string;
+  reference?: string;
+  iconUrl?: string;
+  endpoint?: string;
+  responsesEndpoint?: string;
+  interfaces?: Record<string, DialResourceInterface>;
+  forwardAuthToken?: boolean;
+  maxRetryAttempts?: number;
+  interceptors?: string[];
+  features?: DialModelResourceFeatures;
+  descriptionKeywords?: string[];
+  dependencies?: string[];
+  author?: string;
+  userRoles?: string[];
+  catalogSchemaId?: string;
+  catalogProperties?: Record<string, unknown>;
+}
+
+export enum DialModelResourceStatus {
+  Valid = 'valid',
+  Invalid = 'invalid',
+}
+
+export enum DialModelResourceType {
+  Chat = 'CHAT',
+  Completion = 'COMPLETION',
+  Embedding = 'EMBEDDING',
+}
+
+export interface DialModelResourceFeatures {
+  rate_endpoint: string;
+  tokenize_endpoint: string;
+  truncate_prompt_endpoint: string;
+  configuration_endpoint: string;
+  system_prompt_supported: boolean;
+  tools_supported: boolean;
+  seed_supported: boolean;
+  url_attachments_supported: boolean;
+  folder_attachments_supported: boolean;
+  allow_resume: boolean;
+  accessible_by_per_request_key: boolean;
+  content_parts_supported: boolean;
+  temperature_supported: boolean;
+  cache_supported: boolean;
+  auto_caching_supported: boolean;
   parallel_tool_calls_supported: boolean;
   assistant_attachments_in_request_supported: boolean;
   support_comment_in_rate_response: boolean;

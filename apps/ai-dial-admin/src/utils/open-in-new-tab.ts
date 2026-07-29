@@ -46,6 +46,15 @@ export const getEntityPath = (
         : `${encodeURIComponent((data as DialPrompt).name as string)}?path=${encodeURIComponent(path)}`;
     }
 
+    case ApplicationRoute.AssetsModels: {
+      const { name, path } = data as { name: string; path?: string };
+      const resolvedPath = path || name;
+
+      return forRemove
+        ? decodeURIComponent(escapePercentSign(resolvedPath))
+        : `${encodeURIComponent(name)}?path=${encodeURIComponent(resolvedPath)}`;
+    }
+
     case ApplicationRoute.PromptPublications:
     case ApplicationRoute.FilePublications:
     case ApplicationRoute.ApplicationPublications:

@@ -6,13 +6,13 @@ import {
   TOOLSETS_PREFIX,
 } from '@/src/constants/publications-core';
 import { ResourceType } from '@/src/types/resource-type';
-import { PublicationTypeConfig } from './types';
+import { PublicationTypeConfig, PublishableResourceType } from './types';
 
 /**
  * Per-resource-type configuration driving publication resolution. Replaces the
  * five near-identical backend resolver classes with one config each.
  */
-export const PUBLICATION_TYPE_REGISTRY: Record<ResourceType, PublicationTypeConfig> = {
+export const PUBLICATION_TYPE_REGISTRY: Record<PublishableResourceType, PublicationTypeConfig> = {
   [ResourceType.APPLICATION]: {
     resourceType: ResourceType.APPLICATION,
     prefix: APPLICATIONS_PREFIX,

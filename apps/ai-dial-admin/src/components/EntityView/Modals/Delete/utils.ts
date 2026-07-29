@@ -19,6 +19,7 @@ import { isAssetView, isDeploymentManagerView, isEvaluationView } from '@/src/ut
 
 const deleteEntityMap: Record<string, DeleteI18nKey> = {
   [ApplicationRoute.Models]: DeleteI18nKey.Model,
+  [ApplicationRoute.AssetsModels]: DeleteI18nKey.Model,
   [ApplicationRoute.Applications]: DeleteI18nKey.Application,
   [ApplicationRoute.AssetsApplications]: DeleteI18nKey.Application,
   [ApplicationRoute.AssetsToolsets]: DeleteI18nKey.Toolset,
@@ -49,6 +50,7 @@ const bulkDeleteEntityMap: Record<string, DeleteI18nKey> = {
   [ApplicationRoute.AssetsApplications]: DeleteI18nKey.Applications,
   [ApplicationRoute.AssetsToolsets]: DeleteI18nKey.Toolsets,
   [ApplicationRoute.Prompts]: DeleteI18nKey.Prompts,
+  [ApplicationRoute.AssetsModels]: DeleteI18nKey.Models,
 };
 
 export const getBulkNotificationTitle = (

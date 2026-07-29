@@ -5,6 +5,7 @@ import { actionTypeToCore, mapRulesToCore, resourceTypeToCore } from './mappers'
 import { CorePublicationResource, CorePublicationUpdateDto, CoreResourceType } from './models';
 import { buildEncodedPath, encodeCorePath, encodeFolderPath, ensureTrailingSlash } from './path';
 import { PUBLICATION_TYPE_REGISTRY } from './resolver/registry';
+import { PublishableResourceType } from './resolver/types';
 
 interface AssetLike {
   name?: string;
@@ -41,7 +42,7 @@ type UpdatablePublication = Publication & {
   files?: PublicationFile[];
 };
 
-const getPrimaryType = (publication: UpdatablePublication): ResourceType => {
+const getPrimaryType = (publication: UpdatablePublication): PublishableResourceType => {
   if (Array.isArray(publication.applicationResources)) {
     return ResourceType.APPLICATION;
   }
