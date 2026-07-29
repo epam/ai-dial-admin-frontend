@@ -16,13 +16,16 @@ const makeSuite = (): TestSuite => ({});
 describe('getTestCaseColumns', () => {
   const onCellChange = vi.fn();
 
-  // Column layout: [enabled, ...TEST_CASES_COLUMN(id, testCaseName), ...schema, validityStatus]
-  const BASE_COLUMN_COUNT = 4; // enabled + id + testCaseName + validityStatus
+  // Column layout: [includedInRun, ...TEST_CASES_COLUMN(id, testCaseName), ...schema, validityStatus]
+  const BASE_COLUMN_COUNT = 4; // includedInRun + id + testCaseName + validityStatus
 
   test('should return only base columns when schema is empty', () => {
     const result = getTestCaseColumns(makeSuite(), onCellChange, undefined, []);
 
     expect(result.length).toBe(BASE_COLUMN_COUNT);
+    expect(result[0]).toEqual(
+      expect.objectContaining({ field: 'includedInRun', colId: 'includedInRun', sortable: true }),
+    );
   });
 
   test('should return only base columns when testCaseSchema is undefined', () => {

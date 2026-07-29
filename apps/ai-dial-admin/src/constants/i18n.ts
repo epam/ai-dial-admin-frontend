@@ -1869,6 +1869,13 @@ export enum TestSuitesI18nKey {
   ScoreThresholdCondition = 'TestSuites.ScoreThresholdCondition',
   ScoreThresholdOtherwise = 'TestSuites.ScoreThresholdOtherwise',
   ScoreThresholdFail = 'TestSuites.ScoreThresholdFail',
+  RunCondition = 'TestSuites.RunCondition',
+  RunConditionTooltip = 'TestSuites.RunConditionTooltip',
+  IncludeInRun = 'TestSuites.IncludeInRun',
+  IncludedInRun = 'TestSuites.IncludedInRun',
+  ExcludedFromRun = 'TestSuites.ExcludedFromRun',
+  RunConditionSelect = 'TestSuites.RunConditionSelect',
+  ViewOnlyIncludedInRun = 'TestSuites.ViewOnlyIncludedInRun',
 }
 
 export enum DatasetsI18nKey {

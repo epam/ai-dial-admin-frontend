@@ -2,14 +2,13 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FC, RefObject, useCallback, useEffect, useRef, useState } from 'react';
+import { FC, RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialConfirmationPopup, DialEllipsisTooltip, DialLoader, DialTag, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { DialConfirmationPopup, DialEllipsisTooltip, DialSwitch, DialTag, DialTooltip } from '@epam/ai-dial-ui-kit';
 import { IconDatabaseExport, IconExternalLink } from '@tabler/icons-react';
 import {
   CellClickedEvent,
-  CellValueChangedEvent,
   ColDef,
   GridApi,
   GridOptions,
@@ -44,12 +43,15 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { Dataset, DatasetVisibility } from '@/src/models/evaluation/dataset';
+import { FilterNode } from '@/src/models/evaluation/structured-query';
 import { TestCase, TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import HeaderButtons from './Header';
+import RunCondition from './RunCondition/RunCondition';
+import { useIncludedIds } from './RunCondition/use-included-ids';
 
 export interface TestCasesActions {
   getDirtyTestCases: () => TestCase[];
@@ -94,9 +96,19 @@ const TestCasesList: FC<Props> = ({
   const [isBatchDeleteModalOpen, setIsBatchDeleteModalOpen] = useState(false);
   const [selectedTestCase, setSelectedTestCase] = useState<TestCase | undefined>(undefined);
   const [selectedRows, setSelectedRows] = useState<TestCase[]>([]);
+  const [showIncludedOnly, setShowIncludedOnly] = useState(false);
   const onRemoveCaseRef = useRef<(data?: TestCase) => void>(() => {});
   const dirtyRowsRef = useRef<Map<string, Record<string, unknown>>>(new Map());
   const refreshVersionRef = useRef(0);
+  const gridRows = useMemo(() => [...data, ...newTestCases], [data, newTestCases]);
+  const includedIds = useIncludedIds(selectedTestSuite.testCaseFilter, gridRows, dataset?.testCaseSchema);
+  const includedIdsRef = useRef(includedIds);
+  includedIdsRef.current = includedIds;
+  const showIncludedOnlyRef = useRef(showIncludedOnly);
+  showIncludedOnlyRef.current = showIncludedOnly;
+  const newTestCasesRef = useRef(newTestCases);
+  newTestCasesRef.current = newTestCases;
+  const lastIncludedCountRef = useRef(0);
 
   const updateData = useCallback(
     (row: Record<string, unknown>) => {
@@ -111,43 +123,11 @@ const TestCasesList: FC<Props> = ({
     [newTestCases, onDirtyChange],
   );
 
-  const onCellValueChanged = useCallback(
-    (event: CellValueChangedEvent) => {
-      const col = event.column?.getColId();
-      if (col !== 'enabled') return;
-
-      const api = gridApiRef.current;
-      if (api) api.refreshClientSideRowModel('filter');
-
-      const rowId = String(event.data.id);
-      const isNewCase = newTestCases.some((r) => r.id === rowId);
-
-      if (isNewCase) {
-        onCellChange(event.data, col, event.newValue);
-        return;
-      }
-
-      // Derive disabled IDs from current grid state to handle batch updates
-      // (select all / deselect all) correctly. Reading from selectedTestSuite
-      // closure would be stale when multiple cellValueChanged events fire
-      // synchronously before React processes any state update.
-      const newDisabledIds: string[] = [];
-      api?.forEachNode((node) => {
-        if (!node.data || node.rowPinned) return;
-        if (!node.data.enabled) newDisabledIds.push(String(node.data.id));
-      });
-
-      onChange({ ...selectedTestSuite, disabledTestCaseIds: newDisabledIds }, true);
-      onDirtyChange?.(true);
-    },
-    [newTestCases, selectedTestSuite, onChange, onDirtyChange],
-  );
-
   const onCellChange = useCallback(
     (data: Record<string, unknown>, field: string, value: string | number | boolean) => {
       if (!data) return;
       data[field] = value;
-      if (field !== 'testCaseName' && field !== 'enabled' && data.data != null) {
+      if (field !== 'testCaseName' && data.data != null) {
         data.data = { ...(data.data as Record<string, unknown>), [field]: value };
       }
 
@@ -187,9 +167,17 @@ const TestCasesList: FC<Props> = ({
   }, []);
 
   const gridOptions: GridOptions = {
-    onCellValueChanged,
     onSelectionChanged,
     onCellClicked,
+    isExternalFilterPresent: () => showIncludedOnlyRef.current,
+    doesExternalFilterPass: (node) => {
+      if (!showIncludedOnlyRef.current) return true;
+      const ids = includedIdsRef.current;
+      if (ids == null) return true;
+      const rowId = String(node.data?.id);
+      if (newTestCasesRef.current.some((r) => String(r.id) === rowId)) return true;
+      return ids.has(rowId);
+    },
     rowSelection: {
       mode: 'multiRow',
       checkboxes: false,
@@ -239,6 +227,29 @@ const TestCasesList: FC<Props> = ({
     [selectedTestSuite.id, sidebar, sidebarOpen, toggleSidebar],
   );
 
+  const onRunConditionChange = useCallback(
+    (testCaseFilter: FilterNode | null) => {
+      onChange({ ...selectedTestSuite, testCaseFilter });
+    },
+    [onChange, selectedTestSuite],
+  );
+
+  const buildColumnDefs = useCallback(
+    (activeSchema?: TestCaseSchema[]) => [
+      ...getTestCaseColumns(selectedTestSuite, onCellChange, t, activeSchema, isReadOnly, () => includedIdsRef.current),
+      { ...ONE_ACTION_COLUMN(getTryOutOperation(onOpenTryOutSidebar)), colId: 'action-tryout' },
+      ...(!isReadOnly
+        ? [
+            {
+              ...ONE_ACTION_COLUMN(getRemoveOperation(stableOnRemoveCase, void 0, 'text-error w-4 h-4')),
+              colId: 'action-remove',
+            },
+          ]
+        : []),
+    ],
+    [selectedTestSuite, onCellChange, t, isReadOnly, onOpenTryOutSidebar, stableOnRemoveCase],
+  );
+
   const refreshGrid = useCallback(
     (withRefreshPage?: boolean, schemaOverride?: TestCaseSchema[]) => {
       const datasetId = selectedTestSuite.datasetId;
@@ -251,12 +262,7 @@ const TestCasesList: FC<Props> = ({
       getTestCases(datasetId, 0, 1000, [], []).then((res) => {
         if (version !== refreshVersionRef.current) return;
         setIsLoading(false);
-        const disabledIds = selectedTestSuite.disabledTestCaseIds ?? [];
         let rawData = res == null || res.content.length === 0 ? [] : getTestCaseGridData(res?.content || []);
-        rawData = rawData.map((row) => ({
-          ...row,
-          enabled: !disabledIds.includes(String(row.id)),
-        }));
         if (dirtyRowsRef.current.size > 0) {
           rawData = rawData.map((row) => {
             const id = String(row.id);
@@ -264,30 +270,39 @@ const TestCasesList: FC<Props> = ({
           });
         }
         setData(rawData);
-        setColumnDefs([
-          ...getTestCaseColumns(selectedTestSuite, onCellChange, t, activeSchema, isReadOnly),
-          { ...ONE_ACTION_COLUMN(getTryOutOperation(onOpenTryOutSidebar)), colId: 'action-tryout' },
-          ...(!isReadOnly
-            ? [
-                {
-                  ...ONE_ACTION_COLUMN(getRemoveOperation(stableOnRemoveCase, void 0, 'text-error w-4 h-4')),
-                  colId: 'action-remove',
-                },
-              ]
-            : []),
-        ]);
+        setColumnDefs(buildColumnDefs(activeSchema));
       });
       if (withRefreshPage) {
         router.refresh();
       }
     },
-    [gridApi, onCellChange, onOpenTryOutSidebar, selectedTestSuite, stableOnRemoveCase, t, isReadOnly, dataset],
+    [buildColumnDefs, selectedTestSuite.datasetId, dataset, router],
   );
 
-  const onGridReady = useCallback(({ api }: GridReadyEvent) => {
-    gridApiRef.current = api;
-    setGridApi(api);
-  }, []);
+  const applyIncludedInRunSort = useCallback(() => {
+    const api = gridApiRef.current;
+    if (!api) return;
+
+    if (selectedTestSuite.testCaseFilter) {
+      api.applyColumnState({
+        state: [{ colId: 'includedInRun', sort: 'desc', sortIndex: 0 }],
+        defaultState: { sort: null },
+      });
+    } else {
+      api.applyColumnState({
+        state: [{ colId: 'includedInRun', sort: null }],
+      });
+    }
+  }, [selectedTestSuite.testCaseFilter]);
+
+  const onGridReady = useCallback(
+    ({ api }: GridReadyEvent) => {
+      gridApiRef.current = api;
+      setGridApi(api);
+      applyIncludedInRunSort();
+    },
+    [applyIncludedInRunSort, setGridApi],
+  );
 
   const onApplyImport = useCallback(
     (file: File, mode: TestCaseImportMode, strategy: TestCaseConflictStrategy) => {
@@ -443,6 +458,12 @@ const TestCasesList: FC<Props> = ({
   }, [datasetId, schemaKey, isReadOnly]);
 
   useEffect(() => {
+    gridApiRef.current?.refreshCells({ force: true, columns: ['includedInRun'] });
+    gridApiRef.current?.onFilterChanged();
+    applyIncludedInRunSort();
+  }, [includedIds, showIncludedOnly, applyIncludedInRunSort]);
+
+  useEffect(() => {
     if (!testCasesActionsRef) return;
     testCasesActionsRef.current = {
       getDirtyTestCases,
@@ -514,18 +535,30 @@ const TestCasesList: FC<Props> = ({
   const totalCount = data.length + newTestCases.length;
   const isPrivate = dataset?.visibility === DatasetVisibility.PRIVATE;
 
+  if (!selectedTestSuite.testCaseFilter) {
+    lastIncludedCountRef.current = totalCount;
+  } else if (includedIds != null) {
+    lastIncludedCountRef.current = includedIds.size;
+  }
+  const includedCount = !selectedTestSuite.testCaseFilter
+    ? totalCount
+    : includedIds != null
+      ? includedIds.size
+      : lastIncludedCountRef.current;
+
   const publicTag = !isPrivate && dataset?.visibility && (
     <button
-      className="flex items-center gap-1 bg-accent-secondary-alpha border border-accent-secondary px-2 py-1 rounded-sm shrink-0 cursor-pointer"
+      type="button"
+      className="flex items-center gap-1 bg-accent-secondary-alpha border border-accent-secondary px-1.5 py-1 rounded-sm shrink-0 cursor-pointer"
       onClick={() => onOpenInNewTab(ApplicationRoute.Datasets, { id: selectedTestSuite.datasetId })}
     >
-      <IconDatabaseExport size={12} className="text-accent-secondary" />
+      <IconDatabaseExport size={16} className="text-accent-secondary" />
       <DialEllipsisTooltip className="tiny max-w-[600px]" text={dataset?.name || ''} />
-      <IconExternalLink size={12} />
+      <IconExternalLink size={16} />
     </button>
   );
 
-  const visibilityTag =
+  const datasetTag =
     dataset?.visibility &&
     (isPrivate ? (
       <DialTooltip tooltip={t(TestSuitesI18nKey.TestCasesPrivateTagTooltip)} triggerClassName="flex items-center">
@@ -538,50 +571,51 @@ const TestCasesList: FC<Props> = ({
       publicTag
     ));
 
-  const listLabel = (
-    <div className="flex items-center gap-2">
-      {t(TabsI18nKey.TestCases)}: {totalCount}
-      {visibilityTag}
-    </div>
-  );
-
-  const listDescription = !isPrivate && dataset?.visibility && (
-    <span className="dial-small-text text-secondary">{t(TestSuitesI18nKey.PublicDatasetInfo)}</span>
-  );
-
   return (
     <div className="flex-1 min-h-0">
-      {isLoading ? (
-        <DialLoader size={40} />
-      ) : (
-        <ListEntities
-          additionalGridOptions={gridOptions}
-          listLabel={listLabel}
-          description={listDescription}
-          emptyDataProps={{
-            title: t(TestSuitesI18nKey.NoTestCases),
-            description: t(TestSuitesI18nKey.NoTestCasesDescription),
-          }}
-          onGridReady={onGridReady}
-          rowData={data}
-          columnDefs={columnDefs}
-        >
-          <HeaderButtons
-            datasetId={selectedTestSuite.datasetId as string}
-            onApplyImport={onApplyImport}
-            onAdd={onAddTestCase}
-            onExport={onExport}
-            onOpenSchemaModal={onOpenSchemaModal}
-            onBatchDelete={onOpenBatchDeleteModal}
-            testCaseCount={totalCount}
-            showBatchDelete={!isReadOnly && selectedRows.length > 0}
-            isReadOnly={isReadOnly}
-            onPublish={onPublish}
-            onAttachDataset={onAttachDataset}
-            onDetachDataset={onDetachDatasetCallback}
+      <ListEntities
+        additionalGridOptions={gridOptions}
+        listLabel={t(TabsI18nKey.TestCases)}
+        listLabelAddon={
+          <DialSwitch
+            switchId="view-only-included-in-run"
+            isOn={showIncludedOnly}
+            label={t(TestSuitesI18nKey.ViewOnlyIncludedInRun, { count: includedCount })}
+            onChange={setShowIncludedOnly}
           />
-        </ListEntities>
-      )}
+        }
+        isGridLoading={isLoading}
+        toolbar={
+          <RunCondition
+            testCaseFilter={selectedTestSuite.testCaseFilter}
+            schema={dataset?.testCaseSchema}
+            onChange={onRunConditionChange}
+          />
+        }
+        emptyDataProps={{
+          title: t(TestSuitesI18nKey.NoTestCases),
+          description: t(TestSuitesI18nKey.NoTestCasesDescription),
+        }}
+        onGridReady={onGridReady}
+        rowData={data}
+        columnDefs={columnDefs}
+      >
+        <HeaderButtons
+          datasetId={selectedTestSuite.datasetId as string}
+          onApplyImport={onApplyImport}
+          onAdd={onAddTestCase}
+          onExport={onExport}
+          onOpenSchemaModal={onOpenSchemaModal}
+          onBatchDelete={onOpenBatchDeleteModal}
+          testCaseCount={totalCount}
+          showBatchDelete={!isReadOnly && selectedRows.length > 0}
+          isReadOnly={isReadOnly}
+          onPublish={onPublish}
+          onAttachDataset={onAttachDataset}
+          onDetachDataset={onDetachDatasetCallback}
+          datasetTag={datasetTag}
+        />
+      </ListEntities>
       {isDeleteModalOpen &&
         createPortal(
           <DeleteConfirmationModal
