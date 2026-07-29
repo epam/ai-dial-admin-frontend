@@ -67,6 +67,12 @@ export const getTopics = (data?: { topics?: string[]; descriptionKeywords?: stri
   return value?.length === 0 ? null : value?.sort() || null;
 };
 
+export const displayNameFilterValue = (data?: { displayName?: string; name?: string }): string => {
+  const displayName = data?.displayName ?? data?.name ?? '';
+  const id = data?.name ?? '';
+  return id && id !== displayName ? `${displayName} ${id}` : displayName;
+};
+
 export const formatAttachment = (value: string) => {
   if (value && value?.[0] === ALL_ATTACHMENTS) {
     return '*/*';
