@@ -21,7 +21,7 @@ import {
 } from '@/src/components/Assets/utils';
 import { getImportTitle } from '@/src/components/EntityListView/HeaderButtons/utils';
 import { getImportResults } from '@/src/components/EntityListView/Import/utils';
-import { FILE_PREVIEW, PREVIEW_EXTENSIONS, ROOT_FOLDER } from '@/src/constants/file';
+import { FILE_PREVIEW, PREVIEW_EXTENSIONS } from '@/src/constants/file';
 import { FileManagerI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
@@ -32,6 +32,7 @@ import { ImportResult } from '@/src/models/import';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getFolderName } from '@/src/utils/files/folder';
+import { getRootFolder } from '@/src/utils/files/root-folder';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import MoveItemsModal from './MoveItemsModal';
 import { ASSET_LIST_FILTER_STORAGE_KEY, MAX_FOLDER_NESTING_DEPTH, MOVE_ITEMS_INDICATOR_DELAY } from './constants';
@@ -135,8 +136,8 @@ const FileManager: FC<Props> = ({
 
   useEffect(() => {
     if (files == null || files?.length === 0) {
-      fetchFiles(`${ROOT_FOLDER}/`);
-      setLoadedPaths(new Set([`${ROOT_FOLDER}/`]));
+      fetchFiles(`${getRootFolder(view)}/`);
+      setLoadedPaths(new Set([`${getRootFolder(view)}/`]));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [files]);
@@ -169,7 +170,7 @@ const FileManager: FC<Props> = ({
 
       onCreateFolder?.(_, folderPath).then((res) => {
         if (res && res.success) {
-          const parentPath = getParentPathByFullPath(newPath) || `${ROOT_FOLDER}/`;
+          const parentPath = getParentPathByFullPath(newPath) || `${getRootFolder(view)}/`;
 
           fetchFiles(parentPath);
 
@@ -266,7 +267,7 @@ const FileManager: FC<Props> = ({
       onDeleteItems?.(fileNodes).then((result) => {
         const isSuccess = result.every((res) => (Array.isArray(res) ? res.every((r) => r.success) : res.success));
         if (isSuccess) {
-          const parentPath = getParentPathByFullPath(fileNodes[0]?.sourceUrl) || `${ROOT_FOLDER}/`;
+          const parentPath = getParentPathByFullPath(fileNodes[0]?.sourceUrl) || `${getRootFolder(view)}/`;
           fetchFiles(parentPath);
           setFilePath(parentPath);
 
@@ -394,7 +395,7 @@ const FileManager: FC<Props> = ({
         managerLabel={managerLabel}
         className="bg-layer-2 py-4 px-6"
         path={filePath}
-        defaultPath={`${ROOT_FOLDER}/`}
+        defaultPath={`${getRootFolder(view)}/`}
         items={filteredFiles as []}
         rootItem={filteredFiles?.[0] as DialRootFolder}
         filesLoading={isFetchingFiles}

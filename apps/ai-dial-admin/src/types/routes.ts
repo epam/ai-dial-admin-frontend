@@ -17,6 +17,7 @@ export enum ApplicationRoute {
   InterceptorTemplates = '/interceptor-templates',
 
   // Assets
+  AssetsModels = '/assets-models',
   AssetsApplications = '/assets-applications',
   AssetsToolsets = '/assets-toolsets',
   Conversations = '/conversations',

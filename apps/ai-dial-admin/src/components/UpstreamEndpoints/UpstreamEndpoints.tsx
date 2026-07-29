@@ -1,4 +1,4 @@
-import { FC, useCallback } from 'react';
+import { useCallback } from 'react';
 
 import { DialGhostButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
@@ -8,15 +8,14 @@ import { UpstreamEndpointsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
-import { DialModel, DialModelEndpoint } from '@/src/models/dial/model';
-import { DialRoute } from '@/src/models/dial/route';
+import { DialModelEndpoint } from '@/src/models/dial/model';
 import { ApplicationRoute } from '@/src/types/routes';
 import Endpoint from './Endpoint/Endpoint';
 
-interface Props {
-  entity: DialRoute | DialModel;
+interface Props<T> {
+  entity: T;
   disabled?: boolean;
-  onChangeEntity: (entity: DialRoute | DialModel) => void;
+  onChangeEntity: (entity: T) => void;
   isKeyOptional?: boolean;
   required?: boolean;
   view?: ApplicationRoute;
@@ -24,7 +23,7 @@ interface Props {
   collapsible?: boolean;
 }
 
-const UpstreamEndpoints: FC<Props> = ({
+const UpstreamEndpoints = <T extends { upstreams?: DialModelEndpoint[] }>({
   disabled,
   entity,
   onChangeEntity,
@@ -33,7 +32,7 @@ const UpstreamEndpoints: FC<Props> = ({
   view,
   withResponses,
   collapsible = true,
-}) => {
+}: Props<T>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const isDisabled = disabled || isReadOnlyAdmin;

@@ -2,6 +2,7 @@ import { DialApplication } from './application';
 import { EntityValidityState } from './base-entity';
 import { DialFile } from './file';
 import { DialPrompt } from './prompt';
+import { DialModelResource } from './resource';
 import { Toolset } from './toolset';
 
 export interface AssetApp extends DialFile, DialApplication, EntityValidityState {
@@ -21,6 +22,10 @@ export interface AssetToolset extends DialFile, Toolset {
   display_name?: string;
   displayVersion?: string;
   selectedVersions?: string[];
+}
+
+export interface AssetModel extends DialFile, Omit<DialModelResource, 'name'>, EntityValidityState {
+  items?: AssetModel[];
 }
 
 export type DeploymentAsset = AssetApp | AssetToolset;

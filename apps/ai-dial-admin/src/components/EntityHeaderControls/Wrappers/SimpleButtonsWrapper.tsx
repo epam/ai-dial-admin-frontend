@@ -24,6 +24,7 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
+import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useI18n } from '@/src/locales/client';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -36,6 +37,7 @@ export interface SimpleButtonsWrapperProps<T> {
   leadingActions?: ReactNode;
   entity: T;
   etag?: string;
+  getAssetContext?: () => AssetsFolderContext;
 
   onDiscard: () => void;
   onSave: () => void;
@@ -53,6 +55,7 @@ const SimpleButtonsWrapper = <T extends object>({
   onDiscard,
   onSave,
   onRemove,
+  getAssetContext,
 }: SimpleButtonsWrapperProps<T>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
@@ -133,6 +136,7 @@ const SimpleButtonsWrapper = <T extends object>({
             onCloseModal={onCloseModal}
             isSelectedView={true}
             etag={etag}
+            getAssetContext={getAssetContext}
           />,
           document.body,
         )}

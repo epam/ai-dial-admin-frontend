@@ -38,6 +38,19 @@ describe('Server :: Core :: AssetApi', () => {
     expect(fetch.mock.calls[0][0]).not.toContain('/public/');
   });
 
+  test('getMetadata strips the redundant platform root segment for Model (already baked into the prefix)', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ name: 'platform', nodeType: 'FOLDER', items: [] }));
+    await instance.getMetadata(TOKEN_MOCK, ResourceType.MODEL, 'platform/');
+    expect(fetch.mock.calls[0][0]).toContain('/v1/metadata/models/platform/?');
+    expect(fetch.mock.calls[0][0]).not.toContain('platform/platform');
+  });
+
+  test('getMetadata leaves a bare Model item path (no platform segment) unchanged', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ name: 'gpt-4', nodeType: 'ITEM' }));
+    await instance.getMetadata(TOKEN_MOCK, ResourceType.MODEL, 'gpt-4');
+    expect(fetch.mock.calls[0][0]).toContain('/v1/metadata/models/platform/gpt-4');
+  });
+
   test('list maps both ITEM and FOLDER nodes into resource info rows, tagged with nodeType', async () => {
     fetch.mockResponseOnce(
       JSON.stringify({
@@ -117,6 +130,22 @@ describe('Server :: Core :: AssetApi', () => {
     expect(result.success).toBe(true);
     expect(result.etag).toBe('etag-9');
     expect(result.response).toMatchObject({ content: 'hello', name: 'a', version: '1.0' });
+  });
+
+  test('getMergedWithEtag reads the etag from metadata for an unversioned type (Model), not the content response', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ type: 'chat' }), {
+      headers: { 'content-type': 'application/json' },
+    });
+    fetch.mockResponseOnce(
+      JSON.stringify({ name: 'gpt-4', nodeType: 'ITEM', url: 'models/platform/gpt-4', etag: 'meta-etag-1' }),
+      { headers: { 'content-type': 'application/json' } },
+    );
+
+    const result = await instance.getMergedWithEtag(TOKEN_MOCK, ResourceType.MODEL, 'gpt-4');
+
+    expect(result.success).toBe(true);
+    expect(result.etag).toBe('meta-etag-1');
+    expect(result.response).toMatchObject({ type: 'chat', name: 'gpt-4', path: 'gpt-4', folderId: '' });
   });
 
   test('getMergedWithEtag propagates a failed content fetch without calling metadata', async () => {

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { getStatusReason, normalizeCoreError } from '../error';
+import { getStatusReason, normalizeCoreError, VALIDATION_WARNINGS_ERROR_HEADER } from '../error';
 
 describe('Server :: Core :: normalizeCoreError', () => {
   test('plain-text body becomes the message with a status-reason header', () => {
@@ -39,6 +39,29 @@ describe('Server :: Core :: normalizeCoreError', () => {
       error: 'Internal Server Error',
       message: 'null',
       status: 500,
+    });
+  });
+
+  test('validationWarnings body is surfaced with the stable Validation Failed header, distinct from a generic 422', () => {
+    const body = JSON.stringify({
+      validationWarnings: [
+        { field: 'endpoint', message: 'must not be blank' },
+        { field: 'tokenizerModel', message: 'unknown reference' },
+      ],
+    });
+
+    expect(normalizeCoreError(body, 422)).toEqual({
+      error: VALIDATION_WARNINGS_ERROR_HEADER,
+      message: 'endpoint: must not be blank; tokenizerModel: unknown reference',
+      status: 422,
+    });
+  });
+
+  test('validationWarnings with no field/message falls back to the status reason for the message', () => {
+    expect(normalizeCoreError(JSON.stringify({ validationWarnings: [{}] }), 422)).toEqual({
+      error: VALIDATION_WARNINGS_ERROR_HEADER,
+      message: getStatusReason(422),
+      status: 422,
     });
   });
 

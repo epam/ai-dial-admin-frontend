@@ -87,6 +87,8 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
       return isReadOnlyAdmin
         ? []
         : allActionLabels.filter((item) => item.key !== 'duplicate' && item.key !== 'openInNewTab');
+    case ApplicationRoute.AssetsModels:
+      return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key === 'delete');
     case ApplicationRoute.AssetsApplications:
     case ApplicationRoute.AssetsToolsets:
     case ApplicationRoute.Prompts:
@@ -118,6 +120,14 @@ export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: 
   switch (view) {
     case ApplicationRoute.Files:
       return [...baseToolbarOptionLabels, { key: 'uploadFiles', label: FileManagerI18nKey.Files, icon: null }];
+    case ApplicationRoute.AssetsModels:
+      return [
+        {
+          key: 'newItem',
+          label: FileManagerI18nKey.Model,
+          icon: null,
+        },
+      ];
     case ApplicationRoute.AssetsApplications:
       return [
         ...baseToolbarOptionLabels,
@@ -253,6 +263,20 @@ export const getDeleteNotificationContent = (
         : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
             item: t(FileManagerI18nKey.Prompt),
             name: `${nameWithPath}__${(fileNodes as AssetWithVersion[])?.[0].selectedVersions?.[0] || (fileNodes as AssetWithVersion[])?.[0].version || ''}`,
+          });
+      return { title, description };
+    }
+    case ApplicationRoute.AssetsModels: {
+      const title = isDeleteSeveralFiles
+        ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Items) })
+        : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Model) });
+      const description = isDeleteSeveralFiles
+        ? t(FileManagerI18nKey.DeleteSuccessDescriptionForMany, {
+            count: deletedItemsCount,
+          })
+        : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
+            item: t(FileManagerI18nKey.Model),
+            name: nameWithPath,
           });
       return { title, description };
     }

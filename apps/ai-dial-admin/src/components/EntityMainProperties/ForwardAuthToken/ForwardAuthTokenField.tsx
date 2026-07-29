@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import {
   NotificationVariant,
@@ -20,18 +20,22 @@ import {
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
-import { ChatEntity } from '@/src/models/dial/base-entity';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getAlertTitlePerView, getDisplayNamePerView, NONE_ID, USE_ID } from './utils';
 
-interface Props {
+interface Props<T> {
   view: ApplicationRoute;
-  entity: ChatEntity;
-  onChangeEntity: (entity: ChatEntity) => void;
+  entity: T;
+  onChangeEntity: (entity: T) => void;
   disabled?: boolean;
 }
 
-const ForwardAuthTokenField: FC<Props> = ({ view, entity, onChangeEntity, disabled }) => {
+const ForwardAuthTokenField = <T extends { displayName?: string; forwardAuthToken?: boolean }>({
+  view,
+  entity,
+  onChangeEntity,
+  disabled,
+}: Props<T>) => {
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const isReadonly = disabled || isReadOnlyAdmin;
   const t = useI18n();

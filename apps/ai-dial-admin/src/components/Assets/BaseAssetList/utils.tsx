@@ -6,6 +6,7 @@ import {
   importApps,
   moveApps,
 } from '@/src/app/[lang]/assets-applications/actions';
+import { bulkDeleteModels, createModel, getModel } from '@/src/app/[lang]/assets-models/actions';
 import {
   bulkDeleteToolsets,
   createToolset,
@@ -28,6 +29,7 @@ import { FileManagerI18nKey } from '@/src/constants/i18n';
 import { STRINGS_DELIMITER } from '@/src/constants/prompt';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { useConversationFolder } from '@/src/context/assets/ConversationsFolderContext';
+import { useModelsFolder } from '@/src/context/assets/ModelsFolderContext';
 import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
@@ -42,7 +44,7 @@ import { FileManagerColumnKey, NAME_COLUMN, SelectOption, UPDATED_AT_COLUMN } fr
 import { ColDef } from 'ag-grid-community';
 import { MouseEvent } from 'react';
 import MultiSelectTagsRenderer from '../../Grid/CellRenderers/MultiSelectTagsRenderer';
-import { CrudAssetRoute } from './types';
+import { CreateAssetRoute, CrudAssetRoute } from './types';
 
 export const getItems = (data: unknown) => {
   const asset = data as AssetWithVersion;
@@ -61,6 +63,7 @@ export const customMultiSelectTagsRenderer = (
 };
 
 export const getGridColumns = (
+  view: ApplicationRoute,
   onChange: (
     value: string | string[],
     data: unknown,
@@ -110,6 +113,10 @@ export const getGridColumns = (
     },
   };
 
+  if (view === ApplicationRoute.AssetsModels) {
+    return [NAME_COLUMN('Name') as ColDef, AUTHOR_COLUMN, UPDATED_AT_COLUMN('Updated time') as ColDef];
+  }
+
   return [NAME_COLUMN('Name') as ColDef, VERSION_COLUMN, AUTHOR_COLUMN, UPDATED_AT_COLUMN('Updated time') as ColDef];
 };
 
@@ -155,6 +162,8 @@ export const getFileManagerLabel = (view: ApplicationRoute): string => {
       return FileManagerI18nKey.Toolsets;
     case ApplicationRoute.Conversations:
       return FileManagerI18nKey.Conversations;
+    case ApplicationRoute.AssetsModels:
+      return FileManagerI18nKey.Models;
     default:
       return '';
   }
@@ -185,6 +194,11 @@ export const getEmptyStateContent = (
         title: t(FileManagerI18nKey.ConversationsEmptyStateTitle),
         description: '',
       };
+    case ApplicationRoute.AssetsModels:
+      return {
+        title: t(FileManagerI18nKey.ModelsEmptyStateTitle),
+        description: t(FileManagerI18nKey.ModelsEmptyStateDescription),
+      };
     default:
       return { title: '', description: '' };
   }
@@ -210,6 +224,7 @@ export const AssetFolderContextMap = {
   [ApplicationRoute.AssetsApplications]: useAppsFolder,
   [ApplicationRoute.AssetsToolsets]: useToolsetFolder,
   [ApplicationRoute.Conversations]: useConversationFolder,
+  [ApplicationRoute.AssetsModels]: useModelsFolder,
 };
 
 export const GetAssetActionMap = {
@@ -217,10 +232,11 @@ export const GetAssetActionMap = {
   [ApplicationRoute.AssetsApplications]: getApp,
   [ApplicationRoute.AssetsToolsets]: getToolset,
   [ApplicationRoute.Conversations]: getConversation,
+  [ApplicationRoute.AssetsModels]: getModel,
 };
 
 export const CreateAssetActionMap: Record<
-  CrudAssetRoute,
+  CreateAssetRoute,
   (asset: AssetWithVersion) => Promise<ServerActionResponse<Record<string, unknown>>>
 > = {
   [ApplicationRoute.Prompts]: createPrompt,
@@ -228,6 +244,9 @@ export const CreateAssetActionMap: Record<
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
   [ApplicationRoute.AssetsToolsets]: createToolset as (
+    asset: AssetWithVersion,
+  ) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  [ApplicationRoute.AssetsModels]: createModel as (
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
 };
@@ -269,6 +288,7 @@ export const BulkDeleteAssetActionMap = {
   [ApplicationRoute.AssetsApplications]: bulkDeleteApps,
   [ApplicationRoute.AssetsToolsets]: bulkDeleteToolsets,
   [ApplicationRoute.Conversations]: deleteConversations,
+  [ApplicationRoute.AssetsModels]: bulkDeleteModels,
 };
 
 export const enrichConversationWithVersion = (conversation: AssetWithVersion): AssetWithVersion => {

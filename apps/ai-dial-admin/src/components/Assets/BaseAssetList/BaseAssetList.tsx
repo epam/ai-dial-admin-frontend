@@ -23,7 +23,6 @@ import { navigateEntityUrl } from '@/src/components/EntityListView/utils/on-cell
 import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';
 import { usePointerClickModifier } from '@/src/hooks/use-pointer-click-modifier';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
-import { ROOT_FOLDER } from '@/src/constants/file';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
@@ -36,11 +35,12 @@ import { downloadFile, downloadJson } from '@/src/utils/download';
 import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 import { filterNames } from '@/src/utils/entities/filter-names';
 import { getJsonFileName } from '@/src/utils/import/get-json-name';
+import { getRootFolder } from '@/src/utils/files/root-folder';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { useRouter } from 'next/navigation';
 import Modals from './Modals';
-import { BaseAssetRoute, CrudAssetRoute, ModalType } from './types';
+import { BaseAssetRoute, CreateAssetRoute, CrudAssetRoute, ModalType } from './types';
 import {
   AssetFolderContextMap,
   BulkDeleteAssetActionMap,
@@ -223,8 +223,8 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
   );
 
   const columnDefs = useMemo(() => {
-    return getGridColumns(gridItemVersionsChange, selectedVersionsMap, hasSelectedItems);
-  }, [gridItemVersionsChange, hasSelectedItems, selectedVersionsMap]);
+    return getGridColumns(view, gridItemVersionsChange, selectedVersionsMap, hasSelectedItems);
+  }, [view, gridItemVersionsChange, hasSelectedItems, selectedVersionsMap]);
 
   const handleCreateFolder = useCallback(
     async (_: DialUploadFileItem | undefined, folderPath: string) => {
@@ -232,17 +232,17 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
       const newPath = `${folderPath.replaceAll('//', '/')}/`;
       const emptyAsset = getEmptyAsset(view, newPath);
 
-      const createAsset = CreateAssetActionMap[view as CrudAssetRoute];
+      const createAsset = CreateAssetActionMap[view as CreateAssetRoute];
 
-      return createAsset(emptyAsset);
+      return createAsset(emptyAsset as AssetWithVersion);
     },
     [view],
   );
 
   const handleCreateAsset = useCallback(
     async (asset: AssetWithVersion, path?: string, isCreateDuplicate?: boolean) => {
-      const folderPath = path || destinationFolder || `${ROOT_FOLDER}/`;
-      const createAsset = CreateAssetActionMap[view as CrudAssetRoute];
+      const folderPath = path || destinationFolder || `${getRootFolder(view)}/`;
+      const createAsset = CreateAssetActionMap[view as CreateAssetRoute];
 
       return createAsset({ ...asset, folderId: folderPath }).then((res) => {
         if (res.success) {
@@ -346,7 +346,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
       _: string,
       ignorePaths?: boolean,
     ) => {
-      let importFolder = destinationFolder || `${ROOT_FOLDER}/`;
+      let importFolder = destinationFolder || `${getRootFolder(view)}/`;
       setFolderToRefetch(importFolder);
 
       const { body } = getFormDataForImport(
@@ -492,7 +492,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
       return Promise.all(promises).then((result) => {
         const isSuccess = result.every((res) => res.success);
         if (isSuccess) {
-          const parentPath = destinationFolder || `${ROOT_FOLDER}/`;
+          const parentPath = destinationFolder || `${getRootFolder(view)}/`;
           fetchFiles(parentPath);
           setFilePath(parentPath);
           removeSelection(deletedItems?.map((item) => item.path));

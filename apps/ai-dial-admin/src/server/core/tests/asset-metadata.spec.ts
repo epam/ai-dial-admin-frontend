@@ -1,9 +1,12 @@
 import { describe, expect, test } from 'vitest';
 
+import { ResourceType } from '@/src/types/resource-type';
+
 import {
   CoreResourceMetadataNode,
   mergeApplicationResource,
   mergeConversation,
+  mergeModelResource,
   mergePrompt,
   mergeToolsetResource,
   toResourceInfoList,
@@ -86,6 +89,22 @@ describe('Server :: Core :: asset-metadata', () => {
     });
   });
 
+  test('mergeModelResource sources name/folderId/path/author/updatedAt from metadata (flat, no version), rest from content', () => {
+    const content = { type: 'chat', tokenizerModel: 'gpt-4', displayName: 'GPT-4' };
+    const meta = metadata({ url: 'models/platform/gpt-4', author: 'eve', updatedAt: 555 });
+
+    expect(mergeModelResource(content, meta)).toEqual({
+      type: 'chat',
+      tokenizerModel: 'gpt-4',
+      displayName: 'GPT-4',
+      name: 'gpt-4',
+      folderId: '',
+      path: 'gpt-4',
+      author: 'eve',
+      updatedAt: '555',
+    });
+  });
+
   test('toResourceInfoList maps both ITEM and FOLDER nodes, tagged with nodeType', () => {
     const node = metadata({
       nodeType: 'FOLDER',
@@ -95,7 +114,7 @@ describe('Server :: Core :: asset-metadata', () => {
       ],
     });
 
-    const result = toResourceInfoList(node, 'prompts/');
+    const result = toResourceInfoList(node, ResourceType.PROMPT);
 
     expect(result).toHaveLength(2);
     expect(result[0]).toMatchObject({ name: 'a', version: '1', nodeType: 'item' });
@@ -103,7 +122,7 @@ describe('Server :: Core :: asset-metadata', () => {
   });
 
   test('toResourceInfoList returns an empty array for a node with no items', () => {
-    expect(toResourceInfoList(null, 'prompts/')).toEqual([]);
-    expect(toResourceInfoList(metadata({ items: undefined }), 'prompts/')).toEqual([]);
+    expect(toResourceInfoList(null, ResourceType.PROMPT)).toEqual([]);
+    expect(toResourceInfoList(metadata({ items: undefined }), ResourceType.PROMPT)).toEqual([]);
   });
 });

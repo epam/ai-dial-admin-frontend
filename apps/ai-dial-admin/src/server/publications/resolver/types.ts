@@ -14,8 +14,11 @@ export type PublicationResourceKey =
 /** The field on a resource wrapper that holds the enriched asset body. */
 export type PublicationAssetKey = 'prompt' | 'applicationResource' | 'conversation' | 'toolSetResource' | 'file';
 
+/** Resource types the publications workflow can carry. Models have no publications support. */
+export type PublishableResourceType = Exclude<ResourceType, ResourceType.MODEL>;
+
 export interface PublicationTypeConfig {
-  resourceType: ResourceType;
+  resourceType: PublishableResourceType;
   prefix: string;
   resourceKey: PublicationResourceKey;
   assetKey: PublicationAssetKey;

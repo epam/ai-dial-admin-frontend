@@ -1,22 +1,26 @@
 'use client';
 
-import { FC, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { DialFormPopup } from '@epam/ai-dial-ui-kit';
 
 import { ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DialModel } from '@/src/models/dial/model';
 import TokenizedModelsGrid from './TokenizedModelsGrid';
 
-interface Props {
-  model: DialModel;
+interface Props<T> {
+  model: T;
   isModalOpen: boolean;
   onClose: () => void;
   onSelectModelId: (name: string) => void;
 }
 
-const TokenizedModelsModal: FC<Props> = ({ model, isModalOpen, onClose, onSelectModelId }) => {
+const TokenizedModelsModal = <T extends { tokenizerModel?: string }>({
+  model,
+  isModalOpen,
+  onClose,
+  onSelectModelId,
+}: Props<T>) => {
   const t = useI18n();
 
   const [selectedModel, setSelectedModel] = useState(model.tokenizerModel);

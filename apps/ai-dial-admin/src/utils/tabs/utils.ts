@@ -427,6 +427,9 @@ export const getTabsForAsset = (
   if (view === ApplicationRoute.Conversations) {
     return [propertiesTab(t), conversationTab(t)];
   }
+  if (view === ApplicationRoute.AssetsModels) {
+    return [propertiesTab(t), featuresTab(t)];
+  }
   return [propertiesTab(t)];
 };
 
