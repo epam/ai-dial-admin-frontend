@@ -1,11 +1,11 @@
 import { FC, useCallback } from 'react';
-import { IconX } from '@tabler/icons-react';
 import { SelectOption } from '@epam/ai-dial-ui-kit';
 
-import { FilterData } from '@/src/models/telemetry';
+import FilterChip from '@/src/components/Common/FilterEditor/FilterChip';
 import AddFilter from '@/src/components/Telemetry/TelemetryControls/Filters/AddFilter';
-import { ApplicationRoute } from '@/src/types/routes';
 import { useI18n } from '@/src/locales/client';
+import { FilterData } from '@/src/models/telemetry';
+import { ApplicationRoute } from '@/src/types/routes';
 import { getFilterConditionConfig, getFilterTypeConfig } from '@/src/utils/telemetry';
 
 interface Props {
@@ -55,24 +55,13 @@ const Filter: FC<Props> = ({
       isMcpView={isMcpView}
       isRouteView={isRouteView}
     >
-      <div className="flex text-primary small rounded bg-layer-3 my-[5px] mr-4 px-1.5 py-1">
-        <p className="flex items-center">
-          <span className="mr-1">{typeText}</span>
-          <i className="mr-1">{conditionIcon}</i>
-          <span className="mr-1 max-w-[250px] break-words">
-            {value.length <= 2 ? value.join(', ') : `${value.slice(0, 2).join(', ')}, +${value.length - 2} more`}
-          </span>
-        </p>
-
-        <button
-          type="button"
-          aria-label="button"
-          className="hover:text-accent-primary ml-2"
-          onClick={() => onClose(id)}
-        >
-          <IconX height={16} width={16} />
-        </button>
-      </div>
+      <FilterChip className="my-[5px] mr-4" onRemove={() => onClose(id)} removeAriaLabel="button">
+        <span className="mr-1">{typeText}</span>
+        <i className="mr-1">{conditionIcon}</i>
+        <span className="mr-1 max-w-[250px] break-words">
+          {value.length <= 2 ? value.join(', ') : `${value.slice(0, 2).join(', ')}, +${value.length - 2} more`}
+        </span>
+      </FilterChip>
     </AddFilter>
   );
 };

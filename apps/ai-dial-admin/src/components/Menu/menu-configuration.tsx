@@ -79,6 +79,10 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
       icon: <IconFolders width={iconSize} height={iconSize} />,
       items: [
         {
+          key: MenuI18nKey.Models,
+          href: ApplicationRoute.AssetsModels,
+        },
+        {
           key: MenuI18nKey.Applications,
           href: ApplicationRoute.AssetsApplications,
         },

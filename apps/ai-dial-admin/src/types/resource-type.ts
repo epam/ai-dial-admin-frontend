@@ -4,4 +4,5 @@ export enum ResourceType {
   APPLICATION = 'APPLICATION',
   TOOLSET = 'TOOL_SET',
   CONVERSATION = 'CONVERSATION',
+  MODEL = 'MODEL',
 }

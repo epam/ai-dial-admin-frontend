@@ -1,8 +1,8 @@
 import { ResourceType } from '@/src/types/resource-type';
 import { RESOURCE_TYPE_PREFIX } from '@/src/constants/publications-core';
 
-/** Resource types with a `__version`-suffixed name and a metadata+content split. Files are versionless. */
-export type VersionedResourceType = Exclude<ResourceType, ResourceType.FILE>;
+/** Resource types with a `__version`-suffixed name and a metadata+content split. Files and models are versionless. */
+export type VersionedResourceType = Exclude<ResourceType, ResourceType.FILE | ResourceType.MODEL>;
 
 export const VERSIONED_RESOURCE_TYPES: VersionedResourceType[] = [
   ResourceType.APPLICATION,
@@ -18,6 +18,7 @@ export const CORE_RESOURCE_URL: Record<ResourceType, string> = {
   [ResourceType.CONVERSATION]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.CONVERSATION]}`,
   [ResourceType.PROMPT]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.PROMPT]}`,
   [ResourceType.FILE]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.FILE]}`,
+  [ResourceType.MODEL]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.MODEL]}`,
 };
 
 /** `v1/metadata/{prefix}` metadata endpoint per resource type. */
@@ -27,6 +28,7 @@ export const CORE_RESOURCE_METADATA_URL: Record<ResourceType, string> = {
   [ResourceType.CONVERSATION]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.CONVERSATION]}`,
   [ResourceType.PROMPT]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.PROMPT]}`,
   [ResourceType.FILE]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.FILE]}`,
+  [ResourceType.MODEL]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.MODEL]}`,
 };
 
 /** Backend default list path — only Conversation and Prompt default an omitted path (`ConversationService`/`PromptService`). */

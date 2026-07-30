@@ -27,7 +27,7 @@ export const fillChildren = (files: DialFile[], existingChildren?: DialFile[]): 
       return {
         ...file,
         name: file?.name || getFolderName(file.path),
-        parentPath: `${file.path.replace(/\/[^/]+\/?$/, '')}/`,
+        parentPath: file.path.includes('/') ? `${file.path.replace(/\/[^/]+\/?$/, '')}/` : '',
         // TODO: Remove When we get real permissions
         permissions: ['WRITE', 'READ'],
         items: file.nodeType === DialFileNodeType.FOLDER ? items : void 0,

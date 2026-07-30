@@ -18,6 +18,7 @@ const ONLY_ADMIN_ENTITIES = [
   ApplicationRoute.Files,
   ApplicationRoute.AssetsApplications,
   ApplicationRoute.AssetsToolsets,
+  ApplicationRoute.AssetsModels,
   ApplicationRoute.TestSuites,
   ApplicationRoute.Datasets,
 ];

@@ -295,6 +295,7 @@ export enum DeleteI18nKey {
   Applications = 'DeleteEntity.BulkDelete.Applications',
   Toolsets = 'DeleteEntity.BulkDelete.Toolsets',
   Prompts = 'DeleteEntity.BulkDelete.Prompts',
+  Models = 'DeleteEntity.BulkDelete.Models',
 
   //  No related artefacts
   AdapterWarning = 'DeleteEntity.NoRelatedArtefacts.AdapterWarning',
@@ -1869,6 +1870,13 @@ export enum TestSuitesI18nKey {
   ScoreThresholdCondition = 'TestSuites.ScoreThresholdCondition',
   ScoreThresholdOtherwise = 'TestSuites.ScoreThresholdOtherwise',
   ScoreThresholdFail = 'TestSuites.ScoreThresholdFail',
+  RunCondition = 'TestSuites.RunCondition',
+  RunConditionTooltip = 'TestSuites.RunConditionTooltip',
+  IncludeInRun = 'TestSuites.IncludeInRun',
+  IncludedInRun = 'TestSuites.IncludedInRun',
+  ExcludedFromRun = 'TestSuites.ExcludedFromRun',
+  RunConditionSelect = 'TestSuites.RunConditionSelect',
+  ViewOnlyIncludedInRun = 'TestSuites.ViewOnlyIncludedInRun',
 }
 
 export enum DatasetsI18nKey {
@@ -2053,6 +2061,8 @@ export enum FileManagerI18nKey {
   SelectedItems = 'FileManager.SelectedItems',
   File = 'FileManager.File',
   Files = 'FileManager.Files',
+  Models = 'FileManager.Models',
+  Model = 'FileManager.Model',
   Applications = 'FileManager.Applications',
   Application = 'FileManager.Application',
   Toolsets = 'FileManager.Toolsets',
@@ -2078,6 +2088,8 @@ export enum FileManagerI18nKey {
   PromptEmptyStateDescription = 'FileManager.PromptEmptyStateDescription',
   ApplicationsEmptyStateTitle = 'FileManager.ApplicationsEmptyStateTitle',
   ApplicationsEmptyStateDescription = 'FileManager.ApplicationsEmptyStateDescription',
+  ModelsEmptyStateTitle = 'FileManager.ModelsEmptyStateTitle',
+  ModelsEmptyStateDescription = 'FileManager.ModelsEmptyStateDescription',
   ToolsetsEmptyStateTitle = 'FileManager.ToolsetsEmptyStateTitle',
   ToolsetsEmptyStateDescription = 'FileManager.ToolsetsEmptyStateDescription',
   ConversationsEmptyStateTitle = 'FileManager.ConversationsEmptyStateTitle',

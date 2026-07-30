@@ -3,6 +3,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 
 const createEntityMap: Record<string, CreateI18nKey> = {
   [ApplicationRoute.Models]: CreateI18nKey.Model,
+  [ApplicationRoute.AssetsModels]: CreateI18nKey.Model,
   [ApplicationRoute.Applications]: CreateI18nKey.Application,
   [ApplicationRoute.ApplicationRunners]: CreateI18nKey.ApplicationRunner,
   [ApplicationRoute.Keys]: CreateI18nKey.Key,
