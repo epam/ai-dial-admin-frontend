@@ -1,4 +1,4 @@
-import { ErrorI18nKey } from '@/src/constants/i18n';
+import { ErrorI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { FieldError } from '@/src/models/error';
 import { Metric } from '@/src/models/evaluation/metric';
 import {
@@ -89,15 +89,24 @@ export const getWeightError = (
     return { type: ErrorType.INVALID, text: t ? t(ErrorI18nKey.EmptyField) : '' };
   }
 
+  if (numericValue <= 0) {
+    return { type: ErrorType.INVALID, text: t ? t(TestSuitesI18nKey.OverallScoreWeightPositive) : '' };
+  }
+
   return null;
 };
 
 export const getMetricSelectionError = (
   metricValue: string | undefined,
   t?: (key: string, options?: Record<string, string | number>) => string,
+  exists = true,
 ): FieldError | null => {
   if (!metricValue) {
     return { type: ErrorType.INVALID, text: t ? t(ErrorI18nKey.EmptyField) : '' };
+  }
+
+  if (!exists) {
+    return { type: ErrorType.INVALID, text: t ? t(TestSuitesI18nKey.OverallScoreMetricDeleted) : '' };
   }
 
   return null;

@@ -281,7 +281,7 @@ describe('Import :: changeFilesMap', () => {
       ApplicationRoute.Prompts,
     );
 
-    expect(result.get('key1').files[1].id).toBe('newassetName');
+    expect(result.get('key1').files[1].id).toBe('456__newassetName');
     expect(result.get('key1').files[1].name).toBe('newassetName');
   });
 

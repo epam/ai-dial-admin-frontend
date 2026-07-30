@@ -12,10 +12,11 @@ import { getIconPath } from '@/src/utils/themes/icon-path';
 interface Props {
   disabled?: boolean;
   fileUrl: string;
+  size?: number;
   onChange: (url: string) => void;
 }
 
-const FilledIcon: FC<Props> = ({ disabled, fileUrl, onChange }) => {
+const FilledIcon: FC<Props> = ({ disabled, fileUrl, size = 80, onChange }) => {
   const t = useI18n();
   const [src, setSrc] = useState(fileUrl);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -48,13 +49,16 @@ const FilledIcon: FC<Props> = ({ disabled, fileUrl, onChange }) => {
 
   const getImageSrc = () => {
     return (
-      <div className="bg-controls-enable-primary rounded-full w-[80px] group relative border border-primary hover:border-hover">
+      <div
+        className="bg-controls-enable-primary rounded-full group relative border border-primary hover:border-hover shrink-0"
+        style={{ width: size }}
+      >
         <Image
           role="icon"
           src={getIconPath(src)}
           alt="entityImage"
-          width={80}
-          height={80}
+          width={size}
+          height={size}
           className="rounded-full"
           onError={() => setSrc('/images/icons/fallback-entity-icon.svg')}
         />
