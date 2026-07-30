@@ -18,7 +18,7 @@ import { ButtonsI18nKey, ErrorI18nKey, TestSuitesI18nKey } from '@/src/constants
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { Deployment, ToolDefinition } from '@/src/models/evaluation/deployment';
-import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
+import { OverallScoreType, SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
 import Target from './Target';
 import { TEST_SUIT_STEPS, TestSuitTab } from './constants';
 
@@ -57,8 +57,12 @@ const CreateTestSuit: FC<Props> = ({ onClose, isModalOpen, onCreate, currentEnti
   }, []);
 
   const onFinishClick = useCallback(() => {
-    onCreate(testSuite);
-  }, [onCreate, testSuite]);
+    const suiteToCreate = currentEntity
+      ? testSuite
+      : { ...testSuite, overallScore: testSuite.overallScore ?? { type: OverallScoreType.Mean } };
+
+    onCreate(suiteToCreate);
+  }, [currentEntity, onCreate, testSuite]);
 
   const onTestSuiteChange = useCallback(
     (updated: TestSuite) => {

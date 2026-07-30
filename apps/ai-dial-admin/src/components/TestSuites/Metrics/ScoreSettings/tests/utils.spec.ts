@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 
-import { ErrorI18nKey } from '@/src/constants/i18n';
+import { ErrorI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { Metric } from '@/src/models/evaluation/metric';
 import { ComparisonOp, ExprType, QueryMode, StructuredQuery } from '@/src/models/evaluation/structured-query';
 import { OverallScoreWeight } from '@/src/models/evaluation/test-suite';
@@ -98,7 +98,7 @@ describe('getAvailableOptionsForRow', () => {
 });
 
 describe('getWeightError', () => {
-  test.each([0, 0.5, 1, 100])('returns null for valid numeric value %s', (value) => {
+  test.each([0.5, 1, 100])('returns null for valid numeric value %s', (value) => {
     expect(getWeightError(value)).toBeNull();
   });
 
@@ -108,6 +108,19 @@ describe('getWeightError', () => {
 
   test('returns an error for a non-numeric value', () => {
     expect(getWeightError('abc')).toEqual({ type: ErrorType.INVALID, text: '' });
+  });
+
+  test.each([0, -1, -0.5])('returns an error for non-positive value %s', (value) => {
+    expect(getWeightError(value)).toEqual({ type: ErrorType.INVALID, text: '' });
+  });
+
+  test('builds the weight-must-be-positive text via t for a zero weight', () => {
+    const t = vi.fn((key: string) => key);
+
+    const error = getWeightError(0, t);
+
+    expect(t).toHaveBeenCalledWith(TestSuitesI18nKey.OverallScoreWeightPositive);
+    expect(error).toEqual({ type: ErrorType.INVALID, text: TestSuitesI18nKey.OverallScoreWeightPositive });
   });
 
   test('builds error text via t when provided', () => {
@@ -121,12 +134,21 @@ describe('getWeightError', () => {
 });
 
 describe('getMetricSelectionError', () => {
-  test('returns null when a metric value is selected', () => {
+  test('returns null when a metric value is selected and still exists', () => {
     expect(getMetricSelectionError('A::score')).toBeNull();
   });
 
   test.each([undefined, ''])('returns an error for %s', (value) => {
     expect(getMetricSelectionError(value)).toEqual({ type: ErrorType.INVALID, text: '' });
+  });
+
+  test('returns a metric-deleted error when the selected metric no longer exists', () => {
+    const t = vi.fn((key: string) => key);
+
+    const error = getMetricSelectionError('A::score', t, false);
+
+    expect(t).toHaveBeenCalledWith(TestSuitesI18nKey.OverallScoreMetricDeleted);
+    expect(error).toEqual({ type: ErrorType.INVALID, text: TestSuitesI18nKey.OverallScoreMetricDeleted });
   });
 
   test('builds error text via t when provided', () => {
