@@ -4,6 +4,8 @@ import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import { isAssetView } from '@/src/utils/is-view';
+import AppRunnerCreateProperties from '@/src/components/Assets/AppRunners/CreateProperties';
+import { DialAppRunnerResource } from '@/src/models/dial/resource';
 import AssetProperties from './AssetProperties';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 
@@ -32,6 +34,17 @@ const Properties = <T extends object>({
 }: Props<T>) => {
   if (isSimpleEntity(view)) {
     return <EntityProperties entity={entity} view={view} isUniqueNameError={isUniqueNameError} {...props} />;
+  }
+
+  if (view === ApplicationRoute.AssetsAppRunners) {
+    return (
+      <AppRunnerCreateProperties
+        entity={entity as DialAppRunnerResource}
+        names={props.names}
+        isModal={props.isModal}
+        onChangeEntity={props.onChangeEntity}
+      />
+    );
   }
 
   if (isAssetView(view)) {

@@ -6,6 +6,7 @@ import {
   importApps,
   moveApps,
 } from '@/src/app/[lang]/assets-applications/actions';
+import { bulkDeleteRunners, createRunner, getRunner } from '@/src/app/[lang]/assets-app-runners/actions';
 import { bulkDeleteModels, createModel, getModel } from '@/src/app/[lang]/assets-models/actions';
 import {
   bulkDeleteToolsets,
@@ -29,6 +30,7 @@ import { FileManagerI18nKey } from '@/src/constants/i18n';
 import { STRINGS_DELIMITER } from '@/src/constants/prompt';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { useConversationFolder } from '@/src/context/assets/ConversationsFolderContext';
+import { useAppRunnersFolder } from '@/src/context/assets/AppRunnersFolderContext';
 import { useModelsFolder } from '@/src/context/assets/ModelsFolderContext';
 import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
@@ -113,8 +115,19 @@ export const getGridColumns = (
     },
   };
 
+  const CREATED_AT_COLUMN = {
+    field: 'createdAt',
+    headerName: 'Created time',
+    width: 200,
+    suppressSizeToFit: true,
+  };
+
   if (view === ApplicationRoute.AssetsModels) {
     return [NAME_COLUMN('Name') as ColDef, AUTHOR_COLUMN, UPDATED_AT_COLUMN('Updated time') as ColDef];
+  }
+
+  if (view === ApplicationRoute.AssetsAppRunners) {
+    return [NAME_COLUMN('ID') as ColDef, AUTHOR_COLUMN, CREATED_AT_COLUMN, UPDATED_AT_COLUMN('Updated time') as ColDef];
   }
 
   return [NAME_COLUMN('Name') as ColDef, VERSION_COLUMN, AUTHOR_COLUMN, UPDATED_AT_COLUMN('Updated time') as ColDef];
@@ -164,6 +177,8 @@ export const getFileManagerLabel = (view: ApplicationRoute): string => {
       return FileManagerI18nKey.Conversations;
     case ApplicationRoute.AssetsModels:
       return FileManagerI18nKey.Models;
+    case ApplicationRoute.AssetsAppRunners:
+      return FileManagerI18nKey.AppRunners;
     default:
       return '';
   }
@@ -199,6 +214,11 @@ export const getEmptyStateContent = (
         title: t(FileManagerI18nKey.ModelsEmptyStateTitle),
         description: t(FileManagerI18nKey.ModelsEmptyStateDescription),
       };
+    case ApplicationRoute.AssetsAppRunners:
+      return {
+        title: t(FileManagerI18nKey.AppRunnersEmptyStateTitle),
+        description: t(FileManagerI18nKey.AppRunnersEmptyStateDescription),
+      };
     default:
       return { title: '', description: '' };
   }
@@ -225,6 +245,7 @@ export const AssetFolderContextMap = {
   [ApplicationRoute.AssetsToolsets]: useToolsetFolder,
   [ApplicationRoute.Conversations]: useConversationFolder,
   [ApplicationRoute.AssetsModels]: useModelsFolder,
+  [ApplicationRoute.AssetsAppRunners]: useAppRunnersFolder,
 };
 
 export const GetAssetActionMap = {
@@ -233,6 +254,7 @@ export const GetAssetActionMap = {
   [ApplicationRoute.AssetsToolsets]: getToolset,
   [ApplicationRoute.Conversations]: getConversation,
   [ApplicationRoute.AssetsModels]: getModel,
+  [ApplicationRoute.AssetsAppRunners]: getRunner,
 };
 
 export const CreateAssetActionMap: Record<
@@ -247,6 +269,9 @@ export const CreateAssetActionMap: Record<
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
   [ApplicationRoute.AssetsModels]: createModel as (
+    asset: AssetWithVersion,
+  ) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  [ApplicationRoute.AssetsAppRunners]: createRunner as (
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
 };
@@ -289,6 +314,7 @@ export const BulkDeleteAssetActionMap = {
   [ApplicationRoute.AssetsToolsets]: bulkDeleteToolsets,
   [ApplicationRoute.Conversations]: deleteConversations,
   [ApplicationRoute.AssetsModels]: bulkDeleteModels,
+  [ApplicationRoute.AssetsAppRunners]: bulkDeleteRunners,
 };
 
 export const enrichConversationWithVersion = (conversation: AssetWithVersion): AssetWithVersion => {

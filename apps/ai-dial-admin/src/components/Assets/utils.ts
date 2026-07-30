@@ -88,6 +88,7 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
         ? []
         : allActionLabels.filter((item) => item.key !== 'duplicate' && item.key !== 'openInNewTab');
     case ApplicationRoute.AssetsModels:
+    case ApplicationRoute.AssetsAppRunners:
       return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key === 'delete');
     case ApplicationRoute.AssetsApplications:
     case ApplicationRoute.AssetsToolsets:
@@ -120,6 +121,14 @@ export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: 
   switch (view) {
     case ApplicationRoute.Files:
       return [...baseToolbarOptionLabels, { key: 'uploadFiles', label: FileManagerI18nKey.Files, icon: null }];
+    case ApplicationRoute.AssetsAppRunners:
+      return [
+        {
+          key: 'newItem',
+          label: FileManagerI18nKey.AppRunner,
+          icon: null,
+        },
+      ];
     case ApplicationRoute.AssetsModels:
       return [
         {
@@ -266,10 +275,15 @@ export const getDeleteNotificationContent = (
           });
       return { title, description };
     }
+    case ApplicationRoute.AssetsAppRunners:
     case ApplicationRoute.AssetsModels: {
       const title = isDeleteSeveralFiles
         ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Items) })
-        : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Model) });
+        : t(FileManagerI18nKey.DeleteSuccessTitle, {
+            item: t(
+              view === ApplicationRoute.AssetsAppRunners ? FileManagerI18nKey.AppRunner : FileManagerI18nKey.Model,
+            ),
+          });
       const description = isDeleteSeveralFiles
         ? t(FileManagerI18nKey.DeleteSuccessDescriptionForMany, {
             count: deletedItemsCount,

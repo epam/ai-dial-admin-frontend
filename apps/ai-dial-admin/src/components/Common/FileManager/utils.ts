@@ -32,6 +32,7 @@ export const findFolderByPath = (items: DialFile[], targetPath: string): DialFil
 
 const assetEntityMap: Record<string, FileManagerI18nKey> = {
   [ApplicationRoute.AssetsModels]: FileManagerI18nKey.Models,
+  [ApplicationRoute.AssetsAppRunners]: FileManagerI18nKey.AppRunners,
   [ApplicationRoute.AssetsApplications]: FileManagerI18nKey.Applications,
   [ApplicationRoute.AssetsToolsets]: FileManagerI18nKey.Toolsets,
   [ApplicationRoute.Prompts]: FileManagerI18nKey.Prompts,
@@ -177,7 +178,9 @@ export const getToolbarOptions = (route: ApplicationRoute, isReadOnlyAdmin: bool
 
 export const getBulkActionsToolbarOptions = (view: ApplicationRoute, t: (key: string) => string) => {
   const actionLabels =
-    view === ApplicationRoute.Conversations || view === ApplicationRoute.AssetsModels
+    view === ApplicationRoute.Conversations ||
+    view === ApplicationRoute.AssetsModels ||
+    view === ApplicationRoute.AssetsAppRunners
       ? bulkActionLabels.filter((action) => action.key === 'delete')
       : bulkActionLabels;
 

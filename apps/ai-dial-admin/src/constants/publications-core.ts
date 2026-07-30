@@ -24,6 +24,7 @@ export const PROMPTS_PREFIX = 'prompts/';
 export const TOOLSETS_PREFIX = 'toolsets/';
 export const FILES_PREFIX = 'files/';
 export const MODELS_PREFIX = 'models/platform/';
+export const SCHEMAS_PREFIX = 'schemas/platform/';
 
 export const RESOURCE_TYPE_PREFIX: Record<ResourceType, string> = {
   [ResourceType.APPLICATION]: APPLICATIONS_PREFIX,
@@ -32,6 +33,7 @@ export const RESOURCE_TYPE_PREFIX: Record<ResourceType, string> = {
   [ResourceType.TOOLSET]: TOOLSETS_PREFIX,
   [ResourceType.FILE]: FILES_PREFIX,
   [ResourceType.MODEL]: MODELS_PREFIX,
+  [ResourceType.APP_TYPE_SCHEMA]: SCHEMAS_PREFIX,
 };
 
 /** Hardcoded list path — the backend always lists `publications/public/`. */

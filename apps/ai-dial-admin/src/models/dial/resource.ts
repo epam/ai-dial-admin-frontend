@@ -1,6 +1,8 @@
+import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity, EntityAttachment, EntityDefaults, ModifiedEntity } from '@/src/models/dial/base-entity';
 import { DialResourceInterface } from '@/src/models/dial/interfaces';
 import { DialModelEndpoint, DialModelLimit, DialModelPricing } from '@/src/models/dial/model';
+import { DialAppRoute } from '@/src/models/dial/route';
 import { ToolsetTransport } from '@/src/types/toolset';
 
 export interface DialResource extends BaseEntity {
@@ -109,6 +111,25 @@ export interface DialModelResource extends EntityAttachment, EntityDefaults, Mod
 export enum DialModelResourceStatus {
   Valid = 'valid',
   Invalid = 'invalid',
+}
+
+/**
+ * App-runner (`schemas/platform/{name}`) as returned by Core, in the same `dial:`-prefixed shape the
+ * admin-BE-backed `DialApplicationScheme` uses — so the runner editors are shared between the two
+ * surfaces. `applications` is excluded because that association exists only in the admin BE's
+ * database, and routes are narrowed to `DialAppRoute` since this surface edits attachment paths and
+ * permissions.
+ */
+export interface DialAppRunnerResource extends Omit<
+  DialApplicationScheme,
+  'applications' | 'dial:applicationTypeRoutes'
+> {
+  name: string;
+  path: string;
+  folderId: string;
+  author?: string;
+  status?: DialModelResourceStatus;
+  ['dial:applicationTypeRoutes']?: DialAppRoute[];
 }
 
 export enum DialModelResourceType {

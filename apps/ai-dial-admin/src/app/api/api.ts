@@ -1,5 +1,6 @@
 import { AnalyticsDataApi } from '@/src/server/analytics/analytics-data-api';
 import { stripAssetIdentityFields } from '@/src/server/assets/exim';
+import { AppRunnerSchemaApi } from '@/src/server/core/app-runner-schema-api';
 import { AssetApi } from '@/src/server/core/asset-api';
 import { BucketApi } from '@/src/server/core/bucket-api';
 import { FilesCoreApi } from '@/src/server/core/files-core-api';
@@ -184,6 +185,11 @@ export const assetApi = new AssetApi({
 // Toolset-only Core operations (discovered-tools, sign-in, sign-out) with no equivalent
 // on the other three versioned types, so they don't fit the generic AssetApi.
 export const toolsetOpsApi = new ToolsetOpsApi({
+  host: process.env.DIAL_CORE_API_URL,
+});
+
+// App-runner resolved-schema read — Core performs the external-schema download and merge.
+export const appRunnerSchemaApi = new AppRunnerSchemaApi({
   host: process.env.DIAL_CORE_API_URL,
 });
 

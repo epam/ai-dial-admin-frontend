@@ -46,7 +46,8 @@ export const getEntityPath = (
         : `${encodeURIComponent((data as DialPrompt).name as string)}?path=${encodeURIComponent(path)}`;
     }
 
-    case ApplicationRoute.AssetsModels: {
+    case ApplicationRoute.AssetsModels:
+    case ApplicationRoute.AssetsAppRunners: {
       const { name, path } = data as { name: string; path?: string };
       const resolvedPath = path || name;
 
