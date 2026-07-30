@@ -41,6 +41,20 @@ describe('WeightedMean', () => {
     expect(screen.getByText('row-0-options-2')).toBeInTheDocument();
   });
 
+  test('shows the at-least-one-metric hint when there are no rows', () => {
+    render(<WeightedMean weights={[]} metrics={metrics} onChange={vi.fn()} />);
+
+    expect(screen.getByText(TestSuitesI18nKey.OverallScoreAtLeastOneMetric)).toBeInTheDocument();
+  });
+
+  test('hides the at-least-one-metric hint once a row exists', () => {
+    const weights: OverallScoreWeight[] = [{ metricName: 'A', outputField: 'score', weight: 1 }];
+
+    render(<WeightedMean weights={weights} metrics={metrics} onChange={vi.fn()} />);
+
+    expect(screen.queryByText(TestSuitesI18nKey.OverallScoreAtLeastOneMetric)).not.toBeInTheDocument();
+  });
+
   test('clicking Add appends an empty draft row', async () => {
     const onChange = vi.fn();
 
