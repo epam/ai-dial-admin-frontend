@@ -103,20 +103,36 @@ describe('MENU_CONFIGURATION — Analytics group', () => {
   const findAnalyticsGroup = (flags: FeatureFlags) =>
     MENU_CONFIGURATION(ICON_SIZE, flags).find((group) => group.key === MenuI18nKey.Analytics);
 
-  test('shows the Analytics group with Query Builder + Tables when the flag is enabled', () => {
+  test('shows the Analytics group with Query Builder + Tables + Conversations when the flag is enabled', () => {
     const group = findAnalyticsGroup({ ...baseFlags, analyticsEnabled: true });
 
     expect(group).toBeDefined();
     expect(group?.isPreview).toBe(true);
-    expect(group?.items.map((item) => item.key)).toEqual([MenuI18nKey.Tables, MenuI18nKey.QueryBuilder]);
+    expect(group?.items.map((item) => item.key)).toEqual([
+      MenuI18nKey.Tables,
+      MenuI18nKey.QueryBuilder,
+      MenuI18nKey.AnalyticsConversations,
+    ]);
     expect(group?.items.map((item) => item.href)).toEqual([
       ApplicationRoute.AnalyticsTables,
       ApplicationRoute.AnalyticsQueryBuilder,
+      ApplicationRoute.ConversationsTrace,
     ]);
   });
 
-  test('hides the Analytics group when the flag is disabled', () => {
+  test('the Analytics Conversations item does not reuse the DIAL Core conversations key', () => {
+    const group = findAnalyticsGroup({ ...baseFlags, analyticsEnabled: true });
+
+    expect(group?.items.map((item) => item.key)).not.toContain(MenuI18nKey.Conversations);
+  });
+
+  test('hides the Analytics group and all its sub-items when the flag is disabled', () => {
     expect(findAnalyticsGroup({ ...baseFlags, analyticsEnabled: false })).toBeUndefined();
+
+    const allItems = MENU_CONFIGURATION(ICON_SIZE, { ...baseFlags, analyticsEnabled: false }).flatMap((group) =>
+      group.items.map((item) => item.href),
+    );
+    expect(allItems).not.toContain(ApplicationRoute.ConversationsTrace);
   });
 
   test('gating composes independently of Deployments and Evaluation', () => {

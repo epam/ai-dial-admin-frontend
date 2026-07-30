@@ -89,6 +89,7 @@ Use `Parent/Child` for a single leaf, or just `Parent` when several children cha
 |------|-----------|------------------|
 | `analytics/QueryBuilder` | `query-builder` | `Analytics` |
 | `analytics/Tables` | `tables` | `Analytics` |
+| `analytics/ConversationsTrace` | `conversations-trace` | `Analytics` |
 
 ---
 
