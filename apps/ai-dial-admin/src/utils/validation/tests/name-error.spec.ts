@@ -3,6 +3,7 @@ import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { ErrorI18nKey } from '@/src/constants/i18n';
 import { FORBIDDEN_NAME_SYMBOLS } from '@/src/constants/validation';
 import { ErrorType } from '@/src/types/error-type';
+import { CORE_UNENCODABLE_ID_CHARS } from '@/src/utils/app-runners/constants';
 import {
   getErrorForAppRouteName,
   getErrorForDisplayName,
@@ -74,6 +75,23 @@ describe('getErrorForUrlId', () => {
       text: ErrorI18nKey.NameExists,
       type: ErrorType.EXISTING,
     });
+  });
+
+  test.each(CORE_UNENCODABLE_ID_CHARS)('Should return FORBIDDEN_CHARS error for %s', (char) => {
+    const res = getErrorForUrlId(`https://ai-dial-test.com/a${char}b`, [], t, CORE_UNENCODABLE_ID_CHARS);
+
+    expect(res).toEqual({
+      text: ErrorI18nKey.ForbiddenChars,
+      type: ErrorType.FORBIDDEN_CHARS,
+    });
+  });
+
+  test('Should ignore forbidden characters when none are configured', () => {
+    expect(getErrorForUrlId("https://ai-dial-test.com/it's", [], t)).toBeNull();
+  });
+
+  test('Should accept a url with no forbidden characters', () => {
+    expect(getErrorForUrlId('https://ai-dial-test.com/a_b', [], t, CORE_UNENCODABLE_ID_CHARS)).toBeNull();
   });
 });
 

@@ -27,7 +27,10 @@ export default async function Page(params: {
   let interceptors: DialInterceptor[] | null = [];
 
   try {
-    const path = decodeURIComponent((await params.searchParams).path);
+    // Next already decodes the query param once, which restores the singly-encoded resource name
+    // `ResourceInfo.path` carries. Decoding again would expose the `$id`'s `:` and `/`, and
+    // `encodeCorePath` would then split it into path segments instead of one resource name.
+    const path = (await params.searchParams).path;
 
     runner = await getRunner(path, etag).then((res) => {
       etag = res?.etag || DEFAULT_ETAG;

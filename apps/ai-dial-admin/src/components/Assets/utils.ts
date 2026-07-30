@@ -104,6 +104,12 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
 };
 
 export const getTreeActionLabels = (isReadOnlyAdmin: boolean, view: ApplicationRoute) => {
+  // App runners are flat in Core's `platform` bucket — the tree holds only the root, so every folder
+  // action is inapplicable. `addSibling`/`addChild` in particular created a runner with no `$id`.
+  if (view === ApplicationRoute.AssetsAppRunners) {
+    return [];
+  }
+
   if (view === ApplicationRoute.Conversations) {
     return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key === 'delete');
   }
@@ -289,7 +295,9 @@ export const getDeleteNotificationContent = (
             count: deletedItemsCount,
           })
         : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
-            item: t(FileManagerI18nKey.Model),
+            item: t(
+              view === ApplicationRoute.AssetsAppRunners ? FileManagerI18nKey.AppRunner : FileManagerI18nKey.Model,
+            ),
             name: nameWithPath,
           });
       return { title, description };

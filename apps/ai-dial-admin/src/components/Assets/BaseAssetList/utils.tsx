@@ -115,19 +115,29 @@ export const getGridColumns = (
     },
   };
 
-  const CREATED_AT_COLUMN = {
+  // Derived from the ui-kit's updated-time column so `createdAt` gets the same epoch-millis cell
+  // renderer and locale params. `colId` must be overridden too — the factory hardcodes it, and two
+  // columns sharing a `colId` collide in ag-grid.
+  const CREATED_AT_COLUMN = (
+    dateLocale: Intl.LocalesArgument,
+    dateOptions: Intl.DateTimeFormatOptions | undefined,
+  ): ColDef => ({
+    ...(UPDATED_AT_COLUMN('Created time')(dateLocale, dateOptions) as ColDef),
+    colId: 'createdAt',
     field: 'createdAt',
-    headerName: 'Created time',
-    width: 200,
-    suppressSizeToFit: true,
-  };
+  });
 
   if (view === ApplicationRoute.AssetsModels) {
     return [NAME_COLUMN('Name') as ColDef, AUTHOR_COLUMN, UPDATED_AT_COLUMN('Updated time') as ColDef];
   }
 
   if (view === ApplicationRoute.AssetsAppRunners) {
-    return [NAME_COLUMN('ID') as ColDef, AUTHOR_COLUMN, CREATED_AT_COLUMN, UPDATED_AT_COLUMN('Updated time') as ColDef];
+    return [
+      NAME_COLUMN('ID') as ColDef,
+      AUTHOR_COLUMN,
+      CREATED_AT_COLUMN as unknown as ColDef,
+      UPDATED_AT_COLUMN('Updated time') as ColDef,
+    ];
   }
 
   return [NAME_COLUMN('Name') as ColDef, VERSION_COLUMN, AUTHOR_COLUMN, UPDATED_AT_COLUMN('Updated time') as ColDef];

@@ -78,6 +78,9 @@ const DeleteConfirmationModal = <T extends Artefact>({
   }, [entity, view]);
   const id = useMemo(() => {
     if (view === ApplicationRoute.Datasets) return (entity as { id?: string }).id;
+    // App-runner assets carry `name` as the percent-encoded Core resource name, so `$id` is the only
+    // readable identity for them.
+    if (view === ApplicationRoute.AssetsAppRunners) return entity.$id || entity.name;
     return entity.name || entity.$id || (entity as { id?: string }).id;
   }, [entity, view]);
 

@@ -40,10 +40,14 @@ describe('App Runner Utils :: validateAppRunner', () => {
   });
 
   test('Should reject an id Core cannot store', () => {
-    expect(fieldsOf(runner({ $id: "https://host/it's" }))).toContain('$id');
+    expect(validateAppRunner(runner({ $id: "https://host/it's" }))).toContainEqual({
+      field: '$id',
+      message: "Id must not contain any of ! ~ * ' ( )",
+    });
   });
 
-  test('Should reject an empty id', () => {
+  test('Should report an empty id as missing rather than blaming characters', () => {
+    expect(validateAppRunner(runner({ $id: '' }))).toContainEqual({ field: '$id', message: 'Id is required' });
     expect(fieldsOf(runner({ $id: '' }))).toContain('$id');
   });
 

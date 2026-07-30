@@ -23,6 +23,11 @@ The system SHALL render the app-runner asset list as a single, non-nested list o
 - **WHEN** a user opens the app-runner list toolbar and row actions
 - **THEN** neither a create-folder action nor a move-to-folder action is offered
 
+#### Scenario: The folder tree offers no folder actions
+
+- **WHEN** a user opens the context menu on the app-runner folder tree's root
+- **THEN** no add-sibling, add-child, rename, move, or manage-permissions action is offered, since the namespace is flat and a folder create would submit a runner with no `$id`
+
 #### Scenario: Create action opens the runner create modal
 
 - **WHEN** a user activates the create action in the list toolbar
@@ -47,10 +52,39 @@ The system SHALL show `$id`, author, created-at, and updated-at columns for app-
 - **WHEN** the app-runner list renders
 - **THEN** the created-at and updated-at columns are populated from the Core metadata node's `createdAt` and `updatedAt` fields
 
+#### Scenario: Both timestamp columns render as localized dates
+
+- **WHEN** the app-runner list renders its created-at and updated-at columns
+- **THEN** each shows a locale-formatted date, not the raw epoch-milliseconds value Core returns
+
 #### Scenario: The id column shows the decoded `$id`
 
 - **WHEN** the app-runner list renders a row whose Core resource name is a percent-encoded `$id`
 - **THEN** the column shows the decoded `$id`, not the encoded resource name
+
+### Requirement: A URI-shaped `$id` is a valid, fully usable row name
+
+Because the row name is the runner's `$id`, it contains characters the shared asset list treats as illegal in a filename — notably `:` and `/`. The system SHALL present such a row as ordinary and fully usable for this view: rendered in the normal text style with no invalid-name indication, opening on click, and offering its row actions. Views whose names are filenames SHALL keep the stricter default. The row's own encoded path, not its displayed name, is what addresses the resource, so the name's shape has no bearing on correctness.
+
+#### Scenario: A URI-shaped name is not flagged as invalid
+
+- **WHEN** the list renders a runner whose `$id` is a URI such as `http://example.com/schema`
+- **THEN** the name is shown in the normal style with no forbidden-character indication or rename prompt
+
+#### Scenario: A URI-shaped name opens on click
+
+- **WHEN** a user clicks a row whose name contains `:` and `/`
+- **THEN** the detail view opens, navigating by the row's encoded path
+
+#### Scenario: Row and bulk actions stay enabled
+
+- **WHEN** a user opens the row context menu or selects runners for bulk delete
+- **THEN** the delete action is enabled rather than disabled on account of the name's characters
+
+#### Scenario: Filename-shaped views keep the stricter rule
+
+- **WHEN** any other asset view renders a name containing `/` or `%`
+- **THEN** that view's existing invalid-name treatment is unchanged
 
 ### Requirement: App-runner asset detail view tab set
 
@@ -84,6 +118,11 @@ The system SHALL treat the runner's `$id` as its user-facing identity — used i
 
 - **WHEN** the create modal is open
 - **THEN** the `$id` field is editable and validated as a URL-shaped identifier
+
+#### Scenario: The create form writes the typed id to `$id`
+
+- **WHEN** a user types an id into the create modal's id field
+- **THEN** the value is stored as the runner's `$id`, and not as the generic `name` field the shared create form uses for entities whose identity is a plain name
 
 #### Scenario: Id is read-only on the detail view
 
@@ -145,6 +184,30 @@ Because DIAL Core performs no validation when writing this resource kind, the sy
 
 - **WHEN** a route declares a method outside the supported set
 - **THEN** the save is blocked with a message identifying the offending method
+
+### Requirement: `$id` constraint violations are reported by their actual cause
+
+The system SHALL reject a write whose `$id` is absent, and separately reject one containing a character with no representable Core resource name (`!`, `~`, `*`, `'`, `(`, `)`). Each SHALL be reported by its own cause: an absent id SHALL NOT be attributed to forbidden characters. The character constraint SHALL additionally be enforced on the create form's id field as the user types, so a violation is visible at the point of entry rather than only on submit.
+
+#### Scenario: An absent id is reported as missing
+
+- **WHEN** a write is attempted with no `$id`
+- **THEN** the error states the id is missing, and does not claim it contains forbidden characters
+
+#### Scenario: An unrepresentable character is reported as such
+
+- **WHEN** a write is attempted with an `$id` containing any of `!`, `~`, `*`, `'`, `(`, `)`
+- **THEN** the error names those characters as the cause and no request reaches Core
+
+#### Scenario: The character constraint surfaces while typing
+
+- **WHEN** a user types an id containing one of those characters into the create form
+- **THEN** the id field shows a forbidden-character error immediately, without waiting for submit
+
+#### Scenario: The entity-side runner form is not newly constrained
+
+- **WHEN** a user edits an `$id` on `Entities > Application Runners` or its duplicate modal
+- **THEN** the character constraint is not applied there, since those ids never become a Core resource-name path segment
 
 ### Requirement: Parameters tab shows the Core-resolved schema
 

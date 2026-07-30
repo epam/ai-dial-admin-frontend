@@ -1,8 +1,8 @@
 import { DialAppRunnerResource } from '@/src/models/dial/resource';
 import { DialAppRoute } from '@/src/models/dial/route';
-import { CORE_ROUTE_METHODS } from './constants';
+import { CORE_ROUTE_METHODS, CORE_UNENCODABLE_ID_CHARS } from './constants';
 import { CORE_ROUTE_NAME_PATTERN, getCoreRouteName } from './core-app-routes';
-import { isValidRunnerId } from './core-runner-name';
+import { hasUnencodableRunnerIdChars } from './core-runner-name';
 
 export interface AppRunnerValidationError {
   field: string;
@@ -22,20 +22,22 @@ const validateRoute = (route: DialAppRoute, seen: Set<string>): AppRunnerValidat
   }
   seen.add(name);
 
-  if (!route.paths?.length) {
+  if (!Array.isArray(route.paths) || !route.paths.length) {
     errors.push({ field, message: 'At least one path is required' });
   }
-  if (!route.methods?.length) {
+  if (!Array.isArray(route.methods) || !route.methods.length) {
     errors.push({ field, message: 'At least one method is required' });
   }
-  const invalidMethods = (route.methods ?? []).filter((method) => !CORE_ROUTE_METHODS.includes(method));
+  const methods = Array.isArray(route.methods) ? route.methods : [];
+  const invalidMethods = methods.filter((method) => !CORE_ROUTE_METHODS.includes(method));
   if (invalidMethods.length) {
     errors.push({ field, message: `Unsupported method(s): ${invalidMethods.join(', ')}` });
   }
-  if (!route.upstreams?.length && !route.response) {
+  const upstreams = Array.isArray(route.upstreams) ? route.upstreams : [];
+  if (!upstreams.length && !route.response) {
     errors.push({ field, message: 'Either an upstream or a response is required' });
   }
-  if ((route.upstreams ?? []).some((upstream) => !upstream.endpoint)) {
+  if (upstreams.some((upstream) => !upstream?.endpoint)) {
     errors.push({ field, message: 'Every upstream requires an endpoint' });
   }
   if (route.response && (route.response.status == null || route.response.body == null)) {
@@ -49,6 +51,10 @@ const validateRoute = (route: DialAppRoute, seen: Set<string>): AppRunnerValidat
  * every meta-schema constraint this surface can violate is checked here instead. A violation must
  * block the save rather than reach Core, where it would be accepted and only surface later as an
  * `invalid` status on read.
+ *
+ * The raw JSON editor can hand this arbitrary parsed JSON, and it is the only save gate while that
+ * editor is open. So every field is shape-checked before use: a wrong type must come back as a
+ * validation error the user sees, never as a thrown `TypeError` that leaves the save button inert.
  */
 export const validateAppRunner = (runner: DialAppRunnerResource): AppRunnerValidationError[] => {
   const errors: AppRunnerValidationError[] = [];
@@ -56,13 +62,27 @@ export const validateAppRunner = (runner: DialAppRunnerResource): AppRunnerValid
   if (!runner['dial:applicationTypeDisplayName']) {
     errors.push({ field: 'dial:applicationTypeDisplayName', message: 'Display name is required' });
   }
-  if (!isValidRunnerId(runner.$id)) {
-    errors.push({ field: '$id', message: "Id must not be empty or contain any of ! ~ * ' ( )" });
+  if (!runner.$id) {
+    errors.push({ field: '$id', message: 'Id is required' });
+  } else if (typeof runner.$id !== 'string') {
+    errors.push({ field: '$id', message: 'Id must be a string' });
+  } else if (hasUnencodableRunnerIdChars(runner.$id)) {
+    errors.push({ field: '$id', message: `Id must not contain any of ${CORE_UNENCODABLE_ID_CHARS.join(' ')}` });
   }
 
-  const seen = new Set<string>();
-  for (const route of runner['dial:applicationTypeRoutes'] ?? []) {
-    errors.push(...validateRoute(route, seen));
+  const routes = runner['dial:applicationTypeRoutes'];
+  if (routes != null && !Array.isArray(routes)) {
+    // Core's own wire form is an object keyed by route name — the natural thing to paste into the raw
+    // editor, and the shape the converters exist to translate. Report it instead of iterating it.
+    errors.push({
+      field: 'dial:applicationTypeRoutes',
+      message: 'Routes must be a list; the name-keyed object form Core stores is not accepted here',
+    });
+  } else {
+    const seen = new Set<string>();
+    for (const route of routes ?? []) {
+      errors.push(...validateRoute(route ?? {}, seen));
+    }
   }
 
   return errors;

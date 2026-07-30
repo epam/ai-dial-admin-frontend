@@ -32,10 +32,8 @@ const Properties = <T extends object>({
   entity,
   ...props
 }: Props<T>) => {
-  if (isSimpleEntity(view)) {
-    return <EntityProperties entity={entity} view={view} isUniqueNameError={isUniqueNameError} {...props} />;
-  }
-
+  // Ahead of `isSimpleEntity`, which defaults to `true` for unlisted routes — an app runner is
+  // identified by `$id`, so the generic `name`-based form would silently drop its identity.
   if (view === ApplicationRoute.AssetsAppRunners) {
     return (
       <AppRunnerCreateProperties
@@ -45,6 +43,10 @@ const Properties = <T extends object>({
         onChangeEntity={props.onChangeEntity}
       />
     );
+  }
+
+  if (isSimpleEntity(view)) {
+    return <EntityProperties entity={entity} view={view} isUniqueNameError={isUniqueNameError} {...props} />;
   }
 
   if (isAssetView(view)) {

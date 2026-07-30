@@ -112,7 +112,9 @@ const fromCoreRoute = (name: string, route: CoreAppRunnerRoute): DialAppRoute =>
   }),
 });
 
-export const getCoreRouteName = (route: DialAppRoute): string => route.displayName || route.name || '';
+// Coerced because the raw JSON editor can supply a non-string name, and an uncoerced number would
+// satisfy CORE_ROUTE_NAME_PATTERN via implicit stringification in `test()`.
+export const getCoreRouteName = (route: DialAppRoute): string => String(route.displayName || route.name || '');
 
 /**
  * Converts the editors' route array into Core's name-keyed object. Duplicate names throw rather than

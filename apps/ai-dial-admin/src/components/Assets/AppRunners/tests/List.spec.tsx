@@ -45,15 +45,20 @@ describe('AppRunnersList :: columns', () => {
     expect(columns()).toHaveLength(4);
   });
 
+  // Date columns are `(locale, options) => ColDef` factories the FileManager resolves, so `field`
+  // only exists once invoked.
+  const fieldsOf = (defs: any[]) =>
+    defs.map((column) => (typeof column === 'function' ? column('en-US', void 0).field : column.field));
+
   test('Should include the author and created-time columns', () => {
-    const fields = columns().map((column: any) => column.field);
+    const fields = fieldsOf(columns());
 
     expect(fields).toContain('author');
     expect(fields).toContain('createdAt');
   });
 
   test('Should not show a version column, unlike the versioned asset types', () => {
-    expect(columns().map((column: any) => column.field)).not.toContain('version');
-    expect(versioned().map((column: any) => column.field)).toContain('version');
+    expect(fieldsOf(columns())).not.toContain('version');
+    expect(fieldsOf(versioned())).toContain('version');
   });
 });

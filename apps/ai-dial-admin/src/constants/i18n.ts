@@ -16,6 +16,7 @@ export enum MenuI18nKey {
   Models = 'Menu.Models',
   Applications = 'Menu.Applications',
   ApplicationRunners = 'Menu.ApplicationRunners',
+  AppRunners = 'Menu.AppRunners',
   Builders = 'Menu.Builders',
   BuildersDescription = 'Menu.BuildersDescription',
   Adapters = 'Menu.Adapters',

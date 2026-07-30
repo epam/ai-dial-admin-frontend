@@ -1,9 +1,4 @@
-/**
- * Characters `encodeURIComponent` leaves unescaped that Core's `ENTITY_NAME_PATTERN`
- * (`^[A-Za-z0-9._%:-]+$`, applied to the URL-decoded segment) rejects. An `$id` containing any of
- * them cannot be stored as a Core resource name at all, so it is rejected before the request.
- */
-const UNENCODABLE_ID_CHARS = /[!~*'()]/;
+import { CORE_UNENCODABLE_ID_CHARS } from './constants';
 
 /**
  * An app-runner's `$id` is a URI, and its `/` separators fail Core's `ENTITY_NAME_PATTERN` once the
@@ -24,4 +19,5 @@ export const fromCoreRunnerName = (name: string): string => {
   }
 };
 
-export const isValidRunnerId = (id?: string): boolean => !!id && !UNENCODABLE_ID_CHARS.test(id);
+export const hasUnencodableRunnerIdChars = (id: string): boolean =>
+  CORE_UNENCODABLE_ID_CHARS.some((char) => id.includes(char));

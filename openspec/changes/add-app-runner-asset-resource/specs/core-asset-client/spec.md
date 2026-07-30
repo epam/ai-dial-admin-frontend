@@ -40,6 +40,25 @@ Unlike the five existing resource kinds, whose names pass through the shared pat
 - **WHEN** any of application, toolset, conversation, prompt, file, or model is read or written
 - **THEN** its name encoding is unchanged by this requirement
 
+### Requirement: The listed resource path stays singly encoded end to end
+
+The path a listing row carries SHALL remain in its singly-encoded form from the metadata parse through to the next Core request, so that the shared path builder re-applies exactly one layer. No consumer between those two points may decode it again. A second decode exposes the `$id`'s `:` and `/`, which the path builder then treats as segment separators, addressing a resource that does not exist.
+
+#### Scenario: A listing row's path is the singly-encoded resource name
+
+- **WHEN** an app-runner metadata `url` is parsed into a listing row
+- **THEN** the row's path holds the singly-encoded resource name while its displayed name holds the fully decoded `$id`
+
+#### Scenario: The detail read reconstructs the original wire path
+
+- **WHEN** a listing row's path is carried through a detail-view URL parameter and used for the content read
+- **THEN** the resulting Core request path equals the doubly-encoded form used when the resource was written
+
+#### Scenario: An extra decode is rejected, not silently mis-addressed
+
+- **WHEN** a consumer decodes the path a second time before the content read
+- **THEN** the reconstructed request path no longer matches the written form, and the read fails to find the resource
+
 ### Requirement: App-runner etag sourced from the metadata response
 
 As with the model resource kind, DIAL Core's per-entity app-runner content GET does not set an `ETag` response header. The client SHALL resolve an app-runner resource's etag from the metadata GET's `etag` field and use that value when constructing subsequent conditional `If-Match`/`If-None-Match` requests.

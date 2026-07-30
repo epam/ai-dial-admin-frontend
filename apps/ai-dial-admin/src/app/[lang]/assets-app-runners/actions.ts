@@ -9,13 +9,29 @@ import { bulkDeleteAssets } from '@/src/server/assets/bulk-delete';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { toCoreAppRoutes } from '@/src/utils/app-runners/core-app-routes';
-import { isValidRunnerId, toCoreRunnerName } from '@/src/utils/app-runners/core-runner-name';
+import { CORE_UNENCODABLE_ID_CHARS } from '@/src/utils/app-runners/constants';
+import { hasUnencodableRunnerIdChars, toCoreRunnerName } from '@/src/utils/app-runners/core-runner-name';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+
+const MISSING_ID_ERROR: ServerActionResponse = {
+  success: false,
+  errorHeader: 'Missing application runner id',
+  errorMessage: 'An application runner needs an id — it becomes the resource name DIAL Core stores it under.',
+};
 
 const INVALID_ID_ERROR: ServerActionResponse = {
   success: false,
   errorHeader: 'Invalid application runner id',
-  errorMessage: "The id must not contain any of the characters ! ~ * ' ( ), which DIAL Core cannot store.",
+  errorMessage: `The id must not contain any of the characters ${CORE_UNENCODABLE_ID_CHARS.join(
+    ' ',
+  )}, which DIAL Core cannot store.`,
+};
+
+const checkRunnerId = (id?: string): ServerActionResponse | null => {
+  if (!id) {
+    return MISSING_ID_ERROR;
+  }
+  return hasUnencodableRunnerIdChars(id) ? INVALID_ID_ERROR : null;
 };
 
 /**
@@ -49,8 +65,9 @@ export async function getRunners(path: string) {
 }
 
 export async function createRunner(runner: DialAppRunnerResource): Promise<ServerActionResponse> {
-  if (!isValidRunnerId(runner.$id)) {
-    return INVALID_ID_ERROR;
+  const idError = checkRunnerId(runner.$id);
+  if (idError) {
+    return idError;
   }
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return assetApi.put(
@@ -67,8 +84,9 @@ export async function getRunner(path: string, etag: string) {
 }
 
 export async function updateRunner(runner: DialAppRunnerResource, etag: string): Promise<ServerActionResponse> {
-  if (!isValidRunnerId(runner.$id)) {
-    return INVALID_ID_ERROR;
+  const idError = checkRunnerId(runner.$id);
+  if (idError) {
+    return idError;
   }
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return assetApi.put(

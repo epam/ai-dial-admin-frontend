@@ -118,6 +118,7 @@ export default {
     Adapters: 'Adapters',
     Applications: 'Applications',
     ApplicationRunners: 'Application Runners',
+    AppRunners: 'App Runners',
     Interceptors: 'Interceptors',
     Models: 'Models',
     Routes: 'Routes',

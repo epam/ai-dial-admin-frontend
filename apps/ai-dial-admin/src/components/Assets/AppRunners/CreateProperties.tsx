@@ -3,6 +3,7 @@ import { FC } from 'react';
 import SchemeProperties from '@/src/components/ApplicationRunners/ConfigurationView/Properties';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialAppRunnerResource } from '@/src/models/dial/resource';
+import { CORE_UNENCODABLE_ID_CHARS } from '@/src/utils/app-runners/constants';
 
 interface Props {
   entity: DialAppRunnerResource;
@@ -22,6 +23,7 @@ const AppRunnerCreateProperties: FC<Props> = ({ entity, names, isModal, onChange
       names={names}
       runner={entity}
       isModal={isModal}
+      idForbiddenChars={CORE_UNENCODABLE_ID_CHARS}
       onChangeRunner={(scheme: DialApplicationScheme) => onChangeEntity({ ...entity, ...scheme })}
     />
   );

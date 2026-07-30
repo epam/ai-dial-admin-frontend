@@ -63,7 +63,7 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
   },
   [ApplicationRoute.AssetsAppRunners]: {
     segments: [
-      { name: 'AssetsAppRunners', i18nKey: MenuI18nKey.ApplicationRunners },
+      { name: 'AssetsAppRunners', i18nKey: MenuI18nKey.AppRunners },
       {
         name: 'Id',
         href: false,

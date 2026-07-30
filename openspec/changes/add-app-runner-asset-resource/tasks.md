@@ -14,7 +14,7 @@
 ## 3. Name encoding helpers
 
 - [x] 3.1 Add pure `toCoreRunnerName($id)` and `fromCoreRunnerName(name)` helpers applying and reversing the extra `encodeURIComponent` layer (the shared `encodeCorePath`/`decodeCorePath` supply the second).
-- [x] 3.2 Add a pure `isValidRunnerId($id)` guard rejecting ids containing `!`, `~`, `*`, `'`, `(`, `)` — characters `encodeURIComponent` leaves unescaped and `ENTITY_NAME_PATTERN` disallows.
+- [x] 3.2 Add a pure guard rejecting ids containing `!`, `~`, `*`, `'`, `(`, `)` — characters `encodeURIComponent` leaves unescaped and `ENTITY_NAME_PATTERN` disallows. Implemented as `hasUnencodableRunnerIdChars` over an exported `CORE_UNENCODABLE_ID_CHARS` list, rather than the originally-planned `isValidRunnerId` that also folded in the empty check: conflating the two produced an error blaming forbidden characters for a merely-absent id (see 12.2).
 
 ## 4. Route converters
 
@@ -69,3 +69,21 @@
 - [x] 11.1 Run lint, format check, and the full test suite from `apps/ai-dial-admin/`; fix any failures.
 
 Note: no automated browser-verification task was added for this change — the user declined one when asked, despite several scenarios (menu placement, flat list, tab set, create action, validation blocking save) being browser-observable; coverage for those relies on the component tests in section 10.
+
+## 12. Defects found running the feature against DIAL Core
+
+All six were found by using the view, not by the suite — sections 1–11 were reported complete beforehand. Each fix carries a test verified to fail against the pre-fix code.
+
+- [x] 12.1 Mount `AppRunnersFolderProvider` in `[lang]/layout.tsx`. The provider was never mounted, so every visit threw; the central test mock of all folder contexts hid it. Added `BaseAssetList/tests/provider-wiring.spec.ts` asserting each view in `AssetFolderContextMap` has its provider imported and mounted.
+- [x] 12.2 Split the `$id` write guard into missing-id and forbidden-character errors, and add the character constraint to the create form's id field via an opt-in `forbiddenChars` prop on the shared id control (entity-side runners deliberately unaffected).
+- [x] 12.3 Register `AssetsAppRunners` in `isSimpleEntity` and order the app-runner branch ahead of that check in the shared `Properties` dispatcher. `isSimpleEntity` defaults to `true`, so the app-runner branch was dead code and the create modal rendered the generic `name`-based form — the typed id never reached `$id`. This is what surfaced as the missing-id error from 12.2.
+- [x] 12.4 Remove the folder-tree action set for this view. `addSibling`/`addChild` routed into the shared create-folder handler, which submits `getEmptyAsset` — no `$id` — so a folder create on a flat type could only fail.
+- [x] 12.5 Scope the file manager's name rules for this view: override the ui-kit's default forbidden-symbols regex with a control-characters-only pattern (its default covers `:` and `/`, which greyed every row as invalid and disabled its context-menu actions), and gate row opening on a view-aware check instead of `isItemNameValid`. Also stop the manager label wrapping — `App Runners` is the first multi-word label.
+- [x] 12.6 Stop the detail page decoding the `path` query parameter a second time, and derive the created-at column from the ui-kit's date-column factory so it renders a localized date instead of raw epoch milliseconds. Added `tests/path-round-trip.spec.ts` pinning all four encode/decode boundaries.
+
+## 13. Verification status
+
+- [x] 13.1 Full suite (708 files, 7148 tests) and `npm run build` pass.
+- [x] 13.2 List, create, and the create → Core PUT → list round trip exercised against a live DIAL Core; the doubly-encoded resource name reads back as the decoded `$id`.
+
+Not yet exercised against a live Core: the detail view's tabs (Properties, Features, Parameters, AppRoutes, Interceptors), update-with-etag, and delete. Given every defect in section 12 came from a wiring assumption the suite could not see, further instances should be expected in those surfaces.

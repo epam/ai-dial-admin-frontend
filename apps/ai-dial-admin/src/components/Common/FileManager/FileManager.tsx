@@ -39,6 +39,7 @@ import { ASSET_LIST_FILTER_STORAGE_KEY, MAX_FOLDER_NESTING_DEPTH, MOVE_ITEMS_IND
 import {
   getBulkActionsToolbarOptions,
   getDestinationFolderPopupOptions,
+  getForbiddenSymbolsRegExp,
   getGridOptions,
   getToolbarOptions,
   getTreeOptions,
@@ -142,7 +143,10 @@ const FileManager: FC<Props> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [files]);
 
-  const managerLabel = useMemo(() => <h1 className="text-primary leading-[48px]">{label}</h1>, [label]);
+  const managerLabel = useMemo(
+    () => <h1 className="text-primary leading-[48px] whitespace-nowrap">{label}</h1>,
+    [label],
+  );
   const filteredFiles = useMemo(() => {
     return filterData ? filterData(files as AssetWithVersion[]) : files;
   }, [files, filterData]);
@@ -414,6 +418,7 @@ const FileManager: FC<Props> = ({
         gridOptions={gridOptions}
         onGridApiChange={handleGridApiChange}
         onPathChange={handleOnPathChange}
+        forbiddenSymbolsRegExp={getForbiddenSymbolsRegExp(view)}
         onCreateFolder={isReadOnlyAdmin ? undefined : handleCreateFolder}
         onDownloadFiles={handleDownloadFiles}
         onCreateFolderValidate={handleCreateFolderValidate}

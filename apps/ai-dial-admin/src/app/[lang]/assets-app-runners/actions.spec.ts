@@ -93,6 +93,14 @@ describe('Assets app runner :: server actions', () => {
     expect(result.success).toBe(false);
   });
 
+  test.each([undefined, ''])('Should report a %s id as missing rather than blaming characters', async (id) => {
+    const result = await createRunner({ ...runner, $id: id } as DialAppRunnerResource);
+
+    expect(assetApi.put).not.toHaveBeenCalled();
+    expect(result.success).toBe(false);
+    expect(result.errorHeader).toEqual('Missing application runner id');
+  });
+
   describe('payload construction', () => {
     beforeEach(() => {
       (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);

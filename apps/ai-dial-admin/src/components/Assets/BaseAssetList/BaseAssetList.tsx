@@ -18,7 +18,7 @@ import {
   getVersionsPerName,
 } from '@/src/components/Assets/utils';
 import FileManager from '@/src/components/Common/FileManager/FileManager';
-import { isItemNameValid } from '@/src/components/Common/FileManager/utils';
+import { isItemOpenable } from '@/src/components/Common/FileManager/utils';
 import { navigateEntityUrl } from '@/src/components/EntityListView/utils/on-cell-clicked';
 import { getFormDataForImport } from '@/src/components/EntityListView/HeaderButtons/utils';
 import { usePointerClickModifier } from '@/src/hooks/use-pointer-click-modifier';
@@ -164,7 +164,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
 
   const handleGridItemClick = useCallback(
     (file: FileManagerGridRow) => {
-      if (isItemNameValid(file.name)) {
+      if (isItemOpenable(view, file.name)) {
         const pointerEvent = pointerClickModifierRef.current;
         pointerClickModifierRef.current = null;
         navigateEntityUrl(
