@@ -38,6 +38,8 @@ export enum ComparisonOp {
   Ge = 'ge',
   Le = 'le',
   In = 'in',
+  Co = 'co',
+  Nc = 'nc',
 }
 
 export enum LogicalOp {

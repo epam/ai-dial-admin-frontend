@@ -96,6 +96,6 @@ describe('TestCases', () => {
     );
 
     const wrapper = container.firstChild as HTMLElement;
-    expect(wrapper).toHaveClass('h-full', 'flex', 'flex-col', 'gap-y-6');
+    expect(wrapper).toHaveClass('h-full', 'flex', 'flex-col', 'gap-y-4');
   });
 });

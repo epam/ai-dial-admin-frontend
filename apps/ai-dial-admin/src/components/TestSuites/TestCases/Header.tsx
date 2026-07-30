@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useMemo, useState } from 'react';
+import { FC, ReactNode, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import {
@@ -46,6 +46,7 @@ interface Props {
   onPublish?: (displayName: string, description?: string) => void;
   onAttachDataset?: (datasetId: string) => void;
   onDetachDataset?: () => void;
+  datasetTag?: ReactNode;
 }
 
 const HeaderButtons: FC<Props> = ({
@@ -61,6 +62,7 @@ const HeaderButtons: FC<Props> = ({
   onPublish,
   onAttachDataset,
   onDetachDataset,
+  datasetTag,
 }) => {
   const t = useI18n();
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -108,7 +110,7 @@ const HeaderButtons: FC<Props> = ({
   };
 
   return (
-    <div className="flex gap-4">
+    <div className="flex gap-4 items-center">
       {isReadOnly && (
         <>
           <DialGhostButton
@@ -116,15 +118,16 @@ const HeaderButtons: FC<Props> = ({
             iconBefore={<IconFileArrowRight {...BASE_BUTTON_ICON_PROPS} />}
             onClick={onExport}
           />
+          <div className="w-px h-5 bg-layer-4" />
+          <DialGhostButton
+            label={t(TestSuitesI18nKey.DetachFromDataset)}
+            iconBefore={<IconUnlink {...BASE_BUTTON_ICON_PROPS} />}
+            onClick={() => setIsDetachConfirmOpen(true)}
+          />
           <DialGhostButton
             label={t(TestSuitesI18nKey.ChangeDataset)}
             iconBefore={<IconPencilMinus {...BASE_BUTTON_ICON_PROPS} />}
             onClick={() => setIsAttachModalOpen(true)}
-          />
-          <DialNeutralButton
-            label={t(TestSuitesI18nKey.DetachFromDataset)}
-            iconBefore={<IconUnlink {...BASE_BUTTON_ICON_PROPS} />}
-            onClick={() => setIsDetachConfirmOpen(true)}
           />
         </>
       )}
@@ -161,6 +164,8 @@ const HeaderButtons: FC<Props> = ({
           onClick={onBatchDelete}
         />
       )}
+
+      {datasetTag}
 
       {isImportModalOpen &&
         createPortal(

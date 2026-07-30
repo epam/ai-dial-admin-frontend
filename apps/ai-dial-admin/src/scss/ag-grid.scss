@@ -294,3 +294,21 @@
     min-height: 12px;
   }
 }
+
+.conversations-grid {
+  .ag-header-group-cell {
+    @apply border-b border-tertiary pt-1.5;
+  }
+
+  .ag-header-group-cell-label {
+    @apply items-start justify-start;
+  }
+
+  .ag-header-cell {
+    @apply py-1.5;
+  }
+
+  .ag-cell {
+    @apply py-2;
+  }
+}

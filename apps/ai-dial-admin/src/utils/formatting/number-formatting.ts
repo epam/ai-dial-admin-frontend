@@ -1,14 +1,22 @@
 import { Big } from 'big.js';
 import { isInteger } from 'lodash';
 
+const EXPONENT_UNITS = ['', 'K', 'M', 'B', 'T'];
+
+const scaleTo = (num: number, exponent: number): number => parseFloat((num / Math.pow(1000, exponent)).toFixed(1));
+
 export const formatNumberWithExponent = (num: number): string => {
   if (num < 1000) return num.toFixed(1).replace(/\.0$/, '').toString();
 
-  const units = ['', 'K', 'M', 'B', 'T'];
-  const exponent = Math.floor(Math.log10(num) / 3);
-  const shortNumber = num / Math.pow(1000, exponent);
+  // The unit is chosen from the rounded value, not the raw one: rounding 999_999 to one decimal reaches
+  // 1000, which under its own unit would read "1000 K" instead of "1 M".
+  let exponent = Math.floor(Math.log10(num) / 3);
+  if (scaleTo(num, exponent) >= 1000) {
+    exponent += 1;
+  }
+  exponent = Math.min(exponent, EXPONENT_UNITS.length - 1);
 
-  return `${parseFloat(shortNumber.toFixed(1).replace(/\.0$/, ''))} ${units[exponent]}`;
+  return `${scaleTo(num, exponent)} ${EXPONENT_UNITS[exponent]}`;
 };
 
 export const formatNumberByDelimiter = (
