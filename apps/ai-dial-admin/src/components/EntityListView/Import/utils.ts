@@ -366,15 +366,25 @@ export const changeFilesMap = (
     const updatedValue = { ...currentValue };
     updatedValue.files = [...currentValue.files];
 
-    const targetFile = updatedValue.files[fileIndex];
-
+    let targetFile = updatedValue.files[fileIndex];
     if (view === ApplicationRoute.Prompts || view === ApplicationRoute.Files) {
       if (targetFile) {
         if (field === 'version') {
-          targetFile.id = modifyNameVersionInAsset((targetFile.id || targetFile.name) as string, void 0, value);
+          updatedValue.files[fileIndex] = {
+            content: (targetFile as DialPrompt).content,
+            description: (targetFile as DialPrompt).description,
+            folderId: targetFile.folderId,
+            id: modifyNameVersionInAsset((targetFile.id || targetFile.name) as string, void 0, value),
+            name: targetFile.name,
+          } as DialPrompt;
         } else if (field === 'assetName') {
-          targetFile.id = modifyNameVersionInAsset((targetFile.id || targetFile.name) as string, value);
-          targetFile.name = value;
+          updatedValue.files[fileIndex] = {
+            content: (targetFile as DialPrompt).content,
+            description: (targetFile as DialPrompt).description,
+            folderId: targetFile.folderId,
+            id: modifyNameVersionInAsset((targetFile.id || targetFile.name) as string, void 0, value),
+            name: value,
+          } as DialPrompt;
         } else if (field === 'fileName') {
           const { extension } = getNameExtensionFromFile(key);
 
