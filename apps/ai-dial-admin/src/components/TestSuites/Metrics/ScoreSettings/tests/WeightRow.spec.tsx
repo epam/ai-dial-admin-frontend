@@ -160,6 +160,22 @@ describe('WeightRow', () => {
     expect(screen.queryByText(ErrorI18nKey.EmptyField)).not.toBeInTheDocument();
   });
 
+  test('marks the weight input invalid for a non-positive weight', () => {
+    const row: OverallScoreWeight = { metricName: 'A', outputField: 'score', weight: 0 };
+
+    render(<WeightRow index={0} row={row} availableOptions={availableOptions} onUpdate={vi.fn()} onRemove={vi.fn()} />);
+
+    expect(screen.getByLabelText(TestSuitesI18nKey.OverallScoreWeightLabel)).toHaveAttribute('data-invalid', 'true');
+  });
+
+  test('marks the metric dropdown invalid when the selected metric no longer exists', () => {
+    const row: OverallScoreWeight = { metricName: 'Deleted', outputField: 'score', weight: 1 };
+
+    render(<WeightRow index={0} row={row} availableOptions={availableOptions} onUpdate={vi.fn()} onRemove={vi.fn()} />);
+
+    expect(screen.getByLabelText(TestSuitesI18nKey.OverallScoreMetricLabel)).toHaveAttribute('data-invalid', 'true');
+  });
+
   test('dispatches RemoveField for both fields on unmount', () => {
     const { dispatch } = useSaveValidationContext();
     const row: OverallScoreWeight = { metricName: 'A', outputField: 'score', weight: 0.5 };
