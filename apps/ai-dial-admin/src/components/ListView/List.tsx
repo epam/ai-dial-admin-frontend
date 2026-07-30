@@ -1,6 +1,6 @@
 'use client';
 
-import { DialGhostButton } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton, DialLoader } from '@epam/ai-dial-ui-kit';
 import { IconColumns2 } from '@tabler/icons-react';
 import { GridApi, GridReadyEvent } from 'ag-grid-community';
 import classNames from 'classnames';
@@ -15,10 +15,13 @@ import { mainListEntitiesViewClassName } from './constants';
 
 interface Props<T> extends Omit<GridViewProps<T>, 'showColumnsPanel' | 'toggleColumnsPanel'> {
   listLabel?: ReactNode;
+  listLabelAddon?: ReactNode;
   className?: string;
   children?: ReactNode;
   infoPanel?: ReactNode;
   description?: ReactNode;
+  toolbar?: ReactNode;
+  isGridLoading?: boolean;
   isEnableColumnPanel?: boolean;
   isMainListView?: boolean;
   isEmbedToModal?: boolean;
@@ -27,11 +30,14 @@ interface Props<T> extends Omit<GridViewProps<T>, 'showColumnsPanel' | 'toggleCo
 // TODO: rename to List view
 const ListEntities = <T extends object>({
   listLabel,
+  listLabelAddon,
   isEnableColumnPanel = false,
   isMainListView = false,
   isEmbedToModal = false,
   infoPanel,
   description,
+  toolbar,
+  isGridLoading = false,
   children,
   onGridReady: onGridReadyCallback,
   ...props
@@ -76,10 +82,13 @@ const ListEntities = <T extends object>({
       )}
     >
       {listLabel && (
-        <div className="flex flex-row flex-wrap justify-between mb-4 items-center h-[40px]">
-          <h1>{listLabel}</h1>
+        <div className="flex flex-row flex-wrap justify-between mb-3 items-center h-[40px]">
+          <div className="flex items-center gap-3">
+            <h2>{listLabel}</h2>
+            {listLabelAddon}
+          </div>
 
-          <div className="flex gap-4">
+          <div className="flex gap-4 items-center">
             <ResetFiltersButton gridApi={gridApi} />
             {isEnableColumnPanel &&
               (!!props.rowData?.length || props.additionalGridOptions?.rowModelType === 'infinite') && (
@@ -94,14 +103,19 @@ const ListEntities = <T extends object>({
         </div>
       )}
       {description && <div className="mb-4">{description}</div>}
+      {toolbar && <div className="mb-4">{toolbar}</div>}
       <div className="flex-1 min-h-0 flex flex-row gap-x-3">
         <div className="flex-1 min-w-0">
-          <GridView
-            showColumnsPanel={showColumnsPanel}
-            toggleColumnsPanel={toggleColumnsPanel}
-            onGridReady={onGridReady}
-            {...props}
-          />
+          {isGridLoading ? (
+            <DialLoader size={40} />
+          ) : (
+            <GridView
+              showColumnsPanel={showColumnsPanel}
+              toggleColumnsPanel={toggleColumnsPanel}
+              onGridReady={onGridReady}
+              {...props}
+            />
+          )}
         </div>
         {infoPanel}
       </div>

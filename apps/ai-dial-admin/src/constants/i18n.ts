@@ -62,6 +62,7 @@ export enum MenuI18nKey {
   Analytics = 'Menu.Analytics',
   QueryBuilder = 'Menu.QueryBuilder',
   Tables = 'Menu.Tables',
+  AnalyticsConversations = 'Menu.AnalyticsConversations',
 }
 
 export enum ReadOnlyI18nKey {
@@ -1872,6 +1873,13 @@ export enum TestSuitesI18nKey {
   ScoreThresholdCondition = 'TestSuites.ScoreThresholdCondition',
   ScoreThresholdOtherwise = 'TestSuites.ScoreThresholdOtherwise',
   ScoreThresholdFail = 'TestSuites.ScoreThresholdFail',
+  RunCondition = 'TestSuites.RunCondition',
+  RunConditionTooltip = 'TestSuites.RunConditionTooltip',
+  IncludeInRun = 'TestSuites.IncludeInRun',
+  IncludedInRun = 'TestSuites.IncludedInRun',
+  ExcludedFromRun = 'TestSuites.ExcludedFromRun',
+  RunConditionSelect = 'TestSuites.RunConditionSelect',
+  ViewOnlyIncludedInRun = 'TestSuites.ViewOnlyIncludedInRun',
 }
 
 export enum DatasetsI18nKey {
@@ -2341,4 +2349,41 @@ export enum AnalyticsTablesI18nKey {
   AccessSaved = 'AnalyticsTables.AccessSaved',
   AccessLoadFailed = 'AnalyticsTables.AccessLoadFailed',
   RolesLoadFailed = 'AnalyticsTables.RolesLoadFailed',
+}
+
+export enum ConversationsTraceI18nKey {
+  Title = 'ConversationsTrace.Title',
+  Conversation = 'ConversationsTrace.Conversation',
+  ProjectModel = 'ConversationsTrace.ProjectModel',
+  Turns = 'ConversationsTrace.Turns',
+  Activity = 'ConversationsTrace.Activity',
+  Tokens = 'ConversationsTrace.Tokens',
+  Cost = 'ConversationsTrace.Cost',
+  NoConversations = 'ConversationsTrace.NoConversations',
+  ConversationsLoadFailed = 'ConversationsTrace.ConversationsLoadFailed',
+  SearchPlaceholder = 'ConversationsTrace.SearchPlaceholder',
+  SearchPlaceholderWithTitles = 'ConversationsTrace.SearchPlaceholderWithTitles',
+  Feedback = 'ConversationsTrace.Feedback',
+  FeedbackAll = 'ConversationsTrace.FeedbackAll',
+  FeedbackPositive = 'ConversationsTrace.FeedbackPositive',
+  FeedbackNegative = 'ConversationsTrace.FeedbackNegative',
+  FeedbackRated = 'ConversationsTrace.FeedbackRated',
+  ProvenanceConversation = 'ConversationsTrace.ProvenanceConversation',
+  ProvenanceConversationHint = 'ConversationsTrace.ProvenanceConversationHint',
+  ProvenanceUsageLog = 'ConversationsTrace.ProvenanceUsageLog',
+  ProvenanceUsageLogHint = 'ConversationsTrace.ProvenanceUsageLogHint',
+  ProvenanceFeedback = 'ConversationsTrace.ProvenanceFeedback',
+  ProvenanceFeedbackHint = 'ConversationsTrace.ProvenanceFeedbackHint',
+  Rating = 'ConversationsTrace.Rating',
+  ComposedOver = 'ConversationsTrace.ComposedOver',
+  EntityPending = 'ConversationsTrace.EntityPending',
+  SummaryConversations = 'ConversationsTrace.SummaryConversations',
+  SummaryRated = 'ConversationsTrace.SummaryRated',
+  SummaryWith = 'ConversationsTrace.SummaryWith',
+  SummaryCost = 'ConversationsTrace.SummaryCost',
+  SummaryCostHint = 'ConversationsTrace.SummaryCostHint',
+  SummaryScopeHint = 'ConversationsTrace.SummaryScopeHint',
+  SummaryTruncatedHint = 'ConversationsTrace.SummaryTruncatedHint',
+  RatingUp = 'ConversationsTrace.RatingUp',
+  RatingDown = 'ConversationsTrace.RatingDown',
 }

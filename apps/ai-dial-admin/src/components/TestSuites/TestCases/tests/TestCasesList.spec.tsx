@@ -1,9 +1,15 @@
-import { render, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { createRef } from 'react';
-import { describe, expect, test, vi, beforeEach } from 'vitest';
-import TestCasesList, { TestCasesActions } from '../TestCasesList';
-import { TestSuite, TestCase as TestCaseModel } from '@/src/models/evaluation/test-suite';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import * as actions from '@/src/app/[lang]/datasets/actions';
+import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { DatasetVisibility } from '@/src/models/evaluation/dataset';
+import { ComparisonOp, ExprType, ValueType } from '@/src/models/evaluation/structured-query';
+import { TestCase as TestCaseModel, TestSuite } from '@/src/models/evaluation/test-suite';
+
+import TestCasesList, { TestCasesActions } from '../TestCasesList';
+import { useIncludedIds } from '../RunCondition/use-included-ids';
 
 type TestCase = Partial<TestCaseModel>;
 
@@ -15,10 +21,12 @@ const createPageData = (content: TestCase[]) => ({
   content: content as TestCaseModel[],
 });
 
-let capturedGridOptions: any = null;
+let capturedGridOptions: Record<string, unknown> | null = null;
 let capturedOnCellChange: ((data: Record<string, unknown>, field: string, value: unknown) => void) | null = null;
-let capturedRowData: any[] | null = null;
-let capturedOnGridReady: ((event: { api: any }) => void) | null = null;
+let capturedRowData: Record<string, unknown>[] | null = null;
+let capturedOnGridReady: ((event: { api: unknown }) => void) | null = null;
+let capturedListLabel: unknown = null;
+let capturedDatasetTag: unknown = null;
 
 vi.mock('@/src/app/[lang]/datasets/actions', () => ({
   getTestCases: vi.fn(),
@@ -28,15 +36,29 @@ vi.mock('@/src/app/[lang]/datasets/actions', () => ({
   removeMultipleTestCases: vi.fn(),
 }));
 
+vi.mock('@/src/app/[lang]/runs/actions', () => ({
+  executeStructuredQuery: vi.fn().mockResolvedValue({ rows: [] }),
+}));
+
 vi.mock('@/src/components/ListView/List', () => ({
-  default: ({ listLabel, emptyDataProps, onGridReady, additionalGridOptions, rowData, children }: any) => {
+  default: ({
+    listLabel,
+    listLabelAddon,
+    emptyDataProps,
+    onGridReady,
+    additionalGridOptions,
+    rowData,
+    children,
+  }: any) => {
     capturedGridOptions = additionalGridOptions;
     capturedRowData = rowData ?? null;
     capturedOnGridReady = onGridReady;
+    capturedListLabel = listLabel;
     return (
       <div>
         <div>List View Component</div>
         <div>Title: {listLabel}</div>
+        <div data-testid="list-label-addon">{listLabelAddon}</div>
         <div>Empty Title: {emptyDataProps?.title}</div>
         <div>{children}</div>
       </div>
@@ -52,13 +74,34 @@ vi.mock('@/src/components/TestSuites/utils/columns', () => ({
 }));
 
 vi.mock('@/src/components/TestSuites/TestCases/Header', () => ({
-  default: ({ selectedTestSuiteId }: any) => (
-    <div>
-      <div>Header Buttons</div>
-      <div>Test Suite ID: {selectedTestSuiteId}</div>
-    </div>
-  ),
+  default: ({ selectedTestSuiteId, datasetTag }: any) => {
+    capturedDatasetTag = datasetTag;
+    return (
+      <div>
+        <div>Header Buttons</div>
+        <div>Test Suite ID: {selectedTestSuiteId}</div>
+        <div data-testid="dataset-tag">{datasetTag}</div>
+      </div>
+    );
+  },
 }));
+
+vi.mock('@/src/components/TestSuites/TestCases/RunCondition/use-included-ids', () => ({
+  useIncludedIds: vi.fn().mockReturnValue(null),
+}));
+
+vi.mock('@epam/ai-dial-ui-kit', async () => {
+  const actual = await vi.importActual<any>('@epam/ai-dial-ui-kit');
+  return {
+    ...actual,
+    DialSwitch: ({ label, isOn, onChange, switchId }: any) => (
+      <label>
+        <input type="checkbox" data-testid={switchId} checked={!!isOn} onChange={(e) => onChange?.(e.target.checked)} />
+        {label}
+      </label>
+    ),
+  };
+});
 
 describe('TestCasesList', () => {
   const mockTestSuite: TestSuite = {
@@ -80,6 +123,9 @@ describe('TestCasesList', () => {
     capturedOnCellChange = null;
     capturedRowData = null;
     capturedOnGridReady = null;
+    capturedListLabel = null;
+    capturedDatasetTag = null;
+    vi.mocked(useIncludedIds).mockReturnValue(null);
   });
 
   test('fetches test cases on mount using datasetId', async () => {
@@ -126,23 +172,9 @@ describe('TestCasesList', () => {
   });
 });
 
-describe('TestCasesList — disabledTestCaseIds logic', () => {
+describe('TestCasesList — dirty tracking', () => {
   const mockOnChange = vi.fn();
   const mockOnDirtyChange = vi.fn();
-
-  const makeColumn = (colId: string) => ({ getColId: () => colId });
-  const makeCellEvent = (colId: string, rowData: Record<string, unknown>, newValue: unknown) => ({
-    column: makeColumn(colId),
-    data: rowData,
-    newValue,
-    node: {},
-  });
-
-  const makeGridApi = (nodes: { data: Record<string, unknown>; rowPinned?: string }[]) => ({
-    setGridOption: vi.fn(),
-    refreshClientSideRowModel: vi.fn(),
-    forEachNode: vi.fn((cb: (node: any) => void) => nodes.forEach(cb)),
-  });
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -150,6 +182,9 @@ describe('TestCasesList — disabledTestCaseIds logic', () => {
     capturedOnCellChange = null;
     capturedRowData = null;
     capturedOnGridReady = null;
+    capturedListLabel = null;
+    capturedDatasetTag = null;
+    vi.mocked(useIncludedIds).mockReturnValue(null);
     vi.mocked(actions.getTestCases).mockResolvedValue({
       page: 0,
       size: 1000,
@@ -159,7 +194,8 @@ describe('TestCasesList — disabledTestCaseIds logic', () => {
     });
   });
 
-  const renderList = (suite: TestSuite) => {
+  test('clearDirtyAndRefresh clears dirty rows and calls onDirtyChange(false)', async () => {
+    const suite: TestSuite = { id: 'suite-1', datasetId: 'ds-1' };
     const actionsRef = createRef<TestCasesActions | null>();
     render(
       <TestCasesList
@@ -169,74 +205,6 @@ describe('TestCasesList — disabledTestCaseIds logic', () => {
         onDirtyChange={mockOnDirtyChange}
       />,
     );
-    return actionsRef;
-  };
-
-  test('toggling enabled OFF adds row id to disabledTestCaseIds via onChange', async () => {
-    const suite: TestSuite = { id: 'suite-1', datasetId: 'ds-1', disabledTestCaseIds: [] };
-    renderList(suite);
-
-    await waitFor(() => expect(capturedGridOptions).not.toBeNull());
-
-    const row = { id: 'row-1', testCaseName: 'tc', createdAt: 0 };
-    // Initialize grid with a node showing the row as disabled (ag-grid updates node data before firing the event)
-    capturedOnGridReady?.({ api: makeGridApi([{ data: { ...row, enabled: false } }]) });
-
-    capturedGridOptions.onCellValueChanged(makeCellEvent('enabled', row, false));
-
-    expect(mockOnChange).toHaveBeenCalledWith(expect.objectContaining({ disabledTestCaseIds: ['row-1'] }), true);
-  });
-
-  test('toggling enabled ON removes row id from disabledTestCaseIds via onChange', async () => {
-    const suite: TestSuite = {
-      id: 'suite-1',
-      datasetId: 'ds-1',
-      disabledTestCaseIds: ['row-1'],
-    };
-    renderList(suite);
-
-    await waitFor(() => expect(capturedGridOptions).not.toBeNull());
-
-    const row = { id: 'row-1', testCaseName: 'tc', createdAt: 0 };
-    // Initialize grid with a node showing the row as enabled (ag-grid updates node data before firing the event)
-    capturedOnGridReady?.({ api: makeGridApi([{ data: { ...row, enabled: true } }]) });
-
-    capturedGridOptions.onCellValueChanged(makeCellEvent('enabled', row, true));
-
-    expect(mockOnChange).toHaveBeenCalledWith(expect.objectContaining({ disabledTestCaseIds: [] }), true);
-  });
-
-  test('disabled state is pre-populated from disabledTestCaseIds when data loads', async () => {
-    const suite: TestSuite = {
-      id: 'suite-1',
-      datasetId: 'ds-1',
-      disabledTestCaseIds: ['row-1'],
-    };
-
-    vi.mocked(actions.getTestCases).mockResolvedValue(
-      createPageData([
-        { id: 'row-1', testCaseName: 'disabled case', createdAt: 0 },
-        { id: 'row-2', testCaseName: 'enabled case', createdAt: 0 },
-      ]),
-    );
-
-    renderList(suite);
-
-    await waitFor(() => {
-      expect(capturedRowData).not.toBeNull();
-      expect(capturedRowData!.length).toBe(2);
-    });
-
-    const row1 = capturedRowData!.find((r: any) => r.id === 'row-1');
-    const row2 = capturedRowData!.find((r: any) => r.id === 'row-2');
-
-    expect(row1?.enabled).toBe(false);
-    expect(row2?.enabled).toBe(true);
-  });
-
-  test('clearDirtyAndRefresh clears dirty rows and calls onDirtyChange(false)', async () => {
-    const suite: TestSuite = { id: 'suite-1', datasetId: 'ds-1', disabledTestCaseIds: [] };
-    const actionsRef = renderList(suite);
 
     await waitFor(() => expect(capturedOnCellChange).not.toBeNull());
 
@@ -249,5 +217,144 @@ describe('TestCasesList — disabledTestCaseIds logic', () => {
 
     expect(actionsRef.current?.getDirtyTestCases().length).toBe(0);
     expect(mockOnDirtyChange).toHaveBeenLastCalledWith(false);
+  });
+
+  test('loads rows without enabled checkbox overlay', async () => {
+    const suite: TestSuite = {
+      id: 'suite-1',
+      datasetId: 'ds-1',
+      disabledTestCaseIds: ['row-1'],
+    };
+
+    vi.mocked(actions.getTestCases).mockResolvedValue(
+      createPageData([
+        { id: 'row-1', testCaseName: 'case 1', createdAt: 0 },
+        { id: 'row-2', testCaseName: 'case 2', createdAt: 0 },
+      ]),
+    );
+
+    render(<TestCasesList selectedTestSuite={suite} onChange={mockOnChange} onDirtyChange={mockOnDirtyChange} />);
+
+    await waitFor(() => {
+      expect(capturedRowData).not.toBeNull();
+      expect(capturedRowData!.length).toBe(2);
+    });
+
+    expect(capturedRowData![0]).not.toHaveProperty('enabled');
+    expect(capturedGridOptions?.onCellValueChanged).toBeUndefined();
+  });
+});
+
+describe('TestCasesList — header and included-only filter', () => {
+  const mockOnChange = vi.fn();
+  const filterNode = {
+    op: ComparisonOp.Co,
+    args: [
+      { type: ExprType.Field, name: 'test_case_name' },
+      { type: ExprType.Value, value_type: ValueType.String, value: 'match' },
+    ],
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    capturedGridOptions = null;
+    capturedOnCellChange = null;
+    capturedRowData = null;
+    capturedOnGridReady = null;
+    capturedListLabel = null;
+    capturedDatasetTag = null;
+    vi.mocked(useIncludedIds).mockReturnValue(null);
+    vi.mocked(actions.getTestCases).mockResolvedValue(
+      createPageData([
+        { id: 'row-1', testCaseName: 'case 1', createdAt: 0 },
+        { id: 'row-2', testCaseName: 'case 2', createdAt: 0 },
+      ]),
+    );
+  });
+
+  test('renders title without count or dataset tag', async () => {
+    render(
+      <TestCasesList
+        selectedTestSuite={{ id: 'suite-1', datasetId: 'ds-1' }}
+        onChange={mockOnChange}
+        dataset={{
+          id: 'ds-1',
+          name: 'CaseCollection_Eta',
+          visibility: DatasetVisibility.PUBLIC,
+        }}
+        isReadOnly
+      />,
+    );
+
+    await waitFor(() => expect(capturedListLabel).toBe(TabsI18nKey.TestCases));
+    expect(String(capturedListLabel)).not.toContain(':');
+    expect(screen.getByTestId('dataset-tag').textContent).toContain('CaseCollection_Eta');
+  });
+
+  test('renders included-only switch addon', async () => {
+    render(<TestCasesList selectedTestSuite={{ id: 'suite-1', datasetId: 'ds-1' }} onChange={mockOnChange} />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('view-only-included-in-run')).toBeInTheDocument();
+    });
+    expect(screen.getByText(TestSuitesI18nKey.ViewOnlyIncludedInRun)).toBeInTheDocument();
+  });
+
+  test('external filter hides non-included rows when switch is on', async () => {
+    vi.mocked(useIncludedIds).mockReturnValue(new Set(['row-1']));
+
+    const onFilterChanged = vi.fn();
+    const applyColumnState = vi.fn();
+    render(
+      <TestCasesList
+        selectedTestSuite={{ id: 'suite-1', datasetId: 'ds-1', testCaseFilter: filterNode }}
+        onChange={mockOnChange}
+      />,
+    );
+
+    await waitFor(() => expect(capturedGridOptions).not.toBeNull());
+    capturedOnGridReady?.({
+      api: { onFilterChanged, refreshCells: vi.fn(), applyColumnState, setGridOption: vi.fn() },
+    });
+
+    const isPresent = capturedGridOptions!.isExternalFilterPresent as () => boolean;
+    const doesPass = capturedGridOptions!.doesExternalFilterPass as (node: {
+      data?: Record<string, unknown>;
+    }) => boolean;
+
+    expect(isPresent()).toBe(false);
+    expect(doesPass({ data: { id: 'row-2' } })).toBe(true);
+
+    fireEvent.click(screen.getByTestId('view-only-included-in-run'));
+
+    await waitFor(() => expect(isPresent()).toBe(true));
+    expect(doesPass({ data: { id: 'row-1' } })).toBe(true);
+    expect(doesPass({ data: { id: 'row-2' } })).toBe(false);
+  });
+
+  test('sorts included rows to the top when run condition filter is active', async () => {
+    vi.mocked(useIncludedIds).mockReturnValue(new Set(['row-1']));
+
+    const applyColumnState = vi.fn();
+    const refreshCells = vi.fn();
+    const onFilterChanged = vi.fn();
+
+    render(
+      <TestCasesList
+        selectedTestSuite={{ id: 'suite-1', datasetId: 'ds-1', testCaseFilter: filterNode }}
+        onChange={mockOnChange}
+      />,
+    );
+
+    await waitFor(() => expect(capturedOnGridReady).not.toBeNull());
+
+    capturedOnGridReady?.({
+      api: { applyColumnState, refreshCells, onFilterChanged, setGridOption: vi.fn() },
+    });
+
+    expect(applyColumnState).toHaveBeenCalledWith({
+      state: [{ colId: 'includedInRun', sort: 'desc', sortIndex: 0 }],
+      defaultState: { sort: null },
+    });
   });
 });

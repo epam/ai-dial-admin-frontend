@@ -18,7 +18,7 @@ import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSele
 import JsonAtaCellRenderer from '@/src/components/Grid/CellRenderers/JsonAtaCellRenderer';
 import JsonEditorCellRenderer from '@/src/components/Grid/CellRenderers/JsonEditorCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
-import BooleanColumnHeader from '@/src/components/Grid/HeaderComponents/BooleanColumnHeader';
+import IncludeInRunCellRenderer from '@/src/components/TestSuites/TestCases/RunCondition/IncludeInRunCellRenderer';
 import { TYPE_OPTIONS } from '@/src/components/TestSuites/TestCaseSchema/constants';
 import { NO_BORDER_CLASS, UTILITY_COLUMN } from '@/src/constants/ag-grid';
 import { BASE_STATUS_COLUMN } from '@/src/constants/grid-columns/base-columns';
@@ -38,10 +38,10 @@ import { isValueTruthy } from '@/src/utils/types';
 
 export type onCellChange = (data: Record<string, unknown>, field: string, value: string | number | boolean) => void;
 
-const getEnabledColumnFilterOptions = (
+const getIncludeInRunFilterOptions = (
   allLabel: string,
-  enabledLabel: string,
-  disabledLabel: string,
+  includedLabel: string,
+  excludedLabel: string,
 ): IFilterOptionDef[] => [
   {
     displayKey: 'all',
@@ -50,14 +50,14 @@ const getEnabledColumnFilterOptions = (
     predicate: () => true,
   },
   {
-    displayKey: 'enabled',
-    displayName: enabledLabel,
+    displayKey: 'included',
+    displayName: includedLabel,
     numberOfInputs: 0,
     predicate: (_filterValues, cellValue) => cellValue === true,
   },
   {
-    displayKey: 'disabled',
-    displayName: disabledLabel,
+    displayKey: 'excluded',
+    displayName: excludedLabel,
     numberOfInputs: 0,
     predicate: (_filterValues, cellValue) => cellValue !== true,
   },
@@ -69,41 +69,41 @@ export const getTestCaseColumns = (
   t?: (key: string) => string,
   schema?: TestCaseSchema[],
   isReadOnly?: boolean,
+  includedIds?: Set<string> | null | (() => Set<string> | null),
 ): ColDef[] => {
-  const enabledLabel = t?.(BasicI18nKey.Enabled) ?? 'Enabled';
-  const disabledLabel = t?.(BasicI18nKey.Disabled) ?? 'Disabled';
+  const includedLabel = t?.(TestSuitesI18nKey.IncludedInRun) ?? 'Included';
+  const excludedLabel = t?.(TestSuitesI18nKey.ExcludedFromRun) ?? 'Excluded';
   const allLabel = 'All';
   const resolvedSchema = schema ?? [];
+  const resolveIncludedIds = () => (typeof includedIds === 'function' ? includedIds() : includedIds);
+
   return [
     {
       ...UTILITY_COLUMN,
-      headerName: '',
-      headerComponent: BooleanColumnHeader,
-      field: 'enabled',
-      colId: 'enabled',
-      minWidth: 120,
-      width: 120,
-      maxWidth: 140,
+      headerName: t?.(TestSuitesI18nKey.IncludeInRun) ?? 'Include in run',
+      field: 'includedInRun',
+      colId: 'includedInRun',
+      minWidth: 140,
+      width: 140,
+      maxWidth: 180,
       filter: 'agTextColumnFilter',
       filterParams: {
-        filterOptions: getEnabledColumnFilterOptions(allLabel, enabledLabel, disabledLabel),
+        filterOptions: getIncludeInRunFilterOptions(allLabel, includedLabel, excludedLabel),
         defaultOption: 'all',
         maxNumConditions: 1,
         buttons: ['reset'],
       } as ITextFilterParams,
       floatingFilter: true,
       floatingFilterComponent: 'agTextColumnFloatingFilter',
-      editable: true,
-      cellRenderer: 'agCheckboxCellRenderer',
-      cellEditor: 'agCheckboxCellEditor',
-      cellClass: 'flex justify-center',
-      valueGetter: (params) => params.data?.enabled,
-      valueSetter: (params) => {
-        params.data.enabled = params.newValue;
-        return true;
-      },
-      tooltipValueGetter: (params) => {
-        return params.data?.enabled ? 'Disable test case' : 'Enable test case';
+      sortable: true,
+      editable: false,
+      cellRenderer: IncludeInRunCellRenderer,
+      valueGetter: (params) => {
+        const ids = resolveIncludedIds();
+        if (ids == null) {
+          return true;
+        }
+        return ids.has(String(params.data?.id));
       },
     } as ColDef,
     ...TEST_CASES_COLUMN.map((col) => {
