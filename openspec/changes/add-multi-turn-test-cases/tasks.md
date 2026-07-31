@@ -24,10 +24,10 @@
 
 ## 4. Shared column factory
 
-- [ ] 4.1 Add `src/components/Grid/columns/turn-columns.tsx` with `TurnActionHandlers` and `SchemaColumnContext` types, `getTurnExpanderColumn`, `getGroupedIdColumn`, `getGroupedNameColumn`. Place it under `Grid/` rather than `TestSuites/utils/` so Datasets does not depend on TestSuites.
-- [ ] 4.2 Add `getGroupedSchemaColumn`, moving the existing `TestCaseItemType` renderer switch (`TestSuites/utils/columns.tsx:146-231`) here verbatim, then layering the two grouping cases in front of it: per-turn field on a GROUP row → stacked; shared field on a TURN row → blank.
-- [ ] 4.3 Add `getTurnActionsColumn`: Add turn / Delete test case hidden on TURN rows; Move up / Move down / Delete turn hidden on non-TURN rows.
-- [ ] 4.4 Select renderers by **blacklisting** GROUP and TURN rather than whitelisting SINGLE, so an unprojected caller with no `rowType` stays editable.
+- [x] 4.1 Add `src/components/Grid/columns/turn-columns.tsx` with `TurnActionHandlers` and `SchemaColumnContext` types, `getTurnExpanderColumn`, `getGroupedIdColumn`, `getGroupedNameColumn`. Place it under `Grid/` rather than `TestSuites/utils/` so Datasets does not depend on TestSuites.
+- [x] 4.2 Add `getGroupedSchemaColumn`, moving the existing `TestCaseItemType` renderer switch (`TestSuites/utils/columns.tsx:146-231`) here verbatim, then layering the two grouping cases in front of it: per-turn field on a GROUP row → stacked; shared field on a TURN row → blank.
+- [x] 4.3 Add `getTurnActionsColumn`: Add turn / Delete test case hidden on TURN rows; Move up / Move down / Delete turn hidden on non-TURN rows.
+- [x] 4.4 Select renderers by **blacklisting** GROUP and TURN rather than whitelisting SINGLE, so an unprojected caller with no `rowType` stays editable.
 
 ## 5. Grid hooks
 

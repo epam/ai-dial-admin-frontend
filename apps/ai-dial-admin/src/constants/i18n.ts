@@ -2182,6 +2182,7 @@ export enum ActionMenuOperationI18nKey {
   Delete_turn = 'ActionMenuOperation.Delete_turn',
   Move_turn_up = 'ActionMenuOperation.Move_turn_up',
   Move_turn_down = 'ActionMenuOperation.Move_turn_down',
+  Delete_case = 'ActionMenuOperation.Delete_case',
 }
 
 export enum JsonAtaI18nKey {

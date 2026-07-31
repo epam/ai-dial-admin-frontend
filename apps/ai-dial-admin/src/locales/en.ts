@@ -2256,6 +2256,7 @@ export default {
     Delete_turn: 'Delete turn',
     Move_turn_up: 'Move turn up',
     Move_turn_down: 'Move turn down',
+    Delete_case: 'Delete test case',
   },
   QueryBuilder: {
     Source: 'Source',
