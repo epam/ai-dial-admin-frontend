@@ -59,7 +59,7 @@ This change re-implements multi-turn taking the POC's learnings at roughly a thi
 
 **Backend contract is assumed, not verified.** No contract for `multiTurnData` / `perTurn` / `turnIndex` / `totalTurns` exists in this repo — there is no OpenAPI spec, `openspec/specs/dataset-test-cases/spec.md` documents the import contract with no turn column, and `grep -riE "multi.?turn|turnIndex"` over `openspec/`, `docs/`, and `apps/` returns zero hits outside unrelated archived analytics-chat proposals. Wire shapes are taken from the POC's design doc on the user's explicit instruction. If the real API differs, the model and converter layers are where rework lands.
 
-**Bulk PATCH is untouched.** The `test-cases-bulk-enabled-patch` whitelist stays `{testCaseName, data}` — it never switches a case's turn structure.
+**There is no bulk-PATCH path to guard.** An earlier draft of this proposal said the `test-cases-bulk-enabled-patch` whitelist must stay `{testCaseName, data}`. That capability is in fact **deprecated and removed** — `openspec/specs/test-cases-bulk-enabled-patch/spec.md` records that `PATCH /api/v1/test-suites/{id}/test-cases:bulk` no longer exists and that enable/disable state moved to `TestSuite.disabledTestCaseIds`, persisted via the suite PUT. `TEST_CASES_BULK_URL` survives in `server/eval/test-suites-api.ts` as an unused URL builder referenced only by its own spec test. Nothing to widen and nothing to protect.
 
 ## Non-goals
 

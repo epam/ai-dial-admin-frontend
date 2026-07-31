@@ -94,6 +94,8 @@ export default {
     HighAccuracy: 'High accuracy',
     LowAccuracy: 'Low accuracy',
     DeselectAll: 'Deselect all',
+    PerTurn: 'Per turn',
+    Shared: 'Shared',
   },
   Menu: {
     Entities: 'Entities',
@@ -1930,6 +1932,9 @@ export default {
     ExcludedFromRun: 'Excluded',
     RunConditionSelect: 'Select',
     ViewOnlyIncludedInRun: 'View only included in run ({count})',
+    TurnLabel: 'Turn {index}',
+    TurnCountBadge: '{count} turns',
+    ImportWarnings: 'Warnings',
   },
   FileManager: {
     SelectedItems: 'item(s) selected',
@@ -2246,6 +2251,10 @@ export default {
     Try_out: 'Try out',
     Edit: 'Edit',
     Export: 'Export',
+    Add_turn: 'Add turn',
+    Delete_turn: 'Delete turn',
+    Move_turn_up: 'Move turn up',
+    Move_turn_down: 'Move turn down',
   },
   QueryBuilder: {
     Source: 'Source',

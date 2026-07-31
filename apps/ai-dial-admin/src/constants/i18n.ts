@@ -155,6 +155,8 @@ export enum BasicI18nKey {
   HighAccuracy = 'Basic.HighAccuracy',
   LowAccuracy = 'Basic.LowAccuracy',
   DeselectAll = 'Basic.DeselectAll',
+  PerTurn = 'Basic.PerTurn',
+  Shared = 'Basic.Shared',
 }
 
 export enum EntitiesI18nKey {
@@ -1884,6 +1886,9 @@ export enum TestSuitesI18nKey {
   ExcludedFromRun = 'TestSuites.ExcludedFromRun',
   RunConditionSelect = 'TestSuites.RunConditionSelect',
   ViewOnlyIncludedInRun = 'TestSuites.ViewOnlyIncludedInRun',
+  TurnLabel = 'TestSuites.TurnLabel',
+  TurnCountBadge = 'TestSuites.TurnCountBadge',
+  ImportWarnings = 'TestSuites.ImportWarnings',
 }
 
 export enum DatasetsI18nKey {
@@ -2172,6 +2177,10 @@ export enum ActionMenuOperationI18nKey {
   Try_out = 'ActionMenuOperation.Try_out',
   Edit = 'ActionMenuOperation.Edit',
   Export = 'ActionMenuOperation.Export',
+  Add_turn = 'ActionMenuOperation.Add_turn',
+  Delete_turn = 'ActionMenuOperation.Delete_turn',
+  Move_turn_up = 'ActionMenuOperation.Move_turn_up',
+  Move_turn_down = 'ActionMenuOperation.Move_turn_down',
 }
 
 export enum JsonAtaI18nKey {
