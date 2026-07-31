@@ -98,7 +98,9 @@ const ChipRow: FC<Props> = ({
     return (
       <div ref={containerRef} className="flex items-center gap-1.5">
         {collapseButton}
-        <div className="flex min-w-0 flex-1 items-center gap-1.5">{children}</div>
+        {/* Wraps rather than squeezing: an editor whose min width no longer fits (e.g. an alias next
+            to a function, its argument and a distinct toggle) moves to a second line. */}
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">{children}</div>
         {removeButton}
       </div>
     );

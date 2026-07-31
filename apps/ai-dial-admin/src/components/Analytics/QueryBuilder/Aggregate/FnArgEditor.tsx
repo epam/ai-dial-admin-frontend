@@ -5,7 +5,7 @@ import { SelectOption } from '@epam/ai-dial-ui-kit';
 import CategorizedFieldDropdown from '@/src/components/Analytics/QueryBuilder/Common/CategorizedFieldDropdown';
 import CompactInput from '@/src/components/Analytics/QueryBuilder/Common/CompactInput';
 import CompactSelect from '@/src/components/Analytics/QueryBuilder/Common/CompactSelect';
-import { FieldOption, FnArgValue } from '@/src/models/analytics/query-builder';
+import { FieldDropdownMode, FieldOption, FnArgValue } from '@/src/models/analytics/query-builder';
 import { QueryFunctionArg, QueryFunctionArgKind } from '@/src/models/analytics/query-function';
 
 interface Props {
@@ -34,9 +34,10 @@ const clampToBounds = (raw: string, min?: number, max?: number): string => {
 const FnArgEditor: FC<Props> = ({ id, arg, value, fieldOptions, onChange }) => {
   if (arg.kind === QueryFunctionArgKind.Expression) {
     return (
-      <div className="min-w-0 flex-1">
+      <div className="min-w-[128px] flex-1">
         <CategorizedFieldDropdown
           id={id}
+          mode={FieldDropdownMode.Picker}
           options={fieldOptions}
           value={value.field}
           placeholder={arg.name}

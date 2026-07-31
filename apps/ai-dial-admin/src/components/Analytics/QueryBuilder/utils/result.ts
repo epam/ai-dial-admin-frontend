@@ -13,11 +13,16 @@ const unionKeys = (rows: Array<Record<string, unknown>>): string[] => {
   return [...set];
 };
 
-export const getResultColumns = (result: StructuredQueryResult | null): ColDef[] => {
+// `columnLabels` maps a result column to the display label its header shows — schema fields by their
+// display name, computed columns absent since their alias is already the label (see ExecutedQueryMeta).
+export const getResultColumns = (
+  result: StructuredQueryResult | null,
+  columnLabels: Record<string, string> = {},
+): ColDef[] => {
   if (!result) return [];
   const cols = result.columns?.length ? result.columns : unionKeys(result.rows || []);
   return cols.map((col) => ({
-    headerName: col,
+    headerName: columnLabels[col] ?? col,
     field: col,
     // `field` alone makes ag-grid read a dotted column name (e.g. an enrichment's "table.column"
     // projection) as a nested-property path; the API always returns a flat row object keyed by the

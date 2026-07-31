@@ -14,6 +14,7 @@ import {
   createPredicate,
   createSort,
 } from '@/src/components/Analytics/QueryBuilder/utils/state';
+import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryBuilderState, QueryBuilderWarning } from '@/src/models/analytics/query-builder';
 import {
   QueryLogicalOperator,
@@ -319,16 +320,54 @@ describe('buildQuery — aggregate mode', () => {
     const s = baseState();
     s.mode = QueryMode.Aggregate;
     const empty = createGroupByFn(fnFixture('upper')); // required text arg unfilled → dropped
-    const noAlias = createGroupByFn(fnFixture('trim'), [{ field: 'deployment' }]);
-    noAlias.alias = '';
-    s.groupBy = [empty, noAlias];
+    const cleared = createGroupByFn(fnFixture('trim'), [{ field: 'deployment' }]);
+    cleared.alias = '';
+    s.groupBy = [empty, cleared];
     const q = buildQuery(s);
-    expect(q.group_by).toBeUndefined();
+    // The cleared alias falls back to the derived one, so the entry is still addressable in group_by.
+    expect(q.group_by).toEqual(['deployment (Trim whitespace)']);
     expect(q.select).toContainEqual({
       expr: { type: 'fn', name: 'trim', args: [{ type: 'field', name: 'deployment' }] },
-      as: '',
+      as: 'deployment (Trim whitespace)',
     });
     expect(q.select?.some((c) => (c.expr as { name?: string }).name === 'upper')).toBe(false);
+  });
+
+  test('a cleared aggregate alias falls back to the derived one rather than an empty as', () => {
+    const s = baseState();
+    s.mode = QueryMode.Aggregate;
+    s.fields = [
+      { name: 'total_tokens', type: AnalyticsFieldType.Long, source: 'total_tokens', display_name: 'Total tokens' },
+    ];
+    const agg = createAggregate(fnFixture('sum'), [{ field: 'total_tokens' }]);
+    agg.alias = '   ';
+    s.aggregates = [agg];
+    const q = buildQuery(s);
+    expect(q.select).toContainEqual({
+      expr: { type: 'fn', name: 'sum', args: [{ type: 'field', name: 'total_tokens' }] },
+      as: 'Total tokens (Sum)',
+    });
+  });
+
+  test('two cleared aliases over the same field fall back to distinct names', () => {
+    const s = baseState();
+    s.mode = QueryMode.Aggregate;
+    s.aggregates = [
+      createAggregate(fnFixture('sum'), [{ field: 'total_tokens' }]),
+      createAggregate(fnFixture('sum'), [{ field: 'total_tokens' }]),
+    ];
+    const q = buildQuery(s);
+    expect(q.select?.map((c) => c.as)).toEqual(['total_tokens (Sum)', 'total_tokens (Sum) 2']);
+  });
+
+  test('a user-typed alias is serialized exactly as typed', () => {
+    const s = baseState();
+    s.mode = QueryMode.Aggregate;
+    const agg = createAggregate(fnFixture('sum'), [{ field: 'total_tokens' }]);
+    agg.alias = 'my total';
+    agg.aliasEdited = true;
+    s.aggregates = [agg];
+    expect(buildQuery(s).select?.[0].as).toBe('my total');
   });
 });
 
@@ -343,25 +382,26 @@ describe('getAggregateWarnings', () => {
     expect(getAggregateWarnings(s)).toContain(QueryBuilderWarning.EmptyAggregate);
   });
 
-  test('missing aggregate alias and function field are flagged', () => {
+  test('a function entry with an unfilled required argument is flagged', () => {
     const s = baseState();
     s.mode = QueryMode.Aggregate;
     s.aggregates = [createAggregate(fnFixture('sum'))];
     s.groupBy = [createGroupByFn(fnFixture('date_bin'))];
-    const warnings = getAggregateWarnings(s);
-    expect(warnings).toContain(QueryBuilderWarning.MissingAggregateAlias);
-    expect(warnings).toContain(QueryBuilderWarning.MissingGroupByField);
+    expect(getAggregateWarnings(s)).toContain(QueryBuilderWarning.MissingGroupByField);
   });
 
-  test('function entry with all args filled but no alias is flagged; plain columns are not', () => {
+  // Aliases are prefilled and a cleared one falls back to the derived value at serialization, so a
+  // blank alias is no longer a state worth warning about.
+  test('a blank alias raises no warning', () => {
     const s = baseState();
     s.mode = QueryMode.Aggregate;
     const fnRow = createGroupByFn(fnFixture('lower'), [{ field: 'deployment' }]);
     fnRow.alias = '';
+    const agg = createAggregate(fnFixture('sum'), [{ field: 'total_tokens' }]);
+    agg.alias = '';
     s.groupBy = [createGroupByColumn('project_id'), fnRow];
-    const warnings = getAggregateWarnings(s);
-    expect(warnings).toContain(QueryBuilderWarning.MissingGroupByAlias);
-    expect(warnings).not.toContain(QueryBuilderWarning.MissingGroupByField);
+    s.aggregates = [agg];
+    expect(getAggregateWarnings(s)).toEqual([]);
   });
 });
 
@@ -373,7 +413,7 @@ describe('buildQuery implicit measure', () => {
     const q = buildQuery(s);
     expect(q.select).toEqual([
       { expr: { type: 'field', name: 'project_id' } },
-      { expr: { type: 'fn', name: 'count', args: [] }, as: 'count' },
+      { expr: { type: 'fn', name: 'count', args: [] }, as: 'Count' },
     ]);
   });
 

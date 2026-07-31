@@ -176,6 +176,29 @@ describe('parseQuery round-trip', () => {
     expect(parsed.aggregates).toHaveLength(0);
   });
 
+  // An authored alias belongs to whoever wrote the query, so it is marked user-owned and the builder
+  // never rederives over it.
+  test('an authored alias is kept and marked as user-edited', () => {
+    const q: StructuredQuery = {
+      entity: 'dial_usage_log',
+      mode: QueryMode.Aggregate,
+      select: [
+        {
+          expr: { type: QueryExprType.Fn, name: 'sum', args: [{ type: QueryExprType.Field, name: 'total_tokens' }] },
+          as: 'total',
+        },
+        {
+          expr: { type: QueryExprType.Fn, name: 'upper', args: [{ type: QueryExprType.Field, name: 'deployment' }] },
+          as: 'dep',
+        },
+      ],
+      group_by: ['dep'],
+    };
+    const parsed = parseQuery(q, [], TEST_FUNCTIONS);
+    expect(parsed.aggregates[0]).toMatchObject({ alias: 'total', aliasEdited: true });
+    expect(parsed.groupBy[0]).toMatchObject({ alias: 'dep', aliasEdited: true });
+  });
+
   test('a function absent from the catalog is skipped (not builder-representable)', () => {
     const q: StructuredQuery = {
       entity: 'dial_usage_log',

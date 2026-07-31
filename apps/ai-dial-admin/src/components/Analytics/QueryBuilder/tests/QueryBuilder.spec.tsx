@@ -346,8 +346,9 @@ describe('QueryBuilder', () => {
     await user.click(screen.getByRole('button', { name: /lineage/ }));
     await user.click(screen.getByRole('option', { name: /Project/ }));
 
-    // The chip renders the display label, not the raw field name.
-    expect(screen.getByText('Project')).toBeInTheDocument();
+    // The chip renders the display label, not the raw field name. Multi-select leaves the overlay
+    // open, so the chip is identified by its own remove action rather than by matching label text.
+    expect(screen.getByRole('button', { name: /Remove Project/ })).toBeInTheDocument();
     expect(screen.queryByText('project_id')).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /QueryBuilder.Run/ }));
