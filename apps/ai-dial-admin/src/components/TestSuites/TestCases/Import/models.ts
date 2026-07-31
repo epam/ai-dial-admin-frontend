@@ -27,6 +27,7 @@ export interface RowMapping {
   data: Record<string, string | number>;
   validationWarnings: ValidationWarning[];
   testCaseName: string;
+  turnIndex?: number | null;
 }
 
 export interface CaseWarning {

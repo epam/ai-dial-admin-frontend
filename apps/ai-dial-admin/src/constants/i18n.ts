@@ -1889,6 +1889,7 @@ export enum TestSuitesI18nKey {
   TurnLabel = 'TestSuites.TurnLabel',
   TurnCountBadge = 'TestSuites.TurnCountBadge',
   ImportWarnings = 'TestSuites.ImportWarnings',
+  ImportWarningRow = 'TestSuites.ImportWarningRow',
 }
 
 export enum DatasetsI18nKey {

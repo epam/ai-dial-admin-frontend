@@ -1935,6 +1935,7 @@ export default {
     TurnLabel: 'Turn {index}',
     TurnCountBadge: '{count} turns',
     ImportWarnings: 'Warnings',
+    ImportWarningRow: 'Row {rowNumber}',
   },
   FileManager: {
     SelectedItems: 'item(s) selected',

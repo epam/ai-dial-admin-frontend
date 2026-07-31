@@ -13,11 +13,11 @@ import {
 } from '@epam/ai-dial-ui-kit';
 import { IconDownload, IconPlus, IconTrashX } from '@tabler/icons-react';
 
+import ImportFileModal from '@/src/components/TestSuites/TestCases/Import/ImportFile';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
-import DatasetImportFileModal from './Import/DatasetImportFileModal';
 
 interface Props {
   datasetId: string;
@@ -78,9 +78,10 @@ const DatasetTestCasesHeader: FC<Props> = ({
 
       {isImportModalOpen &&
         createPortal(
-          <DatasetImportFileModal
+          <ImportFileModal
             datasetId={datasetId}
             isModalOpen={isImportModalOpen}
+            portalId="DatasetTestCasesImportModal"
             onClose={() => setIsImportModalOpen(false)}
             onApply={onApplyImport}
           />,

@@ -16,11 +16,11 @@
 
 ## 3. Cell renderers
 
-- [ ] 3.1 Add `STACKED_LINE_HEIGHT` and `STACKED_ROW_PADDING` to `src/components/Grid/constants.ts` beside the existing `ROW_HEIGHT`.
-- [ ] 3.2 Add `TurnExpanderCellRenderer` — chevron on GROUP, indent bullet on TURN, nothing on SINGLE; `stopPropagation` on click so a row-level handler cannot double-toggle; `aria-label` reflecting expand/collapse state.
-- [ ] 3.3 Add `StackedTurnsCellRenderer` — one line per turn on a collapsed GROUP row, em dash for empty, `null` when expanded. Fix each line to `STACKED_LINE_HEIGHT` inside `STACKED_ROW_PADDING` so the rendered height matches the row-height calculation exactly; note this coupling at both ends. Use `DialEllipsisTooltip` for truncation.
-- [ ] 3.4 Add `TestCaseNameCellRenderer` — name plus `{n} turns` `DialTag` on GROUP; `Turn N` label on TURN.
-- [ ] 3.5 Add `TurnIdCellRenderer` (case id on GROUP/SINGLE, blank on TURN) and `BlankCellRenderer` (shared field on a TURN row).
+- [x] 3.1 Add `STACKED_LINE_HEIGHT` and `STACKED_ROW_PADDING` to `src/components/Grid/constants.ts` beside the existing `ROW_HEIGHT`.
+- [x] 3.2 Add `TurnExpanderCellRenderer` — chevron on GROUP, indent bullet on TURN, nothing on SINGLE; `stopPropagation` on click so a row-level handler cannot double-toggle; `aria-label` reflecting expand/collapse state.
+- [x] 3.3 Add `StackedTurnsCellRenderer` — one line per turn on a collapsed GROUP row, em dash for empty, `null` when expanded. Fix each line to `STACKED_LINE_HEIGHT` inside `STACKED_ROW_PADDING` so the rendered height matches the row-height calculation exactly; note this coupling at both ends. Use `DialEllipsisTooltip` for truncation.
+- [x] 3.4 Add `TestCaseNameCellRenderer` — name plus `{n} turns` `DialTag` on GROUP; `Turn N` label on TURN.
+- [x] 3.5 Add `TurnIdCellRenderer` (case id on GROUP/SINGLE, blank on TURN) and `BlankCellRenderer` (shared field on a TURN row).
 
 ## 4. Shared column factory
 
@@ -41,10 +41,10 @@
 
 ## 6. Converters
 
-- [ ] 6.1 In `src/components/TestSuites/utils/data.ts`, make `getTestCaseGridData` expand `multiTurnData` into one row per turn, each carrying the merged `{...shared, ...turn}` as its `data` plus the flattened fields, stamped with `_turnIndex`. Merging is what keeps the existing schema value-getters working unchanged.
-- [ ] 6.2 Add `collapseRowsToTestCases(rows, perTurnFields)`: group by `id`, sort by `_turnIndex`, split the merged map back into shared `data` (read off turn 0) and per-turn `multiTurnData`. A case with one row emits `data` only.
-- [ ] 6.3 Mirror 6.1 and 6.2 in `src/components/Datasets/utils/data.ts` as `getDatasetTestCaseGridData` / `collapseRowsToDatasetTestCases`.
-- [ ] 6.4 Leave `rowToTestCase` / `rowToDatasetTestCase` in place — still used by the single-row delete path.
+- [x] 6.1 In `src/components/TestSuites/utils/data.ts`, make `getTestCaseGridData` expand `multiTurnData` into one row per turn, each carrying the merged `{...shared, ...turn}` as its `data` plus the flattened fields, stamped with `_turnIndex`. Merging is what keeps the existing schema value-getters working unchanged.
+- [x] 6.2 Add `collapseRowsToTestCases(rows, perTurnFields)`: group by `id`, sort by `_turnIndex`, split the merged map back into shared `data` (read off turn 0) and per-turn `multiTurnData`. A case with one row emits `data` only.
+- [x] 6.3 Mirror 6.1 and 6.2 in `src/components/Datasets/utils/data.ts` as `getDatasetTestCaseGridData` / `collapseRowsToDatasetTestCases`.
+- [x] 6.4 Leave `rowToTestCase` / `rowToDatasetTestCase` in place — still used by the single-row delete path.
 
 ## 7. Column builders
 
@@ -78,9 +78,9 @@
 
 ## 12. CSV import
 
-- [ ] 12.1 Add `RowMapping.turnIndex?: number | null` in `src/components/TestSuites/TestCases/Import/models.ts`. The preview grid then shows a Turn column with no further work, since `getGridDataFromImportPreview` maps every entry in the backend's `detectedColumns`.
-- [ ] 12.2 Add `ImportWarningsList.tsx` rendering `ImportPreview.warnings` — currently returned by the backend and discarded. Show the row number, i18n the heading, and cap the height with scroll. Render nothing when there are no warnings.
-- [ ] 12.3 Collapse `Datasets/TestCases/Import/DatasetImportFileModal.tsx` into `TestSuites/TestCases/Import/ImportFile.tsx` — they are identical apart from component name, `portalId`, and import paths, and already share every sub-component and util. Parameterize `portalId` and the i18n keys, delete the duplicate, and update `Datasets/TestCases/Header.tsx`.
+- [x] 12.1 Add `RowMapping.turnIndex?: number | null` in `src/components/TestSuites/TestCases/Import/models.ts`. The preview grid then shows a Turn column with no further work, since `getGridDataFromImportPreview` maps every entry in the backend's `detectedColumns`.
+- [x] 12.2 Add `ImportWarningsList.tsx` rendering `ImportPreview.warnings` — currently returned by the backend and discarded. Show the row number, i18n the heading, and cap the height with scroll. Render nothing when there are no warnings.
+- [x] 12.3 Collapse `Datasets/TestCases/Import/DatasetImportFileModal.tsx` into `TestSuites/TestCases/Import/ImportFile.tsx` — they are identical apart from component name, `portalId`, and import paths, and already share every sub-component and util. Parameterize `portalId` and the i18n keys, delete the duplicate, and update `Datasets/TestCases/Header.tsx`.
 
 ## 13. Tests
 
