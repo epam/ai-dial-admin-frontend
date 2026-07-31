@@ -96,8 +96,14 @@
 
 ## 14. Browser verification
 
-- [ ] 14.1 Run the `spec-browser-verify` skill against the running local app (local stack up, auth disabled). Resolve every `fail` verdict before considering the change complete. Scenarios: add turn promotes a single case and shows the `2 turns` badge; collapsed group stacks per-turn values and blanks them when expanded; a shared field is editable on the GROUP row and blank on TURN rows; move up/down reorders; deleting to one turn demotes; an edit made while collapsed persists across save and reload; toggling Scope moves a field between shared and per-turn rendering; both TestSuites and Datasets tabs; results grid shows Turn and Total turns, and a single-turn run renders both cells empty with nothing else changed.
+- [ ] 14.1 **BLOCKED — needs the developer's environment.** The dev server starts fine (`npm start`, `http://localhost:4200`, routes return 200), but every page redirects to `/api/auth/signin`: `getIsEnableAuthToggle()` keys off `NEXTAUTH_URL`, which is set in `apps/ai-dial-admin/.env.local`. That file holds real secrets and is not editable here. **To unblock:** unset `NEXTAUTH_URL` in `.env.local`, restart `npm start`, and confirm the eval backend the app points at has at least one dataset with a per-turn schema field. Then run the skill. Everything below is what it must cover. Run the `spec-browser-verify` skill against the running local app (local stack up, auth disabled). Resolve every `fail` verdict before considering the change complete. Scenarios: add turn promotes a single case and shows the `2 turns` badge; collapsed group stacks per-turn values and blanks them when expanded; a shared field is editable on the GROUP row and blank on TURN rows; move up/down reorders; deleting to one turn demotes; an edit made while collapsed persists across save and reload; toggling Scope moves a field between shared and per-turn rendering; both TestSuites and Datasets tabs; results grid shows Turn and Total turns, and a single-turn run renders both cells empty with nothing else changed.
 
 ## 15. Quality checks
 
-- [ ] 15.1 `npm run lint`, `npm run format`, `npm run test`. Do not skip the pre-commit or pre-push hooks.
+- [x] 15.1 `npm run lint`, `npm run format`, `npm run test`. Do not skip the pre-commit or pre-push hooks.
+  - `npm run lint` — 0 errors, 32 warnings, all pre-existing and in files this change never touches.
+  - `npm run format` — clean.
+  - `npm run test` (full `vitest run`) — 719 files passed, 1 skipped; 7330 tests passed, 4 skipped.
+  - `npx tsc --noEmit -p tsconfig.app.json` — 291 errors, exactly the pre-existing baseline, none in any file added or changed here. (`tsconfig.json` cannot be used for this: it aborts with `TS6306`/`TS6310` project-reference errors before checking a single file.)
+  - `npm run build` — succeeds. Added as an extra gate because `tsc` alone would not catch a missing `'use client'` in the new renderers.
+  - Every commit went through the pre-commit hook; none were skipped.
