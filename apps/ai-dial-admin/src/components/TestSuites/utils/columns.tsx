@@ -18,11 +18,16 @@ import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSele
 import JsonAtaCellRenderer from '@/src/components/Grid/CellRenderers/JsonAtaCellRenderer';
 import JsonEditorCellRenderer from '@/src/components/Grid/CellRenderers/JsonEditorCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
+import {
+  getGroupedIdColumn,
+  getGroupedNameColumn,
+  getGroupedSchemaColumn,
+  getTurnExpanderColumn,
+} from '@/src/components/Grid/columns/turn-columns';
 import IncludeInRunCellRenderer from '@/src/components/TestSuites/TestCases/RunCondition/IncludeInRunCellRenderer';
 import { TYPE_OPTIONS } from '@/src/components/TestSuites/TestCaseSchema/constants';
 import { NO_BORDER_CLASS, UTILITY_COLUMN } from '@/src/constants/ag-grid';
 import { BASE_STATUS_COLUMN } from '@/src/constants/grid-columns/base-columns';
-import { TEST_CASES_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { MetricBinding } from '@/src/models/evaluation/metric';
 import {
@@ -34,9 +39,18 @@ import {
 } from '@/src/models/evaluation/test-suite';
 import { InputBindingType, MetricBindingType, TestCaseItemType } from '@/src/types/evaluation';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isValueTruthy } from '@/src/utils/types';
 
 export type onCellChange = (data: Record<string, unknown>, field: string, value: string | number | boolean) => void;
+
+export interface TestCaseColumnsOptions {
+  suite: TestSuite;
+  onCellChange: onCellChange;
+  onToggleExpand: (groupKey: string) => void;
+  t?: (key: string) => string;
+  schema?: TestCaseSchema[];
+  isReadOnly?: boolean;
+  includedIds?: Set<string> | null | (() => Set<string> | null);
+}
 
 const getIncludeInRunFilterOptions = (
   allLabel: string,
@@ -63,14 +77,8 @@ const getIncludeInRunFilterOptions = (
   },
 ];
 
-export const getTestCaseColumns = (
-  suite: TestSuite,
-  onCellChange: onCellChange,
-  t?: (key: string) => string,
-  schema?: TestCaseSchema[],
-  isReadOnly?: boolean,
-  includedIds?: Set<string> | null | (() => Set<string> | null),
-): ColDef[] => {
+export const getTestCaseColumns = (options: TestCaseColumnsOptions): ColDef[] => {
+  const { suite, onCellChange, onToggleExpand, t, schema, isReadOnly, includedIds } = options;
   const includedLabel = t?.(TestSuitesI18nKey.IncludedInRun) ?? 'Included';
   const excludedLabel = t?.(TestSuitesI18nKey.ExcludedFromRun) ?? 'Excluded';
   const allLabel = 'All';
@@ -78,6 +86,7 @@ export const getTestCaseColumns = (
   const resolveIncludedIds = () => (typeof includedIds === 'function' ? includedIds() : includedIds);
 
   return [
+    getTurnExpanderColumn(onToggleExpand),
     {
       ...UTILITY_COLUMN,
       headerName: t?.(TestSuitesI18nKey.IncludeInRun) ?? 'Include in run',
@@ -106,131 +115,16 @@ export const getTestCaseColumns = (
         return ids.has(String(params.data?.id));
       },
     } as ColDef,
-    ...TEST_CASES_COLUMN.map((col) => {
-      if (col.field === 'id') {
-        return { ...col, cellClass: 'select-none cursor-pointer' };
-      }
-      if (col.field === 'testCaseName' && onCellChange) {
-        return {
-          ...col,
-          editable: false,
-          cellRenderer: EditableCellRenderer,
-          valueGetter: (params: ValueGetterParams) => params.data?.testCaseName ?? '',
-          cellRendererParams: {
-            isReadonly: isReadOnly,
-            hideTriangle: true,
-            skipRequired: true,
-            onChange: (value: string | number, rowData: unknown) => {
-              onCellChange(rowData as Record<string, unknown>, 'testCaseName', value);
-            },
-          },
-        };
-      }
-      return col;
-    }),
-    ...resolvedSchema.map((param) => {
-      const field = param.name;
-      return {
-        field: field,
-        headerName: field,
-        editable: false,
-        valueGetter: (params: ValueGetterParams) => params.data?.data?.[field] ?? params.data?.[field] ?? '',
-        cellRendererParams: {
-          isReadonly: isReadOnly,
-          hideTriangle: true,
-          skipRequired: true,
-          onChange: (value: string | number, rowData: unknown) => {
-            onCellChange(rowData as Record<string, unknown>, field, value);
-          },
-        },
-        cellRendererSelector: () => {
-          if (param.type === TestCaseItemType.FILE) {
-            return {
-              component: FileSelectCellRenderer,
-              params: {
-                onChange: (value: string | number, rowData: unknown) => {
-                  onCellChange(rowData as Record<string, unknown>, field, value);
-                },
-                id: suite.id,
-                view: ApplicationRoute.TestSuites,
-                isReadonly: isReadOnly,
-              },
-            };
-          }
-          if (param.type === TestCaseItemType.INTEGER || param.type === TestCaseItemType.NUMBER) {
-            return {
-              component: EditableCellRenderer,
-              params: {
-                isReadonly: isReadOnly,
-                hideTriangle: true,
-                skipRequired: true,
-                inputType: 'number' as const,
-                step: param.type === TestCaseItemType.INTEGER ? 1 : void 0,
-                onChange: (value: string | number, rowData: unknown) => {
-                  // For INTEGER type, validate that the value is a whole number
-                  if (param.type === TestCaseItemType.INTEGER) {
-                    const numValue = typeof value === 'string' ? parseFloat(value) : value;
-                    if (value !== '' && !isNaN(numValue) && !Number.isInteger(numValue)) {
-                      // If the value is not an integer, round it to nearest integer
-                      const intValue = Math.round(numValue);
-                      onCellChange(rowData as Record<string, unknown>, field, intValue);
-                      return;
-                    }
-                  }
-                  onCellChange(rowData as Record<string, unknown>, field, +value);
-                },
-              },
-            };
-          }
-          if (param.type == TestCaseItemType.OBJECT || param.type == TestCaseItemType.ARRAY) {
-            return {
-              component: JsonEditorCellRenderer,
-              params: {
-                onChange: (value: string | number, rowData: unknown) => {
-                  onCellChange(rowData as Record<string, unknown>, field, value);
-                },
-                disableValidation: true,
-                disabled: isReadOnly,
-              },
-            };
-          }
-          if (param.type == TestCaseItemType.BOOLEAN) {
-            return {
-              component: SelectCellRenderer,
-              params: {
-                getItems: () => {
-                  return [
-                    {
-                      value: true.toString(),
-                      label: true.toString(),
-                    },
-                    {
-                      value: false.toString(),
-                      label: false.toString(),
-                    },
-                  ];
-                },
-                onChange: (value: string | number, rowData: unknown) => {
-                  onCellChange(rowData as Record<string, unknown>, field, isValueTruthy(value as string));
-                },
-                isReadonly: isReadOnly,
-              },
-            };
-          }
-          return {
-            component: EditableCellRenderer,
-            params: {
-              hideTriangle: true,
-              skipRequired: true,
-              isReadonly: isReadOnly,
-              onChange: (value: string | number, rowData: unknown) => {
-                onCellChange(rowData as Record<string, unknown>, field, value);
-              },
-            },
-          };
-        },
-      };
-    }),
+    getGroupedIdColumn(),
+    getGroupedNameColumn(onCellChange, isReadOnly),
+    ...resolvedSchema.map((param) =>
+      getGroupedSchemaColumn(
+        param,
+        onCellChange,
+        { entityId: suite.id, view: ApplicationRoute.TestSuites },
+        isReadOnly,
+      ),
+    ),
     getValidityStatusColumn(t?.(TestSuitesI18nKey.TestCaseError)),
   ];
 };

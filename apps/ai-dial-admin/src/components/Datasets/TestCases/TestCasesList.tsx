@@ -166,7 +166,7 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, testCasesActionsRef, onDirty
         }
         setData(rows);
         setColumnDefs([
-          ...getDatasetTestCaseColumns(dataset, onCellChange, t),
+          ...getDatasetTestCaseColumns({ dataset, onCellChange, onToggleExpand: () => {}, t }),
           {
             ...ONE_ACTION_COLUMN(getRemoveOperation(stableOnRemoveCase, void 0, 'text-error w-4 h-4')),
             colId: 'action-remove',

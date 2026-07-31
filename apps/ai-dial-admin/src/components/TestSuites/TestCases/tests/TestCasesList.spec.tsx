@@ -67,7 +67,7 @@ vi.mock('@/src/components/ListView/List', () => ({
 }));
 
 vi.mock('@/src/components/TestSuites/utils/columns', () => ({
-  getTestCaseColumns: (_suite: unknown, onCellChange: any) => {
+  getTestCaseColumns: ({ onCellChange }: any) => {
     capturedOnCellChange = onCellChange;
     return [];
   },

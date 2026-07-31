@@ -236,7 +236,15 @@ const TestCasesList: FC<Props> = ({
 
   const buildColumnDefs = useCallback(
     (activeSchema?: TestCaseSchema[]) => [
-      ...getTestCaseColumns(selectedTestSuite, onCellChange, t, activeSchema, isReadOnly, () => includedIdsRef.current),
+      ...getTestCaseColumns({
+        suite: selectedTestSuite,
+        onCellChange,
+        onToggleExpand: () => {},
+        t,
+        schema: activeSchema,
+        isReadOnly,
+        includedIds: () => includedIdsRef.current,
+      }),
       { ...ONE_ACTION_COLUMN(getTryOutOperation(onOpenTryOutSidebar)), colId: 'action-tryout' },
       ...(!isReadOnly
         ? [

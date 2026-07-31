@@ -31,13 +31,13 @@
 
 ## 5. Grid hooks
 
-- [ ] 5.1 Add `src/components/Grid/hooks/use-turn-group-projection.tsx`: read-only projection over `rawRows` — grouping, `expandedKeys` toggling, `expandGroup`, filter-aware `isSearching`, forced `refreshCells` after each projection change (the chevron is driven by `data.expanded`, which ag-grid will not otherwise re-render), pruning of stale keys after a reload, plus `getRowId` and `getRowHeight`.
-- [ ] 5.2 `getRowId` must qualify by row type — every turn of a case shares the case `id`, so `id` alone collides.
-- [ ] 5.3 `getRowHeight` returns the stacked height only for a **collapsed** GROUP row; an expanded group is a single-line header.
-- [ ] 5.4 Add `src/components/Grid/hooks/use-turn-group-grid.tsx` — the editable layer. Owns `flatRowsRef` + a version counter, `dirtyIdsRef: Set<caseId>`, `getCaseRows`, `replaceCaseRows`, `onAddTurn`, `onDeleteTurn`, `moveTurn`/up/down, `turnActionHandlers`, `getDirtyRows`, `spliceDirtyRows`, `pruneToSchema`, and a `turnGridOptions` object for the caller to spread.
-- [ ] 5.5 `onCellChange` must edit the **stored** row, never the object ag-grid passes in — that object is a projection copy, so an in-place edit is lost on the next re-derivation. Shared field → fan out to every row of the case; per-turn or structural field → the one row matching `id` + `_turnIndex`. Comment the *why*.
-- [ ] 5.6 Parameterize the only two real variations: `structuralFields` (whether `enabled` is treated as non-`data`) and `collapseRows`. Everything else is identical between the two callers and takes no parameter.
-- [ ] 5.7 `onAddTurn` on a single-turn case promotes it and appends an empty turn; `onDeleteTurn` renumbers and demotes when one turn remains; every structural mutation expands the affected group.
+- [x] 5.1 Add `src/components/Grid/hooks/use-turn-group-projection.tsx`: read-only projection over `rawRows` — grouping, `expandedKeys` toggling, `expandGroup`, filter-aware `isSearching`, forced `refreshCells` after each projection change (the chevron is driven by `data.expanded`, which ag-grid will not otherwise re-render), pruning of stale keys after a reload, plus `getRowId` and `getRowHeight`.
+- [x] 5.2 `getRowId` must qualify by row type — every turn of a case shares the case `id`, so `id` alone collides.
+- [x] 5.3 `getRowHeight` returns the stacked height only for a **collapsed** GROUP row; an expanded group is a single-line header.
+- [x] 5.4 Add `src/components/Grid/hooks/use-turn-group-grid.tsx` — the editable layer. Owns `flatRowsRef` + a version counter, `dirtyIdsRef: Set<caseId>`, `getCaseRows`, `replaceCaseRows`, `onAddTurn`, `onDeleteTurn`, `moveTurn`/up/down, `turnActionHandlers`, `getDirtyRows`, `spliceDirtyRows`, `pruneToSchema`, and a `turnGridOptions` object for the caller to spread.
+- [x] 5.5 `onCellChange` must edit the **stored** row, never the object ag-grid passes in — that object is a projection copy, so an in-place edit is lost on the next re-derivation. Shared field → fan out to every row of the case; per-turn or structural field → the one row matching `id` + `_turnIndex`. Comment the *why*.
+- [x] 5.6 Parameterize the only two real variations: `structuralFields` (whether `enabled` is treated as non-`data`) and `collapseRows`. Everything else is identical between the two callers and takes no parameter.
+- [x] 5.7 `onAddTurn` on a single-turn case promotes it and appends an empty turn; `onDeleteTurn` renumbers and demotes when one turn remains; every structural mutation expands the affected group.
 
 ## 6. Converters
 
@@ -48,9 +48,9 @@
 
 ## 7. Column builders
 
-- [ ] 7.1 Rewrite `getTestCaseColumns` in `src/components/TestSuites/utils/columns.tsx` to delegate to `Grid/columns/turn-columns.tsx`, deleting the inline renderer switch. Keep the include-in-run and validity columns as they are.
-- [ ] 7.2 Rewrite `getDatasetTestCaseColumns` in `src/components/Datasets/utils/columns.tsx` the same way, deleting its near-copy of the same switch.
-- [ ] 7.3 Convert both builders' parameters to an options object — they are already at six positional params with optionals in the middle, and this change adds another.
+- [x] 7.1 Rewrite `getTestCaseColumns` in `src/components/TestSuites/utils/columns.tsx` to delegate to `Grid/columns/turn-columns.tsx`, deleting the inline renderer switch. Keep the include-in-run and validity columns as they are.
+- [x] 7.2 Rewrite `getDatasetTestCaseColumns` in `src/components/Datasets/utils/columns.tsx` the same way, deleting its near-copy of the same switch.
+- [x] 7.3 Convert both builders' parameters to an options object — they are already at six positional params with optionals in the middle, and this change adds another.
 
 ## 8. Wire the authoring surfaces
 
