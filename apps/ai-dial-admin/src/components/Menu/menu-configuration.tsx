@@ -79,6 +79,14 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
       icon: <IconFolders width={iconSize} height={iconSize} />,
       items: [
         {
+          key: MenuI18nKey.Models,
+          href: ApplicationRoute.AssetsModels,
+        },
+        {
+          key: MenuI18nKey.AppRunners,
+          href: ApplicationRoute.AssetsAppRunners,
+        },
+        {
           key: MenuI18nKey.Applications,
           href: ApplicationRoute.AssetsApplications,
         },
@@ -214,6 +222,10 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
         {
           key: MenuI18nKey.QueryBuilder,
           href: ApplicationRoute.AnalyticsQueryBuilder,
+        },
+        {
+          key: MenuI18nKey.AnalyticsConversations,
+          href: ApplicationRoute.ConversationsTrace,
         },
       ],
     },

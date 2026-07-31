@@ -10,7 +10,7 @@ import { getProperties } from '@/src/app/[lang]/system-properties/actions';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
-import { DESCRIPTION_COLUMN, DISPLAY_NAME_COLUMN, NAME_COLUMN } from '@/src/constants/grid-columns/base-columns';
+import { DESCRIPTION_COLUMN, DISPLAY_NAME_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { ButtonsI18nKey, EntitiesI18nKey, InterceptorsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
@@ -48,12 +48,15 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
       view === ApplicationRoute.Models ||
       view === ApplicationRoute.Applications ||
       view === ApplicationRoute.ApplicationRunners ||
+      view === ApplicationRoute.AssetsAppRunners ||
       view === ApplicationRoute.AssetsApplications
     );
   }, [view]);
 
+  // Both runner surfaces hold their selection in `dial:applicationTypeInterceptors`. Missing the asset
+  // route here reads and writes `interceptors` instead, which Core stores verbatim — permanently.
   const isAppRunnerView = useMemo(() => {
-    return view === ApplicationRoute.ApplicationRunners;
+    return view === ApplicationRoute.ApplicationRunners || view === ApplicationRoute.AssetsAppRunners;
   }, [view]);
 
   const entityInterceptors = useMemo(() => {
@@ -202,6 +205,7 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
           runnerInterceptors={runnerInterceptors}
           localInterceptors={localInterceptors}
           globalInterceptors={globalInterceptors}
+          selectedInterceptors={entityInterceptors}
           headerButton={button}
         />
       ) : (
@@ -225,7 +229,7 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
             entities={availableInterceptors}
             onClose={() => setIsModalOpen(false)}
             onApply={onAddInterceptors}
-            columnDefs={[DISPLAY_NAME_COLUMN, DESCRIPTION_COLUMN, NAME_COLUMN]}
+            columnDefs={[DISPLAY_NAME_COLUMN, DESCRIPTION_COLUMN]}
           />,
           document.body,
         )}

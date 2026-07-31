@@ -16,6 +16,7 @@ export enum ExprType {
   Value = 'value',
   Fn = 'fn',
   Array = 'array',
+  Param = 'param',
 }
 
 /** Allowlisted literal types governing how a {@link ValueExpr} string value is parsed. */
@@ -37,6 +38,8 @@ export enum ComparisonOp {
   Ge = 'ge',
   Le = 'le',
   In = 'in',
+  Co = 'co',
+  Nc = 'nc',
 }
 
 export enum LogicalOp {
@@ -88,7 +91,12 @@ export interface ArrayExpr {
   items: Expr[];
 }
 
-export type Expr = FieldExpr | ValueExpr | FnExpr | ArrayExpr;
+export interface ParamExpr {
+  type: ExprType.Param;
+  name: string;
+}
+
+export type Expr = FieldExpr | ValueExpr | FnExpr | ArrayExpr | ParamExpr;
 
 export interface ComparisonNode {
   op: ComparisonOp;

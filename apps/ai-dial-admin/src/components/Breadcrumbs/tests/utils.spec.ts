@@ -1,4 +1,9 @@
-import { enrichWithFolderBreadcrumbs, getBreadcrumbs } from '@/src/components/Breadcrumbs/utils';
+import {
+  enrichWithFolderBreadcrumbs,
+  getBreadcrumbs,
+  getFolderContext,
+  shouldEnrichWithFolderBreadcrumbs,
+} from '@/src/components/Breadcrumbs/utils';
 import { MenuI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { describe, expect, test, vi } from 'vitest';
 import { Breadcrumb } from '../models';
@@ -45,6 +50,21 @@ describe('Breadcrumbs :: getBreadcrumbConfig with language in path', () => {
     const config = getBreadcrumbs('/en/models/foo%40bar', 'en');
     expect(config.length).toEqual(2);
     expect(config[1].name).toEqual('foo@bar');
+  });
+
+  test('Should correctly return Breadcrumbs config for assets models without folder enrichment', () => {
+    const config = getBreadcrumbs('/en/assets-models/modelId', 'en');
+    expect(config.length).toEqual(2);
+    expect(config[0].href).toEqual('/en/assets-models');
+    expect(config[0].key).toEqual(MenuI18nKey.Models);
+    expect(config[1].href).toBeFalsy();
+    expect(config[1].key).toBeFalsy();
+    expect(config[1].name).toEqual('modelId');
+  });
+
+  test('Should not enrich assets models breadcrumbs with folder context', () => {
+    expect(getFolderContext('/en/assets-models/modelId', 'en')).toBeNull();
+    expect(shouldEnrichWithFolderBreadcrumbs('/en/assets-models/modelId', 'en')).toBeFalsy();
   });
 
   test('Should translate runs compare segment via breadcrumb config', () => {

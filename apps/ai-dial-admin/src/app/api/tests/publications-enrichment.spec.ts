@@ -107,14 +107,49 @@ describe('Server :: api :: publications enrichment re-pointed to AssetApi', () =
     expect(headers[IF_MATCH]).toBeUndefined();
     expect(headers[IF_NONE_MATCH]).toBeUndefined();
 
-    // The PUT body must be a clean content DTO — Core rejects folderId/path/version as
-    // unrecognized properties (the same class of bug fixed for import in `stripAssetIdentityFields`).
-    // `id` is expected here: prompts require it in content, freshly recomputed by `AssetApi.put`'s
-    // `withContentId` — not the stale identity field `stripAssetIdentityFields` strips.
+    // Unlike application/toolset content, Core's prompt (and conversation) content DTO requires
+    // `path`/`version` back on the body — stripping them (as `stripAssetIdentityFields` does for
+    // application/toolset) 400s against a real Core instance. `id` is separately recomputed by
+    // `AssetApi.put`'s `withContentId`.
+    const body = JSON.parse((putCall[1] as RequestInit).body as string);
+    expect(body).toMatchObject({ name: 'P', content: 'body', path: 'old/P__1', version: '1' });
+  });
+
+  test('updatePublication strips folderId/path/version/id from an application-resource body before PUT', async () => {
+    const { publicationsApi } = await import('@/src/app/api/api');
+
+    fetch.mockResponse(JSON.stringify({ success: true }));
+
+    const publication = {
+      path: 'public/req',
+      requestName: 'My request',
+      folderId: 'public/folder',
+      rules: [],
+      applicationResources: [
+        {
+          action: 'ADD',
+          sourceUrl: 'applications/src/App__1',
+          targetUrl: 'applications/old/App__1',
+          reviewUrl: 'applications/review/App__1',
+          applicationResource: { name: 'App', version: '1', endpoint: 'https://app', path: 'old/App__1' },
+        },
+      ],
+    };
+    const formData = new FormData();
+    formData.append('publication', new Blob([JSON.stringify(publication)], { type: 'application/json' }));
+
+    const result = await publicationsApi.updatePublication(TOKEN_MOCK, formData);
+
+    expect(result.success).toBe(true);
+    const putCall = fetch.mock.calls[fetch.mock.calls.length - 1];
+    expect(putCall[0]).toContain('v1/applications/');
+
+    // Application content DTOs reject unrecognized properties — folderId/path/version/id must
+    // stay stripped here, unlike prompt/conversation above.
     const body = JSON.parse((putCall[1] as RequestInit).body as string);
     expect(body).not.toHaveProperty('folderId');
     expect(body).not.toHaveProperty('path');
     expect(body).not.toHaveProperty('version');
-    expect(body).toMatchObject({ name: 'P', content: 'body' });
+    expect(body).toMatchObject({ name: 'App', endpoint: 'https://app' });
   });
 });

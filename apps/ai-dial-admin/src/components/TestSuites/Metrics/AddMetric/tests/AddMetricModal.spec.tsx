@@ -6,13 +6,11 @@ import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { Metric } from '@/src/models/evaluation/metric';
 import AddMetricModal from '../AddMetricModal';
 
-const mockGetMetricDeclarations = vi.fn();
 const mockGetMetricLatestVersion = vi.fn();
 const mockGetTestSuiteMetricDetailsWithSchema = vi.fn();
 const mockGenerateMetricDefaultBindings = vi.fn();
 
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
-  getMetricDeclarations: (...args: unknown[]) => mockGetMetricDeclarations(...args),
   getMetricLatestVersion: (...args: unknown[]) => mockGetMetricLatestVersion(...args),
   getTestSuiteMetricDetailsWithSchema: (...args: unknown[]) => mockGetTestSuiteMetricDetailsWithSchema(...args),
 }));
@@ -84,13 +82,11 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
   ),
 }));
 
+const metricDeclarations: Metric[] = [{ id: 'metric-1', name: 'Metric One' }];
+
 describe('AddMetricModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-
-    mockGetMetricDeclarations.mockResolvedValue({
-      content: [{ id: 'metric-1', name: 'Metric One' }],
-    });
 
     mockGetMetricLatestVersion.mockResolvedValue({
       id: 'ver-1',
@@ -113,11 +109,9 @@ describe('AddMetricModal', () => {
   });
 
   test('renders add mode with steps and metric selection', async () => {
-    render(<AddMetricModal isModalOpen onClose={vi.fn()} onConfirm={vi.fn()} />);
-
-    await waitFor(() => {
-      expect(mockGetMetricDeclarations).toHaveBeenCalledWith(0, 1000);
-    });
+    render(
+      <AddMetricModal isModalOpen onClose={vi.fn()} onConfirm={vi.fn()} metricDeclarations={metricDeclarations} />,
+    );
 
     expect(screen.getByRole('dialog', { name: TestSuitesI18nKey.AddMetric })).toBeInTheDocument();
     expect(screen.getByRole('navigation', { name: 'steps' })).toBeInTheDocument();
@@ -126,11 +120,9 @@ describe('AddMetricModal', () => {
 
   test('loads metric latest version after selection in add mode', async () => {
     const user = userEvent.setup();
-    render(<AddMetricModal isModalOpen onClose={vi.fn()} onConfirm={vi.fn()} />);
-
-    await waitFor(() => {
-      expect(mockGetMetricDeclarations).toHaveBeenCalledWith(0, 1000);
-    });
+    render(
+      <AddMetricModal isModalOpen onClose={vi.fn()} onConfirm={vi.fn()} metricDeclarations={metricDeclarations} />,
+    );
 
     await user.click(screen.getByRole('button', { name: 'Select metric' }));
 

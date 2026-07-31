@@ -73,6 +73,10 @@
 }
 
 .ag-root-wrapper {
+  .ag-row {
+    @apply border-b border-tertiary;
+  }
+
   .ag-root-wrapper-body {
     @apply h-auto;
   }
@@ -104,6 +108,7 @@
 
   @apply overflow-x-auto;
   .ag-header {
+    @apply border-b border-tertiary;
     .ag-header-cell.align-right {
       .ag-header-cell-label {
         @apply justify-end;
@@ -131,6 +136,13 @@
     &.align-right {
       @apply justify-end;
     }
+  }
+  .ag-cell.ag-cell-first-right-pinned:not(
+      .ag-cell-range-left,
+      .ag-cell-range-single-cell,
+      .ag-cell-focus:not(.ag-cell-range-selected):focus-within
+    ) {
+    @apply border-0;
   }
   .ag-error-row {
     @apply bg-error;
@@ -280,5 +292,23 @@
 
   .ag-body-horizontal-scroll {
     min-height: 12px;
+  }
+}
+
+.conversations-grid {
+  .ag-header-group-cell {
+    @apply border-b border-tertiary pt-1.5;
+  }
+
+  .ag-header-group-cell-label {
+    @apply items-start justify-start;
+  }
+
+  .ag-header-cell {
+    @apply py-1.5;
+  }
+
+  .ag-cell {
+    @apply py-2;
   }
 }

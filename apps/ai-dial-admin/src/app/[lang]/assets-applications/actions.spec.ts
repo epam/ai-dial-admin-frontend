@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { assetApi, assetsApi, externalServiceOpsApi, toolsetOpsApi } from '@/src/app/api/api';
+import { assetApi, externalServiceOpsApi, toolsetOpsApi } from '@/src/app/api/api';
 import * as eximModule from '@/src/server/applications/exim';
 import * as zipEximModule from '@/src/server/applications/zip-exim';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -57,7 +57,6 @@ describe('Assets application :: server actions', () => {
 
     expect(getUserToken).toHaveBeenCalled();
     expect(assetApi.getMergedWithEtag).toHaveBeenCalledWith(TOKEN_MOCK, ResourceType.APPLICATION, 'app-path', 'etag');
-    expect(assetsApi.getAsset).not.toHaveBeenCalled();
     expect(result.response?.validityState).toBeUndefined();
   });
 
@@ -155,7 +154,7 @@ describe('Assets application :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('updateApp strips empty interface entries before calling Core', async () => {
+  test('updateApp passes interfaces through unchanged before calling Core', async () => {
     (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
 
     await updateApp(
@@ -163,7 +162,7 @@ describe('Assets application :: server actions', () => {
         folderId: 'public',
         path: 'test',
         version: '1.0',
-        interfaces: { openaiChatCompletions: { base_url: '' } },
+        interfaces: { openaiChatCompletions: { base_url: 'https://example.com' } },
       },
       'etag',
     );
@@ -172,7 +171,9 @@ describe('Assets application :: server actions', () => {
       TOKEN_MOCK,
       ResourceType.APPLICATION,
       'public__1.0',
-      expect.objectContaining({ interfaces: undefined }),
+      expect.objectContaining({
+        interfaces: { openaiChatCompletions: { base_url: 'https://example.com' } },
+      }),
       { etag: 'etag' },
     );
   });

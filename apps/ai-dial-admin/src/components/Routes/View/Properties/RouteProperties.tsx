@@ -108,7 +108,7 @@ const RouteProperties: FC<Props> = ({ route, disabled, isAppRoute, routeNames, o
 
   const selectedPermissions = useMemo(() => {
     return (route as DialAppRoute).permissions?.map(
-      (p) => permissionsItems.find((i) => i.value === p)?.value as string,
+      (p) => permissionsItems.find((i) => i.value.toLowerCase() === p.toLowerCase())?.value as string,
     );
   }, [permissionsItems, route]);
 

@@ -22,6 +22,7 @@ interface Props {
   onTimeRangeChange: (value: TimeRange, isCustom?: boolean) => void;
   onRun: () => void;
   runDisabled: boolean;
+  showRun?: boolean;
   children?: ReactNode;
 }
 
@@ -35,6 +36,7 @@ const QueryBuilderToolbar: FC<Props> = ({
   onTimeRangeChange,
   onRun,
   runDisabled,
+  showRun = true,
   children,
 }) => {
   const t = useI18n();
@@ -57,12 +59,14 @@ const QueryBuilderToolbar: FC<Props> = ({
       />
       <div className="flex flex-1 items-center justify-end gap-4">
         {children}
-        <DialPrimaryButton
-          label={t(QueryBuilderI18nKey.Run)}
-          iconBefore={<IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} />}
-          disabled={runDisabled}
-          onClick={onRun}
-        />
+        {showRun && (
+          <DialPrimaryButton
+            label={t(QueryBuilderI18nKey.Run)}
+            iconBefore={<IconPlayerPlay {...BASE_BUTTON_ICON_PROPS} />}
+            disabled={runDisabled}
+            onClick={onRun}
+          />
+        )}
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ import {
 } from './models';
 import { PUBLICATIONS_PREFIX } from '@/src/constants/publications-core';
 import { decodeCorePath, stripPrefix } from './path';
+import { PublishableResourceType } from './resolver/types';
 
 const CORE_ACTION_TO_ACTION_TYPE: Record<CoreResourceAction, ActionType> = {
   [CoreResourceAction.ADD]: ActionType.ADD,
@@ -39,7 +40,7 @@ export const mapRulesToCore = (rules?: DialRule[]): CorePublicationRule[] => {
   }));
 };
 
-const CORE_RESOURCE_TYPE_TO_RESOURCE_TYPE: Record<CoreResourceType, ResourceType> = {
+const CORE_RESOURCE_TYPE_TO_RESOURCE_TYPE: Record<CoreResourceType, PublishableResourceType> = {
   [CoreResourceType.APPLICATION]: ResourceType.APPLICATION,
   [CoreResourceType.CONVERSATION]: ResourceType.CONVERSATION,
   [CoreResourceType.PROMPT]: ResourceType.PROMPT,
@@ -56,7 +57,7 @@ const RESOLUTION_ORDER: CoreResourceType[] = [
   CoreResourceType.FILE,
 ];
 
-const RESOURCE_TYPE_TO_CORE_RESOURCE_TYPE: Record<ResourceType, CoreResourceType> = {
+const RESOURCE_TYPE_TO_CORE_RESOURCE_TYPE: Record<PublishableResourceType, CoreResourceType> = {
   [ResourceType.APPLICATION]: CoreResourceType.APPLICATION,
   [ResourceType.CONVERSATION]: CoreResourceType.CONVERSATION,
   [ResourceType.PROMPT]: CoreResourceType.PROMPT,
@@ -64,11 +65,11 @@ const RESOURCE_TYPE_TO_CORE_RESOURCE_TYPE: Record<ResourceType, CoreResourceType
   [ResourceType.FILE]: CoreResourceType.FILE,
 };
 
-export const resourceTypeToCore = (type: ResourceType): CoreResourceType => {
+export const resourceTypeToCore = (type: PublishableResourceType): CoreResourceType => {
   return RESOURCE_TYPE_TO_CORE_RESOURCE_TYPE[type];
 };
 
-export const resolvePublicationResourceType = (types?: CoreResourceType[]): ResourceType | undefined => {
+export const resolvePublicationResourceType = (types?: CoreResourceType[]): PublishableResourceType | undefined => {
   if (!types?.length) {
     return undefined;
   }

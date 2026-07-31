@@ -1,18 +1,10 @@
-import React, { cloneElement, Dispatch, FC, ReactElement, SetStateAction, useCallback, useState } from 'react';
-import CreateFilter from '@/src/components/Telemetry/TelemetryControls/Filters/CreateFilter';
-import {
-  autoUpdate,
-  FloatingFocusManager,
-  shift,
-  useClick,
-  useDismiss,
-  useFloating,
-  useInteractions,
-  useRole,
-} from '@floating-ui/react';
-import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
-import { ApplicationRoute } from '@/src/types/routes';
+import React, { Dispatch, FC, ReactElement, SetStateAction } from 'react';
 import { SelectOption } from '@epam/ai-dial-ui-kit';
+
+import FilterEditorPopover from '@/src/components/Common/FilterEditor/FilterEditorPopover';
+import CreateFilter from '@/src/components/Telemetry/TelemetryControls/Filters/CreateFilter';
+import { ApplicationRoute } from '@/src/types/routes';
+import { FILTER_OPERATOR, FILTER_TYPE } from '@/src/types/telemetry';
 
 interface Props {
   type: FILTER_TYPE;
@@ -47,68 +39,32 @@ const AddFilterPopover: FC<Props> = ({
   isMcpView = false,
   isRouteView = false,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const { refs, floatingStyles, context } = useFloating({
-    open: isOpen,
-    onOpenChange: setIsOpen,
-    placement: 'bottom-start',
-    middleware: [shift()],
-    whileElementsMounted: autoUpdate,
-  });
-  const click = useClick(context);
-  const role = useRole(context, { role: 'tooltip' });
-  const dismiss = useDismiss(context, {
-    outsidePress: () => {
-      if (type && condition && value.length > 0) {
-        onCreate();
-        onClose();
-      }
+  const isComplete = Boolean(type && condition && value.length > 0 && value.some((v) => v.trim() !== ''));
 
-      return true;
-    },
-  });
-
-  const onClose = useCallback(() => {
-    setIsOpen(false);
-    reset();
-  }, [setIsOpen, reset]);
-
-  const { getFloatingProps, getReferenceProps } = useInteractions([click, dismiss, role]);
   return (
-    <>
-      <div ref={refs.setReference} {...getReferenceProps()}>
-        {cloneElement(children)}
-      </div>
-      {isOpen && (
-        <div aria-expanded={isOpen}>
-          <FloatingFocusManager context={context}>
-            <div
-              ref={refs.setFloating}
-              style={{
-                ...floatingStyles,
-                zIndex: 50,
-              }}
-              {...getFloatingProps()}
-            >
-              <CreateFilter
-                onClose={onClose}
-                type={type}
-                condition={condition}
-                value={value}
-                setType={setType}
-                setCondition={setCondition}
-                setValue={setValue}
-                projects={projects}
-                entities={entities}
-                route={route}
-                isMcpView={isMcpView}
-                isRouteView={isRouteView}
-              />
-            </div>
-          </FloatingFocusManager>
-        </div>
+    <FilterEditorPopover
+      isComplete={isComplete}
+      onCommit={onCreate}
+      onCancel={reset}
+      editor={(onClose) => (
+        <CreateFilter
+          onClose={onClose}
+          type={type}
+          condition={condition}
+          value={value}
+          setType={setType}
+          setCondition={setCondition}
+          setValue={setValue}
+          projects={projects}
+          entities={entities}
+          route={route}
+          isMcpView={isMcpView}
+          isRouteView={isRouteView}
+        />
       )}
-    </>
+    >
+      {children}
+    </FilterEditorPopover>
   );
 };
 

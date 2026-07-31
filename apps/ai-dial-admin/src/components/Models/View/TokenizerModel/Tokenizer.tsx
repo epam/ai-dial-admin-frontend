@@ -1,19 +1,18 @@
 'use client';
 
-import { FC, useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { DialInputPopup, DialSwitch } from '@epam/ai-dial-ui-kit';
 
 import { EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
-import { DialModel } from '@/src/models/dial/model';
 import TokenizedModelsModal from './TokenizedModelsModal';
 
-interface Props {
-  model: DialModel;
-  onChangeModel: (model: DialModel) => void;
+interface Props<T> {
+  model: T;
+  onChangeModel: (model: T) => void;
 }
-const TokenizerModelSwitch: FC<Props> = ({ model, onChangeModel }) => {
+const TokenizerModelSwitch = <T extends { tokenizerModel?: string }>({ model, onChangeModel }: Props<T>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const [isModalOpen, setIsModalOpen] = useState(false);

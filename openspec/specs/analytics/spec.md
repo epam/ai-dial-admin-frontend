@@ -920,12 +920,13 @@ Adding columns SHALL be available from the header via a form popup reusing the c
 
 The table detail view (`components/Analytics/Tables/TableDetailView.tsx`) SHALL gate its mutating affordances independently:
 
+- **Manage access** SHALL be shown only when `canManageRoles` (`FULL_ADMIN` and non-system).
 - **Delete table** SHALL be shown only when `canDelete` (`FULL_ADMIN` and non-system).
 - For an `ACTIVE` table, **Add rows** (inserting rows) and **Add columns** (schema evolution) SHALL be offered as items of a single header **Add** dropdown rather than two standalone buttons; **Add rows** SHALL be shown only when `canWrite`, **Add columns** only when `canModify`, and the dropdown itself SHALL NOT render when neither is available.
 - Per-column **edit/drop** (grid action column), **inline column rename**, column-metadata edits, and **description edits** SHALL be shown only when `canModify`.
 - Header actions SHALL be ordered **Manage access, Delete table, Add** (a not-yet-`ACTIVE` table shows **Save** in place of **Add** — see "Define and materialize a table schema").
 
-Because the backend reports `permissions {false,false}` for system tables, these edit affordances hide for system tables without a separate check.
+Because the backend reports `permissions {false,false}` for system tables, the write/modify-gated affordances (Add rows, Add columns, per-column edit/drop, inline rename, description edits) hide for system tables without a separate check. **Manage access** and **Delete table** are gated on `FULL_ADMIN`, which the backend does not scope per-table, so each carries its own explicit `!table.system` check.
 
 #### Scenario: Write-capable, not modify-capable
 
@@ -946,6 +947,11 @@ Because the backend reports `permissions {false,false}` for system tables, these
 
 - **WHEN** a non-system table reports edit permissions but the user is not `FULL_ADMIN`
 - **THEN** the "Delete table" button is absent
+
+#### Scenario: Manage access is hidden for a system table even for a full admin
+
+- **WHEN** a `FULL_ADMIN` opens a system table's detail page
+- **THEN** the "Manage access" button is absent
 
 #### Scenario: Header actions follow the fixed order
 
@@ -1003,7 +1009,7 @@ Every delete-table confirmation dialog — the catalog list's row delete action 
 
 ### Requirement: Full-admin per-table role management panel
 
-The table detail view SHALL provide a panel to view and manage the table's `write` / `modify` provider-role lists, backed by `AnalyticsDataApi.getTableAccess` / `replaceTableAccess` (`GET` / `PUT /v1/tables/{name}/access`) and a `TableAccess { write: string[]; modify: string[] }` model. Because the backend restricts `GET /access` to `FULL_ADMIN`, the panel SHALL be shown only when `canManageRoles` (`FULL_ADMIN`); a save SHALL full-replace the lists via `replaceTableAccess`. Role names SHALL be picked as checkboxes from the DIAL Roles catalog (fetched via `RolesApi.getRolesList`, the same source other admin surfaces such as App Routes already use for role selection) rather than typed free text — each option's value is the `DialRole.name`, which is also the raw provider-role string the backend matches against; there is no separate role id. While the initial fetch (the table's current access and the roles catalog, requested together) is in flight the panel SHALL show a loading spinner in place of the role pickers. A failed access fetch and a failed roles-catalog fetch SHALL each surface their own error notification (the two requests can fail independently); Save SHALL stay disabled until the access fetch succeeds.
+The table detail view SHALL provide a panel to view and manage the table's `write` / `modify` provider-role lists, backed by `AnalyticsDataApi.getTableAccess` / `replaceTableAccess` (`GET` / `PUT /v1/tables/{name}/access`) and a `TableAccess { write: string[]; modify: string[] }` model. Because the backend restricts `GET /access` to `FULL_ADMIN` and system tables carry no per-table roles to manage, the panel SHALL be shown only when `canManageRoles` (`FULL_ADMIN` and non-system); a save SHALL full-replace the lists via `replaceTableAccess`. Role names SHALL be picked as checkboxes from the DIAL Roles catalog (fetched via `RolesApi.getRolesList`, the same source other admin surfaces such as App Routes already use for role selection) rather than typed free text — each option's value is the `DialRole.name`, which is also the raw provider-role string the backend matches against; there is no separate role id. While the initial fetch (the table's current access and the roles catalog, requested together) is in flight the panel SHALL show a loading spinner in place of the role pickers. A failed access fetch and a failed roles-catalog fetch SHALL each surface their own error notification (the two requests can fail independently); Save SHALL stay disabled until the access fetch succeeds.
 
 #### Scenario: Full admin edits the role lists
 
@@ -1013,6 +1019,11 @@ The table detail view SHALL provide a panel to view and manage the table's `writ
 #### Scenario: Panel hidden for non-admins
 
 - **WHEN** the detail view renders for a user who is not `FULL_ADMIN`
+- **THEN** the role-management panel is not shown
+
+#### Scenario: Panel hidden for system tables even for a full admin
+
+- **WHEN** a `FULL_ADMIN` opens a system table's detail view
 - **THEN** the role-management panel is not shown
 
 #### Scenario: Loading spinner while fetching
@@ -1032,7 +1043,7 @@ The table detail view SHALL provide a panel to view and manage the table's `writ
 
 ### Requirement: System-owned tables are read-only
 
-The catalog and detail views SHALL reflect the table's server-provided `system` flag. System-owned tables are seeded server-side and reject every modifying request (`409 table_is_system`), so the UI SHALL NOT offer modify actions for them: in the catalog the row's delete action SHALL be hidden and a System indicator SHALL be shown; in the detail view the delete-table / write-rows / add-columns actions and the per-column edit/drop actions and inline rename SHALL be suppressed, replaced by a read-only indicator. System tables SHALL remain fully viewable and navigable, including their column display names and descriptions.
+The catalog and detail views SHALL reflect the table's server-provided `system` flag. System-owned tables are seeded server-side and reject every modifying request (`409 table_is_system`), so the UI SHALL NOT offer modify actions for them: in the catalog the row's delete action SHALL be hidden and a System indicator SHALL be shown; in the detail view the manage-access / delete-table / write-rows / add-columns actions and the per-column edit/drop actions and inline rename SHALL be suppressed, replaced by a read-only indicator. System tables SHALL remain fully viewable and navigable, including their column display names and descriptions.
 
 #### Scenario: System table in the catalog
 
@@ -1043,7 +1054,7 @@ The catalog and detail views SHALL reflect the table's server-provided `system` 
 #### Scenario: System table detail is read-only
 
 - **WHEN** the user opens a system table's detail page
-- **THEN** the delete-table, write-rows, and add-columns actions are absent and a read-only indicator is shown
+- **THEN** the manage-access, delete-table, write-rows, and add-columns actions are absent and a read-only indicator is shown
 - **AND** the column grid offers no edit/drop actions and no inline editing
 - **AND** the table, its columns, and their display names and descriptions remain viewable
 
@@ -1055,8 +1066,8 @@ The system SHALL expose, on `AppContext`, the capability inputs for Analytics ta
 `permissions: { write: boolean; modify: boolean }` object supplied by the data-access service. A hook
 `useAnalyticsTablePermissions(table?)` (`src/hooks/`) SHALL derive:
 
-- `canCreate` and `canManageRoles` SHALL equal `isFullAdmin`.
-- `canDelete` SHALL equal `isFullAdmin && !table.system`.
+- `canCreate` SHALL equal `isFullAdmin`.
+- `canDelete` and `canManageRoles` SHALL equal `isFullAdmin && !table.system`.
 - `canWrite` SHALL equal `table.permissions.write` when present, otherwise `!isEnableAuth`.
 - `canModify` SHALL equal `table.permissions.modify` when present, otherwise `!isEnableAuth`.
 
@@ -1072,11 +1083,11 @@ The system SHALL expose, on `AppContext`, the capability inputs for Analytics ta
 - **THEN** `canWrite` is `true`, `canModify` is `false`, and `canCreate`/`canDelete`/`canManageRoles`
   are `false`
 
-#### Scenario: System table exposes no edits
+#### Scenario: System table exposes no edits, even for a full admin
 
 - **WHEN** a system table reports `permissions {write:false, modify:false}` (as the backend does for
-  every caller)
-- **THEN** `canWrite`, `canModify`, and `canDelete` are `false`
+  every caller) and the user is `FULL_ADMIN`
+- **THEN** `canWrite`, `canModify`, `canDelete`, and `canManageRoles` are all `false`
 
 #### Scenario: Missing permissions default safely
 
@@ -1190,3 +1201,228 @@ The **catalog list's** row action menu SHALL let the user edit a table's catalog
 
 - **WHEN** the user reorders the table's column tags and submits
 - **THEN** `updateTable` is sent with the ordered `tag_order` list and the catalog refreshes
+
+### Requirement: Query Assistant feature flag derives from deployment config
+
+The system SHALL expose a `queryAssistantEnabled: boolean` on the `FeatureFlags` object
+(`models/feature-flags.ts`), initialized in the root layout (`app/[lang]/layout.tsx`) alongside the
+other flags. It SHALL be `true` only when `ANALYTICS_ENABLED` resolves truthy (per `isValueTruthy`)
+AND `process.env.DIAL_QUERY_ASSISTANT_DEPLOYMENT` is present (non-empty); otherwise `false`. The
+`DIAL_QUERY_ASSISTANT_DEPLOYMENT` value is the assistant application's DIAL Core deployment id
+(resource URL, stored raw with literal `/`) and SHALL be read server-side only.
+
+#### Scenario: Flag true when analytics enabled and deployment set
+
+- **WHEN** `ANALYTICS_ENABLED` is truthy and `DIAL_QUERY_ASSISTANT_DEPLOYMENT` is set to a non-empty value
+- **THEN** `featureFlags.queryAssistantEnabled` is `true`
+
+#### Scenario: Flag false when deployment unset
+
+- **WHEN** `ANALYTICS_ENABLED` is truthy but `DIAL_QUERY_ASSISTANT_DEPLOYMENT` is unset or empty
+- **THEN** `featureFlags.queryAssistantEnabled` is `false`
+
+#### Scenario: Flag false when analytics disabled
+
+- **WHEN** `ANALYTICS_ENABLED` is falsy
+- **THEN** `featureFlags.queryAssistantEnabled` is `false` regardless of the deployment variable
+
+### Requirement: Query Builder rail offers an AI view when the assistant is enabled
+
+The Query Builder view switcher SHALL include a fourth mutually exclusive view — AI — alongside Form,
+JSON, and SQL, rendered in the existing segmented control and marked with a spark icon. The AI option
+SHALL be present only when `featureFlags.queryAssistantEnabled` is `true`. When the flag is `false` the
+switcher SHALL offer exactly the existing three views. As with the other views, the switcher (and thus
+the AI option) is available only once an entity schema has loaded.
+
+#### Scenario: AI option shown when enabled
+
+- **WHEN** the schema has loaded and `queryAssistantEnabled` is `true`
+- **THEN** the view switcher offers Form, JSON, SQL, and AI
+
+#### Scenario: AI option hidden when disabled
+
+- **WHEN** the schema has loaded and `queryAssistantEnabled` is `false`
+- **THEN** the view switcher offers only Form, JSON, and SQL and no AI option is present
+
+#### Scenario: Selecting the AI view
+
+- **WHEN** the user selects the AI view
+- **THEN** the rail shows the AI panel and the current view is indicated as AI
+
+### Requirement: AI panel accepts a plain-language prompt with suggestions
+
+In the AI view the rail SHALL render a heading, an explanatory description, a conversation transcript,
+a multi-line text input for a plain-language request, and a Send action. While the transcript is empty
+the rail SHALL additionally render a set of suggested-prompt chips; once at least one message has been
+sent the chips SHALL no longer be shown. Clicking a suggested-prompt chip SHALL populate the text input
+with that chip's prompt text. The Send action SHALL be disabled while the input is empty or a
+generation request is in flight. All text SHALL be provided through i18n.
+
+#### Scenario: Suggested prompt fills the input
+
+- **WHEN** the AI view is shown, the transcript is empty, and the user clicks a suggested-prompt chip
+- **THEN** the text input is populated with that chip's prompt text
+
+#### Scenario: Suggestions hidden once a conversation has started
+
+- **WHEN** at least one message has been sent in the AI view
+- **THEN** the suggested-prompt chips are no longer shown
+
+#### Scenario: Send disabled when input empty
+
+- **WHEN** the text input is empty
+- **THEN** the Send action is disabled
+
+#### Scenario: Send disabled while in flight
+
+- **WHEN** a generation request is in progress
+- **THEN** the Send action is disabled and a loading indicator is shown
+
+### Requirement: Generate calls the assistant and shows the proposed query
+
+Activating Send SHALL append the user's request as a new message in the visible transcript and call
+the `generateQuery` server action with the full accumulated `messages[]`, which posts to the configured
+deployment's chat-completions endpoint on DIAL Core (`QueryAssistantApi`, reusing `DIAL_CORE_API_URL`
+and Bearer auth). On success the assistant's reply SHALL be appended as a new message in the
+transcript, rendered as-is (no SQL extraction applied to the rendered text). When the reply contains an
+extractable SQL block, that message additionally renders the extracted SQL read-only with its own Copy
+and Run actions (see "Each assistant message with extracted SQL offers inline Run and Copy"). On
+failure the system SHALL surface an error notification (header, message, and request id when
+available); the just-sent user message SHALL remain visible in the transcript and no assistant message
+SHALL be appended, so the user can retry or continue the conversation without losing what they asked.
+
+#### Scenario: Successful generation appends to the transcript
+
+- **WHEN** the user submits a request and the assistant returns a reply
+- **THEN** the user's request and the assistant's reply both appear as new messages in the transcript
+
+#### Scenario: Reply without SQL is a plain conversational turn
+
+- **WHEN** the assistant reply contains no SQL block
+- **THEN** the assistant's message is shown in the transcript with no Run or Copy action, and any
+  previously loaded query is left untouched
+
+#### Scenario: Generation failure notifies and preserves the transcript
+
+- **WHEN** the `generateQuery` action returns a failure
+- **THEN** an error notification is shown, the user's just-sent message remains in the transcript, and
+  no assistant message is appended
+
+### Requirement: SQL is extracted from the assistant reply
+
+The system SHALL provide a pure `extractSql(content)` utility that returns the trimmed contents of the
+last fenced code block tagged `sql` (case-insensitive) in a single message's content. If no
+`sql`-tagged block exists but an untagged fenced block does, that block SHALL be returned as a
+fallback. If no fenced block exists, the utility SHALL return `null`. The utility SHALL be unit-tested.
+It SHALL be applied independently to each assistant message in the conversation, so a conversation with
+several assistant turns can have several messages each carrying their own extracted SQL (or none).
+
+#### Scenario: Extract the sql-tagged block
+
+- **WHEN** a message's content contains prose and a ` ```sql … ``` ` block
+- **THEN** `extractSql` returns the block's SQL text, trimmed, without the fences
+
+#### Scenario: Last block wins within a message
+
+- **WHEN** a single message's content contains more than one fenced SQL block
+- **THEN** `extractSql` returns the contents of that message's last block
+
+#### Scenario: No block returns null
+
+- **WHEN** a message's content contains no fenced code block
+- **THEN** `extractSql` returns `null` for that message
+
+#### Scenario: Extraction is independent per message
+
+- **WHEN** a conversation has multiple assistant messages, some with SQL blocks and some without
+- **THEN** each message's extraction result reflects only that message's own content
+
+### Requirement: Each assistant message with extracted SQL offers inline Run and Copy
+
+An assistant message whose content yields a non-null result from `extractSql` SHALL render that SQL
+read-only beneath the message, with its own Copy action and its own Run action. A message with no
+extracted SQL SHALL render neither action. The Run action SHALL be disabled while any message's Run is
+already in progress (translating or executing), and SHALL also be disabled on the message that is
+currently the loaded query (see "Running a message's query loads it into the builder and executes it")
+— that disabled state is the only indicator of which message is current; there is no separate badge.
+
+#### Scenario: SQL-bearing message shows Run and Copy
+
+- **WHEN** an assistant message has extracted SQL
+- **THEN** that message renders the SQL read-only with a Copy action and a Run action
+
+#### Scenario: Plain message shows neither action
+
+- **WHEN** an assistant message has no extracted SQL
+- **THEN** that message renders no Copy action and no Run action
+
+#### Scenario: Run disabled while another run is in progress
+
+- **WHEN** a message's Run has been clicked and its translate-and-execute is still in flight
+- **THEN** every message's Run action in the transcript is disabled until it completes
+
+#### Scenario: Run disabled on the currently loaded message
+
+- **WHEN** a message's query is the currently loaded query
+- **THEN** that message's Run action is disabled, while other SQL-bearing messages' Run actions remain
+  enabled
+
+### Requirement: Running a message's query loads it into the builder and executes it
+
+Clicking a message's Run action SHALL translate that message's SQL into a structured query and, when
+the builder can represent it, hydrate the builder state so the Builder, JSON, and SQL views all reflect
+it; when the query cannot be represented (or translation fails), the raw SQL SHALL remain runnable and
+visible in the SQL view instead. In the same action, the system SHALL execute the query (via the
+structured or SQL execution path, matching whichever form was loaded) and show the result in the
+existing result area. The AI view SHALL remain active after Run (no forced view switch). The message
+whose Run was most recently clicked SHALL have its Run action disabled to indicate it is the currently
+loaded query (see "Each assistant message with extracted SQL offers inline Run and Copy") — no separate
+visual badge is used.
+
+#### Scenario: Representable query loads and runs
+
+- **WHEN** the user clicks Run on a message whose query the builder can represent
+- **THEN** the Builder, JSON, and SQL views are hydrated with that query, the query executes, and the
+  result appears in the result area
+
+#### Scenario: Non-representable query still runs via SQL
+
+- **WHEN** the user clicks Run on a message whose query the builder cannot represent (or translation
+  fails)
+- **THEN** the raw SQL remains visible and runnable in the SQL view, and the query still executes via
+  the SQL path
+
+#### Scenario: Running an earlier message updates which query is loaded
+
+- **WHEN** a later message's Run was previously clicked and the user then clicks an earlier message's
+  Run
+- **THEN** the earlier message's Run action becomes disabled, the later message's Run action becomes
+  enabled again, and the Builder/JSON/SQL views and any subsequent toolbar-independent Copy reflect the
+  earlier query instead
+
+#### Scenario: Changing the entity clears the conversation and loaded state
+
+- **WHEN** a query has been run from the AI view and the user selects a different entity
+- **THEN** the conversation is cleared entirely (no messages remain, so no Run action is disabled or
+  present)
+
+### Requirement: Toolbar Run and Copy are not shown in the AI view
+
+When the AI view is active, the Query Builder toolbar SHALL NOT render its Run action or its Copy
+action; the entity selector and time filter controls remain. Running and copying a query in the AI view
+happens only through the per-message actions on the transcript.
+
+#### Scenario: Toolbar Run hidden in AI view
+
+- **WHEN** the AI view is active
+- **THEN** the toolbar does not show a Run action
+
+#### Scenario: Toolbar Copy hidden in AI view
+
+- **WHEN** the AI view is active
+- **THEN** the toolbar does not show a Copy action
+
+#### Scenario: Entity and time controls remain available
+
+- **WHEN** the AI view is active
+- **THEN** the entity selector and time filter controls are still shown and usable

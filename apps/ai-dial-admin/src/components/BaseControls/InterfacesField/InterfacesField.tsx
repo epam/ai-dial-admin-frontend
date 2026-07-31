@@ -2,8 +2,8 @@
 
 import { useCallback, useMemo, useState } from 'react';
 
-import { DialLabel, DialNeutralButton, DialSelectField } from '@epam/ai-dial-ui-kit';
-import { IconPlus } from '@tabler/icons-react';
+import { DialGhostButton, DialLabel, DialSelectField, DialTooltip } from '@epam/ai-dial-ui-kit';
+import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import { ButtonsI18nKey, InterfacesI18nKey } from '@/src/constants/i18n';
@@ -71,14 +71,14 @@ const InterfacesField = <T extends { interfaces?: InterfaceValueMap }>({
     }
   }, [allowedTypes, onAddType]);
 
-  const onChangeValue = useCallback(
-    (type: string, value: string) => {
+  const onChangeField = useCallback(
+    (type: string, field: string, value: string) => {
       onChangeEntity({
         ...entity,
-        interfaces: { ...interfaces, [type]: { ...interfaces[type], [baseUrlKey]: value } },
+        interfaces: { ...interfaces, [type]: { ...interfaces[type], [field]: value } },
       });
     },
-    [entity, interfaces, baseUrlKey, onChangeEntity],
+    [entity, interfaces, onChangeEntity],
   );
 
   const onDeleteType = useCallback(
@@ -93,18 +93,29 @@ const InterfacesField = <T extends { interfaces?: InterfaceValueMap }>({
   const showAddButton = availableTypes.length > 0 && !isSelectingType;
 
   return (
-    <div className={classNames('flex flex-col gap-y-2', STANDARD_CONTROL_WIDTH)}>
-      <DialLabel label={t(InterfacesI18nKey.Interfaces)} />
+    <div className={classNames('flex flex-col gap-y-2')}>
+      <div className="flex items-center gap-x-2">
+        <DialLabel label={t(InterfacesI18nKey.Interfaces)} />
+        <DialTooltip
+          tooltip={
+            <div className="flex flex-col gap-1">
+              <div>{t(InterfacesI18nKey.InfoBaseUrl)}</div>
+            </div>
+          }
+        >
+          <IconInfoCircle {...BASE_BUTTON_ICON_PROPS} className="text-secondary" />
+        </DialTooltip>
+      </div>
 
-      <div className="flex flex-col gap-y-2 rounded border border-primary p-4">
+      <div className={classNames('flex flex-col gap-y-2 rounded border border-primary p-4', STANDARD_CONTROL_WIDTH)}>
         {usedTypes.map((type) => (
           <InterfaceRow
             key={type}
             fieldId={`interface-${type}`}
-            label={getInterfaceTypeLabel(t, type)}
-            value={interfaces[type]?.[baseUrlKey] || ''}
+            typeLabel={getInterfaceTypeLabel(t, type)}
+            baseUrl={interfaces[type]?.[baseUrlKey] || ''}
             disabled={isReadonly}
-            onChange={(value) => onChangeValue(type, value)}
+            onChangeBaseUrl={(value) => onChangeField(type, baseUrlKey, value)}
             onDelete={() => onDeleteType(type)}
           />
         ))}
@@ -112,7 +123,7 @@ const InterfacesField = <T extends { interfaces?: InterfaceValueMap }>({
         {!isReadonly && isSelectingType && (
           <DialSelectField
             id="interfaceType"
-            containerClassName="w-full"
+            containerClassName="max-w-[300px]"
             placeholder={t(InterfacesI18nKey.SelectType)}
             options={availableTypes.map((type) => ({ value: type, label: getInterfaceTypeLabel(t, type) }))}
             value=""
@@ -122,9 +133,9 @@ const InterfacesField = <T extends { interfaces?: InterfaceValueMap }>({
 
         {!isReadonly && showAddButton && (
           <div>
-            <DialNeutralButton
+            <DialGhostButton
               iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-              label={t(ButtonsI18nKey.Add)}
+              label={t(ButtonsI18nKey.AddInterface)}
               onClick={onAddClick}
             />
           </div>

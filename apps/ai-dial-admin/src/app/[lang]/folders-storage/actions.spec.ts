@@ -1,22 +1,14 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { foldersApi } from '@/src/app/api/api';
+import { filesCoreApi } from '@/src/app/api/api';
 import * as foldersCore from '@/src/server/folders/folders-core';
+import { ConflictResolutionPolicy } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import {
-  changeFolder,
-  createFolderWithFiles,
-  getFolders,
-  getRules,
-  previewAppZip,
-  previewToolsetZip,
-  removeFolder,
-  updateRules,
-} from './actions';
+import { changeFolder, createFolderWithFiles, getFolders, getRules, removeFolder, updateRules } from './actions';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -64,22 +56,6 @@ describe('Folders storage :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call previewAppZip action', async () => {
-    (foldersApi.previewAppZipFiles as any).mockResolvedValue(RESPONSE_MOCK);
-    const result = await previewAppZip({} as FormData);
-    expect(getUserToken).toHaveBeenCalled();
-    expect(foldersApi.previewAppZipFiles).toHaveBeenCalledWith(TOKEN_MOCK, {} as FormData);
-    expect(result).toBe(RESPONSE_MOCK);
-  });
-
-  test('Should call previewToolsetZip action', async () => {
-    (foldersApi.previewToolsetZipFiles as any).mockResolvedValue(RESPONSE_MOCK);
-    const result = await previewToolsetZip({} as FormData);
-    expect(getUserToken).toHaveBeenCalled();
-    expect(foldersApi.previewToolsetZipFiles).toHaveBeenCalledWith(TOKEN_MOCK, {} as FormData);
-    expect(result).toBe(RESPONSE_MOCK);
-  });
-
   test('Should call removeFolder action (unpublish), scoped to the single supplied resource type', async () => {
     (foldersCore.removeFolderCore as any).mockResolvedValue(RESPONSE_MOCK);
     const result = await removeFolder('path', ResourceType.PROMPT);
@@ -104,10 +80,41 @@ describe('Folders storage :: server actions', () => {
   });
 
   test('Should call createFolderWithFiles action', async () => {
-    (foldersApi.createFolder as any).mockResolvedValue(RESPONSE_MOCK);
-    const result = await createFolderWithFiles({} as FormData, 'type', ApplicationRoute.Prompts);
+    (filesCoreApi.uploadFile as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const configBlob = new Blob([JSON.stringify({ path: 'public/folder/', conflictResolutionStrategy: 'skip' })], {
+      type: 'application/json',
+    });
+    const file = new File(['1'], '.dial_folder', { type: 'text/plain' });
+    const body = new FormData();
+    body.append('config', configBlob, 'config.json');
+    body.append('files', file);
+
+    const result = await createFolderWithFiles(body, 'type', ApplicationRoute.Files);
+
     expect(getUserToken).toHaveBeenCalled();
-    expect(foldersApi.createFolder).toHaveBeenCalledWith(TOKEN_MOCK, {} as FormData, 'type', ApplicationRoute.Prompts);
+    expect(filesCoreApi.uploadFile).toHaveBeenCalledWith(TOKEN_MOCK, 'public/folder/.dial_folder', file, {
+      overwrite: false,
+    });
     expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call createFolderWithFiles action with overwrite when the policy is OVERRIDE', async () => {
+    (filesCoreApi.uploadFile as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const configBlob = new Blob(
+      [JSON.stringify({ path: 'public/folder/', conflictResolutionStrategy: ConflictResolutionPolicy.OVERRIDE })],
+      { type: 'application/json' },
+    );
+    const file = new File(['1'], '.dial_folder', { type: 'text/plain' });
+    const body = new FormData();
+    body.append('config', configBlob, 'config.json');
+    body.append('files', file);
+
+    await createFolderWithFiles(body);
+
+    expect(filesCoreApi.uploadFile).toHaveBeenCalledWith(TOKEN_MOCK, 'public/folder/.dial_folder', file, {
+      overwrite: true,
+    });
   });
 });

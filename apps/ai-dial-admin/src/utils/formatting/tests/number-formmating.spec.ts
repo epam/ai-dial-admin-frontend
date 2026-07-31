@@ -19,6 +19,19 @@ describe('Utils :: formatting :: formatNumber', () => {
 
     expect(res).toBe('13.7 M');
   });
+
+  // Rounding to one decimal can reach 1000, which under its own unit reads as "1000 K" rather than "1 M".
+  test.each([
+    [999500, '999.5 K'],
+    [999999, '1 M'],
+    [999999999, '1 B'],
+  ])('Should carry %i into the next unit rather than reporting 1000 of the smaller one', (value, expected) => {
+    expect(formatNumberWithExponent(value)).toBe(expected);
+  });
+
+  test('Should clamp at the largest unit rather than emitting undefined', () => {
+    expect(formatNumberWithExponent(1e15)).toBe('1000 T');
+  });
 });
 
 describe('Utils ::formatting :: formatNumberByDelimiter', () => {

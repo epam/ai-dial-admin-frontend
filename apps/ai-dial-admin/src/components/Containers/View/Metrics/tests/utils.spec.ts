@@ -1,8 +1,29 @@
 import { describe, expect, test } from 'vitest';
 
 import { MetricCardConfig, MetricCardKind } from '@/src/components/Containers/View/Metrics/models';
-import { filterCardsByTask, formatMemoryBytes } from '@/src/components/Containers/View/Metrics/utils';
+import {
+  avgPodValue,
+  filterCardsByTask,
+  formatMemoryBytes,
+  formatMemoryPair,
+  ratioGaugeStatus,
+} from '@/src/components/Containers/View/Metrics/utils';
+import { MetricStatus } from '@/src/components/Common/MetricCard/models';
+import { DeploymentMetrics, PodResourceUsage } from '@/src/models/deployments/metrics';
 import { INFERENCE_TASK } from '@/src/types/deployments/containers';
+
+const pod = (overrides: Partial<PodResourceUsage>): PodResourceUsage => ({
+  name: 'pod',
+  cpuMillicores: null,
+  memoryBytes: null,
+  gpuUtilization: null,
+  gpuMemoryBytes: null,
+  gpuMemoryTotalBytes: null,
+  ...overrides,
+});
+
+const metricsWithPods = (pods: PodResourceUsage[]): DeploymentMetrics =>
+  ({ resources: { replicas: { total: pods.length, ready: pods.length }, pods } }) as DeploymentMetrics;
 
 const card = (labelKey: string, tasks?: INFERENCE_TASK[]): MetricCardConfig => ({
   kind: MetricCardKind.Single,
@@ -60,5 +81,62 @@ describe('formatMemoryBytes', () => {
 
   test('handles zero', () => {
     expect(formatMemoryBytes(0)).toEqual({ value: 0, unit: 'B' });
+  });
+});
+
+describe('avgPodValue', () => {
+  test('averages a field across pods', () => {
+    const metrics = metricsWithPods([pod({ gpuUtilization: 0.2 }), pod({ gpuUtilization: 0.6 })]);
+    expect(avgPodValue(metrics, (p) => p.gpuUtilization)).toBe(0.4);
+  });
+
+  test('ignores null values from pods without data', () => {
+    const metrics = metricsWithPods([pod({ gpuUtilization: 0.5 }), pod({ gpuUtilization: null })]);
+    expect(avgPodValue(metrics, (p) => p.gpuUtilization)).toBe(0.5);
+  });
+
+  test('returns null when no pod contributes', () => {
+    const metrics = metricsWithPods([pod({ gpuUtilization: null }), pod({ gpuUtilization: null })]);
+    expect(avgPodValue(metrics, (p) => p.gpuUtilization)).toBeNull();
+  });
+
+  test('returns null for an empty pod list', () => {
+    expect(avgPodValue(metricsWithPods([]), (p) => p.gpuUtilization)).toBeNull();
+  });
+});
+
+describe('formatMemoryPair', () => {
+  test('scales used to the total’s unit', () => {
+    expect(formatMemoryPair(5 * 1024 ** 3, 20 * 1024 ** 3)).toEqual({ used: 5, total: 20, unit: 'GB' });
+  });
+
+  test('returns null when used is null', () => {
+    expect(formatMemoryPair(null, 20 * 1024 ** 3)).toBeNull();
+  });
+
+  test('returns null when total is null', () => {
+    expect(formatMemoryPair(5 * 1024 ** 3, null)).toBeNull();
+  });
+
+  test('returns null when total is zero', () => {
+    expect(formatMemoryPair(0, 0)).toBeNull();
+  });
+});
+
+describe('ratioGaugeStatus', () => {
+  test('is NoData for null', () => {
+    expect(ratioGaugeStatus(null)).toBe(MetricStatus.NoData);
+  });
+
+  test('is Ok at or below the warn threshold', () => {
+    expect(ratioGaugeStatus(0.7)).toBe(MetricStatus.Ok);
+  });
+
+  test('is Warn above warn and at or below crit', () => {
+    expect(ratioGaugeStatus(0.8)).toBe(MetricStatus.Warn);
+  });
+
+  test('is Crit above the crit threshold', () => {
+    expect(ratioGaugeStatus(0.95)).toBe(MetricStatus.Crit);
   });
 });

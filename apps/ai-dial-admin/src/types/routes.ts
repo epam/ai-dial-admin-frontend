@@ -17,6 +17,8 @@ export enum ApplicationRoute {
   InterceptorTemplates = '/interceptor-templates',
 
   // Assets
+  AssetsModels = '/assets-models',
+  AssetsAppRunners = '/assets-app-runners',
   AssetsApplications = '/assets-applications',
   AssetsToolsets = '/assets-toolsets',
   Conversations = '/conversations',
@@ -59,4 +61,5 @@ export enum ApplicationRoute {
   // Analytics
   AnalyticsQueryBuilder = '/query-builder',
   AnalyticsTables = '/tables',
+  ConversationsTrace = '/conversations-trace',
 }

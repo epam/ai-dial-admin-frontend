@@ -25,12 +25,19 @@ vi.mock('@modelcontextprotocol/sdk/client/streamableHttp.js', () => ({
   },
 }));
 
-import { buildToolsetMcpUrl, callToolViaMcp } from '../mcp-client';
+import { buildApplicationMcpUrl, buildToolsetMcpUrl, callToolViaMcp } from '../mcp-client';
 
 describe('Server :: Toolsets :: mcp-client :: buildToolsetMcpUrl', () => {
   test('builds the prefixed Core MCP endpoint URL', () => {
     const url = buildToolsetMcpUrl('https://core.example.com', 'public/name__1.0');
     expect(url.toString()).toBe('https://core.example.com/v1/toolset/toolsets/public/name__1.0/mcp');
+  });
+});
+
+describe('Server :: Toolsets :: mcp-client :: buildApplicationMcpUrl', () => {
+  test('builds the prefixed Core deployment MCP endpoint URL', () => {
+    const url = buildApplicationMcpUrl('https://core.example.com', 'public/name__1.0');
+    expect(url.toString()).toBe('https://core.example.com/v1/deployments/applications/public/name__1.0/mcp');
   });
 });
 
@@ -44,13 +51,14 @@ describe('Server :: Toolsets :: mcp-client :: callToolViaMcp', () => {
     callToolMock.mockResolvedValue({ content: [{ type: 'text', text: 'ok' }] });
     closeMock.mockResolvedValue(undefined);
 
-    const result = await callToolViaMcp('https://core.example.com', 'token-1' as any, 'public/name__1.0', {
+    const url = buildToolsetMcpUrl('https://core.example.com', 'public/name__1.0');
+    const result = await callToolViaMcp(url, 'token-1' as any, {
       name: 'tool',
       arguments: {},
     });
 
-    const [url, options] = transportConstructorMock.mock.calls[0];
-    expect(url.toString()).toContain('/v1/toolset/toolsets/public/name__1.0/mcp');
+    const [transportUrl, options] = transportConstructorMock.mock.calls[0];
+    expect(transportUrl.toString()).toContain('/v1/toolset/toolsets/public/name__1.0/mcp');
     expect(options.requestInit.headers).toBeDefined();
 
     expect(connectMock).toHaveBeenCalled();
@@ -63,7 +71,8 @@ describe('Server :: Toolsets :: mcp-client :: callToolViaMcp', () => {
     connectMock.mockRejectedValue(new Error('handshake failed'));
     closeMock.mockResolvedValue(undefined);
 
-    const result = await callToolViaMcp('https://core.example.com', 'token-1' as any, 'public/name__1.0', {
+    const url = buildToolsetMcpUrl('https://core.example.com', 'public/name__1.0');
+    const result = await callToolViaMcp(url, 'token-1' as any, {
       name: 'tool',
       arguments: {},
     });

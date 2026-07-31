@@ -38,13 +38,11 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
       const allTestCases = getTestCases(selectedTestSuite.datasetId, 0, 1000, [], []);
       Promise.all([validTestCases, allTestCases]).then(([validRes, allRes]) => {
         setAllRuns(allRes?.totalElements || 0);
-        const disabledIds = new Set(selectedTestSuite.disabledTestCaseIds || []);
-        const enabledValidTestCases = (validRes?.content || []).filter((tc) => !disabledIds.has(tc.id as string));
-        setValidRuns(enabledValidTestCases.length);
+        setValidRuns((validRes?.content || []).length);
         setIsLoading(false);
       });
     }
-  }, [selectedTestSuite.datasetId, selectedTestSuite.disabledTestCaseIds, validRuns]);
+  }, [selectedTestSuite.datasetId, validRuns]);
 
   return (
     <DialFormPopup

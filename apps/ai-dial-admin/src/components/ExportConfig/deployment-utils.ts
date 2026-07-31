@@ -6,7 +6,6 @@ import { getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import {
   DESCRIPTION_COLUMN,
   DISPLAY_NAME_COLUMN_WITH_SORT,
-  NAME_COLUMN,
   VERSION_COLUMN,
 } from '@/src/constants/grid-columns/base-columns';
 import { ButtonsI18nKey, MenuI18nKey } from '@/src/constants/i18n';
@@ -39,9 +38,9 @@ export const getDeploymentButtonTitle = (t: (v: string) => string, selectedTab: 
 
 const getBaseColumns = (selectedTab?: string): ColDef[] => {
   if (selectedTab === DeploymentExportEntityType.IMAGE) {
-    return [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN, VERSION_COLUMN, NAME_COLUMN];
+    return [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN, VERSION_COLUMN];
   }
-  return [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN, NAME_COLUMN];
+  return [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN];
 };
 
 export const getDeploymentColDefs = (

@@ -54,6 +54,7 @@ const renderCard = (card: MetricCardConfig, metrics: DeploymentMetrics | null, l
       const numerator = metrics ? card.getNumerator(metrics) : null;
       const denominator = metrics ? card.getDenominator(metrics) : null;
       const status = card.getStatus ? card.getStatus(numerator, denominator) : undefined;
+      const unit = metrics && card.getUnit ? card.getUnit(metrics) : undefined;
       return (
         <RatioBadgeCard
           key={card.labelKey}
@@ -62,6 +63,7 @@ const renderCard = (card: MetricCardConfig, metrics: DeploymentMetrics | null, l
           denominator={denominator}
           loading={loading}
           status={status}
+          unit={unit}
         />
       );
     }

@@ -6,7 +6,7 @@ import { IconPlus } from '@tabler/icons-react';
 import { RowDragEvent } from 'ag-grid-community';
 
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
-import { DESCRIPTION_COLUMN, DISPLAY_NAME_COLUMN, NAME_COLUMN } from '@/src/constants/grid-columns/base-columns';
+import { DESCRIPTION_COLUMN, DISPLAY_NAME_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { ButtonsI18nKey, EntitiesI18nKey, InterceptorsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
@@ -126,7 +126,7 @@ const GlobalInterceptors: FC<Props> = ({ interceptors, currentInterceptors, onCh
             entities={availableInterceptors}
             onClose={() => setIsModalOpen(false)}
             onApply={onAddInterceptors}
-            columnDefs={[DISPLAY_NAME_COLUMN, DESCRIPTION_COLUMN, NAME_COLUMN]}
+            columnDefs={[DISPLAY_NAME_COLUMN, DESCRIPTION_COLUMN]}
           />,
           document.body,
         )}

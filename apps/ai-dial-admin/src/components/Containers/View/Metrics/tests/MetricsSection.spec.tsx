@@ -15,6 +15,13 @@ const SECTION: MetricsSectionConfig = {
       getNumerator: () => 2,
       getDenominator: () => 3,
     },
+    {
+      kind: MetricCardKind.Ratio,
+      labelKey: 'Card.RatioWithUnit',
+      getNumerator: () => 5,
+      getDenominator: () => 20,
+      getUnit: () => 'GB',
+    },
   ],
 };
 
@@ -34,5 +41,12 @@ describe('MetricsSection', () => {
     expect(screen.getByText('s')).toBeInTheDocument();
     expect(screen.getByText('2')).toBeInTheDocument();
     expect(screen.getByText('3')).toBeInTheDocument();
+  });
+
+  test('renders a ratio card unit when getUnit is provided', () => {
+    render(<MetricsSection section={SECTION} metrics={METRICS} loading={false} />);
+    expect(screen.getByText('5')).toBeInTheDocument();
+    expect(screen.getByText('20')).toBeInTheDocument();
+    expect(screen.getByText('GB')).toBeInTheDocument();
   });
 });

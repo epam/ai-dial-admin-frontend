@@ -1,18 +1,16 @@
 'use client';
 
-import { Icon } from '@tabler/icons-react';
-import classNames from 'classnames';
-import { FC, ReactNode, useEffect, useState } from 'react';
+import { FC } from 'react';
 
 import { DialAnalyticsCard, DialLoader } from '@epam/ai-dial-ui-kit';
 
-import { executeStructuredQuery } from '@/src/app/[lang]/runs/actions';
+import PassedTestCasesValue from '@/src/components/Runs/Summary/PassedTestCasesValue';
+import TestCaseStatusBreakdown from '@/src/components/Runs/Summary/TestCaseStatusBreakdown';
+import { useRunAnalyticsSlice } from '@/src/components/Runs/Summary/use-run-analytics-slice';
+import { formatAvgRunTimeSeconds } from '@/src/components/Runs/Summary/utils';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Run } from '@/src/models/evaluation/run';
-import { STATUS_DOT_CLASSES, STATUS_DOT_ICONS } from './constants';
-import { TestCaseStatusCounts } from './models';
-import { buildAvgRunTimeQuery, buildTestCasesStatusQuery, parseAvgRunTimeMs, parseTestCaseStatusCounts } from './utils';
 
 interface Props {
   run: Run;
@@ -22,52 +20,11 @@ interface Props {
   isMultiTurn?: boolean;
 }
 
-const StatusDot: FC<{ className: string; count: number; icon: Icon; label: string }> = ({
-  className,
-  count,
-  icon: StatusIcon,
-  label,
-}) => (
-  <span className={classNames('flex items-center gap-1', className)}>
-    <StatusIcon aria-hidden="true" size={14} />
-    <span>
-      {count} {label}
-    </span>
-  </span>
-);
-
 const Analytics: FC<Props> = ({ run, overallScore, isMultiTurn }) => {
   const t = useI18n();
-  const [statusCounts, setStatusCounts] = useState<TestCaseStatusCounts | null>(null);
-  const [avgRunTimeMs, setAvgRunTimeMs] = useState<number | null>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const { data } = useRunAnalyticsSlice(run?.id);
 
-  useEffect(() => {
-    if (!run?.id) {
-      return;
-    }
-
-    let cancelled = false;
-    setIsLoaded(false);
-
-    Promise.all([
-      executeStructuredQuery(buildTestCasesStatusQuery(run.id)),
-      executeStructuredQuery(buildAvgRunTimeQuery(run.id)),
-    ]).then(([statusResult, avgResult]) => {
-      if (cancelled) {
-        return;
-      }
-      setStatusCounts(parseTestCaseStatusCounts(statusResult));
-      setAvgRunTimeMs(parseAvgRunTimeMs(avgResult));
-      setIsLoaded(true);
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [run?.id]);
-
-  if (!isLoaded || !statusCounts) {
+  if (!data) {
     return (
       <div className="flex h-24 items-center">
         <DialLoader size={32} />
@@ -75,28 +32,8 @@ const Analytics: FC<Props> = ({ run, overallScore, isMultiTurn }) => {
     );
   }
 
-  const statusDescription: ReactNode = (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-      <StatusDot
-        className={STATUS_DOT_CLASSES.pass}
-        icon={STATUS_DOT_ICONS.pass}
-        count={statusCounts.passed}
-        label={t(RunsI18nKey.Pass)}
-      />
-      <StatusDot
-        className={STATUS_DOT_CLASSES.fail}
-        icon={STATUS_DOT_ICONS.fail}
-        count={statusCounts.failed}
-        label={t(RunsI18nKey.Fail)}
-      />
-      <StatusDot
-        className={STATUS_DOT_CLASSES.error}
-        icon={STATUS_DOT_ICONS.error}
-        count={statusCounts.error}
-        label={t(RunsI18nKey.ExecError)}
-      />
-    </div>
-  );
+  const { statusCounts, avgRunTimeMs } = data;
+  const avgSeconds = avgRunTimeMs != null ? formatAvgRunTimeSeconds(avgRunTimeMs) : null;
 
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap">
@@ -111,21 +48,16 @@ const Analytics: FC<Props> = ({ run, overallScore, isMultiTurn }) => {
       <DialAnalyticsCard
         className="flex-1 sm:max-w-xs"
         title={t(isMultiTurn ? RunsI18nKey.TestCaseTurnsPassed : RunsI18nKey.TestCasesPassed)}
-        value={
-          <>
-            <span className="dial-display-2">{statusCounts.passed}</span>
-            <span className="dial-body-text text-secondary">/{statusCounts.total}</span>
-          </>
-        }
-        description={statusDescription}
+        value={<PassedTestCasesValue counts={statusCounts} />}
+        description={<TestCaseStatusBreakdown counts={statusCounts} />}
         error={statusCounts.total === 0}
       />
       <DialAnalyticsCard
         className="flex-1 sm:max-w-xs"
         title={t(isMultiTurn ? RunsI18nKey.AvgTestCaseTurnRunTime : RunsI18nKey.AvgTestCaseRunTime)}
-        value={avgRunTimeMs != null ? `${Math.round(avgRunTimeMs / 100) / 10} ${t(RunsI18nKey.Seconds)}` : undefined}
+        value={avgSeconds != null ? `${avgSeconds} ${t(RunsI18nKey.Seconds)}` : undefined}
         description={t(isMultiTurn ? RunsI18nKey.AvgPerTestCaseTurn : RunsI18nKey.AvgPerTestCase)}
-        error={avgRunTimeMs == null}
+        error={avgSeconds == null}
       />
     </div>
   );

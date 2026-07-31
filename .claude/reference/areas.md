@@ -42,6 +42,7 @@ Use `Parent/Child` for a single leaf, or just `Parent` when several children cha
 | `Assets/Prompts` | `prompts` | `Assets` |
 | `Assets/Conversations` | `conversations` | `Assets` |
 | `Assets/Files` | `files` | `Assets`, `Publications/Assets/Files` |
+| `Assets/AppRunners` | `assets-app-runners` | `Assets/AppRunners` |
 
 ### `Deployments`
 | Area | Route slug | Component folder |
@@ -89,6 +90,7 @@ Use `Parent/Child` for a single leaf, or just `Parent` when several children cha
 |------|-----------|------------------|
 | `analytics/QueryBuilder` | `query-builder` | `Analytics` |
 | `analytics/Tables` | `tables` | `Analytics` |
+| `analytics/ConversationsTrace` | `conversations-trace` | `Analytics` |
 
 ---
 
@@ -112,6 +114,7 @@ For work with no feature home, use a technical area:
 | `i18n` | Locales / translations (`src/locales`, `src/constants/i18n`) |
 | `config` | App/build/tooling config, deps, lint/format, husky |
 | `infra` | CI, scripts, Docker, agent tooling (`.claude`, `.github`, `.cursor`) |
+| `openspec` | Specification framework (`openspec/specs`, `openspec/changes`) |
 
 ---
 

@@ -1,22 +1,22 @@
 'use client';
 
-import { FC, useCallback } from 'react';
+import { useCallback } from 'react';
 import { DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 
 import PriceControl from '@/src/components/BaseControls/Price';
 import { BasicI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
-import { DialModel, PricingType } from '@/src/models/dial/model';
+import { DialModelPricing, PricingType } from '@/src/models/dial/model';
 import classNames from 'classnames';
 import { getMultipliedValue, getPriceRealValue } from './utils';
 
-interface Props {
-  model: DialModel;
-  onChangeModel: (model: DialModel) => void;
+interface Props<T> {
+  model: T;
+  onChangeModel: (model: T) => void;
 }
 
-const Pricing: FC<Props> = ({ model, onChangeModel }) => {
+const Pricing = <T extends { pricing?: DialModelPricing }>({ model, onChangeModel }: Props<T>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 

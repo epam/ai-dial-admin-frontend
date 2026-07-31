@@ -20,6 +20,8 @@ interface Props<T> {
   localInterceptors?: ReactNode;
   runnerInterceptors?: string[];
   globalInterceptors: string[] | null;
+  /** The entity's own selection, already resolved to the field this view stores it in. */
+  selectedInterceptors?: string[];
 }
 
 const CollapsableInterceptors = <T extends { interceptors?: string[]; 'dial:applicationTypeInterceptors'?: string[] }>({
@@ -31,6 +33,7 @@ const CollapsableInterceptors = <T extends { interceptors?: string[]; 'dial:appl
   localInterceptors,
   runnerInterceptors,
   globalInterceptors,
+  selectedInterceptors,
 }: Props<T>) => {
   const t = useI18n();
   return (
@@ -52,7 +55,7 @@ const CollapsableInterceptors = <T extends { interceptors?: string[]; 'dial:appl
         </CollapsableSection>
       )}
       <CollapsableSection
-        title={`${t(InterceptorsI18nKey.Local)}: ${entity.interceptors?.length || entity['dial:applicationTypeInterceptors']?.length || 0}`}
+        title={`${t(InterceptorsI18nKey.Local)}: ${selectedInterceptors?.length || 0}`}
         headerButton={headerButton}
       >
         {localInterceptors}

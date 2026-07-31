@@ -1,5 +1,6 @@
 import { AnalyticsDataApi } from '@/src/server/analytics/analytics-data-api';
 import { stripAssetIdentityFields } from '@/src/server/assets/exim';
+import { AppRunnerSchemaApi } from '@/src/server/core/app-runner-schema-api';
 import { AssetApi } from '@/src/server/core/asset-api';
 import { BucketApi } from '@/src/server/core/bucket-api';
 import { FilesCoreApi } from '@/src/server/core/files-core-api';
@@ -20,8 +21,6 @@ import { ActivityAuditApi } from '@/src/server/entities/activity-audit-api';
 import { AdaptersApi } from '@/src/server/entities/adapters-api';
 import { ApplicationRunnersApi } from '@/src/server/entities/application-runners-api';
 import { ApplicationsApi } from '@/src/server/entities/applications-api';
-import { AssetsApi } from '@/src/server/entities/assets/assets-api';
-import { FoldersApi } from '@/src/server/entities/assets/folders-api';
 import { CorePublicationsApi } from '@/src/server/entities/core-publications-api';
 import { InterceptorTemplatesApi } from '@/src/server/entities/interceptor-templates-api';
 import { InterceptorsApi } from '@/src/server/entities/interceptors-api';
@@ -40,6 +39,7 @@ import { EnrichmentClients } from '@/src/server/publications/resolver/types';
 import { TelemetryApi } from '@/src/server/telemetry-api';
 import { ThemesApi } from '@/src/server/themes-api';
 import { UtilityApi } from '@/src/server/utility-api';
+import { ResourceType } from '@/src/types/resource-type';
 
 // Admin APIs
 export const modelsApi = new ModelsApi({
@@ -78,10 +78,6 @@ export const routesApi = new RoutesApi({
   host: process.env.DIAL_ADMIN_API_URL,
 });
 
-export const foldersApi = new FoldersApi({
-  host: process.env.DIAL_ADMIN_API_URL,
-});
-
 export const utilityApi = new UtilityApi({
   host: process.env.DIAL_ADMIN_API_URL,
 });
@@ -97,10 +93,6 @@ export const interceptorTemplatesApi = new InterceptorTemplatesApi({
 });
 
 export const toolSetsApi = new ToolsetsApi({
-  host: process.env.DIAL_ADMIN_API_URL,
-});
-
-export const assetsApi = new AssetsApi({
   host: process.env.DIAL_ADMIN_API_URL,
 });
 
@@ -196,6 +188,11 @@ export const toolsetOpsApi = new ToolsetOpsApi({
   host: process.env.DIAL_CORE_API_URL,
 });
 
+// App-runner resolved-schema read — Core performs the external-schema download and merge.
+export const appRunnerSchemaApi = new AppRunnerSchemaApi({
+  host: process.env.DIAL_CORE_API_URL,
+});
+
 // External service sign-in / sign-out — Core-direct, parallel to toolsetOpsApi.
 export const externalServiceOpsApi = new ExternalServiceOpsApi({
   host: process.env.DIAL_CORE_API_URL,
@@ -204,6 +201,18 @@ export const externalServiceOpsApi = new ExternalServiceOpsApi({
 export const queryAssistantApi = new QueryAssistantApi({
   host: process.env.DIAL_CORE_API_URL,
 });
+
+/**
+ * Application/toolset-resource content DTOs reject `folderId`/`path`/`version`/`id`
+ * (`FAIL_ON_UNKNOWN_PROPERTIES`) — those must be stripped before `put`. Conversation/prompt
+ * content DTOs are the opposite: they require `path`/`folderId` back on the body (confirmed by
+ * reproducing the publications-update 400 with/without the strip), so stripping them there is
+ * itself the bug, not the fix.
+ */
+const RESOURCE_TYPES_STRIPPED_BEFORE_PUT: ReadonlySet<ResourceType> = new Set([
+  ResourceType.APPLICATION,
+  ResourceType.TOOLSET,
+]);
 
 // Publications talk to DIAL Core directly, including per-resource enrichment (asset get/put)
 // for the four versioned types, now that the assets→Core migration has landed AssetApi.
@@ -215,7 +224,9 @@ const publicationEnrichmentClients: EnrichmentClients = {
       token,
       type,
       (asset as { path: string }).path,
-      stripAssetIdentityFields(asset as { folderId?: string; path?: string; version?: string; id?: string }),
+      RESOURCE_TYPES_STRIPPED_BEFORE_PUT.has(type)
+        ? stripAssetIdentityFields(asset as { folderId?: string; path?: string; version?: string; id?: string })
+        : asset,
       { etag },
     ),
   getBucket: (token) => bucketApi.getBucket(token),

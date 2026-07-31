@@ -143,6 +143,13 @@ export const inferTypeFromValue = (value: unknown): string => {
   return TypeEntity.STRING;
 };
 
+export const getDefaultValueForType = (type: string): unknown => {
+  if (type === DefaultItemType.number) return 0;
+  if (type === DefaultItemType.boolean) return false;
+  if (type === DefaultItemType.object) return {};
+  return '';
+};
+
 //todo support multiple types from scheme
 export const convertJsonSchema = (
   schema: DialApplicationScheme,

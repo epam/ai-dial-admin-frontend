@@ -23,7 +23,7 @@ import {
   getCreateNotificationDescription,
   getCreateNotificationTitle,
 } from '@/src/utils/entities/create-entity';
-import { isAssetView } from '@/src/utils/is-view';
+import { isAssetView, isAssetWithVersion } from '@/src/utils/is-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { RoutesForCheckingUniqueName } from './constants';
@@ -66,7 +66,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
   const { showNotification } = useNotification();
 
   const [currentEntity, setEntity] = useState<T>(
-    versionsMap
+    isAssetWithVersion(route)
       ? ({ name: '', description: '', version: DEFAULT_NEW_ENTITY_VERSION } as T)
       : ({ name: '', description: '', ...initialValues } as T),
   );
@@ -90,6 +90,11 @@ const CreateEntity = <T extends CreatePromptEntity>({
       if (isAssetView(route)) {
         entity.folderId = folderContext?.filePath;
       }
+      // An app runner is identified by `$id`, not `name`, so both the toast and the navigation target
+      // fall back to it — otherwise they carry an empty identity.
+      const entityId = (entity as { $id?: string }).$id;
+      const entityLabel = entity.name || entityId;
+
       getReqRef.current(createEntity, entity).then((res) => {
         if (res.success) {
           if (isAssetView(route)) {
@@ -98,12 +103,12 @@ const CreateEntity = <T extends CreatePromptEntity>({
           showNotification(
             getSuccessNotification(
               getCreateNotificationTitle(route, t),
-              getCreateNotificationDescription(route, entity.name, t),
+              getCreateNotificationDescription(route, entityLabel, t),
             ),
           );
           const originalRoute = route.split('/')[1];
           const newEntity = isAssetView(route)
-            ? { folderId: entity.folderId, name: entity.name, version: entity.version }
+            ? { folderId: entity.folderId, name: entity.name, version: entity.version, $id: entityId }
             : res.response || entity;
           router.push(`${initialValues ? '/' : ''}${originalRoute}/${getEntityPath(route, newEntity, false)}`);
           onClose();
@@ -134,7 +139,7 @@ const CreateEntity = <T extends CreatePromptEntity>({
       });
     }
 
-    if (versionsMap) {
+    if (isAssetWithVersion(route)) {
       dispatch({
         type: ValidationActionType.SetField,
         field: 'version',

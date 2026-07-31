@@ -13,7 +13,8 @@ import { isValidHttpUrl } from './url-error';
 export const getErrorForUrlId = (
   id?: string,
   names?: string[],
-  t?: (str: string, param?: Record<string, number>) => string,
+  t?: (str: string, param?: Record<string, string | number>) => string,
+  forbiddenChars?: readonly string[],
 ) => {
   const isIncludesName = id && names?.includes(id);
   if (isIncludesName) {
@@ -37,6 +38,14 @@ export const getErrorForUrlId = (
       text: t ? t(ErrorI18nKey.Length, { number: MAX_URL_ID_SYMBOLS }) : '',
     };
   }
+
+  if (id && forbiddenChars?.some((char) => id.includes(char))) {
+    return {
+      type: ErrorType.FORBIDDEN_CHARS,
+      text: t ? t(ErrorI18nKey.ForbiddenChars, { list: forbiddenChars.join(' ') }) : '',
+    };
+  }
+
   return null;
 };
 

@@ -87,6 +87,11 @@ describe('Folder Utils :: fillChildren', () => {
     expect(res[0].items).toBeUndefined();
   });
 
+  test('Should return empty parentPath for flat/bare-name paths with no folder segment', () => {
+    const res = fillChildren([{ path: 'example-from-admin', nodeType: DialFileNodeType.ITEM }]);
+    expect(res[0].parentPath).toBe('');
+  });
+
   test('Should handle case when existing children path does not match', () => {
     const existingChildren = [
       {

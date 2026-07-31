@@ -9,11 +9,15 @@ import {
   SortDir,
   ValueType,
 } from '@/src/models/evaluation/structured-query';
-import { aggregateQuery, and, col, eq, field, fn, offsetPage, rowQuery, sortItem, value } from '../build';
+import { aggregateQuery, and, col, eq, field, fn, offsetPage, param, rowQuery, sortItem, value } from '../build';
 
 describe('structured-query build helpers', () => {
   test('field builds a field expression', () => {
     expect(field('execution_status')).toEqual({ type: ExprType.Field, name: 'execution_status' });
+  });
+
+  test('param builds a param expression', () => {
+    expect(param('runId')).toEqual({ type: ExprType.Param, name: 'runId' });
   });
 
   test('value builds a typed value expression', () => {

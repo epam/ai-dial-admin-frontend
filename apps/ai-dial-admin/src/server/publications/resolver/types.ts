@@ -14,8 +14,15 @@ export type PublicationResourceKey =
 /** The field on a resource wrapper that holds the enriched asset body. */
 export type PublicationAssetKey = 'prompt' | 'applicationResource' | 'conversation' | 'toolSetResource' | 'file';
 
+/**
+ * Resource types the publications workflow can carry. The `ConfigResourceController`-backed types
+ * (models, app runners) have no publications support — Core has no sharing or publication concept
+ * for them.
+ */
+export type PublishableResourceType = Exclude<ResourceType, ResourceType.MODEL | ResourceType.APP_TYPE_SCHEMA>;
+
 export interface PublicationTypeConfig {
-  resourceType: ResourceType;
+  resourceType: PublishableResourceType;
   prefix: string;
   resourceKey: PublicationResourceKey;
   assetKey: PublicationAssetKey;
@@ -30,8 +37,6 @@ export interface PublicationTypeConfig {
 /**
  * The upstream calls publication resolution needs. Injected so the resolver stays
  * pure/testable and to avoid a circular import with `app/api/api`.
- *
- * Phase 1: asset get/put go to the admin BE (`assetsApi`); bucket/file go to Core.
  */
 export interface EnrichmentClients {
   getAsset: (token: Token, path: string, type: ResourceType, etag: string) => Promise<ServerActionResponse>;

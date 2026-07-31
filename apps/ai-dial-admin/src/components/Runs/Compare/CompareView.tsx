@@ -50,7 +50,7 @@ interface Props {
 const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => {
   const t = useI18n();
   const router = useRouter();
-  const { sidebar, featureFlags } = useAppContext();
+  const { sidebar } = useAppContext();
 
   const sidebarRef = useRef(sidebar);
   sidebarRef.current = sidebar;
@@ -62,7 +62,7 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
   const [suiteRuns, setSuiteRuns] = useState<Run[]>([]);
   const [selectRunSlot, setSelectRunSlot] = useState<CompareRunSlot | null>(null);
   const [comparedRunId, setComparedRunId] = useState(comparedRunIdProp);
-  const [activeTab, setActiveTab] = useState(CompareViewTab.ExecutionResults);
+  const [activeTab, setActiveTab] = useState(CompareViewTab.SummaryOverview);
   const [showDisplayPanel, setShowDisplayPanel] = useState(false);
   const [selectedRow, setSelectedRow] = useState<CompareAnalyticsRow | null>(null);
   const [detailPosition, setDetailPosition] = useState(SidebarPosition.Right);
@@ -75,15 +75,13 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
     state: tabState,
     setExecutionResultsState,
     setHeatMapState,
+    setSummaryState,
   } = useCompareViewTabState(primaryRunId, comparedRunId);
 
   const selectedRowRef = useRef(selectedRow);
   selectedRowRef.current = selectedRow;
 
-  const compareTabs = useMemo(
-    () => getCompareViewTabs(t, featureFlags.runsCompareEnabled),
-    [t, featureFlags.runsCompareEnabled],
-  );
+  const compareTabs = useMemo(() => getCompareViewTabs(t), [t]);
 
   const selectRunModalConfig = useMemo(() => {
     if (!selectRunSlot) return null;
@@ -339,6 +337,8 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
           setExecutionResultsState={setExecutionResultsState}
           heatMapState={tabState.heatMap}
           setHeatMapState={setHeatMapState}
+          summaryState={tabState.summary}
+          setSummaryState={setSummaryState}
         />
       </div>
 

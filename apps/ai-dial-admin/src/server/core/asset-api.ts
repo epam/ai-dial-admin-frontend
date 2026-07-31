@@ -5,15 +5,23 @@ import {
   DEFAULT_LIST_LIMIT,
   DEFAULT_LIST_PATH,
   DEFAULT_LIST_PATH_TYPES,
+  PLATFORM_BUCKET_RESOURCE_TYPES,
 } from '@/src/constants/assets-core';
 import { RESOURCE_TYPE_PREFIX } from '@/src/constants/publications-core';
 import { Token } from '@/src/models/auth';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { encodeCorePath, parseVersionedPath, VersionedPathParts } from '@/src/server/publications/path';
+import { encodeCorePath, parseVersionedPath, stripPrefix, VersionedPathParts } from '@/src/server/publications/path';
 import { ResourceType } from '@/src/types/resource-type';
+import { PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
 import { CoreApi } from './core-api';
 import { createHeadersForCreate, createIfMatchHeaders, createIfNoneMatchHeaders } from './asset-headers';
-import { ASSET_MERGERS, CoreResourceMetadataNode, ResourceInfo, toResourceInfoList } from './asset-metadata';
+import {
+  ASSET_MERGERS,
+  CoreResourceMetadataNode,
+  isVersioned,
+  ResourceInfo,
+  toResourceInfoList,
+} from './asset-metadata';
 
 export interface GetMetadataOptions {
   recursive?: boolean;
@@ -61,12 +69,11 @@ export class AssetApi extends CoreApi {
 
   /** Lists the items directly under a folder as lightweight rows (metadata only, no content fetch). */
   async list(token: Token, type: ResourceType, path: string): Promise<ResourceInfo[]> {
-    const prefix = RESOURCE_TYPE_PREFIX[type];
     const items: ResourceInfo[] = [];
     let nextToken: string | undefined;
     while (true) {
       const node = await this.getMetadata(token, type, path, { recursive: false, nextToken });
-      items.push(...toResourceInfoList(node, prefix));
+      items.push(...toResourceInfoList(node, type));
       nextToken = node?.nextToken;
       if (!nextToken) {
         break;
@@ -129,7 +136,11 @@ export class AssetApi extends CoreApi {
       return { success: false, errorHeader: 'Not Found', errorMessage: 'Resource metadata not found' };
     }
     const merged = merge(contentResult.response as Record<string, unknown>, metadata) as T;
-    return { success: true, response: merged, etag: contentResult.etag };
+    // Flat/unversioned types (e.g. MODEL) never get an `ETag` response header on the content GET
+    // (`ConfigResourceController.handleSingleGet`'s success path doesn't set one) — their blob
+    // etag is only available on the metadata node.
+    const eTag = isVersioned(type) ? contentResult.etag : (metadata.etag ?? contentResult.etag);
+    return { success: true, response: merged, etag: eTag };
   }
 
   /**
@@ -155,16 +166,20 @@ export class AssetApi extends CoreApi {
       return result;
     }
     const base = result.response && typeof result.response === 'object' ? result.response : {};
-    return { ...result, response: { ...base, ...this.parsePathFields(path) } };
+    return { ...result, response: { ...base, ...this.parsePathFields(type, path) } };
   }
 
   /**
-   * Splits the written path into the admin-format identity fields. Guarded: a path with no `/`
-   * separator (e.g. an empty `folderId` falling back to the bare `ROOT_FOLDER` = `'public'`) makes
-   * `parseVersionedPath` throw — in that case we skip enrichment rather than fail an otherwise-
-   * successful write.
+   * Splits the written path into the admin-format identity fields. Flat/unversioned types (e.g.
+   * `MODEL`) have no `folderId`/`version` — the bare path is already the name. Versioned types are
+   * guarded: a path with no `/` separator (e.g. an empty `folderId` falling back to the bare
+   * `ROOT_FOLDER` = `'public'`) makes `parseVersionedPath` throw — in that case we skip enrichment
+   * rather than fail an otherwise-successful write.
    */
-  private parsePathFields(path: string): Partial<VersionedPathParts> {
+  private parsePathFields(type: ResourceType, path: string): Partial<VersionedPathParts> {
+    if (!isVersioned(type)) {
+      return { path, folderId: '', name: path };
+    }
     try {
       const { path: parsedPath, folderId, name, version } = parseVersionedPath(path);
       return { path: parsedPath, folderId, name, version };
@@ -216,9 +231,19 @@ export class AssetApi extends CoreApi {
     return this.postAction(CORE_RESOURCE_MOVE_URL, body, token);
   }
 
+  /**
+   * The `ConfigResourceController` prefixes already bake in the `platform` bucket (Core keys are
+   * `models/platform/{name}`, `schemas/platform/{name}`), but the shared asset-folder UI passes it
+   * again as a path segment (the same `{root}/` convention every other asset view uses for its own
+   * bucket) — strip it here so the URL isn't built with `platform` twice. Bare item paths never
+   * start with this prefix, so they pass through unchanged.
+   */
   private resolveListPath(type: ResourceType, path: string): string {
     if (!path && DEFAULT_LIST_PATH_TYPES.has(type)) {
       return DEFAULT_LIST_PATH;
+    }
+    if (PLATFORM_BUCKET_RESOURCE_TYPES.has(type)) {
+      return stripPrefix(path, `${PLATFORM_ROOT_FOLDER}/`);
     }
     return path;
   }

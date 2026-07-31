@@ -1,7 +1,7 @@
 'use client';
 
 import Cloud from '@/public/images/icons/cloud.svg';
-import { ColDef, ICellRendererParams, ITooltipParams, ValueGetterParams } from 'ag-grid-community';
+import { ColDef, ColGroupDef, ICellRendererParams, ITooltipParams, ValueGetterParams } from 'ag-grid-community';
 import { capitalize } from 'lodash';
 
 import StatusIndicator from '@/src/components/Deployments/Common/StatusIndicator/StatusIndicator';
@@ -26,6 +26,7 @@ import {
 import { ROW_IMPORT_META_KEY } from '@/src/constants/import';
 import {
   BasicI18nKey,
+  ConversationsTraceI18nKey,
   EntityFieldsI18nKey,
   ImportI18nKey,
   SourceI18nKey,
@@ -47,6 +48,9 @@ import {
   numberValueFormatter,
   priceValueFormatter,
 } from '@/src/constants/grid-columns/formatters';
+import { CONVERSATION_PROVENANCE_GROUPS } from '@/src/constants/analytics/conversations-trace';
+import { formatCompactNumber, formatSignificantCost } from '@/src/utils/analytics/conversation-formatting';
+import { ConversationField } from '@/src/models/analytics/conversations-trace';
 import { ImageVersion } from '@/src/models/deployments/images';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
@@ -85,6 +89,11 @@ import {
 } from './base-columns';
 import { dateTimeColumn, numericColumn, priceColumn } from './configs';
 import { baseNumberFilter, baseStringFilter, dateFilter, evalStringFilter } from './filters';
+import ConversationCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/ConversationCellRenderer';
+import ProvenanceHeaderGroup from '@/src/components/Analytics/ConversationsTrace/List/ProvenanceHeaderGroup';
+import ActivityCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/ActivityCellRenderer';
+import ProjectCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/ProjectCellRenderer';
+import RatingCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/RatingCellRenderer';
 import RowExpanderCellRenderer from '@/src/components/Grid/CellRenderers/RowExpanderCellRenderer';
 import ChildrenActivityTypeCellRenderer from '@/src/components/Grid/CellRenderers/ChildrenActivityTypeCellRenderer';
 import { ActivityAuditView } from '@/src/types/activity-audit';
@@ -94,7 +103,7 @@ export const COLUMN_PANEL_PREFIX = 'column_';
 
 export const RESOURCE_TYPE_COLUMN = 'resourceType';
 
-export const BASE_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN, NAME_COLUMN];
+export const BASE_COLUMNS: ColDef[] = [DISPLAY_NAME_COLUMN_WITH_SORT, DESCRIPTION_COLUMN];
 
 export const BASE_COLUMNS_WITH_TOPICS: ColDef[] = [
   ...BASE_COLUMNS,
@@ -103,7 +112,7 @@ export const BASE_COLUMNS_WITH_TOPICS: ColDef[] = [
   { ...UPDATED_AT_COLUMN, filter: false },
 ];
 
-export const DEPENDENCIES_COLUMNS = [DISPLAY_NAME_COLUMN, VERSION_COLUMN, DESCRIPTION_COLUMN, NAME_COLUMN];
+export const DEPENDENCIES_COLUMNS = [DISPLAY_NAME_COLUMN, VERSION_COLUMN, DESCRIPTION_COLUMN];
 
 export const ADAPTER_COLUMNS = (t: (str: string) => string): ColDef[] => [
   ...BASE_COLUMNS,
@@ -117,7 +126,6 @@ export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   DISPLAY_NAME_COLUMN_WITH_SORT,
   DISPLAY_VERSION_COLUMN,
   DESCRIPTION_COLUMN,
-  NAME_COLUMN,
   ...SOURCE_FIELD_COLUMNS(t, ApplicationRoute.Models),
   AUTHOR_COLUMN,
   TOPICS_COLUMN,
@@ -149,7 +157,6 @@ export const APPLICATIONS_COLUMNS = (t: (str: string) => string, codeAppEditorUr
   DISPLAY_NAME_COLUMN_WITH_SORT,
   DISPLAY_VERSION_COLUMN,
   DESCRIPTION_COLUMN,
-  NAME_COLUMN,
   ...SOURCE_FIELD_COLUMNS(t, ApplicationRoute.Applications, codeAppEditorUrl),
   VALIDITY_STATUS_COLUMN(t),
   AUTHOR_COLUMN,
@@ -163,7 +170,6 @@ export const APPLICATIONS_COLUMNS = (t: (str: string) => string, codeAppEditorUr
 export const TOOLSETS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   DISPLAY_NAME_COLUMN,
   DESCRIPTION_COLUMN,
-  NAME_COLUMN_WITH_SORT,
   ...SOURCE_FIELD_COLUMNS(t, ApplicationRoute.Toolsets),
   AUTHOR_COLUMN,
   TOPICS_COLUMN,
@@ -174,7 +180,6 @@ export const TOOLSETS_COLUMNS = (t: (str: string) => string): ColDef[] => [
 export const INTERCEPTORS_COLUMNS = (t: (str: string) => string): ColDef[] => [
   DISPLAY_NAME_COLUMN,
   DESCRIPTION_COLUMN,
-  NAME_COLUMN_WITH_SORT,
   ...SOURCE_FIELD_COLUMNS(t, ApplicationRoute.Interceptors),
   AUTHOR_COLUMN,
   TOPICS_COLUMN,
@@ -186,7 +191,6 @@ export const INTERCEPTORS_COLUMNS = (t: (str: string) => string): ColDef[] => [
 export const ROUTES_COLUMNS: ColDef[] = [
   DISPLAY_NAME_COLUMN,
   DESCRIPTION_COLUMN,
-  NAME_COLUMN_WITH_SORT,
   PATHS_COLUMN,
   ORDER_COLUMN,
   TOPICS_COLUMN,
@@ -283,7 +287,6 @@ export const ACTIVITY_AUDIT_COLUMNS = (
 export const BASE_KEYS_COLUMNS: ColDef[] = [
   DISPLAY_NAME_COLUMN,
   DESCRIPTION_COLUMN,
-  NAME_COLUMN_WITH_SORT,
   { ...CREATED_AT_COLUMN, filter: false },
   { ...UPDATED_AT_COLUMN, filter: false },
   {
@@ -353,6 +356,7 @@ export const NON_DEPLOYMENT_ASSETS_COLUMNS: ColDef[] = [ASSET_NAME_COLUMN, ...AS
 export const FILES_COLUMNS: ColDef[] = [
   {
     ...ASSET_NAME_COLUMN,
+    cellRenderer: undefined,
     valueFormatter: ({ value }) => value,
     tooltipValueGetter: () => '',
   },
@@ -602,6 +606,82 @@ export const USAGE_LOG_NUMERIC_COLUMNS = new Set<string>(
     .map((c) => c.field as string),
 );
 
+const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] => [
+  {
+    field: ConversationField.ChatId,
+    headerName: t(ConversationsTraceI18nKey.Conversation),
+    cellRenderer: ConversationCellRenderer,
+    flex: 3,
+    minWidth: 280,
+  },
+  {
+    field: ConversationField.Project,
+    headerName: t(ConversationsTraceI18nKey.ProjectModel),
+    cellRenderer: ProjectCellRenderer,
+    flex: 1.6,
+    minWidth: 180,
+  },
+  {
+    field: ConversationField.Turns,
+    headerName: t(ConversationsTraceI18nKey.Turns),
+    ...numericColumn,
+    flex: 0.6,
+    minWidth: 90,
+  },
+  {
+    field: ConversationField.LastActivity,
+    headerName: t(ConversationsTraceI18nKey.Activity),
+    cellRenderer: ActivityCellRenderer,
+    flex: 1.1,
+    minWidth: 130,
+  },
+  {
+    field: ConversationField.Tokens,
+    headerName: t(ConversationsTraceI18nKey.Tokens),
+    ...numericColumn,
+    valueFormatter: ({ value }) => formatCompactNumber(value),
+    flex: 0.8,
+    minWidth: 100,
+  },
+  {
+    field: ConversationField.Cost,
+    headerName: t(ConversationsTraceI18nKey.Cost),
+    ...numericColumn,
+    valueFormatter: ({ value }) => formatSignificantCost(value),
+    cellClass: 'align-right text-accent-secondary',
+    flex: 0.8,
+    minWidth: 100,
+  },
+  {
+    field: ConversationField.Rating,
+    headerName: t(ConversationsTraceI18nKey.Rating),
+    cellRenderer: RatingCellRenderer,
+    flex: 1,
+    minWidth: 140,
+  },
+];
+
+export const CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] =>
+  restrictSort(BASE_CONVERSATIONS_TRACE_COLUMNS(t)).map((column) => ({
+    ...column,
+    filter: false,
+    floatingFilter: false,
+  }));
+
+export const CONVERSATIONS_TRACE_COLUMN_GROUPS = (t: (key: string) => string): ColGroupDef[] => {
+  const columns = CONVERSATIONS_TRACE_COLUMNS(t);
+
+  return CONVERSATION_PROVENANCE_GROUPS.map(({ provenance, labelKey, tooltipKey, fields, isDerived }) => ({
+    groupId: provenance,
+    headerName: t(labelKey),
+    headerTooltip: t(tooltipKey),
+    headerGroupComponent: ProvenanceHeaderGroup,
+    headerGroupComponentParams: { label: t(labelKey), provenance, isDerived },
+    marryChildren: true,
+    children: fields.map((field) => columns.find((column) => column.field === field)).filter(Boolean) as ColDef[],
+  }));
+};
+
 export const PROJECT_GRID_COLUMNS = (t: (key: string) => string): ColDef[] =>
   suppressCellTooltips([CALLS_PROJECT_COLUMN(t), ...TELEMETRY_COLUMNS]);
 
@@ -654,7 +734,6 @@ export const CALL_BY_ROUTES_COLUMNS: ColDef[] = [
 export const SOURCE_CONTAINERS_COLUMNS: ColDef[] = [
   DISPLAY_NAME_COLUMN_WITH_SORT,
   DESCRIPTION_COLUMN,
-  NAME_COLUMN,
   {
     headerName: 'Image',
     field: 'source',
@@ -668,7 +747,6 @@ export const SOURCE_CONTAINERS_COLUMNS: ColDef[] = [
 export const CONTAINERS_COLUMNS = (t: (key: string) => string, type: string, route: ApplicationRoute): ColDef[] => [
   DISPLAY_NAME_COLUMN,
   DESCRIPTION_COLUMN,
-  NAME_COLUMN,
   ...(route === ApplicationRoute.ModelServings
     ? [
         {

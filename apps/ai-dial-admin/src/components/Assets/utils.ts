@@ -87,6 +87,9 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
       return isReadOnlyAdmin
         ? []
         : allActionLabels.filter((item) => item.key !== 'duplicate' && item.key !== 'openInNewTab');
+    case ApplicationRoute.AssetsModels:
+    case ApplicationRoute.AssetsAppRunners:
+      return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key === 'delete');
     case ApplicationRoute.AssetsApplications:
     case ApplicationRoute.AssetsToolsets:
     case ApplicationRoute.Prompts:
@@ -101,6 +104,12 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
 };
 
 export const getTreeActionLabels = (isReadOnlyAdmin: boolean, view: ApplicationRoute) => {
+  // App runners are flat in Core's `platform` bucket — the tree holds only the root, so every folder
+  // action is inapplicable. `addSibling`/`addChild` in particular created a runner with no `$id`.
+  if (view === ApplicationRoute.AssetsAppRunners) {
+    return [];
+  }
+
   if (view === ApplicationRoute.Conversations) {
     return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key === 'delete');
   }
@@ -118,6 +127,22 @@ export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: 
   switch (view) {
     case ApplicationRoute.Files:
       return [...baseToolbarOptionLabels, { key: 'uploadFiles', label: FileManagerI18nKey.Files, icon: null }];
+    case ApplicationRoute.AssetsAppRunners:
+      return [
+        {
+          key: 'newItem',
+          label: FileManagerI18nKey.AppRunner,
+          icon: null,
+        },
+      ];
+    case ApplicationRoute.AssetsModels:
+      return [
+        {
+          key: 'newItem',
+          label: FileManagerI18nKey.Model,
+          icon: null,
+        },
+      ];
     case ApplicationRoute.AssetsApplications:
       return [
         ...baseToolbarOptionLabels,
@@ -253,6 +278,27 @@ export const getDeleteNotificationContent = (
         : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
             item: t(FileManagerI18nKey.Prompt),
             name: `${nameWithPath}__${(fileNodes as AssetWithVersion[])?.[0].selectedVersions?.[0] || (fileNodes as AssetWithVersion[])?.[0].version || ''}`,
+          });
+      return { title, description };
+    }
+    case ApplicationRoute.AssetsAppRunners:
+    case ApplicationRoute.AssetsModels: {
+      const title = isDeleteSeveralFiles
+        ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Items) })
+        : t(FileManagerI18nKey.DeleteSuccessTitle, {
+            item: t(
+              view === ApplicationRoute.AssetsAppRunners ? FileManagerI18nKey.AppRunner : FileManagerI18nKey.Model,
+            ),
+          });
+      const description = isDeleteSeveralFiles
+        ? t(FileManagerI18nKey.DeleteSuccessDescriptionForMany, {
+            count: deletedItemsCount,
+          })
+        : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
+            item: t(
+              view === ApplicationRoute.AssetsAppRunners ? FileManagerI18nKey.AppRunner : FileManagerI18nKey.Model,
+            ),
+            name: nameWithPath,
           });
       return { title, description };
     }

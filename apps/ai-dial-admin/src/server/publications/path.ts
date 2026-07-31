@@ -87,6 +87,16 @@ export const parseEncodedVersionedPath = (path: string, prefix: string): Version
   return parseVersionedPath(decodeCorePath(stripPrefix(path, prefix)));
 };
 
+/**
+ * Strips the resource prefix and decodes a flat (folder-less, unversioned) resource path — the
+ * Model resource's `models/platform/{name}` shape, where the prefix already consumes the fixed
+ * `platform` root, leaving only the bare name with no `/` separator to split on.
+ */
+export const parseEncodedFlatPath = (path: string, prefix: string): PathParts => {
+  const name = decodeCorePath(stripPrefix(path, prefix));
+  return { path: name, folderId: '', name };
+};
+
 export const getVersionedName = (name: string, version?: string): string => {
   if (name == null) {
     throw new Error('Name must not be null');

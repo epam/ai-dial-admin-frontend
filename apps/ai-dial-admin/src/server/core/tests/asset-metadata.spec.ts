@@ -1,9 +1,13 @@
 import { describe, expect, test } from 'vitest';
 
+import { ResourceType } from '@/src/types/resource-type';
+
 import {
   CoreResourceMetadataNode,
   mergeApplicationResource,
   mergeConversation,
+  mergeAppRunnerResource,
+  mergeModelResource,
   mergePrompt,
   mergeToolsetResource,
   toResourceInfoList,
@@ -86,6 +90,22 @@ describe('Server :: Core :: asset-metadata', () => {
     });
   });
 
+  test('mergeModelResource sources name/folderId/path/author/updatedAt from metadata (flat, no version), rest from content', () => {
+    const content = { type: 'chat', tokenizerModel: 'gpt-4', displayName: 'GPT-4' };
+    const meta = metadata({ url: 'models/platform/gpt-4', author: 'eve', updatedAt: 555 });
+
+    expect(mergeModelResource(content, meta)).toEqual({
+      type: 'chat',
+      tokenizerModel: 'gpt-4',
+      displayName: 'GPT-4',
+      name: 'gpt-4',
+      folderId: '',
+      path: 'gpt-4',
+      author: 'eve',
+      updatedAt: '555',
+    });
+  });
+
   test('toResourceInfoList maps both ITEM and FOLDER nodes, tagged with nodeType', () => {
     const node = metadata({
       nodeType: 'FOLDER',
@@ -95,7 +115,7 @@ describe('Server :: Core :: asset-metadata', () => {
       ],
     });
 
-    const result = toResourceInfoList(node, 'prompts/');
+    const result = toResourceInfoList(node, ResourceType.PROMPT);
 
     expect(result).toHaveLength(2);
     expect(result[0]).toMatchObject({ name: 'a', version: '1', nodeType: 'item' });
@@ -103,7 +123,67 @@ describe('Server :: Core :: asset-metadata', () => {
   });
 
   test('toResourceInfoList returns an empty array for a node with no items', () => {
-    expect(toResourceInfoList(null, 'prompts/')).toEqual([]);
-    expect(toResourceInfoList(metadata({ items: undefined }), 'prompts/')).toEqual([]);
+    expect(toResourceInfoList(null, ResourceType.PROMPT)).toEqual([]);
+    expect(toResourceInfoList(metadata({ items: undefined }), ResourceType.PROMPT)).toEqual([]);
+  });
+  test('mergeAppRunnerResource decodes the resource name back into $id and flattens Core routes', () => {
+    const content = {
+      $schema: 'https://dial.epam.com/application_type_schemas/schema#',
+      'dial:applicationTypeDisplayName': 'QQ',
+      'dial:applicationTypeRoutes': {
+        my_route: {
+          'dial:paths': ['/a'],
+          'dial:methods': ['GET'],
+          'dial:upstreams': [{ 'dial:endpoint': 'http://svc' }],
+        },
+      },
+    };
+    const meta = metadata({
+      url: 'schemas/platform/https%253A%252F%252Fhost%252Fqq',
+      author: 'ivy',
+      createdAt: 100,
+      updatedAt: 200,
+    });
+
+    const result = mergeAppRunnerResource(content, meta);
+
+    expect(result.$id).toEqual('https://host/qq');
+    expect(result.name).toEqual('https%3A%2F%2Fhost%2Fqq');
+    expect(result.path).toEqual('https%3A%2F%2Fhost%2Fqq');
+    expect(result.folderId).toEqual('');
+    expect(result.author).toEqual('ivy');
+    expect(result.createdAt).toEqual('100');
+    expect(result.updatedAt).toEqual('200');
+    expect(result['dial:applicationTypeRoutes']).toEqual([
+      { name: 'my_route', paths: ['/a'], methods: ['GET'], upstreams: [{ endpoint: 'http://svc' }] },
+    ]);
+  });
+
+  test('mergeAppRunnerResource omits routes when Core returned none', () => {
+    const result = mergeAppRunnerResource({ $schema: 's' }, metadata({ url: 'schemas/platform/plain' }));
+
+    expect(result).not.toHaveProperty('dial:applicationTypeRoutes');
+    expect(result.$id).toEqual('plain');
+  });
+
+  test('flat merges project createdAt from metadata', () => {
+    const result = mergeModelResource({}, metadata({ url: 'models/platform/gpt-4', createdAt: 42 }));
+
+    expect(result.createdAt).toEqual('42');
+  });
+
+  test('toResourceInfoList decodes an app runner row name to its $id while leaving path encoded', () => {
+    const node = metadata({
+      nodeType: 'FOLDER',
+      items: [metadata({ nodeType: 'ITEM', url: 'schemas/platform/https%253A%252F%252Fhost%252Fqq', createdAt: 7 })],
+    });
+
+    const result = toResourceInfoList(node, ResourceType.APP_TYPE_SCHEMA);
+
+    expect(result[0]).toMatchObject({
+      name: 'https://host/qq',
+      path: 'https%3A%2F%2Fhost%2Fqq',
+      createdAt: '7',
+    });
   });
 });

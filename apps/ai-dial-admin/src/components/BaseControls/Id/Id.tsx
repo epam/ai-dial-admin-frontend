@@ -15,6 +15,7 @@ interface Props<T> {
   placeholder?: string;
   names?: string[];
   isUrlId?: boolean;
+  forbiddenChars?: readonly string[];
   isUniqueNameError?: boolean;
   isDeploymentId?: boolean;
   disabled?: boolean;
@@ -29,6 +30,7 @@ const IdControl = <T extends { name?: string }>({
   entity,
   names,
   isUrlId,
+  forbiddenChars,
   isUniqueNameError,
   isDeploymentId,
   disabled,
@@ -45,7 +47,7 @@ const IdControl = <T extends { name?: string }>({
   const validateName = useCallback(
     (name?: string) => {
       const error = isUrlId
-        ? getErrorForUrlId(name, names, t)
+        ? getErrorForUrlId(name, names, t, forbiddenChars)
         : getErrorForName(
             name,
             names,
@@ -59,7 +61,7 @@ const IdControl = <T extends { name?: string }>({
       setNameError(error);
       dispatch({ type: ValidationActionType.SetField, field: 'name', isValid: !error });
     },
-    [isUrlId, names, t, isUniqueNameError, isDeploymentId, label, checkEmptySymbols, dispatch],
+    [isUrlId, forbiddenChars, names, t, isUniqueNameError, isDeploymentId, label, checkEmptySymbols, dispatch],
   );
 
   const onChangeName = useCallback(

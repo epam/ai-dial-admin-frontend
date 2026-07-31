@@ -1,12 +1,7 @@
 import { ColDef } from 'ag-grid-community';
 
 import { DeleteI18nKey } from '@/src/constants/i18n';
-import {
-  ASSET_NAME_COLUMN,
-  DESCRIPTION_COLUMN,
-  DISPLAY_NAME_COLUMN,
-  NAME_COLUMN,
-} from '@/src/constants/grid-columns/base-columns';
+import { ASSET_NAME_COLUMN, DESCRIPTION_COLUMN, DISPLAY_NAME_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getApplications } from '@/src/app/[lang]/applications/actions';
 import { getDatasetTestSuites } from '@/src/app/[lang]/datasets/actions';
@@ -24,6 +19,8 @@ import { isAssetView, isDeploymentManagerView, isEvaluationView } from '@/src/ut
 
 const deleteEntityMap: Record<string, DeleteI18nKey> = {
   [ApplicationRoute.Models]: DeleteI18nKey.Model,
+  [ApplicationRoute.AssetsModels]: DeleteI18nKey.Model,
+  [ApplicationRoute.AssetsAppRunners]: DeleteI18nKey.ApplicationRunner,
   [ApplicationRoute.Applications]: DeleteI18nKey.Application,
   [ApplicationRoute.AssetsApplications]: DeleteI18nKey.Application,
   [ApplicationRoute.AssetsToolsets]: DeleteI18nKey.Toolset,
@@ -54,6 +51,8 @@ const bulkDeleteEntityMap: Record<string, DeleteI18nKey> = {
   [ApplicationRoute.AssetsApplications]: DeleteI18nKey.Applications,
   [ApplicationRoute.AssetsToolsets]: DeleteI18nKey.Toolsets,
   [ApplicationRoute.Prompts]: DeleteI18nKey.Prompts,
+  [ApplicationRoute.AssetsModels]: DeleteI18nKey.Models,
+  [ApplicationRoute.AssetsAppRunners]: DeleteI18nKey.ApplicationRunners,
 };
 
 export const getBulkNotificationTitle = (
@@ -178,7 +177,7 @@ export const getRelatedColumns = (view: ApplicationRoute): ColDef[] => {
   if (view === ApplicationRoute.Datasets) {
     return [ASSET_NAME_COLUMN, DESCRIPTION_COLUMN];
   }
-  return [DISPLAY_NAME_COLUMN, NAME_COLUMN];
+  return [DISPLAY_NAME_COLUMN];
 };
 
 const getRelatedTestSuites = (entity: { id?: string }) => {

@@ -13,11 +13,7 @@ import {
   StepStatus,
 } from '@epam/ai-dial-ui-kit';
 
-import {
-  getMetricDeclarations,
-  getMetricLatestVersion,
-  getTestSuiteMetricDetailsWithSchema,
-} from '@/src/app/[lang]/test-suites/actions';
+import { getMetricLatestVersion, getTestSuiteMetricDetailsWithSchema } from '@/src/app/[lang]/test-suites/actions';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -38,9 +34,18 @@ interface Props {
   editingMetric?: Metric;
   selectedTestSuite?: TestSuite;
   dataset?: Dataset | null;
+  metricDeclarations?: Metric[];
 }
 
-const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMetric, selectedTestSuite, dataset }) => {
+const AddMetricModal: FC<Props> = ({
+  isModalOpen,
+  onClose,
+  onConfirm,
+  editingMetric,
+  selectedTestSuite,
+  dataset,
+  metricDeclarations,
+}) => {
   const t = useI18n();
 
   const isEditMode = !!editingMetric;
@@ -48,9 +53,8 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMet
     isEditMode ? MetricStep.Configuration : MetricStep.AddMetric,
   );
 
-  const [isMetricDeclarationsLoading, setIsMetricDeclarationsLoading] = useState(false);
+  const isMetricDeclarationsLoading = !metricDeclarations;
   const [isMetricDetailsLoading, setIsMetricDetailsLoading] = useState(false);
-  const [metrics, setMetrics] = useState<Metric[] | undefined>();
 
   const [selectedMetricId, setSelectedMetricId] = useState<string>('');
   const [selectedMetricDetails, setSelectedMetricDetails] = useState<Metric | undefined>();
@@ -62,7 +66,10 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMet
   const [inputBindings, setInputBindings] = useState<MetricBinding[]>([]);
   const [isJsonView, setIsJsonView] = useState(false);
 
-  const selectedMetric = useMemo(() => metrics?.find((m) => m.id === selectedMetricId), [metrics, selectedMetricId]);
+  const selectedMetric = useMemo(
+    () => metricDeclarations?.find((m) => m.id === selectedMetricId),
+    [metricDeclarations, selectedMetricId],
+  );
 
   useEffect(() => {
     if (selectedMetricId) {
@@ -142,16 +149,6 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMet
     }
   }, [condition, configBindings, inputBindings, metricName, onConfirm, selectedMetricDetails]);
 
-  useEffect(() => {
-    if (!metrics) {
-      setIsMetricDeclarationsLoading(true);
-      getMetricDeclarations(0, 1000).then((response) => {
-        setMetrics(response?.content || []);
-        setIsMetricDeclarationsLoading(false);
-      });
-    }
-  }, [metrics]);
-
   return (
     <DialPopup
       onClose={onClose}
@@ -192,7 +189,7 @@ const AddMetricModal: FC<Props> = ({ isModalOpen, onClose, onConfirm, editingMet
           {currentStepId === MetricStep.Configuration && isMetricDetailsLoading && <DialLoader size={44} />}
           {currentStepId === MetricStep.AddMetric && !isMetricDeclarationsLoading && (
             <MetricSelection
-              metrics={metrics || []}
+              metrics={metricDeclarations || []}
               selectedMetricId={selectedMetricId}
               onSelectMetric={setSelectedMetricId}
             />

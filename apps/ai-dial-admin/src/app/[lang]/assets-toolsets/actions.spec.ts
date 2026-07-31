@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { assetApi, assetsApi, toolsetOpsApi } from '@/src/app/api/api';
+import { assetApi, toolsetOpsApi } from '@/src/app/api/api';
 import * as eximModule from '@/src/server/toolsets/exim';
 import * as mcpClientModule from '@/src/server/toolsets/mcp-client';
 import * as zipEximModule from '@/src/server/toolsets/zip-exim';
@@ -311,27 +311,34 @@ describe('Assets Toolset :: server actions', () => {
 
   test('Should call tryOutAssetTool action for TOOLSET via the MCP client', async () => {
     (mcpClientModule.callToolViaMcp as any).mockResolvedValue(RESPONSE_MOCK);
+    const toolsetUrl = new URL('https://core.example.com/v1/toolset/toolsets/public/name__1.0/mcp');
+    (mcpClientModule.buildToolsetMcpUrl as any).mockReturnValue(toolsetUrl);
 
     const callToolRequest = { name: 'tool', arguments: {} };
     const result = await tryOutAssetTool({ toolSetPath: { path: 'public/name__1.0' }, callToolRequest });
 
     expect(getUserToken).toHaveBeenCalled();
-    expect(mcpClientModule.callToolViaMcp).toHaveBeenCalledWith(
-      expect.any(String),
-      TOKEN_MOCK,
-      'public/name__1.0',
-      callToolRequest,
-    );
-    expect(assetsApi.tryOutTool).not.toHaveBeenCalled();
+    expect(mcpClientModule.buildToolsetMcpUrl).toHaveBeenCalledWith(expect.any(String), 'public/name__1.0');
+    expect(mcpClientModule.buildApplicationMcpUrl).not.toHaveBeenCalled();
+    expect(mcpClientModule.callToolViaMcp).toHaveBeenCalledWith(toolsetUrl, TOKEN_MOCK, callToolRequest);
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call tryOutAssetTool action for APPLICATION resource type', async () => {
-    (assetsApi.tryOutTool as any).mockResolvedValue(RESPONSE_MOCK);
+  test('Should call tryOutAssetTool action for APPLICATION resource type via the MCP client', async () => {
+    (mcpClientModule.callToolViaMcp as any).mockResolvedValue(RESPONSE_MOCK);
+    const applicationUrl = new URL('https://core.example.com/v1/deployments/applications/public/name__1.0/mcp');
+    (mcpClientModule.buildApplicationMcpUrl as any).mockReturnValue(applicationUrl);
 
-    const result = await tryOutAssetTool({}, ResourceType.APPLICATION);
+    const callToolRequest = { name: 'tool', arguments: {} };
+    const result = await tryOutAssetTool(
+      { toolSetPath: { path: 'public/name__1.0' }, callToolRequest },
+      ResourceType.APPLICATION,
+    );
+
     expect(getUserToken).toHaveBeenCalled();
-    expect(assetsApi.tryOutTool).toHaveBeenCalledWith({}, TOKEN_MOCK, ResourceType.APPLICATION);
+    expect(mcpClientModule.buildApplicationMcpUrl).toHaveBeenCalledWith(expect.any(String), 'public/name__1.0');
+    expect(mcpClientModule.buildToolsetMcpUrl).not.toHaveBeenCalled();
+    expect(mcpClientModule.callToolViaMcp).toHaveBeenCalledWith(applicationUrl, TOKEN_MOCK, callToolRequest);
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

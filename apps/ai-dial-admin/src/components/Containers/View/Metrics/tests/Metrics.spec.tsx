@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import Metrics from '@/src/components/Containers/View/Metrics/Metrics';
 import { BasicI18nKey, ButtonsI18nKey, DeploymentMetricsI18nKey } from '@/src/constants/i18n';
 import { DeploymentMetrics } from '@/src/models/deployments/metrics';
-import { INFERENCE_TASK } from '@/src/types/deployments/containers';
+import { CONTAINER_TYPE, INFERENCE_TASK } from '@/src/types/deployments/containers';
 import { MetricsBlockKey } from '@/src/types/deployments/metrics';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -25,6 +25,7 @@ const inferenceSnapshot = (): DeploymentMetrics =>
       [MetricsBlockKey.Serving]: { available: true },
       [MetricsBlockKey.Operational]: { available: true },
       [MetricsBlockKey.Resources]: { available: true },
+      [MetricsBlockKey.ResourcesGpu]: { available: true },
     },
     serving: {
       ttft: null,
@@ -39,7 +40,16 @@ const inferenceSnapshot = (): DeploymentMetrics =>
     operational: { requestErrorRatio: 0, e2eLatency: { mean: 1.2, p50: 1.1, p95: 2, p99: 3, count: 10 } },
     resources: {
       replicas: { total: 1, ready: 1 },
-      pods: [{ name: 'pod-1', cpuMillicores: 200, memoryBytes: 1000, gpuUtilization: null, gpuMemoryBytes: null }],
+      pods: [
+        {
+          name: 'pod-1',
+          cpuMillicores: 200,
+          memoryBytes: 1000,
+          gpuUtilization: 0.42,
+          gpuMemoryBytes: 5 * 1024 ** 3,
+          gpuMemoryTotalBytes: 20 * 1024 ** 3,
+        },
+      ],
     },
     rawCounters: {},
   }) as DeploymentMetrics;
@@ -68,7 +78,7 @@ describe('Metrics', () => {
 
   test('shows all metric sections for a Model Serving', async () => {
     getContainerMetricsMock.mockResolvedValue(inferenceSnapshot());
-    render(<Metrics containerId="c1" route={ApplicationRoute.ModelServings} />);
+    render(<Metrics containerId="c1" route={ApplicationRoute.ModelServings} containerType={CONTAINER_TYPE.HF} />);
 
     expect(await screen.findByText(DeploymentMetricsI18nKey.SectionScaleHealth)).toBeInTheDocument();
     expect(await screen.findByText(DeploymentMetricsI18nKey.SectionCompute)).toBeInTheDocument();
@@ -76,7 +86,31 @@ describe('Metrics', () => {
     expect(await screen.findByText(DeploymentMetricsI18nKey.SectionThroughput)).toBeInTheDocument();
     expect(await screen.findByText(DeploymentMetricsI18nKey.SectionLoad)).toBeInTheDocument();
     expect(screen.getByText(DeploymentMetricsI18nKey.GpuMemory)).toBeInTheDocument();
+    expect(screen.getByText(DeploymentMetricsI18nKey.GpuUtilization)).toBeInTheDocument();
     expect(screen.getByText(DeploymentMetricsI18nKey.RequestErrorRatio)).toBeInTheDocument();
+  });
+
+  test('hides GPU cards when resources.gpu is unavailable', async () => {
+    const snapshot = inferenceSnapshot();
+    snapshot.availability[MetricsBlockKey.ResourcesGpu] = {
+      available: false,
+      reason: 'deployment does not request GPU',
+    };
+    getContainerMetricsMock.mockResolvedValue(snapshot);
+    render(<Metrics containerId="c1" route={ApplicationRoute.ModelServings} containerType={CONTAINER_TYPE.HF} />);
+
+    expect(await screen.findByText(DeploymentMetricsI18nKey.SectionCompute)).toBeInTheDocument();
+    expect(screen.queryByText(DeploymentMetricsI18nKey.GpuMemory)).not.toBeInTheDocument();
+    expect(screen.queryByText(DeploymentMetricsI18nKey.GpuUtilization)).not.toBeInTheDocument();
+  });
+
+  test('hides GPU cards for a NIM deployment even when resources.gpu is available', async () => {
+    getContainerMetricsMock.mockResolvedValue(inferenceSnapshot());
+    render(<Metrics containerId="c1" route={ApplicationRoute.ModelServings} containerType={CONTAINER_TYPE.NIM} />);
+
+    expect(await screen.findByText(DeploymentMetricsI18nKey.SectionCompute)).toBeInTheDocument();
+    expect(screen.queryByText(DeploymentMetricsI18nKey.GpuMemory)).not.toBeInTheDocument();
+    expect(screen.queryByText(DeploymentMetricsI18nKey.GpuUtilization)).not.toBeInTheDocument();
   });
 
   test('shows only Scale & Health + Compute base cards (no inference sections/cards) on a non-inference view', async () => {
@@ -90,6 +124,7 @@ describe('Metrics', () => {
     expect(screen.queryByText(DeploymentMetricsI18nKey.SectionThroughput)).not.toBeInTheDocument();
     expect(screen.queryByText(DeploymentMetricsI18nKey.SectionLoad)).not.toBeInTheDocument();
     expect(screen.queryByText(DeploymentMetricsI18nKey.GpuMemory)).not.toBeInTheDocument();
+    expect(screen.queryByText(DeploymentMetricsI18nKey.GpuUtilization)).not.toBeInTheDocument();
     expect(screen.queryByText(DeploymentMetricsI18nKey.RequestErrorRatio)).not.toBeInTheDocument();
   });
 
@@ -100,6 +135,7 @@ describe('Metrics', () => {
         containerId="c1"
         route={ApplicationRoute.ModelServings}
         inferenceTask={INFERENCE_TASK.TEXT_CLASSIFICATION}
+        containerType={CONTAINER_TYPE.HF}
       />,
     );
 
@@ -109,6 +145,7 @@ describe('Metrics', () => {
     expect(screen.getByText(DeploymentMetricsI18nKey.RequestLatency)).toBeInTheDocument();
     expect(screen.getByText(DeploymentMetricsI18nKey.E2eLatencyMean)).toBeInTheDocument();
     expect(screen.getByText(DeploymentMetricsI18nKey.GpuMemory)).toBeInTheDocument();
+    expect(screen.getByText(DeploymentMetricsI18nKey.GpuUtilization)).toBeInTheDocument();
     // Generation-only gauges are gone, and Load (all generation-only) drops with its title.
     expect(screen.queryByText(DeploymentMetricsI18nKey.RequestErrorRatio)).not.toBeInTheDocument();
     expect(screen.queryByText(DeploymentMetricsI18nKey.TokensPerSecond)).not.toBeInTheDocument();

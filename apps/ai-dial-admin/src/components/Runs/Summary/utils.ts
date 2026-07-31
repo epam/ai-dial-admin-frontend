@@ -341,3 +341,6 @@ export const parseAvgRunTimeMs = (result: StructuredQueryResult | null): number 
   const num = Number(raw);
   return Number.isFinite(num) ? Math.round(num) : null;
 };
+
+/** Display seconds from avg duration ms (one decimal place). */
+export const formatAvgRunTimeSeconds = (avgRunTimeMs: number): number => Math.round(avgRunTimeMs / 100) / 10;

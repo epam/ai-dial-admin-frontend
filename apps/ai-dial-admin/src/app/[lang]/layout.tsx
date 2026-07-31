@@ -33,6 +33,8 @@ import { normalizeUrl } from '@/src/utils/url';
 import { FileFolderProvider } from '@/src/context/assets/FileFolderContext';
 import { ToolsetFolderProvider } from '@/src/context/assets/ToolsetsFolderContext';
 import { ConversationFolderProvider } from '@/src/context/assets/ConversationsFolderContext';
+import { AppRunnersFolderProvider } from '@/src/context/assets/AppRunnersFolderContext';
+import { ModelsFolderProvider } from '@/src/context/assets/ModelsFolderContext';
 
 export default async function Layout({ children, params }: { children: ReactNode; params: Promise<{ lang: string }> }) {
   const { lang } = await params;
@@ -51,7 +53,6 @@ export default async function Layout({ children, params }: { children: ReactNode
     mcpRegistryEnabled: isValueTruthy(process.env.MCP_REGISTRY_ENABLED),
     nimEnabled: isValueTruthy(process.env.NIM_ENABLED),
     hfEnabled: isValueTruthy(process.env.HF_ENABLED),
-    runsCompareEnabled: isValueTruthy(process.env.RUNS_COMPARE_ENABLED),
     analyticsEnabled: isValueTruthy(process.env.ANALYTICS_ENABLED),
     queryAssistantEnabled:
       isValueTruthy(process.env.ANALYTICS_ENABLED) && !!process.env.DIAL_QUERY_ASSISTANT_DEPLOYMENT,
@@ -79,30 +80,34 @@ export default async function Layout({ children, params }: { children: ReactNode
           <ThemeProvider themesConfiguration={themesConfiguration} themeImages={themesImages}>
             <RuleFolderProvider attributes={process.env.PUBLICATION_FILTERS || 'title,role,dial_roles'}>
               <AppsFolderProvider>
-                <PromptFolderProvider>
-                  <ToolsetFolderProvider>
-                    <FileFolderProvider>
-                      <ConversationFolderProvider>
-                        <NotificationProvider>
-                          <div className="flex flex-col size-full">
-                            <Header
-                              isEnableAuth={isEnableAuth}
-                              docLink={normalizeUrl(process.env.DIAL_ADMIN_DOCUMENTATION)}
-                            />
-                            <div className="flex-1 min-h-0">
-                              <div className="flex flex-row h-full relative">
-                                <Menu disableMenuItems={getMenuItems(process.env.DISABLE_MENU_ITEMS)} />
-                                <Content isEnableAuth={isEnableAuth} beVersion={beVersion}>
-                                  {children}
-                                </Content>
+                <ModelsFolderProvider>
+                  <AppRunnersFolderProvider>
+                    <PromptFolderProvider>
+                      <ToolsetFolderProvider>
+                        <FileFolderProvider>
+                          <ConversationFolderProvider>
+                            <NotificationProvider>
+                              <div className="flex flex-col size-full">
+                                <Header
+                                  isEnableAuth={isEnableAuth}
+                                  docLink={normalizeUrl(process.env.DIAL_ADMIN_DOCUMENTATION)}
+                                />
+                                <div className="flex-1 min-h-0">
+                                  <div className="flex flex-row h-full relative">
+                                    <Menu disableMenuItems={getMenuItems(process.env.DISABLE_MENU_ITEMS)} />
+                                    <Content isEnableAuth={isEnableAuth} beVersion={beVersion}>
+                                      {children}
+                                    </Content>
+                                  </div>
+                                </div>
                               </div>
-                            </div>
-                          </div>
-                        </NotificationProvider>
-                      </ConversationFolderProvider>
-                    </FileFolderProvider>
-                  </ToolsetFolderProvider>
-                </PromptFolderProvider>
+                            </NotificationProvider>
+                          </ConversationFolderProvider>
+                        </FileFolderProvider>
+                      </ToolsetFolderProvider>
+                    </PromptFolderProvider>
+                  </AppRunnersFolderProvider>
+                </ModelsFolderProvider>
               </AppsFolderProvider>
             </RuleFolderProvider>
           </ThemeProvider>

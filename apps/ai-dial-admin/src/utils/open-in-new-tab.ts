@@ -5,6 +5,7 @@ import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
+import { toCoreRunnerName } from '@/src/utils/app-runners/core-runner-name';
 
 export const escapePercentSign = (str: string): string => {
   return str.replace(/%/g, '%25');
@@ -44,6 +45,20 @@ export const getEntityPath = (
       return forRemove
         ? decodeURIComponent(escapePercentSign(path))
         : `${encodeURIComponent((data as DialPrompt).name as string)}?path=${encodeURIComponent(path)}`;
+    }
+
+    case ApplicationRoute.AssetsModels:
+    case ApplicationRoute.AssetsAppRunners: {
+      // Straight after create there is no listing row yet, so no `name`/`path` — only the `$id` the
+      // form collected. The Core resource name is the singly-encoded `$id`, which is what `path` holds
+      // on a listing row, so deriving it here makes both entry points agree.
+      const { name, path, $id } = data as { name?: string; path?: string; $id?: string };
+      const resolvedName = name || $id || '';
+      const resolvedPath = path || ($id ? toCoreRunnerName($id) : resolvedName);
+
+      return forRemove
+        ? decodeURIComponent(escapePercentSign(resolvedPath))
+        : `${encodeURIComponent(resolvedName)}?path=${encodeURIComponent(resolvedPath)}`;
     }
 
     case ApplicationRoute.PromptPublications:

@@ -49,6 +49,8 @@ export interface RatioCardConfig extends BaseCard {
   getNumerator: (metrics: DeploymentMetrics) => number | null;
   getDenominator: (metrics: DeploymentMetrics) => number | null;
   getStatus?: (numerator: number | null, denominator: number | null) => MetricStatus;
+  // Resolve the shared unit for numerator/denominator (e.g. "GB"); omitted for unitless ratios (replicas).
+  getUnit?: (metrics: DeploymentMetrics) => string | undefined;
 }
 
 export interface DualCardConfig extends BaseCard {

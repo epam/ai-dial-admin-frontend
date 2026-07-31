@@ -1,20 +1,17 @@
 'use client';
 
-import { FC } from 'react';
-
 import { DialNumberInput } from '@epam/ai-dial-ui-kit';
 
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
-import { DialModel } from '@/src/models/dial/model';
 
-interface Props {
-  model: DialModel;
-  onChangeModel: (model: DialModel) => void;
+interface Props<T> {
+  model: T;
+  onChangeModel: (model: T) => void;
 }
 
-const EmbeddingDimensions: FC<Props> = ({ model, onChangeModel }) => {
+const EmbeddingDimensions = <T extends { embeddingDimensions?: number }>({ model, onChangeModel }: Props<T>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 

@@ -29,6 +29,7 @@ import {
   splitMetricName,
   toMetricInfoByName,
   toMetricOptions,
+  formatAvgRunTimeSeconds,
 } from '../utils';
 
 describe('Runs Summary :: query builders', () => {
@@ -401,5 +402,10 @@ describe('Runs Summary :: result parsers', () => {
     expect(parseHasMultiTurn({ rows: [{ [MAX_TURNS_ALIAS]: null }] })).toBe(false);
     expect(parseHasMultiTurn({ rows: [] })).toBe(false);
     expect(parseHasMultiTurn(null)).toBe(false);
+  });
+
+  test('formatAvgRunTimeSeconds rounds ms to one decimal second', () => {
+    expect(formatAvgRunTimeSeconds(199.6)).toBe(0.2);
+    expect(formatAvgRunTimeSeconds(241000)).toBe(241);
   });
 });

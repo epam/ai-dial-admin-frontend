@@ -78,21 +78,23 @@ describe('Interceptors :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should strip empty interface entries when creating an interceptor', async () => {
+  test('Should pass interfaces through unchanged when creating an interceptor', async () => {
     (interceptorsApi.createInterceptor as any).mockResolvedValue(RESPONSE_MOCK);
 
     await createInterceptor({
       name: 'interceptor',
-      interfaces: { openaiChatCompletions: { baseUrl: '' } },
+      interfaces: { openaiChatCompletions: { baseUrl: 'https://example.com' } },
     } as any);
 
     expect(interceptorsApi.createInterceptor).toHaveBeenCalledWith(
-      expect.objectContaining({ interfaces: undefined }),
+      expect.objectContaining({
+        interfaces: { openaiChatCompletions: { baseUrl: 'https://example.com' } },
+      }),
       TOKEN_MOCK,
     );
   });
 
-  test('Should strip empty interface entries when updating an interceptor', async () => {
+  test('Should pass interfaces through unchanged when updating an interceptor', async () => {
     (interceptorsApi.updateInterceptor as any).mockResolvedValue(RESPONSE_MOCK);
 
     await updateInterceptor(

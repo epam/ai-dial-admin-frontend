@@ -110,7 +110,7 @@ const mergeStoredColumnDefs = (columnDefs: ColDef[], stored: ColumnState[]): Col
 
 const GRID_THEME_COLORS = {
   accentColor: 'var(--controls-bg-solid-primary, #3664E2)',
-  backgroundColor: 'var(--bg-layer-2, #161B2D)',
+  backgroundColor: 'var(--bg-layer-3, #1D2439)',
   borderColor: 'var(--bg-layer-4, #242C42)',
   borderRadius: 3,
   browserColorScheme: 'dark',

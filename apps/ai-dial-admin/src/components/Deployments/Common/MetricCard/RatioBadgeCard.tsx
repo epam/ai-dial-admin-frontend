@@ -11,6 +11,7 @@ interface Props {
   loading: boolean;
   status?: MetricStatus;
   emptyReason?: string;
+  unit?: string;
 }
 
 const RatioBadgeCard: FC<Props> = ({
@@ -20,6 +21,7 @@ const RatioBadgeCard: FC<Props> = ({
   loading,
   status = MetricStatus.Neutral,
   emptyReason,
+  unit,
 }) => {
   const isEmpty = numerator === null || denominator === null;
 
@@ -31,6 +33,7 @@ const RatioBadgeCard: FC<Props> = ({
         {numerator}
         <span className="text-secondary font-extralight mx-1 md:text-3xl text-xl">/</span>
         <span className="text-secondary font-extralight md:text-3xl text-xl">{denominator}</span>
+        {unit && <span className="text-secondary font-extralight ml-1 md:text-3xl text-xl">{unit}</span>}
       </span>
     </MetricCardShell>
   );
