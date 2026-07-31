@@ -729,7 +729,6 @@ export enum TelemetryI18nKey {
   Unknown = 'Telemetry.Unknown',
   ActivityViewConfig = 'Telemetry.ActivityView.Config',
   ActivityViewDeployments = 'Telemetry.ActivityView.Deployments',
-  ActivityViewAsset = 'Telemetry.ActivityView.Asset',
 }
 
 export enum RoutesI18nKey {

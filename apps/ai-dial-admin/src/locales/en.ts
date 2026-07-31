@@ -753,7 +753,6 @@ export default {
     ActivityView: {
       Config: 'Config',
       Deployments: 'Deployments',
-      Asset: 'Asset',
     },
   },
   Routes: {

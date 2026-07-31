@@ -111,9 +111,7 @@ describe('ActivityAuditList :: view-aware behavior', () => {
     render(<ActivityAuditList />);
     const options = Array.from(screen.getByLabelText('View').querySelectorAll('option'));
     const values = options.map((o) => (o as HTMLOptionElement).value);
-    expect(values).toContain('Config');
-    expect(values).toContain('Deployments');
-    expect(values).toContain('Asset');
+    expect(values).toEqual(['Config', 'Deployments']);
     expect(screen.getByText(ButtonsI18nKey.Refresh)).toBeInTheDocument();
     expect(screen.getByText(TelemetryI18nKey.ActivityViewDeployments)).toBeInTheDocument();
   });
