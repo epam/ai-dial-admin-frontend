@@ -29,11 +29,9 @@ const StackedTurnsCellRenderer = ({ data, colDef }: ICellRendererParams<GroupedG
       style={{ paddingTop: STACKED_ROW_PADDING / 2, paddingBottom: STACKED_ROW_PADDING / 2 }}
     >
       {turns.map((turn, index) => (
-        <div
-          key={(turn.id as string | undefined) ?? index}
-          className="flex items-center"
-          style={{ height: STACKED_LINE_HEIGHT }}
-        >
+        // Keyed by position, not `turn.id`: every turn of a case carries the same case id, so an
+        // id key would collide across every line here. Position is the turn's identity.
+        <div key={index} className="flex items-center" style={{ height: STACKED_LINE_HEIGHT }}>
           <DialEllipsisTooltip className="tiny" text={formatTurnValue(turn, field)} />
         </div>
       ))}
