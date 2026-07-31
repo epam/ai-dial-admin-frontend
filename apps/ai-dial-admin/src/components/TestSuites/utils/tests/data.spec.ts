@@ -25,7 +25,7 @@ describe('getTestCaseGridData', () => {
     expect(result.length).toBe(0);
   });
 
-  test('should return test case without modification when it has no facts', () => {
+  test('should normalise data to an empty object when it has no facts', () => {
     const testCases: TestCase[] = [{ testCaseName: 'Test Case 1' }];
 
     const result = getTestCaseGridData(testCases);
@@ -33,11 +33,12 @@ describe('getTestCaseGridData', () => {
     expect(result).toEqual([
       {
         testCaseName: 'Test Case 1',
+        data: {},
       },
     ]);
   });
 
-  test('should return test case without modification when facts is undefined', () => {
+  test('should normalise data to an empty object when facts is undefined', () => {
     const testCases: TestCase[] = [
       {
         testCaseName: 'Test Case 1',
@@ -50,7 +51,7 @@ describe('getTestCaseGridData', () => {
     expect(result).toEqual([
       {
         testCaseName: 'Test Case 1',
-        data: undefined,
+        data: {},
       },
     ]);
   });
