@@ -9,6 +9,8 @@ export interface ResultDto {
   testSuiteRunId?: string;
   responseStatusCode: number;
   runIndex: number;
+  turnIndex?: number;
+  totalTurns?: number;
 
   testCaseData?: Record<string, unknown>;
   extractedColumns?: Record<string, unknown>;
