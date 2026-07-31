@@ -1,7 +1,9 @@
 import { describe, expect, test } from 'vitest';
 
 import {
+  computedColumnNames,
   defaultValueType,
+  deriveAlias,
   distinctTags,
   family,
   fieldDisplayName,
@@ -9,8 +11,11 @@ import {
   filterFieldsByTags,
   groupFieldOptions,
   havingFieldOptions,
+  prefilledAlias,
   sortByName,
   sortFieldOptions,
+  uniqueAlias,
+  takenColumnNames,
 } from '@/src/components/Analytics/QueryBuilder/utils/fields';
 import {
   createAggregate,
@@ -147,13 +152,32 @@ describe('having/sort field options', () => {
     expect(havingFieldOptions(s).map((o) => o.name)).toEqual(['bucket', 'cnt', 'project_id']);
   });
 
-  test('havingFieldOptions skips aliasless function entries', () => {
+  // A computed column with a blank alias is still an output column — the serializer names it by the
+  // derived alias, so Having and Sort must offer that same name or it stays unaddressable.
+  test('havingFieldOptions offers an aliasless function entry by its derived name', () => {
     const s = createInitialState(TEST_FUNCTIONS);
     s.fields = FIELDS;
     const fnRow = createGroupByFn(fnFixture('lower'), [{ field: 'project_id' }]);
     fnRow.alias = '';
     s.groupBy = [fnRow];
-    expect(havingFieldOptions(s)).toEqual([]);
+    expect(havingFieldOptions(s).map((o) => o.name)).toContain('project_id (Lowercase)');
+  });
+
+  test('havingFieldOptions offers an aliasless aggregate by its derived name', () => {
+    const s = createInitialState(TEST_FUNCTIONS);
+    s.fields = [{ ...field('total_tokens', AnalyticsFieldType.Long), display_name: 'Total tokens' }];
+    const agg = createAggregate(fnFixture('sum'), [{ field: 'total_tokens' }]);
+    agg.alias = '';
+    s.aggregates = [agg];
+    expect(havingFieldOptions(s).map((o) => o.name)).toEqual(['Total tokens (Sum)']);
+  });
+
+  // Aggregate mode with no aggregates still returns the implicit count column.
+  test('havingFieldOptions offers the implicit count column when there are no aggregates', () => {
+    const s = createInitialState(TEST_FUNCTIONS);
+    s.fields = FIELDS;
+    s.groupBy = [createGroupByColumn('project_id')];
+    expect(havingFieldOptions(s).map((o) => o.name)).toEqual(['Count', 'project_id']);
   });
 
   test('sortFieldOptions uses schema fields in row mode, aggregate outputs in aggregate mode', () => {
@@ -168,7 +192,22 @@ describe('having/sort field options', () => {
       'request_time',
     ]);
     s.mode = QueryMode.Aggregate;
-    expect(sortFieldOptions(s).map((o) => o.name)).toEqual(['project_id']);
+    expect(sortFieldOptions(s).map((o) => o.name)).toEqual(['Count', 'project_id']);
+  });
+
+  // Computed rows arrive with a prefilled alias, so an aggregate is sortable the moment it is added.
+  test('sortFieldOptions offers a freshly added aggregate by its prefilled alias', () => {
+    const s = createInitialState(TEST_FUNCTIONS);
+    s.fields = FIELDS;
+    s.mode = QueryMode.Aggregate;
+    s.groupBy = [createGroupByColumn('project_id')];
+    const agg = createAggregate(
+      fnFixture('sum'),
+      [{ field: 'project_id' }],
+      prefilledAlias(s, fnFixture('sum'), [{ field: 'project_id' }], false),
+    );
+    s.aggregates = [agg];
+    expect(sortFieldOptions(s).map((o) => o.name)).toContain('project_id (Sum)');
   });
 
   test('sortFieldOptions keeps tags in row mode so the dropdown can group by category', () => {
@@ -291,5 +330,155 @@ describe('havingFieldOptions label projection', () => {
       description: 'Owning project',
     });
     expect(options.find((o) => o.name === 'p')?.display_name).toBeUndefined();
+  });
+});
+
+describe('deriveAlias', () => {
+  const ALIAS_FIELDS: AnalyticsEntityField[] = [
+    { ...field('total_tokens', AnalyticsFieldType.Long), display_name: 'Total tokens' },
+    { ...field('project_id', AnalyticsFieldType.String), display_name: 'Project ID' },
+    field('latency', AnalyticsFieldType.Decimal),
+  ];
+
+  test('names an aggregate by its argument display name and function', () => {
+    expect(deriveAlias(fnFixture('sum'), [{ field: 'total_tokens' }], false, ALIAS_FIELDS)).toBe('Total tokens (Sum)');
+  });
+
+  test('folds distinct into the function part', () => {
+    expect(deriveAlias(fnFixture('count'), [{ field: 'project_id' }], true, ALIAS_FIELDS)).toBe(
+      'Project ID (Row count distinct)',
+    );
+  });
+
+  test('an argument-less aggregate is named by its function label alone', () => {
+    expect(deriveAlias(fnFixture('count'), [{}], false, ALIAS_FIELDS)).toBe('Row count');
+  });
+
+  test('an unfilled expression argument falls back to the function label, keeping the row addressable', () => {
+    expect(deriveAlias(fnFixture('sum'), [{}], false, ALIAS_FIELDS)).toBe('Sum');
+    expect(deriveAlias(fnFixture('date_bin'), [{ literal: '5' }, { literal: 'minute' }, {}], false, ALIAS_FIELDS)).toBe(
+      'Time bucket',
+    );
+  });
+
+  test('a field without a display name contributes its raw name', () => {
+    expect(deriveAlias(fnFixture('avg'), [{ field: 'latency' }], false, ALIAS_FIELDS)).toBe('latency (Average)');
+    expect(deriveAlias(fnFixture('avg'), [{ field: 'unknown_field' }], false, ALIAS_FIELDS)).toBe(
+      'unknown_field (Average)',
+    );
+  });
+
+  test('reads the first expression argument, whatever its position', () => {
+    expect(
+      deriveAlias(fnFixture('percentile_cont'), [{ literal: '0.95' }, { field: 'latency' }], false, ALIAS_FIELDS),
+    ).toBe('latency (Continuous percentile)');
+  });
+});
+
+describe('uniqueAlias', () => {
+  test('an unused candidate is returned unchanged', () => {
+    expect(uniqueAlias('Total tokens (Sum)', ['Count'])).toBe('Total tokens (Sum)');
+  });
+
+  test('a taken candidate gains a counter', () => {
+    expect(uniqueAlias('Total tokens (Sum)', ['Total tokens (Sum)'])).toBe('Total tokens (Sum) 2');
+  });
+
+  test('the counter skips names already taken', () => {
+    expect(uniqueAlias('Count', ['Count', 'Count 2', 'Count 3'])).toBe('Count 4');
+  });
+});
+
+describe('takenColumnNames / prefilledAlias', () => {
+  const state = () => {
+    const s = createInitialState(TEST_FUNCTIONS);
+    s.fields = [{ ...field('total_tokens', AnalyticsFieldType.Long), display_name: 'Total tokens' }];
+    return s;
+  };
+
+  // Every name the query will emit, in serialization order: plain group-by columns, then computed
+  // rows — a blank alias counted by the name it will fall back to, so nothing collides with it.
+  test('collects every output column name, blank aliases included', () => {
+    const s = state();
+    s.aggregates = [{ ...createAggregate(fnFixture('sum'), [{ field: 'total_tokens' }], 'a'), aliasEdited: true }];
+    s.groupBy = [
+      { ...createGroupByFn(fnFixture('lower'), [{ field: 'total_tokens' }], 'b'), aliasEdited: true },
+      createGroupByColumn('total_tokens'),
+      createGroupByFn(fnFixture('upper'), [{ field: 'total_tokens' }]),
+    ];
+    expect(takenColumnNames(s)).toEqual(['total_tokens', 'b', 'Total tokens (Uppercase)', 'a']);
+  });
+
+  test('prefills a unique alias for a second row over the same field', () => {
+    const s = state();
+    const first = createAggregate(fnFixture('sum'), [{ field: 'total_tokens' }], 'Total tokens (Sum)');
+    s.aggregates = [first];
+    expect(prefilledAlias(s, fnFixture('sum'), [{ field: 'total_tokens' }], false)).toBe('Total tokens (Sum) 2');
+  });
+
+  test('rederiving a row does not collide with its own current alias', () => {
+    const s = state();
+    const row = createAggregate(fnFixture('sum'), [{ field: 'total_tokens' }], 'Total tokens (Sum)');
+    s.aggregates = [row];
+    expect(prefilledAlias(s, fnFixture('sum'), [{ field: 'total_tokens' }], false, row.id)).toBe('Total tokens (Sum)');
+  });
+});
+
+// Defects found in review: the three paths that name a computed column — the prefill, the
+// Having/Sort options and serialization — must agree, or a column is offered under a name the query
+// does not carry (backend 400) or two columns share one name (the grid collapses one).
+describe('computed column names agree across paths', () => {
+  const labeled = () => {
+    const s = createInitialState(TEST_FUNCTIONS);
+    s.mode = QueryMode.Aggregate;
+    s.fields = [
+      { ...field('total_tokens', AnalyticsFieldType.Long), display_name: 'Total tokens' },
+      { ...field('latency', AnalyticsFieldType.Long), display_name: 'Latency' },
+    ];
+    return s;
+  };
+
+  test('a blank alias is counted when prefilling the next row, so the two never collide', () => {
+    const s = labeled();
+    const cleared = createAggregate(fnFixture('sum'), [{ field: 'total_tokens' }], 'Total tokens (Sum)');
+    cleared.alias = '';
+    s.aggregates = [cleared];
+
+    const next = prefilledAlias(s, fnFixture('sum'), [{ field: 'total_tokens' }], false);
+    expect(next).toBe('Total tokens (Sum) 2');
+  });
+
+  test('two rows with blank aliases resolve to distinct names, and the options match them', () => {
+    const s = labeled();
+    s.aggregates = [
+      createAggregate(fnFixture('sum'), [{ field: 'total_tokens' }]),
+      createAggregate(fnFixture('sum'), [{ field: 'total_tokens' }]),
+    ];
+    const resolved = [...computedColumnNames(s).values()];
+    expect(resolved).toEqual(['Total tokens (Sum)', 'Total tokens (Sum) 2']);
+    expect(sortFieldOptions(s).map((o) => o.name)).toEqual(resolved);
+  });
+
+  test('a derived name never collides with a plain group-by column of the same name', () => {
+    const s = labeled();
+    s.groupBy = [createGroupByColumn('Total tokens (Sum)')];
+    s.aggregates = [createAggregate(fnFixture('sum'), [{ field: 'total_tokens' }])];
+    expect([...computedColumnNames(s).values()]).toEqual(['Total tokens (Sum) 2']);
+  });
+
+  test('a row whose required argument is unfilled is neither named nor offered', () => {
+    const s = labeled();
+    s.groupBy = [createGroupByFn(fnFixture('lower'))];
+    expect(computedColumnNames(s).size).toBe(0);
+    expect(sortFieldOptions(s).map((o) => o.name)).not.toContain('Lowercase');
+  });
+
+  test('an alias the user typed is the name, duplicates included', () => {
+    const s = labeled();
+    s.aggregates = [
+      { ...createAggregate(fnFixture('sum'), [{ field: 'total_tokens' }], 'mine'), aliasEdited: true },
+      { ...createAggregate(fnFixture('avg'), [{ field: 'latency' }], 'mine'), aliasEdited: true },
+    ];
+    expect([...computedColumnNames(s).values()]).toEqual(['mine', 'mine']);
   });
 });
