@@ -448,6 +448,7 @@ export const getSchemaFieldGridColumns = (
   onChangeEditable: (value: string | number, data: unknown, column: string, index?: number) => void,
   onChangeSelect: (value: string | string[], data: unknown, column?: string, index?: number) => void,
   onChangeRequired: (value: boolean, data: TestCaseSchema) => void,
+  onChangePerTurn: (value: boolean, data: TestCaseSchema) => void,
   t: (key: string) => string,
 ): ColDef<TestCaseSchema>[] => {
   return [
@@ -499,6 +500,23 @@ export const getSchemaFieldGridColumns = (
       filter: false,
       floatingFilter: false,
       maxWidth: 100,
+    },
+    {
+      headerName: 'Scope',
+      colId: 'perTurn',
+      field: 'perTurn',
+      cellClass: NO_BORDER_CLASS,
+      cellRenderer: BooleanButtonCellRenderer,
+      cellRendererParams: {
+        onChange: onChangePerTurn,
+        trueLabel: t(BasicI18nKey.PerTurn),
+        falseLabel: t(BasicI18nKey.Shared),
+      },
+      tooltipValueGetter: () => undefined,
+      sortable: false,
+      filter: false,
+      floatingFilter: false,
+      maxWidth: 110,
     },
     {
       headerName: 'Description',

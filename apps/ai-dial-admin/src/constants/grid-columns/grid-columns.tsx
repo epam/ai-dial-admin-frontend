@@ -1069,11 +1069,6 @@ export const TEST_SUITES_COLUMN: ColDef[] = [
   },
 ];
 
-export const TEST_CASES_COLUMN: ColDef[] = [
-  { field: 'id', colId: 'id', headerName: 'ID' },
-  { field: 'testCaseName', colId: 'testCaseName', headerName: 'Test case name' },
-];
-
 export const DATASETS_COLUMN: ColDef[] = [
   {
     field: 'name',

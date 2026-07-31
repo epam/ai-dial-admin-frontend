@@ -62,9 +62,9 @@
 
 ## 9. Schema editor and dataset preview
 
-- [ ] 9.1 Add a Scope column to `getSchemaFieldGridColumns` using `BooleanButtonCellRenderer` (per `.claude/rules/components.md` §11), `Per turn` / `Shared`, `maxWidth: 110`, writing `TestCaseSchema.perTurn`.
-- [ ] 9.2 Wire the change handler in `src/components/TestSuites/TestCaseSchema/SchemaManager.tsx`, following the existing `isSkipRefresh` pattern so inline edits keep grid focus.
-- [ ] 9.3 Swap `PickPublicDataset.tsx`'s hand-rolled `previewColumns` for `getDatasetTestCaseColumns` plus a read-only `useTurnGroupProjection`, so the attach-dataset preview shows the same collapsed turn summary.
+- [x] 9.1 Add a Scope column to `getSchemaFieldGridColumns` using `BooleanButtonCellRenderer` (per `.claude/rules/components.md` §11), `Per turn` / `Shared`, `maxWidth: 110`, writing `TestCaseSchema.perTurn`. No `valueGetter` needed — `BooleanButtonCellRenderer` coerces its value, so an unset `perTurn` renders `Shared`, the same way `Required` already relies on it.
+- [x] 9.2 Wire the change handler in `src/components/TestSuites/TestCaseSchema/SchemaManager.tsx`, following the existing `isSkipRefresh` pattern so inline edits keep grid focus. `SchemaManager` is shared, so this lands on the Datasets schema tab too, as intended.
+- [x] 9.3 Swap `PickPublicDataset.tsx`'s hand-rolled `previewColumns` for `getDatasetTestCaseColumns` plus a read-only `useTurnGroupProjection`, so the attach-dataset preview shows the same collapsed turn summary. Needed `isReadOnly` on `DatasetTestCaseColumnsOptions`, mirroring the TestSuites builder. `TEST_CASES_COLUMN` had no other caller and is deleted.
 
 ## 10. Results columns
 

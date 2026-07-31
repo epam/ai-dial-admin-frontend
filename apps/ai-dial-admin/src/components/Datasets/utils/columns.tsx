@@ -19,18 +19,24 @@ export interface DatasetTestCaseColumnsOptions {
   onCellChange: onCellChange;
   onToggleExpand: (groupKey: string) => void;
   t?: (key: string) => string;
+  isReadOnly?: boolean;
 }
 
 export const getDatasetTestCaseColumns = (options: DatasetTestCaseColumnsOptions): ColDef[] => {
-  const { dataset, onCellChange, onToggleExpand, t } = options;
+  const { dataset, onCellChange, onToggleExpand, t, isReadOnly } = options;
   const schema: TestCaseSchema[] = dataset.testCaseSchema || [];
 
   return [
     getTurnExpanderColumn(onToggleExpand),
     getGroupedIdColumn(),
-    getGroupedNameColumn(onCellChange),
+    getGroupedNameColumn(onCellChange, isReadOnly),
     ...schema.map((param) =>
-      getGroupedSchemaColumn(param, onCellChange, { entityId: dataset.id, view: ApplicationRoute.Datasets }),
+      getGroupedSchemaColumn(
+        param,
+        onCellChange,
+        { entityId: dataset.id, view: ApplicationRoute.Datasets },
+        isReadOnly,
+      ),
     ),
     getValidityStatusColumn(t?.(TestSuitesI18nKey.TestCaseError)),
   ];

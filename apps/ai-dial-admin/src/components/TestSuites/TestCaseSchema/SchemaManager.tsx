@@ -63,6 +63,13 @@ const SchemaManager: FC<Props> = ({ testCaseSchema, onChangeTestCaseSchema, isSk
     onChangeRef.current(schema);
   }, []);
 
+  const onChangePerTurn = useCallback((value: boolean, data: TestCaseSchema) => {
+    data.perTurn = value;
+    const schema = [...schemaRef.current];
+    schemaRef.current = schema;
+    onChangeRef.current(schema);
+  }, []);
+
   const onAddField = useCallback(() => {
     const schema = [
       ...schemaRef.current,
@@ -81,13 +88,13 @@ const SchemaManager: FC<Props> = ({ testCaseSchema, onChangeTestCaseSchema, isSk
 
   const columnDefs: ColDef[] = useMemo(
     () => [
-      ...getSchemaFieldGridColumns(onCellChange, onSelectChange, onChangeRequired, t),
+      ...getSchemaFieldGridColumns(onCellChange, onSelectChange, onChangeRequired, onChangePerTurn, t),
       {
         ...ONE_ACTION_COLUMN(getRemoveOperation(onRemoveField, undefined, 'text-error w-4 h-4')),
         colId: 'action-remove',
       },
     ],
-    [onCellChange, onSelectChange, onChangeRequired, t, onRemoveField],
+    [onCellChange, onSelectChange, onChangeRequired, onChangePerTurn, t, onRemoveField],
   );
 
   const rowData = useMemo(() => testCaseSchema, [testCaseSchema]);

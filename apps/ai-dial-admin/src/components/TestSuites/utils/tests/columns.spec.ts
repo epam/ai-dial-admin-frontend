@@ -2,6 +2,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { getTestCaseColumns, getSchemaFieldGridColumns } from '../columns';
 import { TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
 import { EXPANDER_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
+import { BasicI18nKey } from '@/src/constants/i18n';
 import { TestCaseItemType } from '@/src/types/evaluation';
 
 const makeSchema = (name: string, type: TestCaseItemType = TestCaseItemType.STRING): TestCaseSchema => ({
@@ -139,37 +140,39 @@ describe('getSchemaFieldGridColumns', () => {
   const onChangeEditable = vi.fn();
   const onChangeSelect = vi.fn();
   const onChangeRequired = vi.fn();
+  const onChangePerTurn = vi.fn();
   const t = (key: string) => key;
 
-  test('should return four columns: Name, Type, Required, Description', () => {
-    const columns = getSchemaFieldGridColumns(onChangeEditable, onChangeSelect, onChangeRequired, t);
+  test('should return five columns: Name, Type, Required, Scope, Description', () => {
+    const columns = getSchemaFieldGridColumns(onChangeEditable, onChangeSelect, onChangeRequired, onChangePerTurn, t);
 
-    expect(columns).toHaveLength(4);
+    expect(columns).toHaveLength(5);
     expect(columns[0]).toEqual(expect.objectContaining({ colId: 'name', field: 'name', headerName: 'Name' }));
     expect(columns[1]).toEqual(expect.objectContaining({ colId: 'type', field: 'type', headerName: 'Type' }));
     expect(columns[2]).toEqual(
       expect.objectContaining({ colId: 'required', field: 'required', headerName: 'Required' }),
     );
-    expect(columns[3]).toEqual(
+    expect(columns[3]).toEqual(expect.objectContaining({ colId: 'perTurn', field: 'perTurn', headerName: 'Scope' }));
+    expect(columns[4]).toEqual(
       expect.objectContaining({ colId: 'description', field: 'description', headerName: 'Description' }),
     );
   });
 
   test('should have Name and Description columns with EditableCellRenderer', () => {
-    const columns = getSchemaFieldGridColumns(onChangeEditable, onChangeSelect, onChangeRequired, t);
+    const columns = getSchemaFieldGridColumns(onChangeEditable, onChangeSelect, onChangeRequired, onChangePerTurn, t);
 
     expect(columns[0].cellRenderer).toBeDefined();
     expect(columns[0].cellRendererParams).toEqual(
       expect.objectContaining({ onChange: onChangeEditable, hideTriangle: true, skipRequired: true }),
     );
-    expect(columns[3].cellRenderer).toBeDefined();
-    expect(columns[3].cellRendererParams).toEqual(
+    expect(columns[4].cellRenderer).toBeDefined();
+    expect(columns[4].cellRendererParams).toEqual(
       expect.objectContaining({ onChange: onChangeEditable, hideTriangle: true, skipRequired: true }),
     );
   });
 
   test('should have Type column with SelectCellRenderer', () => {
-    const columns = getSchemaFieldGridColumns(onChangeEditable, onChangeSelect, onChangeRequired, t);
+    const columns = getSchemaFieldGridColumns(onChangeEditable, onChangeSelect, onChangeRequired, onChangePerTurn, t);
     const typeColumn = columns[1];
 
     expect(typeColumn.cellRenderer).toBeDefined();
@@ -179,7 +182,7 @@ describe('getSchemaFieldGridColumns', () => {
   });
 
   test('should have Required column with BooleanButtonCellRenderer', () => {
-    const columns = getSchemaFieldGridColumns(onChangeEditable, onChangeSelect, onChangeRequired, t);
+    const columns = getSchemaFieldGridColumns(onChangeEditable, onChangeSelect, onChangeRequired, onChangePerTurn, t);
     const requiredColumn = columns[2];
 
     expect(requiredColumn.cellRenderer).toBeDefined();
@@ -187,8 +190,23 @@ describe('getSchemaFieldGridColumns', () => {
     expect(requiredColumn.maxWidth).toBe(100);
   });
 
+  test('should have Scope column with BooleanButtonCellRenderer', () => {
+    const columns = getSchemaFieldGridColumns(onChangeEditable, onChangeSelect, onChangeRequired, onChangePerTurn, t);
+    const scopeColumn = columns[3];
+
+    expect(scopeColumn.cellRenderer).toBeDefined();
+    expect(scopeColumn.cellRendererParams).toEqual(
+      expect.objectContaining({
+        onChange: onChangePerTurn,
+        trueLabel: BasicI18nKey.PerTurn,
+        falseLabel: BasicI18nKey.Shared,
+      }),
+    );
+    expect(scopeColumn.maxWidth).toBe(110);
+  });
+
   test('should have all columns as non-sortable and non-filterable', () => {
-    const columns = getSchemaFieldGridColumns(onChangeEditable, onChangeSelect, onChangeRequired, t);
+    const columns = getSchemaFieldGridColumns(onChangeEditable, onChangeSelect, onChangeRequired, onChangePerTurn, t);
 
     columns.forEach((col) => {
       expect(col.sortable).toBe(false);
