@@ -133,6 +133,13 @@ export const useTurnGroupGrid = <T,>({
       // `getDirtyRows` reads from the store rather than the grid, so it would never see the edit
       // either. Every branch below therefore locates and mutates the real row(s) in
       // `flatRowsRef` instead of `rowData`.
+      //
+      // Deliberately no `bumpRawRows()` here, unlike every structural mutation. `EditableCellRenderer`
+      // fires `onChange` per keystroke, and a new `rowData` array would make `AgGridWrapper` re-run
+      // `updateGridOptions` + `applyGridState` and the projection force a `refreshCells` — recreating
+      // the focused input mid-word. A value edit never changes the projection's shape, the input holds
+      // its own state, and both readers (`getDirtyRows`, a collapsed group's stacked summary on the
+      // next expand/collapse) see these in-place mutations without one.
       if (isDataField && !perTurnFields.has(field)) {
         // Shared field, edited on the GROUP master row: the value is case-level, so write it to
         // every turn row of the case.
@@ -153,11 +160,10 @@ export const useTurnGroupGrid = <T,>({
         }
       }
 
-      bumpRawRows();
       dirtyIdsRef.current.add(rowId);
       onDirtyChange?.(true);
     },
-    [structuralFields, perTurnFields, bumpRawRows, onDirtyChange],
+    [structuralFields, perTurnFields, onDirtyChange],
   );
 
   const onAddTurn = useCallback(

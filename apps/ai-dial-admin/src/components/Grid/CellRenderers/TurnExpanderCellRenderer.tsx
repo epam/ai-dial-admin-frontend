@@ -22,7 +22,6 @@ const TurnExpanderCellRenderer = ({ data, onToggleExpand }: Props) => {
     const expanded = Boolean(data.expanded);
 
     const onClick = (event: MouseEvent) => {
-      // Stop propagation so the results grid's row-level onRowClicked handler doesn't also fire and double-toggle.
       event.stopPropagation();
       onToggleExpand?.(data.groupKey);
     };
