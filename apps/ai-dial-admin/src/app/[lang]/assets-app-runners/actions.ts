@@ -64,6 +64,11 @@ export async function getRunners(path: string) {
   return assetApi.list(token, ResourceType.APP_TYPE_SCHEMA, path);
 }
 
+export async function getAllRunners() {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return assetApi.list(token, ResourceType.APP_TYPE_SCHEMA, '');
+}
+
 export async function createRunner(runner: DialAppRunnerResource): Promise<ServerActionResponse> {
   const idError = checkRunnerId(runner.$id);
   if (idError) {

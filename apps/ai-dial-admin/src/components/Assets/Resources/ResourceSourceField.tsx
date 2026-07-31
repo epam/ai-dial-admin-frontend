@@ -132,6 +132,7 @@ const ResourceSourceField: FC<Props> = ({
             } as DialApplication)
           }
           runners={runners}
+          view={view}
           isEntityImmutable={isEntityImmutable}
           isModal={isModal}
           disabled={isReadonly}

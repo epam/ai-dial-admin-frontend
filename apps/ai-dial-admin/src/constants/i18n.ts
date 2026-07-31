@@ -1108,6 +1108,8 @@ export enum SourceI18nKey {
   DockerImage = 'Source.DockerImage',
   NgcRegistry = 'Source.NgcRegistry',
   HuggingFace = 'Source.HuggingFace',
+  EntityRunner = 'Source.EntityRunner',
+  AssetRunner = 'Source.AssetRunner',
 }
 
 export enum TypeI18nKey {

@@ -9,6 +9,7 @@ import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRe
 import { NO_BORDER_CLASS } from '@/src/constants/ag-grid';
 import { BasicI18nKey, EntitiesI18nKey, TypeI18nKey } from '@/src/constants/i18n';
 import { UserSession } from '@/src/models/auth';
+import { getRunnerReference } from '@/src/components/SourceField/Application/utils';
 import { DialApplication, DialApplicationScheme, TypeEntity } from '@/src/models/dial/application';
 import { getSchemaSourceId } from '@/src/utils/entities/application-source';
 import { DialApplicationResource } from '@/src/models/dial/resource';
@@ -86,7 +87,7 @@ export const getAppRunner = (
         : (entity as DialApplication).editorUrl;
 
     return (
-      (scheme.$id && schemaSourceId && scheme.$id === schemaSourceId) ||
+      (schemaSourceId && getRunnerReference(scheme) === schemaSourceId) ||
       (scheme['dial:applicationTypeEditorUrl'] && editorUrl && scheme['dial:applicationTypeEditorUrl'] === editorUrl)
     );
   });

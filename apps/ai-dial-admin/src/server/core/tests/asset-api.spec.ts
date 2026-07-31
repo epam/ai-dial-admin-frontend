@@ -268,3 +268,66 @@ describe('Server :: Core :: AssetApi', () => {
     expect((fetch.mock.calls[1][1] as RequestInit).headers).not.toHaveProperty(IF_MATCH);
   });
 });
+
+describe('Server :: Core :: AssetApi :: flat app-runner listing', () => {
+  const instance = new AssetApi({ host: TEST_URL });
+
+  const runnerNode = (encodedName: string) => ({
+    name: encodedName,
+    nodeType: 'ITEM',
+    url: `schemas/platform/${encodedName}`,
+  });
+
+  beforeEach(() => {
+    fetch.resetMocks();
+  });
+
+  test('an empty path lists the whole platform bucket rather than defaulting to public/', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ name: '', nodeType: 'FOLDER', items: [] }));
+
+    await instance.list(TOKEN_MOCK, ResourceType.APP_TYPE_SCHEMA, '');
+
+    const [calledUrl] = fetch.mock.calls[0];
+    expect(calledUrl).toContain('/v1/metadata/schemas/platform/?');
+    expect(calledUrl).not.toContain('public/');
+    expect(calledUrl).not.toContain('platform/platform');
+  });
+
+  test('follows nextToken so a paged bucket is returned whole', async () => {
+    fetch.mockResponseOnce(
+      JSON.stringify({
+        name: '',
+        nodeType: 'FOLDER',
+        nextToken: 'page-2',
+        items: [runnerNode('http%253A%252F%252Fa')],
+      }),
+      { headers: { 'content-type': 'application/json' } },
+    );
+    fetch.mockResponseOnce(
+      JSON.stringify({ name: '', nodeType: 'FOLDER', items: [runnerNode('http%253A%252F%252Fb')] }),
+      { headers: { 'content-type': 'application/json' } },
+    );
+
+    const result = await instance.list(TOKEN_MOCK, ResourceType.APP_TYPE_SCHEMA, '');
+
+    expect(fetch.mock.calls).toHaveLength(2);
+    expect(fetch.mock.calls[1][0]).toContain('token=page-2');
+    expect(result.map((r) => r.name)).toEqual(['http://a', 'http://b']);
+  });
+
+  test('yields the decoded $id as name and the singly-encoded form as path', async () => {
+    fetch.mockResponseOnce(
+      JSON.stringify({
+        name: '',
+        nodeType: 'FOLDER',
+        items: [runnerNode('https%253A%252F%252Fhost%252Fcustom_application_schemas%252Fchart')],
+      }),
+      { headers: { 'content-type': 'application/json' } },
+    );
+
+    const [row] = await instance.list(TOKEN_MOCK, ResourceType.APP_TYPE_SCHEMA, '');
+
+    expect(row.name).toBe('https://host/custom_application_schemas/chart');
+    expect(row.path).toBe('https%3A%2F%2Fhost%2Fcustom_application_schemas%2Fchart');
+  });
+});

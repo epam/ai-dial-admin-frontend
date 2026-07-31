@@ -1463,6 +1463,8 @@ export default {
     DockerImage: 'Docker Image',
     NgcRegistry: 'NGC Registry',
     HuggingFace: 'Hugging Face',
+    EntityRunner: 'Entity',
+    AssetRunner: 'Asset',
   },
   Toolset: {
     Tools: 'Tools',
