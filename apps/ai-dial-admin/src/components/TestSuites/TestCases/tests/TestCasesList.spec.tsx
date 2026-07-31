@@ -197,6 +197,9 @@ describe('TestCasesList — dirty tracking', () => {
   test('clearDirtyAndRefresh clears dirty rows and calls onDirtyChange(false)', async () => {
     const suite: TestSuite = { id: 'suite-1', datasetId: 'ds-1' };
     const actionsRef = createRef<TestCasesActions | null>();
+    const row = { id: 'row-1', testCaseName: 'tc', createdAt: 0 };
+    vi.mocked(actions.getTestCases).mockResolvedValue(createPageData([row]));
+
     render(
       <TestCasesList
         selectedTestSuite={suite}
@@ -208,7 +211,6 @@ describe('TestCasesList — dirty tracking', () => {
 
     await waitFor(() => expect(capturedOnCellChange).not.toBeNull());
 
-    const row = { id: 'row-1', testCaseName: 'tc', createdAt: 0 };
     capturedOnCellChange!({ ...row, testCaseName: 'changed' }, 'testCaseName', 'changed');
 
     expect(actionsRef.current?.getDirtyTestCases().length).toBeGreaterThan(0);
