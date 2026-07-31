@@ -171,3 +171,22 @@ The system SHALL NOT apply `__version` suffix parsing, publication or sharing me
 
 - **WHEN** an app-runner resource is listed, created, or fetched
 - **THEN** its name contains no `__version` suffix and no version selector is presented
+
+### Requirement: The whole app-runner bucket is readable in one list call
+
+The system SHALL expose a list read that returns every app-runner resource in the `platform` bucket without requiring a folder path, for consumers that present one flat set of runners. Because this resource kind is flat, the bucket root holds every runner and no recursive traversal SHALL be introduced. The read SHALL follow Core's continuation token to completion so a paged bucket is returned whole.
+
+#### Scenario: An omitted path reads the bucket root
+
+- **WHEN** the list is requested with no folder path
+- **THEN** the request targets `schemas/platform/` rather than defaulting to any other root
+
+#### Scenario: Pagination is exhausted
+
+- **WHEN** Core returns a continuation token
+- **THEN** the read follows it until no token remains, and the returned collection is complete
+
+#### Scenario: Rows carry the decoded id and the addressable path
+
+- **WHEN** a runner is returned in the list
+- **THEN** its name is the fully decoded `$id` and its path is the singly-encoded form the CRUD calls address

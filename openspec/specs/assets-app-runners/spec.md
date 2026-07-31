@@ -1,4 +1,9 @@
-## ADDED Requirements
+# assets-app-runners Specification
+
+## Purpose
+The `Assets > App Runners` surface: menu entry, flat list with create/delete/bulk-delete, and a five-tab detail view (Properties, Features, Parameters, AppRoutes, Interceptors) over DIAL Core's own app-runner config resources — created by archiving change `add-app-runner-asset-resource`. Covers the `$id`-as-resource-name identity and the URI-shaped-name exceptions the shared asset list needs, the client-side meta-schema validation that substitutes for Core's absent write-time checks, and the merged application-source runner picker that lets an asset application reference either population. Deliberately has no Audit tab, revisions, rollback, Core-sync banner, versioning, publications, sharing, move, or import/export — DIAL Core exposes none of those for config resources.
+
+## Requirements
 
 ### Requirement: Assets > App Runners menu entry
 
@@ -227,6 +232,8 @@ The system SHALL populate the app-runner Parameters tab from DIAL Core's resolve
 
 The system SHALL leave the admin-BE-backed `Entities > Application Runners` surface — its route, list, detail view, seven tabs, Audit tab, revision and rollback wiring, Core-sync banner, and server actions — unchanged by this capability.
 
+Reference-data consumers of the admin-BE runner list SHALL continue to read it. `Assets > Applications` additionally reads the Core asset-runner list in order to offer both populations in its picker; every other consumer reads the admin-BE list alone.
+
 #### Scenario: Entity runner view keeps all of its tabs
 
 - **WHEN** a user opens an entity-side application runner
@@ -236,3 +243,104 @@ The system SHALL leave the admin-BE-backed `Entities > Application Runners` surf
 
 - **WHEN** any page that lists application runners for reference (applications, asset applications, interceptors, application publications, export config) loads
 - **THEN** it still reads the admin-BE runner list, unchanged
+
+#### Scenario: Only asset applications read the second list
+
+- **WHEN** the runner picker is rendered on `Entities > Applications`
+- **THEN** it offers admin-BE runners only, and no asset runner is selectable there
+
+### Requirement: Asset runners are selectable from asset applications
+
+The system SHALL offer app runners created through `Assets > App Runners` as source options in the App Runner picker on `Assets > Applications`, alongside the admin-BE-backed runners already offered there. The two populations SHALL be presented in a single flat grid distinguished by a `Source` column reading `Entity` or `Asset`, and each option SHALL carry an explicit origin discriminator rather than one inferred from the shape of its value.
+
+The asset half SHALL be read through the Core app-runner resource path, and its rows SHALL be identified by the runner's `$id`, matching the `Assets > App Runners` list.
+
+The picker's columns SHALL be limited to `ID`, `Source`, `Author`, and `Updated time` — a set both populations can fill from data already loaded. Columns whose values live in the runner's content body (`Display Name`, `Description`, `Topics`) SHALL NOT appear, since populating them for asset rows would require one Core content read per runner on every render. This column set is specific to the picker; the standalone `Entities > Application Runners` list and the config import/export, audit-rollback, and import-preview grids keep their own unchanged column sets.
+
+A runner SHALL be labelled by its `$id` consistently across the picker — the grid's `ID` column, the dropdown options, and the collapsed field showing the current selection — so the name a user selects by is the name they see afterwards. The runner's display name SHALL NOT be surfaced in the merged picker, because an asset runner has none without a content read and a label absent from the grid would not be recognizable.
+
+The picker component and its grid are shared with other surfaces, so this column set and labelling SHALL apply only where both populations are offered. Every other consumer — `Entities > Applications` included — SHALL keep the display-name label and the standalone runner column set unchanged, since all of its runners are admin-BE-backed and carry a display name.
+
+A failure to read the asset runner list SHALL degrade to the admin-BE-only list rather than failing the page.
+
+#### Scenario: Both populations appear in the picker
+
+- **WHEN** a user opens the App Runner picker on an asset application and runners exist in both `Entities > Application Runners` and `Assets > App Runners`
+- **THEN** both are listed in one grid
+- **AND** each row's `Source` column reads `Entity` or `Asset` accordingly
+
+#### Scenario: Asset rows are identified by `$id`
+
+- **WHEN** an asset runner with `$id` `http://asdqwe` appears in the picker
+- **THEN** its `ID` cell reads `http://asdqwe`
+
+#### Scenario: The picker shows no content-backed columns
+
+- **WHEN** the picker grid renders
+- **THEN** its columns are exactly `ID`, `Source`, `Author`, and `Updated time`
+- **AND** no `Display Name`, `Description`, or `Topics` column is present
+
+#### Scenario: The selected runner reads the same as the row that was picked
+
+- **WHEN** a user selects any runner, of either origin
+- **THEN** the collapsed field shows that runner's `$id`, the same value its grid row showed
+- **AND** no display name is shown in its place
+
+#### Scenario: Entities > Applications keeps its own presentation and source
+
+- **WHEN** the runner picker renders on `Entities > Applications`
+- **THEN** it labels runners by their display name and shows the standalone runner column set
+- **AND** it offers admin-BE runners only
+
+#### Scenario: Asset rows show their metadata
+
+- **WHEN** an asset runner appears in the picker
+- **THEN** its author and updated time cells are populated from the Core metadata node
+- **AND** the updated time renders as a localized date, not raw epoch milliseconds
+
+#### Scenario: Every runner in the bucket is offered
+
+- **WHEN** the picker is opened and the `platform` bucket holds more runners than one metadata page
+- **THEN** all of them appear in the grid
+
+#### Scenario: Core read failure leaves the entity list usable
+
+- **WHEN** the asset runner list cannot be read
+- **THEN** the picker still lists the admin-BE runners
+- **AND** the page renders rather than erroring
+
+### Requirement: An asset runner reference is stored as its Core resource name
+
+The system SHALL write `schemas/platform/{encodeURIComponent($id)}` into an asset application's `application_type_schema_id` when the selected runner comes from `Assets > App Runners`, and SHALL continue to write the plain `$id` when it comes from `Entities > Application Runners`. Resolution of a stored reference back to a runner SHALL accept both forms, so an asset application reopens with its selection intact.
+
+#### Scenario: Selecting an asset runner stores the canonical resource name
+
+- **WHEN** a user selects an asset runner whose `$id` is `http://asdqwe`
+- **THEN** the application's `application_type_schema_id` is set to `schemas/platform/http%3A%2F%2Fasdqwe`
+
+#### Scenario: Selecting an entity runner is unchanged
+
+- **WHEN** a user selects a runner from `Entities > Application Runners`
+- **THEN** the application's `application_type_schema_id` is set to that runner's `$id`, with no prefix or encoding applied
+
+#### Scenario: A saved asset-runner reference reopens as selected
+
+- **WHEN** an asset application referencing `schemas/platform/http%3A%2F%2Fasdqwe` is reopened
+- **THEN** the App Runner field shows that runner as selected rather than blank
+- **AND** any behaviour keyed on resolving the referenced runner, such as the Responses defaults section, behaves as it does for an entity runner
+
+### Requirement: Runner origin drives schema resolution and navigation
+
+The system SHALL derive an asset runner's default `applicationProperties` from DIAL Core's resolved-schema read, and an entity runner's from the admin BE's, selecting between them by the option's origin. The picker's open-in-new-tab action SHALL likewise navigate to `/assets-app-runners/{path}` for an asset runner and `/application-runners/{$id}` for an entity runner.
+
+#### Scenario: Selecting an asset runner resolves against Core
+
+- **WHEN** a user selects an asset runner
+- **THEN** the resolved schema is read from Core's `application_type_schemas/schema` route, not the admin BE's `resolvedSchema`
+- **AND** the derived `applicationProperties` defaults are applied to the application
+
+#### Scenario: Open navigates to the runner's own surface
+
+- **WHEN** a user opens the selected runner in a new tab
+- **THEN** an asset runner opens under `/assets-app-runners/`
+- **AND** an entity runner opens under `/application-runners/`

@@ -87,3 +87,53 @@ All six were found by using the view, not by the suite — sections 1–11 were 
 - [x] 13.2 List, create, and the create → Core PUT → list round trip exercised against a live DIAL Core; the doubly-encoded resource name reads back as the decoded `$id`.
 
 Not yet exercised against a live Core: the detail view's tabs (Properties, Features, Parameters, AppRoutes, Interceptors), update-with-etag, and delete. Given every defect in section 12 came from a wiring assumption the suite could not see, further instances should be expected in those surfaces.
+
+## 14. Follow-up: asset runners selectable from asset applications (Issue #4078)
+
+Deferred from this change's original non-goals. Makes the shipped `Assets > App Runners` surface reachable: an asset application can select an asset runner, store the correct reference, and reopen with it intact.
+
+### 14.1 Reference-value helpers
+
+- [x] 14.1.1 Add a pure `toRunnerReference($id)` composing `SCHEMAS_PREFIX + toCoreRunnerName($id)`, beside the existing name helpers in `src/utils/app-runners/`. Do not inline the concatenation at call sites — write and read must agree on one definition.
+- [x] 14.1.2 Add its inverse, recognising a canonical reference and returning the `$id`, returning `undefined` for a value that is not one (so an entity `$id` passes through the reverse lookup untouched).
+
+### 14.2 Whole-bucket Core list
+
+- [x] 14.2.1 ~~Add a recursive sibling to `assetApi.list`~~ — **dropped.** This resource kind is flat (`PLATFORM_BUCKET_RESOURCE_TYPES`; `parseEncodedFlatPath` returns `folderId: ''`; section 12.4 removed folder creation for this view), so the bucket root already holds every runner and `list` already follows `nextToken` to completion. `asset-api.ts` needs no change.
+- [x] 14.2.2 ~~Add a recursive flatten in `asset-metadata.ts`~~ — **dropped** with 14.2.1. A nested node cannot arise, and `parseEncodedFlatPath` would have mis-parsed one into `nested/http://b` as its name; supporting it would have meant changing a shared helper for an impossible case.
+- [x] 14.2.3 Add `getAllRunners()` to `src/app/[lang]/assets-app-runners/actions.ts` wrapping `assetApi.list` with the empty path, returning every runner in the `platform` bucket.
+
+### 14.3 Merged option list
+
+- [x] 14.3.1 Define the merged row model in a `models.ts` beside the picker: the fields the grid renders plus an origin discriminator (an enum, per the repo's enums-over-string-unions rule) and the reference value. Do not widen `DialApplicationScheme` to carry asset fields.
+- [x] 14.3.2 Add a pure builder mapping an admin-BE runner list and an asset runner list into that row model — entity rows keeping `$id` as the reference value, asset rows using `toRunnerReference`, asset rows labelled by `$id`.
+- [x] 14.3.3 Fetch both lists in `src/app/[lang]/assets-applications/page.tsx` and `[id]/page.tsx`, with the asset read isolated so a Core failure degrades to the entity-only list instead of failing the page. Leave the other six `getApplicationSchemesList` consumers untouched.
+
+### 14.4 Picker
+
+- [x] 14.4.1 Add the `Source` column to the runner grid columns in `src/constants/grid-columns/grid-columns.tsx`, scoped to the picker's column set so `Entities > Application Runners` list columns are unaffected.
+- [x] 14.4.2 Give the grid a sort fallback for rows with no `Display Name`, so asset rows are not grouped at one end by an empty sort key.
+- [x] 14.4.3 Change the option value in `src/components/SourceField/Application/AppRunners.tsx` from `r.$id` to the row's reference value, and make `SelectAppRunnersModal` select and compare on it.
+- [x] 14.4.4 Dispatch the resolved-schema read on the row's origin: `getResolvedApplicationScheme` for entity rows, `getResolvedRunnerSchema` for asset rows. Keep the existing fall-back-to-unresolved-runner behaviour on failure for both.
+- [x] 14.4.5 Make `openInNewTab` route by origin — `/assets-app-runners/{path}` for asset rows, `/application-runners/{$id}` for entity rows.
+- [x] 14.4.6 Fix the `valueTitle` lookup, which matches the selected value against the option list and therefore breaks on the reference-value change if left keyed on `$id`.
+
+### 14.5 Reverse lookup
+
+- [x] 14.5.1 Update the runner lookup in `src/components/Assets/Apps/Properties.tsx` to match a stored canonical reference as well as a plain `$id`. Its `scheme.$id === schemaSourceId` comparison can never match an asset reference.
+- [x] 14.5.2 Confirm `showResponsesDefaults` follows from the corrected lookup — it reads `appRunner['dial:applicationTypeResponsesEndpoint']`, so a failed lookup silently hides the Responses defaults section.
+
+### 14.6 Tests
+
+- [x] 14.6.1 Unit tests for `toRunnerReference` and its inverse: `http://asdqwe` → `schemas/platform/http%3A%2F%2Fasdqwe` and back; an entity `$id` is not mistaken for a reference; round trip over ids containing `:` and `/`.
+- [x] 14.6.2 Unit tests for the merged-row builder: both populations present, origin set correctly, entity reference value is the bare `$id`, asset rows labelled by `$id` with empty content columns.
+- [x] 14.6.3 Unit tests for the whole-bucket list: an omitted path targets `schemas/platform/` (not `public/`), `nextToken` is followed to completion, and rows carry the decoded `$id` as name with the singly-encoded form as path.
+- [x] 14.6.4 Component test asserting selection of an asset runner writes `schemas/platform/{encoded $id}` to `application_type_schema_id` — the exact string, not a match against a helper's output.
+- [x] 14.6.5 Component test for the save → reopen round trip: an application whose stored reference is canonical renders the runner as selected, not blank.
+- [x] 14.6.6 Component test asserting resolve dispatch by origin — an asset selection calls Core's resolved-schema action and not the admin BE's, and vice versa.
+- [x] 14.6.7 Test that a failing asset-runner read still renders the picker with the admin-BE list.
+- [x] 14.6.8 Test that the `Entities > Applications` picker offers entity runners only.
+
+### 14.7 Quality checks
+
+- [x] 14.7.1 Run lint, format check, and the full test suite from `apps/ai-dial-admin/`; fix any failures.
