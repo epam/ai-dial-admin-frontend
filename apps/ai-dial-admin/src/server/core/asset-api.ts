@@ -5,13 +5,14 @@ import {
   DEFAULT_LIST_LIMIT,
   DEFAULT_LIST_PATH,
   DEFAULT_LIST_PATH_TYPES,
+  PLATFORM_BUCKET_RESOURCE_TYPES,
 } from '@/src/constants/assets-core';
 import { RESOURCE_TYPE_PREFIX } from '@/src/constants/publications-core';
 import { Token } from '@/src/models/auth';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { encodeCorePath, parseVersionedPath, stripPrefix, VersionedPathParts } from '@/src/server/publications/path';
 import { ResourceType } from '@/src/types/resource-type';
-import { MODELS_ROOT_FOLDER } from '@/src/utils/files/root-folder';
+import { PLATFORM_ROOT_FOLDER } from '@/src/utils/files/root-folder';
 import { CoreApi } from './core-api';
 import { createHeadersForCreate, createIfMatchHeaders, createIfNoneMatchHeaders } from './asset-headers';
 import {
@@ -231,18 +232,18 @@ export class AssetApi extends CoreApi {
   }
 
   /**
-   * `MODELS_PREFIX` already bakes in the `platform` bucket (Core keys are `models/platform/{name}`),
-   * but the shared asset-folder UI passes it again as a path segment (the same `{root}/` convention
-   * every other asset view uses for its own bucket) — strip it here so the URL isn't built with
-   * `platform` twice. Bare item paths (e.g. a single model's name) never start with this prefix, so
-   * they pass through unchanged.
+   * The `ConfigResourceController` prefixes already bake in the `platform` bucket (Core keys are
+   * `models/platform/{name}`, `schemas/platform/{name}`), but the shared asset-folder UI passes it
+   * again as a path segment (the same `{root}/` convention every other asset view uses for its own
+   * bucket) — strip it here so the URL isn't built with `platform` twice. Bare item paths never
+   * start with this prefix, so they pass through unchanged.
    */
   private resolveListPath(type: ResourceType, path: string): string {
     if (!path && DEFAULT_LIST_PATH_TYPES.has(type)) {
       return DEFAULT_LIST_PATH;
     }
-    if (type === ResourceType.MODEL) {
-      return stripPrefix(path, `${MODELS_ROOT_FOLDER}/`);
+    if (PLATFORM_BUCKET_RESOURCE_TYPES.has(type)) {
+      return stripPrefix(path, `${PLATFORM_ROOT_FOLDER}/`);
     }
     return path;
   }

@@ -90,6 +90,11 @@ const CreateEntity = <T extends CreatePromptEntity>({
       if (isAssetView(route)) {
         entity.folderId = folderContext?.filePath;
       }
+      // An app runner is identified by `$id`, not `name`, so both the toast and the navigation target
+      // fall back to it — otherwise they carry an empty identity.
+      const entityId = (entity as { $id?: string }).$id;
+      const entityLabel = entity.name || entityId;
+
       getReqRef.current(createEntity, entity).then((res) => {
         if (res.success) {
           if (isAssetView(route)) {
@@ -98,12 +103,12 @@ const CreateEntity = <T extends CreatePromptEntity>({
           showNotification(
             getSuccessNotification(
               getCreateNotificationTitle(route, t),
-              getCreateNotificationDescription(route, entity.name, t),
+              getCreateNotificationDescription(route, entityLabel, t),
             ),
           );
           const originalRoute = route.split('/')[1];
           const newEntity = isAssetView(route)
-            ? { folderId: entity.folderId, name: entity.name, version: entity.version }
+            ? { folderId: entity.folderId, name: entity.name, version: entity.version, $id: entityId }
             : res.response || entity;
           router.push(`${initialValues ? '/' : ''}${originalRoute}/${getEntityPath(route, newEntity, false)}`);
           onClose();

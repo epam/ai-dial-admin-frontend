@@ -1,7 +1,15 @@
-import { DialApplicationResource, DialModelResource, DialToolsetResource } from '@/src/models/dial/resource';
+import {
+  DialAppRunnerResource,
+  DialApplicationResource,
+  DialModelResource,
+  DialToolsetResource,
+} from '@/src/models/dial/resource';
 import { DialConversation } from '@/src/models/dial/conversation';
+import { CoreAppRunnerRoutes } from '@/src/models/dial/core-app-runner-route';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
+import { fromCoreAppRoutes } from '@/src/utils/app-runners/core-app-routes';
+import { fromCoreRunnerName } from '@/src/utils/app-runners/core-runner-name';
 import { ResourceType } from '@/src/types/resource-type';
 import { RESOURCE_TYPE_PREFIX } from '@/src/constants/publications-core';
 import { VERSIONED_RESOURCE_TYPES } from '@/src/constants/assets-core';
@@ -19,6 +27,7 @@ export interface CoreResourceMetadataNode {
   url: string;
   nodeType: 'ITEM' | 'FOLDER';
   resourceType?: string;
+  createdAt?: number;
   updatedAt?: number;
   author?: string;
   /**
@@ -38,6 +47,7 @@ export interface ResourceInfo {
   path: string;
   version?: string;
   author?: string;
+  createdAt?: string;
   updatedAt?: string;
   nodeType?: DialFileNodeType;
 }
@@ -50,11 +60,14 @@ const toResourceInfo = (metadata: CoreResourceMetadataNode, type: ResourceType):
     ? parseEncodedVersionedPath(metadata.url, prefix)
     : { ...parseEncodedFlatPath(metadata.url, prefix), version: undefined };
   return {
-    name,
+    // An app runner's resource name is its percent-encoded `$id`; rows show the `$id` while `path`
+    // stays encoded, since that is what the CRUD calls address.
+    name: type === ResourceType.APP_TYPE_SCHEMA ? fromCoreRunnerName(name) : name,
     folderId,
     path,
     version,
     author: metadata.author,
+    createdAt: metadata.createdAt !== undefined ? String(metadata.createdAt) : undefined,
     updatedAt: metadata.updatedAt !== undefined ? String(metadata.updatedAt) : undefined,
     nodeType: metadata.nodeType.toLowerCase() as DialFileNodeType,
   };
@@ -87,6 +100,7 @@ const flatMetadataFields = (metadata: CoreResourceMetadataNode, prefix: string) 
     path,
     folderId,
     author: metadata.author ?? '',
+    createdAt: metadata.createdAt !== undefined ? String(metadata.createdAt) : undefined,
     updatedAt: metadata.updatedAt !== undefined ? String(metadata.updatedAt) : undefined,
   };
 };
@@ -150,6 +164,27 @@ export const mergeModelResource = (
   } as DialModelResource;
 };
 
+/**
+ * App runners are flat and unversioned like models, and additionally carry two conversions no other
+ * type needs: the resource name is a percent-encoded `$id` (recovered here, since `$id` is the
+ * runner's identity everywhere in the UI), and Core's `dial:applicationTypeRoutes` is a name-keyed
+ * object that the route editors consume as an array.
+ */
+export const mergeAppRunnerResource = (
+  content: Record<string, unknown>,
+  metadata: CoreResourceMetadataNode,
+): DialAppRunnerResource => {
+  const { name, ...fields } = flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.APP_TYPE_SCHEMA]);
+  const routes = fromCoreAppRoutes(content['dial:applicationTypeRoutes'] as CoreAppRunnerRoutes | undefined);
+  return {
+    ...content,
+    ...fields,
+    name,
+    $id: fromCoreRunnerName(name),
+    ...(routes && { 'dial:applicationTypeRoutes': routes }),
+  } as DialAppRunnerResource;
+};
+
 export type AssetMerge = (content: Record<string, unknown>, metadata: CoreResourceMetadataNode) => unknown;
 
 export const ASSET_MERGERS: Partial<Record<ResourceType, AssetMerge>> = {
@@ -158,4 +193,5 @@ export const ASSET_MERGERS: Partial<Record<ResourceType, AssetMerge>> = {
   [ResourceType.CONVERSATION]: mergeConversation,
   [ResourceType.PROMPT]: mergePrompt,
   [ResourceType.MODEL]: mergeModelResource,
+  [ResourceType.APP_TYPE_SCHEMA]: mergeAppRunnerResource,
 };

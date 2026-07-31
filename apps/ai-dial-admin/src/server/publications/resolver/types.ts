@@ -14,8 +14,12 @@ export type PublicationResourceKey =
 /** The field on a resource wrapper that holds the enriched asset body. */
 export type PublicationAssetKey = 'prompt' | 'applicationResource' | 'conversation' | 'toolSetResource' | 'file';
 
-/** Resource types the publications workflow can carry. Models have no publications support. */
-export type PublishableResourceType = Exclude<ResourceType, ResourceType.MODEL>;
+/**
+ * Resource types the publications workflow can carry. The `ConfigResourceController`-backed types
+ * (models, app runners) have no publications support — Core has no sharing or publication concept
+ * for them.
+ */
+export type PublishableResourceType = Exclude<ResourceType, ResourceType.MODEL | ResourceType.APP_TYPE_SCHEMA>;
 
 export interface PublicationTypeConfig {
   resourceType: PublishableResourceType;

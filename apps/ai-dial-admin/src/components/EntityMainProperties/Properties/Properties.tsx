@@ -4,6 +4,8 @@ import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import { isAssetView } from '@/src/utils/is-view';
+import AppRunnerCreateProperties from '@/src/components/Assets/AppRunners/CreateProperties';
+import { DialAppRunnerResource } from '@/src/models/dial/resource';
 import AssetProperties from './AssetProperties';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 
@@ -30,6 +32,19 @@ const Properties = <T extends object>({
   entity,
   ...props
 }: Props<T>) => {
+  // Ahead of `isSimpleEntity`, which defaults to `true` for unlisted routes — an app runner is
+  // identified by `$id`, so the generic `name`-based form would silently drop its identity.
+  if (view === ApplicationRoute.AssetsAppRunners) {
+    return (
+      <AppRunnerCreateProperties
+        entity={entity as DialAppRunnerResource}
+        names={props.names}
+        isModal={props.isModal}
+        onChangeEntity={props.onChangeEntity}
+      />
+    );
+  }
+
   if (isSimpleEntity(view)) {
     return <EntityProperties entity={entity} view={view} isUniqueNameError={isUniqueNameError} {...props} />;
   }

@@ -12,6 +12,7 @@ export const listViewTitleMap: Record<string, MenuI18nKey> = {
   [ApplicationRoute.Prompts]: MenuI18nKey.Prompts,
   [ApplicationRoute.Files]: MenuI18nKey.Files,
   [ApplicationRoute.AssetsModels]: MenuI18nKey.Models,
+  [ApplicationRoute.AssetsAppRunners]: MenuI18nKey.AppRunners,
   [ApplicationRoute.AssetsApplications]: MenuI18nKey.Applications,
   [ApplicationRoute.Routes]: MenuI18nKey.Routes,
   [ApplicationRoute.PromptPublications]: MenuI18nKey.PromptPublications,

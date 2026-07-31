@@ -61,6 +61,15 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
       },
     ],
   },
+  [ApplicationRoute.AssetsAppRunners]: {
+    segments: [
+      { name: 'AssetsAppRunners', i18nKey: MenuI18nKey.AppRunners },
+      {
+        name: 'Id',
+        href: false,
+      },
+    ],
+  },
   [ApplicationRoute.Conversations]: {
     segments: [
       { name: 'Conversations', i18nKey: MenuI18nKey.Conversations, shouldEnrichWithFolderBreadcrumbs: true },

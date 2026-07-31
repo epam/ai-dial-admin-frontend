@@ -10,7 +10,12 @@ import FloatingFilter from '@/src/components/Grid/FloatingFilter/FloatingFilter'
 import { TEMP_FOLDER } from '@/src/constants/file';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
-import { CREATE_FOLDER_FORBIDDEN_CHARS, FILE_NAME_MAX_LENGTH, MAX_FOLDER_NESTING_DEPTH } from './constants';
+import {
+  CONTROL_CHARS_ONLY_REGEXP,
+  CREATE_FOLDER_FORBIDDEN_CHARS,
+  FILE_NAME_MAX_LENGTH,
+  MAX_FOLDER_NESTING_DEPTH,
+} from './constants';
 import { FORBIDDEN_NAME_SYMBOLS } from '@/src/constants/validation';
 import { getRootFolder } from '@/src/utils/files/root-folder';
 import { addTrailingSlash } from '@/src/utils/url';
@@ -32,6 +37,7 @@ export const findFolderByPath = (items: DialFile[], targetPath: string): DialFil
 
 const assetEntityMap: Record<string, FileManagerI18nKey> = {
   [ApplicationRoute.AssetsModels]: FileManagerI18nKey.Models,
+  [ApplicationRoute.AssetsAppRunners]: FileManagerI18nKey.AppRunners,
   [ApplicationRoute.AssetsApplications]: FileManagerI18nKey.Applications,
   [ApplicationRoute.AssetsToolsets]: FileManagerI18nKey.Toolsets,
   [ApplicationRoute.Prompts]: FileManagerI18nKey.Prompts,
@@ -87,6 +93,19 @@ export const getEmptyFile = () => {
 export const isItemNameValid = (name: string): boolean => {
   return !FORBIDDEN_NAME_SYMBOLS.some((symbol) => name.includes(symbol));
 };
+
+/**
+ * An app-runner's row name is its `$id`, a URI — `:` and `/` are inherent to it. The ui-kit's default
+ * forbidden-symbols regex covers both, which would mark every row invalid (grey name, "please rename
+ * it" tooltip) and disable its context-menu actions. Only control characters are genuinely invalid
+ * here; the CRUD calls address the separately-held encoded `path`, not this name.
+ */
+export const getForbiddenSymbolsRegExp = (view: ApplicationRoute): RegExp | undefined =>
+  view === ApplicationRoute.AssetsAppRunners ? CONTROL_CHARS_ONLY_REGEXP : undefined;
+
+/** Opening a row navigates by encoded `path`, so a URI-shaped app-runner name is safe to open. */
+export const isItemOpenable = (view: ApplicationRoute, name: string): boolean =>
+  view === ApplicationRoute.AssetsAppRunners || isItemNameValid(name);
 
 export const validateCreateFolder = (
   name: string,
@@ -177,7 +196,9 @@ export const getToolbarOptions = (route: ApplicationRoute, isReadOnlyAdmin: bool
 
 export const getBulkActionsToolbarOptions = (view: ApplicationRoute, t: (key: string) => string) => {
   const actionLabels =
-    view === ApplicationRoute.Conversations || view === ApplicationRoute.AssetsModels
+    view === ApplicationRoute.Conversations ||
+    view === ApplicationRoute.AssetsModels ||
+    view === ApplicationRoute.AssetsAppRunners
       ? bulkActionLabels.filter((action) => action.key === 'delete')
       : bulkActionLabels;
 

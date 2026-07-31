@@ -48,12 +48,15 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
       view === ApplicationRoute.Models ||
       view === ApplicationRoute.Applications ||
       view === ApplicationRoute.ApplicationRunners ||
+      view === ApplicationRoute.AssetsAppRunners ||
       view === ApplicationRoute.AssetsApplications
     );
   }, [view]);
 
+  // Both runner surfaces hold their selection in `dial:applicationTypeInterceptors`. Missing the asset
+  // route here reads and writes `interceptors` instead, which Core stores verbatim — permanently.
   const isAppRunnerView = useMemo(() => {
-    return view === ApplicationRoute.ApplicationRunners;
+    return view === ApplicationRoute.ApplicationRunners || view === ApplicationRoute.AssetsAppRunners;
   }, [view]);
 
   const entityInterceptors = useMemo(() => {
@@ -202,6 +205,7 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
           runnerInterceptors={runnerInterceptors}
           localInterceptors={localInterceptors}
           globalInterceptors={globalInterceptors}
+          selectedInterceptors={entityInterceptors}
           headerButton={button}
         />
       ) : (

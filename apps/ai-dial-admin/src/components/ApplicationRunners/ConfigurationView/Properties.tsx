@@ -13,10 +13,12 @@ interface Props {
   isImmutable?: boolean;
   names: string[];
   isModal?: boolean;
+  /** Characters the `$id` may not contain. Only the asset surface constrains this — see `CORE_UNENCODABLE_ID_CHARS`. */
+  idForbiddenChars?: readonly string[];
   onChangeRunner: (entity: DialApplicationScheme) => void;
 }
 
-const SchemeProperties: FC<Props> = ({ names, runner, isImmutable, onChangeRunner, isModal }) => {
+const SchemeProperties: FC<Props> = ({ names, runner, isImmutable, idForbiddenChars, onChangeRunner, isModal }) => {
   const onChangeId = useCallback(
     (id?: string) => {
       onChangeRunner({
@@ -33,6 +35,7 @@ const SchemeProperties: FC<Props> = ({ names, runner, isImmutable, onChangeRunne
         <IdControl
           names={names}
           isUrlId
+          forbiddenChars={idForbiddenChars}
           entity={{ name: runner.$id }}
           onChangeEntity={(entity) => onChangeId(entity.name)}
         />

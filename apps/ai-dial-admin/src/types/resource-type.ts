@@ -5,4 +5,5 @@ export enum ResourceType {
   TOOLSET = 'TOOL_SET',
   CONVERSATION = 'CONVERSATION',
   MODEL = 'MODEL',
+  APP_TYPE_SCHEMA = 'APP_TYPE_SCHEMA',
 }

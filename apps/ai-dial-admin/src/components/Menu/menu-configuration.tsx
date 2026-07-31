@@ -83,6 +83,10 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
           href: ApplicationRoute.AssetsModels,
         },
         {
+          key: MenuI18nKey.AppRunners,
+          href: ApplicationRoute.AssetsAppRunners,
+        },
+        {
           key: MenuI18nKey.Applications,
           href: ApplicationRoute.AssetsApplications,
         },
