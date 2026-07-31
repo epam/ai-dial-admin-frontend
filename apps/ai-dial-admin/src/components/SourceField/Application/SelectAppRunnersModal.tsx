@@ -5,11 +5,12 @@ import { GridOptions, GridReadyEvent } from 'ag-grid-community';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import { SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
-import { LIST_RUNNER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { PICKER_RUNNER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialApplicationScheme } from '@/src/models/dial/application';
+import { getRunnerReference } from './utils';
 
 interface Props {
   selectedId?: string;
@@ -27,7 +28,7 @@ const SelectAppRunnerModal: FC<Props> = ({ selectedId, sourceEntities, isModalOp
   const isSelectedNode = (data?: DialApplicationScheme | DialAdapter) => {
     const runner = data as DialApplicationScheme;
     const adapter = data as DialAdapter;
-    return !!selectedRunner && (runner?.$id === selectedRunner || adapter?.name === selectedRunner);
+    return !!selectedRunner && (getRunnerReference(runner) === selectedRunner || adapter?.name === selectedRunner);
   };
 
   const options: GridOptions = {
@@ -39,12 +40,14 @@ const SelectAppRunnerModal: FC<Props> = ({ selectedId, sourceEntities, isModalOp
         const adapter = data.data as DialAdapter;
         const isActive = isSelectedNode(data.data);
 
-        return <RadioButtonRenderer inputId={runner?.$id || adapter?.name || data.id} isChecked={isActive} />;
+        return (
+          <RadioButtonRenderer inputId={getRunnerReference(runner) || adapter?.name || data.id} isChecked={isActive} />
+        );
       },
     },
     onRowSelected: (event) => {
       if (event.node.isSelected()) {
-        setSelectedRunner(event.data.$id || event.data.name);
+        setSelectedRunner(getRunnerReference(event.data) || event.data.name);
       }
     },
   };
@@ -76,7 +79,7 @@ const SelectAppRunnerModal: FC<Props> = ({ selectedId, sourceEntities, isModalOp
     >
       <div className="flex flex-col px-6 py-4 h-full">
         <GridView
-          columnDefs={LIST_RUNNER_COLUMNS.map((col) => ({ ...col, sort: void 0 }))}
+          columnDefs={PICKER_RUNNER_COLUMNS(t).map((col) => ({ ...col, sort: void 0 }))}
           additionalGridOptions={options}
           onGridReady={onGridReady}
         />

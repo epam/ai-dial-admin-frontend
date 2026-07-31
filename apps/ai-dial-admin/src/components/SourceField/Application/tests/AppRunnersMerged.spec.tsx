@@ -1,0 +1,124 @@
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, test, vi } from 'vitest';
+
+import AppRunners from '@/src/components/SourceField/Application/AppRunners';
+import { buildAppRunnerOptions } from '@/src/components/SourceField/Application/utils';
+import { DialApplicationScheme } from '@/src/models/dial/application';
+import { ResourceInfo } from '@/src/server/core/asset-metadata';
+
+vi.mock('@/src/app/[lang]/application-runners/actions', () => ({
+  getResolvedApplicationScheme: vi.fn().mockResolvedValue({ success: true, response: { schema: {} } }),
+}));
+
+vi.mock('@/src/app/[lang]/assets-app-runners/actions', () => ({
+  getResolvedRunnerSchema: vi.fn().mockResolvedValue({ success: true, response: { properties: {} } }),
+}));
+
+vi.mock('@/src/utils/schema', () => ({
+  getSchemaDefaults: vi.fn(() => ({ propA: 'default-a' })),
+}));
+
+vi.mock('@epam/ai-dial-ui-kit', async () => {
+  const actual = await vi.importActual<Record<string, unknown>>('@epam/ai-dial-ui-kit');
+  return {
+    ...actual,
+    DialSelectField: ({ id, options, onChange, value, label }: any) => (
+      <select aria-label={label || id} value={value ?? ''} onChange={(e) => onChange(e.target.value)}>
+        <option value="">--</option>
+        {options?.map((o: any) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    ),
+  };
+});
+
+vi.mock('@/src/hooks/use-is-mobile-screen', () => ({ useIsMobileScreen: () => false }));
+vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: () => false }));
+
+import { getResolvedApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
+import { getResolvedRunnerSchema } from '@/src/app/[lang]/assets-app-runners/actions';
+
+const ASSET_REFERENCE = 'schemas/platform/http%3A%2F%2Fasdqwe';
+
+const entityRunner = {
+  $id: 'urn:runner:entity',
+  'dial:applicationTypeDisplayName': 'Entity Runner',
+} as unknown as DialApplicationScheme;
+
+const assetRunner = {
+  name: 'http://asdqwe',
+  path: 'http%3A%2F%2Fasdqwe',
+  folderId: '',
+} as ResourceInfo;
+
+const options = buildAppRunnerOptions([entityRunner], [assetRunner]);
+
+const selectRunner = async (value: string) => {
+  const user = userEvent.setup();
+  await user.selectOptions(screen.getByRole('combobox'), value);
+};
+
+describe('AppRunners :: merged picker', () => {
+  test('offers both populations, labelling every row by its $id', () => {
+    render(<AppRunners selectedValue="" onChangeValue={vi.fn()} runners={options} />);
+
+    // Matches the grid's `ID` column, for both populations — the display name is not surfaced here.
+    expect(screen.getByRole('option', { name: 'urn:runner:entity' })).toBeDefined();
+    expect(screen.getByRole('option', { name: 'http://asdqwe' })).toBeDefined();
+    expect(screen.queryByRole('option', { name: 'Entity Runner' })).toBeNull();
+  });
+
+  test('selecting an asset runner stores its canonical Core resource name', async () => {
+    const onChangeValue = vi.fn();
+    render(<AppRunners selectedValue="" onChangeValue={onChangeValue} runners={options} />);
+
+    await selectRunner(ASSET_REFERENCE);
+
+    await waitFor(() => expect(onChangeValue).toHaveBeenCalled());
+    // The literal expected string, not a re-derivation through the helper under test.
+    expect(onChangeValue).toHaveBeenCalledWith('schemas/platform/http%3A%2F%2Fasdqwe', { propA: 'default-a' });
+  });
+
+  test('selecting an entity runner still stores its bare $id', async () => {
+    const onChangeValue = vi.fn();
+    render(<AppRunners selectedValue="" onChangeValue={onChangeValue} runners={options} />);
+
+    await selectRunner('urn:runner:entity');
+
+    await waitFor(() => expect(onChangeValue).toHaveBeenCalled());
+    expect(onChangeValue).toHaveBeenCalledWith('urn:runner:entity', { propA: 'default-a' });
+  });
+
+  test('an asset selection resolves against Core, with the encoded resource name', async () => {
+    vi.mocked(getResolvedRunnerSchema).mockClear();
+    vi.mocked(getResolvedApplicationScheme).mockClear();
+
+    render(<AppRunners selectedValue="" onChangeValue={vi.fn()} runners={options} />);
+    await selectRunner(ASSET_REFERENCE);
+
+    await waitFor(() => expect(getResolvedRunnerSchema).toHaveBeenCalledWith('http%3A%2F%2Fasdqwe'));
+    expect(getResolvedApplicationScheme).not.toHaveBeenCalled();
+  });
+
+  test('an entity selection resolves against the admin BE', async () => {
+    vi.mocked(getResolvedRunnerSchema).mockClear();
+    vi.mocked(getResolvedApplicationScheme).mockClear();
+
+    render(<AppRunners selectedValue="" onChangeValue={vi.fn()} runners={options} />);
+    await selectRunner('urn:runner:entity');
+
+    await waitFor(() => expect(getResolvedApplicationScheme).toHaveBeenCalledWith('urn:runner:entity'));
+    expect(getResolvedRunnerSchema).not.toHaveBeenCalled();
+  });
+
+  test('a stored canonical reference reopens as the selected option, not blank', () => {
+    render(<AppRunners selectedValue={ASSET_REFERENCE} onChangeValue={vi.fn()} runners={options} />);
+
+    expect(screen.getByRole<HTMLSelectElement>('combobox').value).toBe(ASSET_REFERENCE);
+    expect(screen.getByRole<HTMLOptionElement>('option', { name: 'http://asdqwe' }).selected).toBe(true);
+  });
+});

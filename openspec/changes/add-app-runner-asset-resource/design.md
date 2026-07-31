@@ -33,10 +33,10 @@ Blob-written entries land in that same `Config.applicationTypeSchemas` map but k
 
 **Non-Goals:**
 
-- No changes to `Entities > Application Runners` or any existing consumer of `getApplicationSchemesList`.
+- No changes to `Entities > Application Runners`. Of the eight `getApplicationSchemesList` consumers, the follow-up (Issue #4078) touches only the two `Assets > Applications` pages; the other six are unchanged.
 - No versioning, publications, sharing, move, or import/export.
 - No `Applications` tab, `Audit` tab, revision links, rollback, or Core-sync banner.
-- No extension of the application source-field runner picker, and no outbound create-application actions.
+- ~~No extension of the application source-field runner picker~~ — extended on `Assets > Applications` only by the follow-up. No outbound create-application actions.
 - No backfill of existing admin-BE runners into Core blob storage.
 
 ## Decisions
@@ -108,12 +108,52 @@ DIAL Core has no audit, revision, history, or snapshot surface for config resour
 - **Non-locale-aware column defs silently render raw values.** The ui-kit's date columns are `(locale, options) => ColDef` factories the file manager resolves; a plain `ColDef` is passed through untouched, so a hand-written timestamp column renders epoch milliseconds with no error. → The created-at column is derived from the ui-kit's updated-at factory rather than hand-written, overriding `field` and `colId` (a shared `colId` collides in ag-grid).
 - **`core-asset-client` delta overlap.** `add-model-asset-resource` is unarchived, so its `core-asset-client` delta is not yet folded into `openspec/specs/core-asset-client/spec.md`. Both deltas add requirements to the same capability without touching each other's, so they are independent; whichever archives second simply appends. → No action taken on the other change's artifacts.
 
+## Decisions — follow-up (Issue #4078)
+
+**A runner option is identified by its *reference value*, not by `$id`.**
+The two populations are addressed differently in Core's single `applicationTypeSchemas` map: entity runners arrive via the admin BE's aggregated config push keyed by `$id`; asset runners are blob-written and keyed by their canonical ID, `schemas/platform/{encodeURIComponent($id)}`. So `application_type_schema_id` holds a different string shape depending on where the runner came from — confirmed against a Core-side review comment giving the exact expected value (`schemas/platform/http%3A%2F%2Fasdqwe`), which `SCHEMAS_PREFIX + toCoreRunnerName($id)` reproduces character-for-character with helpers already in the tree. The option's `value` therefore becomes the reference value, computed once per population at the point the merged list is built, rather than read off `$id` at the point of use. Every consumer that today compares against `$id` compares against the reference value instead.
+
+**Origin travels on the row, not inferred from the value's shape.**
+Three behaviours branch on which population an option came from: which resolved-schema endpoint to call on select, where the "Open" button navigates, and what the `Source` column renders. Sniffing the origin by testing whether the value starts with `schemas/platform/` would work today and silently misclassify the moment an entity runner's `$id` happens to look like one. An explicit discriminator on the merged row is the same amount of code and cannot drift. This is also the seam that would be reused if `Assets > Models` ever gets the same treatment — the mechanism is population-tagging a merged option list, not anything runner-specific.
+
+**Flat merged grid rather than two tabs.**
+The alternative — one modal, two tabs, each keeping its native columns — avoids empty cells and makes origin structural. It was considered and rejected in favour of a single grid, on the grounds that "one list of runners" is what the user is actually choosing between and a tab split makes them pick a source before they pick a runner. The cost is accepted and mitigated: asset rows have no `Display Name`, `Description`, or `Topics`, so those cells render empty, and `Display Name` being the grid's sort key means the sort needs a fallback to the reference value or the row would clump every asset runner at one end.
+
+**Every row is labelled by `$id`, and the picker's presentation is therefore shared with `Entities > Applications`.**
+The picker started out showing `Display Name` (sorted), `Description`, `ID`, `Topics`, and both timestamps — a set only the entity half can fill. It was reduced to `ID`, `Source`, `Author`, `Updated time`: everything either population has without a content read. With `Display Name` gone from the grid, keeping it as the *selected-value* label would mean browsing by one name and ending up with another, so the label follows the grid and is `$id` everywhere.
+
+`AppRunners` and `SelectAppRunnersModal` are shared by both application surfaces (`SourceField.tsx` for entities, `ResourceSourceField.tsx` for assets), so this reaches `Entities > Applications` as well: its runner picker now presents `$id` rather than display names. That is a cosmetic change to a surface this change's non-goals declared untouched, accepted deliberately — the alternative is per-surface label and column overrides on a component whose whole value is being shared, and no reference value, fetch, save path, or option set changes there. The two call sites *are* cleanly distinguishable (`entity` prop vs `selectedValue` prop) if that ever needs revisiting.
+
+**Asset rows carry no content, so only metadata-backed columns are populated.**
+Core's listing returns `ResourceItemMetadata` — verified against `epam/ai-dial-core`: `name`, `path`, `bucket`, `url`, `nodeType`, `resourceType` from `MetadataBase`, plus `createdAt`, `updatedAt`, `etag`, `author`. No body. So `author` and the timestamps are free and are mapped onto the option; a display name, description, or topic list would cost one content `GET` per runner on every render of both `Assets > Applications` pages, working against the lazy folder context that exists precisely to avoid that. `$id` is also what the shipped `Assets > App Runners` list already shows, under a column literally headed `ID`, so the picker and the list agree on what an asset runner is called.
+
+Two Core-side facts were confirmed directly rather than inferred, both load-bearing here: `ResourceTypes` has no version concept at all for `APP_TYPE_SCHEMA` (the boolean beside it is `requireCompression`), and `ENTITY_NAME_PATTERN` — `^[A-Za-z0-9._%:-]+$`, applied to the URL-decoded segment — admits no `/`, so a runner name can never contain a path separator. The first keeps this resource kind out of `VERSIONED_RESOURCE_TYPES`; the second is why the flat list is sufficient and the recursive read was dropped.
+
+**No recursive list read — the resource kind is flat, so there is nothing to recurse into.**
+This was originally specified as a recursive, folder-flattening variant of `assetApi.list`, on the assumption that a flat picker grid must gather runners out of nested folders. It must not: `PLATFORM_BUCKET_RESOURCE_TYPES` is documented as "flat, unversioned, and stored under the single fixed `platform` bucket", `parseEncodedFlatPath` returns `folderId: ''` unconditionally, and section 12.4 of this change already removed the folder tree's create actions for this view because "a folder create on a flat type could only ever fail". The bucket root therefore holds every runner, and the existing `list` — which already follows `nextToken` to completion — covers the picker in one call. `getAllRunners` is a thin wrapper that supplies the empty path.
+
+The discarded version was worse than redundant: `parseEncodedFlatPath` correctly refuses to split a folder out of a flat path, so a nested node would have surfaced with `nested/http://b` as its *name*. Keeping the recursive read would have meant changing that shared helper to support a case Core cannot currently produce. Caught by a test asserting the flattening, which failed on data Core does not emit — the fixture was wrong, and the wrongness was the point.
+
+**The asset fetch degrades rather than failing the page.**
+`Assets > Applications` renders from a server component that already performs four admin-BE fetches inside one `try`. Adding a Core read to that block would let a Core outage — or an install whose token lacks Core's admin role — take down a page that works fine today. The asset-runner read is isolated so a failure yields the entity-only list, matching the behaviour before this follow-up.
+
+**Spec drift noted, not silently reconciled.**
+`openspec/specs/application-source/spec.md` states that the flat schema-id field is removed and that asset applications read `getSchemaSourceId(entity.source)`. The shipped code disagrees: `DialApplicationResource` carries a flat snake_case `application_type_schema_id`, `ResourceSourceField` reads and writes it directly, and `assets-applications/actions.ts` falls back to `source.applicationTypeSchemaId` only if the flat field is absent. This follow-up is specified against the code as it is, and does not rewrite the `application-source` capability — reconciling that drift is its own piece of work and folding it in here would hide a behavioural change inside a picker fix.
+
 ## Migration Plan
 
 Purely additive. No existing route, component, server action, or admin-BE integration is modified; `Entities > Application Runners` and all six reference-data consumers of `getApplicationSchemesList` are untouched. Ships unconditionally with no feature flag, matching how the six prior asset changes and `add-model-asset-resource` shipped. Rollback is a plain revert — new files plus a menu entry, one `ResourceType` member, and additive entries in shared maps.
 
 Depends on the flat/unversioned machinery merged with `add-model-asset-resource`; written against a tree that includes it, no coordination needed.
 
+## Risks / Trade-offs — follow-up (Issue #4078)
+
+- **The reference-value asymmetry is a silent-failure class, not a visible one.** Writing the wrong form saves a 200 and produces an application that simply never resolves its runner; reading the wrong form produces a blank field on an application that saved correctly. Neither raises an error. → Pinned by tests asserting the exact stored string for each population and a save → reopen → still-selected round trip, rather than by asserting the picker renders.
+- **The picker is shared with `Entities > Applications`.** `AppRunners.tsx` serves both surfaces, so a merge applied at the component rather than at the two `Assets > Applications` pages would hand deployment applications options that fail on save against an admin-BE foreign key. → The merged list is assembled per-page and passed in; the component stays source-agnostic.
+- **Empty content columns on asset rows are visible to every user of the picker.** Display name, description, and topics are blank for the asset half. → Accepted as the cost of not doing N content reads per render; consistent with what `Assets > App Runners` already shows.
+- **Day-one emptiness on existing installs.** The asset half of the grid is empty until someone creates a runner through the new surface, since `ConfigResourceMetadataController` reads blob storage only. → Expected; the `Source` column makes the split legible rather than looking like missing data.
+- **A large `platform` bucket makes the runner list the page's slowest fetch.** The read is unpaginated in aggregate (it follows `nextToken` to completion) and runs on every render of both pages. → Acceptable at the scale a single flat `platform` bucket implies; if it stops being so, the fix is the two-tab shape with a lazy asset pane, which was the rejected alternative above.
+
 ## Open Questions
 
-None outstanding. The identity scheme, tab set, interceptor-picker source, audit-trio treatment, and picker/create-button scope are all settled above.
+None outstanding. The identity scheme, tab set, interceptor-picker source, audit-trio treatment, and create-button scope are all settled above; the picker scope is settled by the follow-up decisions.
