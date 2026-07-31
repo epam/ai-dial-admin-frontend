@@ -257,6 +257,7 @@ const SourceField = <T extends DialInterceptor | DialModel | Toolset | DialAppli
           entity={entity as DialApplication}
           onChange={onChangeEntity as (entity: DialApplication) => void}
           runners={runners}
+          view={view}
           isEntityImmutable={isEntityImmutable}
           isModal={isModal}
           disabled={isReadonly}

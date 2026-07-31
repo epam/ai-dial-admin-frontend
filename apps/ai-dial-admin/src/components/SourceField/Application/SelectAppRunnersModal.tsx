@@ -5,7 +5,7 @@ import { GridOptions, GridReadyEvent } from 'ag-grid-community';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import RadioButtonRenderer from '@/src/components/Grid/CellRenderers/RadioButtonRenderer';
 import { SINGLE_ROW_SELECTION } from '@/src/constants/ag-grid';
-import { PICKER_RUNNER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import { LIST_RUNNER_COLUMNS, PICKER_RUNNER_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
@@ -16,11 +16,20 @@ interface Props {
   selectedId?: string;
   sourceEntities?: DialApplicationScheme[];
   isModalOpen: boolean;
+  /** Both runner populations are offered, so the columns drop to what each of them can fill. */
+  isMergedSource?: boolean;
   onClose: () => void;
   onApply: (id?: string) => void;
 }
 
-const SelectAppRunnerModal: FC<Props> = ({ selectedId, sourceEntities, isModalOpen, onClose, onApply }) => {
+const SelectAppRunnerModal: FC<Props> = ({
+  selectedId,
+  sourceEntities,
+  isModalOpen,
+  isMergedSource,
+  onClose,
+  onApply,
+}) => {
   const t = useI18n();
 
   const [selectedRunner, setSelectedRunner] = useState(selectedId);
@@ -79,7 +88,10 @@ const SelectAppRunnerModal: FC<Props> = ({ selectedId, sourceEntities, isModalOp
     >
       <div className="flex flex-col px-6 py-4 h-full">
         <GridView
-          columnDefs={PICKER_RUNNER_COLUMNS(t).map((col) => ({ ...col, sort: void 0 }))}
+          columnDefs={(isMergedSource ? PICKER_RUNNER_COLUMNS(t) : LIST_RUNNER_COLUMNS).map((col) => ({
+            ...col,
+            sort: void 0,
+          }))}
           additionalGridOptions={options}
           onGridReady={onGridReady}
         />

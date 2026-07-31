@@ -5,6 +5,7 @@ import { describe, expect, test, vi } from 'vitest';
 import AppRunners from '@/src/components/SourceField/Application/AppRunners';
 import { buildAppRunnerOptions } from '@/src/components/SourceField/Application/utils';
 import { DialApplicationScheme } from '@/src/models/dial/application';
+import { ApplicationRoute } from '@/src/types/routes';
 import { ResourceInfo } from '@/src/server/core/asset-metadata';
 
 vi.mock('@/src/app/[lang]/application-runners/actions', () => ({
@@ -64,7 +65,14 @@ const selectRunner = async (value: string) => {
 
 describe('AppRunners :: merged picker', () => {
   test('offers both populations, labelling every row by its $id', () => {
-    render(<AppRunners selectedValue="" onChangeValue={vi.fn()} runners={options} />);
+    render(
+      <AppRunners
+        selectedValue=""
+        onChangeValue={vi.fn()}
+        runners={options}
+        view={ApplicationRoute.AssetsApplications}
+      />,
+    );
 
     // Matches the grid's `ID` column, for both populations — the display name is not surfaced here.
     expect(screen.getByRole('option', { name: 'urn:runner:entity' })).toBeDefined();
@@ -72,9 +80,25 @@ describe('AppRunners :: merged picker', () => {
     expect(screen.queryByRole('option', { name: 'Entity Runner' })).toBeNull();
   });
 
+  test('keeps display names on every other surface, so Entities > Applications is unaffected', () => {
+    render(
+      <AppRunners selectedValue="" onChangeValue={vi.fn()} runners={options} view={ApplicationRoute.Applications} />,
+    );
+
+    expect(screen.getByRole('option', { name: 'Entity Runner' })).toBeDefined();
+    expect(screen.queryByRole('option', { name: 'urn:runner:entity' })).toBeNull();
+  });
+
   test('selecting an asset runner stores its canonical Core resource name', async () => {
     const onChangeValue = vi.fn();
-    render(<AppRunners selectedValue="" onChangeValue={onChangeValue} runners={options} />);
+    render(
+      <AppRunners
+        selectedValue=""
+        onChangeValue={onChangeValue}
+        runners={options}
+        view={ApplicationRoute.AssetsApplications}
+      />,
+    );
 
     await selectRunner(ASSET_REFERENCE);
 
@@ -85,7 +109,14 @@ describe('AppRunners :: merged picker', () => {
 
   test('selecting an entity runner still stores its bare $id', async () => {
     const onChangeValue = vi.fn();
-    render(<AppRunners selectedValue="" onChangeValue={onChangeValue} runners={options} />);
+    render(
+      <AppRunners
+        selectedValue=""
+        onChangeValue={onChangeValue}
+        runners={options}
+        view={ApplicationRoute.AssetsApplications}
+      />,
+    );
 
     await selectRunner('urn:runner:entity');
 
@@ -97,7 +128,14 @@ describe('AppRunners :: merged picker', () => {
     vi.mocked(getResolvedRunnerSchema).mockClear();
     vi.mocked(getResolvedApplicationScheme).mockClear();
 
-    render(<AppRunners selectedValue="" onChangeValue={vi.fn()} runners={options} />);
+    render(
+      <AppRunners
+        selectedValue=""
+        onChangeValue={vi.fn()}
+        runners={options}
+        view={ApplicationRoute.AssetsApplications}
+      />,
+    );
     await selectRunner(ASSET_REFERENCE);
 
     await waitFor(() => expect(getResolvedRunnerSchema).toHaveBeenCalledWith('http%3A%2F%2Fasdqwe'));
@@ -108,7 +146,14 @@ describe('AppRunners :: merged picker', () => {
     vi.mocked(getResolvedRunnerSchema).mockClear();
     vi.mocked(getResolvedApplicationScheme).mockClear();
 
-    render(<AppRunners selectedValue="" onChangeValue={vi.fn()} runners={options} />);
+    render(
+      <AppRunners
+        selectedValue=""
+        onChangeValue={vi.fn()}
+        runners={options}
+        view={ApplicationRoute.AssetsApplications}
+      />,
+    );
     await selectRunner('urn:runner:entity');
 
     await waitFor(() => expect(getResolvedApplicationScheme).toHaveBeenCalledWith('urn:runner:entity'));
@@ -116,7 +161,14 @@ describe('AppRunners :: merged picker', () => {
   });
 
   test('a stored canonical reference reopens as the selected option, not blank', () => {
-    render(<AppRunners selectedValue={ASSET_REFERENCE} onChangeValue={vi.fn()} runners={options} />);
+    render(
+      <AppRunners
+        selectedValue={ASSET_REFERENCE}
+        onChangeValue={vi.fn()}
+        runners={options}
+        view={ApplicationRoute.AssetsApplications}
+      />,
+    );
 
     expect(screen.getByRole<HTMLSelectElement>('combobox').value).toBe(ASSET_REFERENCE);
     expect(screen.getByRole<HTMLOptionElement>('option', { name: 'http://asdqwe' }).selected).toBe(true);

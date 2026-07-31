@@ -252,9 +252,9 @@ The asset half SHALL be read through the Core app-runner resource path, and its 
 
 The picker's columns SHALL be limited to `ID`, `Source`, `Author`, and `Updated time` — a set both populations can fill from data already loaded. Columns whose values live in the runner's content body (`Display Name`, `Description`, `Topics`) SHALL NOT appear, since populating them for asset rows would require one Core content read per runner on every render. This column set is specific to the picker; the standalone `Entities > Application Runners` list and the config import/export, audit-rollback, and import-preview grids keep their own unchanged column sets.
 
-A runner SHALL be labelled by its `$id` consistently across the picker — the grid's `ID` column, the dropdown options, and the collapsed field showing the current selection — so the name a user selects by is the name they see afterwards. The runner's display name SHALL NOT be surfaced in the picker, because an asset runner has none without a content read and a label absent from the grid would not be recognizable.
+A runner SHALL be labelled by its `$id` consistently across the picker — the grid's `ID` column, the dropdown options, and the collapsed field showing the current selection — so the name a user selects by is the name they see afterwards. The runner's display name SHALL NOT be surfaced in the merged picker, because an asset runner has none without a content read and a label absent from the grid would not be recognizable.
 
-The picker component and its grid are shared with `Entities > Applications`, so this labelling and column set apply there too. That surface's runner *source* is unchanged — it continues to offer admin-BE runners only — but its picker presents them by `$id` rather than display name.
+The picker component and its grid are shared with other surfaces, so this column set and labelling SHALL apply only where both populations are offered. Every other consumer — `Entities > Applications` included — SHALL keep the display-name label and the standalone runner column set unchanged, since all of its runners are admin-BE-backed and carry a display name.
 
 A failure to read the asset runner list SHALL degrade to the admin-BE-only list rather than failing the page.
 
@@ -281,11 +281,11 @@ A failure to read the asset runner list SHALL degrade to the admin-BE-only list 
 - **THEN** the collapsed field shows that runner's `$id`, the same value its grid row showed
 - **AND** no display name is shown in its place
 
-#### Scenario: Entities > Applications shares the presentation but not the source
+#### Scenario: Entities > Applications keeps its own presentation and source
 
 - **WHEN** the runner picker renders on `Entities > Applications`
-- **THEN** it labels runners by `$id` and shows the same four columns
-- **AND** it still offers admin-BE runners only
+- **THEN** it labels runners by their display name and shows the standalone runner column set
+- **AND** it offers admin-BE runners only
 
 #### Scenario: Asset rows show their metadata
 

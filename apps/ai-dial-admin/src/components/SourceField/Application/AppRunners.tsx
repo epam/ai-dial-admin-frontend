@@ -33,6 +33,11 @@ interface Props {
   onChangeValue?: (value?: string, application_properties?: Record<string, unknown>) => void;
   runners?: DialApplicationScheme[];
   label?: string;
+  /**
+   * Only `AssetsApplications` receives both runner populations, and only there is the presentation
+   * `$id`-based. Every other surface offers admin-BE runners alone and keeps its display names.
+   */
+  view?: ApplicationRoute;
   isEntityImmutable?: boolean;
   isModal?: boolean;
   disabled?: boolean;
@@ -45,6 +50,7 @@ const AppRunners: FC<Props> = ({
   onChangeValue,
   runners,
   label,
+  view,
   isEntityImmutable = false,
   disabled,
 }) => {
@@ -73,16 +79,19 @@ const AppRunners: FC<Props> = ({
     return () => dispatch({ type: ValidationActionType.SetField, field: 'sourceEntitySelector', isValid: true });
   }, [currentValue, t, dispatch]);
 
-  // Labelled by `$id`, matching the picker grid's `ID` column — an asset runner has no display name
-  // without a per-runner content read, and a label the grid never showed would not be recognizable.
+  const isMergedSource = view === ApplicationRoute.AssetsApplications;
+
+  // On the merged surface, labelled by `$id` to match the grid's `ID` column — an asset runner has no
+  // display name without a per-runner content read, and a label the grid never showed would not be
+  // recognizable. Elsewhere every runner has one, so it stays the label.
   const dropdownItems = useMemo(() => {
     return (
       runners?.map((r) => ({
         value: getRunnerReference(r),
-        label: r.$id || '',
+        label: (isMergedSource ? r.$id : r['dial:applicationTypeDisplayName']) || r.$id || '',
       })) || ([] as SelectOption[])
     );
-  }, [runners]);
+  }, [runners, isMergedSource]);
 
   const handleRunnerSelect = useCallback(
     (value?: string) => {
@@ -175,6 +184,7 @@ const AppRunners: FC<Props> = ({
               isModalOpen={isModalOpen}
               onClose={onCloseModal}
               sourceEntities={runners}
+              isMergedSource={isMergedSource}
             />
           </DialInputPopup>
         </div>
