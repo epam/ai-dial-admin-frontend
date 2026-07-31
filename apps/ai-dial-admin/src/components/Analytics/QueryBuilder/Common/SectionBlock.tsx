@@ -15,7 +15,7 @@ interface Props {
 }
 
 const SectionBlock: FC<Props> = ({ title, subtitle, markerClassName, action, warning, children }) => (
-  <section className="flex flex-col gap-2.5 rounded border border-primary bg-layer-3 p-3">
+  <section className="flex flex-col gap-2.5 rounded bg-layer-3 p-3">
     <div className="flex items-center justify-between gap-2">
       <h3 className="flex items-baseline gap-2 uppercase tracking-wide text-secondary dial-tiny-semi-text">
         {markerClassName && (

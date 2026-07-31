@@ -582,10 +582,10 @@ const buildExecutedMeta = (
   const resultColumns = getResultColumns(response)
     .map((c) => c.field)
     .filter((c): c is string => !!c);
-  // Plain group-by columns carry the schema display name; scalar-fn group-bys and aggregate
-  // aliases are user-authored and display as themselves (no entry).
+  // A returned column that names a schema field is labeled by that field's display name; anything else
+  // — a computed column, named by its alias — keeps the name it came back with.
   const columnLabels: Record<string, string> = {};
-  for (const column of dimensionColumns) {
+  for (const column of resultColumns) {
     const displayName = fields.find((f) => f.name === column)?.display_name;
     if (displayName) columnLabels[column] = displayName;
   }

@@ -7,19 +7,30 @@ import FieldChip from '@/src/components/Analytics/QueryBuilder/Common/FieldChip'
 import FnArgEditor from '@/src/components/Analytics/QueryBuilder/Aggregate/FnArgEditor';
 import SectionBlock from '@/src/components/Analytics/QueryBuilder/Common/SectionBlock';
 import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';
-import { fieldDisplayName, fieldsToOptions } from '@/src/components/Analytics/QueryBuilder/utils/fields';
 import {
+  fieldDisplayName,
+  fieldsToOptions,
+  prefilledAlias,
+} from '@/src/components/Analytics/QueryBuilder/utils/fields';
+import {
+  emptyArgs,
   functionArgSummary,
   functionByName,
+  functionLabels,
   scalarFunctions,
 } from '@/src/components/Analytics/QueryBuilder/utils/functions';
 import { getAggregateWarnings } from '@/src/components/Analytics/QueryBuilder/utils/serialize';
-import { createGroupByColumn, createGroupByFn } from '@/src/components/Analytics/QueryBuilder/utils/state';
+import {
+  createGroupByColumn,
+  createGroupByFn,
+  renamedFilterFields,
+  renamedSortKeys,
+} from '@/src/components/Analytics/QueryBuilder/utils/state';
 import { GROUP_BY_SECTION_WARNINGS, WARNING_I18N } from '@/src/constants/analytics/query-builder';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
-import { FunctionOption, GroupByRow, QueryBuilderColor } from '@/src/models/analytics/query-builder';
+import { FieldDropdownMode, FunctionOption, GroupByRow, QueryBuilderColor } from '@/src/models/analytics/query-builder';
 import { QueryFunction } from '@/src/models/analytics/query-function';
 import { QUERY_BUILDER_PALETTE } from '@/src/constants/analytics/query-builder-palette';
 
@@ -33,11 +44,15 @@ const GroupBySection: FC = () => {
   const t = useI18n();
   const { state, refresh } = useQueryBuilder();
 
-  const pickedColumns = new Set(state.groupBy.filter((g) => !g.fn).map((g) => g.field));
-  const addOptions = fieldsToOptions(state.fields).filter((f) => !pickedColumns.has(f.name));
+  // Picked columns stay listed so the dropdown can show them as selected and toggle them back off.
+  const pickedColumns = state.groupBy.filter((g) => !g.fn).map((g) => g.field);
+  const addOptions = fieldsToOptions(state.fields);
   // The Functions group is sourced entirely from the served catalog's scalar functions.
-  const functionOptions: FunctionOption[] = scalarFunctions(state.functions).map((fn) => ({
+  const scalarFns = scalarFunctions(state.functions);
+  const scalarLabels = functionLabels(scalarFns);
+  const functionOptions: FunctionOption[] = scalarFns.map((fn) => ({
     name: fn.name,
+    label: scalarLabels.get(fn.name) ?? fn.name,
     hint: fn.description,
   }));
 
@@ -48,16 +63,29 @@ const GroupBySection: FC = () => {
   const fnRows = state.groupBy.filter((g) => g.fn);
   const fieldOptions = fieldsToOptions(state.fields);
 
-  const addColumn = (name: string) => {
-    state.groupBy.push(createGroupByColumn(name));
+  const toggleColumn = (name: string) => {
+    const picked = state.groupBy.find((g) => !g.fn && g.field === name);
+    if (picked) state.groupBy = state.groupBy.filter((g) => g !== picked);
+    else state.groupBy.push(createGroupByColumn(name));
     refresh();
   };
 
   const addFunction = (name: string) => {
     const fn = functionByName(state.functions, name);
     if (!fn) return;
-    state.groupBy.push(createGroupByFn(fn));
+    const args = emptyArgs(fn);
+    state.groupBy.push(createGroupByFn(fn, args, prefilledAlias(state, fn, args, false)));
     refresh();
+  };
+
+  const syncAlias = (row: GroupByRow) => {
+    const fn = functionByName(state.functions, row.fn);
+    if (!fn || row.aliasEdited) return;
+    const next = prefilledAlias(state, fn, row.args, false, row.id);
+    if (next === row.alias) return;
+    state.sort = renamedSortKeys(state.sort, row.alias, next);
+    state.having = renamedFilterFields(state.having, row.alias, next);
+    row.alias = next;
   };
 
   const removeRow = (row: GroupByRow) => {
@@ -73,9 +101,11 @@ const GroupBySection: FC = () => {
       action={
         <CategorizedFieldDropdown
           id="qb-groupby-add"
+          mode={FieldDropdownMode.MultiAdd}
           options={addOptions}
+          selected={pickedColumns}
           functions={functionOptions}
-          onSelect={addColumn}
+          onSelect={toggleColumn}
           onSelectFunction={addFunction}
           addLabel={t(QueryBuilderI18nKey.AddField)}
           ariaLabel={`${t(QueryBuilderI18nKey.GroupBy)}: ${t(QueryBuilderI18nKey.AddField)}`}
@@ -113,17 +143,19 @@ const GroupBySection: FC = () => {
                   fieldOptions={fieldOptions}
                   onChange={(value) => {
                     row.args[i] = value;
+                    syncAlias(row);
                     refresh();
                   }}
                 />
               ))}
               <CompactInput
                 ariaLabel={t(QueryBuilderI18nKey.AliasPlaceholder)}
-                className="w-[72px] shrink-0"
+                className="min-w-[140px] flex-1"
                 value={row.alias}
                 placeholder={t(QueryBuilderI18nKey.AliasPlaceholder)}
                 onChange={(value) => {
                   row.alias = value;
+                  row.aliasEdited = true;
                   refresh();
                 }}
               />

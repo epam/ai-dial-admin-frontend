@@ -1,4 +1,5 @@
 import { IMPLICIT_COUNT_ALIAS, SORT_NULLS_DEFAULT } from '@/src/constants/analytics/query-builder';
+import { computedColumnNames } from '@/src/components/Analytics/QueryBuilder/utils/fields';
 import { withTimeBound } from '@/src/components/Analytics/QueryBuilder/utils/time';
 import {
   functionByName,
@@ -110,24 +111,35 @@ export const buildQuery = (state: QueryBuilderState, timeBound?: QueryTimeBound 
       const fn = functionByName(state.functions, g.fn);
       return fn ? requiredArgsFilled(fn, g.args) : false;
     });
-    const groupNames = activeGroupBy.map((g) => (g.fn ? g.alias : g.field)).filter(Boolean);
-    if (groupNames.length) q.group_by = groupNames;
+
+    // A computed column's alias is its only name and the backend rejects a blank one, so names come
+    // from the shared resolver: an alias the user cleared falls back to the derived one, and the
+    // Having/Sort pickers offer these exact names.
+    const names = computedColumnNames(state);
 
     const selectEntries: QueryOutputColumn[] = [];
+    const groupNames: string[] = [];
     activeGroupBy.forEach((g) => {
       if (!g.fn) {
+        groupNames.push(g.field);
         selectEntries.push({ expr: { type: QueryExprType.Field, name: g.field } });
         return;
       }
       const fn = functionByName(state.functions, g.fn);
-      if (fn) selectEntries.push({ expr: fnExpr(fn, g.args), as: g.alias || '' });
+      const alias = names.get(g.id);
+      if (!fn || !alias) return;
+      groupNames.push(alias);
+      selectEntries.push({ expr: fnExpr(fn, g.args), as: alias });
     });
+    if (groupNames.length) q.group_by = groupNames;
+
     state.aggregates.forEach((a) => {
       const fn = functionByName(state.functions, a.fn);
-      if (!fn) return;
+      const alias = names.get(a.id);
+      if (!fn || !alias) return;
       const expr = fnExpr(fn, a.args);
       if (a.distinct) expr.distinct = true;
-      selectEntries.push({ expr, as: a.alias || '' });
+      selectEntries.push({ expr, as: alias });
     });
     // Aggregate mode without aggregates counts the group rows: bare group tuples are useless and
     // charts need at least one value column. The implicit measure is drawn from the catalog (the
@@ -173,6 +185,8 @@ export const buildQuery = (state: QueryBuilderState, timeBound?: QueryTimeBound 
   return q;
 };
 
+// A missing alias is not among the warnings: every computed row is prefilled with one and a cleared
+// alias falls back to the derived value at serialization, so there is no state left to warn about.
 export const getAggregateWarnings = (state: QueryBuilderState): QueryBuilderWarning[] => {
   if (state.mode !== QueryMode.Aggregate) return [];
   const warnings: QueryBuilderWarning[] = [];
@@ -181,10 +195,7 @@ export const getAggregateWarnings = (state: QueryBuilderState): QueryBuilderWarn
     const fn = functionByName(state.functions, g.fn);
     return !!fn && requiredArgsFilled(fn, g.args);
   };
-  if (state.aggregates.some((a) => !a.alias)) warnings.push(QueryBuilderWarning.MissingAggregateAlias);
-  // A function row with an unfilled required arg warns; once complete it warns for a missing alias.
   if (fnRows.some((g) => !rowComplete(g))) warnings.push(QueryBuilderWarning.MissingGroupByField);
-  if (fnRows.some((g) => rowComplete(g) && !g.alias)) warnings.push(QueryBuilderWarning.MissingGroupByAlias);
   if (!state.groupBy.length && !state.aggregates.length) {
     warnings.push(QueryBuilderWarning.EmptyAggregate);
   }

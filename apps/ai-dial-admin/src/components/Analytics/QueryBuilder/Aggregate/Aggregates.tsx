@@ -9,15 +9,24 @@ import FnArgEditor from '@/src/components/Analytics/QueryBuilder/Aggregate/FnArg
 import SectionAction from '@/src/components/Analytics/QueryBuilder/Common/SectionAction';
 import SectionBlock from '@/src/components/Analytics/QueryBuilder/Common/SectionBlock';
 import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';
-import { fieldDisplayName, fieldsToOptions } from '@/src/components/Analytics/QueryBuilder/utils/fields';
+import {
+  fieldDisplayName,
+  fieldsToOptions,
+  prefilledAlias,
+} from '@/src/components/Analytics/QueryBuilder/utils/fields';
 import {
   aggregateFunctions,
   emptyArgs,
   functionArgSummary,
   functionByName,
+  functionLabels,
 } from '@/src/components/Analytics/QueryBuilder/utils/functions';
 import { getAggregateWarnings } from '@/src/components/Analytics/QueryBuilder/utils/serialize';
-import { createAggregate } from '@/src/components/Analytics/QueryBuilder/utils/state';
+import {
+  createAggregate,
+  renamedFilterFields,
+  renamedSortKeys,
+} from '@/src/components/Analytics/QueryBuilder/utils/state';
 import { AGGREGATE_SECTION_WARNINGS, WARNING_I18N } from '@/src/constants/analytics/query-builder';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -38,7 +47,14 @@ const Aggregates: FC = () => {
   const { state, refresh } = useQueryBuilder();
 
   const fns = aggregateFunctions(state.functions);
-  const fnOptions: SelectOption[] = fns.map((fn) => ({ value: fn.name, label: fn.name.toUpperCase() }));
+  // Each option is named from the catalog (see functionLabels) with the full served description as
+  // its hover tooltip.
+  const fnLabels = functionLabels(fns);
+  const fnOptions: SelectOption[] = fns.map((fn) => ({
+    value: fn.name,
+    label: fnLabels.get(fn.name) ?? fn.name,
+    description: fn.description,
+  }));
   const fieldOptions = fieldsToOptions(state.fields);
   const warnings = getAggregateWarnings(state).filter((w) => AGGREGATE_SECTION_WARNINGS.includes(w));
   const warning = warnings.length ? warnings.map((w) => t(WARNING_I18N[w])).join(' ') : undefined;
@@ -46,8 +62,19 @@ const Aggregates: FC = () => {
   const addAggregate = () => {
     const first = fns[0];
     if (!first) return;
-    state.aggregates.push(createAggregate(first));
+    const args = emptyArgs(first);
+    state.aggregates.push(createAggregate(first, args, prefilledAlias(state, first, args, false)));
     refresh();
+  };
+
+  const syncAlias = (agg: AggregateRow) => {
+    const fn = functionByName(state.functions, agg.fn);
+    if (!fn || agg.aliasEdited) return;
+    const next = prefilledAlias(state, fn, agg.args, agg.distinct, agg.id);
+    if (next === agg.alias) return;
+    state.sort = renamedSortKeys(state.sort, agg.alias, next);
+    state.having = renamedFilterFields(state.having, agg.alias, next);
+    agg.alias = next;
   };
 
   const onChangeFn = (agg: AggregateRow, name: string) => {
@@ -57,6 +84,7 @@ const Aggregates: FC = () => {
     agg.fn = fn.name;
     agg.args = emptyArgs(fn);
     agg.distinct = false;
+    syncAlias(agg);
     refresh();
   };
 
@@ -98,6 +126,7 @@ const Aggregates: FC = () => {
                   fieldOptions={fieldOptions}
                   onChange={(value) => {
                     agg.args[i] = value;
+                    syncAlias(agg);
                     refresh();
                   }}
                 />
@@ -109,17 +138,19 @@ const Aggregates: FC = () => {
                   label={t(QueryBuilderI18nKey.Distinct)}
                   onChange={() => {
                     agg.distinct = !agg.distinct;
+                    syncAlias(agg);
                     refresh();
                   }}
                 />
               )}
               <CompactInput
                 ariaLabel={t(QueryBuilderI18nKey.AliasPlaceholder)}
-                className="w-[88px] shrink-0"
+                className="min-w-[140px] flex-1"
                 value={agg.alias}
                 placeholder={t(QueryBuilderI18nKey.AliasPlaceholder)}
                 onChange={(value) => {
                   agg.alias = value;
+                  agg.aliasEdited = true;
                   refresh();
                 }}
               />

@@ -38,7 +38,7 @@ const ResultArea: FC<Props> = ({ result, meta, isRunning }) => {
     setChartConfig(DEFAULT_CHART_CONFIG);
   }, [result]);
 
-  const columns = useMemo(() => getResultColumns(result), [result]);
+  const columns = useMemo(() => getResultColumns(result, meta?.columnLabels), [result, meta?.columnLabels]);
   const rows = result?.rows ?? [];
   const total = getResultTotal(result);
 
