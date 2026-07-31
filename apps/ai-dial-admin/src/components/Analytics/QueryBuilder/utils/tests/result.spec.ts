@@ -32,6 +32,18 @@ describe('getResultColumns', () => {
     expect(getResultColumns(result).map((c) => c.field)).toEqual(['a', 'b', 'c']);
   });
 
+  test('heads a column by its label when the map has one, otherwise by the raw column name', () => {
+    const result: StructuredQueryResult = { columns: ['total_tokens', 'Total tokens (sum)'], rows: [] };
+    const columns = getResultColumns(result, { total_tokens: 'Total tokens' });
+    expect(columns.map((c) => c.headerName)).toEqual(['Total tokens', 'Total tokens (sum)']);
+    expect(columns.map((c) => c.field)).toEqual(['total_tokens', 'Total tokens (sum)']);
+  });
+
+  test('without a label map every header is the raw column name', () => {
+    const result: StructuredQueryResult = { columns: ['total_tokens'], rows: [] };
+    expect(getResultColumns(result)[0].headerName).toBe('total_tokens');
+  });
+
   // ag-grid's default `field`-based lookup treats a dot as a nested-property path (`data.test.test`),
   // but an enrichment's "table.column" projection is a single flat key on the row — the column's
   // valueGetter must read it literally or the cell renders blank despite the row actually having data.

@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import CategorizedFieldDropdown from '@/src/components/Analytics/QueryBuilder/Common/CategorizedFieldDropdown';
+import { FieldDropdownMode } from '@/src/models/analytics/query-builder';
 import ChipRow from '@/src/components/Analytics/QueryBuilder/Common/ChipRow';
 import FieldChip from '@/src/components/Analytics/QueryBuilder/Common/FieldChip';
 
@@ -77,6 +78,7 @@ describe('QueryBuilder :: ChipRow outside-click', () => {
     render(
       <ChipRow summary="cond" onRemove={vi.fn()}>
         <CategorizedFieldDropdown
+          mode={FieldDropdownMode.Picker}
           id="in-row"
           options={[{ name: 'deployment', type: 'string', tag: 'dimension' }]}
           onSelect={vi.fn()}

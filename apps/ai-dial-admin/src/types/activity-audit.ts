@@ -28,7 +28,6 @@ export enum ActivityAuditType {
 export enum ActivityAuditView {
   Config = 'Config',
   Deployments = 'Deployments',
-  Asset = 'Asset',
 }
 
 export enum ActivityAuditResourceType {

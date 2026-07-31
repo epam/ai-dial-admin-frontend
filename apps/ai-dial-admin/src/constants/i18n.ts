@@ -729,7 +729,6 @@ export enum TelemetryI18nKey {
   Unknown = 'Telemetry.Unknown',
   ActivityViewConfig = 'Telemetry.ActivityView.Config',
   ActivityViewDeployments = 'Telemetry.ActivityView.Deployments',
-  ActivityViewAsset = 'Telemetry.ActivityView.Asset',
 }
 
 export enum RoutesI18nKey {
@@ -2248,9 +2247,7 @@ export enum QueryBuilderI18nKey {
   EntitiesLoadFailed = 'QueryBuilder.EntitiesLoadFailed',
   SchemaLoadFailed = 'QueryBuilder.SchemaLoadFailed',
   RunFailed = 'QueryBuilder.RunFailed',
-  WarningMissingAggregateAlias = 'QueryBuilder.WarningMissingAggregateAlias',
   WarningMissingGroupByField = 'QueryBuilder.WarningMissingGroupByField',
-  WarningMissingGroupByAlias = 'QueryBuilder.WarningMissingGroupByAlias',
   WarningEmptyAggregate = 'QueryBuilder.WarningEmptyAggregate',
   ViewForm = 'QueryBuilder.ViewForm',
   ViewSql = 'QueryBuilder.ViewSql',
@@ -2295,6 +2292,28 @@ export enum QueryBuilderI18nKey {
   AiSuggestionFailedRequests = 'QueryBuilder.AiSuggestionFailedRequests',
   AiSuggestionMcpLatency = 'QueryBuilder.AiSuggestionMcpLatency',
   AiSuggestionSlowestCalls = 'QueryBuilder.AiSuggestionSlowestCalls',
+  OperatorEq = 'QueryBuilder.OperatorEq',
+  OperatorEqDescription = 'QueryBuilder.OperatorEqDescription',
+  OperatorNe = 'QueryBuilder.OperatorNe',
+  OperatorNeDescription = 'QueryBuilder.OperatorNeDescription',
+  OperatorCo = 'QueryBuilder.OperatorCo',
+  OperatorCoDescription = 'QueryBuilder.OperatorCoDescription',
+  OperatorNc = 'QueryBuilder.OperatorNc',
+  OperatorNcDescription = 'QueryBuilder.OperatorNcDescription',
+  OperatorLt = 'QueryBuilder.OperatorLt',
+  OperatorLtDescription = 'QueryBuilder.OperatorLtDescription',
+  OperatorGt = 'QueryBuilder.OperatorGt',
+  OperatorGtDescription = 'QueryBuilder.OperatorGtDescription',
+  OperatorLe = 'QueryBuilder.OperatorLe',
+  OperatorLeDescription = 'QueryBuilder.OperatorLeDescription',
+  OperatorGe = 'QueryBuilder.OperatorGe',
+  OperatorGeDescription = 'QueryBuilder.OperatorGeDescription',
+  OperatorIn = 'QueryBuilder.OperatorIn',
+  OperatorInDescription = 'QueryBuilder.OperatorInDescription',
+  DirectionAsc = 'QueryBuilder.DirectionAsc',
+  DirectionAscDescription = 'QueryBuilder.DirectionAscDescription',
+  DirectionDesc = 'QueryBuilder.DirectionDesc',
+  DirectionDescDescription = 'QueryBuilder.DirectionDescDescription',
 }
 
 export enum AnalyticsTablesI18nKey {

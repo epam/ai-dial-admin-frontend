@@ -12,6 +12,43 @@ import {
 export const functionByName = (functions: QueryFunction[], name: string | null): QueryFunction | undefined =>
   name ? functions.find((f) => f.name === name) : undefined;
 
+// A readable label for a catalog function name (`percentile_cont` → "Percentile cont"). Derived
+// mechanically from the served name rather than from a per-function table, so a function the catalog
+// adds later reads correctly with no frontend change — the catalog serves no display name of its own.
+export const humanizeFunctionName = (name: string): string => {
+  const spaced = name.replace(/_/g, ' ');
+  return spaced ? spaced.charAt(0).toUpperCase() + spaced.slice(1) : spaced;
+};
+
+// Where a catalog description stops naming the function and starts explaining it: a clause break, or
+// the "<name> of/for <what it applies to>" and "<name> (<detail>)" patterns the catalog uses.
+const LABEL_TAIL = /[;:.]|\s—\s|\s\(|\sof\s|\sfor\s/;
+// Beyond this the leading phrase is prose, not a name ("Strips leading and trailing whitespace…").
+const LABEL_MAX_WORDS = 3;
+
+// What to call a function in a picker. Catalog descriptions open by naming the function ("Average of a
+// numeric expression over the group; …", "Row count; with an argument …", "Continuous percentile: …"),
+// so their leading phrase is the closest thing to a display name the catalog serves. A description
+// that opens with prose instead ("Lowercases a text expression."), or none at all, falls back to the
+// humanized function name. Still no per-function table: a function the catalog adds names itself.
+export const functionLabel = (fn: QueryFunction): string => {
+  const lead = (fn.description || '').split(LABEL_TAIL)[0].trim();
+  const words = lead.split(/\s+/).filter(Boolean);
+  if (!words.length || words.length > LABEL_MAX_WORDS) return humanizeFunctionName(fn.name);
+  return lead.charAt(0).toUpperCase() + lead.slice(1);
+};
+
+// Labels for a whole picker. Two functions can open their descriptions with the same phrase ("Sum of
+// a numeric expression…" and a future "Sum of squares of…"), and two identically labelled options are
+// unpickable — so on a collision every function involved falls back to its own catalog name.
+export const functionLabels = (functions: QueryFunction[]): Map<string, string> => {
+  const lifted = functions.map((fn) => ({ name: fn.name, label: functionLabel(fn) }));
+  const collides = new Set(
+    lifted.filter((a, i) => lifted.some((b, j) => i !== j && b.label === a.label)).map((a) => a.label),
+  );
+  return new Map(lifted.map(({ name, label }) => [name, collides.has(label) ? humanizeFunctionName(name) : label]));
+};
+
 // Scalar functions populate the Group by section; aggregate and ordered-set-aggregate functions
 // populate the Aggregate section.
 export const scalarFunctions = (functions: QueryFunction[]): QueryFunction[] =>
