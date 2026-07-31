@@ -1,18 +1,18 @@
 ## 1. Models
 
-- [ ] 1.1 Add `TestCase.multiTurnData?: Record<string, unknown>[]` and `TestCaseSchema.perTurn?: boolean` in `src/models/evaluation/test-suite.ts`. Document on `multiTurnData` that it coexists with `data` (shared fields in `data`, per-turn fields in each turn map) — state this once here, not at each call site.
-- [ ] 1.2 Add `DatasetTestCase.multiTurnData?: Record<string, unknown>[]` in `src/models/evaluation/dataset.ts`.
-- [ ] 1.3 Add `ResultDto.turnIndex?: number` and `ResultDto.totalTurns?: number` in `src/models/evaluation/run.ts`.
-- [ ] 1.4 Add `src/models/evaluation/test-case-grouping.ts`: `GridRowType` enum (`GROUP`/`TURN`/`SINGLE`), `TestCaseRow`, `TestCaseGroup`, `GroupedGridRow`.
+- [x] 1.1 Add `TestCase.multiTurnData?: Record<string, unknown>[]` and `TestCaseSchema.perTurn?: boolean` in `src/models/evaluation/test-suite.ts`. Document on `multiTurnData` that it coexists with `data` (shared fields in `data`, per-turn fields in each turn map) — state this once here, not at each call site.
+- [x] 1.2 Add `DatasetTestCase.multiTurnData?: Record<string, unknown>[]` in `src/models/evaluation/dataset.ts`.
+- [x] 1.3 Add `ResultDto.turnIndex?: number` and `ResultDto.totalTurns?: number` in `src/models/evaluation/run.ts`.
+- [x] 1.4 Add `src/models/evaluation/test-case-grouping.ts`: `GridRowType` enum (`GROUP`/`TURN`/`SINGLE`), `TestCaseRow`, `TestCaseGroup`, `GroupedGridRow`.
 
 ## 2. Pure grouping utils
 
-- [ ] 2.1 Add `src/utils/evaluation/test-case-grouping.ts` with `getPerTurnFieldNames`, `selectSharedFields`, `selectPerTurnFields`.
-- [ ] 2.2 Add `readTurnIndex` (accepts number or numeric string, `0` is present, anything else absent) and `readGroupKey` (returns the case `id` for turn rows, `null` for single rows). No `_groupKey` override — nothing needs one now that results are not grouped.
-- [ ] 2.3 Add `groupTestCaseRows`: group by shared `id` when `_turnIndex` is present, single rows keyed by their own id, case order = first appearance, turns sorted by `_turnIndex`.
-- [ ] 2.4 Add the turn mutators: `renumberTurns`, `promoteToMultiTurn`, `demoteToSingle`, `reorderTurns` (out-of-range move is a no-op that still renumbers).
-- [ ] 2.5 Add `aggregateValidity` — a group is valid only when every turn is, warnings concatenated.
-- [ ] 2.6 Add `projectGroupsToGridRows(groups, expandedKeys, isSearching)`: collapsed-by-default GROUP rows expanding into TURN rows; single cases as SINGLE rows; when `isSearching`, drop GROUP rows and emit every turn flat. No `defaultExpanded`/`singlesFirst` params — both were results-grid-only.
+- [x] 2.1 Add `src/utils/evaluation/test-case-grouping.ts` with `getPerTurnFieldNames`, `selectSharedFields`, `selectPerTurnFields`.
+- [x] 2.2 Add `readTurnIndex` (accepts number or numeric string, `0` is present, anything else absent) and `readGroupKey` (returns the case `id` for turn rows, `null` for single rows). No `_groupKey` override — nothing needs one now that results are not grouped.
+- [x] 2.3 Add `groupTestCaseRows`: group by shared `id` when `_turnIndex` is present, single rows keyed by their own id, case order = first appearance, turns sorted by `_turnIndex`.
+- [x] 2.4 Add the turn mutators: `renumberTurns`, `promoteToMultiTurn`, `demoteToSingle`, `reorderTurns` (out-of-range move is a no-op that still renumbers).
+- [x] 2.5 Add `aggregateValidity` — a group is valid only when every turn is, warnings concatenated.
+- [x] 2.6 Add `projectGroupsToGridRows(groups, expandedKeys, isSearching)`: collapsed-by-default GROUP rows expanding into TURN rows; single cases as SINGLE rows; when `isSearching`, drop GROUP rows and emit every turn flat. No `defaultExpanded`/`singlesFirst` params — both were results-grid-only.
 
 ## 3. Cell renderers
 
@@ -68,13 +68,13 @@
 
 ## 10. Results columns
 
-- [ ] 10.1 Append `turnIndex` (headerName `Turn`, `valueGetter` rendering `turnIndex + 1`) and `totalTurns` (headerName `Total turns`) to `executionColumns` in `src/components/Runs/View/utils.ts`, immediately after `runIndex`, reusing `fixedWidthColDef` and `NO_FILTER_COL_DEF`. Headers stay hardcoded, matching `'# Run number'` and `'HTTP'`.
-- [ ] 10.2 Change nothing else in `src/components/Runs/View/` — no projection, no expander, no `getRowId`, no `postSortRows`, no default sort. This boundary is the point of the scope decision; if something seems to require touching `ExtractionResult.tsx`, stop and re-check.
+- [x] 10.1 Append `turnIndex` (headerName `Turn`, `valueGetter` rendering `turnIndex + 1`) and `totalTurns` (headerName `Total turns`) to `executionColumns` in `src/components/Runs/View/utils.ts`, immediately after `runIndex`, reusing `fixedWidthColDef` and `NO_FILTER_COL_DEF`. Headers stay hardcoded, matching `'# Run number'` and `'HTTP'`.
+- [x] 10.2 Change nothing else in `src/components/Runs/View/` — no projection, no expander, no `getRowId`, no `postSortRows`, no default sort. This boundary is the point of the scope decision; if something seems to require touching `ExtractionResult.tsx`, stop and re-check.
 
 ## 11. API and i18n
 
-- [ ] 11.1 Widen the `createTestCase` body `Pick` with `'multiTurnData'` in `src/app/[lang]/datasets/actions.ts`, `src/server/eval/datasets-api.ts`, and `src/server/eval/test-suites-api.ts`. Leave the bulk PATCH whitelist at `{testCaseName, data}`.
-- [ ] 11.2 Add i18n keys in `src/constants/i18n.ts` and `src/locales/en.ts`: `TestSuites.TurnLabel` (`Turn {index}`), `TestSuites.TurnCountBadge` (`{count} turns`), `ActionMenuOperation.{Add_turn,Delete_turn,Move_turn_up,Move_turn_down}`, `Basic.PerTurn`, `Basic.Shared`, and a key for the import-warnings heading. Check `BasicI18nKey`/`ButtonsI18nKey`/`EntitiesI18nKey` for reusable labels first.
+- [x] 11.1 Widen the `createTestCase` body `Pick` with `'multiTurnData'` in `src/app/[lang]/datasets/actions.ts`, `src/server/eval/datasets-api.ts`, and `src/server/eval/test-suites-api.ts`. There is no bulk-PATCH whitelist to leave alone: `test-cases-bulk-enabled-patch` is a deprecated, removed capability and `TEST_CASES_BULK_URL` is an unused leftover builder — proposal corrected accordingly.
+- [x] 11.2 Add i18n keys in `src/constants/i18n.ts` and `src/locales/en.ts`: `TestSuites.TurnLabel` (`Turn {index}`), `TestSuites.TurnCountBadge` (`{count} turns`), `ActionMenuOperation.{Add_turn,Delete_turn,Move_turn_up,Move_turn_down}`, `Basic.PerTurn`, `Basic.Shared`, and a key for the import-warnings heading. Check `BasicI18nKey`/`ButtonsI18nKey`/`EntitiesI18nKey` for reusable labels first.
 
 ## 12. CSV import
 
