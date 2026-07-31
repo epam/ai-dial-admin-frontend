@@ -547,12 +547,14 @@ describe('Runs View :: snapshotsToBindingsMap', () => {
   });
 });
 
+const getExecutionColumn = (colId: string, results = [] as any[]) => {
+  const cols = getAnalyticsColumns(results);
+  const execGroup = cols.find((c: any) => c.headerName === 'Execution') as any;
+  return execGroup.children.find((c: any) => c.colId === colId);
+};
+
 describe('Runs View :: executionColumns # (runIndex) valueGetter', () => {
-  const getRunIndexCol = (results = [] as any[]) => {
-    const cols = getAnalyticsColumns(results);
-    const execGroup = cols.find((c: any) => c.headerName === 'Execution') as any;
-    return execGroup.children.find((c: any) => c.colId === 'runIndex');
-  };
+  const getRunIndexCol = (results = [] as any[]) => getExecutionColumn('runIndex', results);
 
   test('Should display 1-based index (backend runIndex is 0-based)', () => {
     const col = getRunIndexCol();
@@ -574,6 +576,66 @@ describe('Runs View :: executionColumns # (runIndex) valueGetter', () => {
   test('Should return null when runIndex is undefined', () => {
     const col = getRunIndexCol();
     expect(col.valueGetter({ data: {} })).toBeNull();
+  });
+});
+
+describe('Runs View :: executionColumns Turn valueGetter', () => {
+  const getTurnCol = (results = [] as any[]) => getExecutionColumn('turnIndex', results);
+
+  test('Should build a Turn column headed "Turn"', () => {
+    const col = getTurnCol();
+    expect(col).toEqual(expect.objectContaining({ field: 'turnIndex', headerName: 'Turn', colId: 'turnIndex' }));
+  });
+
+  test('Should display 1-based turn number for a 0-based turnIndex', () => {
+    const col = getTurnCol();
+    expect(col.valueGetter({ data: { turnIndex: 0 } })).toBe(1);
+    expect(col.valueGetter({ data: { turnIndex: 1 } })).toBe(2);
+    expect(col.valueGetter({ data: { turnIndex: 4 } })).toBe(5);
+  });
+
+  test('Should render turnIndex 0 as 1, not blank', () => {
+    const col = getTurnCol();
+    expect(col.valueGetter({ data: { turnIndex: 0 } })).toBe(1);
+  });
+
+  test('Should return null when turnIndex is absent (single-turn run)', () => {
+    const col = getTurnCol();
+    expect(col.valueGetter({ data: {} })).toBeNull();
+  });
+
+  test('Should return null when data is null or undefined', () => {
+    const col = getTurnCol();
+    expect(col.valueGetter({ data: null })).toBeNull();
+    expect(col.valueGetter({ data: undefined })).toBeNull();
+  });
+});
+
+describe('Runs View :: executionColumns Total turns valueGetter', () => {
+  const getTotalTurnsCol = (results = [] as any[]) => getExecutionColumn('totalTurns', results);
+
+  test('Should build a Total turns column headed "Total turns"', () => {
+    const col = getTotalTurnsCol();
+    expect(col).toEqual(
+      expect.objectContaining({ field: 'totalTurns', headerName: 'Total turns', colId: 'totalTurns' }),
+    );
+  });
+
+  test('Should pass totalTurns through unchanged', () => {
+    const col = getTotalTurnsCol();
+    expect(col.valueGetter({ data: { totalTurns: 3 } })).toBe(3);
+    expect(col.valueGetter({ data: { totalTurns: 1 } })).toBe(1);
+  });
+
+  test('Should return null when totalTurns is absent (single-turn run)', () => {
+    const col = getTotalTurnsCol();
+    expect(col.valueGetter({ data: {} })).toBeNull();
+  });
+
+  test('Should return null when data is null or undefined', () => {
+    const col = getTotalTurnsCol();
+    expect(col.valueGetter({ data: null })).toBeNull();
+    expect(col.valueGetter({ data: undefined })).toBeNull();
   });
 });
 

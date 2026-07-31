@@ -84,15 +84,15 @@
 
 ## 13. Tests
 
-- [ ] 13.1 `src/utils/evaluation/tests/test-case-grouping.spec.ts` — `groupTestCaseRows` ordering and first-appearance stability; `readTurnIndex` across number / numeric string / `0` / absent / garbage; `projectGroupsToGridRows` collapsed, expanded, and searching; `promoteToMultiTurn` → `demoteToSingle` round trip; `reorderTurns` bounds; `renumberTurns` contiguity; `selectShared`/`selectPerTurnFields` partitioning; `aggregateValidity`.
-- [ ] 13.2 `components/{TestSuites,Datasets}/utils/tests/data.spec.ts` — round trip `getTestCaseGridData` → edit → `collapseRowsTo*` preserving turn order and the shared/per-turn split; single-turn produces no `multiTurnData`; a case collapsing to one turn emits `data` only; no client-only field survives.
-- [ ] 13.3 `use-turn-group-grid` — add/delete/reorder turn, promote/demote, dirty tracking per case, shared-field fan-out, and that an edit made while collapsed is present in `getDirtyRows`.
-- [ ] 13.4 Renderers — expander toggles and stops propagation; stacked renders `n` lines collapsed and nothing expanded; name renderer shows badge on GROUP and `Turn N` on TURN.
-- [ ] 13.5 `turn-columns` — renderer selection across `rowType` × `perTurn`, including that a row with no `rowType` stays editable.
-- [ ] 13.6 Both `TestCasesList` components — GROUP/TURN/SINGLE render, turn actions fire, and (TestSuites) `disabledTestCaseIds` is not double-counted for an expanded group.
-- [ ] 13.7 `components/Runs/View/tests/utils.spec.ts` — Turn renders `turnIndex + 1`, both columns render empty when the fields are absent.
-- [ ] 13.8 `ImportWarningsList` — renders each warning with its row number, renders nothing when empty.
-- [ ] 13.9 Regression: single-turn behaviour is unchanged on both authoring surfaces and in the results grid.
+- [x] 13.1 `src/utils/evaluation/tests/test-case-grouping.spec.ts` — `groupTestCaseRows` ordering and first-appearance stability; `readTurnIndex` across number / numeric string / `0` / absent / garbage; `projectGroupsToGridRows` collapsed, expanded, and searching; `promoteToMultiTurn` → `demoteToSingle` round trip; `reorderTurns` bounds; `renumberTurns` contiguity; `selectShared`/`selectPerTurnFields` partitioning; `aggregateValidity`.
+- [x] 13.2 `components/{TestSuites,Datasets}/utils/tests/data.spec.ts` — round trip `getTestCaseGridData` → edit → `collapseRowsTo*` preserving turn order and the shared/per-turn split; single-turn produces no `multiTurnData`; a case collapsing to one turn emits `data` only; no client-only field survives.
+- [x] 13.3 `use-turn-group-grid` — add/delete/reorder turn, promote/demote, dirty tracking per case, shared-field fan-out, and that an edit made while collapsed is present in `getDirtyRows`.
+- [x] 13.4 Renderers — expander toggles and stops propagation; stacked renders `n` lines collapsed and nothing expanded; name renderer shows badge on GROUP and `Turn N` on TURN.
+- [x] 13.5 `turn-columns` — renderer selection across `rowType` × `perTurn`, including that a row with no `rowType` stays editable.
+- [x] 13.6 Both `TestCasesList` components — GROUP/TURN/SINGLE render, turn actions fire, and the header count is per case rather than per row. (The `disabledTestCaseIds` double-count assertion originally listed here went with dropped task 8.2 — there is no `enabled` toggle column to double-count.)
+- [x] 13.7 `components/Runs/View/tests/utils.spec.ts` — Turn renders `turnIndex + 1`, both columns render empty when the fields are absent.
+- [x] 13.8 `ImportWarningsList` — renders each warning with its row number, renders nothing when empty.
+- [x] 13.9 Regression: single-turn behaviour is unchanged on both authoring surfaces and in the results grid.
 
 ## 14. Browser verification
 

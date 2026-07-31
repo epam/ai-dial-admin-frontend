@@ -4,9 +4,11 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as actions from '@/src/app/[lang]/datasets/actions';
 import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
-import { DatasetVisibility } from '@/src/models/evaluation/dataset';
+import { Dataset, DatasetVisibility } from '@/src/models/evaluation/dataset';
 import { ComparisonOp, ExprType, ValueType } from '@/src/models/evaluation/structured-query';
+import { GridRowType } from '@/src/models/evaluation/test-case-grouping';
 import { TestCase as TestCaseModel, TestSuite } from '@/src/models/evaluation/test-suite';
+import { TestCaseItemType } from '@/src/types/evaluation';
 
 import TestCasesList, { TestCasesActions } from '../TestCasesList';
 import { useIncludedIds } from '../RunCondition/use-included-ids';
@@ -27,6 +29,9 @@ let capturedRowData: Record<string, unknown>[] | null = null;
 let capturedOnGridReady: ((event: { api: unknown }) => void) | null = null;
 let capturedListLabel: unknown = null;
 let capturedDatasetTag: unknown = null;
+let capturedOnToggleExpand: ((groupKey: string) => void) | null = null;
+let capturedTurnActionHandlers: Record<string, (row: any) => void> | null = null;
+let capturedTestCaseCount: number | null = null;
 
 vi.mock('@/src/app/[lang]/datasets/actions', () => ({
   getTestCases: vi.fn(),
@@ -34,6 +39,13 @@ vi.mock('@/src/app/[lang]/datasets/actions', () => ({
   importTestCase: vi.fn(),
   removeTestCase: vi.fn(),
   removeMultipleTestCases: vi.fn(),
+}));
+
+vi.mock('@/src/components/Grid/columns/turn-columns', () => ({
+  getTurnActionsColumn: (handlers: any) => {
+    capturedTurnActionHandlers = handlers;
+    return { colId: 'action-turns' };
+  },
 }));
 
 vi.mock('@/src/app/[lang]/runs/actions', () => ({
@@ -67,15 +79,17 @@ vi.mock('@/src/components/ListView/List', () => ({
 }));
 
 vi.mock('@/src/components/TestSuites/utils/columns', () => ({
-  getTestCaseColumns: ({ onCellChange }: any) => {
+  getTestCaseColumns: ({ onCellChange, onToggleExpand }: any) => {
     capturedOnCellChange = onCellChange;
+    capturedOnToggleExpand = onToggleExpand;
     return [];
   },
 }));
 
 vi.mock('@/src/components/TestSuites/TestCases/Header', () => ({
-  default: ({ selectedTestSuiteId, datasetTag }: any) => {
+  default: ({ selectedTestSuiteId, datasetTag, testCaseCount }: any) => {
     capturedDatasetTag = datasetTag;
+    capturedTestCaseCount = testCaseCount;
     return (
       <div>
         <div>Header Buttons</div>
@@ -125,6 +139,9 @@ describe('TestCasesList', () => {
     capturedOnGridReady = null;
     capturedListLabel = null;
     capturedDatasetTag = null;
+    capturedOnToggleExpand = null;
+    capturedTurnActionHandlers = null;
+    capturedTestCaseCount = null;
     vi.mocked(useIncludedIds).mockReturnValue(null);
   });
 
@@ -184,6 +201,9 @@ describe('TestCasesList — dirty tracking', () => {
     capturedOnGridReady = null;
     capturedListLabel = null;
     capturedDatasetTag = null;
+    capturedOnToggleExpand = null;
+    capturedTurnActionHandlers = null;
+    capturedTestCaseCount = null;
     vi.mocked(useIncludedIds).mockReturnValue(null);
     vi.mocked(actions.getTestCases).mockResolvedValue({
       page: 0,
@@ -265,6 +285,9 @@ describe('TestCasesList — header and included-only filter', () => {
     capturedOnGridReady = null;
     capturedListLabel = null;
     capturedDatasetTag = null;
+    capturedOnToggleExpand = null;
+    capturedTurnActionHandlers = null;
+    capturedTestCaseCount = null;
     vi.mocked(useIncludedIds).mockReturnValue(null);
     vi.mocked(actions.getTestCases).mockResolvedValue(
       createPageData([
@@ -358,5 +381,163 @@ describe('TestCasesList — header and included-only filter', () => {
       state: [{ colId: 'includedInRun', sort: 'desc', sortIndex: 0 }],
       defaultState: { sort: null },
     });
+  });
+});
+
+describe('TestCasesList — multi-turn grouping', () => {
+  const mockOnChange = vi.fn();
+  const suite: TestSuite = { id: 'suite-1', datasetId: 'ds-1' };
+  const perTurnSchemaDataset: Dataset = {
+    id: 'ds-1',
+    testCaseSchema: [{ name: 'value', type: TestCaseItemType.STRING, required: false, description: '', perTurn: true }],
+  };
+
+  const multiTurnCase: TestCase = {
+    id: 'case-1',
+    testCaseName: 'Multi turn case',
+    createdAt: 0,
+    data: {},
+    multiTurnData: [{ value: 'a' }, { value: 'b' }, { value: 'c' }],
+  };
+
+  const singleTurnCase: TestCase = {
+    id: 'case-2',
+    testCaseName: 'Single turn case',
+    createdAt: 0,
+    data: { value: 'only' },
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    capturedGridOptions = null;
+    capturedOnCellChange = null;
+    capturedRowData = null;
+    capturedOnGridReady = null;
+    capturedListLabel = null;
+    capturedDatasetTag = null;
+    capturedOnToggleExpand = null;
+    capturedTurnActionHandlers = null;
+    capturedTestCaseCount = null;
+    vi.mocked(useIncludedIds).mockReturnValue(null);
+  });
+
+  test('renders a multi-turn case as one collapsed GROUP row, not one row per turn', async () => {
+    vi.mocked(actions.getTestCases).mockResolvedValue(createPageData([multiTurnCase]));
+
+    render(<TestCasesList selectedTestSuite={suite} onChange={mockOnChange} dataset={perTurnSchemaDataset} />);
+
+    await waitFor(() => {
+      expect(capturedRowData).not.toBeNull();
+      expect(capturedRowData!.length).toBe(1);
+    });
+    expect(capturedRowData![0].rowType).toBe(GridRowType.GROUP);
+    expect(capturedRowData![0].turnCount).toBe(3);
+  });
+
+  test('expanding a group emits the GROUP row followed by its TURN rows; collapsing returns to just the GROUP row', async () => {
+    vi.mocked(actions.getTestCases).mockResolvedValue(createPageData([multiTurnCase]));
+
+    render(<TestCasesList selectedTestSuite={suite} onChange={mockOnChange} dataset={perTurnSchemaDataset} />);
+
+    await waitFor(() => expect(capturedOnToggleExpand).not.toBeNull());
+
+    capturedOnToggleExpand!('case-1');
+
+    await waitFor(() => expect(capturedRowData!.length).toBe(4));
+    expect(capturedRowData!.map((row) => row.rowType)).toEqual([
+      GridRowType.GROUP,
+      GridRowType.TURN,
+      GridRowType.TURN,
+      GridRowType.TURN,
+    ]);
+
+    capturedOnToggleExpand!('case-1');
+
+    await waitFor(() => expect(capturedRowData!.length).toBe(1));
+    expect(capturedRowData![0].rowType).toBe(GridRowType.GROUP);
+  });
+
+  test('renders a single-turn case as a plain SINGLE row — regression: unchanged from before multi-turn', async () => {
+    vi.mocked(actions.getTestCases).mockResolvedValue(createPageData([singleTurnCase]));
+
+    render(<TestCasesList selectedTestSuite={suite} onChange={mockOnChange} dataset={perTurnSchemaDataset} />);
+
+    await waitFor(() => {
+      expect(capturedRowData).not.toBeNull();
+      expect(capturedRowData!.length).toBe(1);
+    });
+    expect(capturedRowData![0].rowType).toBe(GridRowType.SINGLE);
+    expect(capturedRowData![0].turnCount).toBeUndefined();
+    expect(capturedRowData![0].turns).toBeUndefined();
+  });
+
+  test('adding a turn to a single-turn case promotes it into an expanded two-turn group', async () => {
+    vi.mocked(actions.getTestCases).mockResolvedValue(createPageData([singleTurnCase]));
+
+    render(<TestCasesList selectedTestSuite={suite} onChange={mockOnChange} dataset={perTurnSchemaDataset} />);
+
+    await waitFor(() => expect(capturedTurnActionHandlers).not.toBeNull());
+
+    capturedTurnActionHandlers!.onAddTurn('case-2');
+
+    await waitFor(() => expect(capturedRowData!.length).toBe(3));
+    expect(capturedRowData!.map((row) => row.rowType)).toEqual([GridRowType.GROUP, GridRowType.TURN, GridRowType.TURN]);
+    expect(capturedRowData![0].turnCount).toBe(2);
+  });
+
+  test('deleting turns down to one demotes the case back to a plain SINGLE row', async () => {
+    vi.mocked(actions.getTestCases).mockResolvedValue(createPageData([multiTurnCase]));
+
+    render(<TestCasesList selectedTestSuite={suite} onChange={mockOnChange} dataset={perTurnSchemaDataset} />);
+
+    await waitFor(() => expect(capturedTurnActionHandlers).not.toBeNull());
+
+    capturedTurnActionHandlers!.onDeleteTurn({ groupKey: 'case-1', _turnIndex: 2 });
+    await waitFor(() => expect(capturedRowData!.length).toBe(3));
+
+    capturedTurnActionHandlers!.onDeleteTurn({ groupKey: 'case-1', _turnIndex: 1 });
+    await waitFor(() => expect(capturedRowData!.length).toBe(1));
+    expect(capturedRowData![0].rowType).toBe(GridRowType.SINGLE);
+  });
+
+  test('counts the header total per case, not per row, even when a group is expanded', async () => {
+    vi.mocked(actions.getTestCases).mockResolvedValue(createPageData([multiTurnCase, singleTurnCase]));
+
+    render(<TestCasesList selectedTestSuite={suite} onChange={mockOnChange} dataset={perTurnSchemaDataset} />);
+
+    await waitFor(() => {
+      expect(capturedRowData).not.toBeNull();
+      expect(capturedRowData!.length).toBe(2);
+    });
+    expect(capturedTestCaseCount).toBe(2);
+
+    capturedOnToggleExpand!('case-1');
+
+    await waitFor(() => expect(capturedRowData!.length).toBe(5));
+    expect(capturedTestCaseCount).toBe(2);
+  });
+
+  test('getDirtyTestCases returns a collapsed multi-turn DTO after editing a turn, including while the group is collapsed', async () => {
+    const actionsRef = createRef<TestCasesActions | null>();
+    vi.mocked(actions.getTestCases).mockResolvedValue(createPageData([multiTurnCase]));
+
+    render(
+      <TestCasesList
+        selectedTestSuite={suite}
+        onChange={mockOnChange}
+        dataset={perTurnSchemaDataset}
+        testCasesActionsRef={actionsRef}
+      />,
+    );
+
+    await waitFor(() => expect(capturedOnCellChange).not.toBeNull());
+    expect(capturedRowData!.length).toBe(1); // still collapsed — never toggled
+
+    capturedOnCellChange!({ id: 'case-1', _turnIndex: 1, data: { value: 'b' } }, 'value', 'edited-b');
+
+    const dirty = actionsRef.current!.getDirtyTestCases();
+    expect(dirty).toHaveLength(1);
+    expect(dirty[0].data).toEqual({});
+    expect(dirty[0].multiTurnData).toEqual([{ value: 'a' }, { value: 'edited-b' }, { value: 'c' }]);
   });
 });
