@@ -68,10 +68,6 @@ export const useTurnGroupGrid = <T,>({
     [bumpRawRows, onDirtyChange],
   );
 
-  const markDirty = useCallback((id: string) => {
-    dirtyIdsRef.current.add(id);
-  }, []);
-
   const clearDirty = useCallback(() => {
     dirtyIdsRef.current.clear();
     onDirtyChange?.(false);
@@ -246,15 +242,12 @@ export const useTurnGroupGrid = <T,>({
   return {
     rowData,
     groups,
-    perTurnFields,
     onGridReady,
     onToggleExpand,
     expandGroup,
     getCaseRows,
-    replaceCaseRows,
     setServerRows,
     getDirtyRows,
-    markDirty,
     clearDirty,
     pruneToSchema,
     onCellChange,
