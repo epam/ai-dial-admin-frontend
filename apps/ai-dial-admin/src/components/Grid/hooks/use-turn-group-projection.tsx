@@ -31,10 +31,18 @@ export const useTurnGroupProjection = ({ rawRows, onGridReady: onGridReadyConfig
   );
 
   useEffect(() => {
+    const api = gridApiRef.current;
+    // The parent remounts this grid on discard, and the effect below still runs once against the
+    // torn-down api — ag-grid logs a warning for every call made after destruction.
+    if (!api || api.isDestroyed()) return;
     // ag-grid only re-renders a custom cell renderer when the displayed *value* changes, but the
     // chevron is driven by `data.expanded` rather than any column value, so a toggle would
     // otherwise leave the previously rendered chevron state on screen.
-    gridApiRef.current?.refreshCells({ force: true });
+    api.refreshCells({ force: true });
+    // A GROUP row keeps its `getRowId` identity across a toggle, so ag-grid reuses the node and its
+    // cached height — an expanded group would stay at its collapsed stacked height. Row height is
+    // asked for again only on reset.
+    api.resetRowHeights();
   }, [rowData]);
 
   const onToggleExpand = useCallback((key: string) => {

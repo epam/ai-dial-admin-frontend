@@ -339,7 +339,14 @@ describe('TestCasesList — header and included-only filter', () => {
 
     await waitFor(() => expect(capturedGridOptions).not.toBeNull());
     capturedOnGridReady?.({
-      api: { onFilterChanged, refreshCells: vi.fn(), applyColumnState, setGridOption: vi.fn() },
+      api: {
+        onFilterChanged,
+        refreshCells: vi.fn(),
+        resetRowHeights: vi.fn(),
+        isDestroyed: () => false,
+        applyColumnState,
+        setGridOption: vi.fn(),
+      },
     });
 
     const isPresent = capturedGridOptions!.isExternalFilterPresent as () => boolean;
@@ -374,7 +381,14 @@ describe('TestCasesList — header and included-only filter', () => {
     await waitFor(() => expect(capturedOnGridReady).not.toBeNull());
 
     capturedOnGridReady?.({
-      api: { applyColumnState, refreshCells, onFilterChanged, setGridOption: vi.fn() },
+      api: {
+        applyColumnState,
+        refreshCells,
+        resetRowHeights: vi.fn(),
+        isDestroyed: () => false,
+        onFilterChanged,
+        setGridOption: vi.fn(),
+      },
     });
 
     expect(applyColumnState).toHaveBeenCalledWith({

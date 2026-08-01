@@ -96,13 +96,29 @@
 
 ## 14. Browser verification
 
-- [ ] 14.1 **BLOCKED — needs the developer's environment. Two independent blockers, both verified:**
-  1. **The eval backend is not running.** `DIAL_ADMIN_API_URL` points at `localhost:8082`, and nothing is listening there. Every scenario below needs datasets and test suites from that service, and it is not part of this repo — there is no compose file here to bring it up.
-  2. **Auth is on.** `getIsEnableAuthToggle()` is `!!process.env.NEXTAUTH_URL`, which the local env file sets, so every route 302s to `/api/auth/signin`. Overriding it from the shell does not work: `@next/env` treats an empty string as unset and re-applies the file value.
+- [x] 14.1 Verified in the browser against the developer's running local stack (backend on `:8082`, frontend on `:4200`, signed in through Keycloak) by driving the live app over the Playwright MCP. Every scenario passed; two defects were found and fixed in the process.
 
-  The frontend itself is fine — `npm start` serves `http://localhost:4200` and compiles clean. **To unblock:** start the eval backend on `:8082` with at least one dataset carrying a per-turn schema field, unset `NEXTAUTH_URL`, restart, then run the skill.
+  **Defects found and fixed (both in `use-turn-group-projection.tsx`, neither reachable from the unit suite as written):**
+  1. **An expanded GROUP row kept its collapsed stacked height** (76px for a 3-turn case instead of a 48px header). `getRowId` deliberately keeps a GROUP row's node identity stable across a toggle, so ag-grid reused the node together with its cached height and never re-ran `getRowHeight`. Fixed by calling `resetRowHeights()` alongside the existing `refreshCells()` on every projection change. Task 5.3's requirement was correct in the code but unobservable in the grid.
+  2. **`refreshCells`/`resetRowHeights` ran against a destroyed grid api** after the parent's discard remount, logging an ag-grid warning #26 each time. Fixed with an `api.isDestroyed()` guard.
 
-  Until this runs, the multi-turn UX is verified only at the unit level. That gap is real: both defects found in review (the per-keystroke re-projection that destroyed input focus, and the duplicate React keys in the stacked-turns renderer) were invisible to the unit suite. Run the `spec-browser-verify` skill against the running local app (local stack up, auth disabled). Resolve every `fail` verdict before considering the change complete. Scenarios: add turn promotes a single case and shows the `2 turns` badge; collapsed group stacks per-turn values and blanks them when expanded; a shared field is editable on the GROUP row and blank on TURN rows; move up/down reorders; deleting to one turn demotes; an edit made while collapsed persists across save and reload; toggling Scope moves a field between shared and per-turn rendering; both TestSuites and Datasets tabs; results grid shows Turn and Total turns, and a single-turn run renders both cells empty with nothing else changed.
+  Both are pinned by new tests in `Grid/hooks/tests/use-turn-group-grid.spec.tsx`.
+
+  **Scenario results:**
+  - Add turn on a single case → GROUP with a `2 turns` badge, auto-expanded, `Turn 1` keeping the original values and an empty `Turn 2`. Verified on both surfaces.
+  - Collapsed group stacks one line per turn (3-turn case: 76px = `3*22 + 10`, em dash for empty turns) and blanks those cells when expanded.
+  - A shared field (`tags`, `topic`) renders its editor on the GROUP row and blank on TURN rows; `id` is blank on TURN rows.
+  - Move turn up / move turn down reorder and renumber; deleting down to one turn demotes back to a plain SINGLE row (48px, badge gone, name editable again) — and that demotion persists across save + reload.
+  - An edit typed character-by-character into a turn keeps input focus for the whole string (the F1 regression, confirmed live), survives collapsing the group, and persists to the backend across a full reload against the right turn.
+  - Discard restores the server state, including an un-saved turn deletion.
+  - Toggling Scope in the schema editor moves a field between shared and per-turn rendering immediately.
+  - Attach-dataset preview (task 9.3) shows the same read-only collapsed turn summary.
+  - Header count is per grouped case, not per grid row (`View only included in run (1)` for a 2-turn case).
+  - Results grid shows `Turn` (1-based) and `Total turns` directly after `# Run number`, with nothing else changed. Note: the "both cells empty" half of this scenario is not reachable against this backend — it populates `turnIndex`/`totalTurns` on every result, including runs of a purely single-turn suite. The absent-field rendering stays covered by task 13.7.
+
+  **Out of scope, observed:** ag-grid logs error #200 (`ExternalFilter` module not registered) on the TestSuites test-cases grid, so the "View only included in run" filter is inert. Pre-existing on `development` — `isExternalFilterPresent`/`doesExternalFilterPass` are set at `TestSuites/TestCases/TestCasesList.tsx:228-229` (present there before this change) while `AgGridWrapper`'s `ModuleRegistry.registerModules` list, untouched here, omits `ExternalFilterModule`.
+
+  Environment left as found: the temporary test suite created to exercise the editable TestSuites path (its dataset is public, hence read-only) was deleted along with its auto-created private dataset, and the `multi-turn-01` case promoted during persistence testing was demoted back.
 
 ## 15. Quality checks
 

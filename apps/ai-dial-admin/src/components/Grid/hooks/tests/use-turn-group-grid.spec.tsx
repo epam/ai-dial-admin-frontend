@@ -1,6 +1,8 @@
 import { act, renderHook } from '@testing-library/react';
+import { GridReadyEvent, RowHeightParams } from 'ag-grid-community';
 import { describe, expect, test, vi } from 'vitest';
 
+import { ROW_HEIGHT } from '@/src/components/Grid/constants';
 import { GridRowType, GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
 import { TestCaseSchema } from '@/src/models/evaluation/test-suite';
 import { TestCaseItemType } from '@/src/types/evaluation';
@@ -49,6 +51,12 @@ const schema: TestCaseSchema[] = [
   { name: 'shared', type: TestCaseItemType.STRING, required: false, description: '' },
   { name: 'perTurnField', type: TestCaseItemType.STRING, required: false, description: '', perTurn: true },
 ];
+
+const gridApiMock = () => ({
+  refreshCells: vi.fn(),
+  resetRowHeights: vi.fn(),
+  isDestroyed: vi.fn().mockReturnValue(false),
+});
 
 const setup = () => {
   const onDeleteCase = vi.fn();
@@ -399,5 +407,49 @@ describe('useTurnGroupGrid', () => {
       expect(r).not.toHaveProperty('multiTurnData');
     });
     expect(result.current.getDirtyRows()).toEqual([]);
+  });
+
+  test('should reset row heights on every projection change so an expanded group loses its stacked height', () => {
+    const { result } = setup();
+    const api = gridApiMock();
+
+    act(() => {
+      result.current.onGridReady({ api } as unknown as GridReadyEvent);
+    });
+    act(() => {
+      result.current.setServerRows([row('case-1', { perTurnField: 'a' }, 0), row('case-1', { perTurnField: 'b' }, 1)]);
+    });
+
+    const collapsed = result.current.rowData.find((r) => r.rowType === GridRowType.GROUP) as GroupedGridRow;
+    expect(result.current.turnGridOptions.getRowHeight({ data: collapsed } as RowHeightParams)).toBeGreaterThan(
+      ROW_HEIGHT,
+    );
+
+    api.resetRowHeights.mockClear();
+    act(() => {
+      result.current.onToggleExpand('case-1');
+    });
+
+    // ag-grid caches a row's height against its node, and `getRowId` keeps a GROUP row's identity
+    // stable across a toggle — without the reset the expanded group keeps its collapsed height.
+    expect(api.resetRowHeights).toHaveBeenCalled();
+    const expanded = result.current.rowData.find((r) => r.rowType === GridRowType.GROUP) as GroupedGridRow;
+    expect(result.current.turnGridOptions.getRowHeight({ data: expanded } as RowHeightParams)).toBe(ROW_HEIGHT);
+  });
+
+  test('should not touch a destroyed grid api', () => {
+    const { result } = setup();
+    const api = gridApiMock();
+    api.isDestroyed.mockReturnValue(true);
+
+    act(() => {
+      result.current.onGridReady({ api } as unknown as GridReadyEvent);
+    });
+    act(() => {
+      result.current.setServerRows([row('case-1', { shared: 'a' })]);
+    });
+
+    expect(api.refreshCells).not.toHaveBeenCalled();
+    expect(api.resetRowHeights).not.toHaveBeenCalled();
   });
 });
