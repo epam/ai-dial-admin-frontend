@@ -2,7 +2,7 @@
 
 Test cases are authored inline in an AG Grid on two surfaces that are already near-duplicates of each other:
 
-- `src/components/TestSuites/TestCases/TestCasesList.tsx` (645 lines) — the suite-scoped view, with include-in-run filtering, an `enabled` toggle feeding `disabledTestCaseIds`, and a Try Out action.
+- `src/components/TestSuites/TestCases/TestCasesList.tsx` (645 lines) — the suite-scoped view, with include-in-run filtering and a Try Out action. (An earlier draft credited it with an `enabled` toggle feeding `disabledTestCaseIds`. That was carried over from the POC: on this branch `disabledTestCaseIds` exists only on the `TestSuite` model, and the grid has no such column. The same mistake is what invalidated task 8.2.)
 - `src/components/Datasets/TestCases/TestCasesList.tsx` (357 lines) — the dataset-scoped view, without any of those.
 
 Both hold `useState<Record<string, unknown>[]>` for rows plus a `dirtyRowsRef: Map<id, rowSnapshot>`, and both have byte-identical `updateData`, `onCellChange`, `getDirtyTestCases`, `clearDirtyAndRefresh`, the shift-select `onCellClicked`, the pinned-`newTestCases` effect, and the same `refreshGrid` dirty-merge. Their column builders (`TestSuites/utils/columns.tsx:146-231` and its near-copy in `Datasets/utils/columns.tsx`) contain the same ~140-line `cellRendererSelector` switch over `TestCaseItemType`.
@@ -97,7 +97,9 @@ Exactly two things differ, both parameterized:
 | whether `'enabled'` counts as structural (non-`data`) — TestSuites only | `structuralFields: string[]`, default `['testCaseName', '_turnIndex']` |
 | which collapse function runs | `collapseRows: (rows, perTurnFields) => T[]` |
 
-Stays in each caller: `onCellValueChanged`/`enabled` → `disabledTestCaseIds`, included-in-run filtering and sort, the fetch and its entity-specific grid-data mapper, `onDeleteCase`, `columnDefs` assembly, and all CRUD/import/export/publish/attach logic.
+Stays in each caller: included-in-run filtering and sort, the fetch and its entity-specific grid-data mapper, `onDeleteCase`, `columnDefs` assembly, the pinned `newTestCases` path, and all CRUD/import/export/publish/attach logic.
+
+`structuralFields` is still parameterised even though no `enabled` toggle exists: `getTestCaseGridData` spreads `enabled` onto every row, so it must not be written into a row's `data` map if it ever reaches `onCellChange`.
 
 Alternative considered: leave the logic duplicated as the POC did. Rejected — the two files are already duplicates, and adding ~250 more identical lines to each guarantees they drift.
 
