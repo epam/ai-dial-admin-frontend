@@ -1,5 +1,5 @@
 import { FC, useEffect, useState } from 'react';
-import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { DialNoDataContent, DialTooltip } from '@epam/ai-dial-ui-kit';
 import { ApiRoute } from '@/src/constants/api-routes';
 import { Pod } from '@/src/models/deployments/containers';
 import { ErrorI18nKey, EntityFieldsI18nKey, DeploymentsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
@@ -101,12 +101,18 @@ const PodView: FC<Props> = ({ pod, containerId, route }) => {
             </div>
           )}
           {!!podData?.lastTerminationMessage && (
-            <LabelledText
-              className="max-w-[350px]"
-              label={t(EntityFieldsI18nKey.TerminationMessage)}
-              text={podData.lastTerminationMessage}
-              tooltip={podData.lastTerminationMessage}
-            />
+            <LabelledText className="max-w-[350px]" label={t(EntityFieldsI18nKey.TerminationMessage)}>
+              <DialTooltip
+                triggerClassName="text-primary min-w-0"
+                tooltip={
+                  <div className="max-h-[240px] overflow-y-auto overscroll-contain">
+                    {podData.lastTerminationMessage}
+                  </div>
+                }
+              >
+                {podData.lastTerminationMessage}
+              </DialTooltip>
+            </LabelledText>
           )}
         </div>
       )}

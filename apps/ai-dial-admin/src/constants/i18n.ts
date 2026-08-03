@@ -562,6 +562,15 @@ export enum RolesI18nKey {
   NoLimits = 'Roles.NoLimits',
 }
 
+export enum ModelAssetI18nKey {
+  InvalidTitle = 'ModelAsset.InvalidTitle',
+  InvalidMessage = 'ModelAsset.InvalidMessage',
+  SecretLossTitle = 'ModelAsset.SecretLossTitle',
+  SecretLossMessage = 'ModelAsset.SecretLossMessage',
+  MissingUpstreamEndpointTitle = 'ModelAsset.MissingUpstreamEndpointTitle',
+  MissingUpstreamEndpointMessage = 'ModelAsset.MissingUpstreamEndpointMessage',
+}
+
 export enum ForwardTokenI18nKey {
   UseForThisModel = 'ForwardToken.UseForThisModel',
   UseForThisApplication = 'ForwardToken.UseForThisApplication',
@@ -1150,6 +1159,7 @@ export enum EntityPlaceholdersI18nKey {
   TokenEndpoint = 'EntityPlaceholders.TokenEndpoint',
   AuthorizationEndpoint = 'EntityPlaceholders.AuthorizationEndpoint',
   Maintainer = 'EntityPlaceholders.Maintainer',
+  TokenizerModel = 'EntityPlaceholders.TokenizerModel',
   Type = 'EntityPlaceholders.Type',
   Title = 'EntityPlaceholders.Title',
   Tier = 'EntityPlaceholders.Tier',
@@ -1238,7 +1248,10 @@ export enum EntityFieldsI18nKey {
   scopes = 'EntityFields.scopes',
   author = 'EntityFields.author',
   displayAuthor = 'EntityFields.displayAuthor',
+  deploymentId = 'EntityFields.deploymentId',
+  deploymentIdTooltip = 'EntityFields.deploymentIdTooltip',
   endpoint = 'EntityFields.endpoint',
+  endpointLegacyCaption = 'EntityFields.endpointLegacyCaption',
   permissions = 'EntityFields.permissions',
   allowedTools = 'EntityFields.allowedTools',
   displayName = 'EntityFields.displayName',

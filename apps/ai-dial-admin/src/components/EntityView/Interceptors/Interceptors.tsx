@@ -53,6 +53,7 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
   const isCollapsableView = useMemo(() => {
     return (
       view === ApplicationRoute.Models ||
+      view === ApplicationRoute.AssetsModels ||
       view === ApplicationRoute.Applications ||
       view === ApplicationRoute.ApplicationRunners ||
       view === ApplicationRoute.AssetsAppRunners ||
