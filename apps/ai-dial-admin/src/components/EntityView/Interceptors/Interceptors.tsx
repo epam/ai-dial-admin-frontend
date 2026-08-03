@@ -19,6 +19,7 @@ import { DialApplication } from '@/src/models/dial/application';
 import { getSchemaSourceId } from '@/src/utils/entities/application-source';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ApplicationRoute } from '@/src/types/routes';
+import { hasConfigEntityOrigin } from '@/src/utils/config-entities/source-column';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import CollapsableInterceptors from './CollapsableInterceptors';
 import { getInterceptorsColumnDefs, getInterceptorsGridData } from './utils';
@@ -28,6 +29,11 @@ interface Props<T> {
   interceptors: DialInterceptor[];
   onChangeEntity: (entity: T) => void;
   view: ApplicationRoute;
+  /**
+   * Supplied by surfaces that resolve the global chain themselves — Core-direct ones, which must not
+   * reach the admin backend. When omitted, this component fetches it from the admin backend as before.
+   */
+  globalInterceptors?: string[];
 }
 
 const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicationTypeInterceptors'?: string[] }>({
@@ -35,13 +41,14 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
   interceptors,
   onChangeEntity,
   view,
+  globalInterceptors: providedGlobalInterceptors,
 }: Props<T>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const [availableInterceptors, setAvailableInterceptors] = useState<DialInterceptor[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [runnerInterceptors, setRunnerInterceptors] = useState<string[]>();
-  const [globalInterceptors, setGlobalInterceptors] = useState<string[] | null>(null);
+  const [globalInterceptors, setGlobalInterceptors] = useState<string[] | null>(providedGlobalInterceptors ?? null);
 
   const isCollapsableView = useMemo(() => {
     return (
@@ -78,13 +85,19 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
     }
   }, [entity, runnerInterceptors]);
 
+  // Two mechanisms on purpose: the state initializer avoids a first paint that reports zero globals,
+  // and this effect adopts a chain that arrives or changes after mount. Neither covers both cases.
   useEffect(() => {
+    if (providedGlobalInterceptors) {
+      setGlobalInterceptors(providedGlobalInterceptors);
+      return;
+    }
     if (!globalInterceptors) {
       getProperties(DEFAULT_ETAG).then((res) => {
         setGlobalInterceptors(res.response?.globalInterceptors || []);
       });
     }
-  }, [entity, globalInterceptors, runnerInterceptors]);
+  }, [entity, globalInterceptors, providedGlobalInterceptors, runnerInterceptors]);
 
   useEffect(() => {
     setAvailableInterceptors(interceptors);
@@ -131,9 +144,18 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
     [entity, isAppRunnerView, onChangeEntity],
   );
 
-  const onOpen = (interceptor?: DialInterceptor) => {
-    onOpenInNewTab(ApplicationRoute.Interceptors, interceptor);
-  };
+  // Rows read from Core carry a Core reference in `name`, and `getEntityPath` has no case for
+  // interceptors, so its default branch would build an admin-BE URL for an entity that service need
+  // not hold at all. Offer the link only on surfaces whose rows came from the admin backend.
+  const onOpen = useMemo(
+    () =>
+      hasConfigEntityOrigin(interceptors)
+        ? void 0
+        : (interceptor?: DialInterceptor) => {
+            onOpenInNewTab(ApplicationRoute.Interceptors, interceptor);
+          },
+    [interceptors],
+  );
 
   const rowData = getInterceptorsGridData(interceptors, entityInterceptors);
 
@@ -168,8 +190,9 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
       onOpen,
       isReadOnlyAdmin ? undefined : onRemoveInterceptor,
       (globalInterceptors?.length || 0) + (runnerInterceptors?.length || 0),
+      rowData,
     );
-  }, [onRemoveInterceptor, globalInterceptors?.length, isReadOnlyAdmin, runnerInterceptors?.length]);
+  }, [onOpen, onRemoveInterceptor, globalInterceptors?.length, isReadOnlyAdmin, runnerInterceptors?.length, rowData]);
 
   const additionalGridOptions = useMemo(() => {
     return isReadOnlyAdmin ? undefined : { rowDragManaged: true, onRowDragEnd };

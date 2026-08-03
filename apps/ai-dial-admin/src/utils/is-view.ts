@@ -19,6 +19,28 @@ export const isDeploymentAsset = (view?: ApplicationRoute): boolean => {
   return view === ApplicationRoute.AssetsApplications || view === ApplicationRoute.AssetsToolsets;
 };
 
+/**
+ * Surfaces that must not request the admin backend's topic catalogue.
+ *
+ * DIAL Core has no topic registry — a deployment's topics are a free `List<String>` — so there is no
+ * Core equivalent to read, and the admin backend's catalogue is not a substitute on a surface whose
+ * point is not depending on that service. The controls still seed from the resource and accept typed
+ * entries, so this removes a suggestion list, not the ability to set topics.
+ *
+ * An explicit allow-list rather than a negation: `Assets > Applications` and `Assets > Toolsets` also
+ * read their resource from Core but still use the catalogue, so "asset surface" is not the criterion.
+ * Listing the surfaces that opt out means a new surface fails closed — it keeps the catalogue until
+ * someone adds it here deliberately, rather than silently losing it.
+ */
+const VIEWS_WITHOUT_TOPIC_CATALOGUE: readonly ApplicationRoute[] = [
+  ApplicationRoute.AssetsModels,
+  ApplicationRoute.AssetsAppRunners,
+];
+
+export const hasTopicCatalogue = (view?: ApplicationRoute): boolean => {
+  return !view || !VIEWS_WITHOUT_TOPIC_CATALOGUE.includes(view);
+};
+
 export const isBuildersView = (view?: ApplicationRoute): boolean => {
   return (
     view === ApplicationRoute.Adapters ||
