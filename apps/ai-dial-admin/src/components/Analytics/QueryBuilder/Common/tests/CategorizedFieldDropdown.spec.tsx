@@ -4,8 +4,7 @@ import { describe, expect, test, vi } from 'vitest';
 
 import CategorizedFieldDropdown from '@/src/components/Analytics/QueryBuilder/Common/CategorizedFieldDropdown';
 import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
-import { QueryScalarFn } from '@/src/models/analytics/query';
-import { FieldOption } from '@/src/models/analytics/query-builder';
+import { FieldDropdownMode, FieldOption } from '@/src/models/analytics/query-builder';
 
 const OPTIONS: FieldOption[] = [
   { name: 'total_price', type: 'decimal', tag: 'cost' },
@@ -23,6 +22,7 @@ describe('QueryBuilder :: CategorizedFieldDropdown', () => {
     const user = userEvent.setup();
     render(
       <CategorizedFieldDropdown
+        mode={FieldDropdownMode.Add}
         id="test"
         options={OPTIONS}
         onSelect={vi.fn()}
@@ -56,6 +56,7 @@ describe('QueryBuilder :: CategorizedFieldDropdown', () => {
     const user = userEvent.setup();
     render(
       <CategorizedFieldDropdown
+        mode={FieldDropdownMode.Picker}
         id="test"
         options={OPTIONS}
         onSelect={vi.fn()}
@@ -77,12 +78,13 @@ describe('QueryBuilder :: CategorizedFieldDropdown', () => {
     const onSelectFunction = vi.fn();
     render(
       <CategorizedFieldDropdown
+        mode={FieldDropdownMode.Add}
         id="test"
         options={OPTIONS}
         onSelect={onSelect}
         functions={[
-          { name: 'date_bin', hint: 'time bucket' },
-          { name: 'lower', hint: 'lowercase' },
+          { name: 'date_bin', label: 'Time bucket', hint: 'time bucket' },
+          { name: 'lower', label: 'Lowercase', hint: 'lowercase' },
         ]}
         onSelectFunction={onSelectFunction}
         addLabel="+ Add"
@@ -95,7 +97,7 @@ describe('QueryBuilder :: CategorizedFieldDropdown', () => {
     expect(screen.getByText('QueryBuilder.Columns')).toBeInTheDocument();
     const fnHeader = screen.getByRole('button', { name: /QueryBuilder.Functions/ });
     await user.click(fnHeader);
-    await user.click(screen.getByRole('option', { name: /date_bin/ }));
+    await user.click(screen.getByRole('option', { name: /Time bucket/ }));
 
     expect(onSelectFunction).toHaveBeenCalledWith('date_bin');
     expect(onSelect).not.toHaveBeenCalled();
@@ -105,10 +107,11 @@ describe('QueryBuilder :: CategorizedFieldDropdown', () => {
     const user = userEvent.setup();
     render(
       <CategorizedFieldDropdown
+        mode={FieldDropdownMode.Add}
         id="test"
         options={OPTIONS}
         onSelect={vi.fn()}
-        functions={[{ name: 'lower', hint: 'lowercase' }]}
+        functions={[{ name: 'lower', label: 'Lowercase', hint: 'lowercase' }]}
         onSelectFunction={vi.fn()}
         addLabel="+ Add"
         ariaLabel="Add field"
@@ -118,7 +121,7 @@ describe('QueryBuilder :: CategorizedFieldDropdown', () => {
     await user.click(screen.getByRole('button', { name: 'Add field' }));
     await user.type(screen.getByRole('textbox'), 'lowerc');
 
-    expect(screen.getByRole('option', { name: /lower/ })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /Lowercase/ })).toBeInTheDocument();
     expect(screen.queryByRole('option', { name: /deployment/ })).not.toBeInTheDocument();
   });
 
@@ -126,6 +129,7 @@ describe('QueryBuilder :: CategorizedFieldDropdown', () => {
     const user = userEvent.setup();
     render(
       <CategorizedFieldDropdown
+        mode={FieldDropdownMode.Add}
         id="test"
         options={OPTIONS}
         onSelect={vi.fn()}
@@ -150,6 +154,7 @@ describe('QueryBuilder :: CategorizedFieldDropdown', () => {
     const onSelect = vi.fn();
     render(
       <CategorizedFieldDropdown
+        mode={FieldDropdownMode.Add}
         id="test"
         options={OPTIONS}
         onSelect={onSelect}
@@ -170,6 +175,7 @@ describe('QueryBuilder :: CategorizedFieldDropdown', () => {
     const user = userEvent.setup();
     render(
       <CategorizedFieldDropdown
+        mode={FieldDropdownMode.Picker}
         id="test"
         options={UNTAGGED_OPTIONS}
         onSelect={vi.fn()}
@@ -189,6 +195,7 @@ describe('QueryBuilder :: CategorizedFieldDropdown', () => {
   test('picker mode shows the current value on the trigger', () => {
     render(
       <CategorizedFieldDropdown
+        mode={FieldDropdownMode.Picker}
         id="test"
         options={OPTIONS}
         onSelect={vi.fn()}
@@ -206,6 +213,7 @@ describe('QueryBuilder :: CategorizedFieldDropdown', () => {
     const onSelect = vi.fn();
     render(
       <CategorizedFieldDropdown
+        mode={FieldDropdownMode.Add}
         id="test"
         options={[
           ...OPTIONS,
@@ -241,6 +249,7 @@ describe('QueryBuilder :: CategorizedFieldDropdown', () => {
     const user = userEvent.setup();
     render(
       <CategorizedFieldDropdown
+        mode={FieldDropdownMode.Add}
         id="test"
         options={[...OPTIONS, { name: 'total_money', type: 'decimal', tag: 'cost', display_name: 'Total money spend' }]}
         onSelect={vi.fn()}
@@ -260,6 +269,7 @@ describe('QueryBuilder :: CategorizedFieldDropdown', () => {
     const user = userEvent.setup();
     render(
       <CategorizedFieldDropdown
+        mode={FieldDropdownMode.Add}
         id="test"
         options={[
           { name: 'email', type: 'string', sensitive: true },
@@ -282,6 +292,7 @@ describe('QueryBuilder :: CategorizedFieldDropdown', () => {
   test('picker-mode trigger shows the selected field label', () => {
     render(
       <CategorizedFieldDropdown
+        mode={FieldDropdownMode.Picker}
         id="test"
         options={[{ name: 'total_money', type: 'decimal', tag: 'cost', display_name: 'Total money spend' }]}
         onSelect={vi.fn()}
@@ -292,5 +303,120 @@ describe('QueryBuilder :: CategorizedFieldDropdown', () => {
     );
 
     expect(screen.getByRole('button', { name: 'Pick field' })).toHaveTextContent('Total money spend');
+  });
+  test('multi-add keeps the overlay and its search term open across picks', async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    render(
+      <CategorizedFieldDropdown
+        mode={FieldDropdownMode.MultiAdd}
+        id="test"
+        options={OPTIONS}
+        selected={[]}
+        onSelect={onSelect}
+        addLabel="+ Add"
+        ariaLabel="Add field"
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Add field' }));
+    await user.type(screen.getByRole('textbox'), 'total');
+    await user.click(screen.getByRole('option', { name: /total_price/ }));
+    await user.click(screen.getByRole('option', { name: /total_tokens/ }));
+
+    expect(onSelect).toHaveBeenNthCalledWith(1, 'total_price');
+    expect(onSelect).toHaveBeenNthCalledWith(2, 'total_tokens');
+    expect(screen.getByRole('textbox')).toHaveValue('total');
+  });
+
+  test('multi-add keeps the expanded category open across picks', async () => {
+    const user = userEvent.setup();
+    render(
+      <CategorizedFieldDropdown
+        mode={FieldDropdownMode.MultiAdd}
+        id="test"
+        options={OPTIONS}
+        selected={[]}
+        onSelect={vi.fn()}
+        addLabel="+ Add"
+        ariaLabel="Add field"
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Add field' }));
+    await user.click(screen.getByRole('button', { name: /cost/ }));
+    await user.click(screen.getByRole('option', { name: /total_price/ }));
+
+    // Still expanded: the sibling option is reachable without reopening the category.
+    expect(screen.getByRole('button', { name: /cost/ })).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('option', { name: /total_tokens/ })).toBeInTheDocument();
+  });
+
+  test('the trigger states that it opens the listbox', async () => {
+    const user = userEvent.setup();
+    render(
+      <CategorizedFieldDropdown
+        mode={FieldDropdownMode.Picker}
+        id="test"
+        options={OPTIONS}
+        onSelect={vi.fn()}
+        value="deployment"
+        placeholder="pick"
+        ariaLabel="Pick field"
+      />,
+    );
+
+    const trigger = screen.getByRole('button', { name: 'Pick field' });
+    expect(trigger).toHaveAttribute('aria-haspopup', 'listbox');
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+
+    await user.click(trigger);
+    expect(screen.getByRole('button', { name: 'Pick field' })).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('listbox')).toHaveAttribute('id', 'test-listbox');
+  });
+
+  test('multi-add lists already-selected options as selected so they can be toggled off', async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    render(
+      <CategorizedFieldDropdown
+        mode={FieldDropdownMode.MultiAdd}
+        id="test"
+        options={OPTIONS}
+        selected={['deployment']}
+        onSelect={onSelect}
+        addLabel="+ Add"
+        ariaLabel="Add field"
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Add field' }));
+    await user.click(screen.getByRole('button', { name: /dimension/ }));
+
+    const option = screen.getByRole('option', { name: /deployment/ });
+    expect(option).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('listbox')).toHaveAttribute('aria-multiselectable', 'true');
+
+    await user.click(option);
+    expect(onSelect).toHaveBeenCalledWith('deployment');
+    expect(screen.getByRole('option', { name: /deployment/ })).toBeInTheDocument();
+  });
+
+  test('single-select modes mark no listbox as multi-selectable', async () => {
+    const user = userEvent.setup();
+    render(
+      <CategorizedFieldDropdown
+        mode={FieldDropdownMode.Picker}
+        id="test"
+        options={OPTIONS}
+        onSelect={vi.fn()}
+        value="deployment"
+        placeholder="pick"
+        ariaLabel="Pick field"
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Pick field' }));
+    expect(screen.getByRole('listbox')).not.toHaveAttribute('aria-multiselectable');
   });
 });

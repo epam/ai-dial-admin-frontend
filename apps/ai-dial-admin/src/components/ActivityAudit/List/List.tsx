@@ -471,7 +471,6 @@ const ActivityAuditList: FC<Props> = ({
     () => [
       { value: ActivityAuditView.Config, label: t(TelemetryI18nKey.ActivityViewConfig) },
       { value: ActivityAuditView.Deployments, label: t(TelemetryI18nKey.ActivityViewDeployments) },
-      { value: ActivityAuditView.Asset, label: t(TelemetryI18nKey.ActivityViewAsset), disabled: true },
     ],
     [t],
   );

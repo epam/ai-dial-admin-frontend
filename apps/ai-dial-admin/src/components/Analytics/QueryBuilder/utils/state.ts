@@ -46,25 +46,28 @@ export const createGroupByColumn = (field: string): GroupByRow => ({
   fn: null,
   field,
   alias: '',
+  aliasEdited: false,
   args: [],
 });
 
 // A scalar-function Group by row: one empty arg slot per catalog argument (or pre-filled slots when
-// deserializing an existing query). The alias is left to the user (the section warns until set).
-export const createGroupByFn = (fn: QueryFunction, args?: FnArgValue[]): GroupByRow => ({
+// deserializing an existing query).
+export const createGroupByFn = (fn: QueryFunction, args?: FnArgValue[], alias = ''): GroupByRow => ({
   id: nextId(),
   fn: fn.name,
   field: '',
-  alias: '',
+  alias,
+  aliasEdited: false,
   args: args ?? emptyArgs(fn),
 });
 
 // An aggregate metric row over a catalog function: one arg slot per catalog argument.
-export const createAggregate = (fn: QueryFunction, args?: FnArgValue[]): AggregateRow => ({
+export const createAggregate = (fn: QueryFunction, args?: FnArgValue[], alias = ''): AggregateRow => ({
   id: nextId(),
   fn: fn.name,
   distinct: false,
-  alias: '',
+  alias,
+  aliasEdited: false,
   args: args ?? emptyArgs(fn),
 });
 
@@ -98,4 +101,22 @@ export const createInitialState = (functions: QueryFunction[] = []): QueryBuilde
   having: createGroup(),
   sort: [],
   page: createInitialPage(),
+});
+
+// Rewrites every sort key naming `prev` to `next`. A computed column's name changes whenever its
+// row's function or arguments change, and a sort key holds that name as a string — left alone it
+// would order by a column the query no longer emits, which the backend rejects.
+export const renamedSortKeys = (sort: SortRow[], prev: string, next: string): SortRow[] =>
+  sort.map((key) => (key.field === prev ? { ...key, field: next } : key));
+
+// The same rename across a filter/having tree, at any nesting depth.
+export const renamedFilterFields = (node: FilterGroupNode, prev: string, next: string): FilterGroupNode => ({
+  ...node,
+  children: node.children.map((child) =>
+    child.kind === FilterNodeKind.Group
+      ? renamedFilterFields(child, prev, next)
+      : child.field === prev
+        ? { ...child, field: next }
+        : child,
+  ),
 });

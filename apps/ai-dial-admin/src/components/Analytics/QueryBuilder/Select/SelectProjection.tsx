@@ -8,7 +8,7 @@ import { fieldDisplayName, fieldsToOptions } from '@/src/components/Analytics/Qu
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { QUERY_BUILDER_PALETTE } from '@/src/constants/analytics/query-builder-palette';
-import { QueryBuilderColor } from '@/src/models/analytics/query-builder';
+import { FieldDropdownMode, QueryBuilderColor } from '@/src/models/analytics/query-builder';
 
 // Row-mode projection: fields added in selection order become the query's output columns; no
 // selection means the backend's default projection.
@@ -16,10 +16,13 @@ const SelectProjection: FC = () => {
   const t = useI18n();
   const { state, refresh } = useQueryBuilder();
 
-  const options = fieldsToOptions(state.fields).filter((f) => !state.select.includes(f.name));
+  // Picked fields stay listed so the dropdown can show them as selected and toggle them back off.
+  const options = fieldsToOptions(state.fields);
 
-  const addField = (name: string) => {
-    state.select.push(name);
+  const toggleField = (name: string) => {
+    const index = state.select.indexOf(name);
+    if (index === -1) state.select.push(name);
+    else state.select.splice(index, 1);
     refresh();
   };
 
@@ -35,8 +38,10 @@ const SelectProjection: FC = () => {
       action={
         <CategorizedFieldDropdown
           id="qb-select-add"
+          mode={FieldDropdownMode.MultiAdd}
           options={options}
-          onSelect={addField}
+          selected={state.select}
+          onSelect={toggleField}
           addLabel={t(QueryBuilderI18nKey.AddField)}
           ariaLabel={`${t(QueryBuilderI18nKey.Select)}: ${t(QueryBuilderI18nKey.AddField)}`}
         />
