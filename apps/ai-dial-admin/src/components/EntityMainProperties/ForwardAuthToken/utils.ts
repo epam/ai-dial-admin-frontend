@@ -15,6 +15,7 @@ export const isForwardTokenFalse = (value: string): boolean => {
 export const getAlertTitlePerView = (view: ApplicationRoute): string => {
   switch (view) {
     case ApplicationRoute.Models:
+    case ApplicationRoute.AssetsModels:
       return ForwardTokenI18nKey.UseForThisModel;
 
     case ApplicationRoute.Applications:
@@ -36,6 +37,7 @@ export const getAlertTitlePerView = (view: ApplicationRoute): string => {
 export const getDisplayNamePerView = (view: ApplicationRoute): string => {
   switch (view) {
     case ApplicationRoute.Models:
+    case ApplicationRoute.AssetsModels:
       return EntitiesI18nKey.ModelDisplayName;
 
     case ApplicationRoute.Applications:

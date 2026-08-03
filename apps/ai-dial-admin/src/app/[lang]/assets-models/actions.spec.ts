@@ -177,3 +177,59 @@ describe('Assets model :: server actions', () => {
     expect(result).toBe(failure);
   });
 });
+
+/**
+ * Core preserves an omitted upstream secret but re-encrypts a literal `''`, replacing a live credential
+ * with an empty one on a save that reports success. These assert the exact absence of the property in
+ * the outgoing payload rather than comparing against the strip helper's own output.
+ */
+describe('Assets model :: upstream secrets are never written as empty strings', () => {
+  const payloadOf = (call: unknown[]) => call[3] as { upstreams?: Record<string, unknown>[] };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (getUserToken as any).mockResolvedValue(TOKEN_MOCK);
+    (getIsEnableAuthToggle as any).mockReturnValue(true);
+    (assetApi.put as any).mockResolvedValue(RESPONSE_MOCK);
+  });
+
+  test('Should omit an empty key on update', async () => {
+    await updateModel({ name: 'm', upstreams: [{ endpoint: 'http://a', key: '' }] } as any, 'etag');
+
+    expect(payloadOf((assetApi.put as any).mock.calls[0]).upstreams?.[0]).not.toHaveProperty('key');
+  });
+
+  test('Should omit an empty key on create', async () => {
+    await createModel({ name: 'm', upstreams: [{ endpoint: 'http://a', key: '' }] } as any);
+
+    expect(payloadOf((assetApi.put as any).mock.calls[0]).upstreams?.[0]).not.toHaveProperty('key');
+  });
+
+  test('Should send a supplied key', async () => {
+    await updateModel({ name: 'm', upstreams: [{ endpoint: 'http://a', key: 'secret' }] } as any, 'etag');
+
+    expect(payloadOf((assetApi.put as any).mock.calls[0]).upstreams?.[0]).toHaveProperty('key', 'secret');
+  });
+
+  test('Should omit an empty secretExtraData', async () => {
+    await updateModel({ name: 'm', upstreams: [{ endpoint: 'http://a', secretExtraData: '' }] } as any, 'etag');
+
+    expect(payloadOf((assetApi.put as any).mock.calls[0]).upstreams?.[0]).not.toHaveProperty('secretExtraData');
+  });
+
+  test('Should strip the read-only status and validationWarnings Core rejects on write', async () => {
+    await updateModel(
+      {
+        name: 'm',
+        status: DialModelResourceStatus.Invalid,
+        validationWarnings: [{ field: 'interceptors[0]', message: 'not found' }],
+      } as any,
+      'etag',
+    );
+
+    const payload = payloadOf((assetApi.put as any).mock.calls[0]);
+
+    expect(payload).not.toHaveProperty('status');
+    expect(payload).not.toHaveProperty('validationWarnings');
+  });
+});

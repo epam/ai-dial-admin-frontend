@@ -628,6 +628,16 @@ export default {
     OutputSchema: 'Output Schema',
     Schema: 'Schema',
   },
+  ModelAsset: {
+    InvalidTitle: 'Not served',
+    InvalidMessage: 'DIAL Core rejected this model, so it is stored but not part of the served configuration.',
+    SecretLossTitle: 'Stored credentials will be lost',
+    SecretLossMessage:
+      'Re-enter the key and secret extra data for these upstreams before saving — a changed endpoint cannot keep its stored credentials:',
+    MissingUpstreamEndpointTitle: 'Upstream endpoint required',
+    MissingUpstreamEndpointMessage:
+      'Every upstream needs an endpoint. Fill in or remove the empty upstream before saving.',
+  },
   ForwardToken: {
     ForwardTokenModalTitle: 'Forward Auth Token',
     UseForThisModel: 'Use for this model',
@@ -1064,7 +1074,10 @@ export default {
     isPublic: 'Is Public',
     defaultRoleLimit: 'Default role limit',
     fieldsHashingOrder: 'Hashing order',
+    deploymentId: 'Deployment ID',
+    deploymentIdTooltip: 'The identifier clients use to call this model',
     endpoint: 'Endpoint',
+    endpointLegacyCaption: 'Used only when no interface base URL is declared above',
     keyValue: 'Key value',
     configDelivery: 'Configuration delivery',
     configDeliveryMeta: 'Meta',
@@ -1291,6 +1304,7 @@ export default {
     Id: 'Enter ID',
     Version: 'Enter version',
     Maintainer: 'Enter maintainer',
+    TokenizerModel: 'Enter a tokenizer model',
     Type: 'Enter type',
     Title: 'Enter title',
     Weight: 'Enter weight',

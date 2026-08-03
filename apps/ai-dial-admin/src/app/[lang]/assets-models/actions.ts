@@ -9,10 +9,20 @@ import { bulkDeleteAssets } from '@/src/server/assets/bulk-delete';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { stripEmptyUpstreamSecrets } from '@/src/utils/models/upstream-secrets';
 
 function toModelPayload(model: DialModelResource) {
-  const { status: __status, path: __path, folderId: __folderId, ...payload } = model;
-  return payload;
+  // `name` is deliberately kept: Core's `Model` carries it via `RoleBasedEntity`, so it is a real field
+  // rather than an injected one, and the existing action tests pin it.
+  const {
+    status: __status,
+    validationWarnings: __validationWarnings,
+    path: __path,
+    folderId: __folderId,
+    ...payload
+  } = model;
+
+  return { ...payload, ...(payload.upstreams && { upstreams: stripEmptyUpstreamSecrets(payload.upstreams) }) };
 }
 
 export async function getModels(path: string) {
