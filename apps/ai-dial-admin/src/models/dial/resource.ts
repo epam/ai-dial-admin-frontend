@@ -79,6 +79,7 @@ export interface DialModelResource extends EntityAttachment, EntityDefaults, Mod
   path: string;
   folderId: string;
   status?: DialModelResourceStatus;
+  validationWarnings?: CoreValidationWarning[];
   type?: DialModelResourceType;
   tokenizerModel?: string;
   overrideName?: string;
@@ -111,6 +112,16 @@ export interface DialModelResource extends EntityAttachment, EntityDefaults, Mod
 export enum DialModelResourceStatus {
   Valid = 'valid',
   Invalid = 'invalid',
+}
+
+/**
+ * Accompanies an `invalid` status on read. DIAL Core serves a rejected entity through a separate
+ * projection that names the offending field — the only channel explaining *why* the entity was left out
+ * of the served configuration. Admin callers only; absent for a valid resource.
+ */
+export interface CoreValidationWarning {
+  field?: string;
+  message?: string;
 }
 
 /**

@@ -3,6 +3,7 @@ import { AssetApp, AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { compareVersions, modifyNameVersionInAsset } from '@/src/utils/entities/versions';
 import { resolveCatalogDeploymentNavigation } from '@/src/utils/deployment-navigation';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
+import { isFlatPlatformView } from '@/src/utils/files/root-folder';
 import { ApplicationRoute } from '@/src/types/routes';
 import { allActionLabels, baseToolbarOptionLabels } from './constants';
 import { ButtonsI18nKey, FileManagerI18nKey } from '@/src/constants/i18n';
@@ -104,9 +105,7 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
 };
 
 export const getTreeActionLabels = (isReadOnlyAdmin: boolean, view: ApplicationRoute) => {
-  // App runners are flat in Core's `platform` bucket — the tree holds only the root, so every folder
-  // action is inapplicable. `addSibling`/`addChild` in particular created a runner with no `$id`.
-  if (view === ApplicationRoute.AssetsAppRunners) {
+  if (isFlatPlatformView(view)) {
     return [];
   }
 

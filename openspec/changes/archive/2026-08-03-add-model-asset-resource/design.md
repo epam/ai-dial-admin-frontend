@@ -1,0 +1,122 @@
+## Context
+
+DIAL Core exposes two structurally different resource route families:
+- `ResourceController` (`RESOURCE`/`RESOURCE_METADATA`) — application/toolset/conversation/prompt/file. Nested folders, `name__version` versioning, sharing/publications, always sets an `ETag` on GET 200.
+- `ConfigResourceController` (`CONFIG_RESOURCE`/`CONFIG_RESOURCE_METADATA`) — model/interceptor/role/key/route/schema/catalog_schema/settings. Flat (no folders, no `/` in the entity name), no versioning, fixed `platform` bucket only.
+
+Both families' metadata endpoints (`ConfigResourceMetadataController.handle()` and `ResourceController.getMetadata()`) delegate to the same `ResourceService.getMetadata()`, producing an identical `ResourceFolderMetadata`/`ResourceItemMetadata` JSON shape. This means DIAL Core's `models/platform/` listing is wire-compatible with the admin FE's existing `CoreResourceMetadataNode`/`toResourceInfoList` machinery without modification. The one confirmed gap: `ConfigResourceController`'s per-entity `GET /v1/models/platform/{name}` 200 does not set an `ETag` response header (unlike `ResourceController`, which always does), and its response body is a bespoke `ObjectNode` (`projectItem()`) rather than the raw stored blob `ResourceController` returns.
+
+The admin FE already migrated application/toolset/conversation/prompt/file assets off the admin-BE proxy onto a generic Core-direct client (`AssetApi`, keyed by `ResourceType`). This change extends that same machinery to a sixth resource kind, `MODEL`, which is the first `ConfigResourceController`-family type the FE integrates with.
+
+Only `Entities > Models` (admin-BE-backed, `src/app/[lang]/models/`) exists today. This change adds a parallel `Assets > Models` (Core-direct) surface, following the same relationship `Assets > Applications` already has to `Entities > Applications`.
+
+## Goals / Non-Goals
+
+**Goals:**
+- List, view, create, update, and delete DIAL Core model resources directly, without an admin-BE round trip.
+- Reuse the generic `AssetApi`/`ResourceType`/`ASSET_MERGERS` machinery rather than a bespoke client.
+- Match the Assets > Apps UI pattern (list + Properties/Features detail tabs) as closely as the flat/unversioned constraints allow.
+- Preserve, on the resource side, the exact same Features-tab delta that already exists between the Models-entity and Applications-entity Features tabs (Models has a caching group Applications lacks; Applications has `consentRequired` Models lacks).
+
+**Non-Goals:**
+- No versioning, publications, or sharing for the model asset — `ConfigResourceController` has no `__version`/sharing concept.
+- No nested folders or move-into-folder — the list has exactly one root, the fixed `platform` bucket.
+- No bulk import/export/zip for models in this change (Apps' import/export machinery is version- and folder-aware in ways that don't map cleanly onto a flat, unversioned resource; can be revisited later if needed).
+- ~~No Roles/Interceptors/Audit/Tools/Dependencies tabs on the model asset view — only Properties + Features, matching point 6 of the original request.~~ **Revised**: Roles and Interceptors are added (see the follow-up decisions below); Audit, Tools, and Dependencies remain out.
+- No changes to `Entities > Models` or its admin-BE-backed server actions (`src/app/[lang]/models/actions.ts`) — that path is untouched.
+
+## Decisions
+
+**Extend the generic `AssetApi` machinery rather than build a separate client.**
+Metadata listing is already wire-compatible (same underlying `ResourceService.getMetadata()` on the Core side), so `MODEL` slots into `CORE_RESOURCE_URL`/`CORE_RESOURCE_METADATA_URL`/`RESOURCE_TYPE_PREFIX`/`ASSET_MERGERS` the same way the four versioned types do. Alternative considered: a lightweight model-only client (like `ToolsetOpsApi`) — rejected because the metadata/list/get/put/delete shape is a strict subset of what `AssetApi` already does; a separate client would duplicate that logic for no benefit.
+
+**Widen the unversioned exclusion (`VersionedResourceType`) to include `MODEL`, alongside `FILE`.**
+`MODEL` has no `__version` suffix concept, matching `FILE`'s existing unversioned treatment. `Exclude<ResourceType, ResourceType.FILE>` becomes `Exclude<ResourceType, ResourceType.FILE | ResourceType.MODEL>`.
+
+**Source the model resource's etag from the metadata response, not the content response.**
+`AssetApi.getMergedWithEtag` currently returns `contentResult.etag` (the content GET's `ETag` header) for all types. Since `ConfigResourceController`'s per-entity GET never sets that header, `MODEL` needs a per-type override that instead uses the metadata GET's `etag` field (present in `ResourceItemMetadata` regardless of controller family). This is a pure FE-side workaround — no DIAL Core change — confirmed viable because `ConfigResourceController` PUT/DELETE fully honor `If-Match`/`If-None-Match`, so a metadata-sourced etag is still usable for conditional writes.
+
+**Give the model asset its own dedicated Features component and constants, not a reuse of `ResourceFeatures`.**
+`Assets/Resources/ResourceFeatures.tsx` + `Assets/Resources/constants.ts` (`resourceSwitchGroups`, `resourceTextFeatures`, `resourceFeatureLabelMap`, `resourceRunnerApplicationMap`) are a snake_case mirror of the **Applications**-entity feature set (`applicationSwitchGroups`), including `consent_required` and no caching group, plus app-runner-scheme-inherited-readonly logic that only makes sense for Applications (which have runner schemas). Models have no runner/schema concept — the Models-entity `TabsContent.tsx` already calls the generic `EntityFeatures` without an `appRunner` prop. So the model asset's Features tab needs its own parallel constants mirroring `modelsSwitchGroups`/`modelsTextFeatures` instead: same five shared groups (sampling/output, tools, prompt composition, attachments, feedback) plus a caching group, minus `consent_required` from session-access, and with no runner-inherited-value logic at all.
+
+**Flat list: the list view's data source is the single `platform/` bucket; no folder-create action is wired up.**
+Reuses `Assets/Apps/List` machinery for rendering/columns/actions, but omits `FilePath`/folder-move controls in `Properties.tsx` and the create-folder handler in the list toolbar, since `platform/` is Core's only bucket for this resource type and is never created, renamed, or nested.
+
+**Strip the GET-only `status` field before PUT; do not echo the raw GET response back as the update payload.**
+Confirmed against `ConfigResourceController`: `handleGet()`'s `projectItem()` returns `Model`'s own serialized fields (via the default `MAPPER`) plus an injected `name` (redundant — `Model` already carries `name` via `RoleBasedEntity`) and an injected `status` (`"valid"` or `"invalid"`), which is **not** a field on `Model`/`Deployment`/`RoleBasedEntity`. `handlePut()` deserializes the request body strictly as `Model.class` (`treeToEntity`), and none of `Model`, `Deployment`, or `RoleBasedEntity` carry `@JsonIgnoreProperties(ignoreUnknown = true)` — so Jackson's default `FAIL_ON_UNKNOWN_PROPERTIES` (unset, defaults to `true`) applies. Echoing the raw GET body back as the PUT payload would therefore fail on the unrecognized `status` field. The update action SHALL strip `status` from the merged resource before sending PUT. `name` is deliberately retained: unlike `status` it is a real `Model` field, inherited from `RoleBasedEntity`, so Core accepts it — the same shape of workaround already applied to the four `ResourceController`-family types.
+
+## Risks / Trade-offs
+
+- [Unconfirmed snake_case field names for the caching keys] ~~The Models-entity feature set has `cacheSupported`/`autoCachingSupported`, but no snake_case precedent exists yet.~~ **Resolved**: confirmed via `Features.java`'s class-level `@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)` — canonical wire field names are `cache_supported`/`auto_caching_supported` (camelCase accepted only via `@JsonAlias` for lenient deserialization). This `Features` POJO is shared verbatim between `Model` and `Application` deployments in Core, so `consent_required` is technically a valid field on a model resource's `features` object too — the admin FE's Models-entity switch groups just choose not to surface it, a UI curation choice this change preserves on the resource side as well, not a Core-side constraint.
+- [Bespoke GET response shape] ~~It's unconfirmed whether the PUT request body DIAL Core expects is exactly symmetric with that GET shape.~~ **Resolved**: not symmetric — see the new Decision above. GET adds a `status` field that PUT's strict `Model.class` deserialization rejects; the FE must strip it before update.
+- [Partial visibility] `ConfigResourceMetadataController` does not surface file-sourced (`aidial.config.json`) model entries — only blob-backed/API-written ones. Some models configured via static config may not appear in the new Assets > Models list. → Mitigation: document this as a known limitation; not fixable from the FE alone.
+- [Shared-type blast radius] Widening `VersionedResourceType`'s exclusion touches a type consumed by all five existing asset types' shared logic. → Mitigation: this is a type-level exclusion widening only (adding a case), not a behavior change to the existing four types; verify with the existing asset test suites after the change.
+
+## Migration Plan
+
+Purely additive — no existing route, component, or admin-BE integration is modified. Ships unconditionally (no feature flag), matching how the four prior asset-migration changes shipped. Rollback is a plain revert (new files/menu entry only).
+
+## Follow-up decisions: parity with `Entities > Models`
+
+**A written model asset is live config, not an inert record — this is why the missing fields matter.**
+`MergedConfigStore` builds the runtime `Config` as the union of `FileConfigStore` and API-managed entities read from `ResourceService`, and `ResourceTypes.MODEL` is in its `MANAGED_TYPES` set. A model written to `models/platform/{name}` therefore reaches `Config.getModels()` within one debounced rebuild (or immediately via the cross-replica fast path) and is served. Nothing needs to reference it, so — unlike `Assets > App Runners` before Issue #4078 — no reachability follow-up is required. The consequence runs the other way: an endpoint-less model is a registered-but-unroutable deployment, and `ConfigPostProcessor` performs no endpoint or upstream validation at any point, so nothing rejects it. The form is the only gate there will ever be.
+
+**The deployment identity is the canonical id, not the displayed name.**
+`processModels` / `validateSingleModel` both call `model.setName(canonicalId)`, and for API-written entries the map key is the canonical id. So a model the list shows as `gpt-4` is addressed by callers as `models/platform/gpt-4`, while a file-defined `gpt-4` keeps the bare key. Both populations coexist in one map. The view surfaces the canonical form so an admin is not left guessing which string to hand to a client.
+
+**`endpoint` is a plain text field, not a source field, and is labelled as the legacy path.**
+Core's `Deployment` carries `endpoint` and `responsesEndpoint` directly and has no `source` property at all — `source.$type` (container/adapter/endpoints) is an admin-BE construct with no Core counterpart, so `DeploymentProperties` cannot be transplanted wholesale and only its non-source controls are ported. `endpoint` also is not the primary routing input: `resolveEndpoint(type)` prefers `interfaces[type].base_url` (already rendered by `InterfacesField`) and falls back to `endpoint`/`responsesEndpoint` only when no interface is declared. Presenting it as a peer of `interfaces` would misrepresent Core's precedence, so it is presented as the fallback.
+
+**`responsesDefaults` is gated on Core's own support check, not on the entity view's condition and not unconditionally.**
+The field itself is first-class in Core (`Deployment.responsesDefaults`, a `Map<String, Object>` beside `defaults`) and already declared on the FE type via `EntityDefaults` — nothing is transformed by the admin BE. What *is* admin-BE-only is the visibility condition: `showResponsesDefaults` reads `source.$type`, which does not exist on Core. Two alternatives were considered. Rendering unconditionally is simplest and harmless (stray defaults are inert), but lets an admin configure defaults that can never fire. Instead the check mirrors `Deployment.supportsInterface(OPENAI_RESPONSES)` — true when `interfaces['openaiResponses'].base_url` or `responsesEndpoint` is present — both inputs already on `DialModelResource`. This preserves the entity view's intent while expressing it in terms Core actually evaluates.
+
+**Upstream secrets are stripped when empty, never sent as `""`.**
+`Upstream.key` and `Upstream.secretExtraData` are `@EncryptedField` + `@JsonProperty(access = WRITE_ONLY)`, so Core's GET never returns them and every loaded upstream renders those inputs blank. On PUT, `SecretFieldProcessor.mergePreservingOmittedSecrets` restores an omitted secret from the prior blob — but only for `null` or absent; its contract states that "a literal string in the request is treated as a real value and re-encrypted", and `encryptValue` returns an empty string unchanged. So a payload carrying `key: ""` replaces the stored credential with an empty one. The shared `UpstreamEndpoints` editor emits exactly that on any touch-then-clear (`Endpoint.tsx` does `updateEndpoint({ ...endpoint, key })`), which is safe on the entity path — where the admin BE round-trips the value — and destructive on this one. The write payload helper therefore deletes `key`/`secretExtraData` from each upstream when the value is empty or undefined. Alternative considered: pre-filling the field with a mask sentinel — rejected, since Core explicitly retired its `"***"` sentinel and now treats every literal as real.
+
+**Secret preservation is keyed on `endpoint`, which makes an endpoint rename lossy.**
+`matchSourceIndex` pairs each request upstream with its stored counterpart by matching the `endpoint` string, falling back to strict same-index pairing only for elements that carry no `endpoint`. Renaming an upstream's endpoint while leaving its key blank therefore finds no source element and preserves nothing — the upstream silently loses its credential. The editor warns when an existing upstream's endpoint changes and its key field is empty. Core's own contract note also cautions that mixing endpoint-keyed and endpoint-less elements in one array makes preservation unreliable, so every upstream the FE writes carries an `endpoint`.
+
+**`status` has two Core projections, and the second carries warnings the FE currently ignores.**
+The original spec treated `status` as a single field with two possible values. In fact `projectItem()` hardcodes `status: "valid"` on every successful GET, while `"invalid"` comes from a different projection, `projectInvalidItem()`, served for entities recorded in `MergedConfigStore.getInvalidEntities()` — and for admin callers that projection additionally carries a `validationWarnings` array naming the offending field. Treating `status` as informational-only discards the one channel that explains *why* a model was rejected from the merged config, so both are surfaced.
+
+**The write-time 422 is interceptor-references only.**
+`checkCrossReferences(Model)` runs `ConfigPostProcessor.validateCrossReferences`, which validates exactly one thing: that every entry in `model.interceptors` resolves as a key in the merged `config.interceptors` map (either shape — file entries key by simple name, API entries by canonical id). It then runs `UpstreamExtraDataMerger.validateNoOverlap`, which rejects an upstream whose `extraData` and `secretExtraData` share a top-level key. Nothing else about a model is validated on write. This is why the Interceptors tab and the already-specified 422 requirement belong in the same change — before the tab exists, no form input can produce the error the spec describes.
+
+**Shared controls are extracted for reuse, never duplicated — but only one field actually needs extracting.**
+An audit of where each field is edited today shrank this considerably:
+
+- `overrideName` already lives in `ModelTypeProperties` beside `type`, so it arrives with that control at no extra cost.
+- `descriptionKeywords` is already rendered on this surface — `TopicsControl` maps topics onto `descriptionKeywords` when the view is `AssetsModels`. It was mis-listed as missing.
+- `tokenizerModel` (`TokenizerModelSwitch`) has no view dependence and is directly reusable; only its prop type needs widening beyond `DialModel`.
+- `forwardAuthToken` (`ForwardAuthTokenField`) is reusable once its `getAlertTitlePerView`/`getDisplayNamePerView` lookups gain an `AssetsModels` case.
+- `reference` is editable on **no** surface in the app today. It is not an extraction, it would be a new control, and it is deferred (see non-goals).
+
+That leaves `displayVersion` as the only genuine extraction, and it cannot be lifted alone: inside `DeploymentProperties` the version control is entangled with the display-name field through `getNamesConfigurations(names)`, `isVersionOptional`, `getVersionError`, `getDisplayNameError`, and three `SaveValidationContext` dispatches. The display-name/version pair is extracted together into one shared component that takes the name population as a prop, leaving `DeploymentProperties` composing it exactly as before. The two surfaces then supply different populations — the entity side its admin-BE model list, the asset side the Core `platform` bucket listing — which is precisely why the names must be a prop rather than a fetch inside the extracted component. `isEntitiesWithDisplayVersion` gains `AssetsModels`.
+
+**No admin-backend call is required to configure a model — catalogue-only reads are dropped rather than tolerated.**
+An audit of every server call this surface makes found five admin-backend reads, none of them touching the model resource itself: role list, interceptor list, global interceptors, tokenizer catalogue and topic catalogue. Four were introduced by this follow-up; the topic catalogue predates it. All five populate pickers, so the surface *renders* without them — but two were load-bearing in practice:
+
+- **Tokenizer** was selection-only. `TokenizedModelsGrid` seeds `data` from an admin-backend fetch and offers a radio grid with no free-text path, so with that backend down the field could not be set at all. DIAL Core, meanwhile, treats `tokenizerModel` as an opaque pass-through — `ModelController` copies it into the `/v1/models` listing and nothing in Core resolves, validates or enumerates it. The catalogue exists *only* in the admin backend, so there is no Core substitute. Replaced with a plain free-text control (`BaseControls/TokenizerModel`). Nothing validates the value at any layer, which is a deliberate acceptance of Core's actual contract rather than an oversight: the alternative was a field that stops working when a service this surface otherwise does not need goes down. The control also distinguishes empty from unset, deleting the property rather than sending `''` — the same rule the upstream secrets follow, and a bug the old switch had.
+- **Topics** already had a free-text path (`MultiselectModal` seeds from the entity and accepts typed `newItems`), so the catalogue was pure enrichment. Dropped for this view only, gated on `isFlatPlatformView`, leaving every entity surface untouched.
+
+The cost, recorded because it is real: both catalogues also did consistency work. Free text means two admins can type `code-gen` and `codegen` with nothing nudging them together. Accepted for tokenizer, where the value is consumed by machines that either recognise it or do not, and for topics, where the grouping is cosmetic.
+
+**The three remaining admin-backend reads have exact Core equivalents, deferred to their own change.**
+Roles, interceptors and global interceptors are all Core-owned config resources, each readable from two Core endpoints: `/v1/metadata/{type}/platform/` for API-written entries and `/v1/admin/config/file/{type}` for config-file entries. That pair is not an approximation — `MergedConfigStore` is defined as the union of `FileConfigStore` and API-managed entities, and `validateCrossReferences` checks references against that merged map, so reading both halves yields exactly the set Core will accept. Notably a union with the *admin backend* would be worse: it could offer an entity the backend holds but has not pushed to Core, which would then fail the write with a 422.
+
+Deferred rather than done here because it adds a Core client for a second route family, needs dedup and reference-form rules for name collisions between the two populations (a config role is referenced by bare name, a Core-asset role by `roles/platform/{name}`), and applies equally to `Assets > App Runners`, which shipped with the same interceptor and topic dependencies. Doing it per-surface would mean doing it twice. One constraint for whoever picks it up: `/v1/admin/config/file/keys` returns 403 to every caller because file map keys are themselves secrets, so a generic file-config client must not assume every type in that route pattern is readable.
+
+**Flat-view defects are fixed by widening the app-runner predicates, not by adding parallel ones.**
+`getTreeActionLabels` and the detail route's path handling were corrected for `AssetsAppRunners` in that change's defect pass. `Assets > Models` is the same resource family under the same `ConfigResourceController` constraint, so the same conditions apply to it; the fix widens the existing checks rather than introducing a second, separately-maintained branch.
+
+## Follow-up risks / trade-offs
+
+- [Untested against a live Core] Sections 1–8 were reported complete without the change ever being exercised against a running DIAL Core. `add-app-runner-asset-resource` recorded six defects found only by using its view, all of them wiring assumptions its test suite could not see, and it shipped one day later than this change. The untested surfaces here are the same in kind: the create modal, update-with-etag, delete, and the strip-before-PUT logic against `Model.class`'s strict `FAIL_ON_UNKNOWN_PROPERTIES` deserialization. → Mitigation: unit and component coverage for each rule below; a runtime pass over the list, create, detail, save, and delete flows before archiving.
+- [`LocalizedValue` vs `string`] ~~Core types `displayName`, `description`, and `intro` on `Deployment` as `LocalizedValue`, while `DialModelResource` types all three as `string`. Whether a bare string round-trips through `LocalizedValue`'s deserialization is unverified, and these fields already ship.~~ **Resolved by task 9.5**: all three round-trip byte-identically against a live Core — set to distinctive plain strings, saved, reopened, read back exact, with no blanks, no `[object Object]`, and no locale-key wrapper. No FE-side change is needed, and the type mismatch is cosmetic rather than functional.
+- [Destructive-on-write secret handling] The empty-secret strip is the only thing standing between the shared upstream editor and credential loss, and the failure is silent — the save succeeds and the model simply stops authenticating. → Mitigation: cover it with a unit test asserting the exact absence of the key from the payload, not a match against a helper's output.
+- [Shared-component blast radius] Widening `getTreeActionLabels`, the Interceptors view check, and the Roles view check touches predicates the entity surfaces also consume. → Mitigation: these are additive case arms; the existing entity suites cover the unchanged branches.
+- [Partial visibility, unchanged] `ConfigResourceMetadataController` still does not surface file-sourced (`aidial.config.json`) model entries, so models configured statically do not appear in this list even though they occupy the same merged `Config.models` map — now under bare-name keys alongside the canonical-id keys this surface writes.
+
+## Open Questions
+
+None outstanding. The original two questions (caching-feature snake_case field names; GET/PUT payload symmetry) were resolved in the Decisions and Risks sections above. The follow-up's two questions — whether `endpoint` is a plain field, and how `responsesDefaults` visibility is decided — are resolved in the follow-up decisions above.
