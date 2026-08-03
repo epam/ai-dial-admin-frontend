@@ -28,6 +28,13 @@ const createTestSuite = (body?: TestSuiteRequestTemplateBody): TestSuite => ({
   requestTemplate: { urlTemplate: '/api', body },
 });
 
+const JSONATA_EXPRESSION = [
+  '{',
+  '    "messages": $append($history, [{ "role": "user", "content": "${{user_message}}" }]),',
+  '    "temperature": "${{temperature:0.7}}"',
+  '}',
+].join('\n');
+
 describe('JsonataToggle', () => {
   let mockOnChangeTestSuite: Mock;
 
@@ -246,6 +253,97 @@ describe('JsonataToggle', () => {
       expect(body.contentType).toBe(ContentType.JSON);
       expect(body.content).toEqual({});
       expect('jsonataContent' in body).toBe(false);
+    });
+  });
+
+  describe('in-session round-trip memory', () => {
+    const clickSwitch = () => fireEvent.click(screen.getByRole('switch'));
+    const bodyOfCall = (index: number) => mockOnChangeTestSuite.mock.calls[index][0].requestTemplate.body;
+
+    test('restores an unparseable expression verbatim after turning off and back on', () => {
+      const testSuite = createTestSuite({ contentType: ContentType.JSON, jsonataContent: JSONATA_EXPRESSION });
+
+      const { rerender } = render(<JsonataToggle testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
+      clickSwitch();
+
+      expect(bodyOfCall(0).content).toEqual({});
+
+      rerender(
+        <JsonataToggle testSuite={mockOnChangeTestSuite.mock.calls[0][0]} onChangeTestSuite={mockOnChangeTestSuite} />,
+      );
+      clickSwitch();
+
+      expect(bodyOfCall(1).jsonataContent).toBe(JSONATA_EXPRESSION);
+      expect('content' in bodyOfCall(1)).toBe(false);
+    });
+
+    test('serializes JSON content the user authored after turning off, instead of the stashed expression', () => {
+      const testSuite = createTestSuite({ contentType: ContentType.JSON, jsonataContent: JSONATA_EXPRESSION });
+
+      const { rerender } = render(<JsonataToggle testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
+      clickSwitch();
+
+      const editedContent = { model: 'gpt-4' };
+      rerender(
+        <JsonataToggle
+          testSuite={createTestSuite({ contentType: ContentType.JSON, content: editedContent })}
+          onChangeTestSuite={mockOnChangeTestSuite}
+        />,
+      );
+      clickSwitch();
+
+      expect(bodyOfCall(1).jsonataContent).toBe(JSON.stringify(editedContent, null, 4));
+    });
+
+    test('restores a parseable expression with its original formatting', () => {
+      const jsonataContent = '{ "model": "gpt-4" }';
+      const testSuite = createTestSuite({ contentType: ContentType.JSON, jsonataContent });
+
+      const { rerender } = render(<JsonataToggle testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
+      clickSwitch();
+
+      expect(bodyOfCall(0).content).toEqual({ model: 'gpt-4' });
+
+      rerender(
+        <JsonataToggle testSuite={mockOnChangeTestSuite.mock.calls[0][0]} onChangeTestSuite={mockOnChangeTestSuite} />,
+      );
+      clickSwitch();
+
+      expect(bodyOfCall(1).jsonataContent).toBe(jsonataContent);
+    });
+
+    test('re-stashes on every turn-off, so a second round trip also restores verbatim', () => {
+      const testSuite = createTestSuite({ contentType: ContentType.JSON, jsonataContent: JSONATA_EXPRESSION });
+
+      const { rerender } = render(<JsonataToggle testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
+
+      for (let call = 0; call < 3; call++) {
+        clickSwitch();
+        rerender(
+          <JsonataToggle
+            testSuite={mockOnChangeTestSuite.mock.calls[call][0]}
+            onChangeTestSuite={mockOnChangeTestSuite}
+          />,
+        );
+      }
+      clickSwitch();
+
+      expect(bodyOfCall(3).jsonataContent).toBe(JSONATA_EXPRESSION);
+    });
+
+    test('does not carry the stash across a remount, seeding from content instead', () => {
+      const testSuite = createTestSuite({ contentType: ContentType.JSON, jsonataContent: JSONATA_EXPRESSION });
+
+      const { unmount } = render(<JsonataToggle testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
+      clickSwitch();
+      unmount();
+
+      render(
+        <JsonataToggle testSuite={mockOnChangeTestSuite.mock.calls[0][0]} onChangeTestSuite={mockOnChangeTestSuite} />,
+      );
+      clickSwitch();
+
+      expect(bodyOfCall(1).jsonataContent).toBe('{}');
     });
   });
 });

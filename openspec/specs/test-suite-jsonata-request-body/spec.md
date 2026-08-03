@@ -6,10 +6,10 @@ Defines authoring a DEPLOYMENT test suite's request body as a single JSONata exp
 backend at run time, as an alternative to the literal JSON object or form-data parts the Request Template
 already supports. The expression lives in `requestTemplate.body.jsonataContent`, which is mutually exclusive
 with `content` — a body is either literal or computed, never both. This capability covers the "JSONata" mode
-toggle and its visibility rules, how the mode is derived from the body, how the Body tab picks between the
-JSONata editor, the JSON editor and the form-data grid, how content-type switches and saves preserve the
-exclusivity contract, and the JSONata Monaco language support (highlighting, completions, theming) backing
-the editor.
+toggle and its visibility rules, how the mode is derived from the body, what each direction of the toggle
+writes and how an off/on round trip preserves the expression, how the Body tab picks between the JSONata
+editor, the JSON editor and the form-data grid, how content-type switches and saves preserve the exclusivity
+contract, and the JSONata Monaco language support (highlighting, completions, theming) backing the editor.
 
 ## Requirements
 
@@ -107,6 +107,8 @@ alone would render the JSONata editor with no way to leave it.
 Turning the JSONata switch on SHALL set `body.jsonataContent` and remove `body.content` from the request
 template body, in a single update to the test suite. The value written SHALL be:
 
+- the expression remembered from an earlier turn-off in the same editing session, verbatim, when that memory is
+  still valid (see the round-trip memory requirement) — it takes precedence over the two rules below;
 - the current `content` serialized as pretty-printed JSON text — `JSON.stringify(content, null, 4)`, the same
   indentation `EntityJsonEditor` renders — when `content` is a JSON object;
 - `{}` otherwise: when `content` is absent, is the empty object, or is a `FormDataPart[]` (form-data parts are
@@ -165,11 +167,13 @@ Turning the JSONata switch off SHALL, in a single update to the test suite:
   `application/json` (and for an absent content type), `[]` for `multipart/form-data`;
 - set `body.contentType` to `application/json` **when it is absent**, leaving any existing value untouched.
 
-Restoring a parseable expression mirrors the turn-on carry-over, so the toggle is non-destructive in both
-directions: a body authored as JSON, switched to JSONata and switched back, survives the round trip. A real
-JSONata expression (anything that is not a JSON object literal — `$sum(items.price)`, a scalar, an array, the
-empty string) SHALL NOT be salvaged; those fall back to the type default. A parseable object SHALL NOT be
-restored under `multipart/form-data`, because a form-data `content` must stay an array (see below).
+Restoring a parseable expression mirrors the turn-on carry-over, so a body authored as JSON, switched to
+JSONata and switched back, survives the round trip in `content`. A real JSONata expression (anything that is
+not a JSON object literal — `$sum(items.price)`, a scalar, an array, the empty string) SHALL NOT be salvaged
+into `content`; those fall back to the type default, because `content` is a JSON value and cannot represent
+them. Their text is not lost, though: turn-off also records the outgoing expression outside the suite so
+turning the switch back on can restore it (see the round-trip memory requirement). A parseable object SHALL
+NOT be restored under `multipart/form-data`, because a form-data `content` must stay an array (see below).
 
 Both branches SHALL come from the shared pure util `getContentForJsonataExpression`
 (`src/components/TestSuites/utils/body-content.ts`), which delegates to `getDefaultContentForType` for the
@@ -246,6 +250,70 @@ At no point SHALL the form-data grid be rendered with a `content` value that is 
 - **WHEN** the user turns the JSONata switch off
 - **THEN** the Body tab SHALL render the literal body editor for the resulting content type in place of the
   JSONata editor
+
+### Requirement: The toggle remembers the outgoing expression for an in-session round trip
+
+Turning the switch off SHALL record the outgoing `jsonataContent` string together with the `content` value
+written in the same update. Turning the switch back on SHALL restore that recorded expression **verbatim** when
+the body's current `content` is deep-equal to the recorded one, and SHALL otherwise seed the expression from
+`content` as the turn-on requirement describes. Restoring SHALL clear the record, and a record whose `content`
+no longer matches SHALL be discarded rather than reused.
+
+This closes the destructive case the parse-and-restore rule cannot reach, which is the common one: any
+expression using JSONata functions, variables or `${{placeholder}}` template text is not a JSON object literal,
+so turn-off necessarily writes the type default into `content` — and without this memory, turning the switch
+back on would serialize that default and hand the user `{}`, forcing them to retype the whole expression.
+Restoring verbatim additionally preserves the user's own formatting, which re-serializing `content` cannot.
+
+The deep-equality check on `content` is what keeps the memory honest: a JSON body the user actually authored
+after turning JSONata off SHALL win over the expression they left behind. Equality SHALL be structural
+(lodash `isEqual`), not by reference.
+
+The record SHALL live in the React component layer — a ref held by the mounted toggle
+(`useJsonataExpressionStash`, colocated with `JsonataToggle`) — and SHALL NOT be added to
+`TestSuiteRequestTemplateBody`, `TestSuiteRequestTemplate`, or any other part of the test suite. Those are
+wire-typed models: a draft field there would be sent to ai-dial-admin-backend and would make the suite compare
+unequal to the loaded one, producing a phantom unsaved-changes state. The consequence is that the memory is
+**in-session only** — `TabsContent` renders the Method tab conditionally, so leaving the tab, reloading, or
+reopening the suite unmounts the toggle and drops the record. That is accepted scope: an accidental off/on is
+recoverable while the user is still on the tab, and anything beyond that starts from saved state.
+
+There SHALL be no confirmation dialog on either direction of the toggle.
+
+#### Scenario: Off/on round trip restores a real JSONata expression verbatim
+
+- **WHEN** the body's `jsonataContent` is
+  `{ "messages": $append($history, [{ "role": "user", "content": "${{user_message}}" }]) }` and the user turns
+  the switch off and back on without editing the body in between
+- **THEN** the turn-off SHALL set `content` to `{}` as the type default
+- **AND** the turn-on SHALL set `jsonataContent` back to that exact expression string, character for character
+- **AND** the updated body SHALL NOT carry a `content` value
+
+#### Scenario: Remembered expression keeps the user's formatting
+
+- **WHEN** the user turns the switch off and back on while `jsonataContent` is a parseable object written on one
+  line, such as `'{ "model": "gpt-4" }'`
+- **THEN** the turn-off SHALL set `content` to `{ "model": "gpt-4" }`
+- **AND** the turn-on SHALL restore the original one-line text, not the 4-space re-serialization of `content`
+
+#### Scenario: JSON content authored after turning off wins over the remembered expression
+
+- **WHEN** the user turns the switch off, edits the body in the JSON editor so `content` differs from what the
+  turn-off wrote, and then turns the switch on
+- **THEN** the expression SHALL be the edited `content` serialized as pretty-printed JSON text
+- **AND** the remembered expression SHALL NOT be restored
+
+#### Scenario: Nothing remembered on the first turn-on
+
+- **WHEN** the user turns the switch on without having turned it off earlier in the same session
+- **THEN** the expression SHALL be seeded from `content`, or `{}` when there is nothing to carry
+
+#### Scenario: Memory does not survive leaving the Method tab
+
+- **WHEN** the user turns the switch off, switches to another tab or reloads the suite, returns, and turns the
+  switch on
+- **THEN** the expression SHALL be seeded from `content` rather than restored
+- **AND** no unsaved-changes state SHALL have been introduced by the memory itself
 
 ### Requirement: Body tab branches three ways
 
