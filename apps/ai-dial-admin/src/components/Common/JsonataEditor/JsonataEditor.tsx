@@ -38,7 +38,6 @@ const JsonataEditor: FC<Props> = ({ value, onChange, options }) => {
     modelIdRef.current = editorInstance.getModel()?.id ?? null;
 
     const completionDisposable = monaco.languages.registerCompletionItemProvider(JSONATA_LANGUAGE_ID, {
-      // `$` is not a Monaco word character, so completions have to be triggered explicitly on `$`.
       triggerCharacters: ['$'],
       provideCompletionItems(model, position) {
         if (model.id !== modelIdRef.current) return { suggestions: [] };
@@ -83,7 +82,6 @@ const JsonataEditor: FC<Props> = ({ value, onChange, options }) => {
     editorInstance.onDidDispose(() => disposablesRef.current.forEach((disposable) => disposable.dispose()));
   }, []);
 
-  // Dispose on unmount as well (onDidDispose does not fire on every teardown path).
   useEffect(() => () => disposablesRef.current.forEach((disposable) => disposable.dispose()), []);
 
   return (

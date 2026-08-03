@@ -165,8 +165,6 @@ describe('JsonataEditor', () => {
       const editorInstance = { getModel: () => ({ id: 'model-1' }), onDidDispose: vi.fn() };
       capturedProps.onEditorMount(editorInstance, monaco);
 
-      // Simulates a buffer of "$su" with the cursor after "u": getWordUntilPosition strips the
-      // leading `$` (not a word character), reporting the word as "su" starting at column 2.
       const ownModel = {
         id: 'model-1',
         getWordUntilPosition: vi.fn(() => ({ word: 'su', startColumn: 2, endColumn: 4 })),

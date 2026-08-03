@@ -38,6 +38,9 @@ const JSONATA_EXPRESSION = [
 describe('JsonataToggle', () => {
   let mockOnChangeTestSuite: Mock;
 
+  const clickSwitch = () => fireEvent.click(screen.getByRole('switch'));
+  const bodyOfCall = (index: number) => mockOnChangeTestSuite.mock.calls[index][0].requestTemplate.body;
+
   beforeEach(() => {
     vi.clearAllMocks();
     mockOnChangeTestSuite = vi.fn();
@@ -45,7 +48,13 @@ describe('JsonataToggle', () => {
 
   describe('isOn reflects jsonataContent != null', () => {
     test('is off when body is undefined', () => {
-      render(<JsonataToggle testSuite={createTestSuite(undefined)} onChangeTestSuite={mockOnChangeTestSuite} />);
+      render(
+        <JsonataToggle
+          testSuite={createTestSuite(undefined)}
+          bodyText="{}"
+          onChangeTestSuite={mockOnChangeTestSuite}
+        />,
+      );
 
       expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'false');
     });
@@ -54,6 +63,7 @@ describe('JsonataToggle', () => {
       render(
         <JsonataToggle
           testSuite={createTestSuite({ contentType: ContentType.JSON, content: {} })}
+          bodyText="{}"
           onChangeTestSuite={mockOnChangeTestSuite}
         />,
       );
@@ -65,6 +75,7 @@ describe('JsonataToggle', () => {
       render(
         <JsonataToggle
           testSuite={createTestSuite({ contentType: ContentType.JSON, jsonataContent: '' })}
+          bodyText=""
           onChangeTestSuite={mockOnChangeTestSuite}
         />,
       );
@@ -76,6 +87,7 @@ describe('JsonataToggle', () => {
       render(
         <JsonataToggle
           testSuite={createTestSuite({ jsonataContent: '$sum(items.price)' })}
+          bodyText="$sum(items.price)"
           onChangeTestSuite={mockOnChangeTestSuite}
         />,
       );
@@ -87,6 +99,7 @@ describe('JsonataToggle', () => {
       const { rerender } = render(
         <JsonataToggle
           testSuite={createTestSuite({ contentType: ContentType.JSON, jsonataContent: '{}' })}
+          bodyText="{}"
           onChangeTestSuite={mockOnChangeTestSuite}
         />,
       );
@@ -96,6 +109,7 @@ describe('JsonataToggle', () => {
       rerender(
         <JsonataToggle
           testSuite={createTestSuite({ contentType: ContentType.JSON, jsonataContent: '' })}
+          bodyText=""
           onChangeTestSuite={mockOnChangeTestSuite}
         />,
       );
@@ -105,171 +119,197 @@ describe('JsonataToggle', () => {
   });
 
   describe('turning on', () => {
-    test('carries authored JSON content into jsonataContent and omits content, leaving contentType untouched', () => {
+    test('writes the current body text into jsonataContent and omits content', () => {
       const content = { model: 'gpt-4' };
-      const testSuite = createTestSuite({ contentType: ContentType.JSON, content });
+      const bodyText = JSON.stringify(content, null, 4);
 
-      render(<JsonataToggle testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
-      fireEvent.click(screen.getByRole('switch'));
+      render(
+        <JsonataToggle
+          testSuite={createTestSuite({ contentType: ContentType.JSON, content })}
+          bodyText={bodyText}
+          onChangeTestSuite={mockOnChangeTestSuite}
+        />,
+      );
+      clickSwitch();
 
       expect(mockOnChangeTestSuite).toHaveBeenCalledTimes(1);
-      const body = mockOnChangeTestSuite.mock.calls[0][0].requestTemplate.body;
-
-      expect('jsonataContent' in body).toBe(true);
-      expect(body.jsonataContent).toBe(JSON.stringify(content, null, 4));
-      expect('content' in body).toBe(false);
-      expect(body.contentType).toBe(ContentType.JSON);
+      expect('jsonataContent' in bodyOfCall(0)).toBe(true);
+      expect(bodyOfCall(0).jsonataContent).toBe(bodyText);
+      expect('content' in bodyOfCall(0)).toBe(false);
+      expect(bodyOfCall(0).contentType).toBe(ContentType.JSON);
     });
 
-    test('seeds "{}" when there is no content to carry', () => {
-      const testSuite = createTestSuite({ contentType: ContentType.JSON });
+    test('writes text that is not valid JSON verbatim, without requiring it to parse', () => {
+      render(
+        <JsonataToggle
+          testSuite={createTestSuite({ contentType: ContentType.JSON, content: {} })}
+          bodyText={JSONATA_EXPRESSION}
+          onChangeTestSuite={mockOnChangeTestSuite}
+        />,
+      );
+      clickSwitch();
 
-      render(<JsonataToggle testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
-      fireEvent.click(screen.getByRole('switch'));
-
-      const body = mockOnChangeTestSuite.mock.calls[0][0].requestTemplate.body;
-
-      expect(body.jsonataContent).toBe('{}');
-      expect('content' in body).toBe(false);
+      expect(bodyOfCall(0).jsonataContent).toBe(JSONATA_EXPRESSION);
+      expect('content' in bodyOfCall(0)).toBe(false);
     });
 
-    test('seeds "{}" when content is an empty object', () => {
-      const testSuite = createTestSuite({ contentType: ContentType.JSON, content: {} });
+    test('writes the empty string when the editor was cleared', () => {
+      render(
+        <JsonataToggle
+          testSuite={createTestSuite({ contentType: ContentType.JSON, content: {} })}
+          bodyText=""
+          onChangeTestSuite={mockOnChangeTestSuite}
+        />,
+      );
+      clickSwitch();
 
-      render(<JsonataToggle testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
-      fireEvent.click(screen.getByRole('switch'));
-
-      expect(mockOnChangeTestSuite.mock.calls[0][0].requestTemplate.body.jsonataContent).toBe('{}');
+      expect(bodyOfCall(0).jsonataContent).toBe('');
+      expect('content' in bodyOfCall(0)).toBe(false);
     });
 
     test('does not serialize form-data parts into the expression', () => {
-      const testSuite = createTestSuite({
-        contentType: ContentType.FormData,
-        content: [{ name: 'file', value: 'a.txt', type: FormDataType.File }],
-      });
+      render(
+        <JsonataToggle
+          testSuite={createTestSuite({
+            contentType: ContentType.FormData,
+            content: [{ name: 'file', value: 'a.txt', type: FormDataType.File }],
+          })}
+          bodyText=""
+          onChangeTestSuite={mockOnChangeTestSuite}
+        />,
+      );
+      clickSwitch();
 
-      render(<JsonataToggle testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
-      fireEvent.click(screen.getByRole('switch'));
-
-      const body = mockOnChangeTestSuite.mock.calls[0][0].requestTemplate.body;
-
-      expect(body.jsonataContent).toBe('{}');
-      expect('content' in body).toBe(false);
-      expect(body.contentType).toBe(ContentType.FormData);
+      expect(bodyOfCall(0).jsonataContent).toBe('');
+      expect('content' in bodyOfCall(0)).toBe(false);
+      expect(bodyOfCall(0).contentType).toBe(ContentType.FormData);
     });
 
     test('leaves an absent contentType absent (no normalization on turn-on)', () => {
       const content = { model: 'gpt-4' };
-      const testSuite = createTestSuite({ content });
+      const bodyText = JSON.stringify(content, null, 4);
 
-      render(<JsonataToggle testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
-      fireEvent.click(screen.getByRole('switch'));
+      render(
+        <JsonataToggle
+          testSuite={createTestSuite({ content })}
+          bodyText={bodyText}
+          onChangeTestSuite={mockOnChangeTestSuite}
+        />,
+      );
+      clickSwitch();
 
-      const body = mockOnChangeTestSuite.mock.calls[0][0].requestTemplate.body;
-
-      expect('contentType' in body).toBe(false);
-      expect(body.jsonataContent).toBe(JSON.stringify(content, null, 4));
-      expect('content' in body).toBe(false);
+      expect('contentType' in bodyOfCall(0)).toBe(false);
+      expect(bodyOfCall(0).jsonataContent).toBe(bodyText);
+      expect('content' in bodyOfCall(0)).toBe(false);
     });
   });
 
   describe('turning off', () => {
-    test('under JSON contentType, restores a parseable object expression as content', () => {
-      const testSuite = createTestSuite({ contentType: ContentType.JSON, jsonataContent: '{ "model": "gpt-4" }' });
+    test('under JSON contentType, parses the body text into content', () => {
+      render(
+        <JsonataToggle
+          testSuite={createTestSuite({ contentType: ContentType.JSON, jsonataContent: '{ "model": "gpt-4" }' })}
+          bodyText='{ "model": "gpt-4" }'
+          onChangeTestSuite={mockOnChangeTestSuite}
+        />,
+      );
+      clickSwitch();
 
-      render(<JsonataToggle testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
-      fireEvent.click(screen.getByRole('switch'));
-
-      const body = mockOnChangeTestSuite.mock.calls[0][0].requestTemplate.body;
-
-      expect('jsonataContent' in body).toBe(false);
-      expect(body.content).toEqual({ model: 'gpt-4' });
-      expect(body.contentType).toBe(ContentType.JSON);
+      expect('jsonataContent' in bodyOfCall(0)).toBe(false);
+      expect(bodyOfCall(0).content).toEqual({ model: 'gpt-4' });
+      expect(bodyOfCall(0).contentType).toBe(ContentType.JSON);
     });
 
-    test('round-trips authored JSON content through the toggle unchanged', () => {
-      const content = { model: 'gpt-4', messages: [{ role: 'user', content: 'hi' }] };
-      const testSuite = createTestSuite({ contentType: ContentType.JSON, content });
+    test('does not require the body text to be valid JSON, falling back to the type default', () => {
+      render(
+        <JsonataToggle
+          testSuite={createTestSuite({ contentType: ContentType.JSON, jsonataContent: JSONATA_EXPRESSION })}
+          bodyText={JSONATA_EXPRESSION}
+          onChangeTestSuite={mockOnChangeTestSuite}
+        />,
+      );
+      clickSwitch();
 
-      const { rerender } = render(<JsonataToggle testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
-      fireEvent.click(screen.getByRole('switch'));
-
-      const jsonataSuite = mockOnChangeTestSuite.mock.calls[0][0];
-      rerender(<JsonataToggle testSuite={jsonataSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
-      fireEvent.click(screen.getByRole('switch'));
-
-      const body = mockOnChangeTestSuite.mock.calls[1][0].requestTemplate.body;
-
-      expect(body.content).toEqual(content);
-      expect('jsonataContent' in body).toBe(false);
+      expect('jsonataContent' in bodyOfCall(0)).toBe(false);
+      expect(bodyOfCall(0).content).toEqual({});
+      expect(bodyOfCall(0).contentType).toBe(ContentType.JSON);
     });
 
     test('under JSON contentType, falls back to the type default for a real JSONata expression', () => {
-      const testSuite = createTestSuite({ contentType: ContentType.JSON, jsonataContent: '$sum(items.price)' });
-
-      render(<JsonataToggle testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
-      fireEvent.click(screen.getByRole('switch'));
-
-      const body = mockOnChangeTestSuite.mock.calls[0][0].requestTemplate.body;
-
-      expect('jsonataContent' in body).toBe(false);
-      expect(body.content).toEqual({});
-      expect(body.contentType).toBe(ContentType.JSON);
-    });
-
-    test('under form-data contentType, never restores a parseable object expression', () => {
-      const testSuite = createTestSuite({ contentType: ContentType.FormData, jsonataContent: '{ "model": "gpt-4" }' });
-
-      render(<JsonataToggle testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
-      fireEvent.click(screen.getByRole('switch'));
-
-      const body = mockOnChangeTestSuite.mock.calls[0][0].requestTemplate.body;
-
-      expect(body.content).toEqual([]);
-      expect(body.contentType).toBe(ContentType.FormData);
-    });
-
-    test('under form-data contentType, restores an empty array (not an object) and drops jsonataContent', () => {
-      const testSuite = createTestSuite({ contentType: ContentType.FormData, jsonataContent: '$sum(items.price)' });
-
-      render(<JsonataToggle testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
-      fireEvent.click(screen.getByRole('switch'));
-
-      const body = mockOnChangeTestSuite.mock.calls[0][0].requestTemplate.body;
-
-      expect('jsonataContent' in body).toBe(false);
-      expect(body.content).toEqual([]);
-      expect(body.contentType).toBe(ContentType.FormData);
-    });
-
-    test('with no contentType, normalizes to application/json and yields an empty-object body', () => {
-      const testSuite = createTestSuite({ jsonataContent: '$sum(items.price)' });
-
-      render(<JsonataToggle testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
-      fireEvent.click(screen.getByRole('switch'));
-
-      const body = mockOnChangeTestSuite.mock.calls[0][0].requestTemplate.body;
-
-      expect(body.contentType).toBe(ContentType.JSON);
-      expect(body.content).toEqual({});
-      expect('jsonataContent' in body).toBe(false);
-    });
-  });
-
-  describe('in-session round-trip memory', () => {
-    const clickSwitch = () => fireEvent.click(screen.getByRole('switch'));
-    const bodyOfCall = (index: number) => mockOnChangeTestSuite.mock.calls[index][0].requestTemplate.body;
-
-    test('restores an unparseable expression verbatim after turning off and back on', () => {
-      const testSuite = createTestSuite({ contentType: ContentType.JSON, jsonataContent: JSONATA_EXPRESSION });
-
-      const { rerender } = render(<JsonataToggle testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
+      render(
+        <JsonataToggle
+          testSuite={createTestSuite({ contentType: ContentType.JSON, jsonataContent: '$sum(items.price)' })}
+          bodyText="$sum(items.price)"
+          onChangeTestSuite={mockOnChangeTestSuite}
+        />,
+      );
       clickSwitch();
 
       expect(bodyOfCall(0).content).toEqual({});
+    });
+
+    test('under form-data contentType, never restores a parseable object expression', () => {
+      render(
+        <JsonataToggle
+          testSuite={createTestSuite({ contentType: ContentType.FormData, jsonataContent: '{ "model": "gpt-4" }' })}
+          bodyText='{ "model": "gpt-4" }'
+          onChangeTestSuite={mockOnChangeTestSuite}
+        />,
+      );
+      clickSwitch();
+
+      expect(bodyOfCall(0).content).toEqual([]);
+      expect(bodyOfCall(0).contentType).toBe(ContentType.FormData);
+    });
+
+    test('under form-data contentType, restores an empty array and drops jsonataContent', () => {
+      render(
+        <JsonataToggle
+          testSuite={createTestSuite({ contentType: ContentType.FormData, jsonataContent: '$sum(items.price)' })}
+          bodyText="$sum(items.price)"
+          onChangeTestSuite={mockOnChangeTestSuite}
+        />,
+      );
+      clickSwitch();
+
+      expect('jsonataContent' in bodyOfCall(0)).toBe(false);
+      expect(bodyOfCall(0).content).toEqual([]);
+      expect(bodyOfCall(0).contentType).toBe(ContentType.FormData);
+    });
+
+    test('with no contentType, normalizes to application/json and yields an empty-object body', () => {
+      render(
+        <JsonataToggle
+          testSuite={createTestSuite({ jsonataContent: '$sum(items.price)' })}
+          bodyText="$sum(items.price)"
+          onChangeTestSuite={mockOnChangeTestSuite}
+        />,
+      );
+      clickSwitch();
+
+      expect(bodyOfCall(0).contentType).toBe(ContentType.JSON);
+      expect(bodyOfCall(0).content).toEqual({});
+      expect('jsonataContent' in bodyOfCall(0)).toBe(false);
+    });
+  });
+
+  describe('the body text is never transformed by the toggle', () => {
+    test('an off/on round trip writes back the same text, character for character', () => {
+      const { rerender } = render(
+        <JsonataToggle
+          testSuite={createTestSuite({ contentType: ContentType.JSON, jsonataContent: JSONATA_EXPRESSION })}
+          bodyText={JSONATA_EXPRESSION}
+          onChangeTestSuite={mockOnChangeTestSuite}
+        />,
+      );
+      clickSwitch();
 
       rerender(
-        <JsonataToggle testSuite={mockOnChangeTestSuite.mock.calls[0][0]} onChangeTestSuite={mockOnChangeTestSuite} />,
+        <JsonataToggle
+          testSuite={mockOnChangeTestSuite.mock.calls[0][0]}
+          bodyText={JSONATA_EXPRESSION}
+          onChangeTestSuite={mockOnChangeTestSuite}
+        />,
       );
       clickSwitch();
 
@@ -277,73 +317,53 @@ describe('JsonataToggle', () => {
       expect('content' in bodyOfCall(1)).toBe(false);
     });
 
-    test('serializes JSON content the user authored after turning off, instead of the stashed expression', () => {
-      const testSuite = createTestSuite({ contentType: ContentType.JSON, jsonataContent: JSONATA_EXPRESSION });
+    test('a parseable expression keeps the user formatting rather than being re-serialized', () => {
+      const bodyText = '{ "model": "gpt-4" }';
 
-      const { rerender } = render(<JsonataToggle testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
-      clickSwitch();
-
-      const editedContent = { model: 'gpt-4' };
-      rerender(
+      const { rerender } = render(
         <JsonataToggle
-          testSuite={createTestSuite({ contentType: ContentType.JSON, content: editedContent })}
+          testSuite={createTestSuite({ contentType: ContentType.JSON, jsonataContent: bodyText })}
+          bodyText={bodyText}
           onChangeTestSuite={mockOnChangeTestSuite}
         />,
       );
       clickSwitch();
 
-      expect(bodyOfCall(1).jsonataContent).toBe(JSON.stringify(editedContent, null, 4));
-    });
-
-    test('restores a parseable expression with its original formatting', () => {
-      const jsonataContent = '{ "model": "gpt-4" }';
-      const testSuite = createTestSuite({ contentType: ContentType.JSON, jsonataContent });
-
-      const { rerender } = render(<JsonataToggle testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
-      clickSwitch();
-
       expect(bodyOfCall(0).content).toEqual({ model: 'gpt-4' });
 
       rerender(
-        <JsonataToggle testSuite={mockOnChangeTestSuite.mock.calls[0][0]} onChangeTestSuite={mockOnChangeTestSuite} />,
+        <JsonataToggle
+          testSuite={mockOnChangeTestSuite.mock.calls[0][0]}
+          bodyText={bodyText}
+          onChangeTestSuite={mockOnChangeTestSuite}
+        />,
       );
       clickSwitch();
 
-      expect(bodyOfCall(1).jsonataContent).toBe(jsonataContent);
+      expect(bodyOfCall(1).jsonataContent).toBe(bodyText);
     });
 
-    test('re-stashes on every turn-off, so a second round trip also restores verbatim', () => {
-      const testSuite = createTestSuite({ contentType: ContentType.JSON, jsonataContent: JSONATA_EXPRESSION });
-
-      const { rerender } = render(<JsonataToggle testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
-
-      for (let call = 0; call < 3; call++) {
-        clickSwitch();
-        rerender(
-          <JsonataToggle
-            testSuite={mockOnChangeTestSuite.mock.calls[call][0]}
-            onChangeTestSuite={mockOnChangeTestSuite}
-          />,
-        );
-      }
-      clickSwitch();
-
-      expect(bodyOfCall(3).jsonataContent).toBe(JSONATA_EXPRESSION);
-    });
-
-    test('does not carry the stash across a remount, seeding from content instead', () => {
-      const testSuite = createTestSuite({ contentType: ContentType.JSON, jsonataContent: JSONATA_EXPRESSION });
-
-      const { unmount } = render(<JsonataToggle testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
-      clickSwitch();
-      unmount();
-
-      render(
-        <JsonataToggle testSuite={mockOnChangeTestSuite.mock.calls[0][0]} onChangeTestSuite={mockOnChangeTestSuite} />,
+    test('text the user edited after turning off is what turning on writes', () => {
+      const { rerender } = render(
+        <JsonataToggle
+          testSuite={createTestSuite({ contentType: ContentType.JSON, jsonataContent: JSONATA_EXPRESSION })}
+          bodyText={JSONATA_EXPRESSION}
+          onChangeTestSuite={mockOnChangeTestSuite}
+        />,
       );
       clickSwitch();
 
-      expect(bodyOfCall(1).jsonataContent).toBe('{}');
+      const editedText = JSON.stringify({ model: 'gpt-4' }, null, 4);
+      rerender(
+        <JsonataToggle
+          testSuite={createTestSuite({ contentType: ContentType.JSON, content: { model: 'gpt-4' } })}
+          bodyText={editedText}
+          onChangeTestSuite={mockOnChangeTestSuite}
+        />,
+      );
+      clickSwitch();
+
+      expect(bodyOfCall(1).jsonataContent).toBe(editedText);
     });
   });
 });

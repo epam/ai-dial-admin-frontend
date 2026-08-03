@@ -18,57 +18,63 @@ export type TabsContentRef = (ParamsTabRef & BodyTabRef) | null;
 interface Props {
   activeTab: EntityViewTab;
   selectedTestSuite: TestSuite;
+  bodyText: string;
+  onChangeBodyText: (text: string) => void;
   onChange: (testSuite: TestSuite) => void;
 }
 
-const TabsContent = forwardRef<TabsContentRef, Props>(({ activeTab, onChange, selectedTestSuite }, ref) => {
-  const t = useI18n();
+const TabsContent = forwardRef<TabsContentRef, Props>(
+  ({ activeTab, bodyText, onChangeBodyText, onChange, selectedTestSuite }, ref) => {
+    const t = useI18n();
 
-  const onChangeTemplate = useCallback(
-    (template: TestSuite['requestTemplate']) => {
-      const paramNames = getTemplateParameters(template);
-      const inputBindings = filterParameterBindings(selectedTestSuite.inputBindings, paramNames);
+    const onChangeTemplate = useCallback(
+      (template: TestSuite['requestTemplate']) => {
+        const paramNames = getTemplateParameters(template);
+        const inputBindings = filterParameterBindings(selectedTestSuite.inputBindings, paramNames);
 
-      onChange({
-        ...selectedTestSuite,
-        requestTemplate: template,
-        inputBindings,
-      });
-    },
-    [onChange, selectedTestSuite],
-  );
+        onChange({
+          ...selectedTestSuite,
+          requestTemplate: template,
+          inputBindings,
+        });
+      },
+      [onChange, selectedTestSuite],
+    );
 
-  return (
-    <div className="flex-1 min-h-0">
-      {activeTab === EntityViewTab.Parameters && (
-        <ParamsTab
-          ref={ref}
-          template={selectedTestSuite.requestTemplate || {}}
-          changeTemplate={onChangeTemplate}
-          field="queryParams"
-          emptyDataTitle={t(BasicI18nKey.NoParameters)}
-        />
-      )}
-      {activeTab === EntityViewTab.Body && (
-        <BodyTab
-          ref={ref}
-          selectedTestSuiteId={selectedTestSuite.id as string}
-          template={selectedTestSuite.requestTemplate || {}}
-          changeTemplate={onChangeTemplate}
-        />
-      )}
-      {activeTab === EntityViewTab.Headers && (
-        <ParamsTab
-          ref={ref}
-          template={selectedTestSuite.requestTemplate || {}}
-          changeTemplate={onChangeTemplate}
-          field="headers"
-          emptyDataTitle={t(BasicI18nKey.NoHeaders)}
-        />
-      )}
-    </div>
-  );
-});
+    return (
+      <div className="flex-1 min-h-0">
+        {activeTab === EntityViewTab.Parameters && (
+          <ParamsTab
+            ref={ref}
+            template={selectedTestSuite.requestTemplate || {}}
+            changeTemplate={onChangeTemplate}
+            field="queryParams"
+            emptyDataTitle={t(BasicI18nKey.NoParameters)}
+          />
+        )}
+        {activeTab === EntityViewTab.Body && (
+          <BodyTab
+            ref={ref}
+            selectedTestSuiteId={selectedTestSuite.id as string}
+            template={selectedTestSuite.requestTemplate || {}}
+            bodyText={bodyText}
+            onChangeBodyText={onChangeBodyText}
+            changeTemplate={onChangeTemplate}
+          />
+        )}
+        {activeTab === EntityViewTab.Headers && (
+          <ParamsTab
+            ref={ref}
+            template={selectedTestSuite.requestTemplate || {}}
+            changeTemplate={onChangeTemplate}
+            field="headers"
+            emptyDataTitle={t(BasicI18nKey.NoHeaders)}
+          />
+        )}
+      </div>
+    );
+  },
+);
 
 TabsContent.displayName = 'TabsContent';
 

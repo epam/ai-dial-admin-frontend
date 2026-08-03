@@ -1,11 +1,14 @@
 import { describe, expect, test } from 'vitest';
-import {
-  getContentForJsonataExpression,
-  getDefaultContentForType,
-  getJsonataExpressionForContent,
-} from '../body-content';
+import { getBodyText, getContentForJsonataExpression, getDefaultContentForType } from '../body-content';
 import { ContentType } from '@/src/components/TestSuites/constants/content-type';
 import { FormDataType } from '@/src/models/form-data';
+
+const JSONATA_EXPRESSION = [
+  '{',
+  '    "messages": $append($history, [{ "role": "user", "content": "${{user_message}}" }]),',
+  '    "temperature": "${{temperature:0.7}}"',
+  '}',
+].join('\n');
 
 describe('getDefaultContentForType', () => {
   test('returns an empty object for application/json', () => {
@@ -25,33 +28,51 @@ describe('getDefaultContentForType', () => {
   });
 });
 
-describe('getJsonataExpressionForContent', () => {
+describe('getBodyText', () => {
+  test('returns jsonataContent verbatim, including JSONata syntax and placeholders', () => {
+    expect(getBodyText({ contentType: ContentType.JSON, jsonataContent: JSONATA_EXPRESSION })).toBe(JSONATA_EXPRESSION);
+  });
+
+  test('returns an empty jsonataContent as the empty string', () => {
+    expect(getBodyText({ contentType: ContentType.JSON, jsonataContent: '' })).toBe('');
+  });
+
+  test('prefers jsonataContent over content', () => {
+    expect(getBodyText({ jsonataContent: '$sum(items.price)', content: { model: 'gpt-4' } })).toBe('$sum(items.price)');
+  });
+
   test('serializes JSON object content with the JSON editor indentation', () => {
-    expect(getJsonataExpressionForContent({ model: 'gpt-4', stream: false })).toBe(
-      JSON.stringify({ model: 'gpt-4', stream: false }, null, 4),
-    );
+    const content = { model: 'gpt-4', stream: false };
+
+    expect(getBodyText({ contentType: ContentType.JSON, content })).toBe(JSON.stringify(content, null, 4));
   });
 
   test('serializes nested JSON object content', () => {
     const content = { messages: [{ role: 'user', content: 'hi' }] };
 
-    expect(getJsonataExpressionForContent(content)).toBe(JSON.stringify(content, null, 4));
+    expect(getBodyText({ contentType: ContentType.JSON, content })).toBe(JSON.stringify(content, null, 4));
   });
 
   test('returns "{}" for empty object content', () => {
-    expect(getJsonataExpressionForContent({})).toBe('{}');
+    expect(getBodyText({ contentType: ContentType.JSON, content: {} })).toBe('{}');
   });
 
-  test('returns "{}" when content is undefined', () => {
-    expect(getJsonataExpressionForContent(undefined)).toBe('{}');
+  test('returns "{}" when content is absent', () => {
+    expect(getBodyText({ contentType: ContentType.JSON })).toBe('{}');
   });
 
-  test('returns "{}" for form-data parts rather than serializing them', () => {
-    expect(getJsonataExpressionForContent([{ name: 'file', value: 'a.txt', type: FormDataType.File }])).toBe('{}');
+  test('returns "{}" when the body is undefined', () => {
+    expect(getBodyText(undefined)).toBe('{}');
   });
 
-  test('returns "{}" for empty form-data parts', () => {
-    expect(getJsonataExpressionForContent([])).toBe('{}');
+  test('returns no text for form-data parts, which have no text editor', () => {
+    expect(getBodyText({ contentType: ContentType.FormData, content: [] })).toBe('');
+    expect(
+      getBodyText({
+        contentType: ContentType.FormData,
+        content: [{ name: 'file', value: 'a.txt', type: FormDataType.File }],
+      }),
+    ).toBe('');
   });
 });
 
@@ -66,6 +87,10 @@ describe('getContentForJsonataExpression', () => {
 
   test('falls back to the type default for a real JSONata expression', () => {
     expect(getContentForJsonataExpression('$sum(items.price)', ContentType.JSON)).toEqual({});
+  });
+
+  test('falls back to the type default for JSONata embedded in JSON-looking text', () => {
+    expect(getContentForJsonataExpression(JSONATA_EXPRESSION, ContentType.JSON)).toEqual({});
   });
 
   test('falls back to the type default for an empty expression', () => {

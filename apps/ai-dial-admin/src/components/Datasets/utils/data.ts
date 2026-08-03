@@ -85,8 +85,6 @@ export const collapseRowsToDatasetTestCases = (
     }
 
     const sorted = [...groupRows].sort((a, b) => (readTurnIndex(a) ?? 0) - (readTurnIndex(b) ?? 0));
-    // Shared fields are read off turn 0 (invariant across turns by construction); everything
-    // else in each turn's merged `data` is per-turn and goes back into `multiTurnData`.
     testCase.data = selectSharedFields(sorted[0].data as Record<string, unknown> | undefined, perTurnFields);
     testCase.multiTurnData = sorted.map((row) =>
       selectPerTurnFields(row.data as Record<string, unknown> | undefined, perTurnFields),

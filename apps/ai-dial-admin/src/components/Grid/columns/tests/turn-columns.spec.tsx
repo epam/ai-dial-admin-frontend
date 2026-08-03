@@ -24,8 +24,6 @@ import {
 
 const rendererParams = (data: Partial<GroupedGridRow>) => ({ data }) as ICellRendererParams<GroupedGridRow>;
 
-// `ColDef.valueGetter` is typed as `string | ValueGetterFunc`, so it isn't directly callable —
-// every caller in this file only ever supplies the function form.
 const callValueGetter = (column: { valueGetter?: unknown }, data: Partial<GroupedGridRow>): unknown =>
   (column.valueGetter as (params: ValueGetterParams<GroupedGridRow>) => unknown)({
     data,

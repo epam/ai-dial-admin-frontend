@@ -6,10 +6,11 @@ Defines authoring a DEPLOYMENT test suite's request body as a single JSONata exp
 backend at run time, as an alternative to the literal JSON object or form-data parts the Request Template
 already supports. The expression lives in `requestTemplate.body.jsonataContent`, which is mutually exclusive
 with `content` — a body is either literal or computed, never both. This capability covers the "JSONata" mode
-toggle and its visibility rules, how the mode is derived from the body, what each direction of the toggle
-writes and how an off/on round trip preserves the expression, how the Body tab picks between the JSONata
-editor, the JSON editor and the form-data grid, how content-type switches and saves preserve the exclusivity
-contract, and the JSONata Monaco language support (highlighting, completions, theming) backing the editor.
+toggle and its visibility rules, how the mode is derived from the body, how the body **text** is owned above
+both editors so toggling preserves it verbatim in either direction, what each direction of the toggle writes to
+the model, how the Body tab picks between the JSONata editor, the JSON editor and the form-data grid, how
+content-type switches and saves preserve the exclusivity contract, and the JSONata Monaco language support
+(highlighting, completions, theming) backing the editor.
 
 ## Requirements
 
@@ -54,9 +55,10 @@ context value recording the mode.
 
 #### Scenario: Empty string is still JSONata mode
 
-Still load-bearing after the seeding decision (turn-on writes the carried-over content, or `{}`) — it governs
-the **cleared-by-hand** case rather than the just-toggled-on one. A user who selects all and deletes, on the
-way to typing a different expression, sits at `''` and must not be thrown out of the mode mid-edit.
+Still load-bearing after the seeding decision (turn-on writes the current body text, which is `{}` for an empty
+body) — it governs the **cleared-by-hand** case rather than the just-toggled-on one. A user who selects all and
+deletes, on the way to typing a different expression, sits at `''` and must not be thrown out of the mode
+mid-edit.
 
 - **WHEN** `jsonataContent` is the empty string `''`, having been cleared by the user
 - **THEN** the UI SHALL remain in JSONata mode and show an empty JSONata editor
@@ -102,111 +104,229 @@ alone would render the JSONata editor with no way to leave it.
 - **WHEN** the body has no `jsonataContent` value
 - **THEN** the switch SHALL be rendered in the off state
 
-### Requirement: Turning the toggle on carries the authored JSON body into the expression
+### Requirement: The body text is owned above both editors and never transformed
 
-Turning the JSONata switch on SHALL set `body.jsonataContent` and remove `body.content` from the request
-template body, in a single update to the test suite. The value written SHALL be:
+`RequestTemplate.tsx` SHALL own the body **text** as React state — the single source of truth for what either
+body editor displays — and SHALL thread it to `BodyTab` through `TabsContent` as `bodyText` +
+`onChangeBodyText`. It SHALL be seeded on mount from whichever field the loaded body carries, via the shared
+pure util `getBodyText` (`src/components/TestSuites/utils/body-content.ts`): the `jsonataContent` string when
+present, otherwise `JSON.stringify(content, null, 4)` — the indentation `EntityJsonEditor` itself uses, so
+switching modes cannot reformat what the user was already looking at — and the empty string for a form-data
+body, which has no text editor.
 
-- the expression remembered from an earlier turn-off in the same editing session, verbatim, when that memory is
-  still valid (see the round-trip memory requirement) — it takes precedence over the two rules below;
-- the current `content` serialized as pretty-printed JSON text — `JSON.stringify(content, null, 4)`, the same
-  indentation `EntityJsonEditor` renders — when `content` is a JSON object;
-- `{}` otherwise: when `content` is absent, is the empty object, or is a `FormDataPart[]` (form-data parts are
-  an array, not an expression, and serializing them would be noise rather than a starting point).
+Toggling JSONata SHALL NOT transform, re-serialize, reformat, remember or reset this text. The toggle changes
+only **which editor renders** and **which body field the text is written to**. There SHALL be no staleness
+rule, no restore-vs-serialize decision, and no stash of a previous expression.
 
-Carrying the content over makes the toggle non-destructive: a JSON object literal is itself a valid JSONata
-object-constructor expression, so the authored body is a usable starting point rather than something the user
-must retype.
+The text SHALL be transient editor state and SHALL NOT be added to `TestSuiteRequestTemplateBody`,
+`TestSuiteRequestTemplate`, or any other part of the test suite. Those are wire-typed models: a draft field
+there would be sent to ai-dial-admin-backend and would make the suite compare unequal to the loaded one,
+producing a phantom unsaved-changes state. More fundamentally, `content` is typed
+`Record<string, unknown> | FormDataPart[]`, so text that is not valid JSON has nowhere to live in the model at
+all — the invalid intermediate state is inherently editor state.
 
-`{}` remains the fallback seed because it is a valid JSONata expression evaluating to an empty object and
-mirrors what the JSON editor starts the user with. Seeding it — rather than an empty string — keeps the
-empty-expression state something the user reaches deliberately by clearing the editor, rather than the state
-every new JSONata body begins in. That matters because an empty expression does not survive a save (see the
-save-payload requirements).
+The consequence is that the text resets from the model when `RequestTemplate` unmounts — leaving the Method
+tab, reloading, reopening the suite. That is correct rather than a limitation: the saved model is the source of
+truth then.
 
-The serialization SHALL live in the shared pure util `getJsonataExpressionForContent`
-(`src/components/TestSuites/utils/body-content.ts`) alongside `getDefaultContentForType`, not inline in the
-toggle component.
+Selecting a content type replaces the body wholesale, so `RequestTemplate` SHALL reseed the text from the
+resulting body when `ContentTypeSelect` reports a change. This is the one place the text is reset, and it is
+the deliberate opposite of the toggle's carry-over.
 
-#### Scenario: Enabling JSONata carries the JSON content into the expression
+#### Scenario: Text seeded from a JSON body
 
-- **WHEN** the user turns the JSONata switch on while `body.content` is `{ "model": "gpt-4" }`
-- **THEN** the updated body SHALL have `jsonataContent` set to that object serialized as pretty-printed JSON
-  text with 4-space indentation
+- **WHEN** a suite whose body has `content` `{ "model": "gpt-4" }` is opened on the Method tab
+- **THEN** the body text SHALL be that object serialized with 4-space indentation
+- **AND** the JSON editor SHALL display it
+
+#### Scenario: Text seeded from a JSONata body
+
+- **WHEN** a suite whose body has `jsonataContent` `$sum(items.price)` is opened
+- **THEN** the body text SHALL be that string
+- **AND** the JSONata editor SHALL display it
+
+#### Scenario: Toggling does not alter the text
+
+- **WHEN** the user toggles the JSONata switch in either direction
+- **THEN** the text state SHALL be identical before and after
+- **AND** the newly rendered editor SHALL display exactly the characters the previous one did
+
+#### Scenario: Text does not reach the backend or the change comparison
+
+- **WHEN** the body text differs from what the model's `content` can represent
+- **THEN** the text SHALL NOT appear anywhere in the suite object
+- **AND** no unsaved-changes state SHALL be introduced by the text state itself
+
+#### Scenario: Text resets from the model on remount
+
+- **WHEN** the user leaves the Method tab or reloads the suite, and returns
+- **THEN** the body text SHALL be reseeded from the loaded body
+- **AND** nothing from the previous editing session SHALL be restored
+
+#### Scenario: Content-type change reseeds the text
+
+- **WHEN** the user selects a different content type
+- **THEN** the body text SHALL be reseeded from the body that change produced
+- **AND** text belonging to the previous content type SHALL NOT be carried into the new editor
+
+### Requirement: EntityJsonEditor accepts an externally owned text buffer
+
+`EntityJsonEditor` (`src/components/EntityTabs/JsonEditor/JsonEditor.tsx`) SHALL accept optional `text` and
+`onChangeText` props. When `text` is supplied the parent owns the buffer: `text` SHALL be the editor value, the
+`JSON.stringify(entity, null, 4)` seeding effect SHALL be skipped so an `entity` update cannot clobber the
+parent's text, and the editor SHALL render even when `text` is the empty string. `onChangeText` SHALL receive
+every change, as the empty string when Monaco reports `undefined`.
+
+Controlled mode SHALL NOT weaken the editor's two existing contracts: `setSelectedEntity` SHALL still be called
+with the parsed value on every change that parses, and `onValidateJSON` SHALL still register Monaco's errors
+into `SaveValidationContext`. That registration is what blocks saving an invalid body, so the controlled path
+MUST route through `EntityJsonEditor` rather than around it.
+
+Both props SHALL be opt-in: when `text` is absent, behavior SHALL be byte-for-byte what it is today, for every
+existing consumer.
+
+#### Scenario: Supplied text is the editor value
+
+- **WHEN** `EntityJsonEditor` is rendered with `text` set to a string that is not valid JSON
+- **THEN** the underlying Monaco editor SHALL be mounted with that exact string as its value
+- **AND** the editor SHALL NOT be re-seeded from `entity`
+
+#### Scenario: Empty controlled text still renders the editor
+
+- **WHEN** `text` is the empty string
+- **THEN** the editor SHALL still render, rather than returning null as the uncontrolled path does for an empty
+  buffer
+
+#### Scenario: External entity replacement does not clobber the parent's text
+
+- **WHEN** `entity` is replaced with a different object while `text` is supplied
+- **THEN** the editor value SHALL remain the supplied `text`
+
+#### Scenario: Text that does not parse is reported as text only
+
+- **WHEN** the user types text that does not parse as JSON in controlled mode
+- **THEN** `onChangeText` SHALL be invoked with that text
+- **AND** `setSelectedEntity` SHALL NOT be invoked
+- **AND** the Monaco validation errors SHALL be registered into `SaveValidationContext`
+
+#### Scenario: Text that parses still updates the entity
+
+- **WHEN** the user's text parses as JSON in controlled mode
+- **THEN** `onChangeText` SHALL be invoked with the text
+- **AND** `setSelectedEntity` SHALL be invoked with the parsed value
+
+#### Scenario: Existing consumers are unaffected
+
+- **WHEN** `EntityJsonEditor` is rendered without `text`
+- **THEN** it SHALL seed from `entity`, remount on external `entity` replacement, and return null for an empty
+  buffer, exactly as before
+
+### Requirement: Turning the toggle on writes the current body text into the expression
+
+Turning the JSONata switch on SHALL set `body.jsonataContent` to the **current body text exactly as it stands**
+and remove `body.content`, in a single update to the test suite. There SHALL be no serialization, reformatting,
+defaulting or validity check applied to the text on the way in.
+
+Turning the switch **on** SHALL NOT normalize `contentType`: the JSONata branch ignores it, and writing a value
+the user never chose would silently change what a form-data suite sends.
+
+Because the text was seeded from `content` when the user has not edited it, a JSON body still carries over as
+pretty-printed JSON with 4-space indentation — that now falls out of the seeding rule rather than being a
+separate transformation performed by the toggle. A body with no content is seeded `{}`, so that remains what a
+newly enabled JSONata body starts from, which is what the save requirements below rely on: `{}` is a valid
+JSONata expression evaluating to an empty object, and an empty expression does not survive a save.
+
+#### Scenario: Enabling JSONata carries the JSON body text into the expression
+
+- **WHEN** the user turns the JSONata switch on while the JSON editor shows `{ "model": "gpt-4" }` pretty-printed
+- **THEN** the updated body SHALL have `jsonataContent` set to that exact text
 - **AND** the updated body SHALL NOT carry a `content` value
 - **AND** `contentType` SHALL remain `application/json`
 
 #### Scenario: Enabling JSONata with nothing to carry seeds the empty object
 
 - **WHEN** the user turns the JSONata switch on while `body.content` is absent or is `{}`
-- **THEN** the updated body SHALL have `jsonataContent` set to `{}`
+- **THEN** the body text is `{}`, so the updated body SHALL have `jsonataContent` set to `{}`
 - **AND** the updated body SHALL NOT carry a `content` value
+
+#### Scenario: Enabling JSONata carries text that is not valid JSON
+
+- **WHEN** the JSON editor holds text that does not parse — because the user was mid-edit, or because a previous
+  turn-off left a JSONata expression there — and the user turns the switch on
+- **THEN** the updated body SHALL have `jsonataContent` set to that text, character for character
+- **AND** no validity check SHALL be applied
 
 #### Scenario: Form-data parts are not serialized into the expression
 
-- **WHEN** the user turns the JSONata switch on while `body.contentType` is `multipart/form-data` and
-  `body.content` is an array of form-data parts
-- **THEN** the updated body SHALL have `jsonataContent` set to `{}`, not to the serialized parts
+- **WHEN** the body `contentType` is `multipart/form-data` and `content` is an array of form-data parts
+- **THEN** the body text SHALL be empty, since form-data has no text editor
 - **AND** `contentType` SHALL remain `multipart/form-data`
 
 #### Scenario: Enabling JSONata swaps the editor
 
 - **WHEN** the user turns the JSONata switch on
 - **THEN** the Body tab SHALL render the JSONata editor in place of the JSON editor
-- **AND** the editor SHALL show the carried-over content — or the seeded `{}` when there was none — not an
-  empty document
+- **AND** the editor SHALL show the same text the JSON editor was showing, not an empty document
 
-### Requirement: Turning the toggle off restores the literal body editor
+### Requirement: Turning the toggle off keeps the text and best-effort updates the content
 
 Turning the JSONata switch off SHALL, in a single update to the test suite:
 
 - remove `body.jsonataContent`;
-- set `body.content` to the **JSON object the expression parses to**, when `jsonataContent` parses as a JSON
-  object *and* `contentType` is not `multipart/form-data`;
-- otherwise set `body.content` to the **default empty value for the current content type** — `{}` for
-  `application/json` (and for an absent content type), `[]` for `multipart/form-data`;
-- set `body.contentType` to `application/json` **when it is absent**, leaving any existing value untouched.
+- set `body.contentType` to `application/json` **when it is absent**, leaving any existing value untouched;
+- set `body.content` to the **JSON object the body text parses to**, when it parses as a JSON object *and*
+  `contentType` is not `multipart/form-data`; otherwise to the **default empty value for the current content
+  type** — `{}` for `application/json` (and for an absent content type), `[]` for `multipart/form-data`.
 
-Restoring a parseable expression mirrors the turn-on carry-over, so a body authored as JSON, switched to
-JSONata and switched back, survives the round trip in `content`. A real JSONata expression (anything that is
-not a JSON object literal — `$sum(items.price)`, a scalar, an array, the empty string) SHALL NOT be salvaged
-into `content`; those fall back to the type default, because `content` is a JSON value and cannot represent
-them. Their text is not lost, though: turn-off also records the outgoing expression outside the suite so
-turning the switch back on can restore it (see the round-trip memory requirement). A parseable object SHALL
-NOT be restored under `multipart/form-data`, because a form-data `content` must stay an array (see below).
+The **body text SHALL be left completely untouched**, so the JSON editor displays exactly the characters the
+JSONata editor held — `$append(...)`, `${{placeholder}}` and all. Monaco SHALL flag it as invalid JSON, and that
+is expected and acceptable. This is the point of the behavior: a user with a large body containing JSONata in a
+few places must be able to hand-edit those places out, not retype the whole body. There SHALL be no
+confirmation dialog on either direction of the toggle.
 
-Both branches SHALL come from the shared pure util `getContentForJsonataExpression`
+`content` and the displayed text therefore **deliberately diverge** whenever the text is not valid JSON. That
+is sound for two reasons: `content` is typed `Record<string, unknown> | FormDataPart[]` and cannot represent
+such text at all, and `EntityJsonEditor` registers Monaco's errors into `SaveValidationContext`, which blocks
+the save while the text does not parse. As soon as the user's edits make it parse, `content` catches up. The
+divergence SHALL be documented at the point it is introduced, in `JsonataToggle`.
+
+Both `content` branches SHALL come from the shared pure util `getContentForJsonataExpression`
 (`src/components/TestSuites/utils/body-content.ts`), which delegates to `getDefaultContentForType` for the
 fallback rather than duplicating the defaulting rule.
 
 The content type must be consulted because the switch can be visible while `contentType` is
 `multipart/form-data` (see the toggle visibility requirement); hardcoding `{}` would produce a form-data body
-holding an object. The defaulting logic is the same rule `ContentTypeSelect` already applies when it switches
-content type, and SHALL be shared between the two rather than duplicated.
-
-The content type must additionally be **normalized** on turn-off because the Body tab selects its literal
-editor with `contentType === 'application/json'`, which an absent content type fails — so a body left without
-one would fall through to the form-data grid, which is typed for an array and would be handed an object.
-Turning the switch **on** SHALL NOT normalize `contentType`: the JSONata branch ignores it, and writing a value
-the user never chose would silently change what a form-data suite sends. This asymmetry between the two
-directions is deliberate.
+holding an object. It must additionally be **normalized** because the Body tab selects its literal editor with
+`contentType === 'application/json'`, which an absent content type fails — so a body left without one would
+fall through to the form-data grid, which is typed for an array and would be handed an object. That the two
+directions differ on normalization is deliberate.
 
 At no point SHALL the form-data grid be rendered with a `content` value that is not an array.
 
-#### Scenario: Disabling JSONata restores a parseable object expression
+#### Scenario: Disabling JSONata leaves a real JSONata expression in the JSON editor
 
-- **WHEN** the user turns the JSONata switch off while `contentType` is `application/json` and
-  `body.jsonataContent` is `'{ "model": "gpt-4" }'`
+- **WHEN** the body's `jsonataContent` is
+  `{ "messages": $append($history, [{ "role": "user", "content": "${{user_message}}" }]), "temperature": "${{temperature:0.7}}" }`
+  and the user turns the switch off
+- **THEN** the JSON editor SHALL display that exact text, character for character
+- **AND** Monaco SHALL report validation errors on it, which SHALL block saving
+- **AND** the updated body SHALL NOT carry a `jsonataContent` value
+- **AND** `content` SHALL be `{}` as the type default, since the text does not parse
+
+#### Scenario: Expression text survives an off/on round trip
+
+- **WHEN** the user turns the switch off with a real JSONata expression in the editor and turns it back on
+  without editing
+- **THEN** `jsonataContent` SHALL be set back to that exact expression string, character for character
+- **AND** the updated body SHALL NOT carry a `content` value
+
+#### Scenario: Disabling JSONata parses a JSON-object expression into content
+
+- **WHEN** the user turns the JSONata switch off while `contentType` is `application/json` and the editor holds
+  `{ "model": "gpt-4" }`
 - **THEN** the updated body SHALL NOT carry a `jsonataContent` value
 - **AND** the updated body SHALL have `content` set to `{ "model": "gpt-4" }`
-
-#### Scenario: Disabling JSONata with a real expression falls back to the type default
-
-- **WHEN** the user turns the JSONata switch off while `contentType` is `application/json` and
-  `body.jsonataContent` is `'$sum(items.price)'`
-- **THEN** the updated body SHALL NOT carry a `jsonataContent` value
-- **AND** the updated body SHALL have `content` set to `{}`
-- **AND** no attempt SHALL be made to salvage the expression text
+- **AND** the editor SHALL still display the user's own formatting, not a re-serialization of `content`
 
 #### Scenario: JSON body survives a toggle round trip
 
@@ -218,7 +338,7 @@ At no point SHALL the form-data grid be rendered with a `content` value that is 
 #### Scenario: Disabling JSONata under form-data content type
 
 - **WHEN** the user turns the JSONata switch off while `contentType` is `multipart/form-data`, whether or not
-  `jsonataContent` parses as a JSON object
+  the body text parses as a JSON object
 - **THEN** the updated body SHALL NOT carry a `jsonataContent` value
 - **AND** the updated body SHALL have `content` set to `[]`, not `{}` and not the parsed object
 - **AND** `contentType` SHALL remain `multipart/form-data`
@@ -251,86 +371,26 @@ At no point SHALL the form-data grid be rendered with a `content` value that is 
 - **THEN** the Body tab SHALL render the literal body editor for the resulting content type in place of the
   JSONata editor
 
-### Requirement: The toggle remembers the outgoing expression for an in-session round trip
-
-Turning the switch off SHALL record the outgoing `jsonataContent` string together with the `content` value
-written in the same update. Turning the switch back on SHALL restore that recorded expression **verbatim** when
-the body's current `content` is deep-equal to the recorded one, and SHALL otherwise seed the expression from
-`content` as the turn-on requirement describes. Restoring SHALL clear the record, and a record whose `content`
-no longer matches SHALL be discarded rather than reused.
-
-This closes the destructive case the parse-and-restore rule cannot reach, which is the common one: any
-expression using JSONata functions, variables or `${{placeholder}}` template text is not a JSON object literal,
-so turn-off necessarily writes the type default into `content` — and without this memory, turning the switch
-back on would serialize that default and hand the user `{}`, forcing them to retype the whole expression.
-Restoring verbatim additionally preserves the user's own formatting, which re-serializing `content` cannot.
-
-The deep-equality check on `content` is what keeps the memory honest: a JSON body the user actually authored
-after turning JSONata off SHALL win over the expression they left behind. Equality SHALL be structural
-(lodash `isEqual`), not by reference.
-
-The record SHALL live in the React component layer — a ref held by the mounted toggle
-(`useJsonataExpressionStash`, colocated with `JsonataToggle`) — and SHALL NOT be added to
-`TestSuiteRequestTemplateBody`, `TestSuiteRequestTemplate`, or any other part of the test suite. Those are
-wire-typed models: a draft field there would be sent to ai-dial-admin-backend and would make the suite compare
-unequal to the loaded one, producing a phantom unsaved-changes state. The consequence is that the memory is
-**in-session only** — `TabsContent` renders the Method tab conditionally, so leaving the tab, reloading, or
-reopening the suite unmounts the toggle and drops the record. That is accepted scope: an accidental off/on is
-recoverable while the user is still on the tab, and anything beyond that starts from saved state.
-
-There SHALL be no confirmation dialog on either direction of the toggle.
-
-#### Scenario: Off/on round trip restores a real JSONata expression verbatim
-
-- **WHEN** the body's `jsonataContent` is
-  `{ "messages": $append($history, [{ "role": "user", "content": "${{user_message}}" }]) }` and the user turns
-  the switch off and back on without editing the body in between
-- **THEN** the turn-off SHALL set `content` to `{}` as the type default
-- **AND** the turn-on SHALL set `jsonataContent` back to that exact expression string, character for character
-- **AND** the updated body SHALL NOT carry a `content` value
-
-#### Scenario: Remembered expression keeps the user's formatting
-
-- **WHEN** the user turns the switch off and back on while `jsonataContent` is a parseable object written on one
-  line, such as `'{ "model": "gpt-4" }'`
-- **THEN** the turn-off SHALL set `content` to `{ "model": "gpt-4" }`
-- **AND** the turn-on SHALL restore the original one-line text, not the 4-space re-serialization of `content`
-
-#### Scenario: JSON content authored after turning off wins over the remembered expression
-
-- **WHEN** the user turns the switch off, edits the body in the JSON editor so `content` differs from what the
-  turn-off wrote, and then turns the switch on
-- **THEN** the expression SHALL be the edited `content` serialized as pretty-printed JSON text
-- **AND** the remembered expression SHALL NOT be restored
-
-#### Scenario: Nothing remembered on the first turn-on
-
-- **WHEN** the user turns the switch on without having turned it off earlier in the same session
-- **THEN** the expression SHALL be seeded from `content`, or `{}` when there is nothing to carry
-
-#### Scenario: Memory does not survive leaving the Method tab
-
-- **WHEN** the user turns the switch off, switches to another tab or reloads the suite, returns, and turns the
-  switch on
-- **THEN** the expression SHALL be seeded from `content` rather than restored
-- **AND** no unsaved-changes state SHALL have been introduced by the memory itself
-
 ### Requirement: Body tab branches three ways
 
 `BodyTab` SHALL choose its editor as follows, in priority order: JSONata editor when JSONata mode is active;
 otherwise the existing `EntityJsonEditor` when `contentType` is `application/json`; otherwise the existing
 `FormDataGrid`.
 
+Both text editors SHALL be driven by the `bodyText` prop rather than by the body field they write to, so the
+branch the toggle switches to displays what the previous branch displayed.
+
 #### Scenario: JSONata editor rendered in JSONata mode
 
 - **WHEN** `contentType` is `application/json` and `jsonataContent` is present
 - **THEN** the Body tab SHALL render the JSONata editor
-- **AND** the JSONata editor SHALL be seeded with the `jsonataContent` string
+- **AND** the JSONata editor SHALL be seeded with the body text
 
 #### Scenario: JSON editor rendered in JSON mode
 
 - **WHEN** `contentType` is `application/json` and `jsonataContent` is absent
-- **THEN** the Body tab SHALL render `EntityJsonEditor`, unchanged from today
+- **THEN** the Body tab SHALL render `EntityJsonEditor`, in its controlled-text mode
+- **AND** it SHALL be given the body text as `text` and `onChangeBodyText` as `onChangeText`
 
 #### Scenario: Form-data grid rendered for form-data
 
@@ -342,16 +402,33 @@ otherwise the existing `EntityJsonEditor` when `contentType` is `application/jso
 - **WHEN** the Body tab is in JSONata mode and the imperative `add()` handle is invoked
 - **THEN** nothing SHALL be added and no error SHALL be raised
 
-### Requirement: Editing the JSONata expression updates the body
+### Requirement: Editing either body editor updates the body text, and the model where it can
 
-Every keystroke in the JSONata editor SHALL write the editor's full text to `body.jsonataContent` and SHALL
-leave `content` absent.
+Every keystroke in the JSONata editor SHALL update the owned body text **and** write the editor's full text to
+`body.jsonataContent`, leaving `content` absent — in JSONata mode the two never diverge, because
+`jsonataContent` is a string and can hold anything the editor holds.
+
+Every keystroke in the JSON editor SHALL update the owned body text; it SHALL update `body.content` only when
+the text parses, and SHALL leave `body.content` untouched when it does not — matching `EntityJsonEditor`'s
+existing tolerance rather than clearing the last good value.
 
 #### Scenario: Typing updates jsonataContent
 
 - **WHEN** the user types `{ "model": prompt.model }` into the JSONata editor
 - **THEN** `body.jsonataContent` SHALL be set to that exact string
 - **AND** `body.content` SHALL remain absent
+
+#### Scenario: Valid JSON typed in the JSON editor updates content
+
+- **WHEN** the user types text that parses as a JSON object into the JSON editor
+- **THEN** `body.content` SHALL be set to the parsed object
+
+#### Scenario: Invalid JSON typed in the JSON editor does not corrupt content
+
+- **WHEN** the user types text that does not parse into the JSON editor
+- **THEN** the body text SHALL hold that text and the editor SHALL keep displaying it
+- **AND** `body.content` SHALL be left at its previous value
+- **AND** the save SHALL be blocked by the registered Monaco validation errors
 
 #### Scenario: Clearing the editor keeps JSONata mode
 

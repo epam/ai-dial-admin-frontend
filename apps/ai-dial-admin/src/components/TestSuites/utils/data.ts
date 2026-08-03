@@ -28,10 +28,6 @@ export const getTestCaseGridData = (testCases?: DatasetTestCase[] | null) => {
       if (multiTurnData && multiTurnData.length > 0) {
         const shared = data ?? {};
         multiTurnData.forEach((turn, index) => {
-          // Each turn row carries the merged view (shared `data` + that turn's per-turn map)
-          // because every existing schema column's valueGetter reads
-          // `params.data?.data?.[field] ?? params.data?.[field]`, so merging is what keeps
-          // those getters working unchanged — and it matches how execution resolves fields per turn.
           const merged = { ...shared, ...turn };
           acc.push({ ...rest, id: testCase.id, _turnIndex: index, data: merged, ...flatten(merged) });
         });
@@ -93,8 +89,6 @@ export const collapseRowsToTestCases = (
     }
 
     const sorted = [...groupRows].sort((a, b) => (readTurnIndex(a) ?? 0) - (readTurnIndex(b) ?? 0));
-    // Shared fields are read off turn 0 (invariant across turns by construction); everything
-    // else in each turn's merged `data` is per-turn and goes back into `multiTurnData`.
     testCase.data = selectSharedFields(sorted[0].data as Record<string, unknown> | undefined, perTurnFields);
     testCase.multiTurnData = sorted.map((row) =>
       selectPerTurnFields(row.data as Record<string, unknown> | undefined, perTurnFields),

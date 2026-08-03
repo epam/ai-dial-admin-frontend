@@ -124,9 +124,6 @@ export const JSONATA_LANGUAGE_CONFIGURATION: languages.LanguageConfiguration = {
   ],
 };
 
-// Every token is prefixed with the `jsonata.` language id: Monaco theme rules match token names by
-// dotted prefix across all languages, so a bare `string` or `keyword` rule would restyle the JSON and
-// SQL editors too (design D5).
 export const JSONATA_MONARCH_TOKENS: languages.IMonarchLanguage = {
   defaultToken: '',
   keywords: JSONATA_KEYWORDS,

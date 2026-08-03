@@ -17,7 +17,6 @@ const makeSuite = (): TestSuite => ({});
 describe('getTestCaseColumns', () => {
   const onCellChange = vi.fn();
 
-  // Column layout: [turnExpander, includedInRun, id, testCaseName, ...schema, validityStatus]
   const BASE_COLUMN_COUNT = 5;
 
   test('should return only base columns when schema is empty', () => {

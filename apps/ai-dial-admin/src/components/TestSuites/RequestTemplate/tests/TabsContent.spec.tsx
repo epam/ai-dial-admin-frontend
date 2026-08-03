@@ -10,10 +10,12 @@ import TabsContent from '../tabs/TabsContent';
 vi.mock('../tabs/BodyTab', () => {
   const React = require('react');
   return {
-    default: forwardRef(({ template, changeTemplate }: any, _ref: unknown) => (
+    default: forwardRef(({ template, changeTemplate, bodyText, onChangeBodyText }: any, _ref: unknown) => (
       <div role="region" aria-label="body-tab">
         <span>Body: {JSON.stringify(template.body ?? null)}</span>
+        <span>BodyText: {JSON.stringify(bodyText)}</span>
         <button onClick={() => changeTemplate({ ...template, body: { updated: true } })}>EditBody</button>
+        <button onClick={() => onChangeBodyText('typed')}>EditBodyText</button>
       </div>
     )),
   };
@@ -32,6 +34,8 @@ vi.mock('../tabs/ParamsTab', () => ({
   ),
 }));
 
+const BODY_TEXT = '{ "model": "gpt-4" }';
+
 const createTestSuite = (overrides?: Partial<TestSuite>): TestSuite => ({
   id: 'suite-1',
   name: 'Test Suite 1',
@@ -41,15 +45,23 @@ const createTestSuite = (overrides?: Partial<TestSuite>): TestSuite => ({
 
 describe('TabsContent', () => {
   let mockOnChange: Mock;
+  let mockOnChangeBodyText: Mock;
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockOnChange = vi.fn();
+    mockOnChangeBodyText = vi.fn();
   });
 
   test('renders BodyTab when activeTab is Body', () => {
     render(
-      <TabsContent activeTab={EntityViewTab.Body} selectedTestSuite={createTestSuite()} onChange={mockOnChange} />,
+      <TabsContent
+        activeTab={EntityViewTab.Body}
+        selectedTestSuite={createTestSuite()}
+        bodyText={BODY_TEXT}
+        onChangeBodyText={mockOnChangeBodyText}
+        onChange={mockOnChange}
+      />,
     );
 
     expect(screen.getByRole('region', { name: 'body-tab' })).toBeInTheDocument();
@@ -62,6 +74,8 @@ describe('TabsContent', () => {
       <TabsContent
         activeTab={EntityViewTab.Parameters}
         selectedTestSuite={createTestSuite()}
+        bodyText={BODY_TEXT}
+        onChangeBodyText={mockOnChangeBodyText}
         onChange={mockOnChange}
       />,
     );
@@ -73,7 +87,13 @@ describe('TabsContent', () => {
 
   test('renders ParamsTab with headers field when activeTab is Headers', () => {
     render(
-      <TabsContent activeTab={EntityViewTab.Headers} selectedTestSuite={createTestSuite()} onChange={mockOnChange} />,
+      <TabsContent
+        activeTab={EntityViewTab.Headers}
+        selectedTestSuite={createTestSuite()}
+        bodyText={BODY_TEXT}
+        onChangeBodyText={mockOnChangeBodyText}
+        onChange={mockOnChange}
+      />,
     );
 
     expect(screen.getByRole('region', { name: 'params-tab-headers' })).toBeInTheDocument();
@@ -83,7 +103,13 @@ describe('TabsContent', () => {
 
   test('does not render any tab content for an unrelated activeTab', () => {
     render(
-      <TabsContent activeTab={EntityViewTab.TestCases} selectedTestSuite={createTestSuite()} onChange={mockOnChange} />,
+      <TabsContent
+        activeTab={EntityViewTab.TestCases}
+        selectedTestSuite={createTestSuite()}
+        bodyText={BODY_TEXT}
+        onChangeBodyText={mockOnChangeBodyText}
+        onChange={mockOnChange}
+      />,
     );
 
     expect(screen.queryByRole('region', { name: 'body-tab' })).not.toBeInTheDocument();
@@ -96,6 +122,8 @@ describe('TabsContent', () => {
       <TabsContent
         activeTab={EntityViewTab.Parameters}
         selectedTestSuite={createTestSuite()}
+        bodyText={BODY_TEXT}
+        onChangeBodyText={mockOnChangeBodyText}
         onChange={mockOnChange}
       />,
     );
@@ -108,6 +136,8 @@ describe('TabsContent', () => {
       <TabsContent
         activeTab={EntityViewTab.Parameters}
         selectedTestSuite={createTestSuite()}
+        bodyText={BODY_TEXT}
+        onChangeBodyText={mockOnChangeBodyText}
         onChange={mockOnChange}
       />,
     );
@@ -117,7 +147,13 @@ describe('TabsContent', () => {
 
   test('passes field="headers" to Headers ParamsTab', () => {
     render(
-      <TabsContent activeTab={EntityViewTab.Headers} selectedTestSuite={createTestSuite()} onChange={mockOnChange} />,
+      <TabsContent
+        activeTab={EntityViewTab.Headers}
+        selectedTestSuite={createTestSuite()}
+        bodyText={BODY_TEXT}
+        onChangeBodyText={mockOnChangeBodyText}
+        onChange={mockOnChange}
+      />,
     );
 
     expect(screen.getByText('Field: headers')).toBeInTheDocument();
@@ -126,7 +162,15 @@ describe('TabsContent', () => {
   test('BodyTab changeTemplate calls onChange with updated requestTemplate', () => {
     const testSuite = createTestSuite({ name: 'MySuite' });
 
-    render(<TabsContent activeTab={EntityViewTab.Body} selectedTestSuite={testSuite} onChange={mockOnChange} />);
+    render(
+      <TabsContent
+        activeTab={EntityViewTab.Body}
+        selectedTestSuite={testSuite}
+        bodyText={BODY_TEXT}
+        onChangeBodyText={mockOnChangeBodyText}
+        onChange={mockOnChange}
+      />,
+    );
 
     fireEvent.click(screen.getByRole('button', { name: 'EditBody' }));
 
@@ -142,7 +186,15 @@ describe('TabsContent', () => {
   test('Parameters ParamsTab changeTemplate calls onChange with updated requestTemplate', () => {
     const testSuite = createTestSuite();
 
-    render(<TabsContent activeTab={EntityViewTab.Parameters} selectedTestSuite={testSuite} onChange={mockOnChange} />);
+    render(
+      <TabsContent
+        activeTab={EntityViewTab.Parameters}
+        selectedTestSuite={testSuite}
+        bodyText={BODY_TEXT}
+        onChangeBodyText={mockOnChangeBodyText}
+        onChange={mockOnChange}
+      />,
+    );
 
     fireEvent.click(screen.getByRole('button', { name: 'EditParams-queryParams' }));
 
@@ -157,7 +209,15 @@ describe('TabsContent', () => {
   test('Headers ParamsTab changeTemplate calls onChange with updated requestTemplate', () => {
     const testSuite = createTestSuite();
 
-    render(<TabsContent activeTab={EntityViewTab.Headers} selectedTestSuite={testSuite} onChange={mockOnChange} />);
+    render(
+      <TabsContent
+        activeTab={EntityViewTab.Headers}
+        selectedTestSuite={testSuite}
+        bodyText={BODY_TEXT}
+        onChangeBodyText={mockOnChangeBodyText}
+        onChange={mockOnChange}
+      />,
+    );
 
     fireEvent.click(screen.getByRole('button', { name: 'EditParams-headers' }));
 
@@ -172,15 +232,60 @@ describe('TabsContent', () => {
   test('uses empty object fallback when requestTemplate is undefined', () => {
     const testSuite = createTestSuite({ requestTemplate: undefined });
 
-    render(<TabsContent activeTab={EntityViewTab.Body} selectedTestSuite={testSuite} onChange={mockOnChange} />);
+    render(
+      <TabsContent
+        activeTab={EntityViewTab.Body}
+        selectedTestSuite={testSuite}
+        bodyText={BODY_TEXT}
+        onChangeBodyText={mockOnChangeBodyText}
+        onChange={mockOnChange}
+      />,
+    );
 
     expect(screen.getByRole('region', { name: 'body-tab' })).toBeInTheDocument();
     expect(screen.getByText('Body: null')).toBeInTheDocument();
   });
 
+  test('passes bodyText through to BodyTab', () => {
+    render(
+      <TabsContent
+        activeTab={EntityViewTab.Body}
+        selectedTestSuite={createTestSuite()}
+        bodyText={BODY_TEXT}
+        onChangeBodyText={mockOnChangeBodyText}
+        onChange={mockOnChange}
+      />,
+    );
+
+    expect(screen.getByText(`BodyText: ${JSON.stringify(BODY_TEXT)}`)).toBeInTheDocument();
+  });
+
+  test('BodyTab onChangeBodyText calls onChangeBodyText without touching the test suite', () => {
+    render(
+      <TabsContent
+        activeTab={EntityViewTab.Body}
+        selectedTestSuite={createTestSuite()}
+        bodyText={BODY_TEXT}
+        onChangeBodyText={mockOnChangeBodyText}
+        onChange={mockOnChange}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'EditBodyText' }));
+
+    expect(mockOnChangeBodyText).toHaveBeenCalledWith('typed');
+    expect(mockOnChange).not.toHaveBeenCalled();
+  });
+
   test('renders with correct container class', () => {
     const { container } = render(
-      <TabsContent activeTab={EntityViewTab.Body} selectedTestSuite={createTestSuite()} onChange={mockOnChange} />,
+      <TabsContent
+        activeTab={EntityViewTab.Body}
+        selectedTestSuite={createTestSuite()}
+        bodyText={BODY_TEXT}
+        onChangeBodyText={mockOnChangeBodyText}
+        onChange={mockOnChange}
+      />,
     );
 
     const wrapper = container.firstChild as HTMLElement;

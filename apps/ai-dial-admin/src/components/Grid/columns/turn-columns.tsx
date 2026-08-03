@@ -70,9 +70,6 @@ export const getGroupedNameColumn = (onCell: onCellChange, isReadOnly?: boolean)
   headerName: 'Test case name',
   editable: false,
   valueGetter: (params: ValueGetterParams<GroupedGridRow>) => params.data?.testCaseName ?? '',
-  // Blacklist GROUP/TURN rather than whitelist SINGLE: a row with no rowType yet (a caller that
-  // hasn't wired turn grouping, e.g. a pinned new-case row) must stay editable, and a whitelist
-  // would silently make it read-only.
   cellRendererSelector: (params: ICellRendererParams<GroupedGridRow>) => {
     if (isGroupOrTurnRow(params.data?.rowType)) {
       return { component: TestCaseNameCellRenderer };
@@ -207,7 +204,6 @@ export const getTurnActionsColumn = (
   const isFirstTurn = (node: IRowNode) => (node.data as GroupedGridRow | undefined)?.turnNumber === 1;
   const isLastTurn = (node: IRowNode) => {
     const row = node.data as GroupedGridRow | undefined;
-    // Tolerant of a turn row that carries no `turnCount`: an unknown count must not hide the action.
     return row?.turnCount != null && row.turnNumber === row.turnCount;
   };
 

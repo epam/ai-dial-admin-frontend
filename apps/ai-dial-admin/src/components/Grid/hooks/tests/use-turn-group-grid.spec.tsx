@@ -22,15 +22,8 @@ interface DirtyCase {
   rows: Row[];
 }
 
-// `getCaseRows`/`rowData` are typed as `Record<string, unknown>[]`/`GroupedGridRow[]` by the hook
-// (they carry whatever shape the caller's own rows have), so reading `.data`/`._turnIndex` back in
-// these tests needs a cast to this file's own `Row` shape.
 const asRows = (rows: Record<string, unknown>[]): Row[] => rows as Row[];
 
-// Grouping/splitting the shared vs per-turn fields is covered by
-// `src/utils/evaluation/tests/test-case-grouping.spec.ts` and the converter round-trip tests.
-// This collapse fn only needs to group the dirty rows by case id so this hook's own store,
-// dirty-tracking and turn-CRUD behaviour can be asserted in isolation.
 const collapseRows = (rows: Record<string, unknown>[]): DirtyCase[] => {
   const byId = new Map<string, Row[]>();
   rows.forEach((row) => {
@@ -245,8 +238,6 @@ describe('useTurnGroupGrid', () => {
     });
 
     expect(asRows(result.current.getCaseRows('case-1')).map((r) => r.data)).toEqual([{ shared: 'a' }, { shared: 'b' }]);
-    // Nothing moved, so the case must not be marked dirty — otherwise the view offers Save/Discard
-    // for a change that never happened.
     expect(onDirtyChange).not.toHaveBeenCalled();
     expect(result.current.getDirtyRows()).toEqual([]);
   });
@@ -339,7 +330,6 @@ describe('useTurnGroupGrid', () => {
       ]);
     });
 
-    // The group starts collapsed by default: no TURN rows are currently rendered.
     expect(result.current.rowData.filter((r) => r.rowType === GridRowType.TURN)).toHaveLength(0);
 
     act(() => {
@@ -368,13 +358,10 @@ describe('useTurnGroupGrid', () => {
       result.current.onCellChange({ id: 'case-1', _turnIndex: 1 }, 'perTurnField', 'updated');
     });
 
-    // Deliberately no rowData recompute from onCellChange alone (EditableCellRenderer fires per
-    // keystroke; re-projecting here would destroy the focused input).
     expect(result.current.rowData).toBe(rowDataBefore);
     const staleTurnRow = result.current.rowData.find((r) => r.rowType === GridRowType.TURN && r.turnNumber === 2);
     expect((staleTurnRow?.data as Record<string, unknown>).perTurnField).toBe('y');
 
-    // A structural projection trigger (collapse/expand) surfaces the edit.
     act(() => {
       result.current.onToggleExpand('case-1');
     });
@@ -473,8 +460,6 @@ describe('useTurnGroupGrid', () => {
       result.current.onToggleExpand('case-1');
     });
 
-    // ag-grid caches a row's height against its node, and `getRowId` keeps a GROUP row's identity
-    // stable across a toggle — without the reset the expanded group keeps its collapsed height.
     expect(api.resetRowHeights).toHaveBeenCalled();
     const expanded = result.current.rowData.find((r) => r.rowType === GridRowType.GROUP) as GroupedGridRow;
     expect(result.current.turnGridOptions.getRowHeight({ data: expanded } as RowHeightParams)).toBe(ROW_HEIGHT);

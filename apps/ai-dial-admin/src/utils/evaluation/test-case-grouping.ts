@@ -14,10 +14,6 @@ export const selectPerTurnFields = (
   perTurnFields: Set<string>,
 ): Record<string, unknown> => Object.fromEntries(Object.entries(data ?? {}).filter(([key]) => perTurnFields.has(key)));
 
-/**
- * Accepts a numeric string as well as a number because inline cell editors can yield either,
- * and treats `0` as present — it is the first turn, not a missing index.
- */
 export const readTurnIndex = (row: TestCaseRow): number | null => {
   const value = row._turnIndex;
   if (typeof value === 'number') {
@@ -127,9 +123,6 @@ const toTurnRow = (group: TestCaseGroup, turn: TestCaseRow, index: number): Grou
   rowType: GridRowType.TURN,
   groupKey: group.key,
   turnNumber: index + 1,
-  // Carried on the turn row itself so a row action can tell a boundary turn from a middle one
-  // without walking the grid — which would see only the rendered nodes, and so would misjudge the
-  // boundary while a filter hides sibling turns.
   turnCount: group.turns.length,
 });
 
@@ -142,16 +135,10 @@ const toGroupRow = (group: TestCaseGroup, expanded: boolean): GroupedGridRow => 
   turnCount: group.turns.length,
   expanded,
   enabled: group.turns[0]?.enabled,
-  // Shared fields are identical across turns, so reading `data` off turn 0 is what lets
-  // shared-field columns render and edit on the master row.
   data: (group.turns[0]?.data as Record<string, unknown> | undefined) ?? {},
   ...aggregateValidity(group.turns),
 });
 
-/**
- * While searching, group summary rows are dropped and every turn is emitted individually so
- * ag-grid's native per-column filtering can hide non-matching turns.
- */
 export const projectGroupsToGridRows = (
   groups: TestCaseGroup[],
   expandedKeys: Set<string>,

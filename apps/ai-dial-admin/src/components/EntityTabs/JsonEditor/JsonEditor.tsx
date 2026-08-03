@@ -18,6 +18,8 @@ interface Props<T> {
   ignoredFields?: (keyof T)[];
   readonly?: boolean;
   options?: editor.IStandaloneEditorConstructionOptions;
+  text?: string;
+  onChangeText?: (text: string) => void;
 }
 
 const EntityJsonEditor = <T extends object>({
@@ -27,7 +29,10 @@ const EntityJsonEditor = <T extends object>({
   ignoredFields,
   readonly,
   options,
+  text,
+  onChangeText,
 }: Props<T>) => {
+  const isTextControlled = text !== undefined;
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { dispatch, jsonErrorNotifications } = useSaveValidationContext();
   const { removeNotification } = useNotification();
@@ -45,6 +50,9 @@ const EntityJsonEditor = <T extends object>({
   );
 
   useEffect(() => {
+    if (isTextControlled) {
+      return;
+    }
     if (!entity) {
       return;
     }
@@ -54,10 +62,11 @@ const EntityJsonEditor = <T extends object>({
     lastEntityFromEditorRef.current = entity;
     setEntityModel(JSON.stringify(entity, null, 4));
     setEditorInstanceKey((key) => key + 1);
-  }, [entity]);
+  }, [entity, isTextControlled]);
 
   const onChangeJSON = useCallback(
     (updatedConfig?: string) => {
+      onChangeText?.(updatedConfig ?? '');
       if (!updatedConfig) {
         return;
       }
@@ -74,7 +83,7 @@ const EntityJsonEditor = <T extends object>({
         }
       }
     },
-    [setSelectedEntity, entity, ignoredFields, setIsChanged],
+    [onChangeText, setSelectedEntity, entity, ignoredFields, setIsChanged],
   );
 
   const onValidateJSON = useCallback(
@@ -87,14 +96,14 @@ const EntityJsonEditor = <T extends object>({
     [setJsonErrors, jsonErrorNotifications, removeNotification],
   );
 
-  if (!entityModel) {
+  if (!isTextControlled && !entityModel) {
     return null;
   }
 
   return (
     <JsonEditorBase
       key={editorInstanceKey}
-      value={entityModel}
+      value={isTextControlled ? text : entityModel}
       onChange={onChangeJSON}
       onValidateJSON={onValidateJSON}
       options={{

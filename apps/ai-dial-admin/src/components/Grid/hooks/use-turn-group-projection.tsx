@@ -32,16 +32,8 @@ export const useTurnGroupProjection = ({ rawRows, onGridReady: onGridReadyConfig
 
   useEffect(() => {
     const api = gridApiRef.current;
-    // The parent remounts this grid on discard, and the effect below still runs once against the
-    // torn-down api — ag-grid logs a warning for every call made after destruction.
     if (!api || api.isDestroyed()) return;
-    // ag-grid only re-renders a custom cell renderer when the displayed *value* changes, but the
-    // chevron is driven by `data.expanded` rather than any column value, so a toggle would
-    // otherwise leave the previously rendered chevron state on screen.
     api.refreshCells({ force: true });
-    // A GROUP row keeps its `getRowId` identity across a toggle, so ag-grid reuses the node and its
-    // cached height — an expanded group would stay at its collapsed stacked height. Row height is
-    // asked for again only on reset.
     api.resetRowHeights();
   }, [rowData]);
 
@@ -80,8 +72,6 @@ export const useTurnGroupProjection = ({ rawRows, onGridReady: onGridReadyConfig
 
   const getRowId = useCallback((params: GetRowIdParams<GroupedGridRow>) => {
     const row = params.data;
-    // Every turn of a case shares the case `id`, so `id` alone collides across rows of the same
-    // case — qualify by row type plus whatever distinguishes rows within that type.
     switch (row.rowType) {
       case GridRowType.GROUP:
         return `group:${row.groupKey}`;
@@ -94,8 +84,6 @@ export const useTurnGroupProjection = ({ rawRows, onGridReady: onGridReadyConfig
 
   const getRowHeight = useCallback((params: RowHeightParams<GroupedGridRow>) => {
     const row = params.data;
-    // Only a collapsed GROUP row stacks its turns and needs extra height; an expanded group is
-    // just a single-line header, and every other row type is already a single editable line.
     if (row?.rowType === GridRowType.GROUP && !row.expanded) {
       return Math.max(ROW_HEIGHT, (row.turnCount ?? 1) * STACKED_LINE_HEIGHT + STACKED_ROW_PADDING);
     }

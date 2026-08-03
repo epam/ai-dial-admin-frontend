@@ -1,9 +1,9 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, getDefaultNormalizer, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 
 import { ContentType } from '@/src/components/TestSuites/constants/content-type';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { TestSuite, TestSuiteRequestTemplateBody } from '@/src/models/evaluation/test-suite';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import RequestTemplate from '../RequestTemplate';
 
@@ -47,35 +47,22 @@ vi.mock('@tabler/icons-react', () => ({
 }));
 
 const mockAdd = vi.fn();
-vi.mock('../tabs/TabsContent', () => ({
-  default: ({ activeTab, selectedTestSuite, onChange, ref: _ref }: any, ref: any) => {
-    if (ref && typeof ref === 'object') {
-      ref.current = { add: mockAdd };
-    }
-    return (
-      <div role="region" aria-label={`tabs-content-${activeTab}`}>
-        <span>Suite: {selectedTestSuite?.id}</span>
-        <button type="button" onClick={() => onChange({ ...selectedTestSuite, name: 'updated' })}>
-          Change
-        </button>
-      </div>
-    );
-  },
-}));
-
-// Re-mock using forwardRef pattern
 vi.mock('../tabs/TabsContent', () => {
   const { forwardRef } = require('react');
   return {
-    default: forwardRef(({ activeTab, selectedTestSuite, onChange }: any, ref: any) => {
+    default: forwardRef(({ activeTab, selectedTestSuite, bodyText, onChangeBodyText, onChange }: any, ref: any) => {
       if (ref && typeof ref === 'object') {
         ref.current = { add: mockAdd };
       }
       return (
         <div role="region" aria-label={`tabs-content-${activeTab}`}>
           <span>Suite: {selectedTestSuite?.id}</span>
+          <span>BodyText: {JSON.stringify(bodyText)}</span>
           <button type="button" onClick={() => onChange({ ...selectedTestSuite, name: 'updated' })}>
             Change
+          </button>
+          <button type="button" onClick={() => onChangeBodyText(TYPED_BODY_TEXT)}>
+            TypeBody
           </button>
         </div>
       );
@@ -94,6 +81,20 @@ vi.mock('../components/ContentTypeSelect', () => ({
       <button type="button" onClick={() => onChangeTestSuite({ ...testSuite, name: 'ct-changed' })}>
         ChangeContentType
       </button>
+      <button
+        type="button"
+        onClick={() =>
+          onChangeTestSuite({
+            ...testSuite,
+            requestTemplate: {
+              ...testSuite.requestTemplate,
+              body: { contentType: 'application/json', content: { switched: true } },
+            },
+          })
+        }
+      >
+        SwitchContentType
+      </button>
     </div>
   ),
 }));
@@ -110,12 +111,26 @@ vi.mock('@/src/utils/tabs/utils', async (importOriginal) => {
   };
 });
 
+const exactText = { normalizer: getDefaultNormalizer({ collapseWhitespace: false }) };
+
+const TYPED_BODY_TEXT = '{ "model": "gpt-4"';
+
+const JSONATA_EXPRESSION = [
+  '{',
+  '    "messages": $append($history, [{ "role": "user", "content": "${{user_message}}" }]),',
+  '    "temperature": "${{temperature:0.7}}"',
+  '}',
+].join('\n');
+
 const createTestSuite = (overrides?: Partial<TestSuite>): TestSuite => ({
   id: 'suite-1',
   name: 'My Suite',
   requestTemplate: { urlTemplate: '/api', body: {}, headers: [], queryParams: [] },
   ...overrides,
 });
+
+const createSuiteWithBody = (body: TestSuiteRequestTemplateBody): TestSuite =>
+  createTestSuite({ requestTemplate: { urlTemplate: '/api', body, headers: [], queryParams: [] } });
 
 describe('RequestTemplate', () => {
   let mockOnChangeTestSuite: Mock;
@@ -324,6 +339,90 @@ describe('RequestTemplate', () => {
       expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'true');
       expect(screen.queryByRole('button', { name: ButtonsI18nKey.Add })).not.toBeInTheDocument();
       expect(screen.getByLabelText('template-variables-doc')).toBeInTheDocument();
+    });
+  });
+
+  describe('body text ownership', () => {
+    const bodyOfCall = (index: number) => mockOnChangeTestSuite.mock.calls[index][0].requestTemplate.body;
+
+    test('seeds the body text from a JSON content body', () => {
+      const content = { model: 'gpt-4' };
+
+      render(
+        <RequestTemplate
+          testSuite={createSuiteWithBody({ contentType: ContentType.JSON, content })}
+          onChangeTestSuite={mockOnChangeTestSuite}
+        />,
+      );
+
+      expect(
+        screen.getByText(`BodyText: ${JSON.stringify(JSON.stringify(content, null, 4))}`, exactText),
+      ).toBeInTheDocument();
+    });
+
+    test('seeds the body text from a JSONata body', () => {
+      render(
+        <RequestTemplate
+          testSuite={createSuiteWithBody({ contentType: ContentType.JSON, jsonataContent: '$sum(items.price)' })}
+          onChangeTestSuite={mockOnChangeTestSuite}
+        />,
+      );
+
+      expect(screen.getByText('BodyText: "$sum(items.price)"')).toBeInTheDocument();
+    });
+
+    test('turning JSONata off then on preserves the expression text verbatim', () => {
+      const testSuite = createSuiteWithBody({ contentType: ContentType.JSON, jsonataContent: JSONATA_EXPRESSION });
+
+      const { rerender } = render(<RequestTemplate testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
+
+      fireEvent.click(screen.getByRole('switch'));
+
+      expect(bodyOfCall(0).content).toEqual({});
+      expect('jsonataContent' in bodyOfCall(0)).toBe(false);
+
+      rerender(
+        <RequestTemplate
+          testSuite={mockOnChangeTestSuite.mock.calls[0][0]}
+          onChangeTestSuite={mockOnChangeTestSuite}
+        />,
+      );
+      fireEvent.click(screen.getByRole('switch'));
+
+      expect(bodyOfCall(1).jsonataContent).toBe(JSONATA_EXPRESSION);
+    });
+
+    test('text typed in the editor is what the toggle writes, even when it is not valid JSON', () => {
+      render(
+        <RequestTemplate
+          testSuite={createSuiteWithBody({ contentType: ContentType.JSON, content: {} })}
+          onChangeTestSuite={mockOnChangeTestSuite}
+        />,
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: 'TypeBody' }));
+      fireEvent.click(screen.getByRole('switch'));
+
+      expect(bodyOfCall(0).jsonataContent).toBe(TYPED_BODY_TEXT);
+    });
+
+    test('changing the content type reseeds the body text from the new body', () => {
+      const testSuite = createSuiteWithBody({ contentType: ContentType.JSON, jsonataContent: JSONATA_EXPRESSION });
+
+      const { rerender } = render(<RequestTemplate testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'SwitchContentType' }));
+
+      rerender(
+        <RequestTemplate
+          testSuite={mockOnChangeTestSuite.mock.calls[0][0]}
+          onChangeTestSuite={mockOnChangeTestSuite}
+        />,
+      );
+
+      expect(
+        screen.getByText(`BodyText: ${JSON.stringify(JSON.stringify({ switched: true }, null, 4))}`, exactText),
+      ).toBeInTheDocument();
     });
   });
 });

@@ -23,7 +23,6 @@ export interface TurnGroupGridConfig<T> {
   collapseRows: (rows: Record<string, unknown>[], perTurnFields: Set<string>) => T[];
   onDeleteCase: (row: GroupedGridRow) => void;
   onDirtyChange?: (hasDirty: boolean) => void;
-  /** Fields that are NOT part of the row's `data` map. Defaults to ['testCaseName', '_turnIndex']; TestSuites also passes 'enabled'. */
   structuralFields?: string[];
   onGridReady?: (event: GridReadyEvent) => void;
 }
@@ -39,13 +38,6 @@ export const useTurnGroupGrid = <T,>({
   const flatRowsRef = useRef<Record<string, unknown>[]>([]);
   const [rawRowsVersion, setRawRowsVersion] = useState(0);
   const bumpRawRows = useCallback(() => setRawRowsVersion((v) => v + 1), []);
-  // `rawRows` intentionally depends on `rawRowsVersion`, not on `flatRowsRef` itself. The
-  // projection below only derives what it renders from what it is given, so it cannot also be
-  // the source of truth for a collapsed group's turns or for an edit made off-screen — the ref
-  // is. A ref rather than `useState<Record<string, unknown>[]>` also lets the imperative readers
-  // (`getDirtyRows`, `getCaseRows`, invoked by a parent through a ref) read the latest rows with
-  // no stale-closure risk. Bumping the version hands the projection a fresh array while the row
-  // objects inside keep their identity.
   const rawRows = useMemo(() => [...flatRowsRef.current], [rawRowsVersion]);
   const dirtyIdsRef = useRef<Set<string>>(new Set());
   const perTurnFields = useMemo(() => getPerTurnFieldNames(schema), [schema]);
@@ -124,29 +116,13 @@ export const useTurnGroupGrid = <T,>({
       const rowId = String(rowData.id);
       const isDataField = !structuralFields.includes(field);
 
-      // `rowData` is the object ag-grid handed the renderer — a spread copy produced by the
-      // projection (`toTurnRow`/`toSingleRow`/`toGroupRow`), not the stored row. Mutating it in
-      // place would be lost the next time the projection re-derives (any expand/collapse), and
-      // `getDirtyRows` reads from the store rather than the grid, so it would never see the edit
-      // either. Every branch below therefore locates and mutates the real row(s) in
-      // `flatRowsRef` instead of `rowData`.
-      //
-      // Deliberately no `bumpRawRows()` here, unlike every structural mutation. `EditableCellRenderer`
-      // fires `onChange` per keystroke, and a new `rowData` array would make `AgGridWrapper` re-run
-      // `updateGridOptions` + `applyGridState` and the projection force a `refreshCells` — recreating
-      // the focused input mid-word. A value edit never changes the projection's shape, the input holds
-      // its own state, and both readers (`getDirtyRows`, a collapsed group's stacked summary on the
-      // next expand/collapse) see these in-place mutations without one.
       if (isDataField && !perTurnFields.has(field)) {
-        // Shared field, edited on the GROUP master row: the value is case-level, so write it to
-        // every turn row of the case.
         flatRowsRef.current.forEach((row) => {
           if (String(row.id) !== rowId) return;
           row[field] = value;
           if (row.data != null) row.data = { ...(row.data as Record<string, unknown>), [field]: value };
         });
       } else {
-        // Per-turn or structural field: the single row identified by id + turn index.
         const turnIndex = readTurnIndex(rowData);
         const target = flatRowsRef.current.find((row) => String(row.id) === rowId && readTurnIndex(row) === turnIndex);
         if (target) {
@@ -168,10 +144,6 @@ export const useTurnGroupGrid = <T,>({
       const rows = getCaseRows(groupKey);
       if (rows.length === 0) return;
 
-      // Only the per-turn fields start empty. The shared ones are seeded from the case, because the
-      // fan-out in `onCellChange` reaches only rows that already exist — so an empty new turn would
-      // blank the case's shared values the moment it became turn 0, which is where
-      // `collapseRowsTo*` reads them from.
       const sharedData = selectSharedFields(rows[0].data as Record<string, unknown> | undefined, perTurnFields);
       const newTurn = {
         ...sharedData,
@@ -216,8 +188,6 @@ export const useTurnGroupGrid = <T,>({
       const rows = getCaseRows(groupKey);
       const from = readTurnIndex(row) ?? (row.turnNumber ? row.turnNumber - 1 : 0);
       const to = from + direction;
-      // Moving past either boundary changes nothing, but `replaceCaseRows` would still mark the case
-      // dirty — a phantom unsaved-changes state and an unnecessary save request.
       if (to < 0 || to >= rows.length) return;
 
       replaceCaseRows(groupKey, reorderTurns(rows, from, to));
@@ -237,8 +207,6 @@ export const useTurnGroupGrid = <T,>({
   const getDirtyRows = useCallback(
     (extraRows?: Record<string, unknown>[]): T[] => {
       const dirtyIds = new Set([...dirtyIdsRef.current, ...(extraRows ?? []).map((row) => String(row.id))]);
-      // Collapse from the store rather than from visible grid nodes, so a collapsed group still
-      // contributes all of its turns even though only its GROUP row is currently rendered.
       const rows = [...flatRowsRef.current, ...(extraRows ?? [])].filter((row) => dirtyIds.has(String(row.id)));
       return collapseRows(rows, perTurnFields);
     },
@@ -263,9 +231,6 @@ export const useTurnGroupGrid = <T,>({
     pruneToSchema,
     onCellChange,
     turnActionHandlers,
-    // `AgGridWrapper` forwards `getRowId` only when `isLiveData` is set and does not expose
-    // `getRowHeight`/`onFilterChanged` as props at all, while `additionalGridOptions` is spread
-    // onto `AgGridReact` regardless — the same route `HeatMapTab` and `ContainerCreate` use.
     turnGridOptions,
   };
 };

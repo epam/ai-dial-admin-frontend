@@ -23,14 +23,9 @@ const StackedTurnsCellRenderer = ({ data, colDef }: ICellRendererParams<GroupedG
   return (
     <div
       className="flex flex-col overflow-hidden"
-      // Must match STACKED_LINE_HEIGHT/STACKED_ROW_PADDING used by useTurnGroupProjection's row-height
-      // calculation exactly, or the ui-kit tooltip's own line-height overflows the reserved row height
-      // and clips the last turn.
       style={{ paddingTop: STACKED_ROW_PADDING / 2, paddingBottom: STACKED_ROW_PADDING / 2 }}
     >
       {turns.map((turn, index) => (
-        // Keyed by position, not `turn.id`: every turn of a case carries the same case id, so an
-        // id key would collide across every line here. Position is the turn's identity.
         <div key={index} className="flex items-center" style={{ height: STACKED_LINE_HEIGHT }}>
           <DialEllipsisTooltip className="tiny" text={formatTurnValue(turn, field)} />
         </div>

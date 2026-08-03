@@ -534,7 +534,6 @@ describe('collapseRowsToTestCases', () => {
 
     const rows = getTestCaseGridData([testCase]);
 
-    // Simulate onCellChange editing turn 1's prompt.
     rows[1].data = { ...(rows[1].data as Record<string, unknown>), prompt: 'edited' };
     rows[1].prompt = 'edited';
 
@@ -573,8 +572,6 @@ describe('collapseRowsToTestCases', () => {
     };
 
     const rows = getTestCaseGridData([testCase]);
-    // Deleting the last extra turn demotes the case: only turn 0's row remains, with
-    // _turnIndex stripped (mirrors what use-turn-group-grid's onDeleteTurn does).
     const remainingRow = demoteToSingle(rows[0]);
 
     const result = collapseRowsToTestCases([remainingRow], perTurnFields);
