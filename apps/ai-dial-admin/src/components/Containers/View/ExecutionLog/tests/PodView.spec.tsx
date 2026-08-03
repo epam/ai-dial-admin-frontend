@@ -44,7 +44,13 @@ class MockEventSource {
 vi.stubGlobal('EventSource', MockEventSource);
 
 vi.mock('@epam/ai-dial-ui-kit', () => ({
-  DialNoDataContent: ({ title }: any) => <div data-testid="no-data">{title}</div>,
+  DialNoDataContent: ({ title }: any) => <div role="status">{title}</div>,
+  DialTooltip: ({ tooltip, children }: any) => (
+    <>
+      <span>{children}</span>
+      <div role="tooltip">{tooltip}</div>
+    </>
+  ),
 }));
 
 vi.mock('@/src/components/Common/LogViewer/LogViewer', () => ({
@@ -58,7 +64,12 @@ vi.mock('@/src/components/Common/LogViewer/LogViewer', () => ({
 
 vi.mock('@/src/components/Common/LabelledText/LabelledText', () => ({
   __esModule: true,
-  default: ({ label, text }: any) => <div data-testid={`label-${label}`}>{text}</div>,
+  default: ({ label, text, children }: any) => (
+    <div role="group" aria-label={label}>
+      {text}
+      {children}
+    </div>
+  ),
 }));
 
 import PodView from '../PodView';
@@ -80,7 +91,7 @@ describe('PodView', () => {
 
   test('shows no-data placeholder when there are no logs', () => {
     render(<PodView pod={makePod('pod-1')} containerId="c1" route={ApplicationRoute.McpContainers} />);
-    expect(screen.getByTestId('no-data')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toBeInTheDocument();
   });
 
   test('opens EventSource with correct URL', () => {
@@ -102,14 +113,14 @@ describe('PodView', () => {
         route={ApplicationRoute.McpContainers}
       />,
     );
-    expect(screen.getByTestId(`label-${EntityFieldsI18nKey.Restarts}`)).toHaveTextContent('5');
-    expect(screen.getByTestId(`label-${EntityFieldsI18nKey.LastRestartedAt}`)).toBeInTheDocument();
-    expect(screen.getByTestId(`label-${EntityFieldsI18nKey.LastReason}`)).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: EntityFieldsI18nKey.Restarts })).toHaveTextContent('5');
+    expect(screen.getByRole('group', { name: EntityFieldsI18nKey.LastRestartedAt })).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: EntityFieldsI18nKey.LastReason })).toBeInTheDocument();
   });
 
   test('hides restart info when restartCount is absent', () => {
     render(<PodView pod={makePod('pod-1')} containerId="c1" route={ApplicationRoute.McpContainers} />);
-    expect(screen.queryByTestId(`label-${EntityFieldsI18nKey.Restarts}`)).not.toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: EntityFieldsI18nKey.Restarts })).not.toBeInTheDocument();
   });
 
   test('shows termination message when present', () => {
@@ -120,16 +131,32 @@ describe('PodView', () => {
         route={ApplicationRoute.McpContainers}
       />,
     );
-    expect(screen.getByTestId(`label-${EntityFieldsI18nKey.TerminationMessage}`)).toHaveTextContent(
+    expect(screen.getByRole('group', { name: EntityFieldsI18nKey.TerminationMessage })).toHaveTextContent(
       'container failed: invalid --foo argument',
     );
+  });
+
+  test('keeps a long termination message tooltip height-capped and scrollable', () => {
+    const longMessage = Array.from({ length: 200 }, (_, i) => `  File "mcp_proxy/main.py", line ${i}`).join('\n');
+    render(
+      <PodView
+        pod={makePod('pod-1', { restartCount: 1, lastTerminationMessage: longMessage })}
+        containerId="c1"
+        route={ApplicationRoute.McpContainers}
+      />,
+    );
+
+    const tooltipContent = screen.getByRole('tooltip').firstElementChild as HTMLElement;
+    expect(tooltipContent).toHaveTextContent('File "mcp_proxy/main.py", line 199');
+    expect(tooltipContent.className).toMatch(/max-h-\[\d+px\]/);
+    expect(tooltipContent.className).toContain('overflow-y-auto');
   });
 
   test('hides termination message when absent even with restarts', () => {
     render(
       <PodView pod={makePod('pod-1', { restartCount: 2 })} containerId="c1" route={ApplicationRoute.McpContainers} />,
     );
-    expect(screen.queryByTestId(`label-${EntityFieldsI18nKey.TerminationMessage}`)).not.toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: EntityFieldsI18nKey.TerminationMessage })).not.toBeInTheDocument();
   });
 
   test('shows termination message even when restartCount is 0 (fail-to-start)', () => {
@@ -146,11 +173,11 @@ describe('PodView', () => {
       />,
     );
     // The restart row stays gated on restartCount, so it is hidden at 0...
-    expect(screen.queryByTestId(`label-${EntityFieldsI18nKey.Restarts}`)).not.toBeInTheDocument();
-    expect(screen.queryByTestId(`label-${EntityFieldsI18nKey.LastReason}`)).not.toBeInTheDocument();
-    expect(screen.queryByTestId(`label-${EntityFieldsI18nKey.LastRestartedAt}`)).not.toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: EntityFieldsI18nKey.Restarts })).not.toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: EntityFieldsI18nKey.LastReason })).not.toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: EntityFieldsI18nKey.LastRestartedAt })).not.toBeInTheDocument();
     // ...but the termination message is shown on its own.
-    expect(screen.getByTestId(`label-${EntityFieldsI18nKey.TerminationMessage}`)).toHaveTextContent(
+    expect(screen.getByRole('group', { name: EntityFieldsI18nKey.TerminationMessage })).toHaveTextContent(
       'exec: "--model": bad argument',
     );
   });
@@ -221,7 +248,7 @@ describe('PodView', () => {
     });
     // Buffer cleared on reconnect; LogViewer unmounts and the no-data placeholder renders.
     expect(screen.queryByRole('log')).not.toBeInTheDocument();
-    expect(screen.getByTestId('no-data')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toBeInTheDocument();
 
     act(() => {
       source.dispatch('logs', 'first line');
