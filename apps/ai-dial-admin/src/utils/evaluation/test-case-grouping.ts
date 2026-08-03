@@ -127,6 +127,10 @@ const toTurnRow = (group: TestCaseGroup, turn: TestCaseRow, index: number): Grou
   rowType: GridRowType.TURN,
   groupKey: group.key,
   turnNumber: index + 1,
+  // Carried on the turn row itself so a row action can tell a boundary turn from a middle one
+  // without walking the grid — which would see only the rendered nodes, and so would misjudge the
+  // boundary while a filter hides sibling turns.
+  turnCount: group.turns.length,
 });
 
 const toGroupRow = (group: TestCaseGroup, expanded: boolean): GroupedGridRow => ({

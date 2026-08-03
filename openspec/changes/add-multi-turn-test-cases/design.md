@@ -67,7 +67,7 @@ Consequence: promote/demote are trivial. `promoteToMultiTurn` sets `_turnIndex: 
 
 On load each turn row carries `{...shared, ...turn}` as its `data`. This matters: every existing schema column's `valueGetter` is `params.data?.data?.[field] ?? params.data?.[field] ?? ''`, and merging means those getters keep working with no change. Execution resolves fields per turn the same way, so the merged row is also the honest preview of what will actually run.
 
-On save `collapseRowsToTestCases` groups by `id`, sorts by `_turnIndex`, and splits the merged map back apart via the schema's `perTurn` flags. Shared values are read off turn 0 — they are invariant across turns by construction, because a shared-field edit fans out to every turn row.
+On save `collapseRowsToTestCases` groups by `id`, sorts by `_turnIndex`, and splits the merged map back apart via the schema's `perTurn` flags. Shared values are read off turn 0 — they are invariant across turns by construction, because a shared-field edit fans out to every turn row *and* a newly added turn is seeded with the case's current shared values. The fan-out alone is not enough: it only reaches rows that already exist, so a turn added with an empty `data` would silently blank the case's shared values as soon as a deletion made it turn 0.
 
 ### The store is a ref, and `onCellChange` must not edit the row AG Grid hands it
 

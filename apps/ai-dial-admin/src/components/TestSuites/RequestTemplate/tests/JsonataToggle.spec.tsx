@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 
 import { ContentType } from '@/src/components/TestSuites/constants/content-type';
 import { TestSuite, TestSuiteRequestTemplateBody } from '@/src/models/evaluation/test-suite';
+import { FormDataType } from '@/src/models/form-data';
 import JsonataToggle from '../components/JsonataToggle';
 
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
@@ -97,8 +98,9 @@ describe('JsonataToggle', () => {
   });
 
   describe('turning on', () => {
-    test('seeds jsonataContent with "{}" and omits content, leaving contentType untouched', () => {
-      const testSuite = createTestSuite({ contentType: ContentType.JSON, content: { model: 'gpt-4' } });
+    test('carries authored JSON content into jsonataContent and omits content, leaving contentType untouched', () => {
+      const content = { model: 'gpt-4' };
+      const testSuite = createTestSuite({ contentType: ContentType.JSON, content });
 
       render(<JsonataToggle testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
       fireEvent.click(screen.getByRole('switch'));
@@ -107,13 +109,51 @@ describe('JsonataToggle', () => {
       const body = mockOnChangeTestSuite.mock.calls[0][0].requestTemplate.body;
 
       expect('jsonataContent' in body).toBe(true);
-      expect(body.jsonataContent).toBe('{}');
+      expect(body.jsonataContent).toBe(JSON.stringify(content, null, 4));
       expect('content' in body).toBe(false);
       expect(body.contentType).toBe(ContentType.JSON);
     });
 
+    test('seeds "{}" when there is no content to carry', () => {
+      const testSuite = createTestSuite({ contentType: ContentType.JSON });
+
+      render(<JsonataToggle testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
+      fireEvent.click(screen.getByRole('switch'));
+
+      const body = mockOnChangeTestSuite.mock.calls[0][0].requestTemplate.body;
+
+      expect(body.jsonataContent).toBe('{}');
+      expect('content' in body).toBe(false);
+    });
+
+    test('seeds "{}" when content is an empty object', () => {
+      const testSuite = createTestSuite({ contentType: ContentType.JSON, content: {} });
+
+      render(<JsonataToggle testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
+      fireEvent.click(screen.getByRole('switch'));
+
+      expect(mockOnChangeTestSuite.mock.calls[0][0].requestTemplate.body.jsonataContent).toBe('{}');
+    });
+
+    test('does not serialize form-data parts into the expression', () => {
+      const testSuite = createTestSuite({
+        contentType: ContentType.FormData,
+        content: [{ name: 'file', value: 'a.txt', type: FormDataType.File }],
+      });
+
+      render(<JsonataToggle testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
+      fireEvent.click(screen.getByRole('switch'));
+
+      const body = mockOnChangeTestSuite.mock.calls[0][0].requestTemplate.body;
+
+      expect(body.jsonataContent).toBe('{}');
+      expect('content' in body).toBe(false);
+      expect(body.contentType).toBe(ContentType.FormData);
+    });
+
     test('leaves an absent contentType absent (no normalization on turn-on)', () => {
-      const testSuite = createTestSuite({ content: { model: 'gpt-4' } });
+      const content = { model: 'gpt-4' };
+      const testSuite = createTestSuite({ content });
 
       render(<JsonataToggle testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
       fireEvent.click(screen.getByRole('switch'));
@@ -121,13 +161,43 @@ describe('JsonataToggle', () => {
       const body = mockOnChangeTestSuite.mock.calls[0][0].requestTemplate.body;
 
       expect('contentType' in body).toBe(false);
-      expect(body.jsonataContent).toBe('{}');
+      expect(body.jsonataContent).toBe(JSON.stringify(content, null, 4));
       expect('content' in body).toBe(false);
     });
   });
 
   describe('turning off', () => {
-    test('under JSON contentType, restores an empty object and drops jsonataContent', () => {
+    test('under JSON contentType, restores a parseable object expression as content', () => {
+      const testSuite = createTestSuite({ contentType: ContentType.JSON, jsonataContent: '{ "model": "gpt-4" }' });
+
+      render(<JsonataToggle testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
+      fireEvent.click(screen.getByRole('switch'));
+
+      const body = mockOnChangeTestSuite.mock.calls[0][0].requestTemplate.body;
+
+      expect('jsonataContent' in body).toBe(false);
+      expect(body.content).toEqual({ model: 'gpt-4' });
+      expect(body.contentType).toBe(ContentType.JSON);
+    });
+
+    test('round-trips authored JSON content through the toggle unchanged', () => {
+      const content = { model: 'gpt-4', messages: [{ role: 'user', content: 'hi' }] };
+      const testSuite = createTestSuite({ contentType: ContentType.JSON, content });
+
+      const { rerender } = render(<JsonataToggle testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
+      fireEvent.click(screen.getByRole('switch'));
+
+      const jsonataSuite = mockOnChangeTestSuite.mock.calls[0][0];
+      rerender(<JsonataToggle testSuite={jsonataSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
+      fireEvent.click(screen.getByRole('switch'));
+
+      const body = mockOnChangeTestSuite.mock.calls[1][0].requestTemplate.body;
+
+      expect(body.content).toEqual(content);
+      expect('jsonataContent' in body).toBe(false);
+    });
+
+    test('under JSON contentType, falls back to the type default for a real JSONata expression', () => {
       const testSuite = createTestSuite({ contentType: ContentType.JSON, jsonataContent: '$sum(items.price)' });
 
       render(<JsonataToggle testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
@@ -138,6 +208,18 @@ describe('JsonataToggle', () => {
       expect('jsonataContent' in body).toBe(false);
       expect(body.content).toEqual({});
       expect(body.contentType).toBe(ContentType.JSON);
+    });
+
+    test('under form-data contentType, never restores a parseable object expression', () => {
+      const testSuite = createTestSuite({ contentType: ContentType.FormData, jsonataContent: '{ "model": "gpt-4" }' });
+
+      render(<JsonataToggle testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
+      fireEvent.click(screen.getByRole('switch'));
+
+      const body = mockOnChangeTestSuite.mock.calls[0][0].requestTemplate.body;
+
+      expect(body.content).toEqual([]);
+      expect(body.contentType).toBe(ContentType.FormData);
     });
 
     test('under form-data contentType, restores an empty array (not an object) and drops jsonataContent', () => {

@@ -88,14 +88,16 @@ The grid SHALL offer, per row type:
 - on a `GROUP` or `SINGLE` row — **Add turn** and **Delete test case**
 - on a `TURN` row — **Move turn up**, **Move turn down**, and **Delete turn**
 
-Adding a turn to a single-turn case SHALL promote that case to multi-turn: the existing row becomes turn 0 and a new empty turn is appended. Deleting turns until one remains SHALL demote the case back to a single-turn row.
+**Move turn up** SHALL NOT be offered on the first turn of a case, and **Move turn down** SHALL NOT be offered on its last turn; neither SHALL mark the case as changed.
+
+Adding a turn to a single-turn case SHALL promote that case to multi-turn: the existing row becomes turn 0 and a new turn is appended whose per-turn fields are empty and whose shared fields carry the case's current shared values. Deleting turns until one remains SHALL demote the case back to a single-turn row.
 
 After adding, deleting, or moving a turn, the affected group SHALL be expanded so the result is visible.
 
 #### Scenario: Adding a turn promotes a single-turn case
 
 - **WHEN** Add turn is used on a single-turn case
-- **THEN** the case renders as an expanded group of two turns, the first retaining the original values and the second empty
+- **THEN** the case renders as an expanded group of two turns, the first retaining the original values and the second with no per-turn values of its own
 
 #### Scenario: Deleting the last extra turn demotes the case
 
@@ -112,6 +114,16 @@ After adding, deleting, or moving a turn, the affected group SHALL be expanded s
 - **WHEN** the action menu is opened on a `GROUP` row
 - **THEN** Move turn up, Move turn down, and Delete turn are not offered
 
+#### Scenario: Move actions are not offered at a turn boundary
+
+- **WHEN** the action menu is opened on the first turn of a case
+- **THEN** Move turn up is not offered, while Move turn down and Delete turn are
+
+#### Scenario: A boundary move leaves the case unchanged
+
+- **WHEN** a move past the first or last turn is requested anyway
+- **THEN** the turn order is unchanged and the case is not marked as having unsaved changes
+
 ### Requirement: Schema fields are scoped as per-turn or shared
 
 Each schema field SHALL be either per-turn (`perTurn` true) or shared. A field without `perTurn` SHALL read as shared, so schemas authored before this change keep their current meaning.
@@ -123,7 +135,7 @@ Rendering SHALL follow the scope:
 | per-turn field | every turn's value, one line per turn, read-only | editable | editable |
 | shared field | editable | blank | editable |
 
-Editing a shared field on a `GROUP` row SHALL write the value to every turn of that case.
+Editing a shared field on a `GROUP` row SHALL write the value to every turn of that case. A case's turns SHALL always agree on their shared field values, whichever turn is later removed or reordered.
 
 #### Scenario: A per-turn column previews all turns when collapsed
 
@@ -139,6 +151,11 @@ Editing a shared field on a `GROUP` row SHALL write the value to every turn of t
 
 - **WHEN** a shared field is edited on a `GROUP` row
 - **THEN** the value is applied to every turn of the case, and the case's `TURN` rows show that column blank
+
+#### Scenario: A shared value survives deleting the turn it was entered on
+
+- **WHEN** a shared field is set on a single-turn case, a turn is added, and the original first turn is deleted
+- **THEN** the surviving turn still carries the shared value, and the saved case keeps it
 
 ### Requirement: Editing a turn is preserved regardless of expand state
 

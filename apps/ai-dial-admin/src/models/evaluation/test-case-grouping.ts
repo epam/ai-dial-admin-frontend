@@ -23,7 +23,7 @@ export interface GroupedGridRow extends TestCaseRow {
   id: string;
   rowType: GridRowType;
   groupKey: string;
-  turnCount?: number; // GROUP only
+  turnCount?: number; // GROUP and TURN: the case's total turn count
   expanded?: boolean; // GROUP only
   turns?: TestCaseRow[]; // GROUP only
   turnNumber?: number; // TURN only, 1-based for display

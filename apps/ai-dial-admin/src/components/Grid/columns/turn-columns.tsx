@@ -204,6 +204,12 @@ export const getTurnActionsColumn = (
   const isTurnRow = (_api: GridApi, node: IRowNode) =>
     (node.data as GroupedGridRow | undefined)?.rowType === GridRowType.TURN;
   const isNotTurnRow = (api: GridApi, node: IRowNode) => !isTurnRow(api, node);
+  const isFirstTurn = (node: IRowNode) => (node.data as GroupedGridRow | undefined)?.turnNumber === 1;
+  const isLastTurn = (node: IRowNode) => {
+    const row = node.data as GroupedGridRow | undefined;
+    // Tolerant of a turn row that carries no `turnCount`: an unknown count must not hide the action.
+    return row?.turnCount != null && row.turnNumber === row.turnCount;
+  };
 
   const items: ActionMenuOperationDeclaration<GroupedGridRow>[] = [
     {
@@ -218,14 +224,14 @@ export const getTurnActionsColumn = (
       id: ActionMenuOperationI18nKey.Move_turn_up,
       label: ActionMenuOperationI18nKey.Move_turn_up,
       onClick: (row) => row && handlers.onMoveTurnUp(row),
-      hidden: isNotTurnRow,
+      hidden: (api, node) => isNotTurnRow(api, node) || isFirstTurn(node),
     },
     {
       icon: <IconArrowDown {...BASE_BUTTON_ICON_PROPS} />,
       id: ActionMenuOperationI18nKey.Move_turn_down,
       label: ActionMenuOperationI18nKey.Move_turn_down,
       onClick: (row) => row && handlers.onMoveTurnDown(row),
-      hidden: isNotTurnRow,
+      hidden: (api, node) => isNotTurnRow(api, node) || isLastTurn(node),
     },
     {
       icon: <IconTrash {...BASE_BUTTON_ICON_PROPS} className="text-error" />,

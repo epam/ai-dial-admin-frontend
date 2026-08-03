@@ -213,6 +213,9 @@ describe('getTurnActionsColumn', () => {
 
   const nodeFor = (rowType?: GridRowType) => ({ data: rowType ? { rowType } : undefined }) as IRowNode;
 
+  const turnNodeFor = (turnNumber: number, turnCount: number) =>
+    ({ data: { rowType: GridRowType.TURN, turnNumber, turnCount } }) as IRowNode;
+
   test('should hide Add turn on a TURN row and show it elsewhere', () => {
     const item = findItem(ActionMenuOperationI18nKey.Add_turn);
 
@@ -238,6 +241,34 @@ describe('getTurnActionsColumn', () => {
     expect(item.hidden?.({} as GridApi, nodeFor(GridRowType.GROUP))).toBe(true);
     expect(item.hidden?.({} as GridApi, nodeFor(GridRowType.SINGLE))).toBe(true);
     expect(item.hidden?.({} as GridApi, nodeFor(GridRowType.TURN))).toBe(false);
+  });
+
+  test('should hide Move turn up on the first turn and show it on the others', () => {
+    const item = findItem(ActionMenuOperationI18nKey.Move_turn_up);
+
+    expect(item.hidden?.({} as GridApi, turnNodeFor(1, 3))).toBe(true);
+    expect(item.hidden?.({} as GridApi, turnNodeFor(2, 3))).toBe(false);
+    expect(item.hidden?.({} as GridApi, turnNodeFor(3, 3))).toBe(false);
+  });
+
+  test('should hide Move turn down on the last turn and show it on the others', () => {
+    const item = findItem(ActionMenuOperationI18nKey.Move_turn_down);
+
+    expect(item.hidden?.({} as GridApi, turnNodeFor(3, 3))).toBe(true);
+    expect(item.hidden?.({} as GridApi, turnNodeFor(1, 3))).toBe(false);
+    expect(item.hidden?.({} as GridApi, turnNodeFor(2, 3))).toBe(false);
+  });
+
+  test('should offer neither move direction on the only turn of a case', () => {
+    expect(findItem(ActionMenuOperationI18nKey.Move_turn_up).hidden?.({} as GridApi, turnNodeFor(1, 1))).toBe(true);
+    expect(findItem(ActionMenuOperationI18nKey.Move_turn_down).hidden?.({} as GridApi, turnNodeFor(1, 1))).toBe(true);
+  });
+
+  test('should keep Delete turn available on a boundary turn', () => {
+    const item = findItem(ActionMenuOperationI18nKey.Delete_turn);
+
+    expect(item.hidden?.({} as GridApi, turnNodeFor(1, 2))).toBe(false);
+    expect(item.hidden?.({} as GridApi, turnNodeFor(2, 2))).toBe(false);
   });
 
   test('should call onAddTurn with the group key, not the row', () => {

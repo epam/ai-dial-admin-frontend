@@ -13,6 +13,7 @@ import {
   readTurnIndex,
   renumberTurns,
   reorderTurns,
+  selectSharedFields,
 } from '@/src/utils/evaluation/test-case-grouping';
 
 const DEFAULT_STRUCTURAL_FIELDS = ['testCaseName', '_turnIndex'];
@@ -167,21 +168,28 @@ export const useTurnGroupGrid = <T,>({
       const rows = getCaseRows(groupKey);
       if (rows.length === 0) return;
 
+      // Only the per-turn fields start empty. The shared ones are seeded from the case, because the
+      // fan-out in `onCellChange` reaches only rows that already exist — so an empty new turn would
+      // blank the case's shared values the moment it became turn 0, which is where
+      // `collapseRowsTo*` reads them from.
+      const sharedData = selectSharedFields(rows[0].data as Record<string, unknown> | undefined, perTurnFields);
+      const newTurn = {
+        ...sharedData,
+        id: groupKey,
+        _turnIndex: rows.length,
+        testCaseName: rows[0].testCaseName,
+        data: sharedData,
+      };
+
       if (rows.length === 1 && readTurnIndex(rows[0]) === null) {
-        replaceCaseRows(groupKey, [
-          promoteToMultiTurn(rows[0]),
-          { id: groupKey, _turnIndex: 1, testCaseName: rows[0].testCaseName, data: {} },
-        ]);
+        replaceCaseRows(groupKey, [promoteToMultiTurn(rows[0]), newTurn]);
       } else {
-        replaceCaseRows(groupKey, [
-          ...rows,
-          { id: groupKey, _turnIndex: rows.length, testCaseName: rows[0].testCaseName, data: {} },
-        ]);
+        replaceCaseRows(groupKey, [...rows, newTurn]);
       }
 
       expandGroup(groupKey);
     },
-    [getCaseRows, replaceCaseRows, expandGroup],
+    [getCaseRows, replaceCaseRows, expandGroup, perTurnFields],
   );
 
   const onDeleteTurn = useCallback(
@@ -207,9 +215,12 @@ export const useTurnGroupGrid = <T,>({
       const groupKey = row.groupKey;
       const rows = getCaseRows(groupKey);
       const from = readTurnIndex(row) ?? (row.turnNumber ? row.turnNumber - 1 : 0);
-      const reordered = reorderTurns(rows, from, from + direction);
+      const to = from + direction;
+      // Moving past either boundary changes nothing, but `replaceCaseRows` would still mark the case
+      // dirty — a phantom unsaved-changes state and an unnecessary save request.
+      if (to < 0 || to >= rows.length) return;
 
-      replaceCaseRows(groupKey, reordered);
+      replaceCaseRows(groupKey, reorderTurns(rows, from, to));
       expandGroup(groupKey);
     },
     [getCaseRows, replaceCaseRows, expandGroup],

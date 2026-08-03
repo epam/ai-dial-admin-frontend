@@ -54,9 +54,9 @@ context value recording the mode.
 
 #### Scenario: Empty string is still JSONata mode
 
-Still load-bearing after the `{}` seeding decision — it now governs the **cleared-by-hand** case rather than
-the just-toggled-on one. A user who selects all and deletes, on the way to typing a different expression, sits
-at `''` and must not be thrown out of the mode mid-edit.
+Still load-bearing after the seeding decision (turn-on writes the carried-over content, or `{}`) — it governs
+the **cleared-by-hand** case rather than the just-toggled-on one. A user who selects all and deletes, on the
+way to typing a different expression, sits at `''` and must not be thrown out of the mode mid-edit.
 
 - **WHEN** `jsonataContent` is the empty string `''`, having been cleared by the user
 - **THEN** the UI SHALL remain in JSONata mode and show an empty JSONata editor
@@ -102,37 +102,78 @@ alone would render the JSONata editor with no way to leave it.
 - **WHEN** the body has no `jsonataContent` value
 - **THEN** the switch SHALL be rendered in the off state
 
-### Requirement: Turning the toggle on switches the body to a seeded JSONata expression
+### Requirement: Turning the toggle on carries the authored JSON body into the expression
 
-Turning the JSONata switch on SHALL set `body.jsonataContent` to `{}` and remove `body.content` from the
-request template body, in a single update to the test suite.
+Turning the JSONata switch on SHALL set `body.jsonataContent` and remove `body.content` from the request
+template body, in a single update to the test suite. The value written SHALL be:
 
-`{}` is a valid JSONata expression evaluating to an empty object, and mirrors what the JSON editor starts the
-user with. Seeding it — rather than an empty string — makes the empty-expression state something the user
-reaches deliberately by clearing the editor, rather than the state every new JSONata body begins in. That
-matters because an empty expression does not survive a save (see the save-payload requirements).
+- the current `content` serialized as pretty-printed JSON text — `JSON.stringify(content, null, 4)`, the same
+  indentation `EntityJsonEditor` renders — when `content` is a JSON object;
+- `{}` otherwise: when `content` is absent, is the empty object, or is a `FormDataPart[]` (form-data parts are
+  an array, not an expression, and serializing them would be noise rather than a starting point).
 
-#### Scenario: Enabling JSONata clears content and seeds the expression
+Carrying the content over makes the toggle non-destructive: a JSON object literal is itself a valid JSONata
+object-constructor expression, so the authored body is a usable starting point rather than something the user
+must retype.
+
+`{}` remains the fallback seed because it is a valid JSONata expression evaluating to an empty object and
+mirrors what the JSON editor starts the user with. Seeding it — rather than an empty string — keeps the
+empty-expression state something the user reaches deliberately by clearing the editor, rather than the state
+every new JSONata body begins in. That matters because an empty expression does not survive a save (see the
+save-payload requirements).
+
+The serialization SHALL live in the shared pure util `getJsonataExpressionForContent`
+(`src/components/TestSuites/utils/body-content.ts`) alongside `getDefaultContentForType`, not inline in the
+toggle component.
+
+#### Scenario: Enabling JSONata carries the JSON content into the expression
 
 - **WHEN** the user turns the JSONata switch on while `body.content` is `{ "model": "gpt-4" }`
-- **THEN** the updated body SHALL have `jsonataContent` set to `{}`
+- **THEN** the updated body SHALL have `jsonataContent` set to that object serialized as pretty-printed JSON
+  text with 4-space indentation
 - **AND** the updated body SHALL NOT carry a `content` value
 - **AND** `contentType` SHALL remain `application/json`
+
+#### Scenario: Enabling JSONata with nothing to carry seeds the empty object
+
+- **WHEN** the user turns the JSONata switch on while `body.content` is absent or is `{}`
+- **THEN** the updated body SHALL have `jsonataContent` set to `{}`
+- **AND** the updated body SHALL NOT carry a `content` value
+
+#### Scenario: Form-data parts are not serialized into the expression
+
+- **WHEN** the user turns the JSONata switch on while `body.contentType` is `multipart/form-data` and
+  `body.content` is an array of form-data parts
+- **THEN** the updated body SHALL have `jsonataContent` set to `{}`, not to the serialized parts
+- **AND** `contentType` SHALL remain `multipart/form-data`
 
 #### Scenario: Enabling JSONata swaps the editor
 
 - **WHEN** the user turns the JSONata switch on
 - **THEN** the Body tab SHALL render the JSONata editor in place of the JSON editor
-- **AND** the editor SHALL show the seeded `{}` expression, not an empty document
+- **AND** the editor SHALL show the carried-over content — or the seeded `{}` when there was none — not an
+  empty document
 
 ### Requirement: Turning the toggle off restores the literal body editor
 
 Turning the JSONata switch off SHALL, in a single update to the test suite:
 
 - remove `body.jsonataContent`;
-- set `body.content` to the **default empty value for the current content type** — `{}` for
+- set `body.content` to the **JSON object the expression parses to**, when `jsonataContent` parses as a JSON
+  object *and* `contentType` is not `multipart/form-data`;
+- otherwise set `body.content` to the **default empty value for the current content type** — `{}` for
   `application/json` (and for an absent content type), `[]` for `multipart/form-data`;
 - set `body.contentType` to `application/json` **when it is absent**, leaving any existing value untouched.
+
+Restoring a parseable expression mirrors the turn-on carry-over, so the toggle is non-destructive in both
+directions: a body authored as JSON, switched to JSONata and switched back, survives the round trip. A real
+JSONata expression (anything that is not a JSON object literal — `$sum(items.price)`, a scalar, an array, the
+empty string) SHALL NOT be salvaged; those fall back to the type default. A parseable object SHALL NOT be
+restored under `multipart/form-data`, because a form-data `content` must stay an array (see below).
+
+Both branches SHALL come from the shared pure util `getContentForJsonataExpression`
+(`src/components/TestSuites/utils/body-content.ts`), which delegates to `getDefaultContentForType` for the
+fallback rather than duplicating the defaulting rule.
 
 The content type must be consulted because the switch can be visible while `contentType` is
 `multipart/form-data` (see the toggle visibility requirement); hardcoding `{}` would produce a form-data body
@@ -148,24 +189,40 @@ directions is deliberate.
 
 At no point SHALL the form-data grid be rendered with a `content` value that is not an array.
 
-#### Scenario: Disabling JSONata under JSON content type
+#### Scenario: Disabling JSONata restores a parseable object expression
 
 - **WHEN** the user turns the JSONata switch off while `contentType` is `application/json` and
   `body.jsonataContent` is `'{ "model": "gpt-4" }'`
 - **THEN** the updated body SHALL NOT carry a `jsonataContent` value
+- **AND** the updated body SHALL have `content` set to `{ "model": "gpt-4" }`
+
+#### Scenario: Disabling JSONata with a real expression falls back to the type default
+
+- **WHEN** the user turns the JSONata switch off while `contentType` is `application/json` and
+  `body.jsonataContent` is `'$sum(items.price)'`
+- **THEN** the updated body SHALL NOT carry a `jsonataContent` value
 - **AND** the updated body SHALL have `content` set to `{}`
+- **AND** no attempt SHALL be made to salvage the expression text
+
+#### Scenario: JSON body survives a toggle round trip
+
+- **WHEN** the user authors `{ "model": "gpt-4" }` in the JSON editor, turns the JSONata switch on, and turns
+  it off again without editing
+- **THEN** the updated body SHALL have `content` equal to `{ "model": "gpt-4" }`
+- **AND** the updated body SHALL NOT carry a `jsonataContent` value
 
 #### Scenario: Disabling JSONata under form-data content type
 
-- **WHEN** the user turns the JSONata switch off while `contentType` is `multipart/form-data`
+- **WHEN** the user turns the JSONata switch off while `contentType` is `multipart/form-data`, whether or not
+  `jsonataContent` parses as a JSON object
 - **THEN** the updated body SHALL NOT carry a `jsonataContent` value
-- **AND** the updated body SHALL have `content` set to `[]`, not `{}`
+- **AND** the updated body SHALL have `content` set to `[]`, not `{}` and not the parsed object
 - **AND** `contentType` SHALL remain `multipart/form-data`
 
 #### Scenario: Disabling JSONata with no content type normalizes it to JSON
 
-- **WHEN** the body carries `jsonataContent` with `contentType` absent, and the user turns the JSONata switch
-  off
+- **WHEN** the body carries a non-object `jsonataContent` expression with `contentType` absent, and the user
+  turns the JSONata switch off
 - **THEN** the updated body SHALL have `contentType` set to `application/json`
 - **AND** the updated body SHALL have `content` set to `{}`
 - **AND** the updated body SHALL NOT carry a `jsonataContent` value
@@ -447,20 +504,21 @@ A suite saved while the JSONata editor is empty SHALL reload in JSON mode with t
 empty expression is omitted from the payload and the mode derivation therefore sees no `jsonataContent`. The
 UI SHALL NOT attempt to preserve the mode across such a save.
 
-This is the accepted cost of the canonical wire form, and it is the reason turn-on seeds `{}`: the user must
-clear the editor deliberately to reach it, so it is a rare edge rather than what happens to every newly
-enabled JSONata body.
+This is the accepted cost of the canonical wire form, and it is the reason turn-on seeds a non-empty
+expression — the carried-over content, or `{}` when there is none: the user must clear the editor deliberately
+to reach the empty state, so it is a rare edge rather than what happens to every newly enabled JSONata body.
 
 #### Scenario: Save with a hand-cleared expression reloads in JSON mode
 
-- **WHEN** the user turns the JSONata switch on, clears the seeded `{}` so the editor is empty, saves, and
-  reopens the suite
+- **WHEN** the user turns the JSONata switch on, clears the seeded expression so the editor is empty, saves,
+  and reopens the suite
 - **THEN** the Body tab SHALL render the JSON editor
 - **AND** the JSONata switch SHALL be off
 
 #### Scenario: Save immediately after enabling the toggle preserves JSONata mode
 
-- **WHEN** the user turns the JSONata switch on and saves without editing the seeded expression
+- **WHEN** the user turns the JSONata switch on with an empty body and saves without editing the seeded
+  expression
 - **THEN** the payload SHALL carry `jsonataContent` as `{}`
 - **AND** reopening the suite SHALL render the JSONata editor with the switch on
 

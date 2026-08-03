@@ -348,6 +348,12 @@ describe('projectGroupsToGridRows', () => {
     expect(rows[2].turnNumber).toBe(2);
   });
 
+  test('should carry the case turn count on every TURN row so boundary turns are identifiable', () => {
+    const rows = projectGroupsToGridRows([multiGroup], new Set(['multi-1']), false);
+
+    expect(rows.filter((row) => row.rowType === GridRowType.TURN).map((row) => row.turnCount)).toEqual([2, 2]);
+  });
+
   test('should drop GROUP rows and emit every turn flat while searching', () => {
     const rows = projectGroupsToGridRows([multiGroup], new Set(), true);
 

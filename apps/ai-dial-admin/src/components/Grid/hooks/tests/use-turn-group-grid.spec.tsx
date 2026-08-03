@@ -93,7 +93,7 @@ describe('useTurnGroupGrid', () => {
     const caseRows = asRows(result.current.getCaseRows('case-1'));
     expect(caseRows.map((r) => r._turnIndex)).toEqual([0, 1]);
     expect(caseRows[0].data).toEqual({ shared: 'hello' });
-    expect(caseRows[1].data).toEqual({});
+    expect(caseRows[1].data).toEqual({ shared: 'hello' });
 
     const groupRow = result.current.rowData.find((r) => r.id === 'case-1' && r.rowType === GridRowType.GROUP);
     expect(groupRow?.expanded).toBe(true);
@@ -111,6 +111,43 @@ describe('useTurnGroupGrid', () => {
     });
 
     expect(asRows(result.current.getCaseRows('case-1')).map((r) => r._turnIndex)).toEqual([0, 1, 2]);
+  });
+
+  test('should seed a new turn with the shared field values and leave the per-turn ones empty', () => {
+    const { result } = setup();
+
+    act(() => {
+      result.current.setServerRows([row('case-1', { shared: 'hello', perTurnField: 'x' })]);
+    });
+    act(() => {
+      result.current.turnActionHandlers.onAddTurn('case-1');
+    });
+
+    expect(asRows(result.current.getCaseRows('case-1'))[1].data).toEqual({ shared: 'hello' });
+  });
+
+  test('regression: should keep the shared field values when the original first turn is deleted', () => {
+    const { result } = setup();
+
+    act(() => {
+      result.current.setServerRows([row('case-1', { shared: 'hello', perTurnField: 'x' })]);
+    });
+    act(() => {
+      result.current.turnActionHandlers.onAddTurn('case-1');
+    });
+
+    const originalFirstTurn = asRows(result.current.getCaseRows('case-1'))[0];
+    act(() => {
+      result.current.turnActionHandlers.onDeleteTurn({
+        ...originalFirstTurn,
+        rowType: GridRowType.TURN,
+        groupKey: 'case-1',
+      } as GroupedGridRow);
+    });
+
+    const remaining = asRows(result.current.getCaseRows('case-1'));
+    expect(remaining).toHaveLength(1);
+    expect(remaining[0].data.shared).toBe('hello');
   });
 
   test('should renumber the remaining turns contiguously after deleting a middle turn', () => {
@@ -191,7 +228,7 @@ describe('useTurnGroupGrid', () => {
   });
 
   test('should be a no-op when moving the first turn up (boundary)', () => {
-    const { result } = setup();
+    const { result, onDirtyChange } = setup();
 
     act(() => {
       result.current.setServerRows([row('case-1', { shared: 'a' }, 0), row('case-1', { shared: 'b' }, 1)]);
@@ -208,10 +245,14 @@ describe('useTurnGroupGrid', () => {
     });
 
     expect(asRows(result.current.getCaseRows('case-1')).map((r) => r.data)).toEqual([{ shared: 'a' }, { shared: 'b' }]);
+    // Nothing moved, so the case must not be marked dirty — otherwise the view offers Save/Discard
+    // for a change that never happened.
+    expect(onDirtyChange).not.toHaveBeenCalled();
+    expect(result.current.getDirtyRows()).toEqual([]);
   });
 
   test('should be a no-op when moving the last turn down (boundary)', () => {
-    const { result } = setup();
+    const { result, onDirtyChange } = setup();
 
     act(() => {
       result.current.setServerRows([row('case-1', { shared: 'a' }, 0), row('case-1', { shared: 'b' }, 1)]);
@@ -228,6 +269,8 @@ describe('useTurnGroupGrid', () => {
     });
 
     expect(asRows(result.current.getCaseRows('case-1')).map((r) => r.data)).toEqual([{ shared: 'a' }, { shared: 'b' }]);
+    expect(onDirtyChange).not.toHaveBeenCalled();
+    expect(result.current.getDirtyRows()).toEqual([]);
   });
 
   test('should track dirty rows per case id, firing onDirtyChange, and clear them via clearDirty', () => {

@@ -5,7 +5,10 @@ import { FC, useCallback } from 'react';
 import { DialSwitch } from '@epam/ai-dial-ui-kit';
 
 import { ContentType } from '@/src/components/TestSuites/constants/content-type';
-import { getDefaultContentForType } from '@/src/components/TestSuites/utils/body-content';
+import {
+  getContentForJsonataExpression,
+  getJsonataExpressionForContent,
+} from '@/src/components/TestSuites/utils/body-content';
 import { JsonAtaI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
@@ -22,7 +25,7 @@ const JsonataToggle: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
 
   const onChange = useCallback(
     (value: boolean) => {
-      const { content: __content, jsonataContent: __jsonataContent, ...restBody } = body ?? {};
+      const { content, jsonataContent, ...restBody } = body ?? {};
 
       onChangeTestSuite({
         ...testSuite,
@@ -30,10 +33,8 @@ const JsonataToggle: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
           ...testSuite.requestTemplate,
           body: value
             ? // Turn-on leaves `contentType` untouched — normalizing it here would be a hidden
-              // side effect on a field the user did not touch (design D1a). Seeded with `{}`
-              // rather than `''` (design D14) so the empty state is reached only by clearing
-              // the editor by hand, not by every fresh turn-on.
-              { ...restBody, jsonataContent: '{}' }
+              // side effect on a field the user did not touch (design D1a).
+              { ...restBody, jsonataContent: getJsonataExpressionForContent(content) }
             : // Turn-off must hand the body to an editor that can actually render it. An absent
               // `contentType` falls through BodyTab to FormDataGrid, but ContentTypeSelect has been
               // *displaying* `application/json` for that case all along — so normalize it here to
@@ -41,7 +42,7 @@ const JsonataToggle: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
               {
                 ...restBody,
                 contentType: restBody.contentType ?? ContentType.JSON,
-                content: getDefaultContentForType(restBody.contentType),
+                content: getContentForJsonataExpression(jsonataContent, restBody.contentType),
               },
         },
       });

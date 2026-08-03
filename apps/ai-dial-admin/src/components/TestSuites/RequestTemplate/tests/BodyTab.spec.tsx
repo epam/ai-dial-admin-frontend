@@ -1,6 +1,6 @@
 import { createRef } from 'react';
 
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, getDefaultNormalizer, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 
 import { ContentType } from '@/src/components/TestSuites/constants/content-type';
@@ -397,6 +397,24 @@ describe('BodyTab', () => {
       );
 
       expect(screen.getByText('"$sum(items.price)"')).toBeInTheDocument();
+    });
+
+    test('shows the JSON content carried over by the toggle', () => {
+      const carried = JSON.stringify({ model: 'gpt-4' }, null, 4);
+
+      render(
+        <BodyTab
+          selectedTestSuiteId={SELECTED_TEST_SUITE_ID}
+          template={createTemplate({ body: { contentType: ContentType.JSON, jsonataContent: carried } })}
+          changeTemplate={mockChangeTemplate}
+        />,
+      );
+
+      expect(
+        screen.getByText(JSON.stringify(carried), {
+          normalizer: getDefaultNormalizer({ collapseWhitespace: false }),
+        }),
+      ).toBeInTheDocument();
     });
 
     test('renders JsonataEditor even when contentType is form-data (stranded-user case)', () => {
