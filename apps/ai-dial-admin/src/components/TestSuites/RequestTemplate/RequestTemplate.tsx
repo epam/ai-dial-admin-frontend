@@ -12,6 +12,7 @@ import { EntityViewTab, getTestSuiteRequestTemplateTabs } from '@/src/utils/tabs
 import TabsContent, { TabsContentRef } from './tabs/TabsContent';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import ContentTypeSelect from './components/ContentTypeSelect';
+import JsonataToggle from './components/JsonataToggle';
 import TemplateVariablesDoc from './components/TemplateVariablesDoc';
 
 interface Props {
@@ -33,8 +34,11 @@ const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
     tabsContentRef.current?.add?.();
   }, []);
 
-  const isBodyFormData =
-    activeTab === EntityViewTab.Body && testSuite.requestTemplate?.body?.contentType !== ContentType.JSON;
+  const body = testSuite.requestTemplate?.body;
+  const isJsonataMode = body?.jsonataContent != null;
+  const showJsonataToggle = body?.contentType === ContentType.JSON || isJsonataMode;
+
+  const isBodyFormData = activeTab === EntityViewTab.Body && !isJsonataMode && body?.contentType !== ContentType.JSON;
 
   const showAddButton = activeTab === EntityViewTab.Parameters || activeTab === EntityViewTab.Headers || isBodyFormData;
   const showVariablesDoc = activeTab === EntityViewTab.Body && !isBodyFormData;
@@ -43,7 +47,10 @@ const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
     <div className="flex flex-col size-full gap-2 border border-primary rounded p-4">
       <div className="flex flex-row justify-between items-start mb-3">
         <h3>{t(TestSuitesI18nKey.RequestTemplate)}</h3>
-        <ContentTypeSelect testSuite={testSuite} onChangeTestSuite={onChangeTestSuite} />
+        <div className="flex flex-row items-center gap-4">
+          {showJsonataToggle && <JsonataToggle testSuite={testSuite} onChangeTestSuite={onChangeTestSuite} />}
+          <ContentTypeSelect testSuite={testSuite} onChangeTestSuite={onChangeTestSuite} />
+        </div>
       </div>
 
       <div className="flex flex-row justify-between items-start mb-3">

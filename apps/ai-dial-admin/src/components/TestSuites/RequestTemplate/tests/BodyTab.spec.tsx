@@ -10,6 +10,25 @@ import BodyTab from '../tabs/BodyTab';
 
 let capturedSetSelectedEntity: (body: Record<string, unknown>) => void;
 let capturedChangeContent: (content: FormDataPart[]) => void;
+let capturedJsonataOnChange: (value: string) => void;
+
+vi.mock('@/src/components/Common/JsonataEditor/JsonataEditor', () => ({
+  default: ({ value, onChange, options }: any) => {
+    capturedJsonataOnChange = onChange;
+    return (
+      <div role="textbox" aria-label="JSONata editor">
+        <span>{JSON.stringify(value)}</span>
+        <span>{JSON.stringify(options)}</span>
+        <button type="button" onClick={() => onChange('$sum(items.price)')}>
+          TypeExpr
+        </button>
+        <button type="button" onClick={() => onChange('')}>
+          ClearExpr
+        </button>
+      </div>
+    );
+  },
+}));
 
 vi.mock('@/src/components/EntityTabs/JsonEditor/JsonEditor', () => ({
   default: ({ entity, setSelectedEntity, options }: any) => {
@@ -29,8 +48,13 @@ vi.mock('@/src/components/EntityTabs/JsonEditor/JsonEditor', () => ({
 vi.mock('@/src/components/TestSuites/RequestTemplate/components/FormDataGrid', async () => {
   const { forwardRef, useImperativeHandle } = await import('react');
   const { FormDataType } = await import('@/src/models/form-data');
+  const { expect: expectFn } = await import('vitest');
   return {
     default: forwardRef(({ content, changeContent, hideAddButton }: any, ref: any) => {
+      // Guards the D1b regression: FormDataGrid is typed `content: FormDataPart[]` and silently
+      // reports itself empty for a truthy non-array (see design D1b) — so whenever this mock
+      // renders, in place of the real grid, the content it received must always be an array.
+      expectFn(Array.isArray(content)).toBe(true);
       capturedChangeContent = changeContent;
       useImperativeHandle(ref, () => ({
         add: () => changeContent([...(content || []), { name: '', value: '', type: FormDataType.Text }]),
@@ -47,6 +71,8 @@ vi.mock('@/src/components/TestSuites/RequestTemplate/components/FormDataGrid', a
     }),
   };
 });
+
+const SELECTED_TEST_SUITE_ID = 'suite-1';
 
 const createTemplate = (overrides?: Partial<TestSuiteRequestTemplate>): TestSuiteRequestTemplate => ({
   urlTemplate: '/api/test',
@@ -68,6 +94,7 @@ describe('BodyTab', () => {
     test('renders JsonEditor when body.contentType is JSON', () => {
       render(
         <BodyTab
+          selectedTestSuiteId={SELECTED_TEST_SUITE_ID}
           template={createTemplate({ body: { contentType: ContentType.JSON, content: {} } })}
           changeTemplate={mockChangeTemplate}
         />,
@@ -79,6 +106,7 @@ describe('BodyTab', () => {
     test('passes template body content to JsonEditor entity', () => {
       render(
         <BodyTab
+          selectedTestSuiteId={SELECTED_TEST_SUITE_ID}
           template={createTemplate({ body: { contentType: ContentType.JSON, content: { foo: 'bar' } } })}
           changeTemplate={mockChangeTemplate}
         />,
@@ -90,6 +118,7 @@ describe('BodyTab', () => {
     test('passes empty object to JsonEditor when body content is undefined', () => {
       render(
         <BodyTab
+          selectedTestSuiteId={SELECTED_TEST_SUITE_ID}
           template={createTemplate({ body: { contentType: ContentType.JSON } })}
           changeTemplate={mockChangeTemplate}
         />,
@@ -101,6 +130,7 @@ describe('BodyTab', () => {
     test('passes stickyScroll disabled option to JsonEditor', () => {
       render(
         <BodyTab
+          selectedTestSuiteId={SELECTED_TEST_SUITE_ID}
           template={createTemplate({ body: { contentType: ContentType.JSON, content: {} } })}
           changeTemplate={mockChangeTemplate}
         />,
@@ -116,7 +146,13 @@ describe('BodyTab', () => {
         headers: [{ key: 'h', value: 'v' }],
       });
 
-      render(<BodyTab template={template} changeTemplate={mockChangeTemplate} />);
+      render(
+        <BodyTab
+          selectedTestSuiteId={SELECTED_TEST_SUITE_ID}
+          template={template}
+          changeTemplate={mockChangeTemplate}
+        />,
+      );
 
       fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
 
@@ -136,7 +172,13 @@ describe('BodyTab', () => {
         body: { contentType: ContentType.JSON, content: {} },
       });
 
-      render(<BodyTab template={template} changeTemplate={mockChangeTemplate} />);
+      render(
+        <BodyTab
+          selectedTestSuiteId={SELECTED_TEST_SUITE_ID}
+          template={template}
+          changeTemplate={mockChangeTemplate}
+        />,
+      );
       fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
 
       const calledWith = mockChangeTemplate.mock.calls[0][0];
@@ -148,6 +190,7 @@ describe('BodyTab', () => {
     test('provides setSelectedEntity callback to JsonEditor', () => {
       render(
         <BodyTab
+          selectedTestSuiteId={SELECTED_TEST_SUITE_ID}
           template={createTemplate({ body: { contentType: ContentType.JSON, content: {} } })}
           changeTemplate={mockChangeTemplate}
         />,
@@ -159,7 +202,13 @@ describe('BodyTab', () => {
     test('calls changeTemplate with complex body object when setSelectedEntity is invoked', () => {
       const template = createTemplate({ body: { contentType: ContentType.JSON, content: {} } });
 
-      render(<BodyTab template={template} changeTemplate={mockChangeTemplate} />);
+      render(
+        <BodyTab
+          selectedTestSuiteId={SELECTED_TEST_SUITE_ID}
+          template={template}
+          changeTemplate={mockChangeTemplate}
+        />,
+      );
 
       const complexBody = { nested: { deep: [1, 2, 3] }, flag: true };
       capturedSetSelectedEntity(complexBody);
@@ -175,6 +224,7 @@ describe('BodyTab', () => {
     test('renders FormDataGrid when body.contentType is FormData', () => {
       render(
         <BodyTab
+          selectedTestSuiteId={SELECTED_TEST_SUITE_ID}
           template={createTemplate({ body: { contentType: ContentType.FormData, content: [] } })}
           changeTemplate={mockChangeTemplate}
         />,
@@ -186,6 +236,7 @@ describe('BodyTab', () => {
     test('passes hideAddButton to FormDataGrid', () => {
       const { container } = render(
         <BodyTab
+          selectedTestSuiteId={SELECTED_TEST_SUITE_ID}
           template={createTemplate({ body: { contentType: ContentType.FormData, content: [] } })}
           changeTemplate={mockChangeTemplate}
         />,
@@ -198,7 +249,14 @@ describe('BodyTab', () => {
       const ref = createRef<{ add: () => void }>();
       const template = createTemplate({ body: { contentType: ContentType.FormData, content: [] } });
 
-      render(<BodyTab ref={ref} template={template} changeTemplate={mockChangeTemplate} />);
+      render(
+        <BodyTab
+          ref={ref}
+          selectedTestSuiteId={SELECTED_TEST_SUITE_ID}
+          template={template}
+          changeTemplate={mockChangeTemplate}
+        />,
+      );
 
       ref.current?.add();
 
@@ -215,7 +273,14 @@ describe('BodyTab', () => {
       const ref = createRef<{ add: () => void }>();
       const template = createTemplate({ body: { contentType: ContentType.JSON, content: {} } });
 
-      render(<BodyTab ref={ref} template={template} changeTemplate={mockChangeTemplate} />);
+      render(
+        <BodyTab
+          ref={ref}
+          selectedTestSuiteId={SELECTED_TEST_SUITE_ID}
+          template={template}
+          changeTemplate={mockChangeTemplate}
+        />,
+      );
 
       ref.current?.add();
 
@@ -226,6 +291,7 @@ describe('BodyTab', () => {
       const formContent: FormDataPart[] = [{ name: 'field1', type: FormDataType.Text, value: 'val1' }];
       render(
         <BodyTab
+          selectedTestSuiteId={SELECTED_TEST_SUITE_ID}
           template={createTemplate({ body: { contentType: ContentType.FormData, content: formContent } })}
           changeTemplate={mockChangeTemplate}
         />,
@@ -237,6 +303,7 @@ describe('BodyTab', () => {
     test('passes empty array to FormDataGrid when body content is undefined', () => {
       render(
         <BodyTab
+          selectedTestSuiteId={SELECTED_TEST_SUITE_ID}
           template={createTemplate({ body: { contentType: ContentType.FormData } })}
           changeTemplate={mockChangeTemplate}
         />,
@@ -251,7 +318,13 @@ describe('BodyTab', () => {
         urlTemplate: '/api',
       });
 
-      render(<BodyTab template={template} changeTemplate={mockChangeTemplate} />);
+      render(
+        <BodyTab
+          selectedTestSuiteId={SELECTED_TEST_SUITE_ID}
+          template={template}
+          changeTemplate={mockChangeTemplate}
+        />,
+      );
 
       fireEvent.click(screen.getByRole('button', { name: 'AddPart' }));
 
@@ -272,7 +345,13 @@ describe('BodyTab', () => {
         body: { contentType: ContentType.FormData, content: [] },
       });
 
-      render(<BodyTab template={template} changeTemplate={mockChangeTemplate} />);
+      render(
+        <BodyTab
+          selectedTestSuiteId={SELECTED_TEST_SUITE_ID}
+          template={template}
+          changeTemplate={mockChangeTemplate}
+        />,
+      );
       fireEvent.click(screen.getByRole('button', { name: 'AddPart' }));
 
       const calledWith = mockChangeTemplate.mock.calls[0][0];
@@ -283,12 +362,180 @@ describe('BodyTab', () => {
     test('provides changeContent callback to FormDataGrid', () => {
       render(
         <BodyTab
+          selectedTestSuiteId={SELECTED_TEST_SUITE_ID}
           template={createTemplate({ body: { contentType: ContentType.FormData, content: [] } })}
           changeTemplate={mockChangeTemplate}
         />,
       );
 
       expect(capturedChangeContent).toBeInstanceOf(Function);
+    });
+  });
+
+  describe('JSONata content type', () => {
+    test('renders JsonataEditor when body.jsonataContent is present', () => {
+      render(
+        <BodyTab
+          selectedTestSuiteId={SELECTED_TEST_SUITE_ID}
+          template={createTemplate({ body: { contentType: ContentType.JSON, jsonataContent: '$sum(x)' } })}
+          changeTemplate={mockChangeTemplate}
+        />,
+      );
+
+      expect(screen.getByRole('textbox', { name: 'JSONata editor' })).toBeInTheDocument();
+      expect(screen.queryByRole('application', { name: 'JSON editor' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('region', { name: 'Form data grid' })).not.toBeInTheDocument();
+    });
+
+    test('seeds the editor with the jsonataContent text', () => {
+      render(
+        <BodyTab
+          selectedTestSuiteId={SELECTED_TEST_SUITE_ID}
+          template={createTemplate({ body: { contentType: ContentType.JSON, jsonataContent: '$sum(items.price)' } })}
+          changeTemplate={mockChangeTemplate}
+        />,
+      );
+
+      expect(screen.getByText('"$sum(items.price)"')).toBeInTheDocument();
+    });
+
+    test('renders JsonataEditor even when contentType is form-data (stranded-user case)', () => {
+      render(
+        <BodyTab
+          selectedTestSuiteId={SELECTED_TEST_SUITE_ID}
+          template={createTemplate({ body: { contentType: ContentType.FormData, jsonataContent: '$sum(x)' } })}
+          changeTemplate={mockChangeTemplate}
+        />,
+      );
+
+      expect(screen.getByRole('textbox', { name: 'JSONata editor' })).toBeInTheDocument();
+      expect(screen.queryByRole('region', { name: 'Form data grid' })).not.toBeInTheDocument();
+    });
+
+    test('renders JsonataEditor even when contentType is absent (stranded-user case)', () => {
+      render(
+        <BodyTab
+          selectedTestSuiteId={SELECTED_TEST_SUITE_ID}
+          template={createTemplate({ body: { jsonataContent: '$sum(x)' } })}
+          changeTemplate={mockChangeTemplate}
+        />,
+      );
+
+      expect(screen.getByRole('textbox', { name: 'JSONata editor' })).toBeInTheDocument();
+      expect(screen.queryByRole('region', { name: 'Form data grid' })).not.toBeInTheDocument();
+    });
+
+    test('passes stickyScroll disabled option to JsonataEditor', () => {
+      render(
+        <BodyTab
+          selectedTestSuiteId={SELECTED_TEST_SUITE_ID}
+          template={createTemplate({ body: { contentType: ContentType.JSON, jsonataContent: '' } })}
+          changeTemplate={mockChangeTemplate}
+        />,
+      );
+
+      expect(screen.getByText('{"stickyScroll":{"enabled":false}}')).toBeInTheDocument();
+    });
+
+    test('typing writes jsonataContent and leaves content absent', () => {
+      const template = createTemplate({
+        body: { contentType: ContentType.JSON, jsonataContent: '' },
+        urlTemplate: '/url',
+        headers: [{ key: 'h', value: 'v' }],
+      });
+
+      render(
+        <BodyTab
+          selectedTestSuiteId={SELECTED_TEST_SUITE_ID}
+          template={template}
+          changeTemplate={mockChangeTemplate}
+        />,
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'TypeExpr' }));
+
+      expect(mockChangeTemplate).toHaveBeenCalledTimes(1);
+      const calledBody = mockChangeTemplate.mock.calls[0][0].body;
+
+      expect(calledBody.jsonataContent).toBe('$sum(items.price)');
+      expect('content' in calledBody).toBe(false);
+    });
+
+    test('clearing the editor keeps JSONata mode', () => {
+      const template = createTemplate({ body: { contentType: ContentType.JSON, jsonataContent: 'existing' } });
+
+      const { rerender } = render(
+        <BodyTab
+          selectedTestSuiteId={SELECTED_TEST_SUITE_ID}
+          template={template}
+          changeTemplate={mockChangeTemplate}
+        />,
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'ClearExpr' }));
+
+      const clearedBody = mockChangeTemplate.mock.calls[0][0].body;
+      expect(clearedBody.jsonataContent).toBe('');
+
+      rerender(
+        <BodyTab
+          selectedTestSuiteId={SELECTED_TEST_SUITE_ID}
+          template={{ ...template, body: clearedBody }}
+          changeTemplate={mockChangeTemplate}
+        />,
+      );
+
+      expect(screen.getByRole('textbox', { name: 'JSONata editor' })).toBeInTheDocument();
+    });
+
+    test('preserves other template fields when jsonataContent changes', () => {
+      const template = createTemplate({
+        urlTemplate: '/my-url',
+        headers: [{ key: 'auth', value: 'token' }],
+        queryParams: [{ key: 'q', value: 'search' }],
+        body: { contentType: ContentType.JSON, jsonataContent: '' },
+      });
+
+      render(
+        <BodyTab
+          selectedTestSuiteId={SELECTED_TEST_SUITE_ID}
+          template={template}
+          changeTemplate={mockChangeTemplate}
+        />,
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'TypeExpr' }));
+
+      const calledWith = mockChangeTemplate.mock.calls[0][0];
+      expect(calledWith.urlTemplate).toBe('/my-url');
+      expect(calledWith.headers).toEqual([{ key: 'auth', value: 'token' }]);
+      expect(calledWith.queryParams).toEqual([{ key: 'q', value: 'search' }]);
+    });
+
+    test('captures the onChange callback given to JsonataEditor', () => {
+      render(
+        <BodyTab
+          selectedTestSuiteId={SELECTED_TEST_SUITE_ID}
+          template={createTemplate({ body: { contentType: ContentType.JSON, jsonataContent: '' } })}
+          changeTemplate={mockChangeTemplate}
+        />,
+      );
+
+      expect(capturedJsonataOnChange).toBeInstanceOf(Function);
+    });
+
+    test('ref.add is a no-op in JSONata mode', () => {
+      const ref = createRef<{ add: () => void }>();
+      const template = createTemplate({ body: { contentType: ContentType.JSON, jsonataContent: '$sum(x)' } });
+
+      render(
+        <BodyTab
+          ref={ref}
+          selectedTestSuiteId={SELECTED_TEST_SUITE_ID}
+          template={template}
+          changeTemplate={mockChangeTemplate}
+        />,
+      );
+      ref.current?.add();
+
+      expect(mockChangeTemplate).not.toHaveBeenCalled();
     });
   });
 });

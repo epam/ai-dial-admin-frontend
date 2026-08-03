@@ -2222,6 +2222,7 @@ export default {
     UseCase: 'Use Case',
     Expression: 'Expression',
     ResultType: 'Result Type',
+    ToggleLabel: 'JSONata',
   },
   ActionMenuOperation: {
     Delete: 'Delete',

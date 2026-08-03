@@ -2,6 +2,7 @@
 
 import { Dispatch, forwardRef, SetStateAction, useCallback, useImperativeHandle, useMemo, useRef } from 'react';
 
+import JsonataEditor from '@/src/components/Common/JsonataEditor/JsonataEditor';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { ContentType } from '@/src/components/TestSuites/constants/content-type';
 import FormDataGrid, { FormDataGridRef } from '@/src/components/TestSuites/RequestTemplate/components/FormDataGrid';
@@ -19,6 +20,7 @@ interface Props {
 }
 
 const BodyTab = forwardRef<BodyTabRef, Props>(({ selectedTestSuiteId, template, changeTemplate }, ref) => {
+  const isJsonataContent = template.body?.jsonataContent != null;
   const isJsonContent = useMemo(() => template.body?.contentType === ContentType.JSON, [template.body?.contentType]);
   const formDataGridRef = useRef<FormDataGridRef>(null);
 
@@ -29,6 +31,21 @@ const BodyTab = forwardRef<BodyTabRef, Props>(({ selectedTestSuiteId, template, 
         body: {
           ...template.body,
           content,
+        },
+      });
+    },
+    [changeTemplate, template],
+  );
+
+  const onChangeJsonata = useCallback(
+    (jsonataContent: string) => {
+      const { content: __content, ...restBody } = template.body ?? {};
+
+      changeTemplate({
+        ...template,
+        body: {
+          ...restBody,
+          jsonataContent,
         },
       });
     },
@@ -52,15 +69,21 @@ const BodyTab = forwardRef<BodyTabRef, Props>(({ selectedTestSuiteId, template, 
     ref,
     () => ({
       add: () => {
-        if (!isJsonContent) formDataGridRef.current?.add();
+        if (!isJsonContent && !isJsonataContent) formDataGridRef.current?.add();
       },
     }),
-    [isJsonContent],
+    [isJsonContent, isJsonataContent],
   );
 
   return (
     <div className="w-full h-[350px]">
-      {isJsonContent ? (
+      {isJsonataContent ? (
+        <JsonataEditor
+          value={template.body?.jsonataContent ?? ''}
+          onChange={onChangeJsonata}
+          options={{ stickyScroll: { enabled: false } }}
+        />
+      ) : isJsonContent ? (
         <JsonEditor
           entity={(template.body?.content || {}) as Record<string, unknown>}
           setSelectedEntity={onChangeJson as Dispatch<SetStateAction<Record<string, unknown>>>}

@@ -27,6 +27,17 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
       {label}
     </button>
   ),
+  DialSwitch: ({ switchId, label, isOn, onChange }: any) => (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={!!isOn}
+      aria-label={typeof label === 'string' ? label : switchId}
+      onClick={() => onChange?.(!isOn)}
+    >
+      {label}
+    </button>
+  ),
 }));
 
 vi.mock('@tabler/icons-react', () => ({
@@ -235,5 +246,84 @@ describe('RequestTemplate', () => {
     );
 
     expect(screen.getByText('Suite: suite-42')).toBeInTheDocument();
+  });
+
+  describe('JSONata toggle', () => {
+    test('shows the toggle when Body tab is JSON', () => {
+      render(
+        <RequestTemplate
+          testSuite={createTestSuite({
+            requestTemplate: {
+              urlTemplate: '/api',
+              body: { contentType: ContentType.JSON, content: {} },
+              headers: [],
+              queryParams: [],
+            },
+          })}
+          onChangeTestSuite={mockOnChangeTestSuite}
+        />,
+      );
+
+      expect(screen.getByRole('switch')).toBeInTheDocument();
+      expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'false');
+    });
+
+    test('hides the toggle for form-data with no jsonataContent', () => {
+      render(
+        <RequestTemplate
+          testSuite={createTestSuite({
+            requestTemplate: {
+              urlTemplate: '/api',
+              body: { contentType: ContentType.FormData, content: [] },
+              headers: [],
+              queryParams: [],
+            },
+          })}
+          onChangeTestSuite={mockOnChangeTestSuite}
+        />,
+      );
+
+      expect(screen.queryByRole('switch')).not.toBeInTheDocument();
+    });
+
+    test('shows the toggle on when jsonataContent is present under form-data contentType (stranded-user case)', () => {
+      render(
+        <RequestTemplate
+          testSuite={createTestSuite({
+            requestTemplate: {
+              urlTemplate: '/api',
+              body: { contentType: ContentType.FormData, jsonataContent: '$sum(items.price)' },
+              headers: [],
+              queryParams: [],
+            },
+          })}
+          onChangeTestSuite={mockOnChangeTestSuite}
+        />,
+      );
+
+      expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'true');
+      expect(screen.queryByRole('button', { name: ButtonsI18nKey.Add })).not.toBeInTheDocument();
+      expect(screen.getByLabelText('template-variables-doc')).toBeInTheDocument();
+    });
+
+    test('shows the toggle on when jsonataContent is present with no contentType (stranded-user case)', () => {
+      render(
+        <RequestTemplate
+          testSuite={createTestSuite({
+            requestTemplate: {
+              urlTemplate: '/api',
+              body: { jsonataContent: '$sum(items.price)' },
+              headers: [],
+              queryParams: [],
+            },
+          })}
+          onChangeTestSuite={mockOnChangeTestSuite}
+        />,
+      );
+
+      expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'true');
+      expect(screen.queryByRole('button', { name: ButtonsI18nKey.Add })).not.toBeInTheDocument();
+      expect(screen.getByLabelText('template-variables-doc')).toBeInTheDocument();
+    });
   });
 });

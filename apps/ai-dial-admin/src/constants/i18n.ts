@@ -2202,6 +2202,7 @@ export enum JsonAtaI18nKey {
   UseCase = 'JsonAta.UseCase',
   Expression = 'JsonAta.Expression',
   ResultType = 'JsonAta.ResultType',
+  ToggleLabel = 'JsonAta.ToggleLabel',
 }
 
 export enum QueryBuilderI18nKey {

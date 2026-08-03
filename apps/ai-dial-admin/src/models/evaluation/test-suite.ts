@@ -126,6 +126,7 @@ export interface TestSuiteRequestTemplate {
 export interface TestSuiteRequestTemplateBody {
   contentType?: string;
   content?: Record<string, unknown> | FormDataPart[];
+  jsonataContent?: string;
 }
 
 export interface TestSuiteRequestTemplateParam {
@@ -140,11 +141,6 @@ export interface TestCase {
   id: string;
   createdAt: number;
   data?: Record<string, unknown>;
-  /**
-   * Ordered per-turn field maps for a multi-turn case. Coexists with `data` — shared,
-   * test-case-level fields live in `data`; per-turn fields live here, one map per turn.
-   * The two are not mutually exclusive.
-   */
   multiTurnData?: Record<string, unknown>[];
   validationWarnings?: ValidationWarning[];
   enabled?: boolean;
@@ -164,7 +160,6 @@ export interface TestCaseSchema {
   type: TestCaseItemType;
   required: boolean;
   description: string;
-  /** Absent means shared (case-level), not per-turn. */
   perTurn?: boolean;
 }
 

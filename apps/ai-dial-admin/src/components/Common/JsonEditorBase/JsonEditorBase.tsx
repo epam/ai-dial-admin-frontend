@@ -15,12 +15,22 @@ export interface Props {
   options?: editor.IStandaloneEditorConstructionOptions;
   language?: string;
   onEditorMount?: (editor: editor.IStandaloneCodeEditor, monaco: Monaco) => void;
+  onBeforeMount?: (monaco: Monaco) => void;
 }
 
-const JsonEditorBase: FC<Props> = ({ value, onChange, onValidateJSON, options, language = 'json', onEditorMount }) => {
+const JsonEditorBase: FC<Props> = ({
+  value,
+  onChange,
+  onValidateJSON,
+  options,
+  language = 'json',
+  onEditorMount,
+  onBeforeMount,
+}) => {
   const { currentTheme } = useTheme();
   function handleBeforeMount(monaco: Monaco) {
     monaco?.editor?.defineTheme(currentTheme, EDITOR_THEMES_CONFIG[currentTheme as EDITOR_THEMES]);
+    onBeforeMount?.(monaco);
 
     if (language !== 'json') return;
 

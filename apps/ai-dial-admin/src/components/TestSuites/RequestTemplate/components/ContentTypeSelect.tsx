@@ -4,15 +4,13 @@ import { FC, useCallback, useState } from 'react';
 
 import { DialSelect, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
 
-import { ContentType, contentTypes } from '@/src/components/TestSuites/constants/content-type';
+import { contentTypes } from '@/src/components/TestSuites/constants/content-type';
+import { BodyContent, getDefaultContentForType } from '@/src/components/TestSuites/utils/body-content';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
-import { FormDataPart } from '@/src/models/form-data';
 
-type BodyContent = Record<string, unknown> | FormDataPart[];
 type TempContentMap = Record<string, BodyContent>;
-const getDefaultContentForType = (contentType: string): BodyContent => (contentType === ContentType.FormData ? [] : {});
 
 interface Props {
   testSuite: TestSuite;
@@ -40,13 +38,14 @@ const ContentTypeSelect: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
       setTempContent(nextMap);
 
       const contentForNewType: BodyContent = nextMap[newContentType] ?? getDefaultContentForType(newContentType);
+      const { jsonataContent: __jsonataContent, ...restBody } = testSuite.requestTemplate?.body ?? {};
 
       onChangeTestSuite({
         ...testSuite,
         requestTemplate: {
           ...testSuite.requestTemplate,
           body: {
-            ...testSuite.requestTemplate?.body,
+            ...restBody,
             contentType: newContentType,
             content: contentForNewType,
           },

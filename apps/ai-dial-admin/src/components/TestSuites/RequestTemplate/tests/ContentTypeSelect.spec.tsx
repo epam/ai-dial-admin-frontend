@@ -209,4 +209,39 @@ describe('ContentTypeSelect', () => {
     expect(calledSuite.id).toBe('suite-1');
     expect(calledSuite.name).toBe('Test Suite');
   });
+
+  test('clears jsonataContent when switching away from JSON while a JSONata expression is set', () => {
+    const testSuite = createTestSuite({
+      requestTemplate: {
+        urlTemplate: '/api',
+        body: { contentType: ContentType.JSON, jsonataContent: '$sum(items.price)' },
+      },
+    });
+
+    render(<ContentTypeSelect testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
+
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: ContentType.FormData } });
+
+    expect(mockOnChangeTestSuite).toHaveBeenCalledTimes(1);
+    const calledBody = mockOnChangeTestSuite.mock.calls[0][0].requestTemplate.body;
+
+    expect('jsonataContent' in calledBody).toBe(false);
+    expect(calledBody.contentType).toBe(ContentType.FormData);
+    expect(calledBody.content).toEqual([]);
+  });
+
+  test('selecting the already-active content type is still a no-op when jsonataContent is set', () => {
+    const testSuite = createTestSuite({
+      requestTemplate: {
+        urlTemplate: '/api',
+        body: { contentType: ContentType.JSON, jsonataContent: '$sum(items.price)' },
+      },
+    });
+
+    render(<ContentTypeSelect testSuite={testSuite} onChangeTestSuite={mockOnChangeTestSuite} />);
+
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: ContentType.JSON } });
+
+    expect(mockOnChangeTestSuite).not.toHaveBeenCalled();
+  });
 });
