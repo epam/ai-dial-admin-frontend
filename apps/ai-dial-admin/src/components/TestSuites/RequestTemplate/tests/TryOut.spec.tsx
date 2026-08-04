@@ -5,7 +5,7 @@ import { describe, expect, test, vi } from 'vitest';
 
 import { tryOutTestSuite } from '@/src/app/[lang]/test-suites/actions';
 import { convertVariableIntoInitialRequest } from '@/src/components/TestSuites/utils/template-variables';
-import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
 import TryOut from '../components/TryOut';
 
@@ -128,6 +128,11 @@ const deploymentSuite: TestSuite = {
   endpointRef: { method: 'POST', relativeUrlPattern: '/api/search' },
 };
 
+const deploymentSuiteWithRequestColumn: TestSuite = {
+  ...deploymentSuite,
+  responseColumns: [{ name: 'reqFoo', displayName: 'reqFoo', expression: '$request.foo', type: 'STRING' }],
+};
+
 describe('TryOut MCP branch', () => {
   test('shows Tool Arguments Preview label for MCP suite', async () => {
     render(<TryOut testSuite={mcpSuite} />);
@@ -173,6 +178,31 @@ describe('TryOut MCP branch', () => {
 
     await waitFor(() => {
       expect(screen.getByText('JsonEditor:{"foo":"bar"}')).toBeInTheDocument();
+    });
+  });
+});
+
+describe('TryOut Columns tab request binding', () => {
+  test('binds $request to the request body, not the request envelope', async () => {
+    vi.mocked(tryOutTestSuite).mockResolvedValueOnce({
+      success: true,
+      response: {
+        resolvedRequest: { url: '/v1/chat', method: 'POST', body: { foo: 'bar' } },
+        response: { statusCode: 200, body: { ok: true } },
+      },
+    });
+
+    const user = userEvent.setup();
+    render(<TryOut testSuite={deploymentSuiteWithRequestColumn} />);
+
+    const sendButton = await screen.findByRole('button', { name: ButtonsI18nKey.SendRequest });
+    await user.click(sendButton);
+
+    const columnsTab = await screen.findByRole('tab', { name: TabsI18nKey.Columns });
+    await user.click(columnsTab);
+
+    await waitFor(() => {
+      expect(screen.getByText('bar')).toBeInTheDocument();
     });
   });
 });

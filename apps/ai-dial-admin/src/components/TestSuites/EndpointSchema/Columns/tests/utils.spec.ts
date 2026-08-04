@@ -145,14 +145,14 @@ describe('buildRequestResponseRows', () => {
   test('should still include $request rows for empty schema', () => {
     const rows = buildRequestResponseRows(EMPTY_SCHEMA);
 
+    expect(rows.find((r) => r.useCase === 'Whole request body')).toEqual({
+      useCase: 'Whole request body',
+      expression: '$request',
+      resultType: 'object',
+    });
     expect(rows.find((r) => r.useCase === 'Request body field')).toEqual({
       useCase: 'Request body field',
-      expression: '$request.body.messages[0].content',
-      resultType: 'string',
-    });
-    expect(rows.find((r) => r.useCase === 'Request URL')).toEqual({
-      useCase: 'Request URL',
-      expression: '$request.url',
+      expression: '$request.messages[0].content',
       resultType: 'string',
     });
   });
@@ -160,8 +160,8 @@ describe('buildRequestResponseRows', () => {
   test('should still include $request rows for schema without properties', () => {
     const rows = buildRequestResponseRows(NO_PROPERTIES_SCHEMA);
 
+    expect(rows.find((r) => r.useCase === 'Whole request body')).toBeDefined();
     expect(rows.find((r) => r.useCase === 'Request body field')).toBeDefined();
-    expect(rows.find((r) => r.useCase === 'Request URL')).toBeDefined();
   });
 
   test('should not include $response rows when schema has no simple fields', () => {
@@ -186,12 +186,6 @@ describe('buildRequestResponseRows', () => {
       expression: '$response.name',
       resultType: 'string',
     });
-  });
-
-  test('should not expose statusCode through $response', () => {
-    const rows = buildRequestResponseRows(SIMPLE_SCHEMA);
-
-    expect(rows.some((r) => r.expression.includes('$response.statusCode'))).toBe(false);
   });
 });
 

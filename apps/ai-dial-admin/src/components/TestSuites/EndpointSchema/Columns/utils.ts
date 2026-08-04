@@ -49,15 +49,15 @@ export const buildRequestResponseRows = (schema: JSONSchema7): DocumentationRow[
   }
 
   // Unlike other builders, these rows always render (even for an empty/non-object schema)
-  // because $request describes the request envelope, not the response body schema.
+  // because $request describes the request body, not the response body schema this builder derives from.
   rows.push({
-    useCase: 'Request body field',
-    expression: '$request.body.messages[0].content',
-    resultType: 'string',
+    useCase: 'Whole request body',
+    expression: '$request',
+    resultType: 'object',
   });
   rows.push({
-    useCase: 'Request URL',
-    expression: '$request.url',
+    useCase: 'Request body field',
+    expression: '$request.messages[0].content',
     resultType: 'string',
   });
 

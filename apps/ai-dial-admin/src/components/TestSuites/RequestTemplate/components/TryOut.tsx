@@ -203,7 +203,7 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
           <TryOutColumns
             columns={testSuite.responseColumns}
             response={response?.body as Record<string, unknown>}
-            request={resolvedRequest}
+            request={resolvedRequest.body as Record<string, unknown> | undefined}
             isLoading={isRequestSend}
             responseBody={responseBody}
           />

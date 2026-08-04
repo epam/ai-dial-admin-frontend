@@ -45,9 +45,11 @@ describe('TryOutColumns', () => {
   });
 
   test('evaluates columns against a request when the response body is empty/absent', async () => {
-    const columns = [makeColumn({ expression: '$request.url' })];
-    const request = { url: '/v1/chat', method: 'POST' };
-    vi.mocked(evaluateColumns).mockResolvedValueOnce([makeEvaluatedColumn({ expression: '$request.url' })]);
+    const columns = [makeColumn({ expression: '$request.messages[0].content' })];
+    const request = { messages: [{ content: 'Hi' }] };
+    vi.mocked(evaluateColumns).mockResolvedValueOnce([
+      makeEvaluatedColumn({ expression: '$request.messages[0].content' }),
+    ]);
 
     render(<TryOutColumns columns={columns} request={request} responseBody={null} />);
 
