@@ -7,6 +7,13 @@ CVE-2026-45447
 # Remove this once npm bundles undici >=6.27.0 and update Dockerfile to use that npm version.
 CVE-2026-12151 exp:2026-09-01
 
+# brace-expansion@5.0.6 + ip-address@10.2.0 are npm's own bundled deps in node:24-alpine
+# (/usr/local/lib/node_modules/npm/node_modules) — package.json overrides cannot reach them.
+# Latest npm (12.0.2, 2026-07-29) still bundles vulnerable versions (brace-expansion 5.0.7, ip-address 10.2.0).
+# Remove once npm bundles brace-expansion >=5.0.9 and ip-address >=10.3.1.
+CVE-2026-69152 exp:2026-10-01
+CVE-2026-69192 exp:2026-10-01
+
 CVE-2026-13149
 CVE-2026-59869
 CVE-2026-59869
