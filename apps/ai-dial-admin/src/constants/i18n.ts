@@ -1906,6 +1906,10 @@ export enum TestSuitesI18nKey {
   ViewOnlyIncludedInRun = 'TestSuites.ViewOnlyIncludedInRun',
   TurnLabel = 'TestSuites.TurnLabel',
   TurnCountBadge = 'TestSuites.TurnCountBadge',
+  Condition = 'TestSuites.Condition',
+  ConditionHint = 'TestSuites.ConditionHint',
+  ConditionAlwaysRun = 'TestSuites.ConditionAlwaysRun',
+  ConditionSystemFunctionUnavailable = 'TestSuites.ConditionSystemFunctionUnavailable',
   ImportWarnings = 'TestSuites.ImportWarnings',
   ImportWarningRow = 'TestSuites.ImportWarningRow',
 }

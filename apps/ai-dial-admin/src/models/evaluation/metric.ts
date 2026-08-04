@@ -15,6 +15,9 @@ export interface Metric {
   configBindings?: MetricBinding[];
   inputBindings?: MetricBinding[];
 
+  /** Optional JSONata condition evaluated per result row (per turn) over {data, response, turn}; blank/omitted ⇒ always runs. */
+  condition?: string;
+
   // declaration
   metricDeclarationId?: string;
   metricDeclarationVersionId?: string;
