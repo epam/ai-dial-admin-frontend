@@ -9,14 +9,13 @@ import {
 import { getValidityStatusColumn } from '@/src/components/TestSuites/utils/columns';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { Dataset } from '@/src/models/evaluation/dataset';
+import { OnCellChange } from '@/src/models/grid-cell';
 import { TestCaseSchema } from '@/src/models/evaluation/test-suite';
 import { ApplicationRoute } from '@/src/types/routes';
 
-export type onCellChange = (data: Record<string, unknown>, field: string, value: string | number | boolean) => void;
-
 export interface DatasetTestCaseColumnsOptions {
   dataset: Dataset;
-  onCellChange: onCellChange;
+  onCellChange: OnCellChange;
   onToggleExpand: (groupKey: string) => void;
   t?: (key: string) => string;
   isReadOnly?: boolean;

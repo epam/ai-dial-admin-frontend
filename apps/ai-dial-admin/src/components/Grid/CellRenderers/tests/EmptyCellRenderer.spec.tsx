@@ -1,11 +1,11 @@
 import { render } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
-import BlankCellRenderer from '../BlankCellRenderer';
+import EmptyCellRenderer from '../EmptyCellRenderer';
 
-describe('BlankCellRenderer', () => {
+describe('EmptyCellRenderer', () => {
   test('should render nothing', () => {
-    const { container } = render(<BlankCellRenderer />);
+    const { container } = render(<EmptyCellRenderer />);
 
     expect(container.firstChild).toBeNull();
   });

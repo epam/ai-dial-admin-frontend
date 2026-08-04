@@ -1,4 +1,10 @@
-import { GridRowType, GroupedGridRow, TestCaseGroup, TestCaseRow } from '@/src/models/evaluation/test-case-grouping';
+import {
+  CollapsibleTestCase,
+  GridRowType,
+  GroupedGridRow,
+  TestCaseGroup,
+  TestCaseRow,
+} from '@/src/models/evaluation/test-case-grouping';
 import { TestCaseSchema, ValidationWarning } from '@/src/models/evaluation/test-suite';
 
 export const getPerTurnFieldNames = (schema?: TestCaseSchema[] | null): Set<string> =>
@@ -30,6 +36,55 @@ export const readGroupKey = (row: TestCaseRow): string | null => {
   if (readTurnIndex(row) === null) return null;
   const id = row.id;
   return typeof id === 'string' && id !== '' ? id : null;
+};
+
+export const expandTestCasesToRows = <T extends CollapsibleTestCase = CollapsibleTestCase>(
+  testCases?: T[] | null,
+): TestCaseRow[] =>
+  (testCases ?? []).flatMap(({ multiTurnData, data, ...rest }) => {
+    if (!multiTurnData?.length) {
+      return [{ ...rest, data: data ?? {}, ...(data ?? {}) }];
+    }
+
+    return multiTurnData.map((turn, index) => {
+      const merged = { ...(data ?? {}), ...turn };
+      return { ...rest, _turnIndex: index, data: merged, ...merged };
+    });
+  });
+
+export const collapseRowsToCases = <T extends CollapsibleTestCase>(
+  rows: TestCaseRow[],
+  perTurnFields: Set<string>,
+  buildCase: (row: TestCaseRow) => T,
+): T[] => {
+  const groups = new Map<string, TestCaseRow[]>();
+
+  rows.forEach((row) => {
+    const id = String(row.id);
+    const group = groups.get(id);
+    if (group) {
+      group.push(row);
+    } else {
+      groups.set(id, [row]);
+    }
+  });
+
+  return Array.from(groups.values()).map((groupRows) => {
+    const base = groupRows[0];
+    const testCase: T = { ...buildCase(base), data: (base.data as Record<string, unknown> | undefined) ?? {} };
+
+    if (!groupRows.some((row) => readTurnIndex(row) !== null)) {
+      return testCase;
+    }
+
+    const sorted = [...groupRows].sort((a, b) => (readTurnIndex(a) ?? 0) - (readTurnIndex(b) ?? 0));
+    testCase.data = selectSharedFields(sorted[0].data as Record<string, unknown> | undefined, perTurnFields);
+    testCase.multiTurnData = sorted.map((row) =>
+      selectPerTurnFields(row.data as Record<string, unknown> | undefined, perTurnFields),
+    );
+
+    return testCase;
+  });
 };
 
 const sortTurns = (turns: TestCaseRow[]): TestCaseRow[] =>

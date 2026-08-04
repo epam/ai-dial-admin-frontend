@@ -1,8 +1,8 @@
 import { IconArrowDown, IconArrowUp, IconPlus, IconTrash } from '@tabler/icons-react';
 import { ColDef, GridApi, ICellRendererParams, IRowNode, ValueGetterParams } from 'ag-grid-community';
 
-import BlankCellRenderer from '@/src/components/Grid/CellRenderers/BlankCellRenderer';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
+import EmptyCellRenderer from '@/src/components/Grid/CellRenderers/EmptyCellRenderer';
 import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSelectCellRenderer';
 import JsonEditorCellRenderer from '@/src/components/Grid/CellRenderers/JsonEditorCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
@@ -15,11 +15,10 @@ import { ActionMenuOperationI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
 import { GridRowType, GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
+import { OnCellChange } from '@/src/models/grid-cell';
 import { TestCaseItemType } from '@/src/types/evaluation';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isValueTruthy } from '@/src/utils/types';
-
-export type onCellChange = (data: Record<string, unknown>, field: string, value: string | number | boolean) => void;
 
 export interface TurnActionHandlers {
   onAddTurn: (groupKey: string) => void;
@@ -64,7 +63,7 @@ export const getGroupedIdColumn = (): ColDef => ({
     params.data?.rowType === GridRowType.TURN ? '' : (params.data?.id ?? ''),
 });
 
-export const getGroupedNameColumn = (onCell: onCellChange, isReadOnly?: boolean): ColDef => ({
+export const getGroupedNameColumn = (onCell: OnCellChange, isReadOnly?: boolean): ColDef => ({
   field: 'testCaseName',
   colId: 'testCaseName',
   headerName: 'Test case name',
@@ -90,7 +89,7 @@ export const getGroupedNameColumn = (onCell: onCellChange, isReadOnly?: boolean)
 
 export const getGroupedSchemaColumn = (
   param: { name: string; type: TestCaseItemType; perTurn?: boolean },
-  onCell: onCellChange,
+  onCell: OnCellChange,
   ctx: SchemaColumnContext,
   isReadOnly?: boolean,
 ): ColDef => {
@@ -114,7 +113,7 @@ export const getGroupedSchemaColumn = (
         return { component: StackedTurnsCellRenderer };
       }
       if (params.data?.rowType === GridRowType.TURN && !param.perTurn) {
-        return { component: BlankCellRenderer };
+        return { component: EmptyCellRenderer };
       }
 
       if (param.type === TestCaseItemType.FILE) {

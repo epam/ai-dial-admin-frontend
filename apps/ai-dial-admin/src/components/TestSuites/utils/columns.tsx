@@ -37,14 +37,13 @@ import {
   TestCaseSchema,
   TestSuite,
 } from '@/src/models/evaluation/test-suite';
+import { OnCellChange } from '@/src/models/grid-cell';
 import { InputBindingType, MetricBindingType, TestCaseItemType } from '@/src/types/evaluation';
 import { ApplicationRoute } from '@/src/types/routes';
 
-export type onCellChange = (data: Record<string, unknown>, field: string, value: string | number | boolean) => void;
-
 export interface TestCaseColumnsOptions {
   suite: TestSuite;
-  onCellChange: onCellChange;
+  onCellChange: OnCellChange;
   onToggleExpand: (groupKey: string) => void;
   t?: (key: string) => string;
   schema?: TestCaseSchema[];

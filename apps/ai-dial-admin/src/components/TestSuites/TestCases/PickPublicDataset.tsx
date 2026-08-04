@@ -13,8 +13,7 @@ import {
 
 import { getDataset, getDatasets, getTestCases } from '@/src/app/[lang]/datasets/actions';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
-import { getDatasetTestCaseColumns, onCellChange } from '@/src/components/Datasets/utils/columns';
-import { getDatasetTestCaseGridData } from '@/src/components/Datasets/utils/data';
+import { getDatasetTestCaseColumns } from '@/src/components/Datasets/utils/columns';
 import RadioSelectGrid from '@/src/components/Grid/GridView/RadioSelectGrid';
 import { useTurnGroupProjection } from '@/src/components/Grid/hooks/use-turn-group-projection';
 import ListEntities from '@/src/components/ListView/List';
@@ -22,9 +21,11 @@ import { ButtonsI18nKey, EntitiesI18nKey, TestSuitesI18nKey } from '@/src/consta
 import { DATASETS_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { useI18n } from '@/src/locales/client';
 import { Dataset, DatasetTestCase } from '@/src/models/evaluation/dataset';
+import { OnCellChange } from '@/src/models/grid-cell';
+import { expandTestCasesToRows } from '@/src/utils/evaluation/test-case-grouping';
 import { ATTACH_DATASET_STEPS, AttachDatasetTab } from './pick-dataset-constants';
 
-const noopCellChange: onCellChange = () => {};
+const noopCellChange: OnCellChange = () => {};
 
 interface Props {
   isOpen: boolean;
@@ -78,7 +79,7 @@ const PickPublicDataset: FC<Props> = ({ isOpen, onClose, onConfirm, showWarning 
       .finally(() => setIsLoadingDatasets(false));
   }, []);
 
-  const rawRows = useMemo(() => getDatasetTestCaseGridData(testCasesData), [testCasesData]);
+  const rawRows = useMemo(() => expandTestCasesToRows(testCasesData), [testCasesData]);
 
   const { rowData, onToggleExpand, getRowId, getRowHeight, onFilterChanged } = useTurnGroupProjection({ rawRows });
 

@@ -2,12 +2,12 @@ import { GridApi, ICellRendererParams, IRowNode, ValueGetterParams } from 'ag-gr
 import { describe, expect, test, vi } from 'vitest';
 
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
+import EmptyCellRenderer from '@/src/components/Grid/CellRenderers/EmptyCellRenderer';
 import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSelectCellRenderer';
 import JsonEditorCellRenderer from '@/src/components/Grid/CellRenderers/JsonEditorCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
 import StackedTurnsCellRenderer from '@/src/components/Grid/CellRenderers/StackedTurnsCellRenderer';
 import TestCaseNameCellRenderer from '@/src/components/Grid/CellRenderers/TestCaseNameCellRenderer';
-import BlankCellRenderer from '@/src/components/Grid/CellRenderers/BlankCellRenderer';
 import { ActionMenuOperationI18nKey } from '@/src/constants/i18n';
 import { GridRowType, GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
 import { TestCaseItemType } from '@/src/types/evaluation';
@@ -109,7 +109,7 @@ describe('getGroupedSchemaColumn', () => {
     );
   });
 
-  test('should select BlankCellRenderer for a shared field on a TURN row', () => {
+  test('should select EmptyCellRenderer for a shared field on a TURN row', () => {
     const column = getGroupedSchemaColumn(
       { name: 'field', type: TestCaseItemType.STRING, perTurn: false },
       vi.fn(),
@@ -117,7 +117,7 @@ describe('getGroupedSchemaColumn', () => {
     );
 
     expect(column.cellRendererSelector?.(rendererParams({ rowType: GridRowType.TURN }))?.component).toBe(
-      BlankCellRenderer,
+      EmptyCellRenderer,
     );
   });
 
@@ -133,7 +133,7 @@ describe('getGroupedSchemaColumn', () => {
     );
   });
 
-  test('should NOT select BlankCellRenderer for a per-turn field on a TURN row', () => {
+  test('should NOT select EmptyCellRenderer for a per-turn field on a TURN row', () => {
     const column = getGroupedSchemaColumn(
       { name: 'field', type: TestCaseItemType.STRING, perTurn: true },
       vi.fn(),
@@ -141,7 +141,7 @@ describe('getGroupedSchemaColumn', () => {
     );
 
     expect(column.cellRendererSelector?.(rendererParams({ rowType: GridRowType.TURN }))?.component).not.toBe(
-      BlankCellRenderer,
+      EmptyCellRenderer,
     );
   });
 

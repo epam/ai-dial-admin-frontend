@@ -1,31 +1,26 @@
 import { describe, expect, test } from 'vitest';
 
 import { DatasetTestCase } from '@/src/models/evaluation/dataset';
-import {
-  collapseRowsToDatasetTestCases,
-  createNewDatasetTestCaseRow,
-  getDatasetTestCaseGridData,
-  rowToDatasetTestCase,
-} from '../data';
-import { demoteToSingle } from '@/src/utils/evaluation/test-case-grouping';
+import { collapseRowsToDatasetTestCases, createNewDatasetTestCaseRow, rowToDatasetTestCase } from '../data';
+import { demoteToSingle, expandTestCasesToRows } from '@/src/utils/evaluation/test-case-grouping';
 
-describe('getDatasetTestCaseGridData', () => {
+describe('expandTestCasesToRows :: dataset test cases', () => {
   test('should return empty array when input is empty', () => {
-    expect(getDatasetTestCaseGridData([])).toEqual([]);
+    expect(expandTestCasesToRows([])).toEqual([]);
   });
 
   test('should return empty array when input is undefined', () => {
-    expect(getDatasetTestCaseGridData()).toEqual([]);
+    expect(expandTestCasesToRows()).toEqual([]);
   });
 
   test('should return empty array when input is null', () => {
-    expect(getDatasetTestCaseGridData(null)).toEqual([]);
+    expect(expandTestCasesToRows(null)).toEqual([]);
   });
 
   test('should return test case without modification when data is empty', () => {
     const testCases: DatasetTestCase[] = [{ testCaseName: 'Case 1', data: {} }];
 
-    const result = getDatasetTestCaseGridData(testCases);
+    const result = expandTestCasesToRows(testCases);
 
     expect(result).toEqual([{ testCaseName: 'Case 1', data: {} }]);
   });
@@ -33,7 +28,7 @@ describe('getDatasetTestCaseGridData', () => {
   test('should spread data fields into top-level row properties', () => {
     const testCases: DatasetTestCase[] = [{ testCaseName: 'Case 1', data: { prompt: 'hello', expected: 'world' } }];
 
-    const result = getDatasetTestCaseGridData(testCases);
+    const result = expandTestCasesToRows(testCases);
 
     expect(result[0].prompt).toBe('hello');
     expect(result[0].expected).toBe('world');
@@ -46,7 +41,7 @@ describe('getDatasetTestCaseGridData', () => {
       { testCaseName: 'Case 2', data: { b: '2' } },
     ];
 
-    const result = getDatasetTestCaseGridData(testCases);
+    const result = expandTestCasesToRows(testCases);
 
     expect(result.length).toBe(2);
     expect(result[0].a).toBe('1');
@@ -57,7 +52,7 @@ describe('getDatasetTestCaseGridData', () => {
     const testCases: DatasetTestCase[] = [{ testCaseName: 'Case 1', data: { x: 'y' } }];
     const original = JSON.parse(JSON.stringify(testCases));
 
-    getDatasetTestCaseGridData(testCases);
+    expandTestCasesToRows(testCases);
 
     expect(testCases).toEqual(original);
   });
@@ -67,7 +62,7 @@ describe('getDatasetTestCaseGridData', () => {
       { testCaseName: 'Case 1', data: { num: 42, bool: true, arr: [1, 2], obj: { nested: 'v' } } },
     ];
 
-    const result = getDatasetTestCaseGridData(testCases);
+    const result = expandTestCasesToRows(testCases);
 
     expect(result[0].num).toBe(42);
     expect(result[0].bool).toBe(true);
@@ -156,7 +151,7 @@ describe('rowToDatasetTestCase', () => {
   });
 });
 
-describe('getDatasetTestCaseGridData :: multi-turn', () => {
+describe('expandTestCasesToRows :: dataset test cases, multi-turn', () => {
   test('should emit one row per turn, each stamped with the right _turnIndex', () => {
     const testCases: DatasetTestCase[] = [
       {
@@ -167,7 +162,7 @@ describe('getDatasetTestCaseGridData :: multi-turn', () => {
       },
     ];
 
-    const result = getDatasetTestCaseGridData(testCases);
+    const result = expandTestCasesToRows(testCases);
 
     expect(result).toHaveLength(2);
     expect(result[0]._turnIndex).toBe(0);
@@ -186,7 +181,7 @@ describe('getDatasetTestCaseGridData :: multi-turn', () => {
       },
     ];
 
-    const result = getDatasetTestCaseGridData(testCases);
+    const result = expandTestCasesToRows(testCases);
 
     expect(result[0].data).toEqual({ model: 'gpt-4', prompt: 'hi' });
     expect(result[0].model).toBe('gpt-4');
@@ -208,7 +203,7 @@ describe('getDatasetTestCaseGridData :: multi-turn', () => {
       },
     ];
 
-    const result = getDatasetTestCaseGridData(testCases);
+    const result = expandTestCasesToRows(testCases);
 
     expect(result[0].prompt).toBe('turn-value');
     expect(result[0].data).toEqual({ prompt: 'turn-value' });
@@ -217,7 +212,7 @@ describe('getDatasetTestCaseGridData :: multi-turn', () => {
   test('should emit exactly one row with no _turnIndex when multiTurnData is absent', () => {
     const testCases: DatasetTestCase[] = [{ id: 'tc-1', testCaseName: 'Single', data: { prompt: 'only' } }];
 
-    const result = getDatasetTestCaseGridData(testCases);
+    const result = expandTestCasesToRows(testCases);
 
     expect(result).toHaveLength(1);
     expect(result[0]).not.toHaveProperty('_turnIndex');
@@ -228,7 +223,7 @@ describe('getDatasetTestCaseGridData :: multi-turn', () => {
       { id: 'tc-1', testCaseName: 'Single', data: { prompt: 'only' }, multiTurnData: [] },
     ];
 
-    const result = getDatasetTestCaseGridData(testCases);
+    const result = expandTestCasesToRows(testCases);
 
     expect(result).toHaveLength(1);
     expect(result[0]).not.toHaveProperty('_turnIndex');
@@ -247,7 +242,7 @@ describe('collapseRowsToDatasetTestCases', () => {
       multiTurnData: [{ prompt: 'hi' }, { prompt: 'bye', expected: 'ok' }],
     };
 
-    const rows = getDatasetTestCaseGridData([testCase]);
+    const rows = expandTestCasesToRows([testCase]);
 
     rows[1].data = { ...(rows[1].data as Record<string, unknown>), prompt: 'edited' };
     rows[1].prompt = 'edited';
@@ -268,7 +263,7 @@ describe('collapseRowsToDatasetTestCases', () => {
       data: { prompt: 'only' },
     };
 
-    const rows = getDatasetTestCaseGridData([testCase]);
+    const rows = expandTestCasesToRows([testCase]);
     const result = collapseRowsToDatasetTestCases(rows, perTurnFields);
 
     expect(result[0]).not.toHaveProperty('multiTurnData');
@@ -284,7 +279,7 @@ describe('collapseRowsToDatasetTestCases', () => {
       multiTurnData: [{ prompt: 'hi' }, { prompt: 'bye', expected: 'ok' }],
     };
 
-    const rows = getDatasetTestCaseGridData([testCase]);
+    const rows = expandTestCasesToRows([testCase]);
     const remainingRow = demoteToSingle(rows[0]);
 
     const result = collapseRowsToDatasetTestCases([remainingRow], perTurnFields);
@@ -335,7 +330,7 @@ describe('multi-turn regression :: single-turn case round-trips unchanged', () =
       data: { prompt: 'hello', expected: 'world' },
     };
 
-    const rows = getDatasetTestCaseGridData([testCase]);
+    const rows = expandTestCasesToRows([testCase]);
     expect(rows).toHaveLength(1);
     expect(rows[0]).not.toHaveProperty('_turnIndex');
 

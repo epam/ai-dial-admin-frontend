@@ -20,7 +20,6 @@ import { getDatasetTestCaseColumns } from '@/src/components/Datasets/utils/colum
 import {
   collapseRowsToDatasetTestCases,
   createNewDatasetTestCaseRow,
-  getDatasetTestCaseGridData,
   rowToDatasetTestCase,
 } from '@/src/components/Datasets/utils/data';
 import { getTurnActionsColumn } from '@/src/components/Grid/columns/turn-columns';
@@ -36,6 +35,7 @@ import { Dataset, DatasetTestCase } from '@/src/models/evaluation/dataset';
 import { GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
 import { ApplicationRoute } from '@/src/types/routes';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
+import { expandTestCasesToRows } from '@/src/utils/evaluation/test-case-grouping';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import DatasetTestCasesHeader from './Header';
 import { useRouter } from 'next/navigation';
@@ -171,7 +171,7 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, testCasesActionsRef, onDirty
       setIsLoading(true);
       getTestCases(dataset.id, 0, 1000, [], []).then((res) => {
         setIsLoading(false);
-        const rows = res == null || res.content.length === 0 ? [] : getDatasetTestCaseGridData(res.content);
+        const rows = res == null || res.content.length === 0 ? [] : expandTestCasesToRows(res.content);
         turnGrid.setServerRows(rows);
         setColumnDefs([
           ...getDatasetTestCaseColumns({ dataset, onCellChange, onToggleExpand: turnGrid.onToggleExpand, t }),

@@ -6,6 +6,11 @@ export enum GridRowType {
 
 export type TestCaseRow = Record<string, unknown>;
 
+export interface CollapsibleTestCase {
+  data?: Record<string, unknown>;
+  multiTurnData?: Record<string, unknown>[];
+}
+
 export interface TestCaseGroup {
   key: string;
   isMulti: boolean;

@@ -34,12 +34,7 @@ import { useTurnGroupGrid } from '@/src/components/Grid/hooks/use-turn-group-gri
 import ListEntities from '@/src/components/ListView/List';
 import TryOut from '@/src/components/TestSuites/RequestTemplate/components/TryOut';
 import { getTestCaseColumns } from '@/src/components/TestSuites/utils/columns';
-import {
-  collapseRowsToTestCases,
-  createNewTestCaseRow,
-  getTestCaseGridData,
-  rowToTestCase,
-} from '@/src/components/TestSuites/utils/data';
+import { collapseRowsToTestCases, createNewTestCaseRow, rowToTestCase } from '@/src/components/TestSuites/utils/data';
 import { ONE_ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { ApiRoute } from '@/src/constants/api-routes';
@@ -55,6 +50,7 @@ import { GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
 import { TestCase, TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 import { ApplicationRoute } from '@/src/types/routes';
+import { expandTestCasesToRows } from '@/src/utils/evaluation/test-case-grouping';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import HeaderButtons from './Header';
@@ -320,7 +316,7 @@ const TestCasesList: FC<Props> = ({
       getTestCases(datasetId, 0, 1000, [], []).then((res) => {
         if (version !== refreshVersionRef.current) return;
         setIsLoading(false);
-        const rawData = res == null || res.content.length === 0 ? [] : getTestCaseGridData(res?.content || []);
+        const rawData = res == null || res.content.length === 0 ? [] : expandTestCasesToRows(res?.content || []);
         turnGrid.setServerRows(rawData);
         setColumnDefs(buildColumnDefs(activeSchema));
       });
