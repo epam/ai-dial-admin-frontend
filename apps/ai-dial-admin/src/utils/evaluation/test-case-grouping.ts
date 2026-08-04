@@ -172,13 +172,15 @@ const toSingleRow = (group: TestCaseGroup): GroupedGridRow => {
   return { ...turn, id: String(turn.id), rowType: GridRowType.SINGLE, groupKey: group.key };
 };
 
-const toTurnRow = (group: TestCaseGroup, turn: TestCaseRow, index: number): GroupedGridRow => ({
+const toTurnRow = (group: TestCaseGroup, turn: TestCaseRow, index: number, isFlattened: boolean): GroupedGridRow => ({
   ...turn,
   id: String(turn.id),
   rowType: GridRowType.TURN,
   groupKey: group.key,
   turnNumber: index + 1,
   turnCount: group.turns.length,
+  testCaseName: group.testCaseName,
+  isFlattened,
 });
 
 const toGroupRow = (group: TestCaseGroup, expanded: boolean): GroupedGridRow => ({
@@ -208,14 +210,14 @@ export const projectGroupsToGridRows = (
     }
 
     if (isSearching) {
-      group.turns.forEach((turn, index) => rows.push(toTurnRow(group, turn, index)));
+      group.turns.forEach((turn, index) => rows.push(toTurnRow(group, turn, index, true)));
       return;
     }
 
     const expanded = expandedKeys.has(group.key);
     rows.push(toGroupRow(group, expanded));
     if (expanded) {
-      group.turns.forEach((turn, index) => rows.push(toTurnRow(group, turn, index)));
+      group.turns.forEach((turn, index) => rows.push(toTurnRow(group, turn, index, false)));
     }
   });
 

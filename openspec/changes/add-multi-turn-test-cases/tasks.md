@@ -104,6 +104,16 @@
 
   Both are pinned by new tests in `Grid/hooks/tests/use-turn-group-grid.spec.tsx`.
 
+  **Defect reported by the developer after this run — a multi-turn case's name could not be edited at all.** Two independent causes:
+  1. `getGroupedNameColumn` selected the read-only `TestCaseNameCellRenderer` for both `GROUP` and `TURN` rows, so a `GROUP` row offered no editor. Fixed by giving the renderer an editable `GROUP` branch (editor plus badge, ellipsised text when read-only) and keeping the plain `Turn N` label for `TURN` rows.
+  2. Even with an editor, the write was dropped: `onCellChange` routed every non-`data` field (`testCaseName` among them) down the per-turn path, and a `GROUP` row has no `_turnIndex`, so no target row matched. The scope decision now keys off the schema's per-turn fields alone — a per-turn field writes to its own turn, everything else fans out to the whole case — which is what a case-level name needs.
+
+  Pinned by tests in `use-turn-group-grid.spec.tsx`, `turn-columns.spec.tsx`, and `TestCaseNameCellRenderer.spec.tsx`.
+
+  **Follow-up from the same report — a filtered-down turn was unidentifiable.** While a column filter is active the projection drops `GROUP` rows, and both the id and the name column suppressed their value on every `TURN` row, so a filtered grid showed neither the case id nor its name and offered nowhere to rename it. Turn rows emitted by the flattening path now carry `isFlattened`, and both columns render the case identity on those rows: the id as usual, and the name editor with the row's own `Turn N` label where a `GROUP` row would show its turn-count badge. Turn rows nested under a `GROUP` row are unchanged. The id column's `valueGetter` now returns the case id on every row type — display stays the renderer's decision — which also lets an id filter match a turn instead of comparing against an empty string.
+
+  Pinned by tests in `utils/evaluation/tests/test-case-grouping.spec.ts`, `TurnIdCellRenderer.spec.tsx`, `TestCaseNameCellRenderer.spec.tsx`, and `turn-columns.spec.tsx`.
+
   **Scenario results:**
   - Add turn on a single case → GROUP with a `2 turns` badge, auto-expanded, `Turn 1` keeping the original values and an empty `Turn 2`. Verified on both surfaces.
   - Collapsed group stacks one line per turn (3-turn case: 76px = `3*22 + 10`, em dash for empty turns) and blanks those cells when expanded.

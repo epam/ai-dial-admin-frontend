@@ -31,9 +31,21 @@ describe('TurnIdCellRenderer', () => {
     expect(screen.getByText('case-1')).toBeInTheDocument();
   });
 
-  test('should render blank on a TURN row', () => {
+  test('should render blank on a TURN row nested under its GROUP row', () => {
     const { container } = renderId({ id: 'case-1', rowType: GridRowType.TURN, groupKey: 'case-1', turnNumber: 1 });
 
     expect(container.firstChild).toBeNull();
+  });
+
+  test('should render the case id on a flattened TURN row, which has no GROUP row above it', () => {
+    renderId({
+      id: 'case-1',
+      rowType: GridRowType.TURN,
+      groupKey: 'case-1',
+      turnNumber: 1,
+      isFlattened: true,
+    });
+
+    expect(screen.getByText('case-1')).toBeInTheDocument();
   });
 });

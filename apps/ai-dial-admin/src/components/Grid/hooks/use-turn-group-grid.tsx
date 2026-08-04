@@ -116,13 +116,7 @@ export const useTurnGroupGrid = <T,>({
       const rowId = String(rowData.id);
       const isDataField = !structuralFields.includes(field);
 
-      if (isDataField && !perTurnFields.has(field)) {
-        flatRowsRef.current.forEach((row) => {
-          if (String(row.id) !== rowId) return;
-          row[field] = value;
-          if (row.data != null) row.data = { ...(row.data as Record<string, unknown>), [field]: value };
-        });
-      } else {
+      if (perTurnFields.has(field)) {
         const turnIndex = readTurnIndex(rowData);
         const target = flatRowsRef.current.find((row) => String(row.id) === rowId && readTurnIndex(row) === turnIndex);
         if (target) {
@@ -131,6 +125,14 @@ export const useTurnGroupGrid = <T,>({
             target.data = { ...(target.data as Record<string, unknown>), [field]: value };
           }
         }
+      } else {
+        flatRowsRef.current.forEach((row) => {
+          if (String(row.id) !== rowId) return;
+          row[field] = value;
+          if (isDataField && row.data != null) {
+            row.data = { ...(row.data as Record<string, unknown>), [field]: value };
+          }
+        });
       }
 
       dirtyIdsRef.current.add(rowId);

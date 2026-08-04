@@ -3,7 +3,7 @@
 ### Requirement: Test Cases tab displays dataset-scoped test cases
 The system SHALL display a test cases grid in the Test Cases tab of the dataset detail view. Test cases SHALL be fetched from `GET /api/v1/datasets/{datasetId}/test-cases`. The grid columns SHALL be dynamically generated from the dataset's `testCaseSchema`. There SHALL be NO enabled/disabled toggle column (the `enabled` field does not exist in the dataset test case model).
 
-A multi-turn test case SHALL be displayed as a single collapsible group row rather than one row per turn, preceded by a leading expander column. The group row SHALL show the test case name with a turn-count badge. Single-turn test cases SHALL render as one plain row with no expander affordance and no badge, exactly as before.
+A multi-turn test case SHALL be displayed as a single collapsible group row rather than one row per turn, preceded by a leading expander column. The group row SHALL show the test case name — editable exactly as on a single-turn row — with a turn-count badge. Single-turn test cases SHALL render as one plain row with no expander affordance and no badge, exactly as before.
 
 #### Scenario: Test cases grid with schema-defined columns
 - **WHEN** the user navigates to the Test Cases tab of a dataset with schema fields
@@ -39,6 +39,10 @@ Dirty tracking SHALL be per test case, not per grid row, so that an edit to any 
 #### Scenario: Editing one turn marks the whole case dirty
 - **WHEN** the user edits a value on turn 2 of a three-turn case
 - **THEN** that test case is marked dirty and Save persists all three of its turns
+
+#### Scenario: Renaming a multi-turn case
+- **WHEN** the user edits the name on a multi-turn case's group row
+- **THEN** the case is marked dirty and Save persists the case under its new name with all of its turns
 
 ---
 

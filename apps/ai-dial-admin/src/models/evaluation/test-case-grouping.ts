@@ -26,4 +26,5 @@ export interface GroupedGridRow extends TestCaseRow {
   expanded?: boolean;
   turns?: TestCaseRow[];
   turnNumber?: number;
+  isFlattened?: boolean;
 }

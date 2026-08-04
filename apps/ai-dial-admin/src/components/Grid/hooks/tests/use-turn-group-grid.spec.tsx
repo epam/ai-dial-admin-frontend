@@ -302,6 +302,37 @@ describe('useTurnGroupGrid', () => {
     expect(rows.map((r) => r.data.shared)).toEqual(['updated', 'updated']);
   });
 
+  test('should rename every turn of the case when the name is edited on the group row', () => {
+    const { result } = setup();
+
+    act(() => {
+      result.current.setServerRows([row('case-1', { shared: 'a' }, 0), row('case-1', { shared: 'a' }, 1)]);
+    });
+
+    const groupRow = result.current.rowData.find((r) => r.rowType === GridRowType.GROUP) as GroupedGridRow;
+    act(() => {
+      result.current.onCellChange(groupRow, 'testCaseName', 'Renamed');
+    });
+
+    expect(asRows(result.current.getCaseRows('case-1')).map((r) => r.testCaseName)).toEqual(['Renamed', 'Renamed']);
+    expect(result.current.getDirtyRows().map((c) => c.id)).toEqual(['case-1']);
+  });
+
+  test('should keep a renamed group out of the row data map and only in the case rows', () => {
+    const { result } = setup();
+
+    act(() => {
+      result.current.setServerRows([row('case-1', { shared: 'a' }, 0), row('case-1', { shared: 'a' }, 1)]);
+    });
+
+    const groupRow = result.current.rowData.find((r) => r.rowType === GridRowType.GROUP) as GroupedGridRow;
+    act(() => {
+      result.current.onCellChange(groupRow, 'testCaseName', 'Renamed');
+    });
+
+    expect(asRows(result.current.getCaseRows('case-1')).map((r) => r.data)).toEqual([{ shared: 'a' }, { shared: 'a' }]);
+  });
+
   test('should touch only the row with the matching _turnIndex on a per-turn field edit', () => {
     const { result } = setup();
 

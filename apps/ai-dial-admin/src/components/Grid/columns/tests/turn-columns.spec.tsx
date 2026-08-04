@@ -42,28 +42,37 @@ describe('getGroupedIdColumn', () => {
     expect(callValueGetter(column, { id: 'case-1', rowType: GridRowType.SINGLE })).toBe('case-1');
   });
 
-  test('should return an empty string for a TURN row', () => {
+  test('should return the id for a TURN row so an id filter can match a turn', () => {
     const column = getGroupedIdColumn();
 
-    expect(callValueGetter(column, { id: 'case-1', rowType: GridRowType.TURN })).toBe('');
+    expect(callValueGetter(column, { id: 'case-1', rowType: GridRowType.TURN })).toBe('case-1');
   });
 });
 
 describe('getGroupedNameColumn', () => {
-  test('should select TestCaseNameCellRenderer on a GROUP row', () => {
-    const column = getGroupedNameColumn(vi.fn());
+  test('should select an editable TestCaseNameCellRenderer on a GROUP row', () => {
+    const onCell = vi.fn();
+    const column = getGroupedNameColumn(onCell, true);
 
-    expect(column.cellRendererSelector?.(rendererParams({ rowType: GridRowType.GROUP }))?.component).toBe(
-      TestCaseNameCellRenderer,
-    );
+    const selected = column.cellRendererSelector?.(rendererParams({ rowType: GridRowType.GROUP }));
+
+    expect(selected?.component).toBe(TestCaseNameCellRenderer);
+    expect(selected?.params).toEqual(expect.objectContaining({ isReadonly: true }));
+
+    selected?.params?.onChange('Renamed', { id: 'case-1' });
+    expect(onCell).toHaveBeenCalledWith({ id: 'case-1' }, 'testCaseName', 'Renamed');
   });
 
-  test('should select TestCaseNameCellRenderer on a TURN row', () => {
-    const column = getGroupedNameColumn(vi.fn());
+  test('should select TestCaseNameCellRenderer on a TURN row, with the name editor wired for the flattened case', () => {
+    const onCell = vi.fn();
+    const column = getGroupedNameColumn(onCell);
 
-    expect(column.cellRendererSelector?.(rendererParams({ rowType: GridRowType.TURN }))?.component).toBe(
-      TestCaseNameCellRenderer,
-    );
+    const selected = column.cellRendererSelector?.(rendererParams({ rowType: GridRowType.TURN }));
+
+    expect(selected?.component).toBe(TestCaseNameCellRenderer);
+
+    selected?.params?.onChange('Renamed', { id: 'case-1', _turnIndex: 1 });
+    expect(onCell).toHaveBeenCalledWith({ id: 'case-1', _turnIndex: 1 }, 'testCaseName', 'Renamed');
   });
 
   test('should select EditableCellRenderer on a SINGLE row and thread isReadOnly through', () => {

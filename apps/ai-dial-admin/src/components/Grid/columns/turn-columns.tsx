@@ -35,9 +35,6 @@ export interface SchemaColumnContext {
 
 const EXPANDER_COLUMN_WIDTH = 40;
 
-const isGroupOrTurnRow = (rowType: GridRowType | undefined) =>
-  rowType === GridRowType.GROUP || rowType === GridRowType.TURN;
-
 export const getTurnExpanderColumn = (onToggleExpand: (groupKey: string) => void): ColDef => ({
   ...UTILITY_COLUMN,
   colId: EXPANDER_COLUMN_CEL_ID,
@@ -59,33 +56,32 @@ export const getGroupedIdColumn = (): ColDef => ({
   headerName: 'ID',
   cellClass: 'select-none cursor-pointer',
   cellRenderer: TurnIdCellRenderer,
-  valueGetter: (params: ValueGetterParams<GroupedGridRow>) =>
-    params.data?.rowType === GridRowType.TURN ? '' : (params.data?.id ?? ''),
+  valueGetter: (params: ValueGetterParams<GroupedGridRow>) => params.data?.id ?? '',
 });
 
-export const getGroupedNameColumn = (onCell: OnCellChange, isReadOnly?: boolean): ColDef => ({
-  field: 'testCaseName',
-  colId: 'testCaseName',
-  headerName: 'Test case name',
-  editable: false,
-  valueGetter: (params: ValueGetterParams<GroupedGridRow>) => params.data?.testCaseName ?? '',
-  cellRendererSelector: (params: ICellRendererParams<GroupedGridRow>) => {
-    if (isGroupOrTurnRow(params.data?.rowType)) {
-      return { component: TestCaseNameCellRenderer };
-    }
-    return {
-      component: EditableCellRenderer,
-      params: {
-        isReadonly: isReadOnly,
-        hideTriangle: true,
-        skipRequired: true,
-        onChange: (value: string | number, rowData: unknown) => {
-          onCell(rowData as Record<string, unknown>, 'testCaseName', value);
-        },
-      },
-    };
-  },
-});
+export const getGroupedNameColumn = (onCell: OnCellChange, isReadOnly?: boolean): ColDef => {
+  const onChange = (value: string | number, rowData: unknown) => {
+    onCell(rowData as Record<string, unknown>, 'testCaseName', value);
+  };
+
+  return {
+    field: 'testCaseName',
+    colId: 'testCaseName',
+    headerName: 'Test case name',
+    editable: false,
+    valueGetter: (params: ValueGetterParams<GroupedGridRow>) => params.data?.testCaseName ?? '',
+    cellRendererSelector: (params: ICellRendererParams<GroupedGridRow>) => {
+      const rowType = params.data?.rowType;
+      if (rowType === GridRowType.GROUP || rowType === GridRowType.TURN) {
+        return { component: TestCaseNameCellRenderer, params: { isReadonly: isReadOnly, onChange } };
+      }
+      return {
+        component: EditableCellRenderer,
+        params: { isReadonly: isReadOnly, hideTriangle: true, skipRequired: true, onChange },
+      };
+    },
+  };
+};
 
 export const getGroupedSchemaColumn = (
   param: { name: string; type: TestCaseItemType; perTurn?: boolean },

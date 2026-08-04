@@ -71,10 +71,17 @@ Each projected row SHALL have a grid row id unique across the whole grid — the
 
 While any column filter is active, the projection SHALL drop `GROUP` summary rows and emit every turn as its own row, so the grid's native per-column filtering can hide non-matching turns individually.
 
+A turn row emitted this way SHALL be marked as flattened. Because no `GROUP` row survives to carry them, a flattened turn row SHALL show the case's own `id` and name in their columns rather than leaving them blank — otherwise a filtered-down turn is unidentifiable and its case unrenameable. The case `id` SHALL be readable from the id column's value on every row type regardless of what that row displays, so an id filter can match a turn.
+
 #### Scenario: Filtering matches inside a collapsed group
 
 - **WHEN** a column filter is applied that matches only the third turn of a collapsed case
-- **THEN** that turn is shown as a row and the case's other turns are hidden
+- **THEN** that turn is shown as a row, showing its case's id and name, and the case's other turns are hidden
+
+#### Scenario: A case is renamed while a filter is active
+
+- **WHEN** the name is edited on a flattened turn row
+- **THEN** every turn of that case carries the new name, exactly as editing it on the `GROUP` row would
 
 #### Scenario: Clearing the filter restores grouping
 
@@ -156,6 +163,27 @@ Editing a shared field on a `GROUP` row SHALL write the value to every turn of t
 
 - **WHEN** a shared field is set on a single-turn case, a turn is added, and the original first turn is deleted
 - **THEN** the surviving turn still carries the shared value, and the saved case keeps it
+
+### Requirement: The test case name belongs to the case, not to a turn
+
+The name column SHALL render an editable case name on a `GROUP` row and on a `SINGLE` row. Alongside the editor it SHALL show the turn-count badge on a `GROUP` row and the row's own `Turn N` label on a flattened turn row. A turn row nested under its `GROUP` row SHALL show only its `Turn N` label, since the row above already names the case. The editor SHALL fall back to plain ellipsised text where the grid is read-only.
+
+Editing the name SHALL write it to every turn of that case, so a case's turns always agree on their name.
+
+#### Scenario: A multi-turn case is renamed
+
+- **WHEN** the name is edited on a collapsed `GROUP` row
+- **THEN** every turn of that case carries the new name, the case is marked dirty, and the saved case is renamed
+
+#### Scenario: A nested turn row shows its position instead of the name
+
+- **WHEN** a group is expanded
+- **THEN** each `TURN` row's name cell shows its `Turn N` label and offers no name editor
+
+#### Scenario: A flattened turn row names its own case
+
+- **WHEN** a filter flattens a three-turn case
+- **THEN** each of its rows shows the editable case name with its own `Turn N` label beside it
 
 ### Requirement: Editing a turn is preserved regardless of expand state
 

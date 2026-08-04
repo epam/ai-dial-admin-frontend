@@ -362,6 +362,22 @@ describe('projectGroupsToGridRows', () => {
     expect(rows.map((row) => row.turnNumber)).toEqual([1, 2]);
   });
 
+  test('should mark the flattened TURN rows so they can carry the case identity themselves', () => {
+    const rows = projectGroupsToGridRows([multiGroup], new Set(), true);
+
+    expect(rows.map((row) => row.isFlattened)).toEqual([true, true]);
+    expect(rows.map((row) => row.testCaseName)).toEqual(['Multi case', 'Multi case']);
+  });
+
+  test('should not mark the TURN rows of an expanded group as flattened, the GROUP row above carries the identity', () => {
+    const rows = projectGroupsToGridRows([multiGroup], new Set(['multi-1']), false);
+
+    expect(rows.filter((row) => row.rowType === GridRowType.TURN).map((row) => row.isFlattened)).toEqual([
+      false,
+      false,
+    ]);
+  });
+
   test('should always render single cases as SINGLE regardless of expansion or searching', () => {
     const collapsed = projectGroupsToGridRows([singleGroup], new Set(), false);
     const expanded = projectGroupsToGridRows([singleGroup], new Set(['single-1']), false);
