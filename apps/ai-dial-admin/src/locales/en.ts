@@ -2215,6 +2215,7 @@ export default {
     StringFunctions: 'String functions',
     NumericFunctions: 'Numeric functions',
     Playground: 'Online playground',
+    RequestResponseBindings: 'Request & Response Bindings',
     PathNavigation: 'Path Navigation',
     ArrayOperations: 'Array Operations',
     ConditionalsNullSafety: 'Conditionals & Null Safety',

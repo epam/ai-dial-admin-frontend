@@ -1,8 +1,15 @@
 import { JsonAtaI18nKey } from '@/src/constants/i18n';
-import { buildArrayOperationsRows, buildConditionalsRows, buildMathStringRows, buildPathNavigationRows } from './utils';
+import {
+  buildArrayOperationsRows,
+  buildConditionalsRows,
+  buildMathStringRows,
+  buildPathNavigationRows,
+  buildRequestResponseRows,
+} from './utils';
 import { DocumentationGridSection } from './types';
 
 export const GRID_SECTIONS: DocumentationGridSection[] = [
+  { titleKey: JsonAtaI18nKey.RequestResponseBindings, buildRows: buildRequestResponseRows },
   { titleKey: JsonAtaI18nKey.PathNavigation, buildRows: buildPathNavigationRows },
   { titleKey: JsonAtaI18nKey.ArrayOperations, buildRows: buildArrayOperationsRows },
   { titleKey: JsonAtaI18nKey.ConditionalsNullSafety, buildRows: buildConditionalsRows },

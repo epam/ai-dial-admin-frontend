@@ -6,6 +6,7 @@ import {
   buildConditionalsRows,
   buildMathStringRows,
   buildPathNavigationRows,
+  buildRequestResponseRows,
 } from '../utils';
 
 const EMPTY_SCHEMA: JSONSchema7 = { type: 'object' };
@@ -139,6 +140,60 @@ const ARRAY_NO_CHILDREN_SCHEMA: JSONSchema7 = {
     },
   },
 };
+
+describe('buildRequestResponseRows', () => {
+  test('should still include $request rows for empty schema', () => {
+    const rows = buildRequestResponseRows(EMPTY_SCHEMA);
+
+    expect(rows.find((r) => r.useCase === 'Request body field')).toEqual({
+      useCase: 'Request body field',
+      expression: '$request.body.messages[0].content',
+      resultType: 'string',
+    });
+    expect(rows.find((r) => r.useCase === 'Request URL')).toEqual({
+      useCase: 'Request URL',
+      expression: '$request.url',
+      resultType: 'string',
+    });
+  });
+
+  test('should still include $request rows for schema without properties', () => {
+    const rows = buildRequestResponseRows(NO_PROPERTIES_SCHEMA);
+
+    expect(rows.find((r) => r.useCase === 'Request body field')).toBeDefined();
+    expect(rows.find((r) => r.useCase === 'Request URL')).toBeDefined();
+  });
+
+  test('should not include $response rows when schema has no simple fields', () => {
+    const rows = buildRequestResponseRows(EMPTY_SCHEMA);
+
+    expect(rows.find((r) => r.useCase === 'Response field (bare path)')).toBeUndefined();
+    expect(rows.find((r) => r.useCase === 'Same field via $response')).toBeUndefined();
+  });
+
+  test('should include the bare path and equivalent $response row for the same field', () => {
+    const rows = buildRequestResponseRows(SIMPLE_SCHEMA);
+    const bareRow = rows.find((r) => r.useCase === 'Response field (bare path)');
+    const responseRow = rows.find((r) => r.useCase === 'Same field via $response');
+
+    expect(bareRow).toEqual({
+      useCase: 'Response field (bare path)',
+      expression: 'name',
+      resultType: 'string',
+    });
+    expect(responseRow).toEqual({
+      useCase: 'Same field via $response',
+      expression: '$response.name',
+      resultType: 'string',
+    });
+  });
+
+  test('should not expose statusCode through $response', () => {
+    const rows = buildRequestResponseRows(SIMPLE_SCHEMA);
+
+    expect(rows.some((r) => r.expression.includes('$response.statusCode'))).toBe(false);
+  });
+});
 
 describe('buildPathNavigationRows', () => {
   test('should return empty array for empty schema', () => {

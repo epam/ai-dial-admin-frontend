@@ -79,7 +79,7 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
         if (!testCaseId) saveTryoutResponseToStorage(testSuiteId, res.response);
       } else {
         const errorResponse = { response: { error: res?.errorMessage || 'Unknown error', statusCode: 500 } };
-        setResolvedRequest(requestBody || {});
+        setResolvedRequest({ body: requestBody || {} });
         setResponse(errorResponse.response);
         if (!testCaseId) saveTryoutResponseToStorage(testSuiteId, errorResponse as any);
       }
@@ -203,6 +203,7 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
           <TryOutColumns
             columns={testSuite.responseColumns}
             response={response?.body as Record<string, unknown>}
+            request={resolvedRequest}
             isLoading={isRequestSend}
             responseBody={responseBody}
           />

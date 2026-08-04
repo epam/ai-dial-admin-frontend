@@ -2195,6 +2195,7 @@ export enum JsonAtaI18nKey {
   StringFunctions = 'JsonAta.StringFunctions',
   NumericFunctions = 'JsonAta.NumericFunctions',
   Playground = 'JsonAta.Playground',
+  RequestResponseBindings = 'JsonAta.RequestResponseBindings',
   PathNavigation = 'JsonAta.PathNavigation',
   ArrayOperations = 'JsonAta.ArrayOperations',
   ConditionalsNullSafety = 'JsonAta.ConditionalsNullSafety',

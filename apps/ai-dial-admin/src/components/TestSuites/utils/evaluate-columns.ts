@@ -13,6 +13,7 @@ export interface EvaluatedColumn {
 export const evaluateColumns = async (
   columns: ResponseColumn[],
   response: Record<string, unknown>,
+  request?: Record<string, unknown>,
 ): Promise<EvaluatedColumn[]> => {
   return Promise.all(
     columns.map(async (column) => {
@@ -21,7 +22,7 @@ export const evaluateColumns = async (
 
       try {
         const expr = jsonata(column.expression);
-        const evaluated = await expr.evaluate(response);
+        const evaluated = await expr.evaluate(response, { request, response });
         valid = evaluated != null;
         if (!valid) {
           result = '';
