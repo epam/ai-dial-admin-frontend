@@ -19,6 +19,7 @@ const TabsContent: FC<AppRunnerAssetTabsProps> = ({
   runner,
   roles,
   interceptors,
+  globalInterceptors,
   isSkipRefresh,
   onChange,
 }) => {
@@ -56,6 +57,7 @@ const TabsContent: FC<AppRunnerAssetTabsProps> = ({
         <EntityInterceptors
           entity={runner}
           interceptors={interceptors}
+          globalInterceptors={globalInterceptors}
           onChangeEntity={onChange}
           view={ApplicationRoute.AssetsAppRunners}
         />

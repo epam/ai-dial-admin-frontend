@@ -2,8 +2,10 @@ import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
 import { getModelsList } from '@/src/app/[lang]/models/actions';
+import { getAllRunners } from '@/src/app/[lang]/assets-app-runners/actions';
 import { applicationRunnersApi, applicationsApi, interceptorsApi } from '@/src/app/api/api';
 import AppView from '@/src/components/Assets/Apps/View';
+import { buildAppRunnerOptions } from '@/src/components/SourceField/Application/utils';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
@@ -11,6 +13,7 @@ import { Asset, AssetApp } from '@/src/models/dial/deployment-asset';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
+import { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { errorObjLog } from '@/src/server/logger';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -33,6 +36,7 @@ export default async function Page(params: {
   let applications: DialApplication[] | null = [];
 
   let applicationSchemes: DialApplicationScheme[] | null = [];
+  let assetRunners: ResourceInfo[] = [];
   let interceptors: DialInterceptor[] | null = [];
 
   try {
@@ -56,6 +60,13 @@ export default async function Page(params: {
   } catch (e) {
     errorObjLog(e, 'Failed to fetch app view data');
   }
+
+  try {
+    assetRunners = await getAllRunners();
+  } catch (e) {
+    errorObjLog(e, 'Failed to fetch asset app runners');
+  }
+
   if (app == null) {
     notFound();
   }
@@ -68,7 +79,7 @@ export default async function Page(params: {
         assets={apps || []}
         models={models || []}
         applications={applications || []}
-        schemes={applicationSchemes || []}
+        schemes={buildAppRunnerOptions(applicationSchemes, assetRunners)}
         interceptors={interceptors || []}
       />
     </SaveValidationContextProvider>

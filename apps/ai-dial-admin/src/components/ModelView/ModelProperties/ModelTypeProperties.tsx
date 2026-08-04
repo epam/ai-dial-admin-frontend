@@ -1,15 +1,11 @@
 'use client';
 
-import { DialInput } from '@epam/ai-dial-ui-kit';
-import { FC, useCallback } from 'react';
+import { FC } from 'react';
 
 import IconControl from '@/src/components/BaseControls/Icon';
+import OverrideNameControl from '@/src/components/BaseControls/OverrideName';
 import TopicsControl from '@/src/components/BaseControls/Topics';
 import EntityAttachments from '@/src/components/EntityMainProperties/EntityAttachments/EntityAttachments';
-import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
-import { useI18n } from '@/src/locales/client';
 import { DialModel, DialModelType } from '@/src/models/dial/model';
 
 interface Props {
@@ -18,26 +14,9 @@ interface Props {
 }
 
 const ModelTypeProperties: FC<Props> = ({ model, onChangeModel }) => {
-  const t = useI18n();
-  const isReadOnlyAdmin = useIsReadOnlyAdmin();
-
-  const onChangeOverrideName = useCallback(
-    (overrideName?: string) => {
-      onChangeModel({ ...model, overrideName });
-    },
-    [model, onChangeModel],
-  );
   return (
     <div className="w-full flex flex-col gap-y-8">
-      <DialInput
-        containerClassName={STANDARD_CONTROL_WIDTH}
-        id="overrideName"
-        labelProps={{ label: t(EntityFieldsI18nKey.overrideName) }}
-        placeholder={t(EntityPlaceholdersI18nKey.OverrideName)}
-        value={model.overrideName}
-        onChange={onChangeOverrideName}
-        disabled={isReadOnlyAdmin}
-      />
+      <OverrideNameControl entity={model} onChangeEntity={onChangeModel} />
       {model.type === DialModelType.Chat && (
         <>
           <IconControl iconUrl={model.iconUrl} onChange={(icon) => onChangeModel({ ...model, iconUrl: icon })} />

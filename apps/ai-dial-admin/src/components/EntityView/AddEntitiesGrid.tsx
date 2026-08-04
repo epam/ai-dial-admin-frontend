@@ -7,6 +7,7 @@ import { MULTI_ROW_SELECTION } from '@/src/constants/ag-grid';
 import { BASE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { withSourceColumn } from '@/src/utils/config-entities/source-column';
 
 interface Props<T> {
   isModalOpen: boolean;
@@ -29,6 +30,7 @@ const AddEntitiesGrid = <T extends object>({
 }: Props<T>) => {
   const t = useI18n();
   const [selectedEntities, setSelectedEntities] = useState<T[]>([]);
+  const columns = withSourceColumn(columnDefs, entities);
 
   const onSelectionChanged = (event: SelectionChangedEvent) => {
     const selectedRows = event.api.getSelectedRows();
@@ -57,7 +59,7 @@ const AddEntitiesGrid = <T extends object>({
       <div className="flex h-full flex-col px-6 py-4 min-h-0">
         <GridView
           emptyDataProps={{ title: emptyTitle }}
-          columnDefs={columnDefs}
+          columnDefs={columns}
           rowData={entities}
           additionalGridOptions={additionalGridOptions}
         />

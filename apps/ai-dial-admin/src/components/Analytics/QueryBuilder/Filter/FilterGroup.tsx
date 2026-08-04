@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, useMemo } from 'react';
 
 import classNames from 'classnames';
 import { DialGhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
@@ -8,8 +8,9 @@ import FilterCondition from '@/src/components/Analytics/QueryBuilder/Filter/Filt
 import CompactSelect from '@/src/components/Analytics/QueryBuilder/Common/CompactSelect';
 import SectionAction from '@/src/components/Analytics/QueryBuilder/Common/SectionAction';
 import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';
+import { toCompactSelectOptions } from '@/src/components/Analytics/QueryBuilder/utils/options';
 import { createPredicate } from '@/src/components/Analytics/QueryBuilder/utils/state';
-import { LOGICAL_OPERATOR_OPTIONS } from '@/src/constants/analytics/query-builder';
+import { LOGICAL_OPERATOR_OPTIONS, OPERATOR_OPTION_DESCRIPTORS } from '@/src/constants/analytics/query-builder';
 import { QUERY_BUILDER_PALETTE } from '@/src/constants/analytics/query-builder-palette';
 import { ButtonsI18nKey, QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -31,6 +32,9 @@ interface Props {
 const FilterGroup: FC<Props> = ({ node, parent, fieldOptions, depth = 0, color = QueryBuilderColor.Grouping }) => {
   const t = useI18n();
   const { refresh } = useQueryBuilder();
+
+  // Resolved once per group rather than per condition — the same nine options for every row.
+  const operatorOptions = useMemo(() => toCompactSelectOptions(OPERATOR_OPTION_DESCRIPTORS, t), [t]);
 
   const isRoot = depth === 0;
   // Combining conditions only matters once there is something to combine.
@@ -100,7 +104,14 @@ const FilterGroup: FC<Props> = ({ node, parent, fieldOptions, depth = 0, color =
                 color={color}
               />
             ) : (
-              <FilterCondition key={child.id} node={child} parent={node} fieldOptions={fieldOptions} color={color} />
+              <FilterCondition
+                key={child.id}
+                node={child}
+                parent={node}
+                fieldOptions={fieldOptions}
+                operatorOptions={operatorOptions}
+                color={color}
+              />
             ),
           )}
         </div>

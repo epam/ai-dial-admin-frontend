@@ -39,7 +39,9 @@ const runner = (overrides: Partial<DialAppRunnerResource> = {}): DialAppRunnerRe
 
 const clickSave = async (entity: DialAppRunnerResource) => {
   const user = userEvent.setup();
-  render(<AppRunnerAssetView etag="etag" originalRunner={entity} roles={[]} interceptors={[]} />);
+  render(
+    <AppRunnerAssetView etag="etag" originalRunner={entity} roles={[]} interceptors={[]} globalInterceptors={[]} />,
+  );
   await user.click(screen.getByRole('button', { name: 'save' }));
 };
 

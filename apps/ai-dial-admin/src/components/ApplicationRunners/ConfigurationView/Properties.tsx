@@ -11,6 +11,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 interface Props {
   runner: DialApplicationScheme;
   isImmutable?: boolean;
+  view?: ApplicationRoute;
   names: string[];
   isModal?: boolean;
   /** Characters the `$id` may not contain. Only the asset surface constrains this — see `CORE_UNENCODABLE_ID_CHARS`. */
@@ -18,7 +19,15 @@ interface Props {
   onChangeRunner: (entity: DialApplicationScheme) => void;
 }
 
-const SchemeProperties: FC<Props> = ({ names, runner, isImmutable, idForbiddenChars, onChangeRunner, isModal }) => {
+const SchemeProperties: FC<Props> = ({
+  names,
+  runner,
+  isImmutable,
+  idForbiddenChars,
+  onChangeRunner,
+  isModal,
+  view = ApplicationRoute.ApplicationRunners,
+}) => {
   const onChangeId = useCallback(
     (id?: string) => {
       onChangeRunner({
@@ -50,7 +59,7 @@ const SchemeProperties: FC<Props> = ({ names, runner, isImmutable, idForbiddenCh
 
       <DescriptionControl entity={runner} onChangeEntity={onChangeRunner} isFullWidth={!isImmutable} />
 
-      {isImmutable && <AppRunnerExtendedProperties runner={runner} onChangeRunner={onChangeRunner} />}
+      {isImmutable && <AppRunnerExtendedProperties runner={runner} view={view} onChangeRunner={onChangeRunner} />}
 
       {!isImmutable && (
         <AppRunnerSource

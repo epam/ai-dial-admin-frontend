@@ -195,6 +195,10 @@ export enum EntitiesI18nKey {
   NoDependencies = 'Entities.NoDependencies',
   NoConfigurationSchema = 'Entities.NoConfigurationSchema',
   InvalidAppRunner = 'Entities.InvalidAppRunner',
+  IncompleteOptionList = 'Entities.IncompleteOptionList',
+  OptionListUnavailable = 'Entities.OptionListUnavailable',
+  OptionListPartial = 'Entities.OptionListPartial',
+  GlobalInterceptorsUnavailable = 'Entities.GlobalInterceptorsUnavailable',
   ResolvedSchemaFailed = 'Entities.ResolvedSchemaFailed',
   NoModelServings = 'Entities.NoModelServings',
   AddModel = 'Entities.AddModel',
@@ -560,6 +564,15 @@ export enum RolesI18nKey {
   NoLimits = 'Roles.NoLimits',
 }
 
+export enum ModelAssetI18nKey {
+  InvalidTitle = 'ModelAsset.InvalidTitle',
+  InvalidMessage = 'ModelAsset.InvalidMessage',
+  SecretLossTitle = 'ModelAsset.SecretLossTitle',
+  SecretLossMessage = 'ModelAsset.SecretLossMessage',
+  MissingUpstreamEndpointTitle = 'ModelAsset.MissingUpstreamEndpointTitle',
+  MissingUpstreamEndpointMessage = 'ModelAsset.MissingUpstreamEndpointMessage',
+}
+
 export enum ForwardTokenI18nKey {
   UseForThisModel = 'ForwardToken.UseForThisModel',
   UseForThisApplication = 'ForwardToken.UseForThisApplication',
@@ -731,7 +744,6 @@ export enum TelemetryI18nKey {
   Unknown = 'Telemetry.Unknown',
   ActivityViewConfig = 'Telemetry.ActivityView.Config',
   ActivityViewDeployments = 'Telemetry.ActivityView.Deployments',
-  ActivityViewAsset = 'Telemetry.ActivityView.Asset',
 }
 
 export enum RoutesI18nKey {
@@ -1111,6 +1123,8 @@ export enum SourceI18nKey {
   DockerImage = 'Source.DockerImage',
   NgcRegistry = 'Source.NgcRegistry',
   HuggingFace = 'Source.HuggingFace',
+  EntityRunner = 'Source.EntityRunner',
+  AssetRunner = 'Source.AssetRunner',
 }
 
 export enum TypeI18nKey {
@@ -1147,6 +1161,7 @@ export enum EntityPlaceholdersI18nKey {
   TokenEndpoint = 'EntityPlaceholders.TokenEndpoint',
   AuthorizationEndpoint = 'EntityPlaceholders.AuthorizationEndpoint',
   Maintainer = 'EntityPlaceholders.Maintainer',
+  TokenizerModel = 'EntityPlaceholders.TokenizerModel',
   Type = 'EntityPlaceholders.Type',
   Title = 'EntityPlaceholders.Title',
   Tier = 'EntityPlaceholders.Tier',
@@ -1235,7 +1250,10 @@ export enum EntityFieldsI18nKey {
   scopes = 'EntityFields.scopes',
   author = 'EntityFields.author',
   displayAuthor = 'EntityFields.displayAuthor',
+  deploymentId = 'EntityFields.deploymentId',
+  deploymentIdTooltip = 'EntityFields.deploymentIdTooltip',
   endpoint = 'EntityFields.endpoint',
+  endpointLegacyCaption = 'EntityFields.endpointLegacyCaption',
   permissions = 'EntityFields.permissions',
   allowedTools = 'EntityFields.allowedTools',
   displayName = 'EntityFields.displayName',
@@ -2259,9 +2277,7 @@ export enum QueryBuilderI18nKey {
   EntitiesLoadFailed = 'QueryBuilder.EntitiesLoadFailed',
   SchemaLoadFailed = 'QueryBuilder.SchemaLoadFailed',
   RunFailed = 'QueryBuilder.RunFailed',
-  WarningMissingAggregateAlias = 'QueryBuilder.WarningMissingAggregateAlias',
   WarningMissingGroupByField = 'QueryBuilder.WarningMissingGroupByField',
-  WarningMissingGroupByAlias = 'QueryBuilder.WarningMissingGroupByAlias',
   WarningEmptyAggregate = 'QueryBuilder.WarningEmptyAggregate',
   ViewForm = 'QueryBuilder.ViewForm',
   ViewSql = 'QueryBuilder.ViewSql',
@@ -2306,6 +2322,28 @@ export enum QueryBuilderI18nKey {
   AiSuggestionFailedRequests = 'QueryBuilder.AiSuggestionFailedRequests',
   AiSuggestionMcpLatency = 'QueryBuilder.AiSuggestionMcpLatency',
   AiSuggestionSlowestCalls = 'QueryBuilder.AiSuggestionSlowestCalls',
+  OperatorEq = 'QueryBuilder.OperatorEq',
+  OperatorEqDescription = 'QueryBuilder.OperatorEqDescription',
+  OperatorNe = 'QueryBuilder.OperatorNe',
+  OperatorNeDescription = 'QueryBuilder.OperatorNeDescription',
+  OperatorCo = 'QueryBuilder.OperatorCo',
+  OperatorCoDescription = 'QueryBuilder.OperatorCoDescription',
+  OperatorNc = 'QueryBuilder.OperatorNc',
+  OperatorNcDescription = 'QueryBuilder.OperatorNcDescription',
+  OperatorLt = 'QueryBuilder.OperatorLt',
+  OperatorLtDescription = 'QueryBuilder.OperatorLtDescription',
+  OperatorGt = 'QueryBuilder.OperatorGt',
+  OperatorGtDescription = 'QueryBuilder.OperatorGtDescription',
+  OperatorLe = 'QueryBuilder.OperatorLe',
+  OperatorLeDescription = 'QueryBuilder.OperatorLeDescription',
+  OperatorGe = 'QueryBuilder.OperatorGe',
+  OperatorGeDescription = 'QueryBuilder.OperatorGeDescription',
+  OperatorIn = 'QueryBuilder.OperatorIn',
+  OperatorInDescription = 'QueryBuilder.OperatorInDescription',
+  DirectionAsc = 'QueryBuilder.DirectionAsc',
+  DirectionAscDescription = 'QueryBuilder.DirectionAscDescription',
+  DirectionDesc = 'QueryBuilder.DirectionDesc',
+  DirectionDescDescription = 'QueryBuilder.DirectionDescDescription',
 }
 
 export enum AnalyticsTablesI18nKey {

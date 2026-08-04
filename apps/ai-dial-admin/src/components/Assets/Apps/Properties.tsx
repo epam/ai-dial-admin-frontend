@@ -2,6 +2,7 @@ import { FC, useMemo } from 'react';
 
 import classNames from 'classnames';
 
+import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
 import FoldersStorageLabel from '@/src/components/Assets/Header/FolderStorage';
 import ResourceInfoHeader from '@/src/components/Assets/Resources/ResourceInfoHeader';
 import ResourceSourceField from '@/src/components/Assets/Resources/ResourceSourceField';
@@ -45,16 +46,10 @@ const ApplicationAssetProperties: FC<Props> = ({ asset, runners, onChange, isPub
   const assetApp = asset as DialApplicationResource;
   const schemaSourceId = assetApp.application_type_schema_id;
 
-  const appRunner = useMemo(() => {
-    return runners?.find((scheme) => {
-      const editorUrl = assetApp.editor_url;
-
-      return (
-        (scheme.$id && schemaSourceId && scheme.$id === schemaSourceId) ||
-        (scheme['dial:applicationTypeEditorUrl'] && editorUrl && scheme['dial:applicationTypeEditorUrl'] === editorUrl)
-      );
-    });
-  }, [assetApp.editor_url, runners, schemaSourceId]);
+  const appRunner = useMemo(
+    () => getAppRunner(assetApp, runners ?? [], ApplicationRoute.AssetsApplications),
+    [assetApp, runners],
+  );
 
   const showResponsesDefaults =
     (!schemaSourceId && !!assetApp.responses_endpoint) ||

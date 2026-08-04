@@ -27,6 +27,7 @@ import {
   StructuredQuery,
 } from '@/src/models/analytics/query';
 import { functionByName, isExpressionArg } from '@/src/components/Analytics/QueryBuilder/utils/functions';
+import { deriveAlias, uniqueAlias } from '@/src/components/Analytics/QueryBuilder/utils/fields';
 import {
   createAggregate,
   createGroup,
@@ -127,9 +128,21 @@ const argsToSlots = (fn: QueryFunction, exprArgs: QueryOutputColumn['expr'][]): 
 const parseAggregateSelect = (
   select: QueryOutputColumn[],
   functions: QueryFunction[],
+  fields: AnalyticsEntityField[],
 ): { groupBy: GroupByRow[]; aggregates: AggregateRow[] } => {
   const groupBy: GroupByRow[] = [];
   const aggregates: AggregateRow[] = [];
+  const assigned: string[] = [];
+
+  // An authored alias belongs to whoever wrote the query: it is kept as-is and marked user-owned so
+  // the builder never rederives over it. A column that arrives without one is prefilled exactly as a
+  // freshly added row would be, so it is addressable from Having and Sort straight away.
+  const aliasOf = (fn: QueryFunction, slots: FnArgValue[], as: string | undefined, distinct: boolean) => {
+    const authored = (as ?? '').trim();
+    const alias = authored || uniqueAlias(deriveAlias(fn, slots, distinct, fields), assigned);
+    assigned.push(alias);
+    return { alias, aliasEdited: !!authored };
+  };
 
   select.forEach((col) => {
     const expr = col.expr;
@@ -143,10 +156,12 @@ const parseAggregateSelect = (
     const fn = functionByName(functions, expr.name);
     if (!fn) return;
     const slots = argsToSlots(fn, expr.args);
+    const distinct = !!expr.distinct;
+    const { alias, aliasEdited } = aliasOf(fn, slots, col.as, distinct);
     if (fn.group === QueryFunctionGroup.Scalar) {
-      groupBy.push({ ...createGroupByFn(fn, slots), alias: col.as ?? '' });
+      groupBy.push({ ...createGroupByFn(fn, slots, alias), aliasEdited });
     } else {
-      aggregates.push({ ...createAggregate(fn, slots), distinct: !!expr.distinct, alias: col.as ?? '' });
+      aggregates.push({ ...createAggregate(fn, slots, alias), distinct, aliasEdited });
     }
   });
 
@@ -183,7 +198,7 @@ export const parseQuery = (
   state.having = parseFilterRoot(query.having);
 
   if (state.mode === QueryMode.Aggregate) {
-    const { groupBy, aggregates } = parseAggregateSelect(query.select || [], functions);
+    const { groupBy, aggregates } = parseAggregateSelect(query.select || [], functions, fields);
     state.groupBy = groupBy;
     state.aggregates = aggregates;
   } else {

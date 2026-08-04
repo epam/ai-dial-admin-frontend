@@ -234,9 +234,17 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
 
       const createAsset = CreateAssetActionMap[view as CreateAssetRoute];
 
-      return createAsset(emptyAsset as AssetWithVersion);
+      return createAsset(emptyAsset as AssetWithVersion).then((res) => {
+        // Without this the pending tree node just disappears on rejection, leaving no trace that the
+        // create was refused — the caller renders the node optimistically and drops it on any result.
+        if (!res.success) {
+          showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
+        }
+
+        return res;
+      });
     },
-    [view],
+    [showNotification, view],
   );
 
   const handleCreateAsset = useCallback(

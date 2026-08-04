@@ -38,6 +38,7 @@ import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
+import { isFlatPlatformView } from '@/src/utils/files/root-folder';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ToolsetTransport } from '@/src/types/toolset';
 import { compareVersions, getNameVersionFromAsset } from '@/src/utils/entities/versions';
@@ -127,13 +128,11 @@ export const getGridColumns = (
     field: 'createdAt',
   });
 
-  if (view === ApplicationRoute.AssetsModels) {
-    return [NAME_COLUMN('Name') as ColDef, AUTHOR_COLUMN, UPDATED_AT_COLUMN('Updated time') as ColDef];
-  }
-
-  if (view === ApplicationRoute.AssetsAppRunners) {
+  // Flat platform-bucket views share a metadata-only column set. Only the identity label differs: an
+  // app runner's row name is its `$id`, a model's is its plain name.
+  if (isFlatPlatformView(view)) {
     return [
-      NAME_COLUMN('ID') as ColDef,
+      NAME_COLUMN(view === ApplicationRoute.AssetsAppRunners ? 'ID' : 'Name') as ColDef,
       AUTHOR_COLUMN,
       CREATED_AT_COLUMN as unknown as ColDef,
       UPDATED_AT_COLUMN('Updated time') as ColDef,

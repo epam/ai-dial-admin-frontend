@@ -18,9 +18,10 @@ import { ApplicationRoute } from '@/src/types/routes';
 interface Props {
   runner: DialApplicationScheme;
   onChangeRunner: (entity: DialApplicationScheme) => void;
+  view: ApplicationRoute;
 }
 
-const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
+const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner, view }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
@@ -91,7 +92,7 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner }) => {
         onChange={(type) => onChangeTypeCopyBucket(type as string)}
         disabled={isReadOnlyAdmin}
       />
-      <TopicsControl entity={runner} onChange={onChangeRunner} />
+      <TopicsControl entity={runner} view={view} onChange={onChangeRunner} />
       <AppRunnerSource entity={runner} onChangeEntity={onChangeRunner} view={ApplicationRoute.ApplicationRunners} />
 
       <ViewerUrlControl endpoint={runner['dial:applicationTypeViewerUrl']} onChange={onChangeViewerUrl} />

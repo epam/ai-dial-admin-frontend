@@ -42,6 +42,7 @@ Use `Parent/Child` for a single leaf, or just `Parent` when several children cha
 | `Assets/Prompts` | `prompts` | `Assets` |
 | `Assets/Conversations` | `conversations` | `Assets` |
 | `Assets/Files` | `files` | `Assets`, `Publications/Assets/Files` |
+| `Assets/Models` | `assets-models` | `Assets/Models` |
 | `Assets/AppRunners` | `assets-app-runners` | `Assets/AppRunners` |
 
 ### `Deployments`

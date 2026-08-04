@@ -24,9 +24,11 @@ import {
   STATUS_I18N_KEYS,
 } from '@/src/constants/deployments/images';
 import { ROW_IMPORT_META_KEY } from '@/src/constants/import';
+import { AppRunnerOrigin } from '@/src/components/SourceField/Application/models';
 import {
   BasicI18nKey,
   ConversationsTraceI18nKey,
+  EntitiesI18nKey,
   EntityFieldsI18nKey,
   ImportI18nKey,
   SourceI18nKey,
@@ -332,6 +334,18 @@ export const LIST_RUNNER_COLUMNS: ColDef[] = [
   ...RUNNERS_COLUMNS,
   TOPICS_COLUMN,
   { ...CREATED_AT_COLUMN, filter: false },
+  { ...UPDATED_AT_COLUMN, filter: false },
+];
+
+export const PICKER_RUNNER_COLUMNS = (t: (str: string) => string): ColDef[] => [
+  { field: '$id', headerName: 'ID' },
+  {
+    field: 'origin',
+    headerName: t(EntitiesI18nKey.Source),
+    valueFormatter: ({ value }) =>
+      value === AppRunnerOrigin.Asset ? t(SourceI18nKey.AssetRunner) : t(SourceI18nKey.EntityRunner),
+  },
+  AUTHOR_COLUMN,
   { ...UPDATED_AT_COLUMN, filter: false },
 ];
 

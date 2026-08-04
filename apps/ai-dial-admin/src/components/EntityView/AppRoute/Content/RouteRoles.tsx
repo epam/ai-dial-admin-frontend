@@ -17,6 +17,7 @@ import { DialRole } from '@/src/models/dial/role';
 import { DialRoleLimitsMap } from '@/src/models/dial/role-limits';
 import { DialAppRoute } from '@/src/models/dial/route';
 import { ApplicationRoute } from '@/src/types/routes';
+import { hasConfigEntityOrigin, withSourceColumn } from '@/src/utils/config-entities/source-column';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 
 interface Props {
@@ -32,9 +33,15 @@ const RouteRoles: FC<Props> = ({ route, isAppRunnerView, parentRoles, disabled, 
   const t = useI18n();
 
   const data = useMemo(() => {
-    const userRoles = Object.keys(route.roleLimits || {});
-    return roles.filter((role) =>
-      route.isPublic ? parentRoles?.includes(role.name as string) : userRoles?.includes(role.name as string),
+    const grantedRoles = route.isPublic ? parentRoles || [] : Object.keys(route.roleLimits || {});
+    // Rows are derived from the grants themselves, not by filtering the fetched option list. A grant
+    // naming a role the list does not contain — one defined in Core's configuration files, or any
+    // role at all when the read failed — must stay visible on a permissions surface instead of
+    // silently disappearing while still in effect.
+    return grantedRoles.map(
+      // `displayName` is required, not decorative: BASE_COLUMNS renders the Display Name column from
+      // that field, so a synthetic row without it shows a blank name with the role only in subtext.
+      (name) => roles.find((role) => role.name === name) ?? ({ name, displayName: name, description: '' } as DialRole),
     );
   }, [parentRoles, roles, route.isPublic, route.roleLimits]);
 
@@ -86,13 +93,16 @@ const RouteRoles: FC<Props> = ({ route, isAppRunnerView, parentRoles, disabled, 
   };
 
   const columns = useMemo(() => {
-    const actions = [getOpenInNewTabOperation(onOpen)];
+    // A Core-sourced row's `name` is a Core reference and `getEntityPath` has no case for roles, so its
+    // default branch would build an admin-BE URL for an entity that service need not hold. Drop the
+    // action rather than offer a link that 404s.
+    const actions = hasConfigEntityOrigin(roles) ? [] : [getOpenInNewTabOperation(onOpen)];
     if (!route.isPublic && !disabled) {
       actions.push(getRemoveOperation(onRemoveRole));
     }
 
-    return [...BASE_COLUMNS, ACTION_COLUMN(actions)];
-  }, [route.isPublic, disabled, onRemoveRole]);
+    return [...withSourceColumn(BASE_COLUMNS, roles), ACTION_COLUMN(actions)];
+  }, [route.isPublic, disabled, onRemoveRole, roles]);
 
   return (
     <>

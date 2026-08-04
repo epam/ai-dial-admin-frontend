@@ -7,7 +7,7 @@ import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, TopicsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ApplicationRoute } from '@/src/types/routes';
-import { isDeploymentAsset } from '@/src/utils/is-view';
+import { hasTopicCatalogue, isDeploymentAsset } from '@/src/utils/is-view';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 
@@ -56,7 +56,7 @@ const TopicsControl = <
       elementId="topics"
       className={STANDARD_CONTROL_WIDTH}
       selectedItems={selectedItems}
-      getItems={getModelsTopics}
+      getItems={hasTopicCatalogue(view) ? getModelsTopics : void 0}
       allItems={allItems}
       onChangeItems={onChangeTopics}
       heading={t(EntityFieldsI18nKey.topics)}

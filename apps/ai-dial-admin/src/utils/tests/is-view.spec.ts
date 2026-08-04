@@ -1,4 +1,5 @@
 import {
+  hasTopicCatalogue,
   isAssetView,
   isAssetWithVersion,
   isBuildersView,
@@ -105,4 +106,26 @@ describe('Utils :: isToolsetRoute', () => {
       expect(isToolsetRoute(route)).toBeFalsy();
     },
   );
+});
+
+describe('Utils :: hasTopicCatalogue', () => {
+  // Core has no topic registry, so these surfaces must not reach the admin backend for one.
+  test.each([ApplicationRoute.AssetsModels, ApplicationRoute.AssetsAppRunners])(
+    'Should return false for %s',
+    (route) => {
+      expect(hasTopicCatalogue(route)).toBeFalsy();
+    },
+  );
+
+  // An opt-out list, so anything not listed keeps the catalogue — including surfaces that read their
+  // own resource from Core, and an unset view.
+  test.each([
+    ApplicationRoute.Models,
+    ApplicationRoute.ApplicationRunners,
+    ApplicationRoute.AssetsApplications,
+    ApplicationRoute.AssetsToolsets,
+    undefined,
+  ])('Should return true for %s', (route) => {
+    expect(hasTopicCatalogue(route)).toBeTruthy();
+  });
 });

@@ -4,6 +4,7 @@ import SchemeProperties from '@/src/components/ApplicationRunners/ConfigurationV
 import ResourceInfoHeader from '@/src/components/Assets/Resources/ResourceInfoHeader';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialAppRunnerResource } from '@/src/models/dial/resource';
+import { ApplicationRoute } from '@/src/types/routes';
 import { AppRunnerAssetProps } from './models';
 
 /**
@@ -20,6 +21,7 @@ const AppRunnerAssetProperties: FC<AppRunnerAssetProps> = ({ runner, onChange })
           names={[]}
           runner={runner}
           isImmutable
+          view={ApplicationRoute.AssetsAppRunners}
           onChangeRunner={(scheme: DialApplicationScheme) =>
             onChange({ ...runner, ...scheme } as DialAppRunnerResource)
           }

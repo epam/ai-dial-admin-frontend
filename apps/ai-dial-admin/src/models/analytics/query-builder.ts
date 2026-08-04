@@ -54,11 +54,14 @@ export interface FnArgValue {
 // One Group by entry: a plain column (fn = null) or a scalar-function expression. When fn is a
 // catalog function name, `args` holds one value slot per that function's catalog argument (in
 // order) and `field` is unused; when fn is null the row is a plain column named by `field`.
+// `aliasEdited` marks the alias as owned by the user: a function row's alias is derived from its
+// function and arguments and rederived as they change, until the user types one of their own.
 export interface GroupByRow {
   id: string;
   fn: string | null;
   field: string;
   alias: string;
+  aliasEdited: boolean;
   args: FnArgValue[];
 }
 
@@ -69,7 +72,18 @@ export interface AggregateRow {
   fn: string;
   distinct: boolean;
   alias: string;
+  aliasEdited: boolean;
   args: FnArgValue[];
+}
+
+// A group-by function entry or an aggregate, flattened to what naming a computed output column needs.
+export interface ComputedRow {
+  id: string;
+  fn: QueryFunction;
+  args: FnArgValue[];
+  distinct: boolean;
+  alias: string;
+  aliasEdited: boolean;
 }
 
 export interface SortRow {
@@ -121,10 +135,30 @@ export interface FieldOptionGroup {
 }
 
 // A function entry offered by the categorized dropdown alongside columns; `name` is the catalog
-// function name and `hint` is its catalog description shown next to the name.
+// function name (the value picked), `label` how it reads in the list, and `hint` its catalog
+// description shown next to the label.
 export interface FunctionOption {
   name: string;
+  label: string;
   hint: string;
+}
+
+// How the categorized field dropdown behaves. Picker renders a select-like trigger showing the
+// current value; Add renders a "+ Add"-style ghost trigger; MultiAdd renders the same ghost trigger
+// but toggles membership of a list, keeping the overlay open across picks.
+export enum FieldDropdownMode {
+  Picker = 'picker',
+  Add = 'add',
+  MultiAdd = 'multi-add',
+}
+
+// A CompactSelect option whose user-facing text is resolved at render time, so a fixed option set
+// can live in constants: `labelKey` is the full name shown in both the option list and the trigger,
+// `descriptionKey` the option's hover tooltip.
+export interface CompactSelectOptionDescriptor {
+  value: string;
+  labelKey: QueryBuilderI18nKey;
+  descriptionKey: QueryBuilderI18nKey;
 }
 
 export enum QueryBuilderView {
@@ -147,9 +181,7 @@ export type QueryRunRequest =
   | { kind: QueryRequestKind.Sql; sql: string };
 
 export enum QueryBuilderWarning {
-  MissingAggregateAlias = 'MissingAggregateAlias',
   MissingGroupByField = 'MissingGroupByField',
-  MissingGroupByAlias = 'MissingGroupByAlias',
   EmptyAggregate = 'EmptyAggregate',
 }
 
