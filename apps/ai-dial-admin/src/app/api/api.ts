@@ -1,6 +1,8 @@
 import { AnalyticsDataApi } from '@/src/server/analytics/analytics-data-api';
 import { stripAssetIdentityFields } from '@/src/server/assets/exim';
 import { AppRunnerSchemaApi } from '@/src/server/core/app-runner-schema-api';
+import { ConfigFileApi } from '@/src/server/core/config-file-api';
+import { SettingsApi } from '@/src/server/core/settings-api';
 import { AssetApi } from '@/src/server/core/asset-api';
 import { BucketApi } from '@/src/server/core/bucket-api';
 import { FilesCoreApi } from '@/src/server/core/files-core-api';
@@ -190,6 +192,18 @@ export const toolsetOpsApi = new ToolsetOpsApi({
 
 // App-runner resolved-schema read — Core performs the external-schema download and merge.
 export const appRunnerSchemaApi = new AppRunnerSchemaApi({
+  host: process.env.DIAL_CORE_API_URL,
+});
+
+// Config-file half of Core's merged configuration — the entities declared in aidial.config.json
+// rather than written through the API. Read-only, and separate from assetApi because this route
+// family is not bucket-scoped.
+export const configFileApi = new ConfigFileApi({
+  host: process.env.DIAL_CORE_API_URL,
+});
+
+// Core's global-settings singleton, which carries the global interceptor chain.
+export const settingsApi = new SettingsApi({
   host: process.env.DIAL_CORE_API_URL,
 });
 

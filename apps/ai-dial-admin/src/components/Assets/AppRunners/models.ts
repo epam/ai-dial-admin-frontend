@@ -16,5 +16,6 @@ export interface AppRunnerAssetTabsProps extends AppRunnerAssetProps {
   activeTab: EntityViewTab;
   roles: DialRole[];
   interceptors: DialInterceptor[];
+  globalInterceptors: string[];
   isSkipRefresh?: boolean;
 }

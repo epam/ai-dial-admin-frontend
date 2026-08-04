@@ -16,10 +16,14 @@ export type PublicationAssetKey = 'prompt' | 'applicationResource' | 'conversati
 
 /**
  * Resource types the publications workflow can carry. The `ConfigResourceController`-backed types
- * (models, app runners) have no publications support — Core has no sharing or publication concept
- * for them.
+ * (models, app runners, interceptors, roles) have no publications support — Core has no sharing or
+ * publication concept for them. Interceptors and roles are read-only reference data here, registered
+ * only so their metadata listing can be read.
  */
-export type PublishableResourceType = Exclude<ResourceType, ResourceType.MODEL | ResourceType.APP_TYPE_SCHEMA>;
+export type PublishableResourceType = Exclude<
+  ResourceType,
+  ResourceType.MODEL | ResourceType.APP_TYPE_SCHEMA | ResourceType.INTERCEPTOR | ResourceType.ROLE
+>;
 
 export interface PublicationTypeConfig {
   resourceType: PublishableResourceType;

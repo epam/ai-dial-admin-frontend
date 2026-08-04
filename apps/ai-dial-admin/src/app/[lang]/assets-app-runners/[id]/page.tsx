@@ -1,15 +1,19 @@
 import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
-import { interceptorsApi, rolesApi } from '@/src/app/api/api';
 import AppRunnerAssetView from '@/src/components/Assets/AppRunners/View';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
+import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
+import { Token } from '@/src/models/auth';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialAppRunnerResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
-import { errorObjLog } from '@/src/server/logger';
+import { getConfigEntityOptions, getGlobalInterceptors } from '@/src/server/config-entities/read';
+import { errorLog, errorObjLog } from '@/src/server/logger';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
+import { toConfigEntityRows } from '@/src/utils/config-entities/rows';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getRunner } from '../actions';
 
@@ -23,8 +27,7 @@ export default async function Page(params: {
 
   let etag = DEFAULT_ETAG;
   let runner: DialAppRunnerResource | null = null;
-  let roles: DialRole[] | null = [];
-  let interceptors: DialInterceptor[] | null = [];
+  const optionWarnings: EntitiesI18nKey[] = [];
 
   try {
     // Next already decodes the query param once, which restores the singly-encoded resource name
@@ -36,13 +39,17 @@ export default async function Page(params: {
       etag = res?.etag || DEFAULT_ETAG;
       return res?.response as DialAppRunnerResource | null;
     });
-    roles = (await rolesApi.getRolesList(token)) || [];
-    // Core's interceptor listing is blob-only, so it would not see interceptors published through
-    // the aggregated config — the selectable list still comes from the admin BE.
-    interceptors = (await interceptorsApi.getInterceptorsList(token)) || [];
   } catch (e) {
     errorObjLog(e, 'Failed to fetch app runner asset data');
   }
+
+  // Deliberately outside the resource fetch's try, and resolved together: an option-list problem must
+  // not prevent the runner from loading, and one list failing must not skip the others.
+  const [roles, interceptors, globalInterceptors] = await Promise.all([
+    readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, optionWarnings),
+    readConfigEntities<DialInterceptor>(token, ConfigFileEntityType.Interceptors, optionWarnings),
+    readGlobalInterceptors(token, optionWarnings),
+  ]);
 
   if (runner == null) {
     notFound();
@@ -50,7 +57,60 @@ export default async function Page(params: {
 
   return (
     <SaveValidationContextProvider>
-      <AppRunnerAssetView etag={etag} originalRunner={runner} roles={roles || []} interceptors={interceptors || []} />
+      <AppRunnerAssetView
+        etag={etag}
+        originalRunner={runner}
+        roles={roles}
+        interceptors={interceptors}
+        globalInterceptors={globalInterceptors}
+        optionWarnings={optionWarnings}
+      />
     </SaveValidationContextProvider>
   );
+}
+
+/**
+ * Both option lists come from DIAL Core's merged configuration — the union of its API-written and
+ * config-file populations — so every option offered here resolves in the same map Core validates a
+ * reference against. A partial read still returns the population it could read, and says so.
+ *
+ * Warnings are pushed as i18n keys rather than sentences: this runs on the server, where no translator
+ * is available, so the client component resolves them.
+ */
+async function readConfigEntities<T>(
+  token: Token,
+  type: ConfigFileEntityType,
+  warnings: EntitiesI18nKey[],
+): Promise<T[]> {
+  const result = await getConfigEntityOptions(token, type);
+
+  if (!result.success) {
+    errorLog(`Failed to read ${type} options from Core: ${result.failure.reason} ${result.failure.errorMessage ?? ''}`);
+    warnings.push(EntitiesI18nKey.OptionListUnavailable);
+    return [];
+  }
+
+  result.data.failures.forEach((failure) => {
+    errorLog(`Partial ${type} option read from Core: ${failure.reason} ${failure.errorMessage ?? ''}`);
+    warnings.push(EntitiesI18nKey.OptionListPartial);
+  });
+
+  return toConfigEntityRows(result.data.options, type) as T[];
+}
+
+/**
+ * A failed read is reported rather than passed off as an empty chain: the tab numbers the runner's own
+ * interceptors after the global ones, so silently treating "unreadable" as "none configured" would
+ * misstate the actual execution order.
+ */
+async function readGlobalInterceptors(token: Token, warnings: EntitiesI18nKey[]): Promise<string[]> {
+  const result = await getGlobalInterceptors(token);
+
+  if (result.success) {
+    return result.data;
+  }
+
+  errorLog(`Failed to read global interceptors from Core: ${result.failure.errorMessage ?? ''}`);
+  warnings.push(EntitiesI18nKey.GlobalInterceptorsUnavailable);
+  return [];
 }

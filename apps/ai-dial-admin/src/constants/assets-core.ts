@@ -1,10 +1,10 @@
 import { ResourceType } from '@/src/types/resource-type';
 import { RESOURCE_TYPE_PREFIX } from '@/src/constants/publications-core';
 
-/** Resource types with a `__version`-suffixed name and a metadata+content split. Files, models and app runners are versionless. */
+/** Resource types with a `__version`-suffixed name and a metadata+content split. Files, models, app runners, interceptors and roles are versionless. */
 export type VersionedResourceType = Exclude<
   ResourceType,
-  ResourceType.FILE | ResourceType.MODEL | ResourceType.APP_TYPE_SCHEMA
+  ResourceType.FILE | ResourceType.MODEL | ResourceType.APP_TYPE_SCHEMA | ResourceType.INTERCEPTOR | ResourceType.ROLE
 >;
 
 export const VERSIONED_RESOURCE_TYPES: VersionedResourceType[] = [
@@ -23,6 +23,8 @@ export const CORE_RESOURCE_URL: Record<ResourceType, string> = {
   [ResourceType.FILE]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.FILE]}`,
   [ResourceType.MODEL]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.MODEL]}`,
   [ResourceType.APP_TYPE_SCHEMA]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.APP_TYPE_SCHEMA]}`,
+  [ResourceType.INTERCEPTOR]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.INTERCEPTOR]}`,
+  [ResourceType.ROLE]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.ROLE]}`,
 };
 
 /** `v1/metadata/{prefix}` metadata endpoint per resource type. */
@@ -34,6 +36,8 @@ export const CORE_RESOURCE_METADATA_URL: Record<ResourceType, string> = {
   [ResourceType.FILE]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.FILE]}`,
   [ResourceType.MODEL]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.MODEL]}`,
   [ResourceType.APP_TYPE_SCHEMA]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.APP_TYPE_SCHEMA]}`,
+  [ResourceType.INTERCEPTOR]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.INTERCEPTOR]}`,
+  [ResourceType.ROLE]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.ROLE]}`,
 };
 
 /** Backend default list path — only Conversation and Prompt default an omitted path (`ConversationService`/`PromptService`). */
@@ -52,6 +56,8 @@ export const DEFAULT_LIST_PATH_TYPES: ReadonlySet<ResourceType> = new Set([
 export const PLATFORM_BUCKET_RESOURCE_TYPES: ReadonlySet<ResourceType> = new Set([
   ResourceType.MODEL,
   ResourceType.APP_TYPE_SCHEMA,
+  ResourceType.INTERCEPTOR,
+  ResourceType.ROLE,
 ]);
 
 /** Backend default metadata page size for Conversation/Prompt list reads when the caller omits a limit. */

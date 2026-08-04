@@ -28,9 +28,19 @@ interface Props {
   originalRunner: DialAppRunnerResource;
   roles: DialRole[];
   interceptors: DialInterceptor[];
+  globalInterceptors: string[];
+  /** i18n keys for non-fatal problems from the server-side option reads, resolved here. */
+  optionWarnings?: EntitiesI18nKey[];
 }
 
-const AppRunnerAssetView: FC<Props> = ({ etag, originalRunner, roles, interceptors }) => {
+const AppRunnerAssetView: FC<Props> = ({
+  etag,
+  originalRunner,
+  roles,
+  interceptors,
+  globalInterceptors,
+  optionWarnings,
+}) => {
   const t = useI18n();
   const tabs = getTabsForAsset(t, ApplicationRoute.AssetsAppRunners);
   const router = useRouter();
@@ -56,6 +66,14 @@ const AppRunnerAssetView: FC<Props> = ({ etag, originalRunner, roles, intercepto
   useEffect(() => {
     setSelectedRunner(structuredClone(originalRunner));
   }, [originalRunner]);
+
+  // An option list read from only one of Core's two populations is shown rather than withheld, so the
+  // user has to be told the list is incomplete — otherwise a missing interceptor reads as deleted.
+  useEffect(() => {
+    optionWarnings?.forEach((warning) => {
+      showNotification(getErrorNotification(t(EntitiesI18nKey.IncompleteOptionList), t(warning)));
+    });
+  }, [optionWarnings, showNotification, t]);
 
   useEffect(() => {
     if (Object.keys(selectedRunner).length && originalRunner) {
@@ -133,6 +151,7 @@ const AppRunnerAssetView: FC<Props> = ({ etag, originalRunner, roles, intercepto
             runner={selectedRunner}
             roles={roles}
             interceptors={interceptors}
+            globalInterceptors={globalInterceptors}
             isSkipRefresh={isSkipRefresh}
             onChange={onChange}
           />

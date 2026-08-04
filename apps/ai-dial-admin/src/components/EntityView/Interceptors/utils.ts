@@ -4,6 +4,7 @@ import { ACTION_COLUMN, DRAGGABLE_COL_DEF, UTILITY_COLUMN } from '@/src/constant
 import { getOpenInNewTabOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
 import { BaseEntity } from '@/src/models/dial/base-entity';
 import { DESCRIPTION_COLUMN, DISPLAY_NAME_COLUMN } from '@/src/constants/grid-columns/base-columns';
+import { withSourceColumn } from '@/src/utils/config-entities/source-column';
 
 export const getInterceptorsGridData = (
   interceptors?: BaseEntity[],
@@ -17,11 +18,13 @@ export const getInterceptorsGridData = (
 };
 
 export const getInterceptorsColumnDefs = (
-  open: (entity?: BaseEntity) => void,
+  /** Omitted on Core-sourced surfaces, where no admin-BE detail page exists to open. */
+  open: ((entity?: BaseEntity) => void) | undefined,
   remove?: (entity?: BaseEntity, index?: number) => void,
   startIndex?: number,
+  rows?: BaseEntity[] | null,
 ): ColDef[] => {
-  const actions = [getOpenInNewTabOperation(open)];
+  const actions = open ? [getOpenInNewTabOperation(open)] : [];
   if (remove) {
     actions.push(getRemoveOperation(remove));
   }
@@ -38,7 +41,7 @@ export const getInterceptorsColumnDefs = (
       floatingFilter: false,
     },
     DISPLAY_NAME_COLUMN,
-    DESCRIPTION_COLUMN,
+    ...withSourceColumn([DESCRIPTION_COLUMN], rows),
     ACTION_COLUMN(actions),
   ];
 
