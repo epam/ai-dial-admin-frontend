@@ -46,7 +46,7 @@ import { SaveValidationContextProvider } from '@/src/context/SaveValidationConte
 import { useI18n } from '@/src/locales/client';
 import { Dataset, DatasetVisibility } from '@/src/models/evaluation/dataset';
 import { FilterNode } from '@/src/models/evaluation/structured-query';
-import { GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
+import { GridRowType, GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
 import { TestCase, TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -243,9 +243,19 @@ const TestCasesList: FC<Props> = ({
     setIsDeleteModalOpen(false);
   }, []);
 
-  const stableOnRemoveCase = useCallback((data?: TestCase) => {
-    onRemoveCaseRef.current(data);
-  }, []);
+  const stableOnRemoveCase = useCallback(
+    (row?: GroupedGridRow) => {
+      if (!row) return;
+
+      if (row.rowType === GridRowType.TURN) {
+        turnGrid.turnActionHandlers.onDeleteTurn(row);
+        return;
+      }
+
+      onRemoveCaseRef.current(rowToTestCase(row));
+    },
+    [turnGrid.turnActionHandlers],
+  );
 
   const onOpenTryOutSidebar = useCallback(
     (e?: TestCase) => {

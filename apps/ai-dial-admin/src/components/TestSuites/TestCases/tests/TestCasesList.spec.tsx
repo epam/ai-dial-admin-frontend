@@ -32,6 +32,7 @@ let capturedDatasetTag: unknown = null;
 let capturedOnToggleExpand: ((groupKey: string) => void) | null = null;
 let capturedTurnActionHandlers: Record<string, (row: any) => void> | null = null;
 let capturedTestCaseCount: number | null = null;
+let capturedRemoveIconClick: ((row: any) => void) | null = null;
 
 vi.mock('@/src/app/[lang]/datasets/actions', () => ({
   getTestCases: vi.fn(),
@@ -102,6 +103,21 @@ vi.mock('@/src/components/TestSuites/TestCases/Header', () => ({
 
 vi.mock('@/src/components/TestSuites/TestCases/RunCondition/use-included-ids', () => ({
   useIncludedIds: vi.fn().mockReturnValue(null),
+}));
+
+vi.mock('@/src/constants/grid-columns/actions', async () => {
+  const actual = await vi.importActual<any>('@/src/constants/grid-columns/actions');
+  return {
+    ...actual,
+    getRemoveOperation: (onClick: any, ...rest: any[]) => {
+      capturedRemoveIconClick = onClick;
+      return actual.getRemoveOperation(onClick, ...rest);
+    },
+  };
+});
+
+vi.mock('@/src/components/EntityView/Modals/Delete/Delete', () => ({
+  default: ({ entity }: any) => <div>{`Delete modal for ${entity?.id}`}</div>,
 }));
 
 vi.mock('@epam/ai-dial-ui-kit', async () => {
@@ -432,6 +448,7 @@ describe('TestCasesList — multi-turn grouping', () => {
     capturedOnToggleExpand = null;
     capturedTurnActionHandlers = null;
     capturedTestCaseCount = null;
+    capturedRemoveIconClick = null;
     vi.mocked(useIncludedIds).mockReturnValue(null);
   });
 
@@ -529,6 +546,44 @@ describe('TestCasesList — multi-turn grouping', () => {
 
     await waitFor(() => expect(capturedRowData!.length).toBe(5));
     expect(capturedTestCaseCount).toBe(2);
+  });
+
+  test('the row trash icon deletes only that turn on a TURN row, leaving the rest of the case intact', async () => {
+    vi.mocked(actions.getTestCases).mockResolvedValue(createPageData([multiTurnCase]));
+
+    const { queryByText } = render(
+      <TestCasesList selectedTestSuite={suite} onChange={mockOnChange} dataset={perTurnSchemaDataset} />,
+    );
+
+    await waitFor(() => expect(capturedOnToggleExpand).not.toBeNull());
+    capturedOnToggleExpand!('case-1');
+    await waitFor(() => expect(capturedRowData!.length).toBe(4));
+
+    const turnRow = capturedRowData![2];
+    expect(turnRow.rowType).toBe(GridRowType.TURN);
+
+    capturedRemoveIconClick!(turnRow);
+
+    await waitFor(() => expect(capturedRowData!.length).toBe(3));
+    expect(capturedRowData![0].turnCount).toBe(2);
+    expect(queryByText('Delete modal for case-1')).toBeNull();
+  });
+
+  test('the row trash icon still opens the delete-case modal on a GROUP row', async () => {
+    vi.mocked(actions.getTestCases).mockResolvedValue(createPageData([multiTurnCase]));
+
+    const { findByText } = render(
+      <TestCasesList selectedTestSuite={suite} onChange={mockOnChange} dataset={perTurnSchemaDataset} />,
+    );
+
+    await waitFor(() => expect(capturedRowData!.length).toBe(1));
+    const groupRow = capturedRowData![0];
+    expect(groupRow.rowType).toBe(GridRowType.GROUP);
+
+    capturedRemoveIconClick!(groupRow);
+
+    expect(await findByText('Delete modal for case-1')).toBeInTheDocument();
+    expect(capturedRowData!.length).toBe(1);
   });
 
   test('getDirtyTestCases returns a collapsed multi-turn DTO after editing a turn, including while the group is collapsed', async () => {

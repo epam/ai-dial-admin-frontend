@@ -32,7 +32,7 @@ import { ButtonsI18nKey, DatasetsI18nKey, DeleteI18nKey, TabsI18nKey } from '@/s
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { Dataset, DatasetTestCase } from '@/src/models/evaluation/dataset';
-import { GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
+import { GridRowType, GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
 import { ApplicationRoute } from '@/src/types/routes';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 import { expandTestCasesToRows } from '@/src/utils/evaluation/test-case-grouping';
@@ -162,9 +162,19 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, testCasesActionsRef, onDirty
     setIsDeleteModalOpen(false);
   }, []);
 
-  const stableOnRemoveCase = useCallback((data?: DatasetTestCase) => {
-    onRemoveCaseRef.current(data);
-  }, []);
+  const stableOnRemoveCase = useCallback(
+    (row?: GroupedGridRow) => {
+      if (!row) return;
+
+      if (row.rowType === GridRowType.TURN) {
+        turnGrid.turnActionHandlers.onDeleteTurn(row);
+        return;
+      }
+
+      onRemoveCaseRef.current(rowToDatasetTestCase(row));
+    },
+    [turnGrid.turnActionHandlers],
+  );
 
   const refreshGrid = useCallback(
     (withRefreshPage?: boolean) => {
