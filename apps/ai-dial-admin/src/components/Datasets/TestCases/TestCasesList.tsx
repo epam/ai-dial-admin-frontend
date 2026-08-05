@@ -32,7 +32,7 @@ import { ButtonsI18nKey, DatasetsI18nKey, DeleteI18nKey, TabsI18nKey } from '@/s
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { Dataset, DatasetTestCase } from '@/src/models/evaluation/dataset';
-import { GridRowType, GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
+import { GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
 import { ApplicationRoute } from '@/src/types/routes';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 import { expandTestCasesToRows } from '@/src/utils/evaluation/test-case-grouping';
@@ -40,6 +40,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import DatasetTestCasesHeader from './Header';
 import { useRouter } from 'next/navigation';
 import { TestCaseSchema } from '@/src/models/evaluation/test-suite';
+import { GridRowType } from '@/src/types/grid-row-type';
 
 export interface DatasetTestCasesActions {
   getDirtyTestCases: () => DatasetTestCase[];

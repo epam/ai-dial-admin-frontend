@@ -6,12 +6,12 @@ import * as actions from '@/src/app/[lang]/datasets/actions';
 import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { Dataset, DatasetVisibility } from '@/src/models/evaluation/dataset';
 import { ComparisonOp, ExprType, ValueType } from '@/src/models/evaluation/structured-query';
-import { GridRowType } from '@/src/models/evaluation/test-case-grouping';
 import { TestCase as TestCaseModel, TestSuite } from '@/src/models/evaluation/test-suite';
 import { TestCaseItemType } from '@/src/types/evaluation';
 
 import TestCasesList, { TestCasesActions } from '../TestCasesList';
 import { useIncludedIds } from '../RunCondition/use-included-ids';
+import { GridRowType } from '@/src/types/grid-row-type';
 
 type TestCase = Partial<TestCaseModel>;
 

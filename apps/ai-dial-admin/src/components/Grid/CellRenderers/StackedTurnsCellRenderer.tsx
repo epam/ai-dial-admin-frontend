@@ -3,7 +3,8 @@ import { ICellRendererParams } from 'ag-grid-community';
 import { DialEllipsisTooltip } from '@epam/ai-dial-ui-kit';
 
 import { STACKED_LINE_HEIGHT, STACKED_ROW_PADDING } from '@/src/components/Grid/constants';
-import { GroupedGridRow, TestCaseRow } from '@/src/models/evaluation/test-case-grouping';
+import { GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
+import { TestCaseRow } from '@/src/types/test-case-row';
 
 const formatTurnValue = (turn: TestCaseRow, field: string): string => {
   const data = turn.data as Record<string, unknown> | undefined;

@@ -14,11 +14,12 @@ import { ACTION_COLUMN, EXPANDER_COLUMN_CEL_ID, NO_BORDER_CLASS, UTILITY_COLUMN 
 import { ActionMenuOperationI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operations';
-import { GridRowType, GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
-import { OnCellChange } from '@/src/models/grid-cell';
+import { GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
+import { OnCellChange } from '@/src/types/grid-cell';
 import { TestCaseItemType } from '@/src/types/evaluation';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isValueTruthy } from '@/src/utils/types';
+import { GridRowType } from '@/src/types/grid-row-type';
 
 export interface TurnActionHandlers {
   onAddTurn: (groupKey: string) => void;

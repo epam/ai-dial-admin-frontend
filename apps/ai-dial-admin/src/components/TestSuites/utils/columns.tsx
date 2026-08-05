@@ -37,7 +37,7 @@ import {
   TestCaseSchema,
   TestSuite,
 } from '@/src/models/evaluation/test-suite';
-import { OnCellChange } from '@/src/models/grid-cell';
+import { OnCellChange } from '@/src/types/grid-cell';
 import { InputBindingType, MetricBindingType, TestCaseItemType } from '@/src/types/evaluation';
 import { ApplicationRoute } from '@/src/types/routes';
 

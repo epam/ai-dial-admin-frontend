@@ -9,7 +9,7 @@ import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRe
 import StackedTurnsCellRenderer from '@/src/components/Grid/CellRenderers/StackedTurnsCellRenderer';
 import TestCaseNameCellRenderer from '@/src/components/Grid/CellRenderers/TestCaseNameCellRenderer';
 import { ActionMenuOperationI18nKey } from '@/src/constants/i18n';
-import { GridRowType, GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
+import { GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
 import { TestCaseItemType } from '@/src/types/evaluation';
 import { ApplicationRoute } from '@/src/types/routes';
 
@@ -21,6 +21,7 @@ import {
   SchemaColumnContext,
   TurnActionHandlers,
 } from '../turn-columns';
+import { GridRowType } from '@/src/types/grid-row-type';
 
 const rendererParams = (data: Partial<GroupedGridRow>) => ({ data }) as ICellRendererParams<GroupedGridRow>;
 

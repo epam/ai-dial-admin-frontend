@@ -1,10 +1,5 @@
-export enum GridRowType {
-  GROUP = 'GROUP',
-  TURN = 'TURN',
-  SINGLE = 'SINGLE',
-}
-
-export type TestCaseRow = Record<string, unknown>;
+import { GridRowType } from '@/src/types/grid-row-type';
+import { TestCaseRow } from '@/src/types/test-case-row';
 
 export interface CollapsibleTestCase {
   data?: Record<string, unknown>;

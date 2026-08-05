@@ -3,11 +3,12 @@ import { GridReadyEvent, RowHeightParams } from 'ag-grid-community';
 import { describe, expect, test, vi } from 'vitest';
 
 import { ROW_HEIGHT } from '@/src/components/Grid/constants';
-import { GridRowType, GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
+import { GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
 import { TestCaseSchema } from '@/src/models/evaluation/test-suite';
 import { TestCaseItemType } from '@/src/types/evaluation';
 
 import { useTurnGroupGrid } from '../use-turn-group-grid';
+import { GridRowType } from '@/src/types/grid-row-type';
 
 interface Row {
   [key: string]: unknown;

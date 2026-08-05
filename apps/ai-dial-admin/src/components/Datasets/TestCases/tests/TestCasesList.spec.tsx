@@ -4,10 +4,10 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as actions from '@/src/app/[lang]/datasets/actions';
 import { Dataset, DatasetTestCase } from '@/src/models/evaluation/dataset';
-import { GridRowType } from '@/src/models/evaluation/test-case-grouping';
 import { TestCaseItemType } from '@/src/types/evaluation';
 
 import DatasetTestCasesList, { DatasetTestCasesActions } from '../TestCasesList';
+import { GridRowType } from '@/src/types/grid-row-type';
 
 type TestCase = Partial<DatasetTestCase>;
 

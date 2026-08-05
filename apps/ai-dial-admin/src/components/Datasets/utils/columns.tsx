@@ -9,7 +9,7 @@ import {
 import { getValidityStatusColumn } from '@/src/components/TestSuites/utils/columns';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { Dataset } from '@/src/models/evaluation/dataset';
-import { OnCellChange } from '@/src/models/grid-cell';
+import { OnCellChange } from '@/src/types/grid-cell';
 import { TestCaseSchema } from '@/src/models/evaluation/test-suite';
 import { ApplicationRoute } from '@/src/types/routes';
 

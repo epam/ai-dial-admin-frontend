@@ -4,9 +4,10 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
-import { GridRowType, GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
+import { GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
 
 import TestCaseNameCellRenderer from '../TestCaseNameCellRenderer';
+import { GridRowType } from '@/src/types/grid-row-type';
 
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();

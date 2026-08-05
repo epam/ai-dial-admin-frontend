@@ -21,7 +21,7 @@ import { ButtonsI18nKey, EntitiesI18nKey, TestSuitesI18nKey } from '@/src/consta
 import { DATASETS_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { useI18n } from '@/src/locales/client';
 import { Dataset, DatasetTestCase } from '@/src/models/evaluation/dataset';
-import { OnCellChange } from '@/src/models/grid-cell';
+import { OnCellChange } from '@/src/types/grid-cell';
 import { expandTestCasesToRows } from '@/src/utils/evaluation/test-case-grouping';
 import { ATTACH_DATASET_STEPS, AttachDatasetTab } from './pick-dataset-constants';
 

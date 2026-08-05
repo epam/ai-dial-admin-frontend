@@ -1,11 +1,7 @@
-import {
-  CollapsibleTestCase,
-  GridRowType,
-  GroupedGridRow,
-  TestCaseGroup,
-  TestCaseRow,
-} from '@/src/models/evaluation/test-case-grouping';
+import { CollapsibleTestCase, GroupedGridRow, TestCaseGroup } from '@/src/models/evaluation/test-case-grouping';
 import { TestCaseSchema, ValidationWarning } from '@/src/models/evaluation/test-suite';
+import { GridRowType } from '@/src/types/grid-row-type';
+import { TestCaseRow } from '@/src/types/test-case-row';
 
 export const getPerTurnFieldNames = (schema?: TestCaseSchema[] | null): Set<string> =>
   new Set((schema ?? []).filter((field) => field.perTurn).map((field) => field.name));

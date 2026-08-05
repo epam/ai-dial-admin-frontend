@@ -5,7 +5,8 @@ import { DialEllipsisTooltip, DialTag } from '@epam/ai-dial-ui-kit';
 import EditableCellRenderer from '@/src/components/Grid/CellRenderers/EditableCellRenderer';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { GridRowType, GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
+import { GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
+import { GridRowType } from '@/src/types/grid-row-type';
 
 interface TestCaseNameCellRendererParams extends ICellRendererParams<GroupedGridRow> {
   onChange?: (value: number | string, data: unknown, column: string, index?: number) => void;

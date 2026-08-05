@@ -46,7 +46,7 @@ import { SaveValidationContextProvider } from '@/src/context/SaveValidationConte
 import { useI18n } from '@/src/locales/client';
 import { Dataset, DatasetVisibility } from '@/src/models/evaluation/dataset';
 import { FilterNode } from '@/src/models/evaluation/structured-query';
-import { GridRowType, GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
+import { GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
 import { TestCase, TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -56,6 +56,7 @@ import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import HeaderButtons from './Header';
 import RunCondition from './RunCondition/RunCondition';
 import { useIncludedIds } from './RunCondition/use-included-ids';
+import { GridRowType } from '@/src/types/grid-row-type';
 
 export interface TestCasesActions {
   getDirtyTestCases: () => TestCase[];

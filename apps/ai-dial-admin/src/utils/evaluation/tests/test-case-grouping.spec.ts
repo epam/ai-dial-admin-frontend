@@ -14,8 +14,10 @@ import {
   selectPerTurnFields,
   selectSharedFields,
 } from '../test-case-grouping';
-import { GridRowType, TestCaseGroup, TestCaseRow } from '@/src/models/evaluation/test-case-grouping';
+import { TestCaseGroup } from '@/src/models/evaluation/test-case-grouping';
 import { TestCaseSchema } from '@/src/models/evaluation/test-suite';
+import { GridRowType } from '@/src/types/grid-row-type';
+import { TestCaseRow } from '@/src/types/test-case-row';
 
 describe('getPerTurnFieldNames', () => {
   test('should return empty set when schema is undefined', () => {

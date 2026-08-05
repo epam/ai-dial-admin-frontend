@@ -2,8 +2,10 @@ import { FilterChangedEvent, GetRowIdParams, GridApi, GridReadyEvent, RowHeightP
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ROW_HEIGHT, STACKED_LINE_HEIGHT, STACKED_ROW_PADDING } from '@/src/components/Grid/constants';
-import { GridRowType, GroupedGridRow, TestCaseRow } from '@/src/models/evaluation/test-case-grouping';
+import { GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
 import { groupTestCaseRows, projectGroupsToGridRows } from '@/src/utils/evaluation/test-case-grouping';
+import { GridRowType } from '@/src/types/grid-row-type';
+import { TestCaseRow } from '@/src/types/test-case-row';
 
 export interface TurnGroupProjectionConfig {
   rawRows: TestCaseRow[];

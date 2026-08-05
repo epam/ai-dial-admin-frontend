@@ -3,7 +3,8 @@ import { MouseEvent } from 'react';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import { ICellRendererParams } from 'ag-grid-community';
 
-import { GridRowType, GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
+import { GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
+import { GridRowType } from '@/src/types/grid-row-type';
 
 interface Props extends ICellRendererParams<GroupedGridRow> {
   onToggleExpand?: (groupKey: string) => void;

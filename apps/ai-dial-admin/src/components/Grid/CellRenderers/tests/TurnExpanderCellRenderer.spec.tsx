@@ -2,9 +2,10 @@ import { ICellRendererParams } from 'ag-grid-community';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
-import { GridRowType, GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
+import { GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
 
 import TurnExpanderCellRenderer from '../TurnExpanderCellRenderer';
+import { GridRowType } from '@/src/types/grid-row-type';
 
 type Props = ICellRendererParams<GroupedGridRow> & { onToggleExpand?: (groupKey: string) => void };
 

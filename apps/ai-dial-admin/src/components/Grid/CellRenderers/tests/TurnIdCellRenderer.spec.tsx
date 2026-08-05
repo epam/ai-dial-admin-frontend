@@ -2,9 +2,10 @@ import { ICellRendererParams } from 'ag-grid-community';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
-import { GridRowType, GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
+import { GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
 
 import TurnIdCellRenderer from '../TurnIdCellRenderer';
+import { GridRowType } from '@/src/types/grid-row-type';
 
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
