@@ -81,6 +81,15 @@ describe('getTemplateParameters', () => {
 
     expect(getTemplateParameters(template)).toEqual(['deepVar']);
   });
+
+  test('extracts a placeholder written inside a jsonataContent expression', () => {
+    const template: TestSuiteRequestTemplate = {
+      urlTemplate: '/api',
+      body: { jsonataContent: '{ "q": "${{question}}" }' },
+    };
+
+    expect(getTemplateParameters(template)).toEqual(['question']);
+  });
 });
 
 describe('filterParameterBindings', () => {
@@ -129,5 +138,21 @@ describe('filterParameterBindings', () => {
     ];
 
     expect(filterParameterBindings(bindings, ['tenantId', 'userId'])).toEqual([]);
+  });
+
+  test('drops the binding for a placeholder removed from a jsonataContent expression', () => {
+    const bindings: InputBinding[] = [
+      { templateVariable: 'question', dataField: 'x' },
+      { templateVariable: 'other', constantValue: 'y' },
+    ];
+    const templateAfterEdit: TestSuiteRequestTemplate = {
+      urlTemplate: '/api',
+      body: { jsonataContent: '{ "q": "literal", "r": "${{other}}" }' },
+    };
+
+    const paramNames = getTemplateParameters(templateAfterEdit);
+
+    expect(paramNames).toEqual(['other']);
+    expect(filterParameterBindings(bindings, paramNames)).toEqual([{ templateVariable: 'other', constantValue: 'y' }]);
   });
 });

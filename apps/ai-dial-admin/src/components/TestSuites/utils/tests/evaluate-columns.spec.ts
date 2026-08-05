@@ -188,6 +188,59 @@ describe('evaluateColumns', () => {
     expect(results[0].valid).toBe(true);
   });
 
+  test('should still resolve a body-relative expression when a request is also supplied (regression guard)', async () => {
+    const columns = [makeColumn()];
+    const request = { messages: [{ content: 'Hi' }] };
+
+    const results = await evaluateColumns(columns, chatResponse, request);
+
+    expect(results[0].result).toBe('The capital of Belarus is Minsk.');
+    expect(results[0].valid).toBe(true);
+  });
+
+  test('should resolve $response.<field> to the same value as the bare field', async () => {
+    const columns = [makeColumn({ name: 'viaResponse', expression: '$response.choices[0].message.content' })];
+
+    const results = await evaluateColumns(columns, chatResponse);
+
+    expect(results[0].result).toBe('The capital of Belarus is Minsk.');
+    expect(results[0].valid).toBe(true);
+  });
+
+  test('should resolve $request to the request body verbatim, and a nested path within it', async () => {
+    const request = { messages: [{ content: 'Hi there' }], model: 'gpt-4' };
+    const columns = [
+      makeColumn({ name: 'wholeRequest', expression: '$request' }),
+      makeColumn({ name: 'reqBodyField', expression: '$request.messages[0].content' }),
+    ];
+
+    const results = await evaluateColumns(columns, chatResponse, request);
+
+    expect(results[0].result).toBe(JSON.stringify(request));
+    expect(results[0].valid).toBe(true);
+    expect(results[1].result).toBe('Hi there');
+    expect(results[1].valid).toBe(true);
+  });
+
+  test('should fall into the invalid/empty-result path for $request when no request was supplied', async () => {
+    const columns = [makeColumn({ name: 'reqField', expression: '$request.messages[0].content' })];
+
+    const results = await evaluateColumns(columns, chatResponse);
+
+    expect(results[0].result).toBe('');
+    expect(results[0].valid).toBe(false);
+  });
+
+  test('should support function composition over the $request binding', async () => {
+    const request = { messages: [{ content: 'a' }, { content: 'b' }] };
+    const columns = [makeColumn({ name: 'msgCount', expression: '$count($request.messages)', type: 'NUMBER' })];
+
+    const results = await evaluateColumns(columns, chatResponse, request);
+
+    expect(results[0].result).toBe('2');
+    expect(results[0].valid).toBe(true);
+  });
+
   test('should mix valid and invalid columns in one call', async () => {
     const columns = [
       makeColumn({ name: 'ok', expression: 'model', type: 'STRING' }),

@@ -10,18 +10,22 @@ import {
   PopupSize,
   StepStatus,
 } from '@epam/ai-dial-ui-kit';
-import { ColDef } from 'ag-grid-community';
 
 import { getDataset, getDatasets, getTestCases } from '@/src/app/[lang]/datasets/actions';
 import StepperModalButtons from '@/src/components/Common/StepperModalButtons/StepperModalButtons';
+import { getDatasetTestCaseColumns } from '@/src/components/Datasets/utils/columns';
 import RadioSelectGrid from '@/src/components/Grid/GridView/RadioSelectGrid';
+import { useTurnGroupProjection } from '@/src/components/Grid/hooks/use-turn-group-projection';
 import ListEntities from '@/src/components/ListView/List';
 import { ButtonsI18nKey, EntitiesI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
-import { DATASETS_COLUMN, TEST_CASES_COLUMN } from '@/src/constants/grid-columns/grid-columns';
+import { DATASETS_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { useI18n } from '@/src/locales/client';
-import { Dataset } from '@/src/models/evaluation/dataset';
-import { TestCaseSchema } from '@/src/models/evaluation/test-suite';
+import { Dataset, DatasetTestCase } from '@/src/models/evaluation/dataset';
+import { OnCellChange } from '@/src/types/grid-cell';
+import { expandTestCasesToRows } from '@/src/utils/evaluation/test-case-grouping';
 import { ATTACH_DATASET_STEPS, AttachDatasetTab } from './pick-dataset-constants';
+
+const noopCellChange: OnCellChange = () => {};
 
 interface Props {
   isOpen: boolean;
@@ -36,8 +40,8 @@ const PickPublicDataset: FC<Props> = ({ isOpen, onClose, onConfirm, showWarning 
   const [isLoadingDatasets, setIsLoadingDatasets] = useState(true);
   const [selectedDataset, setSelectedDataset] = useState<Dataset | null>(null);
   const [currentStepId, setCurrentStep] = useState<string>(AttachDatasetTab.SelectDataset);
-  const [testCasesData, setTestCasesData] = useState<Record<string, unknown>[]>([]);
-  const [schema, setSchema] = useState<TestCaseSchema[]>([]);
+  const [testCasesData, setTestCasesData] = useState<DatasetTestCase[]>([]);
+  const [previewDataset, setPreviewDataset] = useState<Dataset | null>(null);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [isPreviewLoaded, setIsPreviewLoaded] = useState(false);
 
@@ -58,14 +62,14 @@ const PickPublicDataset: FC<Props> = ({ isOpen, onClose, onConfirm, showWarning 
     setCurrentStep(AttachDatasetTab.SelectDataset);
     setSelectedDataset(null);
     setTestCasesData([]);
-    setSchema([]);
+    setPreviewDataset(null);
     setIsPreviewLoaded(false);
   }, [isOpen]);
 
   useEffect(() => {
     setIsPreviewLoaded(false);
     setTestCasesData([]);
-    setSchema([]);
+    setPreviewDataset(null);
   }, [selectedDataset?.id]);
 
   useEffect(() => {
@@ -75,14 +79,27 @@ const PickPublicDataset: FC<Props> = ({ isOpen, onClose, onConfirm, showWarning 
       .finally(() => setIsLoadingDatasets(false));
   }, []);
 
-  const previewColumns = useMemo<ColDef[]>(() => {
-    const schemaColumns: ColDef[] = schema.map((param) => ({
-      field: param.name,
-      headerName: param.name,
-      valueGetter: (p) => p.data?.data?.[param.name] ?? p.data?.[param.name] ?? '',
-    }));
-    return [...TEST_CASES_COLUMN, ...schemaColumns];
-  }, [schema]);
+  const rawRows = useMemo(() => expandTestCasesToRows(testCasesData), [testCasesData]);
+
+  const { rowData, onToggleExpand, getRowId, getRowHeight, onFilterChanged } = useTurnGroupProjection({ rawRows });
+
+  const previewColumns = useMemo(
+    () =>
+      previewDataset
+        ? getDatasetTestCaseColumns({
+            dataset: previewDataset,
+            onCellChange: noopCellChange,
+            onToggleExpand,
+            isReadOnly: true,
+          })
+        : [],
+    [previewDataset, onToggleExpand],
+  );
+
+  const previewGridOptions = useMemo(
+    () => ({ suppressClickEdit: true, getRowId, getRowHeight, onFilterChanged }),
+    [getRowId, getRowHeight, onFilterChanged],
+  );
 
   const onNextStep = useCallback(async () => {
     if (!selectedDataset?.id) return;
@@ -93,9 +110,8 @@ const PickPublicDataset: FC<Props> = ({ isOpen, onClose, onConfirm, showWarning 
       getDataset(selectedDataset.id, ''),
     ]);
 
-    const rawData = testCasesRes?.content?.length ? (testCasesRes.content as Record<string, unknown>[]) : [];
-    setTestCasesData(rawData);
-    setSchema((datasetRes?.response as Dataset)?.testCaseSchema ?? []);
+    setTestCasesData(testCasesRes?.content ?? []);
+    setPreviewDataset((datasetRes?.response as Dataset) ?? null);
     setIsLoadingPreview(false);
     setIsPreviewLoaded(true);
 
@@ -147,11 +163,7 @@ const PickPublicDataset: FC<Props> = ({ isOpen, onClose, onConfirm, showWarning 
           )}
 
           {currentStepId === AttachDatasetTab.PreviewTestCases && (
-            <ListEntities
-              rowData={testCasesData}
-              columnDefs={previewColumns}
-              additionalGridOptions={{ suppressClickEdit: true }}
-            />
+            <ListEntities rowData={rowData} columnDefs={previewColumns} additionalGridOptions={previewGridOptions} />
           )}
         </div>
       </div>

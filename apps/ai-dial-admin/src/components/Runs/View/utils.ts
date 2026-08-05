@@ -14,6 +14,8 @@ import {
   STATUS_COLUMN_WIDTH,
   TEST_CASE_NAME_COLUMN_WIDTH,
   TEXT_FILTER_COL_DEF,
+  TOTAL_TURNS_COLUMN_WIDTH,
+  TURN_INDEX_COLUMN_WIDTH,
 } from '@/src/components/Runs/grid-column-layout';
 import {
   EXECUTION_GROUP_HEADER,
@@ -145,6 +147,22 @@ const executionColumns: ColDef[] = [
     ...fixedWidthColDef(RUN_INDEX_COLUMN_WIDTH),
     ...NO_FILTER_COL_DEF,
     valueGetter: (params) => (params.data?.runIndex != null ? params.data.runIndex + 1 : null),
+  },
+  {
+    field: 'turnIndex',
+    headerName: 'Turn',
+    colId: 'turnIndex',
+    ...fixedWidthColDef(TURN_INDEX_COLUMN_WIDTH),
+    ...NO_FILTER_COL_DEF,
+    valueGetter: (params) => (params.data?.turnIndex != null ? params.data.turnIndex + 1 : null),
+  },
+  {
+    field: 'totalTurns',
+    headerName: 'Total turns',
+    colId: 'totalTurns',
+    ...fixedWidthColDef(TOTAL_TURNS_COLUMN_WIDTH),
+    ...NO_FILTER_COL_DEF,
+    valueGetter: (params) => params.data?.totalTurns ?? null,
   },
   {
     field: 'responseStatusCode',

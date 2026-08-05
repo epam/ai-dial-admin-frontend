@@ -94,6 +94,8 @@ export default {
     HighAccuracy: 'High accuracy',
     LowAccuracy: 'Low accuracy',
     DeselectAll: 'Deselect all',
+    PerTurn: 'Per turn',
+    Shared: 'Shared',
   },
   Menu: {
     Entities: 'Entities',
@@ -1776,6 +1778,12 @@ export default {
     Method: 'Method',
     Controls: 'Controls',
     Configuration: 'Configuration',
+    Condition: 'Condition',
+    ConditionHint:
+      'Optional JSONata evaluated per turn — the metric runs only when it is true. Use data.<column>, response.<column>, and turn.<field> (turn.index — 0-based, turn.total, turn.last — boolean), e.g. $exists(response.answer), or turn.last to run only on the final turn. Leave blank to always run.',
+    ConditionAlwaysRun: 'Always run',
+    ConditionSystemFunctionUnavailable:
+      'System functions such as name() are not available yet. Use a JSONata expression (e.g. $exists(response.answer)) or leave blank.',
     NoTestCases: 'No Test Cases',
     FromPC: 'From PC storage',
     FromDial: 'From DIAL files system',
@@ -1949,6 +1957,10 @@ export default {
     ExcludedFromRun: 'Excluded',
     RunConditionSelect: 'Select',
     ViewOnlyIncludedInRun: 'View only included in run ({count})',
+    TurnLabel: 'Turn {index}',
+    TurnCountBadge: '{count} turns',
+    ImportWarnings: 'Warnings',
+    ImportWarningRow: 'Row {rowNumber}',
   },
   FileManager: {
     SelectedItems: 'item(s) selected',
@@ -2228,6 +2240,7 @@ export default {
     StringFunctions: 'String functions',
     NumericFunctions: 'Numeric functions',
     Playground: 'Online playground',
+    RequestResponseBindings: 'Request & Response Bindings',
     PathNavigation: 'Path Navigation',
     ArrayOperations: 'Array Operations',
     ConditionalsNullSafety: 'Conditionals & Null Safety',
@@ -2235,6 +2248,7 @@ export default {
     UseCase: 'Use Case',
     Expression: 'Expression',
     ResultType: 'Result Type',
+    ToggleLabel: 'JSONata',
   },
   ActionMenuOperation: {
     Delete: 'Delete',
@@ -2265,6 +2279,11 @@ export default {
     Try_out: 'Try out',
     Edit: 'Edit',
     Export: 'Export',
+    Add_turn: 'Add turn',
+    Delete_turn: 'Delete turn',
+    Move_turn_up: 'Move turn up',
+    Move_turn_down: 'Move turn down',
+    Delete_case: 'Delete test case',
   },
   QueryBuilder: {
     Source: 'Source',

@@ -29,10 +29,12 @@ import {
 } from '@/src/app/[lang]/datasets/actions';
 import { detachDataset, updateTestSuite } from '@/src/app/[lang]/test-suites/actions';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
+import { getTurnActionsColumn } from '@/src/components/Grid/columns/turn-columns';
+import { useTurnGroupGrid } from '@/src/components/Grid/hooks/use-turn-group-grid';
 import ListEntities from '@/src/components/ListView/List';
 import TryOut from '@/src/components/TestSuites/RequestTemplate/components/TryOut';
 import { getTestCaseColumns } from '@/src/components/TestSuites/utils/columns';
-import { createNewTestCaseRow, getTestCaseGridData, rowToTestCase } from '@/src/components/TestSuites/utils/data';
+import { collapseRowsToTestCases, createNewTestCaseRow, rowToTestCase } from '@/src/components/TestSuites/utils/data';
 import { ONE_ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { ApiRoute } from '@/src/constants/api-routes';
@@ -44,14 +46,17 @@ import { SaveValidationContextProvider } from '@/src/context/SaveValidationConte
 import { useI18n } from '@/src/locales/client';
 import { Dataset, DatasetVisibility } from '@/src/models/evaluation/dataset';
 import { FilterNode } from '@/src/models/evaluation/structured-query';
+import { GroupedGridRow } from '@/src/models/evaluation/test-case-grouping';
 import { TestCase, TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
 import { ApplicationRoute } from '@/src/types/routes';
+import { expandTestCasesToRows } from '@/src/utils/evaluation/test-case-grouping';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import HeaderButtons from './Header';
 import RunCondition from './RunCondition/RunCondition';
 import { useIncludedIds } from './RunCondition/use-included-ids';
+import { GridRowType } from '@/src/types/grid-row-type';
 
 export interface TestCasesActions {
   getDirtyTestCases: () => TestCase[];
@@ -69,6 +74,8 @@ interface Props {
   suiteEtag?: string;
   onChangeDataset?: (dataset: Dataset, etag?: string) => void;
 }
+
+const STRUCTURAL_FIELDS = ['testCaseName', 'enabled', '_turnIndex'];
 
 const TestCasesList: FC<Props> = ({
   selectedTestSuite,
@@ -90,7 +97,6 @@ const TestCasesList: FC<Props> = ({
   const gridApiRef = useRef<GridApi | null>(null);
   const [newTestCases, setNewTestCases] = useState<Record<string, unknown>[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [data, setData] = useState<Record<string, unknown>[]>([]);
   const [columnDefs, setColumnDefs] = useState<ColDef[]>([]);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isBatchDeleteModalOpen, setIsBatchDeleteModalOpen] = useState(false);
@@ -98,43 +104,30 @@ const TestCasesList: FC<Props> = ({
   const [selectedRows, setSelectedRows] = useState<TestCase[]>([]);
   const [showIncludedOnly, setShowIncludedOnly] = useState(false);
   const onRemoveCaseRef = useRef<(data?: TestCase) => void>(() => {});
-  const dirtyRowsRef = useRef<Map<string, Record<string, unknown>>>(new Map());
   const refreshVersionRef = useRef(0);
-  const gridRows = useMemo(() => [...data, ...newTestCases], [data, newTestCases]);
-  const includedIds = useIncludedIds(selectedTestSuite.testCaseFilter, gridRows, dataset?.testCaseSchema);
-  const includedIdsRef = useRef(includedIds);
-  includedIdsRef.current = includedIds;
-  const showIncludedOnlyRef = useRef(showIncludedOnly);
-  showIncludedOnlyRef.current = showIncludedOnly;
   const newTestCasesRef = useRef(newTestCases);
   newTestCasesRef.current = newTestCases;
+  const showIncludedOnlyRef = useRef(showIncludedOnly);
+  showIncludedOnlyRef.current = showIncludedOnly;
   const lastIncludedCountRef = useRef(0);
 
-  const updateData = useCallback(
-    (row: Record<string, unknown>) => {
-      if (newTestCases.some((r) => r.id === row.id)) {
-        setNewTestCases((prev) => prev.map((r) => (r.id === row.id ? ({ ...row } as Record<string, unknown>) : r)));
-      } else {
-        const id = String(row.id);
-        dirtyRowsRef.current.set(id, { ...row });
+  const onOpenDeleteModal = useCallback(
+    (data?: TestCase) => {
+      if (!data) return;
+
+      if (newTestCases.some((r) => r.id === data.id)) {
+        setNewTestCases((prev) => prev.filter((r) => r.id !== data.id));
+        onDirtyChange?.(true);
+        return;
       }
-      onDirtyChange?.(true);
+
+      setSelectedTestCase(data);
+      setIsDeleteModalOpen(true);
     },
     [newTestCases, onDirtyChange],
   );
 
-  const onCellChange = useCallback(
-    (data: Record<string, unknown>, field: string, value: string | number | boolean) => {
-      if (!data) return;
-      data[field] = value;
-      if (field !== 'testCaseName' && data.data != null) {
-        data.data = { ...(data.data as Record<string, unknown>), [field]: value };
-      }
-
-      updateData(data);
-    },
-    [updateData],
-  );
+  const onDeleteCase = useCallback((row: GroupedGridRow) => onOpenDeleteModal(rowToTestCase(row)), [onOpenDeleteModal]);
 
   const onSelectionChanged = useCallback((event: SelectionChangedEvent) => {
     setSelectedRows(event.api.getSelectedRows() as TestCase[]);
@@ -166,7 +159,67 @@ const TestCasesList: FC<Props> = ({
     }
   }, []);
 
+  const applyIncludedInRunSort = useCallback(() => {
+    const api = gridApiRef.current;
+    if (!api) return;
+
+    if (selectedTestSuite.testCaseFilter) {
+      api.applyColumnState({
+        state: [{ colId: 'includedInRun', sort: 'desc', sortIndex: 0 }],
+        defaultState: { sort: null },
+      });
+    } else {
+      api.applyColumnState({
+        state: [{ colId: 'includedInRun', sort: null }],
+      });
+    }
+  }, [selectedTestSuite.testCaseFilter]);
+
+  const onGridReadyInner = useCallback(
+    ({ api }: GridReadyEvent) => {
+      gridApiRef.current = api;
+      setGridApi(api);
+      applyIncludedInRunSort();
+    },
+    [applyIncludedInRunSort, setGridApi],
+  );
+
+  const turnGrid = useTurnGroupGrid<TestCase>({
+    schema: dataset?.testCaseSchema,
+    collapseRows: collapseRowsToTestCases,
+    onDeleteCase,
+    onDirtyChange,
+    structuralFields: STRUCTURAL_FIELDS,
+    onGridReady: onGridReadyInner,
+  });
+
+  const onCellChange = useCallback(
+    (row: Record<string, unknown>, field: string, value: string | number | boolean) => {
+      if (newTestCases.some((r) => r.id === row.id)) {
+        row[field] = value;
+        if (field !== 'testCaseName' && row.data != null) {
+          row.data = { ...(row.data as Record<string, unknown>), [field]: value };
+        }
+        setNewTestCases((prev) => prev.map((r) => (r.id === row.id ? { ...row } : r)));
+        onDirtyChange?.(true);
+        return;
+      }
+
+      turnGrid.onCellChange(row, field, value);
+    },
+    [newTestCases, onDirtyChange, turnGrid.onCellChange],
+  );
+
+  const gridRows = useMemo(
+    () => [...turnGrid.groups.flatMap((group) => group.turns), ...newTestCases],
+    [turnGrid.groups, newTestCases],
+  );
+  const includedIds = useIncludedIds(selectedTestSuite.testCaseFilter, gridRows, dataset?.testCaseSchema);
+  const includedIdsRef = useRef(includedIds);
+  includedIdsRef.current = includedIds;
+
   const gridOptions: GridOptions = {
+    ...turnGrid.turnGridOptions,
     onSelectionChanged,
     onCellClicked,
     isExternalFilterPresent: () => showIncludedOnlyRef.current,
@@ -186,30 +239,24 @@ const TestCasesList: FC<Props> = ({
     },
   };
 
-  const onOpenDeleteModal = useCallback(
-    (data?: TestCase) => {
-      if (!data) return;
-
-      if (newTestCases.some((r) => r.id === data.id)) {
-        setNewTestCases((prev) => prev.filter((r) => r.id !== data.id));
-        onDirtyChange?.(true);
-        return;
-      }
-
-      setSelectedTestCase(data);
-      setIsDeleteModalOpen(true);
-    },
-    [newTestCases, onDirtyChange],
-  );
-
   const onCloseDeleteModal = useCallback(() => {
     setSelectedTestCase(undefined);
     setIsDeleteModalOpen(false);
   }, []);
 
-  const stableOnRemoveCase = useCallback((data?: TestCase) => {
-    onRemoveCaseRef.current(data);
-  }, []);
+  const stableOnRemoveCase = useCallback(
+    (row?: GroupedGridRow) => {
+      if (!row) return;
+
+      if (row.rowType === GridRowType.TURN) {
+        turnGrid.turnActionHandlers.onDeleteTurn(row);
+        return;
+      }
+
+      onRemoveCaseRef.current(rowToTestCase(row));
+    },
+    [turnGrid.turnActionHandlers],
+  );
 
   const onOpenTryOutSidebar = useCallback(
     (e?: TestCase) => {
@@ -236,7 +283,15 @@ const TestCasesList: FC<Props> = ({
 
   const buildColumnDefs = useCallback(
     (activeSchema?: TestCaseSchema[]) => [
-      ...getTestCaseColumns(selectedTestSuite, onCellChange, t, activeSchema, isReadOnly, () => includedIdsRef.current),
+      ...getTestCaseColumns({
+        suite: selectedTestSuite,
+        onCellChange,
+        onToggleExpand: turnGrid.onToggleExpand,
+        t,
+        schema: activeSchema,
+        isReadOnly,
+        includedIds: () => includedIdsRef.current,
+      }),
       { ...ONE_ACTION_COLUMN(getTryOutOperation(onOpenTryOutSidebar)), colId: 'action-tryout' },
       ...(!isReadOnly
         ? [
@@ -244,10 +299,20 @@ const TestCasesList: FC<Props> = ({
               ...ONE_ACTION_COLUMN(getRemoveOperation(stableOnRemoveCase, void 0, 'text-error w-4 h-4')),
               colId: 'action-remove',
             },
+            getTurnActionsColumn(turnGrid.turnActionHandlers),
           ]
         : []),
     ],
-    [selectedTestSuite, onCellChange, t, isReadOnly, onOpenTryOutSidebar, stableOnRemoveCase],
+    [
+      selectedTestSuite,
+      onCellChange,
+      t,
+      isReadOnly,
+      onOpenTryOutSidebar,
+      stableOnRemoveCase,
+      turnGrid.onToggleExpand,
+      turnGrid.turnActionHandlers,
+    ],
   );
 
   const refreshGrid = useCallback(
@@ -262,47 +327,18 @@ const TestCasesList: FC<Props> = ({
       getTestCases(datasetId, 0, 1000, [], []).then((res) => {
         if (version !== refreshVersionRef.current) return;
         setIsLoading(false);
-        let rawData = res == null || res.content.length === 0 ? [] : getTestCaseGridData(res?.content || []);
-        if (dirtyRowsRef.current.size > 0) {
-          rawData = rawData.map((row) => {
-            const id = String(row.id);
-            return dirtyRowsRef.current.has(id) ? dirtyRowsRef.current.get(id)! : row;
-          });
-        }
-        setData(rawData);
+        const rawData = res == null || res.content.length === 0 ? [] : expandTestCasesToRows(res?.content || []);
+        turnGrid.setServerRows(rawData);
         setColumnDefs(buildColumnDefs(activeSchema));
       });
       if (withRefreshPage) {
         router.refresh();
       }
     },
-    [buildColumnDefs, selectedTestSuite.datasetId, dataset, router],
+    [buildColumnDefs, selectedTestSuite.datasetId, dataset, router, turnGrid.setServerRows],
   );
 
-  const applyIncludedInRunSort = useCallback(() => {
-    const api = gridApiRef.current;
-    if (!api) return;
-
-    if (selectedTestSuite.testCaseFilter) {
-      api.applyColumnState({
-        state: [{ colId: 'includedInRun', sort: 'desc', sortIndex: 0 }],
-        defaultState: { sort: null },
-      });
-    } else {
-      api.applyColumnState({
-        state: [{ colId: 'includedInRun', sort: null }],
-      });
-    }
-  }, [selectedTestSuite.testCaseFilter]);
-
-  const onGridReady = useCallback(
-    ({ api }: GridReadyEvent) => {
-      gridApiRef.current = api;
-      setGridApi(api);
-      applyIncludedInRunSort();
-    },
-    [applyIncludedInRunSort, setGridApi],
-  );
+  const onGridReady = turnGrid.onGridReady;
 
   const onApplyImport = useCallback(
     (file: File, mode: TestCaseImportMode, strategy: TestCaseConflictStrategy) => {
@@ -397,18 +433,16 @@ const TestCasesList: FC<Props> = ({
     });
   }, [refreshGrid, selectedRows, selectedTestSuite.datasetId, showNotification, t]);
 
-  const getDirtyTestCases = useCallback((): TestCase[] => {
-    const dirty = Array.from(dirtyRowsRef.current.values()).map((row) => rowToTestCase(row));
-    const newCases = newTestCases.map((row) => rowToTestCase(row));
-    return [...dirty, ...newCases];
-  }, [newTestCases]);
+  const getDirtyTestCases = useCallback(
+    (): TestCase[] => turnGrid.getDirtyRows(newTestCases),
+    [turnGrid.getDirtyRows, newTestCases],
+  );
 
   const clearDirtyAndRefresh = useCallback(() => {
-    dirtyRowsRef.current.clear();
+    turnGrid.clearDirty();
     setNewTestCases([]);
-    onDirtyChange?.(false);
     refreshGrid();
-  }, [refreshGrid, onDirtyChange]);
+  }, [turnGrid.clearDirty, refreshGrid]);
 
   useEffect(() => {
     if (gridApi && newTestCases.length > 0) {
@@ -426,17 +460,7 @@ const TestCasesList: FC<Props> = ({
 
     const schemaFieldNames = new Set((dataset?.testCaseSchema ?? []).map((s) => s.name));
 
-    dirtyRowsRef.current.forEach((row, id) => {
-      const rowData = row.data as Record<string, unknown> | undefined;
-      if (!rowData) return;
-      const hasRemovedFields = Object.keys(rowData).some((key) => !schemaFieldNames.has(key));
-      if (hasRemovedFields) {
-        dirtyRowsRef.current.set(id, {
-          ...row,
-          data: Object.fromEntries(Object.entries(rowData).filter(([key]) => schemaFieldNames.has(key))),
-        });
-      }
-    });
+    turnGrid.pruneToSchema(schemaFieldNames);
 
     setNewTestCases((prev) => {
       const needsClean = prev.some((row) => {
@@ -532,7 +556,7 @@ const TestCasesList: FC<Props> = ({
     }
   }, [selectedTestSuite.id, showNotification, t, router]);
 
-  const totalCount = data.length + newTestCases.length;
+  const totalCount = turnGrid.groups.length + newTestCases.length;
   const isPrivate = dataset?.visibility === DatasetVisibility.PRIVATE;
 
   if (!selectedTestSuite.testCaseFilter) {
@@ -597,7 +621,7 @@ const TestCasesList: FC<Props> = ({
           description: t(TestSuitesI18nKey.NoTestCasesDescription),
         }}
         onGridReady={onGridReady}
-        rowData={data}
+        rowData={turnGrid.rowData}
         columnDefs={columnDefs}
       >
         <HeaderButtons

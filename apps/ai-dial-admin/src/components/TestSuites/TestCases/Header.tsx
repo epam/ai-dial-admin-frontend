@@ -172,6 +172,7 @@ const HeaderButtons: FC<Props> = ({
           <ImportFileModal
             datasetId={datasetId}
             isModalOpen={isImportModalOpen}
+            portalId="ImportFileModal"
             onClose={() => setIsImportModalOpen(false)}
             onApply={onApplyImport}
           />,

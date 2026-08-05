@@ -1,8 +1,11 @@
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { ReactNode } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
-import { TestSuitesI18nKey } from '@/src/constants/i18n';
+import { tryOutTestSuite } from '@/src/app/[lang]/test-suites/actions';
+import { convertVariableIntoInitialRequest } from '@/src/components/TestSuites/utils/template-variables';
+import { ButtonsI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
 import TryOut from '../components/TryOut';
 
@@ -34,7 +37,7 @@ vi.mock('@/src/components/TestSuites/utils/template-variables', () => ({
 }));
 
 vi.mock('@/src/components/EntityTabs/JsonEditor/JsonEditor', () => ({
-  default: () => <div>JsonEditor</div>,
+  default: ({ entity }: { entity: unknown }) => <div>JsonEditor:{JSON.stringify(entity)}</div>,
 }));
 
 vi.mock('../components/Variables', () => ({
@@ -85,6 +88,7 @@ vi.mock('@tabler/icons-react', () => ({
   IconRefresh: () => <svg />,
   IconEqual: () => <svg />,
   IconEqualNot: () => <svg />,
+  IconEdit: () => <svg />,
 }));
 
 vi.mock('@/public/images/icons/grafana.svg', () => ({
@@ -124,6 +128,11 @@ const deploymentSuite: TestSuite = {
   endpointRef: { method: 'POST', relativeUrlPattern: '/api/search' },
 };
 
+const deploymentSuiteWithRequestColumn: TestSuite = {
+  ...deploymentSuite,
+  responseColumns: [{ name: 'reqFoo', displayName: 'reqFoo', expression: '$request.foo', type: 'STRING' }],
+};
+
 describe('TryOut MCP branch', () => {
   test('shows Tool Arguments Preview label for MCP suite', async () => {
     render(<TryOut testSuite={mcpSuite} />);
@@ -154,6 +163,46 @@ describe('TryOut MCP branch', () => {
 
     await waitFor(() => {
       expect(screen.getByText('POST /api/search')).toBeInTheDocument();
+    });
+  });
+
+  test('wraps the bare request body into a request envelope on a failed send', async () => {
+    vi.mocked(convertVariableIntoInitialRequest).mockReturnValueOnce({ foo: 'bar' });
+    vi.mocked(tryOutTestSuite).mockResolvedValueOnce({ success: false, errorMessage: 'boom' });
+
+    const user = userEvent.setup();
+    render(<TryOut testSuite={deploymentSuite} />);
+
+    const sendButton = await screen.findByRole('button', { name: ButtonsI18nKey.SendRequest });
+    await user.click(sendButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('JsonEditor:{"foo":"bar"}')).toBeInTheDocument();
+    });
+  });
+});
+
+describe('TryOut Columns tab request binding', () => {
+  test('binds $request to the request body, not the request envelope', async () => {
+    vi.mocked(tryOutTestSuite).mockResolvedValueOnce({
+      success: true,
+      response: {
+        resolvedRequest: { url: '/v1/chat', method: 'POST', body: { foo: 'bar' } },
+        response: { statusCode: 200, body: { ok: true } },
+      },
+    });
+
+    const user = userEvent.setup();
+    render(<TryOut testSuite={deploymentSuiteWithRequestColumn} />);
+
+    const sendButton = await screen.findByRole('button', { name: ButtonsI18nKey.SendRequest });
+    await user.click(sendButton);
+
+    const columnsTab = await screen.findByRole('tab', { name: TabsI18nKey.Columns });
+    await user.click(columnsTab);
+
+    await waitFor(() => {
+      expect(screen.getByText('bar')).toBeInTheDocument();
     });
   });
 });

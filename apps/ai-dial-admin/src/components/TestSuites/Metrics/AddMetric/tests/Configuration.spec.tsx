@@ -9,13 +9,16 @@ import { MetricBindingType } from '@/src/types/evaluation';
 vi.mock('@epam/ai-dial-ui-kit', () => ({
   SelectSize: { Sm: 'Sm' },
   SelectVariant: { Secondary: 'Secondary' },
-  DialInput: ({ labelProps, value, onChange }: any) => (
-    <input
-      role="textbox"
-      aria-label={labelProps?.label}
-      value={value ?? ''}
-      onChange={(e) => onChange?.(e.target.value)}
-    />
+  DialInput: ({ labelProps, value, onChange, error }: any) => (
+    <>
+      <input
+        role="textbox"
+        aria-label={labelProps?.label}
+        value={value ?? ''}
+        onChange={(e) => onChange?.(e.target.value)}
+      />
+      {error ? <span>{error}</span> : null}
+    </>
   ),
   DialSelect: ({ value, onChange, options = [] }: any) => (
     <select role="combobox" value={value ?? ''} onChange={(e) => onChange?.(e.target.value)}>
@@ -165,5 +168,37 @@ describe('MetricConfiguration', () => {
     expect(screen.getByRole('link', { name: 'our site' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'https://docs.example.com' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'more info' })).toBeInTheDocument();
+  });
+
+  test('renders the condition input with its value and fires onChangeCondition', () => {
+    const onChangeCondition = vi.fn();
+
+    render(
+      <MetricConfiguration
+        metricName="Metric Name"
+        selectedMetricDetails={selectedMetricDetails}
+        condition="$exists(response.answer)"
+        onChangeCondition={onChangeCondition}
+      />,
+    );
+
+    const conditionInput = screen.getByRole('textbox', { name: TestSuitesI18nKey.Condition });
+    expect(conditionInput).toHaveValue('$exists(response.answer)');
+
+    fireEvent.change(conditionInput, { target: { value: '$exists(response.score)' } });
+    expect(onChangeCondition).toHaveBeenCalledWith('$exists(response.score)');
+  });
+
+  test('shows the condition error when provided', () => {
+    render(
+      <MetricConfiguration
+        metricName="Metric Name"
+        selectedMetricDetails={selectedMetricDetails}
+        condition="isLastTurn()"
+        conditionError={TestSuitesI18nKey.ConditionSystemFunctionUnavailable}
+      />,
+    );
+
+    expect(screen.getByText(TestSuitesI18nKey.ConditionSystemFunctionUnavailable)).toBeInTheDocument();
   });
 });

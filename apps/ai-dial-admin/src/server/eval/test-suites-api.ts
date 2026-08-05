@@ -9,6 +9,7 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { API } from '@/src/server/api';
 import { BaseApi } from '@/src/server/base-api';
 import { TestCaseConflictStrategy, TestCaseImportMode } from '@/src/types/evaluation';
+import { normalizeTestSuitePayload } from '@/src/utils/evaluation/test-suite-payload';
 import { getRequestFiltersStr } from '@/src/utils/request/get-request-filters';
 import { getRequestSortsStr } from '@/src/utils/request/get-request-sorts';
 
@@ -104,12 +105,12 @@ export class TestSuitesApi extends BaseApi {
 
   createTestCase(
     testSuiteId: string,
-    body: Pick<TestCase, 'testCaseName' | 'data'>,
+    body: Pick<TestCase, 'testCaseName' | 'data' | 'multiTurnData'>,
     token: Token,
     includeWarnings = false,
   ): Promise<ServerActionResponse> {
     const url = `${TEST_CASES_URL(testSuiteId)}${includeWarnings ? '?includeWarnings=true' : ''}`;
-    return this.postAction<Pick<TestCase, 'testCaseName' | 'data'>>(url, body, token);
+    return this.postAction<Pick<TestCase, 'testCaseName' | 'data' | 'multiTurnData'>>(url, body, token);
   }
 
   updateTestCases(id: string, testCases: TestCase[], token: Token): Promise<ServerActionResponse> {
@@ -138,7 +139,7 @@ export class TestSuitesApi extends BaseApi {
   }
 
   updateTestSuite(suite: TestSuite, etag: string, token: Token): Promise<ServerActionResponse> {
-    return this.putActionWithEtag(TEST_SUITE_URL(suite.id), suite, token, etag);
+    return this.putActionWithEtag(TEST_SUITE_URL(suite.id), normalizeTestSuitePayload(suite), token, etag);
   }
 
   runTestSuite(token: Token, id?: string, numberOfRuns?: number | string): Promise<ServerActionResponse> {

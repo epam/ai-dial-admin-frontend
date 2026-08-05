@@ -269,4 +269,36 @@ describe('Metrics', () => {
       );
     });
   });
+
+  test('renders metric condition when present', async () => {
+    const metricWithCondition: Metric = {
+      ...metric,
+      condition: 'turn.value > 0.5',
+    };
+    mockGetTestSuiteMetrics.mockResolvedValue({ content: [metricWithCondition] });
+
+    render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Metric One')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('turn.value > 0.5')).toBeInTheDocument();
+  });
+
+  test('renders "Always run" when metric has no condition', async () => {
+    const metricWithoutCondition: Metric = {
+      ...metric,
+      condition: undefined,
+    };
+    mockGetTestSuiteMetrics.mockResolvedValue({ content: [metricWithoutCondition] });
+
+    render(<Metrics selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Metric One')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText(TestSuitesI18nKey.ConditionAlwaysRun)).toBeInTheDocument();
+  });
 });

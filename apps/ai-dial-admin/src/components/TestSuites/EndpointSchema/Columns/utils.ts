@@ -29,6 +29,41 @@ const categorizeFields = (nodes: SchemaTreeNode[]): CategorizedFields => {
   return { simpleFields, objectFields, arrayFields, stringFields, numberFields, nestedPaths };
 };
 
+export const buildRequestResponseRows = (schema: JSONSchema7): DocumentationRow[] => {
+  const nodes = schemaToTreeNodes(schema, '', schema);
+  const { simpleFields } = categorizeFields(nodes);
+  const rows: DocumentationRow[] = [];
+
+  const firstSimple = simpleFields[0];
+  if (firstSimple) {
+    rows.push({
+      useCase: 'Response field (bare path)',
+      expression: firstSimple.path,
+      resultType: firstSimple.type,
+    });
+    rows.push({
+      useCase: 'Same field via $response',
+      expression: `$response.${firstSimple.path}`,
+      resultType: firstSimple.type,
+    });
+  }
+
+  // Unlike other builders, these rows always render (even for an empty/non-object schema)
+  // because $request describes the request body, not the response body schema this builder derives from.
+  rows.push({
+    useCase: 'Whole request body',
+    expression: '$request',
+    resultType: 'object',
+  });
+  rows.push({
+    useCase: 'Request body field',
+    expression: '$request.messages[0].content',
+    resultType: 'string',
+  });
+
+  return rows;
+};
+
 export const buildPathNavigationRows = (schema: JSONSchema7): DocumentationRow[] => {
   const nodes = schemaToTreeNodes(schema, '', schema);
   if (!nodes.length) return [];

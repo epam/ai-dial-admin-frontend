@@ -2,7 +2,7 @@ import { JSONSchema7 } from 'json-schema';
 import { describe, expect, test } from 'vitest';
 
 import { MetricBinding } from '@/src/models/evaluation/metric';
-import { validateMetricBindings } from '../utils';
+import { validateMetricBindings, isReservedSystemFunctionCondition } from '../utils';
 import { MetricBindingType } from '@/src/types/evaluation';
 
 describe('validateMetricBindings', () => {
@@ -205,5 +205,17 @@ describe('validateMetricBindings', () => {
     const isValid = validateMetricBindings('Metric name', [], [], schemaWithoutRequired, schemaWithoutRequired);
 
     expect(isValid).toBe(true);
+  });
+});
+
+describe('isReservedSystemFunctionCondition', () => {
+  test('flags a bare system-function call', () => {
+    expect(isReservedSystemFunctionCondition('name()')).toBe(true);
+  });
+  test('allows real JSONata and blanks', () => {
+    expect(isReservedSystemFunctionCondition('$exists(response.answer)')).toBe(false);
+    expect(isReservedSystemFunctionCondition('turn.last')).toBe(false);
+    expect(isReservedSystemFunctionCondition('')).toBe(false);
+    expect(isReservedSystemFunctionCondition(undefined)).toBe(false);
   });
 });

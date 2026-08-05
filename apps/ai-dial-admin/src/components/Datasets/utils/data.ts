@@ -1,4 +1,5 @@
 import { DatasetTestCase } from '@/src/models/evaluation/dataset';
+import { collapseRowsToCases } from '@/src/utils/evaluation/test-case-grouping';
 import { v4 as uuidv4 } from 'uuid';
 
 export const createNewDatasetTestCaseRow = (): Record<string, unknown> => {
@@ -9,23 +10,6 @@ export const createNewDatasetTestCaseRow = (): Record<string, unknown> => {
     createdAt: 0,
     updatedAt: 0,
   };
-};
-
-export const getDatasetTestCaseGridData = (testCases?: DatasetTestCase[] | null) => {
-  return (
-    testCases?.reduce((acc: Record<string, unknown>[], testCase: DatasetTestCase) => {
-      const factsData = Object.keys(testCase.data || {}).reduce((factsAcc: Record<string, string>, factKey: string) => {
-        factsAcc[factKey] = testCase.data?.[factKey] as string;
-        return factsAcc;
-      }, {});
-
-      acc.push({
-        ...testCase,
-        ...factsData,
-      });
-      return acc;
-    }, []) || []
-  );
 };
 
 export const rowToDatasetTestCase = (row: Record<string, unknown>): DatasetTestCase => {
@@ -39,3 +23,8 @@ export const rowToDatasetTestCase = (row: Record<string, unknown>): DatasetTestC
     data: row.data as Record<string, unknown>,
   };
 };
+
+export const collapseRowsToDatasetTestCases = (
+  rows: Record<string, unknown>[],
+  perTurnFields: Set<string> = new Set(),
+): DatasetTestCase[] => collapseRowsToCases(rows, perTurnFields, rowToDatasetTestCase);

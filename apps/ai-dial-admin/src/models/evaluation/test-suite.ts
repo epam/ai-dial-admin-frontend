@@ -126,6 +126,7 @@ export interface TestSuiteRequestTemplate {
 export interface TestSuiteRequestTemplateBody {
   contentType?: string;
   content?: Record<string, unknown> | FormDataPart[];
+  jsonataContent?: string;
 }
 
 export interface TestSuiteRequestTemplateParam {
@@ -140,6 +141,7 @@ export interface TestCase {
   id: string;
   createdAt: number;
   data?: Record<string, unknown>;
+  multiTurnData?: Record<string, unknown>[];
   validationWarnings?: ValidationWarning[];
   enabled?: boolean;
 }
@@ -158,6 +160,7 @@ export interface TestCaseSchema {
   type: TestCaseItemType;
   required: boolean;
   description: string;
+  perTurn?: boolean;
 }
 
 export interface InputBinding {

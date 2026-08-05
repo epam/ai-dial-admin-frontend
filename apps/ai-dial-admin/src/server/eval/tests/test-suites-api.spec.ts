@@ -125,6 +125,50 @@ describe('Server :: TestSuiteApi', () => {
     );
   });
 
+  test('Should call updateTestSuite with jsonataContent omitted when the expression is empty', async () => {
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
+
+    const suite: TestSuite = {
+      ...mockTestSuite,
+      requestTemplate: { urlTemplate: '/api', body: { contentType: 'application/json', jsonataContent: '' } },
+    };
+
+    await instance.updateTestSuite(suite, 'etag', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_SUITE_URL(suite.id)}`,
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify({
+          ...mockTestSuite,
+          requestTemplate: { urlTemplate: '/api', body: { contentType: 'application/json' } },
+        }),
+      }),
+    );
+  });
+
+  test('Should call updateTestSuite with a non-empty jsonataContent sent verbatim', async () => {
+    fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
+
+    const suite: TestSuite = {
+      ...mockTestSuite,
+      requestTemplate: {
+        urlTemplate: '/api',
+        body: { contentType: 'application/json', jsonataContent: '$sum(items.price)' },
+      },
+    };
+
+    await instance.updateTestSuite(suite, 'etag', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${TEST_SUITE_URL(suite.id)}`,
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify(suite),
+      }),
+    );
+  });
+
   test('Should calls removeTestSuite with DELETE method', async () => {
     fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
 

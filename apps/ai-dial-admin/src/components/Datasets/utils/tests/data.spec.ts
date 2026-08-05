@@ -1,25 +1,26 @@
 import { describe, expect, test } from 'vitest';
 
 import { DatasetTestCase } from '@/src/models/evaluation/dataset';
-import { createNewDatasetTestCaseRow, getDatasetTestCaseGridData, rowToDatasetTestCase } from '../data';
+import { collapseRowsToDatasetTestCases, createNewDatasetTestCaseRow, rowToDatasetTestCase } from '../data';
+import { demoteToSingle, expandTestCasesToRows } from '@/src/utils/evaluation/test-case-grouping';
 
-describe('getDatasetTestCaseGridData', () => {
+describe('expandTestCasesToRows :: dataset test cases', () => {
   test('should return empty array when input is empty', () => {
-    expect(getDatasetTestCaseGridData([])).toEqual([]);
+    expect(expandTestCasesToRows([])).toEqual([]);
   });
 
   test('should return empty array when input is undefined', () => {
-    expect(getDatasetTestCaseGridData()).toEqual([]);
+    expect(expandTestCasesToRows()).toEqual([]);
   });
 
   test('should return empty array when input is null', () => {
-    expect(getDatasetTestCaseGridData(null)).toEqual([]);
+    expect(expandTestCasesToRows(null)).toEqual([]);
   });
 
   test('should return test case without modification when data is empty', () => {
     const testCases: DatasetTestCase[] = [{ testCaseName: 'Case 1', data: {} }];
 
-    const result = getDatasetTestCaseGridData(testCases);
+    const result = expandTestCasesToRows(testCases);
 
     expect(result).toEqual([{ testCaseName: 'Case 1', data: {} }]);
   });
@@ -27,7 +28,7 @@ describe('getDatasetTestCaseGridData', () => {
   test('should spread data fields into top-level row properties', () => {
     const testCases: DatasetTestCase[] = [{ testCaseName: 'Case 1', data: { prompt: 'hello', expected: 'world' } }];
 
-    const result = getDatasetTestCaseGridData(testCases);
+    const result = expandTestCasesToRows(testCases);
 
     expect(result[0].prompt).toBe('hello');
     expect(result[0].expected).toBe('world');
@@ -40,7 +41,7 @@ describe('getDatasetTestCaseGridData', () => {
       { testCaseName: 'Case 2', data: { b: '2' } },
     ];
 
-    const result = getDatasetTestCaseGridData(testCases);
+    const result = expandTestCasesToRows(testCases);
 
     expect(result.length).toBe(2);
     expect(result[0].a).toBe('1');
@@ -51,7 +52,7 @@ describe('getDatasetTestCaseGridData', () => {
     const testCases: DatasetTestCase[] = [{ testCaseName: 'Case 1', data: { x: 'y' } }];
     const original = JSON.parse(JSON.stringify(testCases));
 
-    getDatasetTestCaseGridData(testCases);
+    expandTestCasesToRows(testCases);
 
     expect(testCases).toEqual(original);
   });
@@ -61,7 +62,7 @@ describe('getDatasetTestCaseGridData', () => {
       { testCaseName: 'Case 1', data: { num: 42, bool: true, arr: [1, 2], obj: { nested: 'v' } } },
     ];
 
-    const result = getDatasetTestCaseGridData(testCases);
+    const result = expandTestCasesToRows(testCases);
 
     expect(result[0].num).toBe(42);
     expect(result[0].bool).toBe(true);
@@ -147,5 +148,194 @@ describe('rowToDatasetTestCase', () => {
     const result = rowToDatasetTestCase(row);
 
     expect(result).not.toHaveProperty('enabled');
+  });
+});
+
+describe('expandTestCasesToRows :: dataset test cases, multi-turn', () => {
+  test('should emit one row per turn, each stamped with the right _turnIndex', () => {
+    const testCases: DatasetTestCase[] = [
+      {
+        id: 'tc-1',
+        testCaseName: 'Multi',
+        data: { model: 'gpt-4' },
+        multiTurnData: [{ prompt: 'hi' }, { prompt: 'bye', expected: 'ok' }],
+      },
+    ];
+
+    const result = expandTestCasesToRows(testCases);
+
+    expect(result).toHaveLength(2);
+    expect(result[0]._turnIndex).toBe(0);
+    expect(result[1]._turnIndex).toBe(1);
+    expect(result[0].id).toBe('tc-1');
+    expect(result[1].id).toBe('tc-1');
+  });
+
+  test("should merge {...shared, ...turn} into each row's data, and flatten the merged fields onto the row", () => {
+    const testCases: DatasetTestCase[] = [
+      {
+        id: 'tc-1',
+        testCaseName: 'Multi',
+        data: { model: 'gpt-4' },
+        multiTurnData: [{ prompt: 'hi' }, { prompt: 'bye', expected: 'ok' }],
+      },
+    ];
+
+    const result = expandTestCasesToRows(testCases);
+
+    expect(result[0].data).toEqual({ model: 'gpt-4', prompt: 'hi' });
+    expect(result[0].model).toBe('gpt-4');
+    expect(result[0].prompt).toBe('hi');
+
+    expect(result[1].data).toEqual({ model: 'gpt-4', prompt: 'bye', expected: 'ok' });
+    expect(result[1].model).toBe('gpt-4');
+    expect(result[1].prompt).toBe('bye');
+    expect(result[1].expected).toBe('ok');
+  });
+
+  test('should let a per-turn key override a shared key of the same name', () => {
+    const testCases: DatasetTestCase[] = [
+      {
+        id: 'tc-1',
+        testCaseName: 'Multi',
+        data: { prompt: 'shared-value' },
+        multiTurnData: [{ prompt: 'turn-value' }],
+      },
+    ];
+
+    const result = expandTestCasesToRows(testCases);
+
+    expect(result[0].prompt).toBe('turn-value');
+    expect(result[0].data).toEqual({ prompt: 'turn-value' });
+  });
+
+  test('should emit exactly one row with no _turnIndex when multiTurnData is absent', () => {
+    const testCases: DatasetTestCase[] = [{ id: 'tc-1', testCaseName: 'Single', data: { prompt: 'only' } }];
+
+    const result = expandTestCasesToRows(testCases);
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).not.toHaveProperty('_turnIndex');
+  });
+
+  test('should emit exactly one row with no _turnIndex when multiTurnData is an empty array', () => {
+    const testCases: DatasetTestCase[] = [
+      { id: 'tc-1', testCaseName: 'Single', data: { prompt: 'only' }, multiTurnData: [] },
+    ];
+
+    const result = expandTestCasesToRows(testCases);
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).not.toHaveProperty('_turnIndex');
+  });
+});
+
+describe('collapseRowsToDatasetTestCases', () => {
+  const perTurnFields = new Set(['prompt', 'expected']);
+
+  test('should round trip grid-data → edit a value → collapse, preserving turn order and the shared/per-turn split', () => {
+    const testCase: DatasetTestCase = {
+      id: 'tc-1',
+      testCaseName: 'Multi',
+      createdAt: 0,
+      data: { model: 'gpt-4' },
+      multiTurnData: [{ prompt: 'hi' }, { prompt: 'bye', expected: 'ok' }],
+    };
+
+    const rows = expandTestCasesToRows([testCase]);
+
+    rows[1].data = { ...(rows[1].data as Record<string, unknown>), prompt: 'edited' };
+    rows[1].prompt = 'edited';
+
+    const result = collapseRowsToDatasetTestCases(rows, perTurnFields);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('tc-1');
+    expect(result[0].data).toEqual({ model: 'gpt-4' });
+    expect(result[0].multiTurnData).toEqual([{ prompt: 'hi' }, { prompt: 'edited', expected: 'ok' }]);
+  });
+
+  test('should produce no multiTurnData for a single-turn case', () => {
+    const testCase: DatasetTestCase = {
+      id: 'tc-1',
+      testCaseName: 'Single',
+      createdAt: 0,
+      data: { prompt: 'only' },
+    };
+
+    const rows = expandTestCasesToRows([testCase]);
+    const result = collapseRowsToDatasetTestCases(rows, perTurnFields);
+
+    expect(result[0]).not.toHaveProperty('multiTurnData');
+    expect(result[0].data).toEqual({ prompt: 'only' });
+  });
+
+  test('should emit data only when a multi-turn case has been reduced to one turn', () => {
+    const testCase: DatasetTestCase = {
+      id: 'tc-1',
+      testCaseName: 'Multi',
+      createdAt: 0,
+      data: { model: 'gpt-4' },
+      multiTurnData: [{ prompt: 'hi' }, { prompt: 'bye', expected: 'ok' }],
+    };
+
+    const rows = expandTestCasesToRows([testCase]);
+    const remainingRow = demoteToSingle(rows[0]);
+
+    const result = collapseRowsToDatasetTestCases([remainingRow], perTurnFields);
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).not.toHaveProperty('multiTurnData');
+    expect(result[0].data).toEqual({ model: 'gpt-4', prompt: 'hi' });
+  });
+
+  test('should not let any client-only field survive into the emitted DTO', () => {
+    const rows: Record<string, unknown>[] = [
+      {
+        id: 'tc-1',
+        rowType: 'GROUP',
+        groupKey: 'tc-1',
+        testCaseName: 'Multi',
+        createdAt: 0,
+        data: { model: 'gpt-4' },
+      },
+      {
+        id: 'tc-1',
+        _turnIndex: 0,
+        rowType: 'TURN',
+        groupKey: 'tc-1',
+        turnNumber: 1,
+        testCaseName: 'Multi',
+        createdAt: 0,
+        data: { model: 'gpt-4', prompt: 'hi' },
+      },
+    ];
+
+    const result = collapseRowsToDatasetTestCases(rows, perTurnFields);
+
+    const serialized = JSON.stringify(result);
+    expect(serialized).not.toContain('_turnIndex');
+    expect(serialized).not.toContain('rowType');
+    expect(serialized).not.toContain('groupKey');
+    expect(serialized).not.toContain('turnNumber');
+  });
+});
+
+describe('multi-turn regression :: single-turn case round-trips unchanged', () => {
+  test('should round-trip an existing single-turn case through grid-data and collapse unchanged', () => {
+    const testCase: DatasetTestCase = {
+      id: 'tc-existing',
+      testCaseName: 'Existing case',
+      createdAt: 1700000000,
+      data: { prompt: 'hello', expected: 'world' },
+    };
+
+    const rows = expandTestCasesToRows([testCase]);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).not.toHaveProperty('_turnIndex');
+
+    const result = collapseRowsToDatasetTestCases(rows);
+
+    expect(result).toEqual([testCase]);
   });
 });

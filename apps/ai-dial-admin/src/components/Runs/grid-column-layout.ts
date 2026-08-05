@@ -2,6 +2,8 @@ import { ColDef } from 'ag-grid-community';
 
 export const STATUS_COLUMN_WIDTH = 40;
 export const RUN_INDEX_COLUMN_WIDTH = 140;
+export const TURN_INDEX_COLUMN_WIDTH = 80;
+export const TOTAL_TURNS_COLUMN_WIDTH = 110;
 export const TEST_CASE_NAME_COLUMN_WIDTH = 156;
 export const HTTP_COLUMN_WIDTH = 80;
 export const DURATION_COLUMN_WIDTH = 100;

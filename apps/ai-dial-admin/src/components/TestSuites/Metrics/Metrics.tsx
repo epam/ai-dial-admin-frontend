@@ -210,6 +210,13 @@ const Metrics: FC<Props> = ({ selectedTestSuite, dataset, onChange }) => {
                         </ExpandableText>
                       )}
 
+                      <div className="flex flex-row gap-3 items-start">
+                        <p className="dial-tiny-semi-text">{t(TestSuitesI18nKey.Condition)}:</p>
+                        <span className="dial-tiny-text break-all">
+                          {metric.condition?.trim() || t(TestSuitesI18nKey.ConditionAlwaysRun)}
+                        </span>
+                      </div>
+
                       <MetricBindingsDisplay
                         title={t(TestSuitesI18nKey.Configuration)}
                         bindings={metric.configBindings}

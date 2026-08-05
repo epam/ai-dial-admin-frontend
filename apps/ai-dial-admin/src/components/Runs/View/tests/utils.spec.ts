@@ -185,6 +185,18 @@ describe('Runs View :: getAnalyticsColumns', () => {
     expect(scoreColumn.comparator(0.9, 0.5, higherValueRow, lowerValueRow, false)).toBe(1);
     expect(scoreColumn.comparator(0.5, 0.5, lowerValueRow, lowerValueRow, false)).toBe(0);
   });
+
+  test('Should render blank cell without crash when a metric group is skipped entirely for a row (condition false)', () => {
+    const results = [{ metricValues: { GroupA: { a: 1 } } }, { metricValues: { GroupB: { x: 3 } } }] as any[];
+
+    const columns = getAnalyticsColumns(results as any);
+    const groupA = columns.find((c: any) => c.headerName === 'GroupA') as any;
+    const aCol = groupA.children.find((c: any) => c.field === 'a');
+
+    expect(() => aCol.valueGetter({ data: { metricValues: { GroupB: { x: 3 } } } })).not.toThrow();
+    expect(aCol.valueGetter({ data: { metricValues: { GroupB: { x: 3 } } } })).toBe('—');
+    expect(aCol.valueGetter({ data: { metricValues: undefined } })).toBe('—');
+  });
 });
 
 describe('Runs View :: getFormattedDuration', () => {
@@ -512,6 +524,31 @@ describe('Runs View :: getMetricGroups', () => {
     expect(result[0].metrics[0]).toEqual({ key: 'score', value: null, isError: true });
     expect(result[0].metrics[1]).toEqual({ key: 'confidence', value: null, isError: true });
   });
+
+  test('Should omit a metric skipped by a false condition (absent from metricValues) without crashing', () => {
+    const metricValues = {
+      retrieval: { f1: 0.5 },
+    };
+    const result = getMetricGroups(metricValues);
+    expect(result).toHaveLength(1);
+    expect(result.find((group) => group.title === 'conditional_metric')).toBeUndefined();
+  });
+
+  test('Should surface metric whose JSONata condition errored via metricInfos error', () => {
+    // Metric present in result but empty: condition evaluation failed, so metric never ran
+    const metricValues = {
+      jsonata_eval: {},
+    };
+    const metricInfos = {
+      jsonata_eval: { error: 'JSONata condition evaluation failed' },
+    };
+    const result = getMetricGroups(metricValues, metricInfos);
+    expect(result).toHaveLength(1);
+    expect(result[0].title).toBe('jsonata_eval');
+    expect(result[0].hasError).toBe(true);
+    expect(result[0].errorMessage).toBe('JSONata condition evaluation failed');
+    expect(result[0].metrics).toEqual([]);
+  });
 });
 
 describe('Runs View :: snapshotsToBindingsMap', () => {
@@ -547,12 +584,14 @@ describe('Runs View :: snapshotsToBindingsMap', () => {
   });
 });
 
+const getExecutionColumn = (colId: string, results = [] as any[]) => {
+  const cols = getAnalyticsColumns(results);
+  const execGroup = cols.find((c: any) => c.headerName === 'Execution') as any;
+  return execGroup.children.find((c: any) => c.colId === colId);
+};
+
 describe('Runs View :: executionColumns # (runIndex) valueGetter', () => {
-  const getRunIndexCol = (results = [] as any[]) => {
-    const cols = getAnalyticsColumns(results);
-    const execGroup = cols.find((c: any) => c.headerName === 'Execution') as any;
-    return execGroup.children.find((c: any) => c.colId === 'runIndex');
-  };
+  const getRunIndexCol = (results = [] as any[]) => getExecutionColumn('runIndex', results);
 
   test('Should display 1-based index (backend runIndex is 0-based)', () => {
     const col = getRunIndexCol();
@@ -574,6 +613,66 @@ describe('Runs View :: executionColumns # (runIndex) valueGetter', () => {
   test('Should return null when runIndex is undefined', () => {
     const col = getRunIndexCol();
     expect(col.valueGetter({ data: {} })).toBeNull();
+  });
+});
+
+describe('Runs View :: executionColumns Turn valueGetter', () => {
+  const getTurnCol = (results = [] as any[]) => getExecutionColumn('turnIndex', results);
+
+  test('Should build a Turn column headed "Turn"', () => {
+    const col = getTurnCol();
+    expect(col).toEqual(expect.objectContaining({ field: 'turnIndex', headerName: 'Turn', colId: 'turnIndex' }));
+  });
+
+  test('Should display 1-based turn number for a 0-based turnIndex', () => {
+    const col = getTurnCol();
+    expect(col.valueGetter({ data: { turnIndex: 0 } })).toBe(1);
+    expect(col.valueGetter({ data: { turnIndex: 1 } })).toBe(2);
+    expect(col.valueGetter({ data: { turnIndex: 4 } })).toBe(5);
+  });
+
+  test('Should render turnIndex 0 as 1, not blank', () => {
+    const col = getTurnCol();
+    expect(col.valueGetter({ data: { turnIndex: 0 } })).toBe(1);
+  });
+
+  test('Should return null when turnIndex is absent (single-turn run)', () => {
+    const col = getTurnCol();
+    expect(col.valueGetter({ data: {} })).toBeNull();
+  });
+
+  test('Should return null when data is null or undefined', () => {
+    const col = getTurnCol();
+    expect(col.valueGetter({ data: null })).toBeNull();
+    expect(col.valueGetter({ data: undefined })).toBeNull();
+  });
+});
+
+describe('Runs View :: executionColumns Total turns valueGetter', () => {
+  const getTotalTurnsCol = (results = [] as any[]) => getExecutionColumn('totalTurns', results);
+
+  test('Should build a Total turns column headed "Total turns"', () => {
+    const col = getTotalTurnsCol();
+    expect(col).toEqual(
+      expect.objectContaining({ field: 'totalTurns', headerName: 'Total turns', colId: 'totalTurns' }),
+    );
+  });
+
+  test('Should pass totalTurns through unchanged', () => {
+    const col = getTotalTurnsCol();
+    expect(col.valueGetter({ data: { totalTurns: 3 } })).toBe(3);
+    expect(col.valueGetter({ data: { totalTurns: 1 } })).toBe(1);
+  });
+
+  test('Should return null when totalTurns is absent (single-turn run)', () => {
+    const col = getTotalTurnsCol();
+    expect(col.valueGetter({ data: {} })).toBeNull();
+  });
+
+  test('Should return null when data is null or undefined', () => {
+    const col = getTotalTurnsCol();
+    expect(col.valueGetter({ data: null })).toBeNull();
+    expect(col.valueGetter({ data: undefined })).toBeNull();
   });
 });
 

@@ -155,6 +155,8 @@ export enum BasicI18nKey {
   HighAccuracy = 'Basic.HighAccuracy',
   LowAccuracy = 'Basic.LowAccuracy',
   DeselectAll = 'Basic.DeselectAll',
+  PerTurn = 'Basic.PerTurn',
+  Shared = 'Basic.Shared',
 }
 
 export enum EntitiesI18nKey {
@@ -1902,6 +1904,14 @@ export enum TestSuitesI18nKey {
   ExcludedFromRun = 'TestSuites.ExcludedFromRun',
   RunConditionSelect = 'TestSuites.RunConditionSelect',
   ViewOnlyIncludedInRun = 'TestSuites.ViewOnlyIncludedInRun',
+  TurnLabel = 'TestSuites.TurnLabel',
+  TurnCountBadge = 'TestSuites.TurnCountBadge',
+  Condition = 'TestSuites.Condition',
+  ConditionHint = 'TestSuites.ConditionHint',
+  ConditionAlwaysRun = 'TestSuites.ConditionAlwaysRun',
+  ConditionSystemFunctionUnavailable = 'TestSuites.ConditionSystemFunctionUnavailable',
+  ImportWarnings = 'TestSuites.ImportWarnings',
+  ImportWarningRow = 'TestSuites.ImportWarningRow',
 }
 
 export enum DatasetsI18nKey {
@@ -2190,6 +2200,11 @@ export enum ActionMenuOperationI18nKey {
   Try_out = 'ActionMenuOperation.Try_out',
   Edit = 'ActionMenuOperation.Edit',
   Export = 'ActionMenuOperation.Export',
+  Add_turn = 'ActionMenuOperation.Add_turn',
+  Delete_turn = 'ActionMenuOperation.Delete_turn',
+  Move_turn_up = 'ActionMenuOperation.Move_turn_up',
+  Move_turn_down = 'ActionMenuOperation.Move_turn_down',
+  Delete_case = 'ActionMenuOperation.Delete_case',
 }
 
 export enum JsonAtaI18nKey {
@@ -2202,6 +2217,7 @@ export enum JsonAtaI18nKey {
   StringFunctions = 'JsonAta.StringFunctions',
   NumericFunctions = 'JsonAta.NumericFunctions',
   Playground = 'JsonAta.Playground',
+  RequestResponseBindings = 'JsonAta.RequestResponseBindings',
   PathNavigation = 'JsonAta.PathNavigation',
   ArrayOperations = 'JsonAta.ArrayOperations',
   ConditionalsNullSafety = 'JsonAta.ConditionalsNullSafety',
@@ -2209,6 +2225,7 @@ export enum JsonAtaI18nKey {
   UseCase = 'JsonAta.UseCase',
   Expression = 'JsonAta.Expression',
   ResultType = 'JsonAta.ResultType',
+  ToggleLabel = 'JsonAta.ToggleLabel',
 }
 
 export enum QueryBuilderI18nKey {

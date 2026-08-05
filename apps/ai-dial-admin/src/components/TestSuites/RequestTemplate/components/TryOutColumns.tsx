@@ -11,29 +11,32 @@ import { useI18n } from '@/src/locales/client';
 import { ResponseColumn } from '@/src/models/evaluation/test-suite';
 import CollapsibleSection from './CollapsibleSection';
 
+const hasContent = (value?: Record<string, unknown>): boolean => !!value && Object.keys(value).length > 0;
+
 interface Props {
   isLoading?: boolean;
   responseBody: ReactNode;
   columns?: ResponseColumn[];
   response?: Record<string, unknown>;
+  request?: Record<string, unknown>;
 }
 
-const TryOutColumns: FC<Props> = ({ isLoading, responseBody, columns, response }) => {
+const TryOutColumns: FC<Props> = ({ isLoading, responseBody, columns, response, request }) => {
   const t = useI18n();
   const [evaluatedColumns, setEvaluatedColumns] = useState<EvaluatedColumn[]>([]);
   const [isEvaluating, setIsEvaluating] = useState(false);
 
   useEffect(() => {
-    if (!response) return;
+    if (!hasContent(response) && !hasContent(request)) return;
     setIsEvaluating(true);
-    evaluateColumns(columns || [], response || {})
+    evaluateColumns(columns || [], response || {}, request)
       .then((res) => {
         setEvaluatedColumns(res);
       })
       .finally(() => {
         setIsEvaluating(false);
       });
-  }, [columns, response]);
+  }, [columns, response, request]);
 
   return (
     <div className="flex-1 flex flex-col gap-y-8 pb-2 min-h-0">

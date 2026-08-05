@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { TestSuitesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { Metric } from '@/src/models/evaluation/metric';
 import AddMetricModal from '../AddMetricModal';
 
@@ -22,6 +22,7 @@ vi.mock('../../utils/metric-bindings', () => ({
 
 vi.mock('../utils', () => ({
   validateMetricBindings: () => true,
+  isReservedSystemFunctionCondition: (condition?: string) => condition?.trim() === 'name()',
 }));
 
 vi.mock('../MetricSelection', () => ({
@@ -166,5 +167,94 @@ describe('AddMetricModal', () => {
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  test('includes the editing metric condition in the confirmed metric', async () => {
+    const user = userEvent.setup();
+    const onConfirm = vi.fn();
+    const editingMetric: Metric = {
+      id: 'suite-metric-1',
+      name: 'Edited metric',
+      metricDeclarationId: 'decl-1',
+      condition: '$exists(response.answer)',
+    };
+
+    render(
+      <AddMetricModal
+        isModalOpen
+        onClose={vi.fn()}
+        onConfirm={onConfirm}
+        editingMetric={editingMetric}
+        selectedTestSuite={{ id: 'suite-1' }}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(mockGetMetricLatestVersion).toHaveBeenCalledWith('decl-1');
+    });
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Confirm }));
+
+    expect(onConfirm).toHaveBeenCalledWith(expect.objectContaining({ condition: '$exists(response.answer)' }));
+  });
+
+  test('disables finish and blocks confirm when the condition is a reserved system function call', async () => {
+    const user = userEvent.setup();
+    const onConfirm = vi.fn();
+    const editingMetric: Metric = {
+      id: 'suite-metric-1',
+      name: 'Edited metric',
+      metricDeclarationId: 'decl-1',
+      condition: 'name()',
+    };
+
+    render(
+      <AddMetricModal
+        isModalOpen
+        onClose={vi.fn()}
+        onConfirm={onConfirm}
+        editingMetric={editingMetric}
+        selectedTestSuite={{ id: 'suite-1' }}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(mockGetMetricLatestVersion).toHaveBeenCalledWith('decl-1');
+    });
+
+    const confirmButton = screen.getByRole('button', { name: ButtonsI18nKey.Confirm });
+    expect(confirmButton).toBeDisabled();
+
+    await user.click(confirmButton);
+
+    expect(onConfirm).not.toHaveBeenCalled();
+  });
+
+  test('omits condition from the confirmed metric when it is blank', async () => {
+    const user = userEvent.setup();
+    const onConfirm = vi.fn();
+    const editingMetric: Metric = {
+      id: 'suite-metric-1',
+      name: 'Edited metric',
+      metricDeclarationId: 'decl-1',
+    };
+
+    render(
+      <AddMetricModal
+        isModalOpen
+        onClose={vi.fn()}
+        onConfirm={onConfirm}
+        editingMetric={editingMetric}
+        selectedTestSuite={{ id: 'suite-1' }}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(mockGetMetricLatestVersion).toHaveBeenCalledWith('decl-1');
+    });
+
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Confirm }));
+
+    expect(onConfirm).toHaveBeenCalledWith(expect.objectContaining({ condition: undefined }));
   });
 });
