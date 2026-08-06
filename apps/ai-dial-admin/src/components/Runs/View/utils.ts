@@ -197,6 +197,7 @@ const staticColumns = [
         context: { panelName: 'Status' },
         colId: 'status',
         ...fixedWidthColDef(STATUS_COLUMN_WIDTH),
+        maxWidth: STATUS_COLUMN_WIDTH,
         ...NO_FILTER_COL_DEF,
         cellRenderer: ExecutionStatusCellRenderer,
       },
