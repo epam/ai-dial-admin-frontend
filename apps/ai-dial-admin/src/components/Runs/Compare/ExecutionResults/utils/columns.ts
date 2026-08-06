@@ -384,6 +384,7 @@ const getComparedExecutionStatusGroup = (hideHighlights?: boolean): ColGroupDef 
       ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX),
       colId: 'status',
       ...fixedWidthColDef(STATUS_COLUMN_WIDTH),
+      maxWidth: STATUS_COLUMN_WIDTH,
       ...NO_FILTER_COL_DEF,
       cellRenderer: ExecutionStatusCellRenderer,
       ...maybePairCellClassRules(hideHighlights, getStatusPairKind, 'primary'),
@@ -392,6 +393,7 @@ const getComparedExecutionStatusGroup = (hideHighlights?: boolean): ColGroupDef 
       colId: 'cmp_status',
       ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX),
       ...fixedWidthColDef(STATUS_COLUMN_WIDTH),
+      maxWidth: STATUS_COLUMN_WIDTH,
       ...NO_FILTER_COL_DEF,
       cellRenderer: (params: ICellRendererParams<CompareAnalyticsRow>) =>
         ExecutionStatusCellRenderer({

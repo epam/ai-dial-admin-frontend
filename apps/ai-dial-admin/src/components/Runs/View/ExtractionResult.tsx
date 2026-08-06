@@ -152,7 +152,7 @@ const ExtractionResultTab: FC<Props> = ({ run, extractionResultState, setExtract
 
   const gridOptions = useMemo(
     () => ({
-      defaultColDef: { filter: false, floatingFilter: false },
+      defaultColDef: { filter: false, floatingFilter: false, resizable: true, flex: 1 },
       onRowClicked,
       rowClassRules,
     }),
