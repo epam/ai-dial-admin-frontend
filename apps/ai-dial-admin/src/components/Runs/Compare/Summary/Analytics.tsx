@@ -7,6 +7,7 @@ import { DialAnalyticsCard, DialLoader } from '@epam/ai-dial-ui-kit';
 import { getMetricDelta, MetricDeltaKind } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
 import PassedTestCasesValue from '@/src/components/Runs/Summary/PassedTestCasesValue';
 import TestCaseStatusBreakdown from '@/src/components/Runs/Summary/TestCaseStatusBreakdown';
+import { RunAnalyticsSlice } from '@/src/components/Runs/Summary/models';
 import { useRunAnalyticsSlice } from '@/src/components/Runs/Summary/use-run-analytics-slice';
 import { formatAvgRunTimeSeconds } from '@/src/components/Runs/Summary/utils';
 import { RunsI18nKey } from '@/src/constants/i18n';
@@ -17,6 +18,9 @@ interface Props {
   comparedRunId: string;
   primaryRunName: string;
   comparedRunName: string;
+  onlyMatchingTestCases: boolean;
+  primaryMatchedAnalytics: RunAnalyticsSlice | null;
+  comparedMatchedAnalytics: RunAnalyticsSlice | null;
   primaryOverallScore?: number | null;
   comparedOverallScore?: number | null;
 }
@@ -26,12 +30,18 @@ const Analytics: FC<Props> = ({
   comparedRunId,
   primaryRunName,
   comparedRunName,
+  onlyMatchingTestCases,
+  primaryMatchedAnalytics,
+  comparedMatchedAnalytics,
   primaryOverallScore,
   comparedOverallScore,
 }) => {
   const t = useI18n();
-  const { data: primary } = useRunAnalyticsSlice(primaryRunId);
-  const { data: compared } = useRunAnalyticsSlice(comparedRunId);
+  const { data: primaryFull } = useRunAnalyticsSlice(onlyMatchingTestCases ? undefined : primaryRunId);
+  const { data: comparedFull } = useRunAnalyticsSlice(onlyMatchingTestCases ? undefined : comparedRunId);
+
+  const primary = onlyMatchingTestCases ? primaryMatchedAnalytics : primaryFull;
+  const compared = onlyMatchingTestCases ? comparedMatchedAnalytics : comparedFull;
 
   if (!primary || !compared) {
     return (

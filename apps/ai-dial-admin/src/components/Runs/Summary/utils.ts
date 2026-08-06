@@ -2,6 +2,7 @@ import { JSONSchema7 } from 'json-schema';
 
 import { Metric, MetricSnapshot } from '@/src/models/evaluation/metric';
 import { ExtractionResultStatus } from '@/src/models/evaluation/run';
+import { MetricScoreValue } from '@/src/models/evaluation/run-comparison';
 import { SortDir, StructuredQuery, StructuredQueryResult, ValueType } from '@/src/models/evaluation/structured-query';
 import {
   aggregateQuery,
@@ -10,6 +11,8 @@ import {
   eq,
   field,
   fn,
+  inValues,
+  not,
   offsetPage,
   rowQuery,
   sortItem,
@@ -22,6 +25,7 @@ import {
   DISTRIBUTION_ROW_LIMIT,
   DISTRIBUTION_VALUE_ALIAS,
   EVAL_SUMMARIES_ENTITY,
+  EVAL_SUMMARY_ID_FIELD,
   EXEC_DURATION_MS_FIELD,
   EXECUTION_STATUS_FIELD,
   LATEST_COMPUTATION,
@@ -46,14 +50,23 @@ import {
 /**
  * Query: count of test-case eval summaries grouped by execution status within a run.
  * Rows shape: `{ execution_status: string, count: number }`.
+ * When `excludeEvalSummaryIds` is non-empty, those rows are excluded via `NOT (id IN [...])`
+ * so counts describe the matched-only population used in run comparison.
  */
-export const buildTestCasesStatusQuery = (runId: string): StructuredQuery =>
-  aggregateQuery({
+export const buildTestCasesStatusQuery = (runId: string, excludeEvalSummaryIds: string[] = []): StructuredQuery => {
+  const runFilter = eq(RUN_ID_FIELD, ValueType.Uuid, runId);
+  const filter =
+    excludeEvalSummaryIds.length > 0
+      ? and([runFilter, not(inValues(EVAL_SUMMARY_ID_FIELD, ValueType.Uuid, excludeEvalSummaryIds))])
+      : runFilter;
+
+  return aggregateQuery({
     entity: EVAL_SUMMARIES_ENTITY,
-    filter: eq(RUN_ID_FIELD, ValueType.Uuid, runId),
+    filter,
     groupBy: [EXECUTION_STATUS_FIELD],
     select: [col(field(EXECUTION_STATUS_FIELD)), col(fn('count'), COUNT_ALIAS)],
   });
+};
 
 /**
  * Query: average execution duration (ms) across a run's test-case eval summaries.
@@ -231,13 +244,38 @@ export const parseMetricScores = (result: StructuredQueryResult | null): MetricS
  * Query: the raw metric-score values for a run's eval summaries, one row per test case. The values are
  * fed directly to `DialAnalyticsHistogram`, which buckets them into its 12 columns (a dedicated exact-`0`
  * bucket, ten 0.1-wide bands, and an exact-`1` band). Rows shape: `[{ value: number }]`.
+ * When `excludeEvalSummaryIds` is non-empty, those rows are excluded via `NOT (id IN [...])` so the
+ * histogram matches the compared (matched-only) population.
  */
-export const buildDistributionQuery = (runId: string, metricField: string): StructuredQuery =>
-  rowQuery({
+export const buildDistributionQuery = (
+  runId: string,
+  metricField: string,
+  excludeEvalSummaryIds: string[] = [],
+): StructuredQuery => {
+  const runFilter = eq(RUN_ID_FIELD, ValueType.Uuid, runId);
+  const filter =
+    excludeEvalSummaryIds.length > 0
+      ? and([runFilter, not(inValues(EVAL_SUMMARY_ID_FIELD, ValueType.Uuid, excludeEvalSummaryIds))])
+      : runFilter;
+
+  return rowQuery({
     entity: EVAL_SUMMARIES_ENTITY,
     select: [col(field(metricField), DISTRIBUTION_VALUE_ALIAS)],
-    filter: eq(RUN_ID_FIELD, ValueType.Uuid, runId),
+    filter,
     page: offsetPage(0, DISTRIBUTION_ROW_LIMIT),
+  });
+};
+
+/**
+ * Adapts comparison-endpoint `scores` into the same `MetricScoresData` shape as `parseMetricScores`.
+ */
+export const parseComparisonMetricScores = (scores: MetricScoreValue[] | null | undefined): MetricScoresData =>
+  parseMetricScores({
+    rows: (scores ?? []).map((score) => ({
+      [METRIC_NAME_FIELD]: score.metricName,
+      [METRIC_SCORE_NAME_FIELD]: score.metricScoreName,
+      [VALUE_FIELD]: score.value,
+    })),
   });
 
 /**

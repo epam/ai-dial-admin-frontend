@@ -9,6 +9,7 @@ import {
   Expr,
   ExprType,
   FieldExpr,
+  FilterNode,
   FnExpr,
   LogicalNode,
   LogicalOp,
@@ -46,6 +47,13 @@ export const eq = (fieldName: string, valueType: ValueType, val: string): Compar
 });
 
 export const and = (nodes: LogicalNode['args']): LogicalNode => ({ op: LogicalOp.And, args: nodes });
+
+export const not = (node: FilterNode): LogicalNode => ({ op: LogicalOp.Not, args: [node] });
+
+export const inValues = (fieldName: string, valueType: ValueType, values: string[]): ComparisonNode => ({
+  op: ComparisonOp.In,
+  args: [field(fieldName), { type: ExprType.Array, items: values.map((val) => value(valueType, val)) }],
+});
 
 export const offsetPage = (offset: number, limit: number, includeTotal = false): OffsetPage => ({
   type: PageType.Offset,

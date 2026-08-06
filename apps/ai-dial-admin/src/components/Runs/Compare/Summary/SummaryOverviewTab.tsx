@@ -16,6 +16,7 @@ interface Props {
   comparedRunId: string;
   primaryRunName: string;
   comparedRunName: string;
+  onlyMatchingTestCases: boolean;
   summaryState: SummaryOverviewTabUiState;
   setSummaryState: (patch: Partial<SummaryOverviewTabUiState>) => void;
 }
@@ -25,11 +26,28 @@ const SummaryOverviewTab: FC<Props> = ({
   comparedRunId,
   primaryRunName,
   comparedRunName,
+  onlyMatchingTestCases,
   summaryState,
   setSummaryState,
 }) => {
-  const { primaryRun, comparedRun, testSuite, enrichedPrimaryScores, enrichedComparedScores, metricOptions } =
-    useSummaryOverviewData({ primaryRunId, comparedRunId, summaryState, setSummaryState });
+  const {
+    primaryRun,
+    comparedRun,
+    testSuite,
+    enrichedPrimaryScores,
+    enrichedComparedScores,
+    metricOptions,
+    primaryMatchedAnalytics,
+    comparedMatchedAnalytics,
+    primaryUnmatchedIds,
+    comparedUnmatchedIds,
+  } = useSummaryOverviewData({
+    primaryRunId,
+    comparedRunId,
+    onlyMatchingTestCases,
+    summaryState,
+    setSummaryState,
+  });
 
   const onSelectStatistic = useCallback(
     (statistic: string) => setSummaryState({ selectedStatistic: statistic }),
@@ -63,6 +81,9 @@ const SummaryOverviewTab: FC<Props> = ({
         comparedRunId={comparedRunId}
         primaryRunName={primaryRunName}
         comparedRunName={comparedRunName}
+        onlyMatchingTestCases={onlyMatchingTestCases}
+        primaryMatchedAnalytics={primaryMatchedAnalytics}
+        comparedMatchedAnalytics={comparedMatchedAnalytics}
         primaryOverallScore={enrichedPrimaryScores?.overallScore}
         comparedOverallScore={enrichedComparedScores?.overallScore}
       />
@@ -85,6 +106,8 @@ const SummaryOverviewTab: FC<Props> = ({
           comparedMetricScores={enrichedComparedScores}
           selectedMetricName={summaryState.selectedDistributionMetricName}
           onSelectMetric={onSelectDistributionMetric}
+          primaryExcludeEvalSummaryIds={primaryUnmatchedIds}
+          comparedExcludeEvalSummaryIds={comparedUnmatchedIds}
         />
       </div>
     </div>

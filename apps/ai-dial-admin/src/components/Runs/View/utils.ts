@@ -251,6 +251,8 @@ export const createEmptyComparePrimaryRow = (
 export const getCompareRowSelectionId = (row: CompareAnalyticsRow): string | null =>
   row.id ?? row._compared?.id ?? null;
 
+export const isMatchedCompareRow = (row: CompareAnalyticsRow): boolean => Boolean(row.id && row._compared?.id);
+
 const createComparedOnlyRow = (compared: AnalyticsResult): CompareAnalyticsRow => ({
   ...createEmptyComparePrimaryRow(compared),
   _compared: compared,
