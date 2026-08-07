@@ -1,4 +1,5 @@
 import { AnalyticsDataApi } from '@/src/server/analytics/analytics-data-api';
+import { SavedQueriesApi } from '@/src/server/analytics/saved-queries-api';
 import { stripAssetIdentityFields } from '@/src/server/assets/exim';
 import { AppRunnerSchemaApi } from '@/src/server/core/app-runner-schema-api';
 import { ConfigFileApi } from '@/src/server/core/config-file-api';
@@ -165,6 +166,10 @@ export const structuredQueryApi = new StructuredQueryApi({
 });
 
 export const analyticsDataApi = new AnalyticsDataApi({
+  host: process.env.DIAL_ANALYTICS_API_URL,
+});
+
+export const savedQueriesApi = new SavedQueriesApi({
   host: process.env.DIAL_ANALYTICS_API_URL,
 });
 

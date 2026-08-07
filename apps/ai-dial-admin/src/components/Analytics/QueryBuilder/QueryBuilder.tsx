@@ -20,9 +20,16 @@ import Aggregates from '@/src/components/Analytics/QueryBuilder/Aggregate/Aggreg
 import GroupBySection from '@/src/components/Analytics/QueryBuilder/Aggregate/GroupBySection';
 import SectionAction from '@/src/components/Analytics/QueryBuilder/Common/SectionAction';
 import SectionBlock from '@/src/components/Analytics/QueryBuilder/Common/SectionBlock';
+import UnavailableFieldsBanner from '@/src/components/Analytics/QueryBuilder/Common/UnavailableFieldsBanner';
 import FilterGroup from '@/src/components/Analytics/QueryBuilder/Filter/FilterGroup';
 import ModeSwitcher from '@/src/components/Analytics/QueryBuilder/Mode/ModeSwitcher';
+import DeleteSavedQueryPopup from '@/src/components/Analytics/QueryBuilder/Modals/DeleteSavedQueryPopup';
 import DiscardQueryPopup from '@/src/components/Analytics/QueryBuilder/Modals/DiscardQueryPopup';
+import LoadedQueryChip from '@/src/components/Analytics/QueryBuilder/SavedQueries/LoadedQueryChip';
+import SaveQueryDialog from '@/src/components/Analytics/QueryBuilder/SavedQueries/SaveQueryDialog';
+import SavedQueriesActions from '@/src/components/Analytics/QueryBuilder/SavedQueries/SavedQueriesActions';
+import SavedQueriesDialog from '@/src/components/Analytics/QueryBuilder/SavedQueries/SavedQueriesDialog';
+import { useSavedQuerySession } from '@/src/components/Analytics/QueryBuilder/SavedQueries/use-saved-query-session';
 import PageSection from '@/src/components/Analytics/QueryBuilder/Page/PageSection';
 import BuilderRail from '@/src/components/Analytics/QueryBuilder/Rail/BuilderRail';
 import CollapsedRail from '@/src/components/Analytics/QueryBuilder/Rail/CollapsedRail';
@@ -39,7 +46,8 @@ import { getResultColumns } from '@/src/components/Analytics/QueryBuilder/utils/
 import { formatSql } from '@/src/components/Analytics/QueryBuilder/utils/sql-format';
 import { createGroup, createInitialState, createPredicate } from '@/src/components/Analytics/QueryBuilder/utils/state';
 import { findTimestampField, liftTimeRange } from '@/src/components/Analytics/QueryBuilder/utils/time';
-import { LOCAL_STORAGE_QUERY_BUILDER_RAIL_KEY } from '@/src/constants/analytics/query-builder';
+import { unresolvedFieldNames } from '@/src/components/Analytics/QueryBuilder/utils/unavailable-fields';
+import { DEFAULT_CHART_CONFIG, LOCAL_STORAGE_QUERY_BUILDER_RAIL_KEY } from '@/src/constants/analytics/query-builder';
 import { ButtonsI18nKey, MenuI18nKey, QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useTimeFilter } from '@/src/hooks/use-time-filter';
 import { useAppContext } from '@/src/context/AppContext';
@@ -49,11 +57,13 @@ import { AnalyticsEntity, AnalyticsEntityField } from '@/src/models/analytics/en
 import { QueryFunction } from '@/src/models/analytics/query-function';
 import { QueryMode, StructuredQuery, StructuredQueryResult } from '@/src/models/analytics/query';
 import {
+  ChartConfig,
   ExecutedQueryMeta,
   QueryBuilderColor,
   QueryBuilderState,
   QueryBuilderView,
   QueryRequestKind,
+  QueryResultView,
   QueryRunRequest,
   QueryTimeBound,
 } from '@/src/models/analytics/query-builder';
@@ -100,6 +110,12 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
   const [result, setResult] = useState<StructuredQueryResult | null>(null);
   const [resultMeta, setResultMeta] = useState<ExecutedQueryMeta | null>(null);
   const [isRunning, setIsRunning] = useState(false);
+  const [resultView, setResultView] = useState<QueryResultView>(QueryResultView.Table);
+  const [chartConfig, setChartConfig] = useState<ChartConfig>(DEFAULT_CHART_CONFIG);
+  // A chart restored from a saved query has to survive the first result after the load: ChartConfig is
+  // meaningless without ExecutedQueryMeta, which only exists after a run, so the ordinary reset would
+  // discard the saved setup before it could ever be drawn. Every later result resets as usual.
+  const keepChartConfig = useRef(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiLoadedMessageIndex, setAiLoadedMessageIndex] = useState<number | null>(null);
   // Remounts AiPanel (clearing its conversation) only on an explicit user entity switch — not on
@@ -120,10 +136,24 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
     setRailCollapsed(getFromLocalStorage(LOCAL_STORAGE_QUERY_BUILDER_RAIL_KEY) === 'true');
   }, []);
 
+  // Axis picks belong to one result: a new run gets fresh defaults derived from its own query.
+  useEffect(() => {
+    if (keepChartConfig.current) {
+      keepChartConfig.current = false;
+      return;
+    }
+    setChartConfig(DEFAULT_CHART_CONFIG);
+  }, [result]);
+
   const onToggleRail = (collapsed: boolean) => {
     setRailCollapsed(collapsed);
     setToLocalStorage(LOCAL_STORAGE_QUERY_BUILDER_RAIL_KEY, String(collapsed));
   };
+
+  const clearResult = useCallback(() => {
+    setResult(null);
+    setResultMeta(null);
+  }, []);
 
   const refresh = useCallback(() => setState((prev) => ({ ...prev })), []);
   const patch = useCallback((partial: Partial<QueryBuilderState>) => setState((prev) => ({ ...prev, ...partial })), []);
@@ -152,6 +182,7 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
   );
   const query = useMemo(() => buildQuery(state, timeBound), [state, timeBound]);
   const json = useMemo(() => JSON.stringify(query, null, 2), [query]);
+  const unresolvedFieldList = useMemo(() => unresolvedFieldNames(state), [state]);
   const contextValue = useMemo(() => ({ state, refresh, patch }), [state, refresh, patch]);
   const isAggregate = state.mode === QueryMode.Aggregate;
   const isJsonView = view === QueryBuilderView.Json;
@@ -387,13 +418,64 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
     setIsRunning(false);
   };
 
-  const runDisabled = !fieldsLoaded || (isJsonView && jsonInvalid) || (isSqlView && !sqlText.trim());
+  // A query naming a field this caller cannot resolve would be rejected by the backend anyway; holding
+  // Run until the marked names are gone makes the repair the obvious next step instead of an error.
+  // Only the Builder view is gated: the written views run what they hold, as they always have.
+  const hasUnresolvedFields = !!unresolvedFieldList.length && !isJsonView && !isSqlView;
+  const runDisabled =
+    !fieldsLoaded || (isJsonView && jsonInvalid) || (isSqlView && !sqlText.trim()) || hasUnresolvedFields;
+
+  const savedQueries = useSavedQuerySession({
+    state,
+    setState,
+    sqlText,
+    setSqlText,
+    setJsonText,
+    setJsonDiverged,
+    setView,
+    lastGeneratedSql,
+    isSqlView,
+    timePeriod: timeFilter.timePeriod,
+    isCustom: timeFilter.isCustom,
+    timeRange: timeFilter.timeRange,
+    onTimePeriodChange: timeFilter.onTimePeriodChange,
+    onTimeRangeChange: timeFilter.onTimeRangeChange,
+    resultView,
+    setResultView,
+    chartConfig,
+    setChartConfig,
+    keepChartConfig,
+    clearResult,
+    resolveFieldsForEntity,
+    runDisabled,
+  });
+
+  // Ctrl/⌘ S is the same action as the toolbar's Save; the browser's own save dialog is not useful
+  // on a page whose document is a query.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 's') return;
+      event.preventDefault();
+      if (!savedQueries.saveDisabled) savedQueries.onSave();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [savedQueries]);
 
   return (
     <QueryBuilderContext.Provider value={contextValue}>
       <div className="relative flex min-h-0 w-full flex-1 flex-col rounded bg-layer-2">
         <div className="flex flex-col gap-4 p-4 pb-3">
-          <h1>{t(MenuI18nKey.QueryBuilder)}</h1>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1>{t(MenuI18nKey.QueryBuilder)}</h1>
+            {savedQueries.loaded && (
+              <LoadedQueryChip
+                query={savedQueries.loaded}
+                isDirty={savedQueries.isDirty}
+                onClose={savedQueries.closeLoadedQuery}
+              />
+            )}
+          </div>
           {entities.length > 0 && (
             <QueryBuilderToolbar
               entities={entities}
@@ -408,11 +490,25 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
               showRun={!isAiView}
             >
               {fieldsLoaded && !isAiView && (
-                <CopyButton
-                  value={isSqlView ? sqlText : isJsonView ? jsonText : json}
-                  valueLabel={isSqlView ? t(QueryBuilderI18nKey.SqlQuery) : t(QueryBuilderI18nKey.StructuredQueryJson)}
-                  buttonLabel={t(ButtonsI18nKey.Copy)}
-                />
+                <>
+                  <SavedQueriesActions
+                    hasLoadedQuery={!!savedQueries.loaded}
+                    saveDisabled={savedQueries.saveDisabled}
+                    revertDisabled={!savedQueries.isDirty}
+                    onOpenLibrary={() => savedQueries.setLibraryOpen(true)}
+                    onSave={savedQueries.onSave}
+                    onRevert={savedQueries.onRevert}
+                    onEdit={savedQueries.onEdit}
+                    onDelete={savedQueries.onRequestDelete}
+                  />
+                  <CopyButton
+                    value={isSqlView ? sqlText : isJsonView ? jsonText : json}
+                    valueLabel={
+                      isSqlView ? t(QueryBuilderI18nKey.SqlQuery) : t(QueryBuilderI18nKey.StructuredQueryJson)
+                    }
+                    buttonLabel={t(ButtonsI18nKey.Copy)}
+                  />
+                </>
               )}
             </QueryBuilderToolbar>
           )}
@@ -422,7 +518,15 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
           <DialNoDataContent title={t(QueryBuilderI18nKey.EntitiesLoadFailed)} />
         ) : (
           <div className="flex min-h-0 flex-1 border-t border-primary">
-            <ResultArea result={result} meta={resultMeta} isRunning={isRunning} />
+            <ResultArea
+              result={result}
+              meta={resultMeta}
+              isRunning={isRunning}
+              view={resultView}
+              onChangeView={setResultView}
+              chartConfig={chartConfig}
+              onChangeChartConfig={setChartConfig}
+            />
             {railCollapsed ? (
               <CollapsedRail onExpand={() => onToggleRail(false)} />
             ) : (
@@ -485,6 +589,7 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
                   />
                 ) : (
                   <div className="flex flex-col gap-3">
+                    <UnavailableFieldsBanner fields={unresolvedFieldList} source={state.entityName} />
                     <ModeSwitcher />
 
                     {isAggregate ? (
@@ -548,6 +653,7 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
                           parent={null}
                           fieldOptions={havingFieldOptions(state)}
                           color={QueryBuilderColor.Constraint}
+                          marksSchemaFields={false}
                         />
                       </SectionBlock>
                     )}
@@ -563,6 +669,42 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
       </div>
 
       {pendingView !== null && <DiscardQueryPopup onConfirm={onConfirmDiscard} onCancel={() => setPendingView(null)} />}
+
+      <SavedQueriesDialog
+        open={savedQueries.libraryOpen}
+        queriesFor={savedQueries.library.queriesFor}
+        onLoadScope={(scope) => void savedQueries.library.loadScope(scope)}
+        hasUnsavedChanges={savedQueries.isDirty}
+        onOpenQuery={(query) => void savedQueries.onOpenQuery(query)}
+        onDeleteQuery={(query) => void savedQueries.deleteQuery(query)}
+        onClose={() => savedQueries.setLibraryOpen(false)}
+      />
+
+      {savedQueries.dialogMode !== null && (
+        <SaveQueryDialog
+          key={savedQueries.dialogMode}
+          open
+          mode={savedQueries.dialogMode}
+          initial={savedQueries.dialogInitial}
+          tagSuggestions={savedQueries.tagSuggestions}
+          resultView={resultView}
+          chartConfig={chartConfig}
+          currentTime={savedQueries.currentTime}
+          saveDisabled={runDisabled}
+          isSaving={savedQueries.isSaving}
+          error={savedQueries.saveError}
+          onSave={(form) => void savedQueries.onSubmitSave(form)}
+          onClose={() => savedQueries.setDialogMode(null)}
+        />
+      )}
+
+      {savedQueries.pendingDelete && (
+        <DeleteSavedQueryPopup
+          name={savedQueries.pendingDelete.name}
+          onConfirm={() => void savedQueries.onConfirmDelete()}
+          onCancel={() => savedQueries.setPendingDelete(null)}
+        />
+      )}
     </QueryBuilderContext.Provider>
   );
 };

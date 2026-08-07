@@ -3,6 +3,7 @@ import { FC } from 'react';
 import CategorizedFieldDropdown from '@/src/components/Analytics/QueryBuilder/Common/CategorizedFieldDropdown';
 import FieldChip from '@/src/components/Analytics/QueryBuilder/Common/FieldChip';
 import SectionBlock from '@/src/components/Analytics/QueryBuilder/Common/SectionBlock';
+import { useUnavailableField } from '@/src/components/Analytics/QueryBuilder/Common/use-unavailable-field';
 import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';
 import { fieldDisplayName, fieldsToOptions } from '@/src/components/Analytics/QueryBuilder/utils/fields';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
@@ -15,6 +16,7 @@ import { FieldDropdownMode, QueryBuilderColor } from '@/src/models/analytics/que
 const SelectProjection: FC = () => {
   const t = useI18n();
   const { state, refresh } = useQueryBuilder();
+  const { isUnavailable, hintFor } = useUnavailableField();
 
   // Picked fields stay listed so the dropdown can show them as selected and toggle them back off.
   const options = fieldsToOptions(state.fields);
@@ -49,7 +51,13 @@ const SelectProjection: FC = () => {
     >
       <div className="flex flex-wrap gap-1.5">
         {state.select.map((name, index) => (
-          <FieldChip key={name} label={fieldDisplayName(state.fields, name)} onRemove={() => removeField(index)} />
+          <FieldChip
+            key={name}
+            label={fieldDisplayName(state.fields, name)}
+            unavailable={isUnavailable(name)}
+            unavailableHint={hintFor(name)}
+            onRemove={() => removeField(index)}
+          />
         ))}
         {!state.select.length && (
           <span className="dial-tiny-text text-secondary">{t(QueryBuilderI18nKey.NoFields)}</span>

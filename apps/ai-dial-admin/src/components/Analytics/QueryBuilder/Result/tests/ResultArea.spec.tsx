@@ -1,10 +1,18 @@
+import { FC, useState } from 'react';
+
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import ResultArea from '@/src/components/Analytics/QueryBuilder/Result/ResultArea';
+import { DEFAULT_CHART_CONFIG } from '@/src/constants/analytics/query-builder';
 import { QueryMode, StructuredQueryResult } from '@/src/models/analytics/query';
-import { ExecutedQueryMeta, QueryRequestKind } from '@/src/models/analytics/query-builder';
+import {
+  ChartConfig,
+  ExecutedQueryMeta,
+  QueryRequestKind,
+  QueryResultView,
+} from '@/src/models/analytics/query-builder';
 
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
   default: ({ rowData }: { rowData?: unknown[] }) => <div>grid rows: {rowData?.length ?? 0}</div>,
@@ -35,14 +43,37 @@ const ROW_META: ExecutedQueryMeta = {
   columnLabels: {},
 };
 
-const renderArea = (overrides: Partial<Parameters<typeof ResultArea>[0]> = {}) => {
+type AreaProps = Parameters<typeof ResultArea>[0];
+type OwnedProps = Omit<AreaProps, 'view' | 'onChangeView' | 'chartConfig' | 'onChangeChartConfig'>;
+
+// The view and chart config are owned by the Query Builder, so the harness plays that part: it keeps
+// them in state and forwards the spies, letting the interaction tests exercise the same behavior.
+const Harness: FC<OwnedProps & { onChangeView?: (v: QueryResultView) => void }> = ({ onChangeView, ...owned }) => {
+  const [view, setView] = useState<QueryResultView>(QueryResultView.Table);
+  const [chartConfig, setChartConfig] = useState<ChartConfig>(DEFAULT_CHART_CONFIG);
+
+  return (
+    <ResultArea
+      {...owned}
+      view={view}
+      onChangeView={(next) => {
+        setView(next);
+        onChangeView?.(next);
+      }}
+      chartConfig={chartConfig}
+      onChangeChartConfig={setChartConfig}
+    />
+  );
+};
+
+const renderArea = (overrides: Partial<OwnedProps> & { onChangeView?: (v: QueryResultView) => void } = {}) => {
   const props = {
     result: null,
     meta: null,
     isRunning: false,
     ...overrides,
   };
-  render(<ResultArea {...props} />);
+  render(<Harness {...props} />);
   return props;
 };
 
@@ -100,5 +131,15 @@ describe('QueryBuilder :: ResultArea', () => {
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewChart' }));
 
     expect(screen.getByText('QueryBuilder.ChartUnavailable')).toBeInTheDocument();
+  });
+
+  test('switching the view reports the change to its owner', async () => {
+    const user = userEvent.setup();
+    const onChangeView = vi.fn();
+    renderArea({ result: AGG_RESULT, meta: AGG_META, onChangeView });
+
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewChart' }));
+
+    expect(onChangeView).toHaveBeenCalledWith(QueryResultView.Chart);
   });
 });

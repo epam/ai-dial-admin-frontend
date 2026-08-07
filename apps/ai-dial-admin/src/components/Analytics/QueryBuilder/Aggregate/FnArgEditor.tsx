@@ -14,6 +14,9 @@ interface Props {
   value: FnArgValue;
   // Field choices for an `expression` argument.
   fieldOptions: FieldOption[];
+  // Set by the owning section when this argument's picked field does not resolve against the schema.
+  unavailable?: boolean;
+  unavailableHint?: string;
   onChange: (value: FnArgValue) => void;
 }
 
@@ -31,7 +34,7 @@ const clampToBounds = (raw: string, min?: number, max?: number): string => {
 // Renders one function argument's editor purely from its catalog descriptor: a field dropdown for an
 // `expression` argument, a bounded numeric input for a literal number, and a select of allowed
 // values (or a text input) for a string literal.
-const FnArgEditor: FC<Props> = ({ id, arg, value, fieldOptions, onChange }) => {
+const FnArgEditor: FC<Props> = ({ id, arg, value, fieldOptions, unavailable, unavailableHint, onChange }) => {
   if (arg.kind === QueryFunctionArgKind.Expression) {
     return (
       <div className="min-w-[128px] flex-1">
@@ -42,6 +45,8 @@ const FnArgEditor: FC<Props> = ({ id, arg, value, fieldOptions, onChange }) => {
           value={value.field}
           placeholder={arg.name}
           ariaLabel={arg.name}
+          unavailable={unavailable}
+          unavailableHint={unavailableHint}
           onSelect={(name) => onChange({ field: name })}
         />
       </div>

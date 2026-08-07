@@ -4,7 +4,7 @@ import { FC, useMemo, useState } from 'react';
 
 import classNames from 'classnames';
 import { DialDropdown, DialTooltip } from '@epam/ai-dial-ui-kit';
-import { IconChevronDown, IconChevronRight, IconMathFunction } from '@tabler/icons-react';
+import { IconAlertTriangle, IconChevronDown, IconChevronRight, IconMathFunction } from '@tabler/icons-react';
 
 import CompactInput from '@/src/components/Analytics/QueryBuilder/Common/CompactInput';
 import FieldDropdownOption from '@/src/components/Analytics/QueryBuilder/Common/FieldDropdownOption';
@@ -43,6 +43,10 @@ interface PickerProps extends CommonProps {
   mode: FieldDropdownMode.Picker;
   value?: string;
   placeholder?: string;
+  // The picked value does not resolve against the loaded schema. Marked here so the repair is where
+  // the name is, rather than only in the banner.
+  unavailable?: boolean;
+  unavailableHint?: string;
   // Trigger label for the empty value ('') — e.g. the aggregates' "(No arg — count *)". Display
   // only: the option list holds real fields.
   emptyOptionLabel?: string;
@@ -250,8 +254,20 @@ const CategorizedFieldDropdown: FC<Props> = (props) => {
           aria-expanded={open}
           aria-controls={`${id}-listbox`}
           disabled={disabled}
-          className="flex h-[26px] w-full items-center justify-between gap-2 rounded border border-primary bg-layer-2 px-2 text-left hover:bg-layer-4"
+          className={classNames(
+            'flex h-[26px] w-full items-center justify-between gap-2 rounded border bg-layer-2 px-2 text-left hover:bg-layer-4',
+            props.unavailable ? 'border-dashed border-warning' : 'border-primary',
+          )}
         >
+          {props.unavailable && (
+            <DialTooltip
+              hideTooltip={!props.unavailableHint}
+              tooltip={props.unavailableHint}
+              contentClassName="max-w-[320px]"
+            >
+              <IconAlertTriangle size={12} className="shrink-0 text-warning" />
+            </DialTooltip>
+          )}
           <span className={classNames('truncate font-mono dial-tiny-text', value ? 'text-primary' : 'text-secondary')}>
             {valueLabel || props.emptyOptionLabel || props.placeholder}
           </span>

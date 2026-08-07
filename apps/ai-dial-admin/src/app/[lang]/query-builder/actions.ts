@@ -2,7 +2,7 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { analyticsDataApi, queryAssistantApi } from '@/src/app/api/api';
+import { analyticsDataApi, queryAssistantApi, savedQueriesApi } from '@/src/app/api/api';
 import { AnalyticsEntity, AnalyticsEntitySchema } from '@/src/models/analytics/entity';
 import { ChatCompletionResponse, QueryAssistantMessage } from '@/src/models/analytics/query-assistant';
 import { QueryFunction } from '@/src/models/analytics/query-function';
@@ -12,6 +12,7 @@ import {
   TranslateResponse,
   TranslateSqlResponse,
 } from '@/src/models/analytics/query';
+import { SavedQuery, SavedQueryRequest, SavedQueryScope } from '@/src/models/analytics/saved-query';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -44,6 +45,26 @@ export async function translateQuery(query: StructuredQuery): Promise<ServerActi
 
 export async function translateSqlToQuery(sql: string): Promise<ServerActionResponse<TranslateSqlResponse>> {
   return analyticsDataApi.translateSqlAction(sql, await token());
+}
+
+export async function listSavedQueries(scope: SavedQueryScope): Promise<SavedQuery[] | null> {
+  return savedQueriesApi.listSavedQueries(scope, await token());
+}
+
+export async function createSavedQuery(dto: SavedQueryRequest): Promise<ServerActionResponse<SavedQuery>> {
+  return savedQueriesApi.createSavedQuery(dto, await token());
+}
+
+export async function getSavedQuery(id: string): Promise<SavedQuery | null> {
+  return savedQueriesApi.getSavedQuery(id, await token());
+}
+
+export async function updateSavedQuery(id: string, dto: SavedQueryRequest): Promise<ServerActionResponse<SavedQuery>> {
+  return savedQueriesApi.updateSavedQuery(id, dto, await token());
+}
+
+export async function deleteSavedQuery(id: string): Promise<ServerActionResponse> {
+  return savedQueriesApi.deleteSavedQuery(id, await token());
 }
 
 export async function generateQuery(
