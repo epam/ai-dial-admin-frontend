@@ -13,24 +13,22 @@ COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
-# Nx generateLockfile/createLockFile is incomplete for npm ci (nested resolutions).
-# Restore root overrides dropped from the generated package.json, then regenerate
-# the lockfile with npm so it matches what the runner will install.
-RUN node tools/prepare-dist-install.mjs \
-  && cd dist/apps/ai-dial-admin \
-  && npm install --package-lock-only --omit=dev --ignore-scripts
 RUN rm -rf /app/dist/apps/ai-dial-admin/.next/cache
+
+FROM deps AS prod-deps
+WORKDIR /app
+RUN npm prune --omit=dev
 
 FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN addgroup --system --gid 1001 nodejs \
+ && adduser --system --uid 1001 nextjs
 
 COPY --from=builder --chown=nextjs:nodejs /app/dist/apps/ai-dial-admin ./
-RUN npm ci --omit=dev --ignore-scripts
+COPY --from=prod-deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 
 USER nextjs
 
