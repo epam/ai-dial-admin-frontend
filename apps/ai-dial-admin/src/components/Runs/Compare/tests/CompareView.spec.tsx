@@ -33,6 +33,7 @@ vi.mock('@/src/app/[lang]/runs/actions', () => ({
   getTestCaseRunResultDetails: (...args: unknown[]) => getTestCaseRunResultDetailsMock(...args),
   executeStructuredQuery: (...args: unknown[]) => executeStructuredQueryMock(...args),
   getMetricSnapshots: (...args: unknown[]) => getMetricSnapshotsMock(...args),
+  getMetricScoresComparison: vi.fn().mockResolvedValue({ runs: [] }),
 }));
 
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({

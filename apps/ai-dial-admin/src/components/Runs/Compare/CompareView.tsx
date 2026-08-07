@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialGhostButton, DialTabs } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton, DialSwitch, DialTabs } from '@epam/ai-dial-ui-kit';
 
 import { getRun } from '@/src/app/[lang]/runs/actions';
 import CompareRunTag from '@/src/components/Runs/Compare/CompareRunTag';
@@ -35,7 +35,7 @@ import {
   getSelectableCompareRuns,
 } from '@/src/components/Runs/Compare/utils';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
-import { getCompareRowSelectionId } from '@/src/components/Runs/View/utils';
+import { getCompareRowSelectionId, isMatchedCompareRow } from '@/src/components/Runs/View/utils';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
@@ -63,6 +63,7 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
   const [selectRunSlot, setSelectRunSlot] = useState<CompareRunSlot | null>(null);
   const [comparedRunId, setComparedRunId] = useState(comparedRunIdProp);
   const [activeTab, setActiveTab] = useState(CompareViewTab.SummaryOverview);
+  const [onlyMatchingTestCases, setOnlyMatchingTestCases] = useState(false);
   const [showDisplayPanel, setShowDisplayPanel] = useState(false);
   const [selectedRow, setSelectedRow] = useState<CompareAnalyticsRow | null>(null);
   const [detailPosition, setDetailPosition] = useState(SidebarPosition.Right);
@@ -271,7 +272,17 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
     setAvailableMetricGroups([]);
     setSelectedMetricGroups(new Set());
     areMetricGroupsInitializedRef.current = false;
+    setOnlyMatchingTestCases(false);
   }, [primaryRunId, comparedRunId, closeRowDetail]);
+
+  useEffect(() => {
+    if (!onlyMatchingTestCases || !selectedRow) {
+      return;
+    }
+    if (!isMatchedCompareRow(selectedRow)) {
+      closeRowDetail();
+    }
+  }, [onlyMatchingTestCases, selectedRow, closeRowDetail]);
 
   useEffect(() => () => sidebarRef.current.closeSidebar(), []);
 
@@ -279,21 +290,29 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
     <div className="flex flex-col flex-1 min-h-0 h-full bg-layer-2 rounded overflow-hidden p-4 gap-4">
       <h3 className="dial-h3 text-primary shrink-0">{t(RunsI18nKey.RunComparison)}</h3>
 
-      <div className="flex items-center gap-2 shrink-0">
-        {run && (
+      <div className="flex items-center justify-between gap-4 shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
+          {run && (
+            <CompareRunTag
+              runIndex={RUN_COMPARE_PRIMARY_INDEX}
+              name={primaryRunName}
+              onEdit={() => openSelectRun(CompareRunSlot.Primary)}
+              isEditDisabled={isPrimaryEditDisabled}
+            />
+          )}
+          <span className="text-secondary dial-small-text">{t(RunsI18nKey.RunCompareVs)}</span>
           <CompareRunTag
-            runIndex={RUN_COMPARE_PRIMARY_INDEX}
-            name={primaryRunName}
-            onEdit={() => openSelectRun(CompareRunSlot.Primary)}
-            isEditDisabled={isPrimaryEditDisabled}
+            runIndex={RUN_COMPARE_SECONDARY_INDEX}
+            name={comparedRunName}
+            onEdit={() => openSelectRun(CompareRunSlot.Secondary)}
+            isEditDisabled={isSecondaryEditDisabled}
           />
-        )}
-        <span className="text-secondary dial-small-text">{t(RunsI18nKey.RunCompareVs)}</span>
-        <CompareRunTag
-          runIndex={RUN_COMPARE_SECONDARY_INDEX}
-          name={comparedRunName}
-          onEdit={() => openSelectRun(CompareRunSlot.Secondary)}
-          isEditDisabled={isSecondaryEditDisabled}
+        </div>
+        <DialSwitch
+          switchId="onlyMatchingTestCases"
+          isOn={onlyMatchingTestCases}
+          label={t(RunsI18nKey.OnlyMatchingTestCases)}
+          onChange={setOnlyMatchingTestCases}
         />
       </div>
 
@@ -324,6 +343,7 @@ const CompareView: FC<Props> = ({ runId, comparedRunId: comparedRunIdProp }) => 
           comparedRunId={comparedRunId}
           primaryRunName={primaryRunName}
           comparedRunName={comparedRunName}
+          onlyMatchingTestCases={onlyMatchingTestCases}
           colorDisplayMode={colorDisplayMode}
           onColorDisplayModeChange={onColorDisplayModeChange}
           selectedMetricGroups={selectedMetricGroups}

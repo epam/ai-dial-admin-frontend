@@ -26,7 +26,7 @@ import {
 } from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-layout';
 import { getHeatMapTestCaseHeaderLabels } from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-test-case-columns';
 import { HeatMapTabUiState } from '@/src/components/Runs/Compare/models';
-import { mergeByTestCaseId, RESULT_FILTERS } from '@/src/components/Runs/View/utils';
+import { mergeByTestCaseId, isMatchedCompareRow, RESULT_FILTERS } from '@/src/components/Runs/View/utils';
 import { EntitiesI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useI18n } from '@/src/locales/client';
@@ -36,6 +36,7 @@ interface Props {
   comparedRunId: string;
   primaryRunName: string;
   comparedRunName: string;
+  onlyMatchingTestCases: boolean;
   colorDisplayMode: HeatMapColorDisplayMode;
   onColorDisplayModeChange: (mode: HeatMapColorDisplayMode) => void;
   selectedMetricGroups: Set<string>;
@@ -49,6 +50,7 @@ const HeatMapTab: FC<Props> = ({
   comparedRunId,
   primaryRunName,
   comparedRunName,
+  onlyMatchingTestCases,
   colorDisplayMode,
   onColorDisplayModeChange: _onColorDisplayModeChange,
   selectedMetricGroups,
@@ -124,8 +126,9 @@ const HeatMapTab: FC<Props> = ({
 
   const mergedRowData = useMemo(() => {
     if (results === null || comparedResults === null) return null;
-    return mergeByTestCaseId(results, comparedResults);
-  }, [results, comparedResults]);
+    const merged = mergeByTestCaseId(results, comparedResults);
+    return onlyMatchingTestCases ? merged.filter(isMatchedCompareRow) : merged;
+  }, [results, comparedResults, onlyMatchingTestCases]);
 
   const isDeltaMode = colorDisplayMode === HeatMapColorDisplayMode.Delta;
 

@@ -4,7 +4,12 @@ import { FilterOperatorDto } from '@/src/types/request';
 import { RESPONSE_MOCK, TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
-import { ANALYTICS_RESULTS_URL, ANALYTICS_RUN_METRIC_SNAPSHOTS_URL, AnalyticsApi } from '../analytics-api';
+import {
+  ANALYTICS_METRIC_SCORES_COMPARISON_URL,
+  ANALYTICS_RESULTS_URL,
+  ANALYTICS_RUN_METRIC_SNAPSHOTS_URL,
+  AnalyticsApi,
+} from '../analytics-api';
 
 const fetch = createFetchMock(vi);
 fetch.enableMocks();
@@ -79,6 +84,17 @@ describe('Server :: AnalyticsApi', () => {
 
     expect(fetch).toHaveBeenCalledWith(
       `${TEST_URL}${ANALYTICS_RUN_METRIC_SNAPSHOTS_URL}?`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
+  test('Should call getMetricScoresComparison with both run ids', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ runs: [] }));
+
+    await instance.getMetricScoresComparison(['run-a', 'run-b'], TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${ANALYTICS_METRIC_SCORES_COMPARISON_URL}?runIds=run-a%2Crun-b`,
       expect.objectContaining({ method: 'GET' }),
     );
   });

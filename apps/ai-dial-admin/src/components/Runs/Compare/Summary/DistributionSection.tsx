@@ -32,9 +32,13 @@ interface Props {
   comparedMetricScores: MetricScoresData | null;
   selectedMetricName: string | null;
   onSelectMetric: (name: string | null) => void;
+  primaryExcludeEvalSummaryIds?: string[];
+  comparedExcludeEvalSummaryIds?: string[];
 }
 
 const formatValue = (value: number | null): string => (value == null ? '—' : String(Math.round(value * 100) / 100));
+
+const EMPTY_EXCLUDE_EVAL_SUMMARY_IDS: string[] = [];
 
 const DistributionSection: FC<Props> = ({
   primaryRunId,
@@ -46,6 +50,8 @@ const DistributionSection: FC<Props> = ({
   comparedMetricScores,
   selectedMetricName,
   onSelectMetric,
+  primaryExcludeEvalSummaryIds = EMPTY_EXCLUDE_EVAL_SUMMARY_IDS,
+  comparedExcludeEvalSummaryIds = EMPTY_EXCLUDE_EVAL_SUMMARY_IDS,
 }) => {
   const t = useI18n();
   const [primaryValues, setPrimaryValues] = useState<number[] | null>(null);
@@ -64,8 +70,8 @@ const DistributionSection: FC<Props> = ({
     let cancelled = false;
     setIsLoading(true);
     Promise.all([
-      executeStructuredQuery(buildDistributionQuery(primaryRunId, option.field)),
-      executeStructuredQuery(buildDistributionQuery(comparedRunId, option.field)),
+      executeStructuredQuery(buildDistributionQuery(primaryRunId, option.field, primaryExcludeEvalSummaryIds)),
+      executeStructuredQuery(buildDistributionQuery(comparedRunId, option.field, comparedExcludeEvalSummaryIds)),
     ]).then(([primaryResult, comparedResult]) => {
       if (!cancelled) {
         setPrimaryValues(parseHistogramValues(primaryResult));
@@ -77,7 +83,14 @@ const DistributionSection: FC<Props> = ({
     return () => {
       cancelled = true;
     };
-  }, [primaryRunId, comparedRunId, selectedMetricName, metricOptions]);
+  }, [
+    primaryRunId,
+    comparedRunId,
+    selectedMetricName,
+    metricOptions,
+    primaryExcludeEvalSummaryIds,
+    comparedExcludeEvalSummaryIds,
+  ]);
 
   const options = useMemo<SelectOption[]>(
     () => metricOptions.map((metric) => ({ value: metric.name, label: metric.name })),

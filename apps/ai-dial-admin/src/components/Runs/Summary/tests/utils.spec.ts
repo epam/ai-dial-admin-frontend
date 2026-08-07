@@ -21,6 +21,7 @@ import {
   getMetricOutputFields,
   getMetricStatCards,
   parseAvgRunTimeMs,
+  parseComparisonMetricScores,
   parseHistogramValues,
   parseMetricScores,
   parseTestCaseStatusCounts,
@@ -46,6 +47,41 @@ describe('Runs Summary :: query builders', () => {
       args: [
         { type: ExprType.Field, name: 'test_suite_run_id' },
         { type: ExprType.Value, value_type: ValueType.Uuid, value: 'run-1' },
+      ],
+    });
+  });
+
+  test('buildTestCasesStatusQuery ANDs a NOT IN exclusion when unmatched ids are provided', () => {
+    const query = buildTestCasesStatusQuery('run-1', ['id-1', 'id-2']);
+
+    expect(query.filter).toEqual({
+      op: LogicalOp.And,
+      args: [
+        {
+          op: ComparisonOp.Eq,
+          args: [
+            { type: ExprType.Field, name: 'test_suite_run_id' },
+            { type: ExprType.Value, value_type: ValueType.Uuid, value: 'run-1' },
+          ],
+        },
+        {
+          op: LogicalOp.Not,
+          args: [
+            {
+              op: ComparisonOp.In,
+              args: [
+                { type: ExprType.Field, name: 'id' },
+                {
+                  type: ExprType.Array,
+                  items: [
+                    { type: ExprType.Value, value_type: ValueType.Uuid, value: 'id-1' },
+                    { type: ExprType.Value, value_type: ValueType.Uuid, value: 'id-2' },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
       ],
     });
   });
@@ -290,6 +326,19 @@ describe('Runs Summary :: metric scores', () => {
     expect(parseMetricScores(null)).toEqual({ overallScore: null, statistics: [], byStatistic: {} });
     expect(parseMetricScores({ rows: [] })).toEqual({ overallScore: null, statistics: [], byStatistic: {} });
   });
+
+  test('parseComparisonMetricScores maps comparison scores into MetricScoresData', () => {
+    const parsed = parseComparisonMetricScores([
+      { metricScoreName: 'overall', metricName: 'overall', value: 0.77 },
+      { metricScoreName: 'AVG', metricName: 'Accuracy.score', value: 0.91 },
+    ]);
+
+    expect(parsed.overallScore).toBe(0.77);
+    expect(parsed.statistics).toEqual(['AVG']);
+    expect(parsed.byStatistic).toEqual({
+      AVG: [{ name: 'Accuracy', bars: { score: 0.91 } }],
+    });
+  });
 });
 
 describe('Runs Summary :: distribution', () => {
@@ -313,6 +362,40 @@ describe('Runs Summary :: distribution', () => {
     ]);
   });
 
+  test('buildDistributionQuery ANDs a NOT IN exclusion when unmatched ids are provided', () => {
+    const query = buildDistributionQuery('run-1', 'metric::Accuracy::score', ['id-1', 'id-2']);
+
+    expect(query.filter).toEqual({
+      op: LogicalOp.And,
+      args: [
+        {
+          op: ComparisonOp.Eq,
+          args: [
+            { type: ExprType.Field, name: 'test_suite_run_id' },
+            { type: ExprType.Value, value_type: ValueType.Uuid, value: 'run-1' },
+          ],
+        },
+        {
+          op: LogicalOp.Not,
+          args: [
+            {
+              op: ComparisonOp.In,
+              args: [
+                { type: ExprType.Field, name: 'id' },
+                {
+                  type: ExprType.Array,
+                  items: [
+                    { type: ExprType.Value, value_type: ValueType.Uuid, value: 'id-1' },
+                    { type: ExprType.Value, value_type: ValueType.Uuid, value: 'id-2' },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+  });
   test('parseHistogramValues extracts and clamps the raw values', () => {
     const values = parseHistogramValues({
       rows: [{ value: 0 }, { value: 0.42 }, { value: 1 }, { value: 1.2 }, { value: -0.1 }],
