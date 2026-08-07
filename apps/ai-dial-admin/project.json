@@ -18,7 +18,8 @@
           "outputPath": "apps/ai-dial-admin"
         },
         "production": {
-          "generatePackageJson": true
+          "generatePackageJson": true,
+          "generateLockfile": true
         }
       }
     },

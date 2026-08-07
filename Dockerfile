@@ -13,9 +13,12 @@ COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
-# Nx 23.0.2+ drops overrides for packages promoted to direct deps in generatePackageJson
-# (e.g. dompurify via monaco-editor). Reinject root overrides so runner `npm ci` matches the lockfile.
-RUN node -e "const fs=require('fs');const p='dist/apps/ai-dial-admin/package.json';const pkg=JSON.parse(fs.readFileSync(p,'utf8'));const root=JSON.parse(fs.readFileSync('package.json','utf8'));pkg.overrides={...pkg.overrides,...root.overrides};fs.writeFileSync(p,JSON.stringify(pkg,null,2)+'\n')"
+# Nx generateLockfile/createLockFile is incomplete for npm ci (nested resolutions).
+# Restore root overrides dropped from the generated package.json, then regenerate
+# the lockfile with npm so it matches what the runner will install.
+RUN node tools/prepare-dist-install.mjs \
+  && cd dist/apps/ai-dial-admin \
+  && npm install --package-lock-only --omit=dev --ignore-scripts
 RUN rm -rf /app/dist/apps/ai-dial-admin/.next/cache
 
 FROM base AS runner
@@ -27,7 +30,6 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 COPY --from=builder --chown=nextjs:nodejs /app/dist/apps/ai-dial-admin ./
-COPY --from=builder --chown=nextjs:nodejs /app/package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts
 
 USER nextjs
