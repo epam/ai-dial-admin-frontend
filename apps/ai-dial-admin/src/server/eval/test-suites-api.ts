@@ -20,6 +20,10 @@ export const TEST_SUITE_RUN_URL = (id?: string) => `${TEST_SUITE_URL(id)}/runs`;
 export const TEST_CASE_URL = (id?: string, testCaseId?: string) => `${TEST_CASES_URL(id)}/${testCaseId || ''}`;
 export const DEPLOYMENTS_URL = `${API}/deployments`;
 export const DEPLOYMENT_TOOLS_URL = (id: string) => `${DEPLOYMENTS_URL}/tools?deploymentId=${encodeURIComponent(id)}`;
+export const DEPLOYMENT_URL = (id: string, type: string) =>
+  id.includes('/')
+    ? `${DEPLOYMENTS_URL}/${type}?deploymentId=${encodeURIComponent(id)}`
+    : `${DEPLOYMENTS_URL}/${type}/${id}`;
 export const TEST_SUITES_RUNS_URL = `${API}/test-suite-runs`;
 export const TEST_SUITE_TEMPLATE_VARIABLES_URL = (id: string) => `${TEST_SUITE_URL(id)}/template-variables`;
 export const TEST_CASE_TEMPLATE_VARIABLES_URL = (id: string, testCaseId: string) =>
@@ -170,7 +174,7 @@ export class TestSuitesApi extends BaseApi {
   }
 
   getDeployment(id: string, type: string, token: Token): Promise<Deployment | null> {
-    return this.get(`${DEPLOYMENTS_URL}/${type}/${id}`, token);
+    return this.get(DEPLOYMENT_URL(id, type), token);
   }
 
   getTestSuiteTemplateVariables(id: string, token: Token): Promise<TemplateVariable[] | null> {
