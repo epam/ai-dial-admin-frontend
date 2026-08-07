@@ -7,7 +7,11 @@ import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
-vi.mock('@/src/app/api/api');
+vi.mock('@/src/app/api/api', () => ({
+  analyticsDataApi: {
+    executeAction: vi.fn(),
+  },
+}));
 
 const END_MS = Date.parse('2026-07-28T12:00:00.000Z');
 const DAY_MS = 24 * 60 * 60 * 1000;
