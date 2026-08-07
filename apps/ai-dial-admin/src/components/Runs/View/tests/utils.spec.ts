@@ -1,5 +1,12 @@
 import { describe, expect, test } from 'vitest';
 
+import {
+  METRIC_COLUMN_WIDTH,
+  RUN_INDEX_COLUMN_WIDTH,
+  STATUS_COLUMN_WIDTH,
+  TEST_CASE_NAME_COLUMN_WIDTH,
+} from '@/src/components/Runs/grid-column-layout';
+import { AnalyticsResult } from '@/src/models/evaluation/run';
 import { FilterOperatorDto } from '@/src/types/request';
 import {
   RESULT_FILTERS,
@@ -15,7 +22,6 @@ import {
   mergeByTestCaseId,
   snapshotsToBindingsMap,
 } from '../utils';
-import { AnalyticsResult } from '@/src/models/evaluation/run';
 
 describe('Runs View :: RESULT_FILTERS', () => {
   test('Should return run and suite filters for provided run', () => {
@@ -91,7 +97,7 @@ describe('Runs View :: getAnalyticsColumns', () => {
         cellRenderer: expect.any(Function),
         filter: 'agNumberColumnFilter',
         floatingFilter: true,
-        width: 148,
+        width: METRIC_COLUMN_WIDTH,
       }),
     );
     expect(accuracyChildren[0].cellStyle).toBeUndefined();
@@ -99,18 +105,24 @@ describe('Runs View :: getAnalyticsColumns', () => {
     expect(accuracyChildren[0].valueGetter({ data: { metricValues: { Accuracy: {} } } })).toBe('—');
 
     const statusChildren = (columns[0] as any).children;
-    expect(statusChildren[0]).toEqual(expect.objectContaining({ colId: 'status', width: 40 }));
+    expect(statusChildren[0]).toEqual(
+      expect.objectContaining({ colId: 'status', width: STATUS_COLUMN_WIDTH, maxWidth: STATUS_COLUMN_WIDTH }),
+    );
     expect(statusChildren[1]).toEqual(
       expect.objectContaining({
         colId: 'testCaseName',
-        width: 156,
+        width: TEST_CASE_NAME_COLUMN_WIDTH,
         filter: 'agTextColumnFilter',
       }),
     );
 
     const executionChildren = (columns[1] as any).children;
     expect(executionChildren[0]).toEqual(
-      expect.objectContaining({ colId: 'runIndex', headerName: '# Run number', width: 140 }),
+      expect.objectContaining({
+        colId: 'runIndex',
+        headerName: '# Run number',
+        width: RUN_INDEX_COLUMN_WIDTH,
+      }),
     );
 
     const detailsChildren = (columns[3] as any).children;
