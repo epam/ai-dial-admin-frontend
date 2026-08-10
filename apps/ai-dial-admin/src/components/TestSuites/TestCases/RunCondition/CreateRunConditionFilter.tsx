@@ -5,7 +5,6 @@ import { IconPlus, IconX } from '@tabler/icons-react';
 import { FC, useCallback, useMemo } from 'react';
 
 import CompactSelect from '@/src/components/Analytics/QueryBuilder/Common/CompactSelect';
-import CloseButton from '@/src/components/Common/CloseButton/CloseButton';
 import { BasicI18nKey, ButtonsI18nKey, QueryBuilderI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
@@ -23,7 +22,7 @@ interface Props {
   draft: RunConditionFilter;
   fieldOptions: RunConditionFieldOption[];
   onChange: (filter: RunConditionFilter) => void;
-  onClose: () => void;
+  onClear: () => void;
 }
 
 const FIELD_COL = 'w-[120px] shrink-0';
@@ -31,7 +30,7 @@ const OPERATOR_COL = 'w-[168px] shrink-0';
 const VALUE_COL = 'w-[192px] shrink-0';
 const ACTION_COL = 'w-6 shrink-0 flex items-center justify-center';
 
-const CreateRunConditionFilter: FC<Props> = ({ draft, fieldOptions, onChange, onClose }) => {
+const CreateRunConditionFilter: FC<Props> = ({ draft, fieldOptions, onChange, onClear }) => {
   const t = useI18n();
 
   const fieldSelectOptions: SelectOption[] = useMemo(
@@ -91,12 +90,12 @@ const CreateRunConditionFilter: FC<Props> = ({ draft, fieldOptions, onChange, on
   const onRemovePredicate = useCallback(
     (index: number) => {
       if (draft.predicates.length <= 1) {
-        onClose();
+        onClear();
         return;
       }
       onChange({ ...draft, predicates: draft.predicates.filter((_, i) => i !== index) });
     },
-    [draft, onChange, onClose],
+    [draft, onChange, onClear],
   );
 
   const onAddPredicate = useCallback(() => {
@@ -142,7 +141,16 @@ const CreateRunConditionFilter: FC<Props> = ({ draft, fieldOptions, onChange, on
           </>
         ) : null}
         <div className={ACTION_COL}>
-          <CloseButton onClose={onClose} />
+          <button
+            type="button"
+            aria-label={t(ButtonsI18nKey.Delete)}
+            className="hover:text-accent-primary"
+            onClick={() => {
+              onRemovePredicate(0);
+            }}
+          >
+            <IconX height={16} width={16} />
+          </button>
         </div>
       </div>
 
@@ -183,7 +191,9 @@ const CreateRunConditionFilter: FC<Props> = ({ draft, fieldOptions, onChange, on
                   type="button"
                   aria-label={t(ButtonsI18nKey.Delete)}
                   className="hover:text-accent-primary"
-                  onClick={() => onRemovePredicate(i + 1)}
+                  onClick={() => {
+                    onRemovePredicate(i + 1);
+                  }}
                 >
                   <IconX height={16} width={16} />
                 </button>

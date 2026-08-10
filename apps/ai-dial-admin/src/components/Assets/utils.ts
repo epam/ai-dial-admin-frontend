@@ -90,7 +90,11 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
         : allActionLabels.filter((item) => item.key !== 'duplicate' && item.key !== 'openInNewTab');
     case ApplicationRoute.AssetsModels:
     case ApplicationRoute.AssetsAppRunners:
-      return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key === 'delete');
+      return isReadOnlyAdmin
+        ? []
+        : allActionLabels.filter(
+            (item) => item.key === 'duplicate' || item.key === 'delete' || item.key === 'openInNewTab',
+          );
     case ApplicationRoute.AssetsApplications:
     case ApplicationRoute.AssetsToolsets:
     case ApplicationRoute.Prompts:

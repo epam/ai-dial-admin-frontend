@@ -27,6 +27,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { AssetApp, AssetWithVersion } from '@/src/models/dial/deployment-asset';
+import { DialAppRunnerResource, PlatformAsset } from '@/src/models/dial/resource';
 import { ImportData } from '@/src/models/import-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
@@ -35,7 +36,7 @@ import { downloadFile, downloadJson } from '@/src/utils/download';
 import { getCreateNotificationDescription, getCreateNotificationTitle } from '@/src/utils/entities/create-entity';
 import { filterNames } from '@/src/utils/entities/filter-names';
 import { getJsonFileName } from '@/src/utils/import/get-json-name';
-import { getRootFolder } from '@/src/utils/files/root-folder';
+import { getRootFolder, isFlatPlatformView } from '@/src/utils/files/root-folder';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity, onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import { useRouter } from 'next/navigation';
@@ -52,6 +53,7 @@ import {
   getEmptyStateContent,
   getFileManagerLabel,
   getGridColumns,
+  getPlatformAssetDuplicate,
   getResourceTypeByRoute,
   ImportAssetActionMap,
   MoveAssetActionMap,
@@ -256,13 +258,22 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
         if (res.success) {
           fetchFiles?.(folderPath);
           if (isCreateDuplicate) {
+            const isFlatAsset = isFlatPlatformView(view);
+            const entityLabel = isFlatAsset
+              ? asset.name || (asset as DialAppRunnerResource).$id
+              : `${asset.name}__${asset.version}`;
             showNotification(
               getSuccessNotification(
                 getCreateNotificationTitle(view, t),
-                getCreateNotificationDescription(view, `${asset.name}__${asset.version}`, t),
+                getCreateNotificationDescription(view, entityLabel, t),
               ),
             );
-            router.push(getUrnForEntity(view, { name: asset.name, version: asset.version, folderId: folderPath }));
+            router.push(
+              getUrnForEntity(
+                view,
+                isFlatAsset ? asset : { name: asset.name, version: asset.version, folderId: folderPath },
+              ),
+            );
           }
         } else {
           showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
@@ -278,6 +289,13 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
 
   const handleDuplicate = useCallback(
     (asset: AssetWithVersion) => {
+      if (isFlatPlatformView(view)) {
+        const duplicate = getPlatformAssetDuplicate(view, asset as unknown as PlatformAsset);
+        handleCreateAsset(duplicate as unknown as AssetWithVersion, void 0, true);
+        handleModalClose();
+        return;
+      }
+
       const newAsset = {
         ...asset,
         path: `${asset.folderId}${asset.name}__${asset.version}`,
@@ -286,7 +304,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
       handleCreateAsset(newAsset as AssetApp, asset.folderId, true);
       handleModalClose();
     },
-    [handleCreateAsset, handleModalClose],
+    [handleCreateAsset, handleModalClose, view],
   );
 
   const handleMoveItems = useCallback(

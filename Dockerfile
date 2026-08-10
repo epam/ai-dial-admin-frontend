@@ -15,17 +15,20 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 RUN rm -rf /app/dist/apps/ai-dial-admin/.next/cache
 
+FROM deps AS prod-deps
+WORKDIR /app
+RUN npm prune --omit=dev
+
 FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN addgroup --system --gid 1001 nodejs \
+ && adduser --system --uid 1001 nextjs
 
 COPY --from=builder --chown=nextjs:nodejs /app/dist/apps/ai-dial-admin ./
-COPY --from=builder --chown=nextjs:nodejs /app/package-lock.json ./
-RUN npm ci --omit=dev --ignore-scripts
+COPY --from=prod-deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 
 USER nextjs
 

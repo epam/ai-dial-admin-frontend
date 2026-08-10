@@ -2,7 +2,11 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { datasetsApi, testSuitesApi } from '@/src/app/api/api';
+import { datasetsApi, structuredQueryApi, testSuitesApi } from '@/src/app/api/api';
+import {
+  buildTestSuitesQuery,
+  mapTestSuitesQueryResult,
+} from '@/src/components/ListView/Evaluation/utils/test-suites-query';
 import { DeploymentType } from '@/src/models/evaluation/deployment';
 import { DatasetVisibility } from '@/src/models/evaluation/dataset';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
@@ -53,7 +57,9 @@ export async function runTestSuite(id?: string, numberOfRuns?: number | string) 
 
 export async function getTestSuites(page: number, size: number, sorts: SortDto[], filters: FilterDto[]) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
-  return testSuitesApi.getTestSuites(page, size, sorts, filters, token);
+  const query = buildTestSuitesQuery(page, size, sorts, filters);
+  const result = await structuredQueryApi.execute(query, token);
+  return mapTestSuitesQueryResult(result, page, size);
 }
 
 export async function getTestSuiteByName(name: string) {

@@ -5,6 +5,9 @@ import ExportModal from '@/src/components/EntityListView/Export/ExportModal';
 import ImportModal from '@/src/components/EntityListView/Import/ImportModal';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
 import DuplicateAsset from '@/src/components/Assets/Deployments/DuplicateAsset';
+import DuplicatePlatformAsset from '@/src/components/Assets/Modals/DuplicatePlatformAsset';
+import { PlatformAsset } from '@/src/models/dial/resource';
+import { isFlatPlatformView } from '@/src/utils/files/root-folder';
 import { ApplicationRoute } from '@/src/types/routes';
 import { ModalType } from './types';
 import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
@@ -90,18 +93,29 @@ const Modals: FC<Props> = ({
           isModal
         />
       )}
-      {isModalOpen && modalType === ModalType.duplicate && (
-        <DuplicateAsset
-          context={getContext}
-          view={view}
-          isModalOpen={isModalOpen}
-          onClose={onClose}
-          entity={duplicateItem as AssetWithVersion}
-          versionsMap={versionsMap}
-          onDuplicate={onDuplicate}
-          onCreateFolder={onCreateFolder}
-        />
-      )}
+      {isModalOpen &&
+        modalType === ModalType.duplicate &&
+        (isFlatPlatformView(view) ? (
+          <DuplicatePlatformAsset
+            view={view}
+            isModalOpen={isModalOpen}
+            onClose={onClose}
+            names={names || []}
+            entity={duplicateItem as unknown as PlatformAsset}
+            onDuplicate={(asset) => onDuplicate?.(asset as unknown as AssetWithVersion)}
+          />
+        ) : (
+          <DuplicateAsset
+            context={getContext}
+            view={view}
+            isModalOpen={isModalOpen}
+            onClose={onClose}
+            entity={duplicateItem as AssetWithVersion}
+            versionsMap={versionsMap}
+            onDuplicate={onDuplicate}
+            onCreateFolder={onCreateFolder}
+          />
+        ))}
       {isModalOpen && modalType === ModalType.delete && deletedItems && (
         <DeleteAssetsModal
           context={getContext}

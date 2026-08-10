@@ -122,6 +122,8 @@ describe('Runs View :: getAnalyticsColumns', () => {
         colId: 'runIndex',
         headerName: '# Run number',
         width: RUN_INDEX_COLUMN_WIDTH,
+        maxWidth: RUN_INDEX_COLUMN_WIDTH,
+        flex: 0,
       }),
     );
 
@@ -865,5 +867,87 @@ describe('Runs View :: mergeByTestCaseId', () => {
     expect(result).toHaveLength(2);
     expect(result[0]._compared?.responseStatusCode).toBe(404);
     expect(result[0]._compared?.testCaseName).toBe('Original');
+  });
+
+  test('matches multi-turn rows by testCaseId, runIndex, and turnIndex', () => {
+    const current = [
+      makeResult({
+        id: 'p-t0',
+        testCaseId: 'tc1',
+        testCaseName: 'Round 3',
+        runIndex: 0,
+        turnIndex: 0,
+        totalTurns: 3,
+        responseStatusCode: 200,
+      }),
+      makeResult({
+        id: 'p-t1',
+        testCaseId: 'tc1',
+        testCaseName: 'Round 3',
+        runIndex: 0,
+        turnIndex: 1,
+        totalTurns: 3,
+        responseStatusCode: 201,
+      }),
+      makeResult({
+        id: 'p-t2',
+        testCaseId: 'tc1',
+        testCaseName: 'Round 3',
+        runIndex: 0,
+        turnIndex: 2,
+        totalTurns: 3,
+        responseStatusCode: 202,
+      }),
+    ];
+    const compared = [
+      makeResult({
+        id: 'c-t0',
+        testCaseId: 'tc1',
+        testCaseName: 'Round 3',
+        runIndex: 0,
+        turnIndex: 0,
+        totalTurns: 3,
+        responseStatusCode: 400,
+      }),
+      makeResult({
+        id: 'c-t1',
+        testCaseId: 'tc1',
+        testCaseName: 'Round 3',
+        runIndex: 0,
+        turnIndex: 1,
+        totalTurns: 3,
+        responseStatusCode: 401,
+      }),
+      makeResult({
+        id: 'c-t2',
+        testCaseId: 'tc1',
+        testCaseName: 'Round 3',
+        runIndex: 0,
+        turnIndex: 2,
+        totalTurns: 3,
+        responseStatusCode: 402,
+      }),
+    ];
+    const result = mergeByTestCaseId(current, compared);
+
+    expect(result).toHaveLength(3);
+    expect(result.map((row) => row.turnIndex)).toEqual([0, 1, 2]);
+    expect(result[0]._compared?.id).toBe('c-t0');
+    expect(result[1]._compared?.id).toBe('c-t1');
+    expect(result[2]._compared?.id).toBe('c-t2');
+  });
+
+  test('does not reuse one compared turn across multiple primary turns', () => {
+    const current = [
+      makeResult({ id: 'p0', testCaseId: 'tc1', testCaseName: 'A', runIndex: 0, turnIndex: 0, totalTurns: 2 }),
+      makeResult({ id: 'p1', testCaseId: 'tc1', testCaseName: 'A', runIndex: 0, turnIndex: 1, totalTurns: 2 }),
+    ];
+    const compared = [
+      makeResult({ id: 'c1', testCaseId: 'tc1', testCaseName: 'A', runIndex: 0, turnIndex: 1, totalTurns: 2 }),
+    ];
+    const result = mergeByTestCaseId(current, compared);
+
+    expect(result.find((row) => row.id === 'p0')?._compared).toBeNull();
+    expect(result.find((row) => row.id === 'p1')?._compared?.id).toBe('c1');
   });
 });

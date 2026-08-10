@@ -7,6 +7,7 @@ import {
   EXTRACTED_COLUMN_MIN_WIDTH,
   fixedWidthColDef,
   HTTP_COLUMN_WIDTH,
+  lockedWidthColDef,
   METRIC_COLUMN_WIDTH,
   NO_FILTER_COL_DEF,
   NUMBER_FILTER_COL_DEF,
@@ -144,7 +145,7 @@ const executionColumns: ColDef[] = [
     field: 'runIndex',
     headerName: '# Run number',
     colId: 'runIndex',
-    ...fixedWidthColDef(RUN_INDEX_COLUMN_WIDTH),
+    ...lockedWidthColDef(RUN_INDEX_COLUMN_WIDTH),
     ...NO_FILTER_COL_DEF,
     valueGetter: (params) => (params.data?.runIndex != null ? params.data.runIndex + 1 : null),
   },
@@ -152,7 +153,7 @@ const executionColumns: ColDef[] = [
     field: 'turnIndex',
     headerName: 'Turn',
     colId: 'turnIndex',
-    ...fixedWidthColDef(TURN_INDEX_COLUMN_WIDTH),
+    ...lockedWidthColDef(TURN_INDEX_COLUMN_WIDTH),
     ...NO_FILTER_COL_DEF,
     valueGetter: (params) => (params.data?.turnIndex != null ? params.data.turnIndex + 1 : null),
   },
@@ -160,7 +161,7 @@ const executionColumns: ColDef[] = [
     field: 'totalTurns',
     headerName: 'Total turns',
     colId: 'totalTurns',
-    ...fixedWidthColDef(TOTAL_TURNS_COLUMN_WIDTH),
+    ...lockedWidthColDef(TOTAL_TURNS_COLUMN_WIDTH),
     ...NO_FILTER_COL_DEF,
     valueGetter: (params) => params.data?.totalTurns ?? null,
   },
@@ -168,7 +169,7 @@ const executionColumns: ColDef[] = [
     field: 'responseStatusCode',
     headerName: 'HTTP',
     colId: 'http',
-    ...fixedWidthColDef(HTTP_COLUMN_WIDTH),
+    ...lockedWidthColDef(HTTP_COLUMN_WIDTH),
     ...NO_FILTER_COL_DEF,
     cellClass: (params) => getTestCaseStatusClass(params.data?.responseStatusCode),
   },
@@ -176,7 +177,7 @@ const executionColumns: ColDef[] = [
     field: 'durationMs',
     headerName: 'Duration',
     colId: 'duration',
-    ...fixedWidthColDef(DURATION_COLUMN_WIDTH),
+    ...lockedWidthColDef(DURATION_COLUMN_WIDTH),
     ...NO_FILTER_COL_DEF,
     valueGetter: (params) => {
       const duration = params.data?.executionInfo?.durationMs ?? params.data?.execDurationMs;
@@ -196,8 +197,7 @@ const staticColumns = [
         headerName: ' ',
         context: { panelName: 'Status' },
         colId: 'status',
-        ...fixedWidthColDef(STATUS_COLUMN_WIDTH),
-        maxWidth: STATUS_COLUMN_WIDTH,
+        ...lockedWidthColDef(STATUS_COLUMN_WIDTH),
         ...NO_FILTER_COL_DEF,
         cellRenderer: ExecutionStatusCellRenderer,
       },
@@ -234,18 +234,22 @@ export const getAnalyticsColumns = (results: AnalyticsResult[]) => {
   ];
 };
 
+const getCompareTurnKeyPart = (row: AnalyticsResult): string => (row.turnIndex != null ? `::${row.turnIndex}` : '');
+
 const getCompareIdKey = (row: AnalyticsResult): string | null =>
-  row.testCaseId ? `${row.testCaseId}::${row.runIndex}` : null;
+  row.testCaseId ? `${row.testCaseId}::${row.runIndex}${getCompareTurnKeyPart(row)}` : null;
 
 const getCompareNameKey = (row: AnalyticsResult): string | null =>
-  row.testCaseName ? `${row.testCaseName}::${row.runIndex}` : null;
+  row.testCaseName ? `${row.testCaseName}::${row.runIndex}${getCompareTurnKeyPart(row)}` : null;
 
 export const createEmptyComparePrimaryRow = (
-  source: Pick<AnalyticsResult, 'testCaseId' | 'testCaseName' | 'runIndex'>,
+  source: Pick<AnalyticsResult, 'testCaseId' | 'testCaseName' | 'runIndex' | 'turnIndex' | 'totalTurns'>,
 ): AnalyticsResult => ({
   testCaseId: source.testCaseId,
   testCaseName: source.testCaseName,
   runIndex: source.runIndex,
+  turnIndex: source.turnIndex,
+  totalTurns: source.totalTurns,
   responseStatusCode: undefined as unknown as number,
 });
 
@@ -263,7 +267,8 @@ const sortCompareRows = (rows: CompareAnalyticsRow[]): CompareAnalyticsRow[] =>
   [...rows].sort((a, b) => {
     const nameCompare = (a.testCaseName ?? '').localeCompare(b.testCaseName ?? '');
     if (nameCompare !== 0) return nameCompare;
-    return a.runIndex - b.runIndex;
+    if (a.runIndex !== b.runIndex) return a.runIndex - b.runIndex;
+    return (a.turnIndex ?? 0) - (b.turnIndex ?? 0);
   });
 
 const indexRowsByKey = (
@@ -285,7 +290,7 @@ export const mergeByTestCaseId = (current: AnalyticsResult[], compared: Analytic
   const merged: CompareAnalyticsRow[] = [];
   const unmatchedCurrent: AnalyticsResult[] = [];
 
-  // Phase 1: match by testCaseId + runIndex when both sides share the same id
+  // Phase 1: match by testCaseId + runIndex + turnIndex when both sides share the same id
   const comparedById = indexRowsByKey(compared, getCompareIdKey);
   for (const row of current) {
     const idKey = getCompareIdKey(row);
@@ -298,7 +303,7 @@ export const mergeByTestCaseId = (current: AnalyticsResult[], compared: Analytic
     }
   }
 
-  // Phase 2: match remaining rows by testCaseName + runIndex (e.g. public vs detached private copy)
+  // Phase 2: match remaining rows by testCaseName + runIndex + turnIndex (e.g. public vs detached private copy)
   const comparedByName = indexRowsByKey(compared, getCompareNameKey, usedCompared);
   for (const row of unmatchedCurrent) {
     const nameKey = getCompareNameKey(row);

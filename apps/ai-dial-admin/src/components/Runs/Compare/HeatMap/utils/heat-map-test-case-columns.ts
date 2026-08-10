@@ -1,31 +1,53 @@
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 
-type HeatMapTestCaseSource = Pick<AnalyticsResult, 'testCaseId' | 'testCaseName' | 'id' | 'runIndex'>;
+type HeatMapTestCaseSource = Pick<
+  AnalyticsResult,
+  'testCaseId' | 'testCaseName' | 'id' | 'runIndex' | 'turnIndex' | 'totalTurns'
+>;
 
 export const getHeatMapTestCaseKey = (row: HeatMapTestCaseSource): string =>
   row.testCaseId || row.testCaseName || row.id || '';
 
-export const formatHeatMapTestCaseColId = (testCaseKey: string, runIndex: number): string =>
-  `tc_${testCaseKey}__${runIndex}`;
+export const formatHeatMapTestCaseColId = (testCaseKey: string, runIndex: number, turnIndex?: number): string => {
+  const base = `tc_${testCaseKey}__${runIndex}`;
+  return turnIndex != null ? `${base}__t${turnIndex}` : base;
+};
 
 export const getHeatMapTestCaseColId = (row: HeatMapTestCaseSource): string =>
-  formatHeatMapTestCaseColId(getHeatMapTestCaseKey(row), row.runIndex ?? 0);
+  formatHeatMapTestCaseColId(getHeatMapTestCaseKey(row), row.runIndex ?? 0, row.turnIndex);
 
 export const hasHeatMapMultiSubRuns = (rows: CompareAnalyticsRow[]): boolean =>
   rows.some((row) => row.runIndex > 0 || (row._compared?.runIndex ?? 0) > 0);
 
-export const formatHeatMapTestCaseHeader = (row: HeatMapTestCaseSource, includeSubRunIndex: boolean): string => {
-  const name = row.testCaseName || row.testCaseId || row.id || '';
+export const hasHeatMapMultiTurns = (rows: CompareAnalyticsRow[]): boolean =>
+  rows.some((row) => {
+    const primaryMulti = (row.totalTurns ?? 0) > 1 || (row.turnIndex ?? 0) > 0;
+    const comparedMulti = (row._compared?.totalTurns ?? 0) > 1 || (row._compared?.turnIndex ?? 0) > 0;
+    return primaryMulti || comparedMulti;
+  });
 
-  if (!includeSubRunIndex) {
-    return name;
+export const formatHeatMapTestCaseHeader = (
+  row: HeatMapTestCaseSource,
+  includeSubRunIndex: boolean,
+  includeTurnIndex = false,
+): string => {
+  const name = row.testCaseName || row.testCaseId || row.id || '';
+  const parts = [name];
+
+  if (includeSubRunIndex) {
+    parts.push(String((row.runIndex ?? 0) + 1));
   }
 
-  return `${name}_${(row.runIndex ?? 0) + 1}`;
+  if (includeTurnIndex && row.turnIndex != null) {
+    parts.push(`T${row.turnIndex + 1}`);
+  }
+
+  return parts.join('_');
 };
 
 export const getHeatMapTestCaseHeaderLabels = (
   rows: CompareAnalyticsRow[],
   includeSubRunIndex = hasHeatMapMultiSubRuns(rows),
-): string[] => rows.map((row) => formatHeatMapTestCaseHeader(row, includeSubRunIndex));
+  includeTurnIndex = hasHeatMapMultiTurns(rows),
+): string[] => rows.map((row) => formatHeatMapTestCaseHeader(row, includeSubRunIndex, includeTurnIndex));

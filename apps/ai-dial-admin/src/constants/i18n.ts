@@ -569,8 +569,6 @@ export enum ModelAssetI18nKey {
   InvalidMessage = 'ModelAsset.InvalidMessage',
   SecretLossTitle = 'ModelAsset.SecretLossTitle',
   SecretLossMessage = 'ModelAsset.SecretLossMessage',
-  MissingUpstreamEndpointTitle = 'ModelAsset.MissingUpstreamEndpointTitle',
-  MissingUpstreamEndpointMessage = 'ModelAsset.MissingUpstreamEndpointMessage',
 }
 
 export enum ForwardTokenI18nKey {
