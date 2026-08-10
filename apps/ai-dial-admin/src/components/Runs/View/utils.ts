@@ -10,10 +10,12 @@ import {
   METRIC_COLUMN_WIDTH,
   NO_FILTER_COL_DEF,
   NUMBER_FILTER_COL_DEF,
+  REQUEST_INDEX_COLUMN_WIDTH,
   RUN_INDEX_COLUMN_WIDTH,
   STATUS_COLUMN_WIDTH,
   TEST_CASE_NAME_COLUMN_WIDTH,
   TEXT_FILTER_COL_DEF,
+  TOTAL_REQUESTS_COLUMN_WIDTH,
   TOTAL_TURNS_COLUMN_WIDTH,
   TURN_INDEX_COLUMN_WIDTH,
 } from '@/src/components/Runs/grid-column-layout';
@@ -149,6 +151,22 @@ const executionColumns: ColDef[] = [
     valueGetter: (params) => (params.data?.runIndex != null ? params.data.runIndex + 1 : null),
   },
   {
+    field: 'requestIndex',
+    headerName: 'Request',
+    colId: 'requestIndex',
+    ...fixedWidthColDef(REQUEST_INDEX_COLUMN_WIDTH),
+    ...NO_FILTER_COL_DEF,
+    valueGetter: (params) => (params.data?.requestIndex != null ? params.data.requestIndex + 1 : null),
+  },
+  {
+    field: 'totalRequests',
+    headerName: 'Total requests',
+    colId: 'totalRequests',
+    ...fixedWidthColDef(TOTAL_REQUESTS_COLUMN_WIDTH),
+    ...NO_FILTER_COL_DEF,
+    valueGetter: (params) => params.data?.totalRequests ?? null,
+  },
+  {
     field: 'turnIndex',
     headerName: 'Turn',
     colId: 'turnIndex',
@@ -234,18 +252,27 @@ export const getAnalyticsColumns = (results: AnalyticsResult[]) => {
   ];
 };
 
+const getCompareChainSuffix = (row: AnalyticsResult): string => `${row.requestIndex ?? 0}::${row.turnIndex ?? 0}`;
+
 const getCompareIdKey = (row: AnalyticsResult): string | null =>
-  row.testCaseId ? `${row.testCaseId}::${row.runIndex}` : null;
+  row.testCaseId ? `${row.testCaseId}::${row.runIndex}::${getCompareChainSuffix(row)}` : null;
 
 const getCompareNameKey = (row: AnalyticsResult): string | null =>
-  row.testCaseName ? `${row.testCaseName}::${row.runIndex}` : null;
+  row.testCaseName ? `${row.testCaseName}::${row.runIndex}::${getCompareChainSuffix(row)}` : null;
 
 export const createEmptyComparePrimaryRow = (
-  source: Pick<AnalyticsResult, 'testCaseId' | 'testCaseName' | 'runIndex'>,
+  source: Pick<
+    AnalyticsResult,
+    'testCaseId' | 'testCaseName' | 'runIndex' | 'requestIndex' | 'totalRequests' | 'turnIndex' | 'totalTurns'
+  >,
 ): AnalyticsResult => ({
   testCaseId: source.testCaseId,
   testCaseName: source.testCaseName,
   runIndex: source.runIndex,
+  requestIndex: source.requestIndex,
+  totalRequests: source.totalRequests,
+  turnIndex: source.turnIndex,
+  totalTurns: source.totalTurns,
   responseStatusCode: undefined as unknown as number,
 });
 
@@ -285,7 +312,7 @@ export const mergeByTestCaseId = (current: AnalyticsResult[], compared: Analytic
   const merged: CompareAnalyticsRow[] = [];
   const unmatchedCurrent: AnalyticsResult[] = [];
 
-  // Phase 1: match by testCaseId + runIndex when both sides share the same id
+  // Phase 1: match by testCaseId + runIndex + requestIndex + turnIndex when both sides share the same id
   const comparedById = indexRowsByKey(compared, getCompareIdKey);
   for (const row of current) {
     const idKey = getCompareIdKey(row);
@@ -298,7 +325,7 @@ export const mergeByTestCaseId = (current: AnalyticsResult[], compared: Analytic
     }
   }
 
-  // Phase 2: match remaining rows by testCaseName + runIndex (e.g. public vs detached private copy)
+  // Phase 2: match remaining rows by testCaseName + runIndex + requestIndex + turnIndex (e.g. public vs detached private copy)
   const comparedByName = indexRowsByKey(compared, getCompareNameKey, usedCompared);
   for (const row of unmatchedCurrent) {
     const nameKey = getCompareNameKey(row);
