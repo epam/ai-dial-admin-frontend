@@ -234,18 +234,22 @@ export const getAnalyticsColumns = (results: AnalyticsResult[]) => {
   ];
 };
 
+const getCompareTurnKeyPart = (row: AnalyticsResult): string => (row.turnIndex != null ? `::${row.turnIndex}` : '');
+
 const getCompareIdKey = (row: AnalyticsResult): string | null =>
-  row.testCaseId ? `${row.testCaseId}::${row.runIndex}` : null;
+  row.testCaseId ? `${row.testCaseId}::${row.runIndex}${getCompareTurnKeyPart(row)}` : null;
 
 const getCompareNameKey = (row: AnalyticsResult): string | null =>
-  row.testCaseName ? `${row.testCaseName}::${row.runIndex}` : null;
+  row.testCaseName ? `${row.testCaseName}::${row.runIndex}${getCompareTurnKeyPart(row)}` : null;
 
 export const createEmptyComparePrimaryRow = (
-  source: Pick<AnalyticsResult, 'testCaseId' | 'testCaseName' | 'runIndex'>,
+  source: Pick<AnalyticsResult, 'testCaseId' | 'testCaseName' | 'runIndex' | 'turnIndex' | 'totalTurns'>,
 ): AnalyticsResult => ({
   testCaseId: source.testCaseId,
   testCaseName: source.testCaseName,
   runIndex: source.runIndex,
+  turnIndex: source.turnIndex,
+  totalTurns: source.totalTurns,
   responseStatusCode: undefined as unknown as number,
 });
 
@@ -263,7 +267,8 @@ const sortCompareRows = (rows: CompareAnalyticsRow[]): CompareAnalyticsRow[] =>
   [...rows].sort((a, b) => {
     const nameCompare = (a.testCaseName ?? '').localeCompare(b.testCaseName ?? '');
     if (nameCompare !== 0) return nameCompare;
-    return a.runIndex - b.runIndex;
+    if (a.runIndex !== b.runIndex) return a.runIndex - b.runIndex;
+    return (a.turnIndex ?? 0) - (b.turnIndex ?? 0);
   });
 
 const indexRowsByKey = (
@@ -285,7 +290,7 @@ export const mergeByTestCaseId = (current: AnalyticsResult[], compared: Analytic
   const merged: CompareAnalyticsRow[] = [];
   const unmatchedCurrent: AnalyticsResult[] = [];
 
-  // Phase 1: match by testCaseId + runIndex when both sides share the same id
+  // Phase 1: match by testCaseId + runIndex + turnIndex when both sides share the same id
   const comparedById = indexRowsByKey(compared, getCompareIdKey);
   for (const row of current) {
     const idKey = getCompareIdKey(row);
@@ -298,7 +303,7 @@ export const mergeByTestCaseId = (current: AnalyticsResult[], compared: Analytic
     }
   }
 
-  // Phase 2: match remaining rows by testCaseName + runIndex (e.g. public vs detached private copy)
+  // Phase 2: match remaining rows by testCaseName + runIndex + turnIndex (e.g. public vs detached private copy)
   const comparedByName = indexRowsByKey(compared, getCompareNameKey, usedCompared);
   for (const row of unmatchedCurrent) {
     const nameKey = getCompareNameKey(row);
