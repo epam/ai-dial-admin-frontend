@@ -4,6 +4,9 @@ import { GridFilterType } from '@/src/types/grid-filter';
 
 export const dateFilter: Partial<ColDef> = {
   filter: 'agDateColumnFilter',
+  // Text FloatingFilter passes strings via `contains`, which crashes agDateColumnFilter
+  // (`date.getFullYear is not a function`). Date columns use the filter menu instead.
+  floatingFilter: false,
   filterParams: {
     maxNumConditions: 1,
     buttons: ['reset', 'apply'],

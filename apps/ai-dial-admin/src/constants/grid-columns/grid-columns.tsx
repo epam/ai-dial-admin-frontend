@@ -1054,7 +1054,7 @@ export const TEST_SUITES_COLUMN: ColDef[] = [
     headerName: 'Application',
     hide: false,
     sortable: false,
-    filter: false,
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
     valueGetter: (params) => params.data?.deploymentRef?.name || params.data?.mcpDeploymentRef?.name || '',
   },
   { ...CREATED_AT_COLUMN, ...dateFilter },
