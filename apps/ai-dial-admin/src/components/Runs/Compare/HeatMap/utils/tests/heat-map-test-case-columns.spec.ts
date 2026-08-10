@@ -7,6 +7,7 @@ import {
   getHeatMapTestCaseHeaderLabels,
   getHeatMapTestCaseKey,
   hasHeatMapMultiSubRuns,
+  hasHeatMapMultiTurns,
 } from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-test-case-columns';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
@@ -41,6 +42,11 @@ describe('formatHeatMapTestCaseColId / getHeatMapTestCaseColId', () => {
     expect(formatHeatMapTestCaseColId('tc-1', 2)).toBe('tc_tc-1__2');
     expect(getHeatMapTestCaseColId(makeResult({ runIndex: 1 }))).toBe('tc_tc-1__1');
   });
+
+  test('includes turnIndex so multi-turn columns stay unique', () => {
+    expect(formatHeatMapTestCaseColId('tc-1', 0, 1)).toBe('tc_tc-1__0__t1');
+    expect(getHeatMapTestCaseColId(makeResult({ runIndex: 0, turnIndex: 2 }))).toBe('tc_tc-1__0__t2');
+  });
 });
 
 describe('hasHeatMapMultiSubRuns', () => {
@@ -67,6 +73,17 @@ describe('hasHeatMapMultiSubRuns', () => {
   });
 });
 
+describe('hasHeatMapMultiTurns', () => {
+  test('is false for single-turn rows', () => {
+    expect(hasHeatMapMultiTurns([makeRow({ turnIndex: 0, totalTurns: 1 })])).toBe(false);
+  });
+
+  test('is true when totalTurns > 1 or turnIndex > 0', () => {
+    expect(hasHeatMapMultiTurns([makeRow({ turnIndex: 0, totalTurns: 3 })])).toBe(true);
+    expect(hasHeatMapMultiTurns([makeRow({ turnIndex: 1, totalTurns: 2 })])).toBe(true);
+  });
+});
+
 describe('formatHeatMapTestCaseHeader', () => {
   test('uses test case name without suffix when includeSubRunIndex is false', () => {
     expect(formatHeatMapTestCaseHeader(makeResult({ runIndex: 2 }), false)).toBe('BLR');
@@ -75,6 +92,11 @@ describe('formatHeatMapTestCaseHeader', () => {
   test('appends 1-based sub-run index when includeSubRunIndex is true', () => {
     expect(formatHeatMapTestCaseHeader(makeResult({ runIndex: 0 }), true)).toBe('BLR_1');
     expect(formatHeatMapTestCaseHeader(makeResult({ runIndex: 2 }), true)).toBe('BLR_3');
+  });
+
+  test('appends 1-based turn index when includeTurnIndex is true', () => {
+    expect(formatHeatMapTestCaseHeader(makeResult({ turnIndex: 0 }), false, true)).toBe('BLR_T1');
+    expect(formatHeatMapTestCaseHeader(makeResult({ runIndex: 1, turnIndex: 2 }), true, true)).toBe('BLR_2_T3');
   });
 
   test('falls back to testCaseId then id when name is missing', () => {
@@ -103,5 +125,15 @@ describe('getHeatMapTestCaseHeaderLabels', () => {
         makeRow({ id: 'r3', testCaseName: 'BLR', runIndex: 2 }),
       ]),
     ).toEqual(['BLR_1', 'BLR_2', 'BLR_3']);
+  });
+
+  test('returns turn suffixes for multi-turn datasets', () => {
+    expect(
+      getHeatMapTestCaseHeaderLabels([
+        makeRow({ testCaseName: 'Round 3', turnIndex: 0, totalTurns: 3 }),
+        makeRow({ id: 'r2', testCaseName: 'Round 3', turnIndex: 1, totalTurns: 3 }),
+        makeRow({ id: 'r3', testCaseName: 'Round 3', turnIndex: 2, totalTurns: 3 }),
+      ]),
+    ).toEqual(['Round 3_T1', 'Round 3_T2', 'Round 3_T3']);
   });
 });
