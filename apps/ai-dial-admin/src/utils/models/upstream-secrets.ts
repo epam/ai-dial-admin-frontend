@@ -54,14 +54,6 @@ export const stripEmptyUpstreamSecrets = (upstreams?: DialModelEndpoint[]): Dial
 };
 
 /**
- * Core pairs each request upstream with its stored counterpart by matching `endpoint`, falling back to
- * positional matching only for entries carrying none — and its own contract warns that mixing the two
- * forms makes preservation unreliable. An upstream with no endpoint cannot route anyway.
- */
-export const hasUpstreamsMissingEndpoint = (upstreams?: DialModelEndpoint[]): boolean =>
-  !!upstreams?.some((upstream) => !upstream.endpoint);
-
-/**
  * Endpoints whose secret cannot survive the write: Core looks the stored secret up by endpoint, so
  * renaming one while leaving its secrets blank silently drops the credential.
  *
