@@ -9,7 +9,21 @@ import {
   SortDir,
   ValueType,
 } from '@/src/models/evaluation/structured-query';
-import { aggregateQuery, and, col, eq, field, fn, offsetPage, param, rowQuery, sortItem, value } from '../build';
+import {
+  aggregateQuery,
+  and,
+  col,
+  eq,
+  field,
+  fn,
+  inValues,
+  not,
+  offsetPage,
+  param,
+  rowQuery,
+  sortItem,
+  value,
+} from '../build';
 
 describe('structured-query build helpers', () => {
   test('field builds a field expression', () => {
@@ -57,6 +71,26 @@ describe('structured-query build helpers', () => {
     expect(and([node])).toEqual({ op: LogicalOp.And, args: [node] });
   });
 
+  test('not wraps a node in a logical NOT', () => {
+    const node = eq('a', ValueType.String, 'x');
+    expect(not(node)).toEqual({ op: LogicalOp.Not, args: [node] });
+  });
+
+  test('inValues builds an IN comparison against an array of typed values', () => {
+    expect(inValues('id', ValueType.Uuid, ['a', 'b'])).toEqual({
+      op: ComparisonOp.In,
+      args: [
+        { type: ExprType.Field, name: 'id' },
+        {
+          type: ExprType.Array,
+          items: [
+            { type: ExprType.Value, value_type: ValueType.Uuid, value: 'a' },
+            { type: ExprType.Value, value_type: ValueType.Uuid, value: 'b' },
+          ],
+        },
+      ],
+    });
+  });
   test('offsetPage builds an offset page spec', () => {
     expect(offsetPage(0, 25, true)).toEqual({
       type: PageType.Offset,

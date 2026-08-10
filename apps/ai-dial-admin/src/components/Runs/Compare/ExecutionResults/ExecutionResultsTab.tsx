@@ -31,7 +31,12 @@ import {
 } from '@/src/components/Runs/Compare/ExecutionResults/utils/columns';
 import { ExecutionResultsTabUiState } from '@/src/components/Runs/Compare/models';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
-import { getCompareRowSelectionId, mergeByTestCaseId, RESULT_FILTERS } from '@/src/components/Runs/View/utils';
+import {
+  getCompareRowSelectionId,
+  isMatchedCompareRow,
+  mergeByTestCaseId,
+  RESULT_FILTERS,
+} from '@/src/components/Runs/View/utils';
 import { EntitiesI18nKey, RunsI18nKey } from '@/src/constants/i18n';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useI18n } from '@/src/locales/client';
@@ -42,6 +47,7 @@ interface Props {
   comparedRunId: string;
   primaryRunName: string;
   comparedRunName: string;
+  onlyMatchingTestCases: boolean;
   showDisplayPanel: boolean;
   onToggleDisplayPanel: () => void;
   selectedRow: CompareAnalyticsRow | null;
@@ -58,6 +64,7 @@ const ExecutionResultsTab: FC<Props> = ({
   comparedRunId,
   primaryRunName,
   comparedRunName,
+  onlyMatchingTestCases,
   showDisplayPanel,
   onToggleDisplayPanel,
   selectedRow,
@@ -155,8 +162,9 @@ const ExecutionResultsTab: FC<Props> = ({
 
   const mergedRowData = useMemo(() => {
     if (results === null || comparedResults === null) return null;
-    return mergeByTestCaseId(results, comparedResults);
-  }, [results, comparedResults]);
+    const merged = mergeByTestCaseId(results, comparedResults);
+    return onlyMatchingTestCases ? merged.filter(isMatchedCompareRow) : merged;
+  }, [results, comparedResults, onlyMatchingTestCases]);
 
   const metricsSchema = useMemo(() => {
     if (!mergedRowData) return {};

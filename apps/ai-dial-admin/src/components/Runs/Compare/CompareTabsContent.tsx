@@ -20,6 +20,7 @@ interface Props {
   comparedRunId: string;
   primaryRunName: string;
   comparedRunName: string;
+  onlyMatchingTestCases: boolean;
   colorDisplayMode: HeatMapColorDisplayMode;
   onColorDisplayModeChange: (mode: HeatMapColorDisplayMode) => void;
   selectedMetricGroups: Set<string>;
@@ -43,6 +44,7 @@ const CompareTabsContent: FC<Props> = ({
   comparedRunId,
   primaryRunName,
   comparedRunName,
+  onlyMatchingTestCases,
   colorDisplayMode,
   onColorDisplayModeChange,
   selectedMetricGroups,
@@ -66,6 +68,7 @@ const CompareTabsContent: FC<Props> = ({
           comparedRunId={comparedRunId}
           primaryRunName={primaryRunName}
           comparedRunName={comparedRunName}
+          onlyMatchingTestCases={onlyMatchingTestCases}
           summaryState={summaryState}
           setSummaryState={setSummaryState}
         />
@@ -76,6 +79,7 @@ const CompareTabsContent: FC<Props> = ({
           comparedRunId={comparedRunId}
           primaryRunName={primaryRunName}
           comparedRunName={comparedRunName}
+          onlyMatchingTestCases={onlyMatchingTestCases}
           colorDisplayMode={colorDisplayMode}
           onColorDisplayModeChange={onColorDisplayModeChange}
           selectedMetricGroups={selectedMetricGroups}
@@ -90,6 +94,7 @@ const CompareTabsContent: FC<Props> = ({
           comparedRunId={comparedRunId}
           primaryRunName={primaryRunName}
           comparedRunName={comparedRunName}
+          onlyMatchingTestCases={onlyMatchingTestCases}
           showDisplayPanel={showDisplayPanel}
           onToggleDisplayPanel={onToggleDisplayPanel}
           selectedRow={selectedRow}

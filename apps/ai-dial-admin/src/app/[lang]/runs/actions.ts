@@ -43,6 +43,11 @@ export async function getMetricSnapshots(filters: FilterDto[]) {
   return analyticsApi.getMetricSnapshots(filters, token);
 }
 
+export async function getMetricScoresComparison(primaryRunId: string, comparedRunId: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return analyticsApi.getMetricScoresComparison([primaryRunId, comparedRunId], token);
+}
+
 export async function exportRunPreview(runId: string) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return analyticsApi.exportPreview(runId, token);

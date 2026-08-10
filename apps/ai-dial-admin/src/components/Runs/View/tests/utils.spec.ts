@@ -18,6 +18,7 @@ import {
   getMetricGroups,
   getPanelTitle,
   getCompareRowSelectionId,
+  isMatchedCompareRow,
   mergeByTestCaseId,
   snapshotsToBindingsMap,
 } from '../utils';
@@ -707,6 +708,31 @@ describe('Runs View :: getCompareRowSelectionId', () => {
       [makeResult({ id: 'compared-only-id', testCaseId: 'tc1', runIndex: 1 })],
     );
     expect(getCompareRowSelectionId(comparedOnly[0])).toBe('compared-only-id');
+  });
+});
+
+describe('Runs View :: isMatchedCompareRow', () => {
+  test('returns true when both sides have result ids', () => {
+    expect(
+      isMatchedCompareRow({
+        ...makeResult({ id: 'primary-id', testCaseId: 'tc1' }),
+        _compared: makeResult({ id: 'compared-id', testCaseId: 'tc1' }),
+      }),
+    ).toBe(true);
+  });
+
+  test('returns false for primary-only rows', () => {
+    expect(isMatchedCompareRow({ ...makeResult({ id: 'primary-id', testCaseId: 'tc1' }), _compared: null })).toBe(
+      false,
+    );
+  });
+
+  test('returns false for compared-only rows', () => {
+    const comparedOnly = mergeByTestCaseId(
+      [],
+      [makeResult({ id: 'compared-only-id', testCaseId: 'tc1', runIndex: 1 })],
+    );
+    expect(isMatchedCompareRow(comparedOnly[0])).toBe(false);
   });
 });
 

@@ -41,6 +41,9 @@ export const METRIC_FIELD_SEPARATOR = '::';
 /** Preferred metric output field for the overall score; falls back to the first output field. */
 export const DEFAULT_METRIC_SCORE_FIELD = 'score';
 
+/** Eval-summary row id field for matched-only distribution exclusion filters. */
+export const EVAL_SUMMARY_ID_FIELD = 'id';
+
 /**
  * Tailwind text-color tokens for the "Test Cases Passed" card status breakdown
  * (accent-secondary #37BABC, error #F76464, secondary #9FA6BD).
