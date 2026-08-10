@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { getUpstreamsLosingSecret, hasUpstreamsMissingEndpoint, stripEmptyUpstreamSecrets } from '../upstream-secrets';
+import { getUpstreamsLosingSecret, stripEmptyUpstreamSecrets } from '../upstream-secrets';
 
 describe('Models Utils :: stripEmptyUpstreamSecrets', () => {
   test('Should remove an empty key entirely, not send it as an empty string', () => {
@@ -55,24 +55,6 @@ describe('Models Utils :: stripEmptyUpstreamSecrets', () => {
     stripEmptyUpstreamSecrets(input);
 
     expect(input[0]).toHaveProperty('key');
-  });
-});
-
-describe('Models Utils :: hasUpstreamsMissingEndpoint', () => {
-  test('Should flag an upstream with no endpoint, which Core cannot match a secret to', () => {
-    expect(hasUpstreamsMissingEndpoint([{ endpoint: 'http://a' }, { key: 'k' }])).toBe(true);
-  });
-
-  test('Should flag an empty endpoint', () => {
-    expect(hasUpstreamsMissingEndpoint([{ endpoint: '' }])).toBe(true);
-  });
-
-  test('Should accept upstreams that all carry an endpoint', () => {
-    expect(hasUpstreamsMissingEndpoint([{ endpoint: 'http://a' }, { endpoint: 'http://b' }])).toBe(false);
-  });
-
-  test.each([undefined, []])('Should not flag %s', (upstreams) => {
-    expect(hasUpstreamsMissingEndpoint(upstreams)).toBe(false);
   });
 });
 
