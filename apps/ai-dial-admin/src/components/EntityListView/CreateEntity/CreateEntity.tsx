@@ -28,8 +28,9 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
 import { RoutesForCheckingUniqueName } from './constants';
 
-interface CreatePromptEntity extends BaseEntity {
+interface CreateEntityBase extends BaseEntity {
   version?: string;
+  displayVersion?: string;
   folderId?: string;
 }
 
@@ -46,7 +47,7 @@ interface Props<T> {
   isModal?: boolean;
 }
 
-const CreateEntity = <T extends CreatePromptEntity>({
+const CreateEntity = <T extends CreateEntityBase>({
   runners,
   route,
   isModalOpen,
@@ -65,11 +66,17 @@ const CreateEntity = <T extends CreatePromptEntity>({
   const getReqRef = useRef(useProtectedRequest());
   const { showNotification } = useNotification();
 
-  const [currentEntity, setEntity] = useState<T>(
-    isAssetWithVersion(route)
-      ? ({ name: '', description: '', version: DEFAULT_NEW_ENTITY_VERSION } as T)
-      : ({ name: '', description: '', ...initialValues } as T),
-  );
+  const [currentEntity, setEntity] = useState<T>(() => {
+    if (isAssetWithVersion(route)) {
+      return { name: '', description: '', version: DEFAULT_NEW_ENTITY_VERSION } as T;
+    }
+
+    if (route === ApplicationRoute.AssetsModels) {
+      return { name: '', description: '', displayVersion: DEFAULT_NEW_ENTITY_VERSION, ...initialValues } as T;
+    }
+
+    return { name: '', description: '', ...initialValues } as T;
+  });
   const [isUniqueNameError, setIsUniqueNameError] = useState<boolean | undefined>(void 0);
 
   const onCreate = useCallback(
