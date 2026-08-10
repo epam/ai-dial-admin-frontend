@@ -30,10 +30,14 @@ describe('AppRunnersList :: list affordances', () => {
     expect(getToolbarOptionLabels(ApplicationRoute.AssetsAppRunners, true)).toEqual([]);
   });
 
-  test('Should offer only delete as a row action — no duplicate, move, or export', () => {
+  test('Should offer duplicate, delete and open-in-new-tab as row actions — but no move or export', () => {
     const actions = getGridActionLabels(ApplicationRoute.AssetsAppRunners, false);
 
-    expect(actions.map((action) => action.key)).toEqual(['delete']);
+    expect(actions.map((action) => action.key)).toEqual(['duplicate', 'delete', 'openInNewTab']);
+  });
+
+  test('Should offer no row actions to a read-only admin', () => {
+    expect(getGridActionLabels(ApplicationRoute.AssetsAppRunners, true)).toEqual([]);
   });
 });
 
