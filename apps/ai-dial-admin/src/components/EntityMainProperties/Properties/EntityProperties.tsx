@@ -6,6 +6,7 @@ import { getInterceptorContainers } from '@/src/app/actions/deployments';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
 import IdControl from '@/src/components/BaseControls/Id/Id';
+import VersionControl from '@/src/components/BaseControls/Version';
 import { getSourceItems } from '@/src/components/SourceField/constants';
 import SourceField from '@/src/components/SourceField/SourceField';
 import { EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -13,6 +14,7 @@ import { useAppContext } from '@/src/context/AppContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { BaseEntity } from '@/src/models/dial/base-entity';
+import { DialModelResource } from '@/src/models/dial/resource';
 import { DialRoute } from '@/src/models/dial/route';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorForPath } from '@/src/utils/validation/path-error';
@@ -72,6 +74,17 @@ const EntityProperties: FC<Props> = ({
         isFullWidth={!isEntityImmutable}
         onChange={(name) => onChangeEntity({ ...entity, displayName: name })}
       />
+
+      {view === ApplicationRoute.AssetsModels && (
+        <VersionControl
+          title={t(EntityFieldsI18nKey.displayVersion)}
+          version={(entity as DialModelResource).displayVersion}
+          optional
+          isFullWidth={!isEntityImmutable}
+          enableSemanticValidation={false}
+          onChange={(displayVersion) => onChangeEntity({ ...entity, displayVersion } as DialModelResource)}
+        />
+      )}
 
       <DescriptionControl entity={entity} onChangeEntity={onChangeEntity} isFullWidth={!isEntityImmutable} />
 
