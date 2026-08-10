@@ -35,6 +35,7 @@ import { useModelsFolder } from '@/src/context/assets/ModelsFolderContext';
 import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
+import { DialAppRunnerResource, DialModelResource, PlatformAsset } from '@/src/models/dial/resource';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ImportFileType } from '@/src/types/import';
 import { ResourceType } from '@/src/types/resource-type';
@@ -231,6 +232,25 @@ export const getEmptyStateContent = (
     default:
       return { title: '', description: '' };
   }
+};
+
+export const getPlatformAssetDuplicate = (view: ApplicationRoute, asset: PlatformAsset): PlatformAsset => {
+  const {
+    path: __path,
+    folderId: __folderId,
+    author: __author,
+    createdAt: __createdAt,
+    updatedAt: __updatedAt,
+    status: __status,
+    validationWarnings: __validationWarnings,
+    reference: __reference,
+    name,
+    ...duplicate
+  } = asset as DialModelResource & DialAppRunnerResource;
+
+  return view === ApplicationRoute.AssetsAppRunners
+    ? (duplicate as PlatformAsset)
+    : ({ ...duplicate, name } as PlatformAsset);
 };
 
 export const getResourceTypeByRoute = (view: ApplicationRoute) => {
