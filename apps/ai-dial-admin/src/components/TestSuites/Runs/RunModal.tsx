@@ -40,10 +40,12 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
 
       const validTestCases = getTestCases(selectedTestSuite.datasetId, 0, 1000, [], VALID_FILTERS);
       const allTestCases = getTestCases(selectedTestSuite.datasetId, 0, 1000, [], []);
-      const dataset = getDataset(selectedTestSuite.datasetId, DEFAULT_ETAG);
+      const dataset = selectedTestSuite.datasetId
+        ? getDataset(selectedTestSuite.datasetId, DEFAULT_ETAG)
+        : Promise.resolve(null);
       Promise.all([validTestCases, allTestCases, dataset]).then(([validRes, allRes, datasetRes]) => {
         setAllRuns(allRes?.totalElements || 0);
-        setValidRows(validRes?.content || []);
+        setValidRows((validRes?.content || []) as Record<string, unknown>[]);
         setSchema((datasetRes?.response as Dataset | undefined)?.testCaseSchema);
         setIsLoading(false);
       });
