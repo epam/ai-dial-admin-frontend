@@ -52,8 +52,8 @@ const RunConditionChip: FC<Props> = ({ filter, fieldOptions, onEdit, onRemove })
       isComplete={isRunConditionFilterComplete(draft)}
       onCommit={onCommit}
       onCancel={onCancel}
-      editor={(onClose) => (
-        <CreateRunConditionFilter draft={draft} fieldOptions={fieldOptions} onChange={setDraft} onClose={onClose} />
+      editor={() => (
+        <CreateRunConditionFilter draft={draft} fieldOptions={fieldOptions} onChange={setDraft} onClear={onRemove} />
       )}
     >
       <FilterChip onRemove={onRemove}>{chipBody}</FilterChip>
