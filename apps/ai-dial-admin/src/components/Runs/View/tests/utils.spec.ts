@@ -122,6 +122,8 @@ describe('Runs View :: getAnalyticsColumns', () => {
         colId: 'runIndex',
         headerName: '# Run number',
         width: RUN_INDEX_COLUMN_WIDTH,
+        maxWidth: RUN_INDEX_COLUMN_WIDTH,
+        flex: 0,
       }),
     );
 
