@@ -27,9 +27,16 @@ describe('Model asset :: folder operations', () => {
     expect(getToolbarOptionLabels(VIEW, false).map((item) => item.key)).toEqual(['newItem']);
   });
 
-  test('Should offer only delete in the grid context menu', () => {
-    expect(getGridActionLabels(VIEW, false).map((item) => item.key)).toEqual(['delete']);
+  test('Should offer duplicate, delete and open-in-new-tab in the grid context menu', () => {
+    expect(getGridActionLabels(VIEW, false).map((item) => item.key)).toEqual(['duplicate', 'delete', 'openInNewTab']);
   });
+
+  test.each(['addSibling', 'addChild', 'move', 'rename', 'managePermissions'])(
+    'Should not offer the folder-bound %s in the grid context menu',
+    (action) => {
+      expect(getGridActionLabels(VIEW, false).map((item) => item.key)).not.toContain(action);
+    },
+  );
 
   test('Should confirm the placeholder a folder create would send is not a usable model', () => {
     expect(getEmptyAsset(VIEW, 'platform/')).not.toHaveProperty('endpoint');
