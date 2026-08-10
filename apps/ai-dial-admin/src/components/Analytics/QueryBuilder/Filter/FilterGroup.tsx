@@ -27,9 +27,19 @@ interface Props {
   depth?: number;
   // The owning section's palette color (Filter vs Having) — tints group accents and condition chips.
   color?: QueryBuilderColor;
+  // False in the Having tree, whose predicates address the query's select outputs rather than columns
+  // of the source.
+  marksSchemaFields?: boolean;
 }
 
-const FilterGroup: FC<Props> = ({ node, parent, fieldOptions, depth = 0, color = QueryBuilderColor.Grouping }) => {
+const FilterGroup: FC<Props> = ({
+  node,
+  parent,
+  fieldOptions,
+  depth = 0,
+  color = QueryBuilderColor.Grouping,
+  marksSchemaFields = true,
+}) => {
   const t = useI18n();
   const { refresh } = useQueryBuilder();
 
@@ -102,6 +112,7 @@ const FilterGroup: FC<Props> = ({ node, parent, fieldOptions, depth = 0, color =
                 fieldOptions={fieldOptions}
                 depth={depth + 1}
                 color={color}
+                marksSchemaFields={marksSchemaFields}
               />
             ) : (
               <FilterCondition
@@ -111,6 +122,7 @@ const FilterGroup: FC<Props> = ({ node, parent, fieldOptions, depth = 0, color =
                 fieldOptions={fieldOptions}
                 operatorOptions={operatorOptions}
                 color={color}
+                marksSchemaFields={marksSchemaFields}
               />
             ),
           )}

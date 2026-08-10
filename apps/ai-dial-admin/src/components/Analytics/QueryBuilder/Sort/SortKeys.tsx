@@ -7,6 +7,7 @@ import ChipRow from '@/src/components/Analytics/QueryBuilder/Common/ChipRow';
 import CompactSelect from '@/src/components/Analytics/QueryBuilder/Common/CompactSelect';
 import SectionAction from '@/src/components/Analytics/QueryBuilder/Common/SectionAction';
 import SectionBlock from '@/src/components/Analytics/QueryBuilder/Common/SectionBlock';
+import { useUnavailableField } from '@/src/components/Analytics/QueryBuilder/Common/use-unavailable-field';
 import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';
 import { fieldDisplayName, sortFieldOptions } from '@/src/components/Analytics/QueryBuilder/utils/fields';
 import { compactSelectLabel, toCompactSelectOptions } from '@/src/components/Analytics/QueryBuilder/utils/options';
@@ -14,7 +15,7 @@ import { createSort } from '@/src/components/Analytics/QueryBuilder/utils/state'
 import { SORT_DIRECTION_OPTION_DESCRIPTORS, SORT_NULLS_OPTIONS } from '@/src/constants/analytics/query-builder';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { QuerySortDirection, QuerySortNulls } from '@/src/models/analytics/query';
+import { QueryMode, QuerySortDirection, QuerySortNulls } from '@/src/models/analytics/query';
 import { FieldDropdownMode, FieldOption, QueryBuilderColor, SortRow } from '@/src/models/analytics/query-builder';
 import { QUERY_BUILDER_PALETTE } from '@/src/constants/analytics/query-builder-palette';
 
@@ -24,7 +25,11 @@ const summaryOf = (sort: SortRow, options: FieldOption[], directionOptions: Sele
 const SortKeys: FC = () => {
   const t = useI18n();
   const { state, refresh } = useQueryBuilder();
+  const { isUnavailable, hintFor } = useUnavailableField();
 
+  // Only row-mode sort keys name schema columns; in aggregate mode they address the query's own output
+  // columns, which are re-derived from the same state and so are never "missing from the source".
+  const marksSchemaFields = state.mode === QueryMode.Row;
   const fieldOptions = sortFieldOptions(state);
   const directionOptions = useMemo(() => toCompactSelectOptions(SORT_DIRECTION_OPTION_DESCRIPTORS, t), [t]);
 
@@ -59,6 +64,8 @@ const SortKeys: FC = () => {
                 value={sort.field}
                 placeholder={t(QueryBuilderI18nKey.FieldPlaceholder)}
                 ariaLabel={t(QueryBuilderI18nKey.Field)}
+                unavailable={marksSchemaFields && isUnavailable(sort.field)}
+                unavailableHint={marksSchemaFields ? hintFor(sort.field) : undefined}
                 onSelect={(name) => {
                   sort.field = name;
                   refresh();

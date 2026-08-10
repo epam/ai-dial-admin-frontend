@@ -5,6 +5,7 @@ import ChipRow from '@/src/components/Analytics/QueryBuilder/Common/ChipRow';
 import CompactInput from '@/src/components/Analytics/QueryBuilder/Common/CompactInput';
 import FieldChip from '@/src/components/Analytics/QueryBuilder/Common/FieldChip';
 import FnArgEditor from '@/src/components/Analytics/QueryBuilder/Aggregate/FnArgEditor';
+import { useUnavailableField } from '@/src/components/Analytics/QueryBuilder/Common/use-unavailable-field';
 import SectionBlock from '@/src/components/Analytics/QueryBuilder/Common/SectionBlock';
 import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';
 import {
@@ -43,6 +44,7 @@ const summaryOf = (row: GroupByRow, functions: QueryFunction[], fields: Analytic
 const GroupBySection: FC = () => {
   const t = useI18n();
   const { state, refresh } = useQueryBuilder();
+  const { isUnavailable, hintFor } = useUnavailableField();
 
   // Picked columns stay listed so the dropdown can show them as selected and toggle them back off.
   const pickedColumns = state.groupBy.filter((g) => !g.fn).map((g) => g.field);
@@ -119,6 +121,8 @@ const GroupBySection: FC = () => {
               <FieldChip
                 key={row.id}
                 label={fieldDisplayName(state.fields, row.field)}
+                unavailable={isUnavailable(row.field)}
+                unavailableHint={hintFor(row.field)}
                 onRemove={() => removeRow(row)}
               />
             ))}
@@ -141,6 +145,8 @@ const GroupBySection: FC = () => {
                   arg={arg}
                   value={row.args[i] ?? {}}
                   fieldOptions={fieldOptions}
+                  unavailable={isUnavailable(row.args[i]?.field ?? '')}
+                  unavailableHint={hintFor(row.args[i]?.field ?? '')}
                   onChange={(value) => {
                     row.args[i] = value;
                     syncAlias(row);

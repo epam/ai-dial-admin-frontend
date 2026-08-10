@@ -7,6 +7,7 @@ import CategorizedFieldDropdown from '@/src/components/Analytics/QueryBuilder/Co
 import ChipRow from '@/src/components/Analytics/QueryBuilder/Common/ChipRow';
 import CompactInput from '@/src/components/Analytics/QueryBuilder/Common/CompactInput';
 import CompactSelect from '@/src/components/Analytics/QueryBuilder/Common/CompactSelect';
+import { useUnavailableField } from '@/src/components/Analytics/QueryBuilder/Common/use-unavailable-field';
 import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';
 import { defaultValueType, fieldDisplayName } from '@/src/components/Analytics/QueryBuilder/utils/fields';
 import { compactSelectLabel } from '@/src/components/Analytics/QueryBuilder/utils/options';
@@ -30,6 +31,9 @@ interface Props {
   operatorOptions: SelectOption[];
   // Collapsed-chip tint from the owning section (Filter vs Having).
   color?: QueryBuilderColor;
+  // False in the Having tree, whose predicates address the query's select outputs rather than columns
+  // of the source — checking those against the schema would flag correct aliases.
+  marksSchemaFields?: boolean;
 }
 
 const isNullable = (op: QueryOperator): boolean => op === QueryOperator.Eq || op === QueryOperator.Ne;
@@ -43,9 +47,17 @@ const BOOLEAN_VALUES = ['true', 'false'];
 
 const BOOLEAN_ACTIVE = QUERY_BUILDER_PALETTE[QueryBuilderColor.Dimension];
 
-const FilterCondition: FC<Props> = ({ node, parent, fieldOptions, operatorOptions, color }) => {
+const FilterCondition: FC<Props> = ({
+  node,
+  parent,
+  fieldOptions,
+  operatorOptions,
+  color,
+  marksSchemaFields = true,
+}) => {
   const t = useI18n();
   const { refresh } = useQueryBuilder();
+  const { isUnavailable, hintFor } = useUnavailableField();
 
   const onChangeField = (value: string) => {
     node.field = value;
@@ -94,6 +106,8 @@ const FilterCondition: FC<Props> = ({ node, parent, fieldOptions, operatorOption
         value={node.field}
         placeholder={t(QueryBuilderI18nKey.FieldPlaceholder)}
         ariaLabel={t(QueryBuilderI18nKey.Field)}
+        unavailable={marksSchemaFields && isUnavailable(node.field)}
+        unavailableHint={marksSchemaFields ? hintFor(node.field) : undefined}
         onSelect={onChangeField}
       />
       <div className="flex flex-wrap items-center gap-1.5">

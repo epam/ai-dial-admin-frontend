@@ -6,6 +6,7 @@ import ChipRow from '@/src/components/Analytics/QueryBuilder/Common/ChipRow';
 import CompactInput from '@/src/components/Analytics/QueryBuilder/Common/CompactInput';
 import CompactSelect from '@/src/components/Analytics/QueryBuilder/Common/CompactSelect';
 import FnArgEditor from '@/src/components/Analytics/QueryBuilder/Aggregate/FnArgEditor';
+import { useUnavailableField } from '@/src/components/Analytics/QueryBuilder/Common/use-unavailable-field';
 import SectionAction from '@/src/components/Analytics/QueryBuilder/Common/SectionAction';
 import SectionBlock from '@/src/components/Analytics/QueryBuilder/Common/SectionBlock';
 import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';
@@ -45,6 +46,7 @@ const summaryOf = (agg: AggregateRow, functions: QueryFunction[], fields: Analyt
 const Aggregates: FC = () => {
   const t = useI18n();
   const { state, refresh } = useQueryBuilder();
+  const { isUnavailable, hintFor } = useUnavailableField();
 
   const fns = aggregateFunctions(state.functions);
   // Each option is named from the catalog (see functionLabels) with the full served description as
@@ -124,6 +126,8 @@ const Aggregates: FC = () => {
                   arg={arg}
                   value={agg.args[i] ?? {}}
                   fieldOptions={fieldOptions}
+                  unavailable={isUnavailable(agg.args[i]?.field ?? '')}
+                  unavailableHint={hintFor(agg.args[i]?.field ?? '')}
                   onChange={(value) => {
                     agg.args[i] = value;
                     syncAlias(agg);
