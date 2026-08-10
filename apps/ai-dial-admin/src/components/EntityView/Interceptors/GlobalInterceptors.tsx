@@ -17,6 +17,8 @@ import GridView from '@/src/components/Grid/GridView/GridView';
 import { getInterceptorsColumnDefs } from './utils';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 
+const ADD_INTERCEPTOR_COLUMNS = [DISPLAY_NAME_COLUMN, DESCRIPTION_COLUMN];
+
 interface Props {
   interceptors: DialInterceptor[];
   currentInterceptors: string[];
@@ -126,7 +128,7 @@ const GlobalInterceptors: FC<Props> = ({ interceptors, currentInterceptors, onCh
             entities={availableInterceptors}
             onClose={() => setIsModalOpen(false)}
             onApply={onAddInterceptors}
-            columnDefs={[DISPLAY_NAME_COLUMN, DESCRIPTION_COLUMN]}
+            columnDefs={ADD_INTERCEPTOR_COLUMNS}
           />,
           document.body,
         )}
