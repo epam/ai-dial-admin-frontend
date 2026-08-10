@@ -4,8 +4,7 @@ import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DialNeutralButton } from '@epam/ai-dial-ui-kit';
-import { IconPlus } from '@tabler/icons-react';
+import { ButtonAppearance, ButtonVariant, DialButtonDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
 import { JSONSchema7 } from 'json-schema';
 
 import { getResolvedRunnerSchema, removeRunner, updateRunner } from '@/src/app/[lang]/assets-app-runners/actions';
@@ -20,7 +19,6 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { ButtonsI18nKey, CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
-import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
@@ -73,6 +71,14 @@ const AppRunnerAssetView: FC<Props> = ({
   const [discardKey, setDiscardKey] = useState(0);
   const [isCreateAssetAppModalOpen, setIsCreateAssetAppModalOpen] = useState(false);
   const [applicationProperties, setApplicationProperties] = useState<Record<string, unknown>>();
+
+  const createItems: DropdownItem[] = [
+    {
+      key: 'AssetApplication',
+      label: t(CreateI18nKey.AssetApplication),
+      onClick: () => setIsCreateAssetAppModalOpen(true),
+    },
+  ];
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -175,10 +181,11 @@ const AppRunnerAssetView: FC<Props> = ({
         onRemove={removeRunner}
         getAssetContext={useAppRunnersFolder}
       >
-        <DialNeutralButton
-          label={`${t(ButtonsI18nKey.Create)} ${t(CreateI18nKey.AssetApplication)}`}
-          iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
-          onClick={() => setIsCreateAssetAppModalOpen(true)}
+        <DialButtonDropdown
+          label={t(ButtonsI18nKey.Create)}
+          items={createItems}
+          variant={ButtonVariant.Neutral}
+          appearance={ButtonAppearance.Outlined}
         />
       </SimpleEntityHeader>
 

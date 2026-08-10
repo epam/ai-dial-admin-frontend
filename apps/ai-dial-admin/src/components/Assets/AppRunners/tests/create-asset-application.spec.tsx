@@ -36,7 +36,26 @@ vi.mock('@/src/components/Assets/Deployments/CreateAsset', () => ({
 vi.mock('../TabsContent', () => ({ default: () => <div>tabs-content</div> }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
-const CREATE_ACTION_NAME = `${ButtonsI18nKey.Create} ${CreateI18nKey.AssetApplication}`;
+// The real dropdown keeps its items behind a floating overlay with no menu roles to query; flattening
+// them to buttons keeps these tests about the action rather than the ui-kit's popover.
+vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
+  return {
+    ...actual,
+    DialButtonDropdown: ({ label, items }: any) => (
+      <div>
+        <span>{label}</span>
+        {items?.map((item: any) => (
+          <button key={item.key} onClick={() => item.onClick?.({ key: item.key })}>
+            {item.label}
+          </button>
+        ))}
+      </div>
+    ),
+  };
+});
+
+const CREATE_ACTION_NAME = CreateI18nKey.AssetApplication;
 
 const runner = (overrides: Partial<DialAppRunnerResource> = {}): DialAppRunnerResource =>
   ({
@@ -73,9 +92,10 @@ describe('App runner asset :: create asset application action', () => {
     vi.mocked(getResolvedRunnerSchema).mockResolvedValue({ success: false } as never);
   });
 
-  test('Should offer the create-asset-application action in the header', () => {
+  test('Should offer the create-asset-application action under the header Create dropdown', () => {
     renderView();
 
+    expect(screen.getByText(ButtonsI18nKey.Create)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: CREATE_ACTION_NAME })).toBeInTheDocument();
   });
 
