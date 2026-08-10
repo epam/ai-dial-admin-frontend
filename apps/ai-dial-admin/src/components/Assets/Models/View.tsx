@@ -10,7 +10,6 @@ import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor'
 import { useModelsFolder } from '@/src/context/assets/ModelsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
-import { ModelAssetI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { AssetModel } from '@/src/models/dial/deployment-asset';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
@@ -19,7 +18,6 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
-import { hasUpstreamsMissingEndpoint } from '@/src/utils/models/upstream-secrets';
 import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
 import TabsContent from './TabsContent';
 
@@ -68,19 +66,6 @@ const ModelView: FC<Props> = ({ etag, originalModel, roles, interceptors }) => {
   }, [originalModel]);
 
   const onSave = useCallback(() => {
-    // Core matches a stored upstream secret to a request entry by endpoint, so an endpoint-less upstream
-    // is unroutable and breaks that pairing. The editor seeds new rows as `{}`, so this is reachable by
-    // adding an upstream and saving without filling it in.
-    if (hasUpstreamsMissingEndpoint(selectedModel.upstreams)) {
-      showNotification(
-        getErrorNotification(
-          t(ModelAssetI18nKey.MissingUpstreamEndpointTitle),
-          t(ModelAssetI18nKey.MissingUpstreamEndpointMessage),
-        ),
-      );
-      return;
-    }
-
     getReqRef.current(updateModel, selectedModel, etag).then((res) => {
       if (res.success) {
         showNotification(

@@ -640,9 +640,6 @@ export default {
     SecretLossTitle: 'Stored credentials will be lost',
     SecretLossMessage:
       'Re-enter the key and secret extra data for these upstreams before saving — a changed endpoint cannot keep its stored credentials:',
-    MissingUpstreamEndpointTitle: 'Upstream endpoint required',
-    MissingUpstreamEndpointMessage:
-      'Every upstream needs an endpoint. Fill in or remove the empty upstream before saving.',
   },
   ForwardToken: {
     ForwardTokenModalTitle: 'Forward Auth Token',

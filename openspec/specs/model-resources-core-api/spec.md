@@ -70,12 +70,16 @@ DIAL Core marks an upstream's `key` and `secretExtraData` as encrypted, write-on
 - **WHEN** `updateModel` sends a model with several upstreams, only some of which carry a secret
 - **THEN** each upstream is stripped independently, and the upstreams supplying secrets still carry them
 
-### Requirement: Every written upstream carries its endpoint so Core can match its stored secret
-DIAL Core pairs each upstream in a write request with its stored counterpart by matching the `endpoint` value, falling back to positional matching only for entries that carry no endpoint, and its own contract documents that mixing the two forms makes preservation unreliable. The system SHALL include an `endpoint` on every upstream it writes.
+### Requirement: An upstream with no endpoint is written as the user entered it
+An upstream's `endpoint` is not the address Core dials — Core routes a completion to the model's own resolved endpoint and forwards the upstream's endpoint, key, and extra data to that adapter as headers. An upstream carrying only credentials or extra data is therefore serviceable, which is why the entity surface accepts one. The system SHALL NOT block or alter a save because an upstream carries no endpoint.
 
-#### Scenario: Upstreams are written with endpoints
-- **WHEN** `updateModel` sends a model with upstreams
-- **THEN** every upstream object in the request body carries an `endpoint` property
+#### Scenario: A model with an endpoint-less upstream saves
+- **WHEN** a user adds an upstream, leaves its endpoint empty, and saves
+- **THEN** the write is issued and the upstream is persisted, with no validation error raised by the frontend
+
+#### Scenario: Secret preservation for an endpoint-less upstream rests on its position
+- **WHEN** a model is written with an upstream that carries no endpoint
+- **THEN** Core pairs it with the stored upstream at the same array index — its documented fallback when `endpoint` is absent — so an omitted secret is still preserved
 
 ### Requirement: A written model resource becomes a served deployment under its canonical id
 DIAL Core merges API-written model resources into its runtime configuration alongside file-defined models, keying API entries by their canonical id (`models/platform/{name}`) and setting each deployment's name from that key, while file-defined entries keep their bare-name keys. A model created through this surface is therefore routable without any further reference from another entity. The system SHALL treat the canonical id as the model's served deployment identifier, and SHALL NOT present the bare resource name as the identifier a caller invokes.
