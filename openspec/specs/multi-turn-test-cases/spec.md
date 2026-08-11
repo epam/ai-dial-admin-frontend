@@ -147,6 +147,37 @@ Rendering SHALL follow the scope:
 
 Editing a shared field on a `GROUP` row SHALL write the value to every turn of that case. A case's turns SHALL always agree on their shared field values, whichever turn is later removed or reordered.
 
+A multi-turn case's cells SHALL read their value from the side of the split that matches the field's current scope: a per-turn column from that turn's own entry in `multiTurnData`, a shared column from the case's `data`. A value stored on the other side SHALL NOT be displayed — a field whose scope was changed after its value was saved therefore renders empty until a value is entered under the new scope. The stored value SHALL NOT be moved, copied, or deleted to make this so, which makes changing a scope reversible: toggling it back displays the original value again.
+
+A `SINGLE` row SHALL be exempt, reading every field from `data` regardless of scope, because a single-turn case has no `multiTurnData` to split against.
+
+Scope-based reading SHALL apply only once the schema is known. Before it loads, both maps SHALL be read, so that a value is never hidden on the basis of a scope that has not been determined yet.
+
+#### Scenario: A per-turn column reads from its own turn
+
+- **WHEN** a two-turn case holds `prompt` per turn and `persona` in `data`
+- **THEN** each turn row shows that turn's own `prompt`, and both show the same `persona`
+
+#### Scenario: A field switched to per-turn no longer shows its shared value
+
+- **WHEN** a field holding a saved shared value is switched to per-turn scope
+- **THEN** every turn of a multi-turn case shows that column empty, rather than repeating the shared value on each turn
+
+#### Scenario: A field switched to shared no longer shows one turn's value
+
+- **WHEN** a field holding saved per-turn values is switched to shared scope
+- **THEN** the `GROUP` row shows that column empty, rather than presenting the first turn's value as the case-level one
+
+#### Scenario: Changing a scope is reversible
+
+- **WHEN** a field's scope is changed and then changed back, with no case saved in between
+- **THEN** the original values are displayed again
+
+#### Scenario: A single-turn case is unaffected by scope
+
+- **WHEN** a field is switched to per-turn while a single-turn case holds a value for it
+- **THEN** that case's row still shows the value
+
 #### Scenario: A per-turn column previews all turns when collapsed
 
 - **WHEN** a three-turn case is collapsed

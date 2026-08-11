@@ -36,17 +36,25 @@ export const readGroupKey = (row: TestCaseRow): string | null => {
 
 export const expandTestCasesToRows = <T extends CollapsibleTestCase = CollapsibleTestCase>(
   testCases?: T[] | null,
-): TestCaseRow[] =>
-  (testCases ?? []).flatMap(({ multiTurnData, data, ...rest }) => {
+  schema?: TestCaseSchema[] | null,
+): TestCaseRow[] => {
+  // No schema means it has not loaded yet, so both maps merge unfiltered. An empty schema is a loaded
+  // one that scopes nothing per turn, and does filter.
+  const perTurnFields = schema ? getPerTurnFieldNames(schema) : void 0;
+
+  return (testCases ?? []).flatMap(({ multiTurnData, data, ...rest }) => {
     if (!multiTurnData?.length) {
       return [{ ...rest, data: data ?? {}, ...(data ?? {}) }];
     }
 
     return multiTurnData.map((turn, index) => {
-      const merged = { ...(data ?? {}), ...turn };
+      const merged = perTurnFields
+        ? { ...selectSharedFields(data, perTurnFields), ...selectPerTurnFields(turn, perTurnFields) }
+        : { ...(data ?? {}), ...turn };
       return { ...rest, _turnIndex: index, data: merged, ...merged };
     });
   });
+};
 
 export const collapseRowsToCases = <T extends CollapsibleTestCase>(
   rows: TestCaseRow[],

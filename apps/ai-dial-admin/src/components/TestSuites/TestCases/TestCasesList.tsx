@@ -327,7 +327,8 @@ const TestCasesList: FC<Props> = ({
       getTestCases(datasetId, 0, 1000, [], []).then((res) => {
         if (version !== refreshVersionRef.current) return;
         setIsLoading(false);
-        const rawData = res == null || res.content.length === 0 ? [] : expandTestCasesToRows(res?.content || []);
+        const rawData =
+          res == null || res.content.length === 0 ? [] : expandTestCasesToRows(res?.content || [], activeSchema);
         turnGrid.setServerRows(rawData);
         setColumnDefs(buildColumnDefs(activeSchema));
       });
