@@ -1476,6 +1476,8 @@ export enum ToolsetI18nKey {
   ApiKey = 'Toolset.ApiKey',
   OAuth = 'Toolset.OAuth',
   NoneAuth = 'Toolset.NoneAuth',
+  DialNativeAuth = 'Toolset.DialNativeAuth',
+  DialNativeAuthDescription = 'Toolset.DialNativeAuthDescription',
   Import = 'Toolset.Import',
   Export = 'Toolset.Export',
   WithLogin = 'Toolset.WithLogin',
@@ -1513,6 +1515,19 @@ export enum ExternalServiceI18nKey {
   SuccessLoginDescription = 'ExternalService.SuccessLoginDescription',
   SuccessLogout = 'ExternalService.SuccessLogout',
   SuccessLogoutDescription = 'ExternalService.SuccessLogoutDescription',
+  Approved = 'ExternalService.Approved',
+  NotApproved = 'ExternalService.NotApproved',
+  GrantConsent = 'ExternalService.GrantConsent',
+  WithdrawConsent = 'ExternalService.WithdrawConsent',
+  GrantConsentTitle = 'ExternalService.GrantConsentTitle',
+  GrantConsentDescription = 'ExternalService.GrantConsentDescription',
+  WithdrawConsentTitle = 'ExternalService.WithdrawConsentTitle',
+  WithdrawConsentDescription = 'ExternalService.WithdrawConsentDescription',
+  SuccessGrantConsent = 'ExternalService.SuccessGrantConsent',
+  SuccessGrantConsentDescription = 'ExternalService.SuccessGrantConsentDescription',
+  SuccessWithdrawConsent = 'ExternalService.SuccessWithdrawConsent',
+  SuccessWithdrawConsentDescription = 'ExternalService.SuccessWithdrawConsentDescription',
+  NoActionAvailable = 'ExternalService.NoActionAvailable',
 }
 
 export enum InterfacesI18nKey {

@@ -302,7 +302,6 @@ Title:    <title>
 Type:     <Bug/Feature/Task> (reflected via labels)
 Labels:   <comma-separated list — includes `ops-request` if this is an infra change>
 Assignee: <@me (creator) / username>
-Project:  epam/68
 
 ──────────────────────────────────────────
 BODY:
@@ -335,7 +334,6 @@ gh issue create \
   --title "<title>" \
   --body "<body>" \
   --label "<label1>,<label2>,..." \
-  --project "epam/68" \
   --assignee "<@me|username>"
 ```
 
@@ -457,6 +455,5 @@ Note: this repo has **no** `SIA-*` labels — capture security impact in the bod
 - NEVER auto-assign a label unless you are 100% certain from the user's input
 - When uncertain about ANY label, ask directly — don't guess
 - Always use the exact label names as listed in the Label Reference table
-- Always add `--project "epam/68"`
 - The confidential information checkbox is always pre-checked in the body
 - If `gh` CLI fails, show the error and suggest the user check their auth (`gh auth status`)

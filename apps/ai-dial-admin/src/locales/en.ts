@@ -1506,6 +1506,9 @@ export default {
     ApiKey: 'API Key',
     OAuth: 'OAuth',
     NoneAuth: 'Without authentication',
+    DialNativeAuth: 'DIAL (native)',
+    DialNativeAuthDescription:
+      'No authentication settings. An administrator grants consent on the service row instead.',
     WithLogin: 'With login',
     WithLoginAndConfig: 'With login & configuration',
     WithoutLogin: 'Without login',
@@ -1542,6 +1545,21 @@ export default {
     SuccessLoginDescription: 'Authentication credentials have been stored.',
     SuccessLogout: 'External service logged out successfully',
     SuccessLogoutDescription: 'Authentication credentials have been revoked.',
+    Approved: 'Approved',
+    NotApproved: 'Not approved',
+    GrantConsent: 'Grant consent',
+    WithdrawConsent: 'Withdraw consent',
+    GrantConsentTitle: 'Grant consent to “{application}”?',
+    GrantConsentDescription:
+      'This application will be able to act on behalf of any user in this installation who has enabled offline access — with that user’s own permissions, without asking them, including while they are not present.',
+    WithdrawConsentTitle: 'Withdraw consent from “{application}”?',
+    WithdrawConsentDescription:
+      '“{application}” will no longer be able to act on behalf of any user in this installation. Everything it does for them stops immediately, and resumes only when consent is granted again.',
+    SuccessGrantConsent: 'Consent granted',
+    SuccessGrantConsentDescription: 'The application is approved to use this service.',
+    SuccessWithdrawConsent: 'Consent withdrawn',
+    SuccessWithdrawConsentDescription: 'The application can no longer use this service.',
+    NoActionAvailable: 'No action available',
   },
   Interfaces: {
     Interfaces: 'Interfaces',

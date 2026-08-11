@@ -66,9 +66,12 @@ const ResourceAuthTypeSection: FC<Props> = ({
     return buttons;
   }, [config.id, t, withLoginVisible]);
 
+  const isSelectable = config.id !== ToolsetAuthType.DIAL_NATIVE;
+
   const handleOnClick = useCallback(() => {
+    if (!isSelectable) return;
     onClick?.(config.id);
-  }, [config.id, onClick]);
+  }, [config.id, isSelectable, onClick]);
 
   const onChangeAuth = useCallback(
     (value: string) => {
@@ -82,16 +85,22 @@ const ResourceAuthTypeSection: FC<Props> = ({
     <div className="flex flex-col w-full rounded bg-layer-3 border border-tertiary">
       <div
         className={classNames(
-          'flex cursor-pointer border-l-2 p-4 gap-x-3',
+          'flex border-l-2 p-4 gap-x-3',
+          isSelectable ? 'cursor-pointer' : 'cursor-default',
           isSelected ? 'border-accent-primary text-accent-primary' : 'border-transparent text-primary',
         )}
         onClick={handleOnClick}
       >
         {config.icon}
 
-        <span className="dial-small font-semibold">{config.title}</span>
+        <div className="flex flex-col gap-y-1">
+          <span className="dial-small font-semibold">{config.title}</span>
+          {config.id === ToolsetAuthType.DIAL_NATIVE && (
+            <span className="dial-small text-secondary">{t(ToolsetI18nKey.DialNativeAuthDescription)}</span>
+          )}
+        </div>
       </div>
-      {isSelected && config.id !== ToolsetAuthType.NONE && (
+      {isSelected && config.id !== ToolsetAuthType.NONE && config.id !== ToolsetAuthType.DIAL_NATIVE && (
         <div className="flex flex-col gap-4 border-t border-tertiary p-4">
           {config.id === ToolsetAuthType.OAUTH && radioLogin.length > 1 && (
             <DialRadioGroup
