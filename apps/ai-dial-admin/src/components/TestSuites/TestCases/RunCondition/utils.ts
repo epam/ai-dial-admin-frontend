@@ -347,6 +347,18 @@ export const rowMatchesFilter = (
   return filter.args.some((arg) => rowMatchesFilter(row, arg, schema));
 };
 
+const NEGATIVE_COMPARISON_OPS = new Set<string>([ComparisonOp.Ne, ComparisonOp.Nc]);
+
+export const filterRequiresAllTurns = (filter: FilterNode): boolean => {
+  if (isComparisonNode(filter)) {
+    return NEGATIVE_COMPARISON_OPS.has(filter.op);
+  }
+  if (!isLogicalNode(filter) || filter.op === LogicalOp.Not) {
+    return false;
+  }
+  return filter.args.length > 0 && filter.args.every(filterRequiresAllTurns);
+};
+
 export const computeIncludedIdsFromRows = (
   rows: Record<string, unknown>[],
   filter: FilterNode | null | undefined,
@@ -365,9 +377,13 @@ export const computeIncludedIdsFromRows = (
     group.push(row);
     rowsById.set(id, group);
   });
+  const requireAllTurns = filterRequiresAllTurns(filter);
   const ids = new Set<string>();
   rowsById.forEach((group, id) => {
-    if (group.every((row) => rowMatchesFilter(row, filter, schema))) {
+    const matches = requireAllTurns
+      ? group.every((row) => rowMatchesFilter(row, filter, schema))
+      : group.some((row) => rowMatchesFilter(row, filter, schema));
+    if (matches) {
       ids.add(id);
     }
   });

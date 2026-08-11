@@ -266,7 +266,7 @@ describe('RunCondition utils', () => {
     expect(computeIncludedIdsFromRows([{ id: 'a' }, { id: 'b' }], filter)).toEqual(new Set(['b']));
   });
 
-  test('computeIncludedIdsFromRows requires all turns of a multi-turn test case to match', () => {
+  test('computeIncludedIdsFromRows includes multi-turn case when any turn matches Equals', () => {
     const filter: FilterNode = {
       op: ComparisonOp.Eq,
       args: [
@@ -278,8 +278,58 @@ describe('RunCondition utils', () => {
     expect(
       computeIncludedIdsFromRows(
         [
+          { id: 'a', data: { expected: '' } },
           { id: 'a', data: { expected: 'London' } },
+        ],
+        filter,
+      ),
+    ).toEqual(new Set(['a']));
+
+    expect(
+      computeIncludedIdsFromRows(
+        [
           { id: 'a', data: { expected: 'Paris' } },
+          { id: 'a', data: { expected: 'Berlin' } },
+        ],
+        filter,
+      ),
+    ).toEqual(new Set());
+  });
+
+  test('computeIncludedIdsFromRows includes multi-turn case when any turn matches Contains', () => {
+    const filter: FilterNode = {
+      op: ComparisonOp.Co,
+      args: [
+        { type: ExprType.Field, name: 'data::expected' },
+        { type: ExprType.Value, value_type: ValueType.String, value: 'Lon' },
+      ],
+    };
+
+    expect(
+      computeIncludedIdsFromRows(
+        [
+          { id: 'a', data: { expected: '' } },
+          { id: 'a', data: { expected: 'London' } },
+        ],
+        filter,
+      ),
+    ).toEqual(new Set(['a']));
+  });
+
+  test('computeIncludedIdsFromRows excludes multi-turn case when any turn fails Not Equal', () => {
+    const filter: FilterNode = {
+      op: ComparisonOp.Ne,
+      args: [
+        { type: ExprType.Field, name: 'data::expected' },
+        { type: ExprType.Value, value_type: ValueType.String, value: 'London' },
+      ],
+    };
+
+    expect(
+      computeIncludedIdsFromRows(
+        [
+          { id: 'a', data: { expected: '' } },
+          { id: 'a', data: { expected: 'London' } },
         ],
         filter,
       ),
@@ -288,8 +338,8 @@ describe('RunCondition utils', () => {
     expect(
       computeIncludedIdsFromRows(
         [
-          { id: 'a', data: { expected: 'London' } },
-          { id: 'a', data: { expected: 'London' } },
+          { id: 'a', data: { expected: 'Paris' } },
+          { id: 'a', data: { expected: 'Berlin' } },
         ],
         filter,
       ),
