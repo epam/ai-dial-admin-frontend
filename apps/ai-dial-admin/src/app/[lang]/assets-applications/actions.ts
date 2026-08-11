@@ -2,7 +2,7 @@
 
 import { cookies, headers } from 'next/headers';
 
-import { assetApi, externalServiceOpsApi, toolsetOpsApi } from '@/src/app/api/api';
+import { assetApi, externalServiceConsentApi, externalServiceOpsApi, toolsetOpsApi } from '@/src/app/api/api';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { DialApplicationResource, DialExternalServiceAuthSettings, ToolsetAuthType } from '@/src/models/dial/resource';
 import { AssetApp } from '@/src/models/dial/deployment-asset';
@@ -168,6 +168,16 @@ export async function signInExternalService(
     body.apiKey = apiKey;
   }
   return externalServiceOpsApi.signIn(token, body);
+}
+
+export async function grantExternalServiceConsent(appPath: string, serviceId: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return externalServiceConsentApi.grant(token, appPath, serviceId);
+}
+
+export async function withdrawExternalServiceConsent(appPath: string, serviceId: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return externalServiceConsentApi.withdraw(token, appPath, serviceId);
 }
 
 export async function signOutExternalService(appPath: string, serviceId: string, level: string, authType: string) {
