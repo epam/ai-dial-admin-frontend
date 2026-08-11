@@ -240,4 +240,5 @@ export enum ToolsetAuthType {
   NONE = 'NONE',
   API_KEY = 'API_KEY',
   OAUTH = 'OAUTH',
+  DIAL_NATIVE = 'DIAL_NATIVE',
 }

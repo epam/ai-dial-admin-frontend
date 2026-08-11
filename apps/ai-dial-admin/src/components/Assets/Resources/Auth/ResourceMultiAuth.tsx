@@ -13,13 +13,19 @@ import {
 import { IconArrowLeft, IconEdit, IconPlus, IconTrashX } from '@tabler/icons-react';
 import classNames from 'classnames';
 
-import { signInExternalService, signOutExternalService } from '@/src/app/[lang]/assets-applications/actions';
+import {
+  grantExternalServiceConsent,
+  signInExternalService,
+  signOutExternalService,
+  withdrawExternalServiceConsent,
+} from '@/src/app/[lang]/assets-applications/actions';
 import {
   ButtonsI18nKey,
   EntityFieldsI18nKey,
   EntityPlaceholdersI18nKey,
   ErrorI18nKey,
   ExternalServiceI18nKey,
+  ToolsetI18nKey,
 } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
@@ -27,8 +33,15 @@ import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationResource, DialExternalService, ToolsetAuthType } from '@/src/models/dial/resource';
 import ExternalServiceAuthButtons, { EXTERNAL_SERVICE_AUTH_REDIRECT_URL } from './ExternalServiceAuthButtons';
+import ExternalServiceConsentActions from './ExternalServiceConsentActions';
 import ResourceAuthentication from './ResourceAuthentication';
-import { isLoggedInToExternalService } from './external-service-auth-utils';
+import {
+  getExternalServiceRowAction,
+  isExternalServiceApproved,
+  isLoggedInToExternalService,
+  isUnrecognisedAuthType,
+} from './external-service-auth-utils';
+import { ExternalServiceRowAction } from './models';
 
 interface EditState {
   originalId: string;
@@ -182,56 +195,85 @@ const ResourceMultiAuth: FC<Props> = ({ asset, onChange }) => {
         )}
 
         <div className="flex flex-col gap-y-2">
-          {Object.entries(services).map(([serviceId, service]) => (
-            <div
-              key={serviceId}
-              className="flex items-center gap-x-2 rounded bg-layer-3 border border-tertiary px-4 py-2"
-            >
-              <div className="flex-1 min-w-0">
-                <div className="dial-small font-semibold truncate">{service.display_name || serviceId}</div>
-                {service.display_name && <div className="dial-small text-secondary truncate">{serviceId}</div>}
-              </div>
+          {Object.entries(services).map(([serviceId, service]) => {
+            const rowAction = getExternalServiceRowAction(service);
+            const isPositiveState =
+              rowAction === ExternalServiceRowAction.Consent
+                ? isExternalServiceApproved(service)
+                : isLoggedInToExternalService(service);
+            const isDeclarationManaged = rowAction !== ExternalServiceRowAction.Consent;
+            const statusLabel =
+              rowAction === ExternalServiceRowAction.Consent
+                ? t(isPositiveState ? ExternalServiceI18nKey.Approved : ExternalServiceI18nKey.NotApproved)
+                : t(isPositiveState ? ToolsetI18nKey.isAuthenticated : ToolsetI18nKey.LoggedOut);
 
-              <div className="flex items-center gap-x-1 shrink-0">
-                {service.auth_settings?.authentication_type &&
-                  service.auth_settings.authentication_type !== ToolsetAuthType.NONE && (
+            return (
+              <div
+                key={serviceId}
+                className="flex items-center gap-x-2 rounded bg-layer-3 border border-tertiary px-4 py-2"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="dial-small font-semibold truncate">{service.display_name || serviceId}</div>
+                  {service.display_name && <div className="dial-small text-secondary truncate">{serviceId}</div>}
+                </div>
+
+                <div className="flex items-center gap-x-1 shrink-0">
+                  {rowAction !== ExternalServiceRowAction.None && (
                     <div
+                      role="status"
+                      aria-label={statusLabel}
                       className={classNames(
                         'w-[8px] h-[8px] rounded-full',
-                        isLoggedInToExternalService(service) ? 'bg-accent-secondary' : 'bg-red-400',
+                        isPositiveState ? 'bg-accent-secondary' : 'bg-red-400',
                       )}
                     />
                   )}
-              </div>
+                </div>
 
-              <div className="flex items-center gap-x-1 shrink-0">
-                <ExternalServiceAuthButtons
-                  appPath={asset.path}
-                  serviceId={serviceId}
-                  service={service}
-                  signIn={signInExternalService}
-                  signOut={signOutExternalService}
-                  onLoadingChange={(loading) => setLoadingServiceId(loading ? serviceId : null)}
-                />
-                {!isReadOnlyAdmin && loadingServiceId !== serviceId && (
-                  <>
-                    <DialGhostIconButton
-                      aria-label={t(ButtonsI18nKey.Edit)}
-                      size={ElementSize.Small}
-                      icon={<IconEdit {...BASE_BUTTON_ICON_PROPS} />}
-                      onClick={() => onEdit(serviceId)}
+                <div className="flex items-center gap-x-1 shrink-0">
+                  {rowAction === ExternalServiceRowAction.SignIn && (
+                    <ExternalServiceAuthButtons
+                      appPath={asset.path}
+                      serviceId={serviceId}
+                      service={service}
+                      signIn={signInExternalService}
+                      signOut={signOutExternalService}
+                      onLoadingChange={(loading) => setLoadingServiceId(loading ? serviceId : null)}
                     />
-                    <DialGhostIconButton
-                      aria-label={t(ButtonsI18nKey.Delete)}
-                      size={ElementSize.Small}
-                      icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-error" />}
-                      onClick={() => onDelete(serviceId)}
+                  )}
+                  {rowAction === ExternalServiceRowAction.Consent && (
+                    <ExternalServiceConsentActions
+                      appPath={asset.path}
+                      applicationName={asset.display_name || asset.name || asset.path}
+                      serviceId={serviceId}
+                      service={service}
+                      grantConsent={grantExternalServiceConsent}
+                      withdrawConsent={withdrawExternalServiceConsent}
                     />
-                  </>
-                )}
+                  )}
+                  {isUnrecognisedAuthType(service) && (
+                    <span className="dial-small text-secondary">{t(ExternalServiceI18nKey.NoActionAvailable)}</span>
+                  )}
+                  {isDeclarationManaged && !isReadOnlyAdmin && loadingServiceId !== serviceId && (
+                    <>
+                      <DialGhostIconButton
+                        aria-label={t(ButtonsI18nKey.Edit)}
+                        size={ElementSize.Small}
+                        icon={<IconEdit {...BASE_BUTTON_ICON_PROPS} />}
+                        onClick={() => onEdit(serviceId)}
+                      />
+                      <DialGhostIconButton
+                        aria-label={t(ButtonsI18nKey.Delete)}
+                        size={ElementSize.Small}
+                        icon={<IconTrashX {...BASE_BUTTON_ICON_PROPS} className="text-error" />}
+                        onClick={() => onDelete(serviceId)}
+                      />
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {!isReadOnlyAdmin && (
