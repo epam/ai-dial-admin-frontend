@@ -156,11 +156,31 @@ export const reorderTurns = (turns: TestCaseRow[], from: number, to: number): Te
   return renumberTurns(next);
 };
 
+const getWarningKey = ({ code, path, fieldName, message }: ValidationWarning): string =>
+  JSON.stringify([code, path, fieldName, message]);
+
+// Every turn row of a case carries a copy of the same case-level warnings, so concatenating them
+// would repeat each warning once per turn.
+const dedupeWarnings = (warnings: ValidationWarning[]): ValidationWarning[] => {
+  const seen = new Set<string>();
+
+  return warnings.filter((warning) => {
+    const key = getWarningKey(warning);
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+};
+
 export const aggregateValidity = (
   turns: TestCaseRow[],
 ): { valid: boolean; validationWarnings: ValidationWarning[] } => ({
   valid: turns.every((turn) => turn.valid !== false),
-  validationWarnings: turns.flatMap((turn) => (turn.validationWarnings as ValidationWarning[] | undefined) ?? []),
+  validationWarnings: dedupeWarnings(
+    turns.flatMap((turn) => (turn.validationWarnings as ValidationWarning[] | undefined) ?? []),
+  ),
 });
 
 const toSingleRow = (group: TestCaseGroup): GroupedGridRow => {

@@ -308,6 +308,36 @@ describe('aggregateValidity', () => {
     expect(result.valid).toBe(true);
     expect(result.validationWarnings).toEqual([]);
   });
+
+  test('should state a warning repeated across every turn only once', () => {
+    const warning = { code: 'A', message: 'a', path: 'data.a', fieldName: 'a' };
+
+    const result = aggregateValidity([
+      { validationWarnings: [warning] },
+      { validationWarnings: [warning] },
+      { validationWarnings: [warning] },
+    ]);
+
+    expect(result.validationWarnings).toEqual([warning]);
+  });
+
+  test('should keep warnings that share a message but differ by path', () => {
+    const warnFirst = { code: 'A', message: 'a', path: 'data.first', fieldName: 'a' };
+    const warnSecond = { code: 'A', message: 'a', path: 'data.second', fieldName: 'a' };
+
+    const result = aggregateValidity([{ validationWarnings: [warnFirst, warnSecond] }]);
+
+    expect(result.validationWarnings).toEqual([warnFirst, warnSecond]);
+  });
+
+  test('should keep the first occurrence when deduplicating', () => {
+    const warnA = { code: 'A', message: 'a', path: 'data.a', fieldName: 'a' };
+    const warnB = { code: 'B', message: 'b', path: 'data.b', fieldName: 'b' };
+
+    const result = aggregateValidity([{ validationWarnings: [warnA, warnB] }, { validationWarnings: [warnB, warnA] }]);
+
+    expect(result.validationWarnings).toEqual([warnA, warnB]);
+  });
 });
 
 describe('projectGroupsToGridRows', () => {
