@@ -24,6 +24,8 @@ import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import CollapsableInterceptors from './CollapsableInterceptors';
 import { getInterceptorsColumnDefs, getInterceptorsGridData } from './utils';
 
+const ADD_INTERCEPTOR_COLUMNS = [DISPLAY_NAME_COLUMN, DESCRIPTION_COLUMN];
+
 interface Props<T> {
   entity: T;
   interceptors: DialInterceptor[];
@@ -253,7 +255,7 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
             entities={availableInterceptors}
             onClose={() => setIsModalOpen(false)}
             onApply={onAddInterceptors}
-            columnDefs={[DISPLAY_NAME_COLUMN, DESCRIPTION_COLUMN]}
+            columnDefs={ADD_INTERCEPTOR_COLUMNS}
           />,
           document.body,
         )}
