@@ -265,4 +265,34 @@ describe('RunCondition utils', () => {
 
     expect(computeIncludedIdsFromRows([{ id: 'a' }, { id: 'b' }], filter)).toEqual(new Set(['b']));
   });
+
+  test('computeIncludedIdsFromRows requires all turns of a multi-turn test case to match', () => {
+    const filter: FilterNode = {
+      op: ComparisonOp.Eq,
+      args: [
+        { type: ExprType.Field, name: 'data::expected' },
+        { type: ExprType.Value, value_type: ValueType.String, value: 'London' },
+      ],
+    };
+
+    expect(
+      computeIncludedIdsFromRows(
+        [
+          { id: 'a', data: { expected: 'London' } },
+          { id: 'a', data: { expected: 'Paris' } },
+        ],
+        filter,
+      ),
+    ).toEqual(new Set());
+
+    expect(
+      computeIncludedIdsFromRows(
+        [
+          { id: 'a', data: { expected: 'London' } },
+          { id: 'a', data: { expected: 'London' } },
+        ],
+        filter,
+      ),
+    ).toEqual(new Set(['a']));
+  });
 });
