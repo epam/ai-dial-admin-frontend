@@ -355,10 +355,20 @@ export const computeIncludedIdsFromRows = (
   if (!filter) {
     return null;
   }
-  const ids = new Set<string>();
+  const rowsById = new Map<string, Record<string, unknown>[]>();
   rows.forEach((row) => {
-    if (row.id != null && rowMatchesFilter(row, filter, schema)) {
-      ids.add(String(row.id));
+    if (row.id == null) {
+      return;
+    }
+    const id = String(row.id);
+    const group = rowsById.get(id) ?? [];
+    group.push(row);
+    rowsById.set(id, group);
+  });
+  const ids = new Set<string>();
+  rowsById.forEach((group, id) => {
+    if (group.every((row) => rowMatchesFilter(row, filter, schema))) {
+      ids.add(id);
     }
   });
   return ids;
