@@ -31,6 +31,7 @@ import {
   getColumnRowErrors,
   hasColumnRowErrors,
   isRenameRestricted,
+  isScanMetadataColumn,
   parseRowsJson,
   toTableColumns,
 } from '@/src/components/Analytics/Tables/utils';
@@ -268,12 +269,22 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
       : { source_name: grainKey, name: grainKey, type: '' as AnalyticsFieldType };
   }, [table.type, table.grain, sourceTable]);
 
+  const isDropRestricted = useCallback(
+    (api: GridApi, node: IRowNode) => {
+      if (isPinnedRow(api, node)) return true;
+      const column = node.data as AnalyticsTableColumn | undefined;
+      if (!column) return false;
+      return isScanMetadataColumn(table, column);
+    },
+    [table],
+  );
+
   const actions = useMemo<ActionMenuOperationDeclaration<AnalyticsTableColumn>[]>(
     () => [
       getEditOperation<AnalyticsTableColumn>((column) => column && setEditColumn(column), isPinnedRow),
-      getDeleteOperation<AnalyticsTableColumn>((column) => onDrop(column), isPinnedRow),
+      getDeleteOperation<AnalyticsTableColumn>((column) => onDrop(column), isDropRestricted),
     ],
-    [onDrop],
+    [onDrop, isDropRestricted],
   );
 
   const columnDefs = useMemo<ColDef[]>(
@@ -371,6 +382,12 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
                   />
                 </>
               )}
+              {table.identity_column && (
+                <LabelledText label={t(AnalyticsTablesI18nKey.IdentityColumn)} text={table.identity_column} />
+              )}
+              {table.version_column && (
+                <LabelledText label={t(AnalyticsTablesI18nKey.VersionColumn)} text={table.version_column} />
+              )}
             </>
           ) : (
             !!table.grain?.grain_key && (
@@ -459,6 +476,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
         <EditColumnPopup
           column={editColumn}
           renameDisabled={isRenameRestricted(table, editColumn)}
+          sensitiveDisabled={isScanMetadataColumn(table, editColumn)}
           existingNames={columns.filter((c) => c.name !== editColumn.name).map((c) => c.name)}
           onClose={() => setEditColumn(null)}
           onSubmit={(patch) => void onSubmitEditColumn(patch)}

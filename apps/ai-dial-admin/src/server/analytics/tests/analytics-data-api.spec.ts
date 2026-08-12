@@ -210,6 +210,42 @@ describe('Server :: AnalyticsDataApi', () => {
     );
   });
 
+  test('getTable returns the scan-metadata pair as sent by the service', async () => {
+    const table = {
+      name: 'events',
+      type: AnalyticsTableType.Source,
+      ordering_key: ['event_id'],
+      identity_column: 'event_id',
+      version_column: '_ingested_at',
+    };
+    fetch.mockResponseOnce(JSON.stringify(table), { headers: { 'content-type': 'application/json' } });
+
+    expect(await instance.getTable('events', TOKEN_MOCK)).toEqual(table);
+  });
+
+  test('defineTableSchema sends the scan-metadata pair only when declared', async () => {
+    const withPair = {
+      columns: [{ source_name: 'seen_at', name: 'seen_at', type: AnalyticsFieldType.Timestamp }],
+      ordering_key: ['seen_at'],
+      identity_column: 'order_id',
+      version_column: 'seen_at',
+    };
+    fetch.mockResponseOnce(JSON.stringify({ success: true }));
+    await instance.defineTableSchema('events', withPair, TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/tables/events/schema'),
+      expect.objectContaining({ body: JSON.stringify(withPair) }),
+    );
+
+    // An omitted member leaves any stored value untouched, so the absent keys must not be sent as null.
+    const withoutPair = { columns: withPair.columns, ordering_key: withPair.ordering_key };
+    fetch.mockResponseOnce(JSON.stringify({ success: true }));
+    await instance.defineTableSchema('events', withoutPair, TOKEN_MOCK);
+    const body = (fetch as unknown as { mock: { calls: [string, { body: string }][] } }).mock.calls.at(-1)![1].body;
+    expect(JSON.parse(body)).not.toHaveProperty('identity_column');
+    expect(JSON.parse(body)).not.toHaveProperty('version_column');
+  });
+
   test('updateTableSchema PATCHes /v1/tables/{name}/schema with the patch body', async () => {
     const patch = { drop: ['old_col'] };
     fetch.mockResponseOnce(JSON.stringify({ success: true }));

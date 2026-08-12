@@ -2445,6 +2445,16 @@ export default {
     PartitionColumnHint: 'Only Date or Timestamp columns can be selected.',
     Granularity: 'Granularity',
     PartitionNone: 'None',
+    IdentityColumn: 'Identity column',
+    VersionColumn: 'Version column',
+    IdentityColumnHint:
+      'The column that identifies one row, used by the incremental scan. Only non-nullable, non-sensitive columns can be selected, and the value must be unique per row — that is your guarantee, not something we can check. This cannot be changed after the table is created.',
+    VersionColumnHint:
+      'The column carrying each row’s version, used by the incremental scan. Only non-nullable, non-sensitive Timestamp columns can be selected, and the value must be assigned at ingest and never move backwards — that is your guarantee, not something we can check. This cannot be changed after the table is created.',
+    ScanPairIncomplete: 'Identity column and Version column must be set together, or both left empty.',
+    ScanPairRequired:
+      'Identity column and Version column are both required here — this table already declares them, and re-saving cannot clear them.',
+    ScanColumnNotSensitive: 'A column used by the incremental scan cannot be marked sensitive.',
     SourceTable: 'Source table',
     GrainKey: 'Grain key',
     ColumnName: 'Name',

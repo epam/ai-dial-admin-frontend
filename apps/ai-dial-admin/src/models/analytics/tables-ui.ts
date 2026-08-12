@@ -48,4 +48,6 @@ export interface DraftSchemaForm {
   partitionColumn: string;
   granularity: PartitionGranularity | '';
   grainKey: string;
+  identityColumn: string;
+  versionColumn: string;
 }

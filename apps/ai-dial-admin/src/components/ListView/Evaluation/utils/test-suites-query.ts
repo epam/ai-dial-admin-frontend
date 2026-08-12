@@ -153,6 +153,7 @@ export const mapTestSuiteRow = (row: Record<string, unknown>): TestSuite => ({
   deploymentRef: asObject<TestSuiteDeploymentRef>(row.deployment_ref),
   mcpDeploymentRef: asObject<McpDeploymentRef>(row.mcp_deployment_ref),
   endpointRef: asObject<TestSuiteEndpointRef>(row.endpoint_ref),
+  testCaseFilter: asObject<FilterNode>(row.test_case_filter) ?? null,
 });
 
 export const mapTestSuitesQueryResult = (
