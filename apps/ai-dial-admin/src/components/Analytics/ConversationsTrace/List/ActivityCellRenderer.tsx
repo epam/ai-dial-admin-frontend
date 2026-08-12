@@ -16,16 +16,19 @@ const ActivityCellRenderer: FC<Props> = ({ data, nowMs }) => {
     return null;
   }
 
-  const relative = formatRelativeTime(data.last_activity, nowMs ?? Date.now());
+  const relative = formatRelativeTime(data.last_request_time, nowMs ?? Date.now());
   if (!relative) {
     return null;
   }
 
-  const span = formatConversationSpan(data.first_activity, data.last_activity);
+  const span = formatConversationSpan(data.first_request_time, data.last_request_time);
 
   return (
     <div className="flex flex-col justify-center h-full min-w-0 gap-0.5">
-      <span className="text-primary dial-small-text" title={formatDateTimeToLocalString(data.last_activity ?? void 0)}>
+      <span
+        className="text-primary dial-small-text"
+        title={formatDateTimeToLocalString(data.last_request_time ?? void 0)}
+      >
         {relative}
       </span>
       {span && <span className="dial-tiny-text text-secondary">{span}</span>}

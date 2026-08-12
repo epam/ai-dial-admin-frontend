@@ -52,7 +52,7 @@ import {
 } from '@/src/constants/grid-columns/formatters';
 import { CONVERSATION_PROVENANCE_GROUPS } from '@/src/constants/analytics/conversations-trace';
 import { formatCompactNumber, formatSignificantCost } from '@/src/utils/analytics/conversation-formatting';
-import { ConversationField } from '@/src/models/analytics/conversations-trace';
+import { ConversationColumn, ConversationsField } from '@/src/models/analytics/conversations-trace';
 import { ImageVersion } from '@/src/models/deployments/images';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
@@ -622,35 +622,36 @@ export const USAGE_LOG_NUMERIC_COLUMNS = new Set<string>(
 
 const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] => [
   {
-    field: ConversationField.ChatId,
+    field: ConversationsField.ChatId,
     headerName: t(ConversationsTraceI18nKey.Conversation),
     cellRenderer: ConversationCellRenderer,
     flex: 3,
     minWidth: 280,
   },
   {
-    field: ConversationField.Project,
-    headerName: t(ConversationsTraceI18nKey.ProjectModel),
+    field: ConversationsField.ProjectId,
+    headerName: t(ConversationsTraceI18nKey.Project),
     cellRenderer: ProjectCellRenderer,
     flex: 1.6,
     minWidth: 180,
   },
   {
-    field: ConversationField.Turns,
+    field: ConversationsField.TurnCount,
     headerName: t(ConversationsTraceI18nKey.Turns),
+    headerTooltip: t(ConversationsTraceI18nKey.TurnsHint),
     ...numericColumn,
     flex: 0.6,
     minWidth: 90,
   },
   {
-    field: ConversationField.LastActivity,
+    field: ConversationsField.LastRequestTime,
     headerName: t(ConversationsTraceI18nKey.Activity),
     cellRenderer: ActivityCellRenderer,
     flex: 1.1,
     minWidth: 130,
   },
   {
-    field: ConversationField.Tokens,
+    field: ConversationsField.TotalTokens,
     headerName: t(ConversationsTraceI18nKey.Tokens),
     ...numericColumn,
     valueFormatter: ({ value }) => formatCompactNumber(value),
@@ -658,7 +659,7 @@ const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] 
     minWidth: 100,
   },
   {
-    field: ConversationField.Cost,
+    field: ConversationsField.TotalPrice,
     headerName: t(ConversationsTraceI18nKey.Cost),
     ...numericColumn,
     valueFormatter: ({ value }) => formatSignificantCost(value),
@@ -667,7 +668,7 @@ const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] 
     minWidth: 100,
   },
   {
-    field: ConversationField.Rating,
+    field: ConversationColumn.Rating,
     headerName: t(ConversationsTraceI18nKey.Rating),
     cellRenderer: RatingCellRenderer,
     flex: 1,
@@ -685,12 +686,12 @@ export const CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[
 export const CONVERSATIONS_TRACE_COLUMN_GROUPS = (t: (key: string) => string): ColGroupDef[] => {
   const columns = CONVERSATIONS_TRACE_COLUMNS(t);
 
-  return CONVERSATION_PROVENANCE_GROUPS.map(({ provenance, labelKey, tooltipKey, fields, isDerived }) => ({
+  return CONVERSATION_PROVENANCE_GROUPS.map(({ provenance, labelKey, tooltipKey, fields }) => ({
     groupId: provenance,
     headerName: t(labelKey),
     headerTooltip: t(tooltipKey),
     headerGroupComponent: ProvenanceHeaderGroup,
-    headerGroupComponentParams: { label: t(labelKey), provenance, isDerived },
+    headerGroupComponentParams: { label: t(labelKey), provenance },
     marryChildren: true,
     children: fields.map((field) => columns.find((column) => column.field === field)).filter(Boolean) as ColDef[],
   }));

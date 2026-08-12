@@ -1,12 +1,15 @@
 'use client';
 
 import { IconThumbDownFilled } from '@tabler/icons-react';
+import { Big } from 'big.js';
 import classNames from 'classnames';
 import { FC, ReactNode } from 'react';
 
+import { SUMMARY_COST_PRECISION } from '@/src/constants/analytics/conversations-trace';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { ConversationSummary } from '@/src/models/analytics/conversations-trace';
+import { ConversationSummary, ConversationTotals } from '@/src/models/analytics/conversations-trace';
+import { toBig, toNumber } from '@/src/utils/analytics/scalar';
 
 const ICON_SIZE = 14;
 
@@ -34,27 +37,40 @@ const SummaryPill: FC<PillProps> = ({ value, label, valueClassName, hint }) => (
 );
 
 interface Props {
+  totals: ConversationTotals | null;
   summary: ConversationSummary;
+  loadedCount: number;
   periodLabel: string;
 }
 
-const ConversationsSummary: FC<Props> = ({ summary, periodLabel }) => {
+const UNAVAILABLE = '—';
+
+const ConversationsSummary: FC<Props> = ({ totals, summary, loadedCount, periodLabel }) => {
   const t = useI18n();
 
-  const scopeHint = summary.isTruncated
-    ? t(ConversationsTraceI18nKey.SummaryTruncatedHint)
-    : t(ConversationsTraceI18nKey.SummaryScopeHint);
+  // The count and the cost are whole-result figures from their own query; the rated and negative counts
+  // cover only the rows loaded so far, so each pill states the scope it actually reports.
+  const resultHint = t(ConversationsTraceI18nKey.SummaryResultHint);
+  const loadedHint = t(ConversationsTraceI18nKey.SummaryLoadedHint);
+  const unavailableHint = t(ConversationsTraceI18nKey.SummaryUnavailableHint);
 
-  const conversations = summary.isTruncated ? `${summary.conversations}+` : `${summary.conversations}`;
+  const conversationCount = totals ? toNumber(totals.conversations) : null;
+  // A sum over an empty result is null, which means zero — not unavailable. Only an absent `totals`
+  // (the request failed) may render as unavailable.
+  const cost = totals ? (toBig(totals.cost) ?? new Big(0)) : null;
 
   return (
     <div className="flex flex-wrap items-stretch gap-2">
-      <SummaryPill value={conversations} label={t(ConversationsTraceI18nKey.SummaryConversations)} hint={scopeHint} />
       <SummaryPill
-        value={`${summary.rated}/${summary.conversations}`}
+        value={conversationCount === null ? UNAVAILABLE : `${conversationCount}`}
+        label={t(ConversationsTraceI18nKey.SummaryConversations)}
+        hint={conversationCount === null ? unavailableHint : resultHint}
+      />
+      <SummaryPill
+        value={`${summary.rated}/${loadedCount}`}
         label={t(ConversationsTraceI18nKey.SummaryRated)}
         valueClassName="text-success"
-        hint={scopeHint}
+        hint={loadedHint}
       />
       <SummaryPill
         value={`${summary.negative}`}
@@ -65,13 +81,13 @@ const ConversationsSummary: FC<Props> = ({ summary, periodLabel }) => {
           </>
         }
         valueClassName="text-error"
-        hint={scopeHint}
+        hint={loadedHint}
       />
       <SummaryPill
-        value={`$${summary.cost}`}
+        value={cost === null ? UNAVAILABLE : `$${cost.round(SUMMARY_COST_PRECISION).toString()}`}
         label={`${t(ConversationsTraceI18nKey.SummaryCost)} ${periodLabel}`}
         valueClassName="text-accent-secondary"
-        hint={t(ConversationsTraceI18nKey.SummaryCostHint)}
+        hint={cost === null ? unavailableHint : resultHint}
       />
     </div>
   );

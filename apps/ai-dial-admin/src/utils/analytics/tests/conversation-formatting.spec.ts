@@ -1,12 +1,10 @@
 import { describe, expect, test } from 'vitest';
 
-import { MODEL_DOT_CLASSES } from '@/src/constants/analytics/conversations-trace';
 import {
   formatCompactNumber,
   formatConversationSpan,
   formatRelativeTime,
   formatSignificantCost,
-  modelDotClass,
 } from '@/src/utils/analytics/conversation-formatting';
 
 const NOW = Date.parse('2026-07-28T12:00:00.000Z');
@@ -103,8 +101,20 @@ describe('formatRelativeTime', () => {
     expect(formatRelativeTime(NOW - elapsed, NOW)).toBe(expected);
   });
 
-  test('reads an ISO string as well as epoch millis', () => {
+  // The service returns an ISO-8601 string with a `Z`; epoch millis are accepted too.
+  test('reads a zoned ISO string as well as epoch millis', () => {
     expect(formatRelativeTime(new Date(NOW - 12 * MINUTE).toISOString(), NOW)).toBe('12m ago');
+  });
+
+  // A zoneless value would otherwise be read as local time and shift by the viewer's UTC offset, which
+  // silently misreports every activity cell in any non-UTC timezone.
+  test.each([
+    ['T-separated', '2026-07-28T11:48:00.000'],
+    ['space-separated', '2026-07-28 11:48:00.000'],
+    ['without milliseconds', '2026-07-28T11:48:00'],
+    ['without seconds', '2026-07-28T11:48'],
+  ])('reads a %s zoneless timestamp as UTC, not local time', (_label, value) => {
+    expect(formatRelativeTime(value, NOW)).toBe('12m ago');
   });
 
   // The clock is a parameter so the helper stays deterministic and needs no fake timers.
@@ -144,21 +154,5 @@ describe('formatConversationSpan', () => {
     ['a missing end', NOW, null],
   ])('renders %s as empty', (_label, from, to) => {
     expect(formatConversationSpan(from, to)).toBe('');
-  });
-});
-
-describe('modelDotClass', () => {
-  test('always returns one of the theme tokens rather than a literal colour', () => {
-    ['gpt-4o', 'claude-3.5-sonnet', 'gpt-4o-mini', 'unknown-model'].forEach((model) => {
-      expect(MODEL_DOT_CLASSES).toContain(modelDotClass(model));
-    });
-  });
-
-  test('is stable for a given model, so a model keeps its colour between renders', () => {
-    expect(modelDotClass('gpt-4o')).toBe(modelDotClass('gpt-4o'));
-  });
-
-  test('distinguishes the models the fixtures use', () => {
-    expect(modelDotClass('gpt-4o')).not.toBe(modelDotClass('claude-3.5-sonnet'));
   });
 });

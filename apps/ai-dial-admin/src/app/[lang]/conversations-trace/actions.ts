@@ -5,8 +5,12 @@ import { cookies, headers } from 'next/headers';
 import { analyticsDataApi } from '@/src/app/api/api';
 import {
   ConversationFilters,
+  ConversationPageRequest,
   ConversationRatingRow,
   ConversationRow,
+  ConversationTotals,
+  ConversationTotalsField,
+  ConversationsPage,
   FeedbackFilter,
   RateAnalyticsField,
   RatingDirection,
@@ -21,55 +25,29 @@ import { attachRatings, unresolvedRatings } from '@/src/utils/analytics/conversa
 import {
   buildConversationListQuery,
   buildConversationRatingsQuery,
+  buildConversationTotalsQuery,
   buildRatedConversationIdsQuery,
 } from '@/src/utils/analytics/conversations-queries';
-import { USE_CONVERSATIONS_MOCK, buildConversationsMock } from '@/src/mocks/analytics/conversations-trace';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 const token = () => getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
-type ConversationsResponse = ServerActionResponse<{ rows: ConversationRow[] }>;
+type ConversationsResponse = ServerActionResponse<ConversationsPage>;
 
 const toRange = ({ startMs, endMs }: ConversationFilters): TimeRange => ({
   startDate: new Date(startMs),
   endDate: new Date(endMs),
 });
 
-const fetchRatedChatIds = async (
-  filters: ConversationFilters,
-  authToken: Token,
-): Promise<{ ids: string[] | null; failure?: ConversationsResponse }> => {
-  if (filters.feedback === FeedbackFilter.All) {
-    return { ids: null };
-  }
-
-  const query = buildRatedConversationIdsQuery({ range: toRange(filters), feedback: filters.feedback });
-  const result = await analyticsDataApi.executeAction(query, authToken);
-
-  if (!result.success) {
-    return { ids: null, failure: { ...result, response: undefined } };
-  }
-
-  const ids = (result.response?.rows ?? [])
-    .map((row) => row[RateAnalyticsField.ChatId])
-    .filter((id): id is string => typeof id === 'string' && id.length > 0);
-
-  return { ids };
-};
-
 const ratingRows = (result: ServerActionResponse<StructuredQueryResult>): ConversationRatingRow[] =>
   (result.response?.rows ?? []) as unknown as ConversationRatingRow[];
 
-const withRatings = async (
-  rows: ConversationRow[],
-  filters: ConversationFilters,
-  authToken: Token,
-): Promise<ConversationRow[]> => {
+const withRatings = async (rows: ConversationRow[], range: TimeRange, authToken: Token): Promise<ConversationRow[]> => {
   if (!rows.length) {
     return rows;
   }
 
-  const params = { range: toRange(filters), chatIds: rows.map((row) => row.chat_id) };
+  const params = { range, chatIds: rows.map((row) => row.chat_id) };
   const [up, down] = await Promise.all(
     [RatingDirection.Up, RatingDirection.Down].map((direction) =>
       analyticsDataApi.executeAction(buildConversationRatingsQuery({ ...params, direction }), authToken),
@@ -86,26 +64,43 @@ const withRatings = async (
   return attachRatings(rows, ratingRows(up), ratingRows(down));
 };
 
-export async function getConversations(filters: ConversationFilters): Promise<ConversationsResponse> {
-  if (USE_CONVERSATIONS_MOCK) {
-    return { success: true, response: { rows: buildConversationsMock(filters) } };
+// Resolved once per filter state by the caller and carried into every page of that result: the
+// narrowing is a property of the filter, not of the page.
+export async function getRatedChatIds(filters: ConversationFilters): Promise<ServerActionResponse<{ ids: string[] }>> {
+  const query = buildRatedConversationIdsQuery({ range: toRange(filters), feedback: filters.feedback });
+  const result = await analyticsDataApi.executeAction(query, await token());
+
+  if (!result.success) {
+    return { ...result, response: undefined };
+  }
+
+  const ids = (result.response?.rows ?? [])
+    .map((row) => row[RateAnalyticsField.ChatId])
+    .filter((id): id is string => typeof id === 'string' && id.length > 0);
+
+  return { ...result, response: { ids } };
+}
+
+// An active feedback filter narrows by `in`, so an empty candidate set means "nothing carries this
+// feedback" — the complete answer. Building the query anyway would drop the `in` predicate and return
+// every conversation, and the service rejects an empty `in` list with a 400 either way.
+const isNarrowedToNothing = ({ feedback, chatIds }: ConversationPageRequest): boolean =>
+  feedback !== FeedbackFilter.All && !chatIds?.length;
+
+export async function getConversations(request: ConversationPageRequest): Promise<ConversationsResponse> {
+  if (isNarrowedToNothing(request)) {
+    return { success: true, response: { rows: [], total: 0 } };
   }
 
   const authToken = await token();
-
-  const { ids, failure } = await fetchRatedChatIds(filters, authToken);
-  if (failure) {
-    return failure;
-  }
-
-  if (ids?.length === 0) {
-    return { success: true, response: { rows: [] } };
-  }
+  const range = toRange(request);
 
   const query = buildConversationListQuery({
-    range: toRange(filters),
-    search: filters.search,
-    chatIds: ids ?? [],
+    range,
+    search: request.search,
+    chatIds: request.chatIds ?? [],
+    offset: request.offset,
+    limit: request.limit,
   });
   const result = await analyticsDataApi.executeAction(query, authToken);
 
@@ -115,5 +110,41 @@ export async function getConversations(filters: ConversationFilters): Promise<Co
 
   const rows = (result.response?.rows ?? []) as unknown as ConversationRow[];
 
-  return { ...result, response: { rows: await withRatings(rows, filters, authToken) } };
+  return {
+    ...result,
+    response: {
+      rows: await withRatings(rows, range, authToken),
+      total: result.response?.totalCount ?? null,
+    },
+  };
+}
+
+export async function getConversationTotals(
+  filters: ConversationFilters,
+  chatIds?: string[],
+): Promise<ServerActionResponse<ConversationTotals>> {
+  if (isNarrowedToNothing({ ...filters, offset: 0, limit: 0, chatIds })) {
+    return { success: true, response: { conversations: 0, cost: null } };
+  }
+
+  const query = buildConversationTotalsQuery({
+    range: toRange(filters),
+    search: filters.search,
+    chatIds: chatIds ?? [],
+  });
+  const result = await analyticsDataApi.executeAction(query, await token());
+
+  if (!result.success) {
+    return { ...result, response: undefined };
+  }
+
+  const row = result.response?.rows?.[0];
+
+  return {
+    ...result,
+    response: {
+      conversations: (row?.[ConversationTotalsField.Conversations] ?? null) as ConversationTotals['conversations'],
+      cost: (row?.[ConversationTotalsField.Cost] ?? null) as ConversationTotals['cost'],
+    },
+  };
 }
