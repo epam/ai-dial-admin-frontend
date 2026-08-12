@@ -112,6 +112,36 @@ export default [
 
       '@typescript-eslint/no-explicit-any': 'warn',
       'prettier/prettier': 'error',
+
+      // Accessibility. The plugin was registered here long before any of its
+      // rules were switched on; this turns the recommended set on. See
+      // `.claude/rules/a11y.md` for the patterns lint cannot check.
+      //
+      // 25 of the 34 recommended rules are already clean and stay at the
+      // recommended severity. The overrides below are the ones with existing
+      // violations — kept at `warn` so they surface on touched code without
+      // blocking unrelated work. Ratchet each to `error` once its count is 0.
+      ...jsxA11yPlugin.configs.recommended.rules,
+
+      // Interactive semantics on non-interactive elements (37 + 29 + 7 + 4).
+      // Nearly all are `<div onClick>` that should be a `<button>`.
+      'jsx-a11y/click-events-have-key-events': 'warn',
+      'jsx-a11y/no-static-element-interactions': 'warn',
+      'jsx-a11y/no-noninteractive-element-interactions': 'warn',
+      'jsx-a11y/interactive-supports-focus': 'warn',
+      'jsx-a11y/no-noninteractive-tabindex': 'warn',
+      // 11 violations, and the rule is opinionated about what counts as a label.
+      'jsx-a11y/control-has-associated-label': 'warn',
+      // 3 violations, all invented roles (`role="activities"`, `role="icon"`,
+      // `role="dashboards"`) used as test selectors — a `data-testid` in
+      // disguise, which `testing.md` forbids. Fixing needs the component AND
+      // its spec changed together, so it is not a lint-config concern.
+      'jsx-a11y/aria-role': 'warn',
+      // 2 violations, both in App Router layouts that render their own <html>.
+      'jsx-a11y/html-has-lang': 'warn',
+      // Deprecated upstream in favour of label-has-associated-control, which is
+      // enabled above and already clean.
+      'jsx-a11y/label-has-for': 'off',
     },
   },
   prettierConfig,

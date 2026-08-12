@@ -113,14 +113,10 @@ describe('ConversationsToolbar :: feedback filter', () => {
     expect(segment(ConversationsTraceI18nKey.FeedbackAll)).toHaveAttribute('aria-selected', 'true');
   });
 
-  // Titles are only reachable through the conversation-summary enrichment, which is not registered — so the
-  // placeholder must not promise a search the live path cannot perform.
-  test('does not promise title search while the enrichment is unavailable', () => {
+  // The placeholder must name only what search reaches: the conversation id and the project.
+  test('promises only the fields search can match', () => {
     renderToolbar();
 
     expect(screen.getByPlaceholderText(ConversationsTraceI18nKey.SearchPlaceholder)).toBeInTheDocument();
-    expect(
-      screen.queryByPlaceholderText(ConversationsTraceI18nKey.SearchPlaceholderWithTitles),
-    ).not.toBeInTheDocument();
   });
 });

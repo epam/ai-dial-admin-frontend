@@ -9,10 +9,13 @@ import {
 } from '@epam/ai-dial-ui-kit';
 import { FC, useEffect, useState } from 'react';
 
-import { getTestCases } from '@/src/app/[lang]/datasets/actions';
+import { getDataset, getTestCases } from '@/src/app/[lang]/datasets/actions';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { Dataset } from '@/src/models/evaluation/dataset';
+import { TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
+import { useIncludedIds } from '../TestCases/RunCondition/use-included-ids';
 import { VALID_FILTERS } from './constants';
 
 interface Props {
@@ -27,22 +30,30 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
 
   const [isLoading, setIsLoading] = useState(false);
   const [value, setValue] = useState<string | number | undefined>(1);
-  const [validRuns, setValidRuns] = useState<number | undefined>();
   const [allRuns, setAllRuns] = useState<number | undefined>();
+  const [validRows, setValidRows] = useState<Record<string, unknown>[]>([]);
+  const [schema, setSchema] = useState<TestCaseSchema[] | undefined>();
 
   useEffect(() => {
-    if (!validRuns) {
+    if (allRuns === undefined) {
       setIsLoading(true);
 
       const validTestCases = getTestCases(selectedTestSuite.datasetId, 0, 1000, [], VALID_FILTERS);
       const allTestCases = getTestCases(selectedTestSuite.datasetId, 0, 1000, [], []);
-      Promise.all([validTestCases, allTestCases]).then(([validRes, allRes]) => {
+      const dataset = selectedTestSuite.datasetId
+        ? getDataset(selectedTestSuite.datasetId, DEFAULT_ETAG)
+        : Promise.resolve(null);
+      Promise.all([validTestCases, allTestCases, dataset]).then(([validRes, allRes, datasetRes]) => {
         setAllRuns(allRes?.totalElements || 0);
-        setValidRuns((validRes?.content || []).length);
+        setValidRows((validRes?.content || []) as Record<string, unknown>[]);
+        setSchema((datasetRes?.response as Dataset | undefined)?.testCaseSchema);
         setIsLoading(false);
       });
     }
-  }, [selectedTestSuite.datasetId, validRuns]);
+  }, [selectedTestSuite.datasetId, allRuns]);
+
+  const includedIds = useIncludedIds(selectedTestSuite.testCaseFilter, validRows, schema);
+  const validRuns = includedIds ? includedIds.size : validRows.length;
 
   return (
     <DialFormPopup

@@ -5,7 +5,6 @@ import { FC } from 'react';
 
 import FeedbackFilterControl from '@/src/components/Analytics/ConversationsTrace/Toolbar/FeedbackFilterControl';
 import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
-import { USE_CONVERSATION_SUMMARY_ENRICHMENT } from '@/src/constants/analytics/conversations-trace';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { FeedbackFilter } from '@/src/models/analytics/conversations-trace';
@@ -41,11 +40,7 @@ const ConversationsToolbar: FC<Props> = ({
           id="conversations-search"
           value={search}
           onChange={onSearchChange}
-          placeholder={t(
-            USE_CONVERSATION_SUMMARY_ENRICHMENT
-              ? ConversationsTraceI18nKey.SearchPlaceholderWithTitles
-              : ConversationsTraceI18nKey.SearchPlaceholder,
-          )}
+          placeholder={t(ConversationsTraceI18nKey.SearchPlaceholder)}
         />
       </div>
       <TimeFilter

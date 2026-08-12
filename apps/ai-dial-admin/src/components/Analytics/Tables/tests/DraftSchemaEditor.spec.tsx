@@ -10,7 +10,9 @@ import { AnalyticsTable, AnalyticsTableType, TableStatus } from '@/src/models/an
 import { DraftSchemaForm } from '@/src/models/analytics/tables-ui';
 
 // Render DialTooltip content inline so the hint message is queryable (the real component only mounts
-// its content on hover, via a portal).
+// its content on hover, via a portal), and swap DialSelectField for a native select so options and
+// selection are queryable by role — the real one renders a custom listbox. Labels here are ReactNodes
+// (label text + info tooltip), so the association is by `id` rather than an aria-label string.
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();
   return {
@@ -21,28 +23,63 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
         {tooltip}
       </>
     ),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    DialSelectField: ({ id, label, options, value, onChange, multiple, error }: any) => (
+      <div>
+        <label htmlFor={id}>{label}</label>
+        <select
+          id={id}
+          multiple={multiple}
+          value={value}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          onChange={(e: any) => onChange(multiple ? [e.target.value] : e.target.value)}
+        >
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          {options.map((o: any) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        {error && <span role="alert">{error}</span>}
+      </div>
+    ),
   };
 });
 
 // DraftSchemaEditor is purely presentational: it renders whatever `draft` (a useDraftSchemaForm result)
 // hands it. A hand-built fixture keeps these tests focused on rendering/wiring, not on the hook's own
 // validation/DTO logic (covered in use-draft-schema-form.spec.ts).
-const fixtureDraft = (overrides?: Partial<DraftSchemaForm>): ReturnType<typeof useDraftSchemaForm> => {
+interface DraftOverrides extends Partial<DraftSchemaForm> {
+  identityNames?: string[];
+  versionNames?: string[];
+  scanPairRequired?: boolean;
+  scanPairIncomplete?: boolean;
+}
+
+const fixtureDraft = (overrides?: DraftOverrides): ReturnType<typeof useDraftSchemaForm> => {
+  const { identityNames, versionNames, scanPairRequired, scanPairIncomplete, ...formOverrides } = overrides ?? {};
   const form: DraftSchemaForm = {
     columns: [createColumnRow()],
     orderingKey: [],
     partitionColumn: '',
     granularity: '',
     grainKey: '',
-    ...overrides,
+    identityColumn: '',
+    versionColumn: '',
+    ...formOverrides,
   };
   return {
     form,
     update: vi.fn(),
     columnOptions: [],
     temporalNames: [],
+    identityNames: identityNames ?? [],
+    versionNames: versionNames ?? [],
     grainOptions: [],
     columnErrors: [{}],
+    scanPairRequired: scanPairRequired ?? false,
+    scanPairIncomplete: scanPairIncomplete ?? false,
     canMaterialize: false,
     buildDto: () => ({ columns: [] }),
   };
@@ -111,6 +148,79 @@ describe('DraftSchemaEditor source', () => {
     expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'AnalyticsTables.Materialize' })).not.toBeInTheDocument();
   });
+
+  test('renders both scan-metadata selects, each with its info tooltip', () => {
+    render(<DraftSchemaEditor table={source} draft={fixtureDraft()} />);
+    expect(screen.getByText(AnalyticsTablesI18nKey.IdentityColumn)).toBeInTheDocument();
+    expect(screen.getByText(AnalyticsTablesI18nKey.VersionColumn)).toBeInTheDocument();
+    expect(screen.getByText(AnalyticsTablesI18nKey.IdentityColumnHint)).toBeInTheDocument();
+    expect(screen.getByText(AnalyticsTablesI18nKey.VersionColumnHint)).toBeInTheDocument();
+  });
+
+  test('offers the identity and version options the draft derived, plus an empty choice', () => {
+    render(
+      <DraftSchemaEditor
+        table={source}
+        draft={fixtureDraft({ identityNames: ['order_id', 'seen_at'], versionNames: ['seen_at'] })}
+      />,
+    );
+
+    const identity = screen.getByLabelText(AnalyticsTablesI18nKey.IdentityColumn, { exact: false });
+    expect(Array.from(identity.querySelectorAll('option')).map((o) => o.textContent)).toEqual([
+      AnalyticsTablesI18nKey.PartitionNone,
+      'order_id',
+      'seen_at',
+    ]);
+
+    const version = screen.getByLabelText(AnalyticsTablesI18nKey.VersionColumn, { exact: false });
+    expect(Array.from(version.querySelectorAll('option')).map((o) => o.textContent)).toEqual([
+      AnalyticsTablesI18nKey.PartitionNone,
+      'seen_at',
+    ]);
+  });
+
+  test('choosing a scan-metadata column calls the draft update with that key', () => {
+    const draft = fixtureDraft({ identityNames: ['order_id'] });
+    render(<DraftSchemaEditor table={source} draft={draft} />);
+
+    fireEvent.change(screen.getByLabelText(AnalyticsTablesI18nKey.IdentityColumn, { exact: false }), {
+      target: { value: 'order_id' },
+    });
+
+    expect(draft.update).toHaveBeenCalledWith('identityColumn', 'order_id');
+  });
+
+  test('marks only the empty half when exactly one member is chosen', () => {
+    render(
+      <DraftSchemaEditor
+        table={source}
+        draft={fixtureDraft({
+          identityColumn: 'order_id',
+          identityNames: ['order_id'],
+          versionNames: ['seen_at'],
+          scanPairIncomplete: true,
+        })}
+      />,
+    );
+    expect(screen.getByText(AnalyticsTablesI18nKey.ScanPairIncomplete)).toBeInTheDocument();
+  });
+
+  test('a table that already stores a pair gets the required message, not the both-empty one', () => {
+    render(
+      <DraftSchemaEditor
+        table={source}
+        draft={fixtureDraft({ identityNames: ['order_id'], scanPairRequired: true, scanPairIncomplete: true })}
+      />,
+    );
+    // Both halves are empty and neither may stay that way, so both carry the message.
+    expect(screen.getAllByText(AnalyticsTablesI18nKey.ScanPairRequired)).toHaveLength(2);
+    expect(screen.queryByText(AnalyticsTablesI18nKey.ScanPairIncomplete)).not.toBeInTheDocument();
+  });
+
+  test('shows no incomplete-pair message while the pair is complete or empty', () => {
+    render(<DraftSchemaEditor table={source} draft={fixtureDraft()} />);
+    expect(screen.queryByText(AnalyticsTablesI18nKey.ScanPairIncomplete)).not.toBeInTheDocument();
+  });
 });
 
 describe('DraftSchemaEditor enrichment', () => {
@@ -118,5 +228,11 @@ describe('DraftSchemaEditor enrichment', () => {
     render(<DraftSchemaEditor table={enrichment} draft={fixtureDraft()} />);
     expect(screen.getByText(AnalyticsTablesI18nKey.GrainKey)).toBeInTheDocument();
     expect(screen.queryByText(AnalyticsTablesI18nKey.OrderingKey)).not.toBeInTheDocument();
+  });
+
+  test('offers neither scan-metadata select — the backend rejects either member for an enrichment', () => {
+    render(<DraftSchemaEditor table={enrichment} draft={fixtureDraft()} />);
+    expect(screen.queryByText(AnalyticsTablesI18nKey.IdentityColumn)).not.toBeInTheDocument();
+    expect(screen.queryByText(AnalyticsTablesI18nKey.VersionColumn)).not.toBeInTheDocument();
   });
 });

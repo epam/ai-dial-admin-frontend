@@ -1,5 +1,10 @@
 # Add files here to ignore them from prettier formatting
 /dist
+
+# Throwaway fixtures written at runtime by scripts/validate-agent-docs.spec.mjs.
+# They are deliberately malformed, so prettier must never try to parse them.
+scripts/.agent-docs-fixtures*
+
 .github
 .claude
 .cursor

@@ -23,6 +23,7 @@ import {
   le,
   ne,
   offsetPage,
+  rowQuery,
   or,
   sortItem,
   value,
@@ -190,13 +191,18 @@ describe('analytics query-build :: sort and page', () => {
     });
   });
 
-  test('offsetPage never requests a total', () => {
+  test('offsetPage defaults to requesting no total', () => {
     expect(offsetPage(0, 20)).toEqual({
       type: QueryPageType.Offset,
       offset: 0,
       limit: 20,
       include_total: false,
     });
+  });
+
+  test('offsetPage carries the caller total request in both states', () => {
+    expect(offsetPage(40, 100, true).include_total).toBe(true);
+    expect(offsetPage(40, 100, false).include_total).toBe(false);
   });
 });
 
@@ -232,6 +238,46 @@ describe('analytics query-build :: aggregate envelope', () => {
     const page = offsetPage(0, 20);
 
     const query = aggregateQuery({ entity: 'dial_usage_log', groupBy: ['chat_id'], select, filter, sort, page });
+
+    expect(query.filter).toEqual(filter);
+    expect(query.sort).toEqual(sort);
+    expect(query.page).toEqual(page);
+  });
+
+  test('omits group_by when the caller groups by nothing', () => {
+    const query = aggregateQuery({ entity: 'conversations', select });
+
+    expect(query.mode).toBe(QueryMode.Aggregate);
+    expect(query.group_by).toBeUndefined();
+  });
+});
+
+describe('analytics query-build :: row envelope', () => {
+  const select = [col(field('chat_id'))];
+
+  test('sets row mode explicitly and never groups', () => {
+    const query = rowQuery({ entity: 'conversations', select });
+
+    expect(query.mode).toBe(QueryMode.Row);
+    expect(query.entity).toBe('conversations');
+    expect(query.select).toEqual(select);
+    expect(query.group_by).toBeUndefined();
+  });
+
+  test('omits optional sections that were not supplied', () => {
+    const query = rowQuery({ entity: 'conversations', select });
+
+    expect(query.filter).toBeUndefined();
+    expect(query.sort).toBeUndefined();
+    expect(query.page).toBeUndefined();
+  });
+
+  test('carries filter, sort and page when supplied', () => {
+    const filter = and([ne('chat_id', value(QueryValueType.String, ''))]);
+    const sort = [sortItem('chat_id', QuerySortDirection.Asc)];
+    const page = offsetPage(0, 100, true);
+
+    const query = rowQuery({ entity: 'conversations', select, filter, sort, page });
 
     expect(query.filter).toEqual(filter);
     expect(query.sort).toEqual(sort);

@@ -22,7 +22,35 @@ interface Props {
 const DraftSchemaEditor: FC<Props> = ({ table, draft }) => {
   const t = useI18n();
   const isSource = table.type === AnalyticsTableType.Source;
-  const { form, update, columnOptions, temporalNames, grainOptions, columnErrors } = draft;
+  const {
+    form,
+    update,
+    columnOptions,
+    temporalNames,
+    identityNames,
+    versionNames,
+    grainOptions,
+    columnErrors,
+    scanPairRequired,
+    scanPairIncomplete,
+  } = draft;
+
+  const labelWithHint = (label: string, hint: string) => (
+    <span className="flex items-center gap-1">
+      <span>{label}</span>
+      <DialTooltip tooltip={<span>{hint}</span>}>
+        <IconInfoCircle size={14} className="text-secondary" />
+      </DialTooltip>
+    </span>
+  );
+
+  // The pair is all-or-nothing: mark whichever half is still empty, so the disabled Save has a visible cause.
+  // Once the table stores a pair, clearing both is not an escape route either — hence the separate message.
+  const pairError = scanPairIncomplete
+    ? t(scanPairRequired ? AnalyticsTablesI18nKey.ScanPairRequired : AnalyticsTablesI18nKey.ScanPairIncomplete)
+    : '';
+  const identityError = !form.identityColumn ? pairError : '';
+  const versionError = !form.versionColumn ? pairError : '';
 
   return (
     <div className="flex flex-col gap-4">
@@ -50,14 +78,10 @@ const DraftSchemaEditor: FC<Props> = ({ table, draft }) => {
           <DialSelectField
             id="draft-partition-col"
             containerClassName={STANDARD_CONTROL_WIDTH}
-            label={
-              <span className="flex items-center gap-1">
-                <span>{t(AnalyticsTablesI18nKey.PartitionColumn)}</span>
-                <DialTooltip tooltip={<span>{t(AnalyticsTablesI18nKey.PartitionColumnHint)}</span>}>
-                  <IconInfoCircle size={14} className="text-secondary" />
-                </DialTooltip>
-              </span>
-            }
+            label={labelWithHint(
+              t(AnalyticsTablesI18nKey.PartitionColumn),
+              t(AnalyticsTablesI18nKey.PartitionColumnHint),
+            )}
             options={[
               { value: '', label: t(AnalyticsTablesI18nKey.PartitionNone) },
               ...temporalNames.map((s) => ({ value: s, label: s })),
@@ -75,6 +99,37 @@ const DraftSchemaEditor: FC<Props> = ({ table, draft }) => {
               onChange={(v) => update('granularity', v as PartitionGranularity | '')}
             />
           )}
+          <DialSelectField
+            id="draft-identity-col"
+            containerClassName={STANDARD_CONTROL_WIDTH}
+            label={labelWithHint(
+              t(AnalyticsTablesI18nKey.IdentityColumn),
+              t(AnalyticsTablesI18nKey.IdentityColumnHint),
+            )}
+            required={scanPairRequired}
+            options={[
+              { value: '', label: t(AnalyticsTablesI18nKey.PartitionNone) },
+              ...identityNames.map((s) => ({ value: s, label: s })),
+            ]}
+            value={form.identityColumn}
+            error={identityError}
+            invalid={Boolean(identityError)}
+            onChange={(v) => update('identityColumn', v as string)}
+          />
+          <DialSelectField
+            id="draft-version-col"
+            containerClassName={STANDARD_CONTROL_WIDTH}
+            label={labelWithHint(t(AnalyticsTablesI18nKey.VersionColumn), t(AnalyticsTablesI18nKey.VersionColumnHint))}
+            required={scanPairRequired}
+            options={[
+              { value: '', label: t(AnalyticsTablesI18nKey.PartitionNone) },
+              ...versionNames.map((s) => ({ value: s, label: s })),
+            ]}
+            value={form.versionColumn}
+            error={versionError}
+            invalid={Boolean(versionError)}
+            onChange={(v) => update('versionColumn', v as string)}
+          />
         </>
       ) : (
         <DialSelectField

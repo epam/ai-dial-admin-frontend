@@ -1,13 +1,10 @@
-import { Big } from 'big.js';
-
-import { CONVERSATION_PAGE_SIZE, SUMMARY_COST_PRECISION } from '@/src/constants/analytics/conversations-trace';
 import {
   ConversationRatingRow,
   ConversationRow,
   ConversationSummary,
   RatingCounts,
 } from '@/src/models/analytics/conversations-trace';
-import { toBig, toNumber } from '@/src/utils/analytics/scalar';
+import { toNumber } from '@/src/utils/analytics/scalar';
 
 const UNRESOLVED: RatingCounts = { rating_up: null, rating_down: null };
 
@@ -34,10 +31,11 @@ export const attachRatings = (
 export const unresolvedRatings = (rows: ConversationRow[]): ConversationRow[] =>
   rows.map((row) => ({ ...row, ...UNRESOLVED }));
 
+// Covers only the rows loaded so far. The conversation count and the total cost are whole-result
+// figures and come from their own query instead, so they are deliberately not derived here.
 export const summariseConversations = (rows: ConversationRow[]): ConversationSummary => {
   let rated = 0;
   let negative = 0;
-  let cost = new Big(0);
 
   rows.forEach((row) => {
     const up = row.rating_up ?? 0;
@@ -48,14 +46,7 @@ export const summariseConversations = (rows: ConversationRow[]): ConversationSum
     if (down > 0) {
       negative += 1;
     }
-    cost = cost.plus(toBig(row.cost) ?? 0);
   });
 
-  return {
-    conversations: rows.length,
-    isTruncated: rows.length >= CONVERSATION_PAGE_SIZE,
-    rated,
-    negative,
-    cost: cost.round(SUMMARY_COST_PRECISION).toString(),
-  };
+  return { rated, negative };
 };

@@ -1,15 +1,21 @@
 import { render } from '@testing-library/react';
-import { ColDef, ColGroupDef, GridOptions } from 'ag-grid-community';
+import { ColDef, ColGroupDef, GridOptions, GridReadyEvent, IDatasource } from 'ag-grid-community';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import ConversationsList from '@/src/components/Analytics/ConversationsTrace/List/ConversationsList';
+import { PAGE_SIZE } from '@/src/constants/ag-grid';
 import {
   CONVERSATIONS_GROUP_HEADER_HEIGHT,
   CONVERSATIONS_HEADER_HEIGHT,
   CONVERSATIONS_ROW_HEIGHT,
 } from '@/src/constants/analytics/conversations-trace';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
-import { ColumnProvenance, ConversationField, ConversationRow } from '@/src/models/analytics/conversations-trace';
+import {
+  ColumnProvenance,
+  ConversationColumn,
+  ConversationRow,
+  ConversationsField,
+} from '@/src/models/analytics/conversations-trace';
 
 interface CapturedProps {
   rowData?: ConversationRow[] | null;
@@ -17,6 +23,7 @@ interface CapturedProps {
   additionalGridOptions?: GridOptions;
   emptyDataProps?: { title?: string };
   storageKey?: string;
+  onGridReady?: (event: GridReadyEvent) => void;
   getRowId?: (params: { data: ConversationRow }) => string;
 }
 
@@ -31,194 +38,122 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
   },
 }));
 
-const row = (overrides: Partial<ConversationRow> = {}): ConversationRow => ({
-  chat_id: '9f2c4b17-6d3a-4e58-b0c1-7ae95f83d204',
-  project: 'data-team',
-  turns: 3,
-  tokens: 10240,
-  cost: '0.090342871559',
-  last_activity: '2026-07-28T09:41:12.318Z',
-  first_activity: '2026-07-28T09:35:12.318Z',
-  model: 'gpt-4o',
-  model_count: 1,
-  title: null,
-  snippet: null,
-  rating_up: 0,
-  rating_down: 0,
-  ...overrides,
+const datasource: IDatasource = { getRows: vi.fn() };
+const onGridReady = vi.fn();
+
+const renderList = () => render(<ConversationsList datasource={datasource} onGridReady={onGridReady} />);
+
+beforeEach(() => {
+  captured = {};
+  vi.clearAllMocks();
 });
 
-const ROWS: ConversationRow[] = [
-  row(),
-  row({
-    chat_id: 'c41e8a90-2f76-4bd3-9e05-18c7b6a4f2de',
-    project: 'platform-sre',
-    turns: 4,
-    tokens: 8817,
-    cost: '0.079318604227',
-    last_activity: '2026-07-28T07:16:55.902Z',
-  }),
-];
+describe('ConversationsList :: paging', () => {
+  // Rows arrive block by block from the backend, so the grid is never handed an array to narrow.
+  test('drives the grid from a datasource rather than from row data', () => {
+    renderList();
 
-describe('ConversationsList', () => {
-  beforeEach(() => {
-    captured = {};
+    expect(captured.additionalGridOptions?.datasource).toBe(datasource);
+    expect(captured.rowData).toBeUndefined();
   });
 
-  test('passes the supplied conversations through as row data, order preserved', () => {
-    render(<ConversationsList conversations={ROWS} />);
+  test('uses the shared infinite row model and page size', () => {
+    renderList();
 
-    expect(captured.rowData).toEqual(ROWS);
+    expect(captured.additionalGridOptions?.rowModelType).toBe('infinite');
+    expect(captured.additionalGridOptions?.cacheBlockSize).toBe(PAGE_SIZE);
   });
 
-  test('passes an empty list through rather than null', () => {
-    render(<ConversationsList conversations={[]} />);
+  test('passes the grid-ready handler through so the datasource can be reattached', () => {
+    renderList();
 
-    expect(captured.rowData).toEqual([]);
+    expect(captured.onGridReady).toBe(onGridReady);
   });
 
-  test('supplies the seven read-only columns, in order, across the provenance groups', () => {
-    render(<ConversationsList conversations={ROWS} />);
+  test('identifies rows by conversation id', () => {
+    renderList();
 
-    expect(leafColumns().map((col) => col.field)).toEqual([
-      ConversationField.ChatId,
-      ConversationField.Project,
-      ConversationField.Turns,
-      ConversationField.LastActivity,
-      ConversationField.Tokens,
-      ConversationField.Cost,
-      ConversationField.Rating,
-    ]);
+    expect(captured.getRowId?.({ data: { chat_id: 'abc' } as ConversationRow })).toBe('abc');
   });
 
-  test('every supplied column is unsortable and unfiltered', () => {
-    render(<ConversationsList conversations={ROWS} />);
-
-    leafColumns().forEach((col) => {
-      expect(col.sortable).toBe(false);
-      expect(col.floatingFilter).toBe(false);
-    });
-  });
-
-  test('disables the filter itself, not just the floating filter row', () => {
-    render(<ConversationsList conversations={ROWS} />);
-
-    leafColumns().forEach((col) => {
-      expect(col.filter).toBe(false);
-    });
-  });
-
-  test('supplies the empty-state title for the no-data case', () => {
-    render(<ConversationsList conversations={[]} />);
-
-    expect(captured.emptyDataProps?.title).toBe(ConversationsTraceI18nKey.NoConversations);
-  });
-
-  test('says the load failed rather than "no conversations" when the request never returned rows', () => {
-    render(<ConversationsList conversations={[]} hasLoadError />);
-
-    expect(captured.emptyDataProps?.title).toBe(ConversationsTraceI18nKey.ConversationsLoadFailed);
-  });
-
-  test('owns its row height rather than inheriting the shared default', () => {
-    render(<ConversationsList conversations={ROWS} />);
-
-    expect(captured.additionalGridOptions?.rowHeight).toBe(CONVERSATIONS_ROW_HEIGHT);
-  });
-
-  test('never passes defaultColDef through additionalGridOptions', () => {
-    render(<ConversationsList conversations={ROWS} />);
-
-    expect(captured.additionalGridOptions).not.toHaveProperty('defaultColDef');
-  });
-
-  test('sets no storage key, so column auto-sizing stays enabled', () => {
-    render(<ConversationsList conversations={ROWS} />);
+  // Column groups plus persisted state is the one combination that is genuinely unsafe.
+  test('persists no column state', () => {
+    renderList();
 
     expect(captured.storageKey).toBeUndefined();
   });
 
-  test('identifies rows by conversation id', () => {
-    render(<ConversationsList conversations={ROWS} />);
+  // The view renders the app's no-data content; AG Grid's untranslated overlay would cover it.
+  test('leaves the empty state to the view rather than the grid', () => {
+    renderList();
 
-    expect(captured.getRowId?.({ data: ROWS[0] })).toBe(ROWS[0].chat_id);
+    expect(captured.additionalGridOptions?.suppressNoRowsOverlay).toBe(true);
   });
 
-  test('gives the provenance band and the header row their own heights', () => {
-    render(<ConversationsList conversations={ROWS} />);
+  test('owns its row and header heights without replacing the shared column defaults', () => {
+    renderList();
 
-    expect(captured.additionalGridOptions?.groupHeaderHeight).toBe(CONVERSATIONS_GROUP_HEADER_HEIGHT);
-    expect(captured.additionalGridOptions?.headerHeight).toBe(CONVERSATIONS_HEADER_HEIGHT);
+    expect(captured.additionalGridOptions).toMatchObject({
+      rowHeight: CONVERSATIONS_ROW_HEIGHT,
+      headerHeight: CONVERSATIONS_HEADER_HEIGHT,
+      groupHeaderHeight: CONVERSATIONS_GROUP_HEADER_HEIGHT,
+    });
+    expect(captured.additionalGridOptions?.defaultColDef).toBeUndefined();
   });
 });
 
-describe('ConversationsList :: provenance band', () => {
-  beforeEach(() => {
-    captured = {};
-    render(<ConversationsList conversations={ROWS} />);
-  });
+describe('ConversationsList :: columns', () => {
+  test('renders the seven columns in order', () => {
+    renderList();
 
-  test('groups the columns by where their data comes from', () => {
-    expect(captured.columnDefs?.map((group) => group.groupId)).toEqual([
-      ColumnProvenance.Enrichment,
-      ColumnProvenance.UsageLog,
-      ColumnProvenance.Feedback,
+    expect(leafColumns().map((column) => column.field)).toEqual([
+      ConversationsField.ChatId,
+      ConversationsField.ProjectId,
+      ConversationsField.TurnCount,
+      ConversationsField.LastRequestTime,
+      ConversationsField.TotalTokens,
+      ConversationsField.TotalPrice,
+      ConversationColumn.Rating,
     ]);
   });
 
-  test('labels each group and explains it in a tooltip', () => {
-    expect(captured.columnDefs?.map((group) => group.headerName)).toEqual([
-      ConversationsTraceI18nKey.ProvenanceConversation,
-      ConversationsTraceI18nKey.ProvenanceUsageLog,
-      ConversationsTraceI18nKey.ProvenanceFeedback,
-    ]);
-    expect(captured.columnDefs?.map((group) => group.headerTooltip)).toEqual([
-      ConversationsTraceI18nKey.ProvenanceConversationHint,
-      ConversationsTraceI18nKey.ProvenanceUsageLogHint,
-      ConversationsTraceI18nKey.ProvenanceFeedbackHint,
-    ]);
+  test('groups every column under exactly one provenance', () => {
+    renderList();
+
+    const groups = captured.columnDefs ?? [];
+
+    expect(groups.map((group) => group.groupId)).toEqual([ColumnProvenance.Conversations, ColumnProvenance.Feedback]);
+    expect(groups.every((group) => group.marryChildren)).toBe(true);
+    expect(leafColumns()).toHaveLength(7);
   });
 
-  test('marks only the enrichment-backed group as derived', () => {
-    const derived = captured.columnDefs?.map((group) => group.headerGroupComponentParams?.isDerived);
+  test('attributes the rating column to the feedback entity and the rest to conversations', () => {
+    renderList();
 
-    expect(derived).toEqual([true, undefined, undefined]);
+    const [conversations, feedback] = captured.columnDefs ?? [];
+
+    expect((conversations.children as ColDef[]).map((column) => column.field)).not.toContain(ConversationColumn.Rating);
+    expect((feedback.children as ColDef[]).map((column) => column.field)).toEqual([ConversationColumn.Rating]);
   });
 
-  test('every group carries the provenance header component', () => {
-    captured.columnDefs?.forEach((group) => {
-      expect(typeof group.headerGroupComponent).toBe('function');
-      expect(group.headerGroupComponentParams?.provenance).toBe(group.groupId);
+  test('labels the groups and their tooltips from i18n', () => {
+    renderList();
+
+    expect(captured.columnDefs?.[0]).toMatchObject({
+      headerName: ConversationsTraceI18nKey.ProvenanceConversations,
+      headerTooltip: ConversationsTraceI18nKey.ProvenanceConversationsHint,
     });
   });
 
-  test('puts the conversation column alone under the enrichment group', () => {
-    expect((captured.columnDefs?.[0].children as ColDef[]).map((col) => col.field)).toEqual([ConversationField.ChatId]);
-  });
+  // The page's filters are query predicates over the whole result; a column filter would narrow only the
+  // blocks already fetched and report that as the complete answer.
+  test('is read-only — no column sorts and none offers a filter', () => {
+    renderList();
 
-  test('assigns the aggregate columns to the usage-log group', () => {
-    expect((captured.columnDefs?.[1].children as ColDef[]).map((col) => col.field)).toEqual([
-      ConversationField.Project,
-      ConversationField.Turns,
-      ConversationField.LastActivity,
-      ConversationField.Tokens,
-      ConversationField.Cost,
-    ]);
-  });
-
-  test('attributes the rating column to rate_analytics, not to the usage log', () => {
-    expect((captured.columnDefs?.[2].children as ColDef[]).map((col) => col.field)).toEqual([ConversationField.Rating]);
-  });
-
-  test('leaves no column unattributed', () => {
-    const grouped = (captured.columnDefs ?? []).flatMap((group) => group.children as ColDef[]);
-
-    expect(grouped).toHaveLength(7);
-  });
-
-  test('keeps groups intact when columns move', () => {
-    captured.columnDefs?.forEach((group) => {
-      expect(group.marryChildren).toBe(true);
+    leafColumns().forEach((column) => {
+      expect(column.sortable).toBe(false);
+      expect(column.filter).toBe(false);
+      expect(column.floatingFilter).toBe(false);
     });
   });
 });

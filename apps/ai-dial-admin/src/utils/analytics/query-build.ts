@@ -67,20 +67,25 @@ export const or = (args: QueryFilterNode[]): QueryGroup => ({ op: QueryLogicalOp
 
 export const sortItem = (fieldName: string, dir: QuerySortDirection): QuerySortItem => ({ field: fieldName, dir });
 
-export const offsetPage = (offset: number, limit: number): QueryOffsetPage => ({
+// `include_total` is the caller's to choose: the service populates `totalCount` for row-mode queries
+// and never for aggregate mode, so requesting one is a property of the query being built.
+export const offsetPage = (offset: number, limit: number, includeTotal = false): QueryOffsetPage => ({
   type: QueryPageType.Offset,
   offset,
   limit,
-  include_total: false,
+  include_total: includeTotal,
 });
 
-interface AggregateQueryParams {
+interface QueryParams {
   entity: string;
-  groupBy: string[];
   select: QueryOutputColumn[];
   filter?: QueryFilterNode;
   sort?: QuerySortItem[];
   page?: QueryOffsetPage;
+}
+
+interface AggregateQueryParams extends QueryParams {
+  groupBy?: string[];
 }
 
 export const aggregateQuery = ({
@@ -95,7 +100,16 @@ export const aggregateQuery = ({
   mode: QueryMode.Aggregate,
   ...(filter ? { filter } : {}),
   select,
-  group_by: groupBy,
+  ...(groupBy?.length ? { group_by: groupBy } : {}),
+  ...(sort?.length ? { sort } : {}),
+  ...(page ? { page } : {}),
+});
+
+export const rowQuery = ({ entity, select, filter, sort, page }: QueryParams): StructuredQuery => ({
+  entity,
+  mode: QueryMode.Row,
+  ...(filter ? { filter } : {}),
+  select,
   ...(sort?.length ? { sort } : {}),
   ...(page ? { page } : {}),
 });

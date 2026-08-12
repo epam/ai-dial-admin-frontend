@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "ai-dial-ui-kit": {
+      "command": "node",
+      "args": ["./node_modules/@epam/ai-dial-ui-kit/dist/mcp-server.cjs"]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@0.0.79", "--browser", "chrome"]
+    }
+  }
+}
