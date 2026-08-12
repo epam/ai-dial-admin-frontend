@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getTable } from '@/src/app/[lang]/tables/actions';
 import TableDetailView from '@/src/components/Analytics/Tables/TableDetailView';
-import { AnalyticsTablesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { ActionMenuOperationI18nKey, AnalyticsTablesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { AnalyticsTable, AnalyticsTableType, PartitionGranularity, TableStatus } from '@/src/models/analytics/table';
 
@@ -52,19 +52,47 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
     columnDefs,
     additionalGridOptions,
   }: {
-    rowData?: unknown[];
-    columnDefs?: { headerName?: string }[];
+    rowData?: { name: string }[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    columnDefs?: { headerName?: string; cellRendererParams?: { items?: any[] } }[];
     additionalGridOptions?: { pinnedTopRowData?: { name: string; type: string; tag?: string }[] };
-  }) => (
-    <div>
-      <div>headers: {columnDefs?.map((c) => c.headerName).join('|')}</div>
-      <div>columns: {rowData?.length ?? 0}</div>
-      <div>pinned: {additionalGridOptions?.pinnedTopRowData?.map((r) => r.name).join('|') ?? 'none'}</div>
+  }) => {
+    const items = columnDefs?.find((c) => c.cellRendererParams?.items)?.cellRendererParams?.items ?? [];
+    return (
       <div>
-        pinned type/tag:{' '}
-        {additionalGridOptions?.pinnedTopRowData?.map((r) => `${r.type || '(none)'}/${r.tag || '(none)'}`).join('|') ??
-          'none'}
+        <div>headers: {columnDefs?.map((c) => c.headerName).join('|')}</div>
+        <div>columns: {rowData?.length ?? 0}</div>
+        <div>pinned: {additionalGridOptions?.pinnedTopRowData?.map((r) => r.name).join('|') ?? 'none'}</div>
+        <div>
+          pinned type/tag:{' '}
+          {additionalGridOptions?.pinnedTopRowData
+            ?.map((r) => `${r.type || '(none)'}/${r.tag || '(none)'}`)
+            .join('|') ?? 'none'}
+        </div>
+        {rowData?.map((row) => (
+          <div key={row.name} aria-label={`row-${row.name}`}>
+            {items
+              .filter((item) => !item.hidden?.({}, { data: row }))
+              .map((item) => (
+                <button key={item.id} onClick={() => item.onClick?.(row)}>
+                  {`${row.name}:${item.label}`}
+                </button>
+              ))}
+          </div>
+        ))}
       </div>
+    );
+  },
+}));
+
+// The popup's own behavior is covered in EditColumnPopup.spec.tsx; here we only assert which column it
+// opens for and the guard props it receives.
+vi.mock('@/src/components/Analytics/Tables/EditColumnPopup', () => ({
+  default: ({ column, renameDisabled, sensitiveDisabled }: any) => (
+    <div>
+      {`edit-popup: ${column.name} rename-disabled: ${Boolean(renameDisabled)} sensitive-disabled: ${Boolean(
+        sensitiveDisabled,
+      )}`}
     </div>
   ),
 }));
@@ -230,6 +258,62 @@ describe('TableDetailView schema metadata', () => {
     expect(screen.getByText(AnalyticsTablesI18nKey.OrderingKey)).toBeInTheDocument();
     expect(screen.queryByText(AnalyticsTablesI18nKey.PartitionColumn)).not.toBeInTheDocument();
     expect(screen.queryByText(AnalyticsTablesI18nKey.Granularity)).not.toBeInTheDocument();
+  });
+
+  test('an active source table shows its declared scan-metadata pair', () => {
+    render(
+      <TableDetailView
+        name="dial_usage_log"
+        initialTable={table({
+          // Distinct from both pair values so each assertion below matches exactly one node.
+          ordering_key: ['total'],
+          identity_column: 'event_id',
+          version_column: 'request_time',
+        })}
+      />,
+    );
+
+    expect(screen.getByText(AnalyticsTablesI18nKey.IdentityColumn)).toBeInTheDocument();
+    expect(screen.getByText('event_id')).toBeInTheDocument();
+    expect(screen.getByText(AnalyticsTablesI18nKey.VersionColumn)).toBeInTheDocument();
+    expect(screen.getByText('request_time')).toBeInTheDocument();
+  });
+
+  test('a source declaring no scan metadata shows neither label and no substitute message', () => {
+    render(<TableDetailView name="dial_usage_log" initialTable={table({ ordering_key: ['event_id'] })} />);
+
+    expect(screen.queryByText(AnalyticsTablesI18nKey.IdentityColumn)).not.toBeInTheDocument();
+    expect(screen.queryByText(AnalyticsTablesI18nKey.VersionColumn)).not.toBeInTheDocument();
+  });
+
+  test('a source declaring only one member shows that one and omits the other', () => {
+    render(
+      <TableDetailView
+        name="dial_usage_log"
+        initialTable={table({ ordering_key: ['event_id'], version_column: 'request_time' })}
+      />,
+    );
+
+    expect(screen.getByText(AnalyticsTablesI18nKey.VersionColumn)).toBeInTheDocument();
+    expect(screen.queryByText(AnalyticsTablesI18nKey.IdentityColumn)).not.toBeInTheDocument();
+  });
+
+  test('a system scan-metadata column absent from the columns grid still renders in the summary', () => {
+    render(
+      <TableDetailView
+        name="dial_usage_log"
+        initialTable={table({
+          ordering_key: ['event_id'],
+          identity_column: 'event_id',
+          // A `_`-prefixed system column: legitimately not among `columns`.
+          version_column: '_ingested_at',
+          columns: [{ source_name: 'event_id', name: 'event_id', type: AnalyticsFieldType.Uuid }],
+        })}
+      />,
+    );
+
+    expect(screen.getByText('_ingested_at')).toBeInTheDocument();
+    expect(screen.getByText('columns: 1')).toBeInTheDocument();
   });
 
   test('an active enrichment table shows its grain key', () => {
@@ -417,5 +501,67 @@ describe('TableDetailView lifecycle status', () => {
     render(<TableDetailView name="dial_usage_log" initialTable={table({ status: TableStatus.Pending })} />);
 
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeDisabled();
+  });
+});
+
+describe('TableDetailView scan-metadata column guards', () => {
+  // The ordering key deliberately excludes both pair columns: an ordering-key column is rename-restricted for
+  // its own reason, which would mask whether the pair alone restricts a rename (it must not).
+  const scannable = () =>
+    table({
+      ordering_key: ['total'],
+      identity_column: 'event_id',
+      version_column: 'request_time',
+      columns: [
+        { source_name: 'event_id', name: 'event_id', type: AnalyticsFieldType.Uuid },
+        { source_name: 'request_time', name: 'request_time', type: AnalyticsFieldType.Timestamp },
+        { source_name: 'total', name: 'total', type: AnalyticsFieldType.Decimal },
+      ],
+    });
+
+  test('offers no delete action for either scan-metadata column, but keeps it for the others', () => {
+    render(<TableDetailView name="dial_usage_log" initialTable={scannable()} />);
+
+    expect(
+      screen.queryByRole('button', { name: `event_id:${ActionMenuOperationI18nKey.Delete}` }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: `request_time:${ActionMenuOperationI18nKey.Delete}` }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: `total:${ActionMenuOperationI18nKey.Delete}` })).toBeInTheDocument();
+  });
+
+  test('still offers the edit action for a scan-metadata column, with the sensitive guard set', async () => {
+    const user = userEvent.setup();
+    render(<TableDetailView name="dial_usage_log" initialTable={scannable()} />);
+
+    await user.click(screen.getByRole('button', { name: `event_id:${ActionMenuOperationI18nKey.Edit}` }));
+
+    // Renaming stays allowed — the backend repoints the stored pair — while `sensitive: true` is refused.
+    expect(screen.getByText(/edit-popup: event_id/)).toBeInTheDocument();
+    expect(screen.getByText(/rename-disabled: false/)).toBeInTheDocument();
+    expect(screen.getByText(/sensitive-disabled: true/)).toBeInTheDocument();
+  });
+
+  test('leaves both guards off for a column outside the pair', async () => {
+    const user = userEvent.setup();
+    render(<TableDetailView name="dial_usage_log" initialTable={scannable()} />);
+
+    await user.click(screen.getByRole('button', { name: `total:${ActionMenuOperationI18nKey.Edit}` }));
+
+    expect(screen.getByText(/sensitive-disabled: false/)).toBeInTheDocument();
+  });
+
+  test('a column matching neither member keeps its delete action when the table declares no pair', () => {
+    render(
+      <TableDetailView
+        name="dial_usage_log"
+        initialTable={table({
+          columns: [{ source_name: 'event_id', name: 'event_id', type: AnalyticsFieldType.Uuid }],
+        })}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: `event_id:${ActionMenuOperationI18nKey.Delete}` })).toBeInTheDocument();
   });
 });

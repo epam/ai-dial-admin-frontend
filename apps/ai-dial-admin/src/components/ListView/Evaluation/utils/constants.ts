@@ -28,6 +28,7 @@ export const TEST_SUITE_SELECT_FIELDS = [
   'deployment_ref',
   'mcp_deployment_ref',
   'endpoint_ref',
+  'test_case_filter',
 ] as const;
 
 export const DATE_DSL_FIELDS = new Set(['created_at_ms', 'updated_at_ms']);
