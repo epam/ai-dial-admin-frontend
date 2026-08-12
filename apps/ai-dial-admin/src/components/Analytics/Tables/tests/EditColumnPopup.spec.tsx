@@ -134,4 +134,32 @@ describe('EditColumnPopup', () => {
 
     expect(onSubmit).toHaveBeenCalledWith({ update: [{ name: 'total_money', sensitive: true }] });
   });
+
+  test('sensitiveDisabled disables the switch and explains why', () => {
+    renderPopup({ sensitiveDisabled: true });
+
+    expect(screen.getByRole('checkbox')).toBeDisabled();
+    expect(screen.getByText(AnalyticsTablesI18nKey.ScanColumnNotSensitive)).toBeInTheDocument();
+  });
+
+  test('sensitiveDisabled leaves every other field editable and still submits a patch', async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderPopup({ sensitiveDisabled: true });
+
+    setInput(AnalyticsTablesI18nKey.ColumnName, 'event_identifier');
+    setInput(AnalyticsTablesI18nKey.Description, 'Row identity');
+    await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Save }));
+
+    expect(onSubmit).toHaveBeenCalledWith({
+      rename: [{ from: 'total_money', to: 'event_identifier' }],
+      update: [{ name: 'event_identifier', description: 'Row identity' }],
+    });
+  });
+
+  test('the switch is enabled and unexplained by default', () => {
+    renderPopup();
+
+    expect(screen.getByRole('checkbox')).toBeEnabled();
+    expect(screen.queryByText(AnalyticsTablesI18nKey.ScanColumnNotSensitive)).not.toBeInTheDocument();
+  });
 });
