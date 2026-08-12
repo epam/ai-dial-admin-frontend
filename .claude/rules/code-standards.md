@@ -31,12 +31,29 @@ in this repo regardless of what you're editing. Area-specific guidance lives in 
 - Put types and interfaces in dedicated model files — `src/models/` for domain types, an adjacent
   `models.ts` for component- or feature-local types. **Do not** declare inline anonymous object types
   inside interface properties. **Why:** types stay discoverable and reusable; signatures stay readable.
+- Use `interface` for object shapes and `type` for unions, intersections, and aliases. **Why:** one
+  consistent signal of what a name is, so a reader knows the shape before opening the file.
+- Prefix booleans — variables, props, and fields — with `is` / `has` / `can` / `should` / `will`
+  (`isLoading`, `hasChanges`, `canPublish`). **Why:** a bare noun reads as an object or a value at
+  the call site, so `if (error)` and `if (hasError)` look equally plausible until you check the type.
 
 ## Enums over string-literal unions
 
 - Use TypeScript `enum`s for fixed string-value sets (modes, statuses, view types) — not string-literal
   union types. **Why:** a single runtime-usable source of values, consistent across the codebase.
   (Discriminated unions for object shapes are fine — this rule is about value sets, not type modeling.)
+
+## Control flow & expressions
+
+- **No nested ternaries.** One level is fine; a ternary inside a ternary becomes an early return, a
+  lookup object, or an extracted function. **Why:** nesting hides which condition produced a value,
+  and it is the single most common source of misread branches in review.
+- Use `async`/`await` with `try`/`catch`, not `.then()`/`.catch()` chains. **Why:** one error-handling
+  shape across the codebase; mixed styles make it unclear whether a rejection is handled.
+- `== null` to cover both `null` and `undefined` — not `=== null || === undefined`. Use `===`
+  everywhere else. **Why:** this is the one case where loose equality says exactly what is meant.
+- `void` only for a deliberately un-awaited promise (fire-and-forget). **Why:** it marks the omission
+  as intentional, so a missing `await` stays visible as a bug rather than looking like a choice.
 
 ## File organization
 
@@ -45,46 +62,29 @@ in this repo regardless of what you're editing. Area-specific guidance lives in 
 
 ## Comments
 
-- Default to no comments — code should be self-descriptive through naming and structure. Add one only
-  for an explicit, non-default decision: something a competent engineer, reading only the surrounding
-  code, could still get wrong or accidentally revert. Never add a comment that restates what a type
-  signature, function name, or the code itself already shows.
-- **Two failures to self-check before committing a comment:** (1) the same fact re-explained at every
-  call site instead of once at its source of truth (a type/DTO definition, a single API method) — state
-  it there and let readers follow the type instead of repeating it; (2) narrating a relationship a
-  prop/hook type already names (e.g. a prop typed `ReturnType<typeof someHook>` already says where its
-  data comes from — don't also say so in prose).
-- **Why:** a comment restating obvious or already-documented behavior rots the moment the code around it
-  changes, adds review noise, and gives you a second thing to keep in sync for no offsetting benefit.
+Match the comment density of the code around you. A file that explains its tricky parts wants the
+same from your addition; a dense, self-evident file does not want new prose. There is no global quota
+either way — the question is whether a reader of *this* file would be better off.
 
-  ```ts
-  // BAD — failure #1: restated at every call site instead of once at the source of truth
-  // (in models.ts) A widget has no `price` — pricing moved to the catalog service.
-  export interface Widget { id: string; name: string }
+Two failure modes are worth self-checking, because both look like diligence:
 
-  // (in create-widget.ts, again) Widgets don't carry price — that's the catalog service's job.
-  export function createWidget(name: string): Widget { ... }
+1. **The same fact restated at every call site** instead of once at its source of truth (a type, a DTO,
+   a single API method). State it where the decision is actually made and let readers follow the type.
 
-  // (in WidgetCard.tsx, again) No price shown here since Widget never carries one.
-  const WidgetCard: FC<{ widget: Widget }> = ({ widget }) => ...
+   ```ts
+   // Good — stated once, where the absence is decided
+   // Deliberately has no `price`: pricing is owned by the catalog service and fetched separately.
+   export interface Widget {
+     id: string;
+     name: string;
+   }
+   ```
 
-  // GOOD — state it once, where the absence is actually decided
-  // Deliberately has no `price` — pricing is owned by the catalog service, fetched separately.
-  export interface Widget { id: string; name: string }
-  // Everywhere else: `Widget` is self-descriptive; no comment needed.
-  ```
+   Repeating that note in `createWidget` and again in `WidgetCard` gives you three copies to keep in
+   sync and no new information.
 
-  ```ts
-  // BAD — failure #2: narrates what the prop type already says
-  interface Props {
-    cart: ReturnType<typeof useCartState>;
-  }
-  // The cart state (items, totals, add/remove) lives in useCartState; this component just renders it.
-  const CartSummary: FC<Props> = ({ cart }) => ...
+2. **Narrating what a type already names.** A prop typed `ReturnType<typeof useCartState>` already
+   says where its data comes from; prose repeating that adds a second thing to maintain.
 
-  // GOOD — the type already says where `cart` comes from; nothing to add
-  interface Props {
-    cart: ReturnType<typeof useCartState>;
-  }
-  const CartSummary: FC<Props> = ({ cart }) => ...
-  ```
+Both rot as soon as the surrounding code moves, which is what makes them worse than no comment rather
+than merely redundant.

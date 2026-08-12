@@ -238,7 +238,7 @@ https://github.com/<org>/<repo>/compare/development...feat/<short-slug>
 
 ## Step 7 — Summary
 
-Always finish with a concise confirmation:
+Finish with a concise confirmation:
 
 ```
 Branch:  feat/<short-slug>
