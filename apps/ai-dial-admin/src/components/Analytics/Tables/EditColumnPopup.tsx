@@ -19,13 +19,20 @@ import { getAnalyticsIdentifierError, getAnalyticsLengthError } from '@/src/util
 interface Props {
   column: AnalyticsTableColumn;
   renameDisabled?: boolean;
-  // Exposed names of the table's other columns; a rename must not collide with them.
+  sensitiveDisabled?: boolean;
   existingNames?: string[];
   onClose: () => void;
   onSubmit: (patch: AnalyticsSchemaPatch) => void;
 }
 
-const EditColumnPopup: FC<Props> = ({ column, renameDisabled, existingNames = [], onClose, onSubmit }) => {
+const EditColumnPopup: FC<Props> = ({
+  column,
+  renameDisabled,
+  sensitiveDisabled,
+  existingNames = [],
+  onClose,
+  onSubmit,
+}) => {
   const t = useI18n();
 
   const [values, setValues] = useState<ColumnEditValues>({
@@ -101,6 +108,8 @@ const EditColumnPopup: FC<Props> = ({ column, renameDisabled, existingNames = []
           switchId="column-edit-sensitive"
           label={t(AnalyticsTablesI18nKey.Sensitive)}
           isOn={values.sensitive}
+          disabled={sensitiveDisabled}
+          caption={sensitiveDisabled ? t(AnalyticsTablesI18nKey.ScanColumnNotSensitive) : undefined}
           onChange={setSensitive}
         />
       </div>

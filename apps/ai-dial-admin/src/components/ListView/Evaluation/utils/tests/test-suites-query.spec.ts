@@ -152,6 +152,7 @@ describe('test-suites-query', () => {
         deployment_ref: { id: 'dep', name: 'App', version: '1' },
         mcp_deployment_ref: null,
         endpoint_ref: { method: 'POST', relativeUrlPattern: '/v1' },
+        test_case_filter: { op: 'eq', args: [] },
       }),
     ).toEqual({
       id: 'id-1',
@@ -165,14 +166,17 @@ describe('test-suites-query', () => {
       deploymentRef: { id: 'dep', name: 'App', version: '1' },
       mcpDeploymentRef: undefined,
       endpointRef: { method: 'POST', relativeUrlPattern: '/v1' },
+      testCaseFilter: { op: 'eq', args: [] },
     });
   });
 
   test('mapTestSuiteRow parses JSON string refs', () => {
     const suite = mapTestSuiteRow({
       deployment_ref: JSON.stringify({ id: 'd', name: 'N' }),
+      test_case_filter: JSON.stringify({ op: 'co', args: [] }),
     });
     expect(suite.deploymentRef).toEqual({ id: 'd', name: 'N' });
+    expect(suite.testCaseFilter).toEqual({ op: 'co', args: [] });
   });
 
   test('mapTestSuitesQueryResult returns null for null result', () => {
@@ -207,6 +211,7 @@ describe('test-suites-query', () => {
           deploymentRef: undefined,
           mcpDeploymentRef: undefined,
           endpointRef: undefined,
+          testCaseFilter: null,
         },
       ],
     });
