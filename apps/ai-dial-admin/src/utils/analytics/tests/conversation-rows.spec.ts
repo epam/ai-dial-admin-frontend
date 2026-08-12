@@ -1,6 +1,5 @@
 import { describe, expect, test } from 'vitest';
 
-import { CONVERSATION_PAGE_SIZE } from '@/src/constants/analytics/conversations-trace';
 import { ConversationRatingRow, ConversationRow } from '@/src/models/analytics/conversations-trace';
 import { attachRatings, summariseConversations, unresolvedRatings } from '@/src/utils/analytics/conversation-rows';
 
@@ -11,16 +10,12 @@ const ratingRow = (chat_id: string, rating_count: number | string | null): Conve
 
 const row = (overrides: Partial<ConversationRow> = {}): ConversationRow => ({
   chat_id: 'chat-1',
-  project: 'data-team',
-  turns: 3,
-  tokens: 10,
-  cost: '0.100000000000',
-  last_activity: 1,
-  first_activity: 0,
-  model: 'gpt-4o',
-  model_count: 1,
-  title: null,
-  snippet: null,
+  project_id: 'data-team',
+  turn_count: 3,
+  total_tokens: 10,
+  total_price: '0.100000000000',
+  last_request_time: 1,
+  first_request_time: 0,
   rating_up: 0,
   rating_down: 0,
   ...overrides,
@@ -69,7 +64,7 @@ describe('attachRatings', () => {
     const attached = attachRatings(rows(2), [ratingRow('chat-9', 5)], []);
 
     expect(attached.map(({ chat_id }) => chat_id)).toEqual(['chat-0', 'chat-1']);
-    expect(attached[0]).toMatchObject({ project: 'data-team', rating_up: 0, rating_down: 0 });
+    expect(attached[0]).toMatchObject({ project_id: 'data-team', rating_up: 0, rating_down: 0 });
   });
 
   test('does not mutate the rows it was given', () => {
@@ -89,9 +84,11 @@ describe('unresolvedRatings', () => {
   });
 });
 
-describe('summariseConversations :: counts', () => {
+// The conversation count and the total cost are whole-result figures resolved by their own query, so
+// this helper deliberately reports neither — only what the loaded rows can prove.
+describe('summariseConversations', () => {
   test('reports zero for an empty result', () => {
-    expect(summariseConversations([])).toMatchObject({ conversations: 0, rated: 0, negative: 0, cost: '0' });
+    expect(summariseConversations([])).toEqual({ rated: 0, negative: 0 });
   });
 
   test('counts a conversation rated in either direction once, and negatives separately', () => {
@@ -102,55 +99,22 @@ describe('summariseConversations :: counts', () => {
       row({ chat_id: 'd', rating_up: 0, rating_down: 0 }),
     ]);
 
-    expect(summary).toMatchObject({ conversations: 4, rated: 3, negative: 2 });
+    expect(summary).toEqual({ rated: 3, negative: 2 });
   });
 
   // An unresolved rating is not evidence of an absent one, so it must not be counted as rated.
   test('does not count an unresolved rating as rated', () => {
-    expect(summariseConversations([row({ rating_up: null, rating_down: null })])).toMatchObject({
+    expect(summariseConversations([row({ rating_up: null, rating_down: null })])).toEqual({
       rated: 0,
       negative: 0,
     });
   });
-});
 
-describe('summariseConversations :: cost', () => {
-  // Summing 12-decimal strings as JS numbers would drift; the sum runs through Big.
-  test('sums full-scale decimals without floating-point drift', () => {
-    const summary = summariseConversations([
-      row({ cost: '0.070000000001' }),
-      row({ chat_id: 'b', cost: '0.070000000002' }),
-    ]);
+  test('reports no conversation count and no cost', () => {
+    const summary = summariseConversations([row()]) as Record<string, unknown>;
 
-    expect(summary.cost).toBe('0.14');
-  });
-
-  test.each([
-    ['rounds for display rather than showing every fractional digit', '0.090342871559', '0.09'],
-    ['keeps a value that needs the display precision', '0.533456', '0.533'],
-  ])('%s', (_label, cost, expected) => {
-    expect(summariseConversations([row({ cost })]).cost).toBe(expected);
-  });
-
-  test.each([
-    ['a null cost', null],
-    ['an empty cost', ''],
-    ['an unparseable cost', 'n/a'],
-  ])('treats %s as zero rather than failing the whole summary', (_label, cost) => {
-    expect(summariseConversations([row({ cost }), row({ chat_id: 'b', cost: '1' })]).cost).toBe('1');
-  });
-
-  test('reads a numeric cost as well as a string one', () => {
-    expect(summariseConversations([row({ cost: 0.25 }), row({ chat_id: 'b', cost: '0.25' })]).cost).toBe('0.5');
-  });
-});
-
-describe('summariseConversations :: truncation', () => {
-  // A full page means the query hit its limit, so the totals are a lower bound rather than the real ones.
-  test.each([
-    [CONVERSATION_PAGE_SIZE - 1, false],
-    [CONVERSATION_PAGE_SIZE, true],
-  ])('reports %i rows as truncated=%s', (count, expected) => {
-    expect(summariseConversations(rows(count)).isTruncated).toBe(expected);
+    expect(summary.conversations).toBeUndefined();
+    expect(summary.cost).toBeUndefined();
+    expect(summary.isTruncated).toBeUndefined();
   });
 });

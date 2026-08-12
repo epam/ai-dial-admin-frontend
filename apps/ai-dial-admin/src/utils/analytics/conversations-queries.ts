@@ -1,28 +1,19 @@
 import { timeRangePredicates } from '@/src/components/Analytics/QueryBuilder/utils/time';
 import {
-  CONVERSATION_PAGE_SIZE,
   CONVERSATIONS_ENTITY,
   FEEDBACK_CANDIDATE_LIMIT,
   FEEDBACK_ENTITY,
   POSITIVE_RATE_EXCLUSIVE_MIN,
-  SUMMARY_ENRICHMENT_FIELDS,
-  USE_CONVERSATION_SUMMARY_ENRICHMENT,
 } from '@/src/constants/analytics/conversations-trace';
 import {
-  ConversationField,
+  ConversationTotalsField,
+  ConversationsField,
   FeedbackField,
   FeedbackFilter,
   RateAnalyticsField,
   RatingDirection,
-  UsageLogField,
 } from '@/src/models/analytics/conversations-trace';
-import {
-  QueryFilterNode,
-  QueryOutputColumn,
-  QuerySortDirection,
-  QueryValueType,
-  StructuredQuery,
-} from '@/src/models/analytics/query';
+import { QueryFilterNode, QuerySortDirection, QueryValueType, StructuredQuery } from '@/src/models/analytics/query';
 import { TimeRange } from '@/src/models/time-range';
 import {
   aggregateQuery,
@@ -38,6 +29,7 @@ import {
   ne,
   offsetPage,
   or,
+  rowQuery,
   sortItem,
   value,
 } from '@/src/utils/analytics/query-build';
@@ -50,63 +42,62 @@ const searchPredicates = (search: string): QueryFilterNode[] => {
     return [];
   }
 
-  const targets: string[] = [UsageLogField.ChatId, UsageLogField.ProjectId];
-  if (USE_CONVERSATION_SUMMARY_ENRICHMENT) {
-    targets.push(SUMMARY_ENRICHMENT_FIELDS.title, SUMMARY_ENRICHMENT_FIELDS.snippet);
-  }
-
-  return [or(targets.map((fieldName) => ico(fieldName, term)))];
+  return [or([ConversationsField.ChatId, ConversationsField.ProjectId].map((fieldName) => ico(fieldName, term)))];
 };
 
-// Both the select entries and the search targets hang off one flag, so a title can never be
-// displayed without being searchable.
-const enrichmentColumns = (): QueryOutputColumn[] =>
-  USE_CONVERSATION_SUMMARY_ENRICHMENT
-    ? [
-        col(field(SUMMARY_ENRICHMENT_FIELDS.title), ConversationField.Title),
-        col(field(SUMMARY_ENRICHMENT_FIELDS.snippet), ConversationField.Snippet),
-      ]
-    : [];
-
-interface ConversationListQueryParams {
+interface ConversationFilterParams {
   range: TimeRange;
   search?: string;
   chatIds?: string[];
 }
 
+// The list and the totals share one filter, so a pill can never disagree with the rows beneath it.
+const conversationFilter = ({ range, search = '', chatIds = [] }: ConversationFilterParams): QueryFilterNode =>
+  and([
+    ...timeRangePredicates(ConversationsField.LastRequestTime, range),
+    ...searchPredicates(search),
+    ...(chatIds.length ? [inValues(ConversationsField.ChatId, QueryValueType.String, chatIds)] : []),
+  ]);
+
+interface ConversationListQueryParams extends ConversationFilterParams {
+  offset: number;
+  limit: number;
+}
+
 export const buildConversationListQuery = ({
-  range,
-  search = '',
-  chatIds = [],
+  offset,
+  limit,
+  ...filters
 }: ConversationListQueryParams): StructuredQuery =>
+  rowQuery({
+    entity: CONVERSATIONS_ENTITY,
+    select: [
+      col(field(ConversationsField.ChatId)),
+      col(field(ConversationsField.ProjectId)),
+      col(field(ConversationsField.TurnCount)),
+      col(field(ConversationsField.TotalTokens)),
+      col(field(ConversationsField.TotalPrice)),
+      col(field(ConversationsField.LastRequestTime)),
+      col(field(ConversationsField.FirstRequestTime)),
+    ],
+    filter: conversationFilter(filters),
+    sort: [
+      sortItem(ConversationsField.LastRequestTime, QuerySortDirection.Desc),
+      // The service appends no implicit tiebreaker, so without this a paged result is not stable
+      // between requests and a row can be skipped or repeated across pages.
+      sortItem(ConversationsField.ChatId, QuerySortDirection.Asc),
+    ],
+    page: offsetPage(offset, limit, true),
+  });
+
+export const buildConversationTotalsQuery = (filters: ConversationFilterParams): StructuredQuery =>
   aggregateQuery({
     entity: CONVERSATIONS_ENTITY,
-    groupBy: [UsageLogField.ChatId],
     select: [
-      col(field(UsageLogField.ChatId)),
-      col(fn('count', [field(UsageLogField.TraceId)], true), ConversationField.Turns),
-      col(fn('sum', [field(UsageLogField.TotalTokens)]), ConversationField.Tokens),
-      col(fn('sum', [field(UsageLogField.TotalPrice)]), ConversationField.Cost),
-      col(fn('max', [field(UsageLogField.RequestTime)]), ConversationField.LastActivity),
-      col(fn('min', [field(UsageLogField.RequestTime)]), ConversationField.FirstActivity),
-      col(fn('min', [field(UsageLogField.Deployment)]), ConversationField.Model),
-      col(fn('count', [field(UsageLogField.Deployment)], true), ConversationField.ModelCount),
-      col(fn('min', [field(UsageLogField.ProjectId)]), ConversationField.Project),
-      ...enrichmentColumns(),
+      col(fn('count'), ConversationTotalsField.Conversations),
+      col(fn('sum', [field(ConversationsField.TotalPrice)]), ConversationTotalsField.Cost),
     ],
-    filter: and([
-      ...timeRangePredicates(UsageLogField.RequestTime, range),
-      // The column is non-nullable and defaults to '', so `eq null` would match nothing.
-      ne(UsageLogField.ChatId, emptyString),
-      ...searchPredicates(search),
-      ...(chatIds.length ? [inValues(UsageLogField.ChatId, QueryValueType.String, chatIds)] : []),
-    ]),
-    sort: [
-      sortItem(ConversationField.LastActivity, QuerySortDirection.Desc),
-      // Without the tiebreaker the fixed page is not stable between requests.
-      sortItem(UsageLogField.ChatId, QuerySortDirection.Asc),
-    ],
-    page: offsetPage(0, CONVERSATION_PAGE_SIZE),
+    filter: conversationFilter(filters),
   });
 
 const ratePredicates = (feedback: FeedbackFilter): QueryFilterNode[] => {

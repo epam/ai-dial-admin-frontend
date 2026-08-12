@@ -8,16 +8,12 @@ import { ConversationRow } from '@/src/models/analytics/conversations-trace';
 
 const row = (rating_up: number | null, rating_down: number | null): ConversationRow => ({
   chat_id: 'chat-1',
-  first_activity: 0,
-  model: 'gpt-4o',
-  model_count: 1,
-  project: 'data-team',
-  turns: 3,
-  tokens: 10,
-  cost: '0.1',
-  last_activity: 1,
-  title: null,
-  snippet: null,
+  first_request_time: 0,
+  project_id: 'data-team',
+  turn_count: 3,
+  total_tokens: 10,
+  total_price: '0.1',
+  last_request_time: 1,
   rating_up,
   rating_down,
 });
