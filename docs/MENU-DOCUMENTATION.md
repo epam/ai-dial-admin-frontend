@@ -110,8 +110,11 @@ This documentation describes the structure and contents of the menu items array 
 
 ### 7. **Evaluation** [Preview]
 
-- **Description**: A section for managing test suites and evaluation runs.
+- **Description**: A section for managing datasets, test suites, and evaluation runs.
 - **Items**:
+  - **Datasets**
+    - **Key**: `Datasets`
+    - **Description**: Navigate to the datasets page to create and manage datasets used by test suites.
   - **Test Suites**
     - **Key**: `TestSuites`
     - **Description**: Navigate to the test suites page to create and manage test suites for evaluation.
