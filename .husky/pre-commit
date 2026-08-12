@@ -1,1 +1,30 @@
 npx lint-staged
+
+# Hard gate: never let broken agent configuration or an unknown project
+# breakpoint land. Relevant staged files trigger a full semantic validation.
+# Bypass in emergencies with `git commit --no-verify`.
+
+if ! command -v node >/dev/null 2>&1; then
+  nvm_dir=${NVM_DIR:-"$HOME/.nvm"}
+
+  if [ -s "$nvm_dir/nvm.sh" ]; then
+    # Git clients launched from macOS GUI apps do not inherit the interactive shell's NVM PATH.
+    # shellcheck disable=SC1090
+    . "$nvm_dir/nvm.sh"
+  fi
+fi
+
+if ! command -v node >/dev/null 2>&1; then
+  echo "pre-commit: Node.js is required to validate staged agent configuration files." >&2
+  exit 1
+fi
+
+# `|| true` is load-bearing: husky runs this hook with `sh -e`, so a grep that
+# matches nothing exits 1 and would abort the commit. Without it, every commit
+# that does NOT touch agent config — i.e. most of them — fails here.
+agent_files=$(git diff --cached --name-only --diff-filter=ACM | grep -E \
+  '^(\.claude/commands/.*\.md|\.claude/rules/.*\.md|\.claude/skills/.*|\.claude/settings\.json|\.cursor/(commands|rules|skills)/.*|\.github/(instructions|prompts|skills)/.*|\.mcp\.json|AGENTS\.md|CLAUDE\.md|openspec/config\.yaml|apps/.*\.(css|js|jsx|scss|ts|tsx))$' || true)
+
+if [ -n "$agent_files" ]; then
+  node scripts/validate-agent-docs.mjs
+fi

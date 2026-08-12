@@ -67,6 +67,20 @@ over-engineer for a single use.
 - **Readable over clever.** Prefer a clear multi-line solution to a dense, hard-to-read one-liner.
 - **Don't repeat yourself.** Reuse existing components/utils before writing new ones; extract a shared
   piece when the same markup/logic recurs (rule of three).
+- **Wrapper components: spread order encodes intent.** When a component wraps another and passes the
+  rest of its props through, put your **defaults before** the spread (so a caller can override them)
+  and anything you **derive or must control after** it (so a caller cannot break the wrapper):
+
+  ```tsx
+  <DialInput
+    placeholder={t(BasicI18nKey.Search)} // default — caller may override
+    {...inputProps}
+    value={value} // controlled by this wrapper — caller must not override
+    onChange={onChangeInternal}
+  />
+  ```
+
+  Getting this backwards is silent: the prop still appears in the JSX, it just never takes effect.
 
 ## §4 Where code goes (Common vs feature)
 
@@ -86,14 +100,21 @@ over-engineer for a single use.
 Prefer existing building blocks over custom HTML/components:
 
 - Reuse from `@epam/ai-dial-ui-kit` and `src/components/Common/` before creating anything new.
-- **Forms & interactive:** `DialSearch` (search), `DialCheckbox` (checkboxes), `DialTabs` (tabs),
-  `DialIconButton`/`DialGhostIconButton` (icon buttons), `DialPopup` (modal overlays).
+  Controls, inputs, tabs, icon buttons, and modal overlays all exist there — ask the ui-kit MCP server
+  what the current component and prop names are rather than working from a list, which goes stale on
+  every version bump.
 - **Buttons:** use ui-kit button components; don't hand-roll buttons unless truly necessary.
 - **Typography:** use ui-kit Typography font classes; avoid custom font styling.
 - **Tabular data:** use ag-grid (`GridView` → `AgGridWrapper`) — never build tables with CSS grid/flex.
 - **Common behaviors:** reuse existing deps — `re-resizable` (resizable panels), `react-dnd`
   (drag & drop). Don't reimplement these.
 - Follow existing patterns in `src/components/` when structuring a new feature.
+
+**Discovering what ui-kit offers:** query the `ai-dial-ui-kit` MCP server (declared in `.mcp.json`)
+— `searchEntity` to find a component, `getEntityDetails` for its real props, `getMigrationGuides`
+when a ui-kit upgrade breaks something. Don't grep `node_modules/@epam/ai-dial-ui-kit` to find
+components: the MCP server answers from the package's own metadata, so it stays correct across
+version bumps where a grep result goes stale silently.
 
 ## §6 Styling
 
@@ -109,7 +130,14 @@ Prefer existing building blocks over custom HTML/components:
 - Name the props interface `Props` — not `ComponentNameProps`.
 - Keep JSX clean: extract handlers, computed values, and complex prop expressions into named variables in
   the component body.
-- Name handlers with an `on` prefix (`onClick`, `onSubmit`, `onOpenFullScreen`).
+- Name handlers with an `on` prefix — **both** the prop and the local function that implements it
+  (`onClick`, `onSubmit`, `onOpenFullScreen`). This repo does **not** use the `handleX`-for-local /
+  `onX`-for-prop split some React codebases adopt; `on` is used throughout (~1300 call sites), so a
+  `handleX` name here reads as an import from another project. When a component both accepts a
+  callback prop and wraps it, name the wrapper for what it adds — `onSubmitWithValidation`,
+  `onCloseAndReset` — rather than shadowing the prop name.
+- Name a handler for the **intent**, not the event: `onCreateEntity`, not `onButtonClick`. The
+  intent survives a redesign that moves the action to a menu item.
 - Default-export the component (one component per file); use named exports for everything else in the
   file (helpers, types, constants).
 
@@ -119,12 +147,11 @@ Prefer existing building blocks over custom HTML/components:
 - Memoize expensive computations and callbacks (`useMemo`/`useCallback`) where render cost or referential
   stability matters — don't memoize indiscriminately.
 
-## §9 Accessibility & long content
+## §9 Accessibility
 
-- Aim for **WCAG AA**: at minimum, give interactive elements proper roles/labels and aria attributes,
-  and ensure keyboard operability.
-- Never truncate with `break-all` (or similar) without a way to reach the full value.
-- Use `DialEllipsisTooltip` from ui-kit when truncating long text so the full content stays accessible.
+Covered in full by `.claude/rules/a11y.md`, which is always loaded — ARIA state, focus management,
+live regions, contrast against this repo's tokens, keyboard parity, AG Grid specifics, and the
+truncation rules (`break-all`, `DialEllipsisTooltip`). Not repeated here.
 
 ## §10 i18n
 

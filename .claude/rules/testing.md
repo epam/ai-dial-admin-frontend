@@ -40,19 +40,19 @@ Applies only when creating or editing:
 - `apps/ai-dial-admin/test-setup.tsx`
 
 This rule auto-attaches when you open a matching file — you don't need to read it again or re-open it
-mid-task. For non-test work it stays out of context; follow `CLAUDE.md` / `openspec/config.yaml` there.
+mid-task. For non-test work it stays out of context; follow `AGENTS.md` / `openspec/config.yaml` there.
 
 ## §2 Cost & usage discipline
 
 Keep context small and runs cheap:
 
-- Read only the spec under change **plus the single source file it tests**. Don't open sibling specs
-  or the whole `tests/` directory "for reference."
-- Never read `node_modules/`, `.next/`, lockfiles, or `coverage/`. Scope grep/glob to `src/**` and
-  test directories.
+- Read the spec under change **plus the single source file it tests**. Sibling specs and the rest of
+  `tests/` are rarely worth the context.
+- Scope grep/glob to `src/**` and test directories. `node_modules/`, `.next/`, lockfiles, and
+  `coverage/` are large and answer nothing a test needs.
 - Don't re-read a file you just edited — the edit tools confirm success.
-- Run the **narrowest test that proves the change** (§3). Never run the full `npm run test` or
-  `--coverage` while iterating; the full run is a final gate only (§7).
+- Run the **narrowest test that proves the change** (§3). The full `npm run test` always runs with
+  coverage, so it belongs at the end as a gate (§7), not in the iteration loop.
 - Cap retries at ~3 on the same failure, then report the blocker instead of looping.
 - Reuse existing mocks/helpers (§5) before searching the tree. Assert with `expect`; don't dump large
   objects or `console.log` into context to "see" state.
@@ -72,7 +72,8 @@ npx vitest run src/path/to/file.spec.ts
 npx vitest run --coverage
 ```
 
-Always use `vitest run` (one-shot). Never use watch mode — it hangs the session and burns tokens.
+Use `vitest run` (one-shot). **Watch mode is a hard no** — it never exits, so it hangs the session
+rather than failing visibly.
 
 ## §4 Testing approach by type
 
@@ -114,9 +115,19 @@ Base (render key elements + callbacks fire) plus all four extensions:
    read-only badge present/absent).
 4. **Query priority + interactions** — query by **role** first
    (`getByRole('button', { name })`), then label/text. **Never use `data-testid`**; if an element
-   isn't queryable by role, fix the component for accessibility instead. Standardize on
-   `userEvent.setup()` + `await user.click()` over `fireEvent` (`UsageLog.spec.tsx` is the model;
-   `Header.spec.tsx` still uses `fireEvent` — migrate that style when you touch it).
+   isn't queryable by role, fix the component for accessibility instead. Inventing a fake role to
+   query by (`role="icon"`, `role="dashboards"`) is the same violation wearing a disguise — a role
+   must be a real ARIA role. Standardize on `userEvent.setup()` + `await user.click()` over
+   `fireEvent` (`UsageLog.spec.tsx` is the model; `Header.spec.tsx` still uses `fireEvent` —
+   migrate that style when you touch it).
+
+   `fireEvent` is still correct where `userEvent` has no equivalent API: `paste`, `keyDown` with a
+   specific modifier (`{ key: 'Enter', shiftKey: false }`), and `change` on a native input. Reach
+   for it deliberately in those cases, not as a shortcut around an `await`.
+
+   `container.querySelector` is acceptable **only** for CSS-level assertions — a class name, a CSS
+   custom property, an inline `style` — where no semantic query can express the check. Never use it
+   to find an element you could have queried by role.
 5. **Mock heavy children** — mock AG Grid / Monaco / ECharts and other heavy descendants; assert on
    *your* component's behavior, not the library's. Faster, cheaper, less brittle.
 
@@ -128,21 +139,31 @@ snapshot-everything.
 
 ## §5 Mock & setup reuse
 
-Shared mocks live in `apps/ai-dial-admin/test-setup.tsx`. Reuse them; add any missing mock
-**centrally there**, not inline in a spec. It already mocks:
+Shared mocks live in `apps/ai-dial-admin/test-setup.tsx` — fetch, i18n, next-auth, the Next.js
+navigation/headers modules, every context provider, the observers, portals. **Read that file** for the
+current inventory instead of trusting a list here, and add a missing mock there rather than inline in
+a spec.
 
-- fetch (`vitest-fetch-mock`)
-- `useI18n` — **`t()` returns the key as-is** (assert keys, not translated text)
-- `useSession` (next-auth)
-- `next/navigation`, `next/headers`
-- all context providers (Notification, FileFolder/PromptFolder/AppsFolder/ToolsetsFolder, Theme,
-  RuleFolder, AppContext, SaveValidation)
-- `next/image`
-- `ResizeObserver`, `IntersectionObserver`
-- `createPortal` (renders modal content inline)
-- `scrollIntoView`, Monaco `queryCommandSupported` shim
+Three behaviors of that setup are easy to miss and change how you assert:
 
-Note: `console.error` and `console.warn` are mocked (silenced) globally.
+- **`t()` returns the key as-is**, so component tests assert i18n keys, not translated text.
+- `createPortal` renders inline, so modal content is queryable without extra setup.
+- `console.error` and `console.warn` are silenced globally — a test cannot assert on them, and a real
+  React warning will not surface in the output.
+
+Mocking mechanics:
+
+- To keep most of a real module and replace one export, use `importOriginal` rather than
+  re-declaring the whole surface:
+  ```ts
+  vi.mock('@/utils/entities', async (importOriginal) => ({
+    ...(await importOriginal<typeof import('@/utils/entities')>()),
+    getEntityLabel: vi.fn(() => 'label'),
+  }));
+  ```
+- Use `vi.mocked(fn)` for typed access to a mocked import instead of casting.
+- Call `vi.clearAllMocks()` in `beforeEach` whenever shared mock state could leak between tests —
+  the centralized mocks in `test-setup.tsx` persist across a file.
 
 ## §6 Conventions
 
@@ -154,14 +175,33 @@ Consolidated from `openspec/config.yaml` (kept here so test work is self-contain
 - Use the `@/` alias for cross-dir imports, never `../../`.
 - `import { describe, test, expect } from 'vitest';` — prefer `test(...)` over `it(...)`.
 
+Naming and structure:
+
+- One top-level `describe` per exported symbol, named after it: `describe('Header', ...)`. Add
+  further `describe` blocks for distinct states or prop groups: `describe('Header — read-only', ...)`.
+- `test` descriptions are complete third-person sentences stating the expected outcome, not the
+  mechanics: `test('renders the read-only badge when access is restricted')`, not `test('badge')`.
+- Extract a repeated render into an arrow-function helper at the top of the `describe`, so each test
+  only states its own deviation:
+  ```ts
+  const renderHeader = (props?: Partial<Props>) => render(<Header onMenuToggle={vi.fn()} {...props} />);
+  ```
+
+Assertions:
+
+- `toHaveBeenCalledOnce()` rather than `toHaveBeenCalledTimes(1)`.
+- `toHaveBeenCalledWith(...)` to check arguments — don't inspect `.mock.calls` by index.
+- `expect(el).toBeTruthy()` / `.toBeNull()` for presence; skip the double-negative
+  `.not.toBeNull()`.
+
 Test *workflow/planning* rules (when to create a test task, no manual-test tasks, final quality gate) live
 in `openspec/config.yaml` — they fire at planning time, not while you edit a test file, so they're not here.
 
 ## §7 Coverage philosophy
 
-Behavior over lines. The gate lives in `apps/ai-dial-admin/vitest.config.ts` (at writing: **branches 40 /
-functions 40 / lines 50 / statements 50**, v8 — defer to that file if these numbers have drifted).
-**Don't regress it**; ratchet thresholds up as coverage grows. Check overall coverage with `npx vitest run --coverage` — a final gate, not a
+Behavior over lines. The thresholds live in `apps/ai-dial-admin/vitest.config.ts` — read them there
+rather than trusting a number quoted in prose. Don't regress the gate; ratchet it up as coverage
+grows. Check overall coverage with `npx vitest run --coverage`, a final gate rather than a
 per-iteration command. By type: utils → chase branches; components → cover behaviors/states; API →
 url/params/response + error path.
 

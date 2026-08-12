@@ -104,7 +104,7 @@ vi.mock('@/src/context/SaveValidationContext', () => {
 // ------------------ Next Image ------------------
 vi.mock('next/image', () => ({
   __esModule: true,
-  default: (props: any) => <img {...props} />,
+  default: (props: any) => <img alt="" {...props} />,
 }));
 
 // ECharts is heavy and not meaningful in jsdom — render a lightweight stub.

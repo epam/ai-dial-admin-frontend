@@ -88,9 +88,10 @@ rules:
     - Investigate the current codebase for related functionality before proposing — don't duplicate what already exists
     - Consider impact on existing features — flag if the proposal could affect other parts of the app (shared components, contexts, API routes)
   design:
-    - For component, context, and hook design, follow .claude/rules/components.md (design principles, Common-vs-feature placement, design-system reuse, styling, naming, state & memoization, accessibility, i18n, grid)
+    - For component, context, and hook design, follow .claude/rules/components.md (design principles, Common-vs-feature placement, design-system reuse, styling, naming, state & memoization, i18n, grid)
     - For utility / pure-function design, follow .claude/rules/utils.md (purity, placement, determinism, testability)
-    - For cross-cutting TypeScript standards (import alias, enums, type placement, constants/models split), follow .claude/rules/code-standards.md
+    - For cross-cutting TypeScript standards (import alias, enums, type placement, control flow, constants/models split), follow .claude/rules/code-standards.md
+    - For accessibility design (ARIA state, focus management, live regions, contrast against the theme tokens, keyboard parity, AG Grid specifics), follow .claude/rules/a11y.md
   specs:
     - Reference backend API contracts from ai-dial-admin-backend or ai-dial-admin-deployment-manager-backend
     - Include validation requirements for any form fields

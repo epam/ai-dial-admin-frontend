@@ -30,15 +30,11 @@ import { NO_BORDER_CLASS, UTILITY_COLUMN } from '@/src/constants/ag-grid';
 import { BASE_STATUS_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { MetricBinding } from '@/src/models/evaluation/metric';
-import {
-  InputBindingRowData,
-  ResponseColumn,
-  TestCase,
-  TestCaseSchema,
-  TestSuite,
-} from '@/src/models/evaluation/test-suite';
+import { ValidityStatusRow } from '@/src/models/evaluation/test-case-grouping';
+import { InputBindingRowData, ResponseColumn, TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
 import { OnCellChange } from '@/src/types/grid-cell';
 import { InputBindingType, MetricBindingType, TestCaseItemType } from '@/src/types/evaluation';
+import { GridRowType } from '@/src/types/grid-row-type';
 import { ApplicationRoute } from '@/src/types/routes';
 
 export interface TestCaseColumnsOptions {
@@ -131,11 +127,14 @@ export const getTestCaseColumns = (options: TestCaseColumnsOptions): ColDef[] =>
 export const getValidityStatusColumn = (label?: string): ColDef => {
   return {
     ...BASE_STATUS_COLUMN,
-    cellRenderer: (params: { data?: TestCase }) => {
-      return !params.data ? null : (
+    cellRenderer: ({ data }: { data?: ValidityStatusRow }) => {
+      // A flattened turn row has no group row above it to carry the status.
+      const isCoveredByGroupRow = data?.rowType === GridRowType.TURN && !data.isFlattened;
+
+      return !data || isCoveredByGroupRow ? null : (
         <ValidityStatus
-          valid={params.data?.valid}
-          message={params.data?.validationWarnings?.map((warning) => warning.message).join(', \n') || ''}
+          valid={data.valid}
+          message={data.validationWarnings?.map((warning) => warning.message).join(', \n') || ''}
           label={label}
         />
       );
