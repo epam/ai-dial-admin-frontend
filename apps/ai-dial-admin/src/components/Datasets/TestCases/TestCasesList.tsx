@@ -182,7 +182,8 @@ const DatasetTestCasesList: FC<Props> = ({ dataset, testCasesActionsRef, onDirty
       setIsLoading(true);
       getTestCases(dataset.id, 0, 1000, [], []).then((res) => {
         setIsLoading(false);
-        const rows = res == null || res.content.length === 0 ? [] : expandTestCasesToRows(res.content);
+        const rows =
+          res == null || res.content.length === 0 ? [] : expandTestCasesToRows(res.content, dataset.testCaseSchema);
         turnGrid.setServerRows(rows);
         setColumnDefs([
           ...getDatasetTestCaseColumns({ dataset, onCellChange, onToggleExpand: turnGrid.onToggleExpand, t }),

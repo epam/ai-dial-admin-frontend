@@ -1,9 +1,12 @@
+import { ReactElement } from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { getTestCaseColumns, getSchemaFieldGridColumns } from '../columns';
+import { getTestCaseColumns, getSchemaFieldGridColumns, getValidityStatusColumn } from '../columns';
 import { TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
+import { ValidityStatusRow } from '@/src/models/evaluation/test-case-grouping';
 import { EXPANDER_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { TestCaseItemType } from '@/src/types/evaluation';
+import { GridRowType } from '@/src/types/grid-row-type';
 
 const makeSchema = (name: string, type: TestCaseItemType = TestCaseItemType.STRING): TestCaseSchema => ({
   name,
@@ -212,5 +215,84 @@ describe('getSchemaFieldGridColumns', () => {
       expect(col.filter).toBe(false);
       expect(col.floatingFilter).toBe(false);
     });
+  });
+});
+
+describe('getValidityStatusColumn', () => {
+  const label = 'Test case error';
+  const warning = { code: 'A', message: 'a', path: 'data.a', fieldName: 'a' };
+
+  const renderCell = (data?: ValidityStatusRow) => {
+    const renderer = getValidityStatusColumn(label).cellRenderer as (params: {
+      data?: ValidityStatusRow;
+    }) => ReactElement | null;
+
+    return renderer({ data });
+  };
+
+  test('should render nothing when there is no row data', () => {
+    expect(renderCell(undefined)).toBeNull();
+  });
+
+  test('should render the status of a group row', () => {
+    const element = renderCell({
+      id: 'case-1',
+      createdAt: 0,
+      rowType: GridRowType.GROUP,
+      valid: false,
+      validationWarnings: [warning],
+    });
+
+    expect(element?.props).toEqual(expect.objectContaining({ valid: false, message: 'a', label }));
+  });
+
+  test('should render nothing on a turn row of an expanded group', () => {
+    const element = renderCell({
+      id: 'case-1',
+      createdAt: 0,
+      rowType: GridRowType.TURN,
+      isFlattened: false,
+      valid: false,
+      validationWarnings: [warning],
+    });
+
+    expect(element).toBeNull();
+  });
+
+  test('should render the status on a flattened turn row, which has no group row', () => {
+    const element = renderCell({
+      id: 'case-1',
+      createdAt: 0,
+      rowType: GridRowType.TURN,
+      isFlattened: true,
+      valid: false,
+      validationWarnings: [warning],
+    });
+
+    expect(element?.props).toEqual(expect.objectContaining({ valid: false, message: 'a' }));
+  });
+
+  test('should render the status of a single row', () => {
+    const element = renderCell({ id: 'case-1', createdAt: 0, rowType: GridRowType.SINGLE, valid: true });
+
+    expect(element?.props).toEqual(expect.objectContaining({ valid: true, message: '' }));
+  });
+
+  test('should render the status of a row that has no row type', () => {
+    const element = renderCell({ id: 'case-1', createdAt: 0, valid: false, validationWarnings: [warning] });
+
+    expect(element?.props).toEqual(expect.objectContaining({ valid: false, message: 'a' }));
+  });
+
+  test('should join multiple warning messages', () => {
+    const element = renderCell({
+      id: 'case-1',
+      createdAt: 0,
+      rowType: GridRowType.GROUP,
+      valid: false,
+      validationWarnings: [warning, { code: 'B', message: 'b', path: 'data.b', fieldName: 'b' }],
+    });
+
+    expect(element?.props).toEqual(expect.objectContaining({ message: 'a, \nb' }));
   });
 });
