@@ -27,6 +27,10 @@ export interface DialModelPricing {
   unit?: PricingType;
   prompt?: string;
   completion?: string;
+  // An absent cache rate tells DIAL Core to bill cached tokens at the prompt rate; '0' bills them as
+  // free. Never default these to '0' — the two mean different invoices.
+  cacheRead?: string;
+  cacheWrite?: string;
 }
 
 export enum PricingType {
