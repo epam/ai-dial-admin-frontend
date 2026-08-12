@@ -9,6 +9,8 @@
     "lint": "nx run-many -t lint",
     "format": "prettier --check .",
     "format:write": "prettier --write .",
+    "validate:agent-docs": "node scripts/validate-agent-docs.mjs",
+    "validate:agent-docs:test": "node --test scripts/validate-agent-docs.spec.mjs",
     "prepare": "husky"
   },
   "private": true,
@@ -18,6 +20,9 @@
       "npm run lint"
     ],
     "*.{json,md,css,scss,html,yml,yaml}": [
+      "prettier --write"
+    ],
+    "*.mjs": [
       "prettier --write"
     ]
   },
@@ -117,7 +122,8 @@
     "typescript-eslint": "^8.59.2",
     "vite": "^8.0.16",
     "vitest": "^4.1.5",
-    "vitest-fetch-mock": "^0.4.5"
+    "vitest-fetch-mock": "^0.4.5",
+    "yaml": "2.8.3"
   },
   "overrides": {
     "axios": "1.16.0",
