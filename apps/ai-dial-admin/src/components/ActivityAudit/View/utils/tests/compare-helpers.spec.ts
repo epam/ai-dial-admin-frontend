@@ -122,6 +122,20 @@ describe('Activity audit :: convertPricing', () => {
     );
   });
 
+  test('should scale cacheRead and cacheWrite like the other token rates', () => {
+    const pricing = {
+      unit: PricingType.Token,
+      prompt: 0.001,
+      cacheRead: 0.002,
+      cacheWrite: 0.003,
+    };
+
+    const result = convertPricing(pricing, t);
+    expect(result).toBe(
+      `${ModelViewI18nKey.Tokens} ${ModelViewI18nKey.PerMillion}, prompt: 1000, cacheRead: 2000, cacheWrite: 3000`,
+    );
+  });
+
   test('should handle string values gracefully in non-token mode', () => {
     const pricing = {
       unit: PricingType.Character,

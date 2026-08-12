@@ -33,7 +33,7 @@ describe('getSystemRollbackColumns', () => {
 
   test('returns BASE_COLUMNS for MODEL', () => {
     const cols = getSystemRollbackColumns(ActivityAuditResourceType.MODEL, t);
-    expect(cols.length).toEqual(14);
+    expect(cols.length).toEqual(16);
   });
 
   test('returns BASE_COLUMNS for APPLICATION', () => {

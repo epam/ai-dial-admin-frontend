@@ -153,6 +153,18 @@ export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
     hide: true,
     tooltipValueGetter: (params) => params.data?.pricing?.completion,
   },
+  {
+    field: 'pricing.cacheRead',
+    headerName: 'Cache read price',
+    hide: true,
+    tooltipValueGetter: (params) => params.data?.pricing?.cacheRead,
+  },
+  {
+    field: 'pricing.cacheWrite',
+    headerName: 'Cache write price',
+    hide: true,
+    tooltipValueGetter: (params) => params.data?.pricing?.cacheWrite,
+  },
 ];
 
 export const APPLICATIONS_COLUMNS = (t: (str: string) => string, codeAppEditorUrl?: string): ColDef[] => [

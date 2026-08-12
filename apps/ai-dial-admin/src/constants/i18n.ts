@@ -499,6 +499,8 @@ export enum ModelViewI18nKey {
   CostUnit = 'ModelView.Pricing.CostUnit',
   PromptPrice = 'ModelView.Pricing.Prompt',
   CompletionPrice = 'ModelView.Pricing.Completion',
+  CacheReadPrice = 'ModelView.Pricing.CacheRead',
+  CacheWritePrice = 'ModelView.Pricing.CacheWrite',
   Tokens = 'ModelView.Pricing.Tokens',
   CharWithoutWhitespace = 'ModelView.Pricing.CharWithoutWhitespace',
   PerMillion = 'ModelView.Pricing.PerMillion',

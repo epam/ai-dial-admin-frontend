@@ -537,6 +537,8 @@ export default {
       CostUnit: 'Cost unit',
       Prompt: 'Prompt price',
       Completion: 'Completion price',
+      CacheRead: 'Cache read price',
+      CacheWrite: 'Cache write price',
       Tokens: 'Tokens',
       CharWithoutWhitespace: 'Char without whitespace',
       PerMillion: 'per million',
