@@ -67,6 +67,8 @@ export interface AnalyticsTable {
   grain?: AnalyticsTableGrain;
   ordering_key?: string[];
   partition_by?: AnalyticsTablePartition;
+  identity_column?: string;
+  version_column?: string;
   tag_order?: string[];
   permissions?: TablePermissions;
 }
@@ -101,6 +103,8 @@ export interface DraftSourceSchemaDto {
   columns: AnalyticsTableColumn[];
   ordering_key?: string[];
   partition_by?: AnalyticsTablePartition;
+  identity_column?: string;
+  version_column?: string;
 }
 
 export interface DraftEnrichmentSchemaDto {

@@ -7,8 +7,11 @@ import {
   createDraftSchemaForm,
   createTableForm,
   getColumnRowErrors,
+  getIdentityColumnNames,
+  getVersionColumnNames,
   hasColumnRowErrors,
   isRenameRestricted,
+  isScanMetadataColumn,
   parseRowsJson,
   tableDetailHref,
   toTableColumns,
@@ -61,6 +64,90 @@ describe('createDraftSchemaForm', () => {
     expect(form.partitionColumn).toBe('ts');
     expect(form.granularity).toBe(PartitionGranularity.Month);
     expect(form.grainKey).toBe('order_id');
+  });
+
+  test('seeds the scan-metadata pair, which a re-post cannot clear', () => {
+    const form = createDraftSchemaForm({
+      name: 'orders',
+      type: AnalyticsTableType.Source,
+      identity_column: 'order_id',
+      version_column: 'seen_at',
+    });
+    expect(form.identityColumn).toBe('order_id');
+    expect(form.versionColumn).toBe('seen_at');
+  });
+
+  test('leaves the scan-metadata pair empty when the table declares neither', () => {
+    const form = createDraftSchemaForm({ name: 'orders', type: AnalyticsTableType.Source });
+    expect(form).toMatchObject({ identityColumn: '', versionColumn: '' });
+  });
+});
+
+const row = (overrides: Partial<ColumnRow>): ColumnRow => ({ ...createColumnRow(), ...overrides });
+
+describe('getIdentityColumnNames / getVersionColumnNames', () => {
+  const rows: ColumnRow[] = [
+    row({ source_name: 'order_id', name: 'order_id', type: AnalyticsFieldType.Uuid }),
+    row({ source_name: 'seen_at', name: 'seen_at', type: AnalyticsFieldType.Timestamp }),
+    row({ source_name: 'closed_at', name: 'closed_at', type: AnalyticsFieldType.Timestamp, nullable: true }),
+    row({ source_name: 'secret_at', name: 'secret_at', type: AnalyticsFieldType.Timestamp, sensitive: true }),
+    row({ source_name: 'event_date', name: 'event_date', type: AnalyticsFieldType.Date }),
+    row({ source_name: '  ', name: '  ', type: AnalyticsFieldType.String }),
+  ];
+
+  test('identity options exclude nullable, sensitive, and blank rows but allow any type', () => {
+    expect(getIdentityColumnNames(rows)).toEqual(['order_id', 'seen_at', 'event_date']);
+  });
+
+  test('version options narrow the same set to Timestamp — a Date is rejected by the backend', () => {
+    expect(getVersionColumnNames(rows)).toEqual(['seen_at']);
+  });
+
+  test('both de-duplicate repeated source names and return empty for no rows', () => {
+    const dupes = [
+      row({ source_name: 'seen_at', type: AnalyticsFieldType.Timestamp }),
+      row({ source_name: 'seen_at', type: AnalyticsFieldType.Timestamp }),
+    ];
+    expect(getIdentityColumnNames(dupes)).toEqual(['seen_at']);
+    expect(getVersionColumnNames(dupes)).toEqual(['seen_at']);
+    expect(getIdentityColumnNames([])).toEqual([]);
+    expect(getVersionColumnNames([])).toEqual([]);
+  });
+});
+
+describe('isScanMetadataColumn', () => {
+  const table: AnalyticsTable = {
+    name: 'orders',
+    type: AnalyticsTableType.Source,
+    identity_column: 'order_id',
+    version_column: 'seen_at',
+  };
+  const column = (source_name: string, name = source_name): AnalyticsTableColumn => ({
+    source_name,
+    name,
+    type: AnalyticsFieldType.String,
+  });
+
+  test('matches either member of the pair', () => {
+    expect(isScanMetadataColumn(table, column('order_id'))).toBe(true);
+    expect(isScanMetadataColumn(table, column('seen_at'))).toBe(true);
+  });
+
+  test('does not match a column outside the pair', () => {
+    expect(isScanMetadataColumn(table, column('total'))).toBe(false);
+  });
+
+  test('matches on the physical source name, not the exposed name a rename diverged', () => {
+    // Renamed: exposed `identifier`, still physically `order_id` — the backend resolves its guards by the
+    // physical name, so this must still match.
+    expect(isScanMetadataColumn(table, column('order_id', 'identifier'))).toBe(true);
+    // The reverse: an unrelated column whose exposed name happens to read like the stored member.
+    expect(isScanMetadataColumn(table, column('total', 'order_id'))).toBe(false);
+  });
+
+  test('matches nothing when the table declares no pair', () => {
+    const bare: AnalyticsTable = { name: 'orders', type: AnalyticsTableType.Source };
+    expect(isScanMetadataColumn(bare, column('order_id'))).toBe(false);
   });
 });
 
