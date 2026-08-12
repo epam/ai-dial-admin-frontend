@@ -8,8 +8,8 @@ export interface CompareMetricStatCard {
 /** One metric group aligned for DialAnalyticsBarGroup compare mode. */
 export interface CompareBarGroup {
   name: string;
-  data: Record<string, number>;
-  compareData: Record<string, number>;
+  data: Record<string, number | null>;
+  compareData: Record<string, number | null>;
   description?: string;
   barDescriptions?: Record<string, string>;
 }

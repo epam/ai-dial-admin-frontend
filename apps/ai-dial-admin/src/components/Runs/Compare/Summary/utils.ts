@@ -21,9 +21,26 @@ export const unionMetricOptions = (primary: MetricOption[], compared: MetricOpti
   return Array.from(byName.values());
 };
 
+/** Unions bar keys; missing side gets explicit null so DialAnalyticsBar can show "—". */
+const alignBarMaps = (
+  primaryBars: Record<string, number>,
+  comparedBars: Record<string, number>,
+): { data: Record<string, number | null>; compareData: Record<string, number | null> } => {
+  const keys = new Set([...Object.keys(primaryBars), ...Object.keys(comparedBars)]);
+  const data: Record<string, number | null> = {};
+  const compareData: Record<string, number | null> = {};
+
+  for (const key of keys) {
+    data[key] = key in primaryBars ? primaryBars[key] : null;
+    compareData[key] = key in comparedBars ? comparedBars[key] : null;
+  }
+
+  return { data, compareData };
+};
+
 /**
  * Aligns primary/compared bar groups for a statistic. Primary group order is preserved;
- * compared-only groups are appended. Empty bar maps are used when a side is missing a group.
+ * compared-only groups are appended. Missing bar keys are filled with null on the other side.
  */
 export const getCompareBarGroups = (
   primary: MetricScoresData | null,
@@ -48,10 +65,11 @@ export const getCompareBarGroups = (
   return names.map((name) => {
     const primaryGroup = primaryGroups.find((group) => group.name === name);
     const comparedGroup = comparedByName.get(name);
+    const { data, compareData } = alignBarMaps(primaryGroup?.bars ?? {}, comparedGroup?.bars ?? {});
     return {
       name,
-      data: primaryGroup?.bars ?? {},
-      compareData: comparedGroup?.bars ?? {},
+      data,
+      compareData,
       description: primaryGroup?.description ?? comparedGroup?.description,
       barDescriptions: primaryGroup?.barDescriptions ?? comparedGroup?.barDescriptions,
     };
@@ -84,5 +102,12 @@ export const getCompareMetricStatCards = (
   }));
 };
 
-export const maxBarValue = (data: Record<string, number>, compareData: Record<string, number>): number =>
-  Math.max(1, ...Object.values(data), ...Object.values(compareData));
+export const maxBarValue = (
+  data: Record<string, number | null>,
+  compareData: Record<string, number | null>,
+): number => {
+  const values = [...Object.values(data), ...Object.values(compareData)].filter(
+    (value): value is number => value != null,
+  );
+  return Math.max(1, ...values);
+};
