@@ -14,6 +14,7 @@ import {
   aggregateQuery,
   and,
   col,
+  eq,
   field,
   fn,
   gt,
@@ -94,6 +95,7 @@ describe('analytics query-build :: expressions', () => {
 
 describe('analytics query-build :: predicates', () => {
   test.each([
+    ['eq', eq, QueryOperator.Eq],
     ['gt', gt, QueryOperator.Gt],
     ['le', le, QueryOperator.Le],
     ['ne', ne, QueryOperator.Ne],

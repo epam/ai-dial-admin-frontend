@@ -5,7 +5,7 @@ import { Big } from 'big.js';
 import classNames from 'classnames';
 import { FC, ReactNode } from 'react';
 
-import { SUMMARY_COST_PRECISION } from '@/src/constants/analytics/conversations-trace';
+import { SUMMARY_COST_PRECISION, UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ConversationSummary, ConversationTotals } from '@/src/models/analytics/conversations-trace';
@@ -31,7 +31,7 @@ const SummaryPill: FC<PillProps> = ({ value, label, valueClassName, hint }) => (
     title={hint}
   >
     <span className={classNames('dial-base-semi-text', valueClassName ?? 'text-primary')}>{value}</span>
-    <span className="flex items-center gap-1 dial-tiny-text uppercase text-secondary">{label}</span>
+    <span className="flex items-center gap-1 dial-tiny-text text-secondary">{label}</span>
     {hint && <span className="sr-only">{hint}</span>}
   </div>
 );
@@ -42,8 +42,6 @@ interface Props {
   loadedCount: number;
   periodLabel: string;
 }
-
-const UNAVAILABLE = '—';
 
 const ConversationsSummary: FC<Props> = ({ totals, summary, loadedCount, periodLabel }) => {
   const t = useI18n();
@@ -62,7 +60,7 @@ const ConversationsSummary: FC<Props> = ({ totals, summary, loadedCount, periodL
   return (
     <div className="flex flex-wrap items-stretch gap-2">
       <SummaryPill
-        value={conversationCount === null ? UNAVAILABLE : `${conversationCount}`}
+        value={conversationCount === null ? UNAVAILABLE_VALUE : `${conversationCount}`}
         label={t(ConversationsTraceI18nKey.SummaryConversations)}
         hint={conversationCount === null ? unavailableHint : resultHint}
       />
@@ -84,7 +82,7 @@ const ConversationsSummary: FC<Props> = ({ totals, summary, loadedCount, periodL
         hint={loadedHint}
       />
       <SummaryPill
-        value={cost === null ? UNAVAILABLE : `$${cost.round(SUMMARY_COST_PRECISION).toString()}`}
+        value={cost === null ? UNAVAILABLE_VALUE : `$${cost.round(SUMMARY_COST_PRECISION).toString()}`}
         label={`${t(ConversationsTraceI18nKey.SummaryCost)} ${periodLabel}`}
         valueClassName="text-accent-secondary"
         hint={cost === null ? unavailableHint : resultHint}

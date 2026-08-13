@@ -1,8 +1,11 @@
 'use client';
 
-import { GridReadyEvent, IDatasource } from 'ag-grid-community';
-import { FC, useMemo } from 'react';
+import { CellClickedEvent, CellKeyDownEvent, GridReadyEvent, IDatasource } from 'ag-grid-community';
+import { useRouter } from 'next/navigation';
+import { FC, useCallback, useMemo } from 'react';
 
+import { conversationDetailHref } from '@/src/components/Analytics/ConversationsTrace/utils';
+import { navigateEntityUrl } from '@/src/components/EntityListView/utils/on-cell-clicked';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { infiniteGridOptions } from '@/src/constants/ag-grid';
 import {
@@ -21,8 +24,31 @@ interface Props {
 
 const ConversationsList: FC<Props> = ({ datasource, onGridReady }) => {
   const t = useI18n();
+  const router = useRouter();
 
   const columnDefs = useMemo(() => CONVERSATIONS_TRACE_COLUMN_GROUPS(t), [t]);
+
+  const onOpenConversation = useCallback(
+    (chatId: string, event?: MouseEvent | null) =>
+      navigateEntityUrl(conversationDetailHref(chatId), router.push, event),
+    [router],
+  );
+
+  const onCellClicked = useCallback(
+    (e: CellClickedEvent<ConversationRow>) => {
+      if (!e.data) return;
+      onOpenConversation(e.data.chat_id, e.event as MouseEvent | undefined);
+    },
+    [onOpenConversation],
+  );
+
+  const onCellKeyDown = useCallback(
+    (e: CellKeyDownEvent<ConversationRow>) => {
+      if ((e.event as KeyboardEvent | undefined)?.key !== 'Enter' || !e.data) return;
+      onOpenConversation(e.data.chat_id);
+    },
+    [onOpenConversation],
+  );
 
   return (
     <div className="conversations-grid size-full">
@@ -36,6 +62,9 @@ const ConversationsList: FC<Props> = ({ datasource, onGridReady }) => {
           rowHeight: CONVERSATIONS_ROW_HEIGHT,
           headerHeight: CONVERSATIONS_HEADER_HEIGHT,
           groupHeaderHeight: CONVERSATIONS_GROUP_HEADER_HEIGHT,
+          onCellClicked,
+          onCellKeyDown,
+          rowClassRules: { 'cursor-pointer': ({ data }) => Boolean(data) },
         }}
         onGridReady={onGridReady}
         getRowId={({ data }) => data.chat_id}
