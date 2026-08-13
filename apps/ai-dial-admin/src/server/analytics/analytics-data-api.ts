@@ -9,6 +9,12 @@ import {
   TranslateSqlResponse,
 } from '@/src/models/analytics/query';
 import {
+  SavedQuery,
+  SavedQueryListResponse,
+  SavedQueryRequest,
+  SavedQueryScope,
+} from '@/src/models/analytics/saved-query';
+import {
   AnalyticsSchemaPatch,
   AnalyticsTable,
   CreateTableDto,
@@ -29,6 +35,11 @@ export const QUERIES_TRANSLATE_URL = `${QUERIES_URL}/translate`;
 export const QUERIES_TRANSLATE_SQL_URL = `${QUERIES_URL}/translate-sql`;
 export const QUERIES_ENTITY_SCHEMA_URL = (name: string): string =>
   `${QUERIES_ENTITIES_URL}/schema/${encodeURIComponent(name)}`;
+
+export const SAVED_QUERIES_URL = 'v1/saved-queries';
+export const SAVED_QUERY_URL = (id: string): string => `${SAVED_QUERIES_URL}/${encodeURIComponent(id)}`;
+export const SAVED_QUERIES_SCOPE_URL = (scope: SavedQueryScope): string =>
+  `${SAVED_QUERIES_URL}?scope=${encodeURIComponent(scope)}`;
 
 export const TABLES_URL = 'v1/tables';
 export const TABLE_URL = (name: string): string => `${TABLES_URL}/${encodeURIComponent(name)}`;
@@ -74,6 +85,33 @@ export class AnalyticsDataApi extends BaseApi {
   // endpoint accepts verbatim. Rejected with 400 for unparseable/unsupported SQL.
   translateSqlAction(sql: string, token: Token): Promise<ServerActionResponse<TranslateSqlResponse>> {
     return this.postAction<SqlQueryRequest>(QUERIES_TRANSLATE_SQL_URL, { sql }, token);
+  }
+
+  // Saved queries. Reads use `get` — a failure is indistinguishable from an empty result to the
+  // caller, which is all the list and the detail page need. Writes use the `*Action` variants
+  // because their failures are load-bearing: the caller branches on the machine code the envelope
+  // carries (see `utils/saved-query-error.ts`).
+  async listSavedQueries(scope: SavedQueryScope, token: Token): Promise<SavedQuery[] | null> {
+    const res = await this.get<SavedQueryListResponse>(SAVED_QUERIES_SCOPE_URL(scope), token);
+    return res?.saved_queries ?? null;
+  }
+
+  getSavedQuery(id: string, token: Token): Promise<SavedQuery | null> {
+    return this.get<SavedQuery>(SAVED_QUERY_URL(id), token);
+  }
+
+  createSavedQuery(dto: SavedQueryRequest, token: Token): Promise<ServerActionResponse<SavedQuery>> {
+    return this.postAction<SavedQueryRequest>(SAVED_QUERIES_URL, dto, token);
+  }
+
+  // Full replace. Deliberately no If-Match: the service returns `generation` but accepts no
+  // precondition header, so concurrent writes are last-write-wins by contract.
+  updateSavedQuery(id: string, dto: SavedQueryRequest, token: Token): Promise<ServerActionResponse<SavedQuery>> {
+    return this.putAction<SavedQueryRequest>(SAVED_QUERY_URL(id), dto, token);
+  }
+
+  deleteSavedQuery(id: string, token: Token): Promise<ServerActionResponse> {
+    return this.deleteAction(SAVED_QUERY_URL(id), token);
   }
 
   async getTables(token: Token): Promise<AnalyticsTable[] | null> {

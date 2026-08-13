@@ -10,14 +10,14 @@ import {
   getEntitySchema,
   translateQuery,
   translateSqlToQuery,
-} from '@/src/app/[lang]/query-builder/actions';
+} from '@/src/app/[lang]/queries/actions';
 import { useAppContext } from '@/src/context/AppContext';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { AnalyticsEntity, AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryMode, StructuredQuery } from '@/src/models/analytics/query';
 import { TEST_FUNCTIONS } from '@/src/components/Analytics/QueryBuilder/utils/tests/functions.fixture';
 
-vi.mock('@/src/app/[lang]/query-builder/actions');
+vi.mock('@/src/app/[lang]/queries/actions');
 
 vi.mock('@/src/context/AppContext', () => ({
   useAppContext: vi.fn(() => ({ featureFlags: { deploymentsEnabled: true } })),

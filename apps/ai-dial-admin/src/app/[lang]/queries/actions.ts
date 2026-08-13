@@ -12,11 +12,32 @@ import {
   TranslateResponse,
   TranslateSqlResponse,
 } from '@/src/models/analytics/query';
+import { SavedQuery, SavedQueryRequest, SavedQueryScope } from '@/src/models/analytics/saved-query';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 const token = () => getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+
+export async function listSavedQueries(scope: SavedQueryScope): Promise<SavedQuery[] | null> {
+  return analyticsDataApi.listSavedQueries(scope, await token());
+}
+
+export async function getSavedQuery(id: string): Promise<SavedQuery | null> {
+  return analyticsDataApi.getSavedQuery(id, await token());
+}
+
+export async function createSavedQuery(dto: SavedQueryRequest): Promise<ServerActionResponse<SavedQuery>> {
+  return analyticsDataApi.createSavedQuery(dto, await token());
+}
+
+export async function updateSavedQuery(id: string, dto: SavedQueryRequest): Promise<ServerActionResponse<SavedQuery>> {
+  return analyticsDataApi.updateSavedQuery(id, dto, await token());
+}
+
+export async function deleteSavedQuery(id: string): Promise<ServerActionResponse> {
+  return analyticsDataApi.deleteSavedQuery(id, await token());
+}
 
 export async function getEntities(): Promise<AnalyticsEntity[] | null> {
   return analyticsDataApi.getEntities(await token());

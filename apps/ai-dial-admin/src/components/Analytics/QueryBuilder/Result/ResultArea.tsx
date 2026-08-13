@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useEffect, useMemo, useState } from 'react';
+import { FC, useMemo } from 'react';
 
 import { ColDef } from 'ag-grid-community';
 import { DialLoader, DialNoDataContent, DialSegmentedControl } from '@epam/ai-dial-ui-kit';
@@ -10,7 +10,6 @@ import GridView from '@/src/components/Grid/GridView/GridView';
 import ResultChart from '@/src/components/Analytics/QueryBuilder/Result/ResultChart';
 import StatChip from '@/src/components/Analytics/QueryBuilder/Result/StatChip';
 import { getResultColumns, getResultTotal } from '@/src/components/Analytics/QueryBuilder/utils/result';
-import { DEFAULT_CHART_CONFIG } from '@/src/constants/analytics/query-builder';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { QueryMode, StructuredQueryResult } from '@/src/models/analytics/query';
@@ -25,18 +24,16 @@ interface Props {
   result: StructuredQueryResult | null;
   meta: ExecutedQueryMeta | null;
   isRunning: boolean;
+  // Controlled by the orchestrator: both are members of a saved query's payload, so they have to be
+  // readable at save time and restorable when a stored query opens.
+  view: QueryResultView;
+  onChangeView: (view: QueryResultView) => void;
+  chartConfig: ChartConfig;
+  onChangeChartConfig: (config: ChartConfig) => void;
 }
 
-const ResultArea: FC<Props> = ({ result, meta, isRunning }) => {
+const ResultArea: FC<Props> = ({ result, meta, isRunning, view, onChangeView, chartConfig, onChangeChartConfig }) => {
   const t = useI18n();
-
-  const [view, setView] = useState<QueryResultView>(QueryResultView.Table);
-  const [chartConfig, setChartConfig] = useState<ChartConfig>(DEFAULT_CHART_CONFIG);
-
-  // Axis picks belong to one result: a new run gets fresh defaults derived from its own query.
-  useEffect(() => {
-    setChartConfig(DEFAULT_CHART_CONFIG);
-  }, [result]);
 
   const columns = useMemo(() => getResultColumns(result, meta?.columnLabels), [result, meta?.columnLabels]);
   const rows = result?.rows ?? [];
@@ -66,7 +63,7 @@ const ResultArea: FC<Props> = ({ result, meta, isRunning }) => {
           ariaLabel={t(QueryBuilderI18nKey.ResultViewSwitcher)}
           options={viewOptions}
           value={view}
-          onChange={setView}
+          onChange={onChangeView}
         />
         {hasResult && (
           <div className="flex items-center gap-2">
@@ -84,7 +81,7 @@ const ResultArea: FC<Props> = ({ result, meta, isRunning }) => {
           <DialNoDataContent title={t(QueryBuilderI18nKey.ResultsEmptyDescription)} />
         ) : isChartView ? (
           chartAvailable && meta ? (
-            <ResultChart result={result} meta={meta} config={chartConfig} onChangeConfig={setChartConfig} />
+            <ResultChart result={result} meta={meta} config={chartConfig} onChangeConfig={onChangeChartConfig} />
           ) : (
             <DialNoDataContent title={t(QueryBuilderI18nKey.ChartUnavailable)} />
           )

@@ -220,8 +220,8 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
           href: ApplicationRoute.AnalyticsTables,
         },
         {
-          key: MenuI18nKey.QueryBuilder,
-          href: ApplicationRoute.AnalyticsQueryBuilder,
+          key: MenuI18nKey.Queries,
+          href: ApplicationRoute.AnalyticsQueries,
         },
         {
           key: MenuI18nKey.AnalyticsConversations,
