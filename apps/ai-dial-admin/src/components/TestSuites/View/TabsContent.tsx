@@ -9,6 +9,7 @@ import TestSuiteProperties from '@/src/components/TestSuites/Properties/Properti
 import Runs from '@/src/components/TestSuites/Runs/Runs';
 import TestCases from '@/src/components/TestSuites/TestCases/TestCases';
 import { TestCasesActions } from '@/src/components/TestSuites/TestCases/TestCasesList';
+import Trends from '@/src/components/TestSuites/Trends/Trends';
 import MethodTabContent from '@/src/components/TestSuites/View/MethodTabContent';
 import { Dataset } from '@/src/models/evaluation/dataset';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
@@ -27,6 +28,7 @@ interface Props {
   dataset?: Dataset | null;
   onChangeDataset?: (dataset: Dataset) => void;
   suiteEtag?: string;
+  onStartRun?: () => void;
 }
 
 const TabsContent: FC<Props> = ({
@@ -41,6 +43,7 @@ const TabsContent: FC<Props> = ({
   dataset,
   onChangeDataset,
   suiteEtag,
+  onStartRun,
 }) => {
   const headerPostfix = useMemo(() => {
     return (
@@ -81,6 +84,7 @@ const TabsContent: FC<Props> = ({
         />
       )}
       {activeTab === EntityViewTab.Runs && <Runs selectedTestSuite={selectedTestSuite} runRefreshRef={runRefreshRef} />}
+      {activeTab === EntityViewTab.Trends && <Trends selectedTestSuite={selectedTestSuite} onStartRun={onStartRun} />}
       {activeTab === EntityViewTab.Metrics && (
         <Metrics selectedTestSuite={selectedTestSuite} dataset={dataset} onChange={onChange} />
       )}
