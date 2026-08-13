@@ -1,5 +1,5 @@
 ### Requirement: Dataset listing page shows only PUBLIC datasets
-The system SHALL display a listing page at `/datasets` that shows only datasets with `visibility: PUBLIC`, fetched from `GET /api/v1/datasets` with a PUBLIC visibility filter. The page SHALL be accessible from the Evaluation section menu between "Test Suites" and "Runs".
+The system SHALL display a listing page at `/datasets` that shows only datasets with `visibility: PUBLIC`, fetched from `GET /api/v1/datasets` with a PUBLIC visibility filter. The page SHALL be accessible from the Evaluation section menu as the first item, before "Test Suites" and "Runs".
 
 #### Scenario: Navigating to the datasets listing
 - **WHEN** the user clicks "Datasets" in the Evaluation menu
