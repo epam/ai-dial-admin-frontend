@@ -36,7 +36,7 @@ const ZONELESS_ISO = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/;
 // The service returns timestamps as ISO-8601 with a `Z`; epoch millis are accepted too, since the
 // mapping is not fixed by its contract. A *zoneless* ISO string is the trap: `Date.parse` reads it as
 // local time and would shift every cell by the viewer's offset, so it is pinned to UTC first.
-const toMillis = (value: number | string | null): number | null => {
+export const toMillis = (value: number | string | null): number | null => {
   const parsed = toNumber(value);
   if (parsed !== null) {
     return parsed;
@@ -75,6 +75,18 @@ export const formatSignificantCost = (value: number | string | null): string => 
   // switching to exponential notation below 1e-7.
   const decimals = -amount.e + COST_SIGNIFICANT_DIGITS - 1;
   return `$${stripTrailingZeros(amount.toFixed(decimals))}`;
+};
+
+export const formatDurationMs = (value: number | string | null): string => {
+  const millis = toNumber(value);
+  if (millis === null) {
+    return '';
+  }
+  if (Math.abs(millis) < SECOND_MS) {
+    return `${Math.round(millis)}ms`;
+  }
+
+  return `${stripTrailingZeros((millis / SECOND_MS).toFixed(1))}s`;
 };
 
 export const formatRelativeTime = (value: number | string | null, nowMs: number): string => {

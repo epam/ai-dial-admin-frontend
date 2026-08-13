@@ -37,9 +37,7 @@ const FeedbackFilterControl: FC<Props> = ({ feedback, onFeedbackChange }) => {
 
   return (
     <div className="flex items-center gap-2">
-      <span className="dial-small-text text-secondary whitespace-nowrap uppercase">
-        {t(ConversationsTraceI18nKey.Feedback)}
-      </span>
+      <span className="dial-small-text text-secondary whitespace-nowrap">{t(ConversationsTraceI18nKey.Feedback)}</span>
       <DialSegmentedControl
         options={options}
         value={feedback}
