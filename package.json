@@ -28,10 +28,10 @@
   },
   "dependencies": {
     "@epam/ai-dial-shared": "^0.44.8",
-    "@epam/ai-dial-ui-kit": "0.13.0-dev.51",
+    "@epam/ai-dial-ui-kit": "0.13.0-dev.60",
     "@epam/ai-dial-visualizer-connector": "^0.44.8",
     "@floating-ui/react": "^0.27.19",
-    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "@monaco-editor/react": "^4.7.0",
     "@opentelemetry/exporter-trace-otlp-http": "^0.219.0",
     "@opentelemetry/instrumentation-fetch": "^0.219.0",

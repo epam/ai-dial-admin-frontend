@@ -1,7 +1,7 @@
 'use client';
 
-import { DialLoader } from '@epam/ai-dial-ui-kit';
-import { FC, useMemo } from 'react';
+import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { FC } from 'react';
 
 import ConversationsProvenanceLine from '@/src/components/Analytics/ConversationsTrace/Header/ConversationsProvenanceLine';
 import ConversationsSummary from '@/src/components/Analytics/ConversationsTrace/Header/ConversationsSummary';
@@ -10,22 +10,26 @@ import ConversationsToolbar from '@/src/components/Analytics/ConversationsTrace/
 import { useConversations } from '@/src/components/Analytics/ConversationsTrace/use-conversations';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { ConversationRow } from '@/src/models/analytics/conversations-trace';
-import { summariseConversations } from '@/src/utils/analytics/conversation-rows';
+import { ConversationTotals } from '@/src/models/analytics/conversations-trace';
 
 const LOADER_SIZE = 40;
 
 interface Props {
-  initialConversations: ConversationRow[];
+  initialTotals: ConversationTotals | null;
   hasInitialLoadError?: boolean;
 }
 
-const ConversationsTraceView: FC<Props> = ({ initialConversations, hasInitialLoadError }) => {
+const ConversationsTraceView: FC<Props> = ({ initialTotals, hasInitialLoadError }) => {
   const t = useI18n();
   const {
-    conversations,
+    onGridReady,
+    datasource,
+    totals,
+    summary,
+    loadedCount,
+    isEmptyResult,
+    isFirstPageLoading,
     hasLoadError,
-    isLoading,
     search,
     onSearchChange,
     timePeriod,
@@ -34,9 +38,19 @@ const ConversationsTraceView: FC<Props> = ({ initialConversations, hasInitialLoa
     onTimeRangeChange,
     feedback,
     onFeedbackChange,
-  } = useConversations(initialConversations, hasInitialLoadError);
+  } = useConversations(initialTotals, hasInitialLoadError);
 
-  const summary = useMemo(() => summariseConversations(conversations), [conversations]);
+  const emptyStateTitle = hasLoadError
+    ? ConversationsTraceI18nKey.ConversationsLoadFailed
+    : ConversationsTraceI18nKey.NoConversations;
+
+  // The grid stays mounted whatever the state: under the infinite row model its datasource is attached
+  // through the grid api, so unmounting it would strand the next request.
+  const overlay = isFirstPageLoading ? (
+    <DialLoader size={LOADER_SIZE} />
+  ) : isEmptyResult || hasLoadError ? (
+    <DialNoDataContent title={t(emptyStateTitle)} />
+  ) : null;
 
   return (
     <div className="flex flex-col size-full bg-layer-2 rounded py-5 px-6 gap-5">
@@ -45,7 +59,7 @@ const ConversationsTraceView: FC<Props> = ({ initialConversations, hasInitialLoa
           <h1 className="text-primary">{t(ConversationsTraceI18nKey.Title)}</h1>
           <ConversationsProvenanceLine />
         </div>
-        <ConversationsSummary summary={summary} periodLabel={timePeriod} />
+        <ConversationsSummary totals={totals} summary={summary} loadedCount={loadedCount} periodLabel={timePeriod} />
       </div>
       <ConversationsToolbar
         search={search}
@@ -57,14 +71,9 @@ const ConversationsTraceView: FC<Props> = ({ initialConversations, hasInitialLoa
         feedback={feedback}
         onFeedbackChange={onFeedbackChange}
       />
-      <div className="flex flex-1 rounded overflow-auto min-h-0 border border-primary">
-        {isLoading ? (
-          <div className="flex size-full items-center justify-center">
-            <DialLoader size={LOADER_SIZE} />
-          </div>
-        ) : (
-          <ConversationsList conversations={conversations} hasLoadError={hasLoadError} />
-        )}
+      <div className="relative flex flex-1 rounded overflow-auto min-h-0 border border-primary">
+        <ConversationsList datasource={datasource} onGridReady={onGridReady} />
+        {overlay && <div className="absolute inset-0 flex items-center justify-center bg-layer-2">{overlay}</div>}
       </div>
     </div>
   );

@@ -1,16 +1,15 @@
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import {
   ColumnProvenance,
-  ConversationField,
+  ConversationColumn,
+  ConversationsField,
   ProvenanceEntity,
   ProvenanceGroup,
 } from '@/src/models/analytics/conversations-trace';
 
-export const CONVERSATIONS_ENTITY = 'dial_usage_log';
+export const CONVERSATIONS_ENTITY = 'conversations';
 
 export const FEEDBACK_ENTITY = 'rate_analytics';
-
-export const CONVERSATION_PAGE_SIZE = 20;
 
 export const FEEDBACK_CANDIDATE_LIMIT = 1000;
 
@@ -21,15 +20,6 @@ export const CONVERSATIONS_TIME_PERIOD = '7d';
 export const CONVERSATIONS_SEARCH_DEBOUNCE_MS = 400;
 
 export const CONVERSATIONS_ROW_HEIGHT = 64;
-
-export const CONVERSATION_SUMMARY_ENRICHMENT = 'conversation_summary';
-
-export const SUMMARY_ENRICHMENT_FIELDS = {
-  title: `${CONVERSATION_SUMMARY_ENRICHMENT}.${ConversationField.Title}`,
-  snippet: `${CONVERSATION_SUMMARY_ENRICHMENT}.${ConversationField.Snippet}`,
-};
-
-export const USE_CONVERSATION_SUMMARY_ENRICHMENT: boolean = false;
 
 export const CONVERSATIONS_GROUP_HEADER_HEIGHT = 32;
 
@@ -42,50 +32,34 @@ export const COST_COMPACT_THRESHOLD = 1;
 
 export const COST_SIGNIFICANT_DIGITS = 2;
 
-export const MODEL_DOT_CLASSES = ['bg-accent-secondary', 'bg-accent-tertiary', 'bg-accent-primary'];
-
 export const PROVENANCE_TEXT_CLASS: Record<ColumnProvenance, string> = {
-  [ColumnProvenance.Conversation]: 'text-secondary',
-  [ColumnProvenance.UsageLog]: 'text-accent-primary',
-  [ColumnProvenance.Enrichment]: 'text-accent-secondary',
+  [ColumnProvenance.Conversations]: 'text-accent-primary',
   [ColumnProvenance.Feedback]: 'text-warning',
 };
 
 export const CONVERSATION_SOURCE_ENTITIES: ProvenanceEntity[] = [
-  { provenance: ColumnProvenance.UsageLog, name: CONVERSATIONS_ENTITY },
+  { provenance: ColumnProvenance.Conversations, name: CONVERSATIONS_ENTITY },
   { provenance: ColumnProvenance.Feedback, name: FEEDBACK_ENTITY },
 ];
 
-export const CONVERSATION_ENRICHMENT_ENTITY: ProvenanceEntity = {
-  provenance: ColumnProvenance.Enrichment,
-  name: CONVERSATION_SUMMARY_ENRICHMENT,
-  isPending: true,
-};
-
 export const CONVERSATION_PROVENANCE_GROUPS: ProvenanceGroup[] = [
   {
-    provenance: ColumnProvenance.Enrichment,
-    labelKey: ConversationsTraceI18nKey.ProvenanceConversation,
-    tooltipKey: ConversationsTraceI18nKey.ProvenanceConversationHint,
-    fields: [ConversationField.ChatId],
-    isDerived: true,
-  },
-  {
-    provenance: ColumnProvenance.UsageLog,
-    labelKey: ConversationsTraceI18nKey.ProvenanceUsageLog,
-    tooltipKey: ConversationsTraceI18nKey.ProvenanceUsageLogHint,
+    provenance: ColumnProvenance.Conversations,
+    labelKey: ConversationsTraceI18nKey.ProvenanceConversations,
+    tooltipKey: ConversationsTraceI18nKey.ProvenanceConversationsHint,
     fields: [
-      ConversationField.Project,
-      ConversationField.Turns,
-      ConversationField.LastActivity,
-      ConversationField.Tokens,
-      ConversationField.Cost,
+      ConversationsField.ChatId,
+      ConversationsField.ProjectId,
+      ConversationsField.TurnCount,
+      ConversationsField.LastRequestTime,
+      ConversationsField.TotalTokens,
+      ConversationsField.TotalPrice,
     ],
   },
   {
     provenance: ColumnProvenance.Feedback,
     labelKey: ConversationsTraceI18nKey.ProvenanceFeedback,
     tooltipKey: ConversationsTraceI18nKey.ProvenanceFeedbackHint,
-    fields: [ConversationField.Rating],
+    fields: [ConversationColumn.Rating],
   },
 ];

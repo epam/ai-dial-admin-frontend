@@ -1,8 +1,4 @@
-import {
-  COST_COMPACT_THRESHOLD,
-  COST_SIGNIFICANT_DIGITS,
-  MODEL_DOT_CLASSES,
-} from '@/src/constants/analytics/conversations-trace';
+import { COST_COMPACT_THRESHOLD, COST_SIGNIFICANT_DIGITS } from '@/src/constants/analytics/conversations-trace';
 import { toBig, toNumber } from '@/src/utils/analytics/scalar';
 import { formatNumberWithExponent } from '@/src/utils/formatting/number-formatting';
 
@@ -35,13 +31,22 @@ const pickUnit = (amount: number, units: Unit[]): Unit | undefined =>
 const stripTrailingZeros = (text: string): string =>
   text.includes('.') ? text.replace(/0+$/, '').replace(/\.$/, '') : text;
 
-// The mock emits ISO timestamps while the live query returns epoch millis — accept both.
+const ZONELESS_ISO = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/;
+
+// The service returns timestamps as ISO-8601 with a `Z`; epoch millis are accepted too, since the
+// mapping is not fixed by its contract. A *zoneless* ISO string is the trap: `Date.parse` reads it as
+// local time and would shift every cell by the viewer's offset, so it is pinned to UTC first.
 const toMillis = (value: number | string | null): number | null => {
   const parsed = toNumber(value);
   if (parsed !== null) {
     return parsed;
   }
-  const millis = typeof value === 'string' ? Date.parse(value) : NaN;
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const text = ZONELESS_ISO.test(value.trim()) ? `${value.trim().replace(' ', 'T')}Z` : value;
+  const millis = Date.parse(text);
   return Number.isNaN(millis) ? null : millis;
 };
 
@@ -98,9 +103,4 @@ export const formatConversationSpan = (
   const unit = pickUnit(span, SPAN_UNITS);
 
   return unit ? `${Math.floor(span / unit.limit)}${unit.suffix}` : `${Math.max(Math.round(span / SECOND_MS), 1)} sec`;
-};
-
-export const modelDotClass = (model: string): string => {
-  const seed = [...model].reduce((total, char) => total + char.charCodeAt(0), 0);
-  return MODEL_DOT_CLASSES[seed % MODEL_DOT_CLASSES.length];
 };

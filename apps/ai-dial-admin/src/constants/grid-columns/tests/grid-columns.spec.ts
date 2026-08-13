@@ -41,6 +41,8 @@ describe('Constants :: grid columns', () => {
     expect(cols.some((c) => c.field === 'source.$type')).toBe(true);
     expect(cols.some((c) => c.field === 'endpoint')).toBe(true);
     expect(cols.some((c) => c.field === 'pricing.prompt')).toBe(true);
+    expect(cols.some((c) => c.field === 'pricing.cacheRead' && c.hide)).toBe(true);
+    expect(cols.some((c) => c.field === 'pricing.cacheWrite' && c.hide)).toBe(true);
   });
 
   test('ADAPTER_COLUMNS returns expected columns', () => {
