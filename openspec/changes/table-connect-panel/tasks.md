@@ -23,7 +23,6 @@
 - [ ] 3.3 Create `ConnectAuthSection.tsx` — the shared `ADAS_API_KEY` guidance and env-var block, rendered once above the tabs. Render no application-role constant and no statement about the current session's own permissions.
 - [ ] 3.3a In the Write tab, load access via the existing `getTableAccess` action on first open and render the `write` role names as the roles a key must carry; add the one-line note that a key with administrator access can write too but a scoped role is the better choice; on failure omit the list with no notification. When the list is empty, state that only a key with administrator access can write to this table.
 - [ ] 3.3b In the Read tab, state that reading is not scoped per table — any key with analytics access can query it, and no per-table read-only role exists.
-- [ ] 3.4 Add the **Manage access** shortcut to the auth section, shown only when the viewer can manage roles; it closes the panel and opens the existing access surface.
 - [ ] 3.5 Create `ConnectWriteTab.tsx` (who-can-write roles, Python snippet, cURL snippet, then the generated per-column format notes, then the rejections as troubleshooting *below* them) and `ConnectReadTab.tsx` (read access is not per-table, Python snippet, cURL snippet, Flight SQL with its pip prerequisite, its call-header note, and the read-only note), each rendering through `CodeSnippet`.
 - [ ] 3.6 Show the "replace `<adas-base-url>`" note when no base URL is configured.
 

@@ -170,7 +170,11 @@ The panel SHALL NOT name the analytics backend's internal application roles. Tho
 
 For the same reason the panel SHALL NOT present the current viewer's own per-table permissions as a statement about the key the snippets will use. The two are different principals: `permissions` describes this console session, while the snippets run under an API key the user supplies.
 
-When the `write` list is empty the panel SHALL treat that as a **call to action rather than a statement**: with no write role configured, the only key that can write is an administrator key — the very thing the section warns against — so the panel SHALL name that consequence and offer the route to granting a role. A neutral "no roles are configured" would leave the reader with the anti-pattern as their only working option. When the access lists cannot be read — including the `403` a caller without an application role receives — the panel SHALL omit the role list, keep every other part of the panel rendered, and SHALL NOT surface an error notification. When the viewer can manage roles on a non-system table, the section SHALL offer a **Manage access** shortcut that closes the panel and opens the table's access management surface.
+When the `write` list is empty the panel SHALL say so and SHALL name the consequence — that as configured, only a key with administrator access can write to this table — rather than stating neutrally that no roles are configured, which would leave the reader with that key as their apparently intended option.
+
+The panel SHALL offer no control for granting a role. Roles are managed from the detail header's own **Manage access** action, which is on screen behind the panel; duplicating it here would add a second entry point to the same surface and a permission gate to maintain, for a step the reader takes once. The panel may name that action in prose.
+
+When the access lists cannot be read — including the `403` a caller without an application role receives — the panel SHALL omit the role list, keep every other part of the panel rendered, and SHALL NOT surface an error notification.
 
 #### Scenario: Write roles are listed
 
@@ -193,11 +197,11 @@ When the `write` list is empty the panel SHALL treat that as a **call to action 
 - **WHEN** the authentication section renders
 - **THEN** it states that a key able to query this table can query the whole catalog, and that no per-table read-only role exists
 
-#### Scenario: Empty write list is a call to action
+#### Scenario: Empty write list names its consequence
 
 - **WHEN** the panel opens for a table whose `write` access list is empty
-- **THEN** the section states that only an administrator key can write to this table as configured, and offers the route to granting a write role
-- **AND** it does not present using an administrator key as the resolution
+- **THEN** the section states that as configured, only a key with administrator access can write to this table
+- **AND** it does not present using such a key as the resolution
 
 #### Scenario: Access is unreadable
 
@@ -209,15 +213,10 @@ When the `write` list is empty the panel SHALL treat that as a **call to action 
 - **WHEN** any tab renders
 - **THEN** the API key in every snippet is a placeholder, and the panel offers no way to reveal or generate a real key
 
-#### Scenario: Manage access shortcut
+#### Scenario: The panel offers no access-management control
 
-- **WHEN** a full admin viewing a non-system table activates the section's **Manage access** shortcut
-- **THEN** the Connect panel closes and the table's access management surface opens
-
-#### Scenario: Manage access shortcut is absent without the permission
-
-- **WHEN** a user who is not a full admin opens the panel
-- **THEN** no **Manage access** shortcut is shown, while the role information still is
+- **WHEN** the panel renders for any viewer, including one who can manage roles
+- **THEN** it contains no control that opens the table's access management surface, and the role information is still shown
 
 ## MODIFIED Requirements
 
