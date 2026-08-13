@@ -33,7 +33,7 @@ See `proposal.md` — Why. The constraints that shape the approach:
 
 `DialButtonDropdown` leaves `TableDetailView`'s header. **Add columns** and **Add rows** both render as `DialNeutralButton`, each behind its own permission flag.
 
-Today (`TableDetailView.tsx:333-344`) the code branches three ways and whichever action is the only one available becomes primary. Dropping that keeps the rule one sentence long and one test per button, and means a given action looks the same to every user — a modify-only user seeing **Add columns** promoted to primary would read it as "the main thing to do here", which it is not.
+Today the header code branches three ways and whichever action is the only one available becomes primary. Dropping that keeps the rule one sentence long and one test per button, and means a given action looks the same to every user — a modify-only user seeing **Add columns** promoted to primary would read it as "the main thing to do here", which it is not.
 
 *Alternative considered:* keep the dropdown and add **Connect** as a third item. Rejected — it doubles down on exactly the conflation the change exists to remove.
 
@@ -71,7 +71,7 @@ Five to seven code blocks live in this panel. Five Monaco instances in one overl
 
 `components/Analytics/Tables/utils/connect-snippets.ts`, taking `(table: AnalyticsTable, baseUrl: string)` and returning a typed `ConnectSnippets` object (shape in an adjacent `models.ts`, per the repo's constants/models split). Two layers:
 
-1. **`buildSampleRow(table)`** → `Record<string, SnippetValue>` — the single source of truth for what goes in a row: `_`-prefixed columns dropped, keys taken from `name`, grain key prepended for enrichment tables, values from a `AnalyticsFieldType → literal` map. This mirrors the existing `buildRowsTemplate`/`templateValueFor` (`Tables/utils.ts:173-203`) but is deliberately **not** shared with it: the Add rows template wants *empty* placeholders the user overwrites, the snippet wants *plausible* values the user runs unedited. Merging them would force one of the two to compromise.
+1. **`buildSampleRow(table)`** → `Record<string, SnippetValue>` — the single source of truth for what goes in a row: `_`-prefixed columns dropped, keys taken from `source_name`, grain key prepended for enrichment tables, values from a `AnalyticsFieldType → literal` map. This mirrors the existing `buildRowsTemplate`/`templateValueFor` (`Tables/utils.ts`) but is deliberately **not** shared with it: the Add rows template wants *empty* placeholders the user overwrites, the snippet wants *plausible* values the user runs unedited. Merging them would force one of the two to compromise.
 2. **Serializers** — `toPythonLiteral` and `toJsonLiteral` over that one row, differing only in `True/False/None` vs `true/false/null`. Both `array` element shaping and the `decimal`-as-string rule live in step 1, so neither serializer has to know about column types.
 3. **`buildFormatNotes(table)`** — the same type→rule table, rendered as prose instead of as values. It returns one entry per format rule that at least one declared column actually uses, each carrying the names of the columns it applies to, and nothing when the table has no such column.
 
@@ -79,26 +79,21 @@ That third layer is the part worth naming as a decision. The panel could state i
 
 Both the values and the prose come from one type→rule map, so they cannot disagree: if the map says `decimal` is quoted, the sample row quotes it and the note says so.
 
-### 5a. Snippets key by `name`, not `source_name`
+### 5a. Snippets key by `source_name` — and say nothing about it
 
-The row-insert endpoint resolves keys against the physical `source_name` (`TableDataService.physicalColumns`), and the existing Add rows template follows it. The Connect panel does not, and keys by the exposed `name` instead.
+The row endpoint accepts the physical `source_name`, so that is what the snippets emit. The panel does not explain the identifier, contrast it with the exposed name, or mention that two exist.
 
-This is safe today and correct tomorrow. Safe, because the two are equal on every table this admin UI can reach: the column editor fills both from one input (`ColumnRowsEditor.tsx:58`), and a rename sets both (`CatalogSchemaWriter.renameColumn`, which also issues the physical `ALTER … RENAME COLUMN`). Correct, because `source_name` exists so that ADAS can serve columns it did not name — a `system` table's, or an externally-fed one's — and an identifier that exists to be *internal* has no business in a snippet we hand a user. A separate backend change asks for the write endpoint to key by `name`; when it lands, nothing here moves.
+Both halves matter. Keying by `source_name` matches the shipped contract and the existing Add rows template, so the spec holds one rule rather than two contradictory ones. Saying nothing is correct because the two names are equal on every table this app can produce — the column editor fills both from one input (`ColumnRowsEditor.tsx`), and a rename sets both (`CatalogSchemaWriter.renameColumn`, which also issues the physical `ALTER … RENAME COLUMN`). The distinction exists for columns ADAS did not name, which this UI cannot create. Explaining it would teach a concept the reader cannot act on, and the rendered snippet is byte-identical either way.
 
-The consequence for this change is the part worth stating: **the panel explains no second identifier at all.** It shows the names the columns grid shows, and stops. That also removes what would otherwise be the panel's longest paragraph.
+If the backend later keys writes by the exposed name, only the builder changes; no panel copy does.
 
-The remaining write pitfalls move *below* the snippet and are phrased as the rejection message the caller would see — the generated snippet already satisfies them, so most readers never need them, and leading with warnings teaches failure before the reader has attempted anything. The one worth keeping is a user-level confusion the backend cannot remove: the grid shows **Name** and **Display name** side by side and only the first is a column identifier.
+### 5b. Specified against the backend as it ships, not as it should be
 
-### 5b. This change depends on two unshipped backend changes
+An earlier draft specified ISO-8601 timestamps and exposed-name keying, on the strength of backend changes that were drafted but never filed — `analytics-data-access-service/openspec/changes/` holds only `archive/`. That made the change unshippable and left the spec asserting a contract that does not exist.
 
-The snippets as specified do not work against ADAS as it stands today:
+It is now written against shipped behavior: `source_name` keying, space-separated `YYYY-MM-DD HH:MM:SS.mmm` timestamps on write. The read/write timestamp asymmetry is real and is surfaced to the user as a format note rather than papered over — reads return ISO-8601, writes do not accept it.
 
-- **Keying by `name`** (Decision 5a) is currently only *accidentally* correct, because `source_name == name` on every table this UI can produce. A separate backend proposal asks for the row endpoint to key by `name`.
-- **ISO-8601 timestamps** are rejected on insert today — `CatalogRowWriter` hands the caller's JSON to ClickHouse untouched, so the accepted grammar is ClickHouse's `date_time_input_format=basic` default. A second backend proposal asks ADAS to normalize timestamp-typed fields itself.
-
-Both are specified here as though they have landed, because designing the panel around a format the service itself does not emit would bake a defect into the UI. The consequence is a **hard sequencing dependency**: task group 1 cannot ship before the timestamp change, or every copied snippet fails on its first row.
-
-If the backend work slips, the fallback is to emit the space-separated form and keep the timestamp pitfall in the troubleshooting list — a one-line change in the type→literal map plus one list item, contained entirely within `connect-snippets.ts` and one tab component. Note it, don't design around it.
+The three backend defects worth fixing are recorded in proposal.md. Each would shorten this panel; none gates it.
 
 ### 6. `ANALYTICS_PUBLIC_URL` read server-side, passed as a prop
 
@@ -124,15 +119,21 @@ Omitting the administrator bypass would be a lie: such a key writes here whateve
 
 So the section recommends exactly one thing — a key carrying a role from this table's list, and nothing broader — and mentions administrator access only as a caution naming what else it permits. No step, link, or instruction for obtaining one.
 
-**The empty write list is where this actually bites.** With no write role configured, an administrator key is the *only* thing that works, so the state itself pushes the reader toward the anti-pattern. A neutral "no roles are configured" would leave them there. It is specified as a call to action instead: name the consequence, offer the route to granting a role.
+**The empty write list is where this actually bites.** With no write role configured, an administrator key is the *only* thing that works, so the state itself pushes the reader toward the anti-pattern. A neutral "no roles are configured" would leave them there. It is specified as a call to action instead: name the consequence.
 
 **And the read side has no least-privilege story at all** — the backend governs writes only, so a key that can verify its own inserts can query the whole catalog. The panel says so rather than implying a per-table read role exists. Nothing here can fix that; it is a backend capability gap worth tracking separately.
 
-*What would make this better, and needs the backend:* **remove the administrator write bypass**, so a row insert is authorized by the table's `write` list and nothing else. Then the list is the complete answer, this whole subsection collapses, and the caution paragraph is deleted rather than improved — the panel says "give the key one of these roles" and that is simply true. A backend proposal asks for exactly this.
+*What would make this better, and would need the backend:* **remove the administrator write bypass**, so a row insert is authorized by the table's `write` list and nothing else. Then the list is the complete answer, this whole subsection collapses, and the caution paragraph is deleted rather than improved — the panel says "give the key one of these roles" and that is simply true. Recorded in proposal.md as an opportunity; nothing here waits on it.
 
 An intermediate option — having the access endpoint return each authorizing role tagged with its scope, so the console could name the administrator roles instead of gesturing at them — was considered and set aside. It solves the wording problem while leaving the underlying one (an ambient capability nobody granted), and it becomes unnecessary the moment the bypass goes.
 
 Note this is a *simplification* dependency, not a blocking one: everything specified here works today and gets shorter later. If the bypass is removed, delete the caution and the administrator clause from the empty-list copy; the rest is unchanged.
+
+### 6c. Accessibility is specified, not left to the component
+
+The panel is a modal overlay, which is where accessibility is usually lost. `.claude/rules/a11y.md` is a config-mandated design input, so the spec carries the four things a dialog owes: a dialog role with modal state and an accessible name matching the title, focus moved in on open, `Tab` confined while open, and focus returned to the **Connect** button on close. The copy action announces its result — `CopyButton` already notifies, but the announcement is specified rather than assumed.
+
+The access request also gets a stated loading state. Previously only its success and failure paths were specified, leaving the in-flight render to whoever built it.
 
 ### 7. Access is fetched on open, and failure is silent
 
@@ -140,9 +141,9 @@ Note this is a *simplification* dependency, not a blocking one: everything speci
 
 *Alternative:* pass access down from the RSC page. Rejected — it would make every table-detail page load pay for a call most visits do not need, and would surface the `403` as a page-level concern.
 
-### 8. Three tabs, not four
+### 8. Two tabs, split by task
 
-Two tabs — **Write data** and **Read data** — with `DialTabs`, matching its use inside `PreviewModal.tsx:136` and `SavedQueriesDialog.tsx:155`. Write is the default, because the write path is why the panel exists.
+Two tabs — **Write data** and **Read data** — with `DialTabs`, matching its use inside `PreviewModal.tsx`. Write is the default, because the write path is why the panel exists.
 
 Tabbing by language was the first instinct and it was wrong. The audiences differ: the person building an ingest job and the analyst pulling data into pandas are usually different people, and so does their authorization — a write needs a role on this table, a read needs none and cannot be scoped to one table at all. Under language tabs those two facts collapsed into one shared paragraph shown to everybody, and Flight SQL sat as a peer of Python despite rejecting every write statement, needing a footnote to say so. Splitting by task gives each reader only the authorization that applies to them, and puts Flight SQL under Read where its read-only nature is the premise rather than an exception.
 
@@ -161,6 +162,7 @@ The action closes the popup before opening the panel. Two overlays stacked would
 ## Risks / Trade-offs
 
 - **A copied snippet fails against a real deployment because `ANALYTICS_PUBLIC_URL` is unset or wrong** → unset is the visible, self-describing `<adas-base-url>` placeholder with a note, not a silently wrong URL; every snippet also honours a real `ADAS_BASE_URL` from the environment, so the user can override without editing.
+- **The panel assumes API-key auth and the Flight endpoint are enabled.** Both default off in the backend and neither is readable from here.
 - **The Flight SQL example assumes the endpoint is served.** A deployment with Flight disabled gives the user a bare connection failure and no hint from the panel. Accepted deliberately: Flight is expected to be on, and the alternative — a caveat on every reader's screen for a case most never hit, since detecting it would need a new backend capability endpoint — costs more than it saves.
 - **Snippets drift from the backend's insert contract** (a new column type, a changed timestamp format) → the type→literal map is one table in one pure module with a unit test per type, so drift is a one-line fix, and the map is exhaustive over `AnalyticsFieldType` so a new enum member fails the type check rather than silently emitting nothing.
 - **A wide table produces a long snippet** → the panel scrolls and each block scrolls horizontally; no truncation, because a truncated script is a broken script.
