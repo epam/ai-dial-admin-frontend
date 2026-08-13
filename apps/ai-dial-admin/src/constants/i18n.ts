@@ -61,7 +61,7 @@ export enum MenuI18nKey {
   ActivityAudit = 'Menu.ActivityAudit',
   Images = 'Menu.Images',
   Analytics = 'Menu.Analytics',
-  QueryBuilder = 'Menu.QueryBuilder',
+  Queries = 'Menu.Queries',
   Tables = 'Menu.Tables',
   AnalyticsConversations = 'Menu.AnalyticsConversations',
 }
@@ -170,6 +170,7 @@ export enum EntitiesI18nKey {
   NoInterceptors = 'Entities.NoInterceptors',
   NoTestSuites = 'Entities.NoTestSuites',
   NoDatasets = 'Entities.NoDatasets',
+  NoQueries = 'Entities.NoQueries',
   NoRuns = 'Entities.NoRuns',
   NoResults = 'Entities.NoResults',
   NoMetrics = 'Entities.NoMetrics',
@@ -290,6 +291,7 @@ export enum DeleteI18nKey {
   InterceptorTemplate = 'DeleteEntity.Entities.InterceptorTemplate',
   TestSuite = 'DeleteEntity.Entities.TestSuite',
   Dataset = 'DeleteEntity.Entities.Dataset',
+  Query = 'DeleteEntity.Entities.Query',
   TestCase = 'DeleteEntity.Entities.TestCase',
   Run = 'DeleteEntity.Entities.Run',
   ApplicationRunner = 'DeleteEntity.Entities.ApplicationRunner',
@@ -434,6 +436,7 @@ export enum UpdateI18nKey {
   Adapter = 'UpdateEntity.Entities.Adapter',
   TestSuite = 'UpdateEntity.Entities.TestSuite',
   Dataset = 'UpdateEntity.Entities.Dataset',
+  Query = 'UpdateEntity.Entities.Query',
   InterceptorTemplate = 'UpdateEntity.Entities.InterceptorTemplate',
   ApplicationRunner = 'UpdateEntity.Entities.ApplicationRunner',
   SystemProperties = 'UpdateEntity.Entities.SystemProperties',
@@ -472,6 +475,7 @@ export enum CreateI18nKey {
   AssetApplication = 'CreateEntity.Entities.AssetApplication',
   TestSuite = 'CreateEntity.Entities.TestSuite',
   Dataset = 'CreateEntity.Entities.Dataset',
+  Query = 'CreateEntity.Entities.Query',
 }
 
 export enum UpstreamEndpointsI18nKey {
@@ -2366,6 +2370,36 @@ export enum QueryBuilderI18nKey {
   DirectionAscDescription = 'QueryBuilder.DirectionAscDescription',
   DirectionDesc = 'QueryBuilder.DirectionDesc',
   DirectionDescDescription = 'QueryBuilder.DirectionDescDescription',
+}
+
+export enum QueriesI18nKey {
+  Title = 'Queries.Title',
+  BuilderRail = 'Queries.BuilderRail',
+  CreateQuery = 'Queries.CreateQuery',
+  EditQuery = 'Queries.EditQuery',
+  Name = 'Queries.Name',
+  Description = 'Queries.Description',
+  Tag = 'Queries.Tag',
+  Scope = 'Queries.Scope',
+  ScopePersonal = 'Queries.ScopePersonal',
+  ScopePersonalHint = 'Queries.ScopePersonalHint',
+  ScopeCommon = 'Queries.ScopeCommon',
+  ScopeCommonHint = 'Queries.ScopeCommonHint',
+  Source = 'Queries.Source',
+  Editor = 'Queries.Editor',
+  EditorBuilder = 'Queries.EditorBuilder',
+  EditorJson = 'Queries.EditorJson',
+  EditorSql = 'Queries.EditorSql',
+  SavedBy = 'Queries.SavedBy',
+  SavedByUnknown = 'Queries.SavedByUnknown',
+  NoQueriesDescription = 'Queries.NoQueriesDescription',
+  // Guidance shown alongside (or instead of) the service's own message, chosen by machine error code.
+  ErrorGeneric = 'Queries.ErrorGeneric',
+  ErrorValidation = 'Queries.ErrorValidation',
+  ErrorSensitiveLiteral = 'Queries.ErrorSensitiveLiteral',
+  ErrorForbidden = 'Queries.ErrorForbidden',
+  ErrorNotFound = 'Queries.ErrorNotFound',
+  ErrorPrincipalUnavailable = 'Queries.ErrorPrincipalUnavailable',
 }
 
 export enum AnalyticsTablesI18nKey {

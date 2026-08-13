@@ -110,12 +110,12 @@ describe('MENU_CONFIGURATION — Analytics group', () => {
     expect(group?.isPreview).toBe(true);
     expect(group?.items.map((item) => item.key)).toEqual([
       MenuI18nKey.Tables,
-      MenuI18nKey.QueryBuilder,
+      MenuI18nKey.Queries,
       MenuI18nKey.AnalyticsConversations,
     ]);
     expect(group?.items.map((item) => item.href)).toEqual([
       ApplicationRoute.AnalyticsTables,
-      ApplicationRoute.AnalyticsQueryBuilder,
+      ApplicationRoute.AnalyticsQueries,
       ApplicationRoute.ConversationsTrace,
     ]);
   });

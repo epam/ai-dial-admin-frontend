@@ -36,6 +36,7 @@ const deleteEntityMap: Record<string, DeleteI18nKey> = {
   [ApplicationRoute.InterceptorTemplates]: DeleteI18nKey.InterceptorTemplate,
   [ApplicationRoute.TestSuites]: DeleteI18nKey.TestSuite,
   [ApplicationRoute.Datasets]: DeleteI18nKey.Dataset,
+  [ApplicationRoute.AnalyticsQueries]: DeleteI18nKey.Query,
   [ApplicationRoute.TestCases]: DeleteI18nKey.TestCase,
   [ApplicationRoute.Runs]: DeleteI18nKey.Run,
   [ApplicationRoute.McpContainers]: DeleteI18nKey.McpContainer,

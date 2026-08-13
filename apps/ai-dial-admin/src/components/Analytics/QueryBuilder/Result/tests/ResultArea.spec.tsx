@@ -1,10 +1,18 @@
+import { FC, useState } from 'react';
+
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import ResultArea from '@/src/components/Analytics/QueryBuilder/Result/ResultArea';
+import { DEFAULT_CHART_CONFIG } from '@/src/constants/analytics/query-builder';
 import { QueryMode, StructuredQueryResult } from '@/src/models/analytics/query';
-import { ExecutedQueryMeta, QueryRequestKind } from '@/src/models/analytics/query-builder';
+import {
+  ChartConfig,
+  ExecutedQueryMeta,
+  QueryRequestKind,
+  QueryResultView,
+} from '@/src/models/analytics/query-builder';
 
 vi.mock('@/src/components/Grid/GridView/GridView', () => ({
   default: ({ rowData }: { rowData?: unknown[] }) => <div>grid rows: {rowData?.length ?? 0}</div>,
@@ -35,14 +43,35 @@ const ROW_META: ExecutedQueryMeta = {
   columnLabels: {},
 };
 
-const renderArea = (overrides: Partial<Parameters<typeof ResultArea>[0]> = {}) => {
+type AreaProps = Parameters<typeof ResultArea>[0];
+
+// ResultArea is controlled by the orchestrator, so the view and chart config live above it. This
+// harness supplies that state locally, keeping the switcher interactive in tests that click it.
+const ControlledArea: FC<Omit<AreaProps, 'view' | 'onChangeView' | 'chartConfig' | 'onChangeChartConfig'>> = (
+  props,
+) => {
+  const [view, setView] = useState(QueryResultView.Table);
+  const [chartConfig, setChartConfig] = useState<ChartConfig>(DEFAULT_CHART_CONFIG);
+
+  return (
+    <ResultArea
+      {...props}
+      view={view}
+      onChangeView={setView}
+      chartConfig={chartConfig}
+      onChangeChartConfig={setChartConfig}
+    />
+  );
+};
+
+const renderArea = (overrides: Partial<AreaProps> = {}) => {
   const props = {
     result: null,
     meta: null,
     isRunning: false,
     ...overrides,
   };
-  render(<ResultArea {...props} />);
+  render(<ControlledArea {...props} />);
   return props;
 };
 

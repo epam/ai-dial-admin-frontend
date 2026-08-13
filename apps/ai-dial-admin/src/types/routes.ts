@@ -59,7 +59,7 @@ export enum ApplicationRoute {
   Metrics = '/metrics',
 
   // Analytics
-  AnalyticsQueryBuilder = '/query-builder',
+  AnalyticsQueries = '/queries',
   AnalyticsTables = '/tables',
   ConversationsTrace = '/conversations-trace',
 }
