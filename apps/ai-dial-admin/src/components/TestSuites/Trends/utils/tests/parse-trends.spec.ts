@@ -195,4 +195,51 @@ describe('parseTrendsData', () => {
     expect(parsed.byStatistic.MIN.map((group) => group.name)).toEqual(['pack.generation', 'pack.retrieval']);
     expect(parsed.byStatistic.AVG.map((group) => group.name)).toEqual(['pack.generation', 'pack.retrieval']);
   });
+
+  test('orders statistics by Metric Scores segmented-control order', () => {
+    const parsed = parseTrendsData(
+      {
+        rows: [
+          {
+            test_suite_run_id: 'run-1',
+            metric_name: 'ragas.faithfulness',
+            metric_score_name: 'MAX',
+            value: 0.9,
+            computed_at_ms: 1000,
+          },
+          {
+            test_suite_run_id: 'run-1',
+            metric_name: 'ragas.faithfulness',
+            metric_score_name: 'MIN',
+            value: 0.1,
+            computed_at_ms: 1000,
+          },
+          {
+            test_suite_run_id: 'run-1',
+            metric_name: 'ragas.faithfulness',
+            metric_score_name: 'P90',
+            value: 0.8,
+            computed_at_ms: 1000,
+          },
+          {
+            test_suite_run_id: 'run-1',
+            metric_name: 'ragas.faithfulness',
+            metric_score_name: 'P10',
+            value: 0.2,
+            computed_at_ms: 1000,
+          },
+          {
+            test_suite_run_id: 'run-1',
+            metric_name: 'ragas.faithfulness',
+            metric_score_name: 'AVG',
+            value: 0.5,
+            computed_at_ms: 1000,
+          },
+        ],
+      },
+      runs,
+    );
+
+    expect(parsed.statistics).toEqual(['AVG', 'P90', 'P10', 'MAX', 'MIN']);
+  });
 });

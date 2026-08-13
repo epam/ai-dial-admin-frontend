@@ -1,3 +1,4 @@
+import { sortMetricStatistics } from '@/src/components/Common/MetricStatistics/utils';
 import { splitMetricName } from '@/src/components/Runs/Summary/utils';
 import {
   COMPUTED_AT_MS_FIELD,
@@ -214,7 +215,7 @@ export const parseTrendsData = (result: StructuredQueryResult | null, runs: Run[
       });
   }
 
-  return { runOrder, kpis, statistics, byStatistic };
+  return { runOrder, kpis, statistics: sortMetricStatistics(statistics), byStatistic };
 };
 
 export const emptyTrendsData = (): TrendsData => ({

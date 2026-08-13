@@ -1,9 +1,10 @@
 'use client';
 
-import { FC, useEffect, useMemo, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 
-import { DialLoader, DialNoDataContent, DialSegmentedControl, SegmentedControlOption } from '@epam/ai-dial-ui-kit';
+import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
+import MetricStatisticControl from '@/src/components/Common/MetricStatistics/MetricStatisticControl';
 import SummarySection from '@/src/components/Runs/Summary/SummarySection';
 import MetricTrendCard from '@/src/components/TestSuites/Trends/MetricTrendCard';
 import { MetricTrendGroup, TrendsRunPoint } from '@/src/components/TestSuites/Trends/models';
@@ -32,11 +33,6 @@ const MetricTrends: FC<Props> = ({ runOrder, runCount, statistics, byStatistic, 
     }
   }, [selectedStatistic, statistics]);
 
-  const options: SegmentedControlOption[] = useMemo(
-    () => statistics.map((statistic) => ({ value: statistic, label: statistic })),
-    [statistics],
-  );
-
   const groups = selectedStatistic ? (byStatistic[selectedStatistic] ?? []) : [];
 
   return (
@@ -50,14 +46,12 @@ const MetricTrends: FC<Props> = ({ runOrder, runCount, statistics, byStatistic, 
         </>
       }
       control={
-        options.length > 0 && selectedStatistic ? (
-          <DialSegmentedControl
-            ariaLabel={t(TestSuitesI18nKey.MetricTrends)}
-            options={options}
-            value={selectedStatistic}
-            onChange={setSelectedStatistic}
-          />
-        ) : undefined
+        <MetricStatisticControl
+          statistics={statistics}
+          value={selectedStatistic}
+          onChange={setSelectedStatistic}
+          ariaLabel={t(TestSuitesI18nKey.MetricTrends)}
+        />
       }
     >
       {isLoading ? (
