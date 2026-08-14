@@ -59,9 +59,33 @@ describe('Compare Summary :: utils', () => {
     expect(groups.map((group) => group.name)).toEqual(['ragas', 'aidial', 'other']);
     expect(groups[0].data).toEqual({ context_recall: 0.8, noise_sensitivity: 0.5 });
     expect(groups[0].compareData).toEqual({ context_recall: 0.3, noise_sensitivity: 0.2 });
-    expect(groups[1].compareData).toEqual({});
-    expect(groups[2].data).toEqual({});
+    expect(groups[1].data).toEqual({ faithfulness: 0.7 });
+    expect(groups[1].compareData).toEqual({ faithfulness: null });
+    expect(groups[2].data).toEqual({ score: null });
     expect(groups[2].compareData).toEqual({ score: 0.4 });
+  });
+
+  test('getCompareBarGroups fills null for asymmetric keys in a shared group', () => {
+    const primary: MetricScoresData = {
+      overallScore: 0.8,
+      statistics: ['AVG'],
+      byStatistic: {
+        AVG: [{ name: 'ragas', bars: { context_recall: 0.8, noise_sensitivity: 0.5 } }],
+      },
+    };
+    const compared: MetricScoresData = {
+      overallScore: 0.3,
+      statistics: ['AVG'],
+      byStatistic: {
+        AVG: [{ name: 'ragas', bars: { context_recall: 0.3 } }],
+      },
+    };
+
+    const groups = getCompareBarGroups(primary, compared, 'AVG');
+
+    expect(groups).toHaveLength(1);
+    expect(groups[0].data).toEqual({ context_recall: 0.8, noise_sensitivity: 0.5 });
+    expect(groups[0].compareData).toEqual({ context_recall: 0.3, noise_sensitivity: null });
   });
 
   test('getCompareBarGroups returns empty when statistic or primary is missing', () => {
@@ -83,5 +107,6 @@ describe('Compare Summary :: utils', () => {
   test('maxBarValue uses at least 1 and both series', () => {
     expect(maxBarValue({ a: 0.2 }, { a: 0.5 })).toBe(1);
     expect(maxBarValue({ a: 1.2 }, { a: 0.5 })).toBe(1.2);
+    expect(maxBarValue({ a: null }, { a: 1.5 })).toBe(1.5);
   });
 });
