@@ -21,8 +21,8 @@ const row = (rating_up: number | null, rating_down: number | null): Conversation
 const renderCell = (data?: ConversationRow | null) =>
   render(<RatingCellRenderer {...({ data } as ICellRendererParams<ConversationRow>)} />);
 
-const up = () => screen.getByLabelText(ConversationsTraceI18nKey.RatingUp);
-const down = () => screen.getByLabelText(ConversationsTraceI18nKey.RatingDown);
+const up = () => screen.getByText(ConversationsTraceI18nKey.RatingUp).parentElement;
+const down = () => screen.getByText(ConversationsTraceI18nKey.RatingDown).parentElement;
 
 describe('RatingCellRenderer', () => {
   test('always shows both a positive and a negative count, as the design does', () => {

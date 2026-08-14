@@ -22,6 +22,7 @@ const createEntityMap: Record<string, UpdateI18nKey> = {
   [ApplicationRoute.Files]: UpdateI18nKey.File,
   [ApplicationRoute.TestSuites]: UpdateI18nKey.TestSuite,
   [ApplicationRoute.Datasets]: UpdateI18nKey.Dataset,
+  [ApplicationRoute.AnalyticsQueries]: UpdateI18nKey.Query,
   [ApplicationRoute.FilePublications]: UpdateI18nKey.Publication,
   [ApplicationRoute.PromptPublications]: UpdateI18nKey.Publication,
   [ApplicationRoute.ApplicationPublications]: UpdateI18nKey.Publication,

@@ -12,7 +12,7 @@ const analyticsGroup = (overrides: Partial<MenuGroupConfiguration> = {}): MenuGr
   key: MenuI18nKey.Analytics,
   descriptionKey: MenuI18nKey.Analytics,
   isPreview: true,
-  items: [{ key: MenuI18nKey.QueryBuilder, href: ApplicationRoute.AnalyticsQueryBuilder }],
+  items: [{ key: MenuI18nKey.Queries, href: ApplicationRoute.AnalyticsQueries }],
   ...overrides,
 });
 

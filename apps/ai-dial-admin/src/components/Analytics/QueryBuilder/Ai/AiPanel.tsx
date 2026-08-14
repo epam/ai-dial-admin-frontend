@@ -15,7 +15,9 @@ import classNames from 'classnames';
 
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import { splitMessageAroundSql } from '@/src/components/Analytics/QueryBuilder/utils/extract-sql';
-import { generateQuery } from '@/src/app/[lang]/query-builder/actions';
+import { generateQuery } from '@/src/app/[lang]/queries/actions';
+import { useQueryBuilder } from '@/src/components/Analytics/QueryBuilder/context';
+import { buildSchemaSystemMessage } from '@/src/components/Analytics/QueryBuilder/utils/ai-context';
 import { QUERY_ASSISTANT_SUGGESTIONS } from '@/src/constants/analytics/query-assistant';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -32,6 +34,9 @@ interface Props {
 const AiPanel: FC<Props> = ({ onRunMessage, loadedMessageIndex, runInFlight }) => {
   const t = useI18n();
   const { showNotification } = useNotification();
+  // The selected source and its schema come from the builder context, the same place every other
+  // section reads them from, so the assistant cannot fall out of step with the toolbar.
+  const { state } = useQueryBuilder();
 
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<QueryAssistantMessage[]>([]);
@@ -53,7 +58,10 @@ const AiPanel: FC<Props> = ({ onRunMessage, loadedMessageIndex, runInFlight }) =
     setMessages(nextMessages);
     setInput('');
     setLoading(true);
-    const res = await generateQuery(nextMessages);
+    // The schema message is built per request and kept out of `messages`, so it never shows in the
+    // transcript and always describes the source selected *now* — switching source mid-conversation
+    // makes the next request carry the new schema.
+    const res = await generateQuery([buildSchemaSystemMessage(state.entityName, state.fields), ...nextMessages]);
     if (res.success && res.response) {
       const reply = res.response.choices?.[0]?.message;
       if (reply) {

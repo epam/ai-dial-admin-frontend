@@ -41,6 +41,9 @@ const predicate = (op: QueryOperator, fieldName: string, val: QueryValueExpr): Q
   args: [field(fieldName), val],
 });
 
+export const eq = (fieldName: string, val: QueryValueExpr): QueryPredicate =>
+  predicate(QueryOperator.Eq, fieldName, val);
+
 export const le = (fieldName: string, val: QueryValueExpr): QueryPredicate =>
   predicate(QueryOperator.Le, fieldName, val);
 

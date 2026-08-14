@@ -13,9 +13,7 @@ export interface ProvenanceHeaderGroupParams {
 }
 
 const ProvenanceHeaderGroup: FC<IHeaderGroupParams & ProvenanceHeaderGroupParams> = ({ label, provenance }) => (
-  <span
-    className={classNames('flex items-center gap-1 dial-tiny-semi-text uppercase', PROVENANCE_TEXT_CLASS[provenance])}
-  >
+  <span className={classNames('flex items-center gap-1 dial-tiny-semi-text', PROVENANCE_TEXT_CLASS[provenance])}>
     {label}
   </span>
 );

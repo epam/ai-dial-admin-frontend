@@ -7,7 +7,7 @@ import { DialGhostIconButton, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconLayoutSidebarRightCollapse } from '@tabler/icons-react';
 
 import { QUERY_BUILDER_RAIL_WIDTH_CLASS } from '@/src/constants/analytics/query-builder';
-import { MenuI18nKey, QueryBuilderI18nKey } from '@/src/constants/i18n';
+import { QueriesI18nKey, QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
@@ -21,7 +21,7 @@ const BuilderRail: FC<Props> = ({ onCollapse, switcher, children }) => {
 
   return (
     <aside
-      aria-label={t(MenuI18nKey.QueryBuilder)}
+      aria-label={t(QueriesI18nKey.BuilderRail)}
       className={classNames(
         'flex h-full shrink-0 flex-col border-l border-primary bg-layer-2',
         QUERY_BUILDER_RAIL_WIDTH_CLASS,

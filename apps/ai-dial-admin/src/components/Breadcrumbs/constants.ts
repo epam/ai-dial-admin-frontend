@@ -185,6 +185,15 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
       { name: 'Id', href: false },
     ],
   },
+  [ApplicationRoute.AnalyticsQueries]: {
+    segments: [
+      {
+        name: 'Queries',
+        i18nKey: MenuI18nKey.Queries,
+      },
+      { name: 'Id', href: false },
+    ],
+  },
   [ApplicationRoute.TestSuites]: {
     segments: [
       {

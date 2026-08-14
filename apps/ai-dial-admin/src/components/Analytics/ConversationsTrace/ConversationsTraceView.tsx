@@ -1,6 +1,6 @@
 'use client';
 
-import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import { FC } from 'react';
 
 import ConversationsProvenanceLine from '@/src/components/Analytics/ConversationsTrace/Header/ConversationsProvenanceLine';
@@ -8,11 +8,10 @@ import ConversationsSummary from '@/src/components/Analytics/ConversationsTrace/
 import ConversationsList from '@/src/components/Analytics/ConversationsTrace/List/ConversationsList';
 import ConversationsToolbar from '@/src/components/Analytics/ConversationsTrace/Toolbar/ConversationsToolbar';
 import { useConversations } from '@/src/components/Analytics/ConversationsTrace/use-conversations';
-import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
+import LoadingOverlay from '@/src/components/Common/LoadingOverlay/LoadingOverlay';
+import { BasicI18nKey, ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ConversationTotals } from '@/src/models/analytics/conversations-trace';
-
-const LOADER_SIZE = 40;
 
 interface Props {
   initialTotals: ConversationTotals | null;
@@ -46,11 +45,7 @@ const ConversationsTraceView: FC<Props> = ({ initialTotals, hasInitialLoadError 
 
   // The grid stays mounted whatever the state: under the infinite row model its datasource is attached
   // through the grid api, so unmounting it would strand the next request.
-  const overlay = isFirstPageLoading ? (
-    <DialLoader size={LOADER_SIZE} />
-  ) : isEmptyResult || hasLoadError ? (
-    <DialNoDataContent title={t(emptyStateTitle)} />
-  ) : null;
+  const isEmptyStateVisible = !isFirstPageLoading && (isEmptyResult || hasLoadError);
 
   return (
     <div className="flex flex-col size-full bg-layer-2 rounded py-5 px-6 gap-5">
@@ -73,7 +68,12 @@ const ConversationsTraceView: FC<Props> = ({ initialTotals, hasInitialLoadError 
       />
       <div className="relative flex flex-1 rounded overflow-auto min-h-0 border border-primary">
         <ConversationsList datasource={datasource} onGridReady={onGridReady} />
-        {overlay && <div className="absolute inset-0 flex items-center justify-center bg-layer-2">{overlay}</div>}
+        {isFirstPageLoading && <LoadingOverlay label={t(BasicI18nKey.Loading)} />}
+        {isEmptyStateVisible && (
+          <div className="absolute inset-0 flex items-center justify-center bg-layer-2">
+            <DialNoDataContent title={t(emptyStateTitle)} />
+          </div>
+        )}
       </div>
     </div>
   );
