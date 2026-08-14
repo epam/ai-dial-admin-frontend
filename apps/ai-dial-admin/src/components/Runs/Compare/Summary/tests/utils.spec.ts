@@ -36,8 +36,8 @@ const COMPARED_SCORES: MetricScoresData = {
 };
 
 describe('Compare Summary :: utils', () => {
-  test('intersectStatistics keeps primary order of shared stats', () => {
-    expect(intersectStatistics(['AVG', 'P90', 'MAX'], ['P90', 'AVG', 'MIN'])).toEqual(['AVG', 'P90']);
+  test('intersectStatistics keeps shared stats in canonical control order', () => {
+    expect(intersectStatistics(['MAX', 'AVG', 'P90'], ['P90', 'AVG', 'MIN'])).toEqual(['AVG', 'P90']);
   });
 
   test('unionMetricOptions prefers primary option on name collision', () => {

@@ -22,6 +22,7 @@ import {
   SortDir,
   SortItem,
   StructuredQuery,
+  SubqueryExpr,
   ValueExpr,
   ValueType,
 } from '@/src/models/evaluation/structured-query';
@@ -37,6 +38,8 @@ export const value = (valueType: ValueType, val: string | null): ValueExpr => ({
 });
 
 export const fn = (name: string, args: Expr[] = []): FnExpr => ({ type: ExprType.Fn, name, args });
+
+export const subquery = (query: StructuredQuery): SubqueryExpr => ({ type: ExprType.Subquery, query });
 
 export const col = (expr: Expr, as?: string): OutputColumn => ({ expr, ...(as ? { as } : {}) });
 
@@ -80,6 +83,12 @@ export const not = (node: FilterNode): LogicalNode => ({ op: LogicalOp.Not, args
 export const inValues = (fieldName: string, valueType: ValueType, values: string[]): ComparisonNode => ({
   op: ComparisonOp.In,
   args: [field(fieldName), { type: ExprType.Array, items: values.map((val) => value(valueType, val)) }],
+});
+
+/** Set-membership comparison whose right operand is a nested structured query. */
+export const inSubquery = (fieldName: string, query: StructuredQuery): ComparisonNode => ({
+  op: ComparisonOp.In,
+  args: [field(fieldName), subquery(query)],
 });
 
 export const offsetPage = (offset: number, limit: number, includeTotal = false): OffsetPage => ({
