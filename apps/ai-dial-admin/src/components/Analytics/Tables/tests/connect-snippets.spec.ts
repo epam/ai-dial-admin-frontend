@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'vitest';
 
 import {
-  ADAS_BASE_URL_PLACEHOLDER,
-  ADAS_FLIGHT_URI_PLACEHOLDER,
+  ANALYTICS_BASE_URL_PLACEHOLDER,
+  ANALYTICS_FLIGHT_SQL_URL_PLACEHOLDER,
 } from '@/src/components/Analytics/Tables/ConnectPanel/constants';
 import {
   buildConnectSnippets,
@@ -192,8 +192,8 @@ describe('buildConnectSnippets', () => {
   test('falls back to the placeholder when no endpoint is configured', () => {
     const snippets = buildConnectSnippets(widgets, { baseUrl: '', flightUri: '' });
 
-    expect(snippets.auth).toContain(ADAS_BASE_URL_PLACEHOLDER);
-    expect(snippets.pythonWrite).toContain(ADAS_BASE_URL_PLACEHOLDER);
+    expect(snippets.auth).toContain(ANALYTICS_BASE_URL_PLACEHOLDER);
+    expect(snippets.pythonWrite).toContain(ANALYTICS_BASE_URL_PLACEHOLDER);
   });
 
   test('posts rows to this table and projects its columns on read', () => {
@@ -224,12 +224,22 @@ describe('buildConnectSnippets', () => {
   test('falls back to the Flight placeholder, which is not derived from the REST endpoint', () => {
     const snippets = buildConnectSnippets(widgets, { baseUrl: 'https://analytics.example.com', flightUri: '' });
 
-    expect(snippets.flightInstall).toContain(ADAS_FLIGHT_URI_PLACEHOLDER);
+    expect(snippets.flightInstall).toContain(ANALYTICS_FLIGHT_SQL_URL_PLACEHOLDER);
     expect(snippets.flightInstall).not.toContain('https://analytics.example.com');
   });
 
+  test('asks the reader to set only DIAL-branded names, never the internal service name', () => {
+    const snippets = buildConnectSnippets(widgets, { baseUrl: '', flightUri: '' });
+    const all = Object.values(snippets).join('\n');
+
+    expect(all).toContain('DIAL_API_KEY');
+    expect(all).toContain('DIAL_ANALYTICS_BASE_URL');
+    expect(all).toContain('DIAL_ANALYTICS_FLIGHT_SQL_URL');
+    expect(all.toLowerCase()).not.toContain('adas');
+  });
+
   test('projects a wildcard when the table declares no columns', () => {
-    const snippets = buildConnectSnippets(table([]), '');
+    const snippets = buildConnectSnippets(table([]), { baseUrl: '', flightUri: '' });
 
     expect(snippets.pythonRead).toContain('SELECT * FROM widget_metrics');
     expect(snippets.pythonWrite).toContain('ROW = {}');

@@ -120,7 +120,9 @@ A nullable column SHALL still receive a value rather than a null, so the snippet
 
 **Read snippets** SHALL project the table's column names and SHALL carry an explicit `LIMIT` no greater than the REST maximum.
 
-Snippets SHALL read each endpoint from an environment variable whose default is the corresponding configured public endpoint: `ADAS_BASE_URL` for the REST surfaces and `ADAS_FLIGHT_URI` for Flight SQL. When one is not configured its default SHALL be a visible placeholder — `<adas-base-url>` and `grpc://<adas-host>:32010` respectively — and the panel SHALL show a note to replace it, positioned with the snippets that use it.
+Snippets SHALL read each endpoint from an environment variable whose default is the corresponding configured public endpoint: `DIAL_ANALYTICS_BASE_URL` for the REST surfaces and `DIAL_ANALYTICS_FLIGHT_SQL_URL` for Flight SQL, with the key in `DIAL_API_KEY`. When an endpoint is not configured its default SHALL be a visible placeholder — `<analytics-base-url>` and `grpc://<analytics-host>:32010` respectively — and the panel SHALL show a note to replace it, positioned with the snippets that use it.
+
+Every name a snippet asks the reader to set SHALL be one the product uses publicly. The analytics service's internal name SHALL NOT appear in any snippet, placeholder, or panel string — a reader configuring a client has no way to connect it to anything they were given.
 
 A table with no declared columns SHALL still render every tab, with the write snippet carrying an empty row rather than failing to render.
 
@@ -197,17 +199,17 @@ After the write snippets — not before them, since the generated snippet alread
 #### Scenario: Endpoint defaults to the configured public URL
 
 - **WHEN** a public Analytics endpoint is configured and the user opens the panel
-- **THEN** the snippets default `ADAS_BASE_URL` to that endpoint
+- **THEN** the snippets default `DIAL_ANALYTICS_BASE_URL` to that endpoint
 
 #### Scenario: Flight endpoint falls back to its own placeholder
 
 - **WHEN** no public Flight endpoint is configured
-- **THEN** the Flight snippets default `ADAS_FLIGHT_URI` to a `grpc://` placeholder, never to the REST endpoint, and the Read tab shows a note to replace it
+- **THEN** the Flight snippets default `DIAL_ANALYTICS_FLIGHT_SQL_URL` to a `grpc://` placeholder, never to the REST endpoint, and the Read tab shows a note to replace it
 
 #### Scenario: Endpoint falls back to a placeholder
 
 - **WHEN** no public Analytics endpoint is configured
-- **THEN** the snippets default `ADAS_BASE_URL` to `<adas-base-url>` and the panel shows a note to replace it
+- **THEN** the snippets default `DIAL_ANALYTICS_BASE_URL` to `<analytics-base-url>` and the panel shows a note to replace it
 
 #### Scenario: A table with no columns still renders
 
@@ -221,7 +223,7 @@ After the write snippets — not before them, since the generated snippet alread
 
 ### Requirement: Connect panel states the authentication and role contract
 
-The panel SHALL instruct the user to supply a DIAL API key through an `ADAS_API_KEY` environment variable rather than pasting it into the script. Every surface the panel shows takes the same key in the same `Api-Key` header; the Flight SQL client sends it as a gRPC call header, which is why its driver option carries the lower-cased name. The panel SHALL NOT render, echo, or offer to generate an actual key; the value in every snippet SHALL be a placeholder.
+The panel SHALL instruct the user to supply a DIAL API key through a `DIAL_API_KEY` environment variable rather than pasting it into the script. Every surface the panel shows takes the same key in the same `Api-Key` header; the Flight SQL client sends it as a gRPC call header, which is why its driver option carries the lower-cased name. The panel SHALL NOT render, echo, or offer to generate an actual key; the value in every snippet SHALL be a placeholder.
 
 The panel SHALL read this table's access lists when it opens. The **Write data** tab SHALL render the `write` role names as the roles a key must carry to write rows to this table. These are the only role names the panel SHALL render.
 
@@ -241,6 +243,11 @@ While the access request is in flight the panel SHALL show a loading state in pl
 
 - **WHEN** the panel opens for a table whose `write` access list contains `analytics-writer`
 - **THEN** the **Write data** tab lists `analytics-writer` as a role a key must carry to write to this table
+
+#### Scenario: No internal service name is exposed
+
+- **WHEN** any snippet, placeholder, or panel string renders
+- **THEN** none of them contains the analytics service's internal name
 
 #### Scenario: No application-role constant is rendered
 

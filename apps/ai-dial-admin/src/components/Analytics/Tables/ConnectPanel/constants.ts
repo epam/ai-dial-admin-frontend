@@ -4,15 +4,15 @@ import { ConnectFormatRule, SnippetValue } from '@/src/components/Analytics/Tabl
 // Shown in place of the endpoint when the deployment configures no public Analytics URL. Deliberately
 // not a plausible host: a copied snippet should fail on an obviously unreplaced placeholder rather than
 // on a DNS lookup the reader has to diagnose.
-export const ADAS_BASE_URL_PLACEHOLDER = '<adas-base-url>';
+export const ANALYTICS_BASE_URL_PLACEHOLDER = '<analytics-base-url>';
 
 // The Flight endpoint cannot be derived from the REST one: different scheme, a separately exposed
 // port, and usually a different host.
-export const ADAS_FLIGHT_URI_PLACEHOLDER = 'grpc://<adas-host>:32010';
+export const ANALYTICS_FLIGHT_SQL_URL_PLACEHOLDER = 'grpc://<analytics-host>:32010';
 
-export const ADAS_BASE_URL_ENV = 'ADAS_BASE_URL';
-export const ADAS_API_KEY_ENV = 'ADAS_API_KEY';
-export const ADAS_FLIGHT_URI_ENV = 'ADAS_FLIGHT_URI';
+export const DIAL_ANALYTICS_BASE_URL_ENV = 'DIAL_ANALYTICS_BASE_URL';
+export const DIAL_API_KEY_ENV = 'DIAL_API_KEY';
+export const DIAL_ANALYTICS_FLIGHT_SQL_URL_ENV = 'DIAL_ANALYTICS_FLIGHT_SQL_URL';
 
 // The row limit the generated read snippets carry. The REST surface applies this same value when a
 // query omits a limit, so an explicit one changes nothing but shows the reader where to raise it.

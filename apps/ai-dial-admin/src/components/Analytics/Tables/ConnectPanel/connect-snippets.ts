@@ -1,9 +1,9 @@
 import {
-  ADAS_API_KEY_ENV,
-  ADAS_BASE_URL_ENV,
-  ADAS_BASE_URL_PLACEHOLDER,
-  ADAS_FLIGHT_URI_ENV,
-  ADAS_FLIGHT_URI_PLACEHOLDER,
+  DIAL_API_KEY_ENV,
+  DIAL_ANALYTICS_BASE_URL_ENV,
+  ANALYTICS_BASE_URL_PLACEHOLDER,
+  DIAL_ANALYTICS_FLIGHT_SQL_URL_ENV,
+  ANALYTICS_FLIGHT_SQL_URL_PLACEHOLDER,
   ANALYTICS_FIELD_TYPE_FORMAT_RULE,
   ANALYTICS_FIELD_TYPE_SAMPLE,
   CONNECT_FORMAT_RULE_ORDER,
@@ -98,9 +98,10 @@ export const buildFormatNotes = (table: AnalyticsTable): ConnectFormatNote[] => 
   }));
 };
 
-const resolveBaseUrl = (baseUrl: string): string => (baseUrl ?? '').trim() || ADAS_BASE_URL_PLACEHOLDER;
+const resolveBaseUrl = (baseUrl: string): string => (baseUrl ?? '').trim() || ANALYTICS_BASE_URL_PLACEHOLDER;
 
-const resolveFlightUri = (flightUri: string): string => (flightUri ?? '').trim() || ADAS_FLIGHT_URI_PLACEHOLDER;
+const resolveFlightUri = (flightUri: string): string =>
+  (flightUri ?? '').trim() || ANALYTICS_FLIGHT_SQL_URL_PLACEHOLDER;
 
 const projection = (table: AnalyticsTable): string => {
   const names = writableColumns(table).map((column) => column.name);
@@ -108,16 +109,17 @@ const projection = (table: AnalyticsTable): string => {
 };
 
 const buildAuthSnippet = (baseUrl: string): string =>
-  [`export ${ADAS_API_KEY_ENV}=dial_xxxxxxxxxxxxxxxx`, `export ${ADAS_BASE_URL_ENV}=${resolveBaseUrl(baseUrl)}`].join(
-    '\n',
-  );
+  [
+    `export ${DIAL_API_KEY_ENV}=dial_xxxxxxxxxxxxxxxx`,
+    `export ${DIAL_ANALYTICS_BASE_URL_ENV}=${resolveBaseUrl(baseUrl)}`,
+  ].join('\n');
 
 const buildPythonWriteSnippet = (table: AnalyticsTable, baseUrl: string): string =>
   [
     'import json, os, urllib.request',
     '',
-    `BASE_URL = os.environ.get("${ADAS_BASE_URL_ENV}", "${resolveBaseUrl(baseUrl)}")`,
-    `API_KEY  = os.environ["${ADAS_API_KEY_ENV}"]`,
+    `BASE_URL = os.environ.get("${DIAL_ANALYTICS_BASE_URL_ENV}", "${resolveBaseUrl(baseUrl)}")`,
+    `API_KEY  = os.environ["${DIAL_API_KEY_ENV}"]`,
     `TABLE    = "${table.name}"`,
     '',
     `ROW = ${toPythonLiteral(buildSampleRow(table))}`,
@@ -134,9 +136,9 @@ const buildPythonWriteSnippet = (table: AnalyticsTable, baseUrl: string): string
 
 const buildCurlWriteSnippet = (table: AnalyticsTable): string =>
   [
-    `curl -sS -X POST "$${ADAS_BASE_URL_ENV}/v1/tables/${table.name}/rows" \\`,
+    `curl -sS -X POST "$${DIAL_ANALYTICS_BASE_URL_ENV}/v1/tables/${table.name}/rows" \\`,
     `  -H 'Content-Type: application/json' \\`,
-    `  -H "Api-Key: $${ADAS_API_KEY_ENV}" \\`,
+    `  -H "Api-Key: $${DIAL_API_KEY_ENV}" \\`,
     `  -d '{"rows":[${toJsonLiteral(buildSampleRow(table), '  ')}]}'`,
   ].join('\n');
 
@@ -144,8 +146,8 @@ const buildPythonReadSnippet = (table: AnalyticsTable, baseUrl: string): string 
   [
     'import json, os, urllib.request',
     '',
-    `BASE_URL = os.environ.get("${ADAS_BASE_URL_ENV}", "${resolveBaseUrl(baseUrl)}")`,
-    `API_KEY  = os.environ["${ADAS_API_KEY_ENV}"]`,
+    `BASE_URL = os.environ.get("${DIAL_ANALYTICS_BASE_URL_ENV}", "${resolveBaseUrl(baseUrl)}")`,
+    `API_KEY  = os.environ["${DIAL_API_KEY_ENV}"]`,
     '',
     `SQL = "SELECT ${projection(table)} FROM ${table.name} LIMIT ${READ_SNIPPET_LIMIT}"`,
     '',
@@ -162,16 +164,16 @@ const buildPythonReadSnippet = (table: AnalyticsTable, baseUrl: string): string 
 
 const buildCurlReadSnippet = (table: AnalyticsTable): string =>
   [
-    `curl -sS -X POST "$${ADAS_BASE_URL_ENV}/v1/queries/execute-sql" \\`,
+    `curl -sS -X POST "$${DIAL_ANALYTICS_BASE_URL_ENV}/v1/queries/execute-sql" \\`,
     `  -H 'Content-Type: application/json' \\`,
-    `  -H "Api-Key: $${ADAS_API_KEY_ENV}" \\`,
+    `  -H "Api-Key: $${DIAL_API_KEY_ENV}" \\`,
     `  -d '{"sql":"SELECT ${projection(table)} FROM ${table.name} LIMIT ${READ_SNIPPET_LIMIT}"}'`,
   ].join('\n');
 
 const buildFlightInstallSnippet = (flightUri: string): string =>
   [
     'pip install adbc-driver-flightsql pyarrow pandas',
-    `export ${ADAS_FLIGHT_URI_ENV}=${resolveFlightUri(flightUri)}`,
+    `export ${DIAL_ANALYTICS_FLIGHT_SQL_URL_ENV}=${resolveFlightUri(flightUri)}`,
   ].join('\n');
 
 const buildFlightReadSnippet = (table: AnalyticsTable, flightUri: string): string =>
@@ -179,11 +181,11 @@ const buildFlightReadSnippet = (table: AnalyticsTable, flightUri: string): strin
     'import os',
     'import adbc_driver_flightsql.dbapi as flight_sql',
     '',
-    `URI = os.environ.get("${ADAS_FLIGHT_URI_ENV}", "${resolveFlightUri(flightUri)}")`,
+    `URI = os.environ.get("${DIAL_ANALYTICS_FLIGHT_SQL_URL_ENV}", "${resolveFlightUri(flightUri)}")`,
     '',
     // The driver names the header in lower case because gRPC lower-cases header names on the wire; it
     // is the same Api-Key the REST calls send.
-    `db_kwargs = {"adbc.flight.sql.rpc.call_header.api-key": os.environ["${ADAS_API_KEY_ENV}"]}`,
+    `db_kwargs = {"adbc.flight.sql.rpc.call_header.api-key": os.environ["${DIAL_API_KEY_ENV}"]}`,
     '',
     'with flight_sql.connect(URI, db_kwargs=db_kwargs, autocommit=True) as connection:',
     '    with connection.cursor() as cursor:',
