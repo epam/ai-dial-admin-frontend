@@ -105,6 +105,9 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
   const [sourceTable, setSourceTable] = useState<AnalyticsTable | null>(null);
 
   const isSystem = Boolean(table.system);
+  // An enrichment's rows come from the enrichment process, and it is not a queryable entity — its
+  // columns are surfaced on its source table instead. Neither half of Connect applies.
+  const isEnrichment = table.type === AnalyticsTableType.Enrichment;
   const isActive = table.status === TableStatus.Active;
   const { canDelete, canWrite, canModify, canManageRoles } = useAnalyticsTablePermissions(table);
   const columns = useMemo(() => table.columns ?? [], [table.columns]);
@@ -337,7 +340,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
           </div>
           {table.description && <DialEllipsisTooltip text={table.description} className="text-primary dial-small" />}
         </div>
-        {(canDelete || canWrite || canModify || canManageRoles || isActive) && (
+        {(canDelete || canWrite || canModify || canManageRoles || (isActive && !isEnrichment)) && (
           <div className="flex items-center gap-4">
             {canManageRoles && (
               <DialNeutralButton label={t(AnalyticsTablesI18nKey.ManageAccess)} onClick={() => setAccessOpen(true)} />
@@ -350,14 +353,18 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
                 {canModify && (
                   <DialNeutralButton label={t(AnalyticsTablesI18nKey.AddColumns)} onClick={() => setAddOpen(true)} />
                 )}
-                {canWrite && <DialNeutralButton label={t(AnalyticsTablesI18nKey.AddRows)} onClick={onAddRows} />}
+                {canWrite && !isEnrichment && (
+                  <DialNeutralButton label={t(AnalyticsTablesI18nKey.AddRows)} onClick={onAddRows} />
+                )}
                 {/* Not permission-gated: a reader who cannot yet write is the one who needs to learn
-                    which role to ask for. */}
-                <DialPrimaryButton
-                  label={t(AnalyticsTablesI18nKey.Connect)}
-                  onClick={() => setConnectOpen(true)}
-                  iconBefore={<IconPlugConnected size={18} />}
-                />
+                    which role to ask for. Enrichments are excluded entirely — see isEnrichment. */}
+                {!isEnrichment && (
+                  <DialPrimaryButton
+                    label={t(AnalyticsTablesI18nKey.Connect)}
+                    onClick={() => setConnectOpen(true)}
+                    iconBefore={<IconPlugConnected size={18} />}
+                  />
+                )}
               </>
             ) : (
               canModify && (

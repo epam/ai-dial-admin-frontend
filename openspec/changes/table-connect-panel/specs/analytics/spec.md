@@ -23,7 +23,7 @@ The Flight endpoint SHALL NOT be derived from the REST one. They are unrelated a
 
 ### Requirement: Table detail Connect panel
 
-The Table detail page SHALL offer a **Connect** header action, shown only while the table is `ACTIVE` and shown regardless of the viewer's per-table `write`/`modify` permissions. It SHALL NOT be shown for a `PENDING` or `FAILED` table, which has no materialized table to connect to. **Connect** SHALL be the header's primary action, so an `ACTIVE` table always presents exactly one primary action whatever the viewer's permissions are.
+The Table detail page SHALL offer a **Connect** header action, shown only while the table is `ACTIVE`, only for a table of type **source**, and otherwise regardless of the viewer's per-table `write`/`modify` permissions. An **enrichment** table SHALL offer no Connect action at all: its rows are produced by the enrichment process rather than by a client, and it is not a queryable entity in its own right — its columns are surfaced as table-qualified fields on its source table — so neither the write nor the read path the panel documents applies to it. It SHALL NOT be shown for a `PENDING` or `FAILED` table, which has no materialized table to connect to. **Connect** SHALL be the header's primary action, so an `ACTIVE` table always presents exactly one primary action whatever the viewer's permissions are.
 
 Activating **Connect** SHALL open a right-side overlay panel titled `Connect to <table name>`, dismissible by its close control, by the `Escape` key, and by activating the backdrop. The panel SHALL overlay the page rather than reflow it, and SHALL occupy the full viewport width below the layout's tablet breakpoint.
 
@@ -45,6 +45,12 @@ The panel assumes the deployment has API-key authentication and the Flight endpo
 
 - **WHEN** the detail view renders an `ACTIVE` table
 - **THEN** a **Connect** header action is present, rendered as the header's primary action
+
+#### Scenario: An enrichment table offers no Connect action
+
+- **WHEN** the detail view renders an `ACTIVE` enrichment table
+- **THEN** no **Connect** action and no **Add rows** action are present
+- **AND** the schema and catalog actions its permissions allow are still present
 
 #### Scenario: Connect is not offered before materialization
 
@@ -102,7 +108,7 @@ The panel assumes the deployment has API-key authentication and the Flight endpo
 
 Every snippet the Connect panel renders SHALL be generated from the table currently being viewed, so that a copied snippet runs against that table without editing. Snippets SHALL be derived from the table's declared columns; a column whose physical name begins with `_` SHALL be omitted, because the platform sets those and a row naming one is rejected.
 
-**Write snippets** SHALL key each row field by the column's **physical source name**, which is what the row-insert endpoint accepts. The panel SHALL NOT explain that identifier or contrast it with the exposed name: the two are equal on every table this application can produce — its column editor fills both from one input, and a rename sets both — so the distinction is invisible here and naming it would teach a concept the reader cannot act on. For an **enrichment** table the row SHALL additionally carry the grain key as a top-level field; an enrichment row without it cannot join to its source.
+**Write snippets** SHALL key each row field by the column's **physical source name**, which is what the row-insert endpoint accepts. The panel SHALL NOT explain that identifier or contrast it with the exposed name: the two are equal on every table this application can produce — its column editor fills both from one input, and a rename sets both — so the distinction is invisible here and naming it would teach a concept the reader cannot act on.
 
 Each field's value SHALL be a mock literal of the column's declared type, chosen so the row is valid input:
 
@@ -190,11 +196,6 @@ After the write snippets — not before them, since the generated snippet alread
 
 - **WHEN** a table has a column whose physical name begins with `_`
 - **THEN** that column appears in no snippet
-
-#### Scenario: Enrichment write snippet carries the grain key
-
-- **WHEN** the user opens the Connect panel for an enrichment table
-- **THEN** the write snippets include the grain key as a top-level row field alongside the declared columns
 
 #### Scenario: Endpoint defaults to the configured public URL
 
@@ -304,7 +305,8 @@ The table detail view (`components/Analytics/Tables/TableDetailView.tsx`) SHALL 
 
 - **Manage access** SHALL be shown only when `canManageRoles` (`FULL_ADMIN` and non-system).
 - **Delete table** SHALL be shown only when `canDelete` (`FULL_ADMIN` and non-system).
-- **Connect** SHALL be shown for every `ACTIVE` table regardless of permission, as the header's primary action (see "Table detail Connect panel").
+- **Connect** SHALL be shown for every `ACTIVE` **source** table regardless of permission, as the header's primary action, and SHALL NOT be shown for an **enrichment** table (see "Table detail Connect panel").
+- **Add rows** SHALL NOT be offered for an **enrichment** table whatever its `write` permission reports: those rows come from the enrichment process, so a hand-written insert is not a path this UI offers.
 - For an `ACTIVE` table, **Add columns** (schema evolution) and **Add rows** (inserting rows) SHALL each be offered as its own standalone header button — **not** as items of a shared dropdown. **Add columns** SHALL be shown only when `canModify` and **Add rows** only when `canWrite`; when neither permission is held, neither button renders. Both SHALL render as neutral actions, never primary and never dependent on whether the other is present, so each keeps the same appearance whatever the viewer's other permissions are. **Add rows** is deliberately not the emphasized way to put data in the table — see "Table detail row writes".
 - Per-column **edit/drop** (grid action column), **inline column rename**, column-metadata edits, and **description edits** SHALL be shown only when `canModify`.
 - Header actions SHALL be ordered **Manage access, Delete table, Add columns, Add rows, Connect** — the primary action last, where the header's primary action already sits. A not-yet-`ACTIVE` table shows neither Connect nor the two Add buttons, and shows **Save** in their place — see "Define and materialize a table schema".
@@ -359,7 +361,7 @@ Because the backend reports `permissions {false,false}` for system tables, the w
 
 ### Requirement: Table detail row writes
 
-The Table detail page SHALL let the user write rows by entering a JSON array of row objects in a popup editor, opened via the header **Add rows** button. The popup is a **hand-check** — a way for an admin to confirm the table accepts the shape they expect — and SHALL be presented as such, not as the way a table is populated; a table is populated by a client writing to its row endpoint programmatically (see "Table detail Connect panel"). Opening the editor SHALL prefill it with a one-row JSON template whose keys are the table's declared columns' **physical source names** (not their exposed names, which the backend's row-insert endpoint does not accept), each mapped to a value matching that column's type (`0` for Integer/Long/Decimal, `false` for Boolean, `{}` for Object, `[]` for Array, `""` otherwise) rather than a bare empty array, so the example stays valid input for every column. For an **enrichment** table the template SHALL additionally include the grain key as a top-level field, since an enrichment row cannot join to its source without it. The **Insert rows** submit action SHALL be disabled while the editor's content does not parse as a JSON array, re-enabling as soon as it does; submitting invalid or non-array input SHALL additionally surface an error and SHALL NOT issue a request. Valid rows SHALL be posted via `addRows`, with a success or error notification.
+The Table detail page SHALL let the user write rows by entering a JSON array of row objects in a popup editor, opened via the header **Add rows** button. The popup is a **hand-check** — a way for an admin to confirm the table accepts the shape they expect — and SHALL be presented as such, not as the way a table is populated; a table is populated by a client writing to its row endpoint programmatically (see "Table detail Connect panel"). Opening the editor SHALL prefill it with a one-row JSON template whose keys are the table's declared columns' **physical source names** (not their exposed names, which the backend's row-insert endpoint does not accept), each mapped to a value matching that column's type (`0` for Integer/Long/Decimal, `false` for Boolean, `{}` for Object, `[]` for Array, `""` otherwise) rather than a bare empty array, so the example stays valid input for every column. The popup SHALL NOT be reachable for an **enrichment** table (see the gating requirement); where the template is built for one, it includes the grain key as a top-level field, since an enrichment row cannot join to its source without it. The **Insert rows** submit action SHALL be disabled while the editor's content does not parse as a JSON array, re-enabling as soon as it does; submitting invalid or non-array input SHALL additionally surface an error and SHALL NOT issue a request. Valid rows SHALL be posted via `addRows`, with a success or error notification.
 
 The popup SHALL carry, above its editor, a statement of its purpose — that it inserts rows by hand for checking a schema, and that ongoing ingestion goes through the table's row endpoint — together with a **Write rows programmatically** action which closes the popup, discarding the editor's content, and opens the Connect panel on its **Write data** tab (see "Table detail Connect panel"). Both SHALL sit at the top of the popup body, above the editor and away from the submit controls, so a user who opened the popup for real ingestion is redirected before typing rather than after.
 
@@ -380,8 +382,8 @@ The popup SHALL carry, above its editor, a statement of its purpose — that it 
 
 #### Scenario: Enrichment template includes the grain key
 
-- **WHEN** the user opens the Add rows editor for an enrichment table
-- **THEN** the template includes the grain key as a top-level field alongside the declared columns
+- **WHEN** the Add rows template is built for an enrichment table
+- **THEN** it includes the grain key as a top-level field alongside the declared columns
 
 #### Scenario: Insert rows is disabled while the JSON is invalid
 

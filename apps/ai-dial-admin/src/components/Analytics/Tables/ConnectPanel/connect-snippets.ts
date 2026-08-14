@@ -37,13 +37,11 @@ const sampleFor = (column: AnalyticsTableColumn): SnippetValue => {
  * name on every table this app can create, so naming the distinction would teach a concept the reader
  * cannot act on.
  *
- * An enrichment's grain key leads the row: it is never one of `columns`, and an enrichment row that
- * omits it cannot join to its source.
+ * No grain-key handling: the panel is not offered for enrichment tables, which the enrichment process
+ * writes and which are not queryable in their own right.
  */
 export const buildSampleRow = (table: AnalyticsTable): SnippetRow => {
   const row: SnippetRow = {};
-  const grainKey = table.grain?.grain_key;
-  if (grainKey) row[grainKey] = ANALYTICS_FIELD_TYPE_SAMPLE[AnalyticsFieldType.String];
   writableColumns(table).forEach((column) => {
     row[column.source_name] = sampleFor(column);
   });

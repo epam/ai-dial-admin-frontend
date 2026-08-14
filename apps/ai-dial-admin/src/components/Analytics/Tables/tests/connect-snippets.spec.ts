@@ -93,7 +93,7 @@ describe('buildSampleRow', () => {
     expect(Object.keys(row)).toEqual(['kept']);
   });
 
-  test('leads an enrichment row with its grain key', () => {
+  test('carries no grain key — the panel is never offered for an enrichment table', () => {
     const row = buildSampleRow(
       table([column({ name: 'score', type: AnalyticsFieldType.Decimal })], {
         type: AnalyticsTableType.Enrichment,
@@ -101,7 +101,7 @@ describe('buildSampleRow', () => {
       }),
     );
 
-    expect(Object.keys(row)).toEqual(['event_id', 'score']);
+    expect(Object.keys(row)).toEqual(['score']);
   });
 
   test('yields an empty row for a table with no declared columns', () => {

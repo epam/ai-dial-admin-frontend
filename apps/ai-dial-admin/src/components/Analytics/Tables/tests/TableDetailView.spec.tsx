@@ -493,30 +493,6 @@ describe('TableDetailView write rows', () => {
     expect(JSON.parse(editor.value)).toEqual([{ event_id: '', total_money: 0 }]);
   });
 
-  test('for an enrichment table, the template includes the (hidden) grain key as a leading field', async () => {
-    const user = userEvent.setup();
-    const columns = [{ source_name: 'flag', name: 'flag', type: AnalyticsFieldType.Boolean }];
-    render(
-      <TableDetailView
-        name="order_flags"
-        initialTable={table({
-          name: 'order_flags',
-          type: AnalyticsTableType.Enrichment,
-          source_table: 'orders',
-          grain: { grain_key: 'order_id' },
-          columns,
-        })}
-        apiBaseUrl=""
-        flightUri=""
-      />,
-    );
-
-    await user.click(screen.getByRole('button', { name: AnalyticsTablesI18nKey.AddRows }));
-
-    const editor = screen.getByLabelText('rows-json') as HTMLTextAreaElement;
-    expect(JSON.parse(editor.value)).toEqual([{ order_id: '', flag: false }]);
-  });
-
   test('Insert rows is disabled while the JSON is invalid and re-enables once it is a valid array', async () => {
     const user = userEvent.setup();
     render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
@@ -533,6 +509,26 @@ describe('TableDetailView write rows', () => {
 
     fireEvent.change(editor, { target: { value: '[]' } });
     expect(insertButton).toBeEnabled();
+  });
+});
+
+describe('TableDetailView enrichment tables', () => {
+  const enrichment = () =>
+    table({ type: AnalyticsTableType.Enrichment, source_table: 'dial_usage_log', grain: { grain_key: 'event_id' } });
+
+  test('offers neither Connect nor Add rows — the enrichment process writes these, and they are not queryable alone', () => {
+    render(<TableDetailView name="dial_usage_log" initialTable={enrichment()} apiBaseUrl="" flightUri="" />);
+
+    expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.Connect })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.AddRows })).not.toBeInTheDocument();
+  });
+
+  test('still offers the schema and catalog actions, which do apply', () => {
+    render(<TableDetailView name="dial_usage_log" initialTable={enrichment()} apiBaseUrl="" flightUri="" />);
+
+    expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.AddColumns })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.DeleteTable })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.ManageAccess })).toBeInTheDocument();
   });
 });
 
