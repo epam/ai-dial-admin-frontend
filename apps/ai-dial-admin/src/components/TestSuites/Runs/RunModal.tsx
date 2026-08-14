@@ -7,14 +7,15 @@ import {
   NotificationVariant,
   PopupSize,
 } from '@epam/ai-dial-ui-kit';
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
 
 import { getDataset, getTestCases } from '@/src/app/[lang]/datasets/actions';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { Dataset } from '@/src/models/evaluation/dataset';
+import { Dataset, DatasetTestCase } from '@/src/models/evaluation/dataset';
 import { TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
+import { expandTestCasesToRows } from '@/src/utils/evaluation/test-case-grouping';
 import { useIncludedIds } from '../TestCases/RunCondition/use-included-ids';
 import { VALID_FILTERS } from './constants';
 
@@ -31,7 +32,7 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
   const [isLoading, setIsLoading] = useState(false);
   const [value, setValue] = useState<string | number | undefined>(1);
   const [allRuns, setAllRuns] = useState<number | undefined>();
-  const [validRows, setValidRows] = useState<Record<string, unknown>[]>([]);
+  const [validRows, setValidRows] = useState<DatasetTestCase[]>([]);
   const [schema, setSchema] = useState<TestCaseSchema[] | undefined>();
 
   useEffect(() => {
@@ -45,14 +46,15 @@ const RunModal: FC<Props> = ({ selectedTestSuite, isModalOpen, onRun, onClose })
         : Promise.resolve(null);
       Promise.all([validTestCases, allTestCases, dataset]).then(([validRes, allRes, datasetRes]) => {
         setAllRuns(allRes?.totalElements || 0);
-        setValidRows((validRes?.content || []) as Record<string, unknown>[]);
+        setValidRows((validRes?.content || []) as DatasetTestCase[]);
         setSchema((datasetRes?.response as Dataset | undefined)?.testCaseSchema);
         setIsLoading(false);
       });
     }
   }, [selectedTestSuite.datasetId, allRuns]);
 
-  const includedIds = useIncludedIds(selectedTestSuite.testCaseFilter, validRows, schema);
+  const expandedRows = useMemo(() => expandTestCasesToRows(validRows, schema), [validRows, schema]);
+  const includedIds = useIncludedIds(selectedTestSuite.testCaseFilter, expandedRows, schema);
   const validRuns = includedIds ? includedIds.size : validRows.length;
 
   return (

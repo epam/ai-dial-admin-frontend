@@ -20,6 +20,7 @@ import {
   fn,
   ge,
   gt,
+  inSubquery,
   inValues,
   le,
   lt,
@@ -31,6 +32,7 @@ import {
   param,
   rowQuery,
   sortItem,
+  subquery,
   value,
 } from '../build';
 
@@ -103,6 +105,30 @@ describe('structured-query build helpers', () => {
             { type: ExprType.Value, value_type: ValueType.Uuid, value: 'b' },
           ],
         },
+      ],
+    });
+  });
+
+  test('subquery wraps a nested structured query', () => {
+    const nested = aggregateQuery({
+      entity: 'metric_score_results',
+      select: [col(field('test_suite_run_id'))],
+    });
+    expect(subquery(nested)).toEqual({ type: ExprType.Subquery, query: nested });
+  });
+
+  test('inSubquery builds an IN comparison against a nested query', () => {
+    const nested = aggregateQuery({
+      entity: 'metric_score_results',
+      select: [col(field('test_suite_run_id'))],
+      groupBy: ['test_suite_run_id'],
+      page: offsetPage(0, 10),
+    });
+    expect(inSubquery('test_suite_run_id', nested)).toEqual({
+      op: ComparisonOp.In,
+      args: [
+        { type: ExprType.Field, name: 'test_suite_run_id' },
+        { type: ExprType.Subquery, query: nested },
       ],
     });
   });

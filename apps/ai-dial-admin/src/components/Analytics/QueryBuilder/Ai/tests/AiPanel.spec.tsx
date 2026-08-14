@@ -3,9 +3,15 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import AiPanel from '@/src/components/Analytics/QueryBuilder/Ai/AiPanel';
-import { generateQuery } from '@/src/app/[lang]/query-builder/actions';
+import { QueryBuilderContext } from '@/src/components/Analytics/QueryBuilder/context';
+import { createInitialState } from '@/src/components/Analytics/QueryBuilder/utils/state';
+import { TEST_FUNCTIONS } from '@/src/components/Analytics/QueryBuilder/utils/tests/functions.fixture';
+import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
+import { QueryBuilderState } from '@/src/models/analytics/query-builder';
+import { QueryAssistantMessage, QueryAssistantRole } from '@/src/models/analytics/query-assistant';
+import { generateQuery } from '@/src/app/[lang]/queries/actions';
 
-vi.mock('@/src/app/[lang]/query-builder/actions');
+vi.mock('@/src/app/[lang]/queries/actions');
 
 const showNotification = vi.fn();
 vi.mock('@/src/context/NotificationContext', () => ({
@@ -20,11 +26,33 @@ const reply = (content: string) => ({
 const promptBox = () => screen.getByRole('textbox', { name: 'QueryBuilder.AiPanelHeading' });
 const sendButton = () => screen.getByRole('button', { name: 'QueryBuilder.AiSend' });
 
-const renderPanel = (overrides: Partial<Parameters<typeof AiPanel>[0]> = {}) => {
+const FIELDS: AnalyticsEntityField[] = [
+  { name: 'request_time', type: AnalyticsFieldType.Timestamp, source: 'request_time' },
+  { name: 'project_id', type: AnalyticsFieldType.String, source: 'project_id', display_name: 'Project' },
+];
+
+// The panel reads the selected source from the builder context, the same place the other sections do.
+const builderState = (overrides?: Partial<QueryBuilderState>): QueryBuilderState => ({
+  ...createInitialState(TEST_FUNCTIONS),
+  entityName: 'dial_usage_log',
+  fields: FIELDS,
+  ...overrides,
+});
+
+const renderPanel = (
+  overrides: Partial<Parameters<typeof AiPanel>[0]> = {},
+  state: QueryBuilderState = builderState(),
+) => {
   const props = { onRunMessage: vi.fn(), loadedMessageIndex: null, runInFlight: false, ...overrides };
-  render(<AiPanel {...props} />);
+  render(
+    <QueryBuilderContext.Provider value={{ state, refresh: vi.fn(), patch: vi.fn() }}>
+      <AiPanel {...props} />
+    </QueryBuilderContext.Provider>,
+  );
   return props;
 };
+
+const sentMessages = () => vi.mocked(generateQuery).mock.calls[0][0] as QueryAssistantMessage[];
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -64,7 +92,8 @@ describe('AiPanel', () => {
 
     await user.click(screen.getByRole('button', { name: 'QueryBuilder.Run' }));
     expect(onRunMessage).toHaveBeenCalledWith('SELECT 1', 1);
-    expect(generateQuery).toHaveBeenCalledWith([{ role: 'user', content: 'cost by deployment' }]);
+    // The request leads with a schema message the transcript never shows, followed by the turns.
+    expect(sentMessages()[sentMessages().length - 1]).toEqual({ role: 'user', content: 'cost by deployment' });
   });
 
   test('sending a message scrolls the new user message into view', async () => {
@@ -139,5 +168,48 @@ describe('AiPanel', () => {
 
     await screen.findByText('SELECT 1');
     expect(screen.getByRole('button', { name: 'QueryBuilder.Run' })).toBeDisabled();
+  });
+
+  test('leads the request with the selected source and its columns', async () => {
+    const user = userEvent.setup();
+    vi.mocked(generateQuery).mockResolvedValue(reply('ok') as never);
+    renderPanel();
+
+    await user.type(promptBox(), 'cost by project');
+    await user.click(sendButton());
+
+    await waitFor(() => expect(generateQuery).toHaveBeenCalledOnce());
+    const [first] = sentMessages();
+    expect(first.role).toBe(QueryAssistantRole.System);
+    expect(first.content).toContain('dial_usage_log');
+    expect(first.content).toContain('request_time (timestamp)');
+    expect(first.content).toContain('project_id (string)');
+    expect(first.content).toContain('Project');
+  });
+
+  test('keeps the schema message out of the visible transcript', async () => {
+    const user = userEvent.setup();
+    vi.mocked(generateQuery).mockResolvedValue(reply('ok') as never);
+    renderPanel();
+
+    await user.type(promptBox(), 'cost by project');
+    await user.click(sendButton());
+
+    await waitFor(() => expect(generateQuery).toHaveBeenCalledOnce());
+    expect(screen.queryByText(/Columns of/)).toBeNull();
+  });
+
+  test('describes the source selected at send time, not the one selected first', async () => {
+    const user = userEvent.setup();
+    vi.mocked(generateQuery).mockResolvedValue(reply('ok') as never);
+    renderPanel({}, builderState({ entityName: 'other_table', fields: [] }));
+
+    await user.type(promptBox(), 'anything');
+    await user.click(sendButton());
+
+    await waitFor(() => expect(generateQuery).toHaveBeenCalledOnce());
+    const [first] = sentMessages();
+    expect(first.content).toContain('other_table');
+    expect(first.content).toContain('column list is unavailable');
   });
 });

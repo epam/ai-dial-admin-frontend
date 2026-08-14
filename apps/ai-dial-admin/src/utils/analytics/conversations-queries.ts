@@ -4,14 +4,17 @@ import {
   FEEDBACK_CANDIDATE_LIMIT,
   FEEDBACK_ENTITY,
   POSITIVE_RATE_EXCLUSIVE_MIN,
+  USAGE_LOG_ENTITY,
 } from '@/src/constants/analytics/conversations-trace';
 import {
   ConversationTotalsField,
+  ConversationTurnField,
   ConversationsField,
   FeedbackField,
   FeedbackFilter,
   RateAnalyticsField,
   RatingDirection,
+  UsageLogField,
 } from '@/src/models/analytics/conversations-trace';
 import { QueryFilterNode, QuerySortDirection, QueryValueType, StructuredQuery } from '@/src/models/analytics/query';
 import { TimeRange } from '@/src/models/time-range';
@@ -19,6 +22,7 @@ import {
   aggregateQuery,
   and,
   col,
+  eq,
   field,
   fn,
   gt,
@@ -88,6 +92,71 @@ export const buildConversationListQuery = ({
       sortItem(ConversationsField.ChatId, QuerySortDirection.Asc),
     ],
     page: offsetPage(offset, limit, true),
+  });
+
+export const buildConversationDetailQuery = (chatId: string): StructuredQuery =>
+  rowQuery({
+    entity: CONVERSATIONS_ENTITY,
+    select: Object.values(ConversationsField).map((fieldName) => col(field(fieldName))),
+    filter: eq(ConversationsField.ChatId, value(QueryValueType.String, chatId)),
+    page: offsetPage(0, 1, true),
+  });
+
+export const buildConversationFeedbackQuery = (chatId: string, limit: number): StructuredQuery =>
+  rowQuery({
+    entity: FEEDBACK_ENTITY,
+    select: [
+      col(field(RateAnalyticsField.ResponseId)),
+      col(field(RateAnalyticsField.Rate)),
+      col(field(RateAnalyticsField.RequestTime)),
+    ],
+    filter: eq(RateAnalyticsField.ChatId, value(QueryValueType.String, chatId)),
+    sort: [sortItem(RateAnalyticsField.RequestTime, QuerySortDirection.Desc)],
+    page: offsetPage(0, limit, true),
+  });
+
+export const buildConversationTurnsQuery = (chatId: string, limit: number): StructuredQuery =>
+  aggregateQuery({
+    entity: USAGE_LOG_ENTITY,
+    groupBy: [UsageLogField.TraceId],
+    select: [
+      col(field(UsageLogField.TraceId)),
+      col(fn('min', [field(UsageLogField.RequestTime)]), ConversationTurnField.Started),
+      col(fn('count'), ConversationTurnField.Hops),
+      col(fn('sum', [field(UsageLogField.TotalTokens)]), ConversationTurnField.Tokens),
+      col(fn('sum', [field(UsageLogField.DeploymentPrice)]), ConversationTurnField.Cost),
+      col(fn('max', [field(UsageLogField.OperationDurationMs)]), ConversationTurnField.DurationMs),
+    ],
+    filter: eq(UsageLogField.ChatId, value(QueryValueType.String, chatId)),
+    sort: [sortItem(ConversationTurnField.Started, QuerySortDirection.Asc)],
+    page: offsetPage(0, limit),
+  });
+
+export const buildConversationSpansQuery = (chatId: string, traceId: string, limit: number): StructuredQuery =>
+  rowQuery({
+    entity: USAGE_LOG_ENTITY,
+    select: [
+      col(field(UsageLogField.CoreSpanId)),
+      col(field(UsageLogField.CoreParentSpanId)),
+      col(field(UsageLogField.EventKind)),
+      col(field(UsageLogField.Deployment)),
+      col(field(UsageLogField.ParentDeployment)),
+      col(field(UsageLogField.RequestMethod)),
+      col(field(UsageLogField.RequestUri)),
+      col(field(UsageLogField.ResponseUpstreamUri)),
+      col(field(UsageLogField.ResponseStatus)),
+      col(field(UsageLogField.Success)),
+      col(field(UsageLogField.OperationDurationMs)),
+      col(field(UsageLogField.TotalTokens)),
+      col(field(UsageLogField.DeploymentPrice)),
+      col(field(UsageLogField.RequestTime)),
+    ],
+    filter: and([
+      eq(UsageLogField.ChatId, value(QueryValueType.String, chatId)),
+      eq(UsageLogField.TraceId, value(QueryValueType.String, traceId)),
+    ]),
+    sort: [sortItem(UsageLogField.RequestTime, QuerySortDirection.Asc)],
+    page: offsetPage(0, limit, true),
   });
 
 export const buildConversationTotalsQuery = (filters: ConversationFilterParams): StructuredQuery =>
