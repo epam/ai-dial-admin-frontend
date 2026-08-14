@@ -1932,6 +1932,21 @@ export enum TestSuitesI18nKey {
   ConditionSystemFunctionUnavailable = 'TestSuites.ConditionSystemFunctionUnavailable',
   ImportWarnings = 'TestSuites.ImportWarnings',
   ImportWarningRow = 'TestSuites.ImportWarningRow',
+  TrendsRunsCount = 'TestSuites.TrendsRunsCount',
+  AvgTestSuiteRunTime = 'TestSuites.AvgTestSuiteRunTime',
+  AvgPerRuns = 'TestSuites.AvgPerRuns',
+  ScoreRange = 'TestSuites.ScoreRange',
+  ScoreRangeLatest = 'TestSuites.ScoreRangeLatest',
+  ScoreRangeLatestWorst = 'TestSuites.ScoreRangeLatestWorst',
+  OverallScoreTrend = 'TestSuites.OverallScoreTrend',
+  MetricTrends = 'TestSuites.MetricTrends',
+  TrendsNoData = 'TestSuites.TrendsNoData',
+  TrendsNoRunsTitle = 'TestSuites.TrendsNoRunsTitle',
+  TrendsNoRunsDescription = 'TestSuites.TrendsNoRunsDescription',
+  TrendsSingleRunMessage = 'TestSuites.TrendsSingleRunMessage',
+  TrendsTooltipDate = 'TestSuites.TrendsTooltipDate',
+  TrendsTooltipRun = 'TestSuites.TrendsTooltipRun',
+  TrendsTooltipScore = 'TestSuites.TrendsTooltipScore',
 }
 
 export enum DatasetsI18nKey {
