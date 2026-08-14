@@ -1,11 +1,12 @@
+import { sortMetricStatistics } from '@/src/components/Common/MetricStatistics/utils';
 import { MetricOption, MetricScoresData } from '@/src/components/Runs/Summary/models';
 import { getMetricStatCards } from '@/src/components/Runs/Summary/utils';
 
 import { CompareBarGroup, CompareMetricStatCard } from './models';
 
-/** Statistics present on both runs, in primary order. */
+/** Statistics present on both runs, in canonical Metric Scores control order. */
 export const intersectStatistics = (primary: string[], compared: string[]): string[] =>
-  primary.filter((statistic) => compared.includes(statistic));
+  sortMetricStatistics(primary.filter((statistic) => compared.includes(statistic)));
 
 /** Unions metric dropdown options by name; primary options win on collision. */
 export const unionMetricOptions = (primary: MetricOption[], compared: MetricOption[]): MetricOption[] => {

@@ -4,12 +4,20 @@ import { cookies, headers } from 'next/headers';
 
 import { analyticsDataApi } from '@/src/app/api/api';
 import {
+  ConversationDetailResult,
+  ConversationDetailRow,
+  ConversationFeedbackPage,
+  ConversationFeedbackRow,
   ConversationFilters,
   ConversationPageRequest,
   ConversationRatingRow,
   ConversationRow,
+  ConversationSpanRow,
+  ConversationSpansPage,
   ConversationTotals,
   ConversationTotalsField,
+  ConversationTurnRow,
+  ConversationTurnsResult,
   ConversationsPage,
   FeedbackFilter,
   RateAnalyticsField,
@@ -23,11 +31,20 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { errorObjLog } from '@/src/server/logger';
 import { attachRatings, unresolvedRatings } from '@/src/utils/analytics/conversation-rows';
 import {
+  buildConversationDetailQuery,
+  buildConversationFeedbackQuery,
   buildConversationListQuery,
+  buildConversationSpansQuery,
+  buildConversationTurnsQuery,
   buildConversationRatingsQuery,
   buildConversationTotalsQuery,
   buildRatedConversationIdsQuery,
 } from '@/src/utils/analytics/conversations-queries';
+import {
+  CONVERSATION_FEEDBACK_LIMIT,
+  CONVERSATION_SPAN_LIMIT,
+  CONVERSATION_TURN_LIMIT,
+} from '@/src/constants/analytics/conversations-trace';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 const token = () => getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -114,6 +131,66 @@ export async function getConversations(request: ConversationPageRequest): Promis
     ...result,
     response: {
       rows: await withRatings(rows, range, authToken),
+      total: result.response?.totalCount ?? null,
+    },
+  };
+}
+
+export async function getConversationDetail(chatId: string): Promise<ServerActionResponse<ConversationDetailResult>> {
+  const result = await analyticsDataApi.executeAction(buildConversationDetailQuery(chatId), await token());
+
+  if (!result.success) {
+    return { ...result, response: undefined };
+  }
+
+  const conversation = (result.response?.rows?.[0] ?? null) as ConversationDetailRow | null;
+
+  return { ...result, response: { conversation } };
+}
+
+export async function getConversationFeedback(chatId: string): Promise<ServerActionResponse<ConversationFeedbackPage>> {
+  const query = buildConversationFeedbackQuery(chatId, CONVERSATION_FEEDBACK_LIMIT);
+  const result = await analyticsDataApi.executeAction(query, await token());
+
+  if (!result.success) {
+    return { ...result, response: undefined };
+  }
+
+  return {
+    ...result,
+    response: {
+      rows: (result.response?.rows ?? []) as unknown as ConversationFeedbackRow[],
+      total: result.response?.totalCount ?? null,
+    },
+  };
+}
+
+export async function getConversationTurns(chatId: string): Promise<ServerActionResponse<ConversationTurnsResult>> {
+  const query = buildConversationTurnsQuery(chatId, CONVERSATION_TURN_LIMIT);
+  const result = await analyticsDataApi.executeAction(query, await token());
+
+  if (!result.success) {
+    return { ...result, response: undefined };
+  }
+
+  return { ...result, response: { turns: (result.response?.rows ?? []) as unknown as ConversationTurnRow[] } };
+}
+
+export async function getConversationSpans(
+  chatId: string,
+  traceId: string,
+): Promise<ServerActionResponse<ConversationSpansPage>> {
+  const query = buildConversationSpansQuery(chatId, traceId, CONVERSATION_SPAN_LIMIT);
+  const result = await analyticsDataApi.executeAction(query, await token());
+
+  if (!result.success) {
+    return { ...result, response: undefined };
+  }
+
+  return {
+    ...result,
+    response: {
+      spans: (result.response?.rows ?? []) as unknown as ConversationSpanRow[],
       total: result.response?.totalCount ?? null,
     },
   };

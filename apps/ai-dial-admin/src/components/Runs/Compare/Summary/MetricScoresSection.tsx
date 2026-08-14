@@ -2,11 +2,12 @@
 
 import { FC, useCallback, useMemo } from 'react';
 
-import { DialAnalyticsBarGroup, DialLoader, DialSegmentedControl, SegmentedControlOption } from '@epam/ai-dial-ui-kit';
+import { DialAnalyticsBarGroup, DialLoader } from '@epam/ai-dial-ui-kit';
 
+import MetricStatisticControl from '@/src/components/Common/MetricStatistics/MetricStatisticControl';
+import { getMetricStatisticDescriptionKey } from '@/src/components/Common/MetricStatistics/utils';
 import { getCompareBarGroups, intersectStatistics, maxBarValue } from '@/src/components/Runs/Compare/Summary/utils';
-import { METRIC_STATISTIC_DESCRIPTIONS } from '@/src/components/Runs/Summary/constants';
-import { MetricScoresData, MetricStatistic } from '@/src/components/Runs/Summary/models';
+import { MetricScoresData } from '@/src/components/Runs/Summary/models';
 import SummarySection from '@/src/components/Runs/Summary/SummarySection';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -35,11 +36,6 @@ const MetricScoresSection: FC<Props> = ({
     [primaryData?.statistics, comparedData?.statistics],
   );
 
-  const options = useMemo<SegmentedControlOption[]>(
-    () => statistics.map((statistic) => ({ value: statistic, label: statistic })),
-    [statistics],
-  );
-
   const onStatisticChange = useCallback((value: string) => onSelectStatistic(value), [onSelectStatistic]);
 
   const groups = useMemo(
@@ -47,21 +43,9 @@ const MetricScoresSection: FC<Props> = ({
     [primaryData, comparedData, selectedStatistic],
   );
 
-  const descriptionKey = selectedStatistic
-    ? METRIC_STATISTIC_DESCRIPTIONS[selectedStatistic as MetricStatistic]
-    : undefined;
+  const descriptionKey = getMetricStatisticDescriptionKey(selectedStatistic);
 
   const compareLabels: [string, string] = [primaryRunName, comparedRunName];
-
-  const control =
-    options.length > 0 && selectedStatistic ? (
-      <DialSegmentedControl
-        ariaLabel={t(RunsI18nKey.MetricScoresTitle)}
-        options={options}
-        value={selectedStatistic}
-        onChange={onStatisticChange}
-      />
-    ) : undefined;
 
   const isLoading = !primaryData || !comparedData;
 
@@ -102,7 +86,14 @@ const MetricScoresSection: FC<Props> = ({
     <SummarySection
       title={t(RunsI18nKey.MetricScoresTitle)}
       description={descriptionKey ? t(descriptionKey) : undefined}
-      control={control}
+      control={
+        <MetricStatisticControl
+          statistics={statistics}
+          value={selectedStatistic}
+          onChange={onStatisticChange}
+          ariaLabel={t(RunsI18nKey.MetricScoresTitle)}
+        />
+      }
     >
       {renderContent()}
     </SummarySection>

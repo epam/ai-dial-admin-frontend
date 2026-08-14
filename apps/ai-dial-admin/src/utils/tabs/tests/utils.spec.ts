@@ -295,6 +295,7 @@ describe('Entities :: tabs', () => {
       testCasesTab(t),
       metricsTab(t),
       runsTab(t),
+      trendsTab(t),
     ]);
   });
 

@@ -306,6 +306,20 @@ describe('Runs Summary :: metric scores', () => {
     });
   });
 
+  test('parseMetricScores orders statistics by Metric Scores segmented-control order', () => {
+    const parsed = parseMetricScores({
+      rows: [
+        { metric_name: 'm.a', metric_score_name: 'MAX', value: 0.9 },
+        { metric_name: 'm.a', metric_score_name: 'MIN', value: 0.1 },
+        { metric_name: 'm.a', metric_score_name: 'MED', value: 0.5 },
+        { metric_name: 'm.a', metric_score_name: 'P90', value: 0.8 },
+        { metric_name: 'm.a', metric_score_name: 'AVG', value: 0.55 },
+      ],
+    });
+
+    expect(parsed.statistics).toEqual(['AVG', 'P90', 'MAX', 'MED', 'MIN']);
+  });
+
   test('parseMetricScores extracts overall score and excludes it from statistics', () => {
     const parsed = parseMetricScores({
       rows: [
