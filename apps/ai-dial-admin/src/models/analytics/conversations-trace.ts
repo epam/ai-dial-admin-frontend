@@ -1,8 +1,12 @@
+import { QuerySortDirection, QueryValueType } from '@/src/models/analytics/query';
+
 export enum ColumnProvenance {
   Conversations = 'conversations',
   Feedback = 'feedback',
   None = 'none',
 }
+
+export type ConversationScalar = number | string | boolean | null;
 
 export interface ConversationRow {
   chat_id: string;
@@ -15,6 +19,7 @@ export interface ConversationRow {
   first_request_time: number | string | null;
   rating_up: number | null;
   rating_down: number | null;
+  [field: string]: ConversationScalar | undefined;
 }
 
 export interface ConversationsPage {
@@ -49,22 +54,55 @@ export enum FeedbackFilter {
   Rated = 'rated',
 }
 
+export enum ConversationFilterOperator {
+  Contains = 'contains',
+  NotContains = 'notContains',
+  Equals = 'equals',
+  NotEquals = 'notEquals',
+  GreaterThan = 'greaterThan',
+  GreaterThanOrEqual = 'greaterThanOrEqual',
+  LessThan = 'lessThan',
+  LessThanOrEqual = 'lessThanOrEqual',
+  Range = 'range',
+}
+
+export interface ConversationColumnFilter {
+  field: string;
+  operator: ConversationFilterOperator;
+  value: string;
+  valueTo?: string;
+  valueType?: QueryValueType;
+}
+
+export interface ConversationSortKey {
+  field: string;
+  direction: QuerySortDirection;
+}
+
 export interface ConversationFilters {
   search: string;
   startMs: number;
   endMs: number;
   feedback: FeedbackFilter;
+  columnFilters?: ConversationColumnFilter[];
 }
 
 export interface ConversationPageRequest extends ConversationFilters {
   offset: number;
   limit: number;
   chatIds?: string[];
+  sort?: ConversationSortKey[];
+  visibleFields?: string[];
 }
 
 export interface ConversationSummary {
   rated: number;
   negative: number;
+}
+
+export interface ConversationCandidateIds {
+  ids: string[];
+  isCapped: boolean;
 }
 
 export interface ProvenanceEntity {

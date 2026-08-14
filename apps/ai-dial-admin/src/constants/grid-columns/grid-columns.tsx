@@ -54,9 +54,17 @@ import {
   numberValueFormatter,
   priceValueFormatter,
 } from '@/src/constants/grid-columns/formatters';
-import { CONVERSATION_PROVENANCE_GROUPS } from '@/src/constants/analytics/conversations-trace';
+import {
+  CONVERSATION_FIELD_VALUE_TYPE,
+  CONVERSATION_PROVENANCE_GROUPS,
+  FILTERABLE_CONVERSATION_FIELDS,
+  SORTABLE_CONVERSATION_FIELDS,
+} from '@/src/constants/analytics/conversations-trace';
 import { formatCompactNumber, formatSignificantCost } from '@/src/utils/analytics/conversation-formatting';
-import { ConversationColumn, ConversationsField } from '@/src/models/analytics/conversations-trace';
+import { ColumnProvenance, ConversationColumn, ConversationsField } from '@/src/models/analytics/conversations-trace';
+import { QueryValueType } from '@/src/models/analytics/query';
+import { AnalyticsEntityField } from '@/src/models/analytics/entity';
+import { buildConversationColumnCatalog } from '@/src/utils/analytics/conversation-column-catalog';
 import { ImageVersion } from '@/src/models/deployments/images';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
@@ -700,15 +708,31 @@ const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] 
   },
 ];
 
+const NUMERIC_FILTER_VALUE_TYPES = [QueryValueType.Integer, QueryValueType.Decimal];
+
+const conversationFilterPreset = (fieldName?: string): Partial<ColDef> => {
+  if (!fieldName || !FILTERABLE_CONVERSATION_FIELDS.includes(fieldName as ConversationsField)) {
+    return { filter: false, floatingFilter: false };
+  }
+
+  const valueType = CONVERSATION_FIELD_VALUE_TYPE[fieldName as ConversationsField];
+
+  return valueType && NUMERIC_FILTER_VALUE_TYPES.includes(valueType) ? baseNumberFilter : baseStringFilter;
+};
+
 export const CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] =>
-  restrictSort(BASE_CONVERSATIONS_TRACE_COLUMNS(t)).map((column) => ({
+  restrictSort(BASE_CONVERSATIONS_TRACE_COLUMNS(t), SORTABLE_CONVERSATION_FIELDS).map((column) => ({
     ...column,
-    filter: false,
-    floatingFilter: false,
+    ...conversationFilterPreset(column.field),
+    ...(column.field === ConversationsField.LastRequestTime ? { sort: 'desc' as ColDef['sort'] } : {}),
   }));
 
-export const CONVERSATIONS_TRACE_COLUMN_GROUPS = (t: (key: string) => string): ColGroupDef[] => {
-  const columns = CONVERSATIONS_TRACE_COLUMNS(t);
+export const CONVERSATIONS_TRACE_COLUMN_GROUPS = (
+  t: (key: string) => string,
+  schemaFields: AnalyticsEntityField[] = [],
+): ColGroupDef[] => {
+  const columns = buildConversationColumnCatalog(CONVERSATIONS_TRACE_COLUMNS(t), schemaFields);
+  const attributed = new Set(CONVERSATION_PROVENANCE_GROUPS.flatMap((group) => group.fields as string[]));
 
   return CONVERSATION_PROVENANCE_GROUPS.map(({ provenance, labelKey, tooltipKey, fields }) => ({
     groupId: provenance,
@@ -717,7 +741,12 @@ export const CONVERSATIONS_TRACE_COLUMN_GROUPS = (t: (key: string) => string): C
     headerGroupComponent: ProvenanceHeaderGroup,
     headerGroupComponentParams: { label: t(labelKey), provenance },
     marryChildren: true,
-    children: fields.map((field) => columns.find((column) => column.field === field)).filter(Boolean) as ColDef[],
+    children: [
+      ...(fields.map((field) => columns.find((column) => column.field === field)).filter(Boolean) as ColDef[]),
+      ...(provenance === ColumnProvenance.Conversations
+        ? columns.filter((column) => !attributed.has(column.field as string))
+        : []),
+    ],
   }));
 };
 

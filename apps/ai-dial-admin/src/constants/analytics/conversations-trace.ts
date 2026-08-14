@@ -4,6 +4,7 @@ import {
   ConversationColumn,
   ConversationDetailPanel,
   ConversationFieldFormat,
+  ConversationFilterOperator,
   ConversationPanelDefinition,
   ConversationPanelLayout,
   ConversationsField,
@@ -11,6 +12,9 @@ import {
   ProvenanceGroup,
   SpanCategory,
 } from '@/src/models/analytics/conversations-trace';
+import { AnalyticsFieldType } from '@/src/models/analytics/entity';
+import { QueryOperator, QueryValueType } from '@/src/models/analytics/query';
+import { GridFilterType } from '@/src/types/grid-filter';
 
 export const CONVERSATIONS_ENTITY = 'conversations';
 
@@ -36,12 +40,92 @@ export const CONVERSATIONS_GROUP_HEADER_HEIGHT = 32;
 
 export const CONVERSATIONS_HEADER_HEIGHT = 38;
 
+export const CONVERSATIONS_STORAGE_KEY = 'analytics/conversations';
+
 export const SUMMARY_COST_PRECISION = 3;
 
 // Below a dollar, cost is rendered at significant digits; from a dollar up, rounded and abbreviated.
 export const COST_COMPACT_THRESHOLD = 1;
 
 export const COST_SIGNIFICANT_DIGITS = 2;
+
+export const SORTABLE_CONVERSATION_FIELDS: ConversationsField[] = [
+  ConversationsField.ChatId,
+  ConversationsField.ProjectId,
+  ConversationsField.UserHash,
+  ConversationsField.TurnCount,
+  ConversationsField.LastRequestTime,
+  ConversationsField.TotalTokens,
+  ConversationsField.TotalPrice,
+];
+
+export const FILTERABLE_CONVERSATION_FIELDS: ConversationsField[] = [
+  ConversationsField.ChatId,
+  ConversationsField.ProjectId,
+  ConversationsField.UserHash,
+  ConversationsField.TurnCount,
+  ConversationsField.TotalTokens,
+  ConversationsField.TotalPrice,
+];
+
+export const CURATED_COMPOSED_FIELDS: string[] = [ConversationsField.FirstRequestTime];
+
+export const NON_SCALAR_FIELD_TYPES: AnalyticsFieldType[] = [AnalyticsFieldType.Object, AnalyticsFieldType.Array];
+
+export const DATE_FIELD_TYPES: AnalyticsFieldType[] = [AnalyticsFieldType.Date, AnalyticsFieldType.Timestamp];
+
+export const NUMERIC_FIELD_TYPES: AnalyticsFieldType[] = [
+  AnalyticsFieldType.Integer,
+  AnalyticsFieldType.Long,
+  AnalyticsFieldType.Decimal,
+];
+
+export const CONVERSATION_FIELD_VALUE_TYPE: Partial<Record<ConversationsField, QueryValueType>> = {
+  [ConversationsField.ChatId]: QueryValueType.String,
+  [ConversationsField.ProjectId]: QueryValueType.String,
+  [ConversationsField.UserHash]: QueryValueType.String,
+  [ConversationsField.TurnCount]: QueryValueType.Integer,
+  [ConversationsField.TotalTokens]: QueryValueType.Integer,
+  [ConversationsField.TotalPrice]: QueryValueType.Decimal,
+  [ConversationsField.LastRequestTime]: QueryValueType.Timestamp,
+  [ConversationsField.FirstRequestTime]: QueryValueType.Timestamp,
+};
+
+export const ANALYTICS_FIELD_QUERY_VALUE_TYPE: Partial<Record<AnalyticsFieldType, QueryValueType>> = {
+  [AnalyticsFieldType.Uuid]: QueryValueType.String,
+  [AnalyticsFieldType.String]: QueryValueType.String,
+  [AnalyticsFieldType.Integer]: QueryValueType.Integer,
+  [AnalyticsFieldType.Long]: QueryValueType.Long,
+  [AnalyticsFieldType.Decimal]: QueryValueType.Decimal,
+  [AnalyticsFieldType.Boolean]: QueryValueType.Boolean,
+  [AnalyticsFieldType.Date]: QueryValueType.Date,
+  [AnalyticsFieldType.Timestamp]: QueryValueType.Timestamp,
+};
+
+export const CONVERSATION_FILTER_QUERY_OPERATOR: Record<
+  Exclude<ConversationFilterOperator, ConversationFilterOperator.Range>,
+  QueryOperator
+> = {
+  [ConversationFilterOperator.Contains]: QueryOperator.Ico,
+  [ConversationFilterOperator.NotContains]: QueryOperator.Inc,
+  [ConversationFilterOperator.Equals]: QueryOperator.Eq,
+  [ConversationFilterOperator.NotEquals]: QueryOperator.Ne,
+  [ConversationFilterOperator.GreaterThan]: QueryOperator.Gt,
+  [ConversationFilterOperator.GreaterThanOrEqual]: QueryOperator.Ge,
+  [ConversationFilterOperator.LessThan]: QueryOperator.Lt,
+  [ConversationFilterOperator.LessThanOrEqual]: QueryOperator.Le,
+};
+
+export const GRID_FILTER_TYPE_OPERATOR: Record<GridFilterType, ConversationFilterOperator> = {
+  [GridFilterType.CONTAINS]: ConversationFilterOperator.Contains,
+  [GridFilterType.NOT_CONTAINS]: ConversationFilterOperator.NotContains,
+  [GridFilterType.EQUALS]: ConversationFilterOperator.Equals,
+  [GridFilterType.NOT_EQUAL]: ConversationFilterOperator.NotEquals,
+  [GridFilterType.GREATER_THAN]: ConversationFilterOperator.GreaterThan,
+  [GridFilterType.GREATER_THAN_OR_EQUAL]: ConversationFilterOperator.GreaterThanOrEqual,
+  [GridFilterType.LESS_THAN]: ConversationFilterOperator.LessThan,
+  [GridFilterType.LESS_THAN_OR_EQUAL]: ConversationFilterOperator.LessThanOrEqual,
+};
 
 export const PROVENANCE_TEXT_CLASS: Record<ColumnProvenance, string> = {
   [ColumnProvenance.Conversations]: 'text-accent-primary',

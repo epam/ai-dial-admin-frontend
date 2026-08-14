@@ -4,6 +4,7 @@ import { cookies, headers } from 'next/headers';
 
 import { analyticsDataApi } from '@/src/app/api/api';
 import {
+  ConversationCandidateIds,
   ConversationDetailResult,
   ConversationDetailRow,
   ConversationFeedbackPage,
@@ -44,7 +45,10 @@ import {
   CONVERSATION_FEEDBACK_LIMIT,
   CONVERSATION_SPAN_LIMIT,
   CONVERSATION_TURN_LIMIT,
+  CONVERSATIONS_ENTITY,
+  FEEDBACK_CANDIDATE_LIMIT,
 } from '@/src/constants/analytics/conversations-trace';
+import { AnalyticsEntitySchema } from '@/src/models/analytics/entity';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 const token = () => getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -83,7 +87,9 @@ const withRatings = async (rows: ConversationRow[], range: TimeRange, authToken:
 
 // Resolved once per filter state by the caller and carried into every page of that result: the
 // narrowing is a property of the filter, not of the page.
-export async function getRatedChatIds(filters: ConversationFilters): Promise<ServerActionResponse<{ ids: string[] }>> {
+export async function getRatedChatIds(
+  filters: ConversationFilters,
+): Promise<ServerActionResponse<ConversationCandidateIds>> {
   const query = buildRatedConversationIdsQuery({ range: toRange(filters), feedback: filters.feedback });
   const result = await analyticsDataApi.executeAction(query, await token());
 
@@ -95,7 +101,7 @@ export async function getRatedChatIds(filters: ConversationFilters): Promise<Ser
     .map((row) => row[RateAnalyticsField.ChatId])
     .filter((id): id is string => typeof id === 'string' && id.length > 0);
 
-  return { ...result, response: { ids } };
+  return { ...result, response: { ids, isCapped: ids.length >= FEEDBACK_CANDIDATE_LIMIT } };
 }
 
 // An active feedback filter narrows by `in`, so an empty candidate set means "nothing carries this
@@ -103,6 +109,10 @@ export async function getRatedChatIds(filters: ConversationFilters): Promise<Ser
 // every conversation, and the service rejects an empty `in` list with a 400 either way.
 const isNarrowedToNothing = ({ feedback, chatIds }: ConversationPageRequest): boolean =>
   feedback !== FeedbackFilter.All && !chatIds?.length;
+
+export async function getConversationsSchema(): Promise<AnalyticsEntitySchema | null> {
+  return analyticsDataApi.getEntitySchema(CONVERSATIONS_ENTITY, await token());
+}
 
 export async function getConversations(request: ConversationPageRequest): Promise<ConversationsResponse> {
   if (isNarrowedToNothing(request)) {
@@ -116,6 +126,9 @@ export async function getConversations(request: ConversationPageRequest): Promis
     range,
     search: request.search,
     chatIds: request.chatIds ?? [],
+    columnFilters: request.columnFilters ?? [],
+    sort: request.sort ?? [],
+    visibleFields: request.visibleFields ?? [],
     offset: request.offset,
     limit: request.limit,
   });
@@ -208,6 +221,7 @@ export async function getConversationTotals(
     range: toRange(filters),
     search: filters.search,
     chatIds: chatIds ?? [],
+    columnFilters: filters.columnFilters ?? [],
   });
   const result = await analyticsDataApi.executeAction(query, await token());
 

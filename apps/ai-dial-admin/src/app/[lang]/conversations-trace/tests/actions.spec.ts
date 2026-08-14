@@ -1,13 +1,21 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { analyticsDataApi } from '@/src/app/api/api';
-import { getConversationTotals, getConversations, getRatedChatIds } from '@/src/app/[lang]/conversations-trace/actions';
 import {
+  getConversationTotals,
+  getConversations,
+  getConversationsSchema,
+  getRatedChatIds,
+} from '@/src/app/[lang]/conversations-trace/actions';
+import { FEEDBACK_CANDIDATE_LIMIT } from '@/src/constants/analytics/conversations-trace';
+import {
+  ConversationFilterOperator,
   ConversationFilters,
   ConversationPageRequest,
+  ConversationsField,
   FeedbackFilter,
 } from '@/src/models/analytics/conversations-trace';
-import { QueryMode, QueryOperator } from '@/src/models/analytics/query';
+import { QueryMode, QueryOperator, QuerySortDirection } from '@/src/models/analytics/query';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
@@ -162,6 +170,36 @@ describe('getConversations', () => {
   });
 });
 
+describe('getConversationsSchema', () => {
+  test('reads the conversations entity schema with the caller token', async () => {
+    const getEntitySchema = analyticsDataApi.getEntitySchema as unknown as ReturnType<typeof vi.fn>;
+    getEntitySchema.mockResolvedValue({
+      fields: [{ name: 'success_count', type: 'integer', source: 'conversations' }],
+    });
+
+    const schema = await getConversationsSchema();
+
+    expect(getEntitySchema).toHaveBeenCalledWith('conversations', TOKEN_MOCK);
+    expect(schema?.fields).toHaveLength(1);
+  });
+
+  test('returns null when the schema is unavailable', async () => {
+    (analyticsDataApi.getEntitySchema as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+
+    expect(await getConversationsSchema()).toBeNull();
+  });
+});
+
+describe('getConversations :: projection', () => {
+  test('projects the visible schema-driven fields', async () => {
+    execute().mockResolvedValue(okPage([CONVERSATION_ROW]));
+
+    await getConversations({ ...REQUEST, visibleFields: ['success_count'] });
+
+    expect(JSON.stringify(call(0).select)).toContain('success_count');
+  });
+});
+
 describe('getRatedChatIds', () => {
   test('queries rate_analytics and returns the candidate ids', async () => {
     execute().mockResolvedValue(ok([{ chat_id: 'a' }, { chat_id: 'b' }]));
@@ -187,6 +225,62 @@ describe('getRatedChatIds', () => {
 
     expect(result.success).toBe(false);
     expect(result.response).toBeUndefined();
+  });
+
+  test('reports an uncapped candidate set', async () => {
+    execute().mockResolvedValue(ok([{ chat_id: 'a' }]));
+
+    const result = await getRatedChatIds({ ...FILTERS, feedback: FeedbackFilter.Positive });
+
+    expect(result.response?.isCapped).toBe(false);
+  });
+
+  test('reports a candidate set that reached the limit', async () => {
+    const rows = Array.from({ length: FEEDBACK_CANDIDATE_LIMIT }, (_unused, index) => ({ chat_id: `c${index}` }));
+    execute().mockResolvedValue(ok(rows));
+
+    const result = await getRatedChatIds({ ...FILTERS, feedback: FeedbackFilter.Positive });
+
+    expect(result.response?.isCapped).toBe(true);
+  });
+});
+
+describe('getConversations :: sort and column filters', () => {
+  test('carries the caller sort keys into the query', async () => {
+    execute().mockResolvedValue(okPage([CONVERSATION_ROW]));
+
+    await getConversations({
+      ...REQUEST,
+      sort: [{ field: ConversationsField.TotalPrice, direction: QuerySortDirection.Desc }],
+    });
+
+    expect(call(0).sort?.[0]).toMatchObject({ field: ConversationsField.TotalPrice, dir: QuerySortDirection.Desc });
+  });
+
+  test('carries the column filters into the query', async () => {
+    execute().mockResolvedValue(okPage([CONVERSATION_ROW]));
+
+    await getConversations({
+      ...REQUEST,
+      columnFilters: [
+        { field: ConversationsField.ProjectId, operator: ConversationFilterOperator.Contains, value: 'acme' },
+      ],
+    });
+
+    expect(JSON.stringify(call(0).filter)).toContain(ConversationsField.ProjectId);
+  });
+
+  test('the totals query carries the column filters too', async () => {
+    execute().mockResolvedValue(ok([{ conversations: 1, cost: 1 }]));
+
+    await getConversationTotals({
+      ...FILTERS,
+      columnFilters: [
+        { field: ConversationsField.TurnCount, operator: ConversationFilterOperator.GreaterThan, value: '2' },
+      ],
+    });
+
+    expect(JSON.stringify(call(0).filter)).toContain(ConversationsField.TurnCount);
   });
 });
 

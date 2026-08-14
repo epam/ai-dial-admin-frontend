@@ -2205,12 +2205,17 @@ conversation query, so the default path costs exactly one request per page.
 
 The candidate query SHALL be aggregate mode over `rate_analytics` grouped by `chat_id`, carry the same time
 bounds as the conversation query and an empty-id guard, and select `chat_id` plus `max(request_time)`. It SHALL
-be ordered by most recent rating so that if the candidate set reaches its limit, the ids retained are those
-most likely to survive the conversation query's own `last_request_time desc` ordering. Its limit SHALL NOT
-exceed 1000, the service's hard maximum.
+be ordered by most recent rating, so that if the candidate set reaches its limit the ids retained are the most
+recently rated ones. Its limit SHALL NOT exceed 1000, the service's hard maximum.
 
 The candidate set SHALL be resolved once per filter state and reused across the pages of that result, rather
 than re-queried per page: the narrowing is a property of the filter, not of the page.
+
+When the candidate set reaches that limit the view SHALL state that the feedback-filtered result may be
+incomplete and that the conversations shown are the most recently rated ones. The cap truncates the result
+regardless of how it is ordered, and the ordering is the operator's to choose, so a truncated result MUST NOT
+be presented as the complete set of conversations carrying that feedback. The disclosure SHALL be visible
+while the capped filter state is applied and SHALL clear when the filter state no longer reaches the cap.
 
 The rate predicates SHALL be:
 
@@ -2244,6 +2249,17 @@ failure SHALL propagate and the conversation query MUST NOT run.
 
 - **WHEN** the feedback filter is in its all state
 - **THEN** only the conversation query is issued and it carries no `in` predicate
+
+#### Scenario: A capped candidate set is disclosed
+
+- **WHEN** the candidate query returns its full limit of ids
+- **THEN** the view states that the result may be incomplete and covers the most recently rated
+  conversations
+
+#### Scenario: The disclosure clears when the filter state no longer caps
+
+- **WHEN** the operator changes to a filter state whose candidate set is below the limit
+- **THEN** the incompleteness disclosure is no longer shown
 
 #### Scenario: No conversation carries the feedback
 
@@ -2596,132 +2612,13 @@ resilient if the mapping changes.
 - **WHEN** a row's `total_tokens` or `total_price` is `null`
 - **THEN** the corresponding cell renders empty rather than `0`, `null`, or `NaN`
 
-### Requirement: Read-only conversations grid
-
-The conversations view SHALL render a grid of seven visible columns — conversation, project, user, turns,
-activity, tokens, cost — plus the Rating column. No column SHALL be sortable, and no column SHALL offer a
-filter control of its own — neither a floating filter row nor a filter menu in the header. Per-column filtering
-stays off even though the page itself has filters: the page's filters are query predicates over the whole
-result, whereas a column filter narrows only the pages already fetched, and would report that narrowed view as
-the complete answer. Ordering is fixed by the query, most recent last activity first.
-
-The user column SHALL show the conversation's `user_hash`, labelled the way the conversation detail page labels
-it. The value is a de-identified surrogate rather than an identity, so the column SHALL NOT be presented as a
-name or an address, and the page MUST NOT claim the free-text search reaches it while it does not.
-
-The grid SHALL obtain its rows page by page from the backend and MUST NOT be handed a superset to narrow, and
-no grid-level filter model SHALL be set from the page's filter state. While the first page of a new filter
-state is in flight the view SHALL show a loading indicator, so the empty state cannot flash between a filter
-change and its rows. When the result holds no rows the view SHALL render a no-data state rather than an empty
-grid body.
-
-The conversation column SHALL keep the full conversation id reachable when it is too long to display, since
-real ids are not uniformly short and can run to hundreds of characters. Truncation MUST NOT be the only
-presentation of the value. The user column SHALL keep its value reachable on the same terms.
-
-Numeric and currency columns SHALL carry the same formatting these value types carry elsewhere in the app.
-The grid SHALL use a taller row than the app's shared default, since its cells stack two lines.
-
-The page header SHALL be the title alone, with no status badge of its own — the Analytics navigation group
-already marks the whole area as preview.
-
-Rows SHALL be openable, navigating to that conversation's detail view. Opening a row is a read, not a
-mutation of the result, so it does not make the grid writable: sorting and per-column filtering stay off.
-The grid SHALL indicate that its rows are openable rather than leaving the affordance undiscoverable, and
-SHALL honour the app's convention for opening a row in a new tab. The conversation id SHALL be URL-encoded
-into the detail address, since real ids contain path separators and percent-encoded text.
-
-The grid SHALL carry a provenance band above the column headers, grouping every column under the data source
-it comes from, and a column MUST NOT be able to leave its group when moved.
-
-Every column SHALL belong to exactly one group: an unattributed column would imply a provenance the page has
-not stated. Group labels SHALL name the actual source of the columns beneath them and MUST NOT overstate it —
-a column read from a source table MUST NOT be labelled as enrichment-derived, and no group SHALL be attributed
-to a source the page does not query. Each group SHALL carry a tooltip naming its source precisely. Colours
-SHALL come from theme tokens, never literal values, and every provenance value SHALL map to a colour, so a
-newly added one cannot render unstyled.
-
-The band and the column-header row SHALL each carry their own height, and the band label SHALL be separated
-from the column header beneath it.
-
-#### Scenario: Every column is attributed to a source
-
-- **WHEN** the grid renders
-- **THEN** a band above the column headers groups the columns by source
-- **AND** every column belongs to exactly one group
-- **AND** the conversation, project, user, turns, activity, tokens and cost columns are attributed to
-  `conversations`, and the Rating column to `rate_analytics`
-
-#### Scenario: The user column shows the conversation's user hash
-
-- **WHEN** the grid renders a conversation whose `user_hash` is populated
-- **THEN** the user column shows that value under the `conversations` provenance group
-
-#### Scenario: A conversation with no user hash renders no invented value
-
-- **WHEN** a conversation's `user_hash` is absent
-- **THEN** the user cell renders the view's placeholder rather than an empty-looking identity
-
-#### Scenario: No group claims an enrichment the page does not query
-
-- **WHEN** the grid renders
-- **THEN** no provenance group is labelled as enrichment-derived
-- **AND** no group tooltip says its values are samples
-
-#### Scenario: Groups survive column movement
-
-- **WHEN** a column is dragged
-- **THEN** it cannot be moved out of its provenance group
-
-#### Scenario: Rows render from the fetched pages
-
-- **WHEN** the grid has fetched a page of conversations
-- **THEN** one grid row renders per conversation, most recent last activity first
-
-#### Scenario: A long conversation id stays reachable
-
-- **WHEN** a conversation id is too long to fit its column
-- **THEN** the cell truncates it and the full value remains reachable
-
-#### Scenario: Opening a row navigates to the conversation
-
-- **WHEN** a grid row is opened
-- **THEN** that conversation's detail view is navigated to, with its id URL-encoded in the address
-
-#### Scenario: Opening a row in a new tab
-
-- **WHEN** a grid row is opened with the app's new-tab modifier
-- **THEN** the conversation's detail view opens in a new tab and the grid keeps its fetched pages
-
-#### Scenario: Sorting is disabled
-
-- **WHEN** a column header is clicked
-- **THEN** the row order does not change and no sort indicator appears
-
-#### Scenario: No filter control is reachable
-
-- **WHEN** the grid renders
-- **THEN** no floating filter row appears beneath the header row
-- **AND** no column header offers a filter control, so no client-side filter can be applied
-
-#### Scenario: Empty result renders the empty state
-
-- **WHEN** the result holds zero conversations
-- **THEN** the no-data content renders instead of an empty grid body
-
-#### Scenario: Loading replaces the grid rather than the empty state showing
-
-- **WHEN** the first page of a new filter state is in flight
-- **THEN** a loading indicator renders in place of the grid
-- **AND** the no-data content is not shown
-
 ### Requirement: Conversation list query over the conversations entity
 
-The system SHALL provide `buildConversationListQuery({ range, search, chatIds, offset })` in
-`src/utils/analytics/conversations-queries.ts` returning a `StructuredQuery` over the entity `conversations`
-in **row mode**. The conversation rollup is materialized by the analytics service — one row per `chat_id`,
-produced by an aggregate pipeline over `dial_usage_log` — so the query SHALL read stored columns and MUST NOT
-group or aggregate.
+The system SHALL provide `buildConversationListQuery({ range, search, chatIds, sort, columnFilters, offset })`
+in `src/utils/analytics/conversations-queries.ts` returning a `StructuredQuery` over the entity
+`conversations` in **row mode**. The conversation rollup is materialized by the analytics service — one row
+per `chat_id`, produced by an aggregate pipeline over `dial_usage_log` — so the query SHALL read stored
+columns and MUST NOT group or aggregate.
 
 The select SHALL name exactly the columns the page renders, by their entity field names:
 
@@ -2754,23 +2651,35 @@ the cost of a scan. Both targets are base columns of the entity, so no select-al
 Search MUST NOT reach message content: no column of `conversations` carries it, and the only column that
 could — `dial_usage_log.request_body` — is catalogued `sensitive` and belongs to a different entity. Search
 SHALL NOT reach `user_hash` either: selecting the column for display does not make a surrogate a useful
-free-text target, and a partial-match predicate over it would cost a scan for a value operators paste whole.
-The search affordance SHALL name only the fields search actually reaches.
+free-text target, and a partial-match predicate over it would cost a scan for a value operators paste whole —
+the user column's own filter is the exact-value input for it. The search affordance SHALL name only the fields
+search actually reaches.
 
 When `chatIds` is non-empty the filter SHALL additionally carry `in(chat_id, chatIds)`, which is how the
 feedback filter narrows the result.
 
-The sort SHALL be `[{ last_request_time, desc }, { chat_id, asc }]`. The trailing `chat_id asc` tiebreaker is
-required even with no sorting UI: the service appends no implicit tiebreaker, so without it a paged result is
-not stable across requests and a row could be skipped or repeated between pages.
+When `columnFilters` is non-empty the filter SHALL additionally carry one predicate per entry, conjoined with
+everything above. Each entry names a field of the entity and an operator the language expresses; an entry
+naming a field the entity does not carry, or an operator with no equivalent, SHALL be rejected rather than
+translated to an approximation. A range entry SHALL become a `ge` and an `le` predicate on the same field.
+Predicate value types SHALL follow the field's type: string fields carry string literals, count fields
+integers, price fields decimals, and timestamp fields epoch-millisecond literals.
+
+The sort SHALL be the caller's sort keys, if any, followed by `{ chat_id, asc }`; with no caller sort keys it
+SHALL be `[{ last_request_time, desc }, { chat_id, asc }]`. The trailing `chat_id asc` tiebreaker is required
+in every case: the service appends no implicit tiebreaker, so without it a paged result is not stable across
+requests and a row could be skipped or repeated between pages. A caller sort key SHALL carry an explicit
+nulls ordering placing nulls last, so a column holding nulls orders deterministically rather than relying on
+the backend's default. A sort key naming a field the entity does not carry SHALL be rejected: sorting by a
+value the query cannot name would silently fall back to an unstated order.
 
 The page SHALL be `{ type: 'offset', offset, limit, include_total: true }`. A limit above 1000 SHALL never be
 sent — the service rejects it with HTTP 400 and does not clamp.
 
 The query SHALL reference no column absent from the entity's role-visible schema; `conversations` exposes no
 `sensitive` column, so every selected field is visible to a read-only admin. `user_hash` is catalogued
-non-sensitive — the analytics service exposes it as a de-identified surrogate — so selecting it requires no
-elevated role.
+non-sensitive — the analytics service exposes it as a de-identified surrogate — so selecting, sorting or
+filtering on it requires no elevated role.
 
 #### Scenario: Query reads the conversations entity in row mode
 
@@ -2803,11 +2712,28 @@ elevated role.
 - **WHEN** the query is built with an empty or whitespace-only search term
 - **THEN** the filter carries only the time bounds
 
+#### Scenario: A column filter becomes a conjoined predicate
+
+- **WHEN** the query is built with a column filter entry on `total_price` above a value
+- **THEN** the filter carries a `gt` predicate on `total_price` conjoined with the time bounds
+- **AND** a range entry instead produces a `ge` and an `le` predicate on that field
+
+#### Scenario: Caller sort keys precede the tiebreaker
+
+- **WHEN** the query is built with a sort key on `total_tokens` descending
+- **THEN** the sort is that key followed by `chat_id` ascending
+- **AND** the caller's key carries a nulls-last ordering
+
 #### Scenario: Sort ends with a stable tiebreaker
 
-- **WHEN** the query is built
+- **WHEN** the query is built with no caller sort keys
 - **THEN** the sort is `last_request_time` descending followed by `chat_id` ascending
 - **AND** `chat_id` ascending is the final sort entry
+
+#### Scenario: An unknown field is rejected rather than approximated
+
+- **WHEN** the query is built with a sort key or column filter naming a field the entity does not carry
+- **THEN** that input is rejected rather than translated
 
 #### Scenario: Search leaves the rest of the query untouched
 
@@ -2833,7 +2759,10 @@ the result instead of probing past it. A request for a page beyond the result SH
 NOT be reported as a failure.
 
 Any filter change SHALL discard the pages already fetched and restart from the first page: a filter change
-produces a different result set, so an already-fetched page of the previous one is not a prefix of it.
+produces a different result set, so an already-fetched page of the previous one is not a prefix of it. A
+change to the sort SHALL restart paging on the same grounds: a page of a differently ordered result is not a
+prefix of the new one either, even though the set of conversations is unchanged. A change to any column filter
+SHALL restart paging as a filter change.
 
 Ratings SHALL be resolved for each page as it arrives, restricted to the conversations that page contains.
 
@@ -2863,6 +2792,18 @@ result.
 - **WHEN** the operator changes the search term, the time period or the feedback state after scrolling
 - **THEN** the previously fetched pages are discarded
 - **AND** the next request is for the first page of the new result
+
+#### Scenario: A sort change restarts paging
+
+- **WHEN** the operator changes a column's sort after scrolling
+- **THEN** the previously fetched pages are discarded
+- **AND** the next request is for the first page, carrying the new sort
+
+#### Scenario: A column filter change restarts paging
+
+- **WHEN** the operator applies or clears a column filter after scrolling
+- **THEN** the previously fetched pages are discarded
+- **AND** the next request is for the first page, carrying the new predicates
 
 #### Scenario: Ratings follow each page
 
@@ -3337,3 +3278,294 @@ hundreds.
 
 - **WHEN** a trace records more hops than the view requested
 - **THEN** the view states that the list is partial
+
+### Requirement: Conversations grid with server-side ordering and per-column filtering
+
+The conversations view SHALL render a grid of seven visible columns — conversation, project, user, turns,
+activity, tokens, cost — plus the Rating column.
+
+A column SHALL offer a sort or a filter control **only** when the control can be answered over the whole
+result. That is the case exactly when the column is backed by a stored field of the `conversations` entity,
+because the control then becomes part of the query. Sorting and filtering SHALL therefore be resolved by the
+backend, and the grid MUST NOT narrow or reorder the pages it already holds: those pages are a slice of the
+result, so narrowing them client-side would report a slice as the complete answer.
+
+| Column | Sort | Filter |
+|---|---|---|
+| conversation (`chat_id`) | yes | text |
+| project (`project_id`) | yes | text |
+| user (`user_hash`) | yes | text |
+| turns (`turn_count`) | yes | number |
+| activity (`last_request_time`) | yes | none |
+| tokens (`total_tokens`) | yes | number |
+| cost (`total_price`) | yes | number |
+| Rating | no | no |
+
+The Rating column SHALL offer neither. It is composed from `rate_analytics` lookups resolved for the page
+just returned and has no field on the queried entity, so any ordering or narrowing of it could only describe
+the rows already on screen. The feedback control is the filter for that dimension.
+
+The activity column SHALL be sortable but SHALL NOT offer a filter. The page's time-period control already
+predicates on `last_request_time`, and a second control over the same dimension would let a filter appear to
+widen a range the period clips.
+
+Filter controls SHALL offer only operators the query language can express. An operator with no equivalent —
+notably prefix and suffix matching — MUST NOT be offered, since an offered operator that cannot be translated
+either fails or silently returns the wrong rows. Text columns SHALL offer contains, does-not-contain, equals
+and not-equals; number columns SHALL additionally offer the four magnitude comparisons. An incomplete filter
+entry — an operator chosen with no value — SHALL contribute no predicate rather than a predicate against an
+empty value.
+
+Column filters SHALL compose with the page's own controls as a conjunction: the search term, the time period,
+the feedback narrowing and every column filter SHALL all hold for a returned conversation. The page's filter
+state MUST NOT be written into the grid's filter model, and the grid's filter model MUST NOT be read as the
+page's filter state; they are separate inputs to one query.
+
+A change to the sort or to any column filter SHALL discard the pages already fetched and restart from the
+first page of the new result, exactly as a search, period or feedback change does. The whole-result
+conversation count and cost SHALL be re-resolved under the same predicates, so the summary cannot describe a
+different result than the rows.
+
+When no column sort is applied the result SHALL be ordered most recent last activity first. Clearing a
+column's sort SHALL return to that default rather than leaving an arbitrary order.
+
+The conversation column SHALL keep the full conversation id reachable when it is too long to display, since
+real ids are not uniformly short and can run to hundreds of characters. Truncation MUST NOT be the only
+presentation of the value. The user column SHALL keep its value reachable on the same terms.
+
+The user column SHALL show the conversation's `user_hash`, labelled the way the conversation detail page
+labels it. The value is a de-identified surrogate rather than an identity, so the column SHALL NOT be
+presented as a name or an address.
+
+While the first page of a new sort, filter or page-control state is in flight the view SHALL show a loading
+indicator, so the empty state cannot flash between a change and its rows. When the result holds no rows the
+view SHALL render a no-data state rather than an empty grid body.
+
+Numeric and currency columns SHALL carry the same formatting these value types carry elsewhere in the app.
+The grid SHALL use a taller row than the app's shared default, since its cells stack two lines.
+
+The page header SHALL be the title alone, with no status badge of its own — the Analytics navigation group
+already marks the whole area as preview.
+
+Rows SHALL be openable, navigating to that conversation's detail view. The grid SHALL indicate that its rows
+are openable rather than leaving the affordance undiscoverable, and SHALL honour the app's convention for
+opening a row in a new tab. The conversation id SHALL be URL-encoded into the detail address, since real ids
+contain path separators and percent-encoded text.
+
+The grid SHALL carry a provenance band above the column headers, grouping every column under the data source
+it comes from, and a column MUST NOT be able to leave its group when moved.
+
+Every column SHALL belong to exactly one group: an unattributed column would imply a provenance the page has
+not stated. Group labels SHALL name the actual source of the columns beneath them and MUST NOT overstate it —
+a column read from a source table MUST NOT be labelled as enrichment-derived, and no group SHALL be attributed
+to a source the page does not query. Each group SHALL carry a tooltip naming its source precisely. Colours
+SHALL come from theme tokens, never literal values, and every provenance value SHALL map to a colour, so a
+newly added one cannot render unstyled.
+
+The band and the column-header row SHALL each carry their own height, and the band label SHALL be separated
+from the column header beneath it.
+
+#### Scenario: Sorting a field-backed column re-queries from the first page
+
+- **WHEN** the operator sorts the cost column descending
+- **THEN** a new request is issued carrying that sort key with a first-page offset
+- **AND** the pages already fetched are discarded
+- **AND** the rows shown are the result's ordering, not a reordering of the rows already held
+
+#### Scenario: Clearing a sort returns to the default ordering
+
+- **WHEN** the operator clears the sort on a column
+- **THEN** the result is ordered most recent last activity first
+
+#### Scenario: A column filter becomes a query predicate
+
+- **WHEN** the operator applies a contains filter on the project column
+- **THEN** a new request is issued carrying that predicate with a first-page offset
+- **AND** the returned rows are the whole result's matches, not the previously loaded rows narrowed
+
+#### Scenario: Column filters compose with the page's controls
+
+- **WHEN** a column filter is applied while a search term, a time period and a feedback state are active
+- **THEN** the request carries all of them, and a returned conversation satisfies every one
+
+#### Scenario: The summary follows the sort and filter state
+
+- **WHEN** a column filter is applied
+- **THEN** the whole-result conversation count and cost are re-resolved under the same predicates
+
+#### Scenario: Rating offers no sort and no filter
+
+- **WHEN** the operator inspects the Rating column header
+- **THEN** it offers no sort affordance and no filter control
+- **AND** clicking it does not change the row order
+
+#### Scenario: Activity sorts but does not filter
+
+- **WHEN** the operator inspects the activity column header
+- **THEN** a sort affordance is offered
+- **AND** no filter control is offered
+
+#### Scenario: Untranslatable operators are not offered
+
+- **WHEN** the operator opens a text column's filter
+- **THEN** the operator list offers contains, does-not-contain, equals and not-equals
+- **AND** it offers no prefix or suffix matching option
+
+#### Scenario: An operator with no value contributes nothing
+
+- **WHEN** a filter entry has an operator selected and its value left empty
+- **THEN** the request carries no predicate for that column
+
+#### Scenario: Every column is attributed to a source
+
+- **WHEN** the grid renders
+- **THEN** a band above the column headers groups the columns by source
+- **AND** every column belongs to exactly one group
+- **AND** the conversation, project, user, turns, activity, tokens and cost columns are attributed to
+  `conversations`, and the Rating column to `rate_analytics`
+
+#### Scenario: Groups survive column movement
+
+- **WHEN** a column is dragged
+- **THEN** it cannot be moved out of its provenance group
+
+#### Scenario: A long conversation id stays reachable
+
+- **WHEN** a conversation id is too long to fit its column
+- **THEN** the cell truncates it and the full value remains reachable
+
+#### Scenario: Opening a row navigates to the conversation
+
+- **WHEN** a grid row is opened
+- **THEN** that conversation's detail view is navigated to, with its id URL-encoded in the address
+
+#### Scenario: Opening a row in a new tab
+
+- **WHEN** a grid row is opened with the app's new-tab modifier
+- **THEN** the conversation's detail view opens in a new tab and the grid keeps its fetched pages
+
+#### Scenario: Loading replaces the grid rather than the empty state showing
+
+- **WHEN** the first page of a new sort or filter state is in flight
+- **THEN** a loading indicator renders in place of the grid
+- **AND** the no-data content is not shown
+
+#### Scenario: Empty result renders the empty state
+
+- **WHEN** the result holds zero conversations
+- **THEN** the no-data content renders instead of an empty grid body
+
+### Requirement: Conversation grid columns are offered from the entity schema
+
+The conversations view SHALL build its column catalog from the `conversations` entity's schema as the analytics
+service reports it, not from a field list held in the frontend. The schema is already fetched for the Query
+Builder, is role-filtered by the service, and declares each field's type, display name and description — so it
+is the only source that stays correct when the entity gains or loses a field.
+
+Each offered column SHALL derive its header label from the field's display name, falling back to the field
+name, and SHALL derive its cell formatting, its sortability and its filter type from the field's declared type:
+count-like integer types, decimal money types, timestamp types and string types each render and filter the way
+that value type already renders and filters elsewhere in the app.
+
+A field SHALL NOT be offered when the grid cannot honestly render or query it:
+
+- a field the service marks `sensitive` — selecting it would be rejected for a caller without the required
+  role, so offering it would present a column that cannot be shown;
+- a non-scalar `object` or `array` field — a grid cell is not a structured-value viewer, and rendering one as
+  text would assert a shape the view does not know.
+
+A field consumed by a curated column SHALL NOT also be offered as a raw column. The activity column composes
+`first_request_time` and `last_request_time` into one cell, so the catalog SHALL offer that column and MUST NOT
+additionally offer its two source fields as separate columns, which would present the same data twice under
+different names.
+
+The seven curated columns — conversation, project, user, turns, activity, tokens, cost — SHALL keep their
+composed cells and their labels, and SHALL be the default visible set together with the Rating column. Every
+other offered field SHALL default to hidden.
+
+Every offered column SHALL be attributed to the `conversations` provenance group, since every one is read from
+that entity. The Rating column SHALL remain attributed to `rate_analytics` and SHALL remain outside the
+catalog: it is not a field of the queried entity, so it cannot be offered, hidden or reordered as one.
+
+When the schema cannot be fetched the view SHALL render the curated columns and SHALL report that the
+additional columns are unavailable, rather than presenting an empty catalog as though the entity had no other
+fields.
+
+#### Scenario: The catalog comes from the schema
+
+- **WHEN** the conversations view loads
+- **THEN** the column catalog offers the entity's fields as reported by the schema
+- **AND** each offered column's label, formatting, sortability and filter type follow its declared type
+
+#### Scenario: Sensitive and non-scalar fields are not offered
+
+- **WHEN** the schema reports a field marked sensitive, and a field of an object or array type
+- **THEN** neither is offered in the catalog
+
+#### Scenario: A composed column's source fields are not offered separately
+
+- **WHEN** the catalog is built
+- **THEN** the activity column is offered
+- **AND** `first_request_time` and `last_request_time` are not offered as columns of their own
+
+#### Scenario: The curated set is what is visible by default
+
+- **WHEN** the conversations view loads with no stored column choice
+- **THEN** the conversation, project, user, turns, activity, tokens, cost and Rating columns are visible
+- **AND** every other offered column is hidden
+
+#### Scenario: Rating is not part of the catalog
+
+- **WHEN** the operator opens the column panel
+- **THEN** the Rating column is not offered as a selectable column
+
+#### Scenario: A failed schema fetch degrades to the curated columns
+
+- **WHEN** the entity schema cannot be fetched
+- **THEN** the curated columns render
+- **AND** the view reports that the additional columns are unavailable
+
+### Requirement: The conversation list query projects the visible columns
+
+The conversation list query SHALL select the fields the curated columns require plus every field whose
+schema-driven column is currently visible. It MUST NOT select every field the entity carries: the entity's
+field set is whatever the service reports and can grow, so projecting all of it would make every page fetch
+pay for columns nobody asked for.
+
+Making a hidden column visible SHALL restart paging, because the fetched pages do not carry that field and a
+column rendered from an absent value would read as empty data rather than as data not fetched. Hiding a visible
+column SHALL NOT re-query: the rows already held remain a correct answer to a narrower projection.
+
+A field that has been made visible SHALL be sortable and filterable on the same terms as a curated
+field-backed column, since it is a stored field of the same entity.
+
+The whole-result count and cost SHALL be unaffected by which columns are visible: they are aggregates over the
+filtered result, and a projection change does not change the result.
+
+#### Scenario: The projection follows the visible columns
+
+- **WHEN** the query is built with a schema-driven column visible
+- **THEN** the select names that column's field alongside the curated fields
+- **AND** it does not name a field whose column is hidden
+
+#### Scenario: Showing a column re-queries from the first page
+
+- **WHEN** the operator makes a hidden column visible after scrolling
+- **THEN** the fetched pages are discarded and the next request is for the first page
+- **AND** that request's select names the newly visible field
+
+#### Scenario: Hiding a column does not re-query
+
+- **WHEN** the operator hides a visible column
+- **THEN** no new request is issued and the rows already loaded remain
+
+#### Scenario: A newly visible column can be sorted and filtered
+
+- **WHEN** a schema-driven column is made visible
+- **THEN** it offers a sort affordance and a filter control matching its declared type
+- **AND** applying either carries a predicate or sort key on that field into the query
+
+#### Scenario: The summary is unchanged by a projection change
+
+- **WHEN** the operator changes which columns are visible
+- **THEN** the whole-result conversation count and cost do not change

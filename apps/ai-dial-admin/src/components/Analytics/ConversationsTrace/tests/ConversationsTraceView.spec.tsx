@@ -1,17 +1,22 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { IDatasource, IGetRowsParams } from 'ag-grid-community';
+import { GridApi, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import ConversationsTraceView from '@/src/components/Analytics/ConversationsTrace/ConversationsTraceView';
 import { PAGE_SIZE } from '@/src/constants/ag-grid';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import {
+  ConversationColumn,
+  ConversationFilterOperator,
   ConversationPageRequest,
   ConversationRow,
   ConversationTotals,
+  ConversationsField,
   FeedbackFilter,
 } from '@/src/models/analytics/conversations-trace';
+import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
+import { QuerySortDirection, QueryValueType } from '@/src/models/analytics/query';
 
 const getConversations = vi.fn();
 const getConversationTotals = vi.fn();
@@ -30,13 +35,25 @@ vi.mock('@/src/context/NotificationContext', () => ({
 }));
 
 let datasource: IDatasource | undefined;
+let columnState: { colId: string; hide: boolean }[] = [];
 
 vi.mock('@/src/components/Analytics/ConversationsTrace/List/ConversationsList', () => ({
-  default: (props: { datasource: IDatasource }) => {
+  default: (props: { datasource: IDatasource; onGridReady: (event: GridReadyEvent) => void }) => {
     datasource = props.datasource;
+    onReady = props.onGridReady;
     return <section aria-label="conversations" />;
   },
 }));
+
+let onReady: ((event: GridReadyEvent) => void) | undefined;
+
+const gridApi = {
+  setGridOption: vi.fn(),
+  getColumnState: () => columnState,
+  purgeInfiniteCache: vi.fn(),
+  addEventListener: vi.fn(),
+  removeEventListener: vi.fn(),
+} as unknown as GridApi;
 
 const row = (overrides: Partial<ConversationRow> = {}): ConversationRow => ({
   chat_id: '9f2c4b17-6d3a-4e58-b0c1-7ae95f83d204',
@@ -64,14 +81,19 @@ const lastRequest = (): ConversationPageRequest => getConversations.mock.calls.a
 const okPage = (rows: ConversationRow[], total: number | null) => ({ success: true, response: { rows, total } });
 
 // Drives the block the grid would have requested, and reports back what the grid would have been told.
-const fetchBlock = async (startRow = 0, endRow = PAGE_SIZE) => {
+interface BlockModels {
+  sortModel?: unknown[];
+  filterModel?: Record<string, unknown>;
+}
+
+const fetchBlock = async (startRow = 0, endRow = PAGE_SIZE, models: BlockModels = {}) => {
   const params = {
     startRow,
     endRow,
     successCallback: vi.fn(),
     failCallback: vi.fn(),
-    sortModel: [],
-    filterModel: {},
+    sortModel: models.sortModel ?? [],
+    filterModel: models.filterModel ?? {},
     context: undefined,
   } as unknown as IGetRowsParams;
 
@@ -84,11 +106,30 @@ const awaitFilterApplied = async () => {
   await waitFor(() => expect(datasource).not.toBe(previous));
 };
 
-const renderView = (totals: ConversationTotals | null = TOTALS, hasInitialLoadError = false) =>
-  render(<ConversationsTraceView initialTotals={totals} hasInitialLoadError={hasInitialLoadError} />);
+const SCHEMA_FIELDS = [
+  { name: 'success_count', type: AnalyticsFieldType.Integer, source: 'conversations' },
+] as AnalyticsEntityField[];
+
+const renderView = (
+  totals: ConversationTotals | null = TOTALS,
+  hasInitialLoadError = false,
+  schemaFields?: AnalyticsEntityField[],
+) => {
+  const result = render(
+    <ConversationsTraceView
+      initialTotals={totals}
+      hasInitialLoadError={hasInitialLoadError}
+      schemaFields={schemaFields}
+    />,
+  );
+  onReady?.({ api: gridApi } as GridReadyEvent);
+  return result;
+};
 
 beforeEach(() => {
   datasource = undefined;
+  onReady = undefined;
+  columnState = [];
   showNotificationSpy.mockReset();
   getRatedChatIds.mockReset();
   getConversationTotals.mockReset();
@@ -205,6 +246,186 @@ describe('ConversationsTraceView :: filters', () => {
     await fetchBlock();
 
     expect(lastRequest()).toMatchObject({ feedback: FeedbackFilter.Positive });
+  });
+});
+
+describe('ConversationsTraceView :: sort and column filters', () => {
+  const SORT_MODEL = [{ colId: ConversationsField.TotalPrice, sort: 'desc' }];
+  const FILTER_MODEL = { [ConversationsField.ProjectId]: { type: 'contains', filter: 'acme' } };
+
+  test('a sort model reaches the server action as sort keys', async () => {
+    renderView();
+
+    await fetchBlock(0, PAGE_SIZE, { sortModel: SORT_MODEL });
+
+    expect(lastRequest().sort).toEqual([{ field: ConversationsField.TotalPrice, direction: QuerySortDirection.Desc }]);
+  });
+
+  test('a filter model reaches the server action as column filters', async () => {
+    renderView();
+
+    await fetchBlock(0, PAGE_SIZE, { filterModel: FILTER_MODEL });
+
+    expect(lastRequest().columnFilters).toEqual([
+      {
+        field: ConversationsField.ProjectId,
+        operator: ConversationFilterOperator.Contains,
+        value: 'acme',
+        valueType: QueryValueType.String,
+      },
+    ]);
+  });
+
+  test('the column filters reach the totals call as well', async () => {
+    renderView();
+
+    await fetchBlock(0, PAGE_SIZE, { filterModel: FILTER_MODEL });
+
+    expect(getConversationTotals.mock.calls.at(-1)?.[0]).toMatchObject({
+      columnFilters: [
+        expect.objectContaining({
+          field: ConversationsField.ProjectId,
+          operator: ConversationFilterOperator.Contains,
+          value: 'acme',
+        }),
+      ],
+    });
+  });
+
+  test('changing the filter model starts the loaded count over', async () => {
+    renderView();
+
+    await fetchBlock();
+    getConversations.mockResolvedValue(okPage(SECOND_PAGE, 212));
+    await fetchBlock(PAGE_SIZE, PAGE_SIZE * 2);
+    await waitFor(() => expect(screen.getByText('0/2')).toBeInTheDocument());
+
+    await fetchBlock(0, PAGE_SIZE, { filterModel: FILTER_MODEL });
+
+    await waitFor(() => expect(screen.getByText('0/1')).toBeInTheDocument());
+  });
+});
+
+describe('ConversationsTraceView :: capped feedback result', () => {
+  const cappedIds = { ids: Array.from({ length: 1000 }, (_unused, index) => `c${index}`), isCapped: true };
+
+  const selectNegative = async () => {
+    const user = userEvent.setup();
+    await user.click(screen.getByText(ConversationsTraceI18nKey.FeedbackNegative));
+  };
+
+  test('discloses that a capped feedback result may be incomplete', async () => {
+    getRatedChatIds.mockResolvedValue({ success: true, response: cappedIds });
+    renderView();
+
+    await selectNegative();
+    await fetchBlock();
+
+    await waitFor(() => expect(screen.getByText(ConversationsTraceI18nKey.FeedbackCappedNotice)).toBeInTheDocument());
+  });
+
+  test('shows no disclosure when the candidate set is below the limit', async () => {
+    getRatedChatIds.mockResolvedValue({ success: true, response: { ids: ['a'], isCapped: false } });
+    renderView();
+
+    await selectNegative();
+    await fetchBlock();
+
+    expect(screen.queryByText(ConversationsTraceI18nKey.FeedbackCappedNotice)).not.toBeInTheDocument();
+  });
+
+  test('a superseded capped response does not raise the notice under a later filter state', async () => {
+    const user = userEvent.setup();
+    let resolveCandidates: ((value: unknown) => void) | undefined;
+    getRatedChatIds.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveCandidates = resolve;
+        }),
+    );
+    renderView();
+
+    await selectNegative();
+    await user.click(screen.getByText(ConversationsTraceI18nKey.FeedbackAll));
+
+    resolveCandidates?.({ success: true, response: cappedIds });
+    await fetchBlock();
+
+    expect(screen.queryByText(ConversationsTraceI18nKey.FeedbackCappedNotice)).not.toBeInTheDocument();
+  });
+
+  test('drops the disclosure when the candidate request fails', async () => {
+    getRatedChatIds.mockResolvedValue({ success: false, status: 500 });
+    renderView();
+
+    await selectNegative();
+    await fetchBlock();
+
+    expect(screen.queryByText(ConversationsTraceI18nKey.FeedbackCappedNotice)).not.toBeInTheDocument();
+  });
+
+  test('clears the disclosure when the feedback filter returns to all', async () => {
+    const user = userEvent.setup();
+    getRatedChatIds.mockResolvedValue({ success: true, response: cappedIds });
+    renderView();
+
+    await selectNegative();
+    await fetchBlock();
+    await waitFor(() => expect(screen.getByText(ConversationsTraceI18nKey.FeedbackCappedNotice)).toBeInTheDocument());
+
+    await user.click(screen.getByText(ConversationsTraceI18nKey.FeedbackAll));
+    await fetchBlock();
+
+    await waitFor(() =>
+      expect(screen.queryByText(ConversationsTraceI18nKey.FeedbackCappedNotice)).not.toBeInTheDocument(),
+    );
+  });
+});
+
+describe('ConversationsTraceView :: projection', () => {
+  test('sends a visible schema-driven column', async () => {
+    columnState = [
+      { colId: ConversationsField.ChatId, hide: false },
+      { colId: 'success_count', hide: false },
+    ];
+    renderView(TOTALS, false, SCHEMA_FIELDS);
+    await waitFor(() => expect(datasource).toBeDefined());
+
+    await fetchBlock();
+
+    expect(lastRequest().visibleFields).toEqual(['success_count']);
+  });
+
+  test('omits a hidden schema-driven column', async () => {
+    columnState = [{ colId: 'success_count', hide: true }];
+    renderView(TOTALS, false, SCHEMA_FIELDS);
+    await waitFor(() => expect(datasource).toBeDefined());
+
+    await fetchBlock();
+
+    expect(lastRequest().visibleFields).toEqual([]);
+  });
+
+  test('never projects a grid-only column, even though it is visible', async () => {
+    columnState = [
+      { colId: ConversationColumn.Rating, hide: false },
+      { colId: ConversationsField.ChatId, hide: false },
+    ];
+    renderView(TOTALS, false, SCHEMA_FIELDS);
+    await waitFor(() => expect(datasource).toBeDefined());
+
+    await fetchBlock();
+
+    expect(lastRequest().visibleFields).toEqual([]);
+  });
+
+  test('sends no visible columns when the schema is unavailable', async () => {
+    columnState = [{ colId: 'success_count', hide: false }];
+    renderView();
+
+    await fetchBlock();
+
+    expect(lastRequest().visibleFields).toEqual([]);
   });
 });
 

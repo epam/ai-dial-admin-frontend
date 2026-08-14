@@ -98,10 +98,16 @@ behaviour the spec is closing.
 ### Restored state is applied before the datasource is set
 
 For Conversations, the datasource is assigned in an effect once `gridApi` exists, while `AgGridWrapper`
-restores persisted state in its own effect. Child effects run before parent effects, so the restore already
-precedes the assignment — but relying on that ordering silently is what produces an unfiltered first fetch when
-it changes. The datasource assignment is therefore gated on the restore having run, and a test asserts the
-first request carries the restored predicates.
+restores persisted state in its own effect. Child effects run before parent effects, so the restore precedes
+the assignment.
+
+**Corrected during review.** This section originally said the datasource assignment would be *gated* on the
+restore having run, and the implementation attempted that by restoring inside `onGridReady`. That code was
+dead: `GridView` passes `currentColDefs`, which is still `undefined` when `AgGridReact` fires `onGridReady`,
+so the guard never armed and the effect did all the work anyway. Both the early restore and its ref guard were
+removed. The ordering that actually holds — child effect before ancestor effect — is documented at the effect
+instead, together with the consequence if it ever changed: AG Grid purges and re-requests on a restored sort or
+filter model, so the cost would be one extra request rather than wrong rows.
 
 Conversations also starts passing `isLiveData`, so the persisted state is applied without
 `updateGridOptions({ columnDefs, rowData })` — the branch that exists for exactly this row model.
