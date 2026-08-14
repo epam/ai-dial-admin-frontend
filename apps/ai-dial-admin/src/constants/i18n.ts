@@ -2444,6 +2444,7 @@ export enum AnalyticsTablesI18nKey {
   ConnectAuth = 'AnalyticsTables.ConnectAuth',
   ConnectAuthHint = 'AnalyticsTables.ConnectAuthHint',
   ConnectBaseUrlHint = 'AnalyticsTables.ConnectBaseUrlHint',
+  ConnectFlightUriHint = 'AnalyticsTables.ConnectFlightUriHint',
   ConnectWhoCanWrite = 'AnalyticsTables.ConnectWhoCanWrite',
   ConnectWriteRolesHint = 'AnalyticsTables.ConnectWriteRolesHint',
   ConnectRolesLoading = 'AnalyticsTables.ConnectRolesLoading',

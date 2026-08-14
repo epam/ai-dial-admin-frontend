@@ -1,6 +1,9 @@
 import { describe, expect, test } from 'vitest';
 
-import { ADAS_BASE_URL_PLACEHOLDER } from '@/src/components/Analytics/Tables/ConnectPanel/constants';
+import {
+  ADAS_BASE_URL_PLACEHOLDER,
+  ADAS_FLIGHT_URI_PLACEHOLDER,
+} from '@/src/components/Analytics/Tables/ConnectPanel/constants';
 import {
   buildConnectSnippets,
   buildFormatNotes,
@@ -180,21 +183,21 @@ describe('buildConnectSnippets', () => {
   ]);
 
   test('defaults the endpoint to the configured public URL', () => {
-    const snippets = buildConnectSnippets(widgets, 'https://analytics.example.com');
+    const snippets = buildConnectSnippets(widgets, { baseUrl: 'https://analytics.example.com', flightUri: '' });
 
     expect(snippets.auth).toContain('https://analytics.example.com');
     expect(snippets.pythonWrite).toContain('https://analytics.example.com');
   });
 
   test('falls back to the placeholder when no endpoint is configured', () => {
-    const snippets = buildConnectSnippets(widgets, '');
+    const snippets = buildConnectSnippets(widgets, { baseUrl: '', flightUri: '' });
 
     expect(snippets.auth).toContain(ADAS_BASE_URL_PLACEHOLDER);
     expect(snippets.pythonWrite).toContain(ADAS_BASE_URL_PLACEHOLDER);
   });
 
   test('posts rows to this table and projects its columns on read', () => {
-    const snippets = buildConnectSnippets(widgets, '');
+    const snippets = buildConnectSnippets(widgets, { baseUrl: '', flightUri: '' });
 
     expect(snippets.pythonWrite).toContain('/v1/tables/{TABLE}/rows');
     expect(snippets.curlWrite).toContain('/v1/tables/widget_metrics/rows');
@@ -203,9 +206,26 @@ describe('buildConnectSnippets', () => {
   });
 
   test('keeps platform columns out of every snippet', () => {
-    const snippets = buildConnectSnippets(widgets, '');
+    const snippets = buildConnectSnippets(widgets, { baseUrl: '', flightUri: '' });
 
     Object.values(snippets).forEach((snippet) => expect(snippet).not.toContain('_ingested_at'));
+  });
+
+  test('defaults the Flight endpoint to the configured URI', () => {
+    const snippets = buildConnectSnippets(widgets, {
+      baseUrl: '',
+      flightUri: 'grpc://analytics.example.com:32010',
+    });
+
+    expect(snippets.flightInstall).toContain('grpc://analytics.example.com:32010');
+    expect(snippets.flightRead).toContain('grpc://analytics.example.com:32010');
+  });
+
+  test('falls back to the Flight placeholder, which is not derived from the REST endpoint', () => {
+    const snippets = buildConnectSnippets(widgets, { baseUrl: 'https://analytics.example.com', flightUri: '' });
+
+    expect(snippets.flightInstall).toContain(ADAS_FLIGHT_URI_PLACEHOLDER);
+    expect(snippets.flightInstall).not.toContain('https://analytics.example.com');
   });
 
   test('projects a wildcard when the table declares no columns', () => {

@@ -128,7 +128,7 @@ beforeEach(() => {
 
 describe('TableDetailView action gating', () => {
   test('an admin with full permissions gets Add columns and Add rows as separate buttons, with no dropdown', () => {
-    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" />);
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
 
     expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.DeleteTable })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.ManageAccess })).toBeInTheDocument();
@@ -138,7 +138,9 @@ describe('TableDetailView action gating', () => {
   });
 
   test('the toolbar renders in Manage access, Delete, Add columns, Add rows, Connect order', () => {
-    const { container } = render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" />);
+    const { container } = render(
+      <TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />,
+    );
 
     const text = container.textContent ?? '';
     const order = [
@@ -155,7 +157,7 @@ describe('TableDetailView action gating', () => {
 
   test('Connect is offered on an active table whatever the viewer may do to it', () => {
     setPerms({});
-    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" />);
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
 
     expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.Connect })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.AddRows })).not.toBeInTheDocument();
@@ -164,7 +166,7 @@ describe('TableDetailView action gating', () => {
 
   test('a system table still offers Connect while every mutating action is absent', () => {
     setPerms({});
-    render(<TableDetailView name="dial_usage_log" initialTable={table({ system: true })} apiBaseUrl="" />);
+    render(<TableDetailView name="dial_usage_log" initialTable={table({ system: true })} apiBaseUrl="" flightUri="" />);
 
     expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.Connect })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.ManageAccess })).not.toBeInTheDocument();
@@ -173,7 +175,12 @@ describe('TableDetailView action gating', () => {
 
   test('a not-yet-active table shows Save in place of Connect and the Add buttons', () => {
     render(
-      <TableDetailView name="dial_usage_log" initialTable={table({ status: TableStatus.Pending })} apiBaseUrl="" />,
+      <TableDetailView
+        name="dial_usage_log"
+        initialTable={table({ status: TableStatus.Pending })}
+        apiBaseUrl=""
+        flightUri=""
+      />,
     );
 
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeInTheDocument();
@@ -184,7 +191,7 @@ describe('TableDetailView action gating', () => {
 
   test('write-only capability shows Add rows but not schema/delete actions', () => {
     setPerms({ canWrite: true });
-    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" />);
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
 
     expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.AddRows })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.AddColumns })).not.toBeInTheDocument();
@@ -193,7 +200,7 @@ describe('TableDetailView action gating', () => {
 
   test('modify-only capability shows Add columns but not Add rows', () => {
     setPerms({ canModify: true });
-    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" />);
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
 
     expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.AddColumns })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.AddRows })).not.toBeInTheDocument();
@@ -201,14 +208,14 @@ describe('TableDetailView action gating', () => {
 
   test('delete is hidden when the user cannot delete even with edit permissions', () => {
     setPerms({ canWrite: true, canModify: true });
-    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" />);
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
 
     expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.DeleteTable })).not.toBeInTheDocument();
   });
 
   test('a fully-denied user (e.g. a system table) sees no actions but keeps the read-only badge', () => {
     setPerms({});
-    render(<TableDetailView name="dial_usage_log" initialTable={table({ system: true })} apiBaseUrl="" />);
+    render(<TableDetailView name="dial_usage_log" initialTable={table({ system: true })} apiBaseUrl="" flightUri="" />);
 
     expect(screen.getByText(AnalyticsTablesI18nKey.SystemReadOnly)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.DeleteTable })).not.toBeInTheDocument();
@@ -219,14 +226,14 @@ describe('TableDetailView action gating', () => {
 
   test('the role-management action is hidden when the user cannot manage roles', () => {
     setPerms({ canWrite: true, canModify: true });
-    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" />);
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
 
     expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.ManageAccess })).not.toBeInTheDocument();
   });
 
   test('the delete confirmation names the table being deleted', async () => {
     const user = userEvent.setup();
-    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" />);
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
 
     await user.click(screen.getByRole('button', { name: AnalyticsTablesI18nKey.DeleteTable }));
 
@@ -243,6 +250,7 @@ describe('TableDetailView header', () => {
         name="dial_usage_log"
         initialTable={table({ description: 'Raw usage events ingested from blob storage.' })}
         apiBaseUrl=""
+        flightUri=""
       />,
     );
 
@@ -252,7 +260,7 @@ describe('TableDetailView header', () => {
 
 describe('TableDetailView columns grid', () => {
   test('the grid includes Display name and Description columns', () => {
-    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" />);
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
 
     const headers = screen.getByText(/^headers:/);
     expect(headers).toHaveTextContent(AnalyticsTablesI18nKey.DisplayName);
@@ -270,6 +278,7 @@ describe('TableDetailView schema metadata', () => {
           partition_by: { column: 'request_time', granularity: PartitionGranularity.Day },
         })}
         apiBaseUrl=""
+        flightUri=""
       />,
     );
 
@@ -283,7 +292,12 @@ describe('TableDetailView schema metadata', () => {
 
   test('an active source table with no partition hides partition column and granularity', () => {
     render(
-      <TableDetailView name="dial_usage_log" initialTable={table({ ordering_key: ['event_id'] })} apiBaseUrl="" />,
+      <TableDetailView
+        name="dial_usage_log"
+        initialTable={table({ ordering_key: ['event_id'] })}
+        apiBaseUrl=""
+        flightUri=""
+      />,
     );
 
     expect(screen.getByText(AnalyticsTablesI18nKey.OrderingKey)).toBeInTheDocument();
@@ -302,6 +316,7 @@ describe('TableDetailView schema metadata', () => {
           version_column: 'request_time',
         })}
         apiBaseUrl=""
+        flightUri=""
       />,
     );
 
@@ -313,7 +328,12 @@ describe('TableDetailView schema metadata', () => {
 
   test('a source declaring no scan metadata shows neither label and no substitute message', () => {
     render(
-      <TableDetailView name="dial_usage_log" initialTable={table({ ordering_key: ['event_id'] })} apiBaseUrl="" />,
+      <TableDetailView
+        name="dial_usage_log"
+        initialTable={table({ ordering_key: ['event_id'] })}
+        apiBaseUrl=""
+        flightUri=""
+      />,
     );
 
     expect(screen.queryByText(AnalyticsTablesI18nKey.IdentityColumn)).not.toBeInTheDocument();
@@ -326,6 +346,7 @@ describe('TableDetailView schema metadata', () => {
         name="dial_usage_log"
         initialTable={table({ ordering_key: ['event_id'], version_column: 'request_time' })}
         apiBaseUrl=""
+        flightUri=""
       />,
     );
 
@@ -345,6 +366,7 @@ describe('TableDetailView schema metadata', () => {
           columns: [{ source_name: 'event_id', name: 'event_id', type: AnalyticsFieldType.Uuid }],
         })}
         apiBaseUrl=""
+        flightUri=""
       />,
     );
 
@@ -363,6 +385,7 @@ describe('TableDetailView schema metadata', () => {
           grain: { grain_key: 'order_id' },
         })}
         apiBaseUrl=""
+        flightUri=""
       />,
     );
 
@@ -382,6 +405,7 @@ describe('TableDetailView schema metadata', () => {
           grain: { grain_key: 'order_id' },
         })}
         apiBaseUrl=""
+        flightUri=""
       />,
     );
 
@@ -406,6 +430,7 @@ describe('TableDetailView schema metadata', () => {
           grain: { grain_key: 'order_id' },
         })}
         apiBaseUrl=""
+        flightUri=""
       />,
     );
 
@@ -425,6 +450,7 @@ describe('TableDetailView schema metadata', () => {
           grain: { grain_key: 'stale_column' },
         })}
         apiBaseUrl=""
+        flightUri=""
       />,
     );
 
@@ -433,7 +459,7 @@ describe('TableDetailView schema metadata', () => {
   });
 
   test('a source table has no pinned grid row', () => {
-    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" />);
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
 
     expect(screen.getByText('pinned: none')).toBeInTheDocument();
   });
@@ -444,6 +470,7 @@ describe('TableDetailView schema metadata', () => {
         name="dial_usage_log"
         initialTable={table({ status: TableStatus.Pending, ordering_key: ['event_id'] })}
         apiBaseUrl=""
+        flightUri=""
       />,
     );
 
@@ -458,7 +485,7 @@ describe('TableDetailView write rows', () => {
       { source_name: 'event_id', name: 'event', type: AnalyticsFieldType.Uuid },
       { source_name: 'total_money', name: 'total_money', type: AnalyticsFieldType.Decimal },
     ];
-    render(<TableDetailView name="dial_usage_log" initialTable={table({ columns })} apiBaseUrl="" />);
+    render(<TableDetailView name="dial_usage_log" initialTable={table({ columns })} apiBaseUrl="" flightUri="" />);
 
     await user.click(screen.getByRole('button', { name: AnalyticsTablesI18nKey.AddRows }));
 
@@ -480,6 +507,7 @@ describe('TableDetailView write rows', () => {
           columns,
         })}
         apiBaseUrl=""
+        flightUri=""
       />,
     );
 
@@ -491,7 +519,7 @@ describe('TableDetailView write rows', () => {
 
   test('Insert rows is disabled while the JSON is invalid and re-enables once it is a valid array', async () => {
     const user = userEvent.setup();
-    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" />);
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
 
     await user.click(screen.getByRole('button', { name: AnalyticsTablesI18nKey.AddRows }));
     const editor = screen.getByLabelText('rows-json');
@@ -511,7 +539,7 @@ describe('TableDetailView write rows', () => {
 describe('TableDetailView write rows :: framing and escalation', () => {
   test('the popup says what it is for before the editor, so a reader is redirected before typing', async () => {
     const user = userEvent.setup();
-    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" />);
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
 
     await user.click(screen.getByRole('button', { name: AnalyticsTablesI18nKey.AddRows }));
 
@@ -522,7 +550,7 @@ describe('TableDetailView write rows :: framing and escalation', () => {
 
   test('Write rows programmatically closes the popup and opens the Connect panel on Write data', async () => {
     const user = userEvent.setup();
-    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" />);
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
 
     await user.click(screen.getByRole('button', { name: AnalyticsTablesI18nKey.AddRows }));
     await user.click(screen.getByRole('button', { name: AnalyticsTablesI18nKey.WriteProgrammatically }));
@@ -533,7 +561,7 @@ describe('TableDetailView write rows :: framing and escalation', () => {
 
   test('the Connect header button opens the panel on Write data', async () => {
     const user = userEvent.setup();
-    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" />);
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
 
     await user.click(screen.getByRole('button', { name: AnalyticsTablesI18nKey.Connect }));
 
@@ -545,7 +573,12 @@ describe('TableDetailView write rows :: framing and escalation', () => {
 describe('TableDetailView lifecycle status', () => {
   test('an ACTIVE table shows the live grid and add-rows/add-columns actions', () => {
     render(
-      <TableDetailView name="dial_usage_log" initialTable={table({ status: TableStatus.Active })} apiBaseUrl="" />,
+      <TableDetailView
+        name="dial_usage_log"
+        initialTable={table({ status: TableStatus.Active })}
+        apiBaseUrl=""
+        flightUri=""
+      />,
     );
 
     expect(screen.getByText(/^columns:/)).toBeInTheDocument();
@@ -556,7 +589,12 @@ describe('TableDetailView lifecycle status', () => {
 
   test('a PENDING table shows the draft schema editor and hides add-rows/add-columns actions', () => {
     render(
-      <TableDetailView name="dial_usage_log" initialTable={table({ status: TableStatus.Pending })} apiBaseUrl="" />,
+      <TableDetailView
+        name="dial_usage_log"
+        initialTable={table({ status: TableStatus.Pending })}
+        apiBaseUrl=""
+        flightUri=""
+      />,
     );
 
     expect(screen.getByText('draft-schema-editor')).toBeInTheDocument();
@@ -567,7 +605,12 @@ describe('TableDetailView lifecycle status', () => {
 
   test('a FAILED table also shows the draft schema editor', () => {
     render(
-      <TableDetailView name="dial_usage_log" initialTable={table({ status: TableStatus.Failed })} apiBaseUrl="" />,
+      <TableDetailView
+        name="dial_usage_log"
+        initialTable={table({ status: TableStatus.Failed })}
+        apiBaseUrl=""
+        flightUri=""
+      />,
     );
 
     expect(screen.getByText('draft-schema-editor')).toBeInTheDocument();
@@ -575,7 +618,12 @@ describe('TableDetailView lifecycle status', () => {
 
   test('the status badge reflects the table status', () => {
     render(
-      <TableDetailView name="dial_usage_log" initialTable={table({ status: TableStatus.Pending })} apiBaseUrl="" />,
+      <TableDetailView
+        name="dial_usage_log"
+        initialTable={table({ status: TableStatus.Pending })}
+        apiBaseUrl=""
+        flightUri=""
+      />,
     );
 
     expect(screen.getByText(AnalyticsTablesI18nKey.StatusPending)).toBeInTheDocument();
@@ -583,7 +631,12 @@ describe('TableDetailView lifecycle status', () => {
 
   test('a PENDING table shows a header Save action, disabled until the draft is complete', () => {
     render(
-      <TableDetailView name="dial_usage_log" initialTable={table({ status: TableStatus.Pending })} apiBaseUrl="" />,
+      <TableDetailView
+        name="dial_usage_log"
+        initialTable={table({ status: TableStatus.Pending })}
+        apiBaseUrl=""
+        flightUri=""
+      />,
     );
 
     expect(screen.getByRole('button', { name: ButtonsI18nKey.Save })).toBeDisabled();
@@ -606,7 +659,7 @@ describe('TableDetailView scan-metadata column guards', () => {
     });
 
   test('offers no delete action for either scan-metadata column, but keeps it for the others', () => {
-    render(<TableDetailView name="dial_usage_log" initialTable={scannable()} apiBaseUrl="" />);
+    render(<TableDetailView name="dial_usage_log" initialTable={scannable()} apiBaseUrl="" flightUri="" />);
 
     expect(
       screen.queryByRole('button', { name: `event_id:${ActionMenuOperationI18nKey.Delete}` }),
@@ -619,7 +672,7 @@ describe('TableDetailView scan-metadata column guards', () => {
 
   test('still offers the edit action for a scan-metadata column, with the sensitive guard set', async () => {
     const user = userEvent.setup();
-    render(<TableDetailView name="dial_usage_log" initialTable={scannable()} apiBaseUrl="" />);
+    render(<TableDetailView name="dial_usage_log" initialTable={scannable()} apiBaseUrl="" flightUri="" />);
 
     await user.click(screen.getByRole('button', { name: `event_id:${ActionMenuOperationI18nKey.Edit}` }));
 
@@ -631,7 +684,7 @@ describe('TableDetailView scan-metadata column guards', () => {
 
   test('leaves both guards off for a column outside the pair', async () => {
     const user = userEvent.setup();
-    render(<TableDetailView name="dial_usage_log" initialTable={scannable()} apiBaseUrl="" />);
+    render(<TableDetailView name="dial_usage_log" initialTable={scannable()} apiBaseUrl="" flightUri="" />);
 
     await user.click(screen.getByRole('button', { name: `total:${ActionMenuOperationI18nKey.Edit}` }));
 
@@ -646,6 +699,7 @@ describe('TableDetailView scan-metadata column guards', () => {
           columns: [{ source_name: 'event_id', name: 'event_id', type: AnalyticsFieldType.Uuid }],
         })}
         apiBaseUrl=""
+        flightUri=""
       />,
     );
 

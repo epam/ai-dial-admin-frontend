@@ -67,9 +67,11 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 interface Props {
   name: string;
   initialTable: AnalyticsTable;
-  // The endpoint an external client would call, from ANALYTICS_PUBLIC_URL; blank when unconfigured,
-  // which makes the generated snippets fall back to a visible placeholder.
+  // The endpoints an external client would call, from ANALYTICS_PUBLIC_URL and
+  // ANALYTICS_FLIGHT_SQL_PUBLIC_URL; blank when unconfigured, which makes the generated snippets fall
+  // back to a visible placeholder.
   apiBaseUrl: string;
+  flightUri: string;
 }
 
 // Renders the column name with a trailing sensitive marker; editing still swaps in the cell editor.
@@ -86,7 +88,7 @@ const ColumnNameCellRenderer: FC<ICellRendererParams<AnalyticsTableColumn>> = ({
 // column, so its inline rename and row actions are disabled wherever this check is used.
 const isPinnedRow = (_api: GridApi, node: IRowNode) => Boolean(node.rowPinned);
 
-const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl }) => {
+const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -496,7 +498,14 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl }) => {
 
       {accessOpen && <TableAccessPanel name={name} onClose={() => setAccessOpen(false)} />}
 
-      {connectOpen && <ConnectPanel table={table} apiBaseUrl={apiBaseUrl} onClose={() => setConnectOpen(false)} />}
+      {connectOpen && (
+        <ConnectPanel
+          table={table}
+          apiBaseUrl={apiBaseUrl}
+          flightUri={flightUri}
+          onClose={() => setConnectOpen(false)}
+        />
+      )}
     </div>
   );
 };

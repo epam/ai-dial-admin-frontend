@@ -2509,6 +2509,7 @@ export default {
     ConnectAuthHint:
       'Both sides use a DIAL API key. Keep it in the environment so it never lands in the script or your shell history.',
     ConnectBaseUrlHint: 'Replace <adas-base-url> with your Analytics endpoint.',
+    ConnectFlightUriHint: 'Replace <adas-host> with the host serving the Flight SQL port.',
     ConnectWhoCanWrite: 'Who can write',
     ConnectWriteRolesHint: 'To write rows here, the key must carry one of these roles:',
     ConnectRolesLoading: 'Loading roles…',

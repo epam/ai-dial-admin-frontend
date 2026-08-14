@@ -13,9 +13,16 @@ interface Props {
   curlSnippet: string;
   flightInstallSnippet: string;
   flightSnippet: string;
+  isFlightUriPlaceholder: boolean;
 }
 
-const ConnectReadTab: FC<Props> = ({ pythonSnippet, curlSnippet, flightInstallSnippet, flightSnippet }) => {
+const ConnectReadTab: FC<Props> = ({
+  pythonSnippet,
+  curlSnippet,
+  flightInstallSnippet,
+  flightSnippet,
+  isFlightUriPlaceholder,
+}) => {
   const t = useI18n();
 
   return (
@@ -51,6 +58,9 @@ const ConnectReadTab: FC<Props> = ({ pythonSnippet, curlSnippet, flightInstallSn
         <h4 className="dial-small-text-semi text-primary">{t(AnalyticsTablesI18nKey.ConnectFlight)}</h4>
         <p className="dial-tiny-text text-secondary">{t(AnalyticsTablesI18nKey.ConnectFlightHint)}</p>
         <CodeSnippet title={SNIPPET_LANGUAGE_SHELL} value={flightInstallSnippet} />
+        {isFlightUriPlaceholder && (
+          <p className="dial-tiny-text text-warning">{t(AnalyticsTablesI18nKey.ConnectFlightUriHint)}</p>
+        )}
         <CodeSnippet title={SNIPPET_LANGUAGE_PYTHON} value={flightSnippet} />
         <p className="dial-tiny-text text-secondary">{t(AnalyticsTablesI18nKey.ConnectFlightReadOnly)}</p>
       </section>

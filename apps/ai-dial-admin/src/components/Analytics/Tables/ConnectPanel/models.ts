@@ -22,6 +22,13 @@ export interface ConnectFormatNote {
   columns: string[];
 }
 
+// The endpoints a copied snippet points at. Kept as one object so the two URLs cannot be swapped at a
+// call site; they are unrelated addresses — different scheme, port, and often host.
+export interface ConnectEndpoints {
+  baseUrl: string;
+  flightUri: string;
+}
+
 export interface ConnectSnippets {
   auth: string;
   pythonWrite: string;

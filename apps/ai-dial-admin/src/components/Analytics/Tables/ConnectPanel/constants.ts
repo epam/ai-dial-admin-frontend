@@ -6,6 +6,10 @@ import { ConnectFormatRule, SnippetValue } from '@/src/components/Analytics/Tabl
 // on a DNS lookup the reader has to diagnose.
 export const ADAS_BASE_URL_PLACEHOLDER = '<adas-base-url>';
 
+// The Flight endpoint cannot be derived from the REST one: different scheme, a separately exposed
+// port, and usually a different host.
+export const ADAS_FLIGHT_URI_PLACEHOLDER = 'grpc://<adas-host>:32010';
+
 export const ADAS_BASE_URL_ENV = 'ADAS_BASE_URL';
 export const ADAS_API_KEY_ENV = 'ADAS_API_KEY';
 export const ADAS_FLIGHT_URI_ENV = 'ADAS_FLIGHT_URI';

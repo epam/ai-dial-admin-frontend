@@ -1,18 +1,25 @@
 ## ADDED Requirements
 
-### Requirement: ANALYTICS_PUBLIC_URL is surfaced to the table detail page
+### Requirement: Public Analytics endpoints are surfaced to the table detail page
 
-The system SHALL expose an optional environment variable `ANALYTICS_PUBLIC_URL` carrying the Analytics endpoint an external client would call. It SHALL be read server-side in the table detail page (`app/[lang]/tables/[id]/page.tsx`) and passed to the detail view; it SHALL NOT be added to the `FeatureFlags` object, which carries booleans consumed app-wide. When the variable is unset or blank the detail view SHALL receive an empty value.
+The system SHALL expose two optional environment variables carrying the endpoints an external client would call: `ANALYTICS_PUBLIC_URL` for the REST surface and `ANALYTICS_FLIGHT_SQL_PUBLIC_URL` for the Arrow Flight SQL surface. Both SHALL be read server-side in the table detail page (`app/[lang]/tables/[id]/page.tsx`) and passed to the detail view; neither SHALL be added to the `FeatureFlags` object, which carries booleans consumed app-wide. When a variable is unset or blank the detail view SHALL receive an empty value for it.
 
-#### Scenario: Configured endpoint reaches the view
+The Flight endpoint SHALL NOT be derived from the REST one. They are unrelated addresses — a different scheme, a separately exposed port, and commonly a different host — so deriving one from the other would produce a confidently wrong endpoint rather than an obviously unset one.
 
-- **WHEN** `process.env.ANALYTICS_PUBLIC_URL` is set and the table detail page renders
-- **THEN** the detail view receives that value
+#### Scenario: Configured endpoints reach the view
 
-#### Scenario: Unset endpoint yields a blank value
+- **WHEN** `ANALYTICS_PUBLIC_URL` and `ANALYTICS_FLIGHT_SQL_PUBLIC_URL` are set and the table detail page renders
+- **THEN** the detail view receives both values
 
-- **WHEN** `process.env.ANALYTICS_PUBLIC_URL` is not set
-- **THEN** the detail view receives an empty value rather than `undefined` leaking into a snippet
+#### Scenario: An unset endpoint yields a blank value
+
+- **WHEN** either variable is not set
+- **THEN** the detail view receives an empty value for it rather than `undefined` leaking into a snippet
+
+#### Scenario: Each endpoint is independent
+
+- **WHEN** only `ANALYTICS_PUBLIC_URL` is set
+- **THEN** the REST snippets carry that endpoint and the Flight snippets still carry their own placeholder
 
 ### Requirement: Table detail Connect panel
 
@@ -113,7 +120,7 @@ A nullable column SHALL still receive a value rather than a null, so the snippet
 
 **Read snippets** SHALL project the table's column names and SHALL carry an explicit `LIMIT` no greater than the REST maximum.
 
-Snippets SHALL read the endpoint from an `ADAS_BASE_URL` environment variable whose default is the configured public Analytics endpoint. When none is configured the default SHALL be a literal `<adas-base-url>` placeholder and the panel SHALL show a note to replace it.
+Snippets SHALL read each endpoint from an environment variable whose default is the corresponding configured public endpoint: `ADAS_BASE_URL` for the REST surfaces and `ADAS_FLIGHT_URI` for Flight SQL. When one is not configured its default SHALL be a visible placeholder — `<adas-base-url>` and `grpc://<adas-host>:32010` respectively — and the panel SHALL show a note to replace it, positioned with the snippets that use it.
 
 A table with no declared columns SHALL still render every tab, with the write snippet carrying an empty row rather than failing to render.
 
@@ -191,6 +198,11 @@ After the write snippets — not before them, since the generated snippet alread
 
 - **WHEN** a public Analytics endpoint is configured and the user opens the panel
 - **THEN** the snippets default `ADAS_BASE_URL` to that endpoint
+
+#### Scenario: Flight endpoint falls back to its own placeholder
+
+- **WHEN** no public Flight endpoint is configured
+- **THEN** the Flight snippets default `ADAS_FLIGHT_URI` to a `grpc://` placeholder, never to the REST endpoint, and the Read tab shows a note to replace it
 
 #### Scenario: Endpoint falls back to a placeholder
 

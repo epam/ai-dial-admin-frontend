@@ -3,6 +3,7 @@ import {
   ADAS_BASE_URL_ENV,
   ADAS_BASE_URL_PLACEHOLDER,
   ADAS_FLIGHT_URI_ENV,
+  ADAS_FLIGHT_URI_PLACEHOLDER,
   ANALYTICS_FIELD_TYPE_FORMAT_RULE,
   ANALYTICS_FIELD_TYPE_SAMPLE,
   CONNECT_FORMAT_RULE_ORDER,
@@ -10,6 +11,7 @@ import {
   READ_SNIPPET_LIMIT,
 } from '@/src/components/Analytics/Tables/ConnectPanel/constants';
 import {
+  ConnectEndpoints,
   ConnectFormatNote,
   ConnectSnippets,
   SnippetRow,
@@ -98,6 +100,8 @@ export const buildFormatNotes = (table: AnalyticsTable): ConnectFormatNote[] => 
 
 const resolveBaseUrl = (baseUrl: string): string => (baseUrl ?? '').trim() || ADAS_BASE_URL_PLACEHOLDER;
 
+const resolveFlightUri = (flightUri: string): string => (flightUri ?? '').trim() || ADAS_FLIGHT_URI_PLACEHOLDER;
+
 const projection = (table: AnalyticsTable): string => {
   const names = writableColumns(table).map((column) => column.name);
   return names.length ? names.join(', ') : '*';
@@ -164,17 +168,18 @@ const buildCurlReadSnippet = (table: AnalyticsTable): string =>
     `  -d '{"sql":"SELECT ${projection(table)} FROM ${table.name} LIMIT ${READ_SNIPPET_LIMIT}"}'`,
   ].join('\n');
 
-const buildFlightInstallSnippet = (): string =>
-  ['pip install adbc-driver-flightsql pyarrow pandas', `export ${ADAS_FLIGHT_URI_ENV}=grpc://<adas-host>:32010`].join(
-    '\n',
-  );
+const buildFlightInstallSnippet = (flightUri: string): string =>
+  [
+    'pip install adbc-driver-flightsql pyarrow pandas',
+    `export ${ADAS_FLIGHT_URI_ENV}=${resolveFlightUri(flightUri)}`,
+  ].join('\n');
 
-const buildFlightReadSnippet = (table: AnalyticsTable): string =>
+const buildFlightReadSnippet = (table: AnalyticsTable, flightUri: string): string =>
   [
     'import os',
     'import adbc_driver_flightsql.dbapi as flight_sql',
     '',
-    `URI = os.environ["${ADAS_FLIGHT_URI_ENV}"]`,
+    `URI = os.environ.get("${ADAS_FLIGHT_URI_ENV}", "${resolveFlightUri(flightUri)}")`,
     '',
     // The driver names the header in lower case because gRPC lower-cases header names on the wire; it
     // is the same Api-Key the REST calls send.
@@ -188,12 +193,12 @@ const buildFlightReadSnippet = (table: AnalyticsTable): string =>
     'print(frame.head())',
   ].join('\n');
 
-export const buildConnectSnippets = (table: AnalyticsTable, baseUrl: string): ConnectSnippets => ({
-  auth: buildAuthSnippet(baseUrl),
-  pythonWrite: buildPythonWriteSnippet(table, baseUrl),
+export const buildConnectSnippets = (table: AnalyticsTable, endpoints: ConnectEndpoints): ConnectSnippets => ({
+  auth: buildAuthSnippet(endpoints.baseUrl),
+  pythonWrite: buildPythonWriteSnippet(table, endpoints.baseUrl),
   curlWrite: buildCurlWriteSnippet(table),
-  pythonRead: buildPythonReadSnippet(table, baseUrl),
+  pythonRead: buildPythonReadSnippet(table, endpoints.baseUrl),
   curlRead: buildCurlReadSnippet(table),
-  flightInstall: buildFlightInstallSnippet(),
-  flightRead: buildFlightReadSnippet(table),
+  flightInstall: buildFlightInstallSnippet(endpoints.flightUri),
+  flightRead: buildFlightReadSnippet(table, endpoints.flightUri),
 });

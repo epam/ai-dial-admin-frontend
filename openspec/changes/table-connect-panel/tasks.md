@@ -24,7 +24,7 @@
 
 ## 4. Table detail header and wiring
 
-- [x] 4.1 In `src/app/[lang]/tables/[id]/page.tsx`, read `process.env.ANALYTICS_PUBLIC_URL` and pass it to `TableDetailView` as `apiBaseUrl`, empty when unset.
+- [x] 4.1 In `src/app/[lang]/tables/[id]/page.tsx`, read `process.env.ANALYTICS_PUBLIC_URL` and `process.env.ANALYTICS_FLIGHT_SQL_PUBLIC_URL` and pass them to `TableDetailView` as `apiBaseUrl` and `flightUri`, empty when unset.
 - [x] 4.2 In `TableDetailView.tsx`, replace the `DialButtonDropdown` branch and the `addColumnsAction`/`addRowsAction` item declarations with two standalone `DialNeutralButton`s — **Add columns** (`canModify`) and **Add rows** (`canWrite`) — keeping the existing `onSubmitAddColumns` / `buildRowsTemplate` handlers.
 - [x] 4.3 Add the **Connect** header button as a `DialPrimaryButton` in the last header slot (`ACTIVE` only, no permission gate), plus `connectOpen` state and the `ConnectPanel` mount.
 - [x] 4.4 Add the purpose line and the **Write rows programmatically** action at the top of the Add rows popup body, above the editor; the action closes the popup and opens the panel on the **Write data** tab.

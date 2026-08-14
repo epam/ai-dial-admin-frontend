@@ -21,10 +21,11 @@ import { AnalyticsTable } from '@/src/models/analytics/table';
 interface Props {
   table: AnalyticsTable;
   apiBaseUrl: string;
+  flightUri: string;
   onClose: () => void;
 }
 
-const ConnectPanel: FC<Props> = ({ table, apiBaseUrl, onClose }) => {
+const ConnectPanel: FC<Props> = ({ table, apiBaseUrl, flightUri, onClose }) => {
   const t = useI18n();
   const panelRef = useRef<HTMLElement | null>(null);
   const isReadOnly = Boolean(table.system);
@@ -67,7 +68,10 @@ const ConnectPanel: FC<Props> = ({ table, apiBaseUrl, onClose }) => {
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [onClose]);
 
-  const snippets = useMemo(() => buildConnectSnippets(table, apiBaseUrl), [table, apiBaseUrl]);
+  const snippets = useMemo(
+    () => buildConnectSnippets(table, { baseUrl: apiBaseUrl, flightUri }),
+    [table, apiBaseUrl, flightUri],
+  );
   const formatNotes = useMemo(() => buildFormatNotes(table), [table]);
   const tabs = useMemo(
     () => [
@@ -128,6 +132,7 @@ const ConnectPanel: FC<Props> = ({ table, apiBaseUrl, onClose }) => {
               curlSnippet={snippets.curlRead}
               flightInstallSnippet={snippets.flightInstall}
               flightSnippet={snippets.flightRead}
+              isFlightUriPlaceholder={!flightUri?.trim()}
             />
           )}
         </div>

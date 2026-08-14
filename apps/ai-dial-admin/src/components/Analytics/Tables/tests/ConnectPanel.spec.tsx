@@ -25,7 +25,14 @@ const table: AnalyticsTable = {
 };
 
 const renderPanel = (onClose = vi.fn()) =>
-  render(<ConnectPanel table={table} apiBaseUrl="https://analytics.example.com" onClose={onClose} />);
+  render(
+    <ConnectPanel
+      table={table}
+      apiBaseUrl="https://analytics.example.com"
+      flightUri="grpc://analytics.example.com:32010"
+      onClose={onClose}
+    />,
+  );
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -167,7 +174,9 @@ describe('ConnectPanel :: system tables', () => {
   const systemTable: AnalyticsTable = { ...table, system: true };
 
   const renderSystemPanel = () =>
-    render(<ConnectPanel table={systemTable} apiBaseUrl="https://analytics.example.com" onClose={vi.fn()} />);
+    render(
+      <ConnectPanel table={systemTable} apiBaseUrl="https://analytics.example.com" flightUri="" onClose={vi.fn()} />,
+    );
 
   test('offers no write path at all, since the backend refuses row writes to a system table', () => {
     renderSystemPanel();
