@@ -2499,6 +2499,52 @@ export default {
     AccessSaved: 'Access updated.',
     AccessLoadFailed: 'Could not load access.',
     RolesLoadFailed: 'Could not load roles.',
+    Connect: 'Connect',
+    ConnectTitle: 'Connect to {name}',
+    ConnectTabWrite: 'Write data',
+    ConnectTabRead: 'Read data',
+    ConnectAuth: 'Authentication',
+    ConnectAuthHint:
+      'Both sides use a DIAL API key. Keep it in the environment so it never lands in the script or your shell history.',
+    ConnectBaseUrlHint: 'Replace <adas-base-url> with your Analytics endpoint.',
+    ConnectWhoCanWrite: 'Who can write',
+    ConnectWriteRolesHint: 'To write rows here, the key must carry one of these roles:',
+    ConnectRolesLoading: 'Loading roles…',
+    ConnectNoWriteRoles:
+      'No roles are configured for this table, so as configured only a key with administrator access can write to it. A full administrator grants roles under Manage access.',
+    ConnectAdminWrites:
+      'A key with administrator access can write here as well, but a role scoped to this table is the better choice for a job that only appends rows. A full administrator grants roles under Manage access.',
+    ConnectWhoCanRead: 'Who can read',
+    ConnectReadScope:
+      'Reading is not restricted per table. Any key with analytics access can query this table, and there is no read-only role scoped to a single table.',
+    ConnectRowLimits: 'Row limits',
+    ConnectRestLimits:
+      'Without an explicit LIMIT a query runs with LIMIT 100. An explicit LIMIT above 1000 is rejected, not reduced — page with OFFSET to read further.',
+    ConnectFlightLimits:
+      'Flight SQL instead clamps an oversized LIMIT to its configured cap rather than rejecting it. A query whose result exceeds that cap fails outright instead of streaming a partial page.',
+    ConnectFormats: 'Value formats in this table',
+    ConnectFormatTimestamp:
+      '{columns} — send as YYYY-MM-DD HH:MM:SS.mmm; a T separator or trailing Z is rejected. Queries return this value as ISO-8601, so the two directions differ.',
+    ConnectFormatDate: '{columns} — send as YYYY-MM-DD.',
+    ConnectFormatDecimal:
+      '{columns} — quoted, so the digits arrive exactly. A plain number is accepted too, but passes through a float and loses precision beyond what a double carries.',
+    ConnectFormatArray:
+      '{columns} — a JSON array of the element type. Array columns are never null; send [] for empty.',
+    ConnectBatchLimit: 'One request carries up to 10000 rows; send more than that in batches.',
+    ConnectRejected: 'If a row is rejected',
+    ConnectUnknownColumn:
+      '"unknown column" — the row names something this table does not have. Check it against the Name column in the grid, not Display name, and drop any field starting with an underscore; the platform fills those in.',
+    ConnectNotAuthorized: '"not authorized" — the key carries none of the write roles listed above.',
+    ConnectPython: 'Python',
+    ConnectPythonHint: 'Python 3.11 or newer, standard library only — nothing to install.',
+    ConnectCurl: 'cURL',
+    ConnectFlight: 'Flight SQL — into pandas',
+    ConnectFlightHint:
+      'Arrow Flight SQL lands results straight in a typed pandas frame. It needs its own packages, and takes the same key — the driver sends it as a gRPC call header, which is why the option name is lower-cased.',
+    ConnectFlightReadOnly: 'Flight SQL cannot write — it is a read endpoint only.',
+    WriteProgrammatically: 'Write rows programmatically',
+    AddRowsPurpose:
+      'Inserts rows by hand — useful for checking that the schema accepts what you expect. Ongoing ingestion goes through the table’s row endpoint.',
   },
   ConversationsTrace: {
     Title: 'Conversations',

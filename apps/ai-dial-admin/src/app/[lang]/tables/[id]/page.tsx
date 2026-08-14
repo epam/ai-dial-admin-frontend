@@ -22,5 +22,10 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
     notFound();
   }
 
-  return <TableDetailView name={name} initialTable={table} />;
+  // Server-only, so it is read here and passed down rather than added to FeatureFlags, which carries
+  // booleans consumed app-wide. Blank when unset — the Connect snippets then show a placeholder
+  // endpoint rather than a confidently wrong one.
+  const apiBaseUrl = process.env.ANALYTICS_PUBLIC_URL ?? '';
+
+  return <TableDetailView name={name} initialTable={table} apiBaseUrl={apiBaseUrl} />;
 }
