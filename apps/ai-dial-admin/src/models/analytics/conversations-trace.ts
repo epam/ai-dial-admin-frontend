@@ -19,8 +19,9 @@ export interface ConversationRow {
   first_request_time: number | string | null;
   rating_up: number | null;
   rating_down: number | null;
-  [field: string]: ConversationScalar | undefined;
 }
+
+export type ConversationListRow = ConversationRow & Record<string, ConversationScalar | undefined>;
 
 export interface ConversationsPage {
   rows: ConversationRow[];

@@ -382,6 +382,26 @@ describe('ConversationsTraceView :: capped feedback result', () => {
   });
 });
 
+describe('ConversationsTraceView :: schema availability', () => {
+  test('reports that the additional columns are unavailable when the schema could not be read', () => {
+    render(<ConversationsTraceView initialTotals={TOTALS} schemaFields={null} hasSchemaError />);
+
+    expect(screen.getByText(ConversationsTraceI18nKey.SchemaUnavailableNotice)).toBeInTheDocument();
+  });
+
+  test('says nothing about the schema when it was read', () => {
+    renderView(TOTALS, false, SCHEMA_FIELDS);
+
+    expect(screen.queryByText(ConversationsTraceI18nKey.SchemaUnavailableNotice)).not.toBeInTheDocument();
+  });
+
+  test('still renders the curated columns when the schema is unavailable', () => {
+    render(<ConversationsTraceView initialTotals={TOTALS} schemaFields={null} hasSchemaError />);
+
+    expect(screen.getByRole('heading', { name: ConversationsTraceI18nKey.Title })).toBeInTheDocument();
+  });
+});
+
 describe('ConversationsTraceView :: projection', () => {
   test('sends a visible schema-driven column', async () => {
     columnState = [

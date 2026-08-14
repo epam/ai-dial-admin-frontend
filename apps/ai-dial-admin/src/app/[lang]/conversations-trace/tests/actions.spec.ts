@@ -177,16 +177,20 @@ describe('getConversationsSchema', () => {
       fields: [{ name: 'success_count', type: 'integer', source: 'conversations' }],
     });
 
-    const schema = await getConversationsSchema();
+    const result = await getConversationsSchema();
 
     expect(getEntitySchema).toHaveBeenCalledWith('conversations', TOKEN_MOCK);
-    expect(schema?.fields).toHaveLength(1);
+    expect(result.success).toBe(true);
+    expect(result.response?.fields).toHaveLength(1);
   });
 
-  test('returns null when the schema is unavailable', async () => {
+  test('reports a failure so the view can say the additional columns are unavailable', async () => {
     (analyticsDataApi.getEntitySchema as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null);
 
-    expect(await getConversationsSchema()).toBeNull();
+    const result = await getConversationsSchema();
+
+    expect(result.success).toBe(false);
+    expect(result.response).toBeUndefined();
   });
 });
 

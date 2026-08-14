@@ -73,12 +73,12 @@ export const haveTreeColDefsSamePanelState = (columnDefs: ColDef[], nextColumnDe
 
 export interface ColumnLeaf {
   field: string;
-  headerName?: string;
-  hide?: boolean;
+  headerName?: ColDef['headerName'];
+  hide?: ColDef['hide'];
   sort?: ColDef['sort'];
   groupId?: string;
-  groupName?: string;
-  suppressColumnsToolPanel?: boolean;
+  groupName?: ColDef['headerName'];
+  suppressColumnsToolPanel?: ColDef['suppressColumnsToolPanel'];
 }
 
 const groupChildren = (col: ColDef): ColDef[] | null => {

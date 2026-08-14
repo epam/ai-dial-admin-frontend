@@ -2614,13 +2614,14 @@ resilient if the mapping changes.
 
 ### Requirement: Conversation list query over the conversations entity
 
-The system SHALL provide `buildConversationListQuery({ range, search, chatIds, sort, columnFilters, offset })`
-in `src/utils/analytics/conversations-queries.ts` returning a `StructuredQuery` over the entity
-`conversations` in **row mode**. The conversation rollup is materialized by the analytics service — one row
+The system SHALL provide
+`buildConversationListQuery({ range, search, chatIds, sort, columnFilters, visibleFields, offset })` in
+`src/utils/analytics/conversations-queries.ts` returning a `StructuredQuery` over the entity `conversations`
+in **row mode**. The conversation rollup is materialized by the analytics service — one row
 per `chat_id`, produced by an aggregate pipeline over `dial_usage_log` — so the query SHALL read stored
 columns and MUST NOT group or aggregate.
 
-The select SHALL name exactly the columns the page renders, by their entity field names:
+The select SHALL name the fields the curated columns require, by their entity field names:
 
 | Field | Renders as |
 |---|---|
@@ -2632,6 +2633,17 @@ The select SHALL name exactly the columns the page renders, by their entity fiel
 | `total_price` | cost |
 | `last_request_time` | activity (relative) |
 | `first_request_time` | activity (span) |
+
+It SHALL additionally name every field whose schema-driven column is currently visible. It MUST NOT name every
+field the entity carries: the field set is whatever the service reports and can grow, so projecting all of it
+would make every page fetch pay for columns nobody asked for. A column with no field behind it — Rating is
+composed from `rate_analytics` lookups — MUST NOT be named at all, since the entity has no such column.
+
+Making a hidden column visible SHALL restart paging, because the fetched pages do not carry that field and a
+column rendered from an absent value would read as empty data rather than as data not fetched. Hiding a visible
+column SHALL NOT re-query: the rows already held remain a correct answer to a narrower projection. The
+whole-result count and cost SHALL be unaffected by which columns are visible, being aggregates over the
+filtered result rather than over the projection.
 
 `turn_count` is the pipeline's `count()` over usage-log rows for the conversation, which includes non-LLM
 spans such as embedding, MCP and routing calls. It is therefore **not** a count of distinct request traces,
@@ -2741,6 +2753,28 @@ filtering on it requires no elevated role.
 - **THEN** its select, sort and page are identical to the same query built without one
 - **AND** the time bounds are unchanged
 - **AND** `having` is absent
+
+#### Scenario: The projection follows the visible columns
+
+- **WHEN** the query is built with a schema-driven column visible
+- **THEN** the select names that column's field alongside the curated fields
+- **AND** it does not name a field whose column is hidden
+
+#### Scenario: Showing a column re-queries from the first page
+
+- **WHEN** the operator makes a hidden column visible after scrolling
+- **THEN** the fetched pages are discarded and the next request is for the first page
+- **AND** that request's select names the newly visible field
+
+#### Scenario: Hiding a column does not re-query
+
+- **WHEN** the operator hides a visible column
+- **THEN** no new request is issued and the rows already loaded remain
+
+#### Scenario: The summary is unchanged by a projection change
+
+- **WHEN** the operator changes which columns are visible
+- **THEN** the whole-result conversation count and cost do not change
 
 ### Requirement: Server-side paging with an exact result total
 
@@ -3491,6 +3525,9 @@ When the schema cannot be fetched the view SHALL render the curated columns and 
 additional columns are unavailable, rather than presenting an empty catalog as though the entity had no other
 fields.
 
+A field made visible SHALL be sortable and filterable on the same terms as a curated field-backed column,
+since it is a stored field of the same entity.
+
 #### Scenario: The catalog comes from the schema
 
 - **WHEN** the conversations view loads
@@ -3525,47 +3562,9 @@ fields.
 - **THEN** the curated columns render
 - **AND** the view reports that the additional columns are unavailable
 
-### Requirement: The conversation list query projects the visible columns
-
-The conversation list query SHALL select the fields the curated columns require plus every field whose
-schema-driven column is currently visible. It MUST NOT select every field the entity carries: the entity's
-field set is whatever the service reports and can grow, so projecting all of it would make every page fetch
-pay for columns nobody asked for.
-
-Making a hidden column visible SHALL restart paging, because the fetched pages do not carry that field and a
-column rendered from an absent value would read as empty data rather than as data not fetched. Hiding a visible
-column SHALL NOT re-query: the rows already held remain a correct answer to a narrower projection.
-
-A field that has been made visible SHALL be sortable and filterable on the same terms as a curated
-field-backed column, since it is a stored field of the same entity.
-
-The whole-result count and cost SHALL be unaffected by which columns are visible: they are aggregates over the
-filtered result, and a projection change does not change the result.
-
-#### Scenario: The projection follows the visible columns
-
-- **WHEN** the query is built with a schema-driven column visible
-- **THEN** the select names that column's field alongside the curated fields
-- **AND** it does not name a field whose column is hidden
-
-#### Scenario: Showing a column re-queries from the first page
-
-- **WHEN** the operator makes a hidden column visible after scrolling
-- **THEN** the fetched pages are discarded and the next request is for the first page
-- **AND** that request's select names the newly visible field
-
-#### Scenario: Hiding a column does not re-query
-
-- **WHEN** the operator hides a visible column
-- **THEN** no new request is issued and the rows already loaded remain
-
 #### Scenario: A newly visible column can be sorted and filtered
 
 - **WHEN** a schema-driven column is made visible
 - **THEN** it offers a sort affordance and a filter control matching its declared type
 - **AND** applying either carries a predicate or sort key on that field into the query
 
-#### Scenario: The summary is unchanged by a projection change
-
-- **WHEN** the operator changes which columns are visible
-- **THEN** the whole-result conversation count and cost do not change

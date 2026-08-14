@@ -2,7 +2,8 @@ import ConversationsTraceView from '@/src/components/Analytics/ConversationsTrac
 import Page403 from '@/src/components/Page403/Page403';
 import { CONVERSATIONS_TIME_PERIOD } from '@/src/constants/analytics/conversations-trace';
 import { ConversationTotals, FeedbackFilter } from '@/src/models/analytics/conversations-trace';
-import { AnalyticsEntityField } from '@/src/models/analytics/entity';
+import { AnalyticsEntityField, AnalyticsEntitySchema } from '@/src/models/analytics/entity';
+import { ServerActionResponse } from '@/src/models/server-action';
 import { isAnalyticsForbidden } from '@/src/server/analytics/analytics-access';
 import { errorObjLog } from '@/src/server/logger';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
@@ -18,6 +19,7 @@ export default async function Page() {
   let totals: ConversationTotals | null = null;
   let hasInitialLoadError = false;
   let schemaFields: AnalyticsEntityField[] | null = null;
+  let hasSchemaError = false;
 
   try {
     const range = getTimeRangeById(CONVERSATIONS_TIME_PERIOD);
@@ -30,12 +32,17 @@ export default async function Page() {
         endMs: range.endDate.getTime(),
         feedback: FeedbackFilter.All,
       }),
-      getConversationsSchema().catch((e) => {
+      getConversationsSchema().catch((e): ServerActionResponse<AnalyticsEntitySchema> => {
         errorObjLog(e, 'Failed to fetch the conversations entity schema');
-        return null;
+        return { success: false };
       }),
     ]);
-    schemaFields = schema?.fields ?? null;
+    hasSchemaError = !schema.success;
+    schemaFields = schema.response?.fields ?? null;
+
+    if (!schema.success) {
+      errorObjLog(schema, 'Failed to fetch the conversations entity schema');
+    }
 
     // The action reports a failed query in its response rather than throwing, so the success flag is the
     // only thing separating "no conversations" from "the query never ran".
@@ -55,6 +62,7 @@ export default async function Page() {
       initialTotals={totals}
       hasInitialLoadError={hasInitialLoadError}
       schemaFields={schemaFields}
+      hasSchemaError={hasSchemaError}
     />
   );
 }

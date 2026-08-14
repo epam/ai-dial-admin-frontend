@@ -18,9 +18,10 @@ interface Props {
   initialTotals: ConversationTotals | null;
   hasInitialLoadError?: boolean;
   schemaFields?: AnalyticsEntityField[] | null;
+  hasSchemaError?: boolean;
 }
 
-const ConversationsTraceView: FC<Props> = ({ initialTotals, hasInitialLoadError, schemaFields }) => {
+const ConversationsTraceView: FC<Props> = ({ initialTotals, hasInitialLoadError, schemaFields, hasSchemaError }) => {
   const t = useI18n();
   const [isColumnsPanelOpen, setIsColumnsPanelOpen] = useState(false);
   const {
@@ -72,6 +73,7 @@ const ConversationsTraceView: FC<Props> = ({ initialTotals, hasInitialLoadError,
         feedback={feedback}
         onFeedbackChange={onFeedbackChange}
         isFeedbackCapped={isFeedbackCapped}
+        hasSchemaError={hasSchemaError}
         onToggleColumnsPanel={onToggleColumnsPanel}
       />
       <div className="relative flex flex-1 rounded overflow-auto min-h-0 border border-primary">

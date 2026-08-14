@@ -110,8 +110,10 @@ export async function getRatedChatIds(
 const isNarrowedToNothing = ({ feedback, chatIds }: ConversationPageRequest): boolean =>
   feedback !== FeedbackFilter.All && !chatIds?.length;
 
-export async function getConversationsSchema(): Promise<AnalyticsEntitySchema | null> {
-  return analyticsDataApi.getEntitySchema(CONVERSATIONS_ENTITY, await token());
+export async function getConversationsSchema(): Promise<ServerActionResponse<AnalyticsEntitySchema>> {
+  const schema = await analyticsDataApi.getEntitySchema(CONVERSATIONS_ENTITY, await token());
+
+  return schema ? { success: true, response: schema } : { success: false };
 }
 
 export async function getConversations(request: ConversationPageRequest): Promise<ConversationsResponse> {
