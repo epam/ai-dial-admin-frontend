@@ -2,9 +2,9 @@
 
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DialLoader, DialNoDataContent, DialSegmentedControl } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton, DialLoader, DialNoDataContent, DialSegmentedControl } from '@epam/ai-dial-ui-kit';
 import type { SegmentedControlOption } from '@epam/ai-dial-ui-kit';
-import { IconSparkles } from '@tabler/icons-react';
+import { IconPencilMinus, IconSparkles } from '@tabler/icons-react';
 
 import {
   executeQuery,
@@ -12,7 +12,7 @@ import {
   getEntitySchema,
   translateQuery,
   translateSqlToQuery,
-} from '@/src/app/[lang]/query-builder/actions';
+} from '@/src/app/[lang]/queries/actions';
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import AiPanel from '@/src/components/Analytics/QueryBuilder/Ai/AiPanel';
@@ -32,6 +32,9 @@ import SortKeys from '@/src/components/Analytics/QueryBuilder/Sort/SortKeys';
 import SqlEditor from '@/src/components/Analytics/QueryBuilder/Sql/SqlEditor';
 import QueryBuilderToolbar from '@/src/components/Analytics/QueryBuilder/Toolbar/QueryBuilderToolbar';
 import { QueryBuilderContext } from '@/src/components/Analytics/QueryBuilder/context';
+import { useSavedQueryPage } from '@/src/components/Analytics/QueryBuilder/use-saved-query-page';
+import EditQuery from '@/src/components/Analytics/Queries/Modals/EditQuery';
+import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/ChangedEntityButtons';
 import { fieldsToOptions, havingFieldOptions } from '@/src/components/Analytics/QueryBuilder/utils/fields';
 import { buildQuery } from '@/src/components/Analytics/QueryBuilder/utils/serialize';
 import { isBuilderRepresentable, parseQuery } from '@/src/components/Analytics/QueryBuilder/utils/deserialize';
@@ -39,21 +42,24 @@ import { getResultColumns } from '@/src/components/Analytics/QueryBuilder/utils/
 import { formatSql } from '@/src/components/Analytics/QueryBuilder/utils/sql-format';
 import { createGroup, createInitialState, createPredicate } from '@/src/components/Analytics/QueryBuilder/utils/state';
 import { findTimestampField, liftTimeRange } from '@/src/components/Analytics/QueryBuilder/utils/time';
-import { LOCAL_STORAGE_QUERY_BUILDER_RAIL_KEY } from '@/src/constants/analytics/query-builder';
-import { ButtonsI18nKey, MenuI18nKey, QueryBuilderI18nKey } from '@/src/constants/i18n';
+import { DEFAULT_CHART_CONFIG, LOCAL_STORAGE_QUERY_BUILDER_RAIL_KEY } from '@/src/constants/analytics/query-builder';
+import { ButtonsI18nKey, QueriesI18nKey, QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useTimeFilter } from '@/src/hooks/use-time-filter';
 import { useAppContext } from '@/src/context/AppContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsEntity, AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { QueryFunction } from '@/src/models/analytics/query-function';
+import { SavedQuery } from '@/src/models/analytics/saved-query';
 import { QueryMode, StructuredQuery, StructuredQueryResult } from '@/src/models/analytics/query';
 import {
+  ChartConfig,
   ExecutedQueryMeta,
   QueryBuilderColor,
   QueryBuilderState,
   QueryBuilderView,
   QueryRequestKind,
+  QueryResultView,
   QueryRunRequest,
   QueryTimeBound,
 } from '@/src/models/analytics/query-builder';
@@ -61,15 +67,27 @@ import { TimeRange } from '@/src/models/time-range';
 import { getFromLocalStorage, setToLocalStorage } from '@/src/utils/local-storage';
 import { getErrorNotification } from '@/src/utils/notification';
 import { QUERY_BUILDER_PALETTE } from '@/src/constants/analytics/query-builder-palette';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 
 interface Props {
   initialEntities: AnalyticsEntity[];
   initialEntityName: string;
   initialFields: AnalyticsEntityField[];
   initialFunctions: QueryFunction[];
+  // The heading. A saved query supplies its own name; absent only while the standalone builder route
+  // still exists, which the queries entity workflow retires.
+  name?: string;
+  savedQuery?: SavedQuery;
 }
 
-const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFields, initialFunctions }) => {
+const QueryBuilder: FC<Props> = ({
+  initialEntities,
+  initialEntityName,
+  initialFields,
+  initialFunctions,
+  name,
+  savedQuery,
+}) => {
   const t = useI18n();
   const { showNotification } = useNotification();
   const { featureFlags } = useAppContext();
@@ -100,6 +118,13 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
   const [result, setResult] = useState<StructuredQueryResult | null>(null);
   const [resultMeta, setResultMeta] = useState<ExecutedQueryMeta | null>(null);
   const [isRunning, setIsRunning] = useState(false);
+  // Owned here rather than in ResultArea because both are members of a saved query's payload: they
+  // have to be readable when a save captures the page, and settable when a stored query opens.
+  const [resultView, setResultView] = useState<QueryResultView>(QueryResultView.Table);
+  const [chartConfig, setChartConfig] = useState<ChartConfig>(DEFAULT_CHART_CONFIG);
+  // Set for exactly one result when a chart configuration was restored from a stored query, so the
+  // first run does not reset the axes the author saved. The ordinary reset resumes afterwards.
+  const isChartConfigKept = useRef(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiLoadedMessageIndex, setAiLoadedMessageIndex] = useState<number | null>(null);
   // Remounts AiPanel (clearing its conversation) only on an explicit user entity switch — not on
@@ -120,10 +145,26 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
     setRailCollapsed(getFromLocalStorage(LOCAL_STORAGE_QUERY_BUILDER_RAIL_KEY) === 'true');
   }, []);
 
+  // Axis picks belong to one result: a new run gets fresh defaults derived from its own query. The
+  // one exception is a configuration just restored from a stored query — resetting that on the first
+  // run would silently discard the axes its author saved.
+  useEffect(() => {
+    if (isChartConfigKept.current) {
+      isChartConfigKept.current = false;
+      return;
+    }
+    setChartConfig(DEFAULT_CHART_CONFIG);
+  }, [result]);
+
   const onToggleRail = (collapsed: boolean) => {
     setRailCollapsed(collapsed);
     setToLocalStorage(LOCAL_STORAGE_QUERY_BUILDER_RAIL_KEY, String(collapsed));
   };
+
+  const clearResult = useCallback(() => {
+    setResult(null);
+    setResultMeta(null);
+  }, []);
 
   const refresh = useCallback(() => setState((prev) => ({ ...prev })), []);
   const patch = useCallback((partial: Partial<QueryBuilderState>) => setState((prev) => ({ ...prev, ...partial })), []);
@@ -157,6 +198,34 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
   const isJsonView = view === QueryBuilderView.Json;
   const isSqlView = view === QueryBuilderView.Sql;
   const isAiView = view === QueryBuilderView.Ai;
+
+  // Binds the page to its stored query: seeds the builder on open, tracks unsaved changes, and owns
+  // save, discard, and metadata editing. Inert when no stored query was passed.
+  const savedQueryPage = useSavedQueryPage({
+    savedQuery,
+    state,
+    setState,
+    sqlText,
+    setSqlText,
+    jsonText,
+    setJsonText,
+    isJsonDiverged: jsonDiverged,
+    setJsonDiverged,
+    setView,
+    lastGeneratedSql,
+    isSqlView,
+    timePeriod: timeFilter.timePeriod,
+    isCustom: timeFilter.isCustom,
+    timeRange: timeFilter.timeRange,
+    onTimePeriodChange: timeFilter.onTimePeriodChange,
+    onTimeRangeChange: timeFilter.onTimeRangeChange,
+    resultView,
+    setResultView,
+    chartConfig,
+    setChartConfig,
+    isChartConfigKept,
+    clearResult,
+  });
 
   const viewOptions: SegmentedControlOption<QueryBuilderView>[] = [
     { value: QueryBuilderView.Form, label: t(QueryBuilderI18nKey.ViewForm) },
@@ -393,7 +462,7 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
     <QueryBuilderContext.Provider value={contextValue}>
       <div className="relative flex min-h-0 w-full flex-1 flex-col rounded bg-layer-2">
         <div className="flex flex-col gap-4 p-4 pb-3">
-          <h1>{t(MenuI18nKey.QueryBuilder)}</h1>
+          <h1>{name ?? t(QueriesI18nKey.Title)}</h1>
           {entities.length > 0 && (
             <QueryBuilderToolbar
               entities={entities}
@@ -407,6 +476,21 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
               runDisabled={runDisabled}
               showRun={!isAiView}
             >
+              {savedQueryPage.savedQuery && savedQueryPage.isWritable && !savedQueryPage.isDirty && (
+                <DialGhostButton
+                  label={t(ButtonsI18nKey.Edit)}
+                  iconBefore={<IconPencilMinus {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
+                  onClick={savedQueryPage.onOpenEdit}
+                />
+              )}
+              {savedQueryPage.isDirty && (
+                <ChangedEntityButtons
+                  isSaveAllowed={savedQueryPage.isWritable}
+                  disableSave={runDisabled || savedQueryPage.isSaving}
+                  onDiscard={savedQueryPage.onDiscard}
+                  onSave={savedQueryPage.onSave}
+                />
+              )}
               {fieldsLoaded && !isAiView && (
                 <CopyButton
                   value={isSqlView ? sqlText : isJsonView ? jsonText : json}
@@ -422,7 +506,15 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
           <DialNoDataContent title={t(QueryBuilderI18nKey.EntitiesLoadFailed)} />
         ) : (
           <div className="flex min-h-0 flex-1 border-t border-primary">
-            <ResultArea result={result} meta={resultMeta} isRunning={isRunning} />
+            <ResultArea
+              result={result}
+              meta={resultMeta}
+              isRunning={isRunning}
+              view={resultView}
+              onChangeView={setResultView}
+              chartConfig={chartConfig}
+              onChangeChartConfig={setChartConfig}
+            />
             {railCollapsed ? (
               <CollapsedRail onExpand={() => onToggleRail(false)} />
             ) : (
@@ -466,13 +558,7 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
                           <DialLoader size={32} />
                         </div>
                       ) : (
-                        <SqlEditor
-                          value={sqlText}
-                          onChange={onChangeSql}
-                          fields={state.fields}
-                          entityName={state.entityName}
-                          functions={state.functions}
-                        />
+                        <SqlEditor value={sqlText} onChange={onChangeSql} />
                       )}
                     </div>
                   </div>
@@ -562,6 +648,16 @@ const QueryBuilder: FC<Props> = ({ initialEntities, initialEntityName, initialFi
         )}
       </div>
 
+      {savedQueryPage.isEditOpen && savedQueryPage.savedQuery && (
+        <EditQuery
+          query={savedQueryPage.savedQuery}
+          onClose={savedQueryPage.onCloseEdit}
+          onSaved={savedQueryPage.onEdited}
+        />
+      )}
+
+      {/* The written-mode guard, distinct from discarding unsaved changes: this one resets the builder
+          to its starting defaults, that one reverts to the last saved query. */}
       {pendingView !== null && <DiscardQueryPopup onConfirm={onConfirmDiscard} onCancel={() => setPendingView(null)} />}
     </QueryBuilderContext.Provider>
   );
