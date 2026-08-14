@@ -2503,6 +2503,8 @@ export default {
     ConnectTitle: 'Connect to {name}',
     ConnectTabWrite: 'Write data',
     ConnectTabRead: 'Read data',
+    ConnectSystemReadOnly:
+      'This table is fed by the platform and does not accept row writes, so only the read path is shown.',
     ConnectAuth: 'Authentication',
     ConnectAuthHint:
       'Both sides use a DIAL API key. Keep it in the environment so it never lands in the script or your shell history.',

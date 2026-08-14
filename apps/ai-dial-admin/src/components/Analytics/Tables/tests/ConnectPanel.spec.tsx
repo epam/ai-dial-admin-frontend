@@ -162,3 +162,32 @@ describe('ConnectPanel :: snippets', () => {
     expect(screen.queryByText(AnalyticsTablesI18nKey.ConnectFormatTimestamp)).not.toBeInTheDocument();
   });
 });
+
+describe('ConnectPanel :: system tables', () => {
+  const systemTable: AnalyticsTable = { ...table, system: true };
+
+  const renderSystemPanel = () =>
+    render(<ConnectPanel table={systemTable} apiBaseUrl="https://analytics.example.com" onClose={vi.fn()} />);
+
+  test('offers no write path at all, since the backend refuses row writes to a system table', () => {
+    renderSystemPanel();
+
+    expect(screen.queryByText(AnalyticsTablesI18nKey.ConnectTabWrite)).not.toBeInTheDocument();
+    expect(screen.queryByText(AnalyticsTablesI18nKey.ConnectWhoCanWrite)).not.toBeInTheDocument();
+    expect(screen.queryByText(AnalyticsTablesI18nKey.ConnectRejected)).not.toBeInTheDocument();
+  });
+
+  test('shows the read path and says why it is the only one', () => {
+    renderSystemPanel();
+
+    expect(screen.getByText(AnalyticsTablesI18nKey.ConnectSystemReadOnly)).toBeInTheDocument();
+    expect(screen.getByText(AnalyticsTablesI18nKey.ConnectWhoCanRead)).toBeInTheDocument();
+    expect(screen.getByText(AnalyticsTablesI18nKey.ConnectFlight)).toBeInTheDocument();
+  });
+
+  test('does not ask the backend for a write-role list it could never act on', () => {
+    renderSystemPanel();
+
+    expect(getTableAccess).not.toHaveBeenCalled();
+  });
+});

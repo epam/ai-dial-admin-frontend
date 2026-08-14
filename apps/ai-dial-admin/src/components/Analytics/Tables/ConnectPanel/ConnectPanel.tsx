@@ -27,7 +27,8 @@ interface Props {
 const ConnectPanel: FC<Props> = ({ table, apiBaseUrl, onClose }) => {
   const t = useI18n();
   const panelRef = useRef<HTMLElement | null>(null);
-  const [activeTab, setActiveTab] = useState<string>(ConnectTab.Write);
+  const isReadOnly = Boolean(table.system);
+  const [activeTab, setActiveTab] = useState<string>(isReadOnly ? ConnectTab.Read : ConnectTab.Write);
   const [writeRoles, setWriteRoles] = useState<string[]>([]);
   const [isRolesLoading, setIsRolesLoading] = useState(false);
   const [isAccessReadable, setIsAccessReadable] = useState(true);
@@ -37,6 +38,7 @@ const ConnectPanel: FC<Props> = ({ table, apiBaseUrl, onClose }) => {
   // Loaded on open rather than with the page: most visits never open the panel, and a caller holding
   // no application role gets a 403 here — an expected outcome, so it degrades quietly.
   useEffect(() => {
+    if (isReadOnly) return;
     let isCurrent = true;
     const loadAccess = async () => {
       setIsRolesLoading(true);
@@ -55,7 +57,7 @@ const ConnectPanel: FC<Props> = ({ table, apiBaseUrl, onClose }) => {
     return () => {
       isCurrent = false;
     };
-  }, [table.name]);
+  }, [table.name, isReadOnly]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -101,13 +103,17 @@ const ConnectPanel: FC<Props> = ({ table, apiBaseUrl, onClose }) => {
         </div>
 
         <div className="px-4 pt-3">
-          <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeTab} />
+          {isReadOnly ? (
+            <p className="dial-tiny-text text-secondary pb-3">{t(AnalyticsTablesI18nKey.ConnectSystemReadOnly)}</p>
+          ) : (
+            <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeTab} />
+          )}
         </div>
 
         <div className="flex flex-col gap-6 overflow-y-auto p-4">
           <ConnectAuthBlock snippet={snippets.auth} isBaseUrlPlaceholder={!apiBaseUrl?.trim()} />
 
-          {activeTab === ConnectTab.Write ? (
+          {activeTab === ConnectTab.Write && !isReadOnly ? (
             <ConnectWriteTab
               pythonSnippet={snippets.pythonWrite}
               curlSnippet={snippets.curlWrite}

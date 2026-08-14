@@ -24,6 +24,8 @@ The panel SHALL be a modal dialog for assistive technology: it SHALL carry a dia
 
 The panel body SHALL be organised by **task, not by technology**: two tabs, **Write data** and **Read data**, with **Write data** selected by default from every entry point. Writing and reading are done by different people and carry different authorization, so each tab SHALL carry its own authorization statement and its own language examples, and neither SHALL require reading the other.
 
+For a **system** table the panel SHALL offer the read path only: no **Write data** tab, no write snippets, and no write-role list. Such a table is fed out of band and its row endpoint refuses every write regardless of any access list, so a write tab would teach a path that cannot succeed. The panel SHALL say why the read path is the only one shown, and SHALL NOT request the table's access lists, which cannot authorize anything there.
+
 The API-key instruction, identical for both, SHALL be shown once above the tabs rather than duplicated inside each.
 
 The **Write data** tab SHALL cover posting rows to this table in Python (standard library only) and as a `curl` command. The **Read data** tab SHALL cover querying this table in Python, as a `curl` command, and over Arrow Flight SQL with pandas and the ADBC driver. Flight SQL SHALL appear only under Read, because that endpoint rejects write statements, and the panel SHALL say so. For Flight SQL the panel SHALL state that it needs its own Python packages.
@@ -58,6 +60,12 @@ The panel assumes the deployment has API-key authentication and the Flight endpo
 - **THEN** focus moves into the panel and `Tab` cycles within it
 - **AND WHEN** the panel is closed by any of its dismissal routes
 - **THEN** focus returns to the **Connect** button
+
+#### Scenario: A system table offers the read path only
+
+- **WHEN** the panel opens for a `system` table
+- **THEN** no **Write data** tab, write snippet, or write-role list is present, and the read path is shown with a statement of why it is the only one
+- **AND** no request is made for the table's access lists
 
 #### Scenario: Each tab carries only its own authorization
 
