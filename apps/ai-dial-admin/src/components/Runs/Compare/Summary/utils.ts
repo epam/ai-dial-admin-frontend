@@ -8,7 +8,7 @@ import { CompareBarGroup, CompareMetricStatCard } from './models';
 export const intersectStatistics = (primary: string[], compared: string[]): string[] =>
   sortMetricStatistics(primary.filter((statistic) => compared.includes(statistic)));
 
-/** Unions metric dropdown options by name; primary options win on collision. */
+/** Unions metric dropdown options by name; primary options win on collision. Sorted A–Z to match Metric Scores. */
 export const unionMetricOptions = (primary: MetricOption[], compared: MetricOption[]): MetricOption[] => {
   const byName = new Map<string, MetricOption>();
   for (const option of primary) {
@@ -19,7 +19,7 @@ export const unionMetricOptions = (primary: MetricOption[], compared: MetricOpti
       byName.set(option.name, option);
     }
   }
-  return Array.from(byName.values());
+  return Array.from(byName.values()).sort((a, b) => a.name.localeCompare(b.name));
 };
 
 /**

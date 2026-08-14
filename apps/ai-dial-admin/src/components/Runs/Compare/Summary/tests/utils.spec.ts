@@ -40,16 +40,18 @@ describe('Compare Summary :: utils', () => {
     expect(intersectStatistics(['MAX', 'AVG', 'P90'], ['P90', 'AVG', 'MIN'])).toEqual(['AVG', 'P90']);
   });
 
-  test('unionMetricOptions prefers primary option on name collision', () => {
+  test('unionMetricOptions prefers primary option on name collision and sorts alphabetically', () => {
     const primary: MetricOption[] = [{ name: 'ragas.score', field: 'metric::ragas::score', computationId: 'c1' }];
     const compared: MetricOption[] = [
       { name: 'ragas.score', field: 'metric::ragas::score', computationId: 'c2' },
       { name: 'other.score', field: 'metric::other::score', computationId: 'c3' },
+      { name: 'alpha.score', field: 'metric::alpha::score', computationId: 'c4' },
     ];
 
     expect(unionMetricOptions(primary, compared)).toEqual([
-      { name: 'ragas.score', field: 'metric::ragas::score', computationId: 'c1' },
+      { name: 'alpha.score', field: 'metric::alpha::score', computationId: 'c4' },
       { name: 'other.score', field: 'metric::other::score', computationId: 'c3' },
+      { name: 'ragas.score', field: 'metric::ragas::score', computationId: 'c1' },
     ]);
   });
 

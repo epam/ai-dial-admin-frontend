@@ -124,17 +124,27 @@ describe('Runs Summary :: metric options', () => {
 
     expect(options).toEqual([
       {
-        name: 'DeepEval: Answer Relevancy.score',
-        field: 'metric::DeepEval: Answer Relevancy::score',
-        computationId: 'comp-1',
-      },
-      {
         name: 'DeepEval: Answer Relevancy.reason',
         field: 'metric::DeepEval: Answer Relevancy::reason',
         computationId: 'comp-1',
       },
+      {
+        name: 'DeepEval: Answer Relevancy.score',
+        field: 'metric::DeepEval: Answer Relevancy::score',
+        computationId: 'comp-1',
+      },
       { name: 'Exact Match.exact_match', field: 'metric::Exact Match::exact_match', computationId: 'comp-1' },
     ]);
+  });
+
+  test('toMetricOptions sorts options alphabetically by name', () => {
+    const options = toMetricOptions([
+      { tsmdName: 'zebra', computationId: 'comp-1', outputSchema: { properties: { score: {} } } },
+      { tsmdName: 'alpha', computationId: 'comp-1', outputSchema: { properties: { score: {} } } },
+      { tsmdName: 'middle', computationId: 'comp-1', outputSchema: { properties: { score: {} } } },
+    ] as any);
+
+    expect(options.map((option) => option.name)).toEqual(['alpha.score', 'middle.score', 'zebra.score']);
   });
 
   test('toMetricOptions handles null', () => {
