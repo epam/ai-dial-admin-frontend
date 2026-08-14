@@ -9,9 +9,11 @@ import {
   createEmptyRunConditionFilter,
   deserializeRunConditionFilters,
   getRunConditionFieldOptions,
+  getRunConditionOperatorOptions,
   isRunConditionFilterComplete,
   parseIncludedIds,
   rowMatchesFilter,
+  sanitizeRunConditionOperator,
   serializeRunConditionFilters,
 } from '../utils';
 import { RunConditionLogicalOp, RunConditionOperator } from '../models';
@@ -29,6 +31,33 @@ describe('RunCondition utils', () => {
       { field: 'data::tags', displayName: 'tags', isArray: true },
       { field: 'data::filename', displayName: 'filename', isArray: false },
     ]);
+  });
+
+  test('getRunConditionOperatorOptions returns Contain and NotContains for array fields', () => {
+    expect(getRunConditionOperatorOptions(true).map((o) => o.value)).toEqual([
+      RunConditionOperator.Contain,
+      RunConditionOperator.NotContains,
+    ]);
+  });
+
+  test('getRunConditionOperatorOptions returns all four operators for scalar fields', () => {
+    expect(getRunConditionOperatorOptions(false).map((o) => o.value)).toEqual([
+      RunConditionOperator.Contain,
+      RunConditionOperator.NotContains,
+      RunConditionOperator.Equal,
+      RunConditionOperator.NotEqual,
+    ]);
+  });
+
+  test('sanitizeRunConditionOperator coerces Equal and NotEqual to Contain for arrays', () => {
+    expect(sanitizeRunConditionOperator(RunConditionOperator.Equal, true)).toBe(RunConditionOperator.Contain);
+    expect(sanitizeRunConditionOperator(RunConditionOperator.NotEqual, true)).toBe(RunConditionOperator.Contain);
+    expect(sanitizeRunConditionOperator(RunConditionOperator.NotContains, true)).toBe(RunConditionOperator.NotContains);
+  });
+
+  test('sanitizeRunConditionOperator leaves scalar operators unchanged', () => {
+    expect(sanitizeRunConditionOperator(RunConditionOperator.Equal, false)).toBe(RunConditionOperator.Equal);
+    expect(sanitizeRunConditionOperator(RunConditionOperator.NotEqual, false)).toBe(RunConditionOperator.NotEqual);
   });
 
   test('serializeRunConditionFilters returns null for empty filters', () => {

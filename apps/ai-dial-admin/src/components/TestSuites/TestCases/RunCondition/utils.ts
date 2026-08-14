@@ -46,6 +46,26 @@ export const getRunConditionFieldOptions = (schema?: TestCaseSchema[]): RunCondi
   return [...BASE_RUN_CONDITION_FIELDS, ...schemaFields];
 };
 
+const ARRAY_RUN_CONDITION_OPERATORS = new Set<RunConditionOperator>([
+  RunConditionOperator.Contain,
+  RunConditionOperator.NotContains,
+]);
+
+export const getRunConditionOperatorOptions = (isArray: boolean) =>
+  isArray
+    ? RUN_CONDITION_OPERATOR_OPTIONS.filter((o) => ARRAY_RUN_CONDITION_OPERATORS.has(o.value))
+    : RUN_CONDITION_OPERATOR_OPTIONS;
+
+export const sanitizeRunConditionOperator = (
+  operator: RunConditionOperator,
+  isArray: boolean,
+): RunConditionOperator => {
+  if (!isArray) {
+    return operator;
+  }
+  return ARRAY_RUN_CONDITION_OPERATORS.has(operator) ? operator : RunConditionOperator.Contain;
+};
+
 const isComparisonNode = (node: FilterNode): node is ComparisonNode => COMPARISON_OPS.has(node.op);
 
 const isLogicalNode = (node: FilterNode): node is LogicalNode =>

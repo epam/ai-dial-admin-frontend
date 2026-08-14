@@ -2,14 +2,14 @@
 
 import { DialGhostButton, DialInput, DialSelectField, ElementSize, SelectOption } from '@epam/ai-dial-ui-kit';
 import { IconPlus, IconX } from '@tabler/icons-react';
-import { FC, useCallback, useMemo } from 'react';
+import { FC, useCallback, useEffect, useMemo } from 'react';
 
 import CompactSelect from '@/src/components/Analytics/QueryBuilder/Common/CompactSelect';
 import { BasicI18nKey, ButtonsI18nKey, QueryBuilderI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 
-import { RUN_CONDITION_LOGICAL_OPTIONS, RUN_CONDITION_OPERATOR_OPTIONS } from './constants';
+import { RUN_CONDITION_LOGICAL_OPTIONS } from './constants';
 import {
   RunConditionFieldOption,
   RunConditionFilter,
@@ -17,6 +17,7 @@ import {
   RunConditionOperator,
   RunConditionPredicate,
 } from './models';
+import { getRunConditionOperatorOptions, sanitizeRunConditionOperator } from './utils';
 
 interface Props {
   draft: RunConditionFilter;
@@ -40,12 +41,12 @@ const CreateRunConditionFilter: FC<Props> = ({ draft, fieldOptions, onChange, on
 
   const operatorOptions: SelectOption[] = useMemo(
     () =>
-      RUN_CONDITION_OPERATOR_OPTIONS.map((o) => ({
+      getRunConditionOperatorOptions(draft.isArray).map((o) => ({
         value: o.value,
         label: t(o.label),
         iconBefore: o.icon,
       })),
-    [t],
+    [draft.isArray, t],
   );
 
   const logicalOptions: SelectOption[] = useMemo(
@@ -57,23 +58,41 @@ const CreateRunConditionFilter: FC<Props> = ({ draft, fieldOptions, onChange, on
     [t],
   );
 
+  useEffect(() => {
+    if (!draft.isArray) {
+      return;
+    }
+    const predicates = draft.predicates.map((p) => ({
+      ...p,
+      operator: sanitizeRunConditionOperator(p.operator, true),
+    }));
+    const hasInvalidOperator = predicates.some((p, i) => p.operator !== draft.predicates[i]?.operator);
+    if (hasInvalidOperator) {
+      onChange({ ...draft, predicates });
+    }
+  }, [draft, onChange]);
+
   const onFieldChange = useCallback(
     (field: string) => {
       const option = fieldOptions.find((o) => o.field === field);
       if (!option) return;
+      const predicates = option.isArray
+        ? draft.predicates.map((p) => ({
+            ...p,
+            operator: sanitizeRunConditionOperator(p.operator, true),
+          }))
+        : [
+            {
+              operator: draft.predicates[0]?.operator ?? RunConditionOperator.Contain,
+              value: draft.predicates[0]?.value ?? '',
+            },
+          ];
       onChange({
         ...draft,
         field: option.field,
         displayName: option.displayName,
         isArray: option.isArray,
-        predicates: option.isArray
-          ? draft.predicates
-          : [
-              {
-                operator: draft.predicates[0]?.operator ?? RunConditionOperator.Contain,
-                value: draft.predicates[0]?.value ?? '',
-              },
-            ],
+        predicates,
       });
     },
     [draft, fieldOptions, onChange],
