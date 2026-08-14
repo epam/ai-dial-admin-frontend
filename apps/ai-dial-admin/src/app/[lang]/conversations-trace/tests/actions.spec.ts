@@ -31,6 +31,7 @@ const REQUEST: ConversationPageRequest = { ...FILTERS, offset: 0, limit: 100 };
 const CONVERSATION_ROW = {
   chat_id: 'a',
   project_id: 'p',
+  user_hash: 'db7327ba3decd351',
   turn_count: 1,
   total_tokens: 2,
   total_price: '0.1',

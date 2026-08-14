@@ -103,12 +103,13 @@ describe('ConversationsList :: paging', () => {
 });
 
 describe('ConversationsList :: columns', () => {
-  test('renders the seven columns in order', () => {
+  test('renders the eight columns in order', () => {
     renderList();
 
     expect(leafColumns().map((column) => column.field)).toEqual([
       ConversationsField.ChatId,
       ConversationsField.ProjectId,
+      ConversationsField.UserHash,
       ConversationsField.TurnCount,
       ConversationsField.LastRequestTime,
       ConversationsField.TotalTokens,
@@ -124,7 +125,7 @@ describe('ConversationsList :: columns', () => {
 
     expect(groups.map((group) => group.groupId)).toEqual([ColumnProvenance.Conversations, ColumnProvenance.Feedback]);
     expect(groups.every((group) => group.marryChildren)).toBe(true);
-    expect(leafColumns()).toHaveLength(7);
+    expect(leafColumns()).toHaveLength(8);
   });
 
   test('attributes the rating column to the feedback entity and the rest to conversations', () => {

@@ -78,6 +78,7 @@ export const buildConversationListQuery = ({
     select: [
       col(field(ConversationsField.ChatId)),
       col(field(ConversationsField.ProjectId)),
+      col(field(ConversationsField.UserHash)),
       col(field(ConversationsField.TurnCount)),
       col(field(ConversationsField.TotalTokens)),
       col(field(ConversationsField.TotalPrice)),

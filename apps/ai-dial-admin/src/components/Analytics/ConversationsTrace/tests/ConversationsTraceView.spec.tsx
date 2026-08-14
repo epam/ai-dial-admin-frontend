@@ -41,6 +41,7 @@ vi.mock('@/src/components/Analytics/ConversationsTrace/List/ConversationsList', 
 const row = (overrides: Partial<ConversationRow> = {}): ConversationRow => ({
   chat_id: '9f2c4b17-6d3a-4e58-b0c1-7ae95f83d204',
   project_id: 'data-team',
+  user_hash: 'db7327ba3decd351',
   turn_count: 3,
   total_tokens: 10240,
   total_price: '0.090342871559',
@@ -76,6 +77,11 @@ const fetchBlock = async (startRow = 0, endRow = PAGE_SIZE) => {
 
   await datasource?.getRows(params);
   return params;
+};
+
+const awaitFilterApplied = async () => {
+  const previous = datasource;
+  await waitFor(() => expect(datasource).not.toBe(previous));
 };
 
 const renderView = (totals: ConversationTotals | null = TOTALS, hasInitialLoadError = false) =>
@@ -151,8 +157,7 @@ describe('ConversationsTraceView :: paging', () => {
 
     await fetchBlock(PAGE_SIZE, PAGE_SIZE * 2);
     await user.type(searchBox(), 'acme');
-
-    await waitFor(() => expect(getConversationTotals).toHaveBeenCalledTimes(1));
+    await awaitFilterApplied();
 
     getConversations.mockClear();
     await fetchBlock();
@@ -181,10 +186,14 @@ describe('ConversationsTraceView :: filters', () => {
     renderView();
 
     await user.type(searchBox(), 'acme');
-
     expect(searchBox()).toHaveValue('acme');
-    await waitFor(() => expect(getConversationTotals).toHaveBeenCalledTimes(1));
-    expect(getConversationTotals.mock.calls.at(-1)?.[0]).toMatchObject({ search: 'acme' });
+    await awaitFilterApplied();
+
+    await fetchBlock();
+
+    expect(lastRequest()).toMatchObject({ search: 'acme' });
+    const terms = getConversations.mock.calls.map((call) => (call[0] as ConversationPageRequest).search);
+    expect(Array.from(new Set(terms.filter(Boolean)))).toEqual(['acme']);
   });
 
   test('a feedback change requeries immediately without waiting out the search debounce', async () => {
@@ -193,9 +202,90 @@ describe('ConversationsTraceView :: filters', () => {
     renderView();
 
     await user.click(screen.getByText(ConversationsTraceI18nKey.FeedbackPositive));
+    await fetchBlock();
 
-    await waitFor(() => expect(getConversationTotals).toHaveBeenCalledTimes(1));
-    expect(getConversationTotals.mock.calls.at(-1)?.[0]).toMatchObject({ feedback: FeedbackFilter.Positive });
+    expect(lastRequest()).toMatchObject({ feedback: FeedbackFilter.Positive });
+  });
+});
+
+describe('ConversationsTraceView :: summary figures', () => {
+  test('re-resolves the whole-result figures when the first block is fetched', async () => {
+    renderView();
+
+    expect(getConversationTotals).not.toHaveBeenCalled();
+
+    await fetchBlock();
+
+    expect(getConversationTotals).toHaveBeenCalledOnce();
+    expect(getConversationTotals.mock.calls.at(-1)?.[0]).toMatchObject({ search: '', feedback: FeedbackFilter.All });
+  });
+
+  test('does not re-resolve them for a later block', async () => {
+    renderView();
+
+    await fetchBlock();
+    getConversationTotals.mockClear();
+    await fetchBlock(PAGE_SIZE, PAGE_SIZE * 2);
+
+    expect(getConversationTotals).not.toHaveBeenCalled();
+  });
+
+  test('carries the feedback candidates the first block resolved into the figures', async () => {
+    const user = userEvent.setup();
+    getRatedChatIds.mockResolvedValue({ success: true, response: { ids: ['a', 'b'] } });
+    renderView();
+
+    await user.click(screen.getByText(ConversationsTraceI18nKey.FeedbackNegative));
+    await fetchBlock();
+
+    expect(getRatedChatIds).toHaveBeenCalledOnce();
+    expect(getConversationTotals.mock.calls.at(-1)?.[1]).toEqual(['a', 'b']);
+  });
+
+  test('counts a conversation delivered in two blocks only once', async () => {
+    renderView();
+
+    await fetchBlock();
+    await fetchBlock(PAGE_SIZE, PAGE_SIZE * 2);
+
+    await waitFor(() => expect(screen.getByText('0/1')).toBeInTheDocument());
+  });
+
+  test('counts distinct conversations across blocks', async () => {
+    renderView();
+
+    await fetchBlock();
+    getConversations.mockResolvedValue(okPage(SECOND_PAGE, 212));
+    await fetchBlock(PAGE_SIZE, PAGE_SIZE * 2);
+
+    await waitFor(() => expect(screen.getByText('0/2')).toBeInTheDocument());
+  });
+
+  test('keeps the conversations loaded after block 0 when block 0 is re-fetched', async () => {
+    renderView();
+
+    await fetchBlock();
+    getConversations.mockResolvedValue(okPage(SECOND_PAGE, 212));
+    await fetchBlock(PAGE_SIZE, PAGE_SIZE * 2);
+    getConversations.mockResolvedValue(okPage(FIRST_PAGE, 212));
+    await fetchBlock();
+
+    await waitFor(() => expect(screen.getByText('0/2')).toBeInTheDocument());
+  });
+
+  test('starts the count over when the filter state changes', async () => {
+    const user = userEvent.setup();
+    renderView();
+
+    await fetchBlock();
+    getConversations.mockResolvedValue(okPage(SECOND_PAGE, 212));
+    await fetchBlock(PAGE_SIZE, PAGE_SIZE * 2);
+
+    await user.type(searchBox(), 'acme');
+    await awaitFilterApplied();
+    await fetchBlock();
+
+    await waitFor(() => expect(screen.getByText('0/1')).toBeInTheDocument());
   });
 });
 
@@ -249,12 +339,32 @@ describe('ConversationsTraceView :: empty and failed states', () => {
   });
 
   test('reports the totals as unavailable when the totals request fails', async () => {
-    const user = userEvent.setup();
     getConversationTotals.mockResolvedValue({ success: false, status: 500 });
     renderView();
 
-    await user.type(searchBox(), 'acme');
+    await fetchBlock();
 
     await waitFor(() => expect(screen.getAllByText('—')).toHaveLength(2));
+  });
+
+  test('keeps the figures when the rows fail but the totals query succeeded', async () => {
+    getConversations.mockResolvedValue({ success: false, status: 500 });
+    renderView();
+
+    await fetchBlock();
+
+    await waitFor(() => expect(screen.getByText('212')).toBeInTheDocument());
+  });
+
+  test('reports the figures as unavailable when the feedback candidates fail to resolve', async () => {
+    const user = userEvent.setup();
+    getRatedChatIds.mockResolvedValue({ success: false, status: 500 });
+    renderView();
+
+    await user.click(screen.getByText(ConversationsTraceI18nKey.FeedbackNegative));
+    await fetchBlock();
+
+    await waitFor(() => expect(screen.getAllByText('—')).toHaveLength(2));
+    expect(getConversationTotals).not.toHaveBeenCalled();
   });
 });

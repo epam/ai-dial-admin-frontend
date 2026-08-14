@@ -2503,6 +2503,7 @@ export enum ConversationsTraceI18nKey {
   SummaryCost = 'ConversationsTrace.SummaryCost',
   SummaryResultHint = 'ConversationsTrace.SummaryResultHint',
   SummaryLoadedHint = 'ConversationsTrace.SummaryLoadedHint',
+  SummaryLoadedScope = 'ConversationsTrace.SummaryLoadedScope',
   SummaryUnavailableHint = 'ConversationsTrace.SummaryUnavailableHint',
   RatingUp = 'ConversationsTrace.RatingUp',
   RatingDown = 'ConversationsTrace.RatingDown',

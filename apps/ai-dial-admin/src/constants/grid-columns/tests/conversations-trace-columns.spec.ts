@@ -22,10 +22,11 @@ describe('conversations columns :: composition', () => {
     });
   });
 
-  test('exposes exactly the seven displayed columns, in order', () => {
+  test('exposes exactly the eight displayed columns, in order', () => {
     expect(columns().map((col) => col.field)).toEqual([
       ConversationsField.ChatId,
       ConversationsField.ProjectId,
+      ConversationsField.UserHash,
       ConversationsField.TurnCount,
       ConversationsField.LastRequestTime,
       ConversationsField.TotalTokens,
@@ -38,12 +39,17 @@ describe('conversations columns :: composition', () => {
     expect(columns().map((col) => col.headerName)).toEqual([
       ConversationsTraceI18nKey.Conversation,
       ConversationsTraceI18nKey.Project,
+      ConversationsTraceI18nKey.DetailUser,
       ConversationsTraceI18nKey.Turns,
       ConversationsTraceI18nKey.Activity,
       ConversationsTraceI18nKey.Tokens,
       ConversationsTraceI18nKey.Cost,
       ConversationsTraceI18nKey.Rating,
     ]);
+  });
+
+  test('the user column reuses the label the detail page uses for the same field', () => {
+    expect(column(ConversationsField.UserHash).headerName).toBe(ConversationsTraceI18nKey.DetailUser);
   });
 
   test('the conversation column renders through a cell renderer', () => {
@@ -74,6 +80,11 @@ describe('conversations columns :: proportions', () => {
 
   test('the conversation column reserves room for a production-length id', () => {
     expect(column(ConversationsField.ChatId).minWidth).toBeGreaterThanOrEqual(280);
+  });
+
+  test('the user column is sized for a hash rather than a display name', () => {
+    expect(column(ConversationsField.UserHash).minWidth).toBeGreaterThanOrEqual(140);
+    expect(column(ConversationsField.UserHash).flex).toBeLessThan(column(ConversationsField.ProjectId).flex as number);
   });
 
   test('numeric columns are narrower than the conversation column', () => {
@@ -121,5 +132,10 @@ describe('conversations columns :: value formatting', () => {
 
   test('project renders through a cell renderer so an unattributed project is marked', () => {
     expect(typeof column(ConversationsField.ProjectId).cellRenderer).toBe('function');
+  });
+
+  test('user renders through a cell renderer so a missing hash is marked', () => {
+    expect(typeof column(ConversationsField.UserHash).cellRenderer).toBe('function');
+    expect(column(ConversationsField.UserHash).valueFormatter).toBeUndefined();
   });
 });

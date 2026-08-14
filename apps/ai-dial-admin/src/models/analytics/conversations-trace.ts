@@ -7,6 +7,7 @@ export enum ColumnProvenance {
 export interface ConversationRow {
   chat_id: string;
   project_id: string;
+  user_hash: string | null;
   turn_count: number | string | null;
   total_tokens: number | string | null;
   total_price: number | string | null;

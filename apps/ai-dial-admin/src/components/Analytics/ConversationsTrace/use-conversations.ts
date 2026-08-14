@@ -27,6 +27,11 @@ import { getErrorNotification } from '@/src/utils/notification';
 const filterKey = ({ search, startMs, endMs, feedback }: ConversationFilters): string =>
   [search, startMs, endMs, feedback].join('|');
 
+interface LoadedConversations {
+  key: string;
+  byId: Map<string, ConversationRow>;
+}
+
 interface CandidateIds {
   key: string;
   // The promise, not the resolved ids: the list query and the totals query both need the candidate set
@@ -44,7 +49,7 @@ export const useConversations = (initialTotals: ConversationTotals | null, hasIn
 
   const [hasLoadError, setHasLoadError] = useState(hasInitialLoadError);
   const [totals, setTotals] = useState<ConversationTotals | null>(initialTotals);
-  const [loadedRows, setLoadedRows] = useState<ConversationRow[]>([]);
+  const [loaded, setLoaded] = useState<LoadedConversations>({ key: '', byId: new Map() });
   const [isEmptyResult, setIsEmptyResult] = useState(false);
   const [isFirstPageLoading, setIsFirstPageLoading] = useState(true);
 
@@ -98,11 +103,40 @@ export const useConversations = (initialTotals: ConversationTotals | null, hasIn
     return pending;
   }, [filters, key]);
 
+  const totalsRequestRef = useRef(0);
+
+  const loadTotals = useCallback(
+    async (chatIds: string[] | null) => {
+      const requestId = ++totalsRequestRef.current;
+
+      try {
+        const result = await getReqRef.current(getConversationTotals, filters, chatIds ?? undefined);
+
+        if (requestId !== totalsRequestRef.current) {
+          return;
+        }
+
+        setTotals(result.success ? ((result.response as ConversationTotals | undefined) ?? null) : null);
+      } catch {
+        if (requestId === totalsRequestRef.current) {
+          setTotals(null);
+        }
+      }
+    },
+    [filters],
+  );
+
+  const resetTotals = useCallback(() => {
+    totalsRequestRef.current += 1;
+    setTotals(null);
+  }, []);
+
   const datasource: IDatasource = useMemo(
     () => ({
       getRows: async (params: IGetRowsParams) => {
         const { startRow, endRow } = params;
         const isFirstPage = startRow === 0;
+        let hasResolvedCandidates = false;
         gridApi?.setGridOption('loading', true);
         if (isFirstPage) {
           setIsFirstPageLoading(true);
@@ -110,6 +144,10 @@ export const useConversations = (initialTotals: ConversationTotals | null, hasIn
 
         try {
           const chatIds = await resolveCandidates();
+          hasResolvedCandidates = true;
+          if (isFirstPage) {
+            void loadTotals(chatIds);
+          }
           const result = await getReqRef.current(getConversations, {
             ...filters,
             offset: startRow,
@@ -126,8 +164,11 @@ export const useConversations = (initialTotals: ConversationTotals | null, hasIn
           const total = page?.total ?? null;
 
           setHasLoadError(false);
-          // A later page appends; the first page of a new filter state replaces what came before.
-          setLoadedRows((previous) => (isFirstPage ? rows : [...previous, ...rows]));
+          setLoaded((previous) => {
+            const byId = previous.key === key ? new Map(previous.byId) : new Map<string, ConversationRow>();
+            rows.forEach((row) => byId.set(row.chat_id, row));
+            return { key, byId };
+          });
           if (isFirstPage) {
             setIsEmptyResult(rows.length === 0);
           }
@@ -137,8 +178,11 @@ export const useConversations = (initialTotals: ConversationTotals | null, hasIn
           reportFailure();
           // A failed later page must not discard the rows already shown, so only the first page clears them.
           if (isFirstPage) {
-            setLoadedRows([]);
+            setLoaded({ key, byId: new Map() });
             setIsEmptyResult(false);
+          }
+          if (isFirstPage && !hasResolvedCandidates) {
+            resetTotals();
           }
           params.failCallback();
         } finally {
@@ -149,7 +193,7 @@ export const useConversations = (initialTotals: ConversationTotals | null, hasIn
         }
       },
     }),
-    [filters, gridApi, reportFailure, resolveCandidates],
+    [filters, gridApi, key, loadTotals, reportFailure, resetTotals, resolveCandidates],
   );
 
   // A new datasource identity is what makes a filter change restart paging: AG Grid purges its blocks
@@ -157,38 +201,6 @@ export const useConversations = (initialTotals: ConversationTotals | null, hasIn
   useEffect(() => {
     gridApi?.setGridOption('datasource', datasource);
   }, [gridApi, datasource]);
-
-  const totalsRequestRef = useRef(0);
-  const isFirstTotalsRunRef = useRef(true);
-
-  useEffect(() => {
-    // The server component already prefetched the totals for the filters the controls mount with.
-    if (isFirstTotalsRunRef.current) {
-      isFirstTotalsRunRef.current = false;
-      return;
-    }
-
-    const requestId = ++totalsRequestRef.current;
-
-    const load = async () => {
-      try {
-        const chatIds = await resolveCandidates();
-        const result = await getReqRef.current(getConversationTotals, filters, chatIds ?? undefined);
-
-        if (requestId !== totalsRequestRef.current) {
-          return;
-        }
-
-        setTotals(result.success ? ((result.response as ConversationTotals | undefined) ?? null) : null);
-      } catch {
-        if (requestId === totalsRequestRef.current) {
-          setTotals(null);
-        }
-      }
-    };
-
-    load();
-  }, [filters, resolveCandidates]);
 
   const applySearch = useMemo(() => debounce(setAppliedSearch, CONVERSATIONS_SEARCH_DEBOUNCE_MS), []);
 
@@ -204,14 +216,17 @@ export const useConversations = (initialTotals: ConversationTotals | null, hasIn
 
   const onGridReady = useCallback((event: GridReadyEvent) => setGridApi(event.api), []);
 
-  const summary: ConversationSummary = useMemo(() => summariseConversations(loadedRows), [loadedRows]);
+  const summary: ConversationSummary = useMemo(
+    () => summariseConversations(Array.from(loaded.byId.values())),
+    [loaded],
+  );
 
   return {
     onGridReady,
     datasource,
     totals,
     summary,
-    loadedCount: loadedRows.length,
+    loadedCount: loaded.byId.size,
     isEmptyResult,
     isFirstPageLoading,
     hasLoadError,

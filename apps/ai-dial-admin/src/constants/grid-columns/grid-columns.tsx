@@ -100,6 +100,7 @@ import ProvenanceHeaderGroup from '@/src/components/Analytics/ConversationsTrace
 import ActivityCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/ActivityCellRenderer';
 import ProjectCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/ProjectCellRenderer';
 import RatingCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/RatingCellRenderer';
+import UserCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/UserCellRenderer';
 import RowExpanderCellRenderer from '@/src/components/Grid/CellRenderers/RowExpanderCellRenderer';
 import ChildrenActivityTypeCellRenderer from '@/src/components/Grid/CellRenderers/ChildrenActivityTypeCellRenderer';
 import { ActivityAuditView } from '@/src/types/activity-audit';
@@ -650,6 +651,13 @@ const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] 
     cellRenderer: ProjectCellRenderer,
     flex: 1.6,
     minWidth: 180,
+  },
+  {
+    field: ConversationsField.UserHash,
+    headerName: t(ConversationsTraceI18nKey.DetailUser),
+    cellRenderer: UserCellRenderer,
+    flex: 1.2,
+    minWidth: 140,
   },
   {
     field: ConversationsField.TurnCount,

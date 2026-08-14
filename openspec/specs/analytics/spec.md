@@ -2289,12 +2289,34 @@ has loaded and SHALL name that scope, rather than implying they cover the whole 
 could not be resolved MUST NOT be counted as rated, since an unresolved rating is not evidence of an absent
 one.
 
+The whole-result figures and the loaded-scope figures SHALL be observations of the same fetch cycle. The
+whole-result figures SHALL therefore be re-resolved whenever the page fetches the first page of a result,
+including the first page the client fetches after mount, and a server-prefetched figure MUST NOT remain the
+displayed value once the client has fetched a page of its own. The rollup the page reads is materialized
+continuously, so a figure resolved at page load and a page fetched later are two observations of a changing
+table: presenting them side by side lets the loaded-scope denominator exceed the whole-result total, which
+states an impossibility.
+
+The loaded-conversation count SHALL be a count of **distinct** conversations, not of delivered rows. The row
+cache is bounded, so a conversation whose block is evicted and re-fetched is delivered more than once; it
+SHALL be counted once.
+
+The rated and negative pills SHALL name their loaded scope in text that is visible on the pill. A caveat
+carried only in a tooltip or only in assistive-technology-only content is not stated for the reader looking at
+the header, who then reads all four figures as one consistent set. The visible caveat SHALL NOT replace the
+existing hover and assistive-technology text.
+
 The cost total SHALL be summed with the decimal library rather than as floating-point numbers, since the
 values carry twelve fractional digits, and SHALL be rounded for display. That rounding is local to the summary
 and does not settle how the Cost column renders.
 
 When the summary request fails, the pills SHALL report that the figures are unavailable rather than rendering
 zeros, which would assert an empty result that was never established.
+
+A failure to fetch the rows SHALL NOT by itself make the figures unavailable: they are resolved by their own
+request, so a row failure is no evidence about them. A failure that prevents the summary request from being
+issued at all SHALL, however, clear the figures, because the ones on screen then describe the previous filter
+state rather than the applied one.
 
 #### Scenario: The provenance line names only real, queried entities
 
@@ -2313,6 +2335,19 @@ zeros, which would assert an empty result that was never established.
 
 - **WHEN** only part of the result is loaded
 - **THEN** the rated and negative pills state that they cover the loaded conversations
+- **AND** that statement is visible on the pill without hovering it
+
+#### Scenario: The whole-result figures follow the first page
+
+- **WHEN** the client fetches the first page of a result
+- **THEN** the whole-result count and cost are re-resolved for that same filter state
+- **AND** the figures shown are those observations, not the ones prefetched at page load
+
+#### Scenario: The loaded denominator cannot exceed the result total
+
+- **WHEN** enough of the result has been scrolled that a previously delivered page is re-fetched
+- **THEN** each conversation counts once toward the loaded-conversation count
+- **AND** that count does not exceed the whole-result conversation total
 
 #### Scenario: An unresolved rating is not counted as rated
 
@@ -2323,6 +2358,16 @@ zeros, which would assert an empty result that was never established.
 
 - **WHEN** the summary request fails
 - **THEN** the pills report the figures as unavailable rather than showing zeros
+
+#### Scenario: A failed row fetch leaves the figures standing
+
+- **WHEN** the first page of rows fails but the summary request succeeded
+- **THEN** the pills keep showing the figures the summary request returned
+
+#### Scenario: A summary that could not be issued reports unavailability
+
+- **WHEN** a failure prevents the summary request from being issued for the applied filter state
+- **THEN** the pills report the figures as unavailable rather than the previous state's figures
 
 ### Requirement: Conversation filters re-query the backend
 
@@ -2553,12 +2598,16 @@ resilient if the mapping changes.
 
 ### Requirement: Read-only conversations grid
 
-The conversations view SHALL render a grid of six visible columns — conversation, project, turns, activity,
-tokens, cost — plus the Rating column. No column SHALL be sortable, and no column SHALL offer a filter control
-of its own — neither a floating filter row nor a filter menu in the header. Per-column filtering stays off even
-though the page itself has filters: the page's filters are query predicates over the whole result, whereas a
-column filter narrows only the pages already fetched, and would report that narrowed view as the complete
-answer. Ordering is fixed by the query, most recent last activity first.
+The conversations view SHALL render a grid of seven visible columns — conversation, project, user, turns,
+activity, tokens, cost — plus the Rating column. No column SHALL be sortable, and no column SHALL offer a
+filter control of its own — neither a floating filter row nor a filter menu in the header. Per-column filtering
+stays off even though the page itself has filters: the page's filters are query predicates over the whole
+result, whereas a column filter narrows only the pages already fetched, and would report that narrowed view as
+the complete answer. Ordering is fixed by the query, most recent last activity first.
+
+The user column SHALL show the conversation's `user_hash`, labelled the way the conversation detail page labels
+it. The value is a de-identified surrogate rather than an identity, so the column SHALL NOT be presented as a
+name or an address, and the page MUST NOT claim the free-text search reaches it while it does not.
 
 The grid SHALL obtain its rows page by page from the backend and MUST NOT be handed a superset to narrow, and
 no grid-level filter model SHALL be set from the page's filter state. While the first page of a new filter
@@ -2568,7 +2617,7 @@ grid body.
 
 The conversation column SHALL keep the full conversation id reachable when it is too long to display, since
 real ids are not uniformly short and can run to hundreds of characters. Truncation MUST NOT be the only
-presentation of the value.
+presentation of the value. The user column SHALL keep its value reachable on the same terms.
 
 Numeric and currency columns SHALL carry the same formatting these value types carry elsewhere in the app.
 The grid SHALL use a taller row than the app's shared default, since its cells stack two lines.
@@ -2600,8 +2649,18 @@ from the column header beneath it.
 - **WHEN** the grid renders
 - **THEN** a band above the column headers groups the columns by source
 - **AND** every column belongs to exactly one group
-- **AND** the conversation, project, turns, activity, tokens and cost columns are attributed to
+- **AND** the conversation, project, user, turns, activity, tokens and cost columns are attributed to
   `conversations`, and the Rating column to `rate_analytics`
+
+#### Scenario: The user column shows the conversation's user hash
+
+- **WHEN** the grid renders a conversation whose `user_hash` is populated
+- **THEN** the user column shows that value under the `conversations` provenance group
+
+#### Scenario: A conversation with no user hash renders no invented value
+
+- **WHEN** a conversation's `user_hash` is absent
+- **THEN** the user cell renders the view's placeholder rather than an empty-looking identity
 
 #### Scenario: No group claims an enrichment the page does not query
 
@@ -2670,6 +2729,7 @@ The select SHALL name exactly the columns the page renders, by their entity fiel
 |---|---|
 | `chat_id` | conversation |
 | `project_id` | project |
+| `user_hash` | user |
 | `turn_count` | turns |
 | `total_tokens` | tokens |
 | `total_price` | cost |
@@ -2692,8 +2752,10 @@ SHALL add no predicate at all rather than an `ico` against the empty string, whi
 the cost of a scan. Both targets are base columns of the entity, so no select-alias restriction applies.
 
 Search MUST NOT reach message content: no column of `conversations` carries it, and the only column that
-could — `dial_usage_log.request_body` — is catalogued `sensitive` and belongs to a different entity. The
-search affordance SHALL name only the fields search actually reaches.
+could — `dial_usage_log.request_body` — is catalogued `sensitive` and belongs to a different entity. Search
+SHALL NOT reach `user_hash` either: selecting the column for display does not make a surrogate a useful
+free-text target, and a partial-match predicate over it would cost a scan for a value operators paste whole.
+The search affordance SHALL name only the fields search actually reaches.
 
 When `chatIds` is non-empty the filter SHALL additionally carry `in(chat_id, chatIds)`, which is how the
 feedback filter narrows the result.
@@ -2706,14 +2768,16 @@ The page SHALL be `{ type: 'offset', offset, limit, include_total: true }`. A li
 sent — the service rejects it with HTTP 400 and does not clamp.
 
 The query SHALL reference no column absent from the entity's role-visible schema; `conversations` exposes no
-`sensitive` column, so every selected field is visible to a read-only admin.
+`sensitive` column, so every selected field is visible to a read-only admin. `user_hash` is catalogued
+non-sensitive — the analytics service exposes it as a de-identified surrogate — so selecting it requires no
+elevated role.
 
 #### Scenario: Query reads the conversations entity in row mode
 
 - **WHEN** `buildConversationListQuery` is called with a time range
 - **THEN** the query targets entity `conversations` with `mode: 'row'`
 - **AND** it carries no `group_by` and no aggregate function expression
-- **AND** its select names `chat_id`, `project_id`, `turn_count`, `total_tokens`, `total_price`,
+- **AND** its select names `chat_id`, `project_id`, `user_hash`, `turn_count`, `total_tokens`, `total_price`,
   `last_request_time` and `first_request_time`
 
 #### Scenario: Time bounds apply to last activity as epoch-millisecond literals
@@ -2732,6 +2796,7 @@ The query SHALL reference no column absent from the entity's role-visible schema
 - **WHEN** the query is built with a search term
 - **THEN** the filter carries one additional `or` group of exactly two `ico` predicates
 - **AND** they match `chat_id` and `project_id`, each against the trimmed term
+- **AND** no predicate matches `user_hash`
 
 #### Scenario: A blank search term adds no predicate
 

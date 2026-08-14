@@ -72,6 +72,7 @@ describe('buildConversationListQuery :: shape', () => {
     expect(names).toEqual([
       ConversationsField.ChatId,
       ConversationsField.ProjectId,
+      ConversationsField.UserHash,
       ConversationsField.TurnCount,
       ConversationsField.TotalTokens,
       ConversationsField.TotalPrice,
@@ -135,6 +136,12 @@ describe('buildConversationListQuery :: search', () => {
     expect(predicates.map((node) => node.op)).toEqual([QueryOperator.Ico, QueryOperator.Ico]);
     expect(predicates.map(fieldName)).toEqual([ConversationsField.ChatId, ConversationsField.ProjectId]);
     expect(predicates.map((node) => (node.args[1] as QueryValueExpr).value)).toEqual(['acme', 'acme']);
+  });
+
+  test('search does not reach the user hash', () => {
+    const predicates = searchGroup('acme').args as QueryPredicate[];
+
+    expect(predicates.map(fieldName)).not.toContain(ConversationsField.UserHash);
   });
 
   test('the term is trimmed', () => {

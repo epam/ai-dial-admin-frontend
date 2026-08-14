@@ -167,6 +167,7 @@ export const CONVERSATION_PROVENANCE_GROUPS: ProvenanceGroup[] = [
     fields: [
       ConversationsField.ChatId,
       ConversationsField.ProjectId,
+      ConversationsField.UserHash,
       ConversationsField.TurnCount,
       ConversationsField.LastRequestTime,
       ConversationsField.TotalTokens,
