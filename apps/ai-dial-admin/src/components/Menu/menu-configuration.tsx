@@ -26,6 +26,7 @@ export interface MenuGroupConfiguration {
 export interface MenuItem {
   key: MenuI18nKey;
   href: string;
+  isPreview?: boolean;
 }
 
 export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags): MenuGroupConfiguration[] => {
@@ -79,12 +80,14 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
       icon: <IconFolders width={iconSize} height={iconSize} />,
       items: [
         {
-          key: MenuI18nKey.Models,
+          key: MenuI18nKey.AssetsModels,
           href: ApplicationRoute.AssetsModels,
+          isPreview: true,
         },
         {
           key: MenuI18nKey.AppRunners,
           href: ApplicationRoute.AssetsAppRunners,
+          isPreview: true,
         },
         {
           key: MenuI18nKey.Applications,
@@ -171,12 +174,16 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
           href: ApplicationRoute.PromptPublications,
         },
         {
+          key: MenuI18nKey.ConversationPublications,
+          href: ApplicationRoute.ConversationPublications,
+        },
+        {
           key: MenuI18nKey.FilePublications,
           href: ApplicationRoute.FilePublications,
         },
         {
-          key: MenuI18nKey.ConversationPublications,
-          href: ApplicationRoute.ConversationPublications,
+          key: MenuI18nKey.SkillPublications,
+          href: ApplicationRoute.SkillPublications,
         },
       ],
     },

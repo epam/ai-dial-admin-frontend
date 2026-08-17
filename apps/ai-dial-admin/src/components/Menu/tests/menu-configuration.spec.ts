@@ -99,6 +99,31 @@ describe('MENU_CONFIGURATION — group visibility flags compose independently', 
   });
 });
 
+describe('MENU_CONFIGURATION — Approvals group', () => {
+  const findApprovalsGroup = (flags: FeatureFlags) =>
+    MENU_CONFIGURATION(ICON_SIZE, flags).find((group) => group.key === MenuI18nKey.Approvals);
+
+  test('lists publication types in order: Application, Toolset, Prompt, Conversation, File, Skill', () => {
+    const group = findApprovalsGroup(baseFlags);
+
+    expect(group?.items.map((item) => item.key)).toEqual([
+      MenuI18nKey.ApplicationPublications,
+      MenuI18nKey.ToolsetPublications,
+      MenuI18nKey.PromptPublications,
+      MenuI18nKey.ConversationPublications,
+      MenuI18nKey.FilePublications,
+      MenuI18nKey.SkillPublications,
+    ]);
+  });
+
+  test('Skill Publications links to the skill-publications route', () => {
+    const group = findApprovalsGroup(baseFlags);
+    const skillItem = group?.items.find((item) => item.key === MenuI18nKey.SkillPublications);
+
+    expect(skillItem?.href).toBe(ApplicationRoute.SkillPublications);
+  });
+});
+
 describe('MENU_CONFIGURATION — Analytics group', () => {
   const findAnalyticsGroup = (flags: FeatureFlags) =>
     MENU_CONFIGURATION(ICON_SIZE, flags).find((group) => group.key === MenuI18nKey.Analytics);

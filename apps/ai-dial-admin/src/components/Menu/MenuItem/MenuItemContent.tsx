@@ -4,11 +4,9 @@ import Link from 'next/link';
 import { FC } from 'react';
 
 import { PreviewTag } from '@/src/components/Common/PreviewTag/PreviewTag';
-import { MenuI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { MenuItem } from '../menu-configuration';
 
-const PREVIEW_TAG_MENU_ITEMS = new Set<MenuI18nKey>([]);
 interface Props {
   menuItem: MenuItem;
   isActive: boolean;
@@ -43,7 +41,7 @@ const MenuItemContent: FC<Props> = ({ menuItem, isActive, isSidebarOpen }) => {
             {isSidebarOpen && <DialEllipsisTooltip className="ml-4" text={t(menuItem.key)} />}
           </div>
         </div>
-        {PREVIEW_TAG_MENU_ITEMS.has(menuItem.key) && isSidebarOpen ? <PreviewTag /> : null}
+        {menuItem.isPreview && isSidebarOpen ? <PreviewTag /> : null}
       </Link>
     </DialTooltip>
   );

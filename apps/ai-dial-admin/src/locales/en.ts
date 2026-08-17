@@ -124,6 +124,7 @@ export default {
     AppRunners: 'App Runners',
     Interceptors: 'Interceptors',
     Models: 'Models',
+    AssetsModels: 'Models',
     Routes: 'Routes',
 
     Roles: 'Roles',
@@ -141,6 +142,7 @@ export default {
     ToolsetPublications: 'Toolset Publications',
     FilePublications: 'File Publications',
     ConversationPublications: 'Conversation Publications',
+    SkillPublications: 'Skill Publications',
     ImportConfig: 'Import Config',
     ExportConfig: 'Export Config',
     ReadOnlyAdminImportUnavailable: 'Import is not available for read-only administrators.',
@@ -835,6 +837,14 @@ export default {
       UnpublishDeclineModalTitle: 'Decline Conversation Unpublishing',
       PublishApproveDescription: 'Are you sure that you want to publish conversation?',
       UnpublishApproveDescription: 'Are you sure that you want to unpublish conversation?',
+    },
+    Skill: {
+      PublishApproveModalTitle: 'Publish Skill',
+      UnpublishApproveModalTitle: 'Unpublish Skill',
+      PublishDeclineModalTitle: 'Decline Skill Publishing',
+      UnpublishDeclineModalTitle: 'Decline Skill Unpublishing',
+      PublishApproveDescription: 'Are you sure that you want to publish skill?',
+      UnpublishApproveDescription: 'Are you sure that you want to unpublish skill?',
     },
   },
   Prompts: {
