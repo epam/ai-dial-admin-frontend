@@ -64,7 +64,7 @@ const CreateRunConditionFilter: FC<Props> = ({ draft, fieldOptions, onChange, on
     }
     const predicates = draft.predicates.map((p) => ({
       ...p,
-      operator: sanitizeRunConditionOperator(p.operator, true),
+      operator: sanitizeRunConditionOperator(p.operator),
     }));
     const hasInvalidOperator = predicates.some((p, i) => p.operator !== draft.predicates[i]?.operator);
     if (hasInvalidOperator) {
@@ -79,7 +79,7 @@ const CreateRunConditionFilter: FC<Props> = ({ draft, fieldOptions, onChange, on
       const predicates = option.isArray
         ? draft.predicates.map((p) => ({
             ...p,
-            operator: sanitizeRunConditionOperator(p.operator, true),
+            operator: sanitizeRunConditionOperator(p.operator),
           }))
         : [
             {
