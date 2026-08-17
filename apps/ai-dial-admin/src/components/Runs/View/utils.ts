@@ -54,8 +54,9 @@ const getInputColumns = (input: Record<string, unknown>, hide = false) => {
       ...NO_FILTER_COL_DEF,
       valueGetter: (params) => {
         const value = params.data?.testCaseData?.[key];
+        if (value == null) return '—';
         if (typeof value === 'object') return JSON.stringify(value);
-        return value ?? '—';
+        return value;
       },
     } as ColDef;
   });
@@ -71,8 +72,9 @@ const getExtractedColumns = (extracted: Record<string, unknown>) => {
       ...NO_FILTER_COL_DEF,
       valueGetter: (params) => {
         const value = params.data?.extractedColumns?.[key];
+        if (value == null) return '—';
         if (typeof value === 'object') return JSON.stringify(value);
-        return value ?? '—';
+        return value;
       },
     } as ColDef;
   });
@@ -108,11 +110,9 @@ const getMetricsColumns = (metrics: Record<string, Record<string, unknown>>) => 
             const groupExists = params.data?.metricValues != null && groupKey in params.data.metricValues;
             if (!groupExists) return '—';
             const value = params.data?.metricValues?.[groupKey]?.[key];
+            if (value == null) return '—';
             if (typeof value === 'object') return JSON.stringify(value);
-            if (value != null) {
-              return +value.toFixed(3);
-            }
-            return '—';
+            return +value.toFixed(3);
           },
           comparator(valueA, valueB, nodeA, nodeB, isDescending) {
             const metricA = nodeA?.data?.metricValues?.[groupKey]?.[key];
