@@ -66,6 +66,7 @@ export const getEntityPath = (
     case ApplicationRoute.ApplicationPublications:
     case ApplicationRoute.ToolsetPublications:
     case ApplicationRoute.ConversationPublications:
+    case ApplicationRoute.SkillPublications:
       return `${encodeURIComponent((data as Publication).requestName)}?path=${(data as Publication).path}`;
 
     case ApplicationRoute.ActivityAudit:
