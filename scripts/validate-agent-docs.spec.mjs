@@ -10,7 +10,7 @@
 //     way the Claude PostToolUse hook runs)
 //   - full-scan checks (mirror integrity), run with NO arguments and `cwd` set
 //     to a fixture directory shaped like a miniature repo, because those checks
-//     walk whole directories rather than inspecting one file
+//     read the mirror manifest and compare whole trees rather than one file
 //
 // Run: npm run validate:agent-docs:test
 
@@ -65,21 +65,30 @@ const FIXTURES = {
 };
 
 // Miniature repos for the full-scan mirror-integrity check. Each gets a real
-// `.claude/rules/real.md` plus one `.cursor/rules` entry exercising a single
-// failure mode. `links` values are symlink targets; `files` values are literal
-// file contents (used for the flattened-symlink case).
+// `.claude/rules/real.md`, its own `scripts/agent-mirrors.mjs` declaring one
+// mirror (the validator resolves the manifest against `cwd`), and a
+// `.cursor/rules/real.mdc` in exactly one state.
+//
+// `mirror` is the literal content to write, `symlinkTo` makes it a symlink
+// instead, and omitting both leaves it absent. `source` defaults to the real
+// rule; pointing it elsewhere covers a manifest that has gone stale.
+const MIRROR_RULE = '# Rule\n\nBody.\n';
 const MIRROR_REPOS = {
-  'mirror-healthy': { links: { 'real.mdc': '../../.claude/rules/real.md' } },
-  'mirror-broken': { links: { 'gone.mdc': '../../.claude/rules/gone.md' } },
-  // The exact shape found in ai-dial-chat: a newline baked into the link target.
-  'mirror-trailing-newline': {
-    links: { 'real.mdc': '../../.claude/rules/real.md\n' },
-  },
-  // A symlink that was committed as a regular file containing only its target.
-  'mirror-flattened': {
-    files: { 'real.mdc': '../../.claude/rules/real.md\n' },
-  },
+  'mirror-healthy': { mirror: MIRROR_RULE },
+  'mirror-drifted': { mirror: `${MIRROR_RULE}\nEdited in the copy instead of the source.\n` },
+  'mirror-missing': {},
+  // What a Windows checkout leaves behind: a regular file holding the old link
+  // target, because Git for Windows defaults to `core.symlinks=false`.
+  'mirror-flattened': { mirror: '../../.claude/rules/real.md\n' },
+  // The pattern this design replaced — correct bytes, wrong mechanism.
+  'mirror-symlink': { symlinkTo: '../../.claude/rules/real.md' },
+  'mirror-missing-source': { mirror: MIRROR_RULE, source: '.claude/rules/moved-away.md' },
 };
+
+const mirrorManifest = (source) =>
+  `export const AGENT_MIRRORS = [{ source: '${source}', mirrors: ['.cursor/rules/real.mdc'] }];\n` +
+  `export const SYNC_COMMAND = 'npm run sync:agent-mirrors';\n` +
+  `export const MIRROR_SOURCE_BY_PATH = new Map([['.cursor/rules/real.mdc', '${source}']]);\n`;
 
 let fixturesRoot;
 const fixture = (relPath) => join(fixturesRoot, relPath);
@@ -94,19 +103,19 @@ before(() => {
     writeFileSync(full, content);
   }
 
-  for (const [name, { links = {}, files = {} }] of Object.entries(MIRROR_REPOS)) {
+  for (const [name, { mirror, symlinkTo, source = '.claude/rules/real.md' }] of Object.entries(MIRROR_REPOS)) {
     const rules = fixture(`${name}/.claude/rules`);
-    const mirror = fixture(`${name}/.cursor/rules`);
+    const mirrorDir = fixture(`${name}/.cursor/rules`);
+    const scripts = fixture(`${name}/scripts`);
     mkdirSync(rules, { recursive: true });
-    mkdirSync(mirror, { recursive: true });
-    writeFileSync(join(rules, 'real.md'), '# Rule\n\nBody.\n');
+    mkdirSync(mirrorDir, { recursive: true });
+    mkdirSync(scripts, { recursive: true });
+    writeFileSync(join(rules, 'real.md'), MIRROR_RULE);
+    writeFileSync(join(scripts, 'agent-mirrors.mjs'), mirrorManifest(source));
 
-    for (const [entry, target] of Object.entries(links)) {
-      symlinkSync(target, join(mirror, entry));
-    }
-    for (const [entry, content] of Object.entries(files)) {
-      writeFileSync(join(mirror, entry), content);
-    }
+    const entry = join(mirrorDir, 'real.mdc');
+    if (symlinkTo) symlinkSync(symlinkTo, entry);
+    else if (mirror !== undefined) writeFileSync(entry, mirror);
   }
 });
 
@@ -184,25 +193,47 @@ test('treats an absolute path the same as a repo-relative one', () => {
   assert.equal(abs.status, 0, abs.stderr);
 });
 
-test('accepts a healthy mirror symlink', () => {
+test('accepts a mirror that matches its source', () => {
   const result = scan('mirror-healthy');
   assert.equal(result.status, 0, result.stderr);
 });
 
-test('rejects a broken mirror symlink', () => {
-  const result = scan('mirror-broken');
+test('rejects a mirror edited instead of its source', () => {
+  const result = scan('mirror-drifted');
   assert.equal(result.status, 1);
-  assert.match(result.stderr, /broken symlink/);
+  assert.match(result.stderr, /has drifted from/);
 });
 
-test('rejects a symlink target with trailing whitespace', () => {
-  const result = scan('mirror-trailing-newline');
+test('rejects a missing mirror', () => {
+  const result = scan('mirror-missing');
   assert.equal(result.status, 1);
-  assert.match(result.stderr, /trailing whitespace/);
+  assert.match(result.stderr, /missing generated mirror/);
 });
 
-test('rejects a flattened symlink', () => {
+test('rejects a flattened symlink left by a Windows checkout', () => {
   const result = scan('mirror-flattened');
   assert.equal(result.status, 1);
   assert.match(result.stderr, /flattened symlink/);
+});
+
+// Its bytes are right, so the content check alone would pass it — and it is the
+// one shape that breaks on a Windows clone.
+test('rejects a mirror that is still a symlink', () => {
+  const result = scan('mirror-symlink');
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /is a symlink/);
+});
+
+test('rejects a manifest naming a source that no longer exists', () => {
+  const result = scan('mirror-missing-source');
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /mirror source but does not exist/);
+});
+
+// The full scan skips generated copies, so this is the only gate that catches an
+// edit landing in one — which is exactly how the PostToolUse hook invokes it.
+test('rejects editing a generated mirror directly', () => {
+  const result = run('.cursor/rules/a11y.mdc');
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /is generated from `\.claude\/rules\/a11y\.md`/);
 });
