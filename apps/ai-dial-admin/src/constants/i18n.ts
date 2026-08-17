@@ -1939,6 +1939,8 @@ export enum TestSuitesI18nKey {
   RequestName = 'TestSuites.RequestName',
   RequestChainHint = 'TestSuites.RequestChainHint',
   RequestChainPreviousOutputsInfo = 'TestSuites.RequestChainPreviousOutputsInfo',
+  RequestChainPreviousOutputsColumnsInfo = 'TestSuites.RequestChainPreviousOutputsColumnsInfo',
+  RequestChainOutputOf = 'TestSuites.RequestChainOutputOf',
   TrendsRunsCount = 'TestSuites.TrendsRunsCount',
   AvgTestSuiteRunTime = 'TestSuites.AvgTestSuiteRunTime',
   AvgPerRuns = 'TestSuites.AvgPerRuns',

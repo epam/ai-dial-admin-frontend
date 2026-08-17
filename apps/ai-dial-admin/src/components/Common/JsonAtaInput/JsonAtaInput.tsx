@@ -8,8 +8,9 @@ import { schemaToTreeNodes } from '@/src/components/Common/SchemaGrid/utils';
 import { ButtonsI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
+import { JsonataVariable } from '@/src/models/jsonata';
 import Suggestions, { SuggestionOption } from './Suggestions';
-import { getSchemaSuggestions } from './utils';
+import { getSchemaSuggestions, getVariableSuggestions } from './utils';
 
 interface Props {
   value: string;
@@ -18,6 +19,8 @@ interface Props {
   elementId?: string;
   disabled?: boolean;
   inputClassName?: string;
+  /** Extra variables suggested alongside the response schema's fields. */
+  variables?: JsonataVariable[];
   onChangeValue: (expression: string, type?: string) => void;
 }
 
@@ -28,6 +31,7 @@ const JsonAtaInput: FC<Props> = ({
   label,
   elementId,
   inputClassName,
+  variables,
   onChangeValue,
 }) => {
   const t = useI18n();
@@ -45,7 +49,10 @@ const JsonAtaInput: FC<Props> = ({
     return schemaToTreeNodes(responseSchema, '', responseSchema);
   }, [responseSchema]);
 
-  const filteredSuggestions = useMemo(() => getSchemaSuggestions(treeNodes, expression), [treeNodes, expression]);
+  const filteredSuggestions = useMemo(
+    () => [...getVariableSuggestions(variables ?? [], expression), ...getSchemaSuggestions(treeNodes, expression)],
+    [treeNodes, variables, expression],
+  );
 
   const onOpenModal = useCallback(() => {
     setIsModalOpen(true);

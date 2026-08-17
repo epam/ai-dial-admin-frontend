@@ -13,9 +13,10 @@ vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
 }));
 
 vi.mock('@/src/components/TestSuites/RequestTemplate/RequestTemplate', () => ({
-  default: ({ testSuite, onChangeTestSuite }: any) => (
+  default: ({ testSuite, onChangeTestSuite, jsonataVariables }: any) => (
     <div>
       <span>RequestTemplate:{testSuite.endpointRef?.relativeUrlPattern ?? 'none'}</span>
+      <span>RequestTemplateVariables:{(jsonataVariables ?? []).map((v: any) => v.name).join(',')}</span>
       <button
         type="button"
         onClick={() => onChangeTestSuite({ ...testSuite, requestTemplate: { urlTemplate: 'changed' } }, true)}
@@ -27,7 +28,12 @@ vi.mock('@/src/components/TestSuites/RequestTemplate/RequestTemplate', () => ({
 }));
 
 vi.mock('@/src/components/TestSuites/EndpointSchema/EndpointSchema', () => ({
-  default: ({ testSuite }: any) => <div>EndpointSchema:{testSuite.endpointRef?.relativeUrlPattern ?? 'none'}</div>,
+  default: ({ testSuite, jsonataVariables }: any) => (
+    <div>
+      <span>EndpointSchema:{testSuite.endpointRef?.relativeUrlPattern ?? 'none'}</span>
+      <span>EndpointSchemaVariables:{(jsonataVariables ?? []).map((v: any) => v.name).join(',')}</span>
+    </div>
+  ),
 }));
 
 vi.mock('@/src/components/TestSuites/Modals/ChangeMethodModal/ChangeMethodModal', () => ({
@@ -105,6 +111,37 @@ describe('MethodTabContent - request chain', () => {
     await user.click(screen.getByText('2. Second'));
 
     expect(screen.getByText(TestSuitesI18nKey.RequestChainPreviousOutputsInfo)).toBeInTheDocument();
+  });
+
+  test('passes the previous requests output columns to both editors as JSONata variables', async () => {
+    const user = userEvent.setup();
+    const suiteWithColumns: TestSuite = {
+      ...baseSuite,
+      responseColumns: [{ name: 'answer', displayName: 'Answer', expression: 'answer', type: 'string' }],
+    };
+    render(<Harness initialSuite={suiteWithColumns} />);
+
+    expect(screen.getByText('RequestTemplateVariables:')).toBeInTheDocument();
+    expect(screen.getByText('EndpointSchemaVariables:')).toBeInTheDocument();
+
+    await user.click(screen.getByText('2. Second'));
+
+    expect(screen.getByText('RequestTemplateVariables:answer')).toBeInTheDocument();
+    expect(screen.getByText('EndpointSchemaVariables:answer')).toBeInTheDocument();
+  });
+
+  test('lists the previous requests response column names in the info banner when there are any', async () => {
+    const user = userEvent.setup();
+    const suiteWithColumns: TestSuite = {
+      ...baseSuite,
+      responseColumns: [{ name: 'answer', displayName: 'Answer', expression: 'answer', type: 'string' }],
+    };
+    render(<Harness initialSuite={suiteWithColumns} />);
+
+    await user.click(screen.getByText('2. Second'));
+
+    expect(screen.getByText(TestSuitesI18nKey.RequestChainPreviousOutputsColumnsInfo)).toBeInTheDocument();
+    expect(screen.queryByText(TestSuitesI18nKey.RequestChainPreviousOutputsInfo)).not.toBeInTheDocument();
   });
 
   test('adding a request appends an entry and selects it', async () => {

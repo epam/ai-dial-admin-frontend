@@ -5,6 +5,7 @@ import {
   addRequest,
   fromRequestView,
   getChainResponseColumns,
+  getPreviousOutputVariables,
   getRequestCount,
   getRequestLabel,
   getRequestName,
@@ -285,5 +286,50 @@ describe('getChainResponseColumns', () => {
       { name: 'a', displayName: 'A', expression: 'a', type: 'string' },
       { name: 'b', displayName: 'B', expression: 'b', type: 'string' },
     ]);
+  });
+});
+
+describe('getPreviousOutputVariables', () => {
+  const columnA = { name: 'a', displayName: 'A', expression: 'a', type: 'string' };
+  const columnB = { name: 'b', displayName: 'B', expression: 'b', type: 'string' };
+  const columnC = { name: 'c', displayName: 'C', expression: 'c', type: 'string' };
+
+  const suite: TestSuite = {
+    responseColumns: [columnA],
+    additionalRequests: [{ responseColumns: [columnB] }, { responseColumns: [columnC] }],
+  };
+
+  test('returns an empty array for the first request', () => {
+    expect(getPreviousOutputVariables(suite, 0)).toEqual([]);
+  });
+
+  test('returns an empty array for a negative index', () => {
+    expect(getPreviousOutputVariables(suite, -1)).toEqual([]);
+  });
+
+  test('returns only the columns of the requests before the index, in chain order', () => {
+    expect(getPreviousOutputVariables(suite, 1)).toEqual([{ name: 'a', description: undefined }]);
+    expect(getPreviousOutputVariables(suite, 2)).toEqual([
+      { name: 'a', description: undefined },
+      { name: 'b', description: undefined },
+    ]);
+  });
+
+  test('describes each variable with the index of the request that produced it', () => {
+    expect(getPreviousOutputVariables(suite, 3, (requestIndex) => `request ${requestIndex}`)).toEqual([
+      { name: 'a', description: 'request 0' },
+      { name: 'b', description: 'request 1' },
+      { name: 'c', description: 'request 2' },
+    ]);
+  });
+
+  test('skips requests without response columns and columns without a name', () => {
+    const sparseSuite: TestSuite = {
+      responseColumns: [{ name: '', displayName: '', expression: '', type: '' }],
+      additionalRequests: [{}, { responseColumns: [columnB] }],
+    };
+
+    expect(getPreviousOutputVariables(sparseSuite, 2)).toEqual([]);
+    expect(getPreviousOutputVariables(sparseSuite, 3)).toEqual([{ name: 'b', description: undefined }]);
   });
 });

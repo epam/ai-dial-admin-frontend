@@ -1990,6 +1990,8 @@ export default {
     RequestName: 'Request name',
     RequestChainHint: 'Requests run in order — later requests can use earlier outputs.',
     RequestChainPreviousOutputsInfo: 'This request has access to the output of previous requests.',
+    RequestChainPreviousOutputsColumnsInfo: 'This request has access to the output of previous requests: {columns}.',
+    RequestChainOutputOf: 'Output of {request}',
     TrendsRunsCount: '{count} Runs',
     AvgTestSuiteRunTime: 'Avg Test Suite Run Time',
     AvgPerRuns: 'avg per {count} runs',

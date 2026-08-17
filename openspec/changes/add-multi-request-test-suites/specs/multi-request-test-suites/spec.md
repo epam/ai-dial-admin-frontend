@@ -26,7 +26,7 @@ before this change.
 
 `src/utils/evaluation/request-chain.ts` SHALL export pure functions operating on a `TestSuite`:
 `getRequestCount`, `getRequestName`, `updateRequestName`, `toRequestView`, `fromRequestView`,
-`addRequest`, `removeRequestAt`, and `getChainResponseColumns`.
+`addRequest`, `removeRequestAt`, `getChainResponseColumns`, and `getPreviousOutputVariables`.
 
 `toRequestView(testSuite, index)` SHALL return a `TestSuite`-shaped object whose `endpointRef`,
 `requestTemplate`, `responseColumns`, and `inputBindings` reflect chain entry `index` (the suite's own
@@ -121,7 +121,10 @@ than reusing their internal state (e.g. `RequestTemplate`'s owned `bodyText`).
 ### Requirement: An info banner marks a non-zero request as part of a chain
 
 The Method tab SHALL show an informational banner whenever a request other than `#0` is selected in the
-chip strip, and SHALL show no such banner when request `#0` is selected.
+chip strip, and SHALL show no such banner when request `#0` is selected. When any request before the
+selected one defines response columns, the banner SHALL name those columns in chain order, in the same
+`$<column name>` form the JSONata editors complete them as; otherwise it SHALL state only that previous
+outputs are available.
 
 #### Scenario: Banner shown for a non-zero request
 
@@ -132,6 +135,46 @@ chip strip, and SHALL show no such banner when request `#0` is selected.
 
 - **WHEN** request `#0`'s chip is selected
 - **THEN** no info banner is shown
+
+#### Scenario: Banner names the response columns of preceding requests
+
+- **WHEN** request `#0` defines the response column `answer` and request `#1`'s chip is selected
+- **THEN** the banner lists `$answer` as available output
+
+#### Scenario: Banner omits the column list when no preceding request defines columns
+
+- **WHEN** no request before the selected one defines any response column
+- **THEN** the banner shows only the generic previous-outputs message, with no trailing column list
+
+### Requirement: Chain outputs are offered as JSONata variables to later requests
+
+Every response column of a request before the selected one SHALL be offered as a JSONata variable named
+`$<column name>` in the selected request's JSONata surfaces — the Request Template's Body editor and the
+Endpoint Schema columns grid's expression input — annotated with the label of the request that produces
+it. Columns without a name SHALL be omitted. Request `#0` SHALL be offered none.
+
+#### Scenario: Body editor completions include an earlier request's output
+
+- **WHEN** request `#0` defines the response column `answer` and request `#1`'s JSONata body editor
+  requests completions
+- **THEN** `$answer` is offered, labelled with request `#0`'s name
+
+#### Scenario: Column expression suggestions include an earlier request's output
+
+- **WHEN** request `#1`'s Endpoint Schema columns grid opens an expression input and the typed text is
+  empty or starts with `$`
+- **THEN** every preceding request's output column is suggested as `$<column name>`, alongside the
+  response-schema fields
+
+#### Scenario: Selecting a variable suggestion leaves the column's data type unchanged
+
+- **WHEN** a variable suggestion is picked in a column's expression input
+- **THEN** the expression becomes `$<column name>` and the column keeps the data type it already had
+
+#### Scenario: Request #0 is offered no chain variables
+
+- **WHEN** request `#0` is selected
+- **THEN** neither JSONata surface offers a chain variable
 
 ### Requirement: Try Out always exercises request #0
 

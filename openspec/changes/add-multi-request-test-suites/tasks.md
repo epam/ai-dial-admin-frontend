@@ -50,7 +50,9 @@
   `EndpointSchema` with `toRequestView(testSuite, selectedIndex)` and a `key={selectedIndex}` (or
   equivalent remount trigger), routing their `onChangeTestSuite` through
   `fromRequestView(testSuite, selectedIndex, edited)` before calling the tab's own `onChange`.
-- [ ] 3.3 Add the info banner, shown iff `selectedIndex > 0`.
+- [ ] 3.3 Add the info banner, shown iff `selectedIndex > 0`, naming the response columns of every
+  preceding request via `getPreviousOutputVariables(testSuite, selectedIndex)` and falling back to the
+  generic message when none exist.
 - [ ] 3.4 Confirm `TryOutButton`/`TryOut.tsx` are left unwired to the proxy view (they must keep reading
   `testSuite.requestTemplate`/`endpointRef` directly) — no code change expected here beyond verifying it.
   - **Verification:** `npx vitest run src/components/TestSuites/RequestTemplate/tests/RequestChainSelector.spec.tsx src/components/TestSuites/View/tests/MethodTabContent.spec.tsx`.
@@ -58,6 +60,17 @@
     not offered on request `#0`; switching chips does not carry over uncommitted editor text (mount/
     unmount via `key`); banner shown only for `selectedIndex > 0`; Try Out unaffected by the selected
     chip.
+- [ ] 3.5 Offer the preceding requests' output columns as JSONata variables in both JSONata surfaces:
+  add an optional `variables?: JsonataVariable[]` (`src/models/jsonata.ts`) completion source to
+  `Common/JsonataEditor` (read through a ref, since its completion provider registers once on mount) and
+  to `Common/JsonAtaInput` (via a `getVariableSuggestions` helper beside `getSchemaSuggestions`, with an
+  empty `type` so picking one does not overwrite the column's data type), then thread
+  `getPreviousOutputVariables(testSuite, selectedIndex, describeRequest)` from `MethodTabContent` down
+  through `RequestTemplate`/`TabsContent`/`BodyTab` and `EndpointSchema`/`Columns`/`getColumnsGridColumns`.
+  - **Verification:** `npx vitest run src/components/Common/JsonataEditor/tests/JsonataEditor.spec.tsx src/components/Common/JsonAtaInput/tests/utils.spec.ts src/components/TestSuites/View/tests/MethodTabContent.spec.tsx`.
+    Cover: variables offered ahead of the builtins and picked up after the provider is registered;
+    `getVariableSuggestions` filtering on a `$`-prefixed partial and returning nothing for a schema path;
+    both editors receiving the chain variables only for a non-zero request.
 
 ## 4. Test Cases tab — per-request Dynamic Configuration
 

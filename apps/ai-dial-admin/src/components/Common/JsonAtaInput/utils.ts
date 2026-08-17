@@ -1,4 +1,5 @@
 import { SchemaTreeNode } from '@/src/components/Common/SchemaGrid/utils';
+import { JsonataVariable } from '@/src/models/jsonata';
 import { SuggestionOption } from './Suggestions';
 
 /**
@@ -102,4 +103,36 @@ export const getSchemaSuggestions = (treeNodes: SchemaTreeNode[], expression: st
   return parentNode.children
     .filter((n) => n.name.toLowerCase().includes(partial))
     .map((n) => nodeToSuggestion(n, prefix));
+};
+
+/** Variables carry no schema type — an empty `type` leaves the edited column's own data type alone. */
+const variableToSuggestion = (variable: JsonataVariable): SuggestionOption => ({
+  label: `$${variable.name}`,
+  value: `$${variable.name}`,
+  type: '',
+  detail: variable.description,
+});
+
+/**
+ * Get variable suggestions for the JSONata expression input.
+ *
+ * Behavior:
+ * - Empty expression → show every variable
+ * - Starts with '$' → filter by the partial name after the '$'
+ * - Anything else (a schema path) → no variables
+ */
+export const getVariableSuggestions = (variables: JsonataVariable[], expression: string): SuggestionOption[] => {
+  const trimmed = expression.trim();
+
+  if (!trimmed) {
+    return variables.map(variableToSuggestion);
+  }
+
+  if (!trimmed.startsWith('$')) {
+    return [];
+  }
+
+  const partial = trimmed.slice(1).toLowerCase();
+
+  return variables.filter((variable) => variable.name.toLowerCase().includes(partial)).map(variableToSuggestion);
 };

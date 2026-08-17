@@ -14,11 +14,14 @@ import {
   JSONATA_MONARCH_TOKENS,
 } from '@/src/components/Common/JsonataEditor/constants';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
+import { JsonataVariable } from '@/src/models/jsonata';
 
 interface Props {
   value: string;
   onChange: (value: string) => void;
   options?: editor.IStandaloneEditorConstructionOptions;
+  /** Extra variables offered by the completion provider on top of the JSONata builtins. */
+  variables?: JsonataVariable[];
 }
 
 const registerJsonataLanguage = (monaco: Monaco) => {
@@ -29,10 +32,13 @@ const registerJsonataLanguage = (monaco: Monaco) => {
   monaco.languages.setLanguageConfiguration(JSONATA_LANGUAGE_ID, JSONATA_LANGUAGE_CONFIGURATION);
 };
 
-const JsonataEditor: FC<Props> = ({ value, onChange, options }) => {
+const JsonataEditor: FC<Props> = ({ value, onChange, options, variables }) => {
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const disposablesRef = useRef<{ dispose: () => void }[]>([]);
   const modelIdRef = useRef<string | null>(null);
+  // The completion provider is registered once on mount, so it reads the current variables from a ref.
+  const variablesRef = useRef(variables);
+  variablesRef.current = variables;
 
   const onEditorMount = useCallback((editorInstance: editor.IStandaloneCodeEditor, monaco: Monaco) => {
     modelIdRef.current = editorInstance.getModel()?.id ?? null;
@@ -59,6 +65,15 @@ const JsonataEditor: FC<Props> = ({ value, onChange, options }) => {
 
         return {
           suggestions: [
+            ...(variablesRef.current ?? []).map((variable) => ({
+              label: `$${variable.name}`,
+              kind: monaco.languages.CompletionItemKind.Variable,
+              insertText: `$${variable.name}`,
+              detail: variable.description,
+              // Sorts ahead of the builtins, whose sortText defaults to their `$`-prefixed label.
+              sortText: `!${variable.name}`,
+              range,
+            })),
             ...JSONATA_FUNCTIONS.map((fn) => ({
               label: fn.label,
               kind: monaco.languages.CompletionItemKind.Function,

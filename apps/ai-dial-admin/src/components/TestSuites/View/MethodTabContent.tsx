@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import {
@@ -29,7 +29,9 @@ import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
 import {
   addRequest,
   fromRequestView,
+  getPreviousOutputVariables,
   getRequestCount,
+  getRequestLabel,
   getRequestName,
   removeRequestAt,
   toRequestView,
@@ -97,6 +99,24 @@ const DeploymentMethodContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh
     [onChange, testSuite, selectedRequestIndex],
   );
 
+  const describeRequest = useCallback(
+    (requestIndex: number) =>
+      t(TestSuitesI18nKey.RequestChainOutputOf, {
+        request: getRequestLabel(testSuite, requestIndex, t(TestSuitesI18nKey.Request)),
+      }),
+    [t, testSuite],
+  );
+
+  const previousOutputVariables = useMemo(
+    () => getPreviousOutputVariables(testSuite, selectedRequestIndex, describeRequest),
+    [testSuite, selectedRequestIndex, describeRequest],
+  );
+
+  const previousColumnNames = previousOutputVariables.map((variable) => `$${variable.name}`);
+  const previousOutputsMessage = previousColumnNames.length
+    ? t(TestSuitesI18nKey.RequestChainPreviousOutputsColumnsInfo, { columns: previousColumnNames.join(', ') })
+    : t(TestSuitesI18nKey.RequestChainPreviousOutputsInfo);
+
   return (
     <div className="flex flex-col gap-y-8">
       <RequestChainSelector
@@ -118,10 +138,7 @@ const DeploymentMethodContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh
       />
 
       {selectedRequestIndex > 0 && (
-        <DialNotification
-          variant={NotificationVariant.Info}
-          message={t(TestSuitesI18nKey.RequestChainPreviousOutputsInfo)}
-        />
+        <DialNotification variant={NotificationVariant.Info} message={previousOutputsMessage} />
       )}
 
       <div className="flex flex-col gap-3">
@@ -149,12 +166,14 @@ const DeploymentMethodContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh
           key={`request-template-${selectedRequestIndex}`}
           testSuite={requestView}
           onChangeTestSuite={onChangeRequestView}
+          jsonataVariables={previousOutputVariables}
         />
         <EndpointSchema
           key={`endpoint-schema-${selectedRequestIndex}`}
           testSuite={requestView}
           onChangeTestSuite={onChangeRequestView}
           isSkipRefresh={isSkipRefresh}
+          jsonataVariables={previousOutputVariables}
         />
 
         {isChangeMethodModalOpen &&

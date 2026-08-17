@@ -1,4 +1,5 @@
 import { ResponseColumn, TestSuite, TestSuiteAdditionalRequest } from '@/src/models/evaluation/test-suite';
+import { JsonataVariable } from '@/src/models/jsonata';
 
 export const MAX_ADDITIONAL_REQUESTS = 10;
 
@@ -76,3 +77,24 @@ export const getChainResponseColumns = (suite: TestSuite): ResponseColumn[] => [
   ...(suite.responseColumns ?? []),
   ...(suite.additionalRequests ?? []).flatMap((request: TestSuiteAdditionalRequest) => request.responseColumns ?? []),
 ];
+
+/**
+ * JSONata variables that request `index` inherits from the chain — one per named response column of
+ * every preceding request, in chain order. `describeRequest` receives the producing request's index so
+ * the caller can attach a localized origin label.
+ */
+export const getPreviousOutputVariables = (
+  suite: TestSuite,
+  index: number,
+  describeRequest?: (requestIndex: number) => string,
+): JsonataVariable[] => {
+  const requests: (TestSuite | TestSuiteAdditionalRequest)[] = [suite, ...(suite.additionalRequests ?? [])];
+
+  return requests
+    .slice(0, Math.max(0, index))
+    .flatMap((request, requestIndex) =>
+      (request.responseColumns ?? [])
+        .filter((column) => !!column.name)
+        .map((column) => ({ name: column.name, description: describeRequest?.(requestIndex) })),
+    );
+};
