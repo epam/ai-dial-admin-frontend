@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 
 import { FEEDBACK_CANDIDATE_LIMIT } from '@/src/constants/analytics/conversations-trace';
 import {
+  ConversationFilterOperator,
   ConversationTotalsField,
   ConversationsField,
   FeedbackField,
@@ -21,6 +22,7 @@ import {
   QueryOutputColumn,
   QueryPredicate,
   QuerySortDirection,
+  QuerySortNulls,
   QueryValueExpr,
   QueryValueType,
 } from '@/src/models/analytics/query';
@@ -72,12 +74,36 @@ describe('buildConversationListQuery :: shape', () => {
     expect(names).toEqual([
       ConversationsField.ChatId,
       ConversationsField.ProjectId,
+      ConversationsField.UserHash,
       ConversationsField.TurnCount,
       ConversationsField.TotalTokens,
       ConversationsField.TotalPrice,
       ConversationsField.LastRequestTime,
       ConversationsField.FirstRequestTime,
     ]);
+  });
+
+  test('projects a visible schema-driven field alongside the curated ones', () => {
+    const names = (buildList({ visibleFields: ['success_count'] }).select as QueryOutputColumn[]).map(
+      (column) => (column.expr as QueryFieldExpr).name,
+    );
+
+    expect(names).toContain('success_count');
+    expect(names).toContain(ConversationsField.ChatId);
+  });
+
+  test('omits a field whose column is hidden', () => {
+    const names = (buildList().select as QueryOutputColumn[]).map((column) => (column.expr as QueryFieldExpr).name);
+
+    expect(names).not.toContain('success_count');
+  });
+
+  test('names a curated field once even when it is reported visible', () => {
+    const names = (buildList({ visibleFields: [ConversationsField.ChatId] }).select as QueryOutputColumn[]).map(
+      (column) => (column.expr as QueryFieldExpr).name,
+    );
+
+    expect(names.filter((name) => name === ConversationsField.ChatId)).toHaveLength(1);
   });
 
   test('aliases nothing — a stored column needs no rename', () => {
@@ -137,6 +163,12 @@ describe('buildConversationListQuery :: search', () => {
     expect(predicates.map((node) => (node.args[1] as QueryValueExpr).value)).toEqual(['acme', 'acme']);
   });
 
+  test('search does not reach the user hash', () => {
+    const predicates = searchGroup('acme').args as QueryPredicate[];
+
+    expect(predicates.map(fieldName)).not.toContain(ConversationsField.UserHash);
+  });
+
   test('the term is trimmed', () => {
     const predicates = searchGroup('  acme  ').args as QueryPredicate[];
 
@@ -158,6 +190,81 @@ describe('buildConversationListQuery :: search', () => {
     expect(withSearch.page).toEqual(without.page);
     expect(withSearch.having).toBeUndefined();
     expect(groupArgs(withSearch.filter).slice(0, 2)).toEqual(groupArgs(without.filter));
+  });
+});
+
+describe('buildConversationListQuery :: column filters', () => {
+  const predicateFor = (columnFilters: Parameters<typeof buildList>[0]['columnFilters']) =>
+    groupArgs(buildList({ columnFilters }).filter).slice(2);
+
+  test.each([
+    [ConversationFilterOperator.Contains, QueryOperator.Ico],
+    [ConversationFilterOperator.NotContains, QueryOperator.Inc],
+    [ConversationFilterOperator.Equals, QueryOperator.Eq],
+    [ConversationFilterOperator.NotEquals, QueryOperator.Ne],
+  ])('a %s filter conjoins a %s predicate', (operator, expected) => {
+    const [node] = predicateFor([{ field: ConversationsField.ProjectId, operator, value: 'acme' }]);
+
+    expect(node.op).toBe(expected);
+    expect(fieldName(node)).toBe(ConversationsField.ProjectId);
+    expect((node.args[1] as QueryValueExpr).value).toBe('acme');
+  });
+
+  test.each([
+    [ConversationFilterOperator.GreaterThan, QueryOperator.Gt],
+    [ConversationFilterOperator.GreaterThanOrEqual, QueryOperator.Ge],
+    [ConversationFilterOperator.LessThan, QueryOperator.Lt],
+    [ConversationFilterOperator.LessThanOrEqual, QueryOperator.Le],
+  ])('a %s filter conjoins a %s predicate', (operator, expected) => {
+    const [node] = predicateFor([{ field: ConversationsField.TurnCount, operator, value: '5' }]);
+
+    expect(node.op).toBe(expected);
+  });
+
+  test('a range becomes a ge and an le on the same field', () => {
+    const [group] = predicateFor([
+      {
+        field: ConversationsField.TotalTokens,
+        operator: ConversationFilterOperator.Range,
+        value: '10',
+        valueTo: '20',
+      },
+    ]);
+    const bounds = (group as unknown as QueryGroup).args as QueryPredicate[];
+
+    expect(bounds.map((node) => node.op)).toEqual([QueryOperator.Ge, QueryOperator.Le]);
+    expect(bounds.map(fieldName)).toEqual([ConversationsField.TotalTokens, ConversationsField.TotalTokens]);
+    expect(bounds.map((node) => (node.args[1] as QueryValueExpr).value)).toEqual(['10', '20']);
+  });
+
+  test.each([
+    [ConversationsField.ChatId, QueryValueType.String],
+    [ConversationsField.TurnCount, QueryValueType.Integer],
+    [ConversationsField.TotalPrice, QueryValueType.Decimal],
+  ])('a filter on %s carries the %s value type', (targetField, valueType) => {
+    const [node] = predicateFor([
+      { field: targetField, operator: ConversationFilterOperator.Equals, value: '0.090000000001' },
+    ]);
+
+    expect((node.args[1] as QueryValueExpr).value_type).toBe(valueType);
+  });
+
+  test('no column filter leaves the filter as the bounds alone', () => {
+    expect(groupArgs(buildList({ columnFilters: [] }).filter)).toHaveLength(2);
+  });
+
+  test('column filters compose with the search term and the time bounds', () => {
+    const args = groupArgs(
+      buildList({
+        search: 'acme',
+        columnFilters: [
+          { field: ConversationsField.TurnCount, operator: ConversationFilterOperator.GreaterThan, value: '2' },
+        ],
+      }).filter,
+    );
+
+    expect(args).toHaveLength(4);
+    expect(args.at(-1)?.op).toBe(QueryOperator.Gt);
   });
 });
 
@@ -190,7 +297,7 @@ describe('buildConversationListQuery :: feedback narrowing by chat id', () => {
 });
 
 describe('buildConversationListQuery :: sort, page and purity', () => {
-  test('orders by last activity with a stable id tiebreaker last', () => {
+  test('orders by last activity with a stable id tiebreaker last when no caller key is given', () => {
     const sort = buildList().sort;
 
     expect(sort).toEqual([
@@ -198,6 +305,42 @@ describe('buildConversationListQuery :: sort, page and purity', () => {
       { field: ConversationsField.ChatId, dir: QuerySortDirection.Asc },
     ]);
     expect(sort?.at(-1)?.field).toBe(ConversationsField.ChatId);
+  });
+
+  test('puts a caller sort key before the tiebreaker and orders its nulls last', () => {
+    const sort = buildList({
+      sort: [{ field: ConversationsField.TotalPrice, direction: QuerySortDirection.Desc }],
+    }).sort;
+
+    expect(sort).toEqual([
+      { field: ConversationsField.TotalPrice, dir: QuerySortDirection.Desc, nulls: QuerySortNulls.Last },
+      { field: ConversationsField.ChatId, dir: QuerySortDirection.Asc },
+    ]);
+  });
+
+  test('appends the tiebreaker even when the caller sorts by the id itself', () => {
+    const sort = buildList({
+      sort: [{ field: ConversationsField.ChatId, direction: QuerySortDirection.Desc }],
+    }).sort;
+
+    expect(sort).toHaveLength(2);
+    expect(sort?.at(-1)).toEqual({ field: ConversationsField.ChatId, dir: QuerySortDirection.Asc });
+  });
+
+  test('keeps several caller keys in order, each with a nulls ordering', () => {
+    const sort = buildList({
+      sort: [
+        { field: ConversationsField.ProjectId, direction: QuerySortDirection.Asc },
+        { field: ConversationsField.TotalTokens, direction: QuerySortDirection.Desc },
+      ],
+    }).sort;
+
+    expect(sort?.map((item) => item.field)).toEqual([
+      ConversationsField.ProjectId,
+      ConversationsField.TotalTokens,
+      ConversationsField.ChatId,
+    ]);
+    expect(sort?.slice(0, 2).every((item) => item.nulls === QuerySortNulls.Last)).toBe(true);
   });
 
   // Row mode is the only mode the service populates a total for, and paging needs one.
@@ -219,6 +362,16 @@ describe('buildConversationListQuery :: sort, page and purity', () => {
 describe('buildConversationTotalsQuery', () => {
   const buildTotals = (overrides: Partial<Parameters<typeof buildConversationTotalsQuery>[0]> = {}) =>
     buildConversationTotalsQuery({ range: RANGE, ...overrides });
+
+  test('carries the same column filters as the list query', () => {
+    const columnFilters = [
+      { field: ConversationsField.TotalPrice, operator: ConversationFilterOperator.GreaterThan, value: '0.5' },
+    ];
+    const totalsArgs = groupArgs(buildTotals({ columnFilters }).filter);
+    const listArgs = groupArgs(buildList({ columnFilters }).filter);
+
+    expect(totalsArgs).toEqual(listArgs);
+  });
 
   test('counts conversations and sums cost over the whole result', () => {
     const query = buildTotals();

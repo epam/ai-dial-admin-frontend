@@ -2630,6 +2630,10 @@ export default {
     SummaryCost: 'Cost',
     SummaryResultHint: 'Covers every conversation matching the current filters, not only the rows loaded.',
     SummaryLoadedHint: 'Covers the conversations loaded so far. Scroll to load more.',
+    SummaryLoadedScope: 'Loaded so far',
+    SchemaUnavailableNotice: 'Additional columns are unavailable: the conversations schema could not be read.',
+    FeedbackCappedNotice:
+      'Showing only the most recently rated conversations. More may carry this feedback than are listed.',
     SummaryUnavailableHint: 'Could not be loaded.',
     RatingUp: 'Positive ratings in the selected period',
     RatingDown: 'Negative ratings in the selected period',

@@ -12,21 +12,32 @@ import {
   CONVERSATIONS_GROUP_HEADER_HEIGHT,
   CONVERSATIONS_HEADER_HEIGHT,
   CONVERSATIONS_ROW_HEIGHT,
+  CONVERSATIONS_STORAGE_KEY,
 } from '@/src/constants/analytics/conversations-trace';
 import { CONVERSATIONS_TRACE_COLUMN_GROUPS } from '@/src/constants/grid-columns/grid-columns';
 import { useI18n } from '@/src/locales/client';
 import { ConversationRow } from '@/src/models/analytics/conversations-trace';
+import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 
 interface Props {
   datasource: IDatasource;
   onGridReady: (event: GridReadyEvent) => void;
+  schemaFields?: AnalyticsEntityField[] | null;
+  isColumnsPanelOpen: boolean;
+  onToggleColumnsPanel: () => void;
 }
 
-const ConversationsList: FC<Props> = ({ datasource, onGridReady }) => {
+const ConversationsList: FC<Props> = ({
+  datasource,
+  onGridReady,
+  schemaFields,
+  isColumnsPanelOpen,
+  onToggleColumnsPanel,
+}) => {
   const t = useI18n();
   const router = useRouter();
 
-  const columnDefs = useMemo(() => CONVERSATIONS_TRACE_COLUMN_GROUPS(t), [t]);
+  const columnDefs = useMemo(() => CONVERSATIONS_TRACE_COLUMN_GROUPS(t, schemaFields ?? []), [t, schemaFields]);
 
   const onOpenConversation = useCallback(
     (chatId: string, event?: MouseEvent | null) =>
@@ -68,6 +79,10 @@ const ConversationsList: FC<Props> = ({ datasource, onGridReady }) => {
         }}
         onGridReady={onGridReady}
         getRowId={({ data }) => data.chat_id}
+        storageKey={CONVERSATIONS_STORAGE_KEY}
+        isLiveData
+        showColumnsPanel={isColumnsPanelOpen}
+        toggleColumnsPanel={onToggleColumnsPanel}
       />
     </div>
   );

@@ -11,6 +11,7 @@ const MINUTE = 60 * 1000;
 const row = (overrides: Partial<ConversationRow> = {}): ConversationRow => ({
   chat_id: 'chat-1',
   project_id: 'data-team',
+  user_hash: 'db7327ba3decd351',
   turn_count: 3,
   total_tokens: 10,
   total_price: '0.1',

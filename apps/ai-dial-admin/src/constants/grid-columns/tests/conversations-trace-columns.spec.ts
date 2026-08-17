@@ -1,6 +1,7 @@
 import { ColDef, ValueFormatterParams } from 'ag-grid-community';
 import { describe, expect, test } from 'vitest';
 
+import { baseNumberFilter, baseStringFilter } from '@/src/constants/grid-columns/filters';
 import { CONVERSATIONS_TRACE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { ConversationColumn, ConversationsField } from '@/src/models/analytics/conversations-trace';
@@ -15,17 +16,11 @@ const format = (fieldName: string, value: unknown): string =>
   column(fieldName).valueFormatter?.({ value } as ValueFormatterParams) as string;
 
 describe('conversations columns :: composition', () => {
-  test('no column offers a filter, so the header shows no filter control', () => {
-    columns().forEach((col) => {
-      expect(col.filter).toBe(false);
-      expect(col.floatingFilter).toBe(false);
-    });
-  });
-
-  test('exposes exactly the seven displayed columns, in order', () => {
+  test('exposes exactly the eight displayed columns, in order', () => {
     expect(columns().map((col) => col.field)).toEqual([
       ConversationsField.ChatId,
       ConversationsField.ProjectId,
+      ConversationsField.UserHash,
       ConversationsField.TurnCount,
       ConversationsField.LastRequestTime,
       ConversationsField.TotalTokens,
@@ -38,6 +33,7 @@ describe('conversations columns :: composition', () => {
     expect(columns().map((col) => col.headerName)).toEqual([
       ConversationsTraceI18nKey.Conversation,
       ConversationsTraceI18nKey.Project,
+      ConversationsTraceI18nKey.DetailUser,
       ConversationsTraceI18nKey.Turns,
       ConversationsTraceI18nKey.Activity,
       ConversationsTraceI18nKey.Tokens,
@@ -46,18 +42,66 @@ describe('conversations columns :: composition', () => {
     ]);
   });
 
+  test('the user column reuses the label the detail page uses for the same field', () => {
+    expect(column(ConversationsField.UserHash).headerName).toBe(ConversationsTraceI18nKey.DetailUser);
+  });
+
   test('the conversation column renders through a cell renderer', () => {
     expect(column(ConversationsField.ChatId).cellRenderer).toBeTypeOf('function');
   });
 });
 
-describe('conversations columns :: read-only contract', () => {
-  test('no column is sortable', () => {
-    columns().forEach((col) => expect(col.sortable).toBe(false));
+describe('conversations columns :: sort and filter contract', () => {
+  const FIELD_BACKED = [
+    ConversationsField.ChatId,
+    ConversationsField.ProjectId,
+    ConversationsField.UserHash,
+    ConversationsField.TurnCount,
+    ConversationsField.LastRequestTime,
+    ConversationsField.TotalTokens,
+    ConversationsField.TotalPrice,
+  ];
+
+  test.each(FIELD_BACKED)('%s is sortable, because the query can order the whole result by it', (fieldName) => {
+    expect(column(fieldName).sortable).not.toBe(false);
   });
 
-  test('no column shows a floating filter', () => {
-    columns().forEach((col) => expect(col.floatingFilter).toBe(false));
+  test('rating is not sortable and offers no filter', () => {
+    expect(column(ConversationColumn.Rating).sortable).toBe(false);
+    expect(column(ConversationColumn.Rating).filter).toBe(false);
+  });
+
+  test.each([[ConversationsField.ChatId], [ConversationsField.ProjectId], [ConversationsField.UserHash]])(
+    '%s offers a text filter',
+    (fieldName) => {
+      expect(column(fieldName).filter).not.toBe(false);
+      expect(column(fieldName).filterParams?.filterOptions).toEqual(baseStringFilter.filterParams?.filterOptions);
+    },
+  );
+
+  test.each([[ConversationsField.TurnCount], [ConversationsField.TotalTokens], [ConversationsField.TotalPrice]])(
+    '%s offers a number filter',
+    (fieldName) => {
+      expect(column(fieldName).filter).toBe(baseNumberFilter.filter);
+      expect(column(fieldName).filterParams?.filterOptions).toEqual(baseNumberFilter.filterParams?.filterOptions);
+    },
+  );
+
+  test('activity sorts but offers no filter', () => {
+    expect(column(ConversationsField.LastRequestTime).sortable).not.toBe(false);
+    expect(column(ConversationsField.LastRequestTime).filter).toBe(false);
+  });
+
+  test('text filters offer no prefix or suffix matching', () => {
+    const options = column(ConversationsField.ChatId).filterParams?.filterOptions as string[];
+
+    expect(options).not.toContain('startsWith');
+    expect(options).not.toContain('endsWith');
+  });
+
+  test('the default ordering is stated as a sort model on activity', () => {
+    expect(column(ConversationsField.LastRequestTime).sort).toBe('desc');
+    expect(columns().filter((col) => col.sort).length).toBe(1);
   });
 
   test('no column is editable', () => {
@@ -74,6 +118,11 @@ describe('conversations columns :: proportions', () => {
 
   test('the conversation column reserves room for a production-length id', () => {
     expect(column(ConversationsField.ChatId).minWidth).toBeGreaterThanOrEqual(280);
+  });
+
+  test('the user column is sized for a hash rather than a display name', () => {
+    expect(column(ConversationsField.UserHash).minWidth).toBeGreaterThanOrEqual(140);
+    expect(column(ConversationsField.UserHash).flex).toBeLessThan(column(ConversationsField.ProjectId).flex as number);
   });
 
   test('numeric columns are narrower than the conversation column', () => {
@@ -121,5 +170,10 @@ describe('conversations columns :: value formatting', () => {
 
   test('project renders through a cell renderer so an unattributed project is marked', () => {
     expect(typeof column(ConversationsField.ProjectId).cellRenderer).toBe('function');
+  });
+
+  test('user renders through a cell renderer so a missing hash is marked', () => {
+    expect(typeof column(ConversationsField.UserHash).cellRenderer).toBe('function');
+    expect(column(ConversationsField.UserHash).valueFormatter).toBeUndefined();
   });
 });

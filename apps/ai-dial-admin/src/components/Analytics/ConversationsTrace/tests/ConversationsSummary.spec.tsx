@@ -63,6 +63,26 @@ describe('ConversationsSummary', () => {
     expect(screen.getAllByTitle(ConversationsTraceI18nKey.SummaryLoadedHint)).toHaveLength(2);
   });
 
+  test('names the loaded scope in visible text on the loaded-scope pills', () => {
+    renderSummary();
+
+    expect(screen.getAllByText(ConversationsTraceI18nKey.SummaryLoadedScope)).toHaveLength(2);
+  });
+
+  test('does not also carry the loaded-scope caveat as screen-reader-only text', () => {
+    const { container } = renderSummary();
+    const hidden = Array.from(container.querySelectorAll('.sr-only')).map((node) => node.textContent);
+
+    expect(hidden).not.toContain(ConversationsTraceI18nKey.SummaryLoadedHint);
+  });
+
+  test('keeps the whole-result hint as screen-reader-only text', () => {
+    const { container } = renderSummary();
+    const hidden = Array.from(container.querySelectorAll('.sr-only')).map((node) => node.textContent);
+
+    expect(hidden.filter((text) => text === ConversationsTraceI18nKey.SummaryResultHint)).toHaveLength(2);
+  });
+
   test('names the period on the cost pill', () => {
     renderSummary({ periodLabel: '30d' });
 
