@@ -1,9 +1,9 @@
 ---
 # One canonical file, three consumers — each reads its own scoping key and ignores the others:
 #   Claude Code (.claude/rules/components.md)                                  -> `paths`
-#   Cursor      (.cursor/rules/components.mdc is copied from here)             -> `globs` / `alwaysApply` / `description`
-#   Copilot     (.github/instructions/components.instructions.md, likewise)     -> `applyTo`
-# Keep all three glob sets in sync. Edit only here — pre-commit regenerates the copies.
+#   Cursor      (.cursor/rules/components.mdc stubs to here)             -> `globs` / `alwaysApply` / `description`
+#   Copilot     (.github/instructions/components.instructions.md is a copy)     -> `applyTo`
+# Keep all three glob sets in sync. Edit only here — pre-commit regenerates both mirrors.
 # Scopes to component-shaped files only (.tsx in components/context, hooks). Cross-cutting TS standards
 # live in code-standards.md (always on); pure helpers in utils.md; tests in testing.md.
 description: Component & UI authoring standards — design principles, design-system reuse, styling, state, a11y, i18n, grid. Use when editing component, context, or hook files.

@@ -15,9 +15,10 @@
 //   - broken `@file` references in docs
 //   - broken `references/*` pointers from a skill to its deferred content
 //   - mirror integrity — the .cursor/.github entries listed in
-//     scripts/agent-mirrors.mjs are generated copies of a .claude source; a copy
-//     that drifts means Cursor or Copilot silently loads a stale rule, and a copy
-//     replaced by anything else means the rule stops loading (full scan only)
+//     scripts/agent-mirrors.mjs are generated from a .claude source, as a stub or
+//     a full copy; one that drifts means Cursor or Copilot silently loads a stale
+//     rule, and one replaced by anything else means the rule stops loading
+//     (full scan only)
 //   - hidden/invisible characters — bidi controls, zero-width chars, BOM, and
 //     U+FFFD from invalid UTF-8 — that corrupt parsing or silently alter text
 //   - floating MCP package versions (`@latest`) that break reproducibility
@@ -52,6 +53,10 @@ import { pathToFileURL } from 'node:url';
 import { parse } from 'yaml';
 import * as prettier from 'prettier';
 
+// Script-relative on purpose: the renderer is this gate's own code, while the
+// manifest it renders is repo data loaded from `cwd`.
+import { renderMirror } from './render-agent-mirror.mjs';
+
 const errors = [];
 const fail = (file, msg) => errors.push(`${file}: ${msg}`);
 
@@ -69,9 +74,10 @@ const AGENT_CONFIG_DIRECTORIES = [
   '.github/skills',
 ];
 const AGENT_CONFIG_FILES = ['.claude/settings.json', '.mcp.json', 'AGENTS.md', 'CLAUDE.md', 'openspec/config.yaml'];
-// Declares which mirror entries are generated and from where. Resolved against
-// `cwd` like every other path here, so a repo without it simply has no mirrors
-// to check.
+// Declares which mirror entries are generated, how, and from where. Resolved
+// against `cwd` like every other path here, so a repo without it simply has no
+// mirrors to check. The renderer is shared with the writer so the gate and the
+// generator cannot disagree about what "correct" means.
 const MIRROR_MANIFEST = 'scripts/agent-mirrors.mjs';
 const IGNORED_DIRECTORIES = new Set(['.git', '.next', '.nx', 'coverage', 'dist', 'node_modules', 'tmp']);
 
@@ -97,12 +103,13 @@ const isSymlinkedDirectory = (path) => {
   }
 };
 
-// A generated mirror is a byte-identical copy of its source, so validating it
-// again would report every finding up to three times — and would flag its
-// `name:` as a duplicate Claude skill. checkMirrorIntegrity covers these paths
-// by proving they still match the source that IS validated here.
+// A generated mirror has no content of its own — it is a stub pointing at its
+// source, or a byte-identical copy of it. Validating one again would report every
+// finding twice and flag a copied `name:` as a duplicate Claude skill.
+// checkMirrorIntegrity covers these paths by proving they still match the source
+// that IS validated here.
 const allAgentConfigFiles = (manifest) => {
-  const generated = manifest?.MIRROR_SOURCE_BY_PATH ?? new Map();
+  const generated = manifest?.MIRROR_BY_PATH ?? new Map();
   return [
     ...AGENT_CONFIG_FILES.filter(existsSync),
     ...AGENT_CONFIG_DIRECTORIES.flatMap(listFiles).filter((file) => ['.md', '.mdc'].includes(extname(file))),
@@ -325,20 +332,28 @@ const checkMirrorIntegrity = (manifest) => {
       continue;
     }
 
-    const expected = readFileSync(source, 'utf8');
+    const src = readFileSync(source, 'utf8');
 
-    for (const mirror of mirrors) {
+    for (const { path: mirror, mode } of mirrors) {
       checked += 1;
 
       if (!existsSync(mirror)) {
-        fail(mirror, `missing generated mirror of \`${source}\`; ${syncHint}`);
+        fail(mirror, `missing generated mirror (${mode}) of \`${source}\`; ${syncHint}`);
         continue;
       }
 
       // A symlink pointing at the right bytes still passes the content check, so
       // name it explicitly — it is the pattern that breaks on Windows checkout.
       if (lstatSync(mirror).isSymbolicLink()) {
-        fail(mirror, `is a symlink; mirror entries are generated copies now — ${syncHint}`);
+        fail(mirror, `is a symlink; mirror entries are generated files now — ${syncHint}`);
+        continue;
+      }
+
+      let expected;
+      try {
+        expected = renderMirror(src, { source, mode });
+      } catch (e) {
+        fail(source, `cannot render its \`${mode}\` mirror: ${e.message}`);
         continue;
       }
 
@@ -346,7 +361,7 @@ const checkMirrorIntegrity = (manifest) => {
       if (content === expected) continue;
 
       if (FLATTENED_LINK_PATTERN.test(content.trim())) {
-        fail(mirror, `is a flattened symlink left by a Windows checkout, not a copy of \`${source}\`; ${syncHint}`);
+        fail(mirror, `is a flattened symlink left by a Windows checkout, not a generated mirror; ${syncHint}`);
       } else {
         fail(mirror, `has drifted from \`${source}\`; edit the source, then ${syncHint}`);
       }
@@ -426,9 +441,9 @@ for (const file of files) {
   // Reached only in explicit-file mode — the full scan filters these out. Editing
   // a generated copy is the drift this gate exists to prevent, so say so at the
   // moment of the edit rather than letting the next full scan report it.
-  const mirrorSource = mirrorManifest?.MIRROR_SOURCE_BY_PATH.get(file);
-  if (mirrorSource) {
-    fail(file, `is generated from \`${mirrorSource}\`; edit that file, then run \`${mirrorManifest.SYNC_COMMAND}\``);
+  const mirror = mirrorManifest?.MIRROR_BY_PATH.get(file);
+  if (mirror) {
+    fail(file, `is generated from \`${mirror.source}\`; edit that file, then run \`${mirrorManifest.SYNC_COMMAND}\``);
     continue;
   }
 

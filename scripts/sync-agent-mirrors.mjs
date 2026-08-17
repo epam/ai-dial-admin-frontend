@@ -21,6 +21,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 
 import { AGENT_MIRRORS, SYNC_COMMAND } from './agent-mirrors.mjs';
+import { renderMirror } from './render-agent-mirror.mjs';
 
 const args = process.argv.slice(2);
 const isCheckOnly = args.includes('--check');
@@ -43,15 +44,16 @@ for (const { source, mirrors } of entries) {
 
   const src = readFileSync(source, 'utf8');
 
-  for (const mirror of mirrors) {
-    const isCurrent = existsSync(mirror) && readFileSync(mirror, 'utf8') === src;
+  for (const { path: mirror, mode } of mirrors) {
+    const expected = renderMirror(src, { source, mode });
+    const isCurrent = existsSync(mirror) && readFileSync(mirror, 'utf8') === expected;
     if (isCurrent) continue;
 
-    stale.push({ mirror, source });
+    stale.push({ mirror, source, mode });
     if (isCheckOnly) continue;
 
     mkdirSync(dirname(mirror), { recursive: true });
-    writeFileSync(mirror, src);
+    writeFileSync(mirror, expected);
     written += 1;
   }
 }
@@ -66,7 +68,7 @@ if (missingSources.length) {
 
 const total = entries.reduce((sum, { mirrors }) => sum + mirrors.length, 0);
 
-const listing = stale.map(({ mirror, source }) => `  ${mirror} <- ${source}`).join('\n');
+const listing = stale.map(({ mirror, source, mode }) => `  ${mirror} <- ${source} (${mode})`).join('\n');
 
 if (isCheckOnly) {
   if (stale.length) {

@@ -1,13 +1,13 @@
 ---
 # One canonical file, three consumers — each reads its own scoping key and ignores the others:
 #   Claude Code (.claude/rules)          -> `paths`
-#   Cursor      (.cursor/rules/testing.mdc is copied from here)        -> `globs` / `alwaysApply` / `description`
-#   Copilot     (.github/instructions/testing.instructions.md, likewise)    -> `applyTo`
-# Keep all three globs in sync. Edit only here — pre-commit regenerates the copies.
-# Note: VS Code Copilot also default-scans .claude/rules (reading `paths`), so with the mirror in place it
-# may load this rule twice when editing a test file. To dedupe, a dev can set, in their own VS Code
-# settings, chat.instructionsFilesLocations { ".claude/rules": false } (.vscode is gitignored here, so it
-# can't be committed). Copilot instructions affect chat/agent only — never inline tab-completions.
+#   Cursor      (.cursor/rules/testing.mdc stubs to here)        -> `globs` / `alwaysApply` / `description`
+#   Copilot     (.github/instructions/testing.instructions.md is a copy)    -> `applyTo`
+# Keep all three globs in sync. Edit only here — pre-commit regenerates both mirrors.
+# Note: VS Code Copilot scans only `chat.instructionsFilesLocations` (default `.github/instructions`) and
+# picks up nothing else there — a file must be named `*.instructions.md` to count — so this rule loads
+# once, through the mirror, not twice. Copilot instructions affect chat/agent only — never inline
+# tab-completions.
 description: Test-authoring rules — queries, mocks, per-type approach, cost discipline. Use when editing test files.
 paths:
   - "**/*.test.ts"
@@ -28,7 +28,7 @@ while iterating, and a meaningful per-type testing standard so coverage is purpo
 
 All three tools auto-load this rule only when reading/editing files that match the patterns in the
 frontmatter above (Claude Code via `paths`; Cursor via `globs` through the `.cursor/rules/testing.mdc`
-copy; Copilot via `applyTo` through the `.github/instructions/testing.instructions.md` copy) — so it
+stub; Copilot via `applyTo` through the `.github/instructions/testing.instructions.md` copy) — so it
 stays out of context for non-test work.
 
 ## §1 Scope

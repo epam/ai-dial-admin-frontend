@@ -1,9 +1,9 @@
 ---
 # One canonical file, three consumers — each always-on, each reads its own key and ignores the others:
 #   Claude Code (.claude/rules/code-standards.md)                              -> no `paths` key => loads every session
-#   Cursor      (.cursor/rules/code-standards.mdc is copied from here)         -> `alwaysApply: true`
-#   Copilot     (.github/instructions/code-standards.instructions.md, likewise)    -> `applyTo: "**"`
-# Edit only here — pre-commit regenerates the copies. Keep this file SHORT — it is
+#   Cursor      (.cursor/rules/code-standards.mdc stubs to here)         -> `alwaysApply: true`
+#   Copilot     (.github/instructions/code-standards.instructions.md is a copy)    -> `applyTo: "**"`
+# Edit only here — pre-commit regenerates both mirrors. Keep this file SHORT — it is
 # always in context, so it only holds cross-cutting standards that are not specific to components or utils.
 description: Cross-cutting TypeScript standards for this repo — import alias, enums, type placement, file organization. Always applies.
 applyTo: "**"
