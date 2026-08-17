@@ -1,7 +1,7 @@
 'use client';
 
 import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
-import { FC } from 'react';
+import { FC, useCallback, useState } from 'react';
 
 import ConversationsProvenanceLine from '@/src/components/Analytics/ConversationsTrace/Header/ConversationsProvenanceLine';
 import ConversationsSummary from '@/src/components/Analytics/ConversationsTrace/Header/ConversationsSummary';
@@ -12,14 +12,18 @@ import LoadingOverlay from '@/src/components/Common/LoadingOverlay/LoadingOverla
 import { BasicI18nKey, ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ConversationTotals } from '@/src/models/analytics/conversations-trace';
+import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 
 interface Props {
   initialTotals: ConversationTotals | null;
   hasInitialLoadError?: boolean;
+  schemaFields?: AnalyticsEntityField[] | null;
+  hasSchemaError?: boolean;
 }
 
-const ConversationsTraceView: FC<Props> = ({ initialTotals, hasInitialLoadError }) => {
+const ConversationsTraceView: FC<Props> = ({ initialTotals, hasInitialLoadError, schemaFields, hasSchemaError }) => {
   const t = useI18n();
+  const [isColumnsPanelOpen, setIsColumnsPanelOpen] = useState(false);
   const {
     onGridReady,
     datasource,
@@ -28,6 +32,7 @@ const ConversationsTraceView: FC<Props> = ({ initialTotals, hasInitialLoadError 
     loadedCount,
     isEmptyResult,
     isFirstPageLoading,
+    isFeedbackCapped,
     hasLoadError,
     search,
     onSearchChange,
@@ -37,7 +42,9 @@ const ConversationsTraceView: FC<Props> = ({ initialTotals, hasInitialLoadError 
     onTimeRangeChange,
     feedback,
     onFeedbackChange,
-  } = useConversations(initialTotals, hasInitialLoadError);
+  } = useConversations(initialTotals, hasInitialLoadError, schemaFields);
+
+  const onToggleColumnsPanel = useCallback(() => setIsColumnsPanelOpen((isOpen) => !isOpen), []);
 
   const emptyStateTitle = hasLoadError
     ? ConversationsTraceI18nKey.ConversationsLoadFailed
@@ -65,9 +72,18 @@ const ConversationsTraceView: FC<Props> = ({ initialTotals, hasInitialLoadError 
         onTimeRangeChange={onTimeRangeChange}
         feedback={feedback}
         onFeedbackChange={onFeedbackChange}
+        isFeedbackCapped={isFeedbackCapped}
+        hasSchemaError={hasSchemaError}
+        onToggleColumnsPanel={onToggleColumnsPanel}
       />
       <div className="relative flex flex-1 rounded overflow-auto min-h-0 border border-primary">
-        <ConversationsList datasource={datasource} onGridReady={onGridReady} />
+        <ConversationsList
+          datasource={datasource}
+          onGridReady={onGridReady}
+          schemaFields={schemaFields}
+          isColumnsPanelOpen={isColumnsPanelOpen}
+          onToggleColumnsPanel={onToggleColumnsPanel}
+        />
         {isFirstPageLoading && <LoadingOverlay label={t(BasicI18nKey.Loading)} />}
         {isEmptyStateVisible && (
           <div className="absolute inset-0 flex items-center justify-center bg-layer-2">

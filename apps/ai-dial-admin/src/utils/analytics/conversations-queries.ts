@@ -1,12 +1,17 @@
 import { timeRangePredicates } from '@/src/components/Analytics/QueryBuilder/utils/time';
 import {
   CONVERSATIONS_ENTITY,
+  CONVERSATION_FIELD_VALUE_TYPE,
+  CONVERSATION_FILTER_QUERY_OPERATOR,
   FEEDBACK_CANDIDATE_LIMIT,
   FEEDBACK_ENTITY,
   POSITIVE_RATE_EXCLUSIVE_MIN,
   USAGE_LOG_ENTITY,
 } from '@/src/constants/analytics/conversations-trace';
 import {
+  ConversationColumnFilter,
+  ConversationFilterOperator,
+  ConversationSortKey,
   ConversationTotalsField,
   ConversationTurnField,
   ConversationsField,
@@ -16,7 +21,14 @@ import {
   RatingDirection,
   UsageLogField,
 } from '@/src/models/analytics/conversations-trace';
-import { QueryFilterNode, QuerySortDirection, QueryValueType, StructuredQuery } from '@/src/models/analytics/query';
+import {
+  QueryFilterNode,
+  QuerySortDirection,
+  QuerySortItem,
+  QuerySortNulls,
+  QueryValueType,
+  StructuredQuery,
+} from '@/src/models/analytics/query';
 import { TimeRange } from '@/src/models/time-range';
 import {
   aggregateQuery,
@@ -25,6 +37,7 @@ import {
   eq,
   field,
   fn,
+  ge,
   gt,
   ico,
   inValues,
@@ -33,6 +46,7 @@ import {
   ne,
   offsetPage,
   or,
+  predicate,
   rowQuery,
   sortItem,
   value,
@@ -49,48 +63,96 @@ const searchPredicates = (search: string): QueryFilterNode[] => {
   return [or([ConversationsField.ChatId, ConversationsField.ProjectId].map((fieldName) => ico(fieldName, term)))];
 };
 
+const fieldValueType = (fieldName: string, declared?: QueryValueType): QueryValueType => {
+  const valueType = declared ?? CONVERSATION_FIELD_VALUE_TYPE[fieldName as ConversationsField];
+  if (!valueType) {
+    throw new Error(`No value type for conversations field: ${fieldName}`);
+  }
+  return valueType;
+};
+
+const columnFilterPredicates = (columnFilters: ConversationColumnFilter[]): QueryFilterNode[] =>
+  columnFilters.map(({ field: fieldName, operator, value: val, valueTo, valueType: declared }) => {
+    const valueType = fieldValueType(fieldName, declared);
+
+    if (operator === ConversationFilterOperator.Range) {
+      return and([ge(fieldName, value(valueType, val)), le(fieldName, value(valueType, valueTo as string))]);
+    }
+
+    const queryOperator = CONVERSATION_FILTER_QUERY_OPERATOR[operator];
+    if (!queryOperator) {
+      throw new Error(`No query operator for conversations filter: ${operator}`);
+    }
+    return predicate(queryOperator, fieldName, value(valueType, val));
+  });
+
 interface ConversationFilterParams {
   range: TimeRange;
   search?: string;
   chatIds?: string[];
+  columnFilters?: ConversationColumnFilter[];
 }
 
 // The list and the totals share one filter, so a pill can never disagree with the rows beneath it.
-const conversationFilter = ({ range, search = '', chatIds = [] }: ConversationFilterParams): QueryFilterNode =>
+const conversationFilter = ({
+  range,
+  search = '',
+  chatIds = [],
+  columnFilters = [],
+}: ConversationFilterParams): QueryFilterNode =>
   and([
     ...timeRangePredicates(ConversationsField.LastRequestTime, range),
     ...searchPredicates(search),
     ...(chatIds.length ? [inValues(ConversationsField.ChatId, QueryValueType.String, chatIds)] : []),
+    ...columnFilterPredicates(columnFilters),
   ]);
+
+const conversationSort = (sort: ConversationSortKey[] = []): QuerySortItem[] => {
+  const callerKeys = sort.map(({ field: fieldName, direction }) => sortItem(fieldName, direction, QuerySortNulls.Last));
+
+  return [
+    ...(callerKeys.length ? callerKeys : [sortItem(ConversationsField.LastRequestTime, QuerySortDirection.Desc)]),
+    sortItem(ConversationsField.ChatId, QuerySortDirection.Asc),
+  ];
+};
 
 interface ConversationListQueryParams extends ConversationFilterParams {
   offset: number;
   limit: number;
+  sort?: ConversationSortKey[];
+  visibleFields?: string[];
 }
+
+const CURATED_SELECT_FIELDS: ConversationsField[] = [
+  ConversationsField.ChatId,
+  ConversationsField.ProjectId,
+  ConversationsField.UserHash,
+  ConversationsField.TurnCount,
+  ConversationsField.TotalTokens,
+  ConversationsField.TotalPrice,
+  ConversationsField.LastRequestTime,
+  ConversationsField.FirstRequestTime,
+  ConversationsField.DurationMs,
+  ConversationsField.Deployments,
+];
+
+const conversationSelect = (visibleFields: string[] = []): string[] => {
+  const curated = new Set<string>(CURATED_SELECT_FIELDS);
+  return [...CURATED_SELECT_FIELDS, ...visibleFields.filter((field) => !curated.has(field))];
+};
 
 export const buildConversationListQuery = ({
   offset,
   limit,
+  sort,
+  visibleFields,
   ...filters
 }: ConversationListQueryParams): StructuredQuery =>
   rowQuery({
     entity: CONVERSATIONS_ENTITY,
-    select: [
-      col(field(ConversationsField.ChatId)),
-      col(field(ConversationsField.ProjectId)),
-      col(field(ConversationsField.TurnCount)),
-      col(field(ConversationsField.TotalTokens)),
-      col(field(ConversationsField.TotalPrice)),
-      col(field(ConversationsField.LastRequestTime)),
-      col(field(ConversationsField.FirstRequestTime)),
-    ],
+    select: conversationSelect(visibleFields).map((fieldName) => col(field(fieldName))),
     filter: conversationFilter(filters),
-    sort: [
-      sortItem(ConversationsField.LastRequestTime, QuerySortDirection.Desc),
-      // The service appends no implicit tiebreaker, so without this a paged result is not stable
-      // between requests and a row can be skipped or repeated across pages.
-      sortItem(ConversationsField.ChatId, QuerySortDirection.Asc),
-    ],
+    sort: conversationSort(sort),
     page: offsetPage(offset, limit, true),
   });
 

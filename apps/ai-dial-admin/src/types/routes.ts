@@ -32,6 +32,7 @@ export enum ApplicationRoute {
   PromptPublications = '/prompt-publications',
   FilePublications = '/file-publications',
   ConversationPublications = '/conversation-publications',
+  SkillPublications = '/skill-publications',
 
   // Access Management
   Roles = '/roles',

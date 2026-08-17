@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 
 import ConversationsList from '@/src/components/Analytics/ConversationsTrace/List/ConversationsList';
 import { conversationDetailHref } from '@/src/components/Analytics/ConversationsTrace/utils';
-import { ConversationRow } from '@/src/models/analytics/conversations-trace';
+import { ConversationColumn, ConversationRow, ConversationsField } from '@/src/models/analytics/conversations-trace';
 
 type Column = ColDef<ConversationRow> | ColGroupDef<ConversationRow>;
 
@@ -95,16 +95,18 @@ describe('conversations list row navigation', () => {
   });
 
   // Opening a row is a read, so the grid stays read-only: the change must not have relaxed either.
-  test('sorting and per-column filtering remain off for every column it renders', () => {
+  test('field-backed columns sort and filter, and the composed rating column does neither', () => {
     const columns = leafColumns(columnDefs);
 
     expect(columns.length).toBeGreaterThan(0);
 
-    for (const column of columns) {
-      expect(column.sortable).toBe(false);
-      expect(column.filter).toBe(false);
-      expect(column.floatingFilter).toBe(false);
-    }
+    const rating = columns.find((column) => column.field === ConversationColumn.Rating);
+    expect(rating?.sortable).toBe(false);
+    expect(rating?.filter).toBe(false);
+
+    const conversation = columns.find((column) => column.field === ConversationsField.ChatId);
+    expect(conversation?.sortable).not.toBe(false);
+    expect(conversation?.filter).not.toBe(false);
   });
 
   test('rows are served by the datasource, and the view owns the empty state', () => {

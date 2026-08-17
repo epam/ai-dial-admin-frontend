@@ -68,6 +68,10 @@ export class CorePublicationsApi extends CoreApi {
     return this.listByType(ResourceType.CONVERSATION, token);
   }
 
+  getPublicationSkillList(token: Token): Promise<Publication[] | undefined> {
+    return this.listByType(ResourceType.SKILL, token);
+  }
+
   private async listByType(type: ResourceType, token: Token): Promise<Publication[] | undefined> {
     const res = await this.post<{ url: string }, CorePublicationInfos>(
       CORE_PUBLICATION_LIST_URL,

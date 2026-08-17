@@ -1,18 +1,18 @@
 'use client';
 
 import { DialCheckbox, DialGhostButton } from '@epam/ai-dial-ui-kit';
-import { ColDef } from 'ag-grid-community';
 import { FC, useCallback, useRef } from 'react';
 import { useDrop } from 'react-dnd';
 
 import CloseButton from '@/src/components/Common/CloseButton/CloseButton';
+import { ColumnLeaf } from '@/src/components/Grid/utils';
 import DraggableItem from '@/src/components/Common/DraggableItem/DraggableItem';
 import { COLUMN_PANEL_PREFIX } from '@/src/constants/grid-columns/grid-columns';
 import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
 interface Props {
-  columns: ColDef[];
+  columns: ColumnLeaf[];
   showResetButton: boolean;
   panelClassName: string;
   onReset: () => void;
@@ -67,13 +67,16 @@ const ColumnsPanel: FC<Props> = ({
             .map((col) => {
               return (
                 <li key={col.field}>
-                  <DraggableItem id={col.field || ''} findItem={onFind} moveItem={onMove}>
-                    <DialCheckbox
-                      label={col.headerName}
-                      id={`${COLUMN_PANEL_PREFIX}${col.field}`}
-                      checked={!col.hide}
-                      onChange={onCheckedChange}
-                    />
+                  <DraggableItem id={col.field} findItem={onFind} moveItem={onMove}>
+                    <div className="flex flex-col">
+                      <DialCheckbox
+                        label={col.headerName}
+                        id={`${COLUMN_PANEL_PREFIX}${col.field}`}
+                        checked={!col.hide}
+                        onChange={onCheckedChange}
+                      />
+                      {col.groupName && <span className="pl-6 dial-tiny-text text-secondary">{col.groupName}</span>}
+                    </div>
                   </DraggableItem>
                 </li>
               );

@@ -10,6 +10,7 @@ const CHAT_ID = '7ab178e9-f72c-43b4-8b58-23caefc3594b';
 const row = (overrides: Partial<ConversationRow> = {}): ConversationRow => ({
   chat_id: CHAT_ID,
   project_id: 'data-team',
+  user_hash: 'db7327ba3decd351',
   turn_count: 13,
   total_tokens: 979030,
   total_price: '3.014346',
