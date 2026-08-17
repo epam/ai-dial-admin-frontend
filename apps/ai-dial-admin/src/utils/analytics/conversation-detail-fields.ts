@@ -11,7 +11,7 @@ import {
 } from '@/src/models/analytics/conversations-trace';
 import {
   formatCompactNumber,
-  formatDurationMs,
+  formatConversationDuration,
   formatSignificantCost,
   toMillis,
 } from '@/src/utils/analytics/conversation-formatting';
@@ -28,7 +28,9 @@ const formatValue = (raw: FieldValue, format?: ConversationFieldFormat): string 
     case ConversationFieldFormat.DateTime:
       return formatDateTimeToLocalString(raw as number | string);
     case ConversationFieldFormat.Duration:
-      return formatDurationMs(raw as number | string | null);
+      return formatConversationDuration(raw as number | string | null);
+    case ConversationFieldFormat.List:
+      return ((raw as string[] | null) ?? []).join(', ');
     default:
       return String(raw);
   }

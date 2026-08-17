@@ -37,6 +37,12 @@ describe('translateConversationSortModel', () => {
     expect(translateConversationSortModel(sortModel('not_a_field'))).toEqual([]);
   });
 
+  // A stored sort model can name it even though the column offers no affordance; the query language orders
+  // no array, so carrying it would produce an unstated order rather than the one asked for.
+  test('drops the array-backed models field', () => {
+    expect(translateConversationSortModel(sortModel(ConversationsField.Deployments))).toEqual([]);
+  });
+
   test('keeps multiple keys in the order the grid gave them', () => {
     const model = [
       { colId: ConversationsField.ProjectId, sort: 'asc' },
@@ -154,5 +160,15 @@ describe('translateConversationFilterModel', () => {
       ConversationsField.ProjectId,
       ConversationsField.TotalPrice,
     ]);
+  });
+
+  // The models column offers no filter affordance, so a model naming it can only arrive from stored grid
+  // state — and it must be dropped rather than carried into a query the language cannot express.
+  test('drops an entry naming the array-backed models field', () => {
+    const filters = translateConversationFilterModel(
+      model({ [ConversationsField.Deployments]: { type: GridFilterType.CONTAINS, filter: 'gpt-4.1' } }),
+    );
+
+    expect(filters).toEqual([]);
   });
 });

@@ -132,6 +132,8 @@ const CURATED_SELECT_FIELDS: ConversationsField[] = [
   ConversationsField.TotalPrice,
   ConversationsField.LastRequestTime,
   ConversationsField.FirstRequestTime,
+  ConversationsField.DurationMs,
+  ConversationsField.Deployments,
 ];
 
 const conversationSelect = (visibleFields: string[] = []): string[] => {

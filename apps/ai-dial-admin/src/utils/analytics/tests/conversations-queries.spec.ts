@@ -80,7 +80,25 @@ describe('buildConversationListQuery :: shape', () => {
       ConversationsField.TotalPrice,
       ConversationsField.LastRequestTime,
       ConversationsField.FirstRequestTime,
+      ConversationsField.DurationMs,
+      ConversationsField.Deployments,
     ]);
+  });
+
+  // The query language expresses no comparison over an array, so translating a predicate on one would send
+  // the backend something it rejects — better to refuse it here than to approximate it.
+  test('refuses a column filter naming an array field rather than approximating one', () => {
+    expect(() =>
+      buildList({
+        columnFilters: [
+          {
+            field: ConversationsField.Deployments,
+            operator: ConversationFilterOperator.Contains,
+            value: 'gpt-4.1',
+          },
+        ],
+      }),
+    ).toThrow(ConversationsField.Deployments);
   });
 
   test('projects a visible schema-driven field alongside the curated ones', () => {
