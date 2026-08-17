@@ -306,6 +306,22 @@ describe('Runs Summary :: metric scores', () => {
     });
   });
 
+  test('parseMetricScores sorts metric groups alphabetically regardless of row order', () => {
+    const parsed = parseMetricScores({
+      rows: [
+        { metric_name: 'ragas.faithfulness.score', metric_score_name: 'AVG', value: 0.5 },
+        { metric_name: 'aidial_rag_eval.generation.context_to_answer', metric_score_name: 'AVG', value: 0.8 },
+        { metric_name: 'deepeval.answer_relevancy.score', metric_score_name: 'AVG', value: 0.7 },
+      ],
+    });
+
+    expect(parsed.byStatistic.AVG.map((group) => group.name)).toEqual([
+      'aidial_rag_eval.generation',
+      'deepeval.answer_relevancy',
+      'ragas.faithfulness',
+    ]);
+  });
+
   test('parseMetricScores orders statistics by Metric Scores segmented-control order', () => {
     const parsed = parseMetricScores({
       rows: [
