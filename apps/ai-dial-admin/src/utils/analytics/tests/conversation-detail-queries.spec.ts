@@ -82,7 +82,7 @@ describe('buildConversationDetailQuery', () => {
     const names = selectedNames(buildConversationDetailQuery(CHAT_ID).select);
 
     expect(names).toEqual(Object.values(ConversationsField));
-    expect(names).toHaveLength(13);
+    expect(names).toHaveLength(14);
   });
 
   // The list query bounds last_request_time to the selected period; a detail view addressed by id must
