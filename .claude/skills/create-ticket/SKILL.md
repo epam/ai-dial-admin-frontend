@@ -302,7 +302,6 @@ Title:    <title>
 Type:     <Bug/Feature/Task> (reflected via labels)
 Labels:   <comma-separated list — includes `ops-request` if this is an infra change>
 Assignee: <@me (creator) / username>
-Project:  epam/68
 
 ──────────────────────────────────────────
 BODY:
@@ -335,92 +334,20 @@ gh issue create \
   --title "<title>" \
   --body "<body>" \
   --label "<label1>,<label2>,..." \
-  --project "epam/68" \
   --assignee "<@me|username>"
 ```
 
 Notes:
 - `--type` is not supported by `gh issue create`. Issue type (Bug/Feature/Task) is conveyed via labels (`bug`, `enhancement`, or task-specific labels) — there is no separate type flag.
 - There is no separate "Infra Task" type — infrastructure work is a Task with the `ops-request` label auto-applied and the infra-specific body structure (change type, target environment, task list).
-- `--assignee` is ALWAYS set (default `@me`). Never omit it — the skill guarantees every ticket has an owner.
+- `--assignee` is always set (default `@me`), so every ticket lands with an owner rather than in an
+  unassigned backlog.
 - The `<details-section>` placeholder in the templates below is the code-research findings from Step 2a. If research was NOT performed, omit the entire `### Details` heading and its content — do not leave an empty section.
 - The body must be formatted to match the GitHub issue template output format:
 
-**Bug body format:**
-```markdown
-### EPAM AI DIAL Admin version
-<version>
-
-### How to reproduce
-<steps>
-
-### Actual result
-<actual>
-
-### Expected result
-<expected>
-
-### Additional information
-<info or "_No response_">
-
-### Details
-<details-section>
-
-### Confidential information
-- [X] I confirm that do not share any confidential information
-```
-
-**Feature body format:**
-```markdown
-### Description
-<description>
-
-### Related issues
-<issues or "_No response_">
-
-### Details
-<details-section>
-
-### Confidential information
-- [X] I confirm that do not share any confidential information
-```
-
-**Task body format (general):**
-```markdown
-### Description
-<description>
-
-### Acceptance criteria
-<checklist items or "_No response_">
-
-### Related issues
-<issues or "_No response_">
-
-### Details
-<details-section>
-
-### Confidential information
-- [X] I confirm that do not share any confidential information
-```
-
-**Task body format (infra variant — used when `ops-request` label is applied):**
-```markdown
-### Type of change
-<change type>
-
-### Target environment
-<environment>
-
-### Task list
-<checklist items>
-
-### Context / reason
-<context or "_No response_">
-
-### Details
-<details-section>
-
-```
+**Body formats:** `references/issue-bodies.md` holds the exact per-type body structure (Bug,
+Feature, Task, infra Task). Read it before composing the body — the headings must match the
+repository's issue templates verbatim.
 
 After successful creation, display the issue URL returned by `gh`.
 
@@ -428,35 +355,17 @@ After successful creation, display the issue URL returned by `gh`.
 
 ## Label Reference
 
-Exact label names as configured in `epam/ai-dial-admin-frontend` (verified via `gh label list`).
-When in doubt, run `gh label list --limit 300` to confirm before applying — creation fails hard on an
-unknown label.
+`references/labels.md` holds the verified label table for this repo. `gh issue create` fails hard on
+an unknown label, so confirm against it — or `gh label list --limit 300` — before applying.
 
-| Label | Applied When |
-|---|---|
-| `bug` | Type = Bug |
-| `enhancement` | Type = Feature |
-| `to-be-documented` | Type = Feature (always) |
-| `ops-request` | Type = Task AND infra signals detected (keywords: env var, secret, config change, deployment, prod/uat, `LOG_LEVEL`, etc.) OR user invoked `/create-ticket infra: …` OR user confirms "Yes, infra" in Step 3. (Infra/ops work; this repo has no dedicated infra label, so `ops-request` is the equivalent.) |
-| `P1 – Critical` | User selects Critical priority |
-| `P2 – High` | User selects High priority |
-| `P3 – Medium` | User selects Medium priority |
-| `P4 – Low` | User selects Low priority |
-| `Severity-Low` | Bug — user selects Low |
-| `Severity-Minor` | Bug — user selects Minor |
-| `Severity-Major` | Bug — user selects Major |
-| `Severity-Critical` | Bug — user selects Critical |
-| `Design Required` | Auto or asked — see Step 5 |
-| `analytics-2.0` / `eval` / `cli` / `ui-kit` | Optional area label — apply when the issue clearly belongs to that area (see Step 5) |
-
-Note: this repo has **no** `SIA-*` labels — capture security impact in the body, not a label (see Step 5).
 
 ## Guardrails
 
-- NEVER create an issue without showing a preview and getting explicit confirmation
-- NEVER auto-assign a label unless you are 100% certain from the user's input
+- Creating an issue is outward-facing and awkward to undo: show the preview and get explicit
+  confirmation first, every time.
+- Only apply a label you are certain of. `gh issue create` fails outright on a label this repo
+  doesn't have, and a wrong-but-valid label quietly misroutes the ticket.
 - When uncertain about ANY label, ask directly — don't guess
 - Always use the exact label names as listed in the Label Reference table
-- Always add `--project "epam/68"`
 - The confidential information checkbox is always pre-checked in the body
 - If `gh` CLI fails, show the error and suggest the user check their auth (`gh auth status`)

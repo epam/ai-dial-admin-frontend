@@ -1,31 +1,39 @@
 'use client';
 
-import { DialLoader } from '@epam/ai-dial-ui-kit';
-import { FC, useMemo } from 'react';
+import { DialNoDataContent } from '@epam/ai-dial-ui-kit';
+import { FC, useCallback, useState } from 'react';
 
 import ConversationsProvenanceLine from '@/src/components/Analytics/ConversationsTrace/Header/ConversationsProvenanceLine';
 import ConversationsSummary from '@/src/components/Analytics/ConversationsTrace/Header/ConversationsSummary';
 import ConversationsList from '@/src/components/Analytics/ConversationsTrace/List/ConversationsList';
 import ConversationsToolbar from '@/src/components/Analytics/ConversationsTrace/Toolbar/ConversationsToolbar';
 import { useConversations } from '@/src/components/Analytics/ConversationsTrace/use-conversations';
-import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
+import LoadingOverlay from '@/src/components/Common/LoadingOverlay/LoadingOverlay';
+import { BasicI18nKey, ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { ConversationRow } from '@/src/models/analytics/conversations-trace';
-import { summariseConversations } from '@/src/utils/analytics/conversation-rows';
-
-const LOADER_SIZE = 40;
+import { ConversationTotals } from '@/src/models/analytics/conversations-trace';
+import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 
 interface Props {
-  initialConversations: ConversationRow[];
+  initialTotals: ConversationTotals | null;
   hasInitialLoadError?: boolean;
+  schemaFields?: AnalyticsEntityField[] | null;
+  hasSchemaError?: boolean;
 }
 
-const ConversationsTraceView: FC<Props> = ({ initialConversations, hasInitialLoadError }) => {
+const ConversationsTraceView: FC<Props> = ({ initialTotals, hasInitialLoadError, schemaFields, hasSchemaError }) => {
   const t = useI18n();
+  const [isColumnsPanelOpen, setIsColumnsPanelOpen] = useState(false);
   const {
-    conversations,
+    onGridReady,
+    datasource,
+    totals,
+    summary,
+    loadedCount,
+    isEmptyResult,
+    isFirstPageLoading,
+    isFeedbackCapped,
     hasLoadError,
-    isLoading,
     search,
     onSearchChange,
     timePeriod,
@@ -34,9 +42,17 @@ const ConversationsTraceView: FC<Props> = ({ initialConversations, hasInitialLoa
     onTimeRangeChange,
     feedback,
     onFeedbackChange,
-  } = useConversations(initialConversations, hasInitialLoadError);
+  } = useConversations(initialTotals, hasInitialLoadError, schemaFields);
 
-  const summary = useMemo(() => summariseConversations(conversations), [conversations]);
+  const onToggleColumnsPanel = useCallback(() => setIsColumnsPanelOpen((isOpen) => !isOpen), []);
+
+  const emptyStateTitle = hasLoadError
+    ? ConversationsTraceI18nKey.ConversationsLoadFailed
+    : ConversationsTraceI18nKey.NoConversations;
+
+  // The grid stays mounted whatever the state: under the infinite row model its datasource is attached
+  // through the grid api, so unmounting it would strand the next request.
+  const isEmptyStateVisible = !isFirstPageLoading && (isEmptyResult || hasLoadError);
 
   return (
     <div className="flex flex-col size-full bg-layer-2 rounded py-5 px-6 gap-5">
@@ -45,7 +61,7 @@ const ConversationsTraceView: FC<Props> = ({ initialConversations, hasInitialLoa
           <h1 className="text-primary">{t(ConversationsTraceI18nKey.Title)}</h1>
           <ConversationsProvenanceLine />
         </div>
-        <ConversationsSummary summary={summary} periodLabel={timePeriod} />
+        <ConversationsSummary totals={totals} summary={summary} loadedCount={loadedCount} periodLabel={timePeriod} />
       </div>
       <ConversationsToolbar
         search={search}
@@ -56,14 +72,23 @@ const ConversationsTraceView: FC<Props> = ({ initialConversations, hasInitialLoa
         onTimeRangeChange={onTimeRangeChange}
         feedback={feedback}
         onFeedbackChange={onFeedbackChange}
+        isFeedbackCapped={isFeedbackCapped}
+        hasSchemaError={hasSchemaError}
+        onToggleColumnsPanel={onToggleColumnsPanel}
       />
-      <div className="flex flex-1 rounded overflow-auto min-h-0 border border-primary">
-        {isLoading ? (
-          <div className="flex size-full items-center justify-center">
-            <DialLoader size={LOADER_SIZE} />
+      <div className="relative flex flex-1 rounded overflow-auto min-h-0 border border-primary">
+        <ConversationsList
+          datasource={datasource}
+          onGridReady={onGridReady}
+          schemaFields={schemaFields}
+          isColumnsPanelOpen={isColumnsPanelOpen}
+          onToggleColumnsPanel={onToggleColumnsPanel}
+        />
+        {isFirstPageLoading && <LoadingOverlay label={t(BasicI18nKey.Loading)} />}
+        {isEmptyStateVisible && (
+          <div className="absolute inset-0 flex items-center justify-center bg-layer-2">
+            <DialNoDataContent title={t(emptyStateTitle)} />
           </div>
-        ) : (
-          <ConversationsList conversations={conversations} hasLoadError={hasLoadError} />
         )}
       </div>
     </div>

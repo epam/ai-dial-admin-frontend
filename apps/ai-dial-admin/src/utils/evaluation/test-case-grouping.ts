@@ -36,17 +36,25 @@ export const readGroupKey = (row: TestCaseRow): string | null => {
 
 export const expandTestCasesToRows = <T extends CollapsibleTestCase = CollapsibleTestCase>(
   testCases?: T[] | null,
-): TestCaseRow[] =>
-  (testCases ?? []).flatMap(({ multiTurnData, data, ...rest }) => {
+  schema?: TestCaseSchema[] | null,
+): TestCaseRow[] => {
+  // No schema means it has not loaded yet, so both maps merge unfiltered. An empty schema is a loaded
+  // one that scopes nothing per turn, and does filter.
+  const perTurnFields = schema ? getPerTurnFieldNames(schema) : void 0;
+
+  return (testCases ?? []).flatMap(({ multiTurnData, data, ...rest }) => {
     if (!multiTurnData?.length) {
       return [{ ...rest, data: data ?? {}, ...(data ?? {}) }];
     }
 
     return multiTurnData.map((turn, index) => {
-      const merged = { ...(data ?? {}), ...turn };
+      const merged = perTurnFields
+        ? { ...selectSharedFields(data, perTurnFields), ...selectPerTurnFields(turn, perTurnFields) }
+        : { ...(data ?? {}), ...turn };
       return { ...rest, _turnIndex: index, data: merged, ...merged };
     });
   });
+};
 
 export const collapseRowsToCases = <T extends CollapsibleTestCase>(
   rows: TestCaseRow[],
@@ -156,11 +164,31 @@ export const reorderTurns = (turns: TestCaseRow[], from: number, to: number): Te
   return renumberTurns(next);
 };
 
+const getWarningKey = ({ code, path, fieldName, message }: ValidationWarning): string =>
+  JSON.stringify([code, path, fieldName, message]);
+
+// Every turn row of a case carries a copy of the same case-level warnings, so concatenating them
+// would repeat each warning once per turn.
+const dedupeWarnings = (warnings: ValidationWarning[]): ValidationWarning[] => {
+  const seen = new Set<string>();
+
+  return warnings.filter((warning) => {
+    const key = getWarningKey(warning);
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+};
+
 export const aggregateValidity = (
   turns: TestCaseRow[],
 ): { valid: boolean; validationWarnings: ValidationWarning[] } => ({
   valid: turns.every((turn) => turn.valid !== false),
-  validationWarnings: turns.flatMap((turn) => (turn.validationWarnings as ValidationWarning[] | undefined) ?? []),
+  validationWarnings: dedupeWarnings(
+    turns.flatMap((turn) => (turn.validationWarnings as ValidationWarning[] | undefined) ?? []),
+  ),
 });
 
 const toSingleRow = (group: TestCaseGroup): GroupedGridRow => {

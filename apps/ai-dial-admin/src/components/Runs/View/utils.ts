@@ -7,6 +7,7 @@ import {
   EXTRACTED_COLUMN_MIN_WIDTH,
   fixedWidthColDef,
   HTTP_COLUMN_WIDTH,
+  lockedWidthColDef,
   METRIC_COLUMN_WIDTH,
   NO_FILTER_COL_DEF,
   NUMBER_FILTER_COL_DEF,
@@ -146,7 +147,7 @@ const executionColumns: ColDef[] = [
     field: 'runIndex',
     headerName: '# Run number',
     colId: 'runIndex',
-    ...fixedWidthColDef(RUN_INDEX_COLUMN_WIDTH),
+    ...lockedWidthColDef(RUN_INDEX_COLUMN_WIDTH),
     ...NO_FILTER_COL_DEF,
     valueGetter: (params) => (params.data?.runIndex != null ? params.data.runIndex + 1 : null),
   },
@@ -154,7 +155,7 @@ const executionColumns: ColDef[] = [
     field: 'requestIndex',
     headerName: 'Request',
     colId: 'requestIndex',
-    ...fixedWidthColDef(REQUEST_INDEX_COLUMN_WIDTH),
+    ...lockedWidthColDef(REQUEST_INDEX_COLUMN_WIDTH),
     ...NO_FILTER_COL_DEF,
     valueGetter: (params) => (params.data?.requestIndex != null ? params.data.requestIndex + 1 : null),
   },
@@ -162,7 +163,7 @@ const executionColumns: ColDef[] = [
     field: 'totalRequests',
     headerName: 'Total requests',
     colId: 'totalRequests',
-    ...fixedWidthColDef(TOTAL_REQUESTS_COLUMN_WIDTH),
+    ...lockedWidthColDef(TOTAL_REQUESTS_COLUMN_WIDTH),
     ...NO_FILTER_COL_DEF,
     valueGetter: (params) => params.data?.totalRequests ?? null,
   },
@@ -170,7 +171,7 @@ const executionColumns: ColDef[] = [
     field: 'turnIndex',
     headerName: 'Turn',
     colId: 'turnIndex',
-    ...fixedWidthColDef(TURN_INDEX_COLUMN_WIDTH),
+    ...lockedWidthColDef(TURN_INDEX_COLUMN_WIDTH),
     ...NO_FILTER_COL_DEF,
     valueGetter: (params) => (params.data?.turnIndex != null ? params.data.turnIndex + 1 : null),
   },
@@ -178,7 +179,7 @@ const executionColumns: ColDef[] = [
     field: 'totalTurns',
     headerName: 'Total turns',
     colId: 'totalTurns',
-    ...fixedWidthColDef(TOTAL_TURNS_COLUMN_WIDTH),
+    ...lockedWidthColDef(TOTAL_TURNS_COLUMN_WIDTH),
     ...NO_FILTER_COL_DEF,
     valueGetter: (params) => params.data?.totalTurns ?? null,
   },
@@ -186,7 +187,7 @@ const executionColumns: ColDef[] = [
     field: 'responseStatusCode',
     headerName: 'HTTP',
     colId: 'http',
-    ...fixedWidthColDef(HTTP_COLUMN_WIDTH),
+    ...lockedWidthColDef(HTTP_COLUMN_WIDTH),
     ...NO_FILTER_COL_DEF,
     cellClass: (params) => getTestCaseStatusClass(params.data?.responseStatusCode),
   },
@@ -194,7 +195,7 @@ const executionColumns: ColDef[] = [
     field: 'durationMs',
     headerName: 'Duration',
     colId: 'duration',
-    ...fixedWidthColDef(DURATION_COLUMN_WIDTH),
+    ...lockedWidthColDef(DURATION_COLUMN_WIDTH),
     ...NO_FILTER_COL_DEF,
     valueGetter: (params) => {
       const duration = params.data?.executionInfo?.durationMs ?? params.data?.execDurationMs;
@@ -214,8 +215,7 @@ const staticColumns = [
         headerName: ' ',
         context: { panelName: 'Status' },
         colId: 'status',
-        ...fixedWidthColDef(STATUS_COLUMN_WIDTH),
-        maxWidth: STATUS_COLUMN_WIDTH,
+        ...lockedWidthColDef(STATUS_COLUMN_WIDTH),
         ...NO_FILTER_COL_DEF,
         cellRenderer: ExecutionStatusCellRenderer,
       },
@@ -290,7 +290,8 @@ const sortCompareRows = (rows: CompareAnalyticsRow[]): CompareAnalyticsRow[] =>
   [...rows].sort((a, b) => {
     const nameCompare = (a.testCaseName ?? '').localeCompare(b.testCaseName ?? '');
     if (nameCompare !== 0) return nameCompare;
-    return a.runIndex - b.runIndex;
+    if (a.runIndex !== b.runIndex) return a.runIndex - b.runIndex;
+    return (a.turnIndex ?? 0) - (b.turnIndex ?? 0);
   });
 
 const indexRowsByKey = (

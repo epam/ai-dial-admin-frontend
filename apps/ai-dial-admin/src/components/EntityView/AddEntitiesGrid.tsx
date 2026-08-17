@@ -1,6 +1,6 @@
 import { DialFormPopup, PopupSize } from '@epam/ai-dial-ui-kit';
 import { ColDef, GridOptions, SelectionChangedEvent } from 'ag-grid-community';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { MULTI_ROW_SELECTION } from '@/src/constants/ag-grid';
@@ -30,7 +30,9 @@ const AddEntitiesGrid = <T extends object>({
 }: Props<T>) => {
   const t = useI18n();
   const [selectedEntities, setSelectedEntities] = useState<T[]>([]);
-  const columns = withSourceColumn(columnDefs, entities);
+  // A fresh column array on a selection-only re-render re-pushes `rowData` through ag-grid's grid
+  // options, which rebuilds every row node and clears the selection that just happened.
+  const columns = useMemo(() => withSourceColumn(columnDefs, entities), [columnDefs, entities]);
 
   const onSelectionChanged = (event: SelectionChangedEvent) => {
     const selectedRows = event.api.getSelectedRows();

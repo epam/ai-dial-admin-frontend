@@ -33,3 +33,10 @@ export const fixedWidthColDef = (width: number): Pick<ColDef, 'width' | 'minWidt
   width,
   minWidth: width,
 });
+
+export const lockedWidthColDef = (width: number): Pick<ColDef, 'width' | 'minWidth' | 'maxWidth' | 'flex'> => ({
+  width,
+  minWidth: width,
+  maxWidth: width,
+  flex: 0,
+});

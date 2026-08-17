@@ -1,17 +1,14 @@
 import { describe, expect, test } from 'vitest';
 
+import { FEEDBACK_CANDIDATE_LIMIT } from '@/src/constants/analytics/conversations-trace';
 import {
-  CONVERSATION_PAGE_SIZE,
-  CONVERSATION_SUMMARY_ENRICHMENT,
-  FEEDBACK_CANDIDATE_LIMIT,
-} from '@/src/constants/analytics/conversations-trace';
-import {
-  ConversationField,
+  ConversationFilterOperator,
+  ConversationTotalsField,
+  ConversationsField,
   FeedbackField,
   FeedbackFilter,
   RateAnalyticsField,
   RatingDirection,
-  UsageLogField,
 } from '@/src/models/analytics/conversations-trace';
 import {
   QueryExprType,
@@ -25,6 +22,7 @@ import {
   QueryOutputColumn,
   QueryPredicate,
   QuerySortDirection,
+  QuerySortNulls,
   QueryValueExpr,
   QueryValueType,
 } from '@/src/models/analytics/query';
@@ -32,6 +30,7 @@ import { TimeRange } from '@/src/models/time-range';
 import {
   buildConversationListQuery,
   buildConversationRatingsQuery,
+  buildConversationTotalsQuery,
   buildRatedConversationIdsQuery,
 } from '@/src/utils/analytics/conversations-queries';
 
@@ -43,207 +42,238 @@ const RANGE: TimeRange = {
 const START_MS = '1784592000000';
 const END_MS = '1785196800000';
 
+const PAGE = { offset: 0, limit: 100 };
+
 const groupArgs = (filter: unknown): QueryPredicate[] => (filter as QueryGroup).args as QueryPredicate[];
 
 const fieldName = (node: QueryPredicate): string | undefined => (node.args?.[0] as QueryFieldExpr)?.name;
 
+const buildList = (overrides: Partial<Parameters<typeof buildConversationListQuery>[0]> = {}) =>
+  buildConversationListQuery({ range: RANGE, ...PAGE, ...overrides });
+
 describe('buildConversationListQuery :: shape', () => {
-  const build = () => buildConversationListQuery({ range: RANGE });
+  test('reads the materialized conversations entity in row mode', () => {
+    const query = buildList();
 
-  const aliased = (alias: string): QueryOutputColumn | undefined => build().select?.find((entry) => entry.as === alias);
-
-  test('is an aggregate query over dial_usage_log grouped by chat_id', () => {
-    const query = build();
-
-    expect(query.entity).toBe('dial_usage_log');
-    expect(query.mode).toBe(QueryMode.Aggregate);
-    expect(query.group_by).toEqual([UsageLogField.ChatId]);
+    expect(query.entity).toBe('conversations');
+    expect(query.mode).toBe(QueryMode.Row);
   });
 
-  test('projects the grouped chat_id as a plain unaliased column', () => {
-    const grouped = build().select?.find((entry) => entry.expr.type === QueryExprType.Field);
+  // The rollup is stored, so nothing is recomputed per request.
+  test('never groups and never aggregates', () => {
+    const query = buildList();
 
-    expect(grouped?.expr).toEqual({ type: QueryExprType.Field, name: UsageLogField.ChatId });
-    expect(grouped?.as).toBeUndefined();
+    expect(query.group_by).toBeUndefined();
+    expect(query.having).toBeUndefined();
+    expect(JSON.stringify(query.select)).not.toContain(QueryExprType.Fn);
   });
 
-  test.each([
-    [ConversationField.Turns, 'count', UsageLogField.TraceId],
-    [ConversationField.Tokens, 'sum', UsageLogField.TotalTokens],
-    [ConversationField.Cost, 'sum', UsageLogField.TotalPrice],
-    [ConversationField.LastActivity, 'max', UsageLogField.RequestTime],
-    [ConversationField.FirstActivity, 'min', UsageLogField.RequestTime],
-    // deployment is not in group_by, so it needs an aggregate; a conversation spanning models is reported by count.
-    [ConversationField.Model, 'min', UsageLogField.Deployment],
-    [ConversationField.ModelCount, 'count', UsageLogField.Deployment],
-    [ConversationField.Project, 'min', UsageLogField.ProjectId],
-  ])('%s aggregates %s over %s', (alias, fnName, sourceField) => {
-    const expr = aliased(alias)?.expr as QueryFnExpr;
+  test('selects exactly the fields the grid renders, by their entity names', () => {
+    const names = (buildList().select as QueryOutputColumn[]).map((column) => (column.expr as QueryFieldExpr).name);
 
-    expect(expr.name).toBe(fnName);
-    expect(expr.args).toEqual([{ type: QueryExprType.Field, name: sourceField }]);
-  });
-
-  test('carries exactly the aliases the grid displays, in order', () => {
-    const aliases = build()
-      .select?.map((entry) => entry.as)
-      .filter(Boolean);
-
-    expect(aliases).toEqual([
-      ConversationField.Turns,
-      ConversationField.Tokens,
-      ConversationField.Cost,
-      ConversationField.LastActivity,
-      ConversationField.FirstActivity,
-      ConversationField.Model,
-      ConversationField.ModelCount,
-      ConversationField.Project,
+    expect(names).toEqual([
+      ConversationsField.ChatId,
+      ConversationsField.ProjectId,
+      ConversationsField.UserHash,
+      ConversationsField.TurnCount,
+      ConversationsField.TotalTokens,
+      ConversationsField.TotalPrice,
+      ConversationsField.LastRequestTime,
+      ConversationsField.FirstRequestTime,
     ]);
   });
 
-  // One turn can span several hop rows, and one conversation several deployments.
-  test('only the counting aggregates set distinct', () => {
-    const distinctAliases = build()
-      .select?.filter((entry) => (entry.expr as QueryFnExpr).distinct)
-      .map((entry) => entry.as);
+  test('projects a visible schema-driven field alongside the curated ones', () => {
+    const names = (buildList({ visibleFields: ['success_count'] }).select as QueryOutputColumn[]).map(
+      (column) => (column.expr as QueryFieldExpr).name,
+    );
 
-    expect(distinctAliases).toEqual([ConversationField.Turns, ConversationField.ModelCount]);
+    expect(names).toContain('success_count');
+    expect(names).toContain(ConversationsField.ChatId);
   });
 
-  test('no alias collides with a source column inside its own expression', () => {
-    build().select?.forEach((entry) => {
-      if (!entry.as) return;
-      const argNames = ((entry.expr as QueryFnExpr).args ?? []).map((arg) =>
-        arg.type === QueryExprType.Field ? arg.name : null,
-      );
-      expect(argNames).not.toContain(entry.as);
-    });
+  test('omits a field whose column is hidden', () => {
+    const names = (buildList().select as QueryOutputColumn[]).map((column) => (column.expr as QueryFieldExpr).name);
+
+    expect(names).not.toContain('success_count');
+  });
+
+  test('names a curated field once even when it is reported visible', () => {
+    const names = (buildList({ visibleFields: [ConversationsField.ChatId] }).select as QueryOutputColumn[]).map(
+      (column) => (column.expr as QueryFieldExpr).name,
+    );
+
+    expect(names.filter((name) => name === ConversationsField.ChatId)).toHaveLength(1);
+  });
+
+  test('aliases nothing — a stored column needs no rename', () => {
+    (buildList().select as QueryOutputColumn[]).forEach((column) => expect(column.as).toBeUndefined());
+  });
+
+  // dial_usage_log columns belong to a different entity and would be rejected as unknown fields.
+  test('references no column of the usage log or of an enrichment', () => {
+    const serialized = JSON.stringify(buildList({ search: 'acme' }));
+
+    ['request_time', 'trace_id', 'deployment', 'request_body', 'conversation_summary', 'title', 'snippet'].forEach(
+      // Matched as a whole field name: `last_request_time` legitimately contains `request_time`.
+      (column) => expect(serialized).not.toContain(`"${column}"`),
+    );
   });
 });
 
 describe('buildConversationListQuery :: filter', () => {
-  const filterArgs = () => groupArgs(buildConversationListQuery({ range: RANGE }).filter);
+  test('bounds last activity, not the underlying request time', () => {
+    const args = groupArgs(buildList().filter);
+    const bounds = args.filter((node) => [QueryOperator.Ge, QueryOperator.Le].includes(node.op));
 
-  const findPredicate = (op: QueryOperator, name: string): QueryPredicate | undefined =>
-    filterArgs().find((node) => node.op === op && fieldName(node) === name);
-
-  test('bounds request_time with epoch-millisecond timestamp literals, not ISO strings', () => {
-    const lower = findPredicate(QueryOperator.Ge, UsageLogField.RequestTime);
-    const upper = findPredicate(QueryOperator.Le, UsageLogField.RequestTime);
-
-    expect(lower?.args[1]).toMatchObject({ value_type: QueryValueType.Timestamp, value: START_MS });
-    expect(upper?.args[1]).toMatchObject({ value_type: QueryValueType.Timestamp, value: END_MS });
+    expect(bounds.map(fieldName)).toEqual([ConversationsField.LastRequestTime, ConversationsField.LastRequestTime]);
+    expect(bounds.map((node) => (node.args[1] as QueryValueExpr).value)).toEqual([START_MS, END_MS]);
+    expect(bounds.map((node) => (node.args[1] as QueryValueExpr).value_type)).toEqual([
+      QueryValueType.Timestamp,
+      QueryValueType.Timestamp,
+    ]);
   });
 
-  // The column is non-nullable and defaults to '', so `eq null` would match nothing — hence a string compare
-  // and no null literal anywhere in the filter.
-  test('excludes empty conversation ids by string comparison rather than against null', () => {
-    expect(findPredicate(QueryOperator.Ne, UsageLogField.ChatId)?.args[1]).toEqual({
-      type: QueryExprType.Value,
-      value_type: QueryValueType.String,
-      value: '',
-    });
-    expect(
-      filterArgs().filter((node) =>
-        (node.args ?? []).some((arg) => arg.type === QueryExprType.Value && arg.value_type === QueryValueType.Null),
-      ),
-    ).toEqual([]);
+  test('is a flat AND carrying only the bounds when nothing else is filtered', () => {
+    expect((buildList().filter as QueryGroup).op).toBe(QueryLogicalOperator.And);
+    expect(groupArgs(buildList().filter)).toHaveLength(2);
   });
 
-  test('the filter is a single flat AND group of three predicates', () => {
-    expect((buildConversationListQuery({ range: RANGE }).filter as QueryGroup).op).toBe(QueryLogicalOperator.And);
-    expect(filterArgs()).toHaveLength(3);
+  // The pipeline's own membership predicate excludes empty ids, so every row already has one.
+  test('emits no empty-id guard', () => {
+    const args = groupArgs(buildList().filter);
+
+    expect(args.some((node) => node.op === QueryOperator.Ne)).toBe(false);
   });
 });
 
 describe('buildConversationListQuery :: search', () => {
-  const searchFilterArgs = (search: string) => groupArgs(buildConversationListQuery({ range: RANGE, search }).filter);
+  const searchGroup = (search: string): QueryGroup =>
+    groupArgs(buildList({ search }).filter).find(
+      (node) => (node as unknown as QueryGroup).op === QueryLogicalOperator.Or,
+    ) as unknown as QueryGroup;
 
-  const searchGroup = (search: string): QueryGroup | undefined =>
-    (searchFilterArgs(search) as unknown as QueryGroup[]).find((node) => node.op === QueryLogicalOperator.Or);
+  test('a term becomes one OR of two contains predicates on the id and the project', () => {
+    const group = searchGroup('acme');
+    const predicates = group.args as QueryPredicate[];
 
-  const searchFields = (search: string): (string | undefined)[] =>
-    (searchGroup(search)?.args as QueryPredicate[]).map(fieldName);
-
-  test.each(['', '   ', '\t\n'])('a blank term (%j) adds no predicate rather than matching everything', (term) => {
-    expect(searchFilterArgs(term)).toHaveLength(3);
-    expect(searchGroup(term)).toBeUndefined();
+    expect(predicates).toHaveLength(2);
+    expect(predicates.map((node) => node.op)).toEqual([QueryOperator.Ico, QueryOperator.Ico]);
+    expect(predicates.map(fieldName)).toEqual([ConversationsField.ChatId, ConversationsField.ProjectId]);
+    expect(predicates.map((node) => (node.args[1] as QueryValueExpr).value)).toEqual(['acme', 'acme']);
   });
 
-  test('a term adds one OR group of case-insensitive contains alongside the existing predicates', () => {
-    expect(searchFilterArgs('acme')).toHaveLength(4);
-    expect(searchGroup('acme')?.args).toEqual([
+  test('search does not reach the user hash', () => {
+    const predicates = searchGroup('acme').args as QueryPredicate[];
+
+    expect(predicates.map(fieldName)).not.toContain(ConversationsField.UserHash);
+  });
+
+  test('the term is trimmed', () => {
+    const predicates = searchGroup('  acme  ').args as QueryPredicate[];
+
+    expect(predicates.map((node) => (node.args[1] as QueryValueExpr).value)).toEqual(['acme', 'acme']);
+  });
+
+  // An ico against '' matches every row at the cost of a scan, so a blank term must add nothing at all.
+  test.each(['', '   '])('a blank term (%s) adds no predicate', (search) => {
+    expect(groupArgs(buildList({ search }).filter)).toHaveLength(2);
+    expect(searchGroup(search)).toBeUndefined();
+  });
+
+  test('search leaves the rest of the query untouched', () => {
+    const withSearch = buildList({ search: 'acme' });
+    const without = buildList();
+
+    expect(withSearch.select).toEqual(without.select);
+    expect(withSearch.sort).toEqual(without.sort);
+    expect(withSearch.page).toEqual(without.page);
+    expect(withSearch.having).toBeUndefined();
+    expect(groupArgs(withSearch.filter).slice(0, 2)).toEqual(groupArgs(without.filter));
+  });
+});
+
+describe('buildConversationListQuery :: column filters', () => {
+  const predicateFor = (columnFilters: Parameters<typeof buildList>[0]['columnFilters']) =>
+    groupArgs(buildList({ columnFilters }).filter).slice(2);
+
+  test.each([
+    [ConversationFilterOperator.Contains, QueryOperator.Ico],
+    [ConversationFilterOperator.NotContains, QueryOperator.Inc],
+    [ConversationFilterOperator.Equals, QueryOperator.Eq],
+    [ConversationFilterOperator.NotEquals, QueryOperator.Ne],
+  ])('a %s filter conjoins a %s predicate', (operator, expected) => {
+    const [node] = predicateFor([{ field: ConversationsField.ProjectId, operator, value: 'acme' }]);
+
+    expect(node.op).toBe(expected);
+    expect(fieldName(node)).toBe(ConversationsField.ProjectId);
+    expect((node.args[1] as QueryValueExpr).value).toBe('acme');
+  });
+
+  test.each([
+    [ConversationFilterOperator.GreaterThan, QueryOperator.Gt],
+    [ConversationFilterOperator.GreaterThanOrEqual, QueryOperator.Ge],
+    [ConversationFilterOperator.LessThan, QueryOperator.Lt],
+    [ConversationFilterOperator.LessThanOrEqual, QueryOperator.Le],
+  ])('a %s filter conjoins a %s predicate', (operator, expected) => {
+    const [node] = predicateFor([{ field: ConversationsField.TurnCount, operator, value: '5' }]);
+
+    expect(node.op).toBe(expected);
+  });
+
+  test('a range becomes a ge and an le on the same field', () => {
+    const [group] = predicateFor([
       {
-        op: QueryOperator.Ico,
-        args: [
-          { type: QueryExprType.Field, name: UsageLogField.ChatId },
-          { type: QueryExprType.Value, value_type: QueryValueType.String, value: 'acme' },
-        ],
-      },
-      {
-        op: QueryOperator.Ico,
-        args: [
-          { type: QueryExprType.Field, name: UsageLogField.ProjectId },
-          { type: QueryExprType.Value, value_type: QueryValueType.String, value: 'acme' },
-        ],
+        field: ConversationsField.TotalTokens,
+        operator: ConversationFilterOperator.Range,
+        value: '10',
+        valueTo: '20',
       },
     ]);
+    const bounds = (group as unknown as QueryGroup).args as QueryPredicate[];
+
+    expect(bounds.map((node) => node.op)).toEqual([QueryOperator.Ge, QueryOperator.Le]);
+    expect(bounds.map(fieldName)).toEqual([ConversationsField.TotalTokens, ConversationsField.TotalTokens]);
+    expect(bounds.map((node) => (node.args[1] as QueryValueExpr).value)).toEqual(['10', '20']);
   });
 
-  // Select aliases are absent from the field bindings a filter resolves against, so matching `project`
-  // would be an unknown-field 400.
-  test('matches the base project_id column, never the project alias', () => {
-    expect(searchFields('acme')).not.toContain(ConversationField.Project);
-    expect(searchFields('acme')).toContain(UsageLogField.ProjectId);
+  test.each([
+    [ConversationsField.ChatId, QueryValueType.String],
+    [ConversationsField.TurnCount, QueryValueType.Integer],
+    [ConversationsField.TotalPrice, QueryValueType.Decimal],
+  ])('a filter on %s carries the %s value type', (targetField, valueType) => {
+    const [node] = predicateFor([
+      { field: targetField, operator: ConversationFilterOperator.Equals, value: '0.090000000001' },
+    ]);
+
+    expect((node.args[1] as QueryValueExpr).value_type).toBe(valueType);
   });
 
-  test('trims the term rather than searching for the whitespace', () => {
-    expect(searchGroup('  acme  ')).toEqual(searchGroup('acme'));
+  test('no column filter leaves the filter as the bounds alone', () => {
+    expect(groupArgs(buildList({ columnFilters: [] }).filter)).toHaveLength(2);
   });
 
-  // The translator supplies the %…% and escapes \ % _ server-side; wrapping here would double-escape.
-  test.each(['%', '_', 'a%b', '50%_off'])('passes %s through unescaped and unwrapped', (term) => {
-    const values = (searchGroup(term)?.args as QueryPredicate[]).map((node) => (node.args[1] as QueryValueExpr).value);
+  test('column filters compose with the search term and the time bounds', () => {
+    const args = groupArgs(
+      buildList({
+        search: 'acme',
+        columnFilters: [
+          { field: ConversationsField.TurnCount, operator: ConversationFilterOperator.GreaterThan, value: '2' },
+        ],
+      }).filter,
+    );
 
-    expect(values).toEqual([term, term]);
-  });
-
-  // The enrichment is not registered, so its columns cannot be referenced — an unknown field is a 400. One flag
-  // turns on both selecting and searching them, so a title can never be displayed without being searchable.
-  test('neither selects nor searches the enrichment columns while the enrichment is unavailable', () => {
-    const query = buildConversationListQuery({ range: RANGE, search: 'acme' });
-
-    expect(searchFields('acme')).toEqual([UsageLogField.ChatId, UsageLogField.ProjectId]);
-    expect(query.select?.some((entry) => entry.as === ConversationField.Title)).toBe(false);
-    expect(JSON.stringify(query)).not.toContain(CONVERSATION_SUMMARY_ENRICHMENT);
-  });
-
-  test('search never lands in having, which would forfeit partition pruning', () => {
-    expect(buildConversationListQuery({ range: RANGE, search: 'acme' }).having).toBeUndefined();
-  });
-
-  test('search does not disturb the other predicates, the select, the sort or the page', () => {
-    const withSearch = buildConversationListQuery({ range: RANGE, search: 'acme' });
-    const withoutSearch = buildConversationListQuery({ range: RANGE });
-
-    expect(withSearch.sort).toEqual(withoutSearch.sort);
-    expect(withSearch.page).toEqual(withoutSearch.page);
-    expect(withSearch.select).toEqual(withoutSearch.select);
-    expect(groupArgs(withSearch.filter).slice(0, 3)).toEqual(groupArgs(withoutSearch.filter));
+    expect(args).toHaveLength(4);
+    expect(args.at(-1)?.op).toBe(QueryOperator.Gt);
   });
 });
 
 describe('buildConversationListQuery :: feedback narrowing by chat id', () => {
-  const withIds = (chatIds: string[]) => buildConversationListQuery({ range: RANGE, chatIds });
+  test('narrows by an in predicate over the candidate ids', () => {
+    const node = groupArgs(buildList({ chatIds: ['a', 'b'] }).filter).find((arg) => arg.op === QueryOperator.In);
 
-  const inPredicate = (chatIds: string[]): QueryPredicate | undefined =>
-    groupArgs(withIds(chatIds).filter).find((node) => node.op === QueryOperator.In);
-
-  test('restricts chat_id to the supplied candidate ids', () => {
-    const predicate = inPredicate(['a', 'b']);
-
-    expect(fieldName(predicate as QueryPredicate)).toBe(UsageLogField.ChatId);
-    expect(predicate?.args[1]).toEqual({
+    expect(fieldName(node as QueryPredicate)).toBe(ConversationsField.ChatId);
+    expect(node?.args[1]).toEqual({
       type: QueryExprType.Array,
       items: [
         { type: QueryExprType.Value, value_type: QueryValueType.String, value: 'a' },
@@ -252,65 +282,129 @@ describe('buildConversationListQuery :: feedback narrowing by chat id', () => {
     });
   });
 
-  // An empty `in` list is a 400, so the caller short-circuits instead — the builder must not emit one.
-  test('adds no predicate for an empty candidate list', () => {
-    expect(inPredicate([])).toBeUndefined();
-    expect(groupArgs(withIds([]).filter)).toHaveLength(3);
+  // The service rejects an empty in list with a 400, and "no candidates" is answered without a query.
+  test('an empty id list adds no in predicate', () => {
+    expect(groupArgs(buildList({ chatIds: [] }).filter).some((node) => node.op === QueryOperator.In)).toBe(false);
   });
 
-  test('composes with search rather than replacing it', () => {
-    const args = groupArgs(buildConversationListQuery({ range: RANGE, search: 'acme', chatIds: ['a'] }).filter);
+  test('narrowing composes with search and the time bounds', () => {
+    const args = groupArgs(buildList({ search: 'acme', chatIds: ['a'] }).filter);
 
-    expect(args).toHaveLength(5);
+    expect(args.filter((node) => [QueryOperator.Ge, QueryOperator.Le].includes(node.op))).toHaveLength(2);
+    expect(args.some((node) => (node as unknown as QueryGroup).op === QueryLogicalOperator.Or)).toBe(true);
     expect(args.some((node) => node.op === QueryOperator.In)).toBe(true);
-    expect((args as unknown as QueryGroup[]).some((node) => node.op === QueryLogicalOperator.Or)).toBe(true);
-  });
-
-  test('narrowing does not raise the page limit, so a filtered result is still one page', () => {
-    const many = Array.from({ length: 500 }, (_, i) => `chat-${i}`);
-
-    expect((withIds(many).page as QueryOffsetPage).limit).toBe(CONVERSATION_PAGE_SIZE);
   });
 });
 
 describe('buildConversationListQuery :: sort, page and purity', () => {
-  const build = () => buildConversationListQuery({ range: RANGE });
+  test('orders by last activity with a stable id tiebreaker last when no caller key is given', () => {
+    const sort = buildList().sort;
 
-  // Without the chat_id tiebreaker the fixed page is not stable between requests, since the service
-  // appends no ordering of its own.
-  test('orders by last activity descending, ending with a chat_id ascending tiebreaker', () => {
-    expect(build().sort).toEqual([
-      { field: ConversationField.LastActivity, dir: QuerySortDirection.Desc },
-      { field: UsageLogField.ChatId, dir: QuerySortDirection.Asc },
+    expect(sort).toEqual([
+      { field: ConversationsField.LastRequestTime, dir: QuerySortDirection.Desc },
+      { field: ConversationsField.ChatId, dir: QuerySortDirection.Asc },
+    ]);
+    expect(sort?.at(-1)?.field).toBe(ConversationsField.ChatId);
+  });
+
+  test('puts a caller sort key before the tiebreaker and orders its nulls last', () => {
+    const sort = buildList({
+      sort: [{ field: ConversationsField.TotalPrice, direction: QuerySortDirection.Desc }],
+    }).sort;
+
+    expect(sort).toEqual([
+      { field: ConversationsField.TotalPrice, dir: QuerySortDirection.Desc, nulls: QuerySortNulls.Last },
+      { field: ConversationsField.ChatId, dir: QuerySortDirection.Asc },
     ]);
   });
 
-  // A limit above 1000 is a hard 400, and include_total is always null in aggregate mode.
-  test('requests a single fixed page of 20 by offset and no total', () => {
-    expect(build().page).toEqual({ type: 'offset', offset: 0, limit: CONVERSATION_PAGE_SIZE, include_total: false });
-    expect(CONVERSATION_PAGE_SIZE).toBeLessThanOrEqual(1000);
+  test('appends the tiebreaker even when the caller sorts by the id itself', () => {
+    const sort = buildList({
+      sort: [{ field: ConversationsField.ChatId, direction: QuerySortDirection.Desc }],
+    }).sort;
+
+    expect(sort).toHaveLength(2);
+    expect(sort?.at(-1)).toEqual({ field: ConversationsField.ChatId, dir: QuerySortDirection.Asc });
   });
 
-  test('is a pure function of the range, reading no clock', () => {
-    expect(build()).toEqual(build());
+  test('keeps several caller keys in order, each with a nulls ordering', () => {
+    const sort = buildList({
+      sort: [
+        { field: ConversationsField.ProjectId, direction: QuerySortDirection.Asc },
+        { field: ConversationsField.TotalTokens, direction: QuerySortDirection.Desc },
+      ],
+    }).sort;
+
+    expect(sort?.map((item) => item.field)).toEqual([
+      ConversationsField.ProjectId,
+      ConversationsField.TotalTokens,
+      ConversationsField.ChatId,
+    ]);
+    expect(sort?.slice(0, 2).every((item) => item.nulls === QuerySortNulls.Last)).toBe(true);
   });
 
-  test('a different range changes only the time bounds', () => {
-    const shifted = buildConversationListQuery({
-      range: { startDate: new Date('2026-06-01T00:00:00.000Z'), endDate: new Date('2026-06-08T00:00:00.000Z') },
-    });
-
-    expect(shifted.select).toEqual(build().select);
-    expect(shifted.sort).toEqual(build().sort);
-    expect(shifted.filter).not.toEqual(build().filter);
+  // Row mode is the only mode the service populates a total for, and paging needs one.
+  test('requests the total and carries the caller offset and limit', () => {
+    expect(buildList().page).toEqual({ type: 'offset', offset: 0, limit: 100, include_total: true });
+    expect(buildList({ offset: 200, limit: 100 }).page).toMatchObject({ offset: 200, limit: 100 });
   });
 
-  test('selects no sensitive column', () => {
-    const serialized = JSON.stringify(build());
+  test('a limit above the service maximum is never produced by the page defaults', () => {
+    expect((buildList().page as QueryOffsetPage).limit).toBeLessThanOrEqual(1000);
+  });
 
-    ['request_body', 'response_body', 'jwt_claims', 'request_tags'].forEach((column) => {
-      expect(serialized).not.toContain(column);
-    });
+  test('is pure — same inputs, same query, and it never reads the clock', () => {
+    expect(buildList({ search: 'acme' })).toEqual(buildList({ search: 'acme' }));
+    expect(buildList({ offset: 100, limit: 100 })).not.toEqual(buildList());
+  });
+});
+
+describe('buildConversationTotalsQuery', () => {
+  const buildTotals = (overrides: Partial<Parameters<typeof buildConversationTotalsQuery>[0]> = {}) =>
+    buildConversationTotalsQuery({ range: RANGE, ...overrides });
+
+  test('carries the same column filters as the list query', () => {
+    const columnFilters = [
+      { field: ConversationsField.TotalPrice, operator: ConversationFilterOperator.GreaterThan, value: '0.5' },
+    ];
+    const totalsArgs = groupArgs(buildTotals({ columnFilters }).filter);
+    const listArgs = groupArgs(buildList({ columnFilters }).filter);
+
+    expect(totalsArgs).toEqual(listArgs);
+  });
+
+  test('counts conversations and sums cost over the whole result', () => {
+    const query = buildTotals();
+
+    expect(query.entity).toBe('conversations');
+    expect(query.mode).toBe(QueryMode.Aggregate);
+    expect(query.group_by).toBeUndefined();
+    expect(query.select).toEqual([
+      { expr: { type: QueryExprType.Fn, name: 'count', args: [] }, as: ConversationTotalsField.Conversations },
+      {
+        expr: {
+          type: QueryExprType.Fn,
+          name: 'sum',
+          args: [{ type: QueryExprType.Field, name: ConversationsField.TotalPrice }],
+        },
+        as: ConversationTotalsField.Cost,
+      },
+    ]);
+  });
+
+  test('takes no page and no sort — one row is the whole answer', () => {
+    expect(buildTotals().page).toBeUndefined();
+    expect(buildTotals().sort).toBeUndefined();
+  });
+
+  // The pills must never disagree with the rows beneath them, which only holds while both filters match.
+  test.each([
+    ['no filters', {}],
+    ['a search term', { search: 'acme' }],
+    ['feedback narrowing', { chatIds: ['a', 'b'] }],
+    ['both', { search: 'acme', chatIds: ['a'] }],
+  ])('carries a filter identical to the list query for %s', (_label, overrides) => {
+    expect(buildTotals(overrides).filter).toEqual(buildList(overrides).filter);
   });
 });
 

@@ -47,6 +47,24 @@ export const getTemporalColumnNames = (columns: ColumnRow[]): string[] => {
   return [...seen];
 };
 
+export const getIdentityColumnNames = (columns: ColumnRow[]): string[] => {
+  const seen = new Set<string>();
+  columns.forEach((c) => {
+    const s = c.source_name.trim();
+    if (s && !c.nullable && !c.sensitive) seen.add(s);
+  });
+  return [...seen];
+};
+
+export const getVersionColumnNames = (columns: ColumnRow[]): string[] => {
+  const seen = new Set<string>();
+  columns.forEach((c) => {
+    const s = c.source_name.trim();
+    if (s && !c.nullable && !c.sensitive && c.type === AnalyticsFieldType.Timestamp) seen.add(s);
+  });
+  return [...seen];
+};
+
 export const createTableForm = (tables: AnalyticsTable[]): CreateTableForm => {
   const firstSource = tables.find((tbl) => tbl.type === AnalyticsTableType.Source);
   return {
@@ -76,6 +94,8 @@ export const createDraftSchemaForm = (table: AnalyticsTable): DraftSchemaForm =>
   partitionColumn: table.partition_by?.column ?? '',
   granularity: table.partition_by?.granularity ?? PARTITION_NONE,
   grainKey: table.grain?.grain_key ?? '',
+  identityColumn: table.identity_column ?? '',
+  versionColumn: table.version_column ?? '',
 });
 
 // Validates the column rows of a create/add-columns form against the backend rules: each row that will
@@ -149,6 +169,9 @@ export const isRenameRestricted = (table: AnalyticsTable, column: AnalyticsTable
   column.source_name.startsWith('_') ||
   column.source_name === table.grain?.grain_key ||
   Boolean(table.ordering_key?.includes(column.source_name));
+
+export const isScanMetadataColumn = (table: AnalyticsTable, column: AnalyticsTableColumn): boolean =>
+  column.source_name === table.identity_column || column.source_name === table.version_column;
 
 export const toTableColumns = (rows: ColumnRow[]): AnalyticsTableColumn[] =>
   rows

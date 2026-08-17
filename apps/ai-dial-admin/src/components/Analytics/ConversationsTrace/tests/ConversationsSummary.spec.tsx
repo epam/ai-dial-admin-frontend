@@ -3,113 +3,113 @@ import { describe, expect, test } from 'vitest';
 
 import ConversationsSummary from '@/src/components/Analytics/ConversationsTrace/Header/ConversationsSummary';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
-import { ConversationSummary } from '@/src/models/analytics/conversations-trace';
+import { ConversationSummary, ConversationTotals } from '@/src/models/analytics/conversations-trace';
 
-const summary = (overrides: Partial<ConversationSummary> = {}): ConversationSummary => ({
-  conversations: 11,
-  isTruncated: false,
-  rated: 9,
-  negative: 2,
-  cost: '0.533',
-  ...overrides,
-});
+const TOTALS: ConversationTotals = { conversations: 212, cost: '654.070540769000' };
 
-const renderSummary = (overrides: Partial<ConversationSummary> = {}, periodLabel = '7d') =>
-  render(<ConversationsSummary summary={summary(overrides)} periodLabel={periodLabel} />);
+const SUMMARY: ConversationSummary = { rated: 3, negative: 2 };
+
+interface Options {
+  totals?: ConversationTotals | null;
+  summary?: ConversationSummary;
+  loadedCount?: number;
+  periodLabel?: string;
+}
+
+const renderSummary = ({ totals = TOTALS, summary = SUMMARY, loadedCount = 100, periodLabel = '7d' }: Options = {}) =>
+  render(
+    <ConversationsSummary totals={totals} summary={summary} loadedCount={loadedCount} periodLabel={periodLabel} />,
+  );
 
 describe('ConversationsSummary', () => {
-  test('shows the conversation count', () => {
-    renderSummary();
+  // The count comes from its own query over the whole filtered result, not from the rows loaded.
+  test('shows the whole-result conversation count, with no approximation marker', () => {
+    renderSummary({ loadedCount: 100 });
 
-    expect(screen.getByText('11')).toBeInTheDocument();
+    expect(screen.getByText('212')).toBeInTheDocument();
+    expect(screen.queryByText('212+')).not.toBeInTheDocument();
+    expect(screen.queryByText('100')).not.toBeInTheDocument();
   });
 
-  test('shows the rated count as a fraction of the listed conversations', () => {
+  test('rounds the whole-result cost for display', () => {
     renderSummary();
 
-    expect(screen.getByText('9/11')).toBeInTheDocument();
+    expect(screen.getByText('$654.071')).toBeInTheDocument();
   });
 
-  test('shows how many conversations carry a negative rating', () => {
-    renderSummary({ negative: 2 });
+  test('reads a numeric cost as well as a string one', () => {
+    renderSummary({ totals: { conversations: 1, cost: 0.5335 } });
+
+    expect(screen.getByText('$0.534')).toBeInTheDocument();
+  });
+
+  test('shows the rated count against the rows loaded so far', () => {
+    renderSummary({ loadedCount: 100 });
+
+    expect(screen.getByText('3/100')).toBeInTheDocument();
+  });
+
+  test('shows how many loaded conversations carry a negative rating', () => {
+    renderSummary();
 
     expect(screen.getByText('2')).toBeInTheDocument();
   });
 
-  test('shows the cost with a currency prefix', () => {
+  // Two pills are whole-result figures and two cover the loaded rows; each has to say which.
+  test('states the scope each pill reports', () => {
     renderSummary();
 
-    expect(screen.getByText('$0.533')).toBeInTheDocument();
+    expect(screen.getAllByTitle(ConversationsTraceI18nKey.SummaryResultHint)).toHaveLength(2);
+    expect(screen.getAllByTitle(ConversationsTraceI18nKey.SummaryLoadedHint)).toHaveLength(2);
   });
 
-  test('labels the cost with the active period', () => {
-    renderSummary({}, '30d');
+  test('names the loaded scope in visible text on the loaded-scope pills', () => {
+    renderSummary();
+
+    expect(screen.getAllByText(ConversationsTraceI18nKey.SummaryLoadedScope)).toHaveLength(2);
+  });
+
+  test('does not also carry the loaded-scope caveat as screen-reader-only text', () => {
+    const { container } = renderSummary();
+    const hidden = Array.from(container.querySelectorAll('.sr-only')).map((node) => node.textContent);
+
+    expect(hidden).not.toContain(ConversationsTraceI18nKey.SummaryLoadedHint);
+  });
+
+  test('keeps the whole-result hint as screen-reader-only text', () => {
+    const { container } = renderSummary();
+    const hidden = Array.from(container.querySelectorAll('.sr-only')).map((node) => node.textContent);
+
+    expect(hidden.filter((text) => text === ConversationsTraceI18nKey.SummaryResultHint)).toHaveLength(2);
+  });
+
+  test('names the period on the cost pill', () => {
+    renderSummary({ periodLabel: '30d' });
 
     expect(screen.getByText(`${ConversationsTraceI18nKey.SummaryCost} 30d`)).toBeInTheDocument();
   });
 
-  test('labels every pill from i18n', () => {
-    renderSummary();
+  // Rendering zeros would assert an empty result that was never established.
+  test('reports the whole-result figures as unavailable when the totals query failed', () => {
+    renderSummary({ totals: null });
 
-    expect(screen.getByText(ConversationsTraceI18nKey.SummaryConversations)).toBeInTheDocument();
-    expect(screen.getByText(ConversationsTraceI18nKey.SummaryRated)).toBeInTheDocument();
-    expect(screen.getByText(ConversationsTraceI18nKey.SummaryWith)).toBeInTheDocument();
+    expect(screen.getAllByText('—')).toHaveLength(2);
+    expect(screen.getAllByTitle(ConversationsTraceI18nKey.SummaryUnavailableHint)).toHaveLength(2);
   });
 
-  test('renders zeros for an empty result rather than nothing', () => {
-    renderSummary({ conversations: 0, rated: 0, negative: 0, cost: '0' });
+  // A sum over an empty result comes back null. That is zero, not a failure — reporting it as
+  // unavailable would claim the request broke when it answered correctly.
+  test('renders an empty result as zero cost, not as unavailable', () => {
+    renderSummary({ totals: { conversations: 0, cost: null }, loadedCount: 0 });
 
-    expect(screen.getByText('0/0')).toBeInTheDocument();
     expect(screen.getByText('$0')).toBeInTheDocument();
-  });
-});
-
-describe('ConversationsSummary :: truncated result', () => {
-  test('marks the conversation count as a lower bound when the page is full', () => {
-    renderSummary({ conversations: 20, isTruncated: true });
-
-    expect(screen.getByText('20+')).toBeInTheDocument();
+    expect(screen.queryByText('—')).not.toBeInTheDocument();
+    expect(screen.queryByTitle(ConversationsTraceI18nKey.SummaryUnavailableHint)).not.toBeInTheDocument();
   });
 
-  test('shows an exact count when the result fits in one page', () => {
-    renderSummary({ conversations: 11, isTruncated: false });
+  test('still reports the loaded-scope counts when the totals are unavailable', () => {
+    renderSummary({ totals: null, loadedCount: 20 });
 
-    expect(screen.getByText('11')).toBeInTheDocument();
-    expect(screen.queryByText('11+')).not.toBeInTheDocument();
-  });
-
-  test('explains the narrower scope through a different hint when truncated', () => {
-    renderSummary({ isTruncated: true });
-
-    expect(screen.getAllByTitle(ConversationsTraceI18nKey.SummaryTruncatedHint).length).toBeGreaterThan(0);
-    expect(screen.queryAllByTitle(ConversationsTraceI18nKey.SummaryScopeHint)).toHaveLength(0);
-  });
-
-  test('explains the page scope when not truncated', () => {
-    renderSummary({ isTruncated: false });
-
-    expect(screen.getAllByTitle(ConversationsTraceI18nKey.SummaryScopeHint).length).toBeGreaterThan(0);
-    expect(screen.queryAllByTitle(ConversationsTraceI18nKey.SummaryTruncatedHint)).toHaveLength(0);
-  });
-
-  // The caveat qualifies the figure, so it must not be hover-only: a `title` on a plain div reaches neither
-  // the keyboard nor a screen reader.
-  test('exposes the scope caveat to the keyboard and to assistive technology', () => {
-    renderSummary({ isTruncated: true });
-
-    const pills = screen.getAllByRole('group');
-
-    expect(pills.length).toBeGreaterThan(0);
-    pills.forEach((pill) => expect(pill).toHaveAttribute('tabindex', '0'));
-    expect(pills.some((pill) => pill.textContent?.includes(ConversationsTraceI18nKey.SummaryTruncatedHint))).toBe(true);
-  });
-
-  test('keeps the figure in the pill name rather than replacing it with the caveat', () => {
-    renderSummary({ isTruncated: true, conversations: 20 });
-
-    const [conversationsPill] = screen.getAllByRole('group');
-
-    expect(conversationsPill).not.toHaveAttribute('aria-label');
-    expect(conversationsPill.textContent).toContain('20+');
+    expect(screen.getByText('3/20')).toBeInTheDocument();
   });
 });

@@ -2,11 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
 import ConversationsProvenanceLine from '@/src/components/Analytics/ConversationsTrace/Header/ConversationsProvenanceLine';
-import {
-  CONVERSATIONS_ENTITY,
-  CONVERSATION_SUMMARY_ENRICHMENT,
-  FEEDBACK_ENTITY,
-} from '@/src/constants/analytics/conversations-trace';
+import { CONVERSATIONS_ENTITY, FEEDBACK_ENTITY } from '@/src/constants/analytics/conversations-trace';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 
 describe('ConversationsProvenanceLine', () => {
@@ -30,23 +26,11 @@ describe('ConversationsProvenanceLine', () => {
     expect(screen.getByText(FEEDBACK_ENTITY)).toHaveClass('text-warning');
   });
 
-  test('lists the enrichment when it is switched on', () => {
+  // A source the page does not query must not be named at all, and nothing here is pending.
+  test('names only the entities the page queries, none of them pending', () => {
     render(<ConversationsProvenanceLine />);
 
-    expect(screen.getByText(CONVERSATION_SUMMARY_ENRICHMENT)).toHaveClass('text-accent-secondary');
-  });
-
-  // The enrichment is not registered, so the line must not present it as a live source.
-  test('marks the enrichment as not yet registered', () => {
-    render(<ConversationsProvenanceLine />);
-
-    expect(screen.getByTitle(ConversationsTraceI18nKey.EntityPending)).toBeInTheDocument();
-  });
-
-  test('marks only the enrichment as pending, not the source tables', () => {
-    render(<ConversationsProvenanceLine />);
-
-    expect(screen.getAllByTitle(ConversationsTraceI18nKey.EntityPending)).toHaveLength(1);
+    expect(screen.queryByText('conversation_summary')).not.toBeInTheDocument();
     expect(screen.getByText(CONVERSATIONS_ENTITY)).not.toHaveAttribute('title');
     expect(screen.getByText(FEEDBACK_ENTITY)).not.toHaveAttribute('title');
   });

@@ -5,93 +5,52 @@ import { describe, expect, test } from 'vitest';
 import ConversationCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/ConversationCellRenderer';
 import { ConversationRow } from '@/src/models/analytics/conversations-trace';
 
-const CHAT_ID = '9f2c4b17-6d3a-4e58-b0c1-7ae95f83d204';
+const CHAT_ID = '7ab178e9-f72c-43b4-8b58-23caefc3594b';
 
 const row = (overrides: Partial<ConversationRow> = {}): ConversationRow => ({
   chat_id: CHAT_ID,
-  project: 'data-team',
-  turns: 3,
-  tokens: 10240,
-  cost: '0.090342871559',
-  last_activity: '2026-07-28T09:41:12.318Z',
-  first_activity: '2026-07-28T09:35:12.318Z',
-  model: 'gpt-4o',
-  model_count: 1,
+  project_id: 'data-team',
+  user_hash: 'db7327ba3decd351',
+  turn_count: 13,
+  total_tokens: 979030,
+  total_price: '3.014346',
+  last_request_time: 1,
+  first_request_time: 0,
   rating_up: 0,
   rating_down: 0,
-  title: 'Refund policy for annual plans',
-  snippet: 'A customer wants a partial refund three months into an annual subscription.',
   ...overrides,
 });
 
 const renderCell = (data?: ConversationRow | null) =>
   render(<ConversationCellRenderer {...({ data } as ICellRendererParams<ConversationRow>)} />);
 
-describe('ConversationCellRenderer :: fully enriched row', () => {
-  test('shows the title and the snippet', () => {
-    const data = row();
-    renderCell(data);
-
-    expect(screen.getByText(data.title as string)).toBeInTheDocument();
-    expect(screen.getByText(data.snippet as string)).toBeInTheDocument();
-  });
-
-  test('drops the id once both enrichment values fill the two lines', () => {
+describe('ConversationCellRenderer', () => {
+  test('shows the conversation id', () => {
     renderCell(row());
 
-    expect(screen.queryByText(CHAT_ID)).not.toBeInTheDocument();
-  });
-
-  test('shows nothing beyond the title and the snippet', () => {
-    const data = row();
-    const { container } = renderCell(data);
-
-    expect(container.textContent).toBe(`${data.title}${data.snippet}`);
-  });
-});
-
-describe('ConversationCellRenderer :: partially enriched rows', () => {
-  test('falls back to the id alone when neither value is present', () => {
-    renderCell(row({ title: null, snippet: null }));
-
-    expect(screen.getByText(CHAT_ID)).toBeInTheDocument();
-    expect(screen.queryAllByText(CHAT_ID)).toHaveLength(1);
-  });
-
-  test('shows a title with the id beneath it when the snippet is missing', () => {
-    const data = row({ snippet: null });
-    renderCell(data);
-
-    expect(screen.getByText(data.title as string)).toBeInTheDocument();
     expect(screen.getByText(CHAT_ID)).toBeInTheDocument();
   });
 
-  test('shows the id in place of a missing title, with the snippet beneath', () => {
-    const data = row({ title: null });
-    renderCell(data);
+  // No source supplies a conversation title or snippet, so the id is all the cell shows.
+  test('shows nothing beyond the conversation id', () => {
+    const { container } = renderCell(row());
 
-    expect(screen.getByText(CHAT_ID)).toBeInTheDocument();
-    expect(screen.getByText(data.snippet as string)).toBeInTheDocument();
+    expect(container.textContent).toBe(CHAT_ID);
   });
 
-  test.each([
-    ['empty title', { title: '' }],
-    ['empty snippet', { snippet: '' }],
-    ['both empty', { title: '', snippet: '' }],
-  ])('treats an %s as absent rather than rendering a blank line', (_label, overrides) => {
-    renderCell(row(overrides));
+  // Real ids run from 21 to several hundred characters, some of them URL-like rather than opaque ids.
+  test('keeps a long id reachable rather than only truncating it', () => {
+    const longId = `${'9m4JMektXTE1v1UxkuWzZ2kBJcgRqgXDrVVuatmvVPqy'}/en/what%20is%20the%20latest%20forecast`;
+    renderCell(row({ chat_id: longId }));
 
-    expect(screen.getByText(CHAT_ID)).toBeInTheDocument();
-    expect(screen.queryAllByText(CHAT_ID)).toHaveLength(1);
+    expect(screen.getByText(longId)).toBeInTheDocument();
   });
-});
 
-describe('ConversationCellRenderer :: no usable row', () => {
   test.each([
     ['no data', undefined],
     ['null data', null],
   ])('renders nothing for %s', (_label, data) => {
-    const { container } = renderCell(data as ConversationRow | null);
+    const { container } = renderCell(data as ConversationRow | null | undefined);
 
     expect(container).toBeEmptyDOMElement();
   });

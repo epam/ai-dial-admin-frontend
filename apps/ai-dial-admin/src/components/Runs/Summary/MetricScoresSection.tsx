@@ -1,13 +1,15 @@
 'use client';
 
-import { FC, useCallback, useMemo } from 'react';
+import { FC, useCallback } from 'react';
 
-import { DialAnalyticsBarGroup, DialLoader, DialSegmentedControl, SegmentedControlOption } from '@epam/ai-dial-ui-kit';
+import { DialAnalyticsBarGroup, DialLoader } from '@epam/ai-dial-ui-kit';
 
+import MetricStatisticControl from '@/src/components/Common/MetricStatistics/MetricStatisticControl';
+import { getMetricStatisticDescriptionKey } from '@/src/components/Common/MetricStatistics/utils';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { METRIC_STATISTIC_DESCRIPTIONS } from './constants';
-import { MetricScoresData, MetricStatistic } from './models';
+
+import { MetricScoresData } from './models';
 import SummarySection from './SummarySection';
 
 interface Props {
@@ -22,28 +24,11 @@ interface Props {
 const MetricScoresSection: FC<Props> = ({ data, selectedStatistic, onSelectStatistic, onSelectMetric }) => {
   const t = useI18n();
 
-  const options = useMemo<SegmentedControlOption[]>(
-    () => (data?.statistics ?? []).map((statistic) => ({ value: statistic, label: statistic })),
-    [data?.statistics],
-  );
-
   const onStatisticChange = useCallback((value: string) => onSelectStatistic(value), [onSelectStatistic]);
 
   const groups = selectedStatistic ? (data?.byStatistic[selectedStatistic] ?? []) : [];
 
-  const descriptionKey = selectedStatistic
-    ? METRIC_STATISTIC_DESCRIPTIONS[selectedStatistic as MetricStatistic]
-    : undefined;
-
-  const control =
-    options.length > 0 && selectedStatistic ? (
-      <DialSegmentedControl
-        ariaLabel={t(RunsI18nKey.MetricScoresTitle)}
-        options={options}
-        value={selectedStatistic}
-        onChange={onStatisticChange}
-      />
-    ) : undefined;
+  const descriptionKey = getMetricStatisticDescriptionKey(selectedStatistic);
 
   const renderContent = () => {
     if (!data) {
@@ -83,7 +68,14 @@ const MetricScoresSection: FC<Props> = ({ data, selectedStatistic, onSelectStati
     <SummarySection
       title={t(RunsI18nKey.MetricScoresTitle)}
       description={descriptionKey ? t(descriptionKey) : undefined}
-      control={control}
+      control={
+        <MetricStatisticControl
+          statistics={data?.statistics ?? []}
+          value={selectedStatistic}
+          onChange={onStatisticChange}
+          ariaLabel={t(RunsI18nKey.MetricScoresTitle)}
+        />
+      }
     >
       {renderContent()}
     </SummarySection>

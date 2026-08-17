@@ -1,15 +1,18 @@
 'use client';
 
-import { DialSearch } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton, DialSearch } from '@epam/ai-dial-ui-kit';
+import { IconAlertTriangle, IconColumns2 } from '@tabler/icons-react';
 import { FC } from 'react';
 
 import FeedbackFilterControl from '@/src/components/Analytics/ConversationsTrace/Toolbar/FeedbackFilterControl';
 import TimeFilter from '@/src/components/Common/TimeFilter/TimeFilter';
-import { USE_CONVERSATION_SUMMARY_ENRICHMENT } from '@/src/constants/analytics/conversations-trace';
-import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
+import { ButtonsI18nKey, ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { FeedbackFilter } from '@/src/models/analytics/conversations-trace';
 import { TimeRange } from '@/src/models/time-range';
+
+const NOTICE_ICON_SIZE = 14;
 
 interface Props {
   search: string;
@@ -20,6 +23,9 @@ interface Props {
   onTimeRangeChange: (value: TimeRange, isCustom?: boolean) => void;
   feedback: FeedbackFilter;
   onFeedbackChange: (value: FeedbackFilter) => void;
+  isFeedbackCapped: boolean;
+  hasSchemaError?: boolean;
+  onToggleColumnsPanel: () => void;
 }
 
 const ConversationsToolbar: FC<Props> = ({
@@ -31,6 +37,9 @@ const ConversationsToolbar: FC<Props> = ({
   onTimeRangeChange,
   feedback,
   onFeedbackChange,
+  isFeedbackCapped,
+  hasSchemaError,
+  onToggleColumnsPanel,
 }) => {
   const t = useI18n();
 
@@ -41,11 +50,7 @@ const ConversationsToolbar: FC<Props> = ({
           id="conversations-search"
           value={search}
           onChange={onSearchChange}
-          placeholder={t(
-            USE_CONVERSATION_SUMMARY_ENRICHMENT
-              ? ConversationsTraceI18nKey.SearchPlaceholderWithTitles
-              : ConversationsTraceI18nKey.SearchPlaceholder,
-          )}
+          placeholder={t(ConversationsTraceI18nKey.SearchPlaceholder)}
         />
       </div>
       <TimeFilter
@@ -56,7 +61,24 @@ const ConversationsToolbar: FC<Props> = ({
       />
       <div className="ml-auto flex flex-wrap items-center gap-4">
         <FeedbackFilterControl feedback={feedback} onFeedbackChange={onFeedbackChange} />
+        <DialGhostButton
+          label={t(ButtonsI18nKey.Columns)}
+          iconBefore={<IconColumns2 {...BASE_BUTTON_ICON_PROPS} />}
+          onClick={onToggleColumnsPanel}
+        />
       </div>
+      {hasSchemaError && (
+        <div className="flex w-full items-center gap-1.5 text-warning dial-tiny-text" role="status">
+          <IconAlertTriangle size={NOTICE_ICON_SIZE} aria-hidden />
+          <span>{t(ConversationsTraceI18nKey.SchemaUnavailableNotice)}</span>
+        </div>
+      )}
+      {isFeedbackCapped && (
+        <div className="flex w-full items-center gap-1.5 text-warning dial-tiny-text" role="status">
+          <IconAlertTriangle size={NOTICE_ICON_SIZE} aria-hidden />
+          <span>{t(ConversationsTraceI18nKey.FeedbackCappedNotice)}</span>
+        </div>
+      )}
     </div>
   );
 };

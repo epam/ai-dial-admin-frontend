@@ -12,16 +12,27 @@ import {
 import {
   aggregateQuery,
   and,
+  co,
   col,
+  compare,
   eq,
   field,
   fn,
+  ge,
+  gt,
+  inSubquery,
   inValues,
+  le,
+  lt,
+  nc,
+  ne,
   not,
   offsetPage,
+  or,
   param,
   rowQuery,
   sortItem,
+  subquery,
   value,
 } from '../build';
 
@@ -71,6 +82,12 @@ describe('structured-query build helpers', () => {
     expect(and([node])).toEqual({ op: LogicalOp.And, args: [node] });
   });
 
+  test('or wraps nodes in a logical OR', () => {
+    const left = eq('a', ValueType.String, 'x');
+    const right = eq('b', ValueType.String, 'y');
+    expect(or([left, right])).toEqual({ op: LogicalOp.Or, args: [left, right] });
+  });
+
   test('not wraps a node in a logical NOT', () => {
     const node = eq('a', ValueType.String, 'x');
     expect(not(node)).toEqual({ op: LogicalOp.Not, args: [node] });
@@ -91,6 +108,51 @@ describe('structured-query build helpers', () => {
       ],
     });
   });
+
+  test('subquery wraps a nested structured query', () => {
+    const nested = aggregateQuery({
+      entity: 'metric_score_results',
+      select: [col(field('test_suite_run_id'))],
+    });
+    expect(subquery(nested)).toEqual({ type: ExprType.Subquery, query: nested });
+  });
+
+  test('inSubquery builds an IN comparison against a nested query', () => {
+    const nested = aggregateQuery({
+      entity: 'metric_score_results',
+      select: [col(field('test_suite_run_id'))],
+      groupBy: ['test_suite_run_id'],
+      page: offsetPage(0, 10),
+    });
+    expect(inSubquery('test_suite_run_id', nested)).toEqual({
+      op: ComparisonOp.In,
+      args: [
+        { type: ExprType.Field, name: 'test_suite_run_id' },
+        { type: ExprType.Subquery, query: nested },
+      ],
+    });
+  });
+
+  test('compare builds a comparison with the given operator', () => {
+    expect(compare(ComparisonOp.Co, 'name', ValueType.String, 'gpt')).toEqual({
+      op: ComparisonOp.Co,
+      args: [
+        { type: ExprType.Field, name: 'name' },
+        { type: ExprType.Value, value_type: ValueType.String, value: 'gpt' },
+      ],
+    });
+  });
+
+  test('co/ne/nc/gt/ge/lt/le wrappers set the correct ComparisonOp', () => {
+    expect(co('name', ValueType.String, 'a').op).toBe(ComparisonOp.Co);
+    expect(ne('name', ValueType.String, 'a').op).toBe(ComparisonOp.Ne);
+    expect(nc('name', ValueType.String, 'a').op).toBe(ComparisonOp.Nc);
+    expect(gt('created_at', ValueType.Long, '1').op).toBe(ComparisonOp.Gt);
+    expect(ge('created_at', ValueType.Long, '1').op).toBe(ComparisonOp.Ge);
+    expect(lt('created_at', ValueType.Long, '1').op).toBe(ComparisonOp.Lt);
+    expect(le('created_at', ValueType.Long, '1').op).toBe(ComparisonOp.Le);
+  });
+
   test('offsetPage builds an offset page spec', () => {
     expect(offsetPage(0, 25, true)).toEqual({
       type: PageType.Offset,

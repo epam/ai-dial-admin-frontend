@@ -6,6 +6,7 @@ import { SettingsApi } from '@/src/server/core/settings-api';
 import { AssetApi } from '@/src/server/core/asset-api';
 import { BucketApi } from '@/src/server/core/bucket-api';
 import { FilesCoreApi } from '@/src/server/core/files-core-api';
+import { ExternalServiceConsentApi } from '@/src/server/core/external-service-consent-api';
 import { ExternalServiceOpsApi } from '@/src/server/core/external-service-ops-api';
 import { QueryAssistantApi } from '@/src/server/core/query-assistant-api';
 import { ToolsetOpsApi } from '@/src/server/core/toolset-ops-api';
@@ -207,8 +208,11 @@ export const settingsApi = new SettingsApi({
   host: process.env.DIAL_CORE_API_URL,
 });
 
-// External service sign-in / sign-out — Core-direct, parallel to toolsetOpsApi.
 export const externalServiceOpsApi = new ExternalServiceOpsApi({
+  host: process.env.DIAL_CORE_API_URL,
+});
+
+export const externalServiceConsentApi = new ExternalServiceConsentApi({
   host: process.env.DIAL_CORE_API_URL,
 });
 

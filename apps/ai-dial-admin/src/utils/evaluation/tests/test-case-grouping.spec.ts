@@ -3,6 +3,7 @@ import { describe, expect, test } from 'vitest';
 import {
   aggregateValidity,
   demoteToSingle,
+  expandTestCasesToRows,
   getPerTurnFieldNames,
   groupTestCaseRows,
   projectGroupsToGridRows,
@@ -214,6 +215,74 @@ describe('groupTestCaseRows', () => {
   });
 });
 
+describe('expandTestCasesToRows :: scoped by schema', () => {
+  const schema = [{ name: 'prompt', perTurn: true }, { name: 'persona' }] as TestCaseSchema[];
+
+  const multiTurnCase = {
+    id: 'case-1',
+    data: { persona: 'analyst' },
+    multiTurnData: [{ prompt: 'first' }, { prompt: 'second' }],
+  };
+
+  test('should read a per-turn field from its own turn and a shared field from data', () => {
+    const rows = expandTestCasesToRows([multiTurnCase], schema);
+
+    expect(rows.map((row) => row.data)).toEqual([
+      { persona: 'analyst', prompt: 'first' },
+      { persona: 'analyst', prompt: 'second' },
+    ]);
+  });
+
+  test('should drop a per-turn field whose value is still stored as shared', () => {
+    const staleShared = { id: 'case-1', data: { prompt: 'was shared' }, multiTurnData: [{}, {}] };
+
+    const rows = expandTestCasesToRows([staleShared], schema);
+
+    expect(rows.map((row) => row.data)).toEqual([{}, {}]);
+    expect(rows.every((row) => row.prompt === undefined)).toBe(true);
+  });
+
+  test('should drop a shared field whose value is still stored per turn', () => {
+    const stalePerTurn = { id: 'case-1', data: {}, multiTurnData: [{ persona: 'analyst' }, { persona: 'critic' }] };
+
+    const rows = expandTestCasesToRows([stalePerTurn], schema);
+
+    expect(rows.map((row) => row.data)).toEqual([{}, {}]);
+  });
+
+  test('should leave a single-turn case unfiltered, since it stores every field in data', () => {
+    const singleTurn = { id: 'case-2', data: { prompt: 'only', persona: 'analyst' } };
+
+    const rows = expandTestCasesToRows([singleTurn], schema);
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].data).toEqual({ prompt: 'only', persona: 'analyst' });
+  });
+
+  test('should merge both maps unfiltered when no schema is supplied', () => {
+    const rows = expandTestCasesToRows([multiTurnCase]);
+
+    expect(rows.map((row) => row.data)).toEqual([
+      { persona: 'analyst', prompt: 'first' },
+      { persona: 'analyst', prompt: 'second' },
+    ]);
+  });
+
+  test('should ignore turn maps when the schema is loaded but scopes nothing per turn', () => {
+    const rows = expandTestCasesToRows([multiTurnCase], []);
+
+    expect(rows.map((row) => row.data)).toEqual([{ persona: 'analyst' }, { persona: 'analyst' }]);
+  });
+
+  test('should flatten the scoped map onto the row as well as into data', () => {
+    const rows = expandTestCasesToRows([multiTurnCase], schema);
+
+    expect(rows[0].prompt).toBe('first');
+    expect(rows[1].prompt).toBe('second');
+    expect(rows[0].persona).toBe('analyst');
+  });
+});
+
 describe('renumberTurns', () => {
   test('should produce contiguous 0..n-1 indices in input order', () => {
     const turns: TestCaseRow[] = [{ label: 'A', _turnIndex: 5 }, { label: 'B', _turnIndex: 9 }, { label: 'C' }];
@@ -307,6 +376,36 @@ describe('aggregateValidity', () => {
 
     expect(result.valid).toBe(true);
     expect(result.validationWarnings).toEqual([]);
+  });
+
+  test('should state a warning repeated across every turn only once', () => {
+    const warning = { code: 'A', message: 'a', path: 'data.a', fieldName: 'a' };
+
+    const result = aggregateValidity([
+      { validationWarnings: [warning] },
+      { validationWarnings: [warning] },
+      { validationWarnings: [warning] },
+    ]);
+
+    expect(result.validationWarnings).toEqual([warning]);
+  });
+
+  test('should keep warnings that share a message but differ by path', () => {
+    const warnFirst = { code: 'A', message: 'a', path: 'data.first', fieldName: 'a' };
+    const warnSecond = { code: 'A', message: 'a', path: 'data.second', fieldName: 'a' };
+
+    const result = aggregateValidity([{ validationWarnings: [warnFirst, warnSecond] }]);
+
+    expect(result.validationWarnings).toEqual([warnFirst, warnSecond]);
+  });
+
+  test('should keep the first occurrence when deduplicating', () => {
+    const warnA = { code: 'A', message: 'a', path: 'data.a', fieldName: 'a' };
+    const warnB = { code: 'B', message: 'b', path: 'data.b', fieldName: 'b' };
+
+    const result = aggregateValidity([{ validationWarnings: [warnA, warnB] }, { validationWarnings: [warnB, warnA] }]);
+
+    expect(result.validationWarnings).toEqual([warnA, warnB]);
   });
 });
 

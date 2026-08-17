@@ -1,7 +1,7 @@
 import { FC, ReactNode, useCallback, useMemo } from 'react';
 
 import { DialLabel } from '@epam/ai-dial-ui-kit';
-import { IconBrandOauth, IconKey, IconLockOff } from '@tabler/icons-react';
+import { IconBrandOauth, IconKey, IconLockOff, IconShieldCheck } from '@tabler/icons-react';
 import classNames from 'classnames';
 
 import { EntityFieldsI18nKey, ToolsetI18nKey } from '@/src/constants/i18n';
@@ -10,6 +10,7 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialToolsetResourceAuthSettings, ToolsetAuthType } from '@/src/models/dial/resource';
+import { NEVER_SELECTABLE_AUTH_TYPES } from './constants';
 import ResourceAuthTypeSection from './ResourceAuthTypeSection';
 
 interface Props {
@@ -58,8 +59,23 @@ const ResourceAuthentication: FC<Props> = ({
           title: t(ToolsetI18nKey.NoneAuth),
           icon: <IconLockOff {...BASE_BUTTON_ICON_PROPS} />,
         },
-      ].filter((option) => authSettings?.authentication_type === option.id || !excludeAuthTypes?.includes(option.id)),
+        {
+          id: ToolsetAuthType.DIAL_NATIVE,
+          title: t(ToolsetI18nKey.DialNativeAuth),
+          icon: <IconShieldCheck {...BASE_BUTTON_ICON_PROPS} />,
+        },
+      ].filter((option) => {
+        if (authSettings?.authentication_type === option.id) return true;
+        if (NEVER_SELECTABLE_AUTH_TYPES.includes(option.id)) return false;
+        return !excludeAuthTypes?.includes(option.id);
+      }),
     [t, excludeAuthTypes, authSettings],
+  );
+
+  const selectedConfig: AuthConfig = useMemo(
+    () =>
+      authOptions.find((option) => option.id === selectedAuthType) ?? { id: selectedAuthType, title: selectedAuthType },
+    [authOptions, selectedAuthType],
   );
 
   const onChangeAuthType = useCallback(
@@ -87,7 +103,7 @@ const ResourceAuthentication: FC<Props> = ({
         {isDisabled ? (
           <ResourceAuthTypeSection
             toolsetName={name}
-            config={authOptions.find((option) => option.id === selectedAuthType)!}
+            config={selectedConfig}
             isSelected={true}
             disabled={true}
             authSettings={authSettings}

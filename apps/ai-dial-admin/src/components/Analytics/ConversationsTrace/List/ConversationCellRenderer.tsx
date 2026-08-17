@@ -11,20 +11,11 @@ const ConversationCellRenderer: FC<ICellRendererParams<ConversationRow>> = ({ da
     return null;
   }
 
-  const { chat_id, title, snippet } = data;
-  const primary = title || chat_id;
-  const secondary = snippet || (title ? chat_id : null);
-
   return (
-    <div className="flex flex-col justify-center h-full min-w-0 gap-0.5">
+    <div className="flex flex-col justify-center h-full min-w-0">
       <span className="text-primary dial-small-semi-text">
-        <DialEllipsisTooltip text={primary} />
+        <DialEllipsisTooltip text={data.chat_id} />
       </span>
-      {secondary && (
-        <span className="text-secondary dial-tiny-text">
-          <DialEllipsisTooltip text={secondary} />
-        </span>
-      )}
     </div>
   );
 };

@@ -22,6 +22,7 @@ import {
   SortDir,
   SortItem,
   StructuredQuery,
+  SubqueryExpr,
   ValueExpr,
   ValueType,
 } from '@/src/models/evaluation/structured-query';
@@ -38,21 +39,56 @@ export const value = (valueType: ValueType, val: string | null): ValueExpr => ({
 
 export const fn = (name: string, args: Expr[] = []): FnExpr => ({ type: ExprType.Fn, name, args });
 
+export const subquery = (query: StructuredQuery): SubqueryExpr => ({ type: ExprType.Subquery, query });
+
 export const col = (expr: Expr, as?: string): OutputColumn => ({ expr, ...(as ? { as } : {}) });
 
-/** Equality comparison between a field and a typed literal value. */
-export const eq = (fieldName: string, valueType: ValueType, val: string): ComparisonNode => ({
-  op: ComparisonOp.Eq,
+/** Comparison between a field and a typed literal value. */
+export const compare = (op: ComparisonOp, fieldName: string, valueType: ValueType, val: string): ComparisonNode => ({
+  op,
   args: [field(fieldName), value(valueType, val)],
 });
 
+/** Equality comparison between a field and a typed literal value. */
+export const eq = (fieldName: string, valueType: ValueType, val: string): ComparisonNode =>
+  compare(ComparisonOp.Eq, fieldName, valueType, val);
+
+export const ne = (fieldName: string, valueType: ValueType, val: string): ComparisonNode =>
+  compare(ComparisonOp.Ne, fieldName, valueType, val);
+
+export const co = (fieldName: string, valueType: ValueType, val: string): ComparisonNode =>
+  compare(ComparisonOp.Co, fieldName, valueType, val);
+
+export const nc = (fieldName: string, valueType: ValueType, val: string): ComparisonNode =>
+  compare(ComparisonOp.Nc, fieldName, valueType, val);
+
+export const gt = (fieldName: string, valueType: ValueType, val: string): ComparisonNode =>
+  compare(ComparisonOp.Gt, fieldName, valueType, val);
+
+export const ge = (fieldName: string, valueType: ValueType, val: string): ComparisonNode =>
+  compare(ComparisonOp.Ge, fieldName, valueType, val);
+
+export const lt = (fieldName: string, valueType: ValueType, val: string): ComparisonNode =>
+  compare(ComparisonOp.Lt, fieldName, valueType, val);
+
+export const le = (fieldName: string, valueType: ValueType, val: string): ComparisonNode =>
+  compare(ComparisonOp.Le, fieldName, valueType, val);
+
 export const and = (nodes: LogicalNode['args']): LogicalNode => ({ op: LogicalOp.And, args: nodes });
+
+export const or = (nodes: LogicalNode['args']): LogicalNode => ({ op: LogicalOp.Or, args: nodes });
 
 export const not = (node: FilterNode): LogicalNode => ({ op: LogicalOp.Not, args: [node] });
 
 export const inValues = (fieldName: string, valueType: ValueType, values: string[]): ComparisonNode => ({
   op: ComparisonOp.In,
   args: [field(fieldName), { type: ExprType.Array, items: values.map((val) => value(valueType, val)) }],
+});
+
+/** Set-membership comparison whose right operand is a nested structured query. */
+export const inSubquery = (fieldName: string, query: StructuredQuery): ComparisonNode => ({
+  op: ComparisonOp.In,
+  args: [field(fieldName), subquery(query)],
 });
 
 export const offsetPage = (offset: number, limit: number, includeTotal = false): OffsetPage => ({

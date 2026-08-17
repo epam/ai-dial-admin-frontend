@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { assetApi, externalServiceOpsApi, toolsetOpsApi } from '@/src/app/api/api';
+import { assetApi, externalServiceConsentApi, externalServiceOpsApi, toolsetOpsApi } from '@/src/app/api/api';
 import * as eximModule from '@/src/server/applications/exim';
 import * as zipEximModule from '@/src/server/applications/zip-exim';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -19,6 +19,8 @@ import {
   getAssetTools,
   signInExternalService,
   signOutExternalService,
+  grantExternalServiceConsent,
+  withdrawExternalServiceConsent,
 } from './actions';
 import { DialFileNodeType } from '@/src/models/dial/file';
 import { ResourceType } from '@/src/types/resource-type';
@@ -379,6 +381,26 @@ describe('Assets application :: server actions', () => {
       credentialsLevel: 'USER',
       authenticationType: 'API_KEY',
     });
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call grantExternalServiceConsent action', async () => {
+    (externalServiceConsentApi.grant as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await grantExternalServiceConsent('public/my-app', 'dial');
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(externalServiceConsentApi.grant).toHaveBeenCalledWith(TOKEN_MOCK, 'public/my-app', 'dial');
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call withdrawExternalServiceConsent action', async () => {
+    (externalServiceConsentApi.withdraw as any).mockResolvedValue(RESPONSE_MOCK);
+
+    const result = await withdrawExternalServiceConsent('public/als code apps/my app', 'dial');
+
+    expect(getUserToken).toHaveBeenCalled();
+    expect(externalServiceConsentApi.withdraw).toHaveBeenCalledWith(TOKEN_MOCK, 'public/als code apps/my app', 'dial');
     expect(result).toBe(RESPONSE_MOCK);
   });
 });

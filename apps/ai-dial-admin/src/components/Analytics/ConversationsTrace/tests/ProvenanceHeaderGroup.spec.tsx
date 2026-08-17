@@ -12,15 +12,13 @@ const renderHeader = (params: ProvenanceHeaderGroupParams) =>
 
 describe('ProvenanceHeaderGroup', () => {
   test('renders the group label', () => {
-    renderHeader({ label: 'dial_usage_log', provenance: ColumnProvenance.UsageLog });
+    renderHeader({ label: 'conversations', provenance: ColumnProvenance.Conversations });
 
-    expect(screen.getByText('dial_usage_log')).toBeInTheDocument();
+    expect(screen.getByText('conversations')).toBeInTheDocument();
   });
 
   test.each([
-    [ColumnProvenance.Conversation, 'text-secondary'],
-    [ColumnProvenance.UsageLog, 'text-accent-primary'],
-    [ColumnProvenance.Enrichment, 'text-accent-secondary'],
+    [ColumnProvenance.Conversations, 'text-accent-primary'],
     [ColumnProvenance.Feedback, 'text-warning'],
   ])('colours %s with a theme token rather than a literal colour', (provenance, expectedClass) => {
     renderHeader({ label: 'source', provenance });
@@ -36,30 +34,10 @@ describe('ProvenanceHeaderGroup', () => {
     });
   });
 
-  test('marks a derived group with an icon', () => {
-    const { container } = renderHeader({
-      label: 'enrichment',
-      provenance: ColumnProvenance.Enrichment,
-      isDerived: true,
-    });
-
-    expect(container.querySelector('svg')).toBeInTheDocument();
-  });
-
-  test('shows no icon for a group read straight from a source table', () => {
-    const { container } = renderHeader({ label: 'dial_usage_log', provenance: ColumnProvenance.UsageLog });
+  // No group on this page is enrichment-derived, so no group carries a derived-data icon.
+  test('shows no icon, since every column is read straight from a source table', () => {
+    const { container } = renderHeader({ label: 'conversations', provenance: ColumnProvenance.Conversations });
 
     expect(container.querySelector('svg')).not.toBeInTheDocument();
-  });
-
-  // The icon is decorative — the label already names the source, so it must not be announced twice.
-  test('hides the icon from assistive technology', () => {
-    const { container } = renderHeader({
-      label: 'enrichment',
-      provenance: ColumnProvenance.Enrichment,
-      isDerived: true,
-    });
-
-    expect(container.querySelector('svg')).toHaveAttribute('aria-hidden');
   });
 });

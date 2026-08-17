@@ -93,7 +93,7 @@ const RunCondition: FC<Props> = ({ testCaseFilter, schema, onChange }) => {
         onCommit={onAdd}
         onCancel={onCancelAdd}
         editor={(onClose) => (
-          <CreateRunConditionFilter draft={draft} fieldOptions={fieldOptions} onChange={setDraft} onClose={onClose} />
+          <CreateRunConditionFilter draft={draft} fieldOptions={fieldOptions} onChange={setDraft} onClear={onClose} />
         )}
       >
         <DialGhostButton

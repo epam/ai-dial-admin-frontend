@@ -1,4 +1,10 @@
-import { DialExternalService, ExternalServiceCredentialLevel, ToolsetAuthStatus } from '@/src/models/dial/resource';
+import {
+  DialExternalService,
+  ExternalServiceCredentialLevel,
+  ToolsetAuthStatus,
+  ToolsetAuthType,
+} from '@/src/models/dial/resource';
+import { ExternalServiceRowAction } from './models';
 
 const LEVELS_KEY = 'external-service-auth-levels';
 const URL_KEY = 'external-service-auth-url';
@@ -53,7 +59,31 @@ export const isApplicationLoggedInToExternalService = (service: DialExternalServ
 };
 
 export const isLoggedInToExternalService = (service: DialExternalService): boolean => {
+  if (service.auth_settings?.authentication_type === ToolsetAuthType.DIAL_NATIVE) {
+    return false;
+  }
   return isUserLoggedInToExternalService(service) || isApplicationLoggedInToExternalService(service);
+};
+
+export const isExternalServiceApproved = (service: DialExternalService): boolean => {
+  return service.auth_settings?.app_level_auth_status === ToolsetAuthStatus.SIGNED_IN;
+};
+
+export const isUnrecognisedAuthType = (service: DialExternalService): boolean => {
+  const authType = service.auth_settings?.authentication_type;
+  return !!authType && !Object.values(ToolsetAuthType).includes(authType);
+};
+
+export const getExternalServiceRowAction = (service: DialExternalService): ExternalServiceRowAction => {
+  switch (service.auth_settings?.authentication_type) {
+    case ToolsetAuthType.OAUTH:
+    case ToolsetAuthType.API_KEY:
+      return ExternalServiceRowAction.SignIn;
+    case ToolsetAuthType.DIAL_NATIVE:
+      return ExternalServiceRowAction.Consent;
+    default:
+      return ExternalServiceRowAction.None;
+  }
 };
 
 export const isFullLoggedInToExternalService = (service: DialExternalService): boolean => {

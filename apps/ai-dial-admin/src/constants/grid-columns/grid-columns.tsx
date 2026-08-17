@@ -31,9 +31,13 @@ import {
   EntitiesI18nKey,
   EntityFieldsI18nKey,
   ImportI18nKey,
+  QueriesI18nKey,
   SourceI18nKey,
   TelemetryI18nKey,
 } from '@/src/constants/i18n';
+import { deriveSavedQueryEditor } from '@/src/components/Analytics/QueryBuilder/utils/saved-query';
+import { SAVED_QUERY_EDITOR_I18N_KEYS } from '@/src/constants/analytics/queries';
+import { SavedQuery, SavedQueryScope } from '@/src/models/analytics/saved-query';
 import { RowImportMeta } from '@/src/models/deployments/import';
 import { ValidationState } from '@/src/types/deployments/import';
 import {
@@ -50,9 +54,17 @@ import {
   numberValueFormatter,
   priceValueFormatter,
 } from '@/src/constants/grid-columns/formatters';
-import { CONVERSATION_PROVENANCE_GROUPS } from '@/src/constants/analytics/conversations-trace';
+import {
+  CONVERSATION_FIELD_VALUE_TYPE,
+  CONVERSATION_PROVENANCE_GROUPS,
+  FILTERABLE_CONVERSATION_FIELDS,
+  SORTABLE_CONVERSATION_FIELDS,
+} from '@/src/constants/analytics/conversations-trace';
 import { formatCompactNumber, formatSignificantCost } from '@/src/utils/analytics/conversation-formatting';
-import { ConversationField } from '@/src/models/analytics/conversations-trace';
+import { ColumnProvenance, ConversationColumn, ConversationsField } from '@/src/models/analytics/conversations-trace';
+import { QueryValueType } from '@/src/models/analytics/query';
+import { AnalyticsEntityField } from '@/src/models/analytics/entity';
+import { buildConversationColumnCatalog } from '@/src/utils/analytics/conversation-column-catalog';
 import { ImageVersion } from '@/src/models/deployments/images';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
@@ -96,6 +108,7 @@ import ProvenanceHeaderGroup from '@/src/components/Analytics/ConversationsTrace
 import ActivityCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/ActivityCellRenderer';
 import ProjectCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/ProjectCellRenderer';
 import RatingCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/RatingCellRenderer';
+import UserCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/UserCellRenderer';
 import RowExpanderCellRenderer from '@/src/components/Grid/CellRenderers/RowExpanderCellRenderer';
 import ChildrenActivityTypeCellRenderer from '@/src/components/Grid/CellRenderers/ChildrenActivityTypeCellRenderer';
 import { ActivityAuditView } from '@/src/types/activity-audit';
@@ -152,6 +165,18 @@ export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
     headerName: 'Completion price',
     hide: true,
     tooltipValueGetter: (params) => params.data?.pricing?.completion,
+  },
+  {
+    field: 'pricing.cacheRead',
+    headerName: 'Cache read price',
+    hide: true,
+    tooltipValueGetter: (params) => params.data?.pricing?.cacheRead,
+  },
+  {
+    field: 'pricing.cacheWrite',
+    headerName: 'Cache write price',
+    hide: true,
+    tooltipValueGetter: (params) => params.data?.pricing?.cacheWrite,
   },
 ];
 
@@ -622,35 +647,43 @@ export const USAGE_LOG_NUMERIC_COLUMNS = new Set<string>(
 
 const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] => [
   {
-    field: ConversationField.ChatId,
+    field: ConversationsField.ChatId,
     headerName: t(ConversationsTraceI18nKey.Conversation),
     cellRenderer: ConversationCellRenderer,
     flex: 3,
     minWidth: 280,
   },
   {
-    field: ConversationField.Project,
-    headerName: t(ConversationsTraceI18nKey.ProjectModel),
+    field: ConversationsField.ProjectId,
+    headerName: t(ConversationsTraceI18nKey.Project),
     cellRenderer: ProjectCellRenderer,
     flex: 1.6,
     minWidth: 180,
   },
   {
-    field: ConversationField.Turns,
+    field: ConversationsField.UserHash,
+    headerName: t(ConversationsTraceI18nKey.DetailUser),
+    cellRenderer: UserCellRenderer,
+    flex: 1.2,
+    minWidth: 140,
+  },
+  {
+    field: ConversationsField.TurnCount,
     headerName: t(ConversationsTraceI18nKey.Turns),
+    headerTooltip: t(ConversationsTraceI18nKey.TurnsHint),
     ...numericColumn,
     flex: 0.6,
     minWidth: 90,
   },
   {
-    field: ConversationField.LastActivity,
+    field: ConversationsField.LastRequestTime,
     headerName: t(ConversationsTraceI18nKey.Activity),
     cellRenderer: ActivityCellRenderer,
     flex: 1.1,
     minWidth: 130,
   },
   {
-    field: ConversationField.Tokens,
+    field: ConversationsField.TotalTokens,
     headerName: t(ConversationsTraceI18nKey.Tokens),
     ...numericColumn,
     valueFormatter: ({ value }) => formatCompactNumber(value),
@@ -658,7 +691,7 @@ const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] 
     minWidth: 100,
   },
   {
-    field: ConversationField.Cost,
+    field: ConversationsField.TotalPrice,
     headerName: t(ConversationsTraceI18nKey.Cost),
     ...numericColumn,
     valueFormatter: ({ value }) => formatSignificantCost(value),
@@ -667,7 +700,7 @@ const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] 
     minWidth: 100,
   },
   {
-    field: ConversationField.Rating,
+    field: ConversationColumn.Rating,
     headerName: t(ConversationsTraceI18nKey.Rating),
     cellRenderer: RatingCellRenderer,
     flex: 1,
@@ -675,24 +708,45 @@ const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] 
   },
 ];
 
+const NUMERIC_FILTER_VALUE_TYPES = [QueryValueType.Integer, QueryValueType.Decimal];
+
+const conversationFilterPreset = (fieldName?: string): Partial<ColDef> => {
+  if (!fieldName || !FILTERABLE_CONVERSATION_FIELDS.includes(fieldName as ConversationsField)) {
+    return { filter: false, floatingFilter: false };
+  }
+
+  const valueType = CONVERSATION_FIELD_VALUE_TYPE[fieldName as ConversationsField];
+
+  return valueType && NUMERIC_FILTER_VALUE_TYPES.includes(valueType) ? baseNumberFilter : baseStringFilter;
+};
+
 export const CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] =>
-  restrictSort(BASE_CONVERSATIONS_TRACE_COLUMNS(t)).map((column) => ({
+  restrictSort(BASE_CONVERSATIONS_TRACE_COLUMNS(t), SORTABLE_CONVERSATION_FIELDS).map((column) => ({
     ...column,
-    filter: false,
-    floatingFilter: false,
+    ...conversationFilterPreset(column.field),
+    ...(column.field === ConversationsField.LastRequestTime ? { sort: 'desc' as ColDef['sort'] } : {}),
   }));
 
-export const CONVERSATIONS_TRACE_COLUMN_GROUPS = (t: (key: string) => string): ColGroupDef[] => {
-  const columns = CONVERSATIONS_TRACE_COLUMNS(t);
+export const CONVERSATIONS_TRACE_COLUMN_GROUPS = (
+  t: (key: string) => string,
+  schemaFields: AnalyticsEntityField[] = [],
+): ColGroupDef[] => {
+  const columns = buildConversationColumnCatalog(CONVERSATIONS_TRACE_COLUMNS(t), schemaFields);
+  const attributed = new Set(CONVERSATION_PROVENANCE_GROUPS.flatMap((group) => group.fields as string[]));
 
-  return CONVERSATION_PROVENANCE_GROUPS.map(({ provenance, labelKey, tooltipKey, fields, isDerived }) => ({
+  return CONVERSATION_PROVENANCE_GROUPS.map(({ provenance, labelKey, tooltipKey, fields }) => ({
     groupId: provenance,
     headerName: t(labelKey),
     headerTooltip: t(tooltipKey),
     headerGroupComponent: ProvenanceHeaderGroup,
-    headerGroupComponentParams: { label: t(labelKey), provenance, isDerived },
+    headerGroupComponentParams: { label: t(labelKey), provenance },
     marryChildren: true,
-    children: fields.map((field) => columns.find((column) => column.field === field)).filter(Boolean) as ColDef[],
+    children: [
+      ...(fields.map((field) => columns.find((column) => column.field === field)).filter(Boolean) as ColDef[]),
+      ...(provenance === ColumnProvenance.Conversations
+        ? columns.filter((column) => !attributed.has(column.field as string))
+        : []),
+    ],
   }));
 };
 
@@ -1054,7 +1108,7 @@ export const TEST_SUITES_COLUMN: ColDef[] = [
     headerName: 'Application',
     hide: false,
     sortable: false,
-    filter: false,
+    ...evalStringFilter([GridFilterType.EQUALS, GridFilterType.NOT_EQUAL, GridFilterType.CONTAINS]),
     valueGetter: (params) => params.data?.deploymentRef?.name || params.data?.mcpDeploymentRef?.name || '',
   },
   { ...CREATED_AT_COLUMN, ...dateFilter },
@@ -1528,3 +1582,79 @@ export const IMPORT_VALIDATION_COLUMN = (t: (str: string) => string): ColDef => 
   sortable: false,
   filterValueGetter: ({ data }) => getImportValidationStateLabel(data, t),
 });
+
+// Saved queries. The service returns every visible row unpaged with no server-side sort or filter, so
+// these are client-side filters. Field names are the wire ones (snake_case), which is why the shared
+// created/updated columns cannot be reused as-is — only their formatting is.
+export const QUERIES_COLUMN = (t: (str: string) => string): ColDef[] => [
+  {
+    field: 'name',
+    colId: 'name',
+    headerName: t(QueriesI18nKey.Name),
+    hide: false,
+    sort: 'asc',
+    ...baseStringFilter,
+  },
+  {
+    field: 'description',
+    colId: 'description',
+    headerName: t(QueriesI18nKey.Description),
+    hide: false,
+    ...baseStringFilter,
+  },
+  {
+    field: 'source',
+    colId: 'source',
+    headerName: t(QueriesI18nKey.Source),
+    hide: false,
+    ...baseStringFilter,
+  },
+  { field: 'tag', colId: 'tag', headerName: t(QueriesI18nKey.Tag), hide: false, ...baseStringFilter },
+  {
+    field: 'scope',
+    colId: 'scope',
+    headerName: t(QueriesI18nKey.Scope),
+    hide: false,
+    valueGetter: ({ data }) =>
+      t(
+        (data as SavedQuery)?.scope === SavedQueryScope.Common
+          ? QueriesI18nKey.ScopeCommon
+          : QueriesI18nKey.ScopePersonal,
+      ),
+    ...baseStringFilter,
+  },
+  {
+    // Derived from the body, never read from a stored field: an `editor` member would be a second
+    // source of truth able to contradict the body it describes.
+    colId: 'editor',
+    headerName: t(QueriesI18nKey.Editor),
+    hide: false,
+    valueGetter: ({ data }) => t(SAVED_QUERY_EDITOR_I18N_KEYS[deriveSavedQueryEditor(data as SavedQuery)]),
+    ...baseStringFilter,
+  },
+  {
+    // The service reports no author email whenever there is none to record, so this must not assume one.
+    field: 'owner_email',
+    colId: 'owner_email',
+    headerName: t(QueriesI18nKey.SavedBy),
+    hide: false,
+    valueGetter: ({ data }) => (data as SavedQuery)?.owner_email || t(QueriesI18nKey.SavedByUnknown),
+    ...baseStringFilter,
+  },
+  {
+    field: 'updated_at',
+    colId: 'updated_at',
+    headerName: 'Updated time',
+    hide: false,
+    ...dateTimeColumn,
+    ...dateFilter,
+  },
+  {
+    field: 'created_at',
+    colId: 'created_at',
+    headerName: 'Creation time',
+    hide: true,
+    ...dateTimeColumn,
+    ...dateFilter,
+  },
+];

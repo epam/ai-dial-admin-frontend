@@ -1,5 +1,7 @@
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryMode, StructuredQuery } from '@/src/models/analytics/query';
+import { QueryResultView } from '@/src/models/analytics/query-builder';
+import { SavedQuery, SavedQueryRequest, SavedQueryScope } from '@/src/models/analytics/saved-query';
 import { AnalyticsTableType, CreateTableDto } from '@/src/models/analytics/table';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -210,6 +212,42 @@ describe('Server :: AnalyticsDataApi', () => {
     );
   });
 
+  test('getTable returns the scan-metadata pair as sent by the service', async () => {
+    const table = {
+      name: 'events',
+      type: AnalyticsTableType.Source,
+      ordering_key: ['event_id'],
+      identity_column: 'event_id',
+      version_column: '_ingested_at',
+    };
+    fetch.mockResponseOnce(JSON.stringify(table), { headers: { 'content-type': 'application/json' } });
+
+    expect(await instance.getTable('events', TOKEN_MOCK)).toEqual(table);
+  });
+
+  test('defineTableSchema sends the scan-metadata pair only when declared', async () => {
+    const withPair = {
+      columns: [{ source_name: 'seen_at', name: 'seen_at', type: AnalyticsFieldType.Timestamp }],
+      ordering_key: ['seen_at'],
+      identity_column: 'order_id',
+      version_column: 'seen_at',
+    };
+    fetch.mockResponseOnce(JSON.stringify({ success: true }));
+    await instance.defineTableSchema('events', withPair, TOKEN_MOCK);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/tables/events/schema'),
+      expect.objectContaining({ body: JSON.stringify(withPair) }),
+    );
+
+    // An omitted member leaves any stored value untouched, so the absent keys must not be sent as null.
+    const withoutPair = { columns: withPair.columns, ordering_key: withPair.ordering_key };
+    fetch.mockResponseOnce(JSON.stringify({ success: true }));
+    await instance.defineTableSchema('events', withoutPair, TOKEN_MOCK);
+    const body = (fetch as unknown as { mock: { calls: [string, { body: string }][] } }).mock.calls.at(-1)![1].body;
+    expect(JSON.parse(body)).not.toHaveProperty('identity_column');
+    expect(JSON.parse(body)).not.toHaveProperty('version_column');
+  });
+
   test('updateTableSchema PATCHes /v1/tables/{name}/schema with the patch body', async () => {
     const patch = { drop: ['old_col'] };
     fetch.mockResponseOnce(JSON.stringify({ success: true }));
@@ -256,6 +294,126 @@ describe('Server :: AnalyticsDataApi', () => {
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/v1/tables/events/access'),
       expect.objectContaining({ method: 'PUT', body: JSON.stringify(access) }),
+    );
+  });
+});
+
+describe('Server :: AnalyticsDataApi — saved queries', () => {
+  const instance = new AnalyticsDataApi({ host: TEST_URL });
+
+  const savedQuery: SavedQuery = {
+    id: 'sq_1',
+    name: 'Top chats',
+    scope: SavedQueryScope.Personal,
+    result_view: QueryResultView.Table,
+    generation: 1,
+    created_at: '2026-08-01T00:00:00Z',
+    updated_at: '2026-08-02T00:00:00Z',
+  };
+
+  const request: SavedQueryRequest = {
+    name: 'Top chats',
+    scope: SavedQueryScope.Personal,
+    result_view: QueryResultView.Table,
+    query: { entity: 'dial_usage_log', mode: QueryMode.Row },
+  };
+
+  beforeEach(() => {
+    fetch.resetMocks();
+  });
+
+  test('listSavedQueries issues GET with the scope as a query parameter', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ saved_queries: [savedQuery] }), JSON_HEADERS);
+
+    await instance.listSavedQueries(SavedQueryScope.Common, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/saved-queries?scope=common'),
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
+  test('listSavedQueries unwraps the { saved_queries } envelope to a bare array', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ saved_queries: [savedQuery] }), JSON_HEADERS);
+
+    const res = await instance.listSavedQueries(SavedQueryScope.Personal, TOKEN_MOCK);
+
+    expect(res).toEqual([savedQuery]);
+  });
+
+  test('listSavedQueries returns null when the envelope is absent', async () => {
+    fetch.mockResponseOnce(JSON.stringify({}), JSON_HEADERS);
+
+    const res = await instance.listSavedQueries(SavedQueryScope.Personal, TOKEN_MOCK);
+
+    expect(res).toBeNull();
+  });
+
+  test('getSavedQuery issues GET on the encoded saved-query URL and returns the parsed query', async () => {
+    fetch.mockResponseOnce(JSON.stringify(savedQuery), JSON_HEADERS);
+
+    const res = await instance.getSavedQuery('sq /1', TOKEN_MOCK);
+
+    expect(res).toEqual(savedQuery);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/saved-queries/sq%20%2F1'),
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
+  test('createSavedQuery POSTs the payload to /v1/saved-queries', async () => {
+    fetch.mockResponseOnce(JSON.stringify(savedQuery), JSON_HEADERS);
+
+    const res = await instance.createSavedQuery(request, TOKEN_MOCK);
+
+    expect(res.success).toBeTruthy();
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/saved-queries'),
+      expect.objectContaining({ method: 'POST', body: JSON.stringify(request) }),
+    );
+  });
+
+  test('createSavedQuery surfaces the machine error code on the failure envelope', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ status: 422, error: 'validation_error', message: 'blank name' }), {
+      status: 422,
+      headers: { 'content-type': 'application/json' },
+    });
+
+    const res = await instance.createSavedQuery(request, TOKEN_MOCK);
+
+    expect(res.success).toBeFalsy();
+    expect(res.errorHeader).toBe('validation_error');
+    expect(res.errorMessage).toBe('blank name');
+  });
+
+  test('updateSavedQuery PUTs the payload to the encoded saved-query URL', async () => {
+    fetch.mockResponseOnce(JSON.stringify(savedQuery), JSON_HEADERS);
+
+    await instance.updateSavedQuery('sq_1', request, TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/saved-queries/sq_1'),
+      expect.objectContaining({ method: 'PUT', body: JSON.stringify(request) }),
+    );
+  });
+
+  test('updateSavedQuery sends no If-Match header — the service takes no precondition', async () => {
+    fetch.mockResponseOnce(JSON.stringify(savedQuery), JSON_HEADERS);
+
+    await instance.updateSavedQuery('sq_1', request, TOKEN_MOCK);
+
+    const sentHeaders = (fetch.mock.calls[0][1] as RequestInit).headers as Record<string, string>;
+    expect(Object.keys(sentHeaders).some((key) => key.toLowerCase() === 'if-match')).toBeFalsy();
+  });
+
+  test('deleteSavedQuery issues DELETE on the encoded saved-query URL', async () => {
+    fetch.mockResponseOnce('');
+
+    await instance.deleteSavedQuery('sq_1', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/saved-queries/sq_1'),
+      expect.objectContaining({ method: 'DELETE' }),
     );
   });
 });

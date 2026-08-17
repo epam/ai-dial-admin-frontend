@@ -2,24 +2,38 @@
 
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
-import { removeRunner, updateRunner } from '@/src/app/[lang]/assets-app-runners/actions';
+import { ButtonAppearance, ButtonVariant, DialButtonDropdown, DropdownItem } from '@epam/ai-dial-ui-kit';
+import { JSONSchema7 } from 'json-schema';
+
+import { getResolvedRunnerSchema, removeRunner, updateRunner } from '@/src/app/[lang]/assets-app-runners/actions';
+import { createApp } from '@/src/app/[lang]/assets-applications/actions';
+import CreateAsset from '@/src/components/Assets/Deployments/CreateAsset';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { useAppRunnersFolder } from '@/src/context/assets/AppRunnersFolderContext';
+import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
-import { EntitiesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, CreateI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { DialApplicationScheme } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
-import { DialAppRunnerResource } from '@/src/models/dial/resource';
+import { DialAppRunnerResource, DialResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
+import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
+import { toCoreRunnerName } from '@/src/utils/app-runners/core-runner-name';
+import { toRunnerReference } from '@/src/utils/app-runners/runner-reference';
 import { validateAppRunner } from '@/src/utils/app-runners/validation';
+import { createSchemaSource } from '@/src/utils/entities/application-source';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
+import { getSchemaDefaults } from '@/src/utils/schema';
 import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
 import TabsContent from './TabsContent';
 
@@ -46,6 +60,7 @@ const AppRunnerAssetView: FC<Props> = ({
   const router = useRouter();
   const { fetchFiles } = useAppRunnersFolder();
   const { showNotification } = useNotification();
+  const { dispatch } = useSaveValidationContext();
   const getReqRef = useRef(useProtectedRequest());
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
@@ -54,6 +69,16 @@ const AppRunnerAssetView: FC<Props> = ({
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
   const [isSkipRefresh, setIsSkipRefresh] = useState(false);
   const [discardKey, setDiscardKey] = useState(0);
+  const [isCreateAssetAppModalOpen, setIsCreateAssetAppModalOpen] = useState(false);
+  const [applicationProperties, setApplicationProperties] = useState<Record<string, unknown>>();
+
+  const createItems: DropdownItem[] = [
+    {
+      key: 'AssetApplication',
+      label: t(CreateI18nKey.AssetApplication),
+      onClick: () => setIsCreateAssetAppModalOpen(true),
+    },
+  ];
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -65,6 +90,22 @@ const AppRunnerAssetView: FC<Props> = ({
 
   useEffect(() => {
     setSelectedRunner(structuredClone(originalRunner));
+  }, [originalRunner]);
+
+  // Resolved against the saved runner, not `selectedRunner`: Core resolves what is stored, so in-flight
+  // edits would derive defaults from a schema Core has not seen. A failed resolve falls back to the
+  // runner's own schema so the create modal still opens with usable defaults.
+  useEffect(() => {
+    const id = originalRunner.$id;
+
+    if (!id) {
+      return;
+    }
+
+    getResolvedRunnerSchema(toCoreRunnerName(id)).then((res) => {
+      const resolved = res.success ? (res.response as DialApplicationScheme | undefined) : undefined;
+      setApplicationProperties(getSchemaDefaults((resolved ?? originalRunner) as JSONSchema7));
+    });
   }, [originalRunner]);
 
   // An option list read from only one of Core's two populations is shown rather than withheld, so the
@@ -86,6 +127,11 @@ const AppRunnerAssetView: FC<Props> = ({
     setSelectedRunner(structuredClone(originalRunner));
     setDiscardKey((prev) => prev + 1);
   }, [originalRunner]);
+
+  const onCloseCreateAssetAppModal = useCallback(() => {
+    setIsCreateAssetAppModalOpen(false);
+    dispatch({ type: ValidationActionType.Reset });
+  }, [dispatch]);
 
   const onChange = useCallback((runner: DialAppRunnerResource, skipRefresh?: boolean) => {
     setSelectedRunner(runner);
@@ -134,7 +180,14 @@ const AppRunnerAssetView: FC<Props> = ({
         onChangeActiveTab={setActiveTab}
         onRemove={removeRunner}
         getAssetContext={useAppRunnersFolder}
-      />
+      >
+        <DialButtonDropdown
+          label={t(ButtonsI18nKey.Create)}
+          items={createItems}
+          variant={ButtonVariant.Neutral}
+          appearance={ButtonAppearance.Outlined}
+        />
+      </SimpleEntityHeader>
 
       <div className="flex-1 overflow-auto min-h-0">
         {isEditorEnabled ? (
@@ -156,6 +209,21 @@ const AppRunnerAssetView: FC<Props> = ({
             onChange={onChange}
           />
         )}
+        {isCreateAssetAppModalOpen &&
+          createPortal(
+            <CreateAsset
+              view={ApplicationRoute.AssetsApplications}
+              isModalOpen={isCreateAssetAppModalOpen}
+              onClose={onCloseCreateAssetAppModal}
+              onCreate={createApp as (entity: DialResource) => Promise<ServerActionResponse>}
+              context={useAppsFolder}
+              initialValues={{
+                source: originalRunner.$id ? createSchemaSource(toRunnerReference(originalRunner.$id)) : undefined,
+                applicationProperties,
+              }}
+            />,
+            document.body,
+          )}
       </div>
     </div>
   );

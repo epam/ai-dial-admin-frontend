@@ -10,16 +10,13 @@ const MINUTE = 60 * 1000;
 
 const row = (overrides: Partial<ConversationRow> = {}): ConversationRow => ({
   chat_id: 'chat-1',
-  project: 'data-team',
-  turns: 3,
-  tokens: 10,
-  cost: '0.1',
-  last_activity: NOW - 12 * MINUTE,
-  first_activity: NOW - 18 * MINUTE,
-  model: 'gpt-4o',
-  model_count: 1,
-  title: null,
-  snippet: null,
+  project_id: 'data-team',
+  user_hash: 'db7327ba3decd351',
+  turn_count: 3,
+  total_tokens: 10,
+  total_price: '0.1',
+  last_request_time: NOW - 12 * MINUTE,
+  first_request_time: NOW - 18 * MINUTE,
   rating_up: 0,
   rating_down: 0,
   ...overrides,
@@ -49,20 +46,20 @@ describe('ActivityCellRenderer', () => {
   });
 
   test('shows the relative time alone when the span cannot be computed', () => {
-    renderCell(row({ first_activity: null }));
+    renderCell(row({ first_request_time: null }));
 
     expect(screen.getByText('12m ago')).toBeInTheDocument();
     expect(screen.queryByText('6 min')).not.toBeInTheDocument();
   });
 
   test('reads an ISO timestamp as well as epoch millis', () => {
-    renderCell(row({ last_activity: new Date(NOW - 12 * MINUTE).toISOString() }));
+    renderCell(row({ last_request_time: new Date(NOW - 12 * MINUTE).toISOString() }));
 
     expect(screen.getByText('12m ago')).toBeInTheDocument();
   });
 
   test('renders nothing when there is no activity timestamp', () => {
-    const { container } = renderCell(row({ last_activity: null }));
+    const { container } = renderCell(row({ last_request_time: null }));
 
     expect(container).toBeEmptyDOMElement();
   });

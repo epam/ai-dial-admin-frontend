@@ -248,7 +248,7 @@ const ExternalServiceAuthButtons: FC<Props> = ({ appPath, serviceId, service, si
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (!authType || authType === ToolsetAuthType.NONE) return null;
+  if (authType !== ToolsetAuthType.OAUTH && authType !== ToolsetAuthType.API_KEY) return null;
 
   if (isLoading) return <DialLoader fullWidth={false} size={16} />;
 

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { datasetsApi, testSuitesApi } from '@/src/app/api/api';
+import { datasetsApi, structuredQueryApi, testSuitesApi } from '@/src/app/api/api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
@@ -82,12 +82,35 @@ describe('TestSuites :: server actions', () => {
     expect(result).toBe(RESPONSE_MOCK);
   });
 
-  test('Should call getTestSuites action', async () => {
-    (testSuitesApi.getTestSuites as any).mockResolvedValue([RESPONSE_MOCK]);
+  test('Should call getTestSuites action via Query DSL', async () => {
+    (structuredQueryApi.execute as any).mockResolvedValue({
+      rows: [{ id: '1', name: 'Suite' }],
+      totalCount: 1,
+    });
     const result = await getTestSuites(1, 10, [], []);
     expect(getUserToken).toHaveBeenCalled();
-    expect(testSuitesApi.getTestSuites).toHaveBeenCalledWith(1, 10, [], [], TOKEN_MOCK);
-    expect(result).toEqual([RESPONSE_MOCK]);
+    expect(structuredQueryApi.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ entity: 'test_suites', mode: 'row' }),
+      TOKEN_MOCK,
+    );
+    expect(result).toEqual({
+      page: 1,
+      size: 10,
+      totalElements: 1,
+      totalPages: 1,
+      content: [
+        expect.objectContaining({
+          id: '1',
+          name: 'Suite',
+        }),
+      ],
+    });
+  });
+
+  test('Should return null from getTestSuites when Query DSL returns null', async () => {
+    (structuredQueryApi.execute as any).mockResolvedValue(null);
+    const result = await getTestSuites(0, 10, [], []);
+    expect(result).toBeNull();
   });
 
   test('Should call getTestSuiteByName action', async () => {

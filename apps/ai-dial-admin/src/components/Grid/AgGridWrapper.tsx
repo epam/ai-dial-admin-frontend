@@ -46,7 +46,7 @@ import CellContextMenu, { ContextMenuPosition } from './CellContextMenu/CellCont
 import { baseColumnComparator } from './comparators/base-column-comparator';
 import { ROW_HEIGHT } from './constants';
 import FloatingFilter from './FloatingFilter/FloatingFilter';
-import { getColumnsStateFromStorage, GridModel, saveColumnsStateToStorage } from './utils';
+import { getColumnsStateFromStorage, GridModel, saveColumnsStateToStorage, toColumnLeaves } from './utils';
 
 export interface AgGridProps<T> {
   columnDefs?: ColDef[];
@@ -88,7 +88,9 @@ ModuleRegistry.registerModules([
 ]);
 
 const getDefaultSorts = (columnDefs: ColDef[] | undefined): ColumnState[] =>
-  columnDefs?.filter((col) => col.sort).map((col) => ({ colId: col.field, sort: col.sort }) as ColumnState) ?? [];
+  toColumnLeaves(columnDefs ?? [])
+    .filter((col) => col.sort)
+    .map((col) => ({ colId: col.field, sort: col.sort }) as ColumnState);
 
 const loadPersistedModel = (storageKey: string | undefined, defaultSorts: ColumnState[]): GridModel | null =>
   storageKey ? getColumnsStateFromStorage(storageKey, defaultSorts) : null;

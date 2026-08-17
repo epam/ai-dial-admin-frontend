@@ -143,6 +143,9 @@ export interface DialAppRunnerResource extends Omit<
   ['dial:applicationTypeRoutes']?: DialAppRoute[];
 }
 
+/** The resource types DIAL Core keeps in its flat `platform` bucket — see `isFlatPlatformView`. */
+export type PlatformAsset = DialModelResource | DialAppRunnerResource;
+
 export enum DialModelResourceType {
   Chat = 'CHAT',
   Completion = 'COMPLETION',
@@ -237,4 +240,5 @@ export enum ToolsetAuthType {
   NONE = 'NONE',
   API_KEY = 'API_KEY',
   OAUTH = 'OAUTH',
+  DIAL_NATIVE = 'DIAL_NATIVE',
 }

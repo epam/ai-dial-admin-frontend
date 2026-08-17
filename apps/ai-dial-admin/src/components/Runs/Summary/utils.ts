@@ -1,5 +1,6 @@
 import { JSONSchema7 } from 'json-schema';
 
+import { sortMetricStatistics } from '@/src/components/Common/MetricStatistics/utils';
 import { Metric, MetricSnapshot } from '@/src/models/evaluation/metric';
 import { ExtractionResultStatus } from '@/src/models/evaluation/run';
 import { MetricScoreValue } from '@/src/models/evaluation/run-comparison';
@@ -237,7 +238,7 @@ export const parseMetricScores = (result: StructuredQueryResult | null): MetricS
     group.bars[barName] = Math.round(value * 1000) / 1000;
   }
 
-  return { overallScore, statistics, byStatistic };
+  return { overallScore, statistics: sortMetricStatistics(statistics), byStatistic };
 };
 
 /**
