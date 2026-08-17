@@ -2612,10 +2612,16 @@ export default {
     Project: 'Project',
     NoProject: 'No project',
     Turns: 'Turns',
-    TurnsHint: 'Requests recorded for this conversation, including embedding, MCP and routing calls.',
+    TurnsHint: 'Requests recorded for this conversation.',
     Activity: 'Activity',
     Tokens: 'Tokens',
     Cost: 'Cost',
+    Duration: 'Duration',
+    DurationHint:
+      "The conversation's hop durations added up. A hop includes the hops it called, so a conversation whose turns branch reads longer than the time it actually took.",
+    Models: 'Models',
+    ModelsHint:
+      'Models that served this conversation. Applications, toolsets and embeddings are left out; a routing deployment can remain when nothing in its name reveals it as one.',
     NoConversations: 'No conversations',
     ConversationsLoadFailed: 'Could not load conversations.',
     SearchPlaceholder: 'Search conversations and projects…',

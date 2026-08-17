@@ -12,6 +12,7 @@ import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSele
 import ImportValidationCellRenderer from '@/src/components/Grid/CellRenderers/ImportValidationCellRenderer';
 import RunStatusCellRenderer from '@/src/components/Grid/CellRenderers/RunStatusCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
+import ModelsCellRenderer from '@/src/components/Grid/CellRenderers/ModelsCellRenderer';
 import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRenderer';
 import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
 import { ACTION_COLUMN, NO_BORDER_CLASS } from '@/src/constants/ag-grid';
@@ -60,7 +61,12 @@ import {
   FILTERABLE_CONVERSATION_FIELDS,
   SORTABLE_CONVERSATION_FIELDS,
 } from '@/src/constants/analytics/conversations-trace';
-import { formatCompactNumber, formatSignificantCost } from '@/src/utils/analytics/conversation-formatting';
+import {
+  formatCompactNumber,
+  formatConversationDuration,
+  formatSignificantCost,
+} from '@/src/utils/analytics/conversation-formatting';
+import { narrowToModels } from '@/src/utils/analytics/conversation-models';
 import { ColumnProvenance, ConversationColumn, ConversationsField } from '@/src/models/analytics/conversations-trace';
 import { QueryValueType } from '@/src/models/analytics/query';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
@@ -700,6 +706,34 @@ const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] 
     minWidth: 100,
   },
   {
+    field: ConversationsField.DurationMs,
+    headerName: t(ConversationsTraceI18nKey.Duration),
+    headerTooltip: t(ConversationsTraceI18nKey.DurationHint),
+    ...numericColumn,
+    valueFormatter: ({ value }) => formatConversationDuration(value),
+    flex: 0.8,
+    minWidth: 100,
+  },
+  {
+    field: ConversationsField.Deployments,
+    headerName: t(ConversationsTraceI18nKey.Models),
+    headerTooltip: t(ConversationsTraceI18nKey.ModelsHint),
+    cellRenderer: ModelsCellRenderer,
+    cellRendererParams: (params: { data?: { deployments?: string[] } }) => ({
+      items: narrowToModels(params.data?.deployments),
+      allItems: params.data?.deployments ?? [],
+      label: t(ConversationsTraceI18nKey.Models),
+    }),
+    // The tooltip states everything the row records, so a value the narrowing dropped stays recoverable.
+    tooltipValueGetter: (params) => (params.data?.deployments as string[] | undefined)?.join(', ') || null,
+    // Stated rather than left to the sort/filter allow-lists: a header offering an affordance the query
+    // language cannot honour would discard the operator's input silently.
+    sortable: false,
+    filter: false,
+    flex: 1.6,
+    minWidth: 180,
+  },
+  {
     field: ConversationColumn.Rating,
     headerName: t(ConversationsTraceI18nKey.Rating),
     cellRenderer: RatingCellRenderer,
@@ -708,7 +742,7 @@ const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] 
   },
 ];
 
-const NUMERIC_FILTER_VALUE_TYPES = [QueryValueType.Integer, QueryValueType.Decimal];
+const NUMERIC_FILTER_VALUE_TYPES = [QueryValueType.Integer, QueryValueType.Long, QueryValueType.Decimal];
 
 const conversationFilterPreset = (fieldName?: string): Partial<ColDef> => {
   if (!fieldName || !FILTERABLE_CONVERSATION_FIELDS.includes(fieldName as ConversationsField)) {

@@ -123,6 +123,7 @@ export enum ConversationsField {
   SuccessCount = 'success_count',
   DurationMs = 'duration_ms',
   AvgDurationMs = 'avg_duration_ms',
+  Deployments = 'deployments',
   FirstRequestTime = 'first_request_time',
   LastRequestTime = 'last_request_time',
 }
@@ -173,6 +174,7 @@ export interface ConversationDetailRow {
   success_count: number | string | null;
   duration_ms: number | string | null;
   avg_duration_ms: number | string | null;
+  deployments: string[] | null;
 }
 
 export interface ConversationDetailResult {
@@ -299,6 +301,7 @@ export enum ConversationFieldFormat {
   Cost = 'cost',
   DateTime = 'date-time',
   Duration = 'duration',
+  List = 'list',
 }
 
 export enum ConversationPanelLayout {

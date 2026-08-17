@@ -1,6 +1,7 @@
 import { ColDef, ValueFormatterParams } from 'ag-grid-community';
 import { describe, expect, test } from 'vitest';
 
+import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace';
 import { baseNumberFilter, baseStringFilter } from '@/src/constants/grid-columns/filters';
 import { CONVERSATIONS_TRACE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
@@ -16,7 +17,7 @@ const format = (fieldName: string, value: unknown): string =>
   column(fieldName).valueFormatter?.({ value } as ValueFormatterParams) as string;
 
 describe('conversations columns :: composition', () => {
-  test('exposes exactly the eight displayed columns, in order', () => {
+  test('exposes exactly the ten displayed columns, in order', () => {
     expect(columns().map((col) => col.field)).toEqual([
       ConversationsField.ChatId,
       ConversationsField.ProjectId,
@@ -25,6 +26,8 @@ describe('conversations columns :: composition', () => {
       ConversationsField.LastRequestTime,
       ConversationsField.TotalTokens,
       ConversationsField.TotalPrice,
+      ConversationsField.DurationMs,
+      ConversationsField.Deployments,
       ConversationColumn.Rating,
     ]);
   });
@@ -38,6 +41,8 @@ describe('conversations columns :: composition', () => {
       ConversationsTraceI18nKey.Activity,
       ConversationsTraceI18nKey.Tokens,
       ConversationsTraceI18nKey.Cost,
+      ConversationsTraceI18nKey.Duration,
+      ConversationsTraceI18nKey.Models,
       ConversationsTraceI18nKey.Rating,
     ]);
   });
@@ -60,6 +65,7 @@ describe('conversations columns :: sort and filter contract', () => {
     ConversationsField.LastRequestTime,
     ConversationsField.TotalTokens,
     ConversationsField.TotalPrice,
+    ConversationsField.DurationMs,
   ];
 
   test.each(FIELD_BACKED)('%s is sortable, because the query can order the whole result by it', (fieldName) => {
@@ -71,6 +77,13 @@ describe('conversations columns :: sort and filter contract', () => {
     expect(column(ConversationColumn.Rating).filter).toBe(false);
   });
 
+  // The query language expresses no ordering or predicate over an array, and the grid pages server-side, so a
+  // client-side comparator would order the loaded page and misstate what it did.
+  test('models offers neither a sort nor a filter affordance', () => {
+    expect(column(ConversationsField.Deployments).sortable).toBe(false);
+    expect(column(ConversationsField.Deployments).filter).toBe(false);
+  });
+
   test.each([[ConversationsField.ChatId], [ConversationsField.ProjectId], [ConversationsField.UserHash]])(
     '%s offers a text filter',
     (fieldName) => {
@@ -79,13 +92,15 @@ describe('conversations columns :: sort and filter contract', () => {
     },
   );
 
-  test.each([[ConversationsField.TurnCount], [ConversationsField.TotalTokens], [ConversationsField.TotalPrice]])(
-    '%s offers a number filter',
-    (fieldName) => {
-      expect(column(fieldName).filter).toBe(baseNumberFilter.filter);
-      expect(column(fieldName).filterParams?.filterOptions).toEqual(baseNumberFilter.filterParams?.filterOptions);
-    },
-  );
+  test.each([
+    [ConversationsField.TurnCount],
+    [ConversationsField.TotalTokens],
+    [ConversationsField.TotalPrice],
+    [ConversationsField.DurationMs],
+  ])('%s offers a number filter', (fieldName) => {
+    expect(column(fieldName).filter).toBe(baseNumberFilter.filter);
+    expect(column(fieldName).filterParams?.filterOptions).toEqual(baseNumberFilter.filterParams?.filterOptions);
+  });
 
   test('activity sorts but offers no filter', () => {
     expect(column(ConversationsField.LastRequestTime).sortable).not.toBe(false);
@@ -175,5 +190,39 @@ describe('conversations columns :: value formatting', () => {
   test('user renders through a cell renderer so a missing hash is marked', () => {
     expect(typeof column(ConversationsField.UserHash).cellRenderer).toBe('function');
     expect(column(ConversationsField.UserHash).valueFormatter).toBeUndefined();
+  });
+
+  test.each([
+    ['a sub-minute duration', 6709, '6.7s'],
+    ['a multi-minute duration', 275234, '4m 35s'],
+  ])('duration renders %s as %s', (_label, value, expected) => {
+    expect(format(ConversationsField.DurationMs, value)).toBe(expected);
+  });
+
+  // A conversation that ran took time, so a 0 records that the backend never measured it.
+  test('duration renders an unmeasured zero as the unavailable marker rather than 0s', () => {
+    expect(format(ConversationsField.DurationMs, 0)).toBe(UNAVAILABLE_VALUE);
+  });
+
+  test('models renders through a cell renderer over the narrowed list', () => {
+    const models = column(ConversationsField.Deployments);
+    const params = models.cellRendererParams as (params: unknown) => { items: string[]; allItems: string[] };
+    const deployments = ['dial-chathub-v2-gemini-3.1-pro-preview', 'gemini-3.1-pro-preview'];
+
+    expect(typeof models.cellRenderer).toBe('function');
+    expect(params({ data: { deployments } })).toMatchObject({
+      items: ['gemini-3.1-pro-preview'],
+      allItems: deployments,
+    });
+  });
+
+  // The narrowing drops values from the pills, so the tooltip has to carry the whole record.
+  test('the models tooltip states every recorded deployment, including the narrowed-away ones', () => {
+    const models = column(ConversationsField.Deployments);
+    const deployments = ['applications/public/qa__0.0.1', 'gpt-4.1-2025-04-14'];
+
+    expect(models.tooltipValueGetter?.({ data: { deployments } } as never)).toBe(
+      'applications/public/qa__0.0.1, gpt-4.1-2025-04-14',
+    );
   });
 });
