@@ -124,6 +124,7 @@ export default {
     AppRunners: 'App Runners',
     Interceptors: 'Interceptors',
     Models: 'Models',
+    AssetsModels: 'Models',
     Routes: 'Routes',
 
     Roles: 'Roles',
@@ -141,6 +142,7 @@ export default {
     ToolsetPublications: 'Toolset Publications',
     FilePublications: 'File Publications',
     ConversationPublications: 'Conversation Publications',
+    SkillPublications: 'Skill Publications',
     ImportConfig: 'Import Config',
     ExportConfig: 'Export Config',
     ReadOnlyAdminImportUnavailable: 'Import is not available for read-only administrators.',
@@ -835,6 +837,14 @@ export default {
       UnpublishDeclineModalTitle: 'Decline Conversation Unpublishing',
       PublishApproveDescription: 'Are you sure that you want to publish conversation?',
       UnpublishApproveDescription: 'Are you sure that you want to unpublish conversation?',
+    },
+    Skill: {
+      PublishApproveModalTitle: 'Publish Skill',
+      UnpublishApproveModalTitle: 'Unpublish Skill',
+      PublishDeclineModalTitle: 'Decline Skill Publishing',
+      UnpublishDeclineModalTitle: 'Decline Skill Unpublishing',
+      PublishApproveDescription: 'Are you sure that you want to publish skill?',
+      UnpublishApproveDescription: 'Are you sure that you want to unpublish skill?',
     },
   },
   Prompts: {
@@ -2604,10 +2614,16 @@ export default {
     Project: 'Project',
     NoProject: 'No project',
     Turns: 'Turns',
-    TurnsHint: 'Requests recorded for this conversation, including embedding, MCP and routing calls.',
+    TurnsHint: 'Requests recorded for this conversation.',
     Activity: 'Activity',
     Tokens: 'Tokens',
     Cost: 'Cost',
+    Duration: 'Duration',
+    DurationHint:
+      "The conversation's hop durations added up. A hop includes the hops it called, so a conversation whose turns branch reads longer than the time it actually took.",
+    Models: 'Models',
+    ModelsHint:
+      'Models that served this conversation. Applications, toolsets and embeddings are left out; a routing deployment can remain when nothing in its name reveals it as one.',
     NoConversations: 'No conversations',
     ConversationsLoadFailed: 'Could not load conversations.',
     SearchPlaceholder: 'Search conversations and projects…',

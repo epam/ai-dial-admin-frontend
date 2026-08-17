@@ -33,6 +33,7 @@ const CONVERSATION: ConversationDetailRow = {
   success_count: 0,
   duration_ms: 0,
   avg_duration_ms: 0,
+  deployments: ['anthropic_switchyard-model', 'anthropic.claude-opus-4-8'],
 };
 
 const FEEDBACK: ConversationFeedbackRow[] = [
@@ -85,17 +86,33 @@ describe('ConversationDetailRail', () => {
     expect(screen.getByText('$10.8')).toBeInTheDocument();
   });
 
-  test('the metadata panel marks trace, deployment and region unavailable', () => {
+  test('the metadata panel marks trace and region unavailable', () => {
     setup();
 
-    for (const key of [
-      ConversationsTraceI18nKey.DetailTrace,
-      ConversationsTraceI18nKey.DetailDeployment,
-      ConversationsTraceI18nKey.DetailRegion,
-    ]) {
+    for (const key of [ConversationsTraceI18nKey.DetailTrace, ConversationsTraceI18nKey.DetailRegion]) {
       const label = screen.getByText(key);
       expect(label.parentElement).toHaveTextContent(UNAVAILABLE_VALUE);
     }
+  });
+
+  // The rollup carries the deployments, so marking the row unavailable would misreport data already fetched.
+  test('the metadata panel states the deployments the rollup carries', () => {
+    setup();
+
+    const label = screen.getByText(ConversationsTraceI18nKey.DetailDeployment);
+
+    expect(label.parentElement).toHaveTextContent('anthropic_switchyard-model, anthropic.claude-opus-4-8');
+    expect(label.parentElement).not.toHaveTextContent(UNAVAILABLE_VALUE);
+  });
+
+  // A conversation that ran took time, so a recorded 0 means the backend never measured it. The grid states
+  // the same thing about the same conversation.
+  test('an unmeasured duration renders as the unavailable marker rather than as a zero', () => {
+    setup();
+
+    const label = screen.getByText(ConversationsTraceI18nKey.DetailDuration);
+
+    expect(label.parentElement).toHaveTextContent(UNAVAILABLE_VALUE);
   });
 
   test('a zero success count renders as a number, not as the unavailable marker', () => {

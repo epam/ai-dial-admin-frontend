@@ -57,6 +57,7 @@ export const SORTABLE_CONVERSATION_FIELDS: ConversationsField[] = [
   ConversationsField.LastRequestTime,
   ConversationsField.TotalTokens,
   ConversationsField.TotalPrice,
+  ConversationsField.DurationMs,
 ];
 
 export const FILTERABLE_CONVERSATION_FIELDS: ConversationsField[] = [
@@ -66,11 +67,16 @@ export const FILTERABLE_CONVERSATION_FIELDS: ConversationsField[] = [
   ConversationsField.TurnCount,
   ConversationsField.TotalTokens,
   ConversationsField.TotalPrice,
+  ConversationsField.DurationMs,
 ];
 
 export const CURATED_COMPOSED_FIELDS: string[] = [ConversationsField.FirstRequestTime];
 
 export const NON_SCALAR_FIELD_TYPES: AnalyticsFieldType[] = [AnalyticsFieldType.Object, AnalyticsFieldType.Array];
+
+export const MODEL_EXCLUDED_RESOURCE_PREFIXES: string[] = ['applications/', 'toolsets/'];
+
+export const EMBEDDING_NAME_MARKER = 'embedding';
 
 export const DATE_FIELD_TYPES: AnalyticsFieldType[] = [AnalyticsFieldType.Date, AnalyticsFieldType.Timestamp];
 
@@ -89,6 +95,7 @@ export const CONVERSATION_FIELD_VALUE_TYPE: Partial<Record<ConversationsField, Q
   [ConversationsField.TotalPrice]: QueryValueType.Decimal,
   [ConversationsField.LastRequestTime]: QueryValueType.Timestamp,
   [ConversationsField.FirstRequestTime]: QueryValueType.Timestamp,
+  [ConversationsField.DurationMs]: QueryValueType.Long,
 };
 
 export const ANALYTICS_FIELD_QUERY_VALUE_TYPE: Partial<Record<AnalyticsFieldType, QueryValueType>> = {
@@ -232,7 +239,11 @@ export const CONVERSATION_DETAIL_PANELS: ConversationPanelDefinition[] = [
         format: ConversationFieldFormat.Count,
       },
       { labelKey: ConversationsTraceI18nKey.DetailTrace },
-      { labelKey: ConversationsTraceI18nKey.DetailDeployment },
+      {
+        labelKey: ConversationsTraceI18nKey.DetailDeployment,
+        column: ConversationsField.Deployments,
+        format: ConversationFieldFormat.List,
+      },
       { labelKey: ConversationsTraceI18nKey.DetailRegion },
     ],
   },
@@ -256,6 +267,8 @@ export const CONVERSATION_PROVENANCE_GROUPS: ProvenanceGroup[] = [
       ConversationsField.LastRequestTime,
       ConversationsField.TotalTokens,
       ConversationsField.TotalPrice,
+      ConversationsField.DurationMs,
+      ConversationsField.Deployments,
     ],
   },
   {

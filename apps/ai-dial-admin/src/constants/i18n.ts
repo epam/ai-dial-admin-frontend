@@ -14,6 +14,7 @@ export enum MenuI18nKey {
   Evaluation = 'Menu.Evaluation',
   EvaluationDescription = 'Menu.EvaluationDescription',
   Models = 'Menu.Models',
+  AssetsModels = 'Menu.AssetsModels',
   Applications = 'Menu.Applications',
   ApplicationRunners = 'Menu.ApplicationRunners',
   AppRunners = 'Menu.AppRunners',
@@ -44,6 +45,7 @@ export enum MenuI18nKey {
   ApplicationPublications = 'Menu.ApplicationPublications',
   FilePublications = 'Menu.FilePublications',
   ConversationPublications = 'Menu.ConversationPublications',
+  SkillPublications = 'Menu.SkillPublications',
   ImportConfig = 'Menu.ImportConfig',
   ExportConfig = 'Menu.ExportConfig',
   ReadOnlyAdminImportUnavailable = 'Menu.ReadOnlyAdminImportUnavailable',
@@ -810,6 +812,13 @@ export enum PublicationsI18nKey {
   ConversationUnpublishDeclineModalTitle = 'Publications.Conversation.UnpublishDeclineModalTitle',
   ConversationPublishApproveDescription = 'Publications.Conversation.PublishApproveDescription',
   ConversationUnpublishApproveDescription = 'Publications.Conversation.UnpublishApproveDescription',
+  // skill publications
+  SkillPublishApproveModalTitle = 'Publications.Skill.PublishApproveModalTitle',
+  SkillPublishDeclineModalTitle = 'Publications.Skill.PublishDeclineModalTitle',
+  SkillUnpublishApproveModalTitle = 'Publications.Skill.UnpublishApproveModalTitle',
+  SkillUnpublishDeclineModalTitle = 'Publications.Skill.UnpublishDeclineModalTitle',
+  SkillPublishApproveDescription = 'Publications.Skill.PublishApproveDescription',
+  SkillUnpublishApproveDescription = 'Publications.Skill.UnpublishApproveDescription',
 }
 
 export enum CompareI18nKey {
@@ -2534,6 +2543,10 @@ export enum ConversationsTraceI18nKey {
   Activity = 'ConversationsTrace.Activity',
   Tokens = 'ConversationsTrace.Tokens',
   Cost = 'ConversationsTrace.Cost',
+  Duration = 'ConversationsTrace.Duration',
+  DurationHint = 'ConversationsTrace.DurationHint',
+  Models = 'ConversationsTrace.Models',
+  ModelsHint = 'ConversationsTrace.ModelsHint',
   NoConversations = 'ConversationsTrace.NoConversations',
   ConversationsLoadFailed = 'ConversationsTrace.ConversationsLoadFailed',
   SearchPlaceholder = 'ConversationsTrace.SearchPlaceholder',

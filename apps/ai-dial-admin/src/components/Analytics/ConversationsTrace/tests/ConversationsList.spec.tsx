@@ -120,7 +120,7 @@ describe('ConversationsList :: paging', () => {
 });
 
 describe('ConversationsList :: columns', () => {
-  test('renders the eight columns in order', () => {
+  test('renders the ten columns in order', () => {
     renderList();
 
     expect(leafColumns().map((column) => column.field)).toEqual([
@@ -131,6 +131,8 @@ describe('ConversationsList :: columns', () => {
       ConversationsField.LastRequestTime,
       ConversationsField.TotalTokens,
       ConversationsField.TotalPrice,
+      ConversationsField.DurationMs,
+      ConversationsField.Deployments,
       ConversationColumn.Rating,
     ]);
   });
@@ -142,7 +144,7 @@ describe('ConversationsList :: columns', () => {
 
     expect(groups.map((group) => group.groupId)).toEqual([ColumnProvenance.Conversations, ColumnProvenance.Feedback]);
     expect(groups.every((group) => group.marryChildren)).toBe(true);
-    expect(leafColumns()).toHaveLength(8);
+    expect(leafColumns()).toHaveLength(10);
   });
 
   test('attributes the rating column to the feedback entity and the rest to conversations', () => {
@@ -183,7 +185,7 @@ describe('ConversationsList :: columns', () => {
   test('offers nothing extra when the schema is unavailable', () => {
     renderList();
 
-    expect(leafColumns()).toHaveLength(8);
+    expect(leafColumns()).toHaveLength(10);
   });
 
   test('keeps rating out of the offered set', () => {

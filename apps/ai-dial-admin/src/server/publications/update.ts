@@ -39,6 +39,7 @@ type UpdatablePublication = Publication & {
   conversations?: ResourceWrapper[];
   prompts?: ResourceWrapper[];
   toolSetResources?: ResourceWrapper[];
+  skillResources?: ResourceWrapper[];
   files?: PublicationFile[];
 };
 
@@ -54,6 +55,9 @@ const getPrimaryType = (publication: UpdatablePublication): PublishableResourceT
   }
   if (Array.isArray(publication.toolSetResources)) {
     return ResourceType.TOOLSET;
+  }
+  if (Array.isArray(publication.skillResources)) {
+    return ResourceType.SKILL;
   }
   return ResourceType.FILE;
 };
@@ -89,7 +93,11 @@ export const buildUpdatePlan = (publication: UpdatablePublication): UpdatePlan =
       sourceUrl: wrapper.sourceUrl,
       targetUrl: buildEncodedPath(config.prefix + ensureTrailingSlash(folderId), asset?.name ?? '', asset?.version),
     });
-    resourcePuts.push({ asset: asset as object, type });
+    // Skill has no writable JSON asset (its real write path is Core's /v2/skills multipart API,
+    // not /v1/{type}/...) — only recalculate its target URL above, never queue an asset PUT.
+    if (type !== ResourceType.SKILL) {
+      resourcePuts.push({ asset: asset as object, type });
+    }
   }
 
   const fileWrappers = config.hasFiles ? (publication.files ?? []) : [];

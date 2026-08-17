@@ -1,7 +1,13 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
-import { ActionType, FilePublication, PromptPublication, Publication } from '@/src/models/dial/publications';
+import {
+  ActionType,
+  FilePublication,
+  PromptPublication,
+  Publication,
+  SkillPublication,
+} from '@/src/models/dial/publications';
 import { DialRule, RuleFunction } from '@/src/models/dial/rule';
 import { ApplicationRoute } from '@/src/types/routes';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
@@ -53,6 +59,19 @@ vi.mock('@/src/components/Publications/Properties/PromptProperties', () => ({
   ),
 }));
 
+vi.mock('@/src/components/Publications/Properties/SkillProperties', () => ({
+  default: ({ publication, onChange }: any) => (
+    <div role="region" aria-label="skill-properties">
+      <div role="region" aria-label="skill-publication-path">
+        {publication.path}
+      </div>
+      <button role="button" aria-label="skill-change-button" onClick={() => onChange({ ...publication })}>
+        Change Skill
+      </button>
+    </div>
+  ),
+}));
+
 const mockRules: DialRule[] = [
   {
     source: 'role',
@@ -91,6 +110,12 @@ const createMockFilePublication = (overrides?: Partial<FilePublication>): FilePu
 const createMockPromptPublication = (overrides?: Partial<PromptPublication>): PromptPublication => ({
   ...createMockPublication(),
   prompts: [],
+  ...overrides,
+});
+
+const createMockSkillPublication = (overrides?: Partial<SkillPublication>): SkillPublication => ({
+  ...createMockPublication(),
+  skillResources: [],
   ...overrides,
 });
 
@@ -147,6 +172,22 @@ describe('Publications :: TabsContent', () => {
     expect(screen.getByRole('region', { name: 'prompt-properties' })).toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'file-properties' })).not.toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'permissions' })).not.toBeInTheDocument();
+  });
+
+  test('renders InfoHeader and SkillProperties when Properties tab is active for SkillPublications', () => {
+    const publication = createMockSkillPublication();
+    setup({
+      view: ApplicationRoute.SkillPublications,
+      selectedPublication: publication,
+      activeTab: EntityViewTab.Properties,
+      isPermissionsChanged: false,
+      currentRules: mockCurrentRules,
+    });
+
+    expect(screen.getByText(EntityFieldsI18nKey.displayAuthor)).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'skill-properties' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'file-properties' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'prompt-properties' })).not.toBeInTheDocument();
   });
 
   test('renders Permissions when Permissions tab is active', () => {
