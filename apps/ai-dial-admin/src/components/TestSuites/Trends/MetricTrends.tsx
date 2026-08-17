@@ -37,6 +37,7 @@ const MetricTrends: FC<Props> = ({ runOrder, runCount, statistics, byStatistic, 
 
   return (
     <SummarySection
+      isFillHeight={false}
       title={
         <>
           {t(TestSuitesI18nKey.MetricTrends)}{' '}

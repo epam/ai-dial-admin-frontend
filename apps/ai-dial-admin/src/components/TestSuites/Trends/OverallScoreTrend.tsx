@@ -35,6 +35,7 @@ const OverallScoreTrend: FC<Props> = ({ runOrder, runCount, isLoading }) => {
 
   return (
     <SummarySection
+      isFillHeight={false}
       title={
         <>
           {t(TestSuitesI18nKey.OverallScoreTrend)}{' '}
