@@ -234,9 +234,19 @@ const staticColumns = [
   },
 ];
 
+/**
+ * A single row only carries the columns of the request that produced it, so a request chain spreads
+ * its extracted columns and input bindings across rows — the union is the run's real schema.
+ */
+const mergeRecordSchema = (
+  results: AnalyticsResult[],
+  getRecord: (result: AnalyticsResult) => Record<string, unknown> | undefined,
+): Record<string, unknown> =>
+  results.reduce<Record<string, unknown>>((acc, result) => ({ ...acc, ...(getRecord(result) || {}) }), {});
+
 export const getAnalyticsColumns = (results: AnalyticsResult[]) => {
   const metrics = mergeMetricValuesSchema(results);
-  const input = results[0]?.testCaseData || {};
+  const input = mergeRecordSchema(results, (result) => result.testCaseData);
 
   return [
     ...staticColumns,
@@ -247,7 +257,7 @@ export const getAnalyticsColumns = (results: AnalyticsResult[]) => {
     },
     {
       headerName: EXTRACTED_GROUP_HEADER,
-      children: getExtractedColumns(results[0]?.extractedColumns || {}),
+      children: getExtractedColumns(mergeRecordSchema(results, (result) => result.extractedColumns)),
     },
   ];
 };

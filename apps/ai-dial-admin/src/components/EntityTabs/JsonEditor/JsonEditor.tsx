@@ -1,6 +1,6 @@
 'use client';
 
-import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
+import { Dispatch, SetStateAction, useCallback, useEffect, useId, useRef, useState } from 'react';
 
 import type { editor } from 'monaco-editor';
 
@@ -9,7 +9,7 @@ import { clearResolvedErrors, mergeWithIgnoredFields } from '@/src/components/En
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
-import { JSONEditorError } from '@/src/types/editor';
+import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
 
 interface Props<T> {
   entity: T | null;
@@ -34,6 +34,7 @@ const EntityJsonEditor = <T extends object>({
 }: Props<T>) => {
   const isTextControlled = text !== undefined;
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  const editorId = useId();
   const { dispatch, jsonErrorNotifications } = useSaveValidationContext();
   const { removeNotification } = useNotification();
   const [entityModel, setEntityModel] = useState<string>('');
@@ -41,12 +42,44 @@ const EntityJsonEditor = <T extends object>({
   const [editorInstanceKey, setEditorInstanceKey] = useState(0);
   /** Avoid resetting Monaco text when `entity` updates from our own JSON parse — that resets the cursor. */
   const lastEntityFromEditorRef = useRef<T | null>(null);
+  const lastErrorsRef = useRef<JSONEditorError[]>([]);
+  const notificationsRef = useRef(jsonErrorNotifications);
+  notificationsRef.current = jsonErrorNotifications;
 
   const setJsonErrors = useCallback(
     (errors: JSONEditorError[]) => {
-      dispatch({ type: ValidationActionType.SetJsonEditor, errors });
+      lastErrorsRef.current = errors;
+      dispatch({ type: ValidationActionType.SetJsonEditor, editorId, errors });
     },
-    [dispatch],
+    [dispatch, editorId],
+  );
+
+  /**
+   * Monaco reports no markers for a disposed model, so an editor that goes away — the JSONata toggle,
+   * a content-type switch, a tab change — would otherwise leave its last errors blocking every save,
+   * along with the notifications a blocked save raised for them.
+   */
+  useEffect(
+    () => () => {
+      dispatch({ type: ValidationActionType.RemoveJsonEditor, editorId });
+
+      const own = (notification: JSONEditorErrorNotification) =>
+        lastErrorsRef.current.some(
+          (error) => error.message === notification.message && error.startLineNumber === notification.startLineNumber,
+        );
+      const ownNotifications = notificationsRef.current.filter(own);
+
+      if (!ownNotifications.length) {
+        return;
+      }
+
+      ownNotifications.forEach((notification) => removeNotification(notification.id));
+      dispatch({
+        type: ValidationActionType.SetJsonEditorNotifications,
+        errors: notificationsRef.current.filter((notification) => !own(notification)),
+      });
+    },
+    [dispatch, editorId, removeNotification],
   );
 
   useEffect(() => {

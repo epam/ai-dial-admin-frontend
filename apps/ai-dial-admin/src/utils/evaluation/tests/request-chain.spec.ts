@@ -6,6 +6,7 @@ import {
   fromRequestView,
   getChainResponseColumns,
   getRequestCount,
+  getRequestLabel,
   getRequestName,
   removeRequestAt,
   toRequestView,
@@ -51,6 +52,22 @@ describe('getRequestName', () => {
   test('index > 0 returns undefined when additionalRequests is missing or out of range', () => {
     expect(getRequestName({}, 1)).toBeUndefined();
     expect(getRequestName({ additionalRequests: [{ name: 'Second' }] }, 5)).toBeUndefined();
+  });
+});
+
+describe('getRequestLabel', () => {
+  test('returns the request name when it is set', () => {
+    expect(getRequestLabel({ requestName: 'Main' }, 0, 'Request')).toBe('Main');
+    expect(getRequestLabel({ additionalRequests: [{ name: 'Second' }] }, 1, 'Request')).toBe('Second');
+  });
+
+  test('falls back to a 1-based numbered label when the name is missing', () => {
+    expect(getRequestLabel({}, 0, 'Request')).toBe('1. Request');
+    expect(getRequestLabel({ additionalRequests: [{}] }, 1, 'Request')).toBe('2. Request');
+  });
+
+  test('falls back to a numbered label when the name is an empty string', () => {
+    expect(getRequestLabel({ requestName: '' }, 0, 'Request')).toBe('1. Request');
   });
 });
 

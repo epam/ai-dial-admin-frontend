@@ -35,7 +35,7 @@ vi.mock('next/navigation', () => ({ useRouter: vi.fn(), usePathname: vi.fn() }))
 const createFnContext = () => vi.fn();
 
 vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: vi.fn() }),
+  useNotification: () => ({ showNotification: vi.fn(), removeNotification: vi.fn() }),
 }));
 
 vi.mock('@/src/context/assets/FileFolderContext', () => ({
@@ -92,10 +92,15 @@ vi.mock('@/src/context/SaveValidationContext', () => {
     useSaveValidationContext: () => ({
       isValid: true,
       dispatch,
+      jsonErrors: [],
+      jsonErrorNotifications: [],
     }),
     ValidationActionType: {
       SetField: 'SET_FIELD_VALIDATION',
       RemoveField: 'REMOVE_FIELD_VALIDATION',
+      SetJsonEditor: 'SET_JSON_EDITOR_VALIDATION',
+      RemoveJsonEditor: 'REMOVE_JSON_EDITOR_VALIDATION',
+      SetJsonEditorNotifications: 'SET_JSON_EDITOR_NOTIFICATIONS',
       Reset: 'RESET',
     },
   };

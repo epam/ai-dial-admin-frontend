@@ -145,6 +145,44 @@ describe('Runs View :: getAnalyticsColumns', () => {
     );
   });
 
+  test('Should merge extracted column keys from all rows, so a request chain shows every column', () => {
+    const results = [
+      { requestIndex: 0, extractedColumns: { answer: 'Hello!' } },
+      { requestIndex: 1, extractedColumns: { answer2: 'Bonjour !' } },
+    ] as any[];
+
+    const columns = getAnalyticsColumns(results as any);
+    const extracted = columns.find((column: any) => column.headerName === 'Extracted') as any;
+
+    expect(extracted.children.map((child: any) => child.field)).toEqual(['answer', 'answer2']);
+  });
+
+  test('Should read each merged extracted column from its own row', () => {
+    const results = [
+      { requestIndex: 0, extractedColumns: { answer: 'Hello!' } },
+      { requestIndex: 1, extractedColumns: { answer2: 'Bonjour !' } },
+    ] as any[];
+
+    const columns = getAnalyticsColumns(results as any);
+    const extracted = columns.find((column: any) => column.headerName === 'Extracted') as any;
+    const answer2Column = extracted.children.find((child: any) => child.field === 'answer2');
+
+    expect(answer2Column.valueGetter({ data: results[1] })).toBe('Bonjour !');
+    expect(answer2Column.valueGetter({ data: results[0] })).toBe('—');
+  });
+
+  test('Should merge input binding keys from all rows', () => {
+    const results = [
+      { testCaseData: { prompt: 'hello' } },
+      { testCaseData: { prompt: 'hello', language: 'fr' } },
+    ] as any[];
+
+    const columns = getAnalyticsColumns(results as any);
+    const inputBindings = columns.find((column: any) => column.headerName === 'INPUT BINDINGS') as any;
+
+    expect(inputBindings.children.map((child: any) => child.field)).toEqual(['prompt', 'language']);
+  });
+
   test('Should merge metric keys from all rows into column groups', () => {
     const results = [
       { metricValues: { GroupA: { a: 1 } } },

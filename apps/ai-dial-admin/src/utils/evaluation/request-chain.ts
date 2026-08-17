@@ -7,6 +7,10 @@ export const getRequestCount = (suite: TestSuite): number => 1 + (suite.addition
 export const getRequestName = (suite: TestSuite, index: number): string | undefined =>
   index === 0 ? suite.requestName : suite.additionalRequests?.[index - 1]?.name;
 
+/** `requestWord` is the localized word for a request, used when the request was left unnamed. */
+export const getRequestLabel = (suite: TestSuite, index: number, requestWord: string): string =>
+  getRequestName(suite, index) || `${index + 1}. ${requestWord}`;
+
 export const updateRequestName = (suite: TestSuite, index: number, name: string): TestSuite => {
   if (index === 0) {
     return { ...suite, requestName: name };

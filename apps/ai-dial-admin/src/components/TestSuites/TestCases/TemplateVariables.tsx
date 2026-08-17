@@ -4,7 +4,10 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { getTestSuiteTemplateVariables } from '@/src/app/[lang]/test-suites/actions';
 import DynamicConfiguration from '@/src/components/TestSuites/Common/DynamicConfiguration/DynamicConfiguration';
+import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
+import { useI18n } from '@/src/locales/client';
+import { getRequestLabel } from '@/src/utils/evaluation/request-chain';
 import {
   generateInputBinding,
   generateInputBindingsRowData,
@@ -25,6 +28,7 @@ interface Props {
 }
 
 const TemplateVariables: FC<Props> = ({ selectedTestSuite, onChange, schema }) => {
+  const t = useI18n();
   const [variables, setVariables] = useState<TemplateVariable[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -97,6 +101,11 @@ const TemplateVariables: FC<Props> = ({ selectedTestSuite, onChange, schema }) =
     [upsertBinding],
   );
 
+  /** Only a chain needs the section named — a lone request has nothing to be told apart from. */
+  const sectionTitle = selectedTestSuite.additionalRequests?.length
+    ? `${t(TestSuitesI18nKey.DynamicConfiguration)} — ${getRequestLabel(selectedTestSuite, 0, t(TestSuitesI18nKey.Request))}`
+    : undefined;
+
   return (
     <DynamicConfiguration
       testSuiteId={selectedTestSuite.id as string}
@@ -104,6 +113,7 @@ const TemplateVariables: FC<Props> = ({ selectedTestSuite, onChange, schema }) =
       schema={schema}
       showTypeSelector
       loading={isLoading}
+      title={sectionTitle}
       containerClassName={STANDARD_CONTROL_WIDTH}
       contentClassName="max-h-[350px] overflow-y-auto"
       onChangeValue={onChangeValue}

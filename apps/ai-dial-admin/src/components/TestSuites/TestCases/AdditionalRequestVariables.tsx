@@ -11,7 +11,7 @@ import {
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { fromRequestView, getRequestName, toRequestView } from '@/src/utils/evaluation/request-chain';
+import { fromRequestView, getRequestLabel, toRequestView } from '@/src/utils/evaluation/request-chain';
 import { InputBinding, InputBindingRowData, TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
 import { InputBindingType } from '@/src/types/evaluation';
 
@@ -94,8 +94,7 @@ const AdditionalRequestVariables: FC<Props> = ({ selectedTestSuite, requestIndex
     [upsertBinding, emitChange],
   );
 
-  const sectionTitle =
-    getRequestName(selectedTestSuite, requestIndex) || `${requestIndex + 1}. ${t(TestSuitesI18nKey.Request)}`;
+  const sectionTitle = getRequestLabel(selectedTestSuite, requestIndex, t(TestSuitesI18nKey.Request));
 
   return (
     <DynamicConfiguration

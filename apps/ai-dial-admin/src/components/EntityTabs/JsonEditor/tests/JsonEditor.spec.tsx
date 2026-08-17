@@ -1,14 +1,18 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { JSONEditorError } from '@/src/types/editor';
 import JSONEditor from '../JsonEditor';
 
 let capturedValue: string | undefined;
 let capturedOnChange: (value?: string) => void;
+let capturedOnValidate: ((errors?: JSONEditorError[]) => void) | undefined;
 
 vi.mock('@/src/components/Common/JsonEditorBase/JsonEditorBase', () => ({
-  default: ({ value, onChange }: any) => {
+  default: ({ value, onChange, onValidateJSON }: any) => {
     capturedValue = value;
     capturedOnChange = onChange;
+    capturedOnValidate = onValidateJSON;
     return <div role="application" aria-label="json-editor-base" />;
   },
 }));
@@ -147,6 +151,32 @@ describe('JSONEditor', () => {
       capturedOnChange(undefined);
 
       expect(mockOnChangeText).toHaveBeenCalledWith('');
+    });
+
+    test('drops its reported errors when it unmounts, so they cannot block a later save', () => {
+      const { dispatch } = useSaveValidationContext();
+      const { unmount } = render(
+        <JSONEditor
+          entity={entity}
+          setSelectedEntity={mockSetSelectedEntity}
+          text='{ "content": $answer }'
+          onChangeText={mockOnChangeText}
+        />,
+      );
+
+      capturedOnValidate?.([{ message: 'Value expected', startLineNumber: 5 } as JSONEditorError]);
+      const reported = vi
+        .mocked(dispatch)
+        .mock.calls.find(([action]) => action.type === ValidationActionType.SetJsonEditor)?.[0];
+      unmount();
+      const removed = vi
+        .mocked(dispatch)
+        .mock.calls.find(([action]) => action.type === ValidationActionType.RemoveJsonEditor)?.[0];
+
+      expect(reported).toEqual(
+        expect.objectContaining({ errors: [expect.objectContaining({ message: 'Value expected' })] }),
+      );
+      expect(removed).toEqual(expect.objectContaining({ editorId: (reported as { editorId: string }).editorId }));
     });
 
     test('still reports the parsed entity when the text is valid JSON', () => {

@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useId, useState } from 'react';
 
 import { DialSwitch } from '@epam/ai-dial-ui-kit';
 
@@ -27,6 +27,7 @@ const PromptProperties: FC<Props> = ({ prompt, onChangePrompt, isPublication }) 
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const { dispatch } = useSaveValidationContext();
+  const editorId = useId();
 
   const [isJSONContentMode, setIsJSONContentMode] = useState(false);
   const [jsonValue, setJsonValue] = useState<string | undefined>(undefined);
@@ -35,10 +36,10 @@ const PromptProperties: FC<Props> = ({ prompt, onChangePrompt, isPublication }) 
     (value: boolean) => {
       setIsJSONContentMode(value);
       if (!value) {
-        dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
+        dispatch({ type: ValidationActionType.RemoveJsonEditor, editorId });
       }
     },
-    [dispatch],
+    [dispatch, editorId],
   );
 
   const onChangeJsonValue = useCallback(
@@ -51,10 +52,12 @@ const PromptProperties: FC<Props> = ({ prompt, onChangePrompt, isPublication }) 
 
   const onValidateJSON = useCallback(
     (errors?: JSONEditorError[]) => {
-      dispatch({ type: ValidationActionType.SetJsonEditor, errors: errors || [] });
+      dispatch({ type: ValidationActionType.SetJsonEditor, editorId, errors: errors || [] });
     },
-    [dispatch],
+    [dispatch, editorId],
   );
+
+  useEffect(() => () => dispatch({ type: ValidationActionType.RemoveJsonEditor, editorId }), [dispatch, editorId]);
 
   useEffect(() => {
     try {
