@@ -66,6 +66,37 @@ describe('createDraftSchemaForm', () => {
     expect(form.grainKey).toBe('order_id');
   });
 
+  // A FAILED table is resubmitted from this seed, so metadata the user already authored must survive the
+  // round-trip rather than being silently dropped on retry.
+  test('seeds a column display name and description from an already-drafted table', () => {
+    const form = createDraftSchemaForm({
+      name: 'orders',
+      type: AnalyticsTableType.Source,
+      columns: [
+        {
+          source_name: 'total_tokens',
+          name: 'total_tokens',
+          type: AnalyticsFieldType.Long,
+          display_name: 'Total tokens',
+          description: 'Prompt plus completion tokens',
+        },
+      ],
+    });
+    expect(form.columns[0]).toMatchObject({
+      display_name: 'Total tokens',
+      description: 'Prompt plus completion tokens',
+    });
+  });
+
+  test('seeds a column with no stored display name or description as blank strings', () => {
+    const form = createDraftSchemaForm({
+      name: 'orders',
+      type: AnalyticsTableType.Source,
+      columns: [{ source_name: 'ts', name: 'ts', type: AnalyticsFieldType.Timestamp }],
+    });
+    expect(form.columns[0]).toMatchObject({ display_name: '', description: '' });
+  });
+
   test('seeds the scan-metadata pair, which a re-post cannot clear', () => {
     const form = createDraftSchemaForm({
       name: 'orders',
@@ -169,6 +200,8 @@ describe('createColumnRow', () => {
       type: AnalyticsFieldType.String,
       element_type: '',
       tag: '',
+      display_name: '',
+      description: '',
       nullable: false,
       sensitive: false,
     });
@@ -178,36 +211,15 @@ describe('createColumnRow', () => {
 describe('toTableColumns', () => {
   test('keeps only rows with both source_name and name, trims, and omits empty tag', () => {
     const rows = [
-      {
-        id: '1',
+      row({
         source_name: ' event_id ',
         name: ' event ',
         type: AnalyticsFieldType.Uuid,
-        element_type: '' as const,
         tag: ' identity ',
         nullable: true,
-        sensitive: false,
-      },
-      {
-        id: '2',
-        source_name: '',
-        name: 'skip',
-        type: AnalyticsFieldType.String,
-        element_type: '' as const,
-        tag: '',
-        nullable: false,
-        sensitive: false,
-      },
-      {
-        id: '3',
-        source_name: 'x',
-        name: 'x',
-        type: AnalyticsFieldType.Long,
-        element_type: '' as const,
-        tag: '',
-        nullable: false,
-        sensitive: false,
-      },
+      }),
+      row({ source_name: '', name: 'skip' }),
+      row({ source_name: 'x', name: 'x', type: AnalyticsFieldType.Long }),
     ];
     expect(toTableColumns(rows)).toEqual([
       { source_name: 'event_id', name: 'event', type: AnalyticsFieldType.Uuid, nullable: true, tag: 'identity' },
@@ -217,26 +229,8 @@ describe('toTableColumns', () => {
 
   test('sensitive rows carry sensitive: true; non-sensitive rows omit the field', () => {
     const rows = [
-      {
-        id: '1',
-        source_name: 'email',
-        name: 'email',
-        type: AnalyticsFieldType.String,
-        element_type: '' as const,
-        tag: '',
-        nullable: false,
-        sensitive: true,
-      },
-      {
-        id: '2',
-        source_name: 'total',
-        name: 'total',
-        type: AnalyticsFieldType.Decimal,
-        element_type: '' as const,
-        tag: '',
-        nullable: false,
-        sensitive: false,
-      },
+      row({ source_name: 'email', name: 'email', sensitive: true }),
+      row({ source_name: 'total', name: 'total', type: AnalyticsFieldType.Decimal }),
     ];
     expect(toTableColumns(rows)).toEqual([
       { source_name: 'email', name: 'email', type: AnalyticsFieldType.String, nullable: false, sensitive: true },
@@ -246,16 +240,13 @@ describe('toTableColumns', () => {
 
   test('an Array row carries its element_type and is forced non-nullable', () => {
     const rows = [
-      {
-        id: '1',
+      row({
         source_name: 'tags',
         name: 'tags',
         type: AnalyticsFieldType.Array,
         element_type: AnalyticsFieldType.String,
-        tag: '',
         nullable: true,
-        sensitive: false,
-      },
+      }),
     ];
     expect(toTableColumns(rows)).toEqual([
       {
@@ -269,20 +260,51 @@ describe('toTableColumns', () => {
   });
 
   test('an Array row with no element_type chosen yet omits the field rather than sending an empty value', () => {
-    const rows = [
-      {
-        id: '1',
-        source_name: 'tags',
-        name: 'tags',
-        type: AnalyticsFieldType.Array,
-        element_type: '' as const,
-        tag: '',
-        nullable: false,
-        sensitive: false,
-      },
-    ];
+    const rows = [row({ source_name: 'tags', name: 'tags', type: AnalyticsFieldType.Array, element_type: '' })];
     expect(toTableColumns(rows)).toEqual([
       { source_name: 'tags', name: 'tags', type: AnalyticsFieldType.Array, nullable: false },
+    ]);
+  });
+
+  test('carries a filled display name and description, trimmed', () => {
+    const rows = [
+      row({
+        source_name: 'total_tokens',
+        name: 'total_tokens',
+        type: AnalyticsFieldType.Long,
+        display_name: '  Total tokens  ',
+        description: '  Prompt plus completion tokens  ',
+      }),
+    ];
+    expect(toTableColumns(rows)).toEqual([
+      {
+        source_name: 'total_tokens',
+        name: 'total_tokens',
+        type: AnalyticsFieldType.Long,
+        nullable: false,
+        display_name: 'Total tokens',
+        description: 'Prompt plus completion tokens',
+      },
+    ]);
+  });
+
+  // Blank means "not set" at creation time, so the key is omitted rather than sent as an empty string —
+  // unlike the edit modal, where a blank value is the signal that clears a stored one.
+  test('omits a blank or whitespace-only display name and description', () => {
+    const rows = [
+      row({ source_name: 'a', name: 'a', display_name: '', description: '' }),
+      row({ source_name: 'b', name: 'b', display_name: '   ', description: '  ' }),
+    ];
+    expect(toTableColumns(rows)).toEqual([
+      { source_name: 'a', name: 'a', type: AnalyticsFieldType.String, nullable: false },
+      { source_name: 'b', name: 'b', type: AnalyticsFieldType.String, nullable: false },
+    ]);
+  });
+
+  test('carries one of the pair when only the other is blank', () => {
+    const rows = [row({ source_name: 'a', name: 'a', display_name: 'A value', description: '' })];
+    expect(toTableColumns(rows)).toEqual([
+      { source_name: 'a', name: 'a', type: AnalyticsFieldType.String, nullable: false, display_name: 'A value' },
     ]);
   });
 });
@@ -417,6 +439,35 @@ describe('getColumnRowErrors / hasColumnRowErrors', () => {
     const errors = getColumnRowErrors([row({ tag: 'a'.repeat(65) })], noExisting, t);
     expect(errors[0].tag).toBe(ErrorI18nKey.Length);
     expect(hasColumnRowErrors(errors)).toBe(true);
+  });
+
+  test('flags a display name over its 128-char cap and a description over its 1024-char cap', () => {
+    const errors = getColumnRowErrors(
+      [row({ display_name: 'a'.repeat(129) }), row({ description: 'b'.repeat(1025) })],
+      noExisting,
+      t,
+    );
+    expect(errors[0].display_name).toBe(ErrorI18nKey.Length);
+    expect(errors[1].description).toBe(ErrorI18nKey.Length);
+    expect(hasColumnRowErrors(errors)).toBe(true);
+  });
+
+  test('accepts a display name and description exactly at their caps', () => {
+    const errors = getColumnRowErrors(
+      [row({ source_name: 'a', name: 'a', display_name: 'a'.repeat(128), description: 'b'.repeat(1024) })],
+      noExisting,
+      t,
+    );
+    expect(errors[0].display_name).toBeUndefined();
+    expect(errors[0].description).toBeUndefined();
+    expect(hasColumnRowErrors(errors)).toBe(false);
+  });
+
+  // These two keys are the ones a boolean-OR gate silently forgets: an unlisted key reads as undefined,
+  // so the error is computed and then ignored, letting an over-cap value reach the backend as a 422.
+  test('reports an error carrying only a display name or only a description', () => {
+    expect(hasColumnRowErrors([{ display_name: ErrorI18nKey.Length }])).toBe(true);
+    expect(hasColumnRowErrors([{ description: ErrorI18nKey.Length }])).toBe(true);
   });
 
   test('flags an Array row with no element_type chosen', () => {
