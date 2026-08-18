@@ -1188,6 +1188,18 @@ describe('Runs View :: mergeByTestCaseId', () => {
     expect(result[2]._compared?.id).toBe('c-t2');
   });
 
+  test('orders chained rows by requestIndex before turnIndex', () => {
+    const current = [
+      makeResult({ id: 'r1t0', testCaseId: 'tc1', testCaseName: 'A', runIndex: 0, requestIndex: 1, turnIndex: 0 }),
+      makeResult({ id: 'r0t1', testCaseId: 'tc1', testCaseName: 'A', runIndex: 0, requestIndex: 0, turnIndex: 1 }),
+      makeResult({ id: 'r1t1', testCaseId: 'tc1', testCaseName: 'A', runIndex: 0, requestIndex: 1, turnIndex: 1 }),
+      makeResult({ id: 'r0t0', testCaseId: 'tc1', testCaseName: 'A', runIndex: 0, requestIndex: 0, turnIndex: 0 }),
+    ];
+    const result = mergeByTestCaseId(current, []);
+
+    expect(result.map((row) => row.id)).toEqual(['r0t0', 'r0t1', 'r1t0', 'r1t1']);
+  });
+
   test('does not reuse one compared turn across multiple primary turns', () => {
     const current = [
       makeResult({ id: 'p0', testCaseId: 'tc1', testCaseName: 'A', runIndex: 0, turnIndex: 0, totalTurns: 2 }),

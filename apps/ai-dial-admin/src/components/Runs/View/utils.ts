@@ -302,6 +302,8 @@ const sortCompareRows = (rows: CompareAnalyticsRow[]): CompareAnalyticsRow[] =>
     const nameCompare = (a.testCaseName ?? '').localeCompare(b.testCaseName ?? '');
     if (nameCompare !== 0) return nameCompare;
     if (a.runIndex !== b.runIndex) return a.runIndex - b.runIndex;
+    const requestCompare = (a.requestIndex ?? 0) - (b.requestIndex ?? 0);
+    if (requestCompare !== 0) return requestCompare;
     return (a.turnIndex ?? 0) - (b.turnIndex ?? 0);
   });
 

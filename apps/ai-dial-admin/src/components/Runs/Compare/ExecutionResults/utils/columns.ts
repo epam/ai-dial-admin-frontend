@@ -30,10 +30,12 @@ import {
   METRIC_COLUMN_WIDTH,
   NO_FILTER_COL_DEF,
   NUMBER_FILTER_COL_DEF,
+  REQUEST_INDEX_COLUMN_WIDTH,
   RUN_INDEX_COLUMN_WIDTH,
   STATUS_COLUMN_WIDTH,
   TEST_CASE_NAME_COLUMN_WIDTH,
   TEXT_FILTER_COL_DEF,
+  TURN_INDEX_COLUMN_WIDTH,
 } from '@/src/components/Runs/Compare/ExecutionResults/constants';
 import { CompareColumnsCompareOptions } from '@/src/components/Runs/Compare/ExecutionResults/models';
 import {
@@ -313,6 +315,44 @@ const getComparedExecutionColumns = (hideHighlights?: boolean): ColGroupDef => (
       ...fixedWidthColDef(RUN_INDEX_COLUMN_WIDTH),
       valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) =>
         params.data?._compared?.runIndex != null ? params.data._compared.runIndex + 1 : '—',
+    },
+    {
+      field: 'requestIndex',
+      ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, 'Request'),
+      colId: 'requestIndex',
+      hide: true,
+      ...NO_FILTER_COL_DEF,
+      ...fixedWidthColDef(REQUEST_INDEX_COLUMN_WIDTH),
+      valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) =>
+        params.data?.requestIndex != null ? params.data.requestIndex + 1 : null,
+    },
+    {
+      colId: 'cmp_requestIndex',
+      ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, 'Request'),
+      hide: true,
+      ...NO_FILTER_COL_DEF,
+      ...fixedWidthColDef(REQUEST_INDEX_COLUMN_WIDTH),
+      valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) =>
+        params.data?._compared?.requestIndex != null ? params.data._compared.requestIndex + 1 : '—',
+    },
+    {
+      field: 'turnIndex',
+      ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, 'Turn'),
+      colId: 'turnIndex',
+      hide: true,
+      ...NO_FILTER_COL_DEF,
+      ...fixedWidthColDef(TURN_INDEX_COLUMN_WIDTH),
+      valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) =>
+        params.data?.turnIndex != null ? params.data.turnIndex + 1 : null,
+    },
+    {
+      colId: 'cmp_turnIndex',
+      ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, 'Turn'),
+      hide: true,
+      ...NO_FILTER_COL_DEF,
+      ...fixedWidthColDef(TURN_INDEX_COLUMN_WIDTH),
+      valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) =>
+        params.data?._compared?.turnIndex != null ? params.data._compared.turnIndex + 1 : '—',
     },
     {
       field: 'responseStatusCode',

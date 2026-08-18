@@ -187,13 +187,61 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     };
 
     expect(exec.headerName).toBe(EXECUTION_GROUP_HEADER);
-    expect(exec.children).toHaveLength(6);
-    expect(exec.children[0].headerName).toBe(formatCompareColumnHeader(RUN_COMPARE_PRIMARY_INDEX, '# Run number'));
-    expect(exec.children[1].headerName).toBe(formatCompareColumnHeader(RUN_COMPARE_SECONDARY_INDEX, '# Run number'));
-    expect(exec.children[2].headerName).toBe(formatCompareColumnHeader(RUN_COMPARE_PRIMARY_INDEX, 'HTTP'));
-    expect(exec.children[3].headerName).toBe(formatCompareColumnHeader(RUN_COMPARE_SECONDARY_INDEX, 'HTTP'));
-    expect(exec.children[4].headerName).toBe(formatCompareColumnHeader(RUN_COMPARE_PRIMARY_INDEX, 'Duration'));
-    expect(exec.children[5].headerName).toBe(formatCompareColumnHeader(RUN_COMPARE_SECONDARY_INDEX, 'Duration'));
+    expect(exec.children).toHaveLength(10);
+    expect(exec.children.map((child) => child.headerName)).toEqual([
+      formatCompareColumnHeader(RUN_COMPARE_PRIMARY_INDEX, '# Run number'),
+      formatCompareColumnHeader(RUN_COMPARE_SECONDARY_INDEX, '# Run number'),
+      formatCompareColumnHeader(RUN_COMPARE_PRIMARY_INDEX, 'Request'),
+      formatCompareColumnHeader(RUN_COMPARE_SECONDARY_INDEX, 'Request'),
+      formatCompareColumnHeader(RUN_COMPARE_PRIMARY_INDEX, 'Turn'),
+      formatCompareColumnHeader(RUN_COMPARE_SECONDARY_INDEX, 'Turn'),
+      formatCompareColumnHeader(RUN_COMPARE_PRIMARY_INDEX, 'HTTP'),
+      formatCompareColumnHeader(RUN_COMPARE_SECONDARY_INDEX, 'HTTP'),
+      formatCompareColumnHeader(RUN_COMPARE_PRIMARY_INDEX, 'Duration'),
+      formatCompareColumnHeader(RUN_COMPARE_SECONDARY_INDEX, 'Duration'),
+    ]);
+  });
+
+  test('Request and Turn columns are hidden by default and render the 1-based index for both runs', () => {
+    type ExecChild = {
+      colId?: string;
+      hide?: boolean;
+      valueGetter: (p: { data?: CompareAnalyticsRow }) => unknown;
+    };
+    const cols = getCompareColumnsCompare([makeRow()]);
+    const exec = cols[2] as { children: ExecChild[] };
+    const byColId = (colId: string) => exec.children.find((child) => child.colId === colId) as ExecChild;
+
+    const requestPrimary = byColId('requestIndex');
+    const requestSecondary = byColId('cmp_requestIndex');
+    const turnPrimary = byColId('turnIndex');
+    const turnSecondary = byColId('cmp_turnIndex');
+
+    expect([requestPrimary, requestSecondary, turnPrimary, turnSecondary].every((col) => col.hide === true)).toBe(true);
+
+    const row = makeRow({
+      requestIndex: 1,
+      turnIndex: 0,
+      _compared: makeResult({ requestIndex: 1, turnIndex: 2 }),
+    });
+    expect(requestPrimary.valueGetter({ data: row })).toBe(2);
+    expect(requestSecondary.valueGetter({ data: row })).toBe(2);
+    expect(turnPrimary.valueGetter({ data: row })).toBe(1);
+    expect(turnSecondary.valueGetter({ data: row })).toBe(3);
+  });
+
+  test('Request and Turn columns stay empty for a non-chained, single-turn run', () => {
+    type ExecChild = { colId?: string; valueGetter: (p: { data?: CompareAnalyticsRow }) => unknown };
+    const cols = getCompareColumnsCompare([makeRow()]);
+    const exec = cols[2] as { children: ExecChild[] };
+    const byColId = (colId: string) => exec.children.find((child) => child.colId === colId) as ExecChild;
+    const row = makeRow({ _compared: makeResult() });
+
+    expect(byColId('requestIndex').valueGetter({ data: row })).toBeNull();
+    expect(byColId('turnIndex').valueGetter({ data: row })).toBeNull();
+    expect(byColId('cmp_requestIndex').valueGetter({ data: row })).toBe('—');
+    expect(byColId('cmp_turnIndex').valueGetter({ data: row })).toBe('—');
+    expect(byColId('cmp_requestIndex').valueGetter({ data: makeRow({ _compared: null }) })).toBe('—');
   });
 
   test('# Run number secondary column shows _compared.runIndex', () => {
@@ -374,7 +422,7 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     type ExecChild = { colId?: string; valueGetter: (p: { data?: CompareAnalyticsRow }) => unknown };
     const cols = getCompareColumnsCompare([makeRow()]);
     const exec = cols[2] as { children: ExecChild[] };
-    const primaryHttpCol = exec.children[2];
+    const primaryHttpCol = exec.children.find((child) => child.colId === 'http') as ExecChild;
 
     expect(primaryHttpCol.colId).toBe('http');
     expect(

@@ -115,6 +115,31 @@
     Extend `src/components/Runs/Summary/tests/Header.spec.tsx` — chain-size row shown/omitted per
     scenario, sourced from the snapshot not the live suite.
 
+- [ ] 6.4 Extend `sortCompareRows` in `src/components/Runs/View/utils.ts` to order by `requestIndex`
+  (defaulted to `0`) between `runIndex` and `turnIndex`, so a chained test case reads down the compare
+  grid in chain order instead of interleaving requests.
+  - **Verification:** extend `src/components/Runs/View/tests/utils.spec.ts` — request/turn permutations
+    of one test case come back ordered `r0t0, r0t1, r1t0, r1t1`.
+- [ ] 6.5 Make the Heat Map tab request-aware in
+  `src/components/Runs/Compare/HeatMap/utils/heat-map-test-case-columns.ts`: include `requestIndex` in
+  `formatHeatMapTestCaseColId`/`getHeatMapTestCaseColId` (segment omitted when absent, mirroring
+  `turnIndex`), add `hasHeatMapMultiRequests` mirroring `hasHeatMapMultiTurns`, and append a 1-based
+  `R<n>` header segment before the turn segment. Wire the new flag through `build-heat-map-columns.ts`.
+  Without this, two chained requests of one test case collapse onto a single colliding heat map column.
+  - **Verification:** extend `heat-map-test-case-columns.spec.ts`, `build-heat-map-columns.spec.ts`, and
+    `build-heat-map-rows.spec.ts` — chained rows produce distinct colIds and `_R<n>` headers, each
+    request's metric values land in its own column, and a non-chained run's colIds/headers are unchanged.
+
+- [ ] 6.6 Add hidden-by-default `Request` and `Turn` column pairs to the compare grid's `EXECUTION` group
+  in `src/components/Runs/Compare/ExecutionResults/utils/columns.ts`, following the existing
+  `# Run number` pair (1-based `valueGetter`, `hide: true`, `NO_FILTER_COL_DEF`, fixed width), and
+  register both pairs in `EXECUTION_FIELD_GROUPS` in `utils/panel-columns.ts` so they are toggleable from
+  the column panel. Without them, chained and multi-turn rows of one test case are visually identical.
+  - **Verification:** extend `utils/tests/columns.spec.ts` and `utils/tests/panel-columns.spec.ts` — the
+    `EXECUTION` group carries both pairs in order, they are hidden by default, Current cells render the
+    1-based index (empty when absent) and Compared cells render `—` when absent or unmatched, and the
+    panel tree exposes `Request`/`Turn` field groups.
+
 ## 7. Full-suite tests and regression
 
 - [ ] 7.1 Regression pass: a suite with an empty chain is pixel- and behavior-identical to today on the

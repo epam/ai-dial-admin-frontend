@@ -79,6 +79,55 @@ describe('buildHeatMapRows', () => {
     expect(comparedRow?.values[formatHeatMapTestCaseColId('tc-2', 0)]).toBeNull();
   });
 
+  test('maps distinct columns for chained requests of the same test case', () => {
+    const rows = buildHeatMapRows([
+      makeRow({
+        id: 'r1',
+        testCaseId: 'tc-blr',
+        testCaseName: 'BLR',
+        runIndex: 0,
+        requestIndex: 0,
+        totalRequests: 2,
+        metricValues: { Accuracy: { precision: 0.1 } },
+        _compared: makeResult({
+          id: 'c1',
+          runIndex: 0,
+          requestIndex: 0,
+          totalRequests: 2,
+          metricValues: { Accuracy: { precision: 0.2 } },
+        }),
+      }),
+      makeRow({
+        id: 'r2',
+        testCaseId: 'tc-blr',
+        testCaseName: 'BLR',
+        runIndex: 0,
+        requestIndex: 1,
+        totalRequests: 2,
+        metricValues: { Accuracy: { precision: 0.3 } },
+        _compared: makeResult({
+          id: 'c2',
+          runIndex: 0,
+          requestIndex: 1,
+          totalRequests: 2,
+          metricValues: { Accuracy: { precision: 0.4 } },
+        }),
+      }),
+    ]);
+
+    const primaryRow = rows.find(
+      (row) => row.rowType === HeatMapRowType.Metric && row.runIndex === RUN_COMPARE_PRIMARY_INDEX,
+    );
+    const comparedRow = rows.find(
+      (row) => row.rowType === HeatMapRowType.Metric && row.runIndex === RUN_COMPARE_SECONDARY_INDEX,
+    );
+
+    expect(primaryRow?.values[formatHeatMapTestCaseColId('tc-blr', 0, 0)]).toBe(0.1);
+    expect(primaryRow?.values[formatHeatMapTestCaseColId('tc-blr', 0, 1)]).toBe(0.3);
+    expect(comparedRow?.values[formatHeatMapTestCaseColId('tc-blr', 0, 0)]).toBe(0.2);
+    expect(comparedRow?.values[formatHeatMapTestCaseColId('tc-blr', 0, 1)]).toBe(0.4);
+  });
+
   test('maps distinct columns for multiple sub-runs of the same test case', () => {
     const rows = buildHeatMapRows([
       makeRow({

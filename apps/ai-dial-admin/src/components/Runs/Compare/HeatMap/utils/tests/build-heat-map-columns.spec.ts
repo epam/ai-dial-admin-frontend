@@ -76,4 +76,21 @@ describe('buildHeatMapColumns', () => {
     ]);
     expect(new Set(testCaseColumns.map((col) => col.colId)).size).toBe(3);
   });
+
+  test('uses distinct colIds and R-suffixed headers for chained requests of the same test case', () => {
+    const rows = [
+      makeRow({ testCaseName: 'BLR', requestIndex: 0, totalRequests: 2 }),
+      makeRow({ id: 'r2', testCaseName: 'BLR', requestIndex: 1, totalRequests: 2 }),
+    ];
+
+    const columns = buildHeatMapColumns(rows, buildOptions);
+    const testCaseColumns = columns.slice(1);
+
+    expect(testCaseColumns.map((col) => col.headerName)).toEqual(['BLR_R1', 'BLR_R2']);
+    expect(testCaseColumns.map((col) => col.colId)).toEqual([
+      getHeatMapTestCaseColId(rows[0]),
+      getHeatMapTestCaseColId(rows[1]),
+    ]);
+    expect(new Set(testCaseColumns.map((col) => col.colId)).size).toBe(2);
+  });
 });
