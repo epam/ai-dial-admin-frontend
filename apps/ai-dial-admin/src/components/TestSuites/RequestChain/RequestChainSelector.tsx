@@ -1,8 +1,8 @@
 'use client';
 
-import { FC } from 'react';
+import { FC, useMemo } from 'react';
 
-import { DialGhostButton, DialGhostIconButton, DialTag, ElementSize } from '@epam/ai-dial-ui-kit';
+import { DialGhostButton, DialGhostIconButton, DialTabs, ElementSize, TabModel } from '@epam/ai-dial-ui-kit';
 import { IconPlus, IconX } from '@tabler/icons-react';
 
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -24,27 +24,30 @@ const RequestChainSelector: FC<Props> = ({ testSuite, selectedIndex, disabled = 
   const t = useI18n();
   const requestCount = getRequestCount(testSuite);
   const canAddRequest = !disabled && (testSuite.additionalRequests?.length ?? 0) < MAX_ADDITIONAL_REQUESTS;
+  const canRemoveRequest = !disabled && selectedIndex > 0;
+
+  const tabs: TabModel[] = useMemo(
+    () =>
+      Array.from({ length: requestCount }, (_, index) => ({
+        id: String(index),
+        label: `${index + 1}. ${getRequestName(testSuite, index) || t(TestSuitesI18nKey.Request)}`,
+        disabled,
+      })),
+    [requestCount, testSuite, disabled, t],
+  );
 
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-row items-center gap-2 flex-wrap">
-        {Array.from({ length: requestCount }, (_, index) => (
-          <div key={index} className="flex items-center gap-1">
-            <DialTag
-              label={`${index + 1}. ${getRequestName(testSuite, index) || t(TestSuitesI18nKey.Request)}`}
-              selected={index === selectedIndex}
-              onClick={() => !disabled && onSelect(index)}
-            />
-            {index > 0 && !disabled && (
-              <DialGhostIconButton
-                icon={<IconX {...BASE_BUTTON_ICON_PROPS} />}
-                size={ElementSize.Small}
-                aria-label={t(TestSuitesI18nKey.RemoveRequest)}
-                onClick={() => onRemove(index)}
-              />
-            )}
-          </div>
-        ))}
+        <DialTabs tabs={tabs} activeTab={String(selectedIndex)} onClick={(id) => !disabled && onSelect(Number(id))} />
+        {canRemoveRequest && (
+          <DialGhostIconButton
+            icon={<IconX {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
+            size={ElementSize.Small}
+            aria-label={t(TestSuitesI18nKey.RemoveRequest)}
+            onClick={() => onRemove(selectedIndex)}
+          />
+        )}
         <DialGhostButton
           label={t(TestSuitesI18nKey.AddRequest)}
           iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}

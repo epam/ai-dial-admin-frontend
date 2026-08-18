@@ -35,16 +35,17 @@
     chain is sent unchanged including normalized entries.
 - [ ] 2.2 Extend `TestSuitesI18nKey.ConditionHint` in `src/locales/en.ts` to document the `request.*`
   namespace (`request.index`, `request.total`, `request.last`, `request.name`), alongside the existing
-  `turn.*` documentation. Add labels for the chip strip's add/remove/rename actions, the info banner, and
+  `turn.*` documentation. Add labels for the request strip's add/remove/rename actions, the info banner, and
   the run-summary "Requests in chain" row to `src/constants/i18n.ts` + `src/locales/en.ts` — check
   `BasicI18nKey`/`ButtonsI18nKey`/`EntitiesI18nKey` for reusable labels first.
 
 ## 3. Method tab — chain selector and proxy-view editing
 
 - [ ] 3.1 Add `RequestChainSelector` (location decided per design.md's open question — likely
-  `src/components/TestSuites/RequestTemplate/components/RequestChainSelector.tsx`): a `DialTag` chip per
-  chain entry, add/remove/select/rename affordances, wired to `request-chain.ts`. Selected index is local
-  `useState`, not persisted on the suite.
+  `src/components/TestSuites/RequestTemplate/components/RequestChainSelector.tsx`): a `DialTabs` tab per
+  chain entry (so the strip matches the entity tab strip above it), with add, select, rename, and a
+  remove-selected-request affordance beside the strip, wired to `request-chain.ts`. Selected index is
+  local `useState`, not persisted on the suite.
 - [ ] 3.2 Wire `RequestChainSelector` into `src/components/TestSuites/View/MethodTabContent.tsx`'s
   `DeploymentMethodContent` only (never for the MCP branch). Render `RequestTemplate` and
   `EndpointSchema` with `toRequestView(testSuite, selectedIndex)` and a `key={selectedIndex}` (or
@@ -57,9 +58,9 @@
   `testSuite.requestTemplate`/`endpointRef` directly) — no code change expected here beyond verifying it.
   - **Verification:** `npx vitest run src/components/TestSuites/RequestTemplate/tests/RequestChainSelector.spec.tsx src/components/TestSuites/View/tests/MethodTabContent.spec.tsx`.
     Cover: selector hidden for MCP suites; add/remove/select/rename; add disabled at 11 requests; remove
-    not offered on request `#0`; switching chips does not carry over uncommitted editor text (mount/
-    unmount via `key`); banner shown only for `selectedIndex > 0`; Try Out unaffected by the selected
-    chip.
+    not offered while request `#0` is selected; switching requests does not carry over uncommitted editor
+    text (mount/unmount via `key`); banner shown only for `selectedIndex > 0`; Try Out unaffected by the
+    selected request.
 - [ ] 3.5 Offer the preceding requests' output columns as JSONata variables in both JSONata surfaces:
   add an optional `variables?: JsonataVariable[]` (`src/models/jsonata.ts`) completion source to
   `Common/JsonataEditor` (read through a ref, since its completion provider registers once on mount) and
