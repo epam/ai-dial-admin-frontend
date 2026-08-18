@@ -11,17 +11,23 @@ import { useI18n } from '@/src/locales/client';
 interface Props<T> {
   entity: T;
   onChangeEntity: (entity: T) => void;
+  isAsset?: boolean;
 }
 
-const OverrideNameControl = <T extends { overrideName?: string }>({ entity, onChangeEntity }: Props<T>) => {
+const OverrideNameControl = <T extends { overrideName?: string; override_name?: string }>({
+  entity,
+  onChangeEntity,
+  isAsset,
+}: Props<T>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  const overrideNameKey = isAsset ? 'override_name' : 'overrideName';
 
   const onChange = useCallback(
     (overrideName?: string) => {
-      onChangeEntity({ ...entity, overrideName });
+      onChangeEntity({ ...entity, [overrideNameKey]: overrideName });
     },
-    [entity, onChangeEntity],
+    [entity, onChangeEntity, overrideNameKey],
   );
 
   return (
@@ -30,7 +36,7 @@ const OverrideNameControl = <T extends { overrideName?: string }>({ entity, onCh
       id="overrideName"
       labelProps={{ label: t(EntityFieldsI18nKey.overrideName) }}
       placeholder={t(EntityPlaceholdersI18nKey.OverrideName)}
-      value={entity.overrideName}
+      value={entity?.[overrideNameKey]}
       onChange={onChange}
       disabled={isReadOnlyAdmin}
     />
