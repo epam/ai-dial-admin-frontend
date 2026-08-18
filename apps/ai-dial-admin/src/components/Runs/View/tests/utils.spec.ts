@@ -104,6 +104,7 @@ describe('Runs View :: getAnalyticsColumns', () => {
     expect(accuracyChildren[0].cellStyle).toBeUndefined();
     expect(accuracyChildren[0].valueGetter({ data: { metricValues: { Accuracy: { accuracy: 0.95 } } } })).toBe(0.95);
     expect(accuracyChildren[0].valueGetter({ data: { metricValues: { Accuracy: {} } } })).toBe('—');
+    expect(accuracyChildren[0].valueGetter({ data: { metricValues: { Accuracy: { accuracy: null } } } })).toBe('—');
 
     const statusChildren = (columns[0] as any).children;
     expect(statusChildren[0]).toEqual(
@@ -137,12 +138,14 @@ describe('Runs View :: getAnalyticsColumns', () => {
     const inputBindingsChildren = (columns[4] as any).children;
     expect(inputBindingsChildren).toHaveLength(1);
     expect(inputBindingsChildren[0]).toEqual(expect.objectContaining({ field: 'prompt', hide: true }));
+    expect(inputBindingsChildren[0].valueGetter({ data: { testCaseData: { prompt: null } } })).toBe('—');
 
     const extractedChildren = (columns[5] as any).children;
     expect(extractedChildren).toHaveLength(1);
     expect(extractedChildren[0]).toEqual(
       expect.objectContaining({ field: 'score', headerName: 'score', minWidth: 120, flex: 1 }),
     );
+    expect(extractedChildren[0].valueGetter({ data: { extractedColumns: { score: null } } })).toBe('—');
   });
 
   test('Should merge metric keys from all rows into column groups', () => {
