@@ -19,7 +19,7 @@ const RECORD: ConversationDetailRow = {
   chat_id: 'Lrr0e6L5bpTND3IY_dN0_',
   project_id: '',
   user_hash: 'db7327ba3decd351',
-  turn_count: 930,
+  turn_count: 12,
   first_request_time: '2026-07-22T11:50:28.506Z',
   last_request_time: '2026-07-22T12:00:52.157Z',
   prompt_tokens: 4293420,

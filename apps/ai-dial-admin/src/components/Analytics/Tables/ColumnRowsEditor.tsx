@@ -42,7 +42,14 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange, errors }) => {
         // A validation error makes that field's column taller (label + input + error text). With
         // items-end (the normal bottom-aligned layout) that drags the erroring column's label out of
         // line with its error-free siblings, so switch to top alignment whenever this row has any error.
-        const rowHasError = Boolean(rowError?.source_name || rowError?.name || rowError?.tag || rowError?.element_type);
+        const rowHasError = Boolean(
+          rowError?.source_name ||
+          rowError?.name ||
+          rowError?.tag ||
+          rowError?.display_name ||
+          rowError?.description ||
+          rowError?.element_type,
+        );
         return (
           <div key={row.id} className={classNames('flex gap-2', rowHasError ? 'items-start' : 'items-end')}>
             <DialInput
@@ -56,6 +63,24 @@ const ColumnRowsEditor: FC<Props> = ({ rows, onChange, errors }) => {
               // diverge from its source name via a later rename, done in the grid on an active table —
               // see TableDetailView's onRenameCell) — so one control fills both DTO fields.
               onChange={(v) => update(row.id, { source_name: v ?? '', name: v ?? '' })}
+            />
+            <DialInput
+              id={`col-display-name-${row.id}`}
+              containerClassName="flex-[2] min-w-[140px]"
+              labelProps={first ? { label: t(AnalyticsTablesI18nKey.DisplayName) } : undefined}
+              value={row.display_name}
+              error={rowError?.display_name}
+              invalid={Boolean(rowError?.display_name)}
+              onChange={(v) => update(row.id, { display_name: v ?? '' })}
+            />
+            <DialInput
+              id={`col-description-${row.id}`}
+              containerClassName="flex-[3] min-w-[160px]"
+              labelProps={first ? { label: t(AnalyticsTablesI18nKey.Description) } : undefined}
+              value={row.description}
+              error={rowError?.description}
+              invalid={Boolean(rowError?.description)}
+              onChange={(v) => update(row.id, { description: v ?? '' })}
             />
             <DialSelectField
               id={`col-type-${row.id}`}
