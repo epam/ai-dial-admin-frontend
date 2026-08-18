@@ -2726,9 +2726,10 @@ whole-result count and cost SHALL be unaffected by which columns are visible, be
 filtered result rather than over the projection.
 
 `turn_count` is the pipeline's count of the conversation's **distinct trace ids**, one trace per request, so
-it is a count of requests and not of usage-log rows: the embedding, MCP and routing hops a request fans out
-into collapse into the trace that produced them. User-facing copy SHALL describe it as requests and MUST NOT
-claim it counts individual hops.
+it is a count of turns and not of usage-log rows: the embedding, MCP and routing hops a request fans out
+into collapse into the trace that produced them. Turn, request and trace therefore name one quantity, and
+user-facing copy SHALL call it **turns** throughout — a second name for the same figure reads as a second
+figure. Copy MUST NOT claim it counts individual hops.
 
 The filter SHALL be `and[ ge(last_request_time, startMs), le(last_request_time, endMs) ]`. The time bounds
 SHALL apply to `last_request_time`, so a selected period means *conversations whose last activity falls in the
@@ -3065,7 +3066,7 @@ tokens rather than literal colour values.
 - **THEN** it renders as the unavailable marker rather than as a zero duration
 - **AND** the grid and the detail view render it the same way
 
-### Requirement: Conversation detail header identifies the conversation
+### Requirement: Conversation detail header identifies the conversation and states its turn count
 
 The header SHALL lead with the conversation id as the view's heading. The rollup carries no conversation
 title or summary, so the id is the only identifying value the view can state; a title field SHALL be
@@ -3074,17 +3075,23 @@ surfaced as unavailable rather than fabricated from other values.
 The heading SHALL keep the full id reachable when it is too long to display, and SHALL offer a means of
 copying it, since the id is the value a reader carries to another tool.
 
-The header SHALL state the conversation's project, its request count, the span between first and last
-activity, and how long ago the last activity was. It SHALL surface a model field as unavailable — the rollup
-does not carry `deployment`.
+The header SHALL state the conversation's project, its turn count, the span between first and last activity,
+and how long ago the last activity was. It SHALL surface a model field as unavailable — the rollup does not
+carry `deployment`.
 
 The header MUST NOT carry rating counts or a back control. Ratings belong with the panel that lists them, so
 the same figures are not stated twice in different places, and returning to the log is the application
 navigation's job rather than a control this view owns.
 
-The request count SHALL be labelled as requests, not as turns. The rollup's count is a count of usage-log
-rows, one per proxy hop, and a single turn fans out into many hops — so labelling it as turns would overstate
-the figure, by two orders of magnitude on real conversations. The view MUST NOT present it as a turn count.
+The turn count SHALL be read from the rollup's `turn_count` and labelled **turns**. It SHALL be stated
+**once**: the header MUST NOT carry a second count of the same quantity under a different label.
+`turn_count` counts distinct traces, so turn, request and trace name one quantity — a header stating both a
+turns figure and a requests figure presents one fact as two, and gives the reader no way to tell which is
+authoritative.
+
+The header's turn count MUST NOT be derived from the loaded turn list. That list is bounded, so on a
+conversation longer than the bound the derived figure is the bound itself, stated as though it were the
+conversation's length.
 
 Numeric, currency and time values in the header SHALL carry the same formatting those value types carry in
 the conversations log, so the same conversation reads identically in both places.
@@ -3108,25 +3115,33 @@ the conversations log, so the same conversation reads identically in both places
 #### Scenario: The header states the conversation's facts
 
 - **WHEN** the detail view renders
-- **THEN** the header states the project, the request count, the activity span and the time since last
+- **THEN** the header states the project, the turn count, the activity span and the time since last
   activity
 - **AND** it renders a model field as unavailable
 
-#### Scenario: The request count is not labelled as turns
+#### Scenario: The turn count is stated once, from the rollup
 
-- **WHEN** the header renders the rollup's count of usage-log rows
-- **THEN** it is labelled as requests
-- **AND** it is not labelled as turns
+- **WHEN** the detail view renders a conversation whose `turn_count` is 911
+- **THEN** the header states 911 under a turns label
+- **AND** it states no second count of turns, requests or traces under any other label
+
+#### Scenario: The header count is unaffected by how many turns loaded
+
+- **WHEN** a conversation's `turn_count` is 911 and the view loads only the first 200 turns
+- **THEN** the header states 911
+- **AND** it does not state 200
 
 #### Scenario: Header values match the log
 
 - **WHEN** the same conversation is read in the log and in the detail view
 - **THEN** its token, cost and activity values are formatted identically in both
 
-### Requirement: Conversation turns come from the earliest hop of each trace
+### Requirement: Conversation turn list comes from the earliest hop of each trace and discloses its bound
 
-The detail view SHALL derive a conversation's turns from the usage log, taking one turn per trace and
-identifying the turn's entry hop as the trace's **earliest** request.
+The detail view SHALL derive a conversation's **turn list** from the usage log, taking one turn per trace and
+identifying the turn's entry hop as the trace's **earliest** request. That list is the spine of the
+transcript and the source of each turn's own figures. It is **not** the source of the conversation's turn
+count, which the header reads from the rollup.
 
 The entry hop MUST NOT be identified by an absent parent span. A chain's true first hop is frequently not
 recorded in this table, so most conversations have **no** hop with a null parent span and that rule finds
@@ -3138,14 +3153,13 @@ everything a hop initiated; summing the latter across a chain double-counts.
 The turn query MUST NOT name the request or response body columns. Those columns are heavy, and naming them
 in a per-conversation read makes the turn list as slow as a transcript read.
 
-The view SHALL state the turn count from these root hops, alongside the rollup's request count and under a
-distinct label. The two differ by orders of magnitude — a measured conversation records 930 usage-log rows
-across 3 turns — so presenting either alone would misstate the conversation.
-
 Each turn SHALL carry its own model, token total and cost. A root hop's cost covers the whole chain beneath
 it, so the turn's figure accounts for the calls it caused, not only itself.
 
-The turn list SHALL be bounded, and the view MUST NOT page through it.
+The turn list SHALL be bounded, and the view MUST NOT page through it. When the bound clips the list — that
+is, whenever fewer turns load than the rollup's `turn_count` — the view SHALL state both figures together, so
+the number of turns on screen reads as a stated limit rather than as the conversation's length. That
+disclosure MUST be visible without interaction, and MUST NOT render when the list is complete.
 
 #### Scenario: One turn per trace
 
@@ -3164,11 +3178,16 @@ The turn list SHALL be bounded, and the view MUST NOT page through it.
 - **WHEN** a turn fans out into a chain of hops
 - **THEN** its cost is the sum of each hop's own cost, not of the chain-inclusive figure
 
-#### Scenario: Turn count and request count are both stated, distinctly labelled
+#### Scenario: A clipped turn list states its bound against the real count
 
-- **WHEN** a conversation records 930 usage-log rows across 3 turns
-- **THEN** the header states 3 under a turns label
-- **AND** it states 930 under a requests label
+- **WHEN** a conversation's `turn_count` is 911 and the turn list is bounded at 200
+- **THEN** the view states that 200 of 911 turns are shown
+- **AND** that disclosure is visible without interaction
+
+#### Scenario: A complete turn list carries no disclosure
+
+- **WHEN** a conversation's `turn_count` is 12 and all 12 turns load
+- **THEN** no truncation disclosure renders
 
 #### Scenario: The turn query reads no body column
 
@@ -3192,11 +3211,12 @@ system records is not available to this view at an acceptable cost.
 Sample content SHALL be derived from the conversation's identity, so one conversation always renders the
 same exchange. Content that varied between views would read as changing data rather than as sample content.
 
-The number of sample turns SHALL equal the conversation's real turn count — never more — so every assistant
-message carries the real figures for its turn. Padding the transcript to fill the column would leave later
-messages with no figures beside them, and those figures are the part of this region that is real. A
-conversation with no turns SHALL render no messages and no notice, falling back to stating that message
-content is unavailable.
+The number of sample turns SHALL equal the number of turns the view **loaded** — never more — so every
+assistant message carries the real figures for its turn. It MUST NOT be taken from the rollup's `turn_count`:
+on a conversation whose turn list is clipped, counting from the rollup would pad the transcript with
+exchanges that have no turn behind them, leaving those messages with no figures beside them, and those
+figures are the part of this region that is real. A conversation with no turns SHALL render no messages and
+no notice, falling back to stating that message content is unavailable.
 
 A failed turns query SHALL be reported as a failure and MUST NOT be presented as a conversation that
 recorded no messages. Both states render an empty transcript, and reporting an outage as an absence would
@@ -3222,6 +3242,12 @@ state something false about the conversation.
 
 - **WHEN** a conversation recorded three turns
 - **THEN** three user messages and three assistant messages render
+
+#### Scenario: A clipped turn list does not pad the transcript
+
+- **WHEN** a conversation's `turn_count` is 911 and 200 turns loaded
+- **THEN** 200 user messages and 200 assistant messages render
+- **AND** every assistant message carries its turn's real figures
 
 #### Scenario: A conversation with no turns shows no sample content
 
