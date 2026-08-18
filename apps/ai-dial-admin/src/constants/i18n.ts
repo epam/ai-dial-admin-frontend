@@ -2512,6 +2512,7 @@ export enum AnalyticsTablesI18nKey {
   ConnectTabWrite = 'AnalyticsTables.ConnectTabWrite',
   ConnectTabRead = 'AnalyticsTables.ConnectTabRead',
   ConnectSystemReadOnly = 'AnalyticsTables.ConnectSystemReadOnly',
+  ConnectEnrichmentReadOnly = 'AnalyticsTables.ConnectEnrichmentReadOnly',
   ConnectAuth = 'AnalyticsTables.ConnectAuth',
   ConnectAuthHint = 'AnalyticsTables.ConnectAuthHint',
   ConnectBaseUrlHint = 'AnalyticsTables.ConnectBaseUrlHint',
@@ -2541,6 +2542,9 @@ export enum AnalyticsTablesI18nKey {
   ConnectFlight = 'AnalyticsTables.ConnectFlight',
   ConnectFlightHint = 'AnalyticsTables.ConnectFlightHint',
   ConnectFlightReadOnly = 'AnalyticsTables.ConnectFlightReadOnly',
+  ConnectQuery = 'AnalyticsTables.ConnectQuery',
+  ConnectProjectionNote = 'AnalyticsTables.ConnectProjectionNote',
+  ConnectEnrichmentColumns = 'AnalyticsTables.ConnectEnrichmentColumns',
   WriteProgrammatically = 'AnalyticsTables.WriteProgrammatically',
   AddRowsPurpose = 'AnalyticsTables.AddRowsPurpose',
 }

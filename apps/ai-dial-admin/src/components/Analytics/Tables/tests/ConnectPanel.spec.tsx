@@ -18,6 +18,7 @@ vi.mock('@/src/context/NotificationContext', () => ({
 const table: AnalyticsTable = {
   name: 'widget_metrics',
   type: AnalyticsTableType.Source,
+  ordering_key: ['event_id'],
   columns: [
     { source_name: 'event_id', name: 'event_id', type: AnalyticsFieldType.Uuid },
     { source_name: 'score', name: 'score', type: AnalyticsFieldType.Decimal },
@@ -73,6 +74,32 @@ describe('ConnectPanel :: tabs', () => {
 
     expect(screen.getByText(AnalyticsTablesI18nKey.ConnectRestLimits)).toBeInTheDocument();
     expect(screen.getByText(AnalyticsTablesI18nKey.ConnectFlightLimits)).toBeInTheDocument();
+  });
+
+  test('says the projection is a subset, so a short SELECT does not read as a restriction', async () => {
+    const user = userEvent.setup();
+    renderPanel();
+    await user.click(await screen.findByText(AnalyticsTablesI18nKey.ConnectTabRead));
+
+    expect(screen.getByText(AnalyticsTablesI18nKey.ConnectProjectionNote)).toBeInTheDocument();
+    // The table-qualified form is an enrichment concern; a source table is not asked to learn it.
+    expect(screen.queryByText(AnalyticsTablesI18nKey.ConnectEnrichmentColumns)).not.toBeInTheDocument();
+  });
+
+  test('states nothing about a shortened projection when the snippet selects every column', () => {
+    // No ordering key to project, so the snippet falls back to `SELECT *` — the note would describe a
+    // projection the reader is not looking at.
+    render(
+      <ConnectPanel
+        table={{ ...table, system: true, ordering_key: undefined }}
+        apiBaseUrl="https://analytics.example.com"
+        flightUri=""
+        onClose={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText(AnalyticsTablesI18nKey.ConnectWhoCanRead)).toBeInTheDocument();
+    expect(screen.queryByText(AnalyticsTablesI18nKey.ConnectProjectionNote)).not.toBeInTheDocument();
   });
 });
 
@@ -170,6 +197,39 @@ describe('ConnectPanel :: snippets', () => {
   });
 });
 
+describe('ConnectPanel :: unconfigured endpoint', () => {
+  const renderUnconfiguredPanel = () =>
+    render(<ConnectPanel table={table} apiBaseUrl="" flightUri="" onClose={vi.fn()} />);
+
+  // The export block is repeated above every REST example, and `curl` is the one example that cannot
+  // carry an inline default — so a reader working from any of them has to be told to replace the value.
+  test('warns to replace the placeholder above every endpoint export it renders', async () => {
+    const user = userEvent.setup();
+    renderUnconfiguredPanel();
+    await screen.findByText('analytics-writer');
+
+    const exports = () =>
+      Array.from(document.querySelectorAll('pre')).filter((pre) =>
+        (pre.textContent ?? '').includes('export DIAL_ANALYTICS_BASE_URL=<analytics-base-url>'),
+      );
+
+    expect(exports()).toHaveLength(2);
+    expect(screen.getAllByText(AnalyticsTablesI18nKey.ConnectBaseUrlHint)).toHaveLength(2);
+
+    await user.click(screen.getByText(AnalyticsTablesI18nKey.ConnectTabRead));
+
+    expect(exports()).toHaveLength(2);
+    expect(screen.getAllByText(AnalyticsTablesI18nKey.ConnectBaseUrlHint)).toHaveLength(2);
+  });
+
+  test('states nothing about replacing a value once the deployment configures one', async () => {
+    renderPanel();
+    await screen.findByText('analytics-writer');
+
+    expect(screen.queryByText(AnalyticsTablesI18nKey.ConnectBaseUrlHint)).not.toBeInTheDocument();
+  });
+});
+
 describe('ConnectPanel :: system tables', () => {
   const systemTable: AnalyticsTable = { ...table, system: true };
 
@@ -196,6 +256,63 @@ describe('ConnectPanel :: system tables', () => {
 
   test('does not ask the backend for a write-role list it could never act on', () => {
     renderSystemPanel();
+
+    expect(getTableAccess).not.toHaveBeenCalled();
+  });
+});
+
+describe('ConnectPanel :: enrichment tables', () => {
+  const enrichmentTable: AnalyticsTable = {
+    name: 'widget_scores',
+    type: AnalyticsTableType.Enrichment,
+    source_table: 'widget_events',
+    grain: { grain_key: 'event_id' },
+    columns: [{ source_name: 'score', name: 'score', type: AnalyticsFieldType.Decimal }],
+  };
+
+  const renderEnrichmentPanel = () =>
+    render(
+      <ConnectPanel
+        table={enrichmentTable}
+        apiBaseUrl="https://analytics.example.com"
+        flightUri=""
+        onClose={vi.fn()}
+      />,
+    );
+
+  test('offers no write path — an enrichment’s rows come from the enrichment process', () => {
+    renderEnrichmentPanel();
+
+    expect(screen.queryByText(AnalyticsTablesI18nKey.ConnectTabWrite)).not.toBeInTheDocument();
+    expect(screen.queryByText(AnalyticsTablesI18nKey.ConnectWhoCanWrite)).not.toBeInTheDocument();
+    expect(screen.queryByText(AnalyticsTablesI18nKey.ConnectRejected)).not.toBeInTheDocument();
+  });
+
+  test('gives its own reason for the read-only panel, not the system table’s', () => {
+    renderEnrichmentPanel();
+
+    expect(screen.getByText(AnalyticsTablesI18nKey.ConnectEnrichmentReadOnly)).toBeInTheDocument();
+    expect(screen.queryByText(AnalyticsTablesI18nKey.ConnectSystemReadOnly)).not.toBeInTheDocument();
+    expect(screen.getByText(AnalyticsTablesI18nKey.ConnectWhoCanRead)).toBeInTheDocument();
+  });
+
+  test('states how an enrichment’s columns are addressed, which nothing else in the product teaches', () => {
+    renderEnrichmentPanel();
+
+    expect(screen.getByText(AnalyticsTablesI18nKey.ConnectEnrichmentColumns)).toBeInTheDocument();
+    expect(screen.getByText(AnalyticsTablesI18nKey.ConnectProjectionNote)).toBeInTheDocument();
+  });
+
+  test('generates snippets that read through the source table', () => {
+    renderEnrichmentPanel();
+
+    const blocks = Array.from(document.querySelectorAll('pre')).map((pre) => pre.textContent ?? '');
+    expect(blocks.some((block) => block.includes('"widget_scores.score" FROM widget_events'))).toBe(true);
+    expect(blocks.some((block) => block.includes('FROM widget_scores'))).toBe(false);
+  });
+
+  test('does not ask the backend for a write-role list it could never act on', () => {
+    renderEnrichmentPanel();
 
     expect(getTableAccess).not.toHaveBeenCalled();
   });

@@ -4,6 +4,7 @@ import {
   SNIPPET_LANGUAGE_PYTHON,
   SNIPPET_LANGUAGE_SHELL,
 } from '@/src/components/Analytics/Tables/ConnectPanel/constants';
+import ConnectRestEndpointSetup from '@/src/components/Analytics/Tables/ConnectPanel/ConnectRestEndpointSetup';
 import { ConnectFormatNote, ConnectFormatRule } from '@/src/components/Analytics/Tables/ConnectPanel/models';
 import CodeSnippet from '@/src/components/Common/CodeSnippet/CodeSnippet';
 import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
@@ -12,7 +13,9 @@ import { useI18n } from '@/src/locales/client';
 interface Props {
   pythonSnippet: string;
   curlSnippet: string;
+  restEndpointSnippet: string;
   formatNotes: ConnectFormatNote[];
+  isBaseUrlPlaceholder: boolean;
   writeRoles: string[];
   isRolesLoading: boolean;
   isAccessReadable: boolean;
@@ -28,7 +31,9 @@ const FORMAT_RULE_KEY: Record<ConnectFormatRule, AnalyticsTablesI18nKey> = {
 const ConnectWriteTab: FC<Props> = ({
   pythonSnippet,
   curlSnippet,
+  restEndpointSnippet,
   formatNotes,
+  isBaseUrlPlaceholder,
   writeRoles,
   isRolesLoading,
   isAccessReadable,
@@ -65,12 +70,14 @@ const ConnectWriteTab: FC<Props> = ({
 
       <section className="flex flex-col gap-2">
         <h4 className="dial-small-text-semi text-primary">{t(AnalyticsTablesI18nKey.ConnectPython)}</h4>
+        <ConnectRestEndpointSetup snippet={restEndpointSnippet} isBaseUrlPlaceholder={isBaseUrlPlaceholder} />
         <p className="dial-tiny-text text-secondary">{t(AnalyticsTablesI18nKey.ConnectPythonHint)}</p>
         <CodeSnippet title={SNIPPET_LANGUAGE_PYTHON} value={pythonSnippet} />
       </section>
 
       <section className="flex flex-col gap-2">
         <h4 className="dial-small-text-semi text-primary">{t(AnalyticsTablesI18nKey.ConnectCurl)}</h4>
+        <ConnectRestEndpointSetup snippet={restEndpointSnippet} isBaseUrlPlaceholder={isBaseUrlPlaceholder} />
         <CodeSnippet title={SNIPPET_LANGUAGE_SHELL} value={curlSnippet} />
       </section>
 

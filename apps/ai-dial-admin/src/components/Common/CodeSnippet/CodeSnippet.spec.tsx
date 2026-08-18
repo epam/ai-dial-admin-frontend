@@ -19,7 +19,7 @@ describe('Common components :: CodeSnippet', () => {
     Object.assign(navigator, { clipboard: { writeText } });
 
     render(<CodeSnippet title="shell" value={SCRIPT} />);
-    fireEvent.click(screen.getByLabelText('copy'));
+    fireEvent.click(screen.getByLabelText('copy shell'));
 
     expect(writeText).toHaveBeenCalledWith(SCRIPT);
   });
