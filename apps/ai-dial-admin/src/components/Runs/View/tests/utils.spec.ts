@@ -92,7 +92,8 @@ describe('Runs View :: getAnalyticsColumns', () => {
     expect(accuracyChildren).toHaveLength(1);
     expect(accuracyChildren[0]).toEqual(
       expect.objectContaining({
-        field: 'accuracy',
+        field: 'Accuracy_accuracy',
+        colId: 'Accuracy_accuracy',
         headerName: 'accuracy',
         cellRenderer: expect.any(Function),
         filter: 'agNumberColumnFilter',
@@ -155,12 +156,35 @@ describe('Runs View :: getAnalyticsColumns', () => {
     const groupA = columns.find((c: any) => c.headerName === 'GroupA') as any;
     const groupB = columns.find((c: any) => c.headerName === 'GroupB') as any;
 
-    expect(groupA.children.map((c: any) => c.field)).toEqual(['a', 'b', 'c']);
-    expect(groupB.children.map((c: any) => c.field)).toEqual(['x']);
+    expect(groupA.children.map((c: any) => c.field)).toEqual(['GroupA_a', 'GroupA_b', 'GroupA_c']);
+    expect(groupB.children.map((c: any) => c.field)).toEqual(['GroupB_x']);
 
-    const bCol = groupA.children.find((c: any) => c.field === 'b');
+    const bCol = groupA.children.find((c: any) => c.field === 'GroupA_b');
     expect(bCol.valueGetter({ data: { metricValues: { GroupA: { a: 1 } } } })).toBe('—');
     expect(bCol.valueGetter({ data: { metricValues: { GroupA: { b: 2 } } } })).toBe(2);
+  });
+
+  test('Should assign unique colIds when multiple metrics share the same leaf key', () => {
+    const results = [
+      {
+        metricValues: {
+          'correct-capital1': { score: 1 },
+          'answer-conciseness': { score: 0.5 },
+          'instruction-following': { score: 0.8 },
+        },
+      },
+    ] as any[];
+
+    const columns = getAnalyticsColumns(results as any);
+    const metricGroups = columns.filter((c) =>
+      ['correct-capital1', 'answer-conciseness', 'instruction-following'].includes(c.headerName ?? ''),
+    );
+
+    expect(metricGroups.map((g) => (g as { children?: { colId?: string }[] }).children?.[0]?.colId)).toEqual([
+      'correct-capital1_score',
+      'answer-conciseness_score',
+      'instruction-following_score',
+    ]);
   });
 
   test('Should handle empty results', () => {
@@ -178,7 +202,7 @@ describe('Runs View :: getAnalyticsColumns', () => {
     const results = [{ metricValues: { Accuracy: { score: 0.8 } } }] as any[];
     const columns = getAnalyticsColumns(results as any);
     const accuracyColumn = columns.find((column: any) => column.headerName === 'Accuracy') as any;
-    const scoreColumn = accuracyColumn.children.find((child: any) => child.field === 'score');
+    const scoreColumn = accuracyColumn.children.find((child: any) => child.field === 'Accuracy_score');
 
     const missingMetricRow = { data: { metricValues: { Accuracy: { score: null } } } };
     const validMetricRow = { data: { metricValues: { Accuracy: { score: 0.8 } } } };
@@ -191,7 +215,7 @@ describe('Runs View :: getAnalyticsColumns', () => {
     const results = [{ metricValues: { Accuracy: { score: 0.8 } } }] as any[];
     const columns = getAnalyticsColumns(results as any);
     const accuracyColumn = columns.find((column: any) => column.headerName === 'Accuracy') as any;
-    const scoreColumn = accuracyColumn.children.find((child: any) => child.field === 'score');
+    const scoreColumn = accuracyColumn.children.find((child: any) => child.field === 'Accuracy_score');
 
     const lowerValueRow = { data: { metricValues: { Accuracy: { score: 0.5 } } } };
     const higherValueRow = { data: { metricValues: { Accuracy: { score: 0.9 } } } };
@@ -206,7 +230,7 @@ describe('Runs View :: getAnalyticsColumns', () => {
 
     const columns = getAnalyticsColumns(results as any);
     const groupA = columns.find((c: any) => c.headerName === 'GroupA') as any;
-    const aCol = groupA.children.find((c: any) => c.field === 'a');
+    const aCol = groupA.children.find((c: any) => c.field === 'GroupA_a');
 
     expect(() => aCol.valueGetter({ data: { metricValues: { GroupB: { x: 3 } } } })).not.toThrow();
     expect(aCol.valueGetter({ data: { metricValues: { GroupB: { x: 3 } } } })).toBe('—');

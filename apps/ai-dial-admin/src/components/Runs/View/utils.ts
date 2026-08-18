@@ -99,7 +99,8 @@ const getMetricsColumns = (metrics: Record<string, Record<string, unknown>>) => 
     children: Object.keys(groupValues).map(
       (key) =>
         ({
-          field: key,
+          field: `${groupKey}_${key}`,
+          colId: `${groupKey}_${key}`,
           headerName: key,
           cellRenderer: MetricScoreCellRenderer,
           ...NUMBER_FILTER_COL_DEF,
