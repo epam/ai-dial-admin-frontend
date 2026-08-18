@@ -4,6 +4,7 @@ export const MODEL_INTERFACE_TYPES: DeploymentInterfaceType[] = [
   DeploymentInterfaceType.OpenAIChatCompletions,
   DeploymentInterfaceType.OpenAIResponses,
   DeploymentInterfaceType.AnthropicMessages,
+  DeploymentInterfaceType.OpenAIEmbeddings,
 ];
 
 export const APPLICATION_INTERFACE_TYPES: DeploymentInterfaceType[] = [DeploymentInterfaceType.OpenAIChatCompletions];

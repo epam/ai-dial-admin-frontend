@@ -1591,6 +1591,7 @@ export default {
     SelectType: 'Select interface type',
     OpenAIChatCompletions: 'OpenAI Chat Completions',
     OpenAIResponses: 'OpenAI Responses',
+    OpenAIEmbeddings: 'OpenAI Embeddings',
     AnthropicMessages: 'Anthropic Messages',
     BaseUrl: 'Base URL',
     BaseUrlPlaceholder: 'Enter {type} host',
