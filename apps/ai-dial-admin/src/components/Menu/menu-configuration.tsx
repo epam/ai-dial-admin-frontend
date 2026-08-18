@@ -109,6 +109,10 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
           key: MenuI18nKey.Files,
           href: ApplicationRoute.Files,
         },
+        {
+          key: MenuI18nKey.Skills,
+          href: ApplicationRoute.AssetsSkills,
+        },
       ],
     },
     {

@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DialNotification, NotificationVariant } from '@epam/ai-dial-ui-kit';
 
 import { getRules } from '@/src/app/[lang]/folders-storage/actions';
+import { removeSkillFile, uploadSkillFile } from '@/src/app/[lang]/assets-skills/actions';
 import { updatePublication } from '@/src/app/actions/publications';
 import ResourceAuthButtons from '@/src/components/Assets/Resources/Auth/ResourceAuthButtons';
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
@@ -18,7 +19,13 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { FilePublication, PromptPublication, Publication, ToolsetPublication } from '@/src/models/dial/publications';
+import {
+  FilePublication,
+  PromptPublication,
+  Publication,
+  SkillPublication,
+  ToolsetPublication,
+} from '@/src/models/dial/publications';
 import { DialToolsetResource, ToolsetAuthType } from '@/src/models/dial/resource';
 import { DialRule } from '@/src/models/dial/rule';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -67,6 +74,8 @@ const PublicationView = <T extends Publication>({ view, publication, application
   const [currentRules, setCurrentRules] = useState<DialRule[]>([]);
 
   const [addedFiles, setAddedFiles] = useState<File[]>([]);
+  const [skillAddedFiles, setSkillAddedFiles] = useState<File[]>([]);
+  const [skillRemovedFileNames, setSkillRemovedFileNames] = useState<string[]>([]);
 
   const jsonConfiguration = useMemo<JsonConfiguration>(
     () => ({
@@ -87,7 +96,12 @@ const PublicationView = <T extends Publication>({ view, publication, application
   }, [publication]);
 
   useEffect(() => {
-    setIsChanged(!isEqualSkippingUndefined(selectedPublication, publication) || addedFiles.length > 0);
+    setIsChanged(
+      !isEqualSkippingUndefined(selectedPublication, publication) ||
+        addedFiles.length > 0 ||
+        skillAddedFiles.length > 0 ||
+        skillRemovedFileNames.length > 0,
+    );
     setIsPermissionsChanged(!isEqualSkippingUndefined(currentRules, selectedPublication.rules));
     const error = selectedPublication.rules?.some(
       (rule) =>
@@ -97,7 +111,16 @@ const PublicationView = <T extends Publication>({ view, publication, application
         (rule.targets.length && !rule.targets[0].length),
     );
     dispatch({ type: ValidationActionType.SetField, field: 'rules', isValid: !error });
-  }, [selectedPublication, publication, t, currentRules, dispatch, addedFiles.length]);
+  }, [
+    selectedPublication,
+    publication,
+    t,
+    currentRules,
+    dispatch,
+    addedFiles.length,
+    skillAddedFiles.length,
+    skillRemovedFileNames.length,
+  ]);
 
   useEffect(() => {
     setTabs((prev) => {
@@ -133,8 +156,37 @@ const PublicationView = <T extends Publication>({ view, publication, application
   const onDiscard = useCallback(() => {
     setSelectedPublication(structuredClone(publication));
     setAddedFiles([]);
+    setSkillAddedFiles([]);
+    setSkillRemovedFileNames([]);
     setDiscardKey((prev) => prev + 1);
   }, [publication]);
+
+  /**
+   * Applies staged Skill file changes directly against Core's per-file skill routes — these aren't
+   * publication fields `updatePublication` can persist, so they're a separate step after it
+   * succeeds. Removals first, so a name freed by a removal can be reused by an added file in the
+   * same save.
+   */
+  const applySkillFileChanges = useCallback(
+    async (skillPath: string) => {
+      for (const fileName of skillRemovedFileNames) {
+        const result = await removeSkillFile(skillPath, fileName);
+        if (!result.success) {
+          return result;
+        }
+      }
+      for (const file of skillAddedFiles) {
+        const formData = new FormData();
+        formData.append('file', file);
+        const result = await uploadSkillFile(skillPath, file.name, formData);
+        if (!result.success) {
+          return result;
+        }
+      }
+      return { success: true };
+    },
+    [skillRemovedFileNames, skillAddedFiles],
+  );
 
   const onSave = useCallback(() => {
     const correctedPublication =
@@ -151,8 +203,25 @@ const PublicationView = <T extends Publication>({ view, publication, application
       addedFiles,
     );
     const req = getReqRef.current(updatePublication, body);
-    req.then((res) => {
+    req.then(async (res) => {
       if (res.success) {
+        if (view === ApplicationRoute.SkillPublications && (skillAddedFiles.length || skillRemovedFileNames.length)) {
+          const skillPath = (correctedPublication as unknown as SkillPublication).skillResources?.[0]?.skillResource
+            .path;
+          const skillFilesResult = skillPath ? await applySkillFileChanges(skillPath) : { success: true };
+          if (!skillFilesResult.success) {
+            showNotification(
+              getErrorNotification(
+                (skillFilesResult as { errorHeader?: string }).errorHeader,
+                (skillFilesResult as { errorMessage?: string }).errorMessage,
+              ),
+            );
+            return;
+          }
+          setSkillAddedFiles([]);
+          setSkillRemovedFileNames([]);
+        }
+
         dispatch({ type: ValidationActionType.Reset });
 
         const shouldRedirectToListView =
@@ -177,7 +246,19 @@ const PublicationView = <T extends Publication>({ view, publication, application
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
-  }, [dispatch, publication.requestName, router, selectedPublication, showNotification, t, view, addedFiles]);
+  }, [
+    dispatch,
+    publication.requestName,
+    router,
+    selectedPublication,
+    showNotification,
+    t,
+    view,
+    addedFiles,
+    skillAddedFiles,
+    skillRemovedFileNames,
+    applySkillFileChanges,
+  ]);
 
   const warning = useMemo(() => {
     if (publication.resourceIssues?.length) {
@@ -249,6 +330,10 @@ const PublicationView = <T extends Publication>({ view, publication, application
               currentRules={currentRules}
               addedFiles={addedFiles}
               setAddedFiles={setAddedFiles}
+              skillAddedFiles={skillAddedFiles}
+              setSkillAddedFiles={setSkillAddedFiles}
+              skillRemovedFileNames={skillRemovedFileNames}
+              setSkillRemovedFileNames={setSkillRemovedFileNames}
             />
           )
         )}
