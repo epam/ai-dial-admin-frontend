@@ -55,6 +55,7 @@ const ConversationDetailView: FC<Props> = ({ conversation, feedback, turns, mess
         turns={turns}
         turnRatings={turnRatings}
         hasTurnsLoadError={hasTurnsLoadError}
+        turnCount={conversation.turn_count}
         onOpenTrace={onOpenTrace}
       />
       <ConversationDetailRail
@@ -68,7 +69,7 @@ const ConversationDetailView: FC<Props> = ({ conversation, feedback, turns, mess
 
   return (
     <div className="relative flex size-full flex-col gap-5 rounded bg-layer-2 py-5 px-6">
-      {!trace && <ConversationDetailHeader conversation={conversation} nowMs={nowMs} turnCount={turns.length} />}
+      {!trace && <ConversationDetailHeader conversation={conversation} nowMs={nowMs} />}
       <div className="flex min-h-0 flex-1 flex-col" inert={isLoading}>
         {content}
       </div>
