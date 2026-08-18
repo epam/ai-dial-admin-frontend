@@ -31,7 +31,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { Metric } from '@/src/models/evaluation/metric';
 import { Dataset } from '@/src/models/evaluation/dataset';
-import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { OverallScoreType, TestSuite } from '@/src/models/evaluation/test-suite';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import AddMetricModal from './AddMetric/AddMetricModal';
 import MetricBindingsDisplay from './MetricBindingsDisplay';
@@ -87,15 +87,29 @@ const Metrics: FC<Props> = ({ selectedTestSuite, dataset, onChange }) => {
 
   const onRemoveMetric = useCallback(
     (metricId: string) => {
+      const removedMetricName = metrics?.find((metric) => metric.id === metricId)?.name;
+
       deleteTestSuiteMetric(selectedTestSuite.id as string, metricId).then((response) => {
         setIsDeleteModalOpen(false);
         setMetricToEdit(undefined);
         if (response?.success) {
           loadMetrics();
+
+          if (removedMetricName && selectedTestSuite.overallScore?.type === OverallScoreType.WeightedMean) {
+            const { weights } = selectedTestSuite.overallScore;
+            const remainingWeights = weights.filter((weight) => weight.metricName !== removedMetricName);
+
+            if (remainingWeights.length !== weights.length) {
+              onChange({
+                ...selectedTestSuite,
+                overallScore: { type: OverallScoreType.WeightedMean, weights: remainingWeights },
+              });
+            }
+          }
         }
       });
     },
-    [loadMetrics, selectedTestSuite.id],
+    [loadMetrics, metrics, onChange, selectedTestSuite],
   );
 
   const onAddMetric = useCallback(
