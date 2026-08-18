@@ -120,7 +120,12 @@ interface ConversationListQueryParams extends ConversationFilterParams {
   offset: number;
   limit: number;
   sort?: ConversationSortKey[];
-  visibleFields?: string[];
+  // Split by what projecting a field costs, not by whether its column is on screen: a source field is a
+  // plain column of the table already being read, so it is always projected and revealing its column costs
+  // nothing. An enrichment field pulls its enrichment's join into every page, so it is projected only while
+  // its column is visible.
+  sourceFields?: string[];
+  visibleEnrichmentFields?: string[];
 }
 
 const CURATED_SELECT_FIELDS: ConversationsField[] = [
@@ -136,24 +141,32 @@ const CURATED_SELECT_FIELDS: ConversationsField[] = [
   ConversationsField.Deployments,
 ];
 
-const conversationSelect = (visibleFields: string[] = []): string[] => {
+const conversationSelect = (sourceFields: string[] = [], visibleEnrichmentFields: string[] = []): string[] => {
   const curated = new Set<string>(CURATED_SELECT_FIELDS);
-  return [...CURATED_SELECT_FIELDS, ...visibleFields.filter((field) => !curated.has(field))];
+  return [
+    ...CURATED_SELECT_FIELDS,
+    ...sourceFields.filter((fieldName) => !curated.has(fieldName)),
+    ...visibleEnrichmentFields,
+  ];
 };
 
+// No `include_total`: the totals query resolves the same count under the same filter, and the service runs
+// a requested total as its own statement over the whole filtered result — so asking here would scan it
+// again for every page fetched.
 export const buildConversationListQuery = ({
   offset,
   limit,
   sort,
-  visibleFields,
+  sourceFields,
+  visibleEnrichmentFields,
   ...filters
 }: ConversationListQueryParams): StructuredQuery =>
   rowQuery({
     entity: CONVERSATIONS_ENTITY,
-    select: conversationSelect(visibleFields).map((fieldName) => col(field(fieldName))),
+    select: conversationSelect(sourceFields, visibleEnrichmentFields).map((fieldName) => col(field(fieldName))),
     filter: conversationFilter(filters),
     sort: conversationSort(sort),
-    page: offsetPage(offset, limit, true),
+    page: offsetPage(offset, limit),
   });
 
 export const buildConversationDetailQuery = (chatId: string): StructuredQuery =>

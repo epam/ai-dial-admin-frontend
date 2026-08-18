@@ -11,6 +11,7 @@ import {
   catalogFilterableFields,
   catalogSortableFields,
   catalogValueTypes,
+  projectableSchemaFields,
 } from '@/src/utils/analytics/conversation-column-catalog';
 
 const CURATED: ColDef[] = [
@@ -19,12 +20,15 @@ const CURATED: ColDef[] = [
   { field: 'rating', headerName: 'Rating', sortable: false, filter: false },
 ];
 
-const field = (overrides: Partial<AnalyticsEntityField> = {}): AnalyticsEntityField => ({
-  name: 'success_count',
-  type: AnalyticsFieldType.Integer,
-  source: 'conversations',
-  ...overrides,
-});
+// A plain column of the entity's own source reports its flat name as the field backing it, so the factory
+// mirrors that: `source` follows `name` unless a case overrides it to model an enrichment-supplied field.
+const field = (overrides: Partial<AnalyticsEntityField> = {}): AnalyticsEntityField => {
+  const name = overrides.name ?? 'success_count';
+  return { name, type: AnalyticsFieldType.Integer, source: name, ...overrides };
+};
+
+const enrichmentField = (name: string, overrides: Partial<AnalyticsEntityField> = {}): AnalyticsEntityField =>
+  field({ name, source: name.split('.').at(-1) as string, ...overrides });
 
 const catalogFields = (fields: AnalyticsEntityField[]): string[] =>
   buildConversationColumnCatalog(CURATED, fields).map((column) => column.field as string);
@@ -61,6 +65,12 @@ describe('buildConversationColumnCatalog', () => {
 
   test('does not offer a sensitive field', () => {
     expect(catalogFields([field({ sensitive: true })])).not.toContain('success_count');
+  });
+
+  // The service omits a heavy field from a wildcard projection because it is expensive to transfer, and an
+  // offered column is one the view may project on every page.
+  test('does not offer a heavy field', () => {
+    expect(catalogFields([field({ heavy: true })])).not.toContain('success_count');
   });
 
   test.each([[AnalyticsFieldType.Object], [AnalyticsFieldType.Array]])('does not offer a %s field', (type) => {
@@ -137,8 +147,12 @@ describe('offerableSchemaFields', () => {
     expect(offerableSchemaFields(CURATED, [field()])).toEqual(['success_count']);
   });
 
-  test('excludes a sensitive field and a non-scalar one', () => {
-    const fields = [field({ sensitive: true }), field({ name: 'payload', type: AnalyticsFieldType.Object })];
+  test('excludes a sensitive field, a non-scalar one and a heavy one', () => {
+    const fields = [
+      field({ sensitive: true }),
+      field({ name: 'payload', type: AnalyticsFieldType.Object }),
+      field({ name: 'traces', heavy: true }),
+    ];
 
     expect(offerableSchemaFields(CURATED, fields)).toEqual([]);
   });
@@ -187,5 +201,41 @@ describe('catalogValueTypes', () => {
     [AnalyticsFieldType.Timestamp, QueryValueType.Timestamp],
   ])('maps the %s field type to %s', (type, expected) => {
     expect(catalogValueTypes([field({ name: 'measure', type })]).measure).toBe(expected);
+  });
+});
+
+describe('projectableSchemaFields', () => {
+  test('classifies a plain column of the source as source-backed', () => {
+    expect(projectableSchemaFields(CURATED, [field()])).toEqual({
+      sourceBacked: ['success_count'],
+      enrichmentBacked: [],
+    });
+  });
+
+  // An enrichment-supplied field is namespaced by its enrichment, leaving the backing name unqualified.
+  test('classifies a namespaced field as enrichment-backed', () => {
+    expect(projectableSchemaFields(CURATED, [enrichmentField('conversation_insights.topic')])).toEqual({
+      sourceBacked: [],
+      enrichmentBacked: ['conversation_insights.topic'],
+    });
+  });
+
+  test('splits a schema carrying both', () => {
+    const fields = [field(), enrichmentField('conversation_buckets.turn_bucket')];
+
+    expect(projectableSchemaFields(CURATED, fields)).toEqual({
+      sourceBacked: ['success_count'],
+      enrichmentBacked: ['conversation_buckets.turn_bucket'],
+    });
+  });
+
+  test('classifies nothing the catalog does not offer', () => {
+    const fields = [field({ sensitive: true }), field({ name: 'traces', heavy: true })];
+
+    expect(projectableSchemaFields(CURATED, fields)).toEqual({ sourceBacked: [], enrichmentBacked: [] });
+  });
+
+  test('is empty without a schema', () => {
+    expect(projectableSchemaFields(CURATED)).toEqual({ sourceBacked: [], enrichmentBacked: [] });
   });
 });

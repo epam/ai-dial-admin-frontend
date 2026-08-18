@@ -11,17 +11,14 @@ import { useConversations } from '@/src/components/Analytics/ConversationsTrace/
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay/LoadingOverlay';
 import { BasicI18nKey, ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { ConversationTotals } from '@/src/models/analytics/conversations-trace';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 
 interface Props {
-  initialTotals: ConversationTotals | null;
-  hasInitialLoadError?: boolean;
   schemaFields?: AnalyticsEntityField[] | null;
   hasSchemaError?: boolean;
 }
 
-const ConversationsTraceView: FC<Props> = ({ initialTotals, hasInitialLoadError, schemaFields, hasSchemaError }) => {
+const ConversationsTraceView: FC<Props> = ({ schemaFields, hasSchemaError }) => {
   const t = useI18n();
   const [isColumnsPanelOpen, setIsColumnsPanelOpen] = useState(false);
   const {
@@ -42,7 +39,7 @@ const ConversationsTraceView: FC<Props> = ({ initialTotals, hasInitialLoadError,
     onTimeRangeChange,
     feedback,
     onFeedbackChange,
-  } = useConversations(initialTotals, hasInitialLoadError, schemaFields);
+  } = useConversations(schemaFields);
 
   const onToggleColumnsPanel = useCallback(() => setIsColumnsPanelOpen((isOpen) => !isOpen), []);
 

@@ -49,6 +49,8 @@ import {
   FEEDBACK_CANDIDATE_LIMIT,
 } from '@/src/constants/analytics/conversations-trace';
 import { AnalyticsEntitySchema } from '@/src/models/analytics/entity';
+import { withEntitySchemaCache } from '@/src/server/analytics/entity-schema-cache';
+import { toNumber } from '@/src/utils/analytics/scalar';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 const token = () => getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -85,13 +87,16 @@ const withRatings = async (rows: ConversationRow[], range: TimeRange, authToken:
   return attachRatings(rows, ratingRows(up), ratingRows(down));
 };
 
-// Resolved once per filter state by the caller and carried into every page of that result: the
-// narrowing is a property of the filter, not of the page.
-export async function getRatedChatIds(
+// Resolved on the first page of a result and returned to the caller, which carries the ids into every
+// later page of it: the narrowing is a property of the filter, not of the page. Not exported — a
+// server-side cache keyed on the filter state alone would serve one caller's candidates to another, and
+// the caller already holds them for the life of the filter state.
+async function resolveRatedChatIds(
   filters: ConversationFilters,
+  authToken: Token,
 ): Promise<ServerActionResponse<ConversationCandidateIds>> {
   const query = buildRatedConversationIdsQuery({ range: toRange(filters), feedback: filters.feedback });
-  const result = await analyticsDataApi.executeAction(query, await token());
+  const result = await analyticsDataApi.executeAction(query, authToken);
 
   if (!result.success) {
     return { ...result, response: undefined };
@@ -111,44 +116,86 @@ const isNarrowedToNothing = ({ feedback, chatIds }: ConversationPageRequest): bo
   feedback !== FeedbackFilter.All && !chatIds?.length;
 
 export async function getConversationsSchema(): Promise<ServerActionResponse<AnalyticsEntitySchema>> {
-  const schema = await analyticsDataApi.getEntitySchema(CONVERSATIONS_ENTITY, await token());
+  const authToken = await token();
+  const schema = await withEntitySchemaCache(CONVERSATIONS_ENTITY, authToken, () =>
+    analyticsDataApi.getEntitySchema(CONVERSATIONS_ENTITY, authToken),
+  );
 
   return schema ? { success: true, response: schema } : { success: false };
 }
 
+/**
+ * One request per fetch cycle. A first-page request resolves the feedback candidates, then runs the row
+ * query and the summary query **concurrently** and returns all three; running the summary after the rows
+ * would make the merged call slower than the two separate ones it replaces. A later-page request takes the
+ * candidate ids from the caller and runs neither.
+ */
 export async function getConversations(request: ConversationPageRequest): Promise<ConversationsResponse> {
-  if (isNarrowedToNothing(request)) {
-    return { success: true, response: { rows: [], total: 0 } };
-  }
-
   const authToken = await token();
   const range = toRange(request);
+  const isFirstPage = request.offset === 0;
+
+  let candidates: ConversationCandidateIds | undefined;
+  let chatIds = request.chatIds;
+
+  if (isFirstPage && request.feedback !== FeedbackFilter.All) {
+    const resolved = await resolveRatedChatIds(request, authToken);
+    if (!resolved.success) {
+      return { ...resolved, response: undefined };
+    }
+    candidates = resolved.response;
+    chatIds = candidates?.ids ?? [];
+  }
+
+  if (isNarrowedToNothing({ ...request, chatIds })) {
+    return {
+      success: true,
+      response: {
+        rows: [],
+        total: 0,
+        ...(isFirstPage ? { totals: { conversations: 0, cost: null } } : {}),
+        ...(candidates ? { candidates } : {}),
+      },
+    };
+  }
 
   const query = buildConversationListQuery({
     range,
     search: request.search,
-    chatIds: request.chatIds ?? [],
+    chatIds: chatIds ?? [],
     columnFilters: request.columnFilters ?? [],
     sort: request.sort ?? [],
-    visibleFields: request.visibleFields ?? [],
+    sourceFields: request.sourceFields ?? [],
+    visibleEnrichmentFields: request.visibleEnrichmentFields ?? [],
     offset: request.offset,
     limit: request.limit,
   });
-  const result = await analyticsDataApi.executeAction(query, authToken);
 
-  if (!result.success) {
-    return { ...result, response: undefined };
+  const [page, totals] = await Promise.all([
+    (async () => {
+      const result = await analyticsDataApi.executeAction(query, authToken);
+      if (!result.success) {
+        return { result, rows: null };
+      }
+      const rows = (result.response?.rows ?? []) as unknown as ConversationRow[];
+      return { result, rows: await withRatings(rows, range, authToken) };
+    })(),
+    isFirstPage ? resolveConversationTotals(request, chatIds, authToken) : Promise.resolve(undefined),
+  ]);
+
+  // The rows and the summary are separate queries, so one failing is no evidence about the other. A failed
+  // row query still reports whatever the summary resolved, which is what lets the pills keep standing.
+  const resolved = {
+    total: totals ? toNumber(totals.conversations) : null,
+    ...(totals ? { totals } : {}),
+    ...(candidates ? { candidates } : {}),
+  };
+
+  if (!page.rows) {
+    return { ...page.result, response: { rows: [], ...resolved } };
   }
 
-  const rows = (result.response?.rows ?? []) as unknown as ConversationRow[];
-
-  return {
-    ...result,
-    response: {
-      rows: await withRatings(rows, range, authToken),
-      total: result.response?.totalCount ?? null,
-    },
-  };
+  return { ...page.result, response: { rows: page.rows, ...resolved } };
 }
 
 export async function getConversationDetail(chatId: string): Promise<ServerActionResponse<ConversationDetailResult>> {
@@ -211,33 +258,31 @@ export async function getConversationSpans(
   };
 }
 
-export async function getConversationTotals(
+// Resolved alongside the first page rather than by a request of its own. Not exported: the summary has to
+// be an observation of the same fetch cycle as the rows beside it, which is exactly what returning them
+// together guarantees.
+async function resolveConversationTotals(
   filters: ConversationFilters,
-  chatIds?: string[],
-): Promise<ServerActionResponse<ConversationTotals>> {
-  if (isNarrowedToNothing({ ...filters, offset: 0, limit: 0, chatIds })) {
-    return { success: true, response: { conversations: 0, cost: null } };
-  }
-
+  chatIds: string[] | undefined,
+  authToken: Token,
+): Promise<ConversationTotals | undefined> {
   const query = buildConversationTotalsQuery({
     range: toRange(filters),
     search: filters.search,
     chatIds: chatIds ?? [],
     columnFilters: filters.columnFilters ?? [],
   });
-  const result = await analyticsDataApi.executeAction(query, await token());
+  const result = await analyticsDataApi.executeAction(query, authToken);
 
   if (!result.success) {
-    return { ...result, response: undefined };
+    errorObjLog(result, 'Failed to resolve the conversations summary');
+    return undefined;
   }
 
   const row = result.response?.rows?.[0];
 
   return {
-    ...result,
-    response: {
-      conversations: (row?.[ConversationTotalsField.Conversations] ?? null) as ConversationTotals['conversations'],
-      cost: (row?.[ConversationTotalsField.Cost] ?? null) as ConversationTotals['cost'],
-    },
+    conversations: (row?.[ConversationTotalsField.Conversations] ?? null) as ConversationTotals['conversations'],
+    cost: (row?.[ConversationTotalsField.Cost] ?? null) as ConversationTotals['cost'],
   };
 }
