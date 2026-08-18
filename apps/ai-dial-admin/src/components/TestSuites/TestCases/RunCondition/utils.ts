@@ -284,7 +284,7 @@ const scalarContains = (left: unknown, right: string): boolean => {
 const arrayContainsElement = (left: unknown, right: string): boolean => {
   const parsed = parseArrayValue(left);
   if (parsed != null) {
-    return parsed.some((item) => scalarContains(item, right));
+    return parsed.some((item) => String(item).toLowerCase() === right.toLowerCase());
   }
   return scalarContains(left, right);
 };
