@@ -4,6 +4,7 @@ import classNames from 'classnames';
 
 import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
 import FoldersStorageLabel from '@/src/components/Assets/Header/FolderStorage';
+import ResourceMultiAuth from '@/src/components/Assets/Resources/Auth/ResourceMultiAuth';
 import ResourceInfoHeader from '@/src/components/Assets/Resources/ResourceInfoHeader';
 import ResourceSourceField from '@/src/components/Assets/Resources/ResourceSourceField';
 import DescriptionControl from '@/src/components/BaseControls/Description';
@@ -13,13 +14,13 @@ import IdControl from '@/src/components/BaseControls/Id/Id';
 import InterfacesField from '@/src/components/BaseControls/InterfacesField/InterfacesField';
 import IntroControl from '@/src/components/BaseControls/Intro';
 import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
+import OverrideNameControl from '@/src/components/BaseControls/OverrideName';
 import TopicsControl from '@/src/components/BaseControls/Topics';
 import VersionControl from '@/src/components/BaseControls/Version';
 import FilePath from '@/src/components/Common/FilePath/FilePath';
 import Defaults from '@/src/components/Defaults/Defaults';
 import { getAssetCreateFolderHandler } from '@/src/components/EntityListView/utils';
 import EntityAttachments from '@/src/components/EntityMainProperties/EntityAttachments/EntityAttachments';
-import ResourceMultiAuth from '@/src/components/Assets/Resources/Auth/ResourceMultiAuth';
 import { ASSET_APPLICATION_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
 import { ASSET_APPLICATION_INTERFACE_TYPES } from '@/src/constants/deployment-interfaces';
 import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -122,6 +123,7 @@ const ApplicationAssetProperties: FC<Props> = ({ asset, runners, onChange, isPub
           allowedTypes={ASSET_APPLICATION_INTERFACE_TYPES}
           isAsset
         />
+        <OverrideNameControl entity={asset as any} onChangeEntity={onChange} isAsset />
         <ResourceMultiAuth asset={asset} onChange={onChange} />
         <EntityAttachments entity={asset} onChangeEntity={onChange} isAsset />
         <Defaults

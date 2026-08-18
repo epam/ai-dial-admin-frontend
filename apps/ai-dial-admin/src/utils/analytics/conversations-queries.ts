@@ -5,9 +5,7 @@ import {
   CONVERSATION_FILTER_QUERY_OPERATOR,
   FEEDBACK_CANDIDATE_LIMIT,
   FEEDBACK_ENTITY,
-  LIST_SELECT_FIELDS,
   OPTIONAL_DETAIL_SELECT_FIELDS,
-  OPTIONAL_LIST_SELECT_FIELDS,
   POSITIVE_RATE_EXCLUSIVE_MIN,
   TURNS_ENTITY,
   USAGE_LOG_ENTITY,
@@ -126,38 +124,56 @@ interface ConversationListQueryParams extends ConversationFilterParams {
   offset: number;
   limit: number;
   sort?: ConversationSortKey[];
-  visibleFields?: string[];
-  availableFields?: string[];
+  // Split by what projecting a field costs, not by whether its column is on screen: a source field is a
+  // plain column of the table already being read, so it is always projected and revealing its column costs
+  // nothing. An enrichment field pulls its enrichment's join into every page, so it is projected only while
+  // its column is visible.
+  sourceFields?: string[];
+  visibleEnrichmentFields?: string[];
 }
 
-// The projection floor: the fields the default-visible columns need, narrowed to what the instance carries.
-// Every other curated column defaults to hidden and is projected through `visibleFields` when it is shown,
-// so the page fetch does not pay for a column nobody asked for.
-const conversationSelect = (visibleFields: string[] = [], availableFields?: string[]): string[] => {
-  const floor = availableSelectFields(LIST_SELECT_FIELDS, OPTIONAL_LIST_SELECT_FIELDS, availableFields);
-  const named = new Set<string>(floor);
-  // `visibleFields` is already derived from the same schema, so this intersection is normally a no-op — it
-  // is here so a caller supplying a stale column state cannot reintroduce an unknown field. With no schema
-  // it drops them all, matching the floor: nothing optional can be confirmed, so nothing optional is named.
-  const available = new Set(availableFields ?? []);
+const CURATED_SELECT_FIELDS: ConversationsField[] = [
+  ConversationsField.ChatId,
+  ConversationsField.ProjectId,
+  ConversationsField.UserHash,
+  ConversationsField.TurnCount,
+  ConversationsField.TotalTokens,
+  ConversationsField.TotalPrice,
+  ConversationsField.LastRequestTime,
+  ConversationsField.FirstRequestTime,
+  ConversationsField.DurationMs,
+  ConversationsField.Deployments,
+];
 
-  return [...floor, ...visibleFields.filter((fieldName) => !named.has(fieldName) && available.has(fieldName))];
+// Both incoming sets are resolved from the entity schema by `projectableSchemaFields`, so a field the
+// instance does not carry never reaches here. Only the single-conversation query, which enumerates a
+// frontend enum rather than the schema, has to intersect for itself.
+const conversationSelect = (sourceFields: string[] = [], visibleEnrichmentFields: string[] = []): string[] => {
+  const curated = new Set<string>(CURATED_SELECT_FIELDS);
+  return [
+    ...CURATED_SELECT_FIELDS,
+    ...sourceFields.filter((fieldName) => !curated.has(fieldName)),
+    ...visibleEnrichmentFields,
+  ];
 };
 
+// No `include_total`: the totals query resolves the same count under the same filter, and the service runs
+// a requested total as its own statement over the whole filtered result — so asking here would scan it
+// again for every page fetched.
 export const buildConversationListQuery = ({
   offset,
   limit,
   sort,
-  visibleFields,
-  availableFields,
+  sourceFields,
+  visibleEnrichmentFields,
   ...filters
 }: ConversationListQueryParams): StructuredQuery =>
   rowQuery({
     entity: CONVERSATIONS_ENTITY,
-    select: conversationSelect(visibleFields, availableFields).map((fieldName) => col(field(fieldName))),
+    select: conversationSelect(sourceFields, visibleEnrichmentFields).map((fieldName) => col(field(fieldName))),
     filter: conversationFilter(filters),
     sort: conversationSort(sort),
-    page: offsetPage(offset, limit, true),
+    page: offsetPage(offset, limit),
   });
 
 export const buildConversationDetailQuery = (chatId: string, availableFields?: string[]): StructuredQuery =>

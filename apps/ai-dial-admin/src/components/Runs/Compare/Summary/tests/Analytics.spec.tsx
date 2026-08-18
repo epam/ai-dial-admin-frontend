@@ -17,11 +17,12 @@ vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   return {
     ...actual,
     DialLoader: ({ size }: any) => <div aria-label={`loading-${size}`} />,
-    DialAnalyticsCard: ({ title, compareValues, delta, deltaPositive }: any) => (
+    DialAnalyticsCard: ({ title, compareValues, delta, deltaPositive, deltaUnit }: any) => (
       <div role="region" aria-label={typeof title === 'string' ? title : undefined}>
         <div>{title}</div>
         {delta != null && <span>delta:{delta}</span>}
         {deltaPositive === false && <span>delta-inverted</span>}
+        {deltaUnit != null && <span>delta-unit:{deltaUnit}</span>}
         {(compareValues || []).map((item: any, index: number) => (
           <div key={index}>
             <span>{item.title}</span>
@@ -115,14 +116,15 @@ describe('Compare Summary :: Analytics', () => {
     expect(screen.queryByText('Runs.OverallScore')).not.toBeInTheDocument();
   });
 
-  test('renders passed counts and runtime with inverted delta styling', async () => {
+  test('renders passed counts and runtime with a seconds delta unit', async () => {
     mockQueries();
     renderAnalytics();
 
     await screen.findByText('Runs.AvgTestCaseRunTime');
     expect(screen.getByText('delta:-3')).toBeInTheDocument();
     expect(screen.getByText('delta:110')).toBeInTheDocument();
-    expect(screen.getByText('delta-inverted')).toBeInTheDocument();
+    expect(screen.queryByText('delta-inverted')).not.toBeInTheDocument();
+    expect(screen.getByText('delta-unit:Runs.Seconds')).toBeInTheDocument();
   });
 
   test('shows status breakdown and uses matched analytics when onlyMatchingTestCases is on', async () => {

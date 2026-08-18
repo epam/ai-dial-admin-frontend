@@ -9,12 +9,11 @@ in **row mode**. The conversation rollup is materialized by the analytics servic
 per `chat_id`, produced by an aggregate pipeline over `dial_usage_log` — so the query SHALL read stored
 columns and MUST NOT group or aggregate.
 
-The select SHALL name the fields the default-visible curated columns require, by their entity field names:
+The select SHALL name the fields the curated columns require, by their entity field names:
 
 | Field | Renders as |
 |---|---|
 | `chat_id` | conversation |
-| `conversation_insights.title` | title |
 | `project_id` | project |
 | `user_hash` | user |
 | `turn_count` | turns |
@@ -25,29 +24,32 @@ The select SHALL name the fields the default-visible curated columns require, by
 | `duration_ms` | duration |
 | `deployments` | deployments |
 
-It SHALL additionally name every field whose column is currently visible, whether that column is curated or
-derived from the schema. Projection SHALL follow column visibility for **every** field-backed column, not only
-for schema-derived ones: a curated column that defaults to hidden carries a real entity field, so a
-visibility-driven projection that skipped it would render an empty cell for data the row does carry.
+It SHALL additionally name **every offered field the entity's own source carries**, whether or not its column
+is currently visible. Such a field costs the query one more column of the table it is already reading, which
+is less than what re-fetching every loaded page costs when the operator reveals its column.
+
+It SHALL name a field the service reports under an **enrichment namespace** — a name qualified by the
+enrichment that supplies it, `conversation_insights.` and `conversation_buckets.` being the two the
+`conversations` entity currently exposes — only while that field's column is visible. The service joins an
+enrichment only when a query names one of its columns, so naming one unconditionally would add that join to
+every page of every scroll, for columns the operator has not asked for.
+
+Both rules SHALL apply to a **curated** column's field as well as an offered one's. A curated column is not
+offered in the catalog — it is designed rather than derived — but it still reads a stored field, so a
+projection that skipped it would render an empty cell for data the row does carry, and it is classified as
+source- or enrichment-backed by the same test.
 
 It MUST NOT name every field the entity carries: the field set is whatever the service reports and can grow,
-so projecting all of it would make every page fetch pay for columns nobody asked for. A column with no field
-behind it — Rating is composed from `rate_analytics` lookups — MUST NOT be named at all, since the entity has
-no such column.
+and a field the catalog does not offer is one no column renders. A column with no field behind it — Rating is
+composed from `rate_analytics` lookups — MUST NOT be named at all, since the entity has no such column.
 
-An enrichment column's exposed name is a qualified flat name containing a dot — `conversation_insights.title`.
-That name SHALL be sent whole: the dot is part of the field name the service exposes, not a path to traverse
-and not a table qualifier to strip.
-
-The select SHALL be intersected with the fetched entity schema, per "A conversation query names only fields
-the entity's schema reports". The ten fields the pre-existing curated columns read are required; the
-conversation title is optional and is named only when the schema reports it.
-
-Making a hidden column visible SHALL restart paging, because the fetched pages do not carry that field and a
-column rendered from an absent value would read as empty data rather than as data not fetched. Hiding a visible
-column SHALL NOT re-query: the rows already held remain a correct answer to a narrower projection. The
-whole-result count and cost SHALL be unaffected by which columns are visible, being aggregates over the
-filtered result rather than over the projection.
+Making a hidden **enrichment-backed** column visible SHALL restart paging, because the fetched pages do not
+carry that field and a column rendered from an absent value would read as empty data rather than as data not
+fetched. Making a hidden **source-backed** column visible SHALL NOT re-query: its field is already in every
+fetched page, so the rows already held render it. Hiding a visible column SHALL NOT re-query in either case:
+the rows already held remain a correct answer to a narrower projection. The whole-result count and cost SHALL
+be unaffected by which columns are visible, being aggregates over the filtered result rather than over the
+projection.
 
 `turn_count` is the pipeline's count of the conversation's **distinct trace ids**, one trace per request, so
 it is a count of turns and not of usage-log rows: the embedding, MCP and routing hops a request fans out
@@ -65,14 +67,16 @@ predicates matching `chat_id` and `project_id`. The term SHALL be trimmed, and a
 SHALL add no predicate at all rather than an `ico` against the empty string, which would match every row at
 the cost of a scan. Both targets are base columns of the entity, so no select-alias restriction applies.
 
+Search SHALL NOT reach the conversation title either: the title is an enrichment column, absent for any
+conversation the evaluator has not processed, so a term matched against it would silently narrow the result to
+enriched conversations only.
+
 Search MUST NOT reach message content: no column of `conversations` carries it, and the only column that
 could — `dial_usage_log.request_body` — is catalogued `sensitive` and belongs to a different entity. Search
 SHALL NOT reach `user_hash` either: selecting the column for display does not make a surrogate a useful
 free-text target, and a partial-match predicate over it would cost a scan for a value operators paste whole —
-the user column's own filter is the exact-value input for it. Search SHALL NOT reach the conversation title:
-the title is an enrichment column that is absent for any conversation the evaluator has not processed, so a
-term matched against it would silently narrow the result to enriched conversations only. The search affordance
-SHALL name only the fields search actually reaches.
+the user column's own filter is the exact-value input for it. The search affordance SHALL name only the fields
+search actually reaches.
 
 When `chatIds` is non-empty the filter SHALL additionally carry `in(chat_id, chatIds)`, which is how the
 feedback filter narrows the result.
@@ -96,7 +100,10 @@ nulls ordering placing nulls last, so a column holding nulls orders deterministi
 the backend's default. A sort key naming a field the entity does not carry SHALL be rejected: sorting by a
 value the query cannot name would silently fall back to an unstated order.
 
-The page SHALL be `{ type: 'offset', offset, limit, include_total: true }`. A limit above 1000 SHALL never be
+The page SHALL be `{ type: 'offset', offset, limit, include_total: false }`, on **every** page including the
+first. The result total is resolved by the summary query under an identical filter, so requesting it here
+resolves the same figure a second time; the service issues `include_total` as its own statement over the whole
+filtered result, so the second resolution costs a scan per page fetched. A limit above 1000 SHALL never be
 sent — the service rejects it with HTTP 400 and does not clamp.
 
 The query SHALL reference no column absent from the entity's role-visible schema; `conversations` exposes no
@@ -109,13 +116,19 @@ filtering on it requires no elevated role.
 - **WHEN** `buildConversationListQuery` is called with a time range
 - **THEN** the query targets entity `conversations` with `mode: 'row'`
 - **AND** it carries no `group_by` and no aggregate function expression
-- **AND** its select names `chat_id`, `conversation_insights.title`, `project_id`, `user_hash`, `turn_count`,
-  `total_tokens`, `total_price`, `last_request_time`, `first_request_time`, `duration_ms` and `deployments`
+- **AND** its select names `chat_id`, `project_id`, `user_hash`, `turn_count`, `total_tokens`, `total_price`,
+  `last_request_time`, `first_request_time`, `duration_ms` and `deployments`
 
-#### Scenario: An enrichment field is named by its qualified flat name
+#### Scenario: The query requests no result total
 
-- **WHEN** the query names the conversation title
-- **THEN** the select entry's field is the single name `conversation_insights.title`
+- **WHEN** the query is built for the first page, and again for a later page
+- **THEN** each carries `include_total: false`
+
+#### Scenario: Source-owned fields are projected whether or not their columns are visible
+
+- **WHEN** the query is built while every schema-driven column is hidden
+- **THEN** its select names each offered field the entity's own source carries
+- **AND** it names no field reported under an enrichment namespace
 
 #### Scenario: Time bounds apply to last activity as epoch-millisecond literals
 
@@ -133,7 +146,7 @@ filtering on it requires no elevated role.
 - **WHEN** the query is built with a search term
 - **THEN** the filter carries one additional `or` group of exactly two `ico` predicates
 - **AND** they match `chat_id` and `project_id`, each against the trimmed term
-- **AND** no predicate matches `user_hash` or `conversation_insights.title`
+- **AND** no predicate matches `user_hash`
 
 #### Scenario: A blank search term adds no predicate
 
@@ -177,9 +190,14 @@ filtering on it requires no elevated role.
 
 #### Scenario: The projection follows the visible columns
 
-- **WHEN** the query is built with a schema-driven column visible
-- **THEN** the select names that column's field alongside the curated fields
-- **AND** it does not name a field whose column is hidden
+- **WHEN** the query is built with one enrichment-backed column visible and another hidden
+- **THEN** the select names the visible column's field
+- **AND** it does not name the hidden column's field
+
+#### Scenario: Showing a source-backed column does not re-query
+
+- **WHEN** the operator makes a hidden source-backed column visible after scrolling
+- **THEN** no new request is issued and the rows already loaded render that column's values
 
 #### Scenario: A curated hidden column is projected once it is shown
 
@@ -189,7 +207,7 @@ filtering on it requires no elevated role.
 
 #### Scenario: Showing a column re-queries from the first page
 
-- **WHEN** the operator makes a hidden column visible after scrolling
+- **WHEN** the operator makes a hidden enrichment-backed column visible after scrolling
 - **THEN** the fetched pages are discarded and the next request is for the first page
 - **AND** that request's select names the newly visible field
 
@@ -553,7 +571,9 @@ A field SHALL NOT be offered when the grid cannot honestly render or query it:
 - a field the service marks `sensitive` — selecting it would be rejected for a caller without the required
   role, so offering it would present a column that cannot be shown;
 - a non-scalar `object` or `array` field — a grid cell is not a structured-value viewer, and rendering one as
-  text would assert a shape the view does not know.
+  text would assert a shape the view does not know;
+- a field the service marks `heavy` — the service omits such a field from a wildcard projection because it is
+  expensive to transfer, and a column the catalog offers is one the view may project on every page.
 
 The array exclusion governs what the catalog offers, not what the view can render. A curated column MAY read an
 array field where the view defines a presentation for that field's values and states what they mean; such a
@@ -563,33 +583,38 @@ field's.
 A field consumed by a curated column SHALL NOT also be offered as a raw column. The activity column composes
 `first_request_time` and `last_request_time` into one cell, so the catalog SHALL offer that column and MUST NOT
 additionally offer its two source fields as separate columns, which would present the same data twice under
-different names. The same applies to `duration_ms` and `deployments`, which the duration and deployments columns
-consume, and to every field a curated insight, token or cost column reads.
+different names. The same applies to `duration_ms` and `deployments`, which the duration and models columns
+consume.
+
+The curated columns — conversation, title, project, user, turns, activity, tokens, cost, duration, deployments —
+SHALL keep their composed cells and their labels, and SHALL be the default visible set together with the
+Rating column. Every other offered field SHALL default to hidden.
+
+Every offered column SHALL be attributed to the `conversations` provenance group, since every one is read from
+that entity. The Rating column SHALL remain attributed to `rate_analytics` and SHALL remain outside the
+catalog: it is not a field of the queried entity, so it cannot be offered, hidden or reordered as one.
+
+An offered column SHALL be classified by whether the schema reports its field under an enrichment namespace,
+because that classification decides whether revealing it costs a re-query. The classification SHALL follow
+what the schema reports rather than a list held in the frontend, so an enrichment added to the entity is
+classified correctly without a code change.
 
 An enrichment field's exposed name is a qualified flat name containing a dot — `conversation_insights.title`.
 The grid SHALL read such a field by that whole name. It MUST NOT interpret the dot as a path into a nested
 value: the row carries the name as a single key, so a path interpretation finds nothing and renders an empty
 cell for a field the row does carry. This applies to schema-derived and curated columns alike.
 
-The curated columns SHALL keep their composed cells and their labels. The **default visible set** SHALL be the
-conversation, title, project, user, turns, activity, tokens, cost, duration and deployments columns together with
-the Rating column. Every other column — curated or offered — SHALL default to hidden.
-
 A curated column whose field the schema does not report SHALL NOT be rendered at all — neither shown nor
 offered as hideable. A column that can never carry a value is not a column the operator has a use for:
-enabling it would present permanently empty cells that read as missing data. This applies to the columns
-added beyond the view's original set; the original curated columns and the composed Rating column are
-rendered unconditionally, Rating because it reads no field of this entity. A column omitted this way SHALL
-reappear on its own once the instance reports its field, with no stored column choice to reset.
+enabling it would present permanently empty cells that read as missing data. This applies to the columns added
+beyond the view's original set; the original curated columns and the composed Rating column are rendered
+unconditionally, Rating because it reads no field of this entity. A column omitted this way SHALL reappear on
+its own once the instance reports its field, with no stored column choice to reset.
 
 The Title column is subject to the same rule rather than exempted by its fallback. It degrades to the
 conversation id for a conversation the enrichment has not reached, which is right for a gap in the data — but
 on an instance carrying no insight enrichment at all it would degrade for **every** row, presenting a second
 column of conversation ids beside the first.
-
-Every offered column SHALL be attributed to the `conversations` provenance group, since every one is read from
-that entity. The Rating column SHALL remain attributed to `rate_analytics` and SHALL remain outside the
-catalog: it is not a field of the queried entity, so it cannot be offered, hidden or reordered as one.
 
 When the schema cannot be fetched the view SHALL render the curated columns and SHALL report that the
 additional columns are unavailable, rather than presenting an empty catalog as though the entity had no other
@@ -610,6 +635,11 @@ SHALL offer neither, because the query language expresses no ordering or predica
 - **WHEN** the schema reports a field marked sensitive, and a field of an object or array type
 - **THEN** neither is offered in the catalog
 
+#### Scenario: A heavy field is not offered
+
+- **WHEN** the schema reports a field the service marks `heavy`
+- **THEN** it is not offered in the catalog
+
 #### Scenario: A curated array column's field is not offered separately
 
 - **WHEN** the catalog is built
@@ -621,6 +651,25 @@ SHALL offer neither, because the query language expresses no ordering or predica
 - **WHEN** the catalog is built
 - **THEN** the activity column is offered
 - **AND** `first_request_time` and `last_request_time` are not offered as columns of their own
+
+#### Scenario: An offered column is classified by its backing source
+
+- **WHEN** the catalog is built from a schema reporting both plain field names and enrichment-namespaced ones
+- **THEN** each offered column records whether its field is enrichment-backed
+- **AND** that classification comes from the reported schema rather than a frontend list
+
+#### Scenario: The curated set is what is visible by default
+
+- **WHEN** the conversations view loads with no stored column choice
+- **THEN** the conversation, title, project, user, turns, activity, tokens, cost, duration, deployments and
+  Rating columns
+  are visible
+- **AND** every other offered column is hidden
+
+#### Scenario: Rating is not part of the catalog
+
+- **WHEN** the operator opens the column panel
+- **THEN** the Rating column is not offered as a selectable column
 
 #### Scenario: A dotted enrichment field is read by its whole name
 
@@ -640,18 +689,6 @@ SHALL offer neither, because the query language expresses no ordering or predica
 
 - **WHEN** the column set is built
 - **THEN** the Rating column renders even though the entity carries no `rating` field
-
-#### Scenario: The curated set is what is visible by default
-
-- **WHEN** the conversations view loads with no stored column choice
-- **THEN** the conversation, title, project, user, turns, activity, tokens, cost, duration, deployments and Rating
-  columns are visible
-- **AND** every other column is hidden
-
-#### Scenario: Rating is not part of the catalog
-
-- **WHEN** the operator opens the column panel
-- **THEN** the Rating column is not offered as a selectable column
 
 #### Scenario: A failed schema fetch degrades to the curated columns
 

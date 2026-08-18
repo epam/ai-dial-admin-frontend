@@ -51,28 +51,6 @@ export const COST_COMPACT_THRESHOLD = 1;
 
 export const COST_SIGNIFICANT_DIGITS = 2;
 
-// The fields the view's original curated columns read. An instance that exposes the conversation rollup at
-// all exposes these, so they are named unconditionally and a query that cannot have them is broken anyway.
-export const REQUIRED_LIST_SELECT_FIELDS: ConversationsField[] = [
-  ConversationsField.ChatId,
-  ConversationsField.ProjectId,
-  ConversationsField.UserHash,
-  ConversationsField.TurnCount,
-  ConversationsField.TotalTokens,
-  ConversationsField.TotalPrice,
-  ConversationsField.LastRequestTime,
-  ConversationsField.FirstRequestTime,
-  ConversationsField.DurationMs,
-  ConversationsField.Deployments,
-];
-
-// The projection floor in render order: the title sits beside the conversation id, as its column does.
-export const LIST_SELECT_FIELDS: ConversationsField[] = [
-  ConversationsField.ChatId,
-  ConversationsField.InsightTitle,
-  ...REQUIRED_LIST_SELECT_FIELDS.filter((fieldName) => fieldName !== ConversationsField.ChatId),
-];
-
 export const REQUIRED_DETAIL_SELECT_FIELDS: ConversationsField[] = [
   ConversationsField.ChatId,
   ConversationsField.ProjectId,
@@ -115,8 +93,6 @@ export const OPTIONAL_DETAIL_SELECT_FIELDS: ConversationsField[] = [
   ...CURATED_SCALAR_FIELDS,
   ConversationsField.Traces,
 ];
-
-export const OPTIONAL_LIST_SELECT_FIELDS: ConversationsField[] = [ConversationsField.InsightTitle];
 
 export const SORTABLE_CONVERSATION_FIELDS: ConversationsField[] = [
   ConversationsField.ChatId,

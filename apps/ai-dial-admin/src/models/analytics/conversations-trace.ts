@@ -31,7 +31,13 @@ export interface ConversationTitleSource {
 
 export interface ConversationsPage {
   rows: ConversationRow[];
+  // The grid's row count, coerced from the summary's conversation count. `totals` carries the same figure
+  // for display, where a backend decimal string is still a valid value; the grid needs a number.
   total: number | null;
+  // Both are resolved for a first-page request only. `totals` is absent when its query failed, which the
+  // pills report as unavailable rather than as zero.
+  totals?: ConversationTotals;
+  candidates?: ConversationCandidateIds;
 }
 
 export interface ConversationTotals {
@@ -97,10 +103,12 @@ export interface ConversationFilters {
 export interface ConversationPageRequest extends ConversationFilters {
   offset: number;
   limit: number;
+  // Carried by a later page only: the first page resolves the candidate ids and returns them, and the
+  // client sends them back for the rest of that result.
   chatIds?: string[];
   sort?: ConversationSortKey[];
-  visibleFields?: string[];
-  availableFields?: string[];
+  sourceFields?: string[];
+  visibleEnrichmentFields?: string[];
 }
 
 export interface ConversationSummary {
@@ -111,6 +119,14 @@ export interface ConversationSummary {
 export interface ConversationCandidateIds {
   ids: string[];
   isCapped: boolean;
+}
+
+// Offered fields split by what projecting one costs. A source-backed field is a plain column of the table
+// the list query already reads; an enrichment-backed one is supplied by a joined enrichment, so naming it
+// adds that join to every page.
+export interface ConversationProjectableFields {
+  sourceBacked: string[];
+  enrichmentBacked: string[];
 }
 
 export interface ProvenanceEntity {

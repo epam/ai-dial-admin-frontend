@@ -109,7 +109,8 @@ const Analytics: FC<Props> = ({
         title={t(RunsI18nKey.AvgTestCaseRunTime)}
         description={t(RunsI18nKey.AvgPerTestCase)}
         delta={runtimeDelta.kind === MetricDeltaKind.Changed ? runtimeDelta.value : undefined}
-        deltaPositive={false}
+        deltaPositive={true}
+        deltaUnit={t(RunsI18nKey.Seconds)}
         compareValues={[
           {
             title: primaryRunName,
