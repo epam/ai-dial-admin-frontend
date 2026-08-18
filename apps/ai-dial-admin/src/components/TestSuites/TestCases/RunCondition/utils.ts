@@ -15,6 +15,7 @@ import { and, col, eq, field, fn, offsetPage, rowQuery, value } from '@/src/util
 import { v4 as uuidv4 } from 'uuid';
 
 import {
+  ARRAY_RUN_CONDITION_OPERATOR_OPTIONS,
   BASE_RUN_CONDITION_FIELDS,
   DATA_FIELD_PREFIX,
   INCLUDED_IDS_PAGE_SIZE,
@@ -45,6 +46,15 @@ export const getRunConditionFieldOptions = (schema?: TestCaseSchema[]): RunCondi
   }));
   return [...BASE_RUN_CONDITION_FIELDS, ...schemaFields];
 };
+
+export const getRunConditionOperatorOptions = (isArray: boolean) =>
+  isArray ? ARRAY_RUN_CONDITION_OPERATOR_OPTIONS : RUN_CONDITION_OPERATOR_OPTIONS;
+
+/** Coerce Equal/NotEqual to Contain — only used when the field is already known to be an array. */
+export const sanitizeRunConditionOperator = (operator: RunConditionOperator): RunConditionOperator =>
+  operator === RunConditionOperator.Contain || operator === RunConditionOperator.NotContains
+    ? operator
+    : RunConditionOperator.Contain;
 
 const isComparisonNode = (node: FilterNode): node is ComparisonNode => COMPARISON_OPS.has(node.op);
 
