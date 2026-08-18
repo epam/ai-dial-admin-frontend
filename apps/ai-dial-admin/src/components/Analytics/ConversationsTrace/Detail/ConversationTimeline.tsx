@@ -20,6 +20,7 @@ import {
   formatDurationMs,
   formatSignificantCost,
 } from '@/src/utils/analytics/conversation-formatting';
+import { toNumber } from '@/src/utils/analytics/scalar';
 
 const ROLE_ICON_SIZE = 14;
 const TRACE_ICON_SIZE = 12;
@@ -109,11 +110,23 @@ interface Props {
   turns: ConversationTurnRow[];
   turnRatings: RatingCountsModel[];
   hasTurnsLoadError: boolean;
+  turnCount: number | string | null;
   onOpenTrace: (turn: ConversationTurnRow, turnNumber: number) => void;
 }
 
-const ConversationTimeline: FC<Props> = ({ messages, turns, turnRatings, hasTurnsLoadError, onOpenTrace }) => {
+const ConversationTimeline: FC<Props> = ({
+  messages,
+  turns,
+  turnRatings,
+  hasTurnsLoadError,
+  turnCount,
+  onOpenTrace,
+}) => {
   const t = useI18n();
+  // The rollup counts every turn; the list is bounded, so the two disagree only when it was clipped.
+  // A null count leaves nothing to compare against, so no bound is claimed.
+  const totalTurns = toNumber(turnCount);
+  const isTurnListClipped = totalTurns !== null && turns.length < totalTurns;
 
   if (!messages.length) {
     return (
@@ -155,6 +168,16 @@ const ConversationTimeline: FC<Props> = ({ messages, turns, turnRatings, hasTurn
           iconSize={NOTIFICATION_ICON_SIZE}
           message={t(ConversationsTraceI18nKey.DetailSampleMessages)}
         />
+        {isTurnListClipped && (
+          <DialNotification
+            variant={NotificationVariant.Info}
+            iconSize={NOTIFICATION_ICON_SIZE}
+            message={t(ConversationsTraceI18nKey.DetailTurnsTruncated, {
+              loaded: formatCompactNumber(turns.length),
+              total: formatCompactNumber(totalTurns),
+            })}
+          />
+        )}
         {messages.map((message, index) => {
           const isAssistant = message.role === MessageRole.Assistant;
 

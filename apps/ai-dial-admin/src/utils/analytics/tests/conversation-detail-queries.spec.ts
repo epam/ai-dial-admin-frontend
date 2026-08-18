@@ -157,8 +157,8 @@ describe('buildConversationFeedbackQuery', () => {
 describe('buildConversationTurnsQuery', () => {
   const query = () => buildConversationTurnsQuery(CHAT_ID, CONVERSATION_TURN_LIMIT);
 
-  // turn_count on the rollup counts every proxy hop, so turns are grouped out of the usage log by
-  // trace_id instead — the grain a user's turn actually maps to.
+  // The rollup's turn_count is the header's figure; this query exists for the per-turn detail behind it,
+  // which only the usage log carries — hence the group by trace_id, one per turn.
   test('groups the usage log by trace id in aggregate mode', () => {
     const built = query();
 
