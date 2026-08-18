@@ -1,1 +1,0 @@
-../../../.claude/skills/address-current-branch-review/SKILL.md

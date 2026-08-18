@@ -1559,6 +1559,7 @@ export enum InterfacesI18nKey {
   SelectType = 'Interfaces.SelectType',
   OpenAIChatCompletions = 'Interfaces.OpenAIChatCompletions',
   OpenAIResponses = 'Interfaces.OpenAIResponses',
+  OpenAIEmbeddings = 'Interfaces.OpenAIEmbeddings',
   AnthropicMessages = 'Interfaces.AnthropicMessages',
   BaseUrl = 'Interfaces.BaseUrl',
   BaseUrlPlaceholder = 'Interfaces.BaseUrlPlaceholder',
