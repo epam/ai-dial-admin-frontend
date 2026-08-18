@@ -8,6 +8,7 @@ import {
 import {
   ConversationColumnFilter,
   ConversationFilterOperator,
+  ConversationProjectableFields,
   ConversationSortKey,
 } from '@/src/models/analytics/conversations-trace';
 import { QuerySortDirection, QueryValueType } from '@/src/models/analytics/query';
@@ -27,7 +28,7 @@ export interface ConversationModelScope {
   sortableFields?: string[];
   filterableFields?: string[];
   valueTypes?: Record<string, QueryValueType>;
-  projectableFields?: string[];
+  projectableFields?: ConversationProjectableFields;
 }
 
 const asDirection = (sort: string): QuerySortDirection =>

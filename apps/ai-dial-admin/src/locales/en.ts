@@ -131,6 +131,7 @@ export default {
     Keys: 'Keys',
     Prompts: 'Prompts',
     Files: 'Files',
+    Skills: 'Skills',
     FoldersStorage: 'Folders Storage',
 
     Dashboard: 'Dashboard',
@@ -199,6 +200,10 @@ export default {
     NoAppRoutes: 'No App Routes',
     NoPrompts: 'No Prompts',
     NoFiles: 'No Files',
+    SkillFileUploadSuccess: 'File uploaded successfully',
+    SkillFileUploadError: 'Failed to upload file',
+    SkillFileRemoveSuccess: 'File removed successfully',
+    SkillFileRemoveError: 'Failed to remove file',
     NoTemplates: 'No Templates',
     NoContainers: 'No Containers',
     NoPublications: 'No Publications',
@@ -323,6 +328,7 @@ export default {
       TestCase: 'Test case',
       Application: 'Application',
       Toolset: 'Toolset',
+      Skill: 'Skill',
       Interceptor: 'Interceptor',
       Route: 'Route',
       Role: 'Role',
@@ -413,6 +419,7 @@ export default {
       Model: 'Model',
       Application: 'Application',
       Toolset: 'Toolset',
+      Skill: 'Skill',
       TestSuite: 'Test Suite',
       Dataset: 'Dataset',
       Query: 'Query',
@@ -1108,6 +1115,7 @@ export default {
     authentication: 'Authentication',
     name: 'Name',
     id: 'ID',
+    path: 'Path',
     displayName: 'Display Name',
     adapter: 'Adapter',
     description: 'Description',
@@ -1583,6 +1591,7 @@ export default {
     SelectType: 'Select interface type',
     OpenAIChatCompletions: 'OpenAI Chat Completions',
     OpenAIResponses: 'OpenAI Responses',
+    OpenAIEmbeddings: 'OpenAI Embeddings',
     AnthropicMessages: 'Anthropic Messages',
     BaseUrl: 'Base URL',
     BaseUrlPlaceholder: 'Enter {type} host',
@@ -2024,6 +2033,8 @@ export default {
     Application: 'Application',
     Toolsets: 'Toolsets',
     Toolset: 'Toolset',
+    Skills: 'Skills',
+    Skill: 'Skill',
     Conversation: 'Conversation',
     Conversations: 'Conversations',
     Folder: 'Folder',
@@ -2093,6 +2104,8 @@ export default {
     AppRunnersEmptyStateDescription: 'Create an app runner using the Create button',
     ToolsetsEmptyStateTitle: "You don't have any toolsets",
     ToolsetsEmptyStateDescription: 'Create or import a toolset using the Create button',
+    SkillsEmptyStateTitle: "You don't have any skills",
+    SkillsEmptyStateDescription: 'Create skill using the Create button',
     ConversationsEmptyStateTitle: "You don't have any conversations",
     MovingItems: 'Moving items',
     MovingProgress: '{count} of {total} items moved...',
@@ -2564,9 +2577,11 @@ export default {
     ConnectTabRead: 'Read data',
     ConnectSystemReadOnly:
       'This table is fed by the platform and does not accept row writes, so only the read path is shown.',
+    ConnectEnrichmentReadOnly:
+      'The rows of an enrichment are produced by the enrichment process rather than written by a client, so only the read path is shown.',
     ConnectAuth: 'Authentication',
     ConnectAuthHint:
-      'Both sides use a DIAL API key. Keep it in the environment so it never lands in the script or your shell history.',
+      'Every example here takes the same DIAL API key. Keep it in the environment so it never lands in the script or your shell history.',
     ConnectBaseUrlHint: 'Replace <analytics-base-url> with your DIAL Analytics endpoint.',
     ConnectFlightUriHint: 'Replace <analytics-host> with the host serving the Flight SQL port.',
     ConnectWhoCanWrite: 'Who can write',
@@ -2604,6 +2619,11 @@ export default {
     ConnectFlightHint:
       'Arrow Flight SQL lands results straight in a typed pandas frame. It needs its own packages, and takes the same key — the driver sends it as a gRPC call header, which is why the option name is lower-cased.',
     ConnectFlightReadOnly: 'Flight SQL cannot write — it is a read endpoint only.',
+    ConnectQuery: 'The example query',
+    ConnectProjectionNote:
+      'The query selects a few columns to keep the example short. Any column of the table can be selected instead — the grid on this page lists them all.',
+    ConnectEnrichmentColumns:
+      'An enrichment is queried through {source}, the table it enriches. Every column of {name} is available there as "{name}.<column>" — one quoted name, dot included — and any column of {source} can be selected in the same query.',
     WriteProgrammatically: 'Write rows programmatically',
     AddRowsPurpose:
       'Inserts rows by hand — useful for checking that the schema accepts what you expect. Ongoing ingestion goes through the table’s row endpoint.',

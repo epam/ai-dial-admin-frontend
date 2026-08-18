@@ -50,6 +50,12 @@ export interface ResourceInfo {
   createdAt?: string;
   updatedAt?: string;
   nodeType?: DialFileNodeType;
+  /**
+   * Present on `ITEM` nodes (see `CoreResourceMetadataNode.etag`). Unused by most consumers — a
+   * type-name lookup carries its own etag from its content GET — but Skill rows need it here since
+   * their delete has no content GET to source an etag from (see `skill-resources-core-api`).
+   */
+  etag?: string;
 }
 
 export const isVersioned = (type: ResourceType): boolean => (VERSIONED_RESOURCE_TYPES as ResourceType[]).includes(type);
@@ -70,6 +76,7 @@ const toResourceInfo = (metadata: CoreResourceMetadataNode, type: ResourceType):
     createdAt: metadata.createdAt !== undefined ? String(metadata.createdAt) : undefined,
     updatedAt: metadata.updatedAt !== undefined ? String(metadata.updatedAt) : undefined,
     nodeType: metadata.nodeType.toLowerCase() as DialFileNodeType,
+    etag: metadata.etag,
   };
 };
 

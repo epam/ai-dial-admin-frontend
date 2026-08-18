@@ -10,15 +10,40 @@ import {
   NON_SCALAR_FIELD_TYPES,
   NUMERIC_FIELD_TYPES,
 } from '@/src/constants/analytics/conversations-trace';
+import { ConversationProjectableFields } from '@/src/models/analytics/conversations-trace';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryValueType } from '@/src/models/analytics/query';
 
-export const offerableSchemaFields = (curated: ColDef[], fields: AnalyticsEntityField[] = []): string[] => {
-  const consumed = new Set<string>([...curated.map((column) => column.field as string), ...CURATED_COMPOSED_FIELDS]);
+const isOfferable = (field: AnalyticsEntityField, consumed: Set<string>): boolean =>
+  !field.sensitive && !field.heavy && !NON_SCALAR_FIELD_TYPES.includes(field.type) && !consumed.has(field.name);
 
-  return fields
-    .filter((field) => !field.sensitive && !NON_SCALAR_FIELD_TYPES.includes(field.type) && !consumed.has(field.name))
-    .map((field) => field.name);
+const consumedFields = (curated: ColDef[]): Set<string> =>
+  new Set<string>([...curated.map((column) => column.field as string), ...CURATED_COMPOSED_FIELDS]);
+
+export const offerableSchemaFields = (curated: ColDef[], fields: AnalyticsEntityField[] = []): string[] => {
+  const consumed = consumedFields(curated);
+
+  return fields.filter((field) => isOfferable(field, consumed)).map((field) => field.name);
+};
+
+// A plain column of the entity's own source reports its flat name as the field backing it, so the two are
+// equal. Anything the service supplies through an enrichment is namespaced by that enrichment, leaving the
+// backing name unqualified — `conversation_insights.title` sources `title`. The inequality therefore reads
+// as "not a plain column of the table the query already reads", which also covers a JSON-derived field:
+// likewise not free to project, and likewise better fetched on demand.
+const isSourceBacked = (field: AnalyticsEntityField): boolean => field.name === field.source;
+
+export const projectableSchemaFields = (
+  curated: ColDef[],
+  fields: AnalyticsEntityField[] = [],
+): ConversationProjectableFields => {
+  const consumed = consumedFields(curated);
+  const offered = fields.filter((field) => isOfferable(field, consumed));
+
+  return {
+    sourceBacked: offered.filter(isSourceBacked).map((field) => field.name),
+    enrichmentBacked: offered.filter((field) => !isSourceBacked(field)).map((field) => field.name),
+  };
 };
 
 const typeColumn = (type: AnalyticsFieldType): Partial<ColDef> => {

@@ -19,6 +19,9 @@ export const CORE_FILES_METADATA_URL = 'v1/metadata/files';
 /** DIAL Core's v2 "complex resource" metadata endpoint for skills (folder metadata only — no ZIP/content). */
 export const CORE_SKILLS_METADATA_URL = 'v2/metadata/skills';
 
+/** DIAL Core's v2 "complex resource" content endpoint for skills (whole-bundle GET/PUT/DELETE, multipart/ZIP). */
+export const CORE_SKILLS_URL = 'v2/skills';
+
 /** Core resource URL prefixes (mirror the backend `*ClientMapper` prefixes). */
 export const PUBLICATIONS_PREFIX = 'publications/';
 export const APPLICATIONS_PREFIX = 'applications/';

@@ -1,1 +1,0 @@
-../../../.claude/skills/code-review-and-quality/SKILL.md

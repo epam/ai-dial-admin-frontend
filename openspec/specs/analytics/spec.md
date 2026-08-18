@@ -22,7 +22,6 @@ prefetch their initial data on the server and hand it to client views.
 This folder (`openspec/specs/analytics/`) is the single home for all Analytics specs; this file is
 the consolidated master spec, folding in the scaffold, saved queries, the query workbench, the SQL
 editor, the query assistant, Tables, and the conversations trace.
-
 ## Requirements
 ### Requirement: ANALYTICS_ENABLED feature flag is surfaced on FeatureFlags
 
@@ -267,6 +266,7 @@ The **persisted** body is the one exception, and it is deliberate: the structure
 - **WHEN** the user saves a query whose toolbar has a time range selected and whose schema has a temporal field
 - **THEN** the persisted structured body contains no `ge`/`le` predicate on the timestamp field
 - **AND** the range is carried as the saved query's time intent instead
+
 ### Requirement: Query builder rail with collapse
 
 The query builder SHALL render in a fixed-width rail at the right edge of the content area with a header containing a collapse control and the view switcher. Collapsing SHALL hide the rail entirely and show a restore ("Query builder") button in the results-area header; restoring SHALL bring the rail back. The collapsed state SHALL be persisted in the browser's local storage under a Query-Builder-specific key and applied SSR-safely on the next visit.
@@ -1404,7 +1404,6 @@ Creating a table SHALL open a form popup that is mounted only while open, so clo
 
 ### Requirement: Table detail column schema management
 
-
 The Table detail page SHALL branch on the table's lifecycle `status`. The **live** column-management surface described here SHALL be offered only when the table is `ACTIVE`; for a `PENDING`/`FAILED` table the detail view SHALL instead offer the schema-definition surface (see "Define and materialize a table schema"). The detail header SHALL show the table's name and status badge regardless of status, and, when the table has a `description`, the description SHALL be shown beneath them regardless of status too (truncated with the full value reachable via an ellipsis tooltip, as elsewhere long text is truncated).
 
 While the table is `ACTIVE`, the header SHALL also show a read-only schema-metadata summary: for a **source** table, its ordering key when set, its partition column and granularity together when a partition is set, and its `identity_column` and `version_column` each when the definition declares it; for an **enrichment** table, its grain key when set. A scan-metadata value the definition does not declare SHALL simply be omitted, with no substitute message. A `_`-prefixed scan-metadata value (e.g. `_ingested_at`) is a system column and legitimately matches no row in the columns grid; this SHALL NOT be treated as an error. This summary SHALL NOT be shown for a `PENDING`/`FAILED` table, which instead exposes the same fields as editable inputs in the schema-definition surface.
@@ -1544,7 +1543,7 @@ The table detail view (`components/Analytics/Tables/TableDetailView.tsx`) SHALL 
 
 - **Manage access** SHALL be shown only when `canManageRoles` (`FULL_ADMIN` and non-system).
 - **Delete table** SHALL be shown only when `canDelete` (`FULL_ADMIN` and non-system).
-- **Connect** SHALL be shown for every `ACTIVE` **source** table regardless of permission, as the header's primary action, and SHALL NOT be shown for an **enrichment** table (see "Table detail Connect panel").
+- **Connect** SHALL be shown regardless of permission, as the header's primary action, for every `ACTIVE` **source** table and for every `ACTIVE` **enrichment** table whose payload names a source table (see "Table detail Connect panel").
 - **Add rows** SHALL NOT be offered for an **enrichment** table whatever its `write` permission reports: those rows come from the enrichment process, so a hand-written insert is not a path this UI offers.
 - For an `ACTIVE` table, **Add columns** (schema evolution) and **Add rows** (inserting rows) SHALL each be offered as its own standalone header button — **not** as items of a shared dropdown. **Add columns** SHALL be shown only when `canModify` and **Add rows** only when `canWrite`; when neither permission is held, neither button renders. Both SHALL render as neutral actions, never primary and never dependent on whether the other is present, so each keeps the same appearance whatever the viewer's other permissions are. **Add rows** is deliberately not the emphasized way to put data in the table — see "Table detail row writes".
 - Per-column **edit/drop** (grid action column), **inline column rename**, column-metadata edits, and **description edits** SHALL be shown only when `canModify`.
@@ -1587,6 +1586,12 @@ Because the backend reports `permissions {false,false}` for system tables, the w
 
 - **WHEN** a user opens an `ACTIVE` system table's detail page
 - **THEN** **Connect** is present while **Add rows**, **Add columns**, **Manage access**, and **Delete table** are all absent
+
+#### Scenario: An enrichment table offers Connect but never Add rows
+
+- **WHEN** a user opens an `ACTIVE` enrichment table's detail page and its payload names a source table
+- **THEN** **Connect** is present as the header's primary action
+- **AND** no **Add rows** action is present, whatever the table's `write` permission reports
 
 #### Scenario: Header actions follow the fixed order
 
@@ -1779,7 +1784,6 @@ The UI SHALL surface a table's lifecycle `status` (`PENDING`, `ACTIVE`, `FAILED`
 - **THEN** its badge renders the "Active" (success) state
 
 ### Requirement: Define and materialize a table schema
-
 
 For a not-yet-materialized table (`status` `PENDING` or `FAILED`), the table detail view SHALL present a schema-definition surface in place of the live column surface. The surface SHALL let the user define the whole physical schema: for a **source**, a repeatable set of columns (a single **Name** field, used as both the column's exposed name and its physical source name since the two are always equal at definition time, type, nullable, optional tag, optional display name, optional description, optional sensitive flag, and — for a column typed Array — a required element type), an ordering key chosen from the declared column names, an optional partition (a temporal column + a day/month/year granularity), and an optional scan-metadata pair (`identity_column` and `version_column`); for an **enrichment**, its columns plus a grain key chosen from its source table's columns. Cardinality SHALL NOT be user-selectable — the enrichment submission SHALL send the single supported value (`zero_or_one`). Column rows SHALL be validated for identifier grammar, uniqueness, tag length, display-name length, and description length exactly as the create/add-columns editor validates today, against both the exposed-name and source-name uniqueness constraints (which the merged Name field satisfies identically).
 
@@ -2172,20 +2176,35 @@ render `Page403` when it returns `true`. Code identifiers SHALL use `conversatio
 the existing `/conversations` DIAL Core route — breadcrumb and menu resolution match on the exact first
 path segment, so the two are independent.
 
-For a permitted caller the page SHALL prefetch the **result summary** server-side and pass it to the client
-view as an initial-data prop. It MUST NOT prefetch the first page of rows: the grid fetches its own pages, so
-a prefetched page would be discarded or duplicated. A prefetch failure SHALL be reported through the initial
-state handed to the client view, since a server component cannot raise a toast.
+For a permitted caller the page SHALL prefetch the **entity schema** server-side and pass it to the client
+view as an initial-data prop, so the column catalog is known before the grid mounts. A schema prefetch
+failure SHALL be reported through the initial state handed to the client view, since a server component
+cannot raise a toast.
+
+The page MUST NOT prefetch the first page of rows: the grid fetches its own pages, so a prefetched page would
+be discarded or duplicated. The page MUST NOT prefetch the **result summary** either. The summary is required
+to be an observation of the same fetch cycle as the rows on screen, so a summary resolved during server
+rendering is superseded by the client's own first fetch the moment it lands; resolving it twice buys nothing
+but a scan of the whole filtered result. The summary figures SHALL therefore be unavailable until the
+client's first fetch resolves them, and the view SHALL render that pending state rather than zeros, which
+would assert an empty result that was never established.
 
 The page SHALL depend on the `conversations` entity being registered and populated in the environment it runs
 against. Where it is absent, the access guard still passes and the conversation query fails with HTTP 400; the
-page SHALL surface that as a load failure rather than as an empty period.
+page SHALL surface that as a load failure rather than as an empty period. That failure SHALL be reported by
+the client's own fetch, which is the first request the page makes against the entity.
 
 #### Scenario: Page renders for a permitted caller
 
 - **WHEN** `isAnalyticsForbidden()` returns `false` and the page is requested
-- **THEN** the page prefetches the result summary on the server and renders the client view with it
+- **THEN** the page prefetches the entity schema on the server and renders the client view with it
 - **AND** the grid requests its first page of rows
+
+#### Scenario: The summary is not resolved during server rendering
+
+- **WHEN** the page is requested by a permitted caller
+- **THEN** no result-summary query is issued while the page is rendered on the server
+- **AND** the summary pills report their figures as pending until the client's first fetch resolves them
 
 #### Scenario: Forbidden caller sees Page403 and no query runs
 
@@ -2281,19 +2300,27 @@ the requested feedback, then the conversation query over `conversations` narrowe
 predicate. Both SHALL be issued server-side with the caller's token, and the `all` state SHALL issue only the
 conversation query, so the default path costs exactly one request per page.
 
-The candidate query SHALL be aggregate mode over `rate_analytics` grouped by `chat_id`, carry the same time
-bounds as the conversation query and an empty-id guard, and select `chat_id` plus `max(request_time)`. It SHALL
-be ordered by most recent rating, so that if the candidate set reaches its limit the ids retained are the most
-recently rated ones. Its limit SHALL NOT exceed 1000, the service's hard maximum.
+Both queries SHALL be issued within a **single** request from the client when the first page of a result is
+fetched, rather than the client resolving candidates in one request and the page in another. The candidate
+ids SHALL be returned to the client alongside that first page.
 
 The candidate set SHALL be resolved once per filter state and reused across the pages of that result, rather
-than re-queried per page: the narrowing is a property of the filter, not of the page.
+than re-queried per page: the narrowing is a property of the filter, not of the page. The reuse SHALL be held
+per client, keyed by the filter state it was resolved under, and the ids SHALL be carried back with each
+later page of that result. The candidate set MUST NOT be held in a cache shared between callers: it is
+resolved under the caller's token, so serving one caller's set to another would narrow a result by rows the
+second caller's token never selected.
 
 When the candidate set reaches that limit the view SHALL state that the feedback-filtered result may be
 incomplete and that the conversations shown are the most recently rated ones. The cap truncates the result
 regardless of how it is ordered, and the ordering is the operator's to choose, so a truncated result MUST NOT
 be presented as the complete set of conversations carrying that feedback. The disclosure SHALL be visible
 while the capped filter state is applied and SHALL clear when the filter state no longer reaches the cap.
+
+The candidate query SHALL be aggregate mode over `rate_analytics` grouped by `chat_id`, carry the same time
+bounds as the conversation query and an empty-id guard, and select `chat_id` plus `max(request_time)`. It SHALL
+be ordered by most recent rating, so that if the candidate set reaches its limit the ids retained are the most
+recently rated ones. Its limit SHALL NOT exceed 1000, the service's hard maximum.
 
 The rate predicates SHALL be:
 
@@ -2322,6 +2349,18 @@ failure SHALL propagate and the conversation query MUST NOT run.
 - **THEN** a query against `rate_analytics` is issued first, carrying the state's rate predicate
 - **AND** a query against `conversations` follows, restricted to the returned ids by an `in` predicate
 - **AND** both carry the caller's token
+
+#### Scenario: The first page costs one request, not two
+
+- **WHEN** a feedback state other than all is selected and the first page of the result is fetched
+- **THEN** the client issues exactly one request for that page
+- **AND** the candidate ids are returned to the client with it
+
+#### Scenario: Later pages reuse the ids without re-resolving them
+
+- **WHEN** the operator scrolls to a further page of a feedback-filtered result
+- **THEN** no further query against `rate_analytics` is issued
+- **AND** the page request carries the candidate ids the first page returned
 
 #### Scenario: The default state costs one query per page
 
@@ -2714,16 +2753,27 @@ The select SHALL name the fields the curated columns require, by their entity fi
 | `duration_ms` | duration |
 | `deployments` | models |
 
-It SHALL additionally name every field whose schema-driven column is currently visible. It MUST NOT name every
-field the entity carries: the field set is whatever the service reports and can grow, so projecting all of it
-would make every page fetch pay for columns nobody asked for. A column with no field behind it — Rating is
+It SHALL additionally name **every offered field the entity's own source carries**, whether or not its column
+is currently visible. Such a field costs the query one more column of the table it is already reading, which
+is less than what re-fetching every loaded page costs when the operator reveals its column.
+
+It SHALL name a field the service reports under an **enrichment namespace** — a name qualified by the
+enrichment that supplies it, `conversation_insights.` and `conversation_buckets.` being the two the
+`conversations` entity currently exposes — only while that field's column is visible. The service joins an
+enrichment only when a query names one of its columns, so naming one unconditionally would add that join to
+every page of every scroll, for columns the operator has not asked for.
+
+It MUST NOT name every field the entity carries: the field set is whatever the service reports and can grow,
+and a field the catalog does not offer is one no column renders. A column with no field behind it — Rating is
 composed from `rate_analytics` lookups — MUST NOT be named at all, since the entity has no such column.
 
-Making a hidden column visible SHALL restart paging, because the fetched pages do not carry that field and a
-column rendered from an absent value would read as empty data rather than as data not fetched. Hiding a visible
-column SHALL NOT re-query: the rows already held remain a correct answer to a narrower projection. The
-whole-result count and cost SHALL be unaffected by which columns are visible, being aggregates over the
-filtered result rather than over the projection.
+Making a hidden **enrichment-backed** column visible SHALL restart paging, because the fetched pages do not
+carry that field and a column rendered from an absent value would read as empty data rather than as data not
+fetched. Making a hidden **source-backed** column visible SHALL NOT re-query: its field is already in every
+fetched page, so the rows already held render it. Hiding a visible column SHALL NOT re-query in either case:
+the rows already held remain a correct answer to a narrower projection. The whole-result count and cost SHALL
+be unaffected by which columns are visible, being aggregates over the filtered result rather than over the
+projection.
 
 `turn_count` is the pipeline's count of the conversation's **distinct trace ids**, one trace per request, so
 it is a count of turns and not of usage-log rows: the embedding, MCP and routing hops a request fans out
@@ -2770,7 +2820,10 @@ nulls ordering placing nulls last, so a column holding nulls orders deterministi
 the backend's default. A sort key naming a field the entity does not carry SHALL be rejected: sorting by a
 value the query cannot name would silently fall back to an unstated order.
 
-The page SHALL be `{ type: 'offset', offset, limit, include_total: true }`. A limit above 1000 SHALL never be
+The page SHALL be `{ type: 'offset', offset, limit, include_total: false }`, on **every** page including the
+first. The result total is resolved by the summary query under an identical filter, so requesting it here
+resolves the same figure a second time; the service issues `include_total` as its own statement over the whole
+filtered result, so the second resolution costs a scan per page fetched. A limit above 1000 SHALL never be
 sent — the service rejects it with HTTP 400 and does not clamp.
 
 The query SHALL reference no column absent from the entity's role-visible schema; `conversations` exposes no
@@ -2785,6 +2838,17 @@ filtering on it requires no elevated role.
 - **AND** it carries no `group_by` and no aggregate function expression
 - **AND** its select names `chat_id`, `project_id`, `user_hash`, `turn_count`, `total_tokens`, `total_price`,
   `last_request_time`, `first_request_time`, `duration_ms` and `deployments`
+
+#### Scenario: The query requests no result total
+
+- **WHEN** the query is built for the first page, and again for a later page
+- **THEN** each carries `include_total: false`
+
+#### Scenario: Source-owned fields are projected whether or not their columns are visible
+
+- **WHEN** the query is built while every schema-driven column is hidden
+- **THEN** its select names each offered field the entity's own source carries
+- **AND** it names no field reported under an enrichment namespace
 
 #### Scenario: Time bounds apply to last activity as epoch-millisecond literals
 
@@ -2846,13 +2910,18 @@ filtering on it requires no elevated role.
 
 #### Scenario: The projection follows the visible columns
 
-- **WHEN** the query is built with a schema-driven column visible
-- **THEN** the select names that column's field alongside the curated fields
-- **AND** it does not name a field whose column is hidden
+- **WHEN** the query is built with one enrichment-backed column visible and another hidden
+- **THEN** the select names the visible column's field
+- **AND** it does not name the hidden column's field
+
+#### Scenario: Showing a source-backed column does not re-query
+
+- **WHEN** the operator makes a hidden source-backed column visible after scrolling
+- **THEN** no new request is issued and the rows already loaded render that column's values
 
 #### Scenario: Showing a column re-queries from the first page
 
-- **WHEN** the operator makes a hidden column visible after scrolling
+- **WHEN** the operator makes a hidden enrichment-backed column visible after scrolling
 - **THEN** the fetched pages are discarded and the next request is for the first page
 - **AND** that request's select names the newly visible field
 
@@ -2868,10 +2937,11 @@ filtering on it requires no elevated role.
 
 ### Requirement: Server-side paging with an exact result total
 
-The conversations page SHALL fetch its rows one page at a time from the backend and SHALL request the result
-total with `include_total: true`. The analytics service populates `totalCount` for row-mode queries only; the
-entity is read in row mode, so the total is available and SHALL be used rather than inferred from the number
-of rows returned.
+The conversations page SHALL fetch its rows one page at a time from the backend. The result total SHALL be
+the conversation count the result summary resolves, and the list query SHALL NOT request a total of its own.
+The summary count and the list query are built from the same filter, so they resolve the same figure; asking
+for it twice returns one number by two independent requests, which can disagree with each other and costs a
+scan of the whole filtered result on each page fetched.
 
 The page SHALL reuse the application's existing server-paged grid mechanism and its shared page size rather
 than introducing a second paging pattern. Successive pages SHALL be requested by advancing the query's
@@ -2879,8 +2949,18 @@ than introducing a second paging pattern. Successive pages SHALL be requested by
 which conversations are in the result, only which slice of it is delivered.
 
 The grid SHALL be told the total number of rows once it is known, so it stops requesting pages at the end of
-the result instead of probing past it. A request for a page beyond the result SHALL yield no rows and SHALL
-NOT be reported as a failure.
+the result instead of probing past it. The summary and the first page of a result SHALL be resolved
+concurrently and delivered together, so the total reaches the grid with that page rather than by a second
+request; the first page SHALL NOT wait on the summary beyond whichever of the two is slower. A later page
+carries no summary and SHALL leave the total as it stands. A request for a page beyond the result SHALL
+yield no rows and SHALL NOT be reported as a failure.
+
+Where the summary is unavailable — it failed, or it has not yet arrived — the grid SHALL fall back to
+treating a page returning fewer rows than were requested as the end of the result, which is the same signal
+it uses to terminate a result whose total is not yet known. No further total SHALL be requested on that
+account: the fallback already terminates paging, and re-requesting one would reintroduce the scan this
+requirement removes. Until either signal arrives the end of the result is simply unknown, which the grid
+already represents.
 
 Any filter change SHALL discard the pages already fetched and restart from the first page: a filter change
 produces a different result set, so an already-fetched page of the previous one is not a prefix of it. A
@@ -2897,8 +2977,26 @@ result.
 #### Scenario: The first page requests a total
 
 - **WHEN** the page loads its first page of conversations
-- **THEN** the query's offset page sets `include_total: true`
-- **AND** the returned `totalCount` is used as the result total
+- **THEN** the request resolves the result summary alongside the rows
+- **AND** the list query's offset page sets `include_total: false`
+- **AND** the result total shown is the conversation count that summary resolved
+
+#### Scenario: A later page requests no total
+
+- **WHEN** a page after the first is fetched
+- **THEN** its list query's offset page sets `include_total: false`
+
+#### Scenario: The total is delivered with the first page
+
+- **WHEN** the first page of a result is fetched
+- **THEN** the summary is resolved concurrently with the rows and returned alongside them
+- **AND** the grid's row count is set from that summary as the page is delivered
+
+#### Scenario: A later page does not restate the total
+
+- **WHEN** a page after the first is fetched
+- **THEN** its response carries no summary
+- **AND** the grid's row count is left as the first page established it
 
 #### Scenario: Scrolling fetches the next page unchanged but for its offset
 
@@ -2910,6 +3008,12 @@ result.
 
 - **WHEN** the last page of the result has been delivered
 - **THEN** the grid is told the total row count and issues no further page request
+
+#### Scenario: A short page ends the result when the total is unavailable
+
+- **WHEN** the summary request failed and a page returns fewer rows than were requested
+- **THEN** the grid treats that page as the end of the result and issues no further page request
+- **AND** no total is requested to establish it
 
 #### Scenario: A filter change restarts paging
 
@@ -3319,6 +3423,7 @@ map to a colour, so a newly added source cannot render unstyled.
 - **THEN** the metadata panel states the conversation id, user identifier, project, first activity,
   successful-request count and the conversation's deployments
 - **AND** it renders trace and region as unavailable
+
 ### Requirement: Conversation detail feedback reads the rating source
 
 The detail view SHALL read this conversation's ratings from the feedback source and SHALL state, **in the
@@ -3440,6 +3545,7 @@ hundreds.
 
 - **WHEN** a trace records more hops than the view requested
 - **THEN** the view states that the list is partial
+
 ### Requirement: Conversations grid with server-side ordering and per-column filtering
 
 The conversations view SHALL render a grid of seven visible columns — conversation, project, user, turns,
@@ -3633,7 +3739,9 @@ A field SHALL NOT be offered when the grid cannot honestly render or query it:
 - a field the service marks `sensitive` — selecting it would be rejected for a caller without the required
   role, so offering it would present a column that cannot be shown;
 - a non-scalar `object` or `array` field — a grid cell is not a structured-value viewer, and rendering one as
-  text would assert a shape the view does not know.
+  text would assert a shape the view does not know;
+- a field the service marks `heavy` — the service omits such a field from a wildcard projection because it is
+  expensive to transfer, and a column the catalog offers is one the view may project on every page.
 
 The array exclusion governs what the catalog offers, not what the view can render. A curated column MAY read an
 array field where the view defines a presentation for that field's values and states what they mean; such a
@@ -3654,6 +3762,11 @@ Every offered column SHALL be attributed to the `conversations` provenance group
 that entity. The Rating column SHALL remain attributed to `rate_analytics` and SHALL remain outside the
 catalog: it is not a field of the queried entity, so it cannot be offered, hidden or reordered as one.
 
+An offered column SHALL be classified by whether the schema reports its field under an enrichment namespace,
+because that classification decides whether revealing it costs a re-query. The classification SHALL follow
+what the schema reports rather than a list held in the frontend, so an enrichment added to the entity is
+classified correctly without a code change.
+
 When the schema cannot be fetched the view SHALL render the curated columns and SHALL report that the
 additional columns are unavailable, rather than presenting an empty catalog as though the entity had no other
 fields.
@@ -3673,6 +3786,11 @@ SHALL offer neither, because the query language expresses no ordering or predica
 - **WHEN** the schema reports a field marked sensitive, and a field of an object or array type
 - **THEN** neither is offered in the catalog
 
+#### Scenario: A heavy field is not offered
+
+- **WHEN** the schema reports a field the service marks `heavy`
+- **THEN** it is not offered in the catalog
+
 #### Scenario: A curated array column's field is not offered separately
 
 - **WHEN** the catalog is built
@@ -3684,6 +3802,12 @@ SHALL offer neither, because the query language expresses no ordering or predica
 - **WHEN** the catalog is built
 - **THEN** the activity column is offered
 - **AND** `first_request_time` and `last_request_time` are not offered as columns of their own
+
+#### Scenario: An offered column is classified by its backing source
+
+- **WHEN** the catalog is built from a schema reporting both plain field names and enrichment-namespaced ones
+- **THEN** each offered column records whether its field is enrichment-backed
+- **AND** that classification comes from the reported schema rather than a frontend list
 
 #### Scenario: The curated set is what is visible by default
 
@@ -3845,17 +3969,19 @@ The Flight endpoint SHALL NOT be derived from the REST one. They are unrelated a
 
 ### Requirement: Table detail Connect panel
 
-The Table detail page SHALL offer a **Connect** header action, shown only while the table is `ACTIVE`, only for a table of type **source**, and otherwise regardless of the viewer's per-table `write`/`modify` permissions. An **enrichment** table SHALL offer no Connect action at all: its rows are produced by the enrichment process rather than by a client, and it is not a queryable entity in its own right — its columns are surfaced as table-qualified fields on its source table — so neither the write nor the read path the panel documents applies to it. It SHALL NOT be shown for a `PENDING` or `FAILED` table, which has no materialized table to connect to. **Connect** SHALL be the header's primary action, so an `ACTIVE` table always presents exactly one primary action whatever the viewer's permissions are.
+The Table detail page SHALL offer a **Connect** header action, shown only while the table is `ACTIVE`, and otherwise regardless of the viewer's per-table `write`/`modify` permissions. It SHALL be offered for a table of type **source**, and for a table of type **enrichment** whose payload names a source table: an enrichment is not queryable under its own name, but its columns are readable as table-qualified fields on its source table, and its detail page is the one place a reader is shown how. An enrichment whose payload names no source table SHALL offer no Connect action, since no runnable query can be generated for it. It SHALL NOT be shown for a `PENDING` or `FAILED` table, which has no materialized table to connect to. **Connect** SHALL be the header's primary action, so an `ACTIVE` table always presents exactly one primary action whatever the viewer's permissions are.
 
 Activating **Connect** SHALL open a right-side overlay panel titled `Connect to <table name>`, dismissible by its close control, by the `Escape` key, and by activating the backdrop. The panel SHALL overlay the page rather than reflow it, and SHALL occupy the full viewport width below the layout's tablet breakpoint.
 
 The panel SHALL be a modal dialog for assistive technology: it SHALL carry a dialog role and modal state with an accessible name matching its title, SHALL move focus into the panel on open, SHALL confine `Tab` cycling to the panel while open, and SHALL return focus to the **Connect** button on close.
 
-The panel body SHALL be organised by **task, not by technology**: two tabs, **Write data** and **Read data**, with **Write data** selected by default from every entry point. Writing and reading are done by different people and carry different authorization, so each tab SHALL carry its own authorization statement and its own language examples, and neither SHALL require reading the other.
+The panel body SHALL be organised by **task, not by technology**: for a table a client can write, two tabs — **Write data** and **Read data** — with **Write data** selected by default from every entry point. Writing and reading are done by different people and carry different authorization, so each tab SHALL carry its own authorization statement and its own language examples, and neither SHALL require reading the other.
 
-For a **system** table the panel SHALL offer the read path only: no **Write data** tab, no write snippets, and no write-role list. Such a table is fed out of band and its row endpoint refuses every write regardless of any access list, so a write tab would teach a path that cannot succeed. The panel SHALL say why the read path is the only one shown, and SHALL NOT request the table's access lists, which cannot authorize anything there.
+For a **system** table and for an **enrichment** table the panel SHALL offer the read path only: no **Write data** tab, no write snippets, and no write-role list. It SHALL state which reason applies. A system table is fed out of band and its row endpoint refuses every write regardless of any access list, so a write tab would teach a path that cannot succeed. An enrichment's rows are produced by the enrichment process, which is the same reason this UI offers no hand-written insert for one. In neither case SHALL the panel request the table's access lists, which cannot authorize anything there.
 
-The API-key instruction, identical for both, SHALL be shown once above the tabs rather than duplicated inside each.
+The API-key instruction SHALL be shown once at the top of the panel rather than duplicated inside each tab, and SHALL state that every example the panel shows takes the same key. It SHALL NOT be phrased in terms of the two tabs, since the read-only variants render no tabs at all.
+
+That shared block SHALL carry the key **and nothing else**. An endpoint belongs to the surface that reads it: the REST base URL SHALL be shown as its own setup block above **each** REST example — Python and `curl` alike — and the Flight endpoint above the Flight example, so no example asks the reader to set a variable it never uses, and none asks them to find a variable it does. The Python examples SHALL additionally keep their endpoint default inline, so a copied script still runs when the export is skipped; `curl`, which can carry no default, depends on it.
 
 The **Write data** tab SHALL cover posting rows to this table in Python (standard library only) and as a `curl` command. The **Read data** tab SHALL cover querying this table in Python, as a `curl` command, and over Arrow Flight SQL with pandas and the ADBC driver. Flight SQL SHALL appear only under Read, because that endpoint rejects write statements, and the panel SHALL say so. For Flight SQL the panel SHALL state that it needs its own Python packages.
 
@@ -3868,10 +3994,16 @@ The panel assumes the deployment has API-key authentication and the Flight endpo
 - **WHEN** the detail view renders an `ACTIVE` table
 - **THEN** a **Connect** header action is present, rendered as the header's primary action
 
+#### Scenario: An enrichment table offers Connect with the read path only
+
+- **WHEN** the panel opens for an `ACTIVE` enrichment table
+- **THEN** no **Write data** tab, write snippet, or write-role list is present, and the read path is shown with a statement of why it is the only one
+- **AND** no request is made for the table's access lists
+
 #### Scenario: An enrichment table offers no Connect action
 
-- **WHEN** the detail view renders an `ACTIVE` enrichment table
-- **THEN** no **Connect** action and no **Add rows** action are present
+- **WHEN** the detail view renders an `ACTIVE` enrichment table whose payload names no source table, the only case in which no runnable query can be generated for it
+- **THEN** no **Connect** action is present
 - **AND** the schema and catalog actions its permissions allow are still present
 
 #### Scenario: Connect is not offered before materialization
@@ -3886,7 +4018,7 @@ The panel assumes the deployment has API-key authentication and the Flight endpo
 
 #### Scenario: Opening the panel
 
-- **WHEN** the user activates **Connect**
+- **WHEN** the user activates **Connect** on a source table a client can write
 - **THEN** a side panel titled `Connect to <table name>` opens with the **Write data** and **Read data** tabs, and **Write data** is the selected tab
 
 #### Scenario: The panel takes and returns focus
@@ -3928,7 +4060,7 @@ The panel assumes the deployment has API-key authentication and the Flight endpo
 
 ### Requirement: Connect panel snippets are generated from the table schema
 
-Every snippet the Connect panel renders SHALL be generated from the table currently being viewed, so that a copied snippet runs against that table without editing. Snippets SHALL be derived from the table's declared columns; a column whose physical name begins with `_` SHALL be omitted, because the platform sets those and a row naming one is rejected.
+Every snippet the Connect panel renders SHALL be generated from the table currently being viewed, so that a copied snippet runs against that table without editing. Snippets SHALL be derived from the table's declared columns; a column whose physical name begins with `_` SHALL be omitted, because the platform sets those and a row naming one is rejected. The exclusion SHALL hold for the read projection as well as the write snippets, so no part of the panel names a platform column.
 
 **Write snippets** SHALL key each row field by the column's **physical source name**, which is what the row-insert endpoint accepts. The panel SHALL NOT explain that identifier or contrast it with the exposed name: the two are equal on every table this application can produce — its column editor fills both from one input, and a rename sets both — so the distinction is invisible here and naming it would teach a concept the reader cannot act on.
 
@@ -3946,9 +4078,16 @@ Each field's value SHALL be a mock literal of the column's declared type, chosen
 
 A nullable column SHALL still receive a value rather than a null, so the snippet stays a working example.
 
-**Read snippets** SHALL project the table's column names and SHALL carry an explicit `LIMIT` no greater than the REST maximum.
+**Read snippets** SHALL carry an explicit `LIMIT` no greater than the REST maximum, and SHALL project a **key subset** of the table rather than every column, so the example teaches the shape of a query instead of the width of the table:
 
-Snippets SHALL read each endpoint from an environment variable whose default is the corresponding configured public endpoint: `DIAL_ANALYTICS_BASE_URL` for the REST surfaces and `DIAL_ANALYTICS_FLIGHT_SQL_URL` for Flight SQL, with the key in `DIAL_API_KEY`. When an endpoint is not configured its default SHALL be a visible placeholder — `<analytics-base-url>` and `grpc://<analytics-host>:32010` respectively — and the panel SHALL show a note to replace it, positioned with the snippets that use it.
+- For a **source** table the projection SHALL be the table's **ordering-key columns** — the set a reader filters, sorts, and joins on — less any entry naming a `_`-prefixed platform column. `ordering_key` reports **physical source names**, while the query surface binds a `SELECT` list against the **exposed** name each column is published under, so each entry SHALL be matched to its declared column by source name and projected by that column's exposed name. The two spellings are equal on every table this application creates; on a table created through the API with a differing pair, projecting the physical name is an unknown-column error. An entry no declared column matches SHALL be projected as reported, since nothing better is known about it.
+- For an **enrichment** table the query SHALL read `FROM` the enrichment's **source table**, never from the enrichment's own name, since an enrichment is not queryable under its own name. Its projection SHALL be the enrichment's **grain key**, which is a column of that source table, together with one of the enrichment's own columns — the first declared column whose physical name does not begin with `_`. The enrichment's column SHALL be addressed as `"<enrichment>.<column>"`, quoted as a **single** identifier with the dot inside it: the service exposes an enrichment column on the source table under a name that literally contains a dot, and quoting it as two identifiers (`"<enrichment>"."<column>"`) is rejected with `Table '<enrichment>' not found`.
+- Every projected column SHALL be quoted, not only the enrichment column that has to be, so that one `SELECT` list does not mix quoted and bare names for no reason a reader can see.
+- Where the rules above yield no column at all — a table declaring no ordering key or one naming only platform columns, an enrichment with neither a grain key nor a non-platform column — the projection SHALL be `*`, so no snippet is ever generated with an empty projection.
+
+The **Read data** tab SHALL state that its snippet projects a subset and that any of the table's columns may be selected, so the shortened projection is not read as a restriction. That statement SHALL be shown **only when the snippet actually names columns** — where the rules above fell back to `*` it SHALL be omitted, since it would describe a projection the reader is not looking at. For an **enrichment** it SHALL additionally state that the query reads through the table it enriches, that every column of the enrichment is reachable as `"<enrichment>.<column>"`, and that any column of the source table may be selected in the same query. That statement SHALL **name** the source table rather than referring to it by a pronoun: two tables are in play, so "that table" resolves against either.
+
+Snippets SHALL read each endpoint from an environment variable whose default is the corresponding configured public endpoint: `DIAL_ANALYTICS_BASE_URL` for the REST surfaces and `DIAL_ANALYTICS_FLIGHT_SQL_URL` for Flight SQL, with the key in `DIAL_API_KEY`. When an endpoint is not configured its default SHALL be a visible placeholder — `<analytics-base-url>` and `grpc://<analytics-host>:32010` respectively — and the panel SHALL show a note to replace it, positioned with **every** export block that carries it — the REST endpoint's export block is repeated above each REST example, and `curl` cannot carry an inline default the way the Python examples can, so a reader working from any one of them SHALL be told the value is a placeholder.
 
 Every name a snippet asks the reader to set SHALL be one the product uses publicly. The analytics service's internal name SHALL NOT appear in any snippet, placeholder, or panel string — a reader configuring a client has no way to connect it to anything they were given.
 
@@ -3976,6 +4115,37 @@ After the write snippets — not before them, since the generated snippet alread
 
 - **WHEN** any part of the panel renders
 - **THEN** it contains no explanation of, or contrast between, the physical and exposed column identifiers
+
+#### Scenario: Read snippets project the ordering key
+
+- **WHEN** the panel opens for a source table declaring columns `event_id`, `request_time`, and `total` with an ordering key of `event_id, request_time`
+- **THEN** every read snippet — Python, `curl`, and Flight SQL — queries `SELECT "event_id", "request_time" FROM <table> LIMIT <limit>`, and `total` appears in none of them
+
+#### Scenario: A platform column named by the ordering key is not projected
+
+- **WHEN** a source table's ordering key names a `_`-prefixed platform column such as `_ingested_at` alongside an ordinary column
+- **THEN** the read snippets project only the ordinary column
+
+#### Scenario: A table with no usable ordering key projects everything
+
+- **WHEN** the panel opens for a source table whose payload declares no ordering key, or one naming only `_`-prefixed platform columns
+- **THEN** the read snippets query `SELECT * FROM <table> LIMIT <limit>`
+
+#### Scenario: An enrichment reads from its source table
+
+- **WHEN** the panel opens for an enrichment named `widget_scores` over source table `widget_events`, with grain key `event_id` and first declared column `score`
+- **THEN** every read snippet queries `SELECT "event_id", "widget_scores.score" FROM widget_events LIMIT <limit>`
+- **AND** no snippet queries `FROM widget_scores`
+
+#### Scenario: The enrichment read tab states the qualified form
+
+- **WHEN** the **Read data** tab renders for an enrichment
+- **THEN** it names the source table the query reads through, states that every column of the enrichment is reachable there as `"<enrichment>.<column>"` quoted as one name, and states that any column of the source table may be selected in the same query
+
+#### Scenario: The read tab states that the projection is a subset
+
+- **WHEN** the **Read data** tab renders
+- **THEN** it states that any of the table's columns may be selected, so the snippet's projection is not read as a restriction
 
 #### Scenario: Timestamp columns use the insert format and name the asymmetry
 
@@ -4032,7 +4202,24 @@ After the write snippets — not before them, since the generated snippet alread
 #### Scenario: Endpoint falls back to a placeholder
 
 - **WHEN** no public Analytics endpoint is configured
-- **THEN** the snippets default `DIAL_ANALYTICS_BASE_URL` to `<analytics-base-url>` and the panel shows a note to replace it
+- **THEN** the snippets default `DIAL_ANALYTICS_BASE_URL` to `<analytics-base-url>` and the panel shows a note to replace it above every REST example, on both tabs — each `DIAL_ANALYTICS_BASE_URL` export block carries its own copy of the note
+
+#### Scenario: The subset note is omitted over a wildcard projection
+
+- **WHEN** the read snippets fall back to `SELECT *` — the table declares no ordering key, or names only platform columns
+- **THEN** the Read tab omits the note about projecting a few columns, rather than stating it over a projection that selects every column
+
+#### Scenario: The ordering key is projected by exposed name
+
+- **WHEN** a source table's `ordering_key` names a column whose physical source name differs from its exposed name
+- **THEN** the read snippets project that column's exposed name, which is the spelling the query surface binds
+
+#### Scenario: The shared block carries only the key
+
+- **WHEN** the panel renders
+- **THEN** the block above the tabs exports `DIAL_API_KEY` and no endpoint variable
+- **AND** the Flight SQL example, which needs the key but not the REST endpoint, sets no `DIAL_ANALYTICS_BASE_URL`
+- **AND** each REST example is preceded by its own `DIAL_ANALYTICS_BASE_URL` export block
 
 #### Scenario: A table with no columns still renders
 
@@ -4119,4 +4306,46 @@ While the access request is in flight the panel SHALL show a loading state in pl
 - **WHEN** the panel renders for a viewer who can manage roles
 - **THEN** it contains no control that opens the table's access management surface
 
+### Requirement: Entity schema responses are cached per caller role
+
+An entity's schema describes the shape of a table rather than its contents: it changes when the table's
+schema is patched, not when rows arrive. Re-fetching it on every page load spends a request on an answer that
+did not change. The system SHALL therefore serve the `conversations` entity schema from a cache rather than
+querying the analytics service on each page load.
+
+The cache key SHALL include the caller's role, not the entity name alone. The service filters `sensitive`
+columns from the schema by the caller's role, so one entity has more than one correct answer: a key that
+ignores the role would either disclose to a caller field names their role withholds, or withhold from a
+caller field names their role permits. A cached entry SHALL NOT be served to a caller whose role differs from
+the one it was resolved under.
+
+A cached entry SHALL expire after a bounded lifetime. The schema is stable, not immutable — a table schema
+patch changes it — so an entry that never expires would pin the view to a field set the entity no longer has.
+
+A cache miss, an expired entry, or a failed lookup SHALL fall through to the service exactly as an uncached
+fetch does, and a fetch failure SHALL NOT be cached: a failure is a statement about one request, not about
+the schema, and caching it would extend one outage over the entry's whole lifetime.
+
+#### Scenario: A repeated load does not re-query the schema
+
+- **WHEN** the conversations page is loaded twice in succession by the same caller within the entry's lifetime
+- **THEN** the entity schema is fetched from the analytics service once
+- **AND** the second load renders the same column catalog as the first
+
+#### Scenario: A different role does not read another role's entry
+
+- **WHEN** a caller whose role withholds sensitive columns loads the page after a caller whose role permits them
+- **THEN** the schema served to the second caller is the one their own role resolves
+- **AND** it does not offer a column their role withholds
+
+#### Scenario: An expired entry is re-resolved
+
+- **WHEN** the page is loaded after the cached entry's lifetime has elapsed
+- **THEN** the schema is fetched from the analytics service again
+- **AND** a field added to the entity since the entry was cached is offered in the catalog
+
+#### Scenario: A failed schema fetch is not cached
+
+- **WHEN** a schema fetch fails and the page is loaded again
+- **THEN** the schema is fetched from the analytics service again rather than the failure being replayed
 

@@ -3,22 +3,22 @@
 import { FC } from 'react';
 
 import { getInterceptorTemplatesList } from '@/src/app/[lang]/interceptor-templates/actions';
+import { getInterceptorContainers } from '@/src/app/actions/deployments';
+import InterfacesField from '@/src/components/BaseControls/InterfacesField/InterfacesField';
+import MaintainerControl from '@/src/components/BaseControls/Maintainer';
+import OverrideNameControl from '@/src/components/BaseControls/OverrideName';
+import TopicsControl from '@/src/components/BaseControls/Topics';
+import Defaults from '@/src/components/Defaults/Defaults';
+import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
+import EntityProperties from '@/src/components/EntityMainProperties/Properties/EntityProperties';
 import { getSourceItems } from '@/src/components/SourceField/constants';
+import SourceField from '@/src/components/SourceField/SourceField';
+import { INTERCEPTOR_INTERFACE_TYPES } from '@/src/constants/deployment-interfaces';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ApplicationRoute } from '@/src/types/routes';
-
-import Defaults from '@/src/components/Defaults/Defaults';
-import MaintainerControl from '@/src/components/BaseControls/Maintainer';
-import InterfacesField from '@/src/components/BaseControls/InterfacesField/InterfacesField';
-import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
-import EntityProperties from '@/src/components/EntityMainProperties/Properties/EntityProperties';
-import SourceField from '@/src/components/SourceField/SourceField';
-import { getInterceptorContainers } from '@/src/app/actions/deployments';
-import { INTERCEPTOR_INTERFACE_TYPES } from '@/src/constants/deployment-interfaces';
-import TopicsControl from '@/src/components/BaseControls/Topics';
 
 interface Props {
   selectedInterceptor: DialInterceptor;
@@ -65,6 +65,7 @@ const InterceptorProperties: FC<Props> = ({ selectedInterceptor, names, onChange
         onChangeEntity={onChangeInterceptor}
         allowedTypes={INTERCEPTOR_INTERFACE_TYPES}
       />
+      <OverrideNameControl entity={selectedInterceptor as any} onChangeEntity={onChangeInterceptor} />
     </div>
   );
 };

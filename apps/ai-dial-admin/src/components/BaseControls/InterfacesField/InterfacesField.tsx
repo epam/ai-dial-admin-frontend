@@ -31,6 +31,8 @@ const getInterfaceTypeLabel = (t: ReturnType<typeof useI18n>, type: DeploymentIn
       return t(InterfacesI18nKey.OpenAIResponses);
     case DeploymentInterfaceType.AnthropicMessages:
       return t(InterfacesI18nKey.AnthropicMessages);
+    case DeploymentInterfaceType.OpenAIEmbeddings:
+      return t(InterfacesI18nKey.OpenAIEmbeddings);
   }
 };
 

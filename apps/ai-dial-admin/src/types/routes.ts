@@ -24,6 +24,7 @@ export enum ApplicationRoute {
   Conversations = '/conversations',
   Prompts = '/prompts',
   Files = '/files',
+  AssetsSkills = '/assets-skills',
 
   // Publications
   FoldersStorage = '/folders-storage',

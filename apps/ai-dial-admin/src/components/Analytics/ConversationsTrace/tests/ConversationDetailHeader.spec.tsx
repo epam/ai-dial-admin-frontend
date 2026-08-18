@@ -42,7 +42,7 @@ describe('ConversationDetailHeader', () => {
   test('offers a copy control for the conversation id', () => {
     renderHeader();
 
-    expect(screen.getByRole('button', { name: 'copy' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: `copy ${ConversationsTraceI18nKey.Conversation}` })).toBeTruthy();
   });
 
   test('renders the title field as unavailable, since nothing supplies one', () => {

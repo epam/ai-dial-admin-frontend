@@ -36,7 +36,8 @@ export const getEntityPath = (
     case ApplicationRoute.Prompts:
     case ApplicationRoute.Files:
     case ApplicationRoute.AssetsApplications:
-    case ApplicationRoute.AssetsToolsets: {
+    case ApplicationRoute.AssetsToolsets:
+    case ApplicationRoute.AssetsSkills: {
       const path = version
         ? `${(data as DialPrompt).folderId}${(data as DialPrompt).name}__${version}`
         : (data as DialPrompt).path ||
