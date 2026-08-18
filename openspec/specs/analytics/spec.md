@@ -2670,6 +2670,8 @@ The select SHALL name the fields the curated columns require, by their entity fi
 | `total_price` | cost |
 | `last_request_time` | activity (relative) |
 | `first_request_time` | activity (span) |
+| `duration_ms` | duration |
+| `deployments` | models |
 
 It SHALL additionally name every field whose schema-driven column is currently visible. It MUST NOT name every
 field the entity carries: the field set is whatever the service reports and can grow, so projecting all of it
@@ -2682,10 +2684,10 @@ column SHALL NOT re-query: the rows already held remain a correct answer to a na
 whole-result count and cost SHALL be unaffected by which columns are visible, being aggregates over the
 filtered result rather than over the projection.
 
-`turn_count` is the pipeline's `count()` over usage-log rows for the conversation, which includes non-LLM
-spans such as embedding, MCP and routing calls. It is therefore **not** a count of distinct request traces,
-and user-facing copy MUST NOT claim it is. An exact turn count is not expressible in a rollup: a pipeline
-measure is one aggregate function over one column with no `distinct` option.
+`turn_count` is the pipeline's count of the conversation's **distinct trace ids**, one trace per request, so
+it is a count of requests and not of usage-log rows: the embedding, MCP and routing hops a request fans out
+into collapse into the trace that produced them. User-facing copy SHALL describe it as requests and MUST NOT
+claim it counts individual hops.
 
 The filter SHALL be `and[ ge(last_request_time, startMs), le(last_request_time, endMs) ]`. The time bounds
 SHALL apply to `last_request_time`, so a selected period means *conversations whose last activity falls in the
@@ -2714,6 +2716,10 @@ translated to an approximation. A range entry SHALL become a `ge` and an `le` pr
 Predicate value types SHALL follow the field's type: string fields carry string literals, count fields
 integers, price fields decimals, and timestamp fields epoch-millisecond literals.
 
+An array field SHALL carry neither a sort key nor a filter predicate: the query language expresses no ordering
+or comparison over one, so a request to sort or filter by such a field SHALL be rejected rather than
+approximated client-side over the loaded page.
+
 The sort SHALL be the caller's sort keys, if any, followed by `{ chat_id, asc }`; with no caller sort keys it
 SHALL be `[{ last_request_time, desc }, { chat_id, asc }]`. The trailing `chat_id asc` tiebreaker is required
 in every case: the service appends no implicit tiebreaker, so without it a paged result is not stable across
@@ -2736,7 +2742,7 @@ filtering on it requires no elevated role.
 - **THEN** the query targets entity `conversations` with `mode: 'row'`
 - **AND** it carries no `group_by` and no aggregate function expression
 - **AND** its select names `chat_id`, `project_id`, `user_hash`, `turn_count`, `total_tokens`, `total_price`,
-  `last_request_time` and `first_request_time`
+  `last_request_time`, `first_request_time`, `duration_ms` and `deployments`
 
 #### Scenario: Time bounds apply to last activity as epoch-millisecond literals
 
@@ -2766,6 +2772,11 @@ filtering on it requires no elevated role.
 - **WHEN** the query is built with a column filter entry on `total_price` above a value
 - **THEN** the filter carries a `gt` predicate on `total_price` conjoined with the time bounds
 - **AND** a range entry instead produces a `ge` and an `le` predicate on that field
+
+#### Scenario: An array field carries no sort or filter
+
+- **WHEN** the query is built with a sort key or a column filter naming `deployments`
+- **THEN** that input is rejected rather than translated into a predicate or sort key
 
 #### Scenario: Caller sort keys precede the tiebreaker
 
@@ -2982,6 +2993,12 @@ The view SHALL distinguish three states, and MUST NOT collapse them onto one pre
 A zero count SHALL render as a number. It MUST NOT render as the unavailable marker, since `0` ratings or
 `0` failed requests are findings rather than gaps.
 
+A zero SHALL instead render as the unavailable marker where the measured quantity cannot be zero in a
+conversation that occurred — an elapsed duration being the case in hand, since a conversation that ran took
+time. There the zero records that the backend did not measure the value, not that the value was nothing, and
+rendering it as a number would state a finding the data does not support. This rule SHALL apply wherever the
+value is presented, so the grid and the detail view state the same thing about the same conversation.
+
 The marker SHALL be a single presentation used consistently across the view, and SHALL come from theme
 tokens rather than literal colour values.
 
@@ -3000,6 +3017,12 @@ tokens rather than literal colour values.
 
 - **WHEN** a conversation has zero ratings
 - **THEN** the rating counts render as `0` rather than as the unavailable marker
+
+#### Scenario: An impossible zero renders as unavailable
+
+- **WHEN** a conversation's recorded duration is `0`
+- **THEN** it renders as the unavailable marker rather than as a zero duration
+- **AND** the grid and the detail view render it the same way
 
 ### Requirement: Conversation detail header identifies the conversation
 
@@ -3194,8 +3217,10 @@ durations from the rollup, laid out as headline figures rather than a label-and-
 money carries elsewhere in the app, which is independent of the panel's source colour.
 
 The metadata panel SHALL state the conversation id, the anonymized user identifier, the project, the first
-activity time and the successful-request count from the rollup, and SHALL surface trace, deployment and
-region fields as unavailable.
+activity time, the successful-request count and the deployments that served the conversation, all from the
+rollup, and SHALL surface trace and region fields as unavailable. A field the rollup carries SHALL NOT be
+rendered as unavailable: the panel states what the record holds, and marking a recorded field as absent
+misreports the data the view already fetched.
 
 Panel provenance colours SHALL come from theme tokens, and every provenance value the view can render SHALL
 map to a colour, so a newly added source cannot render unstyled.
@@ -3224,10 +3249,9 @@ map to a colour, so a newly added source cannot render unstyled.
 #### Scenario: The metadata panel marks what the rollup lacks
 
 - **WHEN** the detail view renders
-- **THEN** the metadata panel states the conversation id, user identifier, project, first activity and
-  successful-request count
-- **AND** it renders trace, deployment and region as unavailable
-
+- **THEN** the metadata panel states the conversation id, user identifier, project, first activity,
+  successful-request count and the conversation's deployments
+- **AND** it renders trace and region as unavailable
 ### Requirement: Conversation detail feedback reads the rating source
 
 The detail view SHALL read this conversation's ratings from the feedback source and SHALL state, **in the
@@ -3544,14 +3568,20 @@ A field SHALL NOT be offered when the grid cannot honestly render or query it:
 - a non-scalar `object` or `array` field — a grid cell is not a structured-value viewer, and rendering one as
   text would assert a shape the view does not know.
 
+The array exclusion governs what the catalog offers, not what the view can render. A curated column MAY read an
+array field where the view defines a presentation for that field's values and states what they mean; such a
+column is designed rather than derived, and its field remains outside the catalog like any other curated
+field's.
+
 A field consumed by a curated column SHALL NOT also be offered as a raw column. The activity column composes
 `first_request_time` and `last_request_time` into one cell, so the catalog SHALL offer that column and MUST NOT
 additionally offer its two source fields as separate columns, which would present the same data twice under
-different names.
+different names. The same applies to `duration_ms` and `deployments`, which the duration and models columns
+consume.
 
-The seven curated columns — conversation, project, user, turns, activity, tokens, cost — SHALL keep their
-composed cells and their labels, and SHALL be the default visible set together with the Rating column. Every
-other offered field SHALL default to hidden.
+The nine curated columns — conversation, project, user, turns, activity, tokens, cost, duration, models —
+SHALL keep their composed cells and their labels, and SHALL be the default visible set together with the
+Rating column. Every other offered field SHALL default to hidden.
 
 Every offered column SHALL be attributed to the `conversations` provenance group, since every one is read from
 that entity. The Rating column SHALL remain attributed to `rate_analytics` and SHALL remain outside the
@@ -3562,7 +3592,8 @@ additional columns are unavailable, rather than presenting an empty catalog as t
 fields.
 
 A field made visible SHALL be sortable and filterable on the same terms as a curated field-backed column,
-since it is a stored field of the same entity.
+since it is a stored field of the same entity. A curated column reading an array field is the exception and
+SHALL offer neither, because the query language expresses no ordering or predicate over an array.
 
 #### Scenario: The catalog comes from the schema
 
@@ -3575,6 +3606,12 @@ since it is a stored field of the same entity.
 - **WHEN** the schema reports a field marked sensitive, and a field of an object or array type
 - **THEN** neither is offered in the catalog
 
+#### Scenario: A curated array column's field is not offered separately
+
+- **WHEN** the catalog is built
+- **THEN** the models column renders `deployments`
+- **AND** `deployments` is not additionally offered as a catalog column
+
 #### Scenario: A composed column's source fields are not offered separately
 
 - **WHEN** the catalog is built
@@ -3584,7 +3621,8 @@ since it is a stored field of the same entity.
 #### Scenario: The curated set is what is visible by default
 
 - **WHEN** the conversations view loads with no stored column choice
-- **THEN** the conversation, project, user, turns, activity, tokens, cost and Rating columns are visible
+- **THEN** the conversation, project, user, turns, activity, tokens, cost, duration, models and Rating columns
+  are visible
 - **AND** every other offered column is hidden
 
 #### Scenario: Rating is not part of the catalog
@@ -3603,6 +3641,119 @@ since it is a stored field of the same entity.
 - **WHEN** a schema-driven column is made visible
 - **THEN** it offers a sort affordance and a filter control matching its declared type
 - **AND** applying either carries a predicate or sort key on that field into the query
+
+### Requirement: Conversations grid states how long each conversation took
+
+The conversations grid SHALL present a curated **Duration** column reading the rollup's `duration_ms`, so an
+operator scanning the list can find slow conversations without opening each one. The column SHALL be part of
+the default visible set and SHALL be projected by the first list query, so it carries a value on the grid's
+first paint rather than after a column-selection round trip.
+
+The column SHALL render a human-readable elapsed time rather than a raw millisecond count, at a precision that
+stays legible across the range the field spans — sub-minute durations reading in seconds, longer ones in
+minutes and seconds.
+
+The column SHALL be sortable and range-filterable server-side on the same terms as the other numeric curated
+columns, since `duration_ms` is a stored scalar of the queried entity.
+
+The field records the summed duration of a conversation's hops. Where a turn fans out into a chain, an outer
+hop's duration contains its inner hops' durations, so the value exceeds the conversation's elapsed wall-clock
+time. User-facing copy MUST NOT describe the column as elapsed time.
+
+#### Scenario: Duration renders on first paint
+
+- **WHEN** the conversations grid loads with no stored column choice
+- **THEN** the Duration column is visible
+- **AND** the first list query's select names `duration_ms`
+
+#### Scenario: Duration renders as elapsed time, not milliseconds
+
+- **WHEN** a conversation has a recorded duration
+- **THEN** the cell states it in seconds, or in minutes and seconds when it exceeds a minute
+- **AND** it does not state a raw millisecond count
+
+#### Scenario: Duration sorts and filters server-side
+
+- **WHEN** the operator sorts by Duration or applies a range filter to it
+- **THEN** the query carries a sort key or a `ge`/`le` predicate pair on `duration_ms`
+- **AND** paging restarts from the first page
+
+### Requirement: Conversations grid names the models a conversation used
+
+The conversations grid SHALL present a curated **Models** column derived from the rollup's `deployments`
+array, so an operator can see which models served a conversation without opening it. The column SHALL be part
+of the default visible set and SHALL be projected by the first list query.
+
+The column SHALL render its values as discrete pills with an overflow badge stating how many further values
+exist, and SHALL make the complete list reachable without a pointer, so the values hidden by the overflow are
+available to a keyboard user and not only on hover.
+
+`deployments` records every deployment that handled a hop, which includes orchestrating deployments,
+applications, MCP toolsets and embedding deployments alongside the models themselves. Because the column
+claims to name models, it SHALL narrow the array before rendering pills by excluding:
+
+- a value carrying an application or toolset resource path, which names a DIAL resource rather than a model;
+- a value naming an embedding deployment;
+- a value that contains another value of the same conversation as a substring, which is how a deployment that
+  wraps and dispatches to another one is named.
+
+The narrowing is an approximation and SHALL be treated as one. An orchestrating deployment whose name shares
+nothing with the deployment it dispatched to is not detectable from the array alone and SHALL be allowed to
+remain rather than removed by a guess. When narrowing would leave no value at all, the column SHALL render the
+unnarrowed list, because a conversation served only by an application is better described by that application
+than by an empty cell.
+
+The complete unnarrowed list SHALL remain reachable from the cell, so a value the narrowing removed is
+recoverable by the reader and the column never silently discards recorded data.
+
+The column SHALL NOT be sortable and SHALL NOT be filterable. The query language expresses no ordering or
+predicate over an array field, and the grid pages server-side, so any client-side ordering or filtering would
+apply to the loaded page rather than to the result and would misstate what it did.
+
+#### Scenario: Models renders on first paint
+
+- **WHEN** the conversations grid loads with no stored column choice
+- **THEN** the Models column is visible
+- **AND** the first list query's select names `deployments`
+
+#### Scenario: Values render as pills with an overflow badge
+
+- **WHEN** a conversation's narrowed list holds more values than the column width fits
+- **THEN** the cell renders as many pills as fit followed by a badge stating the remaining count
+- **AND** the complete list is reachable without a pointer
+
+#### Scenario: Applications, toolsets and embeddings are narrowed away
+
+- **WHEN** a conversation's deployments include an application resource path, a toolset resource path and an
+  embedding deployment alongside a model
+- **THEN** the pills state the model
+- **AND** they state none of the other three
+
+#### Scenario: A wrapping deployment is narrowed away by its name
+
+- **WHEN** a conversation's deployments include a value that contains another of its values as a substring
+- **THEN** the containing value is not rendered as a pill
+- **AND** the contained value is
+
+#### Scenario: An undetectable orchestrator remains
+
+- **WHEN** a conversation's orchestrating deployment shares no substring with the deployments it dispatched to
+- **THEN** it remains among the rendered pills rather than being removed by a guess
+
+#### Scenario: Narrowing to nothing falls back to the recorded list
+
+- **WHEN** every value of a conversation's deployments is excluded by the narrowing rules
+- **THEN** the cell renders the unnarrowed list rather than an empty cell
+
+#### Scenario: The complete list stays reachable
+
+- **WHEN** narrowing removed a value from a conversation's pills
+- **THEN** the complete recorded list is still reachable from the cell
+
+#### Scenario: Models offers no sort or filter affordance
+
+- **WHEN** the operator inspects the Models column header
+- **THEN** it offers neither a sort affordance nor a filter control
 
 ### Requirement: Public Analytics endpoints are surfaced to the table detail page
 

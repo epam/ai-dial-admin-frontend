@@ -519,6 +519,8 @@ export const getPublicationViewTabs = (t: (key: string) => string, view: Applica
       return getToolsetPublicationTabs(t);
     case ApplicationRoute.ConversationPublications:
       return getConversationPublicationTabs(t);
+    case ApplicationRoute.SkillPublications:
+      return getSkillPublicationTabs(t);
     default:
       return [];
   }
@@ -542,6 +544,10 @@ export const getToolsetPublicationTabs = (t: (key: string) => string): TabModel[
 
 export const getConversationPublicationTabs = (t: (key: string) => string): TabModel[] => {
   return [propertiesTab(t), conversationTab(t), filesTab(t), permissionsTab(t)];
+};
+
+export const getSkillPublicationTabs = (t: (key: string) => string): TabModel[] => {
+  return [propertiesTab(t), permissionsTab(t)];
 };
 
 export const getTestSuiteRequestTemplateTabs = (t: (key: string) => string): TabModel[] => {

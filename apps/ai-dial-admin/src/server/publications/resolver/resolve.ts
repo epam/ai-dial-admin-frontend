@@ -19,6 +19,7 @@ import { CorePublication, CorePublicationResource, CoreResourceAction } from '..
 import { parseEncodedVersionedPath } from '../path';
 import { enrichFileResource } from './file-resource';
 import { PUBLICATION_TYPE_REGISTRY } from './registry';
+import { enrichSkillResource } from './skill-resource';
 import { EnrichmentClients, PublicationTypeConfig } from './types';
 import { resolveResourceUrl } from './url-resolver';
 
@@ -61,6 +62,24 @@ const enrichAssetResource = async (
   };
 };
 
+/** Dispatches a primary resource to its type's enrichment shape (metadata-only for FILE/SKILL, asset body otherwise). */
+const enrichPrimaryResource = (
+  resource: CorePublicationResource,
+  status: PublicationStatus,
+  config: PublicationTypeConfig,
+  token: Token,
+  clients: EnrichmentClients,
+  issues: ResourceIssue[],
+) => {
+  if (config.resourceType === ResourceType.FILE) {
+    return enrichFileResource(resource, status, token, clients, issues);
+  }
+  if (config.resourceType === ResourceType.SKILL) {
+    return enrichSkillResource(resource, status, token, clients, issues);
+  }
+  return enrichAssetResource(resource, status, config, token, clients, issues);
+};
+
 /**
  * Resolves a Core publication into the enriched FE `Publication`: partitions
  * resources by type, enriches each (asset body or file metadata), and collects
@@ -91,10 +110,7 @@ export const resolvePublication = async (
 
   const resourceWrappers: ResourceWrapper[] = [];
   for (const resource of primaryResources) {
-    const wrapper =
-      config.resourceType === ResourceType.FILE
-        ? await enrichFileResource(resource, status, token, clients, issues)
-        : await enrichAssetResource(resource, status, config, token, clients, issues);
+    const wrapper = await enrichPrimaryResource(resource, status, config, token, clients, issues);
     if (wrapper) {
       resourceWrappers.push(wrapper as ResourceWrapper);
     }

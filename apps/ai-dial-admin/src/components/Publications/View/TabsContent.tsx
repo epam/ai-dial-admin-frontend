@@ -8,6 +8,7 @@ import ApplicationProperties from '@/src/components/Publications/Properties/Appl
 import ConversationProperties from '@/src/components/Publications/Properties/ConversationProperties';
 import FileProperties from '@/src/components/Publications/Properties/FileProperties';
 import PromptProperties from '@/src/components/Publications/Properties/PromptProperties';
+import SkillProperties from '@/src/components/Publications/Properties/SkillProperties';
 import ToolsetProperties from '@/src/components/Publications/Properties/ToolsetProperties';
 import Tools from '@/src/components/Tools/Tools';
 import { AppsFolderProvider } from '@/src/context/assets/AppsFolderContext';
@@ -23,6 +24,7 @@ import {
   FilePublication,
   PromptPublication,
   Publication,
+  SkillPublication,
   ToolsetPublication,
 } from '@/src/models/dial/publications';
 import { DialToolsetResource } from '@/src/models/dial/resource';
@@ -121,6 +123,15 @@ const TabsContent = <T extends Publication>({
                 onChange={onChange as (p: ConversationPublication) => void}
               />
             </ConversationFolderProvider>
+          )}
+          {/* todo add correct provider */}
+          {view === ApplicationRoute.SkillPublications && (
+            <FileFolderProvider>
+              <SkillProperties
+                publication={selectedPublication as SkillPublication}
+                onChange={onChange as (p: SkillPublication) => void}
+              />
+            </FileFolderProvider>
           )}
         </div>
       )}

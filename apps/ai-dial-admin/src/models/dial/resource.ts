@@ -191,6 +191,26 @@ export interface DialToolsetResource extends DialResource {
   updatedAt: string;
 }
 
+/**
+ * A skill resource's folder metadata, enriched via metadata-only lookup (no content/ZIP fetch —
+ * see `enrichSkillResource`). `name`/`description`/`version` come from the skill's `SKILL.md`
+ * frontmatter, surfaced by Core's folder marker; `files` lists the bundle's contents for read-only
+ * display.
+ */
+export interface DialSkillResource {
+  name: string;
+  description?: string;
+  version?: string;
+  path: string;
+  etag?: string;
+  files: DialSkillFile[];
+}
+
+export interface DialSkillFile {
+  name: string;
+  size: number;
+}
+
 export interface DialToolsetResourceAuthSettings {
   authentication_type?: ToolsetAuthType;
   global_auth_status?: ToolsetAuthStatus;

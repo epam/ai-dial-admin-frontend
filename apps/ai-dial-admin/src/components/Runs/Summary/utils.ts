@@ -147,6 +147,7 @@ export const attachMetricInfo = (data: MetricScoresData, infoByName: Record<stri
  * Expands run metric snapshots into selectable Distribution options — one per metric output field.
  * `name` is the UI label (`<metric>.<field>`, e.g. `DeepEval: Answer Relevancy.score`); `field` is the
  * request path (`metric::<metric>::<field>`). Snapshots without a name/computation are skipped.
+ * Options are sorted A–Z by `name` to match Metric Scores order.
  */
 export const toMetricOptions = (snapshots: MetricSnapshot[] | null): MetricOption[] => {
   const options: MetricOption[] = [];
@@ -163,6 +164,8 @@ export const toMetricOptions = (snapshots: MetricSnapshot[] | null): MetricOptio
       });
     }
   }
+
+  options.sort((a, b) => a.name.localeCompare(b.name));
 
   return options;
 };
