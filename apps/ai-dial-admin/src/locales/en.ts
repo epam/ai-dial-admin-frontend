@@ -2554,9 +2554,11 @@ export default {
     ConnectTabRead: 'Read data',
     ConnectSystemReadOnly:
       'This table is fed by the platform and does not accept row writes, so only the read path is shown.',
+    ConnectEnrichmentReadOnly:
+      'The rows of an enrichment are produced by the enrichment process rather than written by a client, so only the read path is shown.',
     ConnectAuth: 'Authentication',
     ConnectAuthHint:
-      'Both sides use a DIAL API key. Keep it in the environment so it never lands in the script or your shell history.',
+      'Every example here takes the same DIAL API key. Keep it in the environment so it never lands in the script or your shell history.',
     ConnectBaseUrlHint: 'Replace <analytics-base-url> with your DIAL Analytics endpoint.',
     ConnectFlightUriHint: 'Replace <analytics-host> with the host serving the Flight SQL port.',
     ConnectWhoCanWrite: 'Who can write',
@@ -2594,6 +2596,11 @@ export default {
     ConnectFlightHint:
       'Arrow Flight SQL lands results straight in a typed pandas frame. It needs its own packages, and takes the same key — the driver sends it as a gRPC call header, which is why the option name is lower-cased.',
     ConnectFlightReadOnly: 'Flight SQL cannot write — it is a read endpoint only.',
+    ConnectQuery: 'The example query',
+    ConnectProjectionNote:
+      'The query selects a few columns to keep the example short. Any column of the table can be selected instead — the grid on this page lists them all.',
+    ConnectEnrichmentColumns:
+      'An enrichment is queried through {source}, the table it enriches. Every column of {name} is available there as "{name}.<column>" — one quoted name, dot included — and any column of {source} can be selected in the same query.',
     WriteProgrammatically: 'Write rows programmatically',
     AddRowsPurpose:
       'Inserts rows by hand — useful for checking that the schema accepts what you expect. Ongoing ingestion goes through the table’s row endpoint.',

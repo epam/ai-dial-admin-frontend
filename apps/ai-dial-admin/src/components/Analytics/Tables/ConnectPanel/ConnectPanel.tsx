@@ -11,12 +11,17 @@ import ConnectWriteTab from '@/src/components/Analytics/Tables/ConnectPanel/Conn
 import {
   buildConnectSnippets,
   buildFormatNotes,
+  isEnrichmentRead,
 } from '@/src/components/Analytics/Tables/ConnectPanel/connect-snippets';
-import { ConnectTab } from '@/src/components/Analytics/Tables/ConnectPanel/models';
+import {
+  ConnectEnrichmentRead,
+  ConnectReadOnlyReason,
+  ConnectTab,
+} from '@/src/components/Analytics/Tables/ConnectPanel/models';
 import { useModalFocus } from '@/src/components/Analytics/Tables/ConnectPanel/use-modal-focus';
 import { AnalyticsTablesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { AnalyticsTable } from '@/src/models/analytics/table';
+import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
 
 interface Props {
   table: AnalyticsTable;
@@ -25,10 +30,27 @@ interface Props {
   onClose: () => void;
 }
 
+const READ_ONLY_NOTICE_KEY: Record<ConnectReadOnlyReason, AnalyticsTablesI18nKey> = {
+  [ConnectReadOnlyReason.SystemTable]: AnalyticsTablesI18nKey.ConnectSystemReadOnly,
+  [ConnectReadOnlyReason.Enrichment]: AnalyticsTablesI18nKey.ConnectEnrichmentReadOnly,
+};
+
+// A system table that is also an enrichment reads as a system table: the platform feeding it is the
+// broader statement, and it is the one that explains why no access list is worth requesting.
+const resolveReadOnlyReason = (table: AnalyticsTable): ConnectReadOnlyReason | null => {
+  if (table.system) return ConnectReadOnlyReason.SystemTable;
+  if (table.type === AnalyticsTableType.Enrichment) return ConnectReadOnlyReason.Enrichment;
+  return null;
+};
+
 const ConnectPanel: FC<Props> = ({ table, apiBaseUrl, flightUri, onClose }) => {
   const t = useI18n();
   const panelRef = useRef<HTMLElement | null>(null);
-  const isReadOnly = Boolean(table.system);
+  const readOnlyReason = resolveReadOnlyReason(table);
+  const isReadOnly = readOnlyReason !== null;
+  // `isEnrichmentRead` already requires a source table; naming it again is what narrows the type.
+  const enrichmentRead: ConnectEnrichmentRead | undefined =
+    isEnrichmentRead(table) && table.source_table ? { name: table.name, sourceTable: table.source_table } : undefined;
   const [activeTab, setActiveTab] = useState<string>(isReadOnly ? ConnectTab.Read : ConnectTab.Write);
   const [writeRoles, setWriteRoles] = useState<string[]>([]);
   const [isRolesLoading, setIsRolesLoading] = useState(false);
@@ -107,21 +129,23 @@ const ConnectPanel: FC<Props> = ({ table, apiBaseUrl, flightUri, onClose }) => {
         </div>
 
         <div className="px-4 pt-3">
-          {isReadOnly ? (
-            <p className="dial-tiny-text text-secondary pb-3">{t(AnalyticsTablesI18nKey.ConnectSystemReadOnly)}</p>
+          {readOnlyReason ? (
+            <p className="dial-tiny-text text-secondary pb-3">{t(READ_ONLY_NOTICE_KEY[readOnlyReason])}</p>
           ) : (
             <DialTabs tabs={tabs} activeTab={activeTab} onClick={onChangeTab} />
           )}
         </div>
 
         <div className="flex flex-col gap-6 overflow-y-auto p-4">
-          <ConnectAuthBlock snippet={snippets.auth} isBaseUrlPlaceholder={!apiBaseUrl?.trim()} />
+          <ConnectAuthBlock snippet={snippets.auth} />
 
           {activeTab === ConnectTab.Write && !isReadOnly ? (
             <ConnectWriteTab
               pythonSnippet={snippets.pythonWrite}
               curlSnippet={snippets.curlWrite}
+              restEndpointSnippet={snippets.restEndpoint}
               formatNotes={formatNotes}
+              isBaseUrlPlaceholder={!apiBaseUrl?.trim()}
               writeRoles={writeRoles}
               isRolesLoading={isRolesLoading}
               isAccessReadable={isAccessReadable}
@@ -130,9 +154,12 @@ const ConnectPanel: FC<Props> = ({ table, apiBaseUrl, flightUri, onClose }) => {
             <ConnectReadTab
               pythonSnippet={snippets.pythonRead}
               curlSnippet={snippets.curlRead}
+              restEndpointSnippet={snippets.restEndpoint}
               flightInstallSnippet={snippets.flightInstall}
               flightSnippet={snippets.flightRead}
+              isBaseUrlPlaceholder={!apiBaseUrl?.trim()}
               isFlightUriPlaceholder={!flightUri?.trim()}
+              enrichment={enrichmentRead}
             />
           )}
         </div>

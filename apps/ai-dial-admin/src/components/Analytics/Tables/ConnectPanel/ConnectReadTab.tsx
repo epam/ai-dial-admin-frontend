@@ -4,6 +4,7 @@ import {
   SNIPPET_LANGUAGE_PYTHON,
   SNIPPET_LANGUAGE_SHELL,
 } from '@/src/components/Analytics/Tables/ConnectPanel/constants';
+import { ConnectEnrichmentRead } from '@/src/components/Analytics/Tables/ConnectPanel/models';
 import CodeSnippet from '@/src/components/Common/CodeSnippet/CodeSnippet';
 import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
@@ -11,17 +12,25 @@ import { useI18n } from '@/src/locales/client';
 interface Props {
   pythonSnippet: string;
   curlSnippet: string;
+  restEndpointSnippet: string;
   flightInstallSnippet: string;
   flightSnippet: string;
+  isBaseUrlPlaceholder: boolean;
   isFlightUriPlaceholder: boolean;
+  // Set only when the snippets read an enrichment through its source table, which is the one case the
+  // dotted column name has to be explained.
+  enrichment?: ConnectEnrichmentRead;
 }
 
 const ConnectReadTab: FC<Props> = ({
   pythonSnippet,
   curlSnippet,
+  restEndpointSnippet,
   flightInstallSnippet,
   flightSnippet,
+  isBaseUrlPlaceholder,
   isFlightUriPlaceholder,
+  enrichment,
 }) => {
   const t = useI18n();
 
@@ -45,12 +54,30 @@ const ConnectReadTab: FC<Props> = ({
       </section>
 
       <section className="flex flex-col gap-2">
+        <h4 className="dial-small-text-semi text-primary">{t(AnalyticsTablesI18nKey.ConnectQuery)}</h4>
+        <p className="dial-tiny-text text-secondary">{t(AnalyticsTablesI18nKey.ConnectProjectionNote)}</p>
+        {enrichment && (
+          <p className="dial-tiny-text text-secondary">
+            {t(AnalyticsTablesI18nKey.ConnectEnrichmentColumns, {
+              name: enrichment.name,
+              source: enrichment.sourceTable,
+            })}
+          </p>
+        )}
+      </section>
+
+      <section className="flex flex-col gap-2">
         <h4 className="dial-small-text-semi text-primary">{t(AnalyticsTablesI18nKey.ConnectPython)}</h4>
+        <CodeSnippet title={SNIPPET_LANGUAGE_SHELL} value={restEndpointSnippet} />
+        {isBaseUrlPlaceholder && (
+          <p className="dial-tiny-text text-warning">{t(AnalyticsTablesI18nKey.ConnectBaseUrlHint)}</p>
+        )}
         <CodeSnippet title={SNIPPET_LANGUAGE_PYTHON} value={pythonSnippet} />
       </section>
 
       <section className="flex flex-col gap-2">
         <h4 className="dial-small-text-semi text-primary">{t(AnalyticsTablesI18nKey.ConnectCurl)}</h4>
+        <CodeSnippet title={SNIPPET_LANGUAGE_SHELL} value={restEndpointSnippet} />
         <CodeSnippet title={SNIPPET_LANGUAGE_SHELL} value={curlSnippet} />
       </section>
 
