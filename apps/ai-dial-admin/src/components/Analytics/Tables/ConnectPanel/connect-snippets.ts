@@ -149,12 +149,11 @@ export const buildReadSql = (table: AnalyticsTable): string => {
 
 /**
  * A quoted identifier carries double quotes, so the statement cannot sit in a double-quoted literal
- * unescaped. Python takes it in single quotes; a JSON body has to escape it. Table and column
- * identifiers cannot contain either quote character, so neither form can be broken out of.
+ * unescaped. Python takes it in single quotes instead. The JSON body goes through `JSON.stringify`,
+ * which supplies its own quotes and escapes every character that needs it — a hand-rolled `"` -> `\\"`
+ * pass would leave a backslash in a name unescaped and produce a malformed body.
  */
 const toPythonSqlLiteral = (sql: string): string => `'${sql}'`;
-
-const toJsonSqlString = (sql: string): string => sql.replace(/"/g, '\\"');
 
 /**
  * The key alone. It is the one thing every example on both tabs needs; the REST endpoint travels with
@@ -222,7 +221,7 @@ const buildCurlReadSnippet = (table: AnalyticsTable): string =>
     `curl -sS -X POST "$${DIAL_ANALYTICS_BASE_URL_ENV}/v1/queries/execute-sql" \\`,
     `  -H 'Content-Type: application/json' \\`,
     `  -H "Api-Key: $${DIAL_API_KEY_ENV}" \\`,
-    `  -d '{"sql":"${toJsonSqlString(buildReadSql(table))}"}'`,
+    `  -d '{"sql":${JSON.stringify(buildReadSql(table))}}'`,
   ].join('\n');
 
 const buildFlightInstallSnippet = (flightUri: string): string =>

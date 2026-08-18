@@ -236,9 +236,22 @@ describe('buildConnectSnippets', () => {
 
     expect(snippets.pythonRead).toContain(statement);
     expect(snippets.flightRead).toContain(statement);
-    // The curl body carries the same statement with its quotes escaped for JSON.
-    expect(snippets.curlRead).toContain(statement.replace(/"/g, '\\"'));
+    // The curl body carries the same statement, JSON-encoded.
+    expect(snippets.curlRead).toContain(`"sql":${JSON.stringify(statement)}`);
     expect(snippets.pythonRead).not.toContain('total');
+  });
+
+  test('encodes the curl body so a name carrying a quote or backslash cannot break it', () => {
+    // A system table's column names are not validated by this app, so the JSON body has to survive
+    // characters an identifier is not expected to hold. Escaping the quotes by hand left a backslash
+    // untouched and produced a body that would not parse.
+    const messy = ['back\\slash', 'qu\"ote'];
+    const snippets = buildConnectSnippets(table([column({ name: 'ok' })], { ordering_key: messy }), noEndpoints);
+    const payload = snippets.curlRead.match(/-d '(.*)'$/m)?.[1] ?? '';
+
+    expect(() => JSON.parse(payload)).not.toThrow();
+    const { sql } = JSON.parse(payload);
+    messy.forEach((name) => expect(sql).toContain(`"${name}"`));
   });
 
   test('drops a platform column the ordering key names', () => {
