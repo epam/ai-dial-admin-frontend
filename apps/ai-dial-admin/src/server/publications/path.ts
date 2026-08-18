@@ -97,6 +97,16 @@ export const parseEncodedFlatPath = (path: string, prefix: string): PathParts =>
   return { path: name, folderId: '', name };
 };
 
+/**
+ * Strips the resource prefix, decodes, and splits into folderId + name — for resource types that
+ * nest in folders like a versioned type, but carry no `__version` suffix (Skill: a skill's own
+ * name has no version marker, only Core's internal storage is versioned). Unlike
+ * `parseEncodedVersionedPath`, this never attempts to split a `__` suffix off the name.
+ */
+export const parseEncodedFolderPath = (path: string, prefix: string): PathParts => {
+  return parsePath(decodeCorePath(stripPrefix(path, prefix)));
+};
+
 export const getVersionedName = (name: string, version?: string): string => {
   if (name == null) {
     throw new Error('Name must not be null');

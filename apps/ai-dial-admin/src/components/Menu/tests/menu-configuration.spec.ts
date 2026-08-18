@@ -124,6 +124,26 @@ describe('MENU_CONFIGURATION — Approvals group', () => {
   });
 });
 
+describe('MENU_CONFIGURATION — Assets group', () => {
+  const findAssetsGroup = (flags: FeatureFlags) =>
+    MENU_CONFIGURATION(ICON_SIZE, flags).find((group) => group.key === MenuI18nKey.Assets);
+
+  test('Skills is the last entry, immediately after Files', () => {
+    const group = findAssetsGroup(baseFlags);
+    const keys = group?.items.map((item) => item.key) || [];
+
+    expect(keys[keys.length - 1]).toBe(MenuI18nKey.Skills);
+    expect(keys[keys.length - 2]).toBe(MenuI18nKey.Files);
+  });
+
+  test('Skills links to the assets-skills route', () => {
+    const group = findAssetsGroup(baseFlags);
+    const skillsItem = group?.items.find((item) => item.key === MenuI18nKey.Skills);
+
+    expect(skillsItem?.href).toBe(ApplicationRoute.AssetsSkills);
+  });
+});
+
 describe('MENU_CONFIGURATION — Analytics group', () => {
   const findAnalyticsGroup = (flags: FeatureFlags) =>
     MENU_CONFIGURATION(ICON_SIZE, flags).find((group) => group.key === MenuI18nKey.Analytics);

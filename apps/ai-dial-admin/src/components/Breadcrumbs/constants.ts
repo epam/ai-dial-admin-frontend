@@ -52,6 +52,15 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
       },
     ],
   },
+  [ApplicationRoute.AssetsSkills]: {
+    segments: [
+      { name: 'AssetsSkills', i18nKey: MenuI18nKey.Skills, shouldEnrichWithFolderBreadcrumbs: true },
+      {
+        name: 'Id',
+        href: false,
+      },
+    ],
+  },
   [ApplicationRoute.AssetsModels]: {
     segments: [
       { name: 'AssetsModels', i18nKey: MenuI18nKey.Models },

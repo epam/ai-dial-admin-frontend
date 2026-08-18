@@ -15,6 +15,7 @@ import { AppsFolderProvider } from '@/src/context/assets/AppsFolderContext';
 import { ConversationFolderProvider } from '@/src/context/assets/ConversationsFolderContext';
 import { FileFolderProvider } from '@/src/context/assets/FileFolderContext';
 import { PromptFolderProvider } from '@/src/context/assets/PromptFolderContext';
+import { SkillFolderProvider } from '@/src/context/assets/SkillFolderContext';
 import { ToolsetFolderProvider } from '@/src/context/assets/ToolsetsFolderContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { DialApplicationScheme } from '@/src/models/dial/application';
@@ -46,6 +47,10 @@ interface Props<T> {
   currentRules: DialRule[];
   addedFiles?: File[];
   setAddedFiles: Dispatch<SetStateAction<File[]>>;
+  skillAddedFiles?: File[];
+  setSkillAddedFiles: Dispatch<SetStateAction<File[]>>;
+  skillRemovedFileNames?: string[];
+  setSkillRemovedFileNames: Dispatch<SetStateAction<string[]>>;
 }
 
 const TabsContent = <T extends Publication>({
@@ -59,6 +64,10 @@ const TabsContent = <T extends Publication>({
   currentRules,
   addedFiles,
   setAddedFiles,
+  skillAddedFiles,
+  setSkillAddedFiles,
+  skillRemovedFileNames,
+  setSkillRemovedFileNames,
 }: Props<T>) => {
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
@@ -124,14 +133,18 @@ const TabsContent = <T extends Publication>({
               />
             </ConversationFolderProvider>
           )}
-          {/* todo add correct provider */}
           {view === ApplicationRoute.SkillPublications && (
-            <FileFolderProvider>
+            <SkillFolderProvider>
               <SkillProperties
                 publication={selectedPublication as SkillPublication}
                 onChange={onChange as (p: SkillPublication) => void}
+                addedFiles={skillAddedFiles}
+                setAddedFiles={setSkillAddedFiles}
+                removedFileNames={skillRemovedFileNames}
+                setRemovedFileNames={setSkillRemovedFileNames}
+                disabled={isReadOnlyAdmin}
               />
-            </FileFolderProvider>
+            </SkillFolderProvider>
           )}
         </div>
       )}

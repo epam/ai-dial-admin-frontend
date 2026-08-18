@@ -1,0 +1,66 @@
+import { render, screen } from '@testing-library/react';
+import { describe, expect, test, vi } from 'vitest';
+
+import { getGridColumns } from '@/src/components/Assets/BaseAssetList/utils';
+import { getGridActionLabels, getTreeActionLabels, getToolbarOptionLabels } from '@/src/components/Assets/utils';
+import { ApplicationRoute } from '@/src/types/routes';
+import SkillsList from '../List';
+
+vi.mock('@/src/components/Assets/BaseAssetList/BaseAssetList', () => ({
+  default: ({ view }: any) => <div>base-asset-list:{view}</div>,
+}));
+
+describe('SkillsList', () => {
+  test('Should render BaseAssetList scoped to the skills view', () => {
+    render(<SkillsList />);
+
+    expect(screen.getByText(`base-asset-list:${ApplicationRoute.AssetsSkills}`)).toBeInTheDocument();
+  });
+});
+
+describe('SkillsList :: list affordances', () => {
+  test('Should offer no create, import, or export action in the toolbar', () => {
+    expect(getToolbarOptionLabels(ApplicationRoute.AssetsSkills, false)).toEqual([]);
+  });
+
+  test('Should offer delete and open-in-new-tab as row actions — but no move or duplicate', () => {
+    const actions = getGridActionLabels(ApplicationRoute.AssetsSkills, false);
+
+    expect(actions.map((action) => action.key)).toEqual(['delete', 'openInNewTab']);
+  });
+
+  test('Should offer no row actions to a read-only admin', () => {
+    expect(getGridActionLabels(ApplicationRoute.AssetsSkills, true)).toEqual([]);
+  });
+
+  test('Should offer no folder-tree actions', () => {
+    expect(getTreeActionLabels(false, ApplicationRoute.AssetsSkills)).toEqual([]);
+  });
+});
+
+describe('SkillsList :: columns', () => {
+  const columns = () => getGridColumns(ApplicationRoute.AssetsSkills, vi.fn(), {}, false);
+  const versioned = () => getGridColumns(ApplicationRoute.Prompts, vi.fn(), {}, false);
+
+  test('Should show exactly four metadata-backed columns', () => {
+    expect(columns()).toHaveLength(4);
+  });
+
+  // Date columns are `(locale, options) => ColDef` factories the FileManager resolves, so `field`
+  // only exists once invoked.
+  const fieldsOf = (defs: any[]) =>
+    defs.map((column) => (typeof column === 'function' ? column('en-US', void 0).field : column.field));
+
+  test('Should include name, author, created-time, and updated-time columns', () => {
+    const fields = fieldsOf(columns());
+
+    expect(fields).toContain('author');
+    expect(fields).toContain('createdAt');
+    expect(fields).toContain('updatedAt');
+  });
+
+  test('Should not show a version column, unlike the versioned asset types', () => {
+    expect(fieldsOf(columns())).not.toContain('version');
+    expect(fieldsOf(versioned())).toContain('version');
+  });
+});

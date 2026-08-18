@@ -63,6 +63,11 @@ vi.mock('@/src/context/assets/AppRunnersFolderContext', () => ({
   AppRunnersFolderProvider: ({ children }: any) => <div>{children}</div>,
 }));
 
+vi.mock('@/src/context/assets/SkillFolderContext', () => ({
+  useSkillFolder: () => ({ fetchFiles: vi.fn() }),
+  SkillFolderProvider: ({ children }: any) => <div>{children}</div>,
+}));
+
 vi.mock('@/src/context/ThemeContext', () => ({ useTheme: createFnContext }));
 vi.mock('@/src/context/RuleFolderProvider', () => ({ useRuleFolder: createFnContext }));
 vi.mock('@/src/context/RuleFolderContext', () => ({ useRuleFolder: createFnContext }));

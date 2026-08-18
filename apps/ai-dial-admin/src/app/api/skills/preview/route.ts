@@ -1,0 +1,14 @@
+import { cookies, headers } from 'next/headers';
+import { NextRequest } from 'next/server';
+
+import { skillsCoreApi } from '@/src/app/api/api';
+import { getUserToken } from '@/src/utils/auth/auth-request';
+import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+
+export async function GET(req: NextRequest) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  const { searchParams } = new URL(req.url);
+  const path = decodeURIComponent(searchParams.get('path') as string);
+  const filePath = decodeURIComponent(searchParams.get('filePath') as string);
+  return skillsCoreApi.previewSkillFile(token, path, filePath);
+}
