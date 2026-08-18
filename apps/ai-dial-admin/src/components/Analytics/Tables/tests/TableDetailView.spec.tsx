@@ -602,11 +602,18 @@ describe('TableDetailView enrichment tables', () => {
   const enrichment = () =>
     table({ type: AnalyticsTableType.Enrichment, source_table: 'dial_usage_log', grain: { grain_key: 'event_id' } });
 
-  test('offers neither Connect nor Add rows — the enrichment process writes these, and they are not queryable alone', () => {
+  test('offers Connect but not Add rows — the enrichment process writes these, but they are readable through the source table', () => {
     render(<TableDetailView name="dial_usage_log" initialTable={enrichment()} apiBaseUrl="" flightUri="" />);
 
-    expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.Connect })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.Connect })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.AddRows })).not.toBeInTheDocument();
+  });
+
+  test('offers no Connect when the payload names no source table, since no runnable query exists', () => {
+    const orphan = table({ type: AnalyticsTableType.Enrichment, grain: { grain_key: 'event_id' } });
+    render(<TableDetailView name="dial_usage_log" initialTable={orphan} apiBaseUrl="" flightUri="" />);
+
+    expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.Connect })).not.toBeInTheDocument();
   });
 
   test('still offers the schema and catalog actions, which do apply', () => {

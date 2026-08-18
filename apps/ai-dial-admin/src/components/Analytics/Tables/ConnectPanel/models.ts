@@ -1,7 +1,29 @@
+import { AnalyticsTable } from '@/src/models/analytics/table';
+
 export enum ConnectTab {
   Write = 'write',
   Read = 'read',
 }
+
+// Why a table gets the read-only panel — the two reasons differ in what the panel must say, so the
+// state carries its cause rather than being a bare boolean: a system table's row endpoint refuses
+// every write, while an enrichment's rows come from the enrichment process.
+export enum ConnectReadOnlyReason {
+  SystemTable = 'system-table',
+  Enrichment = 'enrichment',
+}
+
+// The two tables an enrichment's read note has to name apart: the enrichment whose page this is, and
+// the table its query actually reads. Naming both is what keeps the note free of an ambiguous "that
+// table".
+export interface ConnectEnrichmentRead {
+  name: string;
+  sourceTable: string;
+}
+
+// An enrichment whose payload names the source table its query has to read. Narrowing to it is what
+// keeps `source_table` from having to be re-checked — or interpolated as `undefined` — downstream.
+export type EnrichmentReadTable = AnalyticsTable & { source_table: string };
 
 // A value-format rule the panel states against the columns it applies to. Which rules exist is fixed;
 // which appear for a given table is derived from its declared column types.
@@ -31,6 +53,7 @@ export interface ConnectEndpoints {
 
 export interface ConnectSnippets {
   auth: string;
+  restEndpoint: string;
   pythonWrite: string;
   curlWrite: string;
   pythonRead: string;
