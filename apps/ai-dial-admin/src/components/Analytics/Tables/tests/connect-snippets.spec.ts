@@ -254,6 +254,30 @@ describe('buildConnectSnippets', () => {
     messy.forEach((name) => expect(sql).toContain(`"${name}"`));
   });
 
+  test('projects the ordering key by exposed name, which is what the query resolves', () => {
+    // `ordering_key` reports physical source_names; the query surface publishes each source column under
+    // its exposed name and binds the SELECT list against that. The two differ only on a table created
+    // through the API, where projecting the physical name is an unknown-column error.
+    const snippets = buildConnectSnippets(
+      table([column({ name: 'event_id', source_name: 'evt_id' })], { ordering_key: ['evt_id'] }),
+      noEndpoints,
+    );
+
+    expect(snippets.pythonRead).toContain('SELECT "event_id" FROM widget_metrics LIMIT 100');
+    expect(snippets.pythonRead).not.toContain('evt_id');
+  });
+
+  test('leaves an ordering-key entry no declared column matches as reported', () => {
+    // A system table's key may name a column its payload does not carry; nothing better is known about
+    // such an entry than the name itself.
+    const snippets = buildConnectSnippets(
+      table([column({ name: 'score' })], { ordering_key: ['event_id'] }),
+      noEndpoints,
+    );
+
+    expect(snippets.pythonRead).toContain('SELECT "event_id" FROM widget_metrics LIMIT 100');
+  });
+
   test('drops a platform column the ordering key names', () => {
     const snippets = buildConnectSnippets(
       table([column({ name: 'event_id' })], { ordering_key: ['_ingested_at', 'event_id'] }),

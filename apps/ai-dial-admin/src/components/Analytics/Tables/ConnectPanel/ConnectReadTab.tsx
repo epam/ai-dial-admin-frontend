@@ -4,6 +4,7 @@ import {
   SNIPPET_LANGUAGE_PYTHON,
   SNIPPET_LANGUAGE_SHELL,
 } from '@/src/components/Analytics/Tables/ConnectPanel/constants';
+import ConnectRestEndpointSetup from '@/src/components/Analytics/Tables/ConnectPanel/ConnectRestEndpointSetup';
 import { ConnectEnrichmentRead } from '@/src/components/Analytics/Tables/ConnectPanel/models';
 import CodeSnippet from '@/src/components/Common/CodeSnippet/CodeSnippet';
 import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
@@ -17,6 +18,8 @@ interface Props {
   flightSnippet: string;
   isBaseUrlPlaceholder: boolean;
   isFlightUriPlaceholder: boolean;
+  // False when the read snippets fell back to `SELECT *`, which the projection note does not describe.
+  isProjectionSubset: boolean;
   // Set only when the snippets read an enrichment through its source table, which is the one case the
   // dotted column name has to be explained.
   enrichment?: ConnectEnrichmentRead;
@@ -30,6 +33,7 @@ const ConnectReadTab: FC<Props> = ({
   flightSnippet,
   isBaseUrlPlaceholder,
   isFlightUriPlaceholder,
+  isProjectionSubset,
   enrichment,
 }) => {
   const t = useI18n();
@@ -55,7 +59,9 @@ const ConnectReadTab: FC<Props> = ({
 
       <section className="flex flex-col gap-2">
         <h4 className="dial-small-text-semi text-primary">{t(AnalyticsTablesI18nKey.ConnectQuery)}</h4>
-        <p className="dial-tiny-text text-secondary">{t(AnalyticsTablesI18nKey.ConnectProjectionNote)}</p>
+        {isProjectionSubset && (
+          <p className="dial-tiny-text text-secondary">{t(AnalyticsTablesI18nKey.ConnectProjectionNote)}</p>
+        )}
         {enrichment && (
           <p className="dial-tiny-text text-secondary">
             {t(AnalyticsTablesI18nKey.ConnectEnrichmentColumns, {
@@ -68,16 +74,13 @@ const ConnectReadTab: FC<Props> = ({
 
       <section className="flex flex-col gap-2">
         <h4 className="dial-small-text-semi text-primary">{t(AnalyticsTablesI18nKey.ConnectPython)}</h4>
-        <CodeSnippet title={SNIPPET_LANGUAGE_SHELL} value={restEndpointSnippet} />
-        {isBaseUrlPlaceholder && (
-          <p className="dial-tiny-text text-warning">{t(AnalyticsTablesI18nKey.ConnectBaseUrlHint)}</p>
-        )}
+        <ConnectRestEndpointSetup snippet={restEndpointSnippet} isBaseUrlPlaceholder={isBaseUrlPlaceholder} />
         <CodeSnippet title={SNIPPET_LANGUAGE_PYTHON} value={pythonSnippet} />
       </section>
 
       <section className="flex flex-col gap-2">
         <h4 className="dial-small-text-semi text-primary">{t(AnalyticsTablesI18nKey.ConnectCurl)}</h4>
-        <CodeSnippet title={SNIPPET_LANGUAGE_SHELL} value={restEndpointSnippet} />
+        <ConnectRestEndpointSetup snippet={restEndpointSnippet} isBaseUrlPlaceholder={isBaseUrlPlaceholder} />
         <CodeSnippet title={SNIPPET_LANGUAGE_SHELL} value={curlSnippet} />
       </section>
 

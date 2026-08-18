@@ -14,6 +14,7 @@ import {
   ConnectEndpoints,
   ConnectFormatNote,
   ConnectSnippets,
+  EnrichmentReadTable,
   SnippetRow,
   SnippetValue,
 } from '@/src/components/Analytics/Tables/ConnectPanel/models';
@@ -106,7 +107,7 @@ const resolveFlightUri = (flightUri: string): string =>
  * missing it cannot produce a runnable query, and the panel is not offered for such a table; the check
  * keeps this builder total rather than emitting `FROM undefined`.
  */
-export const isEnrichmentRead = (table: AnalyticsTable): boolean =>
+export const isEnrichmentRead = (table: AnalyticsTable): table is EnrichmentReadTable =>
   table.type === AnalyticsTableType.Enrichment && Boolean(table.source_table);
 
 /**
@@ -120,8 +121,24 @@ export const isEnrichmentRead = (table: AnalyticsTable): boolean =>
 const quoteIdentifier = (name: string): string => `"${name}"`;
 
 /**
+ * The physical key members a table reports — `ordering_key`, `grain_key` — name columns by their
+ * `source_name`, while the query surface resolves a SELECT list against the *exposed* name the catalog
+ * publishes each column under. The two spellings coincide on every table this app creates, which is why
+ * an unresolved entry costs nothing there; on a table created through the API with `source_name` !=
+ * `name` a physical entry is an unknown column, so the projection has to translate rather than pass the
+ * key through. An entry no declared column matches is left as reported: nothing better is known about
+ * it, and a system table's key may name a column the payload does not carry.
+ */
+const toExposedName = (table: AnalyticsTable, sourceName: string): string =>
+  (table.columns ?? []).find((column) => column.source_name === sourceName)?.name ?? sourceName;
+
+/**
  * The grain key plus one of the enrichment's own columns. The grain key is an ordinary column of the
  * table being read; the enrichment's column carries the dotted name described above.
+ *
+ * The grain key stays as reported: it is a physical name belonging to the *source* table, whose column
+ * mapping this payload does not carry, so the enrichment's own columns are the wrong thing to resolve it
+ * against — its copy of that column can be exposed under a different name than the source's.
  */
 const enrichmentProjection = (table: AnalyticsTable): string[] => {
   const projected: string[] = [];
@@ -134,16 +151,28 @@ const enrichmentProjection = (table: AnalyticsTable): string[] => {
 
 /**
  * The ordering key names the columns a reader filters, sorts, and joins on, which makes it a better
- * first example than every column the table declares. Entries are quoted as the payload reports them;
- * a platform column is dropped here as everywhere else in the panel.
+ * first example than every column the table declares. Entries are matched against the payload by the
+ * physical name they are reported under and projected by the exposed one the query resolves; a platform
+ * column is dropped here as everywhere else in the panel.
  */
 const orderingKeyProjection = (table: AnalyticsTable): string[] =>
-  (table.ordering_key ?? []).filter((name) => !name.startsWith(PLATFORM_COLUMN_PREFIX)).map(quoteIdentifier);
+  (table.ordering_key ?? [])
+    .filter((sourceName) => !sourceName.startsWith(PLATFORM_COLUMN_PREFIX))
+    .map((sourceName) => quoteIdentifier(toExposedName(table, sourceName)));
+
+const readProjection = (table: AnalyticsTable): string[] =>
+  isEnrichmentRead(table) ? enrichmentProjection(table) : orderingKeyProjection(table);
+
+/**
+ * Whether the read snippets name specific columns rather than falling back to `*`. The panel's
+ * "this selects a few columns to keep the example short" note is only true of the first case; stated over
+ * a `SELECT *` it describes a projection the reader is not looking at.
+ */
+export const isReadProjectionSubset = (table: AnalyticsTable): boolean => readProjection(table).length > 0;
 
 export const buildReadSql = (table: AnalyticsTable): string => {
-  const isEnrichment = isEnrichmentRead(table);
-  const projected = isEnrichment ? enrichmentProjection(table) : orderingKeyProjection(table);
-  const relation = isEnrichment ? table.source_table : table.name;
+  const projected = readProjection(table);
+  const relation = isEnrichmentRead(table) ? table.source_table : table.name;
   return `SELECT ${projected.length ? projected.join(', ') : '*'} FROM ${relation} LIMIT ${READ_SNIPPET_LIMIT}`;
 };
 

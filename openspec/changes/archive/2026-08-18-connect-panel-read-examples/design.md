@@ -83,6 +83,14 @@ Two deliberate halves:
   table this app creates, and no diverging case is confirmed. A `find` per entry would be a no-op
   guarding a hypothetical, so surviving entries are emitted as given.
 
+  **Superseded.** The diverging case is confirmed against the service: `CreateTableRequest` and
+  `DefineSchemaRequest` accept a column whose `source_name` differs from its `name`, `TableDto` documents
+  `ordering_key` as physical source names, and `CatalogQueryService.addColumn` publishes a source column
+  under the exposed `col.getName()` — so a physical entry in the `SELECT` list is an unknown column, not a
+  cosmetic difference. `orderingKeyProjection` now resolves each entry through the column list, which is
+  what `proposal.md` originally promised. The grain key is still emitted as reported: it names a column of
+  the *source* table, whose column mapping the enrichment payload does not carry.
+
 The `*` fallback covers both empty cases — no ordering key, and an ordering key that filtering
 empties — because `SELECT  FROM x` is not a statement.
 

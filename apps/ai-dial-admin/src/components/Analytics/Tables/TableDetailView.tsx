@@ -21,6 +21,7 @@ import { IconPlugConnected } from '@tabler/icons-react';
 import { addRows, defineTableSchema, deleteTable, getTable, updateTableSchema } from '@/src/app/[lang]/tables/actions';
 import ColumnRowsEditor from '@/src/components/Analytics/Tables/ColumnRowsEditor';
 import ConnectPanel from '@/src/components/Analytics/Tables/ConnectPanel/ConnectPanel';
+import { isEnrichmentRead } from '@/src/components/Analytics/Tables/ConnectPanel/connect-snippets';
 import DraftSchemaEditor from '@/src/components/Analytics/Tables/DraftSchemaEditor';
 import EditColumnPopup from '@/src/components/Analytics/Tables/EditColumnPopup';
 import TableAccessPanel from '@/src/components/Analytics/Tables/TableAccessPanel';
@@ -109,7 +110,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
   // to one. The read half does: its columns are queryable as table-qualified fields on its source
   // table, which is why Connect needs that table to be named before it can offer anything.
   const isEnrichment = table.type === AnalyticsTableType.Enrichment;
-  const canConnect = !isEnrichment || Boolean(table.source_table);
+  const canConnect = !isEnrichment || isEnrichmentRead(table);
   const isActive = table.status === TableStatus.Active;
   const { canDelete, canWrite, canModify, canManageRoles } = useAnalyticsTablePermissions(table);
   const columns = useMemo(() => table.columns ?? [], [table.columns]);

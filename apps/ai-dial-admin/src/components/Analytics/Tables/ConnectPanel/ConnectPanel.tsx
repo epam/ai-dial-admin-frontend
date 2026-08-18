@@ -12,6 +12,7 @@ import {
   buildConnectSnippets,
   buildFormatNotes,
   isEnrichmentRead,
+  isReadProjectionSubset,
 } from '@/src/components/Analytics/Tables/ConnectPanel/connect-snippets';
 import {
   ConnectEnrichmentRead,
@@ -48,9 +49,9 @@ const ConnectPanel: FC<Props> = ({ table, apiBaseUrl, flightUri, onClose }) => {
   const panelRef = useRef<HTMLElement | null>(null);
   const readOnlyReason = resolveReadOnlyReason(table);
   const isReadOnly = readOnlyReason !== null;
-  // `isEnrichmentRead` already requires a source table; naming it again is what narrows the type.
-  const enrichmentRead: ConnectEnrichmentRead | undefined =
-    isEnrichmentRead(table) && table.source_table ? { name: table.name, sourceTable: table.source_table } : undefined;
+  const enrichmentRead: ConnectEnrichmentRead | undefined = isEnrichmentRead(table)
+    ? { name: table.name, sourceTable: table.source_table }
+    : undefined;
   const [activeTab, setActiveTab] = useState<string>(isReadOnly ? ConnectTab.Read : ConnectTab.Write);
   const [writeRoles, setWriteRoles] = useState<string[]>([]);
   const [isRolesLoading, setIsRolesLoading] = useState(false);
@@ -95,6 +96,7 @@ const ConnectPanel: FC<Props> = ({ table, apiBaseUrl, flightUri, onClose }) => {
     [table, apiBaseUrl, flightUri],
   );
   const formatNotes = useMemo(() => buildFormatNotes(table), [table]);
+  const isProjectionSubset = useMemo(() => isReadProjectionSubset(table), [table]);
   const tabs = useMemo(
     () => [
       { id: ConnectTab.Write, label: t(AnalyticsTablesI18nKey.ConnectTabWrite) },
@@ -159,6 +161,7 @@ const ConnectPanel: FC<Props> = ({ table, apiBaseUrl, flightUri, onClose }) => {
               flightSnippet={snippets.flightRead}
               isBaseUrlPlaceholder={!apiBaseUrl?.trim()}
               isFlightUriPlaceholder={!flightUri?.trim()}
+              isProjectionSubset={isProjectionSubset}
               enrichment={enrichmentRead}
             />
           )}
