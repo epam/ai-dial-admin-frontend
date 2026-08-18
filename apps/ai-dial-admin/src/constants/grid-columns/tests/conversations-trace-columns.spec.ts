@@ -6,19 +6,168 @@ import { baseNumberFilter, baseStringFilter } from '@/src/constants/grid-columns
 import { CONVERSATIONS_TRACE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { ConversationColumn, ConversationsField } from '@/src/models/analytics/conversations-trace';
+import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 
 const t = (key: string) => key;
 
-const columns = (): ColDef[] => CONVERSATIONS_TRACE_COLUMNS(t);
+// An instance carrying every field this view can read. Passing it explicitly is the point: a curated column
+// renders only where the schema reports its field, so a test that omits the schema is describing a lagging
+// deployment rather than the full column set.
+const schemaOf = (names: string[]): AnalyticsEntityField[] =>
+  names.map((name) => ({ name, type: AnalyticsFieldType.String, source: 'conversations' }));
+
+const ALL_FIELDS = schemaOf(Object.values(ConversationsField));
+
+const columns = (schemaFields: AnalyticsEntityField[] = ALL_FIELDS): ColDef[] =>
+  CONVERSATIONS_TRACE_COLUMNS(t, schemaFields);
 
 const column = (fieldName: string): ColDef => columns().find((col) => col.field === fieldName) as ColDef;
 
 const format = (fieldName: string, value: unknown): string =>
   column(fieldName).valueFormatter?.({ value } as ValueFormatterParams) as string;
 
+const DEFAULT_VISIBLE = [
+  ConversationsField.ChatId,
+  ConversationsField.InsightTitle,
+  ConversationsField.ProjectId,
+  ConversationsField.UserHash,
+  ConversationsField.TurnCount,
+  ConversationsField.LastRequestTime,
+  ConversationsField.TotalTokens,
+  ConversationsField.TotalPrice,
+  ConversationsField.DurationMs,
+  ConversationsField.Deployments,
+  ConversationColumn.Rating,
+];
+
+const INSIGHT_COLUMNS = [
+  ConversationsField.InsightSentiment,
+  ConversationsField.InsightSentimentScore,
+  ConversationsField.InsightTopic,
+  ConversationsField.InsightTopics,
+  ConversationsField.InsightLanguage,
+  ConversationsField.InsightResolutionStatus,
+];
+
+const USAGE_COLUMNS = [
+  ConversationsField.CacheCreationTokens,
+  ConversationsField.CachedPromptTokens,
+  ConversationsField.ReasoningTokens,
+  ConversationsField.ChainPriceTotal,
+];
+
 describe('conversations columns :: composition', () => {
-  test('exposes exactly the ten displayed columns, in order', () => {
-    expect(columns().map((col) => col.field)).toEqual([
+  test('exposes the curated columns, default-visible ones first and in order', () => {
+    expect(columns().map((col) => col.field)).toEqual([...DEFAULT_VISIBLE, ...INSIGHT_COLUMNS, ...USAGE_COLUMNS]);
+  });
+
+  test('headers come from i18n keys, not hardcoded strings', () => {
+    expect(columns().map((col) => col.headerName)).toEqual([
+      ConversationsTraceI18nKey.Conversation,
+      ConversationsTraceI18nKey.DetailTitleField,
+      ConversationsTraceI18nKey.Project,
+      ConversationsTraceI18nKey.DetailUser,
+      ConversationsTraceI18nKey.Turns,
+      ConversationsTraceI18nKey.Activity,
+      ConversationsTraceI18nKey.Tokens,
+      ConversationsTraceI18nKey.Cost,
+      ConversationsTraceI18nKey.Duration,
+      ConversationsTraceI18nKey.Deployments,
+      ConversationsTraceI18nKey.Rating,
+      ConversationsTraceI18nKey.Sentiment,
+      ConversationsTraceI18nKey.SentimentScore,
+      ConversationsTraceI18nKey.Topic,
+      ConversationsTraceI18nKey.Topics,
+      ConversationsTraceI18nKey.Language,
+      ConversationsTraceI18nKey.ResolutionStatus,
+      ConversationsTraceI18nKey.CacheCreationTokens,
+      ConversationsTraceI18nKey.CachedPromptTokens,
+      ConversationsTraceI18nKey.ReasoningTokens,
+      ConversationsTraceI18nKey.ChainCost,
+    ]);
+  });
+
+  test('the title column is visible and sits beside the conversation id', () => {
+    const fields = columns().map((col) => col.field);
+
+    expect(column(ConversationsField.InsightTitle).hide).toBeUndefined();
+    expect(fields.indexOf(ConversationsField.InsightTitle)).toBe(fields.indexOf(ConversationsField.ChatId) + 1);
+  });
+
+  test('every other new column defaults to hidden', () => {
+    for (const fieldName of [...INSIGHT_COLUMNS, ...USAGE_COLUMNS]) {
+      expect(column(fieldName).hide).toBe(true);
+    }
+  });
+
+  // Sentiment or a resolution status is derived by an evaluation rather than recorded by DIAL, and an empty
+  // cell means not-yet-evaluated — so each header has to say where the value came from.
+  test('each insight column discloses that its value comes from an evaluation', () => {
+    for (const fieldName of [ConversationsField.InsightTitle, ...INSIGHT_COLUMNS]) {
+      expect(column(fieldName).headerTooltip).toBe(ConversationsTraceI18nKey.InsightHint);
+    }
+  });
+
+  test('the chain cost column discloses its coverage gap', () => {
+    expect(column(ConversationsField.ChainPriceTotal).headerTooltip).toBe(ConversationsTraceI18nKey.ChainCostHint);
+  });
+
+  // NULL wherever no turn of the conversation starts a chain carrying a chat id — a coverage gap, not a
+  // conversation that cost nothing.
+  test('an absent chain cost renders empty rather than as a zero', () => {
+    expect(format(ConversationsField.ChainPriceTotal, null)).toBe('');
+    expect(format(ConversationsField.ChainPriceTotal, 0)).toBe('$0');
+  });
+
+  test('the title column renders through a cell renderer', () => {
+    expect(column(ConversationsField.InsightTitle).cellRenderer).toBeTypeOf('function');
+  });
+
+  test('the user column reuses the label the detail page uses for the same field', () => {
+    expect(column(ConversationsField.UserHash).headerName).toBe(ConversationsTraceI18nKey.DetailUser);
+  });
+
+  test('the conversation column renders through a cell renderer', () => {
+    expect(column(ConversationsField.ChatId).cellRenderer).toBeTypeOf('function');
+  });
+});
+
+// The rollups are provisioned per ADAS instance rather than shipped with the service, so an instance can
+// carry an older field set. A column reading a field it does not have could never fill, and the query cannot
+// name that field at all — so the column is omitted rather than rendered empty.
+describe('conversations columns :: a lagging deployment', () => {
+  const WITHOUT_INSIGHTS = schemaOf(
+    Object.values(ConversationsField).filter((name) => !name.startsWith('conversation_insights.')),
+  );
+
+  test('omits every insight column when the schema reports no insight field', () => {
+    const fields = columns(WITHOUT_INSIGHTS).map((col) => col.field);
+
+    for (const fieldName of [ConversationsField.InsightTitle, ...INSIGHT_COLUMNS]) {
+      expect(fields).not.toContain(fieldName);
+    }
+  });
+
+  test('keeps the columns the instance does carry', () => {
+    const fields = columns(WITHOUT_INSIGHTS).map((col) => col.field);
+
+    expect(fields).toContain(ConversationsField.ChatId);
+    expect(fields).toContain(ConversationsField.Deployments);
+    expect(fields).toContain(ConversationsField.ChainPriceTotal);
+  });
+
+  // Rating is composed from the feedback lookups, so no conversations schema will ever report it.
+  test('keeps the rating column, which reads no field of this entity', () => {
+    expect(columns(WITHOUT_INSIGHTS).map((col) => col.field)).toContain(ConversationColumn.Rating);
+    expect(columns([]).map((col) => col.field)).toContain(ConversationColumn.Rating);
+  });
+
+  // Without a schema nothing optional can be confirmed to exist, and the select names the required core
+  // alone — so the column set matches that projection rather than promising columns it cannot fill.
+  test('falls back to the original curated columns when no schema is given', () => {
+    const fields = columns([]).map((col) => col.field);
+
+    expect(fields).toEqual([
       ConversationsField.ChatId,
       ConversationsField.ProjectId,
       ConversationsField.UserHash,
@@ -30,29 +179,6 @@ describe('conversations columns :: composition', () => {
       ConversationsField.Deployments,
       ConversationColumn.Rating,
     ]);
-  });
-
-  test('headers come from i18n keys, not hardcoded strings', () => {
-    expect(columns().map((col) => col.headerName)).toEqual([
-      ConversationsTraceI18nKey.Conversation,
-      ConversationsTraceI18nKey.Project,
-      ConversationsTraceI18nKey.DetailUser,
-      ConversationsTraceI18nKey.Turns,
-      ConversationsTraceI18nKey.Activity,
-      ConversationsTraceI18nKey.Tokens,
-      ConversationsTraceI18nKey.Cost,
-      ConversationsTraceI18nKey.Duration,
-      ConversationsTraceI18nKey.Models,
-      ConversationsTraceI18nKey.Rating,
-    ]);
-  });
-
-  test('the user column reuses the label the detail page uses for the same field', () => {
-    expect(column(ConversationsField.UserHash).headerName).toBe(ConversationsTraceI18nKey.DetailUser);
-  });
-
-  test('the conversation column renders through a cell renderer', () => {
-    expect(column(ConversationsField.ChatId).cellRenderer).toBeTypeOf('function');
   });
 });
 
@@ -204,24 +330,32 @@ describe('conversations columns :: value formatting', () => {
     expect(format(ConversationsField.DurationMs, 0)).toBe(UNAVAILABLE_VALUE);
   });
 
-  test('models renders through a cell renderer over the narrowed list', () => {
-    const models = column(ConversationsField.Deployments);
-    const params = models.cellRendererParams as (params: unknown) => { items: string[]; allItems: string[] };
-    const deployments = ['dial-chathub-v2-gemini-3.1-pro-preview', 'gemini-3.1-pro-preview'];
+  // Which value is a model is not derivable from the array: a router deployed under a plain name looks like a
+  // model, and an embedding deployment that was billed belongs to the billed set. Measured against
+  // `turns.models`, the old name heuristic kept orchestrators and dropped billed embeddings — so the column
+  // names the field it reads and renders it whole.
+  test('deployments renders the recorded array through a cell renderer, unnarrowed', () => {
+    const deploymentsColumn = column(ConversationsField.Deployments);
+    const params = deploymentsColumn.cellRendererParams as (params: unknown) => {
+      items: string[];
+      allItems: string[];
+    };
+    const deployments = [
+      'applications/public/qa__0.0.1',
+      'azure-ai-vision-embeddings',
+      'statgpt-generic-rag-swiss-re',
+      'gpt-4.1-2025-04-14',
+    ];
 
-    expect(typeof models.cellRenderer).toBe('function');
-    expect(params({ data: { deployments } })).toMatchObject({
-      items: ['gemini-3.1-pro-preview'],
-      allItems: deployments,
-    });
+    expect(typeof deploymentsColumn.cellRenderer).toBe('function');
+    expect(params({ data: { deployments } })).toMatchObject({ items: deployments, allItems: deployments });
   });
 
-  // The narrowing drops values from the pills, so the tooltip has to carry the whole record.
-  test('the models tooltip states every recorded deployment, including the narrowed-away ones', () => {
-    const models = column(ConversationsField.Deployments);
+  test('the deployments tooltip states every recorded deployment', () => {
+    const deploymentsColumn = column(ConversationsField.Deployments);
     const deployments = ['applications/public/qa__0.0.1', 'gpt-4.1-2025-04-14'];
 
-    expect(models.tooltipValueGetter?.({ data: { deployments } } as never)).toBe(
+    expect(deploymentsColumn.tooltipValueGetter?.({ data: { deployments } } as never)).toBe(
       'applications/public/qa__0.0.1, gpt-4.1-2025-04-14',
     );
   });

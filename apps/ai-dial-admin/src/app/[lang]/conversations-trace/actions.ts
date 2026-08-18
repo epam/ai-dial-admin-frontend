@@ -131,6 +131,7 @@ export async function getConversations(request: ConversationPageRequest): Promis
     columnFilters: request.columnFilters ?? [],
     sort: request.sort ?? [],
     visibleFields: request.visibleFields ?? [],
+    availableFields: request.availableFields,
     offset: request.offset,
     limit: request.limit,
   });
@@ -151,8 +152,14 @@ export async function getConversations(request: ConversationPageRequest): Promis
   };
 }
 
-export async function getConversationDetail(chatId: string): Promise<ServerActionResponse<ConversationDetailResult>> {
-  const result = await analyticsDataApi.executeAction(buildConversationDetailQuery(chatId), await token());
+export async function getConversationDetail(
+  chatId: string,
+  availableFields?: string[],
+): Promise<ServerActionResponse<ConversationDetailResult>> {
+  const result = await analyticsDataApi.executeAction(
+    buildConversationDetailQuery(chatId, availableFields),
+    await token(),
+  );
 
   if (!result.success) {
     return { ...result, response: undefined };

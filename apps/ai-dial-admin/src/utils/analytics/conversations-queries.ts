@@ -5,7 +5,11 @@ import {
   CONVERSATION_FILTER_QUERY_OPERATOR,
   FEEDBACK_CANDIDATE_LIMIT,
   FEEDBACK_ENTITY,
+  LIST_SELECT_FIELDS,
+  OPTIONAL_DETAIL_SELECT_FIELDS,
+  OPTIONAL_LIST_SELECT_FIELDS,
   POSITIVE_RATE_EXCLUSIVE_MIN,
+  TURNS_ENTITY,
   USAGE_LOG_ENTITY,
 } from '@/src/constants/analytics/conversations-trace';
 import {
@@ -19,6 +23,7 @@ import {
   FeedbackFilter,
   RateAnalyticsField,
   RatingDirection,
+  TurnsField,
   UsageLogField,
 } from '@/src/models/analytics/conversations-trace';
 import {
@@ -51,6 +56,7 @@ import {
   sortItem,
   value,
 } from '@/src/utils/analytics/query-build';
+import { availableSelectFields } from '@/src/utils/analytics/conversation-column-catalog';
 
 const emptyString = value(QueryValueType.String, '');
 
@@ -121,24 +127,21 @@ interface ConversationListQueryParams extends ConversationFilterParams {
   limit: number;
   sort?: ConversationSortKey[];
   visibleFields?: string[];
+  availableFields?: string[];
 }
 
-const CURATED_SELECT_FIELDS: ConversationsField[] = [
-  ConversationsField.ChatId,
-  ConversationsField.ProjectId,
-  ConversationsField.UserHash,
-  ConversationsField.TurnCount,
-  ConversationsField.TotalTokens,
-  ConversationsField.TotalPrice,
-  ConversationsField.LastRequestTime,
-  ConversationsField.FirstRequestTime,
-  ConversationsField.DurationMs,
-  ConversationsField.Deployments,
-];
+// The projection floor: the fields the default-visible columns need, narrowed to what the instance carries.
+// Every other curated column defaults to hidden and is projected through `visibleFields` when it is shown,
+// so the page fetch does not pay for a column nobody asked for.
+const conversationSelect = (visibleFields: string[] = [], availableFields?: string[]): string[] => {
+  const floor = availableSelectFields(LIST_SELECT_FIELDS, OPTIONAL_LIST_SELECT_FIELDS, availableFields);
+  const named = new Set<string>(floor);
+  // `visibleFields` is already derived from the same schema, so this intersection is normally a no-op — it
+  // is here so a caller supplying a stale column state cannot reintroduce an unknown field. With no schema
+  // it drops them all, matching the floor: nothing optional can be confirmed, so nothing optional is named.
+  const available = new Set(availableFields ?? []);
 
-const conversationSelect = (visibleFields: string[] = []): string[] => {
-  const curated = new Set<string>(CURATED_SELECT_FIELDS);
-  return [...CURATED_SELECT_FIELDS, ...visibleFields.filter((field) => !curated.has(field))];
+  return [...floor, ...visibleFields.filter((fieldName) => !named.has(fieldName) && available.has(fieldName))];
 };
 
 export const buildConversationListQuery = ({
@@ -146,20 +149,25 @@ export const buildConversationListQuery = ({
   limit,
   sort,
   visibleFields,
+  availableFields,
   ...filters
 }: ConversationListQueryParams): StructuredQuery =>
   rowQuery({
     entity: CONVERSATIONS_ENTITY,
-    select: conversationSelect(visibleFields).map((fieldName) => col(field(fieldName))),
+    select: conversationSelect(visibleFields, availableFields).map((fieldName) => col(field(fieldName))),
     filter: conversationFilter(filters),
     sort: conversationSort(sort),
     page: offsetPage(offset, limit, true),
   });
 
-export const buildConversationDetailQuery = (chatId: string): StructuredQuery =>
+export const buildConversationDetailQuery = (chatId: string, availableFields?: string[]): StructuredQuery =>
   rowQuery({
     entity: CONVERSATIONS_ENTITY,
-    select: Object.values(ConversationsField).map((fieldName) => col(field(fieldName))),
+    select: availableSelectFields(
+      Object.values(ConversationsField),
+      OPTIONAL_DETAIL_SELECT_FIELDS,
+      availableFields,
+    ).map((fieldName) => col(field(fieldName))),
     filter: eq(ConversationsField.ChatId, value(QueryValueType.String, chatId)),
     page: offsetPage(0, 1, true),
   });
@@ -177,19 +185,22 @@ export const buildConversationFeedbackQuery = (chatId: string, limit: number): S
     page: offsetPage(0, limit, true),
   });
 
+// The `turns` rollup resolves what a turn is — one row per trace, with the entry time, hop count, token
+// total, cost and wall-clock duration already computed — so this reads rows rather than grouping the hop
+// log itself. The aliases keep the rollup's columns under the names the timeline already consumes.
 export const buildConversationTurnsQuery = (chatId: string, limit: number): StructuredQuery =>
-  aggregateQuery({
-    entity: USAGE_LOG_ENTITY,
-    groupBy: [UsageLogField.TraceId],
+  rowQuery({
+    entity: TURNS_ENTITY,
     select: [
-      col(field(UsageLogField.TraceId)),
-      col(fn('min', [field(UsageLogField.RequestTime)]), ConversationTurnField.Started),
-      col(fn('count'), ConversationTurnField.Hops),
-      col(fn('sum', [field(UsageLogField.TotalTokens)]), ConversationTurnField.Tokens),
-      col(fn('sum', [field(UsageLogField.DeploymentPrice)]), ConversationTurnField.Cost),
-      col(fn('max', [field(UsageLogField.OperationDurationMs)]), ConversationTurnField.DurationMs),
+      col(field(TurnsField.TraceId)),
+      col(field(TurnsField.FirstRequestTime), ConversationTurnField.Started),
+      col(field(TurnsField.HopCount), ConversationTurnField.Hops),
+      col(field(TurnsField.TotalTokens), ConversationTurnField.Tokens),
+      col(field(TurnsField.TotalPrice), ConversationTurnField.Cost),
+      col(field(TurnsField.DurationMs), ConversationTurnField.DurationMs),
     ],
-    filter: eq(UsageLogField.ChatId, value(QueryValueType.String, chatId)),
+    filter: eq(TurnsField.ChatId, value(QueryValueType.String, chatId)),
+    // The rollup carries no turn index, so the entry time is the only ordering that rebuilds the sequence.
     sort: [sortItem(ConversationTurnField.Started, QuerySortDirection.Asc)],
     page: offsetPage(0, limit),
   });

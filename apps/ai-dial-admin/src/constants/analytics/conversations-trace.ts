@@ -22,6 +22,8 @@ export const FEEDBACK_ENTITY = 'rate_analytics';
 
 export const USAGE_LOG_ENTITY = 'dial_usage_log';
 
+export const TURNS_ENTITY = 'turns';
+
 export const CONVERSATION_TURN_LIMIT = 200;
 
 export const CONVERSATION_SPAN_LIMIT = 300;
@@ -49,6 +51,73 @@ export const COST_COMPACT_THRESHOLD = 1;
 
 export const COST_SIGNIFICANT_DIGITS = 2;
 
+// The fields the view's original curated columns read. An instance that exposes the conversation rollup at
+// all exposes these, so they are named unconditionally and a query that cannot have them is broken anyway.
+export const REQUIRED_LIST_SELECT_FIELDS: ConversationsField[] = [
+  ConversationsField.ChatId,
+  ConversationsField.ProjectId,
+  ConversationsField.UserHash,
+  ConversationsField.TurnCount,
+  ConversationsField.TotalTokens,
+  ConversationsField.TotalPrice,
+  ConversationsField.LastRequestTime,
+  ConversationsField.FirstRequestTime,
+  ConversationsField.DurationMs,
+  ConversationsField.Deployments,
+];
+
+// The projection floor in render order: the title sits beside the conversation id, as its column does.
+export const LIST_SELECT_FIELDS: ConversationsField[] = [
+  ConversationsField.ChatId,
+  ConversationsField.InsightTitle,
+  ...REQUIRED_LIST_SELECT_FIELDS.filter((fieldName) => fieldName !== ConversationsField.ChatId),
+];
+
+export const REQUIRED_DETAIL_SELECT_FIELDS: ConversationsField[] = [
+  ConversationsField.ChatId,
+  ConversationsField.ProjectId,
+  ConversationsField.UserHash,
+  ConversationsField.TurnCount,
+  ConversationsField.FirstRequestTime,
+  ConversationsField.LastRequestTime,
+  ConversationsField.PromptTokens,
+  ConversationsField.CompletionTokens,
+  ConversationsField.TotalTokens,
+  ConversationsField.TotalPrice,
+  ConversationsField.SuccessCount,
+  ConversationsField.DurationMs,
+  ConversationsField.AvgDurationMs,
+  ConversationsField.Deployments,
+];
+
+// Scalar fields the query language can order and compare. `traces` and `deployments` are absent by
+// design: the language expresses neither an ordering nor a predicate over an array.
+const CURATED_SCALAR_FIELDS: ConversationsField[] = [
+  ConversationsField.CacheCreationTokens,
+  ConversationsField.CachedPromptTokens,
+  ConversationsField.ReasoningTokens,
+  ConversationsField.ChainPriceTotal,
+  ConversationsField.InsightTitle,
+  ConversationsField.InsightSentiment,
+  ConversationsField.InsightSentimentScore,
+  ConversationsField.InsightTopic,
+  ConversationsField.InsightTopics,
+  ConversationsField.InsightLanguage,
+  ConversationsField.InsightResolutionStatus,
+];
+
+// Every field this change added beyond the view's original set. Each is a catalog object an instance may
+// not carry yet, so a query names one only when the fetched schema reports it, and a curated column reading
+// one is not rendered at all where it is absent.
+export const OPTIONAL_CURATED_COLUMN_FIELDS: ConversationsField[] = CURATED_SCALAR_FIELDS;
+
+export const OPTIONAL_DETAIL_SELECT_FIELDS: ConversationsField[] = [
+  ...CURATED_SCALAR_FIELDS,
+  ConversationsField.Traces,
+];
+
+export const OPTIONAL_LIST_SELECT_FIELDS: ConversationsField[] = [ConversationsField.InsightTitle];
+
 export const SORTABLE_CONVERSATION_FIELDS: ConversationsField[] = [
   ConversationsField.ChatId,
   ConversationsField.ProjectId,
@@ -58,6 +127,7 @@ export const SORTABLE_CONVERSATION_FIELDS: ConversationsField[] = [
   ConversationsField.TotalTokens,
   ConversationsField.TotalPrice,
   ConversationsField.DurationMs,
+  ...CURATED_SCALAR_FIELDS,
 ];
 
 export const FILTERABLE_CONVERSATION_FIELDS: ConversationsField[] = [
@@ -68,15 +138,12 @@ export const FILTERABLE_CONVERSATION_FIELDS: ConversationsField[] = [
   ConversationsField.TotalTokens,
   ConversationsField.TotalPrice,
   ConversationsField.DurationMs,
+  ...CURATED_SCALAR_FIELDS,
 ];
 
 export const CURATED_COMPOSED_FIELDS: string[] = [ConversationsField.FirstRequestTime];
 
 export const NON_SCALAR_FIELD_TYPES: AnalyticsFieldType[] = [AnalyticsFieldType.Object, AnalyticsFieldType.Array];
-
-export const MODEL_EXCLUDED_RESOURCE_PREFIXES: string[] = ['applications/', 'toolsets/'];
-
-export const EMBEDDING_NAME_MARKER = 'embedding';
 
 export const DATE_FIELD_TYPES: AnalyticsFieldType[] = [AnalyticsFieldType.Date, AnalyticsFieldType.Timestamp];
 
@@ -96,6 +163,17 @@ export const CONVERSATION_FIELD_VALUE_TYPE: Partial<Record<ConversationsField, Q
   [ConversationsField.LastRequestTime]: QueryValueType.Timestamp,
   [ConversationsField.FirstRequestTime]: QueryValueType.Timestamp,
   [ConversationsField.DurationMs]: QueryValueType.Long,
+  [ConversationsField.CacheCreationTokens]: QueryValueType.Integer,
+  [ConversationsField.CachedPromptTokens]: QueryValueType.Integer,
+  [ConversationsField.ReasoningTokens]: QueryValueType.Integer,
+  [ConversationsField.ChainPriceTotal]: QueryValueType.Decimal,
+  [ConversationsField.InsightTitle]: QueryValueType.String,
+  [ConversationsField.InsightSentiment]: QueryValueType.String,
+  [ConversationsField.InsightSentimentScore]: QueryValueType.Decimal,
+  [ConversationsField.InsightTopic]: QueryValueType.String,
+  [ConversationsField.InsightTopics]: QueryValueType.String,
+  [ConversationsField.InsightLanguage]: QueryValueType.String,
+  [ConversationsField.InsightResolutionStatus]: QueryValueType.String,
 };
 
 export const ANALYTICS_FIELD_QUERY_VALUE_TYPE: Partial<Record<AnalyticsFieldType, QueryValueType>> = {
@@ -238,13 +316,16 @@ export const CONVERSATION_DETAIL_PANELS: ConversationPanelDefinition[] = [
         column: ConversationsField.SuccessCount,
         format: ConversationFieldFormat.Count,
       },
-      { labelKey: ConversationsTraceI18nKey.DetailTrace },
+      {
+        labelKey: ConversationsTraceI18nKey.DetailTrace,
+        column: ConversationsField.Traces,
+        format: ConversationFieldFormat.List,
+      },
       {
         labelKey: ConversationsTraceI18nKey.DetailDeployment,
         column: ConversationsField.Deployments,
         format: ConversationFieldFormat.List,
       },
-      { labelKey: ConversationsTraceI18nKey.DetailRegion },
     ],
   },
 ];
@@ -261,6 +342,7 @@ export const CONVERSATION_PROVENANCE_GROUPS: ProvenanceGroup[] = [
     tooltipKey: ConversationsTraceI18nKey.ProvenanceConversationsHint,
     fields: [
       ConversationsField.ChatId,
+      ConversationsField.InsightTitle,
       ConversationsField.ProjectId,
       ConversationsField.UserHash,
       ConversationsField.TurnCount,

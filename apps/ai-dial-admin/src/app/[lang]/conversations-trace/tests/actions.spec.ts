@@ -198,9 +198,17 @@ describe('getConversations :: projection', () => {
   test('projects the visible schema-driven fields', async () => {
     execute().mockResolvedValue(okPage([CONVERSATION_ROW]));
 
-    await getConversations({ ...REQUEST, visibleFields: ['success_count'] });
+    await getConversations({ ...REQUEST, visibleFields: ['success_count'], availableFields: ['success_count'] });
 
     expect(JSON.stringify(call(0).select)).toContain('success_count');
+  });
+
+  test('drops a visible field the instance does not report', async () => {
+    execute().mockResolvedValue(okPage([CONVERSATION_ROW]));
+
+    await getConversations({ ...REQUEST, visibleFields: ['retired_column'], availableFields: ['success_count'] });
+
+    expect(JSON.stringify(call(0).select)).not.toContain('retired_column');
   });
 });
 

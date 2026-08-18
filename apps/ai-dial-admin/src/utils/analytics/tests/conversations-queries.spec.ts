@@ -48,8 +48,15 @@ const groupArgs = (filter: unknown): QueryPredicate[] => (filter as QueryGroup).
 
 const fieldName = (node: QueryPredicate): string | undefined => (node.args?.[0] as QueryFieldExpr)?.name;
 
+// Supplied by default: a query built without a schema names the required core alone, which describes a
+// lagging deployment rather than the norm.
+const ALL_FIELDS: string[] = Object.values(ConversationsField);
+
 const buildList = (overrides: Partial<Parameters<typeof buildConversationListQuery>[0]> = {}) =>
-  buildConversationListQuery({ range: RANGE, ...PAGE, ...overrides });
+  buildConversationListQuery({ range: RANGE, ...PAGE, availableFields: ALL_FIELDS, ...overrides });
+
+const selectNames = (query: ReturnType<typeof buildConversationListQuery>): string[] =>
+  (query.select as QueryOutputColumn[]).map((column) => (column.expr as QueryFieldExpr).name);
 
 describe('buildConversationListQuery :: shape', () => {
   test('reads the materialized conversations entity in row mode', () => {
@@ -73,6 +80,7 @@ describe('buildConversationListQuery :: shape', () => {
 
     expect(names).toEqual([
       ConversationsField.ChatId,
+      ConversationsField.InsightTitle,
       ConversationsField.ProjectId,
       ConversationsField.UserHash,
       ConversationsField.TurnCount,
@@ -83,6 +91,34 @@ describe('buildConversationListQuery :: shape', () => {
       ConversationsField.DurationMs,
       ConversationsField.Deployments,
     ]);
+  });
+
+  test('names the title by its qualified flat name', () => {
+    const names = (buildList().select as QueryOutputColumn[]).map((column) => (column.expr as QueryFieldExpr).name);
+
+    expect(names).toContain('conversation_insights.title');
+  });
+
+  test('leaves the hidden curated columns out of the default projection', () => {
+    const names = (buildList().select as QueryOutputColumn[]).map((column) => (column.expr as QueryFieldExpr).name);
+
+    for (const hidden of [
+      ConversationsField.InsightSentiment,
+      ConversationsField.InsightTopic,
+      ConversationsField.CacheCreationTokens,
+      ConversationsField.ChainPriceTotal,
+      ConversationsField.Traces,
+    ]) {
+      expect(names).not.toContain(hidden);
+    }
+  });
+
+  test('projects a curated column once it is visible', () => {
+    const names = (
+      buildList({ visibleFields: [ConversationsField.InsightSentiment] }).select as QueryOutputColumn[]
+    ).map((column) => (column.expr as QueryFieldExpr).name);
+
+    expect(names).toContain(ConversationsField.InsightSentiment);
   });
 
   // The query language expresses no comparison over an array, so translating a predicate on one would send
@@ -124,12 +160,46 @@ describe('buildConversationListQuery :: shape', () => {
     expect(names.filter((name) => name === ConversationsField.ChatId)).toHaveLength(1);
   });
 
+  test('omits an optional field the schema does not report', () => {
+    const withoutInsights = ALL_FIELDS.filter((name) => !name.startsWith('conversation_insights.'));
+    const names = selectNames(buildList({ availableFields: withoutInsights }));
+
+    expect(names).not.toContain(ConversationsField.InsightTitle);
+    expect(names).toEqual([
+      ConversationsField.ChatId,
+      ConversationsField.ProjectId,
+      ConversationsField.UserHash,
+      ConversationsField.TurnCount,
+      ConversationsField.TotalTokens,
+      ConversationsField.TotalPrice,
+      ConversationsField.LastRequestTime,
+      ConversationsField.FirstRequestTime,
+      ConversationsField.DurationMs,
+      ConversationsField.Deployments,
+    ]);
+  });
+
+  test('names the required core alone when no schema is available', () => {
+    const names = selectNames(buildConversationListQuery({ range: RANGE, ...PAGE }));
+
+    expect(names).not.toContain(ConversationsField.InsightTitle);
+    expect(names).toContain(ConversationsField.ChatId);
+    expect(names).toHaveLength(10);
+  });
+
+  test('drops a visible field the schema does not report', () => {
+    const names = selectNames(buildList({ visibleFields: ['retired_column'] }));
+
+    expect(names).not.toContain('retired_column');
+  });
+
   test('aliases nothing — a stored column needs no rename', () => {
     (buildList().select as QueryOutputColumn[]).forEach((column) => expect(column.as).toBeUndefined());
   });
 
-  // dial_usage_log columns belong to a different entity and would be rejected as unknown fields.
-  test('references no column of the usage log or of an enrichment', () => {
+  // dial_usage_log columns belong to a different entity and would be rejected as unknown fields, as would a
+  // column invented by the frontend. The rollup's own enrichment columns are named, by their flat names.
+  test('references no column of the usage log and no invented one', () => {
     const serialized = JSON.stringify(buildList({ search: 'acme' }));
 
     ['request_time', 'trace_id', 'deployment', 'request_body', 'conversation_summary', 'title', 'snippet'].forEach(

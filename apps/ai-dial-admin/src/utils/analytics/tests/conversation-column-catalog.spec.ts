@@ -6,11 +6,13 @@ import { ConversationsField } from '@/src/models/analytics/conversations-trace';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryValueType } from '@/src/models/analytics/query';
 import {
+  availableSelectFields,
   buildConversationColumnCatalog,
   offerableSchemaFields,
   catalogFilterableFields,
   catalogSortableFields,
   catalogValueTypes,
+  projectableCatalogFields,
 } from '@/src/utils/analytics/conversation-column-catalog';
 
 const CURATED: ColDef[] = [
@@ -145,6 +147,82 @@ describe('offerableSchemaFields', () => {
 
   test('is empty without a schema', () => {
     expect(offerableSchemaFields(CURATED)).toEqual([]);
+  });
+});
+
+describe('availableSelectFields', () => {
+  const ORDERED = ['chat_id', 'conversation_insights.title', 'project_id'];
+  const OPTIONAL = ['conversation_insights.title'];
+
+  test('names an optional field the schema reports', () => {
+    expect(availableSelectFields(ORDERED, OPTIONAL, ORDERED)).toEqual(ORDERED);
+  });
+
+  test('drops an optional field the schema does not report', () => {
+    expect(availableSelectFields(ORDERED, OPTIONAL, ['chat_id', 'project_id'])).toEqual(['chat_id', 'project_id']);
+  });
+
+  test('keeps a required field the schema does not report, so a broken schema fails loudly', () => {
+    expect(availableSelectFields(ORDERED, OPTIONAL, ['conversation_insights.title'])).toEqual([
+      'chat_id',
+      'conversation_insights.title',
+      'project_id',
+    ]);
+  });
+
+  test('names the required fields alone without a schema', () => {
+    expect(availableSelectFields(ORDERED, OPTIONAL)).toEqual(['chat_id', 'project_id']);
+    expect(availableSelectFields(ORDERED, OPTIONAL, [])).toEqual(['chat_id', 'project_id']);
+  });
+
+  test('preserves the given order', () => {
+    expect(availableSelectFields(['c', 'b', 'a'], [], ['a', 'b', 'c'])).toEqual(['c', 'b', 'a']);
+  });
+
+  test('returns everything when nothing is optional', () => {
+    expect(availableSelectFields(ORDERED, [])).toEqual(ORDERED);
+  });
+});
+
+describe('projectableCatalogFields', () => {
+  const schema = [
+    field(),
+    field({ name: ConversationsField.ChatId, type: AnalyticsFieldType.String }),
+    field({ name: ConversationsField.LastRequestTime, type: AnalyticsFieldType.Timestamp }),
+  ];
+
+  // A curated column is not offered in the catalog, but it still reads a stored field — so showing it has
+  // to bring that field into the projection, exactly as a schema-driven column does.
+  test('includes a curated column backed by an entity field', () => {
+    const projectable = projectableCatalogFields(CURATED, schema);
+
+    expect(projectable).toContain(ConversationsField.ChatId);
+    expect(projectable).toContain(ConversationsField.LastRequestTime);
+  });
+
+  test('includes the offerable schema fields as well', () => {
+    expect(projectableCatalogFields(CURATED, schema)).toContain('success_count');
+  });
+
+  // Rating is composed from the feedback lookups, so the entity has no such column to project.
+  test('excludes a composed column with no field on the entity', () => {
+    expect(projectableCatalogFields(CURATED, schema)).not.toContain('rating');
+  });
+
+  test('excludes a curated field the schema does not report', () => {
+    const curated = [...CURATED, { field: ConversationsField.Traces, headerName: 'Traces' }];
+
+    expect(projectableCatalogFields(curated, schema)).not.toContain(ConversationsField.Traces);
+  });
+
+  test('lists every field once', () => {
+    const projectable = projectableCatalogFields(CURATED, schema);
+
+    expect(projectable).toHaveLength(new Set(projectable).size);
+  });
+
+  test('is empty without a schema', () => {
+    expect(projectableCatalogFields(CURATED)).toEqual([]);
   });
 });
 

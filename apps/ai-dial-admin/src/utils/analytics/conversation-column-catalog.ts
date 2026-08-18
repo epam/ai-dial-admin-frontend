@@ -21,6 +21,31 @@ export const offerableSchemaFields = (curated: ColDef[], fields: AnalyticsEntity
     .map((field) => field.name);
 };
 
+// The service rejects a whole query that names one field its entity does not carry, and the rollups are
+// catalog objects provisioned per instance rather than shipped with the service — so an instance can carry
+// an older field set than this frontend knows. A field beyond the view's required core is therefore named
+// only when the fetched schema reports it. With no schema in hand the required core is all that is named:
+// a failed schema fetch is not evidence that an optional field exists, and guessing costs every row.
+export const availableSelectFields = (ordered: string[], optional: string[], schemaFieldNames?: string[]): string[] => {
+  const isOptional = new Set(optional);
+  const available = new Set(schemaFieldNames ?? []);
+
+  return ordered.filter((name) => !isOptional.has(name) || available.has(name));
+};
+
+// What the query may project, which is a wider set than what the catalog may offer: a curated column is
+// not offered (it is designed, not derived) but it still reads a stored field, so hiding and showing it has
+// to drive the projection the same way. Membership in the schema is the test, so the composed Rating column
+// — which has no field on the entity — falls out without an exclusion list to maintain.
+export const projectableCatalogFields = (curated: ColDef[], fields: AnalyticsEntityField[] = []): string[] => {
+  const entityFields = new Set(fields.map((field) => field.name));
+  const curatedFields = curated
+    .map((column) => column.field as string | undefined)
+    .filter((name): name is string => Boolean(name) && entityFields.has(name));
+
+  return [...new Set([...offerableSchemaFields(curated, fields), ...curatedFields])];
+};
+
 const typeColumn = (type: AnalyticsFieldType): Partial<ColDef> => {
   if (NUMERIC_FIELD_TYPES.includes(type)) {
     return { ...numericColumn, ...baseNumberFilter };

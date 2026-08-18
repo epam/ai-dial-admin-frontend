@@ -31,7 +31,7 @@ import {
   catalogFilterableFields,
   catalogSortableFields,
   catalogValueTypes,
-  offerableSchemaFields,
+  projectableCatalogFields,
 } from '@/src/utils/analytics/conversation-column-catalog';
 import {
   ConversationGridFilterModel,
@@ -104,13 +104,16 @@ export const useConversations = (
 
   const key = filterKey(filters);
 
+  const availableFields = useMemo(() => (schemaFields ?? []).map(({ name }) => name), [schemaFields]);
+
   const modelScope: ConversationModelScope = useMemo(() => {
-    const catalog = buildConversationColumnCatalog(CONVERSATIONS_TRACE_COLUMNS(t), schemaFields ?? []);
+    const curated = CONVERSATIONS_TRACE_COLUMNS(t, schemaFields ?? []);
+    const catalog = buildConversationColumnCatalog(curated, schemaFields ?? []);
     return {
       sortableFields: catalogSortableFields(catalog),
       filterableFields: catalogFilterableFields(catalog),
       valueTypes: catalogValueTypes(schemaFields ?? []),
-      projectableFields: offerableSchemaFields(CONVERSATIONS_TRACE_COLUMNS(t), schemaFields ?? []),
+      projectableFields: projectableCatalogFields(curated, schemaFields ?? []),
     };
   }, [schemaFields, t]);
 
@@ -213,6 +216,7 @@ export const useConversations = (
             columnFilters,
             sort,
             visibleFields,
+            availableFields,
             offset: startRow,
             limit: endRow - startRow,
             ...(chatIds ? { chatIds } : {}),
@@ -256,7 +260,7 @@ export const useConversations = (
         }
       },
     }),
-    [filters, gridApi, loadTotals, modelScope, reportFailure, resetTotals, resolveCandidates],
+    [availableFields, filters, gridApi, loadTotals, modelScope, reportFailure, resetTotals, resolveCandidates],
   );
 
   // A new datasource identity is what makes a filter change restart paging: AG Grid purges its blocks
