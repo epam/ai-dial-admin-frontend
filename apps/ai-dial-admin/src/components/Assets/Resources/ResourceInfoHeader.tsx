@@ -9,8 +9,8 @@ interface ResourceHeaderEntity {
   author?: string;
   updated_at?: number;
   created_at?: number;
-  updatedAt?: string;
-  createdAt?: string;
+  updatedAt?: string | number;
+  createdAt?: string | number;
 }
 
 interface Props<T> {

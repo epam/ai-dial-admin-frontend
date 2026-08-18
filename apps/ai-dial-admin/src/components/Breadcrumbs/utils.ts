@@ -6,6 +6,7 @@ import { Breadcrumb } from './models';
 import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
+import { useSkillFolder } from '@/src/context/assets/SkillFolderContext';
 import { useFileFolder } from '@/src/context/assets/FileFolderContext';
 import { Dispatch, SetStateAction } from 'react';
 import { useConversationFolder } from '@/src/context/assets/ConversationsFolderContext';
@@ -114,6 +115,8 @@ export function getFolderContext(pathname: string, currentLocale: string) {
       return usePromptFolder;
     case ApplicationRoute.AssetsToolsets:
       return useToolsetFolder;
+    case ApplicationRoute.AssetsSkills:
+      return useSkillFolder;
     case ApplicationRoute.Files:
       return useFileFolder;
     case ApplicationRoute.Conversations:

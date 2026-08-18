@@ -4,7 +4,7 @@ import { describe, expect, test, vi } from 'vitest';
 
 import ColumnRowsEditor from '@/src/components/Analytics/Tables/ColumnRowsEditor';
 import { createColumnRow } from '@/src/components/Analytics/Tables/utils';
-import { AnalyticsTablesI18nKey } from '@/src/constants/i18n';
+import { AnalyticsTablesI18nKey, ErrorI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { ColumnRow } from '@/src/models/analytics/tables-ui';
 
@@ -117,5 +117,74 @@ describe('ColumnRowsEditor', () => {
       />,
     );
     expect(screen.getByRole('alert')).toHaveTextContent('Required');
+  });
+
+  test('renders a Display name and a Description field on a row', () => {
+    render(<ColumnRowsEditor rows={[row()]} onChange={vi.fn()} />);
+
+    expect(screen.getByLabelText(AnalyticsTablesI18nKey.DisplayName, { exact: false })).toBeInTheDocument();
+    expect(screen.getByLabelText(AnalyticsTablesI18nKey.Description, { exact: false })).toBeInTheDocument();
+  });
+
+  test('renders the two field labels on the first row only', () => {
+    const rows = [row(), row()];
+    const { container } = render(<ColumnRowsEditor rows={rows} onChange={vi.fn()} />);
+
+    expect(screen.getAllByLabelText(AnalyticsTablesI18nKey.DisplayName, { exact: false })).toHaveLength(1);
+    expect(screen.getAllByLabelText(AnalyticsTablesI18nKey.Description, { exact: false })).toHaveLength(1);
+    // The second row still has both controls; only its labels are omitted, as for every other field here.
+    expect(container.querySelector(`#col-display-name-${rows[1].id}`)).toBeTruthy();
+    expect(container.querySelector(`#col-description-${rows[1].id}`)).toBeTruthy();
+  });
+
+  test('typing a display name patches only that field on the row', () => {
+    const onChange = vi.fn();
+    render(<ColumnRowsEditor rows={[row()]} onChange={onChange} />);
+
+    fireEvent.change(screen.getByLabelText(AnalyticsTablesI18nKey.DisplayName, { exact: false }), {
+      target: { value: 'Total tokens' },
+    });
+
+    expect(onChange).toHaveBeenCalledWith([expect.objectContaining({ display_name: 'Total tokens', description: '' })]);
+  });
+
+  test('typing a description patches only that field on the row', () => {
+    const onChange = vi.fn();
+    render(<ColumnRowsEditor rows={[row()]} onChange={onChange} />);
+
+    fireEvent.change(screen.getByLabelText(AnalyticsTablesI18nKey.Description, { exact: false }), {
+      target: { value: 'Prompt plus completion tokens' },
+    });
+
+    expect(onChange).toHaveBeenCalledWith([
+      expect.objectContaining({ description: 'Prompt plus completion tokens', display_name: '' }),
+    ]);
+  });
+
+  test('shows a length validation error on the display name and on the description', () => {
+    render(
+      <ColumnRowsEditor
+        rows={[row(), row()]}
+        errors={[{ display_name: ErrorI18nKey.Length }, { description: ErrorI18nKey.Length }]}
+        onChange={vi.fn()}
+      />,
+    );
+    expect(screen.getAllByText(ErrorI18nKey.Length)).toHaveLength(2);
+  });
+
+  // rowHasError drives the row's top-aligned layout; a row erroring only on one of the two new fields
+  // must trigger it too, or its labels fall out of line with its error-free siblings.
+  test('a row erroring only on the description still gets the top-aligned layout', () => {
+    const { container } = render(
+      <ColumnRowsEditor rows={[row()]} errors={[{ description: ErrorI18nKey.Length }]} onChange={vi.fn()} />,
+    );
+    expect(container.querySelector('.items-start')).toBeTruthy();
+    expect(container.querySelector('.items-end')).toBeNull();
+  });
+
+  test('a row with no errors keeps the bottom-aligned layout', () => {
+    const { container } = render(<ColumnRowsEditor rows={[row()]} onChange={vi.fn()} />);
+    expect(container.querySelector('.items-end')).toBeTruthy();
+    expect(container.querySelector('.items-start')).toBeNull();
   });
 });

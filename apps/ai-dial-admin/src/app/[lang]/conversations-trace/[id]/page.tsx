@@ -54,6 +54,8 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
       errorObjLog(turnResult, 'Failed to fetch conversation turns');
     }
 
+    // Sample exchanges follow the turns actually loaded, not the rollup's `turn_count`: each one carries its
+    // turn's real figures, so counting from the rollup would pad a clipped list with figureless messages.
     messages = mockConversationTranscript(chatId, turns.length);
   } catch (e) {
     hasLoadError = true;

@@ -14,11 +14,12 @@ import {
   ConnectEndpoints,
   ConnectFormatNote,
   ConnectSnippets,
+  EnrichmentReadTable,
   SnippetRow,
   SnippetValue,
 } from '@/src/components/Analytics/Tables/ConnectPanel/models';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { AnalyticsTable, AnalyticsTableColumn } from '@/src/models/analytics/table';
+import { AnalyticsTable, AnalyticsTableColumn, AnalyticsTableType } from '@/src/models/analytics/table';
 
 const writableColumns = (table: AnalyticsTable): AnalyticsTableColumn[] =>
   (table.columns ?? []).filter((column) => !column.source_name.startsWith(PLATFORM_COLUMN_PREFIX));
@@ -37,8 +38,8 @@ const sampleFor = (column: AnalyticsTableColumn): SnippetValue => {
  * name on every table this app can create, so naming the distinction would teach a concept the reader
  * cannot act on.
  *
- * No grain-key handling: the panel is not offered for enrichment tables, which the enrichment process
- * writes and which are not queryable in their own right.
+ * No grain-key handling: the write path is not offered for enrichment tables, whose rows the
+ * enrichment process produces. Their read path is `buildReadSql`.
  */
 export const buildSampleRow = (table: AnalyticsTable): SnippetRow => {
   const row: SnippetRow = {};
@@ -101,16 +102,100 @@ const resolveBaseUrl = (baseUrl: string): string => (baseUrl ?? '').trim() || AN
 const resolveFlightUri = (flightUri: string): string =>
   (flightUri ?? '').trim() || ANALYTICS_FLIGHT_SQL_URL_PLACEHOLDER;
 
-const projection = (table: AnalyticsTable): string => {
-  const names = writableColumns(table).map((column) => column.name);
-  return names.length ? names.join(', ') : '*';
+/**
+ * An enrichment is queried through its source table, so it needs one that is actually named. A payload
+ * missing it cannot produce a runnable query, and the panel is not offered for such a table; the check
+ * keeps this builder total rather than emitting `FROM undefined`.
+ */
+export const isEnrichmentRead = (table: AnalyticsTable): table is EnrichmentReadTable =>
+  table.type === AnalyticsTableType.Enrichment && Boolean(table.source_table);
+
+/**
+ * Every projected column is quoted, not only the ones that have to be. An enrichment's column is
+ * exposed on the source table under a name that literally contains a dot, so it must be quoted as ONE
+ * identifier — `"enrichment.column"`; quoting it as two (`"enrichment"."column"`) makes the service
+ * read the first part as a table and answer `Table '<enrichment>' not found`. Quoting the ordinary
+ * names alongside it costs nothing and keeps a single SELECT list from looking arbitrarily
+ * inconsistent.
+ */
+const quoteIdentifier = (name: string): string => `"${name}"`;
+
+/**
+ * The physical key members a table reports — `ordering_key`, `grain_key` — name columns by their
+ * `source_name`, while the query surface resolves a SELECT list against the *exposed* name the catalog
+ * publishes each column under. The two spellings coincide on every table this app creates, which is why
+ * an unresolved entry costs nothing there; on a table created through the API with `source_name` !=
+ * `name` a physical entry is an unknown column, so the projection has to translate rather than pass the
+ * key through. An entry no declared column matches is left as reported: nothing better is known about
+ * it, and a system table's key may name a column the payload does not carry.
+ */
+const toExposedName = (table: AnalyticsTable, sourceName: string): string =>
+  (table.columns ?? []).find((column) => column.source_name === sourceName)?.name ?? sourceName;
+
+/**
+ * The grain key plus one of the enrichment's own columns. The grain key is an ordinary column of the
+ * table being read; the enrichment's column carries the dotted name described above.
+ *
+ * The grain key stays as reported: it is a physical name belonging to the *source* table, whose column
+ * mapping this payload does not carry, so the enrichment's own columns are the wrong thing to resolve it
+ * against — its copy of that column can be exposed under a different name than the source's.
+ */
+const enrichmentProjection = (table: AnalyticsTable): string[] => {
+  const projected: string[] = [];
+  const grainKey = table.grain?.grain_key;
+  if (grainKey) projected.push(quoteIdentifier(grainKey));
+  const [column] = writableColumns(table);
+  if (column) projected.push(quoteIdentifier(`${table.name}.${column.name}`));
+  return projected;
 };
 
-const buildAuthSnippet = (baseUrl: string): string =>
-  [
-    `export ${DIAL_API_KEY_ENV}=dial_xxxxxxxxxxxxxxxx`,
-    `export ${DIAL_ANALYTICS_BASE_URL_ENV}=${resolveBaseUrl(baseUrl)}`,
-  ].join('\n');
+/**
+ * The ordering key names the columns a reader filters, sorts, and joins on, which makes it a better
+ * first example than every column the table declares. Entries are matched against the payload by the
+ * physical name they are reported under and projected by the exposed one the query resolves; a platform
+ * column is dropped here as everywhere else in the panel.
+ */
+const orderingKeyProjection = (table: AnalyticsTable): string[] =>
+  (table.ordering_key ?? [])
+    .filter((sourceName) => !sourceName.startsWith(PLATFORM_COLUMN_PREFIX))
+    .map((sourceName) => quoteIdentifier(toExposedName(table, sourceName)));
+
+const readProjection = (table: AnalyticsTable): string[] =>
+  isEnrichmentRead(table) ? enrichmentProjection(table) : orderingKeyProjection(table);
+
+/**
+ * Whether the read snippets name specific columns rather than falling back to `*`. The panel's
+ * "this selects a few columns to keep the example short" note is only true of the first case; stated over
+ * a `SELECT *` it describes a projection the reader is not looking at.
+ */
+export const isReadProjectionSubset = (table: AnalyticsTable): boolean => readProjection(table).length > 0;
+
+export const buildReadSql = (table: AnalyticsTable): string => {
+  const projected = readProjection(table);
+  const relation = isEnrichmentRead(table) ? table.source_table : table.name;
+  return `SELECT ${projected.length ? projected.join(', ') : '*'} FROM ${relation} LIMIT ${READ_SNIPPET_LIMIT}`;
+};
+
+/**
+ * A quoted identifier carries double quotes, so the statement cannot sit in a double-quoted literal
+ * unescaped. Python takes it in single quotes instead. The JSON body goes through `JSON.stringify`,
+ * which supplies its own quotes and escapes every character that needs it — a hand-rolled `"` -> `\\"`
+ * pass would leave a backslash in a name unescaped and produce a malformed body.
+ */
+const toPythonSqlLiteral = (sql: string): string => `'${sql}'`;
+
+/**
+ * The key alone. It is the one thing every example on both tabs needs; the REST endpoint travels with
+ * the `curl` examples that read it, so Flight SQL — which needs the key but not that endpoint — is
+ * never asked to set a variable it does not use.
+ */
+const buildAuthSnippet = (): string => `export ${DIAL_API_KEY_ENV}=dial_xxxxxxxxxxxxxxxx`;
+
+// Shown as its own shell block above each REST example, the way the Flight section already presents
+// its own setup. `curl` cannot carry a default at all; the Python examples can, and still do, so the
+// export stays optional there rather than becoming a step the script depends on.
+const buildRestEndpointExport = (baseUrl: string): string =>
+  `export ${DIAL_ANALYTICS_BASE_URL_ENV}=${resolveBaseUrl(baseUrl)}`;
 
 const buildPythonWriteSnippet = (table: AnalyticsTable, baseUrl: string): string =>
   [
@@ -147,7 +232,7 @@ const buildPythonReadSnippet = (table: AnalyticsTable, baseUrl: string): string 
     `BASE_URL = os.environ.get("${DIAL_ANALYTICS_BASE_URL_ENV}", "${resolveBaseUrl(baseUrl)}")`,
     `API_KEY  = os.environ["${DIAL_API_KEY_ENV}"]`,
     '',
-    `SQL = "SELECT ${projection(table)} FROM ${table.name} LIMIT ${READ_SNIPPET_LIMIT}"`,
+    `SQL = ${toPythonSqlLiteral(buildReadSql(table))}`,
     '',
     'request = urllib.request.Request(',
     '    f"{BASE_URL}/v1/queries/execute-sql",',
@@ -165,7 +250,7 @@ const buildCurlReadSnippet = (table: AnalyticsTable): string =>
     `curl -sS -X POST "$${DIAL_ANALYTICS_BASE_URL_ENV}/v1/queries/execute-sql" \\`,
     `  -H 'Content-Type: application/json' \\`,
     `  -H "Api-Key: $${DIAL_API_KEY_ENV}" \\`,
-    `  -d '{"sql":"SELECT ${projection(table)} FROM ${table.name} LIMIT ${READ_SNIPPET_LIMIT}"}'`,
+    `  -d '{"sql":${JSON.stringify(buildReadSql(table))}}'`,
   ].join('\n');
 
 const buildFlightInstallSnippet = (flightUri: string): string =>
@@ -187,14 +272,15 @@ const buildFlightReadSnippet = (table: AnalyticsTable, flightUri: string): strin
     '',
     'with flight_sql.connect(URI, db_kwargs=db_kwargs, autocommit=True) as connection:',
     '    with connection.cursor() as cursor:',
-    `        cursor.execute("SELECT ${projection(table)} FROM ${table.name} LIMIT ${READ_SNIPPET_LIMIT}")`,
+    `        cursor.execute(${toPythonSqlLiteral(buildReadSql(table))})`,
     '        frame = cursor.fetch_arrow_table().to_pandas()',
     '',
     'print(frame.head())',
   ].join('\n');
 
 export const buildConnectSnippets = (table: AnalyticsTable, endpoints: ConnectEndpoints): ConnectSnippets => ({
-  auth: buildAuthSnippet(endpoints.baseUrl),
+  auth: buildAuthSnippet(),
+  restEndpoint: buildRestEndpointExport(endpoints.baseUrl),
   pythonWrite: buildPythonWriteSnippet(table, endpoints.baseUrl),
   curlWrite: buildCurlWriteSnippet(table),
   pythonRead: buildPythonReadSnippet(table, endpoints.baseUrl),

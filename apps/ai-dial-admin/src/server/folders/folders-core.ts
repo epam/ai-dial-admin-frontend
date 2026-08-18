@@ -1,12 +1,15 @@
-import { assetApi, filesCoreApi, publicationsApi } from '@/src/app/api/api';
+import { assetApi, filesCoreApi, publicationsApi, skillsCoreApi } from '@/src/app/api/api';
 import { PUBLICATIONS_PREFIX, RESOURCE_TYPE_PREFIX } from '@/src/constants/publications-core';
 import { Token } from '@/src/models/auth';
+import { DialFileNodeType } from '@/src/models/dial/file';
 import { DialRule } from '@/src/models/dial/rule';
 import { ServerActionResponse } from '@/src/models/server-action';
+import { toSkillList } from '@/src/server/core/skill-metadata';
 import { decodeCorePath, encodeCorePath, stripPrefix } from '@/src/server/publications/path';
 import { CoreResourceAction, CorePublicationResource, CorePublicationRule } from '@/src/server/publications/models';
 import { ResourceType } from '@/src/types/resource-type';
-import { replacePathPrefix } from '@/src/utils/files/path';
+import { removeTrailingSlash, replacePathPrefix } from '@/src/utils/files/path';
+import { addTrailingSlash } from '@/src/utils/url';
 import { FolderNode, mergeFolderTrees, toFolderTree } from './folder-tree';
 import { fetchAllPages, gatherResourceUrls, WalkableNode } from './resource-walk';
 
@@ -176,6 +179,69 @@ export async function removeFolderCore(
         : assetApi.delete(token, type, path, DEFAULT_ETAG),
     ),
   );
+
+  return { success: true };
+}
+
+/**
+ * Recursively walks a Skill grouping folder, collecting every skill and every nested `.dial-folder`
+ * marker found at any depth. A skill's own path resolves to an ITEM row here — its internal files are
+ * never surfaced by this listing (Core's `nodeMetadata()` only ever returns marker nodes), so this walk
+ * naturally treats each skill as one atomic leaf and never descends into its bundle.
+ */
+async function walkSkillFolder(token: Token, path: string): Promise<{ skillPaths: string[]; folderPaths: string[] }> {
+  const skillPaths: string[] = [];
+  const folderPaths: string[] = [];
+
+  const walkLevel = async (levelPath: string): Promise<void> => {
+    let nextToken: string | undefined;
+    do {
+      const node = await skillsCoreApi.listSkillMetadata(token, levelPath, { nextToken });
+      const rows = toSkillList(node);
+      for (const row of rows) {
+        if (row.nodeType === DialFileNodeType.FOLDER) {
+          folderPaths.push(row.path);
+          await walkLevel(addTrailingSlash(row.path));
+        } else {
+          skillPaths.push(row.path);
+        }
+      }
+      nextToken = node?.nextToken;
+    } while (nextToken);
+  };
+
+  await walkLevel(path);
+  return { skillPaths, folderPaths };
+}
+
+/**
+ * Deletes (recursively) a Skill grouping folder — the SKILL-specific counterpart to
+ * {@link removeFolderCore}, kept separate rather than folded into `ALL_TYPES`: Skills are
+ * folder-shaped resources with their own dedicated v2 endpoints (`skills.md`), not flat resources
+ * addressable through the generic publication-based delete every other type uses. Deletes bottom-up
+ * — every skill first (order-independent, they're atomic units), then every nested `.dial-folder`
+ * marker deepest-first, then the target folder itself — since Core rejects a non-empty folder marker
+ * delete with a conflict. Every delete is unconditional (`If-Match: *`), matching how
+ * {@link removeFolderCore}'s own folder-marker cleanup step already treats a folder delete as
+ * best-effort rather than requiring a real etag per item.
+ */
+export async function removeSkillFolderCore(token: Token, path: string): Promise<ServerActionResponse> {
+  const { skillPaths, folderPaths } = await walkSkillFolder(token, path);
+
+  for (const skillPath of skillPaths) {
+    const result = await skillsCoreApi.deleteSkill(token, skillPath, DEFAULT_ETAG);
+    if (!result.success) {
+      return result;
+    }
+  }
+
+  const deepestFirstFolders = [...folderPaths].sort((a, b) => b.split('/').length - a.split('/').length);
+  for (const folderPath of [...deepestFirstFolders, removeTrailingSlash(path)]) {
+    const result = await skillsCoreApi.deleteSkillFolder(token, folderPath, DEFAULT_ETAG);
+    if (!result.success) {
+      return result;
+    }
+  }
 
   return { success: true };
 }

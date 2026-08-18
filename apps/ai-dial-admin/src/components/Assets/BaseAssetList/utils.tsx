@@ -8,6 +8,7 @@ import {
 } from '@/src/app/[lang]/assets-applications/actions';
 import { bulkDeleteRunners, createRunner, getRunner } from '@/src/app/[lang]/assets-app-runners/actions';
 import { bulkDeleteModels, createModel, getModel } from '@/src/app/[lang]/assets-models/actions';
+import { bulkDeleteSkills, getSkill } from '@/src/app/[lang]/assets-skills/actions';
 import {
   bulkDeleteToolsets,
   createToolset,
@@ -33,6 +34,7 @@ import { useConversationFolder } from '@/src/context/assets/ConversationsFolderC
 import { useAppRunnersFolder } from '@/src/context/assets/AppRunnersFolderContext';
 import { useModelsFolder } from '@/src/context/assets/ModelsFolderContext';
 import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
+import { useSkillFolder } from '@/src/context/assets/SkillFolderContext';
 import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
 import { DialAppRunnerResource, DialModelResource, PlatformAsset } from '@/src/models/dial/resource';
@@ -130,8 +132,11 @@ export const getGridColumns = (
   });
 
   // Flat platform-bucket views share a metadata-only column set. Only the identity label differs: an
-  // app runner's row name is its `$id`, a model's is its plain name.
-  if (isFlatPlatformView(view)) {
+  // app runner's row name is its `$id`, a model's is its plain name. Skills shares the same
+  // metadata-only shape (no Version column — a skill's folder listing carries no version info) even
+  // though it isn't a flat platform view: it nests in folders like Toolsets, just without content to
+  // read a display name from.
+  if (isFlatPlatformView(view) || view === ApplicationRoute.AssetsSkills) {
     return [
       NAME_COLUMN(view === ApplicationRoute.AssetsAppRunners ? 'ID' : 'Name') as ColDef,
       AUTHOR_COLUMN,
@@ -189,6 +194,8 @@ export const getFileManagerLabel = (view: ApplicationRoute): string => {
       return FileManagerI18nKey.Models;
     case ApplicationRoute.AssetsAppRunners:
       return FileManagerI18nKey.AppRunners;
+    case ApplicationRoute.AssetsSkills:
+      return FileManagerI18nKey.Skills;
     default:
       return '';
   }
@@ -228,6 +235,11 @@ export const getEmptyStateContent = (
       return {
         title: t(FileManagerI18nKey.AppRunnersEmptyStateTitle),
         description: t(FileManagerI18nKey.AppRunnersEmptyStateDescription),
+      };
+    case ApplicationRoute.AssetsSkills:
+      return {
+        title: t(FileManagerI18nKey.SkillsEmptyStateTitle),
+        description: t(FileManagerI18nKey.SkillsEmptyStateDescription),
       };
     default:
       return { title: '', description: '' };
@@ -275,6 +287,7 @@ export const AssetFolderContextMap = {
   [ApplicationRoute.Conversations]: useConversationFolder,
   [ApplicationRoute.AssetsModels]: useModelsFolder,
   [ApplicationRoute.AssetsAppRunners]: useAppRunnersFolder,
+  [ApplicationRoute.AssetsSkills]: useSkillFolder,
 };
 
 export const GetAssetActionMap = {
@@ -284,6 +297,7 @@ export const GetAssetActionMap = {
   [ApplicationRoute.Conversations]: getConversation,
   [ApplicationRoute.AssetsModels]: getModel,
   [ApplicationRoute.AssetsAppRunners]: getRunner,
+  [ApplicationRoute.AssetsSkills]: getSkill,
 };
 
 export const CreateAssetActionMap: Record<
@@ -344,6 +358,7 @@ export const BulkDeleteAssetActionMap = {
   [ApplicationRoute.Conversations]: deleteConversations,
   [ApplicationRoute.AssetsModels]: bulkDeleteModels,
   [ApplicationRoute.AssetsAppRunners]: bulkDeleteRunners,
+  [ApplicationRoute.AssetsSkills]: bulkDeleteSkills,
 };
 
 export const enrichConversationWithVersion = (conversation: AssetWithVersion): AssetWithVersion => {

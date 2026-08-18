@@ -176,33 +176,130 @@ describe('buildFormatNotes', () => {
 });
 
 describe('buildConnectSnippets', () => {
-  const widgets = table([
-    column({ name: 'event_id', type: AnalyticsFieldType.Uuid }),
-    column({ name: 'score', type: AnalyticsFieldType.Decimal }),
-    column({ name: '_ingested_at', type: AnalyticsFieldType.Timestamp }),
-  ]);
+  const widgets = table(
+    [
+      column({ name: 'event_id', type: AnalyticsFieldType.Uuid }),
+      column({ name: 'score', type: AnalyticsFieldType.Decimal }),
+      column({ name: '_ingested_at', type: AnalyticsFieldType.Timestamp }),
+    ],
+    { ordering_key: ['event_id'] },
+  );
+
+  const noEndpoints = { baseUrl: '', flightUri: '' };
 
   test('defaults the endpoint to the configured public URL', () => {
     const snippets = buildConnectSnippets(widgets, { baseUrl: 'https://analytics.example.com', flightUri: '' });
 
-    expect(snippets.auth).toContain('https://analytics.example.com');
     expect(snippets.pythonWrite).toContain('https://analytics.example.com');
+    expect(snippets.restEndpoint).toContain('https://analytics.example.com');
+  });
+
+  test('keeps the shared block to the key alone, so an example needing no REST endpoint sets none', () => {
+    const snippets = buildConnectSnippets(widgets, { baseUrl: 'https://analytics.example.com', flightUri: '' });
+
+    expect(snippets.auth).toContain('DIAL_API_KEY');
+    expect(snippets.auth).not.toContain('DIAL_ANALYTICS_BASE_URL');
+    expect(snippets.flightInstall).not.toContain('DIAL_ANALYTICS_BASE_URL');
+    // It travels as its own block, shown with the REST examples that read it.
+    expect(snippets.restEndpoint).toBe('export DIAL_ANALYTICS_BASE_URL=https://analytics.example.com');
   });
 
   test('falls back to the placeholder when no endpoint is configured', () => {
     const snippets = buildConnectSnippets(widgets, { baseUrl: '', flightUri: '' });
 
-    expect(snippets.auth).toContain(ANALYTICS_BASE_URL_PLACEHOLDER);
+    expect(snippets.restEndpoint).toContain(ANALYTICS_BASE_URL_PLACEHOLDER);
     expect(snippets.pythonWrite).toContain(ANALYTICS_BASE_URL_PLACEHOLDER);
   });
 
-  test('posts rows to this table and projects its columns on read', () => {
-    const snippets = buildConnectSnippets(widgets, { baseUrl: '', flightUri: '' });
+  test('posts rows to this table and projects its ordering key on read', () => {
+    const snippets = buildConnectSnippets(widgets, noEndpoints);
 
     expect(snippets.pythonWrite).toContain('/v1/tables/{TABLE}/rows');
     expect(snippets.curlWrite).toContain('/v1/tables/widget_metrics/rows');
-    expect(snippets.pythonRead).toContain('SELECT event_id, score FROM widget_metrics LIMIT 100');
+    expect(snippets.pythonRead).toContain('SELECT "event_id" FROM widget_metrics LIMIT 100');
     expect(snippets.curlRead).toContain('/v1/queries/execute-sql');
+  });
+
+  test('projects the ordering key rather than every column, in all three read snippets', () => {
+    const snippets = buildConnectSnippets(
+      table(
+        [
+          column({ name: 'tenant_id' }),
+          column({ name: 'event_time', type: AnalyticsFieldType.Timestamp }),
+          column({ name: 'total', type: AnalyticsFieldType.Decimal }),
+        ],
+        { ordering_key: ['tenant_id', 'event_time'] },
+      ),
+      noEndpoints,
+    );
+    const statement = 'SELECT "tenant_id", "event_time" FROM widget_metrics LIMIT 100';
+
+    expect(snippets.pythonRead).toContain(statement);
+    expect(snippets.flightRead).toContain(statement);
+    // The curl body carries the same statement, JSON-encoded.
+    expect(snippets.curlRead).toContain(`"sql":${JSON.stringify(statement)}`);
+    expect(snippets.pythonRead).not.toContain('total');
+  });
+
+  test('encodes the curl body so a name carrying a quote or backslash cannot break it', () => {
+    // A system table's column names are not validated by this app, so the JSON body has to survive
+    // characters an identifier is not expected to hold. Escaping the quotes by hand left a backslash
+    // untouched and produced a body that would not parse.
+    const messy = ['back\\slash', 'qu\"ote'];
+    const snippets = buildConnectSnippets(table([column({ name: 'ok' })], { ordering_key: messy }), noEndpoints);
+    const payload = snippets.curlRead.match(/-d '(.*)'$/m)?.[1] ?? '';
+
+    expect(() => JSON.parse(payload)).not.toThrow();
+    const { sql } = JSON.parse(payload);
+    messy.forEach((name) => expect(sql).toContain(`"${name}"`));
+  });
+
+  test('projects the ordering key by exposed name, which is what the query resolves', () => {
+    // `ordering_key` reports physical source_names; the query surface publishes each source column under
+    // its exposed name and binds the SELECT list against that. The two differ only on a table created
+    // through the API, where projecting the physical name is an unknown-column error.
+    const snippets = buildConnectSnippets(
+      table([column({ name: 'event_id', source_name: 'evt_id' })], { ordering_key: ['evt_id'] }),
+      noEndpoints,
+    );
+
+    expect(snippets.pythonRead).toContain('SELECT "event_id" FROM widget_metrics LIMIT 100');
+    expect(snippets.pythonRead).not.toContain('evt_id');
+  });
+
+  test('leaves an ordering-key entry no declared column matches as reported', () => {
+    // A system table's key may name a column its payload does not carry; nothing better is known about
+    // such an entry than the name itself.
+    const snippets = buildConnectSnippets(
+      table([column({ name: 'score' })], { ordering_key: ['event_id'] }),
+      noEndpoints,
+    );
+
+    expect(snippets.pythonRead).toContain('SELECT "event_id" FROM widget_metrics LIMIT 100');
+  });
+
+  test('drops a platform column the ordering key names', () => {
+    const snippets = buildConnectSnippets(
+      table([column({ name: 'event_id' })], { ordering_key: ['_ingested_at', 'event_id'] }),
+      noEndpoints,
+    );
+
+    expect(snippets.pythonRead).toContain('SELECT "event_id" FROM widget_metrics LIMIT 100');
+  });
+
+  test('projects a wildcard when the table declares no ordering key', () => {
+    const snippets = buildConnectSnippets(table([column({ name: 'event_id' })]), noEndpoints);
+
+    expect(snippets.pythonRead).toContain('SELECT * FROM widget_metrics LIMIT 100');
+  });
+
+  test('projects a wildcard when the ordering key names only platform columns', () => {
+    const snippets = buildConnectSnippets(
+      table([column({ name: 'event_id' })], { ordering_key: ['_ingested_at'] }),
+      noEndpoints,
+    );
+
+    expect(snippets.pythonRead).toContain('SELECT * FROM widget_metrics LIMIT 100');
   });
 
   test('keeps platform columns out of every snippet', () => {
@@ -243,5 +340,57 @@ describe('buildConnectSnippets', () => {
 
     expect(snippets.pythonRead).toContain('SELECT * FROM widget_metrics');
     expect(snippets.pythonWrite).toContain('ROW = {}');
+  });
+});
+
+describe('buildConnectSnippets — enrichment table', () => {
+  const noEndpoints = { baseUrl: '', flightUri: '' };
+
+  const enrichment = (overrides: Partial<AnalyticsTable> = {}): AnalyticsTable => ({
+    name: 'widget_scores',
+    type: AnalyticsTableType.Enrichment,
+    source_table: 'widget_events',
+    grain: { grain_key: 'event_id' },
+    columns: [column({ name: 'score', type: AnalyticsFieldType.Decimal })],
+    ...overrides,
+  });
+
+  test('reads through the source table, qualifying the enrichment column', () => {
+    const snippets = buildConnectSnippets(enrichment(), noEndpoints);
+    const statement = 'SELECT "event_id", "widget_scores.score" FROM widget_events LIMIT 100';
+
+    expect(snippets.pythonRead).toContain(statement);
+    expect(snippets.flightRead).toContain(statement);
+    expect(snippets.pythonRead).not.toContain('FROM widget_scores');
+  });
+
+  test('keeps the statement inside a literal its language can carry', () => {
+    const snippets = buildConnectSnippets(enrichment(), noEndpoints);
+
+    // Python takes the quoted identifiers in a single-quoted literal; a JSON body has to escape them.
+    expect(snippets.pythonRead).toContain(`SQL = 'SELECT "event_id", "widget_scores.score"`);
+    expect(snippets.curlRead).toContain('\\"widget_scores.score\\"');
+    expect(snippets.curlRead).not.toContain('"sql":"SELECT "event_id"');
+  });
+
+  test('projects the grain key alone when the enrichment declares only platform columns', () => {
+    const snippets = buildConnectSnippets(
+      enrichment({ columns: [column({ name: '_ingested_at', type: AnalyticsFieldType.Timestamp })] }),
+      noEndpoints,
+    );
+
+    expect(snippets.pythonRead).toContain('SELECT "event_id" FROM widget_events LIMIT 100');
+  });
+
+  test('projects a wildcard when it has neither a grain key nor a usable column', () => {
+    const snippets = buildConnectSnippets(enrichment({ grain: undefined, columns: [] }), noEndpoints);
+
+    expect(snippets.pythonRead).toContain('SELECT * FROM widget_events LIMIT 100');
+  });
+
+  test('never emits an unnamed relation when the payload names no source table', () => {
+    const snippets = buildConnectSnippets(enrichment({ source_table: undefined }), noEndpoints);
+
+    expect(snippets.pythonRead).not.toContain('undefined');
   });
 });

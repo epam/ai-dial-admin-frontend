@@ -15,8 +15,27 @@ export const roundScore = (value: number): number => Math.round(value * 1000) / 
 export const formatTrendAxisDate = (ms: number): string => {
   const date = new Date(ms);
   const month = date.toLocaleString(undefined, { month: 'short' });
-  const year = String(date.getFullYear()).slice(-2);
+  const year = String(date.getFullYear());
   return `${month} ${year}`;
+};
+
+export const buildCenteredTimelineLabels = (labels: string[]): string[] => {
+  const centeredLabels = Array(labels.length).fill('');
+  let startIndex = 0;
+
+  while (startIndex < labels.length) {
+    let endIndex = startIndex;
+
+    while (endIndex + 1 < labels.length && labels[endIndex + 1] === labels[startIndex]) {
+      endIndex += 1;
+    }
+
+    const middleIndex = Math.floor((startIndex + endIndex) / 2);
+    centeredLabels[middleIndex] = labels[startIndex];
+    startIndex = endIndex + 1;
+  }
+
+  return centeredLabels;
 };
 
 /** Tooltip date like "Feb 27". */

@@ -9,6 +9,7 @@ import {
 } from '@/src/components/TestSuites/Trends/constants';
 import { MetricTrendSeries, TrendsRunPoint } from '@/src/components/TestSuites/Trends/models';
 import {
+  buildCenteredTimelineLabels,
   formatScore,
   formatTrendAxisDate,
   formatTrendTooltipDate,
@@ -27,6 +28,8 @@ export const buildOverallScoreChartOptions = (
   labels: OverallChartLabels,
 ): EChartsOption => {
   const categories = runOrder.map((point) => formatTrendAxisDate(point.computedAtMs));
+  const centeredCategories = buildCenteredTimelineLabels(categories);
+
   const values = runOrder.map((point) => {
     if (point.overallScore == null) {
       return null;
@@ -92,7 +95,11 @@ export const buildOverallScoreChartOptions = (
       boundaryGap: false,
       axisLine: { show: false },
       axisTick: { show: false },
-      axisLabel: { color: '#9FA6BD', fontSize: 12 },
+      axisLabel: {
+        color: '#9FA6BD',
+        fontSize: 12,
+        formatter: (_value: string, index: number) => centeredCategories[index] ?? '',
+      },
       splitLine: { show: false },
     },
     yAxis: {

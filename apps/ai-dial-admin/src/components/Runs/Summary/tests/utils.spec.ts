@@ -124,17 +124,27 @@ describe('Runs Summary :: metric options', () => {
 
     expect(options).toEqual([
       {
-        name: 'DeepEval: Answer Relevancy.score',
-        field: 'metric::DeepEval: Answer Relevancy::score',
-        computationId: 'comp-1',
-      },
-      {
         name: 'DeepEval: Answer Relevancy.reason',
         field: 'metric::DeepEval: Answer Relevancy::reason',
         computationId: 'comp-1',
       },
+      {
+        name: 'DeepEval: Answer Relevancy.score',
+        field: 'metric::DeepEval: Answer Relevancy::score',
+        computationId: 'comp-1',
+      },
       { name: 'Exact Match.exact_match', field: 'metric::Exact Match::exact_match', computationId: 'comp-1' },
     ]);
+  });
+
+  test('toMetricOptions sorts options alphabetically by name', () => {
+    const options = toMetricOptions([
+      { tsmdName: 'zebra', computationId: 'comp-1', outputSchema: { properties: { score: {} } } },
+      { tsmdName: 'alpha', computationId: 'comp-1', outputSchema: { properties: { score: {} } } },
+      { tsmdName: 'middle', computationId: 'comp-1', outputSchema: { properties: { score: {} } } },
+    ] as any);
+
+    expect(options.map((option) => option.name)).toEqual(['alpha.score', 'middle.score', 'zebra.score']);
   });
 
   test('toMetricOptions handles null', () => {
@@ -304,6 +314,22 @@ describe('Runs Summary :: metric scores', () => {
       ],
       P90: [{ name: 'aidial_rag_eval.generation', bars: { context_to_answer: 0.956 } }],
     });
+  });
+
+  test('parseMetricScores sorts metric groups alphabetically regardless of row order', () => {
+    const parsed = parseMetricScores({
+      rows: [
+        { metric_name: 'ragas.faithfulness.score', metric_score_name: 'AVG', value: 0.5 },
+        { metric_name: 'aidial_rag_eval.generation.context_to_answer', metric_score_name: 'AVG', value: 0.8 },
+        { metric_name: 'deepeval.answer_relevancy.score', metric_score_name: 'AVG', value: 0.7 },
+      ],
+    });
+
+    expect(parsed.byStatistic.AVG.map((group) => group.name)).toEqual([
+      'aidial_rag_eval.generation',
+      'deepeval.answer_relevancy',
+      'ragas.faithfulness',
+    ]);
   });
 
   test('parseMetricScores orders statistics by Metric Scores segmented-control order', () => {

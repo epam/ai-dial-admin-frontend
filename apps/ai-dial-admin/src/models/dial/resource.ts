@@ -24,6 +24,7 @@ export interface DialResource extends BaseEntity {
   responses_defaults?: Record<string, unknown>;
   created_at: number;
   updated_at: number;
+  etag?: string;
 }
 
 export interface DialApplicationResource extends DialResource, EntityDefaults {
@@ -189,6 +190,32 @@ export interface DialToolsetResource extends DialResource {
   provider?: string;
   vendor_website?: string;
   updatedAt: string;
+}
+
+/**
+ * A skill resource's folder metadata. `name`/`folderId` are derived from `path` alone (Core exposes
+ * no separate display name — see `SkillsCoreApi.getSkillMetadata`'s doc comment); `description`/
+ * `version` live only in `SKILL.md`'s frontmatter and are deliberately left unpopulated until
+ * in-browser `SKILL.md` editing is built. `files` lists the bundle's contents, read separately via
+ * `SkillsCoreApi.getSkillFiles` (Core's metadata endpoint reports no per-file size).
+ */
+export interface DialSkillResource {
+  name: string;
+  description?: string;
+  version?: string;
+  path: string;
+  /** The containing folder's path, e.g. `public/` for a skill at `public/my-skill` — enables Move. */
+  folderId: string;
+  etag?: string;
+  files: DialSkillFile[];
+  /** Present when read via the Assets surface — Skill Publications' properties view doesn't show these. */
+  author?: string;
+  createdAt?: number;
+  updatedAt?: number;
+}
+
+export interface DialSkillFile {
+  name: string;
 }
 
 export interface DialToolsetResourceAuthSettings {

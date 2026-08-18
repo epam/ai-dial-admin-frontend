@@ -6,7 +6,8 @@ export type BaseAssetRoute =
   | ApplicationRoute.AssetsToolsets
   | ApplicationRoute.Conversations
   | ApplicationRoute.AssetsModels
-  | ApplicationRoute.AssetsAppRunners;
+  | ApplicationRoute.AssetsAppRunners
+  | ApplicationRoute.AssetsSkills;
 
 export type CrudAssetRoute =
   | ApplicationRoute.Prompts

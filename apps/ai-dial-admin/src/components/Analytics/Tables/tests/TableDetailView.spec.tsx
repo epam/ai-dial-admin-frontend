@@ -2,7 +2,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { getTable, getTableAccess } from '@/src/app/[lang]/tables/actions';
+import { getTable, getTableAccess, updateTableSchema } from '@/src/app/[lang]/tables/actions';
 import TableDetailView from '@/src/components/Analytics/Tables/TableDetailView';
 import { ActionMenuOperationI18nKey, AnalyticsTablesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
@@ -512,15 +512,108 @@ describe('TableDetailView write rows', () => {
   });
 });
 
+describe('TableDetailView add columns :: display name and description', () => {
+  // The header trigger and the popup's submit share the "Add columns" label, so every query below is
+  // scoped to the popup itself.
+  const openPopup = async () => {
+    const user = userEvent.setup();
+    render(<TableDetailView name="dial_usage_log" initialTable={table()} apiBaseUrl="" flightUri="" />);
+    await user.click(screen.getByRole('button', { name: AnalyticsTablesI18nKey.AddColumns }));
+    return { user, popup: within(screen.getByRole('dialog')) };
+  };
+
+  test('the popup offers a Display name and a Description field on its column row', async () => {
+    const { popup } = await openPopup();
+
+    expect(popup.getByLabelText(AnalyticsTablesI18nKey.DisplayName, { exact: false })).toBeInTheDocument();
+    expect(popup.getByLabelText(AnalyticsTablesI18nKey.Description, { exact: false })).toBeInTheDocument();
+  });
+
+  // The point of the change: metadata authored here reaches the backend in the same request that creates
+  // the column, so no follow-up trip through the edit modal is needed.
+  test('a column added with metadata sends display_name and description in the add patch', async () => {
+    vi.mocked(updateTableSchema).mockResolvedValue({ success: true });
+    const { user, popup } = await openPopup();
+
+    fireEvent.change(popup.getByLabelText(AnalyticsTablesI18nKey.ColumnName, { exact: false }), {
+      target: { value: 'total_tokens' },
+    });
+    fireEvent.change(popup.getByLabelText(AnalyticsTablesI18nKey.DisplayName, { exact: false }), {
+      target: { value: 'Total tokens' },
+    });
+    fireEvent.change(popup.getByLabelText(AnalyticsTablesI18nKey.Description, { exact: false }), {
+      target: { value: 'Prompt plus completion tokens' },
+    });
+    await user.click(popup.getByRole('button', { name: AnalyticsTablesI18nKey.AddColumns }));
+
+    expect(updateTableSchema).toHaveBeenCalledWith('dial_usage_log', {
+      add: [
+        expect.objectContaining({
+          source_name: 'total_tokens',
+          name: 'total_tokens',
+          display_name: 'Total tokens',
+          description: 'Prompt plus completion tokens',
+        }),
+      ],
+    });
+  });
+
+  test('a column added without metadata sends neither key', async () => {
+    vi.mocked(updateTableSchema).mockResolvedValue({ success: true });
+    const { user, popup } = await openPopup();
+
+    fireEvent.change(popup.getByLabelText(AnalyticsTablesI18nKey.ColumnName, { exact: false }), {
+      target: { value: 'total_tokens' },
+    });
+    await user.click(popup.getByRole('button', { name: AnalyticsTablesI18nKey.AddColumns }));
+
+    const patch = vi.mocked(updateTableSchema).mock.lastCall?.[1];
+    expect(patch?.add?.[0]).not.toHaveProperty('display_name');
+    expect(patch?.add?.[0]).not.toHaveProperty('description');
+  });
+
+  test('an over-cap display name or description disables submit', async () => {
+    const { popup } = await openPopup();
+    const submit = popup.getByRole('button', { name: AnalyticsTablesI18nKey.AddColumns });
+
+    fireEvent.change(popup.getByLabelText(AnalyticsTablesI18nKey.ColumnName, { exact: false }), {
+      target: { value: 'total_tokens' },
+    });
+    expect(submit).toBeEnabled();
+
+    fireEvent.change(popup.getByLabelText(AnalyticsTablesI18nKey.DisplayName, { exact: false }), {
+      target: { value: 'a'.repeat(129) },
+    });
+    expect(submit).toBeDisabled();
+
+    fireEvent.change(popup.getByLabelText(AnalyticsTablesI18nKey.DisplayName, { exact: false }), {
+      target: { value: 'Total tokens' },
+    });
+    expect(submit).toBeEnabled();
+
+    fireEvent.change(popup.getByLabelText(AnalyticsTablesI18nKey.Description, { exact: false }), {
+      target: { value: 'b'.repeat(1025) },
+    });
+    expect(submit).toBeDisabled();
+  });
+});
+
 describe('TableDetailView enrichment tables', () => {
   const enrichment = () =>
     table({ type: AnalyticsTableType.Enrichment, source_table: 'dial_usage_log', grain: { grain_key: 'event_id' } });
 
-  test('offers neither Connect nor Add rows — the enrichment process writes these, and they are not queryable alone', () => {
+  test('offers Connect but not Add rows — the enrichment process writes these, but they are readable through the source table', () => {
     render(<TableDetailView name="dial_usage_log" initialTable={enrichment()} apiBaseUrl="" flightUri="" />);
 
-    expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.Connect })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: AnalyticsTablesI18nKey.Connect })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.AddRows })).not.toBeInTheDocument();
+  });
+
+  test('offers no Connect when the payload names no source table, since no runnable query exists', () => {
+    const orphan = table({ type: AnalyticsTableType.Enrichment, grain: { grain_key: 'event_id' } });
+    render(<TableDetailView name="dial_usage_log" initialTable={orphan} apiBaseUrl="" flightUri="" />);
+
+    expect(screen.queryByRole('button', { name: AnalyticsTablesI18nKey.Connect })).not.toBeInTheDocument();
   });
 
   test('still offers the schema and catalog actions, which do apply', () => {
