@@ -25,6 +25,7 @@ import {
   QuerySortNulls,
   QueryValueExpr,
   QueryValueType,
+  StructuredQuery,
 } from '@/src/models/analytics/query';
 import { TimeRange } from '@/src/models/time-range';
 import {
@@ -50,6 +51,9 @@ const fieldName = (node: QueryPredicate): string | undefined => (node.args?.[0] 
 
 const buildList = (overrides: Partial<Parameters<typeof buildConversationListQuery>[0]> = {}) =>
   buildConversationListQuery({ range: RANGE, ...PAGE, ...overrides });
+
+const selectNames = (query: StructuredQuery): string[] =>
+  (query.select as QueryOutputColumn[]).map((column) => (column.expr as QueryFieldExpr).name);
 
 describe('buildConversationListQuery :: shape', () => {
   test('reads the materialized conversations entity in row mode', () => {
@@ -101,25 +105,24 @@ describe('buildConversationListQuery :: shape', () => {
     ).toThrow(ConversationsField.Deployments);
   });
 
-  test('projects a visible schema-driven field alongside the curated ones', () => {
-    const names = (buildList({ visibleFields: ['success_count'] }).select as QueryOutputColumn[]).map(
-      (column) => (column.expr as QueryFieldExpr).name,
-    );
+  // A source field is a plain column of the table already being read, so projecting it costs one more
+  // column rather than a re-fetch when its column is revealed.
+  test('projects a source-backed field alongside the curated ones, hidden or not', () => {
+    const names = selectNames(buildList({ sourceFields: ['success_count'] }));
 
     expect(names).toContain('success_count');
     expect(names).toContain(ConversationsField.ChatId);
   });
 
-  test('omits a field whose column is hidden', () => {
-    const names = (buildList().select as QueryOutputColumn[]).map((column) => (column.expr as QueryFieldExpr).name);
+  test('projects an enrichment-backed field only while its column is visible', () => {
+    const visible = selectNames(buildList({ visibleEnrichmentFields: ['conversation_insights.topic'] }));
 
-    expect(names).not.toContain('success_count');
+    expect(visible).toContain('conversation_insights.topic');
+    expect(selectNames(buildList())).not.toContain('conversation_insights.topic');
   });
 
-  test('names a curated field once even when it is reported visible', () => {
-    const names = (buildList({ visibleFields: [ConversationsField.ChatId] }).select as QueryOutputColumn[]).map(
-      (column) => (column.expr as QueryFieldExpr).name,
-    );
+  test('names a curated field once even when it is reported as a source field', () => {
+    const names = selectNames(buildList({ sourceFields: [ConversationsField.ChatId] }));
 
     expect(names.filter((name) => name === ConversationsField.ChatId)).toHaveLength(1);
   });
@@ -361,9 +364,10 @@ describe('buildConversationListQuery :: sort, page and purity', () => {
     expect(sort?.slice(0, 2).every((item) => item.nulls === QuerySortNulls.Last)).toBe(true);
   });
 
-  // Row mode is the only mode the service populates a total for, and paging needs one.
-  test('requests the total and carries the caller offset and limit', () => {
-    expect(buildList().page).toEqual({ type: 'offset', offset: 0, limit: 100, include_total: true });
+  // The totals query resolves the same count under the same filter, and the service runs a requested
+  // total as its own statement over the whole filtered result — so asking here would scan it per page.
+  test('requests no total and carries the caller offset and limit', () => {
+    expect(buildList().page).toEqual({ type: 'offset', offset: 0, limit: 100, include_total: false });
     expect(buildList({ offset: 200, limit: 100 }).page).toMatchObject({ offset: 200, limit: 100 });
   });
 
