@@ -1,12 +1,17 @@
+import { QuerySortDirection, QueryValueType } from '@/src/models/analytics/query';
+
 export enum ColumnProvenance {
   Conversations = 'conversations',
   Feedback = 'feedback',
   None = 'none',
 }
 
+export type ConversationScalar = number | string | boolean | null;
+
 export interface ConversationRow {
   chat_id: string;
   project_id: string;
+  user_hash: string | null;
   turn_count: number | string | null;
   total_tokens: number | string | null;
   total_price: number | string | null;
@@ -15,6 +20,8 @@ export interface ConversationRow {
   rating_up: number | null;
   rating_down: number | null;
 }
+
+export type ConversationListRow = ConversationRow & Record<string, ConversationScalar | undefined>;
 
 export interface ConversationsPage {
   rows: ConversationRow[];
@@ -48,22 +55,55 @@ export enum FeedbackFilter {
   Rated = 'rated',
 }
 
+export enum ConversationFilterOperator {
+  Contains = 'contains',
+  NotContains = 'notContains',
+  Equals = 'equals',
+  NotEquals = 'notEquals',
+  GreaterThan = 'greaterThan',
+  GreaterThanOrEqual = 'greaterThanOrEqual',
+  LessThan = 'lessThan',
+  LessThanOrEqual = 'lessThanOrEqual',
+  Range = 'range',
+}
+
+export interface ConversationColumnFilter {
+  field: string;
+  operator: ConversationFilterOperator;
+  value: string;
+  valueTo?: string;
+  valueType?: QueryValueType;
+}
+
+export interface ConversationSortKey {
+  field: string;
+  direction: QuerySortDirection;
+}
+
 export interface ConversationFilters {
   search: string;
   startMs: number;
   endMs: number;
   feedback: FeedbackFilter;
+  columnFilters?: ConversationColumnFilter[];
 }
 
 export interface ConversationPageRequest extends ConversationFilters {
   offset: number;
   limit: number;
   chatIds?: string[];
+  sort?: ConversationSortKey[];
+  visibleFields?: string[];
 }
 
 export interface ConversationSummary {
   rated: number;
   negative: number;
+}
+
+export interface ConversationCandidateIds {
+  ids: string[];
+  isCapped: boolean;
 }
 
 export interface ProvenanceEntity {
@@ -83,6 +123,7 @@ export enum ConversationsField {
   SuccessCount = 'success_count',
   DurationMs = 'duration_ms',
   AvgDurationMs = 'avg_duration_ms',
+  Deployments = 'deployments',
   FirstRequestTime = 'first_request_time',
   LastRequestTime = 'last_request_time',
 }
@@ -133,6 +174,7 @@ export interface ConversationDetailRow {
   success_count: number | string | null;
   duration_ms: number | string | null;
   avg_duration_ms: number | string | null;
+  deployments: string[] | null;
 }
 
 export interface ConversationDetailResult {
@@ -259,6 +301,7 @@ export enum ConversationFieldFormat {
   Cost = 'cost',
   DateTime = 'date-time',
   Duration = 'duration',
+  List = 'list',
 }
 
 export enum ConversationPanelLayout {

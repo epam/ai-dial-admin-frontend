@@ -1,4 +1,8 @@
-import { COST_COMPACT_THRESHOLD, COST_SIGNIFICANT_DIGITS } from '@/src/constants/analytics/conversations-trace';
+import {
+  COST_COMPACT_THRESHOLD,
+  COST_SIGNIFICANT_DIGITS,
+  UNAVAILABLE_VALUE,
+} from '@/src/constants/analytics/conversations-trace';
 import { toBig, toNumber } from '@/src/utils/analytics/scalar';
 import { formatNumberWithExponent } from '@/src/utils/formatting/number-formatting';
 
@@ -87,6 +91,21 @@ export const formatDurationMs = (value: number | string | null): string => {
   }
 
   return `${stripTrailingZeros((millis / SECOND_MS).toFixed(1))}s`;
+};
+
+export const formatConversationDuration = (value: number | string | null): string => {
+  const millis = toNumber(value);
+  if (millis === null || millis <= 0) {
+    return UNAVAILABLE_VALUE;
+  }
+  if (millis < MINUTE_MS) {
+    return `${stripTrailingZeros((millis / SECOND_MS).toFixed(1))}s`;
+  }
+  if (millis < HOUR_MS) {
+    return `${Math.floor(millis / MINUTE_MS)}m ${Math.round((millis % MINUTE_MS) / SECOND_MS)}s`;
+  }
+
+  return `${Math.floor(millis / HOUR_MS)}h ${Math.round((millis % HOUR_MS) / MINUTE_MS)}m`;
 };
 
 export const formatRelativeTime = (value: number | string | null, nowMs: number): string => {

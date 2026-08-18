@@ -6,20 +6,21 @@ import { useRouter } from 'next/navigation';
 
 import { ColDef, GridApi, ICellRendererParams, IRowNode, ITooltipParams, ValueGetterParams } from 'ag-grid-community';
 import {
-  ButtonVariant,
   ConfirmationPopupVariant,
-  DialButtonDropdown,
   DialConfirmationPopup,
   DialDangerButton,
   DialEllipsisTooltip,
   DialFormPopup,
+  DialGhostButton,
   DialNeutralButton,
   DialPrimaryButton,
   PopupSize,
 } from '@epam/ai-dial-ui-kit';
+import { IconPlugConnected } from '@tabler/icons-react';
 
 import { addRows, defineTableSchema, deleteTable, getTable, updateTableSchema } from '@/src/app/[lang]/tables/actions';
 import ColumnRowsEditor from '@/src/components/Analytics/Tables/ColumnRowsEditor';
+import ConnectPanel from '@/src/components/Analytics/Tables/ConnectPanel/ConnectPanel';
 import DraftSchemaEditor from '@/src/components/Analytics/Tables/DraftSchemaEditor';
 import EditColumnPopup from '@/src/components/Analytics/Tables/EditColumnPopup';
 import TableAccessPanel from '@/src/components/Analytics/Tables/TableAccessPanel';
@@ -66,6 +67,11 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 interface Props {
   name: string;
   initialTable: AnalyticsTable;
+  // The endpoints an external client would call, from ANALYTICS_PUBLIC_URL and
+  // ANALYTICS_FLIGHT_SQL_PUBLIC_URL; blank when unconfigured, which makes the generated snippets fall
+  // back to a visible placeholder.
+  apiBaseUrl: string;
+  flightUri: string;
 }
 
 // Renders the column name with a trailing sensitive marker; editing still swaps in the cell editor.
@@ -82,7 +88,7 @@ const ColumnNameCellRenderer: FC<ICellRendererParams<AnalyticsTableColumn>> = ({
 // column, so its inline rename and row actions are disabled wherever this check is used.
 const isPinnedRow = (_api: GridApi, node: IRowNode) => Boolean(node.rowPinned);
 
-const TableDetailView: FC<Props> = ({ name, initialTable }) => {
+const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri }) => {
   const t = useI18n();
   const router = useRouter();
   const { showNotification } = useNotification();
@@ -92,12 +98,16 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
   const [addOpen, setAddOpen] = useState(false);
   const [writeOpen, setWriteOpen] = useState(false);
   const [accessOpen, setAccessOpen] = useState(false);
+  const [connectOpen, setConnectOpen] = useState(false);
   const [addColumns, setAddColumns] = useState<ColumnRow[]>([createColumnRow()]);
   const [rowsJson, setRowsJson] = useState('[]');
   const [editColumn, setEditColumn] = useState<AnalyticsTableColumn | null>(null);
   const [sourceTable, setSourceTable] = useState<AnalyticsTable | null>(null);
 
   const isSystem = Boolean(table.system);
+  // An enrichment's rows come from the enrichment process, and it is not a queryable entity — its
+  // columns are surfaced on its source table instead. Neither half of Connect applies.
+  const isEnrichment = table.type === AnalyticsTableType.Enrichment;
   const isActive = table.status === TableStatus.Active;
   const { canDelete, canWrite, canModify, canManageRoles } = useAnalyticsTablePermissions(table);
   const columns = useMemo(() => table.columns ?? [], [table.columns]);
@@ -242,18 +252,15 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
     }
   };
 
-  const addColumnsAction = {
-    key: 'add-columns',
-    label: t(AnalyticsTablesI18nKey.AddColumns),
-    onClick: () => setAddOpen(true),
+  const onAddRows = () => {
+    setRowsJson(buildRowsTemplate(columns, table.grain?.grain_key));
+    setWriteOpen(true);
   };
-  const addRowsAction = {
-    key: 'add-rows',
-    label: t(AnalyticsTablesI18nKey.AddRows),
-    onClick: () => {
-      setRowsJson(buildRowsTemplate(columns, table.grain?.grain_key));
-      setWriteOpen(true);
-    },
+  // The manual editor is a hand-check; a reader who opened it for real ingestion is redirected to the
+  // scripted path before typing, so the discarded content is the untouched template.
+  const onWriteProgrammatically = () => {
+    setWriteOpen(false);
+    setConnectOpen(true);
   };
   // The enrichment grain key is a hidden physical column (never part of `table.columns`, and the API
   // never exposes its type/tag/display metadata directly) — shown pinned to the top of the grid for
@@ -333,7 +340,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
           </div>
           {table.description && <DialEllipsisTooltip text={table.description} className="text-primary dial-small" />}
         </div>
-        {(canDelete || canWrite || canModify || canManageRoles) && (
+        {(canDelete || canWrite || canModify || canManageRoles || (isActive && !isEnrichment)) && (
           <div className="flex items-center gap-4">
             {canManageRoles && (
               <DialNeutralButton label={t(AnalyticsTablesI18nKey.ManageAccess)} onClick={() => setAccessOpen(true)} />
@@ -342,17 +349,23 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
               <DialDangerButton label={t(AnalyticsTablesI18nKey.DeleteTable)} onClick={() => setConfirmOpen(true)} />
             )}
             {isActive ? (
-              canModify && canWrite ? (
-                <DialButtonDropdown
-                  label={t(ButtonsI18nKey.Add)}
-                  items={[addColumnsAction, addRowsAction]}
-                  variant={ButtonVariant.Primary}
-                />
-              ) : canModify ? (
-                <DialPrimaryButton label={addColumnsAction.label} onClick={addColumnsAction.onClick} />
-              ) : (
-                canWrite && <DialPrimaryButton label={addRowsAction.label} onClick={addRowsAction.onClick} />
-              )
+              <>
+                {canModify && (
+                  <DialNeutralButton label={t(AnalyticsTablesI18nKey.AddColumns)} onClick={() => setAddOpen(true)} />
+                )}
+                {canWrite && !isEnrichment && (
+                  <DialNeutralButton label={t(AnalyticsTablesI18nKey.AddRows)} onClick={onAddRows} />
+                )}
+                {/* Not permission-gated: a reader who cannot yet write is the one who needs to learn
+                    which role to ask for. Enrichments are excluded entirely — see isEnrichment. */}
+                {!isEnrichment && (
+                  <DialPrimaryButton
+                    label={t(AnalyticsTablesI18nKey.Connect)}
+                    onClick={() => setConnectOpen(true)}
+                    iconBefore={<IconPlugConnected size={18} />}
+                  />
+                )}
+              </>
             ) : (
               canModify && (
                 <DialPrimaryButton
@@ -464,7 +477,14 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
           onClose={() => setWriteOpen(false)}
           onSubmit={() => void onSubmitWriteRows()}
         >
-          <div className="p-6">
+          <div className="flex flex-col gap-3 p-6">
+            <div className="flex flex-col items-start gap-1 border-l-2 border-tertiary pl-3">
+              <p className="dial-tiny-text text-secondary">{t(AnalyticsTablesI18nKey.AddRowsPurpose)}</p>
+              <DialGhostButton
+                label={t(AnalyticsTablesI18nKey.WriteProgrammatically)}
+                onClick={onWriteProgrammatically}
+              />
+            </div>
             <div className="h-[320px] overflow-hidden rounded border border-primary">
               <JsonEditorBase value={rowsJson} onChange={(v) => setRowsJson(v ?? '')} />
             </div>
@@ -484,6 +504,15 @@ const TableDetailView: FC<Props> = ({ name, initialTable }) => {
       )}
 
       {accessOpen && <TableAccessPanel name={name} onClose={() => setAccessOpen(false)} />}
+
+      {connectOpen && (
+        <ConnectPanel
+          table={table}
+          apiBaseUrl={apiBaseUrl}
+          flightUri={flightUri}
+          onClose={() => setConnectOpen(false)}
+        />
+      )}
     </div>
   );
 };

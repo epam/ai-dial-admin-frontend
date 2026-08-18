@@ -10,6 +10,7 @@ const row = (rating_up: number | null, rating_down: number | null): Conversation
   chat_id: 'chat-1',
   first_request_time: 0,
   project_id: 'data-team',
+  user_hash: 'db7327ba3decd351',
   turn_count: 3,
   total_tokens: 10,
   total_price: '0.1',

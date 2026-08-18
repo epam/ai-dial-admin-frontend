@@ -8,6 +8,7 @@ import {
   CONVERSATIONS_GROUP_HEADER_HEIGHT,
   CONVERSATIONS_HEADER_HEIGHT,
   CONVERSATIONS_ROW_HEIGHT,
+  CONVERSATIONS_STORAGE_KEY,
 } from '@/src/constants/analytics/conversations-trace';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import {
@@ -16,6 +17,7 @@ import {
   ConversationRow,
   ConversationsField,
 } from '@/src/models/analytics/conversations-trace';
+import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 
 interface CapturedProps {
   rowData?: ConversationRow[] | null;
@@ -23,6 +25,8 @@ interface CapturedProps {
   additionalGridOptions?: GridOptions;
   emptyDataProps?: { title?: string };
   storageKey?: string;
+  isLiveData?: boolean;
+  showColumnsPanel?: boolean;
   onGridReady?: (event: GridReadyEvent) => void;
   getRowId?: (params: { data: ConversationRow }) => string;
 }
@@ -41,7 +45,15 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
 const datasource: IDatasource = { getRows: vi.fn() };
 const onGridReady = vi.fn();
 
-const renderList = () => render(<ConversationsList datasource={datasource} onGridReady={onGridReady} />);
+const renderList = () =>
+  render(
+    <ConversationsList
+      datasource={datasource}
+      onGridReady={onGridReady}
+      isColumnsPanelOpen={false}
+      onToggleColumnsPanel={vi.fn()}
+    />,
+  );
 
 beforeEach(() => {
   captured = {};
@@ -76,11 +88,16 @@ describe('ConversationsList :: paging', () => {
     expect(captured.getRowId?.({ data: { chat_id: 'abc' } as ConversationRow })).toBe('abc');
   });
 
-  // Column groups plus persisted state is the one combination that is genuinely unsafe.
-  test('persists no column state', () => {
+  test('persists column state under a per-view key', () => {
     renderList();
 
-    expect(captured.storageKey).toBeUndefined();
+    expect(captured.storageKey).toBe(CONVERSATIONS_STORAGE_KEY);
+  });
+
+  test('restores persisted state through the live-data branch', () => {
+    renderList();
+
+    expect(captured.isLiveData).toBe(true);
   });
 
   // The view renders the app's no-data content; AG Grid's untranslated overlay would cover it.
@@ -103,16 +120,19 @@ describe('ConversationsList :: paging', () => {
 });
 
 describe('ConversationsList :: columns', () => {
-  test('renders the seven columns in order', () => {
+  test('renders the ten columns in order', () => {
     renderList();
 
     expect(leafColumns().map((column) => column.field)).toEqual([
       ConversationsField.ChatId,
       ConversationsField.ProjectId,
+      ConversationsField.UserHash,
       ConversationsField.TurnCount,
       ConversationsField.LastRequestTime,
       ConversationsField.TotalTokens,
       ConversationsField.TotalPrice,
+      ConversationsField.DurationMs,
+      ConversationsField.Deployments,
       ConversationColumn.Rating,
     ]);
   });
@@ -124,7 +144,7 @@ describe('ConversationsList :: columns', () => {
 
     expect(groups.map((group) => group.groupId)).toEqual([ColumnProvenance.Conversations, ColumnProvenance.Feedback]);
     expect(groups.every((group) => group.marryChildren)).toBe(true);
-    expect(leafColumns()).toHaveLength(7);
+    expect(leafColumns()).toHaveLength(10);
   });
 
   test('attributes the rating column to the feedback entity and the rest to conversations', () => {
@@ -145,15 +165,51 @@ describe('ConversationsList :: columns', () => {
     });
   });
 
-  // The page's filters are query predicates over the whole result; a column filter would narrow only the
-  // blocks already fetched and report that as the complete answer.
-  test('is read-only — no column sorts and none offers a filter', () => {
+  test('offers a schema-driven column, hidden, inside the conversations group', () => {
+    render(
+      <ConversationsList
+        datasource={datasource}
+        onGridReady={onGridReady}
+        isColumnsPanelOpen={false}
+        onToggleColumnsPanel={vi.fn()}
+        schemaFields={[{ name: 'success_count', type: AnalyticsFieldType.Integer, source: 'conversations' }]}
+      />,
+    );
+
+    const [conversations] = captured.columnDefs ?? [];
+    const added = (conversations.children as ColDef[]).find((column) => column.field === 'success_count');
+
+    expect(added).toMatchObject({ hide: true });
+  });
+
+  test('offers nothing extra when the schema is unavailable', () => {
     renderList();
 
-    leafColumns().forEach((column) => {
-      expect(column.sortable).toBe(false);
-      expect(column.filter).toBe(false);
-      expect(column.floatingFilter).toBe(false);
-    });
+    expect(leafColumns()).toHaveLength(10);
+  });
+
+  test('keeps rating out of the offered set', () => {
+    renderList();
+
+    const rating = leafColumns().find((column) => column.field === ConversationColumn.Rating);
+
+    expect(rating?.suppressColumnsToolPanel ?? false).toBe(false);
+    expect(rating?.hide ?? false).toBe(false);
+  });
+
+  test('offers sort and filter on field-backed columns only', () => {
+    renderList();
+
+    const rating = leafColumns().find((column) => column.field === ConversationColumn.Rating);
+    expect(rating?.sortable).toBe(false);
+    expect(rating?.filter).toBe(false);
+
+    const activity = leafColumns().find((column) => column.field === ConversationsField.LastRequestTime);
+    expect(activity?.sortable).not.toBe(false);
+    expect(activity?.filter).toBe(false);
+
+    const project = leafColumns().find((column) => column.field === ConversationsField.ProjectId);
+    expect(project?.sortable).not.toBe(false);
+    expect(project?.filter).not.toBe(false);
   });
 });

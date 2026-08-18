@@ -8,15 +8,26 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 
 import AgGridWrapper, { AgGridProps } from '@/src/components/Grid/AgGridWrapper';
 import ColumnsPanel from '@/src/components/Grid/ColumnsPanel/ColumnsPanel';
-import { checkColDefsChanges } from '@/src/components/Grid/comparators/base-column-comparator';
+import {
+  checkColDefsChanges,
+  checkGroupedColDefsChanges,
+} from '@/src/components/Grid/comparators/base-column-comparator';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
 import { useIsOnlyTabletScreen } from '@/src/hooks/use-is-tablet-screen';
 
 import {
   applyColumnStateOrderToColDefs,
+  applyColumnStateOrderToGroupedColDefs,
   getColumnVisibilityFromGridState,
+  getGroupedColumnVisibilityFromGridState,
   haveColDefsSamePanelState,
+  haveGroupedColDefsSamePanelState,
+  isGroupedColDefs,
+  toColumnLeaves,
   updateColumnVisibilityInStorage,
+  updateGroupedColumnVisibilityInStorage,
+  withLeafMoved,
+  withLeafVisibility,
 } from '../utils';
 
 export interface GridViewProps<T> extends AgGridProps<T> {
@@ -74,13 +85,17 @@ const GridView = <T extends object>({
 
     if (showColumnsPanel) {
       if (currentColDefs == null || currentColDefs.length === 0) {
-        const storageColumns = storageKey ? getColumnVisibilityFromGridState(storageKey, columnDefs) : null;
+        const readStoredColumns = isGroupedColDefs(columnDefs)
+          ? getGroupedColumnVisibilityFromGridState
+          : getColumnVisibilityFromGridState;
+        const storageColumns = storageKey ? readStoredColumns(storageKey, columnDefs) : null;
         setCurrentColDefs(
           !(storageColumns && columnDefs && columnDefs.length > storageColumns?.length)
             ? storageColumns || [...(columnDefs || [])]
             : [...columnDefs],
         );
-        setShowResetButton(storageColumns ? checkColDefsChanges(storageColumns, columnDefs || []) : false);
+        const hasChanges = isGroupedColDefs(columnDefs) ? checkGroupedColDefsChanges : checkColDefsChanges;
+        setShowResetButton(storageColumns ? hasChanges(storageColumns, columnDefs || []) : false);
       }
       return;
     }
@@ -102,51 +117,97 @@ const GridView = <T extends object>({
     );
   }, [isMobile, isTablet, staticPanelContainerClassName, staticPanelClassName]);
 
+  const isGrouped = useMemo(() => isGroupedColDefs(columnDefs), [columnDefs]);
+  const columnLeaves = useMemo(() => toColumnLeaves(currentColDefs || []), [currentColDefs]);
+
+  const persistVisibility = useCallback(
+    (colDefs: ColDef[]) => {
+      if (!storageKey) {
+        return;
+      }
+      if (isGrouped) {
+        updateGroupedColumnVisibilityInStorage(storageKey, colDefs);
+        return;
+      }
+      updateColumnVisibilityInStorage(storageKey, colDefs);
+    },
+    [isGrouped, storageKey],
+  );
+
+  const hasPanelChanges = useCallback(
+    (colDefs: ColDef[]) =>
+      isGrouped
+        ? checkGroupedColDefsChanges(colDefs, columnDefs || [])
+        : checkColDefsChanges(colDefs, columnDefs || []),
+    [isGrouped, columnDefs],
+  );
+
+  const clearSortAndFilter = useCallback((fields: string[]) => {
+    if (!fields.length) {
+      return;
+    }
+
+    gridApiRef.current?.applyColumnState({ state: fields.map((colId) => ({ colId, sort: null })) });
+
+    const filterModel = gridApiRef.current?.getFilterModel();
+    if (filterModel && fields.some((colId) => colId in filterModel)) {
+      const remaining = Object.fromEntries(Object.entries(filterModel).filter(([colId]) => !fields.includes(colId)));
+      gridApiRef.current?.setFilterModel(remaining);
+    }
+  }, []);
+
   const toggleColumnVisibility = useCallback(
     (id?: string) => {
-      if (currentColDefs) {
-        const newColDefs = currentColDefs?.map((c) => (c.field === id ? { ...c, hide: !c.hide } : c));
-        setCurrentColDefs(newColDefs);
-        if (storageKey) {
-          updateColumnVisibilityInStorage(storageKey, newColDefs);
-        }
-        setShowResetButton(newColDefs.some((c, index) => c.hide !== columnDefs?.[index].hide));
+      if (!currentColDefs || !id) {
+        return;
       }
+
+      const isHiding = !columnLeaves.find((leaf) => leaf.field === id)?.hide;
+      if (isHiding) {
+        clearSortAndFilter([id]);
+      }
+
+      const newColDefs = withLeafVisibility(currentColDefs, id, isHiding);
+      setCurrentColDefs(newColDefs);
+      persistVisibility(newColDefs);
+      setShowResetButton(hasPanelChanges(newColDefs));
     },
-    [currentColDefs, columnDefs, storageKey],
+    [currentColDefs, columnLeaves, clearSortAndFilter, hasPanelChanges, persistVisibility],
   );
 
   const onResetToDefault = () => {
-    setCurrentColDefs([...(columnDefs || [])]);
+    const defaults = columnDefs || [];
+    const hiddenByReset = toColumnLeaves(defaults)
+      .filter((leaf) => leaf.hide)
+      .map((leaf) => leaf.field);
+    clearSortAndFilter(hiddenByReset);
 
-    if (storageKey) {
-      updateColumnVisibilityInStorage(storageKey, columnDefs || []);
-    }
+    setCurrentColDefs([...defaults]);
+    persistVisibility(defaults);
     setShowResetButton(false);
   };
 
   const onFindColumn = useCallback(
-    (field?: string) => currentColDefs?.findIndex((c) => c.field === field),
-    [currentColDefs],
+    (field?: string) => columnLeaves.findIndex((leaf) => leaf.field === field),
+    [columnLeaves],
   );
 
   const onMoveColumn = useCallback(
     (field: string, atIndex: number) => {
-      const index = onFindColumn(field);
-      if (index == null || index < 0) {
+      if (!currentColDefs) {
         return;
       }
 
-      const updatedColDefs = [...(currentColDefs || [])];
-      const [removedColDef] = updatedColDefs.splice(index, 1);
-      updatedColDefs.splice(atIndex, 0, removedColDef);
-      if (storageKey) {
-        updateColumnVisibilityInStorage(storageKey, updatedColDefs);
+      const updatedColDefs = withLeafMoved(currentColDefs, field, atIndex);
+      if (updatedColDefs === currentColDefs) {
+        return;
       }
+
+      persistVisibility(updatedColDefs);
       setCurrentColDefs(updatedColDefs);
-      setShowResetButton(checkColDefsChanges(updatedColDefs, columnDefs || []));
+      setShowResetButton(hasPanelChanges(updatedColDefs));
     },
-    [onFindColumn, currentColDefs, columnDefs, storageKey],
+    [currentColDefs, hasPanelChanges, persistVisibility],
   );
 
   const handleGridReady = useCallback(
@@ -172,12 +233,22 @@ const GridView = <T extends object>({
         return prevColDefs;
       }
 
-      const syncedColDefs = applyColumnStateOrderToColDefs(prevColDefs, columnState);
-      if (haveColDefsSamePanelState(prevColDefs, syncedColDefs)) {
+      const grouped = isGroupedColDefs(prevColDefs);
+      const syncedColDefs = grouped
+        ? applyColumnStateOrderToGroupedColDefs(prevColDefs, columnState)
+        : applyColumnStateOrderToColDefs(prevColDefs, columnState);
+      const isSame = grouped
+        ? haveGroupedColDefsSamePanelState(prevColDefs, syncedColDefs)
+        : haveColDefsSamePanelState(prevColDefs, syncedColDefs);
+      if (isSame) {
         return prevColDefs;
       }
 
-      setShowResetButton(checkColDefsChanges(syncedColDefs, columnDefs));
+      setShowResetButton(
+        grouped
+          ? checkGroupedColDefsChanges(syncedColDefs, columnDefs)
+          : checkColDefsChanges(syncedColDefs, columnDefs),
+      );
       return syncedColDefs;
     });
   }, [showColumnsPanel, columnDefs]);
@@ -202,7 +273,7 @@ const GridView = <T extends object>({
             <div className={panelContainerClassName}>
               <DndProvider backend={HTML5Backend}>
                 <ColumnsPanel
-                  columns={currentColDefs || []}
+                  columns={columnLeaves}
                   showResetButton={showResetButton}
                   panelClassName={panelClassName}
                   onReset={onResetToDefault}

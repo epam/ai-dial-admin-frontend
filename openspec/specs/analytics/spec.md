@@ -24,7 +24,6 @@ the consolidated master spec, folding in the scaffold, saved queries, the query 
 editor, the query assistant, Tables, and the conversations trace.
 
 ## Requirements
-
 ### Requirement: ANALYTICS_ENABLED feature flag is surfaced on FeatureFlags
 
 The system SHALL expose an environment variable `ANALYTICS_ENABLED` whose value is surfaced at runtime on the `FeatureFlags` object as `analyticsEnabled: boolean`. The flag MUST be `true` only when `process.env.ANALYTICS_ENABLED` is present and resolves truthy per the existing `isValueTruthy` helper; otherwise it MUST be `false`. The flag SHALL be initialized in the root layout (`app/[lang]/layout.tsx`) alongside the other feature flags and added to the `FeatureFlags` model (`models/feature-flags.ts`).
@@ -735,6 +734,7 @@ The toolbar Run action SHALL execute the current query and render the result in 
 
 - **WHEN** the user runs a query from the SQL view
 - **THEN** each grid column is headed by the name the result returned
+
 ### Requirement: Result stat tiles
 
 When a result is shown, the results area SHALL display a stat-tile row above the result with: the number of returned rows, the number of result columns (Fields), and — when the response includes a total count — the Total. The service computes `totalCount` only for row-mode offset paging with `include_total=true`, so the Include total toggle SHALL be offered only in row mode with offset paging, and aggregate/SQL results never show a Total tile. No timing tile SHALL be shown (the backend does not report query timing).
@@ -1527,26 +1527,34 @@ The table detail view (`components/Analytics/Tables/TableDetailView.tsx`) SHALL 
 
 - **Manage access** SHALL be shown only when `canManageRoles` (`FULL_ADMIN` and non-system).
 - **Delete table** SHALL be shown only when `canDelete` (`FULL_ADMIN` and non-system).
-- For an `ACTIVE` table, **Add rows** (inserting rows) and **Add columns** (schema evolution) SHALL be offered as items of a single header **Add** dropdown rather than two standalone buttons; **Add rows** SHALL be shown only when `canWrite`, **Add columns** only when `canModify`, and the dropdown itself SHALL NOT render when neither is available.
+- **Connect** SHALL be shown for every `ACTIVE` **source** table regardless of permission, as the header's primary action, and SHALL NOT be shown for an **enrichment** table (see "Table detail Connect panel").
+- **Add rows** SHALL NOT be offered for an **enrichment** table whatever its `write` permission reports: those rows come from the enrichment process, so a hand-written insert is not a path this UI offers.
+- For an `ACTIVE` table, **Add columns** (schema evolution) and **Add rows** (inserting rows) SHALL each be offered as its own standalone header button — **not** as items of a shared dropdown. **Add columns** SHALL be shown only when `canModify` and **Add rows** only when `canWrite`; when neither permission is held, neither button renders. Both SHALL render as neutral actions, never primary and never dependent on whether the other is present, so each keeps the same appearance whatever the viewer's other permissions are. **Add rows** is deliberately not the emphasized way to put data in the table — see "Table detail row writes".
 - Per-column **edit/drop** (grid action column), **inline column rename**, column-metadata edits, and **description edits** SHALL be shown only when `canModify`.
-- Header actions SHALL be ordered **Manage access, Delete table, Add** (a not-yet-`ACTIVE` table shows **Save** in place of **Add** — see "Define and materialize a table schema").
+- Header actions SHALL be ordered **Manage access, Delete table, Add columns, Add rows, Connect** — the primary action last, where the header's primary action already sits. A not-yet-`ACTIVE` table shows neither Connect nor the two Add buttons, and shows **Save** in their place — see "Define and materialize a table schema".
 
 Because the backend reports `permissions {false,false}` for system tables, the write/modify-gated affordances (Add rows, Add columns, per-column edit/drop, inline rename, description edits) hide for system tables without a separate check. **Manage access** and **Delete table** are gated on `FULL_ADMIN`, which the backend does not scope per-table, so each carries its own explicit `!table.system` check.
 
 #### Scenario: Write-capable, not modify-capable
 
 - **WHEN** a table reports `permissions {write:true, modify:false}`
-- **THEN** the header **Add** dropdown offers **Add rows** but not **Add columns**, and the per-column action column and inline rename are absent
+- **THEN** the header shows an **Add rows** button and no **Add columns** button, and the per-column action column and inline rename are absent
 
 #### Scenario: Modify-capable, not write-capable
 
 - **WHEN** a table reports `permissions {write:false, modify:true}`
-- **THEN** the schema-edit affordances and per-column action column are present, and the header **Add** dropdown offers **Add columns** but not **Add rows**
+- **THEN** the schema-edit affordances and per-column action column are present, and the header shows an **Add columns** button and no **Add rows** button
 
 #### Scenario: Neither capability hides the Add dropdown entirely
 
 - **WHEN** a table reports `permissions {write:false, modify:false}`
-- **THEN** the header **Add** dropdown is not rendered at all
+- **THEN** neither **Add columns** nor **Add rows** is rendered, and no **Add** dropdown is rendered in their place either
+
+#### Scenario: Add actions keep a fixed emphasis
+
+- **WHEN** a table reports both permissions, and separately when it reports only one
+- **THEN** **Add columns** and **Add rows** each render as a neutral action whenever present, and neither is promoted to primary by the other's absence
+- **AND** **Connect** is the only primary action in the header
 
 #### Scenario: Delete stays admin-only
 
@@ -1558,14 +1566,31 @@ Because the backend reports `permissions {false,false}` for system tables, the w
 - **WHEN** a `FULL_ADMIN` opens a system table's detail page
 - **THEN** the "Manage access" button is absent
 
+#### Scenario: A system table still offers Connect
+
+- **WHEN** a user opens an `ACTIVE` system table's detail page
+- **THEN** **Connect** is present while **Add rows**, **Add columns**, **Manage access**, and **Delete table** are all absent
+
 #### Scenario: Header actions follow the fixed order
 
-- **WHEN** the detail header renders for a user with every permission
-- **THEN** the actions appear in the order Manage access, Delete table, Add (or Save when not `ACTIVE`)
+- **WHEN** the detail header renders for a user with every permission on an `ACTIVE` table
+- **THEN** the actions appear in the order Manage access, Delete table, Add columns, Add rows, Connect
+
+#### Scenario: A not-yet-active table shows Save in their place
+
+- **WHEN** the detail header renders for a `PENDING` or `FAILED` table and the user has `canModify`
+- **THEN** **Save** is shown, and none of **Connect**, **Add columns**, or **Add rows** is
 
 ### Requirement: Table detail row writes
 
-The Table detail page SHALL let the user write rows by entering a JSON array of row objects in a popup editor, opened via the header **Add** dropdown's **Add rows** item. Opening the editor SHALL prefill it with a one-row JSON template whose keys are the table's declared columns' **physical source names** (not their exposed names, which the backend's row-insert endpoint does not accept), each mapped to a value matching that column's type (`0` for Integer/Long/Decimal, `false` for Boolean, `{}` for Object, `[]` for Array, `""` otherwise) rather than a bare empty array, so the example stays valid input for every column. For an **enrichment** table the template SHALL additionally include the grain key as a top-level field, since the backend requires it on every inserted row. The **Insert rows** submit action SHALL be disabled while the editor's content does not parse as a JSON array, re-enabling as soon as it does; submitting invalid or non-array input SHALL additionally surface an error and SHALL NOT issue a request. Valid rows SHALL be posted via `addRows`, with a success or error notification.
+The Table detail page SHALL let the user write rows by entering a JSON array of row objects in a popup editor, opened via the header **Add rows** button. The popup is a **hand-check** — a way for an admin to confirm the table accepts the shape they expect — and SHALL be presented as such, not as the way a table is populated; a table is populated by a client writing to its row endpoint programmatically (see "Table detail Connect panel"). Opening the editor SHALL prefill it with a one-row JSON template whose keys are the table's declared columns' **physical source names** (not their exposed names, which the backend's row-insert endpoint does not accept), each mapped to a value matching that column's type (`0` for Integer/Long/Decimal, `false` for Boolean, `{}` for Object, `[]` for Array, `""` otherwise) rather than a bare empty array, so the example stays valid input for every column. The popup SHALL NOT be reachable for an **enrichment** table (see the gating requirement); where the template is built for one, it includes the grain key as a top-level field, since an enrichment row cannot join to its source without it. The **Insert rows** submit action SHALL be disabled while the editor's content does not parse as a JSON array, re-enabling as soon as it does; submitting invalid or non-array input SHALL additionally surface an error and SHALL NOT issue a request. Valid rows SHALL be posted via `addRows`, with a success or error notification.
+
+The popup SHALL carry, above its editor, a statement of its purpose — that it inserts rows by hand for checking a schema, and that ongoing ingestion goes through the table's row endpoint — together with a **Write rows programmatically** action which closes the popup, discarding the editor's content, and opens the Connect panel on its **Write data** tab (see "Table detail Connect panel"). Both SHALL sit at the top of the popup body, above the editor and away from the submit controls, so a user who opened the popup for real ingestion is redirected before typing rather than after.
+
+#### Scenario: The popup states that it is a hand-check
+
+- **WHEN** the user opens the Add rows editor
+- **THEN** the popup shows, above the editor, that it is for inserting rows by hand and that ongoing ingestion uses the row endpoint
 
 #### Scenario: Opening Add rows prefills a type-shaped template
 
@@ -1579,8 +1604,8 @@ The Table detail page SHALL let the user write rows by entering a JSON array of 
 
 #### Scenario: Enrichment template includes the grain key
 
-- **WHEN** the user opens the Add rows editor for an enrichment table
-- **THEN** the template includes the grain key as a top-level field alongside the declared columns
+- **WHEN** the Add rows template is built for an enrichment table
+- **THEN** it includes the grain key as a top-level field alongside the declared columns
 
 #### Scenario: Insert rows is disabled while the JSON is invalid
 
@@ -1597,6 +1622,11 @@ The Table detail page SHALL let the user write rows by entering a JSON array of 
 
 - **WHEN** the user enters text that is not a JSON array
 - **THEN** an error is shown and no request is issued
+
+#### Scenario: Escalating from the editor to a script
+
+- **WHEN** the user activates **Write rows programmatically** in the Add rows popup
+- **THEN** the popup closes and the Connect panel opens with its **Write data** tab selected
 
 ### Requirement: Delete confirmation identifies the table by name
 
@@ -2083,6 +2113,7 @@ happens only through the per-message actions on the transcript.
 
 - **WHEN** the AI view is active
 - **THEN** the entity selector and time filter controls are still shown and usable
+
 ### Requirement: Conversations page route, access guard, and server prefetch
 
 The system SHALL expose an Analytics page at `/conversations-trace`, present in the `ApplicationRoute`
@@ -2205,12 +2236,17 @@ conversation query, so the default path costs exactly one request per page.
 
 The candidate query SHALL be aggregate mode over `rate_analytics` grouped by `chat_id`, carry the same time
 bounds as the conversation query and an empty-id guard, and select `chat_id` plus `max(request_time)`. It SHALL
-be ordered by most recent rating so that if the candidate set reaches its limit, the ids retained are those
-most likely to survive the conversation query's own `last_request_time desc` ordering. Its limit SHALL NOT
-exceed 1000, the service's hard maximum.
+be ordered by most recent rating, so that if the candidate set reaches its limit the ids retained are the most
+recently rated ones. Its limit SHALL NOT exceed 1000, the service's hard maximum.
 
 The candidate set SHALL be resolved once per filter state and reused across the pages of that result, rather
 than re-queried per page: the narrowing is a property of the filter, not of the page.
+
+When the candidate set reaches that limit the view SHALL state that the feedback-filtered result may be
+incomplete and that the conversations shown are the most recently rated ones. The cap truncates the result
+regardless of how it is ordered, and the ordering is the operator's to choose, so a truncated result MUST NOT
+be presented as the complete set of conversations carrying that feedback. The disclosure SHALL be visible
+while the capped filter state is applied and SHALL clear when the filter state no longer reaches the cap.
 
 The rate predicates SHALL be:
 
@@ -2244,6 +2280,17 @@ failure SHALL propagate and the conversation query MUST NOT run.
 
 - **WHEN** the feedback filter is in its all state
 - **THEN** only the conversation query is issued and it carries no `in` predicate
+
+#### Scenario: A capped candidate set is disclosed
+
+- **WHEN** the candidate query returns its full limit of ids
+- **THEN** the view states that the result may be incomplete and covers the most recently rated
+  conversations
+
+#### Scenario: The disclosure clears when the filter state no longer caps
+
+- **WHEN** the operator changes to a filter state whose candidate set is below the limit
+- **THEN** the incompleteness disclosure is no longer shown
 
 #### Scenario: No conversation carries the feedback
 
@@ -2289,12 +2336,34 @@ has loaded and SHALL name that scope, rather than implying they cover the whole 
 could not be resolved MUST NOT be counted as rated, since an unresolved rating is not evidence of an absent
 one.
 
+The whole-result figures and the loaded-scope figures SHALL be observations of the same fetch cycle. The
+whole-result figures SHALL therefore be re-resolved whenever the page fetches the first page of a result,
+including the first page the client fetches after mount, and a server-prefetched figure MUST NOT remain the
+displayed value once the client has fetched a page of its own. The rollup the page reads is materialized
+continuously, so a figure resolved at page load and a page fetched later are two observations of a changing
+table: presenting them side by side lets the loaded-scope denominator exceed the whole-result total, which
+states an impossibility.
+
+The loaded-conversation count SHALL be a count of **distinct** conversations, not of delivered rows. The row
+cache is bounded, so a conversation whose block is evicted and re-fetched is delivered more than once; it
+SHALL be counted once.
+
+The rated and negative pills SHALL name their loaded scope in text that is visible on the pill. A caveat
+carried only in a tooltip or only in assistive-technology-only content is not stated for the reader looking at
+the header, who then reads all four figures as one consistent set. The visible caveat SHALL NOT replace the
+existing hover and assistive-technology text.
+
 The cost total SHALL be summed with the decimal library rather than as floating-point numbers, since the
 values carry twelve fractional digits, and SHALL be rounded for display. That rounding is local to the summary
 and does not settle how the Cost column renders.
 
 When the summary request fails, the pills SHALL report that the figures are unavailable rather than rendering
 zeros, which would assert an empty result that was never established.
+
+A failure to fetch the rows SHALL NOT by itself make the figures unavailable: they are resolved by their own
+request, so a row failure is no evidence about them. A failure that prevents the summary request from being
+issued at all SHALL, however, clear the figures, because the ones on screen then describe the previous filter
+state rather than the applied one.
 
 #### Scenario: The provenance line names only real, queried entities
 
@@ -2313,6 +2382,19 @@ zeros, which would assert an empty result that was never established.
 
 - **WHEN** only part of the result is loaded
 - **THEN** the rated and negative pills state that they cover the loaded conversations
+- **AND** that statement is visible on the pill without hovering it
+
+#### Scenario: The whole-result figures follow the first page
+
+- **WHEN** the client fetches the first page of a result
+- **THEN** the whole-result count and cost are re-resolved for that same filter state
+- **AND** the figures shown are those observations, not the ones prefetched at page load
+
+#### Scenario: The loaded denominator cannot exceed the result total
+
+- **WHEN** enough of the result has been scrolled that a previously delivered page is re-fetched
+- **THEN** each conversation counts once toward the loaded-conversation count
+- **AND** that count does not exceed the whole-result conversation total
 
 #### Scenario: An unresolved rating is not counted as rated
 
@@ -2323,6 +2405,16 @@ zeros, which would assert an empty result that was never established.
 
 - **WHEN** the summary request fails
 - **THEN** the pills report the figures as unavailable rather than showing zeros
+
+#### Scenario: A failed row fetch leaves the figures standing
+
+- **WHEN** the first page of rows fails but the summary request succeeded
+- **THEN** the pills keep showing the figures the summary request returned
+
+#### Scenario: A summary that could not be issued reports unavailability
+
+- **WHEN** a failure prevents the summary request from being issued for the applied filter state
+- **THEN** the pills report the figures as unavailable rather than the previous state's figures
 
 ### Requirement: Conversation filters re-query the backend
 
@@ -2551,135 +2643,45 @@ resilient if the mapping changes.
 - **WHEN** a row's `total_tokens` or `total_price` is `null`
 - **THEN** the corresponding cell renders empty rather than `0`, `null`, or `NaN`
 
-### Requirement: Read-only conversations grid
-
-The conversations view SHALL render a grid of six visible columns — conversation, project, turns, activity,
-tokens, cost — plus the Rating column. No column SHALL be sortable, and no column SHALL offer a filter control
-of its own — neither a floating filter row nor a filter menu in the header. Per-column filtering stays off even
-though the page itself has filters: the page's filters are query predicates over the whole result, whereas a
-column filter narrows only the pages already fetched, and would report that narrowed view as the complete
-answer. Ordering is fixed by the query, most recent last activity first.
-
-The grid SHALL obtain its rows page by page from the backend and MUST NOT be handed a superset to narrow, and
-no grid-level filter model SHALL be set from the page's filter state. While the first page of a new filter
-state is in flight the view SHALL show a loading indicator, so the empty state cannot flash between a filter
-change and its rows. When the result holds no rows the view SHALL render a no-data state rather than an empty
-grid body.
-
-The conversation column SHALL keep the full conversation id reachable when it is too long to display, since
-real ids are not uniformly short and can run to hundreds of characters. Truncation MUST NOT be the only
-presentation of the value.
-
-Numeric and currency columns SHALL carry the same formatting these value types carry elsewhere in the app.
-The grid SHALL use a taller row than the app's shared default, since its cells stack two lines.
-
-The page header SHALL be the title alone, with no status badge of its own — the Analytics navigation group
-already marks the whole area as preview.
-
-Rows SHALL be openable, navigating to that conversation's detail view. Opening a row is a read, not a
-mutation of the result, so it does not make the grid writable: sorting and per-column filtering stay off.
-The grid SHALL indicate that its rows are openable rather than leaving the affordance undiscoverable, and
-SHALL honour the app's convention for opening a row in a new tab. The conversation id SHALL be URL-encoded
-into the detail address, since real ids contain path separators and percent-encoded text.
-
-The grid SHALL carry a provenance band above the column headers, grouping every column under the data source
-it comes from, and a column MUST NOT be able to leave its group when moved.
-
-Every column SHALL belong to exactly one group: an unattributed column would imply a provenance the page has
-not stated. Group labels SHALL name the actual source of the columns beneath them and MUST NOT overstate it —
-a column read from a source table MUST NOT be labelled as enrichment-derived, and no group SHALL be attributed
-to a source the page does not query. Each group SHALL carry a tooltip naming its source precisely. Colours
-SHALL come from theme tokens, never literal values, and every provenance value SHALL map to a colour, so a
-newly added one cannot render unstyled.
-
-The band and the column-header row SHALL each carry their own height, and the band label SHALL be separated
-from the column header beneath it.
-
-#### Scenario: Every column is attributed to a source
-
-- **WHEN** the grid renders
-- **THEN** a band above the column headers groups the columns by source
-- **AND** every column belongs to exactly one group
-- **AND** the conversation, project, turns, activity, tokens and cost columns are attributed to
-  `conversations`, and the Rating column to `rate_analytics`
-
-#### Scenario: No group claims an enrichment the page does not query
-
-- **WHEN** the grid renders
-- **THEN** no provenance group is labelled as enrichment-derived
-- **AND** no group tooltip says its values are samples
-
-#### Scenario: Groups survive column movement
-
-- **WHEN** a column is dragged
-- **THEN** it cannot be moved out of its provenance group
-
-#### Scenario: Rows render from the fetched pages
-
-- **WHEN** the grid has fetched a page of conversations
-- **THEN** one grid row renders per conversation, most recent last activity first
-
-#### Scenario: A long conversation id stays reachable
-
-- **WHEN** a conversation id is too long to fit its column
-- **THEN** the cell truncates it and the full value remains reachable
-
-#### Scenario: Opening a row navigates to the conversation
-
-- **WHEN** a grid row is opened
-- **THEN** that conversation's detail view is navigated to, with its id URL-encoded in the address
-
-#### Scenario: Opening a row in a new tab
-
-- **WHEN** a grid row is opened with the app's new-tab modifier
-- **THEN** the conversation's detail view opens in a new tab and the grid keeps its fetched pages
-
-#### Scenario: Sorting is disabled
-
-- **WHEN** a column header is clicked
-- **THEN** the row order does not change and no sort indicator appears
-
-#### Scenario: No filter control is reachable
-
-- **WHEN** the grid renders
-- **THEN** no floating filter row appears beneath the header row
-- **AND** no column header offers a filter control, so no client-side filter can be applied
-
-#### Scenario: Empty result renders the empty state
-
-- **WHEN** the result holds zero conversations
-- **THEN** the no-data content renders instead of an empty grid body
-
-#### Scenario: Loading replaces the grid rather than the empty state showing
-
-- **WHEN** the first page of a new filter state is in flight
-- **THEN** a loading indicator renders in place of the grid
-- **AND** the no-data content is not shown
-
 ### Requirement: Conversation list query over the conversations entity
 
-The system SHALL provide `buildConversationListQuery({ range, search, chatIds, offset })` in
+The system SHALL provide
+`buildConversationListQuery({ range, search, chatIds, sort, columnFilters, visibleFields, offset })` in
 `src/utils/analytics/conversations-queries.ts` returning a `StructuredQuery` over the entity `conversations`
-in **row mode**. The conversation rollup is materialized by the analytics service — one row per `chat_id`,
-produced by an aggregate pipeline over `dial_usage_log` — so the query SHALL read stored columns and MUST NOT
-group or aggregate.
+in **row mode**. The conversation rollup is materialized by the analytics service — one row
+per `chat_id`, produced by an aggregate pipeline over `dial_usage_log` — so the query SHALL read stored
+columns and MUST NOT group or aggregate.
 
-The select SHALL name exactly the columns the page renders, by their entity field names:
+The select SHALL name the fields the curated columns require, by their entity field names:
 
 | Field | Renders as |
 |---|---|
 | `chat_id` | conversation |
 | `project_id` | project |
+| `user_hash` | user |
 | `turn_count` | turns |
 | `total_tokens` | tokens |
 | `total_price` | cost |
 | `last_request_time` | activity (relative) |
 | `first_request_time` | activity (span) |
+| `duration_ms` | duration |
+| `deployments` | models |
 
-`turn_count` is the pipeline's `count()` over usage-log rows for the conversation, which includes non-LLM
-spans such as embedding, MCP and routing calls. It is therefore **not** a count of distinct request traces,
-and user-facing copy MUST NOT claim it is. An exact turn count is not expressible in a rollup: a pipeline
-measure is one aggregate function over one column with no `distinct` option.
+It SHALL additionally name every field whose schema-driven column is currently visible. It MUST NOT name every
+field the entity carries: the field set is whatever the service reports and can grow, so projecting all of it
+would make every page fetch pay for columns nobody asked for. A column with no field behind it — Rating is
+composed from `rate_analytics` lookups — MUST NOT be named at all, since the entity has no such column.
+
+Making a hidden column visible SHALL restart paging, because the fetched pages do not carry that field and a
+column rendered from an absent value would read as empty data rather than as data not fetched. Hiding a visible
+column SHALL NOT re-query: the rows already held remain a correct answer to a narrower projection. The
+whole-result count and cost SHALL be unaffected by which columns are visible, being aggregates over the
+filtered result rather than over the projection.
+
+`turn_count` is the pipeline's count of the conversation's **distinct trace ids**, one trace per request, so
+it is a count of requests and not of usage-log rows: the embedding, MCP and routing hops a request fans out
+into collapse into the trace that produced them. User-facing copy SHALL describe it as requests and MUST NOT
+claim it counts individual hops.
 
 The filter SHALL be `and[ ge(last_request_time, startMs), le(last_request_time, endMs) ]`. The time bounds
 SHALL apply to `last_request_time`, so a selected period means *conversations whose last activity falls in the
@@ -2692,29 +2694,49 @@ SHALL add no predicate at all rather than an `ico` against the empty string, whi
 the cost of a scan. Both targets are base columns of the entity, so no select-alias restriction applies.
 
 Search MUST NOT reach message content: no column of `conversations` carries it, and the only column that
-could — `dial_usage_log.request_body` — is catalogued `sensitive` and belongs to a different entity. The
-search affordance SHALL name only the fields search actually reaches.
+could — `dial_usage_log.request_body` — is catalogued `sensitive` and belongs to a different entity. Search
+SHALL NOT reach `user_hash` either: selecting the column for display does not make a surrogate a useful
+free-text target, and a partial-match predicate over it would cost a scan for a value operators paste whole —
+the user column's own filter is the exact-value input for it. The search affordance SHALL name only the fields
+search actually reaches.
 
 When `chatIds` is non-empty the filter SHALL additionally carry `in(chat_id, chatIds)`, which is how the
 feedback filter narrows the result.
 
-The sort SHALL be `[{ last_request_time, desc }, { chat_id, asc }]`. The trailing `chat_id asc` tiebreaker is
-required even with no sorting UI: the service appends no implicit tiebreaker, so without it a paged result is
-not stable across requests and a row could be skipped or repeated between pages.
+When `columnFilters` is non-empty the filter SHALL additionally carry one predicate per entry, conjoined with
+everything above. Each entry names a field of the entity and an operator the language expresses; an entry
+naming a field the entity does not carry, or an operator with no equivalent, SHALL be rejected rather than
+translated to an approximation. A range entry SHALL become a `ge` and an `le` predicate on the same field.
+Predicate value types SHALL follow the field's type: string fields carry string literals, count fields
+integers, price fields decimals, and timestamp fields epoch-millisecond literals.
+
+An array field SHALL carry neither a sort key nor a filter predicate: the query language expresses no ordering
+or comparison over one, so a request to sort or filter by such a field SHALL be rejected rather than
+approximated client-side over the loaded page.
+
+The sort SHALL be the caller's sort keys, if any, followed by `{ chat_id, asc }`; with no caller sort keys it
+SHALL be `[{ last_request_time, desc }, { chat_id, asc }]`. The trailing `chat_id asc` tiebreaker is required
+in every case: the service appends no implicit tiebreaker, so without it a paged result is not stable across
+requests and a row could be skipped or repeated between pages. A caller sort key SHALL carry an explicit
+nulls ordering placing nulls last, so a column holding nulls orders deterministically rather than relying on
+the backend's default. A sort key naming a field the entity does not carry SHALL be rejected: sorting by a
+value the query cannot name would silently fall back to an unstated order.
 
 The page SHALL be `{ type: 'offset', offset, limit, include_total: true }`. A limit above 1000 SHALL never be
 sent — the service rejects it with HTTP 400 and does not clamp.
 
 The query SHALL reference no column absent from the entity's role-visible schema; `conversations` exposes no
-`sensitive` column, so every selected field is visible to a read-only admin.
+`sensitive` column, so every selected field is visible to a read-only admin. `user_hash` is catalogued
+non-sensitive — the analytics service exposes it as a de-identified surrogate — so selecting, sorting or
+filtering on it requires no elevated role.
 
 #### Scenario: Query reads the conversations entity in row mode
 
 - **WHEN** `buildConversationListQuery` is called with a time range
 - **THEN** the query targets entity `conversations` with `mode: 'row'`
 - **AND** it carries no `group_by` and no aggregate function expression
-- **AND** its select names `chat_id`, `project_id`, `turn_count`, `total_tokens`, `total_price`,
-  `last_request_time` and `first_request_time`
+- **AND** its select names `chat_id`, `project_id`, `user_hash`, `turn_count`, `total_tokens`, `total_price`,
+  `last_request_time`, `first_request_time`, `duration_ms` and `deployments`
 
 #### Scenario: Time bounds apply to last activity as epoch-millisecond literals
 
@@ -2732,17 +2754,40 @@ The query SHALL reference no column absent from the entity's role-visible schema
 - **WHEN** the query is built with a search term
 - **THEN** the filter carries one additional `or` group of exactly two `ico` predicates
 - **AND** they match `chat_id` and `project_id`, each against the trimmed term
+- **AND** no predicate matches `user_hash`
 
 #### Scenario: A blank search term adds no predicate
 
 - **WHEN** the query is built with an empty or whitespace-only search term
 - **THEN** the filter carries only the time bounds
 
+#### Scenario: A column filter becomes a conjoined predicate
+
+- **WHEN** the query is built with a column filter entry on `total_price` above a value
+- **THEN** the filter carries a `gt` predicate on `total_price` conjoined with the time bounds
+- **AND** a range entry instead produces a `ge` and an `le` predicate on that field
+
+#### Scenario: An array field carries no sort or filter
+
+- **WHEN** the query is built with a sort key or a column filter naming `deployments`
+- **THEN** that input is rejected rather than translated into a predicate or sort key
+
+#### Scenario: Caller sort keys precede the tiebreaker
+
+- **WHEN** the query is built with a sort key on `total_tokens` descending
+- **THEN** the sort is that key followed by `chat_id` ascending
+- **AND** the caller's key carries a nulls-last ordering
+
 #### Scenario: Sort ends with a stable tiebreaker
 
-- **WHEN** the query is built
+- **WHEN** the query is built with no caller sort keys
 - **THEN** the sort is `last_request_time` descending followed by `chat_id` ascending
 - **AND** `chat_id` ascending is the final sort entry
+
+#### Scenario: An unknown field is rejected rather than approximated
+
+- **WHEN** the query is built with a sort key or column filter naming a field the entity does not carry
+- **THEN** that input is rejected rather than translated
 
 #### Scenario: Search leaves the rest of the query untouched
 
@@ -2750,6 +2795,28 @@ The query SHALL reference no column absent from the entity's role-visible schema
 - **THEN** its select, sort and page are identical to the same query built without one
 - **AND** the time bounds are unchanged
 - **AND** `having` is absent
+
+#### Scenario: The projection follows the visible columns
+
+- **WHEN** the query is built with a schema-driven column visible
+- **THEN** the select names that column's field alongside the curated fields
+- **AND** it does not name a field whose column is hidden
+
+#### Scenario: Showing a column re-queries from the first page
+
+- **WHEN** the operator makes a hidden column visible after scrolling
+- **THEN** the fetched pages are discarded and the next request is for the first page
+- **AND** that request's select names the newly visible field
+
+#### Scenario: Hiding a column does not re-query
+
+- **WHEN** the operator hides a visible column
+- **THEN** no new request is issued and the rows already loaded remain
+
+#### Scenario: The summary is unchanged by a projection change
+
+- **WHEN** the operator changes which columns are visible
+- **THEN** the whole-result conversation count and cost do not change
 
 ### Requirement: Server-side paging with an exact result total
 
@@ -2768,7 +2835,10 @@ the result instead of probing past it. A request for a page beyond the result SH
 NOT be reported as a failure.
 
 Any filter change SHALL discard the pages already fetched and restart from the first page: a filter change
-produces a different result set, so an already-fetched page of the previous one is not a prefix of it.
+produces a different result set, so an already-fetched page of the previous one is not a prefix of it. A
+change to the sort SHALL restart paging on the same grounds: a page of a differently ordered result is not a
+prefix of the new one either, even though the set of conversations is unchanged. A change to any column filter
+SHALL restart paging as a filter change.
 
 Ratings SHALL be resolved for each page as it arrives, restricted to the conversations that page contains.
 
@@ -2798,6 +2868,18 @@ result.
 - **WHEN** the operator changes the search term, the time period or the feedback state after scrolling
 - **THEN** the previously fetched pages are discarded
 - **AND** the next request is for the first page of the new result
+
+#### Scenario: A sort change restarts paging
+
+- **WHEN** the operator changes a column's sort after scrolling
+- **THEN** the previously fetched pages are discarded
+- **AND** the next request is for the first page, carrying the new sort
+
+#### Scenario: A column filter change restarts paging
+
+- **WHEN** the operator applies or clears a column filter after scrolling
+- **THEN** the previously fetched pages are discarded
+- **AND** the next request is for the first page, carrying the new predicates
 
 #### Scenario: Ratings follow each page
 
@@ -2905,6 +2987,12 @@ The view SHALL distinguish three states, and MUST NOT collapse them onto one pre
 A zero count SHALL render as a number. It MUST NOT render as the unavailable marker, since `0` ratings or
 `0` failed requests are findings rather than gaps.
 
+A zero SHALL instead render as the unavailable marker where the measured quantity cannot be zero in a
+conversation that occurred — an elapsed duration being the case in hand, since a conversation that ran took
+time. There the zero records that the backend did not measure the value, not that the value was nothing, and
+rendering it as a number would state a finding the data does not support. This rule SHALL apply wherever the
+value is presented, so the grid and the detail view state the same thing about the same conversation.
+
 The marker SHALL be a single presentation used consistently across the view, and SHALL come from theme
 tokens rather than literal colour values.
 
@@ -2923,6 +3011,12 @@ tokens rather than literal colour values.
 
 - **WHEN** a conversation has zero ratings
 - **THEN** the rating counts render as `0` rather than as the unavailable marker
+
+#### Scenario: An impossible zero renders as unavailable
+
+- **WHEN** a conversation's recorded duration is `0`
+- **THEN** it renders as the unavailable marker rather than as a zero duration
+- **AND** the grid and the detail view render it the same way
 
 ### Requirement: Conversation detail header identifies the conversation
 
@@ -3117,8 +3211,10 @@ durations from the rollup, laid out as headline figures rather than a label-and-
 money carries elsewhere in the app, which is independent of the panel's source colour.
 
 The metadata panel SHALL state the conversation id, the anonymized user identifier, the project, the first
-activity time and the successful-request count from the rollup, and SHALL surface trace, deployment and
-region fields as unavailable.
+activity time, the successful-request count and the deployments that served the conversation, all from the
+rollup, and SHALL surface trace and region fields as unavailable. A field the rollup carries SHALL NOT be
+rendered as unavailable: the panel states what the record holds, and marking a recorded field as absent
+misreports the data the view already fetched.
 
 Panel provenance colours SHALL come from theme tokens, and every provenance value the view can render SHALL
 map to a colour, so a newly added source cannot render unstyled.
@@ -3147,10 +3243,9 @@ map to a colour, so a newly added source cannot render unstyled.
 #### Scenario: The metadata panel marks what the rollup lacks
 
 - **WHEN** the detail view renders
-- **THEN** the metadata panel states the conversation id, user identifier, project, first activity and
-  successful-request count
-- **AND** it renders trace, deployment and region as unavailable
-
+- **THEN** the metadata panel states the conversation id, user identifier, project, first activity,
+  successful-request count and the conversation's deployments
+- **AND** it renders trace and region as unavailable
 ### Requirement: Conversation detail feedback reads the rating source
 
 The detail view SHALL read this conversation's ratings from the feedback source and SHALL state, **in the
@@ -3272,3 +3367,683 @@ hundreds.
 
 - **WHEN** a trace records more hops than the view requested
 - **THEN** the view states that the list is partial
+### Requirement: Conversations grid with server-side ordering and per-column filtering
+
+The conversations view SHALL render a grid of seven visible columns — conversation, project, user, turns,
+activity, tokens, cost — plus the Rating column.
+
+A column SHALL offer a sort or a filter control **only** when the control can be answered over the whole
+result. That is the case exactly when the column is backed by a stored field of the `conversations` entity,
+because the control then becomes part of the query. Sorting and filtering SHALL therefore be resolved by the
+backend, and the grid MUST NOT narrow or reorder the pages it already holds: those pages are a slice of the
+result, so narrowing them client-side would report a slice as the complete answer.
+
+| Column | Sort | Filter |
+|---|---|---|
+| conversation (`chat_id`) | yes | text |
+| project (`project_id`) | yes | text |
+| user (`user_hash`) | yes | text |
+| turns (`turn_count`) | yes | number |
+| activity (`last_request_time`) | yes | none |
+| tokens (`total_tokens`) | yes | number |
+| cost (`total_price`) | yes | number |
+| Rating | no | no |
+
+The Rating column SHALL offer neither. It is composed from `rate_analytics` lookups resolved for the page
+just returned and has no field on the queried entity, so any ordering or narrowing of it could only describe
+the rows already on screen. The feedback control is the filter for that dimension.
+
+The activity column SHALL be sortable but SHALL NOT offer a filter. The page's time-period control already
+predicates on `last_request_time`, and a second control over the same dimension would let a filter appear to
+widen a range the period clips.
+
+Filter controls SHALL offer only operators the query language can express. An operator with no equivalent —
+notably prefix and suffix matching — MUST NOT be offered, since an offered operator that cannot be translated
+either fails or silently returns the wrong rows. Text columns SHALL offer contains, does-not-contain, equals
+and not-equals; number columns SHALL additionally offer the four magnitude comparisons. An incomplete filter
+entry — an operator chosen with no value — SHALL contribute no predicate rather than a predicate against an
+empty value.
+
+Column filters SHALL compose with the page's own controls as a conjunction: the search term, the time period,
+the feedback narrowing and every column filter SHALL all hold for a returned conversation. The page's filter
+state MUST NOT be written into the grid's filter model, and the grid's filter model MUST NOT be read as the
+page's filter state; they are separate inputs to one query.
+
+A change to the sort or to any column filter SHALL discard the pages already fetched and restart from the
+first page of the new result, exactly as a search, period or feedback change does. The whole-result
+conversation count and cost SHALL be re-resolved under the same predicates, so the summary cannot describe a
+different result than the rows.
+
+When no column sort is applied the result SHALL be ordered most recent last activity first. Clearing a
+column's sort SHALL return to that default rather than leaving an arbitrary order.
+
+The conversation column SHALL keep the full conversation id reachable when it is too long to display, since
+real ids are not uniformly short and can run to hundreds of characters. Truncation MUST NOT be the only
+presentation of the value. The user column SHALL keep its value reachable on the same terms.
+
+The user column SHALL show the conversation's `user_hash`, labelled the way the conversation detail page
+labels it. The value is a de-identified surrogate rather than an identity, so the column SHALL NOT be
+presented as a name or an address.
+
+While the first page of a new sort, filter or page-control state is in flight the view SHALL show a loading
+indicator, so the empty state cannot flash between a change and its rows. When the result holds no rows the
+view SHALL render a no-data state rather than an empty grid body.
+
+Numeric and currency columns SHALL carry the same formatting these value types carry elsewhere in the app.
+The grid SHALL use a taller row than the app's shared default, since its cells stack two lines.
+
+The page header SHALL be the title alone, with no status badge of its own — the Analytics navigation group
+already marks the whole area as preview.
+
+Rows SHALL be openable, navigating to that conversation's detail view. The grid SHALL indicate that its rows
+are openable rather than leaving the affordance undiscoverable, and SHALL honour the app's convention for
+opening a row in a new tab. The conversation id SHALL be URL-encoded into the detail address, since real ids
+contain path separators and percent-encoded text.
+
+The grid SHALL carry a provenance band above the column headers, grouping every column under the data source
+it comes from, and a column MUST NOT be able to leave its group when moved.
+
+Every column SHALL belong to exactly one group: an unattributed column would imply a provenance the page has
+not stated. Group labels SHALL name the actual source of the columns beneath them and MUST NOT overstate it —
+a column read from a source table MUST NOT be labelled as enrichment-derived, and no group SHALL be attributed
+to a source the page does not query. Each group SHALL carry a tooltip naming its source precisely. Colours
+SHALL come from theme tokens, never literal values, and every provenance value SHALL map to a colour, so a
+newly added one cannot render unstyled.
+
+The band and the column-header row SHALL each carry their own height, and the band label SHALL be separated
+from the column header beneath it.
+
+#### Scenario: Sorting a field-backed column re-queries from the first page
+
+- **WHEN** the operator sorts the cost column descending
+- **THEN** a new request is issued carrying that sort key with a first-page offset
+- **AND** the pages already fetched are discarded
+- **AND** the rows shown are the result's ordering, not a reordering of the rows already held
+
+#### Scenario: Clearing a sort returns to the default ordering
+
+- **WHEN** the operator clears the sort on a column
+- **THEN** the result is ordered most recent last activity first
+
+#### Scenario: A column filter becomes a query predicate
+
+- **WHEN** the operator applies a contains filter on the project column
+- **THEN** a new request is issued carrying that predicate with a first-page offset
+- **AND** the returned rows are the whole result's matches, not the previously loaded rows narrowed
+
+#### Scenario: Column filters compose with the page's controls
+
+- **WHEN** a column filter is applied while a search term, a time period and a feedback state are active
+- **THEN** the request carries all of them, and a returned conversation satisfies every one
+
+#### Scenario: The summary follows the sort and filter state
+
+- **WHEN** a column filter is applied
+- **THEN** the whole-result conversation count and cost are re-resolved under the same predicates
+
+#### Scenario: Rating offers no sort and no filter
+
+- **WHEN** the operator inspects the Rating column header
+- **THEN** it offers no sort affordance and no filter control
+- **AND** clicking it does not change the row order
+
+#### Scenario: Activity sorts but does not filter
+
+- **WHEN** the operator inspects the activity column header
+- **THEN** a sort affordance is offered
+- **AND** no filter control is offered
+
+#### Scenario: Untranslatable operators are not offered
+
+- **WHEN** the operator opens a text column's filter
+- **THEN** the operator list offers contains, does-not-contain, equals and not-equals
+- **AND** it offers no prefix or suffix matching option
+
+#### Scenario: An operator with no value contributes nothing
+
+- **WHEN** a filter entry has an operator selected and its value left empty
+- **THEN** the request carries no predicate for that column
+
+#### Scenario: Every column is attributed to a source
+
+- **WHEN** the grid renders
+- **THEN** a band above the column headers groups the columns by source
+- **AND** every column belongs to exactly one group
+- **AND** the conversation, project, user, turns, activity, tokens and cost columns are attributed to
+  `conversations`, and the Rating column to `rate_analytics`
+
+#### Scenario: Groups survive column movement
+
+- **WHEN** a column is dragged
+- **THEN** it cannot be moved out of its provenance group
+
+#### Scenario: A long conversation id stays reachable
+
+- **WHEN** a conversation id is too long to fit its column
+- **THEN** the cell truncates it and the full value remains reachable
+
+#### Scenario: Opening a row navigates to the conversation
+
+- **WHEN** a grid row is opened
+- **THEN** that conversation's detail view is navigated to, with its id URL-encoded in the address
+
+#### Scenario: Opening a row in a new tab
+
+- **WHEN** a grid row is opened with the app's new-tab modifier
+- **THEN** the conversation's detail view opens in a new tab and the grid keeps its fetched pages
+
+#### Scenario: Loading replaces the grid rather than the empty state showing
+
+- **WHEN** the first page of a new sort or filter state is in flight
+- **THEN** a loading indicator renders in place of the grid
+- **AND** the no-data content is not shown
+
+#### Scenario: Empty result renders the empty state
+
+- **WHEN** the result holds zero conversations
+- **THEN** the no-data content renders instead of an empty grid body
+
+### Requirement: Conversation grid columns are offered from the entity schema
+
+The conversations view SHALL build its column catalog from the `conversations` entity's schema as the analytics
+service reports it, not from a field list held in the frontend. The schema is already fetched for the Query
+Builder, is role-filtered by the service, and declares each field's type, display name and description — so it
+is the only source that stays correct when the entity gains or loses a field.
+
+Each offered column SHALL derive its header label from the field's display name, falling back to the field
+name, and SHALL derive its cell formatting, its sortability and its filter type from the field's declared type:
+count-like integer types, decimal money types, timestamp types and string types each render and filter the way
+that value type already renders and filters elsewhere in the app.
+
+A field SHALL NOT be offered when the grid cannot honestly render or query it:
+
+- a field the service marks `sensitive` — selecting it would be rejected for a caller without the required
+  role, so offering it would present a column that cannot be shown;
+- a non-scalar `object` or `array` field — a grid cell is not a structured-value viewer, and rendering one as
+  text would assert a shape the view does not know.
+
+The array exclusion governs what the catalog offers, not what the view can render. A curated column MAY read an
+array field where the view defines a presentation for that field's values and states what they mean; such a
+column is designed rather than derived, and its field remains outside the catalog like any other curated
+field's.
+
+A field consumed by a curated column SHALL NOT also be offered as a raw column. The activity column composes
+`first_request_time` and `last_request_time` into one cell, so the catalog SHALL offer that column and MUST NOT
+additionally offer its two source fields as separate columns, which would present the same data twice under
+different names. The same applies to `duration_ms` and `deployments`, which the duration and models columns
+consume.
+
+The nine curated columns — conversation, project, user, turns, activity, tokens, cost, duration, models —
+SHALL keep their composed cells and their labels, and SHALL be the default visible set together with the
+Rating column. Every other offered field SHALL default to hidden.
+
+Every offered column SHALL be attributed to the `conversations` provenance group, since every one is read from
+that entity. The Rating column SHALL remain attributed to `rate_analytics` and SHALL remain outside the
+catalog: it is not a field of the queried entity, so it cannot be offered, hidden or reordered as one.
+
+When the schema cannot be fetched the view SHALL render the curated columns and SHALL report that the
+additional columns are unavailable, rather than presenting an empty catalog as though the entity had no other
+fields.
+
+A field made visible SHALL be sortable and filterable on the same terms as a curated field-backed column,
+since it is a stored field of the same entity. A curated column reading an array field is the exception and
+SHALL offer neither, because the query language expresses no ordering or predicate over an array.
+
+#### Scenario: The catalog comes from the schema
+
+- **WHEN** the conversations view loads
+- **THEN** the column catalog offers the entity's fields as reported by the schema
+- **AND** each offered column's label, formatting, sortability and filter type follow its declared type
+
+#### Scenario: Sensitive and non-scalar fields are not offered
+
+- **WHEN** the schema reports a field marked sensitive, and a field of an object or array type
+- **THEN** neither is offered in the catalog
+
+#### Scenario: A curated array column's field is not offered separately
+
+- **WHEN** the catalog is built
+- **THEN** the models column renders `deployments`
+- **AND** `deployments` is not additionally offered as a catalog column
+
+#### Scenario: A composed column's source fields are not offered separately
+
+- **WHEN** the catalog is built
+- **THEN** the activity column is offered
+- **AND** `first_request_time` and `last_request_time` are not offered as columns of their own
+
+#### Scenario: The curated set is what is visible by default
+
+- **WHEN** the conversations view loads with no stored column choice
+- **THEN** the conversation, project, user, turns, activity, tokens, cost, duration, models and Rating columns
+  are visible
+- **AND** every other offered column is hidden
+
+#### Scenario: Rating is not part of the catalog
+
+- **WHEN** the operator opens the column panel
+- **THEN** the Rating column is not offered as a selectable column
+
+#### Scenario: A failed schema fetch degrades to the curated columns
+
+- **WHEN** the entity schema cannot be fetched
+- **THEN** the curated columns render
+- **AND** the view reports that the additional columns are unavailable
+
+#### Scenario: A newly visible column can be sorted and filtered
+
+- **WHEN** a schema-driven column is made visible
+- **THEN** it offers a sort affordance and a filter control matching its declared type
+- **AND** applying either carries a predicate or sort key on that field into the query
+
+### Requirement: Conversations grid states how long each conversation took
+
+The conversations grid SHALL present a curated **Duration** column reading the rollup's `duration_ms`, so an
+operator scanning the list can find slow conversations without opening each one. The column SHALL be part of
+the default visible set and SHALL be projected by the first list query, so it carries a value on the grid's
+first paint rather than after a column-selection round trip.
+
+The column SHALL render a human-readable elapsed time rather than a raw millisecond count, at a precision that
+stays legible across the range the field spans — sub-minute durations reading in seconds, longer ones in
+minutes and seconds.
+
+The column SHALL be sortable and range-filterable server-side on the same terms as the other numeric curated
+columns, since `duration_ms` is a stored scalar of the queried entity.
+
+The field records the summed duration of a conversation's hops. Where a turn fans out into a chain, an outer
+hop's duration contains its inner hops' durations, so the value exceeds the conversation's elapsed wall-clock
+time. User-facing copy MUST NOT describe the column as elapsed time.
+
+#### Scenario: Duration renders on first paint
+
+- **WHEN** the conversations grid loads with no stored column choice
+- **THEN** the Duration column is visible
+- **AND** the first list query's select names `duration_ms`
+
+#### Scenario: Duration renders as elapsed time, not milliseconds
+
+- **WHEN** a conversation has a recorded duration
+- **THEN** the cell states it in seconds, or in minutes and seconds when it exceeds a minute
+- **AND** it does not state a raw millisecond count
+
+#### Scenario: Duration sorts and filters server-side
+
+- **WHEN** the operator sorts by Duration or applies a range filter to it
+- **THEN** the query carries a sort key or a `ge`/`le` predicate pair on `duration_ms`
+- **AND** paging restarts from the first page
+
+### Requirement: Conversations grid names the models a conversation used
+
+The conversations grid SHALL present a curated **Models** column derived from the rollup's `deployments`
+array, so an operator can see which models served a conversation without opening it. The column SHALL be part
+of the default visible set and SHALL be projected by the first list query.
+
+The column SHALL render its values as discrete pills with an overflow badge stating how many further values
+exist, and SHALL make the complete list reachable without a pointer, so the values hidden by the overflow are
+available to a keyboard user and not only on hover.
+
+`deployments` records every deployment that handled a hop, which includes orchestrating deployments,
+applications, MCP toolsets and embedding deployments alongside the models themselves. Because the column
+claims to name models, it SHALL narrow the array before rendering pills by excluding:
+
+- a value carrying an application or toolset resource path, which names a DIAL resource rather than a model;
+- a value naming an embedding deployment;
+- a value that contains another value of the same conversation as a substring, which is how a deployment that
+  wraps and dispatches to another one is named.
+
+The narrowing is an approximation and SHALL be treated as one. An orchestrating deployment whose name shares
+nothing with the deployment it dispatched to is not detectable from the array alone and SHALL be allowed to
+remain rather than removed by a guess. When narrowing would leave no value at all, the column SHALL render the
+unnarrowed list, because a conversation served only by an application is better described by that application
+than by an empty cell.
+
+The complete unnarrowed list SHALL remain reachable from the cell, so a value the narrowing removed is
+recoverable by the reader and the column never silently discards recorded data.
+
+The column SHALL NOT be sortable and SHALL NOT be filterable. The query language expresses no ordering or
+predicate over an array field, and the grid pages server-side, so any client-side ordering or filtering would
+apply to the loaded page rather than to the result and would misstate what it did.
+
+#### Scenario: Models renders on first paint
+
+- **WHEN** the conversations grid loads with no stored column choice
+- **THEN** the Models column is visible
+- **AND** the first list query's select names `deployments`
+
+#### Scenario: Values render as pills with an overflow badge
+
+- **WHEN** a conversation's narrowed list holds more values than the column width fits
+- **THEN** the cell renders as many pills as fit followed by a badge stating the remaining count
+- **AND** the complete list is reachable without a pointer
+
+#### Scenario: Applications, toolsets and embeddings are narrowed away
+
+- **WHEN** a conversation's deployments include an application resource path, a toolset resource path and an
+  embedding deployment alongside a model
+- **THEN** the pills state the model
+- **AND** they state none of the other three
+
+#### Scenario: A wrapping deployment is narrowed away by its name
+
+- **WHEN** a conversation's deployments include a value that contains another of its values as a substring
+- **THEN** the containing value is not rendered as a pill
+- **AND** the contained value is
+
+#### Scenario: An undetectable orchestrator remains
+
+- **WHEN** a conversation's orchestrating deployment shares no substring with the deployments it dispatched to
+- **THEN** it remains among the rendered pills rather than being removed by a guess
+
+#### Scenario: Narrowing to nothing falls back to the recorded list
+
+- **WHEN** every value of a conversation's deployments is excluded by the narrowing rules
+- **THEN** the cell renders the unnarrowed list rather than an empty cell
+
+#### Scenario: The complete list stays reachable
+
+- **WHEN** narrowing removed a value from a conversation's pills
+- **THEN** the complete recorded list is still reachable from the cell
+
+#### Scenario: Models offers no sort or filter affordance
+
+- **WHEN** the operator inspects the Models column header
+- **THEN** it offers neither a sort affordance nor a filter control
+
+### Requirement: Public Analytics endpoints are surfaced to the table detail page
+
+The system SHALL expose two optional environment variables carrying the endpoints an external client would call: `ANALYTICS_PUBLIC_URL` for the REST surface and `ANALYTICS_FLIGHT_SQL_PUBLIC_URL` for the Arrow Flight SQL surface. Both SHALL be read server-side in the table detail page (`app/[lang]/tables/[id]/page.tsx`) and passed to the detail view; neither SHALL be added to the `FeatureFlags` object, which carries booleans consumed app-wide. When a variable is unset or blank the detail view SHALL receive an empty value for it.
+
+The Flight endpoint SHALL NOT be derived from the REST one. They are unrelated addresses — a different scheme, a separately exposed port, and commonly a different host — so deriving one from the other would produce a confidently wrong endpoint rather than an obviously unset one.
+
+#### Scenario: Configured endpoints reach the view
+
+- **WHEN** `ANALYTICS_PUBLIC_URL` and `ANALYTICS_FLIGHT_SQL_PUBLIC_URL` are set and the table detail page renders
+- **THEN** the detail view receives both values
+
+#### Scenario: An unset endpoint yields a blank value
+
+- **WHEN** either variable is not set
+- **THEN** the detail view receives an empty value for it rather than `undefined` leaking into a snippet
+
+#### Scenario: Each endpoint is independent
+
+- **WHEN** only `ANALYTICS_PUBLIC_URL` is set
+- **THEN** the REST snippets carry that endpoint and the Flight snippets still carry their own placeholder
+
+### Requirement: Table detail Connect panel
+
+The Table detail page SHALL offer a **Connect** header action, shown only while the table is `ACTIVE`, only for a table of type **source**, and otherwise regardless of the viewer's per-table `write`/`modify` permissions. An **enrichment** table SHALL offer no Connect action at all: its rows are produced by the enrichment process rather than by a client, and it is not a queryable entity in its own right — its columns are surfaced as table-qualified fields on its source table — so neither the write nor the read path the panel documents applies to it. It SHALL NOT be shown for a `PENDING` or `FAILED` table, which has no materialized table to connect to. **Connect** SHALL be the header's primary action, so an `ACTIVE` table always presents exactly one primary action whatever the viewer's permissions are.
+
+Activating **Connect** SHALL open a right-side overlay panel titled `Connect to <table name>`, dismissible by its close control, by the `Escape` key, and by activating the backdrop. The panel SHALL overlay the page rather than reflow it, and SHALL occupy the full viewport width below the layout's tablet breakpoint.
+
+The panel SHALL be a modal dialog for assistive technology: it SHALL carry a dialog role and modal state with an accessible name matching its title, SHALL move focus into the panel on open, SHALL confine `Tab` cycling to the panel while open, and SHALL return focus to the **Connect** button on close.
+
+The panel body SHALL be organised by **task, not by technology**: two tabs, **Write data** and **Read data**, with **Write data** selected by default from every entry point. Writing and reading are done by different people and carry different authorization, so each tab SHALL carry its own authorization statement and its own language examples, and neither SHALL require reading the other.
+
+For a **system** table the panel SHALL offer the read path only: no **Write data** tab, no write snippets, and no write-role list. Such a table is fed out of band and its row endpoint refuses every write regardless of any access list, so a write tab would teach a path that cannot succeed. The panel SHALL say why the read path is the only one shown, and SHALL NOT request the table's access lists, which cannot authorize anything there.
+
+The API-key instruction, identical for both, SHALL be shown once above the tabs rather than duplicated inside each.
+
+The **Write data** tab SHALL cover posting rows to this table in Python (standard library only) and as a `curl` command. The **Read data** tab SHALL cover querying this table in Python, as a `curl` command, and over Arrow Flight SQL with pandas and the ADBC driver. Flight SQL SHALL appear only under Read, because that endpoint rejects write statements, and the panel SHALL say so. For Flight SQL the panel SHALL state that it needs its own Python packages.
+
+Each code block SHALL offer a copy action that places that block's exact text on the clipboard and announces the result to assistive technology.
+
+The panel assumes the deployment has API-key authentication and the Flight endpoint enabled. Both are backend configuration this application cannot read; the panel SHALL neither detect nor caveat either.
+
+#### Scenario: Connect is offered on an active table
+
+- **WHEN** the detail view renders an `ACTIVE` table
+- **THEN** a **Connect** header action is present, rendered as the header's primary action
+
+#### Scenario: An enrichment table offers no Connect action
+
+- **WHEN** the detail view renders an `ACTIVE` enrichment table
+- **THEN** no **Connect** action and no **Add rows** action are present
+- **AND** the schema and catalog actions its permissions allow are still present
+
+#### Scenario: Connect is not offered before materialization
+
+- **WHEN** the detail view renders a `PENDING` or `FAILED` table
+- **THEN** no **Connect** action is present
+
+#### Scenario: Connect is offered to a viewer with no write or modify permission
+
+- **WHEN** an `ACTIVE` table reports `permissions {write:false, modify:false}`
+- **THEN** the **Connect** action is still present, even though no **Add rows** or **Add columns** action is
+
+#### Scenario: Opening the panel
+
+- **WHEN** the user activates **Connect**
+- **THEN** a side panel titled `Connect to <table name>` opens with the **Write data** and **Read data** tabs, and **Write data** is the selected tab
+
+#### Scenario: The panel takes and returns focus
+
+- **WHEN** the panel opens
+- **THEN** focus moves into the panel and `Tab` cycles within it
+- **AND WHEN** the panel is closed by any of its dismissal routes
+- **THEN** focus returns to the **Connect** button
+
+#### Scenario: A system table offers the read path only
+
+- **WHEN** the panel opens for a `system` table
+- **THEN** no **Write data** tab, write snippet, or write-role list is present, and the read path is shown with a statement of why it is the only one
+- **AND** no request is made for the table's access lists
+
+#### Scenario: Each tab carries only its own authorization
+
+- **WHEN** the **Write data** tab renders
+- **THEN** it names the roles a key must carry to write to this table, and states no read-access rule
+- **AND WHEN** the **Read data** tab renders
+- **THEN** it states that reading is not scoped per table, and names no write role
+
+#### Scenario: Flight SQL appears only under Read
+
+- **WHEN** the **Read data** tab renders
+- **THEN** a Flight SQL example is present, with a statement that the endpoint rejects write statements
+- **AND WHEN** the **Write data** tab renders
+- **THEN** no Flight SQL example is present
+
+#### Scenario: Dismissing the panel
+
+- **WHEN** the panel is open and the user activates its close control, presses `Escape`, or activates the backdrop
+- **THEN** the panel closes and the detail page is unchanged
+
+#### Scenario: Copying a snippet
+
+- **WHEN** the user activates a code block's copy action
+- **THEN** that block's exact text is placed on the clipboard and a success notification is shown
+
+### Requirement: Connect panel snippets are generated from the table schema
+
+Every snippet the Connect panel renders SHALL be generated from the table currently being viewed, so that a copied snippet runs against that table without editing. Snippets SHALL be derived from the table's declared columns; a column whose physical name begins with `_` SHALL be omitted, because the platform sets those and a row naming one is rejected.
+
+**Write snippets** SHALL key each row field by the column's **physical source name**, which is what the row-insert endpoint accepts. The panel SHALL NOT explain that identifier or contrast it with the exposed name: the two are equal on every table this application can produce — its column editor fills both from one input, and a rename sets both — so the distinction is invisible here and naming it would teach a concept the reader cannot act on.
+
+Each field's value SHALL be a mock literal of the column's declared type, chosen so the row is valid input:
+
+- `uuid` — a well-formed UUID literal
+- `string` — a quoted example string
+- `integer` / `long` — a whole number
+- `decimal` — a **quoted** numeric string, so the digits reach the store exactly rather than through a JSON float
+- `boolean` — a boolean literal in the snippet's own syntax (`True` in Python, `true` in JSON and shell)
+- `date` — a `YYYY-MM-DD` literal
+- `timestamp` — a **space-separated** `YYYY-MM-DD HH:MM:SS.mmm` literal, which is what the insert path accepts; an ISO-8601 `T` separator or `Z` suffix is rejected on write
+- `object` — an empty object literal
+- `array` — a literal array of two values shaped by the column's `element_type`
+
+A nullable column SHALL still receive a value rather than a null, so the snippet stays a working example.
+
+**Read snippets** SHALL project the table's column names and SHALL carry an explicit `LIMIT` no greater than the REST maximum.
+
+Snippets SHALL read each endpoint from an environment variable whose default is the corresponding configured public endpoint: `DIAL_ANALYTICS_BASE_URL` for the REST surfaces and `DIAL_ANALYTICS_FLIGHT_SQL_URL` for Flight SQL, with the key in `DIAL_API_KEY`. When an endpoint is not configured its default SHALL be a visible placeholder — `<analytics-base-url>` and `grpc://<analytics-host>:32010` respectively — and the panel SHALL show a note to replace it, positioned with the snippets that use it.
+
+Every name a snippet asks the reader to set SHALL be one the product uses publicly. The analytics service's internal name SHALL NOT appear in any snippet, placeholder, or panel string — a reader configuring a client has no way to connect it to anything they were given.
+
+A table with no declared columns SHALL still render every tab, with the write snippet carrying an empty row rather than failing to render.
+
+**The panel's format guidance SHALL be generated from the schema, exactly as its snippets are, and SHALL name this table's own columns rather than the types they happen to have.** For each declared column whose type carries a value-format rule — a timestamp's representation, a decimal's quoting, an array's element shape — the panel SHALL state the rule against the column's name, listing the columns of that type when there is more than one. A rule no declared column's type uses SHALL be omitted entirely, so a table of strings and integers shows no format guidance.
+
+The timestamp entry SHALL state the write format **and** that queries return ISO-8601, so the reader learns the two directions differ rather than discovering it from a rejected insert.
+
+Rules that are not per-column SHALL be stated separately from the per-column list. These are the write batch maximum (10 000 rows per request) and, on the Read tab, the row limits below.
+
+The Read tab SHALL state the row limits per surface, because they differ in kind and not only in value:
+
+- **REST** (`/v1/queries/execute-sql`) — a query with no `LIMIT` runs with a default of 100; an explicit `LIMIT` above 1 000 is **rejected**, not reduced.
+- **Flight SQL** — an oversized `LIMIT` is **clamped** to the endpoint's cap, never rejected; a query whose result exceeds that cap fails outright and returns no partial page. The cap is deployment-configured, so the panel SHALL describe it rather than printing a number.
+
+After the write snippets — not before them, since the generated snippet already satisfies the rules above — the panel SHALL surface the two likeliest rejections, phrased as the message the caller sees and what to change: an unknown column, and an authorization failure. The unknown-column rejection SHALL be presented as one message covering both a mistaken display name and a `_`-prefixed platform column, because the backend does not distinguish them.
+
+#### Scenario: Write snippets key by the physical source name
+
+- **WHEN** the user opens the Connect panel
+- **THEN** each write snippet's row fields are keyed by the columns' physical source names
+
+#### Scenario: The panel teaches no second column identifier
+
+- **WHEN** any part of the panel renders
+- **THEN** it contains no explanation of, or contrast between, the physical and exposed column identifiers
+
+#### Scenario: Timestamp columns use the insert format and name the asymmetry
+
+- **WHEN** a table has a `timestamp` column
+- **THEN** its value in the write snippets is a space-separated `YYYY-MM-DD HH:MM:SS.mmm` literal, with no `T` separator and no `Z` suffix
+- **AND** the format guidance states that queries return that column as ISO-8601
+
+#### Scenario: Decimal columns are quoted
+
+- **WHEN** a table has a `decimal` column
+- **THEN** its value in the write snippets is a quoted numeric string
+
+#### Scenario: Array columns are shaped by their element type
+
+- **WHEN** a table has an `array` column whose `element_type` is `string`
+- **THEN** its value in the write snippets is an array of quoted strings, and an `array` of `long` yields an array of whole numbers
+
+#### Scenario: Format guidance names columns, not types
+
+- **WHEN** a table has a `decimal` column named `score` and a `timestamp` column named `recorded_at`
+- **THEN** the format guidance states the quoting rule against `score` and the representation rule against `recorded_at`, naming neither type
+
+#### Scenario: Several columns share a rule
+
+- **WHEN** a table has two `timestamp` columns
+- **THEN** the representation rule is stated once, naming both columns
+
+#### Scenario: Irrelevant rules are omitted
+
+- **WHEN** a table declares no `decimal`, `timestamp`, `date`, or `array` column
+- **THEN** the panel shows no per-column format guidance
+
+#### Scenario: Row limits are stated per surface
+
+- **WHEN** the **Read data** tab renders
+- **THEN** it states that a REST query without a limit runs with a default of 100 and that an explicit limit above 1 000 is rejected
+- **AND** it states that Flight SQL clamps an oversized limit rather than rejecting it, and fails without a partial page when a result exceeds its cap
+
+#### Scenario: Platform columns are omitted
+
+- **WHEN** a table has a column whose physical name begins with `_`
+- **THEN** that column appears in no snippet
+
+#### Scenario: Endpoint defaults to the configured public URL
+
+- **WHEN** a public Analytics endpoint is configured and the user opens the panel
+- **THEN** the snippets default `DIAL_ANALYTICS_BASE_URL` to that endpoint
+
+#### Scenario: Flight endpoint falls back to its own placeholder
+
+- **WHEN** no public Flight endpoint is configured
+- **THEN** the Flight snippets default `DIAL_ANALYTICS_FLIGHT_SQL_URL` to a `grpc://` placeholder, never to the REST endpoint, and the Read tab shows a note to replace it
+
+#### Scenario: Endpoint falls back to a placeholder
+
+- **WHEN** no public Analytics endpoint is configured
+- **THEN** the snippets default `DIAL_ANALYTICS_BASE_URL` to `<analytics-base-url>` and the panel shows a note to replace it
+
+#### Scenario: A table with no columns still renders
+
+- **WHEN** the user opens the Connect panel for an `ACTIVE` table that declares no columns
+- **THEN** every tab renders and the write snippet carries an empty row
+
+#### Scenario: Rejections are shown after the snippets
+
+- **WHEN** the **Write data** tab renders
+- **THEN** the unknown-column and authorization rejections appear below the write snippets, each naming the message the caller would see
+
+### Requirement: Connect panel states the authentication and role contract
+
+The panel SHALL instruct the user to supply a DIAL API key through a `DIAL_API_KEY` environment variable rather than pasting it into the script. Every surface the panel shows takes the same key in the same `Api-Key` header; the Flight SQL client sends it as a gRPC call header, which is why its driver option carries the lower-cased name. The panel SHALL NOT render, echo, or offer to generate an actual key; the value in every snippet SHALL be a placeholder.
+
+The panel SHALL read this table's access lists when it opens. The **Write data** tab SHALL render the `write` role names as the roles a key must carry to write rows to this table. These are the only role names the panel SHALL render.
+
+The panel SHALL NOT name the analytics backend's application roles. Those are derived by that service from a provider-role mapping this application cannot read, they are not names an operator can attach to a key, and the similarly named role this application holds is a different service's notion of the same word. Where the panel must refer to that level of access it SHALL do so descriptively.
+
+For the same reason the panel SHALL NOT present the current viewer's own per-table permissions as a statement about the key the snippets will use: `permissions` describes this console session, while the snippets run under a key the user supplies.
+
+The **Write data** tab SHALL state that a key with administrator access can write to this table regardless of the list, together with the note that a role scoped to this table is the better choice for a job that only appends rows. It SHALL offer no step or instruction for obtaining such a key. Where the panel points at role management it SHALL attribute it to a full administrator rather than implying an on-screen control, since the header's **Manage access** action renders only for full admins on non-system tables. The panel SHALL offer no access-management control of its own; the header already carries one for those who can use it.
+
+When the `write` list is empty the panel SHALL say so and name the consequence — that as configured, only a key with administrator access can write to this table.
+
+The **Read data** tab SHALL state that read access is not scoped per table: a key able to query this table can query the whole catalog, and no per-table read-only role exists.
+
+While the access request is in flight the panel SHALL show a loading state in place of the role list, and SHALL render every other part of the panel immediately. When the request fails — including the `403` returned to a caller holding neither application role — the panel SHALL omit the role list, keep every other part rendered, and SHALL NOT surface an error notification. Because that failure hides the role names from exactly the reader who cannot yet write, the panel SHALL NOT be described as guaranteeing that reader an answer.
+
+#### Scenario: Write roles are listed
+
+- **WHEN** the panel opens for a table whose `write` access list contains `analytics-writer`
+- **THEN** the **Write data** tab lists `analytics-writer` as a role a key must carry to write to this table
+
+#### Scenario: No internal service name is exposed
+
+- **WHEN** any snippet, placeholder, or panel string renders
+- **THEN** none of them contains the analytics service's internal name
+
+#### Scenario: No application-role constant is rendered
+
+- **WHEN** any part of the panel renders
+- **THEN** neither `FULL_ADMIN` nor `READ_ONLY_ADMIN` appears in it, and the only role names shown are those returned by the table's access lists
+
+#### Scenario: Administrator access is a caution, not an option
+
+- **WHEN** the **Write data** tab renders
+- **THEN** it states that a key with administrator access can write to this table regardless of the list, and that a scoped role is the better choice for a job that only appends rows
+- **AND** it offers no step or instruction for obtaining such a key
+
+#### Scenario: Role management is attributed, not pointed at
+
+- **WHEN** the panel refers to granting a role
+- **THEN** it attributes that to a full administrator rather than directing the reader to a control that may not be rendered for them
+
+#### Scenario: Read scope is stated on the Read tab
+
+- **WHEN** the **Read data** tab renders
+- **THEN** it states that a key able to query this table can query the whole catalog, and that no per-table read-only role exists
+
+#### Scenario: Empty write list names its consequence
+
+- **WHEN** the panel opens for a table whose `write` access list is empty
+- **THEN** the **Write data** tab states that as configured, only a key with administrator access can write to this table
+- **AND** it does not present using such a key as the resolution
+
+#### Scenario: Access is loading
+
+- **WHEN** the access request has not yet resolved
+- **THEN** the role list shows a loading state and every other part of the panel is already rendered
+
+#### Scenario: Access is unreadable
+
+- **WHEN** the request for the table's access lists fails
+- **THEN** the role list is omitted, no error notification is shown, and the tabs and snippets still render
+
+#### Scenario: No key is ever rendered
+
+- **WHEN** any tab renders
+- **THEN** the API key in every snippet is a placeholder, and the panel offers no way to reveal or generate a real key
+
+#### Scenario: The panel offers no access-management control
+
+- **WHEN** the panel renders for a viewer who can manage roles
+- **THEN** it contains no control that opens the table's access management surface
+
+

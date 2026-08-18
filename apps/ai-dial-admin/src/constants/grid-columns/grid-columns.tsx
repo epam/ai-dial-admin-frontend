@@ -12,6 +12,7 @@ import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSele
 import ImportValidationCellRenderer from '@/src/components/Grid/CellRenderers/ImportValidationCellRenderer';
 import RunStatusCellRenderer from '@/src/components/Grid/CellRenderers/RunStatusCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
+import ModelsCellRenderer from '@/src/components/Grid/CellRenderers/ModelsCellRenderer';
 import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRenderer';
 import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
 import { ACTION_COLUMN, NO_BORDER_CLASS } from '@/src/constants/ag-grid';
@@ -54,9 +55,22 @@ import {
   numberValueFormatter,
   priceValueFormatter,
 } from '@/src/constants/grid-columns/formatters';
-import { CONVERSATION_PROVENANCE_GROUPS } from '@/src/constants/analytics/conversations-trace';
-import { formatCompactNumber, formatSignificantCost } from '@/src/utils/analytics/conversation-formatting';
-import { ConversationColumn, ConversationsField } from '@/src/models/analytics/conversations-trace';
+import {
+  CONVERSATION_FIELD_VALUE_TYPE,
+  CONVERSATION_PROVENANCE_GROUPS,
+  FILTERABLE_CONVERSATION_FIELDS,
+  SORTABLE_CONVERSATION_FIELDS,
+} from '@/src/constants/analytics/conversations-trace';
+import {
+  formatCompactNumber,
+  formatConversationDuration,
+  formatSignificantCost,
+} from '@/src/utils/analytics/conversation-formatting';
+import { narrowToModels } from '@/src/utils/analytics/conversation-models';
+import { ColumnProvenance, ConversationColumn, ConversationsField } from '@/src/models/analytics/conversations-trace';
+import { QueryValueType } from '@/src/models/analytics/query';
+import { AnalyticsEntityField } from '@/src/models/analytics/entity';
+import { buildConversationColumnCatalog } from '@/src/utils/analytics/conversation-column-catalog';
 import { ImageVersion } from '@/src/models/deployments/images';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
@@ -100,6 +114,7 @@ import ProvenanceHeaderGroup from '@/src/components/Analytics/ConversationsTrace
 import ActivityCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/ActivityCellRenderer';
 import ProjectCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/ProjectCellRenderer';
 import RatingCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/RatingCellRenderer';
+import UserCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/UserCellRenderer';
 import RowExpanderCellRenderer from '@/src/components/Grid/CellRenderers/RowExpanderCellRenderer';
 import ChildrenActivityTypeCellRenderer from '@/src/components/Grid/CellRenderers/ChildrenActivityTypeCellRenderer';
 import { ActivityAuditView } from '@/src/types/activity-audit';
@@ -652,6 +667,13 @@ const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] 
     minWidth: 180,
   },
   {
+    field: ConversationsField.UserHash,
+    headerName: t(ConversationsTraceI18nKey.DetailUser),
+    cellRenderer: UserCellRenderer,
+    flex: 1.2,
+    minWidth: 140,
+  },
+  {
     field: ConversationsField.TurnCount,
     headerName: t(ConversationsTraceI18nKey.Turns),
     headerTooltip: t(ConversationsTraceI18nKey.TurnsHint),
@@ -684,6 +706,34 @@ const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] 
     minWidth: 100,
   },
   {
+    field: ConversationsField.DurationMs,
+    headerName: t(ConversationsTraceI18nKey.Duration),
+    headerTooltip: t(ConversationsTraceI18nKey.DurationHint),
+    ...numericColumn,
+    valueFormatter: ({ value }) => formatConversationDuration(value),
+    flex: 0.8,
+    minWidth: 100,
+  },
+  {
+    field: ConversationsField.Deployments,
+    headerName: t(ConversationsTraceI18nKey.Models),
+    headerTooltip: t(ConversationsTraceI18nKey.ModelsHint),
+    cellRenderer: ModelsCellRenderer,
+    cellRendererParams: (params: { data?: { deployments?: string[] } }) => ({
+      items: narrowToModels(params.data?.deployments),
+      allItems: params.data?.deployments ?? [],
+      label: t(ConversationsTraceI18nKey.Models),
+    }),
+    // The tooltip states everything the row records, so a value the narrowing dropped stays recoverable.
+    tooltipValueGetter: (params) => (params.data?.deployments as string[] | undefined)?.join(', ') || null,
+    // Stated rather than left to the sort/filter allow-lists: a header offering an affordance the query
+    // language cannot honour would discard the operator's input silently.
+    sortable: false,
+    filter: false,
+    flex: 1.6,
+    minWidth: 180,
+  },
+  {
     field: ConversationColumn.Rating,
     headerName: t(ConversationsTraceI18nKey.Rating),
     cellRenderer: RatingCellRenderer,
@@ -692,15 +742,31 @@ const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] 
   },
 ];
 
+const NUMERIC_FILTER_VALUE_TYPES = [QueryValueType.Integer, QueryValueType.Long, QueryValueType.Decimal];
+
+const conversationFilterPreset = (fieldName?: string): Partial<ColDef> => {
+  if (!fieldName || !FILTERABLE_CONVERSATION_FIELDS.includes(fieldName as ConversationsField)) {
+    return { filter: false, floatingFilter: false };
+  }
+
+  const valueType = CONVERSATION_FIELD_VALUE_TYPE[fieldName as ConversationsField];
+
+  return valueType && NUMERIC_FILTER_VALUE_TYPES.includes(valueType) ? baseNumberFilter : baseStringFilter;
+};
+
 export const CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] =>
-  restrictSort(BASE_CONVERSATIONS_TRACE_COLUMNS(t)).map((column) => ({
+  restrictSort(BASE_CONVERSATIONS_TRACE_COLUMNS(t), SORTABLE_CONVERSATION_FIELDS).map((column) => ({
     ...column,
-    filter: false,
-    floatingFilter: false,
+    ...conversationFilterPreset(column.field),
+    ...(column.field === ConversationsField.LastRequestTime ? { sort: 'desc' as ColDef['sort'] } : {}),
   }));
 
-export const CONVERSATIONS_TRACE_COLUMN_GROUPS = (t: (key: string) => string): ColGroupDef[] => {
-  const columns = CONVERSATIONS_TRACE_COLUMNS(t);
+export const CONVERSATIONS_TRACE_COLUMN_GROUPS = (
+  t: (key: string) => string,
+  schemaFields: AnalyticsEntityField[] = [],
+): ColGroupDef[] => {
+  const columns = buildConversationColumnCatalog(CONVERSATIONS_TRACE_COLUMNS(t), schemaFields);
+  const attributed = new Set(CONVERSATION_PROVENANCE_GROUPS.flatMap((group) => group.fields as string[]));
 
   return CONVERSATION_PROVENANCE_GROUPS.map(({ provenance, labelKey, tooltipKey, fields }) => ({
     groupId: provenance,
@@ -709,7 +775,12 @@ export const CONVERSATIONS_TRACE_COLUMN_GROUPS = (t: (key: string) => string): C
     headerGroupComponent: ProvenanceHeaderGroup,
     headerGroupComponentParams: { label: t(labelKey), provenance },
     marryChildren: true,
-    children: fields.map((field) => columns.find((column) => column.field === field)).filter(Boolean) as ColDef[],
+    children: [
+      ...(fields.map((field) => columns.find((column) => column.field === field)).filter(Boolean) as ColDef[]),
+      ...(provenance === ColumnProvenance.Conversations
+        ? columns.filter((column) => !attributed.has(column.field as string))
+        : []),
+    ],
   }));
 };
 

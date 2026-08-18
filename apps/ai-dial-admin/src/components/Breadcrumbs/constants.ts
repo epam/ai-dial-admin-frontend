@@ -133,6 +133,15 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
       },
     ],
   },
+  [ApplicationRoute.SkillPublications]: {
+    segments: [
+      { name: 'SkillPublications', i18nKey: MenuI18nKey.SkillPublications },
+      {
+        name: 'Id',
+        href: false,
+      },
+    ],
+  },
   [ApplicationRoute.Routes]: auditSubIdBreadcrumb('Routes', MenuI18nKey.Routes),
   [ApplicationRoute.Toolsets]: auditSubIdBreadcrumb('Toolsets', MenuI18nKey.Toolsets),
   [ApplicationRoute.Dashboard]: {
