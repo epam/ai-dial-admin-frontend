@@ -2584,8 +2584,6 @@ export enum ConversationsTraceI18nKey {
   DetailCopyId = 'ConversationsTrace.DetailCopyId',
   DetailTitleField = 'ConversationsTrace.DetailTitleField',
   DetailModel = 'ConversationsTrace.DetailModel',
-  DetailRequests = 'ConversationsTrace.DetailRequests',
-  DetailRequestsHint = 'ConversationsTrace.DetailRequestsHint',
   DetailDuration = 'ConversationsTrace.DetailDuration',
   DetailLastActivity = 'ConversationsTrace.DetailLastActivity',
   DetailMessages = 'ConversationsTrace.DetailMessages',
@@ -2641,4 +2639,5 @@ export enum ConversationsTraceI18nKey {
   SpanSelected = 'ConversationsTrace.SpanSelected',
   DetailAvgDuration = 'ConversationsTrace.DetailAvgDuration',
   DetailTurns = 'ConversationsTrace.DetailTurns',
+  DetailTurnsTruncated = 'ConversationsTrace.DetailTurnsTruncated',
 }

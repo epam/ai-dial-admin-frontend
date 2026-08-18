@@ -23,7 +23,7 @@ const CONVERSATION: ConversationDetailRow = {
   chat_id: 'Lrr0e6L5bpTND3IY_dN0_',
   project_id: '',
   user_hash: 'db7327ba3decd351',
-  turn_count: 930,
+  turn_count: 12,
   first_request_time: '2026-07-22T11:50:28.506Z',
   last_request_time: '2026-07-22T12:00:52.157Z',
   prompt_tokens: 4293420,
@@ -178,10 +178,13 @@ describe('ConversationTimeline', () => {
         turns={[]}
         turnRatings={[]}
         hasTurnsLoadError={false}
+        turnCount={null}
         onOpenTrace={vi.fn()}
         {...props}
       />,
     );
+
+  const MESSAGES = [{ role: MessageRole.User, content: 'q' }];
 
   test('falls back to the placeholder when no message content could be read', () => {
     renderTimeline();
@@ -235,6 +238,27 @@ describe('ConversationTimeline', () => {
     renderTimeline({ messages: [{ role: MessageRole.User, content: 'q' }], turns: TURNS });
 
     expect(screen.getByText(ConversationsTraceI18nKey.DetailSampleMessages)).toBeInTheDocument();
+  });
+
+  // The list is bounded, so on a long conversation the turns on screen are a stated limit rather than the
+  // conversation's length — leaving that unsaid reads as a complete transcript.
+  test('discloses the bound when the turn list is clipped', () => {
+    renderTimeline({ messages: MESSAGES, turns: TURNS, turnCount: 911 });
+
+    expect(screen.getByText(ConversationsTraceI18nKey.DetailTurnsTruncated)).toBeInTheDocument();
+  });
+
+  test('discloses nothing when every turn loaded', () => {
+    renderTimeline({ messages: MESSAGES, turns: TURNS, turnCount: 1 });
+
+    expect(screen.queryByText(ConversationsTraceI18nKey.DetailTurnsTruncated)).not.toBeInTheDocument();
+  });
+
+  // A disclosure needs a real second number; "showing 1 of —" states nothing.
+  test('discloses nothing when the rollup carries no turn count', () => {
+    renderTimeline({ messages: MESSAGES, turns: TURNS, turnCount: null });
+
+    expect(screen.queryByText(ConversationsTraceI18nKey.DetailTurnsTruncated)).not.toBeInTheDocument();
   });
 
   test('shows no sample-data notice when there is nothing to label', () => {

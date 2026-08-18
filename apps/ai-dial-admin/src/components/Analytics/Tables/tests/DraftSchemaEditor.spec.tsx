@@ -143,6 +143,49 @@ describe('DraftSchemaEditor source', () => {
     expect(draft.update).toHaveBeenCalledWith('columns', expect.any(Array));
   });
 
+  test('the column rows offer a Display name and a Description field', () => {
+    render(<DraftSchemaEditor table={source} draft={fixtureDraft()} />);
+    expect(screen.getByLabelText(AnalyticsTablesI18nKey.DisplayName, { exact: false })).toBeInTheDocument();
+    expect(screen.getByLabelText(AnalyticsTablesI18nKey.Description, { exact: false })).toBeInTheDocument();
+  });
+
+  test('editing a column display name and description calls the draft update with the new rows', () => {
+    const draft = fixtureDraft();
+    render(<DraftSchemaEditor table={source} draft={draft} />);
+
+    fireEvent.change(screen.getByLabelText(AnalyticsTablesI18nKey.DisplayName, { exact: false }), {
+      target: { value: 'Total tokens' },
+    });
+    expect(draft.update).toHaveBeenCalledWith('columns', [expect.objectContaining({ display_name: 'Total tokens' })]);
+
+    fireEvent.change(screen.getByLabelText(AnalyticsTablesI18nKey.Description, { exact: false }), {
+      target: { value: 'Prompt plus completion tokens' },
+    });
+    expect(draft.update).toHaveBeenCalledWith('columns', [
+      expect.objectContaining({ description: 'Prompt plus completion tokens' }),
+    ]);
+  });
+
+  test('seeds the column rows with the display name and description a FAILED table already stores', () => {
+    const seeded = fixtureDraft({
+      columns: [
+        {
+          ...createColumnRow(),
+          source_name: 'total_tokens',
+          name: 'total_tokens',
+          display_name: 'Total tokens',
+          description: 'Prompt plus completion tokens',
+        },
+      ],
+    });
+    render(<DraftSchemaEditor table={{ ...source, status: TableStatus.Failed }} draft={seeded} />);
+
+    expect(screen.getByLabelText(AnalyticsTablesI18nKey.DisplayName, { exact: false })).toHaveValue('Total tokens');
+    expect(screen.getByLabelText(AnalyticsTablesI18nKey.Description, { exact: false })).toHaveValue(
+      'Prompt plus completion tokens',
+    );
+  });
+
   test('renders no Save submit button — that trigger lives in the detail view header', () => {
     render(<DraftSchemaEditor table={source} draft={fixtureDraft()} />);
     expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();

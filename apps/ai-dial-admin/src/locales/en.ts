@@ -2621,7 +2621,7 @@ export default {
     Project: 'Project',
     NoProject: 'No project',
     Turns: 'Turns',
-    TurnsHint: 'Requests recorded for this conversation.',
+    TurnsHint: 'Turns recorded for this conversation, one per request.',
     Activity: 'Activity',
     Tokens: 'Tokens',
     Cost: 'Cost',
@@ -2667,9 +2667,6 @@ export default {
     DetailCopyId: 'Copy conversation id',
     DetailTitleField: 'Title',
     DetailModel: 'Model',
-    DetailRequests: 'Requests',
-    DetailRequestsHint:
-      'Requests recorded for this conversation, one per proxy hop — a single turn fans out into several, so this is not a turn count.',
     DetailDuration: 'Duration',
     DetailLastActivity: 'Last activity',
     DetailMessages: 'Messages',
@@ -2726,5 +2723,6 @@ export default {
     DetailSampleMessages:
       'Sample messages. Real message content is not read from the usage log; the turn, token and cost figures below are real.',
     DetailTurns: 'Turns',
+    DetailTurnsTruncated: 'Showing {loaded} of {total} turns. This conversation is too long to display in full.',
   },
 } as const;
