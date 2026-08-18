@@ -1,72 +1,173 @@
-import { ColDef } from 'ag-grid-community';
-import { FC, useMemo } from 'react';
+import { ColDef, GridApi, IRowNode } from 'ag-grid-community';
+import { ChangeEvent, FC, useCallback, useMemo, useRef } from 'react';
+
+import { DialGhostButton } from '@epam/ai-dial-ui-kit';
+import { IconPlus } from '@tabler/icons-react';
 
 import GridView from '@/src/components/Grid/GridView/GridView';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
-import { EntitiesI18nKey, EntityFieldsI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
+import { ACTION_COLUMN } from '@/src/constants/ag-grid';
+import { ApiRoute } from '@/src/constants/api-routes';
+import { getDownloadOperation, getPreviewOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
+import { ButtonsI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
-import { SkillPublication } from '@/src/models/dial/publications';
-import { DialSkillFile } from '@/src/models/dial/resource';
+import { DialSkillFile, DialSkillResource } from '@/src/models/dial/resource';
 
-interface Props {
-  publication: SkillPublication;
+/** Core has no manifest-editing UI: a skill without its root `SKILL.md` isn't a skill Core will serve. */
+const SKILL_MANIFEST_FILE = 'SKILL.md';
+
+interface SkillFileRow extends DialSkillFile {
+  /** A staged, not-yet-uploaded file — has no server-side content to preview/download yet. */
+  isNew?: boolean;
 }
 
-/** Formats a byte count for display — this repo has no shared formatter since file grids elsewhere show name/author, not size. */
-const formatFileSize = (bytes: number): string => {
-  if (bytes < 1024) return `${bytes} B`;
-  const units = ['KB', 'MB', 'GB'];
-  let value = bytes / 1024;
-  let unitIndex = 0;
-  while (value >= 1024 && unitIndex < units.length - 1) {
-    value /= 1024;
-    unitIndex += 1;
-  }
-  return `${value.toFixed(1)} ${units[unitIndex]}`;
-};
-
-const COLUMN_DEFS: ColDef<DialSkillFile>[] = [
-  { field: 'name', headerName: 'Name', flex: 2 },
-  {
-    field: 'size',
-    headerName: 'Size',
-    flex: 1,
-    filter: false,
-    floatingFilter: false,
-    valueFormatter: ({ value }) => formatFileSize(value ?? 0),
-  },
-];
+interface Props {
+  skill?: DialSkillResource;
+  /** Hides add/remove — e.g. a read-only admin. Preview/download stay available either way. */
+  disabled?: boolean;
+  /** Files staged for upload on the next save; not yet on the server. */
+  addedFiles?: File[];
+  /** Names of existing files staged for removal on the next save. */
+  removedFileNames?: string[];
+  onAddFile?: (file: File) => void;
+  onRemoveExistingFile?: (fileName: string) => void;
+  onRemoveAddedFile?: (index: number) => void;
+}
 
 /**
- * Read-only skill metadata + bundle file listing for a pending Skill publication. Unlike
- * `FilesDetails`, this has no add/remove/download affordances — Skill's files aren't independently
- * addressable Core file resources in this app, only names/sizes surfaced via folder metadata.
+ * Skill metadata + bundle file listing, shared between the Skill Publications properties view and
+ * the `Assets > Skills` detail view. Both surfaces edit the file list identically: add/remove are
+ * staged locally (via `addedFiles`/`removedFileNames`) and only committed to Core when the owning
+ * view's Save is clicked — this component itself never calls Core. Preview and download work
+ * directly against the skill's already-saved files (unavailable for a staged, not-yet-uploaded
+ * file). `SKILL.md` can't be removed — a skill has no meaning without its manifest.
  */
-const SkillDetails: FC<Props> = ({ publication }) => {
+const SkillDetails: FC<Props> = ({
+  skill,
+  disabled,
+  addedFiles = [],
+  removedFileNames = [],
+  onAddFile,
+  onRemoveExistingFile,
+  onRemoveAddedFile,
+}) => {
   const t = useI18n();
-  const skillResource = publication.skillResources?.[0]?.skillResource;
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const rowData = useMemo<DialSkillFile[]>(() => skillResource?.files ?? [], [skillResource]);
+  const rowData = useMemo<SkillFileRow[]>(() => {
+    const existing = (skill?.files ?? []).filter((file) => !removedFileNames.includes(file.name));
+    const added = addedFiles.map((file) => ({ name: file.name, isNew: true }));
+    return [...existing, ...added];
+  }, [skill, removedFileNames, addedFiles]);
 
-  if (!skillResource) {
+  const onPreview = useCallback(
+    (file?: SkillFileRow) => {
+      if (!skill || !file) return;
+      const url = `${ApiRoute.SkillsPreview}?path=${encodeURIComponent(skill.path)}&filePath=${encodeURIComponent(file.name)}`;
+      window.open(url, '_blank');
+    },
+    [skill],
+  );
+
+  const onDownload = useCallback(
+    (file?: SkillFileRow) => {
+      if (!skill || !file) return;
+      const url = `${ApiRoute.SkillsDownload}?path=${encodeURIComponent(skill.path)}&filePath=${encodeURIComponent(file.name)}`;
+      window.open(url, '_blank');
+    },
+    [skill],
+  );
+
+  const onRemove = useCallback(
+    (file?: SkillFileRow) => {
+      if (!file) return;
+      if (file.isNew) {
+        const index = addedFiles.findIndex((added) => added.name === file.name);
+        if (index !== -1) {
+          onRemoveAddedFile?.(index);
+        }
+      } else {
+        onRemoveExistingFile?.(file.name);
+      }
+    },
+    [addedFiles, onRemoveAddedFile, onRemoveExistingFile],
+  );
+
+  const isPreviewActionHidden = useCallback((_: GridApi, node: IRowNode<SkillFileRow>) => {
+    return Boolean(node.data?.isNew);
+  }, []);
+
+  const isRemoveActionHidden = useCallback(
+    (_: GridApi, node: IRowNode<SkillFileRow>) => {
+      return Boolean(disabled) || node.data?.name === SKILL_MANIFEST_FILE;
+    },
+    [disabled],
+  );
+
+  const onAddClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const onFileInputChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const selectedFile = e.target.files?.[0];
+      if (selectedFile) {
+        onAddFile?.(selectedFile);
+      }
+      e.target.value = '';
+    },
+    [onAddFile],
+  );
+
+  const columnDefs = useMemo<ColDef<SkillFileRow>[]>(
+    () => [
+      { field: 'name', headerName: 'Name', flex: 1 },
+      ACTION_COLUMN([
+        getPreviewOperation(onPreview, isPreviewActionHidden),
+        getDownloadOperation(onDownload, isPreviewActionHidden),
+        getRemoveOperation(onRemove, isRemoveActionHidden),
+      ]),
+    ],
+    [onPreview, onDownload, onRemove, isPreviewActionHidden, isRemoveActionHidden],
+  );
+
+  if (!skill) {
     return null;
   }
 
   return (
     <div className="flex flex-col gap-y-8 h-full">
       <div className="flex flex-col sm:flex-row gap-8">
-        <LabelledText label={t(EntityFieldsI18nKey.name)} text={skillResource.name} />
-        {skillResource.description && (
-          <LabelledText label={t(EntityFieldsI18nKey.description)} text={skillResource.description} />
-        )}
-        {skillResource.version && <LabelledText label={t(EntityFieldsI18nKey.version)} text={skillResource.version} />}
+        <LabelledText label={t(EntityFieldsI18nKey.name)} text={skill.name} />
+        {skill.description && <LabelledText label={t(EntityFieldsI18nKey.description)} text={skill.description} />}
+        {skill.version && <LabelledText label={t(EntityFieldsI18nKey.version)} text={skill.version} />}
       </div>
       <div className="flex flex-col gap-y-2 flex-1 min-h-0">
-        <h3 className="text-primary mb-4">
-          {t(PublicationsI18nKey.FilesListTitle)}: {rowData.length}
-        </h3>
+        <div className="flex flex-row justify-between items-center">
+          <h3 className="text-primary mb-4">
+            {t(PublicationsI18nKey.FilesListTitle)}: {rowData.length}
+          </h3>
+          {!disabled && (
+            <>
+              <DialGhostButton
+                onClick={onAddClick}
+                label={t(ButtonsI18nKey.Add)}
+                className="w-fit"
+                iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
+              />
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                aria-label={t(ButtonsI18nKey.Add)}
+                onChange={onFileInputChange}
+              />
+            </>
+          )}
+        </div>
         <div className="flex-1 min-h-0">
-          <GridView emptyDataProps={{ title: t(EntitiesI18nKey.NoFiles) }} columnDefs={COLUMN_DEFS} rowData={rowData} />
+          <GridView emptyDataProps={{ title: t(EntitiesI18nKey.NoFiles) }} columnDefs={columnDefs} rowData={rowData} />
         </div>
       </div>
     </div>

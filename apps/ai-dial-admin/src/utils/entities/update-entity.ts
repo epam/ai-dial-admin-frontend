@@ -17,6 +17,7 @@ const createEntityMap: Record<string, UpdateI18nKey> = {
   [ApplicationRoute.Adapters]: UpdateI18nKey.Adapter,
   [ApplicationRoute.Toolsets]: UpdateI18nKey.Toolset,
   [ApplicationRoute.AssetsToolsets]: UpdateI18nKey.Toolset,
+  [ApplicationRoute.AssetsSkills]: UpdateI18nKey.Skill,
   [ApplicationRoute.InterceptorTemplates]: UpdateI18nKey.InterceptorTemplate,
   [ApplicationRoute.SystemProperties]: UpdateI18nKey.SystemProperties,
   [ApplicationRoute.Files]: UpdateI18nKey.File,

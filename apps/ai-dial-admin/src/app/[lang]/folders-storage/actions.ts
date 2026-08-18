@@ -15,6 +15,7 @@ import {
   getFoldersCore,
   getRulesCore,
   removeFolderCore,
+  removeSkillFolderCore,
   updateRulesCore,
 } from '@/src/server/folders/folders-core';
 
@@ -48,6 +49,16 @@ export async function createFolderWithFiles(body: FormData, _type?: string, _vie
 export async function removeFolder(path: string, resourceType: ResourceType) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return removeFolderCore(token, path, [resourceType]);
+}
+
+/**
+ * Deletes a Skill grouping folder. Kept separate from `removeFolder`/`removeFolderCore` rather than
+ * adding `ResourceType.SKILL` to that call: Skills aren't one of the five flat resource types
+ * `removeFolderCore` walks generically, so they get their own dedicated Core path instead.
+ */
+export async function removeSkillFolder(path: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return removeSkillFolderCore(token, path);
 }
 
 export async function changeFolder(oldPath: string, newPath: string, resourceType: ResourceType, overwrite?: boolean) {

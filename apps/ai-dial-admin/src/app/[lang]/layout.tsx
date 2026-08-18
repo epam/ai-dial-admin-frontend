@@ -35,6 +35,7 @@ import { ToolsetFolderProvider } from '@/src/context/assets/ToolsetsFolderContex
 import { ConversationFolderProvider } from '@/src/context/assets/ConversationsFolderContext';
 import { AppRunnersFolderProvider } from '@/src/context/assets/AppRunnersFolderContext';
 import { ModelsFolderProvider } from '@/src/context/assets/ModelsFolderContext';
+import { SkillFolderProvider } from '@/src/context/assets/SkillFolderContext';
 
 export default async function Layout({ children, params }: { children: ReactNode; params: Promise<{ lang: string }> }) {
   const { lang } = await params;
@@ -86,22 +87,24 @@ export default async function Layout({ children, params }: { children: ReactNode
                       <ToolsetFolderProvider>
                         <FileFolderProvider>
                           <ConversationFolderProvider>
-                            <NotificationProvider>
-                              <div className="flex flex-col size-full">
-                                <Header
-                                  isEnableAuth={isEnableAuth}
-                                  docLink={normalizeUrl(process.env.DIAL_ADMIN_DOCUMENTATION)}
-                                />
-                                <div className="flex-1 min-h-0">
-                                  <div className="flex flex-row h-full relative">
-                                    <Menu disableMenuItems={getMenuItems(process.env.DISABLE_MENU_ITEMS)} />
-                                    <Content isEnableAuth={isEnableAuth} beVersion={beVersion}>
-                                      {children}
-                                    </Content>
+                            <SkillFolderProvider>
+                              <NotificationProvider>
+                                <div className="flex flex-col size-full">
+                                  <Header
+                                    isEnableAuth={isEnableAuth}
+                                    docLink={normalizeUrl(process.env.DIAL_ADMIN_DOCUMENTATION)}
+                                  />
+                                  <div className="flex-1 min-h-0">
+                                    <div className="flex flex-row h-full relative">
+                                      <Menu disableMenuItems={getMenuItems(process.env.DISABLE_MENU_ITEMS)} />
+                                      <Content isEnableAuth={isEnableAuth} beVersion={beVersion}>
+                                        {children}
+                                      </Content>
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            </NotificationProvider>
+                              </NotificationProvider>
+                            </SkillFolderProvider>
                           </ConversationFolderProvider>
                         </FileFolderProvider>
                       </ToolsetFolderProvider>
