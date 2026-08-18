@@ -1544,7 +1544,7 @@ The table detail view (`components/Analytics/Tables/TableDetailView.tsx`) SHALL 
 
 - **Manage access** SHALL be shown only when `canManageRoles` (`FULL_ADMIN` and non-system).
 - **Delete table** SHALL be shown only when `canDelete` (`FULL_ADMIN` and non-system).
-- **Connect** SHALL be shown for every `ACTIVE` **source** table regardless of permission, as the header's primary action, and SHALL NOT be shown for an **enrichment** table (see "Table detail Connect panel").
+- **Connect** SHALL be shown regardless of permission, as the header's primary action, for every `ACTIVE` **source** table and for every `ACTIVE` **enrichment** table whose payload names a source table (see "Table detail Connect panel").
 - **Add rows** SHALL NOT be offered for an **enrichment** table whatever its `write` permission reports: those rows come from the enrichment process, so a hand-written insert is not a path this UI offers.
 - For an `ACTIVE` table, **Add columns** (schema evolution) and **Add rows** (inserting rows) SHALL each be offered as its own standalone header button — **not** as items of a shared dropdown. **Add columns** SHALL be shown only when `canModify` and **Add rows** only when `canWrite`; when neither permission is held, neither button renders. Both SHALL render as neutral actions, never primary and never dependent on whether the other is present, so each keeps the same appearance whatever the viewer's other permissions are. **Add rows** is deliberately not the emphasized way to put data in the table — see "Table detail row writes".
 - Per-column **edit/drop** (grid action column), **inline column rename**, column-metadata edits, and **description edits** SHALL be shown only when `canModify`.
@@ -1587,6 +1587,12 @@ Because the backend reports `permissions {false,false}` for system tables, the w
 
 - **WHEN** a user opens an `ACTIVE` system table's detail page
 - **THEN** **Connect** is present while **Add rows**, **Add columns**, **Manage access**, and **Delete table** are all absent
+
+#### Scenario: An enrichment table offers Connect but never Add rows
+
+- **WHEN** a user opens an `ACTIVE` enrichment table's detail page and its payload names a source table
+- **THEN** **Connect** is present as the header's primary action
+- **AND** no **Add rows** action is present, whatever the table's `write` permission reports
 
 #### Scenario: Header actions follow the fixed order
 
@@ -3845,17 +3851,19 @@ The Flight endpoint SHALL NOT be derived from the REST one. They are unrelated a
 
 ### Requirement: Table detail Connect panel
 
-The Table detail page SHALL offer a **Connect** header action, shown only while the table is `ACTIVE`, only for a table of type **source**, and otherwise regardless of the viewer's per-table `write`/`modify` permissions. An **enrichment** table SHALL offer no Connect action at all: its rows are produced by the enrichment process rather than by a client, and it is not a queryable entity in its own right — its columns are surfaced as table-qualified fields on its source table — so neither the write nor the read path the panel documents applies to it. It SHALL NOT be shown for a `PENDING` or `FAILED` table, which has no materialized table to connect to. **Connect** SHALL be the header's primary action, so an `ACTIVE` table always presents exactly one primary action whatever the viewer's permissions are.
+The Table detail page SHALL offer a **Connect** header action, shown only while the table is `ACTIVE`, and otherwise regardless of the viewer's per-table `write`/`modify` permissions. It SHALL be offered for a table of type **source**, and for a table of type **enrichment** whose payload names a source table: an enrichment is not queryable under its own name, but its columns are readable as table-qualified fields on its source table, and its detail page is the one place a reader is shown how. An enrichment whose payload names no source table SHALL offer no Connect action, since no runnable query can be generated for it. It SHALL NOT be shown for a `PENDING` or `FAILED` table, which has no materialized table to connect to. **Connect** SHALL be the header's primary action, so an `ACTIVE` table always presents exactly one primary action whatever the viewer's permissions are.
 
 Activating **Connect** SHALL open a right-side overlay panel titled `Connect to <table name>`, dismissible by its close control, by the `Escape` key, and by activating the backdrop. The panel SHALL overlay the page rather than reflow it, and SHALL occupy the full viewport width below the layout's tablet breakpoint.
 
 The panel SHALL be a modal dialog for assistive technology: it SHALL carry a dialog role and modal state with an accessible name matching its title, SHALL move focus into the panel on open, SHALL confine `Tab` cycling to the panel while open, and SHALL return focus to the **Connect** button on close.
 
-The panel body SHALL be organised by **task, not by technology**: two tabs, **Write data** and **Read data**, with **Write data** selected by default from every entry point. Writing and reading are done by different people and carry different authorization, so each tab SHALL carry its own authorization statement and its own language examples, and neither SHALL require reading the other.
+The panel body SHALL be organised by **task, not by technology**: for a table a client can write, two tabs — **Write data** and **Read data** — with **Write data** selected by default from every entry point. Writing and reading are done by different people and carry different authorization, so each tab SHALL carry its own authorization statement and its own language examples, and neither SHALL require reading the other.
 
-For a **system** table the panel SHALL offer the read path only: no **Write data** tab, no write snippets, and no write-role list. Such a table is fed out of band and its row endpoint refuses every write regardless of any access list, so a write tab would teach a path that cannot succeed. The panel SHALL say why the read path is the only one shown, and SHALL NOT request the table's access lists, which cannot authorize anything there.
+For a **system** table and for an **enrichment** table the panel SHALL offer the read path only: no **Write data** tab, no write snippets, and no write-role list. It SHALL state which reason applies. A system table is fed out of band and its row endpoint refuses every write regardless of any access list, so a write tab would teach a path that cannot succeed. An enrichment's rows are produced by the enrichment process, which is the same reason this UI offers no hand-written insert for one. In neither case SHALL the panel request the table's access lists, which cannot authorize anything there.
 
-The API-key instruction, identical for both, SHALL be shown once above the tabs rather than duplicated inside each.
+The API-key instruction SHALL be shown once at the top of the panel rather than duplicated inside each tab, and SHALL state that every example the panel shows takes the same key. It SHALL NOT be phrased in terms of the two tabs, since the read-only variants render no tabs at all.
+
+That shared block SHALL carry the key **and nothing else**. An endpoint belongs to the surface that reads it: the REST base URL SHALL be shown as its own setup block above **each** REST example — Python and `curl` alike — and the Flight endpoint above the Flight example, so no example asks the reader to set a variable it never uses, and none asks them to find a variable it does. The Python examples SHALL additionally keep their endpoint default inline, so a copied script still runs when the export is skipped; `curl`, which can carry no default, depends on it.
 
 The **Write data** tab SHALL cover posting rows to this table in Python (standard library only) and as a `curl` command. The **Read data** tab SHALL cover querying this table in Python, as a `curl` command, and over Arrow Flight SQL with pandas and the ADBC driver. Flight SQL SHALL appear only under Read, because that endpoint rejects write statements, and the panel SHALL say so. For Flight SQL the panel SHALL state that it needs its own Python packages.
 
@@ -3868,10 +3876,16 @@ The panel assumes the deployment has API-key authentication and the Flight endpo
 - **WHEN** the detail view renders an `ACTIVE` table
 - **THEN** a **Connect** header action is present, rendered as the header's primary action
 
+#### Scenario: An enrichment table offers Connect with the read path only
+
+- **WHEN** the panel opens for an `ACTIVE` enrichment table
+- **THEN** no **Write data** tab, write snippet, or write-role list is present, and the read path is shown with a statement of why it is the only one
+- **AND** no request is made for the table's access lists
+
 #### Scenario: An enrichment table offers no Connect action
 
-- **WHEN** the detail view renders an `ACTIVE` enrichment table
-- **THEN** no **Connect** action and no **Add rows** action are present
+- **WHEN** the detail view renders an `ACTIVE` enrichment table whose payload names no source table, the only case in which no runnable query can be generated for it
+- **THEN** no **Connect** action is present
 - **AND** the schema and catalog actions its permissions allow are still present
 
 #### Scenario: Connect is not offered before materialization
@@ -3886,7 +3900,7 @@ The panel assumes the deployment has API-key authentication and the Flight endpo
 
 #### Scenario: Opening the panel
 
-- **WHEN** the user activates **Connect**
+- **WHEN** the user activates **Connect** on a source table a client can write
 - **THEN** a side panel titled `Connect to <table name>` opens with the **Write data** and **Read data** tabs, and **Write data** is the selected tab
 
 #### Scenario: The panel takes and returns focus
@@ -3928,7 +3942,7 @@ The panel assumes the deployment has API-key authentication and the Flight endpo
 
 ### Requirement: Connect panel snippets are generated from the table schema
 
-Every snippet the Connect panel renders SHALL be generated from the table currently being viewed, so that a copied snippet runs against that table without editing. Snippets SHALL be derived from the table's declared columns; a column whose physical name begins with `_` SHALL be omitted, because the platform sets those and a row naming one is rejected.
+Every snippet the Connect panel renders SHALL be generated from the table currently being viewed, so that a copied snippet runs against that table without editing. Snippets SHALL be derived from the table's declared columns; a column whose physical name begins with `_` SHALL be omitted, because the platform sets those and a row naming one is rejected. The exclusion SHALL hold for the read projection as well as the write snippets, so no part of the panel names a platform column.
 
 **Write snippets** SHALL key each row field by the column's **physical source name**, which is what the row-insert endpoint accepts. The panel SHALL NOT explain that identifier or contrast it with the exposed name: the two are equal on every table this application can produce — its column editor fills both from one input, and a rename sets both — so the distinction is invisible here and naming it would teach a concept the reader cannot act on.
 
@@ -3946,9 +3960,16 @@ Each field's value SHALL be a mock literal of the column's declared type, chosen
 
 A nullable column SHALL still receive a value rather than a null, so the snippet stays a working example.
 
-**Read snippets** SHALL project the table's column names and SHALL carry an explicit `LIMIT` no greater than the REST maximum.
+**Read snippets** SHALL carry an explicit `LIMIT` no greater than the REST maximum, and SHALL project a **key subset** of the table rather than every column, so the example teaches the shape of a query instead of the width of the table:
 
-Snippets SHALL read each endpoint from an environment variable whose default is the corresponding configured public endpoint: `DIAL_ANALYTICS_BASE_URL` for the REST surfaces and `DIAL_ANALYTICS_FLIGHT_SQL_URL` for Flight SQL, with the key in `DIAL_API_KEY`. When an endpoint is not configured its default SHALL be a visible placeholder — `<analytics-base-url>` and `grpc://<analytics-host>:32010` respectively — and the panel SHALL show a note to replace it, positioned with the snippets that use it.
+- For a **source** table the projection SHALL be the table's **ordering-key columns** — the set a reader filters, sorts, and joins on — less any entry naming a `_`-prefixed platform column. `ordering_key` reports **physical source names**, while the query surface binds a `SELECT` list against the **exposed** name each column is published under, so each entry SHALL be matched to its declared column by source name and projected by that column's exposed name. The two spellings are equal on every table this application creates; on a table created through the API with a differing pair, projecting the physical name is an unknown-column error. An entry no declared column matches SHALL be projected as reported, since nothing better is known about it.
+- For an **enrichment** table the query SHALL read `FROM` the enrichment's **source table**, never from the enrichment's own name, since an enrichment is not queryable under its own name. Its projection SHALL be the enrichment's **grain key**, which is a column of that source table, together with one of the enrichment's own columns — the first declared column whose physical name does not begin with `_`. The enrichment's column SHALL be addressed as `"<enrichment>.<column>"`, quoted as a **single** identifier with the dot inside it: the service exposes an enrichment column on the source table under a name that literally contains a dot, and quoting it as two identifiers (`"<enrichment>"."<column>"`) is rejected with `Table '<enrichment>' not found`.
+- Every projected column SHALL be quoted, not only the enrichment column that has to be, so that one `SELECT` list does not mix quoted and bare names for no reason a reader can see.
+- Where the rules above yield no column at all — a table declaring no ordering key or one naming only platform columns, an enrichment with neither a grain key nor a non-platform column — the projection SHALL be `*`, so no snippet is ever generated with an empty projection.
+
+The **Read data** tab SHALL state that its snippet projects a subset and that any of the table's columns may be selected, so the shortened projection is not read as a restriction. That statement SHALL be shown **only when the snippet actually names columns** — where the rules above fell back to `*` it SHALL be omitted, since it would describe a projection the reader is not looking at. For an **enrichment** it SHALL additionally state that the query reads through the table it enriches, that every column of the enrichment is reachable as `"<enrichment>.<column>"`, and that any column of the source table may be selected in the same query. That statement SHALL **name** the source table rather than referring to it by a pronoun: two tables are in play, so "that table" resolves against either.
+
+Snippets SHALL read each endpoint from an environment variable whose default is the corresponding configured public endpoint: `DIAL_ANALYTICS_BASE_URL` for the REST surfaces and `DIAL_ANALYTICS_FLIGHT_SQL_URL` for Flight SQL, with the key in `DIAL_API_KEY`. When an endpoint is not configured its default SHALL be a visible placeholder — `<analytics-base-url>` and `grpc://<analytics-host>:32010` respectively — and the panel SHALL show a note to replace it, positioned with **every** export block that carries it — the REST endpoint's export block is repeated above each REST example, and `curl` cannot carry an inline default the way the Python examples can, so a reader working from any one of them SHALL be told the value is a placeholder.
 
 Every name a snippet asks the reader to set SHALL be one the product uses publicly. The analytics service's internal name SHALL NOT appear in any snippet, placeholder, or panel string — a reader configuring a client has no way to connect it to anything they were given.
 
@@ -3976,6 +3997,37 @@ After the write snippets — not before them, since the generated snippet alread
 
 - **WHEN** any part of the panel renders
 - **THEN** it contains no explanation of, or contrast between, the physical and exposed column identifiers
+
+#### Scenario: Read snippets project the ordering key
+
+- **WHEN** the panel opens for a source table declaring columns `event_id`, `request_time`, and `total` with an ordering key of `event_id, request_time`
+- **THEN** every read snippet — Python, `curl`, and Flight SQL — queries `SELECT "event_id", "request_time" FROM <table> LIMIT <limit>`, and `total` appears in none of them
+
+#### Scenario: A platform column named by the ordering key is not projected
+
+- **WHEN** a source table's ordering key names a `_`-prefixed platform column such as `_ingested_at` alongside an ordinary column
+- **THEN** the read snippets project only the ordinary column
+
+#### Scenario: A table with no usable ordering key projects everything
+
+- **WHEN** the panel opens for a source table whose payload declares no ordering key, or one naming only `_`-prefixed platform columns
+- **THEN** the read snippets query `SELECT * FROM <table> LIMIT <limit>`
+
+#### Scenario: An enrichment reads from its source table
+
+- **WHEN** the panel opens for an enrichment named `widget_scores` over source table `widget_events`, with grain key `event_id` and first declared column `score`
+- **THEN** every read snippet queries `SELECT "event_id", "widget_scores.score" FROM widget_events LIMIT <limit>`
+- **AND** no snippet queries `FROM widget_scores`
+
+#### Scenario: The enrichment read tab states the qualified form
+
+- **WHEN** the **Read data** tab renders for an enrichment
+- **THEN** it names the source table the query reads through, states that every column of the enrichment is reachable there as `"<enrichment>.<column>"` quoted as one name, and states that any column of the source table may be selected in the same query
+
+#### Scenario: The read tab states that the projection is a subset
+
+- **WHEN** the **Read data** tab renders
+- **THEN** it states that any of the table's columns may be selected, so the snippet's projection is not read as a restriction
 
 #### Scenario: Timestamp columns use the insert format and name the asymmetry
 
@@ -4032,7 +4084,24 @@ After the write snippets — not before them, since the generated snippet alread
 #### Scenario: Endpoint falls back to a placeholder
 
 - **WHEN** no public Analytics endpoint is configured
-- **THEN** the snippets default `DIAL_ANALYTICS_BASE_URL` to `<analytics-base-url>` and the panel shows a note to replace it
+- **THEN** the snippets default `DIAL_ANALYTICS_BASE_URL` to `<analytics-base-url>` and the panel shows a note to replace it above every REST example, on both tabs — each `DIAL_ANALYTICS_BASE_URL` export block carries its own copy of the note
+
+#### Scenario: The subset note is omitted over a wildcard projection
+
+- **WHEN** the read snippets fall back to `SELECT *` — the table declares no ordering key, or names only platform columns
+- **THEN** the Read tab omits the note about projecting a few columns, rather than stating it over a projection that selects every column
+
+#### Scenario: The ordering key is projected by exposed name
+
+- **WHEN** a source table's `ordering_key` names a column whose physical source name differs from its exposed name
+- **THEN** the read snippets project that column's exposed name, which is the spelling the query surface binds
+
+#### Scenario: The shared block carries only the key
+
+- **WHEN** the panel renders
+- **THEN** the block above the tabs exports `DIAL_API_KEY` and no endpoint variable
+- **AND** the Flight SQL example, which needs the key but not the REST endpoint, sets no `DIAL_ANALYTICS_BASE_URL`
+- **AND** each REST example is preceded by its own `DIAL_ANALYTICS_BASE_URL` export block
 
 #### Scenario: A table with no columns still renders
 
