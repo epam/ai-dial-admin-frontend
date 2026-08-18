@@ -20,6 +20,11 @@ const CopyButton: FC<Props> = ({ buttonLabel, value, valueLabel, className, size
   const { showNotification } = useNotification();
   const t = useI18n();
 
+  // Several copy controls can sit in one view (a panel of snippets, a header of ids), and a bare
+  // "copy" leaves them indistinguishable to a screen reader. `valueLabel` already names the value for
+  // the confirmation toast, so it is the name to reuse rather than a second prop to thread.
+  const copyLabel = valueLabel ? `copy ${valueLabel}` : 'copy';
+
   const onClick = useCallback(() => {
     if (valueLabel && value) {
       navigator.clipboard.writeText(value);
@@ -32,14 +37,14 @@ const CopyButton: FC<Props> = ({ buttonLabel, value, valueLabel, className, size
     <DialNeutralButton
       label={buttonLabel}
       onClick={onClick}
-      aria-label="copy"
+      aria-label={copyLabel}
       iconBefore={<IconCopy stroke={2} size={size === ElementSize.Small ? 16 : 20} />}
       size={size}
     />
   ) : (
     <DialIconButton
       className={classNames('cursor-pointer h-[20px] w-[20px] text-secondary hover:text-accent-primary', className)}
-      aria-label="copy"
+      aria-label={copyLabel}
       size={size}
       onClick={onClick}
       icon={<IconCopy stroke={2} size={size === ElementSize.Small ? 16 : 20} />}

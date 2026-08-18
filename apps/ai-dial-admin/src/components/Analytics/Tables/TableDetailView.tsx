@@ -21,6 +21,7 @@ import { IconPlugConnected } from '@tabler/icons-react';
 import { addRows, defineTableSchema, deleteTable, getTable, updateTableSchema } from '@/src/app/[lang]/tables/actions';
 import ColumnRowsEditor from '@/src/components/Analytics/Tables/ColumnRowsEditor';
 import ConnectPanel from '@/src/components/Analytics/Tables/ConnectPanel/ConnectPanel';
+import { isEnrichmentRead } from '@/src/components/Analytics/Tables/ConnectPanel/connect-snippets';
 import DraftSchemaEditor from '@/src/components/Analytics/Tables/DraftSchemaEditor';
 import EditColumnPopup from '@/src/components/Analytics/Tables/EditColumnPopup';
 import TableAccessPanel from '@/src/components/Analytics/Tables/TableAccessPanel';
@@ -105,9 +106,11 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
   const [sourceTable, setSourceTable] = useState<AnalyticsTable | null>(null);
 
   const isSystem = Boolean(table.system);
-  // An enrichment's rows come from the enrichment process, and it is not a queryable entity — its
-  // columns are surfaced on its source table instead. Neither half of Connect applies.
+  // An enrichment's rows come from the enrichment process, so the write half of Connect never applies
+  // to one. The read half does: its columns are queryable as table-qualified fields on its source
+  // table, which is why Connect needs that table to be named before it can offer anything.
   const isEnrichment = table.type === AnalyticsTableType.Enrichment;
+  const canConnect = !isEnrichment || isEnrichmentRead(table);
   const isActive = table.status === TableStatus.Active;
   const { canDelete, canWrite, canModify, canManageRoles } = useAnalyticsTablePermissions(table);
   const columns = useMemo(() => table.columns ?? [], [table.columns]);
@@ -340,7 +343,7 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
           </div>
           {table.description && <DialEllipsisTooltip text={table.description} className="text-primary dial-small" />}
         </div>
-        {(canDelete || canWrite || canModify || canManageRoles || (isActive && !isEnrichment)) && (
+        {(canDelete || canWrite || canModify || canManageRoles || (isActive && canConnect)) && (
           <div className="flex items-center gap-4">
             {canManageRoles && (
               <DialNeutralButton label={t(AnalyticsTablesI18nKey.ManageAccess)} onClick={() => setAccessOpen(true)} />
@@ -357,8 +360,8 @@ const TableDetailView: FC<Props> = ({ name, initialTable, apiBaseUrl, flightUri 
                   <DialNeutralButton label={t(AnalyticsTablesI18nKey.AddRows)} onClick={onAddRows} />
                 )}
                 {/* Not permission-gated: a reader who cannot yet write is the one who needs to learn
-                    which role to ask for. Enrichments are excluded entirely — see isEnrichment. */}
-                {!isEnrichment && (
+                    which role to ask for. An enrichment gets the read-only panel — see canConnect. */}
+                {canConnect && (
                   <DialPrimaryButton
                     label={t(AnalyticsTablesI18nKey.Connect)}
                     onClick={() => setConnectOpen(true)}

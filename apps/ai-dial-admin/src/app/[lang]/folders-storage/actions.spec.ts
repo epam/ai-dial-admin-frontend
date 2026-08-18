@@ -8,7 +8,15 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { RESPONSE_MOCK, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { changeFolder, createFolderWithFiles, getFolders, getRules, removeFolder, updateRules } from './actions';
+import {
+  changeFolder,
+  createFolderWithFiles,
+  getFolders,
+  getRules,
+  removeFolder,
+  removeSkillFolder,
+  updateRules,
+} from './actions';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -61,6 +69,14 @@ describe('Folders storage :: server actions', () => {
     const result = await removeFolder('path', ResourceType.PROMPT);
     expect(getUserToken).toHaveBeenCalled();
     expect(foldersCore.removeFolderCore).toHaveBeenCalledWith(TOKEN_MOCK, 'path', [ResourceType.PROMPT]);
+    expect(result).toBe(RESPONSE_MOCK);
+  });
+
+  test('Should call removeSkillFolder action, delegating to removeSkillFolderCore', async () => {
+    (foldersCore.removeSkillFolderCore as any).mockResolvedValue(RESPONSE_MOCK);
+    const result = await removeSkillFolder('public/archive/');
+    expect(getUserToken).toHaveBeenCalled();
+    expect(foldersCore.removeSkillFolderCore).toHaveBeenCalledWith(TOKEN_MOCK, 'public/archive/');
     expect(result).toBe(RESPONSE_MOCK);
   });
 

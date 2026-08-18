@@ -52,6 +52,15 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
       },
     ],
   },
+  [ApplicationRoute.AssetsSkills]: {
+    segments: [
+      { name: 'AssetsSkills', i18nKey: MenuI18nKey.Skills, shouldEnrichWithFolderBreadcrumbs: true },
+      {
+        name: 'Id',
+        href: false,
+      },
+    ],
+  },
   [ApplicationRoute.AssetsModels]: {
     segments: [
       { name: 'AssetsModels', i18nKey: MenuI18nKey.Models },
@@ -127,6 +136,15 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
   [ApplicationRoute.ConversationPublications]: {
     segments: [
       { name: 'ConversationPublications', i18nKey: MenuI18nKey.ConversationPublications },
+      {
+        name: 'Id',
+        href: false,
+      },
+    ],
+  },
+  [ApplicationRoute.SkillPublications]: {
+    segments: [
+      { name: 'SkillPublications', i18nKey: MenuI18nKey.SkillPublications },
       {
         name: 'Id',
         href: false,

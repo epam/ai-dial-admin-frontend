@@ -147,6 +147,7 @@ export const attachMetricInfo = (data: MetricScoresData, infoByName: Record<stri
  * Expands run metric snapshots into selectable Distribution options — one per metric output field.
  * `name` is the UI label (`<metric>.<field>`, e.g. `DeepEval: Answer Relevancy.score`); `field` is the
  * request path (`metric::<metric>::<field>`). Snapshots without a name/computation are skipped.
+ * Options are sorted A–Z by `name` to match Metric Scores order.
  */
 export const toMetricOptions = (snapshots: MetricSnapshot[] | null): MetricOption[] => {
   const options: MetricOption[] = [];
@@ -163,6 +164,8 @@ export const toMetricOptions = (snapshots: MetricSnapshot[] | null): MetricOptio
       });
     }
   }
+
+  options.sort((a, b) => a.name.localeCompare(b.name));
 
   return options;
 };
@@ -201,7 +204,9 @@ export const splitMetricName = (metricName: string): { group: string; bar: strin
  * Folds `metric_score_results` rows into bar groups per statistic. For each statistic
  * (`metric_score_name`, e.g. AVG), metrics are grouped by their name prefix (before the last `.`),
  * and each leaf metric name becomes a bar with its value. Also collects the distinct statistic
- * names (first-seen order) that drive the statistic SegmentedControl.
+ * names (canonical Metric Scores control order) that drive the statistic SegmentedControl.
+ * Metric groups within each statistic are sorted alphabetically so order is stable across
+ * full-run and matched-only data sources.
  */
 export const parseMetricScores = (result: StructuredQueryResult | null): MetricScoresData => {
   const statistics: string[] = [];
@@ -238,7 +243,14 @@ export const parseMetricScores = (result: StructuredQueryResult | null): MetricS
     group.bars[barName] = Math.round(value * 1000) / 1000;
   }
 
-  return { overallScore, statistics: sortMetricStatistics(statistics), byStatistic };
+  const sortedByStatistic: Record<string, MetricScoreGroup[]> = {};
+  for (const [statistic, groups] of Object.entries(byStatistic)) {
+    sortedByStatistic[statistic] = [...groups].sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
+    );
+  }
+
+  return { overallScore, statistics: sortMetricStatistics(statistics), byStatistic: sortedByStatistic };
 };
 
 /**

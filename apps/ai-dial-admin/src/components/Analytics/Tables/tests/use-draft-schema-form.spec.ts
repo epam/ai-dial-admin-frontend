@@ -47,6 +47,72 @@ describe('useDraftSchemaForm source', () => {
     });
   });
 
+  test('buildDto carries a column display name and description, and omits them when blank', () => {
+    const { result } = renderHook(() => useDraftSchemaForm(source, null, t));
+
+    act(() =>
+      result.current.update('columns', [
+        {
+          ...result.current.form.columns[0],
+          source_name: 'total_tokens',
+          name: 'total_tokens',
+          type: AnalyticsFieldType.Long,
+          display_name: 'Total tokens',
+          description: 'Prompt plus completion tokens',
+        },
+        {
+          ...result.current.form.columns[0],
+          id: 'c2',
+          source_name: 'ts',
+          name: 'ts',
+          type: AnalyticsFieldType.Timestamp,
+        },
+      ]),
+    );
+    act(() => result.current.update('orderingKey', ['ts']));
+
+    expect(result.current.canMaterialize).toBe(true);
+    expect(result.current.buildDto()).toEqual({
+      columns: [
+        {
+          source_name: 'total_tokens',
+          name: 'total_tokens',
+          type: AnalyticsFieldType.Long,
+          nullable: false,
+          display_name: 'Total tokens',
+          description: 'Prompt plus completion tokens',
+        },
+        { source_name: 'ts', name: 'ts', type: AnalyticsFieldType.Timestamp, nullable: false },
+      ],
+      ordering_key: ['ts'],
+    });
+  });
+
+  test('an over-cap display name or description blocks Materialize on an otherwise complete schema', () => {
+    const { result } = renderHook(() => useDraftSchemaForm(source, null, t));
+
+    act(() =>
+      result.current.update('columns', [
+        { ...result.current.form.columns[0], source_name: 'ts', name: 'ts', type: AnalyticsFieldType.Timestamp },
+      ]),
+    );
+    act(() => result.current.update('orderingKey', ['ts']));
+    expect(result.current.canMaterialize).toBe(true);
+
+    act(() => result.current.update('columns', [{ ...result.current.form.columns[0], display_name: 'a'.repeat(129) }]));
+    expect(result.current.canMaterialize).toBe(false);
+
+    act(() =>
+      result.current.update('columns', [
+        { ...result.current.form.columns[0], display_name: '', description: 'b'.repeat(1025) },
+      ]),
+    );
+    expect(result.current.canMaterialize).toBe(false);
+
+    act(() => result.current.update('columns', [{ ...result.current.form.columns[0], description: '' }]));
+    expect(result.current.canMaterialize).toBe(true);
+  });
+
   test('retyping the selected partition column away from Date/Timestamp clears both it and the granularity', () => {
     const { result } = renderHook(() => useDraftSchemaForm(source, null, t));
 

@@ -43,6 +43,7 @@ const assetEntityMap: Record<string, FileManagerI18nKey> = {
   [ApplicationRoute.Prompts]: FileManagerI18nKey.Prompts,
   [ApplicationRoute.Files]: FileManagerI18nKey.Files,
   [ApplicationRoute.Conversations]: FileManagerI18nKey.Conversations,
+  [ApplicationRoute.AssetsSkills]: FileManagerI18nKey.Skills,
 };
 
 export const getValidationMessages = (t: (key: string) => string) => {
@@ -198,7 +199,8 @@ export const getBulkActionsToolbarOptions = (view: ApplicationRoute, t: (key: st
   const actionLabels =
     view === ApplicationRoute.Conversations ||
     view === ApplicationRoute.AssetsModels ||
-    view === ApplicationRoute.AssetsAppRunners
+    view === ApplicationRoute.AssetsAppRunners ||
+    view === ApplicationRoute.AssetsSkills
       ? bulkActionLabels.filter((action) => action.key === 'delete')
       : bulkActionLabels;
 

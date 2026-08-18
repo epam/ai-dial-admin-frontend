@@ -1,10 +1,15 @@
 import { ResourceType } from '@/src/types/resource-type';
 import { RESOURCE_TYPE_PREFIX } from '@/src/constants/publications-core';
 
-/** Resource types with a `__version`-suffixed name and a metadata+content split. Files, models, app runners, interceptors and roles are versionless. */
+/** Resource types with a `__version`-suffixed name and a metadata+content split. Files, skills, models, app runners, interceptors and roles are versionless. */
 export type VersionedResourceType = Exclude<
   ResourceType,
-  ResourceType.FILE | ResourceType.MODEL | ResourceType.APP_TYPE_SCHEMA | ResourceType.INTERCEPTOR | ResourceType.ROLE
+  | ResourceType.FILE
+  | ResourceType.SKILL
+  | ResourceType.MODEL
+  | ResourceType.APP_TYPE_SCHEMA
+  | ResourceType.INTERCEPTOR
+  | ResourceType.ROLE
 >;
 
 export const VERSIONED_RESOURCE_TYPES: VersionedResourceType[] = [
@@ -14,26 +19,34 @@ export const VERSIONED_RESOURCE_TYPES: VersionedResourceType[] = [
   ResourceType.PROMPT,
 ];
 
-/** `v1/{prefix}` content endpoint per resource type (mirrors the backend's per-type Core clients). */
+/**
+ * `v1/{prefix}` content endpoint per resource type (mirrors the backend's per-type Core clients).
+ * `SKILL`'s entry is unreachable in practice: a skill has no `/v1/skills` JSON endpoint (Core
+ * serves it via `/v2/skills`, multipart/ZIP) and is never enriched through `AssetApi` — publications
+ * resolve it through the dedicated `SkillsCoreApi.getSkillMetadata` instead (see
+ * `enrichSkillResource`). Present only so this `Record<ResourceType, string>` stays total.
+ */
 export const CORE_RESOURCE_URL: Record<ResourceType, string> = {
   [ResourceType.APPLICATION]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.APPLICATION]}`,
   [ResourceType.TOOLSET]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.TOOLSET]}`,
   [ResourceType.CONVERSATION]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.CONVERSATION]}`,
   [ResourceType.PROMPT]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.PROMPT]}`,
   [ResourceType.FILE]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.FILE]}`,
+  [ResourceType.SKILL]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.SKILL]}`,
   [ResourceType.MODEL]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.MODEL]}`,
   [ResourceType.APP_TYPE_SCHEMA]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.APP_TYPE_SCHEMA]}`,
   [ResourceType.INTERCEPTOR]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.INTERCEPTOR]}`,
   [ResourceType.ROLE]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.ROLE]}`,
 };
 
-/** `v1/metadata/{prefix}` metadata endpoint per resource type. */
+/** `v1/metadata/{prefix}` metadata endpoint per resource type. `SKILL`'s entry is unreachable — see `CORE_RESOURCE_URL`. */
 export const CORE_RESOURCE_METADATA_URL: Record<ResourceType, string> = {
   [ResourceType.APPLICATION]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.APPLICATION]}`,
   [ResourceType.TOOLSET]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.TOOLSET]}`,
   [ResourceType.CONVERSATION]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.CONVERSATION]}`,
   [ResourceType.PROMPT]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.PROMPT]}`,
   [ResourceType.FILE]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.FILE]}`,
+  [ResourceType.SKILL]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.SKILL]}`,
   [ResourceType.MODEL]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.MODEL]}`,
   [ResourceType.APP_TYPE_SCHEMA]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.APP_TYPE_SCHEMA]}`,
   [ResourceType.INTERCEPTOR]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.INTERCEPTOR]}`,

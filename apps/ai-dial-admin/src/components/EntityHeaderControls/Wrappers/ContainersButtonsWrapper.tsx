@@ -290,6 +290,7 @@ const ContainersButtonsWrapper: FC<ContainersButtonsWrapperProps> = ({
             onClose={onCloseModal}
             createEntity={activeCreateEntity}
             initialValues={getEntityTemplate(route, container, t, transport)}
+            isModal
           />,
           document.body,
         )}

@@ -43,10 +43,9 @@ const Separator: FC = () => <span aria-hidden className="h-4 w-px bg-tertiary" /
 interface Props {
   conversation: ConversationDetailRow;
   nowMs: number;
-  turnCount: number;
 }
 
-const ConversationDetailHeader: FC<Props> = ({ conversation, nowMs, turnCount }) => {
+const ConversationDetailHeader: FC<Props> = ({ conversation, nowMs }) => {
   const t = useI18n();
 
   const project = conversation.project_id?.trim() ? conversation.project_id : t(ConversationsTraceI18nKey.NoProject);
@@ -63,11 +62,9 @@ const ConversationDetailHeader: FC<Props> = ({ conversation, nowMs, turnCount })
       value: UNAVAILABLE_VALUE,
       markerClassName: PROVENANCE_MARKER_CLASS[ColumnProvenance.None],
     },
-    { label: t(ConversationsTraceI18nKey.DetailTurns), value: String(turnCount) },
     {
-      label: t(ConversationsTraceI18nKey.DetailRequests),
+      label: t(ConversationsTraceI18nKey.DetailTurns),
       value: formatCompactNumber(conversation.turn_count) || UNAVAILABLE_VALUE,
-      hint: t(ConversationsTraceI18nKey.DetailRequestsHint),
     },
     {
       label: t(ConversationsTraceI18nKey.DetailDuration),

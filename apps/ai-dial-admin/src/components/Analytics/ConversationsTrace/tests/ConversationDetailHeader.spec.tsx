@@ -13,20 +13,20 @@ const CONVERSATION: ConversationDetailRow = {
   chat_id: CHAT_ID,
   project_id: 'internal-copilot',
   user_hash: 'db73',
-  turn_count: 930,
+  turn_count: 911,
   first_request_time: '2026-07-22T11:50:28.506Z',
   last_request_time: '2026-07-22T12:00:52.157Z',
   prompt_tokens: 1,
   completion_tokens: 2,
   total_tokens: 3,
   total_price: '0.1',
-  success_count: 930,
+  success_count: 908,
   duration_ms: 0,
   avg_duration_ms: 0,
 };
 
 const renderHeader = (overrides: Partial<ConversationDetailRow> = {}) =>
-  render(<ConversationDetailHeader conversation={{ ...CONVERSATION, ...overrides }} nowMs={NOW_MS} turnCount={3} />);
+  render(<ConversationDetailHeader conversation={{ ...CONVERSATION, ...overrides }} nowMs={NOW_MS} />);
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -42,7 +42,7 @@ describe('ConversationDetailHeader', () => {
   test('offers a copy control for the conversation id', () => {
     renderHeader();
 
-    expect(screen.getByRole('button', { name: 'copy' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: `copy ${ConversationsTraceI18nKey.Conversation}` })).toBeTruthy();
   });
 
   test('renders the title field as unavailable, since nothing supplies one', () => {
@@ -59,20 +59,29 @@ describe('ConversationDetailHeader', () => {
     expect(screen.getByText(ConversationsTraceI18nKey.DetailModel).parentElement).toHaveTextContent(UNAVAILABLE_VALUE);
   });
 
-  // turn_count counts usage-log rows — 930 here against 3 real turns — so labelling it as turns would
-  // overstate it by two orders of magnitude.
-  test('labels the rollup count as requests and never as turns', () => {
+  // turn_count counts distinct traces, so turn, request and trace are one quantity — stating it twice
+  // under two labels would present one fact as two.
+  test('states the turn count once, read from the rollup', () => {
     renderHeader();
 
-    expect(screen.getByText(ConversationsTraceI18nKey.DetailRequests)).toBeTruthy();
-    expect(screen.queryByText(ConversationsTraceI18nKey.Turns)).toBeNull();
+    expect(screen.getByText(ConversationsTraceI18nKey.DetailTurns).parentElement).toHaveTextContent('911');
+    // The retired label, spelled out because the key no longer exists; the mocked t() renders keys verbatim.
+    expect(screen.queryByText('ConversationsTrace.DetailRequests')).toBeNull();
   });
 
-  test('states the real turn count alongside the request count', () => {
+  // The header takes no turn-list prop, so the bounded list cannot reach it — 911 turns behind a list
+  // bounded at 200 must still read 911.
+  test('reports the whole conversation, not the turns the view loaded', () => {
     renderHeader();
 
-    expect(screen.getByText(ConversationsTraceI18nKey.DetailTurns).parentElement).toHaveTextContent('3');
-    expect(screen.getByText(ConversationsTraceI18nKey.DetailRequests).parentElement).toHaveTextContent('930');
+    expect(screen.getByText(ConversationsTraceI18nKey.DetailTurns).parentElement).toHaveTextContent('911');
+    expect(screen.queryByText('200')).toBeNull();
+  });
+
+  test('renders the turn count as unavailable when the rollup carries none', () => {
+    renderHeader({ turn_count: null });
+
+    expect(screen.getByText(ConversationsTraceI18nKey.DetailTurns).parentElement).toHaveTextContent(UNAVAILABLE_VALUE);
   });
 
   test('states the project when the conversation has one', () => {

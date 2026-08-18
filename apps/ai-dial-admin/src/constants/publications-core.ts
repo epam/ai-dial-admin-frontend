@@ -16,6 +16,12 @@ export const CORE_BUCKET_URL = 'v1/bucket';
 export const CORE_FILES_URL = 'v1/files';
 export const CORE_FILES_METADATA_URL = 'v1/metadata/files';
 
+/** DIAL Core's v2 "complex resource" metadata endpoint for skills (folder metadata only — no ZIP/content). */
+export const CORE_SKILLS_METADATA_URL = 'v2/metadata/skills';
+
+/** DIAL Core's v2 "complex resource" content endpoint for skills (whole-bundle GET/PUT/DELETE, multipart/ZIP). */
+export const CORE_SKILLS_URL = 'v2/skills';
+
 /** Core resource URL prefixes (mirror the backend `*ClientMapper` prefixes). */
 export const PUBLICATIONS_PREFIX = 'publications/';
 export const APPLICATIONS_PREFIX = 'applications/';
@@ -23,6 +29,7 @@ export const CONVERSATIONS_PREFIX = 'conversations/';
 export const PROMPTS_PREFIX = 'prompts/';
 export const TOOLSETS_PREFIX = 'toolsets/';
 export const FILES_PREFIX = 'files/';
+export const SKILLS_PREFIX = 'skills/';
 export const MODELS_PREFIX = 'models/platform/';
 export const SCHEMAS_PREFIX = 'schemas/platform/';
 export const INTERCEPTORS_PREFIX = 'interceptors/platform/';
@@ -34,6 +41,7 @@ export const RESOURCE_TYPE_PREFIX: Record<ResourceType, string> = {
   [ResourceType.PROMPT]: PROMPTS_PREFIX,
   [ResourceType.TOOLSET]: TOOLSETS_PREFIX,
   [ResourceType.FILE]: FILES_PREFIX,
+  [ResourceType.SKILL]: SKILLS_PREFIX,
   [ResourceType.MODEL]: MODELS_PREFIX,
   [ResourceType.APP_TYPE_SCHEMA]: SCHEMAS_PREFIX,
   [ResourceType.INTERCEPTOR]: INTERCEPTORS_PREFIX,

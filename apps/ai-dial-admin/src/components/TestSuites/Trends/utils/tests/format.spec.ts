@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import {
+  buildCenteredTimelineLabels,
   formatScore,
   formatSuiteRunTime,
   formatTrendAxisDate,
@@ -22,5 +23,15 @@ describe('Trends format helpers', () => {
     const ms = new Date(2026, 1, 27).getTime();
     expect(formatTrendAxisDate(ms)).toContain('Feb');
     expect(formatTrendTooltipDate(ms)).toContain('Feb');
+  });
+
+  test('centers timeline labels within each contiguous month block', () => {
+    expect(buildCenteredTimelineLabels(['Aug 2026', 'Aug 2026', 'Aug 2026', 'Sep 2026', 'Sep 2026'])).toEqual([
+      '',
+      'Aug 2026',
+      '',
+      'Sep 2026',
+      '',
+    ]);
   });
 });

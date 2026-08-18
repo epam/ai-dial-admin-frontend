@@ -10,7 +10,7 @@ import {
 } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { changeFolder, removeFolder } from '@/src/app/[lang]/folders-storage/actions';
+import { changeFolder, removeFolder, removeSkillFolder } from '@/src/app/[lang]/folders-storage/actions';
 import {
   getDeleteNotificationContent,
   getExportNotificationContent,
@@ -27,7 +27,7 @@ import { useNotification } from '@/src/context/NotificationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { AssetApp, AssetWithVersion } from '@/src/models/dial/deployment-asset';
-import { DialAppRunnerResource, PlatformAsset } from '@/src/models/dial/resource';
+import { DialAppRunnerResource, DialResource, PlatformAsset } from '@/src/models/dial/resource';
 import { ImportData } from '@/src/models/import-asset';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ConflictResolutionPolicy, ImportFileType } from '@/src/types/import';
@@ -484,19 +484,21 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
 
   const onMultipleRemove = useCallback(async () => {
     if (deletedItems) {
-      const assets = deletedItems.filter((item) => item.nodeType === DialFileNodeType.ITEM);
+      const assets = deletedItems.filter((item) => item.nodeType === DialFileNodeType.ITEM) as DialResource[];
       const folders = deletedItems.filter((item) => item.nodeType === DialFileNodeType.FOLDER);
       const bulkDeleteAsset = BulkDeleteAssetActionMap[view as BaseAssetRoute];
 
       const promises = [];
       if (assets.length > 0) {
-        const assetsPaths: { path: string }[] = [];
+        // `etag` is optional here and ignored by every entry except `bulkDeleteSkills`, whose delete
+        // has no content GET to source an etag from and so requires one from the listing row.
+        const assetsPaths: { path: string; etag?: string }[] = [];
         assets.forEach((asset) => {
           const paths = getAllSelectedItemsPaths(asset.path, selectedVersionsMap);
           if (paths.length > 0) {
-            assetsPaths.push(...paths.map((path: string) => ({ path: path })));
+            assetsPaths.push(...paths.map((path: string) => ({ path: path, etag: asset.etag })));
           } else {
-            assetsPaths.push({ path: asset.path });
+            assetsPaths.push({ path: asset.path, etag: asset.etag });
           }
           const prefix = asset.path.substring(0, asset.path.lastIndexOf('__'));
           setSelectedVersionsMap({
@@ -510,6 +512,13 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
       if (resourceType) {
         folders.forEach((folder) => {
           promises.push(removeFolder(folder.path, resourceType));
+        });
+      } else if (view === ApplicationRoute.AssetsSkills) {
+        // Skills aren't one of the five flat resource types `removeFolder`/`removeFolderCore`
+        // walks generically (`getResourceTypeByRoute` deliberately excludes SKILL) — they get their
+        // own recursive, dedicated-endpoint delete instead (see `removeSkillFolderCore`).
+        folders.forEach((folder) => {
+          promises.push(removeSkillFolder(folder.path));
         });
       }
 
