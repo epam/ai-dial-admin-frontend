@@ -1,4 +1,9 @@
-import { ANALYTICS_TAG_MAX_LENGTH, PARTITION_NONE } from '@/src/constants/analytics/tables';
+import {
+  ANALYTICS_DESCRIPTION_MAX_LENGTH,
+  ANALYTICS_DISPLAY_NAME_MAX_LENGTH,
+  ANALYTICS_TAG_MAX_LENGTH,
+  PARTITION_NONE,
+} from '@/src/constants/analytics/tables';
 import { ErrorI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -34,6 +39,8 @@ export const createColumnRow = (): ColumnRow => ({
   type: AnalyticsFieldType.String,
   element_type: '',
   tag: '',
+  display_name: '',
+  description: '',
   nullable: false,
   sensitive: false,
 });
@@ -82,6 +89,8 @@ const toColumnRows = (columns: AnalyticsTableColumn[]): ColumnRow[] =>
     type: c.type,
     element_type: c.element_type ?? '',
     tag: c.tag ?? '',
+    display_name: c.display_name ?? '',
+    description: c.description ?? '',
     nullable: Boolean(c.nullable),
     sensitive: Boolean(c.sensitive),
   }));
@@ -98,10 +107,6 @@ export const createDraftSchemaForm = (table: AnalyticsTable): DraftSchemaForm =>
   versionColumn: table.version_column ?? '',
 });
 
-// Validates the column rows of a create/add-columns form against the backend rules: each row that will
-// actually be sent (both source_name and name filled — partial rows are dropped by toTableColumns) must
-// have snake_case identifiers unique within the table (against sibling rows and any pre-existing columns),
-// and a tag within its length cap. Returns one entry per row, aligned by index; empty entries are valid.
 export const getColumnRowErrors = (
   rows: ColumnRow[],
   existing: ExistingColumnNames,
@@ -126,6 +131,12 @@ export const getColumnRowErrors = (
     const tagError = getAnalyticsLengthError(row.tag, ANALYTICS_TAG_MAX_LENGTH, t);
     if (tagError) error.tag = tagError.text;
 
+    const displayNameError = getAnalyticsLengthError(row.display_name, ANALYTICS_DISPLAY_NAME_MAX_LENGTH, t);
+    if (displayNameError) error.display_name = displayNameError.text;
+
+    const descriptionError = getAnalyticsLengthError(row.description, ANALYTICS_DESCRIPTION_MAX_LENGTH, t);
+    if (descriptionError) error.description = descriptionError.text;
+
     if (row.type === AnalyticsFieldType.Array && !row.element_type) {
       error.element_type = t(ErrorI18nKey.RequiredField);
     }
@@ -135,7 +146,7 @@ export const getColumnRowErrors = (
 };
 
 export const hasColumnRowErrors = (errors: ColumnRowError[]): boolean =>
-  errors.some((e) => e.source_name || e.name || e.tag || e.element_type);
+  errors.some((e) => e.source_name || e.name || e.tag || e.display_name || e.description || e.element_type);
 
 const normalized = (value?: string): string => (value ?? '').trim();
 
@@ -182,10 +193,11 @@ export const toTableColumns = (rows: ColumnRow[]): AnalyticsTableColumn[] =>
         source_name: r.source_name.trim(),
         name: r.name.trim(),
         type: r.type,
-        // The backend rejects a nullable array column, so an Array row is always sent as non-nullable.
         nullable: isArray ? false : r.nullable,
         ...(isArray && r.element_type ? { element_type: r.element_type } : {}),
         ...(r.tag.trim() ? { tag: r.tag.trim() } : {}),
+        ...(r.display_name.trim() ? { display_name: r.display_name.trim() } : {}),
+        ...(r.description.trim() ? { description: r.description.trim() } : {}),
         ...(r.sensitive ? { sensitive: true } : {}),
       };
     });

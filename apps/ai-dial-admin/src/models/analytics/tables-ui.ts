@@ -6,18 +6,20 @@ export interface ColumnRow {
   source_name: string;
   name: string;
   type: AnalyticsFieldType;
-  // Required when `type` is Array; '' means not yet chosen (matches the `granularity: … | ''` pattern).
   element_type: AnalyticsFieldType | '';
   tag: string;
+  display_name: string;
+  description: string;
   nullable: boolean;
   sensitive: boolean;
 }
 
-// Per-row validation messages for a ColumnRow; an absent key means that field is valid.
 export interface ColumnRowError {
   source_name?: string;
   name?: string;
   tag?: string;
+  display_name?: string;
+  description?: string;
   element_type?: string;
 }
 
