@@ -1,7 +1,7 @@
 'use client';
 
 import { DialNumberInput, DialRemoveButton, DialSelectField } from '@epam/ai-dial-ui-kit';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -25,6 +25,9 @@ const WeightRow: FC<Props> = ({ index, row, availableOptions, onUpdate, onRemove
 
   const [metricError, setMetricError] = useState<FieldError | null>(null);
   const [weightError, setWeightError] = useState<FieldError | null>(null);
+
+  const hasMetricBeenTouched = useRef(false);
+  const hasWeightBeenTouched = useRef(false);
 
   const metricValue = row.metricName ? `${row.metricName}::${row.outputField}` : '';
   const metricExists = availableOptions.some((option) => option.value === metricValue);
@@ -58,7 +61,11 @@ const WeightRow: FC<Props> = ({ index, row, availableOptions, onUpdate, onRemove
   }, []);
 
   useEffect(() => {
-    if (resetCounter || metricValue) {
+    if (metricValue) {
+      hasMetricBeenTouched.current = true;
+    }
+
+    if (resetCounter || hasMetricBeenTouched.current) {
       const error = getMetricSelectionError(metricValue, t, metricExists);
       setMetricError(error);
       dispatch({ type: ValidationActionType.SetField, field: `overallScoreMetric_${index}`, isValid: !error });
@@ -66,7 +73,11 @@ const WeightRow: FC<Props> = ({ index, row, availableOptions, onUpdate, onRemove
   }, [dispatch, index, metricValue, metricExists, resetCounter, t]);
 
   useEffect(() => {
-    if (resetCounter || row.weight !== undefined) {
+    if (row.weight !== undefined) {
+      hasWeightBeenTouched.current = true;
+    }
+
+    if (resetCounter || hasWeightBeenTouched.current) {
       const error = getWeightError(row.weight, t);
       setWeightError(error);
       dispatch({ type: ValidationActionType.SetField, field: `overallScoreWeight_${index}`, isValid: !error });
@@ -98,7 +109,7 @@ const WeightRow: FC<Props> = ({ index, row, availableOptions, onUpdate, onRemove
   }, [index, onRemove]);
 
   return (
-    <div className="mt-3 flex flex-row items-end gap-2">
+    <div className="mt-3 flex flex-row items-start gap-2">
       <div className="min-w-0 flex-1">
         <DialSelectField
           id={`overallScoreMetric_${index}`}
@@ -107,6 +118,7 @@ const WeightRow: FC<Props> = ({ index, row, availableOptions, onUpdate, onRemove
           options={metricOptions}
           searchable
           invalid={!!metricError}
+          error={metricError?.text}
           onChange={onMetricChange}
         />
       </div>
@@ -117,10 +129,15 @@ const WeightRow: FC<Props> = ({ index, row, availableOptions, onUpdate, onRemove
           step={0.01}
           value={row.weight}
           invalid={!!weightError}
+          error={weightError?.text}
           onChange={onWeightChange}
         />
       </div>
-      <DialRemoveButton onClick={onRemoveRow} aria-label={t(ButtonsI18nKey.Remove)} />
+      <DialRemoveButton
+        onClick={onRemoveRow}
+        aria-label={t(ButtonsI18nKey.Remove)}
+        className={index === 0 ? 'mt-7' : ''}
+      />
     </div>
   );
 };

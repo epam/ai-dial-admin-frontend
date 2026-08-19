@@ -2170,7 +2170,7 @@ export default {
     MetricScoresDescriptionMed: 'Median score among all scored test cases',
     MetricScoresDescriptionCount: 'Number of scored test cases',
     NoMetricScores: 'No metric scores available for this run.',
-    DistributionTitle: 'Distribution',
+    DistributionTitle: 'Test Cases Distribution',
     Metric: 'Metric:',
     DistributionValueTitle: 'test cases',
     SelectMetricToSeeDistribution: 'Select a metric to see its score distribution.',
