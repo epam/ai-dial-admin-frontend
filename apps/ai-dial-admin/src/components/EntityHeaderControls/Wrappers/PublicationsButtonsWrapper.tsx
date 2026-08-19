@@ -30,6 +30,8 @@ import {
   SELECT_ENTITY_MOBILE_HEADER_BUTTONS_CLASS,
   SELECT_ENTITY_MOBILE_HEADER_CLASS,
 } from '@/src/constants/main-layout';
+import { ROOT_FOLDER } from '@/src/constants/file';
+import { AssetsFolderContext } from '@/src/context/assets/AssetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsMobileScreen } from '@/src/hooks/use-is-mobile-screen';
@@ -40,6 +42,7 @@ import { ActionType, Publication } from '@/src/models/dial/publications';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getErrorNotification } from '@/src/utils/notification';
 import { getModalsTranslations, isAddAction } from '@/src/utils/publications';
+import { addTrailingSlash } from '@/src/utils/url';
 
 export interface PublicationsButtonsWrapperProps<T> {
   view: ApplicationRoute;
@@ -47,6 +50,7 @@ export interface PublicationsButtonsWrapperProps<T> {
   jsonConfiguration?: JsonConfiguration;
   entity: T;
   isOnlyDeleteAvailable?: boolean;
+  getAssetContext?: () => AssetsFolderContext;
 
   onDiscard: () => void;
   onSave: () => void;
@@ -58,6 +62,7 @@ const PublicationsButtonsWrapper = <T extends Publication>({
   jsonConfiguration,
   isChanged,
   isOnlyDeleteAvailable,
+  getAssetContext,
   onDiscard,
   onSave,
 }: PublicationsButtonsWrapperProps<T>) => {
@@ -67,7 +72,6 @@ const PublicationsButtonsWrapper = <T extends Publication>({
   const { isValid, dispatch, jsonErrors } = useSaveValidationContext();
   const { showNotification } = useNotification();
   const router = useRouter();
-
   const isTablet = useIsOnlyTabletScreen();
   const isMobile = useIsMobileScreen();
   const isDisableSave = useMemo(() => (isEditorEnabled ? false : !isValid), [isEditorEnabled, isValid]);
@@ -96,12 +100,15 @@ const PublicationsButtonsWrapper = <T extends Publication>({
   const onApprove = useCallback(() => {
     approvePublication(entity.path).then((res) => {
       if (res.success) {
+        if (isAddAction(action)) {
+          getAssetContext?.().fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
+        }
         router.push(view);
       } else {
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage, res.requestId));
       }
     });
-  }, [entity.path, router, showNotification, view]);
+  }, [action, entity.path, getAssetContext, router, showNotification, view]);
 
   const onDecline = useCallback(
     (comment: string) => {

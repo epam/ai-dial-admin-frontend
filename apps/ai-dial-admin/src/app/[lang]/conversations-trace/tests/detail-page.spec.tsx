@@ -5,7 +5,9 @@ import {
   getConversationDetail,
   getConversationFeedback,
   getConversationTurns,
+  getConversationsSchema,
 } from '@/src/app/[lang]/conversations-trace/actions';
+import { ConversationsField } from '@/src/models/analytics/conversations-trace';
 import { isAnalyticsForbidden } from '@/src/server/analytics/analytics-access';
 
 vi.mock('@/src/app/[lang]/conversations-trace/actions');
@@ -35,14 +37,20 @@ const DETAIL_ROW = {
   success_count: 1,
   duration_ms: 0,
   avg_duration_ms: 0,
+  deployments: ['anthropic.claude-opus-4-8'],
+  traces: ['0a3f1d9c8b7e6a5f'],
+  'conversation_insights.title': 'Refund policy for EU orders',
 };
 
 const forbidden = () => isAnalyticsForbidden as unknown as ReturnType<typeof vi.fn>;
 const detail = () => getConversationDetail as unknown as ReturnType<typeof vi.fn>;
 const feedback = () => getConversationFeedback as unknown as ReturnType<typeof vi.fn>;
 const turns = () => getConversationTurns as unknown as ReturnType<typeof vi.fn>;
+const schema = () => getConversationsSchema as unknown as ReturnType<typeof vi.fn>;
 
-const TURN = { trace_id: 't1', started: 1, hops: 3, tokens: 1, cost: '0.1' };
+const SCHEMA_FIELDS = Object.keys(DETAIL_ROW).map((name) => ({ name, type: 'string', source: 'conversations' }));
+
+const TURN = { trace_id: 't1', started: 1, hops: 3, tokens: 1, cost: '0.1', duration_ms: 42 };
 
 const render = (id: string) => Page({ params: Promise.resolve({ id }) });
 
@@ -57,6 +65,7 @@ beforeEach(() => {
   detail().mockResolvedValue({ success: true, response: { conversation: DETAIL_ROW } });
   feedback().mockResolvedValue({ success: true, response: { rows: [], total: 0 } });
   turns().mockResolvedValue({ success: true, response: { turns: [TURN] } });
+  schema().mockResolvedValue({ success: true, response: { fields: SCHEMA_FIELDS } });
 });
 
 describe('conversation detail route', () => {
@@ -104,7 +113,7 @@ describe('conversation detail route', () => {
 
     await render(raw);
 
-    expect(detail()).toHaveBeenCalledWith('conversations/eRxsos/chathub-claude4');
+    expect(detail()).toHaveBeenCalledWith('conversations/eRxsos/chathub-claude4', expect.anything());
   });
 
   test('decodes an id carrying percent-encoded query text', async () => {
@@ -112,18 +121,75 @@ describe('conversation detail route', () => {
 
     await render(raw);
 
-    expect(detail()).toHaveBeenCalledWith('chat/en/give%20me%20gdp-1786535692111');
+    expect(detail()).toHaveBeenCalledWith('chat/en/give%20me%20gdp-1786535692111', expect.anything());
   });
 
   test('requests the conversation and its feedback for the same id', async () => {
     await render(CHAT_ID);
 
-    expect(detail()).toHaveBeenCalledWith(CHAT_ID);
+    expect(detail()).toHaveBeenCalledWith(CHAT_ID, expect.arrayContaining([ConversationsField.ChatId]));
     expect(feedback()).toHaveBeenCalledWith(CHAT_ID);
   });
 
+  test('builds the detail query from the fields the schema reports', async () => {
+    schema().mockResolvedValue({ success: true, response: { fields: [{ name: ConversationsField.ChatId }] } });
+
+    await render(CHAT_ID);
+
+    expect(detail()).toHaveBeenCalledWith(CHAT_ID, [ConversationsField.ChatId]);
+  });
+
+  test('renders the conversation when the schema cannot be read', async () => {
+    schema().mockResolvedValue({ success: false });
+
+    expect(componentName(await render(CHAT_ID))).toBe('ConversationDetailView');
+    expect(detail()).toHaveBeenCalledWith(CHAT_ID, undefined);
+  });
+
+  // The request layer rethrows a connection failure rather than reporting it in the payload, so a rejected
+  // schema read would reject the whole wave and error a conversation the required-only projection resolves.
+  test('renders the conversation when the schema read rejects', async () => {
+    schema().mockRejectedValue(new TypeError('fetch failed'));
+
+    expect(componentName(await render(CHAT_ID))).toBe('ConversationDetailView');
+    expect(detail()).toHaveBeenCalledWith(CHAT_ID, undefined);
+  });
+
+  // Only the conversation query depends on the schema. Queueing the feedback and turn reads behind it would
+  // add a round trip to every detail view for nothing.
+  test('issues the feedback and turn reads without waiting for the schema', async () => {
+    let releaseSchema: (value: unknown) => void = () => undefined;
+    schema().mockReturnValue(
+      new Promise((resolve) => {
+        releaseSchema = resolve;
+      }),
+    );
+
+    const pending = render(CHAT_ID);
+    // The route awaits the access check and the route params before the read wave, so a single microtask
+    // is not enough to reach it.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(feedback()).toHaveBeenCalledWith(CHAT_ID);
+    expect(turns()).toHaveBeenCalledWith(CHAT_ID);
+    expect(detail()).not.toHaveBeenCalled();
+
+    releaseSchema({ success: true, response: { fields: SCHEMA_FIELDS } });
+    await pending;
+
+    expect(detail()).toHaveBeenCalledOnce();
+  });
+
+  // Also the shape of a conversation newer than the turns rollup's last refresh: the detail view renders
+  // its empty-turn-list presentation, and an empty rollup result is not an error state.
   test('a conversation with no turns still renders', async () => {
     turns().mockResolvedValue({ success: true, response: { turns: [] } });
+
+    expect(componentName(await render(CHAT_ID))).toBe('ConversationDetailView');
+  });
+
+  test('a failed turns query renders the conversation rather than the error state', async () => {
+    turns().mockResolvedValue({ success: false, errorMessage: 'boom' });
 
     expect(componentName(await render(CHAT_ID))).toBe('ConversationDetailView');
   });

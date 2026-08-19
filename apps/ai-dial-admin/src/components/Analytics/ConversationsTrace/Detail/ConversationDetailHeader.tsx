@@ -1,14 +1,14 @@
 'use client';
 
 import { DialEllipsisTooltip, DialTooltip } from '@epam/ai-dial-ui-kit';
-import classNames from 'classnames';
 import { FC, Fragment } from 'react';
 
 import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
-import { PROVENANCE_MARKER_CLASS, UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace';
+import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { ColumnProvenance, ConversationDetailRow } from '@/src/models/analytics/conversations-trace';
+import { ConversationDetailRow } from '@/src/models/analytics/conversations-trace';
+import { conversationTitle } from '@/src/utils/analytics/conversation-detail-fields';
 import {
   formatCompactNumber,
   formatConversationSpan,
@@ -21,13 +21,11 @@ interface MetaProps {
   value: string;
   hint?: string;
   title?: string;
-  markerClassName?: string;
 }
 
-const MetaTag: FC<MetaProps> = ({ label, value, hint, title, markerClassName }) => {
+const MetaTag: FC<MetaProps> = ({ label, value, hint, title }) => {
   const text = (
     <span className="inline-flex items-center gap-1.5 font-mono dial-small-text text-secondary">
-      {markerClassName && <span aria-hidden className={classNames('size-2 rounded-full', markerClassName)} />}
       {label}
       <span className="text-primary dial-small-semi-text" title={title}>
         {value}
@@ -50,18 +48,14 @@ const ConversationDetailHeader: FC<Props> = ({ conversation, nowMs }) => {
 
   const project = conversation.project_id?.trim() ? conversation.project_id : t(ConversationsTraceI18nKey.NoProject);
 
+  // The metadata panel states the deployments; restating them here would present one fact twice, which is
+  // what the turn count and the rating counts are already kept out of the header for.
   const meta: MetaProps[] = [
     {
       label: t(ConversationsTraceI18nKey.DetailTitleField),
-      value: UNAVAILABLE_VALUE,
-      markerClassName: PROVENANCE_MARKER_CLASS[ColumnProvenance.None],
+      value: conversationTitle(conversation),
     },
     { label: t(ConversationsTraceI18nKey.Project), value: project },
-    {
-      label: t(ConversationsTraceI18nKey.DetailModel),
-      value: UNAVAILABLE_VALUE,
-      markerClassName: PROVENANCE_MARKER_CLASS[ColumnProvenance.None],
-    },
     {
       label: t(ConversationsTraceI18nKey.DetailTurns),
       value: formatCompactNumber(conversation.turn_count) || UNAVAILABLE_VALUE,

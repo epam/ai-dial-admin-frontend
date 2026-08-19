@@ -11,6 +11,7 @@ import {
   CONVERSATION_FEEDBACK_LIMIT,
   CONVERSATION_SPAN_LIMIT,
   CONVERSATION_TURN_LIMIT,
+  TURNS_ENTITY,
   USAGE_LOG_ENTITY,
 } from '@/src/constants/analytics/conversations-trace';
 import { QueryMode, QueryOffsetPage, QueryOperator, QueryPredicate } from '@/src/models/analytics/query';
@@ -166,18 +167,18 @@ describe('getConversationFeedback', () => {
 });
 
 describe('getConversationTurns', () => {
-  test('aggregates the usage log with the user token and the shared limit', async () => {
+  test('reads the turns rollup with the user token and the shared limit', async () => {
     execute().mockResolvedValue({ success: true, response: { rows: [TURN_ROW] } });
 
     await getConversationTurns(CHAT_ID);
 
     expect(execute()).toHaveBeenCalledWith(expect.anything(), TOKEN_MOCK);
-    expect(call(0).entity).toBe(USAGE_LOG_ENTITY);
-    expect(call(0).mode).toBe(QueryMode.Aggregate);
+    expect(call(0).entity).toBe(TURNS_ENTITY);
+    expect(call(0).mode).toBe(QueryMode.Row);
     expect((call(0).page as QueryOffsetPage).limit).toBe(CONVERSATION_TURN_LIMIT);
   });
 
-  test('returns the aggregated turns', async () => {
+  test('returns the rollup turns', async () => {
     execute().mockResolvedValue({ success: true, response: { rows: [TURN_ROW] } });
 
     const result = await getConversationTurns(CHAT_ID);
@@ -192,6 +193,17 @@ describe('getConversationTurns', () => {
 
     expect(result.success).toBe(true);
     expect(result.response).toEqual({ turns: [] });
+  });
+
+  // Falling back to the hop log for a conversation the rollup has not caught up with would answer one
+  // conversation by one definition of a turn and the next by another.
+  test('issues no second query when the rollup returns nothing', async () => {
+    execute().mockResolvedValue({ success: true, response: { rows: [] } });
+
+    await getConversationTurns(CHAT_ID);
+
+    expect(execute()).toHaveBeenCalledOnce();
+    expect(JSON.stringify(call(0))).not.toContain(USAGE_LOG_ENTITY);
   });
 
   // The route distinguishes these two: an empty list is a conversation without turns, an absent response

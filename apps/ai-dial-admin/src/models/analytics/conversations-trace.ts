@@ -19,9 +19,15 @@ export interface ConversationRow {
   first_request_time: number | string | null;
   rating_up: number | null;
   rating_down: number | null;
+  'conversation_insights.title'?: string | null;
 }
 
 export type ConversationListRow = ConversationRow & Record<string, ConversationScalar | undefined>;
+
+export interface ConversationTitleSource {
+  chat_id: string;
+  'conversation_insights.title'?: string | null;
+}
 
 export interface ConversationsPage {
   rows: ConversationRow[];
@@ -143,6 +149,20 @@ export enum ConversationsField {
   Deployments = 'deployments',
   FirstRequestTime = 'first_request_time',
   LastRequestTime = 'last_request_time',
+  CacheCreationTokens = 'cache_creation_tokens',
+  CachedPromptTokens = 'cached_prompt_tokens',
+  ReasoningTokens = 'reasoning_tokens',
+  ChainPriceTotal = 'chain_price_total',
+  Traces = 'traces',
+  // The insight fields are enrichment columns: the service exposes each under a qualified flat name, and
+  // the dot belongs to the name rather than marking a path into a nested value.
+  InsightTitle = 'conversation_insights.title',
+  InsightSentiment = 'conversation_insights.sentiment',
+  InsightSentimentScore = 'conversation_insights.sentiment_score',
+  InsightTopic = 'conversation_insights.topic',
+  InsightTopics = 'conversation_insights.topics',
+  InsightLanguage = 'conversation_insights.language',
+  InsightResolutionStatus = 'conversation_insights.resolution_status',
 }
 
 // Grid-only column ids: every other column binds to a `ConversationsField`, but Rating is composed
@@ -192,6 +212,20 @@ export interface ConversationDetailRow {
   duration_ms: number | string | null;
   avg_duration_ms: number | string | null;
   deployments: string[] | null;
+  cache_creation_tokens?: number | string | null;
+  cached_prompt_tokens?: number | string | null;
+  reasoning_tokens?: number | string | null;
+  chain_price_total?: number | string | null;
+  traces?: string[] | null;
+  // Optional because the insight enrichment runs per conversation: a conversation the evaluator has not
+  // processed has no insight row at all, so the service returns no value under these names.
+  'conversation_insights.title'?: string | null;
+  'conversation_insights.sentiment'?: string | null;
+  'conversation_insights.sentiment_score'?: number | string | null;
+  'conversation_insights.topic'?: string | null;
+  'conversation_insights.topics'?: string | null;
+  'conversation_insights.language'?: string | null;
+  'conversation_insights.resolution_status'?: string | null;
 }
 
 export interface ConversationDetailResult {
@@ -226,6 +260,18 @@ export enum UsageLogField {
   ResponseStatus = 'response_status',
   Success = 'success',
   OperationDurationMs = 'operation_duration_ms',
+}
+
+// The `turns` rollup: one row per trace, with the turn's entry time, hop count, token totals, cost and
+// wall-clock duration already resolved. `dial_usage_log` stays the source of a turn's span tree.
+export enum TurnsField {
+  ChatId = 'chat_id',
+  TraceId = 'trace_id',
+  FirstRequestTime = 'first_request_time',
+  HopCount = 'hop_count',
+  TotalTokens = 'total_tokens',
+  TotalPrice = 'total_price',
+  DurationMs = 'duration_ms',
 }
 
 export enum ConversationTurnField {
