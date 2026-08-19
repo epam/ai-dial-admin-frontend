@@ -6,6 +6,8 @@ import {
   ConversationFieldDefinition,
   ConversationFieldFormat,
   ConversationFieldState,
+  ConversationTitleSource,
+  ConversationsField,
   RatingCounts,
   ResolvedConversationField,
 } from '@/src/models/analytics/conversations-trace';
@@ -36,6 +38,13 @@ const formatValue = (raw: FieldValue, format?: ConversationFieldFormat): string 
   }
 };
 
+// The insight enrichment runs per conversation, so a title can be missing (never evaluated) or blank. The
+// conversation id is what identifies the row everywhere else, so it is the fallback rather than an empty
+// cell — and both the header and the grid's title column read this, so they cannot state different names
+// for one conversation.
+export const conversationTitle = (record: ConversationTitleSource): string =>
+  record[ConversationsField.InsightTitle]?.trim() || record.chat_id;
+
 export const resolveConversationField = (
   definition: ConversationFieldDefinition,
   record: ConversationDetailRow,
@@ -47,7 +56,13 @@ export const resolveConversationField = (
   }
 
   const raw = record[column];
-  if (raw === null || raw === undefined || raw === '') {
+  // The service returns every projected column in every row, `null` where the cell is null — so a key the
+  // row does not carry at all was never projected, because this deployment does not expose it. That is
+  // "unavailable"; a key present and null is a record with no value, which is "empty".
+  if (raw === undefined) {
+    return { labelKey, state: ConversationFieldState.Unavailable, text: UNAVAILABLE_VALUE, accentClassName };
+  }
+  if (raw === null || raw === '') {
     return { labelKey, state: ConversationFieldState.Empty, text: '', accentClassName };
   }
 

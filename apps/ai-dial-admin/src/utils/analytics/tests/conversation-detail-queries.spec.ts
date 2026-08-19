@@ -6,18 +6,21 @@ import {
   CONVERSATION_SPAN_LIMIT,
   CONVERSATION_TURN_LIMIT,
   FEEDBACK_ENTITY,
+  OPTIONAL_DETAIL_SELECT_FIELDS,
+  REQUIRED_DETAIL_SELECT_FIELDS,
+  TURNS_ENTITY,
   USAGE_LOG_ENTITY,
 } from '@/src/constants/analytics/conversations-trace';
 import {
   ConversationTurnField,
   ConversationsField,
   RateAnalyticsField,
+  TurnsField,
   UsageLogField,
 } from '@/src/models/analytics/conversations-trace';
 import {
   QueryExprType,
   QueryFieldExpr,
-  QueryFnExpr,
   QueryGroup,
   QueryLogicalOperator,
   QueryMode,
@@ -37,6 +40,9 @@ import {
 } from '@/src/utils/analytics/conversations-queries';
 
 const CHAT_ID = 'Lrr0e6L5bpTND3IY_dN0_';
+const ALL_FIELDS: string[] = Object.values(ConversationsField);
+const detailQuery = (availableFields: string[] | undefined = ALL_FIELDS) =>
+  buildConversationDetailQuery(CHAT_ID, availableFields);
 const TRACE_ID = '0a3f1d9c8b7e6a5f';
 const BODY_COLUMNS = ['request_body', 'response_body'];
 
@@ -45,15 +51,14 @@ const selectedNames = (select?: QueryOutputColumn[]): string[] =>
 
 const asPredicate = (filter: unknown): QueryPredicate => filter as QueryPredicate;
 
-const measureOf = (select: QueryOutputColumn[] | undefined, alias: string): QueryFnExpr =>
-  (select ?? []).find((column) => column.as === alias)?.expr as QueryFnExpr;
-
-const measureArgNames = (measure: QueryFnExpr): string[] =>
-  (measure.args ?? []).map((arg) => (arg as QueryFieldExpr).name);
+// The turn query aliases the rollup's columns to the names the timeline reads, so a test asserts which
+// rollup column ended up under a given alias.
+const fieldOf = (select: QueryOutputColumn[] | undefined, alias: string): string | undefined =>
+  ((select ?? []).find((column) => column.as === alias)?.expr as QueryFieldExpr | undefined)?.name;
 
 describe('buildConversationDetailQuery', () => {
   test('reads the conversations entity in row mode', () => {
-    const query = buildConversationDetailQuery(CHAT_ID);
+    const query = detailQuery();
 
     expect(query.entity).toBe(CONVERSATIONS_ENTITY);
     expect(query.mode).toBe(QueryMode.Row);
@@ -61,7 +66,7 @@ describe('buildConversationDetailQuery', () => {
   });
 
   test('filters to one conversation by equality and requests a single row', () => {
-    const query = buildConversationDetailQuery(CHAT_ID);
+    const query = detailQuery();
     const predicate = asPredicate(query.filter);
 
     expect(predicate.op).toBe(QueryOperator.Eq);
@@ -79,16 +84,57 @@ describe('buildConversationDetailQuery', () => {
   });
 
   test('selects every stored column of the rollup', () => {
-    const names = selectedNames(buildConversationDetailQuery(CHAT_ID).select);
+    const names = selectedNames(detailQuery().select);
 
     expect(names).toEqual(Object.values(ConversationsField));
-    expect(names).toHaveLength(14);
+    expect(names).toHaveLength(26);
+  });
+
+  // `traces` is catalogued heavy, so a default projection returns no value for it and the metadata panel's
+  // trace field would read empty against a row that carries it.
+  test('names the heavy trace column explicitly', () => {
+    const names = selectedNames(detailQuery().select);
+
+    expect(names).toContain(ConversationsField.Traces);
+    expect(detailQuery().select?.length).toBeGreaterThan(0);
+  });
+
+  test('names the insight columns by their qualified flat names', () => {
+    const names = selectedNames(detailQuery().select);
+
+    expect(names).toContain('conversation_insights.title');
+    expect(names).toContain(ConversationsField.InsightTitle);
+  });
+
+  test('omits the columns an instance does not carry', () => {
+    const withoutInsights = ALL_FIELDS.filter((name) => !name.startsWith('conversation_insights.'));
+    const names = selectedNames(detailQuery(withoutInsights).select);
+
+    expect(names).not.toContain(ConversationsField.InsightTitle);
+    expect(names).toContain(ConversationsField.Traces);
+    expect(names).toContain(ConversationsField.ChatId);
+  });
+
+  test('names the required core alone when no schema is available', () => {
+    const names = selectedNames(buildConversationDetailQuery(CHAT_ID).select);
+
+    expect([...names].sort()).toEqual([...REQUIRED_DETAIL_SELECT_FIELDS].sort());
+    expect(names).not.toContain(ConversationsField.Traces);
+    expect(names).not.toContain(ConversationsField.InsightTitle);
+  });
+
+  // The split is the contract the projection rests on: a field classified as neither would be named
+  // unconditionally and take the whole query down on an instance that lacks it.
+  test('classifies every field of the entity as required or optional', () => {
+    expect([...REQUIRED_DETAIL_SELECT_FIELDS, ...OPTIONAL_DETAIL_SELECT_FIELDS].sort()).toEqual(
+      [...Object.values(ConversationsField)].sort(),
+    );
   });
 
   // The list query bounds last_request_time to the selected period; a detail view addressed by id must
   // resolve whatever period the log was showing, so a bookmark cannot break as a conversation ages out.
   test('carries no time bound', () => {
-    const query = buildConversationDetailQuery(CHAT_ID);
+    const query = detailQuery();
     const serialized = JSON.stringify(query.filter);
 
     expect(serialized).not.toContain(ConversationsField.LastRequestTime);
@@ -97,7 +143,7 @@ describe('buildConversationDetailQuery', () => {
   });
 
   test('requests no sensitive column', () => {
-    const names = selectedNames(buildConversationDetailQuery(CHAT_ID).select);
+    const names = selectedNames(detailQuery().select);
 
     for (const sensitive of ['request_body', 'response_body', 'jwt_claims', 'request_tags']) {
       expect(names).not.toContain(sensitive);
@@ -157,50 +203,51 @@ describe('buildConversationFeedbackQuery', () => {
 describe('buildConversationTurnsQuery', () => {
   const query = () => buildConversationTurnsQuery(CHAT_ID, CONVERSATION_TURN_LIMIT);
 
-  // The rollup's turn_count is the header's figure; this query exists for the per-turn detail behind it,
-  // which only the usage log carries — hence the group by trace_id, one per turn.
-  test('groups the usage log by trace id in aggregate mode', () => {
+  test('reads the turns rollup in row mode', () => {
     const built = query();
 
-    expect(built.entity).toBe(USAGE_LOG_ENTITY);
-    expect(built.mode).toBe(QueryMode.Aggregate);
-    expect(built.group_by).toEqual([UsageLogField.TraceId]);
+    expect(built.entity).toBe(TURNS_ENTITY);
+    expect(built.mode).toBe(QueryMode.Row);
+    expect(built.group_by).toBeUndefined();
+    expect(JSON.stringify(built.select)).not.toContain(QueryExprType.Fn);
+  });
+
+  test('does not read the hop-level usage log', () => {
+    expect(query().entity).not.toBe(USAGE_LOG_ENTITY);
   });
 
   test('filters to one conversation by equality', () => {
     const predicate = asPredicate(query().filter);
 
     expect(predicate.op).toBe(QueryOperator.Eq);
-    expect(predicate.args[0]).toEqual({ type: QueryExprType.Field, name: UsageLogField.ChatId });
+    expect(predicate.args[0]).toEqual({ type: QueryExprType.Field, name: TurnsField.ChatId });
     expect((predicate.args[1] as QueryValueExpr).value).toBe(CHAT_ID);
   });
 
-  // total_price is hierarchical — it already includes what a hop's children cost — so summing it across
-  // the hops of one trace counts the same spend repeatedly. deployment_price is each hop's own cost.
-  test('sums each hop own cost and never the hierarchical total price', () => {
-    const cost = measureOf(query().select, ConversationTurnField.Cost);
-
-    expect(cost.name).toBe('sum');
-    expect(measureArgNames(cost)).toEqual([UsageLogField.DeploymentPrice]);
-    expect(JSON.stringify(query().select)).not.toContain('total_price');
+  // The rollup's cost is each hop's own cost added up, so only the billed hop of a chain contributes and
+  // the figure does not double-count what a chain-inclusive total would.
+  test('reads the rollup cost under the turn cost alias', () => {
+    expect(fieldOf(query().select, ConversationTurnField.Cost)).toBe(TurnsField.TotalPrice);
   });
 
-  // Hops of one trace overlap in time, so their durations do not add up to the turn's latency.
-  test('takes the longest hop as the turn duration rather than summing', () => {
-    const duration = measureOf(query().select, ConversationTurnField.DurationMs);
-
-    expect(duration.name).toBe('max');
-    expect(measureArgNames(duration)).toEqual([UsageLogField.OperationDurationMs]);
+  // The rollup's duration_ms is the turn's elapsed time (its longest hop); hop_duration_total_ms is the
+  // one that adds nested hops up, and this query must not read it.
+  test('reads the elapsed duration rather than the hop total', () => {
+    expect(fieldOf(query().select, ConversationTurnField.DurationMs)).toBe(TurnsField.DurationMs);
+    expect(JSON.stringify(query())).not.toContain('hop_duration_total_ms');
   });
 
-  test('reports when each turn started and how many hops it took', () => {
-    const started = measureOf(query().select, ConversationTurnField.Started);
-    const hops = measureOf(query().select, ConversationTurnField.Hops);
+  test('reports when each turn started, its hop count and its token total', () => {
+    const select = query().select;
 
-    expect(started.name).toBe('min');
-    expect(measureArgNames(started)).toEqual([UsageLogField.RequestTime]);
-    expect(hops.name).toBe('count');
-    expect(hops.args ?? []).toEqual([]);
+    expect(fieldOf(select, ConversationTurnField.Started)).toBe(TurnsField.FirstRequestTime);
+    expect(fieldOf(select, ConversationTurnField.Hops)).toBe(TurnsField.HopCount);
+    expect(fieldOf(select, ConversationTurnField.Tokens)).toBe(TurnsField.TotalTokens);
+  });
+
+  // The span drawer looks a turn's tree up by its trace id, so the projection has to keep carrying it.
+  test('keeps the trace id addressable', () => {
+    expect(selectedNames(query().select)).toContain(TurnsField.TraceId);
   });
 
   test('orders turns oldest first, as a transcript reads', () => {

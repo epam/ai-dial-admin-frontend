@@ -101,12 +101,13 @@ export const useConversations = (schemaFields?: AnalyticsEntityField[] | null) =
   const key = filterKey(filters);
 
   const modelScope: ConversationModelScope = useMemo(() => {
-    const catalog = buildConversationColumnCatalog(CONVERSATIONS_TRACE_COLUMNS(t), schemaFields ?? []);
+    const curated = CONVERSATIONS_TRACE_COLUMNS(t, schemaFields ?? []);
+    const catalog = buildConversationColumnCatalog(curated, schemaFields ?? []);
     return {
       sortableFields: catalogSortableFields(catalog),
       filterableFields: catalogFilterableFields(catalog),
       valueTypes: catalogValueTypes(schemaFields ?? []),
-      projectableFields: projectableSchemaFields(CONVERSATIONS_TRACE_COLUMNS(t), schemaFields ?? []),
+      projectableFields: projectableSchemaFields(curated, schemaFields ?? []),
     };
   }, [schemaFields, t]);
 

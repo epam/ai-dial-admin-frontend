@@ -23,6 +23,8 @@ const CONVERSATION: ConversationDetailRow = {
   success_count: 908,
   duration_ms: 0,
   avg_duration_ms: 0,
+  deployments: ['applications/internal/assistant', 'anthropic_switchyard-model', 'anthropic.claude-opus-4-8'],
+  'conversation_insights.title': 'Refund policy for EU orders',
 };
 
 const renderHeader = (overrides: Partial<ConversationDetailRow> = {}) =>
@@ -45,18 +47,28 @@ describe('ConversationDetailHeader', () => {
     expect(screen.getByRole('button', { name: `copy ${ConversationsTraceI18nKey.Conversation}` })).toBeTruthy();
   });
 
-  test('renders the title field as unavailable, since nothing supplies one', () => {
+  test('states the title the insight enrichment carries', () => {
     renderHeader();
 
     expect(screen.getByText(ConversationsTraceI18nKey.DetailTitleField).parentElement).toHaveTextContent(
-      UNAVAILABLE_VALUE,
+      'Refund policy for EU orders',
     );
   });
 
-  test('renders the model field as unavailable, since the rollup carries no deployment', () => {
+  test('falls back to the conversation id when no insight title exists', () => {
+    renderHeader({ 'conversation_insights.title': null });
+
+    const field = screen.getByText(ConversationsTraceI18nKey.DetailTitleField).parentElement;
+
+    expect(field).toHaveTextContent(CHAT_ID);
+    expect(field).not.toHaveTextContent(UNAVAILABLE_VALUE);
+  });
+
+  test('does not restate the deployments the metadata panel carries', () => {
     renderHeader();
 
-    expect(screen.getByText(ConversationsTraceI18nKey.DetailModel).parentElement).toHaveTextContent(UNAVAILABLE_VALUE);
+    expect(screen.queryByText(ConversationsTraceI18nKey.Deployments)).toBeNull();
+    expect(screen.queryByText(/anthropic\.claude-opus-4-8/)).toBeNull();
   });
 
   // turn_count counts distinct traces, so turn, request and trace are one quantity — stating it twice

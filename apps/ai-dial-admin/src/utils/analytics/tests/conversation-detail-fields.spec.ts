@@ -10,6 +10,7 @@ import {
   ConversationsField,
 } from '@/src/models/analytics/conversations-trace';
 import {
+  conversationTitle,
   countFeedbackDirections,
   isFeedbackPartial,
   resolveConversationField,
@@ -33,7 +34,60 @@ const RECORD: ConversationDetailRow = {
 
 const label = ConversationsTraceI18nKey.DetailTokensIn;
 
+describe('conversationTitle', () => {
+  test('states the insight title when the enrichment carries one', () => {
+    expect(conversationTitle({ ...RECORD, 'conversation_insights.title': 'Refund policy for EU orders' })).toBe(
+      'Refund policy for EU orders',
+    );
+  });
+
+  test('trims the surrounding whitespace of a title', () => {
+    expect(conversationTitle({ ...RECORD, 'conversation_insights.title': '  Cost of a rerun  ' })).toBe(
+      'Cost of a rerun',
+    );
+  });
+
+  test('falls back to the conversation id when the enrichment has no row', () => {
+    expect(conversationTitle(RECORD)).toBe(RECORD.chat_id);
+  });
+
+  test('falls back to the conversation id for a null, empty or whitespace-only title', () => {
+    for (const title of [null, '', '   ']) {
+      expect(conversationTitle({ ...RECORD, 'conversation_insights.title': title })).toBe(RECORD.chat_id);
+    }
+  });
+
+  // The grid's title column and the header read the same helper, so one conversation cannot be named two
+  // different things in the two places.
+  test('resolves a grid row and a detail row identically', () => {
+    const title = 'Refund policy for EU orders';
+
+    expect(conversationTitle({ chat_id: RECORD.chat_id, 'conversation_insights.title': title })).toBe(
+      conversationTitle({ ...RECORD, 'conversation_insights.title': title }),
+    );
+  });
+});
+
 describe('resolveConversationField', () => {
+  test('a column absent from the row is unavailable, not empty', () => {
+    const resolved = resolveConversationField(
+      { labelKey: label, column: ConversationsField.Traces, format: ConversationFieldFormat.List },
+      RECORD,
+    );
+
+    expect(resolved.state).toBe(ConversationFieldState.Unavailable);
+    expect(resolved.text).toBe(UNAVAILABLE_VALUE);
+  });
+
+  test('a column present in the row with a null value is empty, not unavailable', () => {
+    const resolved = resolveConversationField(
+      { labelKey: label, column: ConversationsField.Traces, format: ConversationFieldFormat.List },
+      { ...RECORD, traces: null },
+    );
+
+    expect(resolved.state).toBe(ConversationFieldState.Empty);
+  });
+
   test('a definition with no column is unavailable and renders the marker', () => {
     expect(resolveConversationField({ labelKey: label }, RECORD)).toEqual({
       labelKey: label,

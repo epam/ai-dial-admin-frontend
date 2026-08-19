@@ -17,7 +17,7 @@ import {
   ConversationRow,
   ConversationsField,
 } from '@/src/models/analytics/conversations-trace';
-import { AnalyticsFieldType } from '@/src/models/analytics/entity';
+import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 
 interface CapturedProps {
   rowData?: ConversationRow[] | null;
@@ -45,13 +45,28 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
 const datasource: IDatasource = { getRows: vi.fn() };
 const onGridReady = vi.fn();
 
-const renderList = () =>
+// Fields no curated column reads: the catalog offers each as a schema-derived hidden column, which the
+// catalog's own tests count. Leaving them out keeps this fixture to exactly the curated set.
+const CATALOG_ONLY_FIELDS: string[] = [
+  ConversationsField.PromptTokens,
+  ConversationsField.CompletionTokens,
+  ConversationsField.SuccessCount,
+  ConversationsField.AvgDurationMs,
+  ConversationsField.Traces,
+];
+
+const ALL_FIELDS: AnalyticsEntityField[] = Object.values(ConversationsField)
+  .filter((name) => !CATALOG_ONLY_FIELDS.includes(name))
+  .map((name) => ({ name, type: AnalyticsFieldType.String, source: 'conversations' }));
+
+const renderList = (schemaFields: AnalyticsEntityField[] | null = ALL_FIELDS) =>
   render(
     <ConversationsList
       datasource={datasource}
       onGridReady={onGridReady}
       isColumnsPanelOpen={false}
       onToggleColumnsPanel={vi.fn()}
+      schemaFields={schemaFields}
     />,
   );
 
@@ -119,22 +134,45 @@ describe('ConversationsList :: paging', () => {
   });
 });
 
+// The Rating column lives in its own provenance group, so it is the last leaf rather than part of this
+// run; "attributes the rating column to the feedback entity" covers where it sits.
+const CONVERSATIONS_VISIBLE = [
+  ConversationsField.ChatId,
+  ConversationsField.InsightTitle,
+  ConversationsField.ProjectId,
+  ConversationsField.UserHash,
+  ConversationsField.TurnCount,
+  ConversationsField.LastRequestTime,
+  ConversationsField.TotalTokens,
+  ConversationsField.TotalPrice,
+  ConversationsField.DurationMs,
+  ConversationsField.Deployments,
+];
+
+const CURATED_COLUMN_COUNT = CONVERSATIONS_VISIBLE.length + 1 + 10;
+
 describe('ConversationsList :: columns', () => {
-  test('renders the ten columns in order', () => {
+  test('renders the default-visible columns first, in order', () => {
     renderList();
 
-    expect(leafColumns().map((column) => column.field)).toEqual([
-      ConversationsField.ChatId,
-      ConversationsField.ProjectId,
-      ConversationsField.UserHash,
-      ConversationsField.TurnCount,
-      ConversationsField.LastRequestTime,
-      ConversationsField.TotalTokens,
-      ConversationsField.TotalPrice,
-      ConversationsField.DurationMs,
-      ConversationsField.Deployments,
-      ConversationColumn.Rating,
-    ]);
+    expect(
+      leafColumns()
+        .map((column) => column.field)
+        .slice(0, CONVERSATIONS_VISIBLE.length),
+    ).toEqual(CONVERSATIONS_VISIBLE);
+    expect(leafColumns().at(-1)?.field).toBe(ConversationColumn.Rating);
+  });
+
+  test('renders every curated column, the hidden ones included', () => {
+    renderList();
+
+    expect(leafColumns()).toHaveLength(CURATED_COLUMN_COUNT);
+  });
+
+  test('reads a dotted enrichment name as a flat key', () => {
+    renderList();
+
+    expect(captured.additionalGridOptions?.suppressFieldDotNotation).toBe(true);
   });
 
   test('groups every column under exactly one provenance', () => {
@@ -144,7 +182,7 @@ describe('ConversationsList :: columns', () => {
 
     expect(groups.map((group) => group.groupId)).toEqual([ColumnProvenance.Conversations, ColumnProvenance.Feedback]);
     expect(groups.every((group) => group.marryChildren)).toBe(true);
-    expect(leafColumns()).toHaveLength(10);
+    expect(leafColumns()).toHaveLength(CURATED_COLUMN_COUNT);
   });
 
   test('attributes the rating column to the feedback entity and the rest to conversations', () => {
@@ -182,10 +220,23 @@ describe('ConversationsList :: columns', () => {
     expect(added).toMatchObject({ hide: true });
   });
 
-  test('offers nothing extra when the schema is unavailable', () => {
+  test('offers nothing extra when the schema reports only the fields the curated columns read', () => {
     renderList();
 
-    expect(leafColumns()).toHaveLength(10);
+    expect(leafColumns()).toHaveLength(CURATED_COLUMN_COUNT);
+  });
+
+  // A column reading a field the instance does not carry could never fill, and the query cannot name that
+  // field at all — so it is omitted rather than offered as a permanently empty column.
+  test('omits the insight columns on an instance without the enrichment', () => {
+    renderList(ALL_FIELDS.filter((entityField) => !entityField.name.startsWith('conversation_insights.')));
+
+    const fields = leafColumns().map((column) => column.field);
+
+    expect(fields).not.toContain(ConversationsField.InsightTitle);
+    expect(fields).not.toContain(ConversationsField.InsightSentiment);
+    expect(fields).toContain(ConversationsField.ChatId);
+    expect(fields).toContain(ConversationColumn.Rating);
   });
 
   test('keeps rating out of the offered set', () => {

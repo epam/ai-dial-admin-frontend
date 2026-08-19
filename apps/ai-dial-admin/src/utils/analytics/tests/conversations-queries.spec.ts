@@ -73,7 +73,7 @@ describe('buildConversationListQuery :: shape', () => {
   });
 
   test('selects exactly the fields the grid renders, by their entity names', () => {
-    const names = (buildList().select as QueryOutputColumn[]).map((column) => (column.expr as QueryFieldExpr).name);
+    const names = selectNames(buildList());
 
     expect(names).toEqual([
       ConversationsField.ChatId,
@@ -87,6 +87,33 @@ describe('buildConversationListQuery :: shape', () => {
       ConversationsField.DurationMs,
       ConversationsField.Deployments,
     ]);
+  });
+
+  // The title is an enrichment column, so it reaches the select the way every enrichment field does — while
+  // its column is visible — and by its qualified flat name, sent whole rather than as a path.
+  test('names the title by its qualified flat name while its column is visible', () => {
+    const names = selectNames(buildList({ visibleEnrichmentFields: [ConversationsField.InsightTitle] }));
+
+    expect(names).toContain('conversation_insights.title');
+  });
+
+  test('leaves the hidden curated enrichment columns out of the default projection', () => {
+    const names = selectNames(buildList());
+
+    for (const hidden of [
+      ConversationsField.InsightTitle,
+      ConversationsField.InsightSentiment,
+      ConversationsField.InsightTopic,
+      ConversationsField.Traces,
+    ]) {
+      expect(names).not.toContain(hidden);
+    }
+  });
+
+  test('projects a curated enrichment column once it is visible', () => {
+    const names = selectNames(buildList({ visibleEnrichmentFields: [ConversationsField.InsightSentiment] }));
+
+    expect(names).toContain(ConversationsField.InsightSentiment);
   });
 
   // The query language expresses no comparison over an array, so translating a predicate on one would send
@@ -131,8 +158,9 @@ describe('buildConversationListQuery :: shape', () => {
     (buildList().select as QueryOutputColumn[]).forEach((column) => expect(column.as).toBeUndefined());
   });
 
-  // dial_usage_log columns belong to a different entity and would be rejected as unknown fields.
-  test('references no column of the usage log or of an enrichment', () => {
+  // dial_usage_log columns belong to a different entity and would be rejected as unknown fields, as would a
+  // column invented by the frontend. The rollup's own enrichment columns are named, by their flat names.
+  test('references no column of the usage log and no invented one', () => {
     const serialized = JSON.stringify(buildList({ search: 'acme' }));
 
     ['request_time', 'trace_id', 'deployment', 'request_body', 'conversation_summary', 'title', 'snippet'].forEach(
