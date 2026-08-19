@@ -1264,7 +1264,6 @@ export enum EntityFieldsI18nKey {
   configDeliveryHeader = 'EntityFields.configDeliveryHeader',
   costLimit = 'EntityFields.costLimit',
   defaultRoleLimit = 'EntityFields.defaultRoleLimit',
-  fieldsHashingOrder = 'EntityFields.fieldsHashingOrder',
   content = 'EntityFields.content',
   name = 'EntityFields.name',
   id = 'EntityFields.id',

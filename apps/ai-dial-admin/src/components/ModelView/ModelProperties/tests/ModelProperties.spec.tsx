@@ -6,7 +6,6 @@ const mockUpdateModel = vi.fn();
 const baseModel = {
   name: 'model-1',
   displayName: 'Test Model',
-  fieldsHashingOrder: ['field1', 'field2'],
 };
 
 describe('ModelProperties', () => {

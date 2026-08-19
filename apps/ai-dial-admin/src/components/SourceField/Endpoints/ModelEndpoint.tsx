@@ -1,15 +1,14 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DialRadioGroup, RadioGroupOrientation, RadioButtonWithContent } from '@epam/ai-dial-ui-kit';
-
-import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey, ModelViewI18nKey } from '@/src/constants/i18n';
-import { DialModel, DialModelType } from '@/src/models/dial/model';
-import { SOURCE_FIELD } from '@/src/components/SourceField/types';
-import { getUrlError } from '@/src/utils/validation/url-error';
-import { useI18n } from '@/src/locales/client';
+import ModelTypeControl from '@/src/components/BaseControls/ModelType';
 import ComplexInput from '@/src/components/Common/ComplexInput/ComplexInput';
+import { SOURCE_FIELD } from '@/src/components/SourceField/types';
+import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
+import { DialModel, DialModelType } from '@/src/models/dial/model';
 import { getEndpointPostfix } from '@/src/utils/models/model-endpoint';
 import { addTrailingSlash, removeSlash } from '@/src/utils/url';
+import { getUrlError } from '@/src/utils/validation/url-error';
 
 interface Props {
   entity: DialModel;
@@ -23,10 +22,6 @@ interface Props {
 const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal, disabled, hideResponsesEndpoint }) => {
   const t = useI18n();
 
-  const modelTypeRadio: RadioButtonWithContent[] = [
-    { id: DialModelType.Chat, name: t(ModelViewI18nKey.Chat) },
-    { id: DialModelType.Embedding, name: t(ModelViewI18nKey.Embedding) },
-  ];
   const responsesPostfix = '/responses';
   const [postfix, setPostfix] = useState('');
   const [endpoint, setEndpoint] = useState('');
@@ -137,17 +132,7 @@ const ModelEndpoint: FC<Props> = ({ entity, prefix, onChange, isModal, disabled,
 
   return (
     <div className="flex flex-col gap-y-8">
-      {!isModal && (
-        <DialRadioGroup
-          radioButtons={modelTypeRadio}
-          activeRadioButton={entity.type as string}
-          elementId="type"
-          fieldTitle={t(EntityFieldsI18nKey.type)}
-          orientation={RadioGroupOrientation.Row}
-          onChange={onChangeType}
-          disabled={disabled}
-        />
-      )}
+      {!isModal && <ModelTypeControl entity={entity} onChangeEntity={onChangeType} />}
 
       {prefix ? (
         <ComplexInput

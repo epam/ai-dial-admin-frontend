@@ -1100,7 +1100,6 @@ export default {
     roleLimits: 'Role limits',
     isPublic: 'Is Public',
     defaultRoleLimit: 'Default role limit',
-    fieldsHashingOrder: 'Hashing order',
     deploymentId: 'Deployment ID',
     deploymentIdTooltip: 'The identifier clients use to call this model',
     endpoint: 'Endpoint',
