@@ -43,7 +43,7 @@ describe('RequestChainSelector', () => {
       />,
     );
 
-    await user.click(screen.getByText('2. Second request'));
+    await user.click(screen.getByRole('tab', { name: /2\. Second request/ }));
 
     expect(onSelect).toHaveBeenCalledWith(1);
   });
@@ -126,7 +126,7 @@ describe('RequestChainSelector', () => {
       />,
     );
 
-    await user.click(screen.getByText('2. Second request'));
+    await user.click(screen.getByRole('tab', { name: /2\. Second request/ }));
 
     expect(onSelect).not.toHaveBeenCalled();
   });

@@ -50,7 +50,7 @@ const RequestChainSelector: FC<Props> = ({ testSuite, selectedIndex, disabled = 
         )}
         <DialGhostButton
           label={t(TestSuitesI18nKey.AddRequest)}
-          iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} />}
+          iconBefore={<IconPlus {...BASE_BUTTON_ICON_PROPS} aria-hidden />}
           size={ElementSize.Small}
           disabled={!canAddRequest}
           onClick={onAdd}

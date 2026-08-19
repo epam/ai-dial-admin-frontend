@@ -1,14 +1,9 @@
+import { ParsedTemplateParam } from '@/src/components/TestSuites/utils/models';
 import { InputBinding, TemplateVariable, TestSuiteRequestTemplate } from '@/src/models/evaluation/test-suite';
 import { TestCaseItemType } from '@/src/types/evaluation';
 
 /** Matches ${{name}} or ${{name:defaultValue}} in template strings */
 const TEMPLATE_PARAM_REGEX = /\$\{\{([^}:]+)(?::([^}]*))?\}\}/g;
-
-interface ParsedTemplateParam {
-  name: string;
-  hasDefault: boolean;
-  defaultValue?: string;
-}
 
 const collectParamsFromString = (str: string): ParsedTemplateParam[] => {
   const params: ParsedTemplateParam[] = [];

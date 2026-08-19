@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
 import { RunsI18nKey } from '@/src/constants/i18n';
@@ -31,7 +31,7 @@ const baseRun: Run = {};
 const getChainRow = () =>
   screen
     .queryAllByRole('region', { name: 'labelled-text' })
-    .find((row) => row.querySelector('[aria-label="label"]')?.textContent === RunsI18nKey.RequestsInChain);
+    .find((row) => within(row).queryByRole('region', { name: 'label' })?.textContent === RunsI18nKey.RequestsInChain);
 
 describe('Runs Summary :: Header', () => {
   test('omits the chain-size row when the suite has no additional requests', () => {
@@ -53,7 +53,7 @@ describe('Runs Summary :: Header', () => {
 
     const row = getChainRow();
     expect(row).toBeTruthy();
-    expect(row?.querySelector('[aria-label="text"]')?.textContent).toBe('3');
+    expect(within(row!).getByRole('region', { name: 'text' }).textContent).toBe('3');
   });
 
   test('reads the chain size from the run snapshot, not the live suite', () => {
@@ -62,7 +62,7 @@ describe('Runs Summary :: Header', () => {
     render(<Header run={run} testSuite={testSuite} />);
 
     const row = getChainRow();
-    expect(row?.querySelector('[aria-label="text"]')?.textContent).toBe('2');
+    expect(within(row!).getByRole('region', { name: 'text' }).textContent).toBe('2');
   });
 
   test('falls back to the live suite when the run has no snapshot', () => {
@@ -70,6 +70,6 @@ describe('Runs Summary :: Header', () => {
     render(<Header run={baseRun} testSuite={testSuite} />);
 
     const row = getChainRow();
-    expect(row?.querySelector('[aria-label="text"]')?.textContent).toBe('2');
+    expect(within(row!).getByRole('region', { name: 'text' }).textContent).toBe('2');
   });
 });

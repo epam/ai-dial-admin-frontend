@@ -20,7 +20,6 @@ interface Props {
   value: string;
   onChange: (value: string) => void;
   options?: editor.IStandaloneEditorConstructionOptions;
-  /** Extra variables offered by the completion provider on top of the JSONata builtins. */
   variables?: JsonataVariable[];
 }
 
@@ -36,7 +35,6 @@ const JsonataEditor: FC<Props> = ({ value, onChange, options, variables }) => {
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const disposablesRef = useRef<{ dispose: () => void }[]>([]);
   const modelIdRef = useRef<string | null>(null);
-  // The completion provider is registered once on mount, so it reads the current variables from a ref.
   const variablesRef = useRef(variables);
   variablesRef.current = variables;
 
@@ -70,7 +68,6 @@ const JsonataEditor: FC<Props> = ({ value, onChange, options, variables }) => {
               kind: monaco.languages.CompletionItemKind.Variable,
               insertText: `$${variable.name}`,
               detail: variable.description,
-              // Sorts ahead of the builtins, whose sortText defaults to their `$`-prefixed label.
               sortText: `!${variable.name}`,
               range,
             })),

@@ -84,7 +84,7 @@ describe('MethodTabContent - request chain', () => {
 
     expect(screen.getByText('RequestTemplate:/v1/main')).toBeInTheDocument();
 
-    await user.click(screen.getByText('2. Second'));
+    await user.click(screen.getByRole('tab', { name: /2\. Second/ }));
 
     expect(screen.getByText('RequestTemplate:/v1/second')).toBeInTheDocument();
     expect(screen.getByText('EndpointSchema:/v1/second')).toBeInTheDocument();
@@ -97,7 +97,7 @@ describe('MethodTabContent - request chain', () => {
 
     expect(screen.getByText('TryOut')).toBeInTheDocument();
 
-    await user.click(screen.getByText('2. Second'));
+    await user.click(screen.getByRole('tab', { name: /2\. Second/ }));
 
     expect(screen.queryByText('TryOut')).not.toBeInTheDocument();
   });
@@ -108,7 +108,7 @@ describe('MethodTabContent - request chain', () => {
 
     expect(screen.queryByText(TestSuitesI18nKey.RequestChainPreviousOutputsInfo)).not.toBeInTheDocument();
 
-    await user.click(screen.getByText('2. Second'));
+    await user.click(screen.getByRole('tab', { name: /2\. Second/ }));
 
     expect(screen.getByText(TestSuitesI18nKey.RequestChainPreviousOutputsInfo)).toBeInTheDocument();
   });
@@ -124,7 +124,7 @@ describe('MethodTabContent - request chain', () => {
     expect(screen.getByText('RequestTemplateVariables:')).toBeInTheDocument();
     expect(screen.getByText('EndpointSchemaVariables:')).toBeInTheDocument();
 
-    await user.click(screen.getByText('2. Second'));
+    await user.click(screen.getByRole('tab', { name: /2\. Second/ }));
 
     expect(screen.getByText('RequestTemplateVariables:answer')).toBeInTheDocument();
     expect(screen.getByText('EndpointSchemaVariables:answer')).toBeInTheDocument();
@@ -138,7 +138,7 @@ describe('MethodTabContent - request chain', () => {
     };
     render(<Harness initialSuite={suiteWithColumns} />);
 
-    await user.click(screen.getByText('2. Second'));
+    await user.click(screen.getByRole('tab', { name: /2\. Second/ }));
 
     expect(screen.getByText(TestSuitesI18nKey.RequestChainPreviousOutputsColumnsInfo)).toBeInTheDocument();
     expect(screen.queryByText(TestSuitesI18nKey.RequestChainPreviousOutputsInfo)).not.toBeInTheDocument();
@@ -158,7 +158,7 @@ describe('MethodTabContent - request chain', () => {
     const user = userEvent.setup();
     render(<Harness initialSuite={baseSuite} />);
 
-    await user.click(screen.getByText('2. Second'));
+    await user.click(screen.getByRole('tab', { name: /2\. Second/ }));
     const removeButtons = screen.getAllByRole('button', { name: TestSuitesI18nKey.RemoveRequest });
     await user.click(removeButtons[0]);
 
@@ -172,7 +172,7 @@ describe('MethodTabContent - request chain', () => {
     const onChange = vi.fn();
     const { rerender } = render(<MethodTabContent testSuite={baseSuite} onChange={onChange} />);
 
-    await user.click(screen.getByText('2. Second'));
+    await user.click(screen.getByRole('tab', { name: /2\. Second/ }));
     expect(screen.getByText('RequestTemplate:/v1/second')).toBeInTheDocument();
 
     // Simulates an external reset (e.g. discard changes) replacing the suite prop with a shorter

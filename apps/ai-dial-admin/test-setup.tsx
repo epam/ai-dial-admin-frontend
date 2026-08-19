@@ -5,7 +5,7 @@
 
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
-import { ReactNode } from 'react';
+import { ReactNode, useId } from 'react';
 import { afterEach, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 
@@ -100,6 +100,14 @@ vi.mock('@/src/context/SaveValidationContext', () => {
       jsonErrors: [],
       jsonErrorNotifications: [],
     }),
+    useJsonEditorValidation: () => {
+      const editorId = useId();
+      return {
+        editorId,
+        setJsonErrors: (errors: unknown[]) => dispatch({ type: 'SET_JSON_EDITOR_VALIDATION', editorId, errors }),
+        removeEditor: () => dispatch({ type: 'REMOVE_JSON_EDITOR_VALIDATION', editorId }),
+      };
+    },
     ValidationActionType: {
       SetField: 'SET_FIELD_VALIDATION',
       RemoveField: 'REMOVE_FIELD_VALIDATION',

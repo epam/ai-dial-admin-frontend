@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import { useId } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { JSONEditorError } from '@/src/types/editor';
@@ -34,6 +35,17 @@ vi.mock('@/src/context/SaveValidationContext', () => ({
     dispatch: mocks.dispatch,
     jsonErrorNotifications: mocks.notifications,
   }),
+  useJsonEditorValidation: () => {
+    const editorId = useId();
+    return {
+      editorId,
+      setJsonErrors: (errors: JSONEditorError[]) => {
+        const ownedErrors = errors.map((error) => ({ ...error, editorId }));
+        mocks.dispatch({ type: 'SET_JSON_EDITOR_VALIDATION', editorId, errors: ownedErrors });
+      },
+      removeEditor: () => mocks.dispatch({ type: 'REMOVE_JSON_EDITOR_VALIDATION', editorId }),
+    };
+  },
   ValidationActionType: {
     SetField: 'SET_FIELD_VALIDATION',
     RemoveField: 'REMOVE_FIELD_VALIDATION',

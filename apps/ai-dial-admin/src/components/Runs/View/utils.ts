@@ -143,23 +143,20 @@ const getMetricsColumns = (metrics: Record<string, Record<string, unknown>>) => 
   }));
 };
 
+type IndexColumnField = 'runIndex' | 'requestIndex' | 'turnIndex';
+
+const buildIndexColumn = (field: IndexColumnField, headerName: string, width: number): ColDef => ({
+  field,
+  headerName,
+  colId: field,
+  ...lockedWidthColDef(width),
+  ...NO_FILTER_COL_DEF,
+  valueGetter: (params) => (params.data?.[field] != null ? params.data[field] + 1 : null),
+});
+
 const executionColumns: ColDef[] = [
-  {
-    field: 'runIndex',
-    headerName: '# Run number',
-    colId: 'runIndex',
-    ...lockedWidthColDef(RUN_INDEX_COLUMN_WIDTH),
-    ...NO_FILTER_COL_DEF,
-    valueGetter: (params) => (params.data?.runIndex != null ? params.data.runIndex + 1 : null),
-  },
-  {
-    field: 'requestIndex',
-    headerName: 'Request',
-    colId: 'requestIndex',
-    ...lockedWidthColDef(REQUEST_INDEX_COLUMN_WIDTH),
-    ...NO_FILTER_COL_DEF,
-    valueGetter: (params) => (params.data?.requestIndex != null ? params.data.requestIndex + 1 : null),
-  },
+  buildIndexColumn('runIndex', '# Run number', RUN_INDEX_COLUMN_WIDTH),
+  buildIndexColumn('requestIndex', 'Request', REQUEST_INDEX_COLUMN_WIDTH),
   {
     field: 'totalRequests',
     headerName: 'Total requests',
@@ -168,14 +165,7 @@ const executionColumns: ColDef[] = [
     ...NO_FILTER_COL_DEF,
     valueGetter: (params) => params.data?.totalRequests ?? null,
   },
-  {
-    field: 'turnIndex',
-    headerName: 'Turn',
-    colId: 'turnIndex',
-    ...lockedWidthColDef(TURN_INDEX_COLUMN_WIDTH),
-    ...NO_FILTER_COL_DEF,
-    valueGetter: (params) => (params.data?.turnIndex != null ? params.data.turnIndex + 1 : null),
-  },
+  buildIndexColumn('turnIndex', 'Turn', TURN_INDEX_COLUMN_WIDTH),
   {
     field: 'totalTurns',
     headerName: 'Total turns',

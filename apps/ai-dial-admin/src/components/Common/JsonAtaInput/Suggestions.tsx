@@ -5,7 +5,6 @@ export interface SuggestionOption {
   label: string;
   value: string;
   type: string;
-  /** Shown instead of `type` when the option is not a schema field (e.g. a variable). */
   detail?: string;
 }
 

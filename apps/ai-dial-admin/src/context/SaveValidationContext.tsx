@@ -1,6 +1,6 @@
 'use client';
-import { createContext, Dispatch, ReactNode, useContext, useMemo, useReducer } from 'react';
-import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
+import { createContext, Dispatch, ReactNode, useCallback, useContext, useId, useMemo, useReducer } from 'react';
+import { JSONEditorError, JSONEditorErrorNotification, JsonEditorOwnedError } from '@/src/types/editor';
 
 export enum ValidationActionType {
   SetField = 'SET_FIELD_VALIDATION',
@@ -22,7 +22,6 @@ type ValidationAction =
 interface ValidationState {
   fieldValidations: Map<string, boolean>;
   isValid: boolean;
-  /** Keyed per editor instance so an editor that unmounts takes its errors with it. */
   jsonEditorErrors: Map<string, JSONEditorError[]>;
   jsonErrorNotifications: JSONEditorErrorNotification[];
   resetCounter: number;
@@ -147,4 +146,23 @@ export const useSaveValidationContext = () => {
   }
 
   return context;
+};
+
+export const useJsonEditorValidation = () => {
+  const editorId = useId();
+  const { dispatch } = useSaveValidationContext();
+
+  const setJsonErrors = useCallback(
+    (errors: JSONEditorError[]) => {
+      const ownedErrors: JsonEditorOwnedError[] = errors.map((error) => ({ ...error, editorId }));
+      dispatch({ type: ValidationActionType.SetJsonEditor, editorId, errors: ownedErrors });
+    },
+    [dispatch, editorId],
+  );
+
+  const removeEditor = useCallback(() => {
+    dispatch({ type: ValidationActionType.RemoveJsonEditor, editorId });
+  }, [dispatch, editorId]);
+
+  return { editorId, setJsonErrors, removeEditor };
 };

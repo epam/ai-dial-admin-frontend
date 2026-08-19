@@ -1,14 +1,18 @@
 'use client';
 
-import { Dispatch, SetStateAction, useCallback, useEffect, useId, useRef, useState } from 'react';
+import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 
 import type { editor } from 'monaco-editor';
 
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
-import { JsonEditorOwnedError, JsonEditorOwnedNotification } from '@/src/components/EntityTabs/JsonEditor/models';
+import { JsonEditorOwnedNotification } from '@/src/components/EntityTabs/JsonEditor/models';
 import { clearResolvedErrors, mergeWithIgnoredFields } from '@/src/components/EntityTabs/JsonEditor/utils';
 import { useNotification } from '@/src/context/NotificationContext';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import {
+  useJsonEditorValidation,
+  useSaveValidationContext,
+  ValidationActionType,
+} from '@/src/context/SaveValidationContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { JSONEditorError } from '@/src/types/editor';
 
@@ -35,7 +39,7 @@ const EntityJsonEditor = <T extends object>({
 }: Props<T>) => {
   const isTextControlled = text !== undefined;
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
-  const editorId = useId();
+  const { editorId, setJsonErrors, removeEditor } = useJsonEditorValidation();
   const { dispatch, jsonErrorNotifications } = useSaveValidationContext();
   const { removeNotification } = useNotification();
   const [entityModel, setEntityModel] = useState<string>('');
@@ -46,21 +50,6 @@ const EntityJsonEditor = <T extends object>({
   const notificationsRef = useRef(jsonErrorNotifications);
   notificationsRef.current = jsonErrorNotifications;
 
-  const setJsonErrors = useCallback(
-    (errors: JSONEditorError[]) => {
-      /**
-       * Tag every error with this editor's `editorId` before it goes into the shared context. The
-       * tag is a plain extra field, so it rides along unchanged through `jsonErrors` (flattened
-       * across all mounted editors) and into any notification created from it downstream — letting
-       * unmount cleanup identify exactly this editor's own notifications later, even when another
-       * mounted editor reports the identical message on the identical line.
-       */
-      const ownedErrors: JsonEditorOwnedError[] = errors.map((error) => ({ ...error, editorId }));
-      dispatch({ type: ValidationActionType.SetJsonEditor, editorId, errors: ownedErrors });
-    },
-    [dispatch, editorId],
-  );
-
   /**
    * Monaco reports no markers for a disposed model, so an editor that goes away — the JSONata toggle,
    * a content-type switch, a tab change — would otherwise leave its last errors blocking every save,
@@ -68,7 +57,7 @@ const EntityJsonEditor = <T extends object>({
    */
   useEffect(
     () => () => {
-      dispatch({ type: ValidationActionType.RemoveJsonEditor, editorId });
+      removeEditor();
 
       const ownedNotifications = notificationsRef.current as JsonEditorOwnedNotification[];
       const own = (notification: JsonEditorOwnedNotification) => notification.editorId === editorId;
@@ -84,7 +73,7 @@ const EntityJsonEditor = <T extends object>({
         errors: ownedNotifications.filter((notification) => !own(notification)),
       });
     },
-    [dispatch, editorId, removeNotification],
+    [removeEditor, dispatch, editorId, removeNotification],
   );
 
   useEffect(() => {

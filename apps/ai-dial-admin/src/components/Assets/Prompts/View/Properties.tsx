@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useId, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 
 import { DialSwitch } from '@epam/ai-dial-ui-kit';
 
@@ -9,7 +9,7 @@ import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBas
 import MdEditor from '@/src/components/Common/MdEditor/MdEditor';
 import { BasicI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
-import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
+import { useJsonEditorValidation } from '@/src/context/SaveValidationContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialPrompt } from '@/src/models/dial/prompt';
@@ -26,8 +26,7 @@ interface Props {
 const PromptProperties: FC<Props> = ({ prompt, onChangePrompt, isPublication }) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
-  const { dispatch } = useSaveValidationContext();
-  const editorId = useId();
+  const { setJsonErrors, removeEditor } = useJsonEditorValidation();
 
   const [isJSONContentMode, setIsJSONContentMode] = useState(false);
   const [jsonValue, setJsonValue] = useState<string | undefined>(undefined);
@@ -36,10 +35,10 @@ const PromptProperties: FC<Props> = ({ prompt, onChangePrompt, isPublication }) 
     (value: boolean) => {
       setIsJSONContentMode(value);
       if (!value) {
-        dispatch({ type: ValidationActionType.RemoveJsonEditor, editorId });
+        removeEditor();
       }
     },
-    [dispatch, editorId],
+    [removeEditor],
   );
 
   const onChangeJsonValue = useCallback(
@@ -52,12 +51,12 @@ const PromptProperties: FC<Props> = ({ prompt, onChangePrompt, isPublication }) 
 
   const onValidateJSON = useCallback(
     (errors?: JSONEditorError[]) => {
-      dispatch({ type: ValidationActionType.SetJsonEditor, editorId, errors: errors || [] });
+      setJsonErrors(errors || []);
     },
-    [dispatch, editorId],
+    [setJsonErrors],
   );
 
-  useEffect(() => () => dispatch({ type: ValidationActionType.RemoveJsonEditor, editorId }), [dispatch, editorId]);
+  useEffect(() => () => removeEditor(), [removeEditor]);
 
   useEffect(() => {
     try {

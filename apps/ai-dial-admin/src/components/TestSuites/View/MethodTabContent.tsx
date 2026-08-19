@@ -62,8 +62,6 @@ const DeploymentMethodContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh
   const { sidebar } = useAppContext();
   const isTryOutOpen = sidebar.show;
 
-  // Clamp to the current chain length so an external reset (e.g. discard changes shrinking
-  // `additionalRequests`) can't leave the selection pointing at a request that no longer exists.
   const selectedRequestIndex = Math.min(rawSelectedRequestIndex, Math.max(getRequestCount(testSuite) - 1, 0));
 
   useEffect(() => {
