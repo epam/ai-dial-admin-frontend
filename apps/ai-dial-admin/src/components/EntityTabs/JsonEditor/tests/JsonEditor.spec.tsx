@@ -2,20 +2,57 @@ import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { JSONEditorError } from '@/src/types/editor';
+import { JsonEditorOwnedNotification } from '../models';
 import JSONEditor from '../JsonEditor';
 
 let capturedValue: string | undefined;
 let capturedOnChange: (value?: string) => void;
 let capturedOnValidate: ((errors?: JSONEditorError[]) => void) | undefined;
+let capturedOnValidates: Array<(errors?: JSONEditorError[]) => void> = [];
 
 vi.mock('@/src/components/Common/JsonEditorBase/JsonEditorBase', () => ({
   default: ({ value, onChange, onValidateJSON }: any) => {
     capturedValue = value;
     capturedOnChange = onChange;
     capturedOnValidate = onValidateJSON;
+    capturedOnValidates.push(onValidateJSON);
     return <div role="application" aria-label="json-editor-base" />;
   },
 }));
+
+// Overrides the global test-setup mock so `jsonErrorNotifications` and `removeNotification` are
+// controllable, stable references across renders — needed to exercise unmount cleanup against a
+// populated, shared notification list (the global mock always returns an empty array).
+const mocks = vi.hoisted(() => ({
+  dispatch: vi.fn(),
+  notifications: [] as JsonEditorOwnedNotification[],
+  removeNotification: vi.fn(),
+}));
+
+vi.mock('@/src/context/SaveValidationContext', () => ({
+  useSaveValidationContext: () => ({
+    dispatch: mocks.dispatch,
+    jsonErrorNotifications: mocks.notifications,
+  }),
+  ValidationActionType: {
+    SetField: 'SET_FIELD_VALIDATION',
+    RemoveField: 'REMOVE_FIELD_VALIDATION',
+    SetJsonEditor: 'SET_JSON_EDITOR_VALIDATION',
+    RemoveJsonEditor: 'REMOVE_JSON_EDITOR_VALIDATION',
+    SetJsonEditorNotifications: 'SET_JSON_EDITOR_NOTIFICATIONS',
+    Reset: 'RESET',
+  },
+}));
+
+vi.mock('@/src/context/NotificationContext', () => ({
+  useNotification: () => ({ showNotification: vi.fn(), removeNotification: mocks.removeNotification }),
+}));
+
+const lastDispatchedEditorId = () =>
+  mocks.dispatch.mock.calls
+    .map(([action]) => action as { type: string; editorId?: string })
+    .filter((action) => action.type === ValidationActionType.SetJsonEditor)
+    .at(-1)?.editorId;
 
 const entity = { id: '1', name: 'Test Entity' };
 const mockSetSelectedEntity = vi.fn();
@@ -24,6 +61,8 @@ const mockOnChangeText = vi.fn();
 describe('JSONEditor', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    capturedOnValidates = [];
+    mocks.notifications = [];
   });
 
   describe('uncontrolled (default)', () => {
@@ -177,6 +216,61 @@ describe('JSONEditor', () => {
         expect.objectContaining({ errors: [expect.objectContaining({ message: 'Value expected' })] }),
       );
       expect(removed).toEqual(expect.objectContaining({ editorId: (reported as { editorId: string }).editorId }));
+    });
+
+    test('unmounting one editor keeps a sibling editor notification with the same message and line', () => {
+      const error = { message: 'Value expected', startLineNumber: 5 } as JSONEditorError;
+
+      const { rerender: rerenderA, unmount: unmountA } = render(
+        <JSONEditor
+          entity={entity}
+          setSelectedEntity={mockSetSelectedEntity}
+          text='{ "a": $x }'
+          onChangeText={mockOnChangeText}
+        />,
+      );
+      capturedOnValidates[0]([error]);
+      const editorIdA = lastDispatchedEditorId();
+
+      render(
+        <JSONEditor
+          entity={entity}
+          setSelectedEntity={mockSetSelectedEntity}
+          text='{ "b": $y }'
+          onChangeText={mockOnChangeText}
+        />,
+      );
+      capturedOnValidates[1]([error]);
+      const editorIdB = lastDispatchedEditorId();
+
+      expect(editorIdA).not.toBe(editorIdB);
+
+      mocks.notifications = [
+        { id: 'notif-a', message: 'Value expected', startLineNumber: 5, editorId: editorIdA },
+        { id: 'notif-b', message: 'Value expected', startLineNumber: 5, editorId: editorIdB },
+      ] as JsonEditorOwnedNotification[];
+
+      // Re-render editor A so it picks up the populated notification list before it unmounts.
+      rerenderA(
+        <JSONEditor
+          entity={entity}
+          setSelectedEntity={mockSetSelectedEntity}
+          text='{ "a": $x }'
+          onChangeText={mockOnChangeText}
+        />,
+      );
+
+      unmountA();
+
+      expect(mocks.removeNotification).toHaveBeenCalledWith('notif-a');
+      expect(mocks.removeNotification).not.toHaveBeenCalledWith('notif-b');
+
+      const setNotifications = mocks.dispatch.mock.calls
+        .map(([action]) => action as { type: string; errors?: JsonEditorOwnedNotification[] })
+        .filter((action) => action.type === ValidationActionType.SetJsonEditorNotifications)
+        .at(-1);
+
+      expect(setNotifications?.errors).toEqual([expect.objectContaining({ id: 'notif-b' })]);
     });
 
     test('still reports the parsed entity when the text is valid JSON', () => {

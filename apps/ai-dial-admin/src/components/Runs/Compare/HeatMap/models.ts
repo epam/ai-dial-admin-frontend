@@ -38,3 +38,14 @@ export interface HeatMapCellTooltipData {
   valueTextKey?: RunsI18nKey;
   valueLabelKey: RunsI18nKey;
 }
+
+export interface HeatMapTestCaseColIdOptions {
+  requestIndex?: number;
+  turnIndex?: number;
+}
+
+export interface HeatMapTestCaseHeaderOptions {
+  includeSubRunIndex: boolean;
+  includeRequestIndex?: boolean;
+  includeTurnIndex?: boolean;
+}

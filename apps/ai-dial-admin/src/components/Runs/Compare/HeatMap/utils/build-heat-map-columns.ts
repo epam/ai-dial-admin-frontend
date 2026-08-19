@@ -73,7 +73,7 @@ export const buildHeatMapColumns = (
 
   const testCaseColumns: ColDef<HeatMapRow>[] = mergedRows.map((row) => {
     const colId = getHeatMapTestCaseColId(row);
-    const headerLabel = formatHeatMapTestCaseHeader(row, includeSubRunIndex, includeRequestIndex, includeTurnIndex);
+    const headerLabel = formatHeatMapTestCaseHeader(row, { includeSubRunIndex, includeRequestIndex, includeTurnIndex });
 
     return {
       colId,

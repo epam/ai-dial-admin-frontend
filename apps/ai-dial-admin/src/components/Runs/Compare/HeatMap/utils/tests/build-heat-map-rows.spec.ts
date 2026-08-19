@@ -122,10 +122,10 @@ describe('buildHeatMapRows', () => {
       (row) => row.rowType === HeatMapRowType.Metric && row.runIndex === RUN_COMPARE_SECONDARY_INDEX,
     );
 
-    expect(primaryRow?.values[formatHeatMapTestCaseColId('tc-blr', 0, 0)]).toBe(0.1);
-    expect(primaryRow?.values[formatHeatMapTestCaseColId('tc-blr', 0, 1)]).toBe(0.3);
-    expect(comparedRow?.values[formatHeatMapTestCaseColId('tc-blr', 0, 0)]).toBe(0.2);
-    expect(comparedRow?.values[formatHeatMapTestCaseColId('tc-blr', 0, 1)]).toBe(0.4);
+    expect(primaryRow?.values[formatHeatMapTestCaseColId('tc-blr', 0, { requestIndex: 0 })]).toBe(0.1);
+    expect(primaryRow?.values[formatHeatMapTestCaseColId('tc-blr', 0, { requestIndex: 1 })]).toBe(0.3);
+    expect(comparedRow?.values[formatHeatMapTestCaseColId('tc-blr', 0, { requestIndex: 0 })]).toBe(0.2);
+    expect(comparedRow?.values[formatHeatMapTestCaseColId('tc-blr', 0, { requestIndex: 1 })]).toBe(0.4);
   });
 
   test('maps distinct columns for multiple sub-runs of the same test case', () => {

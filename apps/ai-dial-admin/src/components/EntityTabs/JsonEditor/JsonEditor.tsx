@@ -5,11 +5,12 @@ import { Dispatch, SetStateAction, useCallback, useEffect, useId, useRef, useSta
 import type { editor } from 'monaco-editor';
 
 import JsonEditorBase from '@/src/components/Common/JsonEditorBase/JsonEditorBase';
+import { JsonEditorOwnedError, JsonEditorOwnedNotification } from '@/src/components/EntityTabs/JsonEditor/models';
 import { clearResolvedErrors, mergeWithIgnoredFields } from '@/src/components/EntityTabs/JsonEditor/utils';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
-import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
+import { JSONEditorError } from '@/src/types/editor';
 
 interface Props<T> {
   entity: T | null;
@@ -42,14 +43,20 @@ const EntityJsonEditor = <T extends object>({
   const [editorInstanceKey, setEditorInstanceKey] = useState(0);
   /** Avoid resetting Monaco text when `entity` updates from our own JSON parse — that resets the cursor. */
   const lastEntityFromEditorRef = useRef<T | null>(null);
-  const lastErrorsRef = useRef<JSONEditorError[]>([]);
   const notificationsRef = useRef(jsonErrorNotifications);
   notificationsRef.current = jsonErrorNotifications;
 
   const setJsonErrors = useCallback(
     (errors: JSONEditorError[]) => {
-      lastErrorsRef.current = errors;
-      dispatch({ type: ValidationActionType.SetJsonEditor, editorId, errors });
+      /**
+       * Tag every error with this editor's `editorId` before it goes into the shared context. The
+       * tag is a plain extra field, so it rides along unchanged through `jsonErrors` (flattened
+       * across all mounted editors) and into any notification created from it downstream — letting
+       * unmount cleanup identify exactly this editor's own notifications later, even when another
+       * mounted editor reports the identical message on the identical line.
+       */
+      const ownedErrors: JsonEditorOwnedError[] = errors.map((error) => ({ ...error, editorId }));
+      dispatch({ type: ValidationActionType.SetJsonEditor, editorId, errors: ownedErrors });
     },
     [dispatch, editorId],
   );
@@ -63,11 +70,9 @@ const EntityJsonEditor = <T extends object>({
     () => () => {
       dispatch({ type: ValidationActionType.RemoveJsonEditor, editorId });
 
-      const own = (notification: JSONEditorErrorNotification) =>
-        lastErrorsRef.current.some(
-          (error) => error.message === notification.message && error.startLineNumber === notification.startLineNumber,
-        );
-      const ownNotifications = notificationsRef.current.filter(own);
+      const ownedNotifications = notificationsRef.current as JsonEditorOwnedNotification[];
+      const own = (notification: JsonEditorOwnedNotification) => notification.editorId === editorId;
+      const ownNotifications = ownedNotifications.filter(own);
 
       if (!ownNotifications.length) {
         return;
@@ -76,7 +81,7 @@ const EntityJsonEditor = <T extends object>({
       ownNotifications.forEach((notification) => removeNotification(notification.id));
       dispatch({
         type: ValidationActionType.SetJsonEditorNotifications,
-        errors: notificationsRef.current.filter((notification) => !own(notification)),
+        errors: ownedNotifications.filter((notification) => !own(notification)),
       });
     },
     [dispatch, editorId, removeNotification],

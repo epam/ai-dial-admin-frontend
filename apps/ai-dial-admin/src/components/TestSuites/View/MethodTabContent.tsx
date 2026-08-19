@@ -58,9 +58,19 @@ const DeploymentMethodContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh
   const t = useI18n();
   const [deployments, setDeployments] = useState<Deployment[] | null>(null);
   const [isChangeMethodModalOpen, setIsChangeMethodModalOpen] = useState(false);
-  const [selectedRequestIndex, setSelectedRequestIndex] = useState(0);
+  const [rawSelectedRequestIndex, setSelectedRequestIndex] = useState(0);
   const { sidebar } = useAppContext();
   const isTryOutOpen = sidebar.show;
+
+  // Clamp to the current chain length so an external reset (e.g. discard changes shrinking
+  // `additionalRequests`) can't leave the selection pointing at a request that no longer exists.
+  const selectedRequestIndex = Math.min(rawSelectedRequestIndex, Math.max(getRequestCount(testSuite) - 1, 0));
+
+  useEffect(() => {
+    if (selectedRequestIndex !== rawSelectedRequestIndex) {
+      setSelectedRequestIndex(selectedRequestIndex);
+    }
+  }, [selectedRequestIndex, rawSelectedRequestIndex]);
 
   const requestView = toRequestView(testSuite, selectedRequestIndex);
 

@@ -54,6 +54,10 @@ export interface TestSuite {
   overallScore?: OverallScoreConfig;
 
   deploymentRef?: TestSuiteDeploymentRef;
+  /**
+   * `endpointRef`/`requestTemplate`/`inputBindings`/`responseColumns` are request `#0` of the chain,
+   * labelled by `requestName`; `additionalRequests` holds requests `1..N`, each shaped identically.
+   */
   endpointRef?: TestSuiteEndpointRef;
   requestTemplate?: TestSuiteRequestTemplate;
   inputBindings?: InputBinding[];

@@ -167,6 +167,24 @@ describe('MethodTabContent - request chain', () => {
     expect(screen.getAllByText(/RequestTemplate:/)).toHaveLength(1);
   });
 
+  test('clamps the selection when an external reset shrinks the request chain', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const { rerender } = render(<MethodTabContent testSuite={baseSuite} onChange={onChange} />);
+
+    await user.click(screen.getByText('2. Second'));
+    expect(screen.getByText('RequestTemplate:/v1/second')).toBeInTheDocument();
+
+    // Simulates an external reset (e.g. discard changes) replacing the suite prop with a shorter
+    // chain, independent of this component's own onChange.
+    const shrunkSuite: TestSuite = { ...baseSuite, additionalRequests: [] };
+    rerender(<MethodTabContent testSuite={shrunkSuite} onChange={onChange} />);
+
+    expect(screen.queryByText('2. Second')).not.toBeInTheDocument();
+    expect(screen.getByText('RequestTemplate:/v1/main')).toBeInTheDocument();
+    expect(screen.getByText('TryOut')).toBeInTheDocument();
+  });
+
   test('forwards isSkipRefresh from request-scoped editors through the proxy view', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();

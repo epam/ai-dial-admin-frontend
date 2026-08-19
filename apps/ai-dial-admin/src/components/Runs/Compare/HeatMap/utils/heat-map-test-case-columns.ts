@@ -1,3 +1,7 @@
+import {
+  HeatMapTestCaseColIdOptions,
+  HeatMapTestCaseHeaderOptions,
+} from '@/src/components/Runs/Compare/HeatMap/models';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import { AnalyticsResult } from '@/src/models/evaluation/run';
 
@@ -12,8 +16,7 @@ export const getHeatMapTestCaseKey = (row: HeatMapTestCaseSource): string =>
 export const formatHeatMapTestCaseColId = (
   testCaseKey: string,
   runIndex: number,
-  requestIndex?: number,
-  turnIndex?: number,
+  { requestIndex, turnIndex }: HeatMapTestCaseColIdOptions = {},
 ): string => {
   const base = `tc_${testCaseKey}__${runIndex}`;
   const withRequest = requestIndex != null ? `${base}__r${requestIndex}` : base;
@@ -21,7 +24,10 @@ export const formatHeatMapTestCaseColId = (
 };
 
 export const getHeatMapTestCaseColId = (row: HeatMapTestCaseSource): string =>
-  formatHeatMapTestCaseColId(getHeatMapTestCaseKey(row), row.runIndex ?? 0, row.requestIndex, row.turnIndex);
+  formatHeatMapTestCaseColId(getHeatMapTestCaseKey(row), row.runIndex ?? 0, {
+    requestIndex: row.requestIndex,
+    turnIndex: row.turnIndex,
+  });
 
 export const hasHeatMapMultiSubRuns = (rows: CompareAnalyticsRow[]): boolean =>
   rows.some((row) => row.runIndex > 0 || (row._compared?.runIndex ?? 0) > 0);
@@ -42,9 +48,7 @@ export const hasHeatMapMultiTurns = (rows: CompareAnalyticsRow[]): boolean =>
 
 export const formatHeatMapTestCaseHeader = (
   row: HeatMapTestCaseSource,
-  includeSubRunIndex: boolean,
-  includeRequestIndex = false,
-  includeTurnIndex = false,
+  { includeSubRunIndex, includeRequestIndex = false, includeTurnIndex = false }: HeatMapTestCaseHeaderOptions,
 ): string => {
   const name = row.testCaseName || row.testCaseId || row.id || '';
   const parts = [name];
@@ -70,4 +74,4 @@ export const getHeatMapTestCaseHeaderLabels = (
   includeRequestIndex = hasHeatMapMultiRequests(rows),
   includeTurnIndex = hasHeatMapMultiTurns(rows),
 ): string[] =>
-  rows.map((row) => formatHeatMapTestCaseHeader(row, includeSubRunIndex, includeRequestIndex, includeTurnIndex));
+  rows.map((row) => formatHeatMapTestCaseHeader(row, { includeSubRunIndex, includeRequestIndex, includeTurnIndex }));

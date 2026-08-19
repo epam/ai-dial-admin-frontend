@@ -45,18 +45,18 @@ describe('formatHeatMapTestCaseColId / getHeatMapTestCaseColId', () => {
   });
 
   test('includes turnIndex so multi-turn columns stay unique', () => {
-    expect(formatHeatMapTestCaseColId('tc-1', 0, undefined, 1)).toBe('tc_tc-1__0__t1');
+    expect(formatHeatMapTestCaseColId('tc-1', 0, { turnIndex: 1 })).toBe('tc_tc-1__0__t1');
     expect(getHeatMapTestCaseColId(makeResult({ runIndex: 0, turnIndex: 2 }))).toBe('tc_tc-1__0__t2');
   });
 
   test('includes requestIndex so chained-request columns stay unique', () => {
-    expect(formatHeatMapTestCaseColId('tc-1', 0, 1)).toBe('tc_tc-1__0__r1');
+    expect(formatHeatMapTestCaseColId('tc-1', 0, { requestIndex: 1 })).toBe('tc_tc-1__0__r1');
     expect(getHeatMapTestCaseColId(makeResult({ runIndex: 0, requestIndex: 0 }))).toBe('tc_tc-1__0__r0');
     expect(getHeatMapTestCaseColId(makeResult({ runIndex: 0, requestIndex: 1 }))).toBe('tc_tc-1__0__r1');
   });
 
   test('combines requestIndex and turnIndex into one unique colId', () => {
-    expect(formatHeatMapTestCaseColId('tc-1', 1, 2, 3)).toBe('tc_tc-1__1__r2__t3');
+    expect(formatHeatMapTestCaseColId('tc-1', 1, { requestIndex: 2, turnIndex: 3 })).toBe('tc_tc-1__1__r2__t3');
     expect(getHeatMapTestCaseColId(makeResult({ runIndex: 1, requestIndex: 2, turnIndex: 3 }))).toBe(
       'tc_tc-1__1__r2__t3',
     );
@@ -118,31 +118,51 @@ describe('hasHeatMapMultiTurns', () => {
 
 describe('formatHeatMapTestCaseHeader', () => {
   test('uses test case name without suffix when includeSubRunIndex is false', () => {
-    expect(formatHeatMapTestCaseHeader(makeResult({ runIndex: 2 }), false)).toBe('BLR');
+    expect(formatHeatMapTestCaseHeader(makeResult({ runIndex: 2 }), { includeSubRunIndex: false })).toBe('BLR');
   });
 
   test('appends 1-based sub-run index when includeSubRunIndex is true', () => {
-    expect(formatHeatMapTestCaseHeader(makeResult({ runIndex: 0 }), true)).toBe('BLR_1');
-    expect(formatHeatMapTestCaseHeader(makeResult({ runIndex: 2 }), true)).toBe('BLR_3');
+    expect(formatHeatMapTestCaseHeader(makeResult({ runIndex: 0 }), { includeSubRunIndex: true })).toBe('BLR_1');
+    expect(formatHeatMapTestCaseHeader(makeResult({ runIndex: 2 }), { includeSubRunIndex: true })).toBe('BLR_3');
   });
 
   test('appends 1-based turn index when includeTurnIndex is true', () => {
-    expect(formatHeatMapTestCaseHeader(makeResult({ turnIndex: 0 }), false, false, true)).toBe('BLR_T1');
-    expect(formatHeatMapTestCaseHeader(makeResult({ runIndex: 1, turnIndex: 2 }), true, false, true)).toBe('BLR_2_T3');
+    expect(
+      formatHeatMapTestCaseHeader(makeResult({ turnIndex: 0 }), { includeSubRunIndex: false, includeTurnIndex: true }),
+    ).toBe('BLR_T1');
+    expect(
+      formatHeatMapTestCaseHeader(makeResult({ runIndex: 1, turnIndex: 2 }), {
+        includeSubRunIndex: true,
+        includeTurnIndex: true,
+      }),
+    ).toBe('BLR_2_T3');
   });
 
   test('appends 1-based request index before the turn index', () => {
-    expect(formatHeatMapTestCaseHeader(makeResult({ requestIndex: 1 }), false, true)).toBe('BLR_R2');
     expect(
-      formatHeatMapTestCaseHeader(makeResult({ runIndex: 1, requestIndex: 0, turnIndex: 1 }), true, true, true),
+      formatHeatMapTestCaseHeader(makeResult({ requestIndex: 1 }), {
+        includeSubRunIndex: false,
+        includeRequestIndex: true,
+      }),
+    ).toBe('BLR_R2');
+    expect(
+      formatHeatMapTestCaseHeader(makeResult({ runIndex: 1, requestIndex: 0, turnIndex: 1 }), {
+        includeSubRunIndex: true,
+        includeRequestIndex: true,
+        includeTurnIndex: true,
+      }),
     ).toBe('BLR_2_R1_T2');
   });
 
   test('falls back to testCaseId then id when name is missing', () => {
-    expect(formatHeatMapTestCaseHeader(makeResult({ testCaseName: undefined }), false)).toBe('tc-1');
-    expect(formatHeatMapTestCaseHeader(makeResult({ testCaseName: undefined, testCaseId: undefined }), true)).toBe(
-      'result-1_1',
+    expect(formatHeatMapTestCaseHeader(makeResult({ testCaseName: undefined }), { includeSubRunIndex: false })).toBe(
+      'tc-1',
     );
+    expect(
+      formatHeatMapTestCaseHeader(makeResult({ testCaseName: undefined, testCaseId: undefined }), {
+        includeSubRunIndex: true,
+      }),
+    ).toBe('result-1_1');
   });
 });
 

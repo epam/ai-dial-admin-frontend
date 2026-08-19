@@ -58,10 +58,13 @@ export const fromRequestView = (suite: TestSuite, index: number, view: TestSuite
   return { ...suite, additionalRequests };
 };
 
-export const addRequest = (suite: TestSuite): TestSuite => ({
-  ...suite,
-  additionalRequests: [...(suite.additionalRequests ?? []), {}],
-});
+export const addRequest = (suite: TestSuite): TestSuite => {
+  if ((suite.additionalRequests?.length ?? 0) >= MAX_ADDITIONAL_REQUESTS) {
+    return suite;
+  }
+
+  return { ...suite, additionalRequests: [...(suite.additionalRequests ?? []), {}] };
+};
 
 export const removeRequestAt = (suite: TestSuite, index: number): TestSuite => {
   if (index < 1 || !suite.additionalRequests) {

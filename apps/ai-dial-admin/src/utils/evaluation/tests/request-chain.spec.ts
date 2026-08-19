@@ -243,6 +243,21 @@ describe('addRequest', () => {
     expect(result.additionalRequests).toEqual([{ name: 'First' }, {}]);
     expect(suite.additionalRequests).toEqual([{ name: 'First' }]);
   });
+
+  test('appends up to MAX_ADDITIONAL_REQUESTS entries', () => {
+    const suite: TestSuite = { additionalRequests: Array(MAX_ADDITIONAL_REQUESTS - 1).fill({}) };
+    const result = addRequest(suite);
+
+    expect(result.additionalRequests).toHaveLength(MAX_ADDITIONAL_REQUESTS);
+  });
+
+  test('is a no-op once the chain has 11 requests (MAX_ADDITIONAL_REQUESTS reached)', () => {
+    const suite: TestSuite = { additionalRequests: Array(MAX_ADDITIONAL_REQUESTS).fill({}) };
+    const result = addRequest(suite);
+
+    expect(result).toBe(suite);
+    expect(result.additionalRequests).toHaveLength(MAX_ADDITIONAL_REQUESTS);
+  });
 });
 
 describe('removeRequestAt', () => {
