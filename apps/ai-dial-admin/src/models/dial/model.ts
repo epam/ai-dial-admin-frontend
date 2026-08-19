@@ -8,7 +8,6 @@ export interface DialModel extends ChatEntity {
   overrideName?: string;
   limits?: DialModelLimit;
   pricing?: DialModelPricing;
-  fieldsHashingOrder?: string[];
   displayVersion?: string;
   upstreams?: DialModelEndpoint[];
   source?: SOURCE_FIELD;

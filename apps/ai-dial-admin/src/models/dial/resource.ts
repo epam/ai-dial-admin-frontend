@@ -87,7 +87,6 @@ export interface DialModelResource extends EntityAttachment, EntityDefaults, Mod
   limits?: DialModelLimit;
   pricing?: DialModelPricing;
   upstreams?: DialModelEndpoint[];
-  fieldsHashingOrder?: string[];
   embeddingDimensions?: number;
   displayName?: string;
   displayVersion?: string;

@@ -10,14 +10,16 @@ import IntroControl from '@/src/components/BaseControls/Intro';
 import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
 import ModelTypeControl from '@/src/components/BaseControls/ModelType';
 import OverrideNameControl from '@/src/components/BaseControls/OverrideName';
+import TokenizerModelControl from '@/src/components/BaseControls/TokenizerModel';
 import TopicsControl from '@/src/components/BaseControls/Topics';
 import VersionControl from '@/src/components/BaseControls/Version';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import Defaults from '@/src/components/Defaults/Defaults';
 import EntityAttachments from '@/src/components/EntityMainProperties/EntityAttachments/EntityAttachments';
 import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
+import Limits from '@/src/components/ModelView/Limits/Limits';
 import EmbeddingDimensions from '@/src/components/ModelView/ModelProperties/EmbeddingDimensions';
-import TokenizerModelControl from '@/src/components/BaseControls/TokenizerModel';
+import Pricing from '@/src/components/ModelView/Pricing/Pricing';
 import UpstreamEndpoints from '@/src/components/UpstreamEndpoints/UpstreamEndpoints';
 import { MODEL_INTERFACE_TYPES } from '@/src/constants/deployment-interfaces';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
@@ -26,8 +28,6 @@ import { DialModelResource, DialModelResourceType } from '@/src/models/dial/reso
 import { ApplicationRoute } from '@/src/types/routes';
 import { getModelDeploymentId } from '@/src/utils/models/deployment-id';
 import { supportsResponsesInterface } from '@/src/utils/models/responses-interface';
-import Limits from '@/src/components/ModelView/Limits/Limits';
-import Pricing from '@/src/components/ModelView/Pricing/Pricing';
 
 interface Props {
   asset: DialModelResource;
@@ -75,10 +75,11 @@ const ModelAssetProperties: FC<Props> = ({ asset, onChange }) => {
         <DescriptionControl entity={asset} onChangeEntity={onChange} isFullWidth={false} />
         <IntroControl entity={asset} onChangeEntity={onChange} isFullWidth={false} />
 
-        <IconControl iconUrl={asset.iconUrl} onChange={(iconUrl) => onChange({ ...asset, iconUrl })} />
-        <TopicsControl entity={asset} onChange={onChange} view={ApplicationRoute.AssetsModels} />
-
-        <ModelTypeControl entity={asset} onChangeEntity={onChange} />
+        <ModelTypeControl
+          entity={asset}
+          onChangeEntity={(type) => onChange({ ...asset, type: type as DialModelResourceType })}
+          isAsset
+        />
         <OverrideNameControl entity={asset} onChangeEntity={onChange} />
 
         <InterfacesField entity={asset} onChangeEntity={onChange} allowedTypes={MODEL_INTERFACE_TYPES} isAsset />
@@ -97,8 +98,14 @@ const ModelAssetProperties: FC<Props> = ({ asset, onChange }) => {
           view={ApplicationRoute.AssetsModels}
           withResponses={showResponsesDefaults}
         />
+        {asset.type === DialModelResourceType.Chat && (
+          <>
+            <IconControl iconUrl={asset.iconUrl} onChange={(iconUrl) => onChange({ ...asset, iconUrl })} />
+            <TopicsControl entity={asset} onChange={onChange} view={ApplicationRoute.AssetsModels} />
+            <EntityAttachments entity={asset} onChangeEntity={onChange} />
+          </>
+        )}
 
-        <EntityAttachments entity={asset} onChangeEntity={onChange} />
         <Defaults
           values={asset.defaults}
           onChangeValues={(defaults) => onChange({ ...asset, defaults })}

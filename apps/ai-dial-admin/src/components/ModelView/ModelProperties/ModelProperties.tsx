@@ -3,9 +3,8 @@
 import { FC, useEffect, useRef, useState } from 'react';
 
 import { getModelsAdapters } from '@/src/app/[lang]/models/actions';
-import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
 import InterfacesField from '@/src/components/BaseControls/InterfacesField/InterfacesField';
-import Multiselect from '@/src/components/Common/Multiselect/Multiselect';
+import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
 import Defaults from '@/src/components/Defaults/Defaults';
 import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
 import DeploymentProperties from '@/src/components/EntityMainProperties/Properties/DeploymentProperties';
@@ -14,10 +13,8 @@ import Pricing from '@/src/components/ModelView/Pricing/Pricing';
 import TokenizerModelSwitch from '@/src/components/Models/View/TokenizerModel/Tokenizer';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
 import UpstreamEndpoints from '@/src/components/UpstreamEndpoints/UpstreamEndpoints';
-import { BasicI18nKey, EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
-import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 import { MODEL_INTERFACE_TYPES } from '@/src/constants/deployment-interfaces';
-import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
+import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
@@ -38,7 +35,6 @@ interface Props {
 
 const ModelProperties: FC<Props> = ({ model, modelsNames, onChangeModel }) => {
   const t = useI18n();
-  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const getReqRef = useRef(useProtectedRequest());
   const [selectedAdapter, setSelectedAdapter] = useState<DialAdapter | null>(null);
 
@@ -117,21 +113,6 @@ const ModelProperties: FC<Props> = ({ model, modelsNames, onChangeModel }) => {
       <MaxRetryAttempts entity={model} onChangeEntity={onChangeModel} />
 
       <Pricing model={model} onChangeModel={onChangeModel} />
-      <Multiselect
-        elementId="order"
-        className={STANDARD_CONTROL_WIDTH}
-        draggable={true}
-        selectedItems={model.fieldsHashingOrder || []}
-        allItems={model.fieldsHashingOrder || []}
-        onChangeItems={(fieldsHashingOrder) => {
-          onChangeModel({ ...model, fieldsHashingOrder });
-        }}
-        heading={t(EntityFieldsI18nKey.fieldsHashingOrder)}
-        label={t(EntityFieldsI18nKey.fieldsHashingOrder)}
-        addPlaceholder={t(EntityPlaceholdersI18nKey.Value)}
-        addTitle={t(BasicI18nKey.AddField)}
-        disabled={isReadOnlyAdmin}
-      />
     </div>
   );
 };

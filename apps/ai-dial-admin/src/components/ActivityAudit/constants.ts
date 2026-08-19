@@ -10,7 +10,6 @@ export const sorts = [
 export enum EntityParameterKeys {
   TOPICS = 'topics',
   TOOLS = 'allowedTools',
-  HASHING_ORDER = 'fieldsHashingOrder',
   LIMITS = 'limits',
   PRICING = 'pricing',
   INTERCEPTORS = 'interceptors',
@@ -64,7 +63,6 @@ export const shareKeys = ['invitationTtl', 'maxAcceptedUsers'];
 export const arrayParameterKeys = [
   EntityParameterKeys.TOPICS,
   EntityParameterKeys.TOOLS,
-  EntityParameterKeys.HASHING_ORDER,
   EntityParameterKeys.PATHS,
   EntityParameterKeys.METHODS,
 ];
