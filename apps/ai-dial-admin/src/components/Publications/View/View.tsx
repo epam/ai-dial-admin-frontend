@@ -14,6 +14,12 @@ import PublicationsHeader from '@/src/components/EntityHeaderControls/Publicatio
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { PublicationsI18nKey } from '@/src/constants/i18n';
+import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
+import { useConversationFolder } from '@/src/context/assets/ConversationsFolderContext';
+import { useFileFolder } from '@/src/context/assets/FileFolderContext';
+import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
+import { useSkillFolder } from '@/src/context/assets/SkillFolderContext';
+import { useToolsetFolder } from '@/src/context/assets/ToolsetsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -45,6 +51,17 @@ interface Props<T> {
   oAuthCode?: string | null;
 }
 
+// Maps a Publications route to the same-entity Assets folder context, so approving a publication can
+// refresh the corresponding Assets folder listing the published entity now belongs to.
+const PublicationFolderContextMap = {
+  [ApplicationRoute.ApplicationPublications]: useAppsFolder,
+  [ApplicationRoute.ToolsetPublications]: useToolsetFolder,
+  [ApplicationRoute.PromptPublications]: usePromptFolder,
+  [ApplicationRoute.FilePublications]: useFileFolder,
+  [ApplicationRoute.ConversationPublications]: useConversationFolder,
+  [ApplicationRoute.SkillPublications]: useSkillFolder,
+};
+
 const PublicationView = <T extends Publication>({ view, publication, applicationSchemes, oAuthCode }: Props<T>) => {
   const t = useI18n();
   const router = useRouter();
@@ -52,6 +69,7 @@ const PublicationView = <T extends Publication>({ view, publication, application
   const showNotificationRef = useRef(useNotification().showNotification);
   const { dispatch } = useSaveValidationContext();
   const { showNotification } = useNotification();
+  const folderContext = PublicationFolderContextMap[view as keyof typeof PublicationFolderContextMap]();
 
   const toolset = useMemo(() => {
     if (view === ApplicationRoute.ToolsetPublications) {
@@ -291,6 +309,7 @@ const PublicationView = <T extends Publication>({ view, publication, application
         activeTab={activeTab}
         warning={warning}
         onChangeActiveTab={setActiveTab}
+        getAssetContext={() => folderContext}
       >
         {view === ApplicationRoute.ToolsetPublications &&
           toolset &&
