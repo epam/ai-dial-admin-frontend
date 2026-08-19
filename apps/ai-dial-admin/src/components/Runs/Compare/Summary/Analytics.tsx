@@ -57,6 +57,11 @@ const Analytics: FC<Props> = ({
   const primarySeconds = primary.avgRunTimeMs != null ? formatAvgRunTimeSeconds(primary.avgRunTimeMs) : null;
   const comparedSeconds = compared.avgRunTimeMs != null ? formatAvgRunTimeSeconds(compared.avgRunTimeMs) : null;
   const runtimeDelta = getMetricDelta(primarySeconds, comparedSeconds);
+  const primaryMetricEvalSeconds =
+    primary.avgMetricEvalDurationMs != null ? formatAvgRunTimeSeconds(primary.avgMetricEvalDurationMs) : null;
+  const comparedMetricEvalSeconds =
+    compared.avgMetricEvalDurationMs != null ? formatAvgRunTimeSeconds(compared.avgMetricEvalDurationMs) : null;
+  const metricEvalDelta = getMetricDelta(primaryMetricEvalSeconds, comparedMetricEvalSeconds);
 
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap">
@@ -109,7 +114,7 @@ const Analytics: FC<Props> = ({
         title={t(RunsI18nKey.AvgTestCaseRunTime)}
         description={t(RunsI18nKey.AvgPerTestCase)}
         delta={runtimeDelta.kind === MetricDeltaKind.Changed ? runtimeDelta.value : undefined}
-        deltaPositive={false}
+        deltaPositive={runtimeDelta.value != null && runtimeDelta.value < 0}
         deltaUnit={t(RunsI18nKey.Seconds)}
         compareValues={[
           {
@@ -122,6 +127,25 @@ const Analytics: FC<Props> = ({
           },
         ]}
         error={primarySeconds == null && comparedSeconds == null}
+      />
+      <DialAnalyticsCard
+        className="min-w-0 flex-1"
+        title={t(RunsI18nKey.AvgMetricEvalLatency)}
+        description={t(RunsI18nKey.AvgPerTestCase)}
+        delta={metricEvalDelta.kind === MetricDeltaKind.Changed ? metricEvalDelta.value : undefined}
+        deltaPositive={metricEvalDelta.value != null && metricEvalDelta.value < 0}
+        deltaUnit={t(RunsI18nKey.Seconds)}
+        compareValues={[
+          {
+            title: primaryRunName,
+            value: primaryMetricEvalSeconds != null ? `${primaryMetricEvalSeconds} ${t(RunsI18nKey.Seconds)}` : '—',
+          },
+          {
+            title: comparedRunName,
+            value: comparedMetricEvalSeconds != null ? `${comparedMetricEvalSeconds} ${t(RunsI18nKey.Seconds)}` : '—',
+          },
+        ]}
+        error={primaryMetricEvalSeconds == null && comparedMetricEvalSeconds == null}
       />
     </div>
   );

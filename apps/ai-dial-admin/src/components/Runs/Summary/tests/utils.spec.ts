@@ -8,9 +8,10 @@ import {
   SortDir,
   ValueType,
 } from '@/src/models/evaluation/structured-query';
-import { AVG_DURATION_ALIAS, COUNT_ALIAS, EXECUTION_STATUS_FIELD } from '../constants';
+import { AVG_DURATION_ALIAS, AVG_METRIC_EVAL_DURATION_ALIAS, COUNT_ALIAS, EXECUTION_STATUS_FIELD } from '../constants';
 import { MetricScoresData } from '../models';
 import {
+  buildAvgMetricEvalDurationQuery,
   attachMetricInfo,
   buildAvgRunTimeQuery,
   buildDistributionQuery,
@@ -96,6 +97,53 @@ describe('Runs Summary :: query builders', () => {
       },
     ]);
     expect(query.group_by).toBeUndefined();
+  });
+
+  test('buildAvgMetricEvalDurationQuery averages metric_eval_duration_ms within the run', () => {
+    const query = buildAvgMetricEvalDurationQuery('run-1');
+
+    expect(query.select).toEqual([
+      {
+        expr: { type: ExprType.Fn, name: 'avg', args: [{ type: ExprType.Field, name: 'metric_eval_duration_ms' }] },
+        as: AVG_METRIC_EVAL_DURATION_ALIAS,
+      },
+    ]);
+    expect(query.group_by).toBeUndefined();
+  });
+
+  test('buildAvgMetricEvalDurationQuery ANDs a NOT IN exclusion when unmatched ids are provided', () => {
+    const query = buildAvgMetricEvalDurationQuery('run-1', ['id-1', 'id-2']);
+
+    expect(query.filter).toEqual({
+      op: LogicalOp.And,
+      args: [
+        {
+          op: ComparisonOp.Eq,
+          args: [
+            { type: ExprType.Field, name: 'test_suite_run_id' },
+            { type: ExprType.Value, value_type: ValueType.Uuid, value: 'run-1' },
+          ],
+        },
+        {
+          op: LogicalOp.Not,
+          args: [
+            {
+              op: ComparisonOp.In,
+              args: [
+                { type: ExprType.Field, name: 'id' },
+                {
+                  type: ExprType.Array,
+                  items: [
+                    { type: ExprType.Value, value_type: ValueType.Uuid, value: 'id-1' },
+                    { type: ExprType.Value, value_type: ValueType.Uuid, value: 'id-2' },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
   });
 });
 
@@ -501,6 +549,12 @@ describe('Runs Summary :: result parsers', () => {
     expect(parseAvgRunTimeMs({ rows: [{ [AVG_DURATION_ALIAS]: null }] })).toBeNull();
     expect(parseAvgRunTimeMs({ rows: [] })).toBeNull();
     expect(parseAvgRunTimeMs(null)).toBeNull();
+  });
+
+  test('parseAvgRunTimeMs supports reading a non-default alias', () => {
+    expect(
+      parseAvgRunTimeMs({ rows: [{ [AVG_METRIC_EVAL_DURATION_ALIAS]: 291123.6 }] }, AVG_METRIC_EVAL_DURATION_ALIAS),
+    ).toBe(291124);
   });
 
   test('formatAvgRunTimeSeconds rounds ms to one decimal second', () => {

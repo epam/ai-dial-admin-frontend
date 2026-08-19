@@ -61,4 +61,5 @@ export interface MetricOption {
 export interface RunAnalyticsSlice {
   statusCounts: TestCaseStatusCounts;
   avgRunTimeMs: number | null;
+  avgMetricEvalDurationMs: number | null;
 }
