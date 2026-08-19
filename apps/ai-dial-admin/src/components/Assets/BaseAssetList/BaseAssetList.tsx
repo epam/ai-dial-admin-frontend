@@ -496,9 +496,9 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
         assets.forEach((asset) => {
           const paths = getAllSelectedItemsPaths(asset.path, selectedVersionsMap);
           if (paths.length > 0) {
-            assetsPaths.push(...paths.map((path: string) => ({ path: path, etag: asset.etag })));
+            assetsPaths.push(...paths.map((path: string) => ({ path: path, etag: asset.etag || DEFAULT_ETAG })));
           } else {
-            assetsPaths.push({ path: asset.path, etag: asset.etag });
+            assetsPaths.push({ path: asset.path, etag: asset.etag || DEFAULT_ETAG });
           }
           const prefix = asset.path.substring(0, asset.path.lastIndexOf('__'));
           setSelectedVersionsMap({
