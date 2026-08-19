@@ -134,7 +134,7 @@ describe('Compare Summary :: Analytics', () => {
     expect(screen.getByText('delta:-3')).toBeInTheDocument();
     expect(screen.getByText('delta:110')).toBeInTheDocument();
     expect(screen.getByText('delta:-170.6')).toBeInTheDocument();
-    expect(screen.getAllByText('delta-inverted')).toHaveLength(2);
+    expect(screen.getAllByText('delta-inverted')).toHaveLength(1);
     expect(screen.getAllByText('delta-unit:Runs.Seconds')).toHaveLength(2);
   });
 
