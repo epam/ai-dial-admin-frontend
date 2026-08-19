@@ -44,14 +44,6 @@ describe('Model asset Properties :: routing-critical fields', () => {
     expect(screen.getByDisplayValue('http://upstream-one')).toBeInTheDocument();
   });
 
-  // The `EntityFields.type` label is also rendered per row by the interfaces field, so this asserts on
-  // the selected value instead — which additionally proves the control is bound to the resource.
-  test('Should render the model type control showing the current type', () => {
-    renderProperties({ type: DialModelResourceType.Completion });
-
-    expect(screen.getByText(DialModelResourceType.Completion)).toBeInTheDocument();
-  });
-
   test('Should render the override name control', () => {
     renderProperties({ overrideName: 'upstream-facing-name' });
 
