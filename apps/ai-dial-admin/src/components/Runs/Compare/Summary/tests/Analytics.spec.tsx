@@ -123,7 +123,7 @@ describe('Compare Summary :: Analytics', () => {
     await screen.findByText('Runs.AvgTestCaseRunTime');
     expect(screen.getByText('delta:-3')).toBeInTheDocument();
     expect(screen.getByText('delta:110')).toBeInTheDocument();
-    expect(screen.queryByText('delta-inverted')).not.toBeInTheDocument();
+    expect(screen.getByText('delta-inverted')).toBeInTheDocument();
     expect(screen.getByText('delta-unit:Runs.Seconds')).toBeInTheDocument();
   });
 
