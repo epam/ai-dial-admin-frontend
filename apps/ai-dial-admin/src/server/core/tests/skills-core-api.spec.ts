@@ -344,6 +344,39 @@ describe('Server :: Core :: SkillsCoreApi :: downloadSkillFile / previewSkillFil
   });
 });
 
+describe('Server :: Core :: SkillsCoreApi :: getSkillManifestContent', () => {
+  const instance = new SkillsCoreApi({ host: TEST_URL });
+
+  beforeEach(() => {
+    fetch.resetMocks();
+  });
+
+  test("GETs SKILL.md's own per-file route and returns its raw text", async () => {
+    fetch.mockResponseOnce('---\nname: my-skill\ndescription: Does a thing\n---\nBody.', {
+      headers: { 'content-type': 'text/markdown' },
+    });
+
+    const result = await instance.getSkillManifestContent(TOKEN_MOCK, 'public/my-skill');
+
+    const [calledUrl, init] = fetch.mock.calls[0];
+    expect(calledUrl).toContain('/v2/skills/public/my-skill/files/SKILL.md');
+    expect((init as RequestInit).method).toBe('GET');
+    expect(result).toEqual({
+      success: true,
+      response: '---\nname: my-skill\ndescription: Does a thing\n---\nBody.',
+      etag: undefined,
+    });
+  });
+
+  test('reports not-found rather than throwing when Core 404s', async () => {
+    fetch.mockResponseOnce('Not Found', { status: 404 });
+
+    const result = await instance.getSkillManifestContent(TOKEN_MOCK, 'public/missing');
+
+    expect(result.success).toBe(false);
+  });
+});
+
 describe('Server :: Core :: SkillsCoreApi :: deleteSkillFile', () => {
   const instance = new SkillsCoreApi({ host: TEST_URL });
 

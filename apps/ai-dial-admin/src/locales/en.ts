@@ -596,6 +596,7 @@ export default {
   },
   Tabs: {
     Properties: 'Properties',
+    Skill: 'Skill',
     Features: 'Features',
     Roles: 'Roles',
     Interceptors: 'Interceptors',

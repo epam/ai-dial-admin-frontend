@@ -93,6 +93,17 @@ export async function removeSkillFile(path: string, filePath: string, etag?: str
 }
 
 /**
+ * Reads `SKILL.md`'s raw content for the Skill tab (see `parseSkillManifest`). Shared by both
+ * `Assets > Skills` and Skill Publications — the underlying Core route is keyed only by path, not by
+ * which bucket (source/review/public) that path resolves into, matching how `uploadSkillFile`/
+ * `removeSkillFile` are already reused by the Publications view instead of duplicated there.
+ */
+export async function getSkillManifest(path: string): Promise<ServerActionResponse> {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return skillsCoreApi.getSkillManifestContent(token, path);
+}
+
+/**
  * Moves a skill to a different folder. Uses the generic `AssetApi.move` (`POST
  * /v1/ops/resource/move`) directly — Core's move op is resource-type-agnostic and already accepts
  * `SKILL` via `RESOURCE_TYPE_PREFIX[ResourceType.SKILL]`, so no new Core client code is needed, only

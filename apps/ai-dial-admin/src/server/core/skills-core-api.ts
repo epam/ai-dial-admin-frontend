@@ -4,6 +4,9 @@ import { DialSkillFile, DialSkillResource } from '@/src/models/dial/resource';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ResourceType } from '@/src/types/resource-type';
 import { decodeCorePath, encodeCorePath, stripPrefix } from '@/src/server/publications/path';
+import { sendRequest } from '@/src/utils/api/send-request';
+import { getError, getErrorMessage } from '@/src/utils/api/error';
+import { getApiHeaders } from '@/src/utils/auth/api-headers';
 import { removeTrailingSlash } from '@/src/utils/files/path';
 import { createHeadersForCreate, createIfMatchHeaders } from './asset-headers';
 import { CoreResourceMetadataNode } from './asset-metadata';
@@ -169,6 +172,38 @@ export class SkillsCoreApi extends CoreApi {
     // one-appended-slash contract from ever producing a `//` Core doesn't resolve.
     const url = `${CORE_SKILLS_URL}/${encodeCorePath(removeTrailingSlash(path))}/`;
     return this.sendActionRequest(url, 'PUT', token);
+  }
+
+  /**
+   * Reads `SKILL.md`'s raw content as text (`GET /v2/skills/{bucket}/{path}/files/SKILL.md`) — used
+   * to populate the Skill tab's Name/Description/body fields (see `skill-manifest.ts`'s parser).
+   * Deliberately bypasses `getAction`/`get`: `BaseApi`'s shared response parsing assumes a body is
+   * either JSON or `text/plain` and falls back to `res.json().catch(() => res.text().catch(...))`
+   * for anything else — but a `Response` body can only be read once, so when Core returns `SKILL.md`
+   * with its own content type (e.g. `text/markdown`, whatever it was uploaded as), the failed
+   * `res.json()` already consumes the stream and the fallback `res.text()` comes back empty. Reading
+   * `res.text()` directly, once, sidesteps that. Not `downloadSkillFile`/`previewSkillFile` either:
+   * those return a streamed `Response` meant to be piped straight to the browser, not read as a
+   * string server-side.
+   */
+  async getSkillManifestContent(token: Token, path: string): Promise<ServerActionResponse> {
+    const url = `${this.config.host || ''}${CORE_SKILLS_URL}/${encodeCorePath(path)}/files/${SKILL_MANIFEST_FILE}`;
+    const res = await sendRequest(url, 'GET', getApiHeaders(token));
+    const etag = res.headers.get('etag') || undefined;
+    const content = await res.text();
+
+    if (!(res.status >= 200 && res.status < 300)) {
+      const errObject = this.parseErrorBody(content, res.status);
+      return {
+        success: false,
+        errorMessage: getErrorMessage(errObject, res.status),
+        errorHeader: getError(errObject),
+        status: res.status,
+        etag,
+      };
+    }
+
+    return { success: true, response: content, etag };
   }
 
   /** Streams a single file's content from a skill's bundle for download (`GET /v2/skills/{bucket}/{path}/files/{filePath}`). */
