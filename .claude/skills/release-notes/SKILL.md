@@ -173,8 +173,18 @@ Use the alert callout if the changes are critical:
 
 1. `git diff <prev-tag>..<tag> -- docs/INFRA-CHANGELOG.md` — what landed in the range.
 2. Read the relevant version block in `docs/INFRA-CHANGELOG.md` for variable names, defaults, and descriptions.
-3. If no `docs/upgrade-plans/<base-version>.md` exists yet, note in the editorial file that the upgrade plan is missing and describe what needs to go in `Deployment Changes` inline — the user will decide.
-4. Characterize severity: if all new env vars are optional and default-off, use plain text ("This release adds optional configuration flags"). If any is required or changes existing behavior, use `> [!IMPORTANT]`.
+3. If no `docs/upgrade-plans/<base-version>.md` exists yet, build the section inline instead of linking out: a table with columns `Variable | Required | Default | Description`, one row per env var that changed in the range. Pull `Required` from whether `docs/INFRA-CHANGELOG.md` marks the var `**required**` (or code shows no fallback), `Default` from the changelog's `(default: ...)` note, and `Description` from the changelog entry trimmed to one clause — don't repeat the `[Preview]` tag there, it belongs on the variable name.
+
+   ```markdown
+   ## Deployment Changes
+
+   | Variable | Required | Default | Description |
+   |---|---|---|---|
+   | `NIM_ENABLED` | No | `false` | Enables the NIM Model Serving option in Deployments |
+   | `DIAL_CORE_API_URL` | Yes | — | DIAL Core API url |
+   ```
+
+4. Characterize severity: if all new env vars are optional and default-off, use plain text ("This release adds optional configuration flags") ahead of the table. If any is required or changes existing behavior, use `> [!IMPORTANT]` ahead of the table.
 
 **What does not belong here:** Per-app feature configuration (things users configure in the UI, not operators in helm/env). `Deployment Changes` is strictly for env vars, behavioral shifts at the service level, and external system migrations.
 
