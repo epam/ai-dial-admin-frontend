@@ -3,6 +3,7 @@ import {
   COST_SIGNIFICANT_DIGITS,
   UNAVAILABLE_VALUE,
 } from '@/src/constants/analytics/conversations-trace';
+import { ConversationScalar } from '@/src/models/analytics/conversations-trace';
 import { toBig, toNumber } from '@/src/utils/analytics/scalar';
 import { formatNumberWithExponent } from '@/src/utils/formatting/number-formatting';
 
@@ -135,3 +136,16 @@ export const formatConversationSpan = (
 
   return unit ? `${Math.floor(span / unit.limit)}${unit.suffix}` : `${Math.max(Math.round(span / SECOND_MS), 1)} sec`;
 };
+
+// The evaluator writes a conversation's topics as one delimited string, and its own schema asks for "a comma
+// and a single space" — which the model does not reliably produce: real rows carry `capabilities,error`
+// beside `security, code review, validation`. So the separator is the comma alone and the spacing is
+// whatever came back. A term the view does not recognise is returned as stored: the vocabulary belongs to an
+// evaluator that can be re-versioned without this frontend knowing, so normalising would hide real data.
+export const conversationTopics = (raw: ConversationScalar | undefined): string[] =>
+  typeof raw === 'string'
+    ? raw
+        .split(',')
+        .map((topic) => topic.trim())
+        .filter(Boolean)
+    : [];

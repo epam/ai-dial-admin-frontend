@@ -138,28 +138,25 @@ describe('ConversationsList :: paging', () => {
 // run; "attributes the rating column to the feedback entity" covers where it sits.
 const CONVERSATIONS_VISIBLE = [
   ConversationsField.ChatId,
-  ConversationsField.InsightTitle,
   ConversationsField.ProjectId,
   ConversationsField.UserHash,
-  ConversationsField.TurnCount,
   ConversationsField.LastRequestTime,
-  ConversationsField.TotalTokens,
   ConversationsField.TotalPrice,
-  ConversationsField.DurationMs,
-  ConversationsField.Deployments,
 ];
 
-const CURATED_COLUMN_COUNT = CONVERSATIONS_VISIBLE.length + 1 + 10;
+// The whole set is fixed: nothing is derived from the schema, so this is a count of designed columns rather
+// than of whatever the entity happens to report.
+const CURATED_COLUMN_COUNT = 10;
 
 describe('ConversationsList :: columns', () => {
-  test('renders the default-visible columns first, in order', () => {
+  test('renders the default-visible columns in order, Rating last', () => {
     renderList();
 
-    expect(
-      leafColumns()
-        .map((column) => column.field)
-        .slice(0, CONVERSATIONS_VISIBLE.length),
-    ).toEqual(CONVERSATIONS_VISIBLE);
+    const visible = leafColumns()
+      .filter((column) => !column.hide)
+      .map((column) => column.field);
+
+    expect(visible).toEqual([...CONVERSATIONS_VISIBLE, ConversationColumn.Rating]);
     expect(leafColumns().at(-1)?.field).toBe(ConversationColumn.Rating);
   });
 
@@ -167,6 +164,14 @@ describe('ConversationsList :: columns', () => {
     renderList();
 
     expect(leafColumns()).toHaveLength(CURATED_COLUMN_COUNT);
+  });
+
+  // The identity column is how a row is recognised and opened, and its permanence is what lets the query
+  // project its enrichment field unconditionally.
+  test('locks the identity column against being hidden', () => {
+    renderList();
+
+    expect(leafColumns()[0]).toMatchObject({ field: ConversationsField.ChatId, lockVisible: true });
   });
 
   test('reads a dotted enrichment name as a flat key', () => {
@@ -180,18 +185,25 @@ describe('ConversationsList :: columns', () => {
 
     const groups = captured.columnDefs ?? [];
 
-    expect(groups.map((group) => group.groupId)).toEqual([ColumnProvenance.Conversations, ColumnProvenance.Feedback]);
+    expect(groups.map((group) => group.groupId)).toEqual([
+      ColumnProvenance.Conversations,
+      ColumnProvenance.Insights,
+      ColumnProvenance.Feedback,
+    ]);
     expect(groups.every((group) => group.marryChildren)).toBe(true);
     expect(leafColumns()).toHaveLength(CURATED_COLUMN_COUNT);
   });
 
-  test('attributes the rating column to the feedback entity and the rest to conversations', () => {
+  test('attributes each column to the source its values actually come from', () => {
     renderList();
 
-    const [conversations, feedback] = captured.columnDefs ?? [];
+    const [conversations, insights, feedback] = captured.columnDefs ?? [];
+    const fieldsOf = (group: ColGroupDef) => (group.children as ColDef[]).map((column) => column.field);
 
-    expect((conversations.children as ColDef[]).map((column) => column.field)).not.toContain(ConversationColumn.Rating);
-    expect((feedback.children as ColDef[]).map((column) => column.field)).toEqual([ConversationColumn.Rating]);
+    expect(fieldsOf(conversations)).not.toContain(ConversationColumn.Rating);
+    expect(fieldsOf(conversations)).not.toContain(ConversationsField.InsightTopics);
+    expect(fieldsOf(insights)).toEqual([ConversationsField.InsightTopics]);
+    expect(fieldsOf(feedback)).toEqual([ConversationColumn.Rating]);
   });
 
   test('labels the groups and their tooltips from i18n', () => {
@@ -203,26 +215,28 @@ describe('ConversationsList :: columns', () => {
     });
   });
 
-  test('offers a schema-driven column, hidden, inside the conversations group', () => {
+  // A field the entity reports but nobody designed a column for gets no column: a header taken from a
+  // display name asserts a meaning no one checked, which is how a column headed "Model" came to hold the
+  // evaluator's own deployment.
+  test('generates no column for a reported field the curated set does not read', () => {
     render(
       <ConversationsList
         datasource={datasource}
         onGridReady={onGridReady}
         isColumnsPanelOpen={false}
         onToggleColumnsPanel={vi.fn()}
-        schemaFields={[{ name: 'success_count', type: AnalyticsFieldType.Integer, source: 'conversations' }]}
+        schemaFields={[
+          ...ALL_FIELDS,
+          { name: 'success_count', type: AnalyticsFieldType.Integer, source: 'conversations' },
+          { name: 'conversation_insights.model', type: AnalyticsFieldType.String, source: 'model' },
+        ]}
       />,
     );
 
-    const [conversations] = captured.columnDefs ?? [];
-    const added = (conversations.children as ColDef[]).find((column) => column.field === 'success_count');
+    const fields = leafColumns().map((column) => column.field);
 
-    expect(added).toMatchObject({ hide: true });
-  });
-
-  test('offers nothing extra when the schema reports only the fields the curated columns read', () => {
-    renderList();
-
+    expect(fields).not.toContain('success_count');
+    expect(fields).not.toContain('conversation_insights.model');
     expect(leafColumns()).toHaveLength(CURATED_COLUMN_COUNT);
   });
 

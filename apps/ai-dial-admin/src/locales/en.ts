@@ -2634,33 +2634,26 @@ export default {
   ConversationsTrace: {
     Title: 'Conversations',
     Conversation: 'Conversation',
+    ConversationHint:
+      'The conversation id, with the title an evaluation wrote for it above. A title is written from a size-capped copy of the conversation, so a long one may describe only part of it. A conversation the evaluation has not reached shows no title.',
     Project: 'Project',
     NoProject: 'No project',
+    NoTitle: 'Untitled conversation',
     Turns: 'Turns',
     TurnsHint: 'Turns recorded for this conversation, one per request.',
     Activity: 'Activity',
     Tokens: 'Tokens',
     Cost: 'Cost',
-    Duration: 'Duration',
     DurationHint:
       "The conversation's hop durations added up. A hop includes the hops it called, so a conversation whose turns branch reads longer than the time it actually took.",
+    AvgDurationHint:
+      "Averaged over the conversation's hops, not its turns, so a turn that fanned out into several hops pulls the figure toward the length of one hop rather than one turn.",
     Deployments: 'Deployments',
     DeploymentsHint:
       'Every deployment that handled a hop of this conversation, as recorded: models alongside routers, applications, toolsets and embeddings. Which of them is a model is not recorded, so none is filtered out.',
-    Sentiment: 'Sentiment',
-    SentimentScore: 'Sentiment score',
-    Topic: 'Topic',
     Topics: 'Topics',
-    Language: 'Language',
-    ResolutionStatus: 'Resolution status',
-    InsightHint:
-      'Derived by an evaluation of this conversation, not recorded by DIAL. Empty means the conversation has not been evaluated.',
-    CacheCreationTokens: 'Cache creation tokens',
-    CachedPromptTokens: 'Cached prompt tokens',
-    ReasoningTokens: 'Reasoning tokens',
-    ChainCost: 'Chain cost',
-    ChainCostHint:
-      'Cost summed top-down, from the hops that start a chain. Where present it agrees with Cost; it is empty for a conversation whose chains carry no conversation id, so Cost remains the cost of record.',
+    TopicsHint:
+      'Themes an evaluation identified in this conversation, not recorded by DIAL. Empty means the conversation has not been evaluated.',
     NoConversations: 'No conversations',
     ConversationsLoadFailed: 'Could not load conversations.',
     SearchPlaceholder: 'Search conversations and projects…',
@@ -2669,12 +2662,15 @@ export default {
     FeedbackPositive: 'Positive feedback',
     FeedbackNegative: 'Negative feedback',
     FeedbackRated: 'Rated',
-    ProvenanceConversations: 'conversations',
+    ProvenanceConversations: 'Conversation',
     ProvenanceConversationsHint:
-      'Read from the conversations table, one row per conversation, refreshed periodically from dial_usage_log.',
-    ProvenanceFeedback: 'rate_analytics',
+      'One row per conversation, refreshed periodically from the request log. Every conversation carries these values — without them the row would not exist.',
+    ProvenanceInsights: 'Conversation insights',
+    ProvenanceInsightsHint:
+      'Computed by a separate evaluation run rather than recorded by DIAL. These values may be absent for any conversation, and absence means it has not been evaluated yet.',
+    ProvenanceFeedback: 'Ratings',
     ProvenanceFeedbackHint:
-      'Ratings from rate_analytics, resolved by a separate query for the conversations on this page and counted only within the selected period.',
+      'Resolved by a separate query for the conversations on this page, and counted only within the selected period.',
     Rating: 'Rating',
     ComposedOver: 'Data from',
     SummaryConversations: 'Conversations',
@@ -2684,7 +2680,8 @@ export default {
     SummaryResultHint: 'Covers every conversation matching the current filters, not only the rows loaded.',
     SummaryLoadedHint: 'Covers the conversations loaded so far. Scroll to load more.',
     SummaryLoadedScope: 'Loaded so far',
-    SchemaUnavailableNotice: 'Additional columns are unavailable: the conversations schema could not be read.',
+    SchemaUnavailableNotice:
+      'The conversations schema could not be read, so the columns that depend on it were dropped: conversations show no title and no topics.',
     FeedbackCappedNotice:
       'Showing only the most recently rated conversations. More may carry this feedback than are listed.',
     SummaryUnavailableHint: 'Could not be loaded.',
@@ -2694,8 +2691,7 @@ export default {
     DetailTurnsLoadFailed: 'Could not load the turns for this conversation.',
     DetailNotRecorded: 'Not recorded',
     DetailEmptyValue: 'Empty',
-    DetailCopyId: 'Copy conversation id',
-    DetailTitleField: 'Title',
+    DetailId: 'Id',
     DetailDuration: 'Duration',
     DetailLastActivity: 'Last activity',
     DetailMessages: 'Messages',
@@ -2750,6 +2746,8 @@ export default {
     DetailAvgDuration: 'Avg duration',
     DetailSampleMessages:
       'Sample messages. Real message content is not read from the usage log; the turn, token and cost figures below are real.',
+    DetailTitleTruncated:
+      'This title was written from part of the conversation — its content exceeded the size the evaluation reads.',
     DetailTurns: 'Turns',
     DetailTurnsTruncated: 'Showing {loaded} of {total} turns. This conversation is too long to display in full.',
   },

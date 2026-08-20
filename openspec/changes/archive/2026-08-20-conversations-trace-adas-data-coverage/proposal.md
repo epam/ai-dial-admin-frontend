@@ -9,12 +9,27 @@ entity exists that does server-side what `buildConversationTurnsQuery` currently
 columns only as unlabelled hidden columns, and the page still identifies a conversation by `chat_id`
 while a human-readable title sits unread in the schema.
 
+**Amended 2026-08-20.** The change as first built reached those fields two ways: a curated column written in
+code, and a schema-derived column generated from whatever the entity reports. The generic path produces
+actively misleading columns. `conversation_insights.model` is the evaluator's own deployment, its
+`display_name` is "Model", and the catalog renders a column headed **Model** holding it — every row of
+2026-08-17 reading `gemini-2.5-flash-lite` because one evaluator produced all 137 insights that day, beside a
+`deployments` array holding `fw.deepseek-v4-flash-0731`, which is what actually served the conversation. It
+never is the conversation's model. `chain_price_total` reads as an alternative cost where it is really a
+coverage gap; `sentiment_score` and `topic` restate `sentiment` and `topics`. So the curated set becomes the
+whole set: a field the schema does not report simply has no column. The cost is accepted deliberately — a new
+rollup field no longer appears without a frontend release, and an undesigned column that misleads is worse
+than no column.
+
 ## What Changes
 
 Detail page (`/conversations-trace/[id]`):
 
-- Header **Title** reads `conversation_insights.title`. The insight row can be absent or `truncated`,
-  so the value degrades to the conversation id rather than to a blank or an em-dash.
+- Header **Title** reads `conversation_insights.title` and becomes the view's `<h1>`; the id moves into the
+  meta row beside the project, turn count, span and last activity, keeping its copy control. An untitled
+  conversation shows the unavailable marker as the heading, carrying an accessible name — a heading whose
+  only text is a dash names nothing for a screen reader. `truncated` is stated per conversation here, where
+  there is room to explain it.
 - Header **Deployments** reads the rollup's `deployments` as recorded. It was first built as a *Model*
   field narrowed by the existing `narrowToModels` helper, matching the grid's Models column; review
   measured that narrowing against `turns.models` on dev and it disagreed in both directions — keeping
@@ -39,18 +54,32 @@ Detail page (`/conversations-trace/[id]`):
 
 List page (`/conversations-trace`):
 
-- Curated columns for `conversation_insights.title`, `sentiment`, `sentiment_score`, `topic`, `topics`,
-  `language` and `resolution_status`. They reach the grid today only as schema-derived hidden columns
-  with the raw field name as a header. Title becomes a first-class identity column beside `chat_id` and
-  is visible by default; the rest stay hidden by default, as the existing default-visible contract
-  requires.
-- New `ConversationsField` members and curated columns for `cache_creation_tokens`,
-  `cached_prompt_tokens`, `reasoning_tokens` and `chain_price_total`, all hidden by default.
-  `chain_price_total` is NULL wherever no turn has a chain-starting hop carrying a chat id, so
-  `total_price` stays the cost column and the new one is labelled as the top-down figure it is.
-- Projection follows visibility for curated field-backed columns. Today `visibleFields` is derived only
-  from the schema-offered set, so a curated column hidden by default would render blank when unhidden —
-  promoting the insight fields into the curated set requires closing that gap in the same change.
+- **The schema-derived catalog is removed.** The curated set is the whole set. A field the schema does not
+  report has no column; a field it reports but nobody designed a column for has no column either.
+- **Ten columns, six visible.** Conversation (`chat_id` + `conversation_insights.title` as one identity
+  cell), Project, User, Activity and Cost visible, plus Rating; Turns, Tokens, Deployments and Topics
+  hidden by default.
+- **Fourteen fields leave the curated set**: `duration_ms`; the insight `sentiment`, `sentiment_score`,
+  `topic`, `language`, `resolution_status`, `model`, `evaluator_version`, `enriched_at`, `group_version`;
+  `cache_creation_tokens`, `cached_prompt_tokens`, `reasoning_tokens`; `chain_price_total`. `sentiment` and
+  `resolution_status` go because their value vocabulary is declared in the evaluator's `response_schema` on
+  the ADAS side and `describe_entity` reports only `type: "string"` — a usable filter would mean a second
+  copy of the enum in the frontend, drifting silently when the evaluator is re-versioned. Both stay
+  reachable in Query Builder.
+- **Title and id merge into one identity column.** `TitleCellRenderer` is deleted; the conversation cell
+  renders the title above the id. `conversationTitle` returns `string | null` and no longer falls back to
+  the id — substituting it printed the id twice in one cell and read as though the conversation were named
+  after its own hash. An untitled conversation shows the unavailable marker on the first line only.
+- **Origins are named readably, in three real column groups**: Conversation (the rollup), Conversation
+  insights (the enrichment), Ratings (the feedback source). `ProvenanceConversations: 'conversations'` and
+  `ProvenanceFeedback: 'rate_analytics'` stop being raw table identifiers. `marryChildren` forces columns of
+  one origin to be adjacent, and the resulting column order is accepted rather than worked around with a
+  custom columns panel.
+- **Topics renders as chips.** The stored value is a string whose separator is inconsistent in real data
+  (`security, code review, validation` alongside `capabilities,error`), so it is split on `,`, trimmed and
+  emptied-out before rendering through `TagsCellRenderer`. Unrecognised values render as-is.
+- Projection follows visibility for curated field-backed columns, and the identity column's enrichment
+  fields are projected unconditionally because that column cannot be hidden.
 
 Both pages (added 2026-08-18, after browser verification):
 
@@ -63,8 +92,8 @@ Both pages (added 2026-08-18, after browser verification):
   fields. The select is now intersected with the entity schema the view already fetches, so a field the
   instance does not expose is never requested and the rest of the page renders.
 - A curated column whose field the instance does not report is **not rendered at all**, so an operator
-  cannot enable a column that could never fill, and the Title column cannot degrade into a duplicate of
-  the conversation id for every row.
+  cannot enable a column that could never fill. After the 2026-08-20 amendment this is the only
+  schema-driven column behaviour left, and Topics is the only column it can drop.
 - A field absent from the fetched payload renders as **unavailable** rather than as empty, which is what
   the view's existing three-state model already means.
 - The detail route gains a schema read. It is server-side, like the list route's, and only the
@@ -72,6 +101,17 @@ Both pages (added 2026-08-18, after browser verification):
 
 ## Non-goals
 
+- **A column filter on Activity.** Time is a toolbar concern. The period control already predicates on
+  `last_request_time`, and the grid requirement already forbids a second control over the same dimension.
+  It would also need new infrastructure the presets do not cover: AG Grid's date filter emits a date string
+  and the service rejects a timestamp literal that is not epoch millis.
+- **A copy control in the identity cell.** It would put a focusable node in every row of an infinite grid.
+  The full id stays reachable through `DialEllipsisTooltip`, and the detail page one click away has copy.
+- **Clickable topic chips.** Display and tooltip only; a chip that filters is a separate interaction
+  decision.
+- **A per-row truncation marker in the grid.** 1235 of 1432 insight rows are truncated — 86%. A marker
+  firing on six rows in seven is background, not signal, so the grid states it once and the detail page
+  states it per conversation.
 - **Message transcript.** `mockConversationTranscript` stays exactly as it is, disclosure requirement
   included. ADAS exposes metrics and insights, not message bodies, so nothing here closes it; whether to
   drop the block or read it from DIAL Core is a separate decision.
@@ -94,9 +134,11 @@ Both pages (added 2026-08-18, after browser verification):
 - **The `duration_ms` / `avg_duration_ms` defect.** Parked by decision on 2026-08-18. The backend notes
   record both as wrong wherever a turn fans out into a chain — `duration_ms` sums hop durations that
   already contain their nested hops, and `avg_duration_ms` averages per hop rather than per turn; 46% of
-  the conversations carrying duration data read wrong. The grid's Duration column already discloses the
-  hop-sum behaviour in its header tooltip; the Usage panel states both figures unqualified and continues
-  to. Fixing it properly needs an **aggregate** query over `turns` grouped by `chat_id` — not the page's
+  the conversations carrying duration data read wrong. The defect is still parked — but the Duration **column**
+  is removed by this amendment, and its header tooltip was the only place the behaviour was disclosed to a
+  reader. The caveat therefore moves to the Usage panel, which states both figures and until now stated them
+  unqualified. Removing the column rather than hiding it is deliberate: a hidden column is one click from
+  showing a wrong number with no warning attached. Fixing it properly needs an **aggregate** query over `turns` grouped by `chat_id` — not the page's
   bounded turn list, which would report the first 200 turns of a 911-turn conversation as its total, the
   error the header's turn-count rule already forbids. Separate change.
 - **Provisioning the missing catalog objects.** `turns` and the `conversation_insights` enrichment exist
@@ -119,7 +161,7 @@ Region is gone, and the successful-request label is restated.
 **Not yet verified anywhere** — these scenarios stay open until a provisioned instance is available:
 
 - an insight title rendering in the header or the grid;
-- any of the six insight columns appearing and carrying values;
+- the Topics column appearing and carrying values;
 - the timeline reading a `turns` row, its ordering by `first_request_time`, the clipped-list disclosure, and
   the trace drawer opening from a rollup-sourced turn.
 
@@ -152,7 +194,7 @@ None. Every requirement affected already lives in the Analytics master spec.
 
 ### Modified Capabilities
 
-- `analytics`: seven requirements change —
+- `analytics`: as amended 2026-08-20, six requirements change, two are removed and one is added —
   - *Conversation detail header identifies the conversation and states its turn count* — Title and Model
     become real values with a stated degradation rule, replacing "surfaced as unavailable".
   - *Conversation detail side panels and their provenance* — Trace becomes a real field, Region is gone,
@@ -163,11 +205,30 @@ None. Every requirement affected already lives in the Analytics master spec.
     column and the insight columns explicitly.
   - *Conversation list query over the conversations entity* — the curated select grows, and projection
     follows the visibility of curated field-backed columns.
-  - *Conversation grid columns are offered from the entity schema* — the curated set grows from nine
-    columns to twenty; the default-visible set gains Title only.
+  - *Conversations grid with server-side ordering and per-column filtering* — the visible column set
+    becomes six plus Rating, and the sort/filter table gains Deployments and Topics.
+  - *Conversation cells render composed values, not raw aggregates* — the identity cell composes the title
+    over the id, and Topics composes a delimited string into chips.
   - *Unavailable conversation values render an explicit placeholder* — the three-state model gains the
-    insight case: an absent insight row degrades to the conversation id, and Region is no longer an
-    example of an unavailable field because it no longer exists.
+    insight case, and an absent insight title degrades to the unavailable marker rather than to the
+    conversation id, because the id is already on the cell's second line.
+  - *Conversation detail side panels and their provenance* — a panel field may carry a keyboard-reachable
+    caveat, and the duration caveat lands there; the two registers of provenance are stated.
+
+  Removed:
+
+  - *Conversation grid columns are offered from the entity schema* — the capability is deleted, not
+    narrowed. Four of its rulings are rehomed rather than dropped: dotted names are read whole, a curated
+    column whose field the schema does not report is not rendered, enrichment-vs-source classification
+    decides re-query cost, and a failed schema fetch degrades to the required core with a notice.
+  - *Conversations grid states how long each conversation took* — the Duration column is removed. The
+    requirement's own closing paragraph is the normative statement of the defect, so it is re-stated on the
+    Usage panel rather than lost with the column.
+
+  Added:
+
+  - *Conversation grid columns are a fixed curated set gated by the entity schema* — the ten columns, their
+    origins, their sort and filter affordances, and what each empty cell means.
 
 ## Impact
 
@@ -183,7 +244,16 @@ Code (all under `apps/ai-dial-admin/`):
 - `src/utils/analytics/conversation-column-catalog.ts` and
   `src/components/Analytics/ConversationsTrace/use-conversations.ts` — projectable set includes curated
   field-backed columns.
-- `src/constants/grid-columns/grid-columns.tsx` — eleven new curated column definitions.
+- `src/constants/grid-columns/grid-columns.tsx` — the curated set is trimmed to ten columns and assigned
+  to three provenance groups; `buildConversationColumnCatalog` is no longer called.
+- `src/utils/analytics/conversation-column-catalog.ts` — `isOfferable`, `offerableSchemaFields`,
+  `typeColumn`, `toCatalogColumn` and `buildConversationColumnCatalog` are deleted. `NON_SCALAR_FIELD_TYPES`,
+  `NUMERIC_FIELD_TYPES`, `DATE_FIELD_TYPES` and `ANALYTICS_FIELD_QUERY_VALUE_TYPE` lose their last consumer.
+  `ColumnProvenance.None` and `PROVENANCE_MARKER_CLASS` are dead already and go with them.
+- `src/components/Analytics/ConversationsTrace/List/TopicsCellRenderer.tsx` — new; `TitleCellRenderer.tsx`
+  is deleted.
+- `src/components/Analytics/ConversationsTrace/Detail/ConversationFieldRows.tsx` — a panel field's caveat
+  renders as a focusable control carrying the caveat as its accessible name.
 - `src/components/Analytics/ConversationsTrace/Detail/ConversationDetailHeader.tsx` — Title and Model.
 - `src/components/Analytics/ConversationsTrace/List/ConversationsList.tsx` — dotted field names need
   AG Grid's field-dot-notation suppressed, or the flat `conversation_insights.title` key reads as a

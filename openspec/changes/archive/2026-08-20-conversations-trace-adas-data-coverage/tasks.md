@@ -159,13 +159,87 @@ field they read.
       label is restated, the Deployments column and header entry name the field and render it unnarrowed, and
       the timeline reports a failed turn read. Conclusion supportable from this run: "safe to deploy against a
       non-provisioned instance", not "works". See proposal — Verification status.
-- [ ] 8.2 BLOCKED on provisioning: re-run against an instance carrying the `conversation_insights` enrichment
-      and the `turns` rollup, covering the scenarios no degradation path can show — an insight title
-      rendering in the header and the grid, the six insight columns appearing with values, and the timeline
-      reading `turns` rows in `first_request_time` order with its clipped-list disclosure and a working trace
-      drawer.
+- [x] 8.2 Run the `spec-browser-verify` skill against an instance carrying the `conversation_insights`
+      enrichment and the `turns` rollup, scoped to the scenarios no degradation path can show. It builds a
+      VerificationRequest from this change's scenarios and spawns `spec-verification-gate` to drive the local
+      app through the Playwright MCP; resolve every `fail` verdict before the change is complete. Scenarios in
+      scope, as amended 2026-08-20: the identity cell states a title over an id and the marker over an id
+      where the enrichment has not reached; the detail heading is the title, with the id and its copy control
+      in the meta row, and an untitled conversation's heading carries an accessible name; a truncated title
+      says so on the detail view; the three origin groups render with readable names and the topics column
+      sits under the insight group; Topics renders chips from an unevenly delimited string; the identity
+      column offers no way to hide it; hiding a filtered Topics column clears the filter and re-queries; each
+      duration figure carries a keyboard-reachable caveat; and the timeline reads `turns` rows in
+      `first_request_time` order with its clipped-list disclosure and a working trace drawer. The dev instance
+      carries both catalog objects, so this is no longer blocked on provisioning.
 
 ## 9. Quality gate
 
 - [x] 9.1 Run `npm run lint`, `npm run format`, and `npm run test` from the repo root; fix everything they
       report.
+
+## 10. Amendment (2026-08-20): fixed column set, named origins, designed rendering
+
+- [x] 10.1 Merge the grid's Conversation and Title columns into one identity column and lead the detail header
+      with the title: delete `List/TitleCellRenderer.tsx`, render two lines in `ConversationCellRenderer`,
+      make `conversationTitle` return `string | null` with no id fallback, move the id into the header's meta
+      row with its copy control, and add `requiredEnrichment` to `ConversationProjectableFields` plus
+      `IDENTITY_ENRICHMENT_FIELDS` so the identity column's enrichment field is projected unconditionally.
+      *(Implemented ahead of this task list; it is part of this change.)*
+- [x] 10.2 Delete the schema-derived catalog from `src/utils/analytics/conversation-column-catalog.ts` —
+      `isOfferable`, `offerableSchemaFields`, `typeColumn`, `toCatalogColumn`,
+      `buildConversationColumnCatalog` — and reduce `projectableSchemaFields` to the curated fields the schema
+      reports (design §15). Point `use-conversations.ts` at `CONVERSATIONS_TRACE_COLUMNS(t, schemaFields)`
+      for `sortableFields` / `filterableFields`, and collapse `catalogValueTypes` to
+      `CONVERSATION_FIELD_VALUE_TYPE` (design §18). Delete what this orphans:
+      `NON_SCALAR_FIELD_TYPES`, `NUMERIC_FIELD_TYPES`, `DATE_FIELD_TYPES`,
+      `ANALYTICS_FIELD_QUERY_VALUE_TYPE`, `ColumnProvenance.None` and `PROVENANCE_MARKER_CLASS`.
+- [x] 10.3 Trim `BASE_CONVERSATIONS_TRACE_COLUMNS` in `src/constants/grid-columns/grid-columns.tsx` to the ten
+      columns of the spec's table: delete `CONVERSATION_INSIGHT_COLUMNS` and `CONVERSATION_USAGE_COLUMNS`
+      except Topics, delete the Duration column, and set Turns, Tokens and Deployments to `hide: true`. Add
+      `lockVisible` to the identity column. Drop the unattributed-column catch-all from
+      `CONVERSATIONS_TRACE_COLUMN_GROUPS`.
+- [x] 10.4 Name the origins: add the insights member to `ColumnProvenance`, give
+      `CONVERSATION_PROVENANCE_GROUPS` its third group, and replace `ProvenanceConversations` /
+      `ProvenanceFeedback` with readable names plus the three group tooltips in `src/constants/i18n.ts` and
+      `src/locales/en.ts`. Add the group's colour to `PROVENANCE_TEXT_CLASS` and check the token's contrast
+      against `bg-layer-1` and `bg-layer-4` (design §17). Leave `CONVERSATION_SOURCE_ENTITIES` alone — the
+      provenance line names entities the page queries, and an enrichment is not one.
+- [x] 10.5 Trim `SORTABLE_CONVERSATION_FIELDS` to the seven orderable fields and
+      `FILTERABLE_CONVERSATION_FIELDS` to the eight filterable ones, keeping
+      `conversation_insights.topics` in the second and `last_request_time` out of it, and prune
+      `CONVERSATION_FIELD_VALUE_TYPE` and `OPTIONAL_CURATED_COLUMN_FIELDS` to the fields the curated set still
+      reads.
+- [x] 10.6 Add `List/TopicsCellRenderer.tsx`: split the stored string on `,`, trim, drop empties, cap the
+      rendered terms and pass the whole list as `allItems`, wrapping `TagsCellRenderer` in the
+      `role="group"` + `aria-label` shape `ModelsCellRenderer` established.
+- [x] 10.7 State the identity column's disclosure — the title comes from the insight enrichment, and a title
+      may describe only part of the conversation — as its `headerTooltip`, and reword
+      `SchemaUnavailableNotice` off "additional columns" to name what was dropped (design §20).
+- [x] 10.8 Add `ConversationsField.InsightTruncated` with a `Boolean` value type and membership in
+      `OPTIONAL_DETAIL_SELECT_FIELDS` only, and state the truncation for the conversation on screen in
+      `Detail/ConversationDetailHeader.tsx`. The list query must not name it.
+- [x] 10.9 Add `hintKey` to `ConversationFieldDefinition`, carry it through `resolveConversationField` into
+      `ResolvedConversationField`, and render it in `Detail/ConversationFieldRows.tsx` as a focusable control
+      whose accessible name is the caveat, with an `aria-hidden` icon. Bind the retained `DurationHint` to the
+      Usage panel's Duration entry and a new hint to Avg duration (design §21).
+- [x] 10.10 Clear a column's filter when it is hidden, in the `columnVisible` handler in
+      `use-conversations.ts`, so a predicate cannot outlive the column that set it (design §22).
+- [x] 10.11 Update and extend the unit tests for everything above:
+      `src/constants/grid-columns/tests/conversations-trace-columns.spec.ts` (the ten columns and their
+      defaults, the identity column is not hideable, Activity offers no filter, Topics offers a text filter
+      and no sort, every column is attributed to exactly one origin),
+      `src/utils/analytics/tests/conversation-column-catalog.spec.ts` (the projection is the curated fields
+      the schema reports; the allow-lists still drop a column the schema does not report),
+      `src/components/Analytics/ConversationsTrace/tests/` (the topics renderer's delimiter handling and
+      unrecognised terms, the truncation statement, the duration caveats' accessible names, a filter cleared
+      on hide), and the query specs where the trimmed field lists change a select.
+- [x] 10.12 Re-run `npm run lint`, `npm run format` and `npm run test` from the repo root; fix everything they
+      report.
+
+  **Verified 2026-08-20** against an instance carrying `conversation_insights` and `turns`, with the period
+  narrowed to 2026-08-17 (full insight coverage). All fifteen scenarios pass. Two findings, neither now
+  outstanding: a pre-existing saved column state under `gridColumnsStateanalytics/conversations` masked the
+  new hidden-by-default columns until cleared — anyone who used this page before the change sees their old
+  layout, not the new defaults; and `lockVisible` alone did not stop the identity column being hidden,
+  because this repo renders its own columns panel which reads only `suppressColumnsToolPanel` (now set).
