@@ -35,6 +35,7 @@ const STATUS_ROWS = {
   ],
 };
 const AVG_ROWS = { rows: [{ avg_duration_ms: 199.6 }] };
+const AVG_METRIC_EVAL_ROWS = { rows: [{ avg_metric_eval_duration_ms: 291123.6 }] };
 
 const mockQueries = () => {
   executeStructuredQueryMock.mockImplementation((query: StructuredQuery) => {
@@ -44,6 +45,9 @@ const mockQueries = () => {
     const alias = query.select?.[0]?.as;
     if (alias === 'avg_duration_ms') {
       return Promise.resolve(AVG_ROWS);
+    }
+    if (alias === 'avg_metric_eval_duration_ms') {
+      return Promise.resolve(AVG_METRIC_EVAL_ROWS);
     }
     return Promise.resolve({ rows: [] });
   });
@@ -101,10 +105,18 @@ describe('Runs Summary :: Analytics', () => {
     expect(await screen.findByText('0.2 Runs.Seconds')).toBeInTheDocument();
   });
 
+  test('renders average metric-eval latency card in seconds', async () => {
+    mockQueries();
+    render(<Analytics run={{ id: 'run-1' } as any} />);
+
+    expect(await screen.findByText('Runs.AvgMetricEvalLatency')).toBeInTheDocument();
+    expect(screen.getByText('291.1 Runs.Seconds')).toBeInTheDocument();
+  });
+
   test('marks cards as error when the run has no data', async () => {
     executeStructuredQueryMock.mockResolvedValue({ rows: [] });
     render(<Analytics run={{ id: 'run-1' } as any} overallScore={null} />);
 
-    await waitFor(() => expect(screen.getAllByText('error-tag').length).toBeGreaterThanOrEqual(2));
+    await waitFor(() => expect(screen.getAllByText('error-tag')).toHaveLength(3));
   });
 });

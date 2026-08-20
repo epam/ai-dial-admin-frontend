@@ -2175,6 +2175,7 @@ export default {
     SelectMetricToSeeDistribution: 'Select a metric to see its score distribution.',
     TestCasesPassed: 'Test Cases Passed Threshold',
     AvgTestCaseRunTime: 'Avg Test Case Run Time',
+    AvgMetricEvalLatency: 'Avg Metric-Eval Latency',
     AvgPerTestCase: 'avg per test case',
     Pass: 'pass',
     Fail: 'fail',
