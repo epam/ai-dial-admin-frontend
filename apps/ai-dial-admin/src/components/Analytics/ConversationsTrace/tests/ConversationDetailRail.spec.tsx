@@ -34,6 +34,7 @@ const CONVERSATION: ConversationDetailRow = {
   duration_ms: 0,
   avg_duration_ms: 0,
   deployments: ['anthropic_switchyard-model', 'anthropic.claude-opus-4-8'],
+  traces: ['0a3f1d9c8b7e6a5f', '4c81be02d5aa77e1'],
 };
 
 const FEEDBACK: ConversationFeedbackRow[] = [
@@ -86,13 +87,39 @@ describe('ConversationDetailRail', () => {
     expect(screen.getByText('$10.8')).toBeInTheDocument();
   });
 
-  test('the metadata panel marks trace and region unavailable', () => {
+  test('the metadata panel states the trace ids the rollup carries', () => {
     setup();
 
-    for (const key of [ConversationsTraceI18nKey.DetailTrace, ConversationsTraceI18nKey.DetailRegion]) {
-      const label = screen.getByText(key);
-      expect(label.parentElement).toHaveTextContent(UNAVAILABLE_VALUE);
-    }
+    const label = screen.getByText(ConversationsTraceI18nKey.DetailTrace);
+
+    expect(label.parentElement).toHaveTextContent('0a3f1d9c8b7e6a5f, 4c81be02d5aa77e1');
+    expect(label.parentElement).not.toHaveTextContent(UNAVAILABLE_VALUE);
+  });
+
+  // The trace array is ordered by id rather than by turn, so numbering the entries would assert a sequence
+  // the rollup does not record — and turn_count, not this array, is the count of record.
+  test('the trace ids carry no turn numbering and no count', () => {
+    setup();
+
+    const row = screen.getByText(ConversationsTraceI18nKey.DetailTrace).parentElement;
+
+    expect(row).not.toHaveTextContent(ConversationsTraceI18nKey.DetailTurn);
+    expect(row?.textContent).not.toMatch(/\b2 trace/i);
+  });
+
+  // DIAL records no region at all, so the field is absent rather than permanently unavailable.
+  test('the metadata panel presents no region field', () => {
+    setup();
+
+    expect(screen.queryByText('ConversationsTrace.DetailRegion')).toBeNull();
+  });
+
+  // success_count counts a turn in which at least one hop succeeded, which is weaker than "the turn
+  // succeeded" — the label has to say which.
+  test('the successful-request field states what it counts', () => {
+    setup();
+
+    expect(screen.getByText(ConversationsTraceI18nKey.DetailSuccessful)).toBeTruthy();
   });
 
   // The rollup carries the deployments, so marking the row unavailable would misreport data already fetched.
@@ -190,6 +217,16 @@ describe('ConversationTimeline', () => {
     renderTimeline();
 
     expect(screen.getByText(ConversationsTraceI18nKey.DetailMessagesUnavailable)).toBeInTheDocument();
+  });
+
+  // The rollup is refreshed periodically while the hop log is written live, so a conversation younger than
+  // the last refresh has a turn count but no turns yet. Nothing failed, so the empty presentation stands
+  // rather than the outage one.
+  test('renders the empty presentation for a conversation the rollup has not caught up with', () => {
+    renderTimeline({ turns: [], turnCount: 4 });
+
+    expect(screen.getByText(ConversationsTraceI18nKey.DetailMessagesUnavailable)).toBeInTheDocument();
+    expect(screen.queryByText(ConversationsTraceI18nKey.DetailTurnsLoadFailed)).not.toBeInTheDocument();
   });
 
   // A failed turns query also yields no messages, and reporting that as "not recorded" would present an

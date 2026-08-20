@@ -70,6 +70,9 @@ const ConversationsList: FC<Props> = ({
           datasource,
           // The view owns the empty state; AG Grid's untranslated built-in overlay would sit on top of it.
           suppressNoRowsOverlay: true,
+          // An enrichment column's exposed name carries a dot (`conversation_insights.title`) and the rows
+          // are flat maps keyed by that whole name, so the default path interpretation finds nothing.
+          suppressFieldDotNotation: true,
           rowHeight: CONVERSATIONS_ROW_HEIGHT,
           headerHeight: CONVERSATIONS_HEADER_HEIGHT,
           groupHeaderHeight: CONVERSATIONS_GROUP_HEADER_HEIGHT,

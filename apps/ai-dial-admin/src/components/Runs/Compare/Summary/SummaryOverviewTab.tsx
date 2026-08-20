@@ -95,6 +95,7 @@ const SummaryOverviewTab: FC<Props> = ({
           comparedRunName={comparedRunName}
           selectedStatistic={summaryState.selectedStatistic}
           onSelectStatistic={onSelectStatistic}
+          onSelectMetric={onSelectDistributionMetric}
         />
         <DistributionSection
           primaryRunId={primaryRunId}

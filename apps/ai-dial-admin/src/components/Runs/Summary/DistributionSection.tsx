@@ -33,7 +33,7 @@ interface Props {
   onSelectMetric: (name: string | null) => void;
 }
 
-const formatValue = (value: number): string => String(Math.round(value * 100) / 100);
+const formatValue = (value: number): string => value.toFixed(3);
 
 const DistributionSection: FC<Props> = ({ run, metricOptions, metricScores, selectedMetricName, onSelectMetric }) => {
   const t = useI18n();

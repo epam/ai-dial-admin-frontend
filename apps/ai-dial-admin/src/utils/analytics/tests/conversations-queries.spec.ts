@@ -25,6 +25,7 @@ import {
   QuerySortNulls,
   QueryValueExpr,
   QueryValueType,
+  StructuredQuery,
 } from '@/src/models/analytics/query';
 import { TimeRange } from '@/src/models/time-range';
 import {
@@ -51,6 +52,9 @@ const fieldName = (node: QueryPredicate): string | undefined => (node.args?.[0] 
 const buildList = (overrides: Partial<Parameters<typeof buildConversationListQuery>[0]> = {}) =>
   buildConversationListQuery({ range: RANGE, ...PAGE, ...overrides });
 
+const selectNames = (query: StructuredQuery): string[] =>
+  (query.select as QueryOutputColumn[]).map((column) => (column.expr as QueryFieldExpr).name);
+
 describe('buildConversationListQuery :: shape', () => {
   test('reads the materialized conversations entity in row mode', () => {
     const query = buildList();
@@ -69,7 +73,7 @@ describe('buildConversationListQuery :: shape', () => {
   });
 
   test('selects exactly the fields the grid renders, by their entity names', () => {
-    const names = (buildList().select as QueryOutputColumn[]).map((column) => (column.expr as QueryFieldExpr).name);
+    const names = selectNames(buildList());
 
     expect(names).toEqual([
       ConversationsField.ChatId,
@@ -83,6 +87,33 @@ describe('buildConversationListQuery :: shape', () => {
       ConversationsField.DurationMs,
       ConversationsField.Deployments,
     ]);
+  });
+
+  // The title is an enrichment column, so it reaches the select the way every enrichment field does — while
+  // its column is visible — and by its qualified flat name, sent whole rather than as a path.
+  test('names the title by its qualified flat name while its column is visible', () => {
+    const names = selectNames(buildList({ visibleEnrichmentFields: [ConversationsField.InsightTitle] }));
+
+    expect(names).toContain('conversation_insights.title');
+  });
+
+  test('leaves the hidden curated enrichment columns out of the default projection', () => {
+    const names = selectNames(buildList());
+
+    for (const hidden of [
+      ConversationsField.InsightTitle,
+      ConversationsField.InsightSentiment,
+      ConversationsField.InsightTopic,
+      ConversationsField.Traces,
+    ]) {
+      expect(names).not.toContain(hidden);
+    }
+  });
+
+  test('projects a curated enrichment column once it is visible', () => {
+    const names = selectNames(buildList({ visibleEnrichmentFields: [ConversationsField.InsightSentiment] }));
+
+    expect(names).toContain(ConversationsField.InsightSentiment);
   });
 
   // The query language expresses no comparison over an array, so translating a predicate on one would send
@@ -101,25 +132,24 @@ describe('buildConversationListQuery :: shape', () => {
     ).toThrow(ConversationsField.Deployments);
   });
 
-  test('projects a visible schema-driven field alongside the curated ones', () => {
-    const names = (buildList({ visibleFields: ['success_count'] }).select as QueryOutputColumn[]).map(
-      (column) => (column.expr as QueryFieldExpr).name,
-    );
+  // A source field is a plain column of the table already being read, so projecting it costs one more
+  // column rather than a re-fetch when its column is revealed.
+  test('projects a source-backed field alongside the curated ones, hidden or not', () => {
+    const names = selectNames(buildList({ sourceFields: ['success_count'] }));
 
     expect(names).toContain('success_count');
     expect(names).toContain(ConversationsField.ChatId);
   });
 
-  test('omits a field whose column is hidden', () => {
-    const names = (buildList().select as QueryOutputColumn[]).map((column) => (column.expr as QueryFieldExpr).name);
+  test('projects an enrichment-backed field only while its column is visible', () => {
+    const visible = selectNames(buildList({ visibleEnrichmentFields: ['conversation_insights.topic'] }));
 
-    expect(names).not.toContain('success_count');
+    expect(visible).toContain('conversation_insights.topic');
+    expect(selectNames(buildList())).not.toContain('conversation_insights.topic');
   });
 
-  test('names a curated field once even when it is reported visible', () => {
-    const names = (buildList({ visibleFields: [ConversationsField.ChatId] }).select as QueryOutputColumn[]).map(
-      (column) => (column.expr as QueryFieldExpr).name,
-    );
+  test('names a curated field once even when it is reported as a source field', () => {
+    const names = selectNames(buildList({ sourceFields: [ConversationsField.ChatId] }));
 
     expect(names.filter((name) => name === ConversationsField.ChatId)).toHaveLength(1);
   });
@@ -128,8 +158,9 @@ describe('buildConversationListQuery :: shape', () => {
     (buildList().select as QueryOutputColumn[]).forEach((column) => expect(column.as).toBeUndefined());
   });
 
-  // dial_usage_log columns belong to a different entity and would be rejected as unknown fields.
-  test('references no column of the usage log or of an enrichment', () => {
+  // dial_usage_log columns belong to a different entity and would be rejected as unknown fields, as would a
+  // column invented by the frontend. The rollup's own enrichment columns are named, by their flat names.
+  test('references no column of the usage log and no invented one', () => {
     const serialized = JSON.stringify(buildList({ search: 'acme' }));
 
     ['request_time', 'trace_id', 'deployment', 'request_body', 'conversation_summary', 'title', 'snippet'].forEach(
@@ -361,9 +392,10 @@ describe('buildConversationListQuery :: sort, page and purity', () => {
     expect(sort?.slice(0, 2).every((item) => item.nulls === QuerySortNulls.Last)).toBe(true);
   });
 
-  // Row mode is the only mode the service populates a total for, and paging needs one.
-  test('requests the total and carries the caller offset and limit', () => {
-    expect(buildList().page).toEqual({ type: 'offset', offset: 0, limit: 100, include_total: true });
+  // The totals query resolves the same count under the same filter, and the service runs a requested
+  // total as its own statement over the whole filtered result — so asking here would scan it per page.
+  test('requests no total and carries the caller offset and limit', () => {
+    expect(buildList().page).toEqual({ type: 'offset', offset: 0, limit: 100, include_total: false });
     expect(buildList({ offset: 200, limit: 100 }).page).toMatchObject({ offset: 200, limit: 100 });
   });
 

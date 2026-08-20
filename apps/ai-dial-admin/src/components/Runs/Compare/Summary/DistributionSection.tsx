@@ -36,7 +36,7 @@ interface Props {
   comparedExcludeEvalSummaryIds?: string[];
 }
 
-const formatValue = (value: number | null): string => (value == null ? '—' : String(Math.round(value * 100) / 100));
+const formatValue = (value: number | null): string => (value == null ? '—' : value.toFixed(3));
 
 const EMPTY_EXCLUDE_EVAL_SUMMARY_IDS: string[] = [];
 

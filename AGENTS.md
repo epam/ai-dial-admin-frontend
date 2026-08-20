@@ -23,9 +23,16 @@ Things that cost time or fail silently if you don't know them:
   not inline in a spec.
 - **`console.error` / `console.warn` are silenced globally in tests**, so React warnings never surface
   in output.
-- **`.cursor/` and `.github/instructions|skills` are symlinks into `.claude/`.** Edit the `.claude`
-  file; never replace a mirror with a copy. `npm run validate:agent-docs` fails on a broken or
-  flattened link, because either one silently stops the rule loading for that tool.
+- **The `.cursor/rules` and `.github/instructions` entries are generated from `.claude/` sources** —
+  `scripts/agent-mirrors.mjs` maps each one. Edit only the `.claude` file; pre-commit regenerates and
+  stages the mirrors, `npm run sync:agent-mirrors` does it by hand, and `npm run validate:agent-docs`
+  fails on drift. Cursor gets a stub (`@` reference, no duplicated body); Copilot gets a full copy,
+  because `applyTo` only exists in `*.instructions.md` and that file type does not expand references.
+  They were symlinks until Windows clones — where git writes the link target as plain text — broke them.
+- **Skills need no mirror.** Cursor loads `.claude/skills/` as a compatibility path and Copilot reads
+  it as a default project skills location, so both see the canonical files. The `openspec-*` entries
+  under `.cursor/skills` and `.github/skills` are different — the openspec CLI generates a distinct
+  variant per tool and owns them.
 - **Analytics is one master spec** — `openspec/specs/analytics/spec.md`. Don't create per-feature
   analytics specs.
 - **Pre-commit runs lint-staged plus the agent-config validator; pre-push runs the suite.** Don't skip

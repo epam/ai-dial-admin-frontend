@@ -30,8 +30,10 @@ const Analytics: FC<Props> = ({ run, overallScore }) => {
     );
   }
 
-  const { statusCounts, avgRunTimeMs } = data;
+  const { statusCounts, avgRunTimeMs, avgMetricEvalDurationMs } = data;
   const avgSeconds = avgRunTimeMs != null ? formatAvgRunTimeSeconds(avgRunTimeMs) : null;
+  const avgMetricEvalSeconds =
+    avgMetricEvalDurationMs != null ? formatAvgRunTimeSeconds(avgMetricEvalDurationMs) : null;
 
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap">
@@ -56,6 +58,13 @@ const Analytics: FC<Props> = ({ run, overallScore }) => {
         value={avgSeconds != null ? `${avgSeconds} ${t(RunsI18nKey.Seconds)}` : undefined}
         description={t(RunsI18nKey.AvgPerTestCase)}
         error={avgSeconds == null}
+      />
+      <DialAnalyticsCard
+        className="flex-1 sm:max-w-xs"
+        title={t(RunsI18nKey.AvgMetricEvalLatency)}
+        value={avgMetricEvalSeconds != null ? `${avgMetricEvalSeconds} ${t(RunsI18nKey.Seconds)}` : undefined}
+        description={t(RunsI18nKey.AvgPerTestCase)}
+        error={avgMetricEvalSeconds == null}
       />
     </div>
   );

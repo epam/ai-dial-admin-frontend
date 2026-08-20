@@ -5,7 +5,9 @@ import {
   CONVERSATION_FILTER_QUERY_OPERATOR,
   FEEDBACK_CANDIDATE_LIMIT,
   FEEDBACK_ENTITY,
+  OPTIONAL_DETAIL_SELECT_FIELDS,
   POSITIVE_RATE_EXCLUSIVE_MIN,
+  TURNS_ENTITY,
   USAGE_LOG_ENTITY,
 } from '@/src/constants/analytics/conversations-trace';
 import {
@@ -19,6 +21,7 @@ import {
   FeedbackFilter,
   RateAnalyticsField,
   RatingDirection,
+  TurnsField,
   UsageLogField,
 } from '@/src/models/analytics/conversations-trace';
 import {
@@ -51,6 +54,7 @@ import {
   sortItem,
   value,
 } from '@/src/utils/analytics/query-build';
+import { availableSelectFields } from '@/src/utils/analytics/conversation-column-catalog';
 
 const emptyString = value(QueryValueType.String, '');
 
@@ -120,7 +124,12 @@ interface ConversationListQueryParams extends ConversationFilterParams {
   offset: number;
   limit: number;
   sort?: ConversationSortKey[];
-  visibleFields?: string[];
+  // Split by what projecting a field costs, not by whether its column is on screen: a source field is a
+  // plain column of the table already being read, so it is always projected and revealing its column costs
+  // nothing. An enrichment field pulls its enrichment's join into every page, so it is projected only while
+  // its column is visible.
+  sourceFields?: string[];
+  visibleEnrichmentFields?: string[];
 }
 
 const CURATED_SELECT_FIELDS: ConversationsField[] = [
@@ -136,30 +145,45 @@ const CURATED_SELECT_FIELDS: ConversationsField[] = [
   ConversationsField.Deployments,
 ];
 
-const conversationSelect = (visibleFields: string[] = []): string[] => {
+// Both incoming sets are resolved from the entity schema by `projectableSchemaFields`, so a field the
+// instance does not carry never reaches here. Only the single-conversation query, which enumerates a
+// frontend enum rather than the schema, has to intersect for itself.
+const conversationSelect = (sourceFields: string[] = [], visibleEnrichmentFields: string[] = []): string[] => {
   const curated = new Set<string>(CURATED_SELECT_FIELDS);
-  return [...CURATED_SELECT_FIELDS, ...visibleFields.filter((field) => !curated.has(field))];
+  return [
+    ...CURATED_SELECT_FIELDS,
+    ...sourceFields.filter((fieldName) => !curated.has(fieldName)),
+    ...visibleEnrichmentFields,
+  ];
 };
 
+// No `include_total`: the totals query resolves the same count under the same filter, and the service runs
+// a requested total as its own statement over the whole filtered result — so asking here would scan it
+// again for every page fetched.
 export const buildConversationListQuery = ({
   offset,
   limit,
   sort,
-  visibleFields,
+  sourceFields,
+  visibleEnrichmentFields,
   ...filters
 }: ConversationListQueryParams): StructuredQuery =>
   rowQuery({
     entity: CONVERSATIONS_ENTITY,
-    select: conversationSelect(visibleFields).map((fieldName) => col(field(fieldName))),
+    select: conversationSelect(sourceFields, visibleEnrichmentFields).map((fieldName) => col(field(fieldName))),
     filter: conversationFilter(filters),
     sort: conversationSort(sort),
-    page: offsetPage(offset, limit, true),
+    page: offsetPage(offset, limit),
   });
 
-export const buildConversationDetailQuery = (chatId: string): StructuredQuery =>
+export const buildConversationDetailQuery = (chatId: string, availableFields?: string[]): StructuredQuery =>
   rowQuery({
     entity: CONVERSATIONS_ENTITY,
-    select: Object.values(ConversationsField).map((fieldName) => col(field(fieldName))),
+    select: availableSelectFields(
+      Object.values(ConversationsField),
+      OPTIONAL_DETAIL_SELECT_FIELDS,
+      availableFields,
+    ).map((fieldName) => col(field(fieldName))),
     filter: eq(ConversationsField.ChatId, value(QueryValueType.String, chatId)),
     page: offsetPage(0, 1, true),
   });
@@ -177,19 +201,22 @@ export const buildConversationFeedbackQuery = (chatId: string, limit: number): S
     page: offsetPage(0, limit, true),
   });
 
+// The `turns` rollup resolves what a turn is — one row per trace, with the entry time, hop count, token
+// total, cost and wall-clock duration already computed — so this reads rows rather than grouping the hop
+// log itself. The aliases keep the rollup's columns under the names the timeline already consumes.
 export const buildConversationTurnsQuery = (chatId: string, limit: number): StructuredQuery =>
-  aggregateQuery({
-    entity: USAGE_LOG_ENTITY,
-    groupBy: [UsageLogField.TraceId],
+  rowQuery({
+    entity: TURNS_ENTITY,
     select: [
-      col(field(UsageLogField.TraceId)),
-      col(fn('min', [field(UsageLogField.RequestTime)]), ConversationTurnField.Started),
-      col(fn('count'), ConversationTurnField.Hops),
-      col(fn('sum', [field(UsageLogField.TotalTokens)]), ConversationTurnField.Tokens),
-      col(fn('sum', [field(UsageLogField.DeploymentPrice)]), ConversationTurnField.Cost),
-      col(fn('max', [field(UsageLogField.OperationDurationMs)]), ConversationTurnField.DurationMs),
+      col(field(TurnsField.TraceId)),
+      col(field(TurnsField.FirstRequestTime), ConversationTurnField.Started),
+      col(field(TurnsField.HopCount), ConversationTurnField.Hops),
+      col(field(TurnsField.TotalTokens), ConversationTurnField.Tokens),
+      col(field(TurnsField.TotalPrice), ConversationTurnField.Cost),
+      col(field(TurnsField.DurationMs), ConversationTurnField.DurationMs),
     ],
-    filter: eq(UsageLogField.ChatId, value(QueryValueType.String, chatId)),
+    filter: eq(TurnsField.ChatId, value(QueryValueType.String, chatId)),
+    // The rollup carries no turn index, so the entry time is the only ordering that rebuilds the sequence.
     sort: [sortItem(ConversationTurnField.Started, QuerySortDirection.Asc)],
     page: offsetPage(0, limit),
   });

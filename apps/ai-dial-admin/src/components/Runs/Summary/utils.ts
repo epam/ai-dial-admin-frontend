@@ -19,6 +19,7 @@ import {
   sortItem,
 } from '@/src/utils/structured-query/build';
 import {
+  AVG_METRIC_EVAL_DURATION_ALIAS,
   AVG_DURATION_ALIAS,
   COMPUTATION_ID_FIELD,
   COUNT_ALIAS,
@@ -30,6 +31,7 @@ import {
   EXEC_DURATION_MS_FIELD,
   EXECUTION_STATUS_FIELD,
   LATEST_COMPUTATION,
+  METRIC_EVAL_DURATION_MS_FIELD,
   METRIC_FIELD_PREFIX,
   METRIC_FIELD_SEPARATOR,
   METRIC_NAME_FIELD,
@@ -79,6 +81,29 @@ export const buildAvgRunTimeQuery = (runId: string): StructuredQuery =>
     filter: eq(RUN_ID_FIELD, ValueType.Uuid, runId),
     select: [col(fn('avg', [field(EXEC_DURATION_MS_FIELD)]), AVG_DURATION_ALIAS)],
   });
+
+/**
+ * Query: average metric-evaluation duration (ms) across a run's test-case eval summaries.
+ * Rows shape: `[{ avg_metric_eval_duration_ms: number }]`.
+ * When `excludeEvalSummaryIds` is non-empty, those rows are excluded so the average describes the
+ * matched-only population used in run comparison.
+ */
+export const buildAvgMetricEvalDurationQuery = (
+  runId: string,
+  excludeEvalSummaryIds: string[] = [],
+): StructuredQuery => {
+  const runFilter = eq(RUN_ID_FIELD, ValueType.Uuid, runId);
+  const filter =
+    excludeEvalSummaryIds.length > 0
+      ? and([runFilter, not(inValues(EVAL_SUMMARY_ID_FIELD, ValueType.Uuid, excludeEvalSummaryIds))])
+      : runFilter;
+
+  return aggregateQuery({
+    entity: EVAL_SUMMARIES_ENTITY,
+    filter,
+    select: [col(fn('avg', [field(METRIC_EVAL_DURATION_MS_FIELD)]), AVG_METRIC_EVAL_DURATION_ALIAS)],
+  });
+};
 
 /** Builds the flattened metric field path, e.g. `metric::Ragas Answer Relevancy::score`. */
 export const getMetricFieldPath = (metricName: string, outputField: string): string =>
@@ -362,9 +387,12 @@ export const parseTestCaseStatusCounts = (result: StructuredQueryResult | null):
   return counts;
 };
 
-/** Reads the single average-duration value, rounded to a whole millisecond, or null when absent. */
-export const parseAvgRunTimeMs = (result: StructuredQueryResult | null): number | null => {
-  const raw = result?.rows?.[0]?.[AVG_DURATION_ALIAS];
+/** Reads the single average-duration value for the provided alias, rounded to a whole ms, or null when absent. */
+export const parseAvgRunTimeMs = (
+  result: StructuredQueryResult | null,
+  alias: string = AVG_DURATION_ALIAS,
+): number | null => {
+  const raw = result?.rows?.[0]?.[alias];
   if (raw == null) {
     return null;
   }

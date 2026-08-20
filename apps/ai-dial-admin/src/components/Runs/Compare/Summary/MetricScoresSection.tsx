@@ -19,6 +19,7 @@ interface Props {
   comparedRunName: string;
   selectedStatistic: string | null;
   onSelectStatistic: (statistic: string) => void;
+  onSelectMetric: (name: string) => void;
 }
 
 const MetricScoresSection: FC<Props> = ({
@@ -28,6 +29,7 @@ const MetricScoresSection: FC<Props> = ({
   comparedRunName,
   selectedStatistic,
   onSelectStatistic,
+  onSelectMetric,
 }) => {
   const t = useI18n();
 
@@ -70,10 +72,13 @@ const MetricScoresSection: FC<Props> = ({
             compareData={group.compareData}
             compareLabels={compareLabels}
             maxValue={maxBarValue(group.data, group.compareData)}
+            onBarClick={(bar) => onSelectMetric(`${group.name}.${bar}`)}
             inline
             nonCollapsible
             defaultExpanded
             className="bg-layer-2"
+            barDescriptions={group.barDescriptions}
+            barClassName="hover:bg-accent-primary-alpha hover:cursor-pointer rounded-sm px-1"
             titleTooltip={group.description}
             barTitleClassName="text-secondary"
           />

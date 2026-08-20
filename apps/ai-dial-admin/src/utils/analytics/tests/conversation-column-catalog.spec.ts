@@ -6,11 +6,13 @@ import { ConversationsField } from '@/src/models/analytics/conversations-trace';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryValueType } from '@/src/models/analytics/query';
 import {
+  availableSelectFields,
   buildConversationColumnCatalog,
   offerableSchemaFields,
   catalogFilterableFields,
   catalogSortableFields,
   catalogValueTypes,
+  projectableSchemaFields,
 } from '@/src/utils/analytics/conversation-column-catalog';
 
 const CURATED: ColDef[] = [
@@ -19,12 +21,15 @@ const CURATED: ColDef[] = [
   { field: 'rating', headerName: 'Rating', sortable: false, filter: false },
 ];
 
-const field = (overrides: Partial<AnalyticsEntityField> = {}): AnalyticsEntityField => ({
-  name: 'success_count',
-  type: AnalyticsFieldType.Integer,
-  source: 'conversations',
-  ...overrides,
-});
+// A plain column of the entity's own source reports its flat name as the field backing it, so the factory
+// mirrors that: `source` follows `name` unless a case overrides it to model an enrichment-supplied field.
+const field = (overrides: Partial<AnalyticsEntityField> = {}): AnalyticsEntityField => {
+  const name = overrides.name ?? 'success_count';
+  return { name, type: AnalyticsFieldType.Integer, source: name, ...overrides };
+};
+
+const enrichmentField = (name: string, overrides: Partial<AnalyticsEntityField> = {}): AnalyticsEntityField =>
+  field({ name, source: name.split('.').at(-1) as string, ...overrides });
 
 const catalogFields = (fields: AnalyticsEntityField[]): string[] =>
   buildConversationColumnCatalog(CURATED, fields).map((column) => column.field as string);
@@ -61,6 +66,12 @@ describe('buildConversationColumnCatalog', () => {
 
   test('does not offer a sensitive field', () => {
     expect(catalogFields([field({ sensitive: true })])).not.toContain('success_count');
+  });
+
+  // The service omits a heavy field from a wildcard projection because it is expensive to transfer, and an
+  // offered column is one the view may project on every page.
+  test('does not offer a heavy field', () => {
+    expect(catalogFields([field({ heavy: true })])).not.toContain('success_count');
   });
 
   test.each([[AnalyticsFieldType.Object], [AnalyticsFieldType.Array]])('does not offer a %s field', (type) => {
@@ -137,14 +148,95 @@ describe('offerableSchemaFields', () => {
     expect(offerableSchemaFields(CURATED, [field()])).toEqual(['success_count']);
   });
 
-  test('excludes a sensitive field and a non-scalar one', () => {
-    const fields = [field({ sensitive: true }), field({ name: 'payload', type: AnalyticsFieldType.Object })];
+  test('excludes a sensitive field, a non-scalar one and a heavy one', () => {
+    const fields = [
+      field({ sensitive: true }),
+      field({ name: 'payload', type: AnalyticsFieldType.Object }),
+      field({ name: 'traces', heavy: true }),
+    ];
 
     expect(offerableSchemaFields(CURATED, fields)).toEqual([]);
   });
 
   test('is empty without a schema', () => {
     expect(offerableSchemaFields(CURATED)).toEqual([]);
+  });
+});
+
+describe('availableSelectFields', () => {
+  const ORDERED = ['chat_id', 'conversation_insights.title', 'project_id'];
+  const OPTIONAL = ['conversation_insights.title'];
+
+  test('names an optional field the schema reports', () => {
+    expect(availableSelectFields(ORDERED, OPTIONAL, ORDERED)).toEqual(ORDERED);
+  });
+
+  test('drops an optional field the schema does not report', () => {
+    expect(availableSelectFields(ORDERED, OPTIONAL, ['chat_id', 'project_id'])).toEqual(['chat_id', 'project_id']);
+  });
+
+  test('keeps a required field the schema does not report, so a broken schema fails loudly', () => {
+    expect(availableSelectFields(ORDERED, OPTIONAL, ['conversation_insights.title'])).toEqual([
+      'chat_id',
+      'conversation_insights.title',
+      'project_id',
+    ]);
+  });
+
+  test('names the required fields alone without a schema', () => {
+    expect(availableSelectFields(ORDERED, OPTIONAL)).toEqual(['chat_id', 'project_id']);
+    expect(availableSelectFields(ORDERED, OPTIONAL, [])).toEqual(['chat_id', 'project_id']);
+  });
+
+  test('preserves the given order', () => {
+    expect(availableSelectFields(['c', 'b', 'a'], [], ['a', 'b', 'c'])).toEqual(['c', 'b', 'a']);
+  });
+
+  test('returns everything when nothing is optional', () => {
+    expect(availableSelectFields(ORDERED, [])).toEqual(ORDERED);
+  });
+});
+
+// A curated column is not offered in the catalog, but it still reads a stored field — so showing it has to
+// bring that field into the projection, classified by the same source/enrichment test.
+describe('projectableSchemaFields :: curated columns', () => {
+  const schema = [
+    field(),
+    field({ name: ConversationsField.ChatId, type: AnalyticsFieldType.String }),
+    enrichmentField('conversation_insights.title'),
+  ];
+  const curated = [...CURATED, { field: 'conversation_insights.title', headerName: 'Title' }];
+  const all = (c = curated) => {
+    const { sourceBacked, enrichmentBacked } = projectableSchemaFields(c, schema);
+    return [...sourceBacked, ...enrichmentBacked];
+  };
+
+  test('projects a curated source-backed column', () => {
+    expect(projectableSchemaFields(curated, schema).sourceBacked).toContain(ConversationsField.ChatId);
+  });
+
+  test('projects a curated enrichment-backed column on the enrichment terms', () => {
+    const projectable = projectableSchemaFields(curated, schema);
+
+    expect(projectable.enrichmentBacked).toContain('conversation_insights.title');
+    expect(projectable.sourceBacked).not.toContain('conversation_insights.title');
+  });
+
+  test('still projects the offered schema fields', () => {
+    expect(projectableSchemaFields(curated, schema).sourceBacked).toContain('success_count');
+  });
+
+  // Rating is composed from the feedback lookups, so no conversations schema will ever report it.
+  test('projects no composed column with no field on the entity', () => {
+    expect(all()).not.toContain('rating');
+  });
+
+  test('projects no curated field the schema does not report', () => {
+    expect(all([...curated, { field: ConversationsField.Traces }])).not.toContain(ConversationsField.Traces);
+  });
+
+  test('lists every field once', () => {
+    expect(all()).toHaveLength(new Set(all()).size);
   });
 });
 
@@ -187,5 +279,41 @@ describe('catalogValueTypes', () => {
     [AnalyticsFieldType.Timestamp, QueryValueType.Timestamp],
   ])('maps the %s field type to %s', (type, expected) => {
     expect(catalogValueTypes([field({ name: 'measure', type })]).measure).toBe(expected);
+  });
+});
+
+describe('projectableSchemaFields', () => {
+  test('classifies a plain column of the source as source-backed', () => {
+    expect(projectableSchemaFields(CURATED, [field()])).toEqual({
+      sourceBacked: ['success_count'],
+      enrichmentBacked: [],
+    });
+  });
+
+  // An enrichment-supplied field is namespaced by its enrichment, leaving the backing name unqualified.
+  test('classifies a namespaced field as enrichment-backed', () => {
+    expect(projectableSchemaFields(CURATED, [enrichmentField('conversation_insights.topic')])).toEqual({
+      sourceBacked: [],
+      enrichmentBacked: ['conversation_insights.topic'],
+    });
+  });
+
+  test('splits a schema carrying both', () => {
+    const fields = [field(), enrichmentField('conversation_buckets.turn_bucket')];
+
+    expect(projectableSchemaFields(CURATED, fields)).toEqual({
+      sourceBacked: ['success_count'],
+      enrichmentBacked: ['conversation_buckets.turn_bucket'],
+    });
+  });
+
+  test('classifies nothing the catalog does not offer', () => {
+    const fields = [field({ sensitive: true }), field({ name: 'traces', heavy: true })];
+
+    expect(projectableSchemaFields(CURATED, fields)).toEqual({ sourceBacked: [], enrichmentBacked: [] });
+  });
+
+  test('is empty without a schema', () => {
+    expect(projectableSchemaFields(CURATED)).toEqual({ sourceBacked: [], enrichmentBacked: [] });
   });
 });
