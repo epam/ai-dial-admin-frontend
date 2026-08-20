@@ -659,8 +659,11 @@ const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] 
     cellRenderer: ConversationCellRenderer,
     // How a row is recognised and how it is opened. A log whose identity column can be hidden is a table of
     // values belonging to conversations the reader cannot name — and this column's permanence is what makes
-    // its enrichment field unconditional in the projection.
+    // its enrichment field unconditional in the projection. `lockVisible` guards AG Grid's own paths;
+    // withholding it from the columns panel is what closes the one the app actually offers, since that panel
+    // is this repo's own component and reads only `suppressColumnsToolPanel`.
     lockVisible: true,
+    suppressColumnsToolPanel: true,
     flex: 3,
     minWidth: 280,
   },

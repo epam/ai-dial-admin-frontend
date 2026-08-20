@@ -120,7 +120,12 @@ describe('conversations columns :: composition', () => {
   // How a row is recognised and how it is opened, and the reason its enrichment field is projected
   // unconditionally: there is no hidden state for a visibility rule to key on.
   test('the identity column cannot be hidden', () => {
-    expect(column(ConversationsField.ChatId).lockVisible).toBe(true);
+    const identity = column(ConversationsField.ChatId);
+
+    expect(identity.lockVisible).toBe(true);
+    // The app renders its own columns panel rather than AG Grid's, and that panel reads only
+    // `suppressColumnsToolPanel` — `lockVisible` alone would leave the checkbox live.
+    expect(identity.suppressColumnsToolPanel).toBe(true);
   });
 
   test('every other column can be hidden', () => {

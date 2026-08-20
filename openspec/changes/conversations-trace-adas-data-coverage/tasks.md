@@ -159,7 +159,7 @@ field they read.
       label is restated, the Deployments column and header entry name the field and render it unnarrowed, and
       the timeline reports a failed turn read. Conclusion supportable from this run: "safe to deploy against a
       non-provisioned instance", not "works". See proposal — Verification status.
-- [ ] 8.2 Run the `spec-browser-verify` skill against an instance carrying the `conversation_insights`
+- [x] 8.2 Run the `spec-browser-verify` skill against an instance carrying the `conversation_insights`
       enrichment and the `turns` rollup, scoped to the scenarios no degradation path can show. It builds a
       VerificationRequest from this change's scenarios and spawns `spec-verification-gate` to drive the local
       app through the Playwright MCP; resolve every `fail` verdict before the change is complete. Scenarios in
@@ -236,3 +236,10 @@ field they read.
       on hide), and the query specs where the trimmed field lists change a select.
 - [x] 10.12 Re-run `npm run lint`, `npm run format` and `npm run test` from the repo root; fix everything they
       report.
+
+  **Verified 2026-08-20** against an instance carrying `conversation_insights` and `turns`, with the period
+  narrowed to 2026-08-17 (full insight coverage). All fifteen scenarios pass. Two findings, neither now
+  outstanding: a pre-existing saved column state under `gridColumnsStateanalytics/conversations` masked the
+  new hidden-by-default columns until cleared — anyone who used this page before the change sees their old
+  layout, not the new defaults; and `lockVisible` alone did not stop the identity column being hidden,
+  because this repo renders its own columns panel which reads only `suppressColumnsToolPanel` (now set).
