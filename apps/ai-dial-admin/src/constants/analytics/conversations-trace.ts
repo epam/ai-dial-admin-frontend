@@ -12,7 +12,6 @@ import {
   ProvenanceGroup,
   SpanCategory,
 } from '@/src/models/analytics/conversations-trace';
-import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryOperator, QueryValueType } from '@/src/models/analytics/query';
 import { GridFilterType } from '@/src/types/grid-filter';
 
@@ -68,32 +67,29 @@ export const REQUIRED_DETAIL_SELECT_FIELDS: ConversationsField[] = [
   ConversationsField.Deployments,
 ];
 
-// Scalar fields the query language can order and compare. `traces` and `deployments` are absent by
-// design: the language expresses neither an ordering nor a predicate over an array.
-const CURATED_SCALAR_FIELDS: ConversationsField[] = [
-  ConversationsField.CacheCreationTokens,
-  ConversationsField.CachedPromptTokens,
-  ConversationsField.ReasoningTokens,
-  ConversationsField.ChainPriceTotal,
-  ConversationsField.InsightTitle,
-  ConversationsField.InsightSentiment,
-  ConversationsField.InsightSentimentScore,
-  ConversationsField.InsightTopic,
-  ConversationsField.InsightTopics,
-  ConversationsField.InsightLanguage,
-  ConversationsField.InsightResolutionStatus,
-];
+// Fields beyond the view's original set that a curated column still reads. Each is a catalog object an
+// instance may not carry yet, so a query names one only when the fetched schema reports it, and a curated
+// column reading one is not rendered at all where it is absent.
+export const OPTIONAL_CURATED_COLUMN_FIELDS: ConversationsField[] = [ConversationsField.InsightTopics];
 
-// Every field this change added beyond the view's original set. Each is a catalog object an instance may
-// not carry yet, so a query names one only when the fetched schema reports it, and a curated column reading
-// one is not rendered at all where it is absent.
-export const OPTIONAL_CURATED_COLUMN_FIELDS: ConversationsField[] = CURATED_SCALAR_FIELDS;
+// Enrichment-backed fields the identity column reads. Unlike every other enrichment field, these are not
+// projected on column visibility: the column that reads them is the one column the view cannot hide, so
+// the join is paid on every page. That is the cost of naming a conversation by anything other than its id.
+export const IDENTITY_ENRICHMENT_FIELDS: ConversationsField[] = [ConversationsField.InsightTitle];
 
 export const OPTIONAL_DETAIL_SELECT_FIELDS: ConversationsField[] = [
-  ...CURATED_SCALAR_FIELDS,
+  ...OPTIONAL_CURATED_COLUMN_FIELDS,
+  ...IDENTITY_ENRICHMENT_FIELDS,
+  // Read by the detail view alone. The log states the size cap once, for the whole column, because it holds
+  // for the large majority of titled conversations — so the list query never names this field.
+  ConversationsField.InsightTruncated,
   ConversationsField.Traces,
 ];
 
+// Only where the query can order the whole result by the field: paging is server-side, so a sort the backend
+// cannot express would reorder one loaded block and report a slice as the answer. `deployments` and `topics`
+// are absent by design — the language expresses no ordering over an array, and a delimited string would sort
+// by whichever term happens to be written first.
 export const SORTABLE_CONVERSATION_FIELDS: ConversationsField[] = [
   ConversationsField.ChatId,
   ConversationsField.ProjectId,
@@ -102,10 +98,10 @@ export const SORTABLE_CONVERSATION_FIELDS: ConversationsField[] = [
   ConversationsField.LastRequestTime,
   ConversationsField.TotalTokens,
   ConversationsField.TotalPrice,
-  ConversationsField.DurationMs,
-  ...CURATED_SCALAR_FIELDS,
 ];
 
+// `last_request_time` is deliberately absent: the toolbar's period control already predicates on it, and a
+// second control over the same axis would let a filter appear to widen a range the period clips.
 export const FILTERABLE_CONVERSATION_FIELDS: ConversationsField[] = [
   ConversationsField.ChatId,
   ConversationsField.ProjectId,
@@ -113,21 +109,10 @@ export const FILTERABLE_CONVERSATION_FIELDS: ConversationsField[] = [
   ConversationsField.TurnCount,
   ConversationsField.TotalTokens,
   ConversationsField.TotalPrice,
-  ConversationsField.DurationMs,
-  ...CURATED_SCALAR_FIELDS,
+  ConversationsField.InsightTopics,
 ];
 
-export const CURATED_COMPOSED_FIELDS: string[] = [ConversationsField.FirstRequestTime];
-
-export const NON_SCALAR_FIELD_TYPES: AnalyticsFieldType[] = [AnalyticsFieldType.Object, AnalyticsFieldType.Array];
-
-export const DATE_FIELD_TYPES: AnalyticsFieldType[] = [AnalyticsFieldType.Date, AnalyticsFieldType.Timestamp];
-
-export const NUMERIC_FIELD_TYPES: AnalyticsFieldType[] = [
-  AnalyticsFieldType.Integer,
-  AnalyticsFieldType.Long,
-  AnalyticsFieldType.Decimal,
-];
+export const CURATED_COMPOSED_FIELDS: string[] = [ConversationsField.FirstRequestTime, ...IDENTITY_ENRICHMENT_FIELDS];
 
 export const CONVERSATION_FIELD_VALUE_TYPE: Partial<Record<ConversationsField, QueryValueType>> = {
   [ConversationsField.ChatId]: QueryValueType.String,
@@ -138,29 +123,9 @@ export const CONVERSATION_FIELD_VALUE_TYPE: Partial<Record<ConversationsField, Q
   [ConversationsField.TotalPrice]: QueryValueType.Decimal,
   [ConversationsField.LastRequestTime]: QueryValueType.Timestamp,
   [ConversationsField.FirstRequestTime]: QueryValueType.Timestamp,
-  [ConversationsField.DurationMs]: QueryValueType.Long,
-  [ConversationsField.CacheCreationTokens]: QueryValueType.Integer,
-  [ConversationsField.CachedPromptTokens]: QueryValueType.Integer,
-  [ConversationsField.ReasoningTokens]: QueryValueType.Integer,
-  [ConversationsField.ChainPriceTotal]: QueryValueType.Decimal,
   [ConversationsField.InsightTitle]: QueryValueType.String,
-  [ConversationsField.InsightSentiment]: QueryValueType.String,
-  [ConversationsField.InsightSentimentScore]: QueryValueType.Decimal,
-  [ConversationsField.InsightTopic]: QueryValueType.String,
   [ConversationsField.InsightTopics]: QueryValueType.String,
-  [ConversationsField.InsightLanguage]: QueryValueType.String,
-  [ConversationsField.InsightResolutionStatus]: QueryValueType.String,
-};
-
-export const ANALYTICS_FIELD_QUERY_VALUE_TYPE: Partial<Record<AnalyticsFieldType, QueryValueType>> = {
-  [AnalyticsFieldType.Uuid]: QueryValueType.String,
-  [AnalyticsFieldType.String]: QueryValueType.String,
-  [AnalyticsFieldType.Integer]: QueryValueType.Integer,
-  [AnalyticsFieldType.Long]: QueryValueType.Long,
-  [AnalyticsFieldType.Decimal]: QueryValueType.Decimal,
-  [AnalyticsFieldType.Boolean]: QueryValueType.Boolean,
-  [AnalyticsFieldType.Date]: QueryValueType.Date,
-  [AnalyticsFieldType.Timestamp]: QueryValueType.Timestamp,
+  [ConversationsField.InsightTruncated]: QueryValueType.Boolean,
 };
 
 export const CONVERSATION_FILTER_QUERY_OPERATOR: Record<
@@ -188,16 +153,15 @@ export const GRID_FILTER_TYPE_OPERATOR: Record<GridFilterType, ConversationFilte
   [GridFilterType.LESS_THAN_OR_EQUAL]: ConversationFilterOperator.LessThanOrEqual,
 };
 
+// One colour per origin, from theme tokens. Every value here clears WCAG AA for normal text against
+// `bg-layer-1` through `bg-layer-4`, which the grid's header row and the detail rail both draw on:
+// accent-primary 7.8:1 → 5.7:1, accent-secondary 8.1:1 → 5.9:1, warning 11.7:1 → 8.6:1. `accent-tertiary`
+// is the unused accent and would have been the obvious third hue, but it reads 4.32:1 on `bg-layer-4` —
+// under the 4.5:1 floor for the 12px semibold the group header uses.
 export const PROVENANCE_TEXT_CLASS: Record<ColumnProvenance, string> = {
   [ColumnProvenance.Conversations]: 'text-accent-primary',
+  [ColumnProvenance.Insights]: 'text-accent-secondary',
   [ColumnProvenance.Feedback]: 'text-warning',
-  [ColumnProvenance.None]: 'text-secondary',
-};
-
-export const PROVENANCE_MARKER_CLASS: Record<ColumnProvenance, string> = {
-  [ColumnProvenance.Conversations]: 'bg-accent-primary',
-  [ColumnProvenance.Feedback]: 'bg-warning',
-  [ColumnProvenance.None]: 'bg-layer-4',
 };
 
 export const COST_TEXT_CLASS = 'text-accent-secondary';
@@ -261,15 +225,20 @@ export const CONVERSATION_DETAIL_PANELS: ConversationPanelDefinition[] = [
         format: ConversationFieldFormat.Cost,
         accentClassName: COST_TEXT_CLASS,
       },
+      // Both figures are wrong in their own way, so each states its own caveat rather than sharing one: a
+      // note naming only the sum would leave the average looking sound. The grid's Duration column used to
+      // carry the first of these; it no longer exists, and these are the only surfaces left showing either.
       {
         labelKey: ConversationsTraceI18nKey.DetailDuration,
         column: ConversationsField.DurationMs,
         format: ConversationFieldFormat.Duration,
+        hintKey: ConversationsTraceI18nKey.DurationHint,
       },
       {
         labelKey: ConversationsTraceI18nKey.DetailAvgDuration,
         column: ConversationsField.AvgDurationMs,
         format: ConversationFieldFormat.Duration,
+        hintKey: ConversationsTraceI18nKey.AvgDurationHint,
       },
     ],
   },
@@ -311,6 +280,10 @@ export const CONVERSATION_SOURCE_ENTITIES: ProvenanceEntity[] = [
   { provenance: ColumnProvenance.Feedback, name: FEEDBACK_ENTITY },
 ];
 
+// Rendered as real AG Grid column groups, so a group's columns are adjacent and the rendered column order
+// follows this list. The identity column sits under the rollup even though it reads the enrichment for its
+// title: a conversation's identity is its id, and the title only labels it — its own tooltip says where the
+// title comes from.
 export const CONVERSATION_PROVENANCE_GROUPS: ProvenanceGroup[] = [
   {
     provenance: ColumnProvenance.Conversations,
@@ -318,16 +291,20 @@ export const CONVERSATION_PROVENANCE_GROUPS: ProvenanceGroup[] = [
     tooltipKey: ConversationsTraceI18nKey.ProvenanceConversationsHint,
     fields: [
       ConversationsField.ChatId,
-      ConversationsField.InsightTitle,
       ConversationsField.ProjectId,
       ConversationsField.UserHash,
       ConversationsField.TurnCount,
       ConversationsField.LastRequestTime,
       ConversationsField.TotalTokens,
       ConversationsField.TotalPrice,
-      ConversationsField.DurationMs,
       ConversationsField.Deployments,
     ],
+  },
+  {
+    provenance: ColumnProvenance.Insights,
+    labelKey: ConversationsTraceI18nKey.ProvenanceInsights,
+    tooltipKey: ConversationsTraceI18nKey.ProvenanceInsightsHint,
+    fields: [ConversationsField.InsightTopics],
   },
   {
     provenance: ColumnProvenance.Feedback,

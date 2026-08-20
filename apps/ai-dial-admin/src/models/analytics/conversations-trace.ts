@@ -1,10 +1,18 @@
 import { QuerySortDirection, QueryValueType } from '@/src/models/analytics/query';
 
+// Where a column's value comes from, which decides what an empty cell means: a rollup column is present for
+// every conversation, an enrichment column is absent until an evaluation reaches it, and a feedback column is
+// resolved by a separate query for the page on screen.
 export enum ColumnProvenance {
   Conversations = 'conversations',
+  Insights = 'insights',
   Feedback = 'feedback',
-  None = 'none',
 }
+
+// A panel's source is a catalog identifier, and an identifier names the entity the page queried — never an
+// enrichment, whose columns the service exposes through the entity it decorates. So the insights origin,
+// which exists to label where a *value* came from, is not a source a panel can claim.
+export type PanelProvenance = Exclude<ColumnProvenance, ColumnProvenance.Insights>;
 
 export type ConversationScalar = number | string | boolean | null;
 
@@ -25,7 +33,6 @@ export interface ConversationRow {
 export type ConversationListRow = ConversationRow & Record<string, ConversationScalar | undefined>;
 
 export interface ConversationTitleSource {
-  chat_id: string;
   'conversation_insights.title'?: string | null;
 }
 
@@ -127,6 +134,8 @@ export interface ConversationCandidateIds {
 export interface ConversationProjectableFields {
   sourceBacked: string[];
   enrichmentBacked: string[];
+  // Enrichment-backed and projected unconditionally — the identity column reads these and cannot be hidden.
+  requiredEnrichment: string[];
 }
 
 export interface ProvenanceEntity {
@@ -149,20 +158,12 @@ export enum ConversationsField {
   Deployments = 'deployments',
   FirstRequestTime = 'first_request_time',
   LastRequestTime = 'last_request_time',
-  CacheCreationTokens = 'cache_creation_tokens',
-  CachedPromptTokens = 'cached_prompt_tokens',
-  ReasoningTokens = 'reasoning_tokens',
-  ChainPriceTotal = 'chain_price_total',
   Traces = 'traces',
   // The insight fields are enrichment columns: the service exposes each under a qualified flat name, and
   // the dot belongs to the name rather than marking a path into a nested value.
   InsightTitle = 'conversation_insights.title',
-  InsightSentiment = 'conversation_insights.sentiment',
-  InsightSentimentScore = 'conversation_insights.sentiment_score',
-  InsightTopic = 'conversation_insights.topic',
   InsightTopics = 'conversation_insights.topics',
-  InsightLanguage = 'conversation_insights.language',
-  InsightResolutionStatus = 'conversation_insights.resolution_status',
+  InsightTruncated = 'conversation_insights.truncated',
 }
 
 // Grid-only column ids: every other column binds to a `ConversationsField`, but Rating is composed
@@ -212,20 +213,12 @@ export interface ConversationDetailRow {
   duration_ms: number | string | null;
   avg_duration_ms: number | string | null;
   deployments: string[] | null;
-  cache_creation_tokens?: number | string | null;
-  cached_prompt_tokens?: number | string | null;
-  reasoning_tokens?: number | string | null;
-  chain_price_total?: number | string | null;
   traces?: string[] | null;
   // Optional because the insight enrichment runs per conversation: a conversation the evaluator has not
   // processed has no insight row at all, so the service returns no value under these names.
   'conversation_insights.title'?: string | null;
-  'conversation_insights.sentiment'?: string | null;
-  'conversation_insights.sentiment_score'?: number | string | null;
-  'conversation_insights.topic'?: string | null;
   'conversation_insights.topics'?: string | null;
-  'conversation_insights.language'?: string | null;
-  'conversation_insights.resolution_status'?: string | null;
+  'conversation_insights.truncated'?: boolean | null;
 }
 
 export interface ConversationDetailResult {
@@ -377,11 +370,14 @@ export interface ConversationFieldDefinition {
   column?: ConversationsField;
   format?: ConversationFieldFormat;
   accentClassName?: string;
+  // A caveat for a figure that cannot be read at face value. The panel exposes it through a focusable
+  // control, so it reaches a keyboard as well as a pointer.
+  hintKey?: string;
 }
 
 export interface ConversationPanelDefinition {
   panel: ConversationDetailPanel;
-  provenance: ColumnProvenance;
+  provenance: PanelProvenance;
   labelKey: string;
   layout: ConversationPanelLayout;
   fields: ConversationFieldDefinition[];
@@ -398,4 +394,5 @@ export interface ResolvedConversationField {
   state: ConversationFieldState;
   text: string;
   accentClassName?: string;
+  hintKey?: string;
 }

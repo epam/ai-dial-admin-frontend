@@ -8,12 +8,13 @@ import {
   CONVERSATIONS_ENTITY,
   CONVERSATION_DETAIL_PANELS,
   FEEDBACK_ENTITY,
-  PROVENANCE_MARKER_CLASS,
+  PROVENANCE_TEXT_CLASS,
   UNAVAILABLE_VALUE,
 } from '@/src/constants/analytics/conversations-trace';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import {
   ColumnProvenance,
+  PanelProvenance,
   ConversationDetailRow,
   ConversationFeedbackRow,
   MessageRole,
@@ -51,6 +52,13 @@ const setup = (
     <ConversationDetailRail conversation={CONVERSATION} feedback={feedback} feedbackTotal={total} ratings={ratings} />,
   );
 
+const SOURCE_ENTITIES = [CONVERSATIONS_ENTITY, FEEDBACK_ENTITY];
+
+const SOURCE_LABEL_FOR: Record<PanelProvenance, string> = {
+  [ColumnProvenance.Conversations]: CONVERSATIONS_ENTITY,
+  [ColumnProvenance.Feedback]: FEEDBACK_ENTITY,
+};
+
 describe('ConversationDetailRail', () => {
   test('renders the usage, metadata and feedback panels', () => {
     setup();
@@ -72,9 +80,12 @@ describe('ConversationDetailRail', () => {
     expect(screen.getByText(FEEDBACK_ENTITY)).toBeInTheDocument();
   });
 
-  test('every panel definition carries a real source entity', () => {
+  // A panel's source is a catalog identifier, and an identifier names the entity the page queried — never an
+  // enrichment, whose columns the service exposes through the entity it decorates.
+  test('no panel claims an enrichment as its source', () => {
     for (const { provenance } of CONVERSATION_DETAIL_PANELS) {
-      expect(provenance).not.toBe(ColumnProvenance.None);
+      expect(provenance).not.toBe(ColumnProvenance.Insights);
+      expect(SOURCE_ENTITIES).toContain(SOURCE_LABEL_FOR[provenance]);
     }
   });
 
@@ -185,12 +196,39 @@ describe('ConversationDetailRail', () => {
     expect(screen.queryByText(ConversationsTraceI18nKey.DetailFeedbackPartial)).not.toBeInTheDocument();
   });
 
-  test('every provenance a panel can carry maps to a marker colour', () => {
+  // Both duration figures are wrong, in different ways: the sum double-counts nested hops, and the average is
+  // per hop rather than per turn. The grid's Duration column used to carry the first caveat and no longer
+  // exists, so this panel is the only surface stating either.
+  test('each duration figure carries its own caveat', () => {
+    setup();
+
+    expect(screen.getByRole('button', { name: ConversationsTraceI18nKey.DurationHint })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: ConversationsTraceI18nKey.AvgDurationHint })).toBeInTheDocument();
+  });
+
+  // A `<dt>` takes no focus, so a caveat attached to the label by hover alone never reaches a keyboard.
+  test('a caveat is reachable by keyboard', async () => {
+    setup();
+
+    const hint = screen.getByRole('button', { name: ConversationsTraceI18nKey.DurationHint });
+    hint.focus();
+
+    expect(hint).toHaveFocus();
+  });
+
+  test('a figure with nothing to qualify carries no caveat', () => {
+    setup();
+
+    expect(screen.queryByRole('button', { name: ConversationsTraceI18nKey.DetailTotalTokens })).toBeNull();
+  });
+
+  // Every origin the view can render needs a colour, so a newly added source cannot render unstyled.
+  test('every provenance maps to a colour', () => {
     for (const provenance of Object.values(ColumnProvenance)) {
-      expect(PROVENANCE_MARKER_CLASS[provenance]).toBeTruthy();
+      expect(PROVENANCE_TEXT_CLASS[provenance]).toBeTruthy();
     }
     for (const { provenance } of CONVERSATION_DETAIL_PANELS) {
-      expect(PROVENANCE_MARKER_CLASS[provenance]).toBeTruthy();
+      expect(PROVENANCE_TEXT_CLASS[provenance]).toBeTruthy();
     }
   });
 });

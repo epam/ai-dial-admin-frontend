@@ -3,13 +3,21 @@
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { moveSkills, removeSkill, removeSkillFile, uploadSkillFile } from '@/src/app/[lang]/assets-skills/actions';
+import {
+  getSkillManifest,
+  moveSkills,
+  removeSkill,
+  removeSkillFile,
+  uploadSkillFile,
+} from '@/src/app/[lang]/assets-skills/actions';
 import SkillAssetProperties from '@/src/components/Assets/Skills/View/Properties';
 import SkillHeader from '@/src/components/EntityHeaderControls/SkillHeader';
+import SkillManifestTab from '@/src/components/Publications/Assets/Skill/SkillManifestTab';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { ErrorI18nKey } from '@/src/constants/i18n';
 import { useSkillFolder } from '@/src/context/assets/SkillFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
+import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { DialSkillResource } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
@@ -17,8 +25,10 @@ import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/
 import { removeTrailingSlash } from '@/src/utils/files/path';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
+import { buildSkillManifest, parseSkillManifest, SkillManifest } from '@/src/utils/skill-manifest';
 import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
 import { addTrailingSlash } from '@/src/utils/url';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 interface Props {
   skill: DialSkillResource;
@@ -27,14 +37,17 @@ interface Props {
 /**
  * `Assets > Skills` detail view. No Audit tab, no Core-sync banner, no JSON editor, no version
  * control (Skill has no version concept exposed at this layer — see `SkillButtonsWrapper`'s doc
- * comment for why it isn't the generic `AssetHeader`). Files and the destination folder are staged
- * locally and only committed to Core on Save, matching every other asset's Save/Discard pattern.
+ * comment for why it isn't the generic `AssetHeader`). Files, the destination folder, and — on the
+ * `Skill` tab — `SKILL.md`'s description and body are all staged locally and only committed to Core
+ * on Save, matching every other asset's Save/Discard pattern. The Skill tab's content is fetched
+ * lazily on first activation, not eagerly with the rest of the page.
  */
 const SkillView: FC<Props> = ({ skill: originalSkill }) => {
   const t = useI18n();
   const router = useRouter();
   const { fetchFiles } = useSkillFolder();
   const { showNotification } = useNotification();
+  const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const tabs = getTabsForAsset(t, ApplicationRoute.AssetsSkills);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
@@ -42,14 +55,56 @@ const SkillView: FC<Props> = ({ skill: originalSkill }) => {
   const [addedFiles, setAddedFiles] = useState<File[]>([]);
   const [removedFileNames, setRemovedFileNames] = useState<string[]>([]);
 
+  // `SKILL.md`'s raw last-fetched content — reassembled with the staged manifest fields on Save
+  // (see `buildSkillManifest`'s doc comment for why the original content, not just the parsed
+  // fields, is needed to preserve untouched frontmatter keys like `version`).
+  const [manifestContent, setManifestContent] = useState<string | undefined>(undefined);
+  const [manifest, setManifest] = useState<SkillManifest | undefined>(undefined);
+  const [stagedManifest, setStagedManifest] = useState<SkillManifest | undefined>(undefined);
+
   useEffect(() => {
     setSelectedSkill(structuredClone(originalSkill));
     setAddedFiles([]);
     setRemovedFileNames([]);
+    setManifestContent(undefined);
+    setManifest(undefined);
+    setStagedManifest(undefined);
   }, [originalSkill]);
 
+  // Lazy-fetch `SKILL.md`'s content on first activation of the Skill tab, rather than eagerly with
+  // the rest of the page — most skill views never open it.
+  useEffect(() => {
+    if (activeTab !== EntityViewTab.Skill || manifestContent !== undefined) {
+      return;
+    }
+    getSkillManifest(originalSkill.path).then((result) => {
+      if (!result.success) {
+        showNotification(getErrorNotification(result.errorHeader || t(ErrorI18nKey.ServerError), result.errorMessage));
+        return;
+      }
+      const content = result.response as string;
+      const parsed = parseSkillManifest(content);
+      setManifestContent(content);
+      setManifest(parsed);
+      setStagedManifest(parsed);
+    });
+  }, [activeTab, manifestContent, originalSkill.path, showNotification, t]);
+
+  const isManifestChanged =
+    !!manifest &&
+    !!stagedManifest &&
+    (stagedManifest.description !== manifest.description || stagedManifest.body !== manifest.body);
+
   const isNeedToMove = removeTrailingSlash(selectedSkill.folderId) !== removeTrailingSlash(originalSkill.folderId);
-  const isChanged = addedFiles.length > 0 || removedFileNames.length > 0 || isNeedToMove;
+  const isChanged = addedFiles.length > 0 || removedFileNames.length > 0 || isNeedToMove || isManifestChanged;
+
+  const onChangeDescription = useCallback((description: string) => {
+    setStagedManifest((prev) => (prev ? { ...prev, description } : prev));
+  }, []);
+
+  const onChangeBody = useCallback((body: string) => {
+    setStagedManifest((prev) => (prev ? { ...prev, body } : prev));
+  }, []);
 
   const onChangeFolderId = useCallback((folderId: string) => {
     setSelectedSkill((prev) => ({ ...prev, folderId }));
@@ -75,10 +130,34 @@ const SkillView: FC<Props> = ({ skill: originalSkill }) => {
     setSelectedSkill(structuredClone(originalSkill));
     setAddedFiles([]);
     setRemovedFileNames([]);
-  }, [originalSkill]);
+    setStagedManifest(manifest);
+  }, [originalSkill, manifest]);
 
   const onSave = useCallback(async () => {
     try {
+      if (isManifestChanged && manifestContent && manifest && stagedManifest) {
+        const content = buildSkillManifest(manifestContent, {
+          name: manifest.name,
+          description: stagedManifest.description,
+          body: stagedManifest.body,
+        });
+        const formData = new FormData();
+        formData.append('file', new File([content], 'SKILL.md', { type: 'text/markdown' }));
+        const result = await uploadSkillFile(originalSkill.path, 'SKILL.md', formData);
+        if (!result.success) {
+          showNotification(
+            getErrorNotification(
+              result.errorHeader || t(ErrorI18nKey.ServerError),
+              result.errorMessage,
+              result.requestId,
+            ),
+          );
+          return;
+        }
+        setManifestContent(content);
+        setManifest(stagedManifest);
+      }
+
       for (const fileName of removedFileNames) {
         // No etag: Core's per-file delete is unconditional (see `deleteSkillFile`'s doc comment),
         // and reusing `originalSkill.etag` across a loop would send the same, increasingly stale
@@ -165,6 +244,10 @@ const SkillView: FC<Props> = ({ skill: originalSkill }) => {
     addedFiles,
     removedFileNames,
     isNeedToMove,
+    isManifestChanged,
+    manifestContent,
+    manifest,
+    stagedManifest,
     showNotification,
     t,
     router,
@@ -172,7 +255,7 @@ const SkillView: FC<Props> = ({ skill: originalSkill }) => {
   ]);
 
   const onRemoveSkill = useCallback(
-    (path: string) => removeSkill(path, originalSkill.etag as string),
+    (path: string) => removeSkill(path, originalSkill.etag || DEFAULT_ETAG),
     [originalSkill.etag],
   );
 
@@ -192,15 +275,27 @@ const SkillView: FC<Props> = ({ skill: originalSkill }) => {
         getAssetContext={useSkillFolder}
       />
       <div className="flex-1 overflow-auto min-h-0">
-        <SkillAssetProperties
-          skill={selectedSkill}
-          onChangeFolderId={onChangeFolderId}
-          addedFiles={addedFiles}
-          removedFileNames={removedFileNames}
-          onAddFile={onAddFile}
-          onRemoveExistingFile={onRemoveExistingFile}
-          onRemoveAddedFile={onRemoveAddedFile}
-        />
+        {activeTab === EntityViewTab.Properties && (
+          <SkillAssetProperties
+            skill={selectedSkill}
+            onChangeFolderId={onChangeFolderId}
+            addedFiles={addedFiles}
+            removedFileNames={removedFileNames}
+            onAddFile={onAddFile}
+            onRemoveExistingFile={onRemoveExistingFile}
+            onRemoveAddedFile={onRemoveAddedFile}
+          />
+        )}
+        {activeTab === EntityViewTab.Skill && stagedManifest && (
+          <SkillManifestTab
+            name={stagedManifest.name}
+            description={stagedManifest.description}
+            body={stagedManifest.body}
+            onChangeDescription={onChangeDescription}
+            onChangeBody={onChangeBody}
+            disabled={isReadOnlyAdmin}
+          />
+        )}
       </div>
     </div>
   );

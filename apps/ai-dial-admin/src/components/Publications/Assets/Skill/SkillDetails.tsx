@@ -5,16 +5,19 @@ import { DialGhostButton } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 
 import GridView from '@/src/components/Grid/GridView/GridView';
-import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { ApiRoute } from '@/src/constants/api-routes';
 import { getDownloadOperation, getPreviewOperation, getRemoveOperation } from '@/src/constants/grid-columns/actions';
-import { ButtonsI18nKey, EntitiesI18nKey, EntityFieldsI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, EntitiesI18nKey, PublicationsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { DialSkillFile, DialSkillResource } from '@/src/models/dial/resource';
 
-/** Core has no manifest-editing UI: a skill without its root `SKILL.md` isn't a skill Core will serve. */
+/**
+ * Core has no manifest-editing UI here: a skill without its root `SKILL.md` isn't a skill Core will
+ * serve, so it's excluded from this file listing entirely (its content is edited through the
+ * dedicated Skill tab — see `SkillManifestTab`) rather than shown with its remove action suppressed.
+ */
 const SKILL_MANIFEST_FILE = 'SKILL.md';
 
 interface SkillFileRow extends DialSkillFile {
@@ -36,12 +39,13 @@ interface Props {
 }
 
 /**
- * Skill metadata + bundle file listing, shared between the Skill Publications properties view and
- * the `Assets > Skills` detail view. Both surfaces edit the file list identically: add/remove are
- * staged locally (via `addedFiles`/`removedFileNames`) and only committed to Core when the owning
- * view's Save is clicked — this component itself never calls Core. Preview and download work
- * directly against the skill's already-saved files (unavailable for a staged, not-yet-uploaded
- * file). `SKILL.md` can't be removed — a skill has no meaning without its manifest.
+ * Skill bundle file listing, shared between the Skill Publications properties view and the
+ * `Assets > Skills` detail view. Both surfaces edit the file list identically: add/remove are staged
+ * locally (via `addedFiles`/`removedFileNames`) and only committed to Core when the owning view's
+ * Save is clicked — this component itself never calls Core. Preview and download work directly
+ * against the skill's already-saved files (unavailable for a staged, not-yet-uploaded file).
+ * `SKILL.md` is excluded from this listing — see `SkillManifestTab` for its own name/description/body
+ * fields, rendered by both surfaces in a separate `Skill` tab.
  */
 const SkillDetails: FC<Props> = ({
   skill,
@@ -56,7 +60,9 @@ const SkillDetails: FC<Props> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const rowData = useMemo<SkillFileRow[]>(() => {
-    const existing = (skill?.files ?? []).filter((file) => !removedFileNames.includes(file.name));
+    const existing = (skill?.files ?? []).filter(
+      (file) => file.name !== SKILL_MANIFEST_FILE && !removedFileNames.includes(file.name),
+    );
     const added = addedFiles.map((file) => ({ name: file.name, isNew: true }));
     return [...existing, ...added];
   }, [skill, removedFileNames, addedFiles]);
@@ -98,12 +104,7 @@ const SkillDetails: FC<Props> = ({
     return Boolean(node.data?.isNew);
   }, []);
 
-  const isRemoveActionHidden = useCallback(
-    (_: GridApi, node: IRowNode<SkillFileRow>) => {
-      return Boolean(disabled) || node.data?.name === SKILL_MANIFEST_FILE;
-    },
-    [disabled],
-  );
+  const isRemoveActionHidden = useCallback(() => Boolean(disabled), [disabled]);
 
   const onAddClick = useCallback(() => {
     fileInputRef.current?.click();
@@ -138,11 +139,6 @@ const SkillDetails: FC<Props> = ({
 
   return (
     <div className="flex flex-col gap-y-8 h-full">
-      <div className="flex flex-col sm:flex-row gap-8">
-        <LabelledText label={t(EntityFieldsI18nKey.name)} text={skill.name} />
-        {skill.description && <LabelledText label={t(EntityFieldsI18nKey.description)} text={skill.description} />}
-        {skill.version && <LabelledText label={t(EntityFieldsI18nKey.version)} text={skill.version} />}
-      </div>
       <div className="flex flex-col gap-y-2 flex-1 min-h-0">
         <div className="flex flex-row justify-between items-center">
           <h3 className="text-primary mb-4">

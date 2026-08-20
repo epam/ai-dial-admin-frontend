@@ -1,30 +1,14 @@
 import { ColDef } from 'ag-grid-community';
 
-import { dateTimeColumn, numericColumn } from '@/src/constants/grid-columns/configs';
-import { baseNumberFilter, baseStringFilter, dateFilter } from '@/src/constants/grid-columns/filters';
-import {
-  ANALYTICS_FIELD_QUERY_VALUE_TYPE,
-  CONVERSATION_FIELD_VALUE_TYPE,
-  CURATED_COMPOSED_FIELDS,
-  DATE_FIELD_TYPES,
-  NON_SCALAR_FIELD_TYPES,
-  NUMERIC_FIELD_TYPES,
-} from '@/src/constants/analytics/conversations-trace';
+import { CURATED_COMPOSED_FIELDS, IDENTITY_ENRICHMENT_FIELDS } from '@/src/constants/analytics/conversations-trace';
 import { ConversationProjectableFields } from '@/src/models/analytics/conversations-trace';
-import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { QueryValueType } from '@/src/models/analytics/query';
+import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 
-const isOfferable = (field: AnalyticsEntityField, consumed: Set<string>): boolean =>
-  !field.sensitive && !field.heavy && !NON_SCALAR_FIELD_TYPES.includes(field.type) && !consumed.has(field.name);
-
-const consumedFields = (curated: ColDef[]): Set<string> =>
+// Every stored field the curated column set reads: the field behind each column, plus the fields a composed
+// column reads without having a field of its own. The grid offers nothing beyond this set, so this is also
+// the whole of what the list query may project.
+const curatedFields = (curated: ColDef[]): Set<string> =>
   new Set<string>([...curated.map((column) => column.field as string), ...CURATED_COMPOSED_FIELDS]);
-
-export const offerableSchemaFields = (curated: ColDef[], fields: AnalyticsEntityField[] = []): string[] => {
-  const consumed = consumedFields(curated);
-
-  return fields.filter((field) => isOfferable(field, consumed)).map((field) => field.name);
-};
 
 // A plain column of the entity's own source reports its flat name as the field backing it, so the two are
 // equal. Anything the service supplies through an enrichment is namespaced by that enrichment, leaving the
@@ -37,19 +21,18 @@ export const projectableSchemaFields = (
   curated: ColDef[],
   fields: AnalyticsEntityField[] = [],
 ): ConversationProjectableFields => {
-  const consumed = consumedFields(curated);
-  // A curated column is not offered in the catalog — it is designed rather than derived — but it still reads
-  // a stored field, so showing it has to bring that field into the projection on the same terms as a
-  // schema-derived one. Membership in the schema is the test, so the composed Rating column, which has no
-  // field on this entity, falls out without an exclusion list to maintain.
-  const projectable = [
-    ...fields.filter((field) => isOfferable(field, consumed)),
-    ...fields.filter((field) => consumed.has(field.name)),
-  ];
+  const consumed = curatedFields(curated);
+  // Membership in the schema is the test, so the composed Rating column — which has no field on this entity —
+  // falls out without an exclusion list to maintain, and so does a curated field an instance does not carry.
+  const projectable = fields.filter((field) => consumed.has(field.name));
+
+  const required = new Set<string>(IDENTITY_ENRICHMENT_FIELDS);
+  const enrichment = projectable.filter((field) => !isSourceBacked(field));
 
   return {
     sourceBacked: projectable.filter(isSourceBacked).map((field) => field.name),
-    enrichmentBacked: projectable.filter((field) => !isSourceBacked(field)).map((field) => field.name),
+    enrichmentBacked: enrichment.filter((field) => !required.has(field.name)).map((field) => field.name),
+    requiredEnrichment: enrichment.filter((field) => required.has(field.name)).map((field) => field.name),
   };
 };
 
@@ -65,47 +48,13 @@ export const availableSelectFields = (ordered: string[], optional: string[], sch
   return ordered.filter((name) => !isOptional.has(name) || available.has(name));
 };
 
-const typeColumn = (type: AnalyticsFieldType): Partial<ColDef> => {
-  if (NUMERIC_FIELD_TYPES.includes(type)) {
-    return { ...numericColumn, ...baseNumberFilter };
-  }
-  if (DATE_FIELD_TYPES.includes(type)) {
-    return { ...dateTimeColumn, ...dateFilter };
-  }
-  return { ...baseStringFilter };
-};
+// Both allow-lists are derived from the column set rather than held independently of it, and that column set
+// has already dropped any column whose field this instance does not report. The gate is therefore structural:
+// a predicate or an ordering can only name a field some rendered column reads. A hand-maintained list would
+// drift the moment a column is dropped for a lagging instance, and the service rejects the *whole* query for
+// one unknown field — so the failure would be the page, not the control.
+export const sortableColumnFields = (columns: ColDef[]): string[] =>
+  columns.filter((column) => column.sortable !== false && column.field).map((column) => column.field as string);
 
-const toCatalogColumn = (field: AnalyticsEntityField): ColDef => ({
-  field: field.name,
-  headerName: field.display_name || field.name,
-  ...(field.description ? { headerTooltip: field.description } : {}),
-  ...typeColumn(field.type),
-  minWidth: 140,
-  flex: 1,
-  hide: true,
-});
-
-export const buildConversationColumnCatalog = (curated: ColDef[], fields: AnalyticsEntityField[] = []): ColDef[] => {
-  const offerable = new Set(offerableSchemaFields(curated, fields));
-
-  return [...curated, ...fields.filter((field) => offerable.has(field.name)).map(toCatalogColumn)];
-};
-
-export const catalogValueTypes = (fields: AnalyticsEntityField[] = []): Record<string, QueryValueType> => {
-  const types = { ...CONVERSATION_FIELD_VALUE_TYPE } as Record<string, QueryValueType>;
-
-  fields.forEach((field) => {
-    const valueType = ANALYTICS_FIELD_QUERY_VALUE_TYPE[field.type];
-    if (valueType) {
-      types[field.name] = valueType;
-    }
-  });
-
-  return types;
-};
-
-export const catalogSortableFields = (catalog: ColDef[]): string[] =>
-  catalog.filter((column) => column.sortable !== false && column.field).map((column) => column.field as string);
-
-export const catalogFilterableFields = (catalog: ColDef[]): string[] =>
-  catalog.filter((column) => column.filter !== false && column.field).map((column) => column.field as string);
+export const filterableColumnFields = (columns: ColDef[]): string[] =>
+  columns.filter((column) => column.filter !== false && column.field).map((column) => column.field as string);

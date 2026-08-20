@@ -197,6 +197,15 @@ export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: 
           icon: null,
         },
       ];
+    case ApplicationRoute.AssetsSkills:
+      return [
+        ...baseToolbarOptionLabels,
+        {
+          key: 'newItem',
+          label: FileManagerI18nKey.Skill,
+          icon: null,
+        },
+      ];
     default:
       return [];
   }
