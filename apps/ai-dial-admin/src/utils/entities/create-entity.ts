@@ -20,6 +20,7 @@ const createEntityMap: Record<string, CreateI18nKey> = {
   [ApplicationRoute.TestSuites]: CreateI18nKey.TestSuite,
   [ApplicationRoute.Datasets]: CreateI18nKey.Dataset,
   [ApplicationRoute.AnalyticsQueries]: CreateI18nKey.Query,
+  [ApplicationRoute.AssetsSkills]: CreateI18nKey.Skill,
 };
 
 export const getCreateEntityTitle = (

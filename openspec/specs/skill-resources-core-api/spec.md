@@ -2,9 +2,11 @@
 
 ## Purpose
 The Skill Core API client additions backing the `assets-skills` surface: list metadata, parent-folder
-author/date/etag lookup, whole-skill delete, per-file upload/download/preview/delete, and the
-`SkillFolderContext` that both `assets-skills` and the corrected `skill-publications` properties view
-depend on — created by archiving change `add-assets-skills`.
+author/date/etag lookup, whole-skill create and delete, grouping-folder create and delete, per-file
+upload/download/preview/delete, and the `SkillFolderContext` that both `assets-skills` and the
+corrected `skill-publications` properties view depend on — created by archiving change
+`add-assets-skills`; whole-skill and grouping-folder create added by archiving change
+`add-skill-creation`.
 
 ## Requirements
 
@@ -159,3 +161,45 @@ publication-based delete.
 #### Scenario: A failure stops the delete without attempting further items
 - **WHEN** deleting a skill or a folder marker fails partway through
 - **THEN** the method returns the failure immediately without deleting any remaining items
+
+### Requirement: A skill can be created from a name and description, create-only
+The system SHALL provide a Skill Core API method that creates a brand-new skill via a whole-bundle
+multipart request (`PUT /v2/skills/{bucket}/{path}`) containing a single `SKILL.md` part built from a
+given name and description, and SHALL send no `If-Match` header, so Core rejects the request if a
+resource already exists at that path rather than overwriting it.
+
+#### Scenario: Creating a skill sends a single SKILL.md part
+- **WHEN** the create method is called with a path, name, and description
+- **THEN** the request is a multipart `PUT` to the whole-bundle route containing exactly one part,
+  the generated `SKILL.md`
+
+#### Scenario: An existing resource at the target path is not overwritten
+- **WHEN** the create method is called for a path that already resolves to an existing resource
+- **THEN** no `If-Match` header is sent, and Core's rejection of the conflicting create is surfaced to
+  the caller as a failed result rather than retried or silently ignored
+
+### Requirement: A Skills grouping folder can be created
+The system SHALL provide a Skill Core API method that creates an empty grouping folder
+(`PUT /v2/skills/{bucket}/{path}/` — trailing slash, no body), distinct from the whole-skill create
+route (no trailing slash), matching the existing trailing-slash convention already used for
+`deleteSkillFolder`.
+
+#### Scenario: The folder-create route is distinct from the skill-create route
+- **WHEN** a grouping folder is created
+- **THEN** the request targets the trailing-slash folder route, not the whole-skill-create route
+
+### Requirement: A skill's SKILL.md content can be read as raw text
+The system SHALL provide a Skill Core API method that reads `SKILL.md`'s raw content
+(`GET /v2/skills/{bucket}/{path}/files/SKILL.md`), returned as text rather than Core's JSON-wrapped
+metadata shapes, for use by the Skill tab (see `assets-skills` and `skill-publications`). This method
+SHALL be used instead of adding a per-file "content" field to the existing folder-metadata or
+files-listing methods, which carry no file content today.
+
+#### Scenario: The manifest's raw content is returned as text
+- **WHEN** the method is called for a skill's path
+- **THEN** it returns `SKILL.md`'s full raw text content, unparsed
+
+#### Scenario: A missing skill or manifest is reported, not thrown as an unhandled error
+- **WHEN** the method is called for a path that no longer resolves to a skill resource, or whose
+  bundle has no `SKILL.md`
+- **THEN** the call reports a not-found result rather than throwing an unhandled exception

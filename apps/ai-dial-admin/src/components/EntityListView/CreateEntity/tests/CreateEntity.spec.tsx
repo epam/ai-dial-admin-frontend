@@ -1,4 +1,4 @@
-import { ButtonsI18nKey, CreateI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, CreateI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useRouter } from 'next/navigation';
 import { Mock, describe, expect, test, vi } from 'vitest';
@@ -79,5 +79,76 @@ describe('CreateEntity', () => {
 
     await waitFor(() => expect(createModel).toHaveBeenCalled());
     expect(createModel.mock.calls[0][0]).toMatchObject({ displayVersion: '1.0.0' });
+  });
+
+  test('navigates to a path built from folderId + name for AssetsSkills, with no version suffix', async () => {
+    const push = vi.fn();
+    (useRouter as Mock).mockReturnValue({ push });
+
+    const createSkill = vi.fn().mockResolvedValue({ success: true });
+    render(
+      <CreateEntity
+        route={ApplicationRoute.AssetsSkills}
+        isModalOpen={true}
+        onClose={vi.fn()}
+        names={[]}
+        versionsMap={{}}
+        createEntity={createSkill}
+      />,
+    );
+
+    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.name}*` }), {
+      target: { value: 'my-skill' },
+    });
+    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.description}*` }), {
+      target: { value: 'Does a thing' },
+    });
+
+    fireEvent.click(screen.getByText(ButtonsI18nKey.Create));
+
+    await waitFor(() => expect(createSkill).toHaveBeenCalled());
+    await waitFor(() => expect(push).toHaveBeenCalled());
+    expect(push.mock.calls[0][0]).not.toContain('undefined');
+    expect(push.mock.calls[0][0]).toContain('my-skill');
+  });
+
+  test('inserts the missing separator when navigating into a skill created inside a nested folder', async () => {
+    const push = vi.fn();
+    (useRouter as Mock).mockReturnValue({ push });
+
+    const createSkill = vi.fn().mockResolvedValue({ success: true });
+    // A folder's own path (once navigated into) carries no trailing slash, unlike the root default
+    // — concatenating it verbatim previously produced a path with no separator (`New folder 1my-skill`).
+    const context = () => ({
+      filePath: 'public/New folder 1',
+      fetchFiles: vi.fn(),
+    });
+
+    render(
+      <CreateEntity
+        route={ApplicationRoute.AssetsSkills}
+        isModalOpen={true}
+        onClose={vi.fn()}
+        names={[]}
+        versionsMap={{}}
+        createEntity={createSkill}
+        context={context as any}
+      />,
+    );
+
+    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.name}*` }), {
+      target: { value: 'folder-s2' },
+    });
+    fireEvent.change(screen.getByRole('textbox', { name: `${EntityFieldsI18nKey.description}*` }), {
+      target: { value: 'Does a thing' },
+    });
+
+    fireEvent.click(screen.getByText(ButtonsI18nKey.Create));
+
+    await waitFor(() => expect(push).toHaveBeenCalled());
+    // The navigation target embeds the resolved path as an encoded query param, so the `/` between
+    // the folder and the skill name is itself percent-encoded (`%2F`) — the separator this test
+    // guards against being dropped entirely.
+    expect(push.mock.calls[0][0]).toContain(encodeURIComponent('public/New folder 1/folder-s2'));
   });
 });
