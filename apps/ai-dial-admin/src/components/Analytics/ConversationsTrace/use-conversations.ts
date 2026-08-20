@@ -8,6 +8,7 @@ import { getConversations } from '@/src/app/[lang]/conversations-trace/actions';
 import {
   CONVERSATIONS_SEARCH_DEBOUNCE_MS,
   CONVERSATIONS_TIME_PERIOD,
+  CONVERSATION_FIELD_VALUE_TYPE,
 } from '@/src/constants/analytics/conversations-trace';
 import { CONVERSATIONS_TRACE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
@@ -27,11 +28,9 @@ import {
 } from '@/src/models/analytics/conversations-trace';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 import {
-  buildConversationColumnCatalog,
-  catalogFilterableFields,
-  catalogSortableFields,
-  catalogValueTypes,
+  filterableColumnFields,
   projectableSchemaFields,
+  sortableColumnFields,
 } from '@/src/utils/analytics/conversation-column-catalog';
 import {
   ConversationGridFilterModel,
@@ -102,11 +101,10 @@ export const useConversations = (schemaFields?: AnalyticsEntityField[] | null) =
 
   const modelScope: ConversationModelScope = useMemo(() => {
     const curated = CONVERSATIONS_TRACE_COLUMNS(t, schemaFields ?? []);
-    const catalog = buildConversationColumnCatalog(curated, schemaFields ?? []);
     return {
-      sortableFields: catalogSortableFields(catalog),
-      filterableFields: catalogFilterableFields(catalog),
-      valueTypes: catalogValueTypes(schemaFields ?? []),
+      sortableFields: sortableColumnFields(curated),
+      filterableFields: filterableColumnFields(curated),
+      valueTypes: CONVERSATION_FIELD_VALUE_TYPE,
       projectableFields: projectableSchemaFields(curated, schemaFields ?? []),
     };
   }, [schemaFields, t]);
@@ -133,9 +131,14 @@ export const useConversations = (schemaFields?: AnalyticsEntityField[] | null) =
         // A later page reuses the ids the first page of this result resolved; a stale set from a previous
         // filter state is not sent, because the first page of the new one resolves its own.
         const chatIds = candidateRef.current?.key === key ? candidateRef.current.ids : undefined;
-        const visibleEnrichmentFields = (gridApi?.getColumnState() ?? [])
-          .filter((column) => !column.hide && enrichmentFields.has(column.colId))
-          .map((column) => column.colId);
+        // The identity column's fields ride along regardless of column state: that column is always on
+        // screen, so its enrichment is not optional the way a revealable column's is.
+        const visibleEnrichmentFields = [
+          ...(modelScope.projectableFields?.requiredEnrichment ?? []),
+          ...(gridApi?.getColumnState() ?? [])
+            .filter((column) => !column.hide && enrichmentFields.has(column.colId))
+            .map((column) => column.colId),
+        ];
         const loadedKey = resultKey(filters, columnFilters, sort);
         gridApi?.setGridOption('loading', true);
         if (isFirstPage) {
@@ -234,10 +237,22 @@ export const useConversations = (schemaFields?: AnalyticsEntityField[] | null) =
     // Only an enrichment-backed field is absent from the pages already fetched, so only revealing one of
     // those columns has anything to re-fetch. A source-backed field is in every row already.
     const onColumnVisible = (event: ColumnVisibleEvent) => {
-      const isEnrichmentBacked = (event.columns ?? []).some(
-        (column) => column.getColId() && enrichmentFields.has(column.getColId()),
-      );
-      if (event.visible && isEnrichmentBacked) {
+      const colIds = (event.columns ?? []).map((column) => column.getColId()).filter(Boolean);
+
+      if (!event.visible) {
+        // A filter outliving its column keeps narrowing every later page with nothing on screen to explain
+        // it — and on an enrichment field that narrowing is severe, since only the conversations the
+        // evaluation has reached can match. Clearing it re-queries, which is the point: the rows have to
+        // come back.
+        const model = gridApi.getFilterModel();
+        const remaining = Object.fromEntries(Object.entries(model).filter(([colId]) => !colIds.includes(colId)));
+        if (Object.keys(remaining).length !== Object.keys(model).length) {
+          gridApi.setFilterModel(remaining);
+        }
+        return;
+      }
+
+      if (colIds.some((colId) => enrichmentFields.has(colId))) {
         gridApi.purgeInfiniteCache();
       }
     };

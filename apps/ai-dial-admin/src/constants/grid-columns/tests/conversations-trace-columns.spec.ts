@@ -1,11 +1,13 @@
-import { ColDef, ValueFormatterParams } from 'ag-grid-community';
+import { ColDef, ColGroupDef, ValueFormatterParams } from 'ag-grid-community';
 import { describe, expect, test } from 'vitest';
 
-import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace';
 import { baseNumberFilter, baseStringFilter } from '@/src/constants/grid-columns/filters';
-import { CONVERSATIONS_TRACE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
+import {
+  CONVERSATIONS_TRACE_COLUMNS,
+  CONVERSATIONS_TRACE_COLUMN_GROUPS,
+} from '@/src/constants/grid-columns/grid-columns';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
-import { ConversationColumn, ConversationsField } from '@/src/models/analytics/conversations-trace';
+import { ColumnProvenance, ConversationColumn, ConversationsField } from '@/src/models/analytics/conversations-trace';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 
 const t = (key: string) => key;
@@ -26,109 +28,179 @@ const column = (fieldName: string): ColDef => columns().find((col) => col.field 
 const format = (fieldName: string, value: unknown): string =>
   column(fieldName).valueFormatter?.({ value } as ValueFormatterParams) as string;
 
-const DEFAULT_VISIBLE = [
+// The whole set, in rendered order. Column groups are marryChildren, so an origin's columns are adjacent and
+// this order follows the group list rather than an arbitrary preference.
+const ALL_COLUMNS = [
   ConversationsField.ChatId,
-  ConversationsField.InsightTitle,
   ConversationsField.ProjectId,
   ConversationsField.UserHash,
   ConversationsField.TurnCount,
   ConversationsField.LastRequestTime,
   ConversationsField.TotalTokens,
   ConversationsField.TotalPrice,
-  ConversationsField.DurationMs,
   ConversationsField.Deployments,
+  ConversationsField.InsightTopics,
   ConversationColumn.Rating,
 ];
 
-const INSIGHT_COLUMNS = [
-  ConversationsField.InsightSentiment,
-  ConversationsField.InsightSentimentScore,
-  ConversationsField.InsightTopic,
+const HIDDEN_BY_DEFAULT = [
+  ConversationsField.TurnCount,
+  ConversationsField.TotalTokens,
+  ConversationsField.Deployments,
   ConversationsField.InsightTopics,
-  ConversationsField.InsightLanguage,
-  ConversationsField.InsightResolutionStatus,
 ];
 
-const USAGE_COLUMNS = [
-  ConversationsField.CacheCreationTokens,
-  ConversationsField.CachedPromptTokens,
-  ConversationsField.ReasoningTokens,
-  ConversationsField.ChainPriceTotal,
+// Retired by the fixed-column amendment: each was either undesigned, redundant, a description of the
+// evaluator rather than the conversation, or — for duration — a number that reads wrong on a large minority
+// of conversations.
+const RETIRED_FIELDS = [
+  'duration_ms',
+  'conversation_insights.sentiment',
+  'conversation_insights.sentiment_score',
+  'conversation_insights.topic',
+  'conversation_insights.language',
+  'conversation_insights.resolution_status',
+  'cache_creation_tokens',
+  'cached_prompt_tokens',
+  'reasoning_tokens',
+  'chain_price_total',
 ];
 
 describe('conversations columns :: composition', () => {
-  test('exposes the curated columns, default-visible ones first and in order', () => {
-    expect(columns().map((col) => col.field)).toEqual([...DEFAULT_VISIBLE, ...INSIGHT_COLUMNS, ...USAGE_COLUMNS]);
+  test('renders exactly the ten designed columns, in their origin order', () => {
+    expect(columns().map((col) => col.field)).toEqual(ALL_COLUMNS);
   });
 
   test('headers come from i18n keys, not hardcoded strings', () => {
     expect(columns().map((col) => col.headerName)).toEqual([
       ConversationsTraceI18nKey.Conversation,
-      ConversationsTraceI18nKey.DetailTitleField,
       ConversationsTraceI18nKey.Project,
       ConversationsTraceI18nKey.DetailUser,
       ConversationsTraceI18nKey.Turns,
       ConversationsTraceI18nKey.Activity,
       ConversationsTraceI18nKey.Tokens,
       ConversationsTraceI18nKey.Cost,
-      ConversationsTraceI18nKey.Duration,
       ConversationsTraceI18nKey.Deployments,
-      ConversationsTraceI18nKey.Rating,
-      ConversationsTraceI18nKey.Sentiment,
-      ConversationsTraceI18nKey.SentimentScore,
-      ConversationsTraceI18nKey.Topic,
       ConversationsTraceI18nKey.Topics,
-      ConversationsTraceI18nKey.Language,
-      ConversationsTraceI18nKey.ResolutionStatus,
-      ConversationsTraceI18nKey.CacheCreationTokens,
-      ConversationsTraceI18nKey.CachedPromptTokens,
-      ConversationsTraceI18nKey.ReasoningTokens,
-      ConversationsTraceI18nKey.ChainCost,
+      ConversationsTraceI18nKey.Rating,
     ]);
   });
 
-  test('the title column is visible and sits beside the conversation id', () => {
-    const fields = columns().map((col) => col.field);
-
-    expect(column(ConversationsField.InsightTitle).hide).toBeUndefined();
-    expect(fields.indexOf(ConversationsField.InsightTitle)).toBe(fields.indexOf(ConversationsField.ChatId) + 1);
+  // The generic path took a header from the field's display name and formatting from its declared type,
+  // which produced a column headed "Model" holding the evaluator's own deployment. Nothing is derived now.
+  test.each(RETIRED_FIELDS)('offers no column for %s, even where the schema reports it', (fieldName) => {
+    expect(columns().map((col) => col.field)).not.toContain(fieldName);
   });
 
-  test('every other new column defaults to hidden', () => {
-    for (const fieldName of [...INSIGHT_COLUMNS, ...USAGE_COLUMNS]) {
-      expect(column(fieldName).hide).toBe(true);
-    }
+  // The conversation's name and its id are one identity, rendered as two lines of the conversation
+  // column. A column of its own printed the id twice wherever the enrichment had not reached.
+  test('gives the insight title no column of its own', () => {
+    expect(columns().map((col) => col.field)).not.toContain(ConversationsField.InsightTitle);
   });
 
-  // Sentiment or a resolution status is derived by an evaluation rather than recorded by DIAL, and an empty
-  // cell means not-yet-evaluated — so each header has to say where the value came from.
-  test('each insight column discloses that its value comes from an evaluation', () => {
-    for (const fieldName of [ConversationsField.InsightTitle, ...INSIGHT_COLUMNS]) {
-      expect(column(fieldName).headerTooltip).toBe(ConversationsTraceI18nKey.InsightHint);
-    }
+  test('the default view is six columns', () => {
+    const visible = columns()
+      .filter((col) => !col.hide)
+      .map((col) => col.field);
+
+    expect(visible).toEqual([
+      ConversationsField.ChatId,
+      ConversationsField.ProjectId,
+      ConversationsField.UserHash,
+      ConversationsField.LastRequestTime,
+      ConversationsField.TotalPrice,
+      ConversationColumn.Rating,
+    ]);
   });
 
-  test('the chain cost column discloses its coverage gap', () => {
-    expect(column(ConversationsField.ChainPriceTotal).headerTooltip).toBe(ConversationsTraceI18nKey.ChainCostHint);
+  test.each(HIDDEN_BY_DEFAULT)('%s defaults to hidden', (fieldName) => {
+    expect(column(fieldName).hide).toBe(true);
   });
 
-  // NULL wherever no turn of the conversation starts a chain carrying a chat id — a coverage gap, not a
-  // conversation that cost nothing.
-  test('an absent chain cost renders empty rather than as a zero', () => {
-    expect(format(ConversationsField.ChainPriceTotal, null)).toBe('');
-    expect(format(ConversationsField.ChainPriceTotal, 0)).toBe('$0');
+  // How a row is recognised and how it is opened, and the reason its enrichment field is projected
+  // unconditionally: there is no hidden state for a visibility rule to key on.
+  test('the identity column cannot be hidden', () => {
+    const identity = column(ConversationsField.ChatId);
+
+    expect(identity.lockVisible).toBe(true);
+    // The app renders its own columns panel rather than AG Grid's, and that panel reads only
+    // `suppressColumnsToolPanel` — `lockVisible` alone would leave the checkbox live.
+    expect(identity.suppressColumnsToolPanel).toBe(true);
   });
 
-  test('the title column renders through a cell renderer', () => {
-    expect(column(ConversationsField.InsightTitle).cellRenderer).toBeTypeOf('function');
+  test('every other column can be hidden', () => {
+    columns()
+      .filter((col) => col.field !== ConversationsField.ChatId)
+      .forEach((col) => expect(col.lockVisible).toBeFalsy());
   });
 
-  test('the user column reuses the label the detail page uses for the same field', () => {
-    expect(column(ConversationsField.UserHash).headerName).toBe(ConversationsTraceI18nKey.DetailUser);
+  // Two facts about the title, both of which change how its cell reads: where the value came from, and that
+  // it is written from a size-capped copy of the conversation.
+  test('the identity column discloses where its title comes from', () => {
+    expect(column(ConversationsField.ChatId).headerTooltip).toBe(ConversationsTraceI18nKey.ConversationHint);
+  });
+
+  test('the topics column discloses that its values come from an evaluation', () => {
+    expect(column(ConversationsField.InsightTopics).headerTooltip).toBe(ConversationsTraceI18nKey.TopicsHint);
   });
 
   test('the conversation column renders through a cell renderer', () => {
     expect(column(ConversationsField.ChatId).cellRenderer).toBeTypeOf('function');
+  });
+});
+
+describe('conversations columns :: origins', () => {
+  const groups = (schemaFields: AnalyticsEntityField[] = ALL_FIELDS): ColGroupDef[] =>
+    CONVERSATIONS_TRACE_COLUMN_GROUPS(t, schemaFields);
+
+  const childFields = (group: ColGroupDef): string[] => (group.children as ColDef[]).map((col) => col.field as string);
+
+  test('three origins are rendered, named readably rather than by catalog identifier', () => {
+    expect(groups().map((group) => group.headerName)).toEqual([
+      ConversationsTraceI18nKey.ProvenanceConversations,
+      ConversationsTraceI18nKey.ProvenanceInsights,
+      ConversationsTraceI18nKey.ProvenanceFeedback,
+    ]);
+  });
+
+  // An enrichment column attributed to the rollup would state that its empty cells cannot happen, when in
+  // fact they are the common case.
+  test('the topics column is attributed to the enrichment, not the rollup', () => {
+    const insights = groups().find((group) => group.groupId === ColumnProvenance.Insights) as ColGroupDef;
+
+    expect(childFields(insights)).toEqual([ConversationsField.InsightTopics]);
+    expect(childFields(groups()[0])).not.toContain(ConversationsField.InsightTopics);
+  });
+
+  // The grid renders only what a group claims, so a column left out of every group disappears entirely.
+  // There is deliberately no catch-all: sweeping an unattributed column into the rollup group is the
+  // mis-attribution this change removes, which makes the invariant a test's job.
+  test('every column is attributed to exactly one origin', () => {
+    const attributed = groups().flatMap(childFields);
+
+    expect([...attributed].sort()).toEqual([...ALL_COLUMNS].sort());
+    expect(new Set(attributed).size).toBe(attributed.length);
+  });
+
+  test('each origin states what it means', () => {
+    groups().forEach((group) => expect(group.headerTooltip).toBeTruthy());
+  });
+
+  // marryChildren is what keeps an origin's columns adjacent; without it the group header would span
+  // columns read from somewhere else.
+  test('origins keep their columns adjacent', () => {
+    groups().forEach((group) => expect(group.marryChildren).toBe(true));
+  });
+
+  test('an origin whose only column the schema does not report contributes nothing', () => {
+    const withoutInsights = schemaOf(
+      Object.values(ConversationsField).filter((name) => !name.startsWith('conversation_insights.')),
+    );
+    const insights = groups(withoutInsights).find(
+      (group) => group.groupId === ColumnProvenance.Insights,
+    ) as ColGroupDef;
+
+    expect(childFields(insights)).toEqual([]);
   });
 });
 
@@ -140,12 +212,8 @@ describe('conversations columns :: a lagging deployment', () => {
     Object.values(ConversationsField).filter((name) => !name.startsWith('conversation_insights.')),
   );
 
-  test('omits every insight column when the schema reports no insight field', () => {
-    const fields = columns(WITHOUT_INSIGHTS).map((col) => col.field);
-
-    for (const fieldName of [ConversationsField.InsightTitle, ...INSIGHT_COLUMNS]) {
-      expect(fields).not.toContain(fieldName);
-    }
+  test('omits the topics column when the schema reports no insight field', () => {
+    expect(columns(WITHOUT_INSIGHTS).map((col) => col.field)).not.toContain(ConversationsField.InsightTopics);
   });
 
   test('keeps the columns the instance does carry', () => {
@@ -153,7 +221,6 @@ describe('conversations columns :: a lagging deployment', () => {
 
     expect(fields).toContain(ConversationsField.ChatId);
     expect(fields).toContain(ConversationsField.Deployments);
-    expect(fields).toContain(ConversationsField.ChainPriceTotal);
   });
 
   // Rating is composed from the feedback lookups, so no conversations schema will ever report it.
@@ -164,26 +231,15 @@ describe('conversations columns :: a lagging deployment', () => {
 
   // Without a schema nothing optional can be confirmed to exist, and the select names the required core
   // alone — so the column set matches that projection rather than promising columns it cannot fill.
-  test('falls back to the original curated columns when no schema is given', () => {
-    const fields = columns([]).map((col) => col.field);
-
-    expect(fields).toEqual([
-      ConversationsField.ChatId,
-      ConversationsField.ProjectId,
-      ConversationsField.UserHash,
-      ConversationsField.TurnCount,
-      ConversationsField.LastRequestTime,
-      ConversationsField.TotalTokens,
-      ConversationsField.TotalPrice,
-      ConversationsField.DurationMs,
-      ConversationsField.Deployments,
-      ConversationColumn.Rating,
-    ]);
+  test('falls back to the columns that need no optional field when no schema is given', () => {
+    expect(columns([]).map((col) => col.field)).toEqual(
+      ALL_COLUMNS.filter((field) => field !== ConversationsField.InsightTopics),
+    );
   });
 });
 
 describe('conversations columns :: sort and filter contract', () => {
-  const FIELD_BACKED = [
+  const SORTABLE = [
     ConversationsField.ChatId,
     ConversationsField.ProjectId,
     ConversationsField.UserHash,
@@ -191,10 +247,9 @@ describe('conversations columns :: sort and filter contract', () => {
     ConversationsField.LastRequestTime,
     ConversationsField.TotalTokens,
     ConversationsField.TotalPrice,
-    ConversationsField.DurationMs,
   ];
 
-  test.each(FIELD_BACKED)('%s is sortable, because the query can order the whole result by it', (fieldName) => {
+  test.each(SORTABLE)('%s is sortable, because the query can order the whole result by it', (fieldName) => {
     expect(column(fieldName).sortable).not.toBe(false);
   });
 
@@ -205,9 +260,19 @@ describe('conversations columns :: sort and filter contract', () => {
 
   // The query language expresses no ordering or predicate over an array, and the grid pages server-side, so a
   // client-side comparator would order the loaded page and misstate what it did.
-  test('models offers neither a sort nor a filter affordance', () => {
+  test('deployments offers neither a sort nor a filter affordance', () => {
     expect(column(ConversationsField.Deployments).sortable).toBe(false);
     expect(column(ConversationsField.Deployments).filter).toBe(false);
+  });
+
+  // A delimited string: lexicographic order would sort by whichever term happens to be written first, while
+  // a contains predicate matches a term wherever it sits.
+  test('topics offers a text filter but no sort', () => {
+    expect(column(ConversationsField.InsightTopics).sortable).toBe(false);
+    expect(column(ConversationsField.InsightTopics).filter).not.toBe(false);
+    expect(column(ConversationsField.InsightTopics).filterParams?.filterOptions).toEqual(
+      baseStringFilter.filterParams?.filterOptions,
+    );
   });
 
   test.each([[ConversationsField.ChatId], [ConversationsField.ProjectId], [ConversationsField.UserHash]])(
@@ -218,19 +283,21 @@ describe('conversations columns :: sort and filter contract', () => {
     },
   );
 
-  test.each([
-    [ConversationsField.TurnCount],
-    [ConversationsField.TotalTokens],
-    [ConversationsField.TotalPrice],
-    [ConversationsField.DurationMs],
-  ])('%s offers a number filter', (fieldName) => {
-    expect(column(fieldName).filter).toBe(baseNumberFilter.filter);
-    expect(column(fieldName).filterParams?.filterOptions).toEqual(baseNumberFilter.filterParams?.filterOptions);
-  });
+  test.each([[ConversationsField.TurnCount], [ConversationsField.TotalTokens], [ConversationsField.TotalPrice]])(
+    '%s offers a number filter',
+    (fieldName) => {
+      expect(column(fieldName).filter).toBe(baseNumberFilter.filter);
+      expect(column(fieldName).filterParams?.filterOptions).toEqual(baseNumberFilter.filterParams?.filterOptions);
+    },
+  );
 
-  test('activity sorts but offers no filter', () => {
+  // The toolbar's period control already predicates on this field. A second control over the same axis would
+  // let a filter appear to widen a range the period clips, and the value type would have to survive AG Grid's
+  // date model reaching a service that only parses epoch millis.
+  test('activity sorts but offers no filter, because the period control owns that axis', () => {
     expect(column(ConversationsField.LastRequestTime).sortable).not.toBe(false);
     expect(column(ConversationsField.LastRequestTime).filter).toBe(false);
+    expect(column(ConversationsField.LastRequestTime).floatingFilter).toBe(false);
   });
 
   test('text filters offer no prefix or suffix matching', () => {
@@ -318,18 +385,6 @@ describe('conversations columns :: value formatting', () => {
     expect(column(ConversationsField.UserHash).valueFormatter).toBeUndefined();
   });
 
-  test.each([
-    ['a sub-minute duration', 6709, '6.7s'],
-    ['a multi-minute duration', 275234, '4m 35s'],
-  ])('duration renders %s as %s', (_label, value, expected) => {
-    expect(format(ConversationsField.DurationMs, value)).toBe(expected);
-  });
-
-  // A conversation that ran took time, so a 0 records that the backend never measured it.
-  test('duration renders an unmeasured zero as the unavailable marker rather than 0s', () => {
-    expect(format(ConversationsField.DurationMs, 0)).toBe(UNAVAILABLE_VALUE);
-  });
-
   // Which value is a model is not derivable from the array: a router deployed under a plain name looks like a
   // model, and an embedding deployment that was billed belongs to the billed set. Measured against
   // `turns.models`, the old name heuristic kept orchestrators and dropped billed embeddings — so the column
@@ -358,5 +413,23 @@ describe('conversations columns :: value formatting', () => {
     expect(deploymentsColumn.tooltipValueGetter?.({ data: { deployments } } as never)).toBe(
       'applications/public/qa__0.0.1, gpt-4.1-2025-04-14',
     );
+  });
+
+  test('topics renders through a cell renderer and keeps its whole list in the tooltip', () => {
+    const topicsColumn = column(ConversationsField.InsightTopics);
+    const data = { 'conversation_insights.topics': 'security, code review,validation' };
+
+    expect(typeof topicsColumn.cellRenderer).toBe('function');
+    expect(topicsColumn.tooltipValueGetter?.({ data } as never)).toBe('security, code review, validation');
+  });
+
+  test('a conversation the evaluation has not reached carries no topics tooltip', () => {
+    expect(column(ConversationsField.InsightTopics).tooltipValueGetter?.({ data: {} } as never)).toBeNull();
+  });
+
+  // The log states no duration at all now, so the rule about an unmeasured zero moved with the figures to
+  // the detail view's usage panel, where they are still shown.
+  test('no column formats a duration, since the log states none', () => {
+    expect(columns().every((col) => col.field !== 'duration_ms')).toBe(true);
   });
 });

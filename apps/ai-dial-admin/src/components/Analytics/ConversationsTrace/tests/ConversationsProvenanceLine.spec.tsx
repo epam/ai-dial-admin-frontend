@@ -26,6 +26,15 @@ describe('ConversationsProvenanceLine', () => {
     expect(screen.getByText(FEEDBACK_ENTITY)).toHaveClass('text-warning');
   });
 
+  // An enrichment is never an entity the page queries: the service exposes its columns through the entity it
+  // decorates. So the line names the two tables the queries actually target, while the grid's origin groups —
+  // which answer a different question, where a value came from — do distinguish the enrichment.
+  test('does not name the insight enrichment, which the page never queries as an entity', () => {
+    render(<ConversationsProvenanceLine />);
+
+    expect(screen.queryByText('conversation_insights')).not.toBeInTheDocument();
+  });
+
   // A source the page does not query must not be named at all, and nothing here is pending.
   test('names only the entities the page queries, none of them pending', () => {
     render(<ConversationsProvenanceLine />);
