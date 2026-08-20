@@ -638,6 +638,7 @@ export enum TopicsI18nKey {
 
 export enum TabsI18nKey {
   Properties = 'Tabs.Properties',
+  Skill = 'Tabs.Skill',
   Features = 'Tabs.Features',
   Roles = 'Tabs.Roles',
   Interceptors = 'Tabs.Interceptors',

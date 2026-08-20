@@ -25,27 +25,17 @@ function actionId(key: 'Preview' | 'Download' | 'Remove') {
 
 const buildSkill = (overrides: Partial<DialSkillResource> = {}): DialSkillResource => ({
   name: 'my-skill',
-  description: 'Does a thing',
-  version: '1',
   path: 'review/my-skill',
   folderId: 'review/',
-  files: [{ name: 'SKILL.md' }],
+  files: [{ name: 'existing.md' }],
   ...overrides,
 });
 
 describe('Publications :: SkillDetails', () => {
-  test('renders the skill name, description, and version', () => {
-    render(<SkillDetails skill={buildSkill()} />);
+  test('excludes SKILL.md from the file listing', () => {
+    render(<SkillDetails skill={buildSkill({ files: [{ name: 'SKILL.md' }, { name: 'notes.md' }] })} />);
 
-    expect(screen.getByText('my-skill')).toBeInTheDocument();
-    expect(screen.getByText('Does a thing')).toBeInTheDocument();
-    expect(screen.getByText('1')).toBeInTheDocument();
-  });
-
-  test('omits description and version labels when absent', () => {
-    render(<SkillDetails skill={buildSkill({ description: undefined, version: undefined })} />);
-
-    expect(screen.queryByText('Does a thing')).not.toBeInTheDocument();
+    expect(capturedGridProps.rowData).toEqual([{ name: 'notes.md' }]);
   });
 
   test('renders the file list title with the file count', () => {
@@ -69,23 +59,11 @@ describe('Publications :: SkillDetails', () => {
     expect(items?.map((item) => item.id)).toEqual([actionId('Preview'), actionId('Download'), actionId('Remove')]);
   });
 
-  test('hides the remove action for SKILL.md, but not for other files', () => {
-    render(<SkillDetails skill={buildSkill({ files: [{ name: 'SKILL.md' }, { name: 'notes.md' }] })} />);
-
-    const actionsColumn = capturedGridProps.columnDefs?.find((col) => col.field === ACTIONS_COLUMN_CEL_ID);
-    const removeItem = (
-      actionsColumn?.cellRendererParams as { items: { id: string; hidden?: (a: unknown, n: unknown) => boolean }[] }
-    )?.items.find((item) => item.id === actionId('Remove'));
-
-    expect(removeItem?.hidden?.(undefined, { data: { name: 'SKILL.md' } } as never)).toBe(true);
-    expect(removeItem?.hidden?.(undefined, { data: { name: 'notes.md' } } as never)).toBe(false);
-  });
-
   test('hides preview and download for a staged, not-yet-uploaded file', () => {
     const file = new File(['content'], 'notes.md');
     render(<SkillDetails skill={buildSkill()} addedFiles={[file]} />);
 
-    expect(capturedGridProps.rowData).toEqual([{ name: 'SKILL.md' }, { name: 'notes.md', isNew: true }]);
+    expect(capturedGridProps.rowData).toEqual([{ name: 'existing.md' }, { name: 'notes.md', isNew: true }]);
     const actionsColumn = capturedGridProps.columnDefs?.find((col) => col.field === ACTIONS_COLUMN_CEL_ID);
     const items = (
       actionsColumn?.cellRendererParams as { items: { id: string; hidden?: (a: unknown, n: unknown) => boolean }[] }
@@ -95,18 +73,18 @@ describe('Publications :: SkillDetails', () => {
 
     expect(previewItem?.hidden?.(undefined, { data: { name: 'notes.md', isNew: true } } as never)).toBe(true);
     expect(downloadItem?.hidden?.(undefined, { data: { name: 'notes.md', isNew: true } } as never)).toBe(true);
-    expect(previewItem?.hidden?.(undefined, { data: { name: 'SKILL.md' } } as never)).toBe(false);
+    expect(previewItem?.hidden?.(undefined, { data: { name: 'existing.md' } } as never)).toBe(false);
   });
 
   test('excludes files staged for removal from the row list', () => {
     render(
       <SkillDetails
-        skill={buildSkill({ files: [{ name: 'SKILL.md' }, { name: 'notes.md' }] })}
+        skill={buildSkill({ files: [{ name: 'existing.md' }, { name: 'notes.md' }] })}
         removedFileNames={['notes.md']}
       />,
     );
 
-    expect(capturedGridProps.rowData).toEqual([{ name: 'SKILL.md' }]);
+    expect(capturedGridProps.rowData).toEqual([{ name: 'existing.md' }]);
   });
 
   describe('disabled (e.g. read-only admin)', () => {

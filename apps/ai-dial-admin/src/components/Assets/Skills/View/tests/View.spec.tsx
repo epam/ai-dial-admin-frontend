@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
-import { moveSkills, removeSkillFile, uploadSkillFile } from '@/src/app/[lang]/assets-skills/actions';
+import { getSkillManifest, moveSkills, removeSkillFile, uploadSkillFile } from '@/src/app/[lang]/assets-skills/actions';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { DialSkillResource } from '@/src/models/dial/resource';
 import SkillView from '../View';
@@ -31,6 +31,7 @@ vi.mock('@/src/components/Common/FilePath/FilePath', () => ({
 vi.mock('@/src/app/[lang]/assets-skills/actions', () => ({
   getSkill: vi.fn(),
   getSkills: vi.fn(),
+  getSkillManifest: vi.fn(),
   removeSkill: vi.fn(),
   bulkDeleteSkills: vi.fn(),
   uploadSkillFile: vi.fn(),
@@ -177,5 +178,74 @@ describe('SkillView', () => {
 
     await waitFor(() => expect(showNotification).toHaveBeenCalled());
     expect(push).not.toHaveBeenCalled();
+  });
+
+  describe('Skill tab', () => {
+    const manifestContent = '---\nname: my-skill\ndescription: Does a thing\n---\nBody text.\n';
+
+    test('fetches and shows the parsed manifest on first activation', async () => {
+      vi.mocked(getSkillManifest).mockResolvedValue({ success: true, response: manifestContent });
+      const user = userEvent.setup();
+      render(<SkillView skill={buildSkill()} />);
+
+      await user.click(screen.getByRole('tab', { name: 'Tabs.Skill' }));
+
+      await waitFor(() => expect(getSkillManifest).toHaveBeenCalledWith('public/my-skill'));
+      const nameInput = (await screen.findByLabelText(EntityFieldsI18nKey.name)) as HTMLInputElement;
+      expect(nameInput.value).toBe('my-skill');
+      expect(nameInput).toBeDisabled();
+    });
+
+    test('shows an error notification when the manifest fails to load', async () => {
+      vi.mocked(getSkillManifest).mockResolvedValue({ success: false, errorMessage: 'boom' });
+      const user = userEvent.setup();
+      render(<SkillView skill={buildSkill()} />);
+
+      await user.click(screen.getByRole('tab', { name: 'Tabs.Skill' }));
+
+      await waitFor(() => expect(showNotification).toHaveBeenCalled());
+    });
+
+    test('editing description stages a change, and saving reassembles and uploads SKILL.md', async () => {
+      vi.mocked(getSkillManifest).mockResolvedValue({ success: true, response: manifestContent });
+      vi.mocked(uploadSkillFile).mockResolvedValue({ success: true });
+      const user = userEvent.setup();
+      render(<SkillView skill={buildSkill()} />);
+
+      await user.click(screen.getByRole('tab', { name: 'Tabs.Skill' }));
+      const descriptionInput = await screen.findByLabelText(new RegExp(EntityFieldsI18nKey.description));
+      await user.type(descriptionInput, '!');
+
+      const saveButton = await screen.findByRole('button', { name: /save/i });
+      await user.click(saveButton);
+
+      await waitFor(() => expect(uploadSkillFile).toHaveBeenCalled());
+      const [path, filePath, formData] = vi.mocked(uploadSkillFile).mock.calls[0];
+      expect(path).toBe('public/my-skill');
+      expect(filePath).toBe('SKILL.md');
+      const uploadedContent = await (formData.get('file') as File).text();
+      expect(uploadedContent).toContain('description: Does a thing!');
+      expect(refresh).toHaveBeenCalled();
+    });
+
+    test('discarding a staged description edit reverts it without calling Core', async () => {
+      vi.mocked(getSkillManifest).mockResolvedValue({ success: true, response: manifestContent });
+      const user = userEvent.setup();
+      render(<SkillView skill={buildSkill()} />);
+
+      await user.click(screen.getByRole('tab', { name: 'Tabs.Skill' }));
+      const descriptionInput = (await screen.findByLabelText(
+        new RegExp(EntityFieldsI18nKey.description),
+      )) as HTMLTextAreaElement;
+      await user.type(descriptionInput, '!');
+
+      const discardButton = await screen.findByRole('button', { name: /discard/i });
+      await user.click(discardButton);
+      const confirmButton = await screen.findByRole('button', { name: /discard/i });
+      await user.click(confirmButton);
+
+      expect(screen.queryByRole('button', { name: /save/i })).not.toBeInTheDocument();
+      expect(uploadSkillFile).not.toHaveBeenCalled();
+    });
   });
 });

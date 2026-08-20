@@ -9,6 +9,7 @@ import {
   createSkill,
   createSkillFolder,
   getSkill,
+  getSkillManifest,
   getSkills,
   removeSkill,
   removeSkillFile,
@@ -117,6 +118,29 @@ describe('Assets Skills :: server actions', () => {
 
     expect(result.success).toBe(false);
     expect(skillsCoreApi.uploadSkillFile).not.toHaveBeenCalled();
+  });
+
+  test('getSkillManifest delegates to the Core client', async () => {
+    (skillsCoreApi.getSkillManifestContent as any).mockResolvedValue({
+      success: true,
+      response: '---\nname: my-skill\ndescription: Does a thing\n---\nBody.',
+    });
+
+    const result = await getSkillManifest('public/my-skill');
+
+    expect(skillsCoreApi.getSkillManifestContent).toHaveBeenCalledWith(TOKEN_MOCK, 'public/my-skill');
+    expect(result).toEqual({
+      success: true,
+      response: '---\nname: my-skill\ndescription: Does a thing\n---\nBody.',
+    });
+  });
+
+  test('getSkillManifest reports not-found when the manifest cannot be read', async () => {
+    (skillsCoreApi.getSkillManifestContent as any).mockResolvedValue({ success: false });
+
+    const result = await getSkillManifest('public/missing');
+
+    expect(result.success).toBe(false);
   });
 
   test('removeSkillFile delegates to the Core client, etag optional', async () => {

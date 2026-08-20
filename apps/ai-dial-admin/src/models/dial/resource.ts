@@ -194,8 +194,11 @@ export interface DialToolsetResource extends DialResource {
 /**
  * A skill resource's folder metadata. `name`/`folderId` are derived from `path` alone (Core exposes
  * no separate display name — see `SkillsCoreApi.getSkillMetadata`'s doc comment); `description`/
- * `version` live only in `SKILL.md`'s frontmatter and are deliberately left unpopulated until
- * in-browser `SKILL.md` editing is built. `files` lists the bundle's contents, read separately via
+ * `version` live only in `SKILL.md`'s frontmatter and are deliberately left unpopulated here — the
+ * Skill tab (see `SkillManifestTab`) fetches and parses `SKILL.md`'s content independently
+ * (`getSkillManifestContent`/`parseSkillManifest`) rather than populating them on this model, since
+ * every other consumer of `DialSkillResource` (the list, the folder tree) never needs the manifest's
+ * content and shouldn't pay for fetching it. `files` lists the bundle's contents, read separately via
  * `SkillsCoreApi.getSkillFiles` (Core's metadata endpoint reports no per-file size).
  */
 export interface DialSkillResource {
