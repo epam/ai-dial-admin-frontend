@@ -26,6 +26,7 @@ import {
 import { isAssetView, isAssetWithVersion } from '@/src/utils/is-view';
 import { getErrorNotification, getSuccessNotification } from '@/src/utils/notification';
 import { getEntityPath } from '@/src/utils/open-in-new-tab';
+import { addTrailingSlash } from '@/src/utils/url';
 import { RoutesForCheckingUniqueName } from './constants';
 
 interface CreateEntityBase extends BaseEntity {
@@ -114,8 +115,23 @@ const CreateEntity = <T extends CreateEntityBase>({
             ),
           );
           const originalRoute = route.split('/')[1];
+          // Skill has nothing for `getEntityPath`'s shared branch (Prompts/Files/AssetsApplications/
+          // AssetsToolsets/AssetsSkills) to build a path from otherwise — no version, so it would fall
+          // back to a literal `__undefined` suffix. Scoped to this one route rather than "no version"
+          // generically: AssetsModels/AssetsAppRunners also have no version, but their own branch in
+          // `getEntityPath` already prefers an explicit `path` over its `$id` fallback, so adding one
+          // unconditionally there would change already-working behavior (design D5).
           const newEntity = isAssetView(route)
-            ? { folderId: entity.folderId, name: entity.name, version: entity.version, $id: entityId }
+            ? {
+                folderId: entity.folderId,
+                name: entity.name,
+                version: entity.version,
+                $id: entityId,
+                path:
+                  route === ApplicationRoute.AssetsSkills
+                    ? `${addTrailingSlash(entity.folderId)}${entity.name || ''}`
+                    : undefined,
+              }
             : res.response || entity;
           router.push(`${initialValues ? '/' : ''}${originalRoute}/${getEntityPath(route, newEntity, false)}`);
           onClose();

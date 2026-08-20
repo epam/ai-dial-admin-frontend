@@ -4,7 +4,16 @@ import { skillsCoreApi } from '@/src/app/api/api';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { bulkDeleteSkills, getSkill, getSkills, removeSkill, removeSkillFile, uploadSkillFile } from './actions';
+import {
+  bulkDeleteSkills,
+  createSkill,
+  createSkillFolder,
+  getSkill,
+  getSkills,
+  removeSkill,
+  removeSkillFile,
+  uploadSkillFile,
+} from './actions';
 
 vi.mock('@/src/utils/auth/auth-request');
 vi.mock('@/src/utils/env/get-auth-toggle');
@@ -136,6 +145,39 @@ describe('Assets Skills :: server actions', () => {
 
     expect(skillsCoreApi.deleteSkill).toHaveBeenNthCalledWith(1, TOKEN_MOCK, 'a', 'etag-1');
     expect(skillsCoreApi.deleteSkill).toHaveBeenNthCalledWith(2, TOKEN_MOCK, 'b', 'etag-2');
+    expect(result).toEqual({ success: true });
+  });
+
+  test('createSkill builds the path from folderId + name and delegates to the Core client', async () => {
+    (skillsCoreApi.createSkill as any).mockResolvedValue({ success: true });
+
+    const result = await createSkill('my-skill', 'Does a thing', 'public/');
+
+    expect(skillsCoreApi.createSkill).toHaveBeenCalledWith(TOKEN_MOCK, 'public/my-skill', 'my-skill', 'Does a thing');
+    expect(result).toEqual({ success: true });
+  });
+
+  test('createSkill inserts the missing separator when folderId has no trailing slash', async () => {
+    // A nested folder's own path (after navigating into it) doesn't carry a trailing slash, unlike
+    // the root's `public/` — concatenating it verbatim previously produced `New folder 1my-skill`.
+    (skillsCoreApi.createSkill as any).mockResolvedValue({ success: true });
+
+    await createSkill('my-skill', 'Does a thing', 'public/New folder 1');
+
+    expect(skillsCoreApi.createSkill).toHaveBeenCalledWith(
+      TOKEN_MOCK,
+      'public/New folder 1/my-skill',
+      'my-skill',
+      'Does a thing',
+    );
+  });
+
+  test('createSkillFolder delegates to the Core client', async () => {
+    (skillsCoreApi.createSkillFolder as any).mockResolvedValue({ success: true });
+
+    const result = await createSkillFolder('public/new-folder');
+
+    expect(skillsCoreApi.createSkillFolder).toHaveBeenCalledWith(TOKEN_MOCK, 'public/new-folder');
     expect(result).toEqual({ success: true });
   });
 
