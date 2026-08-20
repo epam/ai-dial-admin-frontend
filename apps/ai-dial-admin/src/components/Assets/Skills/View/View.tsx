@@ -19,6 +19,7 @@ import { getErrorNotification, getSuccessNotification } from '@/src/utils/notifi
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { EntityViewTab, getTabsForAsset } from '@/src/utils/tabs/utils';
 import { addTrailingSlash } from '@/src/utils/url';
+import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 interface Props {
   skill: DialSkillResource;
@@ -172,7 +173,7 @@ const SkillView: FC<Props> = ({ skill: originalSkill }) => {
   ]);
 
   const onRemoveSkill = useCallback(
-    (path: string) => removeSkill(path, originalSkill.etag as string),
+    (path: string) => removeSkill(path, originalSkill.etag || DEFAULT_ETAG),
     [originalSkill.etag],
   );
 
