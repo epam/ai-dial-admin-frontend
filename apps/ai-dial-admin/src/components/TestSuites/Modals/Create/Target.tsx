@@ -5,13 +5,12 @@ import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useRef, 
 import { DialTabs } from '@epam/ai-dial-ui-kit';
 
 import { getDeployments } from '@/src/app/[lang]/test-suites/actions';
-import { TEMP_FOLDER } from '@/src/constants/file';
+import RadioSelectGrid from '@/src/components/Grid/GridView/RadioSelectGrid';
 import { EVALUATION_DEPLOYMENTS_COLUMNS, MCP_DEPLOYMENTS_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey, MenuI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Deployment, DeploymentType } from '@/src/models/evaluation/deployment';
 import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
-import RadioSelectGrid from '@/src/components/Grid/GridView/RadioSelectGrid';
 import { TargetTab } from './types';
 import { buildDeploymentUpdate, buildMcpDeploymentUpdate, getInitialTab } from './utils';
 
@@ -29,6 +28,9 @@ const Target: FC<Props> = ({ selectedTargetId, suiteType, onChangeTarget, onChan
   const [deployments, setDeployments] = useState<Deployment[] | null>(null);
   const initialSelectedIdRef = useRef(selectedTargetId);
   const hasSwitchedTabRef = useRef(false);
+  // Deployments per tab don't change while the modal is open, so cache each tab's result here to
+  // avoid re-fetching every time the user switches back to a previously loaded tab.
+  const deploymentsByTabRef = useRef<Map<string, Deployment[]>>(new Map());
 
   const tabs = useMemo(
     () => [
@@ -51,6 +53,12 @@ const Target: FC<Props> = ({ selectedTargetId, suiteType, onChangeTarget, onChan
   );
 
   useEffect(() => {
+    const cached = deploymentsByTabRef.current.get(activeTab);
+    if (cached) {
+      setDeployments(cached);
+      return;
+    }
+
     setDeployments([]);
     const type =
       activeTab === TargetTab.Applications
@@ -62,9 +70,9 @@ const Target: FC<Props> = ({ selectedTargetId, suiteType, onChangeTarget, onChan
     setIsLoading(true);
 
     getDeployments(type, activeTab === TargetTab.Mcp ? 'mcp' : void 0).then((res) => {
-      if (res?.success) {
-        setDeployments(res.response?.filter((res) => res.displayName !== TEMP_FOLDER) || []);
-      }
+      const filtered = res?.response || [];
+      deploymentsByTabRef.current.set(activeTab, filtered);
+      setDeployments(filtered);
       setIsLoading(false);
     });
   }, [activeTab]);
