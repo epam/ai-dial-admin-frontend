@@ -21,6 +21,7 @@ import {
   ConversationDetailPanel as Panel,
   ConversationDetailRow,
   ConversationFeedbackRow,
+  PanelProvenance,
   RatingCounts as RatingCountsModel,
 } from '@/src/models/analytics/conversations-trace';
 import { resolveConversationField } from '@/src/utils/analytics/conversation-detail-fields';
@@ -33,10 +34,9 @@ const PANEL_ICON: Record<Panel, ReactNode> = {
   [Panel.Metadata]: <IconDatabase size={ICON_SIZE} aria-hidden />,
 };
 
-const SOURCE_LABEL: Record<ColumnProvenance, string> = {
+const SOURCE_LABEL: Record<PanelProvenance, string> = {
   [ColumnProvenance.Conversations]: CONVERSATIONS_ENTITY,
   [ColumnProvenance.Feedback]: FEEDBACK_ENTITY,
-  [ColumnProvenance.None]: '',
 };
 
 interface Props {

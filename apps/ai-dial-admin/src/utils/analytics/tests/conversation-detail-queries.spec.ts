@@ -83,11 +83,13 @@ describe('buildConversationDetailQuery', () => {
     expect(page.include_total).toBe(true);
   });
 
+  // The count is a canary: the enum is what the detail select enumerates, so a member added without a place
+  // to render it silently widens every single-conversation query.
   test('selects every stored column of the rollup', () => {
     const names = selectedNames(detailQuery().select);
 
     expect(names).toEqual(Object.values(ConversationsField));
-    expect(names).toHaveLength(26);
+    expect(names).toHaveLength(18);
   });
 
   // `traces` is catalogued heavy, so a default projection returns no value for it and the metadata panel's

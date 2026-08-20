@@ -47,18 +47,24 @@ describe('conversationTitle', () => {
     );
   });
 
-  test('falls back to the conversation id when the enrichment has no row', () => {
-    expect(conversationTitle(RECORD)).toBe(RECORD.chat_id);
+  test('reports no title when the enrichment has no row', () => {
+    expect(conversationTitle(RECORD)).toBeNull();
   });
 
-  test('falls back to the conversation id for a null, empty or whitespace-only title', () => {
+  test('reports no title for a null, empty or whitespace-only title', () => {
     for (const title of [null, '', '   ']) {
-      expect(conversationTitle({ ...RECORD, 'conversation_insights.title': title })).toBe(RECORD.chat_id);
+      expect(conversationTitle({ ...RECORD, 'conversation_insights.title': title })).toBeNull();
     }
   });
 
-  // The grid's title column and the header read the same helper, so one conversation cannot be named two
-  // different things in the two places.
+  // Both callers render the conversation id beside the title, so falling back to it would print the id
+  // twice and name the conversation after its own hash.
+  test('never falls back to the conversation id', () => {
+    expect(conversationTitle(RECORD)).not.toBe(RECORD.chat_id);
+  });
+
+  // The grid's identity column and the header read the same helper, so one conversation cannot be named
+  // two different things in the two places.
   test('resolves a grid row and a detail row identically', () => {
     const title = 'Refund policy for EU orders';
 

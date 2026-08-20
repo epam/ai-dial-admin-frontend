@@ -9,6 +9,8 @@ import { ConversationDetailRow } from '@/src/models/analytics/conversations-trac
 const CHAT_ID = 'Lrr0e6L5bpTND3IY_dN0_';
 const NOW_MS = Date.parse('2026-07-22T12:12:52.157Z');
 
+const TITLE = 'Refund policy for EU orders';
+
 const CONVERSATION: ConversationDetailRow = {
   chat_id: CHAT_ID,
   project_id: 'internal-copilot',
@@ -24,7 +26,7 @@ const CONVERSATION: ConversationDetailRow = {
   duration_ms: 0,
   avg_duration_ms: 0,
   deployments: ['applications/internal/assistant', 'anthropic_switchyard-model', 'anthropic.claude-opus-4-8'],
-  'conversation_insights.title': 'Refund policy for EU orders',
+  'conversation_insights.title': TITLE,
 };
 
 const renderHeader = (overrides: Partial<ConversationDetailRow> = {}) =>
@@ -35,10 +37,29 @@ beforeEach(() => {
 });
 
 describe('ConversationDetailHeader', () => {
-  test('leads with the conversation id as the heading', () => {
+  test('leads with the conversation name as the heading', () => {
     renderHeader();
 
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(CHAT_ID);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Refund policy for EU orders');
+  });
+
+  // The id identifies the conversation everywhere else, so it stays on the page and stays copyable — it is
+  // just no longer what the page calls the conversation.
+  test('states the conversation id in the meta row rather than the heading', () => {
+    renderHeader();
+
+    expect(screen.getByText(ConversationsTraceI18nKey.DetailId).parentElement).toHaveTextContent(CHAT_ID);
+    expect(screen.getByRole('heading', { level: 1 })).not.toHaveTextContent(CHAT_ID);
+  });
+
+  test('keeps the copy control beside the id', () => {
+    renderHeader();
+
+    const entry = screen.getByText(ConversationsTraceI18nKey.DetailId).parentElement;
+
+    expect(entry).toContainElement(
+      screen.getByRole('button', { name: `copy ${ConversationsTraceI18nKey.Conversation}` }),
+    );
   });
 
   test('offers a copy control for the conversation id', () => {
@@ -47,21 +68,54 @@ describe('ConversationDetailHeader', () => {
     expect(screen.getByRole('button', { name: `copy ${ConversationsTraceI18nKey.Conversation}` })).toBeTruthy();
   });
 
-  test('states the title the insight enrichment carries', () => {
+  // The heading states it, so a labelled Title field beside it would say the same thing twice.
+  test('states the title once, as the heading', () => {
     renderHeader();
 
-    expect(screen.getByText(ConversationsTraceI18nKey.DetailTitleField).parentElement).toHaveTextContent(
-      'Refund policy for EU orders',
-    );
+    const heading = screen.getByRole('heading', { level: 1 });
+
+    expect(heading).toHaveTextContent(TITLE);
+    expect(screen.getAllByText(TITLE)).toHaveLength(1);
   });
 
-  test('falls back to the conversation id when no insight title exists', () => {
+  // The evaluator assembles a conversation's bodies up to a size cap, and 86% of titled conversations hit it.
+  // The log states that once for the column; here there is one conversation and room to say what it means.
+  test('states that a truncated title describes only part of the conversation', () => {
+    renderHeader({ 'conversation_insights.truncated': true });
+
+    expect(screen.getByText(ConversationsTraceI18nKey.DetailTitleTruncated)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(TITLE);
+  });
+
+  test('states nothing about truncation for a title written from the whole conversation', () => {
+    renderHeader({ 'conversation_insights.truncated': false });
+
+    expect(screen.queryByText(ConversationsTraceI18nKey.DetailTitleTruncated)).toBeNull();
+  });
+
+  // Without a title there is nothing for the caveat to qualify.
+  test('states nothing about truncation when there is no title', () => {
+    renderHeader({ 'conversation_insights.title': null, 'conversation_insights.truncated': true });
+
+    expect(screen.queryByText(ConversationsTraceI18nKey.DetailTitleTruncated)).toBeNull();
+  });
+
+  // Falling back to the id would name the conversation after its own hash, and the id is already on the
+  // line below — so the heading says the name is missing instead.
+  test('marks the heading unavailable when no insight title exists', () => {
     renderHeader({ 'conversation_insights.title': null });
 
-    const field = screen.getByText(ConversationsTraceI18nKey.DetailTitleField).parentElement;
+    const heading = screen.getByRole('heading', { level: 1 });
 
-    expect(field).toHaveTextContent(CHAT_ID);
-    expect(field).not.toHaveTextContent(UNAVAILABLE_VALUE);
+    expect(heading).toHaveTextContent(UNAVAILABLE_VALUE);
+    expect(heading).not.toHaveTextContent(CHAT_ID);
+  });
+
+  // A heading whose only text is a dash names nothing for a screen reader.
+  test('gives an untitled conversation an accessible heading name', () => {
+    renderHeader({ 'conversation_insights.title': null });
+
+    expect(screen.getByLabelText(ConversationsTraceI18nKey.NoTitle)).toBeInTheDocument();
   });
 
   test('does not restate the deployments the metadata panel carries', () => {
