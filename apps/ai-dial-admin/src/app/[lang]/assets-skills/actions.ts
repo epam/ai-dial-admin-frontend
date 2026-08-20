@@ -11,6 +11,7 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { addTrailingSlash } from '@/src/utils/url';
 
 /**
  * Lists the direct children of a Skill folder — metadata-only rows, no per-child content or
@@ -48,6 +49,24 @@ export async function getSkill(path: string, _etag?: string): Promise<ServerActi
 export async function removeSkill(path: string, etag: string): Promise<ServerActionResponse> {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return skillsCoreApi.deleteSkill(token, path, etag);
+}
+
+/**
+ * Creates a brand-new skill at `${folderId}${name}`, writing a `SKILL.md` built from name/description.
+ * `folderId` isn't guaranteed to already end with a slash — the root path does (`public/`), but a
+ * nested folder's own path (e.g. after navigating into one) doesn't carry one — so `addTrailingSlash`
+ * normalizes it here rather than trusting the caller to always supply one.
+ */
+export async function createSkill(name: string, description: string, folderId: string): Promise<ServerActionResponse> {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  const path = `${addTrailingSlash(folderId)}${name}`;
+  return skillsCoreApi.createSkill(token, path, name, description);
+}
+
+/** Creates an empty Skills grouping folder at the given path. */
+export async function createSkillFolder(folderPath: string): Promise<ServerActionResponse> {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return skillsCoreApi.createSkillFolder(token, folderPath);
 }
 
 /**
