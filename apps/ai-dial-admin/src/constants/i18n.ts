@@ -2031,6 +2031,7 @@ export enum RunsI18nKey {
   SelectMetricToSeeDistribution = 'Runs.SelectMetricToSeeDistribution',
   TestCasesPassed = 'Runs.TestCasesPassed',
   AvgTestCaseRunTime = 'Runs.AvgTestCaseRunTime',
+  AvgMetricEvalLatency = 'Runs.AvgMetricEvalLatency',
   AvgPerTestCase = 'Runs.AvgPerTestCase',
   Pass = 'Runs.Pass',
   Fail = 'Runs.Fail',

@@ -11,7 +11,7 @@ import {
 import { getMetricLatestVersion, getTestSuite } from '@/src/app/[lang]/test-suites/actions';
 import { intersectStatistics, unionMetricOptions } from '@/src/components/Runs/Compare/Summary/utils';
 import { SummaryOverviewTabUiState } from '@/src/components/Runs/Compare/models';
-import { OVERALL_METRIC_SCORE_NAME } from '@/src/components/Runs/Summary/constants';
+import { AVG_METRIC_EVAL_DURATION_ALIAS, OVERALL_METRIC_SCORE_NAME } from '@/src/components/Runs/Summary/constants';
 import {
   MetricInfo,
   MetricOption,
@@ -21,8 +21,10 @@ import {
 } from '@/src/components/Runs/Summary/models';
 import {
   attachMetricInfo,
+  buildAvgMetricEvalDurationQuery,
   buildMetricScoresQuery,
   buildTestCasesStatusQuery,
+  parseAvgRunTimeMs,
   parseComparisonMetricScores,
   parseMetricScores,
   parseTestCaseStatusCounts,
@@ -55,14 +57,17 @@ const EMPTY_METRIC_SCORES: MetricScoresData = { overallScore: null, statistics: 
 const EMPTY_MATCHED_ANALYTICS: RunAnalyticsSlice = {
   statusCounts: EMPTY_STATUS_COUNTS,
   avgRunTimeMs: null,
+  avgMetricEvalDurationMs: null,
 };
 
 const toMatchedAnalyticsSlice = (
   run: RunComparisonRun | undefined,
   statusCounts: TestCaseStatusCounts,
+  avgMetricEvalDurationMs: number | null = null,
 ): RunAnalyticsSlice => ({
   statusCounts,
   avgRunTimeMs: run?.avgExecDurationMs ?? null,
+  avgMetricEvalDurationMs,
 });
 
 const findComparisonRun = (runs: RunComparisonRun[] | undefined, runId: string): RunComparisonRun | undefined =>
@@ -235,19 +240,30 @@ export const useSummaryOverviewData = ({
         setPrimaryUnmatchedIds(primaryPartial.unmatchedIds);
         setComparedUnmatchedIds(comparedPartial.unmatchedIds);
 
-        const [primaryStatusResult, comparedStatusResult] = await Promise.all([
-          executeStructuredQuery(buildTestCasesStatusQuery(primaryRunId, primaryPartial.unmatchedIds)),
-          executeStructuredQuery(buildTestCasesStatusQuery(comparedRunId, comparedPartial.unmatchedIds)),
-        ]);
+        const [primaryStatusResult, comparedStatusResult, primaryMetricEvalResult, comparedMetricEvalResult] =
+          await Promise.all([
+            executeStructuredQuery(buildTestCasesStatusQuery(primaryRunId, primaryPartial.unmatchedIds)),
+            executeStructuredQuery(buildTestCasesStatusQuery(comparedRunId, comparedPartial.unmatchedIds)),
+            executeStructuredQuery(buildAvgMetricEvalDurationQuery(primaryRunId, primaryPartial.unmatchedIds)),
+            executeStructuredQuery(buildAvgMetricEvalDurationQuery(comparedRunId, comparedPartial.unmatchedIds)),
+          ]);
         if (cancelled) {
           return;
         }
 
         setPrimaryMatchedAnalytics(
-          toMatchedAnalyticsSlice(primaryComparison, parseTestCaseStatusCounts(primaryStatusResult)),
+          toMatchedAnalyticsSlice(
+            primaryComparison,
+            parseTestCaseStatusCounts(primaryStatusResult),
+            parseAvgRunTimeMs(primaryMetricEvalResult, AVG_METRIC_EVAL_DURATION_ALIAS),
+          ),
         );
         setComparedMatchedAnalytics(
-          toMatchedAnalyticsSlice(comparedComparison, parseTestCaseStatusCounts(comparedStatusResult)),
+          toMatchedAnalyticsSlice(
+            comparedComparison,
+            parseTestCaseStatusCounts(comparedStatusResult),
+            parseAvgRunTimeMs(comparedMetricEvalResult, AVG_METRIC_EVAL_DURATION_ALIAS),
+          ),
         );
       });
     } else {
