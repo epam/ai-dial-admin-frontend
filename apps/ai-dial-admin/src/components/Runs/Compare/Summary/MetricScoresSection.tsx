@@ -7,6 +7,7 @@ import { DialAnalyticsBarGroup, DialLoader } from '@epam/ai-dial-ui-kit';
 import MetricStatisticControl from '@/src/components/Common/MetricStatistics/MetricStatisticControl';
 import { getMetricStatisticDescriptionKey } from '@/src/components/Common/MetricStatistics/utils';
 import { getCompareBarGroups, intersectStatistics, maxBarValue } from '@/src/components/Runs/Compare/Summary/utils';
+import { METRIC_SCORES_GRID_CLASS } from '@/src/components/Runs/Summary/constants';
 import { MetricScoresData } from '@/src/components/Runs/Summary/models';
 import SummarySection from '@/src/components/Runs/Summary/SummarySection';
 import { RunsI18nKey } from '@/src/constants/i18n';
@@ -63,7 +64,7 @@ const MetricScoresSection: FC<Props> = ({
       return <p className="dial-small-text text-secondary">{t(RunsI18nKey.NoMetricScores)}</p>;
     }
     return (
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className={METRIC_SCORES_GRID_CLASS}>
         {groups.map((group) => (
           <DialAnalyticsBarGroup
             key={group.name}
@@ -76,11 +77,11 @@ const MetricScoresSection: FC<Props> = ({
             inline
             nonCollapsible
             defaultExpanded
-            className="bg-layer-2"
+            className="min-w-0 overflow-hidden bg-layer-2"
             barDescriptions={group.barDescriptions}
             barClassName="hover:bg-accent-primary-alpha hover:cursor-pointer rounded-sm px-1"
             titleTooltip={group.description}
-            barTitleClassName="text-secondary"
+            barTitleClassName="block min-w-0 truncate text-secondary"
           />
         ))}
       </div>
