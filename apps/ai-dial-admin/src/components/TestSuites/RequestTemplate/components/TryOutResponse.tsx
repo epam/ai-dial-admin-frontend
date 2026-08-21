@@ -30,7 +30,7 @@ interface Props {
 
 const JsonCollapsible: FC<{
   title: string;
-  entity: object | undefined;
+  entity: object | null | undefined;
   isLoading?: boolean;
   wordWrap?: 'off' | 'bounded';
   growOnOpen?: boolean;
@@ -48,7 +48,11 @@ const JsonCollapsible: FC<{
         <DialLoader />
       ) : (
         <div className={growOnOpen ? 'min-h-0 flex-1' : 'h-64'}>
-          <JsonEditor entity={entity} options={{ stickyScroll: { enabled: false }, wordWrap }} readonly={true} />
+          <JsonEditor
+            entity={entity ?? null}
+            options={{ stickyScroll: { enabled: false }, wordWrap }}
+            readonly={true}
+          />
         </div>
       )}
     </CollapsibleSection>
