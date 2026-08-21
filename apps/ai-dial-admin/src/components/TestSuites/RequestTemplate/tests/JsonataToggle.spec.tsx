@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, Mock, test, vi } from 'vitest';
 
 import { ContentType } from '@/src/components/TestSuites/constants/content-type';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { TestSuite, TestSuiteRequestTemplateBody } from '@/src/models/evaluation/test-suite';
 import { FormDataType } from '@/src/models/form-data';
 import JsonataToggle from '../components/JsonataToggle';
@@ -153,6 +154,21 @@ describe('JsonataToggle', () => {
       expect('content' in bodyOfCall(0)).toBe(false);
     });
 
+    test('clears registered JSON editor errors so save is not blocked by the prior mode', () => {
+      const { dispatch } = useSaveValidationContext();
+
+      render(
+        <JsonataToggle
+          testSuite={createTestSuite({ contentType: ContentType.JSON, content: {} })}
+          bodyText={JSONATA_EXPRESSION}
+          onChangeTestSuite={mockOnChangeTestSuite}
+        />,
+      );
+      clickSwitch();
+
+      expect(dispatch).toHaveBeenCalledWith({ type: ValidationActionType.SetJsonEditor, errors: [] });
+    });
+
     test('writes the empty string when the editor was cleared', () => {
       render(
         <JsonataToggle
@@ -233,6 +249,21 @@ describe('JsonataToggle', () => {
       expect('jsonataContent' in bodyOfCall(0)).toBe(false);
       expect(bodyOfCall(0).content).toEqual({});
       expect(bodyOfCall(0).contentType).toBe(ContentType.JSON);
+    });
+
+    test('does not clear JSON editor errors, so Monaco can re-register them', () => {
+      const { dispatch } = useSaveValidationContext();
+
+      render(
+        <JsonataToggle
+          testSuite={createTestSuite({ contentType: ContentType.JSON, jsonataContent: JSONATA_EXPRESSION })}
+          bodyText={JSONATA_EXPRESSION}
+          onChangeTestSuite={mockOnChangeTestSuite}
+        />,
+      );
+      clickSwitch();
+
+      expect(dispatch).not.toHaveBeenCalledWith({ type: ValidationActionType.SetJsonEditor, errors: [] });
     });
 
     test('under JSON contentType, falls back to the type default for a real JSONata expression', () => {

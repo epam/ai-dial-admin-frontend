@@ -225,7 +225,9 @@ existing consumer.
 
 Turning the JSONata switch on SHALL set `body.jsonataContent` to the **current body text exactly as it stands**
 and remove `body.content`, in a single update to the test suite. There SHALL be no serialization, reformatting,
-defaulting or validity check applied to the text on the way in.
+defaulting or validity check applied to the text on the way in. Any Monaco JSON validation errors previously
+registered into `SaveValidationContext` SHALL be cleared in the same update, so they cannot block a subsequent
+save.
 
 Turning the switch **on** SHALL NOT normalize `contentType`: the JSONata branch ignores it, and writing a value
 the user never chose would silently change what a form-data suite sends.
@@ -255,6 +257,13 @@ JSONata expression evaluating to an empty object, and an empty expression does n
   turn-off left a JSONata expression there — and the user turns the switch on
 - **THEN** the updated body SHALL have `jsonataContent` set to that text, character for character
 - **AND** no validity check SHALL be applied
+
+#### Scenario: Enabling JSONata clears prior JSON validation errors
+
+- **WHEN** the JSON editor has registered Monaco validation errors into `SaveValidationContext`
+- **AND** the user turns the JSONata switch on
+- **THEN** those errors SHALL be cleared from `SaveValidationContext`
+- **AND** a subsequent save SHALL NOT be blocked by those prior JSON errors
 
 #### Scenario: Form-data parts are not serialized into the expression
 

@@ -7,6 +7,7 @@ import { DialSwitch } from '@epam/ai-dial-ui-kit';
 import { ContentType } from '@/src/components/TestSuites/constants/content-type';
 import { getContentForJsonataExpression } from '@/src/components/TestSuites/utils/body-content';
 import { JsonAtaI18nKey } from '@/src/constants/i18n';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { TestSuite, TestSuiteRequestTemplateBody } from '@/src/models/evaluation/test-suite';
 
@@ -18,6 +19,7 @@ interface Props {
 
 const JsonataToggle: FC<Props> = ({ testSuite, bodyText, onChangeTestSuite }) => {
   const t = useI18n();
+  const { dispatch } = useSaveValidationContext();
   const body = testSuite.requestTemplate?.body;
   const isOn = body?.jsonataContent != null;
 
@@ -27,6 +29,7 @@ const JsonataToggle: FC<Props> = ({ testSuite, bodyText, onChangeTestSuite }) =>
       let nextBody: TestSuiteRequestTemplateBody;
 
       if (value) {
+        dispatch({ type: ValidationActionType.SetJsonEditor, errors: [] });
         nextBody = { ...restBody, jsonataContent: bodyText };
       } else {
         nextBody = {
@@ -41,7 +44,7 @@ const JsonataToggle: FC<Props> = ({ testSuite, bodyText, onChangeTestSuite }) =>
         requestTemplate: { ...testSuite.requestTemplate, body: nextBody },
       });
     },
-    [body, bodyText, onChangeTestSuite, testSuite],
+    [body, bodyText, dispatch, onChangeTestSuite, testSuite],
   );
 
   return <DialSwitch switchId="jsonataToggle" label={t(JsonAtaI18nKey.ToggleLabel)} isOn={isOn} onChange={onChange} />;
