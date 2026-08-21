@@ -6,6 +6,7 @@ import DescriptionControl from '@/src/components/BaseControls/Description';
 import MdEditor from '@/src/components/Common/MdEditor/MdEditor';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
 
 interface Props {
   name: string;
@@ -33,11 +34,13 @@ const SkillManifestTab: FC<Props> = ({ name, description, body, onChangeDescript
         labelProps={{ label: t(EntityFieldsI18nKey.name) }}
         id="skill-manifest-name"
         value={name}
+        containerClassName={STANDARD_CONTROL_WIDTH}
       />
       <DescriptionControl
         entity={{ description }}
         onChangeEntity={(updated) => onChangeDescription(updated.description ?? '')}
         disabled={disabled}
+        isFullWidth={false}
         required
       />
       <div>
