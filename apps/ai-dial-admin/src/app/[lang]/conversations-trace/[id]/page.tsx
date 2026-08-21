@@ -6,17 +6,18 @@ import Page403 from '@/src/components/Page403/Page403';
 import {
   ConversationDetailRow,
   ConversationFeedbackPage,
-  ConversationMessage,
+  ConversationTranscript,
   ConversationTurnRow,
+  TranscriptState,
 } from '@/src/models/analytics/conversations-trace';
 import { AnalyticsEntitySchema } from '@/src/models/analytics/entity';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { isAnalyticsForbidden } from '@/src/server/analytics/analytics-access';
 import { errorObjLog } from '@/src/server/logger';
-import { mockConversationTranscript } from '@/src/mocks/analytics/conversation-transcript';
 import {
   getConversationDetail,
   getConversationFeedback,
+  getConversationTranscript,
   getConversationTurns,
   getConversationsSchema,
 } from '../actions';
@@ -30,11 +31,12 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
 
   const { id } = await params;
   const chatId = decodeURIComponent(id);
+  const nowMs = Date.now();
 
   let conversation: ConversationDetailRow | null = null;
   let feedback: ConversationFeedbackPage | null = null;
   let turns: ConversationTurnRow[] = [];
-  let messages: ConversationMessage[] = [];
+  let transcript: ConversationTranscript = { state: TranscriptState.LoadFailed, messages: [], loadedTurns: null };
   let hasLoadError = false;
   let hasTurnsLoadError = false;
 
@@ -77,9 +79,20 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
       errorObjLog(turnResult, 'Failed to fetch conversation turns');
     }
 
-    // Sample exchanges follow the turns actually loaded, not the rollup's `turn_count`: each one carries its
-    // turn's real figures, so counting from the rollup would pad a clipped list with figureless messages.
-    messages = mockConversationTranscript(chatId, turns.length);
+    const transcriptResult = await getConversationTranscript(
+      chatId,
+      conversation?.last_request_time ?? null,
+      nowMs,
+    ).catch((e): ServerActionResponse<ConversationTranscript> => {
+      errorObjLog(e, 'Failed to fetch the conversation transcript');
+      return { success: false };
+    });
+
+    transcript = transcriptResult.response ?? { state: TranscriptState.LoadFailed, messages: [], loadedTurns: null };
+
+    if (!transcriptResult.success) {
+      errorObjLog(transcriptResult, 'Failed to fetch the conversation transcript');
+    }
   } catch (e) {
     hasLoadError = true;
     errorObjLog(e, 'Failed to fetch conversation detail data');
@@ -98,8 +111,8 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
       conversation={conversation}
       feedback={feedback}
       turns={turns}
-      messages={messages}
-      nowMs={Date.now()}
+      transcript={transcript}
+      nowMs={nowMs}
       hasTurnsLoadError={hasTurnsLoadError}
     />
   );

@@ -60,6 +60,9 @@ export const ge = (fieldName: string, val: QueryValueExpr): QueryPredicate =>
 export const isNotNull = (fieldName: string): QueryPredicate =>
   predicate(QueryOperator.Ne, fieldName, value(QueryValueType.Null, null));
 
+export const isNull = (fieldName: string): QueryPredicate =>
+  predicate(QueryOperator.Eq, fieldName, value(QueryValueType.Null, null));
+
 export const inValues = (fieldName: string, valueType: QueryValueType, values: string[]): QueryPredicate => ({
   op: QueryOperator.In,
   args: [field(fieldName), { type: QueryExprType.Array, items: values.map((val) => value(valueType, val)) }],

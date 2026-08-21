@@ -9,6 +9,7 @@ import { navigateEntityUrl } from '@/src/components/EntityListView/utils/on-cell
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { infiniteGridOptions } from '@/src/constants/ag-grid';
 import {
+  CONVERSATIONS_FLOATING_FILTER_HEIGHT,
   CONVERSATIONS_GROUP_HEADER_HEIGHT,
   CONVERSATIONS_HEADER_HEIGHT,
   CONVERSATIONS_ROW_HEIGHT,
@@ -76,6 +77,9 @@ const ConversationsList: FC<Props> = ({
           rowHeight: CONVERSATIONS_ROW_HEIGHT,
           headerHeight: CONVERSATIONS_HEADER_HEIGHT,
           groupHeaderHeight: CONVERSATIONS_GROUP_HEADER_HEIGHT,
+          // Pinned so the view can offset its empty state by a header height it knows rather than one it
+          // infers. The value matches AG Grid's own default, so the grid renders exactly as before.
+          floatingFiltersHeight: CONVERSATIONS_FLOATING_FILTER_HEIGHT,
           onCellClicked,
           onCellKeyDown,
           rowClassRules: { 'cursor-pointer': ({ data }) => Boolean(data) },

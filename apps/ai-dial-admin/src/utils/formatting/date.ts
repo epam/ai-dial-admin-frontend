@@ -27,6 +27,21 @@ export const formatDateTimeToLocalString = (value?: number | string): string => 
 };
 
 /**
+ * Format the time-of-day of a datetime to user local format, without the date.
+ *
+ * @param {?number | string} [value] - datetime in milliseconds and iso string
+ * @returns {string} - formatted time string
+ */
+export const formatTimeToLocalString = (value?: number | string): string => {
+  if (!value) {
+    return '';
+  }
+  const date = toDate(value);
+
+  return date.toLocaleTimeString();
+};
+
+/**
  * Format date to user local time format.
  *
  * @param {?number | string} [value] - datetime in milliseconds and iso string

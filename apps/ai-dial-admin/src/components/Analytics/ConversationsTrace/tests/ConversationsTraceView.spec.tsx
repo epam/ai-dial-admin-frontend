@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import ConversationsTraceView from '@/src/components/Analytics/ConversationsTrace/ConversationsTraceView';
 import { PAGE_SIZE } from '@/src/constants/ag-grid';
+import { CONVERSATIONS_HEADER_STACK_HEIGHT } from '@/src/constants/analytics/conversations-trace';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import {
   ConversationCandidateIds,
@@ -722,6 +723,36 @@ describe('ConversationsTraceView :: empty and failed states', () => {
     await fetchBlock();
 
     await waitFor(() => expect(screen.getByText(ConversationsTraceI18nKey.NoConversations)).toBeInTheDocument());
+  });
+
+  // The state a filter that matched nothing produces. Covering the header stack would hide the very filter
+  // inputs the operator needs to undo it, leaving the grid with no way out.
+  test('the empty state leaves the grid header and its filter row uncovered', async () => {
+    getConversations.mockResolvedValue(okPage([], { totals: { conversations: 0, cost: null } }));
+    renderView();
+
+    await fetchBlock();
+
+    const overlay = (await screen.findByText(ConversationsTraceI18nKey.NoConversations)).closest(
+      '[style*="top"]',
+    ) as HTMLElement;
+
+    expect(overlay).toBeTruthy();
+    expect(overlay.style.top).toBe(`${CONVERSATIONS_HEADER_STACK_HEIGHT}px`);
+    expect(overlay.className).not.toContain('inset-0');
+  });
+
+  test('the failed state leaves the header uncovered too, so a filter can still be cleared', async () => {
+    getConversations.mockResolvedValue({ success: false, status: 500 });
+    renderView();
+
+    await fetchBlock();
+
+    const overlay = (await screen.findByText(ConversationsTraceI18nKey.ConversationsLoadFailed)).closest(
+      '[style*="top"]',
+    ) as HTMLElement;
+
+    expect(overlay.style.top).toBe(`${CONVERSATIONS_HEADER_STACK_HEIGHT}px`);
   });
 
   // An emptied grid alone cannot be told apart from a period that genuinely held no conversations.

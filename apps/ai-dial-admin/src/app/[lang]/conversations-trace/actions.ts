@@ -10,13 +10,21 @@ import {
   ConversationFeedbackPage,
   ConversationFeedbackRow,
   ConversationFilters,
+  ConversationHopBodies,
+  ModelCallOutput,
   ConversationPageRequest,
   ConversationRatingRow,
   ConversationRow,
+  ConversationEntryBodyRow,
+  ConversationModelBodyRow,
+  ConversationEntryHopRow,
   ConversationSpanRow,
   ConversationSpansPage,
+  ConversationTranscript,
   ConversationTotals,
   ConversationTotalsField,
+  HopTextsState,
+  TranscriptState,
   ConversationTurnRow,
   ConversationTurnsResult,
   ConversationsPage,
@@ -33,7 +41,12 @@ import { errorObjLog } from '@/src/server/logger';
 import { attachRatings, unresolvedRatings } from '@/src/utils/analytics/conversation-rows';
 import {
   buildConversationDetailQuery,
+  buildConversationEntryBodiesQuery,
+  buildConversationEntryHopsQuery,
   buildConversationFeedbackQuery,
+  buildConversationHopBodyQuery,
+  buildConversationHopCountQuery,
+  buildConversationModelBodiesQuery,
   buildConversationListQuery,
   buildConversationSpansQuery,
   buildConversationTurnsQuery,
@@ -42,15 +55,28 @@ import {
   buildRatedConversationIdsQuery,
 } from '@/src/utils/analytics/conversations-queries';
 import {
+  CONVERSATION_ENTRY_HOP_LIMIT,
   CONVERSATION_FEEDBACK_LIMIT,
+  CONVERSATION_HOP_COUNT_ALIAS,
   CONVERSATION_SPAN_LIMIT,
   CONVERSATION_TURN_LIMIT,
   CONVERSATIONS_ENTITY,
   FEEDBACK_CANDIDATE_LIMIT,
+  USAGE_LOG_ENTITY,
 } from '@/src/constants/analytics/conversations-trace';
 import { AnalyticsEntitySchema } from '@/src/models/analytics/entity';
 import { withEntitySchemaCache } from '@/src/server/analytics/entity-schema-cache';
 import { toNumber } from '@/src/utils/analytics/scalar';
+import { transcriptBodyFields } from '@/src/utils/analytics/conversation-column-catalog';
+import {
+  assembleTranscript,
+  carriesWholeConversation,
+  transcriptStateOf,
+} from '@/src/utils/analytics/conversation-transcript';
+import { hopTextsOf } from '@/src/utils/analytics/conversation-hop-texts';
+import { isConversationHop } from '@/src/utils/analytics/conversation-hop-stream';
+import { isModelCall } from '@/src/utils/analytics/conversation-spans';
+import { modelOutputOf, splitModelBodyBudget, unreadOutputOf } from '@/src/utils/analytics/conversation-model-outputs';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 const token = () => getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -244,22 +270,128 @@ export async function getConversationTurns(chatId: string): Promise<ServerAction
   return { ...result, response: { turns: (result.response?.rows ?? []) as unknown as ConversationTurnRow[] } };
 }
 
+const NO_HOP_TEXTS = { sent: null, received: null, toolCalls: [] };
+
+const hopBodiesOf = (state: HopTextsState): ConversationHopBodies => ({ state, ...NO_HOP_TEXTS });
+
+export async function getConversationHopBodies(
+  chatId: string,
+  traceId: string,
+  coreSpanId: string,
+  requestTime: number | string | null,
+): Promise<ServerActionResponse<ConversationHopBodies>> {
+  const authToken = await token();
+  const schema = await withEntitySchemaCache(USAGE_LOG_ENTITY, authToken, () =>
+    analyticsDataApi.getEntitySchema(USAGE_LOG_ENTITY, authToken),
+  );
+
+  if (!schema) {
+    return { success: false, response: hopBodiesOf(HopTextsState.LoadFailed) };
+  }
+
+  const schemaFieldNames = schema.fields?.map(({ name }) => name) ?? [];
+  if (!transcriptBodyFields(schemaFieldNames).isReadable) {
+    return { success: true, response: hopBodiesOf(HopTextsState.ColumnsUnavailable) };
+  }
+
+  const result = await analyticsDataApi.executeAction(
+    buildConversationHopBodyQuery(chatId, traceId, coreSpanId, requestTime, schemaFieldNames),
+    authToken,
+  );
+
+  if (!result.success) {
+    errorObjLog(result, 'Failed to fetch the conversation hop bodies');
+    return { ...result, response: hopBodiesOf(HopTextsState.LoadFailed) };
+  }
+
+  const row = (result.response?.rows ?? [])[0] as unknown as ConversationEntryBodyRow | undefined;
+  if (!row) {
+    return { success: true, response: hopBodiesOf(HopTextsState.NoBodies) };
+  }
+
+  const texts = hopTextsOf(row);
+  const hasText = texts.sent !== null || texts.received !== null || texts.toolCalls.length > 0;
+
+  return {
+    success: true,
+    response: { state: hasText ? HopTextsState.Available : HopTextsState.NoBodies, ...texts },
+  };
+}
+
+// Never rejects: the outputs enrich the event stream, and the spans beside them are worth rendering
+// without it. A throw here used to discard a span read that had already succeeded.
+async function resolveModelOutputs(
+  chatId: string,
+  traceId: string,
+  spans: ConversationSpanRow[],
+  authToken: Token,
+): Promise<ModelCallOutput[]> {
+  try {
+    return await readModelOutputs(chatId, traceId, spans, authToken);
+  } catch (error) {
+    errorObjLog(error, 'Failed to enrich the conversation spans with model call outputs');
+    return [];
+  }
+}
+
+async function readModelOutputs(
+  chatId: string,
+  traceId: string,
+  spans: ConversationSpanRow[],
+  authToken: Token,
+): Promise<ModelCallOutput[]> {
+  const schema = await withEntitySchemaCache(USAGE_LOG_ENTITY, authToken, () =>
+    analyticsDataApi.getEntitySchema(USAGE_LOG_ENTITY, authToken),
+  );
+  const schemaFieldNames = schema?.fields?.map(({ name }) => name) ?? [];
+
+  if (!schema || !transcriptBodyFields(schemaFieldNames).responseFields.length) {
+    return [];
+  }
+
+  const candidates = spans.filter(
+    (span) => isModelCall(span) && isConversationHop(span) && toNumber(span.response_body_bytes) !== 0,
+  );
+  const { read, skipped } = splitModelBodyBudget(candidates);
+  if (!read.length) {
+    return candidates.map(unreadOutputOf);
+  }
+
+  const result = await analyticsDataApi.executeAction(
+    buildConversationModelBodiesQuery(chatId, traceId, read, schemaFieldNames),
+    authToken,
+  );
+
+  if (!result.success) {
+    errorObjLog(result, 'Failed to fetch the conversation model call outputs');
+    return [];
+  }
+
+  const decoded = ((result.response?.rows ?? []) as unknown as ConversationModelBodyRow[]).map(modelOutputOf);
+
+  return [...decoded, ...skipped.map(unreadOutputOf)];
+}
+
 export async function getConversationSpans(
   chatId: string,
   traceId: string,
 ): Promise<ServerActionResponse<ConversationSpansPage>> {
+  const authToken = await token();
   const query = buildConversationSpansQuery(chatId, traceId, CONVERSATION_SPAN_LIMIT);
-  const result = await analyticsDataApi.executeAction(query, await token());
+  const result = await analyticsDataApi.executeAction(query, authToken);
 
   if (!result.success) {
     return { ...result, response: undefined };
   }
 
+  const spans = (result.response?.rows ?? []) as unknown as ConversationSpanRow[];
+
   return {
     ...result,
     response: {
-      spans: (result.response?.rows ?? []) as unknown as ConversationSpanRow[],
+      spans,
       total: result.response?.totalCount ?? null,
+      modelOutputs: await resolveModelOutputs(chatId, traceId, spans, authToken),
     },
   };
 }
@@ -290,5 +422,92 @@ async function resolveConversationTotals(
   return {
     conversations: (row?.[ConversationTotalsField.Conversations] ?? null) as ConversationTotals['conversations'],
     cost: (row?.[ConversationTotalsField.Cost] ?? null) as ConversationTotals['cost'],
+  };
+}
+
+const EMPTY_TRANSCRIPT = { messages: [], loadedTurns: null };
+
+const transcriptOf = (state: TranscriptState): ConversationTranscript => ({ state, ...EMPTY_TRANSCRIPT });
+
+export async function getConversationTranscript(
+  chatId: string,
+  lastRequestTime: number | string | null,
+  nowMs: number,
+): Promise<ServerActionResponse<ConversationTranscript>> {
+  const authToken = await token();
+  const schema = await withEntitySchemaCache(USAGE_LOG_ENTITY, authToken, () =>
+    analyticsDataApi.getEntitySchema(USAGE_LOG_ENTITY, authToken),
+  );
+
+  if (!schema) {
+    return { success: false, response: transcriptOf(TranscriptState.LoadFailed) };
+  }
+
+  const schemaFieldNames = schema.fields?.map(({ name }) => name) ?? [];
+  const { isReadable } = transcriptBodyFields(schemaFieldNames);
+
+  if (!isReadable) {
+    return { success: true, response: transcriptOf(TranscriptState.ColumnsUnavailable) };
+  }
+
+  const [entryResult, countResult] = await Promise.all([
+    analyticsDataApi.executeAction(buildConversationEntryHopsQuery(chatId, CONVERSATION_ENTRY_HOP_LIMIT), authToken),
+    analyticsDataApi.executeAction(buildConversationHopCountQuery(chatId), authToken),
+  ]);
+
+  if (!entryResult.success) {
+    errorObjLog(entryResult, 'Failed to fetch the conversation entry hops');
+    return { ...entryResult, response: transcriptOf(TranscriptState.LoadFailed) };
+  }
+
+  const entryHops = (entryResult.response?.rows ?? []) as unknown as ConversationEntryHopRow[];
+
+  if (!entryHops.length && !countResult.success) {
+    errorObjLog(countResult, 'Failed to resolve the conversation hop count');
+    return { ...countResult, response: transcriptOf(TranscriptState.LoadFailed) };
+  }
+
+  const countRow = countResult.response?.rows?.[0];
+  const hopCount = toNumber((countRow?.[CONVERSATION_HOP_COUNT_ALIAS] ?? null) as number | string | null) ?? 0;
+  const state = transcriptStateOf({
+    isReadable,
+    hasLoadFailed: false,
+    entryHopCount: entryHops.length,
+    hopCount,
+    lastRequestTime,
+    nowMs,
+  });
+
+  if (state !== TranscriptState.Available) {
+    return { success: true, response: transcriptOf(state) };
+  }
+
+  const needed = carriesWholeConversation(entryHops) ? [entryHops[entryHops.length - 1]] : entryHops;
+  const bodyResult = await analyticsDataApi.executeAction(
+    buildConversationEntryBodiesQuery(chatId, needed, schemaFieldNames),
+    authToken,
+  );
+
+  if (!bodyResult.success) {
+    errorObjLog(bodyResult, 'Failed to fetch the conversation entry bodies');
+    return { ...bodyResult, response: transcriptOf(TranscriptState.LoadFailed) };
+  }
+
+  const bodies = (bodyResult.response?.rows ?? []) as unknown as ConversationEntryBodyRow[];
+  const messages = assembleTranscript(entryHops, bodies);
+
+  // Entry hops that yielded no message is not "nothing was recorded": the rows are there and the bodies
+  // could not be turned into a transcript, which is what this state says.
+  if (!messages.length) {
+    return { success: true, response: transcriptOf(TranscriptState.NotReconstructable) };
+  }
+
+  return {
+    success: true,
+    response: {
+      state: TranscriptState.Available,
+      messages,
+      loadedTurns: entryHops.length,
+    },
   };
 }
