@@ -9,7 +9,16 @@ import { FunctionParameterSourceType, OverallScoreFunctionName } from '../models
 import { buildOverallScoreFunctionExpression } from '../utils';
 
 vi.mock('../WeightedMean', () => ({ default: () => <div>weighted-mean-panel</div> }));
-vi.mock('../SpecificFunction', () => ({ default: () => <div>specific-function-panel</div> }));
+vi.mock('../SpecificFunction', () => ({
+  default: ({ responseColumns }: any) => (
+    <div>
+      specific-function-panel
+      {responseColumns?.map((column: any) => (
+        <span key={column.name}>{column.name}</span>
+      ))}
+    </div>
+  ),
+}));
 
 describe('OverallScore', () => {
   test('renders title, description and all radios', () => {
@@ -94,5 +103,27 @@ describe('OverallScore', () => {
     render(<OverallScore selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
 
     expect(screen.getByText('specific-function-panel')).toBeInTheDocument();
+  });
+
+  test('passes response columns from the whole request chain to the specific function panel', () => {
+    const selectedTestSuite: TestSuite = {
+      id: 'suite-1',
+      responseColumns: [{ name: 'answer', displayName: 'Answer', expression: '', type: 'string' }],
+      additionalRequests: [
+        { responseColumns: [{ name: 'follow_up', displayName: 'Follow up', expression: '', type: 'string' }] },
+      ],
+      overallScore: {
+        type: OverallScoreType.Function,
+        expression: buildOverallScoreFunctionExpression(OverallScoreFunctionName.RocAuc, [
+          { $type: FunctionParameterSourceType.TestCase },
+          { $type: FunctionParameterSourceType.Response },
+        ]),
+      },
+    };
+
+    render(<OverallScore selectedTestSuite={selectedTestSuite} onChange={vi.fn()} />);
+
+    expect(screen.getByText('answer')).toBeInTheDocument();
+    expect(screen.getByText('follow_up')).toBeInTheDocument();
   });
 });

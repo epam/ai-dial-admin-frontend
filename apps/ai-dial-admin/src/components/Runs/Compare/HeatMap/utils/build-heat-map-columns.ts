@@ -21,6 +21,7 @@ import { buildHeatMapCellTooltipData } from '@/src/components/Runs/Compare/HeatM
 import {
   formatHeatMapTestCaseHeader,
   getHeatMapTestCaseColId,
+  hasHeatMapMultiRequests,
   hasHeatMapMultiSubRuns,
   hasHeatMapMultiTurns,
 } from '@/src/components/Runs/Compare/HeatMap/utils/heat-map-test-case-columns';
@@ -49,6 +50,7 @@ export const buildHeatMapColumns = (
 ): ColDef<HeatMapRow>[] => {
   const isDeltaMode = colorDisplayMode === HeatMapColorDisplayMode.Delta;
   const includeSubRunIndex = hasHeatMapMultiSubRuns(mergedRows);
+  const includeRequestIndex = hasHeatMapMultiRequests(mergedRows);
   const includeTurnIndex = hasHeatMapMultiTurns(mergedRows);
   const labelColumn: ColDef<HeatMapRow> = {
     colId: HEAT_MAP_LABEL_COL_ID,
@@ -71,7 +73,7 @@ export const buildHeatMapColumns = (
 
   const testCaseColumns: ColDef<HeatMapRow>[] = mergedRows.map((row) => {
     const colId = getHeatMapTestCaseColId(row);
-    const headerLabel = formatHeatMapTestCaseHeader(row, includeSubRunIndex, includeTurnIndex);
+    const headerLabel = formatHeatMapTestCaseHeader(row, { includeSubRunIndex, includeRequestIndex, includeTurnIndex });
 
     return {
       colId,

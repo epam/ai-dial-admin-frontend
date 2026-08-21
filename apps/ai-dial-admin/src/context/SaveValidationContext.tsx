@@ -1,11 +1,12 @@
 'use client';
-import { createContext, Dispatch, ReactNode, useContext, useReducer } from 'react';
-import { JSONEditorError, JSONEditorErrorNotification } from '@/src/types/editor';
+import { createContext, Dispatch, ReactNode, useCallback, useContext, useId, useMemo, useReducer } from 'react';
+import { JSONEditorError, JSONEditorErrorNotification, JsonEditorOwnedError } from '@/src/types/editor';
 
 export enum ValidationActionType {
   SetField = 'SET_FIELD_VALIDATION',
   RemoveField = 'REMOVE_FIELD_VALIDATION',
   SetJsonEditor = 'SET_JSON_EDITOR_VALIDATION',
+  RemoveJsonEditor = 'REMOVE_JSON_EDITOR_VALIDATION',
   SetJsonEditorNotifications = 'SET_JSON_EDITOR_NOTIFICATIONS',
   Reset = 'RESET',
 }
@@ -13,14 +14,15 @@ export enum ValidationActionType {
 type ValidationAction =
   | { type: ValidationActionType.SetField; field: string; isValid: boolean }
   | { type: ValidationActionType.RemoveField; field: string }
-  | { type: ValidationActionType.SetJsonEditor; errors: JSONEditorError[] | null }
+  | { type: ValidationActionType.SetJsonEditor; editorId: string; errors: JSONEditorError[] | null }
+  | { type: ValidationActionType.RemoveJsonEditor; editorId: string }
   | { type: ValidationActionType.SetJsonEditorNotifications; errors: JSONEditorErrorNotification[] }
   | { type: ValidationActionType.Reset };
 
 interface ValidationState {
   fieldValidations: Map<string, boolean>;
   isValid: boolean;
-  jsonErrors: JSONEditorError[] | null;
+  jsonEditorErrors: Map<string, JSONEditorError[]>;
   jsonErrorNotifications: JSONEditorErrorNotification[];
   resetCounter: number;
 }
@@ -29,7 +31,7 @@ interface SaveValidationContextType {
   isValid: boolean;
   dispatch: Dispatch<ValidationAction>;
   jsonErrorNotifications: JSONEditorErrorNotification[];
-  jsonErrors: JSONEditorError[] | null;
+  jsonErrors: JSONEditorError[];
   resetCounter: number;
   errorFields: Map<string, boolean>;
 }
@@ -62,9 +64,26 @@ const validationReducer = (state: ValidationState, action: ValidationAction): Va
       };
     }
     case ValidationActionType.SetJsonEditor: {
+      const jsonEditorErrors = new Map(state.jsonEditorErrors);
+      jsonEditorErrors.set(action.editorId, action.errors ?? []);
+
       return {
         ...state,
-        jsonErrors: action.errors,
+        jsonEditorErrors,
+      };
+    }
+
+    case ValidationActionType.RemoveJsonEditor: {
+      if (!state.jsonEditorErrors.has(action.editorId)) {
+        return state;
+      }
+
+      const jsonEditorErrors = new Map(state.jsonEditorErrors);
+      jsonEditorErrors.delete(action.editorId);
+
+      return {
+        ...state,
+        jsonEditorErrors,
       };
     }
 
@@ -78,7 +97,7 @@ const validationReducer = (state: ValidationState, action: ValidationAction): Va
     case ValidationActionType.Reset: {
       return {
         ...state,
-        jsonErrors: null,
+        jsonEditorErrors: new Map(),
         fieldValidations: new Map(),
         isValid: true,
         resetCounter: state.resetCounter + 1,
@@ -92,7 +111,7 @@ const validationReducer = (state: ValidationState, action: ValidationAction): Va
 const initialState: ValidationState = {
   fieldValidations: new Map(),
   isValid: true,
-  jsonErrors: [],
+  jsonEditorErrors: new Map(),
   jsonErrorNotifications: [],
   resetCounter: 0,
 };
@@ -101,6 +120,7 @@ const SaveValidationContext = createContext<SaveValidationContextType | undefine
 
 export const SaveValidationContextProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(validationReducer, initialState);
+  const jsonErrors = useMemo(() => [...state.jsonEditorErrors.values()].flat(), [state.jsonEditorErrors]);
 
   return (
     <SaveValidationContext.Provider
@@ -108,7 +128,7 @@ export const SaveValidationContextProvider = ({ children }: { children: ReactNod
         isValid: state.isValid,
         jsonErrorNotifications: state.jsonErrorNotifications,
         dispatch,
-        jsonErrors: state.jsonErrors,
+        jsonErrors,
         resetCounter: state.resetCounter,
         errorFields: state.fieldValidations,
       }}
@@ -126,4 +146,23 @@ export const useSaveValidationContext = () => {
   }
 
   return context;
+};
+
+export const useJsonEditorValidation = () => {
+  const editorId = useId();
+  const { dispatch } = useSaveValidationContext();
+
+  const setJsonErrors = useCallback(
+    (errors: JSONEditorError[]) => {
+      const ownedErrors: JsonEditorOwnedError[] = errors.map((error) => ({ ...error, editorId }));
+      dispatch({ type: ValidationActionType.SetJsonEditor, editorId, errors: ownedErrors });
+    },
+    [dispatch, editorId],
+  );
+
+  const removeEditor = useCallback(() => {
+    dispatch({ type: ValidationActionType.RemoveJsonEditor, editorId });
+  }, [dispatch, editorId]);
+
+  return { editorId, setJsonErrors, removeEditor };
 };

@@ -12,6 +12,7 @@ import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
 import { useI18n } from '@/src/locales/client';
 import { DialScheme } from '@/src/models/dial/scheme';
 import { ResponseColumn, TestSuite } from '@/src/models/evaluation/test-suite';
+import { JsonataVariable } from '@/src/models/jsonata';
 import { EntityViewTab, getEndpointSchemaTabs } from '@/src/utils/tabs/utils';
 import Columns from './Columns/Columns';
 
@@ -19,9 +20,10 @@ interface Props {
   testSuite: TestSuite;
   onChangeTestSuite: (testSuite: TestSuite, isSkipRefresh?: boolean) => void;
   isSkipRefresh?: boolean;
+  jsonataVariables?: JsonataVariable[];
 }
 
-const EndpointSchema: FC<Props> = ({ testSuite, onChangeTestSuite, isSkipRefresh }) => {
+const EndpointSchema: FC<Props> = ({ testSuite, onChangeTestSuite, isSkipRefresh, jsonataVariables }) => {
   const t = useI18n();
   const tabs = getEndpointSchemaTabs(t);
   const [activeSchemaTab, setActiveSchemaTab] = useState(tabs[0].id);
@@ -113,6 +115,7 @@ const EndpointSchema: FC<Props> = ({ testSuite, onChangeTestSuite, isSkipRefresh
           onChangeResponseColumns={onChangeResponseColumns}
           responseSchema={(testSuite.endpointRef?.responseBodySchema || {}) as JSONSchema7}
           isSkipRefresh={isSkipRefresh}
+          jsonataVariables={jsonataVariables}
         />
       )}
     </div>

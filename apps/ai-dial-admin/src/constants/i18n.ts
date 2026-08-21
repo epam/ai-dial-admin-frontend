@@ -1952,6 +1952,15 @@ export enum TestSuitesI18nKey {
   ConditionSystemFunctionUnavailable = 'TestSuites.ConditionSystemFunctionUnavailable',
   ImportWarnings = 'TestSuites.ImportWarnings',
   ImportWarningRow = 'TestSuites.ImportWarningRow',
+  RequestChain = 'TestSuites.RequestChain',
+  Request = 'TestSuites.Request',
+  AddRequest = 'TestSuites.AddRequest',
+  RemoveRequest = 'TestSuites.RemoveRequest',
+  RequestName = 'TestSuites.RequestName',
+  RequestChainHint = 'TestSuites.RequestChainHint',
+  RequestChainPreviousOutputsInfo = 'TestSuites.RequestChainPreviousOutputsInfo',
+  RequestChainPreviousOutputsColumnsInfo = 'TestSuites.RequestChainPreviousOutputsColumnsInfo',
+  RequestChainOutputOf = 'TestSuites.RequestChainOutputOf',
   TrendsRunsCount = 'TestSuites.TrendsRunsCount',
   AvgTestSuiteRunTime = 'TestSuites.AvgTestSuiteRunTime',
   AvgPerRuns = 'TestSuites.AvgPerRuns',
@@ -2129,6 +2138,7 @@ export enum RunsI18nKey {
   RunCompareHeatMapTooltipScore = 'Runs.RunCompareHeatMapTooltipScore',
   RunCompareHeatMapTooltipDelta = 'Runs.RunCompareHeatMapTooltipDelta',
   RunCompareHeatMapNotApplicable = 'Runs.RunCompareHeatMapNotApplicable',
+  RequestsInChain = 'Runs.RequestsInChain',
 }
 
 export enum ExportRunI18nKey {

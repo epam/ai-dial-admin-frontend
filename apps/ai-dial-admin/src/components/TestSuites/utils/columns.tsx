@@ -32,6 +32,7 @@ import { BasicI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { MetricBinding } from '@/src/models/evaluation/metric';
 import { ValidityStatusRow } from '@/src/models/evaluation/test-case-grouping';
 import { InputBindingRowData, ResponseColumn, TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
+import { JsonataVariable } from '@/src/models/jsonata';
 import { OnCellChange } from '@/src/types/grid-cell';
 import { InputBindingType, MetricBindingType, TestCaseItemType } from '@/src/types/evaluation';
 import { GridRowType } from '@/src/types/grid-row-type';
@@ -545,6 +546,7 @@ export const getColumnsGridColumns = (
     column: string,
     index?: number,
   ) => void,
+  jsonataVariables?: JsonataVariable[],
 ): ColDef<ResponseColumn>[] => {
   return [
     {
@@ -571,6 +573,7 @@ export const getColumnsGridColumns = (
       cellRendererParams: {
         responseSchema,
         onChange: onChangeExpression,
+        variables: jsonataVariables,
       },
     },
     {

@@ -18,6 +18,7 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { ResponseColumn } from '@/src/models/evaluation/test-suite';
+import { JsonataVariable } from '@/src/models/jsonata';
 import DocumentationModal from './DocumentationModal';
 
 interface ColumnsProps {
@@ -25,9 +26,16 @@ interface ColumnsProps {
   onChangeResponseColumns: (responseColumns: ResponseColumn[], isSkipRefresh?: boolean) => void;
   isSkipRefresh?: boolean;
   responseSchema: JSONSchema7;
+  jsonataVariables?: JsonataVariable[];
 }
 
-const Columns: FC<ColumnsProps> = ({ responseColumns, onChangeResponseColumns, responseSchema, isSkipRefresh }) => {
+const Columns: FC<ColumnsProps> = ({
+  responseColumns,
+  onChangeResponseColumns,
+  responseSchema,
+  isSkipRefresh,
+  jsonataVariables,
+}) => {
   const t = useI18n();
   const { isValid, dispatch } = useSaveValidationContext();
 
@@ -91,13 +99,13 @@ const Columns: FC<ColumnsProps> = ({ responseColumns, onChangeResponseColumns, r
 
   const columnDefs: ColDef[] = useMemo(
     () => [
-      ...getColumnsGridColumns(responseSchema, onChangeColumn, onChangeExpression),
+      ...getColumnsGridColumns(responseSchema, onChangeColumn, onChangeExpression, jsonataVariables),
       {
         ...ONE_ACTION_COLUMN(getRemoveOperation(onRemoveColumn, void 0, 'text-error w-4 h-4')),
         colId: 'action-remove',
       },
     ],
-    [onChangeColumn, onChangeExpression, onRemoveColumn, responseSchema],
+    [onChangeColumn, onChangeExpression, onRemoveColumn, responseSchema, jsonataVariables],
   );
 
   const onGridReady = useCallback(

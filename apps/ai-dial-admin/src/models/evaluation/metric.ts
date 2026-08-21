@@ -15,7 +15,7 @@ export interface Metric {
   configBindings?: MetricBinding[];
   inputBindings?: MetricBinding[];
 
-  /** Optional JSONata condition evaluated per result row (per turn) over {data, response, turn}; blank/omitted ⇒ always runs. */
+  /** Optional JSONata condition evaluated per result row (per turn, per request) over {data, response, turn, request}; request.{index,total,last,name} mirrors turn.{index,total,last}; blank/omitted ⇒ always runs. */
   condition?: string;
 
   // declaration
