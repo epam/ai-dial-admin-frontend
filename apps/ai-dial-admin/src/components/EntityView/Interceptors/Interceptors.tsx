@@ -7,19 +7,21 @@ import { RowDragEvent } from 'ag-grid-community';
 
 import { getApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
 import { getProperties } from '@/src/app/[lang]/system-properties/actions';
+import { useAssetRunnerDetails } from '@/src/components/Assets/use-asset-runner-details';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import GridView from '@/src/components/Grid/GridView/GridView';
+import { AppRunnerOption, AppRunnerOrigin } from '@/src/components/SourceField/Application/models';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { DESCRIPTION_COLUMN, DISPLAY_NAME_COLUMN } from '@/src/constants/grid-columns/base-columns';
 import { ButtonsI18nKey, EntitiesI18nKey, InterceptorsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
-import { DialApplication } from '@/src/models/dial/application';
-import { getSchemaSourceId } from '@/src/utils/entities/application-source';
+import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { ApplicationRoute } from '@/src/types/routes';
 import { hasConfigEntityOrigin } from '@/src/utils/config-entities/source-column';
+import { getSchemaSourceId } from '@/src/utils/entities/application-source';
 import { onOpenInNewTab } from '@/src/utils/open-in-new-tab';
 import CollapsableInterceptors from './CollapsableInterceptors';
 import { getInterceptorsColumnDefs, getInterceptorsGridData } from './utils';
@@ -36,6 +38,7 @@ interface Props<T> {
    * reach the admin backend. When omitted, this component fetches it from the admin backend as before.
    */
   globalInterceptors?: string[];
+  appRunner?: DialApplicationScheme;
 }
 
 const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicationTypeInterceptors'?: string[] }>({
@@ -44,9 +47,11 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
   onChangeEntity,
   view,
   globalInterceptors: providedGlobalInterceptors,
+  appRunner,
 }: Props<T>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
+  const { interceptors: appRunnerInterceptors } = useAssetRunnerDetails(appRunner);
   const [availableInterceptors, setAvailableInterceptors] = useState<DialInterceptor[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [runnerInterceptors, setRunnerInterceptors] = useState<string[]>();
@@ -74,6 +79,12 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
   }, [entity, isAppRunnerView]);
 
   const interceptorsRef = useRef(entityInterceptors);
+
+  useEffect(() => {
+    if ((appRunner as AppRunnerOption).origin === AppRunnerOrigin.Asset && appRunnerInterceptors) {
+      setRunnerInterceptors(appRunnerInterceptors);
+    }
+  }, [appRunnerInterceptors, appRunner, interceptors]);
 
   useEffect(() => {
     interceptorsRef.current = entityInterceptors;

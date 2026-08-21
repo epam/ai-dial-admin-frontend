@@ -175,6 +175,7 @@ const TabsContent: FC<Props> = ({
       )}
       {activeTab === EntityViewTab.Interceptors && (
         <EntityInterceptors
+          appRunner={appRunner}
           entity={selectedApplication}
           interceptors={interceptors || []}
           onChangeEntity={onChangeApplication}
