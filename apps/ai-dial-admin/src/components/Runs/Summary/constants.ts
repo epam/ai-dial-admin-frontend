@@ -53,6 +53,10 @@ export const STATUS_DOT_CLASSES = {
   error: 'text-secondary',
 } as const;
 
+export const METRIC_SCORES_GRID_CLASS = 'grid min-w-0 grid-cols-1 gap-3 xl:grid-cols-2';
+
+export const SUMMARY_PANELS_GRID_CLASS = 'grid min-h-0 min-w-0 flex-1 grid-cols-1 gap-4 md:grid-cols-2';
+
 /** Icons for the "Test Cases Passed" card status breakdown. */
 export const STATUS_DOT_ICONS = {
   pass: IconCheck,

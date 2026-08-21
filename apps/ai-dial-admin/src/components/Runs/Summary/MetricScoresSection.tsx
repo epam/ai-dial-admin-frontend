@@ -9,6 +9,7 @@ import { getMetricStatisticDescriptionKey } from '@/src/components/Common/Metric
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 
+import { METRIC_SCORES_GRID_CLASS } from './constants';
 import { MetricScoresData } from './models';
 import SummarySection from './SummarySection';
 
@@ -42,7 +43,7 @@ const MetricScoresSection: FC<Props> = ({ data, selectedStatistic, onSelectStati
       return <p className="dial-small-text text-secondary">{t(RunsI18nKey.NoMetricScores)}</p>;
     }
     return (
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className={METRIC_SCORES_GRID_CLASS}>
         {groups.map((group) => (
           <DialAnalyticsBarGroup
             key={group.name}
@@ -53,11 +54,11 @@ const MetricScoresSection: FC<Props> = ({ data, selectedStatistic, onSelectStati
             inline
             nonCollapsible
             defaultExpanded
-            className="bg-layer-2"
+            className="min-w-0 overflow-hidden bg-layer-2"
             barDescriptions={group.barDescriptions}
             titleTooltip={group.description}
             barClassName="hover:bg-accent-primary-alpha hover:cursor-pointer rounded-sm px-1"
-            barTitleClassName="text-secondary"
+            barTitleClassName="block min-w-0 truncate text-secondary"
           />
         ))}
       </div>
