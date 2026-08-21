@@ -75,6 +75,14 @@ describe('Runs Summary :: MetricScoresSection', () => {
     expect(screen.getByText('Runs.MetricScoresTitle')).toBeInTheDocument();
   });
 
+  test('uses a single card column below xl and two columns from 1280', () => {
+    const { container } = render(<ControlledMetricScoresSection data={DATA} />);
+    const grid = container.querySelector('.grid');
+
+    expect(grid?.className).toContain('grid-cols-1');
+    expect(grid?.className).toContain('xl:grid-cols-2');
+  });
+
   test('renders a bar group per metric prefix with leaf-name bars for the selected statistic', () => {
     render(<ControlledMetricScoresSection data={DATA} />);
 

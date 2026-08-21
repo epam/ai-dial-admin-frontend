@@ -10,6 +10,7 @@ import Header from '@/src/components/Runs/Compare/Summary/Header';
 import MetricScoresSection from '@/src/components/Runs/Compare/Summary/MetricScoresSection';
 import { useSummaryOverviewData } from '@/src/components/Runs/Compare/Summary/use-summary-overview-data';
 import { SummaryOverviewTabUiState } from '@/src/components/Runs/Compare/models';
+import { SUMMARY_PANELS_GRID_CLASS } from '@/src/components/Runs/Summary/constants';
 
 interface Props {
   primaryRunId: string;
@@ -87,7 +88,7 @@ const SummaryOverviewTab: FC<Props> = ({
         primaryOverallScore={enrichedPrimaryScores?.overallScore}
         comparedOverallScore={enrichedComparedScores?.overallScore}
       />
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className={SUMMARY_PANELS_GRID_CLASS}>
         <MetricScoresSection
           primaryData={enrichedPrimaryScores}
           comparedData={enrichedComparedScores}
