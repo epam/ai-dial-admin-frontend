@@ -45,10 +45,10 @@ describe('StackedTurnsCellRenderer', () => {
     expect(screen.getByText('third')).toBeInTheDocument();
   });
 
-  test('should render null when the group is expanded', () => {
-    const { container } = renderStacked(groupRow([{ id: 'case-1', data: { note: 'first' } }], true));
+  test('should render an em dash when the group is expanded', () => {
+    renderStacked(groupRow([{ id: 'case-1', data: { note: 'first' } }], true));
 
-    expect(container.firstChild).toBeNull();
+    expect(screen.getByText('—')).toBeInTheDocument();
   });
 
   test('should render an em dash for an empty or absent turn value', () => {
