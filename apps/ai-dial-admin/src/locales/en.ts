@@ -2681,6 +2681,17 @@ export default {
     ProvenanceFeedback: 'Ratings',
     ProvenanceFeedbackHint:
       'Resolved by a separate query for the conversations on this page, and counted only within the selected period.',
+    ProvenanceEnrichmentHint:
+      'Computed by a separate enrichment rather than recorded by DIAL. These values may be absent for any conversation, and absence means the enrichment has not reached it yet.',
+    TagIdentity: 'Identity',
+    TagPrincipal: 'Attribution',
+    TagResponse: 'Outcome',
+    TagTokenUsage: 'Token usage',
+    TagCost: 'Cost',
+    TagPerformance: 'Performance',
+    TagDeployment: 'Deployment',
+    TagInsight: 'Insight',
+    TagProvenance: 'Evaluator run',
     Rating: 'Rating',
     ComposedOver: 'Data from',
     SummaryConversations: 'Conversations',
@@ -2691,7 +2702,7 @@ export default {
     SummaryLoadedHint: 'Covers the conversations loaded so far. Scroll to load more.',
     SummaryLoadedScope: 'Loaded so far',
     SchemaUnavailableNotice:
-      'The conversations schema could not be read, so the columns that depend on it were dropped: conversations show no title and no topics.',
+      'The conversations schema could not be read, so the columns that depend on it were dropped: conversations show no title and no topics, and none of the entity’s other fields are offered as columns.',
     FeedbackCappedNotice:
       'Showing only the most recently rated conversations. More may carry this feedback than are listed.',
     SummaryUnavailableHint: 'Could not be loaded.',

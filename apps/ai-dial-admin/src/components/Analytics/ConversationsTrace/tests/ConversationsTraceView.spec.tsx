@@ -146,9 +146,7 @@ const awaitFilterApplied = async () => {
   await waitFor(() => expect(datasource).not.toBe(previous));
 };
 
-// A plain column of the source reports its flat name as its backing field; an enrichment-supplied one is
-// namespaced by the enrichment, leaving the backing name unqualified. Every entry here is a field some
-// curated column reads — with the derived catalog gone, nothing else reaches the projection at all.
+// Every field here gets a column, so every one reaches the projection, in the bucket its cost puts it in.
 const SCHEMA_FIELDS = [
   { name: ConversationsField.ChatId, type: AnalyticsFieldType.String, source: ConversationsField.ChatId },
   { name: ConversationsField.TotalTokens, type: AnalyticsFieldType.Integer, source: ConversationsField.TotalTokens },
@@ -474,8 +472,7 @@ describe('ConversationsTraceView :: schema availability', () => {
 });
 
 describe('ConversationsTraceView :: projection', () => {
-  // A source field costs the query one more column of the table it already reads, so it is projected
-  // whether or not its column is on screen — which is what makes revealing that column free.
+  // A cheap source field is projected whether or not its column is on screen, which makes revealing it free.
   test('sends every source-backed field even with its column hidden', async () => {
     columnState = [{ colId: ConversationsField.TotalTokens, hide: true }];
     renderView(SCHEMA_FIELDS);
@@ -507,8 +504,7 @@ describe('ConversationsTraceView :: projection', () => {
   });
 
   // The identity column reads the insight title and cannot be hidden, so the field has to reach the query
-  // without a column of its own to carry it — the projection is driven by column visibility for every
-  // other enrichment field, and this one would silently never be fetched.
+  // without a column of its own to carry it — every other enrichment field is projected on visibility.
   test('projects the identity column title with no column of its own', async () => {
     columnState = [{ colId: ConversationsField.ChatId, hide: false }];
     renderView([
@@ -543,6 +539,50 @@ describe('ConversationsTraceView :: projection', () => {
 
     expect(lastRequest().sourceFields).toEqual([]);
     expect(lastRequest().visibleEnrichmentFields).toEqual([]);
+  });
+});
+
+// The service marks a field heavy when it is expensive to transfer, and omits it from a wildcard projection
+// for that reason. Measured on the local rollup, the one heavy field cost 2.7× the other ten columns
+// together — so unlike an ordinary source field it is worth gating, and worth a re-fetch when revealed.
+const HEAVY_FIELD = 'big_payload';
+
+const HEAVY_SCHEMA_FIELDS = [
+  ...SCHEMA_FIELDS,
+  { name: HEAVY_FIELD, type: AnalyticsFieldType.String, source: HEAVY_FIELD, heavy: true },
+] as AnalyticsEntityField[];
+
+describe('ConversationsTraceView :: projecting a heavy field', () => {
+  test('omits a heavy source field while its column is hidden', async () => {
+    columnState = [{ colId: HEAVY_FIELD, hide: true }];
+    renderView(HEAVY_SCHEMA_FIELDS);
+    await waitFor(() => expect(datasource).toBeDefined());
+
+    await fetchBlock();
+
+    expect(lastRequest().sourceFields).not.toContain(HEAVY_FIELD);
+    expect(lastRequest().sourceFields).toContain(ConversationsField.TotalTokens);
+  });
+
+  test('sends a heavy source field once its column is visible, as a source field', async () => {
+    columnState = [{ colId: HEAVY_FIELD, hide: false }];
+    renderView(HEAVY_SCHEMA_FIELDS);
+    await waitFor(() => expect(datasource).toBeDefined());
+
+    await fetchBlock();
+
+    expect(lastRequest().sourceFields).toContain(HEAVY_FIELD);
+    expect(lastRequest().visibleEnrichmentFields).not.toContain(HEAVY_FIELD);
+  });
+
+  test('restarts paging when a heavy source column is revealed', async () => {
+    renderView(HEAVY_SCHEMA_FIELDS);
+    await awaitGridReady();
+    await fetchBlock();
+
+    revealColumn(HEAVY_FIELD);
+
+    expect(purgeInfiniteCache).toHaveBeenCalledOnce();
   });
 });
 
