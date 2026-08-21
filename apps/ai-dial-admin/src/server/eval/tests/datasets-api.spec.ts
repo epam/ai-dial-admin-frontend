@@ -149,6 +149,17 @@ describe('Server :: DatasetsApi', () => {
     );
   });
 
+  test('Should call getTestCase with dataset and case ids', async () => {
+    fetch.mockResponseOnce(JSON.stringify({ id: 'tc-1', data: {} }));
+
+    await instance.getTestCase('dataset-1', 'tc-1', TOKEN_MOCK);
+
+    expect(fetch).toHaveBeenCalledWith(
+      `${TEST_URL}${DATASET_TEST_CASE_URL('dataset-1', 'tc-1')}`,
+      expect.objectContaining({ method: 'GET' }),
+    );
+  });
+
   test('Should call createTestCase with correct payload', async () => {
     fetch.mockResponseOnce(JSON.stringify(RESPONSE_MOCK));
     const body = { testCaseName: 'Case 1', data: { input: 'hello' } };

@@ -77,6 +77,11 @@ export async function getTestCases(
   return datasetsApi.getTestCases(id, page, size, sorts, filters, token);
 }
 
+export async function getDatasetTestCase(datasetId: string, testCaseId: string) {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return datasetsApi.getTestCase(datasetId, testCaseId, token);
+}
+
 export async function createTestCase(
   datasetId: string,
   body: Pick<DatasetTestCase, 'testCaseName' | 'data' | 'multiTurnData'>,
