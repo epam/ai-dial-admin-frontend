@@ -32,12 +32,6 @@ const buildSkill = (overrides: Partial<DialSkillResource> = {}): DialSkillResour
 });
 
 describe('Publications :: SkillDetails', () => {
-  test('excludes SKILL.md from the file listing', () => {
-    render(<SkillDetails skill={buildSkill({ files: [{ name: 'SKILL.md' }, { name: 'notes.md' }] })} />);
-
-    expect(capturedGridProps.rowData).toEqual([{ name: 'notes.md' }]);
-  });
-
   test('renders the file list title with the file count', () => {
     render(<SkillDetails skill={buildSkill()} />);
 
@@ -92,17 +86,6 @@ describe('Publications :: SkillDetails', () => {
       render(<SkillDetails skill={buildSkill()} disabled />);
 
       expect(screen.queryByRole('button', { name: /add/i })).not.toBeInTheDocument();
-    });
-
-    test('hides remove for every file, not just SKILL.md', () => {
-      render(<SkillDetails skill={buildSkill({ files: [{ name: 'notes.md' }] })} disabled />);
-
-      const actionsColumn = capturedGridProps.columnDefs?.find((col) => col.field === ACTIONS_COLUMN_CEL_ID);
-      const removeItem = (
-        actionsColumn?.cellRendererParams as { items: { id: string; hidden?: (a: unknown, n: unknown) => boolean }[] }
-      )?.items.find((item) => item.id === actionId('Remove'));
-
-      expect(removeItem?.hidden?.(undefined, { data: { name: 'notes.md' } } as never)).toBe(true);
     });
   });
 

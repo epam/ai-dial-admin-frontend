@@ -9,7 +9,7 @@ import ConversationProperties from '@/src/components/Publications/Properties/Con
 import FileProperties from '@/src/components/Publications/Properties/FileProperties';
 import PromptProperties from '@/src/components/Publications/Properties/PromptProperties';
 import SkillProperties from '@/src/components/Publications/Properties/SkillProperties';
-import SkillManifestTab from '@/src/components/Publications/Assets/Skill/SkillManifestTab';
+import SkillManifestTab from '@/src/components/Assets/Skills/View/SkillManifestTab';
 import ToolsetProperties from '@/src/components/Publications/Properties/ToolsetProperties';
 import Tools from '@/src/components/Tools/Tools';
 import { AppsFolderProvider } from '@/src/context/assets/AppsFolderContext';

@@ -60,9 +60,7 @@ const SkillDetails: FC<Props> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const rowData = useMemo<SkillFileRow[]>(() => {
-    const existing = (skill?.files ?? []).filter(
-      (file) => file.name !== SKILL_MANIFEST_FILE && !removedFileNames.includes(file.name),
-    );
+    const existing = (skill?.files ?? []).filter((file) => !removedFileNames.includes(file.name));
     const added = addedFiles.map((file) => ({ name: file.name, isNew: true }));
     return [...existing, ...added];
   }, [skill, removedFileNames, addedFiles]);
@@ -104,7 +102,10 @@ const SkillDetails: FC<Props> = ({
     return Boolean(node.data?.isNew);
   }, []);
 
-  const isRemoveActionHidden = useCallback(() => Boolean(disabled), [disabled]);
+  const isRemoveActionHidden = useCallback(
+    (_: GridApi, node: IRowNode<SkillFileRow>) => node.data?.name === SKILL_MANIFEST_FILE,
+    [],
+  );
 
   const onAddClick = useCallback(() => {
     fileInputRef.current?.click();
