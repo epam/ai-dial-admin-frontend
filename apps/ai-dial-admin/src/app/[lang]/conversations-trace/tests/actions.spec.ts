@@ -1,7 +1,12 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { analyticsDataApi } from '@/src/app/api/api';
-import { getConversations, getConversationsSchema } from '@/src/app/[lang]/conversations-trace/actions';
+import {
+  getConversationHopBodies,
+  getConversationTranscript,
+  getConversations,
+  getConversationsSchema,
+} from '@/src/app/[lang]/conversations-trace/actions';
 import { FEEDBACK_CANDIDATE_LIMIT } from '@/src/constants/analytics/conversations-trace';
 import {
   ConversationFilterOperator,
@@ -9,6 +14,9 @@ import {
   ConversationPageRequest,
   ConversationsField,
   FeedbackFilter,
+  HopTextsState,
+  TranscriptState,
+  UsageLogField,
 } from '@/src/models/analytics/conversations-trace';
 import { QueryMode, QueryOperator, QuerySortDirection, StructuredQuery } from '@/src/models/analytics/query';
 import { clearEntitySchemaCache } from '@/src/server/analytics/entity-schema-cache';
@@ -441,5 +449,352 @@ describe('getConversationsSchema', () => {
 
     expect(getEntitySchema()).toHaveBeenCalledTimes(1);
     expect(result.success).toBe(true);
+  });
+});
+
+describe('getConversationTranscript', () => {
+  const CHAT_ID = 'chat-1';
+  const NOW = Date.parse('2026-08-20T00:00:00.000Z');
+  const RECENT = Date.parse('2026-08-19T00:00:00.000Z');
+  const getEntitySchema = () => analyticsDataApi.getEntitySchema as unknown as ReturnType<typeof vi.fn>;
+
+  const READABLE = [UsageLogField.RequestBody, UsageLogField.ResponseBody, UsageLogField.AssembledResponse];
+
+  const schemaOf = (names: string[]) =>
+    getEntitySchema().mockResolvedValue({ fields: names.map((name) => ({ name, type: 'string', source: name })) });
+
+  const answer = (text: string) => JSON.stringify({ choices: [{ message: { role: 'assistant', content: text } }] });
+
+  const hopRow = (traceId: string, messageCount: number) => ({
+    trace_id: traceId,
+    request_time: 1787218895000,
+    deployment: 'app',
+    number_request_messages: messageCount,
+    request_body_bytes: 10,
+    response_body_bytes: 20,
+  });
+
+  const bodyRow = (traceId: string, userText: string, reply: string) => ({
+    trace_id: traceId,
+    event_kind: 'llm_call',
+    request_body: JSON.stringify({ messages: [{ role: 'user', content: userText }] }),
+    response_body: null,
+    assembled_response: answer(reply),
+  });
+
+  // The three hop-log reads are told apart by shape rather than by call order, since two of them run
+  // concurrently.
+  const stubHopLog = (hops: object[], bodies: object[], count = hops.length) =>
+    execute().mockImplementation((query: StructuredQuery) => {
+      if (query.mode === QueryMode.Aggregate) {
+        return Promise.resolve(ok([{ hop_count: count }]));
+      }
+      const names = (query.select ?? []).map((column) => (column.expr as { name?: string }).name);
+      return Promise.resolve(names.includes(UsageLogField.RequestBody) ? ok(bodies) : ok(hops));
+    });
+
+  beforeEach(() => {
+    clearEntitySchemaCache();
+    schemaOf(READABLE);
+  });
+
+  test('assembles the transcript from the entry hops', async () => {
+    stubHopLog([hopRow('t1', 1), hopRow('t2', 1)], [bodyRow('t1', 'first', 'A'), bodyRow('t2', 'second', 'B')]);
+
+    const result = await getConversationTranscript(CHAT_ID, RECENT, NOW);
+
+    expect(result.response?.state).toBe(TranscriptState.Available);
+    expect(result.response?.messages.map(({ content }) => content)).toEqual(['first', 'A', 'second', 'B']);
+    expect(result.response?.loadedTurns).toBe(2);
+  });
+
+  test('reads the hop log schema for the caller token', async () => {
+    stubHopLog([], []);
+    await getConversationTranscript(CHAT_ID, RECENT, NOW);
+
+    expect(getEntitySchema()).toHaveBeenCalledWith('dial_usage_log', TOKEN_MOCK);
+  });
+
+  // The `sensitive` case: the service hides all three columns from a caller below FULL_ADMIN.
+  test('reports the columns unavailable when the schema reports none of them', async () => {
+    schemaOf([UsageLogField.ChatId]);
+
+    const result = await getConversationTranscript(CHAT_ID, RECENT, NOW);
+
+    expect(result.success).toBe(true);
+    expect(result.response?.state).toBe(TranscriptState.ColumnsUnavailable);
+    expect(execute()).not.toHaveBeenCalled();
+  });
+
+  // The service-version case: an older instance never persists the assembled column, so it is missing for
+  // every caller — and naming it would cost the whole query.
+  test('never names the assembled column when the schema omits it', async () => {
+    schemaOf([UsageLogField.RequestBody, UsageLogField.ResponseBody]);
+    stubHopLog([hopRow('t1', 1)], [{ ...bodyRow('t1', 'q', 'a'), assembled_response: undefined }]);
+
+    const result = await getConversationTranscript(CHAT_ID, RECENT, NOW);
+    const bodyQuery = execute()
+      .mock.calls.map((args) => args[0] as StructuredQuery)
+      .find((query) =>
+        (query.select ?? []).some((column) => (column.expr as { name?: string }).name === UsageLogField.RequestBody),
+      );
+
+    expect(result.response?.state).toBe(TranscriptState.Available);
+    expect(JSON.stringify(bodyQuery?.select)).not.toContain(UsageLogField.AssembledResponse);
+  });
+
+  test('reports a failure when the schema cannot be read', async () => {
+    getEntitySchema().mockResolvedValue(null);
+
+    const result = await getConversationTranscript(CHAT_ID, RECENT, NOW);
+
+    expect(result.success).toBe(false);
+    expect(result.response?.state).toBe(TranscriptState.LoadFailed);
+  });
+
+  // Hops exist but none entered DIAL, so nothing recorded can be attributed to the user.
+  test('reports a conversation with hops but no entry hop as not reconstructable', async () => {
+    stubHopLog([], [], 12);
+
+    const result = await getConversationTranscript(CHAT_ID, RECENT, NOW);
+
+    expect(result.response?.state).toBe(TranscriptState.NotReconstructable);
+  });
+
+  test('reports a conversation older than the retention as expired', async () => {
+    stubHopLog([], [], 0);
+    const aged = NOW - 400 * DAY_MS;
+
+    expect((await getConversationTranscript(CHAT_ID, aged, NOW)).response?.state).toBe(TranscriptState.Expired);
+  });
+
+  test('reports a recent conversation with no hops as having recorded nothing', async () => {
+    stubHopLog([], [], 0);
+
+    expect((await getConversationTranscript(CHAT_ID, RECENT, NOW)).response?.state).toBe(TranscriptState.NoMessages);
+  });
+
+  // Without the count there is no way to tell an unattributable conversation from an empty one, and stating
+  // either would say something the read does not support.
+  test('reports a failure when the hop count fails and no entry hop was read', async () => {
+    execute().mockImplementation((query: StructuredQuery) =>
+      Promise.resolve(query.mode === QueryMode.Aggregate ? failure : ok([])),
+    );
+
+    const result = await getConversationTranscript(CHAT_ID, RECENT, NOW);
+
+    expect(result.success).toBe(false);
+    expect(result.response?.state).toBe(TranscriptState.LoadFailed);
+  });
+
+  test('reports a failure when the entry hop read fails', async () => {
+    execute().mockResolvedValue(failure);
+
+    expect((await getConversationTranscript(CHAT_ID, RECENT, NOW)).response?.state).toBe(TranscriptState.LoadFailed);
+  });
+
+  // The read that carries the messages themselves: without this the failure resolved to an available
+  // transcript of nothing, and the view said the conversation recorded no messages during an outage.
+  test('reports a failure when the body read fails, not an empty conversation', async () => {
+    execute().mockImplementation((query: StructuredQuery) => {
+      const names = (query.select ?? []).map((column) => (column.expr as { name?: string }).name);
+      if (names.includes(UsageLogField.RequestBody)) {
+        return Promise.resolve(failure);
+      }
+      return Promise.resolve(query.mode === QueryMode.Aggregate ? ok([{ hop_count: 1 }]) : ok([hopRow('t1', 1)]));
+    });
+
+    const result = await getConversationTranscript(CHAT_ID, RECENT, NOW);
+
+    expect(result.success).toBe(false);
+    expect(result.response?.state).toBe(TranscriptState.LoadFailed);
+  });
+
+  // Rows were read and none of them yielded a message: the conversation is not empty, it could not be
+  // reconstructed — which is the state that says so.
+  test('reports entry hops whose bodies yield no message as not reconstructable', async () => {
+    stubHopLog([hopRow('t1', 1)], []);
+
+    const result = await getConversationTranscript(CHAT_ID, RECENT, NOW);
+
+    expect(result.success).toBe(true);
+    expect(result.response?.state).toBe(TranscriptState.NotReconstructable);
+  });
+
+  // Under the 2n-1 shortcut only the newest row's bodies are fetched, and the transcript is the same.
+  test('fetches one row of bodies when the newest entry hop carries the whole conversation', async () => {
+    const hops = [hopRow('t1', 1), hopRow('t2', 3)];
+    stubHopLog(hops, [
+      {
+        trace_id: 't2',
+        event_kind: 'llm_call',
+        request_body: JSON.stringify({
+          messages: [
+            { role: 'user', content: 'first' },
+            { role: 'assistant', content: 'A' },
+            { role: 'user', content: 'second' },
+          ],
+        }),
+        response_body: null,
+        assembled_response: answer('B'),
+      },
+    ]);
+
+    const result = await getConversationTranscript(CHAT_ID, RECENT, NOW);
+    const bodyQuery = execute()
+      .mock.calls.map((args) => args[0] as StructuredQuery)
+      .find((query) =>
+        (query.select ?? []).some((column) => (column.expr as { name?: string }).name === UsageLogField.RequestBody),
+      );
+
+    expect(result.response?.messages.map(({ content }) => content)).toEqual(['first', 'A', 'second', 'B']);
+    expect(JSON.stringify(bodyQuery?.filter)).toContain('t2');
+    expect(JSON.stringify(bodyQuery?.filter)).not.toContain('t1');
+  });
+
+  // Bodies never cross to the caller: only decoded messages do.
+  test('returns decoded messages and no body value', async () => {
+    stubHopLog([hopRow('t1', 1)], [bodyRow('t1', 'q', 'a')]);
+
+    const result = await getConversationTranscript(CHAT_ID, RECENT, NOW);
+
+    expect(JSON.stringify(result.response)).not.toContain('assembled_response');
+    expect(JSON.stringify(result.response)).not.toContain('request_body');
+  });
+});
+
+describe('getConversationHopBodies', () => {
+  const CHAT_ID = 'chat-1';
+  const getEntitySchema = () => analyticsDataApi.getEntitySchema as unknown as ReturnType<typeof vi.fn>;
+  const READABLE = [UsageLogField.RequestBody, UsageLogField.ResponseBody];
+
+  const schemaOf = (names: string[]) =>
+    getEntitySchema().mockResolvedValue({ fields: names.map((name) => ({ name, type: 'string', source: name })) });
+
+  const bodyRow = (overrides: Record<string, unknown> = {}) => ({
+    trace_id: 'tr1',
+    event_kind: 'llm_call',
+    request_body: JSON.stringify({ messages: [{ role: 'user', content: 'the prompt' }] }),
+    response_body: JSON.stringify({ choices: [{ message: { content: 'the answer' } }] }),
+    ...overrides,
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    clearEntitySchemaCache();
+    (getUserToken as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(TOKEN_MOCK);
+    (getIsEnableAuthToggle as unknown as ReturnType<typeof vi.fn>).mockReturnValue(true);
+  });
+
+  const read = (requestTime: number | string | null = 1787052797216) =>
+    getConversationHopBodies(CHAT_ID, 'tr1', 'sp1', requestTime);
+
+  test('ships the decoded texts and no raw body', async () => {
+    schemaOf(READABLE);
+    execute().mockResolvedValue({ success: true, response: { rows: [bodyRow()] } });
+
+    const result = await read();
+
+    expect(result.response).toEqual({
+      state: HopTextsState.Available,
+      sent: 'the prompt',
+      received: 'the answer',
+      toolCalls: [],
+    });
+    expect(JSON.stringify(result.response)).not.toContain('choices');
+  });
+
+  // One hop at a time: the query names the hop, and the bound is its own instant.
+  test('reads exactly the one hop it was asked for', async () => {
+    schemaOf(READABLE);
+    execute().mockResolvedValue({ success: true, response: { rows: [bodyRow()] } });
+
+    await read();
+
+    const query = execute().mock.calls[0][0] as StructuredQuery;
+    expect(JSON.stringify(query.filter)).toContain('sp1');
+    expect(JSON.stringify(query.filter)).toContain('1787052797216');
+    expect(execute()).toHaveBeenCalledOnce();
+    expect(execute()).toHaveBeenCalledWith(expect.anything(), TOKEN_MOCK);
+  });
+
+  // The expected non-administrator path: the columns were never offered, so the section is simply absent.
+  test('reports the columns as unavailable without reading anything', async () => {
+    schemaOf([UsageLogField.TraceId]);
+
+    const result = await read();
+
+    expect(result.success).toBe(true);
+    expect(result.response?.state).toBe(HopTextsState.ColumnsUnavailable);
+    expect(execute()).not.toHaveBeenCalled();
+  });
+
+  // A schema that could not be read is an outage, not a column that was withheld.
+  test('reports a failure when the schema could not be read', async () => {
+    getEntitySchema().mockResolvedValue(null);
+
+    const result = await read();
+
+    expect(result.success).toBe(false);
+    expect(result.response?.state).toBe(HopTextsState.LoadFailed);
+  });
+
+  test('reports a failed read as a failure rather than as an empty hop', async () => {
+    schemaOf(READABLE);
+    execute().mockResolvedValue({ success: false, response: undefined });
+
+    expect((await read()).response?.state).toBe(HopTextsState.LoadFailed);
+  });
+
+  test('reports a hop the read matched no row for', async () => {
+    schemaOf(READABLE);
+    execute().mockResolvedValue({ success: true, response: { rows: [] } });
+
+    const result = await read();
+
+    expect(result.success).toBe(true);
+    expect(result.response?.state).toBe(HopTextsState.NoBodies);
+  });
+
+  test('reports a hop whose bodies decoded to nothing as recording nothing readable', async () => {
+    schemaOf(READABLE);
+    execute().mockResolvedValue({
+      success: true,
+      response: { rows: [bodyRow({ request_body: null, response_body: null })] },
+    });
+
+    expect((await read()).response?.state).toBe(HopTextsState.NoBodies);
+  });
+
+  // The tool names are the only record of what a hop that returned no text actually did.
+  test('carries the requested tool names for a hop that returned no text', async () => {
+    schemaOf(READABLE);
+    execute().mockResolvedValue({
+      success: true,
+      response: {
+        rows: [
+          bodyRow({
+            response_body: JSON.stringify({
+              choices: [{ message: { content: '', tool_calls: [{ function: { name: 'rag_search' } }] } }],
+            }),
+          }),
+        ],
+      },
+    });
+
+    const result = await read();
+
+    expect(result.response?.state).toBe(HopTextsState.Available);
+    expect(result.response?.toolCalls).toEqual(['rag_search']);
+  });
+
+  test('sends no time bound for a hop that records no time', async () => {
+    schemaOf(READABLE);
+    execute().mockResolvedValue({ success: true, response: { rows: [bodyRow()] } });
+
+    await read(null);
+
+    const query = execute().mock.calls[0][0] as StructuredQuery;
+    expect(JSON.stringify(query.filter)).not.toContain(QueryOperator.Ge);
   });
 });

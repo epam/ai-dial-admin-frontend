@@ -1,7 +1,7 @@
 'use client';
 
 import { IconDatabase, IconGauge, IconMessage2 } from '@tabler/icons-react';
-import { FC, ReactNode } from 'react';
+import { FC, ReactNode, memo } from 'react';
 
 import ConversationDetailPanel from '@/src/components/Analytics/ConversationsTrace/Detail/ConversationDetailPanel';
 import ConversationRailShell from '@/src/components/Analytics/ConversationsTrace/Detail/ConversationRailShell';
@@ -80,4 +80,6 @@ const ConversationDetailRail: FC<Props> = ({ conversation, feedback, feedbackTot
   );
 };
 
-export default ConversationDetailRail;
+// Memoized because it sits beside both views and is identical in each: switching Chat to Trace changes none
+// of its props, so re-rendering three panels of resolved fields for it would be work with no output.
+export default memo(ConversationDetailRail);

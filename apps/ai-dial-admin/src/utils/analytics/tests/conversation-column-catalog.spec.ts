@@ -2,14 +2,16 @@ import { ColDef } from 'ag-grid-community';
 import { describe, expect, test } from 'vitest';
 
 import { CONVERSATIONS_TRACE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
-import { ConversationColumn, ConversationsField } from '@/src/models/analytics/conversations-trace';
+import { ConversationColumn, ConversationsField, UsageLogField } from '@/src/models/analytics/conversations-trace';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import {
   availableSelectFields,
   filterableColumnFields,
   projectableSchemaFields,
   sortableColumnFields,
+  transcriptBodyFields,
 } from '@/src/utils/analytics/conversation-column-catalog';
+import { OPTIONAL_USAGE_LOG_FIELDS } from '@/src/constants/analytics/conversations-trace';
 
 const t = (key: string) => key;
 
@@ -147,5 +149,100 @@ describe('availableSelectFields', () => {
       'total_price',
       'traces',
     ]);
+  });
+});
+
+// Two unrelated conditions remove a body column from the fetched schema, and both look identical here: the
+// `sensitive` flag hides all three from a caller below FULL_ADMIN, while `assembled_response` is simply not
+// persisted by an instance predating it — missing for every caller, full administrators included.
+describe('transcriptBodyFields', () => {
+  const ALL = [UsageLogField.RequestBody, UsageLogField.ResponseBody, UsageLogField.AssembledResponse];
+
+  test('reads a transcript when the request body and both response columns are reported', () => {
+    expect(transcriptBodyFields(ALL)).toEqual({
+      isReadable: true,
+      responseFields: [UsageLogField.AssembledResponse, UsageLogField.ResponseBody],
+    });
+  });
+
+  // The service-version case: an older instance carries no assembled column at all, and the decoder over the
+  // raw body is the only path. The Chat view still works.
+  test('reads a transcript from the raw body alone when the assembled column is absent', () => {
+    expect(transcriptBodyFields([UsageLogField.RequestBody, UsageLogField.ResponseBody])).toEqual({
+      isReadable: true,
+      responseFields: [UsageLogField.ResponseBody],
+    });
+  });
+
+  test('prefers the assembled column when it is the only response column reported', () => {
+    expect(transcriptBodyFields([UsageLogField.RequestBody, UsageLogField.AssembledResponse])).toEqual({
+      isReadable: true,
+      responseFields: [UsageLogField.AssembledResponse],
+    });
+  });
+
+  // The access case: `sensitive` takes all three at once, which is why the request body going missing is the
+  // reliable signal that this is a rights problem rather than a version one.
+  test('reads no transcript when the schema reports none of them', () => {
+    expect(transcriptBodyFields([UsageLogField.ChatId, UsageLogField.TraceId])).toEqual({
+      isReadable: false,
+      responseFields: [],
+    });
+  });
+
+  test('reads no transcript without the request body, whatever the response columns say', () => {
+    expect(transcriptBodyFields([UsageLogField.ResponseBody, UsageLogField.AssembledResponse])).toEqual({
+      isReadable: false,
+      responseFields: [UsageLogField.AssembledResponse, UsageLogField.ResponseBody],
+    });
+  });
+
+  test('reads no transcript when the request body is reported but no response column is', () => {
+    expect(transcriptBodyFields([UsageLogField.RequestBody])).toEqual({ isReadable: false, responseFields: [] });
+  });
+
+  test('reads no transcript from an unread schema', () => {
+    expect(transcriptBodyFields()).toEqual({ isReadable: false, responseFields: [] });
+  });
+});
+
+// The gate that protects a full administrator: naming a column the instance does not persist is a 400 on the
+// whole query, and no permission changes that.
+describe('the hop log optional-field list', () => {
+  const ordered = [UsageLogField.TraceId, UsageLogField.RequestBody, UsageLogField.AssembledResponse];
+
+  test('names the assembled column where the schema reports it', () => {
+    expect(availableSelectFields(ordered, OPTIONAL_USAGE_LOG_FIELDS, [...ordered])).toEqual(ordered);
+  });
+
+  test('omits the assembled column where the schema does not, keeping every required field', () => {
+    expect(
+      availableSelectFields(ordered, OPTIONAL_USAGE_LOG_FIELDS, [UsageLogField.TraceId, UsageLogField.RequestBody]),
+    ).toEqual([UsageLogField.TraceId, UsageLogField.RequestBody]);
+  });
+
+  test('names the required fields only when the schema could not be read', () => {
+    expect(availableSelectFields(ordered, OPTIONAL_USAGE_LOG_FIELDS, undefined)).toEqual([
+      UsageLogField.TraceId,
+      UsageLogField.RequestBody,
+    ]);
+  });
+
+  // An instance can persist one body column without the other, and the gate accepts either — so neither may
+  // be named unconditionally. Naming `response_body` regardless broke the whole Chat view on an instance
+  // that reports only the assembled column.
+  test('treats both body columns as optional hop-log fields', () => {
+    expect(OPTIONAL_USAGE_LOG_FIELDS).toEqual([UsageLogField.AssembledResponse, UsageLogField.ResponseBody]);
+  });
+
+  test('omits the raw response column where the schema reports only the assembled one', () => {
+    const bodyFields = [UsageLogField.RequestBody, UsageLogField.ResponseBody, UsageLogField.AssembledResponse];
+
+    expect(
+      availableSelectFields(bodyFields, OPTIONAL_USAGE_LOG_FIELDS, [
+        UsageLogField.RequestBody,
+        UsageLogField.AssembledResponse,
+      ]),
+    ).toEqual([UsageLogField.RequestBody, UsageLogField.AssembledResponse]);
   });
 });

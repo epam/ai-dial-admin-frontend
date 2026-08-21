@@ -15,6 +15,8 @@ import {
   USAGE_LOG_ENTITY,
 } from '@/src/constants/analytics/conversations-trace';
 import { QueryMode, QueryOffsetPage, QueryOperator, QueryPredicate } from '@/src/models/analytics/query';
+import { UsageLogField } from '@/src/models/analytics/conversations-trace';
+import { clearEntitySchemaCache } from '@/src/server/analytics/entity-schema-cache';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
@@ -58,10 +60,14 @@ const SPAN_ROW = {
 };
 
 const execute = () => analyticsDataApi.executeAction as unknown as ReturnType<typeof vi.fn>;
+const getEntitySchema = () => analyticsDataApi.getEntitySchema as unknown as ReturnType<typeof vi.fn>;
 const call = (index: number) => execute().mock.calls[index][0];
 
 beforeEach(() => {
   vi.clearAllMocks();
+  clearEntitySchemaCache();
+  // No readable response column by default, so the tests about the spans read are not also model-body tests.
+  getEntitySchema().mockResolvedValue({ fields: [] });
   (getIsEnableAuthToggle as unknown as ReturnType<typeof vi.fn>).mockReturnValue(true);
   (getUserToken as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(TOKEN_MOCK);
 });
@@ -139,6 +145,8 @@ describe('getConversationFeedback', () => {
     expect(result.response).toEqual({ rows: [FEEDBACK_ROW], total: 6 });
   });
 
+  // The model-call bodies are the only record of what a model call produced, so the stream cannot be typed
+  // without them. Narrow by construction: only the model-call hops, capped, never the whole trace.
   test('an absent total resolves to null rather than a guessed count', async () => {
     execute().mockResolvedValue({ success: true, response: { rows: [FEEDBACK_ROW] } });
 
@@ -236,7 +244,76 @@ describe('getConversationSpans', () => {
 
     const result = await getConversationSpans(CHAT_ID, TRACE_ID);
 
-    expect(result.response).toEqual({ spans: [SPAN_ROW], total: 922 });
+    expect(result.response).toEqual({ spans: [SPAN_ROW], total: 922, modelOutputs: [] });
+  });
+
+  // The model-call bodies are the only record of what a model call produced, so the stream cannot be typed
+  // without them. Narrow by construction: only the model-call hops, capped, never the whole trace.
+  test('decodes what each model call produced, and ships no body', async () => {
+    getEntitySchema().mockResolvedValue({
+      fields: [UsageLogField.RequestBody, UsageLogField.ResponseBody].map((name) => ({
+        name,
+        type: 'string',
+        source: name,
+      })),
+    });
+    execute()
+      .mockResolvedValueOnce({ success: true, response: { rows: [SPAN_ROW], totalCount: 1 } })
+      .mockResolvedValueOnce({
+        success: true,
+        response: {
+          rows: [
+            {
+              core_span_id: 's1',
+              response_body: JSON.stringify({
+                choices: [
+                  {
+                    message: {
+                      content: 'an answer',
+                      tool_calls: [{ function: { name: 'rag_search', arguments: '{"q":"cyber"}' } }],
+                    },
+                  },
+                ],
+              }),
+            },
+          ],
+        },
+      });
+
+    const result = await getConversationSpans(CHAT_ID, TRACE_ID);
+
+    expect(result.response?.modelOutputs).toEqual([
+      {
+        core_span_id: 's1',
+        text: 'an answer',
+        toolCalls: [{ name: 'rag_search', argumentsPreview: '{"q":"cyber"}' }],
+        isUnread: false,
+      },
+    ]);
+    expect(JSON.stringify(result.response)).not.toContain('choices');
+  });
+
+  // The outputs enrich the stream; the spans stand without them. A throwing schema read used to reject the
+  // whole action, so the reader was told the trace could not be read when its rows were already in hand.
+  test('returns the spans it read when the body enrichment throws', async () => {
+    getEntitySchema().mockRejectedValue(new Error('schema unreachable'));
+    execute().mockResolvedValue({ success: true, response: { rows: [SPAN_ROW], totalCount: 1 } });
+
+    const result = await getConversationSpans(CHAT_ID, TRACE_ID);
+
+    expect(result.response?.spans).toEqual([SPAN_ROW]);
+    expect(result.response?.modelOutputs).toEqual([]);
+  });
+
+  // The stream still renders without them, with its model-call rows typed generically.
+  test('reads no model bodies when the schema reports no response column', async () => {
+    getEntitySchema().mockResolvedValue({ fields: [{ name: 'trace_id', type: 'string', source: 'trace_id' }] });
+    execute().mockResolvedValue({ success: true, response: { rows: [SPAN_ROW], totalCount: 1 } });
+
+    const result = await getConversationSpans(CHAT_ID, TRACE_ID);
+
+    expect(result.response?.modelOutputs).toEqual([]);
+    expect(execute()).toHaveBeenCalledOnce();
   });
 
   test('an absent total resolves to null rather than a guessed count', async () => {
@@ -247,14 +324,20 @@ describe('getConversationSpans', () => {
     expect(result.response?.total).toBeNull();
   });
 
+  // Checked against the projected names rather than the serialized query, because `response_body_bytes` — a
+  // `long` the chain does need — contains `response_body` as a substring.
   test('never asks for a body column', async () => {
     execute().mockResolvedValue({ success: true, response: { rows: [SPAN_ROW], totalCount: 1 } });
 
     await getConversationSpans(CHAT_ID, TRACE_ID);
 
-    const serialized = JSON.stringify(call(0));
-    expect(serialized).not.toContain('request_body');
-    expect(serialized).not.toContain('response_body');
+    const names = ((call(0).select ?? []) as { expr: { name?: string } }[]).map(({ expr }) => expr.name);
+
+    expect(names).not.toContain('request_body');
+    expect(names).not.toContain('response_body');
+    expect(names).not.toContain('assembled_response');
+    // The size is not the body: a `long` that decides whether a hop has text worth fetching.
+    expect(names).toContain('response_body_bytes');
   });
 
   test('a failed query reports failure with no response', async () => {

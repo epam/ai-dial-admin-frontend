@@ -1,94 +1,80 @@
-import { Big } from 'big.js';
-
 import {
-  ConversationSpanNode,
-  ConversationSpanRow,
-  ConversationTraceTotals,
-  SpanCategory,
-} from '@/src/models/analytics/conversations-trace';
-import { toMillis } from '@/src/utils/analytics/conversation-formatting';
-import { toBig, toNumber } from '@/src/utils/analytics/scalar';
+  MCP_EVENT_KIND,
+  MCP_PROTOCOL_METHODS,
+  MODEL_CALL_URI_MARKERS,
+  ROUTE_EVENT_KIND,
+} from '@/src/constants/analytics/conversations-trace';
+import { ConversationSpanRow, HopTextSuppression, SpanCategory } from '@/src/models/analytics/conversations-trace';
+import { toNumber } from '@/src/utils/analytics/scalar';
+
+const EMBEDDING_EVENT_KIND = 'embedding';
+const LLM_CALL_EVENT_KIND = 'llm_call';
 
 const EVENT_KIND_CATEGORY: Record<string, SpanCategory> = {
-  embedding: SpanCategory.Embedding,
-  mcp: SpanCategory.Retrieval,
-  route: SpanCategory.Route,
-  llm_call: SpanCategory.Deployment,
+  [EMBEDDING_EVENT_KIND]: SpanCategory.Embedding,
+  [MCP_EVENT_KIND]: SpanCategory.Retrieval,
+  [ROUTE_EVENT_KIND]: SpanCategory.Route,
+  [LLM_CALL_EVENT_KIND]: SpanCategory.Deployment,
 };
 
-export const spanCategoryOf = ({ success, event_kind }: ConversationSpanRow): SpanCategory => {
-  if (success === false) {
+export const isEmbedding = ({ event_kind }: ConversationSpanRow): boolean =>
+  event_kind?.trim() === EMBEDDING_EVENT_KIND;
+
+export const isMcpCall = ({ event_kind }: ConversationSpanRow): boolean => event_kind?.trim() === MCP_EVENT_KIND;
+
+export const isModelCall = ({ event_kind, request_uri }: ConversationSpanRow): boolean => {
+  const kind = event_kind?.trim();
+  if (kind === LLM_CALL_EVENT_KIND) {
+    return true;
+  }
+  if (kind) {
+    return false;
+  }
+
+  const uri = request_uri?.trim() ?? '';
+  return MODEL_CALL_URI_MARKERS.some((marker) => uri.includes(marker));
+};
+
+export const spanCategoryOf = (span: ConversationSpanRow): SpanCategory => {
+  if (span.success === false) {
     return SpanCategory.Error;
   }
 
-  return EVENT_KIND_CATEGORY[event_kind ?? ''] ?? SpanCategory.Other;
-};
-
-export const spanLabelOf = ({ deployment, request_uri, core_span_id }: ConversationSpanRow): string =>
-  deployment?.trim() || request_uri?.trim() || core_span_id;
-
-const childrenOf = (spans: ConversationSpanRow[]): Map<string, ConversationSpanRow[]> => {
-  const known = new Set(spans.map(({ core_span_id }) => core_span_id));
-  const byParent = new Map<string, ConversationSpanRow[]>();
-
-  for (const span of spans) {
-    const parent = span.core_parent_span_id;
-    const key = parent && known.has(parent) ? parent : '';
-    byParent.set(key, [...(byParent.get(key) ?? []), span]);
+  const mapped = EVENT_KIND_CATEGORY[span.event_kind?.trim() ?? ''];
+  if (mapped) {
+    return mapped;
   }
 
-  return byParent;
+  return isModelCall(span) ? SpanCategory.Deployment : SpanCategory.Other;
 };
 
-export const buildSpanTree = (spans: ConversationSpanRow[]): ConversationSpanNode[] => {
-  if (!spans.length) {
-    return [];
+export const spanLabelOf = ({
+  deployment,
+  request_uri,
+  core_span_id,
+  mcp_tool_call_name,
+  mcp_method,
+}: ConversationSpanRow): string =>
+  mcp_tool_call_name?.trim() || mcp_method?.trim() || deployment?.trim() || request_uri?.trim() || core_span_id;
+
+export const areSpansPartial = (spans: ConversationSpanRow[], hopCount: number | null): boolean =>
+  hopCount !== null && hopCount > spans.length;
+
+export const isProtocolEnvelope = ({ mcp_method, mcp_tool_call_name }: ConversationSpanRow): boolean =>
+  !mcp_tool_call_name?.trim() && MCP_PROTOCOL_METHODS.includes(mcp_method?.trim() ?? '');
+
+export const hopTextSuppressionOf = (span: ConversationSpanRow): HopTextSuppression | null => {
+  if (toNumber(span.response_body_bytes) === 0) {
+    return HopTextSuppression.NoResponse;
   }
 
-  const byParent = childrenOf(spans);
-  const startedAt = spans
-    .map(({ request_time }) => toMillis(request_time))
-    .filter((value): value is number => value !== null);
-  const traceStart = startedAt.length ? Math.min(...startedAt) : null;
+  if (isProtocolEnvelope(span)) {
+    return HopTextSuppression.SessionSetup;
+  }
 
-  const walk = (parentKey: string, depth: number): ConversationSpanNode[] =>
-    (byParent.get(parentKey) ?? []).flatMap((span) => {
-      const startMs = toMillis(span.request_time);
+  if (isEmbedding(span)) {
+    return HopTextSuppression.Embedding;
+  }
 
-      return [
-        {
-          span,
-          depth,
-          category: spanCategoryOf(span),
-          offsetMs: startMs !== null && traceStart !== null ? startMs - traceStart : null,
-          durationMs: toNumber(span.operation_duration_ms),
-        },
-        ...walk(span.core_span_id, depth + 1),
-      ];
-    });
-
-  return walk('', 0);
+  return null;
 };
-
-export const traceTotalsOf = (spans: ConversationSpanRow[]): ConversationTraceTotals => {
-  const durations = spans
-    .map(({ operation_duration_ms }) => toNumber(operation_duration_ms))
-    .filter((value): value is number => value !== null);
-
-  const tokens = spans.reduce((total, { total_tokens }) => total + (toNumber(total_tokens) ?? 0), 0);
-  const cost = spans.reduce(
-    (total, { deployment_price }) => total.plus(toBig(deployment_price) ?? new Big(0)),
-    new Big(0),
-  );
-
-  return {
-    latencyMs: durations.length ? Math.max(...durations) : null,
-    tokens,
-    cost: cost.toString(),
-    spanCount: spans.length,
-    isFailed: spans.some(({ success }) => success === false),
-  };
-};
-
-export const areSpansPartial = (spans: ConversationSpanRow[], total: number | null): boolean =>
-  total !== null && total > spans.length;
