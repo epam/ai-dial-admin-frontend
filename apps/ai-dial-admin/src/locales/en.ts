@@ -1820,7 +1820,7 @@ export default {
     Configuration: 'Configuration',
     Condition: 'Condition',
     ConditionHint:
-      'Optional JSONata evaluated per turn — the metric runs only when it is true. Use data.<column>, response.<column>, and turn.<field> (turn.index — 0-based, turn.total, turn.last — boolean), e.g. $exists(response.answer), or turn.last to run only on the final turn. Leave blank to always run.',
+      'Optional JSONata evaluated per turn — the metric runs only when it is true. Use data.<column>, response.<column>, turn.<field> (turn.index — 0-based, turn.total, turn.last — boolean), and request.<field> (request.index — 0-based, request.total, request.last — boolean, request.name), e.g. $exists(response.answer), or turn.last to run only on the final turn. Leave blank to always run.',
     ConditionAlwaysRun: 'Always run',
     ConditionSystemFunctionUnavailable:
       'System functions such as name() are not available yet. Use a JSONata expression (e.g. $exists(response.answer)) or leave blank.',
@@ -2001,6 +2001,15 @@ export default {
     TurnCountBadge: '{count} turns',
     ImportWarnings: 'Warnings',
     ImportWarningRow: 'Row {rowNumber}',
+    RequestChain: 'Request chain',
+    Request: 'Request',
+    AddRequest: 'Add request',
+    RemoveRequest: 'Remove request',
+    RequestName: 'Request name',
+    RequestChainHint: 'Requests run in order — later requests can use earlier outputs.',
+    RequestChainPreviousOutputsInfo: 'This request has access to the output of previous requests.',
+    RequestChainPreviousOutputsColumnsInfo: 'This request has access to the output of previous requests: {columns}.',
+    RequestChainOutputOf: 'Output of {request}',
     TrendsRunsCount: '{count} Runs',
     AvgTestSuiteRunTime: 'Avg Test Suite Run Time',
     AvgPerRuns: 'avg per {count} runs',
@@ -2271,6 +2280,7 @@ export default {
     RunCompareHeatMapTooltipScore: 'Score:',
     RunCompareHeatMapTooltipDelta: 'Delta:',
     RunCompareHeatMapNotApplicable: 'N/A',
+    RequestsInChain: 'Requests in chain',
   },
   ExportRun: {
     ExportRunTitle: 'Export run',

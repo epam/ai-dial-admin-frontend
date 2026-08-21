@@ -8,6 +8,7 @@ import { useI18n } from '@/src/locales/client';
 import { BindingSourceValue, MetricBinding } from '@/src/models/evaluation/metric';
 import { TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
 import { MetricBindingType } from '@/src/types/evaluation';
+import { getChainResponseColumns } from '@/src/utils/evaluation/request-chain';
 import MetricControl from './MetricControl';
 import MetricSectionTabs from './MetricSectionTabs';
 
@@ -115,9 +116,10 @@ const MetricInput: FC<{
       {binding?.source.$type === MetricBindingType.Response && (
         <DialSelect
           elementId={field.id}
-          options={
-            selectedTestSuite?.responseColumns?.map((item) => ({ label: item.displayName, value: item.name })) || []
-          }
+          options={(selectedTestSuite ? getChainResponseColumns(selectedTestSuite) : []).map((item) => ({
+            label: item.displayName,
+            value: item.name,
+          }))}
           value={binding?.source.columnName as string | undefined}
           onChange={(v) => onChangeColumn(v as string)}
         />

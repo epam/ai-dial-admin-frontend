@@ -2,7 +2,7 @@ import { describe, test, expect } from 'vitest';
 import { JSONSchema7 } from 'json-schema';
 
 import { schemaToTreeNodes, SchemaTreeNode } from '@/src/components/Common/SchemaGrid/utils';
-import { getSchemaSuggestions } from '../utils';
+import { getSchemaSuggestions, getVariableSuggestions } from '../utils';
 
 const buildNodes = (schema: JSONSchema7): SchemaTreeNode[] => schemaToTreeNodes(schema, '', schema);
 
@@ -411,5 +411,36 @@ describe('getSchemaSuggestions', () => {
       expect(suggestions).toHaveLength(2);
       expect(suggestions.map((s) => s.label)).toEqual(['message', 'index']);
     });
+  });
+});
+
+describe('getVariableSuggestions', () => {
+  const variables = [{ name: 'answer', description: 'Output of 1. Main request' }, { name: 'tokens' }];
+
+  test('should return every variable for an empty expression', () => {
+    expect(getVariableSuggestions(variables, '')).toEqual([
+      { label: '$answer', value: '$answer', type: '', detail: 'Output of 1. Main request' },
+      { label: '$tokens', value: '$tokens', type: '', detail: undefined },
+    ]);
+  });
+
+  test('should filter by the partial name typed after the dollar sign', () => {
+    expect(getVariableSuggestions(variables, '$tok').map((s) => s.label)).toEqual(['$tokens']);
+  });
+
+  test('should match case-insensitively', () => {
+    expect(getVariableSuggestions(variables, '$ANS').map((s) => s.label)).toEqual(['$answer']);
+  });
+
+  test('should return nothing for a schema path expression', () => {
+    expect(getVariableSuggestions(variables, 'choices[0].')).toEqual([]);
+  });
+
+  test('should return nothing when there are no variables', () => {
+    expect(getVariableSuggestions([], '')).toEqual([]);
+  });
+
+  test('should carry an empty type so selecting a variable leaves the column data type alone', () => {
+    expect(getVariableSuggestions(variables, '$answer')[0].type).toBe('');
   });
 });

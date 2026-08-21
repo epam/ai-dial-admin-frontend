@@ -1,19 +1,26 @@
-import { InputBinding, TestSuiteRequestTemplate } from '@/src/models/evaluation/test-suite';
+import { ParsedTemplateParam } from '@/src/components/TestSuites/utils/models';
+import { InputBinding, TemplateVariable, TestSuiteRequestTemplate } from '@/src/models/evaluation/test-suite';
+import { TestCaseItemType } from '@/src/types/evaluation';
 
 /** Matches ${{name}} or ${{name:defaultValue}} in template strings */
 const TEMPLATE_PARAM_REGEX = /\$\{\{([^}:]+)(?::([^}]*))?\}\}/g;
 
-const collectParamsFromString = (str: string): string[] => {
-  const names: string[] = [];
+const collectParamsFromString = (str: string): ParsedTemplateParam[] => {
+  const params: ParsedTemplateParam[] = [];
   let match: RegExpExecArray | null;
   TEMPLATE_PARAM_REGEX.lastIndex = 0;
   while ((match = TEMPLATE_PARAM_REGEX.exec(str)) !== null) {
-    names.push(match[1].trim());
+    const hasDefault = match[2] !== undefined;
+    params.push({
+      name: match[1].trim(),
+      hasDefault,
+      defaultValue: hasDefault ? match[2].trim() : undefined,
+    });
   }
-  return names;
+  return params;
 };
 
-const collectParamsFromValue = (value: unknown): string[] => {
+const collectParamsFromValue = (value: unknown): ParsedTemplateParam[] => {
   if (typeof value === 'string') {
     return collectParamsFromString(value);
   }
@@ -34,8 +41,40 @@ export const getTemplateParameters = (template: TestSuiteRequestTemplate | undef
   if (!template) {
     return [];
   }
-  const names = collectParamsFromValue(template);
+  const names = collectParamsFromValue(template).map((param) => param.name);
   return [...new Set(names)];
+};
+
+/**
+ * Scans a request template's URL, headers, query params, and body (including a jsonataContent
+ * expression) for ${{name}} / ${{name:defaultValue}} placeholders, the same surface
+ * `getTemplateParameters` covers, and returns one `TemplateVariable` per unique name in
+ * first-seen order — the shape `generateInputBindingsRowData` expects in place of the
+ * server-fetched variables used for request #0.
+ */
+export const getTemplateParameterVariables = (template: TestSuiteRequestTemplate | undefined): TemplateVariable[] => {
+  if (!template) {
+    return [];
+  }
+
+  const seen = new Set<string>();
+  const variables: TemplateVariable[] = [];
+
+  collectParamsFromValue(template).forEach(({ name, hasDefault, defaultValue }) => {
+    if (seen.has(name)) {
+      return;
+    }
+    seen.add(name);
+    variables.push({
+      name,
+      hasDefault,
+      defaultValue: hasDefault ? defaultValue : null,
+      effectiveType: TestCaseItemType.STRING,
+      sources: [],
+    });
+  });
+
+  return variables;
 };
 
 export const filterParameterBindings = (

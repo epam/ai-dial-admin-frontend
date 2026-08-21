@@ -7,6 +7,7 @@ import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Metric } from '@/src/models/evaluation/metric';
 import { OverallScoreType, OverallScoreWeight, TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
+import { getChainResponseColumns } from '@/src/utils/evaluation/request-chain';
 import { FunctionParameterSource, FunctionParameterSourceType, OverallScoreFunctionName } from './models';
 import SpecificFunction from './SpecificFunction';
 import { buildOverallScoreFunctionExpression } from './utils';
@@ -124,7 +125,7 @@ const OverallScore: FC<Props> = ({ selectedTestSuite, metrics, testCaseSchema, o
         <SpecificFunction
           expression={selectedTestSuite.overallScore.expression}
           testCaseSchema={testCaseSchema}
-          responseColumns={selectedTestSuite.responseColumns}
+          responseColumns={getChainResponseColumns(selectedTestSuite)}
           metrics={metrics}
           onChange={onFunctionChange}
         />
