@@ -71,7 +71,7 @@ const View: FC<Props> = ({ originalModel, etag, ...props }) => {
   );
 
   useEffect(() => {
-    const name = (originalModel as { name: string })?.name;
+    const name = encodeURIComponent((originalModel as { name: string })?.name);
     if (!coreModel && name) {
       getCoreModel(name).then((data) => {
         setCoreModel(data.response as DialModel);
