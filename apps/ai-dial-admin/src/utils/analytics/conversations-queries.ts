@@ -5,13 +5,17 @@ import {
   CONVERSATION_FILTER_QUERY_OPERATOR,
   FEEDBACK_CANDIDATE_LIMIT,
   FEEDBACK_ENTITY,
+  CONVERSATION_HOP_COUNT_ALIAS,
   OPTIONAL_DETAIL_SELECT_FIELDS,
+  OPTIONAL_USAGE_LOG_FIELDS,
   POSITIVE_RATE_EXCLUSIVE_MIN,
   TURNS_ENTITY,
   USAGE_LOG_ENTITY,
 } from '@/src/constants/analytics/conversations-trace';
 import {
   ConversationColumnFilter,
+  ConversationEntryHopRow,
+  ConversationSpanRow,
   ConversationFilterOperator,
   ConversationSortKey,
   ConversationTotalsField,
@@ -45,6 +49,7 @@ import {
   ico,
   inValues,
   isNotNull,
+  isNull,
   le,
   ne,
   offsetPage,
@@ -55,6 +60,7 @@ import {
   value,
 } from '@/src/utils/analytics/query-build';
 import { availableSelectFields } from '@/src/utils/analytics/conversation-column-catalog';
+import { toMillis } from '@/src/utils/analytics/conversation-formatting';
 
 const emptyString = value(QueryValueType.String, '');
 
@@ -216,6 +222,7 @@ export const buildConversationTurnsQuery = (chatId: string, limit: number): Stru
       col(field(TurnsField.TraceId)),
       col(field(TurnsField.FirstRequestTime), ConversationTurnField.Started),
       col(field(TurnsField.HopCount), ConversationTurnField.Hops),
+      col(field(TurnsField.FailedHopCount), ConversationTurnField.FailedHops),
       col(field(TurnsField.TotalTokens), ConversationTurnField.Tokens),
       col(field(TurnsField.TotalPrice), ConversationTurnField.Cost),
       col(field(TurnsField.DurationMs), ConversationTurnField.DurationMs),
@@ -244,6 +251,11 @@ export const buildConversationSpansQuery = (chatId: string, traceId: string, lim
       col(field(UsageLogField.TotalTokens)),
       col(field(UsageLogField.DeploymentPrice)),
       col(field(UsageLogField.RequestTime)),
+      col(field(UsageLogField.ResponseBodyBytes)),
+      col(field(UsageLogField.ReasoningTokens)),
+      col(field(UsageLogField.McpMethod)),
+      col(field(UsageLogField.McpToolCallName)),
+      col(field(UsageLogField.ExecutionPath)),
     ],
     filter: and([
       eq(UsageLogField.ChatId, value(QueryValueType.String, chatId)),
@@ -252,6 +264,153 @@ export const buildConversationSpansQuery = (chatId: string, traceId: string, lim
     sort: [sortItem(UsageLogField.RequestTime, QuerySortDirection.Asc)],
     page: offsetPage(0, limit, true),
   });
+
+const entryHopFilter = (chatId: string): QueryFilterNode =>
+  and([eq(UsageLogField.ChatId, value(QueryValueType.String, chatId)), isNull(UsageLogField.CoreParentSpanId)]);
+
+export const buildConversationEntryHopsQuery = (chatId: string, limit: number): StructuredQuery =>
+  rowQuery({
+    entity: USAGE_LOG_ENTITY,
+    select: [
+      col(field(UsageLogField.TraceId)),
+      col(field(UsageLogField.RequestTime)),
+      col(field(UsageLogField.Deployment)),
+      col(field(UsageLogField.NumberRequestMessages)),
+      col(field(UsageLogField.RequestBodyBytes)),
+      col(field(UsageLogField.ResponseBodyBytes)),
+    ],
+    filter: entryHopFilter(chatId),
+    sort: [sortItem(UsageLogField.RequestTime, QuerySortDirection.Asc)],
+    page: offsetPage(0, limit, true),
+  });
+
+export const buildConversationHopCountQuery = (chatId: string): StructuredQuery =>
+  aggregateQuery({
+    entity: USAGE_LOG_ENTITY,
+    select: [col(fn('count'), CONVERSATION_HOP_COUNT_ALIAS)],
+    filter: eq(UsageLogField.ChatId, value(QueryValueType.String, chatId)),
+  });
+
+// ADAS accepts a `timestamp` value only as epoch millis — an ISO-8601 string is rejected outright. And an
+// `in` list over `request_time` compiles to `has(...)`, which prunes no partitions, so the time bound has to
+// be a `ge`/`le` range.
+export const buildConversationEntryBodiesQuery = (
+  chatId: string,
+  hops: ConversationEntryHopRow[],
+  schemaFieldNames?: string[],
+): StructuredQuery => {
+  const selectable = availableSelectFields(
+    [
+      UsageLogField.TraceId,
+      UsageLogField.EventKind,
+      UsageLogField.RequestBody,
+      UsageLogField.ResponseBody,
+      UsageLogField.AssembledResponse,
+    ],
+    OPTIONAL_USAGE_LOG_FIELDS,
+    schemaFieldNames,
+  );
+  const recordedMillis = hops
+    .map(({ request_time }) => toMillis(request_time))
+    .filter((ms): ms is number => ms !== null);
+
+  return rowQuery({
+    entity: USAGE_LOG_ENTITY,
+    select: selectable.map((fieldName) => col(field(fieldName))),
+    filter: and([
+      entryHopFilter(chatId),
+      inValues(
+        UsageLogField.TraceId,
+        QueryValueType.String,
+        hops.map(({ trace_id }) => trace_id),
+      ),
+      ...(recordedMillis.length
+        ? [
+            ge(UsageLogField.RequestTime, value(QueryValueType.Timestamp, String(Math.min(...recordedMillis)))),
+            le(UsageLogField.RequestTime, value(QueryValueType.Timestamp, String(Math.max(...recordedMillis)))),
+          ]
+        : []),
+    ]),
+    sort: [sortItem(UsageLogField.RequestTime, QuerySortDirection.Asc)],
+    page: offsetPage(0, Math.max(hops.length, 1)),
+  });
+};
+
+export const buildConversationHopBodyQuery = (
+  chatId: string,
+  traceId: string,
+  coreSpanId: string,
+  requestTime: number | string | null,
+  schemaFieldNames?: string[],
+): StructuredQuery => {
+  const selectable = availableSelectFields(
+    [
+      UsageLogField.TraceId,
+      UsageLogField.EventKind,
+      UsageLogField.RequestBody,
+      UsageLogField.ResponseBody,
+      UsageLogField.AssembledResponse,
+    ],
+    OPTIONAL_USAGE_LOG_FIELDS,
+    schemaFieldNames,
+  );
+  const recordedMillis = toMillis(requestTime);
+
+  return rowQuery({
+    entity: USAGE_LOG_ENTITY,
+    select: selectable.map((fieldName) => col(field(fieldName))),
+    filter: and([
+      eq(UsageLogField.ChatId, value(QueryValueType.String, chatId)),
+      eq(UsageLogField.TraceId, value(QueryValueType.String, traceId)),
+      eq(UsageLogField.CoreSpanId, value(QueryValueType.String, coreSpanId)),
+      ...(recordedMillis === null
+        ? []
+        : [
+            ge(UsageLogField.RequestTime, value(QueryValueType.Timestamp, String(recordedMillis))),
+            le(UsageLogField.RequestTime, value(QueryValueType.Timestamp, String(recordedMillis))),
+          ]),
+    ]),
+    page: offsetPage(0, 1),
+  });
+};
+
+export const buildConversationModelBodiesQuery = (
+  chatId: string,
+  traceId: string,
+  hops: ConversationSpanRow[],
+  schemaFieldNames?: string[],
+): StructuredQuery => {
+  const selectable = availableSelectFields(
+    [UsageLogField.CoreSpanId, UsageLogField.ResponseBody, UsageLogField.AssembledResponse],
+    OPTIONAL_USAGE_LOG_FIELDS,
+    schemaFieldNames,
+  );
+  const recordedMillis = hops
+    .map(({ request_time }) => toMillis(request_time))
+    .filter((ms): ms is number => ms !== null);
+
+  return rowQuery({
+    entity: USAGE_LOG_ENTITY,
+    select: selectable.map((fieldName) => col(field(fieldName))),
+    filter: and([
+      eq(UsageLogField.ChatId, value(QueryValueType.String, chatId)),
+      eq(UsageLogField.TraceId, value(QueryValueType.String, traceId)),
+      inValues(
+        UsageLogField.CoreSpanId,
+        QueryValueType.String,
+        hops.map(({ core_span_id }) => core_span_id),
+      ),
+      ...(recordedMillis.length
+        ? [
+            ge(UsageLogField.RequestTime, value(QueryValueType.Timestamp, String(Math.min(...recordedMillis)))),
+            le(UsageLogField.RequestTime, value(QueryValueType.Timestamp, String(Math.max(...recordedMillis)))),
+          ]
+        : []),
+    ]),
+    sort: [sortItem(UsageLogField.RequestTime, QuerySortDirection.Asc)],
+    page: offsetPage(0, Math.max(hops.length, 1)),
+  });
+};
 
 export const buildConversationTotalsQuery = (filters: ConversationFilterParams): StructuredQuery =>
   aggregateQuery({

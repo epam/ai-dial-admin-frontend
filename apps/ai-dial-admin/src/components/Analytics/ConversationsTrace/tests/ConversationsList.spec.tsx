@@ -5,8 +5,10 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import ConversationsList from '@/src/components/Analytics/ConversationsTrace/List/ConversationsList';
 import { PAGE_SIZE } from '@/src/constants/ag-grid';
 import {
+  CONVERSATIONS_FLOATING_FILTER_HEIGHT,
   CONVERSATIONS_GROUP_HEADER_HEIGHT,
   CONVERSATIONS_HEADER_HEIGHT,
+  CONVERSATIONS_HEADER_STACK_HEIGHT,
   CONVERSATIONS_ROW_HEIGHT,
   CONVERSATIONS_STORAGE_KEY,
 } from '@/src/constants/analytics/conversations-trace';
@@ -155,8 +157,21 @@ describe('ConversationsList :: paging', () => {
       rowHeight: CONVERSATIONS_ROW_HEIGHT,
       headerHeight: CONVERSATIONS_HEADER_HEIGHT,
       groupHeaderHeight: CONVERSATIONS_GROUP_HEADER_HEIGHT,
+      floatingFiltersHeight: CONVERSATIONS_FLOATING_FILTER_HEIGHT,
     });
     expect(captured.additionalGridOptions?.defaultColDef).toBeUndefined();
+  });
+
+  // The view offsets its empty state by this sum to keep the filter inputs reachable, so a height configured
+  // here and not counted there would put the overlay back over the controls.
+  test('the header stack the view offsets by is the sum of the heights configured here', () => {
+    renderList();
+
+    const { headerHeight, groupHeaderHeight, floatingFiltersHeight } = captured.additionalGridOptions ?? {};
+
+    expect((headerHeight ?? 0) + (groupHeaderHeight ?? 0) + (floatingFiltersHeight ?? 0)).toBe(
+      CONVERSATIONS_HEADER_STACK_HEIGHT,
+    );
   });
 });
 

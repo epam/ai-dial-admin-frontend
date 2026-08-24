@@ -12,11 +12,14 @@ import {
   IDENTITY_ENRICHMENT_FIELDS,
   NON_SCALAR_FIELD_TYPES,
   NUMERIC_FIELD_TYPES,
+  TRANSCRIPT_REQUIRED_FIELD,
+  TRANSCRIPT_RESPONSE_FIELDS,
 } from '@/src/constants/analytics/conversations-trace';
 import {
   ColumnProvenance,
   ConversationColumnGroup,
   ConversationProjectableFields,
+  TranscriptBodyFields,
 } from '@/src/models/analytics/conversations-trace';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryValueType } from '@/src/models/analytics/query';
@@ -235,3 +238,15 @@ export const sortableColumnFields = (columns: ColDef[]): string[] =>
 
 export const filterableColumnFields = (columns: ColDef[]): string[] =>
   columns.filter((column) => column.filter !== false && column.field).map((column) => column.field as string);
+
+// The hop-log body columns are `sensitive` in the ADAS catalog, so they are absent from the fetched schema
+// below FULL_ADMIN — and the service rejects the whole query for one unknown field.
+export const transcriptBodyFields = (schemaFieldNames: string[] = []): TranscriptBodyFields => {
+  const available = new Set(schemaFieldNames);
+  const responseFields = TRANSCRIPT_RESPONSE_FIELDS.filter((name) => available.has(name));
+
+  return {
+    isReadable: available.has(TRANSCRIPT_REQUIRED_FIELD) && responseFields.length > 0,
+    responseFields,
+  };
+};

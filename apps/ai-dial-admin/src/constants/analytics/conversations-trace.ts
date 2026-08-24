@@ -8,8 +8,10 @@ import {
   ConversationPanelDefinition,
   ConversationPanelLayout,
   ConversationsField,
+  HopEventType,
   ProvenanceEntity,
   SpanCategory,
+  UsageLogField,
 } from '@/src/models/analytics/conversations-trace';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryOperator, QueryValueType } from '@/src/models/analytics/query';
@@ -25,7 +27,55 @@ export const TURNS_ENTITY = 'turns';
 
 export const CONVERSATION_TURN_LIMIT = 200;
 
+export const CONVERSATION_ENTRY_HOP_LIMIT = CONVERSATION_TURN_LIMIT;
+
 export const CONVERSATION_SPAN_LIMIT = 300;
+
+export const USAGE_LOG_RETENTION_MS = 365 * 24 * 60 * 60 * 1000;
+
+export const MCP_PROTOCOL_METHODS: string[] = [
+  'initialize',
+  'notifications/initialized',
+  'tools/list',
+  'resources/list',
+  'prompts/list',
+  'resources/templates/list',
+  'server/discover',
+  'ping',
+  'logging/setLevel',
+];
+
+export const UTILITY_URI_MARKERS: string[] = ['count_tokens', '/tokenize', '/truncate_prompt'];
+
+export const ROUTE_EVENT_KIND = 'route';
+
+export const MCP_EVENT_KIND = 'mcp';
+
+export const STREAM_MODEL_BODY_LIMIT = 80;
+
+export const STREAM_MODEL_BODY_BYTE_BUDGET = 24 * 1024 * 1024;
+
+export const TOOL_ARGUMENTS_PREVIEW_LIMIT = 200;
+
+export const MODEL_CALL_URI_MARKERS: string[] = [
+  '/chat/completions',
+  '/v1/messages',
+  '/v1/responses',
+  '/v1/completions',
+];
+
+export const CONVERSATION_HOP_COUNT_ALIAS = 'hop_count';
+
+// Both body columns are named only when the fetched schema reports them: an instance can persist the
+// assembled column without `response_body`, or the reverse, and one unknown field rejects the whole query.
+export const OPTIONAL_USAGE_LOG_FIELDS: UsageLogField[] = [UsageLogField.AssembledResponse, UsageLogField.ResponseBody];
+
+export const TRANSCRIPT_REQUIRED_FIELD: UsageLogField = UsageLogField.RequestBody;
+
+export const TRANSCRIPT_RESPONSE_FIELDS: UsageLogField[] = [
+  UsageLogField.AssembledResponse,
+  UsageLogField.ResponseBody,
+];
 
 export const FEEDBACK_CANDIDATE_LIMIT = 1000;
 
@@ -40,6 +90,11 @@ export const CONVERSATIONS_ROW_HEIGHT = 64;
 export const CONVERSATIONS_GROUP_HEADER_HEIGHT = 32;
 
 export const CONVERSATIONS_HEADER_HEIGHT = 38;
+
+export const CONVERSATIONS_FLOATING_FILTER_HEIGHT = 38;
+
+export const CONVERSATIONS_HEADER_STACK_HEIGHT =
+  CONVERSATIONS_GROUP_HEADER_HEIGHT + CONVERSATIONS_HEADER_HEIGHT + CONVERSATIONS_FLOATING_FILTER_HEIGHT;
 
 export const CONVERSATIONS_STORAGE_KEY = 'analytics/conversations';
 
@@ -237,6 +292,36 @@ export const SPAN_CATEGORY_CLASS: Record<SpanCategory, string> = {
   [SpanCategory.Route]: 'bg-accent-primary-alpha text-accent-primary',
   [SpanCategory.Deployment]: 'bg-info text-info',
   [SpanCategory.Other]: 'bg-layer-4 text-secondary',
+};
+
+export const EMPTY_ICON_SIZE = 24;
+
+export const HOP_EVENT_RAIL_CLASS: Record<HopEventType, string> = {
+  [HopEventType.TurnStart]: 'bg-accent-primary',
+  [HopEventType.TurnComplete]: 'bg-accent-primary',
+  [HopEventType.Text]: 'bg-accent-secondary',
+  [HopEventType.ToolCall]: 'bg-accent-tertiary',
+  [HopEventType.ToolResult]: 'bg-accent-tertiary',
+  [HopEventType.Thinking]: 'bg-controls-accent',
+  [HopEventType.Empty]: 'bg-layer-4',
+  [HopEventType.Error]: 'bg-error',
+  [HopEventType.Session]: 'bg-secondary',
+  [HopEventType.Embedding]: 'bg-info',
+  [HopEventType.Other]: 'bg-layer-4',
+};
+
+export const HOP_EVENT_LABEL_KEY: Record<HopEventType, string> = {
+  [HopEventType.TurnStart]: ConversationsTraceI18nKey.EventTurnStart,
+  [HopEventType.TurnComplete]: ConversationsTraceI18nKey.EventTurnComplete,
+  [HopEventType.Text]: ConversationsTraceI18nKey.EventText,
+  [HopEventType.ToolCall]: ConversationsTraceI18nKey.EventToolCall,
+  [HopEventType.ToolResult]: ConversationsTraceI18nKey.EventToolResult,
+  [HopEventType.Thinking]: ConversationsTraceI18nKey.EventThinking,
+  [HopEventType.Empty]: ConversationsTraceI18nKey.EventEmpty,
+  [HopEventType.Error]: ConversationsTraceI18nKey.EventError,
+  [HopEventType.Session]: ConversationsTraceI18nKey.EventSession,
+  [HopEventType.Embedding]: ConversationsTraceI18nKey.EventEmbedding,
+  [HopEventType.Other]: ConversationsTraceI18nKey.EventOther,
 };
 
 export const SPAN_CATEGORY_RAIL_CLASS: Record<SpanCategory, string> = {

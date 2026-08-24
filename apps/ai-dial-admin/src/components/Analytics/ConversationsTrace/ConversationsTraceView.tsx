@@ -9,6 +9,7 @@ import ConversationsList from '@/src/components/Analytics/ConversationsTrace/Lis
 import ConversationsToolbar from '@/src/components/Analytics/ConversationsTrace/Toolbar/ConversationsToolbar';
 import { useConversations } from '@/src/components/Analytics/ConversationsTrace/use-conversations';
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay/LoadingOverlay';
+import { CONVERSATIONS_HEADER_STACK_HEIGHT } from '@/src/constants/analytics/conversations-trace';
 import { BasicI18nKey, ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
@@ -82,8 +83,14 @@ const ConversationsTraceView: FC<Props> = ({ schemaFields, hasSchemaError }) => 
           onToggleColumnsPanel={onToggleColumnsPanel}
         />
         {isFirstPageLoading && <LoadingOverlay label={t(BasicI18nKey.Loading)} />}
+        {/* Offset below the header stack rather than covering it. A filter that matches nothing produces this
+            state, and an overlay over the filter inputs would leave the operator unable to clear the filter
+            that emptied the grid — the sort, filter and column controls all live in the rows above. */}
         {isEmptyStateVisible && (
-          <div className="absolute inset-0 flex items-center justify-center bg-layer-2">
+          <div
+            className="absolute inset-x-0 bottom-0 flex items-center justify-center bg-layer-2"
+            style={{ top: CONVERSATIONS_HEADER_STACK_HEIGHT }}
+          >
             <DialNoDataContent title={t(emptyStateTitle)} />
           </div>
         )}
