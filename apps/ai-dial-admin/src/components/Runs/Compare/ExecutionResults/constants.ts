@@ -18,8 +18,6 @@ export {
 
 export const DELTA_COLUMN_WIDTH = 80;
 export const DEFAULT_COMPARE_DELTA_HEADER = 'Delta';
-export const COMPARE_ACTION_COL_ID = 'compare_action';
-export const COMPARE_ACTION_COLUMN_WIDTH = 40;
 
 export const COMPARE_GROUP_HEADER_HEIGHT = 28;
 

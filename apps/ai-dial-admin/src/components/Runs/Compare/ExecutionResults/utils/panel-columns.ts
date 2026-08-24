@@ -2,7 +2,6 @@ import { ColDef, ColGroupDef } from 'ag-grid-community';
 
 import { RUN_COMPARE_PRIMARY_INDEX, RUN_COMPARE_SECONDARY_INDEX } from '@/src/components/Runs/Compare/constants';
 import {
-  COMPARE_ACTION_COL_ID,
   DEFAULT_COMPARE_DELTA_HEADER,
   EXECUTION_GROUP_HEADER,
   EXECUTION_STATUS_GROUP_HEADER,
@@ -281,8 +280,7 @@ export const buildComparePanelColumnTree = (
   runNames: ComparePanelRunNames,
   prevPanelTree?: ColDef[],
 ): ColDef[] => {
-  const panelDefs = flatDefs.filter((col) => getColId(col) !== COMPARE_ACTION_COL_ID);
-  const nestedTree = panelDefs.map((node) => nestTopLevelNode(node, runNames));
+  const nestedTree = flatDefs.map((node) => nestTopLevelNode(node, runNames));
 
   return prevPanelTree ? preservePanelHideState(nestedTree, prevPanelTree) : nestedTree;
 };

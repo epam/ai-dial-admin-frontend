@@ -9,7 +9,6 @@ import {
   formatCompareRunIndexHeader,
 } from '@/src/components/Runs/Compare/constants';
 import {
-  COMPARE_ACTION_COL_ID,
   DELTA_COLUMN_WIDTH,
   DEFAULT_COMPARE_DELTA_HEADER,
   DURATION_COLUMN_WIDTH,
@@ -23,11 +22,7 @@ import {
   RUN_INDEX_COLUMN_WIDTH,
   STATUS_COLUMN_WIDTH,
 } from '@/src/components/Runs/Compare/ExecutionResults/constants';
-import {
-  getCompareColumnsCompare,
-  mergeComparePanelColumns,
-  splitComparePanelColumns,
-} from '@/src/components/Runs/Compare/ExecutionResults/utils/columns';
+import { getCompareColumnsCompare } from '@/src/components/Runs/Compare/ExecutionResults/utils/columns';
 import NumericGridFilterFloatingFilter from '@/src/components/Grid/Filter/NumericGridFilterFloatingFilter';
 import { ExtractionResultStatus } from '@/src/models/evaluation/run';
 
@@ -359,12 +354,10 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     );
   });
 
-  test('includes pinned eye action column at the end', () => {
+  test('does not include a pinned eye action column', () => {
     const cols = getCompareColumnsCompare([makeRow()]);
-    const actionCol = cols[cols.length - 1] as ColDef;
-    expect(actionCol.colId).toBe(COMPARE_ACTION_COL_ID);
-    expect(actionCol.pinned).toBe('right');
-    expect(actionCol.lockPinned).toBe(true);
+    expect(cols.some((col) => (col as ColDef).colId === 'compare_action')).toBe(false);
+    expect(cols.some((col) => (col as ColDef).pinned === 'right')).toBe(false);
   });
 
   test('extracted group has paired columns with run index in header name', () => {
@@ -460,26 +453,5 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
 
     expect(primaryPrecision.cellClassRules).toBeUndefined();
     expect(secondaryPrecision.cellClassRules).toBeUndefined();
-  });
-});
-
-describe('Runs Compare :: compare panel columns', () => {
-  test('splitComparePanelColumns removes action column from panel list', () => {
-    const columns = getCompareColumnsCompare([makeRow()]);
-    const { panelColumns, actionColumn } = splitComparePanelColumns(columns as ColDef[]);
-
-    expect(panelColumns.some((col) => col.colId === COMPARE_ACTION_COL_ID)).toBe(false);
-    expect(actionColumn?.colId).toBe(COMPARE_ACTION_COL_ID);
-    expect(panelColumns).toHaveLength(columns.length - 1);
-  });
-
-  test('mergeComparePanelColumns appends action column and keeps it visible', () => {
-    const columns = getCompareColumnsCompare([makeRow()]);
-    const { panelColumns, actionColumn } = splitComparePanelColumns(columns as ColDef[]);
-    const hiddenPanelColumns = panelColumns.map((col) => ({ ...col, hide: true }));
-    const merged = mergeComparePanelColumns(hiddenPanelColumns, actionColumn);
-
-    expect(merged[merged.length - 1].colId).toBe(COMPARE_ACTION_COL_ID);
-    expect(merged[merged.length - 1].hide).toBe(false);
   });
 });

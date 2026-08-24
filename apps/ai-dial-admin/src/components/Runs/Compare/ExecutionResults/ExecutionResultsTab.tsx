@@ -1,6 +1,14 @@
 'use client';
 
-import { ColDef, FilterChangedEvent, GridApi, GridReadyEvent, RowClassRules } from 'ag-grid-community';
+import {
+  ColDef,
+  CellKeyDownEvent,
+  FilterChangedEvent,
+  GridApi,
+  GridReadyEvent,
+  RowClassRules,
+  RowClickedEvent,
+} from 'ag-grid-community';
 import classNames from 'classnames';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -23,12 +31,7 @@ import {
   hasCompareRowDiff,
   mergeCompareMetricValuesSchema,
 } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
-import {
-  applyEyeCellRendererParams,
-  getCompareColumnsCompare,
-  mergeComparePanelColumns,
-  splitComparePanelColumns,
-} from '@/src/components/Runs/Compare/ExecutionResults/utils/columns';
+import { getCompareColumnsCompare } from '@/src/components/Runs/Compare/ExecutionResults/utils/columns';
 import { ExecutionResultsTabUiState } from '@/src/components/Runs/Compare/models';
 import { CompareAnalyticsRow } from '@/src/components/Runs/View/models';
 import {
@@ -184,20 +187,25 @@ const ExecutionResultsTab: FC<Props> = ({
     });
   }, [mergedRowData, errorText, t, hideHighlights, metricsSchema, currentTheme]);
 
-  const eyeRendererParams = useMemo(
-    () => ({
-      onOpenRowDetail,
-      selectedRowId: selectedRow ? getCompareRowSelectionId(selectedRow) : null,
-      viewRowDetailsLabel: t(RunsI18nKey.RunCompareViewRowDetails),
-    }),
-    [onOpenRowDetail, selectedRow, t],
+  const onRowClicked = useCallback(
+    (event: RowClickedEvent<CompareAnalyticsRow>) => {
+      if (!event.data) return;
+      onOpenRowDetail(event.data);
+    },
+    [onOpenRowDetail],
+  );
+
+  const onCellKeyDown = useCallback(
+    (event: CellKeyDownEvent<CompareAnalyticsRow>) => {
+      if ((event.event as KeyboardEvent | undefined)?.key !== 'Enter' || !event.data) return;
+      onOpenRowDetail(event.data);
+    },
+    [onOpenRowDetail],
   );
 
   const displayColDefs = useMemo(() => {
-    const base = gridColDefs.length > 0 ? gridColDefs : computedColDefs;
-    if (!base.length) return base;
-    return applyEyeCellRendererParams(base as ColDef[], eyeRendererParams);
-  }, [gridColDefs, computedColDefs, eyeRendererParams]);
+    return gridColDefs.length > 0 ? gridColDefs : computedColDefs;
+  }, [gridColDefs, computedColDefs]);
 
   useEffect(() => {
     if (!displayColDefs.length) return;
@@ -256,6 +264,8 @@ const ExecutionResultsTab: FC<Props> = ({
       ...compareGridOptions,
       rowHeight: 40,
       rowClassRules,
+      onRowClicked,
+      onCellKeyDown,
       onFilterChanged: (event: FilterChangedEvent) => {
         syncGridUiState(event.api);
       },
@@ -271,7 +281,7 @@ const ExecutionResultsTab: FC<Props> = ({
         syncGridUiState(event.api);
       },
     }),
-    [rowClassRules, syncGridUiState],
+    [rowClassRules, syncGridUiState, onRowClicked, onCellKeyDown],
   );
 
   useEffect(() => {
@@ -300,16 +310,14 @@ const ExecutionResultsTab: FC<Props> = ({
   const onPanelColumnsChange = useCallback(
     (nestedPanelCols: ColDef[]) => {
       const flatDefs = flattenComparePanelColumnTree(nestedPanelCols);
-      const { actionColumn } = splitComparePanelColumns(computedColDefs as ColDef[]);
-      const mergedGridDefs = mergeComparePanelColumns(flatDefs, actionColumn);
 
       setExecutionResultsState({
         panelColDefs: nestedPanelCols,
-        gridColDefs: mergedGridDefs,
+        gridColDefs: flatDefs as ColDef[],
       });
       requestAnimationFrame(() => gridApiRef.current?.sizeColumnsToFit());
     },
-    [computedColDefs, setExecutionResultsState],
+    [setExecutionResultsState],
   );
 
   const onGridReady = useCallback((event: GridReadyEvent) => {
