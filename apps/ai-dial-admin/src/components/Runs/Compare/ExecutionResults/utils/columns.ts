@@ -30,10 +30,12 @@ import {
   METRIC_COLUMN_WIDTH,
   NO_FILTER_COL_DEF,
   NUMBER_FILTER_COL_DEF,
+  REQUEST_INDEX_COLUMN_WIDTH,
   RUN_INDEX_COLUMN_WIDTH,
   STATUS_COLUMN_WIDTH,
   TEST_CASE_NAME_COLUMN_WIDTH,
   TEXT_FILTER_COL_DEF,
+  TURN_INDEX_COLUMN_WIDTH,
 } from '@/src/components/Runs/Compare/ExecutionResults/constants';
 import { CompareColumnsCompareOptions } from '@/src/components/Runs/Compare/ExecutionResults/models';
 import {
@@ -292,28 +294,40 @@ const buildComparedExtractedColumn = (key: string, hideHighlights?: boolean): Co
   ...maybePairCellClassRules(hideHighlights, getExtractedPairKind(key), 'secondary'),
 });
 
+type CompareIndexColumnField = 'runIndex' | 'requestIndex' | 'turnIndex';
+
+const buildCompareIndexColumnPair = (
+  field: CompareIndexColumnField,
+  label: string,
+  width: number,
+): [ColDef, ColDef] => [
+  {
+    field,
+    ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, label),
+    colId: field,
+    hide: true,
+    ...NO_FILTER_COL_DEF,
+    ...fixedWidthColDef(width),
+    valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) =>
+      params.data?.[field] != null ? params.data[field]! + 1 : null,
+  },
+  {
+    colId: `cmp_${field}`,
+    ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, label),
+    hide: true,
+    ...NO_FILTER_COL_DEF,
+    ...fixedWidthColDef(width),
+    valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) =>
+      params.data?._compared?.[field] != null ? params.data._compared[field]! + 1 : '—',
+  },
+];
+
 const getComparedExecutionColumns = (hideHighlights?: boolean): ColGroupDef => ({
   headerName: EXECUTION_GROUP_HEADER,
   children: [
-    {
-      field: 'runIndex',
-      ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, '# Run number'),
-      colId: 'runIndex',
-      hide: true,
-      ...NO_FILTER_COL_DEF,
-      ...fixedWidthColDef(RUN_INDEX_COLUMN_WIDTH),
-      valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) =>
-        params.data?.runIndex != null ? params.data.runIndex + 1 : null,
-    },
-    {
-      colId: 'cmp_runIndex',
-      ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, '# Run number'),
-      hide: true,
-      ...NO_FILTER_COL_DEF,
-      ...fixedWidthColDef(RUN_INDEX_COLUMN_WIDTH),
-      valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) =>
-        params.data?._compared?.runIndex != null ? params.data._compared.runIndex + 1 : '—',
-    },
+    ...buildCompareIndexColumnPair('runIndex', '# Run number', RUN_INDEX_COLUMN_WIDTH),
+    ...buildCompareIndexColumnPair('requestIndex', 'Request', REQUEST_INDEX_COLUMN_WIDTH),
+    ...buildCompareIndexColumnPair('turnIndex', 'Turn', TURN_INDEX_COLUMN_WIDTH),
     {
       field: 'responseStatusCode',
       ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, 'HTTP'),

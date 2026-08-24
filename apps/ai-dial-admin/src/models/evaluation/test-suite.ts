@@ -54,14 +54,28 @@ export interface TestSuite {
   overallScore?: OverallScoreConfig;
 
   deploymentRef?: TestSuiteDeploymentRef;
+  /**
+   * `endpointRef`/`requestTemplate`/`inputBindings`/`responseColumns` are request `#0` of the chain,
+   * labelled by `requestName`; `additionalRequests` holds requests `1..N`, each shaped identically.
+   */
   endpointRef?: TestSuiteEndpointRef;
   requestTemplate?: TestSuiteRequestTemplate;
   inputBindings?: InputBinding[];
   responseColumns?: ResponseColumn[];
+  requestName?: string;
+  additionalRequests?: TestSuiteAdditionalRequest[];
 
   mcpDeploymentRef?: McpDeploymentRef;
   toolRef?: ToolRef;
   argumentTemplate?: ArgumentTemplate;
+}
+
+export interface TestSuiteAdditionalRequest {
+  name?: string;
+  endpointRef?: TestSuiteEndpointRef;
+  requestTemplate?: TestSuiteRequestTemplate;
+  responseColumns?: ResponseColumn[];
+  inputBindings?: InputBinding[];
 }
 
 /** Frozen suite configuration captured when a test suite run starts. */
@@ -70,6 +84,8 @@ export interface SuiteSnapshot {
   suiteType?: SuiteType;
   deploymentRef?: TestSuiteDeploymentRef;
   mcpDeploymentRef?: McpDeploymentRef;
+  requestName?: string;
+  additionalRequests?: TestSuiteAdditionalRequest[];
 }
 
 export interface McpDeploymentRef {

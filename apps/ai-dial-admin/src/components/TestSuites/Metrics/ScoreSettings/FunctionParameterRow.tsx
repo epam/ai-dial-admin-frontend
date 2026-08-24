@@ -1,10 +1,11 @@
 'use client';
 
 import { DialLabel, DialSelect } from '@epam/ai-dial-ui-kit';
-import { FC, useCallback } from 'react';
+import { FC, useCallback, useEffect } from 'react';
 
 import TabSelector from '@/src/components/Common/TabSelector/TabSelector';
 import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { Metric } from '@/src/models/evaluation/metric';
 import { ResponseColumn, TestCaseSchema } from '@/src/models/evaluation/test-suite';
@@ -22,6 +23,7 @@ export interface Props {
 
 const FunctionParameterRow: FC<Props> = ({ labelKey, source, testCaseSchema, responseColumns, metrics, onChange }) => {
   const t = useI18n();
+  const { dispatch } = useSaveValidationContext();
 
   const elementId = `functionParameter-${labelKey}`;
   const tabs = [
@@ -64,9 +66,23 @@ const FunctionParameterRow: FC<Props> = ({ labelKey, source, testCaseSchema, res
     [metricOptions, onChange],
   );
 
+  useEffect(() => {
+    const isValid = !!(source.metricName || source.columnName);
+
+    dispatch({
+      type: ValidationActionType.SetField,
+      field: `specific_function_${labelKey}`,
+      isValid,
+    });
+
+    return () => {
+      dispatch({ type: ValidationActionType.RemoveField, field: `specific_function_${labelKey}` });
+    };
+  }, [dispatch, labelKey, source.columnName, source.metricName]);
+
   return (
     <div className="flex flex-col gap-1">
-      <DialLabel label={t(labelKey)} />
+      <DialLabel label={t(labelKey)} required />
       <TabSelector tabs={tabs} activeTab={source.$type} onChange={onTabChange} />
 
       {source.$type === FunctionParameterSourceType.TestCase && (
@@ -76,6 +92,7 @@ const FunctionParameterRow: FC<Props> = ({ labelKey, source, testCaseSchema, res
           value={source.columnName}
           searchable
           onChange={(v) => onColumnChange(v as string)}
+          invalid={!source.columnName}
         />
       )}
 
@@ -86,6 +103,7 @@ const FunctionParameterRow: FC<Props> = ({ labelKey, source, testCaseSchema, res
           value={source.columnName}
           searchable
           onChange={(v) => onColumnChange(v as string)}
+          invalid={!source.columnName}
         />
       )}
 
@@ -105,6 +123,7 @@ const FunctionParameterRow: FC<Props> = ({ labelKey, source, testCaseSchema, res
           value={metricValue}
           searchable
           onChange={(v) => onMetricChange(v as string)}
+          invalid={!metricValue}
         />
       )}
     </div>

@@ -14,6 +14,8 @@ type CompareRunIndex = typeof RUN_COMPARE_PRIMARY_INDEX | typeof RUN_COMPARE_SEC
 
 const EXECUTION_FIELD_GROUPS = [
   { fieldLabel: '# Run number', primaryColId: 'runIndex', secondaryColId: 'cmp_runIndex' },
+  { fieldLabel: 'Request', primaryColId: 'requestIndex', secondaryColId: 'cmp_requestIndex' },
+  { fieldLabel: 'Turn', primaryColId: 'turnIndex', secondaryColId: 'cmp_turnIndex' },
   { fieldLabel: 'HTTP', primaryColId: 'http', secondaryColId: 'cmp_http' },
   { fieldLabel: 'Duration', primaryColId: 'duration', secondaryColId: 'cmp_duration' },
 ] as const;

@@ -3,16 +3,16 @@ import { FC, useCallback, useMemo } from 'react';
 import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
 import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
+import { useAssetRunnerDetails } from '@/src/components/Assets/use-asset-runner-details';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
 import { ApplicationSourceType, DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
+import { DialApplicationResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
 import { DialAppRoute } from '@/src/models/dial/route';
 import { ApplicationRoute } from '@/src/types/routes';
 import EntityRoutes from './AppRoute';
-import { useAssetRunnerRoutes } from './use-asset-runner-routes';
-import { DialApplicationResource } from '@/src/models/dial/resource';
 
 interface Props {
   view: ApplicationRoute;
@@ -36,7 +36,7 @@ const ApplicationAppRoutes: FC<Props> = ({ view, selectedEntity, applicationRunn
     [hasSchemaSource, selectedEntity, applicationRunners, view],
   );
 
-  const { routes: assetRunnerRoutes, isLoading, error } = useAssetRunnerRoutes(appRunner);
+  const { routes: assetRunnerRoutes, isLoading, error } = useAssetRunnerDetails(appRunner);
 
   const routes = useMemo(() => {
     if (!hasSchemaSource) {

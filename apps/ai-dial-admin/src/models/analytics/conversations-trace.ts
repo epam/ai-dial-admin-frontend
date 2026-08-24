@@ -1,3 +1,5 @@
+import { Icon as TablerIcon } from '@tabler/icons-react';
+
 import { QuerySortDirection, QueryValueType } from '@/src/models/analytics/query';
 
 // Where a column's value comes from, which decides what an empty cell means: a rollup column is present for
@@ -253,6 +255,18 @@ export enum UsageLogField {
   ResponseStatus = 'response_status',
   Success = 'success',
   OperationDurationMs = 'operation_duration_ms',
+  McpMethod = 'mcp_method',
+  McpToolCallName = 'mcp_tool_call_name',
+  ExecutionPath = 'execution_path',
+  NumberRequestMessages = 'number_request_messages',
+  RequestBodyBytes = 'request_body_bytes',
+  ResponseBodyBytes = 'response_body_bytes',
+  ReasoningTokens = 'reasoning_tokens',
+  RequestBody = 'request_body',
+  ResponseBody = 'response_body',
+  // A later addition to the hop log: an instance predating it does not persist the column, so it is named
+  // only when the fetched schema reports it.
+  AssembledResponse = 'assembled_response',
 }
 
 // The `turns` rollup: one row per trace, with the turn's entry time, hop count, token totals, cost and
@@ -262,6 +276,7 @@ export enum TurnsField {
   TraceId = 'trace_id',
   FirstRequestTime = 'first_request_time',
   HopCount = 'hop_count',
+  FailedHopCount = 'failed_hop_count',
   TotalTokens = 'total_tokens',
   TotalPrice = 'total_price',
   DurationMs = 'duration_ms',
@@ -271,6 +286,7 @@ export enum ConversationTurnField {
   TraceId = 'trace_id',
   Started = 'started',
   Hops = 'hops',
+  FailedHops = 'failed_hops',
   Tokens = 'tokens',
   Cost = 'cost',
   DurationMs = 'duration_ms',
@@ -280,6 +296,7 @@ export interface ConversationTurnRow {
   trace_id: string;
   started: number | string | null;
   hops: number | string | null;
+  failed_hops: number | string | null;
   tokens: number | string | null;
   cost: number | string | null;
   duration_ms: number | string | null;
@@ -300,11 +317,59 @@ export interface ConversationSpanRow {
   total_tokens: number | string | null;
   deployment_price: number | string | null;
   request_time: number | string | null;
+  response_body_bytes: number | string | null;
+  reasoning_tokens: number | string | null;
+  mcp_method?: string | null;
+  mcp_tool_call_name?: string | null;
+  execution_path?: string[] | null;
+}
+
+export enum HopEventType {
+  TurnStart = 'turn-start',
+  TurnComplete = 'turn-complete',
+  Text = 'text',
+  ToolCall = 'tool-call',
+  ToolResult = 'tool-result',
+  Thinking = 'thinking',
+  Empty = 'empty',
+  Error = 'error',
+  Session = 'session',
+  Embedding = 'embedding',
+  Other = 'other',
+}
+
+export interface HopEvent {
+  key: string;
+  line: number;
+  type: HopEventType;
+  label: string;
+  detail: string | null;
+  span: ConversationSpanRow | null;
+  startedAtMs: number | null;
+  tokens: number | null;
+  reasoningTokens: number | null;
+  cost: number | string | null;
+  hops: number | null;
+  durationMs: number | null;
+  hasNoRecordedResult: boolean;
+}
+
+export interface ModelCallOutput {
+  core_span_id: string;
+  text: string | null;
+  toolCalls: ModelToolRequest[];
+  isUnread: boolean;
+}
+
+export interface ModelToolRequest {
+  name: string;
+  argumentsPreview: string | null;
 }
 
 export interface ConversationSpansPage {
   spans: ConversationSpanRow[];
   total: number | null;
+  modelOutputs: ModelCallOutput[];
 }
 
 export enum SpanCategory {
@@ -318,18 +383,31 @@ export enum SpanCategory {
 
 export interface ConversationSpanNode {
   span: ConversationSpanRow;
-  depth: number;
   category: SpanCategory;
-  offsetMs: number | null;
-  durationMs: number | null;
+  startedAtMs: number | null;
 }
 
-export interface ConversationTraceTotals {
-  latencyMs: number | null;
-  tokens: number;
-  cost: string;
-  spanCount: number;
-  isFailed: boolean;
+export enum HopTextSuppression {
+  NoResponse = 'no-response',
+  SessionSetup = 'session-setup',
+  Embedding = 'embedding',
+}
+
+export interface ConversationHopTexts {
+  sent: string | null;
+  received: string | null;
+  toolCalls: string[];
+}
+
+export enum HopTextsState {
+  Available = 'available',
+  ColumnsUnavailable = 'columns-unavailable',
+  NoBodies = 'no-bodies',
+  LoadFailed = 'load-failed',
+}
+
+export interface ConversationHopBodies extends ConversationHopTexts {
+  state: HopTextsState;
 }
 
 export enum MessageRole {
@@ -339,11 +417,65 @@ export enum MessageRole {
 
 export interface ConversationMessage {
   role: MessageRole;
-  content: string;
+  content: string | null;
+  trace_id: string;
+}
+
+export enum TranscriptState {
+  Available = 'available',
+  ColumnsUnavailable = 'columns-unavailable',
+  NotReconstructable = 'not-reconstructable',
+  Expired = 'expired',
+  NoMessages = 'no-messages',
+  LoadFailed = 'load-failed',
+}
+
+export interface ConversationTranscript {
+  state: TranscriptState;
+  messages: ConversationMessage[];
+  loadedTurns: number | null;
+}
+
+export interface TranscriptBodyFields {
+  isReadable: boolean;
+  responseFields: UsageLogField[];
+}
+
+export interface ConversationEntryHopRow {
+  trace_id: string;
+  request_time: number | string | null;
+  deployment: string | null;
+  number_request_messages: number | string | null;
+  request_body_bytes: number | string | null;
+  response_body_bytes: number | string | null;
+}
+
+export interface ConversationEntryBodyRow {
+  trace_id: string;
+  event_kind: string | null;
+  request_body: string | null;
+  response_body: string | null;
+  assembled_response?: string | null;
+}
+
+export interface TranscriptStatePresentation {
+  titleKey: string;
+  hintKey: string;
+  icon: TablerIcon;
+  isError: boolean;
+}
+
+export interface ConversationModelBodyRow extends ConversationEntryBodyRow {
+  core_span_id: string;
 }
 
 export interface ConversationTurnsResult {
   turns: ConversationTurnRow[];
+}
+
+export enum ConversationDetailView {
+  Chat = 'chat',
+  Trace = 'trace',
 }
 
 export enum ConversationDetailPanel {

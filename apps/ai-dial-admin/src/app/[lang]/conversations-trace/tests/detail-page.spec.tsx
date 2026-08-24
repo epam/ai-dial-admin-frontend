@@ -4,10 +4,11 @@ import Page from '@/src/app/[lang]/conversations-trace/[id]/page';
 import {
   getConversationDetail,
   getConversationFeedback,
+  getConversationTranscript,
   getConversationTurns,
   getConversationsSchema,
 } from '@/src/app/[lang]/conversations-trace/actions';
-import { ConversationsField } from '@/src/models/analytics/conversations-trace';
+import { ConversationsField, MessageRole, TranscriptState } from '@/src/models/analytics/conversations-trace';
 import { isAnalyticsForbidden } from '@/src/server/analytics/analytics-access';
 
 vi.mock('@/src/app/[lang]/conversations-trace/actions');
@@ -47,10 +48,17 @@ const detail = () => getConversationDetail as unknown as ReturnType<typeof vi.fn
 const feedback = () => getConversationFeedback as unknown as ReturnType<typeof vi.fn>;
 const turns = () => getConversationTurns as unknown as ReturnType<typeof vi.fn>;
 const schema = () => getConversationsSchema as unknown as ReturnType<typeof vi.fn>;
+const transcript = () => getConversationTranscript as unknown as ReturnType<typeof vi.fn>;
+
+const TRANSCRIPT = {
+  state: TranscriptState.Available,
+  messages: [{ role: MessageRole.User, content: 'q', trace_id: 't1' }],
+  loadedTurns: 1,
+};
 
 const SCHEMA_FIELDS = Object.keys(DETAIL_ROW).map((name) => ({ name, type: 'string', source: 'conversations' }));
 
-const TURN = { trace_id: 't1', started: 1, hops: 3, tokens: 1, cost: '0.1', duration_ms: 42 };
+const TURN = { trace_id: 't1', started: 1, hops: 3, failed_hops: 0, tokens: 1, cost: '0.1', duration_ms: 42 };
 
 const render = (id: string) => Page({ params: Promise.resolve({ id }) });
 
@@ -59,6 +67,9 @@ const componentName = (node: Awaited<ReturnType<typeof render>>): string => {
   return type?.name ?? '';
 };
 
+const transcriptStateOfNode = (node: Awaited<ReturnType<typeof render>>): TranscriptState =>
+  (node as unknown as { props: { transcript: { state: TranscriptState } } }).props.transcript.state;
+
 beforeEach(() => {
   vi.clearAllMocks();
   forbidden().mockResolvedValue(false);
@@ -66,6 +77,7 @@ beforeEach(() => {
   feedback().mockResolvedValue({ success: true, response: { rows: [], total: 0 } });
   turns().mockResolvedValue({ success: true, response: { turns: [TURN] } });
   schema().mockResolvedValue({ success: true, response: { fields: SCHEMA_FIELDS } });
+  transcript().mockResolvedValue({ success: true, response: TRANSCRIPT });
 });
 
 describe('conversation detail route', () => {
@@ -192,5 +204,32 @@ describe('conversation detail route', () => {
     turns().mockResolvedValue({ success: false, errorMessage: 'boom' });
 
     expect(componentName(await render(CHAT_ID))).toBe('ConversationDetailView');
+  });
+
+  // The transcript is one region of the page. A conversation whose header, panels, figures and trace all
+  // resolved must still render when only its messages failed — and that region has to say the read failed
+  // rather than that the conversation recorded nothing.
+  test('a failed transcript read still renders the conversation, stating the failure', async () => {
+    transcript().mockResolvedValue({ success: false });
+    const node = await render(CHAT_ID);
+
+    expect(componentName(node)).toBe('ConversationDetailView');
+    expect(transcriptStateOfNode(node)).toBe(TranscriptState.LoadFailed);
+  });
+
+  test('a rejected transcript read still renders the conversation, stating the failure', async () => {
+    transcript().mockRejectedValue(new Error('hop log unavailable'));
+    const node = await render(CHAT_ID);
+
+    expect(componentName(node)).toBe('ConversationDetailView');
+    expect(transcriptStateOfNode(node)).toBe(TranscriptState.LoadFailed);
+  });
+
+  // The retention split needs the conversation's own last activity, so the read cannot be issued before the
+  // detail query resolves.
+  test('passes the conversation last request time to the transcript read', async () => {
+    await render(CHAT_ID);
+
+    expect(transcript()).toHaveBeenCalledWith(CHAT_ID, DETAIL_ROW.last_request_time, expect.any(Number));
   });
 });

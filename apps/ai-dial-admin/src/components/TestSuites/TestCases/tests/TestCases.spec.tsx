@@ -13,6 +13,17 @@ vi.mock('../TemplateVariables', () => ({
   ),
 }));
 
+vi.mock('../AdditionalRequestVariables', () => ({
+  default: ({ selectedTestSuite, requestIndex, onChange }: any) => (
+    <section aria-label={`additional request variables ${requestIndex}`}>
+      <span>{selectedTestSuite.id}</span>
+      <button onClick={() => onChange({ ...selectedTestSuite, name: `Changed by ARV ${requestIndex}` })}>
+        ARV Change {requestIndex}
+      </button>
+    </section>
+  ),
+}));
+
 vi.mock('../TestCasesList', () => ({
   default: ({ selectedTestSuite, onChange }: any) => (
     <section aria-label="test cases list">
@@ -88,6 +99,40 @@ describe('TestCases', () => {
 
     expect(mockOnChange).toHaveBeenCalledTimes(1);
     expect(mockOnChange).toHaveBeenCalledWith(expect.objectContaining({ name: 'Changed by TCL' }));
+  });
+
+  test('renders no AdditionalRequestVariables sections when there are no additionalRequests', () => {
+    render(<TestCases selectedTestSuite={createTestSuite()} onChange={mockOnChange} {...defaultDatasetProps} />);
+
+    expect(screen.queryByLabelText(/additional request variables/)).not.toBeInTheDocument();
+  });
+
+  test('renders one AdditionalRequestVariables section per additionalRequests entry', () => {
+    render(
+      <TestCases
+        selectedTestSuite={createTestSuite({ additionalRequests: [{}, {}] })}
+        onChange={mockOnChange}
+        {...defaultDatasetProps}
+      />,
+    );
+
+    expect(screen.getByRole('region', { name: 'additional request variables 1' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'additional request variables 2' })).toBeInTheDocument();
+  });
+
+  test('passes onChange to AdditionalRequestVariables and it triggers correctly', () => {
+    render(
+      <TestCases
+        selectedTestSuite={createTestSuite({ additionalRequests: [{}] })}
+        onChange={mockOnChange}
+        {...defaultDatasetProps}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'ARV Change 1' }));
+
+    expect(mockOnChange).toHaveBeenCalledTimes(1);
+    expect(mockOnChange).toHaveBeenCalledWith(expect.objectContaining({ name: 'Changed by ARV 1' }));
   });
 
   test('renders with correct container classes', () => {

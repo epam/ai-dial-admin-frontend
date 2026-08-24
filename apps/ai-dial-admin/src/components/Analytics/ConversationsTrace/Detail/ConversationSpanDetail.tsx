@@ -3,18 +3,21 @@
 import classNames from 'classnames';
 import { FC } from 'react';
 
+import ConversationHopTexts from '@/src/components/Analytics/ConversationsTrace/Detail/ConversationHopTexts';
 import ConversationRailShell from '@/src/components/Analytics/ConversationsTrace/Detail/ConversationRailShell';
 import SpanCategoryBadge from '@/src/components/Analytics/ConversationsTrace/Detail/SpanCategoryBadge';
 import { COST_TEXT_CLASS, UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { ConversationSpanNode } from '@/src/models/analytics/conversations-trace';
 import {
-  formatCompactNumber,
-  formatDurationMs,
-  formatSignificantCost,
-} from '@/src/utils/analytics/conversation-formatting';
+  ConversationHopBodies,
+  ConversationSpanNode,
+  HopTextSuppression,
+} from '@/src/models/analytics/conversations-trace';
+import { formatCompactNumber, formatSignificantCost } from '@/src/utils/analytics/conversation-formatting';
+import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { spanLabelOf } from '@/src/utils/analytics/conversation-spans';
+import { isFailedHop } from '@/src/utils/analytics/conversation-hop-stream';
 
 interface RowProps {
   label: string;
@@ -34,9 +37,17 @@ const DetailRow: FC<RowProps> = ({ label, value, isMono, valueClassName }) => (
 
 interface Props {
   node: ConversationSpanNode | null;
+  bodies?: ConversationHopBodies | null;
+  isLoadingBodies?: boolean;
+  bodiesSuppression?: HopTextSuppression | null;
 }
 
-const ConversationSpanDetail: FC<Props> = ({ node }) => {
+const ConversationSpanDetail: FC<Props> = ({
+  node,
+  bodies = null,
+  isLoadingBodies = false,
+  bodiesSuppression = null,
+}) => {
   const t = useI18n();
 
   if (!node) {
@@ -47,21 +58,34 @@ const ConversationSpanDetail: FC<Props> = ({ node }) => {
     );
   }
 
-  const { span, category, offsetMs, durationMs } = node;
+  const { span, category, startedAtMs } = node;
+  const hasFailed = isFailedHop(span);
 
   const metrics: RowProps[] = [
     {
-      label: t(ConversationsTraceI18nKey.SpanOffset),
-      value: offsetMs === null ? UNAVAILABLE_VALUE : `+${formatDurationMs(offsetMs)}`,
+      label: t(ConversationsTraceI18nKey.SpanRecordedAt),
+      value: startedAtMs === null ? UNAVAILABLE_VALUE : formatDateTimeToLocalString(startedAtMs),
     },
-    { label: t(ConversationsTraceI18nKey.SpanSelf), value: formatDurationMs(durationMs) || UNAVAILABLE_VALUE },
     {
       label: t(ConversationsTraceI18nKey.TraceTokens),
       value: formatCompactNumber(span.total_tokens) || UNAVAILABLE_VALUE,
     },
   ];
 
+  const mcpFacts: RowProps[] = [
+    ...(span.mcp_tool_call_name
+      ? [{ label: t(ConversationsTraceI18nKey.SpanMcpTool), value: span.mcp_tool_call_name, isMono: true }]
+      : []),
+    ...(span.mcp_method
+      ? [{ label: t(ConversationsTraceI18nKey.SpanMcpMethod), value: span.mcp_method, isMono: true }]
+      : []),
+    ...(span.execution_path?.length
+      ? [{ label: t(ConversationsTraceI18nKey.SpanRouting), value: span.execution_path.join(' → '), isMono: true }]
+      : []),
+  ];
+
   const facts: RowProps[] = [
+    ...mcpFacts,
     { label: t(ConversationsTraceI18nKey.SpanEndpoint), value: span.request_uri || UNAVAILABLE_VALUE, isMono: true },
     {
       label: t(ConversationsTraceI18nKey.SpanUpstream),
@@ -91,14 +115,12 @@ const ConversationSpanDetail: FC<Props> = ({ node }) => {
         <h3 className="break-all text-primary dial-base-semi-text">{spanLabelOf(span)}</h3>
         <div className="flex items-center gap-2">
           <SpanCategoryBadge category={category} />
-          <span
-            className={span.success === false ? 'text-error dial-tiny-semi-text' : 'text-success dial-tiny-semi-text'}
-          >
-            {t(span.success === false ? ConversationsTraceI18nKey.TraceFailed : ConversationsTraceI18nKey.TraceOk)}
+          <span className={classNames('dial-tiny-semi-text', hasFailed ? 'text-error' : 'text-success')}>
+            {t(hasFailed ? ConversationsTraceI18nKey.TraceFailed : ConversationsTraceI18nKey.TraceOk)}
           </span>
         </div>
       </div>
-      <dl className="grid grid-cols-3 gap-2 rounded border border-primary bg-layer-3 p-3">
+      <dl className="grid grid-cols-2 gap-2 rounded border border-primary bg-layer-3 p-3">
         {metrics.map(({ label, value }) => (
           <div key={label} className="flex min-w-0 flex-col gap-0.5">
             <dt className="text-secondary dial-tiny-text">{label}</dt>
@@ -106,6 +128,7 @@ const ConversationSpanDetail: FC<Props> = ({ node }) => {
           </div>
         ))}
       </dl>
+      <ConversationHopTexts bodies={bodies} isLoading={isLoadingBodies} suppression={bodiesSuppression} />
       <div className="rounded border border-primary bg-layer-3 px-3">
         {facts.map((row) => (
           <DetailRow key={row.label} {...row} />

@@ -12,7 +12,7 @@ import {
 } from '@/src/app/[lang]/assets-skills/actions';
 import SkillAssetProperties from '@/src/components/Assets/Skills/View/Properties';
 import SkillHeader from '@/src/components/EntityHeaderControls/SkillHeader';
-import SkillManifestTab from '@/src/components/Publications/Assets/Skill/SkillManifestTab';
+import SkillManifestTab from '@/src/components/Assets/Skills/View/SkillManifestTab';
 import { ROOT_FOLDER } from '@/src/constants/file';
 import { ErrorI18nKey } from '@/src/constants/i18n';
 import { useSkillFolder } from '@/src/context/assets/SkillFolderContext';

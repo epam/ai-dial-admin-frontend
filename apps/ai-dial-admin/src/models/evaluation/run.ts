@@ -11,6 +11,8 @@ export interface ResultDto {
   runIndex: number;
   turnIndex?: number;
   totalTurns?: number;
+  requestIndex?: number;
+  totalRequests?: number;
 
   testCaseData?: Record<string, unknown>;
   extractedColumns?: Record<string, unknown>;
