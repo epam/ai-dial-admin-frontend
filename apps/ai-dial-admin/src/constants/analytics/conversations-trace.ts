@@ -10,10 +10,10 @@ import {
   ConversationsField,
   HopEventType,
   ProvenanceEntity,
-  ProvenanceGroup,
   SpanCategory,
   UsageLogField,
 } from '@/src/models/analytics/conversations-trace';
+import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryOperator, QueryValueType } from '@/src/models/analytics/query';
 import { GridFilterType } from '@/src/types/grid-filter';
 
@@ -169,6 +169,67 @@ export const FILTERABLE_CONVERSATION_FIELDS: ConversationsField[] = [
 
 export const CURATED_COMPOSED_FIELDS: string[] = [ConversationsField.FirstRequestTime, ...IDENTITY_ENRICHMENT_FIELDS];
 
+// A grid cell is not a structured-value viewer, so a field of one of these types is never derived into a
+// column: rendering it as text would assert a shape this view does not know. A curated column may still read
+// one, having a presentation of its own.
+export const NON_SCALAR_FIELD_TYPES: AnalyticsFieldType[] = [AnalyticsFieldType.Object, AnalyticsFieldType.Array];
+
+export const DATE_FIELD_TYPES: AnalyticsFieldType[] = [AnalyticsFieldType.Date, AnalyticsFieldType.Timestamp];
+
+export const NUMERIC_FIELD_TYPES: AnalyticsFieldType[] = [
+  AnalyticsFieldType.Integer,
+  AnalyticsFieldType.Long,
+  AnalyticsFieldType.Decimal,
+];
+
+export const ANALYTICS_FIELD_QUERY_VALUE_TYPE: Partial<Record<AnalyticsFieldType, QueryValueType>> = {
+  [AnalyticsFieldType.Uuid]: QueryValueType.String,
+  [AnalyticsFieldType.String]: QueryValueType.String,
+  [AnalyticsFieldType.Integer]: QueryValueType.Integer,
+  [AnalyticsFieldType.Long]: QueryValueType.Long,
+  [AnalyticsFieldType.Decimal]: QueryValueType.Decimal,
+  [AnalyticsFieldType.Boolean]: QueryValueType.Boolean,
+  [AnalyticsFieldType.Date]: QueryValueType.Date,
+  [AnalyticsFieldType.Timestamp]: QueryValueType.Timestamp,
+};
+
+export const ENRICHMENT_PROVENANCE: Record<string, ColumnProvenance> = {
+  conversation_insights: ColumnProvenance.Insights,
+};
+
+export const PROVENANCE_LABEL_KEY: Partial<Record<ColumnProvenance, string>> = {
+  [ColumnProvenance.Conversations]: ConversationsTraceI18nKey.ProvenanceConversations,
+  [ColumnProvenance.Insights]: ConversationsTraceI18nKey.ProvenanceInsights,
+  [ColumnProvenance.Feedback]: ConversationsTraceI18nKey.ProvenanceFeedback,
+};
+
+export const PROVENANCE_HINT_KEY: Record<ColumnProvenance, string> = {
+  [ColumnProvenance.Conversations]: ConversationsTraceI18nKey.ProvenanceConversationsHint,
+  [ColumnProvenance.Insights]: ConversationsTraceI18nKey.ProvenanceInsightsHint,
+  [ColumnProvenance.Feedback]: ConversationsTraceI18nKey.ProvenanceFeedbackHint,
+  [ColumnProvenance.Other]: ConversationsTraceI18nKey.ProvenanceEnrichmentHint,
+};
+
+// Readable names for the tags the service reports, because a header showing `token-usage` presents a catalog
+// identifier where a reader needs words. A tag missing from here falls back to its raw value: an unlovely
+// header, never a dropped column.
+//
+// `provenance` is the one entry doing real work. Its five fields are the evaluation's own bookkeeping, and
+// one of them reports the display name "Model" while holding the evaluator's deployment. Labelled with the
+// raw tag it would read as a category; labelled as the evaluator's run it reads as what it is. It is also
+// why this map must not simply title-case the tag: "Provenance" already means a column's origin here.
+export const CONVERSATION_TAG_LABEL_KEY: Record<string, string> = {
+  identity: ConversationsTraceI18nKey.TagIdentity,
+  principal: ConversationsTraceI18nKey.TagPrincipal,
+  response: ConversationsTraceI18nKey.TagResponse,
+  'token-usage': ConversationsTraceI18nKey.TagTokenUsage,
+  cost: ConversationsTraceI18nKey.TagCost,
+  performance: ConversationsTraceI18nKey.TagPerformance,
+  deployment: ConversationsTraceI18nKey.TagDeployment,
+  insight: ConversationsTraceI18nKey.TagInsight,
+  provenance: ConversationsTraceI18nKey.TagProvenance,
+};
+
 export const CONVERSATION_FIELD_VALUE_TYPE: Partial<Record<ConversationsField, QueryValueType>> = {
   [ConversationsField.ChatId]: QueryValueType.String,
   [ConversationsField.ProjectId]: QueryValueType.String,
@@ -213,10 +274,13 @@ export const GRID_FILTER_TYPE_OPERATOR: Record<GridFilterType, ConversationFilte
 // accent-primary 7.8:1 → 5.7:1, accent-secondary 8.1:1 → 5.9:1, warning 11.7:1 → 8.6:1. `accent-tertiary`
 // is the unused accent and would have been the obvious third hue, but it reads 4.32:1 on `bg-layer-4` —
 // under the 4.5:1 floor for the 12px semibold the group header uses.
+// An unnamed enrichment takes `text-secondary` (7.8:1 → 5.7:1) rather than a fourth hue: sharing a colour
+// with a named origin would say the two are the same source.
 export const PROVENANCE_TEXT_CLASS: Record<ColumnProvenance, string> = {
   [ColumnProvenance.Conversations]: 'text-accent-primary',
   [ColumnProvenance.Insights]: 'text-accent-secondary',
   [ColumnProvenance.Feedback]: 'text-warning',
+  [ColumnProvenance.Other]: 'text-secondary',
 };
 
 export const COST_TEXT_CLASS = 'text-accent-secondary';
@@ -365,36 +429,8 @@ export const CONVERSATION_SOURCE_ENTITIES: ProvenanceEntity[] = [
   { provenance: ColumnProvenance.Feedback, name: FEEDBACK_ENTITY },
 ];
 
-// Rendered as real AG Grid column groups, so a group's columns are adjacent and the rendered column order
-// follows this list. The identity column sits under the rollup even though it reads the enrichment for its
-// title: a conversation's identity is its id, and the title only labels it — its own tooltip says where the
-// title comes from.
-export const CONVERSATION_PROVENANCE_GROUPS: ProvenanceGroup[] = [
-  {
-    provenance: ColumnProvenance.Conversations,
-    labelKey: ConversationsTraceI18nKey.ProvenanceConversations,
-    tooltipKey: ConversationsTraceI18nKey.ProvenanceConversationsHint,
-    fields: [
-      ConversationsField.ChatId,
-      ConversationsField.ProjectId,
-      ConversationsField.UserHash,
-      ConversationsField.TurnCount,
-      ConversationsField.LastRequestTime,
-      ConversationsField.TotalTokens,
-      ConversationsField.TotalPrice,
-      ConversationsField.Deployments,
-    ],
-  },
-  {
-    provenance: ColumnProvenance.Insights,
-    labelKey: ConversationsTraceI18nKey.ProvenanceInsights,
-    tooltipKey: ConversationsTraceI18nKey.ProvenanceInsightsHint,
-    fields: [ConversationsField.InsightTopics],
-  },
-  {
-    provenance: ColumnProvenance.Feedback,
-    labelKey: ConversationsTraceI18nKey.ProvenanceFeedback,
-    tooltipKey: ConversationsTraceI18nKey.ProvenanceFeedbackHint,
-    fields: [ConversationColumn.Rating],
-  },
-];
+// Columns whose origin cannot be read off a field name, because they have no field of this entity: Rating is
+// composed from the `rate_analytics` lookups.
+export const COMPOSED_COLUMN_PROVENANCE: Record<string, ColumnProvenance> = {
+  [ConversationColumn.Rating]: ColumnProvenance.Feedback,
+};

@@ -77,7 +77,7 @@ const ToolsetView: FC<Props> = ({ names, oAuthCode, etag, roles, originalToolset
   );
 
   useEffect(() => {
-    const name = originalToolset?.name;
+    const name = encodeURIComponent(originalToolset?.name || '');
     if (!coreToolset && name) {
       getReqRef.current(getCoreToolset, name).then((data) => {
         setCoreToolset(data.response);
