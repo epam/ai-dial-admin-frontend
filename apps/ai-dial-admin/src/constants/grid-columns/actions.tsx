@@ -23,6 +23,7 @@ import { ActionMenuOperationDeclaration } from '@/src/models/action-menu-operati
 import { CONTAINER_STATUS } from '@/src/types/deployments/containers';
 import { ActionMenuOperationI18nKey } from '@/src/constants/i18n';
 import IconCompare from '@/public/images/icons/difference.svg';
+import { GridRowType } from '@/src/types/grid-row-type';
 
 export function getResourceRollbackOperation<T>(
   onClick: (entity?: T) => void,
@@ -232,6 +233,16 @@ export function getTryOutOperation<T>(onClick: (entity?: T) => void): ActionMenu
     id: ActionMenuOperationI18nKey.Try_out,
     label: ActionMenuOperationI18nKey.Try_out,
     onClick,
+    hidden: (_: GridApi, node: IRowNode) => {
+      const row = node.data as { rowType?: GridRowType; isFlattened?: boolean; turnNumber?: number } | undefined;
+      if (row?.rowType === GridRowType.TURN && !row.isFlattened) {
+        return true;
+      }
+      if (row?.rowType === GridRowType.TURN && row.isFlattened) {
+        return row.turnNumber !== 1;
+      }
+      return false;
+    },
   };
 }
 

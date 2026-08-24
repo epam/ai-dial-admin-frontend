@@ -241,17 +241,24 @@ describe('evaluateColumns', () => {
     expect(results[0].valid).toBe(true);
   });
 
-  test('should mix valid and invalid columns in one call', async () => {
+  test('should resolve $_request / $_response aliases used by backend column expressions', async () => {
+    const request = { messages: [{ role: 'user', content: 'Hi' }] };
     const columns = [
-      makeColumn({ name: 'ok', expression: 'model', type: 'STRING' }),
-      makeColumn({ name: 'missing', expression: 'does.not.exist', type: 'STRING' }),
-      makeColumn({ name: 'bad', expression: '[[[', type: 'STRING' }),
+      makeColumn({
+        name: 'history',
+        expression: '$append($_request.messages, [$_response.choices[-1].message])',
+      }),
+      makeColumn({ name: 'answer', expression: '$_response.choices[-1].message.content' }),
     ];
 
-    const results = await evaluateColumns(columns, chatResponse);
+    const results = await evaluateColumns(columns, chatResponse, request);
 
     expect(results[0].valid).toBe(true);
-    expect(results[1].valid).toBe(false);
-    expect(results[2].valid).toBe(false);
+    expect(JSON.parse(results[0].result)).toEqual([
+      { role: 'user', content: 'Hi' },
+      { role: 'assistant', content: 'The capital of Belarus is Minsk.' },
+    ]);
+    expect(results[1].result).toBe('The capital of Belarus is Minsk.');
+    expect(results[1].valid).toBe(true);
   });
 });

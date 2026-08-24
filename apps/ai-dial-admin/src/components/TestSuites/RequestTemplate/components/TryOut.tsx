@@ -23,8 +23,12 @@ import { BasicI18nKey, ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
-import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
+import { SuiteType, TestCase, TestCaseSchema, TestSuite, TryOutHistoryEntry } from '@/src/models/evaluation/test-suite';
 import { columnsTab, EntityViewTab, responseTab } from '@/src/utils/tabs/utils';
+import {
+  normalizeResponseBodyForColumns,
+  unwrapJsonRequestBody,
+} from '@/src/components/TestSuites/utils/column-eval-context';
 import CollapsibleSection from './CollapsibleSection';
 import TryOutColumns from './TryOutColumns';
 import TryOutRequestPreview from './TryOutRequestPreview';
@@ -37,9 +41,11 @@ export interface TryOutResponse {
 interface Props {
   testSuite: TestSuite;
   testCaseId?: string;
+  schema?: TestCaseSchema[];
+  initialTestCase?: TestCase;
 }
 
-const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
+const TryOut: FC<Props> = ({ testSuite, testCaseId, schema, initialTestCase }) => {
   const t = useI18n();
   const { sidebar, toggleSidebar } = useAppContext();
   const isMcp = testSuite.suiteType === SuiteType.McpTool;
@@ -48,6 +54,7 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
   const [requestBody, setRequestBody] = useState<Record<string, unknown>>({});
   const [response, setResponse] = useState<TryOutResponse | null>(null);
   const [resolvedRequest, setResolvedRequest] = useState<Record<string, unknown>>({});
+  const [history, setHistory] = useState<TryOutHistoryEntry[] | undefined>(undefined);
   const [isRequestSend, setIsRequestSend] = useState(false);
   const [grafanaTraceUrl, setGrafanaTraceUrl] = useState<string | undefined>(undefined);
 
@@ -76,11 +83,13 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
         setResolvedRequest(res.response?.resolvedRequest || {});
         setResponse(tryoutResponse);
         setGrafanaTraceUrl(res.response?.grafanaTraceUrl);
+        setHistory(res.response?.history);
         if (!testCaseId) saveTryoutResponseToStorage(testSuiteId, res.response);
       } else {
         const errorResponse = { response: { error: res?.errorMessage || 'Unknown error', statusCode: 500 } };
         setResolvedRequest({ body: requestBody || {} });
         setResponse(errorResponse.response);
+        setHistory(undefined);
         if (!testCaseId) saveTryoutResponseToStorage(testSuiteId, errorResponse as any);
       }
     } finally {
@@ -121,6 +130,7 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
         setResponse(responseFromStorage.response as TryOutResponse);
         setResolvedRequest(responseFromStorage.resolvedRequest || {});
         setGrafanaTraceUrl(responseFromStorage.grafanaTraceUrl);
+        setHistory(responseFromStorage.history);
       }
     }
 
@@ -146,7 +156,10 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
                     <DialNeutralButton
                       iconBefore={<IconEdit {...BASE_BUTTON_ICON_PROPS} />}
                       label={t(ButtonsI18nKey.Change)}
-                      onClick={() => setResponse(null)}
+                      onClick={() => {
+                        setResponse(null);
+                        setActiveTab(EntityViewTab.Response);
+                      }}
                     />
                   )}
                 </div>
@@ -157,9 +170,11 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
           </div>
           <p className="text-secondary dial-small-text">{t(TestSuitesI18nKey.TryoutWarning)}</p>
         </div>
-        <div className="flex">
-          <Tabs tabs={tabs} activeTab={activeTab} onChangeActiveTab={setActiveTab} />
-        </div>
+        {response ? (
+          <div className="flex">
+            <Tabs tabs={tabs} activeTab={activeTab} onChangeActiveTab={setActiveTab} />
+          </div>
+        ) : null}
 
         {activeTab === EntityViewTab.Response && (
           <>
@@ -168,6 +183,8 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
                 <TryOutRequestPreview
                   testSuite={testSuite}
                   testCaseId={testCaseId}
+                  schema={schema}
+                  initialTestCase={initialTestCase}
                   resolvedRequest={resolvedRequest}
                   isRequestSend={isRequestSend}
                   requestBody={requestBody}
@@ -179,6 +196,7 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
                 <TryOutResponsePreview
                   response={response}
                   resolvedRequest={resolvedRequest}
+                  history={history}
                   grafanaTraceUrl={grafanaTraceUrl}
                   isRequestSend={isRequestSend}
                   responseBody={responseBody}
@@ -202,8 +220,8 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId }) => {
         {activeTab === EntityViewTab.Columns && (
           <TryOutColumns
             columns={testSuite.responseColumns}
-            response={response?.body as Record<string, unknown>}
-            request={resolvedRequest.body as Record<string, unknown> | undefined}
+            response={normalizeResponseBodyForColumns(response?.body as Record<string, unknown>)}
+            request={unwrapJsonRequestBody(resolvedRequest.body as Record<string, unknown> | undefined)}
             isLoading={isRequestSend}
             responseBody={responseBody}
           />

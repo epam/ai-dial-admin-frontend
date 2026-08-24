@@ -35,6 +35,7 @@ import ListEntities from '@/src/components/ListView/List';
 import TryOut from '@/src/components/TestSuites/RequestTemplate/components/TryOut';
 import { getTestCaseColumns } from '@/src/components/TestSuites/utils/columns';
 import { collapseRowsToTestCases, createNewTestCaseRow, rowToTestCase } from '@/src/components/TestSuites/utils/data';
+import { testCaseFromTryOutRow } from '@/src/components/TestSuites/utils/tryout-test-case';
 import { ONE_ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { ApiRoute } from '@/src/constants/api-routes';
@@ -259,10 +260,16 @@ const TestCasesList: FC<Props> = ({
   );
 
   const onOpenTryOutSidebar = useCallback(
-    (e?: TestCase) => {
+    (e?: GroupedGridRow) => {
+      const initialTestCase = testCaseFromTryOutRow(e, turnGrid.groups, dataset?.testCaseSchema) ?? undefined;
       sidebar.showSidebar(
         <SaveValidationContextProvider>
-          <TryOut testSuite={selectedTestSuite} testCaseId={e?.id || ''} />
+          <TryOut
+            testSuite={selectedTestSuite}
+            testCaseId={e?.id || ''}
+            schema={dataset?.testCaseSchema}
+            initialTestCase={initialTestCase}
+          />
         </SaveValidationContextProvider>,
         'w-1/2 max-w-[800px]',
       );
@@ -271,7 +278,7 @@ const TestCasesList: FC<Props> = ({
         toggleSidebar();
       }
     },
-    [selectedTestSuite.id, sidebar, sidebarOpen, toggleSidebar],
+    [dataset?.testCaseSchema, selectedTestSuite, sidebar, sidebarOpen, toggleSidebar, turnGrid.groups],
   );
 
   const onRunConditionChange = useCallback(

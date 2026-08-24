@@ -382,7 +382,7 @@ export const changeFilesMap = (
             content: (targetFile as DialPrompt).content,
             description: (targetFile as DialPrompt).description,
             folderId: targetFile.folderId,
-            id: modifyNameVersionInAsset((targetFile.id || targetFile.name) as string, void 0, value),
+            id: modifyNameVersionInAsset((targetFile.id || targetFile.name) as string, value, void 0),
             name: value,
           } as DialPrompt;
         } else if (field === 'fileName') {

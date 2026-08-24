@@ -85,6 +85,10 @@ export class DatasetsApi extends BaseApi {
     );
   }
 
+  getTestCase(datasetId: string, testCaseId: string, token: Token): Promise<DatasetTestCase | null> {
+    return this.get(DATASET_TEST_CASE_URL(datasetId, testCaseId), token);
+  }
+
   createTestCase(
     datasetId: string,
     body: Pick<DatasetTestCase, 'testCaseName' | 'data' | 'multiTurnData'>,
