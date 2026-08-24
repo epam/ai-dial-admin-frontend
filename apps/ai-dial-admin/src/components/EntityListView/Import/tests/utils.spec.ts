@@ -281,8 +281,30 @@ describe('Import :: changeFilesMap', () => {
       ApplicationRoute.Prompts,
     );
 
-    expect(result.get('key1').files[1].id).toBe('456__newassetName');
+    expect(result.get('key1').files[1].id).toBe('newassetName');
     expect(result.get('key1').files[1].name).toBe('newassetName');
+  });
+
+  test('should preserve the existing version when field is "assetName"', () => {
+    const versionedMap = new Map([
+      [
+        'key1',
+        {
+          files: [{ id: 'oldFileName__1.0.3', name: 'oldFileName', type: 'text/plain' }],
+        },
+      ],
+    ]);
+
+    const result = changeFilesMap(
+      versionedMap,
+      { name: 'key1', index: 0 },
+      'assetName',
+      'newassetName',
+      ApplicationRoute.Prompts,
+    );
+
+    expect(result.get('key1').files[0].id).toBe('newassetName__1.0.3');
+    expect(result.get('key1').files[0].name).toBe('newassetName');
   });
 
   test('should update file content when field is "fileName"', () => {
