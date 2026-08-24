@@ -8,7 +8,6 @@ import { getConversations } from '@/src/app/[lang]/conversations-trace/actions';
 import {
   CONVERSATIONS_SEARCH_DEBOUNCE_MS,
   CONVERSATIONS_TIME_PERIOD,
-  CONVERSATION_FIELD_VALUE_TYPE,
 } from '@/src/constants/analytics/conversations-trace';
 import { CONVERSATIONS_TRACE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
@@ -28,6 +27,7 @@ import {
 } from '@/src/models/analytics/conversations-trace';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 import {
+  catalogValueTypes,
   filterableColumnFields,
   projectableSchemaFields,
   sortableColumnFields,
@@ -100,16 +100,25 @@ export const useConversations = (schemaFields?: AnalyticsEntityField[] | null) =
   const key = filterKey(filters);
 
   const modelScope: ConversationModelScope = useMemo(() => {
-    const curated = CONVERSATIONS_TRACE_COLUMNS(t, schemaFields ?? []);
+    const columns = CONVERSATIONS_TRACE_COLUMNS(t, schemaFields ?? []);
     return {
-      sortableFields: sortableColumnFields(curated),
-      filterableFields: filterableColumnFields(curated),
-      valueTypes: CONVERSATION_FIELD_VALUE_TYPE,
-      projectableFields: projectableSchemaFields(curated, schemaFields ?? []),
+      sortableFields: sortableColumnFields(columns),
+      filterableFields: filterableColumnFields(columns),
+      valueTypes: catalogValueTypes(schemaFields ?? []),
+      projectableFields: projectableSchemaFields(columns, schemaFields ?? []),
     };
   }, [schemaFields, t]);
 
-  const enrichmentFields = useMemo(() => new Set(modelScope.projectableFields?.enrichmentBacked ?? []), [modelScope]);
+  // The fields whose columns must be re-fetched when revealed, for the two different reasons a page can lack
+  // one: an enrichment field was never joined, and a heavy field was deliberately left out of the projection.
+  const gatedFields = useMemo(
+    () =>
+      new Set([
+        ...(modelScope.projectableFields?.enrichment ?? []),
+        ...(modelScope.projectableFields?.heavySource ?? []),
+      ]),
+    [modelScope],
+  );
 
   const candidateRef = useRef<CandidateIds | null>(null);
 
@@ -131,13 +140,21 @@ export const useConversations = (schemaFields?: AnalyticsEntityField[] | null) =
         // A later page reuses the ids the first page of this result resolved; a stale set from a previous
         // filter state is not sent, because the first page of the new one resolves its own.
         const chatIds = candidateRef.current?.key === key ? candidateRef.current.ids : undefined;
+        const visibleGatedFields = (gridApi?.getColumnState() ?? [])
+          .filter((column) => !column.hide && gatedFields.has(column.colId))
+          .map((column) => column.colId);
+        const heavySource = new Set(modelScope.projectableFields?.heavySource ?? []);
+        // A revealed heavy field is still a plain column of the table already being read, so it joins the
+        // source projection rather than the enrichment one: it is gated for transfer cost, not for a join.
+        const sourceFields = [
+          ...(modelScope.projectableFields?.cheapSource ?? []),
+          ...visibleGatedFields.filter((colId) => heavySource.has(colId)),
+        ];
         // The identity column's fields ride along regardless of column state: that column is always on
         // screen, so its enrichment is not optional the way a revealable column's is.
         const visibleEnrichmentFields = [
           ...(modelScope.projectableFields?.requiredEnrichment ?? []),
-          ...(gridApi?.getColumnState() ?? [])
-            .filter((column) => !column.hide && enrichmentFields.has(column.colId))
-            .map((column) => column.colId),
+          ...visibleGatedFields.filter((colId) => !heavySource.has(colId)),
         ];
         const loadedKey = resultKey(filters, columnFilters, sort);
         gridApi?.setGridOption('loading', true);
@@ -150,7 +167,7 @@ export const useConversations = (schemaFields?: AnalyticsEntityField[] | null) =
             ...filters,
             columnFilters,
             sort,
-            sourceFields: modelScope.projectableFields?.sourceBacked ?? [],
+            sourceFields,
             visibleEnrichmentFields,
             offset: startRow,
             limit: endRow - startRow,
@@ -206,7 +223,7 @@ export const useConversations = (schemaFields?: AnalyticsEntityField[] | null) =
         }
       },
     }),
-    [enrichmentFields, filters, gridApi, key, modelScope, reportFailure],
+    [filters, gatedFields, gridApi, key, modelScope, reportFailure],
   );
 
   // A new datasource identity is what makes a filter change restart paging: AG Grid purges its blocks
@@ -234,8 +251,6 @@ export const useConversations = (schemaFields?: AnalyticsEntityField[] | null) =
       return;
     }
 
-    // Only an enrichment-backed field is absent from the pages already fetched, so only revealing one of
-    // those columns has anything to re-fetch. A source-backed field is in every row already.
     const onColumnVisible = (event: ColumnVisibleEvent) => {
       const colIds = (event.columns ?? []).map((column) => column.getColId()).filter(Boolean);
 
@@ -252,14 +267,14 @@ export const useConversations = (schemaFields?: AnalyticsEntityField[] | null) =
         return;
       }
 
-      if (colIds.some((colId) => enrichmentFields.has(colId))) {
+      if (colIds.some((colId) => gatedFields.has(colId))) {
         gridApi.purgeInfiniteCache();
       }
     };
 
     gridApi.addEventListener('columnVisible', onColumnVisible);
     return () => gridApi.removeEventListener('columnVisible', onColumnVisible);
-  }, [enrichmentFields, gridApi]);
+  }, [gatedFields, gridApi]);
 
   const summary: ConversationSummary = useMemo(
     () => summariseConversations(Array.from(loaded.byId.values())),
