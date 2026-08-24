@@ -23,10 +23,9 @@ import {
 } from '@/src/models/analytics/conversations-trace';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryValueType } from '@/src/models/analytics/query';
+import { readableWords } from '@/src/utils/analytics/conversation-formatting';
 
 const ENRICHMENT_SEPARATOR = '.';
-
-const WORD_SEPARATORS = /[_-]+/g;
 
 const UNFILTERABLE: Partial<ColDef> = { filter: false, floatingFilter: false };
 
@@ -152,10 +151,7 @@ export const columnHeaderName = (field: AnalyticsEntityField): string => {
     return field.display_name;
   }
 
-  const unqualified = field.name.slice(field.name.indexOf(ENRICHMENT_SEPARATOR) + 1);
-  const words = unqualified.replace(WORD_SEPARATORS, ' ').trim();
-
-  return words.charAt(0).toUpperCase() + words.slice(1);
+  return readableWords(field.name.slice(field.name.indexOf(ENRICHMENT_SEPARATOR) + 1));
 };
 
 // The description is the service's own, quoted rather than paraphrased: two of them contradict what their

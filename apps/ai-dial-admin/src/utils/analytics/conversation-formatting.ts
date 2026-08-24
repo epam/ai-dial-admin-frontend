@@ -41,6 +41,17 @@ const ZONELESS_ISO = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/;
 // The service returns timestamps as ISO-8601 with a `Z`; epoch millis are accepted too, since the
 // mapping is not fixed by its contract. A *zoneless* ISO string is the trap: `Date.parse` reads it as
 // local time and would shift every cell by the viewer's offset, so it is pinned to UTC first.
+const WORD_SEPARATORS = /[_-]+/g;
+
+// A catalog token rendered for a reader: separators become spaces and the first word is capitalized. Applies
+// to a field name and to an enrichment's own values — both arrive underscored from the service, and neither
+// may be presented raw.
+export const readableWords = (token: string): string => {
+  const words = token.replace(WORD_SEPARATORS, ' ').trim();
+
+  return words.charAt(0).toUpperCase() + words.slice(1);
+};
+
 export const toMillis = (value: number | string | null): number | null => {
   const parsed = toNumber(value);
   if (parsed !== null) {
