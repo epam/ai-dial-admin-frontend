@@ -94,7 +94,7 @@ const DistributionSection: FC<Props> = ({ run, metricOptions, metricScores, sele
       return <p className="dial-small-text text-secondary">{t(RunsI18nKey.SelectMetricToSeeDistribution)}</p>;
     }
     return (
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 [&_[data-histogram-y-axis]]:min-w-4">
         <DialAnalyticsHistogram
           title=""
           values={histogramValues ?? []}
