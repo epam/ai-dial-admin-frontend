@@ -4,8 +4,11 @@ import { IconThumbDown, IconThumbDownFilled, IconThumbUp, IconThumbUpFilled } fr
 import classNames from 'classnames';
 import { FC } from 'react';
 
+import FieldCaveat from '@/src/components/Analytics/ConversationsTrace/FieldCaveat';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { ConversationRatingCounts } from '@/src/models/analytics/conversations-trace';
+import { hasNegativeRatingCaveat, negativeRatingGap } from '@/src/utils/analytics/conversation-rows';
 
 const ICON_SIZE = 18;
 
@@ -30,31 +33,52 @@ const RatingCount: FC<CountProps> = ({ count, label, activeClassName, ActiveIcon
   );
 };
 
+// The grid's figures are bounded to the selected period and the detail view's are the conversation's whole
+// feedback, so the two legitimately disagree. The accessible name is the only thing that says which is on
+// screen — one fixed string would tell a screen reader the all-time figure was period-scoped.
+const LABEL_KEYS = {
+  period: { up: ConversationsTraceI18nKey.RatingUp, down: ConversationsTraceI18nKey.RatingDown },
+  whole: { up: ConversationsTraceI18nKey.RatingUpTotal, down: ConversationsTraceI18nKey.RatingDownTotal },
+};
+
 interface Props {
-  ratingUp: number;
-  ratingDown: number;
+  counts: ConversationRatingCounts;
+  isPeriodScoped?: boolean;
   className?: string;
 }
 
-const RatingCounts: FC<Props> = ({ ratingUp, ratingDown, className }) => {
+const RatingCounts: FC<Props> = ({ counts, isPeriodScoped = false, className }) => {
   const t = useI18n();
+  const labels = isPeriodScoped ? LABEL_KEYS.period : LABEL_KEYS.whole;
 
   return (
     <span className={classNames('flex items-center gap-4', className)}>
       <RatingCount
-        count={ratingUp}
-        label={t(ConversationsTraceI18nKey.RatingUp)}
+        count={counts.rating_up ?? 0}
+        label={t(labels.up)}
         activeClassName="text-success"
         ActiveIcon={IconThumbUpFilled}
         IdleIcon={IconThumbUp}
       />
-      <RatingCount
-        count={ratingDown}
-        label={t(ConversationsTraceI18nKey.RatingDown)}
-        activeClassName="text-error"
-        ActiveIcon={IconThumbDownFilled}
-        IdleIcon={IconThumbDown}
-      />
+      <span className="flex items-center gap-1">
+        <RatingCount
+          count={counts.rating_down ?? 0}
+          label={t(labels.down)}
+          activeClassName="text-error"
+          ActiveIcon={IconThumbDownFilled}
+          IdleIcon={IconThumbDown}
+        />
+        {hasNegativeRatingCaveat(counts) && (
+          <FieldCaveat
+            caveat={t(ConversationsTraceI18nKey.RatingDownCaveat, {
+              unestablished: negativeRatingGap(counts),
+              down: counts.rating_down ?? 0,
+              captured: counts.captured_form ?? 0,
+              events: counts.rate_events ?? 0,
+            })}
+          />
+        )}
+      </span>
     </span>
   );
 };

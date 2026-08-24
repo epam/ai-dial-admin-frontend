@@ -6,7 +6,11 @@ import RatingCellRenderer from '@/src/components/Analytics/ConversationsTrace/Li
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { ConversationRow } from '@/src/models/analytics/conversations-trace';
 
-const row = (rating_up: number | null, rating_down: number | null): ConversationRow => ({
+const row = (
+  rating_up: number | null,
+  rating_down: number | null,
+  caveat: Partial<ConversationRow> = {},
+): ConversationRow => ({
   chat_id: 'chat-1',
   first_request_time: 0,
   project_id: 'data-team',
@@ -17,6 +21,10 @@ const row = (rating_up: number | null, rating_down: number | null): Conversation
   last_request_time: 1,
   rating_up,
   rating_down,
+  provable_down: rating_down,
+  captured_form: rating_down,
+  rate_events: (rating_up ?? 0) + (rating_down ?? 0),
+  ...caveat,
 });
 
 const renderCell = (data?: ConversationRow | null) =>
@@ -98,6 +106,35 @@ describe('RatingCellRenderer', () => {
     const { container } = renderCell(row(upCount, downCount));
 
     expect(container).toBeEmptyDOMElement();
+  });
+
+  test('renders both directions from the one result', () => {
+    renderCell(row(3, 2));
+
+    expect(up()).toHaveTextContent('3');
+    expect(down()).toHaveTextContent('2');
+  });
+
+  test('a partially attributable negative figure carries a keyboard-reachable caveat', () => {
+    renderCell(row(0, 4, { provable_down: 1, captured_form: 1, rate_events: 4 }));
+
+    const caveat = screen.getByRole('button', { name: ConversationsTraceI18nKey.RatingDownCaveat });
+
+    expect(caveat).toBeInTheDocument();
+    caveat.focus();
+    expect(caveat).toHaveFocus();
+  });
+
+  test('a fully attributable negative figure carries no caveat', () => {
+    renderCell(row(1, 3));
+
+    expect(screen.queryByRole('button')).toBeNull();
+  });
+
+  test('an unrated conversation carries no caveat', () => {
+    renderCell(row(0, 0));
+
+    expect(screen.queryByRole('button')).toBeNull();
   });
 
   test('renders nothing without a row', () => {

@@ -17,7 +17,7 @@ export enum ColumnProvenance {
 
 export type ConversationScalar = number | string | boolean | null;
 
-export interface ConversationRow {
+export interface ConversationRow extends ConversationRatingCounts {
   chat_id: string;
   project_id: string;
   user_hash: string | null;
@@ -26,8 +26,6 @@ export interface ConversationRow {
   total_price: number | string | null;
   last_request_time: number | string | null;
   first_request_time: number | string | null;
-  rating_up: number | null;
-  rating_down: number | null;
   'conversation_insights.title'?: string | null;
 }
 
@@ -55,17 +53,23 @@ export interface ConversationTotals {
 
 export interface ConversationRatingRow {
   chat_id: string;
-  rating_count: number | string | null;
-}
-
-export enum RatingDirection {
-  Up = 'up',
-  Down = 'down',
+  rating_up: number | string | null;
+  rate_zero: number | string | null;
+  rate_negative: number | string | null;
+  rate_bool_false: number | string | null;
+  rate_raw: number | string | null;
+  rate_events: number | string | null;
 }
 
 export interface RatingCounts {
   rating_up: number | null;
   rating_down: number | null;
+}
+
+export interface ConversationRatingCounts extends RatingCounts {
+  provable_down?: number | null;
+  captured_form?: number | null;
+  rate_events?: number | null;
 }
 
 export enum FeedbackFilter {
@@ -188,16 +192,30 @@ export enum ConversationTotalsField {
   Cost = 'cost',
 }
 
-export enum RateAnalyticsField {
+export enum ResponseRatingsField {
   ChatId = 'chat_id',
-  Rate = 'rate',
-  RequestTime = 'request_time',
   ResponseId = 'response_id',
+  FirstRateTime = 'first_rate_time',
+  LastRateTime = 'last_rate_time',
+  RatePosCount = 'rate_pos_count',
+  RateZeroCount = 'rate_zero_count',
+  RateNegCount = 'rate_neg_count',
+  RateBoolFalseCount = 'rate_bool_false_count',
+  RateRawCount = 'rate_raw_count',
+  RateEventCount = 'rate_event_count',
+  RateDistinctCount = 'rate_distinct_count',
+  CommentCount = 'comment_count',
+  CommentSample = 'comment_sample',
 }
 
 export enum FeedbackField {
   LastRated = 'last_rated',
-  RatingCount = 'rating_count',
+  RatingUp = 'rating_up',
+  RateZero = 'rate_zero',
+  RateNegative = 'rate_negative',
+  RateBoolFalse = 'rate_bool_false',
+  RateRaw = 'rate_raw',
+  RateEvents = 'rate_events',
 }
 
 export type ConversationColumnId = ConversationsField | ConversationColumn;
@@ -251,13 +269,21 @@ export interface ConversationDetailResult {
 
 export interface ConversationFeedbackRow {
   response_id: string | null;
-  rate: number | null;
-  request_time: number | string | null;
+  first_rate_time: number | string | null;
+  last_rate_time: number | string | null;
+  rate_pos_count: number | string | null;
+  rate_zero_count: number | string | null;
+  rate_neg_count: number | string | null;
+  rate_distinct_count: number | string | null;
+  comment_count: number | string | null;
+  comment_sample?: string | null;
 }
 
 export interface ConversationFeedbackPage {
   rows: ConversationFeedbackRow[];
   total: number | null;
+  ratings: ConversationRatingCounts | null;
+  isCommentTextReadable: boolean;
 }
 
 export enum UsageLogField {
