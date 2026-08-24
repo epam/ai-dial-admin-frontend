@@ -1,31 +1,53 @@
 import {
+  ConversationRatingCounts,
   ConversationRatingRow,
   ConversationRow,
   ConversationSummary,
-  RatingCounts,
 } from '@/src/models/analytics/conversations-trace';
 import { toNumber } from '@/src/utils/analytics/scalar';
 
-const UNRESOLVED: RatingCounts = { rating_up: null, rating_down: null };
+const UNRESOLVED: ConversationRatingCounts = {
+  rating_up: null,
+  rating_down: null,
+  provable_down: null,
+  captured_form: null,
+  rate_events: null,
+};
 
-const countsByChatId = (ratingRows: ConversationRatingRow[]): Map<string, number> =>
-  new Map(ratingRows.map((row) => [row.chat_id, toNumber(row.rating_count) ?? 0]));
+const NONE: ConversationRatingCounts = {
+  rating_up: 0,
+  rating_down: 0,
+  provable_down: 0,
+  captured_form: 0,
+  rate_events: 0,
+};
 
-// Each direction is counted by its own query, since `rate` is signed (-1 for a dislike, 0 for a
-// normalized boolean false) and the language has no conditional aggregation to split one result.
-export const attachRatings = (
-  rows: ConversationRow[],
-  upRows: ConversationRatingRow[],
-  downRows: ConversationRatingRow[],
-): ConversationRow[] => {
-  const up = countsByChatId(upRows);
-  const down = countsByChatId(downRows);
+const sum = (...values: (number | string | null)[]): number =>
+  values.reduce<number>((total, value) => total + (toNumber(value) ?? 0), 0);
 
-  return rows.map((row) => ({
-    ...row,
-    rating_up: up.get(row.chat_id) ?? 0,
-    rating_down: down.get(row.chat_id) ?? 0,
-  }));
+export const conversationRatingCounts = (row?: ConversationRatingRow): ConversationRatingCounts =>
+  row
+    ? {
+        rating_up: sum(row.rating_up),
+        rating_down: sum(row.rate_zero, row.rate_negative),
+        provable_down: sum(row.rate_bool_false, row.rate_negative),
+        captured_form: sum(row.rate_raw),
+        rate_events: sum(row.rate_events),
+      }
+    : NONE;
+
+export const negativeRatingGap = ({ rating_down: down, provable_down: provable }: ConversationRatingCounts): number =>
+  down == null || provable == null ? 0 : Math.max(down - provable, 0);
+
+export const hasNegativeRatingCaveat = (counts: ConversationRatingCounts): boolean => negativeRatingGap(counts) > 0;
+
+const countsByChatId = (ratingRows: ConversationRatingRow[]): Map<string, ConversationRatingCounts> =>
+  new Map(ratingRows.map((row) => [row.chat_id, conversationRatingCounts(row)]));
+
+export const attachRatings = (rows: ConversationRow[], ratingRows: ConversationRatingRow[]): ConversationRow[] => {
+  const counts = countsByChatId(ratingRows);
+
+  return rows.map((row) => ({ ...row, ...(counts.get(row.chat_id) ?? NONE) }));
 };
 
 export const unresolvedRatings = (rows: ConversationRow[]): ConversationRow[] =>

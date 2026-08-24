@@ -16,6 +16,7 @@ import {
   ColumnProvenance,
   ConversationDetailRow,
   ConversationFeedbackRow,
+  ConversationRatingCounts,
   ConversationsField,
 } from '@/src/models/analytics/conversations-trace';
 
@@ -37,19 +38,46 @@ const CONVERSATION: ConversationDetailRow = {
   traces: ['0a3f1d9c8b7e6a5f', '4c81be02d5aa77e1'],
 };
 
+const feedbackRow = (overrides: Partial<ConversationFeedbackRow> = {}): ConversationFeedbackRow => ({
+  response_id: 'chatcmpl-a',
+  first_rate_time: '2026-07-20T19:12:59.268Z',
+  last_rate_time: '2026-07-20T19:12:59.268Z',
+  rate_pos_count: 1,
+  rate_zero_count: 0,
+  rate_neg_count: 0,
+  rate_distinct_count: 1,
+  comment_count: 0,
+  ...overrides,
+});
+
 const FEEDBACK: ConversationFeedbackRow[] = [
-  { response_id: 'chatcmpl-a', rate: 1, request_time: '2026-07-20T19:12:59.268Z' },
-  { response_id: 'chatcmpl-b', rate: 0, request_time: '2026-07-20T19:12:56.486Z' },
+  feedbackRow(),
+  feedbackRow({ response_id: 'chatcmpl-b', rate_pos_count: 0, rate_zero_count: 1 }),
 ];
+
+const RATINGS: ConversationRatingCounts = {
+  rating_up: 2,
+  rating_down: 0,
+  provable_down: 0,
+  captured_form: 2,
+  rate_events: 2,
+};
 
 const setup = (
   feedback: ConversationFeedbackRow[] = FEEDBACK,
   total: number | null = feedback.length,
-  ratings = { rating_up: 2, rating_down: 0 },
+  ratings: ConversationRatingCounts | null = RATINGS,
   conversation: ConversationDetailRow = CONVERSATION,
+  isCommentTextReadable = false,
 ) =>
   render(
-    <ConversationDetailRail conversation={conversation} feedback={feedback} feedbackTotal={total} ratings={ratings} />,
+    <ConversationDetailRail
+      conversation={conversation}
+      feedback={feedback}
+      feedbackTotal={total}
+      ratings={ratings}
+      isCommentTextReadable={isCommentTextReadable}
+    />,
   );
 
 const INSIGHTS: Partial<ConversationDetailRow> = {
@@ -105,7 +133,7 @@ describe('ConversationDetailRail', () => {
   });
 
   test('an evaluated conversation renders the insights panel first', () => {
-    setup(FEEDBACK, FEEDBACK.length, { rating_up: 2, rating_down: 0 }, { ...CONVERSATION, ...INSIGHTS });
+    setup(FEEDBACK, FEEDBACK.length, RATINGS, { ...CONVERSATION, ...INSIGHTS });
 
     const headings = screen.getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent);
 
@@ -113,7 +141,7 @@ describe('ConversationDetailRail', () => {
   });
 
   test('the insights panel states the evaluator reading without restating the title', () => {
-    setup(FEEDBACK, FEEDBACK.length, { rating_up: 2, rating_down: 0 }, { ...CONVERSATION, ...INSIGHTS });
+    setup(FEEDBACK, FEEDBACK.length, RATINGS, { ...CONVERSATION, ...INSIGHTS });
 
     expect(screen.getByText(INSIGHTS[ConversationsField.InsightSummary] as string)).toBeInTheDocument();
     expect(screen.getByText('Partially resolved')).toBeInTheDocument();
@@ -121,7 +149,7 @@ describe('ConversationDetailRail', () => {
   });
 
   test('an unevaluated conversation gets a statement rather than a panel of markers', () => {
-    setup(FEEDBACK, FEEDBACK.length, { rating_up: 2, rating_down: 0 }, {
+    setup(FEEDBACK, FEEDBACK.length, RATINGS, {
       ...CONVERSATION,
       [ConversationsField.InsightTitle]: null,
     } as ConversationDetailRow);
@@ -219,13 +247,26 @@ describe('ConversationDetailRail', () => {
     expect(label.parentElement).not.toHaveTextContent(UNAVAILABLE_VALUE);
   });
 
-  test('lists each rating with its direction, and marks turn and comment unavailable', () => {
+  test('lists each rated response with its direction and its comment count', () => {
     setup();
 
     expect(screen.getByText(ConversationsTraceI18nKey.DetailRatingPositive)).toBeInTheDocument();
     expect(screen.getByText(ConversationsTraceI18nKey.DetailRatingNegative)).toBeInTheDocument();
-    expect(screen.getAllByText(ConversationsTraceI18nKey.DetailTurn, { exact: false })).toHaveLength(2);
     expect(screen.getAllByText(ConversationsTraceI18nKey.DetailComment, { exact: false })).toHaveLength(2);
+    expect(screen.getAllByText(ConversationsTraceI18nKey.DetailNoComments)).toHaveLength(2);
+  });
+
+  test('states figures the listed rows do not add up to', () => {
+    setup([feedbackRow()], 240, { ...RATINGS, rating_up: 37, rating_down: 4, provable_down: 4 });
+
+    expect(screen.getByText('37')).toBeInTheDocument();
+    expect(screen.getByText('4')).toBeInTheDocument();
+  });
+
+  test('renders no figures at all when the aggregate failed', () => {
+    setup(FEEDBACK, FEEDBACK.length, null);
+
+    expect(screen.queryByText(ConversationsTraceI18nKey.RatingUp)).toBeNull();
   });
 
   test('an unrated conversation states so rather than rendering an empty list', () => {

@@ -16,7 +16,7 @@ import {
   ConversationTranscript,
   ConversationTurnRow,
 } from '@/src/models/analytics/conversations-trace';
-import { attributeRatingsToTurns, countFeedbackDirections } from '@/src/utils/analytics/conversation-detail-fields';
+import { attributeRatingsToTurns } from '@/src/utils/analytics/conversation-detail-fields';
 import { questionsByTurn } from '@/src/utils/analytics/conversation-transcript';
 
 interface Props {
@@ -31,7 +31,6 @@ interface Props {
 const ConversationDetailView: FC<Props> = ({ conversation, feedback, turns, transcript, nowMs, hasTurnsLoadError }) => {
   const t = useI18n();
   const rows = useMemo(() => feedback?.rows ?? [], [feedback]);
-  const ratings = useMemo(() => countFeedbackDirections(rows), [rows]);
   const turnRatings = useMemo(() => attributeRatingsToTurns(turns, rows), [turns, rows]);
   const questions = useMemo(() => questionsByTurn(transcript.messages), [transcript.messages]);
 
@@ -69,7 +68,8 @@ const ConversationDetailView: FC<Props> = ({ conversation, feedback, turns, tran
           turnRatings={turnRatings}
           feedbackRows={rows}
           feedbackTotal={feedback?.total ?? null}
-          ratings={ratings}
+          ratings={feedback?.ratings ?? null}
+          isCommentTextReadable={feedback?.isCommentTextReadable ?? false}
           questions={questions}
           hasTurnsLoadError={hasTurnsLoadError}
           onOpenTrace={onOpenTrace}

@@ -29,8 +29,7 @@ import {
   ConversationTurnsResult,
   ConversationsPage,
   FeedbackFilter,
-  RateAnalyticsField,
-  RatingDirection,
+  ResponseRatingsField,
 } from '@/src/models/analytics/conversations-trace';
 import { Token } from '@/src/models/auth';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -38,7 +37,7 @@ import { StructuredQueryResult } from '@/src/models/analytics/query';
 import { TimeRange } from '@/src/models/time-range';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { errorObjLog } from '@/src/server/logger';
-import { attachRatings, unresolvedRatings } from '@/src/utils/analytics/conversation-rows';
+import { attachRatings, conversationRatingCounts, unresolvedRatings } from '@/src/utils/analytics/conversation-rows';
 import {
   buildConversationDetailQuery,
   buildConversationEntryBodiesQuery,
@@ -50,6 +49,7 @@ import {
   buildConversationListQuery,
   buildConversationSpansQuery,
   buildConversationTurnsQuery,
+  buildConversationRatingCountsQuery,
   buildConversationRatingsQuery,
   buildConversationTotalsQuery,
   buildRatedConversationIdsQuery,
@@ -62,6 +62,7 @@ import {
   CONVERSATION_TURN_LIMIT,
   CONVERSATIONS_ENTITY,
   FEEDBACK_CANDIDATE_LIMIT,
+  FEEDBACK_ENTITY,
   USAGE_LOG_ENTITY,
 } from '@/src/constants/analytics/conversations-trace';
 import { AnalyticsEntitySchema } from '@/src/models/analytics/entity';
@@ -96,21 +97,15 @@ const withRatings = async (rows: ConversationRow[], range: TimeRange, authToken:
     return rows;
   }
 
-  const params = { range, chatIds: rows.map((row) => row.chat_id) };
-  const [up, down] = await Promise.all(
-    [RatingDirection.Up, RatingDirection.Down].map((direction) =>
-      analyticsDataApi.executeAction(buildConversationRatingsQuery({ ...params, direction }), authToken),
-    ),
-  );
+  const query = buildConversationRatingsQuery({ range, chatIds: rows.map((row) => row.chat_id) });
+  const result = await analyticsDataApi.executeAction(query, authToken);
 
-  // Either direction missing leaves the split unknowable, so the cell shows nothing rather than a
-  // half-counted rating that reads as real.
-  if (!up.success || !down.success) {
-    errorObjLog(up.success ? down : up, 'Failed to resolve conversation ratings');
+  if (!result.success) {
+    errorObjLog(result, 'Failed to resolve conversation ratings');
     return unresolvedRatings(rows);
   }
 
-  return attachRatings(rows, ratingRows(up), ratingRows(down));
+  return attachRatings(rows, ratingRows(result));
 };
 
 // Resolved on the first page of a result and returned to the caller, which carries the ids into every
@@ -129,7 +124,7 @@ async function resolveRatedChatIds(
   }
 
   const ids = (result.response?.rows ?? [])
-    .map((row) => row[RateAnalyticsField.ChatId])
+    .map((row) => row[ResponseRatingsField.ChatId])
     .filter((id): id is string => typeof id === 'string' && id.length > 0);
 
   return { ...result, response: { ids, isCapped: ids.length >= FEEDBACK_CANDIDATE_LIMIT } };
@@ -242,19 +237,55 @@ export async function getConversationDetail(
   return { ...result, response: { conversation } };
 }
 
-export async function getConversationFeedback(chatId: string): Promise<ServerActionResponse<ConversationFeedbackPage>> {
-  const query = buildConversationFeedbackQuery(chatId, CONVERSATION_FEEDBACK_LIMIT);
-  const result = await analyticsDataApi.executeAction(query, await token());
+// Never rejects: a failed schema read must cost the optional comment column, not the page. Without this the
+// rejection would reach the detail route's `Promise.all` and render the error state for a conversation whose
+// transcript, turns and record all resolved. `resolveModelOutputs` defends the same way for the same reason.
+async function feedbackSchemaFields(authToken: Token): Promise<string[] | undefined> {
+  try {
+    const schema = await withEntitySchemaCache(FEEDBACK_ENTITY, authToken, () =>
+      analyticsDataApi.getEntitySchema(FEEDBACK_ENTITY, authToken),
+    );
+    return schema?.fields?.map(({ name }) => name);
+  } catch (error) {
+    errorObjLog(error, 'Failed to fetch the rating source entity schema');
+    return undefined;
+  }
+}
 
-  if (!result.success) {
-    return { ...result, response: undefined };
+/**
+ * The list and the conversation's own figures, resolved together. The figures come from an aggregate scoped
+ * to the conversation rather than from counting the listed rows: the list is bounded, so counting it would
+ * report the bound as the conversation's total. Both reads are issued concurrently — neither needs the other
+ * — and the counts failing leaves them unresolved without taking the list down with them.
+ */
+export async function getConversationFeedback(chatId: string): Promise<ServerActionResponse<ConversationFeedbackPage>> {
+  const authToken = await token();
+  const schemaFieldNames = await feedbackSchemaFields(authToken);
+
+  const [list, counts] = await Promise.all([
+    analyticsDataApi.executeAction(
+      buildConversationFeedbackQuery(chatId, CONVERSATION_FEEDBACK_LIMIT, schemaFieldNames),
+      authToken,
+    ),
+    analyticsDataApi.executeAction(buildConversationRatingCountsQuery(chatId), authToken),
+  ]);
+
+  if (!list.success) {
+    return { ...list, response: undefined };
+  }
+
+  const countRow = ratingRows(counts)[0];
+  if (!counts.success) {
+    errorObjLog(counts, 'Failed to resolve conversation rating counts');
   }
 
   return {
-    ...result,
+    ...list,
     response: {
-      rows: (result.response?.rows ?? []) as unknown as ConversationFeedbackRow[],
-      total: result.response?.totalCount ?? null,
+      rows: (list.response?.rows ?? []) as unknown as ConversationFeedbackRow[],
+      total: list.response?.totalCount ?? null,
+      ratings: counts.success ? conversationRatingCounts(countRow) : null,
+      isCommentTextReadable: (schemaFieldNames ?? []).includes(ResponseRatingsField.CommentSample),
     },
   };
 }

@@ -68,7 +68,7 @@ const AssistantFooter: FC<FooterProps> = ({ turn, ratings, onOpenTrace }) => {
           onClick={onOpenTrace}
         />
       )}
-      {ratings && <RatingCounts ratingUp={ratings.rating_up ?? 0} ratingDown={ratings.rating_down ?? 0} />}
+      {ratings && <RatingCounts counts={ratings} />}
     </div>
   );
 };

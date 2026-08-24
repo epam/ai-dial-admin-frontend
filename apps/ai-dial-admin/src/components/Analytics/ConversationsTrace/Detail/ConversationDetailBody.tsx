@@ -14,6 +14,7 @@ import {
   ConversationFeedbackRow,
   ConversationTranscript,
   ConversationTurnRow,
+  ConversationRatingCounts,
   RatingCounts as RatingCountsModel,
   TranscriptState,
 } from '@/src/models/analytics/conversations-trace';
@@ -25,7 +26,8 @@ interface Props {
   turnRatings: RatingCountsModel[];
   feedbackRows: ConversationFeedbackRow[];
   feedbackTotal: number | null;
-  ratings: RatingCountsModel;
+  ratings: ConversationRatingCounts | null;
+  isCommentTextReadable: boolean;
   questions: Map<string, string>;
   hasTurnsLoadError: boolean;
   onOpenTrace: (turn: ConversationTurnRow, turnNumber: number) => void;
@@ -39,6 +41,7 @@ const ConversationDetailBody: FC<Props> = ({
   feedbackRows,
   feedbackTotal,
   ratings,
+  isCommentTextReadable,
   questions,
   hasTurnsLoadError,
   onOpenTrace,
@@ -87,6 +90,7 @@ const ConversationDetailBody: FC<Props> = ({
           feedback={feedbackRows}
           feedbackTotal={feedbackTotal}
           ratings={ratings}
+          isCommentTextReadable={isCommentTextReadable}
         />
       </div>
     </>

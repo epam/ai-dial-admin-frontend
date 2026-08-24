@@ -13,6 +13,7 @@ import {
   ConversationsField,
   HopEventType,
   ProvenanceEntity,
+  ResponseRatingsField,
   SpanCategory,
   UsageLogField,
 } from '@/src/models/analytics/conversations-trace';
@@ -22,7 +23,7 @@ import { GridFilterType } from '@/src/types/grid-filter';
 
 export const CONVERSATIONS_ENTITY = 'conversations';
 
-export const FEEDBACK_ENTITY = 'rate_analytics';
+export const FEEDBACK_ENTITY = 'response_ratings';
 
 export const USAGE_LOG_ENTITY = 'dial_usage_log';
 
@@ -82,7 +83,9 @@ export const TRANSCRIPT_RESPONSE_FIELDS: UsageLogField[] = [
 
 export const FEEDBACK_CANDIDATE_LIMIT = 1000;
 
-export const POSITIVE_RATE_EXCLUSIVE_MIN = 0;
+export const RATING_COUNT_EXCLUSIVE_MIN = 0;
+
+export const OPTIONAL_FEEDBACK_FIELDS: ResponseRatingsField[] = [ResponseRatingsField.CommentSample];
 
 export const CONVERSATIONS_TIME_PERIOD = '7d';
 
@@ -506,7 +509,7 @@ export const CONVERSATION_SOURCE_ENTITIES: ProvenanceEntity[] = [
 ];
 
 // Columns whose origin cannot be read off a field name, because they have no field of this entity: Rating is
-// composed from the `rate_analytics` lookups.
+// composed from the rating rollup's lookups.
 export const COMPOSED_COLUMN_PROVENANCE: Record<string, ColumnProvenance> = {
   [ConversationColumn.Rating]: ColumnProvenance.Feedback,
 };

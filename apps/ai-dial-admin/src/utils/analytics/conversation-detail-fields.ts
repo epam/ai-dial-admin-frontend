@@ -17,6 +17,7 @@ import {
   formatSignificantCost,
   toMillis,
 } from '@/src/utils/analytics/conversation-formatting';
+import { toNumber } from '@/src/utils/analytics/scalar';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 
 type FieldValue = ConversationDetailRow[keyof ConversationDetailRow];
@@ -76,18 +77,20 @@ export const resolveConversationField = (
     : { ...base, state: ConversationFieldState.Available, text };
 };
 
-export const countFeedbackDirections = (rows: ConversationFeedbackRow[]): RatingCounts =>
-  rows.reduce<RatingCounts>(
-    (counts, { rate }) => {
-      if (rate === null) {
-        return counts;
-      }
-      return rate > 0
-        ? { ...counts, rating_up: (counts.rating_up ?? 0) + 1 }
-        : { ...counts, rating_down: (counts.rating_down ?? 0) + 1 };
-    },
-    { rating_up: 0, rating_down: 0 },
-  );
+export const feedbackRowCounts = (row: ConversationFeedbackRow): RatingCounts => ({
+  rating_up: toNumber(row.rate_pos_count) ?? 0,
+  rating_down: (toNumber(row.rate_zero_count) ?? 0) + (toNumber(row.rate_neg_count) ?? 0),
+});
+
+export const isFeedbackContested = (row: ConversationFeedbackRow): boolean =>
+  (toNumber(row.rate_distinct_count) ?? 0) > 1;
+
+export const isFeedbackReRated = (row: ConversationFeedbackRow): boolean => {
+  const first = toMillis(row.first_rate_time);
+  const last = toMillis(row.last_rate_time);
+
+  return first !== null && last !== null && first !== last;
+};
 
 export const attributeRatingsToTurns = (
   turns: ConversationTurnRow[],
@@ -96,9 +99,9 @@ export const attributeRatingsToTurns = (
   const startedAt = turns.map(({ started }) => toMillis(started));
   const counts: RatingCounts[] = turns.map(() => ({ rating_up: 0, rating_down: 0 }));
 
-  for (const { rate, request_time } of rows) {
-    const ratedAt = toMillis(request_time);
-    if (rate === null || ratedAt === null) {
+  for (const row of rows) {
+    const ratedAt = toMillis(row.last_rate_time);
+    if (ratedAt === null) {
       continue;
     }
 
@@ -111,10 +114,11 @@ export const attributeRatingsToTurns = (
     }
 
     const bucket = counts[index];
-    counts[index] =
-      rate > 0
-        ? { ...bucket, rating_up: (bucket.rating_up ?? 0) + 1 }
-        : { ...bucket, rating_down: (bucket.rating_down ?? 0) + 1 };
+    const { rating_up: up, rating_down: down } = feedbackRowCounts(row);
+    counts[index] = {
+      rating_up: (bucket.rating_up ?? 0) + (up ?? 0),
+      rating_down: (bucket.rating_down ?? 0) + (down ?? 0),
+    };
   }
 
   return counts;
