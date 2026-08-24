@@ -7,6 +7,7 @@ export const isAssetView = (view?: ApplicationRoute): boolean => {
     view === ApplicationRoute.Conversations ||
     view === ApplicationRoute.AssetsModels ||
     view === ApplicationRoute.AssetsAppRunners ||
+    view === ApplicationRoute.AssetsInterceptors ||
     view === ApplicationRoute.AssetsSkills ||
     isDeploymentAsset(view)
   );
@@ -36,6 +37,7 @@ export const isDeploymentAsset = (view?: ApplicationRoute): boolean => {
 const VIEWS_WITHOUT_TOPIC_CATALOGUE: readonly ApplicationRoute[] = [
   ApplicationRoute.AssetsModels,
   ApplicationRoute.AssetsAppRunners,
+  ApplicationRoute.AssetsInterceptors,
 ];
 
 export const hasTopicCatalogue = (view?: ApplicationRoute): boolean => {

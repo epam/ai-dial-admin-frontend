@@ -21,10 +21,19 @@ interface Props {
   originalModel: AssetModel;
   roles: DialRole[];
   interceptors: DialInterceptor[];
+  globalInterceptors?: string[];
   onChange: (model: AssetModel) => void;
 }
 
-const TabsContent: FC<Props> = ({ activeTab, selectedModel, originalModel, roles, interceptors, onChange }) => {
+const TabsContent: FC<Props> = ({
+  activeTab,
+  selectedModel,
+  originalModel,
+  roles,
+  interceptors,
+  globalInterceptors,
+  onChange,
+}) => {
   const resource = selectedModel as unknown as DialModelResource;
 
   // Passed through whole, deliberately not merged over `selectedModel`. Every control here returns a
@@ -59,6 +68,7 @@ const TabsContent: FC<Props> = ({ activeTab, selectedModel, originalModel, roles
         <EntityInterceptors
           entity={selectedModel}
           interceptors={interceptors}
+          globalInterceptors={globalInterceptors}
           onChangeEntity={onChange}
           view={ApplicationRoute.AssetsModels}
         />

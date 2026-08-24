@@ -15,6 +15,7 @@ export enum MenuI18nKey {
   EvaluationDescription = 'Menu.EvaluationDescription',
   Models = 'Menu.Models',
   AssetsModels = 'Menu.AssetsModels',
+  AssetsInterceptors = 'Menu.AssetsInterceptors',
   Applications = 'Menu.Applications',
   ApplicationRunners = 'Menu.ApplicationRunners',
   AppRunners = 'Menu.AppRunners',
@@ -317,6 +318,7 @@ export enum DeleteI18nKey {
   Prompts = 'DeleteEntity.BulkDelete.Prompts',
   Models = 'DeleteEntity.BulkDelete.Models',
   ApplicationRunners = 'DeleteEntity.BulkDelete.ApplicationRunners',
+  Interceptors = 'DeleteEntity.BulkDelete.Interceptors',
 
   //  No related artefacts
   AdapterWarning = 'DeleteEntity.NoRelatedArtefacts.AdapterWarning',
@@ -2167,6 +2169,8 @@ export enum FileManagerI18nKey {
   Model = 'FileManager.Model',
   AppRunners = 'FileManager.AppRunners',
   AppRunner = 'FileManager.AppRunner',
+  Interceptors = 'FileManager.Interceptors',
+  Interceptor = 'FileManager.Interceptor',
   Applications = 'FileManager.Applications',
   Application = 'FileManager.Application',
   Toolsets = 'FileManager.Toolsets',
@@ -2198,6 +2202,8 @@ export enum FileManagerI18nKey {
   ModelsEmptyStateDescription = 'FileManager.ModelsEmptyStateDescription',
   AppRunnersEmptyStateTitle = 'FileManager.AppRunnersEmptyStateTitle',
   AppRunnersEmptyStateDescription = 'FileManager.AppRunnersEmptyStateDescription',
+  InterceptorsEmptyStateTitle = 'FileManager.InterceptorsEmptyStateTitle',
+  InterceptorsEmptyStateDescription = 'FileManager.InterceptorsEmptyStateDescription',
   ToolsetsEmptyStateTitle = 'FileManager.ToolsetsEmptyStateTitle',
   ToolsetsEmptyStateDescription = 'FileManager.ToolsetsEmptyStateDescription',
   SkillsEmptyStateTitle = 'FileManager.SkillsEmptyStateTitle',

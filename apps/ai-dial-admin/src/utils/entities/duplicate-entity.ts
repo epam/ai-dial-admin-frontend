@@ -5,6 +5,7 @@ export const duplicateEntityMap: Record<string, DuplicateI18nKey> = {
   [ApplicationRoute.Models]: DuplicateI18nKey.Model,
   [ApplicationRoute.AssetsModels]: DuplicateI18nKey.Model,
   [ApplicationRoute.AssetsAppRunners]: DuplicateI18nKey.ApplicationRunner,
+  [ApplicationRoute.AssetsInterceptors]: DuplicateI18nKey.Interceptor,
   [ApplicationRoute.Applications]: DuplicateI18nKey.Application,
   [ApplicationRoute.AssetsApplications]: DuplicateI18nKey.Application,
   [ApplicationRoute.AssetsToolsets]: DuplicateI18nKey.Toolset,

@@ -60,13 +60,23 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner, view }
 
   return (
     <div className="flex flex-col gap-y-8 h-full">
+      <AppRunnerSource entity={runner} onChangeEntity={onChangeRunner} view={ApplicationRoute.ApplicationRunners} />
+      <ViewerUrlControl endpoint={runner['dial:applicationTypeViewerUrl']} onChange={onChangeViewerUrl} />
+      <EditorUrlControl endpoint={runner['dial:applicationTypeEditorUrl']} onChange={onChangeEditorUrl} />
+      <EndpointControl
+        id="applicationTypeSchemaEndpoint"
+        label={t(EntityFieldsI18nKey['dial:applicationTypeSchemaEndpoint'])}
+        placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
+        endpoint={runner['dial:applicationTypeSchemaEndpoint']}
+        onChange={(endpoint) => onChange(endpoint, 'dial:applicationTypeSchemaEndpoint')}
+      />
       <IconControl
         iconUrl={runner['dial:applicationTypeIconUrl']}
         onChange={(icon: string) => {
           onChange(icon, 'dial:applicationTypeIconUrl');
         }}
       />
-
+      <TopicsControl entity={runner} view={view} onChange={onChangeRunner} />
       <DialInput
         id="title"
         labelProps={{ label: t(EntityFieldsI18nKey.title) }}
@@ -78,7 +88,6 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner, view }
         }}
         disabled={isReadOnlyAdmin}
       />
-
       <DialSelectField
         value={runner['dial:applicationTypeBucketCopy'] || TypeBucketCopy.DISABLED}
         id="typeCopy"
@@ -91,18 +100,6 @@ const AppRunnerExtendedProperties: FC<Props> = ({ runner, onChangeRunner, view }
         placeholder={t(EntityPlaceholdersI18nKey.TypeBucketCopy)}
         onChange={(type) => onChangeTypeCopyBucket(type as string)}
         disabled={isReadOnlyAdmin}
-      />
-      <TopicsControl entity={runner} view={view} onChange={onChangeRunner} />
-      <AppRunnerSource entity={runner} onChangeEntity={onChangeRunner} view={ApplicationRoute.ApplicationRunners} />
-
-      <ViewerUrlControl endpoint={runner['dial:applicationTypeViewerUrl']} onChange={onChangeViewerUrl} />
-      <EditorUrlControl endpoint={runner['dial:applicationTypeEditorUrl']} onChange={onChangeEditorUrl} />
-      <EndpointControl
-        id="applicationTypeSchemaEndpoint"
-        label={t(EntityFieldsI18nKey['dial:applicationTypeSchemaEndpoint'])}
-        placeholder={t(EntityPlaceholdersI18nKey.Endpoint)}
-        endpoint={runner['dial:applicationTypeSchemaEndpoint']}
-        onChange={(endpoint) => onChange(endpoint, 'dial:applicationTypeSchemaEndpoint')}
       />
     </div>
   );

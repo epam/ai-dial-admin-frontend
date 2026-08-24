@@ -21,6 +21,7 @@ const deleteEntityMap: Record<string, DeleteI18nKey> = {
   [ApplicationRoute.Models]: DeleteI18nKey.Model,
   [ApplicationRoute.AssetsModels]: DeleteI18nKey.Model,
   [ApplicationRoute.AssetsAppRunners]: DeleteI18nKey.ApplicationRunner,
+  [ApplicationRoute.AssetsInterceptors]: DeleteI18nKey.Interceptor,
   [ApplicationRoute.Applications]: DeleteI18nKey.Application,
   [ApplicationRoute.AssetsApplications]: DeleteI18nKey.Application,
   [ApplicationRoute.AssetsToolsets]: DeleteI18nKey.Toolset,
@@ -55,6 +56,7 @@ const bulkDeleteEntityMap: Record<string, DeleteI18nKey> = {
   [ApplicationRoute.Prompts]: DeleteI18nKey.Prompts,
   [ApplicationRoute.AssetsModels]: DeleteI18nKey.Models,
   [ApplicationRoute.AssetsAppRunners]: DeleteI18nKey.ApplicationRunners,
+  [ApplicationRoute.AssetsInterceptors]: DeleteI18nKey.Interceptors,
 };
 
 export const getBulkNotificationTitle = (

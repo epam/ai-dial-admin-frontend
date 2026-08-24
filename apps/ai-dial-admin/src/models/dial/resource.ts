@@ -1,5 +1,6 @@
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity, EntityAttachment, EntityDefaults, ModifiedEntity } from '@/src/models/dial/base-entity';
+import { DialFeatures } from '@/src/models/dial/features';
 import { DialResourceInterface } from '@/src/models/dial/interfaces';
 import { DialModelEndpoint, DialModelLimit, DialModelPricing } from '@/src/models/dial/model';
 import { DialAppRoute } from '@/src/models/dial/route';
@@ -143,8 +144,35 @@ export interface DialAppRunnerResource extends Omit<
   ['dial:applicationTypeRoutes']?: DialAppRoute[];
 }
 
+/**
+ * An interceptor resource (`interceptors/platform/{name}`) as returned by Core. Flat and unversioned
+ * like `DialModelResource`, and — unlike an app runner's raw-JSON schema resource — a real
+ * `Interceptor extends Deployment` entity that Core validates server-side, so this surface adds no
+ * client-side meta-schema layer. Scoped to the fields the Properties/Configuration tabs use; fields
+ * meaningful for a routing deployment but not for an interceptor (e.g. `maxRetryAttempts`,
+ * `responsesEndpoint`) are left off.
+ */
+export interface DialInterceptorResource extends ModifiedEntity {
+  name: string;
+  path: string;
+  folderId: string;
+  author?: string;
+  status?: DialModelResourceStatus;
+  validationWarnings?: CoreValidationWarning[];
+  displayName?: string;
+  description?: string;
+  iconUrl?: string;
+  endpoint?: string | null;
+  interfaces?: Record<string, DialResourceInterface>;
+  overrideName?: string;
+  forwardAuthToken?: boolean;
+  descriptionKeywords?: string[];
+  features?: DialFeatures;
+  defaults?: Record<string, unknown>;
+}
+
 /** The resource types DIAL Core keeps in its flat `platform` bucket — see `isFlatPlatformView`. */
-export type PlatformAsset = DialModelResource | DialAppRunnerResource;
+export type PlatformAsset = DialModelResource | DialAppRunnerResource | DialInterceptorResource;
 
 export enum DialModelResourceType {
   Chat = 'CHAT',

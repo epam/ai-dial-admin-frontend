@@ -1,14 +1,17 @@
 import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
-import { interceptorsApi, rolesApi } from '@/src/app/api/api';
+import { rolesApi } from '@/src/app/api/api';
 import ModelView from '@/src/components/Assets/Models/View';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
+import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { AssetModel } from '@/src/models/dial/deployment-asset';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialRole } from '@/src/models/dial/role';
+import { readConfigEntities, readGlobalInterceptors } from '@/src/server/config-entities/read-page-options';
 import { errorObjLog } from '@/src/server/logger';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getModel } from '../actions';
@@ -24,7 +27,7 @@ export default async function Page(params: {
   let etag = DEFAULT_ETAG;
   let model: AssetModel | null = null;
   let roles: DialRole[] | null = [];
-  let interceptors: DialInterceptor[] | null = [];
+  const optionWarnings: EntitiesI18nKey[] = [];
 
   try {
     // Next already decodes the query param once, which restores the resource name `ResourceInfo.path`
@@ -36,19 +39,33 @@ export default async function Page(params: {
       return res?.response as AssetModel | null;
     });
     roles = (await rolesApi.getRolesList(token)) || [];
-    // Core's interceptor listing is blob-only, so it would not see interceptors published through the
-    // aggregated config — the selectable list still comes from the admin BE.
-    interceptors = (await interceptorsApi.getInterceptorsList(token)) || [];
   } catch (e) {
     errorObjLog(e, 'Failed to fetch model view data');
   }
+
+  // Deliberately outside the resource fetch's try, and resolved together: an option-list problem must
+  // not prevent the model from loading, and one list failing must not skip the other. Core-direct —
+  // matching Assets > App Runners — rather than the admin-BE list, which cannot see interceptors
+  // declared in Core's configuration file.
+  const [interceptors, globalInterceptors] = await Promise.all([
+    readConfigEntities<DialInterceptor>(token, ConfigFileEntityType.Interceptors, optionWarnings),
+    readGlobalInterceptors(token, optionWarnings),
+  ]);
+
   if (model == null) {
     notFound();
   }
 
   return (
     <SaveValidationContextProvider>
-      <ModelView etag={etag} originalModel={model} roles={roles || []} interceptors={interceptors || []} />
+      <ModelView
+        etag={etag}
+        originalModel={model}
+        roles={roles || []}
+        interceptors={interceptors}
+        globalInterceptors={globalInterceptors}
+        optionWarnings={optionWarnings}
+      />
     </SaveValidationContextProvider>
   );
 }

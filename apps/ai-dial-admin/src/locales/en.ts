@@ -125,6 +125,7 @@ export default {
     Interceptors: 'Interceptors',
     Models: 'Models',
     AssetsModels: 'Models',
+    AssetsInterceptors: 'Interceptors',
     Routes: 'Routes',
 
     Roles: 'Roles',
@@ -353,6 +354,7 @@ export default {
       Toolsets: 'Toolsets',
       Models: 'Models',
       ApplicationRunners: 'App Runners',
+      Interceptors: 'Interceptors',
     },
   },
   DuplicateEntity: {
@@ -2037,6 +2039,8 @@ export default {
     Model: 'Model',
     AppRunners: 'App Runners',
     AppRunner: 'App Runner',
+    Interceptors: 'Interceptors',
+    Interceptor: 'Interceptor',
     Prompt: 'Prompt',
     Prompts: 'Prompts',
     Items: 'Items',
@@ -2113,6 +2117,8 @@ export default {
     ModelsEmptyStateDescription: 'Create a model using the Create button',
     AppRunnersEmptyStateTitle: "You don't have any app runners",
     AppRunnersEmptyStateDescription: 'Create an app runner using the Create button',
+    InterceptorsEmptyStateTitle: "You don't have any interceptors",
+    InterceptorsEmptyStateDescription: 'Create an interceptor using the Create button',
     ToolsetsEmptyStateTitle: "You don't have any toolsets",
     ToolsetsEmptyStateDescription: 'Create or import a toolset using the Create button',
     SkillsEmptyStateTitle: "You don't have any skills",

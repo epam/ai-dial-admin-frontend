@@ -7,6 +7,7 @@ import {
   mergeApplicationResource,
   mergeConversation,
   mergeAppRunnerResource,
+  mergeInterceptorResource,
   mergeModelResource,
   mergePrompt,
   mergeToolsetResource,
@@ -103,6 +104,21 @@ describe('Server :: Core :: asset-metadata', () => {
       path: 'gpt-4',
       author: 'eve',
       updatedAt: '555',
+    });
+  });
+
+  test('mergeInterceptorResource sources name/folderId/path/author/updatedAt from metadata (flat, no version), rest from content', () => {
+    const content = { displayName: 'Redactor', endpoint: 'https://interceptor' };
+    const meta = metadata({ url: 'interceptors/platform/redactor', author: 'frank', updatedAt: 666 });
+
+    expect(mergeInterceptorResource(content, meta)).toEqual({
+      displayName: 'Redactor',
+      endpoint: 'https://interceptor',
+      name: 'redactor',
+      folderId: '',
+      path: 'redactor',
+      author: 'frank',
+      updatedAt: '666',
     });
   });
 
