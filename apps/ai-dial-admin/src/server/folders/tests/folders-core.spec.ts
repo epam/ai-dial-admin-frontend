@@ -336,7 +336,10 @@ describe('Server :: Folders :: folders-core :: removeSkillFolderCore', () => {
     expect(skillsCoreApi.deleteSkill).toHaveBeenCalledWith(TOKEN_MOCK, 'public/target/a', '*');
     expect(skillsCoreApi.deleteSkill).toHaveBeenCalledWith(TOKEN_MOCK, 'public/target/sub/b', '*');
     const folderCallPaths = (skillsCoreApi.deleteSkillFolder as any).mock.calls.map((call: unknown[]) => call[1]);
-    expect(folderCallPaths).toEqual(['public/target/sub', 'public/target']);
+    // The nested folder keeps the trailing slash `toSkillList` now gives every folder row (matching
+    // every other asset type's folder-path convention); `deleteSkillFolder` itself normalizes before
+    // building the route, so this doesn't produce a `//` against Core.
+    expect(folderCallPaths).toEqual(['public/target/sub/', 'public/target']);
     expect((skillsCoreApi.deleteSkillFolder as any).mock.calls[0][2]).toBe('*');
     expect(result.success).toBe(true);
   });

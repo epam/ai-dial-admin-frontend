@@ -485,6 +485,7 @@ export enum CreateI18nKey {
   TestSuite = 'CreateEntity.Entities.TestSuite',
   Dataset = 'CreateEntity.Entities.Dataset',
   Query = 'CreateEntity.Entities.Query',
+  Skill = 'CreateEntity.Entities.Skill',
 }
 
 export enum UpstreamEndpointsI18nKey {
@@ -637,6 +638,7 @@ export enum TopicsI18nKey {
 
 export enum TabsI18nKey {
   Properties = 'Tabs.Properties',
+  Skill = 'Tabs.Skill',
   Features = 'Tabs.Features',
   Roles = 'Tabs.Roles',
   Interceptors = 'Tabs.Interceptors',
@@ -1074,6 +1076,7 @@ export enum ErrorI18nKey {
   DisplayNameErrorVersion = 'Error.DisplayNameErrorVersion',
   NameExists = 'Error.NameExists',
   DisplayNameExists = 'Error.DisplayNameExists',
+  SkillNameExists = 'Error.SkillNameExists',
   Unique = 'Error.Unique',
   Version = 'Error.Version',
   NameVersionCombination = 'Error.NameVersionCombination',

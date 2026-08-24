@@ -13,8 +13,24 @@ import {
   getMoveNotificationContent,
   getExportNotificationContent,
   getParentPathByFullPath,
+  getToolbarOptionLabels,
   getVersionsPerName,
 } from '../utils';
+
+describe('getToolbarOptionLabels', () => {
+  test('AssetsSkills offers Folder and Skill, with no Import option', () => {
+    const labels = getToolbarOptionLabels(ApplicationRoute.AssetsSkills, false);
+
+    expect(labels).toEqual([
+      { key: 'newFolder', label: FileManagerI18nKey.Folder, icon: null },
+      { key: 'newItem', label: FileManagerI18nKey.Skill, icon: null },
+    ]);
+  });
+
+  test('AssetsSkills returns no options for a read-only admin', () => {
+    expect(getToolbarOptionLabels(ApplicationRoute.AssetsSkills, true)).toEqual([]);
+  });
+});
 
 describe('filterLatestVersions', () => {
   test('Should return only latest versions', () => {

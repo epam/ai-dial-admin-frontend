@@ -11,6 +11,7 @@ import { ServerActionResponse } from '@/src/models/server-action';
 import { ResourceType } from '@/src/types/resource-type';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
+import { addTrailingSlash } from '@/src/utils/url';
 
 /**
  * Lists the direct children of a Skill folder — metadata-only rows, no per-child content or
@@ -51,6 +52,24 @@ export async function removeSkill(path: string, etag: string): Promise<ServerAct
 }
 
 /**
+ * Creates a brand-new skill at `${folderId}${name}`, writing a `SKILL.md` built from name/description.
+ * `folderId` isn't guaranteed to already end with a slash — the root path does (`public/`), but a
+ * nested folder's own path (e.g. after navigating into one) doesn't carry one — so `addTrailingSlash`
+ * normalizes it here rather than trusting the caller to always supply one.
+ */
+export async function createSkill(name: string, description: string, folderId: string): Promise<ServerActionResponse> {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  const path = `${addTrailingSlash(folderId)}${name}`;
+  return skillsCoreApi.createSkill(token, path, name, description);
+}
+
+/** Creates an empty Skills grouping folder at the given path. */
+export async function createSkillFolder(folderPath: string): Promise<ServerActionResponse> {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return skillsCoreApi.createSkillFolder(token, folderPath);
+}
+
+/**
  * Uploads (creates or replaces) a single file within a skill's bundle. Takes the file wrapped in
  * `FormData` — a bare `File` argument isn't how server actions in this app pass file content (see
  * `importToolsets`/`importFiles`) — rather than the file object directly.
@@ -71,6 +90,17 @@ export async function uploadSkillFile(
 export async function removeSkillFile(path: string, filePath: string, etag?: string): Promise<ServerActionResponse> {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
   return skillsCoreApi.deleteSkillFile(token, path, filePath, etag);
+}
+
+/**
+ * Reads `SKILL.md`'s raw content for the Skill tab (see `parseSkillManifest`). Shared by both
+ * `Assets > Skills` and Skill Publications — the underlying Core route is keyed only by path, not by
+ * which bucket (source/review/public) that path resolves into, matching how `uploadSkillFile`/
+ * `removeSkillFile` are already reused by the Publications view instead of duplicated there.
+ */
+export async function getSkillManifest(path: string): Promise<ServerActionResponse> {
+  const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
+  return skillsCoreApi.getSkillManifestContent(token, path);
 }
 
 /**
