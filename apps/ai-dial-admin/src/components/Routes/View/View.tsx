@@ -61,7 +61,7 @@ const RouteView: FC<Props> = ({ originalRoute, etag, names, roles }) => {
   );
 
   useEffect(() => {
-    const name = originalRoute?.name;
+    const name = encodeURIComponent(originalRoute?.name || '');
     if (!coreRoute && name) {
       getReqRef.current(getCoreRoute, name).then((data) => {
         setCoreRoute(data.response);

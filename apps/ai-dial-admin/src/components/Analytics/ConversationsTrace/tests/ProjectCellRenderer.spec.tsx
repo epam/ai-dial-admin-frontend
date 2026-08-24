@@ -9,6 +9,7 @@ import { ConversationRow } from '@/src/models/analytics/conversations-trace';
 const row = (overrides: Partial<ConversationRow> = {}): ConversationRow => ({
   chat_id: 'chat-1',
   project_id: 'internal-copilot',
+  user_hash: 'db7327ba3decd351',
   turn_count: 3,
   total_tokens: 7200,
   total_price: '0.065',

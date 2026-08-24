@@ -14,9 +14,11 @@
 //   - duplicate Claude skill names (one would silently shadow the other)
 //   - broken `@file` references in docs
 //   - broken `references/*` pointers from a skill to its deferred content
-//   - mirror integrity — the .cursor/.github trees are symlinks back into
-//     .claude; a broken or FLATTENED symlink means a whole rule silently stops
-//     loading for Cursor or Copilot (full scan only)
+//   - mirror integrity — the .cursor/.github entries listed in
+//     scripts/agent-mirrors.mjs are generated from a .claude source, as a stub or
+//     a full copy; one that drifts means Cursor or Copilot silently loads a stale
+//     rule, and one replaced by anything else means the rule stops loading
+//     (full scan only)
 //   - hidden/invisible characters — bidi controls, zero-width chars, BOM, and
 //     U+FFFD from invalid UTF-8 — that corrupt parsing or silently alter text
 //   - floating MCP package versions (`@latest`) that break reproducibility
@@ -45,16 +47,21 @@
 //
 // With no file arguments, every tracked agent-config location is validated.
 
-import { existsSync, lstatSync, readFileSync, readdirSync, readlinkSync, realpathSync } from 'node:fs';
+import { existsSync, lstatSync, readFileSync, readdirSync, realpathSync } from 'node:fs';
 import { dirname, extname, relative, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { parse } from 'yaml';
 import * as prettier from 'prettier';
+
+// Script-relative on purpose: the renderer is this gate's own code, while the
+// manifest it renders is repo data loaded from `cwd`.
+import { renderMirror } from './render-agent-mirror.mjs';
 
 const errors = [];
 const fail = (file, msg) => errors.push(`${file}: ${msg}`);
 
-// `.claude` first so that when a mirror symlink collapses onto its target
-// during dedup, the canonical path is the one reported in any error.
+// `.claude` first so that the canonical source is the path reported in any
+// error; generated mirror entries are filtered out of this scan entirely.
 const AGENT_CONFIG_DIRECTORIES = [
   '.claude/commands',
   '.claude/rules',
@@ -67,15 +74,11 @@ const AGENT_CONFIG_DIRECTORIES = [
   '.github/skills',
 ];
 const AGENT_CONFIG_FILES = ['.claude/settings.json', '.mcp.json', 'AGENTS.md', 'CLAUDE.md', 'openspec/config.yaml'];
-// The mirror trees: every entry is expected to be a symlink back into .claude.
-const MIRROR_DIRECTORIES = [
-  '.cursor/commands',
-  '.cursor/rules',
-  '.cursor/skills',
-  '.github/instructions',
-  '.github/prompts',
-  '.github/skills',
-];
+// Declares which mirror entries are generated, how, and from where. Resolved
+// against `cwd` like every other path here, so a repo without it simply has no
+// mirrors to check. The renderer is shared with the writer so the gate and the
+// generator cannot disagree about what "correct" means.
+const MIRROR_MANIFEST = 'scripts/agent-mirrors.mjs';
 const IGNORED_DIRECTORIES = new Set(['.git', '.next', '.nx', 'coverage', 'dist', 'node_modules', 'tmp']);
 
 const listFiles = (directory) => {
@@ -96,33 +99,22 @@ const isSymlinkedDirectory = (path) => {
   try {
     return lstatSync(path).isSymbolicLink() && lstatSync(realpathSync(path)).isDirectory();
   } catch {
-    return false; // broken link — checkMirrorIntegrity reports it
+    return false;
   }
 };
 
-// The mirror trees are symlinks into .claude, so a naive scan would validate
-// the same bytes up to three times and report every error three times. Collapse
-// by real path, keeping the first (canonical) occurrence.
-const dedupeByRealPath = (files) => {
-  const seen = new Set();
-  return files.filter((file) => {
-    let key;
-    try {
-      key = realpathSync(file);
-    } catch {
-      key = file; // broken link — keep it so the read error surfaces
-    }
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-};
-
-const allAgentConfigFiles = () =>
-  dedupeByRealPath([
+// A generated mirror has no content of its own — it is a stub pointing at its
+// source, or a byte-identical copy of it. Validating one again would report every
+// finding twice and flag a copied `name:` as a duplicate Claude skill.
+// checkMirrorIntegrity covers these paths by proving they still match the source
+// that IS validated here.
+const allAgentConfigFiles = (manifest) => {
+  const generated = manifest?.MIRROR_BY_PATH ?? new Map();
+  return [
     ...AGENT_CONFIG_FILES.filter(existsSync),
     ...AGENT_CONFIG_DIRECTORIES.flatMap(listFiles).filter((file) => ['.md', '.mdc'].includes(extname(file))),
-  ]);
+  ].filter((file) => !generated.has(file));
+};
 
 const lineNumberAt = (src, index) => src.slice(0, index).split(/\r?\n/).length;
 
@@ -305,70 +297,79 @@ const checkSettingsSecurity = (config, src, file) => {
   }
 };
 
-// The .cursor and .github trees are symlinks back into .claude so one edit
-// updates every tool. Two failure modes make a rule silently stop loading, and
-// neither is visible in a diff or caught by any other check here:
-//   1. a broken link — e.g. a trailing newline baked into the link target, which
-//      `git diff` renders as an ordinary path
-//   2. a FLATTENED link — a regular file whose entire content is the relative
-//      path it was supposed to point at, so the tool loads ~30 bytes of text
-// Both exist in the sibling ai-dial-chat repo today. This is integrity only:
-// whether a given rule SHOULD have a mirror entry is a per-rule choice.
+// One canonical rule or skill under .claude feeds Cursor and Copilot as
+// generated copies (see scripts/agent-mirrors.mjs). A copy that no longer
+// matches its source makes a tool load a stale rule — or, when it is not a copy
+// at all, load nothing usable. Neither is obvious in a diff or caught by any
+// other check here, so this proves every declared mirror is still faithful.
+//
+// The mirrors were symlinks until Windows clones exposed the flaw: Git for
+// Windows defaults to `core.symlinks=false` and writes a regular file holding
+// the link target instead, so the rule silently stopped loading there. Such a
+// leftover is still recognised below to give an old working tree a clear fix.
 const FLATTENED_LINK_PATTERN = /^\.{1,2}\/[^\s]+\.(?:md|mdc)$/;
-const FLATTENED_LINK_MAX_BYTES = 512;
 
-const checkMirrorIntegrity = () => {
+const loadMirrorManifest = async () => {
+  if (!existsSync(MIRROR_MANIFEST)) return null;
+
+  try {
+    return await import(pathToFileURL(resolve(MIRROR_MANIFEST)).href);
+  } catch (e) {
+    fail(MIRROR_MANIFEST, `mirror manifest could not be loaded: ${e.message}`);
+    return null;
+  }
+};
+
+const checkMirrorIntegrity = (manifest) => {
+  if (!manifest) return 0;
+
+  const syncHint = `run \`${manifest.SYNC_COMMAND}\``;
   let checked = 0;
 
-  for (const directory of MIRROR_DIRECTORIES) {
-    if (!existsSync(directory)) continue;
+  for (const { source, mirrors } of manifest.AGENT_MIRRORS) {
+    if (!existsSync(source)) {
+      fail(source, `is listed in ${MIRROR_MANIFEST} as a mirror source but does not exist`);
+      continue;
+    }
 
-    for (const file of listMirrorEntries(directory)) {
+    const src = readFileSync(source, 'utf8');
+
+    for (const { path: mirror, mode } of mirrors) {
       checked += 1;
-      let stat;
+
+      if (!existsSync(mirror)) {
+        fail(mirror, `missing generated mirror (${mode}) of \`${source}\`; ${syncHint}`);
+        continue;
+      }
+
+      // A symlink pointing at the right bytes still passes the content check, so
+      // name it explicitly — it is the pattern that breaks on Windows checkout.
+      if (lstatSync(mirror).isSymbolicLink()) {
+        fail(mirror, `is a symlink; mirror entries are generated files now — ${syncHint}`);
+        continue;
+      }
+
+      let expected;
       try {
-        stat = lstatSync(file);
-      } catch {
+        expected = renderMirror(src, { source, mode });
+      } catch (e) {
+        fail(source, `cannot render its \`${mode}\` mirror: ${e.message}`);
         continue;
       }
 
-      if (stat.isSymbolicLink()) {
-        const target = readlinkSync(file);
-        if (/\s$/.test(target)) {
-          fail(
-            file,
-            `symlink target \`${target.replace(/\s+$/, '')}\` has trailing whitespace baked into the link; recreate it with \`ln -sfn\``,
-          );
-        } else if (!existsSync(file)) {
-          fail(file, `broken symlink -> \`${target}\``);
-        }
-        continue;
-      }
+      const content = readFileSync(mirror, 'utf8');
+      if (content === expected) continue;
 
-      if (!stat.isFile() || stat.size > FLATTENED_LINK_MAX_BYTES) continue;
-
-      const content = readFileSync(file, 'utf8').trim();
-      if (FLATTENED_LINK_PATTERN.test(content)) {
-        fail(
-          file,
-          `looks like a flattened symlink: a regular file whose only content is \`${content}\`; recreate it with \`ln -sfn ${content} ${file}\``,
-        );
+      if (FLATTENED_LINK_PATTERN.test(content.trim())) {
+        fail(mirror, `is a flattened symlink left by a Windows checkout, not a generated mirror; ${syncHint}`);
+      } else {
+        fail(mirror, `has drifted from \`${source}\`; edit the source, then ${syncHint}`);
       }
     }
   }
 
   return checked;
 };
-
-// Walks a mirror tree WITHOUT following symlinks, so a symlinked skill folder is
-// returned as the single entry to check rather than being descended into.
-const listMirrorEntries = (directory) =>
-  readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-    const path = `${directory}/${entry.name}`;
-    if (entry.name === '.DS_Store') return [];
-    if (entry.isDirectory()) return listMirrorEntries(path);
-    return [path];
-  });
 
 const TAILWIND_CONFIG = 'apps/ai-dial-admin/tailwind.config.js';
 
@@ -430,12 +431,22 @@ const toRepoRelative = (file) => {
 // breakpoint scan and the mirror-integrity walk are full-scan concerns (CI,
 // pre-commit): editing one config file cannot introduce a source breakpoint
 // regression, and mirror integrity is a property of whole directories.
+const mirrorManifest = await loadMirrorManifest();
 const explicitFiles = process.argv.length > 2;
-const files = explicitFiles ? process.argv.slice(2).map(toRepoRelative) : allAgentConfigFiles();
+const files = explicitFiles ? process.argv.slice(2).map(toRepoRelative) : allAgentConfigFiles(mirrorManifest);
 const skillNames = [];
 let checkedConfigFiles = 0;
 
 for (const file of files) {
+  // Reached only in explicit-file mode — the full scan filters these out. Editing
+  // a generated copy is the drift this gate exists to prevent, so say so at the
+  // moment of the edit rather than letting the next full scan report it.
+  const mirror = mirrorManifest?.MIRROR_BY_PATH.get(file);
+  if (mirror) {
+    fail(file, `is generated from \`${mirror.source}\`; edit that file, then run \`${mirrorManifest.SYNC_COMMAND}\``);
+    continue;
+  }
+
   let src;
   try {
     src = readFileSync(file, 'utf8');
@@ -507,7 +518,7 @@ for (const file of files) {
 }
 
 checkUniqueClaudeSkillNames(skillNames);
-const checkedMirrorEntries = explicitFiles ? 0 : checkMirrorIntegrity();
+const checkedMirrorEntries = explicitFiles ? 0 : checkMirrorIntegrity(mirrorManifest);
 const checkedSourceFiles = explicitFiles ? 0 : checkSourceBreakpoints();
 const summary = `${checkedConfigFiles} config files, ${checkedMirrorEntries} mirror entries, ${checkedSourceFiles} source files`;
 

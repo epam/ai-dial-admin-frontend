@@ -8,12 +8,15 @@ import ApplicationProperties from '@/src/components/Publications/Properties/Appl
 import ConversationProperties from '@/src/components/Publications/Properties/ConversationProperties';
 import FileProperties from '@/src/components/Publications/Properties/FileProperties';
 import PromptProperties from '@/src/components/Publications/Properties/PromptProperties';
+import SkillProperties from '@/src/components/Publications/Properties/SkillProperties';
+import SkillManifestTab from '@/src/components/Assets/Skills/View/SkillManifestTab';
 import ToolsetProperties from '@/src/components/Publications/Properties/ToolsetProperties';
 import Tools from '@/src/components/Tools/Tools';
 import { AppsFolderProvider } from '@/src/context/assets/AppsFolderContext';
 import { ConversationFolderProvider } from '@/src/context/assets/ConversationsFolderContext';
 import { FileFolderProvider } from '@/src/context/assets/FileFolderContext';
 import { PromptFolderProvider } from '@/src/context/assets/PromptFolderContext';
+import { SkillFolderProvider } from '@/src/context/assets/SkillFolderContext';
 import { ToolsetFolderProvider } from '@/src/context/assets/ToolsetsFolderContext';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { DialApplicationScheme } from '@/src/models/dial/application';
@@ -23,12 +26,14 @@ import {
   FilePublication,
   PromptPublication,
   Publication,
+  SkillPublication,
   ToolsetPublication,
 } from '@/src/models/dial/publications';
 import { DialToolsetResource } from '@/src/models/dial/resource';
 import { DialRule } from '@/src/models/dial/rule';
 import { Toolset } from '@/src/models/dial/toolset';
 import { ApplicationRoute } from '@/src/types/routes';
+import { SkillManifest } from '@/src/utils/skill-manifest';
 import { EntityViewTab } from '@/src/utils/tabs/utils';
 import PublicationInfoHeader from './InfoHeader';
 import PublicationPermissions from './Permissions';
@@ -44,6 +49,13 @@ interface Props<T> {
   currentRules: DialRule[];
   addedFiles?: File[];
   setAddedFiles: Dispatch<SetStateAction<File[]>>;
+  skillAddedFiles?: File[];
+  setSkillAddedFiles: Dispatch<SetStateAction<File[]>>;
+  skillRemovedFileNames?: string[];
+  setSkillRemovedFileNames: Dispatch<SetStateAction<string[]>>;
+  skillManifest?: SkillManifest;
+  onChangeSkillDescription: (description: string) => void;
+  onChangeSkillBody: (body: string) => void;
 }
 
 const TabsContent = <T extends Publication>({
@@ -57,6 +69,13 @@ const TabsContent = <T extends Publication>({
   currentRules,
   addedFiles,
   setAddedFiles,
+  skillAddedFiles,
+  setSkillAddedFiles,
+  skillRemovedFileNames,
+  setSkillRemovedFileNames,
+  skillManifest,
+  onChangeSkillDescription,
+  onChangeSkillBody,
 }: Props<T>) => {
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
 
@@ -122,6 +141,19 @@ const TabsContent = <T extends Publication>({
               />
             </ConversationFolderProvider>
           )}
+          {view === ApplicationRoute.SkillPublications && (
+            <SkillFolderProvider>
+              <SkillProperties
+                publication={selectedPublication as SkillPublication}
+                onChange={onChange as (p: SkillPublication) => void}
+                addedFiles={skillAddedFiles}
+                setAddedFiles={setSkillAddedFiles}
+                removedFileNames={skillRemovedFileNames}
+                setRemovedFileNames={setSkillRemovedFileNames}
+                disabled={isReadOnlyAdmin}
+              />
+            </SkillFolderProvider>
+          )}
         </div>
       )}
       {activeTab === EntityViewTab.Parameters && (
@@ -139,6 +171,17 @@ const TabsContent = <T extends Publication>({
           onChangeEntity={onChangeToolset as (toolset: Toolset) => void}
           disabled={isReadOnlyAdmin}
           isAsset
+        />
+      )}
+
+      {activeTab === EntityViewTab.Skill && skillManifest && (
+        <SkillManifestTab
+          name={skillManifest.name}
+          description={skillManifest.description}
+          body={skillManifest.body}
+          onChangeDescription={onChangeSkillDescription}
+          onChangeBody={onChangeSkillBody}
+          disabled={isReadOnlyAdmin}
         />
       )}
 

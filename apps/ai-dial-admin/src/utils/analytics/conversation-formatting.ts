@@ -1,4 +1,9 @@
-import { COST_COMPACT_THRESHOLD, COST_SIGNIFICANT_DIGITS } from '@/src/constants/analytics/conversations-trace';
+import {
+  COST_COMPACT_THRESHOLD,
+  COST_SIGNIFICANT_DIGITS,
+  UNAVAILABLE_VALUE,
+} from '@/src/constants/analytics/conversations-trace';
+import { ConversationScalar } from '@/src/models/analytics/conversations-trace';
 import { toBig, toNumber } from '@/src/utils/analytics/scalar';
 import { formatNumberWithExponent } from '@/src/utils/formatting/number-formatting';
 
@@ -36,7 +41,7 @@ const ZONELESS_ISO = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/;
 // The service returns timestamps as ISO-8601 with a `Z`; epoch millis are accepted too, since the
 // mapping is not fixed by its contract. A *zoneless* ISO string is the trap: `Date.parse` reads it as
 // local time and would shift every cell by the viewer's offset, so it is pinned to UTC first.
-const toMillis = (value: number | string | null): number | null => {
+export const toMillis = (value: number | string | null): number | null => {
   const parsed = toNumber(value);
   if (parsed !== null) {
     return parsed;
@@ -77,6 +82,33 @@ export const formatSignificantCost = (value: number | string | null): string => 
   return `$${stripTrailingZeros(amount.toFixed(decimals))}`;
 };
 
+export const formatDurationMs = (value: number | string | null): string => {
+  const millis = toNumber(value);
+  if (millis === null) {
+    return '';
+  }
+  if (Math.abs(millis) < SECOND_MS) {
+    return `${Math.round(millis)}ms`;
+  }
+
+  return `${stripTrailingZeros((millis / SECOND_MS).toFixed(1))}s`;
+};
+
+export const formatConversationDuration = (value: number | string | null): string => {
+  const millis = toNumber(value);
+  if (millis === null || millis <= 0) {
+    return UNAVAILABLE_VALUE;
+  }
+  if (millis < MINUTE_MS) {
+    return `${stripTrailingZeros((millis / SECOND_MS).toFixed(1))}s`;
+  }
+  if (millis < HOUR_MS) {
+    return `${Math.floor(millis / MINUTE_MS)}m ${Math.round((millis % MINUTE_MS) / SECOND_MS)}s`;
+  }
+
+  return `${Math.floor(millis / HOUR_MS)}h ${Math.round((millis % HOUR_MS) / MINUTE_MS)}m`;
+};
+
 export const formatRelativeTime = (value: number | string | null, nowMs: number): string => {
   const millis = toMillis(value);
   if (millis === null) {
@@ -104,3 +136,16 @@ export const formatConversationSpan = (
 
   return unit ? `${Math.floor(span / unit.limit)}${unit.suffix}` : `${Math.max(Math.round(span / SECOND_MS), 1)} sec`;
 };
+
+// The evaluator writes a conversation's topics as one delimited string, and its own schema asks for "a comma
+// and a single space" — which the model does not reliably produce: real rows carry `capabilities,error`
+// beside `security, code review, validation`. So the separator is the comma alone and the spacing is
+// whatever came back. A term the view does not recognise is returned as stored: the vocabulary belongs to an
+// evaluator that can be re-versioned without this frontend knowing, so normalising would hide real data.
+export const conversationTopics = (raw: ConversationScalar | undefined): string[] =>
+  typeof raw === 'string'
+    ? raw
+        .split(',')
+        .map((topic) => topic.trim())
+        .filter(Boolean)
+    : [];

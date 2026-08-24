@@ -105,6 +105,10 @@ export const getDeleteModalTitle = (
       return t(FileManagerI18nKey.DeleteItemsModalTitle, {
         items: itemsCount > 1 ? t(FileManagerI18nKey.AppRunners) : t(FileManagerI18nKey.AppRunner),
       });
+    case ApplicationRoute.AssetsSkills:
+      return t(FileManagerI18nKey.DeleteItemsModalTitle, {
+        items: itemsCount > 1 ? t(FileManagerI18nKey.Skills) : t(FileManagerI18nKey.Skill),
+      });
   }
 };
 
@@ -169,6 +173,14 @@ export const getDeleteModalDescription = (
       return t(FileManagerI18nKey.DeleteItemsModalDescription, {
         items: (itemsCount > 1 ? t(FileManagerI18nKey.AppRunners) : t(FileManagerI18nKey.AppRunner)).toLowerCase(),
       });
+    case ApplicationRoute.AssetsSkills:
+      return hasFoldersToDelete
+        ? t(FileManagerI18nKey.DeleteItemsAndFoldersModalDescription, {
+            items: t(FileManagerI18nKey.Skills).toLowerCase(),
+          })
+        : t(FileManagerI18nKey.DeleteItemsModalDescription, {
+            items: (itemsCount > 1 ? t(FileManagerI18nKey.Skills) : t(FileManagerI18nKey.Skill)).toLowerCase(),
+          });
   }
 };
 

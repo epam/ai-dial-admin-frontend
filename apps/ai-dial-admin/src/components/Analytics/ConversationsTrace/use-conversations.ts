@@ -1,52 +1,83 @@
 'use client';
 
-import { GridApi, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
+import { ColumnVisibleEvent, GridApi, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
 import { debounce } from 'lodash';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { getConversationTotals, getConversations, getRatedChatIds } from '@/src/app/[lang]/conversations-trace/actions';
+import { getConversations } from '@/src/app/[lang]/conversations-trace/actions';
 import {
   CONVERSATIONS_SEARCH_DEBOUNCE_MS,
   CONVERSATIONS_TIME_PERIOD,
 } from '@/src/constants/analytics/conversations-trace';
+import { CONVERSATIONS_TRACE_COLUMNS } from '@/src/constants/grid-columns/grid-columns';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useTimeFilter } from '@/src/hooks/use-time-filter';
 import { useI18n } from '@/src/locales/client';
 import {
+  ConversationColumnFilter,
   ConversationFilters,
+  ConversationSortKey,
   ConversationRow,
   ConversationSummary,
   ConversationTotals,
+  ConversationsPage,
   FeedbackFilter,
 } from '@/src/models/analytics/conversations-trace';
+import { AnalyticsEntityField } from '@/src/models/analytics/entity';
+import {
+  catalogValueTypes,
+  filterableColumnFields,
+  projectableSchemaFields,
+  sortableColumnFields,
+} from '@/src/utils/analytics/conversation-column-catalog';
+import {
+  ConversationGridFilterModel,
+  ConversationModelScope,
+  translateConversationFilterModel,
+  translateConversationSortModel,
+} from '@/src/utils/analytics/conversation-grid-models';
 import { summariseConversations } from '@/src/utils/analytics/conversation-rows';
 import { getErrorNotification } from '@/src/utils/notification';
 
 const filterKey = ({ search, startMs, endMs, feedback }: ConversationFilters): string =>
   [search, startMs, endMs, feedback].join('|');
 
-interface CandidateIds {
+// The projection is deliberately not part of the key: revealing a source-backed column changes neither the
+// result nor the rows already held, so the loaded set survives it.
+const resultKey = (
+  filters: ConversationFilters,
+  columnFilters: ConversationColumnFilter[],
+  sort: ConversationSortKey[],
+): string => [filterKey(filters), JSON.stringify(columnFilters), JSON.stringify(sort)].join('|');
+
+interface LoadedConversations {
   key: string;
-  // The promise, not the resolved ids: the list query and the totals query both need the candidate set
-  // and run concurrently, so caching the in-flight request is what stops them issuing two of it and
-  // possibly narrowing by two different sets.
-  pending: Promise<string[]>;
+  byId: Map<string, ConversationRow>;
 }
 
-export const useConversations = (initialTotals: ConversationTotals | null, hasInitialLoadError = false) => {
+// The ids the first page of a result resolved, held for the rest of that result's pages. It stays in the
+// browser: the set is resolved under the caller's token, so a server-side cache keyed on the filter state
+// would narrow one caller's result by ids another caller's token selected.
+interface CandidateIds {
+  key: string;
+  ids: string[];
+}
+
+export const useConversations = (schemaFields?: AnalyticsEntityField[] | null) => {
   const t = useI18n();
   const { showNotification } = useNotification();
   const getReqRef = useRef(useProtectedRequest());
 
   const [gridApi, setGridApi] = useState<GridApi<ConversationRow> | null>(null);
 
-  const [hasLoadError, setHasLoadError] = useState(hasInitialLoadError);
-  const [totals, setTotals] = useState<ConversationTotals | null>(initialTotals);
-  const [loadedRows, setLoadedRows] = useState<ConversationRow[]>([]);
+  const [hasLoadError, setHasLoadError] = useState(false);
+  const [totals, setTotals] = useState<ConversationTotals | null>(null);
+  const [loaded, setLoaded] = useState<LoadedConversations>({ key: '', byId: new Map() });
   const [isEmptyResult, setIsEmptyResult] = useState(false);
   const [isFirstPageLoading, setIsFirstPageLoading] = useState(true);
+  const [isFeedbackCapped, setIsFeedbackCapped] = useState(false);
 
   const [search, setSearch] = useState('');
   const [appliedSearch, setAppliedSearch] = useState('');
@@ -68,6 +99,27 @@ export const useConversations = (initialTotals: ConversationTotals | null, hasIn
 
   const key = filterKey(filters);
 
+  const modelScope: ConversationModelScope = useMemo(() => {
+    const columns = CONVERSATIONS_TRACE_COLUMNS(t, schemaFields ?? []);
+    return {
+      sortableFields: sortableColumnFields(columns),
+      filterableFields: filterableColumnFields(columns),
+      valueTypes: catalogValueTypes(schemaFields ?? []),
+      projectableFields: projectableSchemaFields(columns, schemaFields ?? []),
+    };
+  }, [schemaFields, t]);
+
+  // The fields whose columns must be re-fetched when revealed, for the two different reasons a page can lack
+  // one: an enrichment field was never joined, and a heavy field was deliberately left out of the projection.
+  const gatedFields = useMemo(
+    () =>
+      new Set([
+        ...(modelScope.projectableFields?.enrichment ?? []),
+        ...(modelScope.projectableFields?.heavySource ?? []),
+      ]),
+    [modelScope],
+  );
+
   const candidateRef = useRef<CandidateIds | null>(null);
 
   const reportFailure = useCallback(() => {
@@ -75,69 +127,91 @@ export const useConversations = (initialTotals: ConversationTotals | null, hasIn
     setHasLoadError(true);
   }, [showNotification, t]);
 
-  // An active feedback state narrows the list by `in`, so its candidate ids must be resolved before the
-  // first page and then reused for every page of that same result.
-  const resolveCandidates = useCallback(async (): Promise<string[] | null> => {
-    if (filters.feedback === FeedbackFilter.All) {
-      return null;
-    }
-    if (candidateRef.current?.key === key) {
-      return candidateRef.current.pending;
-    }
-
-    const pending = getReqRef.current(getRatedChatIds, filters).then((result) => {
-      if (!result.success) {
-        // Dropped so a later attempt re-issues it rather than replaying the failure forever.
-        candidateRef.current = null;
-        throw new Error('Failed to resolve rated conversations');
-      }
-      return (result.response as { ids: string[] } | undefined)?.ids ?? [];
-    });
-
-    candidateRef.current = { key, pending };
-    return pending;
-  }, [filters, key]);
-
   const datasource: IDatasource = useMemo(
     () => ({
       getRows: async (params: IGetRowsParams) => {
         const { startRow, endRow } = params;
         const isFirstPage = startRow === 0;
+        const sort = translateConversationSortModel(params.sortModel, modelScope);
+        const columnFilters = translateConversationFilterModel(
+          params.filterModel as ConversationGridFilterModel,
+          modelScope,
+        );
+        // A later page reuses the ids the first page of this result resolved; a stale set from a previous
+        // filter state is not sent, because the first page of the new one resolves its own.
+        const chatIds = candidateRef.current?.key === key ? candidateRef.current.ids : undefined;
+        const visibleGatedFields = (gridApi?.getColumnState() ?? [])
+          .filter((column) => !column.hide && gatedFields.has(column.colId))
+          .map((column) => column.colId);
+        const heavySource = new Set(modelScope.projectableFields?.heavySource ?? []);
+        // A revealed heavy field is still a plain column of the table already being read, so it joins the
+        // source projection rather than the enrichment one: it is gated for transfer cost, not for a join.
+        const sourceFields = [
+          ...(modelScope.projectableFields?.cheapSource ?? []),
+          ...visibleGatedFields.filter((colId) => heavySource.has(colId)),
+        ];
+        // The identity column's fields ride along regardless of column state: that column is always on
+        // screen, so its enrichment is not optional the way a revealable column's is.
+        const visibleEnrichmentFields = [
+          ...(modelScope.projectableFields?.requiredEnrichment ?? []),
+          ...visibleGatedFields.filter((colId) => !heavySource.has(colId)),
+        ];
+        const loadedKey = resultKey(filters, columnFilters, sort);
         gridApi?.setGridOption('loading', true);
         if (isFirstPage) {
           setIsFirstPageLoading(true);
         }
 
         try {
-          const chatIds = await resolveCandidates();
           const result = await getReqRef.current(getConversations, {
             ...filters,
+            columnFilters,
+            sort,
+            sourceFields,
+            visibleEnrichmentFields,
             offset: startRow,
             limit: endRow - startRow,
             ...(chatIds ? { chatIds } : {}),
           });
 
+          // Read before the failure check: the rows and the summary are separate queries, so a failed row
+          // query still carries whatever the summary resolved and the figures keep standing.
+          const page = result.response as ConversationsPage | undefined;
+
+          if (isFirstPage) {
+            candidateRef.current = page?.candidates ? { key, ids: page.candidates.ids } : null;
+            setIsFeedbackCapped(Boolean(page?.candidates?.isCapped));
+            // An absent summary means its query failed, which the pills report as unavailable. A later
+            // page carries none and leaves the figures standing.
+            setTotals(page?.totals ?? null);
+          }
+
           if (!result.success) {
             throw new Error('Failed to fetch conversations');
           }
 
-          const page = result.response as { rows: ConversationRow[]; total: number | null } | undefined;
           const rows = page?.rows ?? [];
           const total = page?.total ?? null;
 
           setHasLoadError(false);
-          // A later page appends; the first page of a new filter state replaces what came before.
-          setLoadedRows((previous) => (isFirstPage ? rows : [...previous, ...rows]));
+          setLoaded((previous) => {
+            const byId = previous.key === loadedKey ? new Map(previous.byId) : new Map<string, ConversationRow>();
+            rows.forEach((row) => byId.set(row.chat_id, row));
+            return { key: loadedKey, byId };
+          });
           if (isFirstPage) {
             setIsEmptyResult(rows.length === 0);
           }
 
+          // Without a total the end of the result is unknown until a page comes back short, which is the
+          // signal the grid already terminates on.
           params.successCallback(rows, total ?? (rows.length < endRow - startRow ? startRow + rows.length : undefined));
         } catch {
           reportFailure();
           // A failed later page must not discard the rows already shown, so only the first page clears them.
+          // The figures are settled above from whatever the response carried, so the catch leaves them be.
           if (isFirstPage) {
-            setLoadedRows([]);
+            setLoaded({ key: loadedKey, byId: new Map() });
             setIsEmptyResult(false);
           }
           params.failCallback();
@@ -149,7 +223,7 @@ export const useConversations = (initialTotals: ConversationTotals | null, hasIn
         }
       },
     }),
-    [filters, gridApi, reportFailure, resolveCandidates],
+    [filters, gatedFields, gridApi, key, modelScope, reportFailure],
   );
 
   // A new datasource identity is what makes a filter change restart paging: AG Grid purges its blocks
@@ -157,38 +231,6 @@ export const useConversations = (initialTotals: ConversationTotals | null, hasIn
   useEffect(() => {
     gridApi?.setGridOption('datasource', datasource);
   }, [gridApi, datasource]);
-
-  const totalsRequestRef = useRef(0);
-  const isFirstTotalsRunRef = useRef(true);
-
-  useEffect(() => {
-    // The server component already prefetched the totals for the filters the controls mount with.
-    if (isFirstTotalsRunRef.current) {
-      isFirstTotalsRunRef.current = false;
-      return;
-    }
-
-    const requestId = ++totalsRequestRef.current;
-
-    const load = async () => {
-      try {
-        const chatIds = await resolveCandidates();
-        const result = await getReqRef.current(getConversationTotals, filters, chatIds ?? undefined);
-
-        if (requestId !== totalsRequestRef.current) {
-          return;
-        }
-
-        setTotals(result.success ? ((result.response as ConversationTotals | undefined) ?? null) : null);
-      } catch {
-        if (requestId === totalsRequestRef.current) {
-          setTotals(null);
-        }
-      }
-    };
-
-    load();
-  }, [filters, resolveCandidates]);
 
   const applySearch = useMemo(() => debounce(setAppliedSearch, CONVERSATIONS_SEARCH_DEBOUNCE_MS), []);
 
@@ -204,16 +246,50 @@ export const useConversations = (initialTotals: ConversationTotals | null, hasIn
 
   const onGridReady = useCallback((event: GridReadyEvent) => setGridApi(event.api), []);
 
-  const summary: ConversationSummary = useMemo(() => summariseConversations(loadedRows), [loadedRows]);
+  useEffect(() => {
+    if (!gridApi) {
+      return;
+    }
+
+    const onColumnVisible = (event: ColumnVisibleEvent) => {
+      const colIds = (event.columns ?? []).map((column) => column.getColId()).filter(Boolean);
+
+      if (!event.visible) {
+        // A filter outliving its column keeps narrowing every later page with nothing on screen to explain
+        // it — and on an enrichment field that narrowing is severe, since only the conversations the
+        // evaluation has reached can match. Clearing it re-queries, which is the point: the rows have to
+        // come back.
+        const model = gridApi.getFilterModel();
+        const remaining = Object.fromEntries(Object.entries(model).filter(([colId]) => !colIds.includes(colId)));
+        if (Object.keys(remaining).length !== Object.keys(model).length) {
+          gridApi.setFilterModel(remaining);
+        }
+        return;
+      }
+
+      if (colIds.some((colId) => gatedFields.has(colId))) {
+        gridApi.purgeInfiniteCache();
+      }
+    };
+
+    gridApi.addEventListener('columnVisible', onColumnVisible);
+    return () => gridApi.removeEventListener('columnVisible', onColumnVisible);
+  }, [gatedFields, gridApi]);
+
+  const summary: ConversationSummary = useMemo(
+    () => summariseConversations(Array.from(loaded.byId.values())),
+    [loaded],
+  );
 
   return {
     onGridReady,
     datasource,
     totals,
     summary,
-    loadedCount: loadedRows.length,
+    loadedCount: loaded.byId.size,
     isEmptyResult,
     isFirstPageLoading,
+    isFeedbackCapped,
     hasLoadError,
     search,
     onSearchChange,

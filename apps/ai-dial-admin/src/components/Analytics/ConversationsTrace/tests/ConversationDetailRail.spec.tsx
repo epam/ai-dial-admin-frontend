@@ -1,0 +1,231 @@
+import { render, screen } from '@testing-library/react';
+import { describe, expect, test, vi } from 'vitest';
+
+import ConversationDetailRail from '@/src/components/Analytics/ConversationsTrace/Detail/ConversationDetailRail';
+import {
+  CONVERSATIONS_ENTITY,
+  CONVERSATION_DETAIL_PANELS,
+  FEEDBACK_ENTITY,
+  PROVENANCE_TEXT_CLASS,
+  UNAVAILABLE_VALUE,
+} from '@/src/constants/analytics/conversations-trace';
+import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
+import {
+  ColumnProvenance,
+  PanelProvenance,
+  ConversationDetailRow,
+  ConversationFeedbackRow,
+} from '@/src/models/analytics/conversations-trace';
+
+const CONVERSATION: ConversationDetailRow = {
+  chat_id: 'Lrr0e6L5bpTND3IY_dN0_',
+  project_id: '',
+  user_hash: 'db7327ba3decd351',
+  turn_count: 12,
+  first_request_time: '2026-07-22T11:50:28.506Z',
+  last_request_time: '2026-07-22T12:00:52.157Z',
+  prompt_tokens: 4293420,
+  completion_tokens: 70174,
+  total_tokens: 4363594,
+  total_price: '10.79380012',
+  success_count: 0,
+  duration_ms: 0,
+  avg_duration_ms: 0,
+  deployments: ['anthropic_switchyard-model', 'anthropic.claude-opus-4-8'],
+  traces: ['0a3f1d9c8b7e6a5f', '4c81be02d5aa77e1'],
+};
+
+const FEEDBACK: ConversationFeedbackRow[] = [
+  { response_id: 'chatcmpl-a', rate: 1, request_time: '2026-07-20T19:12:59.268Z' },
+  { response_id: 'chatcmpl-b', rate: 0, request_time: '2026-07-20T19:12:56.486Z' },
+];
+
+const setup = (
+  feedback: ConversationFeedbackRow[] = FEEDBACK,
+  total: number | null = feedback.length,
+  ratings = { rating_up: 2, rating_down: 0 },
+) =>
+  render(
+    <ConversationDetailRail conversation={CONVERSATION} feedback={feedback} feedbackTotal={total} ratings={ratings} />,
+  );
+
+const SOURCE_ENTITIES = [CONVERSATIONS_ENTITY, FEEDBACK_ENTITY];
+
+const SOURCE_LABEL_FOR: Record<PanelProvenance, string> = {
+  [ColumnProvenance.Conversations]: CONVERSATIONS_ENTITY,
+  [ColumnProvenance.Feedback]: FEEDBACK_ENTITY,
+};
+
+describe('ConversationDetailRail', () => {
+  test('renders the usage, metadata and feedback panels', () => {
+    setup();
+
+    for (const key of [
+      ConversationsTraceI18nKey.DetailPanelUsage,
+      ConversationsTraceI18nKey.DetailPanelMetadata,
+      ConversationsTraceI18nKey.DetailPanelFeedback,
+    ]) {
+      expect(screen.getByText(key)).toBeInTheDocument();
+    }
+  });
+
+  // Every panel states the entity it read from, so no group of values on the page is unattributed.
+  test('names the source each panel reads from', () => {
+    setup();
+
+    expect(screen.getAllByText(CONVERSATIONS_ENTITY).length).toBeGreaterThan(0);
+    expect(screen.getByText(FEEDBACK_ENTITY)).toBeInTheDocument();
+  });
+
+  // A panel's source is a catalog identifier, and an identifier names the entity the page queried — never an
+  // enrichment, whose columns the service exposes through the entity it decorates.
+  test('no panel claims an enrichment as its source', () => {
+    for (const { provenance } of CONVERSATION_DETAIL_PANELS) {
+      expect(provenance).not.toBe(ColumnProvenance.Insights);
+      expect(SOURCE_ENTITIES).toContain(SOURCE_LABEL_FOR[provenance]);
+    }
+  });
+
+  test('the usage panel reports real token and cost values', () => {
+    setup();
+
+    expect(screen.getByText(ConversationsTraceI18nKey.DetailTokensIn)).toBeInTheDocument();
+    expect(screen.getByText('4.3 M')).toBeInTheDocument();
+    expect(screen.getByText('70.2 K')).toBeInTheDocument();
+    expect(screen.getByText('$10.8')).toBeInTheDocument();
+  });
+
+  test('the metadata panel states the trace ids the rollup carries', () => {
+    setup();
+
+    const label = screen.getByText(ConversationsTraceI18nKey.DetailTrace);
+
+    expect(label.parentElement).toHaveTextContent('0a3f1d9c8b7e6a5f, 4c81be02d5aa77e1');
+    expect(label.parentElement).not.toHaveTextContent(UNAVAILABLE_VALUE);
+  });
+
+  // The trace array is ordered by id rather than by turn, so numbering the entries would assert a sequence
+  // the rollup does not record — and turn_count, not this array, is the count of record.
+  test('the trace ids carry no turn numbering and no count', () => {
+    setup();
+
+    const row = screen.getByText(ConversationsTraceI18nKey.DetailTrace).parentElement;
+
+    expect(row).not.toHaveTextContent(ConversationsTraceI18nKey.DetailTurn);
+    expect(row?.textContent).not.toMatch(/\b2 trace/i);
+  });
+
+  // DIAL records no region at all, so the field is absent rather than permanently unavailable.
+  test('the metadata panel presents no region field', () => {
+    setup();
+
+    expect(screen.queryByText('ConversationsTrace.DetailRegion')).toBeNull();
+  });
+
+  // success_count counts a turn in which at least one hop succeeded, which is weaker than "the turn
+  // succeeded" — the label has to say which.
+  test('the successful-request field states what it counts', () => {
+    setup();
+
+    expect(screen.getByText(ConversationsTraceI18nKey.DetailSuccessful)).toBeTruthy();
+  });
+
+  // The rollup carries the deployments, so marking the row unavailable would misreport data already fetched.
+  test('the metadata panel states the deployments the rollup carries', () => {
+    setup();
+
+    const label = screen.getByText(ConversationsTraceI18nKey.DetailDeployment);
+
+    expect(label.parentElement).toHaveTextContent('anthropic_switchyard-model, anthropic.claude-opus-4-8');
+    expect(label.parentElement).not.toHaveTextContent(UNAVAILABLE_VALUE);
+  });
+
+  // A conversation that ran took time, so a recorded 0 means the backend never measured it. The grid states
+  // the same thing about the same conversation.
+  test('an unmeasured duration renders as the unavailable marker rather than as a zero', () => {
+    setup();
+
+    const label = screen.getByText(ConversationsTraceI18nKey.DetailDuration);
+
+    expect(label.parentElement).toHaveTextContent(UNAVAILABLE_VALUE);
+  });
+
+  test('a zero success count renders as a number, not as the unavailable marker', () => {
+    setup();
+
+    const label = screen.getByText(ConversationsTraceI18nKey.DetailSuccessful);
+    expect(label.parentElement).toHaveTextContent('0');
+    expect(label.parentElement).not.toHaveTextContent(UNAVAILABLE_VALUE);
+  });
+
+  test('an empty project renders its own empty presentation, not the marker', () => {
+    setup();
+
+    const label = screen.getByText(ConversationsTraceI18nKey.Project);
+    expect(label.parentElement).toHaveTextContent(ConversationsTraceI18nKey.DetailEmptyValue);
+    expect(label.parentElement).not.toHaveTextContent(UNAVAILABLE_VALUE);
+  });
+
+  test('lists each rating with its direction, and marks turn and comment unavailable', () => {
+    setup();
+
+    expect(screen.getByText(ConversationsTraceI18nKey.DetailRatingPositive)).toBeInTheDocument();
+    expect(screen.getByText(ConversationsTraceI18nKey.DetailRatingNegative)).toBeInTheDocument();
+    expect(screen.getAllByText(ConversationsTraceI18nKey.DetailTurn, { exact: false })).toHaveLength(2);
+    expect(screen.getAllByText(ConversationsTraceI18nKey.DetailComment, { exact: false })).toHaveLength(2);
+  });
+
+  test('an unrated conversation states so rather than rendering an empty list', () => {
+    setup([], 0);
+
+    expect(screen.getByText(ConversationsTraceI18nKey.DetailNoRatings)).toBeInTheDocument();
+  });
+
+  test('a truncated rating list declares itself partial', () => {
+    setup(FEEDBACK, 6);
+
+    expect(screen.getByText(ConversationsTraceI18nKey.DetailFeedbackPartial)).toBeInTheDocument();
+  });
+
+  test('a complete rating list makes no partial claim', () => {
+    setup(FEEDBACK, 2);
+
+    expect(screen.queryByText(ConversationsTraceI18nKey.DetailFeedbackPartial)).not.toBeInTheDocument();
+  });
+
+  // Both duration figures are wrong, in different ways: the sum double-counts nested hops, and the average is
+  // per hop rather than per turn. The grid's Duration column used to carry the first caveat and no longer
+  // exists, so this panel is the only surface stating either.
+  test('each duration figure carries its own caveat', () => {
+    setup();
+
+    expect(screen.getByRole('button', { name: ConversationsTraceI18nKey.DurationHint })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: ConversationsTraceI18nKey.AvgDurationHint })).toBeInTheDocument();
+  });
+
+  // A `<dt>` takes no focus, so a caveat attached to the label by hover alone never reaches a keyboard.
+  test('a caveat is reachable by keyboard', async () => {
+    setup();
+
+    const hint = screen.getByRole('button', { name: ConversationsTraceI18nKey.DurationHint });
+    hint.focus();
+
+    expect(hint).toHaveFocus();
+  });
+
+  test('a figure with nothing to qualify carries no caveat', () => {
+    setup();
+
+    expect(screen.queryByRole('button', { name: ConversationsTraceI18nKey.DetailTotalTokens })).toBeNull();
+  });
+
+  // Every origin the view can render needs a colour, so a newly added source cannot render unstyled.
+  test('every provenance maps to a colour', () => {
+    for (const provenance of Object.values(ColumnProvenance)) {
+      expect(PROVENANCE_TEXT_CLASS[provenance]).toBeTruthy();
+    }
+    for (const { provenance } of CONVERSATION_DETAIL_PANELS) {
+      expect(PROVENANCE_TEXT_CLASS[provenance]).toBeTruthy();
+    }
+  });
+});

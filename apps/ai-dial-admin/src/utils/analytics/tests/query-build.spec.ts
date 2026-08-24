@@ -14,12 +14,14 @@ import {
   aggregateQuery,
   and,
   col,
+  eq,
   field,
   fn,
   gt,
   ico,
   inValues,
   isNotNull,
+  isNull,
   le,
   ne,
   offsetPage,
@@ -94,6 +96,7 @@ describe('analytics query-build :: expressions', () => {
 
 describe('analytics query-build :: predicates', () => {
   test.each([
+    ['eq', eq, QueryOperator.Eq],
     ['gt', gt, QueryOperator.Gt],
     ['le', le, QueryOperator.Le],
     ['ne', ne, QueryOperator.Ne],
@@ -157,6 +160,26 @@ describe('analytics query-build :: predicates', () => {
         { type: QueryExprType.Value, value_type: QueryValueType.Null, value: null },
       ],
     });
+  });
+
+  test('isNull is an eq against a typed null literal', () => {
+    expect(isNull('core_parent_span_id')).toEqual({
+      op: QueryOperator.Eq,
+      args: [
+        { type: QueryExprType.Field, name: 'core_parent_span_id' },
+        { type: QueryExprType.Value, value_type: QueryValueType.Null, value: null },
+      ],
+    });
+  });
+
+  // The two are not interchangeable: an unset identifier column is null, never '', so an empty-string
+  // comparison silently matches no rows and reads as a conversation with no entry hops.
+  test('isNull is not an empty-string comparison', () => {
+    const nullArg = isNull('core_parent_span_id').args[1] as QueryValueExpr;
+
+    expect(nullArg.value_type).toBe(QueryValueType.Null);
+    expect(nullArg.value).toBeNull();
+    expect(nullArg.value).not.toBe('');
   });
 
   test('inValues builds an array expression of typed literals', () => {

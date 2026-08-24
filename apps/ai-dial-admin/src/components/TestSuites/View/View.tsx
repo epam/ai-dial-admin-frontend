@@ -253,6 +253,7 @@ const TestSuiteView: FC<Props> = ({ originalTestSuite, etag }) => {
               dataset={dataset}
               onChangeDataset={onChangeDataset}
               suiteEtag={etag}
+              onStartRun={onStartRunTestSuite}
             />
           )}
         </div>

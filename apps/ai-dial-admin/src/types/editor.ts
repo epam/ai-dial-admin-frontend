@@ -8,6 +8,10 @@ export interface JSONEditorErrorNotification extends JSONEditorError {
   id: string;
 }
 
+export interface JsonEditorOwnedError extends JSONEditorError {
+  editorId: string;
+}
+
 export enum EDITOR_THEMES {
   dark = 'dark',
   light = 'light',

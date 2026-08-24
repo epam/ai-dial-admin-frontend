@@ -1,9 +1,16 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { assetApi, filesCoreApi, publicationsApi } from '@/src/app/api/api';
+import { assetApi, filesCoreApi, publicationsApi, skillsCoreApi } from '@/src/app/api/api';
 import { ResourceType } from '@/src/types/resource-type';
 import { TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
-import { changeFolderCore, getFoldersCore, getRulesCore, removeFolderCore, updateRulesCore } from '../folders-core';
+import {
+  changeFolderCore,
+  getFoldersCore,
+  getRulesCore,
+  removeFolderCore,
+  removeSkillFolderCore,
+  updateRulesCore,
+} from '../folders-core';
 
 vi.mock('@/src/app/api/api');
 
@@ -298,5 +305,71 @@ describe('Server :: Folders :: folders-core :: changeFolderCore', () => {
 
     expect(assetApi.move).not.toHaveBeenCalled();
     expect(result.success).toBe(false);
+  });
+});
+
+describe('Server :: Folders :: folders-core :: removeSkillFolderCore', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test('deletes every skill, then every nested folder marker deepest-first, then the target folder, all unconditionally', async () => {
+    (skillsCoreApi.listSkillMetadata as any).mockImplementation((_t: unknown, path: string) => {
+      if (path === 'public/target/') {
+        return Promise.resolve({
+          items: [
+            { url: 'skills/public/target/a', nodeType: 'ITEM' },
+            { url: 'skills/public/target/sub', nodeType: 'FOLDER' },
+          ],
+        });
+      }
+      if (path === 'public/target/sub/') {
+        return Promise.resolve({ items: [{ url: 'skills/public/target/sub/b', nodeType: 'ITEM' }] });
+      }
+      return Promise.resolve({ items: [] });
+    });
+    (skillsCoreApi.deleteSkill as any).mockResolvedValue({ success: true });
+    (skillsCoreApi.deleteSkillFolder as any).mockResolvedValue({ success: true });
+
+    const result = await removeSkillFolderCore(TOKEN_MOCK, 'public/target/');
+
+    expect(skillsCoreApi.deleteSkill).toHaveBeenCalledWith(TOKEN_MOCK, 'public/target/a', '*');
+    expect(skillsCoreApi.deleteSkill).toHaveBeenCalledWith(TOKEN_MOCK, 'public/target/sub/b', '*');
+    const folderCallPaths = (skillsCoreApi.deleteSkillFolder as any).mock.calls.map((call: unknown[]) => call[1]);
+    // The nested folder keeps the trailing slash `toSkillList` now gives every folder row (matching
+    // every other asset type's folder-path convention); `deleteSkillFolder` itself normalizes before
+    // building the route, so this doesn't produce a `//` against Core.
+    expect(folderCallPaths).toEqual(['public/target/sub/', 'public/target']);
+    expect((skillsCoreApi.deleteSkillFolder as any).mock.calls[0][2]).toBe('*');
+    expect(result.success).toBe(true);
+  });
+
+  test('stops at the first failed delete without attempting further deletes', async () => {
+    (skillsCoreApi.listSkillMetadata as any).mockResolvedValue({
+      items: [
+        { url: 'skills/public/target/a', nodeType: 'ITEM' },
+        { url: 'skills/public/target/b', nodeType: 'ITEM' },
+      ],
+    });
+    (skillsCoreApi.deleteSkill as any)
+      .mockResolvedValueOnce({ success: false, errorMessage: 'boom' })
+      .mockResolvedValueOnce({ success: true });
+
+    const result = await removeSkillFolderCore(TOKEN_MOCK, 'public/target/');
+
+    expect(skillsCoreApi.deleteSkill).toHaveBeenCalledTimes(1);
+    expect(skillsCoreApi.deleteSkillFolder).not.toHaveBeenCalled();
+    expect(result.success).toBe(false);
+  });
+
+  test('deletes just the target folder when it has no children', async () => {
+    (skillsCoreApi.listSkillMetadata as any).mockResolvedValue({ items: [] });
+    (skillsCoreApi.deleteSkillFolder as any).mockResolvedValue({ success: true });
+
+    const result = await removeSkillFolderCore(TOKEN_MOCK, 'public/empty/');
+
+    expect(skillsCoreApi.deleteSkill).not.toHaveBeenCalled();
+    expect(skillsCoreApi.deleteSkillFolder).toHaveBeenCalledWith(TOKEN_MOCK, 'public/empty', '*');
+    expect(result.success).toBe(true);
   });
 });

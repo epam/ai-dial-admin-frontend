@@ -1,5 +1,7 @@
 import { ColDef, IRowNode } from 'ag-grid-community';
 
+import { toColumnLeaves } from '@/src/components/Grid/utils';
+
 export const baseColumnComparator = (
   a: string | number | undefined,
   b: string | number | undefined,
@@ -31,4 +33,15 @@ export const checkColDefsChanges = (cols: ColDef[], initialCols: ColDef[]) => {
     }
     return !!col.hide !== !!initialCols[index].hide;
   });
+};
+
+export const checkGroupedColDefsChanges = (cols: ColDef[], initialCols: ColDef[]): boolean => {
+  const current = toColumnLeaves(cols);
+  const initial = toColumnLeaves(initialCols);
+
+  if (current.length !== initial.length) {
+    return true;
+  }
+
+  return current.some((leaf, index) => leaf.field !== initial[index].field || !!leaf.hide !== !!initial[index].hide);
 };

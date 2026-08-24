@@ -1,8 +1,11 @@
 import { FC, useMemo } from 'react';
 
+import { getApplicationContainers } from '@/src/app/actions/deployments';
+import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
 import IconControl from '@/src/components/BaseControls/Icon';
 import InterfacesField from '@/src/components/BaseControls/InterfacesField/InterfacesField';
 import MaxRetryAttempts from '@/src/components/BaseControls/MaxRetryAttempts';
+import OverrideNameControl from '@/src/components/BaseControls/OverrideName';
 import TopicsControl from '@/src/components/BaseControls/Topics';
 import Defaults from '@/src/components/Defaults/Defaults';
 import EntityAttachments from '@/src/components/EntityMainProperties/EntityAttachments/EntityAttachments';
@@ -11,8 +14,6 @@ import DeploymentProperties from '@/src/components/EntityMainProperties/Properti
 import SourceField from '@/src/components/SourceField/SourceField';
 import { APPLICATION_SOURCE_ITEMS } from '@/src/components/SourceField/constants';
 import { SOURCE_TYPE } from '@/src/components/SourceField/types';
-import { getApplicationContainers } from '@/src/app/actions/deployments';
-import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
 import { APPLICATION_INTERFACE_TYPES } from '@/src/constants/deployment-interfaces';
 import { EntitiesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
@@ -73,6 +74,7 @@ const EntityProperties: FC<Props> = ({ runners, view, ...props }) => {
         onChangeEntity={props.onChangeEntity as (entity: DialApplication) => void}
         allowedTypes={APPLICATION_INTERFACE_TYPES}
       />
+      <OverrideNameControl entity={props.entity as any} onChangeEntity={props.onChangeEntity} />
       <EntityAttachments {...props} />
       <Defaults
         values={application.defaults}

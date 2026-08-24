@@ -2,6 +2,7 @@ export enum DeploymentInterfaceType {
   OpenAIChatCompletions = 'openaiChatCompletions',
   OpenAIResponses = 'openaiResponses',
   AnthropicMessages = 'anthropicMessages',
+  OpenAIEmbeddings = 'openaiEmbeddings',
 }
 
 export interface DialDeploymentInterface {

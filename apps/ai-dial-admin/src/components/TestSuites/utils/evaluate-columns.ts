@@ -22,7 +22,14 @@ export const evaluateColumns = async (
 
       try {
         const expr = jsonata(column.expression);
-        const evaluated = await expr.evaluate(response, { request, response });
+        // Backend/eval column expressions use $_request / $_response; FE docs/examples use $request / $response.
+        const bindings = {
+          request,
+          response,
+          _request: request,
+          _response: response,
+        };
+        const evaluated = await expr.evaluate(response, bindings);
         valid = evaluated != null;
         if (!valid) {
           result = '';

@@ -74,6 +74,26 @@ describe('panel-columns', () => {
     expect(executionLeaves.every((leaf) => leaf.hide === true)).toBe(true);
   });
 
+  test('buildComparePanelColumnTree exposes Request and Turn as execution field groups', () => {
+    const panelTree = buildComparePanelColumnTree(getFlatDefs(), runNames);
+    const executionGroup = panelTree.find((col) => col.headerName === EXECUTION_GROUP_HEADER) as ColDef;
+    const fieldGroups = getChildren(executionGroup);
+
+    expect(fieldGroups.map((group) => group.headerName)).toEqual([
+      '# Run number',
+      'Request',
+      'Turn',
+      'HTTP',
+      'Duration',
+    ]);
+
+    const requestLeaves = getChildren(fieldGroups[1]);
+    const turnLeaves = getChildren(fieldGroups[2]);
+
+    expect(requestLeaves.map(getColId)).toEqual(['requestIndex', 'cmp_requestIndex']);
+    expect(turnLeaves.map(getColId)).toEqual(['turnIndex', 'cmp_turnIndex']);
+  });
+
   test('buildComparePanelColumnTree nests execution status and metric groups', () => {
     const panelTree = buildComparePanelColumnTree(getFlatDefs(), runNames);
     const statusGroup = panelTree[0] as ColDef;
@@ -113,9 +133,7 @@ describe('panel-columns', () => {
         return collectColIds(children);
       });
 
-    expect(collectColIds(flattened)).toEqual(
-      collectColIds(flatDefs.filter((col) => getColId(col) !== 'compare_action')),
-    );
+    expect(collectColIds(flattened)).toEqual(collectColIds(flatDefs));
   });
 
   test('preservePanelHideState copies hide flags by colId', () => {
@@ -155,7 +173,18 @@ describe('panel-columns', () => {
         return {
           ...col,
           children: children.map((child) =>
-            ['runIndex', 'cmp_runIndex', 'http', 'cmp_http', 'duration', 'cmp_duration'].includes(getColId(child) ?? '')
+            [
+              'runIndex',
+              'cmp_runIndex',
+              'requestIndex',
+              'cmp_requestIndex',
+              'turnIndex',
+              'cmp_turnIndex',
+              'http',
+              'cmp_http',
+              'duration',
+              'cmp_duration',
+            ].includes(getColId(child) ?? '')
               ? { ...child, hide: false }
               : child,
           ),

@@ -5,7 +5,7 @@
 
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
-import { ReactNode } from 'react';
+import { ReactNode, useId } from 'react';
 import { afterEach, vi } from 'vitest';
 import createFetchMock from 'vitest-fetch-mock';
 
@@ -35,7 +35,7 @@ vi.mock('next/navigation', () => ({ useRouter: vi.fn(), usePathname: vi.fn() }))
 const createFnContext = () => vi.fn();
 
 vi.mock('@/src/context/NotificationContext', () => ({
-  useNotification: () => ({ showNotification: vi.fn() }),
+  useNotification: () => ({ showNotification: vi.fn(), removeNotification: vi.fn() }),
 }));
 
 vi.mock('@/src/context/assets/FileFolderContext', () => ({
@@ -61,6 +61,11 @@ vi.mock('@/src/context/assets/ToolsetsFolderContext', () => ({
 vi.mock('@/src/context/assets/AppRunnersFolderContext', () => ({
   useAppRunnersFolder: () => ({ fetchFiles: vi.fn() }),
   AppRunnersFolderProvider: ({ children }: any) => <div>{children}</div>,
+}));
+
+vi.mock('@/src/context/assets/SkillFolderContext', () => ({
+  useSkillFolder: () => ({ fetchFiles: vi.fn() }),
+  SkillFolderProvider: ({ children }: any) => <div>{children}</div>,
 }));
 
 vi.mock('@/src/context/ThemeContext', () => ({ useTheme: createFnContext }));
@@ -92,10 +97,23 @@ vi.mock('@/src/context/SaveValidationContext', () => {
     useSaveValidationContext: () => ({
       isValid: true,
       dispatch,
+      jsonErrors: [],
+      jsonErrorNotifications: [],
     }),
+    useJsonEditorValidation: () => {
+      const editorId = useId();
+      return {
+        editorId,
+        setJsonErrors: (errors: unknown[]) => dispatch({ type: 'SET_JSON_EDITOR_VALIDATION', editorId, errors }),
+        removeEditor: () => dispatch({ type: 'REMOVE_JSON_EDITOR_VALIDATION', editorId }),
+      };
+    },
     ValidationActionType: {
       SetField: 'SET_FIELD_VALIDATION',
       RemoveField: 'REMOVE_FIELD_VALIDATION',
+      SetJsonEditor: 'SET_JSON_EDITOR_VALIDATION',
+      RemoveJsonEditor: 'REMOVE_JSON_EDITOR_VALIDATION',
+      SetJsonEditorNotifications: 'SET_JSON_EDITOR_NOTIFICATIONS',
       Reset: 'RESET',
     },
   };

@@ -8,9 +8,10 @@ import {
   SortDir,
   ValueType,
 } from '@/src/models/evaluation/structured-query';
-import { AVG_DURATION_ALIAS, COUNT_ALIAS, EXECUTION_STATUS_FIELD } from '../constants';
+import { AVG_DURATION_ALIAS, AVG_METRIC_EVAL_DURATION_ALIAS, COUNT_ALIAS, EXECUTION_STATUS_FIELD } from '../constants';
 import { MetricScoresData } from '../models';
 import {
+  buildAvgMetricEvalDurationQuery,
   attachMetricInfo,
   buildAvgRunTimeQuery,
   buildDistributionQuery,
@@ -97,6 +98,53 @@ describe('Runs Summary :: query builders', () => {
     ]);
     expect(query.group_by).toBeUndefined();
   });
+
+  test('buildAvgMetricEvalDurationQuery averages metric_eval_duration_ms within the run', () => {
+    const query = buildAvgMetricEvalDurationQuery('run-1');
+
+    expect(query.select).toEqual([
+      {
+        expr: { type: ExprType.Fn, name: 'avg', args: [{ type: ExprType.Field, name: 'metric_eval_duration_ms' }] },
+        as: AVG_METRIC_EVAL_DURATION_ALIAS,
+      },
+    ]);
+    expect(query.group_by).toBeUndefined();
+  });
+
+  test('buildAvgMetricEvalDurationQuery ANDs a NOT IN exclusion when unmatched ids are provided', () => {
+    const query = buildAvgMetricEvalDurationQuery('run-1', ['id-1', 'id-2']);
+
+    expect(query.filter).toEqual({
+      op: LogicalOp.And,
+      args: [
+        {
+          op: ComparisonOp.Eq,
+          args: [
+            { type: ExprType.Field, name: 'test_suite_run_id' },
+            { type: ExprType.Value, value_type: ValueType.Uuid, value: 'run-1' },
+          ],
+        },
+        {
+          op: LogicalOp.Not,
+          args: [
+            {
+              op: ComparisonOp.In,
+              args: [
+                { type: ExprType.Field, name: 'id' },
+                {
+                  type: ExprType.Array,
+                  items: [
+                    { type: ExprType.Value, value_type: ValueType.Uuid, value: 'id-1' },
+                    { type: ExprType.Value, value_type: ValueType.Uuid, value: 'id-2' },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+  });
 });
 
 describe('Runs Summary :: metric options', () => {
@@ -124,17 +172,27 @@ describe('Runs Summary :: metric options', () => {
 
     expect(options).toEqual([
       {
-        name: 'DeepEval: Answer Relevancy.score',
-        field: 'metric::DeepEval: Answer Relevancy::score',
-        computationId: 'comp-1',
-      },
-      {
         name: 'DeepEval: Answer Relevancy.reason',
         field: 'metric::DeepEval: Answer Relevancy::reason',
         computationId: 'comp-1',
       },
+      {
+        name: 'DeepEval: Answer Relevancy.score',
+        field: 'metric::DeepEval: Answer Relevancy::score',
+        computationId: 'comp-1',
+      },
       { name: 'Exact Match.exact_match', field: 'metric::Exact Match::exact_match', computationId: 'comp-1' },
     ]);
+  });
+
+  test('toMetricOptions sorts options alphabetically by name', () => {
+    const options = toMetricOptions([
+      { tsmdName: 'zebra', computationId: 'comp-1', outputSchema: { properties: { score: {} } } },
+      { tsmdName: 'alpha', computationId: 'comp-1', outputSchema: { properties: { score: {} } } },
+      { tsmdName: 'middle', computationId: 'comp-1', outputSchema: { properties: { score: {} } } },
+    ] as any);
+
+    expect(options.map((option) => option.name)).toEqual(['alpha.score', 'middle.score', 'zebra.score']);
   });
 
   test('toMetricOptions handles null', () => {
@@ -306,6 +364,36 @@ describe('Runs Summary :: metric scores', () => {
     });
   });
 
+  test('parseMetricScores sorts metric groups alphabetically regardless of row order', () => {
+    const parsed = parseMetricScores({
+      rows: [
+        { metric_name: 'ragas.faithfulness.score', metric_score_name: 'AVG', value: 0.5 },
+        { metric_name: 'aidial_rag_eval.generation.context_to_answer', metric_score_name: 'AVG', value: 0.8 },
+        { metric_name: 'deepeval.answer_relevancy.score', metric_score_name: 'AVG', value: 0.7 },
+      ],
+    });
+
+    expect(parsed.byStatistic.AVG.map((group) => group.name)).toEqual([
+      'aidial_rag_eval.generation',
+      'deepeval.answer_relevancy',
+      'ragas.faithfulness',
+    ]);
+  });
+
+  test('parseMetricScores orders statistics by Metric Scores segmented-control order', () => {
+    const parsed = parseMetricScores({
+      rows: [
+        { metric_name: 'm.a', metric_score_name: 'MAX', value: 0.9 },
+        { metric_name: 'm.a', metric_score_name: 'MIN', value: 0.1 },
+        { metric_name: 'm.a', metric_score_name: 'MED', value: 0.5 },
+        { metric_name: 'm.a', metric_score_name: 'P90', value: 0.8 },
+        { metric_name: 'm.a', metric_score_name: 'AVG', value: 0.55 },
+      ],
+    });
+
+    expect(parsed.statistics).toEqual(['AVG', 'P90', 'MAX', 'MED', 'MIN']);
+  });
+
   test('parseMetricScores extracts overall score and excludes it from statistics', () => {
     const parsed = parseMetricScores({
       rows: [
@@ -461,6 +549,12 @@ describe('Runs Summary :: result parsers', () => {
     expect(parseAvgRunTimeMs({ rows: [{ [AVG_DURATION_ALIAS]: null }] })).toBeNull();
     expect(parseAvgRunTimeMs({ rows: [] })).toBeNull();
     expect(parseAvgRunTimeMs(null)).toBeNull();
+  });
+
+  test('parseAvgRunTimeMs supports reading a non-default alias', () => {
+    expect(
+      parseAvgRunTimeMs({ rows: [{ [AVG_METRIC_EVAL_DURATION_ALIAS]: 291123.6 }] }, AVG_METRIC_EVAL_DURATION_ALIAS),
+    ).toBe(291124);
   });
 
   test('formatAvgRunTimeSeconds rounds ms to one decimal second', () => {

@@ -52,6 +52,15 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
       },
     ],
   },
+  [ApplicationRoute.AssetsSkills]: {
+    segments: [
+      { name: 'AssetsSkills', i18nKey: MenuI18nKey.Skills, shouldEnrichWithFolderBreadcrumbs: true },
+      {
+        name: 'Id',
+        href: false,
+      },
+    ],
+  },
   [ApplicationRoute.AssetsModels]: {
     segments: [
       { name: 'AssetsModels', i18nKey: MenuI18nKey.Models },
@@ -133,6 +142,15 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
       },
     ],
   },
+  [ApplicationRoute.SkillPublications]: {
+    segments: [
+      { name: 'SkillPublications', i18nKey: MenuI18nKey.SkillPublications },
+      {
+        name: 'Id',
+        href: false,
+      },
+    ],
+  },
   [ApplicationRoute.Routes]: auditSubIdBreadcrumb('Routes', MenuI18nKey.Routes),
   [ApplicationRoute.Toolsets]: auditSubIdBreadcrumb('Toolsets', MenuI18nKey.Toolsets),
   [ApplicationRoute.Dashboard]: {
@@ -181,6 +199,15 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
       {
         name: 'Datasets',
         i18nKey: MenuI18nKey.Datasets,
+      },
+      { name: 'Id', href: false },
+    ],
+  },
+  [ApplicationRoute.AnalyticsQueries]: {
+    segments: [
+      {
+        name: 'Queries',
+        i18nKey: MenuI18nKey.Queries,
       },
       { name: 'Id', href: false },
     ],

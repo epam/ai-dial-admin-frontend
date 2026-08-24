@@ -1,5 +1,6 @@
 import { JSONSchema7 } from 'json-schema';
 
+import { sortMetricStatistics } from '@/src/components/Common/MetricStatistics/utils';
 import { Metric, MetricSnapshot } from '@/src/models/evaluation/metric';
 import { ExtractionResultStatus } from '@/src/models/evaluation/run';
 import { MetricScoreValue } from '@/src/models/evaluation/run-comparison';
@@ -18,6 +19,7 @@ import {
   sortItem,
 } from '@/src/utils/structured-query/build';
 import {
+  AVG_METRIC_EVAL_DURATION_ALIAS,
   AVG_DURATION_ALIAS,
   COMPUTATION_ID_FIELD,
   COUNT_ALIAS,
@@ -29,6 +31,7 @@ import {
   EXEC_DURATION_MS_FIELD,
   EXECUTION_STATUS_FIELD,
   LATEST_COMPUTATION,
+  METRIC_EVAL_DURATION_MS_FIELD,
   METRIC_FIELD_PREFIX,
   METRIC_FIELD_SEPARATOR,
   METRIC_NAME_FIELD,
@@ -78,6 +81,29 @@ export const buildAvgRunTimeQuery = (runId: string): StructuredQuery =>
     filter: eq(RUN_ID_FIELD, ValueType.Uuid, runId),
     select: [col(fn('avg', [field(EXEC_DURATION_MS_FIELD)]), AVG_DURATION_ALIAS)],
   });
+
+/**
+ * Query: average metric-evaluation duration (ms) across a run's test-case eval summaries.
+ * Rows shape: `[{ avg_metric_eval_duration_ms: number }]`.
+ * When `excludeEvalSummaryIds` is non-empty, those rows are excluded so the average describes the
+ * matched-only population used in run comparison.
+ */
+export const buildAvgMetricEvalDurationQuery = (
+  runId: string,
+  excludeEvalSummaryIds: string[] = [],
+): StructuredQuery => {
+  const runFilter = eq(RUN_ID_FIELD, ValueType.Uuid, runId);
+  const filter =
+    excludeEvalSummaryIds.length > 0
+      ? and([runFilter, not(inValues(EVAL_SUMMARY_ID_FIELD, ValueType.Uuid, excludeEvalSummaryIds))])
+      : runFilter;
+
+  return aggregateQuery({
+    entity: EVAL_SUMMARIES_ENTITY,
+    filter,
+    select: [col(fn('avg', [field(METRIC_EVAL_DURATION_MS_FIELD)]), AVG_METRIC_EVAL_DURATION_ALIAS)],
+  });
+};
 
 /** Builds the flattened metric field path, e.g. `metric::Ragas Answer Relevancy::score`. */
 export const getMetricFieldPath = (metricName: string, outputField: string): string =>
@@ -146,6 +172,7 @@ export const attachMetricInfo = (data: MetricScoresData, infoByName: Record<stri
  * Expands run metric snapshots into selectable Distribution options — one per metric output field.
  * `name` is the UI label (`<metric>.<field>`, e.g. `DeepEval: Answer Relevancy.score`); `field` is the
  * request path (`metric::<metric>::<field>`). Snapshots without a name/computation are skipped.
+ * Options are sorted A–Z by `name` to match Metric Scores order.
  */
 export const toMetricOptions = (snapshots: MetricSnapshot[] | null): MetricOption[] => {
   const options: MetricOption[] = [];
@@ -162,6 +189,8 @@ export const toMetricOptions = (snapshots: MetricSnapshot[] | null): MetricOptio
       });
     }
   }
+
+  options.sort((a, b) => a.name.localeCompare(b.name));
 
   return options;
 };
@@ -200,7 +229,9 @@ export const splitMetricName = (metricName: string): { group: string; bar: strin
  * Folds `metric_score_results` rows into bar groups per statistic. For each statistic
  * (`metric_score_name`, e.g. AVG), metrics are grouped by their name prefix (before the last `.`),
  * and each leaf metric name becomes a bar with its value. Also collects the distinct statistic
- * names (first-seen order) that drive the statistic SegmentedControl.
+ * names (canonical Metric Scores control order) that drive the statistic SegmentedControl.
+ * Metric groups within each statistic are sorted alphabetically so order is stable across
+ * full-run and matched-only data sources.
  */
 export const parseMetricScores = (result: StructuredQueryResult | null): MetricScoresData => {
   const statistics: string[] = [];
@@ -237,7 +268,14 @@ export const parseMetricScores = (result: StructuredQueryResult | null): MetricS
     group.bars[barName] = Math.round(value * 1000) / 1000;
   }
 
-  return { overallScore, statistics, byStatistic };
+  const sortedByStatistic: Record<string, MetricScoreGroup[]> = {};
+  for (const [statistic, groups] of Object.entries(byStatistic)) {
+    sortedByStatistic[statistic] = [...groups].sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
+    );
+  }
+
+  return { overallScore, statistics: sortMetricStatistics(statistics), byStatistic: sortedByStatistic };
 };
 
 /**
@@ -349,9 +387,12 @@ export const parseTestCaseStatusCounts = (result: StructuredQueryResult | null):
   return counts;
 };
 
-/** Reads the single average-duration value, rounded to a whole millisecond, or null when absent. */
-export const parseAvgRunTimeMs = (result: StructuredQueryResult | null): number | null => {
-  const raw = result?.rows?.[0]?.[AVG_DURATION_ALIAS];
+/** Reads the single average-duration value for the provided alias, rounded to a whole ms, or null when absent. */
+export const parseAvgRunTimeMs = (
+  result: StructuredQueryResult | null,
+  alias: string = AVG_DURATION_ALIAS,
+): number | null => {
+  const raw = result?.rows?.[0]?.[alias];
   if (raw == null) {
     return null;
   }

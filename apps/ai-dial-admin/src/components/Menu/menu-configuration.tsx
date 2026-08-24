@@ -26,6 +26,7 @@ export interface MenuGroupConfiguration {
 export interface MenuItem {
   key: MenuI18nKey;
   href: string;
+  isPreview?: boolean;
 }
 
 export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags): MenuGroupConfiguration[] => {
@@ -79,12 +80,14 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
       icon: <IconFolders width={iconSize} height={iconSize} />,
       items: [
         {
-          key: MenuI18nKey.Models,
+          key: MenuI18nKey.AssetsModels,
           href: ApplicationRoute.AssetsModels,
+          isPreview: true,
         },
         {
           key: MenuI18nKey.AppRunners,
           href: ApplicationRoute.AssetsAppRunners,
+          isPreview: true,
         },
         {
           key: MenuI18nKey.Applications,
@@ -105,6 +108,10 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
         {
           key: MenuI18nKey.Files,
           href: ApplicationRoute.Files,
+        },
+        {
+          key: MenuI18nKey.Skills,
+          href: ApplicationRoute.AssetsSkills,
         },
       ],
     },
@@ -171,12 +178,16 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
           href: ApplicationRoute.PromptPublications,
         },
         {
+          key: MenuI18nKey.ConversationPublications,
+          href: ApplicationRoute.ConversationPublications,
+        },
+        {
           key: MenuI18nKey.FilePublications,
           href: ApplicationRoute.FilePublications,
         },
         {
-          key: MenuI18nKey.ConversationPublications,
-          href: ApplicationRoute.ConversationPublications,
+          key: MenuI18nKey.SkillPublications,
+          href: ApplicationRoute.SkillPublications,
         },
       ],
     },
@@ -185,8 +196,8 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
       descriptionKey: MenuI18nKey.EvaluationDescription,
       icon: <IconFlask width={iconSize} height={iconSize} />,
       items: [
-        { key: MenuI18nKey.TestSuites, href: ApplicationRoute.TestSuites },
         { key: MenuI18nKey.Datasets, href: ApplicationRoute.Datasets },
+        { key: MenuI18nKey.TestSuites, href: ApplicationRoute.TestSuites },
         { key: MenuI18nKey.Runs, href: ApplicationRoute.Runs },
       ],
     },
@@ -220,8 +231,8 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
           href: ApplicationRoute.AnalyticsTables,
         },
         {
-          key: MenuI18nKey.QueryBuilder,
-          href: ApplicationRoute.AnalyticsQueryBuilder,
+          key: MenuI18nKey.Queries,
+          href: ApplicationRoute.AnalyticsQueries,
         },
         {
           key: MenuI18nKey.AnalyticsConversations,

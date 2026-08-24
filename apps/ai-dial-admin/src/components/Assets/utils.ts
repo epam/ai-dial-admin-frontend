@@ -100,6 +100,7 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
     case ApplicationRoute.Prompts:
       return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key !== 'preview');
     case ApplicationRoute.Conversations:
+    case ApplicationRoute.AssetsSkills:
       return isReadOnlyAdmin
         ? []
         : allActionLabels.filter((item) => item.key === 'delete' || item.key === 'openInNewTab');
@@ -110,6 +111,14 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
 
 export const getTreeActionLabels = (isReadOnlyAdmin: boolean, view: ApplicationRoute) => {
   if (isFlatPlatformView(view)) {
+    return [];
+  }
+
+  // Skills offers no folder-tree actions at all: creating/renaming/moving a folder isn't supported
+  // (no create/move on this surface — see design's Non-Goals), and folder delete isn't wired either
+  // (`getResourceTypeByRoute` deliberately has no SKILL case, since Skill has no `AssetApi`-shaped
+  // delete path), so offering it here would silently no-op.
+  if (view === ApplicationRoute.AssetsSkills) {
     return [];
   }
 
@@ -185,6 +194,15 @@ export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: 
         {
           key: 'uploadFiles',
           label: ButtonsI18nKey.Import,
+          icon: null,
+        },
+      ];
+    case ApplicationRoute.AssetsSkills:
+      return [
+        ...baseToolbarOptionLabels,
+        {
+          key: 'newItem',
+          label: FileManagerI18nKey.Skill,
           icon: null,
         },
       ];
@@ -354,6 +372,18 @@ export const getDeleteNotificationContent = (
         : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
             item: t(FileManagerI18nKey.Toolset),
             name: `${nameWithPath}__${(fileNodes as AssetWithVersion[])?.[0].selectedVersions?.[0] || (fileNodes as AssetWithVersion[])?.[0].version || ''}`,
+          });
+      return { title, description };
+    }
+    case ApplicationRoute.AssetsSkills: {
+      const title = isDeleteSeveralFiles
+        ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Items) })
+        : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Skill) });
+      const description = isDeleteSeveralFiles
+        ? t(FileManagerI18nKey.DeleteSuccessDescriptionForMany, { count: deletedItemsCount })
+        : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
+            item: t(FileManagerI18nKey.Skill),
+            name: nameWithPath,
           });
       return { title, description };
     }

@@ -5,7 +5,7 @@ import { Big } from 'big.js';
 import classNames from 'classnames';
 import { FC, ReactNode } from 'react';
 
-import { SUMMARY_COST_PRECISION } from '@/src/constants/analytics/conversations-trace';
+import { SUMMARY_COST_PRECISION, UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { ConversationSummary, ConversationTotals } from '@/src/models/analytics/conversations-trace';
@@ -18,12 +18,13 @@ interface PillProps {
   label: ReactNode;
   valueClassName?: string;
   hint?: string;
+  scope?: string;
 }
 
 // The hint qualifies what the number means, so it has to be reachable by keyboard rather than on hover
 // alone. It goes in the pill's own content as visually-hidden text: an aria-label here would replace the
 // value and label as the accessible name, announcing the caveat and hiding the figure it qualifies.
-const SummaryPill: FC<PillProps> = ({ value, label, valueClassName, hint }) => (
+const SummaryPill: FC<PillProps> = ({ value, label, valueClassName, hint, scope }) => (
   <div
     className="flex min-w-[92px] flex-col gap-0.5 rounded border border-primary bg-layer-3 px-3 py-2"
     role="group"
@@ -31,8 +32,9 @@ const SummaryPill: FC<PillProps> = ({ value, label, valueClassName, hint }) => (
     title={hint}
   >
     <span className={classNames('dial-base-semi-text', valueClassName ?? 'text-primary')}>{value}</span>
-    <span className="flex items-center gap-1 dial-tiny-text uppercase text-secondary">{label}</span>
-    {hint && <span className="sr-only">{hint}</span>}
+    <span className="flex items-center gap-1 dial-tiny-text text-secondary">{label}</span>
+    {scope && <span className="dial-tiny-text text-secondary">{scope}</span>}
+    {hint && !scope && <span className="sr-only">{hint}</span>}
   </div>
 );
 
@@ -43,8 +45,6 @@ interface Props {
   periodLabel: string;
 }
 
-const UNAVAILABLE = '—';
-
 const ConversationsSummary: FC<Props> = ({ totals, summary, loadedCount, periodLabel }) => {
   const t = useI18n();
 
@@ -52,6 +52,7 @@ const ConversationsSummary: FC<Props> = ({ totals, summary, loadedCount, periodL
   // cover only the rows loaded so far, so each pill states the scope it actually reports.
   const resultHint = t(ConversationsTraceI18nKey.SummaryResultHint);
   const loadedHint = t(ConversationsTraceI18nKey.SummaryLoadedHint);
+  const loadedScope = t(ConversationsTraceI18nKey.SummaryLoadedScope);
   const unavailableHint = t(ConversationsTraceI18nKey.SummaryUnavailableHint);
 
   const conversationCount = totals ? toNumber(totals.conversations) : null;
@@ -62,7 +63,7 @@ const ConversationsSummary: FC<Props> = ({ totals, summary, loadedCount, periodL
   return (
     <div className="flex flex-wrap items-stretch gap-2">
       <SummaryPill
-        value={conversationCount === null ? UNAVAILABLE : `${conversationCount}`}
+        value={conversationCount === null ? UNAVAILABLE_VALUE : `${conversationCount}`}
         label={t(ConversationsTraceI18nKey.SummaryConversations)}
         hint={conversationCount === null ? unavailableHint : resultHint}
       />
@@ -71,6 +72,7 @@ const ConversationsSummary: FC<Props> = ({ totals, summary, loadedCount, periodL
         label={t(ConversationsTraceI18nKey.SummaryRated)}
         valueClassName="text-success"
         hint={loadedHint}
+        scope={loadedScope}
       />
       <SummaryPill
         value={`${summary.negative}`}
@@ -82,9 +84,10 @@ const ConversationsSummary: FC<Props> = ({ totals, summary, loadedCount, periodL
         }
         valueClassName="text-error"
         hint={loadedHint}
+        scope={loadedScope}
       />
       <SummaryPill
-        value={cost === null ? UNAVAILABLE : `$${cost.round(SUMMARY_COST_PRECISION).toString()}`}
+        value={cost === null ? UNAVAILABLE_VALUE : `$${cost.round(SUMMARY_COST_PRECISION).toString()}`}
         label={`${t(ConversationsTraceI18nKey.SummaryCost)} ${periodLabel}`}
         valueClassName="text-accent-secondary"
         hint={cost === null ? unavailableHint : resultHint}

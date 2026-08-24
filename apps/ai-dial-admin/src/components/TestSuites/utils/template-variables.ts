@@ -1,5 +1,68 @@
-import { InputBinding, InputBindingRowData, TemplateVariable } from '@/src/models/evaluation/test-suite';
+import {
+  InputBinding,
+  InputBindingRowData,
+  TemplateVariable,
+  TestCaseSchema,
+} from '@/src/models/evaluation/test-suite';
 import { InputBindingType } from '@/src/types/evaluation';
+
+/** Shared fields from `data`, per-turn fields from that turn's map only (grid scope rule). */
+export const buildTurnEffectiveData = (
+  data: Record<string, unknown> | undefined,
+  turnData: Record<string, unknown> | undefined,
+  perTurnFields: Set<string>,
+): Record<string, unknown> => {
+  const effective: Record<string, unknown> = {};
+
+  if (data) {
+    for (const [key, value] of Object.entries(data)) {
+      if (!perTurnFields.has(key)) {
+        effective[key] = value;
+      }
+    }
+  }
+
+  if (turnData) {
+    for (const [key, value] of Object.entries(turnData)) {
+      if (perTurnFields.has(key)) {
+        effective[key] = value;
+      }
+    }
+  }
+
+  return effective;
+};
+
+export const perTurnFieldNames = (schema: TestCaseSchema[] | undefined): Set<string> =>
+  new Set((schema ?? []).filter((field) => field.perTurn).map((field) => field.name));
+
+/**
+ * Resolve template variables for one turn: constant → dataField → variable name → default → null.
+ */
+export const resolveVariablesForTurn = (
+  variables: TemplateVariable[],
+  bindings: InputBinding[],
+  effectiveData: Record<string, unknown>,
+): TemplateVariable[] => {
+  const bindingByVar = new Map(bindings.map((b) => [b.templateVariable, b]));
+
+  return variables.map((variable) => {
+    const binding = bindingByVar.get(variable.name);
+    let resolvedValue: unknown = null;
+
+    if (binding?.constantValue != null) {
+      resolvedValue = binding.constantValue;
+    } else if (binding?.dataField != null && binding.dataField !== '' && binding.dataField in effectiveData) {
+      resolvedValue = effectiveData[binding.dataField];
+    } else if (variable.name in effectiveData) {
+      resolvedValue = effectiveData[variable.name];
+    } else if (variable.hasDefault) {
+      resolvedValue = variable.defaultValue;
+    }
+
+    return { ...variable, resolvedValue };
+  });
+};
 
 export const generateInputBindingsRowData = (
   variables: TemplateVariable[],

@@ -33,6 +33,14 @@ describe('MetricCard', () => {
     fireEvent.click(screen.getByText('f1'));
     expect(onClick).toHaveBeenCalled();
   });
+
+  test('applies hover highlight only when clickable', () => {
+    const { container: nonClickable } = render(<MetricCard name="f1" value={0.5} isError={false} />);
+    expect(nonClickable.firstChild).not.toHaveClass('hover:border-hover');
+
+    const { container: clickable } = render(<MetricCard name="recall" value={0.5} isError={false} onClick={vi.fn()} />);
+    expect(clickable.firstChild).toHaveClass('hover:border-hover');
+  });
 });
 
 describe('MetricCardsGrid', () => {

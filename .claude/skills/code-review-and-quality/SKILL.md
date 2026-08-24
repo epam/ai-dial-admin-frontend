@@ -179,7 +179,7 @@ Use these as the source of truth before applying generic advice:
 | Accessibility                        | `.claude/rules/a11y.md`                                           |
 | ui-kit components                    | `ai-dial-ui-kit` MCP server before recommending raw HTML          |
 | Commit / PR scope naming             | `.claude/reference/areas.md`                                     |
-| Agent config (`.claude`, `.cursor`)  | `npm run validate:agent-docs` must pass; mirrors stay symlinks    |
+| Agent config (`.claude`, `.cursor`)  | `npm run validate:agent-docs` must pass; mirrors stay in sync     |
 | Backend contracts                    | `ai-dial-admin-backend`, `ai-dial-admin-deployment-manager-backend` |
 
 Do not import generic standards that conflict with these repo rules — for example, do not request a

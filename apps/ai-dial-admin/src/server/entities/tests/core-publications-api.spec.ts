@@ -48,6 +48,23 @@ describe('Server :: CorePublicationsApi', () => {
     expect(result?.[0]).toMatchObject({ path: 'public/p1', requestName: 'Prompt 1' });
   });
 
+  test('getPublicationSkillList posts the public path and filters/maps to SKILL', async () => {
+    fetch.mockResponseOnce(
+      JSON.stringify({
+        publications: [
+          { url: 'publications/public/s1', name: 'Skill 1', resourceTypes: ['SKILL'], status: 'PENDING' },
+          { url: 'publications/public/p1', name: 'Prompt 1', resourceTypes: ['PROMPT'], status: 'PENDING' },
+        ],
+      }),
+      JSON_HEADERS,
+    );
+
+    const result = await instance.getPublicationSkillList(TOKEN_MOCK);
+
+    expect(result).toHaveLength(1);
+    expect(result?.[0]).toMatchObject({ path: 'public/s1', requestName: 'Skill 1' });
+  });
+
   test('getPublication returns null for APPROVED publications', async () => {
     fetch.mockResponseOnce(JSON.stringify({ url: 'publications/x', status: 'APPROVED' }), JSON_HEADERS);
 

@@ -242,20 +242,23 @@ describe('CompareView', () => {
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });
 
-  test('opens row detail panel when eye button is clicked and closes on close button', async () => {
+  test('opens row detail panel when a row is clicked and closes on close button', async () => {
     const user = userEvent.setup();
 
     renderCompareView();
 
     await user.click(screen.getByRole('tab', { name: 'Runs.RunCompareTabExecutionResults' }));
 
-    let eyeButton: HTMLButtonElement | null = null;
+    let row: HTMLElement | null = null;
     await waitFor(() => {
-      eyeButton = document.querySelector('.ag-pinned-right-cols-container [col-id="compare_action"] button');
-      expect(eyeButton).toBeTruthy();
+      row = document.querySelector('.ag-center-cols-container .ag-row');
+      expect(row).toBeTruthy();
+      expect(row?.textContent).toContain('Test Case 1');
     });
 
-    fireEvent.click(eyeButton!);
+    expect(document.querySelector('[col-id="compare_action"]')).not.toBeInTheDocument();
+
+    fireEvent.click(row!);
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { level: 3, name: 'Test Case 1' })).toBeInTheDocument();
@@ -280,13 +283,14 @@ describe('CompareView', () => {
 
     await user.click(screen.getByRole('tab', { name: 'Runs.RunCompareTabExecutionResults' }));
 
-    let eyeButton: HTMLButtonElement | null = null;
+    let row: HTMLElement | null = null;
     await waitFor(() => {
-      eyeButton = document.querySelector('.ag-pinned-right-cols-container [col-id="compare_action"] button');
-      expect(eyeButton).toBeTruthy();
+      row = document.querySelector('.ag-center-cols-container .ag-row');
+      expect(row).toBeTruthy();
+      expect(row?.textContent).toContain('Test Case 1');
     });
 
-    fireEvent.click(eyeButton!);
+    fireEvent.click(row!);
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { level: 3, name: 'Test Case 1' })).toBeInTheDocument();
@@ -319,13 +323,14 @@ describe('CompareView', () => {
 
     await user.click(screen.getByRole('tab', { name: 'Runs.RunCompareTabExecutionResults' }));
 
-    let eyeButton: HTMLButtonElement | null = null;
+    let row: HTMLElement | null = null;
     await waitFor(() => {
-      eyeButton = document.querySelector('.ag-pinned-right-cols-container [col-id="compare_action"] button');
-      expect(eyeButton).toBeTruthy();
+      row = document.querySelector('.ag-center-cols-container .ag-row');
+      expect(row).toBeTruthy();
+      expect(row?.textContent).toContain('Test Case 1');
     });
 
-    fireEvent.click(eyeButton!);
+    fireEvent.click(row!);
 
     await waitFor(() => {
       expect(screen.getByText('Runs.FieldColumn')).toBeInTheDocument();

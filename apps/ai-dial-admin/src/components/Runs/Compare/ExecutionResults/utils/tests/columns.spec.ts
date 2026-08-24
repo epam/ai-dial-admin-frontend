@@ -9,7 +9,6 @@ import {
   formatCompareRunIndexHeader,
 } from '@/src/components/Runs/Compare/constants';
 import {
-  COMPARE_ACTION_COL_ID,
   DELTA_COLUMN_WIDTH,
   DEFAULT_COMPARE_DELTA_HEADER,
   DURATION_COLUMN_WIDTH,
@@ -23,11 +22,7 @@ import {
   RUN_INDEX_COLUMN_WIDTH,
   STATUS_COLUMN_WIDTH,
 } from '@/src/components/Runs/Compare/ExecutionResults/constants';
-import {
-  getCompareColumnsCompare,
-  mergeComparePanelColumns,
-  splitComparePanelColumns,
-} from '@/src/components/Runs/Compare/ExecutionResults/utils/columns';
+import { getCompareColumnsCompare } from '@/src/components/Runs/Compare/ExecutionResults/utils/columns';
 import NumericGridFilterFloatingFilter from '@/src/components/Grid/Filter/NumericGridFilterFloatingFilter';
 import { ExtractionResultStatus } from '@/src/models/evaluation/run';
 
@@ -187,13 +182,61 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     };
 
     expect(exec.headerName).toBe(EXECUTION_GROUP_HEADER);
-    expect(exec.children).toHaveLength(6);
-    expect(exec.children[0].headerName).toBe(formatCompareColumnHeader(RUN_COMPARE_PRIMARY_INDEX, '# Run number'));
-    expect(exec.children[1].headerName).toBe(formatCompareColumnHeader(RUN_COMPARE_SECONDARY_INDEX, '# Run number'));
-    expect(exec.children[2].headerName).toBe(formatCompareColumnHeader(RUN_COMPARE_PRIMARY_INDEX, 'HTTP'));
-    expect(exec.children[3].headerName).toBe(formatCompareColumnHeader(RUN_COMPARE_SECONDARY_INDEX, 'HTTP'));
-    expect(exec.children[4].headerName).toBe(formatCompareColumnHeader(RUN_COMPARE_PRIMARY_INDEX, 'Duration'));
-    expect(exec.children[5].headerName).toBe(formatCompareColumnHeader(RUN_COMPARE_SECONDARY_INDEX, 'Duration'));
+    expect(exec.children).toHaveLength(10);
+    expect(exec.children.map((child) => child.headerName)).toEqual([
+      formatCompareColumnHeader(RUN_COMPARE_PRIMARY_INDEX, '# Run number'),
+      formatCompareColumnHeader(RUN_COMPARE_SECONDARY_INDEX, '# Run number'),
+      formatCompareColumnHeader(RUN_COMPARE_PRIMARY_INDEX, 'Request'),
+      formatCompareColumnHeader(RUN_COMPARE_SECONDARY_INDEX, 'Request'),
+      formatCompareColumnHeader(RUN_COMPARE_PRIMARY_INDEX, 'Turn'),
+      formatCompareColumnHeader(RUN_COMPARE_SECONDARY_INDEX, 'Turn'),
+      formatCompareColumnHeader(RUN_COMPARE_PRIMARY_INDEX, 'HTTP'),
+      formatCompareColumnHeader(RUN_COMPARE_SECONDARY_INDEX, 'HTTP'),
+      formatCompareColumnHeader(RUN_COMPARE_PRIMARY_INDEX, 'Duration'),
+      formatCompareColumnHeader(RUN_COMPARE_SECONDARY_INDEX, 'Duration'),
+    ]);
+  });
+
+  test('Request and Turn columns are hidden by default and render the 1-based index for both runs', () => {
+    type ExecChild = {
+      colId?: string;
+      hide?: boolean;
+      valueGetter: (p: { data?: CompareAnalyticsRow }) => unknown;
+    };
+    const cols = getCompareColumnsCompare([makeRow()]);
+    const exec = cols[2] as { children: ExecChild[] };
+    const byColId = (colId: string) => exec.children.find((child) => child.colId === colId) as ExecChild;
+
+    const requestPrimary = byColId('requestIndex');
+    const requestSecondary = byColId('cmp_requestIndex');
+    const turnPrimary = byColId('turnIndex');
+    const turnSecondary = byColId('cmp_turnIndex');
+
+    expect([requestPrimary, requestSecondary, turnPrimary, turnSecondary].every((col) => col.hide === true)).toBe(true);
+
+    const row = makeRow({
+      requestIndex: 1,
+      turnIndex: 0,
+      _compared: makeResult({ requestIndex: 1, turnIndex: 2 }),
+    });
+    expect(requestPrimary.valueGetter({ data: row })).toBe(2);
+    expect(requestSecondary.valueGetter({ data: row })).toBe(2);
+    expect(turnPrimary.valueGetter({ data: row })).toBe(1);
+    expect(turnSecondary.valueGetter({ data: row })).toBe(3);
+  });
+
+  test('Request and Turn columns stay empty for a non-chained, single-turn run', () => {
+    type ExecChild = { colId?: string; valueGetter: (p: { data?: CompareAnalyticsRow }) => unknown };
+    const cols = getCompareColumnsCompare([makeRow()]);
+    const exec = cols[2] as { children: ExecChild[] };
+    const byColId = (colId: string) => exec.children.find((child) => child.colId === colId) as ExecChild;
+    const row = makeRow({ _compared: makeResult() });
+
+    expect(byColId('requestIndex').valueGetter({ data: row })).toBeNull();
+    expect(byColId('turnIndex').valueGetter({ data: row })).toBeNull();
+    expect(byColId('cmp_requestIndex').valueGetter({ data: row })).toBe('—');
+    expect(byColId('cmp_turnIndex').valueGetter({ data: row })).toBe('—');
+    expect(byColId('cmp_requestIndex').valueGetter({ data: makeRow({ _compared: null }) })).toBe('—');
   });
 
   test('# Run number secondary column shows _compared.runIndex', () => {
@@ -311,12 +354,10 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     );
   });
 
-  test('includes pinned eye action column at the end', () => {
+  test('does not include a pinned eye action column', () => {
     const cols = getCompareColumnsCompare([makeRow()]);
-    const actionCol = cols[cols.length - 1] as ColDef;
-    expect(actionCol.colId).toBe(COMPARE_ACTION_COL_ID);
-    expect(actionCol.pinned).toBe('right');
-    expect(actionCol.lockPinned).toBe(true);
+    expect(cols.some((col) => (col as ColDef).colId === 'compare_action')).toBe(false);
+    expect(cols.some((col) => (col as ColDef).pinned === 'right')).toBe(false);
   });
 
   test('extracted group has paired columns with run index in header name', () => {
@@ -374,7 +415,7 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
     type ExecChild = { colId?: string; valueGetter: (p: { data?: CompareAnalyticsRow }) => unknown };
     const cols = getCompareColumnsCompare([makeRow()]);
     const exec = cols[2] as { children: ExecChild[] };
-    const primaryHttpCol = exec.children[2];
+    const primaryHttpCol = exec.children.find((child) => child.colId === 'http') as ExecChild;
 
     expect(primaryHttpCol.colId).toBe('http');
     expect(
@@ -412,26 +453,5 @@ describe('Runs Compare :: getCompareColumnsCompare', () => {
 
     expect(primaryPrecision.cellClassRules).toBeUndefined();
     expect(secondaryPrecision.cellClassRules).toBeUndefined();
-  });
-});
-
-describe('Runs Compare :: compare panel columns', () => {
-  test('splitComparePanelColumns removes action column from panel list', () => {
-    const columns = getCompareColumnsCompare([makeRow()]);
-    const { panelColumns, actionColumn } = splitComparePanelColumns(columns as ColDef[]);
-
-    expect(panelColumns.some((col) => col.colId === COMPARE_ACTION_COL_ID)).toBe(false);
-    expect(actionColumn?.colId).toBe(COMPARE_ACTION_COL_ID);
-    expect(panelColumns).toHaveLength(columns.length - 1);
-  });
-
-  test('mergeComparePanelColumns appends action column and keeps it visible', () => {
-    const columns = getCompareColumnsCompare([makeRow()]);
-    const { panelColumns, actionColumn } = splitComparePanelColumns(columns as ColDef[]);
-    const hiddenPanelColumns = panelColumns.map((col) => ({ ...col, hide: true }));
-    const merged = mergeComparePanelColumns(hiddenPanelColumns, actionColumn);
-
-    expect(merged[merged.length - 1].colId).toBe(COMPARE_ACTION_COL_ID);
-    expect(merged[merged.length - 1].hide).toBe(false);
   });
 });

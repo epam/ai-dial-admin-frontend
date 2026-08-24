@@ -25,6 +25,25 @@ fi
 agent_files=$(git diff --cached --name-only --diff-filter=ACM | grep -E \
   '^(\.claude/commands/.*\.md|\.claude/rules/.*\.md|\.claude/skills/.*|\.claude/settings\.json|\.cursor/(commands|rules|skills)/.*|\.github/(instructions|prompts|skills)/.*|\.mcp\.json|AGENTS\.md|CLAUDE\.md|openspec/config\.yaml|apps/.*\.(css|js|jsx|scss|ts|tsx))$' || true)
 
+# A mirrored rule or skill was staged, so regenerate its Cursor/Copilot copies
+# and stage exactly the ones that changed. Without this the validator below would
+# reject the commit for drift the author has no reason to expect — the whole point
+# of one canonical source is that you only ever edit that file. Same `|| true` as
+# above: a grep with no match would otherwise abort the commit.
+mirror_sources=$(echo "$agent_files" | grep -E '^\.claude/(rules|skills)/.*\.md$' || true)
+
+if [ -n "$mirror_sources" ]; then
+  # shellcheck disable=SC2086
+  changed_mirrors=$(node scripts/sync-agent-mirrors.mjs --print-changed $mirror_sources)
+
+  if [ -n "$changed_mirrors" ]; then
+    # Word splitting is intended — one path per line, and the manifest has none with spaces.
+    # shellcheck disable=SC2086
+    git add -- $changed_mirrors
+    echo "pre-commit: regenerated and staged $(echo "$changed_mirrors" | wc -l | tr -d ' ') agent mirror file(s)."
+  fi
+fi
+
 if [ -n "$agent_files" ]; then
   node scripts/validate-agent-docs.mjs
 fi

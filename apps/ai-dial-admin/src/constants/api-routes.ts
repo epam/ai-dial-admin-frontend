@@ -10,6 +10,8 @@ export enum ApiRoute {
   FilesPreview = '/api/files/preview',
   PromptsImport = '/api/prompts/import',
   RunsStatusStream = '/api/runs/status-stream',
+  SkillsDownload = '/api/skills/download',
+  SkillsPreview = '/api/skills/preview',
   Sse = '/api/sse',
   TestSuitesExport = '/api/test-suites/export',
   DatasetsExport = '/api/datasets/export',

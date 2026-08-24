@@ -10,6 +10,7 @@ const row = (rating_up: number | null, rating_down: number | null): Conversation
   chat_id: 'chat-1',
   first_request_time: 0,
   project_id: 'data-team',
+  user_hash: 'db7327ba3decd351',
   turn_count: 3,
   total_tokens: 10,
   total_price: '0.1',
@@ -21,8 +22,8 @@ const row = (rating_up: number | null, rating_down: number | null): Conversation
 const renderCell = (data?: ConversationRow | null) =>
   render(<RatingCellRenderer {...({ data } as ICellRendererParams<ConversationRow>)} />);
 
-const up = () => screen.getByLabelText(ConversationsTraceI18nKey.RatingUp);
-const down = () => screen.getByLabelText(ConversationsTraceI18nKey.RatingDown);
+const up = () => screen.getByText(ConversationsTraceI18nKey.RatingUp).parentElement;
+const down = () => screen.getByText(ConversationsTraceI18nKey.RatingDown).parentElement;
 
 describe('RatingCellRenderer', () => {
   test('always shows both a positive and a negative count, as the design does', () => {

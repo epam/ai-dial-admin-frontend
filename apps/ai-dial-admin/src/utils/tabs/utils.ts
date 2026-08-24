@@ -9,6 +9,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 
 export enum EntityViewTab {
   Properties = 'Properties',
+  Skill = 'Skill',
   Features = 'Features',
   Parameters = 'Parameters',
   Roles = 'Roles',
@@ -71,6 +72,11 @@ export const propertiesTab = (t: (key: string) => string, warning?: boolean) => 
   id: EntityViewTab.Properties,
   label: t(TabsI18nKey.Properties),
   warning,
+});
+
+export const skillTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.Skill,
+  label: t(TabsI18nKey.Skill),
 });
 
 export const featuresTab = (t: (key: string) => string) => ({
@@ -433,6 +439,9 @@ export const getTabsForAsset = (
   if (view === ApplicationRoute.AssetsAppRunners) {
     return [propertiesTab(t), featuresTab(t), parametersTab(t), appRouteTab(t), interceptorsTab(t)];
   }
+  if (view === ApplicationRoute.AssetsSkills) {
+    return [propertiesTab(t), skillTab(t)];
+  }
   return [propertiesTab(t)];
 };
 
@@ -504,7 +513,7 @@ export const getSystemPropertiesTabs = (t: (key: string) => string): TabModel[] 
 };
 
 export const getTestSuiteTabs = (t: (key: string) => string): TabModel[] => {
-  return [propertiesTab(t), testSuiteMethodTab(t), testCasesTab(t), metricsTab(t), runsTab(t)];
+  return [propertiesTab(t), testSuiteMethodTab(t), testCasesTab(t), metricsTab(t), runsTab(t), trendsTab(t)];
 };
 
 export const getPublicationViewTabs = (t: (key: string) => string, view: ApplicationRoute): TabModel[] => {
@@ -519,6 +528,8 @@ export const getPublicationViewTabs = (t: (key: string) => string, view: Applica
       return getToolsetPublicationTabs(t);
     case ApplicationRoute.ConversationPublications:
       return getConversationPublicationTabs(t);
+    case ApplicationRoute.SkillPublications:
+      return getSkillPublicationTabs(t);
     default:
       return [];
   }
@@ -542,6 +553,10 @@ export const getToolsetPublicationTabs = (t: (key: string) => string): TabModel[
 
 export const getConversationPublicationTabs = (t: (key: string) => string): TabModel[] => {
   return [propertiesTab(t), conversationTab(t), filesTab(t), permissionsTab(t)];
+};
+
+export const getSkillPublicationTabs = (t: (key: string) => string): TabModel[] => {
+  return [propertiesTab(t), skillTab(t), permissionsTab(t)];
 };
 
 export const getTestSuiteRequestTemplateTabs = (t: (key: string) => string): TabModel[] => {

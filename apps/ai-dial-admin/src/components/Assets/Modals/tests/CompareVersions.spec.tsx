@@ -34,6 +34,6 @@ describe('Common components - CompareVersions', () => {
 
     const dropdownItem = screen.getByText('Compare.Version 1.0.0');
     expect(dropdownItem).toBeInTheDocument();
-    user.click(dropdownItem);
+    await user.click(dropdownItem);
   });
 });

@@ -2,7 +2,6 @@ import { ColDef, ColGroupDef } from 'ag-grid-community';
 
 import { RUN_COMPARE_PRIMARY_INDEX, RUN_COMPARE_SECONDARY_INDEX } from '@/src/components/Runs/Compare/constants';
 import {
-  COMPARE_ACTION_COL_ID,
   DEFAULT_COMPARE_DELTA_HEADER,
   EXECUTION_GROUP_HEADER,
   EXECUTION_STATUS_GROUP_HEADER,
@@ -14,6 +13,8 @@ type CompareRunIndex = typeof RUN_COMPARE_PRIMARY_INDEX | typeof RUN_COMPARE_SEC
 
 const EXECUTION_FIELD_GROUPS = [
   { fieldLabel: '# Run number', primaryColId: 'runIndex', secondaryColId: 'cmp_runIndex' },
+  { fieldLabel: 'Request', primaryColId: 'requestIndex', secondaryColId: 'cmp_requestIndex' },
+  { fieldLabel: 'Turn', primaryColId: 'turnIndex', secondaryColId: 'cmp_turnIndex' },
   { fieldLabel: 'HTTP', primaryColId: 'http', secondaryColId: 'cmp_http' },
   { fieldLabel: 'Duration', primaryColId: 'duration', secondaryColId: 'cmp_duration' },
 ] as const;
@@ -279,8 +280,7 @@ export const buildComparePanelColumnTree = (
   runNames: ComparePanelRunNames,
   prevPanelTree?: ColDef[],
 ): ColDef[] => {
-  const panelDefs = flatDefs.filter((col) => getColId(col) !== COMPARE_ACTION_COL_ID);
-  const nestedTree = panelDefs.map((node) => nestTopLevelNode(node, runNames));
+  const nestedTree = flatDefs.map((node) => nestTopLevelNode(node, runNames));
 
   return prevPanelTree ? preservePanelHideState(nestedTree, prevPanelTree) : nestedTree;
 };

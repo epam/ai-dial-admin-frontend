@@ -14,6 +14,7 @@ import {
   QueryPredicate,
   QuerySortDirection,
   QuerySortItem,
+  QuerySortNulls,
   QueryValueExpr,
   QueryValueType,
   StructuredQuery,
@@ -36,10 +37,13 @@ export const fn = (name: string, args: QueryExpr[] = [], distinct?: boolean): Qu
 
 export const col = (expr: QueryExpr, as?: string): QueryOutputColumn => ({ expr, ...(as ? { as } : {}) });
 
-const predicate = (op: QueryOperator, fieldName: string, val: QueryValueExpr): QueryPredicate => ({
+export const predicate = (op: QueryOperator, fieldName: string, val: QueryValueExpr): QueryPredicate => ({
   op,
   args: [field(fieldName), val],
 });
+
+export const eq = (fieldName: string, val: QueryValueExpr): QueryPredicate =>
+  predicate(QueryOperator.Eq, fieldName, val);
 
 export const le = (fieldName: string, val: QueryValueExpr): QueryPredicate =>
   predicate(QueryOperator.Le, fieldName, val);
@@ -50,8 +54,14 @@ export const ne = (fieldName: string, val: QueryValueExpr): QueryPredicate =>
 export const gt = (fieldName: string, val: QueryValueExpr): QueryPredicate =>
   predicate(QueryOperator.Gt, fieldName, val);
 
+export const ge = (fieldName: string, val: QueryValueExpr): QueryPredicate =>
+  predicate(QueryOperator.Ge, fieldName, val);
+
 export const isNotNull = (fieldName: string): QueryPredicate =>
   predicate(QueryOperator.Ne, fieldName, value(QueryValueType.Null, null));
+
+export const isNull = (fieldName: string): QueryPredicate =>
+  predicate(QueryOperator.Eq, fieldName, value(QueryValueType.Null, null));
 
 export const inValues = (fieldName: string, valueType: QueryValueType, values: string[]): QueryPredicate => ({
   op: QueryOperator.In,
@@ -65,7 +75,11 @@ export const and = (args: QueryFilterNode[]): QueryGroup => ({ op: QueryLogicalO
 
 export const or = (args: QueryFilterNode[]): QueryGroup => ({ op: QueryLogicalOperator.Or, args });
 
-export const sortItem = (fieldName: string, dir: QuerySortDirection): QuerySortItem => ({ field: fieldName, dir });
+export const sortItem = (fieldName: string, dir: QuerySortDirection, nulls?: QuerySortNulls): QuerySortItem => ({
+  field: fieldName,
+  dir,
+  ...(nulls ? { nulls } : {}),
+});
 
 // `include_total` is the caller's to choose: the service populates `totalCount` for row-mode queries
 // and never for aggregate mode, so requesting one is a property of the query being built.

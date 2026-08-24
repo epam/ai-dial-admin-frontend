@@ -142,4 +142,30 @@ describe('MetricInputs (Values)', () => {
     const updatedBindings = onChange.mock.calls[onChange.mock.calls.length - 1][0] as MetricBinding[];
     expect(updatedBindings[0].source).toEqual({ $type: MetricBindingType.Response, columnName: 'answer' });
   });
+
+  test('response column options include columns from additionalRequests in the chain', () => {
+    const fields: SchemaFieldRow[] = [makeField({ id: 'f1', name: 'prompt' })];
+    const bindings: MetricBinding[] = [
+      { property: 'prompt', source: { $type: MetricBindingType.Response, columnName: 'answer' } },
+    ];
+    const selectedTestSuite: TestSuite = {
+      responseColumns: [{ name: 'answer', displayName: 'Answer', expression: '', type: 'string' }],
+      additionalRequests: [
+        { responseColumns: [{ name: 'follow_up', displayName: 'Follow up', expression: '', type: 'string' }] },
+      ],
+    };
+
+    render(
+      <MetricInputs
+        title="Inputs"
+        fields={fields}
+        bindings={bindings}
+        selectedTestSuite={selectedTestSuite}
+        onChange={vi.fn()}
+      />,
+    );
+
+    const options = screen.getAllByRole('option').map((option) => option.textContent);
+    expect(options).toEqual(['Answer', 'Follow up']);
+  });
 });

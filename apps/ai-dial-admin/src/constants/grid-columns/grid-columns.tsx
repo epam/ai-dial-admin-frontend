@@ -12,6 +12,7 @@ import FileSelectCellRenderer from '@/src/components/Grid/CellRenderers/FileSele
 import ImportValidationCellRenderer from '@/src/components/Grid/CellRenderers/ImportValidationCellRenderer';
 import RunStatusCellRenderer from '@/src/components/Grid/CellRenderers/RunStatusCellRenderer';
 import SelectCellRenderer from '@/src/components/Grid/CellRenderers/SelectCellRenderer';
+import ModelsCellRenderer from '@/src/components/Grid/CellRenderers/ModelsCellRenderer';
 import TagsCellRenderer from '@/src/components/Grid/CellRenderers/TagsCellRenderer';
 import { numberValueComparator } from '@/src/components/Grid/comparators/number-comparator';
 import { ACTION_COLUMN, NO_BORDER_CLASS } from '@/src/constants/ag-grid';
@@ -31,9 +32,13 @@ import {
   EntitiesI18nKey,
   EntityFieldsI18nKey,
   ImportI18nKey,
+  QueriesI18nKey,
   SourceI18nKey,
   TelemetryI18nKey,
 } from '@/src/constants/i18n';
+import { deriveSavedQueryEditor } from '@/src/components/Analytics/QueryBuilder/utils/saved-query';
+import { SAVED_QUERY_EDITOR_I18N_KEYS } from '@/src/constants/analytics/queries';
+import { SavedQuery, SavedQueryScope } from '@/src/models/analytics/saved-query';
 import { RowImportMeta } from '@/src/models/deployments/import';
 import { ValidationState } from '@/src/types/deployments/import';
 import {
@@ -50,9 +55,32 @@ import {
   numberValueFormatter,
   priceValueFormatter,
 } from '@/src/constants/grid-columns/formatters';
-import { CONVERSATION_PROVENANCE_GROUPS } from '@/src/constants/analytics/conversations-trace';
-import { formatCompactNumber, formatSignificantCost } from '@/src/utils/analytics/conversation-formatting';
-import { ConversationColumn, ConversationsField } from '@/src/models/analytics/conversations-trace';
+import {
+  CONVERSATION_FIELD_VALUE_TYPE,
+  CONVERSATION_TAG_LABEL_KEY,
+  FILTERABLE_CONVERSATION_FIELDS,
+  OPTIONAL_CURATED_COLUMN_FIELDS,
+  PROVENANCE_HINT_KEY,
+  PROVENANCE_LABEL_KEY,
+  SORTABLE_CONVERSATION_FIELDS,
+} from '@/src/constants/analytics/conversations-trace';
+import {
+  conversationTopics,
+  formatCompactNumber,
+  formatSignificantCost,
+} from '@/src/utils/analytics/conversation-formatting';
+import {
+  buildConversationColumnCatalog,
+  conversationColumnGroups,
+} from '@/src/utils/analytics/conversation-column-catalog';
+import {
+  ColumnProvenance,
+  ConversationColumn,
+  ConversationColumnGroup,
+  ConversationsField,
+} from '@/src/models/analytics/conversations-trace';
+import { QueryValueType } from '@/src/models/analytics/query';
+import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { ImageVersion } from '@/src/models/deployments/images';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
@@ -92,10 +120,12 @@ import {
 import { dateTimeColumn, numericColumn, priceColumn } from './configs';
 import { baseNumberFilter, baseStringFilter, dateFilter, evalStringFilter } from './filters';
 import ConversationCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/ConversationCellRenderer';
+import TopicsCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/TopicsCellRenderer';
 import ProvenanceHeaderGroup from '@/src/components/Analytics/ConversationsTrace/List/ProvenanceHeaderGroup';
 import ActivityCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/ActivityCellRenderer';
 import ProjectCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/ProjectCellRenderer';
 import RatingCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/RatingCellRenderer';
+import UserCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/UserCellRenderer';
 import RowExpanderCellRenderer from '@/src/components/Grid/CellRenderers/RowExpanderCellRenderer';
 import ChildrenActivityTypeCellRenderer from '@/src/components/Grid/CellRenderers/ChildrenActivityTypeCellRenderer';
 import { ActivityAuditView } from '@/src/types/activity-audit';
@@ -152,6 +182,18 @@ export const MODELS_COLUMNS = (t: (str: string) => string): ColDef[] => [
     headerName: 'Completion price',
     hide: true,
     tooltipValueGetter: (params) => params.data?.pricing?.completion,
+  },
+  {
+    field: 'pricing.cacheRead',
+    headerName: 'Cache read price',
+    hide: true,
+    tooltipValueGetter: (params) => params.data?.pricing?.cacheRead,
+  },
+  {
+    field: 'pricing.cacheWrite',
+    headerName: 'Cache write price',
+    hide: true,
+    tooltipValueGetter: (params) => params.data?.pricing?.cacheWrite,
   },
 ];
 
@@ -624,7 +666,15 @@ const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] 
   {
     field: ConversationsField.ChatId,
     headerName: t(ConversationsTraceI18nKey.Conversation),
+    headerTooltip: t(ConversationsTraceI18nKey.ConversationHint),
     cellRenderer: ConversationCellRenderer,
+    // How a row is recognised and how it is opened. A log whose identity column can be hidden is a table of
+    // values belonging to conversations the reader cannot name — and this column's permanence is what makes
+    // its enrichment field unconditional in the projection. `lockVisible` guards AG Grid's own paths;
+    // withholding it from the columns panel is what closes the one the app actually offers, since that panel
+    // is this repo's own component and reads only `suppressColumnsToolPanel`.
+    lockVisible: true,
+    suppressColumnsToolPanel: true,
     flex: 3,
     minWidth: 280,
   },
@@ -636,12 +686,20 @@ const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] 
     minWidth: 180,
   },
   {
+    field: ConversationsField.UserHash,
+    headerName: t(ConversationsTraceI18nKey.DetailUser),
+    cellRenderer: UserCellRenderer,
+    flex: 1.2,
+    minWidth: 140,
+  },
+  {
     field: ConversationsField.TurnCount,
     headerName: t(ConversationsTraceI18nKey.Turns),
     headerTooltip: t(ConversationsTraceI18nKey.TurnsHint),
     ...numericColumn,
     flex: 0.6,
     minWidth: 90,
+    hide: true,
   },
   {
     field: ConversationsField.LastRequestTime,
@@ -657,6 +715,7 @@ const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] 
     valueFormatter: ({ value }) => formatCompactNumber(value),
     flex: 0.8,
     minWidth: 100,
+    hide: true,
   },
   {
     field: ConversationsField.TotalPrice,
@@ -668,6 +727,42 @@ const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] 
     minWidth: 100,
   },
   {
+    field: ConversationsField.Deployments,
+    headerName: t(ConversationsTraceI18nKey.Deployments),
+    headerTooltip: t(ConversationsTraceI18nKey.DeploymentsHint),
+    cellRenderer: ModelsCellRenderer,
+    // The array as recorded. Which of its values is a model is not derivable from it — a router or
+    // application deployed under a plain name is indistinguishable from a model, and an embedding deployment
+    // that was billed belongs to the billed set — so the column names the field it reads and narrows nothing.
+    cellRendererParams: (params: { data?: { deployments?: string[] } }) => ({
+      items: params.data?.deployments ?? [],
+      allItems: params.data?.deployments ?? [],
+      label: t(ConversationsTraceI18nKey.Deployments),
+    }),
+    tooltipValueGetter: (params) => (params.data?.deployments as string[] | undefined)?.join(', ') || null,
+    // Stated rather than left to the sort/filter allow-lists: a header offering an affordance the query
+    // language cannot honour would discard the operator's input silently.
+    sortable: false,
+    filter: false,
+    flex: 1.6,
+    minWidth: 180,
+    hide: true,
+  },
+  {
+    field: ConversationsField.InsightTopics,
+    headerName: t(ConversationsTraceI18nKey.Topics),
+    headerTooltip: t(ConversationsTraceI18nKey.TopicsHint),
+    cellRenderer: TopicsCellRenderer,
+    tooltipValueGetter: (params) =>
+      conversationTopics(params.data?.[ConversationsField.InsightTopics]).join(', ') || null,
+    // A delimited string, so lexicographic ordering would sort by whichever term happens to be written
+    // first. A contains predicate matches a term wherever it sits, which is what the filter is for.
+    sortable: false,
+    flex: 1.6,
+    minWidth: 180,
+    hide: true,
+  },
+  {
     field: ConversationColumn.Rating,
     headerName: t(ConversationsTraceI18nKey.Rating),
     cellRenderer: RatingCellRenderer,
@@ -676,25 +771,98 @@ const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] 
   },
 ];
 
-export const CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] =>
-  restrictSort(BASE_CONVERSATIONS_TRACE_COLUMNS(t)).map((column) => ({
+const NUMERIC_FILTER_VALUE_TYPES = [QueryValueType.Integer, QueryValueType.Long, QueryValueType.Decimal];
+
+const conversationFilterPreset = (fieldName?: string): Partial<ColDef> => {
+  if (!fieldName || !FILTERABLE_CONVERSATION_FIELDS.includes(fieldName as ConversationsField)) {
+    return { filter: false, floatingFilter: false };
+  }
+
+  const valueType = CONVERSATION_FIELD_VALUE_TYPE[fieldName as ConversationsField];
+
+  return valueType && NUMERIC_FILTER_VALUE_TYPES.includes(valueType) ? baseNumberFilter : baseStringFilter;
+};
+
+// A curated column reading a field this instance does not carry is dropped rather than rendered empty: the
+// query cannot name the field, so the cells could never fill, and an operator would read them as missing
+// data. Only the columns added beyond the view's original set are candidates — Rating reads no field of this
+// entity and must survive a schema that has never heard of it.
+const availableCuratedColumns = (columns: ColDef[], schemaFields: AnalyticsEntityField[]): ColDef[] => {
+  const available = new Set(schemaFields.map(({ name }) => name));
+  const optional = new Set<string>(OPTIONAL_CURATED_COLUMN_FIELDS);
+
+  return columns.filter((column) => !optional.has(column.field as string) || available.has(column.field as string));
+};
+
+const curatedConversationColumns = (t: (key: string) => string, schemaFields: AnalyticsEntityField[]): ColDef[] =>
+  restrictSort(
+    availableCuratedColumns(BASE_CONVERSATIONS_TRACE_COLUMNS(t), schemaFields),
+    SORTABLE_CONVERSATION_FIELDS,
+  ).map((column) => ({
     ...column,
-    filter: false,
-    floatingFilter: false,
+    ...conversationFilterPreset(column.field),
+    ...(column.field === ConversationsField.LastRequestTime ? { sort: 'desc' as ColDef['sort'] } : {}),
   }));
 
-export const CONVERSATIONS_TRACE_COLUMN_GROUPS = (t: (key: string) => string): ColGroupDef[] => {
-  const columns = CONVERSATIONS_TRACE_COLUMNS(t);
+// The curated set plus one column per field the fetched schema reports and no curated column already reads,
+// so the count is whatever the instance carries. With no schema in hand the curated columns are all there is:
+// an unfetched schema is not evidence that a field exists, and a column that can never fill is of no use.
+export const CONVERSATIONS_TRACE_COLUMNS = (
+  t: (key: string) => string,
+  schemaFields: AnalyticsEntityField[] = [],
+): ColDef[] => buildConversationColumnCatalog(curatedConversationColumns(t, schemaFields), schemaFields);
 
-  return CONVERSATION_PROVENANCE_GROUPS.map(({ provenance, labelKey, tooltipKey, fields }) => ({
-    groupId: provenance,
-    headerName: t(labelKey),
-    headerTooltip: t(tooltipKey),
-    headerGroupComponent: ProvenanceHeaderGroup,
-    headerGroupComponentParams: { label: t(labelKey), provenance },
-    marryChildren: true,
-    children: fields.map((field) => columns.find((column) => column.field === field)).filter(Boolean) as ColDef[],
-  }));
+// The origin is what a reader needs to interpret an empty cell — a rollup value cannot be missing, an
+// enrichment value is missing until the evaluation reaches it — so it stays legible even where the tag
+// supplies the label.
+const groupOriginLabel = (t: (key: string) => string, { provenance, source }: ConversationColumnGroup): string => {
+  const labelKey = PROVENANCE_LABEL_KEY[provenance];
+  return labelKey ? t(labelKey) : source;
+};
+
+// An enrichment's groups carry their origin in the label itself, not only in their colour: the columns panel
+// prints this same string as each column's caption, and a caption reading "Evaluator run" over a checkbox
+// reading "Model" still leaves whose model it is to guess. The rollup takes no prefix — it is what the grid
+// is a list of.
+const groupHeaderName = (t: (key: string) => string, group: ConversationColumnGroup): string => {
+  const origin = groupOriginLabel(t, group);
+  if (!group.tag) {
+    return origin;
+  }
+
+  const labelKey = CONVERSATION_TAG_LABEL_KEY[group.tag];
+  const tagLabel = labelKey ? t(labelKey) : group.tag;
+
+  return group.provenance === ColumnProvenance.Conversations ? tagLabel : `${origin} · ${tagLabel}`;
+};
+
+// A named origin identifies its source on its own — one origin, one enrichment — so its id needs no more
+// than the pair. `Other` is the catch-all every unnamed enrichment shares, so there the source is what keeps
+// two of them from claiming one id.
+const groupId = ({ provenance, source, tag }: ConversationColumnGroup): string =>
+  [provenance === ColumnProvenance.Other ? `${provenance}:${source}` : provenance, tag].filter(Boolean).join(':');
+
+export const CONVERSATIONS_TRACE_COLUMN_GROUPS = (
+  t: (key: string) => string,
+  schemaFields: AnalyticsEntityField[] = [],
+): ColGroupDef[] => {
+  const columns = CONVERSATIONS_TRACE_COLUMNS(t, schemaFields);
+
+  return conversationColumnGroups(columns, schemaFields).map((group) => {
+    const headerName = groupHeaderName(t, group);
+
+    return {
+      groupId: groupId(group),
+      headerName,
+      // The origin on hover as well as in colour, since a hue alone names nothing.
+      headerTooltip: `${groupOriginLabel(t, group)} · ${t(PROVENANCE_HINT_KEY[group.provenance])}`,
+      headerGroupComponent: ProvenanceHeaderGroup,
+      headerGroupComponentParams: { label: headerName, provenance: group.provenance },
+      marryChildren: true,
+      // Built from the columns themselves, so no column can be left out of every group and vanish.
+      children: group.fields.map((field) => columns.find((column) => column.field === field)) as ColDef[],
+    };
+  });
 };
 
 export const PROJECT_GRID_COLUMNS = (t: (key: string) => string): ColDef[] =>
@@ -1529,3 +1697,79 @@ export const IMPORT_VALIDATION_COLUMN = (t: (str: string) => string): ColDef => 
   sortable: false,
   filterValueGetter: ({ data }) => getImportValidationStateLabel(data, t),
 });
+
+// Saved queries. The service returns every visible row unpaged with no server-side sort or filter, so
+// these are client-side filters. Field names are the wire ones (snake_case), which is why the shared
+// created/updated columns cannot be reused as-is — only their formatting is.
+export const QUERIES_COLUMN = (t: (str: string) => string): ColDef[] => [
+  {
+    field: 'name',
+    colId: 'name',
+    headerName: t(QueriesI18nKey.Name),
+    hide: false,
+    sort: 'asc',
+    ...baseStringFilter,
+  },
+  {
+    field: 'description',
+    colId: 'description',
+    headerName: t(QueriesI18nKey.Description),
+    hide: false,
+    ...baseStringFilter,
+  },
+  {
+    field: 'source',
+    colId: 'source',
+    headerName: t(QueriesI18nKey.Source),
+    hide: false,
+    ...baseStringFilter,
+  },
+  { field: 'tag', colId: 'tag', headerName: t(QueriesI18nKey.Tag), hide: false, ...baseStringFilter },
+  {
+    field: 'scope',
+    colId: 'scope',
+    headerName: t(QueriesI18nKey.Scope),
+    hide: false,
+    valueGetter: ({ data }) =>
+      t(
+        (data as SavedQuery)?.scope === SavedQueryScope.Common
+          ? QueriesI18nKey.ScopeCommon
+          : QueriesI18nKey.ScopePersonal,
+      ),
+    ...baseStringFilter,
+  },
+  {
+    // Derived from the body, never read from a stored field: an `editor` member would be a second
+    // source of truth able to contradict the body it describes.
+    colId: 'editor',
+    headerName: t(QueriesI18nKey.Editor),
+    hide: false,
+    valueGetter: ({ data }) => t(SAVED_QUERY_EDITOR_I18N_KEYS[deriveSavedQueryEditor(data as SavedQuery)]),
+    ...baseStringFilter,
+  },
+  {
+    // The service reports no author email whenever there is none to record, so this must not assume one.
+    field: 'owner_email',
+    colId: 'owner_email',
+    headerName: t(QueriesI18nKey.SavedBy),
+    hide: false,
+    valueGetter: ({ data }) => (data as SavedQuery)?.owner_email || t(QueriesI18nKey.SavedByUnknown),
+    ...baseStringFilter,
+  },
+  {
+    field: 'updated_at',
+    colId: 'updated_at',
+    headerName: 'Updated time',
+    hide: false,
+    ...dateTimeColumn,
+    ...dateFilter,
+  },
+  {
+    field: 'created_at',
+    colId: 'created_at',
+    headerName: 'Creation time',
+    hide: true,
+    ...dateTimeColumn,
+    ...dateFilter,
+  },
+];

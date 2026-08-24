@@ -89,7 +89,7 @@ Use `Parent/Child` for a single leaf, or just `Parent` when several children cha
 ### `analytics`
 | Area | Route slug | Component folder |
 |------|-----------|------------------|
-| `analytics/QueryBuilder` | `query-builder` | `Analytics` |
+| `analytics/Queries` | `queries` | `Analytics/Queries` |
 | `analytics/Tables` | `tables` | `Analytics` |
 | `analytics/ConversationsTrace` | `conversations-trace` | `Analytics` |
 

@@ -14,9 +14,10 @@ vi.mock('@/src/hooks/use-is-tablet-screen', () => ({ useIsOnlyTabletScreen: () =
 
 // Heavy children — assert on the wrapper's wiring, not their internals.
 vi.mock('@/src/components/EntityListView/CreateEntity/CreateEntity', () => ({
-  default: ({ route, createEntity }: any) => (
+  default: ({ route, createEntity, isModal }: any) => (
     <div>
       <span>modal-route:{route}</span>
+      <span>modal-is-modal:{String(!!isModal)}</span>
       <button onClick={() => createEntity({ name: 'x' })}>invoke-create</button>
     </div>
   ),
@@ -90,6 +91,15 @@ describe('ContainersButtonsWrapper capability branching', () => {
   test('NONE shows no create button', () => {
     renderWrapper(INFERENCE_TASK.NONE);
     expect(createButton()).not.toBeInTheDocument();
+  });
+
+  test('marks the create flow as a modal so view-only fields such as Intro stay out of the popup', async () => {
+    const user = userEvent.setup();
+    renderWrapper(INFERENCE_TASK.TEXT_GENERATION);
+
+    await user.click(createButton()!);
+
+    expect(screen.getByText('modal-is-modal:true')).toBeInTheDocument();
   });
 
   test('absent inferenceTask keeps the model create flow', async () => {

@@ -4,7 +4,6 @@ import { getAccuracyColors } from '@/src/components/Common/ColorScale/utils';
 import { SCORE_INDICATOR_COMPARE_WIDTH } from '@/src/components/Common/ScoreBar/constants';
 import { isScoreIndicatorValue } from '@/src/components/Common/ScoreBar/utils';
 import CompareDeltaCellRenderer from '@/src/components/Grid/CellRenderers/CompareDeltaCellRenderer';
-import CompareEyeCellRenderer from '@/src/components/Grid/CellRenderers/CompareEyeCellRenderer';
 import ExecutionStatusCellRenderer from '@/src/components/Grid/CellRenderers/ExecutionStatusCellRenderer';
 import MetricScoreCellRenderer from '@/src/components/Grid/CellRenderers/MetricScoreCellRenderer';
 import NumericGridFilterFloatingFilter from '@/src/components/Grid/Filter/NumericGridFilterFloatingFilter';
@@ -15,8 +14,6 @@ import {
   formatCompareRunIndexHeader,
 } from '@/src/components/Runs/Compare/constants';
 import {
-  COMPARE_ACTION_COL_ID,
-  COMPARE_ACTION_COLUMN_WIDTH,
   DEFAULT_COMPARE_DELTA_HEADER,
   DELTA_COLUMN_WIDTH,
   DURATION_COLUMN_WIDTH,
@@ -30,10 +27,12 @@ import {
   METRIC_COLUMN_WIDTH,
   NO_FILTER_COL_DEF,
   NUMBER_FILTER_COL_DEF,
+  REQUEST_INDEX_COLUMN_WIDTH,
   RUN_INDEX_COLUMN_WIDTH,
   STATUS_COLUMN_WIDTH,
   TEST_CASE_NAME_COLUMN_WIDTH,
   TEXT_FILTER_COL_DEF,
+  TURN_INDEX_COLUMN_WIDTH,
 } from '@/src/components/Runs/Compare/ExecutionResults/constants';
 import { CompareColumnsCompareOptions } from '@/src/components/Runs/Compare/ExecutionResults/models';
 import {
@@ -292,28 +291,40 @@ const buildComparedExtractedColumn = (key: string, hideHighlights?: boolean): Co
   ...maybePairCellClassRules(hideHighlights, getExtractedPairKind(key), 'secondary'),
 });
 
+type CompareIndexColumnField = 'runIndex' | 'requestIndex' | 'turnIndex';
+
+const buildCompareIndexColumnPair = (
+  field: CompareIndexColumnField,
+  label: string,
+  width: number,
+): [ColDef, ColDef] => [
+  {
+    field,
+    ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, label),
+    colId: field,
+    hide: true,
+    ...NO_FILTER_COL_DEF,
+    ...fixedWidthColDef(width),
+    valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) =>
+      params.data?.[field] != null ? params.data[field]! + 1 : null,
+  },
+  {
+    colId: `cmp_${field}`,
+    ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, label),
+    hide: true,
+    ...NO_FILTER_COL_DEF,
+    ...fixedWidthColDef(width),
+    valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) =>
+      params.data?._compared?.[field] != null ? params.data._compared[field]! + 1 : '—',
+  },
+];
+
 const getComparedExecutionColumns = (hideHighlights?: boolean): ColGroupDef => ({
   headerName: EXECUTION_GROUP_HEADER,
   children: [
-    {
-      field: 'runIndex',
-      ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, '# Run number'),
-      colId: 'runIndex',
-      hide: true,
-      ...NO_FILTER_COL_DEF,
-      ...fixedWidthColDef(RUN_INDEX_COLUMN_WIDTH),
-      valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) =>
-        params.data?.runIndex != null ? params.data.runIndex + 1 : null,
-    },
-    {
-      colId: 'cmp_runIndex',
-      ...compareRunIndexHeaderDef(RUN_COMPARE_SECONDARY_INDEX, '# Run number'),
-      hide: true,
-      ...NO_FILTER_COL_DEF,
-      ...fixedWidthColDef(RUN_INDEX_COLUMN_WIDTH),
-      valueGetter: (params: ValueGetterParams<CompareAnalyticsRow>) =>
-        params.data?._compared?.runIndex != null ? params.data._compared.runIndex + 1 : '—',
-    },
+    ...buildCompareIndexColumnPair('runIndex', '# Run number', RUN_INDEX_COLUMN_WIDTH),
+    ...buildCompareIndexColumnPair('requestIndex', 'Request', REQUEST_INDEX_COLUMN_WIDTH),
+    ...buildCompareIndexColumnPair('turnIndex', 'Turn', TURN_INDEX_COLUMN_WIDTH),
     {
       field: 'responseStatusCode',
       ...compareRunIndexHeaderDef(RUN_COMPARE_PRIMARY_INDEX, 'HTTP'),
@@ -446,46 +457,5 @@ export const getCompareColumnsCompare = (
     getComparedExecutionColumns(hideHighlights),
     ...getComparedMetricGroupColumns(metrics, errorText, deltaHeader, hideHighlights, options?.theme),
     ...(extractedGroup ? [extractedGroup] : []),
-    {
-      colId: COMPARE_ACTION_COL_ID,
-      headerName: ' ',
-      ...fixedWidthColDef(COMPARE_ACTION_COLUMN_WIDTH),
-      ...NO_FILTER_COL_DEF,
-      cellRenderer: CompareEyeCellRenderer,
-      sortable: false,
-      suppressMovable: true,
-      pinned: 'right',
-      lockPinned: true,
-      suppressSpanHeaderHeight: true,
-    },
   ];
 };
-
-export const splitComparePanelColumns = (columns: ColDef[]): { panelColumns: ColDef[]; actionColumn?: ColDef } => {
-  const actionIndex = columns.findIndex((col) => col.colId === COMPARE_ACTION_COL_ID);
-  if (actionIndex === -1) {
-    return { panelColumns: columns };
-  }
-
-  return {
-    panelColumns: columns.filter((_, index) => index !== actionIndex),
-    actionColumn: columns[actionIndex],
-  };
-};
-
-export const mergeComparePanelColumns = (panelColumns: ColDef[], actionColumn?: ColDef): ColDef[] => {
-  if (!actionColumn) {
-    return panelColumns;
-  }
-
-  return [...panelColumns, { ...actionColumn, hide: false }];
-};
-
-export interface CompareEyeRendererParams {
-  onOpenRowDetail?: (row: CompareAnalyticsRow) => void;
-  selectedRowId?: string | null;
-  viewRowDetailsLabel?: string;
-}
-
-export const applyEyeCellRendererParams = (columns: ColDef[], params: CompareEyeRendererParams): ColDef[] =>
-  columns.map((col) => (col.colId === COMPARE_ACTION_COL_ID ? { ...col, cellRendererParams: params } : col));

@@ -29,6 +29,7 @@ const Header: FC<Props> = ({ run, testSuite }) => {
   const completedAt = useLocalDateTimeString(run?.completedAt);
   const suiteContext = run.suiteSnapshot ?? testSuite;
   const applicationName = getSuiteApplicationName(suiteContext);
+  const additionalRequestsCount = suiteContext?.additionalRequests?.length ?? 0;
 
   return (
     <div className="flex flex-col sm:flex-row gap-8 pb-8 border-b border-primary">
@@ -58,6 +59,10 @@ const Header: FC<Props> = ({ run, testSuite }) => {
 
       {!!run?.startedAt && <LabelledText label={t(RunsI18nKey.StartDate)} text={startedAt} />}
       {!!run?.completedAt && <LabelledText label={t(RunsI18nKey.EndDate)} text={completedAt} />}
+
+      {additionalRequestsCount > 0 && (
+        <LabelledText label={t(RunsI18nKey.RequestsInChain)} text={String(additionalRequestsCount + 1)} />
+      )}
 
       {!!run?.status && (
         <LabelledText label={t(EntityFieldsI18nKey.status)}>

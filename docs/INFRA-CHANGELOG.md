@@ -2,6 +2,15 @@
 
 All notable infrastructure-relevant changes to this project will be documented in this file.
 
+## Unreleased
+
+### Added
+
+#### Analytics
+
+- `ANALYTICS_PUBLIC_URL` [Preview] — the REST endpoint of the Analytics data-access service as an _external_ client would reach it, used to prefill the copyable snippets in a table's Connect panel. Distinct from `DIAL_ANALYTICS_API_URL`, which is how this app reaches the service and is commonly an in-cluster address a user's machine cannot resolve. When unset the snippets show a `<analytics-base-url>` placeholder (default: unset)
+- `ANALYTICS_FLIGHT_SQL_PUBLIC_URL` [Preview] — the Arrow Flight SQL endpoint as an external client would reach it, e.g. `grpc://analytics.example.com:32010`, used to prefill the Flight SQL snippets in the Connect panel. Not derived from `ANALYTICS_PUBLIC_URL`: it is a separately exposed gRPC port with a different scheme and commonly a different host. When unset the snippets show a `grpc://<analytics-host>:32010` placeholder (default: unset)
+
 ## 0.19.0
 
 ### Added

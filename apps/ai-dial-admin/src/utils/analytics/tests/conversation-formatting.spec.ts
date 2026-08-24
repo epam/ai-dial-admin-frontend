@@ -1,7 +1,10 @@
 import { describe, expect, test } from 'vitest';
 
+import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace';
 import {
+  conversationTopics,
   formatCompactNumber,
+  formatConversationDuration,
   formatConversationSpan,
   formatRelativeTime,
   formatSignificantCost,
@@ -154,5 +157,69 @@ describe('formatConversationSpan', () => {
     ['a missing end', NOW, null],
   ])('renders %s as empty', (_label, from, to) => {
     expect(formatConversationSpan(from, to)).toBe('');
+  });
+});
+
+describe('formatConversationDuration', () => {
+  test.each([
+    ['a sub-second duration', 340, '0.3s'],
+    ['a seconds duration', 6709, '6.7s'],
+    ['a whole-second duration', 30000, '30s'],
+    ['a duration just under a minute', 59999, '60s'],
+    ['a minutes duration', 275234, '4m 35s'],
+    ['a whole-minute duration', 5 * MINUTE, '5m 0s'],
+    ['an hours duration', 2 * HOUR + 30 * MINUTE, '2h 30m'],
+  ])('renders %s as %s', (_label, millis, expected) => {
+    expect(formatConversationDuration(millis)).toBe(expected);
+  });
+
+  test('reads a numeric string as well as a number', () => {
+    expect(formatConversationDuration('6709')).toBe('6.7s');
+  });
+
+  // A conversation that ran took time, so a zero records that the backend never measured it.
+  test.each([
+    ['zero', 0],
+    ['a negative value', -1],
+    ['null', null],
+    ['an empty value', ''],
+    ['an unparseable value', 'n/a'],
+  ])('renders %s as the unavailable marker rather than a zero duration', (_label, value) => {
+    expect(formatConversationDuration(value)).toBe(UNAVAILABLE_VALUE);
+  });
+});
+
+describe('conversationTopics', () => {
+  test('splits a comma-and-space list into its terms', () => {
+    expect(conversationTopics('security, code review, validation')).toEqual(['security', 'code review', 'validation']);
+  });
+
+  // The evaluator's schema asks for a comma and a single space; the model does not always comply, and both
+  // shapes appear in real data.
+  test('splits on the comma alone', () => {
+    expect(conversationTopics('capabilities,error')).toEqual(['capabilities', 'error']);
+  });
+
+  test('trims whatever spacing came back', () => {
+    expect(conversationTopics('  security ,   validation  ')).toEqual(['security', 'validation']);
+  });
+
+  test('drops empty terms rather than returning blanks', () => {
+    expect(conversationTopics('security,,  ,validation')).toEqual(['security', 'validation']);
+  });
+
+  test('returns a single term for a value with no separator', () => {
+    expect(conversationTopics('security')).toEqual(['security']);
+  });
+
+  // Absent is the common case: under a quarter of conversations carry an insight row.
+  test.each([[undefined], [null], [''], ['   '], [', ,']])('returns no terms for %s', (raw) => {
+    expect(conversationTopics(raw as string | undefined)).toEqual([]);
+  });
+
+  // The stored value is a string; anything else is a shape this view has never been given, and guessing at it
+  // would put a number or a boolean on screen as though it were a topic.
+  test.each([[42], [true]])('returns no terms for the non-string value %s', (raw) => {
+    expect(conversationTopics(raw as unknown as string)).toEqual([]);
   });
 });

@@ -1,1 +1,0 @@
-../../../.claude/skills/dial-admin-reference/SKILL.md

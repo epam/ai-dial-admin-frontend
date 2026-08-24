@@ -1,13 +1,6 @@
-/** Known `metric_score_name` statistic values, each with its own Metric Scores section description. */
-export enum MetricStatistic {
-  Avg = 'AVG',
-  P90 = 'P90',
-  P10 = 'P10',
-  Max = 'MAX',
-  Min = 'MIN',
-  Med = 'MED',
-  Count = 'COUNT',
-}
+import { MetricStatistic } from '@/src/components/Common/MetricStatistics/models';
+
+export { MetricStatistic };
 
 /** Aggregated test-case execution outcome counts for a run, derived from `eval_summaries`. */
 export interface TestCaseStatusCounts {
@@ -42,7 +35,7 @@ export interface MetricInfo {
 export interface MetricScoresData {
   /** Run-level overall score from the `overall` statistic row, or null when absent. */
   overallScore: number | null;
-  /** Distinct `metric_score_name` values (AVG/P10/…) in first-seen order — the SegmentedControl options. */
+  /** Distinct `metric_score_name` values (AVG/P10/…) in canonical control order. */
   statistics: string[];
   /** Bar groups keyed by statistic name. */
   byStatistic: Record<string, MetricScoreGroup[]>;
@@ -68,4 +61,5 @@ export interface MetricOption {
 export interface RunAnalyticsSlice {
   statusCounts: TestCaseStatusCounts;
   avgRunTimeMs: number | null;
+  avgMetricEvalDurationMs: number | null;
 }

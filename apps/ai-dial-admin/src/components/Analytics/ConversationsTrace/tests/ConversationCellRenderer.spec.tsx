@@ -3,6 +3,7 @@ import { ICellRendererParams } from 'ag-grid-community';
 import { describe, expect, test } from 'vitest';
 
 import ConversationCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/ConversationCellRenderer';
+import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace';
 import { ConversationRow } from '@/src/models/analytics/conversations-trace';
 
 const CHAT_ID = '7ab178e9-f72c-43b4-8b58-23caefc3594b';
@@ -10,6 +11,7 @@ const CHAT_ID = '7ab178e9-f72c-43b4-8b58-23caefc3594b';
 const row = (overrides: Partial<ConversationRow> = {}): ConversationRow => ({
   chat_id: CHAT_ID,
   project_id: 'data-team',
+  user_hash: 'db7327ba3decd351',
   turn_count: 13,
   total_tokens: 979030,
   total_price: '3.014346',
@@ -30,11 +32,25 @@ describe('ConversationCellRenderer', () => {
     expect(screen.getByText(CHAT_ID)).toBeInTheDocument();
   });
 
-  // No source supplies a conversation title or snippet, so the id is all the cell shows.
-  test('shows nothing beyond the conversation id', () => {
-    const { container } = renderCell(row());
+  // The cell is the conversation's whole identity: its name above, its id below.
+  test('shows the insight title above the id', () => {
+    renderCell(row({ 'conversation_insights.title': 'Poland GDP for 2024' } as Partial<ConversationRow>));
 
-    expect(container.textContent).toBe(CHAT_ID);
+    expect(screen.getByText('Poland GDP for 2024')).toBeInTheDocument();
+    expect(screen.getByText(CHAT_ID)).toBeInTheDocument();
+  });
+
+  // Substituting the id would print it on both lines, and read as though the conversation were named
+  // after its own hash — which is what most of them would show, the enrichment reaching few of them.
+  test.each([
+    ['no title field', undefined],
+    ['a null title', null],
+    ['a whitespace-only title', '   '],
+  ])('marks the title unavailable rather than repeating the id for %s', (_label, title) => {
+    renderCell(row({ 'conversation_insights.title': title } as Partial<ConversationRow>));
+
+    expect(screen.getByText(UNAVAILABLE_VALUE)).toBeInTheDocument();
+    expect(screen.getAllByText(CHAT_ID)).toHaveLength(1);
   });
 
   // Real ids run from 21 to several hundred characters, some of them URL-like rather than opaque ids.

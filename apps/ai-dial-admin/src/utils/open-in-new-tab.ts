@@ -36,7 +36,8 @@ export const getEntityPath = (
     case ApplicationRoute.Prompts:
     case ApplicationRoute.Files:
     case ApplicationRoute.AssetsApplications:
-    case ApplicationRoute.AssetsToolsets: {
+    case ApplicationRoute.AssetsToolsets:
+    case ApplicationRoute.AssetsSkills: {
       const path = version
         ? `${(data as DialPrompt).folderId}${(data as DialPrompt).name}__${version}`
         : (data as DialPrompt).path ||
@@ -66,6 +67,7 @@ export const getEntityPath = (
     case ApplicationRoute.ApplicationPublications:
     case ApplicationRoute.ToolsetPublications:
     case ApplicationRoute.ConversationPublications:
+    case ApplicationRoute.SkillPublications:
       return `${encodeURIComponent((data as Publication).requestName)}?path=${(data as Publication).path}`;
 
     case ApplicationRoute.ActivityAudit:
@@ -79,6 +81,7 @@ export const getEntityPath = (
     case ApplicationRoute.TestSuites:
     case ApplicationRoute.TestCases:
     case ApplicationRoute.Datasets:
+    case ApplicationRoute.AnalyticsQueries:
       return `${encodeURIComponent((data as { id: string }).id)}`;
     case ApplicationRoute.Runs: {
       const { id, testRunName } = data as { id: string; testRunName?: string };
