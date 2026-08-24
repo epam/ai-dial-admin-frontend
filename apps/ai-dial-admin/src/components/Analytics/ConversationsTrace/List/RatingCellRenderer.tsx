@@ -11,7 +11,7 @@ const RatingCellRenderer: FC<ICellRendererParams<ConversationRow>> = ({ data }) 
     return null;
   }
 
-  return <RatingCounts ratingUp={data.rating_up} ratingDown={data.rating_down} className="h-full" />;
+  return <RatingCounts counts={data} isPeriodScoped className="h-full" />;
 };
 
 export default RatingCellRenderer;

@@ -7,8 +7,9 @@ import {
   FEEDBACK_ENTITY,
   CONVERSATION_HOP_COUNT_ALIAS,
   OPTIONAL_DETAIL_SELECT_FIELDS,
+  OPTIONAL_FEEDBACK_FIELDS,
   OPTIONAL_USAGE_LOG_FIELDS,
-  POSITIVE_RATE_EXCLUSIVE_MIN,
+  RATING_COUNT_EXCLUSIVE_MIN,
   TURNS_ENTITY,
   USAGE_LOG_ENTITY,
 } from '@/src/constants/analytics/conversations-trace';
@@ -23,8 +24,7 @@ import {
   ConversationsField,
   FeedbackField,
   FeedbackFilter,
-  RateAnalyticsField,
-  RatingDirection,
+  ResponseRatingsField,
   TurnsField,
   UsageLogField,
 } from '@/src/models/analytics/conversations-trace';
@@ -48,7 +48,6 @@ import {
   gt,
   ico,
   inValues,
-  isNotNull,
   isNull,
   le,
   ne,
@@ -199,18 +198,35 @@ export const buildConversationDetailQuery = (chatId: string, availableFields?: s
     page: offsetPage(0, 1, true),
   });
 
-export const buildConversationFeedbackQuery = (chatId: string, limit: number): StructuredQuery =>
-  rowQuery({
-    entity: FEEDBACK_ENTITY,
-    select: [
-      col(field(RateAnalyticsField.ResponseId)),
-      col(field(RateAnalyticsField.Rate)),
-      col(field(RateAnalyticsField.RequestTime)),
+export const buildConversationFeedbackQuery = (
+  chatId: string,
+  limit: number,
+  schemaFieldNames?: string[],
+): StructuredQuery => {
+  const selectable = availableSelectFields(
+    [
+      ResponseRatingsField.ResponseId,
+      ResponseRatingsField.FirstRateTime,
+      ResponseRatingsField.LastRateTime,
+      ResponseRatingsField.RatePosCount,
+      ResponseRatingsField.RateZeroCount,
+      ResponseRatingsField.RateNegCount,
+      ResponseRatingsField.RateDistinctCount,
+      ResponseRatingsField.CommentCount,
+      ResponseRatingsField.CommentSample,
     ],
-    filter: eq(RateAnalyticsField.ChatId, value(QueryValueType.String, chatId)),
-    sort: [sortItem(RateAnalyticsField.RequestTime, QuerySortDirection.Desc)],
+    OPTIONAL_FEEDBACK_FIELDS,
+    schemaFieldNames,
+  );
+
+  return rowQuery({
+    entity: FEEDBACK_ENTITY,
+    select: selectable.map((fieldName) => col(field(fieldName))),
+    filter: eq(ResponseRatingsField.ChatId, value(QueryValueType.String, chatId)),
+    sort: [sortItem(ResponseRatingsField.LastRateTime, QuerySortDirection.Desc)],
     page: offsetPage(0, limit, true),
   });
+};
 
 // The `turns` rollup resolves what a turn is — one row per trace, with the entry time, hop count, token
 // total, cost and wall-clock duration already computed — so this reads rows rather than grouping the hop
@@ -423,15 +439,20 @@ export const buildConversationTotalsQuery = (filters: ConversationFilterParams):
   });
 
 const ratePredicates = (feedback: FeedbackFilter): QueryFilterNode[] => {
-  const threshold = value(QueryValueType.Integer, String(POSITIVE_RATE_EXCLUSIVE_MIN));
+  const threshold = value(QueryValueType.Integer, String(RATING_COUNT_EXCLUSIVE_MIN));
+  const positive = gt(ResponseRatingsField.RatePosCount, threshold);
+  const nonPositive = [
+    gt(ResponseRatingsField.RateZeroCount, threshold),
+    gt(ResponseRatingsField.RateNegCount, threshold),
+  ];
 
   switch (feedback) {
     case FeedbackFilter.Positive:
-      return [gt(RateAnalyticsField.Rate, threshold)];
+      return [positive];
     case FeedbackFilter.Negative:
-      return [le(RateAnalyticsField.Rate, threshold)];
+      return [or(nonPositive)];
     case FeedbackFilter.Rated:
-      return [isNotNull(RateAnalyticsField.Rate)];
+      return [or([positive, ...nonPositive])];
     case FeedbackFilter.All:
       return [];
   }
@@ -445,50 +466,54 @@ interface FeedbackQueryParams {
 export const buildRatedConversationIdsQuery = ({ range, feedback }: FeedbackQueryParams): StructuredQuery =>
   aggregateQuery({
     entity: FEEDBACK_ENTITY,
-    groupBy: [RateAnalyticsField.ChatId],
+    groupBy: [ResponseRatingsField.ChatId],
     select: [
-      col(field(RateAnalyticsField.ChatId)),
-      col(fn('max', [field(RateAnalyticsField.RequestTime)]), FeedbackField.LastRated),
+      col(field(ResponseRatingsField.ChatId)),
+      col(fn('max', [field(ResponseRatingsField.LastRateTime)]), FeedbackField.LastRated),
     ],
     filter: and([
-      ...timeRangePredicates(RateAnalyticsField.RequestTime, range),
-      ne(RateAnalyticsField.ChatId, emptyString),
+      ...timeRangePredicates(ResponseRatingsField.LastRateTime, range),
+      ne(ResponseRatingsField.ChatId, emptyString),
       ...ratePredicates(feedback),
     ]),
     sort: [
       sortItem(FeedbackField.LastRated, QuerySortDirection.Desc),
-      sortItem(RateAnalyticsField.ChatId, QuerySortDirection.Asc),
+      sortItem(ResponseRatingsField.ChatId, QuerySortDirection.Asc),
     ],
     page: offsetPage(0, FEEDBACK_CANDIDATE_LIMIT),
   });
 
+const ratingSums = () => [
+  col(fn('sum', [field(ResponseRatingsField.RatePosCount)]), FeedbackField.RatingUp),
+  col(fn('sum', [field(ResponseRatingsField.RateZeroCount)]), FeedbackField.RateZero),
+  col(fn('sum', [field(ResponseRatingsField.RateNegCount)]), FeedbackField.RateNegative),
+  col(fn('sum', [field(ResponseRatingsField.RateBoolFalseCount)]), FeedbackField.RateBoolFalse),
+  col(fn('sum', [field(ResponseRatingsField.RateRawCount)]), FeedbackField.RateRaw),
+  col(fn('sum', [field(ResponseRatingsField.RateEventCount)]), FeedbackField.RateEvents),
+];
+
 interface RatingsQueryParams {
   range: TimeRange;
   chatIds: string[];
-  direction: RatingDirection;
 }
 
-// `rate` is a signed integer: DIAL sends 1 for a like and -1 for a dislike, and a boolean `false` is
-// normalized to 0 — so the split cannot be derived from count and sum, and each direction is counted
-// under the same predicate the feedback filter uses. That shared predicate is the point: a conversation
-// the Positive filter selects is guaranteed to show a non-zero up count.
-const DIRECTION_FEEDBACK: Record<RatingDirection, FeedbackFilter> = {
-  [RatingDirection.Up]: FeedbackFilter.Positive,
-  [RatingDirection.Down]: FeedbackFilter.Negative,
-};
-
-export const buildConversationRatingsQuery = ({ range, chatIds, direction }: RatingsQueryParams): StructuredQuery =>
+export const buildConversationRatingsQuery = ({ range, chatIds }: RatingsQueryParams): StructuredQuery =>
   aggregateQuery({
     entity: FEEDBACK_ENTITY,
-    groupBy: [RateAnalyticsField.ChatId],
-    select: [
-      col(field(RateAnalyticsField.ChatId)),
-      col(fn('count', [field(RateAnalyticsField.Rate)]), FeedbackField.RatingCount),
-    ],
+    groupBy: [ResponseRatingsField.ChatId],
+    select: [col(field(ResponseRatingsField.ChatId)), ...ratingSums()],
     filter: and([
-      ...timeRangePredicates(RateAnalyticsField.RequestTime, range),
-      inValues(RateAnalyticsField.ChatId, QueryValueType.String, chatIds),
-      ...ratePredicates(DIRECTION_FEEDBACK[direction]),
+      ...timeRangePredicates(ResponseRatingsField.LastRateTime, range),
+      inValues(ResponseRatingsField.ChatId, QueryValueType.String, chatIds),
     ]),
     page: offsetPage(0, Math.max(chatIds.length, 1)),
+  });
+
+export const buildConversationRatingCountsQuery = (chatId: string): StructuredQuery =>
+  aggregateQuery({
+    entity: FEEDBACK_ENTITY,
+    groupBy: [ResponseRatingsField.ChatId],
+    select: [col(field(ResponseRatingsField.ChatId)), ...ratingSums()],
+    filter: eq(ResponseRatingsField.ChatId, value(QueryValueType.String, chatId)),
+    page: offsetPage(0, 1),
   });

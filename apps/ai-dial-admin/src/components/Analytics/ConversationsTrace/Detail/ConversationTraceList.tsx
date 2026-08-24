@@ -67,7 +67,7 @@ const TraceRow: FC<RowProps> = ({ turn, turnNumber, question, ratings, onOpenTra
           {formatSignificantCost(turn.cost) || UNAVAILABLE_VALUE}
         </span>
         <span className="w-14 text-right">{formatDurationMs(turn.duration_ms) || UNAVAILABLE_VALUE}</span>
-        {ratings && <RatingCounts ratingUp={ratings.rating_up ?? 0} ratingDown={ratings.rating_down ?? 0} />}
+        {ratings && <RatingCounts counts={ratings} />}
       </span>
       <IconChevronRight size={ICON_SIZE} aria-hidden className="shrink-0 text-secondary" />
     </button>

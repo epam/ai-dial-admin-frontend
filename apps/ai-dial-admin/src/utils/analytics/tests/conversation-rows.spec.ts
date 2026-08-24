@@ -1,11 +1,24 @@
 import { describe, expect, test } from 'vitest';
 
 import { ConversationRatingRow, ConversationRow } from '@/src/models/analytics/conversations-trace';
-import { attachRatings, summariseConversations, unresolvedRatings } from '@/src/utils/analytics/conversation-rows';
+import {
+  attachRatings,
+  conversationRatingCounts,
+  hasNegativeRatingCaveat,
+  negativeRatingGap,
+  summariseConversations,
+  unresolvedRatings,
+} from '@/src/utils/analytics/conversation-rows';
 
-const ratingRow = (chat_id: string, rating_count: number | string | null): ConversationRatingRow => ({
+const ratingRow = (chat_id: string, overrides: Partial<ConversationRatingRow> = {}): ConversationRatingRow => ({
   chat_id,
-  rating_count,
+  rating_up: 0,
+  rate_zero: 0,
+  rate_negative: 0,
+  rate_bool_false: 0,
+  rate_raw: 0,
+  rate_events: 0,
+  ...overrides,
 });
 
 const row = (overrides: Partial<ConversationRow> = {}): ConversationRow => ({
@@ -19,19 +32,129 @@ const row = (overrides: Partial<ConversationRow> = {}): ConversationRow => ({
   first_request_time: 0,
   rating_up: 0,
   rating_down: 0,
+  provable_down: 0,
+  captured_form: 0,
+  rate_events: 0,
   ...overrides,
 });
 
 const rows = (count: number, overrides: Partial<ConversationRow> = {}) =>
   Array.from({ length: count }, (_, index) => row({ chat_id: `chat-${index}`, ...overrides }));
 
+describe('conversationRatingCounts', () => {
+  test('composes the negative figure from the zero and negative counts', () => {
+    expect(
+      conversationRatingCounts(ratingRow('chat-1', { rating_up: 2, rate_zero: 3, rate_negative: 1 })),
+    ).toMatchObject({ rating_up: 2, rating_down: 4 });
+  });
+
+  // The case the previous count-and-sum split got wrong: one like and one dislike summed to zero.
+  test('reports one like and one dislike as one each', () => {
+    expect(conversationRatingCounts(ratingRow('chat-1', { rating_up: 1, rate_negative: 1 }))).toMatchObject({
+      rating_up: 1,
+      rating_down: 1,
+    });
+  });
+
+  test('counts a provable negative from the boolean-false and negative columns', () => {
+    expect(
+      conversationRatingCounts(ratingRow('chat-1', { rate_zero: 5, rate_negative: 2, rate_bool_false: 3 })),
+    ).toMatchObject({ rating_down: 7, provable_down: 5 });
+  });
+
+  test('reads a count returned as a string, as a ClickHouse aggregate may', () => {
+    expect(conversationRatingCounts(ratingRow('chat-1', { rating_up: '4', rate_zero: '2' }))).toMatchObject({
+      rating_up: 4,
+      rating_down: 2,
+    });
+  });
+
+  test.each([
+    ['a null count', null],
+    ['an unparseable count', 'nonsense'],
+  ])('treats %s as zero rather than as a rating', (_label, count) => {
+    expect(conversationRatingCounts(ratingRow('chat-1', { rating_up: count }))).toMatchObject({ rating_up: 0 });
+  });
+
+  test('reports a resolved zero where the rollup returned no row', () => {
+    expect(conversationRatingCounts(undefined)).toEqual({
+      rating_up: 0,
+      rating_down: 0,
+      provable_down: 0,
+      captured_form: 0,
+      rate_events: 0,
+    });
+  });
+});
+
+describe('negativeRatingGap', () => {
+  test('is the part of the negative figure no captured form accounts for', () => {
+    expect(
+      negativeRatingGap({ rating_up: 0, rating_down: 7, provable_down: 5, captured_form: 5, rate_events: 7 }),
+    ).toBe(2);
+  });
+
+  test('never reports a negative gap', () => {
+    expect(
+      negativeRatingGap({ rating_up: 0, rating_down: 2, provable_down: 5, captured_form: 5, rate_events: 2 }),
+    ).toBe(0);
+  });
+});
+
+describe('hasNegativeRatingCaveat', () => {
+  test('a partially attributable figure carries one', () => {
+    expect(
+      hasNegativeRatingCaveat({ rating_up: 0, rating_down: 7, provable_down: 5, captured_form: 5, rate_events: 7 }),
+    ).toBe(true);
+  });
+
+  test('a fully attributable figure carries none', () => {
+    expect(
+      hasNegativeRatingCaveat({ rating_up: 1, rating_down: 3, provable_down: 3, captured_form: 4, rate_events: 4 }),
+    ).toBe(false);
+  });
+
+  test('an unrated conversation carries none', () => {
+    expect(
+      hasNegativeRatingCaveat({ rating_up: 0, rating_down: 0, provable_down: 0, captured_form: 0, rate_events: 0 }),
+    ).toBe(false);
+  });
+
+  test('an unresolved figure carries none', () => {
+    expect(
+      hasNegativeRatingCaveat({
+        rating_up: null,
+        rating_down: null,
+        provable_down: null,
+        captured_form: null,
+        rate_events: null,
+      }),
+    ).toBe(false);
+  });
+});
+
+describe('negativeRatingGap :: unresolved figures', () => {
+  test('reports no gap where the provable count was never resolved', () => {
+    expect(negativeRatingGap({ rating_up: 0, rating_down: 4, provable_down: null })).toBe(0);
+  });
+
+  test('reports no gap where the provable count is absent', () => {
+    expect(negativeRatingGap({ rating_up: 0, rating_down: 4 })).toBe(0);
+  });
+
+  test('reports no gap where the negative figure was never resolved', () => {
+    expect(negativeRatingGap({ rating_up: null, rating_down: null, provable_down: 0 })).toBe(0);
+  });
+});
+
 describe('attachRatings', () => {
-  // `rate` is signed: DIAL sends 1 for a like and -1 for a dislike, and a normalized boolean false is 0.
-  // The two directions are therefore counted by separate queries, not split out of one count and sum.
-  test('takes each direction from its own result set', () => {
+  test('takes both directions from the one result set', () => {
     const given = [row({ chat_id: 'chat-1' }), row({ chat_id: 'chat-2' })];
 
-    const attached = attachRatings(given, [ratingRow('chat-1', 2)], [ratingRow('chat-1', 3), ratingRow('chat-2', 1)]);
+    const attached = attachRatings(given, [
+      ratingRow('chat-1', { rating_up: 2, rate_zero: 3 }),
+      ratingRow('chat-2', { rate_negative: 1 }),
+    ]);
 
     expect(attached.map(({ rating_up, rating_down }) => ({ rating_up, rating_down }))).toEqual([
       { rating_up: 2, rating_down: 3 },
@@ -39,30 +162,17 @@ describe('attachRatings', () => {
     ]);
   });
 
-  // The case the previous count-and-sum split got wrong: one like and one dislike summed to zero.
-  test('reports one like and one dislike as one each', () => {
-    const [attached] = attachRatings([row({ chat_id: 'chat-1' })], [ratingRow('chat-1', 1)], [ratingRow('chat-1', 1)]);
+  test('carries the caveat figures onto the row so the cell can state them', () => {
+    const [attached] = attachRatings(
+      [row({ chat_id: 'chat-1' })],
+      [ratingRow('chat-1', { rate_zero: 4, rate_bool_false: 1, rate_raw: 1, rate_events: 4 })],
+    );
 
-    expect(attached).toMatchObject({ rating_up: 1, rating_down: 1 });
-  });
-
-  test('reads a count returned as a string, as a ClickHouse aggregate may', () => {
-    const [attached] = attachRatings([row({ chat_id: 'chat-1' })], [ratingRow('chat-1', '4')], []);
-
-    expect(attached).toMatchObject({ rating_up: 4, rating_down: 0 });
-  });
-
-  test.each([
-    ['a null count', null],
-    ['an unparseable count', 'nonsense'],
-  ])('treats %s as zero rather than as a rating', (_label, count) => {
-    const [attached] = attachRatings([row({ chat_id: 'chat-1' })], [ratingRow('chat-1', count)], []);
-
-    expect(attached).toMatchObject({ rating_up: 0, rating_down: 0 });
+    expect(attached).toMatchObject({ rating_down: 4, provable_down: 1, captured_form: 1, rate_events: 4 });
   });
 
   test('ignores rating rows for conversations not on the page, preserving order and other fields', () => {
-    const attached = attachRatings(rows(2), [ratingRow('chat-9', 5)], []);
+    const attached = attachRatings(rows(2), [ratingRow('chat-9', { rating_up: 5 })]);
 
     expect(attached.map(({ chat_id }) => chat_id)).toEqual(['chat-0', 'chat-1']);
     expect(attached[0]).toMatchObject({ project_id: 'data-team', rating_up: 0, rating_down: 0 });
@@ -71,7 +181,7 @@ describe('attachRatings', () => {
   test('does not mutate the rows it was given', () => {
     const given = [row({ chat_id: 'chat-1', rating_up: null, rating_down: null })];
 
-    attachRatings(given, [ratingRow('chat-1', 1)], []);
+    attachRatings(given, [ratingRow('chat-1', { rating_up: 1 })]);
 
     expect(given[0].rating_up).toBeNull();
   });
@@ -81,7 +191,7 @@ describe('unresolvedRatings', () => {
   test('marks both sides unresolved so the cell shows nothing rather than a false zero', () => {
     const [marked] = unresolvedRatings([row({ rating_up: 2, rating_down: 1 })]);
 
-    expect(marked).toMatchObject({ chat_id: 'chat-1', rating_up: null, rating_down: null });
+    expect(marked).toMatchObject({ chat_id: 'chat-1', rating_up: null, rating_down: null, provable_down: null });
   });
 });
 

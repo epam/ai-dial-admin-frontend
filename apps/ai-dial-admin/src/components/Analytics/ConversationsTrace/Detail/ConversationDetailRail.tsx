@@ -22,7 +22,7 @@ import {
   ConversationDetailRow,
   ConversationFeedbackRow,
   ConversationInsightsState,
-  RatingCounts as RatingCountsModel,
+  ConversationRatingCounts,
 } from '@/src/models/analytics/conversations-trace';
 import { resolveConversationField } from '@/src/utils/analytics/conversation-detail-fields';
 import { conversationInsightsState, resolveInsightFields } from '@/src/utils/analytics/conversation-insights';
@@ -40,10 +40,17 @@ interface Props {
   conversation: ConversationDetailRow;
   feedback: ConversationFeedbackRow[];
   feedbackTotal: number | null;
-  ratings: RatingCountsModel;
+  ratings: ConversationRatingCounts | null;
+  isCommentTextReadable: boolean;
 }
 
-const ConversationDetailRail: FC<Props> = ({ conversation, feedback, feedbackTotal, ratings }) => {
+const ConversationDetailRail: FC<Props> = ({
+  conversation,
+  feedback,
+  feedbackTotal,
+  ratings,
+  isCommentTextReadable,
+}) => {
   const t = useI18n();
   const insightsState = conversationInsightsState(conversation);
 
@@ -82,8 +89,12 @@ const ConversationDetailRail: FC<Props> = ({ conversation, feedback, feedbackTot
         source={CONVERSATION_FEEDBACK_PANEL.sourceEntity}
       >
         <div className="flex flex-col gap-3">
-          <RatingCounts ratingUp={ratings.rating_up ?? 0} ratingDown={ratings.rating_down ?? 0} />
-          <ConversationFeedbackPanel rows={feedback} total={feedbackTotal} />
+          {ratings && <RatingCounts counts={ratings} />}
+          <ConversationFeedbackPanel
+            rows={feedback}
+            total={feedbackTotal}
+            isCommentTextReadable={isCommentTextReadable}
+          />
         </div>
       </ConversationDetailPanel>
     </ConversationRailShell>
