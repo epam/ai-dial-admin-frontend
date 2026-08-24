@@ -4,7 +4,6 @@ import { getAccuracyColors } from '@/src/components/Common/ColorScale/utils';
 import { SCORE_INDICATOR_COMPARE_WIDTH } from '@/src/components/Common/ScoreBar/constants';
 import { isScoreIndicatorValue } from '@/src/components/Common/ScoreBar/utils';
 import CompareDeltaCellRenderer from '@/src/components/Grid/CellRenderers/CompareDeltaCellRenderer';
-import CompareEyeCellRenderer from '@/src/components/Grid/CellRenderers/CompareEyeCellRenderer';
 import ExecutionStatusCellRenderer from '@/src/components/Grid/CellRenderers/ExecutionStatusCellRenderer';
 import MetricScoreCellRenderer from '@/src/components/Grid/CellRenderers/MetricScoreCellRenderer';
 import NumericGridFilterFloatingFilter from '@/src/components/Grid/Filter/NumericGridFilterFloatingFilter';
@@ -15,8 +14,6 @@ import {
   formatCompareRunIndexHeader,
 } from '@/src/components/Runs/Compare/constants';
 import {
-  COMPARE_ACTION_COL_ID,
-  COMPARE_ACTION_COLUMN_WIDTH,
   DEFAULT_COMPARE_DELTA_HEADER,
   DELTA_COLUMN_WIDTH,
   DURATION_COLUMN_WIDTH,
@@ -460,46 +457,5 @@ export const getCompareColumnsCompare = (
     getComparedExecutionColumns(hideHighlights),
     ...getComparedMetricGroupColumns(metrics, errorText, deltaHeader, hideHighlights, options?.theme),
     ...(extractedGroup ? [extractedGroup] : []),
-    {
-      colId: COMPARE_ACTION_COL_ID,
-      headerName: ' ',
-      ...fixedWidthColDef(COMPARE_ACTION_COLUMN_WIDTH),
-      ...NO_FILTER_COL_DEF,
-      cellRenderer: CompareEyeCellRenderer,
-      sortable: false,
-      suppressMovable: true,
-      pinned: 'right',
-      lockPinned: true,
-      suppressSpanHeaderHeight: true,
-    },
   ];
 };
-
-export const splitComparePanelColumns = (columns: ColDef[]): { panelColumns: ColDef[]; actionColumn?: ColDef } => {
-  const actionIndex = columns.findIndex((col) => col.colId === COMPARE_ACTION_COL_ID);
-  if (actionIndex === -1) {
-    return { panelColumns: columns };
-  }
-
-  return {
-    panelColumns: columns.filter((_, index) => index !== actionIndex),
-    actionColumn: columns[actionIndex],
-  };
-};
-
-export const mergeComparePanelColumns = (panelColumns: ColDef[], actionColumn?: ColDef): ColDef[] => {
-  if (!actionColumn) {
-    return panelColumns;
-  }
-
-  return [...panelColumns, { ...actionColumn, hide: false }];
-};
-
-export interface CompareEyeRendererParams {
-  onOpenRowDetail?: (row: CompareAnalyticsRow) => void;
-  selectedRowId?: string | null;
-  viewRowDetailsLabel?: string;
-}
-
-export const applyEyeCellRendererParams = (columns: ColDef[], params: CompareEyeRendererParams): ColDef[] =>
-  columns.map((col) => (col.colId === COMPARE_ACTION_COL_ID ? { ...col, cellRendererParams: params } : col));

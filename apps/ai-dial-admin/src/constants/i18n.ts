@@ -2127,7 +2127,6 @@ export enum RunsI18nKey {
   RunCompareDisplay = 'Runs.RunCompareDisplay',
   OnlyMatchingTestCases = 'Runs.OnlyMatchingTestCases',
   RunCompareMatchedScoresLoadFailed = 'Runs.RunCompareMatchedScoresLoadFailed',
-  RunCompareViewRowDetails = 'Runs.RunCompareViewRowDetails',
   RunCompareRows = 'Runs.RunCompareRows',
   RunCompareTable = 'Runs.RunCompareTable',
   RunComparePivot = 'Runs.RunComparePivot',
