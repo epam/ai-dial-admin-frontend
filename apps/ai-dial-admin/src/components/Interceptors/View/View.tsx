@@ -72,7 +72,7 @@ const InterceptorView: FC<Props> = ({ originalInterceptor, names, etag, ...props
   );
 
   useEffect(() => {
-    const name = originalInterceptor?.name;
+    const name = encodeURIComponent(originalInterceptor?.name || '');
     if (!coreInterceptor && name) {
       getReqRef.current(getCoreInterceptor, name).then((data) => {
         setCoreInterceptor(data.response);

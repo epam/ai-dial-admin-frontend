@@ -69,7 +69,7 @@ const RolesView: FC<Props> = ({ originalRole, etag, keys, ...props }) => {
     [isEditorEnabled, selectedFormat],
   );
   useEffect(() => {
-    const name = (originalRole as { name: string })?.name;
+    const name = encodeURIComponent((originalRole as { name: string })?.name);
     if (!coreRole && name) {
       getReqRef.current(getCoreRole, name).then((data) => {
         setCoreRole(data.response);

@@ -71,7 +71,7 @@ const KeyView: FC<Props> = ({ originalKey, etag, ...props }) => {
   );
 
   useEffect(() => {
-    const name = originalKey?.name;
+    const name = encodeURIComponent(originalKey?.name || '');
     if (!coreKey && name) {
       getReqRef.current(getCoreKey, name).then((data) => {
         setCoreKey(data.response);
