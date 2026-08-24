@@ -3200,6 +3200,13 @@ always read are required; every column added since — `traces`, the cache, cach
 counts, the chain cost, and the insight columns — is optional. With no schema available the query SHALL name
 the required set alone.
 
+The insight enrichment's **descriptive** fields SHALL all be named where the schema reports them, not a
+subset of them: the conversation's title, its summary, its sentiment and sentiment score, its topic and
+topics, its language and its resolution status. A descriptive insight field the query does not name is a
+field the detail view cannot render at all, and the reader has no way to tell that from a conversation the
+evaluator never reached. The enrichment's `provenance`-tagged fields are not covered by this rule — they
+are the evaluation's own bookkeeping, and only `truncated` is read, to state the heading's caveat.
+
 The selected set SHALL include the rollup's enrichment columns where the schema reports them, whose exposed
 names are qualified flat names containing a dot. The query SHALL send such a name whole rather than treating
 the dot as a path.
@@ -3228,6 +3235,15 @@ field for those callers rather than being refused cleanly, making the whole view
 
 - **WHEN** the single-conversation query is built and the schema reports the insight columns
 - **THEN** its select names `conversation_insights.title`
+- **AND** it names the summary, sentiment, sentiment score, topic, topics, language and resolution status
+- **AND** it names `conversation_insights.truncated`
+
+#### Scenario: A descriptive insight field the schema omits is not named
+
+- **WHEN** the schema reports the insight enrichment but does not report its resolution status
+- **THEN** the select names the descriptive insight fields the schema does report
+- **AND** it does not name `conversation_insights.resolution_status`
+- **AND** the query returns a row
 
 #### Scenario: An instance without the enrichment still resolves a conversation
 
@@ -3621,9 +3637,9 @@ turn and the next by another.
 
 ### Requirement: Conversation detail side panels and their provenance
 
-The detail view SHALL present its supporting fields as labelled panels: token and cost usage, feedback, and
-record metadata. Each panel SHALL carry an icon coloured by its source, so the panels are distinguishable at
-a glance rather than by reading their headings.
+The detail view SHALL present its supporting fields as labelled panels: the conversation's insights, token
+and cost usage, feedback, and record metadata. Each panel SHALL carry an icon coloured by its source, so the
+panels are distinguishable at a glance rather than by reading their headings.
 
 Each panel SHALL name the entity it reads from, and MUST NOT overstate it. **Every** panel SHALL have a real
 source: the view MUST NOT present a panel no queried entity populates, because a panel of nothing but
@@ -3637,14 +3653,43 @@ composition of the entity as a separate thing the view queried.
 This is one half of a rule the whole feature follows, and the two halves SHALL NOT be conflated:
 
 - A **catalog identifier**, rendered in monospace, claims **the entity the page queried**. It SHALL name
-  `conversations` or `rate_analytics` and SHALL NEVER name an enrichment — in a panel's source, in the page
-  header's provenance line, or anywhere else an identifier appears.
+  `conversations` or the entity the conversation's ratings are read from, and SHALL NEVER name an
+  enrichment — in a panel's source, in a page header's provenance line, or anywhere else an identifier
+  appears. It is stated as the entity's role rather than as a fixed name so that the rule does not have to
+  be restated when the rating source changes.
 - A **readable origin label** claims **where a value came from**, which is a different question and decides
   whether an empty cell means "not recorded" or "not yet evaluated". It SHALL distinguish an enrichment from
   the rollup it decorates.
 
 Where both registers describe the same origin they SHALL carry the same provenance colour, so an identifier
-and a label for one source cannot appear to disagree.
+and a label for one source cannot appear to disagree. Where they describe **different** origins — a panel
+reading an enrichment through the entity that exposes it — the two registers SHALL be free to differ: the
+panel's identifier states the entity queried while its colour states the enrichment the values came from.
+A panel's identifier and its colour are therefore two independent claims, and the view MUST NOT derive one
+from the other. Deriving the colour from the identifier would paint an enrichment-sourced panel as the
+rollup, which is the mis-attribution the two registers exist to prevent.
+
+The **insights panel** SHALL present the conversation's insight enrichment: its summary, its sentiment, its
+resolution status, its topic and topics, and its language. It SHALL take the **insight** provenance colour
+and SHALL name `conversations` as its source, per the rule above. It MUST NOT restate the conversation's
+title, which is the view's heading.
+
+The insights panel SHALL render **only where the conversation carries an insight row**. Where it does not,
+the view SHALL state in the panel's place, in text, that the conversation has not been evaluated — and MUST
+NOT render the panel with its fields marked unavailable. The enrichment runs per conversation and reaches a
+minority of them, so a panel of unavailable markers would be the common case rather than the exception, and
+it would state a shape the record does not have. The statement SHALL distinguish *not yet evaluated* from
+*this instance carries no insight enrichment at all*: the first is a conversation the evaluator has not
+reached, the second is a capability the deployment does not have, and a reader cannot act on the two the
+same way.
+
+The panel's summary SHALL render as prose rather than as a label-and-value row: it is two or three sentences
+describing what happened, and a value slot sized for a figure would truncate it. The two fields whose values
+form a closed vocabulary — sentiment and resolution status — SHALL render as badges, so the reader can scan
+them rather than read them, and SHALL render their values as readable words rather than as the raw
+underscored token the evaluator emits. A value the frontend holds no styling for SHALL render as a neutral
+badge carrying that value's text, never dropped and never styled as though it were a recognised one: the
+evaluator's vocabulary is declared on the service side and can gain a value without a frontend release.
 
 The usage panel SHALL state prompt tokens, completion tokens, total tokens, total cost and the recorded
 durations from the rollup, laid out as headline figures rather than a label-and-value list. Monetary values SHALL carry the emphasis
@@ -3684,8 +3729,8 @@ map to a colour, so a newly added source cannot render unstyled.
 
 #### Scenario: Panels render with their sources named
 
-- **WHEN** the detail view renders
-- **THEN** the usage, feedback and metadata panels render
+- **WHEN** the detail view renders a conversation carrying an insight row
+- **THEN** the insights, usage, feedback and metadata panels render
 - **AND** each names the entity it reads from
 
 #### Scenario: The usage panel reports real values
@@ -3697,6 +3742,41 @@ map to a colour, so a newly added source cannot render unstyled.
 
 - **WHEN** the detail view renders
 - **THEN** every panel it renders has a real source entity
+
+#### Scenario: The insights panel states the evaluator's reading
+
+- **WHEN** a conversation carries an insight row
+- **THEN** the insights panel states its summary, sentiment, resolution status, topic, topics and language
+- **AND** it does not restate the conversation's title
+
+#### Scenario: An unevaluated conversation gets a statement, not a panel of dashes
+
+- **WHEN** the detail view renders a conversation the insight enrichment carries no row for
+- **THEN** no insights panel renders
+- **AND** the view states in text that the conversation has not been evaluated
+- **AND** no insight field renders as an unavailable marker
+
+#### Scenario: An instance without the enrichment says so distinctly
+
+- **WHEN** the detail view renders on an instance whose schema reports no insight column
+- **THEN** the view's statement distinguishes an absent enrichment from an unevaluated conversation
+
+#### Scenario: A closed-vocabulary value renders as a readable badge
+
+- **WHEN** the insights panel renders a resolution status of `partially_resolved`
+- **THEN** it renders as a badge reading readable words rather than the underscored token
+
+#### Scenario: An unrecognised vocabulary value still renders
+
+- **WHEN** the insights panel renders a sentiment value the frontend holds no styling for
+- **THEN** a neutral badge carrying that value's text renders
+- **AND** the value is neither dropped nor styled as a recognised one
+
+#### Scenario: The insights panel is coloured by the enrichment and identified by the entity
+
+- **WHEN** the insights panel renders
+- **THEN** its monospace source identifier names `conversations`
+- **AND** its icon carries the insight provenance colour rather than the rollup's
 
 #### Scenario: A duration figure carries a keyboard-reachable caveat
 

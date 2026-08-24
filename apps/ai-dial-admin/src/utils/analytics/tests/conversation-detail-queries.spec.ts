@@ -89,7 +89,7 @@ describe('buildConversationDetailQuery', () => {
     const names = selectedNames(detailQuery().select);
 
     expect(names).toEqual(Object.values(ConversationsField));
-    expect(names).toHaveLength(18);
+    expect(names).toHaveLength(24);
   });
 
   // `traces` is catalogued heavy, so a default projection returns no value for it and the metadata panel's
@@ -106,6 +106,60 @@ describe('buildConversationDetailQuery', () => {
 
     expect(names).toContain('conversation_insights.title');
     expect(names).toContain(ConversationsField.InsightTitle);
+  });
+
+  test('names every descriptive insight column, not a subset', () => {
+    const names = selectedNames(detailQuery().select);
+
+    expect(names).toEqual(
+      expect.arrayContaining([
+        ConversationsField.InsightSummary,
+        ConversationsField.InsightSentiment,
+        ConversationsField.InsightSentimentScore,
+        ConversationsField.InsightTopic,
+        ConversationsField.InsightTopics,
+        ConversationsField.InsightLanguage,
+        ConversationsField.InsightResolutionStatus,
+      ]),
+    );
+    expect(names).toContain(ConversationsField.InsightTruncated);
+  });
+
+  test('omits one descriptive insight column the schema does not report', () => {
+    const withoutResolution = ALL_FIELDS.filter((name) => name !== ConversationsField.InsightResolutionStatus);
+    const names = selectedNames(detailQuery(withoutResolution).select);
+
+    expect(names).not.toContain(ConversationsField.InsightResolutionStatus);
+    expect(names).toContain(ConversationsField.InsightSentiment);
+    expect(names).toContain(ConversationsField.InsightSummary);
+  });
+
+  test('names no insight column when the schema reports none', () => {
+    const withoutInsights = ALL_FIELDS.filter((name) => !name.startsWith('conversation_insights.'));
+    const names = selectedNames(detailQuery(withoutInsights).select);
+
+    expect(names.some((name) => name.startsWith('conversation_insights.'))).toBe(false);
+    expect(names).toContain(ConversationsField.ChatId);
+  });
+
+  test('treats every descriptive insight field as optional', () => {
+    expect(OPTIONAL_DETAIL_SELECT_FIELDS).toEqual(
+      expect.arrayContaining([
+        ConversationsField.InsightSummary,
+        ConversationsField.InsightSentiment,
+        ConversationsField.InsightSentimentScore,
+        ConversationsField.InsightTopic,
+        ConversationsField.InsightLanguage,
+        ConversationsField.InsightResolutionStatus,
+      ]),
+    );
+    expect(REQUIRED_DETAIL_SELECT_FIELDS.some((name) => name.startsWith('conversation_insights.'))).toBe(false);
+  });
+
+  test('names no field twice', () => {
+    const names = selectedNames(detailQuery().select);
+
+    expect(new Set(names).size).toBe(names.length);
   });
 
   test('omits the columns an instance does not carry', () => {
