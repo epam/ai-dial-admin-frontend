@@ -186,7 +186,7 @@ Scope-based reading SHALL apply only once the schema is known. Before it loads, 
 #### Scenario: The stacked preview clears when expanded
 
 - **WHEN** that group is expanded
-- **THEN** the `GROUP` row's per-turn cells render empty, because the turn rows below now show each value
+- **THEN** the `GROUP` row's per-turn cells show an em dash placeholder, because the turn rows below now show each value
 
 #### Scenario: A shared field is edited once
 

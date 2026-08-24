@@ -1,10 +1,13 @@
 import { describe, test, expect } from 'vitest';
 import {
+  buildTurnEffectiveData,
   convertVariableIntoInitialRequest,
   generateInputBindingsRowData,
   generateVariablesRowData,
+  perTurnFieldNames,
+  resolveVariablesForTurn,
 } from '../template-variables';
-import { InputBinding, TemplateVariable } from '@/src/models/evaluation/test-suite';
+import { InputBinding, TemplateVariable, TestCaseSchema } from '@/src/models/evaluation/test-suite';
 import { InputBindingType, TestCaseItemType } from '@/src/types/evaluation';
 
 const createVariable = (overrides?: Partial<TemplateVariable>): TemplateVariable => ({
@@ -14,6 +17,71 @@ const createVariable = (overrides?: Partial<TemplateVariable>): TemplateVariable
   hasDefault: false,
   sources: ['body'],
   ...overrides,
+});
+
+describe('buildTurnEffectiveData', () => {
+  test('takes shared fields from data and per-turn fields from turnData only', () => {
+    const result = buildTurnEffectiveData(
+      { persona: 'shared', prompt: 'wrong-side' },
+      { prompt: 'turn-prompt', persona: 'wrong-side' },
+      new Set(['prompt']),
+    );
+
+    expect(result).toEqual({ persona: 'shared', prompt: 'turn-prompt' });
+  });
+
+  test('returns empty object when both maps are missing', () => {
+    expect(buildTurnEffectiveData(undefined, undefined, new Set(['prompt']))).toEqual({});
+  });
+});
+
+describe('perTurnFieldNames', () => {
+  test('collects names of fields flagged perTurn', () => {
+    const schema: TestCaseSchema[] = [
+      { name: 'prompt', type: TestCaseItemType.STRING, required: false, description: '', perTurn: true },
+      { name: 'persona', type: TestCaseItemType.STRING, required: false, description: '' },
+    ];
+
+    expect(perTurnFieldNames(schema)).toEqual(new Set(['prompt']));
+  });
+
+  test('returns an empty set when schema is undefined', () => {
+    expect(perTurnFieldNames(undefined)).toEqual(new Set());
+  });
+});
+
+describe('resolveVariablesForTurn', () => {
+  test('prefers constantValue over dataField', () => {
+    const variables = [createVariable({ name: 'model' })];
+    const bindings: InputBinding[] = [{ templateVariable: 'model', constantValue: 'gpt-4', dataField: 'model_field' }];
+
+    const result = resolveVariablesForTurn(variables, bindings, { model_field: 'ignored' });
+
+    expect(result[0].resolvedValue).toBe('gpt-4');
+  });
+
+  test('resolves dataField from effective data', () => {
+    const variables = [createVariable({ name: 'prompt' })];
+    const bindings: InputBinding[] = [{ templateVariable: 'prompt', dataField: 'user_prompt' }];
+
+    const result = resolveVariablesForTurn(variables, bindings, { user_prompt: 'Hello' });
+
+    expect(result[0].resolvedValue).toBe('Hello');
+  });
+
+  test('falls back to variable name lookup then default then null', () => {
+    const withName = resolveVariablesForTurn([createVariable({ name: 'q' })], [], { q: 'from-name' });
+    const withDefault = resolveVariablesForTurn(
+      [createVariable({ name: 'q', hasDefault: true, defaultValue: 'fallback' })],
+      [],
+      {},
+    );
+    const unbound = resolveVariablesForTurn([createVariable({ name: 'q' })], [], {});
+
+    expect(withName[0].resolvedValue).toBe('from-name');
+    expect(withDefault[0].resolvedValue).toBe('fallback');
+    expect(unbound[0].resolvedValue).toBeNull();
+  });
 });
 
 describe('generateInputBindingsRowData', () => {

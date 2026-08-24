@@ -192,10 +192,19 @@ export interface InputBindingRowData extends InputBinding {
   defaultValue?: unknown;
 }
 
+export interface TryOutHistoryEntry {
+  resolvedRequest: Record<string, unknown>;
+  response: Record<string, unknown>;
+  durationMs?: number;
+  traceId?: string;
+  grafanaTraceUrl?: string;
+}
+
 export interface TryOutResponse {
   resolvedRequest: Record<string, unknown>;
   response: Record<string, unknown>;
   grafanaTraceUrl?: string;
+  history?: TryOutHistoryEntry[];
 }
 
 export interface ArgumentRow {
