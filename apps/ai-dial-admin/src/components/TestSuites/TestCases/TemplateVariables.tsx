@@ -1,22 +1,16 @@
 'use client';
 
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getTestSuiteTemplateVariables } from '@/src/app/[lang]/test-suites/actions';
 import DynamicConfiguration from '@/src/components/TestSuites/Common/DynamicConfiguration/DynamicConfiguration';
+import { useInputBindingHandlers } from '@/src/components/TestSuites/TestCases/use-input-binding-handlers';
+import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { STANDARD_CONTROL_WIDTH } from '@/src/constants/main-layout';
-import {
-  generateInputBinding,
-  generateInputBindingsRowData,
-} from '@/src/components/TestSuites/utils/template-variables';
-import {
-  InputBinding,
-  InputBindingRowData,
-  TemplateVariable,
-  TestCaseSchema,
-  TestSuite,
-} from '@/src/models/evaluation/test-suite';
-import { InputBindingType } from '@/src/types/evaluation';
+import { useI18n } from '@/src/locales/client';
+import { getRequestLabel } from '@/src/utils/evaluation/request-chain';
+import { generateInputBindingsRowData } from '@/src/components/TestSuites/utils/template-variables';
+import { InputBinding, TemplateVariable, TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
 
 interface Props {
   selectedTestSuite: TestSuite;
@@ -25,18 +19,9 @@ interface Props {
 }
 
 const TemplateVariables: FC<Props> = ({ selectedTestSuite, onChange, schema }) => {
+  const t = useI18n();
   const [variables, setVariables] = useState<TemplateVariable[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  const bindingsRef = useRef(selectedTestSuite.inputBindings || []);
-  const onChangeRef = useRef(onChange);
-  const selectedTestSuiteRef = useRef(selectedTestSuite);
-
-  useEffect(() => {
-    onChangeRef.current = onChange;
-    selectedTestSuiteRef.current = selectedTestSuite;
-    bindingsRef.current = selectedTestSuite.inputBindings || [];
-  }, [onChange, selectedTestSuite]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -55,47 +40,22 @@ const TemplateVariables: FC<Props> = ({ selectedTestSuite, onChange, schema }) =
     [variables, selectedTestSuite.inputBindings],
   );
 
-  const upsertBinding = useCallback((templateVariable: string, update: (binding: InputBinding) => InputBinding) => {
-    const inputBindings = [...bindingsRef.current];
-    const index = inputBindings.findIndex((b) => b.templateVariable === templateVariable);
-    const base: InputBinding = index === -1 ? { templateVariable } : { ...inputBindings[index] };
-    const updated = update(base);
-    if (index === -1) {
-      inputBindings.push(updated);
-    } else {
-      inputBindings.splice(index, 1, updated);
-    }
-    return inputBindings;
-  }, []);
-
-  const onChangeValue = useCallback(
-    (row: InputBindingRowData, value: unknown) => {
-      const inputBindings = upsertBinding(row.templateVariable, (b) => ({
-        ...b,
-        constantValue: value,
-      }));
-      onChangeRef.current({ ...selectedTestSuiteRef.current, inputBindings }, true);
-    },
-    [upsertBinding],
+  const onBuildUpdatedTestSuite = useCallback(
+    (suite: TestSuite, inputBindings: InputBinding[]) => ({ ...suite, inputBindings }),
+    [],
   );
 
-  const onChangeType = useCallback(
-    (row: InputBindingRowData, type: InputBindingType) => {
-      const inputBindings = upsertBinding(row.templateVariable, (b) =>
-        generateInputBinding({ ...b, constantValue: void 0, dataField: void 0 }, 'type', type),
-      );
-      onChangeRef.current({ ...selectedTestSuiteRef.current, inputBindings });
-    },
-    [upsertBinding],
-  );
+  const { onChangeValue, onChangeType, onChangeDataField } = useInputBindingHandlers({
+    bindings: selectedTestSuite.inputBindings || [],
+    selectedTestSuite,
+    onChange,
+    onBuildUpdatedTestSuite,
+  });
 
-  const onChangeDataField = useCallback(
-    (row: InputBindingRowData, dataField: string) => {
-      const inputBindings = upsertBinding(row.templateVariable, (b) => generateInputBinding(b, 'dataField', dataField));
-      onChangeRef.current({ ...selectedTestSuiteRef.current, inputBindings });
-    },
-    [upsertBinding],
-  );
+  /** Only a chain needs the section named — a lone request has nothing to be told apart from. */
+  const sectionTitle = selectedTestSuite.additionalRequests?.length
+    ? `${t(TestSuitesI18nKey.DynamicConfiguration)} — ${getRequestLabel(selectedTestSuite, 0, t(TestSuitesI18nKey.Request))}`
+    : undefined;
 
   return (
     <DynamicConfiguration
@@ -104,6 +64,7 @@ const TemplateVariables: FC<Props> = ({ selectedTestSuite, onChange, schema }) =
       schema={schema}
       showTypeSelector
       loading={isLoading}
+      title={sectionTitle}
       containerClassName={STANDARD_CONTROL_WIDTH}
       contentClassName="max-h-[350px] overflow-y-auto"
       onChangeValue={onChangeValue}

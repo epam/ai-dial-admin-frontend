@@ -5,6 +5,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import { isAssetView } from '@/src/utils/is-view';
 import AppRunnerCreateProperties from '@/src/components/Assets/AppRunners/CreateProperties';
+import SkillCreateProperties from '@/src/components/Assets/Skills/CreateProperties';
 import { DialAppRunnerResource } from '@/src/models/dial/resource';
 import AssetProperties from './AssetProperties';
 import { AssetWithVersion } from '@/src/models/dial/deployment-asset';
@@ -40,6 +41,16 @@ const Properties = <T extends object>({
         entity={entity as DialAppRunnerResource}
         names={props.names}
         isModal={props.isModal}
+        onChangeEntity={props.onChangeEntity}
+      />
+    );
+  }
+
+  if (view === ApplicationRoute.AssetsSkills) {
+    return (
+      <SkillCreateProperties
+        entity={entity as { name?: string; description?: string }}
+        names={props.names}
         onChangeEntity={props.onChangeEntity}
       />
     );

@@ -14,6 +14,7 @@ interface Props<T> {
   entity: T;
   disabled?: boolean;
   isFullWidth?: boolean;
+  required?: boolean;
   onChangeEntity?: (entity: T) => void;
 }
 
@@ -22,6 +23,7 @@ const DescriptionControl = <T extends { description?: string }>({
   onChangeEntity,
   isFullWidth = true,
   disabled,
+  required,
   ...props
 }: Props<T>) => {
   const t = useI18n();
@@ -44,7 +46,7 @@ const DescriptionControl = <T extends { description?: string }>({
   return (
     <DialTextarea
       id="description"
-      labelProps={{ label: t(EntityFieldsI18nKey.description) }}
+      labelProps={{ label: t(EntityFieldsI18nKey.description), required }}
       placeholder={t(EntityPlaceholdersI18nKey.Description)}
       value={entity.description}
       error={descriptionError?.text}

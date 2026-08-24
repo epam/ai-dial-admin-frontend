@@ -5,6 +5,7 @@ export interface SuggestionOption {
   label: string;
   value: string;
   type: string;
+  detail?: string;
 }
 
 interface Props {
@@ -45,7 +46,7 @@ const Suggestions: FC<Props> = ({ suggestions, highlightIndex, onSelectSuggestio
           onMouseDown={handleSelectSuggestion(option)}
         >
           <span className="small font-medium">{option.label}</span>
-          <span className="small text-secondary truncate">{option.type}</span>
+          <span className="small text-secondary truncate">{option.detail || option.type}</span>
         </li>
       ))}
     </ul>

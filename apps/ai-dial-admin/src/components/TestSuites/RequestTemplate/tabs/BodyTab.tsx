@@ -8,6 +8,7 @@ import { ContentType } from '@/src/components/TestSuites/constants/content-type'
 import FormDataGrid, { FormDataGridRef } from '@/src/components/TestSuites/RequestTemplate/components/FormDataGrid';
 import { TestSuiteRequestTemplate } from '@/src/models/evaluation/test-suite';
 import { FormDataPart } from '@/src/models/form-data';
+import { JsonataVariable } from '@/src/models/jsonata';
 
 export interface BodyTabRef {
   add: () => void;
@@ -19,10 +20,11 @@ interface Props {
   bodyText: string;
   onChangeBodyText: (text: string) => void;
   changeTemplate: (template: TestSuiteRequestTemplate) => void;
+  jsonataVariables?: JsonataVariable[];
 }
 
 const BodyTab = forwardRef<BodyTabRef, Props>(
-  ({ selectedTestSuiteId, template, bodyText, onChangeBodyText, changeTemplate }, ref) => {
+  ({ selectedTestSuiteId, template, bodyText, onChangeBodyText, changeTemplate, jsonataVariables }, ref) => {
     const isJsonataContent = template.body?.jsonataContent != null;
     const isJsonContent = useMemo(() => template.body?.contentType === ContentType.JSON, [template.body?.contentType]);
     const formDataGridRef = useRef<FormDataGridRef>(null);
@@ -82,7 +84,12 @@ const BodyTab = forwardRef<BodyTabRef, Props>(
     return (
       <div className="w-full h-[350px]">
         {isJsonataContent ? (
-          <JsonataEditor value={bodyText} onChange={onChangeJsonata} options={{ stickyScroll: { enabled: false } }} />
+          <JsonataEditor
+            value={bodyText}
+            onChange={onChangeJsonata}
+            options={{ stickyScroll: { enabled: false } }}
+            variables={jsonataVariables}
+          />
         ) : isJsonContent ? (
           <JsonEditor
             entity={(template.body?.content || {}) as Record<string, unknown>}

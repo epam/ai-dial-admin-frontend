@@ -1,6 +1,11 @@
 import { describe, expect, test } from 'vitest';
-import { filterParameterBindings, getTemplateParameters } from '../request-template-params';
+import {
+  filterParameterBindings,
+  getTemplateParameterVariables,
+  getTemplateParameters,
+} from '../request-template-params';
 import { InputBinding, TestSuiteRequestTemplate } from '@/src/models/evaluation/test-suite';
+import { TestCaseItemType } from '@/src/types/evaluation';
 
 describe('getTemplateParameters', () => {
   test('should return empty array when template is undefined', () => {
@@ -89,6 +94,96 @@ describe('getTemplateParameters', () => {
     };
 
     expect(getTemplateParameters(template)).toEqual(['question']);
+  });
+});
+
+describe('getTemplateParameterVariables', () => {
+  test('should return empty array when template is undefined', () => {
+    expect(getTemplateParameterVariables(undefined)).toEqual([]);
+  });
+
+  test('should return empty array when template has no placeholders', () => {
+    const template: TestSuiteRequestTemplate = {
+      urlTemplate: '/api/static',
+      body: { message: 'static text' },
+    };
+
+    expect(getTemplateParameterVariables(template)).toEqual([]);
+  });
+
+  test('should scan url, body, headers and query params, marking defaults', () => {
+    const template: TestSuiteRequestTemplate = {
+      urlTemplate: '/api/${{tenantId}}/resource/${{resourceId:default-id}}',
+      body: {
+        metadata: { owner: '${{owner}}' },
+      },
+      headers: [{ key: 'x-user', value: '${{userId}}' }],
+      queryParams: [{ key: 'page', value: '${{page:1}}' }],
+    };
+
+    expect(getTemplateParameterVariables(template)).toEqual([
+      { name: 'tenantId', hasDefault: false, defaultValue: null, effectiveType: TestCaseItemType.STRING, sources: [] },
+      {
+        name: 'resourceId',
+        hasDefault: true,
+        defaultValue: 'default-id',
+        effectiveType: TestCaseItemType.STRING,
+        sources: [],
+      },
+      { name: 'owner', hasDefault: false, defaultValue: null, effectiveType: TestCaseItemType.STRING, sources: [] },
+      { name: 'userId', hasDefault: false, defaultValue: null, effectiveType: TestCaseItemType.STRING, sources: [] },
+      { name: 'page', hasDefault: true, defaultValue: '1', effectiveType: TestCaseItemType.STRING, sources: [] },
+    ]);
+  });
+
+  test('extracts a placeholder written inside a jsonataContent expression', () => {
+    const template: TestSuiteRequestTemplate = {
+      urlTemplate: '/api',
+      body: { jsonataContent: '{ "q": "${{question:fallback}}" }' },
+    };
+
+    expect(getTemplateParameterVariables(template)).toEqual([
+      {
+        name: 'question',
+        hasDefault: true,
+        defaultValue: 'fallback',
+        effectiveType: TestCaseItemType.STRING,
+        sources: [],
+      },
+    ]);
+  });
+
+  test('should dedupe repeated placeholders, keeping the first occurrence default', () => {
+    const template: TestSuiteRequestTemplate = {
+      urlTemplate: '/api/${{id:first-default}}/${{id:second-default}}',
+      body: { ref: '${{id}}' },
+    };
+
+    expect(getTemplateParameterVariables(template)).toEqual([
+      {
+        name: 'id',
+        hasDefault: true,
+        defaultValue: 'first-default',
+        effectiveType: TestCaseItemType.STRING,
+        sources: [],
+      },
+    ]);
+  });
+
+  test('should trim whitespace around parameter names and default values', () => {
+    const template: TestSuiteRequestTemplate = {
+      urlTemplate: '/api/${{  resourceId : default-resource  }}',
+    };
+
+    expect(getTemplateParameterVariables(template)).toEqual([
+      {
+        name: 'resourceId',
+        hasDefault: true,
+        defaultValue: 'default-resource',
+        effectiveType: TestCaseItemType.STRING,
+        sources: [],
+      },
+    ]);
   });
 });
 

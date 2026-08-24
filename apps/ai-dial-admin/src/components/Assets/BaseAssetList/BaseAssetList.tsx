@@ -10,6 +10,7 @@ import {
 } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
+import { createSkill, createSkillFolder } from '@/src/app/[lang]/assets-skills/actions';
 import { changeFolder, removeFolder, removeSkillFolder } from '@/src/app/[lang]/folders-storage/actions';
 import {
   getDeleteNotificationContent,
@@ -232,11 +233,20 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
     async (_: DialUploadFileItem | undefined, folderPath: string) => {
       setSelectedPaths(new Set());
       const newPath = `${folderPath.replaceAll('//', '/')}/`;
-      const emptyAsset = getEmptyAsset(view, newPath);
 
-      const createAsset = CreateAssetActionMap[view as CreateAssetRoute];
+      // Skill's folder marker is a genuinely different Core route from every other type's (a
+      // trailing-slash grouping-folder PUT, not a folder-shaped "empty entity" written through the
+      // same action a real skill uses) — see design D2 — so it's called directly here rather than
+      // through `CreateAssetActionMap`. `createSkillFolder` appends its own trailing slash to build
+      // Core's folder route, so it takes the path without one — passing `newPath` (which already
+      // carries the trailing slash every other branch's folder-marker path expects) produced a
+      // double slash Core rejected as a not-found path.
+      const createFolder =
+        view === ApplicationRoute.AssetsSkills
+          ? () => createSkillFolder(newPath.slice(0, -1))
+          : () => CreateAssetActionMap[view as CreateAssetRoute](getEmptyAsset(view, newPath) as AssetWithVersion);
 
-      return createAsset(emptyAsset as AssetWithVersion).then((res) => {
+      return createFolder().then((res) => {
         // Without this the pending tree node just disappears on rejection, leaving no trace that the
         // create was refused — the caller renders the node optimistically and drops it on any result.
         if (!res.success) {
@@ -252,9 +262,19 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
   const handleCreateAsset = useCallback(
     async (asset: AssetWithVersion, path?: string, isCreateDuplicate?: boolean) => {
       const folderPath = path || destinationFolder || `${getRootFolder(view)}/`;
-      const createAsset = CreateAssetActionMap[view as CreateAssetRoute];
 
-      return createAsset({ ...asset, folderId: folderPath }).then((res) => {
+      // A real skill and its folder marker are different Core operations for this type (design D2),
+      // so Skill is called directly here rather than through `CreateAssetActionMap`, whose single
+      // function per type every other entry can serve unmodified.
+      const createAsset =
+        view === ApplicationRoute.AssetsSkills
+          ? () => {
+              const { name, description } = asset as unknown as { name?: string; description?: string };
+              return createSkill(name || '', description || '', folderPath);
+            }
+          : () => CreateAssetActionMap[view as CreateAssetRoute]({ ...asset, folderId: folderPath });
+
+      return createAsset().then((res) => {
         if (res.success) {
           fetchFiles?.(folderPath);
           if (isCreateDuplicate) {
@@ -496,9 +516,9 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
         assets.forEach((asset) => {
           const paths = getAllSelectedItemsPaths(asset.path, selectedVersionsMap);
           if (paths.length > 0) {
-            assetsPaths.push(...paths.map((path: string) => ({ path: path, etag: asset.etag })));
+            assetsPaths.push(...paths.map((path: string) => ({ path: path, etag: asset.etag || DEFAULT_ETAG })));
           } else {
-            assetsPaths.push({ path: asset.path, etag: asset.etag });
+            assetsPaths.push({ path: asset.path, etag: asset.etag || DEFAULT_ETAG });
           }
           const prefix = asset.path.substring(0, asset.path.lastIndexOf('__'));
           setSelectedVersionsMap({

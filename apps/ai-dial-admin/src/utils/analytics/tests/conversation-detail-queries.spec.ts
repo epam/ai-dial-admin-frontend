@@ -83,11 +83,13 @@ describe('buildConversationDetailQuery', () => {
     expect(page.include_total).toBe(true);
   });
 
+  // The count is a canary: the enum is what the detail select enumerates, so a member added without a place
+  // to render it silently widens every single-conversation query.
   test('selects every stored column of the rollup', () => {
     const names = selectedNames(detailQuery().select);
 
     expect(names).toEqual(Object.values(ConversationsField));
-    expect(names).toHaveLength(26);
+    expect(names).toHaveLength(18);
   });
 
   // `traces` is catalogued heavy, so a default projection returns no value for it and the metadata panel's
@@ -297,7 +299,7 @@ describe('buildConversationSpansQuery', () => {
     expect((trace.args[1] as QueryValueExpr).value).toBe(TRACE_ID);
   });
 
-  test('selects the span hierarchy, its timings and its cost', () => {
+  test('selects the span hierarchy, its cost and what each hop did', () => {
     const names = selectedNames(query().select);
 
     expect(names).toEqual([
@@ -315,7 +317,21 @@ describe('buildConversationSpansQuery', () => {
       UsageLogField.TotalTokens,
       UsageLogField.DeploymentPrice,
       UsageLogField.RequestTime,
+      UsageLogField.ResponseBodyBytes,
+      UsageLogField.ReasoningTokens,
+      UsageLogField.McpMethod,
+      UsageLogField.McpToolCallName,
+      UsageLogField.ExecutionPath,
     ]);
+  });
+
+  // Ordinary non-heavy columns of the entity, so unlike the assembled response they need no schema gate.
+  test('names the MCP columns unconditionally', () => {
+    const names = selectedNames(query().select);
+
+    expect(names).toContain(UsageLogField.McpMethod);
+    expect(names).toContain(UsageLogField.McpToolCallName);
+    expect(names).toContain(UsageLogField.ExecutionPath);
   });
 
   test('reads no body column', () => {

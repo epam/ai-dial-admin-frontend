@@ -48,19 +48,24 @@ const COMPARED_STATUS_ROWS = {
 };
 const AVG_ROWS = { rows: [{ avg_duration_ms: 241000 }] };
 const COMPARED_AVG_ROWS = { rows: [{ avg_duration_ms: 351000 }] };
+const AVG_METRIC_EVAL_ROWS = { rows: [{ avg_metric_eval_duration_ms: 291123.6 }] };
+const COMPARED_AVG_METRIC_EVAL_ROWS = { rows: [{ avg_metric_eval_duration_ms: 120456.4 }] };
 
 const MATCHED_PRIMARY: RunAnalyticsSlice = {
   statusCounts: { passed: 338, failed: 8, error: 4, total: 350 },
   avgRunTimeMs: 1240.5,
+  avgMetricEvalDurationMs: 291123.6,
 };
 const MATCHED_COMPARED: RunAnalyticsSlice = {
   statusCounts: { passed: 320, failed: 20, error: 10, total: 350 },
   avgRunTimeMs: 1500,
+  avgMetricEvalDurationMs: 120456.4,
 };
 
 const mockQueries = () => {
   let statusCall = 0;
   let avgCall = 0;
+  let avgMetricEvalCall = 0;
   executeStructuredQueryMock.mockImplementation((query: StructuredQuery) => {
     if (query.group_by) {
       statusCall += 1;
@@ -70,6 +75,10 @@ const mockQueries = () => {
     if (alias === 'avg_duration_ms') {
       avgCall += 1;
       return Promise.resolve(avgCall === 1 ? AVG_ROWS : COMPARED_AVG_ROWS);
+    }
+    if (alias === 'avg_metric_eval_duration_ms') {
+      avgMetricEvalCall += 1;
+      return Promise.resolve(avgMetricEvalCall === 1 ? AVG_METRIC_EVAL_ROWS : COMPARED_AVG_METRIC_EVAL_ROWS);
     }
     return Promise.resolve({ rows: [] });
   });
@@ -116,15 +125,17 @@ describe('Compare Summary :: Analytics', () => {
     expect(screen.queryByText('Runs.OverallScore')).not.toBeInTheDocument();
   });
 
-  test('renders passed counts and runtime with a seconds delta unit', async () => {
+  test('renders passed counts, runtime, and metric-eval latency with seconds delta units', async () => {
     mockQueries();
     renderAnalytics();
 
-    await screen.findByText('Runs.AvgTestCaseRunTime');
+    expect(await screen.findByText('Runs.AvgTestCaseRunTime')).toBeInTheDocument();
+    expect(screen.getByText('Runs.AvgMetricEvalLatency')).toBeInTheDocument();
     expect(screen.getByText('delta:-3')).toBeInTheDocument();
     expect(screen.getByText('delta:110')).toBeInTheDocument();
-    expect(screen.queryByText('delta-inverted')).not.toBeInTheDocument();
-    expect(screen.getByText('delta-unit:Runs.Seconds')).toBeInTheDocument();
+    expect(screen.getByText('delta:-170.6')).toBeInTheDocument();
+    expect(screen.getAllByText('delta-inverted')).toHaveLength(1);
+    expect(screen.getAllByText('delta-unit:Runs.Seconds')).toHaveLength(2);
   });
 
   test('shows status breakdown and uses matched analytics when onlyMatchingTestCases is on', async () => {
@@ -141,6 +152,8 @@ describe('Compare Summary :: Analytics', () => {
     expect(screen.getAllByText('Runs.Pass')).toHaveLength(2);
     expect(screen.getAllByText('Runs.Fail')).toHaveLength(2);
     expect(screen.getAllByText('Runs.ExecError')).toHaveLength(2);
+    expect(screen.getByText('Runs.AvgMetricEvalLatency')).toBeInTheDocument();
+    expect(screen.getByText('delta:-170.6')).toBeInTheDocument();
     expect(executeStructuredQueryMock).not.toHaveBeenCalled();
   });
 });

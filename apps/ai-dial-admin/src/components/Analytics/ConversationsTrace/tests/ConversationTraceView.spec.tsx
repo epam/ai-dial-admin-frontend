@@ -4,12 +4,24 @@ import { ComponentProps } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
 import ConversationSpanDetail from '@/src/components/Analytics/ConversationsTrace/Detail/ConversationSpanDetail';
-import ConversationSpanList from '@/src/components/Analytics/ConversationsTrace/Detail/ConversationSpanList';
 import ConversationTraceView from '@/src/components/Analytics/ConversationsTrace/Detail/ConversationTraceView';
 import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace';
+import { toMillis } from '@/src/utils/analytics/conversation-formatting';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
-import { ConversationSpanRow, SpanCategory } from '@/src/models/analytics/conversations-trace';
-import { buildSpanTree } from '@/src/utils/analytics/conversation-spans';
+import {
+  ConversationSpanNode,
+  ConversationSpanRow,
+  ConversationTurnRow,
+  SpanCategory,
+} from '@/src/models/analytics/conversations-trace';
+
+// The hop-body read is the component's only side effect: mocked so the trace view's own rendering is what is
+// under test, and so a suppressed hop can be told apart from a hop whose read has not answered yet.
+const getConversationHopBodies = vi.fn();
+
+vi.mock('@/src/app/[lang]/conversations-trace/actions', () => ({
+  getConversationHopBodies: (...args: unknown[]) => getConversationHopBodies(...args),
+}));
 
 const TRACE_ID = '0a3f1d9c8b7e6a5f';
 
@@ -26,8 +38,10 @@ const span = (overrides: Partial<ConversationSpanRow> = {}): ConversationSpanRow
   success: true,
   operation_duration_ms: 5215,
   total_tokens: 18,
+  reasoning_tokens: 0,
   deployment_price: '0.001',
   request_time: '2026-08-13T10:59:05.600Z',
+  response_body_bytes: 4096,
   ...overrides,
 });
 
@@ -47,14 +61,26 @@ const SPANS = [span(), CHILD];
 
 const statFor = (label: string) => screen.getByText(label).parentElement;
 
+// The turn as the rollup resolved it, which is the same row the trace list renders.
+const TURN: ConversationTurnRow = {
+  trace_id: TRACE_ID,
+  started: 1787218895000,
+  hops: 2,
+  failed_hops: 0,
+  tokens: 1078,
+  cost: '0.0015',
+  duration_ms: 1500,
+};
+
 describe('ConversationTraceView', () => {
   const renderTrace = (props: Partial<ComponentProps<typeof ConversationTraceView>> = {}) =>
     render(
       <ConversationTraceView
+        chatId="chat-1"
         turnNumber={2}
-        traceId={TRACE_ID}
+        turn={TURN}
         spans={SPANS}
-        total={SPANS.length}
+        modelOutputs={[]}
         hasLoadError={false}
         selectedSpanId={null}
         onSelectSpan={vi.fn()}
@@ -67,48 +93,64 @@ describe('ConversationTraceView', () => {
     renderTrace();
 
     expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(ConversationsTraceI18nKey.TraceTurn);
-    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('2');
     expect(screen.getByText(TRACE_ID)).toBeInTheDocument();
   });
 
-  // Hops of one trace overlap, so the enclosing hop's duration is the latency and summing would report a
-  // turn as slower than it was.
-  test('reports the longest hop as the latency rather than the sum', () => {
-    renderTrace();
+  // A reader who arrived here from a list row should see the same thing they clicked.
+  test('titles itself with the question the turn answered', () => {
+    renderTrace({ question: 'what exactly have you updated in this plan?' });
 
-    expect(statFor(ConversationsTraceI18nKey.TraceLatency)).toHaveTextContent('5.2s');
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('what exactly have you updated in this plan?');
+    expect(screen.getByText(TRACE_ID)).toBeInTheDocument();
+    expect(screen.getByText(ConversationsTraceI18nKey.TraceTurn, { exact: false })).toBeInTheDocument();
   });
 
-  test('totals the tokens and each hop own cost across the trace', () => {
+  test('falls back to the turn number when the turn has no question', () => {
     renderTrace();
 
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(ConversationsTraceI18nKey.TraceTurn);
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('2');
+  });
+
+  // Every figure is the turn's own, from the rollup the list reads — so the two cannot disagree. Summing the
+  // hop rows instead disagreed with the list by a factor of five on one 384-hop turn, because the read stops
+  // at `CONVERSATION_SPAN_LIMIT` and a sum over what it returned is a sum over part of the turn.
+  test('states the turn own figures rather than re-deriving them from the hop rows', () => {
+    renderTrace();
+
+    expect(statFor(ConversationsTraceI18nKey.TraceDuration)).toHaveTextContent('1.5s');
     expect(statFor(ConversationsTraceI18nKey.TraceTokens)).toHaveTextContent('1.1 K');
     expect(statFor(ConversationsTraceI18nKey.TraceCost)).toHaveTextContent('$0.0015');
-  });
-
-  test('counts the hops the trace is made of', () => {
-    renderTrace();
-
     expect(statFor(ConversationsTraceI18nKey.TraceSpans)).toHaveTextContent('2');
   });
 
-  test('reports the trace as ok when every hop succeeded', () => {
+  // The clipped sample below must not move a single figure in the header: a 384-hop turn reads 300 hops, and
+  // summing those reported 700 K tokens against the list's 3.67 M.
+  test('the figures do not move when the hop chain is clipped', () => {
+    renderTrace({ turn: { ...TURN, hops: 384, tokens: 3667333 }, spans: [span()] });
+
+    expect(statFor(ConversationsTraceI18nKey.TraceTokens)).toHaveTextContent('3.7 M');
+    expect(statFor(ConversationsTraceI18nKey.TraceSpans)).toHaveTextContent('384');
+  });
+
+  test('reports the trace as ok when the rollup counted no failed hop', () => {
     renderTrace();
 
     expect(statFor(ConversationsTraceI18nKey.TraceStatus)).toHaveTextContent(ConversationsTraceI18nKey.TraceOk);
   });
 
-  // One failed hop makes the turn a failure for the reader, whatever the other hops did.
-  test('reports the trace as failed when any hop failed', () => {
-    renderTrace({ spans: [span(), span({ core_span_id: 's2', success: false })] });
+  // One failed hop makes the turn a failure for the reader, whatever the other hops did — and the rollup
+  // counts them across the whole turn, not only across the hops that were read.
+  test('reports the trace as failed when the rollup counted a failed hop', () => {
+    renderTrace({ turn: { ...TURN, failed_hops: 1 } });
 
     expect(statFor(ConversationsTraceI18nKey.TraceStatus)).toHaveTextContent(ConversationsTraceI18nKey.TraceFailed);
   });
 
   // The span read is capped, and a trace that was cut off must say so rather than presenting a partial
   // tree as the whole turn.
-  test('declares itself partial when the trace holds more hops than were read', () => {
-    renderTrace({ total: 922 });
+  test('declares itself partial when the turn holds more hops than were read', () => {
+    renderTrace({ turn: { ...TURN, hops: 922 } });
 
     expect(screen.getByText(ConversationsTraceI18nKey.TraceSpansPartial)).toBeInTheDocument();
   });
@@ -120,7 +162,7 @@ describe('ConversationTraceView', () => {
   });
 
   test('reports a failed span query instead of an empty tree', () => {
-    renderTrace({ spans: [], total: null, hasLoadError: true });
+    renderTrace({ spans: [], hasLoadError: true });
 
     expect(screen.getByText(ConversationsTraceI18nKey.TraceLoadFailed)).toBeInTheDocument();
     expect(screen.queryByText(ConversationsTraceI18nKey.TraceNoSpans)).not.toBeInTheDocument();
@@ -135,76 +177,14 @@ describe('ConversationTraceView', () => {
 
     expect(onClose).toHaveBeenCalledOnce();
   });
-
-  // Colour is the only thing separating the categories in the tree, so the legend has to name all of them.
-  test('names every span category in its legend', () => {
-    renderTrace({ spans: [], total: null });
-
-    for (const key of [
-      ConversationsTraceI18nKey.SpanError,
-      ConversationsTraceI18nKey.SpanEmbedding,
-      ConversationsTraceI18nKey.SpanRetrieval,
-      ConversationsTraceI18nKey.SpanRoute,
-      ConversationsTraceI18nKey.SpanDeployment,
-      ConversationsTraceI18nKey.SpanOther,
-    ]) {
-      expect(screen.getByText(key)).toBeInTheDocument();
-    }
-  });
-});
-
-describe('ConversationSpanList', () => {
-  const renderList = (props: Partial<ComponentProps<typeof ConversationSpanList>> = {}) =>
-    render(
-      <ConversationSpanList nodes={buildSpanTree(SPANS)} selectedSpanId={null} onSelectSpan={vi.fn()} {...props} />,
-    );
-
-  test('renders a row per hop, naming its deployment and endpoint', () => {
-    renderList();
-
-    expect(screen.getAllByRole('button')).toHaveLength(2);
-    expect(screen.getByText('switchyard-model')).toBeInTheDocument();
-    expect(screen.getByText('text-embedding-3')).toBeInTheDocument();
-    expect(screen.getByText('POST /openai/deployments/switchyard-model/chat/completions')).toBeInTheDocument();
-    expect(screen.getByText('POST /openai/deployments/text-embedding-3/embeddings')).toBeInTheDocument();
-  });
-
-  test('marks the selected hop as the current one', () => {
-    renderList({ selectedSpanId: 's2' });
-
-    const [parent, child] = screen.getAllByRole('button');
-    expect(parent).toHaveAttribute('aria-current', 'false');
-    expect(child).toHaveAttribute('aria-current', 'true');
-  });
-
-  test('reports which hop was chosen', async () => {
-    const onSelectSpan = vi.fn();
-    const user = userEvent.setup();
-    renderList({ onSelectSpan });
-
-    await user.click(screen.getAllByRole('button')[1]);
-
-    expect(onSelectSpan).toHaveBeenCalledWith('s2');
-  });
-
-  test('indents a hop under the one that called it', () => {
-    renderList();
-
-    const [parent, child] = screen.getAllByRole('button');
-    expect(parent.style.marginLeft).toBe('0px');
-    expect(child.style.marginLeft).toBe('20px');
-  });
-
-  test('states when a turn recorded no hops at all', () => {
-    renderList({ nodes: [] });
-
-    expect(screen.getByText(ConversationsTraceI18nKey.TraceNoSpans)).toBeInTheDocument();
-    expect(screen.queryAllByRole('button')).toHaveLength(0);
-  });
 });
 
 describe('ConversationSpanDetail', () => {
-  const nodes = buildSpanTree(SPANS);
+  const nodes = SPANS.map((span) => ({
+    span,
+    category: SpanCategory.Deployment,
+    startedAtMs: toMillis(span.request_time),
+  }));
 
   test('asks for a selection while no hop is chosen', () => {
     render(<ConversationSpanDetail node={null} />);
@@ -221,11 +201,15 @@ describe('ConversationSpanDetail', () => {
     expect(screen.getByText('$0.001')).toBeInTheDocument();
   });
 
-  test('places the hop in the trace by its offset and its own duration', () => {
+  // Its absolute recorded time, and nothing derived from `operation_duration_ms`: a recorded zero there is
+  // indistinguishable between a real sub-millisecond operation and a producer that never reported one.
+  test('places the hop by its own recorded time, stating no duration or offset', () => {
     render(<ConversationSpanDetail node={nodes[1]} />);
 
-    expect(screen.getByText('+1.5s')).toBeInTheDocument();
-    expect(screen.getByText('2.9s')).toBeInTheDocument();
+    expect(screen.getByText(ConversationsTraceI18nKey.SpanRecordedAt)).toBeInTheDocument();
+    expect(screen.getByText(new Date('2026-08-13T10:59:07.100Z').toLocaleString())).toBeInTheDocument();
+    expect(screen.queryByText('+1.5s')).toBeNull();
+    expect(screen.queryByText('2.9s')).toBeNull();
   });
 
   test('marks metadata the log did not record as unavailable', () => {
@@ -238,10 +222,8 @@ describe('ConversationSpanDetail', () => {
             parent_deployment: null,
             response_status: null,
           }),
-          depth: 0,
           category: SpanCategory.Deployment,
-          offsetMs: null,
-          durationMs: null,
+          startedAtMs: null,
         }}
       />,
     );
@@ -254,5 +236,48 @@ describe('ConversationSpanDetail', () => {
 
     expect(screen.getByText(ConversationsTraceI18nKey.TraceFailed)).toBeInTheDocument();
     expect(screen.queryByText(ConversationsTraceI18nKey.TraceOk)).not.toBeInTheDocument();
+  });
+});
+
+describe('ConversationSpanDetail — MCP hops', () => {
+  test('renders the routing chain in the order the log recorded it', () => {
+    render(
+      <ConversationSpanDetail
+        node={{
+          span: span({ execution_path: ['statgpt-deep-research', 'gpt-5.4-2026-03-05'] }),
+          category: SpanCategory.Deployment,
+          startedAtMs: 1000,
+        }}
+      />,
+    );
+
+    expect(screen.getByText(ConversationsTraceI18nKey.SpanRouting)).toBeInTheDocument();
+    expect(screen.getByText('statgpt-deep-research → gpt-5.4-2026-03-05')).toBeInTheDocument();
+  });
+
+  test('states the MCP method and tool where the hop recorded them', () => {
+    render(
+      <ConversationSpanDetail
+        node={{
+          span: span({ event_kind: 'mcp', mcp_method: 'tools/call', mcp_tool_call_name: 'rag_search' }),
+          category: SpanCategory.Retrieval,
+          startedAtMs: 1000,
+        }}
+      />,
+    );
+
+    expect(screen.getByText(ConversationsTraceI18nKey.SpanMcpTool)).toBeInTheDocument();
+    // Also the heading, which labels the hop by its tool.
+    expect(screen.getAllByText('rag_search')).toHaveLength(2);
+    expect(screen.getByText(ConversationsTraceI18nKey.SpanMcpMethod)).toBeInTheDocument();
+    expect(screen.getByText('tools/call')).toBeInTheDocument();
+  });
+
+  test('omits the MCP rows for a hop that recorded none of them', () => {
+    render(<ConversationSpanDetail node={{ span: span(), category: SpanCategory.Deployment, startedAtMs: 1 }} />);
+
+    expect(screen.queryByText(ConversationsTraceI18nKey.SpanMcpTool)).toBeNull();
+    expect(screen.queryByText(ConversationsTraceI18nKey.SpanMcpMethod)).toBeNull();
+    expect(screen.queryByText(ConversationsTraceI18nKey.SpanRouting)).toBeNull();
   });
 });

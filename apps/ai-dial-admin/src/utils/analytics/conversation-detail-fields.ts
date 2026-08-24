@@ -38,21 +38,24 @@ const formatValue = (raw: FieldValue, format?: ConversationFieldFormat): string 
   }
 };
 
-// The insight enrichment runs per conversation, so a title can be missing (never evaluated) or blank. The
-// conversation id is what identifies the row everywhere else, so it is the fallback rather than an empty
-// cell — and both the header and the grid's title column read this, so they cannot state different names
-// for one conversation.
-export const conversationTitle = (record: ConversationTitleSource): string =>
-  record[ConversationsField.InsightTitle]?.trim() || record.chat_id;
+// The insight enrichment runs per conversation, so a title can be missing (never evaluated) or blank —
+// null says so, and each caller states the absence in its own register. It deliberately does not fall back
+// to the conversation id: both places that render a title show the id alongside it, so substituting one for
+// the other prints the id twice and reads as though the conversation were named after its hash.
+export const conversationTitle = (record: ConversationTitleSource): string | null =>
+  record[ConversationsField.InsightTitle]?.trim() || null;
 
 export const resolveConversationField = (
   definition: ConversationFieldDefinition,
   record: ConversationDetailRow,
 ): ResolvedConversationField => {
-  const { labelKey, column, format, accentClassName } = definition;
+  const { labelKey, column, format, accentClassName, hintKey } = definition;
+  // What every state carries: the label, the accent, and any caveat the figure needs. Only the state and the
+  // text differ between the branches below.
+  const base = { labelKey, accentClassName, hintKey };
 
   if (!column) {
-    return { labelKey, state: ConversationFieldState.Unavailable, text: UNAVAILABLE_VALUE, accentClassName };
+    return { ...base, state: ConversationFieldState.Unavailable, text: UNAVAILABLE_VALUE };
   }
 
   const raw = record[column];
@@ -60,17 +63,17 @@ export const resolveConversationField = (
   // row does not carry at all was never projected, because this deployment does not expose it. That is
   // "unavailable"; a key present and null is a record with no value, which is "empty".
   if (raw === undefined) {
-    return { labelKey, state: ConversationFieldState.Unavailable, text: UNAVAILABLE_VALUE, accentClassName };
+    return { ...base, state: ConversationFieldState.Unavailable, text: UNAVAILABLE_VALUE };
   }
   if (raw === null || raw === '') {
-    return { labelKey, state: ConversationFieldState.Empty, text: '', accentClassName };
+    return { ...base, state: ConversationFieldState.Empty, text: '' };
   }
 
   const text = formatValue(raw, format);
 
   return text === ''
-    ? { labelKey, state: ConversationFieldState.Empty, text: '', accentClassName }
-    : { labelKey, state: ConversationFieldState.Available, text, accentClassName };
+    ? { ...base, state: ConversationFieldState.Empty, text: '' }
+    : { ...base, state: ConversationFieldState.Available, text };
 };
 
 export const countFeedbackDirections = (rows: ConversationFeedbackRow[]): RatingCounts =>

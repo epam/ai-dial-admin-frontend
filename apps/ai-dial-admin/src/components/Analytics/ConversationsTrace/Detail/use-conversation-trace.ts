@@ -4,13 +4,13 @@ import { useCallback, useRef, useState } from 'react';
 
 import { getConversationSpans } from '@/src/app/[lang]/conversations-trace/actions';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
-import { ConversationSpanRow, ConversationTurnRow } from '@/src/models/analytics/conversations-trace';
+import { ConversationSpanRow, ConversationTurnRow, ModelCallOutput } from '@/src/models/analytics/conversations-trace';
 
 interface TraceState {
   turn: ConversationTurnRow;
   turnNumber: number;
   spans: ConversationSpanRow[];
-  total: number | null;
+  modelOutputs: ModelCallOutput[];
   hasLoadError: boolean;
 }
 
@@ -25,18 +25,24 @@ export const useConversationTrace = (chatId: string) => {
       setIsLoading(true);
       setSelectedSpanId(null);
 
-      const result = await getReqRef.current(getConversationSpans, chatId, turn.trace_id);
-      const spans = result?.response?.spans ?? [];
+      try {
+        const result = await getReqRef.current(getConversationSpans, chatId, turn.trace_id);
+        const spans = result?.response?.spans ?? [];
 
-      setTrace({
-        turn,
-        turnNumber,
-        spans,
-        total: result?.response?.total ?? null,
-        hasLoadError: !result?.success,
-      });
-      setSelectedSpanId(spans[0]?.core_span_id ?? null);
-      setIsLoading(false);
+        setTrace({
+          turn,
+          turnNumber,
+          spans,
+          modelOutputs: result?.response?.modelOutputs ?? [],
+          hasLoadError: !result?.success,
+        });
+        setSelectedSpanId(spans[0]?.core_span_id ?? null);
+      } catch {
+        setTrace({ turn, turnNumber, spans: [], modelOutputs: [], hasLoadError: true });
+        setSelectedSpanId(null);
+      } finally {
+        setIsLoading(false);
+      }
     },
     [chatId],
   );

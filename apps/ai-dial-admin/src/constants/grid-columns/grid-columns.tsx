@@ -57,20 +57,30 @@ import {
 } from '@/src/constants/grid-columns/formatters';
 import {
   CONVERSATION_FIELD_VALUE_TYPE,
-  CONVERSATION_PROVENANCE_GROUPS,
+  CONVERSATION_TAG_LABEL_KEY,
   FILTERABLE_CONVERSATION_FIELDS,
   OPTIONAL_CURATED_COLUMN_FIELDS,
+  PROVENANCE_HINT_KEY,
+  PROVENANCE_LABEL_KEY,
   SORTABLE_CONVERSATION_FIELDS,
 } from '@/src/constants/analytics/conversations-trace';
 import {
+  conversationTopics,
   formatCompactNumber,
-  formatConversationDuration,
   formatSignificantCost,
 } from '@/src/utils/analytics/conversation-formatting';
-import { ColumnProvenance, ConversationColumn, ConversationsField } from '@/src/models/analytics/conversations-trace';
+import {
+  buildConversationColumnCatalog,
+  conversationColumnGroups,
+} from '@/src/utils/analytics/conversation-column-catalog';
+import {
+  ColumnProvenance,
+  ConversationColumn,
+  ConversationColumnGroup,
+  ConversationsField,
+} from '@/src/models/analytics/conversations-trace';
 import { QueryValueType } from '@/src/models/analytics/query';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
-import { buildConversationColumnCatalog } from '@/src/utils/analytics/conversation-column-catalog';
 import { ImageVersion } from '@/src/models/deployments/images';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { Publication } from '@/src/models/dial/publications';
@@ -110,7 +120,7 @@ import {
 import { dateTimeColumn, numericColumn, priceColumn } from './configs';
 import { baseNumberFilter, baseStringFilter, dateFilter, evalStringFilter } from './filters';
 import ConversationCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/ConversationCellRenderer';
-import TitleCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/TitleCellRenderer';
+import TopicsCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/TopicsCellRenderer';
 import ProvenanceHeaderGroup from '@/src/components/Analytics/ConversationsTrace/List/ProvenanceHeaderGroup';
 import ActivityCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/ActivityCellRenderer';
 import ProjectCellRenderer from '@/src/components/Analytics/ConversationsTrace/List/ProjectCellRenderer';
@@ -652,117 +662,21 @@ export const USAGE_LOG_NUMERIC_COLUMNS = new Set<string>(
     .map((c) => c.field as string),
 );
 
-// Designed rather than derived: the schema-driven catalog would label these by their raw field names and
-// format them by type alone, which says nothing about a closed vocabulary or a coverage gap. All default to
-// hidden — the title column above is the one insight field the default view states.
-const CONVERSATION_INSIGHT_COLUMNS = (t: (key: string) => string): ColDef[] => [
-  {
-    field: ConversationsField.InsightSentiment,
-    headerName: t(ConversationsTraceI18nKey.Sentiment),
-    headerTooltip: t(ConversationsTraceI18nKey.InsightHint),
-    minWidth: 120,
-    flex: 0.9,
-    hide: true,
-  },
-  {
-    field: ConversationsField.InsightSentimentScore,
-    headerName: t(ConversationsTraceI18nKey.SentimentScore),
-    headerTooltip: t(ConversationsTraceI18nKey.InsightHint),
-    ...numericColumn,
-    minWidth: 120,
-    flex: 0.8,
-    hide: true,
-  },
-  {
-    field: ConversationsField.InsightTopic,
-    headerName: t(ConversationsTraceI18nKey.Topic),
-    headerTooltip: t(ConversationsTraceI18nKey.InsightHint),
-    minWidth: 140,
-    flex: 1.2,
-    hide: true,
-  },
-  {
-    field: ConversationsField.InsightTopics,
-    headerName: t(ConversationsTraceI18nKey.Topics),
-    headerTooltip: t(ConversationsTraceI18nKey.InsightHint),
-    minWidth: 180,
-    flex: 1.6,
-    hide: true,
-  },
-  {
-    field: ConversationsField.InsightLanguage,
-    headerName: t(ConversationsTraceI18nKey.Language),
-    headerTooltip: t(ConversationsTraceI18nKey.InsightHint),
-    minWidth: 100,
-    flex: 0.7,
-    hide: true,
-  },
-  {
-    field: ConversationsField.InsightResolutionStatus,
-    headerName: t(ConversationsTraceI18nKey.ResolutionStatus),
-    headerTooltip: t(ConversationsTraceI18nKey.InsightHint),
-    minWidth: 150,
-    flex: 1,
-    hide: true,
-  },
-];
-
-const CONVERSATION_USAGE_COLUMNS = (t: (key: string) => string): ColDef[] => [
-  {
-    field: ConversationsField.CacheCreationTokens,
-    headerName: t(ConversationsTraceI18nKey.CacheCreationTokens),
-    ...numericColumn,
-    valueFormatter: ({ value }) => formatCompactNumber(value),
-    minWidth: 130,
-    flex: 0.9,
-    hide: true,
-  },
-  {
-    field: ConversationsField.CachedPromptTokens,
-    headerName: t(ConversationsTraceI18nKey.CachedPromptTokens),
-    ...numericColumn,
-    valueFormatter: ({ value }) => formatCompactNumber(value),
-    minWidth: 130,
-    flex: 0.9,
-    hide: true,
-  },
-  {
-    field: ConversationsField.ReasoningTokens,
-    headerName: t(ConversationsTraceI18nKey.ReasoningTokens),
-    ...numericColumn,
-    valueFormatter: ({ value }) => formatCompactNumber(value),
-    minWidth: 130,
-    flex: 0.9,
-    hide: true,
-  },
-  {
-    field: ConversationsField.ChainPriceTotal,
-    headerName: t(ConversationsTraceI18nKey.ChainCost),
-    headerTooltip: t(ConversationsTraceI18nKey.ChainCostHint),
-    ...numericColumn,
-    valueFormatter: ({ value }) => formatSignificantCost(value),
-    cellClass: 'align-right text-accent-secondary',
-    minWidth: 110,
-    flex: 0.8,
-    hide: true,
-  },
-];
-
 const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] => [
   {
     field: ConversationsField.ChatId,
     headerName: t(ConversationsTraceI18nKey.Conversation),
+    headerTooltip: t(ConversationsTraceI18nKey.ConversationHint),
     cellRenderer: ConversationCellRenderer,
+    // How a row is recognised and how it is opened. A log whose identity column can be hidden is a table of
+    // values belonging to conversations the reader cannot name — and this column's permanence is what makes
+    // its enrichment field unconditional in the projection. `lockVisible` guards AG Grid's own paths;
+    // withholding it from the columns panel is what closes the one the app actually offers, since that panel
+    // is this repo's own component and reads only `suppressColumnsToolPanel`.
+    lockVisible: true,
+    suppressColumnsToolPanel: true,
     flex: 3,
     minWidth: 280,
-  },
-  {
-    field: ConversationsField.InsightTitle,
-    headerName: t(ConversationsTraceI18nKey.DetailTitleField),
-    headerTooltip: t(ConversationsTraceI18nKey.InsightHint),
-    cellRenderer: TitleCellRenderer,
-    flex: 2.4,
-    minWidth: 220,
   },
   {
     field: ConversationsField.ProjectId,
@@ -785,6 +699,7 @@ const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] 
     ...numericColumn,
     flex: 0.6,
     minWidth: 90,
+    hide: true,
   },
   {
     field: ConversationsField.LastRequestTime,
@@ -800,6 +715,7 @@ const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] 
     valueFormatter: ({ value }) => formatCompactNumber(value),
     flex: 0.8,
     minWidth: 100,
+    hide: true,
   },
   {
     field: ConversationsField.TotalPrice,
@@ -807,15 +723,6 @@ const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] 
     ...numericColumn,
     valueFormatter: ({ value }) => formatSignificantCost(value),
     cellClass: 'align-right text-accent-secondary',
-    flex: 0.8,
-    minWidth: 100,
-  },
-  {
-    field: ConversationsField.DurationMs,
-    headerName: t(ConversationsTraceI18nKey.Duration),
-    headerTooltip: t(ConversationsTraceI18nKey.DurationHint),
-    ...numericColumn,
-    valueFormatter: ({ value }) => formatConversationDuration(value),
     flex: 0.8,
     minWidth: 100,
   },
@@ -839,6 +746,21 @@ const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] 
     filter: false,
     flex: 1.6,
     minWidth: 180,
+    hide: true,
+  },
+  {
+    field: ConversationsField.InsightTopics,
+    headerName: t(ConversationsTraceI18nKey.Topics),
+    headerTooltip: t(ConversationsTraceI18nKey.TopicsHint),
+    cellRenderer: TopicsCellRenderer,
+    tooltipValueGetter: (params) =>
+      conversationTopics(params.data?.[ConversationsField.InsightTopics]).join(', ') || null,
+    // A delimited string, so lexicographic ordering would sort by whichever term happens to be written
+    // first. A contains predicate matches a term wherever it sits, which is what the filter is for.
+    sortable: false,
+    flex: 1.6,
+    minWidth: 180,
+    hide: true,
   },
   {
     field: ConversationColumn.Rating,
@@ -847,8 +769,6 @@ const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] 
     flex: 1,
     minWidth: 140,
   },
-  ...CONVERSATION_INSIGHT_COLUMNS(t),
-  ...CONVERSATION_USAGE_COLUMNS(t),
 ];
 
 const NUMERIC_FILTER_VALUE_TYPES = [QueryValueType.Integer, QueryValueType.Long, QueryValueType.Decimal];
@@ -874,10 +794,7 @@ const availableCuratedColumns = (columns: ColDef[], schemaFields: AnalyticsEntit
   return columns.filter((column) => !optional.has(column.field as string) || available.has(column.field as string));
 };
 
-export const CONVERSATIONS_TRACE_COLUMNS = (
-  t: (key: string) => string,
-  schemaFields: AnalyticsEntityField[] = [],
-): ColDef[] =>
+const curatedConversationColumns = (t: (key: string) => string, schemaFields: AnalyticsEntityField[]): ColDef[] =>
   restrictSort(
     availableCuratedColumns(BASE_CONVERSATIONS_TRACE_COLUMNS(t), schemaFields),
     SORTABLE_CONVERSATION_FIELDS,
@@ -887,27 +804,65 @@ export const CONVERSATIONS_TRACE_COLUMNS = (
     ...(column.field === ConversationsField.LastRequestTime ? { sort: 'desc' as ColDef['sort'] } : {}),
   }));
 
+// The curated set plus one column per field the fetched schema reports and no curated column already reads,
+// so the count is whatever the instance carries. With no schema in hand the curated columns are all there is:
+// an unfetched schema is not evidence that a field exists, and a column that can never fill is of no use.
+export const CONVERSATIONS_TRACE_COLUMNS = (
+  t: (key: string) => string,
+  schemaFields: AnalyticsEntityField[] = [],
+): ColDef[] => buildConversationColumnCatalog(curatedConversationColumns(t, schemaFields), schemaFields);
+
+// The origin is what a reader needs to interpret an empty cell — a rollup value cannot be missing, an
+// enrichment value is missing until the evaluation reaches it — so it stays legible even where the tag
+// supplies the label.
+const groupOriginLabel = (t: (key: string) => string, { provenance, source }: ConversationColumnGroup): string => {
+  const labelKey = PROVENANCE_LABEL_KEY[provenance];
+  return labelKey ? t(labelKey) : source;
+};
+
+// An enrichment's groups carry their origin in the label itself, not only in their colour: the columns panel
+// prints this same string as each column's caption, and a caption reading "Evaluator run" over a checkbox
+// reading "Model" still leaves whose model it is to guess. The rollup takes no prefix — it is what the grid
+// is a list of.
+const groupHeaderName = (t: (key: string) => string, group: ConversationColumnGroup): string => {
+  const origin = groupOriginLabel(t, group);
+  if (!group.tag) {
+    return origin;
+  }
+
+  const labelKey = CONVERSATION_TAG_LABEL_KEY[group.tag];
+  const tagLabel = labelKey ? t(labelKey) : group.tag;
+
+  return group.provenance === ColumnProvenance.Conversations ? tagLabel : `${origin} · ${tagLabel}`;
+};
+
+// A named origin identifies its source on its own — one origin, one enrichment — so its id needs no more
+// than the pair. `Other` is the catch-all every unnamed enrichment shares, so there the source is what keeps
+// two of them from claiming one id.
+const groupId = ({ provenance, source, tag }: ConversationColumnGroup): string =>
+  [provenance === ColumnProvenance.Other ? `${provenance}:${source}` : provenance, tag].filter(Boolean).join(':');
+
 export const CONVERSATIONS_TRACE_COLUMN_GROUPS = (
   t: (key: string) => string,
   schemaFields: AnalyticsEntityField[] = [],
 ): ColGroupDef[] => {
-  const columns = buildConversationColumnCatalog(CONVERSATIONS_TRACE_COLUMNS(t, schemaFields), schemaFields);
-  const attributed = new Set(CONVERSATION_PROVENANCE_GROUPS.flatMap((group) => group.fields as string[]));
+  const columns = CONVERSATIONS_TRACE_COLUMNS(t, schemaFields);
 
-  return CONVERSATION_PROVENANCE_GROUPS.map(({ provenance, labelKey, tooltipKey, fields }) => ({
-    groupId: provenance,
-    headerName: t(labelKey),
-    headerTooltip: t(tooltipKey),
-    headerGroupComponent: ProvenanceHeaderGroup,
-    headerGroupComponentParams: { label: t(labelKey), provenance },
-    marryChildren: true,
-    children: [
-      ...(fields.map((field) => columns.find((column) => column.field === field)).filter(Boolean) as ColDef[]),
-      ...(provenance === ColumnProvenance.Conversations
-        ? columns.filter((column) => !attributed.has(column.field as string))
-        : []),
-    ],
-  }));
+  return conversationColumnGroups(columns, schemaFields).map((group) => {
+    const headerName = groupHeaderName(t, group);
+
+    return {
+      groupId: groupId(group),
+      headerName,
+      // The origin on hover as well as in colour, since a hue alone names nothing.
+      headerTooltip: `${groupOriginLabel(t, group)} · ${t(PROVENANCE_HINT_KEY[group.provenance])}`,
+      headerGroupComponent: ProvenanceHeaderGroup,
+      headerGroupComponentParams: { label: headerName, provenance: group.provenance },
+      marryChildren: true,
+      // Built from the columns themselves, so no column can be left out of every group and vanish.
+      children: group.fields.map((field) => columns.find((column) => column.field === field)) as ColDef[],
+    };
+  });
 };
 
 export const PROJECT_GRID_COLUMNS = (t: (key: string) => string): ColDef[] =>

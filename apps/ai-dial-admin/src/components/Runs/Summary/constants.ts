@@ -15,10 +15,12 @@ export const RUN_ID_FIELD = 'test_suite_run_id';
 export const COMPUTATION_ID_FIELD = 'computation_id';
 export const EXECUTION_STATUS_FIELD = 'execution_status';
 export const EXEC_DURATION_MS_FIELD = 'exec_duration_ms';
+export const METRIC_EVAL_DURATION_MS_FIELD = 'metric_eval_duration_ms';
 
 /** Aggregate output aliases requested from the query. */
 export const COUNT_ALIAS = 'count';
 export const AVG_DURATION_ALIAS = 'avg_duration_ms';
+export const AVG_METRIC_EVAL_DURATION_ALIAS = 'avg_metric_eval_duration_ms';
 
 /** `metric_score_name` value for the run-level overall score; excluded from the Metric Scores segmented control. */
 export const OVERALL_METRIC_SCORE_NAME = 'overall';
@@ -50,6 +52,10 @@ export const STATUS_DOT_CLASSES = {
   fail: 'text-error',
   error: 'text-secondary',
 } as const;
+
+export const METRIC_SCORES_GRID_CLASS = 'grid min-w-0 grid-cols-1 gap-3 xl:grid-cols-2';
+
+export const SUMMARY_PANELS_GRID_CLASS = 'grid min-h-0 min-w-0 flex-1 grid-cols-1 gap-4 md:grid-cols-2';
 
 /** Icons for the "Test Cases Passed" card status breakdown. */
 export const STATUS_DOT_ICONS = {

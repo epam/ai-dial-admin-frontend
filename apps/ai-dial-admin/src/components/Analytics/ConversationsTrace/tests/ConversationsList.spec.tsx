@@ -5,8 +5,10 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import ConversationsList from '@/src/components/Analytics/ConversationsTrace/List/ConversationsList';
 import { PAGE_SIZE } from '@/src/constants/ag-grid';
 import {
+  CONVERSATIONS_FLOATING_FILTER_HEIGHT,
   CONVERSATIONS_GROUP_HEADER_HEIGHT,
   CONVERSATIONS_HEADER_HEIGHT,
+  CONVERSATIONS_HEADER_STACK_HEIGHT,
   CONVERSATIONS_ROW_HEIGHT,
   CONVERSATIONS_STORAGE_KEY,
 } from '@/src/constants/analytics/conversations-trace';
@@ -45,19 +47,45 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
 const datasource: IDatasource = { getRows: vi.fn() };
 const onGridReady = vi.fn();
 
-// Fields no curated column reads: the catalog offers each as a schema-derived hidden column, which the
-// catalog's own tests count. Leaving them out keeps this fixture to exactly the curated set.
-const CATALOG_ONLY_FIELDS: string[] = [
-  ConversationsField.PromptTokens,
-  ConversationsField.CompletionTokens,
-  ConversationsField.SuccessCount,
-  ConversationsField.AvgDurationMs,
-  ConversationsField.Traces,
-];
+// Every field this view can read, tagged as the live entity tags them.
+const TAG_BY_FIELD: Record<string, string> = {
+  [ConversationsField.ChatId]: 'identity',
+  [ConversationsField.FirstRequestTime]: 'identity',
+  [ConversationsField.LastRequestTime]: 'identity',
+  [ConversationsField.Traces]: 'identity',
+  [ConversationsField.ProjectId]: 'principal',
+  [ConversationsField.UserHash]: 'principal',
+  [ConversationsField.TurnCount]: 'response',
+  [ConversationsField.SuccessCount]: 'response',
+  [ConversationsField.PromptTokens]: 'token-usage',
+  [ConversationsField.CompletionTokens]: 'token-usage',
+  [ConversationsField.TotalTokens]: 'token-usage',
+  [ConversationsField.TotalPrice]: 'cost',
+  [ConversationsField.DurationMs]: 'performance',
+  [ConversationsField.AvgDurationMs]: 'performance',
+  [ConversationsField.Deployments]: 'deployment',
+  [ConversationsField.InsightTruncated]: 'provenance',
+};
 
-const ALL_FIELDS: AnalyticsEntityField[] = Object.values(ConversationsField)
-  .filter((name) => !CATALOG_ONLY_FIELDS.includes(name))
-  .map((name) => ({ name, type: AnalyticsFieldType.String, source: 'conversations' }));
+const ALL_FIELDS: AnalyticsEntityField[] = Object.values(ConversationsField).map((name) => ({
+  name,
+  type:
+    name === ConversationsField.Deployments || name === ConversationsField.Traces
+      ? AnalyticsFieldType.Array
+      : AnalyticsFieldType.String,
+  source: name.includes('.') ? name.slice(name.indexOf('.') + 1) : name,
+  tag: TAG_BY_FIELD[name] ?? 'insight',
+}));
+
+// The field behind the defect: the frontend enum has no member for it, because nothing designs a column for
+// it — the schema is what offers it.
+const INSIGHT_MODEL_FIELD: AnalyticsEntityField = {
+  name: 'conversation_insights.model',
+  source: 'model',
+  type: AnalyticsFieldType.String,
+  tag: 'provenance',
+  display_name: 'Model',
+};
 
 const renderList = (schemaFields: AnalyticsEntityField[] | null = ALL_FIELDS) =>
   render(
@@ -129,44 +157,73 @@ describe('ConversationsList :: paging', () => {
       rowHeight: CONVERSATIONS_ROW_HEIGHT,
       headerHeight: CONVERSATIONS_HEADER_HEIGHT,
       groupHeaderHeight: CONVERSATIONS_GROUP_HEADER_HEIGHT,
+      floatingFiltersHeight: CONVERSATIONS_FLOATING_FILTER_HEIGHT,
     });
     expect(captured.additionalGridOptions?.defaultColDef).toBeUndefined();
   });
+
+  // The view offsets its empty state by this sum to keep the filter inputs reachable, so a height configured
+  // here and not counted there would put the overlay back over the controls.
+  test('the header stack the view offsets by is the sum of the heights configured here', () => {
+    renderList();
+
+    const { headerHeight, groupHeaderHeight, floatingFiltersHeight } = captured.additionalGridOptions ?? {};
+
+    expect((headerHeight ?? 0) + (groupHeaderHeight ?? 0) + (floatingFiltersHeight ?? 0)).toBe(
+      CONVERSATIONS_HEADER_STACK_HEIGHT,
+    );
+  });
 });
 
-// The Rating column lives in its own provenance group, so it is the last leaf rather than part of this
-// run; "attributes the rating column to the feedback entity" covers where it sits.
-const CONVERSATIONS_VISIBLE = [
+// The default visible set is unchanged, but grouping reorders it: last activity carries the `identity` tag.
+const DEFAULT_VISIBLE = [
   ConversationsField.ChatId,
-  ConversationsField.InsightTitle,
+  ConversationsField.LastRequestTime,
+  ConversationsField.ProjectId,
+  ConversationsField.UserHash,
+  ConversationsField.TotalPrice,
+  ConversationColumn.Rating,
+];
+
+const CURATED_COLUMNS = [
+  ConversationsField.ChatId,
   ConversationsField.ProjectId,
   ConversationsField.UserHash,
   ConversationsField.TurnCount,
   ConversationsField.LastRequestTime,
   ConversationsField.TotalTokens,
   ConversationsField.TotalPrice,
-  ConversationsField.DurationMs,
   ConversationsField.Deployments,
+  ConversationsField.InsightTopics,
+  ConversationColumn.Rating,
 ];
 
-const CURATED_COLUMN_COUNT = CONVERSATIONS_VISIBLE.length + 1 + 10;
-
 describe('ConversationsList :: columns', () => {
-  test('renders the default-visible columns first, in order', () => {
+  test('renders the default-visible columns in group order', () => {
     renderList();
 
-    expect(
-      leafColumns()
-        .map((column) => column.field)
-        .slice(0, CONVERSATIONS_VISIBLE.length),
-    ).toEqual(CONVERSATIONS_VISIBLE);
-    expect(leafColumns().at(-1)?.field).toBe(ConversationColumn.Rating);
+    const visible = leafColumns()
+      .filter((column) => !column.hide)
+      .map((column) => column.field);
+
+    expect(visible).toEqual(DEFAULT_VISIBLE);
   });
 
-  test('renders every curated column, the hidden ones included', () => {
+  test('renders a column for every field the schema reports, the hidden ones included', () => {
     renderList();
 
-    expect(leafColumns()).toHaveLength(CURATED_COLUMN_COUNT);
+    const fields = leafColumns().map((column) => column.field);
+
+    CURATED_COLUMNS.forEach((fieldName) => expect(fields).toContain(fieldName));
+    expect(fields).toContain(ConversationsField.SuccessCount);
+    expect(fields).toContain(ConversationsField.DurationMs);
+    expect(fields.length).toBeGreaterThan(CURATED_COLUMNS.length);
+  });
+
+  test('locks the identity column against being hidden', () => {
+    renderList();
+
+    expect(leafColumns()[0]).toMatchObject({ field: ConversationsField.ChatId, lockVisible: true });
   });
 
   test('reads a dotted enrichment name as a flat key', () => {
@@ -175,66 +232,68 @@ describe('ConversationsList :: columns', () => {
     expect(captured.additionalGridOptions?.suppressFieldDotNotation).toBe(true);
   });
 
-  test('groups every column under exactly one provenance', () => {
+  test('groups every column under exactly one origin-and-tag pair', () => {
     renderList();
 
     const groups = captured.columnDefs ?? [];
+    const attributed = leafColumns().map((column) => column.field);
 
-    expect(groups.map((group) => group.groupId)).toEqual([ColumnProvenance.Conversations, ColumnProvenance.Feedback]);
+    expect(groups.map((group) => group.groupId)).toContain(`${ColumnProvenance.Conversations}:identity`);
+    expect(groups.map((group) => group.groupId)).toContain(`${ColumnProvenance.Insights}:insight`);
     expect(groups.every((group) => group.marryChildren)).toBe(true);
-    expect(leafColumns()).toHaveLength(CURATED_COLUMN_COUNT);
+    expect(new Set(attributed).size).toBe(attributed.length);
   });
 
-  test('attributes the rating column to the feedback entity and the rest to conversations', () => {
+  test('attributes each column to the source its values actually come from', () => {
     renderList();
 
-    const [conversations, feedback] = captured.columnDefs ?? [];
+    const groupFields = (groupId: string) =>
+      ((captured.columnDefs ?? []).find((group) => group.groupId === groupId)?.children as ColDef[]).map(
+        (column) => column.field,
+      );
 
-    expect((conversations.children as ColDef[]).map((column) => column.field)).not.toContain(ConversationColumn.Rating);
-    expect((feedback.children as ColDef[]).map((column) => column.field)).toEqual([ConversationColumn.Rating]);
+    expect(groupFields(`${ColumnProvenance.Conversations}:identity`)).toEqual([
+      ConversationsField.ChatId,
+      ConversationsField.LastRequestTime,
+    ]);
+    expect(groupFields(`${ColumnProvenance.Insights}:insight`)).toContain(ConversationsField.InsightTopics);
+    expect(groupFields(`${ColumnProvenance.Feedback}`)).toEqual([ConversationColumn.Rating]);
   });
 
-  test('labels the groups and their tooltips from i18n', () => {
+  test('labels a rollup group by its tag and an enrichment group by its enrichment too', () => {
     renderList();
 
-    expect(captured.columnDefs?.[0]).toMatchObject({
-      headerName: ConversationsTraceI18nKey.ProvenanceConversations,
-      headerTooltip: ConversationsTraceI18nKey.ProvenanceConversationsHint,
-    });
+    const header = (groupId: string) =>
+      (captured.columnDefs ?? []).find((group) => group.groupId === groupId)?.headerName;
+
+    expect(header(`${ColumnProvenance.Conversations}:identity`)).toBe(ConversationsTraceI18nKey.TagIdentity);
+    expect(header(`${ColumnProvenance.Insights}:insight`)).toBe(
+      `${ConversationsTraceI18nKey.ProvenanceInsights} · ${ConversationsTraceI18nKey.TagInsight}`,
+    );
   });
 
-  test('offers a schema-driven column, hidden, inside the conversations group', () => {
-    render(
-      <ConversationsList
-        datasource={datasource}
-        onGridReady={onGridReady}
-        isColumnsPanelOpen={false}
-        onToggleColumnsPanel={vi.fn()}
-        schemaFields={[{ name: 'success_count', type: AnalyticsFieldType.Integer, source: 'conversations' }]}
-      />,
+  // The defect that withdrew the derived catalog: this field reports the display name "Model" while holding
+  // the evaluator's own deployment. It is offered again, but only under a group that says so.
+  test('offers the evaluator deployment only under the evaluator-run group', () => {
+    renderList([...ALL_FIELDS, INSIGHT_MODEL_FIELD]);
+
+    const bookkeeping = (captured.columnDefs ?? []).find(
+      (group) => group.groupId === `${ColumnProvenance.Insights}:provenance`,
     );
 
-    const [conversations] = captured.columnDefs ?? [];
-    const added = (conversations.children as ColDef[]).find((column) => column.field === 'success_count');
-
-    expect(added).toMatchObject({ hide: true });
+    expect(bookkeeping?.headerName).toBe(
+      `${ConversationsTraceI18nKey.ProvenanceInsights} · ${ConversationsTraceI18nKey.TagProvenance}`,
+    );
+    expect((bookkeeping?.children as ColDef[]).map((column) => column.field)).toContain(INSIGHT_MODEL_FIELD.name);
   });
 
-  test('offers nothing extra when the schema reports only the fields the curated columns read', () => {
-    renderList();
-
-    expect(leafColumns()).toHaveLength(CURATED_COLUMN_COUNT);
-  });
-
-  // A column reading a field the instance does not carry could never fill, and the query cannot name that
-  // field at all — so it is omitted rather than offered as a permanently empty column.
   test('omits the insight columns on an instance without the enrichment', () => {
     renderList(ALL_FIELDS.filter((entityField) => !entityField.name.startsWith('conversation_insights.')));
 
     const fields = leafColumns().map((column) => column.field);
 
     expect(fields).not.toContain(ConversationsField.InsightTitle);
-    expect(fields).not.toContain(ConversationsField.InsightSentiment);
+    expect(fields).not.toContain(ConversationsField.InsightTopics);
     expect(fields).toContain(ConversationsField.ChatId);
     expect(fields).toContain(ConversationColumn.Rating);
   });

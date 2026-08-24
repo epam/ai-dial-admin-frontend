@@ -1,28 +1,27 @@
 'use client';
 
-import { DialGhostIconButton, DialNoDataContent, ElementSize } from '@epam/ai-dial-ui-kit';
+import { DialEllipsisTooltip, DialGhostIconButton, DialNoDataContent, ElementSize } from '@epam/ai-dial-ui-kit';
 import { IconChevronLeft, IconSubtask } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, useMemo } from 'react';
 
 import ConversationSpanDetail from '@/src/components/Analytics/ConversationsTrace/Detail/ConversationSpanDetail';
-import ConversationSpanList from '@/src/components/Analytics/ConversationsTrace/Detail/ConversationSpanList';
-import {
-  COST_TEXT_CLASS,
-  SPAN_CATEGORY_LABEL_KEY,
-  SPAN_CATEGORY_RAIL_CLASS,
-  UNAVAILABLE_VALUE,
-} from '@/src/constants/analytics/conversations-trace';
+import ConversationEventStream from '@/src/components/Analytics/ConversationsTrace/Detail/ConversationEventStream';
+import { useHopBodies } from '@/src/components/Analytics/ConversationsTrace/Detail/use-hop-bodies';
+import { COST_TEXT_CLASS, UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { ConversationSpanRow, SpanCategory } from '@/src/models/analytics/conversations-trace';
+import { ConversationSpanRow, ConversationTurnRow, ModelCallOutput } from '@/src/models/analytics/conversations-trace';
 import {
   formatCompactNumber,
   formatDurationMs,
   formatSignificantCost,
+  toMillis,
 } from '@/src/utils/analytics/conversation-formatting';
-import { areSpansPartial, buildSpanTree, traceTotalsOf } from '@/src/utils/analytics/conversation-spans';
+import { toNumber } from '@/src/utils/analytics/scalar';
+import { areSpansPartial, spanCategoryOf } from '@/src/utils/analytics/conversation-spans';
+import { buildHopEventStream } from '@/src/utils/analytics/conversation-hop-stream';
 
 const ICON_SIZE = 16;
 
@@ -39,26 +38,13 @@ const Stat: FC<StatProps> = ({ label, value, valueClassName }) => (
   </div>
 );
 
-const Legend: FC = () => {
-  const t = useI18n();
-
-  return (
-    <div className="flex flex-wrap items-center gap-3">
-      {Object.values(SpanCategory).map((category) => (
-        <span key={category} className="flex items-center gap-1.5 dial-tiny-text text-secondary">
-          <span aria-hidden className={classNames('size-2 rounded-full', SPAN_CATEGORY_RAIL_CLASS[category])} />
-          {t(SPAN_CATEGORY_LABEL_KEY[category])}
-        </span>
-      ))}
-    </div>
-  );
-};
-
 interface Props {
+  chatId: string;
   turnNumber: number;
-  traceId: string;
+  turn: ConversationTurnRow;
+  question?: string;
   spans: ConversationSpanRow[];
-  total: number | null;
+  modelOutputs: ModelCallOutput[];
   hasLoadError: boolean;
   selectedSpanId: string | null;
   onSelectSpan: (coreSpanId: string) => void;
@@ -66,10 +52,12 @@ interface Props {
 }
 
 const ConversationTraceView: FC<Props> = ({
+  chatId,
   turnNumber,
-  traceId,
+  turn,
+  question,
   spans,
-  total,
+  modelOutputs,
   hasLoadError,
   selectedSpanId,
   onSelectSpan,
@@ -77,9 +65,29 @@ const ConversationTraceView: FC<Props> = ({
 }) => {
   const t = useI18n();
 
-  const nodes = useMemo(() => buildSpanTree(spans), [spans]);
-  const totals = useMemo(() => traceTotalsOf(spans), [spans]);
-  const selected = nodes.find(({ span }) => span.core_span_id === selectedSpanId) ?? null;
+  const events = useMemo(
+    () => buildHopEventStream({ spans, modelOutputs, turn, question }),
+    [spans, modelOutputs, turn, question],
+  );
+  const selectedSpan = spans.find(({ core_span_id }) => core_span_id === selectedSpanId) ?? null;
+  const selected = useMemo(
+    () =>
+      selectedSpan
+        ? {
+            span: selectedSpan,
+            category: spanCategoryOf(selectedSpan),
+            startedAtMs: toMillis(selectedSpan.request_time),
+          }
+        : null,
+    [selectedSpan],
+  );
+  const {
+    bodies,
+    isLoading: isLoadingBodies,
+    suppression: bodiesSuppression,
+  } = useHopBodies(chatId, turn.trace_id, selectedSpan);
+  const hopCount = toNumber(turn.hops);
+  const isFailed = (toNumber(turn.failed_hops) ?? 0) > 0;
 
   return (
     <div className="flex size-full flex-col gap-4">
@@ -92,52 +100,70 @@ const ConversationTraceView: FC<Props> = ({
             onClick={onClose}
             className="shrink-0"
           />
-          <h2 className="flex min-w-0 items-center gap-2 text-primary">
-            <IconSubtask size={ICON_SIZE} aria-hidden className="shrink-0 text-accent-primary" />
-            {t(ConversationsTraceI18nKey.TraceTurn)} {turnNumber}
-            <span className="truncate font-mono text-secondary dial-tiny-text">{traceId}</span>
-          </h2>
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <h2 className="flex min-w-0 items-center gap-2 text-primary">
+              <IconSubtask size={ICON_SIZE} aria-hidden className="shrink-0 text-accent-primary" />
+              <span className="min-w-0">
+                <DialEllipsisTooltip text={question ?? `${t(ConversationsTraceI18nKey.TraceTurn)} ${turnNumber}`} />
+              </span>
+            </h2>
+            <span className="flex min-w-0 items-center gap-1.5 pl-6 text-secondary dial-tiny-text">
+              {question && (
+                <span className="shrink-0">
+                  {t(ConversationsTraceI18nKey.TraceTurn)} {turnNumber}
+                </span>
+              )}
+              <span className="min-w-0 font-mono">
+                <DialEllipsisTooltip text={turn.trace_id} />
+              </span>
+            </span>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Stat
-            label={t(ConversationsTraceI18nKey.TraceLatency)}
-            value={formatDurationMs(totals.latencyMs) || UNAVAILABLE_VALUE}
+            label={t(ConversationsTraceI18nKey.TraceDuration)}
+            value={formatDurationMs(turn.duration_ms) || UNAVAILABLE_VALUE}
           />
-          <Stat label={t(ConversationsTraceI18nKey.TraceTokens)} value={formatCompactNumber(totals.tokens) || '0'} />
+          <Stat label={t(ConversationsTraceI18nKey.TraceTokens)} value={formatCompactNumber(turn.tokens) || '0'} />
           <Stat
             label={t(ConversationsTraceI18nKey.TraceCost)}
-            value={formatSignificantCost(totals.cost) || UNAVAILABLE_VALUE}
+            value={formatSignificantCost(turn.cost) || UNAVAILABLE_VALUE}
             valueClassName={COST_TEXT_CLASS}
           />
-          <Stat label={t(ConversationsTraceI18nKey.TraceSpans)} value={String(totals.spanCount)} />
+          <Stat
+            label={t(ConversationsTraceI18nKey.TraceSpans)}
+            value={formatCompactNumber(turn.hops) || String(spans.length)}
+          />
           <Stat
             label={t(ConversationsTraceI18nKey.TraceStatus)}
-            value={t(totals.isFailed ? ConversationsTraceI18nKey.TraceFailed : ConversationsTraceI18nKey.TraceOk)}
-            valueClassName={totals.isFailed ? 'text-error' : 'text-success'}
+            value={t(isFailed ? ConversationsTraceI18nKey.TraceFailed : ConversationsTraceI18nKey.TraceOk)}
+            valueClassName={isFailed ? 'text-error' : 'text-success'}
           />
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <Legend />
-        {areSpansPartial(spans, total) && (
-          <p className="dial-tiny-text text-secondary">
-            {t(ConversationsTraceI18nKey.TraceSpansPartial, { shown: spans.length, total: total ?? spans.length })}
-          </p>
-        )}
-      </div>
+      {areSpansPartial(spans, hopCount) && (
+        <p className="dial-tiny-text text-secondary">
+          {t(ConversationsTraceI18nKey.TraceSpansPartial, { shown: spans.length, total: hopCount ?? spans.length })}
+        </p>
+      )}
 
       <div className="flex min-h-0 flex-1 rounded border border-primary">
-        <div className="min-h-0 flex-1 overflow-y-auto bg-layer-1">
+        <div className="flex min-h-0 flex-1 overflow-hidden bg-layer-1">
           {hasLoadError ? (
-            <div className="flex h-full items-center justify-center">
+            <div className="flex flex-1 items-center justify-center">
               <DialNoDataContent title={t(ConversationsTraceI18nKey.TraceLoadFailed)} />
             </div>
           ) : (
-            <ConversationSpanList nodes={nodes} selectedSpanId={selectedSpanId} onSelectSpan={onSelectSpan} />
+            <ConversationEventStream events={events} selectedSpanId={selectedSpanId} onSelectSpan={onSelectSpan} />
           )}
         </div>
-        <ConversationSpanDetail node={selected} />
+        <ConversationSpanDetail
+          node={selected}
+          bodies={bodies}
+          isLoadingBodies={isLoadingBodies}
+          bodiesSuppression={bodiesSuppression}
+        />
       </div>
     </div>
   );

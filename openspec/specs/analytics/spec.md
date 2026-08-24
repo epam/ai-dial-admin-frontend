@@ -2652,6 +2652,17 @@ selected — or even counted — by a non-`FULL_ADMIN` caller.
 
 The grid SHALL render composed cells rather than one raw stored value per column:
 
+- The conversation column SHALL be a single **identity** cell stacking the conversation's title over its id,
+  rather than two columns. The title labels the conversation and the id addresses it; they are one identity,
+  and a column apiece printed the id twice on every conversation the enrichment has not reached, which is
+  most of them. Where no title exists the first line SHALL render the unavailable marker and MUST NOT repeat
+  the id.
+- The topics column SHALL render its value as discrete chips rather than as the stored string. The value is a
+  delimited list whose separator is not reliably spaced in real data, so the cell SHALL split on the
+  delimiter, trim each term and drop empty ones before rendering. A term the view does not recognise SHALL
+  render as it is stored: the vocabulary is owned by an evaluator that can be re-versioned without the
+  frontend knowing, so normalising or dropping an unexpected term would hide real data. The full list SHALL
+  stay reachable when more terms exist than the cell shows.
 - The activity column SHALL stack how long ago the conversation was last active over how long it ran. The span
   requires the first activity as well as the last, so the query SHALL select both. The absolute instant SHALL
   stay reachable on hover, since relative time is readable but imprecise.
@@ -2668,6 +2679,24 @@ they stay deterministic and need no fake timers. Colours SHALL come from theme t
 
 Every composed cell SHALL degrade rather than break when part of its data is missing: an absent first activity
 leaves the relative time alone, and an absent last activity renders nothing at all.
+
+#### Scenario: The identity cell states the title over the id
+
+- **WHEN** a row carries both a conversation id and an insight title
+- **THEN** one cell states the title above the id
+- **AND** no separate title column exists
+
+#### Scenario: An untitled conversation shows the marker, not a repeated id
+
+- **WHEN** a row carries no insight title
+- **THEN** the cell's first line renders the unavailable marker
+- **AND** the id appears once, on the second line
+
+#### Scenario: Topics render as chips from an unevenly delimited string
+
+- **WHEN** a row's topics value is `capabilities,error` and another's is `security, code review, validation`
+- **THEN** both render as discrete chips with no leading or trailing whitespace
+- **AND** an unrecognised term renders as stored
 
 #### Scenario: The project cell shows the project alone
 
@@ -2738,42 +2767,55 @@ in **row mode**. The conversation rollup is materialized by the analytics servic
 per `chat_id`, produced by an aggregate pipeline over `dial_usage_log` — so the query SHALL read stored
 columns and MUST NOT group or aggregate.
 
-The select SHALL name the fields the curated columns require, by their entity field names:
+The select SHALL name **`chat_id` unconditionally**, and nothing else unconditionally. It is the only field
+read outside a cell renderer — the grid keys its rows by it, a row click navigates by it, and the loaded set
+is mapped by it — so a row without it is unusable whatever the column state. A sort or a filter needs no
+field named here: both are resolved server-side by field name, not from the projected row.
 
-| Field | Renders as |
-|---|---|
-| `chat_id` | conversation |
-| `project_id` | project |
-| `user_hash` | user |
-| `turn_count` | turns |
-| `total_tokens` | tokens |
-| `total_price` | cost |
-| `last_request_time` | activity (relative) |
-| `first_request_time` | activity (span) |
-| `duration_ms` | duration |
-| `deployments` | models |
+Every other field a column reads SHALL reach the select through the cost classification below, with no
+standing exemption for the curated columns. An exemption list would have to be re-audited against the schema
+on every change and would not be, and it would defeat the classification exactly where it matters: a curated
+field the service later marks `heavy` would go on being named on every page, silently, which is the failure
+the heavy class exists to prevent. Three of the curated columns are hidden by default, so the exemption also
+fetched and discarded their fields on every page.
 
-It SHALL additionally name **every offered field the entity's own source carries**, whether or not its column
-is currently visible. Such a field costs the query one more column of the table it is already reading, which
-is less than what re-fetching every loaded page costs when the operator reveals its column.
+A field SHALL be projected according to **what projecting it costs**, in three classes:
 
-It SHALL name a field the service reports under an **enrichment namespace** — a name qualified by the
-enrichment that supplies it, `conversation_insights.` and `conversation_buckets.` being the two the
-`conversations` entity currently exposes — only while that field's column is visible. The service joins an
-enrichment only when a query names one of its columns, so naming one unconditionally would add that join to
-every page of every scroll, for columns the operator has not asked for.
+- a **cheap field of the entity's own source** SHALL be named whether or not its column is visible. Measured
+  on a rollup of 6 328 conversations, twenty such columns instead of two read 2.08 MiB instead of 492 KiB and
+  took 7 ms instead of 5 — so gating them would buy nothing and would add a re-fetch to every reveal;
+- a field of the entity's own source that the service marks **`heavy`** SHALL be named only while its column
+  is visible. The service omits such a field from a wildcard projection because it is expensive to transfer,
+  and the measurement bears that out: adding the one heavy field to ten scalar columns took the read from
+  1.44 MiB to 5.39 MiB — 2.7× the other ten together;
+- a field the service reports under an **enrichment namespace** — a name qualified by the enrichment that
+  supplies it, `conversation_insights.` and `conversation_buckets.` being two the `conversations` entity
+  exposes — SHALL be named only while that field's column is visible. The service joins an enrichment only
+  when a query names one of its columns, so naming one unconditionally would add that join to every page of
+  every scroll, for columns the operator has not asked for.
+
+The classes SHALL be decided by what the schema reports — the qualified name for an enrichment, the `heavy`
+flag for a heavy field — rather than by a list of field names held in the frontend, so a field the service
+newly marks heavy, or an enrichment newly added to the entity, is classified without a code change.
+
+All three rules SHALL apply to a **curated** column's field as well as a derived one's, with no exemption
+beyond `chat_id`. A curated column is
+designed rather than derived, but it still reads a stored field, so a projection that skipped it would render
+an empty cell for data the row does carry, and it is classified by the same test. The identity column's
+enrichment field is the one exception and SHALL be named unconditionally: that column cannot be hidden, so
+there is no hidden state for a visibility rule to key on.
 
 It MUST NOT name every field the entity carries: the field set is whatever the service reports and can grow,
-and a field the catalog does not offer is one no column renders. A column with no field behind it — Rating is
-composed from `rate_analytics` lookups — MUST NOT be named at all, since the entity has no such column.
+and a field no column reads is one nothing renders. A column with no field behind it — Rating is composed
+from `rate_analytics` lookups — MUST NOT be named at all, since the entity has no such column.
 
-Making a hidden **enrichment-backed** column visible SHALL restart paging, because the fetched pages do not
-carry that field and a column rendered from an absent value would read as empty data rather than as data not
-fetched. Making a hidden **source-backed** column visible SHALL NOT re-query: its field is already in every
-fetched page, so the rows already held render it. Hiding a visible column SHALL NOT re-query in either case:
-the rows already held remain a correct answer to a narrower projection. The whole-result count and cost SHALL
-be unaffected by which columns are visible, being aggregates over the filtered result rather than over the
-projection.
+Making a hidden **enrichment-backed** or **heavy** column visible SHALL restart paging, because the fetched
+pages do not carry that field and a column rendered from an absent value would read as empty data rather than
+as data not fetched. Making a hidden **cheap source-backed** column visible SHALL NOT re-query: its field is
+already in every fetched page, so the rows already held render it. Hiding a visible column SHALL NOT re-query
+in any case: the rows already held remain a correct answer to a narrower projection. The whole-result count
+and cost SHALL be unaffected by which columns are visible, being aggregates over the filtered result rather
+than over the projection.
 
 `turn_count` is the pipeline's count of the conversation's **distinct trace ids**, one trace per request, so
 it is a count of turns and not of usage-log rows: the embedding, MCP and routing hops a request fans out
@@ -2786,10 +2828,19 @@ SHALL apply to `last_request_time`, so a selected period means *conversations wh
 period*. The query MUST NOT carry an empty-`chat_id` guard: the pipeline's own membership predicate excludes
 those rows, so every row of the entity has a non-empty id.
 
+The projection SHALL NOT be what scales with data volume, and this requirement SHALL NOT be read as a
+performance control. Measured across every projection variant above, the rows read stayed identical at 7 760
+— the whole table — because the list query orders by `last_request_time` under no narrowing filter. The
+ordering is what grows with the data; the column list does not.
+
 When a non-blank `search` term is supplied the filter SHALL additionally carry one `or` group of two `ico`
 predicates matching `chat_id` and `project_id`. The term SHALL be trimmed, and a blank or whitespace-only term
 SHALL add no predicate at all rather than an `ico` against the empty string, which would match every row at
 the cost of a scan. Both targets are base columns of the entity, so no select-alias restriction applies.
+
+Search SHALL NOT reach the conversation title either: the title is an enrichment column, absent for any
+conversation the evaluator has not processed, so a term matched against it would silently narrow the result to
+enriched conversations only.
 
 Search MUST NOT reach message content: no column of `conversations` carries it, and the only column that
 could — `dial_usage_log.request_body` — is catalogued `sensitive` and belongs to a different entity. Search
@@ -2837,18 +2888,45 @@ filtering on it requires no elevated role.
 - **THEN** the query targets entity `conversations` with `mode: 'row'`
 - **AND** it carries no `group_by` and no aggregate function expression
 - **AND** its select names `chat_id`, `project_id`, `user_hash`, `turn_count`, `total_tokens`, `total_price`,
-  `last_request_time`, `first_request_time`, `duration_ms` and `deployments`
+  `last_request_time`, `first_request_time` and `deployments`
 
 #### Scenario: The query requests no result total
 
 - **WHEN** the query is built for the first page, and again for a later page
 - **THEN** each carries `include_total: false`
 
+#### Scenario: Only row identity is named unconditionally
+
+- **WHEN** the query is built with a classified set of source fields
+- **THEN** the select names `chat_id`
+- **AND** it names no curated column's field that the classification did not carry
+- **AND** `chat_id` is named once, even where the classification carries it too
+
+#### Scenario: Without a schema the base rollup columns are still named
+
+- **WHEN** the query is built with no classified fields at all, the schema having failed to load
+- **THEN** the select names the base rollup columns the curated set renders
+- **AND** those columns render values rather than empty cells
+
 #### Scenario: Source-owned fields are projected whether or not their columns are visible
 
-- **WHEN** the query is built while every schema-driven column is hidden
-- **THEN** its select names each offered field the entity's own source carries
+- **WHEN** the query is built while every derived column is hidden
+- **THEN** its select names each cheap field of the entity's own source
 - **AND** it names no field reported under an enrichment namespace
+- **AND** it names no field the service marks heavy
+
+#### Scenario: A heavy source field is projected only while its column is visible
+
+- **WHEN** the query is built with a heavy-field column hidden, and again with it visible
+- **THEN** the first select does not name that field
+- **AND** the second does
+
+#### Scenario: Revealing a heavy column restarts paging
+
+- **WHEN** the operator makes a hidden heavy-field column visible after scrolling
+- **THEN** the fetched pages are discarded and the next request is for the first page
+- **AND** that request's select names the newly visible field
+- **AND** the column renders values rather than empty cells
 
 #### Scenario: Time bounds apply to last activity as epoch-millisecond literals
 
@@ -2916,8 +2994,20 @@ filtering on it requires no elevated role.
 
 #### Scenario: Showing a source-backed column does not re-query
 
-- **WHEN** the operator makes a hidden source-backed column visible after scrolling
+- **WHEN** the operator makes a hidden cheap source-backed column visible after scrolling
 - **THEN** no new request is issued and the rows already loaded render that column's values
+
+#### Scenario: A curated hidden column is projected once it is shown
+
+- **WHEN** the operator makes the Topics column visible
+- **THEN** the next request's select names `conversation_insights.topics`
+- **AND** the cells render that field's values rather than empty cells
+
+#### Scenario: The identity column's enrichment field is projected with no column of its own
+
+- **WHEN** the list query is built with every optional column hidden
+- **THEN** the select still names `conversation_insights.title`
+- **AND** it names no other enrichment field
 
 #### Scenario: Showing a column re-queries from the first page
 
@@ -2927,8 +3017,15 @@ filtering on it requires no elevated role.
 
 #### Scenario: Hiding a column does not re-query
 
-- **WHEN** the operator hides a visible column
+- **WHEN** the operator hides a visible column carrying no filter
 - **THEN** no new request is issued and the rows already loaded remain
+
+#### Scenario: Hiding a filtered column clears its filter and re-queries
+
+- **WHEN** the operator hides a column that carries an active filter
+- **THEN** that column's filter is cleared
+- **AND** the fetched pages are discarded and the next request is for the first page
+- **AND** that request carries no predicate on the hidden column's field
 
 #### Scenario: The summary is unchanged by a projection change
 
@@ -3091,8 +3188,21 @@ own a back control, so there is one way back rather than two that can disagree.
 The system SHALL provide a query builder returning a `StructuredQuery` over the entity `conversations` in
 **row mode**, narrowed to exactly one `chat_id` by equality, requesting a single row.
 
-The query SHALL select every stored column of the conversation rollup, so the detail view reads the full
-available record rather than the subset the log's grid needs.
+The query SHALL select every stored column of the conversation rollup **the fetched schema reports**, so the
+detail view reads the full available record rather than the subset the log's grid needs. Every selected
+column SHALL be **named explicitly**. A column the service marks `heavy` is excluded from a default
+projection, so a query that relied on the default would silently return no value for it; `traces` is such a
+column, and the detail view renders it.
+
+The query SHALL take the available field names from the caller rather than enumerating a field list of its
+own, per "A conversation query names only fields the entity's schema reports". The columns the view has
+always read are required; every column added since — `traces`, the cache, cached-prompt and reasoning token
+counts, the chain cost, and the insight columns — is optional. With no schema available the query SHALL name
+the required set alone.
+
+The selected set SHALL include the rollup's enrichment columns where the schema reports them, whose exposed
+names are qualified flat names containing a dot. The query SHALL send such a name whole rather than treating
+the dot as a path.
 
 The query MUST NOT carry a time bound. The log's list query bounds `last_request_time` to the selected
 period, but a detail view is addressed by id and SHALL resolve regardless of which period the log was
@@ -3107,6 +3217,24 @@ field for those callers rather than being refused cleanly, making the whole view
 - **WHEN** the single-conversation query is built for a conversation id
 - **THEN** it queries the `conversations` entity in row mode
 - **AND** it filters on that id by equality and requests one row
+
+#### Scenario: The heavy trace column is named explicitly
+
+- **WHEN** the single-conversation query is built
+- **THEN** its select names `traces`
+- **AND** the projection is explicit rather than a default or wildcard projection
+
+#### Scenario: The insight columns are selected
+
+- **WHEN** the single-conversation query is built and the schema reports the insight columns
+- **THEN** its select names `conversation_insights.title`
+
+#### Scenario: An instance without the enrichment still resolves a conversation
+
+- **WHEN** the single-conversation query is built and the schema reports no insight column
+- **THEN** its select names none of them
+- **AND** it names the conversation's own stored columns
+- **AND** the detail view renders
 
 #### Scenario: The query carries no time bound
 
@@ -3123,18 +3251,95 @@ field for those callers rather than being refused cleanly, making the whole view
 - **WHEN** the single-conversation query is built
 - **THEN** its selected columns include no column the analytics service marks sensitive
 
+### Requirement: A conversation query names only fields the entity's schema reports
+
+The analytics service rejects a query that names a field its entity does not carry, and it rejects the
+**whole query** rather than returning the columns it does have. A projection is therefore all-or-nothing:
+one field the deployment lacks yields no rows at all, so a page that hardcodes its field list fails
+entirely instead of rendering with one column empty.
+
+The entity's fields are not fixed across deployments. The conversation rollup, the turn rollup and the
+insight enrichment are catalog objects provisioned per instance rather than shipped with the service, so
+an instance can carry an older set than the frontend knows about.
+
+The conversations views SHALL therefore treat the fetched entity schema as the authority on what may be
+named. Each view SHALL distinguish two classes of field:
+
+- **required** — the fields without which the view cannot render its curated columns at all. These SHALL
+  be named unconditionally.
+- **optional** — every field added beyond that core. An optional field SHALL be named **only** when the
+  fetched schema reports it.
+
+When the schema cannot be fetched, the query SHALL name the required fields alone. A failed schema fetch
+is not evidence that an optional field exists, and guessing costs the whole page rather than one column.
+
+The schema SHALL be read **server-side**, on the route that renders the view, so the first paint already
+knows which fields exist. A view MUST NOT issue its first data query before that answer is available.
+The single-conversation query alone SHALL wait on it: the reads that name no optional field — the
+conversation's feedback and its turns — SHALL stay parallel with the schema read rather than queue behind
+it.
+
+This rule governs the projection, and the same gate SHALL govern a filter and a sort key. A predicate or an
+ordering naming a field the entity does not carry is rejected with the whole query exactly as a projection is,
+so the allow-lists that decide which columns may sort and filter SHALL be derived from the schema-gated column
+set rather than from a list held independently of it. A list maintained separately would drift the moment a
+column is dropped for a lagging instance, and the failure would be the whole page rather than one control.
+
+#### Scenario: An optional field the schema does not report is not named
+
+- **WHEN** the conversations list query is built and the schema does not report the conversation title
+- **THEN** the select does not name `conversation_insights.title`
+- **AND** it names every required field
+- **AND** the query returns rows
+
+#### Scenario: An optional field the schema reports is named
+
+- **WHEN** the schema reports the conversation title
+- **THEN** the select names `conversation_insights.title`
+
+#### Scenario: A failed schema fetch falls back to the required fields
+
+- **WHEN** the entity schema cannot be fetched
+- **THEN** the query names the required fields only
+- **AND** it names no optional field
+
+#### Scenario: One lagging field does not cost the whole view
+
+- **WHEN** the instance carries the conversation rollup but not the insight enrichment
+- **THEN** the conversations list renders its rows
+- **AND** the detail view renders its header, panels and figures
+
+#### Scenario: The detail route reads the schema server-side
+
+- **WHEN** the conversation detail route renders
+- **THEN** it fetches the conversations entity schema on the server
+- **AND** the single-conversation query is built from the fields that schema reports
+- **AND** the feedback and turn reads are issued without waiting for it
+
 ### Requirement: Unavailable conversation values render an explicit placeholder
 
-The detail view SHALL surface every field its layout defines, including fields no queried source can supply.
-Such a field SHALL render its label together with an explicit unavailable marker. A field MUST NOT be
-silently omitted, and its label MUST NOT be rendered with a blank value, so the difference between "this
+The detail view SHALL surface every field its layout defines. A field the view's layout defines but no
+queried source supplies SHALL render its label together with an explicit unavailable marker. A field MUST NOT
+be silently omitted, and its label MUST NOT be rendered with a blank value, so the difference between "this
 system has no such data" and "this happens to be empty" stays visible to the reader.
+
+The layout SHALL NOT define a field the platform does not record at all. An unavailable marker states "no
+queried source carries this yet"; a field for a quantity DIAL never records is not pending but absent, and
+presenting it invites the reader to expect a value that will never arrive. Such a field SHALL be removed from
+the layout together with its label, rather than rendered as permanently unavailable.
 
 The view SHALL distinguish three states, and MUST NOT collapse them onto one presentation:
 
 - **unavailable** — no queried source carries the field at all;
 - **empty** — a queried source carries the field and its value is absent for this conversation;
 - **zero** — a queried source carries the field and its value is genuinely `0`.
+
+The fetched row itself SHALL decide between the first two. The service returns every projected column in
+every row, `null` where the cell is null — so a key **absent** from the row is a field that was never
+projected, because the instance does not carry it, and SHALL render as unavailable; a key present and `null`
+is a field the record simply has no value for, and SHALL render as empty. The view MUST NOT treat the two as
+one: a deployment that lacks a column and a conversation that lacks a value are different findings, and only
+the first is a reason to expect nothing there ever.
 
 A zero count SHALL render as a number. It MUST NOT render as the unavailable marker, since `0` ratings or
 `0` failed requests are findings rather than gaps.
@@ -3145,6 +3350,18 @@ time. There the zero records that the backend did not measure the value, not tha
 rendering it as a number would state a finding the data does not support. This rule SHALL apply wherever the
 value is presented, so the grid and the detail view state the same thing about the same conversation.
 
+A value supplied by a conversation-insight enrichment is a fourth case and SHALL NOT use any of the three
+presentations above. The enrichment runs per conversation and can be absent — the evaluator has not processed
+the conversation yet — or partial, flagged `truncated`, when the conversation exceeded its budget. An absent
+enrichment value SHALL read as **not yet evaluated**: it MUST NOT render as a zero, as a dash meaning "none",
+or as any placeholder implying the evaluator looked and found nothing. Coverage is sparse and stays sparse —
+under a quarter of conversations carry an insight row — so this is the common case, not an edge one.
+
+Where such a value **labels** the conversation, an absent or blank one SHALL degrade to the unavailable marker
+and MUST NOT degrade to the conversation id. Both surfaces that render a title render the id alongside it, so
+substituting one for the other states the id twice and reads as though the conversation were named after its
+own hash.
+
 The marker SHALL be a single presentation used consistently across the view, and SHALL come from theme
 tokens rather than literal colour values.
 
@@ -3153,6 +3370,12 @@ tokens rather than literal colour values.
 - **WHEN** the detail view renders a field no queried source supplies
 - **THEN** the field's label renders
 - **AND** its value renders as the unavailable marker
+
+#### Scenario: A field the platform does not record is not presented
+
+- **WHEN** the detail view renders
+- **THEN** it presents no field for a conversation's region, because DIAL records none
+- **AND** no label for it appears in any panel
 
 #### Scenario: An empty value is distinguishable from an unavailable one
 
@@ -3170,18 +3393,61 @@ tokens rather than literal colour values.
 - **THEN** it renders as the unavailable marker rather than as a zero duration
 - **AND** the grid and the detail view render it the same way
 
-### Requirement: Conversation detail header identifies the conversation and states its turn count
+#### Scenario: A missing insight title degrades to the marker, not to the id
 
-The header SHALL lead with the conversation id as the view's heading. The rollup carries no conversation
-title or summary, so the id is the only identifying value the view can state; a title field SHALL be
-surfaced as unavailable rather than fabricated from other values.
+- **WHEN** a conversation has no insight row, or its title is blank
+- **THEN** the title renders as the unavailable marker
+- **AND** the conversation id is not rendered in its place
+- **AND** the id remains stated once, in its own line of the same cell
 
-The heading SHALL keep the full id reachable when it is too long to display, and SHALL offer a means of
-copying it, since the id is the value a reader carries to another tool.
+#### Scenario: An absent insight value is not presented as a finding
 
-The header SHALL state the conversation's project, its turn count, the span between first and last activity,
-and how long ago the last activity was. It SHALL surface a model field as unavailable — the rollup does not
-carry `deployment`.
+- **WHEN** the Topics column renders a conversation the evaluator has not processed
+- **THEN** the cell renders empty
+- **AND** it states no zero, no dash and no "none"
+
+#### Scenario: A field the payload never carried is unavailable, not empty
+
+- **WHEN** the metadata panel renders a conversation whose row carries no `traces` key, because the instance
+  does not expose that column
+- **THEN** the trace field renders as the unavailable marker
+- **AND** a field present in the row with a `null` value renders as empty instead
+
+### Requirement: Conversation detail header names the conversation and states its turn count
+
+The header SHALL lead with the conversation's **title** as the view's heading, and SHALL state the
+conversation **id** in the meta row alongside its project, turn count, activity span and time since last
+activity. A heading names the thing on the page; the id addresses it. Leading with the id made every
+conversation's heading a hash, and the reader who needs the id needs to copy it rather than read it.
+
+The id SHALL keep its full value reachable when it is too long to display, and SHALL offer a means of copying
+it, since the id is the value a reader carries to another tool. Those affordances follow the id into the meta
+row rather than staying with the heading.
+
+The title SHALL be read from the conversation-insight enrichment. Where the enrichment carries no row for the
+conversation, or its title is blank, the heading SHALL render the unavailable marker and MUST NOT render the
+id in its place — the id is already stated in the meta row, and repeating it as the name states one value
+twice. The marker MUST NOT stand as the heading's only content for assistive technology: a heading whose text
+is a dash names nothing, so it SHALL carry an accessible name stating that the conversation is untitled. The
+title MUST NOT be fabricated from other values.
+
+A title computed from a `truncated` input SHALL still be stated: it describes the part of the conversation the
+evaluator read, which is a weaker claim than a full title but a true one. The detail view SHALL state that
+weaker claim **for the conversation it is showing**, in text rather than as a bare marker, because the reader
+is looking at one conversation and has room for the explanation. It MUST NOT leave the truncation unstated:
+most titled conversations are truncated, so silence would present a partial label as a whole one.
+
+The header MUST NOT state the conversation's deployments. The metadata panel states them, and one fact
+presented in two places gives the reader no way to tell which is authoritative — the same reason the turn
+count is stated once and the rating counts are left to the panel that lists them.
+
+The header MUST NOT state a **model** field. The rollup carries no conversation-level model column;
+`deployments` names every deployment that handled any hop — routers, applications, MCP toolsets and embedding
+deployments alongside the models — and which of them is a model is not derivable from the array. The view MUST
+NOT synthesize the set either: the turn rollup's `models` column is the authoritative billed set but is **per
+turn**, no server-side union over it is expressible, and a union taken over the view's bounded turn list would
+understate a conversation longer than that bound, the same error the turn-count rule already forbids.
+Presenting a real model set requires a conversation-level field the rollup does not yet carry.
 
 The header MUST NOT carry rating counts or a back control. Ratings belong with the panel that lists them, so
 the same figures are not stated twice in different places, and returning to the log is the application
@@ -3200,15 +3466,35 @@ conversation's length.
 Numeric, currency and time values in the header SHALL carry the same formatting those value types carry in
 the conversations log, so the same conversation reads identically in both places.
 
-#### Scenario: The heading is the conversation id
+#### Scenario: The heading is the conversation's title
 
-- **WHEN** the detail view renders
-- **THEN** the conversation id is the heading
-- **AND** a title field renders as unavailable
+- **WHEN** a conversation's insight row carries a title
+- **THEN** that title is the view's heading
+- **AND** the conversation id is stated in the meta row
+
+#### Scenario: An untitled conversation still has a named heading
+
+- **WHEN** a conversation has no insight row, or its title is blank
+- **THEN** the heading renders the unavailable marker
+- **AND** the heading carries an accessible name stating the conversation is untitled
+- **AND** the conversation id is not rendered as the heading
+
+#### Scenario: A truncated title says so
+
+- **WHEN** a conversation's insight row is flagged `truncated`
+- **THEN** the detail view states that the title describes only part of the conversation
+- **AND** the title itself is still stated
+
+#### Scenario: The header states no deployments and no model
+
+- **WHEN** a conversation's rollup records deployments including a router, an application and a model
+- **THEN** the header states none of them
+- **AND** it presents no model field
+- **AND** the metadata panel remains where those deployments are stated
 
 #### Scenario: A long conversation id stays reachable and copyable
 
-- **WHEN** the conversation id is too long to fit the heading
+- **WHEN** the conversation id is too long to fit the meta row
 - **THEN** it is truncated, its full value remains reachable, and it can be copied
 
 #### Scenario: The header carries no ratings and no back control
@@ -3219,9 +3505,8 @@ the conversations log, so the same conversation reads identically in both places
 #### Scenario: The header states the conversation's facts
 
 - **WHEN** the detail view renders
-- **THEN** the header states the project, the turn count, the activity span and the time since last
-  activity
-- **AND** it renders a model field as unavailable
+- **THEN** the header states the title as its heading, and the id, the project, the turn count, the activity
+  span and the time since last activity in its meta row
 
 #### Scenario: The turn count is stated once, from the rollup
 
@@ -3240,47 +3525,69 @@ the conversations log, so the same conversation reads identically in both places
 - **WHEN** the same conversation is read in the log and in the detail view
 - **THEN** its token, cost and activity values are formatted identically in both
 
-### Requirement: Conversation turn list comes from the earliest hop of each trace and discloses its bound
+### Requirement: Conversation turn list comes from the turns rollup and discloses its bound
 
-The detail view SHALL derive a conversation's **turn list** from the usage log, taking one turn per trace and
-identifying the turn's entry hop as the trace's **earliest** request. That list is the spine of the
-transcript and the source of each turn's own figures. It is **not** the source of the conversation's turn
-count, which the header reads from the rollup.
+The detail view SHALL derive a conversation's **turn list** from the `turns` entity, which the analytics
+service materializes as one row per trace. That list is the spine of the transcript and the source of each
+turn's own figures. It is **not** the source of the conversation's turn count, which the header reads from
+the conversations rollup.
 
-The entry hop MUST NOT be identified by an absent parent span. A chain's true first hop is frequently not
-recorded in this table, so most conversations have **no** hop with a null parent span and that rule finds
-nothing at all — leaving the view with no turns and no transcript.
+The view MUST NOT identify turns itself by grouping the hop-level usage log. The rollup already resolves what
+a turn is, and a second definition maintained in the frontend would drift from it: a turn's entry hop, its
+hop count and its cost would each be answered twice, by two rules, for the same conversation.
 
-A turn's cost SHALL be summed from each hop's own cost, not from the cost figure that already covers
-everything a hop initiated; summing the latter across a chain double-counts.
+Each turn SHALL carry its trace id, its start time, its hop count, its token total, its cost and its
+wall-clock duration, all as the rollup states them. A turn's cost SHALL be the sum of each hop's own cost, not
+the chain-inclusive figure that already covers everything a hop initiated; summing the latter across a chain
+double-counts. A turn's duration SHALL be its elapsed time — the longest single hop, since a hop's duration
+contains the hops it called — not the sum of its hops' durations.
 
-The turn query MUST NOT name the request or response body columns. Those columns are heavy, and naming them
-in a per-conversation read makes the turn list as slow as a transcript read.
+The turn list SHALL be ordered by each turn's start time, ascending. The rollup carries no turn index, so
+start time is the only ordering that reconstructs the conversation's sequence, and the view MUST NOT present
+a turn number as though it were recorded.
 
-Each turn SHALL carry its own model, token total and cost. A root hop's cost covers the whole chain beneath
-it, so the turn's figure accounts for the calls it caused, not only itself.
+The turn query SHALL name the trace id, so a turn's span tree stays addressable and the trace drawer's
+behaviour is unchanged.
+
+The turn query MUST NOT name a request or response body column, and the rollup exposes none: bodies are
+heavy, and naming one in a per-conversation read makes the turn list as slow as a transcript read.
 
 The turn list SHALL be bounded, and the view MUST NOT page through it. When the bound clips the list — that
-is, whenever fewer turns load than the rollup's `turn_count` — the view SHALL state both figures together, so
-the number of turns on screen reads as a stated limit rather than as the conversation's length. That
-disclosure MUST be visible without interaction, and MUST NOT render when the list is complete.
+is, whenever fewer turns load than the conversations rollup's `turn_count` — the view SHALL state both figures
+together, so the number of turns on screen reads as a stated limit rather than as the conversation's length.
+That disclosure MUST be visible without interaction, and MUST NOT render when the list is complete.
 
-#### Scenario: One turn per trace
+The turn read SHALL NOT be gated on a schema probe of its own. Unlike the conversation read, it names no
+optional field: an instance either carries the turn rollup or it does not, so there is no partial projection
+to negotiate. Where the rollup is absent the query fails, and the view SHALL render its existing
+failed-to-load presentation — which is accurate, and stays distinct from a conversation that genuinely has
+no turns.
 
-- **WHEN** the detail view loads a conversation whose usage log records many hops across a few traces
+The `turns` rollup is **refreshed periodically** while `dial_usage_log` is written live, so a conversation
+that started after the last refresh has no rows in it. Such a conversation SHALL render the view's existing
+empty-turn-list presentation: the header, the panels and the rollup's own figures still render from
+`conversations`, and the view MUST NOT report an error, since nothing failed. The view MUST NOT fall back to
+the hop-level usage log to synthesize turns for it — that would answer one conversation by one definition of a
+turn and the next by another.
+
+#### Scenario: One turn per trace, from the rollup
+
+- **WHEN** the detail view loads a conversation the rollup records several turns for
 - **THEN** one turn renders per trace
-- **AND** each turn reports its own hop count, token total and cost
+- **AND** each reports its own hop count, token total, cost and duration as the rollup states them
+- **AND** the turn query targets the `turns` entity and carries no group-by
 
-#### Scenario: Turns resolve when no hop has a null parent span
+#### Scenario: Turns are ordered by when they started
 
-- **WHEN** every hop of a conversation records a parent span
-- **THEN** its turns are still identified, one per trace
-- **AND** the transcript is still read
+- **WHEN** a conversation's turns are listed
+- **THEN** they render in ascending order of start time
+- **AND** the query's sort key is the turn's start time
 
-#### Scenario: A turn's cost is not double-counted
+#### Scenario: A turn's trace stays addressable
 
-- **WHEN** a turn fans out into a chain of hops
-- **THEN** its cost is the sum of each hop's own cost, not of the chain-inclusive figure
+- **WHEN** a turn renders
+- **THEN** it offers the control that opens that turn's trace
+- **AND** the span tree that opens is the one for that turn's trace id
 
 #### Scenario: A clipped turn list states its bound against the real count
 
@@ -3296,80 +3603,21 @@ disclosure MUST be visible without interaction, and MUST NOT render when the lis
 #### Scenario: The turn query reads no body column
 
 - **WHEN** the turn list is requested
-- **THEN** the query names neither the request body nor the response body column
+- **THEN** the query names neither a request body nor a response body column
 
-### Requirement: Conversation message content is sample data, and says so
+#### Scenario: An instance without the turn rollup reports a failed read
 
-The detail view SHALL render a conversation as user and assistant messages, and those messages SHALL be
-**sample content**, not the conversation's stored message text.
+- **WHEN** the detail view loads a conversation on an instance that does not carry the turn rollup
+- **THEN** the timeline states that the turns could not be loaded
+- **AND** the header, the panels and the conversation's own figures still render
+- **AND** no schema probe of the turn entity is issued before the read
 
-Whenever sample messages render, the view SHALL display a persistent notice stating that the messages are
-samples and that the surrounding turn, token and cost figures are real. The notice MUST be visible without
-interaction and MUST NOT be the only cue in a tooltip or title attribute: sample content presented as real
-traffic on an analytics page would misrepresent what the system recorded.
+#### Scenario: A conversation newer than the last refresh lists no turns
 
-The view MUST NOT read the request or response body columns. Those columns are `heavy` and encrypted at
-rest and reach megabytes in a single row, while the route re-renders on every view — so the message text the
-system records is not available to this view at an acceptable cost.
-
-Sample content SHALL be derived from the conversation's identity, so one conversation always renders the
-same exchange. Content that varied between views would read as changing data rather than as sample content.
-
-The number of sample turns SHALL equal the number of turns the view **loaded** — never more — so every
-assistant message carries the real figures for its turn. It MUST NOT be taken from the rollup's `turn_count`:
-on a conversation whose turn list is clipped, counting from the rollup would pad the transcript with
-exchanges that have no turn behind them, leaving those messages with no figures beside them, and those
-figures are the part of this region that is real. A conversation with no turns SHALL render no messages and
-no notice, falling back to stating that message content is unavailable.
-
-A failed turns query SHALL be reported as a failure and MUST NOT be presented as a conversation that
-recorded no messages. Both states render an empty transcript, and reporting an outage as an absence would
-state something false about the conversation.
-
-#### Scenario: Messages render as sample content with a visible notice
-
-- **WHEN** the detail view renders a conversation that recorded turns
-- **THEN** user and assistant messages render
-- **AND** a visible notice states that the messages are samples and the figures beside them are real
-
-#### Scenario: No body column is ever requested
-
-- **WHEN** the detail view loads a conversation
-- **THEN** no query it issues references the request body or response body column
-
-#### Scenario: The same conversation always renders the same exchange
-
-- **WHEN** the same conversation is opened twice
-- **THEN** its messages are identical
-
-#### Scenario: Sample turns match the real turn count
-
-- **WHEN** a conversation recorded three turns
-- **THEN** three user messages and three assistant messages render
-
-#### Scenario: A clipped turn list does not pad the transcript
-
-- **WHEN** a conversation's `turn_count` is 911 and 200 turns loaded
-- **THEN** 200 user messages and 200 assistant messages render
-- **AND** every assistant message carries its turn's real figures
-
-#### Scenario: A conversation with no turns shows no sample content
-
-- **WHEN** a conversation has no turns
-- **THEN** no messages and no sample notice render
-- **AND** the view states that message content is unavailable
-
-#### Scenario: A failed turns query is not reported as an absence of messages
-
-- **WHEN** the turns query fails
-- **THEN** the transcript states that the turns could not be loaded
-- **AND** it does not state that message content was never recorded
-
-#### Scenario: Every assistant message carries its turn's real figures
-
-- **WHEN** a conversation's messages render
-- **THEN** each assistant message shows its turn's real token total, cost and call count
-- **AND** no assistant message renders without them
+- **WHEN** a conversation exists in the conversations rollup but has no rows in the turns rollup
+- **THEN** the view renders its empty-turn-list presentation rather than an error
+- **AND** the header and the panels still state the conversation's figures
+- **AND** no request is made to the hop-level usage log for a substitute turn list
 
 ### Requirement: Conversation detail side panels and their provenance
 
@@ -3379,19 +3627,57 @@ a glance rather than by reading their headings.
 
 Each panel SHALL name the entity it reads from, and MUST NOT overstate it. **Every** panel SHALL have a real
 source: the view MUST NOT present a panel no queried entity populates, because a panel of nothing but
-unavailable markers states a shape the system does not record. A panel MUST NOT be labelled as
-enrichment-derived: the view queries no enrichment, and the analytics deployment defines none over the
-conversation rollup.
+unavailable markers states a shape the system does not record.
+
+A panel MUST NOT name an enrichment as its source. The analytics service exposes an enrichment's columns as
+columns of the entity they enrich, and the view queries the entity — so a panel that reads an
+enrichment-derived field still reads `conversations`, and naming the enrichment would present an internal
+composition of the entity as a separate thing the view queried.
+
+This is one half of a rule the whole feature follows, and the two halves SHALL NOT be conflated:
+
+- A **catalog identifier**, rendered in monospace, claims **the entity the page queried**. It SHALL name
+  `conversations` or `rate_analytics` and SHALL NEVER name an enrichment — in a panel's source, in the page
+  header's provenance line, or anywhere else an identifier appears.
+- A **readable origin label** claims **where a value came from**, which is a different question and decides
+  whether an empty cell means "not recorded" or "not yet evaluated". It SHALL distinguish an enrichment from
+  the rollup it decorates.
+
+Where both registers describe the same origin they SHALL carry the same provenance colour, so an identifier
+and a label for one source cannot appear to disagree.
 
 The usage panel SHALL state prompt tokens, completion tokens, total tokens, total cost and the recorded
 durations from the rollup, laid out as headline figures rather than a label-and-value list. Monetary values SHALL carry the emphasis
 money carries elsewhere in the app, which is independent of the panel's source colour.
 
+A panel field whose value cannot be read at face value SHALL carry a caveat stating why, and that caveat
+SHALL be reachable by keyboard. A field label is not focusable, so a caveat attached to it by hover alone is
+unreachable for a keyboard or screen-reader user; the caveat SHALL therefore be exposed through a focusable
+control whose accessible name carries it. A `title` attribute alone does not satisfy this.
+
+The recorded durations are two such fields. `duration_ms` sums a conversation's hop durations, and an outer
+hop's duration already contains the hops it called, so a conversation whose turns fan out into chains reads
+longer than the time it actually took. `avg_duration_ms` averages per **hop** rather than per turn, so it is
+not the average turn. Each SHALL state its own caveat: the two figures are wrong in different ways, and one
+shared note would misdescribe whichever it did not name. The view MUST NOT describe either as elapsed time.
+This restates a caveat previously carried only by the conversations grid's Duration column, which no longer
+exists — the figures remain on this panel, so the statement has to as well.
+
 The metadata panel SHALL state the conversation id, the anonymized user identifier, the project, the first
-activity time, the successful-request count and the deployments that served the conversation, all from the
-rollup, and SHALL surface trace and region fields as unavailable. A field the rollup carries SHALL NOT be
-rendered as unavailable: the panel states what the record holds, and marking a recorded field as absent
-misreports the data the view already fetched.
+activity time, the successful-request count, the conversation's **trace ids** and the deployments that served
+the conversation, all from the rollup. A field the rollup carries SHALL NOT be rendered as unavailable: the
+panel states what the record holds, and marking a recorded field as absent misreports the data the view
+already fetched.
+
+The trace ids SHALL be read from the rollup's `traces`. Their order is the rollup's own — ascending by id,
+not by turn — so the panel MUST NOT present them as a turn sequence or number them as turns. The panel MUST
+NOT derive a turn count from the array's length: the length is not queryable and the array is subject to the
+same bound as any projected value, so `turn_count` remains the count of record and the header remains where
+it is stated.
+
+The successful-request field's label SHALL state what `success_count` counts — a turn in which **at least one
+hop** succeeded. Labelling it as an unqualified success count would read as "the turn succeeded", which is a
+stronger claim than the rollup makes: a turn whose entry hop failed after a nested hop succeeded is counted.
 
 Panel provenance colours SHALL come from theme tokens, and every provenance value the view can render SHALL
 map to a colour, so a newly added source cannot render unstyled.
@@ -3412,17 +3698,43 @@ map to a colour, so a newly added source cannot render unstyled.
 - **WHEN** the detail view renders
 - **THEN** every panel it renders has a real source entity
 
+#### Scenario: A duration figure carries a keyboard-reachable caveat
+
+- **WHEN** the usage panel renders a conversation's duration and average duration
+- **THEN** each figure carries a caveat explaining what its value actually measures
+- **AND** each caveat is reachable by keyboard and exposed to assistive technology
+- **AND** neither figure is described as elapsed time
+
+#### Scenario: An identifier never names an enrichment
+
+- **WHEN** the detail view's panels and the log's provenance line render for an instance carrying the insight
+  enrichment
+- **THEN** every monospace catalog identifier names only an entity the page queries
+- **AND** none of them names `conversation_insights`
+
 #### Scenario: No panel claims an enrichment
 
-- **WHEN** the detail view renders
-- **THEN** no panel is labelled as enrichment-derived
+- **WHEN** the metadata panel renders a field the conversation-insight enrichment supplies
+- **THEN** the panel still names `conversations` as its source
+- **AND** no panel is labelled as enrichment-derived
 
 #### Scenario: The metadata panel marks what the rollup lacks
 
 - **WHEN** the detail view renders
 - **THEN** the metadata panel states the conversation id, user identifier, project, first activity,
-  successful-request count and the conversation's deployments
-- **AND** it renders trace and region as unavailable
+  successful-request count, trace ids and the conversation's deployments
+- **AND** it marks none of them as unavailable, because the rollup carries every field it lists
+
+#### Scenario: Trace ids are not presented as a turn order
+
+- **WHEN** a conversation's rollup records several trace ids
+- **THEN** the metadata panel lists them without turn numbers or ordinal labels
+- **AND** the panel states no turn count derived from how many it lists
+
+#### Scenario: The successful-request label states what it counts
+
+- **WHEN** the metadata panel renders
+- **THEN** its successful-request label states that a turn counts when at least one of its hops succeeded
 
 ### Requirement: Conversation detail feedback reads the rating source
 
@@ -3475,81 +3787,12 @@ presenting it as complete.
 - **WHEN** a conversation has more ratings than the view requested
 - **THEN** the panel states that the list is partial
 
-### Requirement: A turn's trace opens in place, with a selectable span tree
-
-Each assistant message SHALL offer a control opening that turn's trace. The trace SHALL replace the
-transcript **within the same view** and SHALL offer a control returning to the transcript. Opening a trace is
-a read of one turn and MUST NOT navigate away from the conversation.
-
-While a trace is open the conversation's header SHALL be replaced rather than kept above it. The trace states
-its own identity and its own figures, and two stacked headers would leave the reader unsure which of them the
-figures belong to.
-
-The trace SHALL render one row per recorded hop, nested by the parent-span relationship. A hop whose parent
-is absent from the result SHALL be rendered as a root rather than dropped: a chain's first hop is frequently
-recorded elsewhere, so dropping such hops would hide most of a trace. Nesting depth SHALL be bounded so a
-deep chain cannot indent rows out of view.
-
-Each hop SHALL state its name, its request method and path, a category, its duration and its own cost, and
-SHALL be selectable. Categories SHALL be derived from the recorded event kind, except that a **failed** hop
-SHALL be categorised by its failure whatever its kind — on a trace the reader is looking for what broke.
-Every category SHALL map to a colour from theme tokens and SHALL be named in a legend.
-
-Selecting a hop SHALL show its detail beside the tree: its category and status, its offset from the start of
-the trace, its duration, its tokens and cost, its endpoint, its upstream, its calling deployment and its HTTP
-status. The detail MUST NOT show request or response bodies — the same heavy-column constraint that applies
-to the transcript applies here.
-
-The trace SHALL state its own latency, token total, cost, hop count and status. Latency SHALL be the longest
-hop rather than the sum, because hops of one trace overlap, and cost SHALL sum each hop's own cost rather
-than the chain-inclusive figure.
-
-The hop list SHALL be bounded and SHALL say so when it was cut short. A trace's hop count reaches into the
-hundreds.
-
-#### Scenario: Opening a turn's trace replaces the transcript in place
-
-- **WHEN** the trace control on an assistant message is used
-- **THEN** that turn's span tree renders in place of the transcript
-- **AND** the trace states the turn it belongs to and its own trace id
-- **AND** a control returns to the transcript
-
-#### Scenario: Hops nest by their parent span
-
-- **WHEN** a trace records a hop that called another hop
-- **THEN** the called hop renders nested beneath its caller
-
-#### Scenario: A hop whose parent is absent is still shown
-
-- **WHEN** a hop records a parent span that is not itself in the result
-- **THEN** that hop renders as a root rather than being dropped
-
-#### Scenario: A failed hop is categorised by its failure
-
-- **WHEN** a hop did not succeed
-- **THEN** it is categorised as an error rather than by its event kind
-
-#### Scenario: Selecting a hop shows its detail
-
-- **WHEN** a hop is selected
-- **THEN** its category, status, offset, duration, tokens, cost, endpoint, upstream, caller and HTTP status
-  render beside the tree
-- **AND** no request or response body renders
-
-#### Scenario: Trace latency is the enclosing hop, not the sum
-
-- **WHEN** a trace records overlapping hops
-- **THEN** its stated latency is the longest hop's duration
-
-#### Scenario: A truncated hop list says so
-
-- **WHEN** a trace records more hops than the view requested
-- **THEN** the view states that the list is partial
-
 ### Requirement: Conversations grid with server-side ordering and per-column filtering
 
-The conversations view SHALL render a grid of seven visible columns — conversation, project, user, turns,
-activity, tokens, cost — plus the Rating column.
+The conversations view SHALL render a grid of five visible columns — conversation, project, user, activity,
+cost — plus the Rating column. Turns, tokens, deployments and topics are curated columns that default to
+hidden; see "Conversation grid columns are a fixed curated set gated by the entity schema" for the whole set
+and its origins.
 
 A column SHALL offer a sort or a filter control **only** when the control can be answered over the whole
 result. That is the case exactly when the column is backed by a stored field of the `conversations` entity,
@@ -3566,7 +3809,20 @@ result, so narrowing them client-side would report a slice as the complete answe
 | activity (`last_request_time`) | yes | none |
 | tokens (`total_tokens`) | yes | number |
 | cost (`total_price`) | yes | number |
+| deployments (`deployments`) | no | no |
+| topics (`conversation_insights.topics`) | no | text |
 | Rating | no | no |
+
+The deployments column SHALL offer neither, because the query language expresses no ordering and no predicate
+over an array. The topics column SHALL offer a text filter but no sort: its value is a delimited string, so a
+lexicographic ordering would sort by whichever term happens to be written first and carry no meaning, while a
+contains predicate matches a term wherever it appears in the string.
+
+A predicate on an enrichment-backed field SHALL be gated on the entity schema exactly as the projection is. An
+instance that does not carry the enrichment would have the whole query rejected, not the one predicate
+dropped. A reader SHALL NOT be led to believe such a filter searched every conversation: it matches only rows
+the enrichment has reached, which is under a quarter of them, and that is correct behaviour rather than a
+bug — but it is a narrowing of the population, not only of the result.
 
 The Rating column SHALL offer neither. It is composed from `rate_analytics` lookups resolved for the page
 just returned and has no field on the queried entity, so any ordering or narrowing of it could only describe
@@ -3596,9 +3852,14 @@ different result than the rows.
 When no column sort is applied the result SHALL be ordered most recent last activity first. Clearing a
 column's sort SHALL return to that default rather than leaving an arbitrary order.
 
-The conversation column SHALL keep the full conversation id reachable when it is too long to display, since
-real ids are not uniformly short and can run to hundreds of characters. Truncation MUST NOT be the only
-presentation of the value. The user column SHALL keep its value reachable on the same terms.
+The conversation column SHALL keep **both** of its lines reachable when either is too long to display, since
+real ids are not uniformly short and can run to hundreds of characters, and a title is free text. Truncation
+MUST NOT be the only presentation of either value. The user column SHALL keep its value reachable on the same
+terms.
+
+The conversation column MUST NOT carry a copy control per row. The full id is already reachable there, and a
+control in every row of an infinitely scrolling grid adds a focusable node per row to the tab order for a
+value the detail view already offers to copy.
 
 The user column SHALL show the conversation's `user_hash`, labelled the way the conversation detail page
 labels it. The value is a de-identified surrogate rather than an identity, so the column SHALL NOT be
@@ -3722,228 +3983,353 @@ from the column header beneath it.
 - **WHEN** the result holds zero conversations
 - **THEN** the no-data content renders instead of an empty grid body
 
-### Requirement: Conversation grid columns are offered from the entity schema
+### Requirement: Conversation grid columns are the curated set plus every field the entity schema reports
 
-The conversations view SHALL build its column catalog from the `conversations` entity's schema as the analytics
-service reports it, not from a field list held in the frontend. The schema is already fetched for the Query
-Builder, is role-filtered by the service, and declares each field's type, display name and description — so it
-is the only source that stays correct when the entity gains or loses a field.
+The conversations grid SHALL offer, in addition to its curated columns, one column per field the fetched
+`conversations` entity schema reports. The offered set SHALL follow the instance rather than a list held in
+the frontend, and the number of columns MUST NOT be fixed anywhere in the frontend: one instance reports 32
+fields (19 from the rollup, 13 from `conversation_insights`), another carrying a further enrichment reports
+more, and the difference between them is the reason the schema is read rather than a list maintained.
 
-Each offered column SHALL derive its header label from the field's display name, falling back to the field
-name, and SHALL derive its cell formatting, its sortability and its filter type from the field's declared type:
-count-like integer types, decimal money types, timestamp types and string types each render and filter the way
-that value type already renders and filters elsewhere in the app.
+The curated columns SHALL keep their designed cells, headers and defaults and SHALL NOT be re-derived. They
+are Conversation, Project, User, Turns, Activity, Tokens, Cost, Deployments, Topics and Rating.
 
-A field SHALL NOT be offered when the grid cannot honestly render or query it:
+A derived column SHALL take:
 
-- a field the service marks `sensitive` — selecting it would be rejected for a caller without the required
-  role, so offering it would present a column that cannot be shown;
-- a non-scalar `object` or `array` field — a grid cell is not a structured-value viewer, and rendering one as
-  text would assert a shape the view does not know;
-- a field the service marks `heavy` — the service omits such a field from a wildcard projection because it is
-  expensive to transfer, and a column the catalog offers is one the view may project on every page.
+- its header from the field's `display_name` where the schema reports one, and otherwise from the field's
+  `name` rendered readably — separators replaced by spaces and the first word capitalized, with an
+  enrichment prefix stripped first, so `avg_duration_ms` reads "Avg duration ms" and
+  `conversation_insights.sentiment_score` reads "Sentiment score". `display_name` is reported for some
+  fields and not others on the same instance, and for none at all on some instances, so both paths are
+  ordinary rather than exceptional. A raw catalog identifier SHALL NOT be presented as a header;
+- its tooltip from the field's `description`, **verbatim**. The descriptions are authoritative and several
+  contradict what the column looks like — `duration_ms` counts a chained turn's nested hops more than once
+  and so exceeds the conversation's elapsed time, and `chain_price_total` is NULL wherever no turn carries a
+  chain-starting hop with a chat id, which is a coverage gap and not a zero. The frontend SHALL NOT
+  paraphrase a description into a string of its own, because a paraphrase is a second copy that drifts when
+  the service re-words the original;
+- its cell formatting and its sort affordance from the field's declared type, on the same terms as any other
+  column of that value type elsewhere in the app;
+- its filter from the declared type **only where the grid's filter translation carries that filter's model**.
+  A derived column of a timestamp or boolean type SHALL offer no filter at all. A date filter reports its
+  bounds under names the translation does not read, so the predicate would be dropped and the header would
+  show an active filter over an unnarrowed result; a boolean falling through to the text filter would offer
+  a contains predicate the query language cannot express over a boolean, and the service rejects a whole
+  query for one such predicate — so a filter menu would take the listing down rather than narrow it. Both
+  SHALL remain sortable: an ordering is expressible for either, and it is only the predicate that has no
+  translation.
 
-The array exclusion governs what the catalog offers, not what the view can render. A curated column MAY read an
-array field where the view defines a presentation for that field's values and states what they mean; such a
-column is designed rather than derived, and its field remains outside the catalog like any other curated
-field's.
+A field SHALL NOT be offered as a derived column when:
 
-A field consumed by a curated column SHALL NOT also be offered as a raw column. The activity column composes
-`first_request_time` and `last_request_time` into one cell, so the catalog SHALL offer that column and MUST NOT
-additionally offer its two source fields as separate columns, which would present the same data twice under
-different names. The same applies to `duration_ms` and `deployments`, which the duration and models columns
-consume.
+- the service marks it `sensitive` — selecting it would be rejected for a caller without the required role,
+  so the column could never be shown;
+- its type is the non-scalar `object` or `array` — a grid cell is not a structured-value viewer, and
+  rendering one as text would assert a shape the view does not know;
+- a curated column already reads it, including a field a curated column composes without having a column of
+  its own. `first_request_time` (composed into Activity) and `conversation_insights.title` (read by the
+  identity column) SHALL NOT additionally appear as columns of their own, which would present the same value
+  twice under two names.
 
-The nine curated columns — conversation, project, user, turns, activity, tokens, cost, duration, models —
-SHALL keep their composed cells and their labels, and SHALL be the default visible set together with the
-Rating column. Every other offered field SHALL default to hidden.
+A field the service marks `heavy` SHALL NOT be excluded from being offered on that ground alone: `heavy` is a
+transfer-cost hint and SHALL govern **projection** rather than offering.
 
-Every offered column SHALL be attributed to the `conversations` provenance group, since every one is read from
-that entity. The Rating column SHALL remain attributed to `rate_analytics` and SHALL remain outside the
-catalog: it is not a field of the queried entity, so it cannot be offered, hidden or reordered as one.
+On the current schema no offered field is heavy, so the heavy class is empty — the expected result rather
+than a gap. The non-scalar rule is a rule about which fields become **columns**, and carries no implication
+for projection: `deployments` is an array, has a designed column, and is projected on every page like any
+other cheap field. The one heavy field the entity reports is `traces`, and it is absent from the projection
+because **no rendered column reads it**, not because of its type. The class SHALL become non-empty on either
+of two events, neither requiring this rule to be revisited: the service marking a scalar field `heavy`, or a
+column being designed that reads `traces`.
 
-An offered column SHALL be classified by whether the schema reports its field under an enrichment namespace,
-because that classification decides whether revealing it costs a re-query. The classification SHALL follow
-what the schema reports rather than a list held in the frontend, so an enrichment added to the entity is
-classified correctly without a code change.
+The default visible set SHALL be exactly the set visible today — Conversation, Project, User, Activity, Cost
+and Rating — and every derived column SHALL ship hidden. Grouping constrains column order, so the default
+visible **order** SHALL become Conversation, Activity, Project, User, Cost, Rating. The change of order is
+accepted deliberately: a group a reader can see is worth more than a preserved column sequence.
 
-When the schema cannot be fetched the view SHALL render the curated columns and SHALL report that the
-additional columns are unavailable, rather than presenting an empty catalog as though the entity had no other
-fields.
+Columns SHALL be grouped on the pair of **origin and tag**, at one level, with one group per pair the schema
+actually reports:
 
-A field made visible SHALL be sortable and filterable on the same terms as a curated field-backed column,
-since it is a stored field of the same entity. A curated column reading an array field is the exception and
-SHALL offer neither, because the query language expresses no ordering or predicate over an array.
+- the **tag** SHALL supply the group's label, rendered as readable words rather than as the raw kebab-case
+  catalog identifier. A tag for which the frontend holds no label SHALL fall back to the raw tag rather than
+  causing its columns to be dropped, and a group with no tag at all SHALL be labelled by its origin;
+- the **origin** — the rollup, a named enrichment, or the rating source — SHALL supply the group's colour;
+- a group of an **enrichment** origin SHALL additionally name that enrichment in the label itself, not in
+  the colour alone, and two enrichments the frontend cannot name SHALL form separate groups even where they
+  carry the same tag — they share one catch-all origin, so the enrichment is the only thing distinguishing
+  them. The columns panel prints a group's label as the caption under each of its columns, so a
+  caption reading only "Evaluator run" above a column reading "Model" still leaves the reader to guess whose
+  model it is. A group of the rollup SHALL take no such prefix: the rollup is what the grid is a list of, and
+  naming the source table there is the mis-attribution this grouping replaced.
 
-#### Scenario: The catalog comes from the schema
+Each group SHALL also state its origin's meaning on hover, so a hue is never the only carrier of the
+distinction.
 
-- **WHEN** the conversations view loads
-- **THEN** the column catalog offers the entity's fields as reported by the schema
-- **AND** each offered column's label, formatting, sortability and filter type follow its declared type
+Keying on the pair rather than on the tag alone SHALL keep a rollup field and an enrichment field that share
+a tag in separate groups. Two origins merged under one tag would attribute an enrichment value to the rollup,
+and the two produce different kinds of empty cell — one that cannot happen and one that means not yet
+evaluated.
+
+Every column SHALL be attributed to exactly one group, and no column SHALL be left unattributed.
+
+The five fields the schema tags `provenance` are the evaluation's own bookkeeping rather than facts about the
+conversation: the evaluator's DIAL deployment, its version, the input's group version, when the row was
+computed, and whether the input was truncated. They SHALL be presented only under a group whose label names
+them as the evaluator's run, and MUST NOT be presented under a label a reader could take for a property of
+the conversation. In particular the field whose reported `display_name` is "Model" — described by the service
+as the DIAL deployment that produced the row — MUST NOT appear as a column headed "Model" without that group
+above it: read bare, it is indistinguishable from the deployments the conversation actually used, which is
+the specific defect that caused schema-derived columns to be withdrawn.
+
+The identity column SHALL NOT be hideable. It is how a reader recognises a row and how a row is opened, so a
+grid without it is a table of values belonging to conversations the reader cannot name. It SHALL declare the
+rollup as its origin even though it reads the enrichment for its title — a conversation's identity is its id
+and the title only labels it — and SHALL state in its own disclosure that the title comes from the insight
+enrichment and may describe only part of the conversation. It SHALL state that size cap **once**, for the
+column, rather than marking the rows it applies to.
+
+`conversation_insights.summary` SHALL be offered as a derived column, hidden by default. It is derived text
+the service reports as non-sensitive, like the title the identity column already shows. This is recorded as a
+decision and not an oversight: the request and response bodies it was derived from are marked `sensitive` and
+`heavy`, are encrypted at rest and carry an explicit gating instruction, and none of that propagates through
+an enrichment — so the flags on the derived field cannot be read as evidence that the derivation is
+uninteresting, only that the service does not gate it.
+
+The two fields whose values form a closed vocabulary — an insight's sentiment and its resolution status —
+SHALL be offered as derived columns of their reported string type, with the string operators the query
+language already expresses. The frontend SHALL NOT hold a copy of the evaluator's enumeration in order to
+offer a value-list filter for them: that vocabulary is declared in the evaluator's response schema on the
+service side and would drift silently whenever the evaluator is re-versioned.
+
+A curated column whose field the entity schema does not report SHALL NOT be rendered at all — neither shown
+nor offered as hideable — because the query cannot name the field and the cells could never fill. Rating is
+the exception and SHALL render unconditionally: it reads no field of this entity, so no schema will ever
+report it, and it SHALL remain outside the derived set, not offered, hidden or reordered as a field-backed
+column is.
+
+An enrichment field's exposed name is a qualified flat name containing a dot. The grid SHALL read such a field
+by that whole name and MUST NOT interpret the dot as a path into a nested value: the row carries the name as a
+single key, so a path interpretation finds nothing and renders an empty cell for a field the row does carry.
+
+No column SHALL be offered for a request or response body, because the entity reports no such field. Those
+are columns of `dial_usage_log`, a different entity; the listing queries `conversations`. The frontend SHALL
+state this where columns are derived and SHALL NOT carry a filter against those names, which would imply the
+schema could report them.
+
+When the entity schema cannot be fetched the grid SHALL render the curated columns that need no optional
+field, SHALL offer no derived column, and SHALL report that the additional columns could not be read.
+
+A stored column choice recorded against a smaller column set SHALL leave a column it does not name at that
+column's coded default, so columns introduced by this change arrive hidden for an operator who already has a
+stored choice.
+
+#### Scenario: The offered columns come from the schema, not from a fixed list
+
+- **WHEN** the grid loads against an instance whose schema reports fields beyond those the curated columns read
+- **THEN** each such field is offered as a column
+- **AND** the offered count follows the schema rather than a number held in the frontend
+- **AND** an instance reporting a further enrichment offers that enrichment's fields too, with no code change
+
+#### Scenario: The default visible set is unchanged and derived columns ship hidden
+
+- **WHEN** the grid loads with no stored column choice
+- **THEN** the Conversation, Project, User, Activity and Cost columns are visible, together with Rating
+- **AND** every derived column is hidden
+- **AND** the visible order is Conversation, Activity, Project, User, Cost, Rating
+
+#### Scenario: A group is named by its tag and coloured by its origin
+
+- **WHEN** the grid renders its column groups
+- **THEN** each group is labelled in readable words rather than by a raw catalog identifier
+- **AND** each group's colour distinguishes the rollup from an enrichment
+- **AND** a group of an enrichment origin names that enrichment in its label, while a rollup group does not
+- **AND** each group states its origin's meaning on hover
+- **AND** the columns of one group are adjacent
+- **AND** every column belongs to exactly one group
+
+#### Scenario: A rollup field and an enrichment field sharing a tag stay in separate groups
+
+- **WHEN** the schema reports an enrichment field carrying the same tag as a field of the rollup
+- **THEN** the two are placed in different groups
+- **AND** neither group attributes an enrichment value to the rollup
+
+#### Scenario: The evaluator's deployment never reads as the conversation's model
+
+- **WHEN** the schema reports `conversation_insights.model` with the display name "Model"
+- **THEN** its column appears only under a group whose label names the evaluator's run
+- **AND** the columns panel states that column's origin alongside it
+- **AND** no column headed "Model" appears with no such group above it
+
+#### Scenario: A tag the frontend has no label for still yields columns
+
+- **WHEN** the schema reports a field carrying a tag the frontend holds no label for
+- **THEN** the field is still offered as a column
+- **AND** its group is labelled with the raw tag rather than dropped
+
+#### Scenario: A field with no display name gets a readable header
+
+- **WHEN** the schema reports `avg_duration_ms` with no display name, and
+  `conversation_insights.sentiment_score` with none either
+- **THEN** the first column's header reads "Avg duration ms"
+- **AND** the second's reads "Sentiment score", the enrichment prefix having been stripped
+- **AND** neither header is a raw catalog identifier
+
+#### Scenario: A field's description is its tooltip, unparaphrased
+
+- **WHEN** the grid renders the header of a derived column whose field carries a description
+- **THEN** the tooltip is that description as the service reported it
+- **AND** the duration column's tooltip states that nested hops are counted more than once
+- **AND** the chain-cost column's tooltip states that its NULL is a coverage gap, not an accounting difference
 
 #### Scenario: Sensitive and non-scalar fields are not offered
 
 - **WHEN** the schema reports a field marked sensitive, and a field of an object or array type
-- **THEN** neither is offered in the catalog
+- **THEN** neither is offered as a column
 
-#### Scenario: A heavy field is not offered
+#### Scenario: A heavy field is not excluded for being heavy
 
-- **WHEN** the schema reports a field the service marks `heavy`
-- **THEN** it is not offered in the catalog
+- **WHEN** the schema reports a scalar field marked heavy
+- **THEN** it is offered as a column
+- **AND** it is hidden by default like any other derived column
 
-#### Scenario: A curated array column's field is not offered separately
+#### Scenario: A field a curated column already reads is not offered twice
 
-- **WHEN** the catalog is built
-- **THEN** the models column renders `deployments`
-- **AND** `deployments` is not additionally offered as a catalog column
+- **WHEN** the columns are built
+- **THEN** `first_request_time` is not offered as a column of its own, being composed into Activity
+- **AND** `conversation_insights.title` is not offered as a column of its own, being read by the identity column
+- **AND** `deployments` and `conversation_insights.topics` are offered only as their curated columns
 
-#### Scenario: A composed column's source fields are not offered separately
+#### Scenario: The summary is offered, hidden
 
-- **WHEN** the catalog is built
-- **THEN** the activity column is offered
-- **AND** `first_request_time` and `last_request_time` are not offered as columns of their own
+- **WHEN** the schema reports `conversation_insights.summary`
+- **THEN** it is offered as a column
+- **AND** it is hidden by default
 
-#### Scenario: An offered column is classified by its backing source
+#### Scenario: Sentiment and resolution status are offered as string columns
 
-- **WHEN** the catalog is built from a schema reporting both plain field names and enrichment-namespaced ones
-- **THEN** each offered column records whether its field is enrichment-backed
-- **AND** that classification comes from the reported schema rather than a frontend list
+- **WHEN** the schema reports the insight sentiment and resolution status as string fields
+- **THEN** each is offered as a column with the string filter operators the query language expresses
+- **AND** neither offers a value list drawn from a copy of the evaluator's enumeration held in the frontend
 
-#### Scenario: The curated set is what is visible by default
+#### Scenario: No body column is offered
 
-- **WHEN** the conversations view loads with no stored column choice
-- **THEN** the conversation, project, user, turns, activity, tokens, cost, duration, models and Rating columns
-  are visible
-- **AND** every other offered column is hidden
+- **WHEN** the columns are built from the reported schema
+- **THEN** no column is offered for a request or response body
+- **AND** no filter names those fields, the schema reporting none
 
-#### Scenario: Rating is not part of the catalog
+#### Scenario: The identity column cannot be hidden and discloses its title's source
 
-- **WHEN** the operator opens the column panel
-- **THEN** the Rating column is not offered as a selectable column
+- **WHEN** the operator opens the columns panel
+- **THEN** the Conversation column offers no way to hide it
+- **AND** every other column can be hidden
+- **AND** the column's own disclosure states that its title comes from the insight enrichment and may describe
+  only part of the conversation
+- **AND** no row carries a separate truncation marker of its own
+
+#### Scenario: A dotted enrichment field is read by its whole name
+
+- **WHEN** a derived enrichment column renders a row carrying that field's qualified name as a key
+- **THEN** the cell states that row's value
+- **AND** it is not empty
+
+#### Scenario: A curated column whose field is missing is not rendered
+
+- **WHEN** the schema reports no insight fields
+- **THEN** the grid renders no Topics column
+- **AND** the columns panel offers it nowhere
+- **AND** the remaining columns render as they did before it existed
+
+#### Scenario: Rating survives a schema that reports no such field
+
+- **WHEN** the columns are built from a schema reporting no `rating` field
+- **THEN** the Rating column renders
+- **AND** it is not offered as a derived column
 
 #### Scenario: A failed schema fetch degrades to the curated columns
 
 - **WHEN** the entity schema cannot be fetched
-- **THEN** the curated columns render
-- **AND** the view reports that the additional columns are unavailable
+- **THEN** the curated columns that need no optional field render
+- **AND** no derived column is offered
+- **AND** the view reports that the additional columns could not be read
 
-#### Scenario: A newly visible column can be sorted and filtered
+#### Scenario: A stored choice from the smaller set leaves new columns hidden
 
-- **WHEN** a schema-driven column is made visible
-- **THEN** it offers a sort affordance and a filter control matching its declared type
-- **AND** applying either carries a predicate or sort key on that field into the query
+- **WHEN** the grid loads for an operator whose stored column choice names only the previously shipped columns
+- **THEN** that stored choice is honoured for the columns it names
+- **AND** every column it does not name is hidden
 
-### Requirement: Conversations grid states how long each conversation took
+#### Scenario: A derived timestamp or boolean column offers no filter
 
-The conversations grid SHALL present a curated **Duration** column reading the rollup's `duration_ms`, so an
-operator scanning the list can find slow conversations without opening each one. The column SHALL be part of
-the default visible set and SHALL be projected by the first list query, so it carries a value on the grid's
-first paint rather than after a column-selection round trip.
+- **WHEN** the schema reports a timestamp field and a boolean field that no curated column reads
+- **THEN** each is offered as a column and each offers a sort
+- **AND** neither offers a filter control
 
-The column SHALL render a human-readable elapsed time rather than a raw millisecond count, at a precision that
-stays legible across the range the field spans — sub-minute durations reading in seconds, longer ones in
-minutes and seconds.
+#### Scenario: Two unnamed enrichments sharing a tag stay apart
 
-The column SHALL be sortable and range-filterable server-side on the same terms as the other numeric curated
-columns, since `duration_ms` is a stored scalar of the queried entity.
+- **WHEN** the schema reports fields from two enrichments the frontend has no name for, both carrying the
+  same tag
+- **THEN** each enrichment's fields form their own group
+- **AND** each group is labelled with the enrichment that supplies it
 
-The field records the summed duration of a conversation's hops. Where a turn fans out into a chain, an outer
-hop's duration contains its inner hops' durations, so the value exceeds the conversation's elapsed wall-clock
-time. User-facing copy MUST NOT describe the column as elapsed time.
+#### Scenario: Sort affordances match what the query can order
 
-#### Scenario: Duration renders on first paint
+- **WHEN** the grid renders its headers
+- **THEN** a derived column of a scalar type offers a sort
+- **AND** the Rating, Topics and Deployments columns offer none
 
-- **WHEN** the conversations grid loads with no stored column choice
-- **THEN** the Duration column is visible
-- **AND** the first list query's select names `duration_ms`
+### Requirement: Conversations grid names the deployments a conversation used
 
-#### Scenario: Duration renders as elapsed time, not milliseconds
-
-- **WHEN** a conversation has a recorded duration
-- **THEN** the cell states it in seconds, or in minutes and seconds when it exceeds a minute
-- **AND** it does not state a raw millisecond count
-
-#### Scenario: Duration sorts and filters server-side
-
-- **WHEN** the operator sorts by Duration or applies a range filter to it
-- **THEN** the query carries a sort key or a `ge`/`le` predicate pair on `duration_ms`
-- **AND** paging restarts from the first page
-
-### Requirement: Conversations grid names the models a conversation used
-
-The conversations grid SHALL present a curated **Models** column derived from the rollup's `deployments`
-array, so an operator can see which models served a conversation without opening it. The column SHALL be part
-of the default visible set and SHALL be projected by the first list query.
+The conversations grid SHALL present a curated **Deployments** column reading the rollup's `deployments`
+array, so an operator can see which deployments served a conversation without opening it. The column SHALL be
+part of the default visible set and SHALL be projected by the first list query.
 
 The column SHALL render its values as discrete pills with an overflow badge stating how many further values
 exist, and SHALL make the complete list reachable without a pointer, so the values hidden by the overflow are
 available to a keyboard user and not only on hover.
 
-`deployments` records every deployment that handled a hop, which includes orchestrating deployments,
-applications, MCP toolsets and embedding deployments alongside the models themselves. Because the column
-claims to name models, it SHALL narrow the array before rendering pills by excluding:
+The column SHALL render the array **as recorded**. It MUST NOT narrow it, and it MUST NOT be labelled as
+naming models. `deployments` records every deployment that handled a hop — orchestrating deployments,
+applications, MCP toolsets and embedding deployments alongside the models — and which of those is a model is
+not derivable from the array. A name-shaped rule cannot decide it: a router or application deployed under a
+plain name is indistinguishable from a model, while an embedding deployment that was billed is a legitimate
+member of the billed set. A column labelled for the field it reads needs no such guess and cannot misreport.
 
-- a value carrying an application or toolset resource path, which names a DIAL resource rather than a model;
-- a value naming an embedding deployment;
-- a value that contains another value of the same conversation as a substring, which is how a deployment that
-  wraps and dispatches to another one is named.
-
-The narrowing is an approximation and SHALL be treated as one. An orchestrating deployment whose name shares
-nothing with the deployment it dispatched to is not detectable from the array alone and SHALL be allowed to
-remain rather than removed by a guess. When narrowing would leave no value at all, the column SHALL render the
-unnarrowed list, because a conversation served only by an application is better described by that application
-than by an empty cell.
-
-The complete unnarrowed list SHALL remain reachable from the cell, so a value the narrowing removed is
-recoverable by the reader and the column never silently discards recorded data.
+Where a per-conversation set of **billed models** is wanted, it SHALL come from a conversation-level field the
+service reports. The turn rollup's `models` column is the authoritative billed set but is per turn, no
+server-side union over it is expressible, and a union over the bounded turn list a detail view loads would
+understate a longer conversation — so the grid MUST NOT synthesize one.
 
 The column SHALL NOT be sortable and SHALL NOT be filterable. The query language expresses no ordering or
 predicate over an array field, and the grid pages server-side, so any client-side ordering or filtering would
 apply to the loaded page rather than to the result and would misstate what it did.
 
-#### Scenario: Models renders on first paint
+#### Scenario: Deployments renders on first paint
 
 - **WHEN** the conversations grid loads with no stored column choice
-- **THEN** the Models column is visible
+- **THEN** the Deployments column is visible
 - **AND** the first list query's select names `deployments`
 
 #### Scenario: Values render as pills with an overflow badge
 
-- **WHEN** a conversation's narrowed list holds more values than the column width fits
+- **WHEN** a conversation's list holds more values than the column width fits
 - **THEN** the cell renders as many pills as fit followed by a badge stating the remaining count
 - **AND** the complete list is reachable without a pointer
 
-#### Scenario: Applications, toolsets and embeddings are narrowed away
+#### Scenario: The recorded array renders unnarrowed
 
-- **WHEN** a conversation's deployments include an application resource path, a toolset resource path and an
-  embedding deployment alongside a model
-- **THEN** the pills state the model
-- **AND** they state none of the other three
+- **WHEN** a conversation's deployments include an application resource path, a toolset resource path, an
+  embedding deployment and a model
+- **THEN** the cell states all four
+- **AND** none is withheld as not being a model
 
-#### Scenario: A wrapping deployment is narrowed away by its name
+#### Scenario: The column does not claim to name models
 
-- **WHEN** a conversation's deployments include a value that contains another of its values as a substring
-- **THEN** the containing value is not rendered as a pill
-- **AND** the contained value is
+- **WHEN** the operator reads the column header
+- **THEN** it names deployments
+- **AND** the detail view's metadata panel names the same field the same way
 
-#### Scenario: An undetectable orchestrator remains
+#### Scenario: Deployments offers no sort or filter affordance
 
-- **WHEN** a conversation's orchestrating deployment shares no substring with the deployments it dispatched to
-- **THEN** it remains among the rendered pills rather than being removed by a guess
-
-#### Scenario: Narrowing to nothing falls back to the recorded list
-
-- **WHEN** every value of a conversation's deployments is excluded by the narrowing rules
-- **THEN** the cell renders the unnarrowed list rather than an empty cell
-
-#### Scenario: The complete list stays reachable
-
-- **WHEN** narrowing removed a value from a conversation's pills
-- **THEN** the complete recorded list is still reachable from the cell
-
-#### Scenario: Models offers no sort or filter affordance
-
-- **WHEN** the operator inspects the Models column header
+- **WHEN** the operator inspects the Deployments column header
 - **THEN** it offers neither a sort affordance nor a filter control
 
 ### Requirement: Public Analytics endpoints are surfaced to the table detail page
@@ -4348,4 +4734,1069 @@ the schema, and caching it would extend one outage over the entry's whole lifeti
 
 - **WHEN** a schema fetch fails and the page is loaded again
 - **THEN** the schema is fetched from the analytics service again rather than the failure being replayed
+
+### Requirement: Conversation message content is the recorded transcript
+
+The conversation detail view SHALL render the conversation's **recorded** message text — the words the user
+and the assistant actually exchanged, as `dial_usage_log` stored them — and MUST NOT render fabricated,
+derived or sample content in their place.
+
+The presentation SHALL be the one the view already uses: alternating user and assistant messages, each
+assistant message carrying its turn's real token total, cost, hop count and duration, its rating counts, and
+the control that opens that turn's trace. Only the message text changes. The notice stating that the messages
+are samples SHALL be removed, because the statement it makes is no longer true.
+
+The transcript MUST NOT interleave tool calls, model steps or embeddings between the messages. The hop chain
+is the Trace view's subject, and a reader who wants it has a control on every assistant message and a view
+switch on the page.
+
+An assistant message SHALL be bound to its turn by **trace id**, not by its position in the rendered list. A
+transcript assembled from one bounded read and a turn list assembled from another can differ in length or in
+membership, and a positional binding would then attach one turn's figures to another turn's words.
+
+An assistant message whose recorded response carries no text content SHALL render the view's explicit
+unavailable placeholder rather than an empty bubble. A response with empty content is a response that put its
+output somewhere other than text — commonly in tool calls — and a blank bubble would read as an assistant
+that said nothing.
+
+#### Scenario: Recorded messages render in place of sample content
+
+- **WHEN** the detail view loads a conversation whose hop log carries its bodies
+- **THEN** the user and assistant messages show the recorded text
+- **AND** no notice claims the messages are samples
+
+#### Scenario: The transcript carries no machinery between messages
+
+- **WHEN** a turn's hop chain includes tool calls and embeddings
+- **THEN** none of them render between the messages of the transcript
+- **AND** the assistant message still offers the control that opens that turn's trace
+
+#### Scenario: An assistant message takes its figures from its own turn
+
+- **WHEN** the transcript carries a turn the bounded turn list does not, or lists them in a different order
+- **THEN** each assistant message shows the figures of the turn whose trace id it shares
+- **AND** no assistant message shows another turn's figures
+
+#### Scenario: A response with no text content is stated, not blank
+
+- **WHEN** a turn's recorded response carries no text content
+- **THEN** that assistant message renders the explicit unavailable placeholder
+
+### Requirement: The transcript is assembled from every entry hop of the conversation
+
+A conversation's **entry hop** is a `dial_usage_log` row attributed to that conversation whose
+`core_parent_span_id` is null — what the client sent to DIAL. Where one exists, its request body carries the
+user-visible exchange with no system prompt and no internal planning; a child hop carries the machinery
+instead, and one sampled child held a 20 461-character system prompt. The transcript SHALL therefore be
+assembled from entry hops alone, and MUST NOT read a child hop's body for message text.
+
+The null test SHALL be a null test. The column is null for a root hop and never the empty string (measured:
+655 078 null, 0 empty), so a predicate comparing it to an empty string would match nothing.
+
+Where a conversation has entry hops at all, it has at most one per trace id, so its entry hops are its turns.
+A conversation MUST NOT be assumed to have one per trace, or any at all: observed conversations carry a full
+set of turns in the rollup and no entry hop under their `chat_id`, and that case is governed below.
+
+The transcript MUST NOT be taken from a single row. Reading only the newest entry hop's request body is
+correct **only** for a client that resends the whole history each turn. A DIAL **application** deployment
+keeps conversation state server-side and sends only the new message: one measured 11-turn conversation
+reported `1, 3, 1, 1, 1, 1, 1, 1, 3, 5, 5` messages across its entry hops in time order, eight of eleven
+turns carrying a single message, while a full-history client on the same instance grew monotonically
+247 → 250 → 253 → 255 → 258.
+
+Entry hops SHALL be read in ascending `request_time` order and assembled in that order. For each entry hop,
+the messages its request body carries SHALL be appended to the transcript **after dropping the longest
+leading run of them that already matches the tail of the assembled transcript**, and the text decoded from
+its response body SHALL then be appended as that turn's assistant message. One rule SHALL cover both client
+shapes: a full-history client's leading run matches everything already assembled and contributes only its
+new message, and an application deployment's single message matches nothing and is appended whole.
+
+**A message whose text was never recorded SHALL match.** Two messages with the same role SHALL be treated as
+the same message when either carries no text, because a message this view failed to decode is still that
+message. A turn that answered with tool calls alone decodes to no text while the resent copy of that same
+message carries no `content` key at all, and comparing the two strictly finds no overlap anywhere in the
+history: the match is effectively all-or-nothing, so a single mismatched message re-appends the **whole**
+conversation under the later turn — the reader sees their first question twice, and the duplicated answer
+carries the later turn's tokens, cost, hops and duration.
+
+Where the newest entry hop demonstrably carries the whole conversation, the implementation MAY fetch that one
+row's bodies instead of every row's. **The test SHALL be that every entry hop's message count is exactly
+`2k − 1` at its position `k`** — one question and one answer per turn, in order — and not merely that the
+newest hop's count reaches `2n − 1`. Where the test does not hold, every entry hop's bodies SHALL be fetched.
+
+This is a cost optimisation and SHALL produce the same transcript as the general rule, **including which turn
+each message belongs to**. A single body carries no turn of its own for the messages inside it, so a count
+that only reaches `2n − 1` establishes that the content is all present while saying nothing about where one
+turn ends and the next begins; attributing those messages by position under that weaker test puts the newest
+turn's figures beneath every answer in the conversation. Under the exact test the attribution is arithmetic:
+the messages at index `2i` and `2i + 1` belong to turn `i + 1`, and the newest turn's answer comes from the
+response body. Where the decoded history is not the length the test promised, the implementation SHALL fall
+back to fetching every entry hop's bodies rather than attributing by position.
+
+The entry-hop read SHALL be bounded by the same limit as the turn list, so the transcript and the turn list
+cannot disclose different lengths for one conversation. When the bound clips the entry hops, the view SHALL
+state both figures together exactly as the turn list already does.
+
+**The entry-hop test MUST NOT be relaxed.** A conversation can record hops under its `chat_id` and yet have
+no entry hop among them, because the hop that entered DIAL was logged with no `chat_id` of its own. This is
+not a rare accident: it is a routine outcome for whole classes of deployment, and observed conversations show
+it for every one of their turns. In such a conversation the hops that *are* attributed to it are inner
+agent-loop calls, and the view MUST NOT take message text from one. Sampled examples carry a system message,
+a tool-definition array, and per-turn message counts that grow with the loop rather than with the
+conversation. Specifically, the view MUST NOT fall back to a hop whose parent is merely absent from the
+result, nor to the earliest hop of each trace, nor to any hop selected by recency or depth: each of those
+would render a system prompt and a tool catalogue as though the user had typed them. A conversation with hops
+but no entry hop SHALL render the dedicated state that says the transcript cannot be reconstructed.
+
+**Only user and assistant messages belong to the transcript.** A message whose role is neither SHALL be
+excluded, and a request body's own system field — where the dialect carries one outside the message list —
+SHALL be ignored. The exclusion is by role, applied to every entry hop, and does not depend on the entry-hop
+test having already screened the hop: two independent rules protecting one outcome is the point, because the
+consequence of a single missed case is a leaked system prompt.
+
+**A message's content is a string or a list of content parts.** Both SHALL be handled; a list SHALL be
+reduced to the text of its text-bearing parts, in order. A message that carries no `content` key at all is
+not a message with empty content — it is a message whose output went elsewhere, and it SHALL be treated as
+such rather than as an empty string.
+
+#### Scenario: Entry hops are selected by a null parent span
+
+- **WHEN** the entry-hop query is built
+- **THEN** its filter tests that the parent span column is null
+- **AND** it does not compare that column to an empty string
+
+#### Scenario: A server-side-state deployment's transcript is assembled across turns
+
+- **WHEN** a conversation's entry hops each carry only the turn's new message
+- **THEN** the transcript contains every turn's user message
+- **AND** it is not limited to the messages the newest entry hop carried
+
+#### Scenario: A full-history client's repeated messages appear once
+
+- **WHEN** a conversation's entry hops each resend the whole prior exchange
+- **THEN** each message renders exactly once
+- **AND** the messages are in the order the entry hops recorded them
+
+#### Scenario: A resent message whose text was never recorded is not repeated
+
+- **WHEN** a full-history client resends a message whose text this view could not decode from its own turn
+- **THEN** that message appears once
+- **AND** the earlier turn's messages are not repeated under the later turn
+
+#### Scenario: Child hop bodies are never read for message text
+
+- **WHEN** the transcript is assembled
+- **THEN** no body of a hop with a non-null parent span is read
+
+#### Scenario: A clipped entry-hop read states its bound
+
+- **WHEN** a conversation records more entry hops than the bound allows
+- **THEN** the view states how many of how many turns are shown
+- **AND** that disclosure is visible without interaction
+
+#### Scenario: A conversation with hops but no entry hop is not reconstructed from them
+
+- **WHEN** a conversation's hops all record a parent span and none is an entry hop
+- **THEN** the view renders the state that says the transcript cannot be reconstructed
+- **AND** no message text is taken from any of those hops
+- **AND** the Trace view, the header, the panels and the turn list still render
+
+#### Scenario: A system message is never part of the transcript
+
+- **WHEN** an entry hop's request body carries a system message, or a system field outside the message list
+- **THEN** neither appears in the transcript
+- **AND** only the user and assistant messages render
+
+#### Scenario: Content parts are reduced to their text
+
+- **WHEN** a message's content is a list of content parts rather than a string
+- **THEN** the message renders the text of its text-bearing parts in order
+
+### Requirement: Assistant text is read from the assembled response, or decoded from the raw body
+
+A request body is always plain JSON. An assistant's text has **two** possible sources, and the transcript
+SHALL treat both as first-class.
+
+**Preferred source — `assembled_response`.** Where the producer persists it, this column holds the merged
+response message: a single JSON object whose first choice's message content is the readable answer, already
+reassembled from whatever streaming the call used. Reading it avoids reassembling a chunk transcript.
+
+**Guaranteed fallback — `response_body`.** The assembled column is not always populated. It is null for every
+row ingested before the producer began writing it, and hop rows live for a year, so a recently upgraded
+instance carries up to a year of conversations for which the raw body is the **only** source of assistant
+text. A minority of rows, current ones included, also store a value that is not JSON. The fallback is
+therefore an ordinary operating mode, not an error path, and SHALL be implemented and tested as such.
+
+The fallback SHALL decode `response_body` in whichever of three formats it is written:
+
+- a stream of OpenAI server-sent-event chunks — the concatenation of the streamed content deltas in arrival
+  order;
+- a single JSON object — the first choice's message content;
+- JSON-RPC over server-sent events, for an `mcp` hop — the concatenation of the result's content parts.
+
+The format SHALL be determined from the body itself, not from a recorded flag. The hop log carries **no**
+streaming column; whether a call streamed is stated inside the request body, and a request body that is
+absent, withheld or unparseable would leave the response undecodable for want of a discriminator that the
+response already carries plainly.
+
+The fallback SHALL be used whenever the assembled value is absent, null, or not parseable as JSON — the three
+cases are indistinguishable to a reader and SHALL be indistinguishable in behaviour. A turn SHALL NOT render
+as unavailable while a decodable raw body for it exists.
+
+Where neither source yields text, the turn SHALL render the view's unavailable placeholder. It MUST NOT yield
+the raw body, a partial fragment, or a fabricated substitute: a malformed body is an unknown message, and
+rendering bytes at the reader would present transport detail as conversation.
+
+A response whose decoded content is empty, or which carries no content key at all, SHALL NOT be treated as an
+empty step. Its output is in the response's tool calls, whose names exist **only** in a response body — the
+hop log carries no column for them.
+
+#### Scenario: The assembled response is preferred where present
+
+- **WHEN** a turn's assembled response is present and parseable
+- **THEN** the assistant message is its first choice's message content
+- **AND** the raw response body is not decoded for that turn
+
+#### Scenario: A null assembled response falls back to the raw body
+
+- **WHEN** a turn's assembled response is null because the row predates the column
+- **THEN** the assistant message is decoded from the raw response body
+- **AND** the turn does not render as unavailable
+
+#### Scenario: A non-JSON assembled response falls back to the raw body
+
+- **WHEN** a turn's assembled response is present but is not parseable as JSON
+- **THEN** the assistant message is decoded from the raw response body
+
+#### Scenario: A streamed body is reassembled from its chunks
+
+- **WHEN** the fallback decodes a body that is a stream of event chunks
+- **THEN** the assistant message is the concatenation of their content deltas in arrival order
+
+#### Scenario: A single-object body is read from its first choice
+
+- **WHEN** the fallback decodes a body that is one JSON object
+- **THEN** the assistant message is that object's first choice's message content
+
+#### Scenario: An MCP body is read from its JSON-RPC result
+
+- **WHEN** the fallback decodes an MCP hop's body written as JSON-RPC over server-sent events
+- **THEN** its text is the concatenation of the result's content parts
+
+#### Scenario: The format is decided by the body, not by a flag
+
+- **WHEN** the fallback decodes a response body
+- **THEN** the format is determined from the body's own shape
+- **AND** no streaming column of the hop log is consulted
+
+#### Scenario: Neither source yields a placeholder, not raw bytes
+
+- **WHEN** the assembled response is unusable and the raw body cannot be parsed in any of the three formats
+- **THEN** that message renders the unavailable placeholder
+- **AND** no part of either raw value is rendered
+
+### Requirement: The body columns are schema-gated for two independent reasons
+
+The fetched `dial_usage_log` entity schema SHALL be the sole authority on which body columns a query may
+name. Two different conditions remove a column from that schema, they are **not** interchangeable, and a
+projection that names an absent column is rejected with the whole query — so both must be handled or the
+Chat view fails outright rather than degrading.
+
+**Access — `sensitive`.** `request_body`, `response_body` and `assembled_response` are flagged `sensitive` in
+the analytics catalog, so the service omits them from the schema it returns to any caller below FULL_ADMIN.
+This is the expected path for a non-admin, and it removes all three at once. All three are also `heavy`,
+which keeps them out of a wildcard projection but is a transfer-cost hint rather than access control.
+
+**Service version.** `assembled_response` is a **later addition** to the hop log and does not exist on every
+instance. An instance predating it does not persist the column at all — its own mapping states that the
+merged response is read at ingest as a deriver source and never stored — so the column is missing from the
+schema for **every** caller, full administrators included. This is not an access condition and no permission
+changes it; only upgrading the service does.
+
+Consequently `assembled_response` SHALL be treated as an **optional** field in exactly the sense the
+conversations views already use: named only when the fetched schema reports it, through the same
+optional-field mechanism the insight columns go through. It MUST NOT be named unconditionally. Naming it on
+an instance that predates it costs the whole transcript query, which is the one failure this gate exists to
+prevent — and it is a failure a full administrator would see, so no amount of permission masks it.
+
+**`response_body` SHALL be optional on exactly the same terms**, and for a reason that follows directly from
+the gate below: the view is offered when *either* response column is present, so an instance reporting only
+the assembled column is a supported state — and a projection that names `response_body` regardless rejects
+the whole query on it. Neither response column may be named unconditionally. Gating one and hard-coding the
+other makes the gate and the projection two different answers to the same question, which is the failure this
+requirement exists to prevent.
+
+The Chat view SHALL be offered when the schema reports `request_body` **and at least one** of
+`assembled_response` or `response_body`. The request body has no substitute — it is the only record of what
+the user said — while either response column can supply the assistant's text. An instance that carries
+`response_body` but not `assembled_response` SHALL therefore offer a fully functional Chat view.
+
+The frontend MUST NOT implement an access check of its own. The service's column-level access control is the
+gate, and a second gate maintained here would be a second answer to the same question.
+
+Where the Chat view is not offered, the view SHALL state that the transcript is not available and SHALL keep
+the Trace view, the header, the panels and every figure on the page fully functional. It MUST NOT render an
+error, and MUST NOT imply the conversation recorded no messages.
+
+A schema read that **fails** is not the same as a schema that omits a column, and SHALL be reported as a
+failure rather than silently withholding the Chat view.
+
+#### Scenario: A full administrator on a current instance is offered the transcript
+
+- **WHEN** the fetched hop-log schema reports the request body and both response columns
+- **THEN** the Chat view is offered and renders the recorded transcript
+
+#### Scenario: An instance without the assembled column still offers the transcript
+
+- **WHEN** the fetched schema reports the request body and the raw response body but not the assembled response
+- **THEN** the Chat view is offered
+- **AND** no query names the assembled response column
+- **AND** the assistant text is decoded from the raw response body
+
+#### Scenario: The assembled column is named only when the schema reports it
+
+- **WHEN** the transcript body query is built and the schema does not report the assembled response
+- **THEN** the select does not name it
+- **AND** the query returns rows
+
+#### Scenario: The raw response column is named only when the schema reports it
+
+- **WHEN** the fetched schema reports the request body and the assembled column but not `response_body`
+- **THEN** the transcript query does not name `response_body`
+- **AND** the Chat view is offered and renders the transcript
+
+#### Scenario: A caller without the body columns is not offered the transcript
+
+- **WHEN** the fetched hop-log schema reports none of the body columns
+- **THEN** the Chat view is not offered
+- **AND** the view states that the transcript is unavailable to this caller rather than showing an error
+- **AND** the Trace view, the header and the panels still render
+
+#### Scenario: No frontend role check gates the transcript
+
+- **WHEN** the detail route decides whether to offer the Chat view
+- **THEN** the decision reads only the fetched entity schema
+- **AND** no role, scope or permission of the session is consulted
+
+#### Scenario: A failed schema read is reported as a failure
+
+- **WHEN** the hop-log schema cannot be fetched
+- **THEN** the view reports a failure rather than presenting the transcript as unavailable to the caller
+
+### Requirement: Hop bodies are read and decoded server-side and never sent to the browser
+
+Every read and every decode of a `request_body` or `response_body` value SHALL happen on the server, and
+only the assembled transcript SHALL be sent to the client. Bodies reach megabytes in a single row — a sampled
+response body was 1.4 MB and a 116-turn conversation's newest request body was 405 KB — so shipping them
+would move the cost of the page onto the reader's connection and put encrypted-at-rest content into a client
+bundle.
+
+Every query reading the hop log SHALL predicate on `chat_id`. The table carries a bloom-filter index on
+`chat_id`, `trace_id` and `core_span_id`, which makes such a read fast; a read predicated on an attribute
+instead — `event_kind`, for instance — took over 120 s on a two-core virtual machine and took the service
+down with it. A hop-log query MUST NOT be issued without a chat predicate.
+
+The entry-hop read SHALL be split so the expensive columns are named only where needed: a first query naming
+no body column establishes the conversation's entry hops, their times, their deployments and their message
+counts, and a second names the body columns for the rows the assembly actually requires.
+
+**A body query SHALL additionally be bounded by a range over the recorded times of the exact rows it
+fetches.** The hop log is partitioned by the day of `request_time`, and a chat predicate alone does not prune
+a single partition: a measured body read filtered only by `chat_id` and `trace_id` exceeded the service's
+two-gigabyte query budget and was rejected, while the same read with a bounded time predicate returned
+immediately. The bound MUST NOT be widened to the conversation's own span — conversations run for weeks, and
+one observed conversation spanned 27 daily partitions, enough to exceed the budget again. The first query
+already returns each entry hop's `request_time`, so the second SHALL be bounded by the earliest and latest of
+exactly the times it is fetching. Where the assembly needs one row, that is one instant and one partition.
+
+**The bound SHALL be expressed as a `>=`/`<=` pair, never as an `in` list of the exact instants.** An `in`
+list over a timestamp column compiles to `has([…], request_time)`, a function over the column: the query
+planner reports its partition condition as unconditionally true and selects every part, exactly as no
+predicate at all does. Only a range prunes. A range matches other entry hops that fall inside the window; the
+`trace_id` list is what keeps the result exact, and it is required for correctness rather than for cost,
+since it prunes no partition either.
+
+**Those times SHALL be converted to epoch milliseconds.** The query DSL accepts a `timestamp` value only as
+milliseconds, while a row carries `request_time` as an ISO-8601 string. Passing a returned value through
+verbatim is rejected as an invalid timestamp literal, which fails the whole body read and is indistinguishable
+to the reader from a conversation that recorded no bodies. The column has millisecond precision, so the
+conversion is lossless.
+
+#### Scenario: The client receives messages, not bodies
+
+- **WHEN** the detail page renders a transcript
+- **THEN** the data sent to the browser contains the decoded messages
+- **AND** it contains no request or response body value
+
+#### Scenario: Every hop-log query filters by conversation
+
+- **WHEN** any query against the hop log is built for this view
+- **THEN** its filter includes an equality predicate on the conversation id
+
+#### Scenario: The cheap read names no body column
+
+- **WHEN** the first entry-hop query is built
+- **THEN** it names no body column
+
+#### Scenario: A body query is bounded by the times of the rows it fetches
+
+- **WHEN** the body query is built for a set of entry hops
+- **THEN** its filter bounds `request_time` to the earliest and latest recorded time among exactly those rows
+- **AND** the bound is not widened to the conversation's own first and last request time
+
+#### Scenario: The bound is a range, not a set of instants
+
+- **WHEN** the body query is built for a set of entry hops
+- **THEN** the time bound is a pair of `>=` and `<=` comparisons
+- **AND** it is not an `in` list of the individual recorded instants
+
+#### Scenario: A recorded time is converted to epoch milliseconds
+
+- **WHEN** a first-query time is returned as an ISO-8601 string
+- **THEN** the value sent as the bound is that instant in epoch milliseconds
+
+### Requirement: A turn is titled by the question it answered
+
+The turn list SHALL title each row with that turn's own user question, and SHALL carry the turn number and
+trace id as its subtitle. A reader scanning a conversation's turns is looking for the exchange, not for an
+identifier; the number and the trace id identify a turn once it has been found, which is a subtitle's job.
+
+The question SHALL be the last user message the turn contributed to the transcript. A turn's request body ends
+with the user's new message, so its last user message is the question that turn answered. It SHALL be derived
+from the assembled transcript rather than from a query of its own: the transcript is already fetched, decoded
+and attributed, so one rule covers both fetch paths and the titles cost nothing.
+
+**A turn with no question SHALL fall back to its turn number**, per turn rather than for the list as a whole.
+A conversation with no entry hop has no transcript, and a caller whose schema withholds the body columns is
+told nothing about any turn — the turn list SHALL remain usable in both cases, since its figures come from the
+rollup and do not depend on a body.
+
+An open hop chain SHALL be titled the same way, with the turn number and trace id beneath it: a reader who
+reached a chain from a list row is looking at the same turn and SHALL see the same thing they clicked. Both
+SHALL read one derivation of the questions, so the two cannot disagree about a turn.
+
+The question SHALL be truncated with the shared ellipsis-tooltip control, so a long question stays reachable
+rather than being cut off.
+
+#### Scenario: Each turn is titled by its own question
+
+- **WHEN** the turn list renders a conversation whose transcript is available
+- **THEN** each row is titled with the user question that turn answered
+- **AND** the turn number and trace id appear as that row's subtitle
+
+#### Scenario: A turn without a question keeps its number
+
+- **WHEN** a turn contributed no user message to the transcript
+- **THEN** that row is titled with its turn number
+- **AND** the other rows keep the questions they do have
+
+#### Scenario: An open hop chain is titled by the same question
+
+- **WHEN** a turn's hop chain is opened
+- **THEN** it is titled with the question that turn answered
+- **AND** the turn number and trace id appear beneath it
+
+### Requirement: A turn renders as a flat, typed, filterable event stream
+
+A turn's hops SHALL render as one flat numbered stream of typed events, not as a nested tree. The span tree is
+one root with hundreds of direct children and a second level only under a tool call, so nesting conveys almost
+nothing; typing and filtering convey what a turn consisted of.
+
+**An event is not a hop.** One model call emits a reasoning marker, its answer, and one event per tool it
+requested, so the stream is longer than the hop list — 384 hops of one measured turn become 446 events. Events
+SHALL be typed as: the turn's question and its totals (the frame), assistant text, tool request, tool result,
+reasoning, empty, error, session, embedding, and a generic type for anything unrecognised.
+
+**Typing SHALL be a deny-list at every level.** An `event_kind` or `mcp_method` this frontend does not
+recognise SHALL render as a shown, generically-typed row: silently dropping something unfamiliar is the worse
+failure in an observability tool. Two cases SHALL be handled explicitly — a hop with no `event_kind` is not
+unknown but an unlabelled model call, classified by its endpoint (53 179 such hops exist table-wide); and a
+`count_tokens` endpoint is utility rather than conversation.
+
+**`route` hops SHALL be excluded from the stream entirely.** All 5 611 of them carry an empty `chat_id`: they
+are scheduler REST calls and never part of a conversation.
+
+**A failed hop SHALL emit a single error event whatever kind of hop it is**, so a failure can never be buried
+among the rows of the work it was attempting. A failure is either a false success flag or a status of 400 or
+above.
+
+**A reasoning event SHALL state its token count and MUST NOT claim to carry content.** The reasoning text is
+recorded nowhere; the count is its only trace, and `reasoning · 264 tok` says more than an empty row.
+
+**The tool-request to tool-result gap SHALL be surfaced, not hidden.** 85 tools were requested on the measured
+turn and 57 results recorded; the missing 28 are functions the calling application handles internally, which
+never cross a network boundary and so were never logged. A request with no recorded result SHALL say so. The
+surplus SHALL be resolved **by count per tool name, never by identity** — the log pairs nothing, so no claim
+may be made about which specific request went unanswered.
+
+**The stream SHALL offer one filter control per event category, and SHALL start with every category shown.** An
+observability tool that opens by hiding what it recorded makes the reader's judgement for them, so narrowing is
+the reader's action.
+
+**Activating a category SHALL isolate it**, showing that category alone; activating it again SHALL restore every
+category, so one control both narrows and releases. A separate control SHALL also restore every category. Each
+control SHALL name its category and nothing more, and SHALL expose programmatically whether it is the isolated
+one rather than signalling it by appearance alone. **How much of the stream is showing SHALL be stated once**,
+beside the filters, rather than as a count on each of them.
+
+**The frame SHALL NOT be offered as a category, and SHALL be shown only while the whole turn is.** It describes
+the turn rather than anything that happened inside it, so a view narrowed to one category SHALL answer with that
+category alone — asking for the tool calls answers with tool calls, not with tool calls between two rows about
+something else.
+
+**Every category SHALL remain selectable whether or not the turn recorded any of it**, and isolating one the
+turn has none of SHALL state that plainly. Asking "were there any errors" is a real question and *none* is a
+real answer; a control that cannot be pressed gives neither. **No filter control SHALL be disabled, including
+the one that is currently active**: the pressed state already says which filter is on, and disabling the active
+control drops it out of the tab order — so the reader who narrowed by keyboard cannot get back.
+
+**Line numbers SHALL reflect position in the unfiltered stream**, so a narrowed view still says where in the
+turn each row sits, and the stream SHALL state how many rows of the total are showing. Both sides of that
+count SHALL exclude the frame, which is not one of the turn's rows: counting it in the total but not in a
+narrowed selection compares unlike things. The count is the only feedback that a filter took effect — the rows
+themselves change silently — so it SHALL be announced to assistive technology when it changes.
+
+**A frame row SHALL NOT be a control.** It carries the question and the turn's totals and stands for no hop, so
+there is nothing to open: rendering it as a control that happens to be unavailable advertises an action that
+does not exist.
+
+**Deriving the stream requires the model calls' own response bodies**, which are the only record of whether a
+call answered and which tools it asked for. Those SHALL be read server-side for the model-call hops only,
+bounded by a cap, with only the decoded text and tool names crossing to the client. On the measured turn that
+is 43 of 384 hops and 2.04 MiB of the trace's 16.67 MiB. Where the response column is not in the caller's
+schema, or a call falls past the cap, its rows SHALL be typed generically rather than reported as empty. A hop
+the log records as having returned **no bytes** is the exception: its emptiness is a recorded fact, not an
+unread body, and it SHALL be typed empty so the two remain distinguishable.
+
+#### Scenario: One model call emits several events
+
+- **WHEN** a model call answered and requested a tool
+- **THEN** the stream carries a text event and a tool-request event for that one hop
+
+#### Scenario: An unlabelled model call is typed as conversation
+
+- **WHEN** a hop records no event kind but a model endpoint
+- **THEN** its events are typed as a model call's
+
+#### Scenario: An unrecognised hop is shown
+
+- **WHEN** a hop records an event kind this frontend does not recognise
+- **THEN** it renders as a generically-typed row rather than being dropped
+
+#### Scenario: A route hop is excluded
+
+- **WHEN** a trace contains a hop whose event kind is route
+- **THEN** the stream contains no event for it
+
+#### Scenario: A failed hop is one error event
+
+- **WHEN** a hop failed
+- **THEN** it emits a single error event and no other event
+
+#### Scenario: A reasoning event states its tokens
+
+- **WHEN** a hop recorded reasoning tokens
+- **THEN** a reasoning event states that count
+- **AND** it does not claim to carry the reasoning text
+
+#### Scenario: An unanswered tool request says so
+
+- **WHEN** more requests for a tool were made than results recorded for it
+- **THEN** the surplus requests are marked as having no recorded result
+
+#### Scenario: Every category is shown until the reader narrows
+
+- **WHEN** the stream first renders
+- **THEN** events of every category are shown
+- **AND** each category offers a control naming it
+- **AND** the stream states how many rows of the total are showing
+
+#### Scenario: Activating a category isolates it
+
+- **WHEN** a category's control is activated
+- **THEN** only that category's events are shown
+- **AND** activating it again shows every category
+
+#### Scenario: A turn that recorded no hops says so
+
+- **WHEN** a turn's trace returned no hops
+- **THEN** the stream states that nothing was recorded
+- **AND** it does not render the frame with nothing between its two rows
+
+#### Scenario: A category with no events stays visible and operable
+
+- **WHEN** the turn recorded no events of some category
+- **THEN** that category's control remains selectable
+- **AND** isolating it states that none were recorded
+
+#### Scenario: The active filter is not disabled
+
+- **WHEN** every category is showing
+- **THEN** the control that restores every category states that it is the active one
+- **AND** it is not disabled
+
+#### Scenario: A frame row is not a control
+
+- **WHEN** the stream renders the turn's question and totals
+- **THEN** neither row is rendered as a control
+
+#### Scenario: The showing count excludes the frame from both of its figures
+
+- **WHEN** a category is isolated
+- **THEN** the stated count compares that category's rows against the turn's rows
+- **AND** neither figure counts the frame
+
+#### Scenario: A model call recorded as returning no bytes is empty, not unread
+
+- **WHEN** a model call's recorded response size is zero
+- **THEN** its row is typed empty
+- **AND** it is distinguishable from a call whose body was not read
+
+#### Scenario: A narrowed view shows its category alone
+
+- **WHEN** a category is isolated
+- **THEN** the turn's question and totals are not shown
+- **AND** restoring every category shows them again
+
+#### Scenario: An isolated category with nothing in it says so
+
+- **WHEN** a category the turn recorded none of is isolated
+- **THEN** the stream states that the turn recorded no events of that kind
+
+#### Scenario: Line numbers survive filtering
+
+- **WHEN** the stream is filtered
+- **THEN** each visible row keeps its number from the unfiltered stream
+
+### Requirement: A hop's own request and response are read on demand
+
+The hop detail SHALL state what the selected hop sent and what came back, decoded from its recorded bodies.
+An `llm_call` hop SHALL state the last message it sent and its response text; an `mcp` hop SHALL state its
+JSON-RPC arguments and its tool result. A hop whose response carried no text SHALL state the tool names it
+requested, which exist only in a body — the hop log has no column for them.
+
+**Only the last message of an `llm_call` request SHALL be stated, and only for a role the transcript admits.**
+An inner agent-loop request carries a system prompt, a tool catalogue and the whole accumulated history, none
+of which is what a reader opening one hop is asking about — and the first two must never reach the screen. The
+role filter that protects the transcript SHALL apply here too, so this cannot become a second route to a
+leaked prompt.
+
+**Which hops have text worth opening SHALL be decided from the hop row, before any body is fetched.** The
+section SHALL be suppressed, and the reason stated in its place, when the hop's recorded response size is
+zero, when its MCP method is one of the nine protocol-envelope calls, or when its event kind is an embedding — a response that is a float vector and a request that is the probe
+string producing it. On the sampled 384-hop turn this settles 284 hops with no fetch at all: 60 that returned
+nothing, 116 session-setup calls and 108 embeddings, leaving 57 `tools/call` and 43 `llm_call`.
+
+**That test SHALL be a deny-list and MUST NOT be inverted into an allow-list.** An MCP method or event kind
+this frontend does not recognise SHALL default to shown. In an observability tool, silently hiding something
+unfamiliar is the worse failure: an empty panel is a puzzle a reader can resolve by looking at it, while a hop
+that never offers its text is a fact they cannot discover. A recorded response size that is absent rather than
+zero is unknown, and an unknown size SHALL NOT be read as a claim that nothing came back.
+
+A suppressed hop SHALL keep its row in the hop chain, with its timing, status and nesting intact — only the
+text section is withheld, and it SHALL state why rather than rendering an empty panel.
+
+**These bodies SHALL be fetched one hop at a time, when that hop is opened, and never with the hop chain.** A
+measured 384-hop turn carried 99.26 MiB of request bodies and 16.67 MiB of responses, with one hop reaching
+4.00 MiB; reading them with the chain would ship a hundred megabytes to render rows a reader may never open.
+The read SHALL be filtered by conversation, trace and hop, and SHALL carry the same `request_time` range bound
+as the transcript read — a single hop is a single instant, so the bound is one partition.
+
+Decoding SHALL happen server-side and only the decoded text SHALL reach the client, exactly as the transcript
+does. The same schema gate applies: where the body columns are not in the caller's schema the section SHALL be
+absent entirely rather than explaining its own absence on every hop. A hop that recorded nothing readable and
+a hop whose read failed SHALL be stated as the different facts they are.
+
+Re-opening a hop already read SHALL issue no second read.
+
+A read that **failed** SHALL be reported as a failure rather than in the same presentation as a hop that
+recorded nothing — the two are the different facts named above, and rendering them identically hides an outage
+behind an ordinary empty result. A decoded text long enough to scroll SHALL remain reachable by keyboard: a
+scroll container with no tab stop puts everything past its first screenful out of reach for a reader with no
+pointer.
+
+#### Scenario: A hop's texts are read only when it is opened
+
+- **WHEN** a turn's hop chain is rendered
+- **THEN** no hop body is fetched for a hop that has not been opened
+- **AND** opening one hop fetches that hop's bodies alone
+
+#### Scenario: A hop with nothing worth reading is settled without a fetch
+
+- **WHEN** a hop whose response size is zero, whose method is session setup, or whose kind is an embedding is
+  opened
+- **THEN** no body is fetched for it
+- **AND** the section states why that hop has no text
+- **AND** the hop keeps its row, its timing, its status and its nesting
+
+#### Scenario: An unrecognised hop defaults to shown
+
+- **WHEN** a hop records an MCP method or event kind this frontend does not recognise
+- **THEN** its bodies are fetched and its text is shown
+
+#### Scenario: An llm_call hop states its prompt, not its history
+
+- **WHEN** an `llm_call` hop whose request carried a system prompt and prior turns is opened
+- **THEN** the section states the last message the hop sent
+- **AND** it states neither the system prompt nor the tool catalogue
+
+#### Scenario: An mcp hop states its arguments and its result
+
+- **WHEN** an `mcp` hop is opened
+- **THEN** the section states the arguments it sent
+- **AND** it states the text of the tool result
+
+#### Scenario: A hop that returned no text names the tools it requested
+
+- **WHEN** a hop whose response content is empty is opened
+- **THEN** the section names the tools that response requested
+
+#### Scenario: The section is absent when the body columns are withheld
+
+- **WHEN** the caller's schema does not report the body columns
+- **THEN** the hop detail renders no request-and-response section at all
+
+### Requirement: The conversation detail view switches between Chat and Trace
+
+The detail view SHALL offer a switch between two views of one conversation: **Chat**, the recorded
+transcript, and **Trace**, the conversation's traces. The switch SHALL indicate which view is current, SHALL
+be reachable by keyboard, and SHALL NOT navigate away from the conversation.
+
+Choosing a view is a **local** change and SHALL re-render only the region the switch governs. The
+conversation's header and the supporting panels beside the view do not depend on which view is showing, and
+SHALL NOT re-render when it changes. Opening a hop chain is the exception, and only because the header gives
+way to the trace's own identity.
+
+**The Trace view SHALL land on a list of the conversation's traces**, one row per recorded turn, each stating
+that turn's trace id, start time, hop count, token total, cost, duration and rating counts, and each opening
+that turn's hop chain. Switching to Trace MUST NOT open a turn's hop chain directly: the reader has not chosen
+a turn, and picking one for them presents an arbitrary default as the answer.
+
+A conversation whose turn list is empty SHALL render the list's own empty state rather than refusing the
+switch — the view still has something to say about why there is nothing to open. A failed turn read SHALL be
+reported as a failure there, distinctly from an empty list.
+
+The per-turn trace control on each assistant message SHALL keep its current behaviour: it opens a turn's hop
+chain directly, without passing through the list.
+
+Returning from a hop chain SHALL land on the view it was opened from. A reader who reached a hop chain from
+the trace list and is returned to the transcript has been moved somewhere they were not, and has to find their
+way back to the list to continue.
+
+Where the Chat view is not offered — because the schema reports no usable body column, for either of the two
+reasons a column can be missing — the switch SHALL still be rendered, with the Chat option disabled and its
+reason stated, rather than removed. A control that disappears leaves the reader unable to tell an unavailable
+view from a view that does not exist.
+
+**In that state the view SHALL open on Trace**, not on the disabled Chat option. Opening on it makes the same
+option current and unselectable at once, which is the expected path for every caller below FULL_ADMIN: the
+disabled segment is not focusable, so keyboard navigation within the switch has no starting point, and the data
+that *is* available has to be discovered.
+
+The Chat option SHALL remain enabled whenever the transcript is merely **empty**. An aged-out, not
+reconstructable or never-recorded transcript is a Chat view with something to say, and disabling the switch
+would replace that statement with silence.
+
+#### Scenario: Switching views keeps the conversation
+
+- **WHEN** the user switches from Chat to Trace
+- **THEN** the hop chain renders in place
+- **AND** the page does not navigate away from the conversation
+
+#### Scenario: The current view is indicated
+
+- **WHEN** either view is shown
+- **THEN** the switch indicates which of the two is current
+
+#### Scenario: A caller without the body columns opens on the Trace view
+
+- **WHEN** the schema reports no usable body column
+- **THEN** the detail opens on the Trace view
+- **AND** the Chat option is rendered, disabled, with its reason stated
+
+#### Scenario: A per-turn control opens the trace on that turn
+
+- **WHEN** the trace control on an assistant message is used
+- **THEN** that turn's hop chain opens directly
+
+#### Scenario: Switching to Trace lists the conversation's traces
+
+- **WHEN** the user switches to Trace from the view switch
+- **THEN** one row renders per recorded turn, each stating that turn's own figures
+- **AND** no turn's hop chain is opened and no hop read is issued
+
+#### Scenario: A trace in the list opens its hop chain
+
+- **WHEN** a row of the trace list is activated
+- **THEN** that turn's hop chain opens
+
+#### Scenario: A conversation with no turns switches to an empty list
+
+- **WHEN** the user switches to Trace on a conversation whose turn list is empty
+- **THEN** the trace list states that no traces were recorded
+- **AND** the switch is not refused
+
+#### Scenario: Returning from a hop chain lands on the view it was opened from
+
+- **WHEN** a hop chain opened from the trace list is closed
+- **THEN** the Trace view is shown, still listing the traces
+- **AND** a hop chain opened from an assistant message returns to the transcript instead
+
+#### Scenario: An unavailable Chat view is disabled, not hidden
+
+- **WHEN** the schema reports no usable body column
+- **THEN** the switch renders with the Chat option disabled and its reason stated
+
+#### Scenario: Choosing a view does not re-render the page around it
+
+- **WHEN** the user switches between Chat and Trace
+- **THEN** the conversation's header does not re-render
+- **AND** the supporting panels beside the view do not re-render
+
+#### Scenario: An empty transcript keeps the Chat view enabled
+
+- **WHEN** the transcript is aged out, not reconstructable, or was never recorded
+- **THEN** the Chat option stays enabled
+- **AND** selecting it shows the statement for that cause
+
+### Requirement: An absent transcript is distinguished from a failed one, by cause
+
+A transcript can be absent for three different reasons and can fail for a fourth. All four render no
+messages, and the view SHALL distinguish them, because they say different things about the conversation: one
+lost its detail to age, one never had detail to lose, one has detail that cannot be attributed to the user,
+and one is an outage. Collapsing them would state something false about three conversations out of four.
+
+**Aged out.** `dial_usage_log` and `rate_analytics` retain a row for one year from its request time, while
+`conversations`, `turns` and `conversation_insights` retain theirs indefinitely. The retention is
+**row-level**, so a body lives exactly as long as the hop carrying it: a conversation older than a year keeps
+its list row, its detail header and its rollup figures, and has no hops left to read. The view SHALL state
+that the hop log no longer carries the conversation.
+
+**Not reconstructable.** The conversation has hops, but none of them is an entry hop, so nothing recorded
+under it represents what the user sent. The view SHALL state that the transcript cannot be reconstructed from
+what was logged, and MUST NOT state that no messages were recorded — messages were recorded; they cannot be
+attributed. This state exists precisely so that the view never has a reason to reach for an inner hop's body.
+
+This is also the state for entry hops that **were** read and yielded no message: rows exist and no transcript
+could be built from them, which is what this state says. Reporting that combination as an available transcript
+of nothing renders it through the nothing-recorded presentation, which is the mislabel this state was added to
+prevent. On the dev instance this is not an edge case — of 228 conversations with hops in one recent two-day
+window, 112 had no entry hop, every one of them agent-SDK or benchmark traffic whose bodies open with a 6.6 KB
+system prompt rather than anything a person typed. Widening the entry-hop rule to admit an orphaned hop would
+put that system prompt where the user's first question belongs.
+
+**Nothing recorded.** The conversation is within the retention window and has no hops at all.
+
+**Failed.** A query or the schema read failed. The view SHALL state that the transcript could not be loaded.
+
+None of the first three SHALL render as an error — nothing failed in any of them. In all four the header, the
+panels, the turn list and every rollup figure SHALL still render, and the Trace view SHALL remain available
+wherever hops exist.
+
+#### Scenario: A conversation past retention states its transcript has aged out
+
+- **WHEN** the detail view loads a conversation whose last request is older than the hop log's retention
+- **AND** the conversation has no hops
+- **THEN** the transcript region states that the hop log no longer carries the conversation
+- **AND** no error is reported
+- **AND** the header, the panels and the turn list still render
+
+#### Scenario: Entry hops that yield no message state the transcript cannot be reconstructed
+
+- **WHEN** the entry hops are read and none of their bodies yields a message
+- **THEN** the transcript region states that the transcript cannot be reconstructed from the log
+- **AND** it does not state that the conversation recorded no messages
+
+#### Scenario: A conversation with hops but no entry hop states it cannot be reconstructed
+
+- **WHEN** a conversation records hops and none of them is an entry hop
+- **THEN** the transcript region states that the transcript cannot be reconstructed from the log
+- **AND** it does not state that no messages were recorded
+- **AND** the Trace view remains available for those hops
+
+#### Scenario: A recent conversation with no hops states nothing was recorded
+
+- **WHEN** a conversation within the retention window records no hops at all
+- **THEN** the transcript region states that no messages were recorded
+
+#### Scenario: A failed entry-hop query is reported as a failure
+
+- **WHEN** the entry-hop query fails
+- **THEN** the transcript region states that the transcript could not be loaded
+- **AND** it does not state that the conversation recorded no messages
+
+#### Scenario: The four states are distinguishable
+
+- **WHEN** each of the four causes occurs
+- **THEN** the transcript region renders a different statement for each
+
+### Requirement: A turn's trace opens in place, stating the turn's own figures
+
+Each assistant message SHALL offer a control opening that turn's trace, and the view switch SHALL offer the
+Trace view for the conversation. The trace SHALL replace the transcript **within the same view** and SHALL
+offer a control returning to the transcript. Opening a trace is a read of one turn and MUST NOT navigate away
+from the conversation.
+
+While a trace is open the conversation's header SHALL be replaced rather than kept above it. The trace states
+its own identity and its own figures, and two stacked headers would leave the reader unsure which of them the
+figures belong to.
+
+**Ordering.** The events SHALL be ordered by the recorded time of the hop that produced them, and every row
+SHALL state its own absolute recorded time. Measured over a 251-hop trace, no child hop began before its
+parent and all 25 tied timestamps were between siblings — never between an ancestor and a descendant — so a
+tie means genuine concurrency and any stable order among tied hops is honest. Hops from different parts of a
+trace **interleave**: one sampled hop's children spanned 22.8 s with 11 hops from elsewhere starting inside
+that window, so the view MUST NOT present any group of hops as a contiguous block of time.
+
+**Durations are not claimed.** The view MUST NOT render a hop duration, a duration bar, an offset from the
+start of the trace, or any other per-hop wall-clock figure. All 251 hops of the sampled trace reported a
+duration of zero: DIAL clamps its own measurement at zero, so on a current producer a reported zero is a real
+sub-millisecond operation, but a core predating the field omits it and the non-nullable fallback stores zero
+— on that producer version zero is indistinguishable from "not reported", and the view cannot tell the two
+apart. Ordering and absolute times are the only temporal claims the data supports. This is a property of the
+producer, and the view SHALL NOT compensate for it.
+
+Every row SHALL be typed, named, and — where it stands for a recorded hop — selectable. A **failed** hop
+SHALL be typed by its failure whatever its kind: on a trace the reader is looking for what broke. The failure
+rule SHALL be one predicate shared by the row and its detail, so a row typed as an error can never open a
+detail reporting success.
+
+**An MCP hop SHALL be named by what it did.** The trace SHALL project the hop's MCP method and its tool-call
+name and SHALL label the hop by the tool it called where one is recorded, falling back to the method and only
+then to the server name. Labelling an MCP hop by its server name alone leaves the tool invisible, which is
+the one thing a reader opening a retrieval hop is looking for.
+
+The trace MUST NOT present its MCP hops as the complete set of tools the model requested. A tool the calling
+application implements internally never crosses a network boundary and is never logged: over one measured
+trace, 43 of 48 requested tool calls produced exactly one MCP row each and 6 produced none, so the recorded
+set under-reports model intent by roughly one call in eight. Every MCP-backed call did produce a row — no
+rows are missing — so the view SHALL neither claim completeness nor report a missing row as an error.
+
+**A hop's routing chain SHALL be shown where recorded.** The hop log carries the execution path as an
+ordered list naming the deployments a request was routed through, application first and model last. Where
+present it SHALL be rendered as that chain.
+
+Selecting a hop SHALL show its detail beside the stream: its category and status, its recorded time, its
+tokens and cost, its endpoint, its upstream, its calling deployment, its HTTP status, its MCP method and tool
+where recorded, and its routing chain where recorded. Its decoded request and response text SHALL be read on
+demand for that hop alone, under **A hop's own request and response are read on demand** — a raw body MUST
+NOT reach the client in any case.
+
+**Colour SHALL never be the only thing distinguishing one kind of row from another.** Every row states its
+type as text, so the rail colour is redundant by construction and the view SHALL NOT rely on a legend to
+make its rows readable. Every colour SHALL come from a theme token that the project's palette defines: a
+class naming a token the palette does not carry renders nothing at all, silently.
+
+**The trace SHALL state the turn's figures as the rollup resolved them, and MUST NOT re-derive them from the
+hops it read.** Its token total, cost, hop count, duration and status SHALL come from the same turn row the
+turn list renders, so the two cannot disagree about one turn. Summing the hops instead is wrong whenever the
+hop read is bounded, which is precisely when a turn is large enough for a reader to open it: one measured
+384-hop turn read 300 hops and summed to 700 106 tokens and $1.01 against the turn's own 3 667 333 and
+$3.68 — a figure that is neither the turn's nor recognisably a part of it.
+
+The status SHALL likewise be the turn's failed-hop count rather than a failure seen among the hops read, for
+the same reason: a failure past the bound would otherwise render the turn as OK.
+
+The hop list SHALL be bounded and SHALL say so when it was cut short. A trace's hop count reaches into the
+hundreds, and one observed turn recorded 1226 hops. The bound SHALL NOT be raised to accommodate such a
+turn: filtering and on-demand disclosure are the answer, since a read large enough for the worst turn is a
+read that punishes every other one.
+
+**Opening a trace SHALL always leave the loading state, whatever the read does.** A read that rejects rather
+than returning a failed result — the service unreachable, the session gone — SHALL open the trace stating that
+it could not be read, not leave a loading indicator in place of the view. **A loading indicator SHALL NOT be
+shown over an already-opened trace**, since a loaded chain beneath one reads as a chain that never loaded.
+
+**An enrichment that fails SHALL NOT discard a read that succeeded.** The decoded model outputs that type the
+stream's rows are an enrichment of the hop read, not a part of it: where resolving them fails or throws, the
+hops SHALL still render, with their model-call rows typed generically. Rejecting the whole read would tell the
+reader the trace could not be read while its rows were already in hand.
+
+#### Scenario: A rejected trace read still leaves the loading state
+
+- **WHEN** the trace read rejects
+- **THEN** no loading indicator remains
+- **AND** the trace states that it could not be read
+
+#### Scenario: Opening a turn's trace replaces the transcript in place
+
+- **WHEN** the trace control on an assistant message is used
+- **THEN** that turn's event stream renders in place of the transcript
+- **AND** the trace states the turn it belongs to and its own trace id
+- **AND** a control returns to the transcript
+
+#### Scenario: A turn's figures are the same in the list and in its trace
+
+- **WHEN** a turn's trace is opened from the turn list
+- **THEN** the tokens, cost, hop count and duration stated above the hop chain equal those on its list row
+- **AND** they do not change when the hop chain is clipped by its bound
+
+#### Scenario: The shortcut attributes each message to its own turn
+
+- **WHEN** the whole conversation is assembled from one entry hop's body
+- **THEN** each message carries the trace id of the turn that produced it
+- **AND** the newest turn's figures appear only beneath the newest turn's answer
+
+#### Scenario: Hops render in the order they were recorded
+
+- **WHEN** a turn records hops at different times
+- **THEN** their rows render in ascending order of recorded time
+
+#### Scenario: No hop states a duration
+
+- **WHEN** the trace renders its hops
+- **THEN** no hop shows a duration, a duration bar or an offset from the start of the trace
+- **AND** each hop shows its own absolute recorded time
+
+#### Scenario: A failed hop is typed by its failure
+
+- **WHEN** a hop did not succeed
+- **THEN** it is typed as an error rather than by its event kind
+- **AND** its detail reports the same verdict as its row
+
+#### Scenario: An MCP hop is named by the tool it called
+
+- **WHEN** an MCP hop records a tool-call name
+- **THEN** the hop is labelled by that tool
+- **AND** the query that fetched it named the MCP method and tool-call columns
+
+#### Scenario: An MCP hop with no tool call falls back to its method
+
+- **WHEN** an MCP hop records a method but no tool-call name
+- **THEN** the hop is labelled by that method
+
+#### Scenario: A routing chain renders as a chain
+
+- **WHEN** a hop records an execution path of an application followed by a model
+- **THEN** the hop's detail shows that chain in that order
+
+#### Scenario: Selecting a hop shows its detail
+
+- **WHEN** a hop is selected
+- **THEN** its category, status, recorded time, tokens, cost, endpoint, upstream, caller and HTTP status
+  render beside the stream
+- **AND** its MCP method, tool and routing chain render where recorded
+- **AND** no raw request or response body value reaches the client
+
+#### Scenario: Every row states its type in words
+
+- **WHEN** the stream renders its rows
+- **THEN** each row states its type as text rather than by colour alone
+
+#### Scenario: A failed enrichment still renders the hops
+
+- **WHEN** resolving the decoded model outputs throws
+- **THEN** the hops that were read still render
+- **AND** the view does not state that the trace could not be read
+
+#### Scenario: The trace states no latency derived from hop durations
+
+- **WHEN** the trace states its own figures
+- **THEN** they include its token total, its cost, its hop count and its status
+- **AND** no stated figure is derived from a hop's recorded duration
+
+#### Scenario: A clipped hop list says so
+
+- **WHEN** the hop read is bounded below the turn's recorded hop count
+- **THEN** the view states that the list is partial
 

@@ -72,6 +72,18 @@ vi.mock('@/src/components/Publications/Properties/SkillProperties', () => ({
   ),
 }));
 
+vi.mock('@/src/components/Assets/Skills/View/SkillManifestTab', () => ({
+  default: ({ name, description, onChangeDescription }: any) => (
+    <div role="region" aria-label="skill-manifest-tab">
+      <span>{name}</span>
+      <span>{description}</span>
+      <button role="button" aria-label="manifest-change-button" onClick={() => onChangeDescription('changed')}>
+        Change description
+      </button>
+    </div>
+  ),
+}));
+
 const mockRules: DialRule[] = [
   {
     source: 'role',
@@ -126,8 +138,11 @@ const setup = (props: {
   onChange?: any;
   isPermissionsChanged: boolean;
   currentRules: DialRule[];
+  skillManifest?: { name: string; description: string; body: string };
+  onChangeSkillDescription?: (description: string) => void;
 }) => {
   const onChange = props.onChange || vi.fn();
+  const onChangeSkillDescription = props.onChangeSkillDescription || vi.fn();
   const utils = render(
     <TabsContent
       view={props.view}
@@ -136,9 +151,15 @@ const setup = (props: {
       onChange={onChange}
       isPermissionsChanged={props.isPermissionsChanged}
       currentRules={props.currentRules}
+      setAddedFiles={vi.fn()}
+      setSkillAddedFiles={vi.fn()}
+      setSkillRemovedFileNames={vi.fn()}
+      skillManifest={props.skillManifest}
+      onChangeSkillDescription={onChangeSkillDescription}
+      onChangeSkillBody={vi.fn()}
     />,
   );
-  return { onChange, ...utils };
+  return { onChange, onChangeSkillDescription, ...utils };
 };
 
 describe('Publications :: TabsContent', () => {
@@ -452,5 +473,50 @@ describe('Publications :: TabsContent', () => {
     });
 
     expect(screen.getByRole('region', { name: 'permissions-rules-count' })).toHaveTextContent('3');
+  });
+
+  test('renders SkillManifestTab with the parsed manifest when the Skill tab is active', () => {
+    const publication = createMockSkillPublication();
+    setup({
+      view: ApplicationRoute.SkillPublications,
+      selectedPublication: publication,
+      activeTab: EntityViewTab.Skill,
+      isPermissionsChanged: false,
+      currentRules: mockCurrentRules,
+      skillManifest: { name: 'my-skill', description: 'Does a thing', body: 'Body' },
+    });
+
+    expect(screen.getByRole('region', { name: 'skill-manifest-tab' })).toBeInTheDocument();
+    expect(screen.getByText('my-skill')).toBeInTheDocument();
+    expect(screen.getByText('Does a thing')).toBeInTheDocument();
+  });
+
+  test('does not render SkillManifestTab when no manifest has been fetched yet', () => {
+    const publication = createMockSkillPublication();
+    setup({
+      view: ApplicationRoute.SkillPublications,
+      selectedPublication: publication,
+      activeTab: EntityViewTab.Skill,
+      isPermissionsChanged: false,
+      currentRules: mockCurrentRules,
+    });
+
+    expect(screen.queryByRole('region', { name: 'skill-manifest-tab' })).not.toBeInTheDocument();
+  });
+
+  test('forwards a description edit from SkillManifestTab', async () => {
+    const publication = createMockSkillPublication();
+    const { onChangeSkillDescription } = setup({
+      view: ApplicationRoute.SkillPublications,
+      selectedPublication: publication,
+      activeTab: EntityViewTab.Skill,
+      isPermissionsChanged: false,
+      currentRules: mockCurrentRules,
+      skillManifest: { name: 'my-skill', description: 'Does a thing', body: 'Body' },
+    });
+
+    screen.getByRole('button', { name: 'manifest-change-button' }).click();
+
+    expect(onChangeSkillDescription).toHaveBeenCalledWith('changed');
   });
 });

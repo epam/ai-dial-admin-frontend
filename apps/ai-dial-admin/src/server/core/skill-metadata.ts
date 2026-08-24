@@ -6,10 +6,17 @@ import { CoreResourceMetadataNode, ResourceInfo } from './asset-metadata';
 
 const toSkillResourceInfo = (metadata: CoreResourceMetadataNode): ResourceInfo => {
   const { path, folderId, name } = parseEncodedFolderPath(metadata.url, RESOURCE_TYPE_PREFIX[ResourceType.SKILL]);
+  const isFolder = metadata.nodeType.toUpperCase() === 'FOLDER';
+  // `parsePath` (behind `parseEncodedFolderPath`) unconditionally strips a trailing slash — correct
+  // for a skill item, whose marker is stored as a folder-shaped resource and so carries one despite
+  // being an `ITEM`, but wrong for a genuine grouping folder: every other asset type's folder rows
+  // keep their trailing slash (`parseEncodedVersionedPath` never strips it), and generic path-matching
+  // code downstream (e.g. `mergeFiles`, per-path fetches) expects that convention. Re-adding it only
+  // for `FOLDER` rows keeps skill items unaffected.
   return {
     name,
     folderId,
-    path,
+    path: isFolder ? `${path}/` : path,
     author: metadata.author,
     createdAt: metadata.createdAt !== undefined ? String(metadata.createdAt) : undefined,
     updatedAt: metadata.updatedAt !== undefined ? String(metadata.updatedAt) : undefined,

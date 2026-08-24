@@ -83,6 +83,8 @@ import {
   responseSchemaTab,
   rolesTab,
   runsTab,
+  getSkillPublicationTabs,
+  skillTab,
   summaryTab,
   testCasesTab,
   testSuiteMethodTab,
@@ -196,6 +198,10 @@ describe('Entities :: tabs', () => {
   test('returns correct tabs for toolset', () => {
     const tabs = getTabsForAsset(t, ApplicationRoute.ActivityAudit);
     expect(tabs).toEqual([propertiesTab(t)]);
+  });
+
+  test('returns Properties and Skill tabs for AssetsSkills', () => {
+    expect(getTabsForAsset(t, ApplicationRoute.AssetsSkills)).toEqual([propertiesTab(t), skillTab(t)]);
   });
 
   test('returns correct tabs for key', () => {
@@ -404,6 +410,10 @@ describe('Entities :: tabs', () => {
 
   test('returns correct tabs for toolset publication', () => {
     expect(getToolsetPublicationTabs(t)).toEqual([propertiesTab(t), toolsTab(t), permissionsTab(t)]);
+  });
+
+  test('returns Properties, Skill, and Permissions tabs for skill publication', () => {
+    expect(getSkillPublicationTabs(t)).toEqual([propertiesTab(t), skillTab(t), permissionsTab(t)]);
   });
 
   test('returns correct tabs for publication view routes and default', () => {

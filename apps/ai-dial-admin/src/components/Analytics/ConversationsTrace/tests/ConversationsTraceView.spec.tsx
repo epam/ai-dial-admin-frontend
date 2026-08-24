@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import ConversationsTraceView from '@/src/components/Analytics/ConversationsTrace/ConversationsTraceView';
 import { PAGE_SIZE } from '@/src/constants/ag-grid';
+import { CONVERSATIONS_HEADER_STACK_HEIGHT } from '@/src/constants/analytics/conversations-trace';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import {
   ConversationCandidateIds,
@@ -46,10 +47,14 @@ vi.mock('@/src/components/Analytics/ConversationsTrace/List/ConversationsList', 
 let onReady: ((event: GridReadyEvent) => void) | undefined;
 
 const purgeInfiniteCache = vi.fn();
+const setFilterModel = vi.fn();
+let filterModel: Record<string, unknown> = {};
 
 const gridApi = {
   setGridOption: vi.fn(),
   getColumnState: () => columnState,
+  getFilterModel: () => filterModel,
+  setFilterModel,
   purgeInfiniteCache,
   addEventListener: (event: string, handler: (event: ColumnVisibleEvent) => void) => {
     if (event === 'columnVisible') {
@@ -62,6 +67,12 @@ const gridApi = {
 const revealColumn = (colId: string) =>
   columnVisibleHandler?.({
     visible: true,
+    columns: [{ getColId: () => colId } as Column],
+  } as ColumnVisibleEvent);
+
+const hideColumn = (colId: string) =>
+  columnVisibleHandler?.({
+    visible: false,
     columns: [{ getColId: () => colId } as Column],
   } as ColumnVisibleEvent);
 
@@ -136,11 +147,11 @@ const awaitFilterApplied = async () => {
   await waitFor(() => expect(datasource).not.toBe(previous));
 };
 
-// A plain column of the source reports its flat name as its backing field; an enrichment-supplied one is
-// namespaced by the enrichment, leaving the backing name unqualified.
+// Every field here gets a column, so every one reaches the projection, in the bucket its cost puts it in.
 const SCHEMA_FIELDS = [
-  { name: 'success_count', type: AnalyticsFieldType.Integer, source: 'success_count' },
-  { name: 'conversation_insights.topic', type: AnalyticsFieldType.String, source: 'topic' },
+  { name: ConversationsField.ChatId, type: AnalyticsFieldType.String, source: ConversationsField.ChatId },
+  { name: ConversationsField.TotalTokens, type: AnalyticsFieldType.Integer, source: ConversationsField.TotalTokens },
+  { name: ConversationsField.InsightTopics, type: AnalyticsFieldType.String, source: 'topics' },
 ] as AnalyticsEntityField[];
 
 const renderView = (schemaFields?: AnalyticsEntityField[]) => {
@@ -154,6 +165,8 @@ beforeEach(() => {
   onReady = undefined;
   columnState = [];
   columnVisibleHandler = undefined;
+  filterModel = {};
+  setFilterModel.mockReset();
   purgeInfiniteCache.mockReset();
   showNotificationSpy.mockReset();
   getConversations.mockReset();
@@ -460,36 +473,50 @@ describe('ConversationsTraceView :: schema availability', () => {
 });
 
 describe('ConversationsTraceView :: projection', () => {
-  // A source field costs the query one more column of the table it already reads, so it is projected
-  // whether or not its column is on screen — which is what makes revealing that column free.
+  // A cheap source field is projected whether or not its column is on screen, which makes revealing it free.
   test('sends every source-backed field even with its column hidden', async () => {
-    columnState = [{ colId: 'success_count', hide: true }];
+    columnState = [{ colId: ConversationsField.TotalTokens, hide: true }];
     renderView(SCHEMA_FIELDS);
     await waitFor(() => expect(datasource).toBeDefined());
 
     await fetchBlock();
 
-    expect(lastRequest().sourceFields).toEqual(['success_count']);
+    expect(lastRequest().sourceFields).toContain(ConversationsField.TotalTokens);
   });
 
   test('sends an enrichment-backed field only while its column is visible', async () => {
-    columnState = [{ colId: 'conversation_insights.topic', hide: false }];
+    columnState = [{ colId: ConversationsField.InsightTopics, hide: false }];
     renderView(SCHEMA_FIELDS);
     await waitFor(() => expect(datasource).toBeDefined());
 
     await fetchBlock();
 
-    expect(lastRequest().visibleEnrichmentFields).toEqual(['conversation_insights.topic']);
+    expect(lastRequest().visibleEnrichmentFields).toEqual([ConversationsField.InsightTopics]);
   });
 
   test('omits a hidden enrichment-backed column', async () => {
-    columnState = [{ colId: 'conversation_insights.topic', hide: true }];
+    columnState = [{ colId: ConversationsField.InsightTopics, hide: true }];
     renderView(SCHEMA_FIELDS);
     await waitFor(() => expect(datasource).toBeDefined());
 
     await fetchBlock();
 
     expect(lastRequest().visibleEnrichmentFields).toEqual([]);
+  });
+
+  // The identity column reads the insight title and cannot be hidden, so the field has to reach the query
+  // without a column of its own to carry it — every other enrichment field is projected on visibility.
+  test('projects the identity column title with no column of its own', async () => {
+    columnState = [{ colId: ConversationsField.ChatId, hide: false }];
+    renderView([
+      ...SCHEMA_FIELDS,
+      { name: ConversationsField.InsightTitle, type: AnalyticsFieldType.String, source: 'title' },
+    ] as AnalyticsEntityField[]);
+    await waitFor(() => expect(datasource).toBeDefined());
+
+    await fetchBlock();
+
+    expect(lastRequest().visibleEnrichmentFields).toContain(ConversationsField.InsightTitle);
   });
 
   test('never projects a grid-only column, even though it is visible', async () => {
@@ -506,13 +533,57 @@ describe('ConversationsTraceView :: projection', () => {
   });
 
   test('sends no schema-driven fields at all when the schema is unavailable', async () => {
-    columnState = [{ colId: 'success_count', hide: false }];
+    columnState = [{ colId: ConversationsField.TotalTokens, hide: false }];
     renderView();
 
     await fetchBlock();
 
     expect(lastRequest().sourceFields).toEqual([]);
     expect(lastRequest().visibleEnrichmentFields).toEqual([]);
+  });
+});
+
+// The service marks a field heavy when it is expensive to transfer, and omits it from a wildcard projection
+// for that reason. Measured on the local rollup, the one heavy field cost 2.7× the other ten columns
+// together — so unlike an ordinary source field it is worth gating, and worth a re-fetch when revealed.
+const HEAVY_FIELD = 'big_payload';
+
+const HEAVY_SCHEMA_FIELDS = [
+  ...SCHEMA_FIELDS,
+  { name: HEAVY_FIELD, type: AnalyticsFieldType.String, source: HEAVY_FIELD, heavy: true },
+] as AnalyticsEntityField[];
+
+describe('ConversationsTraceView :: projecting a heavy field', () => {
+  test('omits a heavy source field while its column is hidden', async () => {
+    columnState = [{ colId: HEAVY_FIELD, hide: true }];
+    renderView(HEAVY_SCHEMA_FIELDS);
+    await waitFor(() => expect(datasource).toBeDefined());
+
+    await fetchBlock();
+
+    expect(lastRequest().sourceFields).not.toContain(HEAVY_FIELD);
+    expect(lastRequest().sourceFields).toContain(ConversationsField.TotalTokens);
+  });
+
+  test('sends a heavy source field once its column is visible, as a source field', async () => {
+    columnState = [{ colId: HEAVY_FIELD, hide: false }];
+    renderView(HEAVY_SCHEMA_FIELDS);
+    await waitFor(() => expect(datasource).toBeDefined());
+
+    await fetchBlock();
+
+    expect(lastRequest().sourceFields).toContain(HEAVY_FIELD);
+    expect(lastRequest().visibleEnrichmentFields).not.toContain(HEAVY_FIELD);
+  });
+
+  test('restarts paging when a heavy source column is revealed', async () => {
+    renderView(HEAVY_SCHEMA_FIELDS);
+    await awaitGridReady();
+    await fetchBlock();
+
+    revealColumn(HEAVY_FIELD);
+
+    expect(purgeInfiniteCache).toHaveBeenCalledOnce();
   });
 });
 
@@ -523,7 +594,7 @@ describe('ConversationsTraceView :: revealing a column', () => {
     await awaitGridReady();
     await fetchBlock();
 
-    revealColumn('success_count');
+    revealColumn(ConversationsField.TotalTokens);
 
     expect(purgeInfiniteCache).not.toHaveBeenCalled();
   });
@@ -535,7 +606,7 @@ describe('ConversationsTraceView :: revealing a column', () => {
     await awaitGridReady();
     await fetchBlock();
 
-    revealColumn('conversation_insights.topic');
+    revealColumn(ConversationsField.InsightTopics);
 
     expect(purgeInfiniteCache).toHaveBeenCalledOnce();
   });
@@ -546,6 +617,55 @@ describe('ConversationsTraceView :: revealing a column', () => {
     await fetchBlock();
 
     revealColumn(ConversationsField.ChatId);
+
+    expect(purgeInfiniteCache).not.toHaveBeenCalled();
+  });
+});
+
+describe('ConversationsTraceView :: hiding a filtered column', () => {
+  // A filter outliving its column keeps narrowing every later page with nothing on screen to explain it, and
+  // on an enrichment field the narrowing is severe: only conversations the evaluation has reached can match.
+  test('clears the filter the hidden column carried', async () => {
+    filterModel = { [ConversationsField.InsightTopics]: { type: 'contains', filter: 'security' } };
+    renderView(SCHEMA_FIELDS);
+    await awaitGridReady();
+
+    hideColumn(ConversationsField.InsightTopics);
+
+    expect(setFilterModel).toHaveBeenCalledWith({});
+  });
+
+  test('leaves every other column filter standing', async () => {
+    filterModel = {
+      [ConversationsField.InsightTopics]: { type: 'contains', filter: 'security' },
+      [ConversationsField.ProjectId]: { type: 'contains', filter: 'data-team' },
+    };
+    renderView(SCHEMA_FIELDS);
+    await awaitGridReady();
+
+    hideColumn(ConversationsField.InsightTopics);
+
+    expect(setFilterModel).toHaveBeenCalledWith({
+      [ConversationsField.ProjectId]: { type: 'contains', filter: 'data-team' },
+    });
+  });
+
+  test('does not touch the filter model when the hidden column carried no filter', async () => {
+    filterModel = { [ConversationsField.ProjectId]: { type: 'contains', filter: 'data-team' } };
+    renderView(SCHEMA_FIELDS);
+    await awaitGridReady();
+
+    hideColumn(ConversationsField.InsightTopics);
+
+    expect(setFilterModel).not.toHaveBeenCalled();
+  });
+
+  test('does not re-fetch rows on hide, beyond what clearing a filter costs', async () => {
+    renderView(SCHEMA_FIELDS);
+    await awaitGridReady();
+    await fetchBlock();
+
+    hideColumn(ConversationsField.InsightTopics);
 
     expect(purgeInfiniteCache).not.toHaveBeenCalled();
   });
@@ -643,6 +763,36 @@ describe('ConversationsTraceView :: empty and failed states', () => {
     await fetchBlock();
 
     await waitFor(() => expect(screen.getByText(ConversationsTraceI18nKey.NoConversations)).toBeInTheDocument());
+  });
+
+  // The state a filter that matched nothing produces. Covering the header stack would hide the very filter
+  // inputs the operator needs to undo it, leaving the grid with no way out.
+  test('the empty state leaves the grid header and its filter row uncovered', async () => {
+    getConversations.mockResolvedValue(okPage([], { totals: { conversations: 0, cost: null } }));
+    renderView();
+
+    await fetchBlock();
+
+    const overlay = (await screen.findByText(ConversationsTraceI18nKey.NoConversations)).closest(
+      '[style*="top"]',
+    ) as HTMLElement;
+
+    expect(overlay).toBeTruthy();
+    expect(overlay.style.top).toBe(`${CONVERSATIONS_HEADER_STACK_HEIGHT}px`);
+    expect(overlay.className).not.toContain('inset-0');
+  });
+
+  test('the failed state leaves the header uncovered too, so a filter can still be cleared', async () => {
+    getConversations.mockResolvedValue({ success: false, status: 500 });
+    renderView();
+
+    await fetchBlock();
+
+    const overlay = (await screen.findByText(ConversationsTraceI18nKey.ConversationsLoadFailed)).closest(
+      '[style*="top"]',
+    ) as HTMLElement;
+
+    expect(overlay.style.top).toBe(`${CONVERSATIONS_HEADER_STACK_HEIGHT}px`);
   });
 
   // An emptied grid alone cannot be told apart from a period that genuinely held no conversations.

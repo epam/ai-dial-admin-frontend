@@ -7,6 +7,7 @@ import { IconPlus } from '@tabler/icons-react';
 
 import { useI18n } from '@/src/locales/client';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
+import { JsonataVariable } from '@/src/models/jsonata';
 import { ContentType } from '@/src/components/TestSuites/constants/content-type';
 import { getBodyText } from '@/src/components/TestSuites/utils/body-content';
 import { EntityViewTab, getTestSuiteRequestTemplateTabs } from '@/src/utils/tabs/utils';
@@ -19,9 +20,10 @@ import TemplateVariablesDoc from './components/TemplateVariablesDoc';
 interface Props {
   testSuite: TestSuite;
   onChangeTestSuite: (testSuite: TestSuite) => void;
+  jsonataVariables?: JsonataVariable[];
 }
 
-const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
+const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite, jsonataVariables }) => {
   const t = useI18n();
   const tabs = getTestSuiteRequestTemplateTabs(t);
   const [activeTab, setActiveTab] = useState(EntityViewTab.Body);
@@ -84,6 +86,7 @@ const RequestTemplate: FC<Props> = ({ testSuite, onChangeTestSuite }) => {
         bodyText={bodyText}
         onChangeBodyText={setBodyText}
         onChange={onChangeTestSuite}
+        jsonataVariables={jsonataVariables}
       />
     </div>
   );
