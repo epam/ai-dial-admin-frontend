@@ -5,6 +5,8 @@ import ConversationDetailRail from '@/src/components/Analytics/ConversationsTrac
 import {
   CONVERSATIONS_ENTITY,
   CONVERSATION_DETAIL_PANELS,
+  CONVERSATION_FEEDBACK_PANEL,
+  CONVERSATION_INSIGHTS_PANEL,
   FEEDBACK_ENTITY,
   PROVENANCE_TEXT_CLASS,
   UNAVAILABLE_VALUE,
@@ -12,9 +14,9 @@ import {
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import {
   ColumnProvenance,
-  PanelProvenance,
   ConversationDetailRow,
   ConversationFeedbackRow,
+  ConversationsField,
 } from '@/src/models/analytics/conversations-trace';
 
 const CONVERSATION: ConversationDetailRow = {
@@ -44,17 +46,24 @@ const setup = (
   feedback: ConversationFeedbackRow[] = FEEDBACK,
   total: number | null = feedback.length,
   ratings = { rating_up: 2, rating_down: 0 },
+  conversation: ConversationDetailRow = CONVERSATION,
 ) =>
   render(
-    <ConversationDetailRail conversation={CONVERSATION} feedback={feedback} feedbackTotal={total} ratings={ratings} />,
+    <ConversationDetailRail conversation={conversation} feedback={feedback} feedbackTotal={total} ratings={ratings} />,
   );
+
+const INSIGHTS: Partial<ConversationDetailRow> = {
+  [ConversationsField.InsightTitle]: 'Rotating a shared API key',
+  [ConversationsField.InsightSummary]: 'The user asked how to rotate a shared key and confirmed the old one died.',
+  [ConversationsField.InsightSentiment]: 'neutral',
+  [ConversationsField.InsightResolutionStatus]: 'partially_resolved',
+  [ConversationsField.InsightTopic]: 'api keys',
+  [ConversationsField.InsightLanguage]: 'en',
+};
 
 const SOURCE_ENTITIES = [CONVERSATIONS_ENTITY, FEEDBACK_ENTITY];
 
-const SOURCE_LABEL_FOR: Record<PanelProvenance, string> = {
-  [ColumnProvenance.Conversations]: CONVERSATIONS_ENTITY,
-  [ColumnProvenance.Feedback]: FEEDBACK_ENTITY,
-};
+const PANEL_FRAMES = [...CONVERSATION_DETAIL_PANELS, CONVERSATION_INSIGHTS_PANEL, CONVERSATION_FEEDBACK_PANEL];
 
 describe('ConversationDetailRail', () => {
   test('renders the usage, metadata and feedback panels', () => {
@@ -78,12 +87,56 @@ describe('ConversationDetailRail', () => {
   });
 
   // A panel's source is a catalog identifier, and an identifier names the entity the page queried — never an
-  // enrichment, whose columns the service exposes through the entity it decorates.
+  // enrichment, whose columns the service exposes through the entity it decorates. The insights panel is the
+  // case that matters: it reads the enrichment and still names the entity.
   test('no panel claims an enrichment as its source', () => {
-    for (const { provenance } of CONVERSATION_DETAIL_PANELS) {
-      expect(provenance).not.toBe(ColumnProvenance.Insights);
-      expect(SOURCE_ENTITIES).toContain(SOURCE_LABEL_FOR[provenance]);
+    for (const { sourceEntity } of PANEL_FRAMES) {
+      expect(SOURCE_ENTITIES).toContain(sourceEntity);
+      expect(sourceEntity).not.toBe('conversation_insights');
     }
+  });
+
+  test('the insights panel names the entity but takes the enrichment colour', () => {
+    expect(CONVERSATION_INSIGHTS_PANEL.sourceEntity).toBe(CONVERSATIONS_ENTITY);
+    expect(CONVERSATION_INSIGHTS_PANEL.provenance).toBe(ColumnProvenance.Insights);
+    expect(PROVENANCE_TEXT_CLASS[CONVERSATION_INSIGHTS_PANEL.provenance]).not.toBe(
+      PROVENANCE_TEXT_CLASS[ColumnProvenance.Conversations],
+    );
+  });
+
+  test('an evaluated conversation renders the insights panel first', () => {
+    setup(FEEDBACK, FEEDBACK.length, { rating_up: 2, rating_down: 0 }, { ...CONVERSATION, ...INSIGHTS });
+
+    const headings = screen.getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent);
+
+    expect(headings[0]).toContain(ConversationsTraceI18nKey.DetailPanelInsights);
+  });
+
+  test('the insights panel states the evaluator reading without restating the title', () => {
+    setup(FEEDBACK, FEEDBACK.length, { rating_up: 2, rating_down: 0 }, { ...CONVERSATION, ...INSIGHTS });
+
+    expect(screen.getByText(INSIGHTS[ConversationsField.InsightSummary] as string)).toBeInTheDocument();
+    expect(screen.getByText('Partially resolved')).toBeInTheDocument();
+    expect(screen.queryByText(INSIGHTS[ConversationsField.InsightTitle] as string)).toBeNull();
+  });
+
+  test('an unevaluated conversation gets a statement rather than a panel of markers', () => {
+    setup(FEEDBACK, FEEDBACK.length, { rating_up: 2, rating_down: 0 }, {
+      ...CONVERSATION,
+      [ConversationsField.InsightTitle]: null,
+    } as ConversationDetailRow);
+
+    expect(screen.getByText(ConversationsTraceI18nKey.DetailInsightsNotEvaluated)).toBeInTheDocument();
+    expect(screen.queryByText(ConversationsTraceI18nKey.DetailPanelInsights)).toBeNull();
+    expect(screen.queryByText(ConversationsTraceI18nKey.DetailSummary)).toBeNull();
+  });
+
+  test('a deployment without the enrichment says so distinctly', () => {
+    setup();
+
+    expect(screen.getByText(ConversationsTraceI18nKey.DetailInsightsUnavailable)).toBeInTheDocument();
+    expect(screen.queryByText(ConversationsTraceI18nKey.DetailInsightsNotEvaluated)).toBeNull();
+    expect(screen.queryByText(ConversationsTraceI18nKey.DetailPanelInsights)).toBeNull();
   });
 
   test('the usage panel reports real token and cost values', () => {

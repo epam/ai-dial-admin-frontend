@@ -15,11 +15,6 @@ export enum ColumnProvenance {
   Other = 'other',
 }
 
-// A panel's source is a catalog identifier, and an identifier names the entity the page queried — never an
-// enrichment, whose columns the service exposes through the entity it decorates. So neither origin that
-// exists to label where a *value* came from is a source a panel can claim.
-export type PanelProvenance = Exclude<ColumnProvenance, ColumnProvenance.Insights | ColumnProvenance.Other>;
-
 export type ConversationScalar = number | string | boolean | null;
 
 export interface ConversationRow {
@@ -172,12 +167,18 @@ export enum ConversationsField {
   // The insight fields are enrichment columns: the service exposes each under a qualified flat name, and
   // the dot belongs to the name rather than marking a path into a nested value.
   InsightTitle = 'conversation_insights.title',
+  InsightSummary = 'conversation_insights.summary',
+  InsightSentiment = 'conversation_insights.sentiment',
+  InsightSentimentScore = 'conversation_insights.sentiment_score',
+  InsightTopic = 'conversation_insights.topic',
   InsightTopics = 'conversation_insights.topics',
+  InsightLanguage = 'conversation_insights.language',
+  InsightResolutionStatus = 'conversation_insights.resolution_status',
   InsightTruncated = 'conversation_insights.truncated',
 }
 
 // Grid-only column ids: every other column binds to a `ConversationsField`, but Rating is composed
-// from the `rate_analytics` lookups and has no field on the conversations entity.
+// from the rating rollup's lookups and has no field on the conversations entity.
 export enum ConversationColumn {
   Rating = 'rating',
 }
@@ -234,7 +235,13 @@ export interface ConversationDetailRow {
   // Optional because the insight enrichment runs per conversation: a conversation the evaluator has not
   // processed has no insight row at all, so the service returns no value under these names.
   'conversation_insights.title'?: string | null;
+  'conversation_insights.summary'?: string | null;
+  'conversation_insights.sentiment'?: string | null;
+  'conversation_insights.sentiment_score'?: number | string | null;
+  'conversation_insights.topic'?: string | null;
   'conversation_insights.topics'?: string | null;
+  'conversation_insights.language'?: string | null;
+  'conversation_insights.resolution_status'?: string | null;
   'conversation_insights.truncated'?: boolean | null;
 }
 
@@ -494,6 +501,7 @@ export enum ConversationDetailView {
 }
 
 export enum ConversationDetailPanel {
+  Insights = 'insights',
   Usage = 'usage',
   Feedback = 'feedback',
   Metadata = 'metadata',
@@ -522,10 +530,14 @@ export interface ConversationFieldDefinition {
   hintKey?: string;
 }
 
-export interface ConversationPanelDefinition {
+export interface ConversationPanelFrame {
   panel: ConversationDetailPanel;
-  provenance: PanelProvenance;
+  sourceEntity: string;
+  provenance: ColumnProvenance;
   labelKey: string;
+}
+
+export interface ConversationPanelDefinition extends ConversationPanelFrame {
   layout: ConversationPanelLayout;
   fields: ConversationFieldDefinition[];
 }
@@ -536,6 +548,12 @@ export enum ConversationFieldState {
   Unavailable = 'unavailable',
 }
 
+export enum ConversationInsightsState {
+  Available = 'available',
+  NotEvaluated = 'not-evaluated',
+  EnrichmentUnavailable = 'enrichment-unavailable',
+}
+
 export interface ResolvedConversationField {
   labelKey: string;
   state: ConversationFieldState;
@@ -543,3 +561,5 @@ export interface ResolvedConversationField {
   accentClassName?: string;
   hintKey?: string;
 }
+
+export type ResolvedInsightFields = Partial<Record<ConversationsField, ResolvedConversationField>>;

@@ -3,9 +3,12 @@ import {
   ColumnProvenance,
   ConversationColumn,
   ConversationDetailPanel,
+  ConversationFieldDefinition,
   ConversationFieldFormat,
   ConversationFilterOperator,
+  ConversationInsightsState,
   ConversationPanelDefinition,
+  ConversationPanelFrame,
   ConversationPanelLayout,
   ConversationsField,
   HopEventType,
@@ -132,9 +135,19 @@ export const OPTIONAL_CURATED_COLUMN_FIELDS: ConversationsField[] = [Conversatio
 // the join is paid on every page. That is the cost of naming a conversation by anything other than its id.
 export const IDENTITY_ENRICHMENT_FIELDS: ConversationsField[] = [ConversationsField.InsightTitle];
 
+export const DETAIL_INSIGHT_FIELDS: ConversationsField[] = [
+  ConversationsField.InsightSummary,
+  ConversationsField.InsightSentiment,
+  ConversationsField.InsightSentimentScore,
+  ConversationsField.InsightTopic,
+  ConversationsField.InsightLanguage,
+  ConversationsField.InsightResolutionStatus,
+];
+
 export const OPTIONAL_DETAIL_SELECT_FIELDS: ConversationsField[] = [
   ...OPTIONAL_CURATED_COLUMN_FIELDS,
   ...IDENTITY_ENRICHMENT_FIELDS,
+  ...DETAIL_INSIGHT_FIELDS,
   // Read by the detail view alone. The log states the size cap once, for the whole column, because it holds
   // for the large majority of titled conversations — so the list query never names this field.
   ConversationsField.InsightTruncated,
@@ -240,7 +253,13 @@ export const CONVERSATION_FIELD_VALUE_TYPE: Partial<Record<ConversationsField, Q
   [ConversationsField.LastRequestTime]: QueryValueType.Timestamp,
   [ConversationsField.FirstRequestTime]: QueryValueType.Timestamp,
   [ConversationsField.InsightTitle]: QueryValueType.String,
+  [ConversationsField.InsightSummary]: QueryValueType.String,
+  [ConversationsField.InsightSentiment]: QueryValueType.String,
+  [ConversationsField.InsightSentimentScore]: QueryValueType.Decimal,
+  [ConversationsField.InsightTopic]: QueryValueType.String,
   [ConversationsField.InsightTopics]: QueryValueType.String,
+  [ConversationsField.InsightLanguage]: QueryValueType.String,
+  [ConversationsField.InsightResolutionStatus]: QueryValueType.String,
   [ConversationsField.InsightTruncated]: QueryValueType.Boolean,
 };
 
@@ -292,6 +311,47 @@ export const SPAN_CATEGORY_CLASS: Record<SpanCategory, string> = {
   [SpanCategory.Route]: 'bg-accent-primary-alpha text-accent-primary',
   [SpanCategory.Deployment]: 'bg-info text-info',
   [SpanCategory.Other]: 'bg-layer-4 text-secondary',
+};
+
+export const CONVERSATION_INSIGHT_FIELDS: ConversationFieldDefinition[] = [
+  { labelKey: ConversationsTraceI18nKey.DetailSummary, column: ConversationsField.InsightSummary },
+  { labelKey: ConversationsTraceI18nKey.DetailSentiment, column: ConversationsField.InsightSentiment },
+  {
+    labelKey: ConversationsTraceI18nKey.DetailResolutionStatus,
+    column: ConversationsField.InsightResolutionStatus,
+  },
+  { labelKey: ConversationsTraceI18nKey.DetailTopic, column: ConversationsField.InsightTopic },
+  { labelKey: ConversationsTraceI18nKey.DetailTopics, column: ConversationsField.InsightTopics },
+  { labelKey: ConversationsTraceI18nKey.DetailLanguage, column: ConversationsField.InsightLanguage },
+  {
+    labelKey: ConversationsTraceI18nKey.DetailSentimentScore,
+    column: ConversationsField.InsightSentimentScore,
+  },
+];
+
+export const INSIGHTS_ABSENCE_KEY: Record<
+  Exclude<ConversationInsightsState, ConversationInsightsState.Available>,
+  string
+> = {
+  [ConversationInsightsState.NotEvaluated]: ConversationsTraceI18nKey.DetailInsightsNotEvaluated,
+  [ConversationInsightsState.EnrichmentUnavailable]: ConversationsTraceI18nKey.DetailInsightsUnavailable,
+};
+
+export const INSIGHT_BADGE_NEUTRAL_CLASS = 'bg-layer-4 text-secondary';
+
+export const SENTIMENT_BADGE_CLASS: Record<string, string> = {
+  positive: 'bg-success text-success',
+  neutral: 'bg-info text-info',
+  negative: 'bg-error text-error',
+  mixed: 'bg-warning text-warning',
+};
+
+export const RESOLUTION_BADGE_CLASS: Record<string, string> = {
+  resolved: 'bg-success text-success',
+  partially_resolved: 'bg-warning text-warning',
+  unresolved: 'bg-error text-error',
+  abandoned: 'bg-error text-error',
+  unclear: 'bg-layer-4 text-secondary',
 };
 
 export const EMPTY_ICON_SIZE = 24;
@@ -346,9 +406,24 @@ export const UNAVAILABLE_VALUE = '—';
 
 export const CONVERSATION_FEEDBACK_LIMIT = 100;
 
+export const CONVERSATION_INSIGHTS_PANEL: ConversationPanelFrame = {
+  panel: ConversationDetailPanel.Insights,
+  sourceEntity: CONVERSATIONS_ENTITY,
+  provenance: ColumnProvenance.Insights,
+  labelKey: ConversationsTraceI18nKey.DetailPanelInsights,
+};
+
+export const CONVERSATION_FEEDBACK_PANEL: ConversationPanelFrame = {
+  panel: ConversationDetailPanel.Feedback,
+  sourceEntity: FEEDBACK_ENTITY,
+  provenance: ColumnProvenance.Feedback,
+  labelKey: ConversationsTraceI18nKey.DetailPanelFeedback,
+};
+
 export const CONVERSATION_DETAIL_PANELS: ConversationPanelDefinition[] = [
   {
     panel: ConversationDetailPanel.Usage,
+    sourceEntity: CONVERSATIONS_ENTITY,
     provenance: ColumnProvenance.Conversations,
     labelKey: ConversationsTraceI18nKey.DetailPanelUsage,
     layout: ConversationPanelLayout.Grid,
@@ -393,6 +468,7 @@ export const CONVERSATION_DETAIL_PANELS: ConversationPanelDefinition[] = [
   },
   {
     panel: ConversationDetailPanel.Metadata,
+    sourceEntity: CONVERSATIONS_ENTITY,
     provenance: ColumnProvenance.Conversations,
     labelKey: ConversationsTraceI18nKey.DetailPanelMetadata,
     layout: ConversationPanelLayout.Rows,
