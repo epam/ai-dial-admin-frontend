@@ -57,9 +57,11 @@ import {
 } from '@/src/constants/grid-columns/formatters';
 import {
   CONVERSATION_FIELD_VALUE_TYPE,
-  CONVERSATION_PROVENANCE_GROUPS,
+  CONVERSATION_TAG_LABEL_KEY,
   FILTERABLE_CONVERSATION_FIELDS,
   OPTIONAL_CURATED_COLUMN_FIELDS,
+  PROVENANCE_HINT_KEY,
+  PROVENANCE_LABEL_KEY,
   SORTABLE_CONVERSATION_FIELDS,
 } from '@/src/constants/analytics/conversations-trace';
 import {
@@ -67,7 +69,16 @@ import {
   formatCompactNumber,
   formatSignificantCost,
 } from '@/src/utils/analytics/conversation-formatting';
-import { ConversationColumn, ConversationsField } from '@/src/models/analytics/conversations-trace';
+import {
+  buildConversationColumnCatalog,
+  conversationColumnGroups,
+} from '@/src/utils/analytics/conversation-column-catalog';
+import {
+  ColumnProvenance,
+  ConversationColumn,
+  ConversationColumnGroup,
+  ConversationsField,
+} from '@/src/models/analytics/conversations-trace';
 import { QueryValueType } from '@/src/models/analytics/query';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
 import { ImageVersion } from '@/src/models/deployments/images';
@@ -783,10 +794,7 @@ const availableCuratedColumns = (columns: ColDef[], schemaFields: AnalyticsEntit
   return columns.filter((column) => !optional.has(column.field as string) || available.has(column.field as string));
 };
 
-export const CONVERSATIONS_TRACE_COLUMNS = (
-  t: (key: string) => string,
-  schemaFields: AnalyticsEntityField[] = [],
-): ColDef[] =>
+const curatedConversationColumns = (t: (key: string) => string, schemaFields: AnalyticsEntityField[]): ColDef[] =>
   restrictSort(
     availableCuratedColumns(BASE_CONVERSATIONS_TRACE_COLUMNS(t), schemaFields),
     SORTABLE_CONVERSATION_FIELDS,
@@ -796,24 +804,65 @@ export const CONVERSATIONS_TRACE_COLUMNS = (
     ...(column.field === ConversationsField.LastRequestTime ? { sort: 'desc' as ColDef['sort'] } : {}),
   }));
 
+// The curated set plus one column per field the fetched schema reports and no curated column already reads,
+// so the count is whatever the instance carries. With no schema in hand the curated columns are all there is:
+// an unfetched schema is not evidence that a field exists, and a column that can never fill is of no use.
+export const CONVERSATIONS_TRACE_COLUMNS = (
+  t: (key: string) => string,
+  schemaFields: AnalyticsEntityField[] = [],
+): ColDef[] => buildConversationColumnCatalog(curatedConversationColumns(t, schemaFields), schemaFields);
+
+// The origin is what a reader needs to interpret an empty cell — a rollup value cannot be missing, an
+// enrichment value is missing until the evaluation reaches it — so it stays legible even where the tag
+// supplies the label.
+const groupOriginLabel = (t: (key: string) => string, { provenance, source }: ConversationColumnGroup): string => {
+  const labelKey = PROVENANCE_LABEL_KEY[provenance];
+  return labelKey ? t(labelKey) : source;
+};
+
+// An enrichment's groups carry their origin in the label itself, not only in their colour: the columns panel
+// prints this same string as each column's caption, and a caption reading "Evaluator run" over a checkbox
+// reading "Model" still leaves whose model it is to guess. The rollup takes no prefix — it is what the grid
+// is a list of.
+const groupHeaderName = (t: (key: string) => string, group: ConversationColumnGroup): string => {
+  const origin = groupOriginLabel(t, group);
+  if (!group.tag) {
+    return origin;
+  }
+
+  const labelKey = CONVERSATION_TAG_LABEL_KEY[group.tag];
+  const tagLabel = labelKey ? t(labelKey) : group.tag;
+
+  return group.provenance === ColumnProvenance.Conversations ? tagLabel : `${origin} · ${tagLabel}`;
+};
+
+// A named origin identifies its source on its own — one origin, one enrichment — so its id needs no more
+// than the pair. `Other` is the catch-all every unnamed enrichment shares, so there the source is what keeps
+// two of them from claiming one id.
+const groupId = ({ provenance, source, tag }: ConversationColumnGroup): string =>
+  [provenance === ColumnProvenance.Other ? `${provenance}:${source}` : provenance, tag].filter(Boolean).join(':');
+
 export const CONVERSATIONS_TRACE_COLUMN_GROUPS = (
   t: (key: string) => string,
   schemaFields: AnalyticsEntityField[] = [],
 ): ColGroupDef[] => {
   const columns = CONVERSATIONS_TRACE_COLUMNS(t, schemaFields);
 
-  return CONVERSATION_PROVENANCE_GROUPS.map(({ provenance, labelKey, tooltipKey, fields }) => ({
-    groupId: provenance,
-    headerName: t(labelKey),
-    headerTooltip: t(tooltipKey),
-    headerGroupComponent: ProvenanceHeaderGroup,
-    headerGroupComponentParams: { label: t(labelKey), provenance },
-    marryChildren: true,
-    // Only what the group claims. A column left out of every group would vanish from the grid, which a unit
-    // test catches — the alternative, sweeping it into the rollup group, is the mis-attribution this change
-    // exists to remove.
-    children: fields.map((field) => columns.find((column) => column.field === field)).filter(Boolean) as ColDef[],
-  }));
+  return conversationColumnGroups(columns, schemaFields).map((group) => {
+    const headerName = groupHeaderName(t, group);
+
+    return {
+      groupId: groupId(group),
+      headerName,
+      // The origin on hover as well as in colour, since a hue alone names nothing.
+      headerTooltip: `${groupOriginLabel(t, group)} · ${t(PROVENANCE_HINT_KEY[group.provenance])}`,
+      headerGroupComponent: ProvenanceHeaderGroup,
+      headerGroupComponentParams: { label: headerName, provenance: group.provenance },
+      marryChildren: true,
+      // Built from the columns themselves, so no column can be left out of every group and vanish.
+      children: group.fields.map((field) => columns.find((column) => column.field === field)) as ColDef[],
+    };
+  });
 };
 
 export const PROJECT_GRID_COLUMNS = (t: (key: string) => string): ColDef[] =>

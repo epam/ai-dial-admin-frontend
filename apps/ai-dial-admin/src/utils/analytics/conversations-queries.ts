@@ -130,15 +130,23 @@ interface ConversationListQueryParams extends ConversationFilterParams {
   offset: number;
   limit: number;
   sort?: ConversationSortKey[];
-  // Split by what projecting a field costs, not by whether its column is on screen: a source field is a
-  // plain column of the table already being read, so it is always projected and revealing its column costs
-  // nothing. An enrichment field pulls its enrichment's join into every page, so it is projected only while
-  // its column is visible.
+  // Split by what projecting a field costs, not by whether its column is on screen: the caller sends every
+  // cheap source column, plus whichever gated ones — heavy or enrichment — its columns currently show.
   sourceFields?: string[];
   visibleEnrichmentFields?: string[];
 }
 
-const CURATED_SELECT_FIELDS: ConversationsField[] = [
+// Read outside any cell renderer — the grid keys its rows by it, a row click navigates by it, and the loaded
+// set is mapped by it — so a row is unusable without it whatever the column state. Every other field a
+// column reads is renderer-scoped and therefore reaches the query through the cost buckets instead. Sorting
+// and filtering need nothing here: both are resolved server-side by field name, not from the projected row.
+const IDENTITY_SELECT_FIELDS: ConversationsField[] = [ConversationsField.ChatId];
+
+// Named only when the caller has no schema to classify from — the base rollup columns, which is what the
+// curated columns still render in that state. With a schema in hand every one of these arrives through
+// `sourceFields`, costed like any other field: that is the point of not keeping them exempt, since the day
+// the service marks one `heavy` the gating applies with no carve-out list here to re-audit.
+const SCHEMALESS_SELECT_FIELDS: ConversationsField[] = [
   ConversationsField.ChatId,
   ConversationsField.ProjectId,
   ConversationsField.UserHash,
@@ -147,7 +155,6 @@ const CURATED_SELECT_FIELDS: ConversationsField[] = [
   ConversationsField.TotalPrice,
   ConversationsField.LastRequestTime,
   ConversationsField.FirstRequestTime,
-  ConversationsField.DurationMs,
   ConversationsField.Deployments,
 ];
 
@@ -155,12 +162,10 @@ const CURATED_SELECT_FIELDS: ConversationsField[] = [
 // instance does not carry never reaches here. Only the single-conversation query, which enumerates a
 // frontend enum rather than the schema, has to intersect for itself.
 const conversationSelect = (sourceFields: string[] = [], visibleEnrichmentFields: string[] = []): string[] => {
-  const curated = new Set<string>(CURATED_SELECT_FIELDS);
-  return [
-    ...CURATED_SELECT_FIELDS,
-    ...sourceFields.filter((fieldName) => !curated.has(fieldName)),
-    ...visibleEnrichmentFields,
-  ];
+  const core = sourceFields.length ? IDENTITY_SELECT_FIELDS : SCHEMALESS_SELECT_FIELDS;
+  const named = new Set<string>(core);
+
+  return [...core, ...sourceFields.filter((fieldName) => !named.has(fieldName)), ...visibleEnrichmentFields];
 };
 
 // No `include_total`: the totals query resolves the same count under the same filter, and the service runs

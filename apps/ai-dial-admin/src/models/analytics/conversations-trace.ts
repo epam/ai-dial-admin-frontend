@@ -9,12 +9,16 @@ export enum ColumnProvenance {
   Conversations = 'conversations',
   Insights = 'insights',
   Feedback = 'feedback',
+  // An enrichment this frontend knows no name for. The entity's enrichments are provisioned per instance,
+  // so one can appear that no release anticipated; its columns are still offered, attributed to it by the
+  // namespace its own field names carry.
+  Other = 'other',
 }
 
 // A panel's source is a catalog identifier, and an identifier names the entity the page queried — never an
-// enrichment, whose columns the service exposes through the entity it decorates. So the insights origin,
-// which exists to label where a *value* came from, is not a source a panel can claim.
-export type PanelProvenance = Exclude<ColumnProvenance, ColumnProvenance.Insights>;
+// enrichment, whose columns the service exposes through the entity it decorates. So neither origin that
+// exists to label where a *value* came from is a source a panel can claim.
+export type PanelProvenance = Exclude<ColumnProvenance, ColumnProvenance.Insights | ColumnProvenance.Other>;
 
 export type ConversationScalar = number | string | boolean | null;
 
@@ -130,12 +134,16 @@ export interface ConversationCandidateIds {
   isCapped: boolean;
 }
 
-// Offered fields split by what projecting one costs. A source-backed field is a plain column of the table
-// the list query already reads; an enrichment-backed one is supplied by a joined enrichment, so naming it
-// adds that join to every page.
+// Offered fields split by what projecting one costs, which is not the same question as whether its column
+// is on screen. Measured over 6 328 conversations, twenty ordinary columns instead of two cost 1.6 MiB and
+// 2 ms — so gating them would only buy a re-fetch on every reveal. The one field the service marks heavy
+// cost 2.7× the other ten together, so it is worth the re-fetch.
 export interface ConversationProjectableFields {
-  sourceBacked: string[];
-  enrichmentBacked: string[];
+  cheapSource: string[];
+  // Also plain columns, but marked heavy by the service, so projected only while their columns show.
+  heavySource: string[];
+  // Supplied by a joined enrichment, so naming one adds that join to every page. Projected on visibility.
+  enrichment: string[];
   // Enrichment-backed and projected unconditionally — the identity column reads these and cannot be hidden.
   requiredEnrichment: string[];
 }
@@ -193,11 +201,18 @@ export enum FeedbackField {
 
 export type ConversationColumnId = ConversationsField | ConversationColumn;
 
-export interface ProvenanceGroup {
+// One rendered column group, keyed on the pair of a column's origin and the tag the schema gives its field.
+// The pair rather than the tag alone: a rollup field and an enrichment field can carry the same tag, and one
+// group holding both would attribute an enrichment value to the rollup — which is the mis-attribution the
+// grouping exists to prevent, since the two produce different kinds of empty cell.
+export interface ConversationColumnGroup {
   provenance: ColumnProvenance;
-  labelKey: string;
-  tooltipKey: string;
-  fields: ConversationColumnId[];
+  // The enrichment supplying these fields, empty for the rollup; names a group this frontend cannot label.
+  source: string;
+  // Empty where the schema reports no tag for the field — including every column when the schema could not
+  // be fetched at all, which is what collapses the groups back to one per origin.
+  tag: string;
+  fields: string[];
 }
 
 export interface ConversationDetailRow {

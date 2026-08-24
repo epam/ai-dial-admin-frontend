@@ -82,6 +82,24 @@ describe('buildConversationListQuery :: shape', () => {
     expect(JSON.stringify(query.select)).not.toContain(QueryExprType.Fn);
   });
 
+  // With a schema in hand only row identity is unconditional: every other field a column reads arrives
+  // classified by cost, so a curated field the service later marks heavy is gated like any other.
+  test('names only row identity unconditionally once the caller has classified fields', () => {
+    const names = selectNames(buildList({ sourceFields: ['project_id', 'total_price'] }));
+
+    expect(names).toEqual([ConversationsField.ChatId, 'project_id', 'total_price']);
+    expect(names).not.toContain(ConversationsField.TurnCount);
+    expect(names).not.toContain(ConversationsField.Deployments);
+  });
+
+  test('does not name row identity twice when the caller also classifies it', () => {
+    const names = selectNames(buildList({ sourceFields: [ConversationsField.ChatId, 'total_price'] }));
+
+    expect(names.filter((name) => name === ConversationsField.ChatId)).toHaveLength(1);
+  });
+
+  // Without a schema there are no buckets to classify from, and the curated columns still render — so the
+  // base rollup columns are named rather than left to show empty cells.
   test('selects exactly the fields the grid renders, by their entity names', () => {
     const names = selectNames(buildList());
 
@@ -94,7 +112,6 @@ describe('buildConversationListQuery :: shape', () => {
       ConversationsField.TotalPrice,
       ConversationsField.LastRequestTime,
       ConversationsField.FirstRequestTime,
-      ConversationsField.DurationMs,
       ConversationsField.Deployments,
     ]);
   });
@@ -142,8 +159,6 @@ describe('buildConversationListQuery :: shape', () => {
     ).toThrow(ConversationsField.Deployments);
   });
 
-  // A source field is a plain column of the table already being read, so projecting it costs one more
-  // column rather than a re-fetch when its column is revealed.
   test('projects a source-backed field alongside the curated ones, hidden or not', () => {
     const names = selectNames(buildList({ sourceFields: ['success_count'] }));
 
