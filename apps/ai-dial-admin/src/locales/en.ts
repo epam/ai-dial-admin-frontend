@@ -2273,7 +2273,6 @@ export default {
     RunCompareDisplay: 'Display',
     OnlyMatchingTestCases: 'Only matching test cases',
     RunCompareMatchedScoresLoadFailed: 'Failed to load matched-only comparison metrics',
-    RunCompareViewRowDetails: 'View row details',
     RunCompareRows: 'Rows',
     RunCompareTable: 'Table',
     RunComparePivot: 'Pivot',

@@ -378,24 +378,33 @@ describe('ExecutionResultsTab', () => {
     });
   });
 
-  test('calls onOpenRowDetail when eye button is clicked', async () => {
+  test('calls onOpenRowDetail when a row is clicked', async () => {
     const onOpenRowDetail = vi.fn();
 
     renderExecutionResultsTab({ onOpenRowDetail });
 
-    let eyeButton: HTMLButtonElement | null = null;
     await waitFor(() => {
-      eyeButton = document.querySelector('.ag-pinned-right-cols-container [col-id="compare_action"] button');
-      expect(eyeButton).toBeTruthy();
+      expect(screen.queryByLabelText('loading-40')).not.toBeInTheDocument();
     });
 
-    fireEvent.click(eyeButton!);
+    expect(document.querySelector('[col-id="compare_action"]')).not.toBeInTheDocument();
 
-    expect(onOpenRowDetail).toHaveBeenCalledWith(
-      expect.objectContaining({
-        id: 'result-1',
-        testCaseName: 'Test Case 1',
-      }),
-    );
+    let row: HTMLElement | null = null;
+    await waitFor(() => {
+      row = document.querySelector('.ag-center-cols-container .ag-row');
+      expect(row).toBeTruthy();
+      expect(row?.textContent).toContain('Test Case 1');
+    });
+
+    fireEvent.click(row!);
+
+    await waitFor(() => {
+      expect(onOpenRowDetail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'result-1',
+          testCaseName: 'Test Case 1',
+        }),
+      );
+    });
   });
 });
