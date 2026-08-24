@@ -106,7 +106,7 @@ const ApplicationRunnersView: FC<Props> = ({ etag, originalScheme, names, ...pro
   }, [selectedRunner]);
 
   useEffect(() => {
-    const name = originalScheme?.$id;
+    const name = encodeURIComponent(originalScheme?.$id || '');
     if (!coreRunner && name) {
       getReqRef.current(getCoreRunner, name).then((data) => {
         setCoreRunner(data.response);

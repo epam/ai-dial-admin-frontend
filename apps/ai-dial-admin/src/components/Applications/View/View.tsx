@@ -93,7 +93,7 @@ const ApplicationView: FC<Props> = ({ etag, originalApplication, ...props }) => 
   }, [originalApplication.mcp?.endpoint]);
 
   useEffect(() => {
-    const name = originalApplication?.name;
+    const name = encodeURIComponent(originalApplication?.name || '');
     if (!coreApplication && name) {
       getReqRef.current(getCoreApplication, name).then((data) => {
         setCoreApplication(data.response);
