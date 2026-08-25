@@ -159,6 +159,23 @@ describe('MENU_CONFIGURATION — Assets group', () => {
 
     expect(interceptorsItem).toBeDefined();
   });
+
+  test('Routes follows Interceptors', () => {
+    const group = findAssetsGroup(baseFlags);
+    const keys = group?.items.map((item) => item.key) || [];
+    const interceptorsIndex = keys.indexOf(MenuI18nKey.AssetsInterceptors);
+
+    expect(keys[interceptorsIndex + 1]).toBe(MenuI18nKey.AssetsRoutes);
+  });
+
+  test('Routes links to the assets-routes route', () => {
+    const group = findAssetsGroup(baseFlags);
+    const routesItem = group?.items.find(
+      (item) => item.key === MenuI18nKey.AssetsRoutes && item.href === ApplicationRoute.AssetsRoutes,
+    );
+
+    expect(routesItem).toBeDefined();
+  });
 });
 
 describe('MENU_CONFIGURATION — Analytics group', () => {

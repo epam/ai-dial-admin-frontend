@@ -5,6 +5,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import { isAssetView } from '@/src/utils/is-view';
 import AppRunnerCreateProperties from '@/src/components/Assets/AppRunners/CreateProperties';
+import RouteCreateProperties from '@/src/components/Assets/Routes/CreateProperties';
 import SkillCreateProperties from '@/src/components/Assets/Skills/CreateProperties';
 import { DialAppRunnerResource } from '@/src/models/dial/resource';
 import AssetProperties from './AssetProperties';
@@ -51,6 +52,20 @@ const Properties = <T extends object>({
       <SkillCreateProperties
         entity={entity as { name?: string; description?: string }}
         names={props.names}
+        onChangeEntity={props.onChangeEntity}
+      />
+    );
+  }
+
+  // Ahead of `isSimpleEntity` for the same reason as App Runner above: the generic `EntityProperties`
+  // form always renders a display-name field and seeds a `description`, neither of which exists on
+  // `Route` (see `RouteCreateProperties`'s doc comment).
+  if (view === ApplicationRoute.AssetsRoutes) {
+    return (
+      <RouteCreateProperties
+        entity={entity as { name?: string }}
+        names={props.names}
+        isUniqueNameError={isUniqueNameError}
         onChangeEntity={props.onChangeEntity}
       />
     );

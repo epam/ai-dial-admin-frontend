@@ -109,6 +109,10 @@ export const getDeleteModalTitle = (
       return t(FileManagerI18nKey.DeleteItemsModalTitle, {
         items: itemsCount > 1 ? t(FileManagerI18nKey.Interceptors) : t(FileManagerI18nKey.Interceptor),
       });
+    case ApplicationRoute.AssetsRoutes:
+      return t(FileManagerI18nKey.DeleteItemsModalTitle, {
+        items: itemsCount > 1 ? t(FileManagerI18nKey.Routes) : t(FileManagerI18nKey.Route),
+      });
     case ApplicationRoute.AssetsSkills:
       return t(FileManagerI18nKey.DeleteItemsModalTitle, {
         items: itemsCount > 1 ? t(FileManagerI18nKey.Skills) : t(FileManagerI18nKey.Skill),
@@ -180,6 +184,10 @@ export const getDeleteModalDescription = (
     case ApplicationRoute.AssetsInterceptors:
       return t(FileManagerI18nKey.DeleteItemsModalDescription, {
         items: (itemsCount > 1 ? t(FileManagerI18nKey.Interceptors) : t(FileManagerI18nKey.Interceptor)).toLowerCase(),
+      });
+    case ApplicationRoute.AssetsRoutes:
+      return t(FileManagerI18nKey.DeleteItemsModalDescription, {
+        items: (itemsCount > 1 ? t(FileManagerI18nKey.Routes) : t(FileManagerI18nKey.Route)).toLowerCase(),
       });
     case ApplicationRoute.AssetsSkills:
       return hasFoldersToDelete

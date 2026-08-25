@@ -3,13 +3,15 @@ import { describe, expect, test } from 'vitest';
 import { getRootFolder, isFlatPlatformView, PLATFORM_ROOT_FOLDER } from '../root-folder';
 
 describe('Root Folder Utils :: getRootFolder', () => {
-  test.each([ApplicationRoute.AssetsModels, ApplicationRoute.AssetsAppRunners, ApplicationRoute.AssetsInterceptors])(
-    'Should return "platform" for %s view',
-    (view) => {
-      expect(getRootFolder(view)).toEqual('platform');
-      expect(getRootFolder(view)).toEqual(PLATFORM_ROOT_FOLDER);
-    },
-  );
+  test.each([
+    ApplicationRoute.AssetsModels,
+    ApplicationRoute.AssetsAppRunners,
+    ApplicationRoute.AssetsInterceptors,
+    ApplicationRoute.AssetsRoutes,
+  ])('Should return "platform" for %s view', (view) => {
+    expect(getRootFolder(view)).toEqual('platform');
+    expect(getRootFolder(view)).toEqual(PLATFORM_ROOT_FOLDER);
+  });
 
   test.each([
     ApplicationRoute.AssetsApplications,
@@ -23,12 +25,14 @@ describe('Root Folder Utils :: getRootFolder', () => {
 });
 
 describe('Root Folder Utils :: isFlatPlatformView', () => {
-  test.each([ApplicationRoute.AssetsModels, ApplicationRoute.AssetsAppRunners, ApplicationRoute.AssetsInterceptors])(
-    'Should treat %s as flat, since Core stores it in one fixed bucket with no folder concept',
-    (view) => {
-      expect(isFlatPlatformView(view)).toBe(true);
-    },
-  );
+  test.each([
+    ApplicationRoute.AssetsModels,
+    ApplicationRoute.AssetsAppRunners,
+    ApplicationRoute.AssetsInterceptors,
+    ApplicationRoute.AssetsRoutes,
+  ])('Should treat %s as flat, since Core stores it in one fixed bucket with no folder concept', (view) => {
+    expect(isFlatPlatformView(view)).toBe(true);
+  });
 
   test.each([
     ApplicationRoute.AssetsApplications,
