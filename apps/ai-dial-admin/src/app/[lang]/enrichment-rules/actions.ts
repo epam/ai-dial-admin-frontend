@@ -4,7 +4,7 @@ import { cookies, headers } from 'next/headers';
 
 import { analyticsDataApi } from '@/src/app/api/api';
 import { Evaluator, EvaluatorSummary } from '@/src/models/analytics/evaluator';
-import { CreateRuleDto, EnrichmentRuleListItem, RulesListFilters } from '@/src/models/analytics/rule';
+import { CreateRuleDto, EnrichmentRule, EnrichmentRuleListItem, RulesListFilters } from '@/src/models/analytics/rule';
 import { AnalyticsTable } from '@/src/models/analytics/table';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -18,8 +18,16 @@ export async function getRules(filters?: RulesListFilters): Promise<EnrichmentRu
   return rules?.map(toRuleListItem) ?? null;
 }
 
+export async function getRule(id: string): Promise<EnrichmentRule | null> {
+  return analyticsDataApi.getRule(id, await token());
+}
+
 export async function createRule(dto: CreateRuleDto): Promise<ServerActionResponse> {
   return analyticsDataApi.createRule(dto, await token());
+}
+
+export async function updateRule(id: string, dto: CreateRuleDto): Promise<ServerActionResponse> {
+  return analyticsDataApi.updateRule(id, dto, await token());
 }
 
 export async function deleteRule(id: string): Promise<ServerActionResponse> {
