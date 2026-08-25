@@ -180,6 +180,19 @@ describe('Entity list view :: getEntityPath', () => {
     const result = getEntityPath(ApplicationRoute.AssetsModels, { name: 'example-from-admin' }, true);
     expect(result).toEqual('example-from-admin');
   });
+
+  test('Should derive path from name for AssetsRoutes when path is missing (newly created route)', () => {
+    const result = getEntityPath(ApplicationRoute.AssetsRoutes, { name: 'my-route' });
+    expect(result).toEqual('my-route?path=my-route');
+  });
+
+  test('Should use provided path for AssetsRoutes when browsing an existing route', () => {
+    const result = getEntityPath(ApplicationRoute.AssetsRoutes, {
+      name: 'my-route',
+      path: 'platform/my-route',
+    });
+    expect(result).toEqual('my-route?path=platform%2Fmy-route');
+  });
 });
 
 describe('onOpenInNewTab', () => {

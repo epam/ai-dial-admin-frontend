@@ -208,6 +208,10 @@ describe('Entities :: tabs', () => {
     expect(getTabsForAsset(t, ApplicationRoute.AssetsInterceptors)).toEqual([propertiesTab(t), parameterSchemaTab(t)]);
   });
 
+  test('returns only the Properties tab for AssetsRoutes — Route has no features or configuration endpoint', () => {
+    expect(getTabsForAsset(t, ApplicationRoute.AssetsRoutes)).toEqual([propertiesTab(t)]);
+  });
+
   test('returns correct tabs for key', () => {
     expect(getKeyTabs(t)).toEqual([propertiesTab(t), rolesTab(t), auditTab(t)]);
   });

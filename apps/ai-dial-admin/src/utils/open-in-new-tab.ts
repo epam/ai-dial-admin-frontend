@@ -50,7 +50,8 @@ export const getEntityPath = (
 
     case ApplicationRoute.AssetsModels:
     case ApplicationRoute.AssetsAppRunners:
-    case ApplicationRoute.AssetsInterceptors: {
+    case ApplicationRoute.AssetsInterceptors:
+    case ApplicationRoute.AssetsRoutes: {
       // Straight after create there is no listing row yet, so no `name`/`path` — only the `$id` the
       // form collected. The Core resource name is the singly-encoded `$id`, which is what `path` holds
       // on a listing row, so deriving it here makes both entry points agree.

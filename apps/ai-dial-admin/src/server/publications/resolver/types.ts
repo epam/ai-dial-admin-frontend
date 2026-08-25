@@ -30,7 +30,7 @@ export type PublicationAssetKey =
  */
 export type PublishableResourceType = Exclude<
   ResourceType,
-  ResourceType.MODEL | ResourceType.APP_TYPE_SCHEMA | ResourceType.INTERCEPTOR | ResourceType.ROLE
+  ResourceType.MODEL | ResourceType.APP_TYPE_SCHEMA | ResourceType.INTERCEPTOR | ResourceType.ROLE | ResourceType.ROUTE
 >;
 
 export interface PublicationTypeConfig {
