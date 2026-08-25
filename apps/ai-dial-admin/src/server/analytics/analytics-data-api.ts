@@ -14,6 +14,8 @@ import {
   SavedQueryRequest,
   SavedQueryScope,
 } from '@/src/models/analytics/saved-query';
+import { Evaluator, EvaluatorSummary } from '@/src/models/analytics/evaluator';
+import { CreateRuleDto, EnrichmentRule, RuleEnabledFilter, RulesListFilters } from '@/src/models/analytics/rule';
 import {
   AnalyticsSchemaPatch,
   AnalyticsTable,
@@ -40,6 +42,34 @@ export const SAVED_QUERIES_URL = 'v1/saved-queries';
 export const SAVED_QUERY_URL = (id: string): string => `${SAVED_QUERIES_URL}/${encodeURIComponent(id)}`;
 export const SAVED_QUERIES_SCOPE_URL = (scope: SavedQueryScope): string =>
   `${SAVED_QUERIES_URL}?scope=${encodeURIComponent(scope)}`;
+
+// The service has shipped two envelopes for its list endpoints — a bare array and a `{key: [...]}`
+// wrapper — and which one answers depends on the deployed build. Accepting both keeps the client
+// working against either rather than reading the unexpected shape as a failure.
+const unwrapList = <T>(res: unknown, key: string): T[] | null => {
+  if (Array.isArray(res)) return res as T[];
+  const wrapped = (res as Record<string, unknown> | null)?.[key];
+  return Array.isArray(wrapped) ? (wrapped as T[]) : null;
+};
+
+export const RULES_URL = 'v1/rules';
+export const RULE_URL = (id: string): string => `${RULES_URL}/${encodeURIComponent(id)}`;
+
+export const RULES_LIST_URL = (filters?: RulesListFilters): string => {
+  const params = new URLSearchParams();
+
+  if (filters?.enabled === RuleEnabledFilter.Enabled) params.set('enabled', 'true');
+  if (filters?.enabled === RuleEnabledFilter.Disabled) params.set('enabled', 'false');
+  if (filters?.updatedSince) params.set('updated_since', filters.updatedSince);
+
+  const query = params.toString();
+  return query ? `${RULES_URL}?${query}` : RULES_URL;
+};
+
+export const EVALUATORS_URL = 'v1/evaluators';
+export const EVALUATOR_URL = (name: string): string => `${EVALUATORS_URL}/${encodeURIComponent(name)}`;
+export const EVALUATOR_VERSION_URL = (name: string, version: number): string =>
+  `${EVALUATOR_URL(name)}/versions/${encodeURIComponent(String(version))}`;
 
 export const TABLES_URL = 'v1/tables';
 export const TABLE_URL = (name: string): string => `${TABLES_URL}/${encodeURIComponent(name)}`;
@@ -157,5 +187,39 @@ export class AnalyticsDataApi extends BaseApi {
   // Full-replace of the table's role lists (admin-only).
   replaceTableAccess(name: string, access: TableAccess, token: Token): Promise<ServerActionResponse> {
     return this.putAction<TableAccess>(TABLE_ACCESS_URL(name), access, token);
+  }
+
+  async getRules(filters: RulesListFilters | undefined, token: Token): Promise<EnrichmentRule[] | null> {
+    const res = await this.get<object>(RULES_LIST_URL(filters), token);
+    return unwrapList<EnrichmentRule>(res, 'items');
+  }
+
+  getRule(id: string, token: Token): Promise<EnrichmentRule | null> {
+    return this.get<EnrichmentRule>(RULE_URL(id), token);
+  }
+
+  createRule(dto: CreateRuleDto, token: Token): Promise<ServerActionResponse> {
+    return this.postAction<CreateRuleDto>(RULES_URL, dto, token);
+  }
+
+  updateRule(id: string, dto: CreateRuleDto, token: Token): Promise<ServerActionResponse> {
+    return this.putAction<CreateRuleDto>(RULE_URL(id), dto, token);
+  }
+
+  deleteRule(id: string, token: Token): Promise<ServerActionResponse> {
+    return this.deleteAction(RULE_URL(id), token);
+  }
+
+  async getEvaluators(token: Token): Promise<EvaluatorSummary[] | null> {
+    const res = await this.get<object>(EVALUATORS_URL, token);
+    return unwrapList<EvaluatorSummary>(res, 'items');
+  }
+
+  getEvaluator(name: string, token: Token): Promise<Evaluator | null> {
+    return this.get<Evaluator>(EVALUATOR_URL(name), token);
+  }
+
+  getEvaluatorVersion(name: string, version: number, token: Token): Promise<Evaluator | null> {
+    return this.get<Evaluator>(EVALUATOR_VERSION_URL(name, version), token);
   }
 }
