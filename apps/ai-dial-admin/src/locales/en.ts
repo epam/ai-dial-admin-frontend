@@ -1886,6 +1886,8 @@ export default {
     ConflictStrategyOverride: 'Override',
     ConflictStrategyOverrideDesc: 'Replace existing row with incoming row (last wins).',
     NoInformationToPreview: 'No information to preview',
+    ConfigureEndpointFirst: 'No endpoint configured',
+    ConfigureEndpointFirstDescription: 'Click Change method to set up the endpoint first.',
     AddMetric: 'Add metric',
     EditMetric: 'Edit metric',
     Metric: 'Metric',

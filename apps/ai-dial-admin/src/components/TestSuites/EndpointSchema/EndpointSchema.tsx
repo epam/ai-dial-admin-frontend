@@ -2,7 +2,7 @@
 
 import { Dispatch, FC, SetStateAction, useCallback, useState } from 'react';
 
-import { DialSelect, DialTabs, SelectOption, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
+import { DialNoDataContent, DialSelect, DialTabs, SelectOption, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
 import { JSONSchema7 } from 'json-schema';
 
 import SchemaGrid from '@/src/components/Common/SchemaGrid/SchemaGrid';
@@ -75,11 +75,13 @@ const EndpointSchema: FC<Props> = ({ testSuite, onChangeTestSuite, isSkipRefresh
     [testSuite, onChangeTestSuite],
   );
 
+  const isEndpointConfigured = !!testSuite.endpointRef?.method && !!testSuite.endpointRef?.relativeUrlPattern;
+
   return (
     <div className="flex flex-col size-full gap-2 border border-primary rounded p-4">
       <div className="flex flex-row justify-between items-start mb-3">
         <h3>{t(TestSuitesI18nKey.EndpointSchema)}</h3>
-        {activeSchemaTab !== EntityViewTab.Columns && (
+        {isEndpointConfigured && activeSchemaTab !== EntityViewTab.Columns && (
           <DialSelect
             prefix={`${t(CompareI18nKey.View)}: `}
             size={SelectSize.Sm}
@@ -91,32 +93,43 @@ const EndpointSchema: FC<Props> = ({ testSuite, onChangeTestSuite, isSkipRefresh
         )}
       </div>
 
-      <div className="flex flex-row justify-between items-start mb-3">
-        <DialTabs tabs={tabs} activeTab={activeSchemaTab} onClick={onChangeSchemaTab} />
-      </div>
+      {isEndpointConfigured ? (
+        <>
+          <div className="flex flex-row justify-between items-start mb-3">
+            <DialTabs tabs={tabs} activeTab={activeSchemaTab} onClick={onChangeSchemaTab} />
+          </div>
 
-      {activeSchemaTab !== EntityViewTab.Columns ? (
-        isJsonView ? (
-          <div className="w-full h-[350px]">
-            <JsonEditor
-              entity={currentSchema as object}
-              options={{ stickyScroll: { enabled: false } }}
-              setSelectedEntity={onChangeSchema as Dispatch<SetStateAction<JSONSchema7>>}
+          {activeSchemaTab !== EntityViewTab.Columns ? (
+            isJsonView ? (
+              <div className="w-full h-[350px]">
+                <JsonEditor
+                  entity={currentSchema as object}
+                  options={{ stickyScroll: { enabled: false } }}
+                  setSelectedEntity={onChangeSchema as Dispatch<SetStateAction<JSONSchema7>>}
+                />
+              </div>
+            ) : (
+              <div className="h-[500px]">
+                <SchemaGrid schema={currentSchema} onChange={onChangeSchema} isSkipRefresh={isSkipRefresh} />
+              </div>
+            )
+          ) : (
+            <Columns
+              responseColumns={testSuite.responseColumns || []}
+              onChangeResponseColumns={onChangeResponseColumns}
+              responseSchema={(testSuite.endpointRef?.responseBodySchema || {}) as JSONSchema7}
+              isSkipRefresh={isSkipRefresh}
+              jsonataVariables={jsonataVariables}
             />
-          </div>
-        ) : (
-          <div className="h-[500px]">
-            <SchemaGrid schema={currentSchema} onChange={onChangeSchema} isSkipRefresh={isSkipRefresh} />
-          </div>
-        )
+          )}
+        </>
       ) : (
-        <Columns
-          responseColumns={testSuite.responseColumns || []}
-          onChangeResponseColumns={onChangeResponseColumns}
-          responseSchema={(testSuite.endpointRef?.responseBodySchema || {}) as JSONSchema7}
-          isSkipRefresh={isSkipRefresh}
-          jsonataVariables={jsonataVariables}
-        />
+        <div className="flex-1 min-h-[350px] flex items-center justify-center">
+          <DialNoDataContent
+            title={t(TestSuitesI18nKey.ConfigureEndpointFirst)}
+            description={t(TestSuitesI18nKey.ConfigureEndpointFirstDescription)}
+          />
+        </div>
       )}
     </div>
   );

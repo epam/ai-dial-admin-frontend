@@ -1841,6 +1841,8 @@ export enum TestSuitesI18nKey {
   ImportStepFile = 'TestSuites.ImportStepFile',
   ImportStepOptions = 'TestSuites.ImportStepOptions',
   NoInformationToPreview = 'TestSuites.NoInformationToPreview',
+  ConfigureEndpointFirst = 'TestSuites.ConfigureEndpointFirst',
+  ConfigureEndpointFirstDescription = 'TestSuites.ConfigureEndpointFirstDescription',
   AddMetric = 'TestSuites.AddMetric',
   EditMetric = 'TestSuites.EditMetric',
   Metric = 'TestSuites.Metric',
