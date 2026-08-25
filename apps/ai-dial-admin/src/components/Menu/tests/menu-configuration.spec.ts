@@ -148,18 +148,20 @@ describe('MENU_CONFIGURATION — Analytics group', () => {
   const findAnalyticsGroup = (flags: FeatureFlags) =>
     MENU_CONFIGURATION(ICON_SIZE, flags).find((group) => group.key === MenuI18nKey.Analytics);
 
-  test('shows the Analytics group with Query Builder + Tables + Conversations when the flag is enabled', () => {
+  test('shows the Analytics group with Tables + Enrichment rules + Queries + Conversations when the flag is enabled', () => {
     const group = findAnalyticsGroup({ ...baseFlags, analyticsEnabled: true });
 
     expect(group).toBeDefined();
     expect(group?.isPreview).toBe(true);
     expect(group?.items.map((item) => item.key)).toEqual([
       MenuI18nKey.Tables,
+      MenuI18nKey.EnrichmentRules,
       MenuI18nKey.Queries,
       MenuI18nKey.AnalyticsConversations,
     ]);
     expect(group?.items.map((item) => item.href)).toEqual([
       ApplicationRoute.AnalyticsTables,
+      ApplicationRoute.AnalyticsEnrichmentRules,
       ApplicationRoute.AnalyticsQueries,
       ApplicationRoute.ConversationsTrace,
     ]);

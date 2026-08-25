@@ -2,6 +2,8 @@ import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryMode, StructuredQuery } from '@/src/models/analytics/query';
 import { QueryResultView } from '@/src/models/analytics/query-builder';
 import { SavedQuery, SavedQueryRequest, SavedQueryScope } from '@/src/models/analytics/saved-query';
+import { EvaluatorType } from '@/src/models/analytics/evaluator';
+import { CreateRuleDto, RuleEnabledFilter, TriggerKind } from '@/src/models/analytics/rule';
 import { AnalyticsTableType, CreateTableDto } from '@/src/models/analytics/table';
 import { TEST_URL, TOKEN_MOCK } from '@/src/utils/tests/mock/api.mock';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -415,5 +417,194 @@ describe('Server :: AnalyticsDataApi — saved queries', () => {
       expect.stringContaining('/v1/saved-queries/sq_1'),
       expect.objectContaining({ method: 'DELETE' }),
     );
+  });
+  describe('rules', () => {
+    const rule = {
+      id: 'r_1',
+      name: 'turn-feedback-live',
+      evaluator_name: 'feedback-rollup',
+      evaluator_version: 2,
+      evaluator: { name: 'feedback-rollup', version: 2, type: EvaluatorType.Sql },
+      target_enrichment: 'turn_feedback',
+      source: 'response_ratings',
+      grain_key: 'response_id',
+      trigger_kind: TriggerKind.OnIngest,
+      enabled: true,
+      generation: 5,
+      created_at: '2026-08-20T14:39:05Z',
+      updated_at: '2026-08-21T09:37:29Z',
+    };
+
+    const createDto: CreateRuleDto = {
+      name: 'new-rule',
+      evaluator_name: 'feedback-rollup',
+      target_enrichment: 'turn_feedback',
+      trigger_kind: TriggerKind.OnIngest,
+      enabled: false,
+    };
+
+    test('getRules unwraps the {items} envelope, not {tables}', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ items: [rule] }), JSON_HEADERS);
+
+      const res = await instance.getRules(undefined, TOKEN_MOCK);
+
+      expect(res).toEqual([rule]);
+    });
+
+    test('getRules returns null when neither shape is present', async () => {
+      fetch.mockResponseOnce(JSON.stringify({}), JSON_HEADERS);
+
+      expect(await instance.getRules(undefined, TOKEN_MOCK)).toBeNull();
+    });
+
+    // Deployed builds disagree: some answer a bare array, some the wrapper.
+    test('getRules accepts a bare array as well as the wrapper', async () => {
+      fetch.mockResponseOnce(JSON.stringify([rule]), JSON_HEADERS);
+
+      expect(await instance.getRules(undefined, TOKEN_MOCK)).toEqual([rule]);
+    });
+
+    test('getRules reads an empty bare array as no rules rather than a failure', async () => {
+      fetch.mockResponseOnce(JSON.stringify([]), JSON_HEADERS);
+
+      expect(await instance.getRules(undefined, TOKEN_MOCK)).toEqual([]);
+    });
+
+    test('getRules omits enabled entirely when no preference is expressed', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ items: [] }), JSON_HEADERS);
+
+      await instance.getRules({ enabled: RuleEnabledFilter.All }, TOKEN_MOCK);
+
+      const url = fetch.mock.calls[0][0] as string;
+      expect(url).not.toContain('enabled');
+      expect(url).not.toContain('?');
+    });
+
+    test('getRules sends enabled=true for the enabled-only filter', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ items: [] }), JSON_HEADERS);
+
+      await instance.getRules({ enabled: RuleEnabledFilter.Enabled }, TOKEN_MOCK);
+
+      expect(fetch.mock.calls[0][0] as string).toContain('enabled=true');
+    });
+
+    test('getRules sends enabled=false for the disabled-only filter', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ items: [] }), JSON_HEADERS);
+
+      await instance.getRules({ enabled: RuleEnabledFilter.Disabled }, TOKEN_MOCK);
+
+      expect(fetch.mock.calls[0][0] as string).toContain('enabled=false');
+    });
+
+    test('getRules combines both filters rather than one replacing the other', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ items: [] }), JSON_HEADERS);
+
+      await instance.getRules({ enabled: RuleEnabledFilter.Enabled, updatedSince: '2026-08-01T00:00:00Z' }, TOKEN_MOCK);
+
+      const url = fetch.mock.calls[0][0] as string;
+      expect(url).toContain('enabled=true');
+      expect(url).toContain('updated_since=2026-08-01T00%3A00%3A00Z');
+    });
+
+    test('getRules sends updated_since alone when enabled is unfiltered', async () => {
+      fetch.mockResponseOnce(JSON.stringify({ items: [] }), JSON_HEADERS);
+
+      await instance.getRules({ enabled: RuleEnabledFilter.All, updatedSince: '2026-08-01T00:00:00Z' }, TOKEN_MOCK);
+
+      const url = fetch.mock.calls[0][0] as string;
+      expect(url).toContain('updated_since=');
+      expect(url).not.toContain('enabled');
+    });
+
+    test('getRule issues GET on the encoded rule URL', async () => {
+      fetch.mockResponseOnce(JSON.stringify(rule), JSON_HEADERS);
+
+      const res = await instance.getRule('r 1', TOKEN_MOCK);
+
+      expect(res).toEqual(rule);
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/v1/rules/r%201'),
+        expect.objectContaining({ method: 'GET' }),
+      );
+    });
+
+    test('createRule POSTs the whole rule in one request', async () => {
+      fetch.mockResponseOnce(JSON.stringify(rule), JSON_HEADERS);
+
+      await instance.createRule(createDto, TOKEN_MOCK);
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/v1/rules'),
+        expect.objectContaining({ method: 'POST', body: JSON.stringify(createDto) }),
+      );
+    });
+
+    test('updateRule PUTs the complete object', async () => {
+      fetch.mockResponseOnce(JSON.stringify(rule), JSON_HEADERS);
+
+      await instance.updateRule('r_1', createDto, TOKEN_MOCK);
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/v1/rules/r_1'),
+        expect.objectContaining({ method: 'PUT', body: JSON.stringify(createDto) }),
+      );
+    });
+
+    test('deleteRule issues DELETE on the encoded rule URL', async () => {
+      fetch.mockResponseOnce('');
+
+      await instance.deleteRule('r_1', TOKEN_MOCK);
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/v1/rules/r_1'),
+        expect.objectContaining({ method: 'DELETE' }),
+      );
+    });
+  });
+
+  describe('evaluators', () => {
+    const evaluator = {
+      name: 'conversation-insights',
+      version: 4,
+      type: EvaluatorType.Llm,
+      output_vars: [{ name: 'title', type: 'string' }],
+    };
+
+    test('getEvaluators unwraps the {items} envelope', async () => {
+      const items = [{ name: 'conversation-insights', latest_version: 4 }];
+      fetch.mockResponseOnce(JSON.stringify({ items }), JSON_HEADERS);
+
+      expect(await instance.getEvaluators(TOKEN_MOCK)).toEqual(items);
+    });
+
+    test('getEvaluators accepts a bare array as well as the wrapper', async () => {
+      const items = [{ name: 'conversation-insights', latest_version: 4 }];
+      fetch.mockResponseOnce(JSON.stringify(items), JSON_HEADERS);
+
+      expect(await instance.getEvaluators(TOKEN_MOCK)).toEqual(items);
+    });
+
+    test('getEvaluator issues GET on the encoded evaluator URL', async () => {
+      fetch.mockResponseOnce(JSON.stringify(evaluator), JSON_HEADERS);
+
+      const res = await instance.getEvaluator('my evaluator', TOKEN_MOCK);
+
+      expect(res).toEqual(evaluator);
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/v1/evaluators/my%20evaluator'),
+        expect.objectContaining({ method: 'GET' }),
+      );
+    });
+
+    test('getEvaluatorVersion issues GET on the pinned-version URL', async () => {
+      fetch.mockResponseOnce(JSON.stringify(evaluator), JSON_HEADERS);
+
+      await instance.getEvaluatorVersion('conversation-insights', 4, TOKEN_MOCK);
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/v1/evaluators/conversation-insights/versions/4'),
+        expect.objectContaining({ method: 'GET' }),
+      );
+    });
   });
 });

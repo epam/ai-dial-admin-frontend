@@ -63,5 +63,6 @@ export enum ApplicationRoute {
   // Analytics
   AnalyticsQueries = '/queries',
   AnalyticsTables = '/tables',
+  AnalyticsEnrichmentRules = '/enrichment-rules',
   ConversationsTrace = '/conversations-trace',
 }

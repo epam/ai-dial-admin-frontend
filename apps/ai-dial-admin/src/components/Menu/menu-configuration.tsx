@@ -231,6 +231,10 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
           href: ApplicationRoute.AnalyticsTables,
         },
         {
+          key: MenuI18nKey.EnrichmentRules,
+          href: ApplicationRoute.AnalyticsEnrichmentRules,
+        },
+        {
           key: MenuI18nKey.Queries,
           href: ApplicationRoute.AnalyticsQueries,
         },
