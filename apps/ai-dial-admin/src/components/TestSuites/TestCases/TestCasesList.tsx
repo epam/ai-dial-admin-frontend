@@ -510,6 +510,10 @@ const TestCasesList: FC<Props> = ({
     onRemoveCaseRef.current = onOpenDeleteModal;
   }, [onOpenDeleteModal]);
 
+  useEffect(() => {
+    return () => sidebar.closeSidebar();
+  }, []);
+
   const onPublish = useCallback(
     async (name: string, description?: string) => {
       const datasetId = selectedTestSuite.datasetId;

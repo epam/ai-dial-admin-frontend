@@ -4,14 +4,15 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as actions from '@/src/app/[lang]/datasets/actions';
 import { TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import * as AppContext from '@/src/context/AppContext';
 import { Dataset, DatasetVisibility } from '@/src/models/evaluation/dataset';
 import { ComparisonOp, ExprType, ValueType } from '@/src/models/evaluation/structured-query';
 import { TestCase as TestCaseModel, TestSuite } from '@/src/models/evaluation/test-suite';
 import { TestCaseItemType } from '@/src/types/evaluation';
+import { GridRowType } from '@/src/types/grid-row-type';
 
 import TestCasesList, { TestCasesActions } from '../TestCasesList';
 import { useIncludedIds } from '../RunCondition/use-included-ids';
-import { GridRowType } from '@/src/types/grid-row-type';
 
 type TestCase = Partial<TestCaseModel>;
 
@@ -202,6 +203,32 @@ describe('TestCasesList', () => {
 
     await waitFor(() => expect(actions.getTestCases).toHaveBeenCalledTimes(2));
     expect(actions.getTestCases).toHaveBeenLastCalledWith('dataset-456', 0, 1000, [], []);
+  });
+
+  test('closes try out sidebar on unmount', () => {
+    const mockCloseSidebar = vi.fn();
+    const spy = vi.spyOn(AppContext, 'useAppContext').mockReturnValue({
+      sidebar: {
+        show: false,
+        content: null,
+        closeSidebar: mockCloseSidebar,
+        showSidebar: vi.fn(),
+        toggleIsMenuClosed: vi.fn(),
+        isMenuClosed: false,
+      },
+      sidebarOpen: false,
+      toggleSidebar: vi.fn(),
+      featureFlags: { deploymentsEnabled: true },
+      isReadOnlyAdmin: false,
+      isFullAdmin: true,
+      isEnableAuth: false,
+    } as ReturnType<typeof AppContext.useAppContext>);
+
+    const { unmount } = render(<TestCasesList selectedTestSuite={mockTestSuite} onChange={mockOnChange} />);
+    unmount();
+
+    expect(mockCloseSidebar).toHaveBeenCalledTimes(1);
+    spy.mockRestore();
   });
 });
 
