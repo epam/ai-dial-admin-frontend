@@ -102,6 +102,27 @@ Each request's name SHALL be editable, writing to `requestName` for request `#0`
 - **WHEN** the second request's name is edited to "Follow-up"
 - **THEN** that tab's label reads "Follow-up" and `additionalRequests[0].name` is `"Follow-up"`
 
+### Requirement: An unconfigured additional request prompts for endpoint setup
+
+When the selected request has no configured endpoint (`endpointRef.method` and
+`endpointRef.relativeUrlPattern` both absent), Request Template and Endpoint Schema SHALL show an
+empty-state prompt to click Change method rather than an editable form-data or schema grid, and SHALL
+NOT offer Add or Add Field. After Change method assigns an endpoint, the JSON editor SHALL appear as
+it does for a newly created primary request.
+
+#### Scenario: A newly added request tab prompts for endpoint setup
+
+- **WHEN** a new additional request is added and selected, before Change method
+- **THEN** Request Template shows guidance to click Change method rather than "No form data"
+- **AND** Endpoint Schema shows the same guidance
+- **AND** the Add and Add Field controls are not actionable
+
+#### Scenario: Configuring the endpoint reveals the JSON editor
+
+- **WHEN** Change method is used to assign an endpoint to that request
+- **THEN** Request Template Body shows the JSON editor with that method's default body immediately,
+  without switching away from the tab
+
 ### Requirement: Switching the selected request remounts the request editors
 
 `RequestTemplate` and `EndpointSchema` SHALL be rendered keyed by the selected request index (or an
