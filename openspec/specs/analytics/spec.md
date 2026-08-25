@@ -2293,12 +2293,19 @@ type error rather than a simplification.
 The conversations page SHALL provide a feedback filter with exactly four mutually exclusive states — all,
 positive, negative, and rated — defaulting to all. It SHALL reuse the shared `DialSegmentedControl`.
 
-Feedback lives in the `rate_analytics` entity, which the conversation rollup does not include, and the
-structured-query DSL accepts a single `entity` with no join construct. A feedback filter SHALL therefore be
-resolved as two queries: first a candidate query over `rate_analytics` returning the `chat_id` values carrying
-the requested feedback, then the conversation query over `conversations` narrowed to those ids with an `in`
-predicate. Both SHALL be issued server-side with the caller's token, and the `all` state SHALL issue only the
-conversation query, so the default path costs exactly one request per page.
+Feedback lives in the `response_ratings` entity — the per-response rollup of DIAL's rate events, keyed on the
+rated `response_id` and carrying the `chat_id` the rating was submitted from — which the conversation rollup
+does not include, and the structured-query DSL accepts a single `entity` with no join construct. A feedback
+filter SHALL therefore be resolved as two queries: first a candidate query over `response_ratings` returning
+the `chat_id` values carrying the requested feedback, then the conversation query over `conversations`
+narrowed to those ids with an `in` predicate. Both SHALL be issued server-side with the caller's token, and
+the `all` state SHALL issue only the conversation query, so the default path costs exactly one request per
+page.
+
+The rating source SHALL be the per-response rollup rather than the raw rate-event log. The rollup partitions
+each response's events into additive counts, which is what allows a direction to be selected and counted from
+the same columns; the event log carries a single normalized `rate` from which the directions cannot be
+separated without one query per direction.
 
 Both queries SHALL be issued within a **single** request from the client when the first page of a result is
 fetched, rather than the client resolving candidates in one request and the page in another. The candidate
@@ -2317,36 +2324,49 @@ regardless of how it is ordered, and the ordering is the operator's to choose, s
 be presented as the complete set of conversations carrying that feedback. The disclosure SHALL be visible
 while the capped filter state is applied and SHALL clear when the filter state no longer reaches the cap.
 
-The candidate query SHALL be aggregate mode over `rate_analytics` grouped by `chat_id`, carry the same time
-bounds as the conversation query and an empty-id guard, and select `chat_id` plus `max(request_time)`. It SHALL
-be ordered by most recent rating, so that if the candidate set reaches its limit the ids retained are the most
-recently rated ones. Its limit SHALL NOT exceed 1000, the service's hard maximum.
+The candidate query SHALL be aggregate mode over `response_ratings` grouped by `chat_id`, carry time bounds
+over `last_rate_time` matching the period the conversation query is bounded to, and an empty-id guard, and
+select `chat_id` plus `max(last_rate_time)`. It SHALL be ordered by most recent rating, so that if the
+candidate set reaches its limit the ids retained are the most recently rated ones. Its limit SHALL NOT exceed
+1000, the service's hard maximum.
 
 The rate predicates SHALL be:
 
 | State | Predicate |
 |---|---|
-| positive | `gt(rate, 0)` |
-| negative | `le(rate, 0)` |
-| rated | `ne(rate, null)` |
+| positive | `gt(rate_pos_count, 0)` |
+| negative | `gt(rate_zero_count, 0)` OR `gt(rate_neg_count, 0)` |
+| rated | `gt(rate_pos_count, 0)` OR `gt(rate_zero_count, 0)` OR `gt(rate_neg_count, 0)` |
 
-`rate` is signed: DIAL sends `1` for a like and `-1` for a dislike, and the service normalizes a boolean
-`false` to `0` and anything else to null. The negative state SHALL therefore match everything at or below
-zero rather than testing for a value below zero, so a `false` normalized to `0` counts as negative alongside a
-`-1` dislike. Neither comparison SHALL carry a companion null guard: SQL three-valued logic already evaluates
-both to NULL for an unrated row, so an unrated conversation matches neither. `rated` SHALL be its own
-`IS NOT NULL` predicate rather than a union of the other two, so a rating outside the positive/negative split
-still counts as rated, and SHALL use `ne` — the only operator besides `eq` that accepts a null right operand.
+These SHALL select exactly what the previous predicates over the event log's normalized `rate` selected, and
+the negative state SHALL keep its present meaning: `rate_zero_count` counts the events the service normalized
+to zero — a boolean `false` among them — and `rate_neg_count` counts the unambiguously negative ones, so
+their union is what `le(rate, 0)` matched. The negative state MUST NOT be narrowed to the provably negative
+subset: that would silently drop every non-positive rating whose submitted form predates the service's
+captured-form column, which is most of the recorded history, and a filter that quietly stops returning rows
+it used to return is a worse failure than a figure that needs a caveat.
+
+`rated` SHALL be the union of the three value-bearing counts rather than an `IS NOT NULL` test. The rollup
+partitions a response's events into positive, zero, negative and value-less counts, so those three cover
+every event that carried a rating and exclude only an event whose body carried no rate at all — which is what
+the previous null comparison excluded. The rule that `rated` must not be expressed as a union of the other two
+states no longer applies: it existed because a rating outside the positive/negative split could not be
+detected, and the rollup's partition leaves nothing outside it.
 
 When the candidate query returns no ids the page SHALL return no rows **without** issuing the conversation
 query: the service rejects an empty `in` list with HTTP 400, and "nothing carries this feedback" is already
 the complete answer. Blank ids SHALL be dropped from the candidate set. When the candidate query fails, the
 failure SHALL propagate and the conversation query MUST NOT run.
 
+The page MUST NOT fall back to the raw rate-event log when the rollup is absent. The rollup is provisioned
+per instance exactly as the conversation and turn rollups are, and the page cannot render without those
+either, so an absent rating rollup SHALL surface as the read failing rather than as a second rating path
+maintained beside the first.
+
 #### Scenario: Feedback filter issues the candidate query then the narrowed query
 
 - **WHEN** a feedback state other than all is selected
-- **THEN** a query against `rate_analytics` is issued first, carrying the state's rate predicate
+- **THEN** a query against `response_ratings` is issued first, carrying the state's rate predicate
 - **AND** a query against `conversations` follows, restricted to the returned ids by an `in` predicate
 - **AND** both carry the caller's token
 
@@ -2359,7 +2379,7 @@ failure SHALL propagate and the conversation query MUST NOT run.
 #### Scenario: Later pages reuse the ids without re-resolving them
 
 - **WHEN** the operator scrolls to a further page of a feedback-filtered result
-- **THEN** no further query against `rate_analytics` is issued
+- **THEN** no further query against `response_ratings` is issued
 - **AND** the page request carries the candidate ids the first page returned
 
 #### Scenario: The default state costs one query per page
@@ -2392,19 +2412,26 @@ failure SHALL propagate and the conversation query MUST NOT run.
 #### Scenario: Negative feedback includes a zero rating
 
 - **WHEN** the negative state is selected
-- **THEN** its predicate matches ratings less than or equal to zero, covering both a `-1` dislike and a
-  `false` thumb normalized to `0`
+- **THEN** its predicate matches a conversation whose only rating was normalized to zero, alongside one
+  carrying an unambiguously negative rating
+- **AND** it selects the same conversations the previous non-positive predicate selected
 
 #### Scenario: Rated covers both thumbs
 
 - **WHEN** the rated state is selected
-- **THEN** its predicate is a null comparison on `rate`, matching every conversation the two thumb states
-  match and any rating outside that split
+- **THEN** its predicate matches every conversation the two thumb states match
+- **AND** it does not match a conversation whose only rate event carried no rating value
 
 #### Scenario: Feedback composes with the other filters
 
 - **WHEN** a feedback state is selected while a search term and a time range are applied
 - **THEN** the narrowed conversation query still carries the search predicates and the time bounds
+
+#### Scenario: An instance without the rating rollup reports a failed read
+
+- **WHEN** a feedback state is selected on an instance that does not carry `response_ratings`
+- **THEN** the read fails and the failure is reported
+- **AND** no query against a raw rate-event log is issued as a substitute
 
 ### Requirement: Provenance line and result summary
 
@@ -2586,45 +2613,68 @@ pages already shown, and SHALL still raise the notification.
 ### Requirement: Rating column resolved for the displayed page
 
 The grid SHALL show a Rating column giving each conversation's positive and negative rating counts, attributed
-in the provenance band to `rate_analytics` rather than to `conversations`.
+in the provenance band to `response_ratings` rather than to `conversations`.
 
 Ratings SHALL be resolved by a query issued **after** the conversation query, restricted by `in` to exactly the
 conversation ids in the page just returned. Resolving them from the feedback filter's candidate set instead
 MUST NOT be done: that set is capped, so a displayed conversation could fall outside it and be reported as
 unrated when it is not. The ratings query SHALL be skipped entirely when the returned page has no rows.
 
-The split SHALL NOT be derived from one aggregate. `rate` is a signed integer — DIAL sends `1` for a like and
-`-1` for a dislike, and the service normalizes a boolean `false` to `0` — so `count(rate)` and `sum(rate)` do
-not determine the two directions: one like and one dislike sum to zero, indistinguishable from no likes at all.
+The two directions SHALL be resolved by a **single** query. The rating source partitions each response's
+events into additive counts, so the directions are separate columns rather than a split to be derived: one
+aggregate over `response_ratings` grouped by `chat_id`, restricted by `in` to the page's ids, selecting
+`sum(rate_pos_count)` for the positive side and `sum(rate_zero_count)` and `sum(rate_neg_count)` for the
+negative one. The previous rule requiring one query per direction SHALL NOT be carried forward: it existed
+because the event log's normalized `rate` is a signed integer from which `count` and `sum` cannot recover the
+two directions, and additive per-direction columns remove that obstacle entirely.
 
-Each direction SHALL instead be counted by its own query: aggregate mode over `rate_analytics` grouped by
-`chat_id`, selecting `count(rate)`, restricted by `in` to the page's ids, and filtered by the **same** rate
-predicate the corresponding feedback filter uses — `gt(rate, 0)` for the positive side and `le(rate, 0)` for
-the negative one. Reusing those predicates is what guarantees the column agrees with the filter: a
-conversation the Positive filter selected cannot then display a zero positive count. Two queries are required
-because the language offers no conditional aggregation; they SHALL be issued concurrently.
+The negative figure SHALL be the sum of the zero and negative counts, which is what the previous non-positive
+predicate counted, so the column's meaning is unchanged. Each side SHALL be counted from the **same** columns
+the corresponding feedback filter predicates on, which is what guarantees the column agrees with the filter:
+a conversation the Positive filter selected cannot then display a zero positive count, and the same holds for
+the negative side.
 
-Both queries SHALL carry the same time bounds as the conversation query. Bounding them identically keeps the
-column and the feedback filter consistent. The consequence — a rating given outside the selected period is not
-counted — is accepted for that consistency.
+The same query SHALL also select `sum(rate_bool_false_count)`, `sum(rate_raw_count)` and
+`sum(rate_event_count)`. These do not compose either figure: they state how much of the negative one is
+provably a thumbs-down, and how much of the conversation's feedback had its submitted form captured at all —
+which is a proportion, so the event count is named to give it a denominator. Where part of a negative figure is not established as a thumbs-down, that side SHALL
+carry a caveat saying so, and the caveat SHALL be reachable by keyboard and exposed to assistive technology —
+the figure is not redefined, it is disclosed. The caveat MUST NOT attribute the whole gap to an uncaptured
+form: a rating submitted as a numeric zero **is** captured, and is unestablished because the service has not
+fixed what a numeric zero means. Stating only the uncaptured cause would contradict the captured-form
+proportion quoted beside it. A cell whose negative figure is fully attributable, and a cell
+with no negative ratings, SHALL carry no caveat: a caveat on every cell would stop being read.
+
+The query SHALL carry time bounds over `last_rate_time` matching the period the conversation query is bounded
+to. Bounding them identically keeps the column and the feedback filter consistent. The consequence — a rating
+given outside the selected period is not counted — is accepted for that consistency.
 
 Both counts SHALL be displayed at all times, including a zero, so the absence of ratings on one side is visible
 rather than implied. A side carrying ratings SHALL be coloured — positive as success, negative as error, from
 theme tokens — and a side with none SHALL stay muted. Each side SHALL carry a text label for assistive
 technology, since the icons carry the meaning.
 
-When either ratings query fails, both counts SHALL be left unresolved and the cell SHALL render nothing rather
+When the ratings query fails, both counts SHALL be left unresolved and the cell SHALL render nothing rather
 than displaying zeros or a half-counted split, which would assert an absence of feedback that was never
 established. The conversation rows themselves SHALL still be returned.
 
-A comment indicator SHALL NOT be shown. `rate_analytics.comment` is catalogued sensitive, so it cannot be
-selected — or even counted — by a non-`FULL_ADMIN` caller.
+A comment indicator SHALL NOT be shown in the grid cell. The rating source's `comment_count` is catalogued
+**non**-sensitive, so the previous reason for withholding it — that the event log's comment column could not
+be counted by a caller without the elevated role — no longer holds. It is withheld on a different ground: the
+cell is a two-direction figure, a third signal in it is a design question of its own, and the conversation's
+comment count is stated on the detail view's feedback panel instead.
 
 #### Scenario: Ratings are resolved for exactly the page returned
 
 - **WHEN** a page of conversations is returned
-- **THEN** one `rate_analytics` count query per direction follows, each restricted by `in` to that page's ids
-- **AND** neither is issued at all when the page has no rows
+- **THEN** exactly one `response_ratings` aggregate query follows, restricted by `in` to that page's ids
+- **AND** it is not issued at all when the page has no rows
+
+#### Scenario: Both directions come from one query
+
+- **WHEN** the ratings query is built
+- **THEN** it selects the positive count and the two columns forming the negative count in one aggregate
+- **AND** no second query is issued for the other direction
 
 #### Scenario: Both directions are always shown
 
@@ -2634,8 +2684,31 @@ selected — or even counted — by a non-`FULL_ADMIN` caller.
 #### Scenario: A conversation rated both ways shows both counts
 
 - **WHEN** a conversation carries one like and one dislike
-- **THEN** it shows one on each side, each coloured for its own direction — not zero likes, which is what a
-  `count`-and-`sum` split reports for a signed rate
+- **THEN** it shows one on each side, each coloured for its own direction
+
+#### Scenario: A zero-normalized rating still counts as negative
+
+- **WHEN** a conversation's only rating was submitted as a boolean false and normalized to zero
+- **THEN** its negative count is one
+- **AND** the figure matches what the previous non-positive count reported
+
+#### Scenario: An unattributable negative figure carries a caveat
+
+- **WHEN** part of a conversation's negative count comes from events whose submitted form was never captured
+- **THEN** the negative side carries a caveat stating that
+- **AND** the caveat is reachable by keyboard and exposed to assistive technology
+
+#### Scenario: The caveat names both causes of an unestablished rating
+
+- **WHEN** a conversation's negative figure includes a rating submitted as a numeric zero whose form was
+  captured
+- **THEN** the caveat states that such a rating is not established as a thumbs-down
+- **AND** it does not claim the rating was recorded without its submitted form
+
+#### Scenario: A fully attributable figure carries no caveat
+
+- **WHEN** every event behind a conversation's negative count had its submitted form captured
+- **THEN** the negative side carries no caveat
 
 #### Scenario: An unrated conversation is muted, not blank
 
@@ -3818,29 +3891,56 @@ map to a colour, so a newly added source cannot render unstyled.
 
 ### Requirement: Conversation detail feedback reads the rating source
 
-The detail view SHALL read this conversation's ratings from the feedback source and SHALL state, **in the
+The detail view SHALL read this conversation's ratings from the rating source and SHALL state, **in the
 feedback panel**, how many were positive and how many negative. A conversation with no ratings SHALL state
 zero in both directions rather than rendering them as unavailable.
 
+Those figures SHALL come from an **aggregate scoped to the conversation**, not from counting the rows the
+panel loaded. The listed ratings are bounded, so counting them reports the bound rather than the conversation:
+a conversation with more rated responses than the view requested would state the count of the ones on screen
+while presenting it as the conversation's total. The figures SHALL therefore be exact regardless of how many
+the panel lists, and the list's own bound SHALL be disclosed separately.
+
+The negative figure SHALL be composed on the same terms as the grid's — the zero and negative counts
+together — and SHALL carry the same keyboard-reachable caveat where part of it is not attributable to a
+captured submitted form.
+
+The feedback panel SHALL list the conversation's rated **responses**, most recently rated first. The rating
+source rolls a response's rate events into one row per rated response, so the list's grain is the response
+rather than the individual event: a response rated more than once appears once. Each listed entry SHALL state
+its direction, and the time it was rated. Where a response's first and last rating times differ, the entry
+SHALL state the window rather than a single time, so a re-rated response does not present its latest rating as
+its only one.
+
+An entry whose response carries more than one distinct rating value SHALL state that its own ratings
+disagree. The source reports that condition directly, and a single direction shown for such a response would
+present one side of a contested rating as the response's verdict.
+
+Each entry SHALL state how many comments its response carries. The comment **count** is catalogued
+non-sensitive and is therefore stated for every caller. The comment **text** is catalogued sensitive, so it
+SHALL be named only when the fetched schema reports it — the same gate the transcript's body columns use —
+and an entry SHALL distinguish a response with no comments from one whose comment text this caller may not
+read. An entry MUST NOT render a comment as flatly unavailable where the count says there is one.
+
 Each assistant message SHALL also show the ratings attributed to its turn. Attribution SHALL be by time — a
-rating belongs to the last turn that had started when the rating was submitted — because the feedback source
-records no trace identifier and its trace and span columns are not queryable. This is an approximation and
-MUST NOT be presented as an exact join: a rating left after a later turn began is attributed to that later
-turn.
+rating belongs to the last turn that had started when the rating was submitted — using each rated response's
+latest rating time. The rating source records no trace identifier, so this remains an approximation and MUST
+NOT be presented as an exact join: a rating left after a later turn began is attributed to that later turn.
 
-The feedback panel SHALL list the conversation's individual ratings with their direction and the time each
-was recorded, most recent first.
-
-Each listed rating SHALL surface a comment field as unavailable. The feedback source's comment column is
-marked sensitive, so requesting it would make the view unavailable to callers without the elevated role.
-
-When more ratings exist than the view requested, the panel SHALL say the list is partial rather than
-presenting it as complete.
+When more rated responses exist than the view requested, the panel SHALL say the list is partial rather than
+presenting it as complete. That disclosure is about the **list**; the panel's direction figures are exact and
+SHALL NOT be qualified by it.
 
 #### Scenario: Rating counts render with the ratings they summarise
 
 - **WHEN** a conversation has positive and negative ratings
 - **THEN** the feedback panel states the count in each direction
+
+#### Scenario: The counts are exact, not the loaded subset
+
+- **WHEN** a conversation has more rated responses than the panel lists
+- **THEN** the stated direction counts cover every rated response of the conversation
+- **AND** they are not derived from the listed entries
 
 #### Scenario: An unrated conversation reports zero
 
@@ -3855,17 +3955,55 @@ presenting it as complete.
 #### Scenario: Individual ratings are listed
 
 - **WHEN** a conversation has ratings
-- **THEN** the feedback panel lists each with its direction and recorded time, most recent first
+- **THEN** the feedback panel lists each rated response with its direction and rating time, most recently
+  rated first
+- **AND** a response rated more than once appears as one entry rather than one per event
+
+#### Scenario: A re-rated response states its window, not one time
+
+- **WHEN** a listed response's first and last rating times differ
+- **THEN** the entry states the window rather than a single time
+
+#### Scenario: A contested response says its ratings disagree
+
+- **WHEN** a listed response carries more than one distinct rating value
+- **THEN** the entry states that its ratings disagree
 
 #### Scenario: A listed rating's comment is marked unavailable
 
-- **WHEN** the feedback panel lists a rating
-- **THEN** its comment renders as unavailable
+- **WHEN** the feedback panel lists a response carrying comments and the schema reports no comment text column
+- **THEN** the entry states how many comments the response carries
+- **AND** the comment text renders as unavailable to this caller rather than as absent
+- **AND** that is distinguished from a response carrying no comments at all
+
+#### Scenario: Comment text is read where the schema reports it
+
+- **WHEN** the schema reports the comment text column
+- **THEN** the query names it and the entry renders the comment
+
+#### Scenario: A response with no rating value is labelled neither way
+
+- **WHEN** a listed response's rate events carried no rating value at all
+- **THEN** the entry states that it carries no rating value
+- **AND** it is labelled neither positive nor negative, matching the figures that count it in neither
+
+#### Scenario: The comment count is stated alongside a readable comment
+
+- **WHEN** a listed response carries three comments and this caller may read the comment text
+- **THEN** the entry states the count as well as the text
+- **AND** the text is not presented as the response's only comment
+
+#### Scenario: A conversation-wide figure is not announced as period-scoped
+
+- **WHEN** the detail view's rating figures render
+- **THEN** their accessible names state the conversation's ratings without claiming a selected period
+- **AND** the grid's own figures, which are period-bounded, keep an accessible name that says so
 
 #### Scenario: A partial rating list says so
 
-- **WHEN** a conversation has more ratings than the view requested
+- **WHEN** a conversation has more rated responses than the view requested
 - **THEN** the panel states that the list is partial
+- **AND** the panel's direction figures are not qualified by that disclosure
 
 ### Requirement: Conversations grid with server-side ordering and per-column filtering
 
@@ -3904,7 +4042,7 @@ dropped. A reader SHALL NOT be led to believe such a filter searched every conve
 the enrichment has reached, which is under a quarter of them, and that is correct behaviour rather than a
 bug — but it is a narrowing of the population, not only of the result.
 
-The Rating column SHALL offer neither. It is composed from `rate_analytics` lookups resolved for the page
+The Rating column SHALL offer neither. It is composed from rating-source lookups resolved for the page
 just returned and has no field on the queried entity, so any ordering or narrowing of it could only describe
 the rows already on screen. The feedback control is the filter for that dimension.
 
@@ -4030,7 +4168,7 @@ from the column header beneath it.
 - **THEN** a band above the column headers groups the columns by source
 - **AND** every column belongs to exactly one group
 - **AND** the conversation, project, user, turns, activity, tokens and cost columns are attributed to
-  `conversations`, and the Rating column to `rate_analytics`
+  `conversations`, and the Rating column to `response_ratings`
 
 #### Scenario: Groups survive column movement
 

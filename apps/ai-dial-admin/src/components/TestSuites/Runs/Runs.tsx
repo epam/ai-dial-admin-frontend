@@ -3,20 +3,20 @@
 import { FC, RefObject, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
+import { CellClickedEvent, GridApi, GridOptions, GridReadyEvent, IDatasource, IGetRowsParams } from 'ag-grid-community';
 
 import { removeRun } from '@/src/app/[lang]/runs/actions';
 import { getRuns } from '@/src/app/[lang]/test-suites/actions';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
-import ExportRunModal from '@/src/components/Runs/Export/ExportRunModal';
-import { useCompareRunLauncher } from '@/src/components/Runs/Compare/useCompareRunLauncher';
 import GridView from '@/src/components/Grid/GridView/GridView';
-import { ACTION_COLUMN, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
+import { useCompareRunLauncher } from '@/src/components/Runs/Compare/useCompareRunLauncher';
+import ExportRunModal from '@/src/components/Runs/Export/ExportRunModal';
+import { ACTION_COLUMN, ACTIONS_COLUMN_CEL_ID, infiniteGridOptions, PAGE_SIZE } from '@/src/constants/ag-grid';
 import {
+  getCompareOperation,
   getDeleteOperation,
   getExportOperation,
   getOpenInNewTabOperation,
-  getCompareOperation,
 } from '@/src/constants/grid-columns/actions';
 import { RUNS_COLUMN } from '@/src/constants/grid-columns/grid-columns';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
@@ -52,6 +52,16 @@ const Runs: FC<Props> = ({ runRefreshRef, selectedTestSuite }) => {
 
   const gridOptions: GridOptions = {
     ...infiniteGridOptions,
+    rowSelection: { mode: 'singleRow', enableClickSelection: false, checkboxes: false },
+    rowClassRules: {
+      'ag-activity-row-clickable': () => true,
+    },
+    onCellClicked: (e: CellClickedEvent) => {
+      if (e.colDef.field !== ACTIONS_COLUMN_CEL_ID) {
+        e.node.setSelected(true, true);
+        onOpenInNewTab(ApplicationRoute.Runs, e.data);
+      }
+    },
   };
 
   useEffect(() => {

@@ -14,7 +14,7 @@ import {
 import {
   ConversationTurnField,
   ConversationsField,
-  RateAnalyticsField,
+  ResponseRatingsField,
   TurnsField,
   UsageLogField,
 } from '@/src/models/analytics/conversations-trace';
@@ -215,34 +215,62 @@ describe('buildConversationDetailQuery', () => {
 });
 
 describe('buildConversationFeedbackQuery', () => {
-  test('reads the feedback entity in row mode, filtered to one conversation', () => {
-    const query = buildConversationFeedbackQuery(CHAT_ID, CONVERSATION_FEEDBACK_LIMIT);
+  const ALL_FEEDBACK_FIELDS: string[] = Object.values(ResponseRatingsField);
+  const feedbackQuery = (
+    limit = CONVERSATION_FEEDBACK_LIMIT,
+    schemaFields: string[] | undefined = ALL_FEEDBACK_FIELDS,
+  ) => buildConversationFeedbackQuery(CHAT_ID, limit, schemaFields);
+
+  test('reads the rating rollup in row mode, filtered to one conversation', () => {
+    const query = feedbackQuery();
     const predicate = asPredicate(query.filter);
 
     expect(query.entity).toBe(FEEDBACK_ENTITY);
+    expect(FEEDBACK_ENTITY).toBe('response_ratings');
     expect(query.mode).toBe(QueryMode.Row);
     expect(predicate.op).toBe(QueryOperator.Eq);
-    expect(predicate.args[0]).toEqual({ type: QueryExprType.Field, name: RateAnalyticsField.ChatId });
+    expect(predicate.args[0]).toEqual({ type: QueryExprType.Field, name: ResponseRatingsField.ChatId });
   });
 
-  test('selects direction, recorded time and response id', () => {
+  test('selects the response grain: both times, the direction counts, disagreement and comments', () => {
+    const names = selectedNames(feedbackQuery().select);
+
+    expect(names).toEqual([
+      ResponseRatingsField.ResponseId,
+      ResponseRatingsField.FirstRateTime,
+      ResponseRatingsField.LastRateTime,
+      ResponseRatingsField.RatePosCount,
+      ResponseRatingsField.RateZeroCount,
+      ResponseRatingsField.RateNegCount,
+      ResponseRatingsField.RateDistinctCount,
+      ResponseRatingsField.CommentCount,
+      ResponseRatingsField.CommentSample,
+    ]);
+  });
+
+  test('names the comment text only when the schema reports it', () => {
+    const withoutText = ALL_FEEDBACK_FIELDS.filter((name) => name !== ResponseRatingsField.CommentSample);
+    const names = selectedNames(feedbackQuery(CONVERSATION_FEEDBACK_LIMIT, withoutText).select);
+
+    expect(names).not.toContain(ResponseRatingsField.CommentSample);
+    expect(names).toContain(ResponseRatingsField.CommentCount);
+  });
+
+  test('always names the comment count, which the service does not gate', () => {
     const names = selectedNames(buildConversationFeedbackQuery(CHAT_ID, CONVERSATION_FEEDBACK_LIMIT).select);
 
-    expect(names).toEqual([RateAnalyticsField.ResponseId, RateAnalyticsField.Rate, RateAnalyticsField.RequestTime]);
+    expect(names).toContain(ResponseRatingsField.CommentCount);
+    expect(names).not.toContain(ResponseRatingsField.CommentSample);
   });
 
-  // `comment` is sensitive: requesting it strips the column from the query model and fails as an unknown
-  // field for any caller without the elevated role, taking the whole panel down with it.
-  test('never selects the sensitive comment column', () => {
-    const names = selectedNames(buildConversationFeedbackQuery(CHAT_ID, CONVERSATION_FEEDBACK_LIMIT).select);
-
-    expect(names).not.toContain('comment');
+  test('never selects the full comment set, which is sensitive and an array', () => {
+    expect(JSON.stringify(feedbackQuery())).not.toContain('"comments"');
   });
 
-  test('sorts most recent first and requests a total', () => {
-    const query = buildConversationFeedbackQuery(CHAT_ID, 50);
+  test('sorts most recently rated first and requests a total', () => {
+    const query = feedbackQuery(50);
 
-    expect(query.sort).toEqual([{ field: RateAnalyticsField.RequestTime, dir: QuerySortDirection.Desc }]);
+    expect(query.sort).toEqual([{ field: ResponseRatingsField.LastRateTime, dir: QuerySortDirection.Desc }]);
 
     const page = query.page as QueryOffsetPage;
     expect(page.limit).toBe(50);
@@ -250,9 +278,7 @@ describe('buildConversationFeedbackQuery', () => {
   });
 
   test('carries no time bound', () => {
-    const query = buildConversationFeedbackQuery(CHAT_ID, CONVERSATION_FEEDBACK_LIMIT);
-
-    expect(JSON.stringify(query.filter)).not.toContain(RateAnalyticsField.RequestTime);
+    expect(JSON.stringify(feedbackQuery().filter)).not.toContain(ResponseRatingsField.LastRateTime);
   });
 });
 

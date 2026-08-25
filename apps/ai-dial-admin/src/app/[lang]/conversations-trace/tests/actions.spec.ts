@@ -58,8 +58,6 @@ const ok = (rows: object[]) => ({ success: true, response: { rows } });
 
 const failure = { success: false, status: 500, errorMessage: 'boom' };
 
-// One fetch cycle now issues up to four differently shaped queries, two of them concurrently, so tests
-// say what each query answers rather than depending on the order they happen to run in.
 enum QueryKind {
   List = 'list',
   Totals = 'totals',
@@ -68,7 +66,7 @@ enum QueryKind {
 }
 
 const kindOf = (query: StructuredQuery): QueryKind => {
-  if (query.entity === 'rate_analytics') {
+  if (query.entity === 'response_ratings') {
     const isCandidates = (query.select ?? []).some((column) => column.as === 'last_rated');
     return isCandidates ? QueryKind.Candidates : QueryKind.Ratings;
   }
@@ -79,11 +77,10 @@ interface Stubs {
   list?: object;
   totals?: object;
   candidates?: object;
-  ratings?: object[];
+  ratings?: object;
 }
 
 const stub = ({ list = ok([]), totals = ok([{ conversations: 0, cost: null }]), candidates, ratings }: Stubs = {}) => {
-  let ratingCall = 0;
   execute().mockImplementation((query: StructuredQuery) => {
     switch (kindOf(query)) {
       case QueryKind.Candidates:
@@ -91,12 +88,23 @@ const stub = ({ list = ok([]), totals = ok([{ conversations: 0, cost: null }]), 
       case QueryKind.Totals:
         return Promise.resolve(totals);
       case QueryKind.Ratings:
-        return Promise.resolve(ratings?.[ratingCall++] ?? ok([]));
+        return Promise.resolve(ratings ?? ok([]));
       default:
         return Promise.resolve(list);
     }
   });
 };
+
+const ratingRow = (overrides: Record<string, number | string | null> = {}) => ({
+  chat_id: 'a',
+  rating_up: 0,
+  rate_zero: 0,
+  rate_negative: 0,
+  rate_bool_false: 0,
+  rate_raw: 0,
+  rate_events: 0,
+  ...overrides,
+});
 
 const issued = (kind: QueryKind): StructuredQuery[] =>
   execute()
@@ -132,16 +140,24 @@ describe('getConversations', () => {
     expect(queryOf(QueryKind.List).page).toMatchObject({ offset: 200, limit: 100 });
   });
 
-  test('resolves ratings for exactly the returned page', async () => {
+  test('resolves both directions for exactly the returned page in one query', async () => {
+    stub({ list: ok([CONVERSATION_ROW]), ratings: ok([ratingRow({ rating_up: 2, rate_negative: 1 })]) });
+
+    const result = await getConversations(REQUEST);
+
+    expect(issued(QueryKind.Ratings)).toHaveLength(1);
+    expect(result.response?.rows[0]).toMatchObject({ rating_up: 2, rating_down: 1 });
+  });
+
+  test('carries the caveat figures onto the row', async () => {
     stub({
       list: ok([CONVERSATION_ROW]),
-      ratings: [ok([{ chat_id: 'a', rating_count: 2 }]), ok([{ chat_id: 'a', rating_count: 1 }])],
+      ratings: ok([ratingRow({ rate_zero: 4, rate_bool_false: 1, rate_raw: 1, rate_events: 4 })]),
     });
 
     const result = await getConversations(REQUEST);
 
-    expect(issued(QueryKind.Ratings)).toHaveLength(2);
-    expect(result.response?.rows[0]).toMatchObject({ rating_up: 2, rating_down: 1 });
+    expect(result.response?.rows[0]).toMatchObject({ rating_down: 4, provable_down: 1, captured_form: 1 });
   });
 
   test('skips the rating queries entirely when the page is empty', async () => {
@@ -152,9 +168,8 @@ describe('getConversations', () => {
     expect(issued(QueryKind.Ratings)).toHaveLength(0);
   });
 
-  // Either direction missing leaves the split unknowable, so a half-counted rating must not be shown.
-  test('leaves ratings unresolved when a direction fails, still returning the rows', async () => {
-    stub({ list: ok([CONVERSATION_ROW]), ratings: [ok([{ chat_id: 'a', rating_count: 2 }]), failure] });
+  test('leaves ratings unresolved when the query fails, still returning the rows', async () => {
+    stub({ list: ok([CONVERSATION_ROW]), ratings: failure });
 
     const result = await getConversations(REQUEST);
 
@@ -285,7 +300,7 @@ describe('getConversations :: the feedback candidates', () => {
 
     const result = await getConversations({ ...REQUEST, feedback: FeedbackFilter.Positive });
 
-    expect(queryOf(QueryKind.Candidates).entity).toBe('rate_analytics');
+    expect(queryOf(QueryKind.Candidates).entity).toBe('response_ratings');
     expect(result.response?.candidates?.ids).toEqual(['a', 'b']);
   });
 

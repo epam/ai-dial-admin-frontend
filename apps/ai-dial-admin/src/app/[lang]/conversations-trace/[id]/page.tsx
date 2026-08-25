@@ -43,7 +43,8 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   try {
     // The rollup's field set varies by deployment and the service rejects a whole query that names a field
     // its entity lacks, so the schema is read first and the detail query is built from what it reports. Only
-    // that query waits: the feedback and turn reads name no optional field.
+    // that query waits on it: the turn read names no optional field, and the feedback read resolves its own
+    // schema internally without rejecting.
     const [schema, ratings, turnResult] = await Promise.all([
       // A rejected schema read must cost the optional columns, not the page: without the `catch` it would
       // reject this whole wave and render the error state for a conversation the required-only projection

@@ -7,12 +7,16 @@ import {
   ConversationFeedbackRow,
   ConversationFieldFormat,
   ConversationFieldState,
+  ConversationTurnRow,
   ConversationsField,
 } from '@/src/models/analytics/conversations-trace';
 import {
+  attributeRatingsToTurns,
   conversationTitle,
-  countFeedbackDirections,
+  feedbackRowCounts,
+  isFeedbackContested,
   isFeedbackPartial,
+  isFeedbackReRated,
   resolveConversationField,
 } from '@/src/utils/analytics/conversation-detail-fields';
 
@@ -178,28 +182,137 @@ describe('resolveConversationField', () => {
   });
 });
 
-describe('countFeedbackDirections', () => {
-  const row = (rate: number | null): ConversationFeedbackRow => ({
-    response_id: 'chatcmpl-x',
-    rate,
-    request_time: '2026-07-20T19:12:59.268Z',
+const feedbackRow = (overrides: Partial<ConversationFeedbackRow> = {}): ConversationFeedbackRow => ({
+  response_id: 'chatcmpl-x',
+  first_rate_time: '2026-07-20T19:12:59.268Z',
+  last_rate_time: '2026-07-20T19:12:59.268Z',
+  rate_pos_count: 1,
+  rate_zero_count: 0,
+  rate_neg_count: 0,
+  rate_distinct_count: 1,
+  comment_count: 0,
+  ...overrides,
+});
+
+describe('feedbackRowCounts', () => {
+  test('reads a positive response from its own count', () => {
+    expect(feedbackRowCounts(feedbackRow())).toEqual({ rating_up: 1, rating_down: 0 });
   });
 
-  test('counts rate above zero as positive and the rest as negative', () => {
-    expect(countFeedbackDirections([row(1), row(1), row(0)])).toEqual({ rating_up: 2, rating_down: 1 });
+  test('composes the negative side from the zero and negative counts', () => {
+    expect(feedbackRowCounts(feedbackRow({ rate_pos_count: 0, rate_zero_count: 2, rate_neg_count: 1 }))).toEqual({
+      rating_up: 0,
+      rating_down: 3,
+    });
   });
 
-  test('an unrated row counts in neither direction', () => {
-    expect(countFeedbackDirections([row(null), row(1)])).toEqual({ rating_up: 1, rating_down: 0 });
+  test('reads counts returned as strings, as a ClickHouse aggregate may', () => {
+    expect(feedbackRowCounts(feedbackRow({ rate_pos_count: '3' }))).toEqual({ rating_up: 3, rating_down: 0 });
   });
 
-  test('no rows reports zero in both directions rather than nothing', () => {
-    expect(countFeedbackDirections([])).toEqual({ rating_up: 0, rating_down: 0 });
+  test('treats an absent count as zero', () => {
+    expect(feedbackRowCounts(feedbackRow({ rate_pos_count: null }))).toEqual({ rating_up: 0, rating_down: 0 });
+  });
+});
+
+describe('isFeedbackContested', () => {
+  test('more than one distinct rating value is contested', () => {
+    expect(isFeedbackContested(feedbackRow({ rate_distinct_count: 2 }))).toBe(true);
+  });
+
+  test('a single distinct value is not', () => {
+    expect(isFeedbackContested(feedbackRow({ rate_distinct_count: 1 }))).toBe(false);
+  });
+
+  test('an absent count is not', () => {
+    expect(isFeedbackContested(feedbackRow({ rate_distinct_count: null }))).toBe(false);
+  });
+});
+
+describe('isFeedbackReRated', () => {
+  test('differing first and last rating times are a window', () => {
+    expect(
+      isFeedbackReRated(
+        feedbackRow({ first_rate_time: '2026-07-20T19:00:00.000Z', last_rate_time: '2026-07-20T19:12:59.268Z' }),
+      ),
+    ).toBe(true);
+  });
+
+  test('one moment is not a window', () => {
+    expect(isFeedbackReRated(feedbackRow())).toBe(false);
+  });
+
+  test('an unreadable time is not a window', () => {
+    expect(isFeedbackReRated(feedbackRow({ first_rate_time: null }))).toBe(false);
+  });
+});
+
+describe('attributeRatingsToTurns', () => {
+  const turn = (trace_id: string, started: string): ConversationTurnRow => ({
+    trace_id,
+    started,
+    hops: 1,
+    failed_hops: 0,
+    tokens: 10,
+    cost: '0.01',
+    duration_ms: 100,
+  });
+
+  const TURNS = [turn('t1', '2026-07-20T19:00:00.000Z'), turn('t2', '2026-07-20T19:10:00.000Z')];
+
+  test('attributes a rating to the last turn that had started', () => {
+    const counts = attributeRatingsToTurns(TURNS, [feedbackRow({ last_rate_time: '2026-07-20T19:05:00.000Z' })]);
+
+    expect(counts).toEqual([
+      { rating_up: 1, rating_down: 0 },
+      { rating_up: 0, rating_down: 0 },
+    ]);
+  });
+
+  test('attributes a rating left after the next turn began to that later turn', () => {
+    const counts = attributeRatingsToTurns(TURNS, [feedbackRow({ last_rate_time: '2026-07-20T19:20:00.000Z' })]);
+
+    expect(counts[1]).toEqual({ rating_up: 1, rating_down: 0 });
+  });
+
+  test('uses the latest rating time of a re-rated response', () => {
+    const counts = attributeRatingsToTurns(TURNS, [
+      feedbackRow({ first_rate_time: '2026-07-20T19:01:00.000Z', last_rate_time: '2026-07-20T19:15:00.000Z' }),
+    ]);
+
+    expect(counts[1]).toEqual({ rating_up: 1, rating_down: 0 });
+  });
+
+  test('adds a response whole rather than as a single rating', () => {
+    const counts = attributeRatingsToTurns(TURNS, [
+      feedbackRow({ last_rate_time: '2026-07-20T19:05:00.000Z', rate_pos_count: 2, rate_zero_count: 1 }),
+    ]);
+
+    expect(counts[0]).toEqual({ rating_up: 2, rating_down: 1 });
+  });
+
+  test('drops a rating that predates every turn', () => {
+    const counts = attributeRatingsToTurns(TURNS, [feedbackRow({ last_rate_time: '2026-07-20T18:00:00.000Z' })]);
+
+    expect(counts).toEqual([
+      { rating_up: 0, rating_down: 0 },
+      { rating_up: 0, rating_down: 0 },
+    ]);
+  });
+
+  test('drops a rating with no readable time', () => {
+    const counts = attributeRatingsToTurns(TURNS, [feedbackRow({ last_rate_time: null })]);
+
+    expect(counts[0]).toEqual({ rating_up: 0, rating_down: 0 });
+  });
+
+  test('reports a zeroed bucket per turn when no response was rated', () => {
+    expect(attributeRatingsToTurns(TURNS, [])).toHaveLength(2);
   });
 });
 
 describe('isFeedbackPartial', () => {
-  const rows: ConversationFeedbackRow[] = [{ response_id: 'a', rate: 1, request_time: 1 }];
+  const rows: ConversationFeedbackRow[] = [feedbackRow({ response_id: 'a' })];
 
   test('a total above the row count is partial', () => {
     expect(isFeedbackPartial(rows, 6)).toBe(true);
