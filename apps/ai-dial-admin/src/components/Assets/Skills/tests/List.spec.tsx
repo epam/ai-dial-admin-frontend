@@ -3,6 +3,7 @@ import { describe, expect, test, vi } from 'vitest';
 
 import { getGridColumns } from '@/src/components/Assets/BaseAssetList/utils';
 import { getGridActionLabels, getTreeActionLabels, getToolbarOptionLabels } from '@/src/components/Assets/utils';
+import { FileManagerI18nKey } from '@/src/constants/i18n';
 import { ApplicationRoute } from '@/src/types/routes';
 import SkillsList from '../List';
 
@@ -19,8 +20,11 @@ describe('SkillsList', () => {
 });
 
 describe('SkillsList :: list affordances', () => {
-  test('Should offer no create, import, or export action in the toolbar', () => {
-    expect(getToolbarOptionLabels(ApplicationRoute.AssetsSkills, false)).toEqual([]);
+  test('Should offer Create > Folder and Create > Skill, but no import or export action', () => {
+    const labels = getToolbarOptionLabels(ApplicationRoute.AssetsSkills, false);
+
+    expect(labels.map((label) => label.key)).toEqual(['newFolder', 'newItem']);
+    expect(labels.find((label) => label.key === 'newItem')?.label).toBe(FileManagerI18nKey.Skill);
   });
 
   test('Should offer delete and open-in-new-tab as row actions — but no move or duplicate', () => {

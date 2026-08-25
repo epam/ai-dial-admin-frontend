@@ -407,6 +407,7 @@ export default {
       InterceptorTemplate: 'Interceptor Template',
       ApplicationRunner: 'Application Runner',
       AssetApplication: 'Assets Application',
+      Skill: 'Skill',
     },
   },
   UpdateEntity: {
@@ -595,6 +596,7 @@ export default {
   },
   Tabs: {
     Properties: 'Properties',
+    Skill: 'Skill',
     Features: 'Features',
     Roles: 'Roles',
     Interceptors: 'Interceptors',
@@ -1434,6 +1436,7 @@ export default {
     IntroLength: 'User can add any characters, but not more than 2048.',
     NameExists: 'This ID already exists.',
     DisplayNameExists: 'This Display name already exists.',
+    SkillNameExists: 'A skill or folder with this name already exists in this location',
     Unique: 'This field must be unique.',
     Version: 'For an entity with this Display name, specifying a version is mandatory.',
     NameVersionCombination: 'This combination of name and version already exists. Specify another',

@@ -45,7 +45,7 @@ describe('SkillProperties', () => {
     (useSkillFolder as Mock).mockReturnValue({ files: [{}], fetchFiles: vi.fn() });
   });
 
-  test('renders the base properties fields and the skill details', () => {
+  test('renders the base properties fields and the skill file listing', () => {
     render(
       <SkillProperties
         publication={buildPublication()}
@@ -55,7 +55,6 @@ describe('SkillProperties', () => {
     );
 
     expect(screen.getByText(`${PublicationsI18nKey.FilesListTitle}: 0`)).toBeInTheDocument();
-    expect(screen.getByText('my-skill')).toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'skill-files' })).toBeInTheDocument();
   });
 
