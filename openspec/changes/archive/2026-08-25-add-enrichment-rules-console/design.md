@@ -65,17 +65,18 @@ Consequence for the deferred detail page: it uses `getRule(id)` and receives the
 listing model and the rule model are therefore two types, not one — `EnrichmentRuleListItem` and
 `EnrichmentRule`.
 
-### Filter state is local, refetched through the server action
+### Narrowing is the grid's job, not a toolbar's
 
-No `useSearchParams` appears anywhere in `src/components/`; `ConversationsTraceView` holds its
-toolbar state locally and refetches. Following that.
+Every data column stays sortable and filterable through `AgGridWrapper`'s `defaultColDef`, which
+already sets `floatingFilter: true` with `agTextColumnFilter`. Because the listing is unpaged those
+controls act on the whole registry, so a separate toolbar would duplicate them.
 
-*Alternative considered:* URL query params, for shareable filtered views. Rejected as inconsistent
-with every other list view in the app, and the sharing benefit is thin for a registry of this size.
+*Alternative considered:* a server-side filter toolbar (`enabled` tri-state + an `updated_since`
+preset), refetching through the server action. Built first, then removed — it narrowed the same data
+the grid narrows, in a second place, with a second state to keep coherent.
 
-`updated_since` is a **preset select** ("Any time" / last hour / 24h / 7d / 30d) resolved to an ISO
-instant at request time, not the shared `TimeFilter` component — `TimeFilter` models a *range* and
-the API takes a single instant, so half of that control would be inert.
+The API layer keeps both filters (see the endpoint contract), since they are part of the documented
+endpoint and a future saved-view or the detail page may drive them.
 
 ### The `enabled` filter is a three-state enum, never a boolean
 

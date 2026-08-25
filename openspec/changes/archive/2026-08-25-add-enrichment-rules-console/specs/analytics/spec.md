@@ -55,7 +55,7 @@ Tables endpoints (base path `/v1/tables`):
 - `POST /v1/tables/{name}/rows` — insert rows into a table
 
 Enrichment rules endpoints (base path `/v1/rules`):
-- `GET /v1/rules` — list rules; the response is wrapped as `{ items: [...] }` and the client SHALL unwrap it to a bare array. **The wrapper key differs from the tables listing's `{ tables }`.** The listing accepts two optional filters, `enabled` and `updated_since`, which combine rather than replace one another. `enabled` SHALL be sent only as the literal `true` or `false`; when the caller expresses no preference the parameter SHALL be **omitted from the query string entirely**, because the service rejects an empty value — along with `1`, `yes`, `on`, `TRUE`, and a repeated parameter — with HTTP 400 rather than reading it as "unfiltered". The response order is total (oldest `updated_at` first, `id` breaking ties)
+- `GET /v1/rules` — list rules. Deployed builds of the service answer with either a bare array or a `{ items: [...] }` wrapper, so the client SHALL accept both and unwrap to a bare array; only a response that is neither SHALL be read as a failure. **Where the wrapper is used its key differs from the tables listing's `{ tables }`.** The listing accepts two optional filters, `enabled` and `updated_since`, which combine rather than replace one another. The client SHALL support both on the API surface even where no screen currently drives them. `enabled` SHALL be sent only as the literal `true` or `false`; when the caller expresses no preference the parameter SHALL be **omitted from the query string entirely**, because the service rejects an empty value — along with `1`, `yes`, `on`, `TRUE`, and a repeated parameter — with HTTP 400 rather than reading it as "unfiltered". The response order is total (oldest `updated_at` first, `id` breaking ties)
 - `POST /v1/rules` — register a rule. A rule is created **whole in a single request**; unlike a table there is no identity-then-schema split and no draft state. Exposed as an `*Action` returning a `ServerActionResponse`
 - `GET /v1/rules/{id}` — read one rule by id
 - `PUT /v1/rules/{id}` — **full replace**, not a merge-patch: an omitted member is erased. Exposed as an `*Action` returning a `ServerActionResponse`
@@ -64,7 +64,7 @@ Enrichment rules endpoints (base path `/v1/rules`):
 Every rule the service returns is **resolved**: it carries its pinned evaluator version inlined as `evaluator`, its read `source` (declared on the rule, or defaulted to the target enrichment's `source_table` — the response does not distinguish the two), the `grain_key` derived from the target enrichment, and the read source's `version_column`, which is absent when that source declares no scan metadata. A disabled rule is resolved exactly like an enabled one. `generation` is bumped on every accepted mutation and is the change signal; the service exposes no `ETag`, so no precondition header is sent.
 
 Evaluator endpoints (base path `/v1/evaluators`), read-only from this app — evaluators are registered outside the UI:
-- `GET /v1/evaluators` — list evaluators as `{name, latest_version, created_at}`; the response is wrapped as `{ items: [...] }` and the client SHALL unwrap it. Version definitions are **not** included
+- `GET /v1/evaluators` — list evaluators as `{name, latest_version, created_at}`; as with the rules listing the response may be a bare array or a `{ items: [...] }` wrapper and the client SHALL accept both. Version definitions are **not** included
 - `GET /v1/evaluators/{name}` — read that evaluator's latest version in full, including `type` (`llm` or `sql`), `input_vars`, and `output_vars`
 - `GET /v1/evaluators/{name}/versions/{version}` — read one pinned version in full
 
@@ -126,7 +126,7 @@ The Analytics pages SHALL be `async` server components (`export const dynamic = 
 
 - **WHEN** the user navigates to `/enrichment-rules`
 - **THEN** the page awaits the unfiltered rules list on the server and renders the listing view seeded with it
-- **AND** if the list request fails the page resolves to a not-found result
+- **AND** if the list request fails the page renders the console with the failure stated rather than a not-found result
 
 #### Scenario: The queries list is fetched on the server
 
@@ -155,11 +155,28 @@ registered rule — enabled and disabled alike. Narrowing is the user's explicit
 page exists to answer ("is this enrichment's rule missing, or registered but switched off?") is unanswerable
 from a view that hides disabled rules by default.
 
+A registry holding no rules is an ordinary state and SHALL render as the console with an empty grid. A
+**failed** listing fetch SHALL also render the console, with the load failure stated on the page, and SHALL
+NOT resolve to a not-found result. A not-found page conflates three conditions an operator needs to tell
+apart — no rule registered, the service unreachable, and the route absent — which is the confusion this page
+exists to remove. The stated failure SHALL clear once a subsequent fetch succeeds.
+
 #### Scenario: Page renders for a permitted caller
 
 - **WHEN** `isAnalyticsForbidden()` returns `false` and `/enrichment-rules` is requested
 - **THEN** the page fetches the rules list on the server and renders the listing seeded with it
 - **AND** disabled rules are present in that initial listing
+
+#### Scenario: An empty registry renders as an empty grid
+
+- **WHEN** the rules listing resolves with no rules
+- **THEN** the console renders with an empty grid and no failure message
+
+#### Scenario: A failed listing states the failure instead of a not-found page
+
+- **WHEN** the server-side rules listing fetch fails
+- **THEN** the console still renders, reporting that the rules could not be loaded
+- **AND** the page does not resolve to a not-found result
 
 #### Scenario: Forbidden caller sees Page403 and no rules are fetched
 
@@ -169,8 +186,11 @@ from a view that hides disabled rules by default.
 
 ### Requirement: Enrichment rules listing grid
 
-The Enrichment rules page SHALL render the fetched rules as a grid, in the order the service returned them —
-the service's ordering is total, so the grid SHALL NOT re-sort client-side. Columns SHALL be: **name**,
+The Enrichment rules page SHALL render the fetched rules as a grid, seeded in the order the service returned
+them — that order is total, so no client-side sort is applied by default. Narrowing and reordering are the
+grid's own affordances: every data column SHALL remain sortable and filterable through the grid's standard
+column controls, and the page SHALL NOT carry a separate filter toolbar. Because the listing is unpaged, those
+controls act on the whole registry. Columns SHALL be: **name**,
 **target enrichment**, **source**, **trigger**, **evaluator**, **grain key**, **version column**,
 **enabled**, **generation**, and **updated at**.
 
@@ -218,47 +238,17 @@ refresh client-side, preserving the filters currently applied.
 - **WHEN** the user activates a rule's name cell
 - **THEN** the browser navigates to `/enrichment-rules/{id}` for that rule
 
+#### Scenario: Data columns stay sortable and filterable
+
+- **WHEN** the listing renders
+- **THEN** no data column disables sorting or filtering
+- **AND** no separate filter toolbar is rendered above the grid
+
 #### Scenario: Delete a rule
 
 - **WHEN** the user activates a row's delete action and confirms in the red confirmation dialog
-- **THEN** the rule is deleted, a success notification is shown, and the listing refreshes with the current filters still applied
+- **THEN** the rule is deleted, a success notification is shown, and the listing is re-read
 - **AND** a failure surfaces an error notification without removing the row
-
-### Requirement: Enrichment rules listing filters
-
-The listing SHALL offer two filters, held as client state and applied by re-fetching from the service — the
-service filters, not the grid. Filter state SHALL NOT be written to the URL, following the existing Analytics
-listing views.
-
-- **Enabled**: a three-way control — all rules / enabled only / disabled only. Selecting "all" SHALL cause the
-  request to carry **no** `enabled` parameter; the control MUST NOT resolve "all" to an empty string, which
-  the service rejects with HTTP 400.
-- **Updated since**: a preset selection ("Any time" plus relative windows) resolved to an ISO-8601 instant at
-  request time. "Any time" SHALL omit the `updated_since` parameter.
-
-A failed re-fetch SHALL surface an error notification and SHALL leave the previously displayed rows in place,
-so a transient failure does not read as "no rules match".
-
-#### Scenario: Filtering to disabled rules
-
-- **WHEN** the user selects "disabled only"
-- **THEN** the listing re-fetches with `enabled=false` and shows the returned rules
-
-#### Scenario: Clearing the enabled filter
-
-- **WHEN** the user returns the enabled filter to "all"
-- **THEN** the listing re-fetches with no `enabled` parameter in the request
-
-#### Scenario: Both filters apply together
-
-- **WHEN** the user selects "enabled only" and an updated-since window
-- **THEN** the request carries both parameters and the listing shows rules satisfying both
-
-#### Scenario: A failed re-fetch does not empty the grid
-
-- **WHEN** a filter change triggers a re-fetch that fails
-- **THEN** an error notification is shown
-- **AND** the rows from the previous successful fetch remain displayed
 
 ### Requirement: Rule creation requires full-admin rights and a registered evaluator
 
@@ -267,26 +257,36 @@ Registering and enabling a rule is `FULL_ADMIN`-only on the service, and a rule 
 caller's application role (`isFullAdmin` from `AppContext`) alone, and SHALL NOT attempt a per-rule permission
 derivation. A caller who is not a full admin SHALL see the listing without a create action.
 
-Because evaluators are registered outside this UI, a rule cannot be created at all when none exist. When the
-evaluator list is empty the create action SHALL be **disabled rather than hidden**, accompanied by a note
-stating that an evaluator must be registered through the API first. A disabled-with-explanation control
-distinguishes "nothing to build from yet" from "you may not do this", which hiding the action would conflate.
+Because evaluators are registered outside this UI, a rule cannot be created when none exist. The create
+action SHALL nonetheless stay available to a full admin regardless of how many evaluators are registered:
+the modal is where the shortage is visible and where submission is blocked, so gating the action that opens
+it would hide the explanation behind a control the operator cannot reach. With no evaluator registered the
+modal SHALL state that one must be registered through the API first, and submission SHALL be blocked because
+no evaluator can be selected. A failed evaluator listing SHALL be reported as a load failure rather than as
+"none are registered", which would send the operator to register one they may already have.
 
 #### Scenario: Non-admin sees no create action
 
 - **WHEN** a caller who is not a full admin opens the listing
 - **THEN** no create-rule action is offered
 
-#### Scenario: No evaluators registered
+#### Scenario: The create action does not depend on the evaluator list
 
 - **WHEN** a full admin opens the listing and the evaluator list is empty
-- **THEN** the create action is present but disabled
-- **AND** a note explains that an evaluator must be registered via the API first
+- **THEN** the create action is still enabled and opens the create-rule modal
+- **AND** the listing itself carries no note about the missing evaluator
 
-#### Scenario: Create action available
+#### Scenario: The modal explains a missing evaluator and blocks submission
 
-- **WHEN** a full admin opens the listing and at least one evaluator is registered
-- **THEN** the create action is enabled and opens the create-rule modal
+- **WHEN** the create-rule modal is open and no evaluator is registered
+- **THEN** it states that an evaluator must be registered through the API first
+- **AND** submission is blocked
+
+#### Scenario: A failed evaluator listing is not reported as an empty one
+
+- **WHEN** the evaluator listing fails
+- **THEN** the modal reports the load failure
+- **AND** it does not state that no evaluator is registered
 
 ### Requirement: Create-rule modal collects a complete rule in one request
 

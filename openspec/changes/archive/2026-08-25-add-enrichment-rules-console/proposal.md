@@ -25,9 +25,10 @@ follow-up.
 - **Delete from the listing** — a per-row action with a danger confirmation, mirroring the Tables
   catalog. Without it this change would ship a registry with no way to remove anything, since the
   detail page is deferred.
-- **Server-side listing filters** — `enabled` (all / enabled / disabled) and `updated_since`
-  (preset → ISO instant), refetched through a server action. The `enabled` parameter is **omitted
-  entirely** for "all"; the backend rejects an empty value with 400.
+- **Narrowing through the grid** — every data column stays sortable and filterable via the grid's own
+  column controls; the listing is unpaged, so those act on the whole registry. The server-side
+  `enabled` / `updated_since` filters remain on the API surface (the `enabled` parameter is omitted
+  entirely rather than sent empty, which the backend rejects with 400) but no screen drives them.
 - **Create-rule modal**, assembling a complete rule in one request (the API has no draft state):
   name, evaluator + version, target enrichment, trigger kind with its conditional block, output
   bindings, enabled.
@@ -73,7 +74,7 @@ the single master spec.
 ### Modified Capabilities
 
 - `analytics`: adds requirements for the enrichment-rules route and menu entry, the rules listing
-  grid and its server-side filters, the create-rule modal and its conditional trigger block, the
+  grid and its grid-native narrowing, the create-rule modal and its conditional trigger block, the
   four bespoke form controls, the rules/evaluators server API layer, and full-admin gating of rule
   creation.
 
