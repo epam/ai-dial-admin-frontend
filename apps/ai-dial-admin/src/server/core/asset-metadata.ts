@@ -1,6 +1,7 @@
 import {
   DialAppRunnerResource,
   DialApplicationResource,
+  DialInterceptorResource,
   DialModelResource,
   DialToolsetResource,
 } from '@/src/models/dial/resource';
@@ -192,6 +193,21 @@ export const mergeAppRunnerResource = (
   } as DialAppRunnerResource;
 };
 
+/**
+ * Interceptors are flat and unversioned like models — merged via `flatMetadataFields` for the same
+ * reason `mergeModelResource` is: the metadata `url`'s remainder after stripping
+ * `interceptors/platform/` is a bare name with no `/` separator to split into folderId + name.
+ */
+export const mergeInterceptorResource = (
+  content: Record<string, unknown>,
+  metadata: CoreResourceMetadataNode,
+): DialInterceptorResource => {
+  return {
+    ...content,
+    ...flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.INTERCEPTOR]),
+  } as DialInterceptorResource;
+};
+
 export type AssetMerge = (content: Record<string, unknown>, metadata: CoreResourceMetadataNode) => unknown;
 
 export const ASSET_MERGERS: Partial<Record<ResourceType, AssetMerge>> = {
@@ -201,4 +217,5 @@ export const ASSET_MERGERS: Partial<Record<ResourceType, AssetMerge>> = {
   [ResourceType.PROMPT]: mergePrompt,
   [ResourceType.MODEL]: mergeModelResource,
   [ResourceType.APP_TYPE_SCHEMA]: mergeAppRunnerResource,
+  [ResourceType.INTERCEPTOR]: mergeInterceptorResource,
 };

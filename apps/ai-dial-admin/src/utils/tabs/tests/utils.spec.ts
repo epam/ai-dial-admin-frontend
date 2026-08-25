@@ -204,6 +204,10 @@ describe('Entities :: tabs', () => {
     expect(getTabsForAsset(t, ApplicationRoute.AssetsSkills)).toEqual([propertiesTab(t), skillTab(t)]);
   });
 
+  test('returns Properties and Configuration tabs for AssetsInterceptors', () => {
+    expect(getTabsForAsset(t, ApplicationRoute.AssetsInterceptors)).toEqual([propertiesTab(t), parameterSchemaTab(t)]);
+  });
+
   test('returns correct tabs for key', () => {
     expect(getKeyTabs(t)).toEqual([propertiesTab(t), rolesTab(t), auditTab(t)]);
   });

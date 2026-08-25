@@ -90,6 +90,11 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
           isPreview: true,
         },
         {
+          key: MenuI18nKey.AssetsInterceptors,
+          href: ApplicationRoute.AssetsInterceptors,
+          isPreview: true,
+        },
+        {
           key: MenuI18nKey.Applications,
           href: ApplicationRoute.AssetsApplications,
         },

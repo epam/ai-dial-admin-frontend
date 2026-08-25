@@ -7,6 +7,7 @@ import { removeModel, updateModel } from '@/src/app/[lang]/assets-models/actions
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useModelsFolder } from '@/src/context/assets/ModelsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
@@ -26,9 +27,12 @@ interface Props {
   originalModel: AssetModel;
   roles: DialRole[];
   interceptors: DialInterceptor[];
+  globalInterceptors?: string[];
+  /** i18n keys for non-fatal problems from the server-side option reads, resolved here. */
+  optionWarnings?: EntitiesI18nKey[];
 }
 
-const ModelView: FC<Props> = ({ etag, originalModel, roles, interceptors }) => {
+const ModelView: FC<Props> = ({ etag, originalModel, roles, interceptors, globalInterceptors, optionWarnings }) => {
   const t = useI18n();
   const tabs = getTabsForAsset(t, ApplicationRoute.AssetsModels);
   const router = useRouter();
@@ -53,6 +57,14 @@ const ModelView: FC<Props> = ({ etag, originalModel, roles, interceptors }) => {
   useEffect(() => {
     setSelectedModel(structuredClone(originalModel));
   }, [originalModel]);
+
+  // An option list read from only one of Core's two populations is shown rather than withheld, so the
+  // user has to be told the list is incomplete — otherwise a missing interceptor reads as deleted.
+  useEffect(() => {
+    optionWarnings?.forEach((warning) => {
+      showNotification(getErrorNotification(t(EntitiesI18nKey.IncompleteOptionList), t(warning)));
+    });
+  }, [optionWarnings, showNotification, t]);
 
   useEffect(() => {
     if (Object.keys(selectedModel).length && originalModel) {
@@ -115,6 +127,7 @@ const ModelView: FC<Props> = ({ etag, originalModel, roles, interceptors }) => {
             originalModel={originalModel}
             roles={roles}
             interceptors={interceptors}
+            globalInterceptors={globalInterceptors}
             onChange={setSelectedModel}
           />
         )}
