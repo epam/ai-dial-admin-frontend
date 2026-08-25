@@ -142,6 +142,23 @@ describe('MENU_CONFIGURATION — Assets group', () => {
 
     expect(skillsItem?.href).toBe(ApplicationRoute.AssetsSkills);
   });
+
+  test('Interceptors follows App Runners', () => {
+    const group = findAssetsGroup(baseFlags);
+    const keys = group?.items.map((item) => item.key) || [];
+    const appRunnersIndex = keys.indexOf(MenuI18nKey.AppRunners);
+
+    expect(keys[appRunnersIndex + 1]).toBe(MenuI18nKey.AssetsInterceptors);
+  });
+
+  test('Interceptors links to the assets-interceptors route', () => {
+    const group = findAssetsGroup(baseFlags);
+    const interceptorsItem = group?.items.find(
+      (item) => item.key === MenuI18nKey.AssetsInterceptors && item.href === ApplicationRoute.AssetsInterceptors,
+    );
+
+    expect(interceptorsItem).toBeDefined();
+  });
 });
 
 describe('MENU_CONFIGURATION — Analytics group', () => {

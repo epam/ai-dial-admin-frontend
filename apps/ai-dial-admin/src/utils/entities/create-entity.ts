@@ -5,6 +5,7 @@ const createEntityMap: Record<string, CreateI18nKey> = {
   [ApplicationRoute.Models]: CreateI18nKey.Model,
   [ApplicationRoute.AssetsModels]: CreateI18nKey.Model,
   [ApplicationRoute.AssetsAppRunners]: CreateI18nKey.ApplicationRunner,
+  [ApplicationRoute.AssetsInterceptors]: CreateI18nKey.Interceptor,
   [ApplicationRoute.Applications]: CreateI18nKey.Application,
   [ApplicationRoute.ApplicationRunners]: CreateI18nKey.ApplicationRunner,
   [ApplicationRoute.Keys]: CreateI18nKey.Key,

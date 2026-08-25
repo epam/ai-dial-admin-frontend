@@ -13,6 +13,7 @@ export const PLATFORM_ROOT_FOLDER = 'platform';
 const FLAT_PLATFORM_VIEWS: readonly ApplicationRoute[] = [
   ApplicationRoute.AssetsModels,
   ApplicationRoute.AssetsAppRunners,
+  ApplicationRoute.AssetsInterceptors,
 ];
 
 export const isFlatPlatformView = (view?: ApplicationRoute): boolean => !!view && FLAT_PLATFORM_VIEWS.includes(view);
