@@ -208,8 +208,9 @@ const HeatMapTab: FC<Props> = ({
     [headerLabels],
   );
 
-  // Re-fit after columnDefs updates from Absolute/Delta (or theme) switches.
-  // Runs after AgGridWrapper's columnDefs effect so widths are not left at minWidth.
+  // Re-fit after columnDefs updates (Absolute/Delta, theme, matching-filter).
+  // onNewColumnsLoaded is the reliable hook: GridView buffers columnDefs one
+  // commit, so this React effect can run before AG Grid has the new columns.
   useEffect(() => {
     if (!gridApiRef.current || !columnDefs.length) {
       return;
@@ -244,6 +245,9 @@ const HeatMapTab: FC<Props> = ({
         sortable: false,
       },
       onFirstDataRendered: (event: FirstDataRenderedEvent) => {
+        fitHeatMapColumns(event.api);
+      },
+      onNewColumnsLoaded: (event: { api: GridApi }) => {
         fitHeatMapColumns(event.api);
       },
       onGridSizeChanged: (event: { api: GridApi }) => {
