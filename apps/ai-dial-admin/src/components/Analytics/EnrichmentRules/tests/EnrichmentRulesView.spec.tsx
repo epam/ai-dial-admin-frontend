@@ -2,7 +2,8 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { deleteRule, getEvaluators, getRules } from '@/src/app/[lang]/enrichment-rules/actions';
+import { deleteRule, getRules } from '@/src/app/[lang]/enrichment-rules/actions';
+import { getEvaluators } from '@/src/app/[lang]/evaluators/actions';
 import EnrichmentRulesView from '@/src/components/Analytics/EnrichmentRules/EnrichmentRulesView';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace';
@@ -11,6 +12,7 @@ import { EvaluatorType } from '@/src/models/analytics/evaluator';
 import { EnrichmentRuleListItem, TriggerKind } from '@/src/models/analytics/rule';
 
 vi.mock('@/src/app/[lang]/enrichment-rules/actions');
+vi.mock('@/src/app/[lang]/evaluators/actions');
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {

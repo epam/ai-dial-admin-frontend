@@ -93,6 +93,7 @@ Use `Parent/Child` for a single leaf, or just `Parent` when several children cha
 | `analytics/Tables` | `tables` | `Analytics` |
 | `analytics/ConversationsTrace` | `conversations-trace` | `Analytics` |
 | `analytics/EnrichmentRules` | `enrichment-rules` | `Analytics/EnrichmentRules` |
+| `analytics/Evaluators` | `evaluators` | `Analytics/Evaluators` |
 
 ---
 

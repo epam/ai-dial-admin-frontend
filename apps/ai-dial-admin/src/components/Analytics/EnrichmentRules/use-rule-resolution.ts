@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { getEvaluator, getEvaluatorVersion, getTable, getTables } from '@/src/app/[lang]/enrichment-rules/actions';
+import { getTable, getTables } from '@/src/app/[lang]/enrichment-rules/actions';
+import { getEvaluator, getEvaluatorVersion } from '@/src/app/[lang]/evaluators/actions';
 import { LATEST_VERSION } from '@/src/constants/analytics/enrichment-rules';
 import { Evaluator } from '@/src/models/analytics/evaluator';
 import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';

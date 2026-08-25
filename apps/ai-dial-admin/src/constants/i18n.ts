@@ -69,6 +69,7 @@ export enum MenuI18nKey {
   Queries = 'Menu.Queries',
   Tables = 'Menu.Tables',
   EnrichmentRules = 'Menu.EnrichmentRules',
+  Evaluators = 'Menu.Evaluators',
   AnalyticsConversations = 'Menu.AnalyticsConversations',
 }
 
@@ -2710,6 +2711,17 @@ export enum AnalyticsEnrichmentRulesI18nKey {
   DisableConfirmDescription = 'AnalyticsEnrichmentRules.DisableConfirmDescription',
   EnabledChanged = 'AnalyticsEnrichmentRules.EnabledChanged',
   ToggleBlockedByEdits = 'AnalyticsEnrichmentRules.ToggleBlockedByEdits',
+}
+
+export enum AnalyticsEvaluatorsI18nKey {
+  Name = 'AnalyticsEvaluators.Name',
+  LatestVersion = 'AnalyticsEvaluators.LatestVersion',
+  RegisteredAt = 'AnalyticsEvaluators.RegisteredAt',
+  UsedBy = 'AnalyticsEvaluators.UsedBy',
+  UsedByUnknown = 'AnalyticsEvaluators.UsedByUnknown',
+  NoEvaluators = 'AnalyticsEvaluators.NoEvaluators',
+  EvaluatorsLoadFailed = 'AnalyticsEvaluators.EvaluatorsLoadFailed',
+  UsageLoadFailed = 'AnalyticsEvaluators.UsageLoadFailed',
 }
 
 export enum ConversationsTraceI18nKey {

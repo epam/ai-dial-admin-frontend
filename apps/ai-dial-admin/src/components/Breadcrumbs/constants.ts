@@ -230,6 +230,15 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
       { name: 'Id', href: false },
     ],
   },
+  [ApplicationRoute.AnalyticsEvaluators]: {
+    segments: [
+      {
+        name: 'Evaluators',
+        i18nKey: MenuI18nKey.Evaluators,
+      },
+      { name: 'Name', href: false },
+    ],
+  },
   [ApplicationRoute.AnalyticsQueries]: {
     segments: [
       {
