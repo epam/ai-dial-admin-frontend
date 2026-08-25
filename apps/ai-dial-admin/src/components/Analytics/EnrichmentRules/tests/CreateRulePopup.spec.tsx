@@ -2,7 +2,8 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { createRule, getEvaluator, getTable, getTables } from '@/src/app/[lang]/enrichment-rules/actions';
+import { createRule, getTable, getTables } from '@/src/app/[lang]/enrichment-rules/actions';
+import { getEvaluator } from '@/src/app/[lang]/evaluators/actions';
 import CreateRulePopup from '@/src/components/Analytics/EnrichmentRules/CreateRulePopup';
 import { AnalyticsEnrichmentRulesI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
@@ -11,6 +12,7 @@ import { TriggerKind } from '@/src/models/analytics/rule';
 import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
 
 vi.mock('@/src/app/[lang]/enrichment-rules/actions');
+vi.mock('@/src/app/[lang]/evaluators/actions');
 
 vi.mock('@epam/ai-dial-ui-kit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@epam/ai-dial-ui-kit')>();

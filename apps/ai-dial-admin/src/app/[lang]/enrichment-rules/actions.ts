@@ -3,7 +3,6 @@
 import { cookies, headers } from 'next/headers';
 
 import { analyticsDataApi } from '@/src/app/api/api';
-import { Evaluator, EvaluatorSummary } from '@/src/models/analytics/evaluator';
 import { CreateRuleDto, EnrichmentRule, EnrichmentRuleListItem, RulesListFilters } from '@/src/models/analytics/rule';
 import { AnalyticsTable } from '@/src/models/analytics/table';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -32,18 +31,6 @@ export async function updateRule(id: string, dto: CreateRuleDto): Promise<Server
 
 export async function deleteRule(id: string): Promise<ServerActionResponse> {
   return analyticsDataApi.deleteRule(id, await token());
-}
-
-export async function getEvaluators(): Promise<EvaluatorSummary[] | null> {
-  return analyticsDataApi.getEvaluators(await token());
-}
-
-export async function getEvaluator(name: string): Promise<Evaluator | null> {
-  return analyticsDataApi.getEvaluator(name, await token());
-}
-
-export async function getEvaluatorVersion(name: string, version: number): Promise<Evaluator | null> {
-  return analyticsDataApi.getEvaluatorVersion(name, version, await token());
 }
 
 export async function getTables(): Promise<AnalyticsTable[] | null> {

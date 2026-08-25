@@ -6,7 +6,8 @@ import { EnrichmentRule } from '@/src/models/analytics/rule';
 import { EvaluatorSummary } from '@/src/models/analytics/evaluator';
 import { isAnalyticsForbidden } from '@/src/server/analytics/analytics-access';
 import { errorObjLog } from '@/src/server/logger';
-import { getEvaluators, getRule, getRules } from '../actions';
+import { getEvaluators } from '@/src/app/[lang]/evaluators/actions';
+import { getRule, getRules } from '../actions';
 
 export const dynamic = 'force-dynamic';
 

@@ -163,6 +163,7 @@ export default {
     Queries: 'Queries',
     Tables: 'Tables',
     EnrichmentRules: 'Enrichment rules',
+    Evaluators: 'Evaluators',
     AnalyticsConversations: 'Conversations',
 
     EntitiesDescription: 'Centralized space to configure and oversee key components of your AI ecosystem.',
@@ -2654,6 +2655,16 @@ export default {
     EvaluatorsLoadFailed: 'Could not load the evaluator list.',
     EvaluatorTypeLlm: 'LLM',
     EvaluatorTypeSql: 'SQL',
+  },
+  AnalyticsEvaluators: {
+    Name: 'Name',
+    LatestVersion: 'Latest version',
+    RegisteredAt: 'Registered at',
+    UsedBy: 'Used by',
+    UsedByUnknown: 'Unknown',
+    NoEvaluators: 'No evaluators',
+    EvaluatorsLoadFailed: 'Could not load evaluators.',
+    UsageLoadFailed: 'Could not load enrichment rules, so usage counts are unavailable.',
   },
   AnalyticsTables: {
     CreateSource: 'Create source',

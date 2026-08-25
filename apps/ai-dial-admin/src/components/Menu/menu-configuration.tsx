@@ -240,6 +240,10 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
           href: ApplicationRoute.AnalyticsEnrichmentRules,
         },
         {
+          key: MenuI18nKey.Evaluators,
+          href: ApplicationRoute.AnalyticsEvaluators,
+        },
+        {
           key: MenuI18nKey.Queries,
           href: ApplicationRoute.AnalyticsQueries,
         },

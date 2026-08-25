@@ -1,7 +1,8 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { getEvaluator, getEvaluatorVersion, getTable, getTables } from '@/src/app/[lang]/enrichment-rules/actions';
+import { getTable, getTables } from '@/src/app/[lang]/enrichment-rules/actions';
+import { getEvaluator, getEvaluatorVersion } from '@/src/app/[lang]/evaluators/actions';
 import { useRuleForm } from '@/src/components/Analytics/EnrichmentRules/use-rule-form';
 import { GROUP_FETCH_MAX_ROWS } from '@/src/constants/analytics/enrichment-rules';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
@@ -10,6 +11,7 @@ import { EnrichmentRule, RulePriority, TriggerKind } from '@/src/models/analytic
 import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
 
 vi.mock('@/src/app/[lang]/enrichment-rules/actions');
+vi.mock('@/src/app/[lang]/evaluators/actions');
 
 const sqlEvaluator: Evaluator = {
   name: 'feedback-rollup',

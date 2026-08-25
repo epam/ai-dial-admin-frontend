@@ -2,7 +2,8 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { getEvaluator, getTable, getTables, updateRule } from '@/src/app/[lang]/enrichment-rules/actions';
+import { getTable, getTables, updateRule } from '@/src/app/[lang]/enrichment-rules/actions';
+import { getEvaluator } from '@/src/app/[lang]/evaluators/actions';
 import RuleDetailView from '@/src/components/Analytics/EnrichmentRules/RuleDetailView';
 import { AnalyticsEnrichmentRulesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
@@ -11,6 +12,7 @@ import { EnrichmentRule, TriggerKind } from '@/src/models/analytics/rule';
 import { AnalyticsTable, AnalyticsTableType } from '@/src/models/analytics/table';
 
 vi.mock('@/src/app/[lang]/enrichment-rules/actions');
+vi.mock('@/src/app/[lang]/evaluators/actions');
 
 const refresh = vi.fn();
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh, push: vi.fn() }) }));
