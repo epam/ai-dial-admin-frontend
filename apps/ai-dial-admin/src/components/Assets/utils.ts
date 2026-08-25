@@ -91,6 +91,7 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
     case ApplicationRoute.AssetsModels:
     case ApplicationRoute.AssetsAppRunners:
     case ApplicationRoute.AssetsInterceptors:
+    case ApplicationRoute.AssetsRoutes:
       return isReadOnlyAdmin
         ? []
         : allActionLabels.filter(
@@ -161,6 +162,14 @@ export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: 
         {
           key: 'newItem',
           label: FileManagerI18nKey.Interceptor,
+          icon: null,
+        },
+      ];
+    case ApplicationRoute.AssetsRoutes:
+      return [
+        {
+          key: 'newItem',
+          label: FileManagerI18nKey.Route,
           icon: null,
         },
       ];
@@ -313,10 +322,12 @@ export const getDeleteNotificationContent = (
     }
     case ApplicationRoute.AssetsAppRunners:
     case ApplicationRoute.AssetsInterceptors:
+    case ApplicationRoute.AssetsRoutes:
     case ApplicationRoute.AssetsModels: {
       const itemLabel = (() => {
         if (view === ApplicationRoute.AssetsAppRunners) return FileManagerI18nKey.AppRunner;
         if (view === ApplicationRoute.AssetsInterceptors) return FileManagerI18nKey.Interceptor;
+        if (view === ApplicationRoute.AssetsRoutes) return FileManagerI18nKey.Route;
         return FileManagerI18nKey.Model;
       })();
       const title = isDeleteSeveralFiles

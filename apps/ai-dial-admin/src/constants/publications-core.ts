@@ -34,6 +34,7 @@ export const MODELS_PREFIX = 'models/platform/';
 export const SCHEMAS_PREFIX = 'schemas/platform/';
 export const INTERCEPTORS_PREFIX = 'interceptors/platform/';
 export const ROLES_PREFIX = 'roles/platform/';
+export const ROUTES_PREFIX = 'routes/platform/';
 
 export const RESOURCE_TYPE_PREFIX: Record<ResourceType, string> = {
   [ResourceType.APPLICATION]: APPLICATIONS_PREFIX,
@@ -46,6 +47,7 @@ export const RESOURCE_TYPE_PREFIX: Record<ResourceType, string> = {
   [ResourceType.APP_TYPE_SCHEMA]: SCHEMAS_PREFIX,
   [ResourceType.INTERCEPTOR]: INTERCEPTORS_PREFIX,
   [ResourceType.ROLE]: ROLES_PREFIX,
+  [ResourceType.ROUTE]: ROUTES_PREFIX,
 };
 
 /** Hardcoded list path — the backend always lists `publications/public/`. */

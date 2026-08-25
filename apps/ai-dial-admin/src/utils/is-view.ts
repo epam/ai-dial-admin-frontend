@@ -8,6 +8,7 @@ export const isAssetView = (view?: ApplicationRoute): boolean => {
     view === ApplicationRoute.AssetsModels ||
     view === ApplicationRoute.AssetsAppRunners ||
     view === ApplicationRoute.AssetsInterceptors ||
+    view === ApplicationRoute.AssetsRoutes ||
     view === ApplicationRoute.AssetsSkills ||
     isDeploymentAsset(view)
   );
