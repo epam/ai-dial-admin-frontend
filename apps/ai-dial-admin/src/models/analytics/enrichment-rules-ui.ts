@@ -1,4 +1,16 @@
-import { TriggerKind } from '@/src/models/analytics/rule';
+import { CreateRuleDto } from '@/src/models/analytics/rule';
+
+export type RuleDraft = Partial<CreateRuleDto>;
+
+export enum SourceMode {
+  Follow = 'follow',
+  Pin = 'pin',
+}
+
+export enum InputBindingKind {
+  Column = 'column',
+  Jsonata = 'jsonata',
+}
 
 export interface OutputBindingRow {
   id: string;
@@ -6,22 +18,15 @@ export interface OutputBindingRow {
   var: string;
 }
 
-export interface OutputBindingRowError {
+export interface InputBindingRow {
+  id: string;
+  var: string;
+  kind: InputBindingKind;
+  value: string;
+}
+
+export interface BindingRowError {
   isColumnUnavailable: boolean;
   isVarUnavailable: boolean;
   isTypeMismatch: boolean;
-}
-
-export interface CreateRuleForm {
-  name: string;
-  evaluatorName: string;
-  evaluatorVersion: string;
-  targetEnrichment: string;
-  triggerKind: TriggerKind | '';
-  enabled: boolean | null;
-  triggerCron: string;
-  idle: string;
-  maxStaleness: string;
-  costCeiling: string;
-  bindings: OutputBindingRow[];
 }

@@ -1,5 +1,5 @@
 import { EvaluatorVar } from '@/src/models/analytics/evaluator';
-import { OutputBindingRow, OutputBindingRowError } from '@/src/models/analytics/enrichment-rules-ui';
+import { BindingRowError, OutputBindingRow } from '@/src/models/analytics/enrichment-rules-ui';
 import { OutputBinding } from '@/src/models/analytics/rule';
 import { AnalyticsTableColumn } from '@/src/models/analytics/table';
 import { isTypeMismatch } from '@/src/utils/analytics/type-compatibility';
@@ -9,11 +9,17 @@ const nextBindingId = (): string => `binding-${++counter}`;
 
 export const createBindingRow = (): OutputBindingRow => ({ id: nextBindingId(), column: '', var: '' });
 
+// A rule with no bindings still opens on one empty row to edit.
+export const toBindingRows = (bindings?: OutputBinding[]): OutputBindingRow[] =>
+  bindings?.length
+    ? bindings.map(({ column, var: varName }) => ({ id: nextBindingId(), column, var: varName }))
+    : [createBindingRow()];
+
 export const getBindingRowError = (
   row: OutputBindingRow,
   columns: AnalyticsTableColumn[],
   vars: EvaluatorVar[],
-): OutputBindingRowError => {
+): BindingRowError => {
   const column = columns.find((c) => c.name === row.column);
   const variable = vars.find((v) => v.name === row.var);
 
@@ -24,7 +30,7 @@ export const getBindingRowError = (
   };
 };
 
-export const hasBlockingBindingError = (error: OutputBindingRowError): boolean =>
+export const hasBlockingBindingError = (error: BindingRowError): boolean =>
   error.isColumnUnavailable || error.isVarUnavailable;
 
 export const getTakenElsewhere = (rows: OutputBindingRow[], currentId: string, key: 'column' | 'var'): Set<string> =>
