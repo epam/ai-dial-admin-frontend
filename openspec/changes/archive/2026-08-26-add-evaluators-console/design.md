@@ -26,6 +26,11 @@ otherwise.
 
 ## Goals / Non-Goals
 
+> **Scope note.** This change was planned as a read-only console and then extended, at the user's
+> direction, to author versions. The requirements that said the console never mutates the registry were
+> rewritten rather than deleted: what survives is the accurate statement — a registered version is never
+> *changed* or removed, and the only write is *appending* a new one.
+
 **Goals**
 
 - Two server-rendered pages that read only, with each of the three server reads on the detail page failing
@@ -112,7 +117,19 @@ They are awaited in sequence rather than through `Promise.allSettled`, matching 
 sequential server-side calls to one service is the cost; if it ever shows, `allSettled` is a local change
 that does not touch the failure semantics above.
 
-### 5. `CodeViewer`, not `JsonEditorBase`, for the template and the schema
+### 5. Superseded: `CodeViewer` was planned for the template and the schema
+
+This decision held while the tab was read-only. Once Properties became a form, a read-only viewer was the
+wrong control for a member an operator has to change: the template is a `DialTextarea` and the schema goes
+through `JsonEditorInput`, which is how every other editable JSON member in the console is edited. The
+`isInitiallyOpen` prop this decision added to `CodeViewer` was removed again, since nothing consumes it; the
+`aria-controls`/`useId` and focusable-toggle fixes made to `CodeViewer` along the way were kept, because they
+are real accessibility defects independent of this change.
+
+The reasoning below is retained because it still explains why `CodeViewer` beats `JsonEditorBase` wherever a
+read-only view *is* wanted.
+
+#### Original decision
 
 `src/components/Common/CodeViewer/CodeViewer.tsx` already is every clause of the requirement: read-only
 Monaco, `wordWrap: 'on'`, height capped at `Math.min(lineCount * 19 + 24, 400)` with its own scroll, a copy
@@ -131,12 +148,46 @@ Two small changes to `CodeViewer`, both additive:
 - Its toggle carries `aria-expanded` with no `aria-controls`. While in the file, pair it with a `useId`-based
   id on the content region (`a11y.md`: expand/collapse needs both).
 
-### 6. No accordion on the detail page
+### 6. Tabs, not an accordion, and the repo's own tab plumbing
 
-The rule detail page groups with `Common/Accordion` because it holds ~25 *editable* controls that an
-operator has to navigate. This page holds seven read-only blocks, two of which (`CodeViewer`) already carry
-their own collapse header. Wrapping those in an accordion gives two chevrons for one thing to open. Blocks
-render as plain `<section>`s with headings and an `aria-label`, in the order the spec lists them.
+The detail page splits into `Properties` and `Rules` through `EntityViewTab`, `getEvaluatorTabs`, and
+`HeaderTabs` — the same three pieces every other entity view uses. Two consequences are worth writing down
+because both cost time to discover:
+
+- `HeaderTabs` carries `flex-1`, which means "fill the row". `SimpleEntityHeader` wraps it in a
+  `flex items-center justify-between` row for exactly that reason. Dropped straight into a `flex flex-col`
+  container it grows *vertically* instead — 373px of empty tab strip that pushes the content below the fold.
+  Reusing a component means reusing the container it was written for.
+- The facts that describe the version rather than define it sit **inside** `Properties`, above a divider,
+  mirroring `PropertiesTabContent` + `EntityInfoHeader`. `EntityInfoHeader` itself is not reusable here: it
+  hardcodes `updatedAt`/`createdAt` and their labels, and this page's two timestamps are *different facts*
+  (when the name was registered, when this version was), so borrowing it would mislabel them — the one thing
+  the spec forbids. Its markup is mirrored instead.
+
+An accordion was rejected: the rule detail page needs one because it holds ~25 controls in branches, while
+this tab is one linear form whose long members already scroll within their own bounds.
+
+### 6a. The form is a draft plus a per-type builder, mirroring the rule form
+
+`use-evaluator-form` holds a `CreateEvaluatorDto` draft and `buildEvaluatorDto` constructs the request per
+type rather than carrying members over, because the service rejects an `llm`-only member on a `sql`
+evaluator with 422 rather than ignoring it — the same trap the rule form's trigger branch has. "Changed" is
+computed by comparing two built DTOs, not draft against version, so the per-type construction cannot read as
+an edit nobody made.
+
+A variable's expression lives under `sql` or `jsonata` depending on type, so the builder moves it when the
+type changes rather than dropping it.
+
+### 6b. A select never blanks a value it was not offered
+
+`withStrandedOption` keeps a stored value selectable when it is outside the offered set. This is not
+hypothetical: the variable-type list is the catalog's wire codes, while the service also accepts aliases
+(`datetime`, `int`, `double`, `bool`) that resolve to different stored codes. Offering the aliases would let
+an operator pick a value the service silently renames; blanking them would let a save replace a member
+nobody touched. Offering the canonical set and stranding anything else is the only option that does neither.
+
+The same guard covers `type` and `preset`, so a value the service adds later degrades to "shown as reported"
+rather than to "silently cleared on the next save".
 
 ### 7. Layout: ag-grid for the page, CSS grid for the in-page readings
 
@@ -217,7 +268,11 @@ enumerating types. A future third type degrades to a full reading instead of a b
 
 ## Migration Plan
 
-None. Two new routes, one moved server-action module, one moved shared control, and one shared component
-gaining an opt-in prop. No data migration, no API change, no feature flag beyond the existing
-`ANALYTICS_ENABLED` that already gates the whole group. Rollback is reverting the commit; nothing persists
-state.
+None. Two new routes, one moved server-action module, one moved shared control, one shared component gaining
+an opt-in prop, and one added endpoint on an existing client. No data migration, no schema change, no feature
+flag beyond the existing `ANALYTICS_ENABLED` that already gates the whole group.
+
+Rollback is reverting the commit. The one irreversible thing this change makes possible is a **registered
+version**, which the service cannot delete — so a version created by mistake stays in the registry. That is
+the service's contract, not this change's defect, and it is why the number a save will create is named
+before the request is sent.

@@ -14,7 +14,7 @@ import {
   SavedQueryRequest,
   SavedQueryScope,
 } from '@/src/models/analytics/saved-query';
-import { Evaluator, EvaluatorSummary } from '@/src/models/analytics/evaluator';
+import { CreateEvaluatorDto, Evaluator, EvaluatorSummary } from '@/src/models/analytics/evaluator';
 import { CreateRuleDto, EnrichmentRule, RuleEnabledFilter, RulesListFilters } from '@/src/models/analytics/rule';
 import {
   AnalyticsSchemaPatch,
@@ -221,5 +221,10 @@ export class AnalyticsDataApi extends BaseApi {
 
   getEvaluatorVersion(name: string, version: number, token: Token): Promise<Evaluator | null> {
     return this.get<Evaluator>(EVALUATOR_VERSION_URL(name, version), token);
+  }
+
+  // The registry's only mutation: PUT and DELETE on a version answer 409 `evaluator_immutable`.
+  createEvaluator(dto: CreateEvaluatorDto, token: Token): Promise<ServerActionResponse<Evaluator>> {
+    return this.postAction<CreateEvaluatorDto>(EVALUATORS_URL, dto, token);
   }
 }

@@ -123,13 +123,18 @@ describe('getReferencingRules', () => {
     expect(referencing.map((item) => item.id)).toEqual(['r_1']);
   });
 
-  test('reports a pinned rule with the version it pins', () => {
+  test('keeps the whole rule so the grid can render its own columns', () => {
     const [referencing] = getReferencingRules([rule({ evaluator_version: 2 })], 'feedback-rollup');
 
-    expect(referencing).toMatchObject({ version: 2, isTrackingLatest: false });
+    expect(referencing).toMatchObject({
+      id: 'r_1',
+      name: 'turn-feedback-live',
+      target_enrichment: 'turn_feedback',
+      evaluator_version: 2,
+    });
   });
 
-  test('reports a rule declaring no version as tracking the latest', () => {
+  test('keeps a rule that declares no version, resolved as the service returned it', () => {
     const [referencing] = getReferencingRules(
       [
         rule({
@@ -140,7 +145,8 @@ describe('getReferencingRules', () => {
       'feedback-rollup',
     );
 
-    expect(referencing).toMatchObject({ version: 4, isTrackingLatest: true });
+    expect(referencing.evaluator_version).toBeUndefined();
+    expect(referencing.evaluator.version).toBe(4);
   });
 
   test('is empty when no rule names the evaluator', () => {

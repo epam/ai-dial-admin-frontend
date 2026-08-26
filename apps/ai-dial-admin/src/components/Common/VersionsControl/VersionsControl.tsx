@@ -4,7 +4,6 @@ import { DialSelect, SelectOption, SelectSize, SelectVariant } from '@epam/ai-di
 
 import { CompareI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { CompareView } from '@/src/types/activity-audit';
 
 interface Props {
   version: string;
@@ -19,12 +18,7 @@ const VersionsControl: FC<Props> = ({ version, setVersion, versions }) => {
     return { value: version, label: version };
   });
 
-  const onChange = useCallback(
-    (value: string) => {
-      setVersion(value as CompareView);
-    },
-    [setVersion],
-  );
+  const onChange = useCallback((value: string) => setVersion(value), [setVersion]);
 
   return (
     <DialSelect

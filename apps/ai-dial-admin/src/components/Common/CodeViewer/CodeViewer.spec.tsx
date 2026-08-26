@@ -21,6 +21,23 @@ describe('CodeViewer', () => {
     expect(screen.getByText('Request')).toBeInTheDocument();
   });
 
+  test('Should stay collapsed by default so its existing consumers are unchanged', () => {
+    render(<CodeViewer title="Request" content={sampleJson} />);
+
+    expect(screen.queryByText(/"key"/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { expanded: false })).toBeInTheDocument();
+  });
+
+  test('Should point its toggle at the content it controls', () => {
+    render(<CodeViewer title="Request" content={sampleJson} />);
+
+    fireEvent.click(screen.getByText('Request'));
+    const toggle = screen.getByRole('button', { expanded: true });
+
+    expect(toggle.getAttribute('aria-controls')).toBeTruthy();
+    expect(document.getElementById(toggle.getAttribute('aria-controls') as string)).toBeTruthy();
+  });
+
   test('Should expand on header click showing Monaco editor', () => {
     render(<CodeViewer title="Request" content={sampleJson} />);
 
@@ -50,9 +67,9 @@ describe('CodeViewer', () => {
   test('Should omit fullscreen button when hideFullscreen is true', () => {
     const { container } = render(<CodeViewer title="Response" content={sampleJson} hideFullscreen />);
 
-    // Only the copy button should remain in the header
+    // The collapse toggle and the copy button remain; the maximize button is gone.
     const buttons = container.querySelectorAll('button');
-    expect(buttons.length).toBe(1);
+    expect(buttons.length).toBe(2);
     expect(screen.queryByTestId('fullscreen-viewer')).not.toBeInTheDocument();
   });
 });

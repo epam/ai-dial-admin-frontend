@@ -80,68 +80,99 @@ quality gate itself.
 
 ## 5. Detail groundwork — PR B (#4290)
 
-- [ ] 5.1 In `src/models/analytics/evaluator.ts`, add `EvaluatorPreset`
+- [x] 5.1 In `src/models/analytics/evaluator.ts`, add `EvaluatorPreset`
   (`ChatCompletion = 'chat_completion'`) and retype `Evaluator.preset` from `string` to `EvaluatorPreset`.
   Nothing branches on it — see design.md Decision 10.
-- [ ] 5.2 Extend `AnalyticsEvaluatorsI18nKey` with the detail page's strings: the two distinctly-labelled
+- [x] 5.2 Extend `AnalyticsEvaluatorsI18nKey` with the detail page's strings: the two distinctly-labelled
   timestamps, the section headings, the empty-input-vars and no-referencing-rules statements, the
   immutability statement, and the version-list-degraded message.
-- [ ] 5.3 Move `EvaluatorTypeLlm` / `EvaluatorTypeSql` out of `AnalyticsEnrichmentRulesI18nKey` into
+- [x] 5.3 Move `EvaluatorTypeLlm` / `EvaluatorTypeSql` out of `AnalyticsEnrichmentRulesI18nKey` into
   `AnalyticsEvaluatorsI18nKey` (`src/constants/i18n.ts` + `src/locales/en.ts`); the rendered strings stay
   `'LLM'` and `'SQL'`.
 
 ## 6. Shared pieces — PR B (#4290)
 
-- [ ] 6.1 Move `src/components/Assets/Modals/VersionsControl.tsx` to
+- [x] 6.1 Move `src/components/Assets/Modals/VersionsControl.tsx` to
   `src/components/Common/VersionsControl/VersionsControl.tsx`, drop the `as CompareView` cast, and update
   the import in `src/components/Assets/Modals/CompareVersions.tsx` (design.md Decision 8).
-- [ ] 6.2 Add an opt-in `isInitiallyOpen?: boolean` prop to `src/components/Common/CodeViewer/CodeViewer.tsx`
+- [x] 6.2 Add an opt-in `isInitiallyOpen?: boolean` prop to `src/components/Common/CodeViewer/CodeViewer.tsx`
   seeding its `isOpen` state, defaulting to today's collapsed behaviour so its four existing consumers are
   unaffected.
-- [ ] 6.3 In the same component, pair the toggle's `aria-expanded` with `aria-controls` against a `useId`
+- [x] 6.3 In the same component, pair the toggle's `aria-expanded` with `aria-controls` against a `useId`
   id on the content region (`.claude/rules/a11y.md`).
-- [ ] 6.4 Extract the type badge from `src/components/Analytics/EnrichmentRules/EvaluatorCell.tsx` into
+- [x] 6.4 Extract the type badge from `src/components/Analytics/EnrichmentRules/EvaluatorCell.tsx` into
   `src/components/Analytics/Evaluators/EvaluatorTypeBadge.tsx`, carrying its `TYPE_COLOR` / `TYPE_LABEL`
   maps and reading the relocated i18n keys; have `EvaluatorCell` render it.
 
 ## 7. Evaluator detail page — PR B (#4290)
 
-- [ ] 7.1 Create `src/app/[lang]/evaluators/[name]/page.tsx`: guard, decode `{name}`, parse `?version`
+- [x] 7.1 Create `src/app/[lang]/evaluators/[name]/page.tsx`: guard, decode `{name}`, parse `?version`
   permissively (a non-positive-integer is ignored and the latest is read), then three separate `try`
   blocks — the addressed version, the evaluators listing, the rules listing — with the failure handling in
   design.md Decision 4. A null version read calls `notFound()`.
-- [ ] 7.2 Create `src/components/Analytics/Evaluators/EvaluatorDetailView.tsx` composing the sections in
+- [x] 7.2 Create `src/components/Analytics/Evaluators/EvaluatorDetailView.tsx` composing the sections in
   spec order as plain `<section>` elements with `aria-label` — no accordion (design.md Decision 6).
-- [ ] 7.3 Header: name, `EvaluatorTypeBadge`, the version switcher, and both timestamps under distinct
+- [x] 7.3 Header: name, `EvaluatorTypeBadge`, the version switcher, and both timestamps under distinct
   labels, with the name's timestamp reading unavailable when the listing read failed.
-- [ ] 7.4 Create `src/components/Analytics/Evaluators/EvaluatorVersionSwitcher.tsx` wrapping the relocated
+- [x] 7.4 Create `src/components/Analytics/Evaluators/EvaluatorVersionSwitcher.tsx` wrapping the relocated
   `VersionsControl`: options `1..latest_version` built with no request, `router.push` to the version URL on
   change, and a single-option degraded mode plus a stated failure when `latest_version` is unknown.
-- [ ] 7.5 Facts block: `type`, `preset`, `model` via `LabelledText`; `params` as a CSS-grid key/value
+- [x] 7.5 Facts block: `type`, `preset`, `model` via `LabelledText`; `params` as a CSS-grid key/value
   reading, one row per entry, not a JSON blob.
-- [ ] 7.6 Render `request_template` through `CodeViewer` with `isInitiallyOpen`, and `response_schema`
+- [x] 7.6 Render `request_template` through `CodeViewer` with `isInitiallyOpen`, and `response_schema`
   through `CodeViewer` collapsed.
-- [ ] 7.7 Create `src/components/Analytics/Evaluators/EvaluatorVarsGrid.tsx` — a CSS-grid reading of
+- [x] 7.7 Create `src/components/Analytics/Evaluators/EvaluatorVarsGrid.tsx` — a CSS-grid reading of
   `input_vars` (name, type) and `output_vars` (name, type, producing expression), expressions monospaced
   and truncated with `DialEllipsisTooltip`, and an explicit statement when no input variables are declared.
-- [ ] 7.8 Create `src/components/Analytics/Evaluators/EvaluatorUsedByPanel.tsx` listing the referencing
+- [x] 7.8 Create `src/components/Analytics/Evaluators/EvaluatorUsedByPanel.tsx` listing the referencing
   rules with links to `/enrichment-rules/{id}` and each rule's pin, an explicit "no rule references this"
   state, and a stated failure that is never rendered as "none".
-- [ ] 7.9 Branch the whole composition on `type === EvaluatorType.Sql` to omit preset, model, params,
+- [x] 7.9 Branch the whole composition on `type === EvaluatorType.Sql` to omit preset, model, params,
   request template, input vars, and response schema entirely; for `llm`, a permitted-but-absent member
   renders as explicitly unset. An unrecognised type falls through to rendering what the version carries.
-- [ ] 7.10 State the registry's immutability on the page: versions cannot be changed and a new version is
+- [x] 7.10 State the registry's immutability on the page: versions cannot be changed and a new version is
   registered through the API.
 
 ## 8. Navigation into the detail page — PR B (#4290)
 
-- [ ] 8.1 Add an `evaluatorDetailHref(name, version?)` helper alongside the Evaluators view that URL-encodes
+- [x] 8.1 Add an `evaluatorDetailHref(name, version?)` helper alongside the Evaluators view that URL-encodes
   the name and appends `?version=` only when a version is given, mirroring `ruleDetailHref`.
-- [ ] 8.2 Add row activation to `EvaluatorsView`: `navigateEntityUrl` on `onCellClicked`, honouring the
+- [x] 8.2 Add row activation to `EvaluatorsView`: `navigateEntityUrl` on `onCellClicked`, honouring the
   modifier keys that open a new tab, mirroring `EnrichmentRulesView`. The name column stays plain text.
-- [ ] 8.3 In `src/components/Analytics/EnrichmentRules/Properties/RuleReadOnlyFacts.tsx`, make the resolved
+- [x] 8.3 In `src/components/Analytics/EnrichmentRules/Properties/RuleReadOnlyFacts.tsx`, make the resolved
   evaluator a link to `evaluatorDetailHref(rule.evaluator.name, rule.evaluator.version)`. Leave the rules
   **listing** evaluator cell as text — the row already navigates to the rule.
+
+## 8a. Tabs and version authoring — PR B (#4290), added mid-change
+
+Scope the user added after the read-only detail page was working: the detail page became a tabbed entity
+view whose Properties tab authors a new version. Three requirements that forbade mutation were rewritten
+rather than dropped, and the master spec's API-surface requirement now carries `POST /v1/evaluators`.
+
+- [x] 8a.1 Add `EvaluatorPreset` and `CreateEvaluatorDto` to `src/models/analytics/evaluator.ts`;
+  `createEvaluator` to `analytics-data-api.ts` and to `evaluators/actions.ts`.
+- [x] 8a.2 Add `EntityViewTab.Rules`, `rulesTab`, and `getEvaluatorTabs` to `src/utils/tabs/utils.ts`, plus
+  `TabsI18nKey.Rules`.
+- [x] 8a.3 Add `src/utils/analytics/evaluator-dto.ts` — `toEvaluatorDraft`, `buildEvaluatorDto` constructing
+  per type, and `isEvaluatorShapeValid` mirroring `requireValidShape`.
+- [x] 8a.4 Add `use-evaluator-form` holding the draft, comparing built DTOs for `isChanged`, and reporting
+  `nextVersion` as `latest_version + 1` or null.
+- [x] 8a.5 Add `EvaluatorVarsEditor` and `EvaluatorParamsEditor` (addable/removable rows, disabled off the
+  role), replacing the read-only vars grid and the params block.
+- [x] 8a.6 Add `EvaluatorProperties` — every accepted member as a control, `name` read-only for everyone,
+  the `sql` branch omitting the six forbidden members.
+- [x] 8a.7 Add `EvaluatorRulesGrid` — a `GridView` of the referencing rules with row activation, replacing
+  `EvaluatorUsedByPanel`.
+- [x] 8a.8 Rework `EvaluatorDetailView` into the entity-view shape: identity and actions above the tabs
+  (version control leftmost of the actions), facts inside Properties above a divider, `HeaderTabs` wrapped
+  in a row so its `flex-1` fills the row rather than the column.
+- [x] 8a.9 Wire the save: `ChangedEntityButtons` with `isSaveAllowed={false}` plus a Save-as-new-version
+  button, a confirmation naming the version to be created, and navigation to it on success.
+- [x] 8a.10 Correct `EVALUATOR_VAR_TYPES` to the catalog wire codes and add `withStrandedOption` so a stored
+  alias or unknown value stays selected rather than blanking.
+- [x] 8a.11 Fix the seven Important findings from PR B's review that survive the restructure — chiefly the
+  double `decodeURIComponent` on the route param (Next already decodes; a name containing `%` threw
+  `URIError`) and `CodeViewer`'s non-focusable collapse toggle.
 
 ## 9. Tests — split per PR
 
@@ -161,28 +192,32 @@ PR A; 9.4–9.10 land with PR B.**
   is only observable there — a `*Permissions.spec.tsx` on the view could not reach it, and the view carries
   no role gate to test since the whole surface is open.
   The empty-registry and no-mutation-control cases live in 9.2, where the view is rendered.
-- [ ] 9.4 `Evaluators/tests/EvaluatorDetailView.spec.tsx` — both types in one file, since it is one
-  component. For `llm`: both timestamps under distinct labels, params read one entry at a time, the request
+- [x] 9.4 `Evaluators/tests/EvaluatorDetailView.spec.tsx` — both types in one file, since it is one
+  component. Rewritten for the tabbed authoring page: tab switching, the seeded form, the read-only name,
+  the confirmation naming the next version, and the posted DTO. A companion
+  `EvaluatorDetailPermissions.spec.tsx` covers the non-full-admin path (own file, because `test-setup`
+  pins `isFullAdmin` true), and `EvaluatorVarsEditor.spec.tsx` covers type preselection including a
+  stranded alias. For `llm`: both timestamps under distinct labels, params read one entry at a time, the request
   template readable without a further interaction, the response schema present, and a version carrying no
   `params` stating them unset rather than omitting the section. For `sql`: no preset, model, params,
   request-template, input-vars, or response-schema section, with type and output variables still presented.
   Mock `@monaco-editor/react` locally as `CodeViewer.spec.tsx` does.
-- [ ] 9.5 `Evaluators/tests/EvaluatorVersionSwitcher.spec.tsx` — every version from 1 to latest offered with
+- [x] 9.5 `Evaluators/tests/EvaluatorVersionSwitcher.spec.tsx` — every version from 1 to latest offered with
   no per-version request, the shown version marked, selection pushing the version URL, and the degraded
   single-option mode when `latest_version` is unknown.
-- [ ] 9.6 `Evaluators/tests/EvaluatorUsedByPanel.spec.tsx` — referencing rules linking to their own pages,
+- [x] 9.6 `Evaluators/tests/EvaluatorUsedByPanel.spec.tsx` — referencing rules linking to their own pages,
   the pin stated per rule, the explicit unreferenced state, and a failed listing never reading as "none".
-- [ ] 9.7 `Evaluators/tests/EvaluatorVarsGrid.spec.tsx` — output variables presented with their producing
+- [x] 9.7 `Evaluators/tests/EvaluatorVarsGrid.spec.tsx` — output variables presented with their producing
   expression, the full expression reachable without a pointer hover, and the no-input-variables statement.
-- [ ] 9.8 `Evaluators/tests/EvaluatorDetailPermissions.spec.tsx` — the detail page's guard plus its version
-  addressing: `Page403` with no fetch when forbidden, no param reads latest, a valid param reads that
+- [x] 9.8 `src/app/[lang]/evaluators/tests/detail-page.spec.tsx` — the detail page's guard plus its version
+  addressing, written against the page component for the same reason as 9.3: `Page403` with no fetch when forbidden, no param reads latest, a valid param reads that
   version, a malformed param falls back to latest without a not-found, and an unresolvable version is not
   found.
-- [ ] 9.9 Extend `Evaluators/tests/EvaluatorsView.spec.tsx` with row activation navigating to the detail
+- [x] 9.9 Extend `Evaluators/tests/EvaluatorsView.spec.tsx` with row activation navigating to the detail
   route, update `src/components/Analytics/EnrichmentRules/tests/cells.spec.tsx` for the relocated type i18n
   key, and assert in the rule detail's existing spec that the resolved evaluator links to the evaluator page
   at the rule's resolved version.
-- [ ] 9.10 Add a `CodeViewer` case for `isInitiallyOpen` in its existing spec, confirming the default keeps
+- [x] 9.10 Add a `CodeViewer` case for `isInitiallyOpen` in its existing spec, confirming the default keeps
   today's collapsed behaviour for its four consumers.
 
 Note on browser verification: the user was asked, per the `tasks` rule in `openspec/config.yaml`, whether to
@@ -198,6 +233,9 @@ followed, not skipped — no verification task is included by decision.
   `tsconfig.json` — it picks up stale `.next` types).
 - [x] 10.4 No doc under `docs/` describes the Analytics menu group, so none needs updating; confirm nothing
   new landed there before closing out.
+
+Group 10 ran clean for PR B too: full suite 9,863 passing / 4 skipped, lint 0 errors (134 warnings,
+unchanged), prettier clean, and `tsc -p tsconfig.app.json` reporting nothing in any touched file.
 
 Group 10 ran clean for PR A: full suite 9,795 passing / 4 skipped, lint 0 errors (134 warnings, unchanged
 from the pre-existing baseline), prettier clean, and `tsc -p tsconfig.app.json` reporting nothing in any
