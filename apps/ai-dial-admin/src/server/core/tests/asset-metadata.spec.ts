@@ -7,8 +7,10 @@ import {
   mergeApplicationResource,
   mergeConversation,
   mergeAppRunnerResource,
+  mergeInterceptorResource,
   mergeModelResource,
   mergePrompt,
+  mergeRouteResource,
   mergeToolsetResource,
   toResourceInfoList,
 } from '../asset-metadata';
@@ -103,6 +105,37 @@ describe('Server :: Core :: asset-metadata', () => {
       path: 'gpt-4',
       author: 'eve',
       updatedAt: '555',
+    });
+  });
+
+  test('mergeInterceptorResource sources name/folderId/path/author/updatedAt from metadata (flat, no version), rest from content', () => {
+    const content = { displayName: 'Redactor', endpoint: 'https://interceptor' };
+    const meta = metadata({ url: 'interceptors/platform/redactor', author: 'frank', updatedAt: 666 });
+
+    expect(mergeInterceptorResource(content, meta)).toEqual({
+      displayName: 'Redactor',
+      endpoint: 'https://interceptor',
+      name: 'redactor',
+      folderId: '',
+      path: 'redactor',
+      author: 'frank',
+      updatedAt: '666',
+    });
+  });
+
+  test('mergeRouteResource sources name/folderId/path/author/updatedAt from metadata (flat, no version), rest from content', () => {
+    const content = { paths: ['/api'], methods: ['GET'], order: 10 };
+    const meta = metadata({ url: 'routes/platform/my-route', author: 'grace', updatedAt: 777 });
+
+    expect(mergeRouteResource(content, meta)).toEqual({
+      paths: ['/api'],
+      methods: ['GET'],
+      order: 10,
+      name: 'my-route',
+      folderId: '',
+      path: 'my-route',
+      author: 'grace',
+      updatedAt: '777',
     });
   });
 

@@ -90,6 +90,8 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
         : allActionLabels.filter((item) => item.key !== 'duplicate' && item.key !== 'openInNewTab');
     case ApplicationRoute.AssetsModels:
     case ApplicationRoute.AssetsAppRunners:
+    case ApplicationRoute.AssetsInterceptors:
+    case ApplicationRoute.AssetsRoutes:
       return isReadOnlyAdmin
         ? []
         : allActionLabels.filter(
@@ -152,6 +154,22 @@ export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: 
         {
           key: 'newItem',
           label: FileManagerI18nKey.Model,
+          icon: null,
+        },
+      ];
+    case ApplicationRoute.AssetsInterceptors:
+      return [
+        {
+          key: 'newItem',
+          label: FileManagerI18nKey.Interceptor,
+          icon: null,
+        },
+      ];
+    case ApplicationRoute.AssetsRoutes:
+      return [
+        {
+          key: 'newItem',
+          label: FileManagerI18nKey.Route,
           icon: null,
         },
       ];
@@ -303,22 +321,24 @@ export const getDeleteNotificationContent = (
       return { title, description };
     }
     case ApplicationRoute.AssetsAppRunners:
+    case ApplicationRoute.AssetsInterceptors:
+    case ApplicationRoute.AssetsRoutes:
     case ApplicationRoute.AssetsModels: {
+      const itemLabel = (() => {
+        if (view === ApplicationRoute.AssetsAppRunners) return FileManagerI18nKey.AppRunner;
+        if (view === ApplicationRoute.AssetsInterceptors) return FileManagerI18nKey.Interceptor;
+        if (view === ApplicationRoute.AssetsRoutes) return FileManagerI18nKey.Route;
+        return FileManagerI18nKey.Model;
+      })();
       const title = isDeleteSeveralFiles
         ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Items) })
-        : t(FileManagerI18nKey.DeleteSuccessTitle, {
-            item: t(
-              view === ApplicationRoute.AssetsAppRunners ? FileManagerI18nKey.AppRunner : FileManagerI18nKey.Model,
-            ),
-          });
+        : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(itemLabel) });
       const description = isDeleteSeveralFiles
         ? t(FileManagerI18nKey.DeleteSuccessDescriptionForMany, {
             count: deletedItemsCount,
           })
         : t(FileManagerI18nKey.DeleteSuccessDescriptionForOne, {
-            item: t(
-              view === ApplicationRoute.AssetsAppRunners ? FileManagerI18nKey.AppRunner : FileManagerI18nKey.Model,
-            ),
+            item: t(itemLabel),
             name: nameWithPath,
           });
       return { title, description };

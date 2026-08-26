@@ -44,7 +44,9 @@ The system SHALL expose an environment variable `ANALYTICS_ENABLED` whose value 
 
 ### Requirement: Analytics menu group with Query Builder and Tables sub-items
 
-The left-navigation menu configuration (`MENU_CONFIGURATION` in `menu-configuration.tsx`) SHALL define an "Analytics" menu group whose sub-items are, in order, "Tables" (linking to the Tables route), "Queries" (linking to the Queries route), and "Conversations" (linking to the Conversations route). The group MUST use its own icon and follow the existing `MenuGroupConfiguration` shape. Routes SHALL be present in the `ApplicationRoute` enum (`types/routes.ts`) — `/queries`, `/tables`, and `/conversations-trace` — and labels SHALL exist in `MenuI18nKey` (`constants/i18n.ts`) with English strings in `locales/en.ts` ("Analytics", "Queries", "Tables", "Conversations"). The Conversations label MUST be a distinct `MenuI18nKey` member from the one used by the existing DIAL Core `/conversations` item, even though both render the same English string.
+The left-navigation menu configuration (`MENU_CONFIGURATION` in `menu-configuration.tsx`) SHALL define an "Analytics" menu group whose sub-items are, in order, "Tables" (linking to the Tables route), "Enrichment rules" (linking to the Enrichment rules route), "Queries" (linking to the Queries route), and "Conversations" (linking to the Conversations route). The group MUST use its own icon and follow the existing `MenuGroupConfiguration` shape. Routes SHALL be present in the `ApplicationRoute` enum (`types/routes.ts`) — `/queries`, `/tables`, `/enrichment-rules`, and `/conversations-trace` — and labels SHALL exist in `MenuI18nKey` (`constants/i18n.ts`) with English strings in `locales/en.ts` ("Analytics", "Queries", "Tables", "Enrichment rules", "Conversations"). The Conversations label MUST be a distinct `MenuI18nKey` member from the one used by the existing DIAL Core `/conversations` item, even though both render the same English string.
+
+The Enrichment rules route SHALL be spelled `/enrichment-rules`, not `/rules`: `src/components/Rules/` and the `RuleFolderProvider` in the app's provider stack already denote entity **access rules**, an unrelated capability, and a `/rules` route would shadow that meaning in the menu, in breadcrumbs, and in the codebase.
 
 The standalone `/query-builder` route SHALL NOT be present in the menu or in the `ApplicationRoute` enum. Requests to `/query-builder` SHALL redirect to `/queries` so existing links resolve.
 
@@ -53,6 +55,7 @@ The standalone `/query-builder` route SHALL NOT be present in the menu or in the
 - **WHEN** `featureFlags.analyticsEnabled` is `true` and the sidebar menu renders
 - **THEN** an "Analytics" group is present
 - **AND** expanding it shows a "Tables" sub-item linking to `/tables`
+- **AND** it shows an "Enrichment rules" sub-item linking to `/enrichment-rules`
 - **AND** it shows a "Queries" sub-item linking to `/queries`
 - **AND** it shows a "Conversations" sub-item linking to `/conversations-trace`
 - **AND** no "Query Builder" sub-item is present
@@ -123,6 +126,20 @@ Tables endpoints (base path `/v1/tables`):
 - `PATCH /v1/tables/{name}/schema` — evolve a materialized (`ACTIVE`) table's columns; exposed as `updateTableSchema`
 - `POST /v1/tables/{name}/rows` — insert rows into a table
 
+Enrichment rules endpoints (base path `/v1/rules`):
+- `GET /v1/rules` — list rules. Deployed builds of the service answer with either a bare array or a `{ items: [...] }` wrapper, so the client SHALL accept both and unwrap to a bare array; only a response that is neither SHALL be read as a failure. **Where the wrapper is used its key differs from the tables listing's `{ tables }`.** The listing accepts two optional filters, `enabled` and `updated_since`, which combine rather than replace one another. The client SHALL support both on the API surface even where no screen currently drives them. `enabled` SHALL be sent only as the literal `true` or `false`; when the caller expresses no preference the parameter SHALL be **omitted from the query string entirely**, because the service rejects an empty value — along with `1`, `yes`, `on`, `TRUE`, and a repeated parameter — with HTTP 400 rather than reading it as "unfiltered". The response order is total (oldest `updated_at` first, `id` breaking ties)
+- `POST /v1/rules` — register a rule. A rule is created **whole in a single request**; unlike a table there is no identity-then-schema split and no draft state. Exposed as an `*Action` returning a `ServerActionResponse`
+- `GET /v1/rules/{id}` — read one rule by id
+- `PUT /v1/rules/{id}` — **full replace**, not a merge-patch: an omitted member is erased. Exposed as an `*Action` returning a `ServerActionResponse`
+- `DELETE /v1/rules/{id}` — delete a rule by id; exposed as an `*Action` returning a `ServerActionResponse`
+
+Every rule the service returns is **resolved**: it carries its pinned evaluator version inlined as `evaluator`, its read `source` (declared on the rule, or defaulted to the target enrichment's `source_table` — the response does not distinguish the two), the `grain_key` derived from the target enrichment, and the read source's `version_column`, which is absent when that source declares no scan metadata. A disabled rule is resolved exactly like an enabled one. `generation` is bumped on every accepted mutation and is the change signal; the service exposes no `ETag`, so no precondition header is sent.
+
+Evaluator endpoints (base path `/v1/evaluators`), read-only from this app — evaluators are registered outside the UI:
+- `GET /v1/evaluators` — list evaluators as `{name, latest_version, created_at}`; as with the rules listing the response may be a bare array or a `{ items: [...] }` wrapper and the client SHALL accept both. Version definitions are **not** included
+- `GET /v1/evaluators/{name}` — read that evaluator's latest version in full, including `type` (`llm` or `sql`), `input_vars`, and `output_vars`
+- `GET /v1/evaluators/{name}/versions/{version}` — read one pinned version in full
+
 #### Scenario: Client targets the Analytics data-access host
 
 - **WHEN** `analyticsDataApi` is instantiated in `app/api/api.ts`
@@ -143,6 +160,24 @@ Tables endpoints (base path `/v1/tables`):
 - **WHEN** `analyticsDataApi` is used
 - **THEN** it can issue `GET /v1/tables` (unwrapping `{ tables }`), `POST /v1/tables` (identity-only), `GET /v1/tables/{name}`, `PUT /v1/tables/{name}` via `updateTable`, `DELETE /v1/tables/{name}`, `POST /v1/tables/{name}/schema` via `defineTableSchema`, `PATCH /v1/tables/{name}/schema` via `updateTableSchema`, and `POST /v1/tables/{name}/rows`
 
+#### Scenario: Client covers the rules and evaluators endpoints
+
+- **WHEN** `analyticsDataApi` is used
+- **THEN** it can issue `GET /v1/rules` (unwrapping `{ items }`), `POST /v1/rules`, `GET /v1/rules/{id}`, `PUT /v1/rules/{id}`, and `DELETE /v1/rules/{id}`
+- **AND** it can issue `GET /v1/evaluators` (unwrapping `{ items }`), `GET /v1/evaluators/{name}`, and `GET /v1/evaluators/{name}/versions/{version}`
+
+#### Scenario: The rules listing omits an unset enabled filter
+
+- **WHEN** the rules listing is requested with no preference on `enabled`
+- **THEN** the query string carries no `enabled` parameter at all
+- **AND** it is not sent as an empty value, which the service rejects with HTTP 400
+
+#### Scenario: The rules listing sends both filters together
+
+- **WHEN** the rules listing is requested for enabled rules updated since a given instant
+- **THEN** the query string carries `enabled=true` and `updated_since` with that instant
+- **AND** the two narrow the result together rather than one replacing the other
+
 ### Requirement: Analytics pages fetch initial data server-side
 
 The Analytics pages SHALL be `async` server components (`export const dynamic = 'force-dynamic'`) that fetch their initial data on the server via server actions delegating to `analyticsDataApi`, and pass that data to a client view as props; the client view SHALL own all subsequent interactive state and re-fetching. Fetch failures SHALL be logged (`errorObjLog`); a page whose required single entity is missing SHALL call `notFound()`. Pages SHALL NOT fetch their initial data from a client-side effect.
@@ -158,6 +193,12 @@ The Analytics pages SHALL be `async` server components (`export const dynamic = 
 - **WHEN** the user navigates to `/tables/{name}`
 - **THEN** the page awaits that table on the server and renders the detail view seeded with it
 - **AND** if the table is missing the page resolves to a not-found result
+
+#### Scenario: The enrichment rules listing is fetched on the server
+
+- **WHEN** the user navigates to `/enrichment-rules`
+- **THEN** the page awaits the unfiltered rules list on the server and renders the listing view seeded with it
+- **AND** if the list request fails the page renders the console with the failure stated rather than a not-found result
 
 #### Scenario: The queries list is fetched on the server
 
@@ -2293,12 +2334,19 @@ type error rather than a simplification.
 The conversations page SHALL provide a feedback filter with exactly four mutually exclusive states — all,
 positive, negative, and rated — defaulting to all. It SHALL reuse the shared `DialSegmentedControl`.
 
-Feedback lives in the `rate_analytics` entity, which the conversation rollup does not include, and the
-structured-query DSL accepts a single `entity` with no join construct. A feedback filter SHALL therefore be
-resolved as two queries: first a candidate query over `rate_analytics` returning the `chat_id` values carrying
-the requested feedback, then the conversation query over `conversations` narrowed to those ids with an `in`
-predicate. Both SHALL be issued server-side with the caller's token, and the `all` state SHALL issue only the
-conversation query, so the default path costs exactly one request per page.
+Feedback lives in the `response_ratings` entity — the per-response rollup of DIAL's rate events, keyed on the
+rated `response_id` and carrying the `chat_id` the rating was submitted from — which the conversation rollup
+does not include, and the structured-query DSL accepts a single `entity` with no join construct. A feedback
+filter SHALL therefore be resolved as two queries: first a candidate query over `response_ratings` returning
+the `chat_id` values carrying the requested feedback, then the conversation query over `conversations`
+narrowed to those ids with an `in` predicate. Both SHALL be issued server-side with the caller's token, and
+the `all` state SHALL issue only the conversation query, so the default path costs exactly one request per
+page.
+
+The rating source SHALL be the per-response rollup rather than the raw rate-event log. The rollup partitions
+each response's events into additive counts, which is what allows a direction to be selected and counted from
+the same columns; the event log carries a single normalized `rate` from which the directions cannot be
+separated without one query per direction.
 
 Both queries SHALL be issued within a **single** request from the client when the first page of a result is
 fetched, rather than the client resolving candidates in one request and the page in another. The candidate
@@ -2317,36 +2365,49 @@ regardless of how it is ordered, and the ordering is the operator's to choose, s
 be presented as the complete set of conversations carrying that feedback. The disclosure SHALL be visible
 while the capped filter state is applied and SHALL clear when the filter state no longer reaches the cap.
 
-The candidate query SHALL be aggregate mode over `rate_analytics` grouped by `chat_id`, carry the same time
-bounds as the conversation query and an empty-id guard, and select `chat_id` plus `max(request_time)`. It SHALL
-be ordered by most recent rating, so that if the candidate set reaches its limit the ids retained are the most
-recently rated ones. Its limit SHALL NOT exceed 1000, the service's hard maximum.
+The candidate query SHALL be aggregate mode over `response_ratings` grouped by `chat_id`, carry time bounds
+over `last_rate_time` matching the period the conversation query is bounded to, and an empty-id guard, and
+select `chat_id` plus `max(last_rate_time)`. It SHALL be ordered by most recent rating, so that if the
+candidate set reaches its limit the ids retained are the most recently rated ones. Its limit SHALL NOT exceed
+1000, the service's hard maximum.
 
 The rate predicates SHALL be:
 
 | State | Predicate |
 |---|---|
-| positive | `gt(rate, 0)` |
-| negative | `le(rate, 0)` |
-| rated | `ne(rate, null)` |
+| positive | `gt(rate_pos_count, 0)` |
+| negative | `gt(rate_zero_count, 0)` OR `gt(rate_neg_count, 0)` |
+| rated | `gt(rate_pos_count, 0)` OR `gt(rate_zero_count, 0)` OR `gt(rate_neg_count, 0)` |
 
-`rate` is signed: DIAL sends `1` for a like and `-1` for a dislike, and the service normalizes a boolean
-`false` to `0` and anything else to null. The negative state SHALL therefore match everything at or below
-zero rather than testing for a value below zero, so a `false` normalized to `0` counts as negative alongside a
-`-1` dislike. Neither comparison SHALL carry a companion null guard: SQL three-valued logic already evaluates
-both to NULL for an unrated row, so an unrated conversation matches neither. `rated` SHALL be its own
-`IS NOT NULL` predicate rather than a union of the other two, so a rating outside the positive/negative split
-still counts as rated, and SHALL use `ne` — the only operator besides `eq` that accepts a null right operand.
+These SHALL select exactly what the previous predicates over the event log's normalized `rate` selected, and
+the negative state SHALL keep its present meaning: `rate_zero_count` counts the events the service normalized
+to zero — a boolean `false` among them — and `rate_neg_count` counts the unambiguously negative ones, so
+their union is what `le(rate, 0)` matched. The negative state MUST NOT be narrowed to the provably negative
+subset: that would silently drop every non-positive rating whose submitted form predates the service's
+captured-form column, which is most of the recorded history, and a filter that quietly stops returning rows
+it used to return is a worse failure than a figure that needs a caveat.
+
+`rated` SHALL be the union of the three value-bearing counts rather than an `IS NOT NULL` test. The rollup
+partitions a response's events into positive, zero, negative and value-less counts, so those three cover
+every event that carried a rating and exclude only an event whose body carried no rate at all — which is what
+the previous null comparison excluded. The rule that `rated` must not be expressed as a union of the other two
+states no longer applies: it existed because a rating outside the positive/negative split could not be
+detected, and the rollup's partition leaves nothing outside it.
 
 When the candidate query returns no ids the page SHALL return no rows **without** issuing the conversation
 query: the service rejects an empty `in` list with HTTP 400, and "nothing carries this feedback" is already
 the complete answer. Blank ids SHALL be dropped from the candidate set. When the candidate query fails, the
 failure SHALL propagate and the conversation query MUST NOT run.
 
+The page MUST NOT fall back to the raw rate-event log when the rollup is absent. The rollup is provisioned
+per instance exactly as the conversation and turn rollups are, and the page cannot render without those
+either, so an absent rating rollup SHALL surface as the read failing rather than as a second rating path
+maintained beside the first.
+
 #### Scenario: Feedback filter issues the candidate query then the narrowed query
 
 - **WHEN** a feedback state other than all is selected
-- **THEN** a query against `rate_analytics` is issued first, carrying the state's rate predicate
+- **THEN** a query against `response_ratings` is issued first, carrying the state's rate predicate
 - **AND** a query against `conversations` follows, restricted to the returned ids by an `in` predicate
 - **AND** both carry the caller's token
 
@@ -2359,7 +2420,7 @@ failure SHALL propagate and the conversation query MUST NOT run.
 #### Scenario: Later pages reuse the ids without re-resolving them
 
 - **WHEN** the operator scrolls to a further page of a feedback-filtered result
-- **THEN** no further query against `rate_analytics` is issued
+- **THEN** no further query against `response_ratings` is issued
 - **AND** the page request carries the candidate ids the first page returned
 
 #### Scenario: The default state costs one query per page
@@ -2392,19 +2453,26 @@ failure SHALL propagate and the conversation query MUST NOT run.
 #### Scenario: Negative feedback includes a zero rating
 
 - **WHEN** the negative state is selected
-- **THEN** its predicate matches ratings less than or equal to zero, covering both a `-1` dislike and a
-  `false` thumb normalized to `0`
+- **THEN** its predicate matches a conversation whose only rating was normalized to zero, alongside one
+  carrying an unambiguously negative rating
+- **AND** it selects the same conversations the previous non-positive predicate selected
 
 #### Scenario: Rated covers both thumbs
 
 - **WHEN** the rated state is selected
-- **THEN** its predicate is a null comparison on `rate`, matching every conversation the two thumb states
-  match and any rating outside that split
+- **THEN** its predicate matches every conversation the two thumb states match
+- **AND** it does not match a conversation whose only rate event carried no rating value
 
 #### Scenario: Feedback composes with the other filters
 
 - **WHEN** a feedback state is selected while a search term and a time range are applied
 - **THEN** the narrowed conversation query still carries the search predicates and the time bounds
+
+#### Scenario: An instance without the rating rollup reports a failed read
+
+- **WHEN** a feedback state is selected on an instance that does not carry `response_ratings`
+- **THEN** the read fails and the failure is reported
+- **AND** no query against a raw rate-event log is issued as a substitute
 
 ### Requirement: Provenance line and result summary
 
@@ -2586,45 +2654,68 @@ pages already shown, and SHALL still raise the notification.
 ### Requirement: Rating column resolved for the displayed page
 
 The grid SHALL show a Rating column giving each conversation's positive and negative rating counts, attributed
-in the provenance band to `rate_analytics` rather than to `conversations`.
+in the provenance band to `response_ratings` rather than to `conversations`.
 
 Ratings SHALL be resolved by a query issued **after** the conversation query, restricted by `in` to exactly the
 conversation ids in the page just returned. Resolving them from the feedback filter's candidate set instead
 MUST NOT be done: that set is capped, so a displayed conversation could fall outside it and be reported as
 unrated when it is not. The ratings query SHALL be skipped entirely when the returned page has no rows.
 
-The split SHALL NOT be derived from one aggregate. `rate` is a signed integer — DIAL sends `1` for a like and
-`-1` for a dislike, and the service normalizes a boolean `false` to `0` — so `count(rate)` and `sum(rate)` do
-not determine the two directions: one like and one dislike sum to zero, indistinguishable from no likes at all.
+The two directions SHALL be resolved by a **single** query. The rating source partitions each response's
+events into additive counts, so the directions are separate columns rather than a split to be derived: one
+aggregate over `response_ratings` grouped by `chat_id`, restricted by `in` to the page's ids, selecting
+`sum(rate_pos_count)` for the positive side and `sum(rate_zero_count)` and `sum(rate_neg_count)` for the
+negative one. The previous rule requiring one query per direction SHALL NOT be carried forward: it existed
+because the event log's normalized `rate` is a signed integer from which `count` and `sum` cannot recover the
+two directions, and additive per-direction columns remove that obstacle entirely.
 
-Each direction SHALL instead be counted by its own query: aggregate mode over `rate_analytics` grouped by
-`chat_id`, selecting `count(rate)`, restricted by `in` to the page's ids, and filtered by the **same** rate
-predicate the corresponding feedback filter uses — `gt(rate, 0)` for the positive side and `le(rate, 0)` for
-the negative one. Reusing those predicates is what guarantees the column agrees with the filter: a
-conversation the Positive filter selected cannot then display a zero positive count. Two queries are required
-because the language offers no conditional aggregation; they SHALL be issued concurrently.
+The negative figure SHALL be the sum of the zero and negative counts, which is what the previous non-positive
+predicate counted, so the column's meaning is unchanged. Each side SHALL be counted from the **same** columns
+the corresponding feedback filter predicates on, which is what guarantees the column agrees with the filter:
+a conversation the Positive filter selected cannot then display a zero positive count, and the same holds for
+the negative side.
 
-Both queries SHALL carry the same time bounds as the conversation query. Bounding them identically keeps the
-column and the feedback filter consistent. The consequence — a rating given outside the selected period is not
-counted — is accepted for that consistency.
+The same query SHALL also select `sum(rate_bool_false_count)`, `sum(rate_raw_count)` and
+`sum(rate_event_count)`. These do not compose either figure: they state how much of the negative one is
+provably a thumbs-down, and how much of the conversation's feedback had its submitted form captured at all —
+which is a proportion, so the event count is named to give it a denominator. Where part of a negative figure is not established as a thumbs-down, that side SHALL
+carry a caveat saying so, and the caveat SHALL be reachable by keyboard and exposed to assistive technology —
+the figure is not redefined, it is disclosed. The caveat MUST NOT attribute the whole gap to an uncaptured
+form: a rating submitted as a numeric zero **is** captured, and is unestablished because the service has not
+fixed what a numeric zero means. Stating only the uncaptured cause would contradict the captured-form
+proportion quoted beside it. A cell whose negative figure is fully attributable, and a cell
+with no negative ratings, SHALL carry no caveat: a caveat on every cell would stop being read.
+
+The query SHALL carry time bounds over `last_rate_time` matching the period the conversation query is bounded
+to. Bounding them identically keeps the column and the feedback filter consistent. The consequence — a rating
+given outside the selected period is not counted — is accepted for that consistency.
 
 Both counts SHALL be displayed at all times, including a zero, so the absence of ratings on one side is visible
 rather than implied. A side carrying ratings SHALL be coloured — positive as success, negative as error, from
 theme tokens — and a side with none SHALL stay muted. Each side SHALL carry a text label for assistive
 technology, since the icons carry the meaning.
 
-When either ratings query fails, both counts SHALL be left unresolved and the cell SHALL render nothing rather
+When the ratings query fails, both counts SHALL be left unresolved and the cell SHALL render nothing rather
 than displaying zeros or a half-counted split, which would assert an absence of feedback that was never
 established. The conversation rows themselves SHALL still be returned.
 
-A comment indicator SHALL NOT be shown. `rate_analytics.comment` is catalogued sensitive, so it cannot be
-selected — or even counted — by a non-`FULL_ADMIN` caller.
+A comment indicator SHALL NOT be shown in the grid cell. The rating source's `comment_count` is catalogued
+**non**-sensitive, so the previous reason for withholding it — that the event log's comment column could not
+be counted by a caller without the elevated role — no longer holds. It is withheld on a different ground: the
+cell is a two-direction figure, a third signal in it is a design question of its own, and the conversation's
+comment count is stated on the detail view's feedback panel instead.
 
 #### Scenario: Ratings are resolved for exactly the page returned
 
 - **WHEN** a page of conversations is returned
-- **THEN** one `rate_analytics` count query per direction follows, each restricted by `in` to that page's ids
-- **AND** neither is issued at all when the page has no rows
+- **THEN** exactly one `response_ratings` aggregate query follows, restricted by `in` to that page's ids
+- **AND** it is not issued at all when the page has no rows
+
+#### Scenario: Both directions come from one query
+
+- **WHEN** the ratings query is built
+- **THEN** it selects the positive count and the two columns forming the negative count in one aggregate
+- **AND** no second query is issued for the other direction
 
 #### Scenario: Both directions are always shown
 
@@ -2634,8 +2725,31 @@ selected — or even counted — by a non-`FULL_ADMIN` caller.
 #### Scenario: A conversation rated both ways shows both counts
 
 - **WHEN** a conversation carries one like and one dislike
-- **THEN** it shows one on each side, each coloured for its own direction — not zero likes, which is what a
-  `count`-and-`sum` split reports for a signed rate
+- **THEN** it shows one on each side, each coloured for its own direction
+
+#### Scenario: A zero-normalized rating still counts as negative
+
+- **WHEN** a conversation's only rating was submitted as a boolean false and normalized to zero
+- **THEN** its negative count is one
+- **AND** the figure matches what the previous non-positive count reported
+
+#### Scenario: An unattributable negative figure carries a caveat
+
+- **WHEN** part of a conversation's negative count comes from events whose submitted form was never captured
+- **THEN** the negative side carries a caveat stating that
+- **AND** the caveat is reachable by keyboard and exposed to assistive technology
+
+#### Scenario: The caveat names both causes of an unestablished rating
+
+- **WHEN** a conversation's negative figure includes a rating submitted as a numeric zero whose form was
+  captured
+- **THEN** the caveat states that such a rating is not established as a thumbs-down
+- **AND** it does not claim the rating was recorded without its submitted form
+
+#### Scenario: A fully attributable figure carries no caveat
+
+- **WHEN** every event behind a conversation's negative count had its submitted form captured
+- **THEN** the negative side carries no caveat
 
 #### Scenario: An unrated conversation is muted, not blank
 
@@ -3818,29 +3932,56 @@ map to a colour, so a newly added source cannot render unstyled.
 
 ### Requirement: Conversation detail feedback reads the rating source
 
-The detail view SHALL read this conversation's ratings from the feedback source and SHALL state, **in the
+The detail view SHALL read this conversation's ratings from the rating source and SHALL state, **in the
 feedback panel**, how many were positive and how many negative. A conversation with no ratings SHALL state
 zero in both directions rather than rendering them as unavailable.
 
+Those figures SHALL come from an **aggregate scoped to the conversation**, not from counting the rows the
+panel loaded. The listed ratings are bounded, so counting them reports the bound rather than the conversation:
+a conversation with more rated responses than the view requested would state the count of the ones on screen
+while presenting it as the conversation's total. The figures SHALL therefore be exact regardless of how many
+the panel lists, and the list's own bound SHALL be disclosed separately.
+
+The negative figure SHALL be composed on the same terms as the grid's — the zero and negative counts
+together — and SHALL carry the same keyboard-reachable caveat where part of it is not attributable to a
+captured submitted form.
+
+The feedback panel SHALL list the conversation's rated **responses**, most recently rated first. The rating
+source rolls a response's rate events into one row per rated response, so the list's grain is the response
+rather than the individual event: a response rated more than once appears once. Each listed entry SHALL state
+its direction, and the time it was rated. Where a response's first and last rating times differ, the entry
+SHALL state the window rather than a single time, so a re-rated response does not present its latest rating as
+its only one.
+
+An entry whose response carries more than one distinct rating value SHALL state that its own ratings
+disagree. The source reports that condition directly, and a single direction shown for such a response would
+present one side of a contested rating as the response's verdict.
+
+Each entry SHALL state how many comments its response carries. The comment **count** is catalogued
+non-sensitive and is therefore stated for every caller. The comment **text** is catalogued sensitive, so it
+SHALL be named only when the fetched schema reports it — the same gate the transcript's body columns use —
+and an entry SHALL distinguish a response with no comments from one whose comment text this caller may not
+read. An entry MUST NOT render a comment as flatly unavailable where the count says there is one.
+
 Each assistant message SHALL also show the ratings attributed to its turn. Attribution SHALL be by time — a
-rating belongs to the last turn that had started when the rating was submitted — because the feedback source
-records no trace identifier and its trace and span columns are not queryable. This is an approximation and
-MUST NOT be presented as an exact join: a rating left after a later turn began is attributed to that later
-turn.
+rating belongs to the last turn that had started when the rating was submitted — using each rated response's
+latest rating time. The rating source records no trace identifier, so this remains an approximation and MUST
+NOT be presented as an exact join: a rating left after a later turn began is attributed to that later turn.
 
-The feedback panel SHALL list the conversation's individual ratings with their direction and the time each
-was recorded, most recent first.
-
-Each listed rating SHALL surface a comment field as unavailable. The feedback source's comment column is
-marked sensitive, so requesting it would make the view unavailable to callers without the elevated role.
-
-When more ratings exist than the view requested, the panel SHALL say the list is partial rather than
-presenting it as complete.
+When more rated responses exist than the view requested, the panel SHALL say the list is partial rather than
+presenting it as complete. That disclosure is about the **list**; the panel's direction figures are exact and
+SHALL NOT be qualified by it.
 
 #### Scenario: Rating counts render with the ratings they summarise
 
 - **WHEN** a conversation has positive and negative ratings
 - **THEN** the feedback panel states the count in each direction
+
+#### Scenario: The counts are exact, not the loaded subset
+
+- **WHEN** a conversation has more rated responses than the panel lists
+- **THEN** the stated direction counts cover every rated response of the conversation
+- **AND** they are not derived from the listed entries
 
 #### Scenario: An unrated conversation reports zero
 
@@ -3855,17 +3996,55 @@ presenting it as complete.
 #### Scenario: Individual ratings are listed
 
 - **WHEN** a conversation has ratings
-- **THEN** the feedback panel lists each with its direction and recorded time, most recent first
+- **THEN** the feedback panel lists each rated response with its direction and rating time, most recently
+  rated first
+- **AND** a response rated more than once appears as one entry rather than one per event
+
+#### Scenario: A re-rated response states its window, not one time
+
+- **WHEN** a listed response's first and last rating times differ
+- **THEN** the entry states the window rather than a single time
+
+#### Scenario: A contested response says its ratings disagree
+
+- **WHEN** a listed response carries more than one distinct rating value
+- **THEN** the entry states that its ratings disagree
 
 #### Scenario: A listed rating's comment is marked unavailable
 
-- **WHEN** the feedback panel lists a rating
-- **THEN** its comment renders as unavailable
+- **WHEN** the feedback panel lists a response carrying comments and the schema reports no comment text column
+- **THEN** the entry states how many comments the response carries
+- **AND** the comment text renders as unavailable to this caller rather than as absent
+- **AND** that is distinguished from a response carrying no comments at all
+
+#### Scenario: Comment text is read where the schema reports it
+
+- **WHEN** the schema reports the comment text column
+- **THEN** the query names it and the entry renders the comment
+
+#### Scenario: A response with no rating value is labelled neither way
+
+- **WHEN** a listed response's rate events carried no rating value at all
+- **THEN** the entry states that it carries no rating value
+- **AND** it is labelled neither positive nor negative, matching the figures that count it in neither
+
+#### Scenario: The comment count is stated alongside a readable comment
+
+- **WHEN** a listed response carries three comments and this caller may read the comment text
+- **THEN** the entry states the count as well as the text
+- **AND** the text is not presented as the response's only comment
+
+#### Scenario: A conversation-wide figure is not announced as period-scoped
+
+- **WHEN** the detail view's rating figures render
+- **THEN** their accessible names state the conversation's ratings without claiming a selected period
+- **AND** the grid's own figures, which are period-bounded, keep an accessible name that says so
 
 #### Scenario: A partial rating list says so
 
-- **WHEN** a conversation has more ratings than the view requested
+- **WHEN** a conversation has more rated responses than the view requested
 - **THEN** the panel states that the list is partial
+- **AND** the panel's direction figures are not qualified by that disclosure
 
 ### Requirement: Conversations grid with server-side ordering and per-column filtering
 
@@ -3904,7 +4083,7 @@ dropped. A reader SHALL NOT be led to believe such a filter searched every conve
 the enrichment has reached, which is under a quarter of them, and that is correct behaviour rather than a
 bug — but it is a narrowing of the population, not only of the result.
 
-The Rating column SHALL offer neither. It is composed from `rate_analytics` lookups resolved for the page
+The Rating column SHALL offer neither. It is composed from rating-source lookups resolved for the page
 just returned and has no field on the queried entity, so any ordering or narrowing of it could only describe
 the rows already on screen. The feedback control is the filter for that dimension.
 
@@ -4030,7 +4209,7 @@ from the column header beneath it.
 - **THEN** a band above the column headers groups the columns by source
 - **AND** every column belongs to exactly one group
 - **AND** the conversation, project, user, turns, activity, tokens and cost columns are attributed to
-  `conversations`, and the Rating column to `rate_analytics`
+  `conversations`, and the Rating column to `response_ratings`
 
 #### Scenario: Groups survive column movement
 
@@ -5880,3 +6059,828 @@ reader the trace could not be read while its rows were already in hand.
 - **WHEN** the hop read is bounded below the turn's recorded hop count
 - **THEN** the view states that the list is partial
 
+### Requirement: Enrichment rules page route and access guard
+
+The system SHALL expose an Analytics page at `/enrichment-rules`, present in the `ApplicationRoute` enum
+(`types/routes.ts`) as `AnalyticsEnrichmentRules`, with the route directory
+`src/app/[lang]/enrichment-rules/`. The page SHALL be a server component declaring
+`export const dynamic = 'force-dynamic'` that calls `isAnalyticsForbidden()` before any data access and
+renders `Page403` when it returns `true`, matching the guard the Tables, Queries, and Conversations pages
+already use. User-facing strings SHALL read "Enrichment rules".
+
+The listing view SHALL be seeded from an **unfiltered** server-side fetch, so the page opens showing every
+registered rule — enabled and disabled alike. Narrowing is the user's explicit act, because the question the
+page exists to answer ("is this enrichment's rule missing, or registered but switched off?") is unanswerable
+from a view that hides disabled rules by default.
+
+A registry holding no rules is an ordinary state and SHALL render as the console with an empty grid. A
+**failed** listing fetch SHALL also render the console, with the load failure stated on the page, and SHALL
+NOT resolve to a not-found result. A not-found page conflates three conditions an operator needs to tell
+apart — no rule registered, the service unreachable, and the route absent — which is the confusion this page
+exists to remove. The stated failure SHALL clear once a subsequent fetch succeeds.
+
+#### Scenario: Page renders for a permitted caller
+
+- **WHEN** `isAnalyticsForbidden()` returns `false` and `/enrichment-rules` is requested
+- **THEN** the page fetches the rules list on the server and renders the listing seeded with it
+- **AND** disabled rules are present in that initial listing
+
+#### Scenario: An empty registry renders as an empty grid
+
+- **WHEN** the rules listing resolves with no rules
+- **THEN** the console renders with an empty grid and no failure message
+
+#### Scenario: A failed listing states the failure instead of a not-found page
+
+- **WHEN** the server-side rules listing fetch fails
+- **THEN** the console still renders, reporting that the rules could not be loaded
+- **AND** the page does not resolve to a not-found result
+
+#### Scenario: Forbidden caller sees Page403 and no rules are fetched
+
+- **WHEN** `isAnalyticsForbidden()` returns `true` and `/enrichment-rules` is requested
+- **THEN** `Page403` is rendered
+- **AND** no rules request is issued
+
+### Requirement: Enrichment rules listing grid
+
+The Enrichment rules page SHALL render the fetched rules as a grid, seeded in the order the service returned
+them — that order is total, so no client-side sort is applied by default. Narrowing and reordering are the
+grid's own affordances: every data column SHALL remain sortable and filterable through the grid's standard
+column controls, and the page SHALL NOT carry a separate filter toolbar. Because the listing is unpaged, those
+controls act on the whole registry. Columns SHALL be: **name**,
+**target enrichment**, **source**, **trigger**, **evaluator**, **grain key**, **version column**,
+**enabled**, **generation**, and **updated at**.
+
+- The **name** cell SHALL navigate to that rule's detail route, `/enrichment-rules/{id}`.
+- The **trigger** cell SHALL show the `trigger_kind` as a badge, and beneath it the `trigger_cron` for a
+  `schedule` rule or `by {group_by}` for a `group` rule; an `on_ingest` rule SHALL show the badge alone.
+- The **evaluator** cell SHALL show `{evaluator_name}@{version}` with a badge for the evaluator's `llm` or
+  `sql` type, and SHALL mark the pin as "latest" when the rule declares no `evaluator_version`. This cell
+  SHALL be resolved from the listing response alone — the rule carries its evaluator inlined, so the grid
+  SHALL NOT issue a per-row evaluator request.
+- The **version column** cell SHALL render an em dash when the rule reports none, which means the read source
+  declares no scan metadata. This is a legitimate state on this read, not an error.
+- The **enabled** cell SHALL render as a badge distinguishing an enabled from a disabled rule; colour alone
+  SHALL NOT be the only carrier of that distinction.
+
+Each row SHALL offer an action menu with a **delete** entry, whose confirmation dialog SHALL use the danger
+(red confirm) variant and SHALL identify the rule by name. After a successful delete the listing SHALL
+refresh client-side, preserving the filters currently applied.
+
+#### Scenario: Listing renders a rule with its resolved evaluator
+
+- **WHEN** the listing renders a rule pinned to version 4 of an `llm` evaluator
+- **THEN** its evaluator cell shows the evaluator name with version 4 and an `llm` type badge
+- **AND** no additional evaluator request is issued for that row
+
+#### Scenario: An unpinned evaluator is marked latest
+
+- **WHEN** the listing renders a rule that declares no `evaluator_version`
+- **THEN** its evaluator cell marks the pin as "latest"
+
+#### Scenario: Trigger cell carries the kind and its qualifier
+
+- **WHEN** the listing renders a `schedule` rule and a `group` rule
+- **THEN** the `schedule` row shows a schedule badge with its cron expression beneath
+- **AND** the `group` row shows a group badge with `by {group_by}` beneath
+
+#### Scenario: A rule whose source declares no scan metadata
+
+- **WHEN** the listing renders a rule with no `version_column`
+- **THEN** that cell shows an em dash
+- **AND** the row is presented as an ordinary rule, not as a failure
+
+#### Scenario: Navigating to a rule
+
+- **WHEN** the user activates a rule's name cell
+- **THEN** the browser navigates to `/enrichment-rules/{id}` for that rule
+
+#### Scenario: Data columns stay sortable and filterable
+
+- **WHEN** the listing renders
+- **THEN** no data column disables sorting or filtering
+- **AND** no separate filter toolbar is rendered above the grid
+
+#### Scenario: Delete a rule
+
+- **WHEN** the user activates a row's delete action and confirms in the red confirmation dialog
+- **THEN** the rule is deleted, a success notification is shown, and the listing is re-read
+- **AND** a failure surfaces an error notification without removing the row
+
+### Requirement: Rule creation requires full-admin rights and a registered evaluator
+
+Registering and enabling a rule is `FULL_ADMIN`-only on the service, and a rule DTO carries no per-entity
+`permissions` object of the kind table DTOs report. The console SHALL therefore gate the create action on the
+caller's application role (`isFullAdmin` from `AppContext`) alone, and SHALL NOT attempt a per-rule permission
+derivation. A caller who is not a full admin SHALL see the listing without a create action.
+
+Because evaluators are registered outside this UI, a rule cannot be created when none exist. The create
+action SHALL nonetheless stay available to a full admin regardless of how many evaluators are registered:
+the modal is where the shortage is visible and where submission is blocked, so gating the action that opens
+it would hide the explanation behind a control the operator cannot reach. With no evaluator registered the
+modal SHALL state that one must be registered through the API first, and submission SHALL be blocked because
+no evaluator can be selected. A failed evaluator listing SHALL be reported as a load failure rather than as
+"none are registered", which would send the operator to register one they may already have.
+
+#### Scenario: Non-admin sees no create action
+
+- **WHEN** a caller who is not a full admin opens the listing
+- **THEN** no create-rule action is offered
+
+#### Scenario: The create action does not depend on the evaluator list
+
+- **WHEN** a full admin opens the listing and the evaluator list is empty
+- **THEN** the create action is still enabled and opens the create-rule modal
+- **AND** the listing itself carries no note about the missing evaluator
+
+#### Scenario: The modal explains a missing evaluator and blocks submission
+
+- **WHEN** the create-rule modal is open and no evaluator is registered
+- **THEN** it states that an evaluator must be registered through the API first
+- **AND** submission is blocked
+
+#### Scenario: A failed evaluator listing is not reported as an empty one
+
+- **WHEN** the evaluator listing fails
+- **THEN** the modal reports the load failure
+- **AND** it does not state that no evaluator is registered
+
+### Requirement: Create-rule modal collects a complete rule in one request
+
+The service has no draft state for a rule: it is created whole by a single `POST /v1/rules`. The create modal
+SHALL therefore assemble a submittable rule in one pass, collecting fields in this order: **name**,
+**evaluator**, **evaluator version**, **target enrichment**, **trigger kind**, the conditional block for the
+selected trigger kind, **output bindings**, **enabled**.
+
+The modal SHALL be mounted only while open, so closing discards its state without a manual reset, following
+the create-table popup.
+
+Five values are required by the service, and all five SHALL be required to submit:
+
+- **name** — validated only as non-blank; the service defines no grammar for it. Uniqueness is enforced by
+  the service, not pre-checked here.
+- **evaluator** — selected from the registered evaluators.
+- **target enrichment** — selected from tables of type `enrichment`.
+- **trigger kind** — one of `on_ingest`, `schedule`, `group`.
+- **enabled** — an explicit `true`/`false` choice with **no default**. The service models this as a
+  non-nullable boolean specifically so that whether a rule starts live is an operator decision rather than an
+  omission silently becoming `false`; the modal SHALL preserve that by refusing to submit until the operator
+  chooses. The `true` option SHALL be captioned "Runs on its schedule" and the `false` option "Registered but
+  not running. Manual scan and backfill still work".
+
+**Evaluator version** is optional: the control SHALL offer "latest" alongside each concrete version from `1`
+to the evaluator's `latest_version`, and "latest" SHALL submit no `evaluator_version` member rather than a
+literal string.
+
+On success the modal SHALL close, show a success notification, and refresh the listing.
+
+#### Scenario: All five required values are needed to submit
+
+- **WHEN** the modal is open with any of name, evaluator, target enrichment, trigger kind, or enabled unset
+- **THEN** submission is blocked
+
+#### Scenario: Enabled has no default
+
+- **WHEN** the modal is opened
+- **THEN** neither the enabled nor the disabled option is preselected
+- **AND** both options carry their captions describing what the choice means
+
+#### Scenario: Latest version is submitted as an omission
+
+- **WHEN** the user leaves the evaluator version as "latest" and submits
+- **THEN** the request body carries no `evaluator_version` member
+
+#### Scenario: Modal state is discarded on close
+
+- **WHEN** the user opens the modal, edits fields, and closes it
+- **THEN** re-opening the modal shows a fresh, empty form
+
+#### Scenario: Successful creation refreshes the listing
+
+- **WHEN** creation succeeds
+- **THEN** the modal closes, a success notification is shown, and the new rule appears in the listing
+
+### Requirement: The selected trigger kind determines which members are sent
+
+The service's trigger invariants run **both ways**: a member that belongs to the selected trigger kind is
+required, and a member that does not belong to it is **rejected with HTTP 422 rather than ignored**. The modal
+SHALL therefore strip the members of every unselected branch from the request body — hiding a control is not
+sufficient, because a value entered before the trigger kind was changed would otherwise still be submitted.
+
+- `trigger_kind = on_ingest` — the body SHALL carry none of `trigger_cron`, `group_by`, `ready_when`, or
+  `member_select`.
+- `trigger_kind = schedule` — `trigger_cron` SHALL be required; `group_by`, `ready_when`, and `member_select`
+  SHALL be absent.
+- `trigger_kind = group` — `group_by` and `ready_when` SHALL both be required; `trigger_cron` SHALL be absent.
+  `member_select` is never required and is not collected by this modal.
+
+#### Scenario: Switching trigger kind strips the abandoned branch
+
+- **WHEN** the user fills a cron expression, then switches the trigger kind to `group`, then submits
+- **THEN** the request body carries `group_by` and `ready_when` and carries no `trigger_cron`
+
+#### Scenario: An on-ingest rule sends no trigger qualifiers
+
+- **WHEN** the user submits an `on_ingest` rule
+- **THEN** the request body carries none of `trigger_cron`, `group_by`, `ready_when`, or `member_select`
+
+#### Scenario: A schedule rule requires its cron
+
+- **WHEN** the trigger kind is `schedule` and no cron expression has been provided
+- **THEN** submission is blocked
+
+#### Scenario: A group rule requires its readiness declaration
+
+- **WHEN** the trigger kind is `group` and no readiness condition has been provided
+- **THEN** submission is blocked
+
+### Requirement: The modal resolves the evaluator and the target table on demand
+
+Neither list response carries what the form needs: `GET /v1/evaluators` returns no version definitions, and
+`GET /v1/tables` returns neither `grain` nor `columns`. Rule editing — in the create modal and on the detail
+page alike — SHALL therefore read the full evaluator whenever the selected evaluator or its version changes
+— the pinned version via `GET /v1/evaluators/{name}/versions/{version}`, "latest" via
+`GET /v1/evaluators/{name}` — and the full target table via `GET /v1/tables/{name}` whenever the target
+enrichment changes. Resolved values SHALL be cached by their key for as long as the surface is open, so
+re-selecting a previously chosen evaluator, version, or table issues no second request.
+
+Controls that depend on a resolution SHALL report a pending state while it is in flight rather than rendering
+as empty, and a failed resolution SHALL be reported in the form rather than leaving a control silently
+unpopulated.
+
+#### Scenario: Selecting an evaluator resolves its variables
+
+- **WHEN** the user selects an evaluator
+- **THEN** its full definition is read and its `output_vars` become available to the output-bindings editor
+
+#### Scenario: Pinning a version re-resolves
+
+- **WHEN** the user changes the evaluator version from "latest" to a concrete version
+- **THEN** that version is read and the available output variables are those of the pinned version
+
+#### Scenario: Resolutions are cached
+
+- **WHEN** the user selects a target enrichment, switches to another, and switches back
+- **THEN** no second request is issued for the first table
+
+#### Scenario: A failed resolution is reported
+
+- **WHEN** reading the selected target table fails
+- **THEN** the form reports the failure
+- **AND** the controls that depend on that table do not present themselves as having no options
+
+### Requirement: Target enrichments already bound to a rule are not offered
+
+An enrichment table admits **at most one** rule — a UNIQUE constraint, because an enrichment is a
+replacing-merge table whose rows are replaced whole by grain, so two rules writing different columns of the
+same row would clobber one another. A second rule on the same target is rejected with HTTP 409.
+
+The target-enrichment control SHALL therefore offer only enrichment tables that no existing rule already
+targets, derived by excluding the rules listing's target enrichments from the enrichment tables. Learning
+about the constraint from a 409 after filling in an entire form is a preventable failure.
+
+When an existing rule is being edited, its **own** target SHALL remain on offer. That target is bound by the
+rule doing the editing, so excluding it would strand the control on a value it does not list and make the
+rule unsaveable without repointing it.
+
+The 409 SHALL still be handled: the exclusion is computed from data that can be stale by the time the form is
+submitted, so a rejection SHALL surface the service's message and leave the form open with its values intact.
+
+#### Scenario: A bound enrichment is not offered as a target
+
+- **WHEN** an enrichment table is already the target of a registered rule
+- **THEN** it does not appear among the target-enrichment options
+
+#### Scenario: An edited rule still offers its own target
+
+- **WHEN** an existing rule is opened for editing
+- **THEN** its current target enrichment is among the offered options
+
+#### Scenario: Every enrichment is already bound
+
+- **WHEN** every enrichment table already has a rule
+- **THEN** the target-enrichment control offers no options and states why
+
+#### Scenario: A racing 409 is surfaced without losing the form
+
+- **WHEN** submission is rejected with HTTP 409 because another rule claimed the target first
+- **THEN** the service's message is shown
+- **AND** the modal stays open with the entered values intact
+
+### Requirement: Output bindings editor
+
+`output_bindings` maps the evaluator's output variables onto the target table's columns; without it a rule
+computes a result and discards it. The modal SHALL collect it as a repeater whose every row is a pair of
+selects: a **column**, from the resolved target table's `columns`, and a **variable**, from the resolved
+evaluator version's `output_vars`.
+
+- The editor SHALL enforce the one-to-one mapping by suppressing an already-chosen column or variable from its
+  sibling rows' options. This guard is load-bearing rather than cosmetic: the service does not reject a
+  duplicate, it silently drops a binding, so an unguarded duplicate produces a rule that quietly writes less
+  than the operator specified.
+- Each option SHALL display its type alongside its name. When a row pairs a column and a variable whose types
+  disagree, the editor SHALL flag the row. The flag is advisory — the service remains the authority — and
+  SHALL NOT by itself block submission.
+- When the evaluator, the version, or the target table changes so that a chosen column or variable no longer
+  exists, the editor SHALL **mark the affected rows as invalid and retain their values**, and MUST NOT clear
+  them silently. A silent clear destroys work the operator has already done and gives no account of why.
+- Before both an evaluator and a target table are chosen the editor SHALL render an empty state directing the
+  operator to choose them, rather than an empty repeater.
+
+At least one binding SHALL be required to submit when the resolved evaluator's `type` is `sql`, which the
+service rejects outright without one. For an `llm` evaluator the service accepts a rule with no bindings, and
+submission SHALL be allowed — but the modal SHALL warn that such a rule computes results and stores none,
+since that is a silent misconfiguration rather than a deliberate mode.
+
+#### Scenario: Empty state before its inputs are chosen
+
+- **WHEN** the modal is open with no evaluator or no target enrichment selected
+- **THEN** the output-bindings editor shows a prompt to select an evaluator and a target table
+
+#### Scenario: A chosen column is withheld from sibling rows
+
+- **WHEN** a row binds a target column
+- **THEN** that column is not offered in any other row's column select
+
+#### Scenario: A chosen variable is withheld from sibling rows
+
+- **WHEN** a row binds an output variable
+- **THEN** that variable is not offered in any other row's variable select
+
+#### Scenario: A type mismatch is flagged but not blocking
+
+- **WHEN** a row pairs a column and a variable of disagreeing types
+- **THEN** the row is flagged with the mismatch
+- **AND** submission is not blocked by that flag alone
+
+#### Scenario: Changing the evaluator invalidates rather than clears
+
+- **WHEN** filled rows exist and the user changes the evaluator to one lacking those output variables
+- **THEN** the affected rows keep their values and are marked invalid
+- **AND** no row is silently emptied
+
+#### Scenario: A sql evaluator requires at least one binding
+
+- **WHEN** the resolved evaluator's type is `sql` and no output binding has been added
+- **THEN** submission is blocked
+
+#### Scenario: An llm evaluator with no bindings warns
+
+- **WHEN** the resolved evaluator's type is `llm` and no output binding has been added
+- **THEN** the modal warns that the rule will compute results and store none
+- **AND** submission remains possible
+
+### Requirement: Six-field cron control for a scheduled rule
+
+The service checks only whether `trigger_cron` is present or absent for the selected trigger kind — it never
+parses the expression, at create or at update. A syntactically invalid expression is accepted with HTTP 201
+and fails later inside the runner, where the operator will not be looking. The console is the only guard, so
+the control SHALL validate the expression it submits.
+
+The accepted format is **six-field cron** — seconds, minutes, hours, day-of-month, month, day-of-week —
+matching every expression the service configures and the parser its sibling scheduled capability validates
+against. A five-field expression SHALL be rejected by the control: it parses as a *different* schedule under a
+six-field reader, so accepting one silently shifts the schedule rather than failing.
+
+The control SHALL offer named presets alongside a custom expression. A custom expression SHALL be validated
+for its field count before submission, and an invalid expression SHALL block submission with a message naming
+the six-field requirement.
+
+#### Scenario: A preset yields a six-field expression
+
+- **WHEN** the user selects a named schedule preset
+- **THEN** the value submitted as `trigger_cron` has six fields
+
+#### Scenario: A five-field custom expression is rejected
+
+- **WHEN** the user enters a five-field expression
+- **THEN** the control reports it as invalid and submission is blocked
+
+#### Scenario: A valid custom expression is accepted
+
+- **WHEN** the user enters a well-formed six-field expression
+- **THEN** the control accepts it and submission proceeds
+
+### Requirement: Readiness declaration for a group rule
+
+A `group` rule requires `ready_when`, and the service rejects the object with HTTP 422 unless at least one of
+`signal`, `idle`, or `max_staleness` is present. The reason is behavioural rather than formal: a readiness
+declaration satisfying none of them would leave a group perpetually dirty and never ready, so the rule would
+register successfully and then do nothing.
+
+This modal SHALL collect `idle` and `max_staleness`, and SHALL require at least one of the two before
+submission. It SHALL also accept an optional `cost_ceiling`, constrained to a positive integer. `signal` — the
+SQL-predicate form of readiness — is not collected here; the duration form alone yields a valid rule.
+
+Each duration SHALL be entered as a **number paired with a unit** and submitted in the service's short form
+(for example `10` and minutes submitted as `"10m"`), rather than as free text, which offers nothing but a way
+to mistype a format. When a duration control is seeded with an existing value it SHALL round-trip both
+accepted spellings — the short form and the ISO-8601 form — and SHALL fall back to a raw text input holding
+the value verbatim when it matches neither, rather than discarding a value written directly through the API.
+
+#### Scenario: A group rule needs at least one readiness condition
+
+- **WHEN** the trigger kind is `group` and neither idle nor max staleness has a value
+- **THEN** submission is blocked with a message that at least one is required
+
+#### Scenario: A duration is submitted in short form
+
+- **WHEN** the user enters 10 and selects minutes for idle
+- **THEN** the request body carries `ready_when.idle` as `"10m"`
+
+#### Scenario: Cost ceiling must be a positive integer
+
+- **WHEN** the user enters zero or a negative cost ceiling
+- **THEN** the control reports it as invalid and submission is blocked
+
+#### Scenario: An unrecognised duration is preserved verbatim
+
+- **WHEN** a duration control is seeded with a value matching neither the short nor the ISO-8601 form
+- **THEN** it presents that value in a raw text input
+- **AND** the value is not discarded
+
+### Requirement: Group-by is derived from the target enrichment's grain key
+
+`group_by` is a string in the API, but the service accepts exactly one value: the target enrichment's own
+grain key. Anything else is rejected with HTTP 422. The constraint is physical — an enrichment is keyed on its
+grain and collapses by it, so grouping by any other column would pile many groups onto a single row.
+
+The modal SHALL therefore **derive** `group_by` from the resolved target table's `grain.grain_key` and present
+it read-only, captioned as the target table's grain key. It SHALL NOT be offered as a free-text input, which
+could only produce a value the service rejects. The derived value SHALL be re-read whenever the target
+enrichment changes.
+
+#### Scenario: Group-by is filled from the target's grain key
+
+- **WHEN** the trigger kind is `group` and a target enrichment is selected
+- **THEN** the group-by field shows that table's grain key and is not editable
+
+#### Scenario: Changing the target re-derives group-by
+
+- **WHEN** the user changes the target enrichment to one with a different grain key
+- **THEN** the group-by field shows the new table's grain key
+
+### Requirement: Rule action failures report the service's own message
+
+The Analytics data-access service reports a failure as `{status, error, message, path, method}`, where `error`
+is a stable machine code and `message` names the specific violation and often the fix. Rule actions — create,
+delete, and any listing re-fetch — SHALL surface that `message` to the user as the service worded it, through
+the app's error notification, rather than substituting generic text. Replacing it discards the most useful
+part of the response, and the codes involved (`rule_validation_failed` at 422 and 409,
+`sensitive_column_not_entitled` at 403, `write_column_not_allowed` at 422, `bad_request` at 400,
+`unknown_rule` at 404) are not individually actionable in the UI in a way that generic text could preserve.
+
+A create rejection SHALL leave the modal open with its values intact, so the operator can act on the message
+without re-entering the form.
+
+#### Scenario: A validation rejection shows the service's message
+
+- **WHEN** creation is rejected with a `rule_validation_failed` response
+- **THEN** the message from the response is shown to the user as worded by the service
+- **AND** the modal stays open with its values intact
+
+#### Scenario: A forbidden sensitive column is reported as sent
+
+- **WHEN** an action is rejected with `sensitive_column_not_entitled`
+- **THEN** the service's message is shown rather than a generic authorization error
+
+### Requirement: Enrichment rule detail route and access guard
+
+The system SHALL expose a rule detail page at `/enrichment-rules/{id}`, with the route directory
+`src/app/[lang]/enrichment-rules/[id]/`. The page SHALL be a server component declaring
+`export const dynamic = 'force-dynamic'` that calls `isAnalyticsForbidden()` before any data access and
+renders `Page403` when it returns `true`.
+
+The page SHALL read the rule by id on the server. Unlike the listing — where an empty or failed result is
+an ordinary state worth rendering — a detail page addressed by id has nothing to show when that id does not
+resolve, so a `null` result SHALL produce a not-found result.
+
+The route SHALL be registered in the breadcrumb configuration so the trail reads from the Enrichment rules
+listing to the rule. The listing grid SHALL render the rule name as plain text: the name is a value an
+operator reads and compares across rows, and turning every one of them into a link makes the column harder
+to scan for the sake of a navigation affordance the page does not yet commit to.
+
+#### Scenario: A permitted caller opens a rule
+
+- **WHEN** `isAnalyticsForbidden()` returns `false` and `/enrichment-rules/{id}` is requested for a
+  registered rule
+- **THEN** the rule is read on the server and the detail view renders seeded with it
+
+#### Scenario: An unknown id is not found
+
+- **WHEN** the rule read resolves to no rule
+- **THEN** the page resolves to a not-found result
+
+#### Scenario: Forbidden caller sees Page403 and no rule is fetched
+
+- **WHEN** `isAnalyticsForbidden()` returns `true` and `/enrichment-rules/{id}` is requested
+- **THEN** `Page403` is rendered
+- **AND** no rule request is issued
+
+#### Scenario: The listing renders the rule name as plain text
+
+- **WHEN** the rules listing renders a rule
+- **THEN** its name is presented as text rather than as a link
+
+### Requirement: The rule detail page presents every editable member
+
+The create modal deliberately collects only what a rule needs to exist. The detail page SHALL present
+**every** editable member of a rule, so that a rule registered through the API can be inspected and
+corrected in the console: `name`, `evaluator_name`, `evaluator_version`, `target_enrichment`,
+`trigger_kind` and the members its branch admits, `source`, `filter_sql`, `sampling`, `input_bindings`,
+`output_bindings`, `cadence`, `batch_scan_limit`, `batch_chunk`, `rate_rpm`, `priority`, and `enabled`.
+
+Members SHALL be grouped so an operator can find one without reading the whole form. Controls that the
+create modal already provides SHALL be the same controls here, differing only in width and layout.
+
+#### Scenario: A member set only through the API is visible
+
+- **WHEN** a rule carrying `filter_sql` and `input_bindings` — neither of which the create modal
+  collects — is opened
+- **THEN** both are presented with their current values
+
+#### Scenario: The trigger branch follows the selected kind
+
+- **WHEN** the trigger kind is changed
+- **THEN** only the members that kind admits are presented
+- **AND** the members belonging to the previous kind are no longer presented
+
+### Requirement: Read-only rule facts are presented separately from editable ones
+
+A rule carries members the service derives and the API refuses to accept: `id`, `grain_key`,
+`version_column`, `generation`, `created_at`, `updated_at`, and the resolved `evaluator` definition. The
+detail page SHALL present these as read-only, visually separated from the editable form, so it is
+unambiguous which values an operator can change. `version_column` SHALL render as an em dash when the
+read source declares no scan metadata.
+
+These members SHALL NOT be sent when the rule is saved.
+
+#### Scenario: Derived facts are shown but not editable
+
+- **WHEN** a rule is opened
+- **THEN** its `grain_key`, `generation`, `created_at`, `updated_at`, and resolved evaluator are presented
+  as read-only values
+
+#### Scenario: An absent version column reads as an em dash
+
+- **WHEN** the rule's read source declares no scan metadata
+- **THEN** `version_column` renders as an em dash rather than as blank
+
+### Requirement: Saving replaces the rule whole without discarding unpresented members
+
+`PUT /v1/rules/{id}` is a full replace: an omitted member is erased. The detail page SHALL therefore save
+by sending a complete rule, and a member the form does not present SHALL be preserved rather than dropped.
+An operator who edits a rule's name MUST NOT thereby delete a member the console never showed them.
+
+The trigger branch is the exception and SHALL be **constructed** from the selected kind rather than carried
+over, because the service rejects a member that does not belong to the selected kind with HTTP 422 rather
+than ignoring it. Changing the trigger kind SHALL drop the previous kind's members from the request.
+
+A successful save SHALL report success and re-read the rule, so the read-only facts — `generation` in
+particular — reflect the accepted mutation. A failed save SHALL surface the service's own message and leave
+the edited values intact.
+
+#### Scenario: An unpresented member survives an unrelated edit
+
+- **WHEN** a rule carrying a member the form does not present is opened, its name is changed, and it is saved
+- **THEN** the request carries that member unchanged
+
+#### Scenario: Switching trigger kind drops the previous branch
+
+- **WHEN** a scheduled rule's trigger kind is changed to on-ingest and the rule is saved
+- **THEN** the request carries no `trigger_cron`
+
+#### Scenario: Read-only members are not sent
+
+- **WHEN** a rule is saved
+- **THEN** the request carries none of `id`, `grain_key`, `version_column`, `generation`, `created_at`,
+  `updated_at`, or the resolved `evaluator`
+
+#### Scenario: A successful save refreshes the derived facts
+
+- **WHEN** a save succeeds
+- **THEN** success is reported
+- **AND** the rule is re-read so the presented `generation` and `updated_at` reflect the mutation
+
+#### Scenario: A failed save keeps the edits
+
+- **WHEN** a save is rejected
+- **THEN** the service's message is surfaced
+- **AND** the edited values remain in the form
+
+### Requirement: A rule's read source either follows its target enrichment or is pinned
+
+A rule may declare a `source`, or declare none and read from whatever its target enrichment's
+`source_table` points at. **The service resolves the two into the same response shape**, so a rule that
+follows is indistinguishable from one pinned to the same table.
+
+Because the only way to express "follows" is to omit `source` from the request, saving forces a decision
+whether or not the control is presented. The console SHALL therefore infer the state: a `source` equal to
+the target enrichment's `source_table` SHALL be treated as following and omitted from the request; any
+other value SHALL be treated as pinned and sent.
+
+The inference SHALL be presented rather than applied invisibly — the control SHALL offer an explicit choice
+between following the target enrichment and pinning a named table, seeded from the inference, so an
+operator can see and correct it. When following is selected, the table currently being followed SHALL be
+named.
+
+#### Scenario: A following rule keeps following after an unrelated edit
+
+- **WHEN** a rule whose `source` equals its target enrichment's `source_table` is opened, edited elsewhere,
+  and saved
+- **THEN** the request omits `source`
+
+#### Scenario: A pinned rule stays pinned
+
+- **WHEN** a rule whose `source` differs from its target enrichment's `source_table` is saved
+- **THEN** the request carries that `source`
+
+#### Scenario: The inference is visible and correctable
+
+- **WHEN** a rule is opened
+- **THEN** the read-source control shows whether it is following or pinned
+- **AND** the followed table is named when following is shown
+- **AND** the operator can switch between the two
+
+### Requirement: Rule editing resolves the read source in addition to the evaluator and target
+
+Input bindings read from the rule's **read source**, not from its target enrichment, and every SQL
+predicate a rule admits is scoped to that source's columns. The read source is itself derived — it is the
+rule's declared `source`, or the target enrichment's `source_table` — so it cannot be resolved until the
+target is.
+
+Rule editing SHALL therefore resolve three entities in a chain: the evaluator (for `input_vars`,
+`output_vars`, and `type`), the target enrichment (for its columns, its `grain_key`, and its
+`source_table`), and the read source (for its columns and its `version_column`). Controls scoped to the
+read source SHALL report a pending state while it resolves and SHALL report a failed resolution rather
+than presenting themselves as having no options.
+
+#### Scenario: Input bindings offer the read source's columns
+
+- **WHEN** the read source resolves
+- **THEN** the input-bindings editor offers that source's columns, not the target enrichment's
+
+#### Scenario: Changing the target re-resolves the followed source
+
+- **WHEN** the rule follows its target enrichment and the target is changed
+- **THEN** the read source is re-resolved from the new target's `source_table`
+
+#### Scenario: A failed source resolution is reported
+
+- **WHEN** reading the resolved source table fails
+- **THEN** the failure is reported
+- **AND** the controls scoped to that source do not present themselves as having no options
+
+### Requirement: Unsaved rule edits are tracked and discardable
+
+The detail page SHALL track whether the rule differs from the one it was loaded with, and SHALL offer save
+and discard only while it does. Discarding SHALL restore the loaded rule and SHALL require confirmation,
+because a discard is unrecoverable.
+
+Comparison SHALL treat an absent member and a member explicitly set to `undefined` as equal, so clearing an
+optional field and never having set it do not read as a difference.
+
+#### Scenario: An unedited rule offers nothing to save
+
+- **WHEN** a rule is opened and not edited
+- **THEN** no save or discard action is offered
+
+#### Scenario: Editing offers save and discard
+
+- **WHEN** any editable member is changed
+- **THEN** save and discard are offered
+
+#### Scenario: Discard restores the loaded rule after confirmation
+
+- **WHEN** discard is chosen and confirmed
+- **THEN** every edited member returns to the value the rule was loaded with
+
+#### Scenario: Editing back to the original value clears the edited state
+
+- **WHEN** a member is changed and then changed back to its loaded value
+- **THEN** save and discard are no longer offered
+
+### Requirement: Saving a rule requires full-admin rights
+
+Editing a rule is a mutation and SHALL be gated on the same right the console already requires to create
+and delete one. A caller without full-admin rights SHALL be able to open and read a rule but SHALL NOT be
+offered save. The gate SHALL be the same predicate the listing uses, so a caller sees a consistent set of
+rights on both screens.
+
+#### Scenario: A caller without full-admin rights cannot save
+
+- **WHEN** a caller lacking full-admin rights opens a rule and changes a member
+- **THEN** save is not offered
+
+#### Scenario: The detail page and the listing agree
+
+- **WHEN** a caller is not offered rule deletion on the listing
+- **THEN** that same caller is not offered save on the detail page
+
+### Requirement: Input bindings editor
+
+An input binding maps one of the evaluator's `input_vars` to a value drawn from the read source, either as
+a column or as a JSONata expression over the row. The two are alternatives: a binding SHALL carry a column
+or an expression, never both.
+
+The editor SHALL offer the evaluator's `input_vars` and the read source's columns, SHALL NOT offer a
+variable already bound by another row, and SHALL report a row whose variable or column no longer exists on
+the resolved evaluator or source — a rule can outlive the definitions it was written against. A row that is
+incomplete SHALL be omitted from the saved rule rather than sent as a partial binding.
+
+#### Scenario: A variable bound elsewhere is not offered again
+
+- **WHEN** an input variable is already bound by one row
+- **THEN** it is not offered in the other rows
+
+#### Scenario: Column and expression are alternatives
+
+- **WHEN** a row's binding is switched from a column to an expression
+- **THEN** the column is cleared
+
+#### Scenario: A stranded binding is reported
+
+- **WHEN** a row binds a variable that the resolved evaluator no longer declares
+- **THEN** that row is reported as unresolvable
+- **AND** the stranded value remains visible rather than rendering as empty
+
+#### Scenario: An incomplete row is not sent
+
+- **WHEN** a row names a variable but neither a column nor an expression
+- **THEN** the saved rule omits that binding
+
+### Requirement: SQL predicate fields are presented as bounded expressions
+
+A rule admits three SQL predicates — `filter_sql`, the readiness `signal` of a group rule, and the
+`prefer_sql` of its member selection. Each is a boolean expression over the read source's columns, and none
+admits a join, a subquery, or a CTE.
+
+Each SHALL be presented as a multi-line expression input, in a monospaced face, captioned with the source
+its columns come from. The console SHALL NOT attempt to validate the expression — the grammar is the
+service's and a client-side approximation would reject valid predicates — so an invalid expression SHALL be
+reported by surfacing the service's rejection on save.
+
+#### Scenario: A predicate names its source
+
+- **WHEN** a SQL predicate field is presented
+- **THEN** it states which table its columns come from
+
+#### Scenario: An invalid predicate is reported by the service
+
+- **WHEN** a rule carrying an unparseable predicate is saved
+- **THEN** the service's rejection message is surfaced
+- **AND** the edited values remain in the form
+
+### Requirement: Member selection for a group rule
+
+A group rule may declare how members of a group are chosen: a `prefer_sql` preference, an `order_by`
+sequence of column and direction, and a `limit`. `limit` is required whenever member selection is declared
+at all, and SHALL be a positive integer no greater than the service's configured group fetch maximum.
+
+`prefer_sql` is a **preference, not a filter**: when no member satisfies it, every member becomes a
+candidate. The control SHALL say so, because an operator reading it as a filter would expect an empty
+result instead.
+
+Member selection SHALL be presentable only for a group rule, and SHALL be omitted entirely from the saved
+rule when nothing has been declared.
+
+#### Scenario: Declaring member selection requires a limit
+
+- **WHEN** an order or preference is declared without a limit
+- **THEN** the rule cannot be saved and the missing limit is reported
+
+#### Scenario: Member selection is omitted when empty
+
+- **WHEN** no member-selection member has been declared
+- **THEN** the saved rule omits member selection entirely
+
+#### Scenario: The preference is described as a preference
+
+- **WHEN** the `prefer_sql` control is presented
+- **THEN** it states that all members become candidates when none satisfies it
+
+#### Scenario: Member selection is only offered for a group rule
+
+- **WHEN** the trigger kind is not group
+- **THEN** member selection is not presented
+
+### Requirement: Execution knobs are presented without invented validation
+
+A rule carries `sampling`, `cadence`, `batch_scan_limit`, `batch_chunk`, `rate_rpm`, and `priority`. The
+service validates none of these beyond type, and the runner interprets `cadence`. The console SHALL present
+them and SHALL NOT impose constraints the service does not, beyond `sampling` being a fraction between 0
+and 1 — a bound that follows from its meaning rather than from a guessed policy.
+
+An empty knob SHALL be omitted from the saved rule rather than sent as a zero, because zero is a meaningful
+value for several of them.
+
+#### Scenario: A cleared knob is omitted, not zeroed
+
+- **WHEN** a numeric knob is cleared
+- **THEN** the saved rule omits that member
+
+#### Scenario: Sampling is bounded to a fraction
+
+- **WHEN** a sampling value outside 0 to 1 is entered
+- **THEN** it is reported as invalid and the rule cannot be saved

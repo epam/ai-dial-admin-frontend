@@ -1,7 +1,9 @@
 import {
   DialAppRunnerResource,
   DialApplicationResource,
+  DialInterceptorResource,
   DialModelResource,
+  DialRouteResource,
   DialToolsetResource,
 } from '@/src/models/dial/resource';
 import { DialConversation } from '@/src/models/dial/conversation';
@@ -192,6 +194,36 @@ export const mergeAppRunnerResource = (
   } as DialAppRunnerResource;
 };
 
+/**
+ * Interceptors are flat and unversioned like models — merged via `flatMetadataFields` for the same
+ * reason `mergeModelResource` is: the metadata `url`'s remainder after stripping
+ * `interceptors/platform/` is a bare name with no `/` separator to split into folderId + name.
+ */
+export const mergeInterceptorResource = (
+  content: Record<string, unknown>,
+  metadata: CoreResourceMetadataNode,
+): DialInterceptorResource => {
+  return {
+    ...content,
+    ...flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.INTERCEPTOR]),
+  } as DialInterceptorResource;
+};
+
+/**
+ * Routes are flat and unversioned like models and interceptors — merged via `flatMetadataFields` for
+ * the same reason: the metadata `url`'s remainder after stripping `routes/platform/` is a bare name
+ * with no `/` separator to split into folderId + name.
+ */
+export const mergeRouteResource = (
+  content: Record<string, unknown>,
+  metadata: CoreResourceMetadataNode,
+): DialRouteResource => {
+  return {
+    ...content,
+    ...flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.ROUTE]),
+  } as DialRouteResource;
+};
+
 export type AssetMerge = (content: Record<string, unknown>, metadata: CoreResourceMetadataNode) => unknown;
 
 export const ASSET_MERGERS: Partial<Record<ResourceType, AssetMerge>> = {
@@ -201,4 +233,6 @@ export const ASSET_MERGERS: Partial<Record<ResourceType, AssetMerge>> = {
   [ResourceType.PROMPT]: mergePrompt,
   [ResourceType.MODEL]: mergeModelResource,
   [ResourceType.APP_TYPE_SCHEMA]: mergeAppRunnerResource,
+  [ResourceType.INTERCEPTOR]: mergeInterceptorResource,
+  [ResourceType.ROUTE]: mergeRouteResource,
 };

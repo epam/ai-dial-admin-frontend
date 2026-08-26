@@ -19,6 +19,8 @@ export enum ApplicationRoute {
   // Assets
   AssetsModels = '/assets-models',
   AssetsAppRunners = '/assets-app-runners',
+  AssetsInterceptors = '/assets-interceptors',
+  AssetsRoutes = '/assets-routes',
   AssetsApplications = '/assets-applications',
   AssetsToolsets = '/assets-toolsets',
   Conversations = '/conversations',
@@ -63,5 +65,7 @@ export enum ApplicationRoute {
   // Analytics
   AnalyticsQueries = '/queries',
   AnalyticsTables = '/tables',
+  AnalyticsEnrichmentRules = '/enrichment-rules',
+  AnalyticsEvaluators = '/evaluators',
   ConversationsTrace = '/conversations-trace',
 }

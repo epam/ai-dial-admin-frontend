@@ -2,6 +2,7 @@ import { AnalyticsDataApi } from '@/src/server/analytics/analytics-data-api';
 import { stripAssetIdentityFields } from '@/src/server/assets/exim';
 import { AppRunnerSchemaApi } from '@/src/server/core/app-runner-schema-api';
 import { ConfigFileApi } from '@/src/server/core/config-file-api';
+import { DeploymentConfigurationApi } from '@/src/server/core/deployment-configuration-api';
 import { SettingsApi } from '@/src/server/core/settings-api';
 import { AssetApi } from '@/src/server/core/asset-api';
 import { BucketApi } from '@/src/server/core/bucket-api';
@@ -199,6 +200,12 @@ export const toolsetOpsApi = new ToolsetOpsApi({
 
 // App-runner resolved-schema read — Core performs the external-schema download and merge.
 export const appRunnerSchemaApi = new AppRunnerSchemaApi({
+  host: process.env.DIAL_CORE_API_URL,
+});
+
+// Generic deployment-configuration read (`v1/deployments/{name}/configuration`) — resolves any
+// deployment type Core knows, including interceptors, by plain name.
+export const deploymentConfigurationApi = new DeploymentConfigurationApi({
   host: process.env.DIAL_CORE_API_URL,
 });
 

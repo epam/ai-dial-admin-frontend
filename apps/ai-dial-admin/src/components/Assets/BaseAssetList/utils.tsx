@@ -7,7 +7,13 @@ import {
   moveApps,
 } from '@/src/app/[lang]/assets-applications/actions';
 import { bulkDeleteRunners, createRunner, getRunner } from '@/src/app/[lang]/assets-app-runners/actions';
+import {
+  bulkDeleteInterceptors,
+  createInterceptor,
+  getInterceptor,
+} from '@/src/app/[lang]/assets-interceptors/actions';
 import { bulkDeleteModels, createModel, getModel } from '@/src/app/[lang]/assets-models/actions';
+import { bulkDeleteRoutes, createRoute, getRoute } from '@/src/app/[lang]/assets-routes/actions';
 import { bulkDeleteSkills, getSkill } from '@/src/app/[lang]/assets-skills/actions';
 import {
   bulkDeleteToolsets,
@@ -32,6 +38,8 @@ import { STRINGS_DELIMITER } from '@/src/constants/prompt';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { useConversationFolder } from '@/src/context/assets/ConversationsFolderContext';
 import { useAppRunnersFolder } from '@/src/context/assets/AppRunnersFolderContext';
+import { useInterceptorsFolder } from '@/src/context/assets/InterceptorsFolderContext';
+import { useRoutesFolder } from '@/src/context/assets/RoutesFolderContext';
 import { useModelsFolder } from '@/src/context/assets/ModelsFolderContext';
 import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
 import { useSkillFolder } from '@/src/context/assets/SkillFolderContext';
@@ -194,6 +202,10 @@ export const getFileManagerLabel = (view: ApplicationRoute): string => {
       return FileManagerI18nKey.Models;
     case ApplicationRoute.AssetsAppRunners:
       return FileManagerI18nKey.AppRunners;
+    case ApplicationRoute.AssetsInterceptors:
+      return FileManagerI18nKey.Interceptors;
+    case ApplicationRoute.AssetsRoutes:
+      return FileManagerI18nKey.Routes;
     case ApplicationRoute.AssetsSkills:
       return FileManagerI18nKey.Skills;
     default:
@@ -235,6 +247,16 @@ export const getEmptyStateContent = (
       return {
         title: t(FileManagerI18nKey.AppRunnersEmptyStateTitle),
         description: t(FileManagerI18nKey.AppRunnersEmptyStateDescription),
+      };
+    case ApplicationRoute.AssetsInterceptors:
+      return {
+        title: t(FileManagerI18nKey.InterceptorsEmptyStateTitle),
+        description: t(FileManagerI18nKey.InterceptorsEmptyStateDescription),
+      };
+    case ApplicationRoute.AssetsRoutes:
+      return {
+        title: t(FileManagerI18nKey.RoutesEmptyStateTitle),
+        description: t(FileManagerI18nKey.RoutesEmptyStateDescription),
       };
     case ApplicationRoute.AssetsSkills:
       return {
@@ -287,6 +309,8 @@ export const AssetFolderContextMap = {
   [ApplicationRoute.Conversations]: useConversationFolder,
   [ApplicationRoute.AssetsModels]: useModelsFolder,
   [ApplicationRoute.AssetsAppRunners]: useAppRunnersFolder,
+  [ApplicationRoute.AssetsInterceptors]: useInterceptorsFolder,
+  [ApplicationRoute.AssetsRoutes]: useRoutesFolder,
   [ApplicationRoute.AssetsSkills]: useSkillFolder,
 };
 
@@ -297,6 +321,8 @@ export const GetAssetActionMap = {
   [ApplicationRoute.Conversations]: getConversation,
   [ApplicationRoute.AssetsModels]: getModel,
   [ApplicationRoute.AssetsAppRunners]: getRunner,
+  [ApplicationRoute.AssetsInterceptors]: getInterceptor,
+  [ApplicationRoute.AssetsRoutes]: getRoute,
   [ApplicationRoute.AssetsSkills]: getSkill,
 };
 
@@ -315,6 +341,12 @@ export const CreateAssetActionMap: Record<
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
   [ApplicationRoute.AssetsAppRunners]: createRunner as (
+    asset: AssetWithVersion,
+  ) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  [ApplicationRoute.AssetsInterceptors]: createInterceptor as (
+    asset: AssetWithVersion,
+  ) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  [ApplicationRoute.AssetsRoutes]: createRoute as (
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
 };
@@ -358,6 +390,8 @@ export const BulkDeleteAssetActionMap = {
   [ApplicationRoute.Conversations]: deleteConversations,
   [ApplicationRoute.AssetsModels]: bulkDeleteModels,
   [ApplicationRoute.AssetsAppRunners]: bulkDeleteRunners,
+  [ApplicationRoute.AssetsInterceptors]: bulkDeleteInterceptors,
+  [ApplicationRoute.AssetsRoutes]: bulkDeleteRoutes,
   [ApplicationRoute.AssetsSkills]: bulkDeleteSkills,
 };
 

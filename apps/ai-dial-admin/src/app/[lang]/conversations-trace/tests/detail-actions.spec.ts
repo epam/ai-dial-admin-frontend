@@ -14,7 +14,13 @@ import {
   TURNS_ENTITY,
   USAGE_LOG_ENTITY,
 } from '@/src/constants/analytics/conversations-trace';
-import { QueryMode, QueryOffsetPage, QueryOperator, QueryPredicate } from '@/src/models/analytics/query';
+import {
+  QueryMode,
+  QueryOffsetPage,
+  QueryOperator,
+  QueryPredicate,
+  StructuredQuery,
+} from '@/src/models/analytics/query';
 import { UsageLogField } from '@/src/models/analytics/conversations-trace';
 import { clearEntitySchemaCache } from '@/src/server/analytics/entity-schema-cache';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
@@ -43,7 +49,28 @@ const DETAIL_ROW = {
   avg_duration_ms: 0,
 };
 
-const FEEDBACK_ROW = { response_id: 'chatcmpl-x', rate: 1, request_time: '2026-07-20T19:12:59.268Z' };
+const FEEDBACK_ROW = {
+  response_id: 'chatcmpl-x',
+  first_rate_time: '2026-07-20T19:12:59.268Z',
+  last_rate_time: '2026-07-20T19:12:59.268Z',
+  rate_pos_count: 1,
+  rate_zero_count: 0,
+  rate_neg_count: 0,
+  rate_distinct_count: 1,
+  comment_count: 0,
+};
+
+const COUNT_ROW = {
+  chat_id: CHAT_ID,
+  rating_up: 3,
+  rate_zero: 2,
+  rate_negative: 1,
+  rate_bool_false: 1,
+  rate_raw: 2,
+  rate_events: 6,
+};
+
+const NO_COUNTS = { rating_up: 0, rating_down: 0, provable_down: 0, captured_form: 0, rate_events: 0 };
 
 const TRACE_ID = '0a3f1d9c8b7e6a5f';
 
@@ -125,47 +152,98 @@ describe('getConversationDetail', () => {
 });
 
 describe('getConversationFeedback', () => {
+  const stubFeedback = (list: object, counts: object = { success: true, response: { rows: [COUNT_ROW] } }) =>
+    execute().mockImplementation((query: StructuredQuery) =>
+      Promise.resolve(query.mode === QueryMode.Aggregate ? counts : list),
+    );
+
   test('queries the feedback rows with the shared limit and a total', async () => {
-    execute().mockResolvedValue({ success: true, response: { rows: [FEEDBACK_ROW], totalCount: 6 } });
+    stubFeedback({ success: true, response: { rows: [FEEDBACK_ROW], totalCount: 6 } });
 
     await getConversationFeedback(CHAT_ID);
 
     expect(execute()).toHaveBeenCalledWith(expect.anything(), TOKEN_MOCK);
 
-    const page = call(0).page as QueryOffsetPage;
+    const listQuery = execute()
+      .mock.calls.map((args: unknown[]) => args[0] as StructuredQuery)
+      .find((query: StructuredQuery) => query.mode === QueryMode.Row);
+    const page = listQuery?.page as QueryOffsetPage;
     expect(page.limit).toBe(CONVERSATION_FEEDBACK_LIMIT);
     expect(page.include_total).toBe(true);
   });
 
   test('returns the rows with the total so the panel can declare itself partial', async () => {
-    execute().mockResolvedValue({ success: true, response: { rows: [FEEDBACK_ROW], totalCount: 6 } });
+    stubFeedback({ success: true, response: { rows: [FEEDBACK_ROW], totalCount: 6 } });
 
     const result = await getConversationFeedback(CHAT_ID);
 
-    expect(result.response).toEqual({ rows: [FEEDBACK_ROW], total: 6 });
+    expect(result.response).toMatchObject({ rows: [FEEDBACK_ROW], total: 6 });
   });
 
-  // The model-call bodies are the only record of what a model call produced, so the stream cannot be typed
-  // without them. Narrow by construction: only the model-call hops, capped, never the whole trace.
+  test('resolves the direction figures from an aggregate rather than from the listed rows', async () => {
+    stubFeedback({ success: true, response: { rows: [FEEDBACK_ROW], totalCount: 240 } });
+
+    const result = await getConversationFeedback(CHAT_ID);
+
+    expect(result.response?.ratings).toEqual({
+      rating_up: 3,
+      rating_down: 3,
+      provable_down: 2,
+      captured_form: 2,
+      rate_events: 6,
+    });
+  });
+
+  test('issues the aggregate narrowed to the conversation by equality', async () => {
+    stubFeedback({ success: true, response: { rows: [] } });
+
+    await getConversationFeedback(CHAT_ID);
+
+    const countsQuery = execute()
+      .mock.calls.map((args: unknown[]) => args[0] as StructuredQuery)
+      .find((query: StructuredQuery) => query.mode === QueryMode.Aggregate);
+
+    expect(countsQuery?.entity).toBe('response_ratings');
+    expect((countsQuery?.filter as QueryPredicate).op).toBe(QueryOperator.Eq);
+  });
+
   test('an absent total resolves to null rather than a guessed count', async () => {
-    execute().mockResolvedValue({ success: true, response: { rows: [FEEDBACK_ROW] } });
+    stubFeedback({ success: true, response: { rows: [FEEDBACK_ROW] } });
 
     const result = await getConversationFeedback(CHAT_ID);
 
     expect(result.response?.total).toBeNull();
   });
 
-  test('no ratings resolves to an empty list, not a failure', async () => {
-    execute().mockResolvedValue({ success: true, response: { rows: [], totalCount: 0 } });
+  test('no ratings resolves to an empty list and zeroed figures, not a failure', async () => {
+    stubFeedback({ success: true, response: { rows: [], totalCount: 0 } }, { success: true, response: { rows: [] } });
 
     const result = await getConversationFeedback(CHAT_ID);
 
     expect(result.success).toBe(true);
-    expect(result.response).toEqual({ rows: [], total: 0 });
+    expect(result.response).toMatchObject({ rows: [], total: 0, ratings: NO_COUNTS });
   });
 
-  test('a failed query reports failure with no response', async () => {
-    execute().mockResolvedValue({ success: false, errorMessage: 'boom' });
+  test('a failed aggregate leaves the figures unresolved without taking the list down', async () => {
+    stubFeedback({ success: true, response: { rows: [FEEDBACK_ROW], totalCount: 1 } }, { success: false });
+
+    const result = await getConversationFeedback(CHAT_ID);
+
+    expect(result.success).toBe(true);
+    expect(result.response?.rows).toEqual([FEEDBACK_ROW]);
+    expect(result.response?.ratings).toBeNull();
+  });
+
+  test('reports the comment text unreadable when the schema does not offer it', async () => {
+    stubFeedback({ success: true, response: { rows: [FEEDBACK_ROW] } });
+
+    const result = await getConversationFeedback(CHAT_ID);
+
+    expect(result.response?.isCommentTextReadable).toBe(false);
+  });
+
+  test('a failed list query reports failure with no response', async () => {
+    stubFeedback({ success: false, errorMessage: 'boom' });
 
     const result = await getConversationFeedback(CHAT_ID);
 

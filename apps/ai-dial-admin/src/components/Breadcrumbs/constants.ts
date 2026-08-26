@@ -79,6 +79,24 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
       },
     ],
   },
+  [ApplicationRoute.AssetsInterceptors]: {
+    segments: [
+      { name: 'AssetsInterceptors', i18nKey: MenuI18nKey.AssetsInterceptors },
+      {
+        name: 'Id',
+        href: false,
+      },
+    ],
+  },
+  [ApplicationRoute.AssetsRoutes]: {
+    segments: [
+      { name: 'AssetsRoutes', i18nKey: MenuI18nKey.AssetsRoutes },
+      {
+        name: 'Id',
+        href: false,
+      },
+    ],
+  },
   [ApplicationRoute.Conversations]: {
     segments: [
       { name: 'Conversations', i18nKey: MenuI18nKey.Conversations, shouldEnrichWithFolderBreadcrumbs: true },
@@ -201,6 +219,24 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
         i18nKey: MenuI18nKey.Datasets,
       },
       { name: 'Id', href: false },
+    ],
+  },
+  [ApplicationRoute.AnalyticsEnrichmentRules]: {
+    segments: [
+      {
+        name: 'EnrichmentRules',
+        i18nKey: MenuI18nKey.EnrichmentRules,
+      },
+      { name: 'Id', href: false },
+    ],
+  },
+  [ApplicationRoute.AnalyticsEvaluators]: {
+    segments: [
+      {
+        name: 'Evaluators',
+        i18nKey: MenuI18nKey.Evaluators,
+      },
+      { name: 'Name', href: false },
     ],
   },
   [ApplicationRoute.AnalyticsQueries]: {

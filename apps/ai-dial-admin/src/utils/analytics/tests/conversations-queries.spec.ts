@@ -6,14 +6,14 @@ import {
   USAGE_LOG_ENTITY,
 } from '@/src/constants/analytics/conversations-trace';
 import {
+  ConversationColumnFilter,
   ConversationEntryHopRow,
   ConversationFilterOperator,
   ConversationTotalsField,
   ConversationsField,
   FeedbackField,
   FeedbackFilter,
-  RateAnalyticsField,
-  RatingDirection,
+  ResponseRatingsField,
   UsageLogField,
 } from '@/src/models/analytics/conversations-trace';
 import {
@@ -40,6 +40,7 @@ import {
   buildConversationEntryHopsQuery,
   buildConversationHopCountQuery,
   buildConversationListQuery,
+  buildConversationRatingCountsQuery,
   buildConversationRatingsQuery,
   buildConversationTotalsQuery,
   buildRatedConversationIdsQuery,
@@ -268,7 +269,7 @@ describe('buildConversationListQuery :: search', () => {
 });
 
 describe('buildConversationListQuery :: column filters', () => {
-  const predicateFor = (columnFilters: Parameters<typeof buildList>[0]['columnFilters']) =>
+  const predicateFor = (columnFilters: ConversationColumnFilter[]) =>
     groupArgs(buildList({ columnFilters }).filter).slice(2);
 
   test.each([
@@ -488,59 +489,88 @@ describe('buildRatedConversationIdsQuery', () => {
 
   const filterArgs = (feedback: FeedbackFilter) => groupArgs(build(feedback).filter);
 
-  const ratePredicate = (feedback: FeedbackFilter): QueryPredicate | undefined =>
-    filterArgs(feedback).find((node) => fieldName(node) === RateAnalyticsField.Rate);
+  const rateNode = (feedback: FeedbackFilter) =>
+    filterArgs(feedback).find(
+      (node) =>
+        String(node.op) === QueryLogicalOperator.Or ||
+        (fieldName(node) !== undefined && fieldName(node) !== ResponseRatingsField.ChatId && !isTimeBound(node)),
+    );
+
+  const isTimeBound = (node: QueryPredicate) =>
+    [QueryOperator.Ge, QueryOperator.Le].includes(node.op) && fieldName(node) === ResponseRatingsField.LastRateTime;
 
   const RATED_STATES = [FeedbackFilter.Positive, FeedbackFilter.Negative, FeedbackFilter.Rated];
 
-  test.each(RATED_STATES)('%s targets rate_analytics grouped by chat_id', (feedback) => {
+  test.each(RATED_STATES)('%s targets the rating rollup grouped by chat_id', (feedback) => {
     const query = build(feedback);
 
-    expect(query.entity).toBe('rate_analytics');
+    expect(query.entity).toBe('response_ratings');
     expect(query.mode).toBe(QueryMode.Aggregate);
-    expect(query.group_by).toEqual([RateAnalyticsField.ChatId]);
+    expect(query.group_by).toEqual([ResponseRatingsField.ChatId]);
   });
 
   test('selects the conversation id and its most recent rating time', () => {
     const query = build(FeedbackFilter.Rated);
 
-    expect(query.select?.[0]).toEqual({ expr: { type: QueryExprType.Field, name: RateAnalyticsField.ChatId } });
+    expect(query.select?.[0]).toEqual({ expr: { type: QueryExprType.Field, name: ResponseRatingsField.ChatId } });
     expect(query.select?.[1].as).toBe(FeedbackField.LastRated);
+    expect(query.select?.[1].expr).toMatchObject({
+      name: 'max',
+      args: [{ type: QueryExprType.Field, name: ResponseRatingsField.LastRateTime }],
+    });
   });
 
-  // rate_analytics.comment is sensitive, and the remaining columns are not in this entity's schema.
   test.each(RATED_STATES)('%s references no unqueryable column', (feedback) => {
     const serialized = JSON.stringify(build(feedback));
 
-    ['comment', 'trace_id', 'core_span_id', '_ingested_at'].forEach((column) => {
+    ['comment_sample', 'comments', 'trace_id', 'core_span_id', '_updated_at'].forEach((column) => {
       expect(serialized).not.toContain(column);
     });
   });
 
-  // A DIAL thumb normalizes to 1/0, so the two directions must split on a strict/non-strict pair to keep
-  // a zero thumb out of positive and inside negative.
-  test.each([
-    [FeedbackFilter.Positive, QueryOperator.Gt, QueryValueType.Integer, '0'],
-    [FeedbackFilter.Negative, QueryOperator.Le, QueryValueType.Integer, '0'],
-    // ne is the only operator that accepts a null literal.
-    [FeedbackFilter.Rated, QueryOperator.Ne, QueryValueType.Null, null],
-  ])('%s filters rate with %s', (feedback, op, valueType, value) => {
-    expect(ratePredicate(feedback)).toEqual({
-      op,
+  test('Positive selects on the positive count alone', () => {
+    expect(rateNode(FeedbackFilter.Positive)).toEqual({
+      op: QueryOperator.Gt,
       args: [
-        { type: QueryExprType.Field, name: RateAnalyticsField.Rate },
-        { type: QueryExprType.Value, value_type: valueType, value },
+        { type: QueryExprType.Field, name: ResponseRatingsField.RatePosCount },
+        { type: QueryExprType.Value, value_type: QueryValueType.Integer, value: '0' },
       ],
     });
   });
 
-  test.each(RATED_STATES)('%s bounds request_time, guards empty ids and stays a flat AND of four', (feedback) => {
+  test('Negative is a union over the non-positive counts, zero included', () => {
+    const node = rateNode(FeedbackFilter.Negative) as unknown as QueryGroup;
+
+    expect(String(node.op)).toBe(QueryLogicalOperator.Or);
+    expect((node.args as QueryPredicate[]).map(fieldName)).toEqual([
+      ResponseRatingsField.RateZeroCount,
+      ResponseRatingsField.RateNegCount,
+    ]);
+    (node.args as QueryPredicate[]).forEach((arg) => expect(arg.op).toBe(QueryOperator.Gt));
+  });
+
+  test('Rated is a union over every value-bearing count', () => {
+    const node = rateNode(FeedbackFilter.Rated) as unknown as QueryGroup;
+
+    expect(String(node.op)).toBe(QueryLogicalOperator.Or);
+    expect((node.args as QueryPredicate[]).map(fieldName)).toEqual([
+      ResponseRatingsField.RatePosCount,
+      ResponseRatingsField.RateZeroCount,
+      ResponseRatingsField.RateNegCount,
+    ]);
+  });
+
+  test('Rated names no column that could hold a rate event without a value', () => {
+    const serialized = JSON.stringify(build(FeedbackFilter.Rated));
+
+    expect(serialized).not.toContain(ResponseRatingsField.RateEventCount);
+    expect(serialized).not.toContain('rate_null_count');
+  });
+
+  test.each(RATED_STATES)('%s bounds last_rate_time, guards empty ids and stays a flat AND of four', (feedback) => {
     const args = filterArgs(feedback);
-    const bounds = args.filter(
-      (node) =>
-        [QueryOperator.Ge, QueryOperator.Le].includes(node.op) && fieldName(node) === RateAnalyticsField.RequestTime,
-    );
-    const guard = args.find((node) => node.op === QueryOperator.Ne && fieldName(node) === RateAnalyticsField.ChatId);
+    const bounds = args.filter(isTimeBound);
+    const guard = args.find((node) => node.op === QueryOperator.Ne && fieldName(node) === ResponseRatingsField.ChatId);
 
     expect(bounds.map((node) => (node.args[1] as QueryValueExpr).value)).toEqual([START_MS, END_MS]);
     expect((guard?.args[1] as QueryValueExpr).value).toBe('');
@@ -549,7 +579,6 @@ describe('buildRatedConversationIdsQuery', () => {
   });
 
   test('All adds no rate predicate', () => {
-    expect(ratePredicate(FeedbackFilter.All)).toBeUndefined();
     expect(filterArgs(FeedbackFilter.All)).toHaveLength(3);
   });
 
@@ -559,7 +588,7 @@ describe('buildRatedConversationIdsQuery', () => {
 
     expect(query.sort).toEqual([
       { field: FeedbackField.LastRated, dir: QuerySortDirection.Desc },
-      { field: RateAnalyticsField.ChatId, dir: QuerySortDirection.Asc },
+      { field: ResponseRatingsField.ChatId, dir: QuerySortDirection.Asc },
     ]);
     expect(query.page).toEqual({ type: 'offset', offset: 0, limit: FEEDBACK_CANDIDATE_LIMIT, include_total: false });
     expect(FEEDBACK_CANDIDATE_LIMIT).toBeLessThanOrEqual(1000);
@@ -572,60 +601,98 @@ describe('buildRatedConversationIdsQuery', () => {
 });
 
 describe('buildConversationRatingsQuery', () => {
-  const build = (direction: RatingDirection, chatIds = ['a', 'b']) =>
-    buildConversationRatingsQuery({ range: RANGE, chatIds, direction });
+  const build = (chatIds = ['a', 'b']) => buildConversationRatingsQuery({ range: RANGE, chatIds });
 
-  const ratePredicate = (direction: RatingDirection): QueryPredicate | undefined =>
-    groupArgs(build(direction).filter).find((node) => fieldName(node) === RateAnalyticsField.Rate);
+  const summed = (query: StructuredQuery) =>
+    (query.select as QueryOutputColumn[]).slice(1).map((column) => ({
+      as: column.as,
+      field: ((column.expr as QueryFnExpr).args?.[0] as QueryFieldExpr)?.name,
+      fn: (column.expr as QueryFnExpr).name,
+    }));
 
-  test('counts rate per conversation, restricted to the ids given', () => {
-    const query = build(RatingDirection.Up);
+  test('reads the rating rollup grouped by chat_id, restricted to the ids given', () => {
+    const query = build();
 
-    expect(query.entity).toBe('rate_analytics');
-    expect(query.group_by).toEqual([RateAnalyticsField.ChatId]);
-    expect(query.select).toEqual([
-      { expr: { type: QueryExprType.Field, name: RateAnalyticsField.ChatId } },
-      {
-        expr: { type: QueryExprType.Fn, name: 'count', args: [{ type: QueryExprType.Field, name: 'rate' }] },
-        as: FeedbackField.RatingCount,
-      },
-    ]);
+    expect(query.entity).toBe('response_ratings');
+    expect(query.mode).toBe(QueryMode.Aggregate);
+    expect(query.group_by).toEqual([ResponseRatingsField.ChatId]);
+    expect(query.select?.[0]).toEqual({ expr: { type: QueryExprType.Field, name: ResponseRatingsField.ChatId } });
     expect(groupArgs(query.filter).find((node) => node.op === QueryOperator.In)?.args[1]).toMatchObject({
       type: QueryExprType.Array,
     });
   });
 
-  // `rate` is signed — DIAL sends 1 for a like and -1 for a dislike, and a normalized boolean false is 0 —
-  // so the split cannot come from count and sum. Each direction reuses the feedback filter's own predicate,
-  // which is what guarantees a conversation the Positive filter selects shows a non-zero up count.
-  test.each([
-    [RatingDirection.Up, QueryOperator.Gt],
-    [RatingDirection.Down, QueryOperator.Le],
-  ])('%s counts under the same predicate the feedback filter uses (%s)', (direction, op) => {
-    expect(ratePredicate(direction)).toEqual({
-      op,
-      args: [
-        { type: QueryExprType.Field, name: RateAnalyticsField.Rate },
-        { type: QueryExprType.Value, value_type: QueryValueType.Integer, value: '0' },
-      ],
-    });
+  test('answers both directions from one query', () => {
+    expect(summed(build())).toEqual([
+      { as: FeedbackField.RatingUp, field: ResponseRatingsField.RatePosCount, fn: 'sum' },
+      { as: FeedbackField.RateZero, field: ResponseRatingsField.RateZeroCount, fn: 'sum' },
+      { as: FeedbackField.RateNegative, field: ResponseRatingsField.RateNegCount, fn: 'sum' },
+      { as: FeedbackField.RateBoolFalse, field: ResponseRatingsField.RateBoolFalseCount, fn: 'sum' },
+      { as: FeedbackField.RateRaw, field: ResponseRatingsField.RateRawCount, fn: 'sum' },
+      { as: FeedbackField.RateEvents, field: ResponseRatingsField.RateEventCount, fn: 'sum' },
+    ]);
   });
 
-  test('the two directions differ only by the rate predicate', () => {
-    const up = build(RatingDirection.Up);
-    const down = build(RatingDirection.Down);
+  test('projects the form columns the negative figure caveat is drawn from', () => {
+    const aliases = summed(build()).map((column) => column.as);
 
-    expect(up.select).toEqual(down.select);
-    expect(up.page).toEqual(down.page);
-    expect(groupArgs(up.filter).slice(0, 3)).toEqual(groupArgs(down.filter).slice(0, 3));
-    expect(up.filter).not.toEqual(down.filter);
+    expect(aliases).toContain(FeedbackField.RateBoolFalse);
+    expect(aliases).toContain(FeedbackField.RateRaw);
+  });
+
+  test('carries no rate predicate of its own', () => {
+    const args = groupArgs(build().filter);
+
+    expect(args.map(fieldName)).toEqual([
+      ResponseRatingsField.LastRateTime,
+      ResponseRatingsField.LastRateTime,
+      ResponseRatingsField.ChatId,
+    ]);
+  });
+
+  test('bounds last_rate_time to the selected period', () => {
+    const bounds = groupArgs(build().filter).filter((node) => fieldName(node) === ResponseRatingsField.LastRateTime);
+
+    expect(bounds.map((node) => (node.args[1] as QueryValueExpr).value)).toEqual([START_MS, END_MS]);
   });
 
   // Restricted to the page's ids, so the limit tracks that count — a cap below it would silently report a
   // displayed conversation as unrated.
   test('pages for exactly the ids requested, never zero', () => {
-    expect((build(RatingDirection.Up, ['a', 'b', 'c']).page as QueryOffsetPage).limit).toBe(3);
-    expect((build(RatingDirection.Up, []).page as QueryOffsetPage).limit).toBe(1);
+    expect((build(['a', 'b', 'c']).page as QueryOffsetPage).limit).toBe(3);
+    expect((build([]).page as QueryOffsetPage).limit).toBe(1);
+  });
+});
+
+describe('buildConversationRatingCountsQuery', () => {
+  const build = () => buildConversationRatingCountsQuery('chat-1');
+
+  test('narrows to one conversation by equality and requests a single row', () => {
+    const query = build();
+    const predicate = query.filter as QueryPredicate;
+
+    expect(query.entity).toBe('response_ratings');
+    expect(query.group_by).toEqual([ResponseRatingsField.ChatId]);
+    expect(predicate.op).toBe(QueryOperator.Eq);
+    expect(fieldName(predicate)).toBe(ResponseRatingsField.ChatId);
+    expect((query.page as QueryOffsetPage).limit).toBe(1);
+  });
+
+  test('carries no time bound', () => {
+    expect(JSON.stringify(build())).not.toContain(ResponseRatingsField.LastRateTime);
+  });
+
+  test('projects the same figures the grid column reads', () => {
+    const aliases = (build().select as QueryOutputColumn[]).slice(1).map((column) => column.as);
+
+    expect(aliases).toEqual([
+      FeedbackField.RatingUp,
+      FeedbackField.RateZero,
+      FeedbackField.RateNegative,
+      FeedbackField.RateBoolFalse,
+      FeedbackField.RateRaw,
+      FeedbackField.RateEvents,
+    ]);
   });
 });
 
@@ -645,9 +712,7 @@ const HOPS = [hopRow('t1', 1787218895000), hopRow('t2', 1787220824000)];
 const BODY_COLUMNS = [UsageLogField.RequestBody, UsageLogField.ResponseBody, UsageLogField.AssembledResponse];
 
 const flatPredicates = (query: StructuredQuery): QueryPredicate[] =>
-  groupArgs(query.filter).flatMap((node) =>
-    (node as QueryGroup).op === QueryLogicalOperator.And ? groupArgs(node) : [node],
-  );
+  groupArgs(query.filter).flatMap((node) => (String(node.op) === QueryLogicalOperator.And ? groupArgs(node) : [node]));
 
 const predicateFor = (query: StructuredQuery, name: string): QueryPredicate | undefined =>
   flatPredicates(query).find((node) => fieldName(node) === name);
