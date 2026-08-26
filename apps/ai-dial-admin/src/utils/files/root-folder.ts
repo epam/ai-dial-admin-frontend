@@ -15,6 +15,7 @@ const FLAT_PLATFORM_VIEWS: readonly ApplicationRoute[] = [
   ApplicationRoute.AssetsAppRunners,
   ApplicationRoute.AssetsInterceptors,
   ApplicationRoute.AssetsRoutes,
+  ApplicationRoute.AssetsRoles,
 ];
 
 export const isFlatPlatformView = (view?: ApplicationRoute): boolean => !!view && FLAT_PLATFORM_VIEWS.includes(view);

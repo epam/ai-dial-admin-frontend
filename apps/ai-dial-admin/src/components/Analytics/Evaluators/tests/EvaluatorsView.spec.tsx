@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import EvaluatorsView from '@/src/components/Analytics/Evaluators/EvaluatorsView';
@@ -6,6 +7,9 @@ import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace';
 import { AnalyticsEvaluatorsI18nKey } from '@/src/constants/i18n';
 import { EvaluatorListRow } from '@/src/models/analytics/evaluator';
+
+const push = vi.fn();
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }));
 
 interface MockColDef {
   headerName?: string;
@@ -21,10 +25,12 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
     columnDefs,
     rowData,
     emptyDataProps,
+    additionalGridOptions,
   }: {
     columnDefs?: MockColDef[];
     rowData?: EvaluatorListRow[];
     emptyDataProps?: { title?: string };
+    additionalGridOptions?: { onCellClicked?: (e: { data?: EvaluatorListRow; event?: unknown }) => void };
   }) => {
     const dataColumns = columnDefs?.filter((col) => col.field !== ACTIONS_COLUMN_CEL_ID) ?? [];
 
@@ -37,6 +43,7 @@ vi.mock('@/src/components/Grid/GridView/GridView', () => ({
         {rowData?.length === 0 && <div>{emptyDataProps?.title}</div>}
         {rowData?.map((row) => (
           <div key={row.name}>
+            <button onClick={() => additionalGridOptions?.onCellClicked?.({ data: row })}>{`open ${row.name}`}</button>
             {columnDefs
               ?.map((col) => {
                 const value = col.valueGetter
@@ -85,10 +92,18 @@ describe('EvaluatorsView', () => {
   test('offers no create control', () => {
     renderView();
 
-    expect(screen.queryByRole('button')).toBeNull();
+    expect(screen.queryByRole('button', { name: /create|new|add|edit|delete|remove/i })).toBeNull();
   });
 
-  // Narrowing is the grid's job — the listing is unpaged, so a column that opted out would be unreachable.
+  test('activating a row opens that evaluator', async () => {
+    const user = userEvent.setup();
+    renderView();
+
+    await user.click(screen.getByRole('button', { name: 'open conversation-insights' }));
+
+    expect(push).toHaveBeenCalledWith('/evaluators/conversation-insights');
+  });
+
   test('leaves every data column sortable and filterable through the grid', () => {
     renderView();
 

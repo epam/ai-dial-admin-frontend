@@ -1,7 +1,6 @@
 import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
-import { rolesApi } from '@/src/app/api/api';
 import ModelView from '@/src/components/Assets/Models/View';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
@@ -26,7 +25,6 @@ export default async function Page(params: {
 
   let etag = DEFAULT_ETAG;
   let model: AssetModel | null = null;
-  let roles: DialRole[] | null = [];
   const optionWarnings: EntitiesI18nKey[] = [];
 
   try {
@@ -38,16 +36,17 @@ export default async function Page(params: {
       etag = res?.etag || DEFAULT_ETAG;
       return res?.response as AssetModel | null;
     });
-    roles = (await rolesApi.getRolesList(token)) || [];
   } catch (e) {
     errorObjLog(e, 'Failed to fetch model view data');
   }
 
   // Deliberately outside the resource fetch's try, and resolved together: an option-list problem must
-  // not prevent the model from loading, and one list failing must not skip the other. Core-direct —
-  // matching Assets > App Runners — rather than the admin-BE list, which cannot see interceptors
-  // declared in Core's configuration file.
-  const [interceptors, globalInterceptors] = await Promise.all([
+  // not prevent the model from loading, and one list failing must not skip another. Core-direct —
+  // matching Assets > App Runners — rather than the admin-BE list, which cannot see roles/interceptors
+  // declared in Core's configuration file, and which is a different population from `Assets > Roles`/
+  // `Assets > Interceptors`' own API-written one.
+  const [roles, interceptors, globalInterceptors] = await Promise.all([
+    readConfigEntities<DialRole>(token, ConfigFileEntityType.Roles, optionWarnings),
     readConfigEntities<DialInterceptor>(token, ConfigFileEntityType.Interceptors, optionWarnings),
     readGlobalInterceptors(token, optionWarnings),
   ]);
@@ -61,7 +60,7 @@ export default async function Page(params: {
       <ModelView
         etag={etag}
         originalModel={model}
-        roles={roles || []}
+        roles={roles}
         interceptors={interceptors}
         globalInterceptors={globalInterceptors}
         optionWarnings={optionWarnings}

@@ -21,6 +21,7 @@ export enum ApplicationRoute {
   AssetsAppRunners = '/assets-app-runners',
   AssetsInterceptors = '/assets-interceptors',
   AssetsRoutes = '/assets-routes',
+  AssetsRoles = '/assets-roles',
   AssetsApplications = '/assets-applications',
   AssetsToolsets = '/assets-toolsets',
   Conversations = '/conversations',

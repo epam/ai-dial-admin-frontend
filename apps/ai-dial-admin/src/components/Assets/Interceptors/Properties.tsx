@@ -3,20 +3,19 @@ import { FC } from 'react';
 import ResourceInfoHeader from '@/src/components/Assets/Resources/ResourceInfoHeader';
 import DescriptionControl from '@/src/components/BaseControls/Description';
 import DisplayNameControl from '@/src/components/BaseControls/DisplayName';
+import ConfigurationEndpointControl from '@/src/components/BaseControls/Endpoint/ConfigurationEndpointControl';
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
-import IconControl from '@/src/components/BaseControls/Icon';
 import InterfacesField from '@/src/components/BaseControls/InterfacesField/InterfacesField';
 import OverrideNameControl from '@/src/components/BaseControls/OverrideName';
 import TopicsControl from '@/src/components/BaseControls/Topics';
+import Defaults from '@/src/components/Defaults/Defaults';
 import ForwardAuthTokenField from '@/src/components/EntityMainProperties/ForwardAuthToken/ForwardAuthTokenField';
 import { INTERCEPTOR_INTERFACE_TYPES } from '@/src/constants/deployment-interfaces';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+import { DialFeatures } from '@/src/models/dial/features';
 import { DialInterceptorResource } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
-import Defaults from '../../Defaults/Defaults';
-import ConfigurationEndpointControl from '../../BaseControls/Endpoint/ConfigurationEndpointControl';
-import { DialFeatures } from '@/src/models/dial/features';
 
 interface Props {
   asset: DialInterceptorResource;
@@ -53,7 +52,6 @@ const InterceptorAssetProperties: FC<Props> = ({ asset, onChange }) => {
           }
         />
         <Defaults values={asset.defaults} onChangeValues={(defaults) => onChange({ ...asset, defaults })} />
-        <IconControl iconUrl={asset.iconUrl} onChange={(iconUrl) => onChange({ ...asset, iconUrl })} />
         <TopicsControl entity={asset} onChange={onChange} view={ApplicationRoute.AssetsInterceptors} />
         <ForwardAuthTokenField view={ApplicationRoute.AssetsInterceptors} entity={asset} onChangeEntity={onChange} />
       </div>

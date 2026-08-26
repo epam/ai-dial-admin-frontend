@@ -35,6 +35,7 @@ import { ToolsetFolderProvider } from '@/src/context/assets/ToolsetsFolderContex
 import { ConversationFolderProvider } from '@/src/context/assets/ConversationsFolderContext';
 import { AppRunnersFolderProvider } from '@/src/context/assets/AppRunnersFolderContext';
 import { InterceptorsFolderProvider } from '@/src/context/assets/InterceptorsFolderContext';
+import { RolesFolderProvider } from '@/src/context/assets/RolesFolderContext';
 import { RoutesFolderProvider } from '@/src/context/assets/RoutesFolderContext';
 import { ModelsFolderProvider } from '@/src/context/assets/ModelsFolderContext';
 import { SkillFolderProvider } from '@/src/context/assets/SkillFolderContext';
@@ -87,32 +88,34 @@ export default async function Layout({ children, params }: { children: ReactNode
                   <AppRunnersFolderProvider>
                     <InterceptorsFolderProvider>
                       <RoutesFolderProvider>
-                        <PromptFolderProvider>
-                          <ToolsetFolderProvider>
-                            <FileFolderProvider>
-                              <ConversationFolderProvider>
-                                <SkillFolderProvider>
-                                  <NotificationProvider>
-                                    <div className="flex flex-col size-full">
-                                      <Header
-                                        isEnableAuth={isEnableAuth}
-                                        docLink={normalizeUrl(process.env.DIAL_ADMIN_DOCUMENTATION)}
-                                      />
-                                      <div className="flex-1 min-h-0">
-                                        <div className="flex flex-row h-full relative">
-                                          <Menu disableMenuItems={getMenuItems(process.env.DISABLE_MENU_ITEMS)} />
-                                          <Content isEnableAuth={isEnableAuth} beVersion={beVersion}>
-                                            {children}
-                                          </Content>
+                        <RolesFolderProvider>
+                          <PromptFolderProvider>
+                            <ToolsetFolderProvider>
+                              <FileFolderProvider>
+                                <ConversationFolderProvider>
+                                  <SkillFolderProvider>
+                                    <NotificationProvider>
+                                      <div className="flex flex-col size-full">
+                                        <Header
+                                          isEnableAuth={isEnableAuth}
+                                          docLink={normalizeUrl(process.env.DIAL_ADMIN_DOCUMENTATION)}
+                                        />
+                                        <div className="flex-1 min-h-0">
+                                          <div className="flex flex-row h-full relative">
+                                            <Menu disableMenuItems={getMenuItems(process.env.DISABLE_MENU_ITEMS)} />
+                                            <Content isEnableAuth={isEnableAuth} beVersion={beVersion}>
+                                              {children}
+                                            </Content>
+                                          </div>
                                         </div>
                                       </div>
-                                    </div>
-                                  </NotificationProvider>
-                                </SkillFolderProvider>
-                              </ConversationFolderProvider>
-                            </FileFolderProvider>
-                          </ToolsetFolderProvider>
-                        </PromptFolderProvider>
+                                    </NotificationProvider>
+                                  </SkillFolderProvider>
+                                </ConversationFolderProvider>
+                              </FileFolderProvider>
+                            </ToolsetFolderProvider>
+                          </PromptFolderProvider>
+                        </RolesFolderProvider>
                       </RoutesFolderProvider>
                     </InterceptorsFolderProvider>
                   </AppRunnersFolderProvider>

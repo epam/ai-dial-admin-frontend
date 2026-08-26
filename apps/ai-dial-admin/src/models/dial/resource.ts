@@ -3,6 +3,7 @@ import { BaseEntity, EntityAttachment, EntityDefaults, ModifiedEntity } from '@/
 import { DialFeatures } from '@/src/models/dial/features';
 import { DialResourceInterface } from '@/src/models/dial/interfaces';
 import { DialModelEndpoint, DialModelLimit, DialModelPricing } from '@/src/models/dial/model';
+import { DialCoreRoleLimits, DialCoreRoleShare } from '@/src/models/dial/role-limits';
 import { AttachmentPaths, DialAppRoute, RouteResponse } from '@/src/models/dial/route';
 import { ToolsetTransport } from '@/src/types/toolset';
 
@@ -175,8 +176,10 @@ export interface DialInterceptorResource extends ModifiedEntity {
  * A route resource (`routes/platform/{name}`) as returned by Core. Flat and unversioned like
  * `DialModelResource`/`DialInterceptorResource`, and — unlike an interceptor — `Route extends
  * RoleBasedEntity` directly rather than `Deployment`, so it has no `displayName`/`description`/
- * `iconUrl`/`endpoint`/`features`. `userRoles`/role-limits are deliberately left off: role-based
- * access for this surface is being reconsidered separately and is out of scope here.
+ * `iconUrl`/`endpoint`/`features`. `userRoles` (`RoleBasedEntity`'s own field — membership only, no
+ * per-role limits) is the one field this surface does expose from that base class, via its Roles
+ * tab (`AssetRoles`); full role-limit editing remains out of scope, same as every other Core-direct
+ * asset surface.
  */
 export interface DialRouteResource extends ModifiedEntity {
   name: string;
@@ -185,6 +188,7 @@ export interface DialRouteResource extends ModifiedEntity {
   author?: string;
   status?: DialModelResourceStatus;
   validationWarnings?: CoreValidationWarning[];
+  userRoles?: string[];
   paths?: string[];
   methods?: string[];
   rewritePath?: boolean;
@@ -195,8 +199,39 @@ export interface DialRouteResource extends ModifiedEntity {
   attachmentPaths?: AttachmentPaths;
 }
 
+/**
+ * A role resource (`roles/platform/{name}`) as returned by Core. Flat and unversioned like
+ * `DialModelResource`/`DialInterceptorResource`/`DialRouteResource`. `Role` is a plain class — it
+ * extends neither `RoleBasedEntity` (no `userRoles`) nor `Deployment` (no `displayName`/
+ * `description`) — so this model carries only `limits`/`costLimit`/`share`. `grantedKeys` is
+ * deliberately absent: it has no field on Core's `Role` class at all, since the real relationship is
+ * inverted (`Key.roles`/`Key.role`) — granting/revoking a key is out of scope here, deferred until
+ * Keys itself has an asset surface to write through.
+ *
+ * `limits`/`costLimit` values stay plain numbers (`DialCoreRoleLimits`) — `mergeRoleResource` drops
+ * any token too large for `Number.isSafeInteger` rather than converting it to a string; see that
+ * function's doc comment for why. `share` keeps Core's own snake_case `ShareResourceLimit` shape
+ * (`DialCoreRoleShare`), distinct from the admin-backend's camelCase `DialRoleShare`.
+ */
+export interface DialRoleResource extends ModifiedEntity {
+  name: string;
+  path: string;
+  folderId: string;
+  author?: string;
+  status?: DialModelResourceStatus;
+  validationWarnings?: CoreValidationWarning[];
+  limits?: Record<string, DialCoreRoleLimits>;
+  costLimit?: DialCoreRoleLimits;
+  share?: Record<string, DialCoreRoleShare>;
+}
+
 /** The resource types DIAL Core keeps in its flat `platform` bucket — see `isFlatPlatformView`. */
-export type PlatformAsset = DialModelResource | DialAppRunnerResource | DialInterceptorResource | DialRouteResource;
+export type PlatformAsset =
+  | DialModelResource
+  | DialAppRunnerResource
+  | DialInterceptorResource
+  | DialRouteResource
+  | DialRoleResource;
 
 export enum DialModelResourceType {
   Chat = 'CHAT',

@@ -35,8 +35,19 @@ evaluator went missing.
 - Branch the detail page on evaluator `type`: a `sql` evaluator does not render the `preset`, `model`,
   `params`, `request_template`, `input_vars`, or `response_schema` sections at all, because the service
   forbids those members for that type. Rendering them as "not set" would imply they could be set.
-- State the registry's immutability on the page. The console offers no edit and no delete affordance for an
-  evaluator or a version, and says why rather than leaving the absence to be read as an unfinished screen.
+- Split the detail page into **Properties** and **Rules** tabs, following the console's entity-view shape:
+  identity and actions above the tabs, the version's read-only facts inside Properties above a divider, and
+  the referencing rules as a grid rather than a list.
+- Make Properties a **form**, and register an edit as a new version through `POST /v1/evaluators` — the
+  service's only evaluator mutation. `PUT` and `DELETE` on a version answer 409, so there is no save-in-place
+  to offer and the control says "Save as new version" instead. `name` stays read-only, because posting a
+  different one registers a separate evaluator rather than a version of this one.
+- Name the version a save will create **before** posting. `register()` assigns `latest_version + 1`, so
+  editing version 2 while the latest is 4 creates 5, not 3 — the one behaviour here that can silently do
+  something an operator did not intend.
+- Gate the write on `isFullAdmin` and nothing else on the surface. Every evaluator read is open on the
+  service; only the POST is `@FullAdminOnly`. A caller without the right sees the same tabs and values with
+  the controls disabled.
 - Move `getEvaluators`, `getEvaluator`, and `getEvaluatorVersion` out of `enrichment-rules/actions.ts` into
   the new `evaluators/actions.ts`, and update the three importers. The rules console keeps calling them;
   only the module they live in changes.
@@ -55,16 +66,17 @@ None. Evaluators are part of the analytics enrichment surface the `analytics` ca
   and the statement that the console never mutates the registry. Two existing requirements change: the
   Analytics menu group gains an "Evaluators" sub-item, and the rule detail's read-only facts link their
   resolved evaluator to that evaluator's page at the version the rule resolved to.
-- The API-surface requirement is **not** touched. Its evaluator endpoints are already specified, and its
-  line reading "read-only from this app — evaluators are registered outside the UI" stays true: this change
-  adds no mutation. It becomes wrong only in the follow-up that registers versions.
+- The API-surface requirement **is** amended: it gains `POST /v1/evaluators`, records that `PUT` and
+  `DELETE` on a version exist only to answer 409, states the per-type body shape, and loses its line reading
+  "read-only from this app — evaluators are registered outside the UI", which this change makes false.
 
 ## Impact
 
 - **New**: `app/[lang]/evaluators/page.tsx`, `app/[lang]/evaluators/[name]/page.tsx`,
-  `app/[lang]/evaluators/actions.ts`; `EvaluatorsView`, `EvaluatorDetailView`, `EvaluatorTypeBadge`,
-  `EvaluatorVarsGrid`, `EvaluatorVersionSwitcher`, `EvaluatorUsedByPanel` under
-  `components/Analytics/Evaluators/`.
+  `app/[lang]/evaluators/actions.ts`; `EvaluatorsView`, `EvaluatorDetailView`, `EvaluatorProperties`,
+  `EvaluatorRulesGrid`, `EvaluatorVarsEditor`, `EvaluatorParamsEditor`, `EvaluatorTypeBadge`,
+  `EvaluatorVersionSwitcher`, `use-evaluator-form` under `components/Analytics/Evaluators/`;
+  `utils/analytics/evaluator-dto.ts` and `utils/analytics/evaluator-usage.ts`.
 - **Modified**: `models/analytics/evaluator.ts` (`EvaluatorPreset`, a listing row type);
   `enrichment-rules/actions.ts` (evaluator readers removed) and its importers —
   `use-rule-resolution.ts`, `EnrichmentRulesView.tsx`, `enrichment-rules/[id]/page.tsx`;
@@ -74,19 +86,23 @@ None. Evaluators are part of the analytics enrichment surface the `analytics` ca
   gains an opt-in "open on mount" prop so the request template does not arrive collapsed.
 - **Reused unchanged**: `GridView`, `LabelledText`, `CodeViewer`, `VersionsControl`, `Accordion`,
   `DialEllipsisTooltip`, `navigateEntityUrl`, `isAnalyticsForbidden`, `Page403`.
-- **Access**: the guard is `isAnalyticsForbidden()` alone. `GET /v1/evaluators*` carries no `@FullAdminOnly`
-  on the service, so unlike the rules console there is no `isFullAdmin` gate — and with no mutation on the
-  page there is nothing for one to protect.
+- **Access**: reaching either page is `isAnalyticsForbidden()` alone — `GET /v1/evaluators*` carries no
+  `@FullAdminOnly`, so no role keeps a caller off the route or withholds a value. Only the registration POST
+  is gated, on `isFullAdmin`; `isReadOnlyAdmin` would be wrong because the two are not complements and a
+  role-less caller satisfies neither.
 - **Tests**: new specs for the two views, the used-by derivation, the version addressing, and the per-type
   branching. No existing spec changes behaviour; the moved server actions are re-imported, not rewritten.
 
 ## Non-goals
 
-- **Registering an evaluator or a new version** (`POST /v1/evaluators`). Deferred to
-  `add-evaluator-version-authoring`, together with the editable form and the "save as new version" flow
-  that is the only save path an immutable registry can offer.
-- **Diffing two versions.** Also deferred to that follow-up, where `CompareVersions` and `DiffField` are
-  reused for `request_template` and `response_schema`.
+- **Diffing two versions.** `CompareVersions` with `DiffField` over `request_template` and
+  `response_schema` is the obvious next step, but comparing is a separate reading of the registry from
+  authoring one and does not block it.
+- **Registering an evaluator that does not exist yet.** The form edits an existing definition into a new
+  version; creating a first version means composing one from nothing, which needs its own entry point and
+  its own empty-state design.
+- **Validating a `request_template` or a `sql` expression.** The grammar is the service's, and a
+  client-side approximation would reject what the service accepts.
 - **A `type` column in the listing.** `GET /v1/evaluators` returns only `{name, latest_version,
   created_at}`, so a type column would need either a per-row read — which the rules listing requirement
   already forbids for its own evaluator cell — or a join from the rules listing that leaves every unused
