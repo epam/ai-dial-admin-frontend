@@ -141,6 +141,22 @@ describe('TestCases', () => {
     );
 
     const wrapper = container.firstChild as HTMLElement;
-    expect(wrapper).toHaveClass('h-full', 'flex', 'flex-col', 'gap-y-4');
+    expect(wrapper).toHaveClass('h-full', 'flex', 'flex-col', 'gap-y-4', 'min-h-0');
+  });
+
+  test('caps Dynamic Configuration sections so the Test Cases grid keeps remaining height', () => {
+    const { container } = render(
+      <TestCases
+        selectedTestSuite={createTestSuite({ additionalRequests: [{}, {}, {}] })}
+        onChange={mockOnChange}
+        {...defaultDatasetProps}
+      />,
+    );
+
+    const wrapper = container.firstChild as HTMLElement;
+    expect(wrapper.firstChild).toHaveClass('max-h-[50%]', 'overflow-y-auto', 'shrink-0');
+    expect(screen.getByRole('region', { name: 'template variables' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'additional request variables 1' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'test cases list' })).toBeInTheDocument();
   });
 });
