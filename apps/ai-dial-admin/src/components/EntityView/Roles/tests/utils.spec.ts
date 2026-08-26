@@ -27,6 +27,14 @@ describe('getNoAvailableTitle', () => {
   test('returns NotAvailableApplication for Toolsets view', () => {
     expect(getNoAvailableTitle(ApplicationRoute.Toolsets)).toBe(RolesI18nKey.NotAvailableToolSet);
   });
+
+  test('returns NotAvailableModel for AssetsModels view', () => {
+    expect(getNoAvailableTitle(ApplicationRoute.AssetsModels)).toBe(RolesI18nKey.NotAvailableModel);
+  });
+
+  test('returns NotAvailableRoute for AssetsRoutes view', () => {
+    expect(getNoAvailableTitle(ApplicationRoute.AssetsRoutes)).toBe(RolesI18nKey.NotAvailableRoute);
+  });
 });
 
 describe('isLimitSameAsDefault', () => {

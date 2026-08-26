@@ -97,6 +97,13 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
         : allActionLabels.filter(
             (item) => item.key === 'duplicate' || item.key === 'delete' || item.key === 'openInNewTab',
           );
+    // No 'duplicate': the shared duplicate modal (`DuplicatePlatformAsset`) unconditionally writes a
+    // `displayName`, a field `Role.class` doesn't declare — the same class of Core-rejection risk
+    // design D3 avoids for the identity field. Roles get delete + open-in-new-tab only.
+    case ApplicationRoute.AssetsRoles:
+      return isReadOnlyAdmin
+        ? []
+        : allActionLabels.filter((item) => item.key === 'delete' || item.key === 'openInNewTab');
     case ApplicationRoute.AssetsApplications:
     case ApplicationRoute.AssetsToolsets:
     case ApplicationRoute.Prompts:
@@ -170,6 +177,14 @@ export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: 
         {
           key: 'newItem',
           label: FileManagerI18nKey.Route,
+          icon: null,
+        },
+      ];
+    case ApplicationRoute.AssetsRoles:
+      return [
+        {
+          key: 'newItem',
+          label: FileManagerI18nKey.Role,
           icon: null,
         },
       ];
@@ -323,11 +338,13 @@ export const getDeleteNotificationContent = (
     case ApplicationRoute.AssetsAppRunners:
     case ApplicationRoute.AssetsInterceptors:
     case ApplicationRoute.AssetsRoutes:
+    case ApplicationRoute.AssetsRoles:
     case ApplicationRoute.AssetsModels: {
       const itemLabel = (() => {
         if (view === ApplicationRoute.AssetsAppRunners) return FileManagerI18nKey.AppRunner;
         if (view === ApplicationRoute.AssetsInterceptors) return FileManagerI18nKey.Interceptor;
         if (view === ApplicationRoute.AssetsRoutes) return FileManagerI18nKey.Route;
+        if (view === ApplicationRoute.AssetsRoles) return FileManagerI18nKey.Role;
         return FileManagerI18nKey.Model;
       })();
       const title = isDeleteSeveralFiles

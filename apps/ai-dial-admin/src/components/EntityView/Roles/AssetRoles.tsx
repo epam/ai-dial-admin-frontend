@@ -2,9 +2,10 @@
 
 import { DialNeutralButton, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
-import { FC, useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
+import { getNoAvailableTitle } from '@/src/components/EntityView/Roles/utils';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { getRemoveOperation } from '@/src/constants/grid-columns/actions';
@@ -13,33 +14,41 @@ import { ButtonsI18nKey, RolesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';
-import { DialModelResource } from '@/src/models/dial/resource';
 import { DialRole } from '@/src/models/dial/role';
+import { ApplicationRoute } from '@/src/types/routes';
 
-interface Props {
-  asset: DialModelResource;
+interface Props<T> {
+  view: ApplicationRoute;
+  asset: T;
   roles: DialRole[];
-  onChange: (asset: DialModelResource) => void;
+  onChange: (asset: T) => void;
 }
 
 /**
- * Edits `userRoles` — a flat list of role names — deliberately rather than reusing the entity `Roles`
- * tab. That component edits `roleLimits`, `isPublic` and per-role share/limit values, which are admin-BE
- * constructs: DIAL Core keeps a deployment's limits on the *Role* rather than on the model, so a limit
- * typed against a model resource would be dropped on save with no warning. Only membership is editable
- * here because membership is all Core stores.
+ * Edits `userRoles` — a flat list of role names — for any Core-direct asset whose resource extends
+ * `RoleBasedEntity`. Deliberately edits membership only, rather than reusing the entity `Roles` tab
+ * (`components/EntityView/Roles/utils.ts`'s `getRolesGridData`/`LIMIT_COLUMNS`): that tab also edits
+ * `roleLimits`/`isPublic`/per-role share values, which are admin-BE constructs — DIAL Core keeps a
+ * deployment's limits on the *Role* resource itself, not on the deployment/route, so a limit typed
+ * against one of these resources would be silently dropped on save. Only membership is editable here
+ * because membership is all Core stores on `RoleBasedEntity.userRoles`.
+ *
+ * Generic over the asset's resource type — shared by every Core-direct asset surface with a Roles
+ * tab (`Assets > Models`, `Assets > Routes`), the same way `EntityInterceptors`
+ * (`components/EntityView/Interceptors/Interceptors.tsx`) is shared across multiple entity/asset
+ * surfaces' Interceptors tab.
  */
-const ModelAssetRoles: FC<Props> = ({ asset, roles, onChange }) => {
+const AssetRoles = <T extends { userRoles?: string[] }>({ view, asset, roles, onChange }: Props<T>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   /**
-   * Built from `userRoles` rather than by intersecting it with the fetched list, so a role the list does
-   * not contain is still shown. Two ways that happens: the role list read failed (the detail route
-   * swallows it and passes `[]`), or the role is defined in DIAL Core's config file and so is absent
-   * from the admin backend's list. Intersecting would render "no roles" while the model still grants
-   * them — a silent misstatement of who has access.
+   * Built from `userRoles` rather than by intersecting it with the fetched list, so a role the list
+   * does not contain is still shown. Two ways that happens: the role list read failed (the detail
+   * route degrades to `[]` rather than failing the page), or the role is declared in DIAL Core's
+   * configuration file and the admin backend's own list can't see it. Intersecting would render "no
+   * roles" while the asset still grants them — a silent misstatement of who has access.
    */
   const selectedRoles = useMemo(
     () =>
@@ -93,7 +102,7 @@ const ModelAssetRoles: FC<Props> = ({ asset, roles, onChange }) => {
       {selectedRoles.length ? (
         <GridView rowData={selectedRoles} columnDefs={columnDefs} />
       ) : (
-        <DialNoDataContent title={t(RolesI18nKey.NotAvailableModel)} />
+        <DialNoDataContent title={t(getNoAvailableTitle(view))} />
       )}
 
       <AddEntitiesGrid
@@ -108,4 +117,4 @@ const ModelAssetRoles: FC<Props> = ({ asset, roles, onChange }) => {
   );
 };
 
-export default ModelAssetRoles;
+export default AssetRoles;

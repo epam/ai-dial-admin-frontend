@@ -13,6 +13,7 @@ import {
   getInterceptor,
 } from '@/src/app/[lang]/assets-interceptors/actions';
 import { bulkDeleteModels, createModel, getModel } from '@/src/app/[lang]/assets-models/actions';
+import { bulkDeleteRoles, createRole, getRole } from '@/src/app/[lang]/assets-roles/actions';
 import { bulkDeleteRoutes, createRoute, getRoute } from '@/src/app/[lang]/assets-routes/actions';
 import { bulkDeleteSkills, getSkill } from '@/src/app/[lang]/assets-skills/actions';
 import {
@@ -39,6 +40,7 @@ import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { useConversationFolder } from '@/src/context/assets/ConversationsFolderContext';
 import { useAppRunnersFolder } from '@/src/context/assets/AppRunnersFolderContext';
 import { useInterceptorsFolder } from '@/src/context/assets/InterceptorsFolderContext';
+import { useRolesFolder } from '@/src/context/assets/RolesFolderContext';
 import { useRoutesFolder } from '@/src/context/assets/RoutesFolderContext';
 import { useModelsFolder } from '@/src/context/assets/ModelsFolderContext';
 import { usePromptFolder } from '@/src/context/assets/PromptFolderContext';
@@ -206,6 +208,8 @@ export const getFileManagerLabel = (view: ApplicationRoute): string => {
       return FileManagerI18nKey.Interceptors;
     case ApplicationRoute.AssetsRoutes:
       return FileManagerI18nKey.Routes;
+    case ApplicationRoute.AssetsRoles:
+      return FileManagerI18nKey.Roles;
     case ApplicationRoute.AssetsSkills:
       return FileManagerI18nKey.Skills;
     default:
@@ -257,6 +261,11 @@ export const getEmptyStateContent = (
       return {
         title: t(FileManagerI18nKey.RoutesEmptyStateTitle),
         description: t(FileManagerI18nKey.RoutesEmptyStateDescription),
+      };
+    case ApplicationRoute.AssetsRoles:
+      return {
+        title: t(FileManagerI18nKey.RolesEmptyStateTitle),
+        description: t(FileManagerI18nKey.RolesEmptyStateDescription),
       };
     case ApplicationRoute.AssetsSkills:
       return {
@@ -311,6 +320,7 @@ export const AssetFolderContextMap = {
   [ApplicationRoute.AssetsAppRunners]: useAppRunnersFolder,
   [ApplicationRoute.AssetsInterceptors]: useInterceptorsFolder,
   [ApplicationRoute.AssetsRoutes]: useRoutesFolder,
+  [ApplicationRoute.AssetsRoles]: useRolesFolder,
   [ApplicationRoute.AssetsSkills]: useSkillFolder,
 };
 
@@ -323,6 +333,7 @@ export const GetAssetActionMap = {
   [ApplicationRoute.AssetsAppRunners]: getRunner,
   [ApplicationRoute.AssetsInterceptors]: getInterceptor,
   [ApplicationRoute.AssetsRoutes]: getRoute,
+  [ApplicationRoute.AssetsRoles]: getRole,
   [ApplicationRoute.AssetsSkills]: getSkill,
 };
 
@@ -347,6 +358,9 @@ export const CreateAssetActionMap: Record<
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
   [ApplicationRoute.AssetsRoutes]: createRoute as (
+    asset: AssetWithVersion,
+  ) => Promise<ServerActionResponse<Record<string, unknown>>>,
+  [ApplicationRoute.AssetsRoles]: createRole as (
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
 };
@@ -392,6 +406,7 @@ export const BulkDeleteAssetActionMap = {
   [ApplicationRoute.AssetsAppRunners]: bulkDeleteRunners,
   [ApplicationRoute.AssetsInterceptors]: bulkDeleteInterceptors,
   [ApplicationRoute.AssetsRoutes]: bulkDeleteRoutes,
+  [ApplicationRoute.AssetsRoles]: bulkDeleteRoles,
   [ApplicationRoute.AssetsSkills]: bulkDeleteSkills,
 };
 

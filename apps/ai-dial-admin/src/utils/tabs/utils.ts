@@ -442,6 +442,9 @@ export const getTabsForAsset = (
   if (view === ApplicationRoute.AssetsInterceptors) {
     return [propertiesTab(t), parameterSchemaTab(t)];
   }
+  if (view === ApplicationRoute.AssetsRoutes) {
+    return [propertiesTab(t), rolesTab(t)];
+  }
   if (view === ApplicationRoute.AssetsSkills) {
     return [propertiesTab(t), skillTab(t)];
   }

@@ -8,6 +8,7 @@ import {
   filterLatestVersions,
   getDeleteNotificationContent,
   getEntityForUpdate,
+  getGridActionLabels,
   getIsNeedToMove,
   getImportNotificationContent,
   getMoveNotificationContent,
@@ -29,6 +30,25 @@ describe('getToolbarOptionLabels', () => {
 
   test('AssetsSkills returns no options for a read-only admin', () => {
     expect(getToolbarOptionLabels(ApplicationRoute.AssetsSkills, true)).toEqual([]);
+  });
+});
+
+describe('getGridActionLabels', () => {
+  test('AssetsRoles offers delete and openInNewTab, but no duplicate — Role.class has no displayName field for the shared duplicate modal to write', () => {
+    const keys = getGridActionLabels(ApplicationRoute.AssetsRoles, false).map((item) => item.key);
+
+    expect(keys).toEqual(expect.arrayContaining(['delete', 'openInNewTab']));
+    expect(keys).not.toContain('duplicate');
+  });
+
+  test('AssetsRoles returns no options for a read-only admin', () => {
+    expect(getGridActionLabels(ApplicationRoute.AssetsRoles, true)).toEqual([]);
+  });
+
+  test('AssetsRoutes still offers duplicate, unaffected by the AssetsRoles carve-out', () => {
+    const keys = getGridActionLabels(ApplicationRoute.AssetsRoutes, false).map((item) => item.key);
+
+    expect(keys).toContain('duplicate');
   });
 });
 

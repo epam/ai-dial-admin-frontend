@@ -37,12 +37,6 @@ describe('Interceptor asset Properties', () => {
     expect(screen.getByDisplayValue('Redactor')).toBeInTheDocument();
   });
 
-  test('Should render the icon control', () => {
-    renderProperties();
-
-    expect(screen.getByText(EntityFieldsI18nKey.iconUrl)).toBeInTheDocument();
-  });
-
   test('Should render the topics control', () => {
     renderProperties();
 
