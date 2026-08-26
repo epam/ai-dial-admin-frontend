@@ -95,6 +95,11 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
           isPreview: true,
         },
         {
+          key: MenuI18nKey.AssetsRoutes,
+          href: ApplicationRoute.AssetsRoutes,
+          isPreview: true,
+        },
+        {
           key: MenuI18nKey.Applications,
           href: ApplicationRoute.AssetsApplications,
         },
@@ -238,6 +243,10 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
         {
           key: MenuI18nKey.EnrichmentRules,
           href: ApplicationRoute.AnalyticsEnrichmentRules,
+        },
+        {
+          key: MenuI18nKey.Evaluators,
+          href: ApplicationRoute.AnalyticsEvaluators,
         },
         {
           key: MenuI18nKey.Queries,

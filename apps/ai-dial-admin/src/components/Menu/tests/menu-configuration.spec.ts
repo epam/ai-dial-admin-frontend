@@ -159,13 +159,30 @@ describe('MENU_CONFIGURATION — Assets group', () => {
 
     expect(interceptorsItem).toBeDefined();
   });
+
+  test('Routes follows Interceptors', () => {
+    const group = findAssetsGroup(baseFlags);
+    const keys = group?.items.map((item) => item.key) || [];
+    const interceptorsIndex = keys.indexOf(MenuI18nKey.AssetsInterceptors);
+
+    expect(keys[interceptorsIndex + 1]).toBe(MenuI18nKey.AssetsRoutes);
+  });
+
+  test('Routes links to the assets-routes route', () => {
+    const group = findAssetsGroup(baseFlags);
+    const routesItem = group?.items.find(
+      (item) => item.key === MenuI18nKey.AssetsRoutes && item.href === ApplicationRoute.AssetsRoutes,
+    );
+
+    expect(routesItem).toBeDefined();
+  });
 });
 
 describe('MENU_CONFIGURATION — Analytics group', () => {
   const findAnalyticsGroup = (flags: FeatureFlags) =>
     MENU_CONFIGURATION(ICON_SIZE, flags).find((group) => group.key === MenuI18nKey.Analytics);
 
-  test('shows the Analytics group with Tables + Enrichment rules + Queries + Conversations when the flag is enabled', () => {
+  test('shows the Analytics group with Tables + Enrichment rules + Evaluators + Queries + Conversations when the flag is enabled', () => {
     const group = findAnalyticsGroup({ ...baseFlags, analyticsEnabled: true });
 
     expect(group).toBeDefined();
@@ -173,15 +190,31 @@ describe('MENU_CONFIGURATION — Analytics group', () => {
     expect(group?.items.map((item) => item.key)).toEqual([
       MenuI18nKey.Tables,
       MenuI18nKey.EnrichmentRules,
+      MenuI18nKey.Evaluators,
       MenuI18nKey.Queries,
       MenuI18nKey.AnalyticsConversations,
     ]);
     expect(group?.items.map((item) => item.href)).toEqual([
       ApplicationRoute.AnalyticsTables,
       ApplicationRoute.AnalyticsEnrichmentRules,
+      ApplicationRoute.AnalyticsEvaluators,
       ApplicationRoute.AnalyticsQueries,
       ApplicationRoute.ConversationsTrace,
     ]);
+  });
+
+  test('orders Evaluators directly after Enrichment rules', () => {
+    const keys = findAnalyticsGroup({ ...baseFlags, analyticsEnabled: true })?.items.map((item) => item.key) ?? [];
+
+    expect(keys.indexOf(MenuI18nKey.Evaluators)).toBe(keys.indexOf(MenuI18nKey.EnrichmentRules) + 1);
+  });
+
+  test('hides the Evaluators sub-item when the flag is disabled', () => {
+    const allItems = MENU_CONFIGURATION(ICON_SIZE, { ...baseFlags, analyticsEnabled: false }).flatMap((group) =>
+      group.items.map((item) => item.href),
+    );
+
+    expect(allItems).not.toContain(ApplicationRoute.AnalyticsEvaluators);
   });
 
   test('the Analytics Conversations item does not reuse the DIAL Core conversations key', () => {

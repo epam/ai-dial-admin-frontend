@@ -13,7 +13,8 @@ import {
 } from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 
-import { deleteRule, getEvaluators, getRules } from '@/src/app/[lang]/enrichment-rules/actions';
+import { deleteRule, getRules } from '@/src/app/[lang]/enrichment-rules/actions';
+import { getEvaluators } from '@/src/app/[lang]/evaluators/actions';
 import CreateRulePopup from '@/src/components/Analytics/EnrichmentRules/CreateRulePopup';
 import { EvaluatorCellRenderer } from '@/src/components/Analytics/EnrichmentRules/EvaluatorCell';
 import RuleEnabledBadge from '@/src/components/Analytics/EnrichmentRules/RuleEnabledBadge';

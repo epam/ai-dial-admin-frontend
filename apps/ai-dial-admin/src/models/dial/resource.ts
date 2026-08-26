@@ -3,7 +3,7 @@ import { BaseEntity, EntityAttachment, EntityDefaults, ModifiedEntity } from '@/
 import { DialFeatures } from '@/src/models/dial/features';
 import { DialResourceInterface } from '@/src/models/dial/interfaces';
 import { DialModelEndpoint, DialModelLimit, DialModelPricing } from '@/src/models/dial/model';
-import { DialAppRoute } from '@/src/models/dial/route';
+import { AttachmentPaths, DialAppRoute, RouteResponse } from '@/src/models/dial/route';
 import { ToolsetTransport } from '@/src/types/toolset';
 
 export interface DialResource extends BaseEntity {
@@ -171,8 +171,32 @@ export interface DialInterceptorResource extends ModifiedEntity {
   defaults?: Record<string, unknown>;
 }
 
+/**
+ * A route resource (`routes/platform/{name}`) as returned by Core. Flat and unversioned like
+ * `DialModelResource`/`DialInterceptorResource`, and — unlike an interceptor — `Route extends
+ * RoleBasedEntity` directly rather than `Deployment`, so it has no `displayName`/`description`/
+ * `iconUrl`/`endpoint`/`features`. `userRoles`/role-limits are deliberately left off: role-based
+ * access for this surface is being reconsidered separately and is out of scope here.
+ */
+export interface DialRouteResource extends ModifiedEntity {
+  name: string;
+  path: string;
+  folderId: string;
+  author?: string;
+  status?: DialModelResourceStatus;
+  validationWarnings?: CoreValidationWarning[];
+  paths?: string[];
+  methods?: string[];
+  rewritePath?: boolean;
+  response?: RouteResponse;
+  upstreams?: DialModelEndpoint[];
+  maxRetryAttempts?: number;
+  order?: number;
+  attachmentPaths?: AttachmentPaths;
+}
+
 /** The resource types DIAL Core keeps in its flat `platform` bucket — see `isFlatPlatformView`. */
-export type PlatformAsset = DialModelResource | DialAppRunnerResource | DialInterceptorResource;
+export type PlatformAsset = DialModelResource | DialAppRunnerResource | DialInterceptorResource | DialRouteResource;
 
 export enum DialModelResourceType {
   Chat = 'CHAT',

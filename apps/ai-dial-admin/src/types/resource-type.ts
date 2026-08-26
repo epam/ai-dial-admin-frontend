@@ -7,11 +7,11 @@ export enum ResourceType {
   SKILL = 'SKILL',
   MODEL = 'MODEL',
   APP_TYPE_SCHEMA = 'APP_TYPE_SCHEMA',
-  /**
-   * Read-only here: registered so the metadata route can list the API-written half of Core's
-   * interceptor and role populations. Neither has an asset surface — nothing writes them through
-   * `AssetApi`.
-   */
   INTERCEPTOR = 'INTERCEPTOR',
+  /**
+   * Read-only here: registered so the metadata route can list the API-written half of Core's role
+   * population. No asset surface writes it through `AssetApi`.
+   */
   ROLE = 'ROLE',
+  ROUTE = 'ROUTE',
 }

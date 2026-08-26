@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
@@ -6,6 +8,7 @@ import OutputBindingsEditor from '@/src/components/Analytics/EnrichmentRules/Out
 import { AnalyticsEnrichmentRulesI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { EvaluatorVar } from '@/src/models/analytics/evaluator';
+import { OutputBinding } from '@/src/models/analytics/rule';
 import { AnalyticsTableColumn } from '@/src/models/analytics/table';
 
 const columns: AnalyticsTableColumn[] = [
@@ -22,16 +25,7 @@ const vars: EvaluatorVar[] = [
 
 describe('OutputBindingsEditor', () => {
   const renderEditor = (props?: Partial<Parameters<typeof OutputBindingsEditor>[0]>) =>
-    render(
-      <OutputBindingsEditor
-        rows={[{ id: 'row-1', column: '', var: '' }]}
-        columns={columns}
-        vars={vars}
-        isReady
-        onChange={vi.fn()}
-        {...props}
-      />,
-    );
+    render(<OutputBindingsEditor columns={columns} vars={vars} isReady onChange={vi.fn()} {...props} />);
 
   test('prompts for an evaluator and a target table before either is resolved', () => {
     renderEditor({ isReady: false });
@@ -40,16 +34,17 @@ describe('OutputBindingsEditor', () => {
     expect(screen.queryByText(AnalyticsEnrichmentRulesI18nKey.AddBinding)).toBeNull();
   });
 
-  test('renders a column and a variable select per row', () => {
+  test('opens on one empty row when the rule has no bindings', () => {
     renderEditor();
 
     expect(screen.getByText(AnalyticsEnrichmentRulesI18nKey.BindingColumn)).toBeTruthy();
     expect(screen.getByText(AnalyticsEnrichmentRulesI18nKey.BindingVariable)).toBeTruthy();
+    expect(screen.getAllByRole('group', { name: /OutputBindings/ })).toHaveLength(1);
   });
 
   test('shows each option with its type', async () => {
     const user = userEvent.setup();
-    renderEditor({ rows: [{ id: 'row-1', column: 'title', var: '' }] });
+    renderEditor({ bindings: [{ column: 'title', var: 'out_title' }] });
 
     await user.click(screen.getByText('title · string'));
 
@@ -59,9 +54,9 @@ describe('OutputBindingsEditor', () => {
   test('withholds a column already chosen in a sibling row', async () => {
     const user = userEvent.setup();
     renderEditor({
-      rows: [
-        { id: 'row-1', column: 'title', var: 'out_title' },
-        { id: 'row-2', column: 'summary', var: '' },
+      bindings: [
+        { column: 'title', var: 'out_title' },
+        { column: 'summary', var: 'out_summary' },
       ],
     });
 
@@ -74,9 +69,9 @@ describe('OutputBindingsEditor', () => {
   test('withholds a variable already chosen in a sibling row', async () => {
     const user = userEvent.setup();
     renderEditor({
-      rows: [
-        { id: 'row-1', column: 'title', var: 'out_summary' },
-        { id: 'row-2', column: 'summary', var: 'out_title' },
+      bindings: [
+        { column: 'title', var: 'out_summary' },
+        { column: 'summary', var: 'out_title' },
       ],
     });
 
@@ -87,40 +82,40 @@ describe('OutputBindingsEditor', () => {
   });
 
   test('marks a row whose column the target table no longer has', () => {
-    renderEditor({ rows: [{ id: 'row-1', column: 'removed', var: 'out_title' }] });
+    renderEditor({ bindings: [{ column: 'removed', var: 'out_title' }] });
 
     expect(screen.getByText(AnalyticsEnrichmentRulesI18nKey.BindingUnavailable)).toBeTruthy();
   });
 
   test('marks a row whose variable the evaluator version no longer has', () => {
-    renderEditor({ rows: [{ id: 'row-1', column: 'title', var: 'removed' }] });
+    renderEditor({ bindings: [{ column: 'title', var: 'removed' }] });
 
     expect(screen.getByText(AnalyticsEnrichmentRulesI18nKey.BindingUnavailable)).toBeTruthy();
   });
 
   test('shows a stranded value rather than reading as empty', () => {
-    renderEditor({ rows: [{ id: 'row-1', column: 'removed', var: 'title' }] });
+    renderEditor({ bindings: [{ column: 'removed', var: 'title' }] });
 
     expect(screen.getByText('removed')).toBeTruthy();
   });
 
   test('flags a genuine type disagreement', () => {
-    renderEditor({ rows: [{ id: 'row-1', column: 'title', var: 'out_score' }] });
+    renderEditor({ bindings: [{ column: 'title', var: 'out_score' }] });
 
     expect(screen.getByText(AnalyticsEnrichmentRulesI18nKey.BindingTypeMismatch)).toBeTruthy();
   });
 
   test('does not flag a decimal column bound to a double variable', () => {
-    renderEditor({ rows: [{ id: 'row-1', column: 'sentiment_score', var: 'out_score' }] });
+    renderEditor({ bindings: [{ column: 'sentiment_score', var: 'out_score' }] });
 
     expect(screen.queryByText(AnalyticsEnrichmentRulesI18nKey.BindingTypeMismatch)).toBeNull();
   });
 
   test('names each row so its delete button is distinguishable', () => {
     renderEditor({
-      rows: [
-        { id: 'row-1', column: 'title', var: 'out_title' },
-        { id: 'row-2', column: 'summary', var: 'out_summary' },
+      bindings: [
+        { column: 'title', var: 'out_title' },
+        { column: 'summary', var: 'out_summary' },
       ],
     });
 
@@ -130,32 +125,48 @@ describe('OutputBindingsEditor', () => {
     );
   });
 
-  test('adds a row', async () => {
+  test('adds a row without reporting it until it is complete', async () => {
     const onChange = vi.fn();
     const user = userEvent.setup();
-    renderEditor({ onChange });
+    renderEditor({ bindings: [{ column: 'title', var: 'out_title' }], onChange });
 
     await user.click(screen.getByText(AnalyticsEnrichmentRulesI18nKey.AddBinding));
 
-    expect(onChange).toHaveBeenCalledWith([
-      { id: 'row-1', column: '', var: '' },
-      expect.objectContaining({ column: '', var: '' }),
-    ]);
+    // The new row is real in the editor but has nothing to say on the wire yet, so the rule is unchanged.
+    expect(screen.getAllByRole('group', { name: /OutputBindings/ })).toHaveLength(2);
+    expect(onChange).toHaveBeenCalledWith([{ column: 'title', var: 'out_title' }]);
+  });
+
+  test('keeps a half-filled row when a real parent echoes the emitted value back', async () => {
+    const user = userEvent.setup();
+
+    // A `vi.fn()` onChange never changes the `bindings` prop, so the sync effect never runs and the guard
+    // under test is never exercised. This parent round-trips the value the way the form actually does.
+    const Controlled = () => {
+      const [bindings, setBindings] = useState<OutputBinding[]>([{ column: 'title', var: 'out_title' }]);
+      return <OutputBindingsEditor bindings={bindings} columns={columns} vars={vars} isReady onChange={setBindings} />;
+    };
+
+    render(<Controlled />);
+
+    await user.click(screen.getByText(AnalyticsEnrichmentRulesI18nKey.AddBinding));
+
+    expect(screen.getAllByRole('group', { name: /OutputBindings/ })).toHaveLength(2);
   });
 
   test('removes a row', async () => {
     const onChange = vi.fn();
     const user = userEvent.setup();
     renderEditor({
-      rows: [
-        { id: 'row-1', column: 'title', var: 'out_title' },
-        { id: 'row-2', column: 'summary', var: 'out_summary' },
+      bindings: [
+        { column: 'title', var: 'out_title' },
+        { column: 'summary', var: 'out_summary' },
       ],
       onChange,
     });
 
     await user.click(screen.getAllByRole('button', { name: /Buttons.Delete/ })[0]);
 
-    expect(onChange).toHaveBeenCalledWith([{ id: 'row-2', column: 'summary', var: 'out_summary' }]);
+    expect(onChange).toHaveBeenCalledWith([{ column: 'summary', var: 'out_summary' }]);
   });
 });

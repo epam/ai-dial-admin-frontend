@@ -1,6 +1,6 @@
 'use client';
 
-import { FC } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 
 import { DialGhostButton, DialGhostIconButton, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 import { IconTrashX } from '@tabler/icons-react';
@@ -9,18 +9,21 @@ import {
   createBindingRow,
   getBindingRowError,
   getTakenElsewhere,
+  toBindingRows,
+  toOutputBindings,
 } from '@/src/components/Analytics/EnrichmentRules/output-bindings';
 import { AnalyticsEnrichmentRulesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { EvaluatorVar } from '@/src/models/analytics/evaluator';
-import { OutputBindingRow, OutputBindingRowError } from '@/src/models/analytics/enrichment-rules-ui';
+import { BindingRowError, OutputBindingRow } from '@/src/models/analytics/enrichment-rules-ui';
+import { OutputBinding } from '@/src/models/analytics/rule';
 import { AnalyticsTableColumn } from '@/src/models/analytics/table';
 
 const withStrandedValue = (options: SelectOption[], value: string, isStranded: boolean): SelectOption[] =>
   isStranded ? [...options, { value, label: value }] : options;
 
-const getRowMessageKey = (error: OutputBindingRowError): AnalyticsEnrichmentRulesI18nKey | undefined => {
+const getRowMessageKey = (error: BindingRowError): AnalyticsEnrichmentRulesI18nKey | undefined => {
   if (error.isColumnUnavailable || error.isVarUnavailable) {
     return AnalyticsEnrichmentRulesI18nKey.BindingUnavailable;
   }
@@ -31,24 +34,42 @@ const getRowMessageKey = (error: OutputBindingRowError): AnalyticsEnrichmentRule
 };
 
 interface Props {
-  rows: OutputBindingRow[];
+  bindings?: OutputBinding[];
   columns: AnalyticsTableColumn[];
   vars: EvaluatorVar[];
   isReady: boolean;
-  onChange: (rows: OutputBindingRow[]) => void;
+  onChange: (bindings: OutputBinding[]) => void;
 }
 
-const OutputBindingsEditor: FC<Props> = ({ rows, columns, vars, isReady, onChange }) => {
+const OutputBindingsEditor: FC<Props> = ({ bindings, columns, vars, isReady, onChange }) => {
   const t = useI18n();
+
+  // Only complete rows are emitted, so a half-filled row survives here rather than being round-tripped away
+  // by the parent.
+  const [rows, setRows] = useState<OutputBindingRow[]>(() => toBindingRows(bindings));
+  const emittedRef = useRef<OutputBinding[] | undefined>(bindings);
+
+  useEffect(() => {
+    if (bindings === emittedRef.current) return;
+    emittedRef.current = bindings;
+    setRows(toBindingRows(bindings));
+  }, [bindings]);
+
+  const commit = (next: OutputBindingRow[]) => {
+    setRows(next);
+    const emitted = toOutputBindings(next);
+    emittedRef.current = emitted;
+    onChange(emitted);
+  };
 
   if (!isReady) {
     return <span className="text-secondary dial-small">{t(AnalyticsEnrichmentRulesI18nKey.OutputBindingsEmpty)}</span>;
   }
 
   const updateRow = (id: string, key: 'column' | 'var', value: string) =>
-    onChange(rows.map((row) => (row.id === id ? { ...row, [key]: value } : row)));
+    commit(rows.map((row) => (row.id === id ? { ...row, [key]: value } : row)));
 
-  const removeRow = (id: string) => onChange(rows.filter((row) => row.id !== id));
+  const removeRow = (id: string) => commit(rows.filter((row) => row.id !== id));
 
   return (
     <div className="flex flex-col gap-3">
@@ -74,6 +95,7 @@ const OutputBindingsEditor: FC<Props> = ({ rows, columns, vars, isReady, onChang
         );
 
         const messageKey = getRowMessageKey(error);
+        const isFirstRow = index === 0;
 
         return (
           <div
@@ -85,7 +107,7 @@ const OutputBindingsEditor: FC<Props> = ({ rows, columns, vars, isReady, onChang
             <div className="flex items-end gap-2">
               <DialSelectField
                 id={`binding-column-${row.id}`}
-                label={t(AnalyticsEnrichmentRulesI18nKey.BindingColumn)}
+                label={isFirstRow ? t(AnalyticsEnrichmentRulesI18nKey.BindingColumn) : undefined}
                 options={columnOptions}
                 value={row.column}
                 invalid={error.isColumnUnavailable}
@@ -94,7 +116,7 @@ const OutputBindingsEditor: FC<Props> = ({ rows, columns, vars, isReady, onChang
               />
               <DialSelectField
                 id={`binding-var-${row.id}`}
-                label={t(AnalyticsEnrichmentRulesI18nKey.BindingVariable)}
+                label={isFirstRow ? t(AnalyticsEnrichmentRulesI18nKey.BindingVariable) : undefined}
                 options={varOptions}
                 value={row.var}
                 invalid={error.isVarUnavailable}
@@ -113,8 +135,9 @@ const OutputBindingsEditor: FC<Props> = ({ rows, columns, vars, isReady, onChang
       })}
 
       <DialGhostButton
+        className="self-start"
         label={t(AnalyticsEnrichmentRulesI18nKey.AddBinding)}
-        onClick={() => onChange([...rows, createBindingRow()])}
+        onClick={() => commit([...rows, createBindingRow()])}
       />
     </div>
   );

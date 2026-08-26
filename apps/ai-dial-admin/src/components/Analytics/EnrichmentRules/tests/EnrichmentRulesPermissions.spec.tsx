@@ -1,7 +1,8 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { getEvaluators, getRules } from '@/src/app/[lang]/enrichment-rules/actions';
+import { getRules } from '@/src/app/[lang]/enrichment-rules/actions';
+import { getEvaluators } from '@/src/app/[lang]/evaluators/actions';
 import EnrichmentRulesView from '@/src/components/Analytics/EnrichmentRules/EnrichmentRulesView';
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
 import { AnalyticsEnrichmentRulesI18nKey } from '@/src/constants/i18n';
@@ -9,6 +10,7 @@ import { EvaluatorType } from '@/src/models/analytics/evaluator';
 import { EnrichmentRuleListItem, TriggerKind } from '@/src/models/analytics/rule';
 
 vi.mock('@/src/app/[lang]/enrichment-rules/actions');
+vi.mock('@/src/app/[lang]/evaluators/actions');
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 // test-setup.tsx pins isFullAdmin true for the whole suite, so the non-admin case needs its own file.
