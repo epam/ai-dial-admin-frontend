@@ -27,6 +27,12 @@ vi.mock('@epam/ai-dial-ui-kit', () => ({
       {label}
     </button>
   ),
+  DialNoDataContent: ({ title, description }: { title?: string; description?: string }) => (
+    <div role="status">
+      <span>{title}</span>
+      {description ? <span>{description}</span> : null}
+    </div>
+  ),
   DialSwitch: ({ switchId, label, isOn, onChange }: any) => (
     <button
       type="button"
@@ -125,6 +131,7 @@ const JSONATA_EXPRESSION = [
 const createTestSuite = (overrides?: Partial<TestSuite>): TestSuite => ({
   id: 'suite-1',
   name: 'My Suite',
+  endpointRef: { method: 'POST', relativeUrlPattern: '/api' },
   requestTemplate: { urlTemplate: '/api', body: {}, headers: [], queryParams: [] },
   ...overrides,
 });
@@ -144,6 +151,30 @@ describe('RequestTemplate', () => {
     render(<RequestTemplate testSuite={createTestSuite()} onChangeTestSuite={mockOnChangeTestSuite} />);
 
     expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent(TestSuitesI18nKey.RequestTemplate);
+  });
+
+  test('shows Change method guidance and hides Add when the endpoint is not configured', () => {
+    render(
+      <RequestTemplate
+        testSuite={createTestSuite({ endpointRef: undefined, requestTemplate: undefined })}
+        onChangeTestSuite={mockOnChangeTestSuite}
+      />,
+    );
+
+    expect(screen.getByText(TestSuitesI18nKey.ConfigureEndpointFirst)).toBeInTheDocument();
+    expect(screen.getByText(TestSuitesI18nKey.ConfigureEndpointFirstDescription)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.Add })).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'content-type-select' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'tabs' })).not.toBeInTheDocument();
+  });
+
+  test('shows Change method guidance when endpointRef is present but method and URL are missing', () => {
+    render(
+      <RequestTemplate testSuite={createTestSuite({ endpointRef: {} })} onChangeTestSuite={mockOnChangeTestSuite} />,
+    );
+
+    expect(screen.getByText(TestSuitesI18nKey.ConfigureEndpointFirst)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: ButtonsI18nKey.Add })).not.toBeInTheDocument();
   });
 
   test('renders ContentTypeSelect', () => {
@@ -422,6 +453,36 @@ describe('RequestTemplate', () => {
 
       expect(
         screen.getByText(`BodyText: ${JSON.stringify(JSON.stringify({ switched: true }, null, 4))}`, exactText),
+      ).toBeInTheDocument();
+    });
+
+    test('reseeds body text when an endpoint is assigned on the same tab', () => {
+      const content = {
+        messages: [{ role: 'user', content: '${{user_message}}' }],
+        temperature: '${{temperature:0.7}}',
+      };
+      const { rerender } = render(
+        <RequestTemplate
+          testSuite={createTestSuite({ endpointRef: undefined, requestTemplate: undefined })}
+          onChangeTestSuite={mockOnChangeTestSuite}
+        />,
+      );
+
+      rerender(
+        <RequestTemplate
+          testSuite={createTestSuite({
+            endpointRef: { method: 'POST', relativeUrlPattern: '/chat/completions' },
+            requestTemplate: {
+              urlTemplate: '/chat/completions',
+              body: { contentType: ContentType.JSON, content },
+            },
+          })}
+          onChangeTestSuite={mockOnChangeTestSuite}
+        />,
+      );
+
+      expect(
+        screen.getByText(`BodyText: ${JSON.stringify(JSON.stringify(content, null, 4))}`, exactText),
       ).toBeInTheDocument();
     });
   });

@@ -19,7 +19,11 @@ const StackedTurnsCellRenderer = ({ data, colDef }: ICellRendererParams<GroupedG
   const field = colDef?.field;
   const turns = data?.turns;
 
-  if (data?.expanded || !field || !turns || turns.length === 0) return null;
+  if (!field || !turns || turns.length === 0) return null;
+
+  if (data?.expanded) {
+    return <DialEllipsisTooltip className="tiny" text="—" />;
+  }
 
   return (
     <div

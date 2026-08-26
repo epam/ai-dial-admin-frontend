@@ -4,7 +4,13 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import OpenPopup from '@/public/images/icons/open-pop-up.svg';
-import { ButtonAppearance, DialNeutralButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import {
+  ButtonAppearance,
+  DialNeutralButton,
+  DialNotification,
+  DialPrimaryButton,
+  NotificationVariant,
+} from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import { JSONSchema7 } from 'json-schema';
@@ -18,6 +24,8 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { ResponseColumn } from '@/src/models/evaluation/test-suite';
+import { JsonataVariable } from '@/src/models/jsonata';
+import { DuplicateResponseColumn } from '@/src/utils/evaluation/request-chain';
 import DocumentationModal from './DocumentationModal';
 
 interface ColumnsProps {
@@ -25,9 +33,18 @@ interface ColumnsProps {
   onChangeResponseColumns: (responseColumns: ResponseColumn[], isSkipRefresh?: boolean) => void;
   isSkipRefresh?: boolean;
   responseSchema: JSONSchema7;
+  jsonataVariables?: JsonataVariable[];
+  duplicateColumn?: DuplicateResponseColumn;
 }
 
-const Columns: FC<ColumnsProps> = ({ responseColumns, onChangeResponseColumns, responseSchema, isSkipRefresh }) => {
+const Columns: FC<ColumnsProps> = ({
+  responseColumns,
+  onChangeResponseColumns,
+  responseSchema,
+  isSkipRefresh,
+  jsonataVariables,
+  duplicateColumn,
+}) => {
   const t = useI18n();
   const { isValid, dispatch } = useSaveValidationContext();
 
@@ -91,13 +108,13 @@ const Columns: FC<ColumnsProps> = ({ responseColumns, onChangeResponseColumns, r
 
   const columnDefs: ColDef[] = useMemo(
     () => [
-      ...getColumnsGridColumns(responseSchema, onChangeColumn, onChangeExpression),
+      ...getColumnsGridColumns(responseSchema, onChangeColumn, onChangeExpression, jsonataVariables),
       {
         ...ONE_ACTION_COLUMN(getRemoveOperation(onRemoveColumn, void 0, 'text-error w-4 h-4')),
         colId: 'action-remove',
       },
     ],
-    [onChangeColumn, onChangeExpression, onRemoveColumn, responseSchema],
+    [onChangeColumn, onChangeExpression, onRemoveColumn, responseSchema, jsonataVariables],
   );
 
   const onGridReady = useCallback(
@@ -118,8 +135,18 @@ const Columns: FC<ColumnsProps> = ({ responseColumns, onChangeResponseColumns, r
     }
   }, [dispatch, isSkipRefresh, rowData]);
 
+  const duplicateMessage = duplicateColumn
+    ? t(
+        duplicateColumn.inPreviousRequest
+          ? TestSuitesI18nKey.DuplicateResponseColumnNameInPreviousRequest
+          : TestSuitesI18nKey.DuplicateResponseColumnName,
+        { name: duplicateColumn.name },
+      )
+    : undefined;
+
   return (
     <div className="flex flex-col gap-4 flex-1 min-h-0">
+      {duplicateMessage && <DialNotification variant={NotificationVariant.Error} message={duplicateMessage} />}
       <div className="flex flex-row justify-between items-center">
         <span className="text-secondary small">{t(TestSuitesI18nKey.ColumnsDescription)}</span>
         <div className="flex flex-row gap-2">

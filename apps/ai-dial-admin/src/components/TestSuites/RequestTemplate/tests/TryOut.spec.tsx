@@ -24,6 +24,10 @@ vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
   tryOutTestCase: vi.fn(() => Promise.resolve(null)),
 }));
 
+vi.mock('@/src/app/[lang]/datasets/actions', () => ({
+  getDatasetTestCase: vi.fn(() => Promise.resolve(null)),
+}));
+
 vi.mock('@/src/components/TestSuites/utils/tryout-storage', () => ({
   saveTryoutResponseToStorage: vi.fn(),
   getTryoutResponseFromStorage: vi.fn(() => ({
@@ -32,9 +36,13 @@ vi.mock('@/src/components/TestSuites/utils/tryout-storage', () => ({
   })),
 }));
 
-vi.mock('@/src/components/TestSuites/utils/template-variables', () => ({
-  convertVariableIntoInitialRequest: vi.fn(() => ({})),
-}));
+vi.mock('@/src/components/TestSuites/utils/template-variables', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/src/components/TestSuites/utils/template-variables')>();
+  return {
+    ...actual,
+    convertVariableIntoInitialRequest: vi.fn(() => ({})),
+  };
+});
 
 vi.mock('@/src/components/EntityTabs/JsonEditor/JsonEditor', () => ({
   default: ({ entity }: { entity: unknown }) => <div>JsonEditor:{JSON.stringify(entity)}</div>,
@@ -183,6 +191,15 @@ describe('TryOut MCP branch', () => {
 });
 
 describe('TryOut Columns tab request binding', () => {
+  test('hides Response and Columns tabs until a request has been sent', async () => {
+    render(<TryOut testSuite={deploymentSuite} />);
+
+    await screen.findByRole('button', { name: ButtonsI18nKey.SendRequest });
+
+    expect(screen.queryByRole('tab', { name: TabsI18nKey.Response })).not.toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: TabsI18nKey.Columns })).not.toBeInTheDocument();
+  });
+
   test('binds $request to the request body, not the request envelope', async () => {
     vi.mocked(tryOutTestSuite).mockResolvedValueOnce({
       success: true,

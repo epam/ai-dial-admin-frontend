@@ -52,6 +52,46 @@ describe('TemplateVariables', () => {
     expect(screen.getByText(TestSuitesI18nKey.DynamicConfiguration)).toBeInTheDocument();
   });
 
+  test('names the section after the first request when the suite has a request chain', () => {
+    render(
+      <TemplateVariables
+        selectedTestSuite={createTestSuite({ requestName: 'Initial call', additionalRequests: [{ name: 'second' }] })}
+        onChange={mockOnChange}
+      />,
+    );
+
+    expect(
+      screen.getByRole('heading', { name: `${TestSuitesI18nKey.DynamicConfiguration} — Initial call` }),
+    ).toBeInTheDocument();
+  });
+
+  test('falls back to a numbered first request when the suite has a chain and no request name', () => {
+    render(
+      <TemplateVariables
+        selectedTestSuite={createTestSuite({ additionalRequests: [{ name: 'second' }] })}
+        onChange={mockOnChange}
+      />,
+    );
+
+    expect(
+      screen.getByRole('heading', {
+        name: `${TestSuitesI18nKey.DynamicConfiguration} — 1. ${TestSuitesI18nKey.Request}`,
+      }),
+    ).toBeInTheDocument();
+  });
+
+  test('leaves the section title unnamed when the suite has a single request', () => {
+    render(
+      <TemplateVariables
+        selectedTestSuite={createTestSuite({ requestName: 'Initial call' })}
+        onChange={mockOnChange}
+      />,
+    );
+
+    expect(screen.getByRole('heading')).toHaveTextContent(TestSuitesI18nKey.DynamicConfiguration);
+    expect(screen.queryByText(/Initial call/)).toBeNull();
+  });
+
   test('fetches template variables on mount using test suite id', () => {
     render(<TemplateVariables selectedTestSuite={createTestSuite({ id: 'my-suite-id' })} onChange={mockOnChange} />);
 

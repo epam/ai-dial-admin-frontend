@@ -1,19 +1,27 @@
 'use client';
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
 
 import { DialLoader } from '@epam/ai-dial-ui-kit';
 
+import { getDatasetTestCase } from '@/src/app/[lang]/datasets/actions';
 import { getTestCaseTemplateVariables, getTestSuiteTemplateVariables } from '@/src/app/[lang]/test-suites/actions';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
-import { convertVariableIntoInitialRequest } from '@/src/components/TestSuites/utils/template-variables';
+import {
+  convertVariableIntoInitialRequest,
+  perTurnFieldNames,
+  buildTurnEffectiveData,
+  resolveVariablesForTurn,
+} from '@/src/components/TestSuites/utils/template-variables';
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { SuiteType, TemplateVariable, TestSuite } from '@/src/models/evaluation/test-suite';
+import { SuiteType, TemplateVariable, TestCase, TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
 import Variables from './Variables';
 
 interface Props {
   testSuite: TestSuite;
   testCaseId?: string;
+  schema?: TestCaseSchema[];
+  initialTestCase?: TestCase;
   resolvedRequest: Record<string, unknown>;
   isRequestSend?: boolean;
   requestBody: Record<string, unknown>;
@@ -23,6 +31,8 @@ interface Props {
 const TryOutRequestPreview: FC<Props> = ({
   testSuite,
   testCaseId,
+  schema,
+  initialTestCase,
   resolvedRequest,
   isRequestSend,
   requestBody,
@@ -30,27 +40,63 @@ const TryOutRequestPreview: FC<Props> = ({
 }) => {
   const t = useI18n();
   const [variables, setVariables] = useState<TemplateVariable[]>([]);
+  const [testCase, setTestCase] = useState<TestCase | null>(initialTestCase ?? null);
   const [isVariablesLoading, setIsVariablesLoading] = useState(false);
 
   useEffect(() => {
     const fetchVariables = async () => {
       setIsVariablesLoading(true);
       try {
-        const res = testCaseId
-          ? await getTestCaseTemplateVariables(testSuite.id || '', testCaseId || '')
-          : await getTestSuiteTemplateVariables(testSuite.id || '');
+        const needsCaseFetch = !!testCaseId && !initialTestCase?.multiTurnData?.length;
+        const [varsRes, caseRes] = await Promise.all([
+          testCaseId
+            ? getTestCaseTemplateVariables(testSuite.id || '', testCaseId)
+            : getTestSuiteTemplateVariables(testSuite.id || ''),
+          needsCaseFetch && testSuite.datasetId
+            ? getDatasetTestCase(testSuite.datasetId, testCaseId)
+            : Promise.resolve(null),
+        ]);
 
-        const vars = res || [];
+        const vars = varsRes || [];
         setVariables(vars);
-        onChangeRequestBody(convertVariableIntoInitialRequest(vars));
+        if (caseRes) {
+          setTestCase({
+            id: caseRes.id || testCaseId || '',
+            createdAt: caseRes.createdAt ?? 0,
+            data: caseRes.data,
+            multiTurnData: caseRes.multiTurnData,
+          });
+        } else if (initialTestCase) {
+          setTestCase(initialTestCase);
+        }
+        // Test-case try-out posts an empty body; only suite-level Send uses these values.
+        if (!testCaseId) {
+          onChangeRequestBody(convertVariableIntoInitialRequest(vars));
+        }
       } finally {
         setIsVariablesLoading(false);
       }
     };
 
-    fetchVariables();
+    void fetchVariables();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const perTurnFields = useMemo(() => perTurnFieldNames(schema), [schema]);
+  const multiTurnData = testCase?.multiTurnData;
+  const isMultiTurn = !!testCaseId && (multiTurnData?.length ?? 0) > 1;
+
+  const turnVariables = useMemo(() => {
+    if (!isMultiTurn || !multiTurnData) {
+      return null;
+    }
+
+    const bindings = testSuite.inputBindings || [];
+    return multiTurnData.map((turnData) => {
+      const effectiveData = buildTurnEffectiveData(testCase?.data, turnData, perTurnFields);
+      return resolveVariablesForTurn(variables, bindings, effectiveData);
+    });
+  }, [isMultiTurn, multiTurnData, testCase?.data, testSuite.inputBindings, perTurnFields, variables]);
 
   const isMcp = testSuite.suiteType === SuiteType.McpTool;
   const previewLabel = isMcp ? t(TestSuitesI18nKey.ToolArgumentsPreview) : t(TestSuitesI18nKey.RequestBodyPreview);
@@ -62,13 +108,28 @@ const TryOutRequestPreview: FC<Props> = ({
     <DialLoader size={40} />
   ) : (
     <>
-      <Variables
-        testSuiteId={testSuite.id as string}
-        variables={variables}
-        requestBody={requestBody}
-        onChangeRequestBody={onChangeRequestBody}
-        readonly={!!testCaseId}
-      />
+      {turnVariables ? (
+        turnVariables.map((turnVars, index) => (
+          <div key={index} className="flex flex-col gap-y-4 shrink-0">
+            <h2 className="dial-small-text font-semibold">{t(TestSuitesI18nKey.TurnLabel, { index: index + 1 })}</h2>
+            <Variables
+              testSuiteId={testSuite.id as string}
+              variables={turnVars}
+              requestBody={{}}
+              onChangeRequestBody={onChangeRequestBody}
+              readonly
+            />
+          </div>
+        ))
+      ) : (
+        <Variables
+          testSuiteId={testSuite.id as string}
+          variables={variables}
+          requestBody={requestBody}
+          onChangeRequestBody={onChangeRequestBody}
+          readonly={!!testCaseId}
+        />
+      )}
 
       {Object.keys(resolvedRequest).length > 0 && (
         <div className="flex flex-col flex-1 min-h-0">

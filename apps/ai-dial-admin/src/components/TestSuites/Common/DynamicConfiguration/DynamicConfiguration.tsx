@@ -18,6 +18,7 @@ interface Props {
   showTypeSelector?: boolean;
   readonly?: boolean;
   loading?: boolean;
+  title?: string;
   containerClassName?: string;
   contentClassName?: string;
   onChangeValue: (row: InputBindingRowData, value: unknown) => void;
@@ -32,6 +33,7 @@ const DynamicConfiguration: FC<Props> = ({
   showTypeSelector,
   readonly,
   loading,
+  title,
   containerClassName,
   contentClassName,
   onChangeValue,
@@ -41,7 +43,11 @@ const DynamicConfiguration: FC<Props> = ({
   const t = useI18n();
 
   return (
-    <Accordion title={t(TestSuitesI18nKey.DynamicConfiguration)} collapsed={false} contentClassName={contentClassName}>
+    <Accordion
+      title={title ?? t(TestSuitesI18nKey.DynamicConfiguration)}
+      collapsed={false}
+      contentClassName={contentClassName}
+    >
       {loading ? (
         <DialLoader size={40} />
       ) : rows.length === 0 ? (
