@@ -1902,6 +1902,8 @@ export default {
     EditField: 'Edit field',
     NoSchemaFields: 'No schema fields',
     DuplicateFieldName: 'Field name already exists',
+    DuplicateResponseColumnName: "Column name '{name}' is already used.",
+    DuplicateResponseColumnNameInPreviousRequest: "Column name '{name}' is already used in a previous request.",
     MetricNameInvalidChars: 'Name must not contain "::" symbols',
     SchemaDescription: 'Define the data fields available in test cases',
     FinalPath: 'Final path',

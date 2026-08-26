@@ -12,6 +12,7 @@ import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Deployment } from '@/src/models/evaluation/deployment';
 import { TestSuite, TestSuiteEndpointRef } from '@/src/models/evaluation/test-suite';
+import { uniquifyResponseColumns } from '@/src/utils/evaluation/request-chain';
 import MethodInfo from './MethodInfo';
 import MethodItem from './MethodItem';
 
@@ -20,10 +21,11 @@ interface Props {
   onChange: Dispatch<SetStateAction<TestSuite>>;
   selectedTarget?: Deployment | null;
   isCreate?: boolean;
+  takenColumnNames?: string[];
   children?: ReactNode;
 }
 
-const Methods: FC<Props> = ({ testSuite, selectedTarget, onChange, isCreate, children }) => {
+const Methods: FC<Props> = ({ testSuite, selectedTarget, onChange, isCreate, takenColumnNames = [], children }) => {
   const t = useI18n();
 
   const [activeMethodIndex, setActiveMethodIndex] = useState<number | null>();
@@ -44,6 +46,7 @@ const Methods: FC<Props> = ({ testSuite, selectedTarget, onChange, isCreate, chi
         onChange((prev: TestSuite) => ({
           ...prev,
           ...CHAT_COMPLETION_SUITE,
+          responseColumns: uniquifyResponseColumns(CHAT_COMPLETION_SUITE.responseColumns, takenColumnNames),
         }));
       } else {
         const route = methods[index - 1];
@@ -54,7 +57,7 @@ const Methods: FC<Props> = ({ testSuite, selectedTarget, onChange, isCreate, chi
         }));
       }
     },
-    [methods, onChange],
+    [methods, onChange, takenColumnNames],
   );
 
   useEffect(() => {
