@@ -1957,6 +1957,7 @@ export enum TestSuitesI18nKey {
   RunConditionSelect = 'TestSuites.RunConditionSelect',
   ViewOnlyIncludedInRun = 'TestSuites.ViewOnlyIncludedInRun',
   TurnLabel = 'TestSuites.TurnLabel',
+  RequestLabel = 'TestSuites.RequestLabel',
   TurnCountBadge = 'TestSuites.TurnCountBadge',
   Condition = 'TestSuites.Condition',
   ConditionHint = 'TestSuites.ConditionHint',
