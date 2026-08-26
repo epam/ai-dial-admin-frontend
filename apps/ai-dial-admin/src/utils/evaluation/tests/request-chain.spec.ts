@@ -9,8 +9,12 @@ import {
   getRequestCount,
   getRequestLabel,
   getRequestName,
+  getTakenResponseColumnNames,
+  findDuplicateResponseColumnName,
   removeRequestAt,
   toRequestView,
+  uniqueResponseColumnName,
+  uniquifyResponseColumns,
   updateRequestName,
 } from '../request-chain';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
@@ -346,5 +350,129 @@ describe('getPreviousOutputVariables', () => {
 
     expect(getPreviousOutputVariables(sparseSuite, 2)).toEqual([]);
     expect(getPreviousOutputVariables(sparseSuite, 3)).toEqual([{ name: 'b', description: undefined }]);
+  });
+});
+
+describe('getTakenResponseColumnNames', () => {
+  const suite: TestSuite = {
+    responseColumns: [{ name: 'answer', displayName: 'answer', expression: 'a', type: 'string' }],
+    additionalRequests: [
+      { responseColumns: [{ name: 'verification', displayName: 'verification', expression: 'v', type: 'string' }] },
+      { responseColumns: [{ name: 'answer2', displayName: 'answer2', expression: 'a', type: 'string' }] },
+    ],
+  };
+
+  test('excludes request 0 columns when excludeIndex is 0', () => {
+    expect(getTakenResponseColumnNames(suite, 0)).toEqual(['verification', 'answer2']);
+  });
+
+  test('includes request 0 columns and skips the excluded additional request', () => {
+    expect(getTakenResponseColumnNames(suite, 2)).toEqual(['answer', 'verification']);
+  });
+
+  test('returns an empty array when the suite has no columns', () => {
+    expect(getTakenResponseColumnNames({}, 0)).toEqual([]);
+  });
+
+  test('skips blank column names', () => {
+    expect(
+      getTakenResponseColumnNames({ responseColumns: [{ name: '', displayName: '', expression: '', type: '' }] }, 1),
+    ).toEqual([]);
+  });
+});
+
+describe('uniqueResponseColumnName', () => {
+  test('returns the base name when it is not taken', () => {
+    expect(uniqueResponseColumnName('answer', [])).toBe('answer');
+    expect(uniqueResponseColumnName('answer', ['history'])).toBe('answer');
+  });
+
+  test('appends 2 when the base name is taken', () => {
+    expect(uniqueResponseColumnName('answer', ['answer'])).toBe('answer2');
+  });
+
+  test('increments the suffix until the name is free', () => {
+    expect(uniqueResponseColumnName('answer', ['answer', 'answer2', 'answer3'])).toBe('answer4');
+  });
+
+  test('returns an empty string unchanged', () => {
+    expect(uniqueResponseColumnName('', ['answer'])).toBe('');
+  });
+});
+
+describe('uniquifyResponseColumns', () => {
+  test('leaves columns unchanged when their names are free', () => {
+    const columns = [{ name: 'answer', displayName: 'answer', expression: 'a', type: 'string' }];
+
+    expect(uniquifyResponseColumns(columns, [])).toEqual(columns);
+  });
+
+  test('renames name and displayName together when the name is taken', () => {
+    const columns = [{ name: 'answer', displayName: 'answer', expression: 'a', type: 'string' }];
+
+    expect(uniquifyResponseColumns(columns, ['answer'])).toEqual([
+      { name: 'answer2', displayName: 'answer2', expression: 'a', type: 'string' },
+    ]);
+  });
+
+  test('does not mutate the input columns', () => {
+    const columns = [{ name: 'answer', displayName: 'answer', expression: 'a', type: 'string' }];
+
+    uniquifyResponseColumns(columns, ['answer']);
+
+    expect(columns[0].name).toBe('answer');
+  });
+});
+
+describe('findDuplicateResponseColumnName', () => {
+  test('returns undefined when all names are unique', () => {
+    expect(
+      findDuplicateResponseColumnName([{ name: 'answer', displayName: 'answer', expression: 'a', type: 'string' }], []),
+    ).toBeUndefined();
+  });
+
+  test('flags a name already used in a previous request', () => {
+    expect(
+      findDuplicateResponseColumnName(
+        [{ name: 'answer', displayName: 'answer', expression: 'a', type: 'string' }],
+        ['answer'],
+      ),
+    ).toEqual({ name: 'answer', inPreviousRequest: true });
+  });
+
+  test('flags a sibling duplicate within the same request', () => {
+    expect(
+      findDuplicateResponseColumnName(
+        [
+          { name: 'answer', displayName: 'answer', expression: 'a', type: 'string' },
+          { name: 'answer', displayName: 'answer', expression: 'b', type: 'string' },
+        ],
+        [],
+      ),
+    ).toEqual({ name: 'answer', inPreviousRequest: false });
+  });
+
+  test('prefers a previous-request collision when both apply for the same name', () => {
+    expect(
+      findDuplicateResponseColumnName(
+        [
+          { name: 'answer', displayName: 'answer', expression: 'a', type: 'string' },
+          { name: 'answer', displayName: 'answer', expression: 'b', type: 'string' },
+        ],
+        ['answer'],
+      ),
+    ).toEqual({ name: 'answer', inPreviousRequest: true });
+  });
+
+  test('skips blank column names', () => {
+    expect(
+      findDuplicateResponseColumnName(
+        [
+          { name: '', displayName: '', expression: '', type: '' },
+          { name: 'answer', displayName: 'answer', expression: 'a', type: 'string' },
+        ],
+        [''],
+      ),
+    ).toBeUndefined();
   });
 });

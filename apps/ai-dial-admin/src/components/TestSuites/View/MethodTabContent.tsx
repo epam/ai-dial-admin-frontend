@@ -33,6 +33,7 @@ import {
   getRequestCount,
   getRequestLabel,
   getRequestName,
+  getTakenResponseColumnNames,
   removeRequestAt,
   toRequestView,
   updateRequestName,
@@ -120,6 +121,11 @@ const DeploymentMethodContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh
     [testSuite, selectedRequestIndex, describeRequest],
   );
 
+  const takenColumnNames = useMemo(
+    () => getTakenResponseColumnNames(testSuite, selectedRequestIndex),
+    [testSuite, selectedRequestIndex],
+  );
+
   const previousColumnNames = previousOutputVariables.map((variable) => `$${variable.name}`);
   const previousOutputsMessage = previousColumnNames.length
     ? t(TestSuitesI18nKey.RequestChainPreviousOutputsColumnsInfo, { columns: previousColumnNames.join(', ') })
@@ -182,6 +188,7 @@ const DeploymentMethodContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh
           onChangeTestSuite={onChangeRequestView}
           isSkipRefresh={isSkipRefresh}
           jsonataVariables={previousOutputVariables}
+          takenColumnNames={takenColumnNames}
         />
 
         {isChangeMethodModalOpen &&
@@ -192,6 +199,7 @@ const DeploymentMethodContent: FC<Props> = ({ testSuite, onChange, isSkipRefresh
               selectedApplication={selectedApplication}
               isOpen={isChangeMethodModalOpen}
               onClose={() => setIsChangeMethodModalOpen(false)}
+              takenColumnNames={takenColumnNames}
             />,
             document.body,
           )}
