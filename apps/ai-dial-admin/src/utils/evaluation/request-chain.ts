@@ -81,6 +81,88 @@ export const getChainResponseColumns = (suite: TestSuite): ResponseColumn[] => [
   ...(suite.additionalRequests ?? []).flatMap((request: TestSuiteAdditionalRequest) => request.responseColumns ?? []),
 ];
 
+/** Column names already used by every chain request except `excludeIndex`. */
+export const getTakenResponseColumnNames = (suite: TestSuite, excludeIndex: number): string[] => {
+  const names: string[] = [];
+
+  if (excludeIndex !== 0) {
+    names.push(...(suite.responseColumns ?? []).map((column) => column.name).filter(Boolean));
+  }
+
+  (suite.additionalRequests ?? []).forEach((request, index) => {
+    if (index + 1 === excludeIndex) {
+      return;
+    }
+    names.push(...(request.responseColumns ?? []).map((column) => column.name).filter(Boolean));
+  });
+
+  return names;
+};
+
+export const uniqueResponseColumnName = (base: string, taken: Iterable<string>): string => {
+  const takenSet = new Set(taken);
+  if (!base || !takenSet.has(base)) {
+    return base;
+  }
+
+  let suffix = 2;
+  while (takenSet.has(`${base}${suffix}`)) {
+    suffix += 1;
+  }
+
+  return `${base}${suffix}`;
+};
+
+export const uniquifyResponseColumns = (columns: ResponseColumn[], taken: Iterable<string>): ResponseColumn[] => {
+  const takenSet = new Set(taken);
+
+  return columns.map((column) => {
+    const name = uniqueResponseColumnName(column.name, takenSet);
+    takenSet.add(name);
+    if (name === column.name) {
+      return column;
+    }
+
+    return { ...column, name, displayName: name };
+  });
+};
+
+export interface DuplicateResponseColumn {
+  name: string;
+  inPreviousRequest: boolean;
+}
+
+/**
+ * First non-blank column name that collides with `taken` (another request) or a sibling
+ * in `columns`. Prefer a previous-request collision when both apply for the same name.
+ */
+export const findDuplicateResponseColumnName = (
+  columns: ResponseColumn[],
+  taken: Iterable<string>,
+): DuplicateResponseColumn | undefined => {
+  const takenSet = new Set(taken);
+  const seen = new Set<string>();
+
+  for (const column of columns) {
+    const name = column.name;
+    if (!name) {
+      continue;
+    }
+
+    if (takenSet.has(name)) {
+      return { name, inPreviousRequest: true };
+    }
+
+    if (seen.has(name)) {
+      return { name, inPreviousRequest: false };
+    }
+
+    seen.add(name);
+  }
+
+  return undefined;
+};
+
 /**
  * JSONata variables that request `index` inherits from the chain — one per named response column of
  * every preceding request, in chain order. `describeRequest` receives the producing request's index so

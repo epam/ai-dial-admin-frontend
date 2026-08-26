@@ -4,7 +4,13 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import OpenPopup from '@/public/images/icons/open-pop-up.svg';
-import { ButtonAppearance, DialNeutralButton, DialPrimaryButton } from '@epam/ai-dial-ui-kit';
+import {
+  ButtonAppearance,
+  DialNeutralButton,
+  DialNotification,
+  DialPrimaryButton,
+  NotificationVariant,
+} from '@epam/ai-dial-ui-kit';
 import { IconPlus } from '@tabler/icons-react';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import { JSONSchema7 } from 'json-schema';
@@ -19,6 +25,7 @@ import { useSaveValidationContext, ValidationActionType } from '@/src/context/Sa
 import { useI18n } from '@/src/locales/client';
 import { ResponseColumn } from '@/src/models/evaluation/test-suite';
 import { JsonataVariable } from '@/src/models/jsonata';
+import { DuplicateResponseColumn } from '@/src/utils/evaluation/request-chain';
 import DocumentationModal from './DocumentationModal';
 
 interface ColumnsProps {
@@ -27,6 +34,7 @@ interface ColumnsProps {
   isSkipRefresh?: boolean;
   responseSchema: JSONSchema7;
   jsonataVariables?: JsonataVariable[];
+  duplicateColumn?: DuplicateResponseColumn;
 }
 
 const Columns: FC<ColumnsProps> = ({
@@ -35,6 +43,7 @@ const Columns: FC<ColumnsProps> = ({
   responseSchema,
   isSkipRefresh,
   jsonataVariables,
+  duplicateColumn,
 }) => {
   const t = useI18n();
   const { isValid, dispatch } = useSaveValidationContext();
@@ -126,8 +135,18 @@ const Columns: FC<ColumnsProps> = ({
     }
   }, [dispatch, isSkipRefresh, rowData]);
 
+  const duplicateMessage = duplicateColumn
+    ? t(
+        duplicateColumn.inPreviousRequest
+          ? TestSuitesI18nKey.DuplicateResponseColumnNameInPreviousRequest
+          : TestSuitesI18nKey.DuplicateResponseColumnName,
+        { name: duplicateColumn.name },
+      )
+    : undefined;
+
   return (
     <div className="flex flex-col gap-4 flex-1 min-h-0">
+      {duplicateMessage && <DialNotification variant={NotificationVariant.Error} message={duplicateMessage} />}
       <div className="flex flex-row justify-between items-center">
         <span className="text-secondary small">{t(TestSuitesI18nKey.ColumnsDescription)}</span>
         <div className="flex flex-row gap-2">
