@@ -66,7 +66,13 @@ export enum EntityViewTab {
   InputSchema = 'InputSchema',
   OutputSchema = 'OutputSchema',
   Schema = 'Schema',
+  Rules = 'Rules',
 }
+
+export const rulesTab = (t: (key: string) => string) => ({
+  id: EntityViewTab.Rules,
+  label: t(TabsI18nKey.Rules),
+});
 
 export const propertiesTab = (t: (key: string) => string, warning?: boolean) => ({
   id: EntityViewTab.Properties,
@@ -389,6 +395,10 @@ export const getAppRouteTabs = (t: (key: string) => string): TabModel[] => {
 
 export const getRoleTabs = (t: (key: string) => string): TabModel[] => {
   return [propertiesTab(t), entitiesTab(t), keysTab(t), auditTab(t)];
+};
+
+export const getEvaluatorTabs = (t: (key: string) => string): TabModel[] => {
+  return [propertiesTab(t), rulesTab(t)];
 };
 
 export const getInterceptorTabs = (t: (key: string) => string): TabModel[] => {

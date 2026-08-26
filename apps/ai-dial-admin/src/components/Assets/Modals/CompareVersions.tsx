@@ -7,7 +7,7 @@ import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import { BasicI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialPrompt } from '@/src/models/dial/prompt';
-import VersionsControl from './VersionsControl';
+import VersionsControl from '@/src/components/Common/VersionsControl/VersionsControl';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
 
 interface Props {

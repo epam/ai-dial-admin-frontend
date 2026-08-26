@@ -101,6 +101,15 @@ describe('RuleDetailView', () => {
     expect(screen.getByText('7')).toBeTruthy();
   });
 
+  test('links the resolved evaluator to its page at the version the rule resolved to', () => {
+    renderView();
+
+    expect(screen.getByRole('link', { name: 'feedback-rollup@2' })).toHaveAttribute(
+      'href',
+      '/evaluators/feedback-rollup?version=2',
+    );
+  });
+
   test('renders an em dash for an absent version column', () => {
     renderView({ version_column: undefined });
 

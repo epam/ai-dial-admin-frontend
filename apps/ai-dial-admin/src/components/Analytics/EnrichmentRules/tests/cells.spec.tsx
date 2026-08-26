@@ -4,7 +4,7 @@ import { describe, expect, test } from 'vitest';
 import EvaluatorCell from '@/src/components/Analytics/EnrichmentRules/EvaluatorCell';
 import RuleEnabledBadge from '@/src/components/Analytics/EnrichmentRules/RuleEnabledBadge';
 import TriggerCell from '@/src/components/Analytics/EnrichmentRules/TriggerCell';
-import { AnalyticsEnrichmentRulesI18nKey } from '@/src/constants/i18n';
+import { AnalyticsEnrichmentRulesI18nKey, AnalyticsEvaluatorsI18nKey } from '@/src/constants/i18n';
 import { EvaluatorType } from '@/src/models/analytics/evaluator';
 import { EnrichmentRuleListItem, TriggerKind } from '@/src/models/analytics/rule';
 
@@ -56,7 +56,7 @@ describe('EnrichmentRules :: EvaluatorCell', () => {
     render(<EvaluatorCell rule={baseRule} />);
 
     expect(screen.getByText('feedback-rollup@2')).toBeInTheDocument();
-    expect(screen.getByText(AnalyticsEnrichmentRulesI18nKey.EvaluatorTypeSql)).toBeInTheDocument();
+    expect(screen.getByText(AnalyticsEvaluatorsI18nKey.EvaluatorTypeSql)).toBeInTheDocument();
   });
 
   test('marks an unpinned rule as following latest', () => {
