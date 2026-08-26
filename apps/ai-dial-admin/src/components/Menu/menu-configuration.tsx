@@ -100,6 +100,11 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
           isPreview: true,
         },
         {
+          key: MenuI18nKey.AssetsRoles,
+          href: ApplicationRoute.AssetsRoles,
+          isPreview: true,
+        },
+        {
           key: MenuI18nKey.Applications,
           href: ApplicationRoute.AssetsApplications,
         },

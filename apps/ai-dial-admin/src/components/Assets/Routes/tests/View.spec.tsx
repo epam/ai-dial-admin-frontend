@@ -35,7 +35,7 @@ const route = (overrides: Partial<DialRouteResource> = {}): DialRouteResource =>
 
 const clickSave = async (entity: DialRouteResource) => {
   const user = userEvent.setup();
-  render(<RouteAssetView etag="etag" originalRoute={entity} />);
+  render(<RouteAssetView etag="etag" originalRoute={entity} roles={[]} />);
   await user.click(screen.getByRole('button', { name: 'save' }));
 };
 
@@ -51,7 +51,7 @@ describe('RouteAssetView', () => {
   });
 
   test('Should render the tabs content', () => {
-    render(<RouteAssetView etag="etag" originalRoute={route()} />);
+    render(<RouteAssetView etag="etag" originalRoute={route()} roles={[]} />);
 
     expect(screen.getByText('tabs-content')).toBeInTheDocument();
   });

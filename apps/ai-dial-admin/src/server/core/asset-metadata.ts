@@ -3,6 +3,7 @@ import {
   DialApplicationResource,
   DialInterceptorResource,
   DialModelResource,
+  DialRoleResource,
   DialRouteResource,
   DialToolsetResource,
 } from '@/src/models/dial/resource';
@@ -12,6 +13,7 @@ import { DialFileNodeType } from '@/src/models/dial/file';
 import { DialPrompt } from '@/src/models/dial/prompt';
 import { fromCoreAppRoutes } from '@/src/utils/app-runners/core-app-routes';
 import { fromCoreRunnerName } from '@/src/utils/app-runners/core-runner-name';
+import { normalizeRoleLimits } from '@/src/utils/roles/limits';
 import { ResourceType } from '@/src/types/resource-type';
 import { RESOURCE_TYPE_PREFIX } from '@/src/constants/publications-core';
 import { VERSIONED_RESOURCE_TYPES } from '@/src/constants/assets-core';
@@ -224,6 +226,39 @@ export const mergeRouteResource = (
   } as DialRouteResource;
 };
 
+/**
+ * Roles are flat and unversioned like models, interceptors, and routes — merged via
+ * `flatMetadataFields` for the same reason: the metadata `url`'s remainder after stripping
+ * `roles/platform/` is a bare name with no `/` separator to split into folderId + name.
+ *
+ * `costLimit`/`limits` are additionally normalized through `normalizeRoleLimits` here — Core's
+ * `Limit`/`CostLimit` fields have no `@JsonFormat(shape=STRING)`, so a within-range token arrives as
+ * a plain JSON number. An out-of-range one (e.g. the `Long.MAX_VALUE` "unlimited" sentinel, 19
+ * digits — far past `Number.MAX_SAFE_INTEGER`) is dropped rather than kept as the lossily-rounded
+ * number `JSON.parse` produces for it: Core's own field default already means "unlimited" once a
+ * token is missing, and a role write is always a full replace (see `normalizeRoleLimits`'s doc
+ * comment), so omitting it here is exactly equivalent to the sentinel, with no precision to lose.
+ */
+export const mergeRoleResource = (
+  content: Record<string, unknown>,
+  metadata: CoreResourceMetadataNode,
+): DialRoleResource => {
+  const { costLimit, limits, ...rest } = content as {
+    costLimit?: Record<string, unknown>;
+    limits?: Record<string, Record<string, unknown>>;
+  };
+  return {
+    ...rest,
+    ...(costLimit !== undefined && { costLimit: normalizeRoleLimits(costLimit) }),
+    ...(limits !== undefined && {
+      limits: Object.fromEntries(
+        Object.entries(limits || {}).map(([name, roleLimits]) => [name, normalizeRoleLimits(roleLimits)]),
+      ),
+    }),
+    ...flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.ROLE]),
+  } as DialRoleResource;
+};
+
 export type AssetMerge = (content: Record<string, unknown>, metadata: CoreResourceMetadataNode) => unknown;
 
 export const ASSET_MERGERS: Partial<Record<ResourceType, AssetMerge>> = {
@@ -235,4 +270,5 @@ export const ASSET_MERGERS: Partial<Record<ResourceType, AssetMerge>> = {
   [ResourceType.APP_TYPE_SCHEMA]: mergeAppRunnerResource,
   [ResourceType.INTERCEPTOR]: mergeInterceptorResource,
   [ResourceType.ROUTE]: mergeRouteResource,
+  [ResourceType.ROLE]: mergeRoleResource,
 };

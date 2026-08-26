@@ -10,6 +10,7 @@ import {
   mergeInterceptorResource,
   mergeModelResource,
   mergePrompt,
+  mergeRoleResource,
   mergeRouteResource,
   mergeToolsetResource,
   toResourceInfoList,
@@ -137,6 +138,34 @@ describe('Server :: Core :: asset-metadata', () => {
       author: 'grace',
       updatedAt: '777',
     });
+  });
+
+  test('mergeRoleResource sources name/folderId/path/author/updatedAt from metadata (flat, no version), rest from content', () => {
+    const content = { costLimit: { minute: 10 }, share: { conversation: { invitation_ttl: 24 } } };
+    const meta = metadata({ url: 'roles/platform/my-role', author: 'henry', updatedAt: 888 });
+
+    expect(mergeRoleResource(content, meta)).toEqual({
+      costLimit: { minute: 10 },
+      share: { conversation: { invitation_ttl: 24 } },
+      name: 'my-role',
+      folderId: '',
+      path: 'my-role',
+      author: 'henry',
+      updatedAt: '888',
+    });
+  });
+
+  test('mergeRoleResource keeps costLimit/limits tokens as plain numbers and drops any that overflow a safe integer (e.g. the Long.MAX_VALUE "unlimited" sentinel), instead of keeping the lossily-rounded number a plain JSON.parse would produce', () => {
+    const content = {
+      costLimit: { minute: 10, day: 9223372036854775807, week: 500, month: 1000 },
+      limits: { 'other-role': { minute: 9223372036854775807, day: 100 } },
+    };
+    const meta = metadata({ url: 'roles/platform/my-role' });
+
+    const result = mergeRoleResource(content, meta);
+
+    expect(result.costLimit).toEqual({ minute: 10, week: 500, month: 1000 });
+    expect(result.limits).toEqual({ 'other-role': { day: 100 } });
   });
 
   test('toResourceInfoList maps both ITEM and FOLDER nodes, tagged with nodeType', () => {
