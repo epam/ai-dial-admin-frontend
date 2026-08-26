@@ -1,11 +1,11 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getTable, getTables, updateRule } from '@/src/app/[lang]/enrichment-rules/actions';
 import { getEvaluator } from '@/src/app/[lang]/evaluators/actions';
 import RuleDetailView from '@/src/components/Analytics/EnrichmentRules/RuleDetailView';
-import { AnalyticsEnrichmentRulesI18nKey, ButtonsI18nKey } from '@/src/constants/i18n';
+import { AnalyticsEnrichmentRulesI18nKey, ButtonsI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { Evaluator, EvaluatorType } from '@/src/models/analytics/evaluator';
 import { EnrichmentRule, TriggerKind } from '@/src/models/analytics/rule';
@@ -82,11 +82,32 @@ describe('RuleDetailView', () => {
     vi.mocked(updateRule).mockResolvedValue({ success: true });
   });
 
-  test('renders the rule name and id', () => {
+  test('renders the rule name, and its id among the facts rather than under the name', () => {
     renderView();
 
     expect(screen.getByRole('heading', { name: 'feedback-live' })).toBeTruthy();
-    expect(screen.getByText('rule-1')).toBeTruthy();
+
+    const facts = screen.getByRole('region', { name: AnalyticsEnrichmentRulesI18nKey.ReadOnlyFacts });
+    expect(within(facts).getByText('rule-1')).toBeTruthy();
+    expect(within(facts).getByText(EntityFieldsI18nKey.id)).toBeTruthy();
+  });
+
+  test('offers a control that copies the id', () => {
+    renderView();
+
+    const facts = screen.getByRole('region', { name: AnalyticsEnrichmentRulesI18nKey.ReadOnlyFacts });
+    // CopyButton names itself `copy {valueLabel}`, so the control is addressable rather than an unnamed icon.
+    expect(within(facts).getByRole('button', { name: `copy ${EntityFieldsI18nKey.id}` })).toBeTruthy();
+  });
+
+  test('states the rule status ahead of its name', () => {
+    renderView();
+
+    const badge = screen.getByText(AnalyticsEnrichmentRulesI18nKey.StatusEnabled);
+    const heading = screen.getByRole('heading', { name: 'feedback-live' });
+
+    // The badge leads the header; DOCUMENT_POSITION_FOLLOWING means the heading comes after it.
+    expect(badge.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   test('presents the derived facts read-only', () => {
@@ -250,6 +271,20 @@ describe('RuleDetailView', () => {
     expect(screen.getByRole('button', { name: AnalyticsEnrichmentRulesI18nKey.DisableRule })).toBeTruthy();
   });
 
+  test('presents disabling as a danger action', () => {
+    renderView();
+
+    const toggle = screen.getByRole('button', { name: AnalyticsEnrichmentRulesI18nKey.DisableRule });
+    expect(toggle.className).toContain('dial-danger-outlined-button');
+  });
+
+  test('presents enabling as the primary action', () => {
+    renderView({ enabled: false });
+
+    const toggle = screen.getByRole('button', { name: AnalyticsEnrichmentRulesI18nKey.EnableRule });
+    expect(toggle.className).toContain('dial-primary-solid-button');
+  });
+
   test('confirms before disabling a rule', async () => {
     const user = userEvent.setup();
     renderView();
@@ -284,7 +319,10 @@ describe('RuleDetailView', () => {
 
     await editName(user, 'renamed');
 
-    expect(screen.getByRole('button', { name: AnalyticsEnrichmentRulesI18nKey.DisableRule })).toBeDisabled();
+    const toggle = screen.getByRole('button', { name: AnalyticsEnrichmentRulesI18nKey.DisableRule });
+    // Withheld in place rather than removed: a vanished control answers "where did it go?" with nothing.
+    expect(toggle).toBeDisabled();
+    expect(toggle.getAttribute('title')).toBe(AnalyticsEnrichmentRulesI18nKey.ToggleBlockedByEdits);
   });
 
   test('opens on the sections a rule is usually read for', () => {

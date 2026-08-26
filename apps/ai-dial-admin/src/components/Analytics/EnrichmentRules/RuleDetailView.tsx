@@ -2,7 +2,13 @@
 
 import { FC, useCallback, useEffect, useState } from 'react';
 
-import { ConfirmationPopupVariant, DialConfirmationPopup, DialNeutralButton } from '@epam/ai-dial-ui-kit';
+import {
+  ButtonAppearance,
+  ConfirmationPopupVariant,
+  DialConfirmationPopup,
+  DialDangerButton,
+  DialPrimaryButton,
+} from '@epam/ai-dial-ui-kit';
 import { useRouter } from 'next/navigation';
 
 import { updateRule } from '@/src/app/[lang]/enrichment-rules/actions';
@@ -104,35 +110,42 @@ const RuleDetailView: FC<Props> = ({ originalRule, evaluators, hasEvaluatorsErro
     originalRule.enabled ? AnalyticsEnrichmentRulesI18nKey.DisableRule : AnalyticsEnrichmentRulesI18nKey.EnableRule,
   );
 
+  // Shared by both directions of the toggle, which differ only in the button they are spread onto.
+  const toggleProps = {
+    label: toggleLabel,
+    // Toggling re-reads the rule, which would drop unsaved edits, so it waits for them to settle.
+    disabled: isChanged || isSaving,
+    title: isChanged ? t(AnalyticsEnrichmentRulesI18nKey.ToggleBlockedByEdits) : undefined,
+    onClick: () => setIsTogglePromptOpen(true),
+  };
+
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative gap-4">
       <div className="flex flex-row items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
+          <RuleEnabledBadge enabled={originalRule.enabled} className="self-start" />
           <h1 className="text-primary dial-h4">{originalRule.name}</h1>
-          <span className="text-secondary dial-tiny-text">{originalRule.id}</span>
         </div>
 
-        <RuleEnabledBadge enabled={originalRule.enabled} />
+        {isFullAdmin && (
+          <div className="flex flex-row items-center gap-3">
+            {isChanged && (
+              <ChangedEntityButtons
+                disableSave={!form.isValid || isSaving}
+                onDiscard={onDiscard}
+                onSave={() => void onSave()}
+              />
+            )}
+            {originalRule.enabled ? (
+              // Outlined danger, the treatment SimpleButtonsWrapper gives Delete: disabling stops an
+              // enrichment other things depend on, while enabling only restores the expected state.
+              <DialDangerButton {...toggleProps} appearance={ButtonAppearance.Outlined} />
+            ) : (
+              <DialPrimaryButton {...toggleProps} />
+            )}
+          </div>
+        )}
       </div>
-
-      {isFullAdmin && (
-        <div className="flex flex-row items-center justify-end gap-3">
-          {isChanged && (
-            <ChangedEntityButtons
-              disableSave={!form.isValid || isSaving}
-              onDiscard={onDiscard}
-              onSave={() => void onSave()}
-            />
-          )}
-          <DialNeutralButton
-            label={toggleLabel}
-            // Toggling re-reads the rule, which would drop unsaved edits, so it waits for them to settle.
-            disabled={isChanged || isSaving}
-            title={isChanged ? t(AnalyticsEnrichmentRulesI18nKey.ToggleBlockedByEdits) : undefined}
-            onClick={() => setIsTogglePromptOpen(true)}
-          />
-        </div>
-      )}
 
       {isTogglePromptOpen && (
         <DialConfirmationPopup

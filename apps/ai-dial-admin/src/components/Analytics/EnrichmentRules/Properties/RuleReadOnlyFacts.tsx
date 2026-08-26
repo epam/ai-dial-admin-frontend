@@ -6,7 +6,7 @@ import Link from 'next/link';
 
 import { evaluatorDetailHref } from '@/src/components/Analytics/Evaluators/utils';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
-import { AnalyticsEnrichmentRulesI18nKey } from '@/src/constants/i18n';
+import { AnalyticsEnrichmentRulesI18nKey, EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { useLocalDateTimeString } from '@/src/hooks/use-local-date-time-string';
 import { useI18n } from '@/src/locales/client';
 import { EnrichmentRule } from '@/src/models/analytics/rule';
@@ -29,6 +29,7 @@ const RuleReadOnlyFacts: FC<Props> = ({ rule }) => {
       aria-label={t(AnalyticsEnrichmentRulesI18nKey.ReadOnlyFacts)}
       className="flex flex-row flex-wrap gap-8 pb-8 border-b border-primary"
     >
+      <LabelledText label={t(EntityFieldsI18nKey.id)} text={rule.id} copyable copyLabel={t(EntityFieldsI18nKey.id)} />
       <LabelledText label={t(AnalyticsEnrichmentRulesI18nKey.GrainKey)} text={rule.grain_key || notSet} />
       <LabelledText label={t(AnalyticsEnrichmentRulesI18nKey.VersionColumn)} text={rule.version_column || notSet} />
       <LabelledText label={t(AnalyticsEnrichmentRulesI18nKey.EvaluatorResolved)}>
