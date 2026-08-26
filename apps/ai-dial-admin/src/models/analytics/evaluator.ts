@@ -7,6 +7,25 @@ export enum EvaluatorPreset {
   ChatCompletion = 'chat_completion',
 }
 
+/**
+ * The codes an evaluator variable's `type` resolves against (the service's `QueryFieldType`). Deliberately
+ * separate from `AnalyticsFieldType`: that one is the table catalog's column type — it drives the
+ * column-type select and an exhaustive sample map — and it does not admit `map`.
+ */
+export enum EvaluatorVarType {
+  Uuid = 'uuid',
+  String = 'string',
+  Integer = 'integer',
+  Long = 'long',
+  Decimal = 'decimal',
+  Boolean = 'boolean',
+  Date = 'date',
+  Timestamp = 'timestamp',
+  Object = 'object',
+  Array = 'array',
+  Map = 'map',
+}
+
 export interface EvaluatorVar {
   name: string;
   type: string;

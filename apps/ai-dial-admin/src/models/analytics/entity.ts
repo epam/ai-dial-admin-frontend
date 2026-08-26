@@ -9,7 +9,6 @@ export enum AnalyticsFieldType {
   Timestamp = 'timestamp',
   Object = 'object',
   Array = 'array',
-  Map = 'map',
 }
 
 export interface AnalyticsEntity {
