@@ -2,8 +2,12 @@
 
 import { FC, useMemo } from 'react';
 
+import { useRouter } from 'next/navigation';
+
 import { ColDef } from 'ag-grid-community';
 
+import { evaluatorDetailHref } from '@/src/components/Analytics/Evaluators/utils';
+import { navigateEntityUrl } from '@/src/components/EntityListView/utils/on-cell-clicked';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace';
 import { AnalyticsEvaluatorsI18nKey, MenuI18nKey } from '@/src/constants/i18n';
@@ -19,10 +23,8 @@ interface Props {
 
 const EvaluatorsView: FC<Props> = ({ rows, hasUsageError, hasLoadError }) => {
   const t = useI18n();
+  const router = useRouter();
 
-  // No type column: the listing endpoint reports no type, and both ways of filling one mislead — a per-row
-  // version read, or a join from the rules listing that leaves every unreferenced evaluator blank, where an
-  // em dash reads as "no type" rather than "no rule". Type is on the detail page.
   const columns: ColDef[] = useMemo(
     () => [
       { headerName: t(AnalyticsEvaluatorsI18nKey.Name), field: 'name', flex: 2 },
@@ -71,6 +73,12 @@ const EvaluatorsView: FC<Props> = ({ rows, hasUsageError, hasLoadError }) => {
           columnDefs={columns}
           rowData={rows}
           getRowId={(params) => params.data.name}
+          additionalGridOptions={{
+            onCellClicked: (e) => {
+              if (!e.data) return;
+              navigateEntityUrl(evaluatorDetailHref(e.data.name), router.push, e.event as MouseEvent | undefined);
+            },
+          }}
           emptyDataProps={{ title: t(AnalyticsEvaluatorsI18nKey.NoEvaluators) }}
         />
       </div>

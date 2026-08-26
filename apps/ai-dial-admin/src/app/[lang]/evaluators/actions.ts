@@ -3,7 +3,8 @@
 import { cookies, headers } from 'next/headers';
 
 import { analyticsDataApi } from '@/src/app/api/api';
-import { Evaluator, EvaluatorSummary } from '@/src/models/analytics/evaluator';
+import { CreateEvaluatorDto, Evaluator, EvaluatorSummary } from '@/src/models/analytics/evaluator';
+import { ServerActionResponse } from '@/src/models/server-action';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
@@ -19,4 +20,8 @@ export async function getEvaluator(name: string): Promise<Evaluator | null> {
 
 export async function getEvaluatorVersion(name: string, version: number): Promise<Evaluator | null> {
   return analyticsDataApi.getEvaluatorVersion(name, version, await token());
+}
+
+export async function createEvaluator(dto: CreateEvaluatorDto): Promise<ServerActionResponse<Evaluator>> {
+  return analyticsDataApi.createEvaluator(dto, await token());
 }
