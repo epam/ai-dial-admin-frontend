@@ -21,8 +21,9 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { cellRenderParams } from './constants';
 
 export const getNoAvailableTitle = (view: ApplicationRoute) => {
-  if (view === ApplicationRoute.Models) return RolesI18nKey.NotAvailableModel;
+  if (view === ApplicationRoute.Models || view === ApplicationRoute.AssetsModels) return RolesI18nKey.NotAvailableModel;
   if (view === ApplicationRoute.Applications) return RolesI18nKey.NotAvailableApplication;
+  if (view === ApplicationRoute.AssetsRoutes) return RolesI18nKey.NotAvailableRoute;
   return RolesI18nKey.NotAvailableToolSet;
 };
 

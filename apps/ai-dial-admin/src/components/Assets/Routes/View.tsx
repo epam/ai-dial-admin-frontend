@@ -7,10 +7,12 @@ import { removeRoute, updateRoute } from '@/src/app/[lang]/assets-routes/actions
 import { JsonConfiguration } from '@/src/components/EntityHeaderControls/models';
 import SimpleEntityHeader from '@/src/components/EntityHeaderControls/SimpleHeader';
 import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
+import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useRoutesFolder } from '@/src/context/assets/RoutesFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useI18n } from '@/src/locales/client';
+import { DialRole } from '@/src/models/dial/role';
 import { DialRouteResource } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
 import { getUpdateNotificationDescription, getUpdateNotificationTitle } from '@/src/utils/entities/update-entity';
@@ -22,9 +24,12 @@ import TabsContent from './TabsContent';
 interface Props {
   etag: string;
   originalRoute: DialRouteResource;
+  roles: DialRole[];
+  /** i18n keys for non-fatal problems from the server-side option reads, resolved here. */
+  optionWarnings?: EntitiesI18nKey[];
 }
 
-const RouteAssetView: FC<Props> = ({ etag, originalRoute }) => {
+const RouteAssetView: FC<Props> = ({ etag, originalRoute, roles, optionWarnings }) => {
   const t = useI18n();
   const tabs = getTabsForAsset(t, ApplicationRoute.AssetsRoutes);
   const router = useRouter();
@@ -49,6 +54,14 @@ const RouteAssetView: FC<Props> = ({ etag, originalRoute }) => {
   useEffect(() => {
     setSelectedRoute(structuredClone(originalRoute));
   }, [originalRoute]);
+
+  // An option list read from only one of Core's two populations is shown rather than withheld, so the
+  // user has to be told the list is incomplete — otherwise a missing role reads as revoked.
+  useEffect(() => {
+    optionWarnings?.forEach((warning) => {
+      showNotification(getErrorNotification(t(EntitiesI18nKey.IncompleteOptionList), t(warning)));
+    });
+  }, [optionWarnings, showNotification, t]);
 
   useEffect(() => {
     if (Object.keys(selectedRoute).length && originalRoute) {
@@ -108,6 +121,7 @@ const RouteAssetView: FC<Props> = ({ etag, originalRoute }) => {
             activeTab={activeTab}
             selectedRoute={selectedRoute}
             originalRoute={originalRoute}
+            roles={roles}
             onChange={setSelectedRoute}
           />
         )}

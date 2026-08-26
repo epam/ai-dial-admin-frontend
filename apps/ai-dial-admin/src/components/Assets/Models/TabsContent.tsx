@@ -2,6 +2,7 @@
 
 import { FC } from 'react';
 
+import AssetRoles from '@/src/components/EntityView/Roles/AssetRoles';
 import EntityInterceptors from '@/src/components/EntityView/Interceptors/Interceptors';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { AssetModel } from '@/src/models/dial/deployment-asset';
@@ -12,7 +13,6 @@ import { EntityViewTab } from '@/src/utils/tabs/utils';
 import ModelResourceFeatures from './Features';
 import InvalidModelBanner from './InvalidModelBanner';
 import ModelAssetProperties from './Properties';
-import ModelAssetRoles from './Roles';
 import UpstreamSecretWarning from './UpstreamSecretWarning';
 
 interface Props {
@@ -61,7 +61,7 @@ const TabsContent: FC<Props> = ({
       )}
 
       {activeTab === EntityViewTab.Roles && (
-        <ModelAssetRoles asset={resource} roles={roles} onChange={onChangeResource} />
+        <AssetRoles view={ApplicationRoute.AssetsModels} asset={resource} roles={roles} onChange={onChangeResource} />
       )}
 
       {activeTab === EntityViewTab.Interceptors && (

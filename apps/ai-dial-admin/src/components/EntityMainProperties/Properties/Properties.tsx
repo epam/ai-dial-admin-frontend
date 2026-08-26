@@ -5,6 +5,7 @@ import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import { isAssetView } from '@/src/utils/is-view';
 import AppRunnerCreateProperties from '@/src/components/Assets/AppRunners/CreateProperties';
+import RoleCreateProperties from '@/src/components/Assets/Roles/CreateProperties';
 import RouteCreateProperties from '@/src/components/Assets/Routes/CreateProperties';
 import SkillCreateProperties from '@/src/components/Assets/Skills/CreateProperties';
 import { DialAppRunnerResource } from '@/src/models/dial/resource';
@@ -63,6 +64,19 @@ const Properties = <T extends object>({
   if (view === ApplicationRoute.AssetsRoutes) {
     return (
       <RouteCreateProperties
+        entity={entity as { name?: string }}
+        names={props.names}
+        isUniqueNameError={isUniqueNameError}
+        onChangeEntity={props.onChangeEntity}
+      />
+    );
+  }
+
+  // Ahead of `isSimpleEntity` for the same reason as Route above: `Role` is a plain class with no
+  // `displayName`/`description`.
+  if (view === ApplicationRoute.AssetsRoles) {
+    return (
+      <RoleCreateProperties
         entity={entity as { name?: string }}
         names={props.names}
         isUniqueNameError={isUniqueNameError}
