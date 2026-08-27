@@ -78,6 +78,11 @@ vi.mock('@/src/context/assets/RolesFolderContext', () => ({
   RolesFolderProvider: ({ children }: any) => <div>{children}</div>,
 }));
 
+vi.mock('@/src/context/assets/KeysFolderContext', () => ({
+  useKeysFolder: () => ({ fetchFiles: vi.fn() }),
+  KeysFolderProvider: ({ children }: any) => <div>{children}</div>,
+}));
+
 vi.mock('@/src/context/assets/SkillFolderContext', () => ({
   useSkillFolder: () => ({ fetchFiles: vi.fn() }),
   SkillFolderProvider: ({ children }: any) => <div>{children}</div>,

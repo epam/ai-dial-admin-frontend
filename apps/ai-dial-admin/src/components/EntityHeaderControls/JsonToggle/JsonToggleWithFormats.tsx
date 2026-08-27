@@ -23,6 +23,7 @@ const ONLY_ADMIN_ENTITIES = [
   ApplicationRoute.AssetsInterceptors,
   ApplicationRoute.AssetsRoutes,
   ApplicationRoute.AssetsRoles,
+  ApplicationRoute.AssetsKeys,
   ApplicationRoute.TestSuites,
   ApplicationRoute.Datasets,
 ];

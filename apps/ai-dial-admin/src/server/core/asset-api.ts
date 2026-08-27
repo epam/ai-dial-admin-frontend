@@ -243,7 +243,9 @@ export class AssetApi extends CoreApi {
       return DEFAULT_LIST_PATH;
     }
     if (PLATFORM_BUCKET_RESOURCE_TYPES.has(type)) {
-      return stripPrefix(path, `${PLATFORM_ROOT_FOLDER}/`);
+      // A platform-bucket type's root is the bucket itself, so an absent path lists the root —
+      // `stripPrefix` would otherwise receive `undefined` and crash on `.startsWith`.
+      return stripPrefix(path || '', `${PLATFORM_ROOT_FOLDER}/`);
     }
     return path;
   }

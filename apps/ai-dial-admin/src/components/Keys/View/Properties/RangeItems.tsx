@@ -92,7 +92,7 @@ const RangeItems: FC<Props> = ({ ranges, onAddRange, onRemoveRange, onUpdateRang
           />
           {!disabled && (
             <DialRemoveButton
-              className={classNames(index === 0 && 'mt-6')}
+              className={classNames(index === 0 && 'mt-7')}
               onClick={() => {
                 onRemoveRange(index);
               }}

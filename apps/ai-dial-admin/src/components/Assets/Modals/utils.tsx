@@ -117,6 +117,10 @@ export const getDeleteModalTitle = (
       return t(FileManagerI18nKey.DeleteItemsModalTitle, {
         items: itemsCount > 1 ? t(FileManagerI18nKey.Roles) : t(FileManagerI18nKey.Role),
       });
+    case ApplicationRoute.AssetsKeys:
+      return t(FileManagerI18nKey.DeleteItemsModalTitle, {
+        items: itemsCount > 1 ? t(FileManagerI18nKey.Keys) : t(FileManagerI18nKey.Key),
+      });
     case ApplicationRoute.AssetsSkills:
       return t(FileManagerI18nKey.DeleteItemsModalTitle, {
         items: itemsCount > 1 ? t(FileManagerI18nKey.Skills) : t(FileManagerI18nKey.Skill),
@@ -196,6 +200,10 @@ export const getDeleteModalDescription = (
     case ApplicationRoute.AssetsRoles:
       return t(FileManagerI18nKey.DeleteItemsModalDescription, {
         items: (itemsCount > 1 ? t(FileManagerI18nKey.Roles) : t(FileManagerI18nKey.Role)).toLowerCase(),
+      });
+    case ApplicationRoute.AssetsKeys:
+      return t(FileManagerI18nKey.DeleteItemsModalDescription, {
+        items: (itemsCount > 1 ? t(FileManagerI18nKey.Keys) : t(FileManagerI18nKey.Key)).toLowerCase(),
       });
     case ApplicationRoute.AssetsSkills:
       return hasFoldersToDelete

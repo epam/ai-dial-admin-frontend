@@ -98,9 +98,11 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
             (item) => item.key === 'duplicate' || item.key === 'delete' || item.key === 'openInNewTab',
           );
     // No 'duplicate': the shared duplicate modal (`DuplicatePlatformAsset`) unconditionally writes a
-    // `displayName`, a field `Role.class` doesn't declare — the same class of Core-rejection risk
-    // design D3 avoids for the identity field. Roles get delete + open-in-new-tab only.
+    // `displayName`, a field `Role.class`/`Key.class` doesn't declare — the same class of
+    // Core-rejection risk design D3 avoids for the identity field. Roles and keys get delete +
+    // open-in-new-tab only.
     case ApplicationRoute.AssetsRoles:
+    case ApplicationRoute.AssetsKeys:
       return isReadOnlyAdmin
         ? []
         : allActionLabels.filter((item) => item.key === 'delete' || item.key === 'openInNewTab');
@@ -185,6 +187,14 @@ export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: 
         {
           key: 'newItem',
           label: FileManagerI18nKey.Role,
+          icon: null,
+        },
+      ];
+    case ApplicationRoute.AssetsKeys:
+      return [
+        {
+          key: 'newItem',
+          label: FileManagerI18nKey.Key,
           icon: null,
         },
       ];
@@ -339,12 +349,14 @@ export const getDeleteNotificationContent = (
     case ApplicationRoute.AssetsInterceptors:
     case ApplicationRoute.AssetsRoutes:
     case ApplicationRoute.AssetsRoles:
+    case ApplicationRoute.AssetsKeys:
     case ApplicationRoute.AssetsModels: {
       const itemLabel = (() => {
         if (view === ApplicationRoute.AssetsAppRunners) return FileManagerI18nKey.AppRunner;
         if (view === ApplicationRoute.AssetsInterceptors) return FileManagerI18nKey.Interceptor;
         if (view === ApplicationRoute.AssetsRoutes) return FileManagerI18nKey.Route;
         if (view === ApplicationRoute.AssetsRoles) return FileManagerI18nKey.Role;
+        if (view === ApplicationRoute.AssetsKeys) return FileManagerI18nKey.Key;
         return FileManagerI18nKey.Model;
       })();
       const title = isDeleteSeveralFiles
