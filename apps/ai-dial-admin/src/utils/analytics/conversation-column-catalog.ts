@@ -19,6 +19,7 @@ import {
   ColumnProvenance,
   ConversationColumnGroup,
   ConversationProjectableFields,
+  ProvenanceEntity,
   TranscriptBodyFields,
 } from '@/src/models/analytics/conversations-trace';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
@@ -48,6 +49,49 @@ const enrichmentOf = (fieldName: string): string => {
   return separator > 0 ? fieldName.slice(0, separator) : '';
 };
 
+// An enrichment this frontend cannot name takes the unattributed colour rather than a fourth hue. Shared
+// with `columnProvenance` so the provenance line and the grid band attribute a namespace identically.
+const enrichmentProvenance = (enrichment: string): ColumnProvenance =>
+  ENRICHMENT_PROVENANCE[enrichment] ?? ColumnProvenance.Other;
+
+export const composedSourceEntities = (
+  baseEntity: string,
+  fields: AnalyticsEntityField[] = [],
+  queriedEntities: ProvenanceEntity[] = [],
+): ProvenanceEntity[] => {
+  const namespaces: string[] = [];
+
+  fields.forEach((field) => {
+    const enrichment = enrichmentOf(field.name);
+    if (enrichment && !namespaces.includes(enrichment)) {
+      namespaces.push(enrichment);
+    }
+  });
+
+  // An entity can reach here twice: the day ratings arrive as an enrichment, the schema reports the
+  // namespace while the queried list still names the table. Naming it once keeps the line honest and the
+  // rendered keys unique — and the declared attribution wins, because the derived one falls back to the
+  // unattributed colour for any namespace this frontend cannot name, which would paint the line grey while
+  // the grid band paints the same source amber.
+  const declared = new Map(queriedEntities.map((entity) => [entity.name, entity]));
+
+  const entities: ProvenanceEntity[] = [
+    { name: baseEntity, provenance: ColumnProvenance.Conversations },
+    ...namespaces.map((name) => declared.get(name) ?? { name, provenance: enrichmentProvenance(name) }),
+    ...queriedEntities,
+  ];
+
+  const seen = new Set<string>();
+
+  return entities.filter((entity) => {
+    if (seen.has(entity.name)) {
+      return false;
+    }
+    seen.add(entity.name);
+    return true;
+  });
+};
+
 export const columnProvenance = (fieldName: string): ColumnProvenance => {
   const composed = COMPOSED_COLUMN_PROVENANCE[fieldName];
   if (composed) {
@@ -59,7 +103,7 @@ export const columnProvenance = (fieldName: string): ColumnProvenance => {
     return ColumnProvenance.Conversations;
   }
 
-  return ENRICHMENT_PROVENANCE[enrichment] ?? ColumnProvenance.Other;
+  return enrichmentProvenance(enrichment);
 };
 
 // `heavy` is deliberately not a test here: it is a transfer-cost hint, and it governs whether a field is

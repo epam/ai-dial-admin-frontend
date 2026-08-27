@@ -18,6 +18,7 @@ import {
   ConversationEntryHopRow,
   ConversationSpanRow,
   ConversationFilterOperator,
+  ConversationRatingTotalsField,
   ConversationSortKey,
   ConversationTotalsField,
   ConversationTurnField,
@@ -428,14 +429,16 @@ export const buildConversationModelBodiesQuery = (
   });
 };
 
-export const buildConversationTotalsQuery = (filters: ConversationFilterParams): StructuredQuery =>
+// Takes the period, not a filter object: a search or column predicate reaching here would silently make the
+// pills a summary of the filtered result again, which is the behaviour this replaced.
+export const buildConversationTotalsQuery = (range: TimeRange): StructuredQuery =>
   aggregateQuery({
     entity: CONVERSATIONS_ENTITY,
     select: [
       col(fn('count'), ConversationTotalsField.Conversations),
       col(fn('sum', [field(ConversationsField.TotalPrice)]), ConversationTotalsField.Cost),
     ],
-    filter: conversationFilter(filters),
+    filter: and(timeRangePredicates(ConversationsField.LastRequestTime, range)),
   });
 
 const ratePredicates = (feedback: FeedbackFilter): QueryFilterNode[] => {
@@ -462,6 +465,17 @@ interface FeedbackQueryParams {
   range: TimeRange;
   feedback: FeedbackFilter;
 }
+
+export const buildConversationRatingTotalsQuery = ({ range, feedback }: FeedbackQueryParams): StructuredQuery =>
+  aggregateQuery({
+    entity: FEEDBACK_ENTITY,
+    select: [col(fn('count', [field(ResponseRatingsField.ChatId)], true), ConversationRatingTotalsField.Conversations)],
+    filter: and([
+      ...timeRangePredicates(ResponseRatingsField.LastRateTime, range),
+      ne(ResponseRatingsField.ChatId, emptyString),
+      ...ratePredicates(feedback),
+    ]),
+  });
 
 export const buildRatedConversationIdsQuery = ({ range, feedback }: FeedbackQueryParams): StructuredQuery =>
   aggregateQuery({

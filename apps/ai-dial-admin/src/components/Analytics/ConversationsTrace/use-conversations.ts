@@ -16,12 +16,9 @@ import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useTimeFilter } from '@/src/hooks/use-time-filter';
 import { useI18n } from '@/src/locales/client';
 import {
-  ConversationColumnFilter,
   ConversationFilters,
-  ConversationSortKey,
+  ConversationPeriodSummary,
   ConversationRow,
-  ConversationSummary,
-  ConversationTotals,
   ConversationsPage,
   FeedbackFilter,
 } from '@/src/models/analytics/conversations-trace';
@@ -38,24 +35,11 @@ import {
   translateConversationFilterModel,
   translateConversationSortModel,
 } from '@/src/utils/analytics/conversation-grid-models';
-import { summariseConversations } from '@/src/utils/analytics/conversation-rows';
 import { getErrorNotification } from '@/src/utils/notification';
+import { timePeriodLabel } from '@/src/utils/time-filter/period-label';
 
 const filterKey = ({ search, startMs, endMs, feedback }: ConversationFilters): string =>
   [search, startMs, endMs, feedback].join('|');
-
-// The projection is deliberately not part of the key: revealing a source-backed column changes neither the
-// result nor the rows already held, so the loaded set survives it.
-const resultKey = (
-  filters: ConversationFilters,
-  columnFilters: ConversationColumnFilter[],
-  sort: ConversationSortKey[],
-): string => [filterKey(filters), JSON.stringify(columnFilters), JSON.stringify(sort)].join('|');
-
-interface LoadedConversations {
-  key: string;
-  byId: Map<string, ConversationRow>;
-}
 
 // The ids the first page of a result resolved, held for the rest of that result's pages. It stays in the
 // browser: the set is resolved under the caller's token, so a server-side cache keyed on the filter state
@@ -73,8 +57,7 @@ export const useConversations = (schemaFields?: AnalyticsEntityField[] | null) =
   const [gridApi, setGridApi] = useState<GridApi<ConversationRow> | null>(null);
 
   const [hasLoadError, setHasLoadError] = useState(false);
-  const [totals, setTotals] = useState<ConversationTotals | null>(null);
-  const [loaded, setLoaded] = useState<LoadedConversations>({ key: '', byId: new Map() });
+  const [period, setPeriod] = useState<ConversationPeriodSummary | null>(null);
   const [isEmptyResult, setIsEmptyResult] = useState(false);
   const [isFirstPageLoading, setIsFirstPageLoading] = useState(true);
   const [isFeedbackCapped, setIsFeedbackCapped] = useState(false);
@@ -83,7 +66,7 @@ export const useConversations = (schemaFields?: AnalyticsEntityField[] | null) =
   const [appliedSearch, setAppliedSearch] = useState('');
   const [feedback, setFeedback] = useState(FeedbackFilter.All);
 
-  const { timePeriod, timeRange, onTimePeriodChange, onTimeRangeChange } = useTimeFilter({
+  const { timePeriod, timeRange, isCustom, onTimePeriodChange, onTimeRangeChange } = useTimeFilter({
     defaultTimeFilter: CONVERSATIONS_TIME_PERIOD,
   });
 
@@ -122,6 +105,11 @@ export const useConversations = (schemaFields?: AnalyticsEntityField[] | null) =
 
   const candidateRef = useRef<CandidateIds | null>(null);
 
+  // The filter state the page is currently showing. A request carries the key it was issued under, so a
+  // response that outlives its filter state can be told apart from the current one at the moment it lands.
+  const keyRef = useRef(key);
+  keyRef.current = key;
+
   const reportFailure = useCallback(() => {
     showNotification(getErrorNotification(t(ConversationsTraceI18nKey.ConversationsLoadFailed)));
     setHasLoadError(true);
@@ -156,7 +144,6 @@ export const useConversations = (schemaFields?: AnalyticsEntityField[] | null) =
           ...(modelScope.projectableFields?.requiredEnrichment ?? []),
           ...visibleGatedFields.filter((colId) => !heavySource.has(colId)),
         ];
-        const loadedKey = resultKey(filters, columnFilters, sort);
         gridApi?.setGridOption('loading', true);
         if (isFirstPage) {
           setIsFirstPageLoading(true);
@@ -181,9 +168,14 @@ export const useConversations = (schemaFields?: AnalyticsEntityField[] | null) =
           if (isFirstPage) {
             candidateRef.current = page?.candidates ? { key, ids: page.candidates.ids } : null;
             setIsFeedbackCapped(Boolean(page?.candidates?.isCapped));
-            // An absent summary means its query failed, which the pills report as unavailable. A later
+            // Nothing cancels a request whose filter state has moved on, so a slow response can land after
+            // the period changed and put the previous period's figures under the new caption — the exact
+            // mismatch clearing them was meant to prevent. Only the current filter state may set them.
+            // An absent summary means its queries failed, which the pills report as unavailable; a later
             // page carries none and leaves the figures standing.
-            setTotals(page?.totals ?? null);
+            if (keyRef.current === key) {
+              setPeriod(page?.period ?? null);
+            }
           }
 
           if (!result.success) {
@@ -194,11 +186,6 @@ export const useConversations = (schemaFields?: AnalyticsEntityField[] | null) =
           const total = page?.total ?? null;
 
           setHasLoadError(false);
-          setLoaded((previous) => {
-            const byId = previous.key === loadedKey ? new Map(previous.byId) : new Map<string, ConversationRow>();
-            rows.forEach((row) => byId.set(row.chat_id, row));
-            return { key: loadedKey, byId };
-          });
           if (isFirstPage) {
             setIsEmptyResult(rows.length === 0);
           }
@@ -208,10 +195,9 @@ export const useConversations = (schemaFields?: AnalyticsEntityField[] | null) =
           params.successCallback(rows, total ?? (rows.length < endRow - startRow ? startRow + rows.length : undefined));
         } catch {
           reportFailure();
-          // A failed later page must not discard the rows already shown, so only the first page clears them.
-          // The figures are settled above from whatever the response carried, so the catch leaves them be.
+          // A failed later page must not discard the rows already shown, so only the first page resets the
+          // empty state. The figures are settled above from whatever the response carried.
           if (isFirstPage) {
-            setLoaded({ key: loadedKey, byId: new Map() });
             setIsEmptyResult(false);
           }
           params.failCallback();
@@ -231,6 +217,13 @@ export const useConversations = (schemaFields?: AnalyticsEntityField[] | null) =
   useEffect(() => {
     gridApi?.setGridOption('datasource', datasource);
   }, [gridApi, datasource]);
+
+  // Keyed on the period alone, not the whole filter state: the caption repaints the moment the period
+  // changes, while the figures only arrive when the refetch resolves, so holding the old ones would put a
+  // 30d caption over 7d numbers. A search or column change leaves them standing — it does not move them.
+  useEffect(() => {
+    setPeriod(null);
+  }, [filters.startMs, filters.endMs]);
 
   const applySearch = useMemo(() => debounce(setAppliedSearch, CONVERSATIONS_SEARCH_DEBOUNCE_MS), []);
 
@@ -276,17 +269,12 @@ export const useConversations = (schemaFields?: AnalyticsEntityField[] | null) =
     return () => gridApi.removeEventListener('columnVisible', onColumnVisible);
   }, [gatedFields, gridApi]);
 
-  const summary: ConversationSummary = useMemo(
-    () => summariseConversations(Array.from(loaded.byId.values())),
-    [loaded],
-  );
-
   return {
     onGridReady,
     datasource,
-    totals,
-    summary,
-    loadedCount: loaded.byId.size,
+    period,
+    periodLabel: timePeriodLabel(timePeriod, timeRange, isCustom),
+    isPeriodPending: period === null && isFirstPageLoading,
     isEmptyResult,
     isFirstPageLoading,
     isFeedbackCapped,

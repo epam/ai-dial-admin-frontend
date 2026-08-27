@@ -13,7 +13,9 @@ import {
   ConversationHopBodies,
   ModelCallOutput,
   ConversationPageRequest,
+  ConversationPeriodSummary,
   ConversationRatingRow,
+  ConversationRatingTotalsField,
   ConversationRow,
   ConversationEntryBodyRow,
   ConversationModelBodyRow,
@@ -51,6 +53,7 @@ import {
   buildConversationTurnsQuery,
   buildConversationRatingCountsQuery,
   buildConversationRatingsQuery,
+  buildConversationRatingTotalsQuery,
   buildConversationTotalsQuery,
   buildRatedConversationIdsQuery,
 } from '@/src/utils/analytics/conversations-queries';
@@ -145,12 +148,6 @@ export async function getConversationsSchema(): Promise<ServerActionResponse<Ana
   return schema ? { success: true, response: schema } : { success: false };
 }
 
-/**
- * One request per fetch cycle. A first-page request resolves the feedback candidates, then runs the row
- * query and the summary query **concurrently** and returns all three; running the summary after the rows
- * would make the merged call slower than the two separate ones it replaces. A later-page request takes the
- * candidate ids from the caller and runs neither.
- */
 export async function getConversations(request: ConversationPageRequest): Promise<ConversationsResponse> {
   const authToken = await token();
   const range = toRange(request);
@@ -168,13 +165,15 @@ export async function getConversations(request: ConversationPageRequest): Promis
     chatIds = candidates?.ids ?? [];
   }
 
+  const periodSummary = isFirstPage ? resolvePeriodSummary(range, authToken) : Promise.resolve(undefined);
+
   if (isNarrowedToNothing({ ...request, chatIds })) {
     return {
       success: true,
       response: {
         rows: [],
         total: 0,
-        ...(isFirstPage ? { totals: { conversations: 0, cost: null } } : {}),
+        ...withPeriod(await periodSummary),
         ...(candidates ? { candidates } : {}),
       },
     };
@@ -192,7 +191,7 @@ export async function getConversations(request: ConversationPageRequest): Promis
     limit: request.limit,
   });
 
-  const [page, totals] = await Promise.all([
+  const [page, period] = await Promise.all([
     (async () => {
       const result = await analyticsDataApi.executeAction(query, authToken);
       if (!result.success) {
@@ -201,14 +200,17 @@ export async function getConversations(request: ConversationPageRequest): Promis
       const rows = (result.response?.rows ?? []) as unknown as ConversationRow[];
       return { result, rows: await withRatings(rows, range, authToken) };
     })(),
-    isFirstPage ? resolveConversationTotals(request, chatIds, authToken) : Promise.resolve(undefined),
+    periodSummary,
   ]);
 
-  // The rows and the summary are separate queries, so one failing is no evidence about the other. A failed
-  // row query still reports whatever the summary resolved, which is what lets the pills keep standing.
+  // The grid's row total is the period count, which is the grid's own count only while nothing narrows the
+  // period. Under a filter it is not, and must not be offered as one: the grid then finds the end of the
+  // result by a page coming back short, which is the signal it already terminates on.
+  const gridTotal = isNarrowed(request) ? null : toNumber(period?.totals?.conversations ?? null);
+
   const resolved = {
-    total: totals ? toNumber(totals.conversations) : null,
-    ...(totals ? { totals } : {}),
+    total: gridTotal,
+    ...withPeriod(period),
     ...(candidates ? { candidates } : {}),
   };
 
@@ -427,21 +429,13 @@ export async function getConversationSpans(
   };
 }
 
-// Resolved alongside the first page rather than by a request of its own. Not exported: the summary has to
-// be an observation of the same fetch cycle as the rows beside it, which is exactly what returning them
-// together guarantees.
-async function resolveConversationTotals(
-  filters: ConversationFilters,
-  chatIds: string[] | undefined,
-  authToken: Token,
-): Promise<ConversationTotals | undefined> {
-  const query = buildConversationTotalsQuery({
-    range: toRange(filters),
-    search: filters.search,
-    chatIds: chatIds ?? [],
-    columnFilters: filters.columnFilters ?? [],
-  });
-  const result = await analyticsDataApi.executeAction(query, authToken);
+const isNarrowed = ({ search, columnFilters, feedback }: ConversationPageRequest): boolean =>
+  Boolean(search) || Boolean(columnFilters?.length) || feedback !== FeedbackFilter.All;
+
+const withPeriod = (period?: ConversationPeriodSummary) => (period ? { period } : {});
+
+async function resolveConversationTotals(range: TimeRange, authToken: Token): Promise<ConversationTotals | undefined> {
+  const result = await analyticsDataApi.executeAction(buildConversationTotalsQuery(range), authToken);
 
   if (!result.success) {
     errorObjLog(result, 'Failed to resolve the conversations summary');
@@ -453,6 +447,41 @@ async function resolveConversationTotals(
   return {
     conversations: (row?.[ConversationTotalsField.Conversations] ?? null) as ConversationTotals['conversations'],
     cost: (row?.[ConversationTotalsField.Cost] ?? null) as ConversationTotals['cost'],
+  };
+}
+
+async function resolveRatingCount(
+  range: TimeRange,
+  feedback: FeedbackFilter,
+  authToken: Token,
+): Promise<number | null | undefined> {
+  const result = await analyticsDataApi.executeAction(
+    buildConversationRatingTotalsQuery({ range, feedback }),
+    authToken,
+  );
+
+  if (!result.success) {
+    errorObjLog(result, 'Failed to resolve the conversation rating totals');
+    return undefined;
+  }
+
+  const row = result.response?.rows?.[0];
+
+  return toNumber((row?.[ConversationRatingTotalsField.Conversations] ?? null) as number | string | null);
+}
+
+async function resolvePeriodSummary(range: TimeRange, authToken: Token): Promise<ConversationPeriodSummary> {
+  const [totals, rated, negative] = await Promise.all([
+    resolveConversationTotals(range, authToken),
+    resolveRatingCount(range, FeedbackFilter.Rated, authToken),
+    resolveRatingCount(range, FeedbackFilter.Negative, authToken),
+  ]);
+
+  const hasRatings = rated !== undefined && negative !== undefined;
+
+  return {
+    ...(totals ? { totals } : {}),
+    ...(hasRatings ? { ratings: { rated: rated ?? null, negative: negative ?? null } } : {}),
   };
 }
 
