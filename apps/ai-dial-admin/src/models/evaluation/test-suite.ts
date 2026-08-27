@@ -198,6 +198,8 @@ export interface TryOutHistoryEntry {
   durationMs?: number;
   traceId?: string;
   grafanaTraceUrl?: string;
+  requestIndex?: number;
+  turnIndex?: number;
 }
 
 export interface TryOutResponse {

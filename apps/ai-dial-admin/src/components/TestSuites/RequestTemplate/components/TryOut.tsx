@@ -45,6 +45,36 @@ interface Props {
   initialTestCase?: TestCase;
 }
 
+const TryOutResponseBody: FC<{
+  response: TryOutResponse | null;
+  isRequestSend: boolean;
+  growOnOpen: boolean;
+}> = ({ response, isRequestSend, growOnOpen }) => {
+  const t = useI18n();
+  const copyText = useMemo(() => (response?.body ? JSON.stringify(response.body, null, 2) : ''), [response]);
+
+  return (
+    <CollapsibleSection
+      title={t(BasicI18nKey.Response)}
+      fullViewContent={copyText}
+      headerIcon={<CopyButton value={copyText} valueLabel={t(BasicI18nKey.Response)} />}
+      growOnOpen={growOnOpen}
+    >
+      {isRequestSend ? (
+        <DialLoader />
+      ) : (
+        <div className={growOnOpen ? 'min-h-0 flex-1' : 'h-64'}>
+          <JsonEditor
+            entity={response?.body as object}
+            options={{ stickyScroll: { enabled: false }, wordWrap: 'off' }}
+            readonly={true}
+          />
+        </div>
+      )}
+    </CollapsibleSection>
+  );
+};
+
 const TryOut: FC<Props> = ({ testSuite, testCaseId, schema, initialTestCase }) => {
   const t = useI18n();
   const { sidebar, toggleSidebar } = useAppContext();
@@ -97,32 +127,6 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId, schema, initialTestCase }) =
     }
   }, [testSuite, testCaseId, requestBody]);
 
-  // todo: possible change this component to codeViewer
-  const responseBodyCopyText = useMemo(
-    () => (response?.body ? JSON.stringify(response?.body, null, 2) : ''),
-    [response],
-  );
-  const responseBody = useMemo(() => {
-    return (
-      <CollapsibleSection
-        title={t(BasicI18nKey.Response)}
-        fullViewContent={responseBodyCopyText}
-        headerIcon={<CopyButton value={responseBodyCopyText} valueLabel={t(BasicI18nKey.Response)} />}
-        growOnOpen
-      >
-        {isRequestSend ? (
-          <DialLoader />
-        ) : (
-          <JsonEditor
-            entity={response?.body as object}
-            options={{ stickyScroll: { enabled: false }, wordWrap: 'off' }}
-            readonly={true}
-          />
-        )}
-      </CollapsibleSection>
-    );
-  }, [t, responseBodyCopyText, isRequestSend, response]);
-
   useEffect(() => {
     if (!testCaseId) {
       const responseFromStorage = getTryoutResponseFromStorage(testSuite.id || '');
@@ -136,6 +140,11 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId, schema, initialTestCase }) =
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const responseBody = <TryOutResponseBody response={response} isRequestSend={isRequestSend} growOnOpen />;
+  const columnsResponseBody = (
+    <TryOutResponseBody response={response} isRequestSend={isRequestSend} growOnOpen={false} />
+  );
 
   return (
     <div className={classNames('flex flex-col gap-y-6 size-full min-h-0', !response && 'pb-4')}>
@@ -201,6 +210,9 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId, schema, initialTestCase }) =
                   isRequestSend={isRequestSend}
                   responseBody={responseBody}
                   isMcp={isMcp}
+                  testSuite={testSuite}
+                  schema={schema}
+                  multiTurnData={initialTestCase?.multiTurnData}
                 />
               )}
             </div>
@@ -223,7 +235,7 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId, schema, initialTestCase }) =
             response={normalizeResponseBodyForColumns(response?.body as Record<string, unknown>)}
             request={unwrapJsonRequestBody(resolvedRequest.body as Record<string, unknown> | undefined)}
             isLoading={isRequestSend}
-            responseBody={responseBody}
+            responseBody={columnsResponseBody}
           />
         )}
       </>
