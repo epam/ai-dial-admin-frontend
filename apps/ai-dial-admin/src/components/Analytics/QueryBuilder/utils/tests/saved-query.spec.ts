@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 
 import {
   deriveSavedQueryEditor,
-  toMetadataUpdateRequest,
+  toMetadataReplaceRequest,
   savedQueryEntityName,
   toBuilderRestore,
   toSavedQueryRequest,
@@ -455,7 +455,6 @@ describe('toSavedQueryRequest ⇄ toBuilderRestore round trip', () => {
         scope: request.scope,
         query: request.query,
         time: request.time,
-        result_view: request.result_view,
         generation: 1,
         created_at: '2026-08-01T00:00:00Z',
         updated_at: '2026-08-02T00:00:00Z',
@@ -469,7 +468,7 @@ describe('toSavedQueryRequest ⇄ toBuilderRestore round trip', () => {
   });
 });
 
-describe('toMetadataUpdateRequest', () => {
+describe('toMetadataReplaceRequest', () => {
   const stored: SavedQuery = {
     id: 'sq_1',
     name: 'Top chats',
@@ -489,25 +488,24 @@ describe('toMetadataUpdateRequest', () => {
   const meta = { name: 'Renamed', description: 'd', tag: 't', scope: SavedQueryScope.Common };
 
   test('replaces the metadata and carries the body across untouched', () => {
-    const request = toMetadataUpdateRequest(stored, meta);
+    const request = toMetadataReplaceRequest(stored, meta);
 
     expect(request.name).toBe('Renamed');
     expect(request.scope).toBe(SavedQueryScope.Common);
     expect(request.query).toEqual(stored.query);
     expect(request.time).toEqual(stored.time);
     expect(request.chart).toEqual(stored.chart);
-    expect(request.result_view).toBe(QueryResultView.Chart);
   });
 
   test('carries a SQL body instead of a structured one', () => {
-    const request = toMetadataUpdateRequest({ ...stored, query: void 0, sql: 'SELECT 1' }, meta);
+    const request = toMetadataReplaceRequest({ ...stored, query: void 0, sql: 'SELECT 1' }, meta);
 
     expect(request.sql).toBe('SELECT 1');
     expect('query' in request).toBeFalsy();
   });
 
   test('sends no server-assigned member', () => {
-    const request = toMetadataUpdateRequest(stored, meta);
+    const request = toMetadataReplaceRequest(stored, meta);
 
     ['id', 'owner_id', 'owner_email', 'source', 'generation', 'created_at', 'updated_at'].forEach((member) => {
       expect(member in request).toBeFalsy();
@@ -515,7 +513,7 @@ describe('toMetadataUpdateRequest', () => {
   });
 
   test('trims and omits blank metadata like the capture path does', () => {
-    const request = toMetadataUpdateRequest(stored, { ...meta, name: '  Renamed  ', description: '  ', tag: '' });
+    const request = toMetadataReplaceRequest(stored, { ...meta, name: '  Renamed  ', description: '  ', tag: '' });
 
     expect(request.name).toBe('Renamed');
     expect('description' in request).toBeFalsy();
@@ -532,7 +530,7 @@ describe('toMetadataUpdateRequest', () => {
       state: baseState(),
       resultView: QueryResultView.Table,
     });
-    const viaMetadata = toMetadataUpdateRequest(
+    const viaMetadata = toMetadataReplaceRequest(
       { ...stored, query: viaCapture.query, time: void 0, result_view: QueryResultView.Table, chart: void 0 },
       meta,
     );

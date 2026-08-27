@@ -9,7 +9,7 @@ import { updateSavedQuery } from '@/src/app/[lang]/queries/actions';
 import QueryProperties from '@/src/components/Analytics/Queries/Properties/QueryProperties';
 import { QueryMetadataForm } from '@/src/components/Analytics/Queries/models';
 import { describeSavedQueryError } from '@/src/components/Analytics/QueryBuilder/utils/saved-query-error';
-import { toMetadataUpdateRequest } from '@/src/components/Analytics/QueryBuilder/utils/saved-query';
+import { toMetadataReplaceRequest } from '@/src/components/Analytics/QueryBuilder/utils/saved-query';
 import { ButtonsI18nKey, QueriesI18nKey } from '@/src/constants/i18n';
 import { useNotification } from '@/src/context/NotificationContext';
 import { useSaveValidationContext } from '@/src/context/SaveValidationContext';
@@ -43,7 +43,7 @@ const EditQuery: FC<Props> = ({ query, onClose, onSaved }) => {
 
   const onSubmit = useCallback(async () => {
     setIsSaving(true);
-    const res = await updateSavedQuery(query.id, toMetadataUpdateRequest(query, form));
+    const res = await updateSavedQuery(query.id, toMetadataReplaceRequest(query, form));
     setIsSaving(false);
 
     if (!res.success) {
