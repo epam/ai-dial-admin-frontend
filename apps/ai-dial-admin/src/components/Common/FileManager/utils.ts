@@ -41,6 +41,7 @@ const assetEntityMap: Record<string, FileManagerI18nKey> = {
   [ApplicationRoute.AssetsInterceptors]: FileManagerI18nKey.Interceptors,
   [ApplicationRoute.AssetsRoutes]: FileManagerI18nKey.Routes,
   [ApplicationRoute.AssetsRoles]: FileManagerI18nKey.Roles,
+  [ApplicationRoute.AssetsKeys]: FileManagerI18nKey.Keys,
   [ApplicationRoute.AssetsApplications]: FileManagerI18nKey.Applications,
   [ApplicationRoute.AssetsToolsets]: FileManagerI18nKey.Toolsets,
   [ApplicationRoute.Prompts]: FileManagerI18nKey.Prompts,
@@ -206,6 +207,7 @@ export const getBulkActionsToolbarOptions = (view: ApplicationRoute, t: (key: st
     view === ApplicationRoute.AssetsInterceptors ||
     view === ApplicationRoute.AssetsRoutes ||
     view === ApplicationRoute.AssetsRoles ||
+    view === ApplicationRoute.AssetsKeys ||
     view === ApplicationRoute.AssetsSkills
       ? bulkActionLabels.filter((action) => action.key === 'delete')
       : bulkActionLabels;

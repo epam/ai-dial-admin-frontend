@@ -2,6 +2,7 @@ import {
   DialAppRunnerResource,
   DialApplicationResource,
   DialInterceptorResource,
+  DialKeyResource,
   DialModelResource,
   DialRoleResource,
   DialRouteResource,
@@ -259,6 +260,129 @@ export const mergeRoleResource = (
   } as DialRoleResource;
 };
 
+/**
+ * Project keys are flat and unversioned like roles and routes — merged via `flatMetadataFields`
+ * for the same reason: the metadata `url`'s remainder after stripping `keys/platform/` is a bare
+ * name with no `/` separator to split into folderId + name.
+ *
+ * `allowedIpAddressRanges` is normalized here because Core's wire shape is asymmetric: the field
+ * deserializes from a JSON array of CIDR strings but serializes (via the default MAPPER, which has
+ * no custom serializer for `IpAddressRanges`) as the bean form `{"ranges":[…]}` with base64 byte
+ * arrays, or `null` when no restriction is configured. The frontend edits `string[]`, so:
+ *   - `null` / absent            → `undefined` (ALLOW_ALL — "no restriction")
+ *   - `{"ranges":[]}` (empty)    → `[]`        (BLOCK_ALL — "deny all"), preserved so a saved
+ *                                                  block-all survives a reload instead of silently
+ *                                                  reverting to allow-all
+ *   - `{"ranges":[…]}` populated → `["ip/prefix", …]` reconstructed from each range's base64
+ *                                                  `mask`/`maskedBaseIp` byte arrays (see
+ *                                                  `cidrFromRange`) — so a saved real range
+ *                                                  round-trips instead of degrading to allow-all
+ *   - a real `string[]`          → kept as-is (defensive: a future Core serializer would emit it)
+ * `undefined` (not `null`) is used for ALLOW_ALL so `isEqualSkippingUndefined` treats it as absent
+ * and the Save/Discard buttons clear on a clean round-trip.
+ */
+export const mergeKeyResource = (
+  content: Record<string, unknown>,
+  metadata: CoreResourceMetadataNode,
+): DialKeyResource => {
+  const { allowedIpAddressRanges, ...rest } = content as {
+    allowedIpAddressRanges?: string[] | { ranges?: IpRangeBean[] } | null;
+  };
+  const normalizedRanges = normalizeIpRanges(allowedIpAddressRanges);
+  return {
+    ...rest,
+    ...(normalizedRanges !== undefined && { allowedIpAddressRanges: normalizedRanges }),
+    ...flatMetadataFields(metadata, RESOURCE_TYPE_PREFIX[ResourceType.PROJECT_KEY]),
+  } as DialKeyResource;
+};
+
+/** Core's `IpAddressRange` bean as it appears on the wire: base64-encoded `mask`/`maskedBaseIp`. */
+interface IpRangeBean {
+  mask?: string;
+  maskedBaseIp?: string;
+}
+
+/**
+ * Maps Core's `allowedIpAddressRanges` wire shape to the `string[] | undefined` the frontend edits.
+ * See `mergeKeyResource` for the full asymmetry rationale.
+ */
+function normalizeIpRanges(value: string[] | { ranges?: IpRangeBean[] } | null | undefined): string[] | undefined {
+  if (Array.isArray(value)) {
+    return value;
+  }
+  if (value && typeof value === 'object' && Array.isArray(value.ranges)) {
+    // An empty `ranges` array is BLOCK_ALL ("deny all") and must survive a reload. A populated one
+    // is the byte-array bean form; reconstruct each CIDR and drop any that fail to decode. If every
+    // range failed (so the result is empty but the source wasn't), treat as ALLOW_ALL rather than
+    // silently converting an unreadable restriction into "deny all".
+    if (value.ranges.length === 0) {
+      return [];
+    }
+    const decoded = value.ranges.map(cidrFromRange).filter(Boolean) as string[];
+    return decoded.length > 0 ? decoded : undefined;
+  }
+  return undefined;
+}
+
+/**
+ * Reconstructs a CIDR string (`ip/prefix`) from one Core `IpAddressRange` bean. Core stores only the
+ * masked base IP and the bitmask (as base64 byte arrays), so the CIDR is `<maskedBaseIp>/<prefixLen>`
+ * where `prefixLen` is the count of leading 1-bits in `mask`. Non-canonical inputs (host bits set,
+ * non-contiguous masks) normalize to the network address the range actually matches — the same
+ * address Core's deserializer stored — so a round-trip is stable. Returns `undefined` for a range
+ * that can't be decoded (malformed base64 / missing bytes) so the caller drops it.
+ */
+function cidrFromRange(range: IpRangeBean): string | undefined {
+  const maskBytes = decodeBase64Bytes(range?.mask);
+  const ipBytes = decodeBase64Bytes(range?.maskedBaseIp);
+  if (!maskBytes || !ipBytes || maskBytes.length !== ipBytes.length) {
+    return undefined;
+  }
+  let prefixLen = 0;
+  for (const byte of maskBytes) {
+    const bits = byte & 0xff;
+    // Count leading 1-bits; stop at the first 0.
+    for (let i = 7; i >= 0; i--) {
+      if (bits & (1 << i)) {
+        prefixLen++;
+      } else {
+        break;
+      }
+    }
+  }
+  return `${bytesToIp(ipBytes)}/${prefixLen}`;
+}
+
+/** Decodes a base64 string to a byte array; returns `undefined` for malformed/empty input. */
+function decodeBase64Bytes(value?: string): Uint8Array | undefined {
+  if (!value) {
+    return undefined;
+  }
+  try {
+    const binary = typeof atob === 'function' ? atob(value) : Buffer.from(value, 'base64').toString('binary');
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Formats an IP byte array as a dotted-quad (IPv4) or colon-hex (IPv6) string. */
+function bytesToIp(bytes: Uint8Array): string {
+  if (bytes.length === 4) {
+    return Array.from(bytes, (b) => b & 0xff).join('.');
+  }
+  // IPv6: group 16 bytes into 8 big-endian 16-bit words, render as colon-separated hex.
+  const groups: string[] = [];
+  for (let i = 0; i < bytes.length; i += 2) {
+    groups.push(((bytes[i] << 8) | (bytes[i + 1] & 0xff)).toString(16));
+  }
+  return groups.join(':');
+}
+
 export type AssetMerge = (content: Record<string, unknown>, metadata: CoreResourceMetadataNode) => unknown;
 
 export const ASSET_MERGERS: Partial<Record<ResourceType, AssetMerge>> = {
@@ -271,4 +395,5 @@ export const ASSET_MERGERS: Partial<Record<ResourceType, AssetMerge>> = {
   [ResourceType.INTERCEPTOR]: mergeInterceptorResource,
   [ResourceType.ROUTE]: mergeRouteResource,
   [ResourceType.ROLE]: mergeRoleResource,
+  [ResourceType.PROJECT_KEY]: mergeKeyResource,
 };

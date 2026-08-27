@@ -1,7 +1,7 @@
 import { ResourceType } from '@/src/types/resource-type';
 import { RESOURCE_TYPE_PREFIX } from '@/src/constants/publications-core';
 
-/** Resource types with a `__version`-suffixed name and a metadata+content split. Files, skills, models, app runners, interceptors, roles and routes are versionless. */
+/** Resource types with a `__version`-suffixed name and a metadata+content split. Files, skills, models, app runners, interceptors, roles, routes and project keys are versionless. */
 export type VersionedResourceType = Exclude<
   ResourceType,
   | ResourceType.FILE
@@ -11,6 +11,7 @@ export type VersionedResourceType = Exclude<
   | ResourceType.INTERCEPTOR
   | ResourceType.ROLE
   | ResourceType.ROUTE
+  | ResourceType.PROJECT_KEY
 >;
 
 export const VERSIONED_RESOURCE_TYPES: VersionedResourceType[] = [
@@ -39,6 +40,7 @@ export const CORE_RESOURCE_URL: Record<ResourceType, string> = {
   [ResourceType.INTERCEPTOR]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.INTERCEPTOR]}`,
   [ResourceType.ROLE]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.ROLE]}`,
   [ResourceType.ROUTE]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.ROUTE]}`,
+  [ResourceType.PROJECT_KEY]: `v1/${RESOURCE_TYPE_PREFIX[ResourceType.PROJECT_KEY]}`,
 };
 
 /** `v1/metadata/{prefix}` metadata endpoint per resource type. `SKILL`'s entry is unreachable — see `CORE_RESOURCE_URL`. */
@@ -54,6 +56,7 @@ export const CORE_RESOURCE_METADATA_URL: Record<ResourceType, string> = {
   [ResourceType.INTERCEPTOR]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.INTERCEPTOR]}`,
   [ResourceType.ROLE]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.ROLE]}`,
   [ResourceType.ROUTE]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.ROUTE]}`,
+  [ResourceType.PROJECT_KEY]: `v1/metadata/${RESOURCE_TYPE_PREFIX[ResourceType.PROJECT_KEY]}`,
 };
 
 /** Backend default list path — only Conversation and Prompt default an omitted path (`ConversationService`/`PromptService`). */
@@ -75,6 +78,7 @@ export const PLATFORM_BUCKET_RESOURCE_TYPES: ReadonlySet<ResourceType> = new Set
   ResourceType.INTERCEPTOR,
   ResourceType.ROLE,
   ResourceType.ROUTE,
+  ResourceType.PROJECT_KEY,
 ]);
 
 /** Backend default metadata page size for Conversation/Prompt list reads when the caller omits a limit. */

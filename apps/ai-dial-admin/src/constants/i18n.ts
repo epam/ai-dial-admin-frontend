@@ -18,6 +18,7 @@ export enum MenuI18nKey {
   AssetsInterceptors = 'Menu.AssetsInterceptors',
   AssetsRoutes = 'Menu.AssetsRoutes',
   AssetsRoles = 'Menu.AssetsRoles',
+  AssetsKeys = 'Menu.AssetsKeys',
   Applications = 'Menu.Applications',
   ApplicationRunners = 'Menu.ApplicationRunners',
   AppRunners = 'Menu.AppRunners',
@@ -557,6 +558,12 @@ export enum KeysI18nKey {
   AllowAllRestriction = 'Keys.Restrictions.AllowAll',
   BlockAllRestriction = 'Keys.Restrictions.BlockAll',
   RangesRestriction = 'Keys.Restrictions.Ranges',
+  KeyValueRevealTitle = 'Keys.KeyValueRevealTitle',
+  KeyValueRevealDescription = 'Keys.KeyValueRevealDescription',
+  BearerRolesNotAvailable = 'Keys.BearerRolesNotAvailable',
+  BearerRolesDescription = 'Keys.BearerRolesDescription',
+  NoRolesAvailable = 'Keys.NoRolesAvailable',
+  IpRangesMaskNotice = 'Keys.IpRangesMaskNotice',
 }
 
 export enum ValidityStatusI18nKey {
@@ -2188,6 +2195,8 @@ export enum FileManagerI18nKey {
   Route = 'FileManager.Route',
   Roles = 'FileManager.Roles',
   Role = 'FileManager.Role',
+  Keys = 'FileManager.Keys',
+  Key = 'FileManager.Key',
   Applications = 'FileManager.Applications',
   Application = 'FileManager.Application',
   Toolsets = 'FileManager.Toolsets',
@@ -2225,6 +2234,8 @@ export enum FileManagerI18nKey {
   RoutesEmptyStateDescription = 'FileManager.RoutesEmptyStateDescription',
   RolesEmptyStateTitle = 'FileManager.RolesEmptyStateTitle',
   RolesEmptyStateDescription = 'FileManager.RolesEmptyStateDescription',
+  KeysEmptyStateTitle = 'FileManager.KeysEmptyStateTitle',
+  KeysEmptyStateDescription = 'FileManager.KeysEmptyStateDescription',
   ToolsetsEmptyStateTitle = 'FileManager.ToolsetsEmptyStateTitle',
   ToolsetsEmptyStateDescription = 'FileManager.ToolsetsEmptyStateDescription',
   SkillsEmptyStateTitle = 'FileManager.SkillsEmptyStateTitle',

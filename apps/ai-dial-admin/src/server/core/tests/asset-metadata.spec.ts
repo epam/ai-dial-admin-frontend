@@ -8,6 +8,7 @@ import {
   mergeConversation,
   mergeAppRunnerResource,
   mergeInterceptorResource,
+  mergeKeyResource,
   mergeModelResource,
   mergePrompt,
   mergeRoleResource,
@@ -247,5 +248,64 @@ describe('Server :: Core :: asset-metadata', () => {
       path: 'https%3A%2F%2Fhost%2Fqq',
       createdAt: '7',
     });
+  });
+
+  test('mergeKeyResource sources name/folderId/path/author from metadata (flat, no version), rest from content', () => {
+    const content = { project: 'proj', secured: true, roles: ['r1'] };
+    const meta = metadata({ url: 'keys/platform/my-key', author: 'someone', createdAt: 9, updatedAt: 11 });
+
+    expect(mergeKeyResource(content, meta)).toEqual({
+      project: 'proj',
+      secured: true,
+      roles: ['r1'],
+      name: 'my-key',
+      path: 'my-key',
+      folderId: '',
+      author: 'someone',
+      createdAt: '9',
+      updatedAt: '11',
+    });
+  });
+
+  test('mergeKeyResource treats a null allowedIpAddressRanges as absent (ALLOW_ALL)', () => {
+    const content = { project: 'proj', allowedIpAddressRanges: null };
+    const meta = metadata({ url: 'keys/platform/k' });
+
+    expect(mergeKeyResource(content, meta)).not.toHaveProperty('allowedIpAddressRanges');
+  });
+
+  test('mergeKeyResource preserves an empty-ranges bean as an empty array (BLOCK_ALL survives a reload)', () => {
+    const content = { project: 'proj', allowedIpAddressRanges: { ranges: [] } };
+    const meta = metadata({ url: 'keys/platform/k' });
+
+    expect(mergeKeyResource(content, meta)).toHaveProperty('allowedIpAddressRanges', []);
+  });
+
+  test('mergeKeyResource reconstructs CIDR strings from a populated-ranges bean (base64 mask/maskedBaseIp)', () => {
+    // 192.168.1.0/24 — mask 255.255.255.0 = [0xff,0xff,0xff,0x00], maskedBaseIp 192.168.1.0 = [0xc0,0xa8,0x01,0x00]
+    const mask = Buffer.from([0xff, 0xff, 0xff, 0x00]).toString('base64');
+    const maskedBaseIp = Buffer.from([0xc0, 0xa8, 0x01, 0x00]).toString('base64');
+    const content = { project: 'proj', allowedIpAddressRanges: { ranges: [{ mask, maskedBaseIp }] } };
+    const meta = metadata({ url: 'keys/platform/k' });
+
+    expect(mergeKeyResource(content, meta)).toHaveProperty('allowedIpAddressRanges', ['192.168.1.0/24']);
+  });
+
+  test('mergeKeyResource drops a range whose mask and IP byte lengths do not match', () => {
+    // 3-byte mask vs 4-byte IP — cidrFromRange returns undefined, and with no valid ranges left the
+    // property is absent (a key with only undecodable ranges reads back as allow-all).
+    const mask = Buffer.from([0xff, 0xff, 0xff]).toString('base64');
+    const maskedBaseIp = Buffer.from([0xc0, 0xa8, 0x01, 0x00]).toString('base64');
+    const content = { project: 'proj', allowedIpAddressRanges: { ranges: [{ mask, maskedBaseIp }] } };
+    const meta = metadata({ url: 'keys/platform/k' });
+
+    expect(mergeKeyResource(content, meta)).not.toHaveProperty('allowedIpAddressRanges');
+  });
+
+  test('mergeKeyResource keeps a real string[] allowedIpAddressRanges as-is', () => {
+    const content = { project: 'proj', allowedIpAddressRanges: ['192.168.0.0/24'] };
+    const meta = metadata({ url: 'keys/platform/k' });
+
+    expect(mergeKeyResource(content, meta)).toHaveProperty('allowedIpAddressRanges', ['192.168.0.0/24']);
   });
 });

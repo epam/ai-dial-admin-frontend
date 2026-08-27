@@ -4,6 +4,7 @@ import { FC } from 'react';
 import ExportModal from '@/src/components/EntityListView/Export/ExportModal';
 import ImportModal from '@/src/components/EntityListView/Import/ImportModal';
 import CreateEntity from '@/src/components/EntityListView/CreateEntity/CreateEntity';
+import CreateKeyModal from '@/src/components/Assets/Keys/CreateKeyModal';
 import DuplicateAsset from '@/src/components/Assets/Deployments/DuplicateAsset';
 import DuplicatePlatformAsset from '@/src/components/Assets/Modals/DuplicatePlatformAsset';
 import { PlatformAsset } from '@/src/models/dial/resource';
@@ -80,7 +81,10 @@ const Modals: FC<Props> = ({
           preselectedItems={preselectedItems}
         />
       )}
-      {isModalOpen && modalType === ModalType.create && (
+      {isModalOpen && modalType === ModalType.create && view === ApplicationRoute.AssetsKeys && (
+        <CreateKeyModal isOpen={isModalOpen} names={names || []} onClose={onClose} />
+      )}
+      {isModalOpen && modalType === ModalType.create && view !== ApplicationRoute.AssetsKeys && (
         <CreateEntity
           context={getContext}
           route={view}

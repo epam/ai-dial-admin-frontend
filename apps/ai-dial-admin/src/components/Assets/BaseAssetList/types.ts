@@ -10,6 +10,7 @@ export type BaseAssetRoute =
   | ApplicationRoute.AssetsInterceptors
   | ApplicationRoute.AssetsRoutes
   | ApplicationRoute.AssetsRoles
+  | ApplicationRoute.AssetsKeys
   | ApplicationRoute.AssetsSkills;
 
 export type CrudAssetRoute =
@@ -23,7 +24,8 @@ export type CreateAssetRoute =
   | ApplicationRoute.AssetsAppRunners
   | ApplicationRoute.AssetsInterceptors
   | ApplicationRoute.AssetsRoutes
-  | ApplicationRoute.AssetsRoles;
+  | ApplicationRoute.AssetsRoles
+  | ApplicationRoute.AssetsKeys;
 
 export enum ModalType {
   create = 'create',

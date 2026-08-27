@@ -232,13 +232,36 @@ export interface DialRoleResource extends ModifiedEntity {
   share?: Record<string, DialCoreRoleShare>;
 }
 
+/**
+ * Core-direct representation of a `Key` resource (`ResourceTypes.PROJECT_KEY`). Stored in the flat
+ * `platform` bucket. The `key` field is write-only in Core (`@JsonProperty(WRITE_ONLY)`) and is
+ * never present on reads — it is only passed on create and rotation writes.
+ *
+ * The `roles` field lists the role names this key GRANTS to its bearer, which is the inverse of
+ * the `userRoles` pattern on other entity types.
+ */
+export interface DialKeyResource extends ModifiedEntity {
+  name: string;
+  path: string;
+  folderId: string;
+  author?: string;
+  status?: DialModelResourceStatus;
+  validationWarnings?: CoreValidationWarning[];
+  key?: string;
+  project?: string;
+  secured?: boolean;
+  roles?: string[];
+  allowedIpAddressRanges?: string[];
+}
+
 /** The resource types DIAL Core keeps in its flat `platform` bucket — see `isFlatPlatformView`. */
 export type PlatformAsset =
   | DialModelResource
   | DialAppRunnerResource
   | DialInterceptorResource
   | DialRouteResource
-  | DialRoleResource;
+  | DialRoleResource
+  | DialKeyResource;
 
 export enum DialModelResourceType {
   Chat = 'CHAT',
