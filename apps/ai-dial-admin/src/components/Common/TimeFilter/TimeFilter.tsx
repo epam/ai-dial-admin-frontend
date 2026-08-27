@@ -9,7 +9,7 @@ import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
 import { TimeRange } from '@/src/models/time-range';
 import { getTimeRangeById } from '@/src/utils/time-filter/get-time-range-id';
-import { formatDate } from './utils';
+import { formatDate } from '@/src/utils/time-filter/period-label';
 
 type DraftMode = { mode: 'preset'; presetId: string } | { mode: 'custom'; range: TimeRange | null };
 

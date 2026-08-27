@@ -37,18 +37,24 @@ export interface ConversationTitleSource {
 
 export interface ConversationsPage {
   rows: ConversationRow[];
-  // The grid's row count, coerced from the summary's conversation count. `totals` carries the same figure
-  // for display, where a backend decimal string is still a valid value; the grid needs a number.
   total: number | null;
-  // Both are resolved for a first-page request only. `totals` is absent when its query failed, which the
-  // pills report as unavailable rather than as zero.
-  totals?: ConversationTotals;
+  period?: ConversationPeriodSummary;
   candidates?: ConversationCandidateIds;
+}
+
+export interface ConversationPeriodSummary {
+  totals?: ConversationTotals;
+  ratings?: ConversationRatingTotals;
 }
 
 export interface ConversationTotals {
   conversations: number | string | null;
   cost: number | string | null;
+}
+
+export interface ConversationRatingTotals {
+  rated: number | null;
+  negative: number | null;
 }
 
 export interface ConversationRatingRow {
@@ -123,11 +129,6 @@ export interface ConversationPageRequest extends ConversationFilters {
   visibleEnrichmentFields?: string[];
 }
 
-export interface ConversationSummary {
-  rated: number;
-  negative: number;
-}
-
 export interface ConversationCandidateIds {
   ids: string[];
   isCapped: boolean;
@@ -190,6 +191,10 @@ export enum ConversationColumn {
 export enum ConversationTotalsField {
   Conversations = 'conversations',
   Cost = 'cost',
+}
+
+export enum ConversationRatingTotalsField {
+  Conversations = 'rated_conversations',
 }
 
 export enum ResponseRatingsField {

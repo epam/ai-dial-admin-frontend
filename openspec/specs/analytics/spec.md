@@ -2488,91 +2488,123 @@ maintained beside the first.
 - **THEN** the read fails and the failure is reported
 - **AND** no query against a raw rate-event log is issued as a substitute
 
-### Requirement: Provenance line and result summary
+### Requirement: Provenance line and period summary
 
 The page header SHALL state which entities the view is composed over, listing each contributing entity by its
 real catalog name and colouring it with the same provenance colour the grid band uses, so the two cannot
-disagree. Every entity named SHALL be one the page actually queries; the line MUST NOT name a source the page
-does not read, and MUST NOT carry a "pending" or "not registered" marker — a source that does not exist is not
-listed at all.
+disagree. That list SHALL be derived from the entity schema the page fetches — the base entity, followed by
+each enrichment namespace the schema reports, in the order those namespaces first appear — together with any
+further entity the page itself queries to render a column. A hardcoded list is not permitted: enrichments are
+catalog objects provisioned per instance, so a fixed list states the composition the code was written against
+rather than the one the instance has. Every entity named SHALL be one the page actually queries; the line MUST
+NOT name a source the page does not read, and MUST NOT carry a "pending" or "not registered" marker — a source
+that does not exist is not listed at all. Where the schema reports no enrichments, the line SHALL name the base
+entity alone rather than rendering an empty or partial list.
 
 The header SHALL show summary pills for the conversation count, the rated count, the count carrying negative
-feedback, and the total cost. The conversation count and the total cost SHALL be exact figures for the whole
-filtered result, obtained from the backend under the same filter the list query carries, and MUST NOT be
-computed from the rows currently loaded. The rated and negative counts SHALL be stated for the rows the page
-has loaded and SHALL name that scope, rather than implying they cover the whole result. A row whose rating
-could not be resolved MUST NOT be counted as rated, since an unresolved rating is not evidence of an absent
-one.
+feedback, and the total cost. All four SHALL be exact figures for the **selected time period**, obtained from
+the backend, and MUST NOT be computed from the rows currently loaded. The rated and negative counts SHALL be
+resolved by aggregating the rating source over the period, not by inspecting fetched rows, so that they stand
+complete from the first page and do not climb as the operator scrolls.
 
-The whole-result figures and the loaded-scope figures SHALL be observations of the same fetch cycle. The
-whole-result figures SHALL therefore be re-resolved whenever the page fetches the first page of a result,
-including the first page the client fetches after mount, and a server-prefetched figure MUST NOT remain the
-displayed value once the client has fetched a page of its own. The rollup the page reads is materialized
-continuously, so a figure resolved at page load and a page fetched later are two observations of a changing
-table: presenting them side by side lets the loaded-scope denominator exceed the whole-result total, which
-states an impossibility.
+The pills SHALL report the period alone. The free-text search, the grid's column filters and the feedback
+filter SHALL narrow the grid and MUST NOT change any pill: the header answers what the period holds, and the
+grid answers what the current filters select. Because the two answer different questions, each pill SHALL name
+the period it covers in text visible on the pill, so the reader is never left to infer that a pill tracks the
+filters below it. A caveat carried only in a tooltip or only in assistive-technology-only content is not
+stated for the reader looking at the header; the visible caption SHALL NOT replace the existing hover and
+assistive-technology text.
 
-The loaded-conversation count SHALL be a count of **distinct** conversations, not of delivered rows. The row
-cache is bounded, so a conversation whose block is evicted and re-fetched is delivered more than once; it
-SHALL be counted once.
+The rated pill SHALL state the number of conversations carrying at least one rating in the period, as a bare
+count. It MUST NOT be rendered as a ratio over the conversation count: the two are bounded by different clocks
+— ratings by when they were submitted, conversations by when they were last active — so a conversation rated
+inside the period whose activity fell outside it counts toward one and not the other. Presented as a ratio
+those figures do not describe a proportion, and on a short period the pill can read above one, which states an
+impossibility. The count MUST NOT be clamped or adjusted to make a ratio look plausible.
 
-The rated and negative pills SHALL name their loaded scope in text that is visible on the pill. A caveat
-carried only in a tooltip or only in assistive-technology-only content is not stated for the reader looking at
-the header, who then reads all four figures as one consistent set. The visible caveat SHALL NOT replace the
-existing hover and assistive-technology text.
+The pills SHALL be re-resolved whenever the applied period changes and whenever the page fetches the first page
+of a result, including the first page the client fetches after mount; a server-prefetched figure MUST NOT
+remain the displayed value once the client has fetched a page of its own.
 
 The cost total SHALL be summed with the decimal library rather than as floating-point numbers, since the
 values carry twelve fractional digits, and SHALL be rounded for display. That rounding is local to the summary
 and does not settle how the Cost column renders.
 
 When the summary request fails, the pills SHALL report that the figures are unavailable rather than rendering
-zeros, which would assert an empty result that was never established.
+zeros, which would assert an empty result that was never established. A rating aggregate that fails SHALL make
+the rated and negative pills unavailable without disturbing the conversation count or the cost, since they are
+resolved independently.
 
 A failure to fetch the rows SHALL NOT by itself make the figures unavailable: they are resolved by their own
 request, so a row failure is no evidence about them. A failure that prevents the summary request from being
-issued at all SHALL, however, clear the figures, because the ones on screen then describe the previous filter
-state rather than the applied one.
+issued at all SHALL, however, clear the figures, because the ones on screen then describe the previous period
+rather than the applied one.
+
+#### Scenario: The provenance line follows the fetched schema
+
+- **WHEN** the page renders for an instance whose conversations schema reports two enrichment namespaces
+- **THEN** the line names the base entity followed by both enrichment namespaces by their catalog names
+- **AND** each carries the provenance colour its columns carry in the grid band
+- **AND** an enrichment this frontend has no name for is still listed, under the unattributed provenance colour
+
+#### Scenario: An instance reporting no enrichments names the base entity alone
+
+- **WHEN** the fetched schema reports no enrichment namespace
+- **THEN** the line names the base entity and the further entities the page queries, and nothing else
+- **AND** it renders no empty separator and no placeholder in place of the absent enrichments
 
 #### Scenario: The provenance line names only real, queried entities
 
 - **WHEN** the page renders
-- **THEN** the line lists the conversations and feedback entities by their catalog names
-- **AND** each carries the provenance colour its columns carry in the grid band
+- **THEN** every entity on the line is one the page issues a query against
 - **AND** no entity is marked as pending or unregistered
+
+#### Scenario: The rated and negative pills cover the whole period
+
+- **WHEN** the result holds more conversations than one page and only the first page is loaded
+- **THEN** the rated and negative pills show the period's totals, not the loaded rows' totals
+- **AND** those figures do not change as further pages are loaded
 
 #### Scenario: The conversation count is exact regardless of how much is loaded
 
 - **WHEN** the result holds more conversations than one page and only the first page is loaded
-- **THEN** the conversation count shows the whole result's total
+- **THEN** the conversation count shows the period's total
 - **AND** it carries no approximation marker and no "understated" hint
 
-#### Scenario: Loaded-scope counts say so
+#### Scenario: Grid filters do not move the pills
 
-- **WHEN** only part of the result is loaded
-- **THEN** the rated and negative pills state that they cover the loaded conversations
-- **AND** that statement is visible on the pill without hovering it
+- **WHEN** a search term, a column filter or a feedback state is applied and the grid re-queries
+- **THEN** all four pills keep reporting the period's figures unchanged
+- **AND** the grid alone reflects the narrowing
 
-#### Scenario: The whole-result figures follow the first page
+#### Scenario: Each pill names the period it covers
 
-- **WHEN** the client fetches the first page of a result
-- **THEN** the whole-result count and cost are re-resolved for that same filter state
+- **WHEN** the header renders for any selected period
+- **THEN** each pill states that period in text visible without hovering
+- **AND** no pill states that it covers only the conversations loaded so far
+
+#### Scenario: The rated pill is a count, not a ratio
+
+- **WHEN** the rated pill renders
+- **THEN** it shows the number of conversations rated in the period and no denominator
+- **AND** it is never rendered as a fraction of the conversation count
+
+#### Scenario: The pills follow a period change
+
+- **WHEN** the applied period changes and the client fetches the first page of the new result
+- **THEN** all four pills are re-resolved for that period
 - **AND** the figures shown are those observations, not the ones prefetched at page load
-
-#### Scenario: The loaded denominator cannot exceed the result total
-
-- **WHEN** enough of the result has been scrolled that a previously delivered page is re-fetched
-- **THEN** each conversation counts once toward the loaded-conversation count
-- **AND** that count does not exceed the whole-result conversation total
-
-#### Scenario: An unresolved rating is not counted as rated
-
-- **WHEN** a row's rating could not be resolved
-- **THEN** it counts toward neither the rated nor the negative pill
 
 #### Scenario: A failed summary reports unavailability
 
 - **WHEN** the summary request fails
 - **THEN** the pills report the figures as unavailable rather than showing zeros
+
+#### Scenario: A failed rating aggregate leaves the count and cost standing
+
+- **WHEN** the rating aggregate fails but the conversation count and cost resolved
+- **THEN** the rated and negative pills report unavailability
+- **AND** the conversation count and cost pills show their resolved figures
 
 #### Scenario: A failed row fetch leaves the figures standing
 
@@ -2581,8 +2613,8 @@ state rather than the applied one.
 
 #### Scenario: A summary that could not be issued reports unavailability
 
-- **WHEN** a failure prevents the summary request from being issued for the applied filter state
-- **THEN** the pills report the figures as unavailable rather than the previous state's figures
+- **WHEN** a failure prevents the summary request from being issued for the applied period
+- **THEN** the pills report the figures as unavailable rather than the previous period's figures
 
 ### Requirement: Conversation filters re-query the backend
 

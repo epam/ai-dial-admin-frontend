@@ -25,9 +25,9 @@ const ConversationsTraceView: FC<Props> = ({ schemaFields, hasSchemaError }) => 
   const {
     onGridReady,
     datasource,
-    totals,
-    summary,
-    loadedCount,
+    period,
+    periodLabel,
+    isPeriodPending,
     isEmptyResult,
     isFirstPageLoading,
     isFeedbackCapped,
@@ -57,9 +57,9 @@ const ConversationsTraceView: FC<Props> = ({ schemaFields, hasSchemaError }) => 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
           <h1 className="text-primary">{t(ConversationsTraceI18nKey.Title)}</h1>
-          <ConversationsProvenanceLine />
+          <ConversationsProvenanceLine schemaFields={schemaFields} />
         </div>
-        <ConversationsSummary totals={totals} summary={summary} loadedCount={loadedCount} periodLabel={timePeriod} />
+        <ConversationsSummary period={period} periodLabel={periodLabel} isPending={isPeriodPending} />
       </div>
       <ConversationsToolbar
         search={search}
