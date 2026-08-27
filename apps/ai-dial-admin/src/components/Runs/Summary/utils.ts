@@ -402,3 +402,31 @@ export const parseAvgRunTimeMs = (
 
 /** Display seconds from avg duration ms (one decimal place). */
 export const formatAvgRunTimeSeconds = (avgRunTimeMs: number): number => Math.round(avgRunTimeMs / 100) / 10;
+
+const RUN_COST_SIGNIFICANT_DIGITS = 2;
+
+const stripTrailingZeros = (text: string): string =>
+  text.includes('.') ? text.replace(/0+$/, '').replace(/\.$/, '') : text;
+
+/**
+ * Formats a run cost average as `$…`. Returns `null` when the value is missing/non-finite
+ * so callers can render an em dash. Zero is a real value (`$0`).
+ */
+export const formatRunCost = (value: number | null | undefined): string | null => {
+  if (value == null || Number.isNaN(value) || !Number.isFinite(value)) {
+    return null;
+  }
+  if (value === 0) {
+    return '$0';
+  }
+
+  const abs = Math.abs(value);
+  if (abs >= 1) {
+    return `$${stripTrailingZeros(value.toFixed(2))}`;
+  }
+
+  // Sub-dollar: significant digits so tiny averages stay legible (e.g. $0.0004 not $0.00).
+  const exponent = Math.floor(Math.log10(abs));
+  const decimals = -exponent + RUN_COST_SIGNIFICANT_DIGITS - 1;
+  return `$${stripTrailingZeros(value.toFixed(decimals))}`;
+};

@@ -83,3 +83,9 @@ export enum RunStatus {
   RUNNING = 'RUNNING',
   FAILED = 'FAILED',
 }
+
+/** Averages from GET /api/v1/test-suite-runs/{id}/costs (null when no usage-log rows for that phase). */
+export interface RunCosts {
+  avgTestCaseCost: number | null;
+  avgMetricEvalCost: number | null;
+}

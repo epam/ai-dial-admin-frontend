@@ -16,6 +16,10 @@ import {
 import { executeStructuredQuery } from '@/src/app/[lang]/runs/actions';
 import { getMetricDelta, MetricDeltaKind } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
 import { getCompareMetricStatCards } from '@/src/components/Runs/Compare/Summary/utils';
+import {
+  DISTRIBUTION_STAT_CARD_CLASS,
+  DISTRIBUTION_STAT_CARDS_GRID_CLASS,
+} from '@/src/components/Runs/Summary/constants';
 import { MetricOption, MetricScoresData } from '@/src/components/Runs/Summary/models';
 import SummarySection from '@/src/components/Runs/Summary/SummarySection';
 import { buildDistributionQuery, parseHistogramValues } from '@/src/components/Runs/Summary/utils';
@@ -135,7 +139,7 @@ const DistributionSection: FC<Props> = ({
           isLoading={isLoading || primaryValues === null || comparedValues === null}
         />
         {statCards.length > 0 && (
-          <div className="flex flex-wrap gap-3">
+          <div className={DISTRIBUTION_STAT_CARDS_GRID_CLASS}>
             {statCards.map((card) => {
               const delta = getMetricDelta(card.primaryValue, card.comparedValue);
               return (
@@ -148,7 +152,7 @@ const DistributionSection: FC<Props> = ({
                     { title: primaryRunName, value: formatValue(card.primaryValue) },
                     { title: comparedRunName, value: formatValue(card.comparedValue) },
                   ]}
-                  className="min-w-44"
+                  className={DISTRIBUTION_STAT_CARD_CLASS}
                 />
               );
             })}
