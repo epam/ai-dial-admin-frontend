@@ -13,8 +13,7 @@ import ForwardAuthTokenField from '@/src/components/EntityMainProperties/Forward
 import { INTERCEPTOR_INTERFACE_TYPES } from '@/src/constants/deployment-interfaces';
 import { EntityFieldsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { DialFeatures } from '@/src/models/dial/features';
-import { DialInterceptorResource } from '@/src/models/dial/resource';
+import { DialInterceptorResource, DialResourceFeatures } from '@/src/models/dial/resource';
 import { ApplicationRoute } from '@/src/types/routes';
 
 interface Props {
@@ -46,9 +45,9 @@ const InterceptorAssetProperties: FC<Props> = ({ asset, onChange }) => {
           onChange={(endpoint) => onChange({ ...asset, endpoint })}
         />
         <ConfigurationEndpointControl
-          endpoint={asset.features?.configurationEndpoint}
-          onChange={(configurationEndpoint) =>
-            onChange({ ...asset, features: { ...asset.features, configurationEndpoint } as DialFeatures })
+          endpoint={asset.features?.configuration_endpoint}
+          onChange={(configuration_endpoint) =>
+            onChange({ ...asset, features: { ...asset.features, configuration_endpoint } as DialResourceFeatures })
           }
         />
         <Defaults values={asset.defaults} onChangeValues={(defaults) => onChange({ ...asset, defaults })} />

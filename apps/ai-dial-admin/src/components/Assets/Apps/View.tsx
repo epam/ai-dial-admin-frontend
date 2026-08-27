@@ -16,6 +16,7 @@ import EntityJsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor'
 import { useParametersTabGuard } from '@/src/components/EntityView/hooks/use-parameters-tab-guard';
 import EntityViewModals from '@/src/components/EntityView/Modals/EntityViewModals';
 import { ROOT_FOLDER } from '@/src/constants/file';
+import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useAppContext } from '@/src/context/AppContext';
 import { useAppsFolder } from '@/src/context/assets/AppsFolderContext';
 import { useNotification } from '@/src/context/NotificationContext';
@@ -43,9 +44,22 @@ interface Props {
   applications: DialApplication[];
   schemes: DialApplicationScheme[];
   interceptors: DialInterceptor[];
+  globalInterceptors?: string[];
+  /** i18n keys for non-fatal problems from the server-side option reads, resolved here. */
+  optionWarnings?: EntitiesI18nKey[];
 }
 
-const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, schemes, interceptors }) => {
+const AppView: FC<Props> = ({
+  etag,
+  originalApp,
+  assets,
+  models,
+  applications,
+  schemes,
+  interceptors,
+  globalInterceptors,
+  optionWarnings,
+}) => {
   const t = useI18n();
   const router = useRouter();
   const { fetchFiles } = useAppsFolder();
@@ -93,6 +107,14 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
   useEffect(() => {
     setSelectedApp(cloneDeep(originalApp));
   }, [originalApp]);
+
+  // An option list read from only one of Core's two populations is shown rather than withheld, so the
+  // user has to be told the list is incomplete — otherwise a missing interceptor reads as deleted.
+  useEffect(() => {
+    optionWarnings?.forEach((warning) => {
+      showNotification(getErrorNotification(t(EntitiesI18nKey.IncompleteOptionList), t(warning)));
+    });
+  }, [optionWarnings, showNotification, t]);
 
   useEffect(() => {
     if (Object.keys(selectedApp).length && originalApp) {
@@ -213,6 +235,7 @@ const AppView: FC<Props> = ({ etag, originalApp, assets, models, applications, s
             applications={applications}
             applicationSchemes={schemes}
             interceptors={interceptors}
+            globalInterceptors={globalInterceptors}
             view={ApplicationRoute.AssetsApplications}
             selectedApplication={selectedApp}
             originalApplication={originalApp}
