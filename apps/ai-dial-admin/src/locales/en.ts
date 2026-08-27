@@ -2910,9 +2910,9 @@ export default {
     SummaryRated: 'Rated',
     SummaryWith: 'With',
     SummaryCost: 'Cost',
-    SummaryResultHint: 'Covers every conversation matching the current filters, not only the rows loaded.',
-    SummaryLoadedHint: 'Covers the conversations loaded so far. Scroll to load more.',
-    SummaryLoadedScope: 'Loaded so far',
+    SummaryPendingHint: 'Not resolved yet.',
+    SummaryPeriodHint:
+      'Covers every conversation in the selected period. The search, column filters and feedback filter narrow the list below, not this figure.',
     SchemaUnavailableNotice:
       'The conversations schema could not be read, so the columns that depend on it were dropped: conversations show no title and no topics, and none of the entity’s other fields are offered as columns.',
     FeedbackCappedNotice:

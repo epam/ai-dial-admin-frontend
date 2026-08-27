@@ -6,7 +6,6 @@ import {
   conversationRatingCounts,
   hasNegativeRatingCaveat,
   negativeRatingGap,
-  summariseConversations,
   unresolvedRatings,
 } from '@/src/utils/analytics/conversation-rows';
 
@@ -192,40 +191,5 @@ describe('unresolvedRatings', () => {
     const [marked] = unresolvedRatings([row({ rating_up: 2, rating_down: 1 })]);
 
     expect(marked).toMatchObject({ chat_id: 'chat-1', rating_up: null, rating_down: null, provable_down: null });
-  });
-});
-
-// The conversation count and the total cost are whole-result figures resolved by their own query, so
-// this helper deliberately reports neither — only what the loaded rows can prove.
-describe('summariseConversations', () => {
-  test('reports zero for an empty result', () => {
-    expect(summariseConversations([])).toEqual({ rated: 0, negative: 0 });
-  });
-
-  test('counts a conversation rated in either direction once, and negatives separately', () => {
-    const summary = summariseConversations([
-      row({ chat_id: 'a', rating_up: 1, rating_down: 0 }),
-      row({ chat_id: 'b', rating_up: 0, rating_down: 2 }),
-      row({ chat_id: 'c', rating_up: 2, rating_down: 3 }),
-      row({ chat_id: 'd', rating_up: 0, rating_down: 0 }),
-    ]);
-
-    expect(summary).toEqual({ rated: 3, negative: 2 });
-  });
-
-  // An unresolved rating is not evidence of an absent one, so it must not be counted as rated.
-  test('does not count an unresolved rating as rated', () => {
-    expect(summariseConversations([row({ rating_up: null, rating_down: null })])).toEqual({
-      rated: 0,
-      negative: 0,
-    });
-  });
-
-  test('reports no conversation count and no cost', () => {
-    const summary = summariseConversations([row()]) as Record<string, unknown>;
-
-    expect(summary.conversations).toBeUndefined();
-    expect(summary.cost).toBeUndefined();
-    expect(summary.isTruncated).toBeUndefined();
   });
 });

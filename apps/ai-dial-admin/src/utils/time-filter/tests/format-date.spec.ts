@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { formatDate } from '../utils';
+import { formatDate } from '@/src/utils/time-filter/period-label';
 
 describe('formatDate', () => {
   test('Should return a string containing year, month, and day', () => {

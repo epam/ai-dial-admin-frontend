@@ -2,7 +2,6 @@ import {
   ConversationRatingCounts,
   ConversationRatingRow,
   ConversationRow,
-  ConversationSummary,
 } from '@/src/models/analytics/conversations-trace';
 import { toNumber } from '@/src/utils/analytics/scalar';
 
@@ -52,23 +51,3 @@ export const attachRatings = (rows: ConversationRow[], ratingRows: ConversationR
 
 export const unresolvedRatings = (rows: ConversationRow[]): ConversationRow[] =>
   rows.map((row) => ({ ...row, ...UNRESOLVED }));
-
-// Covers only the rows loaded so far. The conversation count and the total cost are whole-result
-// figures and come from their own query instead, so they are deliberately not derived here.
-export const summariseConversations = (rows: ConversationRow[]): ConversationSummary => {
-  let rated = 0;
-  let negative = 0;
-
-  rows.forEach((row) => {
-    const up = row.rating_up ?? 0;
-    const down = row.rating_down ?? 0;
-    if (up + down > 0) {
-      rated += 1;
-    }
-    if (down > 0) {
-      negative += 1;
-    }
-  });
-
-  return { rated, negative };
-};

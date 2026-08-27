@@ -9,6 +9,7 @@ import {
   ConversationColumnFilter,
   ConversationEntryHopRow,
   ConversationFilterOperator,
+  ConversationRatingTotalsField,
   ConversationTotalsField,
   ConversationsField,
   FeedbackField,
@@ -42,6 +43,7 @@ import {
   buildConversationListQuery,
   buildConversationRatingCountsQuery,
   buildConversationRatingsQuery,
+  buildConversationRatingTotalsQuery,
   buildConversationTotalsQuery,
   buildRatedConversationIdsQuery,
 } from '@/src/utils/analytics/conversations-queries';
@@ -436,20 +438,9 @@ describe('buildConversationListQuery :: sort, page and purity', () => {
 });
 
 describe('buildConversationTotalsQuery', () => {
-  const buildTotals = (overrides: Partial<Parameters<typeof buildConversationTotalsQuery>[0]> = {}) =>
-    buildConversationTotalsQuery({ range: RANGE, ...overrides });
+  const buildTotals = () => buildConversationTotalsQuery(RANGE);
 
-  test('carries the same column filters as the list query', () => {
-    const columnFilters = [
-      { field: ConversationsField.TotalPrice, operator: ConversationFilterOperator.GreaterThan, value: '0.5' },
-    ];
-    const totalsArgs = groupArgs(buildTotals({ columnFilters }).filter);
-    const listArgs = groupArgs(buildList({ columnFilters }).filter);
-
-    expect(totalsArgs).toEqual(listArgs);
-  });
-
-  test('counts conversations and sums cost over the whole result', () => {
+  test('counts conversations and sums cost over the period', () => {
     const query = buildTotals();
 
     expect(query.entity).toBe('conversations');
@@ -473,14 +464,73 @@ describe('buildConversationTotalsQuery', () => {
     expect(buildTotals().sort).toBeUndefined();
   });
 
-  // The pills must never disagree with the rows beneath them, which only holds while both filters match.
-  test.each([
-    ['no filters', {}],
-    ['a search term', { search: 'acme' }],
-    ['feedback narrowing', { chatIds: ['a', 'b'] }],
-    ['both', { search: 'acme', chatIds: ['a'] }],
-  ])('carries a filter identical to the list query for %s', (_label, overrides) => {
-    expect(buildTotals(overrides).filter).toEqual(buildList(overrides).filter);
+  // A search or column predicate reaching here would silently make the pills a summary of the filtered result.
+  test('carries the period alone — every predicate is a bound on the time field', () => {
+    const args = groupArgs(buildTotals().filter);
+
+    expect(args).toHaveLength(2);
+    args.forEach((node) => {
+      expect(fieldName(node)).toBe(ConversationsField.LastRequestTime);
+      expect([QueryOperator.Ge, QueryOperator.Le]).toContain(node.op);
+    });
+  });
+
+  test('is narrower than the list query whenever the list is filtered', () => {
+    expect(buildTotals().filter).not.toEqual(buildList({ search: 'acme' }).filter);
+    expect(buildTotals().filter).not.toEqual(buildList({ chatIds: ['a'] }).filter);
+  });
+});
+
+describe('buildConversationRatingTotalsQuery', () => {
+  const build = (feedback: FeedbackFilter) => buildConversationRatingTotalsQuery({ range: RANGE, feedback });
+
+  test('counts distinct conversations, not rate events', () => {
+    const query = build(FeedbackFilter.Rated);
+
+    expect(query.entity).toBe('response_ratings');
+    expect(query.mode).toBe(QueryMode.Aggregate);
+    expect(query.select).toEqual([
+      {
+        expr: {
+          type: QueryExprType.Fn,
+          name: 'count',
+          args: [{ type: QueryExprType.Field, name: ResponseRatingsField.ChatId }],
+          distinct: true,
+        },
+        as: ConversationRatingTotalsField.Conversations,
+      },
+    ]);
+  });
+
+  test('groups by nothing and takes no page — one row is the whole answer', () => {
+    expect(build(FeedbackFilter.Rated).group_by).toBeUndefined();
+    expect(build(FeedbackFilter.Rated).page).toBeUndefined();
+  });
+
+  test('bounds the count by the rating clock, not the conversation clock', () => {
+    const bounds = groupArgs(build(FeedbackFilter.Rated).filter).filter((node) =>
+      [QueryOperator.Ge, QueryOperator.Le].includes(node.op),
+    );
+
+    expect(bounds).toHaveLength(2);
+    bounds.forEach((node) => expect(fieldName(node)).toBe(ResponseRatingsField.LastRateTime));
+  });
+
+  // Half of all rate events carry no chat id — direct API calls, not conversations.
+  test('excludes rate events carrying no conversation id', () => {
+    const guard = groupArgs(build(FeedbackFilter.Rated).filter).find(
+      (node) => node.op === QueryOperator.Ne && fieldName(node) === ResponseRatingsField.ChatId,
+    );
+
+    expect(guard).toBeDefined();
+  });
+
+  test('the rated and negative counts ask different questions of the same rows', () => {
+    expect(build(FeedbackFilter.Rated).filter).not.toEqual(build(FeedbackFilter.Negative).filter);
+  });
+
+  test('is pure — same inputs, same query, and it never reads the clock', () => {
+    expect(build(FeedbackFilter.Negative)).toEqual(build(FeedbackFilter.Negative));
   });
 });
 

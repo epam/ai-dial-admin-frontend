@@ -6,6 +6,7 @@ import {
   ColumnProvenance,
   ConversationColumn,
   ConversationsField,
+  ProvenanceEntity,
   UsageLogField,
 } from '@/src/models/analytics/conversations-trace';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
@@ -15,6 +16,7 @@ import {
   catalogValueTypes,
   columnHeaderName,
   columnProvenance,
+  composedSourceEntities,
   conversationColumnGroups,
   filterableColumnFields,
   offerableSchemaFields,
@@ -484,5 +486,66 @@ describe('the hop log optional-field list', () => {
         UsageLogField.AssembledResponse,
       ]),
     ).toEqual([UsageLogField.RequestBody, UsageLogField.AssembledResponse]);
+  });
+});
+
+describe('composedSourceEntities', () => {
+  const field = (name: string): AnalyticsEntityField => ({
+    name,
+    type: AnalyticsFieldType.String,
+    source: name.includes('.') ? name.slice(name.indexOf('.') + 1) : name,
+  });
+
+  const RATINGS: ProvenanceEntity = { name: 'response_ratings', provenance: ColumnProvenance.Feedback };
+
+  test('names the base entity first, then each enrichment, then the queried entities', () => {
+    const entities = composedSourceEntities(
+      'conversations',
+      [field('chat_id'), field('conversation_insights.title'), field('conversation_buckets.turn_bucket')],
+      [RATINGS],
+    );
+
+    expect(entities.map((entity) => entity.name)).toEqual([
+      'conversations',
+      'conversation_insights',
+      'conversation_buckets',
+      'response_ratings',
+    ]);
+  });
+
+  test('names an enrichment once however many of its fields the schema reports', () => {
+    const entities = composedSourceEntities('conversations', [
+      field('conversation_insights.title'),
+      field('conversation_insights.summary'),
+    ]);
+
+    expect(entities.filter((entity) => entity.name === 'conversation_insights')).toHaveLength(1);
+  });
+
+  test('attributes an enrichment it cannot name to the unattributed provenance', () => {
+    const [, unknown] = composedSourceEntities('conversations', [field('some_future_enrichment.value')]);
+
+    expect(unknown).toEqual({ name: 'some_future_enrichment', provenance: ColumnProvenance.Other });
+  });
+
+  test('names the base entity alone when the schema reports no enrichment', () => {
+    expect(composedSourceEntities('conversations', [field('chat_id')])).toEqual([
+      { name: 'conversations', provenance: ColumnProvenance.Conversations },
+    ]);
+  });
+
+  test('names nothing beyond the base entity when given no schema at all', () => {
+    expect(composedSourceEntities('conversations')).toEqual([
+      { name: 'conversations', provenance: ColumnProvenance.Conversations },
+    ]);
+  });
+
+  // The day ratings arrive as an enrichment, the schema reports the namespace while the queried list still
+  // names the table. The declared attribution has to win: the derived one falls back to the unattributed
+  // colour, which would paint the line grey while the grid band paints the same source as feedback.
+  test('names an entity once, keeping the declared attribution over the derived fallback', () => {
+    const entities = composedSourceEntities('conversations', [field('response_ratings.rate_pos_count')], [RATINGS]);
+
+    expect(entities).toEqual([{ name: 'conversations', provenance: ColumnProvenance.Conversations }, RATINGS]);
   });
 });

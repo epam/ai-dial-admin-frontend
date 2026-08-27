@@ -1,6 +1,5 @@
 import { DialApplicationScheme } from '@/src/models/dial/application';
 import { BaseEntity, EntityAttachment, EntityDefaults, ModifiedEntity } from '@/src/models/dial/base-entity';
-import { DialFeatures } from '@/src/models/dial/features';
 import { DialResourceInterface } from '@/src/models/dial/interfaces';
 import { DialModelEndpoint, DialModelLimit, DialModelPricing } from '@/src/models/dial/model';
 import { DialCoreRoleLimits, DialCoreRoleShare } from '@/src/models/dial/role-limits';
@@ -53,7 +52,12 @@ export interface DialExternalServiceAuthSettings extends DialToolsetResourceAuth
   app_level_auth_status?: ToolsetAuthStatus;
 }
 
-export interface DialApplicationResourceFeatures {
+/**
+ * The feature flags shared by every DIAL resource features shape (model, application). Resource-specific
+ * extensions add their own fields on top — see `DialApplicationResourceFeatures` and
+ * `DialModelResourceFeatures`.
+ */
+export interface DialResourceFeatures {
   rate_endpoint: string;
   tokenize_endpoint: string;
   truncate_prompt_endpoint: string;
@@ -67,7 +71,6 @@ export interface DialApplicationResourceFeatures {
   accessible_by_per_request_key: boolean;
   content_parts_supported: boolean;
   temperature_supported: boolean;
-  consent_required: boolean;
   parallel_tool_calls_supported: boolean;
   assistant_attachments_in_request_supported: boolean;
   support_comment_in_rate_response: boolean;
@@ -75,6 +78,10 @@ export interface DialApplicationResourceFeatures {
   max_completion_tokens_supported: boolean;
   custom_temperature_supported: boolean;
   reasoning_efforts?: string[];
+}
+
+export interface DialApplicationResourceFeatures extends DialResourceFeatures {
+  consent_required: boolean;
 }
 
 export interface DialModelResource extends EntityAttachment, EntityDefaults, ModifiedEntity {
@@ -168,7 +175,7 @@ export interface DialInterceptorResource extends ModifiedEntity {
   overrideName?: string;
   forwardAuthToken?: boolean;
   descriptionKeywords?: string[];
-  features?: DialFeatures;
+  features?: DialResourceFeatures;
   defaults?: Record<string, unknown>;
 }
 
@@ -239,29 +246,9 @@ export enum DialModelResourceType {
   Embedding = 'EMBEDDING',
 }
 
-export interface DialModelResourceFeatures {
-  rate_endpoint: string;
-  tokenize_endpoint: string;
-  truncate_prompt_endpoint: string;
-  configuration_endpoint: string;
-  system_prompt_supported: boolean;
-  tools_supported: boolean;
-  seed_supported: boolean;
-  url_attachments_supported: boolean;
-  folder_attachments_supported: boolean;
-  allow_resume: boolean;
-  accessible_by_per_request_key: boolean;
-  content_parts_supported: boolean;
-  temperature_supported: boolean;
+export interface DialModelResourceFeatures extends DialResourceFeatures {
   cache_supported: boolean;
   auto_caching_supported: boolean;
-  parallel_tool_calls_supported: boolean;
-  assistant_attachments_in_request_supported: boolean;
-  support_comment_in_rate_response: boolean;
-  max_tokens_supported: boolean;
-  max_completion_tokens_supported: boolean;
-  custom_temperature_supported: boolean;
-  reasoning_efforts?: string[];
 }
 
 export interface DialToolsetResource extends DialResource {
