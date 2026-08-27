@@ -32,6 +32,12 @@ interface Props {
   models: DialModel[] | null;
   roles?: DialRole[];
   interceptors: DialInterceptor[] | null;
+  /**
+   * Supplied by Core-direct asset surfaces (Assets > Applications), which resolve the global chain
+   * server-side and must not reach the admin backend. Omitted by the admin-BE Applications surface,
+   * where `EntityInterceptors` fetches it from the admin backend itself.
+   */
+  globalInterceptors?: string[];
   applicationSchemes: DialApplicationScheme[];
   selectedApplication: DialApplication;
   originalApplication?: DialApplication;
@@ -56,6 +62,7 @@ const TabsContent: FC<Props> = ({
   applications,
   names,
   interceptors,
+  globalInterceptors,
   roles,
   models,
   isSkipRefresh,
@@ -178,6 +185,7 @@ const TabsContent: FC<Props> = ({
           appRunner={appRunner}
           entity={selectedApplication}
           interceptors={interceptors || []}
+          globalInterceptors={globalInterceptors}
           onChangeEntity={onChangeApplication}
           view={view}
         />
