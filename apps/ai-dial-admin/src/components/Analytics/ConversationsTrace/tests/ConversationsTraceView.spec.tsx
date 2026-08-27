@@ -5,7 +5,11 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import ConversationsTraceView from '@/src/components/Analytics/ConversationsTrace/ConversationsTraceView';
 import { PAGE_SIZE } from '@/src/constants/ag-grid';
-import { CONVERSATIONS_HEADER_STACK_HEIGHT } from '@/src/constants/analytics/conversations-trace';
+import { timePeriodOptionsConfig } from '@/src/constants/global-time-filter';
+import {
+  CONVERSATIONS_HEADER_STACK_HEIGHT,
+  CONVERSATIONS_TIME_PERIOD,
+} from '@/src/constants/analytics/conversations-trace';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import {
   ConversationCandidateIds,
@@ -13,7 +17,7 @@ import {
   ConversationFilterOperator,
   ConversationPageRequest,
   ConversationRow,
-  ConversationTotals,
+  ConversationPeriodSummary,
   ConversationsField,
   FeedbackFilter,
 } from '@/src/models/analytics/conversations-trace';
@@ -97,24 +101,26 @@ const row = (overrides: Partial<ConversationRow> = {}): ConversationRow => ({
 const FIRST_PAGE = [row()];
 const SECOND_PAGE = [row({ chat_id: 'c41e8a90-2f76-4bd3-9e05-18c7b6a4f2de', project_id: 'acme-support-bot' })];
 
-const TOTALS: ConversationTotals = { conversations: 212, cost: '654.07' };
+const PERIOD: ConversationPeriodSummary = {
+  totals: { conversations: 212, cost: '654.07' },
+  ratings: { rated: 19, negative: 13 },
+};
 
 const searchBox = () => screen.getByPlaceholderText(ConversationsTraceI18nKey.SearchPlaceholder);
 
 const lastRequest = (): ConversationPageRequest => getConversations.mock.calls.at(-1)?.[0];
 
 interface PageExtras {
-  totals?: ConversationTotals;
+  period?: ConversationPeriodSummary;
   candidates?: ConversationCandidateIds;
 }
 
-// A first page carries the summary and, under an active feedback filter, the candidate ids it resolved; a
-// later page carries neither.
-const okPage = (rows: ConversationRow[], extras: PageExtras = { totals: TOTALS }) => ({
+// A first page carries the period figures and any candidate ids; a later page carries neither.
+const okPage = (rows: ConversationRow[], extras: PageExtras = { period: PERIOD }) => ({
   success: true,
   response: {
     rows,
-    total: extras.totals ? Number(extras.totals.conversations) : null,
+    total: extras.period?.totals ? Number(extras.period.totals.conversations) : null,
     ...extras,
   },
 });
@@ -186,10 +192,10 @@ describe('ConversationsTraceView :: header', () => {
   test('reports the figures as pending before the first block is fetched', () => {
     renderView();
 
-    expect(screen.getAllByText('—')).toHaveLength(2);
+    expect(screen.getAllByText('—')).toHaveLength(4);
   });
 
-  test('shows the whole-result count with no approximation marker once the first block lands', async () => {
+  test('shows the period count with no approximation marker once the first block lands', async () => {
     renderView();
 
     await fetchBlock();
@@ -284,7 +290,7 @@ describe('ConversationsTraceView :: feedback candidates', () => {
   };
 
   test('sends no ids on the first block, letting the request resolve them', async () => {
-    getConversations.mockResolvedValue(okPage(FIRST_PAGE, { totals: TOTALS, candidates: CANDIDATES }));
+    getConversations.mockResolvedValue(okPage(FIRST_PAGE, { period: PERIOD, candidates: CANDIDATES }));
     renderView();
 
     await selectNegative();
@@ -294,7 +300,7 @@ describe('ConversationsTraceView :: feedback candidates', () => {
   });
 
   test('carries the ids the first block returned into a later block', async () => {
-    getConversations.mockResolvedValue(okPage(FIRST_PAGE, { totals: TOTALS, candidates: CANDIDATES }));
+    getConversations.mockResolvedValue(okPage(FIRST_PAGE, { period: PERIOD, candidates: CANDIDATES }));
     renderView();
 
     await selectNegative();
@@ -308,7 +314,7 @@ describe('ConversationsTraceView :: feedback candidates', () => {
 
   test('does not carry ids resolved under a previous filter state', async () => {
     const user = userEvent.setup();
-    getConversations.mockResolvedValue(okPage(FIRST_PAGE, { totals: TOTALS, candidates: CANDIDATES }));
+    getConversations.mockResolvedValue(okPage(FIRST_PAGE, { period: PERIOD, candidates: CANDIDATES }));
     renderView();
 
     await selectNegative();
@@ -375,18 +381,26 @@ describe('ConversationsTraceView :: sort and column filters', () => {
     ]);
   });
 
-  test('changing the filter model starts the loaded count over', async () => {
+  // Narrowing the fetched blocks client-side would report a slice as the whole answer.
+  test('changing the filter model re-requests the first block under the new filter', async () => {
     renderView();
 
     await fetchBlock();
     getConversations.mockResolvedValue(laterPage(SECOND_PAGE));
     await fetchBlock(PAGE_SIZE, PAGE_SIZE * 2);
-    await waitFor(() => expect(screen.getByText('0/2')).toBeInTheDocument());
 
     getConversations.mockResolvedValue(okPage(SECOND_PAGE));
     await fetchBlock(0, PAGE_SIZE, { filterModel: FILTER_MODEL });
 
-    await waitFor(() => expect(screen.getByText('0/1')).toBeInTheDocument());
+    expect(lastRequest()).toMatchObject({ offset: 0 });
+    expect(lastRequest().columnFilters).toEqual([
+      {
+        field: ConversationsField.ProjectId,
+        operator: ConversationFilterOperator.Contains,
+        value: 'acme',
+        valueType: QueryValueType.String,
+      },
+    ]);
   });
 });
 
@@ -402,7 +416,7 @@ describe('ConversationsTraceView :: capped feedback result', () => {
   };
 
   test('discloses that a capped feedback result may be incomplete', async () => {
-    getConversations.mockResolvedValue(okPage(FIRST_PAGE, { totals: TOTALS, candidates: cappedIds }));
+    getConversations.mockResolvedValue(okPage(FIRST_PAGE, { period: PERIOD, candidates: cappedIds }));
     renderView();
 
     await selectNegative();
@@ -413,7 +427,7 @@ describe('ConversationsTraceView :: capped feedback result', () => {
 
   test('shows no disclosure when the candidate set is below the limit', async () => {
     getConversations.mockResolvedValue(
-      okPage(FIRST_PAGE, { totals: TOTALS, candidates: { ids: ['a'], isCapped: false } }),
+      okPage(FIRST_PAGE, { period: PERIOD, candidates: { ids: ['a'], isCapped: false } }),
     );
     renderView();
 
@@ -435,7 +449,7 @@ describe('ConversationsTraceView :: capped feedback result', () => {
 
   test('clears the disclosure when the feedback filter returns to all', async () => {
     const user = userEvent.setup();
-    getConversations.mockResolvedValue(okPage(FIRST_PAGE, { totals: TOTALS, candidates: cappedIds }));
+    getConversations.mockResolvedValue(okPage(FIRST_PAGE, { period: PERIOD, candidates: cappedIds }));
     renderView();
 
     await selectNegative();
@@ -671,8 +685,8 @@ describe('ConversationsTraceView :: hiding a filtered column', () => {
   });
 });
 
-describe('ConversationsTraceView :: summary figures', () => {
-  test('resolves the whole-result figures with the first block', async () => {
+describe('ConversationsTraceView :: period figures', () => {
+  test('resolves the period figures with the first block', async () => {
     renderView();
 
     expect(getConversations).not.toHaveBeenCalled();
@@ -682,82 +696,88 @@ describe('ConversationsTraceView :: summary figures', () => {
     await waitFor(() => expect(screen.getByText('212')).toBeInTheDocument());
   });
 
+  test('shows the rating figures the first block resolved, not a count of its rows', async () => {
+    renderView();
+
+    await fetchBlock();
+
+    await waitFor(() => expect(screen.getByText('19')).toBeInTheDocument());
+    expect(screen.getByText('13')).toBeInTheDocument();
+  });
+
   test('a later block does not restate them', async () => {
     renderView();
 
     await fetchBlock();
-    await waitFor(() => expect(screen.getByText('212')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('19')).toBeInTheDocument());
 
     getConversations.mockResolvedValue(laterPage(SECOND_PAGE));
     await fetchBlock(PAGE_SIZE, PAGE_SIZE * 2);
 
     expect(screen.getByText('212')).toBeInTheDocument();
+    expect(screen.getByText('19')).toBeInTheDocument();
   });
 
-  test('counts a conversation delivered in two blocks only once', async () => {
+  test('the rating figures do not move as further blocks land', async () => {
     renderView();
 
     await fetchBlock();
-    await fetchBlock(PAGE_SIZE, PAGE_SIZE * 2);
+    await waitFor(() => expect(screen.getByText('19')).toBeInTheDocument());
 
-    await waitFor(() => expect(screen.getByText('0/1')).toBeInTheDocument());
-  });
-
-  test('counts distinct conversations across blocks', async () => {
-    renderView();
-
-    await fetchBlock();
     getConversations.mockResolvedValue(laterPage(SECOND_PAGE));
     await fetchBlock(PAGE_SIZE, PAGE_SIZE * 2);
+    await fetchBlock(PAGE_SIZE * 2, PAGE_SIZE * 3);
 
-    await waitFor(() => expect(screen.getByText('0/2')).toBeInTheDocument());
-  });
-
-  test('keeps the conversations loaded after block 0 when block 0 is re-fetched', async () => {
-    renderView();
-
-    await fetchBlock();
-    getConversations.mockResolvedValue(laterPage(SECOND_PAGE));
-    await fetchBlock(PAGE_SIZE, PAGE_SIZE * 2);
-    getConversations.mockResolvedValue(okPage(FIRST_PAGE));
-    await fetchBlock();
-
-    await waitFor(() => expect(screen.getByText('0/2')).toBeInTheDocument());
+    expect(screen.getByText('19')).toBeInTheDocument();
   });
 
   // Revealing a source-backed column changes neither the result nor the rows already held.
-  test('keeps the loaded count across a projection change', async () => {
+  test('keeps the figures across a projection change', async () => {
     columnState = [{ colId: 'success_count', hide: true }];
     renderView(SCHEMA_FIELDS);
 
     await fetchBlock();
-    await waitFor(() => expect(screen.getByText('0/1')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('19')).toBeInTheDocument());
 
     columnState = [{ colId: 'success_count', hide: false }];
     await fetchBlock();
 
-    expect(screen.getByText('0/1')).toBeInTheDocument();
+    expect(screen.getByText('19')).toBeInTheDocument();
   });
 
-  test('starts the count over when the filter state changes', async () => {
+  test('a search term re-queries without narrowing the figures', async () => {
     const user = userEvent.setup();
     renderView();
 
     await fetchBlock();
-    getConversations.mockResolvedValue(laterPage(SECOND_PAGE));
-    await fetchBlock(PAGE_SIZE, PAGE_SIZE * 2);
+    await waitFor(() => expect(screen.getByText('19')).toBeInTheDocument());
 
     await user.type(searchBox(), 'acme');
     await awaitFilterApplied();
     await fetchBlock();
 
-    await waitFor(() => expect(screen.getByText('0/1')).toBeInTheDocument());
+    await waitFor(() => expect(lastRequest().search).toBe('acme'));
+    expect(screen.getByText('19')).toBeInTheDocument();
+    expect(screen.getByText('212')).toBeInTheDocument();
+  });
+
+  test('names the selected period on every pill, spelled as the control spells it', async () => {
+    renderView();
+
+    await fetchBlock();
+
+    const preset = timePeriodOptionsConfig.find((option) => option.value === CONVERSATIONS_TIME_PERIOD);
+
+    await waitFor(() => expect(screen.getAllByText(preset?.label as string)).toHaveLength(4));
+    expect(screen.queryByText(CONVERSATIONS_TIME_PERIOD)).not.toBeInTheDocument();
   });
 });
 
 describe('ConversationsTraceView :: empty and failed states', () => {
   test('renders the no-data state when the result holds no conversations', async () => {
-    getConversations.mockResolvedValue(okPage([], { totals: { conversations: 0, cost: null } }));
+    getConversations.mockResolvedValue(
+      okPage([], { period: { totals: { conversations: 0, cost: null }, ratings: { rated: 0, negative: 0 } } }),
+    );
     renderView();
 
     await fetchBlock();
@@ -768,7 +788,9 @@ describe('ConversationsTraceView :: empty and failed states', () => {
   // The state a filter that matched nothing produces. Covering the header stack would hide the very filter
   // inputs the operator needs to undo it, leaving the grid with no way out.
   test('the empty state leaves the grid header and its filter row uncovered', async () => {
-    getConversations.mockResolvedValue(okPage([], { totals: { conversations: 0, cost: null } }));
+    getConversations.mockResolvedValue(
+      okPage([], { period: { totals: { conversations: 0, cost: null }, ratings: { rated: 0, negative: 0 } } }),
+    );
     renderView();
 
     await fetchBlock();
@@ -809,16 +831,19 @@ describe('ConversationsTraceView :: empty and failed states', () => {
     );
   });
 
+  // A later failure is not an empty result, so the empty state must stay away too.
   test('a failed later block keeps the rows already loaded', async () => {
     renderView();
 
-    await fetchBlock();
-    await waitFor(() => expect(screen.getByText('0/1')).toBeInTheDocument());
+    const first = await fetchBlock();
+    await waitFor(() => expect(screen.getByText('212')).toBeInTheDocument());
 
     getConversations.mockResolvedValue({ success: false, status: 500 });
-    await fetchBlock(PAGE_SIZE, PAGE_SIZE * 2);
+    const later = await fetchBlock(PAGE_SIZE, PAGE_SIZE * 2);
 
-    expect(screen.getByText('0/1')).toBeInTheDocument();
+    expect(first.successCallback).toHaveBeenCalledWith(FIRST_PAGE, expect.anything());
+    expect(later.failCallback).toHaveBeenCalled();
+    expect(screen.queryByText(ConversationsTraceI18nKey.NoConversations)).not.toBeInTheDocument();
   });
 
   test('a successful block clears an earlier failure', async () => {
@@ -840,15 +865,14 @@ describe('ConversationsTraceView :: empty and failed states', () => {
 
     await fetchBlock();
 
-    await waitFor(() => expect(screen.getAllByText('—')).toHaveLength(2));
+    await waitFor(() => expect(screen.getAllByText('—')).toHaveLength(4));
   });
 
-  // The rows and the summary are separate queries, so one failing is no evidence about the other.
   test('keeps the figures when the rows fail but the summary resolved', async () => {
     getConversations.mockResolvedValue({
       success: false,
       status: 500,
-      response: { rows: [], total: 212, totals: TOTALS },
+      response: { rows: [], total: 212, period: PERIOD },
     });
     renderView();
 
@@ -863,6 +887,6 @@ describe('ConversationsTraceView :: empty and failed states', () => {
 
     await fetchBlock();
 
-    await waitFor(() => expect(screen.getAllByText('—')).toHaveLength(2));
+    await waitFor(() => expect(screen.getAllByText('—')).toHaveLength(4));
   });
 });

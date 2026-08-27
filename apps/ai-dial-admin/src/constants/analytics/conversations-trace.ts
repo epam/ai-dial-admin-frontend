@@ -503,8 +503,7 @@ export const CONVERSATION_DETAIL_PANELS: ConversationPanelDefinition[] = [
   },
 ];
 
-export const CONVERSATION_SOURCE_ENTITIES: ProvenanceEntity[] = [
-  { provenance: ColumnProvenance.Conversations, name: CONVERSATIONS_ENTITY },
+export const QUERIED_SOURCE_ENTITIES: ProvenanceEntity[] = [
   { provenance: ColumnProvenance.Feedback, name: FEEDBACK_ENTITY },
 ];
 
