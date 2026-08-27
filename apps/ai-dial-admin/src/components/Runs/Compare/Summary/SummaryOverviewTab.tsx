@@ -70,24 +70,26 @@ const SummaryOverviewTab: FC<Props> = ({
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-8 overflow-auto">
-      <Header
-        primaryRun={primaryRun}
-        comparedRun={comparedRun}
-        primaryRunName={primaryRunName}
-        comparedRunName={comparedRunName}
-        testSuite={testSuite}
-      />
-      <Analytics
-        primaryRunId={primaryRunId}
-        comparedRunId={comparedRunId}
-        primaryRunName={primaryRunName}
-        comparedRunName={comparedRunName}
-        onlyMatchingTestCases={onlyMatchingTestCases}
-        primaryMatchedAnalytics={primaryMatchedAnalytics}
-        comparedMatchedAnalytics={comparedMatchedAnalytics}
-        primaryOverallScore={enrichedPrimaryScores?.overallScore}
-        comparedOverallScore={enrichedComparedScores?.overallScore}
-      />
+      <div className="flex shrink-0 flex-col gap-8">
+        <Header
+          primaryRun={primaryRun}
+          comparedRun={comparedRun}
+          primaryRunName={primaryRunName}
+          comparedRunName={comparedRunName}
+          testSuite={testSuite}
+        />
+        <Analytics
+          primaryRunId={primaryRunId}
+          comparedRunId={comparedRunId}
+          primaryRunName={primaryRunName}
+          comparedRunName={comparedRunName}
+          onlyMatchingTestCases={onlyMatchingTestCases}
+          primaryMatchedAnalytics={primaryMatchedAnalytics}
+          comparedMatchedAnalytics={comparedMatchedAnalytics}
+          primaryOverallScore={enrichedPrimaryScores?.overallScore}
+          comparedOverallScore={enrichedComparedScores?.overallScore}
+        />
+      </div>
       <div className={SUMMARY_PANELS_GRID_CLASS}>
         <MetricScoresSection
           primaryData={enrichedPrimaryScores}

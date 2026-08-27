@@ -30,6 +30,7 @@ import {
   toMetricInfoByName,
   toMetricOptions,
   formatAvgRunTimeSeconds,
+  formatRunCost,
 } from '../utils';
 
 describe('Runs Summary :: query builders', () => {
@@ -560,5 +561,22 @@ describe('Runs Summary :: result parsers', () => {
   test('formatAvgRunTimeSeconds rounds ms to one decimal second', () => {
     expect(formatAvgRunTimeSeconds(199.6)).toBe(0.2);
     expect(formatAvgRunTimeSeconds(241000)).toBe(241);
+  });
+
+  test('formatRunCost returns null for missing or non-finite values', () => {
+    expect(formatRunCost(null)).toBeNull();
+    expect(formatRunCost(undefined)).toBeNull();
+    expect(formatRunCost(Number.NaN)).toBeNull();
+  });
+
+  test('formatRunCost formats zero and dollar amounts', () => {
+    expect(formatRunCost(0)).toBe('$0');
+    expect(formatRunCost(1.5)).toBe('$1.5');
+    expect(formatRunCost(12)).toBe('$12');
+  });
+
+  test('formatRunCost keeps sub-dollar significant digits', () => {
+    expect(formatRunCost(0.0004)).toBe('$0.0004');
+    expect(formatRunCost(0.0123)).toBe('$0.012');
   });
 });

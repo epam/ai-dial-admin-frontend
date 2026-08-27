@@ -55,7 +55,16 @@ export const STATUS_DOT_CLASSES = {
 
 export const METRIC_SCORES_GRID_CLASS = 'grid min-w-0 grid-cols-1 gap-3 xl:grid-cols-2';
 
-export const SUMMARY_PANELS_GRID_CLASS = 'grid min-h-0 min-w-0 flex-1 grid-cols-1 gap-4 md:grid-cols-2';
+export const SUMMARY_PANELS_GRID_CLASS =
+  'grid min-h-0 min-w-0 flex-1 auto-rows-fr grid-cols-1 gap-4 md:grid-cols-2 [&>*]:min-h-[36rem]';
+
+export const ANALYTICS_KPI_GRID_CLASS = 'grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:flex xl:flex-row';
+
+export const ANALYTICS_KPI_CARD_CLASS = 'min-w-0 xl:flex-1';
+
+export const DISTRIBUTION_STAT_CARDS_GRID_CLASS = 'grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
+
+export const DISTRIBUTION_STAT_CARD_CLASS = 'min-w-0';
 
 /** Icons for the "Test Cases Passed" card status breakdown. */
 export const STATUS_DOT_ICONS = {
