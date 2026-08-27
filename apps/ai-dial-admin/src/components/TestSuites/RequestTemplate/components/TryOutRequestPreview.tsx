@@ -15,6 +15,14 @@ import {
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { SuiteType, TemplateVariable, TestCase, TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
+import { toRequestView } from '@/src/utils/evaluation/request-chain';
+import {
+  getRequestTurnCounts,
+  getTryOutSectionShape,
+  shouldShowTurnLabels,
+  TryOutSectionGroup,
+} from '@/src/utils/evaluation/tryout-sections';
+import CollapsibleSection from './CollapsibleSection';
 import Variables from './Variables';
 
 interface Props {
@@ -84,19 +92,43 @@ const TryOutRequestPreview: FC<Props> = ({
 
   const perTurnFields = useMemo(() => perTurnFieldNames(schema), [schema]);
   const multiTurnData = testCase?.multiTurnData;
-  const isMultiTurn = !!testCaseId && (multiTurnData?.length ?? 0) > 1;
+  const multiTurnLength = multiTurnData?.length ?? 0;
 
-  const turnVariables = useMemo(() => {
-    if (!isMultiTurn || !multiTurnData) {
-      return null;
+  const turnCounts = useMemo(
+    () => (testCaseId ? getRequestTurnCounts(testSuite, schema, multiTurnLength) : [1]),
+    [testCaseId, testSuite, schema, multiTurnLength],
+  );
+
+  const shape = useMemo(() => getTryOutSectionShape(turnCounts), [turnCounts]);
+
+  const groupedSlots = useMemo((): TryOutSectionGroup<{ variables: TemplateVariable[] }>[] => {
+    if (!testCaseId || shape === 'single') {
+      return [];
     }
 
-    const bindings = testSuite.inputBindings || [];
-    return multiTurnData.map((turnData) => {
-      const effectiveData = buildTurnEffectiveData(testCase?.data, turnData, perTurnFields);
-      return resolveVariablesForTurn(variables, bindings, effectiveData);
-    });
-  }, [isMultiTurn, multiTurnData, testCase?.data, testSuite.inputBindings, perTurnFields, variables]);
+    const groups: TryOutSectionGroup<{ variables: TemplateVariable[] }>[] = [];
+
+    for (let requestIndex = 0; requestIndex < turnCounts.length; requestIndex++) {
+      const turnCount = turnCounts[requestIndex];
+      const bindings = toRequestView(testSuite, requestIndex).inputBindings || [];
+      const turns: TryOutSectionGroup<{ variables: TemplateVariable[] }>['turns'] = [];
+
+      for (let turnIndex = 0; turnIndex < turnCount; turnIndex++) {
+        const turnData = turnCount > 1 && multiTurnData ? multiTurnData[turnIndex] : (multiTurnData?.[0] ?? {});
+        const effectiveData = buildTurnEffectiveData(testCase?.data, turnData, perTurnFields);
+        turns.push({
+          turnIndex,
+          item: { variables: resolveVariablesForTurn(variables, bindings, effectiveData) },
+        });
+      }
+
+      if (turns.length > 0) {
+        groups.push({ requestIndex, turns });
+      }
+    }
+
+    return groups;
+  }, [testCaseId, shape, turnCounts, testSuite, multiTurnData, testCase?.data, perTurnFields, variables]);
 
   const isMcp = testSuite.suiteType === SuiteType.McpTool;
   const previewLabel = isMcp ? t(TestSuitesI18nKey.ToolArgumentsPreview) : t(TestSuitesI18nKey.RequestBodyPreview);
@@ -104,24 +136,22 @@ const TryOutRequestPreview: FC<Props> = ({
     ? `TOOL CALL ${testSuite.mcpDeploymentRef?.name}:${testSuite.toolRef?.name}`
     : `${testSuite.endpointRef?.method} ${testSuite.endpointRef?.relativeUrlPattern}`;
 
-  return isVariablesLoading || isRequestSend ? (
-    <DialLoader size={40} />
-  ) : (
-    <>
-      {turnVariables ? (
-        turnVariables.map((turnVars, index) => (
-          <div key={index} className="flex flex-col gap-y-4 shrink-0">
-            <h2 className="dial-small-text font-semibold">{t(TestSuitesI18nKey.TurnLabel, { index: index + 1 })}</h2>
-            <Variables
-              testSuiteId={testSuite.id as string}
-              variables={turnVars}
-              requestBody={{}}
-              onChangeRequestBody={onChangeRequestBody}
-              readonly
-            />
-          </div>
-        ))
-      ) : (
+  const renderVariables = (vars: TemplateVariable[], key: string, title?: string) => (
+    <div key={key} className="flex flex-col gap-y-4 shrink-0">
+      {title ? <h2 className="dial-small-text font-semibold">{title}</h2> : null}
+      <Variables
+        testSuiteId={testSuite.id as string}
+        variables={vars}
+        requestBody={{}}
+        onChangeRequestBody={onChangeRequestBody}
+        readonly
+      />
+    </div>
+  );
+
+  const sectionedVariables = (() => {
+    if (shape === 'single' || groupedSlots.length === 0) {
+      return (
         <Variables
           testSuiteId={testSuite.id as string}
           variables={variables}
@@ -129,7 +159,52 @@ const TryOutRequestPreview: FC<Props> = ({
           onChangeRequestBody={onChangeRequestBody}
           readonly={!!testCaseId}
         />
-      )}
+      );
+    }
+
+    if (shape === 'turns') {
+      return groupedSlots.flatMap((group) =>
+        group.turns.map(({ turnIndex, item }) =>
+          renderVariables(item.variables, `t-${turnIndex}`, t(TestSuitesI18nKey.TurnLabel, { index: turnIndex + 1 })),
+        ),
+      );
+    }
+
+    if (shape === 'requests') {
+      return groupedSlots.flatMap((group) =>
+        group.turns.map(({ item }) =>
+          renderVariables(
+            item.variables,
+            `r-${group.requestIndex}`,
+            t(TestSuitesI18nKey.RequestLabel, { index: group.requestIndex + 1 }),
+          ),
+        ),
+      );
+    }
+
+    return groupedSlots.map((group) => {
+      const requestTitle = t(TestSuitesI18nKey.RequestLabel, { index: group.requestIndex + 1 });
+      const showTurnLabels = shouldShowTurnLabels(group, turnCounts);
+
+      return (
+        <CollapsibleSection key={`req-${group.requestIndex}`} title={requestTitle} defaultOpen growOnOpen={false}>
+          {group.turns.map(({ turnIndex, item }) =>
+            renderVariables(
+              item.variables,
+              `c-${group.requestIndex}-${turnIndex}`,
+              showTurnLabels ? t(TestSuitesI18nKey.TurnLabel, { index: turnIndex + 1 }) : undefined,
+            ),
+          )}
+        </CollapsibleSection>
+      );
+    });
+  })();
+
+  return isVariablesLoading || isRequestSend ? (
+    <DialLoader size={40} />
+  ) : (
+    <>
+      {sectionedVariables}
 
       {Object.keys(resolvedRequest).length > 0 && (
         <div className="flex flex-col flex-1 min-h-0">

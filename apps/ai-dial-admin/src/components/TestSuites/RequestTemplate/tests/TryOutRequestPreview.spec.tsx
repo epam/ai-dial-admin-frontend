@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
+import { ReactNode } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
 import { TestSuitesI18nKey } from '@/src/constants/i18n';
@@ -23,19 +24,25 @@ vi.mock('@/src/components/EntityTabs/JsonEditor/JsonEditor', () => ({
   default: () => <div>JsonEditor</div>,
 }));
 
+vi.mock('../components/CollapsibleSection', () => ({
+  default: ({ title, children }: { title: string; children: ReactNode }) => (
+    <div>
+      <span data-testid="collapsible-title">{title}</span>
+      {children}
+    </div>
+  ),
+}));
+
 vi.mock('../components/Variables', () => ({
   default: ({ variables }: { variables: TemplateVariable[] }) => (
     <div>Variables:{variables.map((v) => `${v.name}=${String(v.resolvedValue)}`).join(',')}</div>
   ),
 }));
 
-const suite: TestSuite = {
-  id: 'suite-1',
-  datasetId: 'dataset-1',
-  suiteType: SuiteType.Deployment,
-  inputBindings: [{ templateVariable: 'prompt', dataField: 'prompt' }],
-  endpointRef: { method: 'POST', relativeUrlPattern: '/chat' } as TestSuite['endpointRef'],
-};
+const schema: TestCaseSchema[] = [
+  { name: 'prompt', type: TestCaseItemType.STRING, required: false, description: '', perTurn: true },
+  { name: 'shared', type: TestCaseItemType.STRING, required: false, description: '', perTurn: false },
+];
 
 const variables: TemplateVariable[] = [
   {
@@ -48,9 +55,24 @@ const variables: TemplateVariable[] = [
   },
 ];
 
-const schema: TestCaseSchema[] = [
-  { name: 'prompt', type: TestCaseItemType.STRING, required: false, description: '', perTurn: true },
-];
+const multiTurnSuite: TestSuite = {
+  id: 'suite-1',
+  datasetId: 'dataset-1',
+  suiteType: SuiteType.Deployment,
+  inputBindings: [{ templateVariable: 'prompt', dataField: 'prompt' }],
+  endpointRef: { method: 'POST', relativeUrlPattern: '/chat' } as TestSuite['endpointRef'],
+};
+
+const multiRequestSuite: TestSuite = {
+  ...multiTurnSuite,
+  inputBindings: [{ templateVariable: 'shared', dataField: 'shared' }],
+  additionalRequests: [{ inputBindings: [{ templateVariable: 'shared', dataField: 'shared' }] }],
+};
+
+const combinedSuite: TestSuite = {
+  ...multiTurnSuite,
+  additionalRequests: [{ inputBindings: [{ templateVariable: 'prompt', dataField: 'prompt' }] }],
+};
 
 const multiTurnCase: TestCase = {
   id: 'case-1',
@@ -65,13 +87,13 @@ const singleTurnCase: TestCase = {
   data: { prompt: 'once' },
 };
 
-describe('TryOutRequestPreview multi-turn Dynamic configuration', () => {
-  test('renders one Variables section per turn when initialTestCase is multi-turn', async () => {
+describe('TryOutRequestPreview section labels', () => {
+  test('renders one Variables section per turn when multi-turn only', async () => {
     getTestCaseTemplateVariables.mockResolvedValue(variables);
 
     render(
       <TryOutRequestPreview
-        testSuite={suite}
+        testSuite={multiTurnSuite}
         testCaseId="case-1"
         schema={schema}
         initialTestCase={multiTurnCase}
@@ -87,7 +109,67 @@ describe('TryOutRequestPreview multi-turn Dynamic configuration', () => {
 
     expect(screen.getByText('Variables:prompt=turn-a')).toBeInTheDocument();
     expect(screen.getByText('Variables:prompt=turn-b')).toBeInTheDocument();
+    expect(screen.queryByText(TestSuitesI18nKey.RequestLabel)).not.toBeInTheDocument();
     expect(getDatasetTestCase).not.toHaveBeenCalled();
+  });
+
+  test('renders Request labels for multi-request single-turn', async () => {
+    getTestCaseTemplateVariables.mockResolvedValue([
+      {
+        name: 'shared',
+        effectiveType: TestCaseItemType.STRING,
+        defaultValue: null,
+        hasDefault: false,
+        sources: ['body'],
+        resolvedValue: null,
+      },
+    ]);
+
+    const multiRequestCase: TestCase = {
+      id: 'case-mr',
+      createdAt: 0,
+      data: { shared: 'value' },
+    };
+
+    render(
+      <TryOutRequestPreview
+        testSuite={multiRequestSuite}
+        testCaseId="case-mr"
+        schema={schema}
+        initialTestCase={multiRequestCase}
+        resolvedRequest={{}}
+        requestBody={{}}
+        onChangeRequestBody={vi.fn()}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getAllByText(TestSuitesI18nKey.RequestLabel)).toHaveLength(2);
+    });
+
+    expect(screen.queryByText(TestSuitesI18nKey.TurnLabel)).not.toBeInTheDocument();
+  });
+
+  test('nests Turns under Request headers for combined suites', async () => {
+    getTestCaseTemplateVariables.mockResolvedValue(variables);
+
+    render(
+      <TryOutRequestPreview
+        testSuite={combinedSuite}
+        testCaseId="case-1"
+        schema={schema}
+        initialTestCase={multiTurnCase}
+        resolvedRequest={{}}
+        requestBody={{}}
+        onChangeRequestBody={vi.fn()}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId('collapsible-title')).toHaveLength(2);
+    });
+
+    expect(screen.getAllByText(TestSuitesI18nKey.TurnLabel)).toHaveLength(4);
   });
 
   test('keeps a single Variables section for single-turn cases', async () => {
@@ -95,7 +177,7 @@ describe('TryOutRequestPreview multi-turn Dynamic configuration', () => {
 
     render(
       <TryOutRequestPreview
-        testSuite={suite}
+        testSuite={multiTurnSuite}
         testCaseId="case-2"
         schema={schema}
         initialTestCase={singleTurnCase}
@@ -110,5 +192,6 @@ describe('TryOutRequestPreview multi-turn Dynamic configuration', () => {
     });
 
     expect(screen.queryByText(TestSuitesI18nKey.TurnLabel)).not.toBeInTheDocument();
+    expect(screen.queryByText(TestSuitesI18nKey.RequestLabel)).not.toBeInTheDocument();
   });
 });

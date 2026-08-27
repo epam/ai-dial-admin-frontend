@@ -39,7 +39,7 @@ const TryOutColumns: FC<Props> = ({ isLoading, responseBody, columns, response, 
   }, [columns, response, request]);
 
   return (
-    <div className="flex-1 flex flex-col gap-y-8 pb-2 min-h-0">
+    <div className="flex-1 flex flex-col gap-y-8 pb-2 min-h-0 overflow-auto">
       <CollapsibleSection title={t(TestSuitesI18nKey.Results)}>
         {isLoading || isEvaluating ? (
           <DialLoader />

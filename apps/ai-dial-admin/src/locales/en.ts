@@ -2014,6 +2014,7 @@ export default {
     RunConditionSelect: 'Select',
     ViewOnlyIncludedInRun: 'View only included in run ({count})',
     TurnLabel: 'Turn {index}',
+    RequestLabel: 'Request {index}',
     TurnCountBadge: '{count} turns',
     ImportWarnings: 'Warnings',
     ImportWarningRow: 'Row {rowNumber}',
