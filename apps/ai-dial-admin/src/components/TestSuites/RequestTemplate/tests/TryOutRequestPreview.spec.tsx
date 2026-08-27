@@ -113,7 +113,7 @@ describe('TryOutRequestPreview section labels', () => {
     expect(getDatasetTestCase).not.toHaveBeenCalled();
   });
 
-  test('renders Request labels for multi-request single-turn', async () => {
+  test('renders variables for the selected request in multi-request single-turn', async () => {
     getTestCaseTemplateVariables.mockResolvedValue([
       {
         name: 'shared',
@@ -131,7 +131,7 @@ describe('TryOutRequestPreview section labels', () => {
       data: { shared: 'value' },
     };
 
-    render(
+    const { rerender } = render(
       <TryOutRequestPreview
         testSuite={multiRequestSuite}
         testCaseId="case-mr"
@@ -140,17 +140,36 @@ describe('TryOutRequestPreview section labels', () => {
         resolvedRequest={{}}
         requestBody={{}}
         onChangeRequestBody={vi.fn()}
+        selectedRequestIndex={0}
       />,
     );
 
     await waitFor(() => {
-      expect(screen.getAllByText(TestSuitesI18nKey.RequestLabel)).toHaveLength(2);
+      expect(screen.getByText('Variables:shared=value')).toBeInTheDocument();
     });
 
     expect(screen.queryByText(TestSuitesI18nKey.TurnLabel)).not.toBeInTheDocument();
+    expect(screen.getAllByText('Variables:shared=value')).toHaveLength(1);
+
+    rerender(
+      <TryOutRequestPreview
+        testSuite={multiRequestSuite}
+        testCaseId="case-mr"
+        schema={schema}
+        initialTestCase={multiRequestCase}
+        resolvedRequest={{}}
+        requestBody={{}}
+        onChangeRequestBody={vi.fn()}
+        selectedRequestIndex={1}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Variables:shared=value')).toBeInTheDocument();
+    });
   });
 
-  test('nests Turns under Request headers for combined suites', async () => {
+  test('shows Turn labels inside the active request tab for combined suites', async () => {
     getTestCaseTemplateVariables.mockResolvedValue(variables);
 
     render(
@@ -162,14 +181,16 @@ describe('TryOutRequestPreview section labels', () => {
         resolvedRequest={{}}
         requestBody={{}}
         onChangeRequestBody={vi.fn()}
+        selectedRequestIndex={0}
       />,
     );
 
     await waitFor(() => {
-      expect(screen.getAllByTestId('collapsible-title')).toHaveLength(2);
+      expect(screen.getAllByText(TestSuitesI18nKey.TurnLabel)).toHaveLength(2);
     });
 
-    expect(screen.getAllByText(TestSuitesI18nKey.TurnLabel)).toHaveLength(4);
+    expect(screen.getByText('Variables:prompt=turn-a')).toBeInTheDocument();
+    expect(screen.getByText('Variables:prompt=turn-b')).toBeInTheDocument();
   });
 
   test('keeps a single Variables section for single-turn cases', async () => {

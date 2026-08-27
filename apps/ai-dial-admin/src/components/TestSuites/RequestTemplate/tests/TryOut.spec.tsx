@@ -3,10 +3,11 @@ import userEvent from '@testing-library/user-event';
 import { ReactNode } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
-import { tryOutTestSuite } from '@/src/app/[lang]/test-suites/actions';
+import { getTestCaseTemplateVariables, tryOutTestCase, tryOutTestSuite } from '@/src/app/[lang]/test-suites/actions';
 import { convertVariableIntoInitialRequest } from '@/src/components/TestSuites/utils/template-variables';
 import { ButtonsI18nKey, TabsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
-import { SuiteType, TestSuite } from '@/src/models/evaluation/test-suite';
+import { SuiteType, TestCase, TestCaseSchema, TestSuite, TryOutHistoryEntry } from '@/src/models/evaluation/test-suite';
+import { TestCaseItemType } from '@/src/types/evaluation';
 import TryOut from '../components/TryOut';
 
 vi.mock('@/src/app/[lang]/test-suites/actions', () => ({
@@ -141,6 +142,24 @@ const deploymentSuiteWithRequestColumn: TestSuite = {
   responseColumns: [{ name: 'reqFoo', displayName: 'reqFoo', expression: '$request.foo', type: 'STRING' }],
 };
 
+const multiRequestSchema: TestCaseSchema[] = [
+  { name: 'shared', type: TestCaseItemType.STRING, required: false, description: '', perTurn: false },
+];
+
+const multiRequestSuite: TestSuite = {
+  id: 'suite-mr',
+  suiteType: SuiteType.Deployment,
+  endpointRef: { method: 'POST', relativeUrlPattern: '/api/chat' },
+  inputBindings: [{ templateVariable: 'shared', dataField: 'shared' }],
+  additionalRequests: [{ inputBindings: [{ templateVariable: 'shared', dataField: 'shared' }] }],
+};
+
+const multiRequestCase: TestCase = {
+  id: 'case-mr',
+  createdAt: 0,
+  data: { shared: 'value' },
+};
+
 describe('TryOut MCP branch', () => {
   test('shows Tool Arguments Preview label for MCP suite', async () => {
     render(<TryOut testSuite={mcpSuite} />);
@@ -221,5 +240,142 @@ describe('TryOut Columns tab request binding', () => {
     await waitFor(() => {
       expect(screen.getByText('bar')).toBeInTheDocument();
     });
+  });
+});
+
+describe('TryOut request tabs', () => {
+  test('hides request tabs while preview variables are loading', async () => {
+    let resolveVariables: (value: unknown[]) => void = () => undefined;
+    vi.mocked(getTestCaseTemplateVariables).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveVariables = resolve;
+        }),
+    );
+
+    render(
+      <TryOut
+        testSuite={multiRequestSuite}
+        testCaseId="case-mr"
+        schema={multiRequestSchema}
+        initialTestCase={multiRequestCase}
+      />,
+    );
+
+    expect(screen.queryByRole('tab', { name: '1. TestSuites.Request' })).not.toBeInTheDocument();
+
+    resolveVariables([]);
+    await waitFor(() => {
+      expect(screen.getByRole('tab', { name: '1. TestSuites.Request' })).toBeInTheDocument();
+    });
+  });
+
+  test('shows request tabs for multi-request test case preview', async () => {
+    render(
+      <TryOut
+        testSuite={multiRequestSuite}
+        testCaseId="case-mr"
+        schema={multiRequestSchema}
+        initialTestCase={multiRequestCase}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('tab', { name: '1. TestSuites.Request' })).toBeInTheDocument();
+    });
+    expect(screen.getByRole('tab', { name: '2. TestSuites.Request' })).toBeInTheDocument();
+  });
+
+  test('hides request tabs while sending a test case request', async () => {
+    let resolveTryOut:
+      | ((value: {
+          success: boolean;
+          response: {
+            resolvedRequest: { body: Record<string, unknown> };
+            response: { statusCode: number; body: Record<string, unknown> };
+            history: TryOutHistoryEntry[];
+          };
+        }) => void)
+      | undefined;
+    vi.mocked(tryOutTestCase).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveTryOut = resolve;
+        }),
+    );
+
+    const user = userEvent.setup();
+    render(
+      <TryOut
+        testSuite={multiRequestSuite}
+        testCaseId="case-mr"
+        schema={multiRequestSchema}
+        initialTestCase={multiRequestCase}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('tab', { name: '1. TestSuites.Request' })).toBeInTheDocument();
+    });
+
+    const sendButton = await screen.findByRole('button', { name: ButtonsI18nKey.SendRequest });
+    await user.click(sendButton);
+
+    expect(screen.queryByRole('tab', { name: '1. TestSuites.Request' })).not.toBeInTheDocument();
+
+    resolveTryOut?.({
+      success: true,
+      response: {
+        resolvedRequest: { body: {} },
+        response: { statusCode: 200, body: {} },
+        history: [
+          { resolvedRequest: { body: { req: 1 } }, response: { statusCode: 200, body: { out: 'a' } } },
+          { resolvedRequest: { body: { req: 2 } }, response: { statusCode: 200, body: { out: 'b' } } },
+        ],
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('tab', { name: '1. TestSuites.Request' })).toBeInTheDocument();
+    });
+  });
+
+  test('switches response content when selecting another request tab', async () => {
+    vi.mocked(tryOutTestCase).mockResolvedValueOnce({
+      success: true,
+      response: {
+        resolvedRequest: { body: {} },
+        response: { statusCode: 200, body: {} },
+        history: [
+          { resolvedRequest: { body: { req: 1 } }, response: { statusCode: 200, body: { out: 'a' } } },
+          { resolvedRequest: { body: { req: 2 } }, response: { statusCode: 200, body: { out: 'b' } } },
+        ],
+      },
+    });
+
+    const user = userEvent.setup();
+    render(
+      <TryOut
+        testSuite={multiRequestSuite}
+        testCaseId="case-mr"
+        schema={multiRequestSchema}
+        initialTestCase={multiRequestCase}
+      />,
+    );
+
+    const sendButton = await screen.findByRole('button', { name: ButtonsI18nKey.SendRequest });
+    await user.click(sendButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('JsonEditor:{"req":1}')).toBeInTheDocument();
+    });
+    expect(screen.queryByText('JsonEditor:{"req":2}')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: '2. TestSuites.Request' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('JsonEditor:{"req":2}')).toBeInTheDocument();
+    });
+    expect(screen.queryByText('JsonEditor:{"req":1}')).not.toBeInTheDocument();
   });
 });

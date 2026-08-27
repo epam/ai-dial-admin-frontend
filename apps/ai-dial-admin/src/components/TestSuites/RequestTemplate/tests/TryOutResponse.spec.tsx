@@ -96,10 +96,10 @@ describe('TryOutResponsePreview history', () => {
     expect(screen.queryByText('TopLevelResponseBody')).not.toBeInTheDocument();
   });
 
-  test('renders Request labels for multi-request only', () => {
+  test('renders Request content for the selected request index', () => {
     const history = [entry({ req: 1 }, { out: 'a' }), entry({ req: 2 }, { out: 'b' })];
 
-    render(
+    const { rerender } = render(
       <TryOutResponsePreview
         response={{ statusCode: 200 }}
         resolvedRequest={{ body: {} }}
@@ -108,14 +108,34 @@ describe('TryOutResponsePreview history', () => {
         testSuite={multiRequestSuite}
         schema={schema}
         multiTurnData={[{ shared: 'x' }]}
+        selectedRequestIndex={0}
       />,
     );
 
-    expect(screen.getAllByText(TestSuitesI18nKey.RequestLabel)).toHaveLength(2);
+    expect(screen.getByText('JsonEditor:{"req":1}')).toBeInTheDocument();
+    expect(screen.getByText('JsonEditor:{"out":"a"}')).toBeInTheDocument();
+    expect(screen.queryByText('JsonEditor:{"req":2}')).not.toBeInTheDocument();
     expect(screen.queryByText(TestSuitesI18nKey.TurnLabel)).not.toBeInTheDocument();
+
+    rerender(
+      <TryOutResponsePreview
+        response={{ statusCode: 200 }}
+        resolvedRequest={{ body: {} }}
+        history={history}
+        responseBody={responseBody}
+        testSuite={multiRequestSuite}
+        schema={schema}
+        multiTurnData={[{ shared: 'x' }]}
+        selectedRequestIndex={1}
+      />,
+    );
+
+    expect(screen.getByText('JsonEditor:{"req":2}')).toBeInTheDocument();
+    expect(screen.getByText('JsonEditor:{"out":"b"}')).toBeInTheDocument();
+    expect(screen.queryByText('JsonEditor:{"req":1}')).not.toBeInTheDocument();
   });
 
-  test('nests Turns under Request headers for combined suites', () => {
+  test('shows Turn labels inside the active request tab for combined suites', () => {
     const history = [
       entry({ r: 0, t: 0 }, { out: 'a' }),
       entry({ r: 0, t: 1 }, { out: 'b' }),
@@ -132,14 +152,14 @@ describe('TryOutResponsePreview history', () => {
         testSuite={combinedSuite}
         schema={schema}
         multiTurnData={[{ prompt: 'a' }, { prompt: 'b' }]}
+        selectedRequestIndex={0}
       />,
     );
 
-    const requestHeaders = screen
-      .getAllByTestId('collapsible-title')
-      .filter((el) => el.textContent === TestSuitesI18nKey.RequestLabel);
-    expect(requestHeaders).toHaveLength(2);
-    expect(screen.getAllByText(TestSuitesI18nKey.TurnLabel)).toHaveLength(4);
+    expect(screen.getAllByText(TestSuitesI18nKey.TurnLabel)).toHaveLength(2);
+    expect(screen.getByText('JsonEditor:{"out":"a"}')).toBeInTheDocument();
+    expect(screen.getByText('JsonEditor:{"out":"b"}')).toBeInTheDocument();
+    expect(screen.queryByText('JsonEditor:{"out":"c"}')).not.toBeInTheDocument();
   });
 
   test('mixed chain: Request 1 has no Turn labels, Request 2 has Turns', () => {
@@ -159,14 +179,12 @@ describe('TryOutResponsePreview history', () => {
         testSuite={mixedSuite}
         schema={schema}
         multiTurnData={[{ prompt: 'a' }, { prompt: 'b' }, { prompt: 'c' }]}
+        selectedRequestIndex={1}
       />,
     );
 
-    const requestHeaders = screen
-      .getAllByTestId('collapsible-title')
-      .filter((el) => el.textContent === TestSuitesI18nKey.RequestLabel);
-    expect(requestHeaders).toHaveLength(2);
     expect(screen.getAllByText(TestSuitesI18nKey.TurnLabel)).toHaveLength(3);
+    expect(screen.queryByText('JsonEditor:{"out":"setup"}')).not.toBeInTheDocument();
   });
 
   test('keeps the single request/response pair when history is absent', () => {
