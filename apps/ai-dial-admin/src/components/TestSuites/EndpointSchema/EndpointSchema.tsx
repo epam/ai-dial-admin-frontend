@@ -1,6 +1,6 @@
 'use client';
 
-import { Dispatch, FC, SetStateAction, useCallback, useState } from 'react';
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { DialNoDataContent, DialSelect, DialTabs, SelectOption, SelectSize, SelectVariant } from '@epam/ai-dial-ui-kit';
 import { JSONSchema7 } from 'json-schema';
@@ -9,25 +9,61 @@ import SchemaGrid from '@/src/components/Common/SchemaGrid/SchemaGrid';
 import JsonEditor from '@/src/components/EntityTabs/JsonEditor/JsonEditor';
 import { CompareI18nKey, EntitiesI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
+import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
 import { useI18n } from '@/src/locales/client';
 import { DialScheme } from '@/src/models/dial/scheme';
 import { ResponseColumn, TestSuite } from '@/src/models/evaluation/test-suite';
 import { JsonataVariable } from '@/src/models/jsonata';
+import { findDuplicateResponseColumnName } from '@/src/utils/evaluation/request-chain';
 import { EntityViewTab, getEndpointSchemaTabs } from '@/src/utils/tabs/utils';
 import Columns from './Columns/Columns';
+
+const COLUMN_UNIQUENESS_FIELD = 'columnUniqueness';
 
 interface Props {
   testSuite: TestSuite;
   onChangeTestSuite: (testSuite: TestSuite, isSkipRefresh?: boolean) => void;
   isSkipRefresh?: boolean;
   jsonataVariables?: JsonataVariable[];
+  takenColumnNames?: string[];
 }
 
-const EndpointSchema: FC<Props> = ({ testSuite, onChangeTestSuite, isSkipRefresh, jsonataVariables }) => {
+const EndpointSchema: FC<Props> = ({
+  testSuite,
+  onChangeTestSuite,
+  isSkipRefresh,
+  jsonataVariables,
+  takenColumnNames = [],
+}) => {
   const t = useI18n();
-  const tabs = getEndpointSchemaTabs(t);
-  const [activeSchemaTab, setActiveSchemaTab] = useState(tabs[0].id);
+  const { dispatch } = useSaveValidationContext();
+  const [activeSchemaTab, setActiveSchemaTab] = useState(getEndpointSchemaTabs(t)[0].id);
   const [isJsonView, setIsJsonView] = useState(false);
+
+  const duplicateColumn = useMemo(
+    () => findDuplicateResponseColumnName(testSuite.responseColumns || [], takenColumnNames),
+    [testSuite.responseColumns, takenColumnNames],
+  );
+
+  const tabs = useMemo(
+    () =>
+      getEndpointSchemaTabs(t).map((tab) =>
+        tab.id === EntityViewTab.Columns ? { ...tab, invalid: !!duplicateColumn } : tab,
+      ),
+    [t, duplicateColumn],
+  );
+
+  useEffect(() => {
+    dispatch({
+      type: ValidationActionType.SetField,
+      field: COLUMN_UNIQUENESS_FIELD,
+      isValid: !duplicateColumn,
+    });
+
+    return () => {
+      dispatch({ type: ValidationActionType.RemoveField, field: COLUMN_UNIQUENESS_FIELD });
+    };
+  }, [dispatch, duplicateColumn]);
 
   const viewOptions: SelectOption[] = [
     { value: 'table', label: t(EntitiesI18nKey.Table) },
@@ -120,6 +156,7 @@ const EndpointSchema: FC<Props> = ({ testSuite, onChangeTestSuite, isSkipRefresh
               responseSchema={(testSuite.endpointRef?.responseBodySchema || {}) as JSONSchema7}
               isSkipRefresh={isSkipRefresh}
               jsonataVariables={jsonataVariables}
+              duplicateColumn={duplicateColumn}
             />
           )}
         </>

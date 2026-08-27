@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import Methods from '../Methods';
 
@@ -145,5 +146,41 @@ describe('Methods component', () => {
     rerender(<Methods testSuite={testSuite} selectedTarget={selectedApplication} onChange={onChange} />);
 
     expect(mockGetDeployment).toHaveBeenCalledTimes(1);
+  });
+
+  test('keeps the default chat-completion column name when it is not taken', async () => {
+    const user = userEvent.setup();
+    const testSuite: any = { endpointRef: {} };
+    const selectedApplication: any = { deploymentId: 'test-deployment', $type: 'application' };
+
+    render(<Methods testSuite={testSuite} selectedTarget={selectedApplication} onChange={onChange} />);
+
+    await user.click(await screen.findByRole('button', { name: 'POST /chat/completions' }));
+
+    const updater = onChange.mock.calls.at(-1)?.[0];
+    expect(typeof updater).toBe('function');
+    expect(updater({}).responseColumns[0]).toEqual(expect.objectContaining({ name: 'answer', displayName: 'answer' }));
+  });
+
+  test('uniquifies the default chat-completion column name against taken names', async () => {
+    const user = userEvent.setup();
+    const testSuite: any = { endpointRef: {} };
+    const selectedApplication: any = { deploymentId: 'test-deployment', $type: 'application' };
+
+    render(
+      <Methods
+        testSuite={testSuite}
+        selectedTarget={selectedApplication}
+        onChange={onChange}
+        takenColumnNames={['answer', 'history']}
+      />,
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'POST /chat/completions' }));
+
+    const updater = onChange.mock.calls.at(-1)?.[0];
+    expect(updater({}).responseColumns[0]).toEqual(
+      expect.objectContaining({ name: 'answer2', displayName: 'answer2' }),
+    );
   });
 });

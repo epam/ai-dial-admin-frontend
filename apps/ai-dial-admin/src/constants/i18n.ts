@@ -1867,6 +1867,8 @@ export enum TestSuitesI18nKey {
   EditField = 'TestSuites.EditField',
   NoSchemaFields = 'TestSuites.NoSchemaFields',
   DuplicateFieldName = 'TestSuites.DuplicateFieldName',
+  DuplicateResponseColumnName = 'TestSuites.DuplicateResponseColumnName',
+  DuplicateResponseColumnNameInPreviousRequest = 'TestSuites.DuplicateResponseColumnNameInPreviousRequest',
   MetricNameInvalidChars = 'TestSuites.MetricNameInvalidChars',
   SchemaDescription = 'TestSuites.SchemaDescription',
   FinalPath = 'TestSuites.FinalPath',

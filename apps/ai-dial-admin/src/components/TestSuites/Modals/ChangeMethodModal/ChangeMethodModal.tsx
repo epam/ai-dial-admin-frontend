@@ -17,6 +17,7 @@ export interface ChangeMethodModalProps {
   selectedApplication: Deployment | null;
   isOpen?: boolean;
   onClose?: () => void;
+  takenColumnNames?: string[];
 }
 
 const ChangeMethodModal: FC<ChangeMethodModalProps> = ({
@@ -25,6 +26,7 @@ const ChangeMethodModal: FC<ChangeMethodModalProps> = ({
   selectedApplication,
   isOpen = false,
   onClose,
+  takenColumnNames,
 }) => {
   const t = useI18n();
   const { isValid } = useSaveValidationContext();
@@ -60,7 +62,12 @@ const ChangeMethodModal: FC<ChangeMethodModalProps> = ({
       className="h-[800px]"
     >
       <div className="size-full flex flex-col gap-4 px-6 py-4">
-        <Methods selectedTarget={selectedApplication} testSuite={currentSuite} onChange={setCurrentSuite}>
+        <Methods
+          selectedTarget={selectedApplication}
+          testSuite={currentSuite}
+          onChange={setCurrentSuite}
+          takenColumnNames={takenColumnNames}
+        >
           <DialNotification message={t(TestSuitesI18nKey.MethodChangeWarning)} variant={NotificationVariant.Warning} />
         </Methods>
       </div>
