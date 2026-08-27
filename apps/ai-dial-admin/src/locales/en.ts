@@ -380,6 +380,7 @@ export default {
       ApplicationRunner: 'Application Runner',
       TestSuite: 'Test Suite',
       Dataset: 'Dataset',
+      Query: 'Query',
     },
   },
   CreateEntity: {
@@ -2531,7 +2532,6 @@ export default {
     EditorSql: 'SQL',
     SavedBy: 'Saved by',
     SavedByUnknown: 'Unknown',
-    NoQueriesDescription: 'Create a query to name it, come back to it, and share it with your team.',
     ErrorGeneric: 'The query could not be saved. Check it and try again.',
     ErrorValidation: 'The query is not valid as stored. Fix the part named above and try again.',
     ErrorSensitiveLiteral:

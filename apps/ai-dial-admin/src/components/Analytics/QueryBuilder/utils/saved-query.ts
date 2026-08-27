@@ -110,10 +110,11 @@ export const toSavedQueryRequest = (input: SavedQueryCaptureInput): SavedQueryRe
 };
 
 /**
- * Replaces a stored query's metadata, carrying its body, time intent, and chart across untouched — the
- * edit modal renames and re-tags, it does not re-author.
+ * Takes a stored query's authored content — body, time intent, result view, and chart — and pairs it with
+ * a fresh set of metadata. Neither caller re-authors: the edit modal replaces the same query under new
+ * metadata, and the duplicate modal creates a second one from the same content.
  */
-export const toMetadataUpdateRequest = (saved: SavedQuery, meta: SavedQueryMetadata): SavedQueryRequest =>
+export const toMetadataReplaceRequest = (saved: SavedQuery, meta: SavedQueryMetadata): SavedQueryRequest =>
   assembleRequest({
     meta,
     body: saved.sql ? { sql: saved.sql } : { query: saved.query },

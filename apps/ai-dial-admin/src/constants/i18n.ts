@@ -359,6 +359,7 @@ export enum DuplicateI18nKey {
   ApplicationRunner = 'DuplicateEntity.Entities.ApplicationRunner',
   TestSuite = 'DuplicateEntity.Entities.TestSuite',
   Dataset = 'DuplicateEntity.Entities.Dataset',
+  Query = 'DuplicateEntity.Entities.Query',
 }
 
 export enum ButtonsI18nKey {
@@ -2471,7 +2472,6 @@ export enum QueriesI18nKey {
   EditorSql = 'Queries.EditorSql',
   SavedBy = 'Queries.SavedBy',
   SavedByUnknown = 'Queries.SavedByUnknown',
-  NoQueriesDescription = 'Queries.NoQueriesDescription',
   // Guidance shown alongside (or instead of) the service's own message, chosen by machine error code.
   ErrorGeneric = 'Queries.ErrorGeneric',
   ErrorValidation = 'Queries.ErrorValidation',

@@ -22,6 +22,7 @@ export const duplicateEntityMap: Record<string, DuplicateI18nKey> = {
   [ApplicationRoute.InterceptorTemplates]: DuplicateI18nKey.InterceptorTemplate,
   [ApplicationRoute.TestSuites]: DuplicateI18nKey.TestSuite,
   [ApplicationRoute.Datasets]: DuplicateI18nKey.Dataset,
+  [ApplicationRoute.AnalyticsQueries]: DuplicateI18nKey.Query,
 };
 
 export const duplicateModalDescriptionMap: Record<string, DuplicateI18nKey> = {

@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 
 import CreateQuery from '@/src/components/Analytics/Queries/Modals/CreateQuery';
+import DuplicateQuery from '@/src/components/Analytics/Queries/Modals/DuplicateQuery';
 import EditQuery from '@/src/components/Analytics/Queries/Modals/EditQuery';
 import { onCellClicked } from '@/src/components/EntityListView/utils/on-cell-clicked';
 import DeleteConfirmationModal from '@/src/components/EntityView/Modals/Delete/Delete';
@@ -16,8 +17,13 @@ import ListEntities from '@/src/components/ListView/List';
 import { emptyDataTitleMap, listViewTitleMap } from '@/src/components/ListView/constants';
 import { ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { QUERIES_COLUMN } from '@/src/constants/grid-columns/grid-columns';
-import { getDeleteOperation, getEditOperation, getOpenInNewTabOperation } from '@/src/constants/grid-columns/actions';
-import { ButtonsI18nKey, QueriesI18nKey } from '@/src/constants/i18n';
+import {
+  getDeleteOperation,
+  getDuplicateOperation,
+  getEditOperation,
+  getOpenInNewTabOperation,
+} from '@/src/constants/grid-columns/actions';
+import { ButtonsI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useAppContext } from '@/src/context/AppContext';
 import { useI18n } from '@/src/locales/client';
@@ -40,6 +46,7 @@ const QueriesList = ({ data, entities }: Props) => {
   const { isFullAdmin } = useAppContext();
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [duplicatedQuery, setDuplicatedQuery] = useState<SavedQuery | undefined>(void 0);
   const [editedQuery, setEditedQuery] = useState<SavedQuery | undefined>(void 0);
   const [deletedQuery, setDeletedQuery] = useState<SavedQuery | undefined>(void 0);
 
@@ -60,6 +67,7 @@ const QueriesList = ({ data, entities }: Props) => {
       ACTION_COLUMN<SavedQuery>(
         [
           getOpenInNewTabOperation(onOpenNewTab),
+          getDuplicateOperation(setDuplicatedQuery),
           getEditOperation(setEditedQuery, (_api, node) => !isWritable(node.data as SavedQuery)),
           getDeleteOperation(setDeletedQuery, (_api, node) => !isWritable(node.data as SavedQuery)),
         ],
@@ -86,7 +94,7 @@ const QueriesList = ({ data, entities }: Props) => {
         storageKey={VIEW}
         getHref={(query) => getUrnForEntity(VIEW, query)}
         getRowId={({ data: query }) => query.id}
-        emptyDataProps={{ title: t(emptyDataTitleMap[VIEW]), description: t(QueriesI18nKey.NoQueriesDescription) }}
+        emptyDataProps={{ title: t(emptyDataTitleMap[VIEW]) }}
       >
         <DialPrimaryButton
           label={t(ButtonsI18nKey.Create)}
@@ -96,6 +104,8 @@ const QueriesList = ({ data, entities }: Props) => {
       </ListEntities>
 
       {isCreateOpen && <CreateQuery entities={entities} onClose={() => setIsCreateOpen(false)} />}
+
+      {duplicatedQuery && <DuplicateQuery query={duplicatedQuery} onClose={() => setDuplicatedQuery(void 0)} />}
 
       {editedQuery && <EditQuery query={editedQuery} onClose={() => setEditedQuery(void 0)} />}
 
