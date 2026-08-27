@@ -6,11 +6,15 @@ import { DialAnalyticsCard, DialLoader } from '@epam/ai-dial-ui-kit';
 
 import PassedTestCasesValue from '@/src/components/Runs/Summary/PassedTestCasesValue';
 import TestCaseStatusBreakdown from '@/src/components/Runs/Summary/TestCaseStatusBreakdown';
+import { ANALYTICS_KPI_CARD_CLASS, ANALYTICS_KPI_GRID_CLASS } from '@/src/components/Runs/Summary/constants';
 import { useRunAnalyticsSlice } from '@/src/components/Runs/Summary/use-run-analytics-slice';
-import { formatAvgRunTimeSeconds } from '@/src/components/Runs/Summary/utils';
+import { useRunCosts } from '@/src/components/Runs/Summary/use-run-costs';
+import { formatAvgRunTimeSeconds, formatRunCost } from '@/src/components/Runs/Summary/utils';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { Run } from '@/src/models/evaluation/run';
+
+const COST_UNAVAILABLE_VALUE = '—';
 
 interface Props {
   run: Run;
@@ -21,6 +25,7 @@ interface Props {
 const Analytics: FC<Props> = ({ run, overallScore }) => {
   const t = useI18n();
   const { data } = useRunAnalyticsSlice(run?.id);
+  const { costs, isLoading: costsLoading, unavailable: costsUnavailable } = useRunCosts(run?.id);
 
   if (!data) {
     return (
@@ -35,36 +40,56 @@ const Analytics: FC<Props> = ({ run, overallScore }) => {
   const avgMetricEvalSeconds =
     avgMetricEvalDurationMs != null ? formatAvgRunTimeSeconds(avgMetricEvalDurationMs) : null;
 
+  const testCaseCostDisplay = formatRunCost(costs?.avgTestCaseCost);
+  const metricEvalCostDisplay = formatRunCost(costs?.avgMetricEvalCost);
+  const costDescription = costsUnavailable ? t(RunsI18nKey.CostDataUnavailable) : t(RunsI18nKey.AvgPerTestCase);
+
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap">
+    <div className={ANALYTICS_KPI_GRID_CLASS}>
       {overallScore != null && (
         <DialAnalyticsCard
-          className="flex-1 sm:max-w-xs"
+          className={ANALYTICS_KPI_CARD_CLASS}
           title={t(RunsI18nKey.OverallScore)}
           value={String(overallScore)}
           description={t(RunsI18nKey.OverallScoreDescription)}
         />
       )}
       <DialAnalyticsCard
-        className="flex-1 sm:max-w-xs"
+        className={ANALYTICS_KPI_CARD_CLASS}
         title={t(RunsI18nKey.TestCasesPassed)}
         value={<PassedTestCasesValue counts={statusCounts} />}
         description={<TestCaseStatusBreakdown counts={statusCounts} />}
         error={statusCounts.total === 0}
       />
       <DialAnalyticsCard
-        className="flex-1 sm:max-w-xs"
+        className={ANALYTICS_KPI_CARD_CLASS}
         title={t(RunsI18nKey.AvgTestCaseRunTime)}
         value={avgSeconds != null ? `${avgSeconds} ${t(RunsI18nKey.Seconds)}` : undefined}
         description={t(RunsI18nKey.AvgPerTestCase)}
         error={avgSeconds == null}
       />
       <DialAnalyticsCard
-        className="flex-1 sm:max-w-xs"
+        className={ANALYTICS_KPI_CARD_CLASS}
         title={t(RunsI18nKey.AvgMetricEvalLatency)}
         value={avgMetricEvalSeconds != null ? `${avgMetricEvalSeconds} ${t(RunsI18nKey.Seconds)}` : undefined}
         description={t(RunsI18nKey.AvgPerTestCase)}
         error={avgMetricEvalSeconds == null}
+      />
+      <DialAnalyticsCard
+        className={ANALYTICS_KPI_CARD_CLASS}
+        title={t(RunsI18nKey.TestCaseLlmCost)}
+        value={costsUnavailable ? undefined : (testCaseCostDisplay ?? COST_UNAVAILABLE_VALUE)}
+        description={costDescription}
+        isLoading={costsLoading}
+        error={costsUnavailable}
+      />
+      <DialAnalyticsCard
+        className={ANALYTICS_KPI_CARD_CLASS}
+        title={t(RunsI18nKey.MetricEvalCost)}
+        value={costsUnavailable ? undefined : (metricEvalCostDisplay ?? COST_UNAVAILABLE_VALUE)}
+        description={costDescription}
+        isLoading={costsLoading}
+        error={costsUnavailable}
       />
     </div>
   );
