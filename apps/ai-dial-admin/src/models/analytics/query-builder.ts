@@ -266,3 +266,8 @@ export interface ExecutedQueryMeta {
   aggregateColumns: string[];
   columnLabels: Record<string, string>;
 }
+
+export interface ResultColumnClassification {
+  dimensionColumns: string[];
+  aggregateColumns: string[];
+}

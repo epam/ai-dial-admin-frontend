@@ -8,6 +8,7 @@ import {
   buildPieChartOptions,
   buildScatterChartOptions,
   getNumericColumns,
+  getStrictNumericColumns,
 } from '@/src/components/Analytics/QueryBuilder/Result/chart-options';
 import { CHART_COLOR } from '@/src/components/Common/MetricCard/constants';
 import { CHART_SERIES_COLOR_CYCLE } from '@/src/constants/analytics/query-builder-palette';
@@ -96,6 +97,22 @@ describe('QueryBuilder :: chart-options', () => {
 
     test('empty rows yield no numeric columns', () => {
       expect(getNumericColumns([], ['count'])).toEqual([]);
+    });
+  });
+
+  describe('getStrictNumericColumns', () => {
+    const rows = [
+      { model: 'gpt-4o', count: 3, rate: '0.5', day: '2026-07-01', note: 'ok' },
+      { model: 'claude', count: 7, rate: '1.2', day: '2026-07-02', note: null },
+    ];
+
+    test('drops the date-like column getNumericColumns keeps', () => {
+      expect(getStrictNumericColumns(rows, ['model', 'count', 'rate', 'day', 'note'])).toEqual(['count', 'rate']);
+      expect(getNumericColumns(rows, ['day'])).toEqual(['day']);
+    });
+
+    test('empty rows yield no numeric columns', () => {
+      expect(getStrictNumericColumns([], ['count'])).toEqual([]);
     });
   });
 
