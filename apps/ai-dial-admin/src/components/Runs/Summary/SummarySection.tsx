@@ -25,15 +25,15 @@ const SummarySection: FC<Props> = ({ title, description, control, children, clas
   <section
     className={classNames(
       'flex min-w-0 flex-col gap-3 rounded-lg border border-secondary bg-layer-3 p-4',
-      isFillHeight ? 'min-h-0' : 'shrink-0',
+      isFillHeight ? 'h-full min-h-0' : 'shrink-0',
       className,
     )}
   >
-    <div className="flex w-full flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
+    <div className="flex w-full shrink-0 flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
       <h3 className="dial-body-semi-text min-w-0 text-primary">{title}</h3>
       {control}
     </div>
-    {!!description && <p className="dial-body-text text-primary">{description}</p>}
+    {!!description && <p className="dial-body-text shrink-0 text-primary">{description}</p>}
     <div className={classNames(isFillHeight && 'min-h-0 flex-1 overflow-auto')}>{children}</div>
   </section>
 );
