@@ -32,7 +32,7 @@ const ResourceFeatures: FC<Props> = ({ entity, appRunner, onChangeEntity }) => {
   const { features, isLoading } = useAssetRunnerDetails(appRunner);
 
   const fullRunner = useMemo(() => {
-    if ((appRunner as AppRunnerOption).origin === AppRunnerOrigin.Asset) {
+    if ((appRunner as AppRunnerOption)?.origin === AppRunnerOrigin.Asset) {
       return {
         ...appRunner,
         ...features,
@@ -42,7 +42,7 @@ const ResourceFeatures: FC<Props> = ({ entity, appRunner, onChangeEntity }) => {
   }, [appRunner, features]);
 
   const isFeaturesLoading = useMemo(() => {
-    if ((appRunner as AppRunnerOption).origin === AppRunnerOrigin.Asset) {
+    if ((appRunner as AppRunnerOption)?.origin === AppRunnerOrigin.Asset) {
       return isLoading;
     }
     return false;

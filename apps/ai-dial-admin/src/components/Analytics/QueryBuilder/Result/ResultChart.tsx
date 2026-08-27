@@ -23,8 +23,11 @@ interface Props {
 const ResultChart: FC<Props> = ({ result, meta, config, onChangeConfig }) => {
   const t = useI18n();
 
+  // Deduplicated: a SQL run the backend could not translate offers every column as a dimension, so
+  // its numeric columns are in both lists — counting them twice would offer scatter a single column
+  // to plot against itself.
   const numericColumns = useMemo(
-    () => getNumericColumns(result.rows, [...meta.dimensionColumns, ...meta.aggregateColumns]),
+    () => getNumericColumns(result.rows, [...new Set([...meta.dimensionColumns, ...meta.aggregateColumns])]),
     [result.rows, meta.dimensionColumns, meta.aggregateColumns],
   );
 
@@ -77,7 +80,7 @@ const ResultChart: FC<Props> = ({ result, meta, config, onChangeConfig }) => {
   );
 
   if (!options) {
-    return <DialNoDataContent title={t(QueryBuilderI18nKey.ChartUnavailable)} />;
+    return <DialNoDataContent title={t(QueryBuilderI18nKey.ChartNoAxisSelection)} />;
   }
 
   return (

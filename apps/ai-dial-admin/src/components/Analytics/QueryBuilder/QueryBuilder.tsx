@@ -38,7 +38,7 @@ import ChangedEntityButtons from '@/src/components/EntityHeaderControls/Buttons/
 import { fieldsToOptions, havingFieldOptions } from '@/src/components/Analytics/QueryBuilder/utils/fields';
 import { buildQuery } from '@/src/components/Analytics/QueryBuilder/utils/serialize';
 import { isBuilderRepresentable, parseQuery } from '@/src/components/Analytics/QueryBuilder/utils/deserialize';
-import { getResultColumns } from '@/src/components/Analytics/QueryBuilder/utils/result';
+import { buildExecutedMeta } from '@/src/components/Analytics/QueryBuilder/utils/executed-meta';
 import { formatSql } from '@/src/components/Analytics/QueryBuilder/utils/sql-format';
 import { createGroup, createInitialState, createPredicate } from '@/src/components/Analytics/QueryBuilder/utils/state';
 import { findTimestampField, liftTimeRange } from '@/src/components/Analytics/QueryBuilder/utils/time';
@@ -388,11 +388,14 @@ const QueryBuilder: FC<Props> = ({
     setAiLoadedMessageIndex(index);
     setAiLoading(true);
     const res = await translateSqlToQuery(sql);
+    const translated = res.success ? (res.response?.query ?? null) : null;
     let runFields = state.fields;
+    let runEntityName = state.entityName;
     let request: QueryRunRequest = { kind: QueryRequestKind.Sql, sql };
-    if (res.success && res.response?.query && isBuilderRepresentable(res.response.query)) {
-      const hydrated = await hydrateBuilderFromQuery(res.response.query);
+    if (translated && isBuilderRepresentable(translated)) {
+      const hydrated = await hydrateBuilderFromQuery(translated);
       runFields = hydrated.fields;
+      runEntityName = hydrated.state.entityName;
       setSqlText('');
       setJsonText('');
       setJsonDiverged(false);
@@ -410,7 +413,7 @@ const QueryBuilder: FC<Props> = ({
     if (runRes.success) {
       const response = runRes.response ?? { rows: [] };
       setResult(response);
-      setResultMeta(buildExecutedMeta(request, response, runFields));
+      setResultMeta(buildExecutedMeta(request, response, runFields, runEntityName, translated));
     } else {
       showNotification(
         getErrorNotification(
@@ -441,12 +444,14 @@ const QueryBuilder: FC<Props> = ({
     }
 
     setIsRunning(true);
-    const res =
-      request.kind === QueryRequestKind.Sql ? await executeSqlQuery(request.sql) : await executeQuery(request.query);
+    const [res, translated] = await Promise.all([
+      request.kind === QueryRequestKind.Sql ? executeSqlQuery(request.sql) : executeQuery(request.query),
+      translateForMeta(request),
+    ]);
     if (res.success) {
       const response = res.response ?? { rows: [] };
       setResult(response);
-      setResultMeta(buildExecutedMeta(request, response, state.fields));
+      setResultMeta(buildExecutedMeta(request, response, state.fields, state.entityName, translated));
     } else {
       // Keep the previously shown result instead of replacing it with a broken grid.
       showNotification(
@@ -666,32 +671,17 @@ const QueryBuilder: FC<Props> = ({
 const sameRange = (a: TimeRange, b?: TimeRange): boolean =>
   !!b && a.startDate.getTime() === b.startDate.getTime() && a.endDate.getTime() === b.endDate.getTime();
 
-const buildExecutedMeta = (
-  request: QueryRunRequest,
-  response: StructuredQueryResult,
-  fields: AnalyticsEntityField[],
-): ExecutedQueryMeta => {
-  if (request.kind === QueryRequestKind.Sql) {
-    return { kind: request.kind, mode: QueryMode.Row, dimensionColumns: [], aggregateColumns: [], columnLabels: {} };
+// Describing the run must never be able to break it: the translation is rejected routinely (the SQL
+// view exists for DSL-inexpressible SQL) and can also fail in transit, and neither may take the run
+// down with it.
+const translateForMeta = async (request: QueryRunRequest): Promise<StructuredQuery | null> => {
+  if (request.kind !== QueryRequestKind.Sql) return null;
+  try {
+    const res = await translateSqlToQuery(request.sql);
+    return res.success ? (res.response?.query ?? null) : null;
+  } catch {
+    return null;
   }
-  const dimensionColumns = request.query.group_by ?? [];
-  const resultColumns = getResultColumns(response)
-    .map((c) => c.field)
-    .filter((c): c is string => !!c);
-  // A returned column that names a schema field is labeled by that field's display name; anything else
-  // — a computed column, named by its alias — keeps the name it came back with.
-  const columnLabels: Record<string, string> = {};
-  for (const column of resultColumns) {
-    const displayName = fields.find((f) => f.name === column)?.display_name;
-    if (displayName) columnLabels[column] = displayName;
-  }
-  return {
-    kind: request.kind,
-    mode: request.query.mode,
-    dimensionColumns,
-    aggregateColumns: resultColumns.filter((c) => !dimensionColumns.includes(c)),
-    columnLabels,
-  };
 };
 
 export default QueryBuilder;

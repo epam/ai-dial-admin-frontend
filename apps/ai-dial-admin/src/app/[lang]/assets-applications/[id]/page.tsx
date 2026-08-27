@@ -3,10 +3,11 @@ import { notFound } from 'next/navigation';
 
 import { getModelsList } from '@/src/app/[lang]/models/actions';
 import { getAllRunners } from '@/src/app/[lang]/assets-app-runners/actions';
-import { applicationRunnersApi, applicationsApi, interceptorsApi } from '@/src/app/api/api';
+import { applicationRunnersApi, applicationsApi } from '@/src/app/api/api';
 import AppView from '@/src/components/Assets/Apps/View';
 import { buildAppRunnerOptions } from '@/src/components/SourceField/Application/utils';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
+import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { Asset, AssetApp } from '@/src/models/dial/deployment-asset';
@@ -14,7 +15,9 @@ import { DialFileNodeType } from '@/src/models/dial/file';
 import { DialInterceptor } from '@/src/models/dial/interceptor';
 import { DialModel } from '@/src/models/dial/model';
 import { ResourceInfo } from '@/src/server/core/asset-metadata';
+import { readConfigEntities, readGlobalInterceptors } from '@/src/server/config-entities/read-page-options';
 import { errorObjLog } from '@/src/server/logger';
+import { ConfigFileEntityType } from '@/src/types/config-file-entity';
 import { getUserToken } from '@/src/utils/auth/auth-request';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getApp, getApps } from '../actions';
@@ -37,7 +40,9 @@ export default async function Page(params: {
 
   let applicationSchemes: DialApplicationScheme[] | null = [];
   let assetRunners: ResourceInfo[] = [];
-  let interceptors: DialInterceptor[] | null = [];
+  let interceptors: DialInterceptor[] = [];
+  let globalInterceptors: string[] = [];
+  const optionWarnings: EntitiesI18nKey[] = [];
 
   try {
     const path = decodeURIComponent((await params.searchParams).path);
@@ -56,7 +61,6 @@ export default async function Page(params: {
     applications = await applicationsApi.getApplicationsList(token);
 
     applicationSchemes = await applicationRunnersApi.getApplicationSchemesList(token);
-    interceptors = await interceptorsApi.getInterceptorsList(token);
   } catch (e) {
     errorObjLog(e, 'Failed to fetch app view data');
   }
@@ -66,6 +70,16 @@ export default async function Page(params: {
   } catch (e) {
     errorObjLog(e, 'Failed to fetch asset app runners');
   }
+
+  // Deliberately outside the resource fetch's try, and resolved together: an option-list problem must
+  // not prevent the app from loading, and one list failing must not skip the other. Core-direct —
+  // matching Assets > Models / Assets > App Runners — rather than the admin-BE list, which cannot see
+  // interceptors declared in Core's configuration file, and which is a different population from
+  // `Assets > Interceptors`' own API-written one.
+  [interceptors, globalInterceptors] = await Promise.all([
+    readConfigEntities<DialInterceptor>(token, ConfigFileEntityType.Interceptors, optionWarnings),
+    readGlobalInterceptors(token, optionWarnings),
+  ]);
 
   if (app == null) {
     notFound();
@@ -80,7 +94,9 @@ export default async function Page(params: {
         models={models || []}
         applications={applications || []}
         schemes={buildAppRunnerOptions(applicationSchemes, assetRunners)}
-        interceptors={interceptors || []}
+        interceptors={interceptors}
+        globalInterceptors={globalInterceptors}
+        optionWarnings={optionWarnings}
       />
     </SaveValidationContextProvider>
   );

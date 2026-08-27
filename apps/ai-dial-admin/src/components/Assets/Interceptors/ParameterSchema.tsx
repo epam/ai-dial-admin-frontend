@@ -19,7 +19,7 @@ interface Props {
 const InterceptorAssetParameterSchema: FC<Props> = ({ selectedInterceptor, onChangeConfiguration }) => {
   return (
     <ParameterSchema
-      schemaURL={selectedInterceptor.features?.configurationEndpoint}
+      schemaURL={selectedInterceptor.features?.configuration_endpoint}
       name={selectedInterceptor.name}
       configuration={
         (selectedInterceptor.defaults?.custom_fields as Record<string, Record<string, unknown>>)?.[

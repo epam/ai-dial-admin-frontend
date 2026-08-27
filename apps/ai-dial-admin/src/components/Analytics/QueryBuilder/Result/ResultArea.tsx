@@ -12,13 +12,8 @@ import StatChip from '@/src/components/Analytics/QueryBuilder/Result/StatChip';
 import { getResultColumns, getResultTotal } from '@/src/components/Analytics/QueryBuilder/utils/result';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { QueryMode, StructuredQueryResult } from '@/src/models/analytics/query';
-import {
-  ChartConfig,
-  ExecutedQueryMeta,
-  QueryRequestKind,
-  QueryResultView,
-} from '@/src/models/analytics/query-builder';
+import { StructuredQueryResult } from '@/src/models/analytics/query';
+import { ChartConfig, ExecutedQueryMeta, QueryResultView } from '@/src/models/analytics/query-builder';
 
 interface Props {
   result: StructuredQueryResult | null;
@@ -39,14 +34,14 @@ const ResultArea: FC<Props> = ({ result, meta, isRunning, view, onChangeView, ch
   const rows = result?.rows ?? [];
   const total = getResultTotal(result);
 
-  // A chart needs an X (a group-by dimension) and a Y (an aggregate column): a grouped query with
-  // no aggregates returns only dimension columns and has nothing to plot.
   const chartAvailable =
-    !!meta &&
-    meta.kind === QueryRequestKind.Structured &&
-    meta.mode === QueryMode.Aggregate &&
-    meta.dimensionColumns.length > 0 &&
-    meta.aggregateColumns.length > 0;
+    !!meta && rows.length > 0 && meta.dimensionColumns.length > 0 && meta.aggregateColumns.length > 0;
+
+  const chartUnavailableKey = (): QueryBuilderI18nKey => {
+    if (!rows.length) return QueryBuilderI18nKey.ChartNoRows;
+    if (!meta?.dimensionColumns.length) return QueryBuilderI18nKey.ChartNoDimension;
+    return QueryBuilderI18nKey.ChartNoValueColumn;
+  };
 
   const viewOptions: SegmentedControlOption<QueryResultView>[] = [
     { value: QueryResultView.Table, label: t(QueryBuilderI18nKey.ViewTable) },
@@ -83,7 +78,7 @@ const ResultArea: FC<Props> = ({ result, meta, isRunning, view, onChangeView, ch
           chartAvailable && meta ? (
             <ResultChart result={result} meta={meta} config={chartConfig} onChangeConfig={onChangeChartConfig} />
           ) : (
-            <DialNoDataContent title={t(QueryBuilderI18nKey.ChartUnavailable)} />
+            <DialNoDataContent title={t(chartUnavailableKey())} />
           )
         ) : !rows.length ? (
           <DialNoDataContent title={t(QueryBuilderI18nKey.NoRows)} />
