@@ -43,6 +43,22 @@ const ROW_META: ExecutedQueryMeta = {
   columnLabels: {},
 };
 
+const SQL_TRANSLATED_META: ExecutedQueryMeta = {
+  kind: QueryRequestKind.Sql,
+  mode: QueryMode.Aggregate,
+  dimensionColumns: ['deployment'],
+  aggregateColumns: ['total'],
+  columnLabels: {},
+};
+
+const SQL_FALLBACK_META: ExecutedQueryMeta = {
+  kind: QueryRequestKind.Sql,
+  mode: QueryMode.Row,
+  dimensionColumns: ['event_id', 'project_id'],
+  aggregateColumns: [],
+  columnLabels: {},
+};
+
 type AreaProps = Parameters<typeof ResultArea>[0];
 
 // ResultArea is controlled by the orchestrator, so the view and chart config live above it. This
@@ -119,7 +135,7 @@ describe('QueryBuilder :: ResultArea', () => {
 
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewChart' }));
 
-    expect(screen.getByText('QueryBuilder.ChartUnavailable')).toBeInTheDocument();
+    expect(screen.getByText('QueryBuilder.ChartNoValueColumn')).toBeInTheDocument();
   });
 
   test('chart view shows a hint for a row-mode result', async () => {
@@ -128,6 +144,38 @@ describe('QueryBuilder :: ResultArea', () => {
 
     await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewChart' }));
 
-    expect(screen.getByText('QueryBuilder.ChartUnavailable')).toBeInTheDocument();
+    expect(screen.getByText('QueryBuilder.ChartNoDimension')).toBeInTheDocument();
+  });
+
+  test('chart view renders chart controls for a translated SQL result', async () => {
+    const user = userEvent.setup();
+    renderArea({ result: AGG_RESULT, meta: SQL_TRANSLATED_META });
+
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewChart' }));
+
+    expect(screen.getByText(/QueryBuilder.ChartXAxis/)).toBeInTheDocument();
+    expect(screen.getByText(/QueryBuilder.ChartYAxis/)).toBeInTheDocument();
+  });
+
+  test('chart view shows the no-value-column hint for a fallback SQL result', async () => {
+    const user = userEvent.setup();
+    renderArea({
+      result: { columns: ['event_id', 'project_id'], rows: [{ event_id: '1', project_id: 'p' }] },
+      meta: SQL_FALLBACK_META,
+    });
+
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewChart' }));
+
+    expect(screen.getByText('QueryBuilder.ChartNoValueColumn')).toBeInTheDocument();
+    expect(screen.queryByText('QueryBuilder.ChartNoDimension')).not.toBeInTheDocument();
+  });
+
+  test('chart view shows the no-rows hint for an empty result', async () => {
+    const user = userEvent.setup();
+    renderArea({ result: { columns: [], rows: [] }, meta: AGG_META });
+
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewChart' }));
+
+    expect(screen.getByText('QueryBuilder.ChartNoRows')).toBeInTheDocument();
   });
 });

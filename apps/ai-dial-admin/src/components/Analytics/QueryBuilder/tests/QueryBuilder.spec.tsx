@@ -14,10 +14,16 @@ import {
 import { useAppContext } from '@/src/context/AppContext';
 import { QueryBuilderI18nKey } from '@/src/constants/i18n';
 import { AnalyticsEntity, AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
-import { QueryMode, StructuredQuery } from '@/src/models/analytics/query';
+import { QueryExprType, QueryMode, StructuredQuery } from '@/src/models/analytics/query';
 import { TEST_FUNCTIONS } from '@/src/components/Analytics/QueryBuilder/utils/tests/functions.fixture';
 
 vi.mock('@/src/app/[lang]/queries/actions');
+
+const { showNotificationMock } = vi.hoisted(() => ({ showNotificationMock: vi.fn() }));
+
+vi.mock('@/src/context/NotificationContext', () => ({
+  useNotification: () => ({ showNotification: showNotificationMock, removeNotification: vi.fn() }),
+}));
 
 vi.mock('@/src/context/AppContext', () => ({
   useAppContext: vi.fn(() => ({ featureFlags: { deploymentsEnabled: true } })),
@@ -412,6 +418,8 @@ describe('QueryBuilder AI view', () => {
 
     expect(executeSqlQuery).toHaveBeenCalledWith('SELECT 1');
     await vi.waitFor(() => expect(runButton).toBeDisabled());
+    // The run describes itself from the translation it already performed, never a second one.
+    expect(translateSqlToQuery).toHaveBeenCalledOnce();
   });
 
   test('a representable message run hydrates the builder and shows in the JSON view', async () => {
@@ -589,5 +597,99 @@ describe('QueryBuilder AI view', () => {
 
     expect(screen.queryByText('SELECT 1')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'QueryBuilder.Run' })).not.toBeInTheDocument();
+  });
+});
+
+describe('QueryBuilder :: SQL view Run', () => {
+  beforeEach(() => {
+    vi.mocked(translateQuery).mockResolvedValue({ success: true, response: { sql: 'SELECT 1' } });
+  });
+
+  const AGG_ROWS = [
+    { deployment: 'gpt-4o', total: 120 },
+    { deployment: 'claude', total: 80 },
+  ];
+
+  const runSql = async (user: ReturnType<typeof userEvent.setup>, sql: string) => {
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewSql' }));
+    const editor = await screen.findByLabelText('sql-editor');
+    await user.clear(editor);
+    await user.type(editor, sql);
+    await user.click(screen.getByRole('button', { name: /QueryBuilder.Run/ }));
+  };
+
+  test('translates and executes together, then charts the translated grouping', async () => {
+    const user = userEvent.setup();
+    vi.mocked(executeSqlQuery).mockResolvedValue({ success: true, response: { rows: AGG_ROWS } } as never);
+    vi.mocked(translateSqlToQuery).mockResolvedValue({
+      success: true,
+      response: {
+        query: {
+          entity: 'dial_usage_log',
+          mode: QueryMode.Aggregate,
+          group_by: ['deployment'],
+          select: [{ expr: { type: QueryExprType.Field, name: 'deployment' } }],
+        } as StructuredQuery,
+      },
+    } as never);
+
+    renderBuilder();
+    await runSql(user, 'SELECT deployment, count(*) AS total FROM dial_usage_log GROUP BY deployment');
+
+    expect(executeSqlQuery).toHaveBeenCalled();
+    expect(translateSqlToQuery).toHaveBeenCalled();
+
+    await user.click(await screen.findByRole('tab', { name: 'QueryBuilder.ViewChart' }));
+    expect(await screen.findByText(/QueryBuilder.ChartXAxis/)).toBeInTheDocument();
+    expect(screen.getByText(/QueryBuilder.ChartYAxis/)).toBeInTheDocument();
+  });
+
+  test('a rejected translation still shows the result and raises no notification', async () => {
+    const user = userEvent.setup();
+    vi.mocked(executeSqlQuery).mockResolvedValue({ success: true, response: { rows: AGG_ROWS } } as never);
+    vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, status: 400 } as never);
+
+    renderBuilder();
+    await runSql(user, 'SELECT sum(a) / count(*) AS avg_a FROM dial_usage_log');
+
+    expect(await screen.findByText('grid rows: 2')).toBeInTheDocument();
+    expect(showNotificationMock).not.toHaveBeenCalled();
+  });
+
+  test('a rejected translation still charts, classifying columns from the rows', async () => {
+    const user = userEvent.setup();
+    vi.mocked(executeSqlQuery).mockResolvedValue({ success: true, response: { rows: AGG_ROWS } } as never);
+    vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, status: 400 } as never);
+
+    renderBuilder();
+    await runSql(user, 'SELECT sum(a) / count(*) AS avg_a FROM dial_usage_log');
+    await screen.findByText('grid rows: 2');
+
+    await user.click(screen.getByRole('tab', { name: 'QueryBuilder.ViewChart' }));
+    expect(await screen.findByText(/QueryBuilder.ChartXAxis/)).toBeInTheDocument();
+  });
+
+  test('a translation that rejects outright still shows the result and clears the running state', async () => {
+    const user = userEvent.setup();
+    vi.mocked(executeSqlQuery).mockResolvedValue({ success: true, response: { rows: AGG_ROWS } } as never);
+    vi.mocked(translateSqlToQuery).mockRejectedValue(new Error('network down'));
+
+    renderBuilder();
+    await runSql(user, 'SELECT deployment FROM dial_usage_log');
+
+    expect(await screen.findByText('grid rows: 2')).toBeInTheDocument();
+    expect(showNotificationMock).not.toHaveBeenCalled();
+    await vi.waitFor(() => expect(screen.getByRole('button', { name: /QueryBuilder.Run/ })).toBeEnabled());
+  });
+
+  test('a failed run keeps its error notification', async () => {
+    const user = userEvent.setup();
+    vi.mocked(executeSqlQuery).mockResolvedValue({ success: false, errorMessage: 'boom' } as never);
+    vi.mocked(translateSqlToQuery).mockResolvedValue({ success: false, status: 400 } as never);
+
+    renderBuilder();
+    await runSql(user, 'SELECT bad');
+
+    await vi.waitFor(() => expect(showNotificationMock).toHaveBeenCalled());
   });
 });

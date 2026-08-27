@@ -40,6 +40,18 @@ export const sortRowsByX = (rows: ResultRows, xField: string): ResultRows => {
 export const getNumericColumns = (rows: ResultRows, columns: string[]): string[] =>
   rows.length ? columns.filter((column) => rows.every((row) => comparableKey(row[column]) !== null)) : [];
 
+// Stricter than `toNumber`, which coerces anything `Number()` accepts: `true` becomes 1 and an empty
+// array becomes 0, so a boolean or an array-valued column (request_tags) would read as a measure.
+const strictNumber = (value: unknown): number | null => {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+  if (typeof value !== 'string' || value === '') return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+};
+
+export const getStrictNumericColumns = (rows: ResultRows, columns: string[]): string[] =>
+  rows.length ? columns.filter((column) => rows.every((row) => strictNumber(row[column]) !== null)) : [];
+
 // Top-N pie slices by value; the remaining categories merge into one localized "Other" slice.
 export const bucketTopSlices = (
   rows: ResultRows,
