@@ -4,10 +4,11 @@ import {
   convertVariableIntoInitialRequest,
   generateInputBindingsRowData,
   generateVariablesRowData,
+  hasIncompleteInputBindings,
   perTurnFieldNames,
   resolveVariablesForTurn,
 } from '../template-variables';
-import { InputBinding, TemplateVariable, TestCaseSchema } from '@/src/models/evaluation/test-suite';
+import { InputBinding, TemplateVariable, TestCaseSchema, TestSuite } from '@/src/models/evaluation/test-suite';
 import { InputBindingType, TestCaseItemType } from '@/src/types/evaluation';
 
 const createVariable = (overrides?: Partial<TemplateVariable>): TemplateVariable => ({
@@ -601,5 +602,42 @@ describe('convertVariableIntoInitialRequest', () => {
 
     expect(result).toEqual({ dup: '' });
     expect(Object.keys(result)).toHaveLength(1);
+  });
+});
+
+describe('hasIncompleteInputBindings', () => {
+  const suite = (overrides?: Partial<TestSuite>): TestSuite => ({ id: 'suite-1', ...overrides });
+
+  test('returns false when there are no bindings', () => {
+    expect(hasIncompleteInputBindings(suite())).toBe(false);
+    expect(hasIncompleteInputBindings(suite({ inputBindings: [] }))).toBe(false);
+  });
+
+  test('returns false for a constant or a selected attribute', () => {
+    expect(hasIncompleteInputBindings(suite({ inputBindings: [{ templateVariable: 'a', constantValue: '' }] }))).toBe(
+      false,
+    );
+    expect(hasIncompleteInputBindings(suite({ inputBindings: [{ templateVariable: 'a', dataField: 'col' }] }))).toBe(
+      false,
+    );
+  });
+
+  test('returns true for Attribute mode with an empty dataField', () => {
+    expect(hasIncompleteInputBindings(suite({ inputBindings: [{ templateVariable: 'a', dataField: '' }] }))).toBe(true);
+  });
+
+  test('returns true when neither dataField nor constantValue is set', () => {
+    expect(hasIncompleteInputBindings(suite({ inputBindings: [{ templateVariable: 'a' }] }))).toBe(true);
+  });
+
+  test('returns true when an additional request has an incomplete binding', () => {
+    expect(
+      hasIncompleteInputBindings(
+        suite({
+          inputBindings: [{ templateVariable: 'ok', constantValue: 'x' }],
+          additionalRequests: [{ inputBindings: [{ templateVariable: 'followUp', dataField: '' }] }],
+        }),
+      ),
+    ).toBe(true);
   });
 });

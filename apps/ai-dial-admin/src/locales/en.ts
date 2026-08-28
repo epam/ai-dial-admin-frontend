@@ -1972,6 +1972,9 @@ export default {
     NoTestCasesDescription: 'Add test cases manually or attach from dataset',
     More: 'More',
     AttachDataset: 'Attach dataset',
+    AttachDatasetIncompleteConfig: 'Incomplete Dynamic Configuration',
+    AttachDatasetIncompleteConfigDescription:
+      'Complete Dynamic Configuration before attaching a dataset. Each field needs a constant value or a selected attribute.',
     SelectDataset: 'Select Dataset',
     SelectDatasetDescription: 'Select a dataset to link its test cases to the current test suite.',
     PreviewTestCases: 'Preview Test Cases',

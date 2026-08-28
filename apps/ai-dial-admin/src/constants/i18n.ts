@@ -1922,6 +1922,8 @@ export enum TestSuitesI18nKey {
   NoTestCasesDescription = 'TestSuites.NoTestCasesDescription',
   More = 'TestSuites.More',
   AttachDataset = 'TestSuites.AttachDataset',
+  AttachDatasetIncompleteConfig = 'TestSuites.AttachDatasetIncompleteConfig',
+  AttachDatasetIncompleteConfigDescription = 'TestSuites.AttachDatasetIncompleteConfigDescription',
   SelectDataset = 'TestSuites.SelectDataset',
   SelectDatasetDescription = 'TestSuites.SelectDatasetDescription',
   PreviewTestCases = 'TestSuites.PreviewTestCases',

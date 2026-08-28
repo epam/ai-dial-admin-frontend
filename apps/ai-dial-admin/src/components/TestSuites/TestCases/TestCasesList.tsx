@@ -35,6 +35,7 @@ import ListEntities from '@/src/components/ListView/List';
 import TryOut from '@/src/components/TestSuites/RequestTemplate/components/TryOut';
 import { getTestCaseColumns } from '@/src/components/TestSuites/utils/columns';
 import { collapseRowsToTestCases, createNewTestCaseRow, rowToTestCase } from '@/src/components/TestSuites/utils/data';
+import { hasIncompleteInputBindings } from '@/src/components/TestSuites/utils/template-variables';
 import { testCaseFromTryOutRow } from '@/src/components/TestSuites/utils/tryout-test-case';
 import { ONE_ACTION_COLUMN } from '@/src/constants/ag-grid';
 import { DEFAULT_ETAG } from '@/src/constants/api-headers';
@@ -534,9 +535,31 @@ const TestCasesList: FC<Props> = ({
     [selectedTestSuite.datasetId, showNotification, t, router, onChangeDataset],
   );
 
+  const notifyIncompleteBindings = useCallback(() => {
+    showNotification(
+      getErrorNotification(
+        t(TestSuitesI18nKey.AttachDatasetIncompleteConfig),
+        t(TestSuitesI18nKey.AttachDatasetIncompleteConfigDescription),
+      ),
+    );
+  }, [showNotification, t]);
+
+  const onBeforeAttach = useCallback(() => {
+    if (!hasIncompleteInputBindings(selectedTestSuite)) {
+      return true;
+    }
+    notifyIncompleteBindings();
+    return false;
+  }, [selectedTestSuite, notifyIncompleteBindings]);
+
   const onAttachDataset = useCallback(
     async (newDatasetId: string) => {
       if (!suiteEtag) return;
+
+      if (hasIncompleteInputBindings(selectedTestSuite)) {
+        notifyIncompleteBindings();
+        return;
+      }
 
       if (dataset?.visibility === DatasetVisibility.PRIVATE && dataset.id) {
         const deleteRes = await removeDataset(dataset.id);
@@ -553,7 +576,7 @@ const TestCasesList: FC<Props> = ({
         showNotification(getErrorNotification(res.errorHeader, res.errorMessage));
       }
     },
-    [selectedTestSuite, suiteEtag, dataset, showNotification, router],
+    [selectedTestSuite, suiteEtag, dataset, showNotification, router, notifyIncompleteBindings],
   );
 
   const onDetachDatasetCallback = useCallback(async () => {
@@ -648,6 +671,7 @@ const TestCasesList: FC<Props> = ({
           isReadOnly={isReadOnly}
           onPublish={onPublish}
           onAttachDataset={onAttachDataset}
+          onBeforeAttach={onBeforeAttach}
           onDetachDataset={onDetachDatasetCallback}
           datasetTag={datasetTag}
         />

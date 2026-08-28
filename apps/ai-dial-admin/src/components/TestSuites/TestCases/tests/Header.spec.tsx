@@ -157,6 +157,38 @@ describe('HeaderButtons', () => {
     expect(screen.queryByText('Pick Public Dataset Modal')).not.toBeInTheDocument();
   });
 
+  test('does not open attach modal when onBeforeAttach returns false', () => {
+    const mockOnBeforeAttach = vi.fn().mockReturnValue(false);
+    render(
+      <HeaderButtons
+        datasetId={mockTestSuiteId}
+        onApplyImport={mockOnApplyImport}
+        onBeforeAttach={mockOnBeforeAttach}
+      />,
+    );
+
+    fireEvent.click(screen.getByText(TestSuitesI18nKey.AttachDataset));
+
+    expect(mockOnBeforeAttach).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText('Pick Public Dataset Modal')).not.toBeInTheDocument();
+  });
+
+  test('opens attach modal when onBeforeAttach returns true', () => {
+    const mockOnBeforeAttach = vi.fn().mockReturnValue(true);
+    render(
+      <HeaderButtons
+        datasetId={mockTestSuiteId}
+        onApplyImport={mockOnApplyImport}
+        onBeforeAttach={mockOnBeforeAttach}
+      />,
+    );
+
+    fireEvent.click(screen.getByText(TestSuitesI18nKey.AttachDataset));
+
+    expect(mockOnBeforeAttach).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('Pick Public Dataset Modal')).toBeInTheDocument();
+  });
+
   test('opens publish modal and forwards values on confirm', () => {
     const mockOnPublish = vi.fn();
     render(<HeaderButtons datasetId={mockTestSuiteId} onApplyImport={mockOnApplyImport} onPublish={mockOnPublish} />);
