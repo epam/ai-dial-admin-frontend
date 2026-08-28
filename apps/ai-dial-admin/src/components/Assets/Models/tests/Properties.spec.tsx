@@ -58,10 +58,10 @@ describe('Model asset Properties :: routing-critical fields', () => {
 });
 
 describe('Model asset Properties :: identity fields', () => {
-  test('Should show the canonical deployment id callers invoke, not the bare resource name', () => {
+  test('Should show the bare deployment id callers invoke, since Core keys models by short name', () => {
     renderProperties({ name: 'gpt-4' });
 
-    expect(screen.getByText('models/platform/gpt-4')).toBeInTheDocument();
+    expect(screen.getByText('gpt-4')).toBeInTheDocument();
   });
 
   test('Should render an optional display version field', () => {
