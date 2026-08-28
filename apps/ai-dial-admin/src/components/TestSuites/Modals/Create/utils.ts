@@ -11,7 +11,6 @@ export function buildDeploymentUpdate(data: Deployment): Partial<TestSuite> {
       version: data.version,
       type: data.$type,
     },
-    endpointRef: void 0,
     mcpDeploymentRef: void 0,
     toolRef: void 0,
     argumentTemplate: void 0,

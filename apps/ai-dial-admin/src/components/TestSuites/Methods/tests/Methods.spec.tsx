@@ -162,6 +162,23 @@ describe('Methods component', () => {
     expect(updater({}).responseColumns[0]).toEqual(expect.objectContaining({ name: 'answer', displayName: 'answer' }));
   });
 
+  test('highlights chat-completion without resetting the template when it is already selected', async () => {
+    const user = userEvent.setup();
+    const testSuite: any = {
+      endpointRef: { method: 'POST', relativeUrlPattern: '/chat/completions' },
+      requestTemplate: {
+        body: { content: { messages: [{ role: 'user', content: '${{user_message22222222222222222}}' }] } },
+      },
+    };
+    const selectedApplication: any = { deploymentId: 'test-deployment', $type: 'application' };
+
+    render(<Methods testSuite={testSuite} selectedTarget={selectedApplication} onChange={onChange} />);
+
+    await user.click(await screen.findByRole('button', { name: 'POST /chat/completions' }));
+
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
   test('uniquifies the default chat-completion column name against taken names', async () => {
     const user = userEvent.setup();
     const testSuite: any = { endpointRef: {} };
