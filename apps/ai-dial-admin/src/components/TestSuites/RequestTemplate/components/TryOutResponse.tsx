@@ -35,6 +35,7 @@ interface Props {
   testSuite?: TestSuite;
   schema?: TestCaseSchema[];
   multiTurnData?: Record<string, unknown>[];
+  selectedRequestIndex?: number;
 }
 
 const JsonCollapsible: FC<{
@@ -108,6 +109,7 @@ const TryOutResponsePreview: FC<Props> = ({
   testSuite,
   schema,
   multiTurnData,
+  selectedRequestIndex = 0,
 }) => {
   const t = useI18n();
   const requestBody = resolvedRequest.body as object;
@@ -150,37 +152,26 @@ const TryOutResponsePreview: FC<Props> = ({
       );
     }
 
-    if (shape === 'requests') {
-      return groups.flatMap((group) =>
-        group.turns.map(({ turnIndex, item }) => (
-          <HistoryEntryPair
-            key={`r-${group.requestIndex}-${turnIndex}`}
-            entry={item}
-            isRequestSend={isRequestSend}
-            sectionTitle={t(TestSuitesI18nKey.RequestLabel, { index: group.requestIndex + 1 })}
-          />
-        )),
-      );
-    }
+    if (shape === 'requests' || shape === 'combined') {
+      const group = groups.find((item) => item.requestIndex === selectedRequestIndex);
+      if (!group) {
+        return null;
+      }
 
-    return groups.map((group) => {
-      const requestTitle = t(TestSuitesI18nKey.RequestLabel, { index: group.requestIndex + 1 });
       const showTurnLabels = shouldShowTurnLabels(group, turnCounts);
 
-      return (
-        <CollapsibleSection key={`req-${group.requestIndex}`} title={requestTitle} defaultOpen growOnOpen={false}>
-          {group.turns.map(({ turnIndex, item }) => (
-            <HistoryEntryPair
-              key={`c-${group.requestIndex}-${turnIndex}`}
-              entry={item}
-              isRequestSend={isRequestSend}
-              sectionTitle={showTurnLabels ? t(TestSuitesI18nKey.TurnLabel, { index: turnIndex + 1 }) : undefined}
-            />
-          ))}
-        </CollapsibleSection>
-      );
-    });
-  }, [history, shape, groups, turnCounts, isRequestSend, t]);
+      return group.turns.map(({ turnIndex, item }) => (
+        <HistoryEntryPair
+          key={`${shape}-${group.requestIndex}-${turnIndex}`}
+          entry={item}
+          isRequestSend={isRequestSend}
+          sectionTitle={showTurnLabels ? t(TestSuitesI18nKey.TurnLabel, { index: turnIndex + 1 }) : undefined}
+        />
+      ));
+    }
+
+    return null;
+  }, [history, shape, groups, turnCounts, isRequestSend, t, selectedRequestIndex]);
 
   return (
     <>
