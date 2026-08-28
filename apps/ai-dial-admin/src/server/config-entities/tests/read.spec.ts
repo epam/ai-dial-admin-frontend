@@ -36,8 +36,8 @@ describe('getConfigEntityOptions', () => {
     const result = await getConfigEntityOptions(TOKEN_MOCK, ConfigFileEntityType.Interceptors);
 
     expect(result.success && result.data.options).toEqual([
-      { name: 'from-file', origin: ConfigEntityOrigin.ConfigFile },
       { name: 'from-api', origin: ConfigEntityOrigin.Api },
+      { name: 'from-file', origin: ConfigEntityOrigin.ConfigFile },
     ]);
     expect(result.success && result.data.failures).toEqual([]);
   });
