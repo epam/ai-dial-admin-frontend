@@ -10,7 +10,6 @@ import {
 import {
   assembleTranscript,
   carriesWholeConversation,
-  questionsByTurn,
   transcriptStateOf,
 } from '@/src/utils/analytics/conversation-transcript';
 
@@ -330,57 +329,5 @@ describe('transcriptStateOf', () => {
     ];
 
     expect(new Set(states).size).toBe(6);
-  });
-});
-
-describe('questionsByTurn', () => {
-  // A turn's request body always ends with the user's new message, so the last user message a turn
-  // contributed is that turn's question. Read off the assembled transcript, so both fetch paths are covered
-  // by one rule and nothing new is read for it.
-  test('keys each turn own question by its trace id', () => {
-    const messages = [
-      rendered('t1', MessageRole.User, 'first question'),
-      rendered('t1', MessageRole.Assistant, 'first answer'),
-      rendered('t2', MessageRole.User, 'second question'),
-      rendered('t2', MessageRole.Assistant, 'second answer'),
-    ];
-
-    expect(questionsByTurn(messages)).toEqual(
-      new Map([
-        ['t1', 'first question'],
-        ['t2', 'second question'],
-      ]),
-    );
-  });
-
-  // A full-history client's turn contributes the previous turn's answer before its own question, so the last
-  // user message is the one that belongs to it.
-  test('takes the last user message a turn contributed, not the first', () => {
-    const messages = [
-      rendered('t2', MessageRole.User, 'echoed earlier question'),
-      rendered('t2', MessageRole.User, 'the new question'),
-    ];
-
-    expect(questionsByTurn(messages).get('t2')).toBe('the new question');
-  });
-
-  test('never takes an assistant message as a question', () => {
-    expect(questionsByTurn([rendered('t1', MessageRole.Assistant, 'an answer')]).has('t1')).toBe(false);
-  });
-
-  // The turn list has to work without a transcript: a conversation with no entry hop, or a caller whose
-  // schema withheld the body columns, leaves the turn absent so the caller falls back to its number.
-  test('omits a turn whose question is empty, absent or whitespace', () => {
-    const questions = questionsByTurn([
-      rendered('t1', MessageRole.User, ''),
-      rendered('t2', MessageRole.User, '   '),
-      rendered('t3', MessageRole.User, null),
-    ]);
-
-    expect(questions.size).toBe(0);
-  });
-
-  test('no messages yields no questions', () => {
-    expect(questionsByTurn([])).toEqual(new Map());
   });
 });

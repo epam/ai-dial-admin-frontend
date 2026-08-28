@@ -27,13 +27,23 @@ export const FEEDBACK_ENTITY = 'response_ratings';
 
 export const USAGE_LOG_ENTITY = 'dial_usage_log';
 
-export const TURNS_ENTITY = 'turns';
-
-export const CONVERSATION_TURN_LIMIT = 200;
-
-export const CONVERSATION_ENTRY_HOP_LIMIT = CONVERSATION_TURN_LIMIT;
+export const CONVERSATION_ENTRY_HOP_LIMIT = 200;
 
 export const CONVERSATION_SPAN_LIMIT = 300;
+
+export const CONVERSATION_TRACE_PAGE_SIZE = 50;
+
+// A guard against the unlabelled batch shape, not against chat traffic: chat traces record one client root
+// and at most one Core-internal root, while one measured trace carried 93 roots. Reaching the cap is
+// disclosed rather than truncated, because the trace's own figures are not capped with it.
+export const CONVERSATION_TRACE_ROOT_CAP = 12;
+
+// `dial_usage_log` is `PARTITION BY toYYYYMMDD(request_time)`, so widening a bound to a whole UTC day is
+// nearly free — and one further day of slack is what the bound actually needs. A root span starts before its
+// children (54–502 ms observed, no upper bound) and a Core-internal root fires when its parent completes
+// (36 s later on one trace), so a bound rounded to the *containing* day has zero margin at exactly the
+// boundary those offsets straddle.
+export const CONVERSATION_DAY_PAD_MS = 24 * 60 * 60 * 1000;
 
 export const USAGE_LOG_RETENTION_MS = 365 * 24 * 60 * 60 * 1000;
 
@@ -54,6 +64,10 @@ export const UTILITY_URI_MARKERS: string[] = ['count_tokens', '/tokenize', '/tru
 export const ROUTE_EVENT_KIND = 'route';
 
 export const MCP_EVENT_KIND = 'mcp';
+
+export const LLM_CALL_EVENT_KIND = 'llm_call';
+
+export const EMBEDDING_EVENT_KIND = 'embedding';
 
 export const STREAM_MODEL_BODY_LIMIT = 80;
 
@@ -151,9 +165,6 @@ export const OPTIONAL_DETAIL_SELECT_FIELDS: ConversationsField[] = [
   ...OPTIONAL_CURATED_COLUMN_FIELDS,
   ...IDENTITY_ENRICHMENT_FIELDS,
   ...DETAIL_INSIGHT_FIELDS,
-  // Read by the detail view alone. The log states the size cap once, for the whole column, because it holds
-  // for the large majority of titled conversations — so the list query never names this field.
-  ConversationsField.InsightTruncated,
   ConversationsField.Traces,
 ];
 
@@ -263,7 +274,6 @@ export const CONVERSATION_FIELD_VALUE_TYPE: Partial<Record<ConversationsField, Q
   [ConversationsField.InsightTopics]: QueryValueType.String,
   [ConversationsField.InsightLanguage]: QueryValueType.String,
   [ConversationsField.InsightResolutionStatus]: QueryValueType.String,
-  [ConversationsField.InsightTruncated]: QueryValueType.Boolean,
 };
 
 export const CONVERSATION_FILTER_QUERY_OPERATOR: Record<

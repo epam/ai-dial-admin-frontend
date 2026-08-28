@@ -64,7 +64,6 @@ const TAG_BY_FIELD: Record<string, string> = {
   [ConversationsField.DurationMs]: 'performance',
   [ConversationsField.AvgDurationMs]: 'performance',
   [ConversationsField.Deployments]: 'deployment',
-  [ConversationsField.InsightTruncated]: 'provenance',
 };
 
 const ALL_FIELDS: AnalyticsEntityField[] = Object.values(ConversationsField).map((name) => ({

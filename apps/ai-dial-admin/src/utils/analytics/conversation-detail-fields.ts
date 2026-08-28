@@ -2,7 +2,6 @@ import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace
 import {
   ConversationDetailRow,
   ConversationFeedbackRow,
-  ConversationTurnRow,
   ConversationFieldDefinition,
   ConversationFieldFormat,
   ConversationFieldState,
@@ -90,38 +89,6 @@ export const isFeedbackReRated = (row: ConversationFeedbackRow): boolean => {
   const last = toMillis(row.last_rate_time);
 
   return first !== null && last !== null && first !== last;
-};
-
-export const attributeRatingsToTurns = (
-  turns: ConversationTurnRow[],
-  rows: ConversationFeedbackRow[],
-): RatingCounts[] => {
-  const startedAt = turns.map(({ started }) => toMillis(started));
-  const counts: RatingCounts[] = turns.map(() => ({ rating_up: 0, rating_down: 0 }));
-
-  for (const row of rows) {
-    const ratedAt = toMillis(row.last_rate_time);
-    if (ratedAt === null) {
-      continue;
-    }
-
-    const index = startedAt.reduce<number>(
-      (latest, start, at) => (start !== null && start <= ratedAt ? at : latest),
-      -1,
-    );
-    if (index < 0) {
-      continue;
-    }
-
-    const bucket = counts[index];
-    const { rating_up: up, rating_down: down } = feedbackRowCounts(row);
-    counts[index] = {
-      rating_up: (bucket.rating_up ?? 0) + (up ?? 0),
-      rating_down: (bucket.rating_down ?? 0) + (down ?? 0),
-    };
-  }
-
-  return counts;
 };
 
 export const isFeedbackPartial = (rows: ConversationFeedbackRow[], total: number | null): boolean =>

@@ -45,6 +45,7 @@ interface Props {
   isReadOnly?: boolean;
   onPublish?: (displayName: string, description?: string) => void;
   onAttachDataset?: (datasetId: string) => void;
+  onBeforeAttach?: () => boolean;
   onDetachDataset?: () => void;
   datasetTag?: ReactNode;
 }
@@ -61,6 +62,7 @@ const HeaderButtons: FC<Props> = ({
   isReadOnly,
   onPublish,
   onAttachDataset,
+  onBeforeAttach,
   onDetachDataset,
   datasetTag,
 }) => {
@@ -109,6 +111,13 @@ const HeaderButtons: FC<Props> = ({
     onAttachDataset?.(selectedDatasetId);
   };
 
+  const tryOpenAttachModal = () => {
+    if (onBeforeAttach && !onBeforeAttach()) {
+      return;
+    }
+    setIsAttachModalOpen(true);
+  };
+
   return (
     <div className="flex gap-4 items-center">
       {isReadOnly && (
@@ -127,7 +136,7 @@ const HeaderButtons: FC<Props> = ({
           <DialGhostButton
             label={t(TestSuitesI18nKey.ChangeDataset)}
             iconBefore={<IconPencilMinus {...BASE_BUTTON_ICON_PROPS} />}
-            onClick={() => setIsAttachModalOpen(true)}
+            onClick={tryOpenAttachModal}
           />
         </>
       )}
@@ -143,7 +152,7 @@ const HeaderButtons: FC<Props> = ({
           <DialGhostButton
             label={t(TestSuitesI18nKey.AttachDataset)}
             iconBefore={<IconDatabaseImport {...BASE_BUTTON_ICON_PROPS} />}
-            onClick={() => setIsAttachModalOpen(true)}
+            onClick={tryOpenAttachModal}
           />
         </>
       )}

@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 
 import {
   ConversationSpanRow,
-  ConversationTurnRow,
+  ConversationTraceFigures,
   HopEvent,
   HopEventType,
   ModelCallOutput,
@@ -34,14 +34,14 @@ const row = (overrides: Partial<ConversationSpanRow> = {}): ConversationSpanRow 
     ...overrides,
   }) as ConversationSpanRow;
 
-const TURN: ConversationTurnRow = {
-  trace_id: 'tr1',
-  started: 1000,
-  hops: 3,
-  failed_hops: 0,
+const FIGURES: ConversationTraceFigures = {
+  traceId: 'tr1',
+  startedAt: 1000,
+  spans: 3,
+  failedSpans: 0,
   tokens: 3667333,
-  cost: '3.678',
-  duration_ms: 523263,
+  price: '3.678',
+  durationMs: 523263,
 };
 
 const output = (id: string, over: Partial<ModelCallOutput> = {}): ModelCallOutput => ({
@@ -52,8 +52,8 @@ const output = (id: string, over: Partial<ModelCallOutput> = {}): ModelCallOutpu
   ...over,
 });
 
-const stream = (spans: ConversationSpanRow[], modelOutputs: ModelCallOutput[] = [], question?: string): HopEvent[] =>
-  buildHopEventStream({ spans, modelOutputs, turn: TURN, question });
+const stream = (spans: ConversationSpanRow[], modelOutputs: ModelCallOutput[] = [], title?: string): HopEvent[] =>
+  buildHopEventStream({ spans, modelOutputs, figures: FIGURES, title });
 
 const typesOf = (events: HopEvent[]): HopEventType[] => events.map(({ type }) => type);
 

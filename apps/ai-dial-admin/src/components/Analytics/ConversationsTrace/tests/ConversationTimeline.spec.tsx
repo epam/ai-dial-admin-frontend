@@ -8,20 +8,25 @@ import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import {
   ConversationMessage,
+  ConversationTraceGroup,
   ConversationTranscript,
-  ConversationTurnRow,
   MessageRole,
+  RatingCounts,
   TranscriptState,
 } from '@/src/models/analytics/conversations-trace';
 
-const turn = (traceId: string, overrides: Partial<ConversationTurnRow> = {}): ConversationTurnRow => ({
-  trace_id: traceId,
-  started: 1,
-  hops: 3,
-  failed_hops: 0,
+const turn = (traceId: string, overrides: Partial<ConversationTraceGroup> = {}): ConversationTraceGroup => ({
+  traceId,
+  startedAt: 1,
+  spans: 3,
   tokens: 16366,
-  cost: '0.045',
-  duration_ms: 1200,
+  price: 0.045,
+  failedSpans: 0,
+  chips: [],
+  responseIds: [],
+  cards: [],
+  elidedCardCount: 0,
+  isRootRecorded: true,
   ...overrides,
 });
 
@@ -37,6 +42,7 @@ const transcript = (overrides: Partial<ConversationTranscript> = {}): Conversati
   state: TranscriptState.Available,
   messages: [message(MessageRole.User, 'q'), message(MessageRole.Assistant, 'a')],
   loadedTurns: 1,
+  traceFigures: TURNS,
   ...overrides,
 });
 
@@ -44,9 +50,7 @@ const renderTimeline = (props: Partial<ComponentProps<typeof ConversationTimelin
   render(
     <ConversationTimeline
       transcript={transcript()}
-      turns={TURNS}
-      turnRatings={[{ rating_up: 1, rating_down: 0 }]}
-      hasTurnsLoadError={false}
+      traceRatings={new Map<string, RatingCounts>([['t1', { rating_up: 1, rating_down: 0 }]])}
       turnCount={1}
       onOpenTrace={vi.fn()}
       {...props}
@@ -81,12 +85,8 @@ describe('ConversationTimeline', () => {
     renderTimeline({
       transcript: transcript({
         messages: [message(MessageRole.User, 'q', 't2'), message(MessageRole.Assistant, 'a', 't2')],
+        traceFigures: [turn('t1', { tokens: 1, price: 0.001 }), turn('t2', { tokens: 99999, price: 0.9 })],
       }),
-      turns: [turn('t1', { tokens: 1, cost: '0.001' }), turn('t2', { tokens: 99999, cost: '0.9' })],
-      turnRatings: [
-        { rating_up: 0, rating_down: 0 },
-        { rating_up: 0, rating_down: 0 },
-      ],
     });
 
     expect(screen.getByText('100 K', { exact: false })).toBeInTheDocument();
@@ -96,7 +96,6 @@ describe('ConversationTimeline', () => {
   test('renders a message whose turn is absent from the bounded turn list', () => {
     renderTimeline({
       transcript: transcript({ messages: [message(MessageRole.Assistant, 'orphan', 'missing')] }),
-      turns: TURNS,
     });
 
     expect(screen.getByText('orphan')).toBeInTheDocument();
@@ -123,18 +122,16 @@ describe('ConversationTimeline', () => {
     const user = userEvent.setup();
     const onOpenTrace = vi.fn();
     renderTimeline({
-      transcript: transcript({ messages: [message(MessageRole.Assistant, 'a', 't2')] }),
-      turns: [turn('t1'), turn('t2')],
-      turnRatings: [
-        { rating_up: 0, rating_down: 0 },
-        { rating_up: 0, rating_down: 0 },
-      ],
+      transcript: transcript({
+        messages: [message(MessageRole.Assistant, 'a', 't2')],
+        traceFigures: [turn('t1'), turn('t2')],
+      }),
       onOpenTrace,
     });
 
     await user.click(screen.getByText(ConversationsTraceI18nKey.TraceOpen));
 
-    expect(onOpenTrace).toHaveBeenCalledWith(expect.objectContaining({ trace_id: 't2' }), 2);
+    expect(onOpenTrace).toHaveBeenCalledWith(expect.objectContaining({ traceId: 't2' }));
   });
 
   test('discloses the bound when the transcript read was clipped', () => {
@@ -197,22 +194,20 @@ describe('ConversationTimeline — absent transcripts', () => {
   });
 
   // A failed turn read outranks a state that would otherwise claim the conversation recorded nothing.
-  test('reports a failed turn read rather than an absence when there is nothing to show', () => {
-    renderTimeline({
-      transcript: { state: TranscriptState.NoMessages, messages: [], loadedTurns: null },
-      hasTurnsLoadError: true,
-    });
+  test('reports a failed read as a failure rather than as an absence', () => {
+    renderTimeline({ transcript: { state: TranscriptState.LoadFailed, messages: [], loadedTurns: null } });
 
     expect(screen.getByText(ConversationsTraceI18nKey.TranscriptLoadFailed)).toBeInTheDocument();
     expect(screen.queryByText(ConversationsTraceI18nKey.TranscriptNoMessages)).toBeNull();
   });
 
-  // The messages are real and worth showing, so the failure is stated above them rather than replacing them.
-  test('keeps a resolved transcript when only the turn figures failed, and says so', () => {
-    renderTimeline({ transcript: transcript(), hasTurnsLoadError: true });
+  // The figures ride along with the transcript that produced them, so an answer keeps its own message even
+  // where no figures resolved for its trace — rather than the two failing together.
+  test('renders the messages when no figures resolved for their traces', () => {
+    renderTimeline({ transcript: transcript({ traceFigures: [] }) });
 
     expect(screen.getByText('q')).toBeInTheDocument();
-    expect(screen.getByText(ConversationsTraceI18nKey.DetailTurnsLoadFailed)).toBeInTheDocument();
+    expect(screen.getByText('a')).toBeInTheDocument();
   });
 
   test('renders a different statement for each cause', () => {

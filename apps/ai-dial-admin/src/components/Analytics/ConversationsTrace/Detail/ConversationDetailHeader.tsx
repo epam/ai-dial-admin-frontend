@@ -7,7 +7,7 @@ import CopyButton from '@/src/components/Common/CopyButton/CopyButton';
 import { UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { ConversationDetailRow, ConversationsField } from '@/src/models/analytics/conversations-trace';
+import { ConversationDetailRow } from '@/src/models/analytics/conversations-trace';
 import { conversationTitle } from '@/src/utils/analytics/conversation-detail-fields';
 import {
   formatCompactNumber,
@@ -86,10 +86,6 @@ const ConversationDetailHeader: FC<Props> = ({ conversation, nowMs }) => {
   ];
 
   const title = conversationTitle(conversation);
-  // The evaluator assembles a conversation's bodies up to a size cap and flags what it had to cut, so a
-  // title on a long conversation can describe only the part that was read. The log says this once for the
-  // column; here there is one conversation and room to say what it means for it.
-  const isTitleTruncated = Boolean(title && conversation[ConversationsField.InsightTruncated]);
 
   return (
     <div className="flex min-w-0 flex-col gap-2">
@@ -102,9 +98,6 @@ const ConversationDetailHeader: FC<Props> = ({ conversation, nowMs }) => {
           <span aria-label={t(ConversationsTraceI18nKey.NoTitle)}>{UNAVAILABLE_VALUE}</span>
         )}
       </h1>
-      {isTitleTruncated && (
-        <p className="text-secondary dial-tiny-text">{t(ConversationsTraceI18nKey.DetailTitleTruncated)}</p>
-      )}
       <div className="flex flex-wrap items-center gap-3">
         {meta.map((item, index) => (
           <Fragment key={item.label}>
