@@ -25,11 +25,23 @@ describe('Target utils', () => {
           version: '1.0',
           type: 'dial-application',
         },
-        endpointRef: void 0,
         mcpDeploymentRef: void 0,
         toolRef: void 0,
         argumentTemplate: void 0,
       });
+    });
+
+    test('does not clear endpointRef or requestTemplate', () => {
+      const deployment: Deployment = {
+        $type: 'dial-application',
+        deploymentId: 'app-1',
+        displayName: 'My App',
+      };
+
+      const result = buildDeploymentUpdate(deployment);
+
+      expect(result).not.toHaveProperty('endpointRef');
+      expect(result).not.toHaveProperty('requestTemplate');
     });
   });
 

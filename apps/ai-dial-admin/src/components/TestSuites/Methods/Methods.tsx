@@ -41,6 +41,10 @@ const Methods: FC<Props> = ({ testSuite, selectedTarget, onChange, isCreate, tak
 
   const onMethodClick = useCallback(
     (index: number) => {
+      if (index === activeMethodIndex) {
+        return;
+      }
+
       setActiveMethodIndex(index);
       if (index === 0) {
         onChange((prev: TestSuite) => ({
@@ -57,7 +61,7 @@ const Methods: FC<Props> = ({ testSuite, selectedTarget, onChange, isCreate, tak
         }));
       }
     },
-    [methods, onChange, takenColumnNames],
+    [activeMethodIndex, methods, onChange, takenColumnNames],
   );
 
   useEffect(() => {
@@ -69,17 +73,15 @@ const Methods: FC<Props> = ({ testSuite, selectedTarget, onChange, isCreate, tak
           const loadedMethods = generateMethodPathCombinations(data?.routes);
           setMethods(loadedMethods);
 
-          const routeIndex = loadedMethods.findIndex(
-            (m) =>
-              m.method === testSuite.endpointRef?.method &&
-              m.relativeUrlPattern === testSuite.endpointRef?.relativeUrlPattern,
+          const selectedIndex = [CHAT_COMPLETION_METHOD, ...loadedMethods].findIndex(
+            (method) =>
+              method.method === testSuite.endpointRef?.method &&
+              method.relativeUrlPattern === testSuite.endpointRef?.relativeUrlPattern,
           );
-          if (routeIndex === -1) {
-            if (isCreate) {
-              onMethodClick(0);
-            }
-          } else {
-            setActiveMethodIndex(routeIndex + 1);
+          if (selectedIndex !== -1) {
+            setActiveMethodIndex(selectedIndex);
+          } else if (isCreate) {
+            onMethodClick(0);
           }
         })
         .finally(() => {
