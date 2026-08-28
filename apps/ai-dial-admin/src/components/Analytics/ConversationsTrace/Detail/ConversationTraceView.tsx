@@ -16,6 +16,7 @@ import {
   ConversationSpanRow,
   ConversationTraceFigures,
   ModelCallOutput,
+  SessionScope,
 } from '@/src/models/analytics/conversations-trace';
 import {
   formatCompactNumber,
@@ -43,7 +44,7 @@ const Stat: FC<StatProps> = ({ label, value, valueClassName }) => (
 );
 
 interface Props {
-  chatId: string;
+  scope: SessionScope;
   // What names the trace on screen. The data records no turn index, so there is no ordinal to fall back to:
   // the caller supplies the card's own name, or the transcript's question, and the trace id stands alone when
   // neither is available.
@@ -58,7 +59,7 @@ interface Props {
 }
 
 const ConversationTraceView: FC<Props> = ({
-  chatId,
+  scope,
   title,
   figures,
   spans,
@@ -87,7 +88,7 @@ const ConversationTraceView: FC<Props> = ({
     bodies,
     isLoading: isLoadingBodies,
     suppression: bodiesSuppression,
-  } = useHopBodies(chatId, figures.traceId, selectedSpan);
+  } = useHopBodies(scope, figures.traceId, selectedSpan);
   const hopCount = toNumber(figures.spans);
   const isFailed = (toNumber(figures.failedSpans) ?? 0) > 0;
 

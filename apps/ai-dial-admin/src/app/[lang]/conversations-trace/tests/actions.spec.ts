@@ -42,7 +42,7 @@ const REQUEST: ConversationPageRequest = { ...FILTERS, offset: 0, limit: 100 };
 const LATER_PAGE: ConversationPageRequest = { ...FILTERS, offset: 100, limit: 100 };
 
 const CONVERSATION_ROW = {
-  chat_id: 'a',
+  client_session_id: 'a',
   project_id: 'p',
   user_hash: 'db7327ba3decd351',
   turn_count: 1,
@@ -147,7 +147,7 @@ describe('getConversations', () => {
     await getConversations(REQUEST);
 
     expect(execute()).toHaveBeenCalledWith(
-      expect.objectContaining({ entity: 'conversations', mode: QueryMode.Row }),
+      expect.objectContaining({ entity: 'sessions', mode: QueryMode.Row }),
       TOKEN_MOCK,
     );
   });
@@ -214,7 +214,7 @@ describe('getConversations :: the period figures', () => {
 
     await getConversations(REQUEST);
 
-    expect(queryOf(QueryKind.Totals)).toMatchObject({ entity: 'conversations', mode: QueryMode.Aggregate });
+    expect(queryOf(QueryKind.Totals)).toMatchObject({ entity: 'sessions', mode: QueryMode.Aggregate });
     expect(queryOf(QueryKind.Totals).group_by).toBeUndefined();
   });
 
@@ -522,15 +522,15 @@ describe('getConversations :: projection', () => {
   test('projects an enrichment-backed field only while its column is visible', async () => {
     stub();
 
-    await getConversations({ ...REQUEST, visibleEnrichmentFields: ['conversation_insights.topic'] });
+    await getConversations({ ...REQUEST, visibleEnrichmentFields: ['session_insights.topic'] });
     const withColumn = JSON.stringify(queryOf(QueryKind.List).select);
 
     vi.clearAllMocks();
     stub();
     await getConversations({ ...REQUEST, visibleEnrichmentFields: [] });
 
-    expect(withColumn).toContain('conversation_insights.topic');
-    expect(JSON.stringify(queryOf(QueryKind.List).select)).not.toContain('conversation_insights.topic');
+    expect(withColumn).toContain('session_insights.topic');
+    expect(JSON.stringify(queryOf(QueryKind.List).select)).not.toContain('session_insights.topic');
   });
 });
 
@@ -573,7 +573,7 @@ describe('getConversationsSchema', () => {
 
     const result = await getConversationsSchema();
 
-    expect(getEntitySchema()).toHaveBeenCalledWith('conversations', TOKEN_MOCK);
+    expect(getEntitySchema()).toHaveBeenCalledWith('sessions', TOKEN_MOCK);
     expect(result.success).toBe(true);
     expect(result.response?.fields).toHaveLength(1);
   });
@@ -948,6 +948,8 @@ describe('getConversationHopBodies', () => {
     await read(null);
 
     const query = execute().mock.calls[0][0] as StructuredQuery;
-    expect(JSON.stringify(query.filter)).not.toContain(QueryOperator.Ge);
+    // Matched as an operator rather than as a substring: the identity enrichment's column name contains
+    // "ge" (usa*ge*_client_identity), so a bare `toContain` passes for the wrong reason.
+    expect(JSON.stringify(query.filter)).not.toContain(`"op":"${QueryOperator.Ge}"`);
   });
 });

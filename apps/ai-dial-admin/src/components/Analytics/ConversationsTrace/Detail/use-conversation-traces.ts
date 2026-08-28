@@ -4,16 +4,16 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { getConversationTracePage } from '@/src/app/[lang]/conversations-trace/actions';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
-import { ConversationTraceGroup } from '@/src/models/analytics/conversations-trace';
+import { ConversationTraceGroup, SessionScope } from '@/src/models/analytics/conversations-trace';
 
 interface Params {
-  chatId: string;
+  scope: SessionScope;
   projectId: string;
   firstRequestTime: number | string | null;
   lastRequestTime: number | string | null;
 }
 
-export const useConversationTraces = ({ chatId, projectId, firstRequestTime, lastRequestTime }: Params) => {
+export const useConversationTraces = ({ scope, projectId, firstRequestTime, lastRequestTime }: Params) => {
   const [groups, setGroups] = useState<ConversationTraceGroup[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
@@ -36,7 +36,7 @@ export const useConversationTraces = ({ chatId, projectId, firstRequestTime, las
     try {
       const result = await getReqRef.current(
         getConversationTracePage,
-        chatId,
+        scope,
         projectId,
         firstRequestTime,
         lastRequestTime,
@@ -64,7 +64,7 @@ export const useConversationTraces = ({ chatId, projectId, firstRequestTime, las
       isFetchingRef.current = false;
       setIsLoading(false);
     }
-  }, [chatId, projectId, firstRequestTime, lastRequestTime]);
+  }, [scope, projectId, firstRequestTime, lastRequestTime]);
 
   // The loaded state belongs to one conversation, so it is discarded when the conversation changes. Without
   // this a reused instance would append the next conversation's traces to the previous one's, and the

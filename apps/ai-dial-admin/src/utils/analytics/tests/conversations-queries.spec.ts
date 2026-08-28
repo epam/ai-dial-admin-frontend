@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import {
+  CHAT_ID_SESSION_SOURCE,
   CONVERSATION_HOP_COUNT_ALIAS,
   FEEDBACK_CANDIDATE_LIMIT,
   USAGE_LOG_ENTITY,
@@ -16,6 +17,7 @@ import {
   FeedbackFilter,
   ResponseRatingsField,
   UsageLogField,
+  SessionScope,
 } from '@/src/models/analytics/conversations-trace';
 import {
   QueryExprType,
@@ -72,7 +74,7 @@ describe('buildConversationListQuery :: shape', () => {
   test('reads the materialized conversations entity in row mode', () => {
     const query = buildList();
 
-    expect(query.entity).toBe('conversations');
+    expect(query.entity).toBe('sessions');
     expect(query.mode).toBe(QueryMode.Row);
   });
 
@@ -124,7 +126,7 @@ describe('buildConversationListQuery :: shape', () => {
   test('names the title by its qualified flat name while its column is visible', () => {
     const names = selectNames(buildList({ visibleEnrichmentFields: [ConversationsField.InsightTitle] }));
 
-    expect(names).toContain('conversation_insights.title');
+    expect(names).toContain('session_insights.title');
   });
 
   test('leaves the hidden curated enrichment columns out of the default projection', () => {
@@ -170,10 +172,10 @@ describe('buildConversationListQuery :: shape', () => {
   });
 
   test('projects an enrichment-backed field only while its column is visible', () => {
-    const visible = selectNames(buildList({ visibleEnrichmentFields: ['conversation_insights.topic'] }));
+    const visible = selectNames(buildList({ visibleEnrichmentFields: ['session_insights.topic'] }));
 
-    expect(visible).toContain('conversation_insights.topic');
-    expect(selectNames(buildList())).not.toContain('conversation_insights.topic');
+    expect(visible).toContain('session_insights.topic');
+    expect(selectNames(buildList())).not.toContain('session_insights.topic');
   });
 
   test('names a curated field once even when it is reported as a source field', () => {
@@ -443,7 +445,7 @@ describe('buildConversationTotalsQuery', () => {
   test('counts conversations and sums cost over the period', () => {
     const query = buildTotals();
 
-    expect(query.entity).toBe('conversations');
+    expect(query.entity).toBe('sessions');
     expect(query.mode).toBe(QueryMode.Aggregate);
     expect(query.group_by).toBeUndefined();
     expect(query.select).toEqual([
@@ -746,7 +748,10 @@ describe('buildConversationRatingCountsQuery', () => {
   });
 });
 
-const CHAT_ID = 'chat-1';
+// A chat-origin session: its id came from a conversation header, so every hop-log read for it keeps the
+// bloom-filtered `chat_id`. `AGENT_SCOPE` is the other half of that contract.
+const CHAT_ID: SessionScope = { id: 'chat-1', source: CHAT_ID_SESSION_SOURCE };
+const AGENT_SCOPE: SessionScope = { id: 'cc-session-1', source: 'x-claude-code-session-id' };
 
 const hopRow = (traceId: string, requestTime: number | string | null): ConversationEntryHopRow => ({
   trace_id: traceId,
@@ -791,7 +796,7 @@ describe('buildConversationEntryHopsQuery', () => {
   });
 
   test('filters by the conversation', () => {
-    expect((predicateFor(query, UsageLogField.ChatId)?.args?.[1] as QueryValueExpr).value).toBe(CHAT_ID);
+    expect((predicateFor(query, UsageLogField.ChatId)?.args?.[1] as QueryValueExpr).value).toBe(CHAT_ID.id);
   });
 
   // The whole point of the cheap read: it establishes the turns without paying for a body.
@@ -849,7 +854,7 @@ describe('buildConversationEntryBodiesQuery', () => {
   });
 
   test('still filters by the conversation and the null parent span', () => {
-    expect((predicateFor(withAssembled, UsageLogField.ChatId)?.args?.[1] as QueryValueExpr).value).toBe(CHAT_ID);
+    expect((predicateFor(withAssembled, UsageLogField.ChatId)?.args?.[1] as QueryValueExpr).value).toBe(CHAT_ID.id);
     expect(predicateFor(withAssembled, UsageLogField.CoreParentSpanId)).toBeTruthy();
   });
 
@@ -947,7 +952,7 @@ describe('buildConversationHopBodyQuery', () => {
   // One hop at a time, never in bulk: a measured 384-hop turn carried 99.26 MiB of request bodies, one hop of
   // it reaching 4.00 MiB.
   test('narrows to exactly one hop', () => {
-    expect((predicateFor(query, UsageLogField.ChatId)?.args?.[1] as QueryValueExpr).value).toBe(CHAT_ID);
+    expect((predicateFor(query, UsageLogField.ChatId)?.args?.[1] as QueryValueExpr).value).toBe(CHAT_ID.id);
     expect((predicateFor(query, UsageLogField.TraceId)?.args?.[1] as QueryValueExpr).value).toBe('tr1');
     expect((predicateFor(query, UsageLogField.CoreSpanId)?.args?.[1] as QueryValueExpr).value).toBe('sp1');
     expect((query.page as QueryOffsetPage).limit).toBe(1);
@@ -998,6 +1003,35 @@ describe('every transcript query filters by the conversation', () => {
     ['hop body', buildConversationHopBodyQuery(CHAT_ID, 'tr1', 'sp1', 1, BODY_COLUMNS)],
   ])('%s', (_name, query) => {
     expect(JSON.stringify(query.filter)).toContain(UsageLogField.ChatId);
-    expect(JSON.stringify(query.filter)).toContain(CHAT_ID);
+    expect(JSON.stringify(query.filter)).toContain(CHAT_ID.id);
+  });
+});
+
+// The other half of that contract. `chat_id` is bloom-filtered and the enrichment column is not, so the
+// column is chosen per session rather than unified: a chat session must keep the index, and an agent
+// session — whose hops carry no chat id at all — must not be scoped by a column that is always empty for it.
+describe("a hop-log query is scoped by the column that session's hops carry", () => {
+  const agentQueries: [string, StructuredQuery][] = [
+    ['entry hops', buildConversationEntryHopsQuery(AGENT_SCOPE, 10)],
+    ['hop count', buildConversationHopCountQuery(AGENT_SCOPE)],
+    ['entry bodies', buildConversationEntryBodiesQuery(AGENT_SCOPE, HOPS, BODY_COLUMNS)],
+    ['hop body', buildConversationHopBodyQuery(AGENT_SCOPE, 'tr1', 'sp1', 1, BODY_COLUMNS)],
+  ];
+
+  test.each(agentQueries)('%s names the identity enrichment for an agent session', (_name, query) => {
+    expect(JSON.stringify(query.filter)).toContain(UsageLogField.ClientSessionId);
+    expect(JSON.stringify(query.filter)).toContain(AGENT_SCOPE.id);
+  });
+
+  test('an agent session is never scoped by the empty chat id', () => {
+    agentQueries.forEach(([, query]) => {
+      expect(predicateFor(query, UsageLogField.ChatId)).toBeUndefined();
+    });
+  });
+
+  test('a session whose source is unknown takes the enrichment column, not the index', () => {
+    const query = buildConversationHopCountQuery({ id: 'unknown-1' });
+
+    expect(JSON.stringify(query.filter)).toContain(UsageLogField.ClientSessionId);
   });
 });

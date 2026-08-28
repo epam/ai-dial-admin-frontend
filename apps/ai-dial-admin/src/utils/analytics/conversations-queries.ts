@@ -1,5 +1,6 @@
 import { timeRangePredicates } from '@/src/components/Analytics/QueryBuilder/utils/time';
 import {
+  CHAT_ID_SESSION_SOURCE,
   CONVERSATIONS_ENTITY,
   CONVERSATION_FIELD_VALUE_TYPE,
   CONVERSATION_FILTER_QUERY_OPERATOR,
@@ -27,6 +28,7 @@ import {
   FeedbackField,
   FeedbackFilter,
   ResponseRatingsField,
+  SessionScope,
   UsageLogField,
 } from '@/src/models/analytics/conversations-trace';
 import {
@@ -265,8 +267,18 @@ const traceWindowPredicates = (window: ConversationTraceWindow): QueryFilterNode
 // unsound under offset paging and must not be introduced without keyset paging first — which needs the
 // cursor bound over `min(request_time)` in a HAVING, since filtering rows by the cursor changes a straddling
 // trace's computed minimum and it reappears on the next page.
+// The hop log is bloom-filtered on `chat_id`, `trace_id` and `core_span_id` and on nothing else, so a
+// chat-origin session keeps that index and only a harness session — whose hops carry no `chat_id` at all —
+// pays for the enrichment column. An unknown source takes the enrichment column too: it is correct for both
+// populations, and being slow is the safer way to be wrong here.
+const sessionScopeField = (source?: string | null): UsageLogField =>
+  source === CHAT_ID_SESSION_SOURCE ? UsageLogField.ChatId : UsageLogField.ClientSessionId;
+
+const sessionScopePredicate = ({ id, source }: SessionScope): QueryFilterNode =>
+  eq(sessionScopeField(source), value(QueryValueType.String, id));
+
 export const buildConversationTracePageQuery = (
-  chatId: string,
+  scope: SessionScope,
   projectId: string,
   window: ConversationTraceWindow,
   offset: number,
@@ -281,7 +293,7 @@ export const buildConversationTracePageQuery = (
       col(fn('max', [field(UsageLogField.RequestTime)]), ConversationTracePageField.LastRequestTime),
     ],
     filter: and([
-      eq(UsageLogField.ChatId, value(QueryValueType.String, chatId)),
+      sessionScopePredicate(scope),
       eq(UsageLogField.ProjectId, value(QueryValueType.String, projectId)),
       ...traceWindowPredicates(window),
     ]),
@@ -312,7 +324,9 @@ export const buildConversationTraceRootsQuery = (
       col(field(UsageLogField.TotalTokens)),
       col(field(UsageLogField.TotalPrice)),
       col(field(UsageLogField.DeploymentPrice)),
-      col(field(UsageLogField.ChatId)),
+      // The label test's operand, and the reason it is the normalised session id rather than `chat_id`: an
+      // agent session's rows carry no chat id at all, so every root would read as Core-internal.
+      col(field(UsageLogField.ClientSessionId)),
       col(field(UsageLogField.RequestUri)),
       col(field(UsageLogField.EventKind)),
       col(field(UsageLogField.NumberRequestMessages)),
@@ -400,10 +414,10 @@ export const buildConversationSpansQuery = (traceId: string, limit: number): Str
     page: offsetPage(0, limit, true),
   });
 
-const entryHopFilter = (chatId: string): QueryFilterNode =>
-  and([eq(UsageLogField.ChatId, value(QueryValueType.String, chatId)), isNull(UsageLogField.CoreParentSpanId)]);
+const entryHopFilter = (scope: SessionScope): QueryFilterNode =>
+  and([sessionScopePredicate(scope), isNull(UsageLogField.CoreParentSpanId)]);
 
-export const buildConversationEntryHopsQuery = (chatId: string, limit: number): StructuredQuery =>
+export const buildConversationEntryHopsQuery = (scope: SessionScope, limit: number): StructuredQuery =>
   rowQuery({
     entity: USAGE_LOG_ENTITY,
     select: [
@@ -414,23 +428,23 @@ export const buildConversationEntryHopsQuery = (chatId: string, limit: number): 
       col(field(UsageLogField.RequestBodyBytes)),
       col(field(UsageLogField.ResponseBodyBytes)),
     ],
-    filter: entryHopFilter(chatId),
+    filter: entryHopFilter(scope),
     sort: [sortItem(UsageLogField.RequestTime, QuerySortDirection.Asc)],
     page: offsetPage(0, limit, true),
   });
 
-export const buildConversationHopCountQuery = (chatId: string): StructuredQuery =>
+export const buildConversationHopCountQuery = (scope: SessionScope): StructuredQuery =>
   aggregateQuery({
     entity: USAGE_LOG_ENTITY,
     select: [col(fn('count'), CONVERSATION_HOP_COUNT_ALIAS)],
-    filter: eq(UsageLogField.ChatId, value(QueryValueType.String, chatId)),
+    filter: sessionScopePredicate(scope),
   });
 
 // ADAS accepts a `timestamp` value only as epoch millis — an ISO-8601 string is rejected outright. And an
 // `in` list over `request_time` compiles to `has(...)`, which prunes no partitions, so the time bound has to
 // be a `ge`/`le` range.
 export const buildConversationEntryBodiesQuery = (
-  chatId: string,
+  scope: SessionScope,
   hops: ConversationEntryHopRow[],
   schemaFieldNames?: string[],
 ): StructuredQuery => {
@@ -453,7 +467,7 @@ export const buildConversationEntryBodiesQuery = (
     entity: USAGE_LOG_ENTITY,
     select: selectable.map((fieldName) => col(field(fieldName))),
     filter: and([
-      entryHopFilter(chatId),
+      entryHopFilter(scope),
       inValues(
         UsageLogField.TraceId,
         QueryValueType.String,
@@ -472,7 +486,7 @@ export const buildConversationEntryBodiesQuery = (
 };
 
 export const buildConversationHopBodyQuery = (
-  chatId: string,
+  scope: SessionScope,
   traceId: string,
   coreSpanId: string,
   requestTime: number | string | null,
@@ -495,7 +509,7 @@ export const buildConversationHopBodyQuery = (
     entity: USAGE_LOG_ENTITY,
     select: selectable.map((fieldName) => col(field(fieldName))),
     filter: and([
-      eq(UsageLogField.ChatId, value(QueryValueType.String, chatId)),
+      sessionScopePredicate(scope),
       eq(UsageLogField.TraceId, value(QueryValueType.String, traceId)),
       eq(UsageLogField.CoreSpanId, value(QueryValueType.String, coreSpanId)),
       ...(recordedMillis === null
@@ -510,7 +524,7 @@ export const buildConversationHopBodyQuery = (
 };
 
 export const buildConversationModelBodiesQuery = (
-  chatId: string,
+  scope: SessionScope,
   traceId: string,
   hops: ConversationSpanRow[],
   schemaFieldNames?: string[],
@@ -528,7 +542,7 @@ export const buildConversationModelBodiesQuery = (
     entity: USAGE_LOG_ENTITY,
     select: selectable.map((fieldName) => col(field(fieldName))),
     filter: and([
-      eq(UsageLogField.ChatId, value(QueryValueType.String, chatId)),
+      sessionScopePredicate(scope),
       eq(UsageLogField.TraceId, value(QueryValueType.String, traceId)),
       inValues(
         UsageLogField.CoreSpanId,

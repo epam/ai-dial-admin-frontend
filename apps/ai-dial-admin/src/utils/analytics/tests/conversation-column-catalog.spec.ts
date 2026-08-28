@@ -40,7 +40,7 @@ const sourceField = (name: string, overrides: Partial<AnalyticsEntityField> = {}
 const enrichmentField = (
   name: string,
   overrides: Partial<AnalyticsEntityField> = {},
-  enrichment = 'conversation_insights',
+  enrichment = 'session_insights',
 ): AnalyticsEntityField => ({
   name: `${enrichment}.${name}`,
   source: name,
@@ -51,7 +51,7 @@ const enrichmentField = (
 // Shaped after the live dev entity: its tags, `display_name` on some fields only, `heavy` on its one array
 // field, and the five bookkeeping fields tagged `provenance`.
 const SCHEMA: AnalyticsEntityField[] = [
-  sourceField('chat_id', { tag: 'identity' }),
+  sourceField('client_session_id', { tag: 'identity' }),
   sourceField('project_id', { tag: 'principal' }),
   sourceField('user_hash', { tag: 'principal' }),
   sourceField('turn_count', { type: AnalyticsFieldType.Long, tag: 'response' }),
@@ -117,8 +117,8 @@ describe('CONVERSATIONS_TRACE_COLUMNS', () => {
     expect(offered).toContain('success_count');
     expect(offered).toContain('duration_ms');
     expect(offered).toContain('chain_price_total');
-    expect(offered).toContain('conversation_insights.sentiment');
-    expect(offered).toContain('conversation_insights.resolution_status');
+    expect(offered).toContain('session_insights.sentiment');
+    expect(offered).toContain('session_insights.resolution_status');
   });
 
   // Asserting a number here would put back the fixed list the schema is read to avoid.
@@ -257,8 +257,8 @@ describe('conversationColumnGroups', () => {
     const provenance = groups().find((group) => group.tag === 'provenance');
 
     expect(provenance?.provenance).toBe(ColumnProvenance.Insights);
-    expect(provenance?.fields).toContain('conversation_insights.model');
-    expect(provenance?.fields).toContain('conversation_insights.enriched_at');
+    expect(provenance?.fields).toContain('session_insights.model');
+    expect(provenance?.fields).toContain('session_insights.enriched_at');
     expect(provenance?.fields).not.toContain(ConversationsField.InsightTopics);
   });
 
@@ -301,7 +301,7 @@ describe('projectableSchemaFields', () => {
     const { enrichment, cheapSource } = projectableSchemaFields(columns(), SCHEMA);
 
     expect(enrichment).toContain(ConversationsField.InsightTopics);
-    expect(enrichment).toContain('conversation_insights.sentiment');
+    expect(enrichment).toContain('session_insights.sentiment');
     expect(cheapSource).not.toContain(ConversationsField.InsightTopics);
   });
 
@@ -321,7 +321,7 @@ describe('projectableSchemaFields', () => {
   });
 
   test('names nothing an instance does not report', () => {
-    const withoutInsights = SCHEMA.filter((field) => !field.name.startsWith('conversation_insights.'));
+    const withoutInsights = SCHEMA.filter((field) => !field.name.startsWith('session_insights.'));
     const { enrichment, requiredEnrichment } = projectableSchemaFields(columns(withoutInsights), withoutInsights);
 
     expect(enrichment).toEqual([]);
@@ -341,8 +341,8 @@ describe('catalogValueTypes', () => {
 
     expect(types['duration_ms']).toBe(QueryValueType.Long);
     expect(types['chain_price_total']).toBe(QueryValueType.Decimal);
-    expect(types['conversation_insights.enriched_at']).toBe(QueryValueType.Timestamp);
-    expect(types['conversation_insights.truncated']).toBe(QueryValueType.Boolean);
+    expect(types['session_insights.enriched_at']).toBe(QueryValueType.Timestamp);
+    expect(types['session_insights.truncated']).toBe(QueryValueType.Boolean);
   });
 
   test('keeps the curated value types where the schema adds nothing', () => {
@@ -355,7 +355,7 @@ describe('catalogValueTypes', () => {
 describe('sortableColumnFields / filterableColumnFields', () => {
   test('offer a derived scalar column and withhold the arrays', () => {
     expect(sortableColumnFields(columns())).toContain('duration_ms');
-    expect(sortableColumnFields(columns())).toContain('conversation_insights.sentiment');
+    expect(sortableColumnFields(columns())).toContain('session_insights.sentiment');
     expect(sortableColumnFields(columns())).not.toContain(ConversationsField.Deployments);
     expect(sortableColumnFields(columns())).not.toContain(ConversationsField.InsightTopics);
   });
@@ -365,20 +365,22 @@ describe('sortableColumnFields / filterableColumnFields', () => {
   });
 
   test('drop an enrichment predicate the instance cannot answer', () => {
-    const withoutInsights = SCHEMA.filter((field) => !field.name.startsWith('conversation_insights.'));
+    const withoutInsights = SCHEMA.filter((field) => !field.name.startsWith('session_insights.'));
 
     expect(filterableColumnFields(columns(withoutInsights))).not.toContain(ConversationsField.InsightTopics);
   });
 });
 
 describe('availableSelectFields', () => {
-  const ordered = ['chat_id', 'total_price', 'conversation_insights.title', 'traces'];
-  const optional = ['conversation_insights.title', 'traces'];
+  const ordered = ['chat_id', 'total_price', 'session_insights.title', 'traces'];
+  const optional = ['session_insights.title', 'traces'];
 
   test('names an optional field only where the schema reports it', () => {
-    expect(availableSelectFields(ordered, optional, ['chat_id', 'total_price', 'conversation_insights.title'])).toEqual(
-      ['chat_id', 'total_price', 'conversation_insights.title'],
-    );
+    expect(availableSelectFields(ordered, optional, ['chat_id', 'total_price', 'session_insights.title'])).toEqual([
+      'chat_id',
+      'total_price',
+      'session_insights.title',
+    ]);
   });
 
   test('names the required core alone when the schema could not be read', () => {
@@ -501,13 +503,13 @@ describe('composedSourceEntities', () => {
   test('names the base entity first, then each enrichment, then the queried entities', () => {
     const entities = composedSourceEntities(
       'conversations',
-      [field('chat_id'), field('conversation_insights.title'), field('conversation_buckets.turn_bucket')],
+      [field('chat_id'), field('session_insights.title'), field('conversation_buckets.turn_bucket')],
       [RATINGS],
     );
 
     expect(entities.map((entity) => entity.name)).toEqual([
       'conversations',
-      'conversation_insights',
+      'session_insights',
       'conversation_buckets',
       'response_ratings',
     ]);
@@ -515,11 +517,11 @@ describe('composedSourceEntities', () => {
 
   test('names an enrichment once however many of its fields the schema reports', () => {
     const entities = composedSourceEntities('conversations', [
-      field('conversation_insights.title'),
-      field('conversation_insights.summary'),
+      field('session_insights.title'),
+      field('session_insights.summary'),
     ]);
 
-    expect(entities.filter((entity) => entity.name === 'conversation_insights')).toHaveLength(1);
+    expect(entities.filter((entity) => entity.name === 'session_insights')).toHaveLength(1);
   });
 
   test('attributes an enrichment it cannot name to the unattributed provenance', () => {

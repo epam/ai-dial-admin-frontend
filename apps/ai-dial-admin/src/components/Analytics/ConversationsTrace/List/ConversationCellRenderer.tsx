@@ -12,7 +12,7 @@ import { conversationTitle } from '@/src/utils/analytics/conversation-detail-fie
 // the id is what the name falls back to being — rendering them side by side printed the id twice on every
 // conversation the insight enrichment has not reached, which is most of them.
 const ConversationCellRenderer: FC<ICellRendererParams<ConversationRow>> = ({ data }) => {
-  if (!data?.chat_id) {
+  if (!data?.client_session_id) {
     return null;
   }
 
@@ -24,7 +24,7 @@ const ConversationCellRenderer: FC<ICellRendererParams<ConversationRow>> = ({ da
         {title ? <DialEllipsisTooltip text={title} /> : UNAVAILABLE_VALUE}
       </span>
       <span className="text-secondary dial-tiny-text">
-        <DialEllipsisTooltip text={data.chat_id} />
+        <DialEllipsisTooltip text={data.client_session_id} />
       </span>
     </div>
   );

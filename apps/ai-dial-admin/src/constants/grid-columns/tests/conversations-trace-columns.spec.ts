@@ -26,7 +26,7 @@ const insight = (
   tag: string,
   overrides: Partial<AnalyticsEntityField> = {},
 ): AnalyticsEntityField => ({
-  name: `conversation_insights.${name}`,
+  name: `session_insights.${name}`,
   source: name,
   type,
   tag,
@@ -36,7 +36,7 @@ const insight = (
 // An instance carrying every field this view can read, shaped after the live dev entity. Passed explicitly
 // because a column renders only where the schema reports its field.
 const ALL_FIELDS: AnalyticsEntityField[] = [
-  field('chat_id', AnalyticsFieldType.String, 'identity'),
+  field('client_session_id', AnalyticsFieldType.String, 'identity'),
   field('project_id', AnalyticsFieldType.String, 'principal'),
   field('user_hash', AnalyticsFieldType.String, 'principal'),
   field('turn_count', AnalyticsFieldType.Long, 'response'),
@@ -110,14 +110,14 @@ const DERIVED = [
   'chain_price_total',
   'duration_ms',
   'avg_duration_ms',
-  'conversation_insights.summary',
-  'conversation_insights.sentiment',
-  'conversation_insights.sentiment_score',
-  'conversation_insights.resolution_status',
-  'conversation_insights.model',
-  'conversation_insights.evaluator_version',
-  'conversation_insights.enriched_at',
-  'conversation_insights.truncated',
+  'session_insights.summary',
+  'session_insights.sentiment',
+  'session_insights.sentiment_score',
+  'session_insights.resolution_status',
+  'session_insights.model',
+  'session_insights.evaluator_version',
+  'session_insights.enriched_at',
+  'session_insights.truncated',
 ];
 
 const HIDDEN_CURATED = [
@@ -150,12 +150,12 @@ describe('conversations columns :: composition', () => {
 
   test('a derived header comes from the display name the schema reports', () => {
     expect(column('chain_price_total').headerName).toBe('Chain cost (top-down)');
-    expect(column('conversation_insights.resolution_status').headerName).toBe('Resolution status');
+    expect(column('session_insights.resolution_status').headerName).toBe('Resolution status');
   });
 
   test('a derived header falls back to the field name rendered readably', () => {
     expect(column('avg_duration_ms').headerName).toBe('Avg duration ms');
-    expect(column('conversation_insights.sentiment_score').headerName).toBe('Sentiment score');
+    expect(column('session_insights.sentiment_score').headerName).toBe('Sentiment score');
   });
 
   test('a derived tooltip is the field description, unparaphrased', () => {
@@ -282,8 +282,8 @@ describe('conversations columns :: origins and tags', () => {
     expect(bookkeeping.headerName).toBe(
       `${ConversationsTraceI18nKey.ProvenanceInsights} · ${ConversationsTraceI18nKey.TagProvenance}`,
     );
-    expect(childFields(bookkeeping)).toContain('conversation_insights.model');
-    expect(childFields(bookkeeping)).toContain('conversation_insights.enriched_at');
+    expect(childFields(bookkeeping)).toContain('session_insights.model');
+    expect(childFields(bookkeeping)).toContain('session_insights.enriched_at');
   });
 
   test('no column headed Model sits outside the evaluator run group', () => {
@@ -364,7 +364,7 @@ describe('conversations columns :: origins and tags', () => {
   });
 
   test('a group whose columns the schema does not report is not rendered at all', () => {
-    const withoutInsights = ALL_FIELDS.filter((entry) => !entry.name.startsWith('conversation_insights.'));
+    const withoutInsights = ALL_FIELDS.filter((entry) => !entry.name.startsWith('session_insights.'));
 
     expect(groups(withoutInsights).map((group) => group.groupId)).not.toContain(`${ColumnProvenance.Insights}:insight`);
   });
@@ -378,7 +378,7 @@ describe('conversations columns :: origins and tags', () => {
 });
 
 describe('conversations columns :: a lagging deployment', () => {
-  const WITHOUT_INSIGHTS = ALL_FIELDS.filter((entry) => !entry.name.startsWith('conversation_insights.'));
+  const WITHOUT_INSIGHTS = ALL_FIELDS.filter((entry) => !entry.name.startsWith('session_insights.'));
 
   test('omits the topics column when the schema reports no insight field', () => {
     expect(columns(WITHOUT_INSIGHTS).map((col) => col.field)).not.toContain(ConversationsField.InsightTopics);
@@ -421,7 +421,7 @@ describe('conversations columns :: sort and filter contract', () => {
 
   test('a derived scalar column is sortable, being a stored field of the same entity', () => {
     expect(column('duration_ms').sortable).not.toBe(false);
-    expect(column('conversation_insights.sentiment').sortable).not.toBe(false);
+    expect(column('session_insights.sentiment').sortable).not.toBe(false);
   });
 
   test('rating is not sortable and offers no filter', () => {
@@ -463,22 +463,22 @@ describe('conversations columns :: sort and filter contract', () => {
   // `agDateColumnFilter` reports `dateFrom`/`dateTo`, which the grid's filter translation does not read — the
   // entry would be dropped and the header would show an active filter over an unnarrowed result.
   test('a derived timestamp column sorts but offers no filter', () => {
-    expect(column('conversation_insights.enriched_at').sortable).not.toBe(false);
-    expect(column('conversation_insights.enriched_at').filter).toBe(false);
-    expect(column('conversation_insights.enriched_at').floatingFilter).toBe(false);
+    expect(column('session_insights.enriched_at').sortable).not.toBe(false);
+    expect(column('session_insights.enriched_at').filter).toBe(false);
+    expect(column('session_insights.enriched_at').floatingFilter).toBe(false);
   });
 
   // The text filter would offer `contains`, which the language cannot express over a boolean; the service
   // rejects the whole query for one bad predicate, so the filter menu could take the listing down.
   test('a derived boolean column sorts but offers no filter', () => {
-    expect(column('conversation_insights.truncated').sortable).not.toBe(false);
-    expect(column('conversation_insights.truncated').filter).toBe(false);
-    expect(column('conversation_insights.truncated').floatingFilter).toBe(false);
+    expect(column('session_insights.truncated').sortable).not.toBe(false);
+    expect(column('session_insights.truncated').filter).toBe(false);
+    expect(column('session_insights.truncated').floatingFilter).toBe(false);
   });
 
   test('a derived column filters by its declared type', () => {
     expect(column('duration_ms').filter).toBe(baseNumberFilter.filter);
-    expect(column('conversation_insights.sentiment').filterParams?.filterOptions).toEqual(
+    expect(column('session_insights.sentiment').filterParams?.filterOptions).toEqual(
       baseStringFilter.filterParams?.filterOptions,
     );
   });
@@ -486,7 +486,7 @@ describe('conversations columns :: sort and filter contract', () => {
   // The closed vocabularies stay string columns: the enumeration is declared in the evaluator's own response
   // schema, so a value-list filter would mean a second copy here, drifting on every re-version.
   test('sentiment and resolution status offer string operators, not a copied enumeration', () => {
-    [column('conversation_insights.sentiment'), column('conversation_insights.resolution_status')].forEach((col) => {
+    [column('session_insights.sentiment'), column('session_insights.resolution_status')].forEach((col) => {
       expect(col.filterParams?.filterOptions).toEqual(baseStringFilter.filterParams?.filterOptions);
       expect(col.filterParams?.values).toBeUndefined();
     });
@@ -617,7 +617,7 @@ describe('conversations columns :: value formatting', () => {
 
   test('topics renders through a cell renderer and keeps its whole list in the tooltip', () => {
     const topicsColumn = column(ConversationsField.InsightTopics);
-    const data = { 'conversation_insights.topics': 'security, code review,validation' };
+    const data = { 'session_insights.topics': 'security, code review,validation' };
 
     expect(typeof topicsColumn.cellRenderer).toBe('function');
     expect(topicsColumn.tooltipValueGetter?.({ data } as never)).toBe('security, code review, validation');

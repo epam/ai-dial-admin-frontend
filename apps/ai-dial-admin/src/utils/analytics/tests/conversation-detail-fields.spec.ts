@@ -20,7 +20,7 @@ import {
 } from '@/src/utils/analytics/conversation-detail-fields';
 
 const RECORD: ConversationDetailRow = {
-  chat_id: 'Lrr0e6L5bpTND3IY_dN0_',
+  client_session_id: 'Lrr0e6L5bpTND3IY_dN0_',
   project_id: '',
   user_hash: 'db7327ba3decd351',
   turn_count: 12,
@@ -39,15 +39,13 @@ const label = ConversationsTraceI18nKey.DetailTokensIn;
 
 describe('conversationTitle', () => {
   test('states the insight title when the enrichment carries one', () => {
-    expect(conversationTitle({ ...RECORD, 'conversation_insights.title': 'Refund policy for EU orders' })).toBe(
+    expect(conversationTitle({ ...RECORD, 'session_insights.title': 'Refund policy for EU orders' })).toBe(
       'Refund policy for EU orders',
     );
   });
 
   test('trims the surrounding whitespace of a title', () => {
-    expect(conversationTitle({ ...RECORD, 'conversation_insights.title': '  Cost of a rerun  ' })).toBe(
-      'Cost of a rerun',
-    );
+    expect(conversationTitle({ ...RECORD, 'session_insights.title': '  Cost of a rerun  ' })).toBe('Cost of a rerun');
   });
 
   test('reports no title when the enrichment has no row', () => {
@@ -56,14 +54,14 @@ describe('conversationTitle', () => {
 
   test('reports no title for a null, empty or whitespace-only title', () => {
     for (const title of [null, '', '   ']) {
-      expect(conversationTitle({ ...RECORD, 'conversation_insights.title': title })).toBeNull();
+      expect(conversationTitle({ ...RECORD, 'session_insights.title': title })).toBeNull();
     }
   });
 
   // Both callers render the conversation id beside the title, so falling back to it would print the id
   // twice and name the conversation after its own hash.
   test('never falls back to the conversation id', () => {
-    expect(conversationTitle(RECORD)).not.toBe(RECORD.chat_id);
+    expect(conversationTitle(RECORD)).not.toBe(RECORD.client_session_id);
   });
 
   // The grid's identity column and the header read the same helper, so one conversation cannot be named
@@ -71,8 +69,8 @@ describe('conversationTitle', () => {
   test('resolves a grid row and a detail row identically', () => {
     const title = 'Refund policy for EU orders';
 
-    expect(conversationTitle({ chat_id: RECORD.chat_id, 'conversation_insights.title': title })).toBe(
-      conversationTitle({ ...RECORD, 'conversation_insights.title': title }),
+    expect(conversationTitle({ client_session_id: RECORD.client_session_id, 'session_insights.title': title })).toBe(
+      conversationTitle({ ...RECORD, 'session_insights.title': title }),
     );
   });
 });
@@ -177,7 +175,7 @@ describe('resolveConversationField', () => {
   test('an unformatted column falls back to its text value', () => {
     const resolved = resolveConversationField({ labelKey: label, column: ConversationsField.ChatId }, RECORD);
 
-    expect(resolved.text).toBe(RECORD.chat_id);
+    expect(resolved.text).toBe(RECORD.client_session_id);
   });
 });
 
