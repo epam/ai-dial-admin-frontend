@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ComponentProps } from 'react';
 import { describe, expect, test, vi } from 'vitest';
@@ -172,6 +172,33 @@ describe('ConversationTraceView', () => {
 
     expect(screen.getByText(ConversationsTraceI18nKey.TraceLoadFailed)).toBeInTheDocument();
     expect(screen.queryByText(ConversationsTraceI18nKey.TraceNoSpans)).not.toBeInTheDocument();
+  });
+
+  // The view builds the tree from the recorded hops alone: the turn's question and totals are the heading and
+  // the figures beside it, stated once.
+  test('renders the turn hops as a tree, nesting a hop under the hop that called it', () => {
+    renderTrace();
+
+    const tree = within(screen.getByRole('group', { name: ConversationsTraceI18nKey.StreamLabel }));
+
+    expect(tree.getAllByRole('button', { name: /switchyard-model/ }).length).toBeGreaterThan(0);
+    expect(tree.getAllByRole('button', { name: /text-embedding-3/ }).length).toBeGreaterThan(0);
+  });
+
+  test('holds no tree node standing for the turn question or its totals', () => {
+    renderTrace({ title: 'why 2021-2025?' });
+
+    const tree = within(screen.getByRole('group', { name: ConversationsTraceI18nKey.StreamLabel }));
+
+    expect(tree.queryByText('why 2021-2025?')).toBeNull();
+    // The figures stay where they were — in the header, not repeated as a closing node.
+    expect(statFor(ConversationsTraceI18nKey.TraceTokens)).toHaveTextContent('1.1 K');
+  });
+
+  test('reports a turn whose trace returned no hops', () => {
+    renderTrace({ spans: [] });
+
+    expect(screen.getByText(ConversationsTraceI18nKey.TraceNoSpans)).toBeInTheDocument();
   });
 
   test('returns to the transcript through its back control', async () => {

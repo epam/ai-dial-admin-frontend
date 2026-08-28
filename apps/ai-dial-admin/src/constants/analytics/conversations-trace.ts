@@ -370,22 +370,52 @@ export const RESOLUTION_BADGE_CLASS: Record<string, string> = {
 export const EMPTY_ICON_SIZE = 24;
 
 export const HOP_EVENT_RAIL_CLASS: Record<HopEventType, string> = {
-  [HopEventType.TurnStart]: 'bg-accent-primary',
-  [HopEventType.TurnComplete]: 'bg-accent-primary',
-  [HopEventType.Text]: 'bg-accent-secondary',
-  [HopEventType.ToolCall]: 'bg-accent-tertiary',
-  [HopEventType.ToolResult]: 'bg-accent-tertiary',
-  [HopEventType.Thinking]: 'bg-controls-accent',
-  [HopEventType.Empty]: 'bg-layer-4',
-  [HopEventType.Error]: 'bg-error',
-  [HopEventType.Session]: 'bg-secondary',
-  [HopEventType.Embedding]: 'bg-info',
-  [HopEventType.Other]: 'bg-layer-4',
+  [HopEventType.ModelCall]: 'border-accent-primary',
+  [HopEventType.Text]: 'border-accent-secondary',
+  [HopEventType.ToolCall]: 'border-accent-tertiary',
+  [HopEventType.ToolResult]: 'border-accent-tertiary',
+  [HopEventType.Thinking]: 'border-accent-secondary',
+  [HopEventType.Empty]: 'border-primary',
+  [HopEventType.Error]: 'border-error',
+  [HopEventType.Session]: 'border-primary',
+  [HopEventType.Embedding]: 'border-warning',
+  [HopEventType.Other]: 'border-primary',
 };
 
+export const HOP_EVENT_CHIP_CLASS: Record<HopEventType, string> = {
+  [HopEventType.ModelCall]: 'border-accent-primary text-accent-primary',
+  [HopEventType.Text]: 'border-accent-secondary text-accent-secondary',
+  [HopEventType.ToolCall]: 'border-accent-tertiary text-accent-tertiary',
+  [HopEventType.ToolResult]: 'border-accent-tertiary text-accent-tertiary',
+  [HopEventType.Thinking]: 'border-accent-secondary text-accent-secondary',
+  [HopEventType.Empty]: 'border-primary text-secondary',
+  [HopEventType.Error]: 'border-error text-error',
+  [HopEventType.Session]: 'border-primary text-secondary',
+  [HopEventType.Embedding]: 'border-warning text-warning',
+  [HopEventType.Other]: 'border-primary text-secondary',
+};
+
+export const NEUTRAL_CHIP_CLASS = 'border-primary text-secondary';
+
+export const UNRECORDED_ROOT_RAIL_CLASS = 'border-primary';
+
+export const TREE_GUIDE_CLASS = 'border-primary';
+
+export const FILTERABLE_EVENT_TYPES: HopEventType[] = [
+  HopEventType.ModelCall,
+  HopEventType.Text,
+  HopEventType.ToolCall,
+  HopEventType.ToolResult,
+  HopEventType.Thinking,
+  HopEventType.Error,
+  HopEventType.Empty,
+  HopEventType.Session,
+  HopEventType.Embedding,
+  HopEventType.Other,
+];
+
 export const HOP_EVENT_LABEL_KEY: Record<HopEventType, string> = {
-  [HopEventType.TurnStart]: ConversationsTraceI18nKey.EventTurnStart,
-  [HopEventType.TurnComplete]: ConversationsTraceI18nKey.EventTurnComplete,
+  [HopEventType.ModelCall]: ConversationsTraceI18nKey.EventModelCall,
   [HopEventType.Text]: ConversationsTraceI18nKey.EventText,
   [HopEventType.ToolCall]: ConversationsTraceI18nKey.EventToolCall,
   [HopEventType.ToolResult]: ConversationsTraceI18nKey.EventToolResult,

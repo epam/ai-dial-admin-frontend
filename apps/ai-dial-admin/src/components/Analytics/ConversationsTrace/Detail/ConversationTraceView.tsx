@@ -25,7 +25,7 @@ import {
 } from '@/src/utils/analytics/conversation-formatting';
 import { toNumber } from '@/src/utils/analytics/scalar';
 import { areSpansPartial, spanCategoryOf } from '@/src/utils/analytics/conversation-spans';
-import { buildHopEventStream } from '@/src/utils/analytics/conversation-hop-stream';
+import { buildHopTree } from '@/src/utils/analytics/conversation-hop-stream';
 
 const ICON_SIZE = 16;
 
@@ -70,10 +70,7 @@ const ConversationTraceView: FC<Props> = ({
 }) => {
   const t = useI18n();
 
-  const events = useMemo(
-    () => buildHopEventStream({ spans, modelOutputs, figures, title }),
-    [spans, modelOutputs, figures, title],
-  );
+  const tree = useMemo(() => buildHopTree({ spans, modelOutputs }), [spans, modelOutputs]);
   const selectedSpan = spans.find(({ core_span_id }) => core_span_id === selectedSpanId) ?? null;
   const selected = useMemo(
     () =>
@@ -158,7 +155,7 @@ const ConversationTraceView: FC<Props> = ({
               <DialNoDataContent title={t(ConversationsTraceI18nKey.TraceLoadFailed)} />
             </div>
           ) : (
-            <ConversationEventStream events={events} selectedSpanId={selectedSpanId} onSelectSpan={onSelectSpan} />
+            <ConversationEventStream tree={tree} selectedSpanId={selectedSpanId} onSelectSpan={onSelectSpan} />
           )}
         </div>
         <ConversationSpanDetail

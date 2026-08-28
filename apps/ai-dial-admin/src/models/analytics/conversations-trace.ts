@@ -1,5 +1,6 @@
 import { Icon as TablerIcon } from '@tabler/icons-react';
 
+import { TreeRow } from '@/src/components/Common/TreeGrid/types';
 import { QuerySortDirection, QueryValueType } from '@/src/models/analytics/query';
 
 // Where a column's value comes from, which decides what an empty cell means: a rollup column is present for
@@ -479,8 +480,7 @@ export interface ConversationSpanRow {
 }
 
 export enum HopEventType {
-  TurnStart = 'turn-start',
-  TurnComplete = 'turn-complete',
+  ModelCall = 'model-call',
   Text = 'text',
   ToolCall = 'tool-call',
   ToolResult = 'tool-result',
@@ -492,10 +492,24 @@ export enum HopEventType {
   Other = 'other',
 }
 
-export interface HopEvent {
-  key: string;
-  line: number;
+export enum HopNodeKind {
+  Hop = 'hop',
+  Event = 'event',
+  UnrecordedRoot = 'unrecorded-root',
+}
+
+export interface HopEventSeed {
   type: HopEventType;
+  label: string;
+  detail?: string | null;
+  span: ConversationSpanRow;
+  reasoningTokens?: number | null;
+  hasNoRecordedResult?: boolean;
+}
+
+export interface HopNodeData {
+  kind: HopNodeKind;
+  type: HopEventType | null;
   label: string;
   detail: string | null;
   span: ConversationSpanRow | null;
@@ -503,9 +517,18 @@ export interface HopEvent {
   tokens: number | null;
   reasoningTokens: number | null;
   cost: number | string | null;
-  hops: number | null;
-  durationMs: number | null;
   hasNoRecordedResult: boolean;
+  isFailed: boolean;
+  position: number;
+  isMatch: boolean;
+}
+
+export type HopTreeNode = TreeRow<HopNodeData>;
+
+export interface HopTreeRow {
+  node: HopTreeNode;
+  ancestorHasNextSibling: boolean[];
+  isLastChild: boolean;
 }
 
 export interface ModelCallOutput {

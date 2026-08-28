@@ -1,9 +1,9 @@
 import { ROUTE_EVENT_KIND, UTILITY_URI_MARKERS } from '@/src/constants/analytics/conversations-trace';
 import {
   ConversationSpanRow,
-  ConversationTraceFigures,
-  HopEvent,
+  HopEventSeed,
   HopEventType,
+  HopTreeNode,
   ModelCallOutput,
 } from '@/src/models/analytics/conversations-trace';
 import { toMillis } from '@/src/utils/analytics/conversation-formatting';
@@ -14,6 +14,7 @@ import {
   isProtocolEnvelope,
   spanLabelOf,
 } from '@/src/utils/analytics/conversation-spans';
+import { buildSpanTree } from '@/src/utils/analytics/conversation-span-tree';
 import { toNumber } from '@/src/utils/analytics/scalar';
 
 const HTTP_ERROR_STATUS = 400;
@@ -28,26 +29,12 @@ const isUtility = ({ request_uri }: ConversationSpanRow): boolean => {
 export const isFailedHop = ({ success, response_status }: ConversationSpanRow): boolean =>
   success === false || (toNumber(response_status) ?? 0) >= HTTP_ERROR_STATUS;
 
-interface EventSeed {
-  type: HopEventType;
-  label: string;
-  detail?: string | null;
-  span: ConversationSpanRow | null;
-  tokens?: number | null;
-  reasoningTokens?: number | null;
-  cost?: number | string | null;
-  hops?: number | null;
-  durationMs?: number | null;
-  hasNoRecordedResult?: boolean;
-}
-
 const byStartTime = (left: ConversationSpanRow, right: ConversationSpanRow): number =>
   (toMillis(left.request_time) ?? 0) - (toMillis(right.request_time) ?? 0);
 
-const eventsForHop = (span: ConversationSpanRow, output: ModelCallOutput | undefined): EventSeed[] => {
-  const tokens = toNumber(span.total_tokens);
+const eventsForHop = (span: ConversationSpanRow, output: ModelCallOutput | undefined): HopEventSeed[] => {
   const reasoningTokens = toNumber(span.reasoning_tokens);
-  const base = { span, tokens, cost: span.deployment_price };
+  const base = { span };
 
   if (isFailedHop(span)) {
     return [
@@ -71,10 +58,10 @@ const eventsForHop = (span: ConversationSpanRow, output: ModelCallOutput | undef
   }
 
   if (isModelCall(span) && !isUtility(span)) {
-    const seeds: EventSeed[] = [];
+    const seeds: HopEventSeed[] = [];
 
     if (reasoningTokens !== null && reasoningTokens > 0) {
-      seeds.push({ ...base, type: HopEventType.Thinking, label: spanLabelOf(span), reasoningTokens, tokens: null });
+      seeds.push({ ...base, type: HopEventType.Thinking, label: spanLabelOf(span), reasoningTokens });
     }
 
     // A hop the log records as having returned no bytes is known to be empty, so it must not read as one
@@ -96,7 +83,7 @@ const eventsForHop = (span: ConversationSpanRow, output: ModelCallOutput | undef
     }
 
     for (const { name, argumentsPreview } of output.toolCalls) {
-      seeds.push({ ...base, type: HopEventType.ToolCall, label: name, detail: argumentsPreview, tokens: null });
+      seeds.push({ ...base, type: HopEventType.ToolCall, label: name, detail: argumentsPreview });
     }
 
     if (!output.text && !output.toolCalls.length && !seeds.some(({ type }) => type === HopEventType.Thinking)) {
@@ -109,7 +96,7 @@ const eventsForHop = (span: ConversationSpanRow, output: ModelCallOutput | undef
   return [{ ...base, type: HopEventType.Other, label: spanLabelOf(span) }];
 };
 
-const markUnansweredCalls = (seeds: EventSeed[]): EventSeed[] => {
+const markUnansweredCalls = (seeds: HopEventSeed[]): HopEventSeed[] => {
   const resultsByName = new Map<string, number>();
   for (const seed of seeds) {
     if (seed.type === HopEventType.ToolResult) {
@@ -129,67 +116,30 @@ const markUnansweredCalls = (seeds: EventSeed[]): EventSeed[] => {
   });
 };
 
-interface StreamParams {
+const seedsByHopIdOf = (seeds: HopEventSeed[]): Map<string, HopEventSeed[]> => {
+  const byHopId = new Map<string, HopEventSeed[]>();
+  for (const seed of seeds) {
+    const existing = byHopId.get(seed.span.core_span_id);
+    if (existing) {
+      existing.push(seed);
+    } else {
+      byHopId.set(seed.span.core_span_id, [seed]);
+    }
+  }
+
+  return byHopId;
+};
+
+interface HopTreeParams {
   spans: ConversationSpanRow[];
   modelOutputs: ModelCallOutput[];
-  figures: ConversationTraceFigures;
-  title?: string;
 }
 
-export const buildHopEventStream = ({ spans, modelOutputs, figures, title }: StreamParams): HopEvent[] => {
+export const buildHopTree = ({ spans, modelOutputs }: HopTreeParams): HopTreeNode[] => {
   const outputs = new Map(modelOutputs.map((output) => [output.core_span_id, output]));
   const hops = spans.filter(isConversationHop).sort(byStartTime);
 
-  const seeds: EventSeed[] = [
-    { type: HopEventType.TurnStart, label: title ?? '', span: null },
-    ...hops.flatMap((span) => eventsForHop(span, outputs.get(span.core_span_id))),
-    {
-      type: HopEventType.TurnComplete,
-      label: '',
-      span: null,
-      tokens: toNumber(figures.tokens),
-      cost: figures.price,
-      hops: toNumber(figures.spans),
-      durationMs: toNumber(figures.durationMs ?? null),
-    },
-  ];
+  const seeds = markUnansweredCalls(hops.flatMap((span) => eventsForHop(span, outputs.get(span.core_span_id))));
 
-  return markUnansweredCalls(seeds).map((seed, index) => ({
-    key: `${seed.span?.core_span_id ?? seed.type}-${index}`,
-    line: index + 1,
-    type: seed.type,
-    label: seed.label,
-    detail: seed.detail ?? null,
-    span: seed.span,
-    startedAtMs: seed.span ? toMillis(seed.span.request_time) : null,
-    tokens: seed.tokens ?? null,
-    reasoningTokens: seed.reasoningTokens ?? null,
-    cost: seed.cost ?? null,
-    hops: seed.hops ?? null,
-    durationMs: seed.durationMs ?? null,
-    hasNoRecordedResult: seed.hasNoRecordedResult ?? false,
-  }));
+  return buildSpanTree({ hops, seedsByHopId: seedsByHopIdOf(seeds) });
 };
-
-export const FILTERABLE_EVENT_TYPES: HopEventType[] = [
-  HopEventType.Text,
-  HopEventType.ToolCall,
-  HopEventType.ToolResult,
-  HopEventType.Thinking,
-  HopEventType.Error,
-  HopEventType.Empty,
-  HopEventType.Session,
-  HopEventType.Embedding,
-  HopEventType.Other,
-];
-
-const FRAME_TYPES: HopEventType[] = [HopEventType.TurnStart, HopEventType.TurnComplete];
-
-export const filterEvents = (events: HopEvent[], types: HopEventType[]): HopEvent[] =>
-  events.filter(({ type }) => types.includes(type));
-
-export const hasFilteredRows = (events: HopEvent[]): boolean => events.some(({ type }) => !FRAME_TYPES.includes(type));
-
-// The frame is not one of the turn's rows, so it belongs to neither side of a "showing n of m" count.
-export const rowCountOf = (events: HopEvent[]): number =>
-  events.filter(({ type }) => !FRAME_TYPES.includes(type)).length;
