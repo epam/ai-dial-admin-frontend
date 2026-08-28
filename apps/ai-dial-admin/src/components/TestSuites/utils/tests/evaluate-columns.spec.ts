@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
-import { ResponseColumn } from '@/src/models/evaluation/test-suite';
-import { evaluateColumns, EvaluatedColumn } from '../evaluate-columns';
+import { ResponseColumn, TestSuite, TryOutHistoryEntry } from '@/src/models/evaluation/test-suite';
+import { evaluateColumns, evaluateTryOutColumnSections, EvaluatedColumn } from '../evaluate-columns';
 
 const makeColumn = (overrides: Partial<ResponseColumn> = {}): ResponseColumn => ({
   name: 'answer',
@@ -260,5 +260,78 @@ describe('evaluateColumns', () => {
     ]);
     expect(results[1].result).toBe('The capital of Belarus is Minsk.');
     expect(results[1].valid).toBe(true);
+  });
+
+  test('should resolve $answer from extraBindings passed by a prior request evaluation', async () => {
+    const columns = [makeColumn({ name: 'followUp', expression: '$answer', type: 'STRING' })];
+    const response = { choices: [{ message: { content: 'later' } }] };
+
+    const results = await evaluateColumns(columns, response, undefined, { answer: 'from request 0' });
+
+    expect(results[0].result).toBe('from request 0');
+    expect(results[0].valid).toBe(true);
+  });
+});
+
+describe('evaluateTryOutColumnSections', () => {
+  const chatResponse = {
+    choices: [{ message: { content: 'Paris' } }],
+  };
+
+  test('returns grouped results for a three-request chain with history', async () => {
+    const suite: TestSuite = {
+      responseColumns: [makeColumn({ name: 'answer', expression: 'choices[0].message.content' })],
+      additionalRequests: [
+        {
+          responseColumns: [makeColumn({ name: 'is_correct', expression: '$answer = "Paris"' })],
+        },
+        {
+          responseColumns: [makeColumn({ name: 'result', expression: '$answer' })],
+        },
+      ],
+    };
+
+    const history: TryOutHistoryEntry[] = [
+      {
+        resolvedRequest: { body: { contentType: 'application/json', content: { q: 1 } } },
+        response: { body: chatResponse },
+      },
+      {
+        resolvedRequest: { body: { contentType: 'application/json', content: { q: 2 } } },
+        response: { body: { ok: true } },
+      },
+      {
+        resolvedRequest: { body: { contentType: 'application/json', content: { q: 3 } } },
+        response: { body: { done: true } },
+      },
+    ];
+
+    const results = await evaluateTryOutColumnSections({
+      testSuite: suite,
+      history,
+      schema: [],
+      multiTurnLength: 1,
+    });
+
+    expect(results.shape).toBe('requests');
+    expect(results.groups).toHaveLength(3);
+    expect(results.groups?.[0].turns[0].columns[0].result).toBe('Paris');
+    expect(results.groups?.[1].turns[0].columns[0].valid).toBe(true);
+    expect(results.groups?.[2].turns[0].columns[0].result).toBe('Paris');
+  });
+
+  test('falls back to flat request #0 columns when history is absent', async () => {
+    const suite: TestSuite = {
+      responseColumns: [makeColumn({ name: 'answer', expression: 'choices[0].message.content' })],
+    };
+
+    const results = await evaluateTryOutColumnSections({
+      testSuite: suite,
+      fallbackColumns: suite.responseColumns,
+      fallbackResponse: chatResponse,
+    });
+
+    expect(results.shape).toBe('single');
+    expect(results.flatColumns?.[0].result).toBe('Paris');
   });
 });

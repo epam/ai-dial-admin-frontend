@@ -29,9 +29,11 @@ import {
   normalizeResponseBodyForColumns,
   unwrapJsonRequestBody,
 } from '@/src/components/TestSuites/utils/column-eval-context';
+import { getRequestTurnCounts, getTryOutSectionShape } from '@/src/utils/evaluation/tryout-sections';
 import CollapsibleSection from './CollapsibleSection';
 import TryOutColumns from './TryOutColumns';
 import TryOutRequestPreview from './TryOutRequestPreview';
+import TryOutRequestTabs from './TryOutRequestTabs';
 import TryOutResponsePreview from './TryOutResponse';
 
 export interface TryOutResponse {
@@ -87,6 +89,21 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId, schema, initialTestCase }) =
   const [history, setHistory] = useState<TryOutHistoryEntry[] | undefined>(undefined);
   const [isRequestSend, setIsRequestSend] = useState(false);
   const [grafanaTraceUrl, setGrafanaTraceUrl] = useState<string | undefined>(undefined);
+  const [selectedRequestIndex, setSelectedRequestIndex] = useState(0);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(() => !response && !!testCaseId);
+
+  const multiTurnLength = initialTestCase?.multiTurnData?.length ?? 0;
+  const turnCounts = useMemo(
+    () => getRequestTurnCounts(testSuite, schema, multiTurnLength),
+    [testSuite, schema, multiTurnLength],
+  );
+  const shape = useMemo(() => getTryOutSectionShape(turnCounts), [turnCounts]);
+  const showRequestTabs = turnCounts.length > 1 && (shape === 'requests' || shape === 'combined');
+  const renderRequestTabs =
+    showRequestTabs &&
+    !isRequestSend &&
+    !isPreviewLoading &&
+    ((!response && !!testCaseId) || (!!response && !!history?.length));
 
   const onChangeRequestBody = useCallback((body: Record<string, unknown>) => {
     setRequestBody(body);
@@ -141,6 +158,10 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId, schema, initialTestCase }) =
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    setSelectedRequestIndex(0);
+  }, [history]);
+
   const responseBody = <TryOutResponseBody response={response} isRequestSend={isRequestSend} growOnOpen />;
   const columnsResponseBody = (
     <TryOutResponseBody response={response} isRequestSend={isRequestSend} growOnOpen={false} />
@@ -184,6 +205,13 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId, schema, initialTestCase }) =
             <Tabs tabs={tabs} activeTab={activeTab} onChangeActiveTab={setActiveTab} />
           </div>
         ) : null}
+        {renderRequestTabs ? (
+          <TryOutRequestTabs
+            testSuite={testSuite}
+            selectedIndex={selectedRequestIndex}
+            onSelect={setSelectedRequestIndex}
+          />
+        ) : null}
 
         {activeTab === EntityViewTab.Response && (
           <>
@@ -198,6 +226,8 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId, schema, initialTestCase }) =
                   isRequestSend={isRequestSend}
                   requestBody={requestBody}
                   onChangeRequestBody={onChangeRequestBody}
+                  selectedRequestIndex={renderRequestTabs ? selectedRequestIndex : undefined}
+                  onLoadingChange={setIsPreviewLoading}
                 />
               )}
 
@@ -213,6 +243,7 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId, schema, initialTestCase }) =
                   testSuite={testSuite}
                   schema={schema}
                   multiTurnData={initialTestCase?.multiTurnData}
+                  selectedRequestIndex={renderRequestTabs ? selectedRequestIndex : undefined}
                 />
               )}
             </div>
@@ -231,11 +262,16 @@ const TryOut: FC<Props> = ({ testSuite, testCaseId, schema, initialTestCase }) =
 
         {activeTab === EntityViewTab.Columns && (
           <TryOutColumns
+            testSuite={testSuite}
+            history={history}
+            schema={schema}
+            multiTurnData={initialTestCase?.multiTurnData}
             columns={testSuite.responseColumns}
             response={normalizeResponseBodyForColumns(response?.body as Record<string, unknown>)}
             request={unwrapJsonRequestBody(resolvedRequest.body as Record<string, unknown> | undefined)}
             isLoading={isRequestSend}
             responseBody={columnsResponseBody}
+            selectedRequestIndex={renderRequestTabs ? selectedRequestIndex : undefined}
           />
         )}
       </>

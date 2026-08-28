@@ -22,7 +22,6 @@ import {
   shouldShowTurnLabels,
   TryOutSectionGroup,
 } from '@/src/utils/evaluation/tryout-sections';
-import CollapsibleSection from './CollapsibleSection';
 import Variables from './Variables';
 
 interface Props {
@@ -34,6 +33,8 @@ interface Props {
   isRequestSend?: boolean;
   requestBody: Record<string, unknown>;
   onChangeRequestBody: (body: Record<string, unknown>) => void;
+  selectedRequestIndex?: number;
+  onLoadingChange?: (loading: boolean) => void;
 }
 
 const TryOutRequestPreview: FC<Props> = ({
@@ -45,11 +46,13 @@ const TryOutRequestPreview: FC<Props> = ({
   isRequestSend,
   requestBody,
   onChangeRequestBody,
+  selectedRequestIndex = 0,
+  onLoadingChange,
 }) => {
   const t = useI18n();
   const [variables, setVariables] = useState<TemplateVariable[]>([]);
   const [testCase, setTestCase] = useState<TestCase | null>(initialTestCase ?? null);
-  const [isVariablesLoading, setIsVariablesLoading] = useState(false);
+  const [isVariablesLoading, setIsVariablesLoading] = useState(true);
 
   useEffect(() => {
     const fetchVariables = async () => {
@@ -89,6 +92,10 @@ const TryOutRequestPreview: FC<Props> = ({
     void fetchVariables();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    onLoadingChange?.(isVariablesLoading);
+  }, [isVariablesLoading, onLoadingChange]);
 
   const perTurnFields = useMemo(() => perTurnFieldNames(schema), [schema]);
   const multiTurnData = testCase?.multiTurnData;
@@ -170,34 +177,24 @@ const TryOutRequestPreview: FC<Props> = ({
       );
     }
 
-    if (shape === 'requests') {
-      return groupedSlots.flatMap((group) =>
-        group.turns.map(({ item }) =>
-          renderVariables(
-            item.variables,
-            `r-${group.requestIndex}`,
-            t(TestSuitesI18nKey.RequestLabel, { index: group.requestIndex + 1 }),
-          ),
+    if (shape === 'requests' || shape === 'combined') {
+      const group = groupedSlots.find((item) => item.requestIndex === selectedRequestIndex);
+      if (!group) {
+        return null;
+      }
+
+      const showTurnLabels = shouldShowTurnLabels(group, turnCounts);
+
+      return group.turns.map(({ turnIndex, item }) =>
+        renderVariables(
+          item.variables,
+          `${shape}-${group.requestIndex}-${turnIndex}`,
+          showTurnLabels ? t(TestSuitesI18nKey.TurnLabel, { index: turnIndex + 1 }) : undefined,
         ),
       );
     }
 
-    return groupedSlots.map((group) => {
-      const requestTitle = t(TestSuitesI18nKey.RequestLabel, { index: group.requestIndex + 1 });
-      const showTurnLabels = shouldShowTurnLabels(group, turnCounts);
-
-      return (
-        <CollapsibleSection key={`req-${group.requestIndex}`} title={requestTitle} defaultOpen growOnOpen={false}>
-          {group.turns.map(({ turnIndex, item }) =>
-            renderVariables(
-              item.variables,
-              `c-${group.requestIndex}-${turnIndex}`,
-              showTurnLabels ? t(TestSuitesI18nKey.TurnLabel, { index: turnIndex + 1 }) : undefined,
-            ),
-          )}
-        </CollapsibleSection>
-      );
-    });
+    return null;
   })();
 
   return isVariablesLoading || isRequestSend ? (
