@@ -2,9 +2,13 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { useConversationTraces } from '@/src/components/Analytics/ConversationsTrace/Detail/use-conversation-traces';
-import { ConversationTraceGroup } from '@/src/models/analytics/conversations-trace';
+import { ConversationTraceGroup, SessionScope } from '@/src/models/analytics/conversations-trace';
 
 const getConversationTracePage = vi.fn();
+
+// Held at module scope so every render passes the same object. The hook keys its loader on `scope`, so a
+// fresh literal per render would rebuild the loader, refire the reset effect and re-fetch without end.
+const scope: SessionScope = { id: 'chat-1', source: 'chat_id' };
 
 vi.mock('@/src/app/[lang]/conversations-trace/actions', () => ({
   getConversationTracePage: (...args: unknown[]) => getConversationTracePage(...args),
@@ -32,7 +36,7 @@ const page = (ids: string[], hasMore = false) => ({
 const renderTraces = () =>
   renderHook(() =>
     useConversationTraces({
-      chatId: 'chat-1',
+      scope,
       projectId: 'statgpt',
       firstRequestTime: 1000,
       lastRequestTime: 2000,
@@ -51,7 +55,7 @@ describe('useConversationTraces', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     expect(result.current.groups.map(({ traceId }) => traceId)).toEqual(['t1', 't2']);
-    expect(getConversationTracePage).toHaveBeenCalledWith('chat-1', 'statgpt', 1000, 2000, 0);
+    expect(getConversationTracePage).toHaveBeenCalledWith(scope, 'statgpt', 1000, 2000, 0);
   });
 
   test('appends the next page and advances the offset by what the page returned', async () => {
@@ -63,7 +67,7 @@ describe('useConversationTraces', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     expect(result.current.groups.map(({ traceId }) => traceId)).toEqual(['t1', 't2', 't3']);
-    expect(getConversationTracePage).toHaveBeenLastCalledWith('chat-1', 'statgpt', 1000, 2000, 2);
+    expect(getConversationTracePage).toHaveBeenLastCalledWith(scope, 'statgpt', 1000, 2000, 2);
   });
 
   // A late-arriving row can lower a trace's earliest recorded time and move it across a page boundary, which
@@ -78,7 +82,7 @@ describe('useConversationTraces', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     expect(result.current.groups.map(({ traceId }) => traceId)).toEqual(['t1', 't2', 't3']);
-    expect(getConversationTracePage).toHaveBeenLastCalledWith('chat-1', 'statgpt', 1000, 2000, 2);
+    expect(getConversationTracePage).toHaveBeenLastCalledWith(scope, 'statgpt', 1000, 2000, 2);
   });
 
   test('carries the page’s own hasMore rather than inferring one', async () => {

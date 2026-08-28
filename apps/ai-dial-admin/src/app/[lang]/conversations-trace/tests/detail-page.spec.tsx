@@ -24,7 +24,7 @@ vi.mock('next/navigation', () => ({
 const CHAT_ID = 'Lrr0e6L5bpTND3IY_dN0_';
 
 const DETAIL_ROW = {
-  chat_id: CHAT_ID,
+  client_session_id: CHAT_ID,
   project_id: '',
   user_hash: 'db73',
   turn_count: 1,
@@ -39,7 +39,7 @@ const DETAIL_ROW = {
   avg_duration_ms: 0,
   deployments: ['anthropic.claude-opus-4-8'],
   traces: ['0a3f1d9c8b7e6a5f'],
-  'conversation_insights.title': 'Refund policy for EU orders',
+  'session_insights.title': 'Refund policy for EU orders',
 };
 
 const forbidden = () => isAnalyticsForbidden as unknown as ReturnType<typeof vi.fn>;
@@ -48,7 +48,7 @@ const feedback = () => getConversationFeedback as unknown as ReturnType<typeof v
 const schema = () => getConversationsSchema as unknown as ReturnType<typeof vi.fn>;
 const availability = () => getConversationTranscriptAvailability as unknown as ReturnType<typeof vi.fn>;
 
-const SCHEMA_FIELDS = Object.keys(DETAIL_ROW).map((name) => ({ name, type: 'string', source: 'conversations' }));
+const SCHEMA_FIELDS = Object.keys(DETAIL_ROW).map((name) => ({ name, type: 'string', source: 'sessions' }));
 
 const render = (id: string) => Page({ params: Promise.resolve({ id }) });
 

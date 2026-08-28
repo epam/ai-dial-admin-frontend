@@ -79,7 +79,7 @@ const ALL_FIELDS: AnalyticsEntityField[] = Object.values(ConversationsField).map
 // The field behind the defect: the frontend enum has no member for it, because nothing designs a column for
 // it — the schema is what offers it.
 const INSIGHT_MODEL_FIELD: AnalyticsEntityField = {
-  name: 'conversation_insights.model',
+  name: 'session_insights.model',
   source: 'model',
   type: AnalyticsFieldType.String,
   tag: 'provenance',
@@ -127,7 +127,7 @@ describe('ConversationsList :: paging', () => {
   test('identifies rows by conversation id', () => {
     renderList();
 
-    expect(captured.getRowId?.({ data: { chat_id: 'abc' } as ConversationRow })).toBe('abc');
+    expect(captured.getRowId?.({ data: { client_session_id: 'abc' } as ConversationRow })).toBe('abc');
   });
 
   test('persists column state under a per-view key', () => {
@@ -287,7 +287,7 @@ describe('ConversationsList :: columns', () => {
   });
 
   test('omits the insight columns on an instance without the enrichment', () => {
-    renderList(ALL_FIELDS.filter((entityField) => !entityField.name.startsWith('conversation_insights.')));
+    renderList(ALL_FIELDS.filter((entityField) => !entityField.name.startsWith('session_insights.')));
 
     const fields = leafColumns().map((column) => column.field);
 

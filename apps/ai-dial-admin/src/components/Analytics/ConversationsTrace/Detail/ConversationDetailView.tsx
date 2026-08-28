@@ -10,7 +10,11 @@ import { useConversationTrace } from '@/src/components/Analytics/ConversationsTr
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay/LoadingOverlay';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { ConversationDetailRow, ConversationFeedbackPage } from '@/src/models/analytics/conversations-trace';
+import {
+  ConversationDetailRow,
+  ConversationFeedbackPage,
+  SessionScope,
+} from '@/src/models/analytics/conversations-trace';
 
 interface Props {
   conversation: ConversationDetailRow;
@@ -24,10 +28,14 @@ interface Props {
 const ConversationDetailView: FC<Props> = ({ conversation, feedback, isTranscriptReadable, nowMs }) => {
   const t = useI18n();
   const rows = useMemo(() => feedback?.rows ?? [], [feedback]);
-
-  const { trace, isLoading, selectedSpanId, onSelectSpan, onOpenTrace, onCloseTrace } = useConversationTrace(
-    conversation.chat_id,
+  // Built once and passed down: every hop-log read for this session is scoped by it, and rebuilding it per
+  // consumer would give each hook a new object identity and re-fetch on every render.
+  const scope = useMemo<SessionScope>(
+    () => ({ id: conversation.client_session_id, source: conversation.client_session_source }),
+    [conversation.client_session_id, conversation.client_session_source],
   );
+
+  const { trace, isLoading, selectedSpanId, onSelectSpan, onOpenTrace, onCloseTrace } = useConversationTrace(scope);
 
   const isTraceOpen = trace !== null;
 
@@ -35,7 +43,7 @@ const ConversationDetailView: FC<Props> = ({ conversation, feedback, isTranscrip
     <div className="relative flex size-full flex-col gap-5 rounded bg-layer-2 py-5 px-6">
       {trace && (
         <ConversationTraceView
-          chatId={conversation.chat_id}
+          scope={scope}
           figures={trace.figures}
           title={trace.title}
           spans={trace.spans}
@@ -53,6 +61,7 @@ const ConversationDetailView: FC<Props> = ({ conversation, feedback, isTranscrip
         <ConversationDetailHeader conversation={conversation} nowMs={nowMs} />
         <ConversationDetailBody
           conversation={conversation}
+          scope={scope}
           isTranscriptReadable={isTranscriptReadable}
           feedbackRows={rows}
           feedbackTotal={feedback?.total ?? null}

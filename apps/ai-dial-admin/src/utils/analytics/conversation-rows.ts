@@ -46,7 +46,7 @@ const countsByChatId = (ratingRows: ConversationRatingRow[]): Map<string, Conver
 export const attachRatings = (rows: ConversationRow[], ratingRows: ConversationRatingRow[]): ConversationRow[] => {
   const counts = countsByChatId(ratingRows);
 
-  return rows.map((row) => ({ ...row, ...(counts.get(row.chat_id) ?? NONE) }));
+  return rows.map((row) => ({ ...row, ...(counts.get(row.client_session_id) ?? NONE) }));
 };
 
 export const unresolvedRatings = (rows: ConversationRow[]): ConversationRow[] =>
