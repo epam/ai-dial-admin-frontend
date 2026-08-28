@@ -10,23 +10,23 @@ import {
   OPTIONAL_FEEDBACK_FIELDS,
   OPTIONAL_USAGE_LOG_FIELDS,
   RATING_COUNT_EXCLUSIVE_MIN,
-  TURNS_ENTITY,
   USAGE_LOG_ENTITY,
 } from '@/src/constants/analytics/conversations-trace';
 import {
   ConversationColumnFilter,
   ConversationEntryHopRow,
+  ConversationTraceFigureField,
+  ConversationTracePageField,
+  ConversationTraceWindow,
   ConversationSpanRow,
   ConversationFilterOperator,
   ConversationRatingTotalsField,
   ConversationSortKey,
   ConversationTotalsField,
-  ConversationTurnField,
   ConversationsField,
   FeedbackField,
   FeedbackFilter,
   ResponseRatingsField,
-  TurnsField,
   UsageLogField,
 } from '@/src/models/analytics/conversations-trace';
 import {
@@ -45,6 +45,7 @@ import {
   eq,
   field,
   fn,
+  fnIf,
   ge,
   gt,
   ico,
@@ -229,28 +230,148 @@ export const buildConversationFeedbackQuery = (
   });
 };
 
-// The `turns` rollup resolves what a turn is — one row per trace, with the entry time, hop count, token
-// total, cost and wall-clock duration already computed — so this reads rows rather than grouping the hop
-// log itself. The aliases keep the rollup's columns under the names the timeline already consumes.
-export const buildConversationTurnsQuery = (chatId: string, limit: number): StructuredQuery =>
-  rowQuery({
-    entity: TURNS_ENTITY,
+// The trace listing, in three passes over the live hop log.
+//
+// They differ in one way that looks like an inconsistency and is not, so it is stated once here and asserted
+// in the query-shape test: **`project_id` filters the page query and nothing else.**
+//
+// On the page query it is admissible because that query is already restricted to rows carrying the chat id,
+// and a trace's chat-id-carrying rows are single-project (measured: no trace's labelled rows span two
+// projects). It is also the only prune available — `chat_id` is not in the sort key and has no index.
+//
+// On the roots and figures queries it is destructive. A trace's Core-internal calls are recorded under
+// Core's own project while the client's rows carry the conversation's, so filtering by the conversation's
+// project drops exactly the rows and cards this listing exists to show — and drops them *silently*, because
+// the figures query would still count what the roots query lost. That is the arithmetic-correction bug this
+// design removes, so do not "unify" the three filter lists into one shared helper.
+//
+// `project_id` is nonetheless *projected* by the roots query: the Core-internal marker compares it against
+// the conversation's. Required in one clause, forbidden in the other.
+
+// The window the roots and figures passes share. Both take it as one value rather than deriving it twice, so
+// they cannot end up scoped to different ranges.
+const traceWindowPredicates = (window: ConversationTraceWindow): QueryFilterNode[] => [
+  ge(UsageLogField.RequestTime, value(QueryValueType.Timestamp, String(window.fromMs))),
+  le(UsageLogField.RequestTime, value(QueryValueType.Timestamp, String(window.toMs))),
+];
+
+// Pass one. Yields the page's trace ids, the ordering key, and the bounds the other two passes are scoped by
+// — and no figures: a figure resolved under a `chat_id` filter is computed without the rows that filter
+// excludes, which is the defect being fixed.
+//
+// Ascending order is load-bearing, not cosmetic. This reads a live table, so rows arrive between page
+// fetches; ordered ascending, a newly recorded trace sorts past the last page fetched and the offsets already
+// consumed do not shift. `trace_id` breaks ties so a boundary is never arbitrary. A newest-first order is
+// unsound under offset paging and must not be introduced without keyset paging first — which needs the
+// cursor bound over `min(request_time)` in a HAVING, since filtering rows by the cursor changes a straddling
+// trace's computed minimum and it reappears on the next page.
+export const buildConversationTracePageQuery = (
+  chatId: string,
+  projectId: string,
+  window: ConversationTraceWindow,
+  offset: number,
+  limit: number,
+): StructuredQuery =>
+  aggregateQuery({
+    entity: USAGE_LOG_ENTITY,
+    groupBy: [UsageLogField.TraceId],
     select: [
-      col(field(TurnsField.TraceId)),
-      col(field(TurnsField.FirstRequestTime), ConversationTurnField.Started),
-      col(field(TurnsField.HopCount), ConversationTurnField.Hops),
-      col(field(TurnsField.FailedHopCount), ConversationTurnField.FailedHops),
-      col(field(TurnsField.TotalTokens), ConversationTurnField.Tokens),
-      col(field(TurnsField.TotalPrice), ConversationTurnField.Cost),
-      col(field(TurnsField.DurationMs), ConversationTurnField.DurationMs),
+      col(field(UsageLogField.TraceId)),
+      col(fn('min', [field(UsageLogField.RequestTime)]), ConversationTracePageField.FirstRequestTime),
+      col(fn('max', [field(UsageLogField.RequestTime)]), ConversationTracePageField.LastRequestTime),
     ],
-    filter: eq(TurnsField.ChatId, value(QueryValueType.String, chatId)),
-    // The rollup carries no turn index, so the entry time is the only ordering that rebuilds the sequence.
-    sort: [sortItem(ConversationTurnField.Started, QuerySortDirection.Asc)],
+    filter: and([
+      eq(UsageLogField.ChatId, value(QueryValueType.String, chatId)),
+      eq(UsageLogField.ProjectId, value(QueryValueType.String, projectId)),
+      ...traceWindowPredicates(window),
+    ]),
+    sort: [
+      sortItem(ConversationTracePageField.FirstRequestTime, QuerySortDirection.Asc),
+      sortItem(UsageLogField.TraceId, QuerySortDirection.Asc),
+    ],
+    page: offsetPage(offset, limit),
+  });
+
+// Pass two. Every root span of the page's traces, each read for the card it becomes. Located by `trace_id`
+// alone: requiring the conversation header here would drop the roots that carry none, which is the shape this
+// listing exists to render.
+export const buildConversationTraceRootsQuery = (
+  traceIds: string[],
+  window: ConversationTraceWindow,
+  limit: number,
+): StructuredQuery =>
+  rowQuery({
+    entity: USAGE_LOG_ENTITY,
+    select: [
+      col(field(UsageLogField.TraceId)),
+      col(field(UsageLogField.CoreSpanId)),
+      col(field(UsageLogField.RequestTime)),
+      col(field(UsageLogField.OperationDurationMs)),
+      col(field(UsageLogField.Success)),
+      col(field(UsageLogField.ResponseStatus)),
+      col(field(UsageLogField.TotalTokens)),
+      col(field(UsageLogField.TotalPrice)),
+      col(field(UsageLogField.DeploymentPrice)),
+      col(field(UsageLogField.ChatId)),
+      col(field(UsageLogField.RequestUri)),
+      col(field(UsageLogField.EventKind)),
+      col(field(UsageLogField.NumberRequestMessages)),
+      col(field(UsageLogField.Deployment)),
+      // Projected for the marker's comparison — never filtered on. See the note above this group.
+      col(field(UsageLogField.ProjectId)),
+    ],
+    filter: and([
+      isNull(UsageLogField.CoreParentSpanId),
+      inValues(UsageLogField.TraceId, QueryValueType.String, traceIds),
+      ...traceWindowPredicates(window),
+    ]),
+    sort: [sortItem(UsageLogField.RequestTime, QuerySortDirection.Asc)],
     page: offsetPage(0, limit),
   });
 
-export const buildConversationSpansQuery = (chatId: string, traceId: string, limit: number): StructuredQuery =>
+// Pass three. The traces' own figures and their chips. Grouping by `(trace_id, event_kind)` gives the chips
+// their counts; summing the kinds gives the trace its totals.
+//
+// No `chat_id` here is what makes those totals correct *without correction*. Scoped by trace, the span count,
+// tokens and price are simply the trace's own — there is no root to add back and no count to increment.
+//
+// Also the second call site's shape: the Chat view resolves figures for the traces its own transcript covers
+// by passing that transcript's trace ids, so an answer's figures never depend on how far the listing has been
+// paged. Same scoping rules apply there.
+export const buildConversationTraceFiguresQuery = (
+  traceIds: string[],
+  window: ConversationTraceWindow,
+  limit: number,
+): StructuredQuery =>
+  aggregateQuery({
+    entity: USAGE_LOG_ENTITY,
+    groupBy: [UsageLogField.TraceId, UsageLogField.EventKind],
+    select: [
+      col(field(UsageLogField.TraceId)),
+      col(field(UsageLogField.EventKind)),
+      col(fn('count'), ConversationTraceFigureField.Spans),
+      col(fn('sum', [field(UsageLogField.TotalTokens)]), ConversationTraceFigureField.Tokens),
+      col(fn('sum', [field(UsageLogField.DeploymentPrice)]), ConversationTraceFigureField.Price),
+      // No `countIf` in the catalog and no `CASE` in the grammar; `if` is what expresses this.
+      col(
+        fn('sum', [
+          fnIf(field(UsageLogField.Success), value(QueryValueType.Integer, '0'), value(QueryValueType.Integer, '1')),
+        ]),
+        ConversationTraceFigureField.FailedSpans,
+      ),
+      col(fn('group_uniq_array', [field(UsageLogField.ResponseId)]), ConversationTraceFigureField.ResponseIds),
+    ],
+    filter: and([inValues(UsageLogField.TraceId, QueryValueType.String, traceIds), ...traceWindowPredicates(window)]),
+    sort: [sortItem(UsageLogField.TraceId, QuerySortDirection.Asc)],
+    page: offsetPage(0, limit),
+  });
+
+// Scoped by `trace_id` alone, deliberately. A `chat_id` predicate here excluded the rows the listing counts —
+// a root carrying no header, and the Core-internal calls recorded under the trace — so the drawer contradicted
+// the card that opened it: one measured trace's card states two hops while a header-scoped read returned one,
+// and the root the card describes was absent from its own span tree. No trace carries two distinct non-empty
+// chat ids, so the trace id alone cannot draw in another conversation's rows.
+export const buildConversationSpansQuery = (traceId: string, limit: number): StructuredQuery =>
   rowQuery({
     entity: USAGE_LOG_ENTITY,
     select: [
@@ -274,10 +395,7 @@ export const buildConversationSpansQuery = (chatId: string, traceId: string, lim
       col(field(UsageLogField.McpToolCallName)),
       col(field(UsageLogField.ExecutionPath)),
     ],
-    filter: and([
-      eq(UsageLogField.ChatId, value(QueryValueType.String, chatId)),
-      eq(UsageLogField.TraceId, value(QueryValueType.String, traceId)),
-    ]),
+    filter: eq(UsageLogField.TraceId, value(QueryValueType.String, traceId)),
     sort: [sortItem(UsageLogField.RequestTime, QuerySortDirection.Asc)],
     page: offsetPage(0, limit, true),
   });

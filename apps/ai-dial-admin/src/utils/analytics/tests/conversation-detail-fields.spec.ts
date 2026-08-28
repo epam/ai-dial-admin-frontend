@@ -7,11 +7,10 @@ import {
   ConversationFeedbackRow,
   ConversationFieldFormat,
   ConversationFieldState,
-  ConversationTurnRow,
+  ConversationTraceFigures,
   ConversationsField,
 } from '@/src/models/analytics/conversations-trace';
 import {
-  attributeRatingsToTurns,
   conversationTitle,
   feedbackRowCounts,
   isFeedbackContested,
@@ -244,70 +243,6 @@ describe('isFeedbackReRated', () => {
 
   test('an unreadable time is not a window', () => {
     expect(isFeedbackReRated(feedbackRow({ first_rate_time: null }))).toBe(false);
-  });
-});
-
-describe('attributeRatingsToTurns', () => {
-  const turn = (trace_id: string, started: string): ConversationTurnRow => ({
-    trace_id,
-    started,
-    hops: 1,
-    failed_hops: 0,
-    tokens: 10,
-    cost: '0.01',
-    duration_ms: 100,
-  });
-
-  const TURNS = [turn('t1', '2026-07-20T19:00:00.000Z'), turn('t2', '2026-07-20T19:10:00.000Z')];
-
-  test('attributes a rating to the last turn that had started', () => {
-    const counts = attributeRatingsToTurns(TURNS, [feedbackRow({ last_rate_time: '2026-07-20T19:05:00.000Z' })]);
-
-    expect(counts).toEqual([
-      { rating_up: 1, rating_down: 0 },
-      { rating_up: 0, rating_down: 0 },
-    ]);
-  });
-
-  test('attributes a rating left after the next turn began to that later turn', () => {
-    const counts = attributeRatingsToTurns(TURNS, [feedbackRow({ last_rate_time: '2026-07-20T19:20:00.000Z' })]);
-
-    expect(counts[1]).toEqual({ rating_up: 1, rating_down: 0 });
-  });
-
-  test('uses the latest rating time of a re-rated response', () => {
-    const counts = attributeRatingsToTurns(TURNS, [
-      feedbackRow({ first_rate_time: '2026-07-20T19:01:00.000Z', last_rate_time: '2026-07-20T19:15:00.000Z' }),
-    ]);
-
-    expect(counts[1]).toEqual({ rating_up: 1, rating_down: 0 });
-  });
-
-  test('adds a response whole rather than as a single rating', () => {
-    const counts = attributeRatingsToTurns(TURNS, [
-      feedbackRow({ last_rate_time: '2026-07-20T19:05:00.000Z', rate_pos_count: 2, rate_zero_count: 1 }),
-    ]);
-
-    expect(counts[0]).toEqual({ rating_up: 2, rating_down: 1 });
-  });
-
-  test('drops a rating that predates every turn', () => {
-    const counts = attributeRatingsToTurns(TURNS, [feedbackRow({ last_rate_time: '2026-07-20T18:00:00.000Z' })]);
-
-    expect(counts).toEqual([
-      { rating_up: 0, rating_down: 0 },
-      { rating_up: 0, rating_down: 0 },
-    ]);
-  });
-
-  test('drops a rating with no readable time', () => {
-    const counts = attributeRatingsToTurns(TURNS, [feedbackRow({ last_rate_time: null })]);
-
-    expect(counts[0]).toEqual({ rating_up: 0, rating_down: 0 });
-  });
-
-  test('reports a zeroed bucket per turn when no response was rated', () => {
-    expect(attributeRatingsToTurns(TURNS, [])).toHaveLength(2);
   });
 });
 

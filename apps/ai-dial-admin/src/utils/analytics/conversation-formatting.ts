@@ -1,9 +1,10 @@
 import {
+  CONVERSATION_DAY_PAD_MS,
   COST_COMPACT_THRESHOLD,
   COST_SIGNIFICANT_DIGITS,
   UNAVAILABLE_VALUE,
 } from '@/src/constants/analytics/conversations-trace';
-import { ConversationScalar } from '@/src/models/analytics/conversations-trace';
+import { ConversationScalar, ConversationTraceWindow } from '@/src/models/analytics/conversations-trace';
 import { toBig, toNumber } from '@/src/utils/analytics/scalar';
 import { formatNumberWithExponent } from '@/src/utils/formatting/number-formatting';
 
@@ -64,6 +65,36 @@ export const toMillis = (value: number | string | null): number | null => {
   const text = ZONELESS_ISO.test(value.trim()) ? `${value.trim().replace(' ', 'T')}Z` : value;
   const millis = Date.parse(text);
   return Number.isNaN(millis) ? null : millis;
+};
+
+// Expands a set of recorded times to whole UTC days and then pads a further day at each end.
+//
+// UTC, because the partition key is `toYYYYMMDD(request_time)` on a UTC column: rounding to a *local* day
+// widens the lower bound harmlessly but narrows the upper one — a local end-of-day falls hours short of the
+// UTC day's end — and rows in that gap are dropped with no error.
+//
+// Padded, because rounding to the containing day leaves no margin at all. The rows these bounds are derived
+// from are the ones a chat-id-scoped read can see; the rows they have to *cover* include a root recorded
+// before its first child and a Core-internal root recorded after its parent's last child. A root at
+// 23:59:59.7 sits outside a window that starts at 00:00:00.0 of its child's day.
+//
+// Epoch millis, because ADAS rejects an ISO-8601 timestamp literal outright.
+export const paddedUtcDayRange = (values: Array<number | string | null>): ConversationTraceWindow | null => {
+  const millis = values.map(toMillis).filter((ms): ms is number => ms !== null);
+  if (!millis.length) {
+    return null;
+  }
+
+  const earliest = new Date(Math.min(...millis));
+  const latest = new Date(Math.max(...millis));
+
+  const startOfUtcDay = Date.UTC(earliest.getUTCFullYear(), earliest.getUTCMonth(), earliest.getUTCDate());
+  const endOfUtcDay = Date.UTC(latest.getUTCFullYear(), latest.getUTCMonth(), latest.getUTCDate() + 1) - 1;
+
+  return {
+    fromMs: startOfUtcDay - CONVERSATION_DAY_PAD_MS,
+    toMs: endOfUtcDay + CONVERSATION_DAY_PAD_MS,
+  };
 };
 
 export const formatCompactNumber = (value: number | string | null): string => {

@@ -97,6 +97,9 @@ export const assembleTranscript = (
   return assembled;
 };
 
+// The question a turn answered, keyed by trace. Read by the Chat view alone, to title a hop chain opened
+// from an assistant message — a reader who clicked an answer should see that answer's question above its
+// hops, not a hex id. Cards deliberately carry no body-derived text; the drawer is not a card.
 export const questionsByTurn = (messages: ConversationMessage[]): Map<string, string> => {
   const questions = new Map<string, string>();
 

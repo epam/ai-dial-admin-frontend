@@ -23,6 +23,7 @@ This folder (`openspec/specs/analytics/`) is the single home for all Analytics s
 the consolidated master spec, folding in the scaffold, saved queries, the query workbench, the SQL
 editor, the query assistant, Tables, and the conversations trace.
 ## Requirements
+
 ### Requirement: ANALYTICS_ENABLED feature flag is surfaced on FeatureFlags
 
 The system SHALL expose an environment variable `ANALYTICS_ENABLED` whose value is surfaced at runtime on the `FeatureFlags` object as `analyticsEnabled: boolean`. The flag MUST be `true` only when `process.env.ANALYTICS_ENABLED` is present and resolves truthy per the existing `isValueTruthy` helper; otherwise it MUST be `false`. The flag SHALL be initialized in the root layout (`app/[lang]/layout.tsx`) alongside the other feature flags and added to the `FeatureFlags` model (`models/feature-flags.ts`).
@@ -3404,7 +3405,7 @@ subset of them: the conversation's title, its summary, its sentiment and sentime
 topics, its language and its resolution status. A descriptive insight field the query does not name is a
 field the detail view cannot render at all, and the reader has no way to tell that from a conversation the
 evaluator never reached. The enrichment's `provenance`-tagged fields are not covered by this rule — they
-are the evaluation's own bookkeeping, and only `truncated` is read, to state the heading's caveat.
+are the evaluation's own bookkeeping, and the detail view reads none of them.
 
 The selected set SHALL include the rollup's enrichment columns where the schema reports them, whose exposed
 names are qualified flat names containing a dot. The query SHALL send such a name whole rather than treating
@@ -3435,7 +3436,7 @@ field for those callers rather than being refused cleanly, making the whole view
 - **WHEN** the single-conversation query is built and the schema reports the insight columns
 - **THEN** its select names `conversation_insights.title`
 - **AND** it names the summary, sentiment, sentiment score, topic, topics, language and resolution status
-- **AND** it names `conversation_insights.truncated`
+- **AND** it names no `provenance`-tagged bookkeeping field of the enrichment
 
 #### Scenario: A descriptive insight field the schema omits is not named
 
@@ -3646,11 +3647,10 @@ twice. The marker MUST NOT stand as the heading's only content for assistive tec
 is a dash names nothing, so it SHALL carry an accessible name stating that the conversation is untitled. The
 title MUST NOT be fabricated from other values.
 
-A title computed from a `truncated` input SHALL still be stated: it describes the part of the conversation the
-evaluator read, which is a weaker claim than a full title but a true one. The detail view SHALL state that
-weaker claim **for the conversation it is showing**, in text rather than as a bare marker, because the reader
-is looking at one conversation and has room for the explanation. It MUST NOT leave the truncation unstated:
-most titled conversations are truncated, so silence would present a partial label as a whole one.
+A title computed from a `truncated` input SHALL be stated exactly as any other title is, and the header MUST
+NOT qualify it with a truncation caveat. The flag holds for most titled conversations, so a caveat rendered on
+nearly every one of them, and what it reported was a property of the evaluator's input budget rather than
+anything about the conversation the reader is looking at.
 
 The header MUST NOT state the conversation's deployments. The metadata panel states them, and one fact
 presented in two places gives the reader no way to tell which is authoritative — the same reason the turn
@@ -3697,8 +3697,8 @@ the conversations log, so the same conversation reads identically in both places
 #### Scenario: A truncated title says so
 
 - **WHEN** a conversation's insight row is flagged `truncated`
-- **THEN** the detail view states that the title describes only part of the conversation
-- **AND** the title itself is still stated
+- **THEN** the title itself is stated as the heading, exactly as an untruncated title is
+- **AND** the view states nothing about the title having been computed from part of the conversation
 
 #### Scenario: The header states no deployments and no model
 
@@ -3740,99 +3740,427 @@ the conversations log, so the same conversation reads identically in both places
 - **WHEN** the same conversation is read in the log and in the detail view
 - **THEN** its token, cost and activity values are formatted identically in both
 
-### Requirement: Conversation turn list comes from the turns rollup and discloses its bound
+### Requirement: The conversation trace listing groups by trace and cards by root span
 
-The detail view SHALL derive a conversation's **turn list** from the `turns` entity, which the analytics
-service materializes as one row per trace. That list is the spine of the transcript and the source of each
-turn's own figures. It is **not** the source of the conversation's turn count, which the header reads from
-the conversations rollup.
+The listing SHALL present a conversation's recorded activity as **traces**, and within a trace one **card per
+root span** — a span whose parent span id is null. Trace-level figures SHALL attach to the trace; a card's own
+figures SHALL be read from that card's own row. The two registers are not interchangeable: the trace states
+what the whole chain consumed, the card states what that one call did itself.
 
-The view MUST NOT identify turns itself by grouping the hop-level usage log. The rollup already resolves what
-a turn is, and a second definition maintained in the frontend would drift from it: a turn's entry hop, its
-hop count and its cost would each be answered twice, by two rules, for the same conversation.
+A trace SHALL belong to the conversation when **any** of its rows carries the conversation's chat id. Core
+writes the conversation header per request, so the header routinely lands on a child row while the root
+carries none — the ordinary shape for agent clients, verified in Core's source and measured across sampled
+traces. The listing MUST NOT require the header on the root span itself. Requiring it is a stricter rule that
+drops whole conversations from the listing, which is the defect this requirement replaces.
 
-Each turn SHALL carry its trace id, its start time, its hop count, its token total, its cost and its
-wall-clock duration, all as the rollup states them. A turn's cost SHALL be the sum of each hop's own cost, not
-the chain-inclusive figure that already covers everything a hop initiated; summing the latter across a chain
-double-counts. A turn's duration SHALL be its elapsed time — the longest single hop, since a hop's duration
-contains the hops it called — not the sum of its hops' durations.
+Where a trace records exactly one root span — the overwhelming majority — the trace and its card SHALL
+collapse into a **single row**, so the grouping is invisible until a trace genuinely records more than one
+client call. Two cards under one trace SHALL appear only where more than one root was recorded.
 
-The turn list SHALL be ordered by each turn's start time, ascending. The rollup carries no turn index, so
-start time is the only ordering that reconstructs the conversation's sequence, and the view MUST NOT present
-a turn number as though it were recorded.
+The root span carrying the conversation's own call SHALL be identified as the root carrying the chat id where
+one does, and otherwise as the trace's sole root. That is a **labelling** rule, not a selection rule: every
+root renders as a card, and the rule only decides which card is the conversation's own call. No trace records
+two roots carrying the chat id, and where no root carries it there is exactly one root.
 
-The turn query SHALL name the trace id, so a turn's span tree stays addressable and the trace drawer's
-behaviour is unchanged.
+A trace whose root span is not found SHALL still render from its trace-level figures, stating that the entry
+call was not recorded, rather than being omitted from the listing.
 
-The turn query MUST NOT name a request or response body column, and the rollup exposes none: bodies are
-heavy, and naming one in a per-conversation read makes the turn list as slow as a transcript read.
+A card SHALL be labelled by the trace it belongs to and MUST NOT be labelled with a turn number. The data
+records no turn index, and numbering the rows presents an ordinal the source does not carry as though it were
+recorded.
 
-The turn list SHALL be bounded, and the view MUST NOT page through it. When the bound clips the list — that
-is, whenever fewer turns load than the conversations rollup's `turn_count` — the view SHALL state both figures
-together, so the number of turns on screen reads as a stated limit rather than as the conversation's length.
-That disclosure MUST be visible without interaction, and MUST NOT render when the list is complete.
+Service calls — title generation and similar — SHALL be shown rather than filtered out. They are real
+recorded calls that consume tokens and cost, and hiding them would leave a trace's figures exceeding the sum
+of its cards with nothing on screen to account for the difference.
 
-The turn read SHALL NOT be gated on a schema probe of its own. Unlike the conversation read, it names no
-optional field: an instance either carries the turn rollup or it does not, so there is no partial projection
-to negotiate. Where the rollup is absent the query fails, and the view SHALL render its existing
-failed-to-load presentation — which is accurate, and stays distinct from a conversation that genuinely has
-no turns.
+A repeated send SHALL render as two cards, since it is two recorded calls.
 
-The `turns` rollup is **refreshed periodically** while `dial_usage_log` is written live, so a conversation
-that started after the last refresh has no rows in it. Such a conversation SHALL render the view's existing
-empty-turn-list presentation: the header, the panels and the rollup's own figures still render from
-`conversations`, and the view MUST NOT report an error, since nothing failed. The view MUST NOT fall back to
-the hop-level usage log to synthesize turns for it — that would answer one conversation by one definition of a
-turn and the next by another.
+#### Scenario: A trace is listed when any of its rows carries the conversation header
 
-#### Scenario: One turn per trace, from the rollup
+- **WHEN** a trace's root span carries no chat id and one of its child rows carries the conversation's
+- **THEN** that trace is listed
+- **AND** its card is read from the root span's own row
 
-- **WHEN** the detail view loads a conversation the rollup records several turns for
-- **THEN** one turn renders per trace
-- **AND** each reports its own hop count, token total, cost and duration as the rollup states them
-- **AND** the turn query targets the `turns` entity and carries no group-by
+#### Scenario: A single-root trace renders as one row
 
-#### Scenario: Turns are ordered by when they started
+- **WHEN** a trace records exactly one root span
+- **THEN** the trace and its card render as a single row
+- **AND** no grouping affordance is rendered for it
 
-- **WHEN** a conversation's turns are listed
-- **THEN** they render in ascending order of start time
-- **AND** the query's sort key is the turn's start time
+#### Scenario: A trace recording two client calls renders two cards
 
-#### Scenario: A turn's trace stays addressable
+- **WHEN** a trace records a client root and a Core-internal root
+- **THEN** two cards render under that one trace
+- **AND** each states its own recorded time, duration, status and own figures
 
-- **WHEN** a turn renders
-- **THEN** it offers the control that opens that turn's trace
-- **AND** the span tree that opens is the one for that turn's trace id
+#### Scenario: A trace whose root was not recorded still renders
 
-#### Scenario: A clipped turn list states its bound against the real count
+- **WHEN** no root span is found for a listed trace
+- **THEN** the trace still renders from its trace-level figures
+- **AND** it states that the entry call was not recorded
 
-- **WHEN** a conversation's `turn_count` is 911 and the turn list is bounded at 200
-- **THEN** the view states that 200 of 911 turns are shown
-- **AND** that disclosure is visible without interaction
+#### Scenario: A card carries no turn number
 
-#### Scenario: A complete turn list carries no disclosure
+- **WHEN** the listing renders
+- **THEN** no card is labelled with a turn number
+- **AND** each card is labelled by its trace
 
-- **WHEN** a conversation's `turn_count` is 12 and all 12 turns load
-- **THEN** no truncation disclosure renders
+### Requirement: The trace listing is resolved by three queries whose scopes are one invariant
 
-#### Scenario: The turn query reads no body column
+The listing SHALL be resolved over the live hop log by three queries, and by no rollup. A rollup is refreshed
+periodically while the hop log is written live, and the listing's correctness now depends on rows a
+chat-id-scoped rollup omits.
 
-- **WHEN** the turn list is requested
-- **THEN** the query names neither a request body nor a response body column
+**The paging query** SHALL group the hop log by trace, filtered by the conversation's chat id, the
+conversation's project, and a padded day range. It SHALL return exactly three things: the trace ids of the
+page, each trace's earliest recorded time as the ordering key, and each trace's latest recorded time. It MUST
+NOT return figures — nothing consumes them, and a figure resolved under a chat-id filter is the defect this
+change removes.
 
-#### Scenario: An instance without the turn rollup reports a failed read
+**The root query** SHALL return **every** root span of the page's traces, located by trace id, and MUST NOT be
+filtered by chat id. It SHALL project only cheap columns: the trace and span ids, the recorded time, the
+operation duration, the success flag and response status, the token total, the chain price and the call's own
+price, the chat id, the request endpoint, the event kind, the request message count, the deployment, and the
+**project id**.
 
-- **WHEN** the detail view loads a conversation on an instance that does not carry the turn rollup
-- **THEN** the timeline states that the turns could not be loaded
-- **AND** the header, the panels and the conversation's own figures still render
-- **AND** no schema probe of the turn entity is issued before the read
+The project id SHALL appear in the root query's **projection** and MUST NOT appear in its **filter**. The
+Core-internal marker is a comparison against the conversation's project, so the value has to be read; filtering
+on it would drop the very rows the marker exists to identify. One name, required in one clause and forbidden in
+the other, is where a reader tidying this query will go wrong, so the distinction SHALL be stated where the
+query is built.
 
-#### Scenario: A conversation newer than the last refresh lists no turns
+**The figures query** SHALL group the page's traces by trace and event kind, and MUST NOT be filtered by chat
+id. It SHALL yield each trace's span count, token total, price total, its per-kind breakdown for the chips,
+its failed-hop count, and the set of response ids the trace recorded.
 
-- **WHEN** a conversation exists in the conversations rollup but has no rows in the turns rollup
-- **THEN** the view renders its empty-turn-list presentation rather than an error
-- **AND** the header and the panels still state the conversation's figures
-- **AND** no request is made to the hop-level usage log for a substitute turn list
+**The root query and the figures query SHALL be scoped identically** — the page's trace ids and the same
+padded window, with no chat id and no project — differing only in the root-span predicate and in reading rows
+rather than groups. This SHALL be verified as **one** invariant rather than as two filter lists compared by
+eye. Divergence between these two scopes is the mechanism that produced every arithmetic correction this
+design removes: when the figures cover rows the roots do not, a trace's totals stop reconciling with its cards
+and the gap has to be patched field by field.
+
+**Dropping the chat id from the figures query is what makes the figures correct without correction.** Scoped
+by trace, the span count, tokens and price are simply the trace's own. There SHALL be no compensating
+adjustment — no increment to a span count, no addition of a root's value to a sum — because there is nothing
+left to compensate for.
+
+**The figures query has a second call site, and the invariant SHALL hold at both.** The transcript states each
+answer's own figures, so the Chat view SHALL resolve figures for the traces **its own transcript covers**,
+scoped by those trace ids and a window padded from their own earliest and latest recorded times, with no chat
+id and no project. It MUST NOT read them from whatever the listing happens to have paged in: the listing loads
+a page at a time, so a message whose trace lies beyond the loaded pages would lose its figures, and which
+messages were complete would depend on how far the reader had scrolled a different view. Each view SHALL fetch
+what it displays; overlapping reads between the two are acceptable and SHALL NOT be avoided by sharing state
+between them.
+
+A narrower filter at that second call site reintroduces every correction this design removes, inside the Chat
+view instead of the listing. The scope invariant SHALL therefore be asserted for both call sites, not only for
+the listing's.
+
+**The conversation's project SHALL filter the paging query and MUST NOT filter the other two.** It is
+admissible on the paging query only because that query is already restricted to rows carrying the chat id, and
+a trace's chat-id-carrying rows are single-project. On the other two it is destructive: a trace's
+Core-internal calls are recorded under Core's own project while the client's rows carry the conversation's, so
+filtering by the conversation's project deletes exactly the cards and the rows this design added. That
+deletion is silent — the figures query would still count what the root query dropped — so the reason SHALL be
+recorded where the queries are built, not only in this spec.
+
+No query in the listing path SHALL name a request body or a response body column. Bodies are heavy, and
+naming one makes the listing as slow as a transcript read.
+
+The listing MUST NOT be gated on a schema probe of its own: it names no optional field.
+
+#### Scenario: The figures query carries no conversation filter
+
+- **WHEN** the listing's figures are requested for a page of traces
+- **THEN** the query's filter names the page's trace ids and the padded window
+- **AND** it names neither the chat id nor the project
+
+#### Scenario: The paging query carries the project and the chat id
+
+- **WHEN** a page of traces is requested
+- **THEN** the query's filter names the conversation's chat id, its project, and the padded day range
+
+#### Scenario: The root query and the figures query agree on scope
+
+- **WHEN** both queries are built for the same page
+- **THEN** their filters are equal but for the root-span predicate
+- **AND** that equality is asserted as one property rather than as two enumerated filter lists
+
+#### Scenario: A trace's totals reconcile with its cards without adjustment
+
+- **WHEN** a trace records a client root, three children and a Core-internal root
+- **THEN** the trace's span count is five
+- **AND** no increment is applied to it for a root missing from the conversation's row set
+
+#### Scenario: No listing query reads a body column
+
+- **WHEN** any of the three queries is built
+- **THEN** it names neither a request body nor a response body column
+
+#### Scenario: The root query projects the project id but does not filter on it
+
+- **WHEN** the root query is built
+- **THEN** its projection names the project id
+- **AND** its filter does not
+
+#### Scenario: The Chat view resolves figures for its own transcript's traces
+
+- **WHEN** the transcript resolves and covers traces beyond those the listing has paged in
+- **THEN** figures are requested for the transcript's own trace ids
+- **AND** every answer states its trace's figures regardless of how far the listing has been scrolled
+
+#### Scenario: The second call site is held to the same scope invariant
+
+- **WHEN** the figures query is built for the transcript's traces
+- **THEN** its filter names those trace ids and a padded window derived from them
+- **AND** it names neither the chat id nor the project
+
+### Requirement: The trace listing's time bounds are padded whole UTC days
+
+Every time bound in the listing path SHALL be expanded to whole days in **UTC**, and SHALL then be padded by
+one further day at each end.
+
+Whole days are the right granularity because the hop log is partitioned by UTC day, so widening a bound to a
+day boundary costs nothing while a narrower bound saves nothing.
+
+UTC is required because the partition is a UTC day. Rounding to a **local** day widens the lower bound
+harmlessly but narrows the upper one — a local end-of-day falls hours short of the UTC day's end — and rows in
+that gap are dropped with no error.
+
+**Padding by a further day is required, and rounding to the containing day is not sufficient.** A root span
+begins before its children, by tens to hundreds of milliseconds and with no stated upper bound, and a
+Core-internal root fires when its parent completes — measured at 36 seconds after the parent's last child on
+one trace, and longer for long-running calls. A bound taken from the rows a chat-id-scoped query can see and
+rounded to the containing day therefore has **zero** margin at exactly the boundary these offsets straddle: a
+root recorded at 23:59:59.7 falls outside a window that starts at 00:00:00.0 of its child's day.
+
+The bounds SHALL be derived from the **page's** traces rather than from the conversation's own span. A
+conversation-wide window would make the figures query read one partition per day of the conversation's life on
+every page fetch; the page's own window is minutes wide, and stays one to three partitions after padding
+however long the conversation ran.
+
+This SHALL be asserted by a query-shape test, and the assertion SHALL cover the **padding**, not only the
+UTC-ness. A test that checks only that a bound falls on a UTC day boundary passes a query that still clips.
+
+#### Scenario: A day bound is padded beyond the containing day
+
+- **WHEN** a window is derived from a page whose traces were recorded at 12:00 UTC on one day
+- **THEN** the lower bound is the start of the previous UTC day
+- **AND** the upper bound is the end of the following UTC day
+
+#### Scenario: A root recorded just before midnight is inside the window
+
+- **WHEN** a root span is recorded at 23:59:59.7 UTC and its first child at 00:00:00.1 UTC the next day
+- **THEN** both rows fall inside the derived window
+
+#### Scenario: The window is derived from the page, not the conversation
+
+- **WHEN** a page of traces spanning ten minutes is fetched from a conversation that ran for a year
+- **THEN** the window covers those ten minutes plus the padding
+- **AND** it does not span the conversation's activity
+
+#### Scenario: The shape test asserts the padding
+
+- **WHEN** the listing's query-shape test runs
+- **THEN** it fails a query whose bounds are the containing UTC day without padding
+
+### Requirement: The trace listing pages by offset in ascending start order
+
+The listing SHALL page, appending each page to those already shown, and SHALL NOT impose a fixed ceiling on
+how much of a conversation can be reached.
+
+**The order SHALL be ascending by each trace's earliest recorded time, tie-broken by trace id.** The ascending
+direction is not cosmetic: it is what makes offset paging sound here. The listing reads a live table, so rows
+arrive between one page fetch and the next; ordered ascending, a newly recorded trace sorts past the last page
+fetched and the offsets already consumed do not shift. The tie-break is required for the same reason — equal
+start times with no discriminator make a page boundary arbitrary and therefore unstable.
+
+**A newest-first order MUST NOT be introduced while the listing pages by offset.** Under a descending order a
+new trace sorts to the front and displaces every row after it, so a later page re-serves rows already shown
+and skips others. Newest-first is admissible only via keyset paging on the ordering key, which requires the
+cursor bound to be expressed over the **aggregated** start time: filtering the underlying rows by the cursor
+instead changes the computed start time of a trace straddling it, and that trace reappears on the next page.
+The sort direction SHALL therefore be treated as a constraint with a precondition, not as a display option.
+
+**The listing SHALL discard a trace it has already loaded.** A late-arriving row can lower a trace's earliest
+recorded time and move it relative to a page boundary, which both offset and keyset paging expose. Rejecting
+an already-loaded trace id makes the duplicate impossible rather than unlikely.
+
+**The number of cards rendered for one trace SHALL be bounded, and reaching that bound SHALL be disclosed.**
+Traces exist whose root count runs into the dozens. Because a trace's own figures are not bounded by that cap,
+a capped trace's totals legitimately exceed the sum of the cards on screen — so the listing SHALL state how
+many further calls the trace records rather than truncating in silence.
+
+#### Scenario: A page is appended rather than replacing what is shown
+
+- **WHEN** the reader reaches the end of the loaded traces and a further page resolves
+- **THEN** the new traces are appended below those already shown
+
+#### Scenario: The order is ascending with a tie-break
+
+- **WHEN** a page of traces is requested
+- **THEN** the query sorts ascending by the trace's earliest recorded time
+- **AND** the trace id is the tie-break key
+
+#### Scenario: An already-loaded trace is not rendered twice
+
+- **WHEN** a page returns a trace id already loaded
+- **THEN** that trace renders once
+
+#### Scenario: A trace beyond the card cap discloses the remainder
+
+- **WHEN** a trace records more roots than the card cap allows
+- **THEN** the rendered cards are capped
+- **AND** the trace states how many further calls it records
+
+### Requirement: A card is identified by its own recorded call, not by message text
+
+A card SHALL be identified by the deployment its call named, falling back to the request endpoint where the
+deployment is not recorded. A pass-through root records neither a deployment nor an event kind, but does
+record its endpoint, its status, its duration and its request message count — so the endpoint is what names
+it, and such a card is legible without the other three.
+
+**A card MUST NOT carry body-derived content.** No message text, no question, no excerpt. This is what
+separates the listing from the transcript: with no body-derived field on a card, the listing renders without a
+body read, and a body read that fails cannot empty it.
+
+A card SHALL state its own recorded time, its own duration, its own status, its own token total and its own
+price, each from its own row. Its price SHALL be stated as a pair — what the call spent itself against what
+its chain spent — so a call that is free itself but expensive downstream reads as exactly that. The chain
+figure SHALL be the root's own recorded chain price, which equals the sum of its subtree's own prices.
+
+A card's status SHALL come from its own success flag and response status. Whether the trace contains failures
+elsewhere SHALL be stated as a trace-level fact and MUST NOT be presented as this card's status.
+
+Long values SHALL be truncated with the shared ellipsis-tooltip control, so a long endpoint stays reachable.
+
+#### Scenario: A card is named by its deployment
+
+- **WHEN** a card's root records a deployment
+- **THEN** the card is titled by that deployment
+
+#### Scenario: A pass-through card is named by its endpoint
+
+- **WHEN** a card's root records no deployment and no event kind
+- **THEN** the card is titled by its request endpoint
+- **AND** it still states its status, duration and request message count
+
+#### Scenario: No card carries message text
+
+- **WHEN** the listing renders
+- **THEN** no card states a question, a message or any body-derived excerpt
+
+#### Scenario: A free call with downstream spend reads as a pair
+
+- **WHEN** a root records no price of its own and a chain price of $0.02895
+- **THEN** the card states its own spend as unavailable and its chain spend as $0.02895
+
+#### Scenario: A card's own facts are labelled apart from its trace's figures
+
+- **WHEN** a card renders beside its trace's figures
+- **THEN** each of its own facts is labelled with what it states — its own tokens, its own cost, the chain
+  cost — so none can be read as a trace figure
+- **AND** no two of those labels name the same quantity
+
+#### Scenario: A trace states its figures once, however many cards it has
+
+- **WHEN** a trace records more than one client call
+- **THEN** its span count, tokens and price are stated once for the trace
+- **AND** they are not repeated on each of its cards
+
+#### Scenario: A card's status is its own, not its trace's
+
+- **WHEN** a card's own call succeeded and another hop in its trace failed
+- **THEN** the card states success
+- **AND** the failure is stated as a trace-level fact
+
+### Requirement: A trace's system requests are marked as such
+
+A card whose root is recorded under a **different project than the conversation's** SHALL be marked as a
+**system request** — a call the platform made rather than the client. Core makes its own service calls —
+title generation and similar — under its own project, while the client's rows carry the conversation's, so
+the projects differing is a categorical signal rather than an inference.
+
+The marker's wording SHALL claim no more than the predicate establishes. The predicate is a project
+mismatch, so the marker names *who did not make the call* rather than naming Core specifically; and the call
+it marks is a real billed one, stated with its own duration, tokens and cost, so the wording MUST NOT imply
+the call is internal bookkeeping.
+
+The marker MUST NOT be derived from the size or shape of a request. The observable pattern for such calls —
+two messages, a small request, a smaller response — is a heuristic that a new client breaks, and it says
+nothing about who made the call.
+
+The project the marker compares against MUST NOT be hard-coded. Core's own project is deployment
+configuration, and a fixed name silently stops marking anything on an instance configured differently.
+
+**The marker SHALL ship with the two-card presentation, not after it.** A trace's figures include its
+system requests, so a trace's total legitimately exceeds its client card's chain total — measured at
+$0.0291008 against $0.02895 on one trace, the $0.0001508 difference being title generation. Unmarked, that
+difference reads as an arithmetic fault; marked, it reads as the platform's own overhead, itemised.
+
+The marker SHALL agree with the labelling rule that names a trace's own client call. The two are independent
+statements about the same card and MUST NOT be allowed to disagree.
+
+#### Scenario: A system request is marked
+
+- **WHEN** a card's root is recorded under a project other than the conversation's
+- **THEN** that card is marked as a system request
+
+#### Scenario: A client call sharing the conversation's project is not marked
+
+- **WHEN** a trace's sole root carries no chat id but carries the conversation's project
+- **THEN** that card is not marked as Core-internal
+
+#### Scenario: The marker is not a size heuristic
+
+- **WHEN** a client call records two messages and a small body
+- **THEN** it is not marked as Core-internal on that basis alone
+
+#### Scenario: A trace total exceeding its client card is explained
+
+- **WHEN** a trace's price total exceeds its client card's chain price
+- **THEN** a Core-internal card accounts for the difference
+
+### Requirement: The trace listing's structural assumptions are asserted, not assumed
+
+The listing's correctness rests on properties of the recorded data that hold today and are not enforced by the
+source. Each SHALL be expressed as a guard that **fails loudly** when the data stops satisfying it, rather
+than as a comment or a note. A structural assumption left implicit is one that turns into a silently wrong
+figure when the shape of the data changes.
+
+The guarded properties SHALL be:
+
+1. **One conversation per trace.** No trace carries two distinct non-empty chat ids. This is what licenses
+   locating rows by trace id alone, in the root query, the figures query and the hop read.
+2. **One project among a trace's labelled rows.** This is what licenses filtering the paging query by the
+   conversation's project.
+3. **At most one Core-internal root per trace.** This bounds the ordinary two-card presentation.
+4. **Exactly one root where no root carries the chat id.** This is what makes "otherwise the trace's sole
+   root" a total rule rather than a choice among candidates.
+5. **The labelling rule agrees with the Core-internal marker.** A trace carrying both a chat-id-bearing root
+   and another root under the conversation's own project would split them; no such trace is recorded, so the
+   agreement is guarded rather than relied upon.
+
+A guard tripping SHALL be surfaced as a fault to be investigated, and MUST NOT be handled by silently choosing
+one of the candidates.
+
+#### Scenario: A trace carrying two conversations trips a guard
+
+- **WHEN** a trace is observed carrying two distinct non-empty chat ids
+- **THEN** the guard fails
+- **AND** the listing does not silently attribute the trace to one of them
+
+#### Scenario: A second unlabelled root under the conversation's project trips a guard
+
+- **WHEN** a trace carries a chat-id-bearing root and another root under the conversation's own project
+- **THEN** the guard for the labelling rule fails
+
+#### Scenario: The ordinary shapes trip no guard
+
+- **WHEN** the listing renders a single-root trace, and a trace with a client root plus one Core-internal root
+- **THEN** no guard fails
 
 ### Requirement: Conversation detail side panels and their provenance
 
@@ -4048,10 +4376,19 @@ SHALL be named only when the fetched schema reports it — the same gate the tra
 and an entry SHALL distinguish a response with no comments from one whose comment text this caller may not
 read. An entry MUST NOT render a comment as flatly unavailable where the count says there is one.
 
-Each assistant message SHALL also show the ratings attributed to its turn. Attribution SHALL be by time — a
-rating belongs to the last turn that had started when the rating was submitted — using each rated response's
-latest rating time. The rating source records no trace identifier, so this remains an approximation and MUST
-NOT be presented as an exact join: a rating left after a later turn began is attributed to that later turn.
+Each card, and each assistant message, SHALL also show the ratings attributed to its trace, and attribution
+SHALL be an **exact join on the response id**. The trace's figures query resolves the set of response ids the
+trace recorded, and the rating source is grained by response id, so the two join directly.
+
+Attribution MUST NOT fall back to time. The former rule — a rating belongs to the last trace that had started
+when the rating was submitted — is not stable under a paged listing: it is evaluated over the traces loaded
+so far, so a rating submitted after the last loaded trace attaches to that trace and then moves to a
+different card once the next page arrives. A figure that changes because the reader scrolled is worse than an
+absent one.
+
+A rating whose response id matches no loaded trace SHALL therefore go unattributed rather than being placed
+by time. The panel's own figures come from an aggregate scoped to the conversation rather than from what the
+listing attributed, so such a rating is still counted — it is left unplaced on a card, not lost.
 
 When more rated responses exist than the view requested, the panel SHALL say the list is partial rather than
 presenting it as complete. That disclosure is about the **list**; the panel's direction figures are exact and
@@ -4075,8 +4412,9 @@ SHALL NOT be qualified by it.
 
 #### Scenario: An assistant message shows its turn's ratings
 
-- **WHEN** a rating was submitted after a turn began and before the next turn began
+- **WHEN** a rated response's id is among those the turn's trace recorded
 - **THEN** that turn's assistant message shows it in the matching direction
+- **AND** the attribution does not depend on when the rating was submitted
 
 #### Scenario: Individual ratings are listed
 
@@ -4130,6 +4468,22 @@ SHALL NOT be qualified by it.
 - **WHEN** a conversation has more rated responses than the view requested
 - **THEN** the panel states that the list is partial
 - **AND** the panel's direction figures are not qualified by that disclosure
+
+#### Scenario: A card's ratings are joined by response id
+
+- **WHEN** a rated response's id is among those a loaded trace recorded
+- **THEN** that trace's card shows the rating in the matching direction
+
+#### Scenario: An unmatched rating is left unplaced rather than guessed
+
+- **WHEN** a rated response's id matches no loaded trace
+- **THEN** no card is credited with that rating
+- **AND** the feedback panel's direction figures still count it
+
+#### Scenario: Attribution does not move when a further page loads
+
+- **WHEN** a rating is attributed to a trace and a further page of traces is appended
+- **THEN** the rating stays on the same card
 
 ### Requirement: Conversations grid with server-side ordering and per-column filtering
 
@@ -5499,47 +5853,6 @@ conversion is lossless.
 - **WHEN** a first-query time is returned as an ISO-8601 string
 - **THEN** the value sent as the bound is that instant in epoch milliseconds
 
-### Requirement: A turn is titled by the question it answered
-
-The turn list SHALL title each row with that turn's own user question, and SHALL carry the turn number and
-trace id as its subtitle. A reader scanning a conversation's turns is looking for the exchange, not for an
-identifier; the number and the trace id identify a turn once it has been found, which is a subtitle's job.
-
-The question SHALL be the last user message the turn contributed to the transcript. A turn's request body ends
-with the user's new message, so its last user message is the question that turn answered. It SHALL be derived
-from the assembled transcript rather than from a query of its own: the transcript is already fetched, decoded
-and attributed, so one rule covers both fetch paths and the titles cost nothing.
-
-**A turn with no question SHALL fall back to its turn number**, per turn rather than for the list as a whole.
-A conversation with no entry hop has no transcript, and a caller whose schema withholds the body columns is
-told nothing about any turn — the turn list SHALL remain usable in both cases, since its figures come from the
-rollup and do not depend on a body.
-
-An open hop chain SHALL be titled the same way, with the turn number and trace id beneath it: a reader who
-reached a chain from a list row is looking at the same turn and SHALL see the same thing they clicked. Both
-SHALL read one derivation of the questions, so the two cannot disagree about a turn.
-
-The question SHALL be truncated with the shared ellipsis-tooltip control, so a long question stays reachable
-rather than being cut off.
-
-#### Scenario: Each turn is titled by its own question
-
-- **WHEN** the turn list renders a conversation whose transcript is available
-- **THEN** each row is titled with the user question that turn answered
-- **AND** the turn number and trace id appear as that row's subtitle
-
-#### Scenario: A turn without a question keeps its number
-
-- **WHEN** a turn contributed no user message to the transcript
-- **THEN** that row is titled with its turn number
-- **AND** the other rows keep the questions they do have
-
-#### Scenario: An open hop chain is titled by the same question
-
-- **WHEN** a turn's hop chain is opened
-- **THEN** it is titled with the question that turn answered
-- **AND** the turn number and trace id appear beneath it
-
 ### Requirement: A turn renders as a flat, typed, filterable event stream
 
 A turn's hops SHALL render as one flat numbered stream of typed events, not as a nested tree. The span tree is
@@ -5811,14 +6124,32 @@ conversation's header and the supporting panels beside the view do not depend on
 SHALL NOT re-render when it changes. Opening a hop chain is the exception, and only because the header gives
 way to the trace's own identity.
 
-**The Trace view SHALL land on a list of the conversation's traces**, one row per recorded turn, each stating
-that turn's trace id, start time, hop count, token total, cost, duration and rating counts, and each opening
-that turn's hop chain. Switching to Trace MUST NOT open a turn's hop chain directly: the reader has not chosen
-a turn, and picking one for them presents an arbitrary default as the answer.
+**The detail view SHALL open on Trace.** The trace listing renders from the conversation's own recorded
+calls and needs no body read, so it is the view that can always be shown; the transcript depends on body
+columns this caller may not be able to read and on rows that may not reconstruct.
 
-A conversation whose turn list is empty SHALL render the list's own empty state rather than refusing the
-switch — the view still has something to say about why there is nothing to open. A failed turn read SHALL be
-reported as a failure there, distinctly from an empty list.
+**The Trace view SHALL land on the trace listing**, grouped by trace and carded by root span as
+**The conversation trace listing groups by trace and cards by root span** defines, each card stating its own
+recorded time, duration, status, own figures and rating counts, and each opening its trace's hop chain.
+Landing on Trace MUST NOT open a hop chain directly: the reader has not chosen a trace, and picking one for
+them presents an arbitrary default as the answer.
+
+A conversation whose trace listing is empty SHALL render the listing's own empty state rather than refusing
+the switch — the view still has something to say about why there is nothing to open. A failed listing read
+SHALL be reported as a failure there, distinctly from an empty listing.
+
+**The transcript's body read SHALL be issued when the reader switches to Chat, not when the page opens.**
+While that read is outstanding the Chat view SHALL show a loading state, and the switch SHALL remain usable.
+A body read that fails SHALL state so **inside the Chat view**, leaving the Trace view and the rest of the
+page intact. Reading the transcript on page open made a body-read failure the whole page's failure, on a page
+whose landing view does not depend on it.
+
+**The switch's gating and the transcript's content states resolve at different times, and the view SHALL NOT
+conflate them.** Whether this caller can read body columns at all is a **schema** fact: it is resolved from
+the entity schema before any body query is issued, so it is known when the switch first renders and it
+SHALL gate the Chat option there. Whether the transcript is aged out, not reconstructable, or was never
+recorded are **data** facts about the rows themselves: they are resolved by the body read, so they SHALL be
+stated inside the Chat view after the switch. Gating up front, content states inside.
 
 The per-turn trace control on each assistant message SHALL keep its current behaviour: it opens a turn's hop
 chain directly, without passing through the list.
@@ -5866,18 +6197,18 @@ would replace that statement with silence.
 #### Scenario: Switching to Trace lists the conversation's traces
 
 - **WHEN** the user switches to Trace from the view switch
-- **THEN** one row renders per recorded turn, each stating that turn's own figures
-- **AND** no turn's hop chain is opened and no hop read is issued
+- **THEN** the conversation's traces render, one card per recorded root span, each stating its own figures
+- **AND** no hop chain is opened and no hop read is issued
 
 #### Scenario: A trace in the list opens its hop chain
 
-- **WHEN** a row of the trace list is activated
-- **THEN** that turn's hop chain opens
+- **WHEN** a card of the trace listing is activated
+- **THEN** that trace's hop chain opens
 
 #### Scenario: A conversation with no turns switches to an empty list
 
-- **WHEN** the user switches to Trace on a conversation whose turn list is empty
-- **THEN** the trace list states that no traces were recorded
+- **WHEN** the user switches to Trace on a conversation whose trace listing is empty
+- **THEN** the trace listing states that no traces were recorded
 - **AND** the switch is not refused
 
 #### Scenario: Returning from a hop chain lands on the view it was opened from
@@ -5902,6 +6233,43 @@ would replace that statement with silence.
 - **WHEN** the transcript is aged out, not reconstructable, or was never recorded
 - **THEN** the Chat option stays enabled
 - **AND** selecting it shows the statement for that cause
+
+#### Scenario: The detail view opens on the trace listing
+
+- **WHEN** a conversation's detail view loads and this caller can read body columns
+- **THEN** the Trace view is current
+- **AND** no body read has been issued
+
+#### Scenario: The transcript's body read is issued on switching to Chat
+
+- **WHEN** the user switches to Chat for the first time
+- **THEN** the body read is issued at that point
+- **AND** the Chat view shows a loading state until it resolves
+
+#### Scenario: The Chat view fetches the figures it displays
+
+- **WHEN** the transcript resolves
+- **THEN** figures for the traces it covers are requested for that view
+- **AND** they are not read from the listing's loaded pages
+
+#### Scenario: A failed body read leaves the trace listing usable
+
+- **WHEN** the transcript's body read fails
+- **THEN** the Chat view states that the transcript could not be read
+- **AND** the Trace view still lists the conversation's traces
+- **AND** the page does not render its whole-page error state
+
+#### Scenario: A schema-gated Chat option is decided without a body read
+
+- **WHEN** the switch first renders
+- **THEN** whether the Chat option is enabled was resolved from the entity schema
+- **AND** no body query was issued to decide it
+
+#### Scenario: An empty transcript's cause is stated after the switch, not before
+
+- **WHEN** the transcript is aged out, not reconstructable, or was never recorded
+- **THEN** the Chat option was enabled before the switch
+- **AND** the cause is stated inside the Chat view once the body read resolves
 
 ### Requirement: An absent transcript is distinguished from a failed one, by cause
 
@@ -6031,15 +6399,23 @@ type as text, so the rail colour is redundant by construction and the view SHALL
 make its rows readable. Every colour SHALL come from a theme token that the project's palette defines: a
 class naming a token the palette does not carry renders nothing at all, silently.
 
-**The trace SHALL state the turn's figures as the rollup resolved them, and MUST NOT re-derive them from the
-hops it read.** Its token total, cost, hop count, duration and status SHALL come from the same turn row the
-turn list renders, so the two cannot disagree about one turn. Summing the hops instead is wrong whenever the
-hop read is bounded, which is precisely when a turn is large enough for a reader to open it: one measured
-384-hop turn read 300 hops and summed to 700 106 tokens and $1.01 against the turn's own 3 667 333 and
-$3.68 — a figure that is neither the turn's nor recognisably a part of it.
+**The trace SHALL state the figures the listing states for it, and MUST NOT re-derive them from the hops it
+read.** Its token total, cost, span count and status SHALL come from the same trace-level figures the
+listing's group renders, and the opened root's own figures SHALL come from the same root row its card
+renders, so the drawer and the card it was opened from cannot disagree. Summing the hops instead is wrong
+whenever the hop read is bounded, which is precisely when a trace is large enough for a reader to open it:
+one measured 384-hop trace read 300 hops and summed to 700 106 tokens and $1.01 against the trace's own
+3 667 333 and $3.68 — a figure that is neither the trace's nor recognisably a part of it.
 
-The status SHALL likewise be the turn's failed-hop count rather than a failure seen among the hops read, for
-the same reason: a failure past the bound would otherwise render the turn as OK.
+The status SHALL likewise be the trace's failed-hop count rather than a failure seen among the hops read, for
+the same reason: a failure past the bound would otherwise render the trace as OK.
+
+**The hop read SHALL be scoped by trace id alone, and MUST NOT be scoped by chat id.** Scoping it by the
+conversation header excludes exactly the rows the listing counts — a root carrying no header, and the
+Core-internal calls recorded under the trace — so the drawer would contradict the card that opened it.
+Measured on one trace, the card states two hops while a header-scoped read returns one, and the root the card
+describes is absent from its own span tree. No trace carries two distinct non-empty chat ids, so trace id
+alone cannot draw in another conversation's rows.
 
 The hop list SHALL be bounded and SHALL say so when it was cut short. A trace's hop count reaches into the
 hundreds, and one observed turn recorded 1226 hops. The bound SHALL NOT be raised to accommodate such a
@@ -6071,8 +6447,8 @@ reader the trace could not be read while its rows were already in hand.
 
 #### Scenario: A turn's figures are the same in the list and in its trace
 
-- **WHEN** a turn's trace is opened from the turn list
-- **THEN** the tokens, cost, hop count and duration stated above the hop chain equal those on its list row
+- **WHEN** a trace is opened from the trace listing
+- **THEN** the tokens, cost and span count stated above the hop chain equal those the listing states for it
 - **AND** they do not change when the hop chain is clipped by its bound
 
 #### Scenario: The shortcut attributes each message to its own turn
@@ -6143,6 +6519,12 @@ reader the trace could not be read while its rows were already in hand.
 
 - **WHEN** the hop read is bounded below the turn's recorded hop count
 - **THEN** the view states that the list is partial
+
+#### Scenario: The span tree contains the root the card describes
+
+- **WHEN** a card whose root carries no conversation header is opened
+- **THEN** that root appears as a span in the tree
+- **AND** the hop read's filter names the trace id and not the chat id
 
 ### Requirement: Enrichment rules page route and access guard
 
@@ -7650,4 +8032,3 @@ keep calling all three, importing them from the new module; their behaviour SHAL
 
 - **WHEN** the enrichment-rules action module is read
 - **THEN** it declares no evaluator reader
-
