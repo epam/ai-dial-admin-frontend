@@ -185,11 +185,11 @@ The system SHALL provide an Interceptors tab on the model asset detail view, edi
 - **THEN** each option's `Source` column reads which of Core's two populations it came from
 
 ### Requirement: The canonical deployment identity is visible
-Because DIAL Core keys API-written models by their canonical id and sets the deployment's name from that key, the identifier callers use to invoke a model created through this surface is `models/platform/{name}`, not the bare name the list displays. The system SHALL surface that canonical identifier on the model asset's detail view.
+Because DIAL Core keys API-written models by their **bare short name** and sets the deployment's name from that key, the identifier callers use to invoke a model created through this surface is the bare name — the same value the list displays, not a `models/platform/{name}` canonical id. The system SHALL surface that deployment identifier on the model asset's detail view.
 
-#### Scenario: The detail view shows the canonical identifier
+#### Scenario: The detail view shows the deployment identifier
 - **WHEN** a user opens a model asset's detail view
-- **THEN** the canonical deployment identifier `models/platform/{name}` is shown and can be copied
+- **THEN** the deployment identifier — the model's bare name — is shown and can be copied
 
 ### Requirement: A model rejected from the merged config is distinguishable, with its reasons
 DIAL Core serves a valid model and an invalid one through two different projections: a successful read reports a valid status, while an entity that failed validation during the merged-config rebuild is served with an invalid status and, for admin callers, an accompanying list of validation warnings naming the offending fields. The system SHALL distinguish the two states in the detail view and SHALL surface the warnings when present.
