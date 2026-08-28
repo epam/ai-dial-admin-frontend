@@ -3,6 +3,7 @@ import {
   InputBindingRowData,
   TemplateVariable,
   TestCaseSchema,
+  TestSuite,
 } from '@/src/models/evaluation/test-suite';
 import { InputBindingType } from '@/src/types/evaluation';
 
@@ -130,4 +131,19 @@ export const generateInputBinding = (binding: InputBinding, field: string, value
     newBinding.dataField = value;
   }
   return newBinding;
+};
+
+const hasBindingValue = (binding: InputBinding): boolean => {
+  const hasDataField = binding.dataField != null && binding.dataField !== '';
+  const hasConstantValue = binding.constantValue != null;
+  return hasDataField || hasConstantValue;
+};
+
+/** True when any request binding is in Attribute mode with no attribute (or otherwise has neither side set). */
+export const hasIncompleteInputBindings = (suite: TestSuite): boolean => {
+  const bindings = [
+    ...(suite.inputBindings ?? []),
+    ...(suite.additionalRequests?.flatMap((request) => request.inputBindings ?? []) ?? []),
+  ];
+  return bindings.some((binding) => !hasBindingValue(binding));
 };
