@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ACTIONS_COLUMN_CEL_ID } from '@/src/constants/ag-grid';
-import { getSkillManifest, moveSkills, removeSkillFile, uploadSkillFile } from '@/src/app/[lang]/assets-skills/actions';
+import { getSkillManifest, moveSkills, removeSkillFile, uploadSkillFile } from '@/src/app/[lang]/skills/actions';
 import { EntityFieldsI18nKey } from '@/src/constants/i18n';
 import { DialSkillResource } from '@/src/models/dial/resource';
 import SkillView from '../View';
@@ -28,7 +28,7 @@ vi.mock('@/src/components/Common/FilePath/FilePath', () => ({
   ),
 }));
 
-vi.mock('@/src/app/[lang]/assets-skills/actions', () => ({
+vi.mock('@/src/app/[lang]/skills/actions', () => ({
   getSkill: vi.fn(),
   getSkills: vi.fn(),
   getSkillManifest: vi.fn(),

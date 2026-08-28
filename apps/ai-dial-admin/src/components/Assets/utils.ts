@@ -88,10 +88,10 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
       return isReadOnlyAdmin
         ? []
         : allActionLabels.filter((item) => item.key !== 'duplicate' && item.key !== 'openInNewTab');
-    case ApplicationRoute.AssetsModels:
-    case ApplicationRoute.AssetsAppRunners:
-    case ApplicationRoute.AssetsInterceptors:
-    case ApplicationRoute.AssetsRoutes:
+    case ApplicationRoute.PlatformModels:
+    case ApplicationRoute.PlatformAppRunners:
+    case ApplicationRoute.PlatformInterceptors:
+    case ApplicationRoute.PlatformRoutes:
       return isReadOnlyAdmin
         ? []
         : allActionLabels.filter(
@@ -101,8 +101,8 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
     // `displayName`, a field `Role.class`/`Key.class` doesn't declare — the same class of
     // Core-rejection risk design D3 avoids for the identity field. Roles and keys get delete +
     // open-in-new-tab only.
-    case ApplicationRoute.AssetsRoles:
-    case ApplicationRoute.AssetsKeys:
+    case ApplicationRoute.PlatformRoles:
+    case ApplicationRoute.PlatformKeys:
       return isReadOnlyAdmin
         ? []
         : allActionLabels.filter((item) => item.key === 'delete' || item.key === 'openInNewTab');
@@ -111,7 +111,7 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
     case ApplicationRoute.Prompts:
       return isReadOnlyAdmin ? [] : allActionLabels.filter((item) => item.key !== 'preview');
     case ApplicationRoute.Conversations:
-    case ApplicationRoute.AssetsSkills:
+    case ApplicationRoute.Skills:
       return isReadOnlyAdmin
         ? []
         : allActionLabels.filter((item) => item.key === 'delete' || item.key === 'openInNewTab');
@@ -129,7 +129,7 @@ export const getTreeActionLabels = (isReadOnlyAdmin: boolean, view: ApplicationR
   // (no create/move on this surface — see design's Non-Goals), and folder delete isn't wired either
   // (`getResourceTypeByRoute` deliberately has no SKILL case, since Skill has no `AssetApi`-shaped
   // delete path), so offering it here would silently no-op.
-  if (view === ApplicationRoute.AssetsSkills) {
+  if (view === ApplicationRoute.Skills) {
     return [];
   }
 
@@ -150,7 +150,7 @@ export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: 
   switch (view) {
     case ApplicationRoute.Files:
       return [...baseToolbarOptionLabels, { key: 'uploadFiles', label: FileManagerI18nKey.Files, icon: null }];
-    case ApplicationRoute.AssetsAppRunners:
+    case ApplicationRoute.PlatformAppRunners:
       return [
         {
           key: 'newItem',
@@ -158,7 +158,7 @@ export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: 
           icon: null,
         },
       ];
-    case ApplicationRoute.AssetsModels:
+    case ApplicationRoute.PlatformModels:
       return [
         {
           key: 'newItem',
@@ -166,7 +166,7 @@ export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: 
           icon: null,
         },
       ];
-    case ApplicationRoute.AssetsInterceptors:
+    case ApplicationRoute.PlatformInterceptors:
       return [
         {
           key: 'newItem',
@@ -174,7 +174,7 @@ export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: 
           icon: null,
         },
       ];
-    case ApplicationRoute.AssetsRoutes:
+    case ApplicationRoute.PlatformRoutes:
       return [
         {
           key: 'newItem',
@@ -182,7 +182,7 @@ export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: 
           icon: null,
         },
       ];
-    case ApplicationRoute.AssetsRoles:
+    case ApplicationRoute.PlatformRoles:
       return [
         {
           key: 'newItem',
@@ -190,7 +190,7 @@ export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: 
           icon: null,
         },
       ];
-    case ApplicationRoute.AssetsKeys:
+    case ApplicationRoute.PlatformKeys:
       return [
         {
           key: 'newItem',
@@ -240,7 +240,7 @@ export const getToolbarOptionLabels = (view: ApplicationRoute, isReadOnlyAdmin: 
           icon: null,
         },
       ];
-    case ApplicationRoute.AssetsSkills:
+    case ApplicationRoute.Skills:
       return [
         ...baseToolbarOptionLabels,
         {
@@ -345,18 +345,18 @@ export const getDeleteNotificationContent = (
           });
       return { title, description };
     }
-    case ApplicationRoute.AssetsAppRunners:
-    case ApplicationRoute.AssetsInterceptors:
-    case ApplicationRoute.AssetsRoutes:
-    case ApplicationRoute.AssetsRoles:
-    case ApplicationRoute.AssetsKeys:
-    case ApplicationRoute.AssetsModels: {
+    case ApplicationRoute.PlatformAppRunners:
+    case ApplicationRoute.PlatformInterceptors:
+    case ApplicationRoute.PlatformRoutes:
+    case ApplicationRoute.PlatformRoles:
+    case ApplicationRoute.PlatformKeys:
+    case ApplicationRoute.PlatformModels: {
       const itemLabel = (() => {
-        if (view === ApplicationRoute.AssetsAppRunners) return FileManagerI18nKey.AppRunner;
-        if (view === ApplicationRoute.AssetsInterceptors) return FileManagerI18nKey.Interceptor;
-        if (view === ApplicationRoute.AssetsRoutes) return FileManagerI18nKey.Route;
-        if (view === ApplicationRoute.AssetsRoles) return FileManagerI18nKey.Role;
-        if (view === ApplicationRoute.AssetsKeys) return FileManagerI18nKey.Key;
+        if (view === ApplicationRoute.PlatformAppRunners) return FileManagerI18nKey.AppRunner;
+        if (view === ApplicationRoute.PlatformInterceptors) return FileManagerI18nKey.Interceptor;
+        if (view === ApplicationRoute.PlatformRoutes) return FileManagerI18nKey.Route;
+        if (view === ApplicationRoute.PlatformRoles) return FileManagerI18nKey.Role;
+        if (view === ApplicationRoute.PlatformKeys) return FileManagerI18nKey.Key;
         return FileManagerI18nKey.Model;
       })();
       const title = isDeleteSeveralFiles
@@ -424,7 +424,7 @@ export const getDeleteNotificationContent = (
           });
       return { title, description };
     }
-    case ApplicationRoute.AssetsSkills: {
+    case ApplicationRoute.Skills: {
       const title = isDeleteSeveralFiles
         ? t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Items) })
         : t(FileManagerI18nKey.DeleteSuccessTitle, { item: t(FileManagerI18nKey.Skill) });

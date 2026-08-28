@@ -3,10 +3,10 @@ import { ApplicationRoute } from '@/src/types/routes';
 
 export const duplicateEntityMap: Record<string, DuplicateI18nKey> = {
   [ApplicationRoute.Models]: DuplicateI18nKey.Model,
-  [ApplicationRoute.AssetsModels]: DuplicateI18nKey.Model,
-  [ApplicationRoute.AssetsAppRunners]: DuplicateI18nKey.ApplicationRunner,
-  [ApplicationRoute.AssetsInterceptors]: DuplicateI18nKey.Interceptor,
-  [ApplicationRoute.AssetsRoutes]: DuplicateI18nKey.Route,
+  [ApplicationRoute.PlatformModels]: DuplicateI18nKey.Model,
+  [ApplicationRoute.PlatformAppRunners]: DuplicateI18nKey.ApplicationRunner,
+  [ApplicationRoute.PlatformInterceptors]: DuplicateI18nKey.Interceptor,
+  [ApplicationRoute.PlatformRoutes]: DuplicateI18nKey.Route,
   [ApplicationRoute.Applications]: DuplicateI18nKey.Application,
   [ApplicationRoute.AssetsApplications]: DuplicateI18nKey.Application,
   [ApplicationRoute.AssetsToolsets]: DuplicateI18nKey.Toolset,

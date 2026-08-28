@@ -16,7 +16,7 @@ const renderCreateForm = (
 ) => {
   render(
     <Properties
-      view={ApplicationRoute.AssetsSkills}
+      view={ApplicationRoute.Skills}
       entity={entity}
       names={names}
       isModal

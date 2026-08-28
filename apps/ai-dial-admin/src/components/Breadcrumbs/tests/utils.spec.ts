@@ -52,19 +52,19 @@ describe('Breadcrumbs :: getBreadcrumbConfig with language in path', () => {
     expect(config[1].name).toEqual('foo@bar');
   });
 
-  test('Should correctly return Breadcrumbs config for assets models without folder enrichment', () => {
-    const config = getBreadcrumbs('/en/assets-models/modelId', 'en');
+  test('Should correctly return Breadcrumbs config for platform models without folder enrichment', () => {
+    const config = getBreadcrumbs('/en/platform-models/modelId', 'en');
     expect(config.length).toEqual(2);
-    expect(config[0].href).toEqual('/en/assets-models');
+    expect(config[0].href).toEqual('/en/platform-models');
     expect(config[0].key).toEqual(MenuI18nKey.Models);
     expect(config[1].href).toBeFalsy();
     expect(config[1].key).toBeFalsy();
     expect(config[1].name).toEqual('modelId');
   });
 
-  test('Should not enrich assets models breadcrumbs with folder context', () => {
-    expect(getFolderContext('/en/assets-models/modelId', 'en')).toBeNull();
-    expect(shouldEnrichWithFolderBreadcrumbs('/en/assets-models/modelId', 'en')).toBeFalsy();
+  test('Should not enrich platform models breadcrumbs with folder context', () => {
+    expect(getFolderContext('/en/platform-models/modelId', 'en')).toBeNull();
+    expect(shouldEnrichWithFolderBreadcrumbs('/en/platform-models/modelId', 'en')).toBeFalsy();
   });
 
   test('Should translate runs compare segment via breadcrumb config', () => {

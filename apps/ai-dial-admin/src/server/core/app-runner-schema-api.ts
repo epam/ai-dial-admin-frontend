@@ -1,7 +1,5 @@
-import { RESOURCE_TYPE_PREFIX } from '@/src/constants/publications-core';
 import { Token } from '@/src/models/auth';
 import { ServerActionResponse } from '@/src/models/server-action';
-import { ResourceType } from '@/src/types/resource-type';
 import { CoreApi } from './core-api';
 
 const CORE_APP_TYPE_SCHEMA_URL = 'v1/application_type_schemas/schema';
@@ -18,8 +16,7 @@ const CORE_APP_TYPE_SCHEMA_URL = 'v1/application_type_schemas/schema';
  */
 export class AppRunnerSchemaApi extends CoreApi {
   resolvedSchema(token: Token, name: string): Promise<ServerActionResponse> {
-    const canonicalId = `${RESOURCE_TYPE_PREFIX[ResourceType.APP_TYPE_SCHEMA]}${name}`;
-    const url = `${CORE_APP_TYPE_SCHEMA_URL}?id=${encodeURIComponent(canonicalId)}`;
+    const url = `${CORE_APP_TYPE_SCHEMA_URL}?id=${encodeURIComponent(name)}`;
     return this.getAction(url, token);
   }
 }

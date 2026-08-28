@@ -1,6 +1,6 @@
 'use client';
 
-import { getSkills } from '@/src/app/[lang]/assets-skills/actions';
+import { getSkills } from '@/src/app/[lang]/skills/actions';
 import { Asset } from '@/src/models/dial/deployment-asset';
 import { createFolderContext } from '@/src/context/assets/AssetsFolderContext';
 

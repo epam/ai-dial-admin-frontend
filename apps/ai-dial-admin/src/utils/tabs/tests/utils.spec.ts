@@ -201,15 +201,15 @@ describe('Entities :: tabs', () => {
   });
 
   test('returns Properties and Skill tabs for AssetsSkills', () => {
-    expect(getTabsForAsset(t, ApplicationRoute.AssetsSkills)).toEqual([propertiesTab(t), skillTab(t)]);
+    expect(getTabsForAsset(t, ApplicationRoute.Skills)).toEqual([propertiesTab(t), skillTab(t)]);
   });
 
   test('returns Properties and Configuration tabs for AssetsInterceptors', () => {
-    expect(getTabsForAsset(t, ApplicationRoute.AssetsInterceptors)).toEqual([propertiesTab(t), parameterSchemaTab(t)]);
+    expect(getTabsForAsset(t, ApplicationRoute.PlatformInterceptors)).toEqual([propertiesTab(t), parameterSchemaTab(t)]);
   });
 
   test('returns Properties and Roles for AssetsRoutes — Route has no features or configuration endpoint, but is a RoleBasedEntity', () => {
-    expect(getTabsForAsset(t, ApplicationRoute.AssetsRoutes)).toEqual([propertiesTab(t), rolesTab(t)]);
+    expect(getTabsForAsset(t, ApplicationRoute.PlatformRoutes)).toEqual([propertiesTab(t), rolesTab(t)]);
   });
 
   test('returns correct tabs for key', () => {

@@ -72,7 +72,7 @@ const CreateEntity = <T extends CreateEntityBase>({
       return { name: '', description: '', version: DEFAULT_NEW_ENTITY_VERSION } as T;
     }
 
-    if (route === ApplicationRoute.AssetsModels) {
+    if (route === ApplicationRoute.PlatformModels) {
       return { name: '', description: '', displayVersion: DEFAULT_NEW_ENTITY_VERSION, ...initialValues } as T;
     }
 
@@ -116,7 +116,7 @@ const CreateEntity = <T extends CreateEntityBase>({
           );
           const originalRoute = route.split('/')[1];
           // Skill has nothing for `getEntityPath`'s shared branch (Prompts/Files/AssetsApplications/
-          // AssetsToolsets/AssetsSkills) to build a path from otherwise — no version, so it would fall
+          // AssetsToolsets/Skills) to build a path from otherwise — no version, so it would fall
           // back to a literal `__undefined` suffix. Scoped to this one route rather than "no version"
           // generically: AssetsModels/AssetsAppRunners also have no version, but their own branch in
           // `getEntityPath` already prefers an explicit `path` over its `$id` fallback, so adding one
@@ -128,7 +128,7 @@ const CreateEntity = <T extends CreateEntityBase>({
                 version: entity.version,
                 $id: entityId,
                 path:
-                  route === ApplicationRoute.AssetsSkills
+                  route === ApplicationRoute.Skills
                     ? `${addTrailingSlash(entity.folderId)}${entity.name || ''}`
                     : undefined,
               }

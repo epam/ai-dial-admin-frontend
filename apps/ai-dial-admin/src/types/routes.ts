@@ -16,19 +16,20 @@ export enum ApplicationRoute {
   ApplicationRunners = '/application-runners',
   InterceptorTemplates = '/interceptor-templates',
 
+  // Platform entities
+  PlatformModels = '/platform-models',
+  PlatformAppRunners = '/platform-app-runners',
+  PlatformInterceptors = '/platform-interceptors',
+  PlatformRoutes = '/platform-routes',
+  PlatformRoles = '/platform-roles',
+  PlatformKeys = '/platform-keys',
   // Assets
-  AssetsModels = '/assets-models',
-  AssetsAppRunners = '/assets-app-runners',
-  AssetsInterceptors = '/assets-interceptors',
-  AssetsRoutes = '/assets-routes',
-  AssetsRoles = '/assets-roles',
-  AssetsKeys = '/assets-keys',
   AssetsApplications = '/assets-applications',
   AssetsToolsets = '/assets-toolsets',
   Conversations = '/conversations',
   Prompts = '/prompts',
   Files = '/files',
-  AssetsSkills = '/assets-skills',
+  Skills = '/skills',
 
   // Publications
   FoldersStorage = '/folders-storage',

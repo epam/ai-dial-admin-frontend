@@ -25,7 +25,7 @@ describe('Models Utils :: getModelDeploymentId', () => {
  */
 describe('Model asset :: display identity is not the entity uniqueness rule', () => {
   test('Should not classify the model asset view as display-version-identified', () => {
-    expect(isEntitiesWithDisplayVersion(ApplicationRoute.AssetsModels)).toBe(false);
+    expect(isEntitiesWithDisplayVersion(ApplicationRoute.PlatformModels)).toBe(false);
   });
 
   test.each([ApplicationRoute.Models, ApplicationRoute.Applications])(

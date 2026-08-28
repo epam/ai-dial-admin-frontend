@@ -80,33 +80,33 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
       icon: <IconFolders width={iconSize} height={iconSize} />,
       items: [
         {
-          key: MenuI18nKey.AssetsModels,
-          href: ApplicationRoute.AssetsModels,
+          key: MenuI18nKey.PlatformModels,
+          href: ApplicationRoute.PlatformModels,
           isPreview: true,
         },
         {
-          key: MenuI18nKey.AppRunners,
-          href: ApplicationRoute.AssetsAppRunners,
+          key: MenuI18nKey.PlatformAppRunners,
+          href: ApplicationRoute.PlatformAppRunners,
           isPreview: true,
         },
         {
-          key: MenuI18nKey.AssetsInterceptors,
-          href: ApplicationRoute.AssetsInterceptors,
+          key: MenuI18nKey.PlatformInterceptors,
+          href: ApplicationRoute.PlatformInterceptors,
           isPreview: true,
         },
         {
-          key: MenuI18nKey.AssetsRoutes,
-          href: ApplicationRoute.AssetsRoutes,
+          key: MenuI18nKey.PlatformRoutes,
+          href: ApplicationRoute.PlatformRoutes,
           isPreview: true,
         },
         {
-          key: MenuI18nKey.AssetsRoles,
-          href: ApplicationRoute.AssetsRoles,
+          key: MenuI18nKey.PlatformRoles,
+          href: ApplicationRoute.PlatformRoles,
           isPreview: true,
         },
         {
-          key: MenuI18nKey.AssetsKeys,
-          href: ApplicationRoute.AssetsKeys,
+          key: MenuI18nKey.PlatformKeys,
+          href: ApplicationRoute.PlatformKeys,
           isPreview: true,
         },
         {
@@ -131,7 +131,7 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
         },
         {
           key: MenuI18nKey.Skills,
-          href: ApplicationRoute.AssetsSkills,
+          href: ApplicationRoute.Skills,
         },
       ],
     },

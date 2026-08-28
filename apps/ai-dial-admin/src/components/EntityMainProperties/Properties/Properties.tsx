@@ -4,9 +4,9 @@ import { DialApplicationScheme } from '@/src/models/dial/application';
 import { ApplicationRoute } from '@/src/types/routes';
 import { isSimpleEntity } from '@/src/utils/entities/is-simple-entity';
 import { isAssetView } from '@/src/utils/is-view';
-import AppRunnerCreateProperties from '@/src/components/Assets/AppRunners/CreateProperties';
-import RoleCreateProperties from '@/src/components/Assets/Roles/CreateProperties';
-import RouteCreateProperties from '@/src/components/Assets/Routes/CreateProperties';
+import AppRunnerCreateProperties from '@/src/components/Assets/Platform/AppRunners/CreateProperties';
+import RoleCreateProperties from '@/src/components/Assets/Platform/Roles/CreateProperties';
+import RouteCreateProperties from '@/src/components/Assets/Platform/Routes/CreateProperties';
 import SkillCreateProperties from '@/src/components/Assets/Skills/CreateProperties';
 import { DialAppRunnerResource } from '@/src/models/dial/resource';
 import AssetProperties from './AssetProperties';
@@ -37,7 +37,7 @@ const Properties = <T extends object>({
 }: Props<T>) => {
   // Ahead of `isSimpleEntity`, which defaults to `true` for unlisted routes — an app runner is
   // identified by `$id`, so the generic `name`-based form would silently drop its identity.
-  if (view === ApplicationRoute.AssetsAppRunners) {
+  if (view === ApplicationRoute.PlatformAppRunners) {
     return (
       <AppRunnerCreateProperties
         entity={entity as DialAppRunnerResource}
@@ -48,7 +48,7 @@ const Properties = <T extends object>({
     );
   }
 
-  if (view === ApplicationRoute.AssetsSkills) {
+  if (view === ApplicationRoute.Skills) {
     return (
       <SkillCreateProperties
         entity={entity as { name?: string; description?: string }}
@@ -61,7 +61,7 @@ const Properties = <T extends object>({
   // Ahead of `isSimpleEntity` for the same reason as App Runner above: the generic `EntityProperties`
   // form always renders a display-name field and seeds a `description`, neither of which exists on
   // `Route` (see `RouteCreateProperties`'s doc comment).
-  if (view === ApplicationRoute.AssetsRoutes) {
+  if (view === ApplicationRoute.PlatformRoutes) {
     return (
       <RouteCreateProperties
         entity={entity as { name?: string }}
@@ -74,7 +74,7 @@ const Properties = <T extends object>({
 
   // Ahead of `isSimpleEntity` for the same reason as Route above: `Role` is a plain class with no
   // `displayName`/`description`.
-  if (view === ApplicationRoute.AssetsRoles) {
+  if (view === ApplicationRoute.PlatformRoles) {
     return (
       <RoleCreateProperties
         entity={entity as { name?: string }}

@@ -20,7 +20,7 @@ import {
 
 describe('getToolbarOptionLabels', () => {
   test('AssetsSkills offers Folder and Skill, with no Import option', () => {
-    const labels = getToolbarOptionLabels(ApplicationRoute.AssetsSkills, false);
+    const labels = getToolbarOptionLabels(ApplicationRoute.Skills, false);
 
     expect(labels).toEqual([
       { key: 'newFolder', label: FileManagerI18nKey.Folder, icon: null },
@@ -29,24 +29,24 @@ describe('getToolbarOptionLabels', () => {
   });
 
   test('AssetsSkills returns no options for a read-only admin', () => {
-    expect(getToolbarOptionLabels(ApplicationRoute.AssetsSkills, true)).toEqual([]);
+    expect(getToolbarOptionLabels(ApplicationRoute.Skills, true)).toEqual([]);
   });
 });
 
 describe('getGridActionLabels', () => {
   test('AssetsRoles offers delete and openInNewTab, but no duplicate — Role.class has no displayName field for the shared duplicate modal to write', () => {
-    const keys = getGridActionLabels(ApplicationRoute.AssetsRoles, false).map((item) => item.key);
+    const keys = getGridActionLabels(ApplicationRoute.PlatformRoles, false).map((item) => item.key);
 
     expect(keys).toEqual(expect.arrayContaining(['delete', 'openInNewTab']));
     expect(keys).not.toContain('duplicate');
   });
 
   test('AssetsRoles returns no options for a read-only admin', () => {
-    expect(getGridActionLabels(ApplicationRoute.AssetsRoles, true)).toEqual([]);
+    expect(getGridActionLabels(ApplicationRoute.PlatformRoles, true)).toEqual([]);
   });
 
   test('AssetsRoutes still offers duplicate, unaffected by the AssetsRoles carve-out', () => {
-    const keys = getGridActionLabels(ApplicationRoute.AssetsRoutes, false).map((item) => item.key);
+    const keys = getGridActionLabels(ApplicationRoute.PlatformRoutes, false).map((item) => item.key);
 
     expect(keys).toContain('duplicate');
   });

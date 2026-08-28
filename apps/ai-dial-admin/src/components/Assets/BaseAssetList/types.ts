@@ -5,13 +5,13 @@ export type BaseAssetRoute =
   | ApplicationRoute.AssetsApplications
   | ApplicationRoute.AssetsToolsets
   | ApplicationRoute.Conversations
-  | ApplicationRoute.AssetsModels
-  | ApplicationRoute.AssetsAppRunners
-  | ApplicationRoute.AssetsInterceptors
-  | ApplicationRoute.AssetsRoutes
-  | ApplicationRoute.AssetsRoles
-  | ApplicationRoute.AssetsKeys
-  | ApplicationRoute.AssetsSkills;
+  | ApplicationRoute.PlatformModels
+  | ApplicationRoute.PlatformAppRunners
+  | ApplicationRoute.PlatformInterceptors
+  | ApplicationRoute.PlatformRoutes
+  | ApplicationRoute.PlatformRoles
+  | ApplicationRoute.PlatformKeys
+  | ApplicationRoute.Skills;
 
 export type CrudAssetRoute =
   | ApplicationRoute.Prompts
@@ -20,12 +20,12 @@ export type CrudAssetRoute =
 
 export type CreateAssetRoute =
   | CrudAssetRoute
-  | ApplicationRoute.AssetsModels
-  | ApplicationRoute.AssetsAppRunners
-  | ApplicationRoute.AssetsInterceptors
-  | ApplicationRoute.AssetsRoutes
-  | ApplicationRoute.AssetsRoles
-  | ApplicationRoute.AssetsKeys;
+  | ApplicationRoute.PlatformModels
+  | ApplicationRoute.PlatformAppRunners
+  | ApplicationRoute.PlatformInterceptors
+  | ApplicationRoute.PlatformRoutes
+  | ApplicationRoute.PlatformRoles
+  | ApplicationRoute.PlatformKeys;
 
 export enum ModalType {
   create = 'create',

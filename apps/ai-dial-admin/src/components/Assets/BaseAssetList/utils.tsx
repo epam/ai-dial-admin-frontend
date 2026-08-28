@@ -6,17 +6,17 @@ import {
   importApps,
   moveApps,
 } from '@/src/app/[lang]/assets-applications/actions';
-import { bulkDeleteRunners, createRunner, getRunner } from '@/src/app/[lang]/assets-app-runners/actions';
+import { bulkDeleteRunners, createRunner, getRunner } from '@/src/app/[lang]/platform-app-runners/actions';
 import {
   bulkDeleteInterceptors,
   createInterceptor,
   getInterceptor,
-} from '@/src/app/[lang]/assets-interceptors/actions';
-import { bulkDeleteModels, createModel, getModel } from '@/src/app/[lang]/assets-models/actions';
-import { bulkDeleteKeys, createKey, getKey } from '@/src/app/[lang]/assets-keys/actions';
-import { bulkDeleteRoles, createRole, getRole } from '@/src/app/[lang]/assets-roles/actions';
-import { bulkDeleteRoutes, createRoute, getRoute } from '@/src/app/[lang]/assets-routes/actions';
-import { bulkDeleteSkills, getSkill } from '@/src/app/[lang]/assets-skills/actions';
+} from '@/src/app/[lang]/platform-interceptors/actions';
+import { bulkDeleteModels, createModel, getModel } from '@/src/app/[lang]/platform-models/actions';
+import { bulkDeleteKeys, createKey, getKey } from '@/src/app/[lang]/platform-keys/actions';
+import { bulkDeleteRoles, createRole, getRole } from '@/src/app/[lang]/platform-roles/actions';
+import { bulkDeleteRoutes, createRoute, getRoute } from '@/src/app/[lang]/platform-routes/actions';
+import { bulkDeleteSkills, getSkill } from '@/src/app/[lang]/skills/actions';
 import {
   bulkDeleteToolsets,
   createToolset,
@@ -148,9 +148,9 @@ export const getGridColumns = (
   // metadata-only shape (no Version column — a skill's folder listing carries no version info) even
   // though it isn't a flat platform view: it nests in folders like Toolsets, just without content to
   // read a display name from.
-  if (isFlatPlatformView(view) || view === ApplicationRoute.AssetsSkills) {
+  if (isFlatPlatformView(view) || view === ApplicationRoute.Skills) {
     return [
-      NAME_COLUMN(view === ApplicationRoute.AssetsAppRunners ? 'ID' : 'Name') as ColDef,
+      NAME_COLUMN(view === ApplicationRoute.PlatformAppRunners ? 'ID' : 'Name') as ColDef,
       AUTHOR_COLUMN,
       CREATED_AT_COLUMN as unknown as ColDef,
       UPDATED_AT_COLUMN('Updated time') as ColDef,
@@ -202,19 +202,19 @@ export const getFileManagerLabel = (view: ApplicationRoute): string => {
       return FileManagerI18nKey.Toolsets;
     case ApplicationRoute.Conversations:
       return FileManagerI18nKey.Conversations;
-    case ApplicationRoute.AssetsModels:
+    case ApplicationRoute.PlatformModels:
       return FileManagerI18nKey.Models;
-    case ApplicationRoute.AssetsAppRunners:
+    case ApplicationRoute.PlatformAppRunners:
       return FileManagerI18nKey.AppRunners;
-    case ApplicationRoute.AssetsInterceptors:
+    case ApplicationRoute.PlatformInterceptors:
       return FileManagerI18nKey.Interceptors;
-    case ApplicationRoute.AssetsRoutes:
+    case ApplicationRoute.PlatformRoutes:
       return FileManagerI18nKey.Routes;
-    case ApplicationRoute.AssetsRoles:
+    case ApplicationRoute.PlatformRoles:
       return FileManagerI18nKey.Roles;
-    case ApplicationRoute.AssetsKeys:
+    case ApplicationRoute.PlatformKeys:
       return FileManagerI18nKey.Keys;
-    case ApplicationRoute.AssetsSkills:
+    case ApplicationRoute.Skills:
       return FileManagerI18nKey.Skills;
     default:
       return '';
@@ -246,37 +246,37 @@ export const getEmptyStateContent = (
         title: t(FileManagerI18nKey.ConversationsEmptyStateTitle),
         description: '',
       };
-    case ApplicationRoute.AssetsModels:
+    case ApplicationRoute.PlatformModels:
       return {
         title: t(FileManagerI18nKey.ModelsEmptyStateTitle),
         description: t(FileManagerI18nKey.ModelsEmptyStateDescription),
       };
-    case ApplicationRoute.AssetsAppRunners:
+    case ApplicationRoute.PlatformAppRunners:
       return {
         title: t(FileManagerI18nKey.AppRunnersEmptyStateTitle),
         description: t(FileManagerI18nKey.AppRunnersEmptyStateDescription),
       };
-    case ApplicationRoute.AssetsInterceptors:
+    case ApplicationRoute.PlatformInterceptors:
       return {
         title: t(FileManagerI18nKey.InterceptorsEmptyStateTitle),
         description: t(FileManagerI18nKey.InterceptorsEmptyStateDescription),
       };
-    case ApplicationRoute.AssetsRoutes:
+    case ApplicationRoute.PlatformRoutes:
       return {
         title: t(FileManagerI18nKey.RoutesEmptyStateTitle),
         description: t(FileManagerI18nKey.RoutesEmptyStateDescription),
       };
-    case ApplicationRoute.AssetsRoles:
+    case ApplicationRoute.PlatformRoles:
       return {
         title: t(FileManagerI18nKey.RolesEmptyStateTitle),
         description: t(FileManagerI18nKey.RolesEmptyStateDescription),
       };
-    case ApplicationRoute.AssetsKeys:
+    case ApplicationRoute.PlatformKeys:
       return {
         title: t(FileManagerI18nKey.KeysEmptyStateTitle),
         description: t(FileManagerI18nKey.KeysEmptyStateDescription),
       };
-    case ApplicationRoute.AssetsSkills:
+    case ApplicationRoute.Skills:
       return {
         title: t(FileManagerI18nKey.SkillsEmptyStateTitle),
         description: t(FileManagerI18nKey.SkillsEmptyStateDescription),
@@ -300,7 +300,7 @@ export const getPlatformAssetDuplicate = (view: ApplicationRoute, asset: Platfor
     ...duplicate
   } = asset as DialModelResource & DialAppRunnerResource;
 
-  return view === ApplicationRoute.AssetsAppRunners
+  return view === ApplicationRoute.PlatformAppRunners
     ? (duplicate as PlatformAsset)
     : ({ ...duplicate, name } as PlatformAsset);
 };
@@ -325,13 +325,13 @@ export const AssetFolderContextMap = {
   [ApplicationRoute.AssetsApplications]: useAppsFolder,
   [ApplicationRoute.AssetsToolsets]: useToolsetFolder,
   [ApplicationRoute.Conversations]: useConversationFolder,
-  [ApplicationRoute.AssetsModels]: useModelsFolder,
-  [ApplicationRoute.AssetsAppRunners]: useAppRunnersFolder,
-  [ApplicationRoute.AssetsInterceptors]: useInterceptorsFolder,
-  [ApplicationRoute.AssetsRoutes]: useRoutesFolder,
-  [ApplicationRoute.AssetsRoles]: useRolesFolder,
-  [ApplicationRoute.AssetsKeys]: useKeysFolder,
-  [ApplicationRoute.AssetsSkills]: useSkillFolder,
+  [ApplicationRoute.PlatformModels]: useModelsFolder,
+  [ApplicationRoute.PlatformAppRunners]: useAppRunnersFolder,
+  [ApplicationRoute.PlatformInterceptors]: useInterceptorsFolder,
+  [ApplicationRoute.PlatformRoutes]: useRoutesFolder,
+  [ApplicationRoute.PlatformRoles]: useRolesFolder,
+  [ApplicationRoute.PlatformKeys]: useKeysFolder,
+  [ApplicationRoute.Skills]: useSkillFolder,
 };
 
 export const GetAssetActionMap = {
@@ -339,13 +339,13 @@ export const GetAssetActionMap = {
   [ApplicationRoute.AssetsApplications]: getApp,
   [ApplicationRoute.AssetsToolsets]: getToolset,
   [ApplicationRoute.Conversations]: getConversation,
-  [ApplicationRoute.AssetsModels]: getModel,
-  [ApplicationRoute.AssetsAppRunners]: getRunner,
-  [ApplicationRoute.AssetsInterceptors]: getInterceptor,
-  [ApplicationRoute.AssetsRoutes]: getRoute,
-  [ApplicationRoute.AssetsRoles]: getRole,
-  [ApplicationRoute.AssetsKeys]: getKey,
-  [ApplicationRoute.AssetsSkills]: getSkill,
+  [ApplicationRoute.PlatformModels]: getModel,
+  [ApplicationRoute.PlatformAppRunners]: getRunner,
+  [ApplicationRoute.PlatformInterceptors]: getInterceptor,
+  [ApplicationRoute.PlatformRoutes]: getRoute,
+  [ApplicationRoute.PlatformRoles]: getRole,
+  [ApplicationRoute.PlatformKeys]: getKey,
+  [ApplicationRoute.Skills]: getSkill,
 };
 
 export const CreateAssetActionMap: Record<
@@ -359,22 +359,22 @@ export const CreateAssetActionMap: Record<
   [ApplicationRoute.AssetsToolsets]: createToolset as (
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
-  [ApplicationRoute.AssetsModels]: createModel as (
+  [ApplicationRoute.PlatformModels]: createModel as (
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
-  [ApplicationRoute.AssetsAppRunners]: createRunner as (
+  [ApplicationRoute.PlatformAppRunners]: createRunner as (
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
-  [ApplicationRoute.AssetsInterceptors]: createInterceptor as (
+  [ApplicationRoute.PlatformInterceptors]: createInterceptor as (
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
-  [ApplicationRoute.AssetsRoutes]: createRoute as (
+  [ApplicationRoute.PlatformRoutes]: createRoute as (
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
-  [ApplicationRoute.AssetsRoles]: createRole as (
+  [ApplicationRoute.PlatformRoles]: createRole as (
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
-  [ApplicationRoute.AssetsKeys]: createKey as (
+  [ApplicationRoute.PlatformKeys]: createKey as (
     asset: AssetWithVersion,
   ) => Promise<ServerActionResponse<Record<string, unknown>>>,
 };
@@ -416,13 +416,13 @@ export const BulkDeleteAssetActionMap = {
   [ApplicationRoute.AssetsApplications]: bulkDeleteApps,
   [ApplicationRoute.AssetsToolsets]: bulkDeleteToolsets,
   [ApplicationRoute.Conversations]: deleteConversations,
-  [ApplicationRoute.AssetsModels]: bulkDeleteModels,
-  [ApplicationRoute.AssetsAppRunners]: bulkDeleteRunners,
-  [ApplicationRoute.AssetsInterceptors]: bulkDeleteInterceptors,
-  [ApplicationRoute.AssetsRoutes]: bulkDeleteRoutes,
-  [ApplicationRoute.AssetsRoles]: bulkDeleteRoles,
-  [ApplicationRoute.AssetsKeys]: bulkDeleteKeys,
-  [ApplicationRoute.AssetsSkills]: bulkDeleteSkills,
+  [ApplicationRoute.PlatformModels]: bulkDeleteModels,
+  [ApplicationRoute.PlatformAppRunners]: bulkDeleteRunners,
+  [ApplicationRoute.PlatformInterceptors]: bulkDeleteInterceptors,
+  [ApplicationRoute.PlatformRoutes]: bulkDeleteRoutes,
+  [ApplicationRoute.PlatformRoles]: bulkDeleteRoles,
+  [ApplicationRoute.PlatformKeys]: bulkDeleteKeys,
+  [ApplicationRoute.Skills]: bulkDeleteSkills,
 };
 
 export const enrichConversationWithVersion = (conversation: AssetWithVersion): AssetWithVersion => {

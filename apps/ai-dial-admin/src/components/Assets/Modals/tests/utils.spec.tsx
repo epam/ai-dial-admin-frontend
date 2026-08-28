@@ -63,12 +63,12 @@ describe('Assets Modals utils', () => {
     });
 
     test('returns singular skill title when deleting one skill', () => {
-      const result = getDeleteModalTitle(ApplicationRoute.AssetsSkills, t, 1, false);
+      const result = getDeleteModalTitle(ApplicationRoute.Skills, t, 1, false);
       expect(result).toBe(`${FileManagerI18nKey.DeleteItemsModalTitle}:FileManager.Skill`);
     });
 
     test('returns plural skill title when deleting multiple skills', () => {
-      const result = getDeleteModalTitle(ApplicationRoute.AssetsSkills, t, 2, false);
+      const result = getDeleteModalTitle(ApplicationRoute.Skills, t, 2, false);
       expect(result).toBe(`${FileManagerI18nKey.DeleteItemsModalTitle}:FileManager.Skills`);
     });
   });
@@ -90,12 +90,12 @@ describe('Assets Modals utils', () => {
     });
 
     test('returns folder-aware description for skills', () => {
-      const result = getDeleteModalDescription(ApplicationRoute.AssetsSkills, t, 1, true);
+      const result = getDeleteModalDescription(ApplicationRoute.Skills, t, 1, true);
       expect(result).toBe(`${FileManagerI18nKey.DeleteItemsAndFoldersModalDescription}:filemanager.skills`);
     });
 
     test('returns singular skill description when deleting one skill', () => {
-      const result = getDeleteModalDescription(ApplicationRoute.AssetsSkills, t, 1, false);
+      const result = getDeleteModalDescription(ApplicationRoute.Skills, t, 1, false);
       expect(result).toBe(`${FileManagerI18nKey.DeleteItemsModalDescription}:filemanager.skill`);
     });
   });

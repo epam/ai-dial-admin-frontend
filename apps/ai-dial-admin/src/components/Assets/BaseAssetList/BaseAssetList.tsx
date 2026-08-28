@@ -10,7 +10,7 @@ import {
 } from '@epam/ai-dial-ui-kit';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { createSkill, createSkillFolder } from '@/src/app/[lang]/assets-skills/actions';
+import { createSkill, createSkillFolder } from '@/src/app/[lang]/skills/actions';
 import { changeFolder, removeFolder, removeSkillFolder } from '@/src/app/[lang]/folders-storage/actions';
 import {
   getDeleteNotificationContent,
@@ -242,7 +242,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
       // carries the trailing slash every other branch's folder-marker path expects) produced a
       // double slash Core rejected as a not-found path.
       const createFolder =
-        view === ApplicationRoute.AssetsSkills
+        view === ApplicationRoute.Skills
           ? () => createSkillFolder(newPath.slice(0, -1))
           : () => CreateAssetActionMap[view as CreateAssetRoute](getEmptyAsset(view, newPath) as AssetWithVersion);
 
@@ -267,7 +267,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
       // so Skill is called directly here rather than through `CreateAssetActionMap`, whose single
       // function per type every other entry can serve unmodified.
       const createAsset =
-        view === ApplicationRoute.AssetsSkills
+        view === ApplicationRoute.Skills
           ? () => {
               const { name, description } = asset as unknown as { name?: string; description?: string };
               return createSkill(name || '', description || '', folderPath);
@@ -533,7 +533,7 @@ const BaseAssetList: FC<Props> = ({ view, runners }) => {
         folders.forEach((folder) => {
           promises.push(removeFolder(folder.path, resourceType));
         });
-      } else if (view === ApplicationRoute.AssetsSkills) {
+      } else if (view === ApplicationRoute.Skills) {
         // Skills aren't one of the five flat resource types `removeFolder`/`removeFolderCore`
         // walks generically (`getResourceTypeByRoute` deliberately excludes SKILL) — they get their
         // own recursive, dedicated-endpoint delete instead (see `removeSkillFolderCore`).

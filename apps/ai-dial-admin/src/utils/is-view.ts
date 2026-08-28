@@ -5,13 +5,13 @@ export const isAssetView = (view?: ApplicationRoute): boolean => {
     view === ApplicationRoute.Prompts ||
     view === ApplicationRoute.Files ||
     view === ApplicationRoute.Conversations ||
-    view === ApplicationRoute.AssetsModels ||
-    view === ApplicationRoute.AssetsAppRunners ||
-    view === ApplicationRoute.AssetsInterceptors ||
-    view === ApplicationRoute.AssetsRoutes ||
-    view === ApplicationRoute.AssetsRoles ||
-    view === ApplicationRoute.AssetsKeys ||
-    view === ApplicationRoute.AssetsSkills ||
+    view === ApplicationRoute.PlatformModels ||
+    view === ApplicationRoute.PlatformAppRunners ||
+    view === ApplicationRoute.PlatformInterceptors ||
+    view === ApplicationRoute.PlatformRoutes ||
+    view === ApplicationRoute.PlatformRoles ||
+    view === ApplicationRoute.PlatformKeys ||
+    view === ApplicationRoute.Skills ||
     isDeploymentAsset(view)
   );
 };
@@ -38,9 +38,9 @@ export const isDeploymentAsset = (view?: ApplicationRoute): boolean => {
  * someone adds it here deliberately, rather than silently losing it.
  */
 const VIEWS_WITHOUT_TOPIC_CATALOGUE: readonly ApplicationRoute[] = [
-  ApplicationRoute.AssetsModels,
-  ApplicationRoute.AssetsAppRunners,
-  ApplicationRoute.AssetsInterceptors,
+  ApplicationRoute.PlatformModels,
+  ApplicationRoute.PlatformAppRunners,
+  ApplicationRoute.PlatformInterceptors,
 ];
 
 export const hasTopicCatalogue = (view?: ApplicationRoute): boolean => {

@@ -4,11 +4,11 @@ import { getRootFolder, isFlatPlatformView, PLATFORM_ROOT_FOLDER } from '../root
 
 describe('Root Folder Utils :: getRootFolder', () => {
   test.each([
-    ApplicationRoute.AssetsModels,
-    ApplicationRoute.AssetsAppRunners,
-    ApplicationRoute.AssetsInterceptors,
-    ApplicationRoute.AssetsRoutes,
-    ApplicationRoute.AssetsRoles,
+    ApplicationRoute.PlatformModels,
+    ApplicationRoute.PlatformAppRunners,
+    ApplicationRoute.PlatformInterceptors,
+    ApplicationRoute.PlatformRoutes,
+    ApplicationRoute.PlatformRoles,
   ])('Should return "platform" for %s view', (view) => {
     expect(getRootFolder(view)).toEqual('platform');
     expect(getRootFolder(view)).toEqual(PLATFORM_ROOT_FOLDER);
@@ -27,11 +27,11 @@ describe('Root Folder Utils :: getRootFolder', () => {
 
 describe('Root Folder Utils :: isFlatPlatformView', () => {
   test.each([
-    ApplicationRoute.AssetsModels,
-    ApplicationRoute.AssetsAppRunners,
-    ApplicationRoute.AssetsInterceptors,
-    ApplicationRoute.AssetsRoutes,
-    ApplicationRoute.AssetsRoles,
+    ApplicationRoute.PlatformModels,
+    ApplicationRoute.PlatformAppRunners,
+    ApplicationRoute.PlatformInterceptors,
+    ApplicationRoute.PlatformRoutes,
+    ApplicationRoute.PlatformRoles,
   ])('Should treat %s as flat, since Core stores it in one fixed bucket with no folder concept', (view) => {
     expect(isFlatPlatformView(view)).toBe(true);
   });

@@ -29,7 +29,7 @@ const TopicsControl = <
 }: Props<T>) => {
   const t = useI18n();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
-  const isAssetModels = view === ApplicationRoute.AssetsModels || view === ApplicationRoute.AssetsInterceptors;
+  const isAssetModels = view === ApplicationRoute.PlatformModels || view === ApplicationRoute.PlatformInterceptors;
   const currentTopics = isDeploymentAsset(view)
     ? entity.description_keywords
     : isAssetModels

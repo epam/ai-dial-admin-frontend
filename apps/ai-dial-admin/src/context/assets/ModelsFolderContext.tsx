@@ -1,6 +1,6 @@
 'use client';
 
-import { getModels } from '@/src/app/[lang]/assets-models/actions';
+import { getModels } from '@/src/app/[lang]/platform-models/actions';
 import { AssetModel } from '@/src/models/dial/deployment-asset';
 import { createFolderContext } from '@/src/context/assets/AssetsFolderContext';
 
