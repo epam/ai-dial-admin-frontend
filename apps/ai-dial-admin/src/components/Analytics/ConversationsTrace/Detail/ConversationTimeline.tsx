@@ -21,17 +21,13 @@ import { useI18n } from '@/src/locales/client';
 import {
   ConversationMessage,
   ConversationTranscript,
-  ConversationTurnRow,
+  ConversationTraceGroup,
   MessageRole,
   RatingCounts as RatingCountsModel,
   TranscriptState,
   TranscriptStatePresentation,
 } from '@/src/models/analytics/conversations-trace';
-import {
-  formatCompactNumber,
-  formatDurationMs,
-  formatSignificantCost,
-} from '@/src/utils/analytics/conversation-formatting';
+import { formatCompactNumber, formatSignificantCost } from '@/src/utils/analytics/conversation-formatting';
 import { toNumber } from '@/src/utils/analytics/scalar';
 
 const ROLE_ICON_SIZE = 14;
@@ -39,28 +35,30 @@ const TRACE_ICON_SIZE = 12;
 const NOTIFICATION_ICON_SIZE = 16;
 
 interface FooterProps {
-  turn?: ConversationTurnRow;
+  // The trace this answer belongs to, resolved from the transcript's own figures read rather than from the
+  // listing's paged state — otherwise an answer whose trace lay beyond the loaded pages would silently lose
+  // its figures, and which answers were complete would depend on Trace-view scroll position.
+  trace?: ConversationTraceGroup;
   ratings?: RatingCountsModel;
   onOpenTrace?: () => void;
 }
 
-const AssistantFooter: FC<FooterProps> = ({ turn, ratings, onOpenTrace }) => {
+const AssistantFooter: FC<FooterProps> = ({ trace, ratings, onOpenTrace }) => {
   const t = useI18n();
 
-  if (!turn) {
+  if (!trace) {
     return null;
   }
 
   return (
     <div className="flex flex-wrap items-center gap-3 pl-1 font-mono dial-tiny-text text-secondary">
       <span>
-        {formatCompactNumber(turn.tokens)} {t(ConversationsTraceI18nKey.DetailTokensShort)}
+        {formatCompactNumber(trace.tokens)} {t(ConversationsTraceI18nKey.DetailTokensShort)}
       </span>
-      <span className={COST_TEXT_CLASS}>{formatSignificantCost(turn.cost)}</span>
+      <span className={COST_TEXT_CLASS}>{formatSignificantCost(trace.price)}</span>
       <span>
-        {formatCompactNumber(turn.hops)} {t(ConversationsTraceI18nKey.DetailHopsShort)}
+        {formatCompactNumber(trace.spans)} {t(ConversationsTraceI18nKey.DetailHopsShort)}
       </span>
-      <span>{formatDurationMs(turn.duration_ms) || UNAVAILABLE_VALUE}</span>
       {onOpenTrace && (
         <DialLinkButton
           iconBefore={<IconSubtask size={TRACE_ICON_SIZE} aria-hidden />}
@@ -75,7 +73,7 @@ const AssistantFooter: FC<FooterProps> = ({ turn, ratings, onOpenTrace }) => {
 
 interface MessageProps {
   message: ConversationMessage;
-  turn?: ConversationTurnRow;
+  trace?: ConversationTraceGroup;
   ratings?: RatingCountsModel;
   onOpenTrace?: () => void;
 }
@@ -115,14 +113,7 @@ const STATE_PRESENTATION: Record<Exclude<TranscriptState, TranscriptState.Availa
 
 // An available transcript reaching the empty branch carried no message, which is the same nothing-to-show
 // as a conversation that recorded none.
-const emptyStateOf = (
-  state: TranscriptState,
-  hasTurnsLoadError: boolean,
-): Exclude<TranscriptState, TranscriptState.Available> => {
-  if (hasTurnsLoadError) {
-    return TranscriptState.LoadFailed;
-  }
-
+const emptyStateOf = (state: TranscriptState): Exclude<TranscriptState, TranscriptState.Available> => {
   return state === TranscriptState.Available ? TranscriptState.NoMessages : state;
 };
 
@@ -143,7 +134,7 @@ const RoleLabel: FC<{ isUser: boolean }> = ({ isUser }) => {
   );
 };
 
-const Message: FC<MessageProps> = ({ message, turn, ratings, onOpenTrace }) => {
+const Message: FC<MessageProps> = ({ message, trace, ratings, onOpenTrace }) => {
   const isUser = message.role === MessageRole.User;
   const hasContent = message.content !== null && message.content !== '';
 
@@ -159,44 +150,35 @@ const Message: FC<MessageProps> = ({ message, turn, ratings, onOpenTrace }) => {
       >
         {hasContent ? message.content : UNAVAILABLE_VALUE}
       </div>
-      {!isUser && <AssistantFooter turn={turn} ratings={ratings} onOpenTrace={onOpenTrace} />}
+      {!isUser && <AssistantFooter trace={trace} ratings={ratings} onOpenTrace={onOpenTrace} />}
     </div>
   );
 };
 
 interface Props {
   transcript: ConversationTranscript;
-  turns: ConversationTurnRow[];
-  turnRatings: RatingCountsModel[];
-  hasTurnsLoadError: boolean;
+  traceRatings: Map<string, RatingCountsModel>;
   turnCount: number | string | null;
-  onOpenTrace: (turn: ConversationTurnRow, turnNumber: number) => void;
+  onOpenTrace: (trace: ConversationTraceGroup) => void;
 }
 
-interface TurnContext {
-  turn?: ConversationTurnRow;
+interface MessageTraceContext {
+  trace?: ConversationTraceGroup;
   ratings?: RatingCountsModel;
-  turnNumber: number;
 }
 
-const turnContextOf = (
+const traceContextOf = (
   traceId: string,
-  turns: ConversationTurnRow[],
-  turnRatings: RatingCountsModel[],
-): TurnContext => {
-  const index = turns.findIndex((turn) => turn.trace_id === traceId);
+  traces: ConversationTraceGroup[],
+  traceRatings: Map<string, RatingCountsModel>,
+): MessageTraceContext => {
+  const index = traces.findIndex(({ traceId: id }) => id === traceId);
 
-  return index === -1 ? { turnNumber: 0 } : { turn: turns[index], ratings: turnRatings[index], turnNumber: index + 1 };
+  return index === -1 ? {} : { trace: traces[index], ratings: traceRatings.get(traceId) };
 };
 
-const ConversationTimeline: FC<Props> = ({
-  transcript,
-  turns,
-  turnRatings,
-  hasTurnsLoadError,
-  turnCount,
-  onOpenTrace,
-}) => {
+const ConversationTimeline: FC<Props> = ({ transcript, traceRatings, turnCount, onOpenTrace }) => {
+  const traces = transcript.traceFigures ?? [];
   const t = useI18n();
   // The rollup counts every turn; the transcript read is bounded, so the two disagree only when it was
   // clipped. A null count leaves nothing to compare against, so no bound is claimed.
@@ -205,7 +187,7 @@ const ConversationTimeline: FC<Props> = ({
   const isTranscriptClipped = totalTurns !== null && loadedTurns !== null && loadedTurns < totalTurns;
 
   if (state !== TranscriptState.Available || !messages.length) {
-    const presentation = STATE_PRESENTATION[emptyStateOf(state, hasTurnsLoadError)];
+    const presentation = STATE_PRESENTATION[emptyStateOf(state)];
     const Icon = presentation.icon;
 
     return (
@@ -225,13 +207,6 @@ const ConversationTimeline: FC<Props> = ({
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-layer-1">
       <div className="mx-auto flex w-[800px] max-w-full flex-col gap-6 px-4 py-6">
-        {hasTurnsLoadError && (
-          <DialNotification
-            variant={NotificationVariant.Error}
-            iconSize={NOTIFICATION_ICON_SIZE}
-            message={t(ConversationsTraceI18nKey.DetailTurnsLoadFailed)}
-          />
-        )}
         {isTranscriptClipped && (
           <DialNotification
             variant={NotificationVariant.Info}
@@ -244,15 +219,15 @@ const ConversationTimeline: FC<Props> = ({
         )}
         {messages.map((message, index) => {
           const isAssistant = message.role === MessageRole.Assistant;
-          const { turn, ratings, turnNumber } = turnContextOf(message.trace_id, turns, turnRatings);
+          const { trace, ratings } = traceContextOf(message.trace_id, traces, traceRatings);
 
           return (
             <Message
               key={`${message.trace_id}-${message.role}-${index}`}
               message={message}
-              turn={isAssistant ? turn : undefined}
+              trace={isAssistant ? trace : undefined}
               ratings={isAssistant ? ratings : undefined}
-              onOpenTrace={isAssistant && turn ? () => onOpenTrace(turn, turnNumber) : undefined}
+              onOpenTrace={isAssistant && trace ? () => onOpenTrace(trace) : undefined}
             />
           );
         })}

@@ -37,6 +37,17 @@ export const fn = (name: string, args: QueryExpr[] = [], distinct?: boolean): Qu
 
 export const col = (expr: QueryExpr, as?: string): QueryOutputColumn => ({ expr, ...(as ? { as } : {}) });
 
+// `if(condition, then, else)` is in the service's function catalog, which is closed and served at runtime by
+// `GET /v1/queries/functions` — read it there, not from the backend checkout, which lags the deployed
+// service and does not carry this branch. Its condition must be a boolean *expression*: a boolean column, or
+// a call to `not_empty` / `starts_with` / `contains` / `equals` / `json_extract_bool`, since the DSL offers no
+// comparison operator in expression position. A null condition takes the else branch.
+//
+// This is what makes a conditional aggregate expressible client-side: `sum(if(success, 0, 1))` counts
+// failures without a `CASE`, which the grammar deliberately lacks.
+export const fnIf = (condition: QueryExpr, then: QueryExpr, otherwise: QueryExpr): QueryFnExpr =>
+  fn('if', [condition, then, otherwise]);
+
 export const predicate = (op: QueryOperator, fieldName: string, val: QueryValueExpr): QueryPredicate => ({
   op,
   args: [field(fieldName), val],

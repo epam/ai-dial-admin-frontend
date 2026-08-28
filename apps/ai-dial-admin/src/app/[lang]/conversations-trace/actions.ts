@@ -27,8 +27,12 @@ import {
   ConversationTotalsField,
   HopTextsState,
   TranscriptState,
-  ConversationTurnRow,
-  ConversationTurnsResult,
+  ConversationTracePage,
+  ConversationTracePageRow,
+  ConversationTraceGroup,
+  ConversationTranscriptAvailability,
+  ConversationTraceFigureRow,
+  ConversationTraceRootRow,
   ConversationsPage,
   FeedbackFilter,
   ResponseRatingsField,
@@ -50,7 +54,9 @@ import {
   buildConversationModelBodiesQuery,
   buildConversationListQuery,
   buildConversationSpansQuery,
-  buildConversationTurnsQuery,
+  buildConversationTraceFiguresQuery,
+  buildConversationTracePageQuery,
+  buildConversationTraceRootsQuery,
   buildConversationRatingCountsQuery,
   buildConversationRatingsQuery,
   buildConversationRatingTotalsQuery,
@@ -62,7 +68,8 @@ import {
   CONVERSATION_FEEDBACK_LIMIT,
   CONVERSATION_HOP_COUNT_ALIAS,
   CONVERSATION_SPAN_LIMIT,
-  CONVERSATION_TURN_LIMIT,
+  CONVERSATION_TRACE_PAGE_SIZE,
+  CONVERSATION_TRACE_ROOT_CAP,
   CONVERSATIONS_ENTITY,
   FEEDBACK_CANDIDATE_LIMIT,
   FEEDBACK_ENTITY,
@@ -71,6 +78,8 @@ import {
 import { AnalyticsEntitySchema } from '@/src/models/analytics/entity';
 import { withEntitySchemaCache } from '@/src/server/analytics/entity-schema-cache';
 import { toNumber } from '@/src/utils/analytics/scalar';
+import { paddedUtcDayRange } from '@/src/utils/analytics/conversation-formatting';
+import { traceGroupsOf, traceInvariantViolations } from '@/src/utils/analytics/conversation-trace-groups';
 import { transcriptBodyFields } from '@/src/utils/analytics/conversation-column-catalog';
 import {
   assembleTranscript,
@@ -292,15 +301,121 @@ export async function getConversationFeedback(chatId: string): Promise<ServerAct
   };
 }
 
-export async function getConversationTurns(chatId: string): Promise<ServerActionResponse<ConversationTurnsResult>> {
-  const query = buildConversationTurnsQuery(chatId, CONVERSATION_TURN_LIMIT);
-  const result = await analyticsDataApi.executeAction(query, await token());
+// A page's roots and figures are read for at most this many rows. Both bounds assume rows spread evenly
+// across the page's traces, and neither is guaranteed: dev data holds traces with over a hundred roots, and a
+// new event kind widens the figures read. So the bound alone is not the safeguard — a read that comes back
+// exactly full is treated as clipped and reported, because a silently clipped roots read renders traces as
+// "entry call not recorded" and a silently clipped figures read produces wrong totals.
+const TRACE_ROOTS_LIMIT = CONVERSATION_TRACE_PAGE_SIZE * CONVERSATION_TRACE_ROOT_CAP;
+const TRACE_FIGURES_LIMIT = CONVERSATION_TRACE_PAGE_SIZE * 8;
 
-  if (!result.success) {
-    return { ...result, response: undefined };
+/**
+ * One page of the conversation's trace listing, resolved live over the hop log in three passes.
+ *
+ * The first pass pages the traces and yields nothing but their ids and their own time bounds. The other two
+ * are then issued concurrently against **the page's** window rather than the conversation's: a page spans
+ * minutes, so the read stays within a handful of daily partitions however long the conversation ran.
+ *
+ * The window is padded past whole UTC days at both ends. The bounds come from rows a chat-id-scoped read can
+ * see, and they have to cover rows it cannot — a root recorded before its first child, and a Core-internal
+ * root recorded after its parent's last child.
+ */
+export async function getConversationTracePage(
+  chatId: string,
+  projectId: string,
+  firstRequestTime: number | string | null,
+  lastRequestTime: number | string | null,
+  offset: number,
+): Promise<ServerActionResponse<ConversationTracePage>> {
+  const authToken = await token();
+  const conversationWindow = paddedUtcDayRange([firstRequestTime, lastRequestTime]);
+
+  if (!conversationWindow) {
+    return { success: true, response: { groups: [], hasMore: false } };
   }
 
-  return { ...result, response: { turns: (result.response?.rows ?? []) as unknown as ConversationTurnRow[] } };
+  const pageResult = await analyticsDataApi.executeAction(
+    buildConversationTracePageQuery(chatId, projectId, conversationWindow, offset, CONVERSATION_TRACE_PAGE_SIZE),
+    authToken,
+  );
+
+  if (!pageResult.success) {
+    errorObjLog(pageResult, 'Failed to fetch the conversation trace page');
+    return { ...pageResult, response: undefined };
+  }
+
+  const pageRows = (pageResult.response?.rows ?? []) as unknown as ConversationTracePageRow[];
+  if (!pageRows.length) {
+    return { success: true, response: { groups: [], hasMore: false } };
+  }
+
+  // Aggregate mode never populates a total, so a full page is the only evidence that another may exist.
+  const hasMore = pageRows.length === CONVERSATION_TRACE_PAGE_SIZE;
+  const traceIds = pageRows.map(({ trace_id }) => trace_id);
+  const pageWindow = paddedUtcDayRange(
+    pageRows.flatMap(({ first_request_time, last_request_time }) => [first_request_time, last_request_time]),
+  );
+
+  if (!pageWindow) {
+    return { success: true, response: { groups: [], hasMore } };
+  }
+
+  const [rootsResult, figuresResult] = await Promise.all([
+    analyticsDataApi.executeAction(
+      buildConversationTraceRootsQuery(traceIds, pageWindow, TRACE_ROOTS_LIMIT),
+      authToken,
+    ),
+    analyticsDataApi.executeAction(
+      buildConversationTraceFiguresQuery(traceIds, pageWindow, TRACE_FIGURES_LIMIT),
+      authToken,
+    ),
+  ]);
+
+  if (!rootsResult.success) {
+    errorObjLog(rootsResult, 'Failed to fetch the conversation trace root spans');
+  }
+
+  // A failed *figures* read is not survivable: the figures are the trace-level totals, so rendering without
+  // them states 0 spans, 0 tokens and no cost as though they were the trace's facts. That is the
+  // silently-wrong-figure outcome this design removes, so the page fails instead of degrading.
+  if (!figuresResult.success) {
+    errorObjLog(figuresResult, 'Failed to fetch the conversation trace figures');
+    return { ...figuresResult, response: undefined };
+  }
+
+  // A failed *roots* read costs the cards, not the page: a trace still renders from its figures, stating that
+  // its entry call was not recorded — the same presentation a genuinely unrecorded root gets, and accurate
+  // either way.
+  const rootRows = (rootsResult.response?.rows ?? []) as unknown as ConversationTraceRootRow[];
+  const figureRows = (figuresResult.response?.rows ?? []) as unknown as ConversationTraceFigureRow[];
+
+  if (rootRows.length >= TRACE_ROOTS_LIMIT) {
+    errorObjLog(
+      { traceCount: traceIds.length, limit: TRACE_ROOTS_LIMIT },
+      'The trace roots read came back full and may be clipped: some traces will render as "entry call not recorded"',
+    );
+  }
+  if (figureRows.length >= TRACE_FIGURES_LIMIT) {
+    errorObjLog(
+      { traceCount: traceIds.length, limit: TRACE_FIGURES_LIMIT },
+      'The trace figures read came back full and may be clipped: some trace totals will be understated',
+    );
+  }
+
+  // Reported, never resolved. A violation means the recorded data has a shape this design did not anticipate,
+  // so it is logged as a fault to investigate while the listing still renders from what was read — rather
+  // than silently picking one of the candidates, which is the failure mode the guards exist to prevent.
+  for (const violation of traceInvariantViolations(rootRows, projectId)) {
+    errorObjLog(violation, `Conversation trace invariant violated: ${violation.invariant}`);
+  }
+
+  return {
+    success: true,
+    response: {
+      groups: traceGroupsOf(pageRows, rootRows, figureRows, projectId),
+      hasMore,
+    },
+  };
 }
 
 const NO_HOP_TEXTS = { sent: null, received: null, toolCalls: [] };
@@ -410,7 +525,7 @@ export async function getConversationSpans(
   traceId: string,
 ): Promise<ServerActionResponse<ConversationSpansPage>> {
   const authToken = await token();
-  const query = buildConversationSpansQuery(chatId, traceId, CONVERSATION_SPAN_LIMIT);
+  const query = buildConversationSpansQuery(traceId, CONVERSATION_SPAN_LIMIT);
   const result = await analyticsDataApi.executeAction(query, authToken);
 
   if (!result.success) {
@@ -489,8 +604,83 @@ const EMPTY_TRANSCRIPT = { messages: [], loadedTurns: null };
 
 const transcriptOf = (state: TranscriptState): ConversationTranscript => ({ state, ...EMPTY_TRANSCRIPT });
 
+/**
+ * Whether this caller can read body columns at all — a **schema** fact, resolved from the cached entity
+ * schema without issuing any body query.
+ *
+ * Split out so the page can still gate the Chat option accurately at open while the transcript's own body
+ * read moves behind the view switch. Reading the whole transcript on page open made a body-read failure the
+ * whole page's failure, on a page whose landing view does not depend on it; giving up the gate instead would
+ * have offered a Chat option that only fails when clicked.
+ */
+export async function getConversationTranscriptAvailability(): Promise<
+  ServerActionResponse<ConversationTranscriptAvailability>
+> {
+  const authToken = await token();
+  const schema = await withEntitySchemaCache(USAGE_LOG_ENTITY, authToken, () =>
+    analyticsDataApi.getEntitySchema(USAGE_LOG_ENTITY, authToken),
+  );
+
+  if (!schema) {
+    return { success: false, response: { isReadable: false } };
+  }
+
+  const schemaFieldNames = schema.fields?.map(({ name }) => name) ?? [];
+
+  return { success: true, response: { isReadable: transcriptBodyFields(schemaFieldNames).isReadable } };
+}
+
+// Figures for the traces the transcript covers, resolved by the transcript's own read rather than taken from
+// the listing's paged state. The Chat view states each answer's own figures, and a message whose trace lay
+// beyond the loaded pages would otherwise lose them — making which answers were complete depend on how far
+// the reader had scrolled the Trace view. Each view fetches what it displays; the overlap is accepted.
+//
+// Same scoping rules as the listing's own figures pass: trace ids plus a padded window derived from them, no
+// chat id and no project. A narrower filter here would reintroduce every deleted correction inside the Chat
+// view instead.
+async function resolveTranscriptFigures(
+  entryHops: ConversationEntryHopRow[],
+  projectId: string,
+  authToken: Token,
+): Promise<ConversationTraceGroup[]> {
+  const traceIds = [...new Set(entryHops.map(({ trace_id }) => trace_id))].filter(Boolean);
+  const window = paddedUtcDayRange(entryHops.map(({ request_time }) => request_time));
+
+  if (!traceIds.length || !window) {
+    return [];
+  }
+
+  const figuresLimit = traceIds.length * 8;
+  const result = await analyticsDataApi.executeAction(
+    buildConversationTraceFiguresQuery(traceIds, window, figuresLimit),
+    authToken,
+  );
+
+  if (!result.success) {
+    errorObjLog(result, 'Failed to resolve the figures for the transcript traces');
+    return [];
+  }
+
+  const figureRows = (result.response?.rows ?? []) as unknown as ConversationTraceFigureRow[];
+  if (figureRows.length >= figuresLimit) {
+    errorObjLog(
+      { traceCount: traceIds.length, limit: figuresLimit },
+      'The transcript figures read came back full and may be clipped: some answers will understate their figures',
+    );
+  }
+
+  const pageRows = traceIds.map((traceId) => ({
+    trace_id: traceId,
+    first_request_time: null,
+    last_request_time: null,
+  }));
+
+  return traceGroupsOf(pageRows, [], figureRows, projectId);
+}
+
 export async function getConversationTranscript(
   chatId: string,
+  projectId: string,
   lastRequestTime: number | string | null,
   nowMs: number,
 ): Promise<ServerActionResponse<ConversationTranscript>> {
@@ -568,6 +758,7 @@ export async function getConversationTranscript(
       state: TranscriptState.Available,
       messages,
       loadedTurns: entryHops.length,
+      traceFigures: await resolveTranscriptFigures(entryHops, projectId, authToken),
     },
   };
 }

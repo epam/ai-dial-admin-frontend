@@ -10,29 +10,20 @@ import { useConversationTrace } from '@/src/components/Analytics/ConversationsTr
 import LoadingOverlay from '@/src/components/Common/LoadingOverlay/LoadingOverlay';
 import { BasicI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import {
-  ConversationDetailRow,
-  ConversationFeedbackPage,
-  ConversationTranscript,
-  ConversationTurnRow,
-} from '@/src/models/analytics/conversations-trace';
-import { attributeRatingsToTurns } from '@/src/utils/analytics/conversation-detail-fields';
-import { questionsByTurn } from '@/src/utils/analytics/conversation-transcript';
+import { ConversationDetailRow, ConversationFeedbackPage } from '@/src/models/analytics/conversations-trace';
 
 interface Props {
   conversation: ConversationDetailRow;
   feedback: ConversationFeedbackPage | null;
-  turns: ConversationTurnRow[];
-  transcript: ConversationTranscript;
+  // A schema fact, resolved at page open without any body query, so the Chat option is gated accurately
+  // before the transcript itself is read.
+  isTranscriptReadable: boolean;
   nowMs: number;
-  hasTurnsLoadError: boolean;
 }
 
-const ConversationDetailView: FC<Props> = ({ conversation, feedback, turns, transcript, nowMs, hasTurnsLoadError }) => {
+const ConversationDetailView: FC<Props> = ({ conversation, feedback, isTranscriptReadable, nowMs }) => {
   const t = useI18n();
   const rows = useMemo(() => feedback?.rows ?? [], [feedback]);
-  const turnRatings = useMemo(() => attributeRatingsToTurns(turns, rows), [turns, rows]);
-  const questions = useMemo(() => questionsByTurn(transcript.messages), [transcript.messages]);
 
   const { trace, isLoading, selectedSpanId, onSelectSpan, onOpenTrace, onCloseTrace } = useConversationTrace(
     conversation.chat_id,
@@ -45,9 +36,8 @@ const ConversationDetailView: FC<Props> = ({ conversation, feedback, turns, tran
       {trace && (
         <ConversationTraceView
           chatId={conversation.chat_id}
-          turnNumber={trace.turnNumber}
-          turn={trace.turn}
-          question={questions.get(trace.turn.trace_id)}
+          figures={trace.figures}
+          title={trace.title}
           spans={trace.spans}
           modelOutputs={trace.modelOutputs}
           hasLoadError={trace.hasLoadError}
@@ -63,15 +53,12 @@ const ConversationDetailView: FC<Props> = ({ conversation, feedback, turns, tran
         <ConversationDetailHeader conversation={conversation} nowMs={nowMs} />
         <ConversationDetailBody
           conversation={conversation}
-          transcript={transcript}
-          turns={turns}
-          turnRatings={turnRatings}
+          isTranscriptReadable={isTranscriptReadable}
           feedbackRows={rows}
           feedbackTotal={feedback?.total ?? null}
           ratings={feedback?.ratings ?? null}
           isCommentTextReadable={feedback?.isCommentTextReadable ?? false}
-          questions={questions}
-          hasTurnsLoadError={hasTurnsLoadError}
+          nowMs={nowMs}
           onOpenTrace={onOpenTrace}
         />
       </div>

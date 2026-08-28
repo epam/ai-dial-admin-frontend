@@ -1,7 +1,7 @@
 import { ROUTE_EVENT_KIND, UTILITY_URI_MARKERS } from '@/src/constants/analytics/conversations-trace';
 import {
   ConversationSpanRow,
-  ConversationTurnRow,
+  ConversationTraceFigures,
   HopEvent,
   HopEventType,
   ModelCallOutput,
@@ -132,25 +132,25 @@ const markUnansweredCalls = (seeds: EventSeed[]): EventSeed[] => {
 interface StreamParams {
   spans: ConversationSpanRow[];
   modelOutputs: ModelCallOutput[];
-  turn: ConversationTurnRow;
-  question?: string;
+  figures: ConversationTraceFigures;
+  title?: string;
 }
 
-export const buildHopEventStream = ({ spans, modelOutputs, turn, question }: StreamParams): HopEvent[] => {
+export const buildHopEventStream = ({ spans, modelOutputs, figures, title }: StreamParams): HopEvent[] => {
   const outputs = new Map(modelOutputs.map((output) => [output.core_span_id, output]));
   const hops = spans.filter(isConversationHop).sort(byStartTime);
 
   const seeds: EventSeed[] = [
-    { type: HopEventType.TurnStart, label: question ?? '', span: null },
+    { type: HopEventType.TurnStart, label: title ?? '', span: null },
     ...hops.flatMap((span) => eventsForHop(span, outputs.get(span.core_span_id))),
     {
       type: HopEventType.TurnComplete,
       label: '',
       span: null,
-      tokens: toNumber(turn.tokens),
-      cost: turn.cost,
-      hops: toNumber(turn.hops),
-      durationMs: toNumber(turn.duration_ms),
+      tokens: toNumber(figures.tokens),
+      cost: figures.price,
+      hops: toNumber(figures.spans),
+      durationMs: toNumber(figures.durationMs ?? null),
     },
   ];
 
