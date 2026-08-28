@@ -4,11 +4,10 @@ import Page from '@/src/app/[lang]/conversations-trace/[id]/page';
 import {
   getConversationDetail,
   getConversationFeedback,
-  getConversationTranscript,
-  getConversationTurns,
+  getConversationTranscriptAvailability,
   getConversationsSchema,
 } from '@/src/app/[lang]/conversations-trace/actions';
-import { ConversationsField, MessageRole, TranscriptState } from '@/src/models/analytics/conversations-trace';
+import { ConversationsField } from '@/src/models/analytics/conversations-trace';
 import { isAnalyticsForbidden } from '@/src/server/analytics/analytics-access';
 
 vi.mock('@/src/app/[lang]/conversations-trace/actions');
@@ -46,19 +45,10 @@ const DETAIL_ROW = {
 const forbidden = () => isAnalyticsForbidden as unknown as ReturnType<typeof vi.fn>;
 const detail = () => getConversationDetail as unknown as ReturnType<typeof vi.fn>;
 const feedback = () => getConversationFeedback as unknown as ReturnType<typeof vi.fn>;
-const turns = () => getConversationTurns as unknown as ReturnType<typeof vi.fn>;
 const schema = () => getConversationsSchema as unknown as ReturnType<typeof vi.fn>;
-const transcript = () => getConversationTranscript as unknown as ReturnType<typeof vi.fn>;
-
-const TRANSCRIPT = {
-  state: TranscriptState.Available,
-  messages: [{ role: MessageRole.User, content: 'q', trace_id: 't1' }],
-  loadedTurns: 1,
-};
+const availability = () => getConversationTranscriptAvailability as unknown as ReturnType<typeof vi.fn>;
 
 const SCHEMA_FIELDS = Object.keys(DETAIL_ROW).map((name) => ({ name, type: 'string', source: 'conversations' }));
-
-const TURN = { trace_id: 't1', started: 1, hops: 3, failed_hops: 0, tokens: 1, cost: '0.1', duration_ms: 42 };
 
 const render = (id: string) => Page({ params: Promise.resolve({ id }) });
 
@@ -67,17 +57,16 @@ const componentName = (node: Awaited<ReturnType<typeof render>>): string => {
   return type?.name ?? '';
 };
 
-const transcriptStateOfNode = (node: Awaited<ReturnType<typeof render>>): TranscriptState =>
-  (node as unknown as { props: { transcript: { state: TranscriptState } } }).props.transcript.state;
+const isReadableOfNode = (node: Awaited<ReturnType<typeof render>>): boolean =>
+  (node as unknown as { props: { isTranscriptReadable: boolean } }).props.isTranscriptReadable;
 
 beforeEach(() => {
   vi.clearAllMocks();
   forbidden().mockResolvedValue(false);
   detail().mockResolvedValue({ success: true, response: { conversation: DETAIL_ROW } });
   feedback().mockResolvedValue({ success: true, response: { rows: [], total: 0 } });
-  turns().mockResolvedValue({ success: true, response: { turns: [TURN] } });
   schema().mockResolvedValue({ success: true, response: { fields: SCHEMA_FIELDS } });
-  transcript().mockResolvedValue({ success: true, response: TRANSCRIPT });
+  availability().mockResolvedValue({ success: true, response: { isReadable: true } });
 });
 
 describe('conversation detail route', () => {
@@ -183,7 +172,6 @@ describe('conversation detail route', () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(feedback()).toHaveBeenCalledWith(CHAT_ID);
-    expect(turns()).toHaveBeenCalledWith(CHAT_ID);
     expect(detail()).not.toHaveBeenCalled();
 
     releaseSchema({ success: true, response: { fields: SCHEMA_FIELDS } });
@@ -192,44 +180,32 @@ describe('conversation detail route', () => {
     expect(detail()).toHaveBeenCalledOnce();
   });
 
-  // Also the shape of a conversation newer than the turns rollup's last refresh: the detail view renders
-  // its empty-turn-list presentation, and an empty rollup result is not an error state.
-  test('a conversation with no turns still renders', async () => {
-    turns().mockResolvedValue({ success: true, response: { turns: [] } });
-
-    expect(componentName(await render(CHAT_ID))).toBe('ConversationDetailView');
-  });
-
-  test('a failed turns query renders the conversation rather than the error state', async () => {
-    turns().mockResolvedValue({ success: false, errorMessage: 'boom' });
-
-    expect(componentName(await render(CHAT_ID))).toBe('ConversationDetailView');
-  });
-
   // The transcript is one region of the page. A conversation whose header, panels, figures and trace all
   // resolved must still render when only its messages failed — and that region has to say the read failed
   // rather than that the conversation recorded nothing.
-  test('a failed transcript read still renders the conversation, stating the failure', async () => {
-    transcript().mockResolvedValue({ success: false });
+  test('a failed availability probe renders the conversation with Chat gated off', async () => {
+    availability().mockResolvedValue({ success: false, response: { isReadable: false } });
     const node = await render(CHAT_ID);
 
     expect(componentName(node)).toBe('ConversationDetailView');
-    expect(transcriptStateOfNode(node)).toBe(TranscriptState.LoadFailed);
+    expect(isReadableOfNode(node)).toBe(false);
   });
 
-  test('a rejected transcript read still renders the conversation, stating the failure', async () => {
-    transcript().mockRejectedValue(new Error('hop log unavailable'));
+  test('a rejected availability probe renders the conversation with Chat gated off', async () => {
+    availability().mockRejectedValue(new Error('hop log unavailable'));
     const node = await render(CHAT_ID);
 
     expect(componentName(node)).toBe('ConversationDetailView');
-    expect(transcriptStateOfNode(node)).toBe(TranscriptState.LoadFailed);
+    expect(isReadableOfNode(node)).toBe(false);
   });
 
   // The retention split needs the conversation's own last activity, so the read cannot be issued before the
   // detail query resolves.
-  test('passes the conversation last request time to the transcript read', async () => {
+  // The body read moved behind the view switch, so the page issues only the cached schema probe — a
+  // body-read failure is the Chat view's to state, not the page's.
+  test('issues the availability probe and no transcript body read', async () => {
     await render(CHAT_ID);
 
-    expect(transcript()).toHaveBeenCalledWith(CHAT_ID, DETAIL_ROW.last_request_time, expect.any(Number));
+    expect(availability()).toHaveBeenCalled();
   });
 });

@@ -12,7 +12,11 @@ import { COST_TEXT_CLASS, UNAVAILABLE_VALUE } from '@/src/constants/analytics/co
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { ConversationSpanRow, ConversationTurnRow, ModelCallOutput } from '@/src/models/analytics/conversations-trace';
+import {
+  ConversationSpanRow,
+  ConversationTraceFigures,
+  ModelCallOutput,
+} from '@/src/models/analytics/conversations-trace';
 import {
   formatCompactNumber,
   formatDurationMs,
@@ -40,9 +44,11 @@ const Stat: FC<StatProps> = ({ label, value, valueClassName }) => (
 
 interface Props {
   chatId: string;
-  turnNumber: number;
-  turn: ConversationTurnRow;
-  question?: string;
+  // What names the trace on screen. The data records no turn index, so there is no ordinal to fall back to:
+  // the caller supplies the card's own name, or the transcript's question, and the trace id stands alone when
+  // neither is available.
+  title?: string;
+  figures: ConversationTraceFigures;
   spans: ConversationSpanRow[];
   modelOutputs: ModelCallOutput[];
   hasLoadError: boolean;
@@ -53,9 +59,8 @@ interface Props {
 
 const ConversationTraceView: FC<Props> = ({
   chatId,
-  turnNumber,
-  turn,
-  question,
+  title,
+  figures,
   spans,
   modelOutputs,
   hasLoadError,
@@ -66,8 +71,8 @@ const ConversationTraceView: FC<Props> = ({
   const t = useI18n();
 
   const events = useMemo(
-    () => buildHopEventStream({ spans, modelOutputs, turn, question }),
-    [spans, modelOutputs, turn, question],
+    () => buildHopEventStream({ spans, modelOutputs, figures, title }),
+    [spans, modelOutputs, figures, title],
   );
   const selectedSpan = spans.find(({ core_span_id }) => core_span_id === selectedSpanId) ?? null;
   const selected = useMemo(
@@ -85,9 +90,9 @@ const ConversationTraceView: FC<Props> = ({
     bodies,
     isLoading: isLoadingBodies,
     suppression: bodiesSuppression,
-  } = useHopBodies(chatId, turn.trace_id, selectedSpan);
-  const hopCount = toNumber(turn.hops);
-  const isFailed = (toNumber(turn.failed_hops) ?? 0) > 0;
+  } = useHopBodies(chatId, figures.traceId, selectedSpan);
+  const hopCount = toNumber(figures.spans);
+  const isFailed = (toNumber(figures.failedSpans) ?? 0) > 0;
 
   return (
     <div className="flex size-full flex-col gap-4">
@@ -104,35 +109,33 @@ const ConversationTraceView: FC<Props> = ({
             <h2 className="flex min-w-0 items-center gap-2 text-primary">
               <IconSubtask size={ICON_SIZE} aria-hidden className="shrink-0 text-accent-primary" />
               <span className="min-w-0">
-                <DialEllipsisTooltip text={question ?? `${t(ConversationsTraceI18nKey.TraceTurn)} ${turnNumber}`} />
+                <DialEllipsisTooltip text={title ?? figures.traceId} />
               </span>
             </h2>
             <span className="flex min-w-0 items-center gap-1.5 pl-6 text-secondary dial-tiny-text">
-              {question && (
-                <span className="shrink-0">
-                  {t(ConversationsTraceI18nKey.TraceTurn)} {turnNumber}
+              {/* Suppressed when the heading already is the trace id — repeating it says nothing twice. */}
+              {title !== undefined && (
+                <span className="min-w-0 font-mono">
+                  <DialEllipsisTooltip text={figures.traceId} />
                 </span>
               )}
-              <span className="min-w-0 font-mono">
-                <DialEllipsisTooltip text={turn.trace_id} />
-              </span>
             </span>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Stat
             label={t(ConversationsTraceI18nKey.TraceDuration)}
-            value={formatDurationMs(turn.duration_ms) || UNAVAILABLE_VALUE}
+            value={formatDurationMs(figures.durationMs ?? null) || UNAVAILABLE_VALUE}
           />
-          <Stat label={t(ConversationsTraceI18nKey.TraceTokens)} value={formatCompactNumber(turn.tokens) || '0'} />
+          <Stat label={t(ConversationsTraceI18nKey.TraceTokens)} value={formatCompactNumber(figures.tokens) || '0'} />
           <Stat
             label={t(ConversationsTraceI18nKey.TraceCost)}
-            value={formatSignificantCost(turn.cost) || UNAVAILABLE_VALUE}
+            value={formatSignificantCost(figures.price) || UNAVAILABLE_VALUE}
             valueClassName={COST_TEXT_CLASS}
           />
           <Stat
             label={t(ConversationsTraceI18nKey.TraceSpans)}
-            value={formatCompactNumber(turn.hops) || String(spans.length)}
+            value={formatCompactNumber(figures.spans) || String(spans.length)}
           />
           <Stat
             label={t(ConversationsTraceI18nKey.TraceStatus)}

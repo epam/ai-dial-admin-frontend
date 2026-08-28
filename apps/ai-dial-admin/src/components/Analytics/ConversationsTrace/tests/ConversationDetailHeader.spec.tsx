@@ -78,28 +78,6 @@ describe('ConversationDetailHeader', () => {
     expect(screen.getAllByText(TITLE)).toHaveLength(1);
   });
 
-  // The evaluator assembles a conversation's bodies up to a size cap, and 86% of titled conversations hit it.
-  // The log states that once for the column; here there is one conversation and room to say what it means.
-  test('states that a truncated title describes only part of the conversation', () => {
-    renderHeader({ 'conversation_insights.truncated': true });
-
-    expect(screen.getByText(ConversationsTraceI18nKey.DetailTitleTruncated)).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(TITLE);
-  });
-
-  test('states nothing about truncation for a title written from the whole conversation', () => {
-    renderHeader({ 'conversation_insights.truncated': false });
-
-    expect(screen.queryByText(ConversationsTraceI18nKey.DetailTitleTruncated)).toBeNull();
-  });
-
-  // Without a title there is nothing for the caveat to qualify.
-  test('states nothing about truncation when there is no title', () => {
-    renderHeader({ 'conversation_insights.title': null, 'conversation_insights.truncated': true });
-
-    expect(screen.queryByText(ConversationsTraceI18nKey.DetailTitleTruncated)).toBeNull();
-  });
-
   // Falling back to the id would name the conversation after its own hash, and the id is already on the
   // line below — so the heading says the name is missing instead.
   test('marks the heading unavailable when no insight title exists', () => {

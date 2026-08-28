@@ -599,6 +599,7 @@ describe('getConversationsSchema', () => {
 });
 
 describe('getConversationTranscript', () => {
+  const PROJECT_ID = 'statgpt';
   const CHAT_ID = 'chat-1';
   const NOW = Date.parse('2026-08-20T00:00:00.000Z');
   const RECENT = Date.parse('2026-08-19T00:00:00.000Z');
@@ -647,7 +648,7 @@ describe('getConversationTranscript', () => {
   test('assembles the transcript from the entry hops', async () => {
     stubHopLog([hopRow('t1', 1), hopRow('t2', 1)], [bodyRow('t1', 'first', 'A'), bodyRow('t2', 'second', 'B')]);
 
-    const result = await getConversationTranscript(CHAT_ID, RECENT, NOW);
+    const result = await getConversationTranscript(CHAT_ID, PROJECT_ID, RECENT, NOW);
 
     expect(result.response?.state).toBe(TranscriptState.Available);
     expect(result.response?.messages.map(({ content }) => content)).toEqual(['first', 'A', 'second', 'B']);
@@ -656,7 +657,7 @@ describe('getConversationTranscript', () => {
 
   test('reads the hop log schema for the caller token', async () => {
     stubHopLog([], []);
-    await getConversationTranscript(CHAT_ID, RECENT, NOW);
+    await getConversationTranscript(CHAT_ID, PROJECT_ID, RECENT, NOW);
 
     expect(getEntitySchema()).toHaveBeenCalledWith('dial_usage_log', TOKEN_MOCK);
   });
@@ -665,7 +666,7 @@ describe('getConversationTranscript', () => {
   test('reports the columns unavailable when the schema reports none of them', async () => {
     schemaOf([UsageLogField.ChatId]);
 
-    const result = await getConversationTranscript(CHAT_ID, RECENT, NOW);
+    const result = await getConversationTranscript(CHAT_ID, PROJECT_ID, RECENT, NOW);
 
     expect(result.success).toBe(true);
     expect(result.response?.state).toBe(TranscriptState.ColumnsUnavailable);
@@ -678,7 +679,7 @@ describe('getConversationTranscript', () => {
     schemaOf([UsageLogField.RequestBody, UsageLogField.ResponseBody]);
     stubHopLog([hopRow('t1', 1)], [{ ...bodyRow('t1', 'q', 'a'), assembled_response: undefined }]);
 
-    const result = await getConversationTranscript(CHAT_ID, RECENT, NOW);
+    const result = await getConversationTranscript(CHAT_ID, PROJECT_ID, RECENT, NOW);
     const bodyQuery = execute()
       .mock.calls.map((args) => args[0] as StructuredQuery)
       .find((query) =>
@@ -692,7 +693,7 @@ describe('getConversationTranscript', () => {
   test('reports a failure when the schema cannot be read', async () => {
     getEntitySchema().mockResolvedValue(null);
 
-    const result = await getConversationTranscript(CHAT_ID, RECENT, NOW);
+    const result = await getConversationTranscript(CHAT_ID, PROJECT_ID, RECENT, NOW);
 
     expect(result.success).toBe(false);
     expect(result.response?.state).toBe(TranscriptState.LoadFailed);
@@ -702,7 +703,7 @@ describe('getConversationTranscript', () => {
   test('reports a conversation with hops but no entry hop as not reconstructable', async () => {
     stubHopLog([], [], 12);
 
-    const result = await getConversationTranscript(CHAT_ID, RECENT, NOW);
+    const result = await getConversationTranscript(CHAT_ID, PROJECT_ID, RECENT, NOW);
 
     expect(result.response?.state).toBe(TranscriptState.NotReconstructable);
   });
@@ -711,13 +712,17 @@ describe('getConversationTranscript', () => {
     stubHopLog([], [], 0);
     const aged = NOW - 400 * DAY_MS;
 
-    expect((await getConversationTranscript(CHAT_ID, aged, NOW)).response?.state).toBe(TranscriptState.Expired);
+    expect((await getConversationTranscript(CHAT_ID, PROJECT_ID, aged, NOW)).response?.state).toBe(
+      TranscriptState.Expired,
+    );
   });
 
   test('reports a recent conversation with no hops as having recorded nothing', async () => {
     stubHopLog([], [], 0);
 
-    expect((await getConversationTranscript(CHAT_ID, RECENT, NOW)).response?.state).toBe(TranscriptState.NoMessages);
+    expect((await getConversationTranscript(CHAT_ID, PROJECT_ID, RECENT, NOW)).response?.state).toBe(
+      TranscriptState.NoMessages,
+    );
   });
 
   // Without the count there is no way to tell an unattributable conversation from an empty one, and stating
@@ -727,7 +732,7 @@ describe('getConversationTranscript', () => {
       Promise.resolve(query.mode === QueryMode.Aggregate ? failure : ok([])),
     );
 
-    const result = await getConversationTranscript(CHAT_ID, RECENT, NOW);
+    const result = await getConversationTranscript(CHAT_ID, PROJECT_ID, RECENT, NOW);
 
     expect(result.success).toBe(false);
     expect(result.response?.state).toBe(TranscriptState.LoadFailed);
@@ -736,7 +741,9 @@ describe('getConversationTranscript', () => {
   test('reports a failure when the entry hop read fails', async () => {
     execute().mockResolvedValue(failure);
 
-    expect((await getConversationTranscript(CHAT_ID, RECENT, NOW)).response?.state).toBe(TranscriptState.LoadFailed);
+    expect((await getConversationTranscript(CHAT_ID, PROJECT_ID, RECENT, NOW)).response?.state).toBe(
+      TranscriptState.LoadFailed,
+    );
   });
 
   // The read that carries the messages themselves: without this the failure resolved to an available
@@ -750,7 +757,7 @@ describe('getConversationTranscript', () => {
       return Promise.resolve(query.mode === QueryMode.Aggregate ? ok([{ hop_count: 1 }]) : ok([hopRow('t1', 1)]));
     });
 
-    const result = await getConversationTranscript(CHAT_ID, RECENT, NOW);
+    const result = await getConversationTranscript(CHAT_ID, PROJECT_ID, RECENT, NOW);
 
     expect(result.success).toBe(false);
     expect(result.response?.state).toBe(TranscriptState.LoadFailed);
@@ -761,7 +768,7 @@ describe('getConversationTranscript', () => {
   test('reports entry hops whose bodies yield no message as not reconstructable', async () => {
     stubHopLog([hopRow('t1', 1)], []);
 
-    const result = await getConversationTranscript(CHAT_ID, RECENT, NOW);
+    const result = await getConversationTranscript(CHAT_ID, PROJECT_ID, RECENT, NOW);
 
     expect(result.success).toBe(true);
     expect(result.response?.state).toBe(TranscriptState.NotReconstructable);
@@ -786,7 +793,7 @@ describe('getConversationTranscript', () => {
       },
     ]);
 
-    const result = await getConversationTranscript(CHAT_ID, RECENT, NOW);
+    const result = await getConversationTranscript(CHAT_ID, PROJECT_ID, RECENT, NOW);
     const bodyQuery = execute()
       .mock.calls.map((args) => args[0] as StructuredQuery)
       .find((query) =>
@@ -802,7 +809,7 @@ describe('getConversationTranscript', () => {
   test('returns decoded messages and no body value', async () => {
     stubHopLog([hopRow('t1', 1)], [bodyRow('t1', 'q', 'a')]);
 
-    const result = await getConversationTranscript(CHAT_ID, RECENT, NOW);
+    const result = await getConversationTranscript(CHAT_ID, PROJECT_ID, RECENT, NOW);
 
     expect(JSON.stringify(result.response)).not.toContain('assembled_response');
     expect(JSON.stringify(result.response)).not.toContain('request_body');

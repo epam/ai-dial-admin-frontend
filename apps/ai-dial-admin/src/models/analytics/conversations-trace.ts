@@ -179,7 +179,6 @@ export enum ConversationsField {
   InsightTopics = 'conversation_insights.topics',
   InsightLanguage = 'conversation_insights.language',
   InsightResolutionStatus = 'conversation_insights.resolution_status',
-  InsightTruncated = 'conversation_insights.truncated',
 }
 
 // Grid-only column ids: every other column binds to a `ConversationsField`, but Rating is composed
@@ -265,7 +264,6 @@ export interface ConversationDetailRow {
   'conversation_insights.topics'?: string | null;
   'conversation_insights.language'?: string | null;
   'conversation_insights.resolution_status'?: string | null;
-  'conversation_insights.truncated'?: boolean | null;
 }
 
 export interface ConversationDetailResult {
@@ -301,6 +299,14 @@ export enum UsageLogField {
   EventKind = 'event_kind',
   TotalTokens = 'total_tokens',
   DeploymentPrice = 'deployment_price',
+  // The chain-inclusive figure: on a root span it equals the sum of its subtree's own `deployment_price`
+  // (verified against a live app-form trace), which is what makes the card's own/chain price pair readable.
+  TotalPrice = 'total_price',
+  // Leads the table's sort key, so it is the listing's only real prune besides the partition range. Also the
+  // Core-internal marker's operand — a service call is recorded under Core's own project, not the caller's.
+  ProjectId = 'project_id',
+  // The exact join key to the rating source, which is grained by it.
+  ResponseId = 'response_id',
   ParentDeployment = 'parent_deployment',
   RequestMethod = 'request_method',
   RequestUri = 'request_uri',
@@ -322,37 +328,132 @@ export enum UsageLogField {
   AssembledResponse = 'assembled_response',
 }
 
-// The `turns` rollup: one row per trace, with the turn's entry time, hop count, token totals, cost and
-// wall-clock duration already resolved. `dial_usage_log` stays the source of a turn's span tree.
-export enum TurnsField {
-  ChatId = 'chat_id',
+// A trace's own totals, as the drawer states them. Named for what it is rather than for the rollup it used
+// to come from: the listing resolves these live now, and the drawer reads whichever figures the view that
+// opened it already has.
+// What the drawer states above a trace's hops. A view model, not a row — hence camelCase, matching the group
+// and card models it is built from. `durationMs` is card-level and therefore absent when the drawer was
+// opened from the transcript, which has no card to speak for.
+export interface ConversationTraceFigures {
+  traceId: string;
+  startedAt: number | string | null;
+  spans: number | string | null;
+  failedSpans: number | string | null;
+  tokens: number | string | null;
+  price: number | string | null;
+  durationMs?: number | string | null;
+}
+
+// The trace listing reads the hop log live, in three passes. The first pages traces and yields nothing but
+// their ids and their own time bounds; the second reads every root span of that page for its own facts; the
+// third resolves the traces' figures. The aliases below are what each pass projects, so a row's shape says
+// which pass produced it.
+export enum ConversationTracePageField {
   TraceId = 'trace_id',
   FirstRequestTime = 'first_request_time',
-  HopCount = 'hop_count',
-  FailedHopCount = 'failed_hop_count',
-  TotalTokens = 'total_tokens',
-  TotalPrice = 'total_price',
-  DurationMs = 'duration_ms',
+  LastRequestTime = 'last_request_time',
 }
 
-export enum ConversationTurnField {
-  TraceId = 'trace_id',
-  Started = 'started',
-  Hops = 'hops',
-  FailedHops = 'failed_hops',
-  Tokens = 'tokens',
-  Cost = 'cost',
-  DurationMs = 'duration_ms',
-}
-
-export interface ConversationTurnRow {
+export interface ConversationTracePageRow {
   trace_id: string;
-  started: number | string | null;
-  hops: number | string | null;
-  failed_hops: number | string | null;
+  first_request_time: number | string | null;
+  last_request_time: number | string | null;
+}
+
+export enum ConversationTraceFigureField {
+  TraceId = 'trace_id',
+  EventKind = 'event_kind',
+  Spans = 'spans',
+  Tokens = 'tokens',
+  Price = 'price',
+  FailedSpans = 'failed_spans',
+  ResponseIds = 'response_ids',
+}
+
+// One row per (trace, event kind): the per-kind rows are the chips, and their sums are the trace's figures.
+export interface ConversationTraceFigureRow {
+  trace_id: string;
+  event_kind: string | null;
+  spans: number | string | null;
   tokens: number | string | null;
-  cost: number | string | null;
-  duration_ms: number | string | null;
+  price: number | string | null;
+  failed_spans: number | string | null;
+  response_ids: string[] | null;
+}
+
+// A root span, read for the card it becomes. `project_id` is here because the Core-internal marker compares
+// it against the conversation's; it is deliberately absent from the query's filter, where it would drop the
+// rows the marker exists to find.
+export interface ConversationTraceRootRow {
+  trace_id: string;
+  core_span_id: string;
+  request_time: number | string | null;
+  operation_duration_ms: number | string | null;
+  success: boolean | null;
+  response_status: number | null;
+  total_tokens: number | string | null;
+  total_price: number | string | null;
+  deployment_price: number | string | null;
+  chat_id: string | null;
+  request_uri: string | null;
+  event_kind: string | null;
+  number_request_messages: number | string | null;
+  deployment: string | null;
+  project_id: string | null;
+}
+
+// Inclusive epoch-millis bounds, already padded. Carried as a value rather than recomputed per query so the
+// roots and figures passes cannot end up scoped to different windows.
+export interface ConversationTraceWindow {
+  fromMs: number;
+  toMs: number;
+}
+
+export interface ConversationTraceChip {
+  eventKind: string;
+  spans: number;
+}
+
+// What one recorded call states about itself. Every field is read from that root's own row — nothing here is
+// a trace-level figure, and nothing is derived from a body.
+export interface ConversationTraceCard {
+  traceId: string;
+  coreSpanId: string;
+  startedAt: number | string | null;
+  durationMs: number | string | null;
+  isSuccess: boolean | null;
+  responseStatus: number | null;
+  ownTokens: number | string | null;
+  ownPrice: number | string | null;
+  chainPrice: number | string | null;
+  deployment: string | null;
+  requestUri: string | null;
+  eventKind: string | null;
+  requestMessages: number | string | null;
+  hasConversationLabel: boolean;
+  isCoreInternal: boolean;
+}
+
+// A trace and the cards beneath it. `isRootRecorded` false is the trace whose root the roots pass did not
+// return: it still renders, from these figures alone. `elidedCardCount` is what the card cap held back, so
+// the view can disclose it rather than truncating in silence.
+export interface ConversationTraceGroup {
+  traceId: string;
+  startedAt: number | string | null;
+  spans: number;
+  tokens: number;
+  price: number;
+  failedSpans: number;
+  chips: ConversationTraceChip[];
+  responseIds: string[];
+  cards: ConversationTraceCard[];
+  elidedCardCount: number;
+  isRootRecorded: boolean;
+}
+
+export interface ConversationTracePage {
+  groups: ConversationTraceGroup[];
+  hasMore: boolean;
 }
 
 export interface ConversationSpanRow {
@@ -487,6 +588,19 @@ export interface ConversationTranscript {
   state: TranscriptState;
   messages: ConversationMessage[];
   loadedTurns: number | null;
+  // Figures for the traces this transcript covers, resolved by the same read. The Chat view states each
+  // answer's own figures, and reading them from the listing's paged state would make a message's
+  // completeness depend on how far the reader had scrolled a different view — so each view fetches what it
+  // displays. Overlapping reads between the two are accepted; no cache is shared.
+  traceFigures?: ConversationTraceGroup[];
+}
+
+// Whether this caller can read body columns at all. A *schema* fact, resolved before any body query, so it is
+// known when the view switch first renders and can gate the Chat option there. The transcript's other states
+// — aged out, not reconstructable, never recorded, failed — are facts about the rows themselves and resolve
+// only once the body read runs, so they are stated inside the Chat view instead.
+export interface ConversationTranscriptAvailability {
+  isReadable: boolean;
 }
 
 export interface TranscriptBodyFields {
@@ -520,10 +634,6 @@ export interface TranscriptStatePresentation {
 
 export interface ConversationModelBodyRow extends ConversationEntryBodyRow {
   core_span_id: string;
-}
-
-export interface ConversationTurnsResult {
-  turns: ConversationTurnRow[];
 }
 
 export enum ConversationDetailView {

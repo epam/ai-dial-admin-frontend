@@ -11,7 +11,7 @@ import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import {
   ConversationSpanNode,
   ConversationSpanRow,
-  ConversationTurnRow,
+  ConversationTraceFigures,
   SpanCategory,
 } from '@/src/models/analytics/conversations-trace';
 
@@ -61,15 +61,15 @@ const SPANS = [span(), CHILD];
 
 const statFor = (label: string) => screen.getByText(label).parentElement;
 
-// The turn as the rollup resolved it, which is the same row the trace list renders.
-const TURN: ConversationTurnRow = {
-  trace_id: TRACE_ID,
-  started: 1787218895000,
-  hops: 2,
-  failed_hops: 0,
+// The trace's figures as the listing states them, so the drawer and the card that opened it cannot disagree.
+const FIGURES: ConversationTraceFigures = {
+  traceId: TRACE_ID,
+  startedAt: 1787218895000,
+  spans: 2,
+  failedSpans: 0,
   tokens: 1078,
-  cost: '0.0015',
-  duration_ms: 1500,
+  price: '0.0015',
+  durationMs: 1500,
 };
 
 describe('ConversationTraceView', () => {
@@ -77,8 +77,7 @@ describe('ConversationTraceView', () => {
     render(
       <ConversationTraceView
         chatId="chat-1"
-        turnNumber={2}
-        turn={TURN}
+        figures={FIGURES}
         spans={SPANS}
         modelOutputs={[]}
         hasLoadError={false}
@@ -89,30 +88,37 @@ describe('ConversationTraceView', () => {
       />,
     );
 
-  test('names the turn it belongs to and the trace it is', () => {
+  test('names itself by its trace when the caller supplies no title', () => {
     renderTrace();
 
-    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(ConversationsTraceI18nKey.TraceTurn);
-    expect(screen.getByText(TRACE_ID)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(TRACE_ID);
+    // Once, not twice: with no title the heading already is the trace id, so repeating it beneath says the
+    // same thing twice. A `length > 0` assertion here tolerated exactly that.
+    expect(screen.getAllByText(TRACE_ID)).toHaveLength(1);
   });
 
-  // A reader who arrived here from a list row should see the same thing they clicked.
-  test('titles itself with the question the turn answered', () => {
-    renderTrace({ question: 'what exactly have you updated in this plan?' });
+  // A reader who arrived from a card should see the same name they clicked.
+  test('titles itself with the name the caller supplied', () => {
+    renderTrace({ title: 'applications/public/pg-chat-hub__1.0.0' });
 
-    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('what exactly have you updated in this plan?');
-    expect(screen.getByText(TRACE_ID)).toBeInTheDocument();
-    expect(screen.getByText(ConversationsTraceI18nKey.TraceTurn, { exact: false })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('applications/public/pg-chat-hub__1.0.0');
+    // With a title, the trace id is the subtitle — stated once, beneath a heading that is not it.
+    expect(screen.getAllByText(TRACE_ID)).toHaveLength(1);
   });
 
-  test('falls back to the turn number when the turn has no question', () => {
+  // The data records no turn index, so there is no ordinal to render and none to fall back to. An earlier
+  // version passed 0 as a turn number alongside a title, and every drawer read "Turn 0".
+  test('states no turn number, whether or not a title was supplied', () => {
+    renderTrace({ title: 'echo' });
+
+    expect(screen.queryByText(/Turn \d/)).toBeNull();
+
     renderTrace();
 
-    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(ConversationsTraceI18nKey.TraceTurn);
-    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('2');
+    expect(screen.queryByText(/Turn \d/)).toBeNull();
   });
 
-  // Every figure is the turn's own, from the rollup the list reads — so the two cannot disagree. Summing the
+  // Every figure is the trace's own, from the same figures read the listing renders — so the two cannot disagree. Summing the
   // hop rows instead disagreed with the list by a factor of five on one 384-hop turn, because the read stops
   // at `CONVERSATION_SPAN_LIMIT` and a sum over what it returned is a sum over part of the turn.
   test('states the turn own figures rather than re-deriving them from the hop rows', () => {
@@ -127,7 +133,7 @@ describe('ConversationTraceView', () => {
   // The clipped sample below must not move a single figure in the header: a 384-hop turn reads 300 hops, and
   // summing those reported 700 K tokens against the list's 3.67 M.
   test('the figures do not move when the hop chain is clipped', () => {
-    renderTrace({ turn: { ...TURN, hops: 384, tokens: 3667333 }, spans: [span()] });
+    renderTrace({ figures: { ...FIGURES, spans: 384, tokens: 3667333 }, spans: [span()] });
 
     expect(statFor(ConversationsTraceI18nKey.TraceTokens)).toHaveTextContent('3.7 M');
     expect(statFor(ConversationsTraceI18nKey.TraceSpans)).toHaveTextContent('384');
@@ -142,7 +148,7 @@ describe('ConversationTraceView', () => {
   // One failed hop makes the turn a failure for the reader, whatever the other hops did — and the rollup
   // counts them across the whole turn, not only across the hops that were read.
   test('reports the trace as failed when the rollup counted a failed hop', () => {
-    renderTrace({ turn: { ...TURN, failed_hops: 1 } });
+    renderTrace({ figures: { ...FIGURES, failedSpans: 1 } });
 
     expect(statFor(ConversationsTraceI18nKey.TraceStatus)).toHaveTextContent(ConversationsTraceI18nKey.TraceFailed);
   });
@@ -150,7 +156,7 @@ describe('ConversationTraceView', () => {
   // The span read is capped, and a trace that was cut off must say so rather than presenting a partial
   // tree as the whole turn.
   test('declares itself partial when the turn holds more hops than were read', () => {
-    renderTrace({ turn: { ...TURN, hops: 922 } });
+    renderTrace({ figures: { ...FIGURES, spans: 922 } });
 
     expect(screen.getByText(ConversationsTraceI18nKey.TraceSpansPartial)).toBeInTheDocument();
   });

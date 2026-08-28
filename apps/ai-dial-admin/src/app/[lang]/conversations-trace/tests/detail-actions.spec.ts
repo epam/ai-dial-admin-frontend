@@ -5,13 +5,12 @@ import {
   getConversationDetail,
   getConversationFeedback,
   getConversationSpans,
-  getConversationTurns,
+  getConversationTracePage,
+  getConversationTranscriptAvailability,
 } from '@/src/app/[lang]/conversations-trace/actions';
 import {
   CONVERSATION_FEEDBACK_LIMIT,
   CONVERSATION_SPAN_LIMIT,
-  CONVERSATION_TURN_LIMIT,
-  TURNS_ENTITY,
   USAGE_LOG_ENTITY,
 } from '@/src/constants/analytics/conversations-trace';
 import {
@@ -252,58 +251,6 @@ describe('getConversationFeedback', () => {
   });
 });
 
-describe('getConversationTurns', () => {
-  test('reads the turns rollup with the user token and the shared limit', async () => {
-    execute().mockResolvedValue({ success: true, response: { rows: [TURN_ROW] } });
-
-    await getConversationTurns(CHAT_ID);
-
-    expect(execute()).toHaveBeenCalledWith(expect.anything(), TOKEN_MOCK);
-    expect(call(0).entity).toBe(TURNS_ENTITY);
-    expect(call(0).mode).toBe(QueryMode.Row);
-    expect((call(0).page as QueryOffsetPage).limit).toBe(CONVERSATION_TURN_LIMIT);
-  });
-
-  test('returns the rollup turns', async () => {
-    execute().mockResolvedValue({ success: true, response: { rows: [TURN_ROW] } });
-
-    const result = await getConversationTurns(CHAT_ID);
-
-    expect(result.response).toEqual({ turns: [TURN_ROW] });
-  });
-
-  test('a conversation with no recorded turns resolves to an empty list', async () => {
-    execute().mockResolvedValue({ success: true, response: { rows: [] } });
-
-    const result = await getConversationTurns(CHAT_ID);
-
-    expect(result.success).toBe(true);
-    expect(result.response).toEqual({ turns: [] });
-  });
-
-  // Falling back to the hop log for a conversation the rollup has not caught up with would answer one
-  // conversation by one definition of a turn and the next by another.
-  test('issues no second query when the rollup returns nothing', async () => {
-    execute().mockResolvedValue({ success: true, response: { rows: [] } });
-
-    await getConversationTurns(CHAT_ID);
-
-    expect(execute()).toHaveBeenCalledOnce();
-    expect(JSON.stringify(call(0))).not.toContain(USAGE_LOG_ENTITY);
-  });
-
-  // The route distinguishes these two: an empty list is a conversation without turns, an absent response
-  // is an outage, and the transcript says something different for each.
-  test('a failed query reports failure with no response', async () => {
-    execute().mockResolvedValue({ success: false, errorMessage: 'boom' });
-
-    const result = await getConversationTurns(CHAT_ID);
-
-    expect(result.success).toBe(false);
-    expect(result.response).toBeUndefined();
-  });
-});
-
 describe('getConversationSpans', () => {
   test('reads one trace of one conversation with the user token', async () => {
     execute().mockResolvedValue({ success: true, response: { rows: [SPAN_ROW], totalCount: 1 } });
@@ -425,5 +372,144 @@ describe('getConversationSpans', () => {
 
     expect(result.success).toBe(false);
     expect(result.response).toBeUndefined();
+  });
+});
+
+// The Chat option is gated on whether this caller can read body columns at all — a schema fact. Split out of
+// the transcript read so the page can still answer it at open while the body read waits for the switch.
+describe('getConversationTranscriptAvailability', () => {
+  test('answers from the entity schema without issuing any query', async () => {
+    getEntitySchema().mockResolvedValue({
+      fields: [{ name: 'request_body' }, { name: 'response_body' }],
+    });
+
+    const result = await getConversationTranscriptAvailability();
+
+    expect(result.response?.isReadable).toBe(true);
+    expect(execute()).not.toHaveBeenCalled();
+  });
+
+  test('reports the body columns unreadable when the schema names neither', async () => {
+    getEntitySchema().mockResolvedValue({ fields: [{ name: 'trace_id' }] });
+
+    const result = await getConversationTranscriptAvailability();
+
+    expect(result.response?.isReadable).toBe(false);
+    expect(execute()).not.toHaveBeenCalled();
+  });
+
+  test('reports unreadable rather than throwing when the schema cannot be read', async () => {
+    getEntitySchema().mockResolvedValue(undefined);
+
+    const result = await getConversationTranscriptAvailability();
+
+    expect(result.success).toBe(false);
+    expect(result.response?.isReadable).toBe(false);
+  });
+});
+
+describe('getConversationTracePage', () => {
+  const pageRow = (traceId: string, firstMs: number, lastMs = firstMs) => ({
+    trace_id: traceId,
+    first_request_time: firstMs,
+    last_request_time: lastMs,
+  });
+  const NOON = Date.UTC(2026, 7, 26, 12, 0, 0);
+  const DAY = 24 * 60 * 60 * 1000;
+
+  const boundsOf = (call: number) => {
+    const query = execute().mock.calls[call][0];
+    const times = query.filter.args.filter(
+      (node: { args?: [{ name?: string }] }) => node.args?.[0]?.name === 'request_time',
+    );
+    return times.map((node: { args: [unknown, { value: string }] }) => Number(node.args[1].value));
+  };
+
+  const resolvePage = (rows: unknown[]) => {
+    execute()
+      .mockResolvedValueOnce({ success: true, response: { rows } })
+      .mockResolvedValueOnce({ success: true, response: { rows: [] } })
+      .mockResolvedValueOnce({ success: true, response: { rows: [] } });
+  };
+
+  test('reads the page, then its roots and figures, with the user token', async () => {
+    resolvePage([pageRow('t1', NOON)]);
+
+    await getConversationTracePage(CHAT_ID, 'statgpt', NOON, NOON, 0);
+
+    expect(execute()).toHaveBeenCalledTimes(3);
+    expect(execute()).toHaveBeenNthCalledWith(1, expect.anything(), TOKEN_MOCK);
+  });
+
+  // The window the roots and figures passes share comes from the page's own rows, not the conversation's, so
+  // a page spanning minutes reads a handful of partitions however long the conversation ran.
+  test('scopes the roots and figures to the page own padded window', async () => {
+    resolvePage([pageRow('t1', NOON, NOON + 60_000)]);
+
+    await getConversationTracePage(CHAT_ID, 'statgpt', Date.UTC(2025, 0, 1), NOON, 0);
+
+    const [rootsFrom, rootsTo] = boundsOf(1);
+    expect(rootsFrom).toBe(Date.UTC(2026, 7, 26) - DAY);
+    expect(rootsTo).toBe(Date.UTC(2026, 7, 27) - 1 + DAY);
+    expect(boundsOf(2)).toEqual([rootsFrom, rootsTo]);
+  });
+
+  test('resolves nothing further when the page returns no trace', async () => {
+    execute().mockResolvedValue({ success: true, response: { rows: [] } });
+
+    const result = await getConversationTracePage(CHAT_ID, 'statgpt', NOON, NOON, 0);
+
+    expect(result.response).toEqual({ groups: [], hasMore: false });
+    expect(execute()).toHaveBeenCalledOnce();
+  });
+
+  // Aggregate mode never reports a total, so a full page is the only evidence another may exist.
+  test('reports more only when the page came back full', async () => {
+    resolvePage([pageRow('t1', NOON)]);
+
+    expect((await getConversationTracePage(CHAT_ID, 'statgpt', NOON, NOON, 0)).response?.hasMore).toBe(false);
+  });
+
+  test('a failed page read reports failure with no response', async () => {
+    execute().mockResolvedValue({ success: false, errorMessage: 'boom' });
+
+    const result = await getConversationTracePage(CHAT_ID, 'statgpt', NOON, NOON, 0);
+
+    expect(result.success).toBe(false);
+    expect(result.response).toBeUndefined();
+  });
+
+  // The figures are the trace-level totals, so rendering without them would state 0 spans and no cost as the
+  // trace's facts — the silently-wrong-figure outcome this design removes.
+  test('a failed figures read fails the page rather than reporting zeroes', async () => {
+    execute()
+      .mockResolvedValueOnce({ success: true, response: { rows: [pageRow('t1', NOON)] } })
+      .mockResolvedValueOnce({ success: true, response: { rows: [] } })
+      .mockResolvedValueOnce({ success: false, errorMessage: 'figures unavailable' });
+
+    const result = await getConversationTracePage(CHAT_ID, 'statgpt', NOON, NOON, 0);
+
+    expect(result.success).toBe(false);
+    expect(result.response).toBeUndefined();
+  });
+
+  // A failed roots read costs the cards, not the page: the trace still renders from its figures, stating that
+  // its entry call was not recorded.
+  test('a failed roots read still renders the trace from its figures', async () => {
+    execute()
+      .mockResolvedValueOnce({ success: true, response: { rows: [pageRow('t1', NOON)] } })
+      .mockResolvedValueOnce({ success: false, errorMessage: 'roots unavailable' })
+      .mockResolvedValueOnce({
+        success: true,
+        response: {
+          rows: [{ trace_id: 't1', event_kind: 'llm_call', spans: 4, tokens: 10, price: 1, failed_spans: 0 }],
+        },
+      });
+
+    const result = await getConversationTracePage(CHAT_ID, 'statgpt', NOON, NOON, 0);
+
+    expect(result.success).toBe(true);
+    expect(result.response?.groups[0].isRootRecorded).toBe(false);
+    expect(result.response?.groups[0].spans).toBe(4);
   });
 });
