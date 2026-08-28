@@ -205,7 +205,10 @@ describe('Entities :: tabs', () => {
   });
 
   test('returns Properties and Configuration tabs for AssetsInterceptors', () => {
-    expect(getTabsForAsset(t, ApplicationRoute.PlatformInterceptors)).toEqual([propertiesTab(t), parameterSchemaTab(t)]);
+    expect(getTabsForAsset(t, ApplicationRoute.PlatformInterceptors)).toEqual([
+      propertiesTab(t),
+      parameterSchemaTab(t),
+    ]);
   });
 
   test('returns Properties and Roles for AssetsRoutes — Route has no features or configuration endpoint, but is a RoleBasedEntity', () => {

@@ -15,13 +15,7 @@ const renderCreateForm = (
   names: string[] = [],
 ) => {
   render(
-    <Properties
-      view={ApplicationRoute.Skills}
-      entity={entity}
-      names={names}
-      isModal
-      onChangeEntity={onChangeEntity}
-    />,
+    <Properties view={ApplicationRoute.Skills} entity={entity} names={names} isModal onChangeEntity={onChangeEntity} />,
   );
   return { dispatch: useSaveValidationContext().dispatch };
 };
