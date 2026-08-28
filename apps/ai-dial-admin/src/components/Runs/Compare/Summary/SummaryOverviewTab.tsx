@@ -2,7 +2,7 @@
 
 import { FC, useCallback } from 'react';
 
-import { DialLoader } from '@epam/ai-dial-ui-kit';
+import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
 import Analytics from '@/src/components/Runs/Compare/Summary/Analytics';
 import DistributionSection from '@/src/components/Runs/Compare/Summary/DistributionSection';
@@ -11,6 +11,8 @@ import MetricScoresSection from '@/src/components/Runs/Compare/Summary/MetricSco
 import { useSummaryOverviewData } from '@/src/components/Runs/Compare/Summary/use-summary-overview-data';
 import { SummaryOverviewTabUiState } from '@/src/components/Runs/Compare/models';
 import { SUMMARY_PANELS_GRID_CLASS } from '@/src/components/Runs/Summary/constants';
+import { EntitiesI18nKey } from '@/src/constants/i18n';
+import { useI18n } from '@/src/locales/client';
 
 interface Props {
   primaryRunId: string;
@@ -31,6 +33,7 @@ const SummaryOverviewTab: FC<Props> = ({
   summaryState,
   setSummaryState,
 }) => {
+  const t = useI18n();
   const {
     primaryRun,
     comparedRun,
@@ -42,6 +45,7 @@ const SummaryOverviewTab: FC<Props> = ({
     comparedMatchedAnalytics,
     primaryUnmatchedIds,
     comparedUnmatchedIds,
+    hasNoMatchingTestCases,
   } = useSummaryOverviewData({
     primaryRunId,
     comparedRunId,
@@ -78,42 +82,50 @@ const SummaryOverviewTab: FC<Props> = ({
           comparedRunName={comparedRunName}
           testSuite={testSuite}
         />
-        <Analytics
-          primaryRunId={primaryRunId}
-          comparedRunId={comparedRunId}
-          primaryRunName={primaryRunName}
-          comparedRunName={comparedRunName}
-          onlyMatchingTestCases={onlyMatchingTestCases}
-          primaryMatchedAnalytics={primaryMatchedAnalytics}
-          comparedMatchedAnalytics={comparedMatchedAnalytics}
-          primaryOverallScore={enrichedPrimaryScores?.overallScore}
-          comparedOverallScore={enrichedComparedScores?.overallScore}
-        />
+        {!hasNoMatchingTestCases && (
+          <Analytics
+            primaryRunId={primaryRunId}
+            comparedRunId={comparedRunId}
+            primaryRunName={primaryRunName}
+            comparedRunName={comparedRunName}
+            onlyMatchingTestCases={onlyMatchingTestCases}
+            primaryMatchedAnalytics={primaryMatchedAnalytics}
+            comparedMatchedAnalytics={comparedMatchedAnalytics}
+            primaryOverallScore={enrichedPrimaryScores?.overallScore}
+            comparedOverallScore={enrichedComparedScores?.overallScore}
+          />
+        )}
       </div>
-      <div className={SUMMARY_PANELS_GRID_CLASS}>
-        <MetricScoresSection
-          primaryData={enrichedPrimaryScores}
-          comparedData={enrichedComparedScores}
-          primaryRunName={primaryRunName}
-          comparedRunName={comparedRunName}
-          selectedStatistic={summaryState.selectedStatistic}
-          onSelectStatistic={onSelectStatistic}
-          onSelectMetric={onSelectDistributionMetric}
-        />
-        <DistributionSection
-          primaryRunId={primaryRunId}
-          comparedRunId={comparedRunId}
-          primaryRunName={primaryRunName}
-          comparedRunName={comparedRunName}
-          metricOptions={metricOptions}
-          primaryMetricScores={enrichedPrimaryScores}
-          comparedMetricScores={enrichedComparedScores}
-          selectedMetricName={summaryState.selectedDistributionMetricName}
-          onSelectMetric={onSelectDistributionMetric}
-          primaryExcludeEvalSummaryIds={primaryUnmatchedIds}
-          comparedExcludeEvalSummaryIds={comparedUnmatchedIds}
-        />
-      </div>
+      {hasNoMatchingTestCases ? (
+        <div className="flex min-h-0 flex-1 items-center justify-center">
+          <DialNoDataContent title={t(EntitiesI18nKey.NoResults)} />
+        </div>
+      ) : (
+        <div className={SUMMARY_PANELS_GRID_CLASS}>
+          <MetricScoresSection
+            primaryData={enrichedPrimaryScores}
+            comparedData={enrichedComparedScores}
+            primaryRunName={primaryRunName}
+            comparedRunName={comparedRunName}
+            selectedStatistic={summaryState.selectedStatistic}
+            onSelectStatistic={onSelectStatistic}
+            onSelectMetric={onSelectDistributionMetric}
+          />
+          <DistributionSection
+            primaryRunId={primaryRunId}
+            comparedRunId={comparedRunId}
+            primaryRunName={primaryRunName}
+            comparedRunName={comparedRunName}
+            metricOptions={metricOptions}
+            primaryMetricScores={enrichedPrimaryScores}
+            comparedMetricScores={enrichedComparedScores}
+            selectedMetricName={summaryState.selectedDistributionMetricName}
+            onSelectMetric={onSelectDistributionMetric}
+            primaryExcludeEvalSummaryIds={primaryUnmatchedIds}
+            comparedExcludeEvalSummaryIds={comparedUnmatchedIds}
+          />
+        </div>
+      )}
     </div>
   );
 };
