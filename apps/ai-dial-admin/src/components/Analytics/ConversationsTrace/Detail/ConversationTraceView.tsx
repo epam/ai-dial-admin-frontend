@@ -125,7 +125,7 @@ const ConversationTraceView: FC<Props> = ({
         <div className="flex flex-wrap items-center gap-2">
           <Stat
             label={t(ConversationsTraceI18nKey.TraceDuration)}
-            value={formatDurationMs(figures.durationMs) || UNAVAILABLE_VALUE}
+            value={formatDurationMs(figures.durationMs ?? null) || UNAVAILABLE_VALUE}
           />
           <Stat label={t(ConversationsTraceI18nKey.TraceTokens)} value={formatCompactNumber(figures.tokens) || '0'} />
           <Stat
