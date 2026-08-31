@@ -26,7 +26,6 @@ import { DialAppRunnerResource, DialResource } from '@/src/models/dial/resource'
 import { DialRole } from '@/src/models/dial/role';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { ApplicationRoute } from '@/src/types/routes';
-import { toCoreRunnerName } from '@/src/utils/app-runners/core-runner-name';
 import { toRunnerReference } from '@/src/utils/app-runners/runner-reference';
 import { validateAppRunner } from '@/src/utils/app-runners/validation';
 import { createSchemaSource } from '@/src/utils/entities/application-source';
@@ -102,7 +101,7 @@ const AppRunnerAssetView: FC<Props> = ({
       return;
     }
 
-    getResolvedRunnerSchema(toCoreRunnerName(id)).then((res) => {
+    getResolvedRunnerSchema(id).then((res) => {
       const resolved = res.success ? (res.response as DialApplicationScheme | undefined) : undefined;
       setApplicationProperties(getSchemaDefaults((resolved ?? originalRunner) as JSONSchema7));
     });
