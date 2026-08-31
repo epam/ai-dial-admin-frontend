@@ -4530,14 +4530,16 @@ result, so narrowing them client-side would report a slice as the complete answe
 | activity (`last_request_time`) | yes | none |
 | tokens (`total_tokens`) | yes | number |
 | cost (`total_price`) | yes | number |
-| deployments (`deployments`) | no | no |
+| deployments (`deployments`) | no | text, over the array's elements |
 | topics (`session_insights.topics`) | no | text |
 | Rating | no | no |
 
-The deployments column SHALL offer neither, because the query language expresses no ordering and no predicate
-over an array. The topics column SHALL offer a text filter but no sort: its value is a delimited string, so a
-lexicographic ordering would sort by whichever term happens to be written first and carry no meaning, while a
-contains predicate matches a term wherever it appears in the string.
+The deployments column SHALL offer a text filter but no sort. Its value is an array: a predicate over it is
+expressible as a test on the array's elements, specified under "A contains filter over an array-valued
+column resolves its values first", while an ordering of an array is not expressible at all. The topics
+column SHALL likewise offer a text filter but no sort: its value is a delimited string, so a lexicographic
+ordering would sort by whichever term happens to be written first and carry no meaning, while a contains
+predicate matches a term wherever it appears in the string.
 
 A predicate on an enrichment-backed field SHALL be gated on the entity schema exactly as the projection is. An
 instance that does not carry the enrichment would have the whole query rejected, not the one predicate
@@ -4556,9 +4558,11 @@ widen a range the period clips.
 Filter controls SHALL offer only operators the query language can express. An operator with no equivalent —
 notably prefix and suffix matching — MUST NOT be offered, since an offered operator that cannot be translated
 either fails or silently returns the wrong rows. Text columns SHALL offer contains, does-not-contain, equals
-and not-equals; number columns SHALL additionally offer the four magnitude comparisons. An incomplete filter
-entry — an operator chosen with no value — SHALL contribute no predicate rather than a predicate against an
-empty value.
+and not-equals; number columns SHALL additionally offer the four magnitude comparisons; a column of an enum
+type SHALL offer selection among the field's values instead of an operator list, as specified under "A column
+of an enum type filters by selecting from its observed values". An incomplete filter entry — an operator
+chosen with no value, or a value list with nothing selected — SHALL contribute no predicate rather than a
+predicate against an empty value.
 
 Column filters SHALL compose with the page's own controls as a conjunction: the search term, the time period,
 the feedback narrowing and every column filter SHALL all hold for a returned conversation. The page's filter
@@ -4739,6 +4743,13 @@ A derived column SHALL take:
   query for one such predicate — so a filter menu would take the listing down rather than narrow it. Both
   SHALL remain sortable: an ordering is expressible for either, and it is only the predicate that has no
   translation.
+
+  A derived column of an **enum** type SHALL offer the value filter specified under "A column of an enum
+  type filters by selecting from its observed values" rather than the text filter, and SHALL offer no
+  floating filter — the floating filter is a text entry, so it would write a text model over the value model
+  the translation reads. It SHALL remain sortable on the same terms as any other scalar column. The branch
+  SHALL key on the declared type alone: no list in the frontend names which fields are enums, so a field an
+  instance begins reporting as one gets the control with no frontend change.
 
 A field SHALL NOT be offered as a derived column when:
 
@@ -4997,15 +5008,28 @@ stored choice.
 - **THEN** a derived column of a scalar type offers a sort
 - **AND** the Rating, Topics and Deployments columns offer none
 
-### Requirement: Conversations grid names the deployments a conversation used
+#### Scenario: An enum-typed field's column offers the value filter
+
+- **WHEN** the schema reports a field of an enum type that no curated column reads
+- **THEN** its column offers the value filter rather than a text entry
+- **AND** it offers no floating filter
+- **AND** it remains sortable
+
+#### Scenario: A timestamp or boolean field's column still offers no filter
+
+- **WHEN** the schema reports a timestamp field and a boolean field
+- **THEN** neither column offers a filter
+- **AND** both remain sortable
+
+### Requirement: Conversations grid names and filters the deployments a conversation used
 
 The conversations grid SHALL present a curated **Deployments** column reading the rollup's `deployments`
-array, so an operator can see which deployments served a conversation without opening it. The column SHALL be
-part of the default visible set and SHALL be projected by the first list query.
+array, so an operator can see which deployments served a conversation without opening it. The column SHALL
+be part of the default visible set and SHALL be projected by the first list query.
 
 The column SHALL render its values as discrete pills with an overflow badge stating how many further values
-exist, and SHALL make the complete list reachable without a pointer, so the values hidden by the overflow are
-available to a keyboard user and not only on hover.
+exist, and SHALL make the complete list reachable without a pointer, so the values hidden by the overflow
+are available to a keyboard user and not only on hover.
 
 The column SHALL render the array **as recorded**. It MUST NOT narrow it, and it MUST NOT be labelled as
 naming models. `deployments` records every deployment that handled a hop — orchestrating deployments,
@@ -5014,14 +5038,23 @@ not derivable from the array. A name-shaped rule cannot decide it: a router or a
 plain name is indistinguishable from a model, while an embedding deployment that was billed is a legitimate
 member of the billed set. A column labelled for the field it reads needs no such guess and cannot misreport.
 
-Where a per-conversation set of **billed models** is wanted, it SHALL come from a conversation-level field the
-service reports. The turn rollup's `models` column is the authoritative billed set but is per turn, no
+Where a per-conversation set of **billed models** is wanted, it SHALL come from a conversation-level field
+the service reports. The turn rollup's `models` column is the authoritative billed set but is per turn, no
 server-side union over it is expressible, and a union over the bounded turn list a detail view loads would
 understate a longer conversation — so the grid MUST NOT synthesize one.
 
-The column SHALL NOT be sortable and SHALL NOT be filterable. The query language expresses no ordering or
-predicate over an array field, and the grid pages server-side, so any client-side ordering or filtering would
-apply to the loaded page rather than to the result and would misstate what it did.
+The column SHALL offer a text filter, answered as specified under "A contains filter over an array-valued
+column resolves its values first". Because the array is rendered as recorded and the filter tests it as
+recorded, a filter's matches SHALL be exactly the conversations whose visible pills satisfy it — the column
+MUST NOT filter over a value it does not show.
+
+The filter SHALL be a text entry rather than a selection among the deployments observed. The set of
+deployment names is open and grows with every deployment added to an instance, so a value list would
+present a moving set as a closed one.
+
+The column SHALL NOT be sortable. The query language expresses no ordering over an array field, and the
+grid pages server-side, so a client-side ordering would apply to the loaded page rather than to the result
+and would misstate what it did.
 
 #### Scenario: Deployments renders on first paint
 
@@ -5048,10 +5081,194 @@ apply to the loaded page rather than to the result and would misstate what it di
 - **THEN** it names deployments
 - **AND** the detail view's metadata panel names the same field the same way
 
-#### Scenario: Deployments offers no sort or filter affordance
+#### Scenario: Deployments filters but does not sort
 
 - **WHEN** the operator inspects the Deployments column header
-- **THEN** it offers neither a sort affordance nor a filter control
+- **THEN** a filter control is offered
+- **AND** no sort affordance is offered
+
+#### Scenario: The filter matches what the cell shows
+
+- **WHEN** the operator applies a contains filter matching one of a conversation's rendered pills
+- **THEN** that conversation is in the result
+
+#### Scenario: Deployments is filtered by text, not by a value list
+
+- **WHEN** the operator opens the Deployments column's filter
+- **THEN** a text entry with an operator list is offered
+- **AND** no list of observed deployment names is presented for selection
+
+### Requirement: A contains filter over an array-valued column resolves its values first
+
+A column backed by an array field SHALL offer the same operators a text column offers, and its predicate
+SHALL hold when **any element** of the array satisfies it. A predicate over a set either quantifies over
+its members or means nothing.
+
+The service's array predicates match whole elements, not substrings, so a contains filter SHALL be answered
+in two steps: the entered text SHALL first resolve to the set of values it matches, read from a scalar
+column carrying those values; the listing query SHALL then narrow on membership in that set. `equals` needs
+no resolution step and SHALL test membership directly. The negative operators SHALL hold where no element
+matches.
+
+The resolved set SHALL NOT be truncated. A truncated set silently changes what the filter means — it would
+return fewer conversations than match, with nothing to say so.
+
+Not truncating it SHALL be achieved by reading the resolution in pages until a page comes back short, under
+an ordering that makes those pages disjoint. A single read cannot express it: the service applies a default
+row limit to a query that names no page, and rejects a requested limit above its ceiling rather than
+clamping it, while more distinct values exist than that ceiling. A resolution that names no page is
+therefore truncated to the service's default, which is the failure this requirement forbids and is invisible
+at the call site. Where the walk cannot be completed, the filter SHALL fail rather than narrow on a partial
+set, because a partial set is the wrong answer the rule exists to prevent.
+
+Where the resolution step returns nothing, the filter SHALL narrow the result to nothing rather than being
+dropped: no value matched, so no conversation does.
+
+The resolution SHALL belong to the result rather than to the page. The values SHALL be resolved once for a
+result and reused by every later page of it, because the resolution reads a live table: resolved again per
+page, a later page could be narrowed by a different set than the first, and rows would duplicate or vanish
+across the scroll. A query that discovers a column's values for a filter SHALL be narrowed by the same
+resolved set the rows are, so a count cannot describe a different population than the rows it predicts.
+
+An array-valued column SHALL NOT be sortable. An array has no ordering the query language expresses, and a
+client-side ordering would order the loaded pages rather than the result.
+
+Making an array field filterable SHALL NOT make it a derived column. The rule excluding non-scalar types
+from becoming columns concerns rendering a structured value in a grid cell and is unchanged.
+
+#### Scenario: A contains filter matches on any element
+
+- **WHEN** the operator applies a contains filter of `gpt` to an array-valued column
+- **AND** a conversation's values are `["embedding-ada", "gpt-4o"]`
+- **THEN** that conversation is in the result
+
+#### Scenario: The entered text is resolved to values before the listing is narrowed
+
+- **WHEN** the operator applies a contains filter to an array-valued column
+- **THEN** the values matching the text are resolved first
+- **AND** the listing query narrows on membership in that resolved set
+
+#### Scenario: An equals filter tests membership without a resolution step
+
+- **WHEN** the operator applies an equals filter of `gpt-4o`
+- **THEN** conversations whose values include `gpt-4o` are returned
+- **AND** a conversation whose only value is `gpt-4o-mini` is not returned
+
+#### Scenario: A negated filter requires no element to match
+
+- **WHEN** the operator applies a does-not-contain filter of `claude`
+- **AND** a conversation's values are `["gpt-4o", "claude-sonnet"]`
+- **THEN** that conversation is not in the result
+
+#### Scenario: Text matching no value narrows the result to nothing
+
+- **WHEN** the entered text resolves to no values
+- **THEN** the result holds no conversations
+- **AND** the filter is not dropped as though nothing had been entered
+
+#### Scenario: The resolved set is not truncated
+
+- **WHEN** the entered text matches a large number of values
+- **THEN** every matched value takes part in the predicate
+- **AND** the result is not narrowed to a subset of the matches
+
+#### Scenario: The resolution is read in pages until one comes back short
+
+- **WHEN** the entered text matches more values than the service returns for one read
+- **THEN** further reads are issued at successive offsets
+- **AND** the walk ends on the first read that comes back short of a full page
+
+#### Scenario: A later page of one result reuses the values its first page resolved
+
+- **WHEN** a filter over an array-valued column is applied and the operator scrolls past the first page
+- **THEN** the later page is narrowed by the set the first page resolved
+- **AND** no further resolution is issued for it
+
+### Requirement: A column of an enum type filters by selecting from its observed values
+
+A column whose field the entity schema declares to be of an **enum** type SHALL offer a filter listing the
+field's values for selection rather than a free-text entry. A selection SHALL contribute a single
+set-membership predicate naming the selected values.
+
+The trigger SHALL be the declared type and nothing else. The frontend MUST NOT hold a list of which columns
+are enums, and MUST NOT infer enum-ness from how many distinct values a field is observed to have. A list
+drifts as an instance's enrichments change; a cardinality threshold misclassifies in both directions on the
+data as it stands — `session_insights.language` shows six values but is an open BCP-47 set, while
+`session_insights.activity_sub_task_type` has twenty-two values and is a genuine enum. Reading the type
+makes a field an instance begins reporting as an enum filterable with no frontend change.
+
+Values SHALL be discovered by a grouped count when the filter is opened, listed most frequent first with
+each value's count, so the operator sees the shape of the data before narrowing it.
+
+The value list MAY be bounded, unlike an array column's resolved set. A value the operator never sees is a
+value they cannot select, so a bounded list narrows what the control offers; a name missing from a resolved
+set changes what a filter the operator already applied means. The bound SHALL therefore sit well above the
+size of any closed value set the schema is expected to declare, so that reaching it is evidence a field has
+been typed `enum` in error rather than an ordinary outcome.
+
+The value query SHALL carry the view's period, the page's search and feedback narrowing, and every
+**other** column's filter — and SHALL NOT carry the opened column's own. Excluding the column's own
+predicate keeps its unselected values reachable, so a selection can be widened without first being cleared;
+carrying the rest keeps each count equal to what selecting that value returns.
+
+The list SHALL offer observed values only. A **null** SHALL NOT be presented as selectable: null on an
+enrichment-backed field means the enrichment has not reached that conversation, which is a statement about
+coverage rather than a value of the enum.
+
+A selection of no values SHALL contribute no predicate, as a text filter with an empty value does. Where
+the value query fails or returns nothing, the filter SHALL say so and SHALL contribute no predicate; it
+MUST NOT fall back to a text entry, since an operator who opened one control and was given another would
+enter a value under the wrong operator.
+
+A column of an enum type SHALL remain sortable on the same terms as any other scalar column.
+
+#### Scenario: Opening an enum filter lists its values with counts
+
+- **WHEN** the operator opens the filter on a column the schema types as enum
+- **THEN** a grouped count over that field is requested
+- **AND** the values are listed most frequent first, each with its count
+
+#### Scenario: The value query carries the page's other narrowing but not the column's own
+
+- **WHEN** the operator opens an enum column's filter while a period, a search term and another column's
+  filter are active
+- **AND** that same enum column already has values selected
+- **THEN** the value query carries the period, the search term and the other column's filter
+- **AND** it does not carry the opened column's own selection
+- **AND** every value of the column is still listed
+
+#### Scenario: A selection becomes one set-membership predicate
+
+- **WHEN** the operator selects two values in an enum column's filter
+- **THEN** the request carries a single predicate naming both values for that column
+
+#### Scenario: An empty selection contributes no predicate
+
+- **WHEN** an enum column's filter is opened and no value is selected
+- **THEN** the request carries no predicate for that column
+
+#### Scenario: Null is not offered as a value
+
+- **WHEN** an enum column's grouped count reports rows with no value alongside its values
+- **THEN** the filter lists only the values
+
+#### Scenario: Enum-ness follows the declared type, not the value count
+
+- **WHEN** the schema types a field as string and it is observed to hold six distinct values
+- **THEN** its column offers the text filter, not a value list
+
+#### Scenario: A newly declared enum field needs no frontend change
+
+- **WHEN** an instance's schema begins reporting a previously unknown field as an enum type
+- **THEN** that field's column offers the value filter
+- **AND** no frontend list names the field
+
+#### Scenario: A failed value query does not become a text filter
+
+- **WHEN** the grouped count for an enum column fails
+- **THEN** the filter states that the values could not be loaded
+- **AND** no text entry is offered in its place
+- **AND** the request carries no predicate for that column
 
 ### Requirement: Public Analytics endpoints are surfaced to the table detail page
 
