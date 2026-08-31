@@ -106,6 +106,8 @@ export default {
     Builders: 'Builders',
     BuildersDescription:
       'Customize behavior, manage interactions, and optimize performance to ensure seamless operation.',
+    Catalog: 'Catalog',
+    CatalogDescription: 'Catalog section',
     Approvals: 'Approvals',
     Metrics: 'Metrics',
     TestSuites: 'Test Suites',
