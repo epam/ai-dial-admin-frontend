@@ -119,16 +119,28 @@ describe('getGroupedSchemaColumn', () => {
     );
   });
 
-  test('should select EmptyCellRenderer for a shared field on a TURN row', () => {
+  test('should select EmptyCellRenderer for a shared field on a nested TURN row', () => {
     const column = getGroupedSchemaColumn(
       { name: 'field', type: TestCaseItemType.STRING, perTurn: false },
       vi.fn(),
       ctx,
     );
 
-    expect(column.cellRendererSelector?.(rendererParams({ rowType: GridRowType.TURN }))?.component).toBe(
-      EmptyCellRenderer,
+    expect(
+      column.cellRendererSelector?.(rendererParams({ rowType: GridRowType.TURN, isFlattened: false }))?.component,
+    ).toBe(EmptyCellRenderer);
+  });
+
+  test('should select the type-driven renderer for a shared field on a flattened TURN row', () => {
+    const column = getGroupedSchemaColumn(
+      { name: 'field', type: TestCaseItemType.STRING, perTurn: false },
+      vi.fn(),
+      ctx,
     );
+
+    expect(
+      column.cellRendererSelector?.(rendererParams({ rowType: GridRowType.TURN, isFlattened: true }))?.component,
+    ).toBe(EditableCellRenderer);
   });
 
   test('should NOT select StackedTurnsCellRenderer for a shared field on a GROUP row', () => {

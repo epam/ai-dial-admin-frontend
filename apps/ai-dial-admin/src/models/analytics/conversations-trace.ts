@@ -19,7 +19,7 @@ export enum ColumnProvenance {
 export type ConversationScalar = number | string | boolean | null;
 
 export interface ConversationRow extends ConversationRatingCounts {
-  chat_id: string;
+  client_session_id: string;
   project_id: string;
   user_hash: string | null;
   turn_count: number | string | null;
@@ -27,13 +27,13 @@ export interface ConversationRow extends ConversationRatingCounts {
   total_price: number | string | null;
   last_request_time: number | string | null;
   first_request_time: number | string | null;
-  'conversation_insights.title'?: string | null;
+  'session_insights.title'?: string | null;
 }
 
 export type ConversationListRow = ConversationRow & Record<string, ConversationScalar | undefined>;
 
 export interface ConversationTitleSource {
-  'conversation_insights.title'?: string | null;
+  'session_insights.title'?: string | null;
 }
 
 export interface ConversationsPage {
@@ -154,8 +154,10 @@ export interface ProvenanceEntity {
   name: string;
 }
 
+// The view's rows are sessions: one row per client session id, which the service sets to the conversation's
+// `chat_id` wherever a hop carries one. `ChatId` keeps its symbol name so every call site reads unchanged.
 export enum ConversationsField {
-  ChatId = 'chat_id',
+  ChatId = 'client_session_id',
   ProjectId = 'project_id',
   UserHash = 'user_hash',
   TurnCount = 'turn_count',
@@ -172,14 +174,15 @@ export enum ConversationsField {
   Traces = 'traces',
   // The insight fields are enrichment columns: the service exposes each under a qualified flat name, and
   // the dot belongs to the name rather than marking a path into a nested value.
-  InsightTitle = 'conversation_insights.title',
-  InsightSummary = 'conversation_insights.summary',
-  InsightSentiment = 'conversation_insights.sentiment',
-  InsightSentimentScore = 'conversation_insights.sentiment_score',
-  InsightTopic = 'conversation_insights.topic',
-  InsightTopics = 'conversation_insights.topics',
-  InsightLanguage = 'conversation_insights.language',
-  InsightResolutionStatus = 'conversation_insights.resolution_status',
+  InsightTitle = 'session_insights.title',
+  InsightSummary = 'session_insights.summary',
+  InsightSentiment = 'session_insights.sentiment',
+  InsightTopic = 'session_insights.topic',
+  InsightTopics = 'session_insights.topics',
+  InsightLanguage = 'session_insights.language',
+  InsightResolutionStatus = 'session_insights.resolution_status',
+  InsightActivityType = 'session_insights.activity_type',
+  InsightActivitySubTaskType = 'session_insights.activity_sub_task_type',
 }
 
 // Grid-only column ids: every other column binds to a `ConversationsField`, but Rating is composed
@@ -240,7 +243,9 @@ export interface ConversationColumnGroup {
 }
 
 export interface ConversationDetailRow {
-  chat_id: string;
+  client_session_id: string;
+  // Which field the id was read from. Decides the column every hop-log read for this session predicates on.
+  client_session_source?: string | null;
   project_id: string | null;
   user_hash: string | null;
   turn_count: number | string | null;
@@ -257,14 +262,15 @@ export interface ConversationDetailRow {
   traces?: string[] | null;
   // Optional because the insight enrichment runs per conversation: a conversation the evaluator has not
   // processed has no insight row at all, so the service returns no value under these names.
-  'conversation_insights.title'?: string | null;
-  'conversation_insights.summary'?: string | null;
-  'conversation_insights.sentiment'?: string | null;
-  'conversation_insights.sentiment_score'?: number | string | null;
-  'conversation_insights.topic'?: string | null;
-  'conversation_insights.topics'?: string | null;
-  'conversation_insights.language'?: string | null;
-  'conversation_insights.resolution_status'?: string | null;
+  'session_insights.title'?: string | null;
+  'session_insights.summary'?: string | null;
+  'session_insights.sentiment'?: string | null;
+  'session_insights.topic'?: string | null;
+  'session_insights.topics'?: string | null;
+  'session_insights.language'?: string | null;
+  'session_insights.resolution_status'?: string | null;
+  'session_insights.activity_type'?: string | null;
+  'session_insights.activity_sub_task_type'?: string | null;
 }
 
 export interface ConversationDetailResult {
@@ -290,8 +296,20 @@ export interface ConversationFeedbackPage {
   isCommentTextReadable: boolean;
 }
 
+// What a session's hops are located by. `source` is the rollup's `client_session_source`: the value
+// `chat_id` means the id came from a conversation header, and anything else means it came from a coding
+// harness, whose hops carry no `chat_id` at all.
+export interface SessionScope {
+  id: string;
+  source?: string | null;
+}
+
 export enum UsageLogField {
   ChatId = 'chat_id',
+  // The identity enrichment's normalised session key: a chat's own id where the hop carries one, the
+  // harness session id otherwise. Not one of the table's bloom-filtered columns, so it scopes a read only
+  // where `chat_id` cannot — see `sessionScopeField`.
+  ClientSessionId = 'usage_client_identity.client_session_id',
   TraceId = 'trace_id',
   CoreSpanId = 'core_span_id',
   CoreParentSpanId = 'core_parent_span_id',
@@ -395,7 +413,7 @@ export interface ConversationTraceRootRow {
   total_tokens: number | string | null;
   total_price: number | string | null;
   deployment_price: number | string | null;
-  chat_id: string | null;
+  'usage_client_identity.client_session_id': string | null;
   request_uri: string | null;
   event_kind: string | null;
   number_request_messages: number | string | null;

@@ -100,7 +100,8 @@ const ConversationInsightsPanel: FC<Props> = ({ fields }) => {
         <InsightTerm field={fields[ConversationsField.InsightTopic]} />
         <InsightTerm field={fields[ConversationsField.InsightTopics]} />
         <InsightTerm field={fields[ConversationsField.InsightLanguage]} />
-        <InsightTerm field={fields[ConversationsField.InsightSentimentScore]} />
+        <InsightTerm field={fields[ConversationsField.InsightActivityType]} />
+        <InsightTerm field={fields[ConversationsField.InsightActivitySubTaskType]} />
       </dl>
     </div>
   );

@@ -4,12 +4,12 @@ import { useCallback, useRef, useState } from 'react';
 
 import { getConversationTranscript } from '@/src/app/[lang]/conversations-trace/actions';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
-import { ConversationTranscript, TranscriptState } from '@/src/models/analytics/conversations-trace';
+import { ConversationTranscript, SessionScope, TranscriptState } from '@/src/models/analytics/conversations-trace';
 
 const EMPTY_TRANSCRIPT: ConversationTranscript = { state: TranscriptState.LoadFailed, messages: [], loadedTurns: null };
 
 interface Params {
-  chatId: string;
+  scope: SessionScope;
   projectId: string;
   lastRequestTime: number | string | null;
   nowMs: number;
@@ -25,7 +25,7 @@ interface Params {
  * Fetched once. A reader switching back and forth is looking at the same conversation, and re-reading bodies
  * for it would be the expensive half of this page repeated for no new information.
  */
-export const useConversationTranscript = ({ chatId, projectId, lastRequestTime, nowMs }: Params) => {
+export const useConversationTranscript = ({ scope, projectId, lastRequestTime, nowMs }: Params) => {
   const [transcript, setTranscript] = useState<ConversationTranscript | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const getReqRef = useRef(useProtectedRequest());
@@ -39,7 +39,7 @@ export const useConversationTranscript = ({ chatId, projectId, lastRequestTime, 
     setIsLoading(true);
 
     try {
-      const result = await getReqRef.current(getConversationTranscript, chatId, projectId, lastRequestTime, nowMs);
+      const result = await getReqRef.current(getConversationTranscript, scope, projectId, lastRequestTime, nowMs);
 
       setTranscript(result?.response ?? EMPTY_TRANSCRIPT);
       // A failed read is not a read: clearing the guard lets a reader retry by switching away and back,
@@ -51,7 +51,7 @@ export const useConversationTranscript = ({ chatId, projectId, lastRequestTime, 
     } finally {
       setIsLoading(false);
     }
-  }, [chatId, projectId, lastRequestTime, nowMs]);
+  }, [scope, projectId, lastRequestTime, nowMs]);
 
   return { transcript, isLoading, onRequestTranscript };
 };

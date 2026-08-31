@@ -21,7 +21,7 @@ const ratingRow = (chat_id: string, overrides: Partial<ConversationRatingRow> = 
 });
 
 const row = (overrides: Partial<ConversationRow> = {}): ConversationRow => ({
-  chat_id: 'chat-1',
+  client_session_id: 'chat-1',
   project_id: 'data-team',
   user_hash: 'db7327ba3decd351',
   turn_count: 3,
@@ -38,7 +38,7 @@ const row = (overrides: Partial<ConversationRow> = {}): ConversationRow => ({
 });
 
 const rows = (count: number, overrides: Partial<ConversationRow> = {}) =>
-  Array.from({ length: count }, (_, index) => row({ chat_id: `chat-${index}`, ...overrides }));
+  Array.from({ length: count }, (_, index) => row({ client_session_id: `chat-${index}`, ...overrides }));
 
 describe('conversationRatingCounts', () => {
   test('composes the negative figure from the zero and negative counts', () => {
@@ -148,7 +148,7 @@ describe('negativeRatingGap :: unresolved figures', () => {
 
 describe('attachRatings', () => {
   test('takes both directions from the one result set', () => {
-    const given = [row({ chat_id: 'chat-1' }), row({ chat_id: 'chat-2' })];
+    const given = [row({ client_session_id: 'chat-1' }), row({ client_session_id: 'chat-2' })];
 
     const attached = attachRatings(given, [
       ratingRow('chat-1', { rating_up: 2, rate_zero: 3 }),
@@ -163,7 +163,7 @@ describe('attachRatings', () => {
 
   test('carries the caveat figures onto the row so the cell can state them', () => {
     const [attached] = attachRatings(
-      [row({ chat_id: 'chat-1' })],
+      [row({ client_session_id: 'chat-1' })],
       [ratingRow('chat-1', { rate_zero: 4, rate_bool_false: 1, rate_raw: 1, rate_events: 4 })],
     );
 
@@ -173,12 +173,12 @@ describe('attachRatings', () => {
   test('ignores rating rows for conversations not on the page, preserving order and other fields', () => {
     const attached = attachRatings(rows(2), [ratingRow('chat-9', { rating_up: 5 })]);
 
-    expect(attached.map(({ chat_id }) => chat_id)).toEqual(['chat-0', 'chat-1']);
+    expect(attached.map(({ client_session_id }) => client_session_id)).toEqual(['chat-0', 'chat-1']);
     expect(attached[0]).toMatchObject({ project_id: 'data-team', rating_up: 0, rating_down: 0 });
   });
 
   test('does not mutate the rows it was given', () => {
-    const given = [row({ chat_id: 'chat-1', rating_up: null, rating_down: null })];
+    const given = [row({ client_session_id: 'chat-1', rating_up: null, rating_down: null })];
 
     attachRatings(given, [ratingRow('chat-1', { rating_up: 1 })]);
 
@@ -190,6 +190,11 @@ describe('unresolvedRatings', () => {
   test('marks both sides unresolved so the cell shows nothing rather than a false zero', () => {
     const [marked] = unresolvedRatings([row({ rating_up: 2, rating_down: 1 })]);
 
-    expect(marked).toMatchObject({ chat_id: 'chat-1', rating_up: null, rating_down: null, provable_down: null });
+    expect(marked).toMatchObject({
+      client_session_id: 'chat-1',
+      rating_up: null,
+      rating_down: null,
+      provable_down: null,
+    });
   });
 });

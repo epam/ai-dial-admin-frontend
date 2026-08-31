@@ -12,7 +12,7 @@ const NOW_MS = Date.parse('2026-07-22T12:12:52.157Z');
 const TITLE = 'Refund policy for EU orders';
 
 const CONVERSATION: ConversationDetailRow = {
-  chat_id: CHAT_ID,
+  client_session_id: CHAT_ID,
   project_id: 'internal-copilot',
   user_hash: 'db73',
   turn_count: 911,
@@ -26,7 +26,7 @@ const CONVERSATION: ConversationDetailRow = {
   duration_ms: 0,
   avg_duration_ms: 0,
   deployments: ['applications/internal/assistant', 'anthropic_switchyard-model', 'anthropic.claude-opus-4-8'],
-  'conversation_insights.title': TITLE,
+  'session_insights.title': TITLE,
 };
 
 const renderHeader = (overrides: Partial<ConversationDetailRow> = {}) =>
@@ -81,7 +81,7 @@ describe('ConversationDetailHeader', () => {
   // Falling back to the id would name the conversation after its own hash, and the id is already on the
   // line below — so the heading says the name is missing instead.
   test('marks the heading unavailable when no insight title exists', () => {
-    renderHeader({ 'conversation_insights.title': null });
+    renderHeader({ 'session_insights.title': null });
 
     const heading = screen.getByRole('heading', { level: 1 });
 
@@ -91,7 +91,7 @@ describe('ConversationDetailHeader', () => {
 
   // A heading whose only text is a dash names nothing for a screen reader.
   test('gives an untitled conversation an accessible heading name', () => {
-    renderHeader({ 'conversation_insights.title': null });
+    renderHeader({ 'session_insights.title': null });
 
     expect(screen.getByLabelText(ConversationsTraceI18nKey.NoTitle)).toBeInTheDocument();
   });

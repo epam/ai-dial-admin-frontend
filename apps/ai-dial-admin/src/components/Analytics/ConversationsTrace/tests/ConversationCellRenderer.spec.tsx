@@ -9,7 +9,7 @@ import { ConversationRow } from '@/src/models/analytics/conversations-trace';
 const CHAT_ID = '7ab178e9-f72c-43b4-8b58-23caefc3594b';
 
 const row = (overrides: Partial<ConversationRow> = {}): ConversationRow => ({
-  chat_id: CHAT_ID,
+  client_session_id: CHAT_ID,
   project_id: 'data-team',
   user_hash: 'db7327ba3decd351',
   turn_count: 13,
@@ -34,7 +34,7 @@ describe('ConversationCellRenderer', () => {
 
   // The cell is the conversation's whole identity: its name above, its id below.
   test('shows the insight title above the id', () => {
-    renderCell(row({ 'conversation_insights.title': 'Poland GDP for 2024' } as Partial<ConversationRow>));
+    renderCell(row({ 'session_insights.title': 'Poland GDP for 2024' } as Partial<ConversationRow>));
 
     expect(screen.getByText('Poland GDP for 2024')).toBeInTheDocument();
     expect(screen.getByText(CHAT_ID)).toBeInTheDocument();
@@ -47,7 +47,7 @@ describe('ConversationCellRenderer', () => {
     ['a null title', null],
     ['a whitespace-only title', '   '],
   ])('marks the title unavailable rather than repeating the id for %s', (_label, title) => {
-    renderCell(row({ 'conversation_insights.title': title } as Partial<ConversationRow>));
+    renderCell(row({ 'session_insights.title': title } as Partial<ConversationRow>));
 
     expect(screen.getByText(UNAVAILABLE_VALUE)).toBeInTheDocument();
     expect(screen.getAllByText(CHAT_ID)).toHaveLength(1);
@@ -56,7 +56,7 @@ describe('ConversationCellRenderer', () => {
   // Real ids run from 21 to several hundred characters, some of them URL-like rather than opaque ids.
   test('keeps a long id reachable rather than only truncating it', () => {
     const longId = `${'9m4JMektXTE1v1UxkuWzZ2kBJcgRqgXDrVVuatmvVPqy'}/en/what%20is%20the%20latest%20forecast`;
-    renderCell(row({ chat_id: longId }));
+    renderCell(row({ client_session_id: longId }));
 
     expect(screen.getByText(longId)).toBeInTheDocument();
   });
@@ -71,7 +71,7 @@ describe('ConversationCellRenderer', () => {
   });
 
   test('renders nothing when the conversation id is empty', () => {
-    const { container } = renderCell(row({ chat_id: '' }));
+    const { container } = renderCell(row({ client_session_id: '' }));
 
     expect(container).toBeEmptyDOMElement();
   });

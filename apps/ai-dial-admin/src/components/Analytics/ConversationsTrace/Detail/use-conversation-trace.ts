@@ -8,6 +8,7 @@ import {
   ConversationSpanRow,
   ConversationTraceFigures,
   ModelCallOutput,
+  SessionScope,
 } from '@/src/models/analytics/conversations-trace';
 
 interface TraceState {
@@ -20,7 +21,7 @@ interface TraceState {
   hasLoadError: boolean;
 }
 
-export const useConversationTrace = (chatId: string) => {
+export const useConversationTrace = (scope: SessionScope) => {
   const [trace, setTrace] = useState<TraceState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedSpanId, setSelectedSpanId] = useState<string | null>(null);
@@ -32,7 +33,7 @@ export const useConversationTrace = (chatId: string) => {
       setSelectedSpanId(null);
 
       try {
-        const result = await getReqRef.current(getConversationSpans, chatId, figures.traceId);
+        const result = await getReqRef.current(getConversationSpans, scope, figures.traceId);
         const spans = result?.response?.spans ?? [];
 
         setTrace({
@@ -50,7 +51,7 @@ export const useConversationTrace = (chatId: string) => {
         setIsLoading(false);
       }
     },
-    [chatId],
+    [scope],
   );
 
   const onCloseTrace = useCallback(() => {

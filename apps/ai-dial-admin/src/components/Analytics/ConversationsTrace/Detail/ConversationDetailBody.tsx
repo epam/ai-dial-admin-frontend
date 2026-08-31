@@ -21,12 +21,14 @@ import {
   ConversationTraceFigures,
   ConversationRatingCounts,
   RatingCounts as RatingCountsModel,
+  SessionScope,
 } from '@/src/models/analytics/conversations-trace';
 import { attributeRatingsToTraces, traceCardTitle } from '@/src/utils/analytics/conversation-trace-groups';
 import { questionsByTurn } from '@/src/utils/analytics/conversation-transcript';
 
 interface Props {
   conversation: ConversationDetailRow;
+  scope: SessionScope;
   // Whether this caller can read body columns at all — a schema fact, resolved at page open, so the Chat
   // option is gated accurately before any body read runs.
   isTranscriptReadable: boolean;
@@ -95,6 +97,7 @@ const ConversationDetailBody: FC<Props> = ({
   isCommentTextReadable,
   nowMs,
   onOpenTrace,
+  scope,
 }) => {
   const t = useI18n();
   const isChatDisabled = !isTranscriptReadable;
@@ -109,7 +112,7 @@ const ConversationDetailBody: FC<Props> = ({
     isLoading: isTranscriptLoading,
     onRequestTranscript,
   } = useConversationTranscript({
-    chatId: conversation.chat_id,
+    scope,
     projectId,
     lastRequestTime: conversation.last_request_time,
     nowMs,
@@ -132,7 +135,7 @@ const ConversationDetailBody: FC<Props> = ({
   );
 
   const { groups, hasMore, isLoading, hasLoadError, onLoadMore } = useConversationTraces({
-    chatId: conversation.chat_id,
+    scope,
     projectId,
     firstRequestTime: conversation.first_request_time,
     lastRequestTime: conversation.last_request_time,

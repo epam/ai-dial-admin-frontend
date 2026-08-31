@@ -57,12 +57,12 @@ const ConversationDetailHeader: FC<Props> = ({ conversation, nowMs }) => {
       label: t(ConversationsTraceI18nKey.DetailId),
       value: (
         <span className="inline-block max-w-[260px] align-bottom">
-          <DialEllipsisTooltip text={conversation.chat_id} />
+          <DialEllipsisTooltip text={conversation.client_session_id} />
         </span>
       ),
       action: (
         <CopyButton
-          value={conversation.chat_id}
+          value={conversation.client_session_id}
           valueLabel={t(ConversationsTraceI18nKey.Conversation)}
           className="shrink-0"
         />

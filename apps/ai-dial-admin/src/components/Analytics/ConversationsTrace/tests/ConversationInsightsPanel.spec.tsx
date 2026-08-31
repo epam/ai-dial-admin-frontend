@@ -19,7 +19,8 @@ const EVALUATED: Partial<ConversationDetailRow> = {
   [ConversationsField.InsightTopic]: 'api keys',
   [ConversationsField.InsightTopics]: 'api keys, rotation, project admin',
   [ConversationsField.InsightLanguage]: 'en',
-  [ConversationsField.InsightSentimentScore]: '-0.4',
+  [ConversationsField.InsightActivityType]: 'coding',
+  [ConversationsField.InsightActivitySubTaskType]: 'refactoring',
 };
 
 const setup = (fields: Partial<ConversationDetailRow> = EVALUATED) =>
@@ -85,11 +86,11 @@ describe('ConversationInsightsPanel', () => {
     expect(screen.queryByText(ConversationsTraceI18nKey.DetailTopic)).toBeNull();
   });
 
-  test('renders the sentiment score beside the sentiment it buckets', () => {
+  test('renders the activity type beside the work it classifies', () => {
     setup();
 
-    const label = screen.getByText(ConversationsTraceI18nKey.DetailSentimentScore);
+    const label = screen.getByText(ConversationsTraceI18nKey.DetailActivityType);
 
-    expect(label.parentElement).toHaveTextContent('-0.4');
+    expect(label.parentElement).toHaveTextContent('coding');
   });
 });

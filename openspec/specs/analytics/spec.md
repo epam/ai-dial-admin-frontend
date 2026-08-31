@@ -2389,13 +2389,20 @@ The conversations page SHALL provide a feedback filter with exactly four mutuall
 positive, negative, and rated — defaulting to all. It SHALL reuse the shared `DialSegmentedControl`.
 
 Feedback lives in the `response_ratings` entity — the per-response rollup of DIAL's rate events, keyed on the
-rated `response_id` and carrying the `chat_id` the rating was submitted from — which the conversation rollup
+rated `response_id` and carrying the `chat_id` the rating was submitted from — which the session rollup
 does not include, and the structured-query DSL accepts a single `entity` with no join construct. A feedback
 filter SHALL therefore be resolved as two queries: first a candidate query over `response_ratings` returning
-the `chat_id` values carrying the requested feedback, then the conversation query over `conversations`
+the `chat_id` values carrying the requested feedback, then the session query over `sessions`
 narrowed to those ids with an `in` predicate. Both SHALL be issued server-side with the caller's token, and
-the `all` state SHALL issue only the conversation query, so the default path costs exactly one request per
+the `all` state SHALL issue only the session query, so the default path costs exactly one request per
 page.
+
+The two ids join without translation: the analytics service sets a session's id to the conversation's
+`chat_id` wherever the hop carries one, so a rating's `chat_id` is a `client_session_id` for exactly the
+sessions that have ratings. **A session that did not originate in DIAL Chat therefore has no rating and SHALL
+NOT be presented as unrated-by-measurement.** Coding-agent traffic submits no rate events, so any state other
+than `all` narrows the result to chat-origin sessions as a consequence of the data rather than as a filter on
+client type, and the affordance MUST NOT be described as one.
 
 The rating source SHALL be the per-response rollup rather than the raw rate-event log. The rollup partitions
 each response's events into additive counts, which is what allows a direction to be selected and counted from
@@ -2420,7 +2427,7 @@ be presented as the complete set of conversations carrying that feedback. The di
 while the capped filter state is applied and SHALL clear when the filter state no longer reaches the cap.
 
 The candidate query SHALL be aggregate mode over `response_ratings` grouped by `chat_id`, carry time bounds
-over `last_rate_time` matching the period the conversation query is bounded to, and an empty-id guard, and
+over `last_rate_time` matching the period the session query is bounded to, and an empty-id guard, and
 select `chat_id` plus `max(last_rate_time)`. It SHALL be ordered by most recent rating, so that if the
 candidate set reaches its limit the ids retained are the most recently rated ones. Its limit SHALL NOT exceed
 1000, the service's hard maximum.
@@ -2451,7 +2458,7 @@ detected, and the rollup's partition leaves nothing outside it.
 When the candidate query returns no ids the page SHALL return no rows **without** issuing the conversation
 query: the service rejects an empty `in` list with HTTP 400, and "nothing carries this feedback" is already
 the complete answer. Blank ids SHALL be dropped from the candidate set. When the candidate query fails, the
-failure SHALL propagate and the conversation query MUST NOT run.
+failure SHALL propagate and the session query MUST NOT run.
 
 The page MUST NOT fall back to the raw rate-event log when the rollup is absent. The rollup is provisioned
 per instance exactly as the conversation and turn rollups are, and the page cannot render without those
@@ -2462,7 +2469,7 @@ maintained beside the first.
 
 - **WHEN** a feedback state other than all is selected
 - **THEN** a query against `response_ratings` is issued first, carrying the state's rate predicate
-- **AND** a query against `conversations` follows, restricted to the returned ids by an `in` predicate
+- **AND** a query against `sessions` follows, restricted to the returned ids by an `in` predicate
 - **AND** both carry the caller's token
 
 #### Scenario: The first page costs one request, not two
@@ -2480,7 +2487,7 @@ maintained beside the first.
 #### Scenario: The default state costs one query per page
 
 - **WHEN** the feedback filter is in its all state
-- **THEN** only the conversation query is issued and it carries no `in` predicate
+- **THEN** only the session query is issued and it carries no `in` predicate
 
 #### Scenario: A capped candidate set is disclosed
 
@@ -2497,12 +2504,12 @@ maintained beside the first.
 
 - **WHEN** the candidate query returns no ids
 - **THEN** no rows are returned
-- **AND** the conversation query is not issued
+- **AND** the session query is not issued
 
 #### Scenario: The candidate query fails
 
 - **WHEN** the candidate query returns a failure
-- **THEN** that failure is returned and the conversation query is not issued
+- **THEN** that failure is returned and the session query is not issued
 
 #### Scenario: Negative feedback includes a zero rating
 
@@ -2520,7 +2527,13 @@ maintained beside the first.
 #### Scenario: Feedback composes with the other filters
 
 - **WHEN** a feedback state is selected while a search term and a time range are applied
-- **THEN** the narrowed conversation query still carries the search predicates and the time bounds
+- **THEN** the narrowed session query still carries the search predicates and the time bounds
+
+#### Scenario: An agent session falls outside every feedback state but all
+
+- **WHEN** a coding-agent session is in the period and the rated state is selected
+- **THEN** the session is absent from the result, its id having carried no rating
+- **AND** the affordance does not describe itself as filtering by client
 
 #### Scenario: An instance without the rating rollup reports a failed read
 
@@ -2740,10 +2753,14 @@ pages already shown, and SHALL still raise the notification.
 ### Requirement: Rating column resolved for the displayed page
 
 The grid SHALL show a Rating column giving each conversation's positive and negative rating counts, attributed
-in the provenance band to `response_ratings` rather than to `conversations`.
+in the provenance band to `response_ratings` rather than to `sessions`.
 
-Ratings SHALL be resolved by a query issued **after** the conversation query, restricted by `in` to exactly the
-conversation ids in the page just returned. Resolving them from the feedback filter's candidate set instead
+A session with no rating SHALL render the same unavailable placeholder as a conversation nobody rated. An
+agent session can carry no rating at all, so the empty cell SHALL NOT be styled or worded as a defect, and
+the column MUST NOT be hidden for such a row — a column that disappears per row reads as a rendering fault.
+
+Ratings SHALL be resolved by a query issued **after** the session query, restricted by `in` to exactly the
+session ids in the page just returned. Resolving them from the feedback filter's candidate set instead
 MUST NOT be done: that set is capped, so a displayed conversation could fall outside it and be reported as
 unrated when it is not. The ratings query SHALL be skipped entirely when the returned page has no rows.
 
@@ -2772,7 +2789,7 @@ fixed what a numeric zero means. Stating only the uncaptured cause would contrad
 proportion quoted beside it. A cell whose negative figure is fully attributable, and a cell
 with no negative ratings, SHALL carry no caveat: a caveat on every cell would stop being read.
 
-The query SHALL carry time bounds over `last_rate_time` matching the period the conversation query is bounded
+The query SHALL carry time bounds over `last_rate_time` matching the period the session query is bounded
 to. Bounding them identically keeps the column and the feedback filter consistent. The consequence — a rating
 given outside the selected period is not counted — is accepted for that consistency.
 
@@ -2841,6 +2858,12 @@ comment count is stated on the detail view's feedback panel instead.
 
 - **WHEN** a conversation has no ratings in the period
 - **THEN** both sides show a muted zero
+
+#### Scenario: A session that can carry no rating renders the ordinary placeholder
+
+- **WHEN** the grid renders a coding-agent session
+- **THEN** its Rating cell shows the same unavailable placeholder an unrated conversation shows
+- **AND** the column is still present for that row
 
 #### Scenario: A failed ratings lookup shows nothing rather than zero
 
@@ -2962,12 +2985,12 @@ resilient if the mapping changes.
 
 The system SHALL provide
 `buildConversationListQuery({ range, search, chatIds, sort, columnFilters, visibleFields, offset })` in
-`src/utils/analytics/conversations-queries.ts` returning a `StructuredQuery` over the entity `conversations`
-in **row mode**. The conversation rollup is materialized by the analytics service — one row
-per `chat_id`, produced by an aggregate pipeline over `dial_usage_log` — so the query SHALL read stored
+`src/utils/analytics/conversations-queries.ts` returning a `StructuredQuery` over the entity `sessions`
+in **row mode**. The session rollup is materialized by the analytics service — one row
+per `client_session_id`, produced by an aggregate pipeline over `dial_usage_log` — so the query SHALL read stored
 columns and MUST NOT group or aggregate.
 
-The select SHALL name **`chat_id` unconditionally**, and nothing else unconditionally. It is the only field
+The select SHALL name **`client_session_id` unconditionally**, and nothing else unconditionally. It is the only field
 read outside a cell renderer — the grid keys its rows by it, a row click navigates by it, and the loaded set
 is mapped by it — so a row without it is unusable whatever the column state. A sort or a filter needs no
 field named here: both are resolved server-side by field name, not from the projected row.
@@ -2989,8 +3012,8 @@ A field SHALL be projected according to **what projecting it costs**, in three c
   and the measurement bears that out: adding the one heavy field to ten scalar columns took the read from
   1.44 MiB to 5.39 MiB — 2.7× the other ten together;
 - a field the service reports under an **enrichment namespace** — a name qualified by the enrichment that
-  supplies it, `conversation_insights.` and `conversation_buckets.` being two the `conversations` entity
-  exposes — SHALL be named only while that field's column is visible. The service joins an enrichment only
+  supplies it, `session_insights.` being the one the `sessions` entity exposes today — SHALL be named only
+  while that field's column is visible. The service joins an enrichment only
   when a query names one of its columns, so naming one unconditionally would add that join to every page of
   every scroll, for columns the operator has not asked for.
 
@@ -2999,7 +3022,7 @@ flag for a heavy field — rather than by a list of field names held in the fron
 newly marks heavy, or an enrichment newly added to the entity, is classified without a code change.
 
 All three rules SHALL apply to a **curated** column's field as well as a derived one's, with no exemption
-beyond `chat_id`. A curated column is
+beyond `client_session_id`. A curated column is
 designed rather than derived, but it still reads a stored field, so a projection that skipped it would render
 an empty cell for data the row does carry, and it is classified by the same test. The identity column's
 enrichment field is the one exception and SHALL be named unconditionally: that column cannot be hidden, so
@@ -3025,7 +3048,7 @@ figure. Copy MUST NOT claim it counts individual hops.
 
 The filter SHALL be `and[ ge(last_request_time, startMs), le(last_request_time, endMs) ]`. The time bounds
 SHALL apply to `last_request_time`, so a selected period means *conversations whose last activity falls in the
-period*. The query MUST NOT carry an empty-`chat_id` guard: the pipeline's own membership predicate excludes
+period*. The query MUST NOT carry an empty-`client_session_id` guard: the pipeline's own membership predicate excludes
 those rows, so every row of the entity has a non-empty id.
 
 The projection SHALL NOT be what scales with data volume, and this requirement SHALL NOT be read as a
@@ -3034,7 +3057,7 @@ performance control. Measured across every projection variant above, the rows re
 ordering is what grows with the data; the column list does not.
 
 When a non-blank `search` term is supplied the filter SHALL additionally carry one `or` group of two `ico`
-predicates matching `chat_id` and `project_id`. The term SHALL be trimmed, and a blank or whitespace-only term
+predicates matching `client_session_id` and `project_id`. The term SHALL be trimmed, and a blank or whitespace-only term
 SHALL add no predicate at all rather than an `ico` against the empty string, which would match every row at
 the cost of a scan. Both targets are base columns of the entity, so no select-alias restriction applies.
 
@@ -3042,14 +3065,14 @@ Search SHALL NOT reach the conversation title either: the title is an enrichment
 conversation the evaluator has not processed, so a term matched against it would silently narrow the result to
 enriched conversations only.
 
-Search MUST NOT reach message content: no column of `conversations` carries it, and the only column that
+Search MUST NOT reach message content: no column of `sessions` carries it, and the only column that
 could — `dial_usage_log.request_body` — is catalogued `sensitive` and belongs to a different entity. Search
 SHALL NOT reach `user_hash` either: selecting the column for display does not make a surrogate a useful
 free-text target, and a partial-match predicate over it would cost a scan for a value operators paste whole —
 the user column's own filter is the exact-value input for it. The search affordance SHALL name only the fields
 search actually reaches.
 
-When `chatIds` is non-empty the filter SHALL additionally carry `in(chat_id, chatIds)`, which is how the
+When `chatIds` is non-empty the filter SHALL additionally carry `in(client_session_id, chatIds)`, which is how the
 feedback filter narrows the result.
 
 When `columnFilters` is non-empty the filter SHALL additionally carry one predicate per entry, conjoined with
@@ -3063,8 +3086,8 @@ An array field SHALL carry neither a sort key nor a filter predicate: the query 
 or comparison over one, so a request to sort or filter by such a field SHALL be rejected rather than
 approximated client-side over the loaded page.
 
-The sort SHALL be the caller's sort keys, if any, followed by `{ chat_id, asc }`; with no caller sort keys it
-SHALL be `[{ last_request_time, desc }, { chat_id, asc }]`. The trailing `chat_id asc` tiebreaker is required
+The sort SHALL be the caller's sort keys, if any, followed by `{ client_session_id, asc }`; with no caller sort keys it
+SHALL be `[{ last_request_time, desc }, { client_session_id, asc }]`. The trailing `client_session_id asc` tiebreaker is required
 in every case: the service appends no implicit tiebreaker, so without it a paged result is not stable across
 requests and a row could be skipped or repeated between pages. A caller sort key SHALL carry an explicit
 nulls ordering placing nulls last, so a column holding nulls orders deterministically rather than relying on
@@ -3077,7 +3100,7 @@ resolves the same figure a second time; the service issues `include_total` as it
 filtered result, so the second resolution costs a scan per page fetched. A limit above 1000 SHALL never be
 sent — the service rejects it with HTTP 400 and does not clamp.
 
-The query SHALL reference no column absent from the entity's role-visible schema; `conversations` exposes no
+The query SHALL reference no column absent from the entity's role-visible schema; `sessions` exposes no
 `sensitive` column, so every selected field is visible to a read-only admin. `user_hash` is catalogued
 non-sensitive — the analytics service exposes it as a de-identified surrogate — so selecting, sorting or
 filtering on it requires no elevated role.
@@ -3085,9 +3108,9 @@ filtering on it requires no elevated role.
 #### Scenario: Query reads the conversations entity in row mode
 
 - **WHEN** `buildConversationListQuery` is called with a time range
-- **THEN** the query targets entity `conversations` with `mode: 'row'`
+- **THEN** the query targets entity `sessions` with `mode: 'row'`
 - **AND** it carries no `group_by` and no aggregate function expression
-- **AND** its select names `chat_id`, `project_id`, `user_hash`, `turn_count`, `total_tokens`, `total_price`,
+- **AND** its select names `client_session_id`, `project_id`, `user_hash`, `turn_count`, `total_tokens`, `total_price`,
   `last_request_time`, `first_request_time` and `deployments`
 
 #### Scenario: The query requests no result total
@@ -3098,9 +3121,9 @@ filtering on it requires no elevated role.
 #### Scenario: Only row identity is named unconditionally
 
 - **WHEN** the query is built with a classified set of source fields
-- **THEN** the select names `chat_id`
+- **THEN** the select names `client_session_id`
 - **AND** it names no curated column's field that the classification did not carry
-- **AND** `chat_id` is named once, even where the classification carries it too
+- **AND** `client_session_id` is named once, even where the classification carries it too
 
 #### Scenario: Without a schema the base rollup columns are still named
 
@@ -3137,13 +3160,13 @@ filtering on it requires no elevated role.
 #### Scenario: No empty-id guard is emitted
 
 - **WHEN** the query is built
-- **THEN** the filter carries no comparison on `chat_id` against the empty string
+- **THEN** the filter carries no comparison on `client_session_id` against the empty string
 
 #### Scenario: A search term becomes an OR of contains predicates
 
 - **WHEN** the query is built with a search term
 - **THEN** the filter carries one additional `or` group of exactly two `ico` predicates
-- **AND** they match `chat_id` and `project_id`, each against the trimmed term
+- **AND** they match `client_session_id` and `project_id`, each against the trimmed term
 - **AND** no predicate matches `user_hash`
 
 #### Scenario: A blank search term adds no predicate
@@ -3165,14 +3188,14 @@ filtering on it requires no elevated role.
 #### Scenario: Caller sort keys precede the tiebreaker
 
 - **WHEN** the query is built with a sort key on `total_tokens` descending
-- **THEN** the sort is that key followed by `chat_id` ascending
+- **THEN** the sort is that key followed by `client_session_id` ascending
 - **AND** the caller's key carries a nulls-last ordering
 
 #### Scenario: Sort ends with a stable tiebreaker
 
 - **WHEN** the query is built with no caller sort keys
-- **THEN** the sort is `last_request_time` descending followed by `chat_id` ascending
-- **AND** `chat_id` ascending is the final sort entry
+- **THEN** the sort is `last_request_time` descending followed by `client_session_id` ascending
+- **AND** `client_session_id` ascending is the final sort entry
 
 #### Scenario: An unknown field is rejected rather than approximated
 
@@ -3200,13 +3223,13 @@ filtering on it requires no elevated role.
 #### Scenario: A curated hidden column is projected once it is shown
 
 - **WHEN** the operator makes the Topics column visible
-- **THEN** the next request's select names `conversation_insights.topics`
+- **THEN** the next request's select names `session_insights.topics`
 - **AND** the cells render that field's values rather than empty cells
 
 #### Scenario: The identity column's enrichment field is projected with no column of its own
 
 - **WHEN** the list query is built with every optional column hidden
-- **THEN** the select still names `conversation_insights.title`
+- **THEN** the select still names `session_insights.title`
 - **AND** it names no other enrichment field
 
 #### Scenario: Showing a column re-queries from the first page
@@ -3337,7 +3360,7 @@ result.
 
 ### Requirement: Conversation detail route, access guard, and not-found handling
 
-The system SHALL provide a per-conversation detail view at `/<lang>/conversations-trace/<chat_id>`, reached
+The system SHALL provide a per-session detail view at `/<lang>/conversations-trace/<client_session_id>`, reached
 by opening a row of the conversations log. The conversation id SHALL be carried in the path and MUST be
 URL-encoded, since real ids are not opaque short tokens — they reach hundreds of characters and some contain
 path separators and percent-encoded text.
@@ -3385,10 +3408,10 @@ own a back control, so there is one way back rather than two that can disagree.
 
 ### Requirement: Single-conversation query over the conversations entity
 
-The system SHALL provide a query builder returning a `StructuredQuery` over the entity `conversations` in
-**row mode**, narrowed to exactly one `chat_id` by equality, requesting a single row.
+The system SHALL provide a query builder returning a `StructuredQuery` over the entity `sessions` in
+**row mode**, narrowed to exactly one `client_session_id` by equality, requesting a single row.
 
-The query SHALL select every stored column of the conversation rollup **the fetched schema reports**, so the
+The query SHALL select every stored column of the session rollup **the fetched schema reports**, so the
 detail view reads the full available record rather than the subset the log's grid needs. Every selected
 column SHALL be **named explicitly**. A column the service marks `heavy` is excluded from a default
 projection, so a query that relied on the default would silently return no value for it; `traces` is such a
@@ -3401,7 +3424,7 @@ counts, the chain cost, and the insight columns — is optional. With no schema 
 the required set alone.
 
 The insight enrichment's **descriptive** fields SHALL all be named where the schema reports them, not a
-subset of them: the conversation's title, its summary, its sentiment and sentiment score, its topic and
+subset of them: the session's title, its summary, its sentiment, its topic and
 topics, its language and its resolution status. A descriptive insight field the query does not name is a
 field the detail view cannot render at all, and the reader has no way to tell that from a conversation the
 evaluator never reached. The enrichment's `provenance`-tagged fields are not covered by this rule — they
@@ -3421,40 +3444,40 @@ field for those callers rather than being refused cleanly, making the whole view
 
 #### Scenario: The query is narrowed to one conversation by id
 
-- **WHEN** the single-conversation query is built for a conversation id
-- **THEN** it queries the `conversations` entity in row mode
+- **WHEN** the single-session query is built for a conversation id
+- **THEN** it queries the `sessions` entity in row mode
 - **AND** it filters on that id by equality and requests one row
 
 #### Scenario: The heavy trace column is named explicitly
 
-- **WHEN** the single-conversation query is built
+- **WHEN** the single-session query is built
 - **THEN** its select names `traces`
 - **AND** the projection is explicit rather than a default or wildcard projection
 
 #### Scenario: The insight columns are selected
 
-- **WHEN** the single-conversation query is built and the schema reports the insight columns
-- **THEN** its select names `conversation_insights.title`
-- **AND** it names the summary, sentiment, sentiment score, topic, topics, language and resolution status
+- **WHEN** the single-session query is built and the schema reports the insight columns
+- **THEN** its select names `session_insights.title`
+- **AND** it names the summary, sentiment, topic, topics, language, resolution status, activity type and activity sub-task type
 - **AND** it names no `provenance`-tagged bookkeeping field of the enrichment
 
 #### Scenario: A descriptive insight field the schema omits is not named
 
 - **WHEN** the schema reports the insight enrichment but does not report its resolution status
 - **THEN** the select names the descriptive insight fields the schema does report
-- **AND** it does not name `conversation_insights.resolution_status`
+- **AND** it does not name `session_insights.resolution_status`
 - **AND** the query returns a row
 
 #### Scenario: An instance without the enrichment still resolves a conversation
 
-- **WHEN** the single-conversation query is built and the schema reports no insight column
+- **WHEN** the single-session query is built and the schema reports no insight column
 - **THEN** its select names none of them
 - **AND** it names the conversation's own stored columns
 - **AND** the detail view renders
 
 #### Scenario: The query carries no time bound
 
-- **WHEN** the single-conversation query is built
+- **WHEN** the single-session query is built
 - **THEN** it contains no predicate over `first_request_time` or `last_request_time`
 
 #### Scenario: A conversation outside the log's period still resolves
@@ -3464,7 +3487,7 @@ field for those callers rather than being refused cleanly, making the whole view
 
 #### Scenario: No sensitive column is requested
 
-- **WHEN** the single-conversation query is built
+- **WHEN** the single-session query is built
 - **THEN** its selected columns include no column the analytics service marks sensitive
 
 ### Requirement: A conversation query names only fields the entity's schema reports
@@ -3474,7 +3497,7 @@ The analytics service rejects a query that names a field its entity does not car
 one field the deployment lacks yields no rows at all, so a page that hardcodes its field list fails
 entirely instead of rendering with one column empty.
 
-The entity's fields are not fixed across deployments. The conversation rollup, the turn rollup and the
+The entity's fields are not fixed across deployments. The session rollup, the turn rollup and the
 insight enrichment are catalog objects provisioned per instance rather than shipped with the service, so
 an instance can carry an older set than the frontend knows about.
 
@@ -3504,14 +3527,14 @@ column is dropped for a lagging instance, and the failure would be the whole pag
 #### Scenario: An optional field the schema does not report is not named
 
 - **WHEN** the conversations list query is built and the schema does not report the conversation title
-- **THEN** the select does not name `conversation_insights.title`
+- **THEN** the select does not name `session_insights.title`
 - **AND** it names every required field
 - **AND** the query returns rows
 
 #### Scenario: An optional field the schema reports is named
 
 - **WHEN** the schema reports the conversation title
-- **THEN** the select names `conversation_insights.title`
+- **THEN** the select names `session_insights.title`
 
 #### Scenario: A failed schema fetch falls back to the required fields
 
@@ -3521,15 +3544,15 @@ column is dropped for a lagging instance, and the failure would be the whole pag
 
 #### Scenario: One lagging field does not cost the whole view
 
-- **WHEN** the instance carries the conversation rollup but not the insight enrichment
+- **WHEN** the instance carries the session rollup but not the insight enrichment
 - **THEN** the conversations list renders its rows
 - **AND** the detail view renders its header, panels and figures
 
 #### Scenario: The detail route reads the schema server-side
 
 - **WHEN** the conversation detail route renders
-- **THEN** it fetches the conversations entity schema on the server
-- **AND** the single-conversation query is built from the fields that schema reports
+- **THEN** it fetches the `sessions` entity schema on the server
+- **AND** the single-session query is built from the fields that schema reports
 - **AND** the feedback and turn reads are issued without waiting for it
 
 ### Requirement: Unavailable conversation values render an explicit placeholder
@@ -3809,18 +3832,18 @@ A repeated send SHALL render as two cards, since it is two recorded calls.
 
 The listing SHALL be resolved over the live hop log by three queries, and by no rollup. A rollup is refreshed
 periodically while the hop log is written live, and the listing's correctness now depends on rows a
-chat-id-scoped rollup omits.
+session-id-scoped rollup omits.
 
-**The paging query** SHALL group the hop log by trace, filtered by the conversation's chat id, the
+**The paging query** SHALL group the hop log by trace, filtered by the session id, the
 conversation's project, and a padded day range. It SHALL return exactly three things: the trace ids of the
 page, each trace's earliest recorded time as the ordering key, and each trace's latest recorded time. It MUST
-NOT return figures — nothing consumes them, and a figure resolved under a chat-id filter is the defect this
+NOT return figures — nothing consumes them, and a figure resolved under a session-id filter is the defect this
 change removes.
 
 **The root query** SHALL return **every** root span of the page's traces, located by trace id, and MUST NOT be
-filtered by chat id. It SHALL project only cheap columns: the trace and span ids, the recorded time, the
+filtered by session id. It SHALL project only cheap columns: the trace and span ids, the recorded time, the
 operation duration, the success flag and response status, the token total, the chain price and the call's own
-price, the chat id, the request endpoint, the event kind, the request message count, the deployment, and the
+price, the session id, the request endpoint, the event kind, the request message count, the deployment, and the
 **project id**.
 
 The project id SHALL appear in the root query's **projection** and MUST NOT appear in its **filter**. The
@@ -3834,7 +3857,7 @@ id. It SHALL yield each trace's span count, token total, price total, its per-ki
 its failed-hop count, and the set of response ids the trace recorded.
 
 **The root query and the figures query SHALL be scoped identically** — the page's trace ids and the same
-padded window, with no chat id and no project — differing only in the root-span predicate and in reading rows
+padded window, with no session id and no project — differing only in the root-span predicate and in reading rows
 rather than groups. This SHALL be verified as **one** invariant rather than as two filter lists compared by
 eye. Divergence between these two scopes is the mechanism that produced every arithmetic correction this
 design removes: when the figures cover rows the roots do not, a trace's totals stop reconciling with its cards
@@ -3859,8 +3882,8 @@ view instead of the listing. The scope invariant SHALL therefore be asserted for
 the listing's.
 
 **The conversation's project SHALL filter the paging query and MUST NOT filter the other two.** It is
-admissible on the paging query only because that query is already restricted to rows carrying the chat id, and
-a trace's chat-id-carrying rows are single-project. On the other two it is destructive: a trace's
+admissible on the paging query only because that query is already restricted to rows carrying the session id, and
+a trace's session-id-carrying rows are single-project. On the other two it is destructive: a trace's
 Core-internal calls are recorded under Core's own project while the client's rows carry the conversation's, so
 filtering by the conversation's project deletes exactly the cards and the rows this design added. That
 deletion is silent — the figures query would still count what the root query dropped — so the reason SHALL be
@@ -3875,12 +3898,12 @@ The listing MUST NOT be gated on a schema probe of its own: it names no optional
 
 - **WHEN** the listing's figures are requested for a page of traces
 - **THEN** the query's filter names the page's trace ids and the padded window
-- **AND** it names neither the chat id nor the project
+- **AND** it names neither the session id nor the project
 
 #### Scenario: The paging query carries the project and the chat id
 
 - **WHEN** a page of traces is requested
-- **THEN** the query's filter names the conversation's chat id, its project, and the padded day range
+- **THEN** the query's filter names the session id, its project, and the padded day range
 
 #### Scenario: The root query and the figures query agree on scope
 
@@ -3915,7 +3938,7 @@ The listing MUST NOT be gated on a schema probe of its own: it names no optional
 
 - **WHEN** the figures query is built for the transcript's traces
 - **THEN** its filter names those trace ids and a padded window derived from them
-- **AND** it names neither the chat id nor the project
+- **AND** it names neither the session id nor the project
 
 ### Requirement: The trace listing's time bounds are padded whole UTC days
 
@@ -4174,13 +4197,13 @@ unavailable markers states a shape the system does not record.
 
 A panel MUST NOT name an enrichment as its source. The analytics service exposes an enrichment's columns as
 columns of the entity they enrich, and the view queries the entity — so a panel that reads an
-enrichment-derived field still reads `conversations`, and naming the enrichment would present an internal
+enrichment-derived field still reads `sessions`, and naming the enrichment would present an internal
 composition of the entity as a separate thing the view queried.
 
 This is one half of a rule the whole feature follows, and the two halves SHALL NOT be conflated:
 
 - A **catalog identifier**, rendered in monospace, claims **the entity the page queried**. It SHALL name
-  `conversations` or the entity the conversation's ratings are read from, and SHALL NEVER name an
+  `sessions` or the entity the conversation's ratings are read from, and SHALL NEVER name an
   enrichment — in a panel's source, in a page header's provenance line, or anywhere else an identifier
   appears. It is stated as the entity's role rather than as a fixed name so that the rule does not have to
   be restated when the rating source changes.
@@ -4198,7 +4221,7 @@ rollup, which is the mis-attribution the two registers exist to prevent.
 
 The **insights panel** SHALL present the conversation's insight enrichment: its summary, its sentiment, its
 resolution status, its topic and topics, and its language. It SHALL take the **insight** provenance colour
-and SHALL name `conversations` as its source, per the rule above. It MUST NOT restate the conversation's
+and SHALL name `sessions` as its source, per the rule above. It MUST NOT restate the conversation's
 title, which is the view's heading.
 
 The insights panel SHALL render **only where the conversation carries an insight row**. Where it does not,
@@ -4302,7 +4325,7 @@ map to a colour, so a newly added source cannot render unstyled.
 #### Scenario: The insights panel is coloured by the enrichment and identified by the entity
 
 - **WHEN** the insights panel renders
-- **THEN** its monospace source identifier names `conversations`
+- **THEN** its monospace source identifier names `sessions`
 - **AND** its icon carries the insight provenance colour rather than the rollup's
 
 #### Scenario: A duration figure carries a keyboard-reachable caveat
@@ -4317,12 +4340,12 @@ map to a colour, so a newly added source cannot render unstyled.
 - **WHEN** the detail view's panels and the log's provenance line render for an instance carrying the insight
   enrichment
 - **THEN** every monospace catalog identifier names only an entity the page queries
-- **AND** none of them names `conversation_insights`
+- **AND** none of them names `session_insights`
 
 #### Scenario: No panel claims an enrichment
 
 - **WHEN** the metadata panel renders a field the conversation-insight enrichment supplies
-- **THEN** the panel still names `conversations` as its source
+- **THEN** the panel still names `sessions` as its source
 - **AND** no panel is labelled as enrichment-derived
 
 #### Scenario: The metadata panel marks what the rollup lacks
@@ -4493,14 +4516,14 @@ hidden; see "Conversation grid columns are a fixed curated set gated by the enti
 and its origins.
 
 A column SHALL offer a sort or a filter control **only** when the control can be answered over the whole
-result. That is the case exactly when the column is backed by a stored field of the `conversations` entity,
+result. That is the case exactly when the column is backed by a stored field of the `sessions` entity,
 because the control then becomes part of the query. Sorting and filtering SHALL therefore be resolved by the
 backend, and the grid MUST NOT narrow or reorder the pages it already holds: those pages are a slice of the
 result, so narrowing them client-side would report a slice as the complete answer.
 
 | Column | Sort | Filter |
 |---|---|---|
-| conversation (`chat_id`) | yes | text |
+| conversation (`client_session_id`) | yes | text |
 | project (`project_id`) | yes | text |
 | user (`user_hash`) | yes | text |
 | turns (`turn_count`) | yes | number |
@@ -4508,7 +4531,7 @@ result, so narrowing them client-side would report a slice as the complete answe
 | tokens (`total_tokens`) | yes | number |
 | cost (`total_price`) | yes | number |
 | deployments (`deployments`) | no | no |
-| topics (`conversation_insights.topics`) | no | text |
+| topics (`session_insights.topics`) | no | text |
 | Rating | no | no |
 
 The deployments column SHALL offer neither, because the query language expresses no ordering and no predicate
@@ -4648,7 +4671,7 @@ from the column header beneath it.
 - **THEN** a band above the column headers groups the columns by source
 - **AND** every column belongs to exactly one group
 - **AND** the conversation, project, user, turns, activity, tokens and cost columns are attributed to
-  `conversations`, and the Rating column to `response_ratings`
+  `sessions`, and the Rating column to `response_ratings`
 
 #### Scenario: Groups survive column movement
 
@@ -4684,9 +4707,9 @@ from the column header beneath it.
 ### Requirement: Conversation grid columns are the curated set plus every field the entity schema reports
 
 The conversations grid SHALL offer, in addition to its curated columns, one column per field the fetched
-`conversations` entity schema reports. The offered set SHALL follow the instance rather than a list held in
-the frontend, and the number of columns MUST NOT be fixed anywhere in the frontend: one instance reports 32
-fields (19 from the rollup, 13 from `conversation_insights`), another carrying a further enrichment reports
+`sessions` entity schema reports. The offered set SHALL follow the instance rather than a list held in
+the frontend, and the number of columns MUST NOT be fixed anywhere in the frontend: one instance reports 39
+fields (25 from the rollup, 14 from `session_insights`), another carrying a further enrichment reports
 more, and the difference between them is the reason the schema is read rather than a list maintained.
 
 The curated columns SHALL keep their designed cells, headers and defaults and SHALL NOT be re-derived. They
@@ -4697,7 +4720,7 @@ A derived column SHALL take:
 - its header from the field's `display_name` where the schema reports one, and otherwise from the field's
   `name` rendered readably — separators replaced by spaces and the first word capitalized, with an
   enrichment prefix stripped first, so `avg_duration_ms` reads "Avg duration ms" and
-  `conversation_insights.sentiment_score` reads "Sentiment score". `display_name` is reported for some
+  `session_insights.activity_sub_task_type` reads "Activity sub task type". `display_name` is reported for some
   fields and not others on the same instance, and for none at all on some instances, so both paths are
   ordinary rather than exceptional. A raw catalog identifier SHALL NOT be presented as a header;
 - its tooltip from the field's `description`, **verbatim**. The descriptions are authoritative and several
@@ -4724,7 +4747,7 @@ A field SHALL NOT be offered as a derived column when:
 - its type is the non-scalar `object` or `array` — a grid cell is not a structured-value viewer, and
   rendering one as text would assert a shape the view does not know;
 - a curated column already reads it, including a field a curated column composes without having a column of
-  its own. `first_request_time` (composed into Activity) and `conversation_insights.title` (read by the
+  its own. `first_request_time` (composed into Activity) and `session_insights.title` (read by the
   identity column) SHALL NOT additionally appear as columns of their own, which would present the same value
   twice under two names.
 
@@ -4785,7 +4808,7 @@ and the title only labels it — and SHALL state in its own disclosure that the 
 enrichment and may describe only part of the conversation. It SHALL state that size cap **once**, for the
 column, rather than marking the rows it applies to.
 
-`conversation_insights.summary` SHALL be offered as a derived column, hidden by default. It is derived text
+`session_insights.summary` SHALL be offered as a derived column, hidden by default. It is derived text
 the service reports as non-sensitive, like the title the identity column already shows. This is recorded as a
 decision and not an oversight: the request and response bodies it was derived from are marked `sensitive` and
 `heavy`, are encrypted at rest and carry an explicit gating instruction, and none of that propagates through
@@ -4809,7 +4832,7 @@ by that whole name and MUST NOT interpret the dot as a path into a nested value:
 single key, so a path interpretation finds nothing and renders an empty cell for a field the row does carry.
 
 No column SHALL be offered for a request or response body, because the entity reports no such field. Those
-are columns of `dial_usage_log`, a different entity; the listing queries `conversations`. The frontend SHALL
+are columns of `dial_usage_log`, a different entity; the listing queries `sessions`. The frontend SHALL
 state this where columns are derived and SHALL NOT carry a filter against those names, which would imply the
 schema could report them.
 
@@ -4852,7 +4875,7 @@ stored choice.
 
 #### Scenario: The evaluator's deployment never reads as the conversation's model
 
-- **WHEN** the schema reports `conversation_insights.model` with the display name "Model"
+- **WHEN** the schema reports `session_insights.model` with the display name "Model"
 - **THEN** its column appears only under a group whose label names the evaluator's run
 - **AND** the columns panel states that column's origin alongside it
 - **AND** no column headed "Model" appears with no such group above it
@@ -4866,9 +4889,9 @@ stored choice.
 #### Scenario: A field with no display name gets a readable header
 
 - **WHEN** the schema reports `avg_duration_ms` with no display name, and
-  `conversation_insights.sentiment_score` with none either
+  `session_insights.activity_sub_task_type` with none either
 - **THEN** the first column's header reads "Avg duration ms"
-- **AND** the second's reads "Sentiment score", the enrichment prefix having been stripped
+- **AND** the second's reads "Activity sub task type", the enrichment prefix having been stripped
 - **AND** neither header is a raw catalog identifier
 
 #### Scenario: A field's description is its tooltip, unparaphrased
@@ -4893,12 +4916,12 @@ stored choice.
 
 - **WHEN** the columns are built
 - **THEN** `first_request_time` is not offered as a column of its own, being composed into Activity
-- **AND** `conversation_insights.title` is not offered as a column of its own, being read by the identity column
-- **AND** `deployments` and `conversation_insights.topics` are offered only as their curated columns
+- **AND** `session_insights.title` is not offered as a column of its own, being read by the identity column
+- **AND** `deployments` and `session_insights.topics` are offered only as their curated columns
 
 #### Scenario: The summary is offered, hidden
 
-- **WHEN** the schema reports `conversation_insights.summary`
+- **WHEN** the schema reports `session_insights.summary`
 - **THEN** it is offered as a column
 - **AND** it is hidden by default
 
@@ -5493,7 +5516,7 @@ The null test SHALL be a null test. The column is null for a root hop and never 
 
 Where a conversation has entry hops at all, it has at most one per trace id, so its entry hops are its turns.
 A conversation MUST NOT be assumed to have one per trace, or any at all: observed conversations carry a full
-set of turns in the rollup and no entry hop under their `chat_id`, and that case is governed below.
+set of turns in the rollup and no entry hop under their session id, and that case is governed below.
 
 The transcript MUST NOT be taken from a single row. Reading only the newest entry hop's request body is
 correct **only** for a client that resends the whole history each turn. A DIAL **application** deployment
@@ -5535,8 +5558,8 @@ The entry-hop read SHALL be bounded by the same limit as the turn list, so the t
 cannot disclose different lengths for one conversation. When the bound clips the entry hops, the view SHALL
 state both figures together exactly as the turn list already does.
 
-**The entry-hop test MUST NOT be relaxed.** A conversation can record hops under its `chat_id` and yet have
-no entry hop among them, because the hop that entered DIAL was logged with no `chat_id` of its own. This is
+**The entry-hop test MUST NOT be relaxed.** A conversation can record hops under its session id and yet have
+no entry hop among them, because the hop that entered DIAL was logged with no session id of its own. This is
 not a rare accident: it is a routine outcome for whole classes of deployment, and observed conversations show
 it for every one of their turns. In such a conversation the hops that *are* attributed to it are inner
 agent-loop calls, and the view MUST NOT take message text from one. Sampled examples carry a system message,
@@ -5789,18 +5812,27 @@ response body was 1.4 MB and a 116-turn conversation's newest request body was 4
 would move the cost of the page onto the reader's connection and put encrypted-at-rest content into a client
 bundle.
 
-Every query reading the hop log SHALL predicate on `chat_id`. The table carries a bloom-filter index on
-`chat_id`, `trace_id` and `core_span_id`, which makes such a read fast; a read predicated on an attribute
-instead — `event_kind`, for instance — took over 120 s on a two-core virtual machine and took the service
-down with it. A hop-log query MUST NOT be issued without a chat predicate.
+Every query reading the hop log SHALL predicate on the session's own identifier. The table carries a
+bloom-filter index on `chat_id`, `trace_id` and `core_span_id`, which makes such a read fast; a read
+predicated on an attribute instead — `event_kind`, for instance — took over 120 s on a two-core virtual
+machine and took the service down with it. A hop-log query MUST NOT be issued without a session predicate.
+
+**Which column carries that predicate SHALL be decided by the session's `client_session_source`, not by one
+rule for both populations.** A session whose id came from `chat_id` SHALL be scoped by `chat_id`, keeping the
+bloom-filtered fast path for every conversation the view reads today. A session whose id came from a harness
+header SHALL be scoped by `usage_client_identity.client_session_id`, because its hops carry an empty
+`chat_id` and no other column identifies them. The enrichment column is **not** one of the bloom-filtered
+three, so it MUST NOT be substituted for `chat_id` on the chat path merely to have one code path: that would
+move every existing read off the index for no gain. The session row the detail view already loads carries
+`client_session_source`, so the choice costs no extra query.
 
 The entry-hop read SHALL be split so the expensive columns are named only where needed: a first query naming
 no body column establishes the conversation's entry hops, their times, their deployments and their message
 counts, and a second names the body columns for the rows the assembly actually requires.
 
 **A body query SHALL additionally be bounded by a range over the recorded times of the exact rows it
-fetches.** The hop log is partitioned by the day of `request_time`, and a chat predicate alone does not prune
-a single partition: a measured body read filtered only by `chat_id` and `trace_id` exceeded the service's
+fetches.** The hop log is partitioned by the day of `request_time`, and a session predicate alone does not prune
+a single partition: a measured body read filtered only by the session id and `trace_id` exceeded the service's
 two-gigabyte query budget and was rejected, while the same read with a bounded time predicate returned
 immediately. The bound MUST NOT be widened to the conversation's own span — conversations run for weeks, and
 one observed conversation spanned 27 daily partitions, enough to exceed the budget again. The first query
@@ -5829,7 +5861,19 @@ conversion is lossless.
 #### Scenario: Every hop-log query filters by conversation
 
 - **WHEN** any query against the hop log is built for this view
-- **THEN** its filter includes an equality predicate on the conversation id
+- **THEN** its filter includes an equality predicate on the session id
+
+#### Scenario: A chat-origin session keeps the indexed column
+
+- **WHEN** a hop-log query is built for a session whose `client_session_source` is `chat_id`
+- **THEN** the equality predicate names `chat_id`
+- **AND** it does not name the identity enrichment's column
+
+#### Scenario: An agent session is scoped by the enrichment column
+
+- **WHEN** a hop-log query is built for a session whose `client_session_source` is a harness header
+- **THEN** the equality predicate names the identity enrichment's `client_session_id`
+- **AND** the query still carries its time bound
 
 #### Scenario: The cheap read names no body column
 
@@ -6458,7 +6502,7 @@ lost its detail to age, one never had detail to lose, one has detail that cannot
 and one is an outage. Collapsing them would state something false about three conversations out of four.
 
 **Aged out.** `dial_usage_log` and `rate_analytics` retain a row for one year from its request time, while
-`conversations`, `turns` and `conversation_insights` retain theirs indefinitely. The retention is
+`sessions`, `turns` and `session_insights` retain theirs indefinitely. The retention is
 **row-level**, so a body lives exactly as long as the hop carrying it: a conversation older than a year keeps
 its list row, its detail header and its rollup figures, and has no hops left to read. The view SHALL state
 that the hop log no longer carries the conversation.

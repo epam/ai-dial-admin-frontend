@@ -49,7 +49,7 @@ const ConversationsList: FC<Props> = ({
   const onCellClicked = useCallback(
     (e: CellClickedEvent<ConversationRow>) => {
       if (!e.data) return;
-      onOpenConversation(e.data.chat_id, e.event as MouseEvent | undefined);
+      onOpenConversation(e.data.client_session_id, e.event as MouseEvent | undefined);
     },
     [onOpenConversation],
   );
@@ -57,7 +57,7 @@ const ConversationsList: FC<Props> = ({
   const onCellKeyDown = useCallback(
     (e: CellKeyDownEvent<ConversationRow>) => {
       if ((e.event as KeyboardEvent | undefined)?.key !== 'Enter' || !e.data) return;
-      onOpenConversation(e.data.chat_id);
+      onOpenConversation(e.data.client_session_id);
     },
     [onOpenConversation],
   );
@@ -71,7 +71,7 @@ const ConversationsList: FC<Props> = ({
           datasource,
           // The view owns the empty state; AG Grid's untranslated built-in overlay would sit on top of it.
           suppressNoRowsOverlay: true,
-          // An enrichment column's exposed name carries a dot (`conversation_insights.title`) and the rows
+          // An enrichment column's exposed name carries a dot (`session_insights.title`) and the rows
           // are flat maps keyed by that whole name, so the default path interpretation finds nothing.
           suppressFieldDotNotation: true,
           rowHeight: CONVERSATIONS_ROW_HEIGHT,
@@ -85,7 +85,7 @@ const ConversationsList: FC<Props> = ({
           rowClassRules: { 'cursor-pointer': ({ data }) => Boolean(data) },
         }}
         onGridReady={onGridReady}
-        getRowId={({ data }) => data.chat_id}
+        getRowId={({ data }) => data.client_session_id}
         storageKey={CONVERSATIONS_STORAGE_KEY}
         isLiveData
         showColumnsPanel={isColumnsPanelOpen}
