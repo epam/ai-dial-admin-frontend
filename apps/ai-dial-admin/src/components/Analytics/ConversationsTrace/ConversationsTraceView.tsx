@@ -25,6 +25,7 @@ const ConversationsTraceView: FC<Props> = ({ schemaFields, hasSchemaError }) => 
   const {
     onGridReady,
     datasource,
+    gridContext,
     period,
     periodLabel,
     isPeriodPending,
@@ -77,6 +78,7 @@ const ConversationsTraceView: FC<Props> = ({ schemaFields, hasSchemaError }) => 
       <div className="relative flex flex-1 rounded overflow-auto min-h-0 border border-primary">
         <ConversationsList
           datasource={datasource}
+          gridContext={gridContext}
           onGridReady={onGridReady}
           schemaFields={schemaFields}
           isColumnsPanelOpen={isColumnsPanelOpen}

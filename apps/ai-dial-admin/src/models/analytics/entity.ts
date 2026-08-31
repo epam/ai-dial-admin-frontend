@@ -9,6 +9,9 @@ export enum AnalyticsFieldType {
   Timestamp = 'timestamp',
   Object = 'object',
   Array = 'array',
+  // A string field whose value set is closed. Reported by the entity schema only, never declared on a
+  // column. A column of this type filters by selecting among the values the field holds, not by free text.
+  Enum = 'enum',
 }
 
 export interface AnalyticsEntity {

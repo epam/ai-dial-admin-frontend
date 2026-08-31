@@ -45,7 +45,15 @@ beforeEach(() => {
   options = {};
   (useRouter as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ push });
   vi.stubGlobal('open', open);
-  render(<ConversationsList datasource={{ getRows: vi.fn() }} onGridReady={vi.fn()} />);
+  render(
+    <ConversationsList
+      datasource={{ getRows: vi.fn() }}
+      gridContext={{ requestFieldValues: vi.fn() }}
+      onGridReady={vi.fn()}
+      isColumnsPanelOpen={false}
+      onToggleColumnsPanel={vi.fn()}
+    />,
+  );
 });
 
 describe('conversations list row navigation', () => {

@@ -4,7 +4,7 @@ import { ColumnVisibleEvent, GridApi, GridReadyEvent, IDatasource, IGetRowsParam
 import { debounce } from 'lodash';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { getConversations } from '@/src/app/[lang]/conversations-trace/actions';
+import { getConversationFieldValues, getConversations } from '@/src/app/[lang]/conversations-trace/actions';
 import {
   CONVERSATIONS_SEARCH_DEBOUNCE_MS,
   CONVERSATIONS_TIME_PERIOD,
@@ -16,7 +16,11 @@ import { useProtectedRequest } from '@/src/hooks/use-protected-request';
 import { useTimeFilter } from '@/src/hooks/use-time-filter';
 import { useI18n } from '@/src/locales/client';
 import {
+  ConversationArrayFilter,
+  ConversationColumnFilter,
+  ConversationFieldValue,
   ConversationFilters,
+  ConversationGridContext,
   ConversationPeriodSummary,
   ConversationRow,
   ConversationsPage,
@@ -48,6 +52,16 @@ interface CandidateIds {
   key: string;
   ids: string[];
 }
+
+// Keyed on everything the resolution depends on — the period and the column filters — so a new result
+// resolves its own sets rather than inheriting one that no longer describes it.
+interface ResolvedArrayFilters {
+  key: string;
+  filters: ConversationArrayFilter[];
+}
+
+const arrayFilterKey = (filters: ConversationFilters, columnFilters: ConversationColumnFilter[]): string =>
+  JSON.stringify([filters.startMs, filters.endMs, columnFilters]);
 
 export const useConversations = (schemaFields?: AnalyticsEntityField[] | null) => {
   const t = useI18n();
@@ -104,6 +118,7 @@ export const useConversations = (schemaFields?: AnalyticsEntityField[] | null) =
   );
 
   const candidateRef = useRef<CandidateIds | null>(null);
+  const arrayFilterRef = useRef<ResolvedArrayFilters | null>(null);
 
   // The filter state the page is currently showing. A request carries the key it was issued under, so a
   // response that outlives its filter state can be told apart from the current one at the moment it lands.
@@ -128,6 +143,10 @@ export const useConversations = (schemaFields?: AnalyticsEntityField[] | null) =
         // A later page reuses the ids the first page of this result resolved; a stale set from a previous
         // filter state is not sent, because the first page of the new one resolves its own.
         const chatIds = candidateRef.current?.key === key ? candidateRef.current.ids : undefined;
+        // Same rule for the resolved value sets, on their own key.
+        const arrayKey = arrayFilterKey(filters, columnFilters);
+        const arrayFilters =
+          !isFirstPage && arrayFilterRef.current?.key === arrayKey ? arrayFilterRef.current.filters : undefined;
         const visibleGatedFields = (gridApi?.getColumnState() ?? [])
           .filter((column) => !column.hide && gatedFields.has(column.colId))
           .map((column) => column.colId);
@@ -159,6 +178,7 @@ export const useConversations = (schemaFields?: AnalyticsEntityField[] | null) =
             offset: startRow,
             limit: endRow - startRow,
             ...(chatIds ? { chatIds } : {}),
+            ...(arrayFilters ? { arrayFilters } : {}),
           });
 
           // Read before the failure check: the rows and the summary are separate queries, so a failed row
@@ -167,6 +187,7 @@ export const useConversations = (schemaFields?: AnalyticsEntityField[] | null) =
 
           if (isFirstPage) {
             candidateRef.current = page?.candidates ? { key, ids: page.candidates.ids } : null;
+            arrayFilterRef.current = page?.arrayFilters ? { key: arrayKey, filters: page.arrayFilters } : null;
             setIsFeedbackCapped(Boolean(page?.candidates?.isCapped));
             // Nothing cancels a request whose filter state has moved on, so a slow response can land after
             // the period changed and put the previous period's figures under the new caption — the exact
@@ -211,6 +232,33 @@ export const useConversations = (schemaFields?: AnalyticsEntityField[] | null) =
     }),
     [filters, gatedFields, gridApi, key, modelScope, reportFailure],
   );
+
+  // The opened column's own filter is sent along and dropped by the query builder, which is where that rule
+  // is stated and tested.
+  const requestFieldValues = useCallback(
+    async (fieldName: string): Promise<ConversationFieldValue[] | null> => {
+      const columnFilters = translateConversationFilterModel(
+        gridApi?.getFilterModel() as ConversationGridFilterModel,
+        modelScope,
+      );
+      const chatIds = candidateRef.current?.key === key ? candidateRef.current.ids : undefined;
+      const arrayKey = arrayFilterKey(filters, columnFilters);
+      const arrayFilters = arrayFilterRef.current?.key === arrayKey ? arrayFilterRef.current.filters : undefined;
+
+      const result = await getConversationFieldValues({
+        ...filters,
+        field: fieldName,
+        columnFilters,
+        ...(chatIds ? { chatIds } : {}),
+        ...(arrayFilters ? { arrayFilters } : {}),
+      });
+
+      return result.success ? (result.response ?? []) : null;
+    },
+    [filters, gridApi, key, modelScope],
+  );
+
+  const gridContext: ConversationGridContext = useMemo(() => ({ requestFieldValues }), [requestFieldValues]);
 
   // A new datasource identity is what makes a filter change restart paging: AG Grid purges its blocks
   // and re-requests from the first row.
@@ -272,6 +320,7 @@ export const useConversations = (schemaFields?: AnalyticsEntityField[] | null) =
   return {
     onGridReady,
     datasource,
+    gridContext,
     period,
     periodLabel: timePeriodLabel(timePeriod, timeRange, isCustom),
     isPeriodPending: period === null && isFirstPageLoading,

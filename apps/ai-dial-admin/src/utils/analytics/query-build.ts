@@ -1,4 +1,5 @@
 import {
+  QueryArrayExpr,
   QueryExpr,
   QueryExprType,
   QueryFieldExpr,
@@ -74,9 +75,24 @@ export const isNotNull = (fieldName: string): QueryPredicate =>
 export const isNull = (fieldName: string): QueryPredicate =>
   predicate(QueryOperator.Eq, fieldName, value(QueryValueType.Null, null));
 
+export const arrayOf = (valueType: QueryValueType, values: string[]): QueryArrayExpr => ({
+  type: QueryExprType.Array,
+  items: values.map((val) => value(valueType, val)),
+});
+
 export const inValues = (fieldName: string, valueType: QueryValueType, values: string[]): QueryPredicate => ({
   op: QueryOperator.In,
-  args: [field(fieldName), { type: QueryExprType.Array, items: values.map((val) => value(valueType, val)) }],
+  args: [field(fieldName), arrayOf(valueType, values)],
+});
+
+// A comparison whose left operand is an arbitrary expression rather than a field. This is how a boolean
+// *function* reaches a filter at all: the array predicates (`array_has`, `array_has_any`) are catalog
+// functions returning boolean, and the filter grammar has no operator in expression position — so the call
+// is compared against a boolean literal. It is the same lowering the service's own SQL front end performs
+// for a bare `WHERE array_has_any(...)`.
+export const exprPredicate = (op: QueryOperator, left: QueryExpr, right: QueryExpr): QueryPredicate => ({
+  op,
+  args: [left, right],
 });
 
 export const ico = (fieldName: string, term: string): QueryPredicate =>

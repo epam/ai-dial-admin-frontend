@@ -429,9 +429,13 @@ describe('conversations columns :: sort and filter contract', () => {
     expect(column(ConversationColumn.Rating).filter).toBe(false);
   });
 
-  test('deployments offers neither a sort nor a filter affordance', () => {
+  // No ordering of an array is expressible, but a predicate over its elements is.
+  test('deployments offers a text filter but no sort', () => {
     expect(column(ConversationsField.Deployments).sortable).toBe(false);
-    expect(column(ConversationsField.Deployments).filter).toBe(false);
+    expect(column(ConversationsField.Deployments).filter).not.toBe(false);
+    expect(column(ConversationsField.Deployments).filterParams?.filterOptions).toEqual(
+      baseStringFilter.filterParams?.filterOptions,
+    );
   });
 
   // A delimited string: order would follow whichever term was written first, while a contains predicate

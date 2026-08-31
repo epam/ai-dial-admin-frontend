@@ -2,23 +2,37 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { analyticsDataApi } from '@/src/app/api/api';
 import {
+  getConversationFieldValues,
   getConversationHopBodies,
   getConversationTranscript,
   getConversations,
   getConversationsSchema,
 } from '@/src/app/[lang]/conversations-trace/actions';
-import { FEEDBACK_CANDIDATE_LIMIT } from '@/src/constants/analytics/conversations-trace';
 import {
+  ARRAY_VALUE_PAGE_SIZE,
+  CONVERSATION_FIELD_VALUE_COUNT_ALIAS,
+  FEEDBACK_CANDIDATE_LIMIT,
+  USAGE_LOG_ENTITY,
+} from '@/src/constants/analytics/conversations-trace';
+import {
+  ConversationFieldValuesRequest,
   ConversationFilterOperator,
   ConversationFilters,
   ConversationPageRequest,
+  ConversationScalarOperator,
   ConversationsField,
   FeedbackFilter,
   HopTextsState,
   TranscriptState,
   UsageLogField,
 } from '@/src/models/analytics/conversations-trace';
-import { QueryMode, QueryOperator, QuerySortDirection, StructuredQuery } from '@/src/models/analytics/query';
+import {
+  QueryMode,
+  QueryOffsetPage,
+  QueryOperator,
+  QuerySortDirection,
+  StructuredQuery,
+} from '@/src/models/analytics/query';
 import { clearEntitySchemaCache } from '@/src/server/analytics/entity-schema-cache';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 import { getUserToken } from '@/src/utils/auth/auth-request';
@@ -64,6 +78,10 @@ enum QueryKind {
   RatingTotals = 'ratingTotals',
   Candidates = 'candidates',
   Ratings = 'ratings',
+  // Step one of a filter over an array-valued column: the hop log's scalar `deployment` column, grouped.
+  Resolution = 'resolution',
+  // The grouped count that discovers an enum column's values.
+  FieldValues = 'fieldValues',
 }
 
 const aliases = (query: StructuredQuery): (string | undefined)[] => (query.select ?? []).map((column) => column.as);
@@ -74,6 +92,12 @@ const kindOf = (query: StructuredQuery): QueryKind => {
       return QueryKind.Candidates;
     }
     return aliases(query).includes('rated_conversations') ? QueryKind.RatingTotals : QueryKind.Ratings;
+  }
+  if (query.entity === USAGE_LOG_ENTITY) {
+    return QueryKind.Resolution;
+  }
+  if (aliases(query).includes(CONVERSATION_FIELD_VALUE_COUNT_ALIAS)) {
+    return QueryKind.FieldValues;
   }
   return query.mode === QueryMode.Aggregate ? QueryKind.Totals : QueryKind.List;
 };
@@ -89,6 +113,10 @@ interface Stubs {
   negative?: object;
   candidates?: object;
   ratings?: object;
+  // A queue rather than one value: the resolution pages until a page comes back short, so a test of the
+  // walk has to answer successive offsets differently.
+  resolutions?: object[];
+  fieldValues?: object;
 }
 
 const stub = ({
@@ -98,9 +126,17 @@ const stub = ({
   negative = ok([{ rated_conversations: 0 }]),
   candidates,
   ratings,
+  resolutions,
+  fieldValues,
 }: Stubs = {}) => {
+  const pending = [...(resolutions ?? [])];
+
   execute().mockImplementation((query: StructuredQuery) => {
     switch (kindOf(query)) {
+      case QueryKind.Resolution:
+        return Promise.resolve(pending.shift() ?? ok([]));
+      case QueryKind.FieldValues:
+        return Promise.resolve(fieldValues ?? ok([]));
       case QueryKind.Candidates:
         return Promise.resolve(candidates ?? ok([]));
       case QueryKind.Totals:
@@ -390,7 +426,7 @@ describe('getConversations :: the grid row total', () => {
 
   // Under a filter the period count is not the grid's count, so offering it would overstate the result.
   // Without a total the grid finds the end by a page coming back short, which it already handles.
-  test.each([
+  test.each<[string, Partial<ConversationPageRequest>]>([
     ['a search term', { search: 'acme' }],
     [
       'a column filter',
@@ -560,6 +596,214 @@ describe('getConversations :: sort and column filters', () => {
     });
 
     expect(JSON.stringify(queryOf(QueryKind.List).filter)).toContain(ConversationsField.ProjectId);
+  });
+});
+
+describe('getConversations :: an array column filter is resolved before the listing', () => {
+  const deployments = (
+    operator: ConversationScalarOperator,
+    value: string,
+  ): ConversationPageRequest['columnFilters'] => [{ field: ConversationsField.Deployments, operator, value }];
+
+  const name = (deployment: string) => ({ [UsageLogField.Deployment]: deployment });
+
+  const predicate = () => JSON.stringify(queryOf(QueryKind.List).filter);
+
+  test('resolves the entered text against the hop log before narrowing the listing', async () => {
+    stub({ resolutions: [ok([name('gpt-4o'), name('gpt-4o-mini')])], list: ok([CONVERSATION_ROW]) });
+
+    await getConversations({ ...REQUEST, columnFilters: deployments(ConversationFilterOperator.Contains, 'gpt') });
+
+    const resolution = queryOf(QueryKind.Resolution);
+    expect(resolution.entity).toBe(USAGE_LOG_ENTITY);
+    expect(resolution.group_by).toEqual([UsageLogField.Deployment]);
+    expect(JSON.stringify(resolution.filter)).toContain('gpt');
+
+    expect(predicate()).toContain('array_has_any');
+    expect(predicate()).toContain('gpt-4o-mini');
+  });
+
+  test('the resolution is issued with the caller token', async () => {
+    stub({ resolutions: [ok([name('gpt-4o')])] });
+
+    await getConversations({ ...REQUEST, columnFilters: deployments(ConversationFilterOperator.Contains, 'gpt') });
+
+    expect(execute()).toHaveBeenCalledWith(expect.objectContaining({ entity: USAGE_LOG_ENTITY }), TOKEN_MOCK);
+  });
+
+  test('an equals filter skips the resolution entirely', async () => {
+    stub({ list: ok([CONVERSATION_ROW]) });
+
+    await getConversations({
+      ...REQUEST,
+      columnFilters: deployments(ConversationFilterOperator.Equals, 'gpt-4o'),
+    });
+
+    expect(issued(QueryKind.Resolution)).toHaveLength(0);
+    expect(predicate()).toContain('array_has');
+    expect(predicate()).toContain('gpt-4o');
+  });
+
+  // The set must not be truncated, and the service caps a single read.
+  test('pages the resolution until a page comes back short', async () => {
+    const full = ok(Array.from({ length: ARRAY_VALUE_PAGE_SIZE }, (_, index) => name(`d${index}`)));
+    stub({ resolutions: [full, ok([name('tail')])], list: ok([CONVERSATION_ROW]) });
+
+    await getConversations({ ...REQUEST, columnFilters: deployments(ConversationFilterOperator.Contains, 'd') });
+
+    const offsets = issued(QueryKind.Resolution).map((query) => (query.page as QueryOffsetPage).offset);
+    expect(offsets).toEqual([0, ARRAY_VALUE_PAGE_SIZE]);
+    expect(predicate()).toContain('tail');
+  });
+
+  test('a single short page ends the walk', async () => {
+    stub({ resolutions: [ok([name('gpt-4o')])] });
+
+    await getConversations({ ...REQUEST, columnFilters: deployments(ConversationFilterOperator.Contains, 'gpt') });
+
+    expect(issued(QueryKind.Resolution)).toHaveLength(1);
+  });
+
+  // No value matched the text, so no conversation does — and the filter is still stated rather than dropped.
+  test('text matching no value narrows the result to nothing', async () => {
+    stub({ resolutions: [ok([])], list: ok([]) });
+
+    await getConversations({ ...REQUEST, columnFilters: deployments(ConversationFilterOperator.Contains, 'nope') });
+
+    expect(predicate()).toContain('array_length');
+    expect(predicate()).not.toContain('array_has');
+  });
+
+  // Dropping it would widen the result past what the header states: the operator would read conversations
+  // their filter excludes as matches.
+  test('a failed resolution fails the page rather than dropping the filter', async () => {
+    stub({ resolutions: [failure] });
+
+    const result = await getConversations({
+      ...REQUEST,
+      columnFilters: deployments(ConversationFilterOperator.Contains, 'gpt'),
+    });
+
+    expect(result.success).toBe(false);
+    expect(issued(QueryKind.List)).toHaveLength(0);
+  });
+
+  test('the first page returns the resolved sets for later pages to carry', async () => {
+    stub({ resolutions: [ok([name('gpt-4o')])], list: ok([CONVERSATION_ROW]) });
+
+    const result = await getConversations({
+      ...REQUEST,
+      columnFilters: deployments(ConversationFilterOperator.Contains, 'gpt'),
+    });
+
+    expect(result.response?.arrayFilters).toEqual([
+      { field: ConversationsField.Deployments, operator: ConversationFilterOperator.Contains, values: ['gpt-4o'] },
+    ]);
+  });
+
+  // Resolving again per scroll block would let a later page be narrowed by a different set than the first,
+  // and rows would duplicate or vanish across the scroll.
+  test('a later page reuses the carried sets instead of resolving again', async () => {
+    stub({ list: ok([CONVERSATION_ROW]) });
+
+    await getConversations({
+      ...LATER_PAGE,
+      columnFilters: deployments(ConversationFilterOperator.Contains, 'gpt'),
+      arrayFilters: [
+        {
+          field: ConversationsField.Deployments,
+          operator: ConversationFilterOperator.Contains,
+          values: ['carried-name'],
+        },
+      ],
+    });
+
+    expect(issued(QueryKind.Resolution)).toHaveLength(0);
+    expect(predicate()).toContain('carried-name');
+  });
+});
+
+describe('getConversationFieldValues', () => {
+  const REQUEST_FOR = (overrides: Partial<ConversationFieldValuesRequest> = {}): ConversationFieldValuesRequest => ({
+    ...FILTERS,
+    field: ConversationsField.InsightSentiment,
+    ...overrides,
+  });
+
+  const valueRow = (value: string | null, count: number | string) => ({
+    [ConversationsField.InsightSentiment]: value,
+    [CONVERSATION_FIELD_VALUE_COUNT_ALIAS]: count,
+  });
+
+  test('groups the column and returns each value with its count', async () => {
+    stub({ fieldValues: ok([valueRow('positive', 920), valueRow('negative', 41)]) });
+
+    const result = await getConversationFieldValues(REQUEST_FOR());
+
+    expect(queryOf(QueryKind.FieldValues).group_by).toEqual([ConversationsField.InsightSentiment]);
+    expect(result.response).toEqual([
+      { value: 'positive', count: 920 },
+      { value: 'negative', count: 41 },
+    ]);
+  });
+
+  test('coerces a count the service returned as a string', async () => {
+    stub({ fieldValues: ok([valueRow('positive', '920')]) });
+
+    const result = await getConversationFieldValues(REQUEST_FOR());
+
+    expect(result.response).toEqual([{ value: 'positive', count: 920 }]);
+  });
+
+  // Null on an enrichment-backed field means the enrichment has not reached that conversation — a statement
+  // about coverage rather than one of the enum's values.
+  test('drops the group with no value', async () => {
+    stub({ fieldValues: ok([valueRow('positive', 920), valueRow(null, 4000), valueRow('', 3)]) });
+
+    const result = await getConversationFieldValues(REQUEST_FOR());
+
+    expect(result.response).toEqual([{ value: 'positive', count: 920 }]);
+  });
+
+  test('carries the resolved array sets rather than resolving its own', async () => {
+    stub({ fieldValues: ok([valueRow('positive', 1)]) });
+
+    await getConversationFieldValues(
+      REQUEST_FOR({
+        columnFilters: [
+          { field: ConversationsField.Deployments, operator: ConversationFilterOperator.Contains, value: 'gpt' },
+        ],
+        arrayFilters: [
+          {
+            field: ConversationsField.Deployments,
+            operator: ConversationFilterOperator.Contains,
+            values: ['carried-name'],
+          },
+        ],
+      }),
+    );
+
+    expect(issued(QueryKind.Resolution)).toHaveLength(0);
+    expect(JSON.stringify(queryOf(QueryKind.FieldValues).filter)).toContain('carried-name');
+  });
+
+  // An active feedback filter narrows by `in`, so an empty candidate set is the complete answer.
+  test('answers nothing without a query when the feedback candidates are empty', async () => {
+    stub();
+
+    const result = await getConversationFieldValues(REQUEST_FOR({ feedback: FeedbackFilter.Rated, chatIds: [] }));
+
+    expect(result).toEqual({ success: true, response: [] });
+    expect(issued(QueryKind.FieldValues)).toHaveLength(0);
+  });
+
+  test('reports a failed read rather than an empty value list', async () => {
+    stub({ fieldValues: failure });
+
+    const result = await getConversationFieldValues(REQUEST_FOR());
+
+    expect(result.success).toBe(false);
+    expect(result.response).toBeUndefined();
   });
 });
 

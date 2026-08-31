@@ -20,6 +20,7 @@ interface GridColumnFilter {
   type?: string;
   filter?: string | number | null;
   filterTo?: string | number | null;
+  values?: string[];
 }
 
 export type ConversationGridFilterModel = Record<string, GridColumnFilter>;
@@ -58,6 +59,17 @@ const toColumnFilter = (
   entry: GridColumnFilter,
   valueType?: QueryValueType,
 ): ConversationColumnFilter | null => {
+  // An empty selection deliberately has no branch of its own: the text path below already returns `null` for
+  // a blank value.
+  if (entry.values?.length) {
+    return {
+      field: fieldName,
+      operator: ConversationFilterOperator.In,
+      values: entry.values,
+      ...(valueType ? { valueType } : {}),
+    };
+  }
+
   if (entry.type === IN_RANGE) {
     if (isBlank(entry.filter) || isBlank(entry.filterTo)) {
       return null;

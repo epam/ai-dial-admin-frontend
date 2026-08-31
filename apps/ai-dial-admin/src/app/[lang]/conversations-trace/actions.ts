@@ -4,11 +4,17 @@ import { cookies, headers } from 'next/headers';
 
 import { analyticsDataApi } from '@/src/app/api/api';
 import {
+  ConversationArrayFilter,
+  ConversationArrayValueSource,
   ConversationCandidateIds,
+  ConversationColumnFilter,
   ConversationDetailResult,
   ConversationDetailRow,
   ConversationFeedbackPage,
   ConversationFeedbackRow,
+  ConversationFieldValue,
+  ConversationFieldValuesRequest,
+  ConversationFilterOperator,
   ConversationFilters,
   ConversationHopBodies,
   ModelCallOutput,
@@ -16,12 +22,14 @@ import {
   ConversationPeriodSummary,
   ConversationRatingRow,
   ConversationRatingTotalsField,
+  ConversationScalarFilter,
   ConversationRow,
   ConversationEntryBodyRow,
   ConversationModelBodyRow,
   ConversationEntryHopRow,
   ConversationSpanRow,
   ConversationSpansPage,
+  ConversationsField,
   ConversationTranscript,
   ConversationTotals,
   ConversationTotalsField,
@@ -46,10 +54,12 @@ import { getUserToken } from '@/src/utils/auth/auth-request';
 import { errorObjLog } from '@/src/server/logger';
 import { attachRatings, conversationRatingCounts, unresolvedRatings } from '@/src/utils/analytics/conversation-rows';
 import {
+  buildArrayValueResolutionQuery,
   buildConversationDetailQuery,
   buildConversationEntryBodiesQuery,
   buildConversationEntryHopsQuery,
   buildConversationFeedbackQuery,
+  buildConversationFieldValuesQuery,
   buildConversationHopBodyQuery,
   buildConversationHopCountQuery,
   buildConversationModelBodiesQuery,
@@ -63,10 +73,15 @@ import {
   buildConversationRatingTotalsQuery,
   buildConversationTotalsQuery,
   buildRatedConversationIdsQuery,
+  needsValueResolution,
 } from '@/src/utils/analytics/conversations-queries';
 import {
+  ARRAY_VALUE_PAGE_CAP,
+  ARRAY_VALUE_PAGE_SIZE,
+  CONVERSATION_ARRAY_VALUE_SOURCE,
   CONVERSATION_ENTRY_HOP_LIMIT,
   CONVERSATION_FEEDBACK_LIMIT,
+  CONVERSATION_FIELD_VALUE_COUNT_ALIAS,
   CONVERSATION_HOP_COUNT_ALIAS,
   CONVERSATION_SPAN_LIMIT,
   CONVERSATION_TRACE_PAGE_SIZE,
@@ -149,6 +164,137 @@ async function resolveRatedChatIds(
 const isNarrowedToNothing = ({ feedback, chatIds }: ConversationPageRequest): boolean =>
   feedback !== FeedbackFilter.All && !chatIds?.length;
 
+const arrayValueSource = (fieldName: string): ConversationArrayValueSource | undefined =>
+  CONVERSATION_ARRAY_VALUE_SOURCE[fieldName as ConversationsField];
+
+/**
+ * Every value the entered text matches, paged to exhaustion — a truncated set would narrow the listing to
+ * fewer conversations than match, with an active filter in the header and nothing saying so, and no single
+ * query can hold it (see `ARRAY_VALUE_PAGE_SIZE`).
+ *
+ * `undefined` on a failed read, never a partial set: half the values would narrow the result to a subset of
+ * the matches, which is the outcome the paging exists to avoid.
+ */
+async function resolveArrayValues(
+  source: ConversationArrayValueSource,
+  range: TimeRange,
+  term: string,
+  authToken: Token,
+): Promise<string[] | undefined> {
+  const values: string[] = [];
+
+  for (let page = 0; page < ARRAY_VALUE_PAGE_CAP; page += 1) {
+    const result = await analyticsDataApi.executeAction(
+      buildArrayValueResolutionQuery({ source, range, term, offset: page * ARRAY_VALUE_PAGE_SIZE }),
+      authToken,
+    );
+
+    if (!result.success) {
+      errorObjLog(result, `Failed to resolve the values of the ${source.field} filter`);
+      return undefined;
+    }
+
+    const rows = result.response?.rows ?? [];
+    for (const row of rows) {
+      const name = row[source.field];
+      if (typeof name === 'string' && name.length > 0) {
+        values.push(name);
+      }
+    }
+
+    if (rows.length < ARRAY_VALUE_PAGE_SIZE) {
+      return values;
+    }
+  }
+
+  errorObjLog(
+    { field: source.field, cap: ARRAY_VALUE_PAGE_CAP },
+    'The array value resolution never returned a short page and was abandoned rather than truncated',
+  );
+  return undefined;
+}
+
+async function resolveArrayFilter(
+  filter: ConversationScalarFilter,
+  source: ConversationArrayValueSource,
+  range: TimeRange,
+  authToken: Token,
+): Promise<ConversationArrayFilter | undefined> {
+  const carried = {
+    field: filter.field,
+    operator: filter.operator,
+    ...(filter.valueType ? { valueType: filter.valueType } : {}),
+  };
+
+  if (!needsValueResolution(filter.operator)) {
+    return { ...carried, values: [filter.value] };
+  }
+
+  const values = await resolveArrayValues(source, range, filter.value, authToken);
+
+  // An empty result is an answer, not a failure: no value matched the text, so no conversation does. The
+  // query builder states that as a predicate rather than dropping the filter.
+  return values ? { ...carried, values } : undefined;
+}
+
+interface ResolvedColumnFilters {
+  columnFilters: ConversationColumnFilter[];
+  arrayFilters: ConversationArrayFilter[];
+}
+
+/**
+ * Splits the grid's column filters into the ones the listing query can predicate on directly and the ones
+ * over an array-valued column, whose text is resolved to whole values here.
+ *
+ * Returns `undefined` when a resolution query failed. Dropping the filter instead would widen the result
+ * past what the column header states — the operator would read conversations their filter excludes as
+ * matches — so the caller fails rather than answering a different question.
+ *
+ * A value-set (`in`) filter is never an array filter: the value picker binds only to a field the schema
+ * types `enum`, and an array-typed field is never derived into a column at all.
+ *
+ * `resolved` carries the sets a previous call worked out, so a later page of one result reuses them instead
+ * of resolving again — it only ever narrows the caller's own query.
+ */
+async function resolveColumnFilters(
+  columnFilters: ConversationColumnFilter[],
+  range: TimeRange,
+  authToken: Token,
+  resolved?: ConversationArrayFilter[],
+): Promise<ResolvedColumnFilters | undefined> {
+  const scalar: ConversationColumnFilter[] = [];
+  const arrays: ConversationArrayFilter[] = [];
+
+  for (const filter of columnFilters) {
+    if (filter.operator === ConversationFilterOperator.In) {
+      scalar.push(filter);
+      continue;
+    }
+
+    const source = arrayValueSource(filter.field);
+    if (!source) {
+      scalar.push(filter);
+      continue;
+    }
+
+    // A set the caller already holds for this result, matched on the field alone: one filter per column is
+    // all the grid's model can express.
+    const carried = resolved?.find((entry) => entry.field === filter.field);
+    if (carried) {
+      arrays.push(carried);
+      continue;
+    }
+
+    const values = await resolveArrayFilter(filter, source, range, authToken);
+    if (!values) {
+      return undefined;
+    }
+    arrays.push(values);
+  }
+
+  return { columnFilters: scalar, arrayFilters: arrays };
+}
+
 export async function getConversationsSchema(): Promise<ServerActionResponse<AnalyticsEntitySchema>> {
   const authToken = await token();
   const schema = await withEntitySchemaCache(CONVERSATIONS_ENTITY, authToken, () =>
@@ -189,11 +335,31 @@ export async function getConversations(request: ConversationPageRequest): Promis
     };
   }
 
+  const resolvedFilters = await resolveColumnFilters(
+    request.columnFilters ?? [],
+    range,
+    authToken,
+    request.arrayFilters,
+  );
+
+  if (!resolvedFilters) {
+    return {
+      success: false,
+      response: {
+        rows: [],
+        total: null,
+        ...withPeriod(await periodSummary),
+        ...(candidates ? { candidates } : {}),
+      },
+    };
+  }
+
   const query = buildConversationListQuery({
     range,
     search: request.search,
     chatIds: chatIds ?? [],
-    columnFilters: request.columnFilters ?? [],
+    columnFilters: resolvedFilters.columnFilters,
+    arrayFilters: resolvedFilters.arrayFilters,
     sort: request.sort ?? [],
     sourceFields: request.sourceFields ?? [],
     visibleEnrichmentFields: request.visibleEnrichmentFields ?? [],
@@ -222,6 +388,7 @@ export async function getConversations(request: ConversationPageRequest): Promis
     total: gridTotal,
     ...withPeriod(period),
     ...(candidates ? { candidates } : {}),
+    ...(isFirstPage && resolvedFilters.arrayFilters.length ? { arrayFilters: resolvedFilters.arrayFilters } : {}),
   };
 
   if (!page.rows) {
@@ -229,6 +396,72 @@ export async function getConversations(request: ConversationPageRequest): Promis
   }
 
   return { ...page.result, response: { rows: page.rows, ...resolved } };
+}
+
+/**
+ * The values a column holds, for the filter that lists them for selection.
+ *
+ * Faceted against the page's other narrowing — see `buildConversationFieldValuesQuery` for which predicates
+ * carry and why the opened column's own does not.
+ */
+export async function getConversationFieldValues(
+  request: ConversationFieldValuesRequest,
+): Promise<ServerActionResponse<ConversationFieldValue[]>> {
+  const authToken = await token();
+  const range = toRange(request);
+
+  // Same guard as the listing's: an empty candidate set under an active feedback filter is the complete
+  // answer, not a missing predicate.
+  if (request.feedback !== FeedbackFilter.All && !request.chatIds?.length) {
+    return { success: true, response: [] };
+  }
+
+  // The caller passes the sets its rows are narrowed by rather than letting this resolve its own: the
+  // resolution reads a live table, so a fresh one could count under a different set than the rows on screen,
+  // and a count that disagrees with what selecting the value returns is worse than no count.
+  const resolvedFilters = await resolveColumnFilters(
+    request.columnFilters ?? [],
+    range,
+    authToken,
+    request.arrayFilters,
+  );
+
+  if (!resolvedFilters) {
+    return { success: false };
+  }
+
+  const result = await analyticsDataApi.executeAction(
+    buildConversationFieldValuesQuery({
+      field: request.field,
+      range,
+      search: request.search,
+      chatIds: request.chatIds ?? [],
+      columnFilters: resolvedFilters.columnFilters,
+      arrayFilters: resolvedFilters.arrayFilters,
+    }),
+    authToken,
+  );
+
+  if (!result.success) {
+    errorObjLog(result, `Failed to resolve the values of the ${request.field} column`);
+    return { ...result, response: undefined };
+  }
+
+  // Null is not one of an enum's values: on an enrichment-backed field it means the enrichment has not
+  // reached that conversation, which is a statement about coverage rather than something to select. The
+  // grouped count reports it as a group all the same, so it is dropped here.
+  const values = (result.response?.rows ?? []).reduce<ConversationFieldValue[]>((list, row) => {
+    const name = row[request.field];
+    if (typeof name === 'string' && name.length > 0) {
+      list.push({
+        value: name,
+        count: toNumber((row[CONVERSATION_FIELD_VALUE_COUNT_ALIAS] ?? null) as number | string | null),
+      });
+    }
+    return list;
+  }, []);
+
+  return { success: true, response: values };
 }
 
 export async function getConversationDetail(

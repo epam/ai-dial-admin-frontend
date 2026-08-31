@@ -90,6 +90,7 @@ const renderList = (schemaFields: AnalyticsEntityField[] | null = ALL_FIELDS) =>
   render(
     <ConversationsList
       datasource={datasource}
+      gridContext={{ requestFieldValues: vi.fn() }}
       onGridReady={onGridReady}
       isColumnsPanelOpen={false}
       onToggleColumnsPanel={vi.fn()}

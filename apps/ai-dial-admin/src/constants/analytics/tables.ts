@@ -5,7 +5,14 @@ import { PartitionGranularity } from '@/src/models/analytics/table';
 
 export const capitalize = (s: string): string => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
-export const COLUMN_TYPE_OPTIONS: SelectOption[] = Object.values(AnalyticsFieldType).map((value) => ({
+// `enum` is deliberately absent: it is a type the entity schema *reports* for a field whose value set is
+// closed, not one the table catalog accepts in a column declaration. Enumerating the whole type enum here
+// would offer it, and the backend would reject the create — silently, since nothing type-checks a list.
+const DECLARABLE_COLUMN_TYPES: AnalyticsFieldType[] = Object.values(AnalyticsFieldType).filter(
+  (type) => type !== AnalyticsFieldType.Enum,
+);
+
+export const COLUMN_TYPE_OPTIONS: SelectOption[] = DECLARABLE_COLUMN_TYPES.map((value) => ({
   value,
   label: capitalize(value),
 }));

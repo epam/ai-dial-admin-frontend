@@ -41,6 +41,9 @@ export interface ConversationsPage {
   total: number | null;
   period?: ConversationPeriodSummary;
   candidates?: ConversationCandidateIds;
+  // The value sets the first page of this result resolved for its array-valued column filters, for the
+  // caller to carry into every later page of it. See `ConversationPageRequest.arrayFilters`.
+  arrayFilters?: ConversationArrayFilter[];
 }
 
 export interface ConversationPeriodSummary {
@@ -96,14 +99,48 @@ export enum ConversationFilterOperator {
   LessThan = 'lessThan',
   LessThanOrEqual = 'lessThanOrEqual',
   Range = 'range',
+  // Set membership, which a value filter contributes for its whole selection. Its operand is a list rather
+  // than one value, so it is the one operator no text or number filter menu can produce.
+  In = 'in',
 }
 
-export interface ConversationColumnFilter {
+// Every operator whose operand is a single value — one or two of them for a range.
+export type ConversationScalarOperator = Exclude<ConversationFilterOperator, ConversationFilterOperator.In>;
+
+export interface ConversationScalarFilter {
   field: string;
-  operator: ConversationFilterOperator;
+  operator: ConversationScalarOperator;
   value: string;
   valueTo?: string;
   valueType?: QueryValueType;
+}
+
+export interface ConversationValueSetFilter {
+  field: string;
+  operator: ConversationFilterOperator.In;
+  values: string[];
+  valueType?: QueryValueType;
+}
+
+export type ConversationColumnFilter = ConversationScalarFilter | ConversationValueSetFilter;
+
+// One filter over an array-valued column, with its text already resolved to the whole values it matched.
+// The resolution is a second query and belongs to the server action, so this shape never reaches the client:
+// the grid's filter model carries the text, and only the listing query sees the values.
+export interface ConversationArrayFilter {
+  field: string;
+  operator: ConversationScalarOperator;
+  values: string[];
+  valueType?: QueryValueType;
+}
+
+// Where an array column's elements are drawn from, which is what a contains filter resolves its text
+// against. The array's own column cannot answer it: the service's array predicates match whole elements,
+// with no lambda form to test a substring of one.
+export interface ConversationArrayValueSource {
+  entity: string;
+  field: string;
+  timeField: string;
 }
 
 export interface ConversationSortKey {
@@ -128,6 +165,47 @@ export interface ConversationPageRequest extends ConversationFilters {
   sort?: ConversationSortKey[];
   sourceFields?: string[];
   visibleEnrichmentFields?: string[];
+  // Carried by a later page only, exactly as `chatIds` is: the resolution reads a live table, so resolving
+  // again per scroll block could narrow a later page by a different set of values and make rows duplicate
+  // or vanish across the scroll.
+  arrayFilters?: ConversationArrayFilter[];
+}
+
+// One value an enum-typed column holds, with how many conversations carry it under the page's other
+// narrowing.
+export interface ConversationFieldValue {
+  value: string;
+  count: number | null;
+}
+
+// What the value filter's popup is showing while it resolves its list. A failed or empty read is a state of
+// its own rather than a fallback to a text entry: an operator who opened one control and was handed another
+// would enter a value under the wrong operator.
+export enum ConversationValuesState {
+  Loading = 'loading',
+  Available = 'available',
+  Empty = 'empty',
+  LoadFailed = 'loadFailed',
+}
+
+export interface ConversationValueFilterModel {
+  values: string[];
+}
+
+// What the grid hands its filter components through `context`. The facet has to carry the page's period,
+// search term, feedback candidates and other columns' filters, all of which are the conversations hook's
+// state — so the hook supplies the reader and the control stays unaware of any of it.
+export interface ConversationGridContext {
+  requestFieldValues: (field: string) => Promise<ConversationFieldValue[] | null>;
+}
+
+export interface ConversationFieldValuesRequest extends ConversationFilters {
+  field: string;
+  // The feedback narrowing reaches the query as candidate ids the first page resolved, so a facet count
+  // agrees with the rows only when the caller sends the same set it is paging under. The value sets an
+  // array-valued column filter resolved travel for the same reason.
+  chatIds?: string[];
+  arrayFilters?: ConversationArrayFilter[];
 }
 
 export interface ConversationCandidateIds {

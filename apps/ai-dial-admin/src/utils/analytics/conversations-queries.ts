@@ -1,7 +1,10 @@
 import { timeRangePredicates } from '@/src/components/Analytics/QueryBuilder/utils/time';
 import {
+  ARRAY_VALUE_PAGE_SIZE,
   CHAT_ID_SESSION_SOURCE,
   CONVERSATIONS_ENTITY,
+  CONVERSATION_FIELD_VALUE_COUNT_ALIAS,
+  CONVERSATION_FIELD_VALUE_LIMIT,
   CONVERSATION_FIELD_VALUE_TYPE,
   CONVERSATION_FILTER_QUERY_OPERATOR,
   FEEDBACK_CANDIDATE_LIMIT,
@@ -14,6 +17,8 @@ import {
   USAGE_LOG_ENTITY,
 } from '@/src/constants/analytics/conversations-trace';
 import {
+  ConversationArrayFilter,
+  ConversationArrayValueSource,
   ConversationColumnFilter,
   ConversationEntryHopRow,
   ConversationTraceFigureField,
@@ -22,6 +27,7 @@ import {
   ConversationSpanRow,
   ConversationFilterOperator,
   ConversationRatingTotalsField,
+  ConversationScalarOperator,
   ConversationSortKey,
   ConversationTotalsField,
   ConversationsField,
@@ -33,6 +39,8 @@ import {
 } from '@/src/models/analytics/conversations-trace';
 import {
   QueryFilterNode,
+  QueryFnExpr,
+  QueryOperator,
   QuerySortDirection,
   QuerySortItem,
   QuerySortNulls,
@@ -43,8 +51,10 @@ import { TimeRange } from '@/src/models/time-range';
 import {
   aggregateQuery,
   and,
+  arrayOf,
   col,
   eq,
+  exprPredicate,
   field,
   fn,
   fnIf,
@@ -84,19 +94,98 @@ const fieldValueType = (fieldName: string, declared?: QueryValueType): QueryValu
   return valueType;
 };
 
+const columnFilterPredicate = (filter: ConversationColumnFilter): QueryFilterNode => {
+  const { field: fieldName, valueType: declared } = filter;
+  const valueType = fieldValueType(fieldName, declared);
+
+  if (filter.operator === ConversationFilterOperator.In) {
+    return inValues(fieldName, valueType, filter.values);
+  }
+
+  if (filter.operator === ConversationFilterOperator.Range) {
+    return and([
+      ge(fieldName, value(valueType, filter.value)),
+      le(fieldName, value(valueType, filter.valueTo as string)),
+    ]);
+  }
+
+  const queryOperator = CONVERSATION_FILTER_QUERY_OPERATOR[filter.operator];
+  if (!queryOperator) {
+    throw new Error(`No query operator for conversations filter: ${filter.operator}`);
+  }
+  return predicate(queryOperator, fieldName, value(valueType, filter.value));
+};
+
 const columnFilterPredicates = (columnFilters: ConversationColumnFilter[]): QueryFilterNode[] =>
-  columnFilters.map(({ field: fieldName, operator, value: val, valueTo, valueType: declared }) => {
+  columnFilters.map(columnFilterPredicate);
+
+const ARRAY_HAS = 'array_has';
+const ARRAY_HAS_ANY = 'array_has_any';
+const ARRAY_LENGTH = 'array_length';
+
+const NEGATED_ARRAY_OPERATORS: ConversationScalarOperator[] = [
+  ConversationFilterOperator.NotContains,
+  ConversationFilterOperator.NotEquals,
+];
+
+// `contains` arrives here as the whole values its text matched, and tests membership in that set. `equals`
+// needs no resolution: the entered text *is* the value, so it tests one element directly.
+//
+// Exported because the server action decides whether to issue the resolution query from the same question.
+// Held in one place deliberately: were the two to drift, a resolved multi-name set would be reduced to a
+// single-element test and return a wrong answer with nothing raised.
+const RESOLVED_ARRAY_OPERATORS: ConversationScalarOperator[] = [
+  ConversationFilterOperator.Contains,
+  ConversationFilterOperator.NotContains,
+];
+
+export const needsValueResolution = (operator: ConversationScalarOperator): boolean =>
+  RESOLVED_ARRAY_OPERATORS.includes(operator);
+
+// The multi-value guard is not reachable through the grid, where `equals` carries exactly one value. It is
+// here because the alternative to widening is dropping: `array_has` takes one element, so a second value
+// would vanish with no error, unlike an unmapped operator, which throws.
+const arrayMembership = (
+  fieldName: string,
+  operator: ConversationScalarOperator,
+  values: string[],
+  valueType: QueryValueType,
+): QueryFnExpr =>
+  needsValueResolution(operator) || values.length > 1
+    ? fn(ARRAY_HAS_ANY, [field(fieldName), arrayOf(valueType, values)])
+    : fn(ARRAY_HAS, [field(fieldName), value(valueType, values[0])]);
+
+// Nothing resolved, so the predicate is a constant. A positive filter matched no value and therefore matches
+// no conversation; a negated one is satisfied by every conversation, since no element can equal a value that
+// does not exist. Both are still *stated*, rather than the filter being dropped — the header shows an active
+// filter and the query has to mean what it shows. `array_length` is 0 for an empty or null array and never
+// null, so `< 0` is unsatisfiable and `>= 0` is a tautology over the same column.
+const emptyArrayMatch = (fieldName: string, operator: ConversationScalarOperator): QueryFilterNode => {
+  const length = fn(ARRAY_LENGTH, [field(fieldName)]);
+  const zero = value(QueryValueType.Integer, '0');
+
+  return NEGATED_ARRAY_OPERATORS.includes(operator)
+    ? exprPredicate(QueryOperator.Ge, length, zero)
+    : exprPredicate(QueryOperator.Lt, length, zero);
+};
+
+// `ico` and `in` are scalar and reject an array operand, which is what the column's old `filter: false` was
+// written against. `array_has*` returns false — never null — for an empty or null array, so comparing the
+// call against `false` is exactly "no element matches" and needs no null arm.
+const arrayFilterPredicates = (arrayFilters: ConversationArrayFilter[]): QueryFilterNode[] =>
+  arrayFilters.map(({ field: fieldName, operator, values, valueType: declared }) => {
+    if (!values.length) {
+      return emptyArrayMatch(fieldName, operator);
+    }
+
     const valueType = fieldValueType(fieldName, declared);
+    const isNegated = NEGATED_ARRAY_OPERATORS.includes(operator);
 
-    if (operator === ConversationFilterOperator.Range) {
-      return and([ge(fieldName, value(valueType, val)), le(fieldName, value(valueType, valueTo as string))]);
-    }
-
-    const queryOperator = CONVERSATION_FILTER_QUERY_OPERATOR[operator];
-    if (!queryOperator) {
-      throw new Error(`No query operator for conversations filter: ${operator}`);
-    }
-    return predicate(queryOperator, fieldName, value(valueType, val));
+    return exprPredicate(
+      QueryOperator.Eq,
+      arrayMembership(fieldName, operator, values, valueType),
+      value(QueryValueType.Boolean, String(!isNegated)),
+    );
   });
 
 interface ConversationFilterParams {
@@ -104,6 +193,7 @@ interface ConversationFilterParams {
   search?: string;
   chatIds?: string[];
   columnFilters?: ConversationColumnFilter[];
+  arrayFilters?: ConversationArrayFilter[];
 }
 
 // The list and the totals share one filter, so a pill can never disagree with the rows beneath it.
@@ -112,12 +202,14 @@ const conversationFilter = ({
   search = '',
   chatIds = [],
   columnFilters = [],
+  arrayFilters = [],
 }: ConversationFilterParams): QueryFilterNode =>
   and([
     ...timeRangePredicates(ConversationsField.LastRequestTime, range),
     ...searchPredicates(search),
     ...(chatIds.length ? [inValues(ConversationsField.ChatId, QueryValueType.String, chatIds)] : []),
     ...columnFilterPredicates(columnFilters),
+    ...arrayFilterPredicates(arrayFilters),
   ]);
 
 const conversationSort = (sort: ConversationSortKey[] = []): QuerySortItem[] => {
@@ -188,6 +280,67 @@ export const buildConversationListQuery = ({
     filter: conversationFilter(filters),
     sort: conversationSort(sort),
     page: offsetPage(offset, limit),
+  });
+
+interface ArrayValueResolutionParams {
+  source: ConversationArrayValueSource;
+  range: TimeRange;
+  term: string;
+  offset: number;
+}
+
+// Step one of a contains filter over an array-valued column. The values are read from the scalar column the
+// array is built from, so they match exactly — a list read from an admin API would be the *configured* set,
+// and a name present there but absent from the data gives a filter that finds nothing for no visible reason.
+// The period carries, which costs one predicate and keeps the set to names that can appear in the result.
+//
+// One page of `ARRAY_VALUE_PAGE_SIZE`, which the caller walks to exhaustion; the ordering is what makes
+// those pages disjoint.
+export const buildArrayValueResolutionQuery = ({
+  source,
+  range,
+  term,
+  offset,
+}: ArrayValueResolutionParams): StructuredQuery =>
+  aggregateQuery({
+    entity: source.entity,
+    groupBy: [source.field],
+    select: [col(field(source.field))],
+    filter: and([...timeRangePredicates(source.timeField, range), ico(source.field, term)]),
+    sort: [sortItem(source.field, QuerySortDirection.Asc)],
+    page: offsetPage(offset, ARRAY_VALUE_PAGE_SIZE),
+  });
+
+interface ConversationFieldValuesParams extends ConversationFilterParams {
+  field: string;
+}
+
+// Faceted against the page's *other* narrowing: the period, the search term, the feedback candidates and
+// every other column's predicate all carry, so each count equals what selecting that value returns. The
+// opened column's own predicate does not — including it collapses the list to what is already selected, and
+// a selection could then never be widened without first being cleared.
+export const buildConversationFieldValuesQuery = ({
+  field: fieldName,
+  columnFilters = [],
+  arrayFilters = [],
+  ...filters
+}: ConversationFieldValuesParams): StructuredQuery =>
+  aggregateQuery({
+    entity: CONVERSATIONS_ENTITY,
+    groupBy: [fieldName],
+    select: [col(field(fieldName)), col(fn('count'), CONVERSATION_FIELD_VALUE_COUNT_ALIAS)],
+    filter: conversationFilter({
+      ...filters,
+      columnFilters: columnFilters.filter((filter) => filter.field !== fieldName),
+      arrayFilters: arrayFilters.filter((filter) => filter.field !== fieldName),
+    }),
+    // The value breaks a tie on the count, so two equally frequent values keep a stable order between
+    // openings rather than swapping places under the operator's pointer.
+    sort: [
+      sortItem(CONVERSATION_FIELD_VALUE_COUNT_ALIAS, QuerySortDirection.Desc),
+      sortItem(fieldName, QuerySortDirection.Asc),
+    ],
+    page: offsetPage(0, CONVERSATION_FIELD_VALUE_LIMIT),
   });
 
 export const buildConversationDetailQuery = (chatId: string, availableFields?: string[]): StructuredQuery =>

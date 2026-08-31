@@ -1,6 +1,7 @@
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import {
   ColumnProvenance,
+  ConversationArrayValueSource,
   ConversationColumn,
   ConversationDetailPanel,
   ConversationFieldDefinition,
@@ -10,6 +11,7 @@ import {
   ConversationPanelDefinition,
   ConversationPanelFrame,
   ConversationPanelLayout,
+  ConversationScalarOperator,
   ConversationsField,
   HopEventType,
   ProvenanceEntity,
@@ -187,8 +189,49 @@ export const SORTABLE_CONVERSATION_FIELDS: ConversationsField[] = [
   ConversationsField.TotalPrice,
 ];
 
+// Membership in this map is the test for "this column's filter needs the resolution step" — a scalar column
+// has no entry and takes the ordinary predicate path.
+//
+// `sessions.deployments` is built from usage-log hops, so the hop log's scalar `deployment` column holds
+// exactly the names the array can carry. The entity's other array columns (`traces`, `client_types`,
+// `auth_types`, `user_refs`) have no column in the grid today; the mechanism is generic and they can be
+// added here when they do.
+export const CONVERSATION_ARRAY_VALUE_SOURCE: Partial<Record<ConversationsField, ConversationArrayValueSource>> = {
+  [ConversationsField.Deployments]: {
+    entity: USAGE_LOG_ENTITY,
+    field: UsageLogField.Deployment,
+    timeField: UsageLogField.RequestTime,
+  },
+};
+
+// The service's own row ceiling: a query naming no page gets a default of 100 rows, and a requested limit
+// above 1000 is rejected rather than clamped. So a resolution that must not be truncated is a loop over
+// pages of exactly this size — two of them for the 1092 distinct deployment names a measured instance
+// carries — ending on the first page that comes back short.
+export const ARRAY_VALUE_PAGE_SIZE = 1000;
+
+// A guard against a service that ignores the offset, not against the data: the resolved set is bounded by
+// how many distinct values the column holds, so the loop should end on its second page today.
+export const ARRAY_VALUE_PAGE_CAP = 10;
+
+export const CONVERSATION_FIELD_VALUE_COUNT_ALIAS = 'value_count';
+
+// Bound by name rather than by reference so the column catalog — a pure util, read by the server actions
+// too — does not import a client component to describe a column.
+export const CONVERSATION_VALUE_FILTER = 'conversationValueFilter';
+
+// A bound on the grouped count that discovers an enum's values, not a cap on a filter's meaning: an enum's
+// value set is closed and small (twenty-two on the widest field of the current schema), so this is only
+// reached by a field the service has typed `enum` when it is not one — where a truncated list is a better
+// outcome than a menu of thousands.
+export const CONVERSATION_FIELD_VALUE_LIMIT = 200;
+
 // `last_request_time` is deliberately absent: the toolbar's period control already predicates on it, and a
 // second control over the same axis would let a filter appear to widen a range the period clips.
+//
+// `deployments` is here even though the query language has no comparison operator over an array: a contains
+// filter is answered by resolving the entered text against `CONVERSATION_ARRAY_VALUE_SOURCE` first. Ordering
+// an array is still not expressible, which is why it is absent from the sortable set above.
 export const FILTERABLE_CONVERSATION_FIELDS: ConversationsField[] = [
   ConversationsField.ChatId,
   ConversationsField.ProjectId,
@@ -196,6 +239,7 @@ export const FILTERABLE_CONVERSATION_FIELDS: ConversationsField[] = [
   ConversationsField.TurnCount,
   ConversationsField.TotalTokens,
   ConversationsField.TotalPrice,
+  ConversationsField.Deployments,
   ConversationsField.InsightTopics,
 ];
 
@@ -217,6 +261,7 @@ export const NUMERIC_FIELD_TYPES: AnalyticsFieldType[] = [
 export const ANALYTICS_FIELD_QUERY_VALUE_TYPE: Partial<Record<AnalyticsFieldType, QueryValueType>> = {
   [AnalyticsFieldType.Uuid]: QueryValueType.String,
   [AnalyticsFieldType.String]: QueryValueType.String,
+  [AnalyticsFieldType.Enum]: QueryValueType.String,
   [AnalyticsFieldType.Integer]: QueryValueType.Integer,
   [AnalyticsFieldType.Long]: QueryValueType.Long,
   [AnalyticsFieldType.Decimal]: QueryValueType.Decimal,
@@ -262,8 +307,11 @@ export const CONVERSATION_TAG_LABEL_KEY: Record<string, string> = {
   provenance: ConversationsTraceI18nKey.TagProvenance,
 };
 
+// The type of a *value* compared against the field. For an array column that is its element type: the
+// predicate is a membership test over the elements, never a comparison against the array itself.
 export const CONVERSATION_FIELD_VALUE_TYPE: Partial<Record<ConversationsField, QueryValueType>> = {
   [ConversationsField.ChatId]: QueryValueType.String,
+  [ConversationsField.Deployments]: QueryValueType.String,
   [ConversationsField.ProjectId]: QueryValueType.String,
   [ConversationsField.UserHash]: QueryValueType.String,
   [ConversationsField.TurnCount]: QueryValueType.Integer,
@@ -286,6 +334,7 @@ export const CONVERSATION_FILTER_QUERY_OPERATOR: Record<
   Exclude<ConversationFilterOperator, ConversationFilterOperator.Range>,
   QueryOperator
 > = {
+  [ConversationFilterOperator.In]: QueryOperator.In,
   [ConversationFilterOperator.Contains]: QueryOperator.Ico,
   [ConversationFilterOperator.NotContains]: QueryOperator.Inc,
   [ConversationFilterOperator.Equals]: QueryOperator.Eq,
@@ -296,7 +345,7 @@ export const CONVERSATION_FILTER_QUERY_OPERATOR: Record<
   [ConversationFilterOperator.LessThanOrEqual]: QueryOperator.Le,
 };
 
-export const GRID_FILTER_TYPE_OPERATOR: Record<GridFilterType, ConversationFilterOperator> = {
+export const GRID_FILTER_TYPE_OPERATOR: Record<GridFilterType, ConversationScalarOperator> = {
   [GridFilterType.CONTAINS]: ConversationFilterOperator.Contains,
   [GridFilterType.NOT_CONTAINS]: ConversationFilterOperator.NotContains,
   [GridFilterType.EQUALS]: ConversationFilterOperator.Equals,

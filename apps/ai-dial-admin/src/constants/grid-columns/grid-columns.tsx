@@ -740,10 +740,10 @@ const BASE_CONVERSATIONS_TRACE_COLUMNS = (t: (key: string) => string): ColDef[] 
       label: t(ConversationsTraceI18nKey.Deployments),
     }),
     tooltipValueGetter: (params) => (params.data?.deployments as string[] | undefined)?.join(', ') || null,
-    // Stated rather than left to the sort/filter allow-lists: a header offering an affordance the query
-    // language cannot honour would discard the operator's input silently.
+    // Unsortable, and stated rather than left to the allow-list: no ordering of an array is expressible, so
+    // a sort affordance here would discard the operator's input silently. A *predicate* is expressible, so
+    // the filter comes from the column preset like any text column's.
     sortable: false,
-    filter: false,
     flex: 1.6,
     minWidth: 180,
     hide: true,
