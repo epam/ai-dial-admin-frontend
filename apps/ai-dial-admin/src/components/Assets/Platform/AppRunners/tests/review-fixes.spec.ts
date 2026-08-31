@@ -73,19 +73,22 @@ describe('App runner asset :: post-create navigation', () => {
   test('Should build a detail path from $id alone', () => {
     const path = getEntityPath(VIEW, { $id: RUNNER_ID } as never, false);
 
-    expect(path).toEqual(`${encodeURIComponent(RUNNER_ID)}`);
-    expect(path).not.toEqual('?path=');
+    // $id is raw URL → pre-encode to Core name → encodeURIComponent again for the [id] segment.
+    // Next.js decodes once → Core name → encodeCorePath works without splitting on ://.
+    expect(path).toEqual(encodeURIComponent(ENCODED)); // 'http%253A%252F%252Fasdqwe'
+    expect(path).not.toContain('?path=');
   });
 
   test('Should prefer an existing listing row path over deriving one', () => {
-    const path = getEntityPath(VIEW, { name: RUNNER_ID, path: ENCODED } as never, false);
+    // Listing rows carry name = Core name (ENCODED), not the raw $id URL.
+    const path = getEntityPath(VIEW, { name: ENCODED, path: ENCODED } as never, false);
 
-    expect(path).toEqual(`${encodeURIComponent(RUNNER_ID)}`);
+    expect(path).toEqual(encodeURIComponent(ENCODED)); // 'http%253A%252F%252Fasdqwe'
   });
 
   test('Should agree with the row-click path, so both entry points reach the same resource', () => {
     expect(getEntityPath(VIEW, { $id: RUNNER_ID } as never, false)).toEqual(
-      getEntityPath(VIEW, { name: RUNNER_ID, path: ENCODED } as never, false),
+      getEntityPath(VIEW, { name: ENCODED, path: ENCODED } as never, false),
     );
   });
 });

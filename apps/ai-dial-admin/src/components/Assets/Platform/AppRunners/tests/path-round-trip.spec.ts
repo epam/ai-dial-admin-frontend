@@ -34,21 +34,23 @@ describe('App runner asset :: $id path round trip', () => {
 
   test("Should survive the detail-page url and Next's single path decode", () => {
     const { path } = parseEncodedFlatPath(coreMetadataUrl, PREFIX);
-    const urn = getUrnForEntity(ApplicationRoute.PlatformAppRunners, { name: RUNNER_ID, path });
+    // Listing rows carry name = Core name (path), not the raw $id URL.
+    const urn = getUrnForEntity(ApplicationRoute.PlatformAppRunners, { name: path, path });
 
-    // The [id] segment is the last part of the URL path.
     const segment = urn.split('/').at(-1)!;
-    // Next.js decodes the [id] segment once before handing it to the page as params.id.
-    expect(decodeURIComponent(segment)).toEqual(RUNNER_ID);
+    // Next.js decodes the [id] segment once — params.id must be the Core name, not the raw URL.
+    expect(decodeURIComponent(segment)).toEqual(coreName);
   });
 
   test('Should rebuild the exact Core request path from the URL path segment', () => {
     const { path } = parseEncodedFlatPath(coreMetadataUrl, PREFIX);
-    const urn = getUrnForEntity(ApplicationRoute.PlatformAppRunners, { name: RUNNER_ID, path });
+    const urn = getUrnForEntity(ApplicationRoute.PlatformAppRunners, { name: path, path });
+    // params.id = Core name after Next.js decodes the [id] segment once.
     const paramId = decodeURIComponent(urn.split('/').at(-1)!);
 
-    expect(toCoreRunnerName(paramId)).toEqual(coreName);
-    expect(encodeCorePath(toCoreRunnerName(paramId))).toEqual('http%253A%252F%252Fasdqwe');
+    expect(paramId).toEqual(coreName);
+    // Read path: getRunner(params.id) → encodeCorePath(params.id) — no toCoreRunnerName involved.
+    expect(encodeCorePath(paramId)).toEqual('http%253A%252F%252Fasdqwe');
   });
 
   test('Should break if the page decodes the query param a second time', () => {
