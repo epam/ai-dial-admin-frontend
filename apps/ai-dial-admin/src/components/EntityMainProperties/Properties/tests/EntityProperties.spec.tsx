@@ -46,7 +46,7 @@ describe('EntityProperties', () => {
     const onChangeEntity = vi.fn();
     render(
       <EntityProperties
-        view={ApplicationRoute.AssetsModels}
+        view={ApplicationRoute.PlatformModels}
         entity={{ name: 'my-model', displayName: '', description: '', displayVersion: '1.0.0' } as DialModelResource}
         names={[]}
         onChangeEntity={onChangeEntity}

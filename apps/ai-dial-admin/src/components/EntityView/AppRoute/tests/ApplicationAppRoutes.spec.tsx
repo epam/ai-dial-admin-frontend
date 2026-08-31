@@ -9,7 +9,7 @@ import { DialAppRoute } from '@/src/models/dial/route';
 import { ResourceInfo } from '@/src/server/core/asset-metadata';
 import { ApplicationRoute } from '@/src/types/routes';
 
-vi.mock('@/src/app/[lang]/assets-app-runners/actions', () => ({
+vi.mock('@/src/app/[lang]/platform-app-runners/actions', () => ({
   getRunner: vi.fn(),
 }));
 
@@ -42,7 +42,7 @@ vi.mock('@/src/components/EntityView/AppRoute/AppRoute', () => ({
   },
 }));
 
-import { getRunner } from '@/src/app/[lang]/assets-app-runners/actions';
+import { getRunner } from '@/src/app/[lang]/platform-app-runners/actions';
 
 const ASSET_REFERENCE = 'schemas/platform/http%3A%2F%2Fasdqwe';
 const ASSET_PATH = 'http%3A%2F%2Fasdqwe';

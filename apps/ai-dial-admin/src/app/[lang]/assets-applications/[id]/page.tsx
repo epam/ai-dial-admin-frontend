@@ -2,7 +2,7 @@ import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
 import { getModelsList } from '@/src/app/[lang]/models/actions';
-import { getAllRunners } from '@/src/app/[lang]/assets-app-runners/actions';
+import { getAllRunners } from '@/src/app/[lang]/platform-app-runners/actions';
 import { applicationRunnersApi, applicationsApi } from '@/src/app/api/api';
 import AppView from '@/src/components/Assets/Apps/View';
 import { buildAppRunnerOptions } from '@/src/components/SourceField/Application/utils';

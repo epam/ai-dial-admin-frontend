@@ -155,12 +155,12 @@ describe('Entity list view :: getEntityPath', () => {
   });
 
   test('Should derive path from name for AssetsModels when path is missing (newly created model)', () => {
-    const result = getEntityPath(ApplicationRoute.AssetsModels, { name: 'example-from-admin' });
+    const result = getEntityPath(ApplicationRoute.PlatformModels, { name: 'example-from-admin' });
     expect(result).toEqual('example-from-admin?path=example-from-admin');
   });
 
   test('Should use provided path for AssetsModels when browsing an existing model', () => {
-    const result = getEntityPath(ApplicationRoute.AssetsModels, {
+    const result = getEntityPath(ApplicationRoute.PlatformModels, {
       name: 'example-from-admin',
       path: 'platform/example-from-admin',
     });
@@ -169,7 +169,7 @@ describe('Entity list view :: getEntityPath', () => {
 
   test('Should return decoded path for AssetsModels when forRemove is true', () => {
     const result = getEntityPath(
-      ApplicationRoute.AssetsModels,
+      ApplicationRoute.PlatformModels,
       { name: 'example-from-admin', path: 'platform/example-from-admin' },
       true,
     );
@@ -177,17 +177,17 @@ describe('Entity list view :: getEntityPath', () => {
   });
 
   test('Should return decoded name for AssetsModels when forRemove is true and path is missing', () => {
-    const result = getEntityPath(ApplicationRoute.AssetsModels, { name: 'example-from-admin' }, true);
+    const result = getEntityPath(ApplicationRoute.PlatformModels, { name: 'example-from-admin' }, true);
     expect(result).toEqual('example-from-admin');
   });
 
   test('Should derive path from name for AssetsRoutes when path is missing (newly created route)', () => {
-    const result = getEntityPath(ApplicationRoute.AssetsRoutes, { name: 'my-route' });
+    const result = getEntityPath(ApplicationRoute.PlatformRoutes, { name: 'my-route' });
     expect(result).toEqual('my-route?path=my-route');
   });
 
   test('Should use provided path for AssetsRoutes when browsing an existing route', () => {
-    const result = getEntityPath(ApplicationRoute.AssetsRoutes, {
+    const result = getEntityPath(ApplicationRoute.PlatformRoutes, {
       name: 'my-route',
       path: 'platform/my-route',
     });

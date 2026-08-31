@@ -1,6 +1,6 @@
 'use client';
 
-import { getRoutes } from '@/src/app/[lang]/assets-routes/actions';
+import { getRoutes } from '@/src/app/[lang]/platform-routes/actions';
 import { DialRouteResource } from '@/src/models/dial/resource';
 import { createFolderContext } from '@/src/context/assets/AssetsFolderContext';
 

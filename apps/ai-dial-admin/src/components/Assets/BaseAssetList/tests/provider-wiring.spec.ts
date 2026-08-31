@@ -15,9 +15,9 @@ const PROVIDER_BY_VIEW: Partial<Record<ApplicationRoute, string>> = {
   [ApplicationRoute.AssetsApplications]: 'AppsFolderProvider',
   [ApplicationRoute.AssetsToolsets]: 'ToolsetFolderProvider',
   [ApplicationRoute.Conversations]: 'ConversationFolderProvider',
-  [ApplicationRoute.AssetsModels]: 'ModelsFolderProvider',
-  [ApplicationRoute.AssetsAppRunners]: 'AppRunnersFolderProvider',
-  [ApplicationRoute.AssetsSkills]: 'SkillFolderProvider',
+  [ApplicationRoute.PlatformModels]: 'ModelsFolderProvider',
+  [ApplicationRoute.PlatformAppRunners]: 'AppRunnersFolderProvider',
+  [ApplicationRoute.Skills]: 'SkillFolderProvider',
 };
 
 const layout = readFileSync(join(__dirname, '../../../../app/[lang]/layout.tsx'), 'utf-8');

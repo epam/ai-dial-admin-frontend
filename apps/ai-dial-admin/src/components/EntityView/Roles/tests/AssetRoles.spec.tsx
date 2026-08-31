@@ -30,7 +30,7 @@ const roles: DialRole[] = [
 describe('AssetRoles', () => {
   test('renders the Add roles button', () => {
     render(
-      <AssetRoles view={ApplicationRoute.AssetsModels} asset={{ userRoles: [] }} roles={roles} onChange={vi.fn()} />,
+      <AssetRoles view={ApplicationRoute.PlatformModels} asset={{ userRoles: [] }} roles={roles} onChange={vi.fn()} />,
     );
 
     expect(screen.getByTitle(RolesI18nKey.AddRoles)).toBeInTheDocument();
@@ -38,7 +38,7 @@ describe('AssetRoles', () => {
 
   test('shows the model-specific empty state when no role is assigned', () => {
     render(
-      <AssetRoles view={ApplicationRoute.AssetsModels} asset={{ userRoles: [] }} roles={roles} onChange={vi.fn()} />,
+      <AssetRoles view={ApplicationRoute.PlatformModels} asset={{ userRoles: [] }} roles={roles} onChange={vi.fn()} />,
     );
 
     expect(screen.getByText(RolesI18nKey.NotAvailableModel)).toBeInTheDocument();
@@ -46,7 +46,7 @@ describe('AssetRoles', () => {
 
   test('shows the route-specific empty state on the Assets > Routes view', () => {
     render(
-      <AssetRoles view={ApplicationRoute.AssetsRoutes} asset={{ userRoles: [] }} roles={roles} onChange={vi.fn()} />,
+      <AssetRoles view={ApplicationRoute.PlatformRoutes} asset={{ userRoles: [] }} roles={roles} onChange={vi.fn()} />,
     );
 
     expect(screen.getByText(RolesI18nKey.NotAvailableRoute)).toBeInTheDocument();
@@ -55,7 +55,7 @@ describe('AssetRoles', () => {
   test('renders a row for every assigned role, including one absent from the fetched list', () => {
     render(
       <AssetRoles
-        view={ApplicationRoute.AssetsModels}
+        view={ApplicationRoute.PlatformModels}
         asset={{ userRoles: ['admin', 'not-in-list'] }}
         roles={roles}
         onChange={vi.fn()}
@@ -71,7 +71,7 @@ describe('AssetRoles', () => {
   test('includes a remove action column when not read-only', () => {
     render(
       <AssetRoles
-        view={ApplicationRoute.AssetsModels}
+        view={ApplicationRoute.PlatformModels}
         asset={{ userRoles: ['admin'] }}
         roles={roles}
         onChange={vi.fn()}
@@ -87,7 +87,7 @@ describe('AssetRoles', () => {
 
     render(
       <AssetRoles
-        view={ApplicationRoute.AssetsModels}
+        view={ApplicationRoute.PlatformModels}
         asset={{ userRoles: ['admin'] }}
         roles={roles}
         onChange={vi.fn()}

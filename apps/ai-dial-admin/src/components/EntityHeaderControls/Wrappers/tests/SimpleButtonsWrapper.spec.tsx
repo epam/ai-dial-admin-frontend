@@ -21,7 +21,7 @@ vi.mock('@/src/components/EntityView/Modals/Delete/Delete', () => ({
 }));
 
 const baseProps = {
-  view: ApplicationRoute.AssetsModels,
+  view: ApplicationRoute.PlatformModels,
   entity: { name: 'example-from-admin' },
   isChanged: false,
   onDiscard: vi.fn(),

@@ -11,12 +11,12 @@ export const PLATFORM_ROOT_FOLDER = 'platform';
  * signal. Consumers gate folder affordances on `isFlatPlatformView`.
  */
 const FLAT_PLATFORM_VIEWS: readonly ApplicationRoute[] = [
-  ApplicationRoute.AssetsModels,
-  ApplicationRoute.AssetsAppRunners,
-  ApplicationRoute.AssetsInterceptors,
-  ApplicationRoute.AssetsRoutes,
-  ApplicationRoute.AssetsRoles,
-  ApplicationRoute.AssetsKeys,
+  ApplicationRoute.PlatformModels,
+  ApplicationRoute.PlatformAppRunners,
+  ApplicationRoute.PlatformInterceptors,
+  ApplicationRoute.PlatformRoutes,
+  ApplicationRoute.PlatformRoles,
+  ApplicationRoute.PlatformKeys,
 ];
 
 export const isFlatPlatformView = (view?: ApplicationRoute): boolean => !!view && FLAT_PLATFORM_VIEWS.includes(view);

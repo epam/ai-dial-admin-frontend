@@ -9,7 +9,7 @@ import {
   removeSkill,
   removeSkillFile,
   uploadSkillFile,
-} from '@/src/app/[lang]/assets-skills/actions';
+} from '@/src/app/[lang]/skills/actions';
 import SkillAssetProperties from '@/src/components/Assets/Skills/View/Properties';
 import SkillHeader from '@/src/components/EntityHeaderControls/SkillHeader';
 import SkillManifestTab from '@/src/components/Assets/Skills/View/SkillManifestTab';
@@ -48,7 +48,7 @@ const SkillView: FC<Props> = ({ skill: originalSkill }) => {
   const { fetchFiles } = useSkillFolder();
   const { showNotification } = useNotification();
   const isReadOnlyAdmin = useIsReadOnlyAdmin();
-  const tabs = getTabsForAsset(t, ApplicationRoute.AssetsSkills);
+  const tabs = getTabsForAsset(t, ApplicationRoute.Skills);
 
   const [activeTab, setActiveTab] = useState(EntityViewTab.Properties);
   const [selectedSkill, setSelectedSkill] = useState(structuredClone(originalSkill));
@@ -214,8 +214,8 @@ const SkillView: FC<Props> = ({ skill: originalSkill }) => {
 
       showNotification(
         getSuccessNotification(
-          getUpdateNotificationTitle(ApplicationRoute.AssetsSkills, t),
-          getUpdateNotificationDescription(ApplicationRoute.AssetsSkills, originalSkill.name, t),
+          getUpdateNotificationTitle(ApplicationRoute.Skills, t),
+          getUpdateNotificationDescription(ApplicationRoute.Skills, originalSkill.name, t),
         ),
       );
       setAddedFiles([]);
@@ -226,7 +226,7 @@ const SkillView: FC<Props> = ({ skill: originalSkill }) => {
         // folder now has one fewer child too. Reset from the root and let the tree lazy-reload,
         // matching `Assets > Toolsets`' own post-move refresh.
         fetchFiles(addTrailingSlash(ROOT_FOLDER), true);
-        router.push(getUrnForEntity(ApplicationRoute.AssetsSkills, { name: originalSkill.name, path: newPath }));
+        router.push(getUrnForEntity(ApplicationRoute.Skills, { name: originalSkill.name, path: newPath }));
       } else {
         fetchFiles(originalSkill.folderId);
       }
@@ -262,7 +262,7 @@ const SkillView: FC<Props> = ({ skill: originalSkill }) => {
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full bg-layer-2 rounded p-4 pb-14 lg:pb-4 relative">
       <SkillHeader
-        view={ApplicationRoute.AssetsSkills}
+        view={ApplicationRoute.Skills}
         entity={selectedSkill}
         etag={originalSkill.etag}
         isChanged={isChanged}

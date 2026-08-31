@@ -48,7 +48,7 @@ const Endpoint: FC<Props> = ({
 }) => {
   const t = useI18n();
   const { dispatch } = useSaveValidationContext();
-  const isModelView = view === ApplicationRoute.Models || view === ApplicationRoute.AssetsModels;
+  const isModelView = view === ApplicationRoute.Models || view === ApplicationRoute.PlatformModels;
 
   const isIdRequiredForResponses = !endpoint.id && (withResponses ? !!endpoint.responsesEndpoint : !!endpoint.endpoint);
 

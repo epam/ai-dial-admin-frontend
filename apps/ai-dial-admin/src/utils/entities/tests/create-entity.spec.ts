@@ -8,7 +8,7 @@ const t = (key: string, options?: Record<string, string>) => (options ? `${key}:
 
 describe('getCreateEntityTitle', () => {
   test('resolves the Skill entity label for AssetsSkills', () => {
-    const result = getCreateEntityTitle(ApplicationRoute.AssetsSkills, t);
+    const result = getCreateEntityTitle(ApplicationRoute.Skills, t);
 
     expect(result).toBe(`${CreateI18nKey.Title}:${JSON.stringify({ entity: CreateI18nKey.Skill })}`);
   });
@@ -16,7 +16,7 @@ describe('getCreateEntityTitle', () => {
 
 describe('getCreateNotificationTitle', () => {
   test('resolves the Skill entity label for AssetsSkills', () => {
-    const result = getCreateNotificationTitle(ApplicationRoute.AssetsSkills, t);
+    const result = getCreateNotificationTitle(ApplicationRoute.Skills, t);
 
     expect(result).toBe(`${CreateI18nKey.NotificationTitle}:${JSON.stringify({ entity: CreateI18nKey.Skill })}`);
   });
@@ -24,7 +24,7 @@ describe('getCreateNotificationTitle', () => {
 
 describe('getCreateNotificationDescription', () => {
   test('resolves the Skill entity label and entity id for AssetsSkills', () => {
-    const result = getCreateNotificationDescription(ApplicationRoute.AssetsSkills, 'my-skill', t);
+    const result = getCreateNotificationDescription(ApplicationRoute.Skills, 'my-skill', t);
 
     expect(result).toBe(
       `${CreateI18nKey.NotificationDescription}:${JSON.stringify({ entity: CreateI18nKey.Skill, entityId: 'my-skill' })}`,

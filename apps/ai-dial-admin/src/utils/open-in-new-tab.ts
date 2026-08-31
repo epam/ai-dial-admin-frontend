@@ -37,7 +37,7 @@ export const getEntityPath = (
     case ApplicationRoute.Files:
     case ApplicationRoute.AssetsApplications:
     case ApplicationRoute.AssetsToolsets:
-    case ApplicationRoute.AssetsSkills: {
+    case ApplicationRoute.Skills: {
       const path = version
         ? `${(data as DialPrompt).folderId}${(data as DialPrompt).name}__${version}`
         : (data as DialPrompt).path ||
@@ -48,12 +48,12 @@ export const getEntityPath = (
         : `${encodeURIComponent((data as DialPrompt).name as string)}?path=${encodeURIComponent(path)}`;
     }
 
-    case ApplicationRoute.AssetsModels:
-    case ApplicationRoute.AssetsAppRunners:
-    case ApplicationRoute.AssetsInterceptors:
-    case ApplicationRoute.AssetsRoutes:
-    case ApplicationRoute.AssetsRoles:
-    case ApplicationRoute.AssetsKeys: {
+    case ApplicationRoute.PlatformModels:
+    case ApplicationRoute.PlatformAppRunners:
+    case ApplicationRoute.PlatformInterceptors:
+    case ApplicationRoute.PlatformRoutes:
+    case ApplicationRoute.PlatformRoles:
+    case ApplicationRoute.PlatformKeys: {
       // Straight after create there is no listing row yet, so no `name`/`path` — only the `$id` the
       // form collected. The Core resource name is the singly-encoded `$id`, which is what `path` holds
       // on a listing row, so deriving it here makes both entry points agree.

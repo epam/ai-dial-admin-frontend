@@ -12,7 +12,7 @@ vi.mock('@/src/app/[lang]/application-runners/actions', () => ({
   getResolvedApplicationScheme: vi.fn().mockResolvedValue({ success: true, response: { schema: {} } }),
 }));
 
-vi.mock('@/src/app/[lang]/assets-app-runners/actions', () => ({
+vi.mock('@/src/app/[lang]/platform-app-runners/actions', () => ({
   getResolvedRunnerSchema: vi.fn().mockResolvedValue({ success: true, response: { properties: {} } }),
 }));
 
@@ -41,7 +41,7 @@ vi.mock('@/src/hooks/use-is-mobile-screen', () => ({ useIsMobileScreen: () => fa
 vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: () => false }));
 
 import { getResolvedApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
-import { getResolvedRunnerSchema } from '@/src/app/[lang]/assets-app-runners/actions';
+import { getResolvedRunnerSchema } from '@/src/app/[lang]/platform-app-runners/actions';
 
 const ASSET_REFERENCE = 'schemas/platform/http%3A%2F%2Fasdqwe';
 

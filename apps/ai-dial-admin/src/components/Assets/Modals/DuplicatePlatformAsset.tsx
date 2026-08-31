@@ -23,7 +23,7 @@ interface Props {
 const DuplicatePlatformAsset: FC<Props> = ({ view, isModalOpen, names, entity, onClose, onDuplicate }) => {
   const t = useI18n();
   const { isValid } = useSaveValidationContext();
-  const isRunner = view === ApplicationRoute.AssetsAppRunners;
+  const isRunner = view === ApplicationRoute.PlatformAppRunners;
 
   const [clonedAsset, setClonedAsset] = useState<PlatformAsset>(() =>
     isRunner
