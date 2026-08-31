@@ -56,8 +56,7 @@ export const getEntityPath = (
       // Flat platform entities: `parseEncodedFlatPath` always yields `path === name`, so the `[id]`
       // segment alone identifies the resource. No `?path=` needed.
       const { name, $id } = data as { name?: string; $id?: string };
-      // App runner $id is a raw URL; Core stores it as encodeURIComponent($id), so match that.
-      const resolvedName = name || ($id ? encodeURIComponent($id) : '');
+      const resolvedName = name || $id || '';
 
       return forRemove ? decodeURIComponent(escapePercentSign(resolvedName)) : encodeURIComponent(resolvedName);
     }

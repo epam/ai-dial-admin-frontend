@@ -12,7 +12,7 @@ const PREFIX = RESOURCE_TYPE_PREFIX[ResourceType.APP_TYPE_SCHEMA];
 
 /**
  * The `$id` crosses four encode/decode boundaries between the grid and Core, and every one of them
- * has to agree: Core's metadata url, the row's `path`, the detail-page query param (which Next
+ * has to agree: Core's metadata url, the row's `path`, the detail-page [id] segment (which Next
  * decodes once on its own), and `encodeCorePath` on the way back out. One decode too many turns the
  * id's `://` into path separators and the read 404s.
  */
@@ -32,21 +32,23 @@ describe('App runner asset :: $id path round trip', () => {
     expect(fromCoreRunnerName(name)).toEqual(RUNNER_ID);
   });
 
-  test('Should survive the detail-page url and Next’s single query decode', () => {
+  test("Should survive the detail-page url and Next's single path decode", () => {
     const { path } = parseEncodedFlatPath(coreMetadataUrl, PREFIX);
     const urn = getUrnForEntity(ApplicationRoute.PlatformAppRunners, { name: RUNNER_ID, path });
 
-    const query = urn.slice(urn.indexOf('?path=') + '?path='.length);
-    // What Next hands the page as `searchParams.path`.
-    expect(decodeURIComponent(query)).toEqual(coreName);
+    // The [id] segment is the last part of the URL path.
+    const segment = urn.split('/').at(-1)!;
+    // Next.js decodes the [id] segment once before handing it to the page as params.id.
+    expect(decodeURIComponent(segment)).toEqual(RUNNER_ID);
   });
 
-  test('Should rebuild the exact Core request path from the query param', () => {
+  test('Should rebuild the exact Core request path from the URL path segment', () => {
     const { path } = parseEncodedFlatPath(coreMetadataUrl, PREFIX);
     const urn = getUrnForEntity(ApplicationRoute.PlatformAppRunners, { name: RUNNER_ID, path });
-    const fromNext = decodeURIComponent(urn.slice(urn.indexOf('?path=') + '?path='.length));
+    const paramId = decodeURIComponent(urn.split('/').at(-1)!);
 
-    expect(encodeCorePath(fromNext)).toEqual('http%253A%252F%252Fasdqwe');
+    expect(toCoreRunnerName(paramId)).toEqual(coreName);
+    expect(encodeCorePath(toCoreRunnerName(paramId))).toEqual('http%253A%252F%252Fasdqwe');
   });
 
   test('Should break if the page decodes the query param a second time', () => {

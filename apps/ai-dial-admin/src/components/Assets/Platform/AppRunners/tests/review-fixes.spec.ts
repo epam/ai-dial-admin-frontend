@@ -73,14 +73,14 @@ describe('App runner asset :: post-create navigation', () => {
   test('Should build a detail path from $id alone', () => {
     const path = getEntityPath(VIEW, { $id: RUNNER_ID } as never, false);
 
-    expect(path).toEqual(`${encodeURIComponent(RUNNER_ID)}?path=${encodeURIComponent(ENCODED)}`);
+    expect(path).toEqual(`${encodeURIComponent(RUNNER_ID)}`);
     expect(path).not.toEqual('?path=');
   });
 
   test('Should prefer an existing listing row path over deriving one', () => {
     const path = getEntityPath(VIEW, { name: RUNNER_ID, path: ENCODED } as never, false);
 
-    expect(path).toEqual(`${encodeURIComponent(RUNNER_ID)}?path=${encodeURIComponent(ENCODED)}`);
+    expect(path).toEqual(`${encodeURIComponent(RUNNER_ID)}`);
   });
 
   test('Should agree with the row-click path, so both entry points reach the same resource', () => {
@@ -92,7 +92,7 @@ describe('App runner asset :: post-create navigation', () => {
 
 describe('App runner asset :: labels', () => {
   test('Should not reuse the Builders menu label', () => {
-    const assets = MENU_CONFIGURATION(16, {} as never).find((group) => group.key === MenuI18nKey.Assets);
+    const assets = MENU_CONFIGURATION(16, {} as never).find((group) => group.key === MenuI18nKey.Catalog);
     const builders = MENU_CONFIGURATION(16, {} as never).find((group) => group.key === MenuI18nKey.Builders);
 
     const assetKey = assets?.items?.find((item) => item.href === VIEW)?.key;
