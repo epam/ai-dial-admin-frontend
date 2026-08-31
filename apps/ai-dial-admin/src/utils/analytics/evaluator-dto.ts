@@ -1,3 +1,4 @@
+import { trimmedString } from '@/src/utils/formatting/trimmed-string';
 import {
   CreateEvaluatorDto,
   Evaluator,
@@ -15,10 +16,6 @@ export const toEvaluatorDraft = (evaluator: Evaluator): CreateEvaluatorDto => {
 };
 
 export const getVarExpression = (item: EvaluatorVar): string => item.sql ?? item.jsonata ?? '';
-
-// A draft can hold whatever parsed — `"model": 5`, `"output_vars": {}` — and both exported functions below
-// run during render, where a bare `.trim()` or `.filter()` on one of those blanks the page.
-const trimmed = (value: unknown): string => (typeof value === 'string' ? value.trim() : '');
 
 const asVars = (value: unknown): EvaluatorVar[] =>
   (Array.isArray(value) ? value : []).filter((item): item is EvaluatorVar => Boolean(item) && typeof item === 'object');
@@ -41,7 +38,7 @@ const isEmpty = (value: unknown): boolean =>
 
 const namedVars = (vars: unknown, type: EvaluatorType): EvaluatorVar[] =>
   asVars(vars)
-    .filter((item) => trimmed(item.name))
+    .filter((item) => trimmedString(item.name))
     .map((item) => toTypedVar(item, type));
 
 // Rebuilt from the selected type on every save rather than carried over: the service answers 422 for an
@@ -78,16 +75,16 @@ export const buildEvaluatorDto = (draft: CreateEvaluatorDto): CreateEvaluatorDto
 };
 
 export const isEvaluatorShapeValid = (draft: CreateEvaluatorDto): boolean => {
-  if (!trimmed(draft.name) || !draft.type) return false;
+  if (!trimmedString(draft.name) || !draft.type) return false;
 
   const outputVars = asVars(draft.output_vars);
-  if (!outputVars.length || outputVars.some((item) => !trimmed(item.name) || !item.type)) return false;
+  if (!outputVars.length || outputVars.some((item) => !trimmedString(item.name) || !item.type)) return false;
 
   if (draft.type === EvaluatorType.Sql) {
     return outputVars.every((item) => Boolean(getVarExpression(item)));
   }
 
-  return Boolean(draft.preset) && Boolean(trimmed(draft.model));
+  return Boolean(draft.preset) && Boolean(trimmedString(draft.model));
 };
 
 export const toParamRows = (params: Record<string, unknown> = {}): EvaluatorParamRow[] =>

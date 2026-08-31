@@ -687,3 +687,49 @@ describe('useRuleForm — buildDto', () => {
     expect(result.current.buildDto().source).toBe('legacy_log');
   });
 });
+
+describe('useRuleForm — a draft that came from the JSON editor', () => {
+  test.each([
+    ['output_bindings as a string', { output_bindings: 'x' }],
+    ['output_bindings as an object', { output_bindings: {} }],
+    ['output_bindings holding null', { output_bindings: [null] }],
+    ['output_bindings holding a string', { output_bindings: ['abc'] }],
+    ['name as a number', { name: 5 }],
+    ['trigger_cron as a number on a scheduled rule', { trigger_kind: TriggerKind.Schedule, trigger_cron: 5 }],
+    ['input_bindings as a string', { input_bindings: 'x' }],
+    ['sampling as a string', { sampling: 'x' }],
+  ])('reading %s neither throws nor blanks the form', (_label, patch) => {
+    const { result } = renderForm({ rule: baseRule });
+
+    expect(() => {
+      act(() => result.current.replaceDraft({ ...result.current.draft, ...patch }));
+      void result.current.isValid;
+      void result.current.buildDto();
+    }).not.toThrow();
+  });
+
+  test('a wrongly typed cron does not read as a valid schedule', () => {
+    const { result } = renderForm({ rule: baseRule });
+
+    act(() =>
+      result.current.replaceDraft({
+        ...result.current.draft,
+        trigger_kind: TriggerKind.Schedule,
+        trigger_cron: 5,
+      } as never),
+    );
+
+    expect(result.current.isCronValid).toBe(false);
+  });
+
+  test('replaceDraft replaces rather than merging, so a deleted member is gone', () => {
+    const { result } = renderForm({ rule: { ...baseRule, filter_sql: 'score > 0.5' } });
+
+    const withoutFilter = { ...result.current.draft };
+    delete withoutFilter.filter_sql;
+    act(() => result.current.replaceDraft(withoutFilter));
+
+    expect(result.current.draft.filter_sql).toBeUndefined();
+    expect(result.current.buildDto()).not.toHaveProperty('filter_sql');
+  });
+});
