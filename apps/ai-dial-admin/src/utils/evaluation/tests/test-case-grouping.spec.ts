@@ -281,6 +281,30 @@ describe('expandTestCasesToRows :: scoped by schema', () => {
     expect(rows[1].prompt).toBe('second');
     expect(rows[0].persona).toBe('analyst');
   });
+
+  test('should keep a payload field named id in data without overwriting the platform test case id', () => {
+    const rows = expandTestCasesToRows([
+      { id: '3021b6c6-ddae-47f7-bcd8-85f3c1fd279d', testCaseName: 'Case', data: { id: 'test_case_1', prompt: 'hi' } },
+    ]);
+
+    expect(rows[0].id).toBe('3021b6c6-ddae-47f7-bcd8-85f3c1fd279d');
+    expect(rows[0].prompt).toBe('hi');
+    expect(rows[0].data).toEqual({ id: 'test_case_1', prompt: 'hi' });
+  });
+
+  test('should keep a payload id on a multi-turn row without overwriting the platform test case id', () => {
+    const rows = expandTestCasesToRows([
+      {
+        id: '3021b6c6-ddae-47f7-bcd8-85f3c1fd279d',
+        testCaseName: 'Multi',
+        data: { id: 'test_case_1', persona: 'analyst' },
+        multiTurnData: [{ prompt: 'first' }],
+      },
+    ]);
+
+    expect(rows[0].id).toBe('3021b6c6-ddae-47f7-bcd8-85f3c1fd279d');
+    expect(rows[0].data).toEqual({ id: 'test_case_1', persona: 'analyst', prompt: 'first' });
+  });
 });
 
 describe('renumberTurns', () => {
