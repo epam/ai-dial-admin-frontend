@@ -1,16 +1,22 @@
 import { describe, expect, test } from 'vitest';
 
 import {
+  ARRAY_VALUE_PAGE_SIZE,
   CHAT_ID_SESSION_SOURCE,
+  CONVERSATION_ARRAY_VALUE_SOURCE,
+  CONVERSATION_FIELD_VALUE_COUNT_ALIAS,
+  CONVERSATION_FIELD_VALUE_LIMIT,
   CONVERSATION_HOP_COUNT_ALIAS,
   FEEDBACK_CANDIDATE_LIMIT,
   USAGE_LOG_ENTITY,
 } from '@/src/constants/analytics/conversations-trace';
 import {
+  ConversationArrayFilter,
   ConversationColumnFilter,
   ConversationEntryHopRow,
   ConversationFilterOperator,
   ConversationRatingTotalsField,
+  ConversationScalarOperator,
   ConversationTotalsField,
   ConversationsField,
   FeedbackField,
@@ -38,7 +44,9 @@ import {
 } from '@/src/models/analytics/query';
 import { TimeRange } from '@/src/models/time-range';
 import {
+  buildArrayValueResolutionQuery,
   buildConversationEntryBodiesQuery,
+  buildConversationFieldValuesQuery,
   buildConversationHopBodyQuery,
   buildConversationEntryHopsQuery,
   buildConversationHopCountQuery,
@@ -148,20 +156,21 @@ describe('buildConversationListQuery :: shape', () => {
     expect(names).toContain(ConversationsField.InsightSentiment);
   });
 
-  // The query language expresses no comparison over an array, so translating a predicate on one would send
-  // the backend something it rejects — better to refuse it here than to approximate it.
-  test('refuses a column filter naming an array field rather than approximating one', () => {
+  // The comparison operators are scalar and reject an array operand, which is what the column's old
+  // `filter: false` was written against. A text filter over an array reaches the query as an `arrayFilters`
+  // entry instead, never as a `columnFilters` comparison.
+  test('refuses a scalar comparison naming an array field rather than approximating one', () => {
     expect(() =>
       buildList({
         columnFilters: [
           {
-            field: ConversationsField.Deployments,
+            field: ConversationsField.Traces,
             operator: ConversationFilterOperator.Contains,
             value: 'gpt-4.1',
           },
         ],
       }),
-    ).toThrow(ConversationsField.Deployments);
+    ).toThrow(ConversationsField.Traces);
   });
 
   test('projects a source-backed field alongside the curated ones, hidden or not', () => {
@@ -276,7 +285,7 @@ describe('buildConversationListQuery :: column filters', () => {
   const predicateFor = (columnFilters: ConversationColumnFilter[]) =>
     groupArgs(buildList({ columnFilters }).filter).slice(2);
 
-  test.each([
+  test.each<[ConversationScalarOperator, QueryOperator]>([
     [ConversationFilterOperator.Contains, QueryOperator.Ico],
     [ConversationFilterOperator.NotContains, QueryOperator.Inc],
     [ConversationFilterOperator.Equals, QueryOperator.Eq],
@@ -289,7 +298,7 @@ describe('buildConversationListQuery :: column filters', () => {
     expect((node.args[1] as QueryValueExpr).value).toBe('acme');
   });
 
-  test.each([
+  test.each<[ConversationScalarOperator, QueryOperator]>([
     [ConversationFilterOperator.GreaterThan, QueryOperator.Gt],
     [ConversationFilterOperator.GreaterThanOrEqual, QueryOperator.Ge],
     [ConversationFilterOperator.LessThan, QueryOperator.Lt],
@@ -1033,5 +1042,193 @@ describe("a hop-log query is scoped by the column that session's hops carry", ()
     const query = buildConversationHopCountQuery({ id: 'unknown-1' });
 
     expect(JSON.stringify(query.filter)).toContain(UsageLogField.ClientSessionId);
+  });
+});
+
+// The array predicates match whole elements, so a contains filter has to resolve its text to whole values
+// first — which is why such a filter is two queries.
+describe('an array column filters in two steps', () => {
+  const DEPLOYMENTS_SOURCE = CONVERSATION_ARRAY_VALUE_SOURCE[ConversationsField.Deployments]!;
+
+  const resolution = (term = 'gpt', offset = 0) =>
+    buildArrayValueResolutionQuery({ source: DEPLOYMENTS_SOURCE, range: RANGE, term, offset });
+
+  const arrayFilter = (operator: ConversationScalarOperator, values: string[]): ConversationArrayFilter[] => [
+    { field: ConversationsField.Deployments, operator, values },
+  ];
+
+  const arrayPredicate = (operator: ConversationScalarOperator, values: string[]): QueryPredicate =>
+    groupArgs(buildList({ arrayFilters: arrayFilter(operator, values) }).filter).at(-1) as QueryPredicate;
+
+  const callOf = (node: QueryPredicate): QueryFnExpr => node.args[0] as QueryFnExpr;
+
+  test('the resolution reads the scalar column the array is built from, grouped', () => {
+    const query = resolution();
+
+    expect(query.entity).toBe(USAGE_LOG_ENTITY);
+    expect(query.mode).toBe(QueryMode.Aggregate);
+    expect(query.group_by).toEqual([UsageLogField.Deployment]);
+    expect(selectNames(query)).toEqual([UsageLogField.Deployment]);
+  });
+
+  test('the resolution is scoped to the period and matches the entered text', () => {
+    const predicates = groupArgs(resolution('gpt').filter);
+    const term = predicates.find((node) => node.op === QueryOperator.Ico);
+
+    expect(predicates.filter((node) => fieldName(node) === UsageLogField.RequestTime)).toHaveLength(2);
+    expect(fieldName(term as QueryPredicate)).toBe(UsageLogField.Deployment);
+    expect((term?.args?.[1] as QueryValueExpr).value).toBe('gpt');
+  });
+
+  // Naming no page is not "unpaged" — the service applies its own default of 100 rows — and a limit above
+  // the ceiling is rejected rather than clamped.
+  test('the resolution reads a full page of the service ceiling', () => {
+    expect(resolution().page).toMatchObject({ offset: 0, limit: ARRAY_VALUE_PAGE_SIZE });
+  });
+
+  test('the resolution pages by offset', () => {
+    expect((resolution('gpt', ARRAY_VALUE_PAGE_SIZE).page as QueryOffsetPage).offset).toBe(ARRAY_VALUE_PAGE_SIZE);
+  });
+
+  // Without it the pages would overlap and miss values, so the walk could not be exhaustive.
+  test('the resolution orders the values so its pages are disjoint', () => {
+    expect(resolution().sort).toEqual([{ field: UsageLogField.Deployment, dir: QuerySortDirection.Asc }]);
+  });
+
+  test('a contains filter tests membership in the resolved set', () => {
+    const node = arrayPredicate(ConversationFilterOperator.Contains, ['gpt-4o', 'gpt-4o-mini']);
+    const call = callOf(node);
+
+    expect(call.name).toBe('array_has_any');
+    expect((call.args[0] as QueryFieldExpr).name).toBe(ConversationsField.Deployments);
+    expect((call.args[1] as { items: QueryValueExpr[] }).items.map((item) => item.value)).toEqual([
+      'gpt-4o',
+      'gpt-4o-mini',
+    ]);
+    expect((node.args[1] as QueryValueExpr).value).toBe('true');
+  });
+
+  test('an equals filter tests one element without a resolution step', () => {
+    const node = arrayPredicate(ConversationFilterOperator.Equals, ['gpt-4o']);
+    const call = callOf(node);
+
+    expect(call.name).toBe('array_has');
+    expect((call.args[1] as QueryValueExpr).value).toBe('gpt-4o');
+    expect((node.args[1] as QueryValueExpr).value).toBe('true');
+  });
+
+  // Not reachable through the grid, where `equals` carries one value. Asserted because the alternative to
+  // widening is silent: `array_has` takes one element, so a second value would vanish with no error.
+  test('an equals filter carrying several values widens rather than dropping them', () => {
+    const node = arrayPredicate(ConversationFilterOperator.Equals, ['gpt-4o', 'gpt-4o-mini']);
+    const call = callOf(node);
+
+    expect(call.name).toBe('array_has_any');
+    expect((call.args[1] as { items: QueryValueExpr[] }).items).toHaveLength(2);
+  });
+
+  test.each<[ConversationScalarOperator, string]>([
+    [ConversationFilterOperator.NotContains, 'array_has_any'],
+    [ConversationFilterOperator.NotEquals, 'array_has'],
+  ])('a %s filter holds where no element matches', (operator, expected) => {
+    const node = arrayPredicate(operator, ['claude-sonnet']);
+
+    expect(callOf(node).name).toBe(expected);
+    expect((node.args[1] as QueryValueExpr).value).toBe('false');
+  });
+
+  // No value matched the text, so no conversation does — and the filter is still stated, because the header
+  // shows one and the query has to mean what it shows.
+  test('a positive filter that resolved nothing matches nothing', () => {
+    const node = arrayPredicate(ConversationFilterOperator.Contains, []);
+
+    expect(node.op).toBe(QueryOperator.Lt);
+    expect(callOf(node).name).toBe('array_length');
+    expect((node.args[1] as QueryValueExpr).value).toBe('0');
+  });
+
+  // The mirror image: no element can equal a value that does not exist, so every conversation satisfies it.
+  test('a negated filter that resolved nothing matches everything', () => {
+    const node = arrayPredicate(ConversationFilterOperator.NotContains, []);
+
+    expect(node.op).toBe(QueryOperator.Ge);
+    expect(callOf(node).name).toBe('array_length');
+  });
+});
+
+describe('buildConversationFieldValuesQuery', () => {
+  const ENUM_FIELD = ConversationsField.InsightSentiment;
+
+  const build = (overrides: Partial<Parameters<typeof buildConversationFieldValuesQuery>[0]> = {}) =>
+    buildConversationFieldValuesQuery({ field: ENUM_FIELD, range: RANGE, ...overrides });
+
+  const textFilter = (field: string, value: string): ConversationColumnFilter => ({
+    field,
+    operator: ConversationFilterOperator.Contains,
+    value,
+  });
+
+  test('groups by the field and counts each value', () => {
+    const query = build();
+
+    expect(query.entity).toBe('sessions');
+    expect(query.mode).toBe(QueryMode.Aggregate);
+    expect(query.group_by).toEqual([ENUM_FIELD]);
+    expect((query.select as QueryOutputColumn[])[1]).toEqual({
+      expr: { type: QueryExprType.Fn, name: 'count', args: [] },
+      as: CONVERSATION_FIELD_VALUE_COUNT_ALIAS,
+    });
+  });
+
+  test('orders by the count descending, breaking ties on the value', () => {
+    expect(build().sort).toEqual([
+      { field: CONVERSATION_FIELD_VALUE_COUNT_ALIAS, dir: QuerySortDirection.Desc },
+      { field: ENUM_FIELD, dir: QuerySortDirection.Asc },
+    ]);
+    expect((build().page as QueryOffsetPage).limit).toBe(CONVERSATION_FIELD_VALUE_LIMIT);
+  });
+
+  test('carries the period, the search term and the feedback candidates', () => {
+    const query = build({ search: 'acme', chatIds: ['chat-1'] });
+    const predicates = groupArgs(query.filter);
+
+    expect(predicates.filter((node) => fieldName(node) === ConversationsField.LastRequestTime)).toHaveLength(2);
+    expect(JSON.stringify(query.filter)).toContain('acme');
+    expect(JSON.stringify(query.filter)).toContain('chat-1');
+  });
+
+  test("carries another column's filter", () => {
+    const query = build({ columnFilters: [textFilter(ConversationsField.ProjectId, 'acme')] });
+
+    expect(JSON.stringify(query.filter)).toContain(ConversationsField.ProjectId);
+  });
+
+  // Including it would collapse the list to what is already selected, so a selection could never be widened
+  // without first being cleared.
+  test("omits the opened column's own filter", () => {
+    const query = build({
+      columnFilters: [
+        textFilter(ConversationsField.ProjectId, 'acme'),
+        { field: ENUM_FIELD, operator: ConversationFilterOperator.In, values: ['positive'] },
+      ],
+    });
+
+    expect(JSON.stringify(query.filter)).toContain(ConversationsField.ProjectId);
+    expect(JSON.stringify(query.filter)).not.toContain('positive');
+  });
+
+  test("omits the opened column's own array filter", () => {
+    const query = build({
+      field: ConversationsField.Deployments,
+      arrayFilters: [
+        {
+          field: ConversationsField.Deployments,
+          operator: ConversationFilterOperator.Contains,
+          values: ['gpt-4o'],
+        },
+      ],
+    });
+
+    expect(JSON.stringify(query.filter)).not.toContain('gpt-4o');
   });
 });

@@ -24,7 +24,7 @@ import {
   sortableColumnFields,
   transcriptBodyFields,
 } from '@/src/utils/analytics/conversation-column-catalog';
-import { OPTIONAL_USAGE_LOG_FIELDS } from '@/src/constants/analytics/conversations-trace';
+import { CONVERSATION_VALUE_FILTER, OPTIONAL_USAGE_LOG_FIELDS } from '@/src/constants/analytics/conversations-trace';
 
 const t = (key: string) => key;
 
@@ -368,6 +368,53 @@ describe('sortableColumnFields / filterableColumnFields', () => {
     const withoutInsights = SCHEMA.filter((field) => !field.name.startsWith('session_insights.'));
 
     expect(filterableColumnFields(columns(withoutInsights))).not.toContain(ConversationsField.InsightTopics);
+  });
+});
+
+// Reached by the declared type alone — nothing here names which fields are enums, which is the point.
+describe('a derived column binds a filter its type can answer', () => {
+  const derived = (name: string, type: AnalyticsFieldType): ColDef => {
+    const catalog = columns([...SCHEMA, sourceField(name, { type })]);
+    return catalog.find((column) => column.field === name) as ColDef;
+  };
+
+  test('an enum field binds the value filter and no floating filter', () => {
+    const column = derived('usage_scope', AnalyticsFieldType.Enum);
+
+    expect(column.filter).toBe(CONVERSATION_VALUE_FILTER);
+    expect(column.floatingFilter).toBe(false);
+  });
+
+  test('an enum column stays sortable and filterable', () => {
+    const catalog = columns([...SCHEMA, sourceField('usage_scope', { type: AnalyticsFieldType.Enum })]);
+
+    expect(sortableColumnFields(catalog)).toContain('usage_scope');
+    expect(filterableColumnFields(catalog)).toContain('usage_scope');
+  });
+
+  test('an enum column resolves a string value type for its predicate', () => {
+    const types = catalogValueTypes([sourceField('usage_scope', { type: AnalyticsFieldType.Enum })]);
+
+    expect(types['usage_scope']).toBe(QueryValueType.String);
+  });
+
+  // A date column's filter model carries `dateFrom`/`dateTo`, which the translation reads nothing from; a
+  // boolean would fall through to `contains`, which the query language cannot express over a boolean.
+  test.each([
+    ['timestamp', AnalyticsFieldType.Timestamp],
+    ['boolean', AnalyticsFieldType.Boolean],
+  ])('a %s field binds no filter at all', (name, type) => {
+    const column = derived(`probe_${name}`, type);
+
+    expect(column.filter).toBe(false);
+    expect(column.floatingFilter).toBe(false);
+  });
+
+  test('a string field keeps the text filter', () => {
+    const column = derived('probe_string', AnalyticsFieldType.String);
+
+    expect(column.filter).toBeUndefined();
+    expect(column.filterParams).toBeDefined();
   });
 });
 

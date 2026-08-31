@@ -3088,5 +3088,9 @@ export default {
     SpanSelected: 'Select span',
     DetailAvgDuration: 'Avg duration',
     DetailTurns: 'Turns',
+    ValueFilterGroup: 'Filter by {column}',
+    ValueFilterLoading: 'Loading values…',
+    ValueFilterEmpty: 'No values to filter by',
+    ValueFilterLoadFailed: 'Could not load the values for this column.',
   },
 } as const;

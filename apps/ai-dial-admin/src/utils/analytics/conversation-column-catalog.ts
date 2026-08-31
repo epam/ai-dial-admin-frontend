@@ -6,6 +6,7 @@ import {
   ANALYTICS_FIELD_QUERY_VALUE_TYPE,
   COMPOSED_COLUMN_PROVENANCE,
   CONVERSATION_FIELD_VALUE_TYPE,
+  CONVERSATION_VALUE_FILTER,
   CURATED_COMPOSED_FIELDS,
   DATE_FIELD_TYPES,
   ENRICHMENT_PROVENANCE,
@@ -174,9 +175,16 @@ export const availableSelectFields = (ordered: string[], optional: string[], sch
 // service rejects the whole query for one bad predicate, so a filter menu could take the listing down.
 //
 // Both stay sortable: ordering is expressible for either, and it is the predicate that has no translation.
+//
+// An `enum` field binds the value filter instead of either, and no floating filter: the default one is a text
+// entry and would write a text model over a value model. Enum-ness comes from the declared type alone — a
+// field an instance begins reporting as an enum gets the control with no change here.
 const typeColumn = (type: AnalyticsFieldType): Partial<ColDef> => {
   if (NUMERIC_FIELD_TYPES.includes(type)) {
     return { ...numericColumn, ...baseNumberFilter };
+  }
+  if (type === AnalyticsFieldType.Enum) {
+    return { filter: CONVERSATION_VALUE_FILTER, floatingFilter: false };
   }
   if (DATE_FIELD_TYPES.includes(type)) {
     return { ...dateTimeColumn, ...UNFILTERABLE };

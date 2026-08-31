@@ -4,6 +4,7 @@ import { CellClickedEvent, CellKeyDownEvent, GridReadyEvent, IDatasource } from 
 import { useRouter } from 'next/navigation';
 import { FC, useCallback, useMemo } from 'react';
 
+import ConversationValueFilter from '@/src/components/Analytics/ConversationsTrace/List/ConversationValueFilter';
 import { conversationDetailHref } from '@/src/components/Analytics/ConversationsTrace/utils';
 import { navigateEntityUrl } from '@/src/components/EntityListView/utils/on-cell-clicked';
 import GridView from '@/src/components/Grid/GridView/GridView';
@@ -14,14 +15,18 @@ import {
   CONVERSATIONS_HEADER_HEIGHT,
   CONVERSATIONS_ROW_HEIGHT,
   CONVERSATIONS_STORAGE_KEY,
+  CONVERSATION_VALUE_FILTER,
 } from '@/src/constants/analytics/conversations-trace';
 import { CONVERSATIONS_TRACE_COLUMN_GROUPS } from '@/src/constants/grid-columns/grid-columns';
 import { useI18n } from '@/src/locales/client';
-import { ConversationRow } from '@/src/models/analytics/conversations-trace';
+import { ConversationGridContext, ConversationRow } from '@/src/models/analytics/conversations-trace';
 import { AnalyticsEntityField } from '@/src/models/analytics/entity';
+
+const GRID_COMPONENTS = { [CONVERSATION_VALUE_FILTER]: ConversationValueFilter };
 
 interface Props {
   datasource: IDatasource;
+  gridContext: ConversationGridContext;
   onGridReady: (event: GridReadyEvent) => void;
   schemaFields?: AnalyticsEntityField[] | null;
   isColumnsPanelOpen: boolean;
@@ -30,6 +35,7 @@ interface Props {
 
 const ConversationsList: FC<Props> = ({
   datasource,
+  gridContext,
   onGridReady,
   schemaFields,
   isColumnsPanelOpen,
@@ -69,6 +75,8 @@ const ConversationsList: FC<Props> = ({
         additionalGridOptions={{
           ...infiniteGridOptions,
           datasource,
+          components: GRID_COMPONENTS,
+          context: gridContext,
           // The view owns the empty state; AG Grid's untranslated built-in overlay would sit on top of it.
           suppressNoRowsOverlay: true,
           // An enrichment column's exposed name carries a dot (`session_insights.title`) and the rows

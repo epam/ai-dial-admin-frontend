@@ -34,6 +34,7 @@ export const ANALYTICS_FIELD_TYPE_SAMPLE: Record<AnalyticsFieldType, SnippetValu
   [AnalyticsFieldType.Timestamp]: '2026-01-15 10:00:00.000',
   [AnalyticsFieldType.Object]: {},
   [AnalyticsFieldType.Array]: [],
+  [AnalyticsFieldType.Enum]: 'example',
 };
 
 // The column types that carry a value-format rule worth stating. A type absent from this map produces

@@ -13,6 +13,7 @@ import {
   ColumnApiModule,
   ColumnAutoSizeModule,
   ColumnState,
+  CustomFilterModule,
   DateFilterModule,
   EventApiModule,
   GetRowIdParams,
@@ -85,6 +86,7 @@ ModuleRegistry.registerModules([
   CheckboxEditorModule,
   PinnedRowModule,
   DateFilterModule,
+  CustomFilterModule,
 ]);
 
 const getDefaultSorts = (columnDefs: ColDef[] | undefined): ColumnState[] =>

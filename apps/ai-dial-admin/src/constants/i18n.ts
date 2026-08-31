@@ -2991,4 +2991,8 @@ export enum ConversationsTraceI18nKey {
   SpanSelected = 'ConversationsTrace.SpanSelected',
   DetailAvgDuration = 'ConversationsTrace.DetailAvgDuration',
   DetailTurns = 'ConversationsTrace.DetailTurns',
+  ValueFilterGroup = 'ConversationsTrace.ValueFilterGroup',
+  ValueFilterLoading = 'ConversationsTrace.ValueFilterLoading',
+  ValueFilterEmpty = 'ConversationsTrace.ValueFilterEmpty',
+  ValueFilterLoadFailed = 'ConversationsTrace.ValueFilterLoadFailed',
 }

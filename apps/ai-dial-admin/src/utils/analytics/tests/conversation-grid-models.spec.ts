@@ -2,7 +2,7 @@ import { SortModelItem } from 'ag-grid-community';
 import { describe, expect, test } from 'vitest';
 
 import { ConversationFilterOperator, ConversationsField } from '@/src/models/analytics/conversations-trace';
-import { QuerySortDirection } from '@/src/models/analytics/query';
+import { QuerySortDirection, QueryValueType } from '@/src/models/analytics/query';
 import { GridFilterType } from '@/src/types/grid-filter';
 import {
   ConversationGridFilterModel,
@@ -121,7 +121,9 @@ describe('translateConversationFilterModel', () => {
       model({ [ConversationsField.ChatId]: { type: GridFilterType.CONTAINS, filter: '  acme  ' } }),
     );
 
-    expect(filters[0].value).toBe('acme');
+    expect(filters).toEqual([
+      { field: ConversationsField.ChatId, operator: ConversationFilterOperator.Contains, value: 'acme' },
+    ]);
   });
 
   test('drops a column no stored field backs', () => {
@@ -162,13 +164,62 @@ describe('translateConversationFilterModel', () => {
     ]);
   });
 
-  // The models column offers no filter affordance, so a model naming it can only arrive from stored grid
-  // state — and it must be dropped rather than carried into a query the language cannot express.
-  test('drops an entry naming the array-backed models field', () => {
+  describe('a value filter contributes one set-membership entry', () => {
+    test('a selected list becomes a single membership filter', () => {
+      const filters = translateConversationFilterModel(
+        model({ [ConversationsField.InsightTopics]: { values: ['positive', 'neutral'] } }),
+      );
+
+      expect(filters).toEqual([
+        {
+          field: ConversationsField.InsightTopics,
+          operator: ConversationFilterOperator.In,
+          values: ['positive', 'neutral'],
+        },
+      ]);
+    });
+
+    // The same state a text entry with no value is in, and it must read the same way: no predicate, rather
+    // than a predicate against nothing.
+    test.each([[[] as string[]], [undefined]])('a selection of %s contributes nothing', (values) => {
+      const filters = translateConversationFilterModel(model({ [ConversationsField.InsightTopics]: { values } }));
+
+      expect(filters).toEqual([]);
+    });
+
+    test('a text filter is unaffected by the values branch', () => {
+      const filters = translateConversationFilterModel(
+        model({ [ConversationsField.ProjectId]: { type: GridFilterType.CONTAINS, filter: 'acme' } }),
+      );
+
+      expect(filters).toEqual([
+        { field: ConversationsField.ProjectId, operator: ConversationFilterOperator.Contains, value: 'acme' },
+      ]);
+    });
+
+    test("a selection carries the column's declared value type", () => {
+      const filters = translateConversationFilterModel(
+        model({ [ConversationsField.InsightTopics]: { values: ['positive'] } }),
+        { valueTypes: { [ConversationsField.InsightTopics]: QueryValueType.String } },
+      );
+
+      expect(filters[0].valueType).toBe(QueryValueType.String);
+    });
+  });
+
+  // The deployments column offers a text filter, answered over the array's elements: the entered text is
+  // resolved to whole values by the server action, so the translation carries it like any other text entry.
+  test('carries an entry naming the array-backed deployments field', () => {
     const filters = translateConversationFilterModel(
       model({ [ConversationsField.Deployments]: { type: GridFilterType.CONTAINS, filter: 'gpt-4.1' } }),
     );
 
-    expect(filters).toEqual([]);
+    expect(filters).toEqual([
+      {
+        field: ConversationsField.Deployments,
+        operator: ConversationFilterOperator.Contains,
+        value: 'gpt-4.1',
+      },
+    ]);
   });
 });
