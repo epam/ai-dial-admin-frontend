@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { SourceMode } from '@/src/models/analytics/enrichment-rules-ui';
+import { RuleDraft, SourceMode } from '@/src/models/analytics/enrichment-rules-ui';
 import { EnrichmentRule, RulePriority, TriggerKind } from '@/src/models/analytics/rule';
 import { EvaluatorType } from '@/src/models/analytics/evaluator';
 import { buildRuleDto, getReadOnlyMembers, getSourceMode, toRuleDraft } from '@/src/utils/analytics/rule-dto';
@@ -154,5 +154,68 @@ describe('buildRuleDto', () => {
     buildRuleDto({ ...input, trigger_kind: TriggerKind.OnIngest });
 
     expect(input.trigger_cron).toBe('0 0 * * * *');
+  });
+});
+
+describe('buildRuleDto — a draft that came from the JSON editor', () => {
+  test.each([
+    ['name as a number', TriggerKind.OnIngest, { name: 5 }],
+    ['name as an object', TriggerKind.OnIngest, { name: {} }],
+    ['trigger_cron as a number on a scheduled rule', TriggerKind.Schedule, { trigger_cron: 5 }],
+    ['prefer_sql as a number on a group rule', TriggerKind.Group, { member_select: { limit: 1, prefer_sql: 5 } }],
+    ['order_by as a string on a group rule', TriggerKind.Group, { member_select: { limit: 1, order_by: 'x' } }],
+    ['ready_when as a string on a group rule', TriggerKind.Group, { ready_when: 'x' }],
+    ['ready_when.signal as a number on a group rule', TriggerKind.Group, { ready_when: { signal: 5 } }],
+    ['source as a number', TriggerKind.OnIngest, { source: 5 }],
+    ['input_bindings as an object', TriggerKind.OnIngest, { input_bindings: {} }],
+  ])('does not throw on %s', (_label, kind, patch) => {
+    const draft = { ...toRuleDraft(rule), trigger_kind: kind, ...patch } as unknown as RuleDraft;
+
+    expect(() => buildRuleDto(draft, { grainKey: 'g', sourceTable: 'dial_usage_log' })).not.toThrow();
+  });
+
+  test('a member_select order_by that is not a list is dropped rather than sent', () => {
+    const dto = buildRuleDto(
+      {
+        ...toRuleDraft(rule),
+        trigger_kind: TriggerKind.Group,
+        member_select: { limit: 1, order_by: 'x' },
+      } as unknown as RuleDraft,
+      { grainKey: 'g' },
+    );
+
+    expect(dto.member_select).toEqual({ limit: 1 });
+  });
+
+  test('a ready_when that is not an object is dropped rather than sent', () => {
+    const dto = buildRuleDto(
+      { ...toRuleDraft(rule), trigger_kind: TriggerKind.Group, ready_when: 'x' } as unknown as RuleDraft,
+      { grainKey: 'g' },
+    );
+
+    expect(dto).not.toHaveProperty('ready_when');
+  });
+
+  test('a wrongly typed name is dropped rather than faulting, and the service refuses it', () => {
+    // Narrowed to a blank string, then removed by the empty-member prune — so the name is absent rather
+    // than blank, and `@NotBlank` on the service is what refuses it.
+    const dto = buildRuleDto({ ...toRuleDraft(rule), name: 5 } as unknown as RuleDraft);
+
+    expect(dto).not.toHaveProperty('name');
+  });
+
+  test('an assembled request is itself a valid draft, so it round-trips', () => {
+    const context = { grainKey: 'response_id', sourceTable: 'dial_usage_log' };
+    const first = buildRuleDto(toRuleDraft(rule), context);
+
+    expect(buildRuleDto(first as RuleDraft, context)).toEqual(first);
+  });
+
+  test('a rule that follows its target does not come back pinned', () => {
+    const context = { grainKey: 'response_id', sourceTable: 'dial_usage_log' };
+    const followed = buildRuleDto({ ...toRuleDraft(rule), source: 'dial_usage_log' } as RuleDraft, context);
+
+    expect(followed).not.toHaveProperty('source');
+    expect(buildRuleDto(followed as RuleDraft, context)).not.toHaveProperty('source');
   });
 });

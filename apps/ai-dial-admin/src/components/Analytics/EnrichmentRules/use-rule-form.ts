@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { Dispatch, SetStateAction, useCallback, useMemo, useState } from 'react';
 
 import {
   getBindingRowError,
@@ -13,6 +13,7 @@ import { CreateRuleDto, EnrichmentRule, TriggerKind } from '@/src/models/analyti
 import { GROUP_FETCH_MAX_ROWS } from '@/src/constants/analytics/enrichment-rules';
 import { isValidSixFieldCron } from '@/src/utils/analytics/cron';
 import { buildRuleDto, toRuleDraft } from '@/src/utils/analytics/rule-dto';
+import { trimmedString } from '@/src/utils/formatting/trimmed-string';
 
 interface Params {
   rule?: EnrichmentRule;
@@ -44,6 +45,8 @@ export const useRuleForm = ({ rule, takenTargets = [] }: Params = {}) => {
 
   const reset = useCallback((next: EnrichmentRule) => setDraft(toRuleDraft(next)), []);
 
+  const replaceDraft: Dispatch<SetStateAction<RuleDraft>> = setDraft;
+
   const availableTargets = useMemo(() => {
     // The edited rule's own target must stay listed, or the select is stranded on a value it does not offer.
     const taken = new Set(takenTargets.filter((name) => name !== rule?.target_enrichment));
@@ -52,10 +55,13 @@ export const useRuleForm = ({ rule, takenTargets = [] }: Params = {}) => {
 
   const { evaluator, grainKey, targetColumns, outputVars } = resolution;
 
-  const boundOutputs = draft.output_bindings ?? [];
+  const boundOutputs = (Array.isArray(draft.output_bindings) ? draft.output_bindings : []).filter(
+    (binding) => Boolean(binding) && typeof binding === 'object',
+  );
   const hasReadyWhen = Boolean(draft.ready_when?.idle || draft.ready_when?.max_staleness || draft.ready_when?.signal);
   const isCostCeilingValid = isPositiveIntegerOrEmpty(draft.ready_when?.cost_ceiling);
-  const isCronValid = Boolean(draft.trigger_cron) && isValidSixFieldCron(draft.trigger_cron ?? '');
+  const isCronValid =
+    Boolean(trimmedString(draft.trigger_cron)) && isValidSixFieldCron(trimmedString(draft.trigger_cron));
   const isSamplingValid = draft.sampling == null || (draft.sampling >= 0 && draft.sampling <= 1);
   // Only a group rule sends `member_select`, and only a group rule shows the control. Validating it for
   // any other kind blocks the save with a message that is not on screen.
@@ -87,7 +93,7 @@ export const useRuleForm = ({ rule, takenTargets = [] }: Params = {}) => {
     !resolution.hasTargetError;
 
   const isValid =
-    Boolean(draft.name?.trim()) &&
+    Boolean(trimmedString(draft.name)) &&
     Boolean(draft.evaluator_name) &&
     Boolean(draft.target_enrichment) &&
     draft.enabled != null &&
@@ -106,6 +112,7 @@ export const useRuleForm = ({ rule, takenTargets = [] }: Params = {}) => {
   return {
     draft,
     onChange,
+    replaceDraft,
     reset,
     buildDto,
     availableTargets,
