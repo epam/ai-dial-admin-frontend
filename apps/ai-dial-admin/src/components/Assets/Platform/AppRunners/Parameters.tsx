@@ -10,7 +10,6 @@ import SchemaGrid from '@/src/components/Common/SchemaGrid/SchemaGrid';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialAppRunnerResource } from '@/src/models/dial/resource';
-import { toCoreRunnerName } from '@/src/utils/app-runners/core-runner-name';
 import { AppRunnerAssetProps } from './models';
 
 interface Props extends AppRunnerAssetProps {
@@ -53,7 +52,7 @@ const AppRunnerAssetParameters: FC<Props> = ({ runner, onChange, isSkipRefresh }
       return;
     }
     setIsLoading(true);
-    getResolvedRunnerSchema(toCoreRunnerName(runner.$id)).then((res) => {
+    getResolvedRunnerSchema(runner.$id).then((res) => {
       setIsLoading(false);
       if (res.success && res.response) {
         setResolvedSchema(res.response as JsonSchema);

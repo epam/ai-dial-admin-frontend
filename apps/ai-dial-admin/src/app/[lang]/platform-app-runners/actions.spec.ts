@@ -214,9 +214,9 @@ describe('Assets app runner :: server actions', () => {
   test('Should read the resolved schema from Core', async () => {
     (appRunnerSchemaApi.resolvedSchema as any).mockResolvedValue(RESPONSE_MOCK);
 
-    const result = await getResolvedRunnerSchema(ENCODED);
+    const result = await getResolvedRunnerSchema(ID);
 
-    expect(appRunnerSchemaApi.resolvedSchema).toHaveBeenCalledWith(TOKEN_MOCK, ENCODED);
+    expect(appRunnerSchemaApi.resolvedSchema).toHaveBeenCalledWith(TOKEN_MOCK, ID);
     expect(result).toBe(RESPONSE_MOCK);
   });
 
@@ -227,7 +227,7 @@ describe('Assets app runner :: server actions', () => {
       errorMessage: 'Schema not found',
     });
 
-    const result = await getResolvedRunnerSchema(ENCODED);
+    const result = await getResolvedRunnerSchema(ID);
 
     expect(result.success).toBe(false);
     expect(result.errorMessage).toEqual('Schema not found');

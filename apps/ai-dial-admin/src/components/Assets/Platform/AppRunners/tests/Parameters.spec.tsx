@@ -37,7 +37,7 @@ describe('AppRunnerAssetParameters', () => {
     render(<AppRunnerAssetParameters runner={runner({ [ENDPOINT]: 'http://remote/schema' })} onChange={vi.fn()} />);
 
     expect(await screen.findByText('schema-grid:readonly=true')).toBeInTheDocument();
-    expect(getResolvedRunnerSchema).toHaveBeenCalledWith('https%3A%2F%2Fhost%2Frunner');
+    expect(getResolvedRunnerSchema).toHaveBeenCalledWith('https://host/runner');
   });
 
   test('Should surface an error rather than an empty parameter set when Core cannot resolve the schema', async () => {

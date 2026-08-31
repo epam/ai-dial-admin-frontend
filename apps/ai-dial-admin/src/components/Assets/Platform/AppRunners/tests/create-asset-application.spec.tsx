@@ -129,10 +129,10 @@ describe('App runner asset :: create asset application action', () => {
     expect(lastInitialValues().source).toBeUndefined();
   });
 
-  test('Should resolve the schema against Core by the encoded resource name', () => {
+  test('Should resolve the schema against Core by the raw runner $id', () => {
     renderView();
 
-    expect(getResolvedRunnerSchema).toHaveBeenCalledWith('https%3A%2F%2Fhost%2Frunner');
+    expect(getResolvedRunnerSchema).toHaveBeenCalledWith('https://host/runner');
   });
 
   test('Should seed application properties from the Core-resolved schema', async () => {
