@@ -16,9 +16,19 @@ export const toEvaluatorDraft = (evaluator: Evaluator): CreateEvaluatorDto => {
 
 export const getVarExpression = (item: EvaluatorVar): string => item.sql ?? item.jsonata ?? '';
 
+// A draft can hold whatever parsed — `"model": 5`, `"output_vars": {}` — and both exported functions below
+// run during render, where a bare `.trim()` or `.filter()` on one of those blanks the page.
+const trimmed = (value: unknown): string => (typeof value === 'string' ? value.trim() : '');
+
+const asVars = (value: unknown): EvaluatorVar[] =>
+  (Array.isArray(value) ? value : []).filter((item): item is EvaluatorVar => Boolean(item) && typeof item === 'object');
+
 const toTypedVar = (item: EvaluatorVar, type: EvaluatorType): EvaluatorVar => {
   const expression = getVarExpression(item);
-  const base = { name: item.name, type: item.type };
+  const base = { ...item };
+  delete base.sql;
+  delete base.jsonata;
+
   if (!expression) return base;
   return type === EvaluatorType.Sql ? { ...base, sql: expression } : { ...base, jsonata: expression };
 };
@@ -29,48 +39,55 @@ const isEmpty = (value: unknown): boolean =>
   (Array.isArray(value) && value.length === 0) ||
   (typeof value === 'object' && !Array.isArray(value) && Object.keys(value as object).length === 0);
 
-const namedVars = (vars: EvaluatorVar[] | undefined, type: EvaluatorType): EvaluatorVar[] =>
-  (vars ?? []).filter((item) => item.name?.trim()).map((item) => toTypedVar(item, type));
+const namedVars = (vars: unknown, type: EvaluatorType): EvaluatorVar[] =>
+  asVars(vars)
+    .filter((item) => trimmed(item.name))
+    .map((item) => toTypedVar(item, type));
 
+// Rebuilt from the selected type on every save rather than carried over: the service answers 422 for an
+// llm-only member on a sql evaluator rather than ignoring it.
+const LLM_ONLY_MEMBERS: (keyof CreateEvaluatorDto)[] = [
+  'preset',
+  'model',
+  'params',
+  'request_template',
+  'input_vars',
+  'response_schema',
+];
+
+// Everything on the draft is carried through, including members no control presents: an allow-list would
+// silently drop what the JSON editor introduced.
 export const buildEvaluatorDto = (draft: CreateEvaluatorDto): CreateEvaluatorDto => {
-  const dto: CreateEvaluatorDto = {
-    name: draft.name,
-    type: draft.type,
-    output_vars: namedVars(draft.output_vars, draft.type),
-  };
+  const dto = { ...draft } as CreateEvaluatorDto & Record<string, unknown>;
 
-  // The service answers 422 for an llm-only member on a sql evaluator rather than ignoring it, so
-  // switching type must drop them rather than carry them over.
-  if (draft.type !== EvaluatorType.Sql) {
-    Object.assign(dto, {
-      preset: draft.preset,
-      model: draft.model,
-      params: draft.params,
-      request_template: draft.request_template,
-      input_vars: namedVars(draft.input_vars, draft.type),
-      response_schema: draft.response_schema,
-    });
+  READ_ONLY_MEMBERS.forEach((key) => delete dto[key]);
+
+  dto.output_vars = namedVars(draft.output_vars, draft.type);
+
+  if (draft.type === EvaluatorType.Sql) {
+    LLM_ONLY_MEMBERS.forEach((key) => delete dto[key]);
+  } else {
+    dto.input_vars = namedVars(draft.input_vars, draft.type);
   }
 
-  const pruned = dto as CreateEvaluatorDto & Record<string, unknown>;
-  Object.keys(pruned).forEach((key) => {
-    if (isEmpty(pruned[key])) delete pruned[key];
+  Object.keys(dto).forEach((key) => {
+    if (isEmpty(dto[key])) delete dto[key];
   });
 
   return dto;
 };
 
 export const isEvaluatorShapeValid = (draft: CreateEvaluatorDto): boolean => {
-  if (!draft.name?.trim() || !draft.type) return false;
+  if (!trimmed(draft.name) || !draft.type) return false;
 
-  const outputVars = draft.output_vars ?? [];
-  if (!outputVars.length || outputVars.some((item) => !item.name?.trim() || !item.type)) return false;
+  const outputVars = asVars(draft.output_vars);
+  if (!outputVars.length || outputVars.some((item) => !trimmed(item.name) || !item.type)) return false;
 
   if (draft.type === EvaluatorType.Sql) {
     return outputVars.every((item) => Boolean(getVarExpression(item)));
   }
 
-  return Boolean(draft.preset) && Boolean(draft.model?.trim());
+  return Boolean(draft.preset) && Boolean(trimmed(draft.model));
 };
 
 export const toParamRows = (params: Record<string, unknown> = {}): EvaluatorParamRow[] =>

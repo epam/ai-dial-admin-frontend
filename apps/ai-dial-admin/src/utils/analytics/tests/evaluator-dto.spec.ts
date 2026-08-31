@@ -197,3 +197,69 @@ describe('params rows', () => {
     expect(toParams([{ id: '1', key: 'mode', value: 'strict' }])).toEqual({ mode: 'strict' });
   });
 });
+
+describe('buildEvaluatorDto — a draft that came from the JSON editor', () => {
+  test('carries a member the console does not name', () => {
+    const dto = buildEvaluatorDto({ ...draftOf(llm), some_new_knob: 42 } as unknown as CreateEvaluatorDto);
+
+    expect(dto).toMatchObject({ some_new_knob: 42 });
+  });
+
+  test('still strips the members the service assigns, even when they are typed back in', () => {
+    const dto = buildEvaluatorDto({
+      ...draftOf(llm),
+      version: 9,
+      created_at: '2020-01-01T00:00:00Z',
+    } as unknown as CreateEvaluatorDto);
+
+    expect(dto).not.toHaveProperty('version');
+    expect(dto).not.toHaveProperty('created_at');
+  });
+
+  test.each([
+    ['output_vars as an object', { output_vars: {} }],
+    ['output_vars as a string', { output_vars: 'x' }],
+    ['output_vars holding null', { output_vars: [null] }],
+    ['output_vars holding a string', { output_vars: ['abc'] }],
+    ['input_vars as an object', { input_vars: {} }],
+    ['input_vars holding null', { input_vars: [null] }],
+    ['model as a number', { model: 5 }],
+    ['model as an object', { model: {} }],
+    ['name as a number', { name: 5 }],
+    ['params as a number', { params: 5 }],
+    ['request_template as a number', { request_template: 5 }],
+  ])('does not throw on %s', (_label, patch) => {
+    const draft = { ...draftOf(llm), ...patch } as unknown as CreateEvaluatorDto;
+
+    expect(() => buildEvaluatorDto(draft)).not.toThrow();
+    expect(() => isEvaluatorShapeValid(draft)).not.toThrow();
+  });
+
+  test('carries a member the console does not name on a variable too', () => {
+    const dto = buildEvaluatorDto({
+      ...draftOf(llm),
+      output_vars: [{ name: 'topic', type: 'string', jsonata: 'topic', description: 'the topic' }],
+    } as unknown as CreateEvaluatorDto);
+
+    expect(dto.output_vars).toEqual([{ name: 'topic', type: 'string', jsonata: 'topic', description: 'the topic' }]);
+  });
+
+  test('retyping an expression keeps the rest of the variable', () => {
+    const dto = buildEvaluatorDto({
+      ...draftOf(llm),
+      type: EvaluatorType.Sql,
+      output_vars: [{ name: 'topic', type: 'string', jsonata: 'topic', description: 'the topic' }],
+    } as unknown as CreateEvaluatorDto);
+
+    expect(dto.output_vars).toEqual([{ name: 'topic', type: 'string', sql: 'topic', description: 'the topic' }]);
+  });
+
+  test('a var of the wrong shape is dropped rather than sent', () => {
+    const dto = buildEvaluatorDto({
+      ...draftOf(llm),
+      output_vars: [null, 'abc', { name: 'topic', type: 'string', jsonata: 'topic' }],
+    } as unknown as CreateEvaluatorDto);
+
+    expect(dto.output_vars).toEqual([{ name: 'topic', type: 'string', jsonata: 'topic' }]);
+  });
+});
