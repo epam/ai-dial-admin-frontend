@@ -74,7 +74,7 @@ Each projected row SHALL have a grid row id unique across the whole grid — the
 
 While any column filter is active, the projection SHALL drop `GROUP` summary rows and emit every turn as its own row, so the grid's native per-column filtering can hide non-matching turns individually.
 
-A turn row emitted this way SHALL be marked as flattened. Because no `GROUP` row survives to carry them, a flattened turn row SHALL show the case's own `id` and name in their columns rather than leaving them blank — otherwise a filtered-down turn is unidentifiable and its case unrenameable. The case `id` SHALL be readable from the id column's value on every row type regardless of what that row displays, so an id filter can match a turn.
+A turn row emitted this way SHALL be marked as flattened. Because no `GROUP` row survives to carry them, a flattened turn row SHALL show the case's own `id`, name, and shared field values in their columns rather than leaving them blank — otherwise a filtered-down turn is unidentifiable, its case unrenameable, and its shared values invisible. The case `id` SHALL be readable from the id column's value on every row type regardless of what that row displays, so an id filter can match a turn.
 
 #### Scenario: Filtering matches inside a collapsed group
 
@@ -85,6 +85,11 @@ A turn row emitted this way SHALL be marked as flattened. Because no `GROUP` row
 
 - **WHEN** the name is edited on a flattened turn row
 - **THEN** every turn of that case carries the new name, exactly as editing it on the `GROUP` row would
+
+#### Scenario: Filtering keeps shared field values on flattened turns
+
+- **WHEN** a column filter flattens a multi-turn case
+- **THEN** each turn row shows the case's shared field values, rather than leaving those cells blank
 
 #### Scenario: Clearing the filter restores grouping
 
@@ -140,10 +145,10 @@ Each schema field SHALL be either per-turn (`perTurn` true) or shared. A field w
 
 Rendering SHALL follow the scope:
 
-| | collapsed `GROUP` row | `TURN` row | `SINGLE` row |
-|---|---|---|---|
-| per-turn field | every turn's value, one line per turn, read-only | editable | editable |
-| shared field | editable | blank | editable |
+| | collapsed `GROUP` row | nested `TURN` row | flattened `TURN` row | `SINGLE` row |
+|---|---|---|---|---|
+| per-turn field | every turn's value, one line per turn, read-only | editable | editable | editable |
+| shared field | editable | blank | editable | editable |
 
 Editing a shared field on a `GROUP` row SHALL write the value to every turn of that case. A case's turns SHALL always agree on their shared field values, whichever turn is later removed or reordered.
 
@@ -191,7 +196,7 @@ Scope-based reading SHALL apply only once the schema is known. Before it loads, 
 #### Scenario: A shared field is edited once
 
 - **WHEN** a shared field is edited on a `GROUP` row
-- **THEN** the value is applied to every turn of the case, and the case's `TURN` rows show that column blank
+- **THEN** the value is applied to every turn of the case, and nested `TURN` rows show that column blank
 
 #### Scenario: A shared value survives deleting the turn it was entered on
 

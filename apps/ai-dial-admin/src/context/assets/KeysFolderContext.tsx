@@ -1,6 +1,6 @@
 'use client';
 
-import { getKeys } from '@/src/app/[lang]/assets-keys/actions';
+import { getKeys } from '@/src/app/[lang]/platform-keys/actions';
 import { DialKeyResource } from '@/src/models/dial/resource';
 import { createFolderContext } from '@/src/context/assets/AssetsFolderContext';
 

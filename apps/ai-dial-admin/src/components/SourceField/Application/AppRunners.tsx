@@ -7,7 +7,7 @@ import classNames from 'classnames';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getResolvedApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
-import { getResolvedRunnerSchema } from '@/src/app/[lang]/assets-app-runners/actions';
+import { getResolvedRunnerSchema } from '@/src/app/[lang]/platform-app-runners/actions';
 import { ButtonsI18nKey, EntityPlaceholdersI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS, CONTROL_WITH_BUTTON_WIDTH } from '@/src/constants/main-layout';
 import { useSaveValidationContext, ValidationActionType } from '@/src/context/SaveValidationContext';
@@ -144,7 +144,7 @@ const AppRunners: FC<Props> = ({
   const openInNewTab = useCallback(() => {
     const url =
       selectedRunner && getRunnerOrigin(selectedRunner) === AppRunnerOrigin.Asset
-        ? `/${currentLocale}${getUrnForEntity(ApplicationRoute.AssetsAppRunners, selectedRunner)}`
+        ? `/${currentLocale}${getUrnForEntity(ApplicationRoute.PlatformAppRunners, selectedRunner)}`
         : `/${currentLocale}${ApplicationRoute.ApplicationRunners}/${encodeURIComponent(`${currentValue}`)}`;
     window.open(url, '_blank');
   }, [currentLocale, currentValue, selectedRunner]);

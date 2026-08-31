@@ -29,11 +29,11 @@ describe('getNoAvailableTitle', () => {
   });
 
   test('returns NotAvailableModel for AssetsModels view', () => {
-    expect(getNoAvailableTitle(ApplicationRoute.AssetsModels)).toBe(RolesI18nKey.NotAvailableModel);
+    expect(getNoAvailableTitle(ApplicationRoute.PlatformModels)).toBe(RolesI18nKey.NotAvailableModel);
   });
 
   test('returns NotAvailableRoute for AssetsRoutes view', () => {
-    expect(getNoAvailableTitle(ApplicationRoute.AssetsRoutes)).toBe(RolesI18nKey.NotAvailableRoute);
+    expect(getNoAvailableTitle(ApplicationRoute.PlatformRoutes)).toBe(RolesI18nKey.NotAvailableRoute);
   });
 });
 

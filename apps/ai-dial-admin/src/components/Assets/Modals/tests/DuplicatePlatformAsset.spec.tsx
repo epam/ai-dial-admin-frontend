@@ -30,20 +30,20 @@ const renderModal = (view: ApplicationRoute, entity: PlatformAsset, onDuplicate 
 
 describe('DuplicatePlatformAsset', () => {
   test('Should offer only an id and a display name, these assets having no version or folder', () => {
-    renderModal(ApplicationRoute.AssetsModels, model);
+    renderModal(ApplicationRoute.PlatformModels, model);
 
     expect(screen.getAllByRole('textbox')).toHaveLength(2);
   });
 
   test('Should suffix the model id without brackets, which Core rejects in a resource name', () => {
-    renderModal(ApplicationRoute.AssetsModels, model);
+    renderModal(ApplicationRoute.PlatformModels, model);
 
     expect(screen.getAllByRole('textbox')[0]).toHaveValue('gpt-4-copy');
   });
 
   test('Should duplicate a model under the edited name', async () => {
     const user = userEvent.setup();
-    const { onDuplicate } = renderModal(ApplicationRoute.AssetsModels, model);
+    const { onDuplicate } = renderModal(ApplicationRoute.PlatformModels, model);
 
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Duplicate }));
 
@@ -52,7 +52,7 @@ describe('DuplicatePlatformAsset', () => {
 
   test('Should edit an app runner through its $id, not its name', async () => {
     const user = userEvent.setup();
-    const { onDuplicate } = renderModal(ApplicationRoute.AssetsAppRunners, runner);
+    const { onDuplicate } = renderModal(ApplicationRoute.PlatformAppRunners, runner);
     const idInput = screen.getAllByRole('textbox')[0];
 
     expect(idInput).toHaveValue('http://runner/schema-copy');
@@ -65,7 +65,7 @@ describe('DuplicatePlatformAsset', () => {
 
   test('Should close without duplicating on cancel', async () => {
     const user = userEvent.setup();
-    const { onDuplicate, onClose } = renderModal(ApplicationRoute.AssetsModels, model);
+    const { onDuplicate, onClose } = renderModal(ApplicationRoute.PlatformModels, model);
 
     await user.click(screen.getByRole('button', { name: ButtonsI18nKey.Cancel }));
 

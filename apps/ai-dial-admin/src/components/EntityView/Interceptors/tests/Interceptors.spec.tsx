@@ -41,7 +41,7 @@ describe('EntityInterceptors :: runner field selection', () => {
     render(<EntityInterceptors entity={entity} interceptors={interceptors} onChangeEntity={vi.fn()} view={view} />);
   };
 
-  test.each([ApplicationRoute.ApplicationRunners, ApplicationRoute.AssetsAppRunners])(
+  test.each([ApplicationRoute.ApplicationRunners, ApplicationRoute.PlatformAppRunners])(
     'Should count dial:applicationTypeInterceptors for %s',
     (view) => {
       renderFor(view, { 'dial:applicationTypeInterceptors': ['runner-int'] });
@@ -51,7 +51,7 @@ describe('EntityInterceptors :: runner field selection', () => {
   );
 
   test('Should ignore the generic interceptors field on the asset runner view', () => {
-    renderFor(ApplicationRoute.AssetsAppRunners, { interceptors: ['runner-int', 'other'] });
+    renderFor(ApplicationRoute.PlatformAppRunners, { interceptors: ['runner-int', 'other'] });
 
     expect(screen.queryByText(`${InterceptorsI18nKey.Local}: 2`)).not.toBeInTheDocument();
   });

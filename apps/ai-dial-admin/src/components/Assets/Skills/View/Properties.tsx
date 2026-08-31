@@ -53,7 +53,7 @@ const SkillAssetProperties: FC<Props> = ({
         onChange={onChangeFolderId}
         context={useSkillFolder}
         disabled={isReadOnlyAdmin}
-        view={ApplicationRoute.AssetsSkills}
+        view={ApplicationRoute.Skills}
         shouldAbleToCreateNewFolder={false}
       />
       <SkillDetails

@@ -36,18 +36,18 @@ export const findFolderByPath = (items: DialFile[], targetPath: string): DialFil
 };
 
 const assetEntityMap: Record<string, FileManagerI18nKey> = {
-  [ApplicationRoute.AssetsModels]: FileManagerI18nKey.Models,
-  [ApplicationRoute.AssetsAppRunners]: FileManagerI18nKey.AppRunners,
-  [ApplicationRoute.AssetsInterceptors]: FileManagerI18nKey.Interceptors,
-  [ApplicationRoute.AssetsRoutes]: FileManagerI18nKey.Routes,
-  [ApplicationRoute.AssetsRoles]: FileManagerI18nKey.Roles,
-  [ApplicationRoute.AssetsKeys]: FileManagerI18nKey.Keys,
+  [ApplicationRoute.PlatformModels]: FileManagerI18nKey.Models,
+  [ApplicationRoute.PlatformAppRunners]: FileManagerI18nKey.AppRunners,
+  [ApplicationRoute.PlatformInterceptors]: FileManagerI18nKey.Interceptors,
+  [ApplicationRoute.PlatformRoutes]: FileManagerI18nKey.Routes,
+  [ApplicationRoute.PlatformRoles]: FileManagerI18nKey.Roles,
+  [ApplicationRoute.PlatformKeys]: FileManagerI18nKey.Keys,
   [ApplicationRoute.AssetsApplications]: FileManagerI18nKey.Applications,
   [ApplicationRoute.AssetsToolsets]: FileManagerI18nKey.Toolsets,
   [ApplicationRoute.Prompts]: FileManagerI18nKey.Prompts,
   [ApplicationRoute.Files]: FileManagerI18nKey.Files,
   [ApplicationRoute.Conversations]: FileManagerI18nKey.Conversations,
-  [ApplicationRoute.AssetsSkills]: FileManagerI18nKey.Skills,
+  [ApplicationRoute.Skills]: FileManagerI18nKey.Skills,
 };
 
 export const getValidationMessages = (t: (key: string) => string) => {
@@ -106,11 +106,11 @@ export const isItemNameValid = (name: string): boolean => {
  * here; the CRUD calls address the separately-held encoded `path`, not this name.
  */
 export const getForbiddenSymbolsRegExp = (view: ApplicationRoute): RegExp | undefined =>
-  view === ApplicationRoute.AssetsAppRunners ? CONTROL_CHARS_ONLY_REGEXP : undefined;
+  view === ApplicationRoute.PlatformAppRunners ? CONTROL_CHARS_ONLY_REGEXP : undefined;
 
 /** Opening a row navigates by encoded `path`, so a URI-shaped app-runner name is safe to open. */
 export const isItemOpenable = (view: ApplicationRoute, name: string): boolean =>
-  view === ApplicationRoute.AssetsAppRunners || isItemNameValid(name);
+  view === ApplicationRoute.PlatformAppRunners || isItemNameValid(name);
 
 export const validateCreateFolder = (
   name: string,
@@ -202,13 +202,13 @@ export const getToolbarOptions = (route: ApplicationRoute, isReadOnlyAdmin: bool
 export const getBulkActionsToolbarOptions = (view: ApplicationRoute, t: (key: string) => string) => {
   const actionLabels =
     view === ApplicationRoute.Conversations ||
-    view === ApplicationRoute.AssetsModels ||
-    view === ApplicationRoute.AssetsAppRunners ||
-    view === ApplicationRoute.AssetsInterceptors ||
-    view === ApplicationRoute.AssetsRoutes ||
-    view === ApplicationRoute.AssetsRoles ||
-    view === ApplicationRoute.AssetsKeys ||
-    view === ApplicationRoute.AssetsSkills
+    view === ApplicationRoute.PlatformModels ||
+    view === ApplicationRoute.PlatformAppRunners ||
+    view === ApplicationRoute.PlatformInterceptors ||
+    view === ApplicationRoute.PlatformRoutes ||
+    view === ApplicationRoute.PlatformRoles ||
+    view === ApplicationRoute.PlatformKeys ||
+    view === ApplicationRoute.Skills
       ? bulkActionLabels.filter((action) => action.key === 'delete')
       : bulkActionLabels;
 

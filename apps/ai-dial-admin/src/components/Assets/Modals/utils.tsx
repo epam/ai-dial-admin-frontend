@@ -97,31 +97,31 @@ export const getDeleteModalTitle = (
       return t(FileManagerI18nKey.DeleteItemsModalTitle, {
         items: itemsCount > 1 ? t(FileManagerI18nKey.Conversations) : t(FileManagerI18nKey.Conversation),
       });
-    case ApplicationRoute.AssetsModels:
+    case ApplicationRoute.PlatformModels:
       return t(FileManagerI18nKey.DeleteItemsModalTitle, {
         items: itemsCount > 1 ? t(FileManagerI18nKey.Models) : t(FileManagerI18nKey.Model),
       });
-    case ApplicationRoute.AssetsAppRunners:
+    case ApplicationRoute.PlatformAppRunners:
       return t(FileManagerI18nKey.DeleteItemsModalTitle, {
         items: itemsCount > 1 ? t(FileManagerI18nKey.AppRunners) : t(FileManagerI18nKey.AppRunner),
       });
-    case ApplicationRoute.AssetsInterceptors:
+    case ApplicationRoute.PlatformInterceptors:
       return t(FileManagerI18nKey.DeleteItemsModalTitle, {
         items: itemsCount > 1 ? t(FileManagerI18nKey.Interceptors) : t(FileManagerI18nKey.Interceptor),
       });
-    case ApplicationRoute.AssetsRoutes:
+    case ApplicationRoute.PlatformRoutes:
       return t(FileManagerI18nKey.DeleteItemsModalTitle, {
         items: itemsCount > 1 ? t(FileManagerI18nKey.Routes) : t(FileManagerI18nKey.Route),
       });
-    case ApplicationRoute.AssetsRoles:
+    case ApplicationRoute.PlatformRoles:
       return t(FileManagerI18nKey.DeleteItemsModalTitle, {
         items: itemsCount > 1 ? t(FileManagerI18nKey.Roles) : t(FileManagerI18nKey.Role),
       });
-    case ApplicationRoute.AssetsKeys:
+    case ApplicationRoute.PlatformKeys:
       return t(FileManagerI18nKey.DeleteItemsModalTitle, {
         items: itemsCount > 1 ? t(FileManagerI18nKey.Keys) : t(FileManagerI18nKey.Key),
       });
-    case ApplicationRoute.AssetsSkills:
+    case ApplicationRoute.Skills:
       return t(FileManagerI18nKey.DeleteItemsModalTitle, {
         items: itemsCount > 1 ? t(FileManagerI18nKey.Skills) : t(FileManagerI18nKey.Skill),
       });
@@ -181,31 +181,31 @@ export const getDeleteModalDescription = (
               : t(FileManagerI18nKey.Conversation)
             ).toLowerCase(),
           });
-    case ApplicationRoute.AssetsModels:
+    case ApplicationRoute.PlatformModels:
       return t(FileManagerI18nKey.DeleteItemsModalDescription, {
         items: (itemsCount > 1 ? t(FileManagerI18nKey.Models) : t(FileManagerI18nKey.Model)).toLowerCase(),
       });
-    case ApplicationRoute.AssetsAppRunners:
+    case ApplicationRoute.PlatformAppRunners:
       return t(FileManagerI18nKey.DeleteItemsModalDescription, {
         items: (itemsCount > 1 ? t(FileManagerI18nKey.AppRunners) : t(FileManagerI18nKey.AppRunner)).toLowerCase(),
       });
-    case ApplicationRoute.AssetsInterceptors:
+    case ApplicationRoute.PlatformInterceptors:
       return t(FileManagerI18nKey.DeleteItemsModalDescription, {
         items: (itemsCount > 1 ? t(FileManagerI18nKey.Interceptors) : t(FileManagerI18nKey.Interceptor)).toLowerCase(),
       });
-    case ApplicationRoute.AssetsRoutes:
+    case ApplicationRoute.PlatformRoutes:
       return t(FileManagerI18nKey.DeleteItemsModalDescription, {
         items: (itemsCount > 1 ? t(FileManagerI18nKey.Routes) : t(FileManagerI18nKey.Route)).toLowerCase(),
       });
-    case ApplicationRoute.AssetsRoles:
+    case ApplicationRoute.PlatformRoles:
       return t(FileManagerI18nKey.DeleteItemsModalDescription, {
         items: (itemsCount > 1 ? t(FileManagerI18nKey.Roles) : t(FileManagerI18nKey.Role)).toLowerCase(),
       });
-    case ApplicationRoute.AssetsKeys:
+    case ApplicationRoute.PlatformKeys:
       return t(FileManagerI18nKey.DeleteItemsModalDescription, {
         items: (itemsCount > 1 ? t(FileManagerI18nKey.Keys) : t(FileManagerI18nKey.Key)).toLowerCase(),
       });
-    case ApplicationRoute.AssetsSkills:
+    case ApplicationRoute.Skills:
       return hasFoldersToDelete
         ? t(FileManagerI18nKey.DeleteItemsAndFoldersModalDescription, {
             items: t(FileManagerI18nKey.Skills).toLowerCase(),

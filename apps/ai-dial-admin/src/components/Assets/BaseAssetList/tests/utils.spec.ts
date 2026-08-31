@@ -53,7 +53,7 @@ describe('BaseAssetList', () => {
     } as unknown as DialAppRunnerResource;
 
     test('should keep the model name, since it is the identity the user just edited', () => {
-      const duplicate = getPlatformAssetDuplicate(ApplicationRoute.AssetsModels, model) as DialModelResource;
+      const duplicate = getPlatformAssetDuplicate(ApplicationRoute.PlatformModels, model) as DialModelResource;
 
       expect(duplicate.name).toBe('gpt-4-copy');
       expect(duplicate.displayName).toBe('GPT-4 copy');
@@ -61,7 +61,7 @@ describe('BaseAssetList', () => {
     });
 
     test('should drop the fields Core owns from a model duplicate', () => {
-      const duplicate = getPlatformAssetDuplicate(ApplicationRoute.AssetsModels, model);
+      const duplicate = getPlatformAssetDuplicate(ApplicationRoute.PlatformModels, model);
 
       expect(duplicate).not.toHaveProperty('path');
       expect(duplicate).not.toHaveProperty('folderId');
@@ -74,7 +74,7 @@ describe('BaseAssetList', () => {
     });
 
     test('should drop the runner name, since keeping it navigates back to the original', () => {
-      const duplicate = getPlatformAssetDuplicate(ApplicationRoute.AssetsAppRunners, runner) as DialAppRunnerResource;
+      const duplicate = getPlatformAssetDuplicate(ApplicationRoute.PlatformAppRunners, runner) as DialAppRunnerResource;
 
       expect(duplicate).not.toHaveProperty('name');
       expect(duplicate).not.toHaveProperty('path');
@@ -84,7 +84,7 @@ describe('BaseAssetList', () => {
 
     test('should not mutate the asset it was given', () => {
       const source = { ...model } as PlatformAsset;
-      getPlatformAssetDuplicate(ApplicationRoute.AssetsModels, source);
+      getPlatformAssetDuplicate(ApplicationRoute.PlatformModels, source);
 
       expect(source).toEqual(model);
     });

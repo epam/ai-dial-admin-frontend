@@ -15,35 +15,35 @@ describe('SkillsList', () => {
   test('Should render BaseAssetList scoped to the skills view', () => {
     render(<SkillsList />);
 
-    expect(screen.getByText(`base-asset-list:${ApplicationRoute.AssetsSkills}`)).toBeInTheDocument();
+    expect(screen.getByText(`base-asset-list:${ApplicationRoute.Skills}`)).toBeInTheDocument();
   });
 });
 
 describe('SkillsList :: list affordances', () => {
   test('Should offer Create > Folder and Create > Skill, but no import or export action', () => {
-    const labels = getToolbarOptionLabels(ApplicationRoute.AssetsSkills, false);
+    const labels = getToolbarOptionLabels(ApplicationRoute.Skills, false);
 
     expect(labels.map((label) => label.key)).toEqual(['newFolder', 'newItem']);
     expect(labels.find((label) => label.key === 'newItem')?.label).toBe(FileManagerI18nKey.Skill);
   });
 
   test('Should offer delete and open-in-new-tab as row actions — but no move or duplicate', () => {
-    const actions = getGridActionLabels(ApplicationRoute.AssetsSkills, false);
+    const actions = getGridActionLabels(ApplicationRoute.Skills, false);
 
     expect(actions.map((action) => action.key)).toEqual(['delete', 'openInNewTab']);
   });
 
   test('Should offer no row actions to a read-only admin', () => {
-    expect(getGridActionLabels(ApplicationRoute.AssetsSkills, true)).toEqual([]);
+    expect(getGridActionLabels(ApplicationRoute.Skills, true)).toEqual([]);
   });
 
   test('Should offer no folder-tree actions', () => {
-    expect(getTreeActionLabels(false, ApplicationRoute.AssetsSkills)).toEqual([]);
+    expect(getTreeActionLabels(false, ApplicationRoute.Skills)).toEqual([]);
   });
 });
 
 describe('SkillsList :: columns', () => {
-  const columns = () => getGridColumns(ApplicationRoute.AssetsSkills, vi.fn(), {}, false);
+  const columns = () => getGridColumns(ApplicationRoute.Skills, vi.fn(), {}, false);
   const versioned = () => getGridColumns(ApplicationRoute.Prompts, vi.fn(), {}, false);
 
   test('Should show exactly four metadata-backed columns', () => {

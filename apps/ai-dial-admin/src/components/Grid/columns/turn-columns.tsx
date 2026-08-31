@@ -109,7 +109,7 @@ export const getGroupedSchemaColumn = (
       if (params.data?.rowType === GridRowType.GROUP && param.perTurn) {
         return { component: StackedTurnsCellRenderer };
       }
-      if (params.data?.rowType === GridRowType.TURN && !param.perTurn) {
+      if (params.data?.rowType === GridRowType.TURN && !param.perTurn && !params.data.isFlattened) {
         return { component: EmptyCellRenderer };
       }
 

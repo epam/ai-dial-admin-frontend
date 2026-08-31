@@ -136,25 +136,25 @@ describe('MENU_CONFIGURATION — Assets group', () => {
     expect(keys[keys.length - 2]).toBe(MenuI18nKey.Files);
   });
 
-  test('Skills links to the assets-skills route', () => {
+  test('Skills links to the /skills route', () => {
     const group = findAssetsGroup(baseFlags);
     const skillsItem = group?.items.find((item) => item.key === MenuI18nKey.Skills);
 
-    expect(skillsItem?.href).toBe(ApplicationRoute.AssetsSkills);
+    expect(skillsItem?.href).toBe(ApplicationRoute.Skills);
   });
 
   test('Interceptors follows App Runners', () => {
     const group = findAssetsGroup(baseFlags);
     const keys = group?.items.map((item) => item.key) || [];
-    const appRunnersIndex = keys.indexOf(MenuI18nKey.AppRunners);
+    const appRunnersIndex = keys.indexOf(MenuI18nKey.PlatformAppRunners);
 
-    expect(keys[appRunnersIndex + 1]).toBe(MenuI18nKey.AssetsInterceptors);
+    expect(keys[appRunnersIndex + 1]).toBe(MenuI18nKey.PlatformInterceptors);
   });
 
-  test('Interceptors links to the assets-interceptors route', () => {
+  test('Interceptors links to the platform-interceptors route', () => {
     const group = findAssetsGroup(baseFlags);
     const interceptorsItem = group?.items.find(
-      (item) => item.key === MenuI18nKey.AssetsInterceptors && item.href === ApplicationRoute.AssetsInterceptors,
+      (item) => item.key === MenuI18nKey.PlatformInterceptors && item.href === ApplicationRoute.PlatformInterceptors,
     );
 
     expect(interceptorsItem).toBeDefined();
@@ -163,15 +163,15 @@ describe('MENU_CONFIGURATION — Assets group', () => {
   test('Routes follows Interceptors', () => {
     const group = findAssetsGroup(baseFlags);
     const keys = group?.items.map((item) => item.key) || [];
-    const interceptorsIndex = keys.indexOf(MenuI18nKey.AssetsInterceptors);
+    const interceptorsIndex = keys.indexOf(MenuI18nKey.PlatformInterceptors);
 
-    expect(keys[interceptorsIndex + 1]).toBe(MenuI18nKey.AssetsRoutes);
+    expect(keys[interceptorsIndex + 1]).toBe(MenuI18nKey.PlatformRoutes);
   });
 
-  test('Routes links to the assets-routes route', () => {
+  test('Routes links to the platform-routes route', () => {
     const group = findAssetsGroup(baseFlags);
     const routesItem = group?.items.find(
-      (item) => item.key === MenuI18nKey.AssetsRoutes && item.href === ApplicationRoute.AssetsRoutes,
+      (item) => item.key === MenuI18nKey.PlatformRoutes && item.href === ApplicationRoute.PlatformRoutes,
     );
 
     expect(routesItem).toBeDefined();
@@ -180,15 +180,15 @@ describe('MENU_CONFIGURATION — Assets group', () => {
   test('Roles follows Routes', () => {
     const group = findAssetsGroup(baseFlags);
     const keys = group?.items.map((item) => item.key) || [];
-    const routesIndex = keys.indexOf(MenuI18nKey.AssetsRoutes);
+    const routesIndex = keys.indexOf(MenuI18nKey.PlatformRoutes);
 
-    expect(keys[routesIndex + 1]).toBe(MenuI18nKey.AssetsRoles);
+    expect(keys[routesIndex + 1]).toBe(MenuI18nKey.PlatformRoles);
   });
 
-  test('Roles links to the assets-roles route', () => {
+  test('Roles links to the platform-roles route', () => {
     const group = findAssetsGroup(baseFlags);
     const rolesItem = group?.items.find(
-      (item) => item.key === MenuI18nKey.AssetsRoles && item.href === ApplicationRoute.AssetsRoles,
+      (item) => item.key === MenuI18nKey.PlatformRoles && item.href === ApplicationRoute.PlatformRoles,
     );
 
     expect(rolesItem).toBeDefined();

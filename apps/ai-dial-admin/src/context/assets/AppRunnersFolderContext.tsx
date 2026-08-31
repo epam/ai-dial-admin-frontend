@@ -1,6 +1,6 @@
 'use client';
 
-import { getRunners } from '@/src/app/[lang]/assets-app-runners/actions';
+import { getRunners } from '@/src/app/[lang]/platform-app-runners/actions';
 import { DialAppRunnerResource } from '@/src/models/dial/resource';
 import { createFolderContext } from '@/src/context/assets/AssetsFolderContext';
 

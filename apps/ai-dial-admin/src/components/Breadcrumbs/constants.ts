@@ -52,63 +52,63 @@ export const breadcrumbConfig: Partial<Record<ApplicationRoute, BreadcrumbConfig
       },
     ],
   },
-  [ApplicationRoute.AssetsSkills]: {
+  [ApplicationRoute.Skills]: {
     segments: [
-      { name: 'AssetsSkills', i18nKey: MenuI18nKey.Skills, shouldEnrichWithFolderBreadcrumbs: true },
+      { name: 'Skills', i18nKey: MenuI18nKey.Skills, shouldEnrichWithFolderBreadcrumbs: true },
       {
         name: 'Id',
         href: false,
       },
     ],
   },
-  [ApplicationRoute.AssetsModels]: {
+  [ApplicationRoute.PlatformModels]: {
     segments: [
-      { name: 'AssetsModels', i18nKey: MenuI18nKey.Models },
+      { name: 'PlatformModels', i18nKey: MenuI18nKey.Models },
       {
         name: 'Id',
         href: false,
       },
     ],
   },
-  [ApplicationRoute.AssetsAppRunners]: {
+  [ApplicationRoute.PlatformAppRunners]: {
     segments: [
-      { name: 'AssetsAppRunners', i18nKey: MenuI18nKey.AppRunners },
+      { name: 'PlatformAppRunners', i18nKey: MenuI18nKey.PlatformAppRunners },
       {
         name: 'Id',
         href: false,
       },
     ],
   },
-  [ApplicationRoute.AssetsInterceptors]: {
+  [ApplicationRoute.PlatformInterceptors]: {
     segments: [
-      { name: 'AssetsInterceptors', i18nKey: MenuI18nKey.AssetsInterceptors },
+      { name: 'PlatformInterceptors', i18nKey: MenuI18nKey.PlatformInterceptors },
       {
         name: 'Id',
         href: false,
       },
     ],
   },
-  [ApplicationRoute.AssetsRoutes]: {
+  [ApplicationRoute.PlatformRoutes]: {
     segments: [
-      { name: 'AssetsRoutes', i18nKey: MenuI18nKey.AssetsRoutes },
+      { name: 'PlatformRoutes', i18nKey: MenuI18nKey.PlatformRoutes },
       {
         name: 'Id',
         href: false,
       },
     ],
   },
-  [ApplicationRoute.AssetsRoles]: {
+  [ApplicationRoute.PlatformRoles]: {
     segments: [
-      { name: 'AssetsRoles', i18nKey: MenuI18nKey.AssetsRoles },
+      { name: 'PlatformRoles', i18nKey: MenuI18nKey.PlatformRoles },
       {
         name: 'Id',
         href: false,
       },
     ],
   },
-  [ApplicationRoute.AssetsKeys]: {
+  [ApplicationRoute.PlatformKeys]: {
     segments: [
-      { name: 'AssetsKeys', i18nKey: MenuI18nKey.AssetsKeys },
+      { name: 'PlatformKeys', i18nKey: MenuI18nKey.PlatformKeys },
       {
         name: 'Id',
         href: false,

@@ -275,7 +275,7 @@ const ActivityAuditList: FC<Props> = ({
         }
       },
     }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     [isCustom, timePeriod, timeRange, gridApi, entity, entityType, isDeploymentsView, resourceTypeLabelMap],
   );
 

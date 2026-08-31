@@ -110,7 +110,7 @@ describe('Utils :: isToolsetRoute', () => {
 
 describe('Utils :: hasTopicCatalogue', () => {
   // Core has no topic registry, so these surfaces must not reach the admin backend for one.
-  test.each([ApplicationRoute.AssetsModels, ApplicationRoute.AssetsAppRunners])(
+  test.each([ApplicationRoute.PlatformModels, ApplicationRoute.PlatformAppRunners])(
     'Should return false for %s',
     (route) => {
       expect(hasTopicCatalogue(route)).toBeFalsy();

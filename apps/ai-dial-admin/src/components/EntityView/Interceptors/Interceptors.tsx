@@ -6,9 +6,9 @@ import { IconPlus } from '@tabler/icons-react';
 import { RowDragEvent } from 'ag-grid-community';
 
 import { getApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
-import { getInterceptors } from '@/src/app/[lang]/assets-interceptors/actions';
+import { getInterceptors } from '@/src/app/[lang]/platform-interceptors/actions';
 import { getProperties } from '@/src/app/[lang]/system-properties/actions';
-import { useAssetRunnerDetails } from '@/src/components/Assets/use-asset-runner-details';
+import { useAssetRunnerDetails } from '@/src/components/Assets/Platform/use-asset-runner-details';
 import AddEntitiesGrid from '@/src/components/EntityView/AddEntitiesGrid';
 import GridView from '@/src/components/Grid/GridView/GridView';
 import { AppRunnerOption, AppRunnerOrigin } from '@/src/components/SourceField/Application/models';
@@ -89,10 +89,10 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
   const isCollapsableView = useMemo(() => {
     return (
       view === ApplicationRoute.Models ||
-      view === ApplicationRoute.AssetsModels ||
+      view === ApplicationRoute.PlatformModels ||
       view === ApplicationRoute.Applications ||
       view === ApplicationRoute.ApplicationRunners ||
-      view === ApplicationRoute.AssetsAppRunners ||
+      view === ApplicationRoute.PlatformAppRunners ||
       view === ApplicationRoute.AssetsApplications
     );
   }, [view]);
@@ -100,7 +100,7 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
   // Both runner surfaces hold their selection in `dial:applicationTypeInterceptors`. Missing the asset
   // route here reads and writes `interceptors` instead, which Core stores verbatim — permanently.
   const isAppRunnerView = useMemo(() => {
-    return view === ApplicationRoute.ApplicationRunners || view === ApplicationRoute.AssetsAppRunners;
+    return view === ApplicationRoute.ApplicationRunners || view === ApplicationRoute.PlatformAppRunners;
   }, [view]);
 
   const entityInterceptors = useMemo(() => {
@@ -225,7 +225,7 @@ const EntityInterceptors = <T extends { interceptors?: string[]; 'dial:applicati
         : (interceptor?: DialInterceptor & Partial<AssetInterceptorTagged>) => {
             const route =
               interceptor?.assetOrigin === AssetInterceptorOrigin.Asset
-                ? ApplicationRoute.AssetsInterceptors
+                ? ApplicationRoute.PlatformInterceptors
                 : ApplicationRoute.Interceptors;
             onOpenInNewTab(route, interceptor);
           },

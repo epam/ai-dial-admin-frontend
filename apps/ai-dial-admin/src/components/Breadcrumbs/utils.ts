@@ -115,7 +115,7 @@ export function getFolderContext(pathname: string, currentLocale: string) {
       return usePromptFolder;
     case ApplicationRoute.AssetsToolsets:
       return useToolsetFolder;
-    case ApplicationRoute.AssetsSkills:
+    case ApplicationRoute.Skills:
       return useSkillFolder;
     case ApplicationRoute.Files:
       return useFileFolder;

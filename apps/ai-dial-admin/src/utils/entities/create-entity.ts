@@ -3,12 +3,12 @@ import { ApplicationRoute } from '@/src/types/routes';
 
 const createEntityMap: Record<string, CreateI18nKey> = {
   [ApplicationRoute.Models]: CreateI18nKey.Model,
-  [ApplicationRoute.AssetsModels]: CreateI18nKey.Model,
-  [ApplicationRoute.AssetsAppRunners]: CreateI18nKey.ApplicationRunner,
-  [ApplicationRoute.AssetsInterceptors]: CreateI18nKey.Interceptor,
-  [ApplicationRoute.AssetsRoutes]: CreateI18nKey.Route,
-  [ApplicationRoute.AssetsRoles]: CreateI18nKey.Role,
-  [ApplicationRoute.AssetsKeys]: CreateI18nKey.Key,
+  [ApplicationRoute.PlatformModels]: CreateI18nKey.Model,
+  [ApplicationRoute.PlatformAppRunners]: CreateI18nKey.ApplicationRunner,
+  [ApplicationRoute.PlatformInterceptors]: CreateI18nKey.Interceptor,
+  [ApplicationRoute.PlatformRoutes]: CreateI18nKey.Route,
+  [ApplicationRoute.PlatformRoles]: CreateI18nKey.Role,
+  [ApplicationRoute.PlatformKeys]: CreateI18nKey.Key,
   [ApplicationRoute.Applications]: CreateI18nKey.Application,
   [ApplicationRoute.ApplicationRunners]: CreateI18nKey.ApplicationRunner,
   [ApplicationRoute.Keys]: CreateI18nKey.Key,
@@ -24,7 +24,7 @@ const createEntityMap: Record<string, CreateI18nKey> = {
   [ApplicationRoute.TestSuites]: CreateI18nKey.TestSuite,
   [ApplicationRoute.Datasets]: CreateI18nKey.Dataset,
   [ApplicationRoute.AnalyticsQueries]: CreateI18nKey.Query,
-  [ApplicationRoute.AssetsSkills]: CreateI18nKey.Skill,
+  [ApplicationRoute.Skills]: CreateI18nKey.Skill,
 };
 
 export const getCreateEntityTitle = (

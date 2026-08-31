@@ -1,6 +1,6 @@
 'use client';
 
-import { getInterceptors } from '@/src/app/[lang]/assets-interceptors/actions';
+import { getInterceptors } from '@/src/app/[lang]/platform-interceptors/actions';
 import { DialInterceptorResource } from '@/src/models/dial/resource';
 import { createFolderContext } from '@/src/context/assets/AssetsFolderContext';
 

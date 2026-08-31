@@ -443,22 +443,22 @@ export const getTabsForAsset = (
   if (view === ApplicationRoute.Conversations) {
     return [propertiesTab(t), conversationTab(t)];
   }
-  if (view === ApplicationRoute.AssetsModels) {
+  if (view === ApplicationRoute.PlatformModels) {
     return [propertiesTab(t), featuresTab(t), rolesTab(t), interceptorsTab(t)];
   }
-  if (view === ApplicationRoute.AssetsAppRunners) {
+  if (view === ApplicationRoute.PlatformAppRunners) {
     return [propertiesTab(t), featuresTab(t), parametersTab(t), appRouteTab(t), interceptorsTab(t)];
   }
-  if (view === ApplicationRoute.AssetsInterceptors) {
+  if (view === ApplicationRoute.PlatformInterceptors) {
     return [propertiesTab(t), parameterSchemaTab(t)];
   }
-  if (view === ApplicationRoute.AssetsRoutes) {
+  if (view === ApplicationRoute.PlatformRoutes) {
     return [propertiesTab(t), rolesTab(t)];
   }
-  if (view === ApplicationRoute.AssetsKeys) {
+  if (view === ApplicationRoute.PlatformKeys) {
     return [propertiesTab(t), rolesTab(t)];
   }
-  if (view === ApplicationRoute.AssetsSkills) {
+  if (view === ApplicationRoute.Skills) {
     return [propertiesTab(t), skillTab(t)];
   }
   return [propertiesTab(t)];

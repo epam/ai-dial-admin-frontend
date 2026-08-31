@@ -3,7 +3,7 @@ import { FC, useCallback, useMemo } from 'react';
 import { DialLoader, DialNoDataContent } from '@epam/ai-dial-ui-kit';
 
 import { getAppRunner } from '@/src/components/Applications/ParametersTab/utils';
-import { useAssetRunnerDetails } from '@/src/components/Assets/use-asset-runner-details';
+import { useAssetRunnerDetails } from '@/src/components/Assets/Platform/use-asset-runner-details';
 import { EntitiesI18nKey } from '@/src/constants/i18n';
 import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useI18n } from '@/src/locales/client';

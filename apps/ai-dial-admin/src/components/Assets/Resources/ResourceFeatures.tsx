@@ -2,7 +2,7 @@ import { FC, useCallback, useMemo } from 'react';
 
 import { DialLabel, DialLoader, DialSwitch, DialTooltip } from '@epam/ai-dial-ui-kit';
 
-import { useAssetRunnerDetails } from '@/src/components/Assets/use-asset-runner-details';
+import { useAssetRunnerDetails } from '@/src/components/Assets/Platform/use-asset-runner-details';
 import EndpointControl from '@/src/components/BaseControls/Endpoint/Endpoint';
 import LabelledText from '@/src/components/Common/LabelledText/LabelledText';
 import ReasoningEffortsInput from '@/src/components/EntityTabs/Features/ReasoningEffortsInput';

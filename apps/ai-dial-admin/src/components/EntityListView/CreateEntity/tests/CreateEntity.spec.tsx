@@ -26,7 +26,7 @@ describe('CreateEntity', () => {
     const createModel = vi.fn().mockResolvedValue({ success: true, response: { name: 'model1' } });
     render(
       <CreateEntity
-        route={ApplicationRoute.AssetsModels}
+        route={ApplicationRoute.PlatformModels}
         isModalOpen={true}
         onClose={vi.fn()}
         names={[]}
@@ -64,7 +64,7 @@ describe('CreateEntity', () => {
     const createModel = vi.fn().mockResolvedValue({ success: true, response: { name: 'model1' } });
     render(
       <CreateEntity
-        route={ApplicationRoute.AssetsModels}
+        route={ApplicationRoute.PlatformModels}
         isModalOpen={true}
         onClose={vi.fn()}
         names={[]}
@@ -88,7 +88,7 @@ describe('CreateEntity', () => {
     const createSkill = vi.fn().mockResolvedValue({ success: true });
     render(
       <CreateEntity
-        route={ApplicationRoute.AssetsSkills}
+        route={ApplicationRoute.Skills}
         isModalOpen={true}
         onClose={vi.fn()}
         names={[]}
@@ -126,7 +126,7 @@ describe('CreateEntity', () => {
 
     render(
       <CreateEntity
-        route={ApplicationRoute.AssetsSkills}
+        route={ApplicationRoute.Skills}
         isModalOpen={true}
         onClose={vi.fn()}
         names={[]}
