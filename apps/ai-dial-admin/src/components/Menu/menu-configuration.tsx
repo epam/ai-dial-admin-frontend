@@ -1,4 +1,5 @@
 import {
+  IconBook2,
   IconChartBar,
   IconDashboard,
   IconFlask,
@@ -75,40 +76,24 @@ export const MENU_CONFIGURATION = (iconSize: number, featureFlags: FeatureFlags)
       ],
     },
     {
+      key: MenuI18nKey.Catalog,
+      descriptionKey: MenuI18nKey.CatalogDescription,
+      icon: <IconBook2 width={iconSize} height={iconSize} />,
+      isPreview: true,
+      items: [
+        { key: MenuI18nKey.PlatformModels, href: ApplicationRoute.PlatformModels },
+        { key: MenuI18nKey.PlatformAppRunners, href: ApplicationRoute.PlatformAppRunners },
+        { key: MenuI18nKey.PlatformInterceptors, href: ApplicationRoute.PlatformInterceptors },
+        { key: MenuI18nKey.PlatformRoutes, href: ApplicationRoute.PlatformRoutes },
+        { key: MenuI18nKey.PlatformRoles, href: ApplicationRoute.PlatformRoles },
+        { key: MenuI18nKey.PlatformKeys, href: ApplicationRoute.PlatformKeys },
+      ],
+    },
+    {
       key: MenuI18nKey.Assets,
       descriptionKey: MenuI18nKey.AssetsDescription,
       icon: <IconFolders width={iconSize} height={iconSize} />,
       items: [
-        {
-          key: MenuI18nKey.PlatformModels,
-          href: ApplicationRoute.PlatformModels,
-          isPreview: true,
-        },
-        {
-          key: MenuI18nKey.PlatformAppRunners,
-          href: ApplicationRoute.PlatformAppRunners,
-          isPreview: true,
-        },
-        {
-          key: MenuI18nKey.PlatformInterceptors,
-          href: ApplicationRoute.PlatformInterceptors,
-          isPreview: true,
-        },
-        {
-          key: MenuI18nKey.PlatformRoutes,
-          href: ApplicationRoute.PlatformRoutes,
-          isPreview: true,
-        },
-        {
-          key: MenuI18nKey.PlatformRoles,
-          href: ApplicationRoute.PlatformRoles,
-          isPreview: true,
-        },
-        {
-          key: MenuI18nKey.PlatformKeys,
-          href: ApplicationRoute.PlatformKeys,
-          isPreview: true,
-        },
         {
           key: MenuI18nKey.Applications,
           href: ApplicationRoute.AssetsApplications,

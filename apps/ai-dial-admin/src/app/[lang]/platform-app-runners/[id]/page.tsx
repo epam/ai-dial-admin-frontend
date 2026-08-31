@@ -17,10 +17,7 @@ import { getRunner } from '../actions';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Page(params: {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<{ path: string }>;
-}) {
+export default async function Page(params: { params: Promise<{ id: string }> }) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
   let etag = DEFAULT_ETAG;
@@ -28,10 +25,7 @@ export default async function Page(params: {
   const optionWarnings: EntitiesI18nKey[] = [];
 
   try {
-    // Next already decodes the query param once, which restores the singly-encoded resource name
-    // `ResourceInfo.path` carries. Decoding again would expose the `$id`'s `:` and `/`, and
-    // `encodeCorePath` would then split it into path segments instead of one resource name.
-    const path = (await params.searchParams).path;
+    const path = (await params.params).id;
 
     runner = await getRunner(path, etag).then((res) => {
       etag = res?.etag || DEFAULT_ETAG;
