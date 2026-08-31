@@ -16,10 +16,7 @@ import { getRoute } from '../actions';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Page(params: {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<{ path: string }>;
-}) {
+export default async function Page(params: { params: Promise<{ id: string }> }) {
   const token = await getUserToken(getIsEnableAuthToggle(), headers(), cookies());
 
   let etag = DEFAULT_ETAG;
@@ -27,9 +24,7 @@ export default async function Page(params: {
   const optionWarnings: EntitiesI18nKey[] = [];
 
   try {
-    // Next already decodes the query param once, which restores the resource name `ResourceInfo.path`
-    // carries. Decoding again would corrupt any name containing a percent sign.
-    const path = (await params.searchParams).path;
+    const path = (await params.params).id;
 
     route = await getRoute(path, etag).then((res) => {
       etag = res?.etag || DEFAULT_ETAG;

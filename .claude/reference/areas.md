@@ -34,6 +34,16 @@ Use `Parent/Child` for a single leaf, or just `Parent` when several children cha
 | `Builders/InterceptorTemplates` | `interceptor-templates` | `InterceptorTemplates` |
 | `Builders/Adapters` | `adapters` | `Adapter` |
 
+### `Catalog`
+| Area | Route slug | Component folder |
+|------|-----------|------------------|
+| `Catalog/PlatformModels` | `platform-models` | — |
+| `Catalog/PlatformAppRunners` | `platform-app-runners` | — |
+| `Catalog/PlatformInterceptors` | `platform-interceptors` | — |
+| `Catalog/PlatformRoutes` | `platform-routes` | — |
+| `Catalog/PlatformRoles` | `platform-roles` | — |
+| `Catalog/PlatformKeys` | `platform-keys` | — |
+
 ### `Assets`
 | Area | Route slug | Component folder |
 |------|-----------|------------------|

@@ -29,14 +29,3 @@ describe('App runner asset :: tab set', () => {
     },
   );
 });
-
-describe('App runner asset :: menu placement', () => {
-  test('Should sit directly after Models in the Assets section', () => {
-    const assets = MENU_CONFIGURATION(16, {} as never).find((group) => group.key === MenuI18nKey.Assets);
-    const hrefs = assets?.items?.map((item) => item.href);
-
-    expect(hrefs?.indexOf(ApplicationRoute.PlatformAppRunners)).toEqual(
-      (hrefs?.indexOf(ApplicationRoute.PlatformModels) ?? -1) + 1,
-    );
-  });
-});

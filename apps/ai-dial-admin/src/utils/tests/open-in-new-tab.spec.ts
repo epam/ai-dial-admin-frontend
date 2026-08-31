@@ -154,44 +154,61 @@ describe('Entity list view :: getEntityPath', () => {
     expect(res).toEqual('compare?runs=run-123,run-456');
   });
 
-  test('Should derive path from name for AssetsModels when path is missing (newly created model)', () => {
+  test('Should return encoded name for PlatformModels (no ?path= appended)', () => {
     const result = getEntityPath(ApplicationRoute.PlatformModels, { name: 'example-from-admin' });
-    expect(result).toEqual('example-from-admin?path=example-from-admin');
+    expect(result).toEqual('example-from-admin');
   });
 
-  test('Should use provided path for AssetsModels when browsing an existing model', () => {
+  test('Should return encoded name for PlatformModels and ignore any path field', () => {
     const result = getEntityPath(ApplicationRoute.PlatformModels, {
       name: 'example-from-admin',
       path: 'platform/example-from-admin',
     });
-    expect(result).toEqual('example-from-admin?path=platform%2Fexample-from-admin');
+    expect(result).toEqual('example-from-admin');
   });
 
-  test('Should return decoded path for AssetsModels when forRemove is true', () => {
+  test('Should return decoded name for PlatformModels when forRemove is true', () => {
     const result = getEntityPath(
       ApplicationRoute.PlatformModels,
       { name: 'example-from-admin', path: 'platform/example-from-admin' },
       true,
     );
-    expect(result).toEqual('platform/example-from-admin');
+    expect(result).toEqual('example-from-admin');
   });
 
-  test('Should return decoded name for AssetsModels when forRemove is true and path is missing', () => {
+  test('Should return decoded name for PlatformModels when forRemove is true and no path is present', () => {
     const result = getEntityPath(ApplicationRoute.PlatformModels, { name: 'example-from-admin' }, true);
     expect(result).toEqual('example-from-admin');
   });
 
-  test('Should derive path from name for AssetsRoutes when path is missing (newly created route)', () => {
-    const result = getEntityPath(ApplicationRoute.PlatformRoutes, { name: 'my-route' });
-    expect(result).toEqual('my-route?path=my-route');
+  test('Should return double-encoded name for PlatformAppRunners when name is a URL-encoded $id', () => {
+    // name = encodeURIComponent($id); getEntityPath encodes once more so the URL segment is safe.
+    // page.tsx uses params.id directly (Next's one automatic decode restores the singly-encoded name).
+    const result = getEntityPath(ApplicationRoute.PlatformAppRunners, { name: 'http%3A%2F%2Frunner' });
+    expect(result).toEqual('http%253A%252F%252Frunner');
   });
 
-  test('Should use provided path for AssetsRoutes when browsing an existing route', () => {
+  test('Should encode $id fallback for PlatformAppRunners when no name is present', () => {
+    const result = getEntityPath(ApplicationRoute.PlatformAppRunners, { $id: 'http://runner' });
+    expect(result).toEqual('http%253A%252F%252Frunner');
+  });
+
+  test('Should return singly-encoded Core path for PlatformAppRunners when forRemove is true', () => {
+    const result = getEntityPath(ApplicationRoute.PlatformAppRunners, { name: 'http%3A%2F%2Frunner' }, true);
+    expect(result).toEqual('http%3A%2F%2Frunner');
+  });
+
+  test('Should return encoded name for PlatformRoutes (no ?path= appended)', () => {
+    const result = getEntityPath(ApplicationRoute.PlatformRoutes, { name: 'my-route' });
+    expect(result).toEqual('my-route');
+  });
+
+  test('Should return encoded name for PlatformRoutes and ignore any path field', () => {
     const result = getEntityPath(ApplicationRoute.PlatformRoutes, {
       name: 'my-route',
       path: 'platform/my-route',
     });
-    expect(result).toEqual('my-route?path=platform%2Fmy-route');
+    expect(result).toEqual('my-route');
   });
 });
 
