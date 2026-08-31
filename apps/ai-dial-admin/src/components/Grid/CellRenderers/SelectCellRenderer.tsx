@@ -4,7 +4,7 @@ import { ICellRendererParams } from 'ag-grid-community';
 
 import { STRINGS_DELIMITER } from '@/src/constants/prompt';
 import { getItems } from './utils';
-import { ReactNode, MouseEvent } from 'react';
+import { ReactNode, MouseEvent, useEffect, useState } from 'react';
 
 export interface SelectCellRendererParams extends ICellRendererParams {
   isMulti?: boolean;
@@ -22,10 +22,17 @@ export interface SelectCellRendererParams extends ICellRendererParams {
 const SelectCellRenderer = (params: SelectCellRendererParams) => {
   const { items } = getItems(params);
   const { setValue } = params;
+  const incomingValue = params.value?.toString();
+  const [localValue, setLocalValue] = useState(incomingValue);
+
+  useEffect(() => {
+    setLocalValue(incomingValue);
+  }, [incomingValue, params.data]);
 
   const onChangeValue = (value: string | string[]) => {
     const values = Array.isArray(value) ? value : value ? [value] : [];
     const displayValue = params.isMulti ? values.join(STRINGS_DELIMITER) : values[0];
+    setLocalValue(displayValue);
 
     params.onChange(
       value,
@@ -40,11 +47,10 @@ const SelectCellRenderer = (params: SelectCellRendererParams) => {
     }
   };
 
-  const value = params.value?.toString();
-  const multipleValues = params.value === '' ? [] : (params.value?.toString().split(STRINGS_DELIMITER) as string[]);
+  const multipleValues = localValue === '' || localValue == null ? [] : localValue.split(STRINGS_DELIMITER);
 
   if (params.isReadonly) {
-    return <div>{value}</div>;
+    return <div>{localValue}</div>;
   }
 
   return (
@@ -53,7 +59,7 @@ const SelectCellRenderer = (params: SelectCellRendererParams) => {
         className="min-h-[32px] h-8 overflow-hidden px-2 py-1"
         options={items || []}
         selectAll={params.isMulti}
-        value={params.isMulti ? multipleValues : value}
+        value={params.isMulti ? multipleValues : localValue}
         multiple={params.isMulti}
         onChange={(value) => onChangeValue(value as string)}
         customMultiSelectTagsRenderer={params.customMultiSelectTagsRenderer}
