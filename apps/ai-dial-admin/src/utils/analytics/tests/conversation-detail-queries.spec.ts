@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import {
+  CHAT_ID_SESSION_SOURCE,
   CONVERSATIONS_ENTITY,
   CONVERSATION_FEEDBACK_LIMIT,
   CONVERSATION_SPAN_LIMIT,
@@ -17,6 +18,7 @@ import {
   ConversationsField,
   ResponseRatingsField,
   UsageLogField,
+  SessionScope,
 } from '@/src/models/analytics/conversations-trace';
 import {
   QueryExprType,
@@ -43,6 +45,7 @@ import {
 import { paddedUtcDayRange } from '@/src/utils/analytics/conversation-formatting';
 
 const CHAT_ID = 'Lrr0e6L5bpTND3IY_dN0_';
+const CHAT_SCOPE: SessionScope = { id: CHAT_ID, source: CHAT_ID_SESSION_SOURCE };
 const ALL_FIELDS: string[] = Object.values(ConversationsField);
 const detailQuery = (availableFields: string[] | undefined = ALL_FIELDS) =>
   buildConversationDetailQuery(CHAT_ID, availableFields);
@@ -92,7 +95,7 @@ describe('buildConversationDetailQuery', () => {
     const names = selectedNames(detailQuery().select);
 
     expect(names).toEqual(Object.values(ConversationsField));
-    expect(names).toHaveLength(23);
+    expect(names).toHaveLength(24);
   });
 
   // `traces` is catalogued heavy, so a default projection returns no value for it and the metadata panel's
@@ -107,7 +110,7 @@ describe('buildConversationDetailQuery', () => {
   test('names the insight columns by their qualified flat names', () => {
     const names = selectedNames(detailQuery().select);
 
-    expect(names).toContain('conversation_insights.title');
+    expect(names).toContain('session_insights.title');
     expect(names).toContain(ConversationsField.InsightTitle);
   });
 
@@ -118,7 +121,8 @@ describe('buildConversationDetailQuery', () => {
       expect.arrayContaining([
         ConversationsField.InsightSummary,
         ConversationsField.InsightSentiment,
-        ConversationsField.InsightSentimentScore,
+        ConversationsField.InsightActivityType,
+        ConversationsField.InsightActivitySubTaskType,
         ConversationsField.InsightTopic,
         ConversationsField.InsightTopics,
         ConversationsField.InsightLanguage,
@@ -137,10 +141,10 @@ describe('buildConversationDetailQuery', () => {
   });
 
   test('names no insight column when the schema reports none', () => {
-    const withoutInsights = ALL_FIELDS.filter((name) => !name.startsWith('conversation_insights.'));
+    const withoutInsights = ALL_FIELDS.filter((name) => !name.startsWith('session_insights.'));
     const names = selectedNames(detailQuery(withoutInsights).select);
 
-    expect(names.some((name) => name.startsWith('conversation_insights.'))).toBe(false);
+    expect(names.some((name) => name.startsWith('session_insights.'))).toBe(false);
     expect(names).toContain(ConversationsField.ChatId);
   });
 
@@ -149,13 +153,14 @@ describe('buildConversationDetailQuery', () => {
       expect.arrayContaining([
         ConversationsField.InsightSummary,
         ConversationsField.InsightSentiment,
-        ConversationsField.InsightSentimentScore,
+        ConversationsField.InsightActivityType,
+        ConversationsField.InsightActivitySubTaskType,
         ConversationsField.InsightTopic,
         ConversationsField.InsightLanguage,
         ConversationsField.InsightResolutionStatus,
       ]),
     );
-    expect(REQUIRED_DETAIL_SELECT_FIELDS.some((name) => name.startsWith('conversation_insights.'))).toBe(false);
+    expect(REQUIRED_DETAIL_SELECT_FIELDS.some((name) => name.startsWith('session_insights.'))).toBe(false);
   });
 
   test('names no field twice', () => {
@@ -165,7 +170,7 @@ describe('buildConversationDetailQuery', () => {
   });
 
   test('omits the columns an instance does not carry', () => {
-    const withoutInsights = ALL_FIELDS.filter((name) => !name.startsWith('conversation_insights.'));
+    const withoutInsights = ALL_FIELDS.filter((name) => !name.startsWith('session_insights.'));
     const names = selectedNames(detailQuery(withoutInsights).select);
 
     expect(names).not.toContain(ConversationsField.InsightTitle);
@@ -427,7 +432,8 @@ describe('paddedUtcDayRange', () => {
 });
 
 describe('buildConversationTracePageQuery', () => {
-  const query = () => buildConversationTracePageQuery(CHAT_ID, PROJECT_ID, window(), 0, CONVERSATION_TRACE_PAGE_SIZE);
+  const query = () =>
+    buildConversationTracePageQuery(CHAT_SCOPE, PROJECT_ID, window(), 0, CONVERSATION_TRACE_PAGE_SIZE);
 
   test('groups the hop log by trace', () => {
     const built = query();
@@ -480,7 +486,7 @@ describe('buildConversationTracePageQuery', () => {
   });
 
   test('pages by offset at the listing page size', () => {
-    const page = buildConversationTracePageQuery(CHAT_ID, PROJECT_ID, window(), 100, CONVERSATION_TRACE_PAGE_SIZE)
+    const page = buildConversationTracePageQuery(CHAT_SCOPE, PROJECT_ID, window(), 100, CONVERSATION_TRACE_PAGE_SIZE)
       .page as QueryOffsetPage;
 
     expect(page.offset).toBe(100);
@@ -520,7 +526,7 @@ describe('buildConversationTraceRootsQuery', () => {
       UsageLogField.TotalTokens,
       UsageLogField.TotalPrice,
       UsageLogField.DeploymentPrice,
-      UsageLogField.ChatId,
+      UsageLogField.ClientSessionId,
       UsageLogField.RequestUri,
       UsageLogField.EventKind,
       UsageLogField.NumberRequestMessages,

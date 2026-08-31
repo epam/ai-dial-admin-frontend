@@ -8,6 +8,7 @@ import {
   ConversationTracePageRow,
   ConversationTraceRootRow,
   RatingCounts,
+  UsageLogField,
 } from '@/src/models/analytics/conversations-trace';
 import { feedbackRowCounts } from '@/src/utils/analytics/conversation-detail-fields';
 import { toMillis } from '@/src/utils/analytics/conversation-formatting';
@@ -33,7 +34,11 @@ export const isCoreInternalRoot = (root: ConversationTraceRootRow, conversationP
   return rootProject !== '' && rootProject !== conversationProjectId;
 };
 
-const hasConversationLabel = (root: ConversationTraceRootRow): boolean => (root.chat_id ?? '') !== '';
+// Reads the normalised session id, not `chat_id`: the identity enrichment resolves it for chat and harness
+// traffic alike and leaves it empty on a call that entered under neither, which is exactly what "carries the
+// client's label" means here. Testing `chat_id` would mark every root of an agent session as Core-internal.
+const hasConversationLabel = (root: ConversationTraceRootRow): boolean =>
+  (root[UsageLogField.ClientSessionId] ?? '') !== '';
 
 // A card is named by the deployment its call reached. A pass-through root records none — it records its
 // endpoint instead — so the endpoint is the fallback rather than a placeholder, and the trace id stands in
@@ -231,14 +236,14 @@ export const traceInvariantViolations = (
 
   for (const [traceId, roots] of groupBy(rootRows, ({ trace_id }) => trace_id)) {
     const labelled = roots.filter(hasConversationLabel);
-    const chatIds = distinct(roots.map(({ chat_id }) => chat_id));
+    const sessionIds = distinct(roots.map((root) => root[UsageLogField.ClientSessionId]));
     const coreInternal = roots.filter((root) => isCoreInternalRoot(root, conversationProjectId));
 
-    if (chatIds.length > 1) {
+    if (sessionIds.length > 1) {
       violations.push({
         invariant: TraceInvariant.OneConversationPerTrace,
         traceId,
-        detail: `roots carry ${chatIds.length} distinct chat ids`,
+        detail: `roots carry ${sessionIds.length} distinct session ids`,
       });
     }
 

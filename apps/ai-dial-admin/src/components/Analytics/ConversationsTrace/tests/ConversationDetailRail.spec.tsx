@@ -120,7 +120,7 @@ describe('ConversationDetailRail', () => {
   test('no panel claims an enrichment as its source', () => {
     for (const { sourceEntity } of PANEL_FRAMES) {
       expect(SOURCE_ENTITIES).toContain(sourceEntity);
-      expect(sourceEntity).not.toBe('conversation_insights');
+      expect(sourceEntity).not.toBe('session_insights');
     }
   });
 

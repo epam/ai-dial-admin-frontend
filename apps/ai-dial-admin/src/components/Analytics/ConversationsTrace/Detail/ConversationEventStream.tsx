@@ -1,128 +1,219 @@
 'use client';
 
-import { DialEllipsisTooltip, DialNoDataContent, ElementSize, GhostButton } from '@epam/ai-dial-ui-kit';
-import { IconSubtask } from '@tabler/icons-react';
+import {
+  DialEllipsisTooltip,
+  DialGhostIconButton,
+  DialNoDataContent,
+  ElementSize,
+  GhostButton,
+} from '@epam/ai-dial-ui-kit';
+import { IconCheck, IconChevronDown, IconChevronRight, IconSubtask } from '@tabler/icons-react';
 import classNames from 'classnames';
-import { FC, useCallback, useMemo, useState } from 'react';
+import { FC, useCallback, useId, useMemo, useState } from 'react';
 
+import { useTreeExpansion } from '@/src/components/Common/TreeGrid/use-tree-expansion';
 import {
   COST_TEXT_CLASS,
   EMPTY_ICON_SIZE,
+  HOP_EVENT_CHIP_CLASS,
   HOP_EVENT_LABEL_KEY,
   HOP_EVENT_RAIL_CLASS,
-  UNAVAILABLE_VALUE,
+  NEUTRAL_CHIP_CLASS,
+  TREE_GUIDE_CLASS,
+  UNRECORDED_ROOT_RAIL_CLASS,
 } from '@/src/constants/analytics/conversations-trace';
+import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { HopEvent, HopEventType } from '@/src/models/analytics/conversations-trace';
+import { HopEventType, HopTreeNode, HopTreeRow } from '@/src/models/analytics/conversations-trace';
+import { formatCompactNumber, formatSignificantCost } from '@/src/utils/analytics/conversation-formatting';
 import {
-  formatCompactNumber,
-  formatDurationMs,
-  formatSignificantCost,
-} from '@/src/utils/analytics/conversation-formatting';
+  categoriesOf,
+  countMatchingNodes,
+  countMatchableNodes,
+  flattenHopTree,
+  markMatchingNodes,
+} from '@/src/utils/analytics/conversation-span-tree';
 import { formatTimeToLocalString } from '@/src/utils/formatting/date';
-import {
-  FILTERABLE_EVENT_TYPES,
-  filterEvents,
-  hasFilteredRows,
-  rowCountOf,
-} from '@/src/utils/analytics/conversation-hop-stream';
 
-interface RowProps {
-  event: HopEvent;
-  isSelected: boolean;
-  onSelect: (coreSpanId: string) => void;
+const RAIL_COLUMN_CLASS = 'relative w-4 shrink-0 self-stretch';
+const RAIL_LINE_CLASS = 'absolute left-1/2 border-l';
+
+interface RailsProps {
+  ancestorHasNextSibling: boolean[];
+  depth: number;
+  isLastChild: boolean;
 }
 
-const EventRow: FC<RowProps> = ({ event, isSelected, onSelect }) => {
-  const t = useI18n();
-  const { span, type, label, detail, line, startedAtMs, tokens, reasoningTokens, cost } = event;
-  const isOpenable = span !== null;
+const RowRails: FC<RailsProps> = ({ ancestorHasNextSibling, depth, isLastChild }) => (
+  <span aria-hidden className="flex shrink-0 items-stretch">
+    {ancestorHasNextSibling.map((hasNextSibling, index) => (
+      <span key={index} className={RAIL_COLUMN_CLASS}>
+        {hasNextSibling && <span className={classNames(RAIL_LINE_CLASS, TREE_GUIDE_CLASS, 'inset-y-0')} />}
+      </span>
+    ))}
+    {depth > 0 && (
+      <span className={RAIL_COLUMN_CLASS}>
+        <span className={classNames(RAIL_LINE_CLASS, TREE_GUIDE_CLASS, isLastChild ? 'top-0 h-1/2' : 'inset-y-0')} />
+        <span className={classNames('absolute left-1/2 top-1/2 w-1/2 border-t', TREE_GUIDE_CLASS)} />
+      </span>
+    )}
+  </span>
+);
 
-  const className = classNames(
-    'flex w-full items-center gap-3 rounded border bg-layer-3 py-1.5 pl-0 pr-3 text-left',
-    isOpenable && 'hover:border-hover focus-visible:border-hover',
+interface RowProps {
+  row: HopTreeRow;
+  rowElementId: (nodeId: string) => string;
+  isSelected: boolean;
+  isEmphasisActive: boolean;
+  onSelect: (coreSpanId: string) => void;
+  onToggleExpand: (node: HopTreeNode) => void;
+}
+
+const HopTreeRowView: FC<RowProps> = ({
+  row,
+  rowElementId,
+  isSelected,
+  isEmphasisActive,
+  onSelect,
+  onToggleExpand,
+}) => {
+  const t = useI18n();
+  const { node, ancestorHasNextSibling, isLastChild } = row;
+  const { type, span, label, detail, depth, expanded, children } = node;
+  const isOpenable = span !== null;
+  const isDimmed = isEmphasisActive && !node.isMatch;
+
+  const kindLabel = type === null ? t(ConversationsTraceI18nKey.TraceRootNotRecorded) : t(HOP_EVENT_LABEL_KEY[type]);
+
+  const cardClassName = classNames(
+    'flex min-w-0 flex-1 items-center gap-2 rounded border bg-layer-3',
+    (isOpenable || children.length > 0) && 'hover:border-hover focus-within:border-hover',
     isSelected ? 'border-accent-primary' : 'border-primary',
-    type === HopEventType.Error && 'border-error',
+    node.isFailed && 'border-error',
+    isDimmed && 'opacity-50',
   );
+
+  const rowClassName = 'flex min-w-0 flex-1 items-center gap-3 py-1.5 pr-3 text-left';
 
   const content = (
     <>
-      <span aria-hidden className={classNames('h-7 w-0.5 shrink-0 rounded-full', HOP_EVENT_RAIL_CLASS[type])} />
-      <span className="w-10 shrink-0 text-right font-mono text-secondary dial-caption-text">{line}</span>
-      <span className="w-24 shrink-0 font-mono text-secondary dial-caption-text">{t(HOP_EVENT_LABEL_KEY[type])}</span>
+      <span className="w-10 shrink-0 text-right font-mono text-secondary dial-caption-text">{node.position}</span>
+      <span className="w-24 shrink-0 truncate font-mono text-secondary dial-caption-text">{kindLabel}</span>
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="min-w-0 text-primary dial-small-semi-text">
-          {type === HopEventType.TurnComplete ? (
-            <span className="font-mono">
-              {formatCompactNumber(event.hops) || '0'} {t(ConversationsTraceI18nKey.DetailHopsShort)} ·{' '}
-              {formatDurationMs(event.durationMs) || UNAVAILABLE_VALUE}
-            </span>
-          ) : (
+        {isOpenable ? (
+          <span className="truncate text-primary dial-small-semi-text">{label}</span>
+        ) : (
+          <span className="min-w-0 text-primary dial-small-semi-text">
             <DialEllipsisTooltip text={label} />
-          )}
-        </span>
-        {detail && (
-          <span className="min-w-0 font-mono text-secondary dial-caption-text">
-            <DialEllipsisTooltip text={detail} />
           </span>
         )}
+        {detail && <span className="truncate font-mono text-secondary dial-caption-text">{detail}</span>}
       </span>
-      {event.hasNoRecordedResult && (
+      {node.isMatch && (
+        <span className="shrink-0 rounded border border-accent-primary px-1.5 py-0.5 text-accent-primary dial-caption-text">
+          {t(ConversationsTraceI18nKey.StreamMatch)}
+        </span>
+      )}
+      {node.hasNoRecordedResult && (
         <span className="shrink-0 rounded bg-layer-4 px-1.5 py-0.5 text-secondary dial-caption-text">
           {t(ConversationsTraceI18nKey.EventNoRecordedResult)}
         </span>
       )}
-      {reasoningTokens !== null && (
+      {node.reasoningTokens !== null && (
         <span className="w-16 shrink-0 text-right font-mono text-secondary dial-tiny-text">
-          {t(ConversationsTraceI18nKey.EventReasoningTokens, { count: formatCompactNumber(reasoningTokens) })}
+          {t(ConversationsTraceI18nKey.EventReasoningTokens, { count: formatCompactNumber(node.reasoningTokens) })}
         </span>
       )}
       <span className="w-16 shrink-0 text-right font-mono text-secondary dial-tiny-text">
-        {tokens === null ? '' : formatCompactNumber(tokens)}
+        {node.tokens === null ? '' : formatCompactNumber(node.tokens)}
       </span>
       <span className={classNames('w-16 shrink-0 text-right font-mono dial-tiny-text', COST_TEXT_CLASS)}>
-        {formatSignificantCost(cost) || ''}
+        {formatSignificantCost(node.cost) || ''}
       </span>
       <span className="w-20 shrink-0 text-right font-mono text-secondary dial-tiny-text">
-        {startedAtMs === null ? UNAVAILABLE_VALUE : formatTimeToLocalString(startedAtMs)}
+        {node.startedAtMs === null ? '' : formatTimeToLocalString(node.startedAtMs)}
       </span>
     </>
   );
 
-  // A frame carries the turn's question and totals, not a hop — there is nothing to open, so it must not be
-  // offered as a control that happens to be unavailable.
-  if (!isOpenable) {
-    return <div className={className}>{content}</div>;
-  }
-
   return (
-    <button type="button" aria-current={isSelected} onClick={() => onSelect(span.core_span_id)} className={className}>
-      {content}
-    </button>
+    <div className="flex items-stretch gap-1">
+      <RowRails ancestorHasNextSibling={ancestorHasNextSibling} depth={depth} isLastChild={isLastChild} />
+      <div className={cardClassName}>
+        <span
+          aria-hidden
+          className={classNames(
+            'ml-1 h-7 shrink-0 border-l-2',
+            type === null ? UNRECORDED_ROOT_RAIL_CLASS : HOP_EVENT_RAIL_CLASS[type],
+          )}
+        />
+        {children.length > 0 ? (
+          <DialGhostIconButton
+            size={ElementSize.Small}
+            icon={
+              expanded ? (
+                <IconChevronDown {...BASE_BUTTON_ICON_PROPS} aria-hidden />
+              ) : (
+                <IconChevronRight {...BASE_BUTTON_ICON_PROPS} aria-hidden />
+              )
+            }
+            aria-label={t(expanded ? ConversationsTraceI18nKey.TreeCollapse : ConversationsTraceI18nKey.TreeExpand)}
+            aria-expanded={expanded}
+            aria-controls={expanded ? children.map(({ id }) => rowElementId(id)).join(' ') : undefined}
+            onClick={() => onToggleExpand(node)}
+            className="shrink-0"
+          />
+        ) : (
+          <span aria-hidden className="w-6 shrink-0" />
+        )}
+        {isOpenable ? (
+          <button
+            type="button"
+            id={rowElementId(node.id)}
+            aria-current={isSelected}
+            onClick={() => onSelect(span.core_span_id)}
+            className={rowClassName}
+          >
+            {content}
+          </button>
+        ) : (
+          <div id={rowElementId(node.id)} className={rowClassName}>
+            {content}
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 
 interface Props {
-  events: HopEvent[];
+  tree: HopTreeNode[];
   selectedSpanId: string | null;
   onSelectSpan: (coreSpanId: string) => void;
 }
 
-const ConversationEventStream: FC<Props> = ({ events, selectedSpanId, onSelectSpan }) => {
+const ConversationEventStream: FC<Props> = ({ tree, selectedSpanId, onSelectSpan }) => {
   const t = useI18n();
-  const [isolatedType, setIsolatedType] = useState<HopEventType | null>(null);
-  const shownEvents = useMemo(
-    () => (isolatedType === null ? events : filterEvents(events, [isolatedType])),
-    [events, isolatedType],
-  );
+  const treeId = useId();
+  const [emphasisedType, setEmphasisedType] = useState<HopEventType | null>(null);
 
-  const onIsolateType = useCallback(
-    (type: HopEventType) => setIsolatedType((current) => (current === type ? null : type)),
+  const markedTree = useMemo(() => markMatchingNodes(tree, emphasisedType), [tree, emphasisedType]);
+  const { currentTree, onToggleExpand } = useTreeExpansion(markedTree, { isDefaultExpanded: true });
+  const rows = useMemo(() => flattenHopTree(currentTree), [currentTree]);
+
+  const categories = useMemo(() => categoriesOf(tree), [tree]);
+  const totalCount = useMemo(() => countMatchableNodes(tree), [tree]);
+  const matchCount = useMemo(() => countMatchingNodes(markedTree), [markedTree]);
+
+  const rowElementId = useCallback((nodeId: string) => `${treeId}-${nodeId.replace(/\s+/g, '_')}`, [treeId]);
+
+  const onEmphasiseType = useCallback(
+    (type: HopEventType) => setEmphasisedType((current) => (current === type ? null : type)),
     [],
   );
 
-  if (!hasFilteredRows(events)) {
+  if (!tree.length) {
     return (
       <div className="flex flex-1 flex-col justify-center bg-layer-1">
         <DialNoDataContent
@@ -145,28 +236,30 @@ const ConversationEventStream: FC<Props> = ({ events, selectedSpanId, onSelectSp
       >
         <GhostButton
           size={ElementSize.Small}
-          aria-pressed={isolatedType === null}
+          aria-pressed={emphasisedType === null}
           label={t(ConversationsTraceI18nKey.StreamTabAll)}
-          onClick={() => setIsolatedType(null)}
-          className={isolatedType === null ? 'text-primary' : 'text-secondary'}
+          iconBefore={emphasisedType === null ? <IconCheck {...BASE_BUTTON_ICON_PROPS} aria-hidden /> : undefined}
+          onClick={() => setEmphasisedType(null)}
+          className={classNames('border', NEUTRAL_CHIP_CLASS, emphasisedType === null && 'bg-layer-4')}
           textClassName="dial-tiny-text"
         />
         <span aria-hidden className="mx-1 h-4 shrink-0 border-l border-primary" />
-        {FILTERABLE_EVENT_TYPES.map((type) => {
-          return (
-            <GhostButton
-              key={type}
-              size={ElementSize.Small}
-              aria-pressed={isolatedType === type}
-              label={t(HOP_EVENT_LABEL_KEY[type])}
-              onClick={() => onIsolateType(type)}
-              className={classNames(isolatedType === type ? 'text-primary' : 'text-secondary')}
-              textClassName="dial-tiny-text"
-            />
-          );
-        })}
+        {categories.map((type) => (
+          <GhostButton
+            key={type}
+            size={ElementSize.Small}
+            aria-pressed={emphasisedType === type}
+            label={t(HOP_EVENT_LABEL_KEY[type])}
+            iconBefore={emphasisedType === type ? <IconCheck {...BASE_BUTTON_ICON_PROPS} aria-hidden /> : undefined}
+            onClick={() => onEmphasiseType(type)}
+            className={classNames('border', HOP_EVENT_CHIP_CLASS[type], emphasisedType === type && 'bg-layer-4')}
+            textClassName="dial-tiny-text"
+          />
+        ))}
         <span role="status" aria-live="polite" className="ml-auto font-mono text-secondary dial-caption-text">
-          {t(ConversationsTraceI18nKey.StreamShowing, { shown: rowCountOf(shownEvents), total: rowCountOf(events) })}
+          {emphasisedType === null
+            ? ''
+            : t(ConversationsTraceI18nKey.StreamMatchCount, { count: matchCount, total: totalCount })}
         </span>
       </div>
       <div
@@ -174,15 +267,15 @@ const ConversationEventStream: FC<Props> = ({ events, selectedSpanId, onSelectSp
         aria-label={t(ConversationsTraceI18nKey.StreamLabel)}
         className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto p-4"
       >
-        {!hasFilteredRows(shownEvents) && (
-          <p className="dial-small-text text-secondary">{t(ConversationsTraceI18nKey.StreamNoEvents)}</p>
-        )}
-        {shownEvents.map((event) => (
-          <EventRow
-            key={event.key}
-            event={event}
-            isSelected={event.span !== null && event.span.core_span_id === selectedSpanId}
+        {rows.map((row) => (
+          <HopTreeRowView
+            key={row.node.id}
+            row={row}
+            rowElementId={rowElementId}
+            isSelected={row.node.span !== null && row.node.span.core_span_id === selectedSpanId}
+            isEmphasisActive={emphasisedType !== null}
             onSelect={onSelectSpan}
+            onToggleExpand={onToggleExpand}
           />
         ))}
       </div>

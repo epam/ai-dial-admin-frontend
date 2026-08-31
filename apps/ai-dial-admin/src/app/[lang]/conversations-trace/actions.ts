@@ -36,6 +36,7 @@ import {
   ConversationsPage,
   FeedbackFilter,
   ResponseRatingsField,
+  SessionScope,
 } from '@/src/models/analytics/conversations-trace';
 import { Token } from '@/src/models/auth';
 import { ServerActionResponse } from '@/src/models/server-action';
@@ -109,7 +110,7 @@ const withRatings = async (rows: ConversationRow[], range: TimeRange, authToken:
     return rows;
   }
 
-  const query = buildConversationRatingsQuery({ range, chatIds: rows.map((row) => row.chat_id) });
+  const query = buildConversationRatingsQuery({ range, chatIds: rows.map((row) => row.client_session_id) });
   const result = await analyticsDataApi.executeAction(query, authToken);
 
   if (!result.success) {
@@ -321,7 +322,7 @@ const TRACE_FIGURES_LIMIT = CONVERSATION_TRACE_PAGE_SIZE * 8;
  * root recorded after its parent's last child.
  */
 export async function getConversationTracePage(
-  chatId: string,
+  scope: SessionScope,
   projectId: string,
   firstRequestTime: number | string | null,
   lastRequestTime: number | string | null,
@@ -335,7 +336,7 @@ export async function getConversationTracePage(
   }
 
   const pageResult = await analyticsDataApi.executeAction(
-    buildConversationTracePageQuery(chatId, projectId, conversationWindow, offset, CONVERSATION_TRACE_PAGE_SIZE),
+    buildConversationTracePageQuery(scope, projectId, conversationWindow, offset, CONVERSATION_TRACE_PAGE_SIZE),
     authToken,
   );
 
@@ -423,7 +424,7 @@ const NO_HOP_TEXTS = { sent: null, received: null, toolCalls: [] };
 const hopBodiesOf = (state: HopTextsState): ConversationHopBodies => ({ state, ...NO_HOP_TEXTS });
 
 export async function getConversationHopBodies(
-  chatId: string,
+  scope: SessionScope,
   traceId: string,
   coreSpanId: string,
   requestTime: number | string | null,
@@ -443,7 +444,7 @@ export async function getConversationHopBodies(
   }
 
   const result = await analyticsDataApi.executeAction(
-    buildConversationHopBodyQuery(chatId, traceId, coreSpanId, requestTime, schemaFieldNames),
+    buildConversationHopBodyQuery(scope, traceId, coreSpanId, requestTime, schemaFieldNames),
     authToken,
   );
 
@@ -469,13 +470,13 @@ export async function getConversationHopBodies(
 // Never rejects: the outputs enrich the event stream, and the spans beside them are worth rendering
 // without it. A throw here used to discard a span read that had already succeeded.
 async function resolveModelOutputs(
-  chatId: string,
+  scope: SessionScope,
   traceId: string,
   spans: ConversationSpanRow[],
   authToken: Token,
 ): Promise<ModelCallOutput[]> {
   try {
-    return await readModelOutputs(chatId, traceId, spans, authToken);
+    return await readModelOutputs(scope, traceId, spans, authToken);
   } catch (error) {
     errorObjLog(error, 'Failed to enrich the conversation spans with model call outputs');
     return [];
@@ -483,7 +484,7 @@ async function resolveModelOutputs(
 }
 
 async function readModelOutputs(
-  chatId: string,
+  scope: SessionScope,
   traceId: string,
   spans: ConversationSpanRow[],
   authToken: Token,
@@ -506,7 +507,7 @@ async function readModelOutputs(
   }
 
   const result = await analyticsDataApi.executeAction(
-    buildConversationModelBodiesQuery(chatId, traceId, read, schemaFieldNames),
+    buildConversationModelBodiesQuery(scope, traceId, read, schemaFieldNames),
     authToken,
   );
 
@@ -521,7 +522,7 @@ async function readModelOutputs(
 }
 
 export async function getConversationSpans(
-  chatId: string,
+  scope: SessionScope,
   traceId: string,
 ): Promise<ServerActionResponse<ConversationSpansPage>> {
   const authToken = await token();
@@ -539,7 +540,7 @@ export async function getConversationSpans(
     response: {
       spans,
       total: result.response?.totalCount ?? null,
-      modelOutputs: await resolveModelOutputs(chatId, traceId, spans, authToken),
+      modelOutputs: await resolveModelOutputs(scope, traceId, spans, authToken),
     },
   };
 }
@@ -679,7 +680,7 @@ async function resolveTranscriptFigures(
 }
 
 export async function getConversationTranscript(
-  chatId: string,
+  scope: SessionScope,
   projectId: string,
   lastRequestTime: number | string | null,
   nowMs: number,
@@ -701,8 +702,8 @@ export async function getConversationTranscript(
   }
 
   const [entryResult, countResult] = await Promise.all([
-    analyticsDataApi.executeAction(buildConversationEntryHopsQuery(chatId, CONVERSATION_ENTRY_HOP_LIMIT), authToken),
-    analyticsDataApi.executeAction(buildConversationHopCountQuery(chatId), authToken),
+    analyticsDataApi.executeAction(buildConversationEntryHopsQuery(scope, CONVERSATION_ENTRY_HOP_LIMIT), authToken),
+    analyticsDataApi.executeAction(buildConversationHopCountQuery(scope), authToken),
   ]);
 
   if (!entryResult.success) {
@@ -734,7 +735,7 @@ export async function getConversationTranscript(
 
   const needed = carriesWholeConversation(entryHops) ? [entryHops[entryHops.length - 1]] : entryHops;
   const bodyResult = await analyticsDataApi.executeAction(
-    buildConversationEntryBodiesQuery(chatId, needed, schemaFieldNames),
+    buildConversationEntryBodiesQuery(scope, needed, schemaFieldNames),
     authToken,
   );
 

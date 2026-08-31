@@ -16,7 +16,7 @@ import {
 } from '@/src/utils/analytics/conversation-insights';
 
 const row = (fields: Partial<ConversationDetailRow> = {}): ConversationDetailRow =>
-  ({ chat_id: 'Lrr0e6L5bpTND3IY_dN0_', ...fields }) as ConversationDetailRow;
+  ({ client_session_id: 'Lrr0e6L5bpTND3IY_dN0_', ...fields }) as ConversationDetailRow;
 
 describe('conversationInsightsState', () => {
   test('reports the enrichment unavailable when the title key is absent', () => {
@@ -76,12 +76,12 @@ describe('resolveInsightFields', () => {
     expect(fields[ConversationsField.InsightLanguage]?.labelKey).toBeTruthy();
   });
 
-  test('resolves the decimal sentiment score as text', () => {
-    const fields = resolveInsightFields(row({ [ConversationsField.InsightSentimentScore]: -0.4 }));
+  test('resolves the activity type as text', () => {
+    const fields = resolveInsightFields(row({ [ConversationsField.InsightActivityType]: 'coding' }));
 
-    expect(fields[ConversationsField.InsightSentimentScore]).toMatchObject({
+    expect(fields[ConversationsField.InsightActivityType]).toMatchObject({
       state: ConversationFieldState.Available,
-      text: '-0.4',
+      text: 'coding',
     });
   });
 });

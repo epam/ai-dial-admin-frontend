@@ -27,7 +27,7 @@ const leafColumns = (columns: Column[]): ColDef<ConversationRow>[] =>
 
 const CHAT_ID = 'conversations/eRxsos/chathub-claude4__E2E';
 
-const ROW = { chat_id: CHAT_ID } as ConversationRow;
+const ROW = { client_session_id: CHAT_ID } as ConversationRow;
 
 const push = vi.fn();
 const open = vi.fn();

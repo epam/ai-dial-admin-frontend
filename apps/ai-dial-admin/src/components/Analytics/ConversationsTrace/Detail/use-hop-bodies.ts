@@ -4,7 +4,12 @@ import { useEffect, useRef, useState } from 'react';
 
 import { getConversationHopBodies } from '@/src/app/[lang]/conversations-trace/actions';
 import { useProtectedRequest } from '@/src/hooks/use-protected-request';
-import { ConversationHopBodies, ConversationSpanRow, HopTextsState } from '@/src/models/analytics/conversations-trace';
+import {
+  ConversationHopBodies,
+  ConversationSpanRow,
+  HopTextsState,
+  SessionScope,
+} from '@/src/models/analytics/conversations-trace';
 import { hopTextSuppressionOf } from '@/src/utils/analytics/conversation-spans';
 
 const FAILED: ConversationHopBodies = {
@@ -14,7 +19,7 @@ const FAILED: ConversationHopBodies = {
   toolCalls: [],
 };
 
-export const useHopBodies = (chatId: string, traceId: string, span: ConversationSpanRow | null) => {
+export const useHopBodies = (scope: SessionScope, traceId: string, span: ConversationSpanRow | null) => {
   const [bodies, setBodies] = useState<ConversationHopBodies | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const getReqRef = useRef(useProtectedRequest());
@@ -23,7 +28,7 @@ export const useHopBodies = (chatId: string, traceId: string, span: Conversation
   const suppression = span ? hopTextSuppressionOf(span) : null;
   const spanId = span && suppression === null ? span.core_span_id : null;
   const requestTime = span?.request_time ?? null;
-  const heldKey = spanId === null ? null : `${chatId}:${traceId}:${spanId}`;
+  const heldKey = spanId === null ? null : `${scope.id}:${traceId}:${spanId}`;
 
   useEffect(() => {
     if (heldKey === heldKeyRef.current) {
@@ -43,7 +48,7 @@ export const useHopBodies = (chatId: string, traceId: string, span: Conversation
 
     const read = async () => {
       try {
-        const result = await getReqRef.current(getConversationHopBodies, chatId, traceId, spanId, requestTime);
+        const result = await getReqRef.current(getConversationHopBodies, scope, traceId, spanId, requestTime);
 
         if (heldKeyRef.current !== heldKey) {
           return;
@@ -62,7 +67,7 @@ export const useHopBodies = (chatId: string, traceId: string, span: Conversation
     };
 
     void read();
-  }, [chatId, traceId, spanId, requestTime, heldKey]);
+  }, [scope, traceId, spanId, requestTime, heldKey]);
 
   return { bodies, isLoading, suppression };
 };

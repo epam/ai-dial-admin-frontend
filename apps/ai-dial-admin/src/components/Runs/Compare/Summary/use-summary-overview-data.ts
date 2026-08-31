@@ -73,6 +73,9 @@ const toMatchedAnalyticsSlice = (
 const findComparisonRun = (runs: RunComparisonRun[] | undefined, runId: string): RunComparisonRun | undefined =>
   runs?.find((run) => run.runId === runId);
 
+const hasNoMatchedComparisonRows = (runs: RunComparisonRun[] | undefined): boolean =>
+  !runs?.length || runs.every((run) => (run.matchedRowCount ?? 0) === 0);
+
 interface ComparisonRunDerived {
   scores: MetricScoresData;
   unmatchedIds: string[];
@@ -115,6 +118,7 @@ export const useSummaryOverviewData = ({
   const [comparedMatchedAnalytics, setComparedMatchedAnalytics] = useState<RunAnalyticsSlice | null>(null);
   const [primaryUnmatchedIds, setPrimaryUnmatchedIds] = useState<string[]>([]);
   const [comparedUnmatchedIds, setComparedUnmatchedIds] = useState<string[]>([]);
+  const [hasNoMatchingTestCases, setHasNoMatchingTestCases] = useState(false);
   const { selectedStatistic } = summaryState;
 
   const enrichedPrimaryScores = useMemo(
@@ -194,6 +198,7 @@ export const useSummaryOverviewData = ({
       setComparedMatchedAnalytics(null);
       setPrimaryUnmatchedIds([]);
       setComparedUnmatchedIds([]);
+      setHasNoMatchingTestCases(false);
     };
 
     const applyEmptyComparison = () => {
@@ -203,6 +208,7 @@ export const useSummaryOverviewData = ({
       setComparedMatchedAnalytics(EMPTY_MATCHED_ANALYTICS);
       setPrimaryUnmatchedIds([]);
       setComparedUnmatchedIds([]);
+      setHasNoMatchingTestCases(true);
     };
 
     resetMatchedState();
@@ -219,7 +225,7 @@ export const useSummaryOverviewData = ({
         if (cancelled) {
           return;
         }
-        if (!response?.runs?.length) {
+        if (response == null) {
           applyEmptyComparison();
           if (!notifiedComparisonErrorRef.current) {
             notifiedComparisonErrorRef.current = true;
@@ -227,6 +233,11 @@ export const useSummaryOverviewData = ({
               getErrorNotification(tRef.current(RunsI18nKey.RunCompareMatchedScoresLoadFailed)),
             );
           }
+          return;
+        }
+
+        if (hasNoMatchedComparisonRows(response.runs)) {
+          applyEmptyComparison();
           return;
         }
 
@@ -338,5 +349,6 @@ export const useSummaryOverviewData = ({
     comparedMatchedAnalytics,
     primaryUnmatchedIds,
     comparedUnmatchedIds,
+    hasNoMatchingTestCases,
   };
 };

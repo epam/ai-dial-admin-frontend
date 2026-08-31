@@ -14,8 +14,8 @@ const field = (name: string): AnalyticsEntityField => ({
 
 const SCHEMA: AnalyticsEntityField[] = [
   field('chat_id'),
-  field('conversation_insights.title'),
-  field('conversation_insights.summary'),
+  field('session_insights.title'),
+  field('session_insights.summary'),
   field('conversation_buckets.turn_bucket'),
 ];
 
@@ -36,28 +36,28 @@ describe('ConversationsProvenanceLine', () => {
   test('names every enrichment namespace the fetched schema reports', () => {
     render(<ConversationsProvenanceLine schemaFields={SCHEMA} />);
 
-    expect(screen.getByText('conversation_insights')).toBeInTheDocument();
+    expect(screen.getByText('session_insights')).toBeInTheDocument();
     expect(screen.getByText('conversation_buckets')).toBeInTheDocument();
   });
 
   test('names an enrichment once however many of its fields the schema reports', () => {
     render(<ConversationsProvenanceLine schemaFields={SCHEMA} />);
 
-    expect(screen.getAllByText('conversation_insights')).toHaveLength(1);
+    expect(screen.getAllByText('session_insights')).toHaveLength(1);
   });
 
   test('lists the base entity first, then the enrichments in first-appearance order', () => {
     const { container } = render(<ConversationsProvenanceLine schemaFields={SCHEMA} />);
     const names = Array.from(container.querySelectorAll('span.font-mono')).map((node) => node.textContent);
 
-    expect(names).toEqual([CONVERSATIONS_ENTITY, 'conversation_insights', 'conversation_buckets', FEEDBACK_ENTITY]);
+    expect(names).toEqual([CONVERSATIONS_ENTITY, 'session_insights', 'conversation_buckets', FEEDBACK_ENTITY]);
   });
 
   test('colours each entity by its provenance, matching the grid band', () => {
     render(<ConversationsProvenanceLine schemaFields={SCHEMA} />);
 
     expect(screen.getByText(CONVERSATIONS_ENTITY)).toHaveClass('text-accent-primary');
-    expect(screen.getByText('conversation_insights')).toHaveClass('text-accent-secondary');
+    expect(screen.getByText('session_insights')).toHaveClass('text-accent-secondary');
     expect(screen.getByText(FEEDBACK_ENTITY)).toHaveClass('text-warning');
   });
 

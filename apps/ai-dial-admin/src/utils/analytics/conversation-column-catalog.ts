@@ -37,7 +37,7 @@ const consumedFields = (columns: ColDef[]): Set<string> =>
 
 // A plain column of the entity's own source reports its flat name as the field backing it, so the two are
 // equal. Anything the service supplies through an enrichment is namespaced by that enrichment, leaving the
-// backing name unqualified — `conversation_insights.title` sources `title`. The inequality therefore reads
+// backing name unqualified — `session_insights.title` sources `title`. The inequality therefore reads
 // as "not a plain column of the table the query already reads", which also covers a JSON-derived field:
 // likewise not free to project, and likewise better fetched on demand.
 const isSourceBacked = (field: AnalyticsEntityField): boolean => field.name === field.source;

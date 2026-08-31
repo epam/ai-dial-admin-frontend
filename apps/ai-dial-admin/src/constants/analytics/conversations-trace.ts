@@ -21,11 +21,15 @@ import { AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryOperator, QueryValueType } from '@/src/models/analytics/query';
 import { GridFilterType } from '@/src/types/grid-filter';
 
-export const CONVERSATIONS_ENTITY = 'conversations';
+export const CONVERSATIONS_ENTITY = 'sessions';
 
 export const FEEDBACK_ENTITY = 'response_ratings';
 
 export const USAGE_LOG_ENTITY = 'dial_usage_log';
+
+// The rollup's `client_session_source` value meaning "this id came from a conversation header". Every other
+// value names a coding-harness header, whose hops carry no `chat_id`.
+export const CHAT_ID_SESSION_SOURCE = 'chat_id';
 
 export const CONVERSATION_ENTRY_HOP_LIMIT = 200;
 
@@ -155,10 +159,11 @@ export const IDENTITY_ENRICHMENT_FIELDS: ConversationsField[] = [ConversationsFi
 export const DETAIL_INSIGHT_FIELDS: ConversationsField[] = [
   ConversationsField.InsightSummary,
   ConversationsField.InsightSentiment,
-  ConversationsField.InsightSentimentScore,
   ConversationsField.InsightTopic,
   ConversationsField.InsightLanguage,
   ConversationsField.InsightResolutionStatus,
+  ConversationsField.InsightActivityType,
+  ConversationsField.InsightActivitySubTaskType,
 ];
 
 export const OPTIONAL_DETAIL_SELECT_FIELDS: ConversationsField[] = [
@@ -221,7 +226,7 @@ export const ANALYTICS_FIELD_QUERY_VALUE_TYPE: Partial<Record<AnalyticsFieldType
 };
 
 export const ENRICHMENT_PROVENANCE: Record<string, ColumnProvenance> = {
-  conversation_insights: ColumnProvenance.Insights,
+  session_insights: ColumnProvenance.Insights,
 };
 
 export const PROVENANCE_LABEL_KEY: Partial<Record<ColumnProvenance, string>> = {
@@ -269,11 +274,12 @@ export const CONVERSATION_FIELD_VALUE_TYPE: Partial<Record<ConversationsField, Q
   [ConversationsField.InsightTitle]: QueryValueType.String,
   [ConversationsField.InsightSummary]: QueryValueType.String,
   [ConversationsField.InsightSentiment]: QueryValueType.String,
-  [ConversationsField.InsightSentimentScore]: QueryValueType.Decimal,
   [ConversationsField.InsightTopic]: QueryValueType.String,
   [ConversationsField.InsightTopics]: QueryValueType.String,
   [ConversationsField.InsightLanguage]: QueryValueType.String,
   [ConversationsField.InsightResolutionStatus]: QueryValueType.String,
+  [ConversationsField.InsightActivityType]: QueryValueType.String,
+  [ConversationsField.InsightActivitySubTaskType]: QueryValueType.String,
 };
 
 export const CONVERSATION_FILTER_QUERY_OPERATOR: Record<
@@ -336,9 +342,10 @@ export const CONVERSATION_INSIGHT_FIELDS: ConversationFieldDefinition[] = [
   { labelKey: ConversationsTraceI18nKey.DetailTopic, column: ConversationsField.InsightTopic },
   { labelKey: ConversationsTraceI18nKey.DetailTopics, column: ConversationsField.InsightTopics },
   { labelKey: ConversationsTraceI18nKey.DetailLanguage, column: ConversationsField.InsightLanguage },
+  { labelKey: ConversationsTraceI18nKey.DetailActivityType, column: ConversationsField.InsightActivityType },
   {
-    labelKey: ConversationsTraceI18nKey.DetailSentimentScore,
-    column: ConversationsField.InsightSentimentScore,
+    labelKey: ConversationsTraceI18nKey.DetailActivitySubTaskType,
+    column: ConversationsField.InsightActivitySubTaskType,
   },
 ];
 
@@ -370,22 +377,52 @@ export const RESOLUTION_BADGE_CLASS: Record<string, string> = {
 export const EMPTY_ICON_SIZE = 24;
 
 export const HOP_EVENT_RAIL_CLASS: Record<HopEventType, string> = {
-  [HopEventType.TurnStart]: 'bg-accent-primary',
-  [HopEventType.TurnComplete]: 'bg-accent-primary',
-  [HopEventType.Text]: 'bg-accent-secondary',
-  [HopEventType.ToolCall]: 'bg-accent-tertiary',
-  [HopEventType.ToolResult]: 'bg-accent-tertiary',
-  [HopEventType.Thinking]: 'bg-controls-accent',
-  [HopEventType.Empty]: 'bg-layer-4',
-  [HopEventType.Error]: 'bg-error',
-  [HopEventType.Session]: 'bg-secondary',
-  [HopEventType.Embedding]: 'bg-info',
-  [HopEventType.Other]: 'bg-layer-4',
+  [HopEventType.ModelCall]: 'border-accent-primary',
+  [HopEventType.Text]: 'border-accent-secondary',
+  [HopEventType.ToolCall]: 'border-accent-tertiary',
+  [HopEventType.ToolResult]: 'border-accent-tertiary',
+  [HopEventType.Thinking]: 'border-accent-secondary',
+  [HopEventType.Empty]: 'border-primary',
+  [HopEventType.Error]: 'border-error',
+  [HopEventType.Session]: 'border-primary',
+  [HopEventType.Embedding]: 'border-warning',
+  [HopEventType.Other]: 'border-primary',
 };
 
+export const HOP_EVENT_CHIP_CLASS: Record<HopEventType, string> = {
+  [HopEventType.ModelCall]: 'border-accent-primary text-accent-primary',
+  [HopEventType.Text]: 'border-accent-secondary text-accent-secondary',
+  [HopEventType.ToolCall]: 'border-accent-tertiary text-accent-tertiary',
+  [HopEventType.ToolResult]: 'border-accent-tertiary text-accent-tertiary',
+  [HopEventType.Thinking]: 'border-accent-secondary text-accent-secondary',
+  [HopEventType.Empty]: 'border-primary text-secondary',
+  [HopEventType.Error]: 'border-error text-error',
+  [HopEventType.Session]: 'border-primary text-secondary',
+  [HopEventType.Embedding]: 'border-warning text-warning',
+  [HopEventType.Other]: 'border-primary text-secondary',
+};
+
+export const NEUTRAL_CHIP_CLASS = 'border-primary text-secondary';
+
+export const UNRECORDED_ROOT_RAIL_CLASS = 'border-primary';
+
+export const TREE_GUIDE_CLASS = 'border-primary';
+
+export const FILTERABLE_EVENT_TYPES: HopEventType[] = [
+  HopEventType.ModelCall,
+  HopEventType.Text,
+  HopEventType.ToolCall,
+  HopEventType.ToolResult,
+  HopEventType.Thinking,
+  HopEventType.Error,
+  HopEventType.Empty,
+  HopEventType.Session,
+  HopEventType.Embedding,
+  HopEventType.Other,
+];
+
 export const HOP_EVENT_LABEL_KEY: Record<HopEventType, string> = {
-  [HopEventType.TurnStart]: ConversationsTraceI18nKey.EventTurnStart,
-  [HopEventType.TurnComplete]: ConversationsTraceI18nKey.EventTurnComplete,
+  [HopEventType.ModelCall]: ConversationsTraceI18nKey.EventModelCall,
   [HopEventType.Text]: ConversationsTraceI18nKey.EventText,
   [HopEventType.ToolCall]: ConversationsTraceI18nKey.EventToolCall,
   [HopEventType.ToolResult]: ConversationsTraceI18nKey.EventToolResult,
