@@ -198,8 +198,11 @@ const TestCasesList: FC<Props> = ({
   const onCellChange = useCallback(
     (row: Record<string, unknown>, field: string, value: string | number | boolean) => {
       if (newTestCases.some((r) => r.id === row.id)) {
-        row[field] = value;
-        if (field !== 'testCaseName' && row.data != null) {
+        const isDataField = !STRUCTURAL_FIELDS.includes(field);
+        if (field !== 'id') {
+          row[field] = value;
+        }
+        if (isDataField && row.data != null) {
           row.data = { ...(row.data as Record<string, unknown>), [field]: value };
         }
         setNewTestCases((prev) => prev.map((r) => (r.id === row.id ? { ...row } : r)));

@@ -35,6 +35,14 @@ export interface SchemaColumnContext {
 }
 
 const EXPANDER_COLUMN_WIDTH = 40;
+const RESERVED_GRID_COL_IDS = new Set(['id', 'testCaseName']);
+
+export const getSchemaFieldColId = (field: string): string =>
+  RESERVED_GRID_COL_IDS.has(field) ? `data:${field}` : field;
+
+// Reserved schema names must not use the entity field path — AG Grid setValue would clobber row.id.
+export const getSchemaGridField = (field: string): string =>
+  RESERVED_GRID_COL_IDS.has(field) ? `data.${field}` : field;
 
 export const getTurnExpanderColumn = (onToggleExpand: (groupKey: string) => void): ColDef => ({
   ...UTILITY_COLUMN,
@@ -93,7 +101,8 @@ export const getGroupedSchemaColumn = (
   const field = param.name;
 
   return {
-    field,
+    field: getSchemaGridField(field),
+    colId: getSchemaFieldColId(field),
     headerName: field,
     editable: false,
     valueGetter: (params: ValueGetterParams) => params.data?.data?.[field] ?? params.data?.[field] ?? '',
