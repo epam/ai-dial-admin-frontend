@@ -227,29 +227,23 @@ Because DIAL Core performs no validation when writing this resource kind, the sy
 - **WHEN** a route declares a method outside the supported set
 - **THEN** the save is blocked with a message identifying the offending method
 
-### Requirement: `$id` constraint violations are reported by their actual cause
+### Requirement: `$id` constraint violations are reported at the create form
 
-The system SHALL reject a write whose `$id` is absent, and separately reject one containing a character with no representable Core resource name (`!`, `~`, `*`, `'`, `(`, `)`). Each SHALL be reported by its own cause: an absent id SHALL NOT be attributed to forbidden characters. The character constraint SHALL additionally be enforced on the create form's id field as the user types, so a violation is visible at the point of entry rather than only on submit.
+The system SHALL disable save when `$id` is absent. The platform create form SHALL additionally
+reject any `$id` containing characters Core cannot store (`!`, `~`, `*`, `'`, `(`, `)`) with an
+inline client-side error as the user types, preventing a round-trip rejection for identifiers Core
+will refuse regardless.
 
 #### Scenario: An absent id is reported as missing
 
 - **WHEN** a write is attempted with no `$id`
-- **THEN** the error states the id is missing, and does not claim it contains forbidden characters
+- **THEN** the save button is disabled with the id field shown as required, not as forbidden characters
 
-#### Scenario: An unrepresentable character is reported as such
+#### Scenario: A forbidden character surfaces while typing
 
-- **WHEN** a write is attempted with an `$id` containing any of `!`, `~`, `*`, `'`, `(`, `)`
-- **THEN** the error names those characters as the cause and no request reaches Core
-
-#### Scenario: The character constraint surfaces while typing
-
-- **WHEN** a user types an id containing one of those characters into the create form
-- **THEN** the id field shows a forbidden-character error immediately, without waiting for submit
-
-#### Scenario: The entity-side runner form is not newly constrained
-
-- **WHEN** a user edits an `$id` on `Entities > Application Runners` or its duplicate modal
-- **THEN** the character constraint is not applied there, since those ids never become a Core resource-name path segment
+- **WHEN** a user types an `$id` containing any of `!`, `~`, `*`, `'`, `(`, `)` into the platform
+  create form
+- **THEN** an inline error is shown immediately, before any save attempt
 
 ### Requirement: Parameters tab shows the Core-resolved schema
 
