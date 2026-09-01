@@ -1,14 +1,10 @@
-# DISABLED. The leading `_` on the directory name is how the dispatcher skips a
-# manifest — match-agents.py globs `agents/*/agent.yml` and ignores underscore-
-# prefixed directories, so this agent is discovered by nobody until it is renamed.
+# Enabled: the dispatcher discovers `agents/*/agent.yml` and skips only
+# underscore-prefixed directories. To disable without reverting, set the repo
+# variable STAGE_CODE_REVIEW_ENABLED=false.
 #
-# To activate: `git mv agents/_code-review agents/code-review`.
-#
-# Prerequisites before that rename:
-#   1. the `code-review-and-quality` skill exists (it ships separately) — the
-#      dispatcher would otherwise start an agent whose `skill:` resolves to nothing
-#   2. `DIAL_API_KEY` secret and `DIAL_CORE_URL` / `DIAL_ROUTE_PATH` vars are set
-#   3. this file is on the default branch, or no trigger is registered
+# Requires the `code-review-and-quality` skill (the `skill:` below is invoked as
+# `/code-review-and-quality`) plus either DIAL_CORE_URL + DIAL_API_KEY, or
+# ANTHROPIC_API_KEY.
 contract_version: '0.1'
 name: code-review
 skill: code-review-and-quality
