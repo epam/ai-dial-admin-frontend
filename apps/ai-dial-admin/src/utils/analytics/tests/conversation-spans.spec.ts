@@ -1,23 +1,32 @@
 import { describe, expect, test } from 'vitest';
 
-import { ConversationSpanRow, HopSideSuppression, SpanKind } from '@/src/models/analytics/conversations-trace';
+import {
+  ConversationSpanRow,
+  HopFactsShape,
+  HopSideSuppression,
+  SpanKind,
+} from '@/src/models/analytics/conversations-trace';
 import {
   areSpansPartial,
+  hopFactsOf,
   hopSideSuppressionsOf,
   isFailedHop,
+  mcpToolCallTallyOf,
   spanKindOf,
   spanLabelOf,
+  spanPhaseOf,
+  unansweredToolNamesOf,
 } from '@/src/utils/analytics/conversation-spans';
 
 const span = (overrides: Partial<ConversationSpanRow> = {}): ConversationSpanRow => ({
   core_span_id: 's1',
   core_parent_span_id: null,
   event_kind: 'llm_call',
-  deployment: 'switchyard-model',
+  deployment: 'a-model',
   parent_deployment: null,
   request_method: 'POST',
-  request_uri: '/openai/deployments/switchyard-model/chat/completions',
-  response_upstream_uri: 'https://core.dial.parts/openai/deployments/switchyard',
+  request_uri: '/openai/deployments/a-model/chat/completions',
+  response_upstream_uri: 'https://an-upstream.example/openai/deployments/a-model',
   response_status: 200,
   success: true,
   operation_duration_ms: 5215,
@@ -69,11 +78,11 @@ describe('spanKindOf', () => {
 
 describe('spanLabelOf', () => {
   test('prefers the deployment name', () => {
-    expect(spanLabelOf(span())).toBe('switchyard-model');
+    expect(spanLabelOf(span())).toBe('a-model');
   });
 
   test('falls back to the request uri, then to the span id', () => {
-    expect(spanLabelOf(span({ deployment: '' }))).toBe('/openai/deployments/switchyard-model/chat/completions');
+    expect(spanLabelOf(span({ deployment: '' }))).toBe('/openai/deployments/a-model/chat/completions');
     expect(spanLabelOf(span({ deployment: null, request_uri: null }))).toBe('s1');
   });
 });
@@ -91,22 +100,151 @@ describe('areSpansPartial', () => {
 
 // An MCP hop labelled by its server leaves invisible the one thing a reader opening a retrieval hop wants.
 describe('spanLabelOf :: MCP hops', () => {
-  test('names an MCP hop by the tool it called', () => {
+  // The server, not the method: two protocol messages of different servers in the same second are otherwise
+  // indistinguishable, which is the whole reason the preference was inverted.
+  test('names an MCP hop by its server even when it called a tool', () => {
     const label = spanLabelOf(span({ event_kind: 'mcp', mcp_tool_call_name: 'get_page', mcp_method: 'tools/call' }));
 
-    expect(label).toBe('get_page');
+    expect(label).toBe('a-model');
   });
 
-  test('falls back to the method for a hop that called no tool', () => {
-    expect(spanLabelOf(span({ event_kind: 'mcp', mcp_method: 'tools/list' }))).toBe('tools/list');
+  test('names a protocol message by its server rather than its method', () => {
+    expect(spanLabelOf(span({ event_kind: 'mcp', mcp_method: 'tools/list' }))).toBe('a-model');
+  });
+});
+
+describe('spanPhaseOf', () => {
+  test('states the tool an MCP hop called', () => {
+    expect(spanPhaseOf(span({ mcp_tool_call_name: 'get_page', mcp_method: 'tools/call' }))).toBe('get_page');
   });
 
-  test('falls back to the deployment for a hop with neither', () => {
-    expect(spanLabelOf(span())).toBe('switchyard-model');
+  test('states the method when no tool was called', () => {
+    expect(spanPhaseOf(span({ mcp_method: 'tools/list' }))).toBe('tools/list');
   });
 
-  test('ignores a blank tool name rather than rendering an empty label', () => {
-    expect(spanLabelOf(span({ mcp_tool_call_name: '   ', mcp_method: 'initialize' }))).toBe('initialize');
+  test('ignores a blank tool name rather than returning an empty phase', () => {
+    expect(spanPhaseOf(span({ mcp_tool_call_name: '   ', mcp_method: 'initialize' }))).toBe('initialize');
+  });
+
+  test('states nothing for a hop whose kind records no phase', () => {
+    expect(spanPhaseOf(span({ mcp_tool_call_name: null, mcp_method: null }))).toBeNull();
+  });
+});
+
+describe('hopFactsOf', () => {
+  test('states tokens, request messages and cost for a hop that metered its own', () => {
+    expect(hopFactsOf(span())).toEqual({
+      shape: HopFactsShape.Metered,
+      tokens: 18,
+      requestMessages: 3,
+      cost: '0.001',
+    });
+  });
+
+  // The boundary the rule exists for: zero tokens and no own price, with a real chain price beneath.
+  test('states the chain cost for a hop that metered nothing of its own', () => {
+    const facts = hopFactsOf(span({ total_tokens: 0, deployment_price: null, total_price: '0.0375' }));
+
+    expect(facts).toEqual({ shape: HopFactsShape.Unmetered, chainCost: '0.0375' });
+  });
+
+  test('counts a hop with tokens but no own price as metered', () => {
+    expect(hopFactsOf(span({ deployment_price: null }))?.shape).toBe(HopFactsShape.Metered);
+  });
+
+  test('counts a span with a price but no tokens as metered', () => {
+    expect(hopFactsOf(span({ total_tokens: null }))?.shape).toBe(HopFactsShape.Metered);
+  });
+
+  // `0 tok` beside a real price is the same broken reading the unmetered shape exists to avoid.
+  test('states no token count for a span that priced work against zero tokens', () => {
+    expect(hopFactsOf(span({ total_tokens: 0, deployment_price: '0.001' }))).toEqual({
+      shape: HopFactsShape.Metered,
+      tokens: null,
+      requestMessages: 3,
+      cost: '0.001',
+    });
+  });
+
+  // Nothing metered and nothing spent. The row has its name, its kind and its duration and needs no second
+  // line at all — deciding that here rather than in the row is what keeps a blank line off the screen.
+  test('states nothing for a hop that metered nothing and spent nothing', () => {
+    expect(hopFactsOf(span({ total_tokens: 0, deployment_price: null, total_price: null }))).toBeNull();
+  });
+
+  test('states nothing for an MCP hop, which meters and prices nothing', () => {
+    const facts = hopFactsOf(
+      span({ event_kind: 'mcp', total_tokens: null, deployment_price: null, mcp_method: 'tools/list' }),
+    );
+
+    expect(facts).toBeNull();
+  });
+});
+
+describe('mcpToolCallTallyOf', () => {
+  test('counts the MCP calls recorded per tool name', () => {
+    const tally = mcpToolCallTallyOf(
+      [
+        span({ event_kind: 'mcp', mcp_tool_call_name: 'search' }),
+        span({ event_kind: 'mcp', mcp_tool_call_name: 'search' }),
+        span({ event_kind: 'mcp', mcp_tool_call_name: 'fetch' }),
+      ],
+      true,
+    );
+
+    expect(tally).toEqual({ counts: { search: 2, fetch: 1 }, isComplete: true });
+  });
+
+  test('counts no protocol message and no non-MCP span', () => {
+    const tally = mcpToolCallTallyOf(
+      [
+        span({ event_kind: 'mcp', mcp_method: 'tools/list', mcp_tool_call_name: null }),
+        span({ event_kind: 'llm_call', mcp_tool_call_name: 'search' }),
+      ],
+      true,
+    );
+
+    expect(tally.counts).toEqual({});
+  });
+
+  test('counts nothing for a turn with no spans', () => {
+    expect(mcpToolCallTallyOf([], true)).toEqual({ counts: {}, isComplete: true });
+  });
+
+  test('carries the completeness of the read it was built from', () => {
+    expect(mcpToolCallTallyOf([], false).isComplete).toBe(false);
+  });
+});
+
+describe('unansweredToolNamesOf', () => {
+  const tally = (counts: Record<string, number>, isComplete = true) => ({ counts, isComplete });
+
+  test('reports a requested tool the turn recorded no call of', () => {
+    expect(unansweredToolNamesOf(['internal_tool'], tally({}))).toEqual(['internal_tool']);
+  });
+
+  test('reports nothing when every request was matched by a recorded call', () => {
+    expect(unansweredToolNamesOf(['search'], tally({ search: 1 }))).toEqual([]);
+  });
+
+  // By count per name, never by identity: the log pairs nothing, so two requests against one recorded call
+  // leave exactly one unanswered.
+  test('reports the surplus by count when a name was requested more often than recorded', () => {
+    expect(unansweredToolNamesOf(['search', 'search'], tally({ search: 1 }))).toEqual(['search']);
+  });
+
+  test('reports nothing when more calls were recorded than requested', () => {
+    expect(unansweredToolNamesOf(['search'], tally({ search: 3 }))).toEqual([]);
+  });
+
+  test('reports nothing for a response that requested no tool', () => {
+    expect(unansweredToolNamesOf([], tally({ search: 1 }))).toEqual([]);
+  });
+
+  // The note this feeds states a cause. On a capped read an absent call may simply be unread, so the claim
+  // is withheld rather than made wrongly.
+  test('reports nothing when the span read was bounded', () => {
+    expect(unansweredToolNamesOf(['internal_tool'], tally({}, false))).toEqual([]);
   });
 });
 

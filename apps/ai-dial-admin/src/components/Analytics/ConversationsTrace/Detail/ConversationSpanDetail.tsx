@@ -12,9 +12,14 @@ import { useI18n } from '@/src/locales/client';
 import {
   ConversationSpanNode,
   ConversationTranscriptAvailability,
+  McpToolCallTally,
   SessionScope,
 } from '@/src/models/analytics/conversations-trace';
-import { formatCompactNumber, formatSignificantCost } from '@/src/utils/analytics/conversation-formatting';
+import {
+  formatCompactNumber,
+  formatHopDuration,
+  formatSignificantCost,
+} from '@/src/utils/analytics/conversation-formatting';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { spanLabelOf } from '@/src/utils/analytics/conversation-spans';
 
@@ -39,9 +44,10 @@ interface Props {
   scope: SessionScope;
   traceId: string;
   bodyGrants: ConversationTranscriptAvailability;
+  mcpToolCalls: McpToolCallTally;
 }
 
-const ConversationSpanDetail: FC<Props> = ({ node, scope, traceId, bodyGrants }) => {
+const ConversationSpanDetail: FC<Props> = ({ node, scope, traceId, bodyGrants, mcpToolCalls }) => {
   const t = useI18n();
 
   if (!node) {
@@ -62,6 +68,13 @@ const ConversationSpanDetail: FC<Props> = ({ node, scope, traceId, bodyGrants })
     {
       label: t(ConversationsTraceI18nKey.TraceTokens),
       value: formatCompactNumber(span.total_tokens) || UNAVAILABLE_VALUE,
+    },
+    // Hop scale, not conversation scale: a 15 ms handshake reads as `15ms` rather than as `0s`. A reported
+    // zero yields nothing, which is the honest reading — a core predating the field stores zero for "not
+    // reported" — so the row supplies the placeholder instead.
+    {
+      label: t(ConversationsTraceI18nKey.DetailDuration),
+      value: formatHopDuration(span.operation_duration_ms) || UNAVAILABLE_VALUE,
     },
   ];
 
@@ -127,7 +140,14 @@ const ConversationSpanDetail: FC<Props> = ({ node, scope, traceId, bodyGrants })
           <DetailRow key={row.label} {...row} />
         ))}
       </div>
-      <HopInspector scope={scope} traceId={traceId} span={span} kind={kind} bodyGrants={bodyGrants} />
+      <HopInspector
+        scope={scope}
+        traceId={traceId}
+        span={span}
+        kind={kind}
+        bodyGrants={bodyGrants}
+        mcpToolCalls={mcpToolCalls}
+      />
     </ConversationRailShell>
   );
 };

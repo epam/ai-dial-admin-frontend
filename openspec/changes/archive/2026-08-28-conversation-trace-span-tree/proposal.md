@@ -9,12 +9,12 @@ Three shapes exist, all verified against ADAS dev:
 
 - **Flat**, and dominant. Trace `d06f3890…` is 1 970 spans: one root, everything else its direct child.
   Nesting adds nothing here, and the current stream is the right reading.
-- **Genuinely nested.** Trace `ba00487…` is 11 spans, of which `statgpt-dial-rag-pgvector` owns a sub-tree —
+- **Genuinely nested.** Trace `ba00487…` is 11 spans, of which one RAG application owns a sub-tree —
   its own embedding call and its own model call. Flattened, that RAG call is one sibling among ten and its
   two children read as two more siblings. The structure that explains the turn is exactly what the flat view
   discards.
-- **Deep.** Trace `89bcf12…` is a three-level chain: `thinking-model-budget-demo` →
-  `budget-routing-app` → `ali.glm-5.2`. Sampling 1 000 parented spans across 696 traces, 18 (~2%) have a
+- **Deep.** Trace `89bcf12…` is a three-level chain: a budget-demo application → a routing application →
+  `ali.glm-5.2`. Sampling 1 000 parented spans across 696 traces, 18 (~2%) have a
   parent that is itself a child — rare, but not absent, and these are precisely the traces a reader opens the
   drill-in to understand. That same trace also has no root row at all, which is rarer still: 4 954 of
   1 860 573 traces record no root (0.27%), and a 50-trace sample of conversation traces contained none. The

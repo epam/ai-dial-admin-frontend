@@ -4,62 +4,44 @@ import { describe, expect, test, vi } from 'vitest';
 
 import ConversationEventStream from '@/src/components/Analytics/ConversationsTrace/Detail/ConversationEventStream';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
-import {
-  ConversationSpanRow,
-  HopEventType,
-  HopTreeNode,
-  ModelCallOutput,
-} from '@/src/models/analytics/conversations-trace';
-import { buildHopTree } from '@/src/utils/analytics/conversation-hop-stream';
+import { ConversationSpanRow, HopTreeNode } from '@/src/models/analytics/conversations-trace';
+import { buildHopTree } from '@/src/utils/analytics/conversation-span-tree';
 
 const span = (overrides: Partial<ConversationSpanRow> = {}): ConversationSpanRow =>
   ({
     core_span_id: 's1',
     core_parent_span_id: null,
     event_kind: 'llm_call',
-    deployment: 'gpt',
-    request_uri: '/openai/deployments/gpt/chat/completions',
+    deployment: 'a-model',
+    request_uri: '/openai/deployments/a-model/chat/completions',
     response_status: 200,
     success: true,
     total_tokens: 18,
-    reasoning_tokens: 0,
+    number_request_messages: 3,
     deployment_price: '0.001',
+    operation_duration_ms: 1200,
     request_time: 1000,
     response_body_bytes: 4096,
     ...overrides,
   }) as ConversationSpanRow;
 
-// A model call that answered and asked for a tool, the MCP hop answering it nested beneath, and an embedding
-// alongside — the three shapes the drill-in has to read, in one turn.
+// A model call, the MCP hop it made nested beneath, and an embedding alongside — the three shapes the
+// drill-in has to read, in one turn.
 const SPANS = [
-  span({ core_span_id: 'model', request_time: 1000 }),
+  span({ core_span_id: 'model', deployment: 'a-model', request_time: 1000 }),
   span({
     core_span_id: 'mcp',
     core_parent_span_id: 'model',
     event_kind: 'mcp',
+    deployment: 'a-toolset',
     mcp_method: 'tools/call',
-    mcp_tool_call_name: 'rag_search',
+    mcp_tool_call_name: 'a_search_tool',
     request_time: 2000,
   }),
-  span({ core_span_id: 'embed', event_kind: 'embedding', deployment: 'text-embedding-3', request_time: 3000 }),
+  span({ core_span_id: 'embed', event_kind: 'embedding', deployment: 'an-embedding-model', request_time: 3000 }),
 ];
 
-const OUTPUTS: ModelCallOutput[] = [
-  {
-    core_span_id: 'model',
-    text: 'an answer',
-    toolCalls: [{ name: 'rag_search', argumentsPreview: '{"q":"cyber"}' }],
-    isUnread: false,
-  },
-];
-
-const TREE = buildHopTree({ spans: SPANS, modelOutputs: OUTPUTS });
-
-// A turn of nothing but one-event hops, so every node in it is a collapsed call.
-const ONE_EVENT_TURN = buildHopTree({
-  spans: [span({ core_span_id: 'embed', event_kind: 'embedding', deployment: 'text-embedding-3' })],
-  modelOutputs: [],
-});
+const TREE = buildHopTree(SPANS);
 
 const renderStream = (tree: HopTreeNode[] = TREE, onSelectSpan = vi.fn()) =>
   render(<ConversationEventStream tree={tree} selectedSpanId={null} onSelectSpan={onSelectSpan} />);
@@ -67,21 +49,259 @@ const renderStream = (tree: HopTreeNode[] = TREE, onSelectSpan = vi.fn()) =>
 const filters = () => within(screen.getByRole('group', { name: ConversationsTraceI18nKey.StreamFilterLabel }));
 const filterFor = (key: string) => filters().getByRole('button', { name: new RegExp(key) });
 const rows = () => within(screen.getByRole('group', { name: ConversationsTraceI18nKey.StreamLabel }));
-// A call that kept its own node and the events beneath it can carry the same label — the call is the first of
-// them, since an event always renders beneath the hop that emitted it.
-const rowFor = (text: RegExp) => rows().getAllByRole('button', { name: text })[0];
+const rowFor = (text: RegExp) => rows().getByRole('button', { name: text });
 const expanders = () => rows().queryAllByRole('button', { name: ConversationsTraceI18nKey.TreeCollapse });
 
-// The outcome axis: one control, offered only when the turn recorded a failure, marking failed nodes whatever
-// kind of call they were.
-describe('ConversationEventStream — the outcome axis', () => {
-  const FAILED_TURN = buildHopTree({
-    spans: [
-      span({ core_span_id: 'model', request_time: 1000, success: false }),
-      span({ core_span_id: 'embed', event_kind: 'embedding', deployment: 'text-embedding-3', request_time: 2000 }),
-    ],
-    modelOutputs: [],
+describe('ConversationEventStream', () => {
+  test('renders one row per recorded hop', () => {
+    renderStream();
+
+    expect(rows().getAllByRole('button', { name: /a-model|a-toolset|an-embedding-model/ })).toHaveLength(3);
   });
+
+  test('names each row by the deployment that did the work', () => {
+    renderStream();
+
+    expect(rowFor(/a-model/)).toBeInTheDocument();
+    expect(rowFor(/a-toolset/)).toBeInTheDocument();
+    expect(rowFor(/an-embedding-model/)).toBeInTheDocument();
+  });
+
+  test('states what an MCP hop did beside the server that did it', () => {
+    renderStream();
+
+    expect(rowFor(/a-toolset/)).toHaveAccessibleName(/a_search_tool/);
+  });
+
+  test('states no row for content decoded from a hop body', () => {
+    renderStream();
+
+    expect(rows().queryByRole('button', { name: /an answer/ })).toBeNull();
+  });
+
+  test('states each row kind in words', () => {
+    renderStream();
+
+    expect(rowFor(/a-model/)).toHaveAccessibleName(new RegExp(ConversationsTraceI18nKey.SpanLlm));
+    expect(rowFor(/a-toolset/)).toHaveAccessibleName(new RegExp(ConversationsTraceI18nKey.SpanMcp));
+    expect(rowFor(/an-embedding-model/)).toHaveAccessibleName(new RegExp(ConversationsTraceI18nKey.SpanEmbeddings));
+  });
+
+  test('opens fully expanded', () => {
+    renderStream();
+
+    expect(expanders()).toHaveLength(1);
+    expect(expanders()[0]).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  // Programmatic, not visual: the control names the rows it governs, so the relationship survives for a
+  // reader who cannot see the indentation.
+  test('the expand control names the rows it governs while they are shown', () => {
+    renderStream();
+
+    const controlled = expanders()[0].getAttribute('aria-controls');
+    expect(controlled).toBeTruthy();
+    expect(document.getElementById(controlled as string)).toBeTruthy();
+  });
+
+  test('collapsing a row hides its descendants and states the collapsed state', async () => {
+    const user = userEvent.setup();
+    renderStream();
+
+    await user.click(expanders()[0]);
+
+    expect(rows().queryByRole('button', { name: /a-toolset/ })).toBeNull();
+    expect(
+      rows().getByRole('button', { name: ConversationsTraceI18nKey.TreeExpand }).getAttribute('aria-expanded'),
+    ).toBe('false');
+  });
+
+  test('selecting a row reports the hop it stands for', async () => {
+    const user = userEvent.setup();
+    const onSelectSpan = vi.fn();
+    renderStream(TREE, onSelectSpan);
+
+    await user.click(rowFor(/an-embedding-model/));
+
+    expect(onSelectSpan).toHaveBeenCalledOnce();
+    expect(onSelectSpan).toHaveBeenCalledWith('embed');
+  });
+
+  test('marks the selected row as current', () => {
+    render(<ConversationEventStream tree={TREE} selectedSpanId="embed" onSelectSpan={vi.fn()} />);
+
+    expect(rowFor(/an-embedding-model/)).toHaveAttribute('aria-current', 'true');
+  });
+
+  test('states that nothing was recorded for a turn with no hops', () => {
+    renderStream([]);
+
+    expect(screen.getByText(ConversationsTraceI18nKey.TraceNoSpans)).toBeInTheDocument();
+  });
+});
+
+describe('ConversationEventStream — figures', () => {
+  test('states tokens and request messages for a hop that metered its own', () => {
+    renderStream();
+
+    expect(rowFor(/a-model/)).toHaveAccessibleName(new RegExp(ConversationsTraceI18nKey.SpanTokens));
+    expect(rowFor(/a-model/)).toHaveAccessibleName(new RegExp(ConversationsTraceI18nKey.SpanRequestMessages));
+  });
+
+  // The failure this rule exists to prevent: an application hop leading with `0 tok` and a dash.
+  test('states the chain cost for a hop that metered nothing of its own, and no token count', () => {
+    const tree = buildHopTree([
+      span({
+        core_span_id: 'app',
+        deployment: 'an-application',
+        total_tokens: 0,
+        deployment_price: null,
+        total_price: '0.0375',
+      }),
+    ]);
+    renderStream(tree);
+
+    expect(rowFor(/an-application/)).toHaveAccessibleName(new RegExp(ConversationsTraceI18nKey.SpanChainCost));
+    expect(rowFor(/an-application/)).not.toHaveAccessibleName(new RegExp(ConversationsTraceI18nKey.SpanTokens));
+  });
+
+  test('states a reported duration', () => {
+    renderStream(buildHopTree([span({ core_span_id: 'm', deployment: 'a-model', operation_duration_ms: 2500 })]));
+
+    expect(rowFor(/a-model/)).toHaveAccessibleName(/2\.5s/);
+  });
+
+  // Recorded hop durations start at single-digit milliseconds, which conversation-scale formatting rendered
+  // as `0s` — the one reading the zero rule exists to prevent.
+  test('states a sub-second duration in milliseconds rather than as zero seconds', () => {
+    renderStream(buildHopTree([span({ core_span_id: 'm', deployment: 'a-model', operation_duration_ms: 15 })]));
+
+    expect(rowFor(/a-model/)).toHaveAccessibleName(/15ms/);
+    expect(rowFor(/a-model/)).not.toHaveAccessibleName(/0s/);
+  });
+
+  // A model call can record zero tokens, no price of its own and no chain price. The row then has its name,
+  // its kind and its duration, and no second line at all.
+  test('states no figures for a hop that metered nothing and spent nothing', () => {
+    const tree = buildHopTree([
+      span({ core_span_id: 'm', deployment: 'a-model', total_tokens: 0, deployment_price: null, total_price: null }),
+    ]);
+    renderStream(tree);
+
+    expect(rowFor(/a-model/)).not.toHaveAccessibleName(new RegExp(ConversationsTraceI18nKey.SpanTokens));
+    expect(rowFor(/a-model/)).not.toHaveAccessibleName(new RegExp(ConversationsTraceI18nKey.SpanChainCost));
+  });
+
+  // A producer predating the field stores zero for "not reported", so the two cannot be told apart. Matched
+  // on the formatter's own shape — a number carrying a unit — because a bare `0` also appears in the cost.
+  test('states no duration for a hop reporting zero', () => {
+    renderStream(buildHopTree([span({ core_span_id: 'm', deployment: 'a-model', operation_duration_ms: 0 })]));
+
+    expect(rowFor(/a-model/)).not.toHaveAccessibleName(/\d+(\.\d+)?(s|m|h)\b/);
+  });
+});
+
+describe('ConversationEventStream — the kind axis', () => {
+  test('offers a control for each kind the turn recorded and no other', () => {
+    renderStream();
+
+    expect(filterFor(ConversationsTraceI18nKey.SpanLlm)).toBeInTheDocument();
+    expect(filterFor(ConversationsTraceI18nKey.SpanMcp)).toBeInTheDocument();
+    expect(filterFor(ConversationsTraceI18nKey.SpanEmbeddings)).toBeInTheDocument();
+    expect(filters().queryByRole('button', { name: new RegExp(ConversationsTraceI18nKey.SpanRoute) })).toBeNull();
+    expect(filters().queryByRole('button', { name: new RegExp(ConversationsTraceI18nKey.SpanRating) })).toBeNull();
+  });
+
+  test('starts with no kind emphasised and no match count', () => {
+    renderStream();
+
+    expect(filterFor(ConversationsTraceI18nKey.StreamTabAll)).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('status').textContent).toBe('');
+  });
+
+  test('emphasising a kind marks its rows, keeps every row, and announces the count', async () => {
+    const user = userEvent.setup();
+    renderStream();
+
+    await user.click(filterFor(ConversationsTraceI18nKey.SpanMcp));
+
+    expect(filterFor(ConversationsTraceI18nKey.SpanMcp)).toHaveAttribute('aria-pressed', 'true');
+    expect(rows().getAllByText(ConversationsTraceI18nKey.StreamMatch)).toHaveLength(1);
+    expect(rows().getByRole('button', { name: /a-model/ })).toBeInTheDocument();
+    expect(screen.getByRole('status').textContent).toBe(ConversationsTraceI18nKey.StreamMatchCount);
+  });
+
+  test('the separate control returns to no emphasis', async () => {
+    const user = userEvent.setup();
+    renderStream();
+
+    await user.click(filterFor(ConversationsTraceI18nKey.SpanMcp));
+    await user.click(filterFor(ConversationsTraceI18nKey.StreamTabAll));
+
+    expect(filterFor(ConversationsTraceI18nKey.StreamTabAll)).toHaveAttribute('aria-pressed', 'true');
+    expect(rows().queryAllByText(ConversationsTraceI18nKey.StreamMatch)).toHaveLength(0);
+    expect(screen.getByRole('status').textContent).toBe('');
+  });
+
+  test('activating the emphasised control again returns to no emphasis', async () => {
+    const user = userEvent.setup();
+    renderStream();
+
+    await user.click(filterFor(ConversationsTraceI18nKey.SpanMcp));
+    await user.click(filterFor(ConversationsTraceI18nKey.SpanMcp));
+
+    expect(rows().queryAllByText(ConversationsTraceI18nKey.StreamMatch)).toHaveLength(0);
+    expect(screen.getByRole('status').textContent).toBe('');
+  });
+
+  test('a de-emphasised row can still be opened', async () => {
+    const user = userEvent.setup();
+    const onSelectSpan = vi.fn();
+    renderStream(TREE, onSelectSpan);
+
+    await user.click(filterFor(ConversationsTraceI18nKey.SpanMcp));
+    await user.click(rowFor(/an-embedding-model/));
+
+    expect(onSelectSpan).toHaveBeenCalledWith('embed');
+  });
+
+  test('no control is disabled, including the active one', () => {
+    renderStream();
+
+    for (const control of filters().getAllByRole('button')) {
+      expect(control).not.toBeDisabled();
+    }
+  });
+
+  test('offers a Route control for a turn that recorded a route hop', () => {
+    const tree = buildHopTree([
+      span({
+        core_span_id: 'r',
+        event_kind: 'route',
+        deployment: 'a-retrieval-app',
+        request_uri: '/v1/x/route/search',
+      }),
+    ]);
+    renderStream(tree);
+
+    expect(filterFor(ConversationsTraceI18nKey.SpanRoute)).toBeInTheDocument();
+  });
+
+  test('offers a Rating control for a rating trace', () => {
+    const tree = buildHopTree([
+      span({ core_span_id: 'rate', event_kind: '', deployment: 'a-model', request_uri: '/v1/a-model/rate' }),
+    ]);
+    renderStream(tree);
+
+    expect(filterFor(ConversationsTraceI18nKey.SpanRating)).toBeInTheDocument();
+  });
+});
+
+describe('ConversationEventStream — the outcome axis', () => {
+  const FAILED_TURN = buildHopTree([
+    span({ core_span_id: 'model', deployment: 'a-model', request_time: 1000, success: false }),
+    span({ core_span_id: 'embed', event_kind: 'embedding', deployment: 'an-embedding-model', request_time: 2000 }),
+  ]);
 
   test('offers a Failed control when the turn recorded a failure', () => {
     renderStream(FAILED_TURN);
@@ -89,296 +309,61 @@ describe('ConversationEventStream — the outcome axis', () => {
     expect(filterFor(ConversationsTraceI18nKey.EventFailed)).toBeInTheDocument();
   });
 
-  // A control the turn has nothing for would dim every node and mark none.
+  // A control the turn has nothing for would dim every row and mark none.
   test('offers none when nothing failed', () => {
     renderStream(TREE);
 
     expect(filters().queryByRole('button', { name: new RegExp(ConversationsTraceI18nKey.EventFailed) })).toBeNull();
   });
 
-  test('emphasising Failed marks the failed node and states the count', async () => {
+  test('a failed row keeps its kind and carries the failure marker', () => {
+    renderStream(FAILED_TURN);
+
+    expect(rowFor(/a-model/)).toHaveAccessibleName(new RegExp(ConversationsTraceI18nKey.SpanLlm));
+    expect(rowFor(/a-model/)).toHaveAccessibleName(new RegExp(ConversationsTraceI18nKey.SpanFailedMarker));
+  });
+
+  test('the failure marker does not depend on emphasis', () => {
+    renderStream(FAILED_TURN);
+
+    expect(rows().getByText(ConversationsTraceI18nKey.SpanFailedMarker)).toBeInTheDocument();
+  });
+
+  test('emphasising Failed marks the failed row whatever its kind', async () => {
     const user = userEvent.setup();
     renderStream(FAILED_TURN);
 
     await user.click(filterFor(ConversationsTraceI18nKey.EventFailed));
 
-    expect(filterFor(ConversationsTraceI18nKey.EventFailed)).toHaveAttribute('aria-pressed', 'true');
     expect(rows().getAllByText(ConversationsTraceI18nKey.StreamMatch)).toHaveLength(1);
-  });
-
-  // Persistent, and independent of the emphasis: a failure must not be reachable only by having filtered for
-  // one.
-  test('marks a failed hop whether or not anything is emphasised', () => {
-    renderStream(FAILED_TURN);
-
-    expect(rows().getAllByText(ConversationsTraceI18nKey.EventFailed).length).toBeGreaterThan(0);
-  });
-});
-
-describe('ConversationEventStream', () => {
-  // A hop that called another deployment is not a peer of the call it made, and an event is not a peer of the
-  // hop that emitted it.
-  test('renders the turn as a tree, with a hop events and the hops it called beneath it', () => {
-    renderStream();
-
-    expect(rows().getByText('an answer')).toBeInTheDocument();
-    expect(rows().getAllByText('rag_search').length).toBeGreaterThan(1);
-    // The answer and the tool request sit beneath the call that produced them, not beside it.
-    expect(rowFor(/an answer/)).not.toBe(rowFor(/gpt/));
-  });
-
-  // The embedding hop emitted one event and nothing nests under it, so it is one row — not the call's name
-  // twice, once on the hop and once on the event saying nothing the hop did not.
-  test('renders a hop that emitted one event as a single row', () => {
-    renderStream();
-
-    expect(rows().getAllByText('text-embedding-3')).toHaveLength(1);
-    expect(rowFor(/text-embedding-3/)).toHaveTextContent(ConversationsTraceI18nKey.EventEmbedding);
-  });
-
-  // An observability tool that opens by hiding what it recorded makes the reader's judgement for them.
-  test('opens fully expanded', () => {
-    renderStream();
-
-    expect(rows().getByText('an answer')).toBeInTheDocument();
-    expect(expanders().every((button) => button.getAttribute('aria-expanded') === 'true')).toBe(true);
-  });
-
-  test('collapses a node, hiding its descendants and stating that it is collapsed', async () => {
-    const user = userEvent.setup();
-    renderStream();
-
-    await user.click(expanders()[0]);
-
-    expect(rows().queryByText('an answer')).toBeNull();
-    expect(rows().queryAllByText('rag_search')).toHaveLength(0);
-    // The embedding is a sibling of the collapsed hop, so it stays.
-    expect(rows().getAllByText('text-embedding-3').length).toBeGreaterThan(0);
-    expect(
-      rows().getByRole('button', { name: ConversationsTraceI18nKey.TreeExpand }).getAttribute('aria-expanded'),
-    ).toBe('false');
-  });
-
-  test('names the rows a collapsed control would reopen', () => {
-    renderStream();
-
-    expect(expanders()[0]).toHaveAttribute('aria-controls', expect.stringContaining('model:event:0'));
-  });
-
-  test('states each node place in the turn', () => {
-    renderStream();
-
-    expect(rowFor(/an answer/)).toHaveTextContent('2');
-  });
-
-  test('opens the hop a row stands for', async () => {
-    const onSelectSpan = vi.fn();
-    const user = userEvent.setup();
-    renderStream(TREE, onSelectSpan);
-
-    await user.click(rowFor(/an answer/));
-
-    expect(onSelectSpan).toHaveBeenCalledWith('model');
-  });
-
-  test('states that a turn recorded no hops', () => {
-    renderStream([]);
-
-    expect(screen.getByText(ConversationsTraceI18nKey.TraceNoSpans)).toBeInTheDocument();
-  });
-});
-
-describe('ConversationEventStream — filtering', () => {
-  test('emphasises no category until the reader chooses one', () => {
-    renderStream();
-
-    expect(filterFor(ConversationsTraceI18nKey.StreamTabAll)).toHaveAttribute('aria-pressed', 'true');
-    expect(filterFor(ConversationsTraceI18nKey.EventText)).toHaveAttribute('aria-pressed', 'false');
-    expect(rows().queryAllByText(ConversationsTraceI18nKey.StreamMatch)).toHaveLength(0);
-  });
-
-  // The control names its category and nothing more.
-  test('offers one control per category present, naming it without a count', () => {
-    renderStream();
-
-    expect(filterFor(ConversationsTraceI18nKey.EventEmbedding)).toHaveTextContent(
-      ConversationsTraceI18nKey.EventEmbedding,
-    );
-    expect(filterFor(ConversationsTraceI18nKey.EventToolCall)).not.toHaveTextContent(/\d/);
-  });
-
-  // Under dimming a control for an absent category would dim every node and mark none, so its absence is the
-  // answer to "were there any errors".
-  test('offers no control for a category the turn recorded none of', () => {
-    renderStream();
-
-    expect(filters().queryByRole('button', { name: new RegExp(ConversationsTraceI18nKey.EventThinking) })).toBeNull();
-    expect(filters().queryByRole('button', { name: new RegExp(ConversationsTraceI18nKey.EventSession) })).toBeNull();
-  });
-
-  // The tree is the answer to "what did this turn consist of": a filter that removed nodes would break the
-  // structure it exists to show.
-  test('marks the emphasised category and removes nothing', async () => {
-    const user = userEvent.setup();
-    renderStream();
-
-    await user.click(filterFor(ConversationsTraceI18nKey.EventEmbedding));
-
-    expect(rows().getAllByText(ConversationsTraceI18nKey.StreamMatch)).toHaveLength(1);
-    expect(rows().getByText('an answer')).toBeInTheDocument();
-    expect(rows().getAllByText('rag_search').length).toBeGreaterThan(1);
-  });
-
-  // Colour and opacity carry nothing to a reader who cannot perceive them, and here the dimming applies to
-  // most of the screen at once.
-  test('marks a match by more than the dimming of everything else', async () => {
-    const user = userEvent.setup();
-    renderStream();
-
-    await user.click(filterFor(ConversationsTraceI18nKey.EventText));
-
-    expect(rowFor(/an answer/)).toHaveTextContent(ConversationsTraceI18nKey.StreamMatch);
-  });
-
-  // Dimmed, not disabled: a reader who narrowed to errors still needs the call that came just before one.
-  test('opens a de-emphasised hop as it would with no filter active', async () => {
-    const onSelectSpan = vi.fn();
-    const user = userEvent.setup();
-    renderStream(TREE, onSelectSpan);
-
-    await user.click(filterFor(ConversationsTraceI18nKey.EventEmbedding));
-    const dimmed = rowFor(/an answer/);
-
-    expect(dimmed).toBeEnabled();
-    await user.click(dimmed);
-
-    expect(onSelectSpan).toHaveBeenCalledWith('model');
-  });
-
-  test('releases the emphasis when the same control is activated again', async () => {
-    const user = userEvent.setup();
-    renderStream();
-    const filter = filterFor(ConversationsTraceI18nKey.EventEmbedding);
-
-    await user.click(filter);
-    expect(filter).toHaveAttribute('aria-pressed', 'true');
-
-    await user.click(filter);
-
-    expect(filter).toHaveAttribute('aria-pressed', 'false');
-    expect(rows().queryAllByText(ConversationsTraceI18nKey.StreamMatch)).toHaveLength(0);
-  });
-
-  test('returns to no emphasis through the separate control', async () => {
-    const user = userEvent.setup();
-    renderStream();
-
-    await user.click(filterFor(ConversationsTraceI18nKey.EventEmbedding));
-    await user.click(filterFor(ConversationsTraceI18nKey.StreamTabAll));
-
-    expect(rows().queryAllByText(ConversationsTraceI18nKey.StreamMatch)).toHaveLength(0);
-  });
-
-  // The pressed state already says which filter is on, and disabling the active control drops it out of the
-  // tab order — so the reader who narrowed by keyboard could not get back.
-  test('disables no control, the active one included', async () => {
-    const user = userEvent.setup();
-    renderStream();
-
-    const all = filterFor(ConversationsTraceI18nKey.StreamTabAll);
-    expect(all).toBeEnabled();
-
-    await user.click(filterFor(ConversationsTraceI18nKey.EventText));
-
-    expect(filterFor(ConversationsTraceI18nKey.EventText)).toBeEnabled();
-    expect(all).toBeEnabled();
-  });
-
-  // Dimming removes nothing, so a resting count could only read as the total against itself — and it is the
-  // only signal assistive technology gets that the filter found anything.
-  test('states the match count only while a category is emphasised', async () => {
-    const user = userEvent.setup();
-    renderStream();
-
-    expect(screen.queryByText(ConversationsTraceI18nKey.StreamMatchCount)).toBeNull();
-
-    await user.click(filterFor(ConversationsTraceI18nKey.EventText));
-
-    expect(screen.getByRole('status')).toHaveTextContent(ConversationsTraceI18nKey.StreamMatchCount);
-  });
-
-  // A hop node with no category of its own would dim under every filter, so the call that produced the very
-  // event being emphasised would fade while the event lit up.
-  test('marks a collapsed call rather than dimming it when its own category is emphasised', async () => {
-    const user = userEvent.setup();
-    renderStream();
-
-    await user.click(filterFor(ConversationsTraceI18nKey.EventEmbedding));
-
-    expect(rowFor(/text-embedding-3/)).toHaveTextContent(ConversationsTraceI18nKey.StreamMatch);
-  });
-
-  test('marks the call that kept its own node when the model-call category is emphasised', async () => {
-    const user = userEvent.setup();
-    renderStream();
-
-    await user.click(filterFor(ConversationsTraceI18nKey.EventModelCall));
-
-    expect(rowFor(/gpt/)).toHaveTextContent(ConversationsTraceI18nKey.StreamMatch);
-  });
-
-  test('offers the model-call control where a call kept its own node', () => {
-    renderStream();
-
-    expect(filterFor(ConversationsTraceI18nKey.EventModelCall)).toBeEnabled();
-  });
-
-  // The category exists only because a call kept a node of its own, which a turn of one-event hops never does.
-  test('offers no model-call control for a turn whose every hop collapsed', () => {
-    renderStream(ONE_EVENT_TURN);
-
-    expect(filters().queryByRole('button', { name: new RegExp(ConversationsTraceI18nKey.EventModelCall) })).toBeNull();
-    expect(filterFor(ConversationsTraceI18nKey.EventEmbedding)).toBeEnabled();
-  });
-
-  // As a render-time counter this would be a standing bug waiting for the first filter.
-  test('keeps every node place in the turn while a category is emphasised', async () => {
-    const user = userEvent.setup();
-    renderStream();
-    const embeddingPosition = rowFor(/text-embedding-3/).textContent;
-
-    await user.click(filterFor(ConversationsTraceI18nKey.EventToolCall));
-
-    expect(rowFor(/text-embedding-3/).textContent).toBe(embeddingPosition);
   });
 });
 
 describe('ConversationEventStream — an unrecorded root', () => {
-  const ORPHANED = buildHopTree({
-    spans: [
-      span({
-        core_span_id: 'a',
-        core_parent_span_id: 'never-recorded',
-        event_kind: 'embedding',
-        deployment: 'child-call',
-        execution_path: ['deployment-name-stage', 'child-call'],
-      }),
-    ],
-    modelOutputs: [],
-  });
+  const ORPHANED = buildHopTree([
+    span({
+      core_span_id: 'child',
+      core_parent_span_id: 'never-recorded',
+      deployment: 'a-model',
+      execution_path: ['an-entry-point', 'a-model'],
+    }),
+  ]);
 
-  test('renders the placeholder root, marked as standing for no recorded hop', () => {
+  test('renders the placeholder and states that it was not recorded', () => {
     renderStream(ORPHANED);
 
-    expect(rows().getByText('deployment-name-stage')).toBeInTheDocument();
     expect(rows().getByText(ConversationsTraceI18nKey.TraceRootNotRecorded)).toBeInTheDocument();
   });
 
-  // There is no span to open, so it must not be offered as a control that happens to be unavailable.
-  test('does not offer the placeholder as a control', () => {
+  test('the placeholder cannot be opened', () => {
     renderStream(ORPHANED);
 
-    expect(rows().queryByRole('button', { name: /deployment-name-stage/ })).toBeNull();
-    expect(rows().getAllByRole('button', { name: /child-call/ }).length).toBeGreaterThan(0);
+    expect(rows().queryByRole('button', { name: /an-entry-point/ })).toBeNull();
+  });
+
+  test('the turn real work renders beneath it', () => {
+    renderStream(ORPHANED);
+
+    expect(rows().getByRole('button', { name: /a-model/ })).toBeInTheDocument();
   });
 });

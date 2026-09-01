@@ -64,7 +64,7 @@ const groupsOf = (
 
 describe('isCoreInternalRoot', () => {
   test('marks a root recorded under a project other than the conversation own', () => {
-    expect(isCoreInternalRoot(root({ project_id: CORE_PROJECT }), 'statgpt')).toBe(true);
+    expect(isCoreInternalRoot(root({ project_id: CORE_PROJECT }), 'demo-project')).toBe(true);
   });
 
   test('does not mark a root sharing the conversation project', () => {
@@ -84,8 +84,8 @@ describe('isCoreInternalRoot', () => {
   // project, which says nothing about who called it. A blank on the conversation side is still a difference
   // when the root names one.
   test('treats a blank on the root side as an absence rather than a difference', () => {
-    expect(isCoreInternalRoot(root({ project_id: '' }), 'statgpt')).toBe(false);
-    expect(isCoreInternalRoot(root({ project_id: null }), 'statgpt')).toBe(false);
+    expect(isCoreInternalRoot(root({ project_id: '' }), 'demo-project')).toBe(false);
+    expect(isCoreInternalRoot(root({ project_id: null }), 'demo-project')).toBe(false);
   });
 });
 
@@ -298,15 +298,15 @@ describe('attributeRatingsToTraces', () => {
 });
 
 describe('traceInvariantViolations', () => {
-  const violationsOf = (roots: ConversationTraceRootRow[], projectId = 'statgpt') =>
+  const violationsOf = (roots: ConversationTraceRootRow[], projectId = 'demo-project') =>
     traceInvariantViolations(roots, projectId).map(({ invariant }) => invariant);
 
   // The ordinary measured shapes: a single-root trace, and a client root beside one Core-internal root.
   test('reports nothing for the shapes the data actually records', () => {
-    expect(violationsOf([root({ project_id: 'statgpt' })])).toEqual([]);
+    expect(violationsOf([root({ project_id: 'demo-project' })])).toEqual([]);
     expect(
       violationsOf([
-        root({ core_span_id: 'client', 'usage_client_identity.client_session_id': 'c', project_id: 'statgpt' }),
+        root({ core_span_id: 'client', 'usage_client_identity.client_session_id': 'c', project_id: 'demo-project' }),
         root({ core_span_id: 'service', 'usage_client_identity.client_session_id': '', project_id: 'dial' }),
       ]),
     ).toEqual([]);
@@ -324,8 +324,8 @@ describe('traceInvariantViolations', () => {
   test('reports a trace whose roots carry two conversations', () => {
     expect(
       violationsOf([
-        root({ core_span_id: 'a', 'usage_client_identity.client_session_id': 'one', project_id: 'statgpt' }),
-        root({ core_span_id: 'b', 'usage_client_identity.client_session_id': 'two', project_id: 'statgpt' }),
+        root({ core_span_id: 'a', 'usage_client_identity.client_session_id': 'one', project_id: 'demo-project' }),
+        root({ core_span_id: 'b', 'usage_client_identity.client_session_id': 'two', project_id: 'demo-project' }),
       ]),
     ).toContain(TraceInvariant.OneConversationPerTrace);
   });
@@ -333,7 +333,7 @@ describe('traceInvariantViolations', () => {
   test('reports labelled roots spanning two projects', () => {
     expect(
       violationsOf([
-        root({ core_span_id: 'a', 'usage_client_identity.client_session_id': 'one', project_id: 'statgpt' }),
+        root({ core_span_id: 'a', 'usage_client_identity.client_session_id': 'one', project_id: 'demo-project' }),
         root({ core_span_id: 'b', 'usage_client_identity.client_session_id': 'one', project_id: 'other' }),
       ]),
     ).toContain(TraceInvariant.OneProjectAmongLabelledRoots);
@@ -342,7 +342,7 @@ describe('traceInvariantViolations', () => {
   test('reports more than one Core-internal root', () => {
     expect(
       violationsOf([
-        root({ core_span_id: 'a', 'usage_client_identity.client_session_id': 'one', project_id: 'statgpt' }),
+        root({ core_span_id: 'a', 'usage_client_identity.client_session_id': 'one', project_id: 'demo-project' }),
         root({ core_span_id: 'b', 'usage_client_identity.client_session_id': '', project_id: 'dial' }),
         root({ core_span_id: 'c', 'usage_client_identity.client_session_id': '', project_id: 'dial' }),
       ]),
@@ -352,8 +352,8 @@ describe('traceInvariantViolations', () => {
   test('reports several roots where none carries the conversation header', () => {
     expect(
       violationsOf([
-        root({ core_span_id: 'a', 'usage_client_identity.client_session_id': '', project_id: 'statgpt' }),
-        root({ core_span_id: 'b', 'usage_client_identity.client_session_id': '', project_id: 'statgpt' }),
+        root({ core_span_id: 'a', 'usage_client_identity.client_session_id': '', project_id: 'demo-project' }),
+        root({ core_span_id: 'b', 'usage_client_identity.client_session_id': '', project_id: 'demo-project' }),
       ]),
     ).toContain(TraceInvariant.OneRootWhenNoneIsLabelled);
   });
@@ -363,8 +363,8 @@ describe('traceInvariantViolations', () => {
   test('reports a labelled root beside an unmarked unlabelled one', () => {
     expect(
       violationsOf([
-        root({ core_span_id: 'a', 'usage_client_identity.client_session_id': 'one', project_id: 'statgpt' }),
-        root({ core_span_id: 'b', 'usage_client_identity.client_session_id': '', project_id: 'statgpt' }),
+        root({ core_span_id: 'a', 'usage_client_identity.client_session_id': 'one', project_id: 'demo-project' }),
+        root({ core_span_id: 'b', 'usage_client_identity.client_session_id': '', project_id: 'demo-project' }),
       ]),
     ).toContain(TraceInvariant.LabellingAgreesWithMarker);
   });
@@ -372,10 +372,10 @@ describe('traceInvariantViolations', () => {
   test('names the trace and the property in each violation', () => {
     const [violation] = traceInvariantViolations(
       [
-        root({ core_span_id: 'a', 'usage_client_identity.client_session_id': 'one', project_id: 'statgpt' }),
-        root({ core_span_id: 'b', 'usage_client_identity.client_session_id': 'two', project_id: 'statgpt' }),
+        root({ core_span_id: 'a', 'usage_client_identity.client_session_id': 'one', project_id: 'demo-project' }),
+        root({ core_span_id: 'b', 'usage_client_identity.client_session_id': 'two', project_id: 'demo-project' }),
       ],
-      'statgpt',
+      'demo-project',
     );
 
     expect(violation.traceId).toBe(TRACE);

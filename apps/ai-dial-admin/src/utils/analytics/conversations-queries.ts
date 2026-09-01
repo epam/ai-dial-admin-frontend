@@ -24,7 +24,6 @@ import {
   ConversationTraceFigureField,
   ConversationTracePageField,
   ConversationTraceWindow,
-  ConversationSpanRow,
   ConversationFilterOperator,
   ConversationRatingTotalsField,
   ConversationScalarOperator,
@@ -555,6 +554,9 @@ export const buildConversationSpansQuery = (traceId: string, limit: number): Str
       col(field(UsageLogField.OperationDurationMs)),
       col(field(UsageLogField.TotalTokens)),
       col(field(UsageLogField.DeploymentPrice)),
+      // The chain-inclusive price, and the only cost figure a hop that metered nothing of its own has: an
+      // application hop records a null `deployment_price` while its subtree really did spend.
+      col(field(UsageLogField.TotalPrice)),
       col(field(UsageLogField.RequestTime)),
       col(field(UsageLogField.ResponseBodyBytes)),
       // Plain columns, and the inspector's only pre-body facts: the request message count is what the Request
@@ -671,44 +673,6 @@ export const buildConversationHopBodyQuery = (
           ]),
     ]),
     page: offsetPage(0, 1),
-  });
-};
-
-export const buildConversationModelBodiesQuery = (
-  scope: SessionScope,
-  traceId: string,
-  hops: ConversationSpanRow[],
-  schemaFieldNames?: string[],
-): StructuredQuery => {
-  const selectable = availableSelectFields(
-    [UsageLogField.CoreSpanId, UsageLogField.ResponseBody, UsageLogField.AssembledResponse],
-    OPTIONAL_USAGE_LOG_FIELDS,
-    schemaFieldNames,
-  );
-  const recordedMillis = hops
-    .map(({ request_time }) => toMillis(request_time))
-    .filter((ms): ms is number => ms !== null);
-
-  return rowQuery({
-    entity: USAGE_LOG_ENTITY,
-    select: selectable.map((fieldName) => col(field(fieldName))),
-    filter: and([
-      sessionScopePredicate(scope),
-      eq(UsageLogField.TraceId, value(QueryValueType.String, traceId)),
-      inValues(
-        UsageLogField.CoreSpanId,
-        QueryValueType.String,
-        hops.map(({ core_span_id }) => core_span_id),
-      ),
-      ...(recordedMillis.length
-        ? [
-            ge(UsageLogField.RequestTime, value(QueryValueType.Timestamp, String(Math.min(...recordedMillis)))),
-            le(UsageLogField.RequestTime, value(QueryValueType.Timestamp, String(Math.max(...recordedMillis)))),
-          ]
-        : []),
-    ]),
-    sort: [sortItem(UsageLogField.RequestTime, QuerySortDirection.Asc)],
-    page: offsetPage(0, Math.max(hops.length, 1)),
   });
 };
 

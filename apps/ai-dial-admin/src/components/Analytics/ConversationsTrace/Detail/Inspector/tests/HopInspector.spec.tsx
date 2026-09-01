@@ -101,8 +101,20 @@ const envelope = (overrides: Partial<HopRequestEnvelope> = {}): HopRequestEnvelo
   ...overrides,
 });
 
+const NO_TOOL_CALLS = { counts: {}, isComplete: true };
+
 const renderInspector = (props: Partial<Parameters<typeof HopInspector>[0]> = {}) =>
-  render(<HopInspector scope={SCOPE} traceId="tr1" span={span()} kind={SpanKind.Llm} bodyGrants={GRANTS} {...props} />);
+  render(
+    <HopInspector
+      scope={SCOPE}
+      traceId="tr1"
+      span={span()}
+      kind={SpanKind.Llm}
+      bodyGrants={GRANTS}
+      mcpToolCalls={NO_TOOL_CALLS}
+      {...props}
+    />,
+  );
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -284,6 +296,76 @@ describe('HopInspector — the response side', () => {
 
     expect(await screen.findByText('the answer')).toBeInTheDocument();
     expect(getConversationHopRawBody).not.toHaveBeenCalled();
+  });
+
+  // The change's only new user-facing string, and the reason it exists: a requested tool with no recorded MCP
+  // call is the application running it itself, not a lost record.
+  test('states why a requested tool has no recorded result', async () => {
+    const user = userEvent.setup();
+    getConversationHopResponse.mockResolvedValue({
+      success: true,
+      response: {
+        state: HopReadState.Available,
+        text: 'the answer',
+        textClamp: { isClamped: false, recordedBytes: 10, deliveredBytes: 10 },
+        reasoningText: null,
+        finishReason: 'tool_calls',
+        toolCalls: ['an_internal_tool'],
+        recordedBytes: 50,
+      },
+    });
+    renderInspector();
+
+    await user.click(await screen.findByRole('tab', { name: /InspectorResponse/ }));
+
+    expect(await screen.findByText(ConversationsTraceI18nKey.InspectorToolNotRecorded)).toBeInTheDocument();
+    // Twice: once in the list of tools the response requested, once named by the note that explains it.
+    expect(screen.getAllByText('an_internal_tool')).toHaveLength(2);
+  });
+
+  test('makes no such claim when the turn did record a call of that tool', async () => {
+    const user = userEvent.setup();
+    getConversationHopResponse.mockResolvedValue({
+      success: true,
+      response: {
+        state: HopReadState.Available,
+        text: 'the answer',
+        textClamp: { isClamped: false, recordedBytes: 10, deliveredBytes: 10 },
+        reasoningText: null,
+        finishReason: 'tool_calls',
+        toolCalls: ['a_recorded_tool'],
+        recordedBytes: 50,
+      },
+    });
+    renderInspector({ mcpToolCalls: { counts: { a_recorded_tool: 1 }, isComplete: true } });
+
+    await user.click(await screen.findByRole('tab', { name: /InspectorResponse/ }));
+
+    await screen.findByText('the answer');
+    expect(screen.queryByText(ConversationsTraceI18nKey.InspectorToolNotRecorded)).toBeNull();
+  });
+
+  // On a capped read an absent call may simply be unread, so the cause is withheld rather than asserted.
+  test('makes no such claim when the span read was bounded', async () => {
+    const user = userEvent.setup();
+    getConversationHopResponse.mockResolvedValue({
+      success: true,
+      response: {
+        state: HopReadState.Available,
+        text: 'the answer',
+        textClamp: { isClamped: false, recordedBytes: 10, deliveredBytes: 10 },
+        reasoningText: null,
+        finishReason: 'tool_calls',
+        toolCalls: ['an_internal_tool'],
+        recordedBytes: 50,
+      },
+    });
+    renderInspector({ mcpToolCalls: { counts: {}, isComplete: false } });
+
+    await user.click(await screen.findByRole('tab', { name: /InspectorResponse/ }));
+
+    await screen.findByText('the answer');
+    expect(screen.queryByText(ConversationsTraceI18nKey.InspectorToolNotRecorded)).toBeNull();
   });
 
   test('reads the raw body only when the raw mode is selected', async () => {

@@ -6114,229 +6114,268 @@ conversion is lossless.
 - **WHEN** a first-query time is returned as an ISO-8601 string
 - **THEN** the value sent as the bound is that instant in epoch milliseconds
 
-### Requirement: A turn renders as a span tree with its events as leaves
+### Requirement: A turn renders as a tree of spans
 
-A turn's hops SHALL render as a tree. A hop SHALL nest under the hop identified by its `core_parent_span_id`,
-and the events a hop emitted SHALL nest under that hop. Nesting is not decoration: a hop that called another
-deployment is not a peer of the call it made, and an event is not a peer of the hop that emitted it.
+A turn SHALL render as a tree of spans. **A row SHALL stand for exactly one recorded span, and every
+recorded span SHALL have exactly one row.** A span SHALL nest under the span identified by its
+`core_parent_span_id`. Nesting is not decoration: a span that called another deployment is not a peer of the
+call it made.
 
-**The tree SHALL contain nodes for recorded work only.** The turn's own question, totals, duration, cost and
-status are stated by the trace view's heading and figures, and SHALL NOT be repeated as nodes inside the tree.
-A node that stands for no hop is a node the reader can neither open nor act on, and stating one fact in two
-places on one screen invites them to disagree.
+**Nothing decoded from a span's body SHALL be a row.** Assistant text, a requested tool, a tool result, a
+reasoning marker and an empty answer are content *inside* a span, not spans; they SHALL be rendered by the span
+inspector for the span the reader selected, under **A hop's request and response render as a structured
+inspector**. Putting them in the tree alongside spans mixes two questions in one list — the tree answers
+*what this turn asked DIAL to do*, the body answers *what the agent did* — and makes a row's name depend on
+how many fragments its body happened to contain.
 
-**An event is not a hop.** One model call emits a reasoning marker, its answer, and one event per tool it
-requested, so the tree holds more nodes than the hop list — 384 hops of one measured turn become 446 nodes.
-Events SHALL be typed as: assistant text, tool request, tool result, reasoning, empty, session, embedding,
-and a generic type for anything unrecognised. **Failure is not one of these types** — see the outcome axis
-below.
+**One span is one row even when the span is an MCP protocol message.** Each `initialize`,
+`notifications/initialized`, `tools/list` and `tools/call` is a separate request that Core proxied and
+recorded, so each keeps a row. Grouping them would make the turn's span count and the rows' position
+numbering unanswerable against the data they are read from.
 
-**Every node that stands for recorded work SHALL carry a category.** A category set covering events alone
-would leave every hop node unable to match anything, so emphasising *assistant text* would dim the very model
-calls that produced that text.
+**The tree SHALL contain rows for recorded work only.** The turn's own question, totals, duration, cost and
+status are stated by the trace view's heading and figures, and SHALL NOT be repeated as rows inside the tree.
 
-**A hop node's category SHALL be derived, never assumed.** A hop that emitted more than one event is a
-**model call** — that is the only kind that emits several. A hop that emitted exactly one takes **that
-event's** category, whatever kind of hop it was.
+**A row SHALL be named by the entity that did the work** — the deployment or toolset the span was addressed
+to — and never by the content of its response. Where no deployment is recorded the row SHALL fall back to the
+request URI and then to the span's span id.
 
-This SHALL hold for every hop kind, not only the ones the data currently produces. Today every hop that
-other hops nest under is a model call — 16 of 16 in a 1 000-row sample — but a deployment that grows an MCP
-or embedding call into an orchestrating one is a change in someone else's service, not in this frontend, and
-it must not need a release here to be labelled correctly. Deriving the category makes an MCP call that
-acquires children read as an MCP call on the day it appears; hardcoding **model call** for every surviving
-hop would silently mislabel it, which is the failure the deny-list rule exists to prevent.
+**A row's secondary line SHALL be chosen by the figures the span actually recorded, not by its kind.** A span
+that recorded its own tokens SHALL state tokens, request messages and cost; a span that recorded no tokens and
+no price of its own SHALL state its chain cost. An application span records zero tokens and a null own price
+while carrying a real chain price, so a single token-shaped line would render it as `0 tok` and a dash,
+reading as broken data rather than as a call that spent nothing itself.
 
-Deriving it this way also needs **no category that is not already offered**: the single-event case reuses the
-event's own category, so the set grows by **model call** alone.
+**A span that recorded no figures at all SHALL state none.** A model call can record zero tokens, no price of
+its own and no chain price; a row that then renders an empty line under its own name reads as broken rather
+than as a call that measured nothing. Such a row states its name, its kind and its duration and nothing else.
 
-**Kind and outcome SHALL be two axes, never one set.** A node SHALL state what kind of call it stands for
-**and**, independently, whether that call failed. Collapsing the two into a single set makes a failed model
-call report its failure *instead of* its kind, so the reader loses the fact they were about to act on: a
-failed MCP call and a failed model call are different problems, and a set that names both "error" says
-neither.
+**The upstream host SHALL NOT be a row fact.** It is constant across every span of one deployment, so per row
+it restates the row's own name — a turn that handshakes two toolsets renders it seven times — and being the
+longest token on the line it pushes the span's own method into truncation. The detail panel states the full
+upstream URI once, for the span the reader opened.
 
-**A hop's kind SHALL be named as the hop log names it** — **LLM**, **MCP**, **Embeddings**, **Route** — with
-a generic kind for anything unrecognised. The earlier names *Deployment* and *Retrieval* SHALL NOT be used:
-they name an internal taxonomy rather than the thing the reader is looking at, and neither appears anywhere
-in the data they are reading.
+**A duration SHALL be stated at the scale the span log records.** Recorded span durations begin at single-digit
+milliseconds, so a sub-second duration SHALL keep its milliseconds: rendering a 15 ms handshake as `0s` is
+the same zero-reading the rule below forbids, arrived at by rounding instead of by a missing value.
 
-**A hop that failed SHALL keep its kind and carry a failure marker beside it.** A failure is either a false
+**Every row SHALL carry a kind, and the kind SHALL be the kind of call the span log records** — **LLM**,
+**MCP**, **Embeddings**, **Route**, **Rating** — with a generic kind for anything unrecognised. The kind
+SHALL be read from the span's recorded event kind, and from its endpoint only where no event kind is recorded.
+
+**The kind SHALL NOT assert what sort of entity answered the call.** An application span and a model span are
+both recorded as the same kind of call and nothing on the row separates them reliably: the `applications/`
+name prefix misses the many applications deployed under a bare name; having child spans misses an application
+that made none; a null own price catches unpriced *models* as readily as applications — adapters, preview
+models and echo-style test deployments all carry no price of their own. A call to an application's chat
+endpoint *is* an
+LLM-protocol call, and naming it so asserts only what was recorded. Which span orchestrated the turn is
+carried by the row's name and its depth, both of which are facts.
+
+**A rating SHALL be its own kind, recognised by its endpoint.** A rating arrives as its own single-span trace
+shortly after the turn it rates, carrying that turn's conversation id, so it is reachable in the
+conversation's trace list and opens as one row. Typing it generically would put the console's least
+informative label on the one thing a reader actually meets there.
+
+**Kind and outcome SHALL be two axes, never one set.** A row SHALL state what kind of call it stands for
+**and**, independently, whether that call failed. Collapsing the two makes a failed model call report its
+failure *instead of* its kind, so the reader loses the fact they were about to act on: a failed MCP call and
+a failed model call are different problems, and a set that names both "error" says neither.
+
+**A span that failed SHALL keep its kind and carry a failure marker beside it.** A failure is either a false
 success flag or a status of 400 or above. The marker SHALL be persistent and SHALL NOT depend on the current
-emphasis, so a failure can never be buried among the nodes of the work it was attempting — the guarantee the
-single-error-node rule used to provide, now provided without discarding the kind.
+emphasis, so a failure can never be buried among the rows of the work it was attempting. A failed span that
+other spans nest under SHALL keep them as its children.
 
-**The unrecorded-root placeholder SHALL carry no category**, and is the one node exempt from the rule above.
-It stands for a hop the log has no row for, so naming a category would assert what kind of call it was on no
-evidence. It states in words what it is instead, and it matches no filter — which is correct, because it is
-not one of the turn's recorded events.
+**The unrecorded-root placeholder SHALL carry no kind**, and is the one row exempt from the rule above. It
+stands for a span the log has no row for, so naming a kind would assert what kind of call it was on no
+evidence. It SHALL state in words what it is instead, and it SHALL match no filter.
 
-**A hop that emitted exactly one event SHALL render as a single node**, carrying the hop's own figures and
-that event's type and label — **whether or not other hops nest under it**. Every embedding hop, every MCP
-hop, every failed hop and every model call that simply answered emits exactly one event, so without this rule
-each renders as two rows with the same name, the second saying nothing the first did not.
+**Typing SHALL be a deny-list at every level.** An event kind or MCP method this frontend does not recognise
+SHALL render as a shown, generically-typed row: silently dropping something unfamiliar is the worse failure
+in an observability tool. The generic kind SHALL be specified by that behaviour and not by a list of the
+endpoints that reach it today. One case SHALL be handled explicitly: a span with no event kind is not unknown
+but an unlabelled model call, classified by its endpoint.
 
-Child hops SHALL nest under that same node. They are calls the hop *made*, not things it *emitted*, so they
-never need a row of their own to hang from — and exempting a hop because it has children would reintroduce
-the duplicate on exactly the orchestrating calls a reader opens the tree to understand. It would also count
-one recorded event twice: the hop and its event child share a category by the derivation rule above, so
-emphasising that category would mark two nodes for one thing that happened.
+**No endpoint SHALL be treated as too utilitarian to render.** The previous requirement carved out
+token-counting and prompt-truncation endpoints as utility rather than conversation, which the one-row-per-span
+rule now contradicts: a utility call is a request Core proxied and recorded, so it is a span of the turn and
+gets its row like any other. It carries the generic kind, which states exactly what is known about it.
 
-Only a hop that emitted **several** events SHALL keep a node distinct from them, because only then is there
-more than one thing to group.
+**No span SHALL be excluded from the tree for the kind of call it was.** In particular `route` spans SHALL
+render. They sit inside conversation traces and orchestrate other spans: one measured turn of 18 spans has a
+route span that is the **parent of two embedding spans**, so excluding it hoists both to the top level and
+destroys the structure the reader opened the trace to see. Route calls that are genuinely background work are
+roots of **their own** traces, so scoping the trace read by trace id already keeps them out and no exclusion
+rule is needed.
 
-**Typing SHALL be a deny-list at every level.** An `event_kind` or `mcp_method` this frontend does not
-recognise SHALL render as a shown, generically-typed node: silently dropping something unfamiliar is the worse
-failure in an observability tool. Two cases SHALL be handled explicitly — a hop with no `event_kind` is not
-unknown but an unlabelled model call, classified by its endpoint (53 179 such hops exist table-wide); and a
-`count_tokens` endpoint is utility rather than conversation.
+**An empty conversation id SHALL NOT be read as evidence that a span is outside the turn.** The field is
+unpopulated on whole classes of in-turn spans — one measured 18-span turn carries an empty conversation id on
+**every** row — so its absence says nothing about membership. Membership SHALL be decided by the trace the
+span was read under and by its parent pointer, never by that field.
 
-**`route` hops SHALL be excluded from the tree entirely.** All 5 611 of them carry an empty `chat_id`: they
-are scheduler REST calls and never part of a conversation. A non-`route` hop SHALL NOT be excluded because its
-parent was.
+**No span SHALL be dropped for want of a place in the tree.** A span whose parent span id names a span absent
+from the loaded page — the page is capped, and a trace can hold thousands of spans — SHALL render at the top
+level rather than disappear. The same SHALL hold for a span whose parent chain is circular or nests deeper
+than the rendering bound.
 
-**No hop SHALL be dropped for want of a place in the tree.** A hop whose `core_parent_span_id` names a hop
-absent from the loaded page — the page is capped, and a trace can hold thousands of spans — SHALL render at
-the top level rather than disappear. The same SHALL hold for a hop whose parent chain is circular or nests
-deeper than the rendering bound. Losing a recorded hop to a structural accident is a worse failure than
-showing it at the wrong depth.
+**A trace whose root span was not recorded SHALL render that root as a named placeholder**, taking its name
+from the first segment of a child's execution path, and SHALL mark it as not recorded. The turn's real work
+nests beneath it. The execution path SHALL NOT be used to establish a parent-child edge; its only use here is
+naming an unrecorded root.
 
-**A trace whose root hop was not recorded SHALL render that root as a named placeholder**, taking its name
-from the first segment of a child's `execution_path`, and SHALL mark it as not recorded. The turn's real work
-nests beneath it. Presenting the orphaned children as unrelated top-level hops would assert a structure the
-data contradicts. This is a **rare** shape — 4 954 of 1 860 573 traces record no root at all (0.27%), and a
-50-trace sample of conversation traces contained none — so it is a correctness case, not a common one, and
-nothing about the tree's ordinary presentation may be shaped around it.
+**Ordering SHALL be by recorded request time among siblings.** The tree states structure, and a global
+ordering across the whole turn cannot be read off it. Where a turn's spans all sit at one level — the common
+shape — sibling ordering is that global ordering.
 
-**`execution_path` SHALL NOT be used to establish a parent-child edge.** Every root hop records a path of one
-segment, so the path never supplies a parent the pointer lacks; its only use here is naming an unrecorded
-root.
+**The tool-request to tool-result gap SHALL be surfaced with its cause, not merely flagged.** A tool the
+calling application implements internally never crosses Core and is therefore never recorded as a span, so a
+requested tool with no recorded result SHALL state that the execution did not cross DIAL rather than imply a
+record was lost. One measured turn requested a tool by name in a model response and recorded no MCP tool call
+at all: the tool was declared by the calling application in its own request and executed inside it. Because
+requested tools are content and no longer rows, this SHALL be stated in the inspector of the span that
+requested the tool. The surplus SHALL be resolved **by count per tool name, never by identity** — the log
+pairs nothing, so no claim may be made about which specific request went unanswered.
 
-**Ordering SHALL be by `request_time` among siblings.** The tree states structure, and a global ordering
-across the whole turn cannot be read off it. Where a turn's hops all sit at one level — the common shape —
-sibling ordering is that global ordering.
+**The cause SHALL be claimed only where the span read was complete.** The read is capped, so on a bounded
+turn a `tools/call` past the bound is unread rather than absent, and stating that the application ran the
+tool itself would assert a cause from a page that cannot support it. Where the read was bounded the view
+SHALL state nothing about the gap rather than state it wrongly.
 
-**A failed hop SHALL emit a single node whatever kind of hop it is**, carrying its kind and its failure
-marker together, so a failure is stated once rather than once per event it managed to emit. A failed hop that
-other hops nest under SHALL keep them as its children.
-
-**A reasoning event SHALL state its token count and MUST NOT claim to carry content.** The reasoning text is
-recorded nowhere; the count is its only trace, and `reasoning · 264 tok` says more than an empty node.
-
-**The tool-request to tool-result gap SHALL be surfaced, not hidden.** 85 tools were requested on the measured
-turn and 57 results recorded; the missing 28 are functions the calling application handles internally, which
-never cross a network boundary and so were never logged. A request with no recorded result SHALL say so. The
-surplus SHALL be resolved **by count per tool name, never by identity** — the log pairs nothing, so no claim
-may be made about which specific request went unanswered.
-
-**A node with children SHALL expand and collapse, and SHALL expose which state it is in programmatically**
+**A row with children SHALL expand and collapse, and SHALL expose which state it is in programmatically**
 rather than by appearance alone. **The tree SHALL open fully expanded.** An observability tool that opens by
-hiding what it recorded makes the reader's judgement for them, so collapsing is the reader's action.
+hiding what it recorded makes the reader's judgement for them.
 
-**The tree SHALL offer one filter control per event category, and SHALL start with no category emphasised.**
-Activating a category SHALL emphasise it; activating it again SHALL return to no emphasis, so one control both
-narrows and releases. A separate control SHALL also return to no emphasis. Each control SHALL name its
-category and nothing more, and SHALL expose programmatically whether it is the emphasised one.
+**The tree SHALL offer one filter control per kind, and SHALL start with no kind emphasised.** Activating a
+kind SHALL emphasise it; activating it again SHALL return to no emphasis. A separate control SHALL also
+return to no emphasis. Each control SHALL name its kind and nothing more, and SHALL expose programmatically
+whether it is the emphasised one.
 
-**Emphasising a category SHALL de-emphasise every other node, and SHALL NOT remove any node.** The tree is the
-answer to "what did this turn consist of", and a filter that removed nodes would either break the structure it
-exists to show or force ancestors back in as a special case. Every hop stays where it is, at the depth it
-belongs, and the reader keeps the surrounding shape while reading one category out of it.
+**Emphasising a kind SHALL de-emphasise every other row, and SHALL NOT remove any row.** Every span stays
+where it is, at the depth it belongs. **A de-emphasised row SHALL remain readable, selectable and openable.**
+**A match SHALL be distinguishable by more than the dimming of everything else**, carrying its own persistent
+marker, because colour and opacity alone carry nothing to a reader who cannot perceive them.
 
-**A de-emphasised node SHALL remain readable, selectable and openable.** It is dimmed, not disabled: its
-detail is exactly as reachable as before, because a reader who narrowed to errors still needs the call that
-came just before one.
-
-**A match SHALL be distinguishable by more than the dimming of everything else.** Colour and opacity alone
-carry nothing to a reader who cannot perceive them, so a match SHALL carry its own persistent marker.
-
-**While a category is emphasised, the number of matches SHALL be stated once** beside the filter controls, and
-SHALL be announced. **At rest there SHALL be no such count**: dimming removes nothing, so a standing count
-could only ever restate the total against itself.
-
-That announcement is not decoration. Because dimming changes no node's presence, a reader using assistive
-technology gets no structural signal that the filter did anything — the pressed control says a filter is on,
-the count is the only thing that says what it found. It SHALL therefore not be dropped along with the resting
-count.
+**While a kind is emphasised, the number of matches SHALL be stated once** beside the filter controls, and
+SHALL be announced. **At rest there SHALL be no such count.** Because dimming changes no row's presence, a
+reader using assistive technology gets no structural signal that the filter did anything; the count is the
+only thing that says what it found.
 
 **The outcome axis SHALL have exactly one control — Failed — and it SHALL be offered only when the turn
-recorded a failure.** Emphasising it SHALL mark every failed node whatever its kind, and SHALL behave in every
+recorded a failure.** Emphasising it SHALL mark every failed row whatever its kind, and SHALL behave in every
 other respect as a kind control does. There SHALL be no "succeeded" control: the turn's own status figure
-already states whether anything failed, and a control marking almost every node answers nothing.
+already states whether anything failed.
 
-**Only the categories the turn actually recorded SHALL be offered.** Under dimming, a control for a category
-the turn has none of would dim every node and mark none — an unreadable screen in answer to a reasonable
-question. The set of controls SHALL therefore be the set of categories present, which answers "were there any
-errors" by whether the control exists at all, at a glance and without a click.
+**Only the kinds the turn actually recorded SHALL be offered.** Under dimming, a control for a kind the turn
+has none of would dim every row and mark none. The set of controls SHALL therefore be the set of kinds
+present, which answers "were there any errors" by whether the control exists at all.
 
-**A category's control SHALL carry that category's own colour, and that colour SHALL be the one marking its
-nodes in the tree.** One palette across the control and the node is what lets a reader match the two without
-reading either label. The control that returns to no emphasis names no category, so it SHALL stay neutral
-rather than borrow a hue that would read as a tenth category.
+**A kind's control SHALL carry that kind's own colour, and that colour SHALL be the one marking its rows in
+the tree.** Every colour SHALL be a theme token: a hardcoded value is where contrast quietly breaks. **Colour
+SHALL NOT be the only thing that distinguishes one control from another** — each states its kind in words.
+**No filter control SHALL be disabled, including the one that is currently active**: disabling the active
+control drops it out of the tab order, so the reader who narrowed by keyboard cannot get back.
 
-Every colour SHALL be a theme token: a hardcoded value is where contrast quietly breaks, and a theme served by
-the themes service can repaint any of them. **Colour SHALL NOT be the only thing that distinguishes one
-control from another** — each states its category in words — and where the palette offers fewer distinct hues
-than there are categories, categories SHALL share a hue by kinship rather than be given a hue too close to
-another's to tell apart.
+**Each row SHALL carry its position in the turn**, numbered by depth-first order over the whole tree. The
+numbering SHALL NOT change when the reader filters or collapses.
 
-**No filter control SHALL be disabled, including the one that is currently active**: the pressed state already
-says which filter is on, and disabling the active control drops it out of the tab order — so the reader who
-narrowed by keyboard cannot get back. A category the turn has none of is absent, never present-and-disabled.
+**The tree's boundary is Core's boundary, and the view SHALL NOT imply otherwise.** A row exists for each
+request Core proxied and for nothing else, which is why an application span reports no tokens of its own, why
+a tool the application ran itself has no row, and why an upstream has no row. Where the reader would
+otherwise read a boundary as missing data, the view SHALL state the boundary.
 
-**Each node SHALL carry its position in the turn**, numbered by depth-first order over the whole tree, so a
-node's place in the turn is stated wherever the reader is. The numbering SHALL NOT change when the reader
-filters or collapses.
+**Building the tree SHALL NOT require any span's response body.** Rows SHALL come from the recorded spans alone, so
+the trace no longer reads or decodes model-call bodies in order to render. Bodies are read on demand for the
+one span the reader selected, under **The inspector reads bodies in tiers, and never ships one whole**.
 
-**Deriving the events requires the model calls' own response bodies**, which are the only record of whether a
-call answered and which tools it asked for. Those SHALL be read server-side for the model-call hops only,
-bounded by a cap, with only the decoded text and tool names crossing to the client. On the measured turn that
-is 43 of 384 hops and 2.04 MiB of the trace's 16.67 MiB. Where the response column is not in the caller's
-schema, or a call falls past the cap, its nodes SHALL be typed generically rather than reported as empty. A
-hop the log records as having returned **no bytes** is the exception: its emptiness is a recorded fact, not an
-unread body, and it SHALL be typed empty so the two remain distinguishable.
+#### Scenario: A span nests under its parent span
 
-#### Scenario: A hop nests under its parent hop
+- **WHEN** a trace records a span whose parent span id names another span in the same trace
+- **THEN** that span renders as a child of the named span
 
-- **WHEN** a trace records a hop whose parent span id names another hop in the same trace
-- **THEN** that hop renders as a child of the named hop
+#### Scenario: A model call that requested one tool still reads as a model call
 
-#### Scenario: A hop's events nest under it
+- **WHEN** a model call's response carried exactly one tool request and nothing else
+- **THEN** one row renders, named after the deployment that was called and typed LLM
+- **AND** no row is named after the requested tool
+- **AND** the requested tool is shown in that span's inspector
 
-- **WHEN** a model call answered and requested a tool
-- **THEN** a text node and a tool-request node render as children of that hop's node
-- **AND** the hop's own node is categorised as a model call
+#### Scenario: A model call that only answered still reads as a model call
 
-#### Scenario: A hop with one event and no children is one node
+- **WHEN** a model call's response carried assistant text and nothing else
+- **THEN** one row renders, named after the deployment that was called and typed LLM
+- **AND** the answer is shown in that span's inspector rather than as a row
 
-- **WHEN** an embedding hop emits its single embedding event and no hop nests under it
-- **THEN** one node renders, carrying the hop's figures and the event's type
-- **AND** the hop's name is not repeated on a second row
+#### Scenario: A span's row count does not depend on its body
 
-#### Scenario: A model call that only answered is one node
+- **WHEN** one model call's response carried text and three tool requests and another carried only text
+- **THEN** each renders as exactly one row
 
-- **WHEN** a model call emitted assistant text and nothing else, and no hop nests under it
-- **THEN** one node renders, categorised as assistant text
-- **AND** emphasising assistant text marks it rather than dimming it
+#### Scenario: The tree holds no row for decoded content
 
-#### Scenario: A hop with one event is one node even when hops nest under it
+- **WHEN** the tree renders a turn whose model calls recorded reasoning tokens, text and tool requests
+- **THEN** no row stands for a reasoning marker, an assistant text, a tool request or a tool result
 
-- **WHEN** a hop emitted one event and another hop nests under it
-- **THEN** one node renders for that hop, carrying its figures and the event's category
-- **AND** the hop nesting under it renders as that node's child
-- **AND** the event is not repeated as a second row
+#### Scenario: A model call recorded as returning no bytes is still one row
 
-#### Scenario: A failed orchestrating call is one error node
+- **WHEN** a model call's recorded response size is zero
+- **THEN** one row renders for it, typed by its kind of call
+- **AND** its emptiness is stated by its inspector rather than by its kind
 
-- **WHEN** a model call failed and other hops nest under it
-- **THEN** the failing call renders as one node stating the kind LLM
-- **AND** it carries a failure marker beside that kind
-- **AND** emphasising Failed marks it once, not twice
+#### Scenario: Each MCP protocol message keeps its own row
+
+- **WHEN** a turn records `initialize`, `notifications/initialized` and `tools/list` against one toolset
+- **THEN** three rows render
+- **AND** the turn's row count for that toolset equals its recorded span count
+
+#### Scenario: A span with no tokens of its own states what it does have
+
+- **WHEN** a span records zero tokens, no price of its own, and a chain price
+- **THEN** its secondary line states its chain cost
+- **AND** it does not state a token count of zero
+- **AND** it does not state its upstream host
+
+#### Scenario: A span with its own tokens states them
+
+- **WHEN** a span records its own tokens and its own price
+- **THEN** its secondary line states tokens, request messages and cost
+
+#### Scenario: A span that recorded no figures states none
+
+- **WHEN** a span records no tokens, no price of its own and no chain price
+- **THEN** no secondary line renders for it
+- **AND** its name, its kind and its duration still render
+
+#### Scenario: A sub-second duration keeps its milliseconds
+
+- **WHEN** a span reports a duration below one second
+- **THEN** its row states that duration in milliseconds
+- **AND** it does not state it as zero seconds
+
+#### Scenario: An application call is typed by the call, not by the callee
+
+- **WHEN** a span addresses an application's chat endpoint
+- **THEN** its row is typed LLM
+- **AND** no kind asserts that the callee is an application
+
+#### Scenario: A rating opens as its own row
+
+- **WHEN** a conversation records a rating span in its own trace
+- **THEN** that trace opens as one row typed Rating
+- **AND** the row is not typed generically
 
 #### Scenario: A failed call of one kind is distinguishable from a failed call of another
 
 - **WHEN** a turn records a failed model call and a failed MCP call
-- **THEN** each node states its own kind
+- **THEN** each row states its own kind
 - **AND** both carry a failure marker
+
+#### Scenario: A failed orchestrating call keeps its kind and its children
+
+- **WHEN** a model call failed and other spans nest under it
+- **THEN** its row states the kind LLM and carries a failure marker beside it
+- **AND** the spans nesting under it are still rendered as its children
+- **AND** emphasising Failed marks it once
 
 #### Scenario: The Failed control is absent when nothing failed
 
@@ -6345,164 +6384,170 @@ unread body, and it SHALL be typed empty so the two remain distinguishable.
 
 #### Scenario: A failure marker does not depend on emphasis
 
-- **WHEN** no category is emphasised
-- **THEN** a failed node still carries its failure marker
+- **WHEN** no kind is emphasised
+- **THEN** a failed row still carries its failure marker
 
-#### Scenario: The unrecorded root carries no category
+#### Scenario: A route span renders in the tree
 
-- **WHEN** a trace renders its unrecorded-root placeholder
-- **THEN** the placeholder is offered as no category and matches no filter
-- **AND** it states in words that the entry call was not recorded
+- **WHEN** a trace contains a span whose event kind is route
+- **THEN** a row renders for it, typed Route
 
-#### Scenario: The tree holds no node for the turn itself
+#### Scenario: A route span keeps the spans that nest under it
+
+- **WHEN** a route span is the parent of two embedding spans in the same trace
+- **THEN** the route span renders as their parent
+- **AND** neither embedding span is hoisted to the top level
+
+#### Scenario: An empty conversation id does not exclude a span
+
+- **WHEN** every span of a turn records an empty conversation id
+- **THEN** every one of them renders
+- **AND** no span is excluded for that reason
+
+#### Scenario: A background route call does not reach a conversation's trace
+
+- **WHEN** a route call is the root of its own trace and belongs to no conversation
+- **THEN** no conversation's trace renders a row for it
+
+#### Scenario: The tree holds no row for the turn itself
 
 - **WHEN** the tree renders
-- **THEN** it contains no node standing for the turn's question or its totals
+- **THEN** it contains no row standing for the turn's question or its totals
 
-#### Scenario: An orphaned hop is kept at the top level
+#### Scenario: An orphaned span is kept at the top level
 
-- **WHEN** a hop's parent span id names a hop absent from the loaded page
-- **THEN** the hop renders at the top level
+- **WHEN** a span's parent span id names a span absent from the loaded page
+- **THEN** the span renders at the top level
 - **AND** it is not dropped
 
-#### Scenario: A circular parent chain does not lose its hops
+#### Scenario: A circular parent chain does not lose its spans
 
 - **WHEN** a trace's parent pointers form a cycle
-- **THEN** every hop in the cycle is still rendered
+- **THEN** every span in the cycle is still rendered
 
 #### Scenario: An unrecorded root is named from a child's execution path
 
-- **WHEN** a trace's root hop is absent but its children record an execution path
+- **WHEN** a trace's root span is absent but its children record an execution path
 - **THEN** a placeholder root renders, named from the first segment of that path
 - **AND** it is marked as not recorded
-- **AND** the trace's hops render beneath it
+- **AND** it carries no kind and matches no filter
+- **AND** the trace's spans render beneath it
 
 #### Scenario: Siblings are ordered by start time
 
-- **WHEN** a hop has several children
+- **WHEN** a span has several children
 - **THEN** they render in ascending order of request time
 
 #### Scenario: A trace with no nesting renders as one level
 
-- **WHEN** every hop of a trace has the same parent
+- **WHEN** every span of a trace has the same parent
 - **THEN** they all render at the same depth
-- **AND** a hop that emitted several events still renders them beneath it
 
-#### Scenario: A failed hop keeps its children
+#### Scenario: A three-level trace renders three levels
 
-- **WHEN** a hop failed and other hops nest under it
-- **THEN** it emits a single error node
-- **AND** the hops that nest under it are still rendered as its children
+- **WHEN** an application span's child is itself an application span with a model call beneath it
+- **THEN** the tree renders all three at their recorded depths
 
-#### Scenario: An unlabelled model call is typed as conversation
+#### Scenario: An unlabelled model call is typed by its endpoint
 
-- **WHEN** a hop records no event kind but a model endpoint
-- **THEN** its events are typed as a model call's
+- **WHEN** a span records no event kind but a model endpoint
+- **THEN** its row is typed LLM
 
-#### Scenario: An unrecognised hop is shown
+#### Scenario: An unrecognised span is shown
 
-- **WHEN** a hop records an event kind this frontend does not recognise
-- **THEN** it renders as a generically-typed node rather than being dropped
+- **WHEN** a span records an event kind this frontend does not recognise
+- **THEN** it renders as a generically-typed row rather than being dropped
 
-#### Scenario: A route hop is excluded
+#### Scenario: A tool the application ran itself says why it has no result
 
-- **WHEN** a trace contains a hop whose event kind is route
-- **THEN** the tree contains no node for it
+- **WHEN** a model response requested a tool for which the turn recorded no MCP tool call
+- **THEN** the span's inspector states that the execution did not cross DIAL and so was not recorded
+- **AND** it does not present the absence as a lost or failed record
 
-#### Scenario: A hop excluded from the tree does not take its children with it
-
-- **WHEN** a route hop has non-route children
-- **THEN** those children are still rendered
-
-#### Scenario: A reasoning event states its tokens
-
-- **WHEN** a hop recorded reasoning tokens
-- **THEN** a reasoning node states that count
-- **AND** it does not claim to carry the reasoning text
-
-#### Scenario: An unanswered tool request says so
+#### Scenario: An unanswered tool request is resolved by count, not by identity
 
 - **WHEN** more requests for a tool were made than results recorded for it
-- **THEN** the surplus requests are marked as having no recorded result
+- **THEN** the surplus is stated as a count for that tool name
+- **AND** no claim is made about which specific request went unanswered
 
 #### Scenario: The tree opens fully expanded
 
 - **WHEN** the tree first renders
-- **THEN** every node with children is expanded
+- **THEN** every row with children is expanded
 
-#### Scenario: A node collapses and states that it is collapsed
+#### Scenario: A row collapses and states that it is collapsed
 
-- **WHEN** a node with children is collapsed
+- **WHEN** a row with children is collapsed
 - **THEN** its descendants are not shown
-- **AND** the node exposes its collapsed state programmatically
+- **AND** the row exposes its collapsed state programmatically
 
-#### Scenario: No category is emphasised until the reader chooses one
+#### Scenario: No kind is emphasised until the reader chooses one
 
 - **WHEN** the tree first renders
-- **THEN** no node is de-emphasised
-- **AND** each category offers a control naming it
+- **THEN** no row is de-emphasised
+- **AND** each kind present offers a control naming it
 
-#### Scenario: Emphasising a category dims the rest without removing them
+#### Scenario: Emphasising a kind dims the rest without removing them
 
-- **WHEN** a category's control is activated
-- **THEN** every node of that category is marked as a match
-- **AND** every other node is still rendered, at the same depth, de-emphasised
-- **AND** activating the control again returns every node to no emphasis
+- **WHEN** a kind's control is activated
+- **THEN** every row of that kind is marked as a match
+- **AND** every other row is still rendered, at the same depth, de-emphasised
+- **AND** activating the control again returns every row to no emphasis
 
-#### Scenario: A de-emphasised hop can still be opened
+#### Scenario: A de-emphasised span can still be opened
 
-- **WHEN** a category is emphasised and the reader selects a hop of another category
-- **THEN** that hop's detail opens as it would with no filter active
+- **WHEN** a kind is emphasised and the reader selects a span of another kind
+- **THEN** that span's detail opens as it would with no filter active
 
 #### Scenario: A match is marked by more than dimming
 
-- **WHEN** a category is emphasised
-- **THEN** each matching node carries a marker that does not rely on colour or opacity
+- **WHEN** a kind is emphasised
+- **THEN** each matching row carries a marker that does not rely on colour or opacity
 
-#### Scenario: The match count appears only while a category is emphasised
+#### Scenario: The match count appears only while a kind is emphasised
 
-- **WHEN** no category is emphasised
+- **WHEN** no kind is emphasised
 - **THEN** no match count is shown
-- **AND** emphasising a category shows its match count against the turn's nodes
+- **AND** emphasising a kind shows its match count against the turn's rows
 - **AND** that count is announced
 
-#### Scenario: A turn that recorded no hops says so
+#### Scenario: A turn that recorded no spans says so
 
-- **WHEN** a turn's trace returned no hops
+- **WHEN** a turn's trace returned no spans
 - **THEN** the tree states that nothing was recorded
 
-#### Scenario: A control and its category's nodes share one colour
+#### Scenario: A control and its kind's rows share one colour
 
-- **WHEN** the tree renders a category's control
-- **THEN** the control carries the same colour that marks that category's nodes
+- **WHEN** the tree renders a kind's control
+- **THEN** the control carries the same colour that marks that kind's rows
 
-#### Scenario: The control that clears the filter carries no category colour
+#### Scenario: The control that clears the filter carries no kind colour
 
 - **WHEN** the filter controls render
 - **THEN** the control that returns to no emphasis is neutral
 
-#### Scenario: A category the turn has none of is not offered
+#### Scenario: A kind the turn has none of is not offered
 
-- **WHEN** the turn recorded no events of some category
-- **THEN** no control for that category is rendered
+- **WHEN** the turn recorded no spans of some kind
+- **THEN** no control for that kind is rendered
 - **AND** no disabled control stands in its place
 
 #### Scenario: The active filter is not disabled
 
-- **WHEN** no category is emphasised
+- **WHEN** no kind is emphasised
 - **THEN** the control that returns to no emphasis states that it is the active one
 - **AND** it is not disabled
 
-#### Scenario: A model call recorded as returning no bytes is empty, not unread
-
-- **WHEN** a model call's recorded response size is zero
-- **THEN** its node is typed empty
-- **AND** it is distinguishable from a call whose body was not read
-
 #### Scenario: Positions survive filtering and collapsing
 
-- **WHEN** a category is emphasised or a node is collapsed
-- **THEN** each visible node keeps the position it had in the unfiltered tree
+- **WHEN** a kind is emphasised or a row is collapsed
+- **THEN** each visible row keeps the position it had in the unfiltered tree
+
+#### Scenario: The tree renders without reading any response body
+
+- **WHEN** a turn's trace opens
+- **THEN** every row renders from the recorded spans alone
+- **AND** no model-call response body is read to build the tree
 
 ### Requirement: A hop's request and response render as a structured inspector
 
@@ -7231,7 +7276,7 @@ wherever hops exist.
 - **WHEN** each of the four causes occurs
 - **THEN** the transcript region renders a different statement for each
 
-### Requirement: A turn's trace opens in place, stating the turn's own figures
+### Requirement: A turn's trace opens in place, stating the turn's own figures and each span's
 
 Each assistant message SHALL offer a control opening that turn's trace, and the view switch SHALL offer the
 Trace view for the conversation. The trace SHALL replace the transcript **within the same view** and SHALL
@@ -7242,84 +7287,69 @@ While a trace is open the conversation's header SHALL be replaced rather than ke
 its own identity and its own figures, and two stacked headers would leave the reader unsure which of them the
 figures belong to.
 
-**Ordering.** The events SHALL be ordered by the recorded time of the hop that produced them, and every row
-SHALL state its own absolute recorded time. Measured over a 251-hop trace, no child hop began before its
-parent and all 25 tied timestamps were between siblings — never between an ancestor and a descendant — so a
-tie means genuine concurrency and any stable order among tied hops is honest. Hops from different parts of a
-trace **interleave**: one sampled hop's children spanned 22.8 s with 11 hops from elsewhere starting inside
-that window, so the view MUST NOT present any group of hops as a contiguous block of time.
+**Ordering.** The rows SHALL be ordered by the recorded time of the span each stands for, and every row SHALL
+state its own absolute recorded time. Measured over a 251-span trace, no child span began before its parent and
+all 25 tied timestamps were between siblings — never between an ancestor and a descendant — so a tie means
+genuine concurrency and any stable order among tied spans is honest. Spans from different parts of a trace
+**interleave**: one sampled span's children spanned 22.8 s with 11 spans from elsewhere starting inside that
+window, so the view MUST NOT present any group of spans as a contiguous block of time.
 
-**Durations are not claimed.** The view MUST NOT render a hop duration, a duration bar, an offset from the
-start of the trace, or any other per-hop wall-clock figure. All 251 hops of the sampled trace reported a
-duration of zero: DIAL clamps its own measurement at zero, so on a current producer a reported zero is a real
-sub-millisecond operation, but a core predating the field omits it and the non-nullable fallback stores zero
-— on that producer version zero is indistinguishable from "not reported", and the view cannot tell the two
-apart. Ordering and absolute times are the only temporal claims the data supports. This is a property of the
-producer, and the view SHALL NOT compensate for it.
+**A span's recorded duration SHALL be stated where the producer reported one, and a reported zero SHALL be
+treated as no report.** Duration is recorded on effectively every span: over 325 455 spans in one measured
+week, 51 reported zero — 0.016%, all in a single event-kind bucket — while `llm_call`, `embedding`, `mcp` and
+`route` reported a minimum above zero and not one zero between them. The zero-handling rule is why a zero is
+not rendered as `0 ms`: DIAL clamps its own measurement at zero, so on a core predating the field the
+non-nullable fallback also stores zero, and the view cannot tell a real sub-millisecond operation from an
+unreported one. **An offset from the start of the trace, and any duration bar drawn to scale against the
+turn, SHALL NOT be rendered** — spans interleave, so a bar would assert a timeline the ordering rule refuses
+to claim.
 
-Every row SHALL be typed, named, and — where it stands for a recorded hop — selectable. A **failed** hop
-SHALL be typed by its failure whatever its kind: on a trace the reader is looking for what broke. The failure
-rule SHALL be one predicate shared by the row and its detail, so a row typed as an error can never open a
-detail reporting success.
+Every row SHALL be typed, named, and — where it stands for a recorded span — selectable. **A failed span SHALL
+keep its kind and carry its failure beside it**, never instead of it, under **A turn renders as a tree of
+spans**. The failure rule SHALL be one predicate shared by the row and its detail, so a row marked as failed
+can never open a detail reporting success.
 
-**An MCP hop SHALL be named by what it did.** The trace SHALL project the hop's MCP method and its tool-call
-name and SHALL label the hop by the tool it called where one is recorded, falling back to the method and only
-then to the server name. Labelling an MCP hop by its server name alone leaves the tool invisible, which is
-the one thing a reader opening a retrieval hop is looking for.
+**An MCP span SHALL be named by its server and by what it did.** The trace SHALL project the span's MCP method
+and its tool-call name, and the row SHALL state the server together with the tool it called where one is
+recorded and with the method otherwise. Naming the span by its tool or method alone leaves the server
+invisible, so two protocol messages of different servers in the same second cannot be told apart; naming it
+by the server alone leaves the call invisible, which is the one thing a reader opening a retrieval span is
+looking for. Both SHALL be stated.
 
-The trace MUST NOT present its MCP hops as the complete set of tools the model requested. A tool the calling
+The trace MUST NOT present its MCP spans as the complete set of tools the model requested. A tool the calling
 application implements internally never crosses a network boundary and is never logged: over one measured
 trace, 43 of 48 requested tool calls produced exactly one MCP row each and 6 produced none, so the recorded
 set under-reports model intent by roughly one call in eight. Every MCP-backed call did produce a row — no
 rows are missing — so the view SHALL neither claim completeness nor report a missing row as an error.
 
-**A hop's routing chain SHALL be shown where recorded.** The hop log carries the execution path as an
+**A span's routing chain SHALL be shown where recorded.** The span log carries the execution path as an
 ordered list naming the deployments a request was routed through, application first and model last. Where
 present it SHALL be rendered as that chain.
 
-Selecting a hop SHALL show its detail beside the stream: its kind and its outcome, its recorded time, its
-tokens and cost, its endpoint, its upstream, its calling deployment, its HTTP status, its MCP method and tool
-where recorded, and its routing chain where recorded. Its request and response SHALL be read on demand for
-that hop alone, under **The inspector reads bodies in tiers, and never ships one whole** — a raw body MUST
-NOT reach the client unread, and what does reach it SHALL be bounded and state its own clamp.
+Selecting a span SHALL show its detail beside the tree: its kind and its outcome, its recorded time, its
+duration where reported, its tokens and cost, its endpoint, its upstream, its calling deployment, its HTTP
+status, its MCP method and tool where recorded, and its routing chain where recorded. Its request and
+response SHALL be read on demand for that span alone, under **The inspector reads bodies in tiers, and never
+ships one whole** — a raw body MUST NOT reach the client unread, and what does reach it SHALL be bounded and
+state its own clamp.
 
 **Colour SHALL never be the only thing distinguishing one kind of row from another.** Every row states its
-type as text, so the rail colour is redundant by construction and the view SHALL NOT rely on a legend to
+kind as text, so the rail colour is redundant by construction and the view SHALL NOT rely on a legend to
 make its rows readable. Every colour SHALL come from a theme token that the project's palette defines: a
 class naming a token the palette does not carry renders nothing at all, silently.
 
-**The trace SHALL state the figures the listing states for it, and MUST NOT re-derive them from the hops it
+**The trace SHALL state the figures the listing states for it, and MUST NOT re-derive them from the spans it
 read.** Its token total, cost, span count and status SHALL come from the same trace-level figures the
 listing's group renders, and the opened root's own figures SHALL come from the same root row its card
-renders, so the drawer and the card it was opened from cannot disagree. Summing the hops instead is wrong
-whenever the hop read is bounded, which is precisely when a trace is large enough for a reader to open it:
-one measured 384-hop trace read 300 hops and summed to 700 106 tokens and $1.01 against the trace's own
+renders, so the drawer and the card it was opened from cannot disagree. Summing the spans instead is wrong
+whenever the span read is bounded, which is precisely when a trace is large enough for a reader to open it:
+one measured 384-span trace read 300 spans and summed to 700 106 tokens and $1.01 against the trace's own
 3 667 333 and $3.68 — a figure that is neither the trace's nor recognisably a part of it.
 
-The status SHALL likewise be the trace's failed-hop count rather than a failure seen among the hops read, for
-the same reason: a failure past the bound would otherwise render the trace as OK.
-
-**The hop read SHALL be scoped by trace id alone, and MUST NOT be scoped by chat id.** Scoping it by the
-conversation header excludes exactly the rows the listing counts — a root carrying no header, and the
-Core-internal calls recorded under the trace — so the drawer would contradict the card that opened it.
-Measured on one trace, the card states two hops while a header-scoped read returns one, and the root the card
-describes is absent from its own span tree. No trace carries two distinct non-empty chat ids, so trace id
-alone cannot draw in another conversation's rows.
-
-The hop list SHALL be bounded and SHALL say so when it was cut short. A trace's hop count reaches into the
-hundreds, and one observed turn recorded 1226 hops. The bound SHALL NOT be raised to accommodate such a
-turn: filtering and on-demand disclosure are the answer, since a read large enough for the worst turn is a
-read that punishes every other one.
-
-**Opening a trace SHALL always leave the loading state, whatever the read does.** A read that rejects rather
-than returning a failed result — the service unreachable, the session gone — SHALL open the trace stating that
-it could not be read, not leave a loading indicator in place of the view. **A loading indicator SHALL NOT be
-shown over an already-opened trace**, since a loaded chain beneath one reads as a chain that never loaded.
-
-**An enrichment that fails SHALL NOT discard a read that succeeded.** The decoded model outputs that type the
-stream's rows are an enrichment of the hop read, not a part of it: where resolving them fails or throws, the
-hops SHALL still render, with their model-call rows typed generically. Rejecting the whole read would tell the
-reader the trace could not be read while its rows were already in hand.
+The status SHALL likewise be the trace's failed-span count rather than a failure seen among the spans read, for
+the same reason: a failure past the bound would otherwise render the trace as OK. **No stated trace figure
+SHALL be derived from a span's recorded duration**, whether or not durations are rendered per row: the span
+read is bounded and the spans interleave, so neither a sum nor a span of them is the turn's latency.
 
 #### Scenario: A rejected trace read still leaves the loading state
 
@@ -7330,90 +7360,103 @@ reader the trace could not be read while its rows were already in hand.
 #### Scenario: Opening a turn's trace replaces the transcript in place
 
 - **WHEN** the trace control on an assistant message is used
-- **THEN** that turn's event stream renders in place of the transcript
+- **THEN** that turn's tree renders in place of the transcript
 - **AND** the trace states the turn it belongs to and its own trace id
 - **AND** a control returns to the transcript
 
 #### Scenario: A turn's figures are the same in the list and in its trace
 
 - **WHEN** a trace is opened from the trace listing
-- **THEN** the tokens, cost and span count stated above the hop chain equal those the listing states for it
-- **AND** they do not change when the hop chain is clipped by its bound
+- **THEN** the tokens, cost and span count stated above the tree equal those the listing states for it
+- **AND** they do not change when the span read is clipped by its bound
 
 #### Scenario: The shortcut attributes each message to its own turn
 
-- **WHEN** the whole conversation is assembled from one entry hop's body
+- **WHEN** the whole conversation is assembled from one entry span's body
 - **THEN** each message carries the trace id of the turn that produced it
 - **AND** the newest turn's figures appear only beneath the newest turn's answer
 
-#### Scenario: Hops render in the order they were recorded
+#### Scenario: Spans render in the order they were recorded
 
-- **WHEN** a turn records hops at different times
+- **WHEN** a turn records spans at different times
 - **THEN** their rows render in ascending order of recorded time
+- **AND** each row states its own absolute recorded time
 
-#### Scenario: No hop states a duration
+#### Scenario: A reported duration is stated
 
-- **WHEN** the trace renders its hops
-- **THEN** no hop shows a duration, a duration bar or an offset from the start of the trace
-- **AND** each hop shows its own absolute recorded time
+- **WHEN** a span reports a duration above zero
+- **THEN** its row and its detail state that duration
 
-#### Scenario: A failed hop is typed by its failure
+#### Scenario: A reported zero duration is not stated as zero
 
-- **WHEN** a hop did not succeed
-- **THEN** it is typed as an error rather than by its event kind
+- **WHEN** a span reports a duration of zero
+- **THEN** no duration is rendered for it
+- **AND** it is not rendered as zero milliseconds
+
+#### Scenario: No timeline is drawn
+
+- **WHEN** the tree renders a turn whose spans interleave
+- **THEN** no row shows an offset from the start of the trace
+- **AND** no duration bar is drawn to scale against the turn
+
+#### Scenario: A failed span keeps its kind and states its failure
+
+- **WHEN** a span did not succeed
+- **THEN** its row states its kind of call and carries a failure marker beside it
 - **AND** its detail reports the same verdict as its row
 
-#### Scenario: An MCP hop is named by the tool it called
+#### Scenario: An MCP span is named by its server and the tool it called
 
-- **WHEN** an MCP hop records a tool-call name
-- **THEN** the hop is labelled by that tool
+- **WHEN** an MCP span records a tool-call name
+- **THEN** the row states the server and that tool
 - **AND** the query that fetched it named the MCP method and tool-call columns
 
-#### Scenario: An MCP hop with no tool call falls back to its method
+#### Scenario: An MCP span with no tool call is named by its server and its method
 
-- **WHEN** an MCP hop records a method but no tool-call name
-- **THEN** the hop is labelled by that method
+- **WHEN** an MCP span records a method but no tool-call name
+- **THEN** the row states the server and that method
+
+#### Scenario: Two protocol messages of different servers are distinguishable
+
+- **WHEN** two toolsets each record an `initialize` span in the same second
+- **THEN** each row names its own server
+- **AND** the two rows are distinguishable from one another
 
 #### Scenario: A routing chain renders as a chain
 
-- **WHEN** a hop records an execution path of an application followed by a model
-- **THEN** the hop's detail shows that chain in that order
+- **WHEN** a span records an execution path of an application followed by a model
+- **THEN** the span's detail shows that chain in that order
 
-#### Scenario: Selecting a hop shows its detail
+#### Scenario: Selecting a span shows its detail
 
-- **WHEN** a hop is selected
-- **THEN** its category, status, recorded time, tokens, cost, endpoint, upstream, caller and HTTP status
-  render beside the stream
+- **WHEN** a span is selected
+- **THEN** its kind, status, recorded time, tokens, cost, endpoint, upstream, caller and HTTP status render
+  beside the tree
+- **AND** its duration renders where the producer reported one
 - **AND** its MCP method, tool and routing chain render where recorded
 - **AND** no raw request or response body value reaches the client
 
 #### Scenario: Every row states its type in words
 
-- **WHEN** the stream renders its rows
-- **THEN** each row states its type as text rather than by colour alone
+- **WHEN** the tree renders its rows
+- **THEN** each row states its kind as text rather than by colour alone
 
-#### Scenario: A failed enrichment still renders the hops
-
-- **WHEN** resolving the decoded model outputs throws
-- **THEN** the hops that were read still render
-- **AND** the view does not state that the trace could not be read
-
-#### Scenario: The trace states no latency derived from hop durations
+#### Scenario: The trace states no latency derived from span durations
 
 - **WHEN** the trace states its own figures
-- **THEN** they include its token total, its cost, its hop count and its status
-- **AND** no stated figure is derived from a hop's recorded duration
+- **THEN** they include its token total, its cost, its span count and its status
+- **AND** no stated figure is derived from a span's recorded duration
 
-#### Scenario: A clipped hop list says so
+#### Scenario: A clipped span list says so
 
-- **WHEN** the hop read is bounded below the turn's recorded hop count
+- **WHEN** the span read is bounded below the turn's recorded span count
 - **THEN** the view states that the list is partial
 
 #### Scenario: The span tree contains the root the card describes
 
 - **WHEN** a card whose root carries no conversation header is opened
-- **THEN** that root appears as a span in the tree
-- **AND** the hop read's filter names the trace id and not the chat id
+- **THEN** that root appears as a row in the tree
+- **AND** the span read's filter names the trace id and not the chat id
 
 ### Requirement: Enrichment rules page route and access guard
 

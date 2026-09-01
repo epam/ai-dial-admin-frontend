@@ -2,12 +2,16 @@ import {
   MCP_EVENT_KIND,
   MCP_PROTOCOL_METHODS,
   MODEL_CALL_URI_MARKERS,
+  RATE_URI_SUFFIX,
   ROUTE_EVENT_KIND,
 } from '@/src/constants/analytics/conversations-trace';
 import {
   ConversationSpanRow,
+  HopFacts,
+  HopFactsShape,
   HopSideSuppression,
   HopSideSuppressions,
+  McpToolCallTally,
   SpanKind,
 } from '@/src/models/analytics/conversations-trace';
 import { toNumber } from '@/src/utils/analytics/scalar';
@@ -28,6 +32,13 @@ export const isEmbedding = ({ event_kind }: ConversationSpanRow): boolean =>
 
 export const isMcpCall = ({ event_kind }: ConversationSpanRow): boolean => event_kind?.trim() === MCP_EVENT_KIND;
 
+// The path only, so a query string can never decide the kind: the suffix is anchored at the end, and a rating
+// endpoint carries none.
+const pathOf = (requestUri: string | null): string => (requestUri?.trim() ?? '').split('?')[0];
+
+export const isRating = ({ request_uri }: ConversationSpanRow): boolean =>
+  pathOf(request_uri).endsWith(RATE_URI_SUFFIX);
+
 export const isModelCall = ({ event_kind, request_uri }: ConversationSpanRow): boolean => {
   const kind = event_kind?.trim();
   if (kind === LLM_CALL_EVENT_KIND) {
@@ -44,8 +55,15 @@ export const isModelCall = ({ event_kind, request_uri }: ConversationSpanRow): b
 // What kind of call the hop was, and nothing about how it went. The failure branch that used to short-circuit
 // this function is gone: it made a failed model call report its failure *instead of* its kind, so a reader
 // lost the fact they were about to act on — a failed tool call and a failed model call are different
-// problems. Failure is answered by `isFailedSpan`, beside this, never in place of it.
+// problems. Failure is answered by `isFailedHop`, beside this, never in place of it.
+//
+// The rating test runs before the `event_kind` map so the kind is not decided by an `event_kind` a rating
+// never carries — the map would miss it and the model-call fallback would type it generically.
 export const spanKindOf = (span: ConversationSpanRow): SpanKind => {
+  if (isRating(span)) {
+    return SpanKind.Rating;
+  }
+
   const mapped = EVENT_KIND_TO_KIND[span.event_kind?.trim() ?? ''];
   if (mapped) {
     return mapped;
@@ -60,20 +78,90 @@ export const spanKindOf = (span: ConversationSpanRow): SpanKind => {
 export const isFailedHop = ({ success, response_status }: ConversationSpanRow): boolean =>
   success === false || (toNumber(response_status) ?? 0) >= FAILED_STATUS_FLOOR;
 
-export const spanLabelOf = ({
-  deployment,
-  request_uri,
-  core_span_id,
-  mcp_tool_call_name,
-  mcp_method,
-}: ConversationSpanRow): string =>
-  mcp_tool_call_name?.trim() || mcp_method?.trim() || deployment?.trim() || request_uri?.trim() || core_span_id;
+// Who did the work. Deployment first, deliberately: the previous order preferred the MCP method, which left
+// two protocol messages of different servers in the same second indistinguishable. What the hop *did* is a
+// separate field — see `spanPhaseOf` — so a row states both rather than choosing one.
+export const spanLabelOf = ({ deployment, request_uri, core_span_id }: ConversationSpanRow): string =>
+  deployment?.trim() || request_uri?.trim() || core_span_id;
+
+// What the hop did, where its kind records one. The tool it called answers first, since that is what a reader
+// opening a retrieval hop is looking for; the protocol method answers when no tool was called.
+export const spanPhaseOf = ({ mcp_tool_call_name, mcp_method }: ConversationSpanRow): string | null =>
+  mcp_tool_call_name?.trim() || mcp_method?.trim() || null;
 
 export const areSpansPartial = (spans: ConversationSpanRow[], hopCount: number | null): boolean =>
   hopCount !== null && hopCount > spans.length;
 
 export const isProtocolEnvelope = ({ mcp_method, mcp_tool_call_name }: ConversationSpanRow): boolean =>
   !mcp_tool_call_name?.trim() && MCP_PROTOCOL_METHODS.includes(mcp_method?.trim() ?? '');
+
+// Which figures the row states, decided by what the hop recorded rather than by what kind of call it was.
+// A hop that metered nothing of its own — every MCP and route hop, and every application hop, which spends
+// only through the calls it makes — has a duration and a chain price and no tokens, so stating tokens for it
+// prints a zero and a dash where the reader expects its most important figure.
+//
+// `null` where the hop recorded neither: a model call can record zero tokens, no price of its own and no
+// chain price, and there is then nothing to state. Answering an empty shape instead pushed the decision onto
+// the row, which rendered a blank line under the hop's name.
+export const hopFactsOf = (span: ConversationSpanRow): HopFacts | null => {
+  const tokens = toNumber(span.total_tokens);
+  const ownCost = toNumber(span.deployment_price);
+
+  if ((tokens ?? 0) > 0 || (ownCost ?? 0) > 0) {
+    return {
+      shape: HopFactsShape.Metered,
+      // Never a zero. A span can record a real own price against zero tokens, and `0 tok` beside that price
+      // is the same broken reading the unmetered shape exists to avoid — absent, not zero, is the fact.
+      tokens: (tokens ?? 0) > 0 ? tokens : null,
+      requestMessages: toNumber(span.number_request_messages),
+      cost: span.deployment_price,
+    };
+  }
+
+  const chainCost = toNumber(span.total_price);
+
+  return (chainCost ?? 0) > 0 ? { shape: HopFactsShape.Unmetered, chainCost: span.total_price ?? null } : null;
+};
+
+// How many times the turn recorded an MCP call to each tool, and whether that count is the whole truth.
+// `isComplete` is not decoration: the span read is capped, and a `tools/call` past the bound would make an
+// absence look real when it is only unread — so a bounded read answers nothing rather than answering wrongly.
+export const mcpToolCallTallyOf = (spans: ConversationSpanRow[], isComplete: boolean): McpToolCallTally => {
+  const counts: Record<string, number> = {};
+
+  for (const span of spans) {
+    const name = span.mcp_tool_call_name?.trim();
+    if (isMcpCall(span) && name) {
+      counts[name] = (counts[name] ?? 0) + 1;
+    }
+  }
+
+  return { counts, isComplete };
+};
+
+// Which of the tools a response asked for the turn recorded no MCP call of. Resolved by count per name and
+// never by identity — nothing in the log says which specific request went unanswered, so no claim is made
+// about one. A name asked for twice and recorded once leaves one unanswered, not two and not none.
+//
+// Nothing at all on a bounded read: the note this feeds states a *cause* — that the calling application ran
+// the tool itself — and that cause is only sound when every span of the turn was read.
+export const unansweredToolNamesOf = (requested: string[], tally: McpToolCallTally): string[] => {
+  if (!tally.isComplete) {
+    return [];
+  }
+
+  const seen: Record<string, number> = {};
+  const unanswered: string[] = [];
+
+  for (const name of requested) {
+    seen[name] = (seen[name] ?? 0) + 1;
+    if (seen[name] > (tally.counts[name] ?? 0)) {
+      unanswered.push(name);
+    }
+  }
+
+  return unanswered;
+};
 
 // Whether a side has anything worth fetching, decided from the hop row before any body read — and decided
 // per side, because the two questions are not the same one. A hop that returned nothing still sent something,

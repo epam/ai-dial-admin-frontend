@@ -5,6 +5,7 @@ import {
   conversationTopics,
   formatCompactNumber,
   formatConversationDuration,
+  formatHopDuration,
   formatConversationSpan,
   formatRelativeTime,
   formatSignificantCost,
@@ -157,6 +158,38 @@ describe('formatConversationSpan', () => {
     ['a missing end', NOW, null],
   ])('renders %s as empty', (_label, from, to) => {
     expect(formatConversationSpan(from, to)).toBe('');
+  });
+});
+
+describe('formatHopDuration', () => {
+  // Hop scale, not conversation scale: recorded hop durations start at 6 ms, and rendering those as `0s` is
+  // exactly the zero-reading the format rule exists to prevent.
+  test.each([
+    ['a millisecond duration', 6, '6ms'],
+    ['a two-digit millisecond duration', 15, '15ms'],
+    ['a sub-second duration', 340, '340ms'],
+    ['a duration just under a second', 999, '999ms'],
+    ['a seconds duration', 6709, '6.7s'],
+    ['a whole-second duration', 30000, '30s'],
+    ['a minutes duration', 275234, '4m 35s'],
+    ['an hours duration', 2 * HOUR + 30 * MINUTE, '2h 30m'],
+  ])('renders %s as %s', (_label, millis, expected) => {
+    expect(formatHopDuration(millis)).toBe(expected);
+  });
+
+  test('reads a numeric string as well as a number', () => {
+    expect(formatHopDuration('15')).toBe('15ms');
+  });
+
+  // A producer predating the field stores zero for "not reported", and DIAL clamps its own measurement at
+  // zero, so a zero is not a duration and the caller supplies its own placeholder.
+  test.each([
+    ['zero', 0],
+    ['a negative value', -1],
+    ['null', null],
+    ['an empty value', ''],
+  ])('renders %s as nothing', (_label, value) => {
+    expect(formatHopDuration(value)).toBe('');
   });
 });
 
