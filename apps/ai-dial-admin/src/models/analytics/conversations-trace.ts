@@ -567,9 +567,10 @@ export interface ConversationSpanRow {
   operation_duration_ms: number | string | null;
   total_tokens: number | string | null;
   deployment_price: number | string | null;
-  // The chain-inclusive price. A hop that metered nothing of its own carries a null `deployment_price` and a
-  // real `total_price`, so this is the only cost figure such a row has.
-  total_price?: number | string | null;
+  // The chain-inclusive price. A span that metered nothing of its own carries a null `deployment_price` and a
+  // real `total_price`, so this is the only cost figure such a row has. Required, like every other column the
+  // span query always selects: optional would put `undefined` in the type and no reader wants a third empty.
+  total_price: number | string | null;
   request_time: number | string | null;
   response_body_bytes: number | string | null;
   request_body_bytes: number | string | null;
