@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useRouter } from 'next/navigation';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ButtonsI18nKey, KeysI18nKey } from '@/src/constants/i18n';
 import { DialKeyResource } from '@/src/models/dial/resource';
@@ -41,6 +41,10 @@ const renderModal = (entity: DialKeyResource = sourceEntity, names: string[] = [
 };
 
 describe('DuplicatePlatformKeyModal', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe('Name step', () => {
     test('Pre-fills the name field with a cloned version of the source name', () => {
       renderModal();
