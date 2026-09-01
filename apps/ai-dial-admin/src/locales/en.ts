@@ -2043,6 +2043,8 @@ export default {
     RequestChainPreviousOutputsColumnsInfo: 'This request has access to the output of previous requests: {columns}.',
     RequestChainOutputOf: 'Output of {request}',
     TrendsRunsCount: '{count} Runs',
+    TrendsLastNRuns: 'Last {count} Runs',
+    RunsPassedThreshold: 'Runs Passed Threshold',
     AvgTestSuiteRunTime: 'Avg Test Suite Run Time',
     AvgPerRuns: 'avg per {count} runs',
     ScoreRange: 'Score Range',

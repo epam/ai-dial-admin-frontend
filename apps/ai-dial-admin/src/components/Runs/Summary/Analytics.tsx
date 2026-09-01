@@ -4,8 +4,8 @@ import { FC } from 'react';
 
 import { DialAnalyticsCard, DialLoader } from '@epam/ai-dial-ui-kit';
 
-import PassedTestCasesValue from '@/src/components/Runs/Summary/PassedTestCasesValue';
-import TestCaseStatusBreakdown from '@/src/components/Runs/Summary/TestCaseStatusBreakdown';
+import PassFailFraction from '@/src/components/Common/PassFailStatus/PassFailFraction';
+import PassFailStatusBreakdown from '@/src/components/Common/PassFailStatus/PassFailStatusBreakdown';
 import { ANALYTICS_KPI_CARD_CLASS, ANALYTICS_KPI_GRID_CLASS } from '@/src/components/Runs/Summary/constants';
 import { useRunAnalyticsSlice } from '@/src/components/Runs/Summary/use-run-analytics-slice';
 import { useRunCosts } from '@/src/components/Runs/Summary/use-run-costs';
@@ -57,8 +57,8 @@ const Analytics: FC<Props> = ({ run, overallScore }) => {
       <DialAnalyticsCard
         className={ANALYTICS_KPI_CARD_CLASS}
         title={t(RunsI18nKey.TestCasesPassed)}
-        value={<PassedTestCasesValue counts={statusCounts} />}
-        description={<TestCaseStatusBreakdown counts={statusCounts} />}
+        value={<PassFailFraction counts={statusCounts} />}
+        description={<PassFailStatusBreakdown counts={statusCounts} />}
         error={statusCounts.total === 0}
       />
       <DialAnalyticsCard

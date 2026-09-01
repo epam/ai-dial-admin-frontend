@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import Trends from '@/src/components/TestSuites/Trends/Trends';
-import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
+import { ButtonsI18nKey, RunsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { TestSuite } from '@/src/models/evaluation/test-suite';
 
 vi.mock('@/src/app/[lang]/runs/actions', () => ({
@@ -116,6 +116,46 @@ describe('Trends', () => {
       expect(screen.getByText(TestSuitesI18nKey.OverallScoreTrend, { exact: false })).toBeInTheDocument();
       expect(screen.getByText(TestSuitesI18nKey.MetricTrends, { exact: false })).toBeInTheDocument();
       expect(screen.getByText('0.58')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText(new RegExp(TestSuitesI18nKey.RunsPassedThreshold))).not.toBeInTheDocument();
+  });
+
+  test('shows Runs Passed Threshold card when suite threshold is set', async () => {
+    (executeStructuredQuery as ReturnType<typeof vi.fn>).mockResolvedValue({
+      rows: [
+        {
+          test_suite_run_id: 'run-1',
+          metric_name: 'overall',
+          metric_score_name: 'overall',
+          value: 0.8,
+          computed_at_ms: 1000,
+        },
+        {
+          test_suite_run_id: 'run-2',
+          metric_name: 'overall',
+          metric_score_name: 'overall',
+          value: 0.3,
+          computed_at_ms: 2000,
+        },
+      ],
+    });
+    (getRuns as ReturnType<typeof vi.fn>).mockResolvedValue({
+      content: [
+        { id: 'run-1', testRunName: 'Run#1', status: 'COMPLETED', startedAt: 0, completedAt: 100 },
+        { id: 'run-2', testRunName: 'Run#2', status: 'FAILED', startedAt: 200, completedAt: 300 },
+      ],
+    });
+
+    render(<Trends selectedTestSuite={{ ...suite, overallScoreThreshold: 0.5 }} />);
+
+    await waitFor(() => {
+      expect(screen.getByText(new RegExp(TestSuitesI18nKey.RunsPassedThreshold))).toBeInTheDocument();
+      expect(screen.getByText(new RegExp(TestSuitesI18nKey.TrendsLastNRuns))).toBeInTheDocument();
+      expect(screen.getByText('/ 2')).toBeInTheDocument();
+      expect(screen.getByText(`1 ${RunsI18nKey.Pass}`)).toBeInTheDocument();
+      expect(screen.getByText(`0 ${RunsI18nKey.Fail}`)).toBeInTheDocument();
+      expect(screen.getByText(`1 ${RunsI18nKey.ExecError}`)).toBeInTheDocument();
     });
   });
 });

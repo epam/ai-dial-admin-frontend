@@ -1,14 +1,10 @@
 import { MetricStatistic } from '@/src/components/Common/MetricStatistics/models';
+import { PassFailErrorCounts } from '@/src/components/Common/PassFailStatus/models';
 
 export { MetricStatistic };
 
 /** Aggregated test-case execution outcome counts for a run, derived from `eval_summaries`. */
-export interface TestCaseStatusCounts {
-  passed: number;
-  failed: number;
-  error: number;
-  total: number;
-}
+export type TestCaseStatusCounts = PassFailErrorCounts;
 
 /**
  * One bar group for a given statistic: the metric group name (the `metric_name` without its last
