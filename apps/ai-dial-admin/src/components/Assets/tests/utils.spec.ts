@@ -50,6 +50,16 @@ describe('getGridActionLabels', () => {
 
     expect(keys).toContain('duplicate');
   });
+
+  test('PlatformKeys now exposes duplicate, delete, and openInNewTab for a non-read-only admin', () => {
+    const keys = getGridActionLabels(ApplicationRoute.PlatformKeys, false).map((item) => item.key);
+
+    expect(keys).toEqual(expect.arrayContaining(['duplicate', 'delete', 'openInNewTab']));
+  });
+
+  test('PlatformKeys returns no options for a read-only admin', () => {
+    expect(getGridActionLabels(ApplicationRoute.PlatformKeys, true)).toEqual([]);
+  });
 });
 
 describe('filterLatestVersions', () => {
