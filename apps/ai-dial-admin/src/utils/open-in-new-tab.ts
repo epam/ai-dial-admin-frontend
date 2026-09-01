@@ -56,10 +56,10 @@ export const getEntityPath = (
       // Flat platform entities: `parseEncodedFlatPath` always yields `path === name`, so the `[id]`
       // segment alone identifies the resource. No `?path=` needed.
       const { name, $id } = data as { name?: string; $id?: string };
-      // App runner $id is a raw URL; Core stores it as encodeURIComponent($id). Pre-encode so the
-      // final encodeURIComponent produces a double-encoded segment — Next.js decodes it once, giving
-      // the Core name, which encodeCorePath can then safely process without splitting on ://.
-      const resolvedName = name || ($id ? encodeURIComponent($id) : '');
+      // $id falls back here raw (not pre-encoded) so it goes through the same single
+      // `encodeURIComponent` below that the `name` branch relies on — row-click navigation reads
+      // the grid row's already-decoded `name`, so both entry points must produce the same segment.
+      const resolvedName = name || $id || '';
 
       return forRemove ? decodeURIComponent(escapePercentSign(resolvedName)) : encodeURIComponent(resolvedName);
     }
