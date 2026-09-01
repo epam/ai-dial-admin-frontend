@@ -1,20 +1,20 @@
 import { describe, expect, test } from 'vitest';
 
 import { RESOURCE_TYPE_PREFIX } from '@/src/constants/publications-core';
-import { encodeCorePath, parseEncodedFlatPath } from '@/src/server/publications/path';
+import { parseEncodedFlatPath } from '@/src/server/publications/path';
 import { ResourceType } from '@/src/types/resource-type';
 import { fromCoreRunnerName, toCoreRunnerName } from '@/src/utils/app-runners/core-runner-name';
-import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
+import { getEntityPath, getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { ApplicationRoute } from '@/src/types/routes';
 
 const RUNNER_ID = 'http://asdqwe';
 const PREFIX = RESOURCE_TYPE_PREFIX[ResourceType.APP_TYPE_SCHEMA];
 
 /**
- * The `$id` crosses four encode/decode boundaries between the grid and Core, and every one of them
- * has to agree: Core's metadata url, the row's `path`, the detail-page [id] segment (which Next
- * decodes once on its own), and `encodeCorePath` on the way back out. One decode too many turns the
- * id's `://` into path separators and the read 404s.
+ * Grid rows carry the *decoded* `$id` as `name` (`toResourceInfo` applies `fromCoreRunnerName`), and
+ * `getEntityPath` applies exactly one `encodeURIComponent` regardless of whether it read `name` or
+ * fell back to `$id`. That single encode/decode pair is what row-click and post-duplicate-redirect
+ * navigation must agree on — a pre-encode on either side is what produced the #4349 404.
  */
 describe('App runner asset :: $id path round trip', () => {
   const coreName = toCoreRunnerName(RUNNER_ID);
@@ -25,39 +25,26 @@ describe('App runner asset :: $id path round trip', () => {
     expect(coreName).not.toContain('/');
   });
 
-  test('Should keep the row path singly encoded while showing the decoded id', () => {
-    const { path, name } = parseEncodedFlatPath(coreMetadataUrl, PREFIX);
+  test('Should recover the raw $id from the metadata url', () => {
+    const { name } = parseEncodedFlatPath(coreMetadataUrl, PREFIX);
 
-    expect(path).toEqual(coreName);
     expect(fromCoreRunnerName(name)).toEqual(RUNNER_ID);
   });
 
-  test("Should survive the detail-page url and Next's single path decode", () => {
-    const { path } = parseEncodedFlatPath(coreMetadataUrl, PREFIX);
-    // Listing rows carry name = Core name (path), not the raw $id URL.
-    const urn = getUrnForEntity(ApplicationRoute.PlatformAppRunners, { name: path, path });
+  test('Row-click and post-duplicate-redirect build the identical URL segment', () => {
+    // Row click: navigates from the grid row's decoded `name`.
+    const fromRowClick = getUrnForEntity(ApplicationRoute.PlatformAppRunners, { name: RUNNER_ID });
+    // Post-duplicate redirect: no `name` yet, falls back to the freshly authored `$id`.
+    const fromRedirect = getUrnForEntity(ApplicationRoute.PlatformAppRunners, { $id: RUNNER_ID });
 
-    const segment = urn.split('/').at(-1)!;
-    // Next.js decodes the [id] segment once — params.id must be the Core name, not the raw URL.
-    expect(decodeURIComponent(segment)).toEqual(coreName);
+    expect(fromRedirect).toEqual(fromRowClick);
   });
 
-  test('Should rebuild the exact Core request path from the URL path segment', () => {
-    const { path } = parseEncodedFlatPath(coreMetadataUrl, PREFIX);
-    const urn = getUrnForEntity(ApplicationRoute.PlatformAppRunners, { name: path, path });
-    // params.id = Core name after Next.js decodes the [id] segment once.
-    const paramId = decodeURIComponent(urn.split('/').at(-1)!);
+  test("Should survive Next's single path decode back to the raw $id", () => {
+    const segment = getEntityPath(ApplicationRoute.PlatformAppRunners, { $id: RUNNER_ID }, false);
 
-    expect(paramId).toEqual(coreName);
-    // Read path: getRunner(params.id) → encodeCorePath(params.id) — no toCoreRunnerName involved.
-    expect(encodeCorePath(paramId)).toEqual('http%253A%252F%252Fasdqwe');
-  });
-
-  test('Should break if the page decodes the query param a second time', () => {
-    const overDecoded = decodeURIComponent(coreName);
-
-    expect(overDecoded).toEqual(RUNNER_ID);
-    expect(encodeCorePath(overDecoded)).toContain('/');
-    expect(encodeCorePath(overDecoded)).not.toEqual('http%253A%252F%252Fasdqwe');
+    // Next.js decodes the [id] segment once — params.id must be the raw $id, matching what a
+    // fresh page load for this same runner (read via `name`) would also produce.
+    expect(decodeURIComponent(segment)).toEqual(RUNNER_ID);
   });
 });

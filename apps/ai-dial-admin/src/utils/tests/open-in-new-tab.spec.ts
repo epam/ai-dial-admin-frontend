@@ -188,9 +188,17 @@ describe('Entity list view :: getEntityPath', () => {
     expect(result).toEqual('http%253A%252F%252Frunner');
   });
 
-  test('Should encode $id fallback for PlatformAppRunners when no name is present', () => {
+  test('Should singly-encode $id fallback for PlatformAppRunners when no name is present', () => {
+    // No pre-encoding: this goes through the same single final encodeURIComponent as the `name`
+    // branch, so it matches the URL row-click navigation would produce for the same runner.
     const result = getEntityPath(ApplicationRoute.PlatformAppRunners, { $id: 'http://runner' });
-    expect(result).toEqual('http%253A%252F%252Frunner');
+    expect(result).toEqual('http%3A%2F%2Frunner');
+  });
+
+  test('Should produce the same URL segment from $id as row-click navigation does from name', () => {
+    const fromId = getEntityPath(ApplicationRoute.PlatformAppRunners, { $id: 'http://runner' });
+    const fromRowClickName = getEntityPath(ApplicationRoute.PlatformAppRunners, { name: 'http://runner' });
+    expect(fromId).toEqual(fromRowClickName);
   });
 
   test('Should return singly-encoded Core path for PlatformAppRunners when forRemove is true', () => {
