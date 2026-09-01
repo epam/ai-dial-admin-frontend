@@ -43,7 +43,7 @@ vi.mock('@/src/hooks/use-is-read-only-admin', () => ({ useIsReadOnlyAdmin: () =>
 import { getResolvedApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
 import { getResolvedRunnerSchema } from '@/src/app/[lang]/platform-app-runners/actions';
 
-const ASSET_REFERENCE = 'schemas/platform/http%3A%2F%2Fasdqwe';
+const ASSET_ID = 'http://asdqwe';
 
 const entityRunner = {
   $id: 'urn:runner:entity',
@@ -89,7 +89,7 @@ describe('AppRunners :: merged picker', () => {
     expect(screen.queryByRole('option', { name: 'urn:runner:entity' })).toBeNull();
   });
 
-  test('selecting an asset runner stores its canonical Core resource name', async () => {
+  test('selecting an asset runner stores its $id', async () => {
     const onChangeValue = vi.fn();
     render(
       <AppRunners
@@ -100,11 +100,10 @@ describe('AppRunners :: merged picker', () => {
       />,
     );
 
-    await selectRunner(ASSET_REFERENCE);
+    await selectRunner(ASSET_ID);
 
     await waitFor(() => expect(onChangeValue).toHaveBeenCalled());
-    // The literal expected string, not a re-derivation through the helper under test.
-    expect(onChangeValue).toHaveBeenCalledWith('schemas/platform/http%3A%2F%2Fasdqwe', { propA: 'default-a' });
+    expect(onChangeValue).toHaveBeenCalledWith('http://asdqwe', { propA: 'default-a' });
   });
 
   test('selecting an entity runner still stores its bare $id', async () => {
@@ -124,7 +123,7 @@ describe('AppRunners :: merged picker', () => {
     expect(onChangeValue).toHaveBeenCalledWith('urn:runner:entity', { propA: 'default-a' });
   });
 
-  test('an asset selection resolves against Core, with the encoded resource name', async () => {
+  test('an asset selection resolves against Core using the asset $id', async () => {
     vi.mocked(getResolvedRunnerSchema).mockClear();
     vi.mocked(getResolvedApplicationScheme).mockClear();
 
@@ -136,9 +135,9 @@ describe('AppRunners :: merged picker', () => {
         view={ApplicationRoute.AssetsApplications}
       />,
     );
-    await selectRunner(ASSET_REFERENCE);
+    await selectRunner(ASSET_ID);
 
-    await waitFor(() => expect(getResolvedRunnerSchema).toHaveBeenCalledWith('http%3A%2F%2Fasdqwe'));
+    await waitFor(() => expect(getResolvedRunnerSchema).toHaveBeenCalledWith('http://asdqwe'));
     expect(getResolvedApplicationScheme).not.toHaveBeenCalled();
   });
 
@@ -160,17 +159,17 @@ describe('AppRunners :: merged picker', () => {
     expect(getResolvedRunnerSchema).not.toHaveBeenCalled();
   });
 
-  test('a stored canonical reference reopens as the selected option, not blank', () => {
+  test('a stored $id reopens as the selected option, not blank', () => {
     render(
       <AppRunners
-        selectedValue={ASSET_REFERENCE}
+        selectedValue={ASSET_ID}
         onChangeValue={vi.fn()}
         runners={options}
         view={ApplicationRoute.AssetsApplications}
       />,
     );
 
-    expect(screen.getByRole<HTMLSelectElement>('combobox').value).toBe(ASSET_REFERENCE);
-    expect(screen.getByRole<HTMLOptionElement>('option', { name: 'http://asdqwe' }).selected).toBe(true);
+    expect(screen.getByRole<HTMLSelectElement>('combobox').value).toBe(ASSET_ID);
+    expect(screen.getByRole<HTMLOptionElement>('option', { name: ASSET_ID }).selected).toBe(true);
   });
 });
