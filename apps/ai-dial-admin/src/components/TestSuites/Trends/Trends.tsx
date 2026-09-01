@@ -1,6 +1,6 @@
 'use client';
 
-import { FC } from 'react';
+import { FC, useMemo } from 'react';
 
 import {
   DialLoader,
@@ -15,6 +15,7 @@ import KpiStrip from '@/src/components/TestSuites/Trends/KpiStrip';
 import MetricTrends from '@/src/components/TestSuites/Trends/MetricTrends';
 import OverallScoreTrend from '@/src/components/TestSuites/Trends/OverallScoreTrend';
 import { useTrendsData } from '@/src/components/TestSuites/Trends/use-trends-data';
+import { aggregateThresholdStats } from '@/src/components/TestSuites/Trends/utils/threshold-stats';
 import { ButtonsI18nKey, TestSuitesI18nKey } from '@/src/constants/i18n';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { useI18n } from '@/src/locales/client';
@@ -30,6 +31,16 @@ const Trends: FC<Props> = ({ selectedTestSuite, onStartRun }) => {
   const { data, isLoading } = useTrendsData(selectedTestSuite.id);
   const isEmpty = !data || data.kpis.runCount === 0;
 
+  const kpis = useMemo(() => {
+    if (!data) {
+      return null;
+    }
+    return {
+      ...data.kpis,
+      thresholdStats: aggregateThresholdStats(data.runOrder, selectedTestSuite.overallScoreThreshold),
+    };
+  }, [data, selectedTestSuite.overallScoreThreshold]);
+
   if (isLoading && !data) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -38,7 +49,7 @@ const Trends: FC<Props> = ({ selectedTestSuite, onStartRun }) => {
     );
   }
 
-  if (isEmpty) {
+  if (isEmpty || !kpis) {
     return (
       <div className="p-4">
         <DialNotification
@@ -68,7 +79,7 @@ const Trends: FC<Props> = ({ selectedTestSuite, onStartRun }) => {
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-4 overflow-auto p-4">
-      {data.kpis.runCount === 1 && (
+      {kpis.runCount === 1 && (
         <DialNotification
           variant={NotificationVariant.Info}
           iconSize={20}
@@ -76,11 +87,11 @@ const Trends: FC<Props> = ({ selectedTestSuite, onStartRun }) => {
           role="status"
         />
       )}
-      <KpiStrip kpis={data.kpis} />
-      <OverallScoreTrend runOrder={data.runOrder} runCount={data.kpis.runCount} isLoading={isLoading} />
+      <KpiStrip kpis={kpis} />
+      <OverallScoreTrend runOrder={data.runOrder} runCount={kpis.runCount} isLoading={isLoading} />
       <MetricTrends
         runOrder={data.runOrder}
-        runCount={data.kpis.runCount}
+        runCount={kpis.runCount}
         statistics={data.statistics}
         byStatistic={data.byStatistic}
         isLoading={isLoading}

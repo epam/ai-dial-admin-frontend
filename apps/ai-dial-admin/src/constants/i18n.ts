@@ -1990,6 +1990,8 @@ export enum TestSuitesI18nKey {
   RequestChainPreviousOutputsColumnsInfo = 'TestSuites.RequestChainPreviousOutputsColumnsInfo',
   RequestChainOutputOf = 'TestSuites.RequestChainOutputOf',
   TrendsRunsCount = 'TestSuites.TrendsRunsCount',
+  TrendsLastNRuns = 'TestSuites.TrendsLastNRuns',
+  RunsPassedThreshold = 'TestSuites.RunsPassedThreshold',
   AvgTestSuiteRunTime = 'TestSuites.AvgTestSuiteRunTime',
   AvgPerRuns = 'TestSuites.AvgPerRuns',
   ScoreRange = 'TestSuites.ScoreRange',

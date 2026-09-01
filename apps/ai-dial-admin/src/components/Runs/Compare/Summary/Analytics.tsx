@@ -4,9 +4,9 @@ import { FC } from 'react';
 
 import { DialAnalyticsCard, DialLoader } from '@epam/ai-dial-ui-kit';
 
+import PassFailFraction from '@/src/components/Common/PassFailStatus/PassFailFraction';
+import PassFailStatusBreakdown from '@/src/components/Common/PassFailStatus/PassFailStatusBreakdown';
 import { getMetricDelta, MetricDeltaKind } from '@/src/components/Runs/Compare/ExecutionResults/utils/metric-utils';
-import PassedTestCasesValue from '@/src/components/Runs/Summary/PassedTestCasesValue';
-import TestCaseStatusBreakdown from '@/src/components/Runs/Summary/TestCaseStatusBreakdown';
 import { RunAnalyticsSlice } from '@/src/components/Runs/Summary/models';
 import { useRunAnalyticsSlice } from '@/src/components/Runs/Summary/use-run-analytics-slice';
 import { formatAvgRunTimeSeconds } from '@/src/components/Runs/Summary/utils';
@@ -92,8 +92,8 @@ const Analytics: FC<Props> = ({
             title: primaryRunName,
             value: (
               <div className="flex flex-col gap-0.5">
-                <PassedTestCasesValue counts={primary.statusCounts} />
-                <TestCaseStatusBreakdown counts={primary.statusCounts} compact tooltipTitle={primaryRunName} />
+                <PassFailFraction counts={primary.statusCounts} />
+                <PassFailStatusBreakdown counts={primary.statusCounts} compact tooltipTitle={primaryRunName} />
               </div>
             ),
           },
@@ -101,8 +101,8 @@ const Analytics: FC<Props> = ({
             title: comparedRunName,
             value: (
               <div className="flex flex-col gap-0.5">
-                <PassedTestCasesValue counts={compared.statusCounts} />
-                <TestCaseStatusBreakdown counts={compared.statusCounts} compact tooltipTitle={comparedRunName} />
+                <PassFailFraction counts={compared.statusCounts} />
+                <PassFailStatusBreakdown counts={compared.statusCounts} compact tooltipTitle={comparedRunName} />
               </div>
             ),
           },
