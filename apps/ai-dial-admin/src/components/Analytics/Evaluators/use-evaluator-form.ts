@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { Dispatch, SetStateAction, useCallback, useMemo, useState } from 'react';
 
 import { CreateEvaluatorDto, Evaluator, EvaluatorSummary } from '@/src/models/analytics/evaluator';
 import { isEqualSkippingUndefined } from '@/src/utils/is-equals-entity';
@@ -14,6 +14,7 @@ interface Params {
 export interface EvaluatorFormState {
   draft: CreateEvaluatorDto;
   onChange: (patch: Partial<CreateEvaluatorDto>) => void;
+  replaceDraft: Dispatch<SetStateAction<CreateEvaluatorDto>>;
   reset: () => void;
   isChanged: boolean;
   isValid: boolean;
@@ -38,6 +39,7 @@ export const useEvaluatorForm = ({ evaluator, summary }: Params): EvaluatorFormS
   return {
     draft,
     onChange,
+    replaceDraft: setDraft,
     reset,
     isChanged,
     isValid: isEvaluatorShapeValid(draft),

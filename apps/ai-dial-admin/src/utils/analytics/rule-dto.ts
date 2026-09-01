@@ -1,4 +1,5 @@
 import { RuleDraft, SourceMode } from '@/src/models/analytics/enrichment-rules-ui';
+import { trimmedString } from '@/src/utils/formatting/trimmed-string';
 import { CreateRuleDto, EnrichmentRule, ReadyWhen, TriggerKind } from '@/src/models/analytics/rule';
 
 interface Context {
@@ -44,10 +45,10 @@ export const buildRuleDto = (draft: RuleDraft, { grainKey, sourceTable }: Contex
   READ_ONLY_MEMBERS.forEach((key) => delete dto[key]);
   TRIGGER_OWNED_MEMBERS.forEach((key) => delete dto[key]);
 
-  dto.name = draft.name?.trim() ?? '';
+  dto.name = trimmedString(draft.name);
 
-  if (draft.trigger_kind === TriggerKind.Schedule && draft.trigger_cron) {
-    dto.trigger_cron = draft.trigger_cron.trim();
+  if (draft.trigger_kind === TriggerKind.Schedule && trimmedString(draft.trigger_cron)) {
+    dto.trigger_cron = trimmedString(draft.trigger_cron);
   }
 
   if (draft.trigger_kind === TriggerKind.Group) {
@@ -59,8 +60,12 @@ export const buildRuleDto = (draft: RuleDraft, { grainKey, sourceTable }: Contex
     if (draft.member_select?.limit) {
       dto.member_select = {
         limit: draft.member_select.limit,
-        ...(draft.member_select.prefer_sql?.trim() ? { prefer_sql: draft.member_select.prefer_sql.trim() } : {}),
-        ...(draft.member_select.order_by?.length ? { order_by: draft.member_select.order_by } : {}),
+        ...(trimmedString(draft.member_select.prefer_sql)
+          ? { prefer_sql: trimmedString(draft.member_select.prefer_sql) }
+          : {}),
+        ...(Array.isArray(draft.member_select.order_by) && draft.member_select.order_by.length
+          ? { order_by: draft.member_select.order_by }
+          : {}),
       };
     }
   }
@@ -84,10 +89,10 @@ export const getSourceMode = (source?: string, sourceTable?: string): SourceMode
   !source || source === sourceTable ? SourceMode.Follow : SourceMode.Pin;
 
 const compactReadyWhen = (readyWhen?: ReadyWhen): ReadyWhen | undefined => {
-  if (!readyWhen) return undefined;
+  if (!readyWhen || typeof readyWhen !== 'object') return undefined;
 
   const next: ReadyWhen = {};
-  if (readyWhen.signal?.trim()) next.signal = readyWhen.signal.trim();
+  if (trimmedString(readyWhen.signal)) next.signal = trimmedString(readyWhen.signal);
   if (readyWhen.idle) next.idle = readyWhen.idle;
   if (readyWhen.max_staleness) next.max_staleness = readyWhen.max_staleness;
   if (readyWhen.cost_ceiling) next.cost_ceiling = readyWhen.cost_ceiling;

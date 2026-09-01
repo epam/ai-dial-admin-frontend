@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
 import EvaluatorDetailView from '@/src/components/Analytics/Evaluators/EvaluatorDetailView';
-import { AnalyticsEvaluatorsI18nKey, TabsI18nKey } from '@/src/constants/i18n';
+import { AnalyticsEvaluatorsI18nKey, EntitiesI18nKey, TabsI18nKey } from '@/src/constants/i18n';
 import { Evaluator, EvaluatorPreset, EvaluatorType } from '@/src/models/analytics/evaluator';
 
 vi.mock('@/src/app/[lang]/evaluators/actions');
@@ -41,6 +41,14 @@ describe('EvaluatorDetailView — a caller without full-admin rights', () => {
     expect(screen.getByText(TabsI18nKey.Properties)).toBeTruthy();
     expect(screen.getByText(TabsI18nKey.Rules)).toBeTruthy();
     expect(screen.getByLabelText(AnalyticsEvaluatorsI18nKey.Model)).toHaveValue('gemini-2.5-flash-lite');
+  });
+
+  test('is still offered the JSON editor toggle', () => {
+    isFullAdmin.value = false;
+    renderView();
+
+    expect(screen.getByRole('switch')).toBeInTheDocument();
+    expect(screen.getByText(EntitiesI18nKey.JSONEditor)).toBeInTheDocument();
   });
 
   test('cannot edit the fields', () => {

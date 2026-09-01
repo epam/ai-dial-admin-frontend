@@ -17,6 +17,7 @@ import {
   getGroupedIdColumn,
   getGroupedNameColumn,
   getGroupedSchemaColumn,
+  getSchemaFieldColId,
   getTurnActionsColumn,
   SchemaColumnContext,
   TurnActionHandlers,
@@ -47,6 +48,10 @@ describe('getGroupedIdColumn', () => {
     const column = getGroupedIdColumn();
 
     expect(callValueGetter(column, { id: 'case-1', rowType: GridRowType.TURN })).toBe('case-1');
+  });
+
+  test('should keep a reserved colId of id so it does not collide with a schema field of the same name', () => {
+    expect(getGroupedIdColumn().colId).toBe('id');
   });
 });
 
@@ -106,6 +111,37 @@ describe('getGroupedNameColumn', () => {
 
 describe('getGroupedSchemaColumn', () => {
   const ctx: SchemaColumnContext = { entityId: 'entity-1', view: ApplicationRoute.Applications };
+
+  test('should namespace the colId when the schema field collides with a reserved grid column', () => {
+    const column = getGroupedSchemaColumn({ name: 'id', type: TestCaseItemType.STRING }, vi.fn(), ctx);
+
+    expect(column.field).toBe('data.id');
+    expect(column.colId).toBe('data:id');
+    expect(column.colId).not.toBe(getGroupedIdColumn().colId);
+    expect(column.field).not.toBe(getGroupedIdColumn().field);
+  });
+
+  test('should keep the field name as colId when it does not collide', () => {
+    const column = getGroupedSchemaColumn({ name: 'prompt', type: TestCaseItemType.STRING }, vi.fn(), ctx);
+
+    expect(column.field).toBe('prompt');
+    expect(column.colId).toBe('prompt');
+    expect(getSchemaFieldColId('prompt')).toBe('prompt');
+    expect(getSchemaFieldColId('id')).toBe('data:id');
+    expect(getSchemaFieldColId('testCaseName')).toBe('data:testCaseName');
+  });
+
+  test('should read a colliding id field from data, not from the platform row id', () => {
+    const column = getGroupedSchemaColumn({ name: 'id', type: TestCaseItemType.STRING }, vi.fn(), ctx);
+
+    expect(
+      callValueGetter(column, {
+        id: '3021b6c6-ddae-47f7-bcd8-85f3c1fd279d',
+        data: { id: 'test_case_1' },
+        rowType: GridRowType.SINGLE,
+      }),
+    ).toBe('test_case_1');
+  });
 
   test('should select StackedTurnsCellRenderer for a per-turn field on a GROUP row', () => {
     const column = getGroupedSchemaColumn(

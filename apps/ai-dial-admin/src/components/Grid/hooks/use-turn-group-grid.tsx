@@ -113,25 +113,29 @@ export const useTurnGroupGrid = <T,>({
 
   const onCellChange = useCallback(
     (rowData: Record<string, unknown>, field: string, value: string | number | boolean) => {
-      const rowId = String(rowData.id);
+      const rowId = String(rowData.groupKey || rowData.id);
       const isDataField = !structuralFields.includes(field);
+
+      const writeField = (target: Record<string, unknown>) => {
+        // A schema field named `id` lives in `data`; writing it here would clobber the platform UUID.
+        if (field !== 'id') {
+          target[field] = value;
+        }
+        if (isDataField && target.data != null) {
+          target.data = { ...(target.data as Record<string, unknown>), [field]: value };
+        }
+      };
 
       if (perTurnFields.has(field)) {
         const turnIndex = readTurnIndex(rowData);
         const target = flatRowsRef.current.find((row) => String(row.id) === rowId && readTurnIndex(row) === turnIndex);
         if (target) {
-          target[field] = value;
-          if (isDataField && target.data != null) {
-            target.data = { ...(target.data as Record<string, unknown>), [field]: value };
-          }
+          writeField(target);
         }
       } else {
         flatRowsRef.current.forEach((row) => {
           if (String(row.id) !== rowId) return;
-          row[field] = value;
-          if (isDataField && row.data != null) {
-            row.data = { ...(row.data as Record<string, unknown>), [field]: value };
-          }
+          writeField(row);
         });
       }
 
