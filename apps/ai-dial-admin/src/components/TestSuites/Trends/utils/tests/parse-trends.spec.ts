@@ -72,6 +72,7 @@ describe('parseTrendsData', () => {
       scoreMin: 0.4,
       scoreMax: 0.8,
       latestScore: 0.8,
+      thresholdStats: null,
     });
     expect(parsed.statistics).toEqual(['AVG']);
     expect(parsed.byStatistic.AVG).toHaveLength(1);

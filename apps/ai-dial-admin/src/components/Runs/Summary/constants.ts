@@ -1,5 +1,3 @@
-import { IconCheck, IconCircleMinus, IconX } from '@tabler/icons-react';
-
 /** Structured-query entity + column names for the run analytics cards (backend `eval_summaries`). */
 export const EVAL_SUMMARIES_ENTITY = 'eval_summaries';
 
@@ -43,16 +41,6 @@ export const DEFAULT_METRIC_SCORE_FIELD = 'score';
 /** Eval-summary row id field for matched-only distribution exclusion filters. */
 export const EVAL_SUMMARY_ID_FIELD = 'id';
 
-/**
- * Tailwind text-color tokens for the "Test Cases Passed" card status breakdown
- * (accent-secondary #37BABC, error #F76464, secondary #9FA6BD).
- */
-export const STATUS_DOT_CLASSES = {
-  pass: 'text-accent-secondary',
-  fail: 'text-error',
-  error: 'text-secondary',
-} as const;
-
 export const METRIC_SCORES_GRID_CLASS = 'grid min-w-0 grid-cols-1 gap-3 xl:grid-cols-2';
 
 export const SUMMARY_PANELS_GRID_CLASS =
@@ -65,10 +53,3 @@ export const ANALYTICS_KPI_CARD_CLASS = 'min-w-0 xl:flex-1';
 export const DISTRIBUTION_STAT_CARDS_GRID_CLASS = 'grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
 
 export const DISTRIBUTION_STAT_CARD_CLASS = 'min-w-0';
-
-/** Icons for the "Test Cases Passed" card status breakdown. */
-export const STATUS_DOT_ICONS = {
-  pass: IconCheck,
-  fail: IconX,
-  error: IconCircleMinus,
-} as const;

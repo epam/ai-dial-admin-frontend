@@ -5,10 +5,12 @@ import { Icon } from '@tabler/icons-react';
 import classNames from 'classnames';
 import { FC, ReactNode } from 'react';
 
-import { STATUS_DOT_CLASSES, STATUS_DOT_ICONS } from '@/src/components/Runs/Summary/constants';
-import { TestCaseStatusCounts } from '@/src/components/Runs/Summary/models';
+import { STATUS_DOT_CLASSES, STATUS_DOT_ICONS } from '@/src/components/Common/PassFailStatus/constants';
+import { PassFailErrorCounts } from '@/src/components/Common/PassFailStatus/models';
 import { RunsI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
+
+const STATUS_ICON_SIZE = 12;
 
 interface StatusDotProps {
   className: string;
@@ -20,7 +22,7 @@ interface StatusDotProps {
 
 const StatusDot: FC<StatusDotProps> = ({ className, count, icon: StatusIcon, label, compact }) => (
   <span className={classNames('flex items-center gap-1', className)}>
-    <StatusIcon aria-hidden="true" size={compact ? 12 : 14} />
+    <StatusIcon aria-hidden="true" size={STATUS_ICON_SIZE} />
     {compact ? (
       <>
         <span>{count}</span>
@@ -35,12 +37,12 @@ const StatusDot: FC<StatusDotProps> = ({ className, count, icon: StatusIcon, lab
 );
 
 interface Props {
-  counts: TestCaseStatusCounts;
+  counts: PassFailErrorCounts;
   compact?: boolean;
   tooltipTitle?: string;
 }
 
-const TestCaseStatusBreakdown: FC<Props> = ({ counts, compact = false, tooltipTitle }) => {
+const PassFailStatusBreakdown: FC<Props> = ({ counts, compact = false, tooltipTitle }) => {
   const t = useI18n();
 
   const passLabel = t(RunsI18nKey.Pass);
@@ -48,7 +50,12 @@ const TestCaseStatusBreakdown: FC<Props> = ({ counts, compact = false, tooltipTi
   const errorLabel = t(RunsI18nKey.ExecError);
 
   const breakdown = (
-    <div className={classNames('flex flex-wrap items-center gap-y-1', compact ? 'gap-x-2 dial-small-text' : 'gap-x-3')}>
+    <div
+      className={classNames(
+        'flex flex-wrap items-center gap-y-1',
+        compact ? 'gap-x-2 dial-small-text' : 'gap-x-2 dial-tiny-text',
+      )}
+    >
       <StatusDot
         className={STATUS_DOT_CLASSES.pass}
         icon={STATUS_DOT_ICONS.pass}
@@ -99,4 +106,4 @@ const TestCaseStatusBreakdown: FC<Props> = ({ counts, compact = false, tooltipTi
   );
 };
 
-export default TestCaseStatusBreakdown;
+export default PassFailStatusBreakdown;

@@ -148,7 +148,7 @@ describe('Compare Summary :: Analytics', () => {
 
     await screen.findByText('Runs.TestCasesPassed');
     expect(screen.getAllByText('338').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('/350')).toHaveLength(2);
+    expect(screen.getAllByText('/ 350')).toHaveLength(2);
     expect(screen.getAllByText('Runs.Pass')).toHaveLength(2);
     expect(screen.getAllByText('Runs.Fail')).toHaveLength(2);
     expect(screen.getAllByText('Runs.ExecError')).toHaveLength(2);

@@ -138,6 +138,7 @@ export const parseTrendsData = (result: StructuredQueryResult | null, runs: Run[
     scoreMin: overallScores.length ? Math.min(...overallScores) : null,
     scoreMax: overallScores.length ? Math.max(...overallScores) : null,
     latestScore: latest?.overallScore ?? null,
+    thresholdStats: null,
   };
 
   const groupDiscoveryOrder: string[] = [];
@@ -227,6 +228,7 @@ export const emptyTrendsData = (): TrendsData => ({
     scoreMin: null,
     scoreMax: null,
     latestScore: null,
+    thresholdStats: null,
   },
   statistics: [],
   byStatistic: {},
