@@ -569,12 +569,17 @@ export interface ConversationSpanRow {
   deployment_price: number | string | null;
   request_time: number | string | null;
   response_body_bytes: number | string | null;
+  request_body_bytes: number | string | null;
+  number_request_messages: number | string | null;
   reasoning_tokens: number | string | null;
   mcp_method?: string | null;
   mcp_tool_call_name?: string | null;
   execution_path?: string[] | null;
 }
 
+// What a node *is*. Failure is deliberately not a member: a failed model call and a failed tool call are
+// different problems, and one set naming both "error" reports the failure instead of the kind — losing the
+// fact the reader was about to act on. Failure travels on `HopOutcomeFilter`, beside this.
 export enum HopEventType {
   ModelCall = 'model-call',
   Text = 'text',
@@ -582,11 +587,19 @@ export enum HopEventType {
   ToolResult = 'tool-result',
   Thinking = 'thinking',
   Empty = 'empty',
-  Error = 'error',
   Session = 'session',
   Embedding = 'embedding',
   Other = 'other',
 }
+
+// The outcome axis. One member, because there is no "succeeded" control to offer: the turn's own status
+// figure already says whether anything failed, and a control marking almost every node answers nothing.
+export enum HopOutcomeFilter {
+  Failed = 'failed',
+}
+
+// What the tree is currently emphasising — a kind, or the outcome axis, or nothing.
+export type HopEmphasis = HopEventType | HopOutcomeFilter;
 
 export enum HopNodeKind {
   Hop = 'hop',
@@ -645,47 +658,202 @@ export interface ConversationSpansPage {
   modelOutputs: ModelCallOutput[];
 }
 
-export enum SpanCategory {
-  Error = 'error',
-  Embedding = 'embedding',
-  Retrieval = 'retrieval',
+// What kind of call a hop stands for. Named as the hop log names them, and deliberately carrying no failure
+// member: a failed model call and a failed tool call are different problems, and one set naming both "error"
+// says neither. Failure travels beside the kind, never instead of it.
+export enum SpanKind {
+  Llm = 'llm',
+  Mcp = 'mcp',
+  Embeddings = 'embeddings',
   Route = 'route',
-  Deployment = 'deployment',
   Other = 'other',
 }
 
 export interface ConversationSpanNode {
   span: ConversationSpanRow;
-  category: SpanCategory;
+  kind: SpanKind;
+  hasFailed: boolean;
   startedAtMs: number | null;
-}
-
-export enum HopTextSuppression {
-  NoResponse = 'no-response',
-  SessionSetup = 'session-setup',
-  Embedding = 'embedding',
-}
-
-export interface ConversationHopTexts {
-  sent: string | null;
-  received: string | null;
-  toolCalls: string[];
-}
-
-export enum HopTextsState {
-  Available = 'available',
-  ColumnsUnavailable = 'columns-unavailable',
-  NoBodies = 'no-bodies',
-  LoadFailed = 'load-failed',
-}
-
-export interface ConversationHopBodies extends ConversationHopTexts {
-  state: HopTextsState;
 }
 
 export enum MessageRole {
   User = 'user',
   Assistant = 'assistant',
+  System = 'system',
+  Tool = 'tool',
+  // A role this frontend does not recognise. Dropping such a message would hide recorded work, which is the
+  // worse failure in an observability tool — the same deny-list reasoning the hop typing follows.
+  Other = 'other',
+}
+
+// The hop log records model calls in two structurally different dialects, told apart by the endpoint alone.
+// `Unknown` is not a failure: it routes the hop to the raw view, which answers completely for a dialect this
+// frontend has not met.
+export enum HopDialect {
+  ChatCompletions = 'chat-completions',
+  Messages = 'messages',
+  Responses = 'responses',
+  Unknown = 'unknown',
+}
+
+export enum HopInspectorSide {
+  Request = 'request',
+  Response = 'response',
+}
+
+// Why a side has no content to fetch, decided from the hop row before any body read.
+export enum HopSideSuppression {
+  NoResponse = 'no-response',
+  SessionSetup = 'session-setup',
+  Vector = 'vector',
+}
+
+export interface HopSideSuppressions {
+  request: HopSideSuppression | null;
+  response: HopSideSuppression | null;
+}
+
+// Withheld, empty and failed are three different facts about a side, and rendering any two of them
+// identically hides an outage behind an entitlement or an entitlement behind an empty result.
+export enum HopReadState {
+  Available = 'available',
+  ColumnWithheld = 'column-withheld',
+  NoBody = 'no-body',
+  LoadFailed = 'load-failed',
+  // The body was read but no parser claims its dialect. The raw view is the answer.
+  Unstructured = 'unstructured',
+}
+
+// A parameter the request carried, or one of the four always stated with a null value when it did not —
+// absence is itself a debugging answer.
+export interface HopParam {
+  name: string;
+  value: string | null;
+}
+
+export interface HopParams {
+  stated: HopParam[];
+  unrecognisedCount: number;
+}
+
+// What an assistant asked for, carried as part of the history rather than as metadata about it. An assistant
+// message that only called a tool records `content` as `""`, so the call *is* what that message said.
+export interface HopToolCall {
+  name: string;
+  args: string | null;
+}
+
+export interface HopRoleCount {
+  role: MessageRole;
+  count: number;
+}
+
+// One entry per recorded message. `bytes` is the size of the recorded JSON, not of the rendered text, so a
+// message whose text was clamped away entirely still states honestly what made the request heavy.
+export interface HopMessageEntry {
+  index: number;
+  role: MessageRole;
+  bytes: number;
+  text: string | null;
+  toolCalls: HopToolCall[];
+  isTextClamped: boolean;
+  isLarge: boolean;
+}
+
+// What a dialect parser yields before clamping and budgeting: the recorded shape, read once, with no
+// presentation decisions taken. Keeping the parsers free of the clamp is what lets both dialects share one
+// envelope builder and one set of budget rules.
+export interface HopDialectMessage {
+  role: MessageRole;
+  text: string | null;
+  toolCalls: HopToolCall[];
+  bytes: number;
+}
+
+export interface HopRequestEnvelope {
+  state: HopReadState;
+  dialect: HopDialect;
+  params: HopParams;
+  messages: HopMessageEntry[];
+  roleCounts: HopRoleCount[];
+  recordedBytes: number | null;
+  // Set when the envelope's own total budget was reached, so the message list is short of what was recorded.
+  isClamped: boolean;
+}
+
+export enum HopResponseMode {
+  Assembled = 'assembled',
+  Raw = 'raw',
+}
+
+// A clamp states itself **and** states by how much. One shape for every clamped thing, so the three places
+// that clamp cannot each invent their own spelling of the same sentence — and so none of them can carry the
+// flag without carrying the numbers, which is how two of them ended up computing a clamp and never saying so.
+export interface HopClamp {
+  isClamped: boolean;
+  recordedBytes: number | null;
+  deliveredBytes: number | null;
+}
+
+export interface HopResponseEnvelope {
+  state: HopReadState;
+  text: string | null;
+  textClamp: HopClamp;
+  // Stated separately from the answer, never merged into it: 54% of Responses hops record a reasoning
+  // summary, and reading it as the reply would misattribute the model's own scratch work.
+  reasoningText: string | null;
+  finishReason: string | null;
+  toolCalls: string[];
+  recordedBytes: number | null;
+}
+
+// Tier 2 reads one *message* in full, not one property of one. The history is what a reader opens a hop for,
+// and a property was never the unit they were asking about.
+export interface HopMessageValue {
+  state: HopReadState;
+  text: string | null;
+  toolCalls: HopToolCall[];
+}
+
+export interface HopRawBody {
+  state: HopReadState;
+  text: string | null;
+  clamp: HopClamp;
+}
+
+// Which sides a read was actually entitled to. A fact panel is built from both body columns, so a builder
+// that is not told which side it was denied has to report a withheld column and a hop that recorded nothing
+// as the same empty field — the one distinction the inspector exists to keep.
+export interface HopSideGrants {
+  isRequestReadable: boolean;
+  isResponseReadable: boolean;
+}
+
+export interface HopMcpFacts {
+  state: HopReadState;
+  method: string | null;
+  toolName: string | null;
+  toolset: string | null;
+  argumentsText: string | null;
+  resultText: string | null;
+  resultClamp: HopClamp;
+  // The result comes from the response column and the arguments from the request one, so a caller granted
+  // only one side gets a panel that is half available and half withheld. `state` cannot say that.
+  resultState: HopReadState;
+}
+
+// The token count is not here: it is `total_tokens` on the hop row, which the panel already has and which
+// stays right when the body is withheld.
+export interface HopEmbeddingFacts {
+  state: HopReadState;
+  model: string | null;
+  inputCount: number | null;
+  dimensions: number | null;
+  inputText: string | null;
+  inputClamp: HopClamp;
+  // The dimension count is derived from the response column; every other field here comes from the request
+  // one. Withheld and "the vector was not recorded" both produce no number, and they are not the same fact.
+  isDimensionsWithheld: boolean;
 }
 
 export interface ConversationMessage {
@@ -720,10 +888,16 @@ export interface ConversationTranscript {
 // only once the body read runs, so they are stated inside the Chat view instead.
 export interface ConversationTranscriptAvailability {
   isReadable: boolean;
+  // Per side, because the inspector offers the two independently: the transcript needs both a question and an
+  // answer, but a hop's request is worth reading on its own.
+  isRequestReadable: boolean;
+  isResponseReadable: boolean;
 }
 
 export interface TranscriptBodyFields {
   isReadable: boolean;
+  isRequestReadable: boolean;
+  isResponseReadable: boolean;
   responseFields: UsageLogField[];
 }
 
@@ -742,6 +916,9 @@ export interface ConversationEntryBodyRow {
   request_body: string | null;
   response_body: string | null;
   assembled_response?: string | null;
+  // Selected by the inspector's own read so the dialect is resolved server-side from the endpoint rather than
+  // taken on trust from the caller. A plain column, and free beside the body it travels with.
+  request_uri?: string | null;
 }
 
 export interface TranscriptStatePresentation {

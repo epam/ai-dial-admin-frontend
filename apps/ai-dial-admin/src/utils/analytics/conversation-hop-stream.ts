@@ -9,6 +9,7 @@ import {
 import { toMillis } from '@/src/utils/analytics/conversation-formatting';
 import {
   isEmbedding,
+  isFailedHop,
   isMcpCall,
   isModelCall,
   isProtocolEnvelope,
@@ -17,8 +18,6 @@ import {
 import { buildSpanTree } from '@/src/utils/analytics/conversation-span-tree';
 import { toNumber } from '@/src/utils/analytics/scalar';
 
-const HTTP_ERROR_STATUS = 400;
-
 export const isConversationHop = (span: ConversationSpanRow): boolean => span.event_kind?.trim() !== ROUTE_EVENT_KIND;
 
 const isUtility = ({ request_uri }: ConversationSpanRow): boolean => {
@@ -26,21 +25,39 @@ const isUtility = ({ request_uri }: ConversationSpanRow): boolean => {
   return UTILITY_URI_MARKERS.some((marker) => uri.includes(marker));
 };
 
-export const isFailedHop = ({ success, response_status }: ConversationSpanRow): boolean =>
-  success === false || (toNumber(response_status) ?? 0) >= HTTP_ERROR_STATUS;
-
 const byStartTime = (left: ConversationSpanRow, right: ConversationSpanRow): number =>
   (toMillis(left.request_time) ?? 0) - (toMillis(right.request_time) ?? 0);
+
+// What a hop is, read from the row alone. Used where no event can be derived — a failed hop records no usable
+// output — so the node still states the kind of call that failed.
+const kindEventTypeOf = (span: ConversationSpanRow): HopEventType => {
+  if (isEmbedding(span)) {
+    return HopEventType.Embedding;
+  }
+
+  if (isMcpCall(span)) {
+    return isProtocolEnvelope(span) ? HopEventType.Session : HopEventType.ToolResult;
+  }
+
+  if (isModelCall(span) && !isUtility(span)) {
+    return HopEventType.ModelCall;
+  }
+
+  return HopEventType.Other;
+};
 
 const eventsForHop = (span: ConversationSpanRow, output: ModelCallOutput | undefined): HopEventSeed[] => {
   const reasoningTokens = toNumber(span.reasoning_tokens);
   const base = { span };
 
+  // A failed hop still emits exactly one seed, so its failure is stated once rather than once per event it
+  // managed to emit — but that seed now carries the hop's own kind. Reporting every failure as one
+  // undifferentiated type was what made a failed tool call indistinguishable from a failed model call.
   if (isFailedHop(span)) {
     return [
       {
         ...base,
-        type: HopEventType.Error,
+        type: kindEventTypeOf(span),
         label: spanLabelOf(span),
         detail: span.response_status === null ? null : String(span.response_status),
       },

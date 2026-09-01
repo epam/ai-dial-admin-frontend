@@ -334,11 +334,24 @@ describe('buildConversationSpansQuery', () => {
       UsageLogField.DeploymentPrice,
       UsageLogField.RequestTime,
       UsageLogField.ResponseBodyBytes,
+      UsageLogField.RequestBodyBytes,
+      UsageLogField.NumberRequestMessages,
       UsageLogField.ReasoningTokens,
       UsageLogField.McpMethod,
       UsageLogField.McpToolCallName,
       UsageLogField.ExecutionPath,
     ]);
+  });
+
+  // The inspector's only pre-body facts. Plain columns, so the Request tab's message count is known before
+  // anything is fetched and stays right when a body read is clamped or withheld.
+  test('names the request size and message count without naming a body column', () => {
+    const names = selectedNames(query().select);
+
+    expect(names).toContain(UsageLogField.NumberRequestMessages);
+    expect(names).toContain(UsageLogField.RequestBodyBytes);
+    expect(names).not.toContain(UsageLogField.RequestBody);
+    expect(names).not.toContain(UsageLogField.ResponseBody);
   });
 
   // Ordinary non-heavy columns of the entity, so unlike the assembled response they need no schema gate.

@@ -557,6 +557,10 @@ export const buildConversationSpansQuery = (traceId: string, limit: number): Str
       col(field(UsageLogField.DeploymentPrice)),
       col(field(UsageLogField.RequestTime)),
       col(field(UsageLogField.ResponseBodyBytes)),
+      // Plain columns, and the inspector's only pre-body facts: the request message count is what the Request
+      // tab's badge states, and it stays right when a body read is clamped or withheld.
+      col(field(UsageLogField.RequestBodyBytes)),
+      col(field(UsageLogField.NumberRequestMessages)),
       col(field(UsageLogField.ReasoningTokens)),
       col(field(UsageLogField.McpMethod)),
       col(field(UsageLogField.McpToolCallName)),
@@ -638,24 +642,18 @@ export const buildConversationEntryBodiesQuery = (
   });
 };
 
+// The body columns to read are supplied rather than assumed: entitlement to the request body and to the
+// response body is separate, and a caller holding one must not have the other named in their query — an
+// unknown field rejects the whole read, which would withdraw the side they *are* entitled to along with the
+// one they are not.
 export const buildConversationHopBodyQuery = (
   scope: SessionScope,
   traceId: string,
   coreSpanId: string,
   requestTime: number | string | null,
-  schemaFieldNames?: string[],
+  bodyFields: UsageLogField[],
 ): StructuredQuery => {
-  const selectable = availableSelectFields(
-    [
-      UsageLogField.TraceId,
-      UsageLogField.EventKind,
-      UsageLogField.RequestBody,
-      UsageLogField.ResponseBody,
-      UsageLogField.AssembledResponse,
-    ],
-    OPTIONAL_USAGE_LOG_FIELDS,
-    schemaFieldNames,
-  );
+  const selectable = [UsageLogField.TraceId, UsageLogField.EventKind, UsageLogField.RequestUri, ...bodyFields];
   const recordedMillis = toMillis(requestTime);
 
   return rowQuery({

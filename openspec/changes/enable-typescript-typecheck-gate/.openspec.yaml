@@ -1,0 +1,5 @@
+schema: spec-driven
+created: 2026-09-01
+# Tooling only: a typecheck target, its wiring, and the errors it surfaces. No behaviour change, so there
+# is no spec delta to write.
+skip_specs: true

@@ -8,19 +8,30 @@ import { BasicI18nKey, ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import {
   ConversationDetailRow,
   ConversationTranscript,
-  HopTextsState,
+  HopDialect,
+  HopReadState,
   MessageRole,
   TranscriptState,
 } from '@/src/models/analytics/conversations-trace';
 
 const getConversationSpans = vi.fn();
-const getConversationHopBodies = vi.fn();
+const getConversationHopRequest = vi.fn();
+const getConversationHopResponse = vi.fn();
+const getConversationHopProperty = vi.fn();
+const getConversationHopRawBody = vi.fn();
+const getConversationHopMcp = vi.fn();
+const getConversationHopEmbedding = vi.fn();
 const getConversationTracePage = vi.fn();
 const getConversationTranscript = vi.fn();
 
 vi.mock('@/src/app/[lang]/conversations-trace/actions', () => ({
   getConversationSpans: (...args: unknown[]) => getConversationSpans(...args),
-  getConversationHopBodies: (...args: unknown[]) => getConversationHopBodies(...args),
+  getConversationHopRequest: (...args: unknown[]) => getConversationHopRequest(...args),
+  getConversationHopResponse: (...args: unknown[]) => getConversationHopResponse(...args),
+  getConversationHopProperty: (...args: unknown[]) => getConversationHopProperty(...args),
+  getConversationHopRawBody: (...args: unknown[]) => getConversationHopRawBody(...args),
+  getConversationHopMcp: (...args: unknown[]) => getConversationHopMcp(...args),
+  getConversationHopEmbedding: (...args: unknown[]) => getConversationHopEmbedding(...args),
   getConversationTracePage: (...args: unknown[]) => getConversationTracePage(...args),
   getConversationTranscript: (...args: unknown[]) => getConversationTranscript(...args),
 }));
@@ -98,7 +109,14 @@ const transcript = (overrides: Partial<ConversationTranscript> = {}): Conversati
 
 const renderView = (props: Partial<ComponentProps<typeof ConversationDetailView>> = {}) =>
   render(
-    <ConversationDetailView conversation={CONVERSATION} feedback={null} isTranscriptReadable nowMs={1000} {...props} />,
+    <ConversationDetailView
+      conversation={CONVERSATION}
+      feedback={null}
+      isTranscriptReadable
+      bodyGrants={{ isReadable: true, isRequestReadable: true, isResponseReadable: true }}
+      nowMs={1000}
+      {...props}
+    />,
   );
 
 const switchOption = (key: string) => screen.getByRole('tab', { name: key });
@@ -109,10 +127,18 @@ beforeEach(() => {
     success: true,
     response: { spans: [{ core_span_id: 's1', core_parent_span_id: null, request_time: 1 }], total: 1 },
   });
-  // Opening a chain selects its first hop, which reads that hop's texts — one hop, on demand.
-  getConversationHopBodies.mockResolvedValue({
+  // Opening a chain selects its first hop, which reads that hop's request — one hop, on demand.
+  getConversationHopRequest.mockResolvedValue({
     success: true,
-    response: { state: HopTextsState.Available, sent: 'a prompt', received: 'an answer', toolCalls: [] },
+    response: {
+      state: HopReadState.Available,
+      dialect: HopDialect.ChatCompletions,
+      params: { stated: [], unrecognisedCount: 0 },
+      messages: [],
+      roleCounts: [],
+      recordedBytes: 10,
+      isClamped: false,
+    },
   });
   getConversationTracePage.mockResolvedValue({
     success: true,

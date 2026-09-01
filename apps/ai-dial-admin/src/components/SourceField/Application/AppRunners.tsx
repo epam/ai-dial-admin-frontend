@@ -2,8 +2,8 @@
 
 import { DialInputPopup, DialLabel, DialNeutralButton, DialSelectField, SelectOption } from '@epam/ai-dial-ui-kit';
 import { IconExternalLink } from '@tabler/icons-react';
-import { JSONSchema7 } from 'json-schema';
 import classNames from 'classnames';
+import { JSONSchema7 } from 'json-schema';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getResolvedApplicationScheme } from '@/src/app/[lang]/application-runners/actions';
@@ -16,13 +16,12 @@ import { useIsReadOnlyAdmin } from '@/src/hooks/use-is-read-only-admin';
 import { useCurrentLocale, useI18n } from '@/src/locales/client';
 import { DialApplication, DialApplicationScheme } from '@/src/models/dial/application';
 import { ApplicationRoute } from '@/src/types/routes';
-import { toCoreRunnerName } from '@/src/utils/app-runners/core-runner-name';
 import { createSchemaSource, getSchemaSourceId } from '@/src/utils/entities/application-source';
 import { getUrnForEntity } from '@/src/utils/open-in-new-tab';
 import { getSchemaDefaults } from '@/src/utils/schema';
 import { AppRunnerOrigin } from './models';
-import { getRunnerOrigin, getRunnerReference } from './utils';
 import SelectAppRunnerModal from './SelectAppRunnersModal';
+import { getRunnerOrigin } from './utils';
 
 interface Props {
   /** Entity-based API: AppRunners owns scheme-fetch + applicationProperties derivation side-effect. */
@@ -87,7 +86,7 @@ const AppRunners: FC<Props> = ({
   const dropdownItems = useMemo(() => {
     return (
       runners?.map((r) => ({
-        value: getRunnerReference(r),
+        value: r.$id || '',
         label: (isMergedSource ? r.$id : r['dial:applicationTypeDisplayName']) || r.$id || '',
       })) || ([] as SelectOption[])
     );
@@ -105,7 +104,7 @@ const AppRunners: FC<Props> = ({
         mcp: undefined,
       };
 
-      const runner = runners?.find((r) => getRunnerReference(r) === value);
+      const runner = runners?.find((r) => r.$id === value);
 
       if (!runner && entity) {
         onChange?.(baseEntity);
@@ -114,7 +113,7 @@ const AppRunners: FC<Props> = ({
 
       const isAsset = !!runner && getRunnerOrigin(runner) === AppRunnerOrigin.Asset;
       const resolve = isAsset
-        ? getResolvedRunnerSchema(toCoreRunnerName(runner.$id ?? ''))
+        ? getResolvedRunnerSchema(runner.$id ?? '')
         : getResolvedApplicationScheme(runner?.$id ?? '');
 
       resolve.then((res) => {
@@ -136,10 +135,7 @@ const AppRunners: FC<Props> = ({
     [entity, onChange, onChangeValue, onCloseModal, runners],
   );
 
-  const selectedRunner = useMemo(
-    () => runners?.find((r) => getRunnerReference(r) === currentValue),
-    [runners, currentValue],
-  );
+  const selectedRunner = useMemo(() => runners?.find((r) => r.$id === currentValue), [runners, currentValue]);
 
   const openInNewTab = useCallback(() => {
     const url =
