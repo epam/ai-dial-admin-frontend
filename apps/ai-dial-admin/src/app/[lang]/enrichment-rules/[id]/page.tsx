@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 
 import RuleDetailView from '@/src/components/Analytics/EnrichmentRules/RuleDetailView';
 import Page403 from '@/src/components/Page403/Page403';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { EnrichmentRule } from '@/src/models/analytics/rule';
 import { EvaluatorSummary } from '@/src/models/analytics/evaluator';
 import { isAnalyticsForbidden } from '@/src/server/analytics/analytics-access';
@@ -47,11 +48,13 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   }
 
   return (
-    <RuleDetailView
-      originalRule={rule}
-      evaluators={evaluators ?? []}
-      hasEvaluatorsError={evaluators == null}
-      takenTargets={takenTargets}
-    />
+    <SaveValidationContextProvider>
+      <RuleDetailView
+        originalRule={rule}
+        evaluators={evaluators ?? []}
+        hasEvaluatorsError={evaluators == null}
+        takenTargets={takenTargets}
+      />
+    </SaveValidationContextProvider>
   );
 }

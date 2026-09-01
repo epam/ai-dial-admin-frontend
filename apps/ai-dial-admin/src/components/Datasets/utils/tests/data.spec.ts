@@ -35,6 +35,17 @@ describe('expandTestCasesToRows :: dataset test cases', () => {
     expect(result[0].data).toEqual({ prompt: 'hello', expected: 'world' });
   });
 
+  test('should not let a payload field named id overwrite the platform test case id', () => {
+    const testCases: DatasetTestCase[] = [
+      { id: '3021b6c6-ddae-47f7-bcd8-85f3c1fd279d', testCaseName: 'Case 1', data: { id: 'test_case_1' } },
+    ];
+
+    const result = expandTestCasesToRows(testCases);
+
+    expect(result[0].id).toBe('3021b6c6-ddae-47f7-bcd8-85f3c1fd279d');
+    expect(result[0].data).toEqual({ id: 'test_case_1' });
+  });
+
   test('should handle multiple test cases', () => {
     const testCases: DatasetTestCase[] = [
       { testCaseName: 'Case 1', data: { a: '1' } },
@@ -268,6 +279,24 @@ describe('collapseRowsToDatasetTestCases', () => {
 
     expect(result[0]).not.toHaveProperty('multiTurnData');
     expect(result[0].data).toEqual({ prompt: 'only' });
+  });
+
+  test('should persist a payload id in data while saving against the platform test case id', () => {
+    const testCase: DatasetTestCase = {
+      id: '3021b6c6-ddae-47f7-bcd8-85f3c1fd279d',
+      testCaseName: 'Case',
+      createdAt: 0,
+      data: { id: 'test_case_1' },
+    };
+
+    const rows = expandTestCasesToRows([testCase]);
+    rows[0].data = { id: 'test_case_1_edited' };
+
+    const result = collapseRowsToDatasetTestCases(rows);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('3021b6c6-ddae-47f7-bcd8-85f3c1fd279d');
+    expect(result[0].data).toEqual({ id: 'test_case_1_edited' });
   });
 
   test('should emit data only when a multi-turn case has been reduced to one turn', () => {

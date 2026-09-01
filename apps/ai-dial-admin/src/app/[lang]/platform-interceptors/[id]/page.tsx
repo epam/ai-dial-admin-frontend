@@ -9,17 +9,12 @@ import { getInterceptor } from '../actions';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Page(params: {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<{ path: string }>;
-}) {
+export default async function Page(params: { params: Promise<{ id: string }> }) {
   let etag = DEFAULT_ETAG;
   let interceptor: DialInterceptorResource | null = null;
 
   try {
-    // Next already decodes the query param once, which restores the resource name `ResourceInfo.path`
-    // carries. Decoding again would corrupt any name containing a percent sign.
-    const path = (await params.searchParams).path;
+    const path = (await params.params).id;
 
     interceptor = await getInterceptor(path, etag).then((res) => {
       etag = res?.etag || DEFAULT_ETAG;

@@ -72,4 +72,24 @@ describe('DuplicatePlatformAsset', () => {
     expect(onClose).toHaveBeenCalled();
     expect(onDuplicate).not.toHaveBeenCalled();
   });
+
+  test('Should render a name field and a display name field for an app runner', () => {
+    renderModal(ApplicationRoute.PlatformAppRunners, runner);
+
+    expect(screen.getAllByRole('textbox')).toHaveLength(2);
+  });
+
+  test('Should render only a name field for a route, which has no displayName', () => {
+    const route = { name: 'my-route' } as PlatformAsset;
+    renderModal(ApplicationRoute.PlatformRoutes, route);
+
+    expect(screen.getAllByRole('textbox')).toHaveLength(1);
+  });
+
+  test('Should render only a name field for a role, which has no displayName', () => {
+    const role = { name: 'admin-role' } as PlatformAsset;
+    renderModal(ApplicationRoute.PlatformRoles, role);
+
+    expect(screen.getAllByRole('textbox')).toHaveLength(1);
+  });
 });

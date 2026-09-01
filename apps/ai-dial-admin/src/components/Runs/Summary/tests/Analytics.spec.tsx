@@ -108,7 +108,7 @@ describe('Runs Summary :: Analytics', () => {
     render(<Analytics run={{ id: 'run-1' } as any} />);
 
     await screen.findByText('37');
-    await screen.findByText('/43');
+    await screen.findByText('/ 43');
     expect(screen.getByText('37 Runs.Pass')).toBeInTheDocument();
     expect(screen.getByText('4 Runs.Fail')).toBeInTheDocument();
     expect(screen.getByText('2 Runs.ExecError')).toBeInTheDocument();

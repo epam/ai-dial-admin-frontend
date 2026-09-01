@@ -44,14 +44,16 @@ export const expandTestCasesToRows = <T extends CollapsibleTestCase = Collapsibl
 
   return (testCases ?? []).flatMap(({ multiTurnData, data, ...rest }) => {
     if (!multiTurnData?.length) {
-      return [{ ...rest, data: data ?? {}, ...(data ?? {}) }];
+      const payload = data ?? {};
+      // Spread payload first so entity fields (especially `id`) win over a colliding data key.
+      return [{ ...payload, ...rest, data: payload }];
     }
 
     return multiTurnData.map((turn, index) => {
       const merged = perTurnFields
         ? { ...selectSharedFields(data, perTurnFields), ...selectPerTurnFields(turn, perTurnFields) }
         : { ...(data ?? {}), ...turn };
-      return { ...rest, _turnIndex: index, data: merged, ...merged };
+      return { ...merged, ...rest, _turnIndex: index, data: merged };
     });
   });
 };

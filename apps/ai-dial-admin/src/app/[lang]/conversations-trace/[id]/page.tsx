@@ -3,7 +3,11 @@ import { notFound } from 'next/navigation';
 import ConversationDetailError from '@/src/components/Analytics/ConversationsTrace/Detail/ConversationDetailError';
 import ConversationDetailView from '@/src/components/Analytics/ConversationsTrace/Detail/ConversationDetailView';
 import Page403 from '@/src/components/Page403/Page403';
-import { ConversationDetailRow, ConversationFeedbackPage } from '@/src/models/analytics/conversations-trace';
+import {
+  ConversationDetailRow,
+  ConversationFeedbackPage,
+  ConversationTranscriptAvailability,
+} from '@/src/models/analytics/conversations-trace';
 import { AnalyticsEntitySchema } from '@/src/models/analytics/entity';
 import { ServerActionResponse } from '@/src/models/server-action';
 import { isAnalyticsForbidden } from '@/src/server/analytics/analytics-access';
@@ -29,6 +33,11 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   let conversation: ConversationDetailRow | null = null;
   let feedback: ConversationFeedbackPage | null = null;
   let isTranscriptReadable = false;
+  let bodyGrants: ConversationTranscriptAvailability = {
+    isReadable: false,
+    isRequestReadable: false,
+    isResponseReadable: false,
+  };
   let hasLoadError = false;
 
   try {
@@ -48,7 +57,10 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
       getConversationFeedback(chatId),
       getConversationTranscriptAvailability().catch((e) => {
         errorObjLog(e, 'Failed to probe the transcript body columns');
-        return { success: false, response: { isReadable: false } };
+        return {
+          success: false,
+          response: { isReadable: false, isRequestReadable: false, isResponseReadable: false },
+        };
       }),
     ]);
     const availableFields = schema.response?.fields?.map(({ name }) => name);
@@ -62,7 +74,8 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
     hasLoadError = !detail.success;
     conversation = detail.response?.conversation ?? null;
     feedback = ratings.response ?? null;
-    isTranscriptReadable = availability.response?.isReadable ?? false;
+    bodyGrants = availability.response ?? bodyGrants;
+    isTranscriptReadable = bodyGrants.isReadable;
 
     if (!detail.success) {
       errorObjLog(detail, 'Failed to fetch conversation detail data');
@@ -88,6 +101,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
       conversation={conversation}
       feedback={feedback}
       isTranscriptReadable={isTranscriptReadable}
+      bodyGrants={bodyGrants}
       nowMs={nowMs}
     />
   );

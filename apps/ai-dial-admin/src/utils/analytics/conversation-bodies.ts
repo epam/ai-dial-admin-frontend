@@ -60,7 +60,7 @@ const firstChoiceMessage = (parsed: unknown): Record<string, unknown> | null => 
   return choice && isRecord(choice.message) ? choice.message : null;
 };
 
-const sseFrames = (raw: string): string[] =>
+export const sseFrames = (raw: string): string[] =>
   raw
     .split('\n')
     .map((line) => line.trim())

@@ -10,7 +10,6 @@ import { getEntityPath } from '@/src/utils/open-in-new-tab';
 
 const VIEW = ApplicationRoute.PlatformAppRunners;
 const RUNNER_ID = 'http://asdqwe';
-const ENCODED = 'http%3A%2F%2Fasdqwe';
 
 const runner = (fields: Partial<DialAppRunnerResource>) =>
   ({ $id: RUNNER_ID, 'dial:applicationTypeDisplayName': 'Runner', ...fields }) as DialAppRunnerResource;
@@ -67,32 +66,35 @@ describe('App runner asset :: validation survives arbitrary JSON', () => {
 
 /**
  * Straight after create there is no listing row, so the only identity available is the `$id` the form
- * collected — `name` is deliberately never set for this type.
+ * collected — `name` is deliberately never set for this type. It must resolve to the same URL a
+ * listing row (`toResourceInfo` decodes `name` back to the raw `$id` for this type) would produce —
+ * a pre-encode on either side is what caused #4349's post-duplicate 404.
  */
 describe('App runner asset :: post-create navigation', () => {
-  test('Should build a detail path from $id alone', () => {
+  test('Should build a detail path from $id alone, singly encoded', () => {
     const path = getEntityPath(VIEW, { $id: RUNNER_ID } as never, false);
 
-    expect(path).toEqual(`${encodeURIComponent(RUNNER_ID)}?path=${encodeURIComponent(ENCODED)}`);
-    expect(path).not.toEqual('?path=');
+    expect(path).toEqual(encodeURIComponent(RUNNER_ID)); // 'http%3A%2F%2Fasdqwe'
+    expect(path).not.toContain('?path=');
   });
 
-  test('Should prefer an existing listing row path over deriving one', () => {
-    const path = getEntityPath(VIEW, { name: RUNNER_ID, path: ENCODED } as never, false);
+  test('Should prefer an existing listing row name over deriving one from $id', () => {
+    // Listing rows carry the decoded raw $id as `name`, not the Core-encoded form.
+    const path = getEntityPath(VIEW, { name: RUNNER_ID } as never, false);
 
-    expect(path).toEqual(`${encodeURIComponent(RUNNER_ID)}?path=${encodeURIComponent(ENCODED)}`);
+    expect(path).toEqual(encodeURIComponent(RUNNER_ID)); // 'http%3A%2F%2Fasdqwe'
   });
 
   test('Should agree with the row-click path, so both entry points reach the same resource', () => {
     expect(getEntityPath(VIEW, { $id: RUNNER_ID } as never, false)).toEqual(
-      getEntityPath(VIEW, { name: RUNNER_ID, path: ENCODED } as never, false),
+      getEntityPath(VIEW, { name: RUNNER_ID } as never, false),
     );
   });
 });
 
 describe('App runner asset :: labels', () => {
   test('Should not reuse the Builders menu label', () => {
-    const assets = MENU_CONFIGURATION(16, {} as never).find((group) => group.key === MenuI18nKey.Assets);
+    const assets = MENU_CONFIGURATION(16, {} as never).find((group) => group.key === MenuI18nKey.Catalog);
     const builders = MENU_CONFIGURATION(16, {} as never).find((group) => group.key === MenuI18nKey.Builders);
 
     const assetKey = assets?.items?.find((item) => item.href === VIEW)?.key;

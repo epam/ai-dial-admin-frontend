@@ -3,6 +3,7 @@ import { describe, expect, test } from 'vitest';
 import { MenuI18nKey } from '@/src/constants/i18n';
 import { FeatureFlags } from '@/src/models/feature-flags';
 import { ApplicationRoute } from '@/src/types/routes';
+import { getActualMenuItems } from '@/src/utils/env/get-menu-items';
 
 import { MENU_CONFIGURATION } from '../menu-configuration';
 
@@ -143,55 +144,85 @@ describe('MENU_CONFIGURATION — Assets group', () => {
     expect(skillsItem?.href).toBe(ApplicationRoute.Skills);
   });
 
-  test('Interceptors follows App Runners', () => {
+  test('does not contain any platform entity items', () => {
     const group = findAssetsGroup(baseFlags);
     const keys = group?.items.map((item) => item.key) || [];
-    const appRunnersIndex = keys.indexOf(MenuI18nKey.PlatformAppRunners);
 
-    expect(keys[appRunnersIndex + 1]).toBe(MenuI18nKey.PlatformInterceptors);
+    expect(keys).not.toContain(MenuI18nKey.PlatformModels);
+    expect(keys).not.toContain(MenuI18nKey.PlatformAppRunners);
+    expect(keys).not.toContain(MenuI18nKey.PlatformInterceptors);
+    expect(keys).not.toContain(MenuI18nKey.PlatformRoutes);
+    expect(keys).not.toContain(MenuI18nKey.PlatformRoles);
+    expect(keys).not.toContain(MenuI18nKey.PlatformKeys);
+  });
+});
+
+describe('MENU_CONFIGURATION — Catalog group', () => {
+  const findCatalogGroup = (flags: FeatureFlags) =>
+    MENU_CONFIGURATION(ICON_SIZE, flags).find((group) => group.key === MenuI18nKey.Catalog);
+
+  test('includes a group with key MenuI18nKey.Catalog under any FeatureFlags value', () => {
+    const keys = groupKeys(baseFlags);
+
+    expect(keys).toContain(MenuI18nKey.Catalog);
   });
 
-  test('Interceptors links to the platform-interceptors route', () => {
-    const group = findAssetsGroup(baseFlags);
-    const interceptorsItem = group?.items.find(
-      (item) => item.key === MenuI18nKey.PlatformInterceptors && item.href === ApplicationRoute.PlatformInterceptors,
-    );
+  test('Catalog group appears after Builders and before Assets', () => {
+    const keys = groupKeys(baseFlags);
+    const buildersIndex = keys.indexOf(MenuI18nKey.Builders);
+    const catalogIndex = keys.indexOf(MenuI18nKey.Catalog);
+    const assetsIndex = keys.indexOf(MenuI18nKey.Assets);
 
-    expect(interceptorsItem).toBeDefined();
+    expect(catalogIndex).toBeGreaterThan(buildersIndex);
+    expect(catalogIndex).toBeLessThan(assetsIndex);
   });
 
-  test('Routes follows Interceptors', () => {
-    const group = findAssetsGroup(baseFlags);
-    const keys = group?.items.map((item) => item.key) || [];
-    const interceptorsIndex = keys.indexOf(MenuI18nKey.PlatformInterceptors);
+  test('Catalog group carries CatalogDescription as its descriptionKey', () => {
+    const catalogGroup = findCatalogGroup(baseFlags);
 
-    expect(keys[interceptorsIndex + 1]).toBe(MenuI18nKey.PlatformRoutes);
+    expect(catalogGroup?.descriptionKey).toBe(MenuI18nKey.CatalogDescription);
   });
 
-  test('Routes links to the platform-routes route', () => {
-    const group = findAssetsGroup(baseFlags);
-    const routesItem = group?.items.find(
-      (item) => item.key === MenuI18nKey.PlatformRoutes && item.href === ApplicationRoute.PlatformRoutes,
-    );
+  test('Catalog group has isPreview: true', () => {
+    const catalogGroup = findCatalogGroup(baseFlags);
 
-    expect(routesItem).toBeDefined();
+    expect(catalogGroup?.isPreview).toBe(true);
   });
 
-  test('Roles follows Routes', () => {
-    const group = findAssetsGroup(baseFlags);
-    const keys = group?.items.map((item) => item.key) || [];
-    const routesIndex = keys.indexOf(MenuI18nKey.PlatformRoutes);
+  test('Catalog group contains all six platform entity items', () => {
+    const catalogGroup = findCatalogGroup(baseFlags);
+    const keys = catalogGroup?.items.map((item) => item.key) || [];
 
-    expect(keys[routesIndex + 1]).toBe(MenuI18nKey.PlatformRoles);
+    expect(keys).toContain(MenuI18nKey.PlatformModels);
+    expect(keys).toContain(MenuI18nKey.PlatformAppRunners);
+    expect(keys).toContain(MenuI18nKey.PlatformInterceptors);
+    expect(keys).toContain(MenuI18nKey.PlatformRoutes);
+    expect(keys).toContain(MenuI18nKey.PlatformRoles);
+    expect(keys).toContain(MenuI18nKey.PlatformKeys);
   });
 
-  test('Roles links to the platform-roles route', () => {
-    const group = findAssetsGroup(baseFlags);
-    const rolesItem = group?.items.find(
-      (item) => item.key === MenuI18nKey.PlatformRoles && item.href === ApplicationRoute.PlatformRoles,
-    );
+  test('platform items in Catalog have no individual isPreview flag (preview is on the group)', () => {
+    const catalogGroup = findCatalogGroup(baseFlags);
+    const platformKeys = [
+      MenuI18nKey.PlatformModels,
+      MenuI18nKey.PlatformAppRunners,
+      MenuI18nKey.PlatformInterceptors,
+      MenuI18nKey.PlatformRoutes,
+      MenuI18nKey.PlatformRoles,
+      MenuI18nKey.PlatformKeys,
+    ];
 
-    expect(rolesItem).toBeDefined();
+    for (const key of platformKeys) {
+      const item = catalogGroup?.items.find((i) => i.key === key);
+      expect(item?.isPreview).toBeUndefined();
+    }
+  });
+
+  test('getActualMenuItems includes the Catalog group when it has platform items', () => {
+    const config = MENU_CONFIGURATION(ICON_SIZE, baseFlags);
+    const actual = getActualMenuItems(config, []);
+
+    expect(actual.find((group) => group.key === MenuI18nKey.Catalog)).toBeDefined();
   });
 });
 

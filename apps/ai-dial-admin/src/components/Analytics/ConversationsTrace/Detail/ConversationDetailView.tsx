@@ -13,6 +13,7 @@ import { useI18n } from '@/src/locales/client';
 import {
   ConversationDetailRow,
   ConversationFeedbackPage,
+  ConversationTranscriptAvailability,
   SessionScope,
 } from '@/src/models/analytics/conversations-trace';
 
@@ -22,10 +23,11 @@ interface Props {
   // A schema fact, resolved at page open without any body query, so the Chat option is gated accurately
   // before the transcript itself is read.
   isTranscriptReadable: boolean;
+  bodyGrants: ConversationTranscriptAvailability;
   nowMs: number;
 }
 
-const ConversationDetailView: FC<Props> = ({ conversation, feedback, isTranscriptReadable, nowMs }) => {
+const ConversationDetailView: FC<Props> = ({ conversation, feedback, isTranscriptReadable, bodyGrants, nowMs }) => {
   const t = useI18n();
   const rows = useMemo(() => feedback?.rows ?? [], [feedback]);
   // Built once and passed down: every hop-log read for this session is scoped by it, and rebuilding it per
@@ -48,6 +50,7 @@ const ConversationDetailView: FC<Props> = ({ conversation, feedback, isTranscrip
           title={trace.title}
           spans={trace.spans}
           modelOutputs={trace.modelOutputs}
+          bodyGrants={bodyGrants}
           hasLoadError={trace.hasLoadError}
           selectedSpanId={selectedSpanId}
           onSelectSpan={onSelectSpan}

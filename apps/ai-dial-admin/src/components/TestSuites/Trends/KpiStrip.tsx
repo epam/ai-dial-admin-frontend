@@ -3,6 +3,7 @@
 import classNames from 'classnames';
 import { FC } from 'react';
 
+import RunsPassedThresholdCard from '@/src/components/TestSuites/Trends/RunsPassedThresholdCard';
 import ScoreRangeCard from '@/src/components/TestSuites/Trends/ScoreRangeCard';
 import TrendsKpiCard from '@/src/components/TestSuites/Trends/TrendsKpiCard';
 import { TrendsKpiData } from '@/src/components/TestSuites/Trends/models';
@@ -43,6 +44,9 @@ const KpiStrip: FC<Props> = ({ kpis }) => {
         latestScore={kpis.latestScore}
         runCount={kpis.runCount}
       />
+      {kpis.thresholdStats != null && (
+        <RunsPassedThresholdCard className="flex-1 sm:min-w-[180px]" stats={kpis.thresholdStats} />
+      )}
     </div>
   );
 };

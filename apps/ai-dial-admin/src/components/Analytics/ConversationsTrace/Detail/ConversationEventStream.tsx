@@ -18,6 +18,8 @@ import {
   HOP_EVENT_CHIP_CLASS,
   HOP_EVENT_LABEL_KEY,
   HOP_EVENT_RAIL_CLASS,
+  HOP_FAILED_CHIP_CLASS,
+  HOP_FAILED_RAIL_CLASS,
   NEUTRAL_CHIP_CLASS,
   TREE_GUIDE_CLASS,
   UNRECORDED_ROOT_RAIL_CLASS,
@@ -25,16 +27,33 @@ import {
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
-import { HopEventType, HopTreeNode, HopTreeRow } from '@/src/models/analytics/conversations-trace';
+import {
+  HopEmphasis,
+  HopEventType,
+  HopOutcomeFilter,
+  HopTreeNode,
+  HopTreeRow,
+} from '@/src/models/analytics/conversations-trace';
 import { formatCompactNumber, formatSignificantCost } from '@/src/utils/analytics/conversation-formatting';
 import {
   categoriesOf,
   countMatchingNodes,
   countMatchableNodes,
   flattenHopTree,
+  hasFailedNodes,
   markMatchingNodes,
 } from '@/src/utils/analytics/conversation-span-tree';
 import { formatTimeToLocalString } from '@/src/utils/formatting/date';
+
+// The rail states the outcome where there is one and the kind otherwise: a failed call is what a reader
+// scanning the tree needs to find first, and it keeps its kind on the badge beside it.
+const railClassOf = (type: HopEventType | null, isFailed: boolean): string => {
+  if (isFailed) {
+    return HOP_FAILED_RAIL_CLASS;
+  }
+
+  return type === null ? UNRECORDED_ROOT_RAIL_CLASS : HOP_EVENT_RAIL_CLASS[type];
+};
 
 const RAIL_COLUMN_CLASS = 'relative w-4 shrink-0 self-stretch';
 const RAIL_LINE_CLASS = 'absolute left-1/2 border-l';
@@ -110,6 +129,13 @@ const HopTreeRowView: FC<RowProps> = ({
         )}
         {detail && <span className="truncate font-mono text-secondary dial-caption-text">{detail}</span>}
       </span>
+      {/* Persistent, and independent of the current emphasis: a failure must not be reachable only by having
+          filtered for one. It sits beside the node's kind rather than replacing it. */}
+      {node.isFailed && (
+        <span className={classNames('shrink-0 rounded border px-1.5 py-0.5 dial-caption-text', HOP_FAILED_CHIP_CLASS)}>
+          {t(ConversationsTraceI18nKey.EventFailed)}
+        </span>
+      )}
       {node.isMatch && (
         <span className="shrink-0 rounded border border-accent-primary px-1.5 py-0.5 text-accent-primary dial-caption-text">
           {t(ConversationsTraceI18nKey.StreamMatch)}
@@ -141,13 +167,7 @@ const HopTreeRowView: FC<RowProps> = ({
     <div className="flex items-stretch gap-1">
       <RowRails ancestorHasNextSibling={ancestorHasNextSibling} depth={depth} isLastChild={isLastChild} />
       <div className={cardClassName}>
-        <span
-          aria-hidden
-          className={classNames(
-            'ml-1 h-7 shrink-0 border-l-2',
-            type === null ? UNRECORDED_ROOT_RAIL_CLASS : HOP_EVENT_RAIL_CLASS[type],
-          )}
-        />
+        <span aria-hidden className={classNames('ml-1 h-7 shrink-0 border-l-2', railClassOf(type, node.isFailed))} />
         {children.length > 0 ? (
           <DialGhostIconButton
             size={ElementSize.Small}
@@ -196,20 +216,23 @@ interface Props {
 const ConversationEventStream: FC<Props> = ({ tree, selectedSpanId, onSelectSpan }) => {
   const t = useI18n();
   const treeId = useId();
-  const [emphasisedType, setEmphasisedType] = useState<HopEventType | null>(null);
+  const [emphasis, setEmphasis] = useState<HopEmphasis | null>(null);
 
-  const markedTree = useMemo(() => markMatchingNodes(tree, emphasisedType), [tree, emphasisedType]);
+  const markedTree = useMemo(() => markMatchingNodes(tree, emphasis), [tree, emphasis]);
   const { currentTree, onToggleExpand } = useTreeExpansion(markedTree, { isDefaultExpanded: true });
   const rows = useMemo(() => flattenHopTree(currentTree), [currentTree]);
 
   const categories = useMemo(() => categoriesOf(tree), [tree]);
+  // The outcome axis gets a control only when the turn recorded a failure — a control for something the turn
+  // has none of would dim every node and mark none.
+  const hasFailures = useMemo(() => hasFailedNodes(tree), [tree]);
   const totalCount = useMemo(() => countMatchableNodes(tree), [tree]);
   const matchCount = useMemo(() => countMatchingNodes(markedTree), [markedTree]);
 
   const rowElementId = useCallback((nodeId: string) => `${treeId}-${nodeId.replace(/\s+/g, '_')}`, [treeId]);
 
-  const onEmphasiseType = useCallback(
-    (type: HopEventType) => setEmphasisedType((current) => (current === type ? null : type)),
+  const onEmphasise = useCallback(
+    (next: HopEmphasis) => setEmphasis((current) => (current === next ? null : next)),
     [],
   );
 
@@ -236,11 +259,11 @@ const ConversationEventStream: FC<Props> = ({ tree, selectedSpanId, onSelectSpan
       >
         <GhostButton
           size={ElementSize.Small}
-          aria-pressed={emphasisedType === null}
+          aria-pressed={emphasis === null}
           label={t(ConversationsTraceI18nKey.StreamTabAll)}
-          iconBefore={emphasisedType === null ? <IconCheck {...BASE_BUTTON_ICON_PROPS} aria-hidden /> : undefined}
-          onClick={() => setEmphasisedType(null)}
-          className={classNames('border', NEUTRAL_CHIP_CLASS, emphasisedType === null && 'bg-layer-4')}
+          iconBefore={emphasis === null ? <IconCheck {...BASE_BUTTON_ICON_PROPS} aria-hidden /> : undefined}
+          onClick={() => setEmphasis(null)}
+          className={classNames('border', NEUTRAL_CHIP_CLASS, emphasis === null && 'bg-layer-4')}
           textClassName="dial-tiny-text"
         />
         <span aria-hidden className="mx-1 h-4 shrink-0 border-l border-primary" />
@@ -248,16 +271,33 @@ const ConversationEventStream: FC<Props> = ({ tree, selectedSpanId, onSelectSpan
           <GhostButton
             key={type}
             size={ElementSize.Small}
-            aria-pressed={emphasisedType === type}
+            aria-pressed={emphasis === type}
             label={t(HOP_EVENT_LABEL_KEY[type])}
-            iconBefore={emphasisedType === type ? <IconCheck {...BASE_BUTTON_ICON_PROPS} aria-hidden /> : undefined}
-            onClick={() => onEmphasiseType(type)}
-            className={classNames('border', HOP_EVENT_CHIP_CLASS[type], emphasisedType === type && 'bg-layer-4')}
+            iconBefore={emphasis === type ? <IconCheck {...BASE_BUTTON_ICON_PROPS} aria-hidden /> : undefined}
+            onClick={() => onEmphasise(type)}
+            className={classNames('border', HOP_EVENT_CHIP_CLASS[type], emphasis === type && 'bg-layer-4')}
             textClassName="dial-tiny-text"
           />
         ))}
+        {hasFailures && (
+          <GhostButton
+            size={ElementSize.Small}
+            aria-pressed={emphasis === HopOutcomeFilter.Failed}
+            label={t(ConversationsTraceI18nKey.EventFailed)}
+            iconBefore={
+              emphasis === HopOutcomeFilter.Failed ? <IconCheck {...BASE_BUTTON_ICON_PROPS} aria-hidden /> : undefined
+            }
+            onClick={() => onEmphasise(HopOutcomeFilter.Failed)}
+            className={classNames(
+              'border',
+              HOP_FAILED_CHIP_CLASS,
+              emphasis === HopOutcomeFilter.Failed && 'bg-layer-4',
+            )}
+            textClassName="dial-tiny-text"
+          />
+        )}
         <span role="status" aria-live="polite" className="ml-auto font-mono text-secondary dial-caption-text">
-          {emphasisedType === null
+          {emphasis === null
             ? ''
             : t(ConversationsTraceI18nKey.StreamMatchCount, { count: matchCount, total: totalCount })}
         </span>
@@ -273,7 +313,7 @@ const ConversationEventStream: FC<Props> = ({ tree, selectedSpanId, onSelectSpan
             row={row}
             rowElementId={rowElementId}
             isSelected={row.node.span !== null && row.node.span.core_span_id === selectedSpanId}
-            isEmphasisActive={emphasisedType !== null}
+            isEmphasisActive={emphasis !== null}
             onSelect={onSelectSpan}
             onToggleExpand={onToggleExpand}
           />

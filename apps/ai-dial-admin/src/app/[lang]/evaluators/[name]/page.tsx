@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { getRules } from '@/src/app/[lang]/enrichment-rules/actions';
 import EvaluatorDetailView from '@/src/components/Analytics/Evaluators/EvaluatorDetailView';
 import Page403 from '@/src/components/Page403/Page403';
+import { SaveValidationContextProvider } from '@/src/context/SaveValidationContext';
 import { Evaluator, EvaluatorSummary } from '@/src/models/analytics/evaluator';
 import { EnrichmentRuleListItem } from '@/src/models/analytics/rule';
 import { isAnalyticsForbidden } from '@/src/server/analytics/analytics-access';
@@ -59,11 +60,13 @@ export default async function Page({ params, searchParams }: PageProps) {
   }
 
   return (
-    <EvaluatorDetailView
-      evaluator={evaluator}
-      summary={evaluators?.find((item) => item.name === name) ?? null}
-      hasSummaryError={evaluators == null}
-      referencingRules={referencingRules}
-    />
+    <SaveValidationContextProvider>
+      <EvaluatorDetailView
+        evaluator={evaluator}
+        summary={evaluators?.find((item) => item.name === name) ?? null}
+        hasSummaryError={evaluators == null}
+        referencingRules={referencingRules}
+      />
+    </SaveValidationContextProvider>
   );
 }

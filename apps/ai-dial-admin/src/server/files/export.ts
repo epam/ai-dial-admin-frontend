@@ -60,12 +60,13 @@ export const resolveExportEntries = async (
 };
 
 /**
- * A single selected file flattens to `public/<filename>`; a folder selection's children are
- * re-rooted to `public/<lastFolderSegment>/<path-relative-to-that-folder>`.
+ * A single selected file flattens to `<filename>`; a folder selection's children are re-rooted to
+ * `<lastFolderSegment>/<path-relative-to-that-folder>`. The archive path is bucket-agnostic — the
+ * destination folder chosen at import time determines the final storage location.
  */
 export const toExportArchivePath = (storagePath: string, exportFolderPath: string | null): string => {
   if (exportFolderPath === null) {
-    return `public/${getFolderNameAndPath(storagePath).name}`;
+    return getFolderNameAndPath(storagePath).name;
   }
 
   const normalizedFolder = exportFolderPath.endsWith('/') ? exportFolderPath : `${exportFolderPath}/`;
@@ -74,7 +75,7 @@ export const toExportArchivePath = (storagePath: string, exportFolderPath: strin
     ? storagePath.slice(normalizedFolder.length)
     : storagePath;
 
-  return `public/${lastSegment}/${relativePath}`;
+  return `${lastSegment}/${relativePath}`;
 };
 
 const generateExportFileName = (paths: string[]): string => {

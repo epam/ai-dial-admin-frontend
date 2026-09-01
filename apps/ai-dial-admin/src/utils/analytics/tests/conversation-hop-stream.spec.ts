@@ -8,7 +8,8 @@ import {
   HopTreeNode,
   ModelCallOutput,
 } from '@/src/models/analytics/conversations-trace';
-import { buildHopTree, isConversationHop, isFailedHop } from '@/src/utils/analytics/conversation-hop-stream';
+import { buildHopTree, isConversationHop } from '@/src/utils/analytics/conversation-hop-stream';
+import { isFailedHop } from '@/src/utils/analytics/conversation-spans';
 import { categoriesOf } from '@/src/utils/analytics/conversation-span-tree';
 
 const row = (overrides: Partial<ConversationSpanRow> = {}): ConversationSpanRow =>
@@ -151,10 +152,16 @@ describe('buildHopTree', () => {
   });
 
   // A failure must never be buried inside the nodes of the work it was attempting.
-  test('a failed hop emits one error event whatever its kind', () => {
+  // One node, and it keeps the kind of call that failed: a failed tool call and a failed model call are
+  // different problems, and typing both as an undifferentiated error said neither.
+  test('a failed hop emits one node carrying its own kind', () => {
     const built = tree([row({ success: false })], [output('s1', { text: 'ignored' })]);
 
-    expect(typesOf(built)).toEqual([HopEventType.Error]);
+    expect(typesOf(built)).toEqual([HopEventType.ModelCall]);
+  });
+
+  test('a failed hop of another kind keeps that kind', () => {
+    expect(typesOf(tree([row({ event_kind: 'embedding', success: false })]))).toEqual([HopEventType.Embedding]);
   });
 
   // The failure is the hop's, so the hop wears it — not only the event beneath it.
@@ -172,8 +179,8 @@ describe('buildHopTree', () => {
 
     expect(built).toHaveLength(1);
     expect(hopsOf(built[0].children).map(({ span }) => span?.core_span_id)).toEqual(['child']);
-    // Emphasising errors marks the failing call itself, and marks it once.
-    expect(typesOf(built)).toEqual([HopEventType.Error, HopEventType.Embedding]);
+    // Emphasising Failed marks the failing call itself, and marks it once.
+    expect(typesOf(built)).toEqual([HopEventType.ModelCall, HopEventType.Embedding]);
   });
 
   // 53 179 hops table-wide carry no event kind and are ordinary completions.

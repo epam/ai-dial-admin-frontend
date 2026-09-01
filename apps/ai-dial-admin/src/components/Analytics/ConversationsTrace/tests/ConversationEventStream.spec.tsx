@@ -72,6 +72,49 @@ const rows = () => within(screen.getByRole('group', { name: ConversationsTraceI1
 const rowFor = (text: RegExp) => rows().getAllByRole('button', { name: text })[0];
 const expanders = () => rows().queryAllByRole('button', { name: ConversationsTraceI18nKey.TreeCollapse });
 
+// The outcome axis: one control, offered only when the turn recorded a failure, marking failed nodes whatever
+// kind of call they were.
+describe('ConversationEventStream — the outcome axis', () => {
+  const FAILED_TURN = buildHopTree({
+    spans: [
+      span({ core_span_id: 'model', request_time: 1000, success: false }),
+      span({ core_span_id: 'embed', event_kind: 'embedding', deployment: 'text-embedding-3', request_time: 2000 }),
+    ],
+    modelOutputs: [],
+  });
+
+  test('offers a Failed control when the turn recorded a failure', () => {
+    renderStream(FAILED_TURN);
+
+    expect(filterFor(ConversationsTraceI18nKey.EventFailed)).toBeInTheDocument();
+  });
+
+  // A control the turn has nothing for would dim every node and mark none.
+  test('offers none when nothing failed', () => {
+    renderStream(TREE);
+
+    expect(filters().queryByRole('button', { name: new RegExp(ConversationsTraceI18nKey.EventFailed) })).toBeNull();
+  });
+
+  test('emphasising Failed marks the failed node and states the count', async () => {
+    const user = userEvent.setup();
+    renderStream(FAILED_TURN);
+
+    await user.click(filterFor(ConversationsTraceI18nKey.EventFailed));
+
+    expect(filterFor(ConversationsTraceI18nKey.EventFailed)).toHaveAttribute('aria-pressed', 'true');
+    expect(rows().getAllByText(ConversationsTraceI18nKey.StreamMatch)).toHaveLength(1);
+  });
+
+  // Persistent, and independent of the emphasis: a failure must not be reachable only by having filtered for
+  // one.
+  test('marks a failed hop whether or not anything is emphasised', () => {
+    renderStream(FAILED_TURN);
+
+    expect(rows().getAllByText(ConversationsTraceI18nKey.EventFailed).length).toBeGreaterThan(0);
+  });
+});
+
 describe('ConversationEventStream', () => {
   // A hop that called another deployment is not a peer of the call it made, and an event is not a peer of the
   // hop that emitted it.
@@ -169,7 +212,7 @@ describe('ConversationEventStream — filtering', () => {
   test('offers no control for a category the turn recorded none of', () => {
     renderStream();
 
-    expect(filters().queryByRole('button', { name: new RegExp(ConversationsTraceI18nKey.EventError) })).toBeNull();
+    expect(filters().queryByRole('button', { name: new RegExp(ConversationsTraceI18nKey.EventThinking) })).toBeNull();
     expect(filters().queryByRole('button', { name: new RegExp(ConversationsTraceI18nKey.EventSession) })).toBeNull();
   });
 

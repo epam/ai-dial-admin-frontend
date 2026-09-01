@@ -286,6 +286,44 @@ describe('useTurnGroupGrid', () => {
     expect(result.current.getDirtyRows()).toEqual([]);
   });
 
+  test('should keep the platform id when a payload field named id is edited', () => {
+    const { result } = setup();
+    const platformId = '3021b6c6-ddae-47f7-bcd8-85f3c1fd279d';
+
+    act(() => {
+      result.current.setServerRows([row(platformId, { id: 'test_case_1' })]);
+    });
+    act(() => {
+      result.current.onCellChange({ id: platformId, data: { id: 'test_case_1' } }, 'id', 'test_case_1_edited');
+    });
+
+    const rows = asRows(result.current.getCaseRows(platformId));
+    expect(rows[0].id).toBe(platformId);
+    expect(rows[0].data.id).toBe('test_case_1_edited');
+    expect(result.current.getDirtyRows().map((c) => c.id)).toEqual([platformId]);
+  });
+
+  test('should resolve a payload id edit by groupKey when the grid row id was clobbered', () => {
+    const { result } = setup();
+    const platformId = '3021b6c6-ddae-47f7-bcd8-85f3c1fd279d';
+
+    act(() => {
+      result.current.setServerRows([row(platformId, { id: 'test_case_1' })]);
+    });
+    act(() => {
+      result.current.onCellChange(
+        { id: 'test_case_1_x', groupKey: platformId, data: { id: 'test_case_1' } },
+        'id',
+        'test_case_1_xy',
+      );
+    });
+
+    const rows = asRows(result.current.getCaseRows(platformId));
+    expect(rows[0].id).toBe(platformId);
+    expect(rows[0].data.id).toBe('test_case_1_xy');
+    expect(result.current.getDirtyRows().map((c) => c.id)).toEqual([platformId]);
+  });
+
   test('should fan a shared-field edit out to every turn row of the case', () => {
     const { result } = setup();
 
