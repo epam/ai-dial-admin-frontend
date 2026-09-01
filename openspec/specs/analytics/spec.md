@@ -6127,8 +6127,9 @@ places on one screen invites them to disagree.
 
 **An event is not a hop.** One model call emits a reasoning marker, its answer, and one event per tool it
 requested, so the tree holds more nodes than the hop list — 384 hops of one measured turn become 446 nodes.
-Events SHALL be typed as: assistant text, tool request, tool result, reasoning, empty, error, session,
-embedding, and a generic type for anything unrecognised.
+Events SHALL be typed as: assistant text, tool request, tool result, reasoning, empty, session, embedding,
+and a generic type for anything unrecognised. **Failure is not one of these types** — see the outcome axis
+below.
 
 **Every node that stands for recorded work SHALL carry a category.** A category set covering events alone
 would leave every hop node unable to match anything, so emphasising *assistant text* would dim the very model
@@ -6147,6 +6148,22 @@ hop would silently mislabel it, which is the failure the deny-list rule exists t
 
 Deriving it this way also needs **no category that is not already offered**: the single-event case reuses the
 event's own category, so the set grows by **model call** alone.
+
+**Kind and outcome SHALL be two axes, never one set.** A node SHALL state what kind of call it stands for
+**and**, independently, whether that call failed. Collapsing the two into a single set makes a failed model
+call report its failure *instead of* its kind, so the reader loses the fact they were about to act on: a
+failed MCP call and a failed model call are different problems, and a set that names both "error" says
+neither.
+
+**A hop's kind SHALL be named as the hop log names it** — **LLM**, **MCP**, **Embeddings**, **Route** — with
+a generic kind for anything unrecognised. The earlier names *Deployment* and *Retrieval* SHALL NOT be used:
+they name an internal taxonomy rather than the thing the reader is looking at, and neither appears anywhere
+in the data they are reading.
+
+**A hop that failed SHALL keep its kind and carry a failure marker beside it.** A failure is either a false
+success flag or a status of 400 or above. The marker SHALL be persistent and SHALL NOT depend on the current
+emphasis, so a failure can never be buried among the nodes of the work it was attempting — the guarantee the
+single-error-node rule used to provide, now provided without discarding the kind.
 
 **The unrecorded-root placeholder SHALL carry no category**, and is the one node exempt from the rule above.
 It stands for a hop the log has no row for, so naming a category would assert what kind of call it was on no
@@ -6198,9 +6215,9 @@ root.
 across the whole turn cannot be read off it. Where a turn's hops all sit at one level — the common shape —
 sibling ordering is that global ordering.
 
-**A failed hop SHALL emit a single error node whatever kind of hop it is**, so a failure can never be buried
-among the nodes of the work it was attempting. A failure is either a false success flag or a status of 400 or
-above. A failed hop that other hops nest under SHALL keep them as its children.
+**A failed hop SHALL emit a single node whatever kind of hop it is**, carrying its kind and its failure
+marker together, so a failure is stated once rather than once per event it managed to emit. A failed hop that
+other hops nest under SHALL keep them as its children.
 
 **A reasoning event SHALL state its token count and MUST NOT claim to carry content.** The reasoning text is
 recorded nowhere; the count is its only trace, and `reasoning · 264 tok` says more than an empty node.
@@ -6240,6 +6257,11 @@ That announcement is not decoration. Because dimming changes no node's presence,
 technology gets no structural signal that the filter did anything — the pressed control says a filter is on,
 the count is the only thing that says what it found. It SHALL therefore not be dropped along with the resting
 count.
+
+**The outcome axis SHALL have exactly one control — Failed — and it SHALL be offered only when the turn
+recorded a failure.** Emphasising it SHALL mark every failed node whatever its kind, and SHALL behave in every
+other respect as a kind control does. There SHALL be no "succeeded" control: the turn's own status figure
+already states whether anything failed, and a control marking almost every node answers nothing.
 
 **Only the categories the turn actually recorded SHALL be offered.** Under dimming, a control for a category
 the turn has none of would dim every node and mark none — an unreadable screen in answer to a reasonable
@@ -6305,9 +6327,26 @@ unread body, and it SHALL be typed empty so the two remain distinguishable.
 
 #### Scenario: A failed orchestrating call is one error node
 
-- **WHEN** a hop failed and other hops nest under it
-- **THEN** the failing call itself is categorised as an error
-- **AND** emphasising errors marks it once, not twice
+- **WHEN** a model call failed and other hops nest under it
+- **THEN** the failing call renders as one node stating the kind LLM
+- **AND** it carries a failure marker beside that kind
+- **AND** emphasising Failed marks it once, not twice
+
+#### Scenario: A failed call of one kind is distinguishable from a failed call of another
+
+- **WHEN** a turn records a failed model call and a failed MCP call
+- **THEN** each node states its own kind
+- **AND** both carry a failure marker
+
+#### Scenario: The Failed control is absent when nothing failed
+
+- **WHEN** a turn recorded no failure
+- **THEN** no Failed control is offered
+
+#### Scenario: A failure marker does not depend on emphasis
+
+- **WHEN** no category is emphasised
+- **THEN** a failed node still carries its failure marker
 
 #### Scenario: The unrecorded root carries no category
 
@@ -6465,93 +6504,503 @@ unread body, and it SHALL be typed empty so the two remain distinguishable.
 - **WHEN** a category is emphasised or a node is collapsed
 - **THEN** each visible node keeps the position it had in the unfiltered tree
 
-### Requirement: A hop's own request and response are read on demand
+### Requirement: A hop's request and response render as a structured inspector
 
-The hop detail SHALL state what the selected hop sent and what came back, decoded from its recorded bodies.
-An `llm_call` hop SHALL state the last message it sent and its response text; an `mcp` hop SHALL state its
-JSON-RPC arguments and its tool result. A hop whose response carried no text SHALL state the tool names it
-requested, which exist only in a body — the hop log has no column for them.
+The hop detail SHALL state what the selected hop sent and what came back as a **Request / Response**
+inspector, not as excerpts. The two sides SHALL be separate tabs, because a reader is asking about one or the
+other and the panel is a rail, not a page.
 
-**Only the last message of an `llm_call` request SHALL be stated, and only for a role the transcript admits.**
-An inner agent-loop request carries a system prompt, a tool catalogue and the whole accumulated history, none
-of which is what a reader opening one hop is asking about — and the first two must never reach the screen. The
-role filter that protects the transcript SHALL apply here too, so this cannot become a second route to a
-leaked prompt.
+**The Request tab SHALL state the whole message list as a history**, one row per message, each carrying its
+role, its position in the list and its size in bytes. A message's text SHALL be clamped to a readable length
+with an affordance that opens the rest, and a message large enough to dominate the request SHALL be marked as
+such **in words as well as by colour** — 21% of model-call requests exceed 100 KB, and which message made it
+so is the first thing a reader wants.
 
-**Which hops have text worth opening SHALL be decided from the hop row, before any body is fetched.** The
-section SHALL be suppressed, and the reason stated in its place, when the hop's recorded response size is
-zero, when its MCP method is one of the nine protocol-envelope calls, or when its event kind is an embedding — a response that is a float vector and a request that is the probe
-string producing it. On the sampled 384-hop turn this settles 284 hops with no fetch at all: 60 that returned
-nothing, 116 session-setup calls and 108 embeddings, leaving 57 `tools/call` and 43 `llm_call`.
+**A tool call SHALL render as the message's content, not as metadata about it.** An assistant message that
+called a tool and said nothing records `content` as the empty string, so the call is the whole of what that
+message said: the row SHALL state each call's name and its arguments inline in the history. Stating a call as
+a size instead leaves a card that reads as blank, which is what a reader opening the hop is trying to resolve.
+A message that recorded neither text nor a call SHALL say so rather than render empty.
 
-**That test SHALL be a deny-list and MUST NOT be inverted into an allow-list.** An MCP method or event kind
-this frontend does not recognise SHALL default to shown. In an observability tool, silently hiding something
-unfamiliar is the worse failure: an empty panel is a puzzle a reader can resolve by looking at it, while a hop
-that never offers its text is a fact they cannot discover. A recorded response size that is absent rather than
-zero is unknown, and an unknown size SHALL NOT be read as a claim that nothing came back.
+**Per-property sizes SHALL NOT be stated.** A message's own size is stated; its members' sizes are not. The
+reader opens a hop for the history, and a property is not a unit they asked about.
 
-A suppressed hop SHALL keep its row in the hop chain, with its timing, status and nesting intact — only the
-text section is withheld, and it SHALL state why rather than rendering an empty panel.
+**The system message SHALL render, labelled by its role, like any other message.** This reverses the removed
+requirement. There SHALL be no per-role setting and no separate reveal: the bodies are already behind the
+caller's own column grant, so a second gate inside the screen would protect nothing the first does not, while
+a debugging view that withholds the prompt cannot answer the question it exists for. Every message SHALL be
+labelled with its role, so nothing can be read as something a person typed.
 
-**These bodies SHALL be fetched one hop at a time, when that hop is opened, and never with the hop chain.** A
-measured 384-hop turn carried 99.26 MiB of request bodies and 16.67 MiB of responses, with one hop reaching
-4.00 MiB; reading them with the chain would ship a hundred megabytes to render rows a reader may never open.
-The read SHALL be filtered by conversation, trace and hop, and SHALL carry the same `request_time` range bound
-as the transcript read — a single hop is a single instant, so the bound is one partition.
+**Tool definitions SHALL NOT render.** The request's tool catalogue SHALL be stated as a **count** only. A
+catalogue is thousands of tokens of someone's proprietary schema and answers no question a count does not.
 
-Decoding SHALL happen server-side and only the decoded text SHALL reach the client, exactly as the transcript
-does. The same schema gate applies: where the body columns are not in the caller's schema the section SHALL be
-absent entirely rather than explaining its own absence on every hop. A hop that recorded nothing readable and
-a hop whose read failed SHALL be stated as the different facts they are.
+**A role filter SHALL be offered, with a count per role and a control that returns to all roles.** Roles
+present in the request SHALL be offered; a role the request does not carry SHALL NOT be offered, for the same
+reason the tree offers only the categories it recorded.
 
-Re-opening a hop already read SHALL issue no second read.
+**A role this frontend does not recognise SHALL still render as a message**, under a neutral label and
+counted like any other. The history is the answer; a message dropped because its role was unfamiliar is a
+gap the reader cannot see, and the endpoint set is open by design.
 
-A read that **failed** SHALL be reported as a failure rather than in the same presentation as a hop that
-recorded nothing — the two are the different facts named above, and rendering them identically hides an outage
-behind an ordinary empty result. A decoded text long enough to scroll SHALL remain reachable by keyboard: a
-scroll container with no tab stop puts everything past its first screenful out of reach for a reader with no
-pointer.
+**The request's message count SHALL come from the hop row, not from a body.** `number_request_messages` is a
+plain column, so the count is known before anything is fetched and stays right when a body read is clamped or
+withheld. It SHALL be stated alongside the request's parameters rather than as a count on the tab itself,
+whose emphasis styling belongs to the design system and reads as a link. There SHALL be no corresponding count on the Response tab: the only response count worth stating is
+its frame count, and frames can be counted only by a pass over the raw body.
 
-#### Scenario: A hop's texts are read only when it is opened
+#### Scenario: The request states every message, not the last one
 
-- **WHEN** a turn's hop chain is rendered
-- **THEN** no hop body is fetched for a hop that has not been opened
-- **AND** opening one hop fetches that hop's bodies alone
+- **WHEN** a model-call hop whose request carried a system message and prior turns is opened
+- **THEN** the Request tab states every message the request carried
+- **AND** each message states its role, its position and its size
 
-#### Scenario: A hop with nothing worth reading is settled without a fetch
+#### Scenario: An assistant call renders as that message's content
 
-- **WHEN** a hop whose response size is zero, whose method is session setup, or whose kind is an embedding is
-  opened
+- **WHEN** a request carries an assistant message whose content is empty and which called a tool
+- **THEN** the row states the call's name and its arguments as that message's content
+- **AND** it does not state the message as empty
+
+#### Scenario: A message that recorded nothing says so
+
+- **WHEN** a request carries a message with neither text nor a tool call
+- **THEN** the row states that the message recorded no text
+
+#### Scenario: No per-property size is stated
+
+- **WHEN** the Request tab renders a message
+- **THEN** it states that message's own size
+- **AND** it states no size for any member of it
+
+#### Scenario: The system message renders under its own role
+
+- **WHEN** a request carries a system message
+- **THEN** it renders labelled as a system message
+- **AND** it is not presented as anything a user or an assistant said
+
+#### Scenario: The tool catalogue is counted, not shown
+
+- **WHEN** a request carries a tool catalogue
+- **THEN** the inspector states how many tools it carried
+- **AND** no tool definition renders
+
+#### Scenario: An unrecognised role still renders as a message
+
+- **WHEN** a request carries a message whose role this frontend does not recognise
+- **THEN** the message renders in the history under a neutral role label
+- **AND** it is counted in the role filter
+
+#### Scenario: A role the request does not carry is not offered
+
+- **WHEN** a request carries only user and assistant messages
+- **THEN** the role filter offers those roles and no others
+
+#### Scenario: The message count is read from a plain column
+
+- **WHEN** the hop chain is read
+- **THEN** the request message count comes from the hop row
+- **AND** no body column is named to obtain it
+
+### Requirement: The inspector states the parameters the request carried, and the absence of the ones it did not
+
+The inspector SHALL state the sampling parameters the request body carries, beside the tabs. It SHALL NOT
+render a hardcoded list of parameters with values looked up against it, and it SHALL NOT omit a parameter
+merely because the body did not carry one.
+
+**`temperature`, `max_tokens`, `tools` and `stream` SHALL always be stated**, showing a de-emphasised
+placeholder when the body carries none. An absent `temperature` is a debugging answer — the call ran at the
+deployment's default — and a parameter line that silently omits it cannot be told apart from one the reader
+did not look at carefully.
+
+**Every other parameter the body carries SHALL be stated when present**, and parameters this frontend does not
+recognise SHALL be **counted, not listed**: an unbounded parameter list would push the messages off a 360px
+rail to state keys that are usually vendor passthrough.
+
+**Presence SHALL be tested as "not null", never as truthiness.** `temperature: 0` is real and common — it is
+the value a reader most often wants confirmed — and `stream: false` is the fact that explains an unframed
+response. A truthiness test reports both as absent, which is the opposite of what the body says.
+
+#### Scenario: A zero-valued parameter is stated, not treated as absent
+
+- **WHEN** a request body carries `temperature: 0`
+- **THEN** the parameter line states a temperature of 0
+- **AND** it does not show the absent-value placeholder
+
+#### Scenario: An absent parameter is stated as absent
+
+- **WHEN** a request body carries no `temperature`
+- **THEN** the parameter line states temperature with a de-emphasised absent-value placeholder
+
+#### Scenario: Unrecognised parameters are counted
+
+- **WHEN** a request body carries parameters this frontend does not recognise
+- **THEN** the parameter line states how many there are
+- **AND** it does not name them individually
+
+### Requirement: The inspector reads bodies in tiers, and never ships one whole
+
+Every read and decode stays server-side, exactly as the retained payload requirement states. The inspector
+SHALL honour it by reading in **three tiers**, so that what crosses to the browser is bounded by what the
+reader has actually asked to see:
+
+1. **On opening a hop** — an envelope: the parameters, the per-role counts, and one entry per message giving
+   its role, position and size, with its text and the arguments of anything it called each clamped to a stated
+   length.
+2. **On opening one message** — that message in full: its text and the arguments of anything it called, for
+   that message alone.
+3. **On switching to raw mode** — the body as recorded, clamped to a stated budget.
+
+**A clamp SHALL state that it clamped, and by how much.** Silent truncation in an observability tool produces
+a reader who believes they have read the whole request. Where tier 3 clamps, the response SHALL state the
+recorded size alongside the size delivered.
+
+**The envelope SHALL be bounded as a whole, not only per message.** A request of 56 messages — the average for
+the messages dialect — clamped individually can still assemble into a payload larger than the rail will ever
+show, so the envelope SHALL carry a total budget and SHALL state when it was reached. Past that budget a
+message SHALL keep its role, position, size and the **names** of anything it called — the facts a reader
+decides from — and give up only its text and its arguments, which tier 2 fetches one message at a time.
+
+Sizes and counts SHALL be computed server-side from the recorded body. They are the numbers that let a reader
+decide what to open, so they SHALL be present even for a message whose text was clamped away entirely.
+
+#### Scenario: Opening a hop ships an envelope, not a body
+
+- **WHEN** a hop is opened
+- **THEN** what reaches the browser carries per-message roles, positions, sizes and clamped texts
+- **AND** it carries no whole request or response body
+
+#### Scenario: Opening one message fetches only that message
+
+- **WHEN** the reader opens the full text of one message
+- **THEN** that message's text and tool-call arguments are read server-side and returned
+- **AND** no other message's value is returned with it
+
+#### Scenario: A clamped raw body states what was withheld
+
+- **WHEN** the raw body exceeds the delivered budget
+- **THEN** the raw view states the recorded size and the delivered size
+- **AND** it states that the content was clamped
+
+#### Scenario: An envelope that reaches its total budget says so
+
+- **WHEN** a request carries more messages than the envelope budget admits
+- **THEN** the envelope states that it was clamped
+- **AND** every message still carries its role, position and size
+- **AND** a message past the budget still names anything it called, without its arguments
+
+### Requirement: Which tab has content is decided per tab, from the hop row
+
+Whether a hop has anything worth reading SHALL be decided from the hop row before any body is fetched, and
+that decision SHALL be made **per tab**.
+
+**A hop whose recorded response size is zero SHALL still offer its Request tab.** The removed requirement
+suppressed such a hop whole. A call that returned nothing is the case a reader most wants opened, and its
+request is the only record of what it attempted; only the Response tab SHALL state the absence.
+
+**The nine MCP protocol-envelope methods SHALL remain settled without a fetch, on both tabs.** They negotiate
+a session and carry no content, and `tools/list` returns the tool catalogue this requirement withholds
+anyway.
+
+**Embedding hops SHALL no longer be suppressed.** Their request body — averaging 352 B — is the probe text,
+which is the half a reader is asking about; only the response is a vector, and it is the response side that
+states so.
+
+**The test SHALL remain a deny-list.** An `event_kind` or `mcp_method` this frontend does not recognise SHALL
+default to shown, on both tabs.
+
+#### Scenario: A hop that returned nothing still shows its request
+
+- **WHEN** a hop whose recorded response size is zero is opened
+- **THEN** the Request tab states what the hop sent
+- **AND** the Response tab states that the hop returned no response body
+
+#### Scenario: A protocol-envelope hop is settled without a fetch
+
+- **WHEN** a hop whose MCP method negotiates the session is opened
 - **THEN** no body is fetched for it
-- **AND** the section states why that hop has no text
-- **AND** the hop keeps its row, its timing, its status and its nesting
+- **AND** both tabs state why that hop has no content
 
-#### Scenario: An unrecognised hop defaults to shown
+#### Scenario: An embedding hop shows its probe text
 
-- **WHEN** a hop records an MCP method or event kind this frontend does not recognise
-- **THEN** its bodies are fetched and its text is shown
+- **WHEN** an embedding hop is opened
+- **THEN** the Request tab states the text that was embedded
 
-#### Scenario: An llm_call hop states its prompt, not its history
+#### Scenario: An unrecognised hop kind defaults to shown
 
-- **WHEN** an `llm_call` hop whose request carried a system prompt and prior turns is opened
-- **THEN** the section states the last message the hop sent
-- **AND** it states neither the system prompt nor the tool catalogue
+- **WHEN** a hop records an event kind this frontend does not recognise
+- **THEN** its bodies are fetched and its content is shown
 
-#### Scenario: An mcp hop states its arguments and its result
+### Requirement: The model-call dialects are told apart by endpoint, never by body inspection
 
-- **WHEN** an `mcp` hop is opened
-- **THEN** the section states the arguments it sent
-- **AND** it states the text of the tool result
+The hop log records model calls in **three structurally different dialects**, and the inspector SHALL parse
+each with a parser chosen from the hop's `request_uri`. One mapping from endpoint to parser SHALL serve every
+tier, so the envelope and a single-message read cannot disagree about which parser a hop gets.
 
-#### Scenario: A hop that returned no text names the tools it requested
+**An empty `event_kind` is a model call, not an unclassified hop.** 168 137 such hops exist table-wide, and
+they carry the heaviest bodies in the system — averaging 166.9 KB and 56.6 messages against 68.7 KB and 9.84
+for a hop labelled `llm_call`. Gating the inspector on `event_kind` alone would leave the heaviest and most
+agentic traffic in the log unreadable.
 
-- **WHEN** a hop whose response content is empty is opened
-- **THEN** the section names the tools that response requested
+**In the messages dialect the system prompt is a top-level field, not a message** — 99.5% of a 399-hop
+sample — and message content is a list of typed blocks (`text`, `tool_use`, `thinking`), with tool results
+arriving as blocks inside a **user** message. The inspector SHALL present that dialect's system field as a
+system message, its `text` and `tool_result` blocks as the message's text, and its `tool_use` blocks as tool
+calls — so every dialect normalises into one shape and a reader never has to know which one they are looking
+at.
 
-#### Scenario: The section is absent when the body columns are withheld
+**Only chat completions carries its system prompt inside the message list; the other two carry it outside.**
+Chat completions states it as a `system`-role message, the messages dialect as a top-level `system`, and the
+Responses dialect as a top-level `instructions` (393 of 472 sampled hops). **A parser SHALL therefore never
+assume the message list is the whole request** — the rule this exists for, and the one that holds however many
+dialects arrive later.
 
-- **WHEN** the caller's schema does not report the body columns
-- **THEN** the hop detail renders no request-and-response section at all
+**The Responses dialect records neither `messages` nor `choices`.** Its request carries `input` — a string on
+most hops and an array of typed items on 47 of 472, so both SHALL be handled — and `instructions` for the
+prompt; `messages` is absent from every sampled body and SHALL NOT be reached for. Its **response** carries
+`output[]`, not `choices[].message`, even though it lands in the same assembled column: a `message` item's
+`output_text` parts are the answer (431 of 472), and a `reasoning` item's `summary_text` (219 of 472) SHALL be
+stated as reasoning and never merged into the answer. This shape states `status`, so the finish reason SHALL be
+taken from it. A streamed response — 24 of 472 — frames its events **by name**
+(`response.output_text.delta` and the rest) and its terminal `response.completed` frame carries the whole
+response object, so a stream SHALL be decoded from that frame rather than by accumulating deltas.
+
+Every figure above is measured over the **same 472 hops across 23 deployments, 2026-08-17..21**. The
+per-day spread is wide enough that a narrower window misleads: `instructions` appears on 180 of the 185 hops
+recorded on 19 August and on **none** of the 14 recorded on 18 and 20 August, and the array-shaped `input` is
+absent from 19 August entirely while accounting for 10 of 11 hops on 20 August. A figure quoted from one day
+of this endpoint's traffic describes that day and not the endpoint.
+
+**Tool use is barely exercised on this endpoint, and "barely" is not "never".** One hop in 472 recorded a
+`function_call` output item; `function_call_output` never appeared. Handling SHALL NOT be built out from the
+API documentation on that evidence — but because only a `message` item carries text, a hop that called a tool
+and said nothing else SHALL still state the call rather than render as reasoning alone with the call invisible.
+An item type this frontend does not recognise SHALL render, never be silently hidden, exactly as the hop-kind
+deny-list requires.
+
+**A role SHALL NEVER be determined by matching text against the body.** In 43% of sampled messages-dialect
+bodies that carry no system role at all, the literal `"role":"system"` occurs inside tool results and quoted
+transcripts. A substring test therefore reports a system prompt that does not exist — and, in a view that
+renders system prompts, invents one out of a user's pasted text. Roles SHALL be read from parsed structure
+only.
+
+**The endpoint families SHALL be an open set.** The frontend recognises four model-call endpoint markers and
+parses three of them. `/v1/completions` recorded **zero hops in two weeks** and SHALL be left on the raw
+fallback rather than fitted to a guess. An endpoint whose dialect this frontend cannot parse SHALL fall back to
+the raw view rather than be parsed as the nearest known dialect, which would render a confidently wrong
+message list.
+
+#### Scenario: A hop with no event kind is inspected as a model call
+
+- **WHEN** a hop records an empty event kind and a model-call endpoint
+- **THEN** the inspector opens on it
+- **AND** the dialect is chosen from the endpoint
+
+#### Scenario: The messages dialect's system field renders as a system message
+
+- **WHEN** a request carries its system prompt as a top-level field rather than as a message
+- **THEN** the Request tab states it as a system message
+
+#### Scenario: A quoted role string does not become a message
+
+- **WHEN** a request carries the text `"role":"system"` inside a tool result
+- **THEN** no system message is derived from that text
+- **AND** the roles offered are the roles the parsed structure carries
+
+#### Scenario: The Responses dialect's instructions render as a system message
+
+- **WHEN** a request carries a top-level `instructions` field and a string `input`
+- **THEN** the Request tab states the instructions as a system message
+- **AND** it states the input as a user message
+
+#### Scenario: An array input is read as messages
+
+- **WHEN** a Responses request carries `input` as an array of items with typed content parts
+- **THEN** each item renders as a message with its own role
+- **AND** its `input_text` parts are reduced to that message's text
+
+#### Scenario: The Responses dialect never reaches for `messages`
+
+- **WHEN** a Responses request carries a `messages` member
+- **THEN** no message is derived from it
+
+#### Scenario: A Responses output is decoded from its items
+
+- **WHEN** a Responses hop's assembled response carries a `message` item and a `reasoning` item
+- **THEN** the answer is the `message` item's `output_text`
+- **AND** the `reasoning` item's summary is stated separately from the answer
+- **AND** the finish reason is taken from the response's `status`
+
+#### Scenario: A Responses hop whose output was only reasoning is not reported as empty
+
+- **WHEN** a Responses hop recorded a reasoning summary and no message item
+- **THEN** the response is stated as available
+- **AND** the reasoning summary renders
+
+#### Scenario: A streamed Responses hop is decoded from its terminal frame
+
+- **WHEN** a Responses response is recorded as named server-sent events
+- **THEN** the answer is decoded from the `response.completed` frame
+- **AND** no delta accumulation is required to produce it
+
+#### Scenario: A Responses hop that called a tool and said nothing states the call
+
+- **WHEN** a Responses hop's output carries a `function_call` item and no `message` item
+- **THEN** the response states the name of the tool that was called
+- **AND** it is not reported as having recorded nothing
+
+#### Scenario: An unrecognised Responses item type still renders
+
+- **WHEN** a Responses request carries an input item of a type this frontend does not recognise
+- **THEN** that item still renders as a message
+- **AND** it is not silently dropped
+
+#### Scenario: An unparseable dialect falls back to raw
+
+- **WHEN** a model call's endpoint belongs to no dialect this frontend parses
+- **THEN** the inspector states that it cannot structure that body
+- **AND** it offers the raw view instead of an empty panel
+
+### Requirement: A response is stated in assembled form, with the recorded body as a second mode
+
+The Response tab SHALL offer two modes: **Assembled**, the response as the client received it, and **Raw**,
+the body as recorded.
+
+**Assembled SHALL be built from the shape its dialect records, not from one shape for all of them.** The
+Responses dialect lands in the same assembled column while recording `output[]` rather than
+`choices[].message`, so a single decoder finds nothing there and reports a hop that recorded a full response as
+having recorded nothing. The decode SHALL therefore be chosen by dialect.
+
+**Assembled SHALL be the mode a hop opens in**, and SHALL be built from the assembled-response column where
+the caller's schema reports it — averaging 1 511 characters against 52.8 KB for the raw body, roughly 35×
+smaller, and already carrying the finish reason, the message and the full usage breakdown. Where that column
+is absent from the schema, Assembled SHALL be decoded from the recorded response body, exactly as the
+transcript already does. The column is a later addition to the hop log and an instance predating it does not
+persist it, so its absence SHALL be handled, not assumed away.
+
+**Raw SHALL be fetched only when selected**, and clamped per the tier rules above.
+
+**Whether the response was framed SHALL be stated from the request, not derived from the response.** The
+request body's `stream` flag is present on every sampled hop and corresponds exactly to whether the recorded
+response is a sequence of server-sent frames; the parameter line already states it. The Response tab SHALL
+NOT count frames, which needs a pass over the whole raw body to state a number that answers no question the
+flag does not.
+
+#### Scenario: A hop opens on the assembled response
+
+- **WHEN** a hop with a recorded response is opened and the Response tab is selected
+- **THEN** the assembled response renders
+- **AND** the raw body has not been fetched
+
+#### Scenario: The assembled response survives a missing column
+
+- **WHEN** the caller's schema does not report the assembled-response column
+- **THEN** the assembled view is decoded from the recorded response body
+
+#### Scenario: Raw is fetched on selection
+
+- **WHEN** the reader selects the raw mode
+- **THEN** the recorded body is read server-side and returned clamped
+
+### Requirement: MCP and embedding hops state the facts their kind actually has
+
+**An MCP hop SHALL state its method, its tool name, its toolset, its arguments and its result.** The toolset
+SHALL be taken from the hop's deployment: in one measured conversation all 277 MCP hops shared a single parent
+span and were distinguishable only by it. **No session field SHALL be stated** — the hop log records no session
+column for MCP, and a field with no source is a field that will be filled with the wrong thing.
+
+`tools/call` is the only MCP method the inspector opens on; it averages 5.5 KB in and 123 KB out, so its
+result SHALL be subject to the same clamp as any other raw content.
+
+**An embedding hop SHALL state the model, the number of inputs, the dimension count, the token count and the
+text that was embedded.** It SHALL NOT render the vector: 96% of recorded vectors arrive base64-encoded, so
+any depiction of one requires decoding it first, and the result is decoration — the reader is asking what was
+embedded, not what the coordinates were.
+
+**The probe text SHALL be clamped like any other body-derived content.** A single input averages 352 B, but
+the endpoint accepts an array and a batch is assembled into one text here — the one path that would otherwise
+walk past the payload budget every other read honours.
+
+#### Scenario: An MCP hop states its arguments, its result and its toolset
+
+- **WHEN** an MCP tool call is opened
+- **THEN** the inspector states the method, the tool name and the toolset
+- **AND** it states the arguments sent and the result returned
+
+#### Scenario: No MCP session field is stated
+
+- **WHEN** an MCP hop is opened
+- **THEN** no session field is stated
+
+#### Scenario: An embedding hop states its input, not its vector
+
+- **WHEN** an embedding hop is opened
+- **THEN** the inspector states the model, the dimension count and the embedded text
+- **AND** it renders no depiction of the vector
+
+#### Scenario: A batch of embedding inputs is clamped and says so
+
+- **WHEN** an embedding hop's inputs assemble into more text than the budget admits
+- **THEN** the probe text is clamped
+- **AND** the panel states the recorded size and the delivered size
+
+### Requirement: Each side of the inspector is gated by its own recorded column
+
+The request body and the response body are separate columns of the hop log, so the caller's entitlement to
+them is separate. The inspector SHALL treat them separately: a caller whose schema reports one and not the
+other SHALL get the tab they are entitled to rather than neither.
+
+**A withheld side SHALL be stated once, not on every hop.** The statement belongs with the view's own header,
+where it explains the state for the whole session, and individual hops SHALL stay silent about it — a
+per-hop explanation repeats a fixed fact once per click.
+
+**The statistics SHALL stay visible when a body is withheld.** Sizes, token counts, message counts, status,
+duration and cost are plain columns and are not gated by the body grant; withdrawing them along with the
+bodies would withdraw facts the caller is entitled to.
+
+**A withheld body and a failed read SHALL be stated as different things**, as SHALL a hop that recorded
+nothing — three distinct facts, and rendering any two identically hides an outage behind an entitlement or an
+entitlement behind an empty result.
+
+**A panel built from both columns SHALL state each half by its own grant.** The MCP and embedding panels are
+not one side of a hop: an MCP hop's arguments are the request column and its result the response column, and
+an embedding hop's dimension count is its only response-column field. Where one column is granted and the
+other is not, the granted half SHALL render and the withheld half SHALL be stated as withheld — never as a
+hop that recorded nothing, which describes the caller's entitlement as a property of the hop.
+
+#### Scenario: A caller entitled to one side gets that side
+
+- **WHEN** the caller's schema reports the request body column but no response body column
+- **THEN** the Request tab renders
+- **AND** the Response tab states that it is withheld
+
+#### Scenario: A withheld side is explained once
+
+- **WHEN** a side is withheld and the reader opens several hops
+- **THEN** the explanation is stated with the view's header
+- **AND** no hop repeats it
+
+#### Scenario: Statistics survive a withheld body
+
+- **WHEN** both body columns are absent from the caller's schema
+- **THEN** the hop's sizes, tokens, status, duration and cost still render
+
+#### Scenario: Withheld, failed and empty are three different statements
+
+- **WHEN** a body is withheld, a read fails, and a hop recorded nothing
+- **THEN** each is stated differently from the other two
+
+#### Scenario: A half-granted MCP hop states which half was withheld
+
+- **WHEN** the caller's schema reports the request body column but no response body column
+- **AND** an MCP tool call is opened
+- **THEN** the arguments render
+- **AND** the result is stated as withheld rather than as recorded nothing
+
+#### Scenario: A half-granted embedding hop states its dimension count as withheld
+
+- **WHEN** the caller's schema reports the request body column but no response body column
+- **AND** an embedding hop is opened
+- **THEN** the probe text renders
+- **AND** the dimension count is stated as withheld rather than as absent
 
 ### Requirement: The conversation detail view switches between Chat and Trace
 
@@ -6828,11 +7277,11 @@ rows are missing — so the view SHALL neither claim completeness nor report a m
 ordered list naming the deployments a request was routed through, application first and model last. Where
 present it SHALL be rendered as that chain.
 
-Selecting a hop SHALL show its detail beside the stream: its category and status, its recorded time, its
+Selecting a hop SHALL show its detail beside the stream: its kind and its outcome, its recorded time, its
 tokens and cost, its endpoint, its upstream, its calling deployment, its HTTP status, its MCP method and tool
-where recorded, and its routing chain where recorded. Its decoded request and response text SHALL be read on
-demand for that hop alone, under **A hop's own request and response are read on demand** — a raw body MUST
-NOT reach the client in any case.
+where recorded, and its routing chain where recorded. Its request and response SHALL be read on demand for
+that hop alone, under **The inspector reads bodies in tiers, and never ships one whole** — a raw body MUST
+NOT reach the client unread, and what does reach it SHALL be bounded and state its own clamp.
 
 **Colour SHALL never be the only thing distinguishing one kind of row from another.** Every row states its
 type as text, so the rail colour is redundant by construction and the view SHALL NOT rely on a legend to

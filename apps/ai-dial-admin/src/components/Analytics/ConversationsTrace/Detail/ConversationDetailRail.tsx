@@ -55,7 +55,7 @@ const ConversationDetailRail: FC<Props> = ({
   const insightsState = conversationInsightsState(conversation);
 
   return (
-    <ConversationRailShell className="flex-col gap-4">
+    <ConversationRailShell className="flex-col gap-4 overflow-y-auto">
       {insightsState === ConversationInsightsState.Available ? (
         <ConversationDetailPanel
           icon={PANEL_ICON[Panel.Insights]}

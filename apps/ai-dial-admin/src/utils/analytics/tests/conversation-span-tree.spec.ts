@@ -5,6 +5,7 @@ import {
   HopEventSeed,
   HopEventType,
   HopNodeKind,
+  HopOutcomeFilter,
   HopTreeNode,
 } from '@/src/models/analytics/conversations-trace';
 import {
@@ -13,6 +14,7 @@ import {
   countMatchingNodes,
   countMatchableNodes,
   flattenHopTree,
+  hasFailedNodes,
   markMatchingNodes,
 } from '@/src/utils/analytics/conversation-span-tree';
 
@@ -301,11 +303,31 @@ describe('buildSpanTree — the single-event collapse', () => {
   test.each([
     ['an MCP call', HopEventType.ToolResult],
     ['an embedding call', HopEventType.Embedding],
-    ['a failed call', HopEventType.Error],
+    ['a session call', HopEventType.Session],
   ])('keeps %s own category when it acquires a child rather than reading as a model call', (_name, type) => {
     const [node] = orchestrating(type);
 
     expect(node.type).toBe(type);
+  });
+
+  // The kind/outcome split, on the shape it was most likely to break: an orchestrating call that failed. This
+  // case previously named `HopEventType.Error`, which the split deleted — and because vitest does not
+  // typecheck, `undefined` was compared to `undefined` and the assertion held while testing nothing.
+  test('a failed orchestrating call keeps its own kind and is marked failed', () => {
+    const parent = hop('parent', { event_kind: 'mcp', success: false });
+    const child = hop('child', { core_parent_span_id: 'parent', event_kind: 'embedding', request_time: 2000 });
+
+    const [node] = buildSpanTree({
+      hops: [parent, child],
+      seedsByHopId: new Map([
+        ['parent', [seed(parent, HopEventType.ToolResult)]],
+        ['child', [seed(child, HopEventType.Embedding)]],
+      ]),
+    });
+
+    expect(node.type).toBe(HopEventType.ToolResult);
+    expect(node.isFailed).toBe(true);
+    expect(hopsOf(node.children).map(({ span }) => span?.core_span_id)).toEqual(['child']);
   });
 
   // The only kind that emits several events, so it is the only category the derivation has to add.
@@ -335,10 +357,45 @@ describe('buildSpanTree — the single-event collapse', () => {
 
   // One recorded event, one match — not the hop and an event child sharing a category and reporting two.
   test('counts a one-event orchestrating call once', () => {
-    const tree = orchestrating(HopEventType.Error);
+    const tree = orchestrating(HopEventType.Session);
 
     expect(countMatchableNodes(tree)).toBe(2);
-    expect(countMatchingNodes(markMatchingNodes(tree, HopEventType.Error))).toBe(1);
+    expect(countMatchingNodes(markMatchingNodes(tree, HopEventType.Session))).toBe(1);
+  });
+});
+
+// Kind and outcome are two axes: emphasising Failed marks failed nodes whatever kind of call they were.
+describe('the outcome axis', () => {
+  const failing = (): HopTreeNode[] => {
+    const failed = hop('failed', { success: false });
+    const ok = hop('ok', { request_time: 2000 });
+
+    return build([failed, ok]);
+  };
+
+  test('emphasising Failed marks a failed node of any kind', () => {
+    const marked = markMatchingNodes(failing(), HopOutcomeFilter.Failed);
+
+    expect(countMatchingNodes(marked)).toBe(1);
+  });
+
+  test('emphasising a kind does not mark a failure of another kind', () => {
+    const failed = hop('failed', { event_kind: 'embedding', success: false });
+    const marked = markMatchingNodes(
+      buildSpanTree({ hops: [failed], seedsByHopId: new Map([['failed', [seed(failed, HopEventType.Embedding)]]]) }),
+      HopEventType.Text,
+    );
+
+    expect(countMatchingNodes(marked)).toBe(0);
+  });
+
+  test('a turn that recorded a failure offers the outcome control', () => {
+    expect(hasFailedNodes(failing())).toBe(true);
+  });
+
+  // A control the turn has nothing for would dim every node and mark none.
+  test('a turn that recorded none does not', () => {
+    expect(hasFailedNodes(build([hop('ok')]))).toBe(false);
   });
 });
 
@@ -445,11 +502,11 @@ describe('categoriesOf', () => {
 
   // Under dimming, a control for a category the turn has none of would dim every node and mark none.
   test('offers only the categories the turn recorded', () => {
-    expect(categoriesOf(treeWith([HopEventType.Text, HopEventType.Error]))).toEqual([
+    expect(categoriesOf(treeWith([HopEventType.Text, HopEventType.ToolCall]))).toEqual([
       // The call kept its node, because it emitted more than one event.
       HopEventType.ModelCall,
       HopEventType.Text,
-      HopEventType.Error,
+      HopEventType.ToolCall,
     ]);
   });
 
@@ -459,11 +516,11 @@ describe('categoriesOf', () => {
 
   // `FILTERABLE_EVENT_TYPES` stops being the rendered set and becomes the order the present ones come in.
   test('returns the present categories in the offered order, not the recorded one', () => {
-    expect(categoriesOf(treeWith([HopEventType.Error, HopEventType.ToolCall, HopEventType.Text]))).toEqual([
+    expect(categoriesOf(treeWith([HopEventType.Session, HopEventType.ToolCall, HopEventType.Text]))).toEqual([
       HopEventType.ModelCall,
       HopEventType.Text,
       HopEventType.ToolCall,
-      HopEventType.Error,
+      HopEventType.Session,
     ]);
   });
 

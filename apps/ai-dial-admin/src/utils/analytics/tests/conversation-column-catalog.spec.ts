@@ -452,6 +452,8 @@ describe('transcriptBodyFields', () => {
   test('reads a transcript when the request body and both response columns are reported', () => {
     expect(transcriptBodyFields(ALL)).toEqual({
       isReadable: true,
+      isRequestReadable: true,
+      isResponseReadable: true,
       responseFields: [UsageLogField.AssembledResponse, UsageLogField.ResponseBody],
     });
   });
@@ -461,6 +463,8 @@ describe('transcriptBodyFields', () => {
   test('reads a transcript from the raw body alone when the assembled column is absent', () => {
     expect(transcriptBodyFields([UsageLogField.RequestBody, UsageLogField.ResponseBody])).toEqual({
       isReadable: true,
+      isRequestReadable: true,
+      isResponseReadable: true,
       responseFields: [UsageLogField.ResponseBody],
     });
   });
@@ -468,6 +472,8 @@ describe('transcriptBodyFields', () => {
   test('prefers the assembled column when it is the only response column reported', () => {
     expect(transcriptBodyFields([UsageLogField.RequestBody, UsageLogField.AssembledResponse])).toEqual({
       isReadable: true,
+      isRequestReadable: true,
+      isResponseReadable: true,
       responseFields: [UsageLogField.AssembledResponse],
     });
   });
@@ -477,23 +483,47 @@ describe('transcriptBodyFields', () => {
   test('reads no transcript when the schema reports none of them', () => {
     expect(transcriptBodyFields([UsageLogField.ChatId, UsageLogField.TraceId])).toEqual({
       isReadable: false,
+      isRequestReadable: false,
+      isResponseReadable: false,
       responseFields: [],
     });
+  });
+
+  // The transcript needs both a question and an answer, but the inspector offers the two sides
+  // independently — so a caller granted one column and not the other gets the tab they are entitled to.
+  test('states the two sides separately from the conjoined transcript verdict', () => {
+    const requestOnly = transcriptBodyFields([UsageLogField.RequestBody]);
+
+    expect(requestOnly.isReadable).toBe(false);
+    expect(requestOnly.isRequestReadable).toBe(true);
+    expect(requestOnly.isResponseReadable).toBe(false);
   });
 
   test('reads no transcript without the request body, whatever the response columns say', () => {
     expect(transcriptBodyFields([UsageLogField.ResponseBody, UsageLogField.AssembledResponse])).toEqual({
       isReadable: false,
+      isRequestReadable: false,
+      isResponseReadable: true,
       responseFields: [UsageLogField.AssembledResponse, UsageLogField.ResponseBody],
     });
   });
 
   test('reads no transcript when the request body is reported but no response column is', () => {
-    expect(transcriptBodyFields([UsageLogField.RequestBody])).toEqual({ isReadable: false, responseFields: [] });
+    expect(transcriptBodyFields([UsageLogField.RequestBody])).toEqual({
+      isReadable: false,
+      isRequestReadable: true,
+      isResponseReadable: false,
+      responseFields: [],
+    });
   });
 
   test('reads no transcript from an unread schema', () => {
-    expect(transcriptBodyFields()).toEqual({ isReadable: false, responseFields: [] });
+    expect(transcriptBodyFields()).toEqual({
+      isReadable: false,
+      isRequestReadable: false,
+      isResponseReadable: false,
+      responseFields: [],
+    });
   });
 });
 

@@ -1,10 +1,11 @@
 import { describe, expect, test } from 'vitest';
 
-import { ConversationSpanRow, HopTextSuppression, SpanCategory } from '@/src/models/analytics/conversations-trace';
+import { ConversationSpanRow, HopSideSuppression, SpanKind } from '@/src/models/analytics/conversations-trace';
 import {
   areSpansPartial,
-  hopTextSuppressionOf,
-  spanCategoryOf,
+  hopSideSuppressionsOf,
+  isFailedHop,
+  spanKindOf,
   spanLabelOf,
 } from '@/src/utils/analytics/conversation-spans';
 
@@ -24,17 +25,20 @@ const span = (overrides: Partial<ConversationSpanRow> = {}): ConversationSpanRow
   deployment_price: '0.001',
   request_time: '2026-08-13T10:59:05.600Z',
   response_body_bytes: 4096,
+  request_body_bytes: 2048,
+  number_request_messages: 3,
+  reasoning_tokens: null,
   ...overrides,
 });
 
-describe('spanCategoryOf', () => {
+describe('spanKindOf', () => {
   test.each([
-    ['llm_call', SpanCategory.Deployment],
-    ['embedding', SpanCategory.Embedding],
-    ['mcp', SpanCategory.Retrieval],
-    ['route', SpanCategory.Route],
+    ['llm_call', SpanKind.Llm],
+    ['embedding', SpanKind.Embeddings],
+    ['mcp', SpanKind.Mcp],
+    ['route', SpanKind.Route],
   ])('maps event kind %s to its category', (event_kind, expected) => {
-    expect(spanCategoryOf(span({ event_kind }))).toBe(expected);
+    expect(spanKindOf(span({ event_kind }))).toBe(expected);
   });
 
   // A hop with no `event_kind` is not an unknown hop: 53 179 table-wide are ordinary model calls DIAL did not
@@ -42,25 +46,24 @@ describe('spanCategoryOf', () => {
   test.each(['/anthropic/v1/messages', '/openai/v1/responses', '/claude_code_router/v1/messages'])(
     'classifies an unlabelled call to %s as a model call',
     (request_uri) => {
-      expect(spanCategoryOf(span({ event_kind: '', request_uri }))).toBe(SpanCategory.Deployment);
+      expect(spanKindOf(span({ event_kind: '', request_uri }))).toBe(SpanKind.Llm);
     },
   );
 
   // The endpoint is what identifies it, so an unlabelled hop to something else is still unclassified rather
   // than guessed at.
   test('leaves an unlabelled hop to an unrecognised endpoint as other', () => {
-    expect(spanCategoryOf(span({ event_kind: '', request_uri: '/v1/deployments/x/tokenize' }))).toBe(
-      SpanCategory.Other,
-    );
+    expect(spanKindOf(span({ event_kind: '', request_uri: '/v1/deployments/x/tokenize' }))).toBe(SpanKind.Other);
   });
 
-  // On a trace the reader is scanning for what broke, so failure outranks what the hop was doing.
-  test('a failed hop is categorised as an error whatever its kind', () => {
-    expect(spanCategoryOf(span({ event_kind: 'embedding', success: false }))).toBe(SpanCategory.Error);
+  // Kind and outcome are two axes. A failed embedding is still an embedding — reporting it as an undammed
+  // "error" was what made a failed tool call and a failed model call look like the same problem.
+  test('a failed hop keeps its kind', () => {
+    expect(spanKindOf(span({ event_kind: 'embedding', success: false }))).toBe(SpanKind.Embeddings);
   });
 
   test('an unknown kind falls back rather than throwing', () => {
-    expect(spanCategoryOf(span({ event_kind: 'something-new' }))).toBe(SpanCategory.Other);
+    expect(spanKindOf(span({ event_kind: 'something-new' }))).toBe(SpanKind.Other);
   });
 });
 
@@ -107,54 +110,67 @@ describe('spanLabelOf :: MCP hops', () => {
   });
 });
 
-describe('hopTextSuppressionOf', () => {
+describe('isFailedHop', () => {
+  test('a false success flag and an error status are both failures', () => {
+    expect(isFailedHop(span({ success: false }))).toBe(true);
+    expect(isFailedHop(span({ response_status: 404 }))).toBe(true);
+    expect(isFailedHop(span({ response_status: 500 }))).toBe(true);
+  });
+
+  test('a successful hop is not a failure', () => {
+    expect(isFailedHop(span())).toBe(false);
+  });
+});
+
+describe('hopSideSuppressionsOf', () => {
   const hop = (overrides: Partial<ConversationSpanRow> = {}) => span({ response_body_bytes: 4096, ...overrides });
 
-  test('a hop that returned a body has text worth opening', () => {
-    expect(hopTextSuppressionOf(hop())).toBeNull();
+  test('a hop that returned a body has both sides worth opening', () => {
+    expect(hopSideSuppressionsOf(hop())).toEqual({ request: null, response: null });
   });
 
-  test('a hop that returned nothing is suppressed', () => {
-    expect(hopTextSuppressionOf(hop({ response_body_bytes: 0 }))).toBe(HopTextSuppression.NoResponse);
+  // The case most worth opening: a call that returned nothing still sent something, and its request is the
+  // only record of what it attempted.
+  test('a hop that returned nothing keeps its request side', () => {
+    expect(hopSideSuppressionsOf(hop({ response_body_bytes: 0 }))).toEqual({
+      request: null,
+      response: HopSideSuppression.NoResponse,
+    });
   });
 
-  test.each(['initialize', 'notifications/initialized', 'tools/list'])('the %s handshake is suppressed', (method) => {
-    expect(hopTextSuppressionOf(hop({ event_kind: 'mcp', mcp_method: method }))).toBe(HopTextSuppression.SessionSetup);
-  });
+  test.each(['initialize', 'notifications/initialized', 'tools/list'])(
+    'the %s handshake settles both sides',
+    (method) => {
+      expect(hopSideSuppressionsOf(hop({ event_kind: 'mcp', mcp_method: method }))).toEqual({
+        request: HopSideSuppression.SessionSetup,
+        response: HopSideSuppression.SessionSetup,
+      });
+    },
+  );
 
-  // The response is a float vector and the request is the probe string that produced it. Neither is text.
-  test('an embedding is suppressed', () => {
-    expect(hopTextSuppressionOf(hop({ event_kind: 'embedding' }))).toBe(HopTextSuppression.Embedding);
+  // Only the response is a vector. The request averages 352 B and is the probe text — the half the reader is
+  // actually asking about.
+  test('an embedding keeps its request side and suppresses only the vector', () => {
+    expect(hopSideSuppressionsOf(hop({ event_kind: 'embedding' }))).toEqual({
+      request: null,
+      response: HopSideSuppression.Vector,
+    });
   });
 
   test('a tools/call is not suppressed', () => {
-    expect(hopTextSuppressionOf(hop({ event_kind: 'mcp', mcp_method: 'tools/call' }))).toBeNull();
+    expect(hopSideSuppressionsOf(hop({ event_kind: 'mcp', mcp_method: 'tools/call' }))).toEqual({
+      request: null,
+      response: null,
+    });
   });
 
   // A deny-list, not an allow-list. In an observability tool, silently hiding something unrecognised is the
   // worse failure: an empty panel is a puzzle a reader can resolve by looking, while a hop that never offers
-  // its text is a fact they cannot discover.
+  // its content is a fact they cannot discover.
   test('an unrecognised MCP method defaults to shown', () => {
-    expect(hopTextSuppressionOf(hop({ event_kind: 'mcp', mcp_method: 'resources/subscribe' }))).toBeNull();
-  });
-
-  test('an unrecognised event kind defaults to shown', () => {
-    expect(hopTextSuppressionOf(hop({ event_kind: 'rerank' }))).toBeNull();
-  });
-
-  test('a hop that recorded neither a kind nor a method defaults to shown', () => {
-    expect(hopTextSuppressionOf(hop({ event_kind: null, mcp_method: null }))).toBeNull();
-  });
-
-  // An unrecorded size is unknown, and an unknown size is not a claim that nothing came back.
-  test('an unrecorded response size is not read as an empty response', () => {
-    expect(hopTextSuppressionOf(hop({ response_body_bytes: null }))).toBeNull();
-  });
-
-  // Nothing came back at all, so there is no text whatever the hop was doing.
-  test('an empty response outranks the kind of hop it was', () => {
-    expect(hopTextSuppressionOf(hop({ response_body_bytes: 0, event_kind: 'embedding' }))).toBe(
-      HopTextSuppression.NoResponse,
-    );
+    expect(hopSideSuppressionsOf(hop({ event_kind: 'mcp', mcp_method: 'resources/subscribe' }))).toEqual({
+      request: null,
+      response: null,
+    });
   });
 });

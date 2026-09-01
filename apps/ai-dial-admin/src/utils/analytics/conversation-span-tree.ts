@@ -3,15 +3,17 @@ import { buildTreeFromParentPointer } from '@/src/components/Common/TreeGrid/uti
 import { FILTERABLE_EVENT_TYPES } from '@/src/constants/analytics/conversations-trace';
 import {
   ConversationSpanRow,
+  HopEmphasis,
   HopEventSeed,
   HopEventType,
   HopNodeData,
   HopNodeKind,
+  HopOutcomeFilter,
   HopTreeNode,
   HopTreeRow,
 } from '@/src/models/analytics/conversations-trace';
 import { toMillis } from '@/src/utils/analytics/conversation-formatting';
-import { spanLabelOf } from '@/src/utils/analytics/conversation-spans';
+import { isFailedHop, spanLabelOf } from '@/src/utils/analytics/conversation-spans';
 import { toNumber } from '@/src/utils/analytics/scalar';
 
 type SpanTreeRow = TreeRow<ConversationSpanRow>;
@@ -47,7 +49,7 @@ const eventNodesOf = (seeds: HopEventSeed[], hopId: string): HopTreeNode[] =>
         reasoningTokens: seed.reasoningTokens ?? null,
         cost: null,
         hasNoRecordedResult: seed.hasNoRecordedResult ?? false,
-        isFailed: seed.type === HopEventType.Error,
+        isFailed: isFailedHop(seed.span),
         position: 0,
         isMatch: false,
       },
@@ -129,7 +131,7 @@ export const buildSpanTree = ({ hops, seedsByHopId }: SpanTreeParams): HopTreeNo
 
   const toHopNode = (row: SpanTreeRow): HopTreeNode => {
     const seeds = seedsByHopId.get(row.core_span_id) ?? [];
-    const isFailed = seeds.some(({ type }) => type === HopEventType.Error);
+    const isFailed = isFailedHop(row);
     const childHops = row.children.map(toHopNode);
     const hop: HopNodeData = {
       kind: HopNodeKind.Hop,
@@ -173,18 +175,37 @@ export const buildSpanTree = ({ hops, seedsByHopId }: SpanTreeParams): HopTreeNo
   return withPositions(name === null ? roots : [unrecordedRootOf(name, roots)]);
 };
 
-export const markMatchingNodes = (tree: HopTreeNode[], type: HopEventType | null): HopTreeNode[] =>
+// Emphasis is one of two axes: a kind, matched against the node's type, or the outcome axis, matched against
+// the node's recorded failure whatever kind it was.
+export const markMatchingNodes = (tree: HopTreeNode[], emphasis: HopEmphasis | null): HopTreeNode[] =>
   tree.map((node) => ({
     ...node,
-    isMatch: type !== null && node.type === type,
-    children: markMatchingNodes(node.children, type),
+    isMatch: isEmphasised(node, emphasis),
+    children: markMatchingNodes(node.children, emphasis),
   }));
+
+const isEmphasised = (node: HopTreeNode, emphasis: HopEmphasis | null): boolean => {
+  if (emphasis === null) {
+    return false;
+  }
+
+  if (emphasis === HopOutcomeFilter.Failed) {
+    return node.isFailed;
+  }
+
+  return node.type === emphasis;
+};
 
 export const countMatchableNodes = (tree: HopTreeNode[]): number =>
   tree.reduce((total, { type, children }) => total + (type === null ? 0 : 1) + countMatchableNodes(children), 0);
 
 export const countMatchingNodes = (tree: HopTreeNode[]): number =>
   tree.reduce((total, { isMatch, children }) => total + (isMatch ? 1 : 0) + countMatchingNodes(children), 0);
+
+// Whether the turn recorded any failure at all — which is what decides whether the outcome axis gets a
+// control. A control the turn has nothing for would dim every node and mark none.
+export const hasFailedNodes = (tree: HopTreeNode[]): boolean =>
+  tree.some(({ isFailed, children }) => isFailed || hasFailedNodes(children));
 
 export const categoriesOf = (tree: HopTreeNode[]): HopEventType[] => {
   const present = new Set<HopEventType>();
