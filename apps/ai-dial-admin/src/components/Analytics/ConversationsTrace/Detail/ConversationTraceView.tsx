@@ -7,7 +7,6 @@ import { FC, useMemo } from 'react';
 
 import ConversationSpanDetail from '@/src/components/Analytics/ConversationsTrace/Detail/ConversationSpanDetail';
 import ConversationEventStream from '@/src/components/Analytics/ConversationsTrace/Detail/ConversationEventStream';
-import { useHopBodies } from '@/src/components/Analytics/ConversationsTrace/Detail/use-hop-bodies';
 import { COST_TEXT_CLASS, UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace';
 import { BASE_BUTTON_ICON_PROPS } from '@/src/constants/main-layout';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
@@ -15,6 +14,7 @@ import { useI18n } from '@/src/locales/client';
 import {
   ConversationSpanRow,
   ConversationTraceFigures,
+  ConversationTranscriptAvailability,
   ModelCallOutput,
   SessionScope,
 } from '@/src/models/analytics/conversations-trace';
@@ -25,10 +25,20 @@ import {
   toMillis,
 } from '@/src/utils/analytics/conversation-formatting';
 import { toNumber } from '@/src/utils/analytics/scalar';
-import { areSpansPartial, spanCategoryOf } from '@/src/utils/analytics/conversation-spans';
+import { areSpansPartial, isFailedHop, spanKindOf } from '@/src/utils/analytics/conversation-spans';
 import { buildHopTree } from '@/src/utils/analytics/conversation-hop-stream';
 
 const ICON_SIZE = 16;
+
+// Which side, if either, the caller's schema withholds. Both withheld states the request first: it is the
+// side a reader opens a hop for.
+const withheldNoticeKeyOf = ({ isRequestReadable, isResponseReadable }: ConversationTranscriptAvailability) => {
+  if (!isRequestReadable) {
+    return ConversationsTraceI18nKey.InspectorWithheldRequest;
+  }
+
+  return isResponseReadable ? null : ConversationsTraceI18nKey.InspectorWithheldResponse;
+};
 
 interface StatProps {
   label: string;
@@ -52,6 +62,7 @@ interface Props {
   figures: ConversationTraceFigures;
   spans: ConversationSpanRow[];
   modelOutputs: ModelCallOutput[];
+  bodyGrants: ConversationTranscriptAvailability;
   hasLoadError: boolean;
   selectedSpanId: string | null;
   onSelectSpan: (coreSpanId: string) => void;
@@ -64,6 +75,7 @@ const ConversationTraceView: FC<Props> = ({
   figures,
   spans,
   modelOutputs,
+  bodyGrants,
   hasLoadError,
   selectedSpanId,
   onSelectSpan,
@@ -78,18 +90,15 @@ const ConversationTraceView: FC<Props> = ({
       selectedSpan
         ? {
             span: selectedSpan,
-            category: spanCategoryOf(selectedSpan),
+            kind: spanKindOf(selectedSpan),
+            hasFailed: isFailedHop(selectedSpan),
             startedAtMs: toMillis(selectedSpan.request_time),
           }
         : null,
     [selectedSpan],
   );
-  const {
-    bodies,
-    isLoading: isLoadingBodies,
-    suppression: bodiesSuppression,
-  } = useHopBodies(scope, figures.traceId, selectedSpan);
   const hopCount = toNumber(figures.spans);
+  const withheldKey = withheldNoticeKeyOf(bodyGrants);
   const isFailed = (toNumber(figures.failedSpans) ?? 0) > 0;
 
   return (
@@ -149,6 +158,14 @@ const ConversationTraceView: FC<Props> = ({
         </p>
       )}
 
+      {/* A withheld body column is a fixed fact about this account, so it is stated once for the whole view.
+          Repeating it inside every hop would explain the same thing again on every click. */}
+      {withheldKey && (
+        <p role="status" aria-live="polite" className="dial-tiny-text text-secondary">
+          {t(withheldKey)} {t(ConversationsTraceI18nKey.InspectorWithheldStats)}
+        </p>
+      )}
+
       <div className="flex min-h-0 flex-1 rounded border border-primary">
         <div className="flex min-h-0 flex-1 overflow-hidden bg-layer-1">
           {hasLoadError ? (
@@ -159,12 +176,7 @@ const ConversationTraceView: FC<Props> = ({
             <ConversationEventStream tree={tree} selectedSpanId={selectedSpanId} onSelectSpan={onSelectSpan} />
           )}
         </div>
-        <ConversationSpanDetail
-          node={selected}
-          bodies={bodies}
-          isLoadingBodies={isLoadingBodies}
-          bodiesSuppression={bodiesSuppression}
-        />
+        <ConversationSpanDetail node={selected} scope={scope} traceId={figures.traceId} bodyGrants={bodyGrants} />
       </div>
     </div>
   );

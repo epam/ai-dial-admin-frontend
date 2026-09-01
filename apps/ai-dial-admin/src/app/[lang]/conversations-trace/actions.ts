@@ -16,7 +16,6 @@ import {
   ConversationFieldValuesRequest,
   ConversationFilterOperator,
   ConversationFilters,
-  ConversationHopBodies,
   ModelCallOutput,
   ConversationPageRequest,
   ConversationPeriodSummary,
@@ -33,8 +32,19 @@ import {
   ConversationTranscript,
   ConversationTotals,
   ConversationTotalsField,
-  HopTextsState,
+  HopDialect,
+  HopEmbeddingFacts,
+  HopInspectorSide,
+  HopMcpFacts,
+  HopParams,
+  HopMessageValue,
+  HopRawBody,
+  HopReadState,
+  HopRequestEnvelope,
+  HopResponseEnvelope,
+  TranscriptBodyFields,
   TranscriptState,
+  UsageLogField,
   ConversationTracePage,
   ConversationTracePageRow,
   ConversationTraceGroup,
@@ -102,7 +112,17 @@ import {
   carriesWholeConversation,
   transcriptStateOf,
 } from '@/src/utils/analytics/conversation-transcript';
-import { hopTextsOf } from '@/src/utils/analytics/conversation-hop-texts';
+import { dialectOf, messagesForDialect } from '@/src/utils/analytics/hop-inspector/dialect';
+import { embeddingFactsOf } from '@/src/utils/analytics/hop-inspector/embedding';
+import {
+  buildRequestEnvelope,
+  NO_CLAMP,
+  parseJson,
+  textByteLength,
+} from '@/src/utils/analytics/hop-inspector/envelope';
+import { mcpFactsOf } from '@/src/utils/analytics/hop-inspector/mcp';
+import { paramsOf } from '@/src/utils/analytics/hop-inspector/params';
+import { responseEnvelopeOf, rawBodyOf } from '@/src/utils/analytics/hop-inspector/response';
 import { isConversationHop } from '@/src/utils/analytics/conversation-hop-stream';
 import { isModelCall } from '@/src/utils/analytics/conversation-spans';
 import { modelOutputOf, splitModelBodyBudget, unreadOutputOf } from '@/src/utils/analytics/conversation-model-outputs';
@@ -652,52 +672,258 @@ export async function getConversationTracePage(
   };
 }
 
-const NO_HOP_TEXTS = { sent: null, received: null, toolCalls: [] };
+// One hop's body row, read the way the retained payload requirement demands: filtered by session, trace and
+// hop, and bounded by that hop's own instant — a single instant is a single partition, measured at 71-337 ms.
+// Every tier below re-reads it rather than holding a parsed body between calls: server actions here are
+// stateless and the app runs no server cache, and introducing one for a debugging panel is more new surface
+// than a re-read of one partition costs.
+interface HopBodyRead {
+  row?: ConversationEntryBodyRow;
+  state: HopReadState;
+  fields: TranscriptBodyFields;
+}
 
-const hopBodiesOf = (state: HopTextsState): ConversationHopBodies => ({ state, ...NO_HOP_TEXTS });
+const bodyFieldsFor = (side: HopInspectorSide, fields: TranscriptBodyFields): UsageLogField[] => {
+  if (side === HopInspectorSide.Request) {
+    return [UsageLogField.RequestBody];
+  }
 
-export async function getConversationHopBodies(
+  return fields.responseFields;
+};
+
+const isSideReadable = (side: HopInspectorSide, fields: TranscriptBodyFields): boolean =>
+  side === HopInspectorSide.Request ? fields.isRequestReadable : fields.isResponseReadable;
+
+async function readHopBody(
   scope: SessionScope,
   traceId: string,
   coreSpanId: string,
   requestTime: number | string | null,
-): Promise<ServerActionResponse<ConversationHopBodies>> {
+  sides: HopInspectorSide[],
+): Promise<HopBodyRead> {
   const authToken = await token();
   const schema = await withEntitySchemaCache(USAGE_LOG_ENTITY, authToken, () =>
     analyticsDataApi.getEntitySchema(USAGE_LOG_ENTITY, authToken),
   );
 
+  const fields = transcriptBodyFields(schema?.fields?.map(({ name }) => name) ?? []);
+
   if (!schema) {
-    return { success: false, response: hopBodiesOf(HopTextsState.LoadFailed) };
+    return { state: HopReadState.LoadFailed, fields };
   }
 
-  const schemaFieldNames = schema.fields?.map(({ name }) => name) ?? [];
-  if (!transcriptBodyFields(schemaFieldNames).isReadable) {
-    return { success: true, response: hopBodiesOf(HopTextsState.ColumnsUnavailable) };
+  const readable = sides.filter((side) => isSideReadable(side, fields));
+  if (!readable.length) {
+    return { state: HopReadState.ColumnWithheld, fields };
   }
 
+  const bodyFields = [...new Set(readable.flatMap((side) => bodyFieldsFor(side, fields)))];
   const result = await analyticsDataApi.executeAction(
-    buildConversationHopBodyQuery(scope, traceId, coreSpanId, requestTime, schemaFieldNames),
+    buildConversationHopBodyQuery(scope, traceId, coreSpanId, requestTime, bodyFields),
     authToken,
   );
 
   if (!result.success) {
     errorObjLog(result, 'Failed to fetch the conversation hop bodies');
-    return { ...result, response: hopBodiesOf(HopTextsState.LoadFailed) };
+    return { state: HopReadState.LoadFailed, fields };
   }
 
   const row = (result.response?.rows ?? [])[0] as unknown as ConversationEntryBodyRow | undefined;
+
+  return row ? { row, state: HopReadState.Available, fields } : { state: HopReadState.NoBody, fields };
+}
+
+const EMPTY_PARAMS: HopParams = { stated: [], unrecognisedCount: 0 };
+
+const emptyRequestEnvelope = (state: HopReadState): HopRequestEnvelope => ({
+  state,
+  dialect: HopDialect.Unknown,
+  params: EMPTY_PARAMS,
+  messages: [],
+  roleCounts: [],
+  recordedBytes: null,
+  isClamped: false,
+});
+
+// Tier 1. What crosses to the browser is an envelope — roles, positions, sizes, property names and sizes, and
+// each text clamped — never a body. A dialect no parser claims resolves to `Unstructured`, which the panel
+// answers with the raw view rather than with an empty result.
+export async function getConversationHopRequest(
+  scope: SessionScope,
+  traceId: string,
+  coreSpanId: string,
+  requestTime: number | string | null,
+): Promise<ServerActionResponse<HopRequestEnvelope>> {
+  const { row, state } = await readHopBody(scope, traceId, coreSpanId, requestTime, [HopInspectorSide.Request]);
+
   if (!row) {
-    return { success: true, response: hopBodiesOf(HopTextsState.NoBodies) };
+    return { success: state !== HopReadState.LoadFailed, response: emptyRequestEnvelope(state) };
   }
 
-  const texts = hopTextsOf(row);
-  const hasText = texts.sent !== null || texts.received !== null || texts.toolCalls.length > 0;
+  const dialect = dialectOf(row.request_uri ?? null);
+  const parsed = parseJson(row.request_body);
+  const params = paramsOf(parsed);
+  const recordedBytes = row.request_body === null ? null : textByteLength(row.request_body);
+
+  if (dialect === HopDialect.Unknown) {
+    return {
+      success: true,
+      response: { ...emptyRequestEnvelope(HopReadState.Unstructured), params, recordedBytes },
+    };
+  }
+
+  const messages = messagesForDialect(dialect, parsed);
+
+  if (!messages.length) {
+    return {
+      success: true,
+      response: { ...emptyRequestEnvelope(HopReadState.NoBody), dialect, params, recordedBytes },
+    };
+  }
+
+  return { success: true, response: buildRequestEnvelope({ dialect, params, messages, recordedBytes }) };
+}
+
+const emptyResponseEnvelope = (state: HopReadState): HopResponseEnvelope => ({
+  state,
+  text: null,
+  textClamp: NO_CLAMP,
+  reasoningText: null,
+  finishReason: null,
+  toolCalls: [],
+  recordedBytes: null,
+});
+
+export async function getConversationHopResponse(
+  scope: SessionScope,
+  traceId: string,
+  coreSpanId: string,
+  requestTime: number | string | null,
+): Promise<ServerActionResponse<HopResponseEnvelope>> {
+  const { row, state } = await readHopBody(scope, traceId, coreSpanId, requestTime, [HopInspectorSide.Response]);
+
+  if (!row) {
+    return { success: state !== HopReadState.LoadFailed, response: emptyResponseEnvelope(state) };
+  }
+
+  return { success: true, response: responseEnvelopeOf(row, dialectOf(row.request_uri ?? null)) };
+}
+
+// Tier 2. One message, in full — its text and the arguments of anything it called. A reader who opens five
+// messages issues five reads of the same row; that is the deliberate trade against paying for the whole body
+// on every hop selection. The dialect parsers already yield the unclamped message, so this needs no decoder of
+// its own: it parses, picks the index the envelope numbered, and returns that message.
+export async function getConversationHopMessage(
+  scope: SessionScope,
+  traceId: string,
+  coreSpanId: string,
+  requestTime: number | string | null,
+  messageIndex: number,
+): Promise<ServerActionResponse<HopMessageValue>> {
+  const { row, state } = await readHopBody(scope, traceId, coreSpanId, requestTime, [HopInspectorSide.Request]);
+
+  if (!row) {
+    return { success: state !== HopReadState.LoadFailed, response: { state, text: null, toolCalls: [] } };
+  }
+
+  const messages = messagesForDialect(dialectOf(row.request_uri ?? null), parseJson(row.request_body));
+  const message = messages[messageIndex];
+
+  if (!message) {
+    return { success: true, response: { state: HopReadState.NoBody, text: null, toolCalls: [] } };
+  }
 
   return {
     success: true,
-    response: { state: hasText ? HopTextsState.Available : HopTextsState.NoBodies, ...texts },
+    response: { state: HopReadState.Available, text: message.text, toolCalls: message.toolCalls },
   };
+}
+
+// Tier 3. The body as recorded, clamped to a stated budget — never the unbounded value, which reaches 4 MiB.
+export async function getConversationHopRawBody(
+  scope: SessionScope,
+  traceId: string,
+  coreSpanId: string,
+  requestTime: number | string | null,
+  side: HopInspectorSide,
+): Promise<ServerActionResponse<HopRawBody>> {
+  const { row, state } = await readHopBody(scope, traceId, coreSpanId, requestTime, [side]);
+
+  if (!row) {
+    return {
+      success: state !== HopReadState.LoadFailed,
+      response: { state, text: null, clamp: NO_CLAMP },
+    };
+  }
+
+  return {
+    success: true,
+    response: rawBodyOf(side === HopInspectorSide.Request ? row.request_body : row.response_body),
+  };
+}
+
+export async function getConversationHopMcp(
+  scope: SessionScope,
+  traceId: string,
+  coreSpanId: string,
+  requestTime: number | string | null,
+  method: string | null,
+  toolName: string | null,
+  toolset: string | null,
+): Promise<ServerActionResponse<HopMcpFacts>> {
+  const { row, state, fields } = await readHopBody(scope, traceId, coreSpanId, requestTime, [
+    HopInspectorSide.Request,
+    HopInspectorSide.Response,
+  ]);
+
+  if (!row) {
+    return {
+      success: state !== HopReadState.LoadFailed,
+      response: {
+        state,
+        method,
+        toolName,
+        toolset,
+        argumentsText: null,
+        resultText: null,
+        resultClamp: NO_CLAMP,
+        resultState: state,
+      },
+    };
+  }
+
+  // Both sides are asked for and either may be denied: the read proceeds when *one* is granted, so the facts
+  // are built with the grants rather than left to infer a denial from an absent column.
+  return { success: true, response: mcpFactsOf({ row, method, toolName, toolset, grants: fields }) };
+}
+
+export async function getConversationHopEmbedding(
+  scope: SessionScope,
+  traceId: string,
+  coreSpanId: string,
+  requestTime: number | string | null,
+): Promise<ServerActionResponse<HopEmbeddingFacts>> {
+  const { row, state, fields } = await readHopBody(scope, traceId, coreSpanId, requestTime, [
+    HopInspectorSide.Request,
+    HopInspectorSide.Response,
+  ]);
+
+  if (!row) {
+    return {
+      success: state !== HopReadState.LoadFailed,
+      response: {
+        state,
+        model: null,
+        inputCount: null,
+        dimensions: null,
+        inputText: null,
+        inputClamp: NO_CLAMP,
+        isDimensionsWithheld: false,
+      },
+    };
+  }
+
+  return { success: true, response: embeddingFactsOf(row, fields) };
 }
 
 // Never rejects: the outputs enrich the event stream, and the spans beside them are worth rendering
@@ -856,12 +1082,14 @@ export async function getConversationTranscriptAvailability(): Promise<
   );
 
   if (!schema) {
-    return { success: false, response: { isReadable: false } };
+    return { success: false, response: { isReadable: false, isRequestReadable: false, isResponseReadable: false } };
   }
 
-  const schemaFieldNames = schema.fields?.map(({ name }) => name) ?? [];
+  const { isReadable, isRequestReadable, isResponseReadable } = transcriptBodyFields(
+    schema.fields?.map(({ name }) => name) ?? [],
+  );
 
-  return { success: true, response: { isReadable: transcriptBodyFields(schemaFieldNames).isReadable } };
+  return { success: true, response: { isReadable, isRequestReadable, isResponseReadable } };
 }
 
 // Figures for the traces the transcript covers, resolved by the transcript's own read rather than taken from

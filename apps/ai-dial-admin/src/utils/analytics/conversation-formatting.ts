@@ -124,6 +124,28 @@ export const formatSignificantCost = (value: number | string | null): string => 
   return `$${stripTrailingZeros(amount.toFixed(decimals))}`;
 };
 
+// Sizes are the inspector's primary scale — a recorded request runs from 49 B to 4 194 306 B — so they read
+// in whichever unit keeps the number short, stepping by 1024 as the measurements they come from do.
+const BYTE_UNITS = ['B', 'KB', 'MB', 'GB'];
+const BYTES_PER_UNIT = 1024;
+
+export const formatBytes = (value: number | string | null): string => {
+  const bytes = toNumber(value);
+  if (bytes === null) {
+    return '';
+  }
+
+  let size = bytes;
+  let unit = 0;
+
+  while (size >= BYTES_PER_UNIT && unit < BYTE_UNITS.length - 1) {
+    size /= BYTES_PER_UNIT;
+    unit += 1;
+  }
+
+  return `${unit === 0 ? size : size.toFixed(1)} ${BYTE_UNITS[unit]}`;
+};
+
 export const formatDurationMs = (value: number | string | null): string => {
   const millis = toNumber(value);
   if (millis === null) {

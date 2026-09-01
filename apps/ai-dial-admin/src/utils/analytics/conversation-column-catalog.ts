@@ -293,8 +293,17 @@ export const transcriptBodyFields = (schemaFieldNames: string[] = []): Transcrip
   const available = new Set(schemaFieldNames);
   const responseFields = TRANSCRIPT_RESPONSE_FIELDS.filter((name) => available.has(name));
 
+  // The request body and the response body are separate columns, so entitlement to them is separate. The
+  // transcript genuinely needs both — it assembles a question and its answer — so `isReadable` keeps the
+  // conjunction; the inspector consumes the two sides independently, and a caller granted one column and not
+  // the other gets the tab they are entitled to rather than neither.
+  const isRequestReadable = available.has(TRANSCRIPT_REQUIRED_FIELD);
+  const isResponseReadable = responseFields.length > 0;
+
   return {
-    isReadable: available.has(TRANSCRIPT_REQUIRED_FIELD) && responseFields.length > 0,
+    isReadable: isRequestReadable && isResponseReadable,
+    isRequestReadable,
+    isResponseReadable,
     responseFields,
   };
 };

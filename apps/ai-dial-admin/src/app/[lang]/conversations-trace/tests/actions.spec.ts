@@ -3,7 +3,10 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { analyticsDataApi } from '@/src/app/api/api';
 import {
   getConversationFieldValues,
-  getConversationHopBodies,
+  getConversationHopMessage,
+  getConversationHopRawBody,
+  getConversationHopRequest,
+  getConversationHopResponse,
   getConversationTranscript,
   getConversations,
   getConversationsSchema,
@@ -12,6 +15,7 @@ import {
   ARRAY_VALUE_PAGE_SIZE,
   CONVERSATION_FIELD_VALUE_COUNT_ALIAS,
   FEEDBACK_CANDIDATE_LIMIT,
+  RAW_BODY_BYTE_BUDGET,
   USAGE_LOG_ENTITY,
 } from '@/src/constants/analytics/conversations-trace';
 import {
@@ -22,7 +26,9 @@ import {
   ConversationScalarOperator,
   ConversationsField,
   FeedbackFilter,
-  HopTextsState,
+  HopInspectorSide,
+  HopReadState,
+  MessageRole,
   TranscriptState,
   UsageLogField,
 } from '@/src/models/analytics/conversations-trace';
@@ -1060,7 +1066,7 @@ describe('getConversationTranscript', () => {
   });
 });
 
-describe('getConversationHopBodies', () => {
+describe('the hop inspector reads', () => {
   const CHAT_ID = 'chat-1';
   const getEntitySchema = () => analyticsDataApi.getEntitySchema as unknown as ReturnType<typeof vi.fn>;
   const READABLE = [UsageLogField.RequestBody, UsageLogField.ResponseBody];
@@ -1071,8 +1077,15 @@ describe('getConversationHopBodies', () => {
   const bodyRow = (overrides: Record<string, unknown> = {}) => ({
     trace_id: 'tr1',
     event_kind: 'llm_call',
-    request_body: JSON.stringify({ messages: [{ role: 'user', content: 'the prompt' }] }),
-    response_body: JSON.stringify({ choices: [{ message: { content: 'the answer' } }] }),
+    request_uri: '/openai/deployments/gpt/chat/completions',
+    request_body: JSON.stringify({
+      temperature: 0,
+      messages: [
+        { role: 'system', content: 'you are a quartermaster' },
+        { role: 'user', content: 'the prompt' },
+      ],
+    }),
+    response_body: JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: 'the answer' } }] }),
     ...overrides,
   });
 
@@ -1083,22 +1096,50 @@ describe('getConversationHopBodies', () => {
     (getIsEnableAuthToggle as unknown as ReturnType<typeof vi.fn>).mockReturnValue(true);
   });
 
-  const read = (requestTime: number | string | null = 1787052797216) =>
-    getConversationHopBodies(CHAT_ID, 'tr1', 'sp1', requestTime);
+  const readRequest = (requestTime: number | string | null = 1787052797216) =>
+    getConversationHopRequest(CHAT_ID, 'tr1', 'sp1', requestTime);
 
-  test('ships the decoded texts and no raw body', async () => {
+  // Tier 1: roles, positions, sizes and clamped texts cross to the browser; the body does not.
+  test('ships an envelope and no raw body', async () => {
     schemaOf(READABLE);
     execute().mockResolvedValue({ success: true, response: { rows: [bodyRow()] } });
 
-    const result = await read();
+    const result = await readRequest();
 
-    expect(result.response).toEqual({
-      state: HopTextsState.Available,
-      sent: 'the prompt',
-      received: 'the answer',
-      toolCalls: [],
-    });
+    expect(result.response?.state).toBe(HopReadState.Available);
+    expect(result.response?.messages.map(({ role }) => role)).toEqual([MessageRole.System, MessageRole.User]);
     expect(JSON.stringify(result.response)).not.toContain('choices');
+  });
+
+  // The rule this change reverses: the system prompt is what a reader opening a hop to debug it is asking
+  // about, and every message is labelled with its own role so nothing reads as something a person typed.
+  test('states the system message rather than withholding it', async () => {
+    schemaOf(READABLE);
+    execute().mockResolvedValue({ success: true, response: { rows: [bodyRow()] } });
+
+    const [system] = (await readRequest()).response?.messages ?? [];
+
+    expect(system.role).toBe(MessageRole.System);
+    expect(system.text).toBe('you are a quartermaster');
+  });
+
+  test('states a zero temperature rather than reporting it absent', async () => {
+    schemaOf(READABLE);
+    execute().mockResolvedValue({ success: true, response: { rows: [bodyRow()] } });
+
+    const params = (await readRequest()).response?.params.stated ?? [];
+
+    expect(params.find(({ name }) => name === 'temperature')?.value).toBe('0');
+  });
+
+  // A dialect no parser claims is answered with the raw body rather than with a wrong message list.
+  test('reports an unparseable dialect as unstructured', async () => {
+    schemaOf(READABLE);
+    // `/v1/completions` rather than `/v1/responses`: the latter has a parser now, and this scenario is about
+    // an endpoint no parser claims.
+    execute().mockResolvedValue({ success: true, response: { rows: [bodyRow({ request_uri: '/v1/completions' })] } });
+
+    expect((await readRequest()).response?.state).toBe(HopReadState.Unstructured);
   });
 
   // One hop at a time: the query names the hop, and the bound is its own instant.
@@ -1106,7 +1147,7 @@ describe('getConversationHopBodies', () => {
     schemaOf(READABLE);
     execute().mockResolvedValue({ success: true, response: { rows: [bodyRow()] } });
 
-    await read();
+    await readRequest();
 
     const query = execute().mock.calls[0][0] as StructuredQuery;
     expect(JSON.stringify(query.filter)).toContain('sp1');
@@ -1115,14 +1156,26 @@ describe('getConversationHopBodies', () => {
     expect(execute()).toHaveBeenCalledWith(expect.anything(), TOKEN_MOCK);
   });
 
-  // The expected non-administrator path: the columns were never offered, so the section is simply absent.
-  test('reports the columns as unavailable without reading anything', async () => {
-    schemaOf([UsageLogField.TraceId]);
+  // Entitlement is per side: a caller holding the request column must not have the response column named in
+  // their query, because an unknown field rejects the whole read.
+  test('names only the body column the caller holds', async () => {
+    schemaOf([UsageLogField.RequestBody]);
+    execute().mockResolvedValue({ success: true, response: { rows: [bodyRow()] } });
 
-    const result = await read();
+    await readRequest();
+
+    const query = execute().mock.calls[0][0] as StructuredQuery;
+    expect(JSON.stringify(query.select)).toContain(UsageLogField.RequestBody);
+    expect(JSON.stringify(query.select)).not.toContain(UsageLogField.ResponseBody);
+  });
+
+  test('a side the caller does not hold is withheld without reading anything', async () => {
+    schemaOf([UsageLogField.RequestBody]);
+
+    const result = await getConversationHopResponse(CHAT_ID, 'tr1', 'sp1', 1);
 
     expect(result.success).toBe(true);
-    expect(result.response?.state).toBe(HopTextsState.ColumnsUnavailable);
+    expect(result.response?.state).toBe(HopReadState.ColumnWithheld);
     expect(execute()).not.toHaveBeenCalled();
   });
 
@@ -1130,66 +1183,100 @@ describe('getConversationHopBodies', () => {
   test('reports a failure when the schema could not be read', async () => {
     getEntitySchema().mockResolvedValue(null);
 
-    const result = await read();
+    const result = await readRequest();
 
     expect(result.success).toBe(false);
-    expect(result.response?.state).toBe(HopTextsState.LoadFailed);
+    expect(result.response?.state).toBe(HopReadState.LoadFailed);
   });
 
   test('reports a failed read as a failure rather than as an empty hop', async () => {
     schemaOf(READABLE);
     execute().mockResolvedValue({ success: false, response: undefined });
 
-    expect((await read()).response?.state).toBe(HopTextsState.LoadFailed);
+    expect((await readRequest()).response?.state).toBe(HopReadState.LoadFailed);
   });
 
   test('reports a hop the read matched no row for', async () => {
     schemaOf(READABLE);
     execute().mockResolvedValue({ success: true, response: { rows: [] } });
 
-    const result = await read();
+    const result = await readRequest();
 
     expect(result.success).toBe(true);
-    expect(result.response?.state).toBe(HopTextsState.NoBodies);
+    expect(result.response?.state).toBe(HopReadState.NoBody);
   });
 
-  test('reports a hop whose bodies decoded to nothing as recording nothing readable', async () => {
+  test('reports a request that recorded no messages as empty', async () => {
     schemaOf(READABLE);
-    execute().mockResolvedValue({
-      success: true,
-      response: { rows: [bodyRow({ request_body: null, response_body: null })] },
-    });
+    execute().mockResolvedValue({ success: true, response: { rows: [bodyRow({ request_body: null })] } });
 
-    expect((await read()).response?.state).toBe(HopTextsState.NoBodies);
+    expect((await readRequest()).response?.state).toBe(HopReadState.NoBody);
   });
 
-  // The tool names are the only record of what a hop that returned no text actually did.
-  test('carries the requested tool names for a hop that returned no text', async () => {
+  // Tier 2 returns one message in full and nothing beside it — not the whole body, and not a neighbouring
+  // message's text alongside.
+  test('returns a single message in full', async () => {
     schemaOf(READABLE);
-    execute().mockResolvedValue({
-      success: true,
-      response: {
-        rows: [
-          bodyRow({
-            response_body: JSON.stringify({
-              choices: [{ message: { content: '', tool_calls: [{ function: { name: 'rag_search' } }] } }],
-            }),
-          }),
-        ],
-      },
+    execute().mockResolvedValue({ success: true, response: { rows: [bodyRow()] } });
+
+    const result = await getConversationHopMessage(CHAT_ID, 'tr1', 'sp1', 1, 1);
+
+    expect(result.response?.text).toBe('the prompt');
+    expect(JSON.stringify(result.response)).not.toContain('quartermaster');
+  });
+
+  test('reports an index the body does not carry rather than throwing', async () => {
+    schemaOf(READABLE);
+    execute().mockResolvedValue({ success: true, response: { rows: [bodyRow()] } });
+
+    expect((await getConversationHopMessage(CHAT_ID, 'tr1', 'sp1', 1, 9)).response?.state).toBe(HopReadState.NoBody);
+  });
+
+  // An assistant message that only called a tool: the call is what it said, so tier 2 carries it.
+  test('returns an assistant call as the message content', async () => {
+    schemaOf(READABLE);
+    const withCall = JSON.stringify({
+      messages: [
+        { role: 'assistant', content: '', tool_calls: [{ function: { name: 'calc', arguments: '{"a":1}' } }] },
+      ],
     });
+    execute().mockResolvedValue({ success: true, response: { rows: [bodyRow({ request_body: withCall })] } });
 
-    const result = await read();
+    const result = await getConversationHopMessage(CHAT_ID, 'tr1', 'sp1', 1, 0);
 
-    expect(result.response?.state).toBe(HopTextsState.Available);
-    expect(result.response?.toolCalls).toEqual(['rag_search']);
+    expect(result.response?.toolCalls).toEqual([{ name: 'calc', args: '{"a":1}' }]);
+  });
+
+  // Tier 3 clamps and states both sizes: silent truncation produces a reader who believes they read it all.
+  test('clamps the raw body and states what was withheld', async () => {
+    schemaOf(READABLE);
+    const huge = 'x'.repeat(RAW_BODY_BYTE_BUDGET + 50);
+    execute().mockResolvedValue({ success: true, response: { rows: [bodyRow({ request_body: huge })] } });
+
+    const result = await getConversationHopRawBody(CHAT_ID, 'tr1', 'sp1', 1, HopInspectorSide.Request);
+
+    expect(result.response?.clamp).toEqual({
+      isClamped: true,
+      recordedBytes: RAW_BODY_BYTE_BUDGET + 50,
+      deliveredBytes: RAW_BODY_BYTE_BUDGET,
+    });
+  });
+
+  test('states the assembled response and its finish reason', async () => {
+    schemaOf(READABLE);
+    execute().mockResolvedValue({ success: true, response: { rows: [bodyRow()] } });
+
+    const result = await getConversationHopResponse(CHAT_ID, 'tr1', 'sp1', 1);
+
+    expect(result.response?.text).toBe('the answer');
+    expect(result.response?.finishReason).toBe('stop');
   });
 
   test('sends no time bound for a hop that records no time', async () => {
     schemaOf(READABLE);
     execute().mockResolvedValue({ success: true, response: { rows: [bodyRow()] } });
 
-    await read(null);
+    await readRequest(null);
 
     const query = execute().mock.calls[0][0] as StructuredQuery;
     // Matched as an operator rather than as a substring: the identity enrichment's column name contains

@@ -12,16 +12,36 @@ import {
   ConversationSpanNode,
   ConversationSpanRow,
   ConversationTraceFigures,
-  SpanCategory,
+  ConversationTranscriptAvailability,
+  SessionScope,
+  SpanKind,
 } from '@/src/models/analytics/conversations-trace';
 
-// The hop-body read is the component's only side effect: mocked so the trace view's own rendering is what is
-// under test, and so a suppressed hop can be told apart from a hop whose read has not answered yet.
-const getConversationHopBodies = vi.fn();
+// The inspector's reads are the component's only side effects: mocked so the trace view's own rendering is
+// what is under test, and so a suppressed side can be told apart from one whose read has not answered yet.
+const getConversationHopRequest = vi.fn().mockResolvedValue({ success: true, response: undefined });
+const getConversationHopResponse = vi.fn().mockResolvedValue({ success: true, response: undefined });
+const getConversationHopProperty = vi.fn().mockResolvedValue({ success: true, response: undefined });
+const getConversationHopRawBody = vi.fn().mockResolvedValue({ success: true, response: undefined });
+const getConversationHopMcp = vi.fn().mockResolvedValue({ success: true, response: undefined });
+const getConversationHopEmbedding = vi.fn().mockResolvedValue({ success: true, response: undefined });
 
 vi.mock('@/src/app/[lang]/conversations-trace/actions', () => ({
-  getConversationHopBodies: (...args: unknown[]) => getConversationHopBodies(...args),
+  getConversationHopRequest: (...args: unknown[]) => getConversationHopRequest(...args),
+  getConversationHopResponse: (...args: unknown[]) => getConversationHopResponse(...args),
+  getConversationHopProperty: (...args: unknown[]) => getConversationHopProperty(...args),
+  getConversationHopRawBody: (...args: unknown[]) => getConversationHopRawBody(...args),
+  getConversationHopMcp: (...args: unknown[]) => getConversationHopMcp(...args),
+  getConversationHopEmbedding: (...args: unknown[]) => getConversationHopEmbedding(...args),
 }));
+
+const SCOPE: SessionScope = { id: 'chat-1', source: null };
+
+const GRANTS: ConversationTranscriptAvailability = {
+  isReadable: true,
+  isRequestReadable: true,
+  isResponseReadable: true,
+};
 
 const TRACE_ID = '0a3f1d9c8b7e6a5f';
 
@@ -39,6 +59,8 @@ const span = (overrides: Partial<ConversationSpanRow> = {}): ConversationSpanRow
   operation_duration_ms: 5215,
   total_tokens: 18,
   reasoning_tokens: 0,
+  request_body_bytes: 2048,
+  number_request_messages: 2,
   deployment_price: '0.001',
   request_time: '2026-08-13T10:59:05.600Z',
   response_body_bytes: 4096,
@@ -76,7 +98,8 @@ describe('ConversationTraceView', () => {
   const renderTrace = (props: Partial<ComponentProps<typeof ConversationTraceView>> = {}) =>
     render(
       <ConversationTraceView
-        chatId="chat-1"
+        scope={SCOPE}
+        bodyGrants={GRANTS}
         figures={FIGURES}
         spans={SPANS}
         modelOutputs={[]}
@@ -212,21 +235,25 @@ describe('ConversationTraceView', () => {
   });
 });
 
+const renderDetail = (node: ConversationSpanNode | null) =>
+  render(<ConversationSpanDetail node={node} scope={SCOPE} traceId={TRACE_ID} bodyGrants={GRANTS} />);
+
 describe('ConversationSpanDetail', () => {
-  const nodes = SPANS.map((span) => ({
+  const nodes: ConversationSpanNode[] = SPANS.map((span) => ({
     span,
-    category: SpanCategory.Deployment,
+    kind: SpanKind.Llm,
+    hasFailed: false,
     startedAtMs: toMillis(span.request_time),
   }));
 
   test('asks for a selection while no hop is chosen', () => {
-    render(<ConversationSpanDetail node={null} />);
+    renderDetail(null);
 
     expect(screen.getByText(ConversationsTraceI18nKey.SpanSelected)).toBeInTheDocument();
   });
 
   test('reports where the hop went and what came back', () => {
-    render(<ConversationSpanDetail node={nodes[0]} />);
+    renderDetail(nodes[0]);
 
     expect(screen.getByText('/openai/deployments/switchyard-model/chat/completions')).toBeInTheDocument();
     expect(screen.getByText('https://core.dial.parts/openai/deployments/switchyard')).toBeInTheDocument();
@@ -237,7 +264,7 @@ describe('ConversationSpanDetail', () => {
   // Its absolute recorded time, and nothing derived from `operation_duration_ms`: a recorded zero there is
   // indistinguishable between a real sub-millisecond operation and a producer that never reported one.
   test('places the hop by its own recorded time, stating no duration or offset', () => {
-    render(<ConversationSpanDetail node={nodes[1]} />);
+    renderDetail(nodes[1]);
 
     expect(screen.getByText(ConversationsTraceI18nKey.SpanRecordedAt)).toBeInTheDocument();
     expect(screen.getByText(new Date('2026-08-13T10:59:07.100Z').toLocaleString())).toBeInTheDocument();
@@ -246,58 +273,58 @@ describe('ConversationSpanDetail', () => {
   });
 
   test('marks metadata the log did not record as unavailable', () => {
-    render(
-      <ConversationSpanDetail
-        node={{
-          span: span({
-            request_uri: null,
-            response_upstream_uri: null,
-            parent_deployment: null,
-            response_status: null,
-          }),
-          category: SpanCategory.Deployment,
-          startedAtMs: null,
-        }}
-      />,
-    );
+    renderDetail({
+      span: span({
+        request_uri: null,
+        response_upstream_uri: null,
+        parent_deployment: null,
+        response_status: null,
+      }),
+      kind: SpanKind.Llm,
+      hasFailed: false,
+      startedAtMs: null,
+    });
 
     expect(screen.getAllByText(UNAVAILABLE_VALUE).length).toBeGreaterThan(1);
   });
 
-  test('reports a failed hop as failed rather than ok', () => {
-    render(<ConversationSpanDetail node={{ ...nodes[0], span: span({ success: false }) }} />);
+  // Kind and outcome, side by side. The badge no longer reports the failure in place of the kind, so a failed
+  // model call and a failed tool call stay distinguishable.
+  test('marks a failed hop as failed while keeping its kind', () => {
+    renderDetail({ ...nodes[0], span: span({ success: false }), hasFailed: true });
 
-    expect(screen.getByText(ConversationsTraceI18nKey.TraceFailed)).toBeInTheDocument();
-    expect(screen.queryByText(ConversationsTraceI18nKey.TraceOk)).not.toBeInTheDocument();
+    expect(screen.getByText(ConversationsTraceI18nKey.SpanFailedMarker)).toBeInTheDocument();
+    expect(screen.getByText(ConversationsTraceI18nKey.SpanLlm)).toBeInTheDocument();
+  });
+
+  test('states the kind alone for a hop that succeeded', () => {
+    renderDetail(nodes[0]);
+
+    expect(screen.getByText(ConversationsTraceI18nKey.SpanLlm)).toBeInTheDocument();
+    expect(screen.queryByText(ConversationsTraceI18nKey.SpanFailedMarker)).toBeNull();
   });
 });
 
 describe('ConversationSpanDetail — MCP hops', () => {
   test('renders the routing chain in the order the log recorded it', () => {
-    render(
-      <ConversationSpanDetail
-        node={{
-          span: span({ execution_path: ['statgpt-deep-research', 'gpt-5.4-2026-03-05'] }),
-          category: SpanCategory.Deployment,
-          startedAtMs: 1000,
-        }}
-      />,
-    );
+    renderDetail({
+      span: span({ execution_path: ['statgpt-deep-research', 'gpt-5.4-2026-03-05'] }),
+      kind: SpanKind.Llm,
+      hasFailed: false,
+      startedAtMs: 1000,
+    });
 
     expect(screen.getByText(ConversationsTraceI18nKey.SpanRouting)).toBeInTheDocument();
     expect(screen.getByText('statgpt-deep-research → gpt-5.4-2026-03-05')).toBeInTheDocument();
   });
 
   test('states the MCP method and tool where the hop recorded them', () => {
-    render(
-      <ConversationSpanDetail
-        node={{
-          span: span({ event_kind: 'mcp', mcp_method: 'tools/call', mcp_tool_call_name: 'rag_search' }),
-          category: SpanCategory.Retrieval,
-          startedAtMs: 1000,
-        }}
-      />,
-    );
+    renderDetail({
+      span: span({ event_kind: 'mcp', mcp_method: 'tools/call', mcp_tool_call_name: 'rag_search' }),
+      kind: SpanKind.Mcp,
+      hasFailed: false,
+      startedAtMs: 1000,
+    });
 
     expect(screen.getByText(ConversationsTraceI18nKey.SpanMcpTool)).toBeInTheDocument();
     // Also the heading, which labels the hop by its tool.
@@ -307,7 +334,7 @@ describe('ConversationSpanDetail — MCP hops', () => {
   });
 
   test('omits the MCP rows for a hop that recorded none of them', () => {
-    render(<ConversationSpanDetail node={{ span: span(), category: SpanCategory.Deployment, startedAtMs: 1 }} />);
+    renderDetail({ span: span(), kind: SpanKind.Llm, hasFailed: false, startedAtMs: 1 });
 
     expect(screen.queryByText(ConversationsTraceI18nKey.SpanMcpTool)).toBeNull();
     expect(screen.queryByText(ConversationsTraceI18nKey.SpanMcpMethod)).toBeNull();

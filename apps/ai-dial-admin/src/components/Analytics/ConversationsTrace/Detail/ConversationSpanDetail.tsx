@@ -3,21 +3,20 @@
 import classNames from 'classnames';
 import { FC } from 'react';
 
-import ConversationHopTexts from '@/src/components/Analytics/ConversationsTrace/Detail/ConversationHopTexts';
+import HopInspector from '@/src/components/Analytics/ConversationsTrace/Detail/Inspector/HopInspector';
 import ConversationRailShell from '@/src/components/Analytics/ConversationsTrace/Detail/ConversationRailShell';
-import SpanCategoryBadge from '@/src/components/Analytics/ConversationsTrace/Detail/SpanCategoryBadge';
+import SpanKindBadge from '@/src/components/Analytics/ConversationsTrace/Detail/SpanKindBadge';
 import { COST_TEXT_CLASS, UNAVAILABLE_VALUE } from '@/src/constants/analytics/conversations-trace';
 import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import {
-  ConversationHopBodies,
   ConversationSpanNode,
-  HopTextSuppression,
+  ConversationTranscriptAvailability,
+  SessionScope,
 } from '@/src/models/analytics/conversations-trace';
 import { formatCompactNumber, formatSignificantCost } from '@/src/utils/analytics/conversation-formatting';
 import { formatDateTimeToLocalString } from '@/src/utils/formatting/date';
 import { spanLabelOf } from '@/src/utils/analytics/conversation-spans';
-import { isFailedHop } from '@/src/utils/analytics/conversation-hop-stream';
 
 interface RowProps {
   label: string;
@@ -27,7 +26,7 @@ interface RowProps {
 }
 
 const DetailRow: FC<RowProps> = ({ label, value, isMono, valueClassName }) => (
-  <div className="flex flex-col gap-0.5 border-b border-tertiary py-2 last:border-b-0">
+  <div className="flex flex-col gap-0.5 border-b border-tertiary py-1.5 last:border-b-0">
     <span className="text-secondary dial-tiny-text">{label}</span>
     <span className={classNames('break-all dial-tiny-text', isMono && 'font-mono', valueClassName ?? 'text-primary')}>
       {value}
@@ -37,17 +36,12 @@ const DetailRow: FC<RowProps> = ({ label, value, isMono, valueClassName }) => (
 
 interface Props {
   node: ConversationSpanNode | null;
-  bodies?: ConversationHopBodies | null;
-  isLoadingBodies?: boolean;
-  bodiesSuppression?: HopTextSuppression | null;
+  scope: SessionScope;
+  traceId: string;
+  bodyGrants: ConversationTranscriptAvailability;
 }
 
-const ConversationSpanDetail: FC<Props> = ({
-  node,
-  bodies = null,
-  isLoadingBodies = false,
-  bodiesSuppression = null,
-}) => {
+const ConversationSpanDetail: FC<Props> = ({ node, scope, traceId, bodyGrants }) => {
   const t = useI18n();
 
   if (!node) {
@@ -58,8 +52,7 @@ const ConversationSpanDetail: FC<Props> = ({
     );
   }
 
-  const { span, category, startedAtMs } = node;
-  const hasFailed = isFailedHop(span);
+  const { span, kind, hasFailed, startedAtMs } = node;
 
   const metrics: RowProps[] = [
     {
@@ -110,15 +103,11 @@ const ConversationSpanDetail: FC<Props> = ({
   ];
 
   return (
-    <ConversationRailShell className="flex-col gap-3">
+    <ConversationRailShell className="flex-col gap-3 overflow-hidden">
       <div className="flex flex-col gap-2">
         <h3 className="break-all text-primary dial-base-semi-text">{spanLabelOf(span)}</h3>
-        <div className="flex items-center gap-2">
-          <SpanCategoryBadge category={category} />
-          <span className={classNames('dial-tiny-semi-text', hasFailed ? 'text-error' : 'text-success')}>
-            {t(hasFailed ? ConversationsTraceI18nKey.TraceFailed : ConversationsTraceI18nKey.TraceOk)}
-          </span>
-        </div>
+        {/* Kind and outcome, side by side. The badge no longer reports a failure in place of the kind. */}
+        <SpanKindBadge kind={kind} hasFailed={hasFailed} />
       </div>
       <dl className="grid grid-cols-2 gap-2 rounded border border-primary bg-layer-3 p-3">
         {metrics.map(({ label, value }) => (
@@ -128,12 +117,17 @@ const ConversationSpanDetail: FC<Props> = ({
           </div>
         ))}
       </dl>
-      <ConversationHopTexts bodies={bodies} isLoading={isLoadingBodies} suppression={bodiesSuppression} />
-      <div className="rounded border border-primary bg-layer-3 px-3">
+      {/* Capped, because this block and the inspector were competing for the same column and the block was
+          winning: nine rows at natural height took ~280px of a ~530px rail, leaving the message history about
+          130px — one chip row and a sliver. Endpoint, upstream, parent and status are reference facts read
+          once per hop; the inspector is the surface a reader works in, so it gets the majority and this
+          scrolls within its cap. */}
+      <div tabIndex={0} className="max-h-[35%] shrink-0 overflow-y-auto rounded border border-primary bg-layer-3 px-3">
         {facts.map((row) => (
           <DetailRow key={row.label} {...row} />
         ))}
       </div>
+      <HopInspector scope={scope} traceId={traceId} span={span} kind={kind} bodyGrants={bodyGrants} />
     </ConversationRailShell>
   );
 };

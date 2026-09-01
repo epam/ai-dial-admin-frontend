@@ -16,7 +16,7 @@ import {
   HopEventType,
   ProvenanceEntity,
   ResponseRatingsField,
-  SpanCategory,
+  SpanKind,
   UsageLogField,
 } from '@/src/models/analytics/conversations-trace';
 import { AnalyticsFieldType } from '@/src/models/analytics/entity';
@@ -80,6 +80,21 @@ export const STREAM_MODEL_BODY_LIMIT = 80;
 export const STREAM_MODEL_BODY_BYTE_BUDGET = 24 * 1024 * 1024;
 
 export const TOOL_ARGUMENTS_PREVIEW_LIMIT = 200;
+
+// The inspector's clamps. Kept together and beside `STREAM_MODEL_BODY_BYTE_BUDGET` because they are one
+// tuning surface: the recorded distribution is bimodal — 63% of model-call requests are under 10 KB while 21%
+// exceed 100 KB — so these are the numbers that decide how the heavy tail degrades.
+export const MESSAGE_TEXT_CLAMP = 280;
+
+// At or above this, a message is marked: on a 100 KB request, which message made it so is the first thing a
+// reader wants.
+export const LARGE_MESSAGE_BYTES = 1024;
+
+// A per-message clamp alone does not bound the envelope: the messages dialect averages 56.6 messages, and
+// clamped individually they still assemble into more than the rail will show.
+export const ENVELOPE_BYTE_BUDGET = 256 * 1024;
+
+export const RAW_BODY_BYTE_BUDGET = 512 * 1024;
 
 export const MODEL_CALL_URI_MARKERS: string[] = [
   '/chat/completions',
@@ -372,14 +387,30 @@ export const PROVENANCE_TEXT_CLASS: Record<ColumnProvenance, string> = {
 
 export const COST_TEXT_CLASS = 'text-accent-secondary';
 
-export const SPAN_CATEGORY_CLASS: Record<SpanCategory, string> = {
-  [SpanCategory.Error]: 'bg-error text-error',
-  [SpanCategory.Embedding]: 'bg-accent-secondary-alpha text-accent-secondary',
-  [SpanCategory.Retrieval]: 'bg-accent-tertiary-alpha text-accent-tertiary',
-  [SpanCategory.Route]: 'bg-accent-primary-alpha text-accent-primary',
-  [SpanCategory.Deployment]: 'bg-info text-info',
-  [SpanCategory.Other]: 'bg-layer-4 text-secondary',
+// Which node a kind corresponds to in the tree. The tree owns the palette: colour does real work there —
+// matching a filter control to the nodes it marks — so the rail derives its badge hue from it rather than
+// keeping a second set. A hop reading `accent-primary` in the tree must not read blue in the rail beside it.
+export const SPAN_KIND_EVENT_TYPE: Record<SpanKind, HopEventType> = {
+  [SpanKind.Llm]: HopEventType.ModelCall,
+  [SpanKind.Mcp]: HopEventType.ToolResult,
+  [SpanKind.Embeddings]: HopEventType.Embedding,
+  // `route` hops are excluded from the tree entirely, so this kind has no node to correspond to and takes the
+  // neutral hue rather than borrowing one that already means something else.
+  [SpanKind.Route]: HopEventType.Other,
+  [SpanKind.Other]: HopEventType.Other,
 };
+
+// Filled rather than outlined — a rail badge is not a filter control — but the same hue as the kind's node.
+export const SPAN_KIND_CLASS: Record<SpanKind, string> = {
+  [SpanKind.Llm]: 'bg-accent-primary-alpha text-accent-primary',
+  [SpanKind.Mcp]: 'bg-accent-tertiary-alpha text-accent-tertiary',
+  [SpanKind.Embeddings]: 'bg-warning text-warning',
+  [SpanKind.Route]: 'bg-layer-4 text-secondary',
+  [SpanKind.Other]: 'bg-layer-4 text-secondary',
+};
+
+// Failure is its own axis, so it has its own class rather than a member of the kind palette.
+export const SPAN_FAILED_CLASS = 'bg-error text-error';
 
 export const CONVERSATION_INSIGHT_FIELDS: ConversationFieldDefinition[] = [
   { labelKey: ConversationsTraceI18nKey.DetailSummary, column: ConversationsField.InsightSummary },
@@ -432,7 +463,6 @@ export const HOP_EVENT_RAIL_CLASS: Record<HopEventType, string> = {
   [HopEventType.ToolResult]: 'border-accent-tertiary',
   [HopEventType.Thinking]: 'border-accent-secondary',
   [HopEventType.Empty]: 'border-primary',
-  [HopEventType.Error]: 'border-error',
   [HopEventType.Session]: 'border-primary',
   [HopEventType.Embedding]: 'border-warning',
   [HopEventType.Other]: 'border-primary',
@@ -445,13 +475,18 @@ export const HOP_EVENT_CHIP_CLASS: Record<HopEventType, string> = {
   [HopEventType.ToolResult]: 'border-accent-tertiary text-accent-tertiary',
   [HopEventType.Thinking]: 'border-accent-secondary text-accent-secondary',
   [HopEventType.Empty]: 'border-primary text-secondary',
-  [HopEventType.Error]: 'border-error text-error',
   [HopEventType.Session]: 'border-primary text-secondary',
   [HopEventType.Embedding]: 'border-warning text-warning',
   [HopEventType.Other]: 'border-primary text-secondary',
 };
 
 export const NEUTRAL_CHIP_CLASS = 'border-primary text-secondary';
+
+// The outcome axis carries its own colour rather than borrowing one from the kind palette, so a failure reads
+// as a failure whatever kind of call it happened to.
+export const HOP_FAILED_RAIL_CLASS = 'border-error';
+
+export const HOP_FAILED_CHIP_CLASS = 'border-error text-error';
 
 export const UNRECORDED_ROOT_RAIL_CLASS = 'border-primary';
 
@@ -463,7 +498,6 @@ export const FILTERABLE_EVENT_TYPES: HopEventType[] = [
   HopEventType.ToolCall,
   HopEventType.ToolResult,
   HopEventType.Thinking,
-  HopEventType.Error,
   HopEventType.Empty,
   HopEventType.Session,
   HopEventType.Embedding,
@@ -477,28 +511,17 @@ export const HOP_EVENT_LABEL_KEY: Record<HopEventType, string> = {
   [HopEventType.ToolResult]: ConversationsTraceI18nKey.EventToolResult,
   [HopEventType.Thinking]: ConversationsTraceI18nKey.EventThinking,
   [HopEventType.Empty]: ConversationsTraceI18nKey.EventEmpty,
-  [HopEventType.Error]: ConversationsTraceI18nKey.EventError,
   [HopEventType.Session]: ConversationsTraceI18nKey.EventSession,
   [HopEventType.Embedding]: ConversationsTraceI18nKey.EventEmbedding,
   [HopEventType.Other]: ConversationsTraceI18nKey.EventOther,
 };
 
-export const SPAN_CATEGORY_RAIL_CLASS: Record<SpanCategory, string> = {
-  [SpanCategory.Error]: 'bg-error',
-  [SpanCategory.Embedding]: 'bg-accent-secondary',
-  [SpanCategory.Retrieval]: 'bg-accent-tertiary',
-  [SpanCategory.Route]: 'bg-accent-primary',
-  [SpanCategory.Deployment]: 'bg-info',
-  [SpanCategory.Other]: 'bg-layer-4',
-};
-
-export const SPAN_CATEGORY_LABEL_KEY: Record<SpanCategory, string> = {
-  [SpanCategory.Error]: ConversationsTraceI18nKey.SpanError,
-  [SpanCategory.Embedding]: ConversationsTraceI18nKey.SpanEmbedding,
-  [SpanCategory.Retrieval]: ConversationsTraceI18nKey.SpanRetrieval,
-  [SpanCategory.Route]: ConversationsTraceI18nKey.SpanRoute,
-  [SpanCategory.Deployment]: ConversationsTraceI18nKey.SpanDeployment,
-  [SpanCategory.Other]: ConversationsTraceI18nKey.SpanOther,
+export const SPAN_KIND_LABEL_KEY: Record<SpanKind, string> = {
+  [SpanKind.Embeddings]: ConversationsTraceI18nKey.SpanEmbeddings,
+  [SpanKind.Mcp]: ConversationsTraceI18nKey.SpanMcp,
+  [SpanKind.Route]: ConversationsTraceI18nKey.SpanRoute,
+  [SpanKind.Llm]: ConversationsTraceI18nKey.SpanLlm,
+  [SpanKind.Other]: ConversationsTraceI18nKey.SpanOther,
 };
 
 export const UNAVAILABLE_VALUE = '—';
