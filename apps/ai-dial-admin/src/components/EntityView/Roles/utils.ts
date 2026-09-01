@@ -144,14 +144,15 @@ export const SHARING_COLUMNS = (
   onChange?: (value: number, data: DialRole, token: string) => void,
   getDefaultPlaceholder?: (node: IRowNode, colDef: ColDef) => string,
   isReadOnlyAdmin?: boolean,
+  typeLabels: Record<string, string> = sharingTypes,
 ): ColDef[] => [
   {
     headerName: 'Type',
     field: 'name',
     filter: false,
     floatingFilter: false,
-    valueFormatter: ({ value }) => formatType(value, t),
-    tooltipValueGetter: ({ value }) => formatType(value, t),
+    valueFormatter: ({ value }) => formatType(value, t, typeLabels),
+    tooltipValueGetter: ({ value }) => formatType(value, t, typeLabels),
   },
   {
     headerName: 'Expiration time (hours)',
@@ -187,8 +188,8 @@ export const SHARING_COLUMNS = (
   },
 ];
 
-const formatType = (value: string, t: (stringToTranslate: string) => string) => {
-  const typeFieldKey = sharingTypes[value as keyof typeof sharingTypes];
+const formatType = (value: string, t: (stringToTranslate: string) => string, typeLabels: Record<string, string>) => {
+  const typeFieldKey = typeLabels[value];
   if (typeFieldKey) {
     return t(typeFieldKey);
   }
