@@ -92,16 +92,12 @@ export const getGridActionLabels = (view: ApplicationRoute, isReadOnlyAdmin: boo
     case ApplicationRoute.PlatformAppRunners:
     case ApplicationRoute.PlatformInterceptors:
     case ApplicationRoute.PlatformRoutes:
+    case ApplicationRoute.PlatformRoles:
       return isReadOnlyAdmin
         ? []
         : allActionLabels.filter(
             (item) => item.key === 'duplicate' || item.key === 'delete' || item.key === 'openInNewTab',
           );
-    // No 'duplicate': the shared duplicate modal (`DuplicatePlatformAsset`) unconditionally writes a
-    // `displayName`, a field `Role.class`/`Key.class` doesn't declare — the same class of
-    // Core-rejection risk design D3 avoids for the identity field. Roles and keys get delete +
-    // open-in-new-tab only.
-    case ApplicationRoute.PlatformRoles:
     case ApplicationRoute.PlatformKeys:
       return isReadOnlyAdmin
         ? []

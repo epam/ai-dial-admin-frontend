@@ -24,6 +24,8 @@ const DuplicatePlatformAsset: FC<Props> = ({ view, isModalOpen, names, entity, o
   const t = useI18n();
   const { isValid } = useSaveValidationContext();
   const isRunner = view === ApplicationRoute.PlatformAppRunners;
+  const hasDisplayName =
+    isRunner || view === ApplicationRoute.PlatformModels || view === ApplicationRoute.PlatformInterceptors;
 
   const [clonedAsset, setClonedAsset] = useState<PlatformAsset>(() =>
     isRunner
@@ -72,7 +74,7 @@ const DuplicatePlatformAsset: FC<Props> = ({ view, isModalOpen, names, entity, o
           forbiddenChars={isRunner ? CORE_UNENCODABLE_ID_CHARS : void 0}
           onChangeEntity={onChangeId}
         />
-        <DisplayNameControl displayName={displayName} onChange={onChangeDisplayName} required />
+        {hasDisplayName && <DisplayNameControl displayName={displayName} onChange={onChangeDisplayName} required />}
       </div>
     </DialFormPopup>
   );

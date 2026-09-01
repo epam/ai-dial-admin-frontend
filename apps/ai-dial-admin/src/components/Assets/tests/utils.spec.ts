@@ -1,18 +1,19 @@
-import { DialPrompt } from '@/src/models/dial/prompt';
-import { describe, expect, test } from 'vitest';
-import { ApplicationRoute } from '@/src/types/routes';
 import { FileManagerI18nKey } from '@/src/constants/i18n';
+import { DialPrompt } from '@/src/models/dial/prompt';
 import { ImportFileType } from '@/src/types/import';
+import { ApplicationRoute } from '@/src/types/routes';
+import { describe, expect, test } from 'vitest';
 import {
   addNewVersion,
   filterLatestVersions,
+  getAgentLinkForConversation,
   getDeleteNotificationContent,
   getEntityForUpdate,
-  getGridActionLabels,
-  getIsNeedToMove,
-  getImportNotificationContent,
-  getMoveNotificationContent,
   getExportNotificationContent,
+  getGridActionLabels,
+  getImportNotificationContent,
+  getIsNeedToMove,
+  getMoveNotificationContent,
   getParentPathByFullPath,
   getToolbarOptionLabels,
   getVersionsPerName,
@@ -34,11 +35,10 @@ describe('getToolbarOptionLabels', () => {
 });
 
 describe('getGridActionLabels', () => {
-  test('AssetsRoles offers delete and openInNewTab, but no duplicate — Role.class has no displayName field for the shared duplicate modal to write', () => {
+  test('AssetsRoles offers delete and openInNewTab and duplicate — Role.class has no displayName field for the shared duplicate modal to write', () => {
     const keys = getGridActionLabels(ApplicationRoute.PlatformRoles, false).map((item) => item.key);
 
-    expect(keys).toEqual(expect.arrayContaining(['delete', 'openInNewTab']));
-    expect(keys).not.toContain('duplicate');
+    expect(keys).toEqual(expect.arrayContaining(['delete', 'openInNewTab', 'duplicate']));
   });
 
   test('AssetsRoles returns no options for a read-only admin', () => {
@@ -415,6 +415,7 @@ describe('getMoveNotificationContent', () => {
     expect(result.description).toContain('/toolsets/folder/');
   });
 });
+
 describe('getExportNotificationContent', () => {
   const mockT = (key: string, options?: Record<string, string | number>) => {
     if (key === FileManagerI18nKey.ExportSuccessTitle) {
@@ -830,5 +831,55 @@ describe('getImportNotificationContent', () => {
     expect(result.description).toBe('Successfully imported one Toolset to /dest');
     expect(result.skippedTitle).toBe('Import 1 Toolset Skipped');
     expect(result.skippedDescription).toBe('Skipped import of /dest/toolset1');
+  });
+});
+
+describe('getAgentLinkForConversation', () => {
+  test('returns empty string when deployment is null', () => {
+    expect(getAgentLinkForConversation(null, 'en')).toBe('');
+  });
+
+  test('returns empty string when deployment is empty object', () => {
+    expect(getAgentLinkForConversation({}, 'en')).toBe('');
+  });
+
+  test('returns model link when deployment has model', () => {
+    const deployment = { model: 'gpt-4' };
+    const result = getAgentLinkForConversation(deployment, 'en');
+    expect(result).toBe(`/en${ApplicationRoute.Models}/${encodeURIComponent('gpt-4')}`);
+  });
+
+  test('encodes special characters in model name', () => {
+    const deployment = { model: 'my model/v1' };
+    const result = getAgentLinkForConversation(deployment, 'en');
+    expect(result).toBe(`/en${ApplicationRoute.Models}/${encodeURIComponent('my model/v1')}`);
+  });
+
+  test('returns application link when application equals reference', () => {
+    const deployment = { application: 'my-app', reference: 'my-app' };
+    const result = getAgentLinkForConversation(deployment, 'en');
+    expect(result).toBe(`/en${ApplicationRoute.Applications}/${encodeURIComponent('my-app')}`);
+  });
+
+  test('returns assets application link when application differs from reference', () => {
+    const deployment = {
+      application: 'applications/my-app',
+      reference: 'other-ref',
+      displayName: 'My App',
+    };
+    const result = getAgentLinkForConversation(deployment, 'en');
+    expect(result).toBe(`/en${ApplicationRoute.AssetsApplications}/${encodeURIComponent('My App')}?path=my-app`);
+  });
+
+  test('model takes precedence over application', () => {
+    const deployment = { model: 'gpt-4', application: 'my-app', reference: 'my-app' };
+    const result = getAgentLinkForConversation(deployment, 'en');
+    expect(result).toBe(`/en${ApplicationRoute.Models}/${encodeURIComponent('gpt-4')}`);
+  });
+
+  test('uses currentLocale in the path', () => {
+    const deployment = { model: 'gpt-4' };
+    expect(getAgentLinkForConversation(deployment, 'fr')).toContain('/fr/');
+    expect(getAgentLinkForConversation(deployment, 'de')).toContain('/de/');
   });
 });
