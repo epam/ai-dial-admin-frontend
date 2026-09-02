@@ -14,7 +14,6 @@ import { QueryValueType } from '@/src/models/analytics/query';
 import {
   availableSelectFields,
   catalogValueTypes,
-  columnHeaderName,
   columnProvenance,
   composedSourceEntities,
   conversationColumnGroups,
@@ -164,20 +163,6 @@ describe('CONVERSATIONS_TRACE_COLUMNS', () => {
   test('offers only the curated columns without a schema, since no field can be confirmed to exist', () => {
     expect(offerableSchemaFields(columns([]), [])).toEqual([]);
     expect(fieldsOf(columns([]))).not.toContain('duration_ms');
-  });
-});
-
-describe('columnHeaderName', () => {
-  test('uses the display name the schema reports', () => {
-    expect(columnHeaderName(sourceField('traces', { display_name: 'Trace IDs' }))).toBe('Trace IDs');
-  });
-
-  test('renders the field name readably where no display name is reported', () => {
-    expect(columnHeaderName(sourceField('avg_duration_ms'))).toBe('Avg duration ms');
-  });
-
-  test('drops the enrichment namespace, which the column group already names', () => {
-    expect(columnHeaderName(enrichmentField('sentiment_score'))).toBe('Sentiment score');
   });
 });
 

@@ -128,16 +128,22 @@ describe('conversation detail route', () => {
   test('requests the conversation and its feedback for the same id', async () => {
     await render(CHAT_ID);
 
-    expect(detail()).toHaveBeenCalledWith(CHAT_ID, expect.arrayContaining([ConversationsField.ChatId]));
+    expect(detail()).toHaveBeenCalledWith(
+      CHAT_ID,
+      expect.arrayContaining([expect.objectContaining({ name: ConversationsField.ChatId })]),
+    );
     expect(feedback()).toHaveBeenCalledWith(CHAT_ID);
   });
 
+  // The builder is handed the schema's fields, not their names: the insight half of the select is discovered
+  // from the namespace, and the panel reads each column's label, hint and type off the same report.
   test('builds the detail query from the fields the schema reports', async () => {
-    schema().mockResolvedValue({ success: true, response: { fields: [{ name: ConversationsField.ChatId }] } });
+    const fields = [{ name: ConversationsField.ChatId, source: 'chat_id', type: 'string' }];
+    schema().mockResolvedValue({ success: true, response: { fields } });
 
     await render(CHAT_ID);
 
-    expect(detail()).toHaveBeenCalledWith(CHAT_ID, [ConversationsField.ChatId]);
+    expect(detail()).toHaveBeenCalledWith(CHAT_ID, fields);
   });
 
   test('renders the conversation when the schema cannot be read', async () => {
