@@ -2,6 +2,7 @@ import { APPLICATION_JSON_TYPE } from '@/src/constants/request-headers';
 import { CHAT_COMPLETION_BODY } from './chat-completion-body';
 import { TestSuiteEndpointRef } from '@/src/models/evaluation/test-suite';
 import { CHAT_COMPLETION_METHOD } from './chat-completion-method';
+import { TestCaseItemType } from '@/src/types/evaluation';
 
 export const CHAT_COMPLETION_RELATIVE_URL = '/chat/completions';
 export const CHAT_COMPLETION_SUITE = {
@@ -18,7 +19,7 @@ export const CHAT_COMPLETION_SUITE = {
       name: 'answer',
       displayName: 'answer',
       expression: 'choices[0].message.content',
-      type: 'string',
+      type: TestCaseItemType.STRING,
     },
   ],
 };
