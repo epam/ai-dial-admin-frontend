@@ -44,10 +44,12 @@ vi.mock('@/src/components/EntityView/AppRoute/AppRoute', () => ({
 
 import { getRunner } from '@/src/app/[lang]/platform-app-runners/actions';
 
-const ASSET_REFERENCE = 'schemas/platform/http%3A%2F%2Fasdqwe';
+// The App Runner picker stores the selected runner's raw `$id` on `application_type_schema_id`
+// (`AppRunners.tsx`'s dropdown value is `r.$id`) — not the encoded `toRunnerReference` form.
+const ASSET_REFERENCE = 'http://asdqwe';
 const ASSET_PATH = 'http%3A%2F%2Fasdqwe';
 
-const OTHER_ASSET_REFERENCE = 'schemas/platform/http%3A%2F%2Fother';
+const OTHER_ASSET_REFERENCE = 'http://other';
 const OTHER_ASSET_PATH = 'http%3A%2F%2Fother';
 
 const entityRunner = {

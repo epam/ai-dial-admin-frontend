@@ -4,7 +4,6 @@ import {
   ConversationArrayValueSource,
   ConversationColumn,
   ConversationDetailPanel,
-  ConversationFieldDefinition,
   ConversationFieldFormat,
   ConversationFilterOperator,
   ConversationInsightsState,
@@ -27,6 +26,11 @@ export const CONVERSATIONS_ENTITY = 'sessions';
 export const FEEDBACK_ENTITY = 'response_ratings';
 
 export const USAGE_LOG_ENTITY = 'dial_usage_log';
+
+// The namespace the `sessions` entity exposes its conversation-insight columns under. Named once: the detail
+// query selects by it, the panel's field set is derived from it, and the provenance map is keyed on it, so
+// the three cannot disagree about what counts as an insight column.
+export const INSIGHTS_ENRICHMENT = 'session_insights';
 
 // The rollup's `client_session_source` value meaning "this id came from a conversation header". Every other
 // value names a coding-harness header, whose hops carry no `chat_id`.
@@ -282,7 +286,7 @@ export const ANALYTICS_FIELD_QUERY_VALUE_TYPE: Partial<Record<AnalyticsFieldType
 };
 
 export const ENRICHMENT_PROVENANCE: Record<string, ColumnProvenance> = {
-  session_insights: ColumnProvenance.Insights,
+  [INSIGHTS_ENRICHMENT]: ColumnProvenance.Insights,
 };
 
 export const PROVENANCE_LABEL_KEY: Partial<Record<ColumnProvenance, string>> = {
@@ -406,46 +410,12 @@ export const SPAN_KIND_CLASS: Record<SpanKind, string> = {
 // Failure is its own axis, so it has its own class rather than a member of the kind palette.
 export const SPAN_FAILED_CLASS = 'bg-error text-error';
 
-export const CONVERSATION_INSIGHT_FIELDS: ConversationFieldDefinition[] = [
-  { labelKey: ConversationsTraceI18nKey.DetailSummary, column: ConversationsField.InsightSummary },
-  { labelKey: ConversationsTraceI18nKey.DetailSentiment, column: ConversationsField.InsightSentiment },
-  {
-    labelKey: ConversationsTraceI18nKey.DetailResolutionStatus,
-    column: ConversationsField.InsightResolutionStatus,
-  },
-  { labelKey: ConversationsTraceI18nKey.DetailTopic, column: ConversationsField.InsightTopic },
-  { labelKey: ConversationsTraceI18nKey.DetailTopics, column: ConversationsField.InsightTopics },
-  { labelKey: ConversationsTraceI18nKey.DetailLanguage, column: ConversationsField.InsightLanguage },
-  { labelKey: ConversationsTraceI18nKey.DetailActivityType, column: ConversationsField.InsightActivityType },
-  {
-    labelKey: ConversationsTraceI18nKey.DetailActivitySubTaskType,
-    column: ConversationsField.InsightActivitySubTaskType,
-  },
-];
-
 export const INSIGHTS_ABSENCE_KEY: Record<
   Exclude<ConversationInsightsState, ConversationInsightsState.Available>,
   string
 > = {
   [ConversationInsightsState.NotEvaluated]: ConversationsTraceI18nKey.DetailInsightsNotEvaluated,
   [ConversationInsightsState.EnrichmentUnavailable]: ConversationsTraceI18nKey.DetailInsightsUnavailable,
-};
-
-export const INSIGHT_BADGE_NEUTRAL_CLASS = 'bg-layer-4 text-secondary';
-
-export const SENTIMENT_BADGE_CLASS: Record<string, string> = {
-  positive: 'bg-success text-success',
-  neutral: 'bg-info text-info',
-  negative: 'bg-error text-error',
-  mixed: 'bg-warning text-warning',
-};
-
-export const RESOLUTION_BADGE_CLASS: Record<string, string> = {
-  resolved: 'bg-success text-success',
-  partially_resolved: 'bg-warning text-warning',
-  unresolved: 'bg-error text-error',
-  abandoned: 'bg-error text-error',
-  unclear: 'bg-layer-4 text-secondary',
 };
 
 export const EMPTY_ICON_SIZE = 24;

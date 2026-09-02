@@ -10,7 +10,6 @@ import { ButtonsI18nKey, EntitiesI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import { DialAdapter } from '@/src/models/dial/adapter';
 import { DialApplicationScheme } from '@/src/models/dial/application';
-import { getRunnerReference } from './utils';
 
 interface Props {
   selectedId?: string;
@@ -37,7 +36,7 @@ const SelectAppRunnerModal: FC<Props> = ({
   const isSelectedNode = (data?: DialApplicationScheme | DialAdapter) => {
     const runner = data as DialApplicationScheme;
     const adapter = data as DialAdapter;
-    return !!selectedRunner && (getRunnerReference(runner) === selectedRunner || adapter?.name === selectedRunner);
+    return !!selectedRunner && (runner?.$id === selectedRunner || adapter?.name === selectedRunner);
   };
 
   const options: GridOptions = {
@@ -49,14 +48,12 @@ const SelectAppRunnerModal: FC<Props> = ({
         const adapter = data.data as DialAdapter;
         const isActive = isSelectedNode(data.data);
 
-        return (
-          <RadioButtonRenderer inputId={getRunnerReference(runner) || adapter?.name || data.id} isChecked={isActive} />
-        );
+        return <RadioButtonRenderer inputId={runner?.$id || adapter?.name || data.id} isChecked={isActive} />;
       },
     },
     onRowSelected: (event) => {
       if (event.node.isSelected()) {
-        setSelectedRunner(getRunnerReference(event.data) || event.data.name);
+        setSelectedRunner(event.data?.$id || event.data.name);
       }
     },
   };

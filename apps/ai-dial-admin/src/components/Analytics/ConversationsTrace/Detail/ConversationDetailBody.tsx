@@ -15,6 +15,7 @@ import {
   ConversationDetailRow,
   ConversationDetailView as DetailView,
   ConversationFeedbackRow,
+  ConversationInsightField,
   ConversationTraceCard,
   ConversationTraceGroup,
   ConversationTranscript,
@@ -28,6 +29,7 @@ import { questionsByTurn } from '@/src/utils/analytics/conversation-transcript';
 
 interface Props {
   conversation: ConversationDetailRow;
+  insightColumns: ConversationInsightField[];
   scope: SessionScope;
   // Whether this caller can read body columns at all — a schema fact, resolved at page open, so the Chat
   // option is gated accurately before any body read runs.
@@ -90,6 +92,7 @@ const ChatView: FC<ChatViewProps> = ({ transcript, isLoading, traceRatings, turn
 
 const ConversationDetailBody: FC<Props> = ({
   conversation,
+  insightColumns,
   isTranscriptReadable,
   feedbackRows,
   feedbackTotal,
@@ -185,6 +188,7 @@ const ConversationDetailBody: FC<Props> = ({
         )}
         <ConversationDetailRail
           conversation={conversation}
+          insightColumns={insightColumns}
           feedback={feedbackRows}
           feedbackTotal={feedbackTotal}
           ratings={ratings}

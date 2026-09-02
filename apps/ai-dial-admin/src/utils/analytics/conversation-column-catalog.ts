@@ -25,9 +25,7 @@ import {
 } from '@/src/models/analytics/conversations-trace';
 import { AnalyticsEntityField, AnalyticsFieldType } from '@/src/models/analytics/entity';
 import { QueryValueType } from '@/src/models/analytics/query';
-import { readableWords } from '@/src/utils/analytics/conversation-formatting';
-
-const ENRICHMENT_SEPARATOR = '.';
+import { columnHeaderName, enrichmentOf } from '@/src/utils/analytics/conversation-enrichment';
 
 const UNFILTERABLE: Partial<ColDef> = { filter: false, floatingFilter: false };
 
@@ -42,13 +40,6 @@ const consumedFields = (columns: ColDef[]): Set<string> =>
 // as "not a plain column of the table the query already reads", which also covers a JSON-derived field:
 // likewise not free to project, and likewise better fetched on demand.
 const isSourceBacked = (field: AnalyticsEntityField): boolean => field.name === field.source;
-
-// The namespace an enrichment field carries, empty for a plain column of the rollup. Read off the name
-// rather than from a list, so an enrichment this frontend has never heard of is still attributed.
-const enrichmentOf = (fieldName: string): string => {
-  const separator = fieldName.indexOf(ENRICHMENT_SEPARATOR);
-  return separator > 0 ? fieldName.slice(0, separator) : '';
-};
 
 // An enrichment this frontend cannot name takes the unattributed colour rather than a fourth hue. Shared
 // with `columnProvenance` so the provenance line and the grid band attribute a namespace identically.
@@ -193,17 +184,6 @@ const typeColumn = (type: AnalyticsFieldType): Partial<ColDef> => {
     return UNFILTERABLE;
   }
   return { ...baseStringFilter };
-};
-
-// The service omits `display_name` where it is null — on some fields, and on some instances on all of them —
-// so the fallback is an ordinary path, not an edge case, and it may not present a raw catalog identifier as a
-// header. The namespace is dropped because the column's group already names it.
-export const columnHeaderName = (field: AnalyticsEntityField): string => {
-  if (field.display_name) {
-    return field.display_name;
-  }
-
-  return readableWords(field.name.slice(field.name.indexOf(ENRICHMENT_SEPARATOR) + 1));
 };
 
 // The description is the service's own, quoted rather than paraphrased: two of them contradict what their

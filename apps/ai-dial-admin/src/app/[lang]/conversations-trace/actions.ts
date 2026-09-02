@@ -98,7 +98,7 @@ import {
   FEEDBACK_ENTITY,
   USAGE_LOG_ENTITY,
 } from '@/src/constants/analytics/conversations-trace';
-import { AnalyticsEntitySchema } from '@/src/models/analytics/entity';
+import { AnalyticsEntityField, AnalyticsEntitySchema } from '@/src/models/analytics/entity';
 import { withEntitySchemaCache } from '@/src/server/analytics/entity-schema-cache';
 import { toNumber } from '@/src/utils/analytics/scalar';
 import { paddedUtcDayRange } from '@/src/utils/analytics/conversation-formatting';
@@ -480,10 +480,10 @@ export async function getConversationFieldValues(
 
 export async function getConversationDetail(
   chatId: string,
-  availableFields?: string[],
+  schemaFields?: AnalyticsEntityField[],
 ): Promise<ServerActionResponse<ConversationDetailResult>> {
   const result = await analyticsDataApi.executeAction(
-    buildConversationDetailQuery(chatId, availableFields),
+    buildConversationDetailQuery(chatId, schemaFields),
     await token(),
   );
 
