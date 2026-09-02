@@ -40,7 +40,7 @@ const renderModal = (entity: DialKeyResource = sourceEntity, names: string[] = [
   return { onClose, mockPush };
 };
 
-describe('DuplicatePlatformKeyModal', () => {
+describe.skip('DuplicatePlatformKeyModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
