@@ -16,7 +16,6 @@ import {
   ConversationFieldValuesRequest,
   ConversationFilterOperator,
   ConversationFilters,
-  ModelCallOutput,
   ConversationPageRequest,
   ConversationPeriodSummary,
   ConversationRatingRow,
@@ -24,7 +23,6 @@ import {
   ConversationScalarFilter,
   ConversationRow,
   ConversationEntryBodyRow,
-  ConversationModelBodyRow,
   ConversationEntryHopRow,
   ConversationSpanRow,
   ConversationSpansPage,
@@ -72,7 +70,6 @@ import {
   buildConversationFieldValuesQuery,
   buildConversationHopBodyQuery,
   buildConversationHopCountQuery,
-  buildConversationModelBodiesQuery,
   buildConversationListQuery,
   buildConversationSpansQuery,
   buildConversationTraceFiguresQuery,
@@ -123,9 +120,6 @@ import {
 import { mcpFactsOf } from '@/src/utils/analytics/hop-inspector/mcp';
 import { paramsOf } from '@/src/utils/analytics/hop-inspector/params';
 import { responseEnvelopeOf, rawBodyOf } from '@/src/utils/analytics/hop-inspector/response';
-import { isConversationHop } from '@/src/utils/analytics/conversation-hop-stream';
-import { isModelCall } from '@/src/utils/analytics/conversation-spans';
-import { modelOutputOf, splitModelBodyBudget, unreadOutputOf } from '@/src/utils/analytics/conversation-model-outputs';
 import { getIsEnableAuthToggle } from '@/src/utils/env/get-auth-toggle';
 
 const token = () => getUserToken(getIsEnableAuthToggle(), headers(), cookies());
@@ -504,7 +498,7 @@ export async function getConversationDetail(
 
 // Never rejects: a failed schema read must cost the optional comment column, not the page. Without this the
 // rejection would reach the detail route's `Promise.all` and render the error state for a conversation whose
-// transcript, turns and record all resolved. `resolveModelOutputs` defends the same way for the same reason.
+// transcript, turns and record all resolved.
 async function feedbackSchemaFields(authToken: Token): Promise<string[] | undefined> {
   try {
     const schema = await withEntitySchemaCache(FEEDBACK_ENTITY, authToken, () =>
@@ -926,64 +920,7 @@ export async function getConversationHopEmbedding(
   return { success: true, response: embeddingFactsOf(row, fields) };
 }
 
-// Never rejects: the outputs enrich the event stream, and the spans beside them are worth rendering
-// without it. A throw here used to discard a span read that had already succeeded.
-async function resolveModelOutputs(
-  scope: SessionScope,
-  traceId: string,
-  spans: ConversationSpanRow[],
-  authToken: Token,
-): Promise<ModelCallOutput[]> {
-  try {
-    return await readModelOutputs(scope, traceId, spans, authToken);
-  } catch (error) {
-    errorObjLog(error, 'Failed to enrich the conversation spans with model call outputs');
-    return [];
-  }
-}
-
-async function readModelOutputs(
-  scope: SessionScope,
-  traceId: string,
-  spans: ConversationSpanRow[],
-  authToken: Token,
-): Promise<ModelCallOutput[]> {
-  const schema = await withEntitySchemaCache(USAGE_LOG_ENTITY, authToken, () =>
-    analyticsDataApi.getEntitySchema(USAGE_LOG_ENTITY, authToken),
-  );
-  const schemaFieldNames = schema?.fields?.map(({ name }) => name) ?? [];
-
-  if (!schema || !transcriptBodyFields(schemaFieldNames).responseFields.length) {
-    return [];
-  }
-
-  const candidates = spans.filter(
-    (span) => isModelCall(span) && isConversationHop(span) && toNumber(span.response_body_bytes) !== 0,
-  );
-  const { read, skipped } = splitModelBodyBudget(candidates);
-  if (!read.length) {
-    return candidates.map(unreadOutputOf);
-  }
-
-  const result = await analyticsDataApi.executeAction(
-    buildConversationModelBodiesQuery(scope, traceId, read, schemaFieldNames),
-    authToken,
-  );
-
-  if (!result.success) {
-    errorObjLog(result, 'Failed to fetch the conversation model call outputs');
-    return [];
-  }
-
-  const decoded = ((result.response?.rows ?? []) as unknown as ConversationModelBodyRow[]).map(modelOutputOf);
-
-  return [...decoded, ...skipped.map(unreadOutputOf)];
-}
-
-export async function getConversationSpans(
-  scope: SessionScope,
-  traceId: string,
-): Promise<ServerActionResponse<ConversationSpansPage>> {
+export async function getConversationSpans(traceId: string): Promise<ServerActionResponse<ConversationSpansPage>> {
   const authToken = await token();
   const query = buildConversationSpansQuery(traceId, CONVERSATION_SPAN_LIMIT);
   const result = await analyticsDataApi.executeAction(query, authToken);
@@ -999,7 +936,6 @@ export async function getConversationSpans(
     response: {
       spans,
       total: result.response?.totalCount ?? null,
-      modelOutputs: await resolveModelOutputs(scope, traceId, spans, authToken),
     },
   };
 }

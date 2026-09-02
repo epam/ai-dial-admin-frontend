@@ -127,7 +127,7 @@ Added 2026-08-18: browser verification found the change taking both pages down o
 ## 10. Deployments relabel
 
 Added 2026-08-18 after review: the narrowing was measured against `turns.models` on dev and disagrees in both
-directions — it kept three orchestrating `statgpt-*` deployments the rollup excludes and dropped two embedding
+directions — it kept three orchestrating application deployments the rollup excludes and dropped two embedding
 deployments the rollup includes as billed. A name heuristic cannot decide this, so both surfaces name the
 field they read.
 

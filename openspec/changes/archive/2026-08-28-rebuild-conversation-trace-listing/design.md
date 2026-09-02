@@ -9,7 +9,7 @@ Three properties of the backend shape everything below.
 `PARTITION BY toYYYYMMDD(request_time)`.** The only skip index is a minmax on `_ingested_at`. There is no
 index on `chat_id` and none on `trace_id`, and `trace_id` is the fourth sort-key column — so neither prunes.
 The daily partition range is the primary prune and `project_id` the secondary one. `project_id` is a genuine
-discriminator but tenant-dependent: measured over one window, `statgpt` was 78 906 of 126 120 rows (63%) and
+discriminator but tenant-dependent: measured over one window, the busiest project was 78 906 of 126 120 rows (63%) and
 the empty project 7%, so a project filter alone can leave most of the table in scope.
 
 **The query DSL's function catalog is a closed set, negotiated at runtime.** `GET /v1/queries/functions` is

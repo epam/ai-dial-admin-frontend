@@ -332,6 +332,7 @@ describe('buildConversationSpansQuery', () => {
       UsageLogField.OperationDurationMs,
       UsageLogField.TotalTokens,
       UsageLogField.DeploymentPrice,
+      UsageLogField.TotalPrice,
       UsageLogField.RequestTime,
       UsageLogField.ResponseBodyBytes,
       UsageLogField.RequestBodyBytes,
@@ -383,7 +384,7 @@ describe('buildConversationSpansQuery', () => {
   });
 });
 
-const PROJECT_ID = 'statgpt';
+const PROJECT_ID = 'demo-project';
 const PAGE_TRACE_IDS = ['0a3f1d9c8b7e6a5f', 'bee062c1e8b0b4d9'];
 // Noon UTC, so a containing-day bound and a padded one are unambiguously different.
 const NOON_UTC = Date.UTC(2026, 7, 27, 12, 0, 0);

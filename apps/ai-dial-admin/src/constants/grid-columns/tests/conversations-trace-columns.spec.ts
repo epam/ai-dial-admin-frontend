@@ -602,7 +602,7 @@ describe('conversations columns :: value formatting', () => {
     const deployments = [
       'applications/public/qa__0.0.1',
       'azure-ai-vision-embeddings',
-      'statgpt-generic-rag-swiss-re',
+      'generic-rag-app',
       'gpt-4.1-2025-04-14',
     ];
 

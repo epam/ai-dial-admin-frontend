@@ -158,6 +158,32 @@ export const formatDurationMs = (value: number | string | null): string => {
   return `${stripTrailingZeros((millis / SECOND_MS).toFixed(1))}s`;
 };
 
+// Hop scale, which is not conversation scale: recorded hop durations start at 6 ms, and
+// `formatConversationDuration` renders anything under 50 ms as `0s` — a real 15 ms handshake reading as zero
+// is the one thing the zero-handling rule exists to prevent. Sub-second values therefore keep their
+// milliseconds, and the second/minute/hour shapes are the same ones the conversation formatter uses.
+//
+// Empty, not a dash, for an absent or zero value: DIAL clamps its own measurement at zero and a producer
+// predating the field stores zero for "not reported", so the two cannot be told apart and neither is a
+// duration. A caller that needs a placeholder supplies its own.
+export const formatHopDuration = (value: number | string | null): string => {
+  const millis = toNumber(value);
+  if (millis === null || millis <= 0) {
+    return '';
+  }
+  if (millis < SECOND_MS) {
+    return `${Math.round(millis)}ms`;
+  }
+  if (millis < MINUTE_MS) {
+    return `${stripTrailingZeros((millis / SECOND_MS).toFixed(1))}s`;
+  }
+  if (millis < HOUR_MS) {
+    return `${Math.floor(millis / MINUTE_MS)}m ${Math.round((millis % MINUTE_MS) / SECOND_MS)}s`;
+  }
+
+  return `${Math.floor(millis / HOUR_MS)}h ${Math.round((millis % HOUR_MS) / MINUTE_MS)}m`;
+};
+
 export const formatConversationDuration = (value: number | string | null): string => {
   const millis = toNumber(value);
   if (millis === null || millis <= 0) {

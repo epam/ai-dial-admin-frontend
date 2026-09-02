@@ -849,7 +849,7 @@ describe('getConversationsSchema', () => {
 });
 
 describe('getConversationTranscript', () => {
-  const PROJECT_ID = 'statgpt';
+  const PROJECT_ID = 'demo-project';
   const CHAT_ID = 'chat-1';
   const NOW = Date.parse('2026-08-20T00:00:00.000Z');
   const RECENT = Date.parse('2026-08-19T00:00:00.000Z');

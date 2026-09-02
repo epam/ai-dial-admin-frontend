@@ -15,7 +15,6 @@ import {
   ConversationSpanRow,
   ConversationTraceFigures,
   ConversationTranscriptAvailability,
-  ModelCallOutput,
   SessionScope,
 } from '@/src/models/analytics/conversations-trace';
 import {
@@ -25,8 +24,8 @@ import {
   toMillis,
 } from '@/src/utils/analytics/conversation-formatting';
 import { toNumber } from '@/src/utils/analytics/scalar';
-import { areSpansPartial, isFailedHop, spanKindOf } from '@/src/utils/analytics/conversation-spans';
-import { buildHopTree } from '@/src/utils/analytics/conversation-hop-stream';
+import { areSpansPartial, isFailedHop, mcpToolCallTallyOf, spanKindOf } from '@/src/utils/analytics/conversation-spans';
+import { buildHopTree } from '@/src/utils/analytics/conversation-span-tree';
 
 const ICON_SIZE = 16;
 
@@ -61,7 +60,6 @@ interface Props {
   title?: string;
   figures: ConversationTraceFigures;
   spans: ConversationSpanRow[];
-  modelOutputs: ModelCallOutput[];
   bodyGrants: ConversationTranscriptAvailability;
   hasLoadError: boolean;
   selectedSpanId: string | null;
@@ -74,7 +72,6 @@ const ConversationTraceView: FC<Props> = ({
   title,
   figures,
   spans,
-  modelOutputs,
   bodyGrants,
   hasLoadError,
   selectedSpanId,
@@ -83,7 +80,7 @@ const ConversationTraceView: FC<Props> = ({
 }) => {
   const t = useI18n();
 
-  const tree = useMemo(() => buildHopTree({ spans, modelOutputs }), [spans, modelOutputs]);
+  const tree = useMemo(() => buildHopTree(spans), [spans]);
   const selectedSpan = spans.find(({ core_span_id }) => core_span_id === selectedSpanId) ?? null;
   const selected = useMemo(
     () =>
@@ -98,6 +95,11 @@ const ConversationTraceView: FC<Props> = ({
     [selectedSpan],
   );
   const hopCount = toNumber(figures.spans);
+  const isSpanReadPartial = areSpansPartial(spans, hopCount);
+  // Turn-wide, so a span's own inspector can say which of the tools it asked for the turn never recorded a
+  // call of. Computed once here rather than per selection: the answer is a property of the turn — and it
+  // carries whether the read was complete, because an absence read from a capped page proves nothing.
+  const mcpToolCalls = useMemo(() => mcpToolCallTallyOf(spans, !isSpanReadPartial), [spans, isSpanReadPartial]);
   const withheldKey = withheldNoticeKeyOf(bodyGrants);
   const isFailed = (toNumber(figures.failedSpans) ?? 0) > 0;
 
@@ -152,7 +154,7 @@ const ConversationTraceView: FC<Props> = ({
         </div>
       </div>
 
-      {areSpansPartial(spans, hopCount) && (
+      {isSpanReadPartial && (
         <p className="dial-tiny-text text-secondary">
           {t(ConversationsTraceI18nKey.TraceSpansPartial, { shown: spans.length, total: hopCount ?? spans.length })}
         </p>
@@ -176,7 +178,13 @@ const ConversationTraceView: FC<Props> = ({
             <ConversationEventStream tree={tree} selectedSpanId={selectedSpanId} onSelectSpan={onSelectSpan} />
           )}
         </div>
-        <ConversationSpanDetail node={selected} scope={scope} traceId={figures.traceId} bodyGrants={bodyGrants} />
+        <ConversationSpanDetail
+          node={selected}
+          scope={scope}
+          traceId={figures.traceId}
+          bodyGrants={bodyGrants}
+          mcpToolCalls={mcpToolCalls}
+        />
       </div>
     </div>
   );

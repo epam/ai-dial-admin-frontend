@@ -15,12 +15,12 @@ import { useTreeExpansion } from '@/src/components/Common/TreeGrid/use-tree-expa
 import {
   COST_TEXT_CLASS,
   EMPTY_ICON_SIZE,
-  HOP_EVENT_CHIP_CLASS,
-  HOP_EVENT_LABEL_KEY,
-  HOP_EVENT_RAIL_CLASS,
   HOP_FAILED_CHIP_CLASS,
   HOP_FAILED_RAIL_CLASS,
   NEUTRAL_CHIP_CLASS,
+  SPAN_KIND_CHIP_CLASS,
+  SPAN_KIND_LABEL_KEY,
+  SPAN_KIND_RAIL_CLASS,
   TREE_GUIDE_CLASS,
   UNRECORDED_ROOT_RAIL_CLASS,
 } from '@/src/constants/analytics/conversations-trace';
@@ -29,34 +29,52 @@ import { ConversationsTraceI18nKey } from '@/src/constants/i18n';
 import { useI18n } from '@/src/locales/client';
 import {
   HopEmphasis,
-  HopEventType,
+  HopFacts,
+  HopFactsShape,
   HopOutcomeFilter,
   HopTreeNode,
   HopTreeRow,
+  SpanKind,
 } from '@/src/models/analytics/conversations-trace';
-import { formatCompactNumber, formatSignificantCost } from '@/src/utils/analytics/conversation-formatting';
 import {
-  categoriesOf,
+  formatCompactNumber,
+  formatHopDuration,
+  formatSignificantCost,
+} from '@/src/utils/analytics/conversation-formatting';
+import {
   countMatchingNodes,
   countMatchableNodes,
   flattenHopTree,
   hasFailedNodes,
+  kindsOf,
   markMatchingNodes,
 } from '@/src/utils/analytics/conversation-span-tree';
 import { formatTimeToLocalString } from '@/src/utils/formatting/date';
 
-// The rail states the outcome where there is one and the kind otherwise: a failed call is what a reader
-// scanning the tree needs to find first, and it keeps its kind on the badge beside it.
-const railClassOf = (type: HopEventType | null, isFailed: boolean): string => {
+// The rail states the outcome where there is one and the kind of call otherwise: a failed call is what a
+// reader scanning the tree needs to find first, and it keeps its kind on the badge beside it.
+const railClassOf = (kind: SpanKind | null, isFailed: boolean): string => {
   if (isFailed) {
     return HOP_FAILED_RAIL_CLASS;
   }
 
-  return type === null ? UNRECORDED_ROOT_RAIL_CLASS : HOP_EVENT_RAIL_CLASS[type];
+  return kind === null ? UNRECORDED_ROOT_RAIL_CLASS : SPAN_KIND_RAIL_CLASS[kind];
 };
 
 const RAIL_COLUMN_CLASS = 'relative w-4 shrink-0 self-stretch';
 const RAIL_LINE_CLASS = 'absolute left-1/2 border-l';
+
+// The filter controls' own metrics, matching ui-kit's small *chip* (20px tall, 6px of horizontal padding,
+// barely-rounded corners) rather than its small *button* (24px, 8px, fully rounded): a row of these reads as
+// a filter bar, not as a row of buttons.
+//
+// Every class here is important-qualified, and each for its own reason. The radius comes from ui-kit's
+// stylesheet — every 2.0 button class carries `border-radius: 9999px` — so a plain `rounded-sm` sits at equal
+// specificity against it and the winner would depend on stylesheet order. The height and padding come from
+// utilities the button puts on the element, and ui-kit concatenates the caller's `className` onto its own
+// with `classnames` rather than merging with `tailwind-merge` — so `h-[24px]` and `px-2` stay in the
+// attribute alongside these, and again only order would decide.
+const FILTER_CHIP_CLASS = 'border !h-5 !rounded-sm !px-1.5';
 
 interface RailsProps {
   ancestorHasNextSibling: boolean[];
@@ -80,6 +98,37 @@ const RowRails: FC<RailsProps> = ({ ancestorHasNextSibling, depth, isLastChild }
   </span>
 );
 
+interface FactsProps {
+  facts: HopFacts;
+}
+
+// Which figures a row states is decided by what its hop recorded, never by what kind of call it was. A hop
+// that metered nothing of its own would otherwise lead with `0 tok` and a dash where the reader expects its
+// most important figure — see `hopFactsOf`.
+const RowFacts: FC<FactsProps> = ({ facts }) => {
+  const t = useI18n();
+
+  if (facts.shape === HopFactsShape.Metered) {
+    const cost = formatSignificantCost(facts.cost);
+
+    return (
+      <>
+        {facts.tokens !== null && (
+          <span>{t(ConversationsTraceI18nKey.SpanTokens, { count: formatCompactNumber(facts.tokens) })}</span>
+        )}
+        {facts.requestMessages !== null && (
+          <span>{t(ConversationsTraceI18nKey.SpanRequestMessages, { count: facts.requestMessages })}</span>
+        )}
+        {cost && <span className={COST_TEXT_CLASS}>{cost}</span>}
+      </>
+    );
+  }
+
+  const chainCost = formatSignificantCost(facts.chainCost);
+
+  return <span className={COST_TEXT_CLASS}>{t(ConversationsTraceI18nKey.SpanChainCost, { cost: chainCost })}</span>;
+};
+
 interface RowProps {
   row: HopTreeRow;
   rowElementId: (nodeId: string) => string;
@@ -99,11 +148,11 @@ const HopTreeRowView: FC<RowProps> = ({
 }) => {
   const t = useI18n();
   const { node, ancestorHasNextSibling, isLastChild } = row;
-  const { type, span, label, detail, depth, expanded, children } = node;
+  const { type, span, label, detail, facts, depth, expanded, children } = node;
   const isOpenable = span !== null;
   const isDimmed = isEmphasisActive && !node.isMatch;
 
-  const kindLabel = type === null ? t(ConversationsTraceI18nKey.TraceRootNotRecorded) : t(HOP_EVENT_LABEL_KEY[type]);
+  const duration = formatHopDuration(node.durationMs);
 
   const cardClassName = classNames(
     'flex min-w-0 flex-1 items-center gap-2 rounded border bg-layer-3',
@@ -118,7 +167,6 @@ const HopTreeRowView: FC<RowProps> = ({
   const content = (
     <>
       <span className="w-10 shrink-0 text-right font-mono text-secondary dial-caption-text">{node.position}</span>
-      <span className="w-24 shrink-0 truncate font-mono text-secondary dial-caption-text">{kindLabel}</span>
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         {isOpenable ? (
           <span className="truncate text-primary dial-small-semi-text">{label}</span>
@@ -127,13 +175,22 @@ const HopTreeRowView: FC<RowProps> = ({
             <DialEllipsisTooltip text={label} />
           </span>
         )}
-        {detail && <span className="truncate font-mono text-secondary dial-caption-text">{detail}</span>}
+        {/* What the hop did and what it recorded, on one line beneath who did it. An MCP row states its
+            server above and its method here, so two protocol messages of different servers in the same
+            second are told apart. Rendered only where there is something to say: a hop that recorded no
+            phase and no figures is a one-line row, not a row with a blank line under it. */}
+        {(detail !== null || facts !== null) && (
+          <span className="flex min-w-0 items-center gap-2 truncate font-mono text-secondary dial-caption-text">
+            {detail !== null && <span className="truncate">{detail}</span>}
+            {facts !== null && <RowFacts facts={facts} />}
+          </span>
+        )}
       </span>
       {/* Persistent, and independent of the current emphasis: a failure must not be reachable only by having
           filtered for one. It sits beside the node's kind rather than replacing it. */}
       {node.isFailed && (
         <span className={classNames('shrink-0 rounded border px-1.5 py-0.5 dial-caption-text', HOP_FAILED_CHIP_CLASS)}>
-          {t(ConversationsTraceI18nKey.EventFailed)}
+          {t(ConversationsTraceI18nKey.SpanFailedMarker)}
         </span>
       )}
       {node.isMatch && (
@@ -141,22 +198,17 @@ const HopTreeRowView: FC<RowProps> = ({
           {t(ConversationsTraceI18nKey.StreamMatch)}
         </span>
       )}
-      {node.hasNoRecordedResult && (
-        <span className="shrink-0 rounded bg-layer-4 px-1.5 py-0.5 text-secondary dial-caption-text">
-          {t(ConversationsTraceI18nKey.EventNoRecordedResult)}
-        </span>
-      )}
-      {node.reasoningTokens !== null && (
-        <span className="w-16 shrink-0 text-right font-mono text-secondary dial-tiny-text">
-          {t(ConversationsTraceI18nKey.EventReasoningTokens, { count: formatCompactNumber(node.reasoningTokens) })}
-        </span>
-      )}
-      <span className="w-16 shrink-0 text-right font-mono text-secondary dial-tiny-text">
-        {node.tokens === null ? '' : formatCompactNumber(node.tokens)}
+      <span
+        className={classNames(
+          'w-24 shrink-0 truncate rounded px-2 py-0.5 text-center dial-tiny-semi-text',
+          type === null ? NEUTRAL_CHIP_CLASS : SPAN_KIND_CHIP_CLASS[type],
+        )}
+      >
+        {type === null ? t(ConversationsTraceI18nKey.TraceRootNotRecorded) : t(SPAN_KIND_LABEL_KEY[type])}
       </span>
-      <span className={classNames('w-16 shrink-0 text-right font-mono dial-tiny-text', COST_TEXT_CLASS)}>
-        {formatSignificantCost(node.cost) || ''}
-      </span>
+      {/* Empty for a duration the producer reported as zero: a core predating the field stores zero for "not
+          reported", so zero is not a zero-millisecond call and the formatter answers empty for both. */}
+      <span className="w-16 shrink-0 text-right font-mono text-secondary dial-tiny-text">{duration}</span>
       <span className="w-20 shrink-0 text-right font-mono text-secondary dial-tiny-text">
         {node.startedAtMs === null ? '' : formatTimeToLocalString(node.startedAtMs)}
       </span>
@@ -222,7 +274,7 @@ const ConversationEventStream: FC<Props> = ({ tree, selectedSpanId, onSelectSpan
   const { currentTree, onToggleExpand } = useTreeExpansion(markedTree, { isDefaultExpanded: true });
   const rows = useMemo(() => flattenHopTree(currentTree), [currentTree]);
 
-  const categories = useMemo(() => categoriesOf(tree), [tree]);
+  const kinds = useMemo(() => kindsOf(tree), [tree]);
   // The outcome axis gets a control only when the turn recorded a failure — a control for something the turn
   // has none of would dim every node and mark none.
   const hasFailures = useMemo(() => hasFailedNodes(tree), [tree]);
@@ -263,19 +315,19 @@ const ConversationEventStream: FC<Props> = ({ tree, selectedSpanId, onSelectSpan
           label={t(ConversationsTraceI18nKey.StreamTabAll)}
           iconBefore={emphasis === null ? <IconCheck {...BASE_BUTTON_ICON_PROPS} aria-hidden /> : undefined}
           onClick={() => setEmphasis(null)}
-          className={classNames('border', NEUTRAL_CHIP_CLASS, emphasis === null && 'bg-layer-4')}
+          className={classNames(FILTER_CHIP_CLASS, NEUTRAL_CHIP_CLASS, emphasis === null && 'bg-layer-4')}
           textClassName="dial-tiny-text"
         />
         <span aria-hidden className="mx-1 h-4 shrink-0 border-l border-primary" />
-        {categories.map((type) => (
+        {kinds.map((kind) => (
           <GhostButton
-            key={type}
+            key={kind}
             size={ElementSize.Small}
-            aria-pressed={emphasis === type}
-            label={t(HOP_EVENT_LABEL_KEY[type])}
-            iconBefore={emphasis === type ? <IconCheck {...BASE_BUTTON_ICON_PROPS} aria-hidden /> : undefined}
-            onClick={() => onEmphasise(type)}
-            className={classNames('border', HOP_EVENT_CHIP_CLASS[type], emphasis === type && 'bg-layer-4')}
+            aria-pressed={emphasis === kind}
+            label={t(SPAN_KIND_LABEL_KEY[kind])}
+            iconBefore={emphasis === kind ? <IconCheck {...BASE_BUTTON_ICON_PROPS} aria-hidden /> : undefined}
+            onClick={() => onEmphasise(kind)}
+            className={classNames(FILTER_CHIP_CLASS, SPAN_KIND_CHIP_CLASS[kind], emphasis === kind && 'bg-layer-4')}
             textClassName="dial-tiny-text"
           />
         ))}
@@ -289,7 +341,7 @@ const ConversationEventStream: FC<Props> = ({ tree, selectedSpanId, onSelectSpan
             }
             onClick={() => onEmphasise(HopOutcomeFilter.Failed)}
             className={classNames(
-              'border',
+              FILTER_CHIP_CLASS,
               HOP_FAILED_CHIP_CLASS,
               emphasis === HopOutcomeFilter.Failed && 'bg-layer-4',
             )}

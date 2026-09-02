@@ -102,7 +102,6 @@ describe('ConversationTraceView', () => {
         bodyGrants={GRANTS}
         figures={FIGURES}
         spans={SPANS}
-        modelOutputs={[]}
         hasLoadError={false}
         selectedSpanId={null}
         onSelectSpan={vi.fn()}
@@ -236,7 +235,15 @@ describe('ConversationTraceView', () => {
 });
 
 const renderDetail = (node: ConversationSpanNode | null) =>
-  render(<ConversationSpanDetail node={node} scope={SCOPE} traceId={TRACE_ID} bodyGrants={GRANTS} />);
+  render(
+    <ConversationSpanDetail
+      node={node}
+      scope={SCOPE}
+      traceId={TRACE_ID}
+      bodyGrants={GRANTS}
+      mcpToolCalls={{ counts: {}, isComplete: true }}
+    />,
+  );
 
 describe('ConversationSpanDetail', () => {
   const nodes: ConversationSpanNode[] = SPANS.map((span) => ({
@@ -263,13 +270,15 @@ describe('ConversationSpanDetail', () => {
 
   // Its absolute recorded time, and nothing derived from `operation_duration_ms`: a recorded zero there is
   // indistinguishable between a real sub-millisecond operation and a producer that never reported one.
-  test('places the hop by its own recorded time, stating no duration or offset', () => {
+  // The recorded duration is stated; an offset from the start of the trace still is not, because hops
+  // interleave and a bar would assert a timeline the ordering rule refuses to claim.
+  test('places the hop by its own recorded time and states its duration, but no offset', () => {
     renderDetail(nodes[1]);
 
     expect(screen.getByText(ConversationsTraceI18nKey.SpanRecordedAt)).toBeInTheDocument();
     expect(screen.getByText(new Date('2026-08-13T10:59:07.100Z').toLocaleString())).toBeInTheDocument();
+    expect(screen.getByText(ConversationsTraceI18nKey.DetailDuration)).toBeInTheDocument();
     expect(screen.queryByText('+1.5s')).toBeNull();
-    expect(screen.queryByText('2.9s')).toBeNull();
   });
 
   test('marks metadata the log did not record as unavailable', () => {
@@ -308,27 +317,27 @@ describe('ConversationSpanDetail', () => {
 describe('ConversationSpanDetail — MCP hops', () => {
   test('renders the routing chain in the order the log recorded it', () => {
     renderDetail({
-      span: span({ execution_path: ['statgpt-deep-research', 'gpt-5.4-2026-03-05'] }),
+      span: span({ execution_path: ['deep-research-app', 'gpt-5.4-2026-03-05'] }),
       kind: SpanKind.Llm,
       hasFailed: false,
       startedAtMs: 1000,
     });
 
     expect(screen.getByText(ConversationsTraceI18nKey.SpanRouting)).toBeInTheDocument();
-    expect(screen.getByText('statgpt-deep-research → gpt-5.4-2026-03-05')).toBeInTheDocument();
+    expect(screen.getByText('deep-research-app → gpt-5.4-2026-03-05')).toBeInTheDocument();
   });
 
   test('states the MCP method and tool where the hop recorded them', () => {
     renderDetail({
-      span: span({ event_kind: 'mcp', mcp_method: 'tools/call', mcp_tool_call_name: 'rag_search' }),
+      span: span({ event_kind: 'mcp', mcp_method: 'tools/call', mcp_tool_call_name: 'a_search_tool' }),
       kind: SpanKind.Mcp,
       hasFailed: false,
       startedAtMs: 1000,
     });
 
     expect(screen.getByText(ConversationsTraceI18nKey.SpanMcpTool)).toBeInTheDocument();
-    // Also the heading, which labels the hop by its tool.
-    expect(screen.getAllByText('rag_search')).toHaveLength(2);
+    // Once, in the fact row. The heading names the server that served the call, not the tool it called.
+    expect(screen.getAllByText('a_search_tool')).toHaveLength(1);
     expect(screen.getByText(ConversationsTraceI18nKey.SpanMcpMethod)).toBeInTheDocument();
     expect(screen.getByText('tools/call')).toBeInTheDocument();
   });

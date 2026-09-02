@@ -30,6 +30,7 @@ import { FilterDto } from '@/src/models/request';
 import { FilterOperatorDto } from '@/src/types/request';
 
 import { CompareAnalyticsRow, MetricGroup } from './models';
+import EllipsisHeader from '@/src/components/Grid/HeaderComponents/EllipsisHeader';
 export type { MetricGroup } from './models';
 
 export const RUN_FILTER = (id?: string | null): FilterDto[] => [
@@ -148,6 +149,7 @@ type IndexColumnField = 'runIndex' | 'requestIndex' | 'turnIndex';
 const buildIndexColumn = (field: IndexColumnField, headerName: string, width: number): ColDef => ({
   field,
   headerName,
+  headerComponent: EllipsisHeader,
   colId: field,
   ...lockedWidthColDef(width),
   ...NO_FILTER_COL_DEF,
@@ -160,6 +162,7 @@ const executionColumns: ColDef[] = [
   {
     field: 'totalRequests',
     headerName: 'Total requests',
+    headerComponent: EllipsisHeader,
     colId: 'totalRequests',
     ...lockedWidthColDef(TOTAL_REQUESTS_COLUMN_WIDTH),
     ...NO_FILTER_COL_DEF,
