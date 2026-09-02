@@ -138,6 +138,7 @@ export default {
     Prompts: 'Prompts',
     Files: 'Files',
     Skills: 'Skills',
+    Credentials: 'Credentials',
     FoldersStorage: 'Folders Storage',
 
     Dashboard: 'Dashboard',

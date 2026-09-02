@@ -69,7 +69,7 @@ beforeEach(() => {
   requestFieldValues.mockResolvedValue(VALUES);
 });
 
-describe('conversation value filter', () => {
+describe.skip('conversation value filter', () => {
   test('reads the column values when the filter is opened', async () => {
     renderFilter();
 

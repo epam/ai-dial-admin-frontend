@@ -37,6 +37,7 @@ export enum MenuI18nKey {
   Prompts = 'Menu.Prompts',
   Files = 'Menu.Files',
   Skills = 'Menu.Skills',
+  Credentials = 'Menu.Credentials',
   Runs = 'Menu.Runs',
   TestSuites = 'Menu.TestSuites',
   Datasets = 'Menu.Datasets',
